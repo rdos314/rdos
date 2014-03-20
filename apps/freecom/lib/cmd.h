@@ -73,7 +73,6 @@ public:
 
     void WriteLong(long Value);
 
-    char Read();
     int Read(char *str, int maxsize);
 	
 	int Run();

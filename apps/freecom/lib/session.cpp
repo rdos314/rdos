@@ -166,14 +166,30 @@ int TSession::Count = 0;
 #   Returns....: *
 #
 ##########################################################################*/
-TSession::TSession()
+TSession::TSession(const char *ipc)
 {
     FArgList = 0;
     FEcho = TRUE;
-    FCmdFile = new TFile("CON");
-    FInputFile = new TFile("CON");
-    FOutputFile = new TFile("CON");
-    FErrorFile = new TFile("CON");
+
+    if (ipc)
+    {
+        RdosDefineMailslot(ipc, 0x1000);
+        FInBuffer = new char[0x1000];
+
+        FCmdFile = 0;
+        FInputFile = 0;
+        FOutputFile = 0;
+        FErrorFile = 0;
+    }
+    else
+    {
+        FInBuffer = 0;
+        
+        FCmdFile = new TFile("CON");
+        FInputFile = new TFile("CON");
+        FOutputFile = new TFile("CON");
+        FErrorFile = new TFile("CON");
+    }
 
     if (Count == 0)
     {
@@ -260,6 +276,7 @@ TSession::TSession(const TSession &src)
 
     FArgList = 0;
     FEcho = TRUE;
+    FInBuffer = 0;
 
     if (src.FCmdFile->IsDevice())
         FCmdFile = new TFile("CON");
@@ -295,10 +312,20 @@ TSession::TSession(const TSession &src)
 ##########################################################################*/
 TSession::~TSession()
 {
-    delete FCmdFile;
-    delete FInputFile;
-    delete FOutputFile;
-    delete FErrorFile;
+    if (FInBuffer)
+        delete FInBuffer;
+
+    if (FCmdFile)
+        delete FCmdFile;
+
+    if (FInputFile)
+        delete FInputFile;
+
+    if (FOutputFile)
+        delete FOutputFile;
+
+    if (FErrorFile)
+        delete FErrorFile;
 
     Count--;
 
@@ -489,65 +516,65 @@ void TSession::DisplayPrompt()
     while (*pr)
     {
         if (*pr != '$')
-            RdosWriteChar(*pr);
+            Write(*pr);
         else
         {
             switch (toupper(*++pr))
             {
                 case 'Q':
-                    RdosWriteChar('=');
+                    Write('=');
                     break;
 
                 case '$':
-                    RdosWriteChar('$');
+                    Write('$');
                     break;
 
                 case 'T':                              
                     str = FormatTime(currtime);
-                    RdosWriteString(str.GetData());
+                    Write(str.GetData());
                     break;
 
                 case 'D':
                     str = FormatLongDate(currtime);
-                    RdosWriteString(str.GetData());
+                    Write(str.GetData());
                     break;
 
                 case 'P':
                     str = path.GetFullPathName();
                     str.Lower();
-                    RdosWriteString(str.GetData());
+                    Write(str.GetData());
                     break;
 
                 case 'V':
-                    RdosWriteString("command");
+                    Write("command");
                     break;
 
                 case 'N':
-                    RdosWriteChar(RdosGetCurDrive() + 'A');
+                    Write(RdosGetCurDrive() + 'A');
                     break;
 
                 case 'G':
-                    RdosWriteChar('>');
+                    Write('>');
                     break;
 
                 case 'L':
-                    RdosWriteChar('<');
+                    Write('<');
                     break;
 
                 case 'B':
-                    RdosWriteChar('|');
+                    Write('|');
                     break;
 
                 case '_':
-                    RdosWriteChar('\n');
+                    Write('\n');
                     break;
 
                 case 'E':
-                    RdosWriteChar(27);
+                    Write(27);
                     break;
 
                 case 'H':
-                    RdosWriteChar(8);
+                    Write(8);
                     break;
 
             }
@@ -843,6 +870,36 @@ int TSession::ReadCon(char *str, int maxsize)
 
 /*##########################################################################
 #
+#   Name       : TSession::ReadIpc
+#
+#   Purpose....: Read a string from IPC
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TSession::ReadIpc(char *str, int maxsize)
+{
+    int size;
+    
+    size = RdosReceiveMailslot(FInBuffer);
+    if (size > maxsize - 1)
+        size = maxsize - 1;
+
+    if (size >= 0)
+    {
+        FInBuffer[size] = 0;
+
+        memset(str, 0, maxsize);
+        memcpy(str, FInBuffer, size);
+    }
+
+    return TRUE;
+}
+
+/*##########################################################################
+#
 #   Name       : TSession::SetCmdFile
 #
 #   Purpose....: Set cmd file
@@ -989,6 +1046,11 @@ void TSession::Write(char ch)
 
     if (FOutputFile)
         FOutputFile->Write(str, 1);
+    else
+    {
+        RdosWriteChar(ch);
+        IpcOut += TString(str);
+    }
 }
 
 /*##########################################################################
@@ -1008,6 +1070,11 @@ void TSession::Write(const char *str)
 
     if (FOutputFile)
         FOutputFile->Write(str, size);
+    else
+    {
+        RdosWriteString(str);
+        IpcOut += TString(str);
+    }
 }
 
 /*##########################################################################
@@ -1030,6 +1097,11 @@ void TSession::WriteError(char ch)
 
     if (FOutputFile)
         FOutputFile->Write(str, 1);
+    else
+    {
+        RdosWriteChar(ch);
+        IpcOut += TString(str);
+    }
 }
 
 /*##########################################################################
@@ -1049,6 +1121,11 @@ void TSession::WriteError(const char *str)
 
     if (FOutputFile)
         FOutputFile->Write(str, size);
+    else
+    {
+        RdosWriteString(str);
+        IpcOut += TString(str);
+    }
 }
 
 /*##########################################################################
@@ -1124,27 +1201,6 @@ void TSession::WriteLong(long value)
 
 /*##########################################################################
 #
-#   Name       : TSession::Read
-#
-#   Purpose....: Read a character from standard input
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-char TSession::Read()
-{
-    char ch = 3;
-
-    if (FInputFile)
-        FInputFile->Read(&ch, 1);
-
-    return ch;
-}
-
-/*##########################################################################
-#
 #   Name       : TSession::ReadCmd
 #
 #   Purpose....: Read a string from cmd input
@@ -1159,29 +1215,34 @@ int TSession::ReadCmd(char *str, int maxsize)
     char ch;
     int i;
 
-    if (FCmdFile->IsDevice())
-        return ReadCon(str, maxsize);
-    else
+    if (FCmdFile)
     {
-        for (i = 0; i < maxsize; i++)
+        if (FCmdFile->IsDevice())
+            return ReadCon(str, maxsize);
+        else
         {
-            ch = 0;
-            FCmdFile->Read(&ch, 1);
-
-            if (ch == 0 || ch == 0xa)
+            for (i = 0; i < maxsize; i++)
             {
-                *str = 0;
-                break;
+                ch = 0;
+                FCmdFile->Read(&ch, 1);
+    
+                if (ch == 0 || ch == 0xa)
+                {
+                    *str = 0;
+                    break;
+                }
+                else
+                {
+                    *str = ch;
+                    str++;
+                }
             }
-            else
-            {
-                *str = ch;
-                str++;
-            }
+            *str = 0;
+            return TRUE;
         }
-        *str = 0;
-        return TRUE;
     }
+    else
+        return ReadIpc(str, maxsize);
 }
 
 /*##########################################################################
@@ -1200,32 +1261,37 @@ int TSession::Read(char *str, int maxsize)
     char ch;
     int i;
 
-    if (FInputFile->IsDevice())
-        return ReadCon(str, maxsize);
-    else
+    if (FInputFile)
     {
-        for (i = 0; i < maxsize; i++)
+        if (FInputFile->IsDevice())
+            return ReadCon(str, maxsize);
+        else
         {
-            ch = 0;
-            FInputFile->Read(&ch, 1);
+            for (i = 0; i < maxsize; i++)
+            {   
+                ch = 0;
+                FInputFile->Read(&ch, 1);
+    
+                if (ch == 3)
+                    return FALSE;
 
-            if (ch == 3)
-                return FALSE;
-
-            if (ch == 0 || ch == 0xa)
-            {
-                *str = 0;
-                break;
+                if (ch == 0 || ch == 0xa)
+                {
+                    *str = 0;
+                    break;
+                }
+                else
+                {
+                    *str = ch;
+                    str++;
+                }
             }
-            else
-            {
-                *str = ch;
-                str++;
-            }
+            *str = 0;
+            return TRUE;
         }
-        *str = 0;
-        return TRUE;
     }
+    else
+        return ReadIpc(str, maxsize);
 }
 
 /*##########################################################################

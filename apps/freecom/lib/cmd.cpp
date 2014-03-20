@@ -121,17 +121,17 @@ TCommand::~TCommand()
     if (FInputFile)
         delete FInputFile;
 
-	if (FOutputFile)
-		delete FOutputFile;
+        if (FOutputFile)
+                delete FOutputFile;
 
-	if (FErrorFile)
-		delete FErrorFile;
+        if (FErrorFile)
+                delete FErrorFile;
 
-	if (FRemovePath)
-	{
-		FRemovePath->DeleteFile();
-		delete FRemovePath;
-	}
+        if (FRemovePath)
+        {
+                FRemovePath->DeleteFile();
+                delete FRemovePath;
+        }
 }
 
 /*##########################################################################
@@ -163,9 +163,9 @@ int TCommand::IsExit()
 ##########################################################################*/
 int TCommand::Command()
 {
-	TSession session(*FSession);
-	session.Run();
-	return 0;
+        TSession session(*FSession);
+        session.Run();
+        return 0;
 }
 
 /*##########################################################################
@@ -181,9 +181,9 @@ int TCommand::Command()
 ##########################################################################*/
 int TCommand::Command(const char *param)
 {
-	TSession session(*FSession);
-	session.Run(param);
-	return 0;
+        TSession session(*FSession);
+        session.Run(param);
+        return 0;
 }
 
 /*##########################################################################
@@ -199,8 +199,8 @@ int TCommand::Command(const char *param)
 ##########################################################################*/
 int TCommand::RunBatch(const char *name)
 {
-	TSession session(*FSession);
-	return session.Run(name, FArgList);
+        TSession session(*FSession);
+        return session.Run(name, FArgList);
 }
 
 /*##########################################################################
@@ -287,22 +287,6 @@ void TCommand::WriteLong(long Value)
 #
 #   Name       : TCommand::Read
 #
-#   Purpose....: Read a single character from std input
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-char TCommand::Read()
-{
-    return FSession->Read();
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::Read
-#
 #   Purpose....: Read a line from std input
 #
 #   In params..: *
@@ -328,9 +312,9 @@ int TCommand::Read(char *str, int maxsize)
 ##########################################################################*/
 void TCommand::DefineInput(TString &name, int remove)
 {
-	FInputName = name;
-	if (remove)
-		FRemovePath = new TPathName(name);
+        FInputName = name;
+        if (remove)
+                FRemovePath = new TPathName(name);
 }
 
 /*##########################################################################
@@ -346,7 +330,7 @@ void TCommand::DefineInput(TString &name, int remove)
 ##########################################################################*/
 void TCommand::DefineOutput(TString &name)
 {
-	FOutputName = name;
+        FOutputName = name;
 }
 
 /*##########################################################################
@@ -362,7 +346,7 @@ void TCommand::DefineOutput(TString &name)
 ##########################################################################*/
 void TCommand::DefineError(TString &name)
 {
-	FErrorName = name;
+        FErrorName = name;
 }
 
 /*##########################################################################
@@ -378,7 +362,7 @@ void TCommand::DefineError(TString &name)
 ##########################################################################*/
 void TCommand::DefineAppend(TString &name)
 {
-	FAppendName = name;
+        FAppendName = name;
 }
 
 /*##########################################################################
@@ -394,59 +378,59 @@ void TCommand::DefineAppend(TString &name)
 ##########################################################################*/
 int TCommand::Run()
 {
-	char *param;
-	char *ptr;
-	int size;
-	int result;
+        char *param;
+        char *ptr;
+        int size;
+        int result;
 
-	size = FCmdLine.GetSize();
-	param = new char[size + 1];
-	memcpy(param, FCmdLine.GetData(), size + 1);
+        size = FCmdLine.GetSize();
+        param = new char[size + 1];
+        memcpy(param, FCmdLine.GetData(), size + 1);
 
-	ptr = param;
+        ptr = param;
 
-	if (FInputName.GetSize())
-	{
-		FInputFile = new TFile(FInputName.GetData());
-		if (FInputFile->IsOpen())
-			FSession->SetInputFile(FInputFile);
-	}
+        if (FInputName.GetSize())
+        {
+                FInputFile = new TFile(FInputName.GetData());
+                if (FInputFile->IsOpen())
+                        FSession->SetInputFile(FInputFile);
+        }
 
-	if (FOutputName.GetSize())
-	{
-		FOutputFile = new TFile(FOutputName.GetData(), 0);
-		if (FOutputFile->IsOpen())
-			FSession->SetOutputFile(FOutputFile);
-	}
-	else
-	{
-		if (FAppendName.GetSize())
-		{
-			FOutputFile = new TFile(FAppendName.GetData());
-			if (FOutputFile->IsOpen())
-				FOutputFile->SetPos(FOutputFile->GetSize());
-			else
-			{
-				delete FOutputFile;
-				FOutputFile = new TFile(FAppendName.GetData(), 0);
-			}
+        if (FOutputName.GetSize())
+        {
+                FOutputFile = new TFile(FOutputName.GetData(), 0);
+                if (FOutputFile->IsOpen())
+                        FSession->SetOutputFile(FOutputFile);
+        }
+        else
+        {
+                if (FAppendName.GetSize())
+                {
+                        FOutputFile = new TFile(FAppendName.GetData());
+                        if (FOutputFile->IsOpen())
+                                FOutputFile->SetPos(FOutputFile->GetSize());
+                        else
+                        {
+                                delete FOutputFile;
+                                FOutputFile = new TFile(FAppendName.GetData(), 0);
+                        }
 
-			if (FOutputFile->IsOpen())
-				FSession->SetOutputFile(FOutputFile);
-		}
-	}
+                        if (FOutputFile->IsOpen())
+                                FSession->SetOutputFile(FOutputFile);
+                }
+        }
 
-	if (FErrorName.GetSize())
-	{
-		FErrorFile = new TFile(FErrorName.GetData(), 0);
-		if (FErrorFile->IsOpen())
-			FSession->SetErrorFile(FErrorFile);
-	}
+        if (FErrorName.GetSize())
+        {
+                FErrorFile = new TFile(FErrorName.GetData(), 0);
+                if (FErrorFile->IsOpen())
+                        FSession->SetErrorFile(FErrorFile);
+        }
 
-	result = Execute(ptr);
+        result = Execute(ptr);
 
-	delete param;
-	return result;
+        delete param;
+        return result;
 }
 
 /*##########################################################################
@@ -462,8 +446,8 @@ int TCommand::Run()
 ##########################################################################*/
 int TCommand::OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg)
 {
-	OptError(optstr);
-	return 0;
+        OptError(optstr);
+        return 0;
 }
 
 /*##########################################################################
@@ -479,8 +463,8 @@ int TCommand::OptScan(const char *optstr, int ch, int bool, const char *strarg, 
 ##########################################################################*/
 void TCommand::OptError(const char *optstr)
 {
-	FMsg.printf(TEXT_ERROR_INVALID_LSWITCH, optstr);
-	WriteError(FMsg.GetData());
+        FMsg.printf(TEXT_ERROR_INVALID_LSWITCH, optstr);
+        WriteError(FMsg.GetData());
 }
 
 /*##########################################################################
@@ -496,11 +480,11 @@ void TCommand::OptError(const char *optstr)
 ##########################################################################*/
 void TCommand::ErrorSyntax(const char *str)
 {
-	if (str)
-		FMsg.printf(TEXT_ERROR_SYNTAX, str);
-	else
-		FMsg.Load(TEXT_ERROR_SYNTAX);
-	WriteError(FMsg.GetData());
+        if (str)
+                FMsg.printf(TEXT_ERROR_SYNTAX, str);
+        else
+                FMsg.Load(TEXT_ERROR_SYNTAX);
+        WriteError(FMsg.GetData());
 }
 
 /*##########################################################################
@@ -516,28 +500,28 @@ void TCommand::ErrorSyntax(const char *str)
 ##########################################################################*/
 int TCommand::OptScanBool(const char *optstr, int bool, const char *arg, int *value)
 {
-	if (arg)
-	{
-		FMsg.printf(TEXT_ERROR_OPT_ARG, optstr);
-		WriteError(FMsg.GetData());
-	    return E_Useage;
-  	}
+        if (arg)
+        {
+                FMsg.printf(TEXT_ERROR_OPT_ARG, optstr);
+                WriteError(FMsg.GetData());
+            return E_Useage;
+        }
 
-	switch (bool)
-	{
-		case -1:
-			*value = 0;
-			break;
+        switch (bool)
+        {
+                case -1:
+                        *value = 0;
+                        break;
 
-		case 0:
-			*value = !*value;
-			break;
+                case 0:
+                        *value = !*value;
+                        break;
 
-		case 1:
-			*value = 1;
-			break;
-	}
-  	return 0;
+                case 1:
+                        *value = 1;
+                        break;
+        }
+        return 0;
 }
 
 /*##########################################################################
@@ -553,72 +537,72 @@ int TCommand::OptScanBool(const char *optstr, int bool, const char *arg, int *va
 ##########################################################################*/
 int TCommand::ScanOpt(void *ag, char *rest)
 {
-	char *line, *arg, *optend;
-	int ch, bool;
+        char *line, *arg, *optend;
+        int ch, bool;
 
-	line = rest;
-	if (!IsOptChar(*line))
-		return -1;
+        line = rest;
+        if (!IsOptChar(*line))
+                return -1;
 
-	line++;
-	switch (*line)
-	{
-		case 0:
-			return E_None;
+        line++;
+        switch (*line)
+        {
+                case 0:
+                        return E_None;
 
-		case '-':
-			bool = -1;
-			line++;
-			break;
+                case '-':
+                        bool = -1;
+                        line++;
+                        break;
 
-  		case '+':
-			bool = 1;
-			line++;
-			break;
+                case '+':
+                        bool = 1;
+                        line++;
+                        break;
 
-		default:
-			bool = 0;
-			break;
+                default:
+                        bool = 0;
+                        break;
 
-	}
+        }
 
-	ch = toupper(*line);
-	if (!isprint(ch) || strchr("-+=:", ch))
-	{
-		OptError(rest);
-   		return E_Useage;
-	}
+        ch = toupper(*line);
+        if (!isprint(ch) || strchr("-+=:", ch))
+        {
+                OptError(rest);
+                return E_Useage;
+        }
 
-	if (ch == '?')
-	{
-		Write(FHelpScreen.GetData());
-  		return E_Help;
-	}
+        if (ch == '?')
+        {
+                Write(FHelpScreen.GetData());
+                return E_Help;
+        }
 
-	optend = strpbrk(line, "=:");
-	if (optend)
-		arg = optend + 1;
-	else
-	{
- 		arg = 0;
-		optend = strchr(line, 0);
-	}
+        optend = strpbrk(line, "=:");
+        if (optend)
+                arg = optend + 1;
+        else
+        {
+                arg = 0;
+                optend = strchr(line, 0);
+        }
 
-	switch (optend[-1])
-	{
-		case '-':
-			bool = -1;
-        	optend--;
- 			break;
+        switch (optend[-1])
+        {
+                case '-':
+                        bool = -1;
+                optend--;
+                        break;
 
-		case '+':
-			bool = 1;
-        	optend--;
- 			break;
-	}
+                case '+':
+                        bool = 1;
+                optend--;
+                        break;
+        }
 
-	*optend = 0;
-	return OptScan(line, line[1] ? 0 : ch, bool, arg, ag);
+        *optend = 0;
+        return OptScan(line, line[1] ? 0 : ch, bool, arg, ag);
 }
 
 /*##########################################################################
@@ -634,38 +618,38 @@ int TCommand::ScanOpt(void *ag, char *rest)
 ##########################################################################*/
 int TCommand::LeadOptions(char **Xline, void *arg)
 { 
-	int ec = E_None;
-	char *p, *q, *line;
+        int ec = E_None;
+        char *p, *q, *line;
 
-	p = *Xline;
-	if(!p)
-		p = "";
+        p = *Xline;
+        if(!p)
+                p = "";
 
-	while (*(line = SkipDelim(p)))
-	{
-		p = SkipWord(line);
-		q = Unquote(line, p);
+        while (*(line = SkipDelim(p)))
+        {
+                p = SkipWord(line);
+                q = Unquote(line, p);
 
-		if (IsOptChar(*q))
-		{
-			ec = ScanOpt(arg, q);
-			if (ec != E_None && ec != E_Ignore)
-			{
-				delete q;
-				break;
-			}
-			else
-				delete q;
-		}
-		else
-		{
-			delete q;
-			break;
-		}
-	}
+                if (IsOptChar(*q))
+                {
+                        ec = ScanOpt(arg, q);
+                        if (ec != E_None && ec != E_Ignore)
+                        {
+                                delete q;
+                                break;
+                        }
+                        else
+                                delete q;
+                }
+                else
+                {
+                        delete q;
+                        break;
+                }
+        }
 
-	*Xline = line;
-	return ec;
+        *Xline = line;
+        return ec;
 }
 
 /*##########################################################################
@@ -687,15 +671,15 @@ void TCommand::ShowCount(int BaseId, int count)
             FMsg.Load(BaseId);
             break;
                 
-	    case 1:
-	        FMsg.Load(BaseId + 1);
-	        break;
-	            
-	    default:
-	        FMsg.printf(BaseId + 2, count);
-	        break;
+            case 1:
+                FMsg.Load(BaseId + 1);
+                break;
+                    
+            default:
+                FMsg.printf(BaseId + 2, count);
+                break;
     }
-	Write(FMsg.GetData());        
+        Write(FMsg.GetData());        
 }
 
 /*##########################################################################
@@ -715,17 +699,17 @@ void TCommand::AddArg(const char *name)
     TArg *curr;
 
     arg->FList = 0;
-	curr = FArgList;
+        curr = FArgList;
    
-	if (curr)
-	{
-		while (curr->FList)
-			curr = curr->FList;
+        if (curr)
+        {
+                while (curr->FList)
+                        curr = curr->FList;
 
-		curr->FList = arg;
-	}
-	else
-		FArgList = arg;    
+                curr->FList = arg;
+        }
+        else
+                FArgList = arg;    
 }
 
 /*##########################################################################
@@ -762,16 +746,16 @@ void TCommand::AddArg(char *sBeg, char **sEnd)
 ##########################################################################*/
 void TCommand::Split(char *s)
 {
-	char *start;
+        char *start;
 
     if (s)
     {
         start = SkipDelim(s);
         while (*start)
         {
-			AddArg(start, &s);
-			start = SkipDelim(s);
-		}
+                        AddArg(start, &s);
+                        start = SkipDelim(s);
+                }
     }
 }
 
@@ -791,57 +775,57 @@ int TCommand::ParseOptions(void *arg)
     TArg *curr;
     TArg *argv;
     char *str;
-   	int ec;
+        int ec;
 
     FOptCount = 0;
-	FArgCount = 0;
+        FArgCount = 0;
 
-    argv = FArgList;	
-	while (argv)
-	{
-	    str = (char *)argv->FName.GetData();
-		if (IsOptChar(*str))
-		{
-			ec = ScanOpt(arg, str);
-			if (ec == E_None)
-			{
-			    curr = FArgList;
-			    if (curr == argv)
-			    {
-			        FArgList = argv->FList;
-			        delete argv;
-			        argv = 0;
-			    }
-			    else
-			    {
-			        while (curr && curr->FList != argv)
-			            curr = curr->FList;
+    argv = FArgList;    
+        while (argv)
+        {
+            str = (char *)argv->FName.GetData();
+                if (IsOptChar(*str))
+                {
+                        ec = ScanOpt(arg, str);
+                        if (ec == E_None)
+                        {
+                            curr = FArgList;
+                            if (curr == argv)
+                            {
+                                FArgList = argv->FList;
+                                delete argv;
+                                argv = 0;
+                            }
+                            else
+                            {
+                                while (curr && curr->FList != argv)
+                                    curr = curr->FList;
 
-			        if (curr)
-			        {
-			            curr->FList = argv->FList;
-			            delete argv;
-    			        argv = 0;
-			        }
-			    }
-				FOptCount++;
-			}
-			else
-			{
-				if (ec == E_Ignore)
-				    FArgCount++;
-				else
-					return ec;
-			}
-		}
-		else
-    	    FArgCount++;
+                                if (curr)
+                                {
+                                    curr->FList = argv->FList;
+                                    delete argv;
+                                argv = 0;
+                                }
+                            }
+                                FOptCount++;
+                        }
+                        else
+                        {
+                                if (ec == E_Ignore)
+                                    FArgCount++;
+                                else
+                                        return ec;
+                        }
+                }
+                else
+            FArgCount++;
 
-        if (argv)	
-    		argv = argv->FList;
-	}
+        if (argv)       
+                argv = argv->FList;
+        }
 
-	return E_None;
+        return E_None;
 }
 
 /*##########################################################################
@@ -857,11 +841,11 @@ int TCommand::ParseOptions(void *arg)
 ##########################################################################*/
 int TCommand::ScanCmdLine(char *line, void *arg)
 {
-	Split(line);
+        Split(line);
 
-	if (ParseOptions(arg) != E_None)
-		return FALSE;
-	else
-	    return TRUE;
+        if (ParseOptions(arg) != E_None)
+                return FALSE;
+        else
+            return TRUE;
 }
 

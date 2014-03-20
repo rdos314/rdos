@@ -28,10 +28,20 @@
 #include "cmd.h"
 #include "session.h"
 
-int main()
+int main(int argc, char **argv)
 {
-    TSession session;
-    session.Run();
+    TSession *session;
+
+    if (argc == 2)
+    {
+        argv++;
+        session = new TSession(*argv);
+    }
+    else
+        session = new TSession(0);
+
+    session->Run();
+
     return 0;
 }
 

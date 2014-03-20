@@ -40,7 +40,7 @@ class TArg;
 class TSession
 {
 public:
-    TSession();
+    TSession(const char *ipc);
         TSession(const TSession &source);
     ~TSession();
 
@@ -60,41 +60,44 @@ public:
 
     void WriteLong(long Value);
 
-    char Read();
     int Read(char *str, int maxsize);
     int ReadCmd(char *str, int maxsize);
 
     void DisplayPrompt();
     int ReadCon(char *str, int maxsize);
+    int ReadIpc(char *str, int maxsize);
 
     void SetCmdFile(TFile *File);
     void SetInputFile(TFile *File);
     void SetOutputFile(TFile *File);
     void SetErrorFile(TFile *File);
 
-        TFile *GetCmdFile();
-        TFile *GetInputFile();
-        TFile *GetOutputFile();
-        TFile *GetErrorFile();
+    TFile *GetCmdFile();
+    TFile *GetInputFile();
+    TFile *GetOutputFile();
+    TFile *GetErrorFile();
 
 protected:
-        void WriteWelcome();
-        TString FormatTime(TDateTime &time);
-        TString FormatLongDate(TDateTime &date);
+    void WriteWelcome();
+    TString FormatTime(TDateTime &time);
+    TString FormatLongDate(TDateTime &date);
 
-        const char *GetArg(int ArgNr);
-        TString ExpandParam(const char *param);
+    const char *GetArg(int ArgNr);
+    TString ExpandParam(const char *param);
 
-        TFile *FCmdFile;
-        TFile *FInputFile;
-        TFile *FOutputFile;
-        TFile *FErrorFile;
+    char *FInBuffer;
+    TString IpcOut;
+    
+    TFile *FCmdFile;
+    TFile *FInputFile;
+    TFile *FOutputFile;
+    TFile *FErrorFile;
 
     TString FName;
     TArg *FArgList;
     int FEcho;
     
-        static int Count;
+    static int Count;
 
 };
 
