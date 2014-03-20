@@ -808,12 +808,6 @@ HandleReceive   Proc near
     mov edx,es:[si].cm_data+4
     movzx ecx,es:[si].cm_size
     mov ebx,es:[si].cm_id
-    cmp cx,1
-    je hrOk
-;
-    int 3
-
-hrOk:        
     call fword ptr es:[di].ih_offset
 ;
     pop edx
