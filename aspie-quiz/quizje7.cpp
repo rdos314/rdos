@@ -305,8 +305,13 @@ void TQuizJE7::SetupTexts()
 
   Quiz[38].Reverse = TRUE;
   Quiz[39].Reverse = TRUE;
+  Quiz[41].Reverse = TRUE;
+  Quiz[42].Reverse = TRUE;
+  Quiz[46].Reverse = TRUE;
+  Quiz[47].Reverse = TRUE;
   Quiz[104].Reverse = TRUE;
   Quiz[106].Reverse = TRUE;
+  Quiz[107].Reverse = TRUE;
   Quiz[122].Reverse = TRUE;
   Quiz[123].Reverse = TRUE;
   Quiz[124].Reverse = TRUE;
@@ -381,18 +386,18 @@ void TQuizJE7::SetupTexts()
   Quiz[55].MyGroup = GROUP_ASPIE_NVC;
   Quiz[56].MyGroup = GROUP_ASPIE_NVC;
   Quiz[57].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[58].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[58].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[59].MyGroup = GROUP_ASPIE_NVC;
   Quiz[60].MyGroup = GROUP_ASPIE_NVC;
   Quiz[61].MyGroup = GROUP_ASPIE_NVC;
   Quiz[62].MyGroup = GROUP_ASPIE_NVC;
   Quiz[63].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[64].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[64].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[65].MyGroup = GROUP_ASPIE_NVC;
   Quiz[66].MyGroup = GROUP_ASPIE_NVC;
   Quiz[67].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[68].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[69].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[68].MyGroup = GROUP_ASPIE_CONTACT;
+  Quiz[69].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[70].MyGroup = GROUP_NT_NVC;
   Quiz[71].MyGroup = GROUP_NT_NVC;
   Quiz[72].MyGroup = GROUP_NT_NVC;
@@ -406,7 +411,7 @@ void TQuizJE7::SetupTexts()
   Quiz[80].MyGroup = GROUP_NT_NVC;
   Quiz[81].MyGroup = GROUP_NT_NVC;
   Quiz[82].MyGroup = GROUP_NT_NVC;
-  Quiz[83].MyGroup = GROUP_ASPIE_CONTACT;
+  Quiz[83].MyGroup = GROUP_ASPIE_NVC;
   Quiz[84].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[85].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[86].MyGroup = GROUP_ASPIE_CONTACT;
@@ -414,7 +419,7 @@ void TQuizJE7::SetupTexts()
   Quiz[88].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[89].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[90].MyGroup = GROUP_ASPIE_CONTACT;
-  Quiz[91].MyGroup = GROUP_ASPIE_CONTACT;
+  Quiz[91].MyGroup = GROUP_ASPIE_NVC;
   Quiz[92].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[93].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[94].MyGroup = GROUP_ASPIE_CONTACT;
@@ -455,7 +460,7 @@ void TQuizJE7::SetupTexts()
   Quiz[129].MyGroup = GROUP_NT_SOCIAL;  
   Quiz[130].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[131].MyGroup = GROUP_ASPIE_ATTACH;
-  Quiz[132].MyGroup = GROUP_ASPIE_ATTACH;
+  Quiz[132].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[133].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[134].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[135].MyGroup = GROUP_ASPIE_ATTACH;
