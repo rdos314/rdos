@@ -68,6 +68,12 @@ hid_coord_arr       DB MAX_POINTS * 32 DUP(?)
 
 hid_touch   ENDS
 
+data    SEGMENT byte public 'DATA'
+
+ht_installed    DW ?
+
+data    ENDS  
+
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
@@ -298,24 +304,6 @@ hid_end   Proc far
     mov ax,fs:hid_coord_count
     or ax,ax
     jz heFail
-;    
-    push ds
-    push es
-    pushad
-;
-    mov eax,cs
-    mov ds,eax
-    mov es,eax    
-;    
-    mov esi,OFFSET has_touch
-    mov edi,OFFSET has_touch_name
-    xor dx,dx
-    mov ax,has_touch_nr
-    RegisterBimodalUserGate
-;
-    popad
-    pop es
-    pop ds
 ;
     push es
     push ebx
@@ -348,6 +336,10 @@ heLoop:
 ;    
     add ebx,SIZE coord_struc
     loop heLoop
+;
+    mov eax,SEG data
+    mov es,eax
+    mov es:ht_installed,1 
 ;
     pop edi  
     pop ecx
@@ -527,7 +519,24 @@ hid_handle_report   Endp
 has_touch_name DB 'Has Touch',0
 
 has_touch      Proc far
+    push ds
+    push eax
+    mov eax,SEG data
+    mov ds,eax
+    mov ax,ds:ht_installed
+    or ax,ax
+    jz htNo
+
+htYes:
     clc
+    jmp htDone
+
+htNo:
+    stc
+
+htDone:
+    pop eax
+    pop ds
     ret
 has_touch  Endp
 
@@ -554,12 +563,22 @@ InitTouch_   Proc near
     push es
     push eax
     push edi
-;    
+;   
+    mov eax,SEG data
+    mov ds,eax
+    mov ds:ht_installed,0
+;
     mov eax,cs
     mov ds,eax
     mov es,eax
     mov edi,OFFSET hid_tab
     RegisterHidInput
+;    
+    mov esi,OFFSET has_touch
+    mov edi,OFFSET has_touch_name
+    xor dx,dx
+    mov ax,has_touch_nr
+    RegisterBimodalUserGate
 ;
     pop edi
     pop eax
