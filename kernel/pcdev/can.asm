@@ -247,18 +247,11 @@ rmRetry:
     mov eax,ds:can_rec_pend
     not eax
     or eax,eax
-    jz rmNoBuf
+    jz rmDone
 ;
     bsf ebx,eax
     lock bts ds:can_rec_pend,ebx
-    jnc rmGet
-    jmp rmRetry 
-
-rmNoBuf:
-    int 3
-
-rmNoBufStop:
-    jmp rmNoBufStop
+    jc rmRetry 
 
 rmGet:            
     shl bx,4
@@ -282,15 +275,6 @@ rmGet:
     mov ds:[bx].cm_data+4,eax
 ;    
     mov ax,es:IF2_MCONT
-    test ax,4000h
-    jz rmNoLost
-;
-    int 3
-
-rmLost:
-    jmp rmLost
-    
-rmNoLost:    
     and al,0Fh
     test al,8
     jz rmLenOk
@@ -300,6 +284,8 @@ rmNoLost:
 rmLenOk:
     movzx ax,al
     mov ds:[bx].cm_size,ax   
+
+rmDone:    
     ret
 ReadRxMsg  Endp
 
@@ -794,12 +780,13 @@ HandleReceive   Proc near
     mov ax,ds:[di].ih_sel
     or ax,ax
     jz hrClear    
-;  
+      
     push ds
     push es 
     push ebx     
     push ecx
     push edx
+    push si
 ;    
     mov ax,ds
     mov es,ax
@@ -810,6 +797,7 @@ HandleReceive   Proc near
     mov ebx,es:[si].cm_id
     call fword ptr es:[di].ih_offset
 ;
+    pop si
     pop edx
     pop ecx
     pop ebx
