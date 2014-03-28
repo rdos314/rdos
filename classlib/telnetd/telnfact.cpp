@@ -235,17 +235,34 @@ TSocketServer *TTelnetSocketServerFactory::Create(TTcpSocket *Socket)
 {
     TTelnetSocketServer *server = 0;
     int ok;
+    int i;
+    int IpcHandle;
+    char IpcName[80];
 
     ok = CheckFile("command", ".exe");
     if (!ok)
         ok = CheckFile("command", ".com");
 
     if (ok)
-        ok = StartShell("");
+    {
+        sprintf(IpcName, "TELNET.%d", SocketId);
+        SocketId++;
+        
+        ok = StartShell(IpcName);
+    }
 
     if (ok)
     {
-        server = new TTelnetSocketServer("TELNET", 0x2000, Socket);
+        for (i = 0; i < 100; i++)
+        {
+            RdosWaitMilli(100);
+            IpcHandle = RdosGetLocalMailslot(IpcName);
+
+            if (IpcHandle)
+                break;
+        }
+               
+        server = new TTelnetSocketServer("TELNET", 0x2000, Socket, IpcHandle);
         server->OnCommand = OnCommand;
     }
 

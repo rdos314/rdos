@@ -38,7 +38,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-#define BUF_SIZE    512
+#define BUF_SIZE    0x1000
 
 /*##########################################################################
 #
@@ -51,9 +51,10 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TTelnetSocketServer::TTelnetSocketServer(const char *Name, int StackSize, TTcpSocket *Socket)
+TTelnetSocketServer::TTelnetSocketServer(const char *Name, int StackSize, TTcpSocket *Socket, int IpcHandle)
   : TSocketServer(Name, StackSize, Socket)
 {
+    FIpcHandle = IpcHandle;
     OnCommand = 0;
 }
 
@@ -86,23 +87,56 @@ TTelnetSocketServer::~TTelnetSocketServer()
 void TTelnetSocketServer::HandleSocket()
 {
     char *Buf = new char[BUF_SIZE];
+    char *Msg = new char[128 + BUF_SIZE];
+    char *ReplyBuf = new char[BUF_SIZE];
     int count;
+    int InPos;
+    int OutPos;
     
     if (FSocket->WaitForConnection(6000))
     {
+        if (FSocket->WaitForData(5000))
+            count = FSocket->Read(Buf, BUF_SIZE);
+
         while (FSocket->IsOpen())
         {
-            if (FSocket->WaitForData(5000))
+            OutPos = 0;
+            if (FSocket->WaitForData(50))
             {
                 count = FSocket->Read(Buf, BUF_SIZE);
-                Buf[count] = 0;
-                FSocket->Write(Buf, count);
+
+                for (InPos = 0; InPos < count; InPos++)
+                {
+                    switch (Buf[InPos])
+                    {
+                        default:
+                            Msg[OutPos] = Buf[InPos];
+                            OutPos++;
+                            break;
+                    }
+                }
+                Msg[OutPos] = 0;
 
                 if (OnCommand)
-                    (OnCommand)(this, Buf);
+                    (OnCommand)(this, Msg);
             }
+            else
+                count = 0;
+
+            count = RdosSendMailslot(FIpcHandle, Msg, OutPos, ReplyBuf, BUF_SIZE);
+
+            if (count)
+            {
+                FSocket->Write(ReplyBuf, count);
+                FSocket->Push();
+            }
+                
         }
     }
 
+    strcpy(Msg, "exit\r\n");
+    RdosSendMailslot(FIpcHandle, Msg, strlen(Msg), ReplyBuf, BUF_SIZE);
+
     delete Buf;
+    delete ReplyBuf;
 }

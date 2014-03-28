@@ -87,6 +87,7 @@ protected:
 
     char *FInBuffer;
     TString IpcOut;
+    int IpcPos;
     
     TFile *FCmdFile;
     TFile *FInputFile;

@@ -34,7 +34,7 @@
 class TTelnetSocketServer : public TSocketServer
 {
 public:
-    TTelnetSocketServer(const char *Name, int StackSize, TTcpSocket *Socket);
+    TTelnetSocketServer(const char *Name, int StackSize, TTcpSocket *Socket, int IpcHandle);
     ~TTelnetSocketServer();
 
     virtual void HandleSocket();
@@ -42,7 +42,7 @@ public:
     void (*OnCommand)(TTelnetSocketServer *server, const char *str);
 
 protected:
-    
+    int FIpcHandle;    
 };
 
 #endif

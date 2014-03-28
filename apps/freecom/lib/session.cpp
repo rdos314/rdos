@@ -175,6 +175,7 @@ TSession::TSession(const char *ipc)
     {
         RdosDefineMailslot(ipc, 0x1000);
         FInBuffer = new char[0x1000];
+        IpcPos = 0;
 
         FCmdFile = 0;
         FInputFile = 0;
@@ -881,18 +882,49 @@ int TSession::ReadCon(char *str, int maxsize)
 ##########################################################################*/
 int TSession::ReadIpc(char *str, int maxsize)
 {
-    int size;
-    
-    size = RdosReceiveMailslot(FInBuffer);
-    if (size > maxsize - 1)
-        size = maxsize - 1;
+    const char *ptr;
+    int size = 0;
+    int count = 0;
 
-    if (size >= 0)
+    while (size == 0)
     {
-        FInBuffer[size] = 0;
+        size = RdosReceiveMailslot(FInBuffer);
+        if (size > maxsize - 1)
+            size = maxsize - 1;
 
-        memset(str, 0, maxsize);
-        memcpy(str, FInBuffer, size);
+        if (size >= 0)
+        {
+            FInBuffer[size] = 0;
+
+            memset(str, 0, maxsize);
+            memcpy(str, FInBuffer, size);
+        }
+
+        count = IpcOut.GetSize();
+        if (count)
+        {
+            ptr = IpcOut.GetData();
+            count -= IpcPos;
+
+            if (count < 0)
+                count = 0;
+            ptr += IpcPos;
+        }
+        else
+            ptr = 0;
+
+        if (count > 0x1000)
+            count = 0x1000;
+                       
+        RdosReplyMailslot(ptr, count);
+
+        if (count == 0)
+        {
+            IpcPos = 0;
+            IpcOut = TString("");
+        }
+        else
+            IpcPos += count;
     }
 
     return TRUE;
@@ -1242,7 +1274,14 @@ int TSession::ReadCmd(char *str, int maxsize)
         }
     }
     else
-        return ReadIpc(str, maxsize);
+    {
+        if (ReadIpc(str, maxsize))
+        {
+            printf(str);
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 /*##########################################################################
