@@ -28,15 +28,26 @@
 #ifndef _TELNFACT_H
 #define _TELNFACT_H
 
+#include "path.h"
+#include "telnserv.h"
+
 class TTelnetSocketServerFactory : public TSocketServerFactory
 {
 public:
-	TTelnetSocketServerFactory(int Port, int MaxConnections, int BufferSize);
-	~TTelnetSocketServerFactory();
+    TTelnetSocketServerFactory(int Port, int MaxConnections, int BufferSize);
+    ~TTelnetSocketServerFactory();
 
-	virtual TSocketServer *Create(TTcpSocket *Socket);
+    virtual TSocketServer *Create(TTcpSocket *Socket);
 
-	void (*OnCommand)(TTelnetSocketServer *server, const char *str);
+    void (*OnCommand)(TTelnetSocketServer *server, const char *str);
+
+protected:
+    int CheckFileExt(const char *path, const char *ext);
+    int CheckFileExt(const char *path, const char *name, const char *ext);
+    int CheckPathFileExt(char *path, const char *name, const char *ext);
+    int CheckFile(char *name, const char *ext);
+    
+    TPathName FFullPath;    
 };
 
 #endif

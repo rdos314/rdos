@@ -30,6 +30,7 @@
 #include <stdio.h>
 
 #include "rdos.h"
+#include "env.h"
 #include "telnserv.h"
 #include "telnfact.h"
 
@@ -81,10 +82,142 @@ TTelnetSocketServerFactory::~TTelnetSocketServerFactory()
 ##########################################################################*/
 TSocketServer *TTelnetSocketServerFactory::Create(TTcpSocket *Socket)
 {
-	TTelnetSocketServer *server;
+    TTelnetSocketServer *server = 0;
+    int ok;
 
-	server = new TTelnetSocketServer("TELNET", 0x2000, Socket);
-	server->OnCommand = OnCommand;
+    ok = CheckFile("command", ".exe");
+    if (!ok)
+        ok = CheckFile("command", ".com");
 
-	return server;
+    if (ok)
+    {
+        server = new TTelnetSocketServer("TELNET", 0x2000, Socket);
+        server->OnCommand = OnCommand;
+    }
+
+    return server;
+}
+
+/*##########################################################################
+#
+#   Name       : TTelnetSocketServerFactory::CheckFileExt
+#
+#   Purpose....: Check if path is valid file (with given extension)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TTelnetSocketServerFactory::CheckFileExt(const char *path, const char *ext)
+{
+    FFullPath = TString(path);
+    FFullPath += ext;
+
+    if (FFullPath.IsFile())
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TTelnetSocketServerFactory::CheckFileExt
+#
+#   Purpose....: Check if path + name is a valid file (with given extension)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TTelnetSocketServerFactory::CheckFileExt(const char *path, const char *name, const char *ext)
+{
+    TPathName pn(path);
+    pn += name;
+
+    return CheckFileExt(pn.Get().GetData(), ext);
+}
+
+/*##########################################################################
+#
+#   Name       : TTelnetSocketServerFactory::CheckPathFileExt
+#
+#   Purpose....: Find file through with path env var
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TTelnetSocketServerFactory::CheckPathFileExt(char *path, const char *name, const char *ext)
+{
+    char *ptr;
+
+    if (CheckFileExt(name, ext))
+        return TRUE;
+
+    while (*path)
+    {
+        ptr = strchr(path, ';');
+        if (ptr)
+        {
+            *ptr = 0;
+            if (CheckFileExt(path, name, ext))
+                return TRUE;
+
+            path = ptr + 1;
+        }
+        else
+            return CheckFileExt(path, name, ext);
+    }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TTelnetSocketServerFactory::CheckFile
+#
+#   Purpose....: Check if file is executable
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TTelnetSocketServerFactory::CheckFile(char *name, const char *ext)
+{
+    char *path;
+    TEnv *env;
+    int ok;
+        
+    if (strchr(name, '\\'))
+        if (CheckFileExt(name, ext))
+            return TRUE;
+
+    if (strchr(name, '/'))
+        if (CheckFileExt(name, ext))
+            return TRUE;
+
+    if (strchr(name, ':'))
+        if (CheckFileExt(name, ext))
+            return TRUE;
+
+    path = new char[512];
+    env = TEnv::OpenSysEnv();
+    if (env->Find("PATH", path))
+    {
+        ok = CheckPathFileExt(path, name, ext);
+        delete env;
+        delete path;
+        if (ok)
+            return TRUE;
+    }
+    else
+    {
+        delete env;
+        delete path;
+    }
+
+    return CheckFileExt(name, ext);
 }
