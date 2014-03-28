@@ -71,35 +71,6 @@ TTelnetSocketServerFactory::~TTelnetSocketServerFactory()
 
 /*##########################################################################
 #
-#   Name       : TTelnetSocketServerFactory::Create
-#
-#   Purpose....: Create a socket server instance
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSocketServer *TTelnetSocketServerFactory::Create(TTcpSocket *Socket)
-{
-    TTelnetSocketServer *server = 0;
-    int ok;
-
-    ok = CheckFile("command", ".exe");
-    if (!ok)
-        ok = CheckFile("command", ".com");
-
-    if (ok)
-    {
-        server = new TTelnetSocketServer("TELNET", 0x2000, Socket);
-        server->OnCommand = OnCommand;
-    }
-
-    return server;
-}
-
-/*##########################################################################
-#
 #   Name       : TTelnetSocketServerFactory::CheckFileExt
 #
 #   Purpose....: Check if path is valid file (with given extension)
@@ -220,4 +191,63 @@ int TTelnetSocketServerFactory::CheckFile(char *name, const char *ext)
     }
 
     return CheckFileExt(name, ext);
+}
+
+/*##########################################################################
+#
+#   Name       : TTelnetSocketServerFactory::StartShell
+#
+#   Purpose....: Start new shell
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TTelnetSocketServerFactory::StartShell(const char *param)
+{
+    TPathName StartupDir;
+    int ThreadId;
+    int Handle;
+
+    Handle = RdosSpawn(FFullPath.Get().GetData(), param, StartupDir.Get().GetData(), 0, 0, &ThreadId);
+    if (Handle)
+    {
+        RdosFreeProcessHandle(Handle);
+        return TRUE;
+    }
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TTelnetSocketServerFactory::Create
+#
+#   Purpose....: Create a socket server instance
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSocketServer *TTelnetSocketServerFactory::Create(TTcpSocket *Socket)
+{
+    TTelnetSocketServer *server = 0;
+    int ok;
+
+    ok = CheckFile("command", ".exe");
+    if (!ok)
+        ok = CheckFile("command", ".com");
+
+    if (ok)
+        ok = StartShell("");
+
+    if (ok)
+    {
+        server = new TTelnetSocketServer("TELNET", 0x2000, Socket);
+        server->OnCommand = OnCommand;
+    }
+
+    return server;
 }

@@ -46,7 +46,9 @@ protected:
     int CheckFileExt(const char *path, const char *name, const char *ext);
     int CheckPathFileExt(char *path, const char *name, const char *ext);
     int CheckFile(char *name, const char *ext);
-    
+    int StartShell(const char *param);
+
+    int SocketId;    
     TPathName FFullPath;    
 };
 
