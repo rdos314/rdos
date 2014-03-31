@@ -115,6 +115,7 @@ void cdecl main()
 //    if (IwsIp)
 //        Factory.SetMyIp(IwsIp);
 
+    Factory.AddUser("b-drive", "rdos", "b:\\");
     Factory.AddUser("c-drive", "rdos", "c:\\");
     Factory.AddUser("d-drive", "rdos", "d:\\");
     Factory.AddUser("e-drive", "rdos", "e:\\");
