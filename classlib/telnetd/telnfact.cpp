@@ -52,6 +52,7 @@ TTelnetSocketServerFactory::TTelnetSocketServerFactory(int Port, int MaxConnecti
   : TSocketServerFactory(Port, MaxConnections, BufferSize)
 {
     OnCommand = 0;
+    SocketId = 0;
 }
 
 /*##########################################################################
@@ -248,7 +249,7 @@ TSocketServer *TTelnetSocketServerFactory::Create(TTcpSocket *Socket)
         sprintf(IpcName, "TELNET.%d", SocketId);
         SocketId++;
         
-        ok = StartShell(IpcName);
+//        ok = StartShell(IpcName);
     }
 
     if (ok)

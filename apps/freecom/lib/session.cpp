@@ -91,6 +91,8 @@
 #define MAX_Y   24
 #define MAX_HISTORY 100
 
+#define STACK_SIZE      0x2000
+
 #define FALSE 0
 #define TRUE !FALSE
 
@@ -155,6 +157,18 @@ static TKeyboardDevice *Keyboard;
 
 int TSession::Count = 0;
 
+/*##################  IpcThread  ##############################################
+ *   Purpose....: Startup procedure for IPC thread                                             #
+ *   In params..: *                                                          #
+ *   Out params.: *                                                          #
+ *   Returns....: *                                                          #
+ *   Created....: 96-10-02 le                                                #
+ *##########################################################################*/
+static void IpcThread(void *ptr)
+{
+    ((TSession *)ptr)->IpcThread();
+}
+
 /*##########################################################################
 #
 #   Name       : TSession::TSession
@@ -173,19 +187,21 @@ TSession::TSession(const char *ipc)
 
     if (ipc)
     {
-        RdosDefineMailslot(ipc, 0x1000);
-        FInBuffer = new char[0x1000];
-        IpcPos = 0;
+        IpcName = TString(ipc);
+        IpcInPos = 0;
+        IpcOutPos = 0;
 
         FCmdFile = 0;
         FInputFile = 0;
         FOutputFile = 0;
         FErrorFile = 0;
+        FHasExit = FALSE;
+        FThreadExit = FALSE;
+
+        RdosCreateThread(::IpcThread, ipc, this, STACK_SIZE);
     }
     else
     {
-        FInBuffer = 0;
-        
         FCmdFile = new TFile("CON");
         FInputFile = new TFile("CON");
         FOutputFile = new TFile("CON");
@@ -277,7 +293,6 @@ TSession::TSession(const TSession &src)
 
     FArgList = 0;
     FEcho = TRUE;
-    FInBuffer = 0;
 
     if (src.FCmdFile->IsDevice())
         FCmdFile = new TFile("CON");
@@ -313,9 +328,6 @@ TSession::TSession(const TSession &src)
 ##########################################################################*/
 TSession::~TSession()
 {
-    if (FInBuffer)
-        delete FInBuffer;
-
     if (FCmdFile)
         delete FCmdFile;
 
@@ -871,6 +883,61 @@ int TSession::ReadCon(char *str, int maxsize)
 
 /*##########################################################################
 #
+#   Name       : TSession::ReadIpcOne
+#
+#   Purpose....: Read single char
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char TSession::ReadIpcOne()
+{
+    const char *ptr;
+    int size;
+
+    for (;;)
+    {
+        IpcSection.Enter();
+
+        size = IpcIn.GetSize();
+
+        if (size)
+        {
+            if (size > IpcInPos)
+            {
+                ptr = IpcIn.GetData();
+                ptr += IpcInPos;
+                IpcInPos++;
+                if (*ptr == 0xd)
+                {
+                    IpcSection.Leave();
+                    return *ptr;
+                }
+
+                if (*ptr != 0xa)
+                {
+                    IpcSection.Leave();
+                    return *ptr;
+                }
+            }
+            else
+            {
+                IpcInPos = 0;
+                IpcIn = TString("");
+            }
+        }
+
+        IpcSection.Leave();
+
+        if (!size)
+            IpcSignal.WaitForever();
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TSession::ReadIpc
 #
 #   Purpose....: Read a string from IPC
@@ -882,52 +949,159 @@ int TSession::ReadCon(char *str, int maxsize)
 ##########################################################################*/
 int TSession::ReadIpc(char *str, int maxsize)
 {
-    const char *ptr;
-    int size = 0;
-    int count = 0;
+    int OrgX;
+    int OrgY;
+    int CurrX;
+    int CurrY;
+    char ch;
+    int Count = 0;
+    int CurrPos = 0;
+    int i;
+    TString prev;
+    const char *prevstr;
+    int ok;
+    int GetNext = FALSE;
 
-    while (size == 0)
+    if (History->GotoFirst())
+        prev = History->Get();
+
+    prevstr = prev.GetData();
+
+    RdosGetCursorPosition(&OrgY, &OrgX);
+    CurrX = OrgX;
+    CurrY = OrgY;
+
+    memset(str, 0, maxsize);
+
+    for (;;)
     {
-        size = RdosReceiveMailslot(FInBuffer);
-        if (size > maxsize - 1)
-            size = maxsize - 1;
+        ch = ReadIpcOne();
 
-        if (size >= 0)
+        switch (ch)
         {
-            FInBuffer[size] = 0;
+            case 0x1b:
+                ch = ReadIpcOne();
+                if (ch != '[')
+                    break;
 
-            memset(str, 0, maxsize);
-            memcpy(str, FInBuffer, size);
+                ch = ReadIpcOne();
+                switch (ch)
+                {
+                    case 'A':
+                        if (GetNext)
+                            ok = History->GotoNext();
+                        else
+                        {
+                            ok = History->GotoFirst();
+                            GetNext = TRUE;
+                        }
+
+                        if (ok)
+                        {
+                            memset(str, ' ', Count);
+                            RdosSetCursorPosition(OrgY, OrgX);
+                            RdosWriteString(str);
+
+                            prev = History->Get();
+                            prevstr = prev.GetData();
+                            strcpy(str, prevstr);
+                            RdosSetCursorPosition(OrgY, OrgX);
+                            RdosWriteString(str);
+                            RdosGetCursorPosition(&CurrY, &CurrX);
+                            Count = strlen(str);
+                            CurrPos = Count;
+                            
+                            Write("\r\n");
+                            Write(str);
+                        }
+                        break;
+
+                    case 'B':
+                        if (History->GotoPrev())
+                        {
+                            memset(str, ' ', Count);
+                            RdosSetCursorPosition(OrgY, OrgX);
+                            RdosWriteString(str);
+
+                            prev = History->Get();
+                            prevstr = prev.GetData();
+                            strcpy(str, prevstr);
+                            RdosSetCursorPosition(OrgY, OrgX);
+                            RdosWriteString(str);
+                            RdosGetCursorPosition(&CurrY, &CurrX);
+                            Count = strlen(str);
+                            CurrPos = Count;
+
+                            Write("\r\n");
+                            Write(str);
+                        }
+                        break;
+
+                    case 'C':                                        
+                        if (CurrPos != Count)
+                        {
+                            CurrPos++;
+                            if (CurrX == MAX_X)
+                            {
+                                CurrX = 1;
+                                CurrY++;
+                            }
+                            else
+                                CurrX++;
+                            RdosSetCursorPosition(CurrY, CurrX);
+                        }
+                        break;
+
+                    case 'D':
+                        if (CurrPos)
+                        {
+                            CurrPos--;
+                            if (CurrX)
+                                CurrX--;
+                            else
+                            {
+                                CurrX = MAX_X;
+                                CurrY--;
+                            }
+                            RdosSetCursorPosition(CurrY, CurrX);
+                        }
+                        break;
+
+                    default:
+                        break;   
+
+                }
+                break;
+            
+            case 0xd:
+                if (Count)
+                {
+                    TString s(str);
+
+                    if (History->Find(s))
+                        History->RemoveCurrent();
+
+                    History->AddFirst(s);
+                    if (History->GetSize() >= MAX_HISTORY)
+                        History->RemoveLast();
+                }
+                RdosWriteString("\r\n");
+                return TRUE;
+
+            default:
+                if (CurrPos == Count)
+                    Count++;
+                str[CurrPos] = ch;
+                RdosWriteChar(str[CurrPos]);
+                RdosGetCursorPosition(&CurrY, &CurrX);
+                str[Count] = 0;
+
+                if (CurrX == 0)
+                    OrgY--;
+                CurrPos++;
+                break;
         }
-
-        count = IpcOut.GetSize();
-        if (count)
-        {
-            ptr = IpcOut.GetData();
-            count -= IpcPos;
-
-            if (count < 0)
-                count = 0;
-            ptr += IpcPos;
-        }
-        else
-            ptr = 0;
-
-        if (count > 0x1000)
-            count = 0x1000;
-                       
-        RdosReplyMailslot(ptr, count);
-
-        if (count == 0)
-        {
-            IpcPos = 0;
-            IpcOut = TString("");
-        }
-        else
-            IpcPos += count;
     }
-
-    return TRUE;
 }
 
 /*##########################################################################
@@ -1276,10 +1450,7 @@ int TSession::ReadCmd(char *str, int maxsize)
     else
     {
         if (ReadIpc(str, maxsize))
-        {
-            printf(str);
             return TRUE;
-        }
     }
     return FALSE;
 }
@@ -1467,6 +1638,14 @@ void TSession::Run()
             }
         }
     }
+
+    if (!FInputFile)
+    {
+        FHasExit = TRUE;
+
+        while (!FThreadExit)
+            RdosWaitMilli(100);
+    }
 }
 
 /*##########################################################################
@@ -1558,4 +1737,71 @@ int TSession::Run(const char *name, TArg *ArgList)
     }
     else
         return 1;
+}
+
+/*##########################################################################
+#
+#   Name       : TSession::IpcThread
+#
+#   Purpose....: IPC handler thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSession::IpcThread()
+{
+    int size;
+    const char *ptr;
+    char *InBuf = new char[0x1001];
+
+    RdosWaitMilli(50);
+
+    RdosDefineMailslot(IpcName.GetData(), 0x1000);
+
+    while (!FHasExit)
+    {
+        size = RdosReceiveMailslot(InBuf);
+        InBuf[size] = 0;
+
+        if (size)
+            IpcSignal.Signal();
+
+        IpcSection.Enter();
+
+        IpcIn += InBuf;
+
+        size = IpcOut.GetSize();
+        if (size)
+        {
+            ptr = IpcOut.GetData();
+            size -= IpcOutPos;
+
+            if (size < 0)
+                size = 0;
+            ptr += IpcOutPos;
+        }
+        else
+            ptr = 0;
+
+        if (size > 0x1000)
+            size = 0x1000;
+                       
+        RdosReplyMailslot(ptr, size);
+        
+        if (size == 0)
+        {
+            IpcOutPos = 0;
+            IpcOut = TString("");
+        }
+        else
+            IpcOutPos += size;
+
+        IpcSection.Leave();
+    }
+
+    delete InBuf;    
+
+    FThreadExit = TRUE;
 }

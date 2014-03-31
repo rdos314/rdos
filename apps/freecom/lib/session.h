@@ -34,6 +34,7 @@
 #include "part.h"
 #include "strlist.h"
 #include "keyboard.h"
+#include "sigdev.h"
 
 class TArg;
 
@@ -65,6 +66,7 @@ public:
 
     void DisplayPrompt();
     int ReadCon(char *str, int maxsize);
+    char ReadIpcOne();
     int ReadIpc(char *str, int maxsize);
 
     void SetCmdFile(TFile *File);
@@ -77,6 +79,8 @@ public:
     TFile *GetOutputFile();
     TFile *GetErrorFile();
 
+    void IpcThread();
+
 protected:
     void WriteWelcome();
     TString FormatTime(TDateTime &time);
@@ -85,9 +89,17 @@ protected:
     const char *GetArg(int ArgNr);
     TString ExpandParam(const char *param);
 
-    char *FInBuffer;
+    TString IpcName;
+
+    TSignalDevice IpcSignal;
+    TSection IpcSection;
+    TString IpcIn;
+    int IpcInPos;
     TString IpcOut;
-    int IpcPos;
+    int IpcOutPos;
+
+    int FHasExit;
+    int FThreadExit;
     
     TFile *FCmdFile;
     TFile *FInputFile;
