@@ -249,7 +249,7 @@ TSocketServer *TTelnetSocketServerFactory::Create(TTcpSocket *Socket)
         sprintf(IpcName, "TELNET.%d", SocketId);
         SocketId++;
         
-//        ok = StartShell(IpcName);
+        ok = StartShell(IpcName);
     }
 
     if (ok)

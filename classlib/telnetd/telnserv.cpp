@@ -95,7 +95,7 @@ void TTelnetSocketServer::HandleSocket()
     
     if (FSocket->WaitForConnection(6000))
     {
-        if (FSocket->WaitForData(5000))
+        if (FSocket->WaitForData(250))
             count = FSocket->Read(Buf, BUF_SIZE);
 
         while (FSocket->IsOpen())
@@ -134,8 +134,8 @@ void TTelnetSocketServer::HandleSocket()
         }
     }
 
-    strcpy(Msg, "exit\r\n");
-    RdosSendMailslot(FIpcHandle, Msg, strlen(Msg), ReplyBuf, BUF_SIZE);
+    Msg[0] = 0;
+    RdosSendMailslot(FIpcHandle, Msg, 1, ReplyBuf, BUF_SIZE);
 
     delete Buf;
     delete ReplyBuf;

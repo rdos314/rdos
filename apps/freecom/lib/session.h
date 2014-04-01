@@ -98,7 +98,6 @@ protected:
     TString IpcOut;
     int IpcOutPos;
 
-    int FHasExit;
     int FThreadExit;
     
     TFile *FCmdFile;

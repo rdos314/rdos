@@ -195,7 +195,6 @@ TSession::TSession(const char *ipc)
         FInputFile = 0;
         FOutputFile = 0;
         FErrorFile = 0;
-        FHasExit = FALSE;
         FThreadExit = FALSE;
 
         RdosCreateThread(::IpcThread, ipc, this, STACK_SIZE);
@@ -1629,7 +1628,8 @@ void TSession::Run()
             if (cmd->IsExit())
             {
                 delete cmd;
-                break;
+                if (FInputFile || FThreadExit)
+                    break;
             }
             else
             {                   
@@ -1640,12 +1640,7 @@ void TSession::Run()
     }
 
     if (!FInputFile)
-    {
-        FHasExit = TRUE;
-
-        while (!FThreadExit)
-            RdosWaitMilli(100);
-    }
+        RdosWaitMilli(50);
 }
 
 /*##########################################################################
@@ -1760,10 +1755,16 @@ void TSession::IpcThread()
 
     RdosDefineMailslot(IpcName.GetData(), 0x1000);
 
-    while (!FHasExit)
+    while (!FThreadExit)
     {
         size = RdosReceiveMailslot(InBuf);
         InBuf[size] = 0;
+
+        if (size == 1 && InBuf[0] == 0)
+        {
+            strcpy(InBuf, "exit\r\n");
+            FThreadExit = TRUE;
+        }
 
         if (size)
             IpcSignal.Signal();
@@ -1802,6 +1803,4 @@ void TSession::IpcThread()
     }
 
     delete InBuf;    
-
-    FThreadExit = TRUE;
 }
