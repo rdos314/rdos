@@ -44,10 +44,12 @@ code    SEGMENT byte public USE32 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+ extern Start_:near
+
 public __DLLstart_
 
 __DLLstart_:
-    int 3
+    jmp Start_
 
 code    ENDS
 
