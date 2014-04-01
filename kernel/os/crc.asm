@@ -282,8 +282,8 @@ delete_handle   Proc far
     mov ax,CRC_HANDLE
     DerefHandle
     jc delete_handle_done
-;
-    mov es,bx
+;    
+    mov es,[ebx].crc_handle_sel
     FreeMem
     FreeHandle
     clc

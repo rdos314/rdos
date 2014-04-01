@@ -1811,7 +1811,11 @@ unload_exe      Proc far
     pop bx
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ax,ds:p_app_sel
+    verr ax
+    jnz unload_terminate
+;
+    mov ds,ax 
     pop ax
     or bx,bx
     jz unload_exe
