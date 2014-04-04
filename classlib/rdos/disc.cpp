@@ -28,11 +28,11 @@
 #include "rdos.h"
 #include "disc.h"
 
-#define FALSE	0
-#define TRUE	!FALSE
+#define FALSE   0
+#define TRUE    !FALSE
 
 /*##################  TDisc::TDisc  #############
-*   Purpose....: Disc constructor							                    #
+*   Purpose....: Disc constructor                                               #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -44,7 +44,7 @@ TDisc::TDisc()
 }
 
 /*##################  TDisc::TDisc  #############
-*   Purpose....: Disc constructor							                    #
+*   Purpose....: Disc constructor                                               #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -56,7 +56,7 @@ TDisc::TDisc(int Disc)
 }
 
 /*##################  TDisc::Define  #############
-*   Purpose....: Define disc							                    #
+*   Purpose....: Define disc                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -64,23 +64,23 @@ TDisc::TDisc(int Disc)
 *##########################################################################*/
 void TDisc::Define(int Disc)
 {
-	FDisc = Disc;
-	FValid = RdosGetDiscInfo(Disc, &FBytesPerSector, &FSectors, &FSectorsPerCyl, &FHeads);
+    FDisc = Disc;
+    FValid = RdosGetDiscInfo(Disc, &FBytesPerSector, &FSectors, &FSectorsPerCyl, &FHeads);
 
-	if (FValid && FBytesPerSector == 0)
-    	FValid = FALSE;
+    if (FValid && FBytesPerSector == 0)
+        FValid = FALSE;
 
-	if (!FValid)
-	{
-	    FBytesPerSector = 0;
-	    FSectors = 0;
-	    FSectorsPerCyl = 0;
-	    FHeads = 0;
-	}
+    if (!FValid)
+    {
+        FBytesPerSector = 0;
+        FSectors = 0;
+        FSectorsPerCyl = 0;
+        FHeads = 0;
+    }
 }
 
 /*##################  TDisc::~TDisc  #############
-*   Purpose....: Disc destructor							                    #
+*   Purpose....: Disc destructor                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -91,7 +91,7 @@ TDisc::~TDisc()
 }
 
 /*##################  TDisc::IsValid  #############
-*   Purpose....: Is disc valid?						                    #
+*   Purpose....: Is disc valid?                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -103,7 +103,7 @@ int TDisc::IsValid()
 }
 
 /*##################  TDisc::GetDiscNr  #############
-*   Purpose....: Get disc #						                    #
+*   Purpose....: Get disc #                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -112,13 +112,13 @@ int TDisc::IsValid()
 int TDisc::GetDiscNr()
 {
     if (FValid)
-    	return FDisc;
+        return FDisc;
     else
         return 0;
 }
 
 /*##################  TDisc::GetBytesPerSector  #############
-*   Purpose....: Get bytes per sector						                    #
+*   Purpose....: Get bytes per sector                                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -126,23 +126,23 @@ int TDisc::GetDiscNr()
 *##########################################################################*/
 int TDisc::GetBytesPerSector()
 {
-	return FBytesPerSector;
+    return FBytesPerSector;
 }
 
 /*##################  TDisc::GetTotalSectors  #############
-*   Purpose....: Get total sectors on disc		  		                    #
+*   Purpose....: Get total sectors on disc                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-long TDisc::GetTotalSectors()
+long long TDisc::GetTotalSectors()
 {
-	return FSectors;
+    return FSectors;
 }
 
 /*##################  TDisc::GetSectorsPerCyl  #############
-*   Purpose....: Get sectors per cylinder		  		                    #
+*   Purpose....: Get sectors per cylinder                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -150,11 +150,11 @@ long TDisc::GetTotalSectors()
 *##########################################################################*/
 int TDisc::GetSectorsPerCyl()
 {
-	return FSectorsPerCyl;
+    return FSectorsPerCyl;
 }
 
 /*##################  TDisc::GetHeads  #############
-*   Purpose....: Get heads		  		                    #
+*   Purpose....: Get heads                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -162,7 +162,7 @@ int TDisc::GetSectorsPerCyl()
 *##########################################################################*/
 int TDisc::GetHeads()
 {
-	return FHeads;
+    return FHeads;
 }
 
 /*##################  TDisc::Read  #############
@@ -174,7 +174,7 @@ int TDisc::GetHeads()
 *##########################################################################*/
 int TDisc::Read(long Sector, char *buf, int size)
 {
-	return RdosReadDisc(FDisc, Sector, buf, size);
+    return RdosReadDisc(FDisc, Sector, buf, size);
 }
 
 /*##################  TDisc::Write  #############
@@ -186,11 +186,11 @@ int TDisc::Read(long Sector, char *buf, int size)
 *##########################################################################*/
 int TDisc::Write(long Sector, const char *buf, int size)
 {
-	return RdosWriteDisc(FDisc, Sector, buf, size);
+    return RdosWriteDisc(FDisc, Sector, buf, size);
 }
 
 /*##################  TDisc::GetDrive  #############
-*   Purpose....: Get drive from physical sectors							                    #
+*   Purpose....: Get drive from physical sectors                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -204,16 +204,16 @@ int TDisc::GetDrive(long Start, long Size)
     long DriveSize;
 
     for (DriveNr = 0; DriveNr < 25; DriveNr++)
-	    if (RdosGetDriveDiscParam(DriveNr, &DiscNr, &StartSector, &DriveSize))
-	        if (DiscNr == FDisc)
-			    if (Start == StartSector)
-					return DriveNr;
+        if (RdosGetDriveDiscParam(DriveNr, &DiscNr, &StartSector, &DriveSize))
+            if (DiscNr == FDisc)
+                if (Start == StartSector)
+                    return DriveNr;
 
     return 0;
 }
 
 /*##################  TDisc::ChsToLba  #############
-*   Purpose....: Convert CHS to LBA						                    #
+*   Purpose....: Convert CHS to LBA                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -221,31 +221,31 @@ int TDisc::GetDrive(long Start, long Size)
 *##########################################################################*/
 long TDisc::ChsToLba(const char *Data)
 {
-	int chs[3];
-	int BiosHead;
-	int BiosSector;
-	int BiosCyl;
+    int chs[3];
+    int BiosHead;
+    int BiosSector;
+    int BiosCyl;
 
-	chs[0] = *(unsigned char *)Data;
-	chs[1] = *(unsigned char *)(Data + 1);
-	chs[2] = *(unsigned char *)(Data + 2);
+    chs[0] = *(unsigned char *)Data;
+    chs[1] = *(unsigned char *)(Data + 1);
+    chs[2] = *(unsigned char *)(Data + 2);
 
-	BiosCyl = chs[2];
-	BiosCyl += (chs[1] & 0xC0) << 2;
-	BiosSector = chs[1] & 0x3F;
-	BiosHead = chs[0];
+    BiosCyl = chs[2];
+    BiosCyl += (chs[1] & 0xC0) << 2;
+    BiosSector = chs[1] & 0x3F;
+    BiosHead = chs[0];
 
-	if (BiosCyl == 1023)
-		return 0;
+    if (BiosCyl == 1023)
+        return 0;
 
-	if (BiosSector == 0)
-		return 0;
+    if (BiosSector == 0)
+        return 0;
 
-	return BiosSector + FSectorsPerCyl * (BiosHead + FHeads * BiosCyl) - 1;
+    return BiosSector + FSectorsPerCyl * (BiosHead + FHeads * BiosCyl) - 1;
 }
 
 /*##################  TDisc::LbaToChs  #############
-*   Purpose....: Convert LBA to CHS						                    #
+*   Purpose....: Convert LBA to CHS                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -253,26 +253,26 @@ long TDisc::ChsToLba(const char *Data)
 *##########################################################################*/
 void TDisc::LbaToChs(long Sector, char *Data)
 {
-	int BiosHead;
-	int BiosSector;
-	int BiosCyl;
+    int BiosHead;
+    int BiosSector;
+    int BiosCyl;
 
-	BiosCyl = Sector / FSectorsPerCyl / FHeads;
-	if (BiosCyl >= 1024)
-	{
-		BiosCyl = 1023;
-		BiosHead = FHeads - 1;
-		BiosSector = FSectorsPerCyl;
-	}
-	else
-	{
-		Sector = Sector - BiosCyl * FSectorsPerCyl * FHeads;
-		BiosHead = Sector / FSectorsPerCyl;
-		BiosSector = Sector - BiosHead * FSectorsPerCyl + 1;
-	}
+    BiosCyl = Sector / FSectorsPerCyl / FHeads;
+    if (BiosCyl >= 1024)
+    {
+        BiosCyl = 1023;
+        BiosHead = FHeads - 1;
+        BiosSector = FSectorsPerCyl;
+    }
+    else
+    {
+        Sector = Sector - BiosCyl * FSectorsPerCyl * FHeads;
+        BiosHead = Sector / FSectorsPerCyl;
+        BiosSector = Sector - BiosHead * FSectorsPerCyl + 1;
+    }
 
-	*Data = (char)BiosHead;
-	*(Data + 1) = (char)BiosSector;
-	*(Data + 2) = (char)BiosCyl;
-	*(Data + 1) |= (char)((BiosCyl >> 2) & 0xC0);
+    *Data = (char)BiosHead;
+    *(Data + 1) = (char)BiosSector;
+    *(Data + 2) = (char)BiosCyl;
+    *(Data + 1) |= (char)((BiosCyl >> 2) & 0xC0);
 }

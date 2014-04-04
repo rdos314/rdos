@@ -1668,7 +1668,7 @@ GetFloppyDisc     MACRO
 
 ;	IN	AL			Disc #
 ;	OUT	CX			Bytes / sector
-;	OUT	EDX			Total # of sectors
+;	OUT	EDX:EAX	    Total # of sectors
 ;	OUT SI			BIOS sectors / cylinder
 ;	OUT DI			BIOS heads
 GetDiscInfo     MACRO

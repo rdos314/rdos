@@ -4350,14 +4350,75 @@ reset_drive     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GET_OLD_DISC_INFO
+;
+;           DESCRIPTION:    Get 32-bit disc info
+;
+;           PARAMETERS:     AL              Disc #
+;
+;           RETURNS;        CX              Bytes / sector
+;                           EDX             Total sectors
+;                           SI              BIOS sectors / cylinder
+;                           DI              BIOS heads
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_old_disc_info_name      DB 'Get Old Disc Info',0
+
+get_old_disc_info   PROC far
+    push ds
+    push eax
+    push bx
+;
+    cmp al,MAX_DRIVES
+    jae get_old_disc_info_fail
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx bx,al
+    add bx,bx
+    mov bx,ds:[bx].disc_def_arr
+    or bx,bx
+    jz get_old_disc_info_fail
+;
+    mov ds,bx
+    mov eax,ds:disc_units
+    mul ds:disc_sectors_per_unit
+    push dx
+    push ax
+    pop edx
+    mov cx,ds:disc_bytes_per_sector
+    mov si,ds:disc_sectors_per_cyl
+    mov di,ds:disc_heads
+    clc
+    jmp get_old_disc_info_done
+
+get_old_disc_info_fail:
+    xor cx,cx
+    xor edx,edx
+    xor si,si
+    xor di,di
+    stc
+
+get_old_disc_info_done:
+    pop bx
+    pop eax
+    pop ds  
+    retf32
+get_old_disc_info   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GET_DISC_INFO
 ;
 ;           DESCRIPTION:    Get disc info
 ;
-;           PARAMETERS:         AL              Disc #
+;           PARAMETERS:     AL              Disc #
 ;
 ;           RETURNS;        CX              Bytes / sector
-;                           EDX             Total sectors
+;                           EDX:EAX         Total sectors
 ;                           SI              BIOS sectors / cylinder
 ;                           DI              BIOS heads
 ;
@@ -4367,7 +4428,6 @@ get_disc_info_name      DB 'Get Disc Info',0
 
 get_disc_info   PROC far
     push ds
-    push eax
     push bx
 ;
     cmp al,MAX_DRIVES
@@ -4382,11 +4442,8 @@ get_disc_info   PROC far
     jz get_disc_info_fail
 ;
     mov ds,bx
-    mov eax,ds:disc_units
-    mul ds:disc_sectors_per_unit
-    push dx
-    push ax
-    pop edx
+    movzx eax,ds:disc_sectors_per_unit
+    mul ds:disc_units
     mov cx,ds:disc_bytes_per_sector
     mov si,ds:disc_sectors_per_cyl
     mov di,ds:disc_heads
@@ -4395,6 +4452,7 @@ get_disc_info   PROC far
 
 get_disc_info_fail:
     xor cx,cx
+    xor eax,eax
     xor edx,edx
     xor si,si
     xor di,di
@@ -4402,7 +4460,6 @@ get_disc_info_fail:
 
 get_disc_info_done:
     pop bx
-    pop eax
     pop ds  
     retf32
 get_disc_info   Endp
@@ -4415,8 +4472,8 @@ get_disc_info   Endp
 ;
 ;           DESCRIPTION:    Set disc info
 ;
-;           PARAMETERS:         AL              Disc #
-;               CX              Bytes / sector
+;           PARAMETERS:     AL              Disc #
+;                           CX              Bytes / sector
 ;                           EDX             Total sectors
 ;                           SI              BIOS sectors / cylinder
 ;                           DI              BIOS heads
@@ -5617,6 +5674,12 @@ init    PROC far
     mov edi,OFFSET reset_drive_name
     mov ax,reset_drive_nr
     RegisterOsGate
+;
+    mov esi,OFFSET get_old_disc_info
+    mov edi,OFFSET get_old_disc_info_name
+    xor dx,dx
+    mov ax,get_old_disc_info_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_disc_info
     mov edi,OFFSET get_disc_info_name

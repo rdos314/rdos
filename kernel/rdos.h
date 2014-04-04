@@ -616,7 +616,7 @@ int RDOSAPI RdosGetIdeDisc(int UnitNr);
 int RDOSAPI RdosGetFloppyDisc(int UnitNr);
 
 int RDOSAPI RdosSetDiscInfo(int DiscNr, int SectorSize, long Sectors, int BiosSectorsPerCyl, int BiosHeads);
-int RDOSAPI RdosGetDiscInfo(int DiscNr, int *SectorSize, long *Sectors, int *BiosSectorsPerCyl, int *BiosHeads);
+int RDOSAPI RdosGetDiscInfo(int DiscNr, int *SectorSize, long long *Sectors, int *BiosSectorsPerCyl, int *BiosHeads);
 int RDOSAPI RdosReadDisc(int DiscNr, long Sector, char *Buf, int Size);
 int RDOSAPI RdosWriteDisc(int DiscNr, long Sector, const char *Buf, int Size);
 

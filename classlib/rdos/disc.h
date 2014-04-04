@@ -39,7 +39,7 @@ public:
     int IsValid();
 	int GetDiscNr();
 	int GetBytesPerSector();
-	long GetTotalSectors();
+	long long GetTotalSectors();
 	int GetSectorsPerCyl();
 	int GetHeads();
 
@@ -56,7 +56,7 @@ protected:
 
 	int FDisc;
 	int FBytesPerSector;
-	long FSectors;
+	long long FSectors;
 	int FSectorsPerCyl;
 	int FHeads;
 	int FValid;

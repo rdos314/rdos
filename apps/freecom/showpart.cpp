@@ -273,21 +273,23 @@ void TShowPartitionCommand::ShowTree(TDiscPartition *Part)
 ##########################################################################*/
 void TShowPartitionCommand::ShowTable(TDiscPartition *Part)
 {
-        int i;
-        TDisc *Disc;
+    int i;
+    TDisc *Disc;
+    long long TotalSectors;
 
-        Disc = Part->GetDisc();
+    Disc = Part->GetDisc();
+    TotalSectors = Disc->GetTotalSectors();
 
-        Write("\r\n");
+    Write("\r\n");
 
-        FMsg.printf(TEXT_SHOWPART_DISC_LONG, Disc->GetDiscNr(), Disc->GetTotalSectors(), Disc->GetSectorsPerCyl(), Disc->GetHeads());
-        Write(FMsg.GetData());
+    FMsg.printf(TEXT_SHOWPART_DISC_LONG, Disc->GetDiscNr(), (int)(TotalSectors >> 32), (int)(TotalSectors & 0xFFFFFFFF), Disc->GetSectorsPerCyl(), Disc->GetHeads());
+    Write(FMsg.GetData());
 
-        FMsg.Load(TEXT_SHOWPART_HEADER);
-        Write(FMsg.GetData());
+    FMsg.Load(TEXT_SHOWPART_HEADER);
+    Write(FMsg.GetData());
 
-        for (i = 0; i < Part->PartCount; i++)
-                ShowEntry(i, Part->PartArr[i]);
+    for (i = 0; i < Part->PartCount; i++)
+        ShowEntry(i, Part->PartArr[i]);
 }
 
 /*##########################################################################
@@ -308,11 +310,15 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
     TGptPartition *Entry;
     long double TotalSpace;
     char name[10];
+    char guid[32];
     char str[80];
+    long long TotalSectors = Disc->GetTotalSectors();
+    long long Start;
+    long long End;
 
     DiscPart = new TGptDiscPartition(Disc);
 
-    FMsg.printf(TEXT_SHOWPART_DISC_GPT, Disc->GetDiscNr(), Disc->GetTotalSectors());
+    FMsg.printf(TEXT_SHOWPART_DISC_GPT, Disc->GetDiscNr(), (int)(TotalSectors >> 32), (int)(TotalSectors & 0xFFFFFFFF));
     Write(FMsg.GetData());
 
     FMsg.Load(TEXT_SHOWPART_GPT_HEADER);
@@ -326,15 +332,20 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
         memcpy(name, Entry->Name, 8);
         name[8] = 0;
         TotalSpace = Entry->GetTotalSpace();
+        memcpy(guid, Entry->GuidStr, 24);
+        guid[24] = 0;
+
+        Start = Entry->Start;
+        End = Entry->Start + Entry->Size - 1;
 
         sprintf(str,
-                    "%d: -- %08lX-%08lX %8s %6ld MB %s\r\n",
+                    "%d: -- %04lX_%08lX-%04lX_%08lX %8s %8ld MB %s\r\n",
                     i,
-                    Entry->Start,
-                    Entry->Start + Entry->Size - 1,
+                    (int)(Start >> 32), (int)(Start & 0xFFFFFFFF),
+                    (int)(End >> 32), (int)(End & 0xFFFFFFFF),
                     Entry->Name,
                     (int)TotalSpace,
-                    Entry->GuidStr);
+                    guid);
 
         Write(str);        
     }

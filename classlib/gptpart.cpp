@@ -198,8 +198,8 @@ TGptPartition::TGptPartition(TDisc *Disc, const char *Guid, long long StartSecto
     if (EndSector <= 0xFFFFFFFF && StartSector > 0)
     {
         Usable = TRUE;
-        Start = (long)StartSector;
-        Size = (long)(EndSector - StartSector) + 1;
+        Start = StartSector;
+        Size = (EndSector - StartSector) + 1;
         FDisc = Disc;
         UuidToStr(Guid, GuidStr);
 
@@ -240,6 +240,9 @@ TGptPartition::TGptPartition(TDisc *Disc, const char *Guid, long long StartSecto
             mspart = TRUE;
         }
         
+        if (!strcmp(GuidStr, "0657FD6D-A4AB-43C4-84E5-0933C84B4F4F"))
+            strcpy(GuidStr, "Linux Swap");
+
         if (mspart)
             GetMsFsName();
         else
@@ -273,6 +276,11 @@ void TGptPartition::GetMsFsName()
                 Name[8] = 0;
                 break;
 
+            case 'm':
+                memcpy(Name, &Buf[0x36], 8);
+                Name[8] = 0;
+                break;
+                
             default:
                 memcpy(Name, &Buf[3], 8);
                 Name[8] = 0;

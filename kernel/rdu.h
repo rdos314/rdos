@@ -112,7 +112,7 @@
 #define usergate_ip_to_name 0x00000066
 #define usergate_ping 0x00000067
 
-#define usergate_get_disc_info 0x00000068
+#define usergate_get_old_disc_info 0x00000068
 #define usergate_format_drive 0x00000069
 #define usergate_get_rdfs_info 0x0000006A
 #define usergate_read_disc 0x0000006B
@@ -691,6 +691,8 @@
 #define usergate_get_mac_address 0x00000224
 #define usergate_create_uuid 0x00000225
 
+#define usergate_get_disc_info 0x00000226
+
 
 
 #ifdef __FLAT__
@@ -808,7 +810,7 @@
 #define CallGate_ip_to_name 0x67 0x9a 102 0 0 0 3 0
 #define CallGate_ping 0x67 0x9a 103 0 0 0 3 0
 
-#define CallGate_get_disc_info 0x67 0x9a 104 0 0 0 3 0
+#define CallGate_get_old_disc_info 0x67 0x9a 104 0 0 0 3 0
 #define CallGate_format_drive 0x67 0x9a 105 0 0 0 3 0
 #define CallGate_get_rdfs_info 0x67 0x9a 106 0 0 0 3 0
 #define CallGate_read_disc 0x67 0x9a 107 0 0 0 3 0
@@ -1387,6 +1389,8 @@
 #define CallGate_get_mac_address 0x67 0x9a 36 2 0 0 3 0
 #define CallGate_create_uuid 0x67 0x9a 37 2 0 0 3 0
 
+#define CallGate_get_disc_info 0x67 0x9a 38 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1502,7 +1506,7 @@
 #define CallGate_ip_to_name 0x3e 0x67 0x9a 102 0 0 0 3 0
 #define CallGate_ping 0x3e 0x67 0x9a 103 0 0 0 3 0
 
-#define CallGate_get_disc_info 0x3e 0x67 0x9a 104 0 0 0 3 0
+#define CallGate_get_old_disc_info 0x3e 0x67 0x9a 104 0 0 0 3 0
 #define CallGate_format_drive 0x3e 0x67 0x9a 105 0 0 0 3 0
 #define CallGate_get_rdfs_info 0x3e 0x67 0x9a 106 0 0 0 3 0
 #define CallGate_read_disc 0x3e 0x67 0x9a 107 0 0 0 3 0
@@ -2080,5 +2084,7 @@
 
 #define CallGate_get_mac_address 0x3e 0x67 0x9a 36 2 0 0 3 0
 #define CallGate_create_uuid 0x3e 0x67 0x9a 37 2 0 0 3 0
+
+#define CallGate_get_disc_info 0x3e 0x67 0x9a 38 2 0 0 3 0
 
 #endif

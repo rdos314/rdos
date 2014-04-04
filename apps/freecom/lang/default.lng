@@ -1478,7 +1478,7 @@ Disc %d not found
 .
 
 :TEXT_SHOWPART_DISC_LONG
-Disc %d %08lX BIOS sectors / cyl %04X, heads %04X
+Disc %d %04lX_%08lX BIOS sectors / cyl %04X, heads %04X
 .
 
 :TEXT_SHOWPART_DISC_SHORT
@@ -1495,11 +1495,11 @@ Disc %d
 .
 
 :TEXT_SHOWPART_DISC_GPT
-Disc %d %08lX
+Disc %d %04lX_%08lX
 .
 
 :TEXT_SHOWPART_GPT_HEADER
-  DRV      SECTORS       FILESYS      SIZE GUID
+  DRV           SECTORS            FILESYS        SIZE GUID
 .
 
 :TEXT_CMDHELP_RMPART

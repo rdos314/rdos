@@ -42,8 +42,8 @@ public:
     double GetTotalSpace();
 
 	int Usable;
-	long Start;
-	long Size;
+	long long Start;
+	long long Size;
 	TDisc *FDisc;
 	char GuidStr[40];
 	char Name[40];

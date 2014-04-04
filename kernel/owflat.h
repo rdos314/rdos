@@ -2269,7 +2269,8 @@
     "movzx ecx,cx" \
     "mov [ebx],ecx" \
     "pop ebx" \
-    "mov [ebx],edx" \
+    "mov [ebx],eax" \
+    "mov [ebx+4],edx" \
     "pop ebx" \
     "movzx esi,si" \
     "mov [ebx],esi" \

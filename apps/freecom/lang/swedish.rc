@@ -635,13 +635,13 @@ STRINGTABLE
  1654, "  [disc]          Anger en specifik disk\r\n";
  1655, "  /D              Visar detaljerad information om partitionstabeller\r\n";
  1656, "Disc %d not found\r\n";
- 1657, "Disc %d %08lX BIOS sectors / cyl %04X, heads %04X\r\n";
+ 1657, "Disc %d %04lX_%08lX BIOS sectors / cyl %04X, heads %04X\r\n";
  1658, "Disc %d\r\n";
  1659, "\r\n";
  1660, "  DRV TYPE    SECTORS       FILESYS         TOTAL SIZE          FREE SIZE\r\n";
  1661, "%d: -- No entry\r\n";
- 1662, "Disc %d %08lX\r\n";
- 1663, "  DRV      SECTORS       FILESYS      SIZE GUID\r\n";
+ 1662, "Disc %d %04lX_%08lX\r\n";
+ 1663, "  DRV           SECTORS            FILESYS        SIZE GUID\r\n";
  1664, "Remove harddrive partition\r\n";
  1665, "\r\n";
  1666, "RMPART [/Y] disc part\r\n";

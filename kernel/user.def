@@ -112,7 +112,7 @@ name_to_ip_nr				= 101
 ip_to_name_nr				= 102
 ping_nr						= 103 
 
-get_disc_info_nr			= 104
+get_old_disc_info_nr	    = 104
 format_drive_nr				= 105
 get_rdfs_info_nr			= 106
 read_disc_nr				= 107
@@ -690,5 +690,7 @@ check_can_serial_port_nr        = 547
 
 get_mac_address_nr              = 548
 create_uuid_nr                  = 549
+
+get_disc_info_nr	            = 550
 
 usergate_entries			    = 560
