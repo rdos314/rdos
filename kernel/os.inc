@@ -2577,7 +2577,7 @@ StopDisc    MACRO
 ;       IN  AX      Sectors per unit
 ;       IN  BX      Disc sel
 ;       IN  CX      Bytes per sector
-;       IN  DX      Units
+;       IN  EDX     Units
 ;       IN  SI      BIOS sectors / cylinder
 ;       IN  DI      BIOS heads
 SetDiscParam    MACRO
@@ -2668,7 +2668,7 @@ FlushDrive      MACRO
 ;       OUT     EAX         Readahead
 ;       OUT     ECX     Size
 ;       OUT     SI      Sectors per unit
-;       OUT     DI      Units
+;       OUT     EDI     Units
 GetDriveParam   MACRO
     OsGate get_drive_param_nr
                     ENDM

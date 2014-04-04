@@ -525,9 +525,9 @@ CreateFileSel   PROC near
 ;
     mov al,bl
     push si
-    push di
+    push edi
     GetDriveParam
-    pop di
+    pop edi
     pop si
     jnc crfs_ok_params
 ;
