@@ -1433,7 +1433,7 @@ dtInsDo:
 ;
     call CalcParam
     mov ax,fs:disc_sectors_per_unit
-    mov dx,fs:disc_units
+    movzx edx,fs:disc_units
     mov cx,512
     mov si,-1
     mov di,-1

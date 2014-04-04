@@ -56,7 +56,7 @@ disc_def_struc      STRUC
 
 disc_nr                 DB ?
 disc_flags              DB ?
-disc_units                  DW ?
+disc_units              DD ?
 disc_bytes_per_sector   DW ?
 disc_sectors_per_unit   DW ?
 disc_sectors_per_cyl    DW ?
@@ -883,7 +883,7 @@ swap_disc   Proc near
     mov ax,ds
     mov es,ax
     mov edi,OFFSET disc_unit_arr
-    movzx ecx,ds:disc_units
+    mov ecx,ds:disc_units
 
 swap_unit_loop:
     or ecx,ecx
@@ -1857,7 +1857,7 @@ stop_disc       Endp
 ;           PARAMETERS:         AX          Sectors per unit
 ;                           BX          Disc sel
 ;                           CX          Bytes per sector
-;                           DX          Units
+;                           EDX         Units
 ;                           SI          BIOS sectors / cylinder
 ;                           DI          BIOS heads
 ;
@@ -1876,7 +1876,7 @@ set_disc_param  Proc far
     mov ds,bx
     mov ds:disc_sectors_per_unit,ax
     mov ds:disc_bytes_per_sector,cx
-    mov ds:disc_units,dx
+    mov ds:disc_units,edx
     mov ds:disc_sectors_per_cyl,si
     mov ds:disc_heads,di
 ;
@@ -2184,13 +2184,13 @@ new_disc_request_name   DB 'New Disc Request', 0
 new_disc_request    Proc far
     push ds
     push es
-    push cx
+    push ecx
     push dx
 ;
     mov ds,bx
     mov cx,flat_sel
     mov es,cx
-    mov cx,dx
+    movzx ecx,dx
     mov dx,ax
     EnterSection ds:disc_section
 ;
@@ -2200,7 +2200,7 @@ new_disc_request    Proc far
     cmp dx,ds:disc_sectors_per_unit
     jae new_disc_req_fail
 ;
-    cmp cx,ds:disc_units
+    cmp ecx,ds:disc_units
     jae new_disc_req_fail
 ;
     call allocate_handle
@@ -3087,7 +3087,7 @@ flush_unit_done:
 ;
     xor ebx,ebx
     inc esi
-    movzx eax,ds:disc_units
+    mov eax,ds:disc_units
     cmp esi,eax
     jb flush_loop
     jmp flush_leave
@@ -3100,7 +3100,7 @@ flush_next_unit:
 ;
     xor ebx,ebx
     inc esi
-    movzx eax,ds:disc_units
+    mov eax,ds:disc_units
     cmp esi,eax
     jb flush_loop
     jmp flush_leave
@@ -3127,7 +3127,7 @@ flush_drive     Endp
 ;           RETURNS:        EAX         Readahead
 ;                           ECX         Size
 ;                           SI          Sectors per unit
-;                           DI          Units
+;                           EDI         Units
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3161,7 +3161,7 @@ get_drive_param PROC far
     push dx
     push ax
     pop eax
-    movzx edx,ds:disc_units
+    mov edx,ds:disc_units
     mul edx
     or edx,edx
     jz get_param_size_ok
@@ -3172,7 +3172,7 @@ get_param_size_ok:
     mov ecx,eax
     mov eax,ds:disc_readahead
     mov si,ds:disc_sectors_per_unit
-    mov di,ds:disc_units
+    mov edi,ds:disc_units
     clc
     jmp get_drive_param_done
 
@@ -3180,7 +3180,7 @@ get_drive_param_fail:
     xor eax,eax
     xor ecx,ecx
     xor si,si
-    xor di,di
+    xor edi,edi
     stc
 
 get_drive_param_done:
@@ -4367,7 +4367,7 @@ get_disc_info_name      DB 'Get Disc Info',0
 
 get_disc_info   PROC far
     push ds
-    push ax
+    push eax
     push bx
 ;
     cmp al,MAX_DRIVES
@@ -4382,7 +4382,7 @@ get_disc_info   PROC far
     jz get_disc_info_fail
 ;
     mov ds,bx
-    mov ax,ds:disc_units
+    mov eax,ds:disc_units
     mul ds:disc_sectors_per_unit
     push dx
     push ax
@@ -4402,7 +4402,7 @@ get_disc_info_fail:
 
 get_disc_info_done:
     pop bx
-    pop ax
+    pop eax
     pop ds  
     retf32
 get_disc_info   Endp
@@ -4453,6 +4453,7 @@ set_disc_info   PROC far
     mov dx,bx
     pop bx
     xchg ax,dx
+    movzx edx,dx
     SetDiscParam
     clc
     jmp set_disc_info_done

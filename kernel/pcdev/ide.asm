@@ -1947,7 +1947,7 @@ install_unit_ok:
 ;
     call CalcParam
     mov ax,fs:drive_sectors_per_unit
-    mov dx,fs:drive_units
+    movzx edx,fs:drive_units
     mov cx,512
     mov si,fs:drive_sectors_per_cyl
     mov di,fs:drive_heads
@@ -2124,7 +2124,7 @@ install_pci_unit_ok:
 ;
     call CalcParam
     mov ax,fs:drive_sectors_per_unit
-    mov dx,fs:drive_units
+    movzx edx,fs:drive_units
     mov cx,512
     mov si,fs:drive_sectors_per_cyl
     mov di,fs:drive_heads

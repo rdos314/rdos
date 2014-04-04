@@ -1375,7 +1375,7 @@ InstallUnit    Proc near
 ;
     call CalcParam
     mov ax,ds:sd_sectors_per_unit
-    mov dx,ds:sd_units
+    movzx edx,ds:sd_units
     mov cx,512
     mov si,-1
     mov di,-1

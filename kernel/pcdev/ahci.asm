@@ -3551,7 +3551,7 @@ install_disc_unit Proc near
 ;
     call CalcParam
     mov ax,ds:ap_sectors_per_unit
-    mov dx,ds:ap_units
+    movzx edx,ds:ap_units
     mov cx,512
     mov si,-1
     mov di,-1

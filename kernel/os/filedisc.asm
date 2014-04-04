@@ -374,7 +374,7 @@ cfdSave:
 ;
     mov ax,es:fd_sectors_per_unit
     mov cx,200h
-    mov dx,es:fd_units
+    movzx edx,es:fd_units
     xor si,si
     xor di,di    
     SetDiscParam
@@ -526,7 +526,7 @@ ofdSave:
 ;
     mov ax,es:fd_sectors_per_unit
     mov cx,200h
-    mov dx,es:fd_units
+    movzx edx,es:fd_units
     xor si,si
     xor di,di    
     SetDiscParam
