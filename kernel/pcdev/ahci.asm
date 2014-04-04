@@ -1936,6 +1936,65 @@ WaitForCompletion    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           CondWaitForCompletion
+;
+;   DESCRIPTION:    Conditional wait for completion
+;
+;   PARAMETERS:     GS      Port sel
+;                   AL      Slot #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CondWaitForCompletion Proc near
+    push ds
+    push eax
+    push cx
+    push edx
+    push si
+;
+    push eax
+    push edx
+    GetSystemTime
+    add eax,119300
+    adc edx,0
+    WaitForSignalWithTimeout
+    pop edx
+    pop eax
+;
+    mov ds,gs:ap_cmd_sel
+    movzx si,al
+    shl si,5
+    mov edx,ds:[si].acl_transfer_count
+    cmp edx,ds:[si].acl_total_count
+    clc
+    je cwfcRel
+;
+    stc
+
+cwfcRel:    
+    pushf
+    mov cl,al
+    mov edx,1
+    shl edx,cl
+    not edx
+;
+    RequestSpinlock gs:ap_spinlock
+    and gs:ap_active_mask,edx
+    and gs:ap_reserved_mask,edx
+    ReleaseSpinlock gs:ap_spinlock
+    popf
+;
+    pop si
+    pop edx
+    pop cx
+    pop eax
+    pop ds
+    ret
+CondWaitForCompletion    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           GetDriveParams
 ;
 ;       DESCRIPTION:    Get drive param
@@ -1992,7 +2051,7 @@ GetDriveParams  Proc near
     mov cx,1
     call SetupReadCmd
     call StartCmd
-    call WaitForCompletion
+    call CondWaitForCompletion
     jc gdpDone
 ;    
     mov ax,es:[esi+152]
@@ -2609,7 +2668,14 @@ GetFsName   Proc near
     cmp al,'M'
     je gfnDos
 ;
+    cmp al,'m'
+    je gfnLinux    
+;
     add esi,3
+    jmp gfnCopyName
+
+gfnLinux:
+    add esi,36h
     jmp gfnCopyName
 
 gfnDos:

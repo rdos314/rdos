@@ -5403,12 +5403,14 @@ init_disc_retry:
     jmp init_disc_retry
     
 init_disc_do:        
+    EnterSection ds:disc_handler_section
     call run_disc_assign
     call run_drive_assign1
     call run_drive_assign2
 ;    
     mov ax,SEG data
     mov ds,ax
+    LeaveSection ds:disc_handler_section
     mov ds:disc_start_thread,0
     retf32
 init_disc       Endp
