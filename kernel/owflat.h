@@ -2264,13 +2264,28 @@
     "push esi" \
     "push edx" \
     "push ecx" \
+    "push eax" \
     CallGate_get_disc_info  \
+    "jnc UseNew"\
+    "UseOld:"\
+    "pop eax" \
+    CallGate_get_old_disc_info  \
+    "pop ebx"\
+    "movzx ecx,cx"\
+    "mov [ebx],ecx"\
+    "pop ebx"\
+    "mov [ebx],edx"\
+    "mov dword ptr [ebx+4],0"\
+    "jmp Common"\
+    "UseNew:"\
+    "pop ebx" \
     "pop ebx" \
     "movzx ecx,cx" \
     "mov [ebx],ecx" \
     "pop ebx" \
     "mov [ebx],eax" \
     "mov [ebx+4],edx" \
+    "Common:"\
     "pop ebx" \
     "movzx esi,si" \
     "mov [ebx],esi" \
