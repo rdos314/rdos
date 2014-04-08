@@ -381,7 +381,9 @@ void RDOSAPI RdosClearCardDevInserted(int Handle);
 int RDOSAPI RdosWaitForCard(int Handle, char *Strip);
 
 int RDOSAPI RdosGetCanModuleInfo(int Module, int *ComCount, int *Id);
+int RDOSAPI RdosGetCanModuleVersion(int Module, int *MajorVersion, int *MinorVersion, int *SubVersion);
 int RDOSAPI RdosCheckCanSerialPort(int ComPort, int *ModuleId, int *PortNr);
+int RDOSAPI RdosProgramCanModule(int Module, const char *ProgramName);
 
 int RDOSAPI RdosOpenFile(const char *FileName, char Access);
 int RDOSAPI RdosCreateFile(const char *FileName, int Attrib);

@@ -693,4 +693,7 @@ create_uuid_nr                  = 549
 
 get_disc_info_nr	            = 550
 
+get_can_module_version_nr       = 551
+program_can_module_nr           = 552
+
 usergate_entries			    = 560

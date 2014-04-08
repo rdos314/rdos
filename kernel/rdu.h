@@ -693,6 +693,9 @@
 
 #define usergate_get_disc_info 0x00000226
 
+#define usergate_get_can_module_version 0x00000227
+#define usergate_program_can_module 0x00000228
+
 
 
 #ifdef __FLAT__
@@ -1391,6 +1394,9 @@
 
 #define CallGate_get_disc_info 0x67 0x9a 38 2 0 0 3 0
 
+#define CallGate_get_can_module_version 0x67 0x9a 39 2 0 0 3 0
+#define CallGate_program_can_module 0x67 0x9a 40 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2086,5 +2092,8 @@
 #define CallGate_create_uuid 0x3e 0x67 0x9a 37 2 0 0 3 0
 
 #define CallGate_get_disc_info 0x3e 0x67 0x9a 38 2 0 0 3 0
+
+#define CallGate_get_can_module_version 0x3e 0x67 0x9a 39 2 0 0 3 0
+#define CallGate_program_can_module 0x3e 0x67 0x9a 40 2 0 0 3 0
 
 #endif
