@@ -1065,13 +1065,13 @@
 
 #pragma aux RdosGetCanModuleVersion = \
     CallGate_get_can_module_version  \
-    CarryToBool \
     "movzx ecx,ah" \
     "mov [esi],ecx" \
     "movzx ecx,al" \
     "mov [edi],ecx" \
     "movzx ecx,dl" \
     "mov [ebx],ecx" \
+    CarryToBool \
     parm [eax] [esi] [edi] [ebx] \
     value [eax] \
     modify [ecx edx];
