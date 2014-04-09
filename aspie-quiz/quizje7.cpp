@@ -441,7 +441,7 @@ void TQuizJE7::SetupTexts()
   Quiz[110].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[111].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[112].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[113].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[113].MyGroup = GROUP_NT_CONTACT;
   Quiz[114].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[115].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[116].MyGroup = GROUP_ASPIE_SOCIAL;
