@@ -52,45 +52,75 @@ TQuizJE7 *Quiz[50];
 *##########################################################################*/
 int main(int argc, char **argv)
 {
-        char str[80];
-        int g;
+    char str[80];
+    int g;
         
-        printf("read data\r\n");
-        Quiz[0] = new TQuizJE7("bin\\quizje7.bin");
+    printf("read data\r\n");
+    Quiz[0] = new TQuizJE7("bin\\quizje7-all.bin");
 
-        printf("factors\r\n");
-        Quiz[0]->WriteFactors("res\\factors.csv");
+    printf("factors\r\n");
+    Quiz[0]->WriteFactors("res\\factors.csv");
 
-        printf("write no answer\r\n");
-        Quiz[0]->WriteNoAnswerStats("res\\noans.txt");
+    printf("write no answer\r\n");
+    Quiz[0]->WriteNoAnswerStats("res\\noans.txt");
 
-        printf("import\r\n");
-        Quiz[0]->ImportMvsp("pca-done\\allJE7.txt", PCA_TYPE_ALL);
-        Quiz[0]->ImportMvsp("pca-done\\maleJE7.txt", PCA_TYPE_MALE);
-        Quiz[0]->ImportMvsp("pca-done\\femJE7.txt", PCA_TYPE_FEMALE);
-        Quiz[0]->ImportMvspAspie("pca-done\\grpJE7.txt");
+    printf("import\r\n");
+    Quiz[0]->ImportMvsp("pca-done\\allJE7.txt", PCA_TYPE_ALL);
+    Quiz[0]->ImportMvsp("pca-done\\maleJE7.txt", PCA_TYPE_MALE);
+    Quiz[0]->ImportMvsp("pca-done\\femJE7.txt", PCA_TYPE_FEMALE);
+    Quiz[0]->ImportMvspAspie("pca-done\\grpJE7.txt");
 
-        printf("details\r\n");
+    printf("details\r\n");
 
-         Quiz[0]->WriteSumaryTable("res\\quizje7.htm", FALSE);
+    Quiz[0]->WriteSumaryTable("res\\quizje7.htm", FALSE);
 
-        printf("rel\r\n");
+    printf("rel\r\n");
 
-         Quiz[0]->WriteIntercorr("res\\relje7.htm");
+    Quiz[0]->WriteIntercorr("res\\relje7.htm");
 
-     printf("calc global\r\n");
-        Quiz[0]->CalcGlobal();
+    printf("calc global\r\n");
+    Quiz[0]->CalcGlobal();
 
-        printf("group loadings\r\n");
-        Quiz[0]->WriteCsvGroupWeighting("res\\group.csv");
+    printf("group loadings\r\n");
+    Quiz[0]->WriteCsvGroupWeighting("res\\group.csv");
 
-                  printf("group\r\n");
-                        Quiz[0]->WriteGroupTable("res\\group.htm", TRUE);
-                  printf("groupcorr\r\n");
-                        Quiz[0]->WriteGroupCorrTable("res\\groupcorr.htm");
+    printf("group\r\n");
+    Quiz[0]->WriteGroupTable("res\\group.htm", TRUE);
+    printf("groupcorr\r\n");
+    Quiz[0]->WriteGroupCorrTable("res\\groupcorr.htm");
 
-                  printf("main\r\n");
-                        Quiz[0]->WriteLinkReport("res\\index.htm");
+        
+    printf("read ND data\r\n");
+    Quiz[0] = new TQuizJE7("bin\\quizje7-nd.bin");
+
+    printf("import\r\n");
+    Quiz[0]->ImportMvsp("pca-done\\allJE7.txt", PCA_TYPE_ALL);
+    Quiz[0]->ImportMvsp("pca-done\\maleJE7.txt", PCA_TYPE_MALE);
+    Quiz[0]->ImportMvsp("pca-done\\femJE7.txt", PCA_TYPE_FEMALE);
+    Quiz[0]->ImportMvspAspie("pca-done\\grpJE7.txt");
+
+    printf("calc global\r\n");
+    Quiz[0]->CalcGlobal();
+
+    printf("groupcorr\r\n");
+    Quiz[0]->WriteGroupCorrTable("res\\groupcorr-nd.htm");
+        
+    printf("read NT data\r\n");
+    Quiz[0] = new TQuizJE7("bin\\quizje7-nt.bin");
+
+    printf("import\r\n");
+    Quiz[0]->ImportMvsp("pca-done\\allJE7.txt", PCA_TYPE_ALL);
+    Quiz[0]->ImportMvsp("pca-done\\maleJE7.txt", PCA_TYPE_MALE);
+    Quiz[0]->ImportMvsp("pca-done\\femJE7.txt", PCA_TYPE_FEMALE);
+    Quiz[0]->ImportMvspAspie("pca-done\\grpJE7.txt");
+
+    printf("calc global\r\n");
+    Quiz[0]->CalcGlobal();
+
+    printf("groupcorr\r\n");
+    Quiz[0]->WriteGroupCorrTable("res\\groupcorr-nt.htm");
+
+
 }
 
 
