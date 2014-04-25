@@ -3417,7 +3417,14 @@ notify_discbuf_thread:
     mov gs:ap_notify_thread,ax
 
 notify_discbuf_loop:
-    WaitForSignal
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    WaitForSignalWithTimeout
+;    
+    mov ds,gs:ap_hba_sel
+    mov eax,HBA_PXI_DP OR HBA_PXI_DHR
+    mov ds:hba_pxis,eax
 
 notify_discbuf_retry:
     mov ds,gs:ap_hba_sel

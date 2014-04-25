@@ -135,6 +135,26 @@ hid_define   Proc far
     push edx
 ;   
     mov ds,ebx    
+;
+    cmp cl,9
+    jne hdNotButton
+;    
+    cmp al,1
+    jne hdDone
+;    
+    movzx eax,ds:hid_coord_count
+    inc ds:hid_coord_count
+    mov edx,SIZE coord_struc
+    mul edx
+    add eax,OFFSET hid_coord_arr
+    mov ds:[eax].c_tip_index,si
+    mov ds:[eax].c_x_index,-1
+    mov ds:[eax].c_y_index,-1
+    mov ds:[eax].c_x_index+2,-1
+    mov ds:[eax].c_y_index+2,-1
+    jmp hdDone
+
+hdNotButton:        
     cmp cl,0Dh
     jne hdNotTip
 ;
@@ -414,10 +434,12 @@ hhrLoop:
     movzx ebx,es:[ebx].c_tip_index
     mov edi,es:hid_report_offset
     mov es,es:hid_report_sel
-    GetUnsignedHidInput
+    GetUnsignedHidInput    
     pop ecx
     pop ebx
     pop es
+;
+;    xor ax,1
     mov es:[ebx].c_tip,ax
         
 hhrTipDone:
