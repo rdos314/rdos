@@ -380,14 +380,14 @@ void TQuizJE7::SetupTexts()
   Quiz[49].MyGroup = GROUP_NT_SENSORY;  
   Quiz[50].MyGroup = GROUP_ASPIE_NVC;
   Quiz[51].MyGroup = GROUP_MIXED;
-  Quiz[52].MyGroup = GROUP_NT_NVC;
-  Quiz[53].MyGroup = GROUP_NT_NVC;
+  Quiz[52].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[53].MyGroup = GROUP_ASPIE_NVC;
   Quiz[54].MyGroup = GROUP_MIXED;
   Quiz[55].MyGroup = GROUP_ASPIE_NVC;
   Quiz[56].MyGroup = GROUP_ASPIE_NVC;
   Quiz[57].MyGroup = GROUP_ASPIE_NVC;
   Quiz[58].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[59].MyGroup = GROUP_NT_NVC;
+  Quiz[59].MyGroup = GROUP_ASPIE_NVC;
   Quiz[60].MyGroup = GROUP_ASPIE_NVC;
   Quiz[61].MyGroup = GROUP_ASPIE_NVC;
   Quiz[62].MyGroup = GROUP_ASPIE_NVC;
@@ -432,7 +432,7 @@ void TQuizJE7::SetupTexts()
   Quiz[101].MyGroup = GROUP_NT_CONTACT;
   Quiz[102].MyGroup = GROUP_MIXED;
   Quiz[103].MyGroup = GROUP_NT_CONTACT;
-  Quiz[104].MyGroup = GROUP_NT_CONTACT;
+  Quiz[104].MyGroup = GROUP_NT_SOCIAL;
   Quiz[105].MyGroup = GROUP_MIXED;
   Quiz[106].MyGroup = GROUP_MIXED;
   Quiz[107].MyGroup = GROUP_NT_SOCIAL;
@@ -450,7 +450,7 @@ void TQuizJE7::SetupTexts()
   Quiz[119].MyGroup = GROUP_ASPIE_CONTACT;  
   Quiz[120].MyGroup = GROUP_NT_CONTACT;
   Quiz[121].MyGroup = GROUP_NT_CONTACT;
-  Quiz[122].MyGroup = GROUP_NT_CONTACT;
+  Quiz[122].MyGroup = GROUP_NT_SOCIAL;
   Quiz[123].MyGroup = GROUP_NT_CONTACT;
   Quiz[124].MyGroup = GROUP_NT_SOCIAL;
   Quiz[125].MyGroup = GROUP_MIXED;
