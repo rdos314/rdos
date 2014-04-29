@@ -2721,6 +2721,28 @@ void GetTss()
 
 /*##########################################################################
 #
+#   Name       : GlobalEvent
+#
+#   Purpose....: Global event handler
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GlobalEvent(UINT32 type, ACPI_HANDLE device, UINT32 event, void *Param)
+{
+    switch (event)
+    {
+        case ACPI_EVENT_POWER_BUTTON:
+        case ACPI_EVENT_SLEEP_BUTTON:
+            RdosSoftReset();
+            break;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : Load
 #
 #   Purpose....: Make sure tables are loaded & initialized
@@ -2761,6 +2783,8 @@ void Load()
         GetPciDevices();
         GetIrqRouting();
 
+        AcpiInstallGlobalEventHandler(&GlobalEvent, 0);
+
         if (ProcessorArr[0])
         {        
             GetPct();
@@ -2770,6 +2794,7 @@ void Load()
         }
     }
 }
+
 
 /*##########################################################################
 #
