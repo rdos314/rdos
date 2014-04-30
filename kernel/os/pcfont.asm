@@ -973,28 +973,6 @@ init_process   Proc far
     pop es
     ret
 init_process    Endp    
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;   NAME:           Test gate
-;
-;   DESCRIPTION:    Test gate
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_gate_name  DB 'Test Gate', 0
-
-test_gate   Proc far
-    push ds
-    push es
-    pushad
-;
-    popad    
-    pop es
-    pop ds
-    ret
-test_gate   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1020,13 +998,6 @@ init_pcfont      PROC near
 ;
     mov edi,OFFSET init_process
     HookCreateProcess        
-;
-    mov esi,OFFSET test_gate
-    mov edi,OFFSET test_gate_name
-    xor dx,dx
-    mov ax,test_gate_nr
-    RegisterBimodalUserGate
-;
     ret
 init_pcfont ENDP
 

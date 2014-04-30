@@ -352,14 +352,13 @@ long long StateArr[MAX_PROCESSOR_COUNT];
 
 void __far ImplTestGate(const char *msg)
 {
-    long long val;
+    ACPI_EVENT_STATUS status;
+    ACPI_STATUS ok;
 
-    val = RdosGetLongSysTime();
-    
-    for (;;)
-    {
-        RdosWaitMilli(100);
-    }
+    ok = AcpiGetEventStatus(ACPI_EVENT_SLEEP_BUTTON, &status);
+    if (status & ACPI_EVENT_FLAG_SET)
+        RdosSoftReset();
+            
 }
     
 /*##########################################################################
@@ -2931,5 +2930,5 @@ int main()
     RdosRegisterUserGate(usergate_get_acpi_device, (__rdos_gate_callback *)&ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
     RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, (__rdos_gate_callback *)&ImplGetCpuTemperature, "Get CPU Temperature");
 
-//    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
+    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }

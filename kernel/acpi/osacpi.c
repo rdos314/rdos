@@ -820,6 +820,8 @@ void __far IrqStub()
     int sel;
     struct TIntReq *req;
 
+    _asm int 3
+
     sel = RdosGetGateDs();
     req = (struct TIntReq *)RdosSelectorToPointer(sel);
 
@@ -890,6 +892,7 @@ void __far AcpiThread(void *param)
             
         }
         RdosWaitForSignal();
+//        RdosWaitMilli(100);
     }
 }
     
