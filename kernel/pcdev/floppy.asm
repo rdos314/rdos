@@ -1708,7 +1708,7 @@ read_drive_loop:
     push edi
 ;
     movzx eax,es:[edi].dh_sector
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     mov edi,es:[edi].dh_data
 ;
     div byte ptr fs:boot_sectors_per_cyl
@@ -1780,7 +1780,7 @@ write_drive_loop:
     push edi
 ;
     movzx eax,es:[edi].dh_sector
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     mov edi,es:[edi].dh_data
 ;
     div byte ptr fs:boot_sectors_per_cyl

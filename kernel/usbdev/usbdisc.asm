@@ -1004,7 +1004,7 @@ rdLoop:
     push ecx
     mov edi,es:[esi]
 ;
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     movzx eax,fs:disc_sectors_per_unit
     mul edx
     movzx ebx,es:[edi].dh_sector
@@ -1023,7 +1023,7 @@ rdSizeLoop:
     mov edi,es:[esi]
 ;
     push ebx
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     movzx eax,fs:disc_sectors_per_unit
     mul edx
     movzx ebx,es:[edi].dh_sector
@@ -1042,7 +1042,7 @@ rdDoTrans:
     pop esi
 ;    
     mov edi,es:[esi]
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     movzx eax,fs:disc_sectors_per_unit
     mul edx
     movzx ebx,es:[edi].dh_sector
@@ -1163,7 +1163,7 @@ wdLoop:
     push ecx
     mov edi,es:[esi]
 ;
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     movzx eax,fs:disc_sectors_per_unit
     mul edx
     movzx ebx,es:[edi].dh_sector
@@ -1182,7 +1182,7 @@ wdSizeLoop:
     mov edi,es:[esi]
 ;
     push ebx
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     movzx eax,fs:disc_sectors_per_unit
     mul edx
     movzx ebx,es:[edi].dh_sector
@@ -1201,7 +1201,7 @@ wdDoTrans:
     pop esi
 ;    
     mov edi,es:[esi]
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     movzx eax,fs:disc_sectors_per_unit
     mul edx
     movzx ebx,es:[edi].dh_sector

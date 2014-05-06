@@ -104,7 +104,7 @@ code    SEGMENT byte public use16 'CODE'
 
 read_drive      Proc near
     mov bx,fs:fd_handle
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     movzx eax,fs:fd_sectors_per_unit
     mul edx
     movzx edx,es:[edi].dh_sector
@@ -160,7 +160,7 @@ read_drive      Endp
 
 write_drive     Proc near
     mov bx,fs:fd_handle
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     movzx eax,fs:fd_sectors_per_unit
     mul edx
     movzx edx,es:[edi].dh_sector

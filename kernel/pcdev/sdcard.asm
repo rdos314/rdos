@@ -1070,7 +1070,7 @@ InitDevice  Endp
 read_drive      Proc near
 
 read_drive_loop:
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     movzx eax,ds:sd_sectors_per_unit
     mul edx
     movzx ebx,es:[edi].dh_sector
@@ -1132,7 +1132,7 @@ write_drive     Proc near
 
 write_drive_loop:
     mov ebp,1
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     movzx eax,ds:sd_sectors_per_unit
     mul edx
     movzx ebx,es:[edi].dh_sector
@@ -1153,7 +1153,7 @@ write_drive_more:
     cmp edx,es:[edi].dh_data
     jnz write_drive_do
 ;    
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     movzx eax,ds:sd_sectors_per_unit
     mul edx
     movzx edx,es:[edi].dh_sector
@@ -1167,7 +1167,7 @@ write_drive_more:
 
 write_drive_do:    
     mov edi,es:[esi]
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     movzx eax,ds:sd_sectors_per_unit
     mul edx
     movzx ebx,es:[edi].dh_sector

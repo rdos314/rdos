@@ -322,7 +322,7 @@ DiskError:
 ;
 ;           DESCRIPTION:    Check pending test
 ;
-;           PARAMETERS:         DX:AX   Sector #
+;           PARAMETERS:     EDX:AX  Sector #
 ;                           ES:BX   Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -334,7 +334,7 @@ CheckPending    Proc near
     or edi,edi
     jz cpdone
 ;
-    mov dx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     mov ax,es:[edi].dh_sector   
 
 cploop:
@@ -351,7 +351,7 @@ cpvalid:
     test es:[edi].dh_flags, FLAG_ASYNC_WRITE
     jnz cpfail
 ;
-    cmp dx,es:[edi].dh_unit
+    cmp edx,es:[edi].dh_unit
     je cpunit
     jb cpnext
 ;
@@ -371,7 +371,7 @@ cpfail:
     jmp cpdone
 
 cpnext:
-    mov dx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     mov ax,es:[edi].dh_sector   
 ;    
     mov edi,es:[edi].dh_next
@@ -540,7 +540,7 @@ CheckBuffered   PROC near
     mov ax,flat_sel
     mov es,ax
 ;    
-    movzx esi,es:[edi].dh_unit
+    mov esi,es:[edi].dh_unit
     mov eax,ds:[4*esi].disc_unit_arr
     or eax,eax
     jz cbFail
@@ -1005,7 +1005,7 @@ allocate_handle ENDP
 insert_pending  PROC near
     push eax
     push ebx
-    push cx
+    push ecx
     push dx
 
 ifdef DEBUG
@@ -1063,9 +1063,9 @@ insert_pend_empty:
     jmp insert_pend_done
 
 insert_pend_used:
-    mov cx,es:[edi].dh_unit
+    mov ecx,es:[edi].dh_unit
     mov dx,es:[edi].dh_sector
-    cmp cx,es:[eax].dh_unit
+    cmp ecx,es:[eax].dh_unit
     jc insert_pend_first
 ;
     jnz insert_pend_search_loop
@@ -1081,7 +1081,7 @@ insert_pend_search_loop:
     cmp eax,ds:disc_pend_first
     je insert_pend_link
 ;
-    cmp cx,es:[eax].dh_unit
+    cmp ecx,es:[eax].dh_unit
     jc insert_pend_link
 ;
     jnz insert_pend_search_loop
@@ -1104,7 +1104,7 @@ ifdef DEBUG
 endif
     
     pop dx
-    pop cx
+    pop ecx
     pop ebx
     pop eax
     ret
@@ -1247,7 +1247,6 @@ update_async_loop:
 ;
     mov edi,es:[edi].dh_prev
     sub eax,es:[edi].dh_time_lsb
-    sbb dx,es:[edi].dh_time_msb
     jc update_async_done
 ;
     mov eax,es:[edi].dh_next
@@ -1444,7 +1443,7 @@ update_seq_free:
 
 update_seq_move_loop:
     mov dx,es:[edi].dh_sector
-    mov ax,es:[edi].dh_unit
+    mov eax,es:[edi].dh_unit
     test es:[edi].dh_flags,FLAG_IO_PENDING
     jnz update_seq_moved
 ;
@@ -1457,7 +1456,7 @@ update_seq_moved:
     je update_seq_pop_done  
 ;
     mov edi,fs:[4*ebx].dss_arr
-    cmp ax,es:[edi].dh_unit
+    cmp eax,es:[edi].dh_unit
     jne update_seq_next
 ;
     cmp dx,es:[edi].dh_sector
@@ -1548,7 +1547,7 @@ ifdef DEBUG
     call CheckDeleted
 endif
     
-    movzx esi,es:[edi].dh_unit
+    mov esi,es:[edi].dh_unit
     mov edx,ds:[4*esi].disc_unit_arr
     or edx,edx
     jne insert_buf_used
@@ -1568,7 +1567,7 @@ endif
     pop edi
 
 insert_buf_used:
-    mov ax,es:[edi].dh_unit
+    mov eax,es:[edi].dh_unit
     inc es:[edx].disc_sectors
     movzx esi,es:[edi].dh_sector
     mov es:[4*esi+edx].disc_sector_arr,edi
@@ -1604,7 +1603,7 @@ ifdef DEBUG
     call CheckBuffered
 endif
     
-    movzx esi,es:[edi].dh_unit
+    mov esi,es:[edi].dh_unit
     mov edx,ds:[4*esi].disc_unit_arr
     or edx,edx
     jz remove_buf_done
@@ -2210,7 +2209,8 @@ new_disc_request    Proc far
     pop edx
     mov es:[edi].dh_buf_sel,ds
     mov es:[edi].dh_sector,dx
-    mov es:[edi].dh_unit,cx
+    movzx ecx,cx
+    mov es:[edi].dh_unit,ecx
     mov es:[edi].dh_wait,0
     mov es:[edi].dh_thread,0
     mov es:[edi].dh_lock_count,0
@@ -2218,7 +2218,6 @@ new_disc_request    Proc far
     mov es:[edi].dh_usage,0
     mov es:[edi].dh_flags,0
     mov es:[edi].dh_time_lsb,0
-    mov es:[edi].dh_time_msb,0
     call insert_buf
     inc es:[edi].dh_lock_count
     LeaveSection ds:disc_section
@@ -2231,7 +2230,7 @@ new_disc_req_fail:
 
 new_disc_req_done:
     pop dx
-    pop cx
+    pop ecx
     pop es
     pop ds
     retf32
@@ -2260,7 +2259,7 @@ lock_disc_request       PROC far
     push es
     push ax
     push ebx
-    push cx
+    push ecx
     push edx
 ;
     mov ds,bx
@@ -2281,7 +2280,8 @@ lock_disc_loop:
     pop edx
     mov es:[edi].dh_buf_sel,ds
     mov es:[edi].dh_sector,dx
-    mov es:[edi].dh_unit,cx
+    movzx ecx,cx
+    mov es:[edi].dh_unit,ecx
     mov es:[edi].dh_wait,0
     mov es:[edi].dh_thread,0
     mov es:[edi].dh_lock_count,0
@@ -2289,7 +2289,6 @@ lock_disc_loop:
     mov es:[edi].dh_usage,0
     mov es:[edi].dh_flags,0
     mov es:[edi].dh_time_lsb,0
-    mov es:[edi].dh_time_msb,0
     mov es:[edi].dh_flags,0
     call insert_buf
     inc es:[edi].dh_lock_count
@@ -2299,7 +2298,7 @@ lock_disc_ok:
 
 lock_disc_done:
     pop edx
-    pop cx
+    pop ecx
     pop ebx
     pop ax
     pop es
@@ -2341,7 +2340,6 @@ modify_disc_request     PROC far
 ;       
     GetSystemTime
     mov es:[edi].dh_time_lsb,eax
-    mov es:[edi].dh_time_msb,dx
     call insert_async_write
     call update_async_timer
 
@@ -2532,7 +2530,7 @@ endif
     jz get_disc_req_arr_done
 ;
     movzx edx,es:[edi].dh_sector
-    movzx esi,es:[edi].dh_unit
+    mov esi,es:[edi].dh_unit
     mov esi,ds:[4*esi].disc_unit_arr
     lea ebx,[4*edx+esi].disc_sector_arr
     mov edi,es:[4*edx+esi].disc_sector_arr
@@ -3212,7 +3210,7 @@ new_sector      PROC far
     push ds
     push es
     push ax
-    push cx
+    push ecx
     push edx
     push edi
 ;
@@ -3250,7 +3248,8 @@ new_loop:
     pop edx
     mov es:[edi].dh_buf_sel,ds
     mov es:[edi].dh_sector,dx
-    mov es:[edi].dh_unit,cx
+    movzx ecx,cx
+    mov es:[edi].dh_unit,ecx
     mov es:[edi].dh_wait,0
     mov es:[edi].dh_thread,0
     mov es:[edi].dh_lock_count,0
@@ -3258,7 +3257,6 @@ new_loop:
     mov es:[edi].dh_usage,0
     mov es:[edi].dh_flags,0
     mov es:[edi].dh_time_lsb,0
-    mov es:[edi].dh_time_msb,0
     call insert_buf
 
 new_done:
@@ -3270,7 +3268,7 @@ new_done:
 new_leave:
     pop edi
     pop edx
-    pop cx
+    pop ecx
     pop ax
     pop es
     pop ds
@@ -3343,7 +3341,8 @@ lock_loop:
     pop edx
     mov es:[edi].dh_buf_sel,ds
     mov es:[edi].dh_sector,dx
-    mov es:[edi].dh_unit,cx
+    movzx ecx,cx
+    mov es:[edi].dh_unit,ecx
     mov es:[edi].dh_wait,0
     mov es:[edi].dh_thread,0
     mov es:[edi].dh_lock_count,0
@@ -3351,7 +3350,6 @@ lock_loop:
     mov es:[edi].dh_usage,0
     mov es:[edi].dh_flags,0
     mov es:[edi].dh_time_lsb,0
-    mov es:[edi].dh_time_msb,0
     mov es:[edi].dh_flags,0
     call insert_buf
     call insert_pending
@@ -3374,7 +3372,7 @@ lock_read_ahead:
     pop edx
     mov es:[edi].dh_buf_sel,ds
     mov es:[edi].dh_sector,dx
-    mov es:[edi].dh_unit,cx
+    mov es:[edi].dh_unit,ecx
     mov es:[edi].dh_wait,0
     mov es:[edi].dh_thread,0
     mov es:[edi].dh_lock_count,0
@@ -3382,7 +3380,6 @@ lock_read_ahead:
     mov es:[edi].dh_usage,0
     mov es:[edi].dh_flags,FLAGS_READ_AHEAD
     mov es:[edi].dh_time_lsb,0
-    mov es:[edi].dh_time_msb,0
     call insert_buf
     call insert_pending
     
@@ -3494,7 +3491,6 @@ modify_clean:
 ;    
     GetSystemTime
     mov es:[edi].dh_time_lsb,eax
-    mov es:[edi].dh_time_msb,dx
     call insert_async_write
     call update_async_timer
 
@@ -3868,14 +3864,14 @@ req_loop:
     mov es:[edi].dh_data,esi
     mov es:[edi].dh_buf_sel,ds
     mov es:[edi].dh_sector,dx
-    mov es:[edi].dh_unit,cx
+    movzx ecx,cx
+    mov es:[edi].dh_unit,ecx
     mov es:[edi].dh_wait,0
     mov es:[edi].dh_thread,0
     mov es:[edi].dh_lock_count,0
     mov es:[edi].dh_state,STATE_EMPTY
     mov es:[edi].dh_usage,0
     mov es:[edi].dh_time_lsb,0
-    mov es:[edi].dh_time_msb,0
     mov es:[edi].dh_flags,FLAG_EXT_DATA
     call insert_buf
     call insert_pending
@@ -4005,14 +4001,14 @@ define_loop:
     mov es:[edi].dh_data,esi
     mov es:[edi].dh_buf_sel,ds
     mov es:[edi].dh_sector,dx
-    mov es:[edi].dh_unit,cx
+    movzx ecx,cx
+    mov es:[edi].dh_unit,ecx
     mov es:[edi].dh_wait,0
     mov es:[edi].dh_thread,0
     mov es:[edi].dh_lock_count,0
     mov es:[edi].dh_state,STATE_USED
     mov es:[edi].dh_usage,0
     mov es:[edi].dh_time_lsb,0
-    mov es:[edi].dh_time_msb,0
     mov es:[edi].dh_flags,FLAG_EXT_DATA
     call insert_buf
     jmp define_found
@@ -4586,7 +4582,8 @@ read_disc_loop:
     pop edx
     mov es:[edi].dh_buf_sel,ds
     mov es:[edi].dh_sector,dx
-    mov es:[edi].dh_unit,cx
+    movzx ecx,cx
+    mov es:[edi].dh_unit,ecx
     mov es:[edi].dh_wait,0
     mov es:[edi].dh_thread,0
     mov es:[edi].dh_lock_count,0
@@ -4594,7 +4591,6 @@ read_disc_loop:
     mov es:[edi].dh_usage,0
     mov es:[edi].dh_flags,0
     mov es:[edi].dh_time_lsb,0
-    mov es:[edi].dh_time_msb,0
     mov es:[edi].dh_flags,0
     call insert_buf
     call insert_pending
@@ -4719,7 +4715,8 @@ write_disc_loop:
     pop edx
     mov es:[edi].dh_buf_sel,ds
     mov es:[edi].dh_sector,dx
-    mov es:[edi].dh_unit,cx
+    movzx ecx,cx
+    mov es:[edi].dh_unit,ecx
     mov es:[edi].dh_wait,0
     mov es:[edi].dh_thread,0
     mov es:[edi].dh_lock_count,0
@@ -4727,7 +4724,6 @@ write_disc_loop:
     mov es:[edi].dh_usage,0
     mov es:[edi].dh_flags,0
     mov es:[edi].dh_time_lsb,0
-    mov es:[edi].dh_time_msb,0
     mov es:[edi].dh_flags,0
     call insert_buf
     call insert_pending
@@ -4763,7 +4759,6 @@ write_disc_found:
     pop ds
     GetSystemTime
     mov es:[edi].dh_time_lsb,eax
-    mov es:[edi].dh_time_msb,dx
     mov es:[edi].dh_state,STATE_DIRTY
     call insert_async_write
     call update_async_timer

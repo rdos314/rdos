@@ -1469,7 +1469,7 @@ read_drive_retry_loop:
     jz read_drive_ide
 
 read_drive_lba:
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     movzx eax,fs:drive_sectors_per_unit
     mul edx
     movzx ebx,es:[edi].dh_sector
@@ -1480,7 +1480,7 @@ read_drive_lba:
     jmp read_drive_start
 
 read_drive_ide:
-    mov dx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     mov ax,es:[edi].dh_sector
     div byte ptr fs:drive_sectors_per_cyl
     mov bh,al
@@ -1605,7 +1605,7 @@ write_drive_retry_loop:
     jz write_drive_ide
 
 write_drive_lba:
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     movzx eax,fs:drive_sectors_per_unit
     mul edx
     movzx ebx,es:[edi].dh_sector
@@ -1616,7 +1616,7 @@ write_drive_lba:
     jmp write_drive_start
 
 write_drive_ide:
-    mov dx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     mov ax,es:[edi].dh_sector
     div byte ptr fs:drive_sectors_per_cyl
     mov bh,al

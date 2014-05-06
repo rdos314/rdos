@@ -3211,7 +3211,7 @@ perform_write_has_slot:
 
 perform_write_op_ok:
     push ax
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     movzx eax,gs:ap_sectors_per_unit
     mul edx
     movzx edx,es:[edi].dh_sector
@@ -3273,7 +3273,7 @@ perform_read_has_slot:
 
 perform_read_op_ok:
     push ax
-    movzx edx,es:[edi].dh_unit
+    mov edx,es:[edi].dh_unit
     movzx eax,gs:ap_sectors_per_unit
     mul edx
     movzx edx,es:[edi].dh_sector

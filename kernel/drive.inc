@@ -45,7 +45,7 @@ discbuf_handle		STRUC
 
 dh_next				DD ?
 dh_prev				DD ?
-dh_unit				DW ?
+dh_unit				DD ?
 dh_sector			DW ?
 dh_wait				DW ?
 dh_thread			DW ?
@@ -55,7 +55,6 @@ dh_usage			DB ?
 dh_flags			DB ?
 dh_buf_sel			DW ?
 dh_time_lsb			DD ?
-dh_time_msb			DW ?
 dh_data				DD ?
 
 discbuf_handle		ENDS
