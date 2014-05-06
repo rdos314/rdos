@@ -1632,7 +1632,7 @@ AllocateSlot    Endp
 ;       PARAMETERS:     GS      Port sel
 ;                       DS:BX   PRDT entry 
 ;                       AL      Command code
-;                       EDX     Sector #
+;                       BP:EDX  Sector #
 ;                       CX      Sectors
 ;
 ;       RETURNS:        DS:BX   First PRD entry
@@ -1646,9 +1646,10 @@ SetupAta    Proc near
     mov ds:[bx].fhtd_port_flags,80h
     mov ds:[bx].fhtd_command,al
     mov dword ptr ds:[bx].fhtd_lbal,edx
+    movzx edx,bp
+    shl edx,8
     mov dl,40h
     xchg dl,ds:[bx].fhtd_device
-    movzx edx,dl
     mov dword ptr ds:[bx].fhtd_lbah,edx
     mov ds:[bx].fhtd_count,cx
     add bx,act_prd
@@ -1667,7 +1668,7 @@ SetupAta    Endp
 ;       PARAMETERS:     GS      Port sel
 ;                       DS:BX   PRDT entry 
 ;                       AL      Command code
-;                       EDX     Sector #
+;                       BP:EDX  Sector #
 ;                       CX      Sectors
 ;
 ;       RETURNS:        DS:BX   First PRD entry
@@ -1681,9 +1682,10 @@ SetupCnq    Proc near
     mov ds:[bx].fhtd_port_flags,80h
     mov ds:[bx].fhtd_command,al
     mov dword ptr ds:[bx].fhtd_lbal,edx
+    movzx edx,bp
+    shl edx,8
     mov dl,40h
     xchg dl,ds:[bx].fhtd_device
-    movzx edx,dl
     mov dword ptr ds:[bx].fhtd_lbah,edx
     mov ds:[bx].fhtd_count,cx
     add bx,act_prd
@@ -2039,6 +2041,7 @@ GetDriveParams  Proc near
 ;
     push ax
     xor edx,edx
+    xor bp,bp
     mov cx,1
     mov al,0ECh
     call SetupAta
@@ -2183,6 +2186,7 @@ ReadSector  Proc near
     push es
     pushad
 ;    
+    xor bp,bp
     mov esi,edi
     call AllocateSlot
 ;
@@ -3214,8 +3218,10 @@ perform_write_op_ok:
     mov edx,es:[edi].dh_unit
     movzx eax,gs:ap_sectors_per_unit
     mul edx
+    mov bp,dx
     movzx edx,es:[edi].dh_sector
     add edx,eax
+    adc bp,0
     pop ax
     call SetupAta
 ;
@@ -3276,8 +3282,10 @@ perform_read_op_ok:
     mov edx,es:[edi].dh_unit
     movzx eax,gs:ap_sectors_per_unit
     mul edx
+    mov bp,dx
     movzx edx,es:[edi].dh_sector
     add edx,eax
+    adc bp,0
     pop ax
     call SetupAta
 ;
