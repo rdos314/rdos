@@ -297,9 +297,9 @@ ap_slot_mask        DD ?
 ap_reserved_mask    DD ?
 ap_active_mask      DD ?
 
-ap_sector_count     DD ?
+ap_sector_count     DD ?,?
+ap_units            DD ?
 ap_sectors_per_unit DW ?
-ap_units            DW ?
 ap_disc_sel         DW ?
 ap_disc_nr          DB ?
 
@@ -2075,19 +2075,16 @@ gdp48:
     or gs:ap_flags,PORT_FLAG_48_BIT
     mov edx,es:[esi+204]
     mov eax,es:[esi+200]
-    or edx,edx
-    jz gdp48Save
-;
-    mov eax,0FFFFFFFFh
-
-gdp48Save:
+;    
     mov gs:ap_sector_count,eax
+    mov gs:ap_sector_count+4,edx
     clc
     jmp gdpDone
 
 gdp24:
     mov eax,es:[esi+120]
     mov gs:ap_sector_count,eax
+    mov gs:ap_sector_count+4,0
     clc
 
 gdpDone:
@@ -2117,54 +2114,89 @@ GetDriveParams  Endp
 CalcParam       Proc near
     pushad
 ;
-    mov eax,1
-    mov edx,ds:ap_sector_count
+    mov ebx,1
+    mov eax,ds:ap_sector_count
+    mov edx,ds:ap_sector_count+4
 
 calc_param_norm_loop:
-    shl eax,1
-    shr edx,1
-    cmp eax,edx
-    jc calc_param_norm_loop
+    shl ebx,1
+    cmp ebx,10000h
+    je calc_param_done
 ;
-    cmp edx,10000h
+    shr edx,1
+    rcr eax,1
+;
+    or edx,edx
+    jnz calc_param_norm_loop
+;    
+    cmp ebx,eax
+    jc calc_param_norm_loop
+
+calc_param_done:
+    cmp eax,10000h
     jc calc_param_in_range
 ;
-    shr edx,1
+    mov eax,0FFFFh
 
 calc_param_in_range:    
-    mov esi,edx
-    mov ebx,edx
-    mov ecx,edx
-
-calc_param_loop:
-    xor edx,edx
-    mov eax,ds:ap_sector_count
-    div esi
-    cmp ecx,edx
-    jc calc_param_next
-;       
-    mov ecx,edx
-    mov ebx,esi
-    or edx,edx
-    jz calc_param_ok
-
-calc_param_next:
-    inc esi
-    cmp esi,eax
-    jbe calc_param_loop
-;
-    xor edx,edx
+    movzx ebx,ax
+    mov ds:ap_sectors_per_unit,ax
+    mov edx,ds:ap_sector_count+4
     mov eax,ds:ap_sector_count
     div ebx
+    mov ds:ap_units,eax
 
-calc_param_ok:
-    mov ds:ap_sectors_per_unit,bx
-    mov ds:ap_units,ax
-    mul bx
-    push dx
-    push ax
-    pop ds:ap_sector_count
+calc_norm_loop:
+    movzx eax,ds:ap_sectors_per_unit
+    mul ds:ap_units
+    sub edx,ds:ap_sector_count+4
+    sbb eax,ds:ap_sector_count    
+    jnc calc_norm_ok
 ;
+    add ds:ap_sectors_per_unit,1
+    jnc calc_norm_loop
+;
+    dec ds:ap_sectors_per_unit
+    inc ds:ap_units
+    jmp calc_norm_loop
+
+calc_norm_ok:
+    movzx ebx,ds:ap_sectors_per_unit
+    mov esi,ebx
+    mov edi,-1
+    mov ecx,1000h
+
+calc_best_loop:    
+    mov edx,ds:ap_sector_count+4
+    mov eax,ds:ap_sector_count
+    div ebx
+    mul ebx
+    sbb eax,ds:ap_sector_count
+    neg eax
+;
+    cmp eax,edi
+    ja calc_best_next
+;
+    mov esi,ebx
+    mov edi,eax
+
+calc_best_next:
+    sub ebx,1
+    jz calc_best_done
+;    
+    loop calc_best_loop 
+
+calc_best_done:    
+    mov ebx,esi
+    mov ds:ap_sectors_per_unit,bx
+    mov edx,ds:ap_sector_count+4
+    mov eax,ds:ap_sector_count
+    div ebx
+    mov ds:ap_units,eax
+    mul ebx
+    mov ds:ap_sector_count,eax
+    mov ds:ap_sector_count+4,edx
+;    
     popad
     ret
 CalcParam       Endp
@@ -3566,7 +3598,7 @@ install_disc_unit Proc near
 ;
     call CalcParam
     mov ax,ds:ap_sectors_per_unit
-    movzx edx,ds:ap_units
+    mov edx,ds:ap_units
     mov cx,512
     mov si,-1
     mov di,-1
