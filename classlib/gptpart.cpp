@@ -195,7 +195,7 @@ TGptPartition::TGptPartition(TDisc *Disc, const char *Guid, long long StartSecto
     char *ptr;
     int mspart;
     
-    if (EndSector <= 0xFFFFFFFF && StartSector > 0)
+    if (StartSector > 0)
     {
         Usable = TRUE;
         Start = StartSector;
@@ -354,7 +354,7 @@ void TGptDiscPartition::Update()
     int size;
     int i;
     int sectors;
-    int Lba;
+    long long Lba;
     struct TPartEntry *EntryData;
     char uuid[16];
     char uuidstr[40];
@@ -382,7 +382,7 @@ void TGptDiscPartition::Update()
 
                 for (i = 0; i < sectors; i++)
                 {
-                    Lba = i + (int)PartHeader->EntryLba;
+                    Lba = i + PartHeader->EntryLba;
                     FDisc->Read(Lba, ptr, 512);
                     ptr += 512;
                 }
