@@ -37,35 +37,45 @@
 class TGptPartition
 {
 public:
-	TGptPartition(TDisc *Disc, const char *Guid, long long StartSector, long long EndSector, const short int *Name);
+        TGptPartition(TDisc *Disc, const char *Guid, long long StartSector, long long EndSector, const short int *Name);
 
     double GetTotalSpace();
 
-	int Usable;
-	long long Start;
-	long long Size;
-	TDisc *FDisc;
-	char GuidStr[40];
-	char Name[40];
+        int Usable;
+        long long Start;
+        long long Size;
+        TDisc *FDisc;
+        char GuidStr[40];
+        char Name[40];
 
 protected:
     void GetMsFsName();
-	
+        
 };
 
 class TGptDiscPartition
 {
 public:
-	TGptDiscPartition(TDisc *Disc);
+        TGptDiscPartition(TDisc *Disc);
+        ~TGptDiscPartition();
 
-	void Update();
-	TDisc *GetDisc();
+        void Update();
+        TDisc *GetDisc();
 
-	TGptPartition *PartArr[MAX_GPT_PART_COUNT];
-	int PartCount;
+        TGptPartition *PartArr[MAX_GPT_PART_COUNT];
+        int PartCount;
 
 protected:
-	TDisc *FDisc;
+    struct TPartEntry *ReadGpt(long long StartLba, char *HeaderBuf);
+
+        TDisc *FDisc;
+
+        char FPrimaryHeader[512];
+        struct TPartEntry *FPrimaryEntry;
+        
+        char FSecondaryHeader[512];
+        struct TPartEntry *FSecondaryEntry;
+        
 };
 
 #endif

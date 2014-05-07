@@ -319,7 +319,26 @@ TGptDiscPartition::TGptDiscPartition(TDisc *Disc)
     FDisc = Disc;
     PartCount = 0;
 
+    FPrimaryEntry = 0;
+    FSecondaryEntry = 0;
+
     Update();
+}
+
+/*##################  TGptDiscPartition::~TGptDiscPartition  #############
+*   Purpose....: Disc partition destructor                                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TGptDiscPartition::~TGptDiscPartition()
+{
+    if (FPrimaryEntry)
+        delete FPrimaryEntry;
+        
+    if (FSecondaryEntry)
+        delete FSecondaryEntry;
 }
 
 /*##################  TGptDiscPartition::GetDisc  #############
@@ -334,18 +353,16 @@ TDisc *TGptDiscPartition::GetDisc()
     return FDisc;
 }
 
-/*##################  TGptDiscPartition::Update  #############
-*   Purpose....: Update partition table
+/*##################  TGptDiscPartition::ReadGpt  #############
+*   Purpose....: Read GPT table
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TGptDiscPartition::Update()
+struct TPartEntry *TGptDiscPartition::ReadGpt(long long StartLba, char *HeaderBuf)
 {
-    char Buf[512];
     struct TPartHeader *PartHeader;
-    TGptPartition *part;
     char *EntryBuf;
     char *ptr;
     unsigned int Crc32;
@@ -356,18 +373,17 @@ void TGptDiscPartition::Update()
     int sectors;
     long long Lba;
     struct TPartEntry *EntryData;
-    char uuid[16];
-    char uuidstr[40];
 
-    FDisc->Read(1, Buf, 512);
+    Lba = StartLba;
+    FDisc->Read(Lba, HeaderBuf, 512);
 
-    PartHeader = (struct TPartHeader *)Buf;
+    PartHeader = (struct TPartHeader *)HeaderBuf;
 
     if (!strcmp(PartHeader->Sign, "EFI PART"))
     {
         Crc32 = PartHeader->Crc32;
         PartHeader->Crc32 = 0;
-        ThisCrc32 = CalcCrc32(Buf, PartHeader->HeaderSize);
+        ThisCrc32 = CalcCrc32(HeaderBuf, PartHeader->HeaderSize);
 
         if (Crc32 == ThisCrc32)
         {
@@ -389,28 +405,56 @@ void TGptDiscPartition::Update()
                                 
                 Crc32 = CalcCrc32(EntryBuf, size);
                 if (PartHeader->EntryCrc32 == Crc32)
-                {
-                    for (i = 0; i < PartHeader->EntryCount; i++)
-                    {
-                        part = new TGptPartition(   FDisc, 
-                                                    EntryData->PartGuid,
-                                                    EntryData->FirstLba,
-                                                    EntryData->LastLba,
-                                                    EntryData->Name);
-
-                        if (part->Usable)
-                        {
-                            PartArr[PartCount] = part;
-                            PartCount++;
-                        }
-                        else
-                            delete part;                        
-
-                        EntryData++;                        
-                    }
-                }
+                    return EntryData;
+                
                 delete EntryBuf;
             }
         }        
+    }
+
+    return 0;
+}
+
+/*##################  TGptDiscPartition::Update  #############
+*   Purpose....: Update partition table
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TGptDiscPartition::Update()
+{
+    struct TPartHeader *PartHeader;
+    TGptPartition *part;
+    long long Lba;
+    int i;
+    struct TPartEntry *EntryData;
+
+    Lba = 1;
+    FPrimaryEntry = ReadGpt(Lba, FPrimaryHeader);
+    
+    Lba = FDisc->GetTotalSectors() - 1;
+    FSecondaryEntry = ReadGpt(Lba, FSecondaryHeader);
+
+    PartHeader = (struct TPartHeader *)FPrimaryHeader;
+    EntryData = FPrimaryEntry;
+
+    for (i = 0; i < PartHeader->EntryCount; i++)
+    {
+        part = new TGptPartition(   FDisc, 
+                                    EntryData->PartGuid,
+                                    EntryData->FirstLba,
+                                    EntryData->LastLba,
+                                    EntryData->Name);
+
+        if (part->Usable)
+        {
+            PartArr[PartCount] = part;
+            PartCount++;
+        }
+        else
+            delete part;                        
+
+        EntryData++;                        
     }
 }
