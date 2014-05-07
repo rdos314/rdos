@@ -43,8 +43,8 @@ public:
 	int GetSectorsPerCyl();
 	int GetHeads();
 
-	int Read(long Sector, char *buf, int size);
-	int Write(long Sector, const char *buf, int size);
+	int Read(long long Sector, char *buf, int size);
+	int Write(long long Sector, const char *buf, int size);
 	int GetDrive(long Start, long Size);
 
 	long ChsToLba(const char *Data);

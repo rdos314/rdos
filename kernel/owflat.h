@@ -2317,15 +2317,15 @@
     modify [ebx ecx edx esi edi];
 
 #pragma aux RdosReadDisc = \
-    CallGate_read_disc  \
+    CallGate_read_long_disc  \
     CarryToBool \
-    parm [eax] [edx] [edi] [ecx] \
+    parm [ebx] [edx eax] [edi] [ecx] \
     value [eax];
 
 #pragma aux RdosWriteDisc = \
-    CallGate_write_disc  \
+    CallGate_write_long_disc  \
     CarryToBool \
-    parm [eax] [edx] [edi] [ecx] \
+    parm [ebx] [edx eax] [edi] [ecx] \
     value [eax];
 
 #pragma aux RdosGetRdfsInfo = \

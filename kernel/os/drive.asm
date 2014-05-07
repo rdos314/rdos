@@ -1483,9 +1483,9 @@ update_disc_seq ENDP
 ;
 ;           DESCRIPTION:    Check if sector is in buffer cache
 ;
-;           PARAMETERS:         DS          Disc selector
+;           PARAMETERS:     DS          Disc selector
 ;                           ES          Flat_sel
-;                           CX          Unit #
+;                           ECX          Unit #
 ;                           DX          Sector #
 ;
 ;           RETURNS:        EDI         DiscBlock handle
@@ -1494,7 +1494,7 @@ update_disc_seq ENDP
 
 check_buf       PROC near
     push esi
-    movzx esi,cx
+    mov esi,ecx
     mov edi,ds:[4*esi].disc_unit_arr
     or edi,edi
     jz check_buf_fail
@@ -2265,7 +2265,7 @@ lock_disc_request       PROC far
     mov ds,bx
     mov cx,flat_sel
     mov es,cx
-    mov cx,dx
+    movzx ecx,dx
     mov dx,ax
     EnterSection ds:disc_section
 
@@ -3234,7 +3234,7 @@ new_inrange:
     pop ax
     pop dx
     div ds:disc_sectors_per_unit
-    mov cx,ax
+    movzx ecx,ax
     EnterSection ds:disc_section
 
 new_loop:
@@ -3326,7 +3326,7 @@ lock_inrange:
     pop ax
     pop dx
     div ds:disc_sectors_per_unit
-    mov cx,ax
+    movzx ecx,ax
     EnterSection ds:disc_section
 
 lock_loop:
@@ -3853,7 +3853,7 @@ req_inrange:
     pop ax
     pop dx
     div ds:disc_sectors_per_unit
-    mov cx,ax
+    movzx ecx,ax
     EnterSection ds:disc_section
 
 req_loop:
@@ -3989,7 +3989,7 @@ define_inrange:
     pop ax
     pop dx
     div ds:disc_sectors_per_unit
-    mov cx,ax
+    movzx ecx,ax
     EnterSection ds:disc_section
 
 define_loop:
@@ -4526,26 +4526,26 @@ set_disc_info   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           READ_DISC
+;           NAME:           ReadShortDisc
 ;
-;           DESCRIPTION:    Read disc
+;           DESCRIPTION:    Read disc, 32-bit version
 ;
-;           PARAMETERS:         AL              Disc #
+;           PARAMETERS:     AL              Disc #
 ;                           EDX             Sector #
 ;                           (E)CX       Size
 ;                           ES:(E)DI    Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-read_disc_name  DB 'Read Disc',0
+read_short_disc_name  DB 'Read Short Disc',0
 
-read_disc       PROC near
+read_short_disc       PROC near
     push ds
     push es
     pushad
 ;
     cmp al,MAX_DRIVES
-    jae read_disc_fail
+    jae read_short_disc_fail
 ;
     mov bx,SEG data
     mov ds,bx
@@ -4553,7 +4553,7 @@ read_disc       PROC near
     add bx,bx
     mov bx,ds:[bx].disc_def_arr
     or bx,bx
-    jz read_disc_fail
+    jz read_short_disc_fail
 ;
     mov ds,bx
     push ds
@@ -4567,12 +4567,12 @@ read_disc       PROC near
     pop ax
     pop dx
     div ds:disc_sectors_per_unit
-    mov cx,ax
+    movzx ecx,ax
     EnterSection ds:disc_section
 
-read_disc_loop:
+read_short_disc_loop:
     call check_buf
-    jnc read_disc_found
+    jnc read_short_disc_found
 ;
     ClearSignal
     call allocate_handle
@@ -4595,23 +4595,23 @@ read_disc_loop:
     call insert_buf
     call insert_pending
 
-read_disc_signal:
+read_short_disc_signal:
     mov al,es:[edi].dh_state
     cmp al,STATE_EMPTY
     clc
-    jne read_disc_found
+    jne read_short_disc_found
 
-read_disc_block:
+read_short_disc_block:
     call block
-    jmp read_disc_loop
+    jmp read_short_disc_loop
 
-read_disc_found:
+read_short_disc_found:
     test es:[edi].dh_flags, FLAG_IO_BUSY
-    jnz read_disc_block
+    jnz read_short_disc_block
 ;
     mov al,es:[edi].dh_state
     cmp al,STATE_EMPTY
-    je read_disc_signal
+    je read_short_disc_signal
 ;       
     mov esi,es:[edi].dh_data
     mov ax,es
@@ -4625,60 +4625,60 @@ read_disc_found:
     pop ds
     LeaveSection ds:disc_section
     clc
-    jmp read_disc_done
+    jmp read_short_disc_done
 
-read_disc_fail:
+read_short_disc_fail:
     stc
 
-read_disc_done:
+read_short_disc_done:
     popad
     pop es
     pop ds
     ret
-read_disc       ENDP
+read_short_disc       ENDP
 
-read_disc32     Proc far
-    call read_disc
+read_short_disc32     Proc far
+    call read_short_disc
     retf32
-read_disc32     Endp
+read_short_disc32     Endp
 
-read_disc16     Proc far
+read_short_disc16     Proc far
     push ecx
     push edi
 ;
     movzx ecx,cx
     movzx edi,di
-    call read_disc
+    call read_short_disc
 ;
     pop edi
     pop ecx
     retf32
-read_disc16     Endp
+read_short_disc16     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WRITE_DISC
+;           NAME:           WriteShortDisc
 ;
-;           DESCRIPTION:    Write disc
+;           DESCRIPTION:    Write disc, 32-bit version
 ;
-;           PARAMETERS:         AL              Disc #
+;           PARAMETERS:     AL              Disc #
 ;                           EDX             Sector #
 ;                           (E)CX       Size
 ;                           ES:(E)DI    Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-write_disc_name DB 'Write Disc',0
+write_short_disc_name DB 'Write Short Disc',0
 
-write_disc      PROC near
+write_short_disc      PROC near
     push ds
     push es
     pushad
 ;
     cmp al,MAX_DRIVES
-    jae write_disc_fail
+    jae write_short_disc_fail
 ;
     mov bx,SEG data
     mov ds,bx
@@ -4686,7 +4686,7 @@ write_disc      PROC near
     add bx,bx
     mov bx,ds:[bx].disc_def_arr
     or bx,bx
-    jz write_disc_fail
+    jz write_short_disc_fail
 ;
     mov ds,bx
     push ds
@@ -4700,12 +4700,12 @@ write_disc      PROC near
     pop ax
     pop dx
     div ds:disc_sectors_per_unit
-    mov cx,ax
+    movzx ecx,ax
     EnterSection ds:disc_section
 
-write_disc_loop:
+write_short_disc_loop:
     call check_buf
-    jnc write_disc_found
+    jnc write_short_disc_found
 ;
     ClearSignal
     call allocate_handle
@@ -4728,23 +4728,23 @@ write_disc_loop:
     call insert_buf
     call insert_pending
 
-write_disc_signal:
+write_short_disc_signal:
     mov al,es:[edi].dh_state
     cmp al,STATE_EMPTY
     clc
-    jne write_disc_found
+    jne write_short_disc_found
 
-write_disc_block:
+write_short_disc_block:
     call block
-    jmp write_disc_loop
+    jmp write_short_disc_loop
 
-write_disc_found:
+write_short_disc_found:
     test es:[edi].dh_flags, FLAG_IO_BUSY
-    jnz write_disc_block
+    jnz write_short_disc_block
 ;
     mov al,es:[edi].dh_state
     cmp al,STATE_EMPTY
-    je write_disc_signal
+    je write_short_disc_signal
 ;       
     mov ebx,edi
     mov edi,es:[edi].dh_data
@@ -4764,36 +4764,307 @@ write_disc_found:
     call update_async_timer
     LeaveSection ds:disc_section
     clc
-    jmp write_disc_done
+    jmp write_short_disc_done
 
-write_disc_fail:
+write_short_disc_fail:
     stc
 
-write_disc_done:
+write_short_disc_done:
     popad
     pop es
     pop ds
     ret
-write_disc      ENDP
+write_short_disc      ENDP
 
-write_disc32    Proc far
-    call write_disc
+write_short_disc32    Proc far
+    call write_short_disc
     retf32
-write_disc32    Endp
+write_short_disc32    Endp
 
-write_disc16    Proc far
+write_short_disc16    Proc far
     push ecx
     push edi
 ;
     movzx ecx,cx
     movzx edi,di
-    call write_disc
+    call write_short_disc
 ;
     pop edi
     pop ecx
     retf32
-write_disc16    Endp
+write_short_disc16    Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadLongDisc
+;
+;           DESCRIPTION:    Read disc, 64-bit version
+;
+;           PARAMETERS:     BL          Disc #
+;                           EDX:EAX     Sector #
+;                           (E)CX       Size
+;                           ES:(E)DI    Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_long_disc_name  DB 'Read Long Disc',0
+
+read_long_disc       PROC near
+    push ds
+    push es
+    pushad
+;
+    cmp bl,MAX_DRIVES
+    jae read_long_disc_fail
+;
+    push bx
+    mov bx,SEG data
+    mov ds,bx
+    pop bx
+    movzx bx,bl
+    add bx,bx
+    mov bx,ds:[bx].disc_def_arr
+    or bx,bx
+    jz read_long_disc_fail
+;
+    mov ds,bx
+    push ds
+    push es
+    push ecx
+    push edi
+;
+    mov bx,flat_sel
+    mov es,bx
+    movzx ebx,ds:disc_sectors_per_unit    
+    div ebx
+    mov ecx,eax
+    EnterSection ds:disc_section
+
+read_long_disc_loop:
+    call check_buf
+    jnc read_long_disc_found
+;
+    ClearSignal
+    call allocate_handle
+    push edx
+    call allocate_data
+    mov es:[edi].dh_data,edx
+    pop edx
+    mov es:[edi].dh_buf_sel,ds
+    mov es:[edi].dh_sector,dx
+    movzx ecx,cx
+    mov es:[edi].dh_unit,ecx
+    mov es:[edi].dh_wait,0
+    mov es:[edi].dh_thread,0
+    mov es:[edi].dh_lock_count,0
+    mov es:[edi].dh_state,STATE_EMPTY
+    mov es:[edi].dh_usage,0
+    mov es:[edi].dh_flags,0
+    mov es:[edi].dh_time_lsb,0
+    mov es:[edi].dh_flags,0
+    call insert_buf
+    call insert_pending
+
+read_long_disc_signal:
+    mov al,es:[edi].dh_state
+    cmp al,STATE_EMPTY
+    clc
+    jne read_long_disc_found
+
+read_long_disc_block:
+    call block
+    jmp read_long_disc_loop
+
+read_long_disc_found:
+    test es:[edi].dh_flags, FLAG_IO_BUSY
+    jnz read_long_disc_block
+;
+    mov al,es:[edi].dh_state
+    cmp al,STATE_EMPTY
+    je read_long_disc_signal
+;       
+    mov esi,es:[edi].dh_data
+    mov ax,es
+    mov ds,ax
+    pop edi
+    pop ecx
+    pop es
+;
+    shr ecx,2
+    rep movs dword ptr es:[edi],ds:[esi]
+    pop ds
+    LeaveSection ds:disc_section
+    clc
+    jmp read_long_disc_done
+
+read_long_disc_fail:
+    stc
+
+read_long_disc_done:
+    popad
+    pop es
+    pop ds
+    ret
+read_long_disc       ENDP
+
+read_long_disc32     Proc far
+    call read_long_disc
+    retf32
+read_long_disc32     Endp
+
+read_long_disc16     Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call read_long_disc
+;
+    pop edi
+    pop ecx
+    retf32
+read_long_disc16     Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteLongDisc
+;
+;           DESCRIPTION:    Write disc, 64-bit version
+;
+;           PARAMETERS:     BL          Disc #
+;                           EDX:EAX     Sector #
+;                           (E)CX       Size
+;                           ES:(E)DI    Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_long_disc_name DB 'Write Long Disc',0
+
+write_long_disc      PROC near
+    push ds
+    push es
+    pushad
+;
+    cmp bl,MAX_DRIVES
+    jae write_long_disc_fail
+;
+    push bx
+    mov bx,SEG data
+    mov ds,bx
+    pop bx
+    movzx bx,bl
+    add bx,bx
+    mov bx,ds:[bx].disc_def_arr
+    or bx,bx
+    jz write_long_disc_fail
+;
+    mov ds,bx
+    push ds
+    push es
+    push ecx
+    push edi
+;
+    mov bx,flat_sel
+    mov es,bx
+    movzx ebx,ds:disc_sectors_per_unit    
+    div ebx
+    mov ecx,eax
+    EnterSection ds:disc_section
+
+write_long_disc_loop:
+    call check_buf
+    jnc write_long_disc_found
+;
+    ClearSignal
+    call allocate_handle
+    push edx
+    call allocate_data
+    mov es:[edi].dh_data,edx
+    pop edx
+    mov es:[edi].dh_buf_sel,ds
+    mov es:[edi].dh_sector,dx
+    movzx ecx,cx
+    mov es:[edi].dh_unit,ecx
+    mov es:[edi].dh_wait,0
+    mov es:[edi].dh_thread,0
+    mov es:[edi].dh_lock_count,0
+    mov es:[edi].dh_state,STATE_EMPTY
+    mov es:[edi].dh_usage,0
+    mov es:[edi].dh_flags,0
+    mov es:[edi].dh_time_lsb,0
+    mov es:[edi].dh_flags,0
+    call insert_buf
+    call insert_pending
+
+write_long_disc_signal:
+    mov al,es:[edi].dh_state
+    cmp al,STATE_EMPTY
+    clc
+    jne write_long_disc_found
+
+write_long_disc_block:
+    call block
+    jmp write_long_disc_loop
+
+write_long_disc_found:
+    test es:[edi].dh_flags, FLAG_IO_BUSY
+    jnz write_long_disc_block
+;
+    mov al,es:[edi].dh_state
+    cmp al,STATE_EMPTY
+    je write_long_disc_signal
+;       
+    mov ebx,edi
+    mov edi,es:[edi].dh_data
+    pop esi
+    pop ecx
+    pop ds
+;
+    shr ecx,2
+    rep movs dword ptr es:[edi],ds:[esi]
+;
+    mov edi,ebx
+    pop ds
+    GetSystemTime
+    mov es:[edi].dh_time_lsb,eax
+    mov es:[edi].dh_state,STATE_DIRTY
+    call insert_async_write
+    call update_async_timer
+    LeaveSection ds:disc_section
+    clc
+    jmp write_long_disc_done
+
+write_long_disc_fail:
+    stc
+
+write_long_disc_done:
+    popad
+    pop es
+    pop ds
+    ret
+write_long_disc      ENDP
+
+write_long_disc32    Proc far
+    call write_long_disc
+    retf32
+write_long_disc32    Endp
+
+write_long_disc16    Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call write_long_disc
+;
+    pop edi
+    pop ecx
+    retf32
+write_long_disc16    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5724,18 +5995,32 @@ init    PROC far
     mov ax,format_drive_nr
     RegisterUserGate
 ;
-    mov ebx,OFFSET read_disc16
-    mov esi,OFFSET read_disc32
-    mov edi,OFFSET read_disc_name
+    mov ebx,OFFSET read_short_disc16
+    mov esi,OFFSET read_short_disc32
+    mov edi,OFFSET read_short_disc_name
     mov dx,virt_es_in
-    mov ax,read_disc_nr
+    mov ax,read_short_disc_nr
     RegisterUserGate
 ;
-    mov ebx,OFFSET write_disc16
-    mov esi,OFFSET write_disc32
-    mov edi,OFFSET write_disc_name
+    mov ebx,OFFSET write_short_disc16
+    mov esi,OFFSET write_short_disc32
+    mov edi,OFFSET write_short_disc_name
     mov dx,virt_es_in
-    mov ax,write_disc_nr
+    mov ax,write_short_disc_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET read_long_disc16
+    mov esi,OFFSET read_long_disc32
+    mov edi,OFFSET read_long_disc_name
+    mov dx,virt_es_in
+    mov ax,read_long_disc_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET write_long_disc16
+    mov esi,OFFSET write_long_disc32
+    mov edi,OFFSET write_long_disc_name
+    mov dx,virt_es_in
+    mov ax,write_long_disc_nr
     RegisterUserGate
 ;
     mov ebx,OFFSET erase_disc_sectors16

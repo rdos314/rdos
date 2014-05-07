@@ -180,7 +180,7 @@ kw_save_loop:
     mov al,fs:fault_disc
     mov cx,512
     xor di,di       
-    WriteDisc
+    WriteShortDisc
     pop cx
 ;
     DebugNext    
@@ -337,7 +337,7 @@ cfsLoop:
     mov al,ds:fault_disc
     mov cx,512
     xor di,di
-    WriteDisc
+    WriteShortDisc
     pop cx
 ;
     inc edx
@@ -391,7 +391,7 @@ get_fault_thread_state  PROC near
     mov al,ds:fault_disc
     mov cx,512
     xor di,di
-    ReadDisc
+    ReadShortDisc
     mov eax,es:fss_sign
     cmp eax,FAULT_SIGN
     jne gfsFail
@@ -471,7 +471,7 @@ get_fault_thread_tss    PROC near
     mov al,ds:fault_disc
     mov cx,512
     xor di,di
-    ReadDisc
+    ReadShortDisc
     mov eax,es:fss_sign
     cmp eax,FAULT_SIGN
     jne gftFail

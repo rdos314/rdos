@@ -172,7 +172,7 @@ int TDisc::GetHeads()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-int TDisc::Read(long Sector, char *buf, int size)
+int TDisc::Read(long long Sector, char *buf, int size)
 {
     return RdosReadDisc(FDisc, Sector, buf, size);
 }
@@ -184,7 +184,7 @@ int TDisc::Read(long Sector, char *buf, int size)
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-int TDisc::Write(long Sector, const char *buf, int size)
+int TDisc::Write(long long Sector, const char *buf, int size)
 {
     return RdosWriteDisc(FDisc, Sector, buf, size);
 }

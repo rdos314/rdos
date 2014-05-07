@@ -1723,16 +1723,32 @@ GetRdfsInfo     MACRO
 ;	IN	EDX			Sector #
 ;	IN	(E)CX		Size
 ;	IN	ES:(E)DI	Buffer
-ReadDisc     MACRO
-	UserGate read_disc_nr
+ReadShortDisc     MACRO
+	UserGate read_short_disc_nr
 						ENDM
 
 ;	IN	AL			Disc #
 ;	IN	EDX			Sector #
 ;	IN	(E)CX		Size
 ;	IN	ES:(E)DI	Buffer
-WriteDisc     MACRO
-	UserGate write_disc_nr
+WriteShortDisc     MACRO
+	UserGate write_short_disc_nr
+						ENDM
+
+;	IN	BL			Disc #
+;	IN	EDX:EAX		Sector #
+;	IN	(E)CX		Size
+;	IN	ES:(E)DI	Buffer
+ReadLongDisc     MACRO
+	UserGate read_long_disc_nr
+						ENDM
+
+;	IN	BL			Disc #
+;	IN	EDX:EAX		Sector #
+;	IN	(E)CX		Size
+;	IN	ES:(E)DI	Buffer
+WriteLongDisc     MACRO
+	UserGate write_long_disc_nr
 						ENDM
 
 ;	IN	AL			Disc #

@@ -115,8 +115,8 @@
 #define usergate_get_old_disc_info 0x00000068
 #define usergate_format_drive 0x00000069
 #define usergate_get_rdfs_info 0x0000006A
-#define usergate_read_disc 0x0000006B
-#define usergate_write_disc 0x0000006C
+#define usergate_read_short_disc 0x0000006B
+#define usergate_write_short_disc 0x0000006C
 #define usergate_get_drive_info 0x0000006D
 
 #define usergate_set_cur_drive 0x0000006E
@@ -696,6 +696,9 @@
 #define usergate_get_can_module_version 0x00000227
 #define usergate_program_can_module 0x00000228
 
+#define usergate_read_long_disc 0x00000229
+#define usergate_write_long_disc 0x0000022A
+
 
 
 #ifdef __FLAT__
@@ -816,8 +819,8 @@
 #define CallGate_get_old_disc_info 0x67 0x9a 104 0 0 0 3 0
 #define CallGate_format_drive 0x67 0x9a 105 0 0 0 3 0
 #define CallGate_get_rdfs_info 0x67 0x9a 106 0 0 0 3 0
-#define CallGate_read_disc 0x67 0x9a 107 0 0 0 3 0
-#define CallGate_write_disc 0x67 0x9a 108 0 0 0 3 0
+#define CallGate_read_short_disc 0x67 0x9a 107 0 0 0 3 0
+#define CallGate_write_short_disc 0x67 0x9a 108 0 0 0 3 0
 #define CallGate_get_drive_info 0x67 0x9a 109 0 0 0 3 0
 
 #define CallGate_set_cur_drive 0x67 0x9a 110 0 0 0 3 0
@@ -1397,6 +1400,9 @@
 #define CallGate_get_can_module_version 0x67 0x9a 39 2 0 0 3 0
 #define CallGate_program_can_module 0x67 0x9a 40 2 0 0 3 0
 
+#define CallGate_read_long_disc 0x67 0x9a 41 2 0 0 3 0
+#define CallGate_write_long_disc 0x67 0x9a 42 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -1515,8 +1521,8 @@
 #define CallGate_get_old_disc_info 0x3e 0x67 0x9a 104 0 0 0 3 0
 #define CallGate_format_drive 0x3e 0x67 0x9a 105 0 0 0 3 0
 #define CallGate_get_rdfs_info 0x3e 0x67 0x9a 106 0 0 0 3 0
-#define CallGate_read_disc 0x3e 0x67 0x9a 107 0 0 0 3 0
-#define CallGate_write_disc 0x3e 0x67 0x9a 108 0 0 0 3 0
+#define CallGate_read_short_disc 0x3e 0x67 0x9a 107 0 0 0 3 0
+#define CallGate_write_short_disc 0x3e 0x67 0x9a 108 0 0 0 3 0
 #define CallGate_get_drive_info 0x3e 0x67 0x9a 109 0 0 0 3 0
 
 #define CallGate_set_cur_drive 0x3e 0x67 0x9a 110 0 0 0 3 0
@@ -2095,5 +2101,8 @@
 
 #define CallGate_get_can_module_version 0x3e 0x67 0x9a 39 2 0 0 3 0
 #define CallGate_program_can_module 0x3e 0x67 0x9a 40 2 0 0 3 0
+
+#define CallGate_read_long_disc 0x3e 0x67 0x9a 41 2 0 0 3 0
+#define CallGate_write_long_disc 0x3e 0x67 0x9a 42 2 0 0 3 0
 
 #endif
