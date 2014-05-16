@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizJ3::TQuizJ3(const char *FileName)
-  : TQuiz(162),
+  : TQuiz(163),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -109,7 +109,7 @@ int TQuizJ3::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizJ3::GetQuizN()
 {
-    return 162;
+    return 163;
 }
 
 /*##########################################################################
@@ -479,6 +479,7 @@ void TQuizJ3::SetupTexts()
   Quiz[159].MyGroup = GROUP_MIXED;
   Quiz[160].MyGroup = GROUP_MIXED;
   Quiz[161].MyGroup = GROUP_MIXED;
+  Quiz[162].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Is it important for you to find a unique niche where you can acquire unique competence?";
@@ -643,6 +644,7 @@ void TQuizJ3::SetupTexts()
   Quiz[159].Text = "If you were a soldier and disagreed with your commanding officer’s orders, would you obey anyway because that is your duty?";
   Quiz[160].Text = "Is chastity an important and valuable virtue?";
   Quiz[161].Text = "Should people be free to decide what group norms or traditions they themselves want to follow?";
+  Quiz[162].Text = "Do you have odd hair (for example multiple whorls, standing up when short or other peculiarities)?";
 }
 
 /*##########################################################################
@@ -826,7 +828,7 @@ void TQuizJ3::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 162; i++)
+    for (i = 0; i < 163; i++)
             DefineGlobalId(i, i);
 }
 

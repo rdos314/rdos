@@ -185,7 +185,7 @@ static void ProcessRow(char *str)
     }
 
     HandleRow(&Row);
-    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 162);
+    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 163);
 }
 
 /*################## ConvJ3 ##########################
