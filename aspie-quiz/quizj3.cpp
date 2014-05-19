@@ -304,17 +304,28 @@ void TQuizJ3::SetupTexts()
   Quiz[125].Reverse = TRUE;
   Quiz[127].Reverse = TRUE;
   Quiz[128].Reverse = TRUE;
+  Quiz[129].Reverse = TRUE;
   Quiz[131].Reverse = TRUE;
+  Quiz[132].Reverse = TRUE;
   Quiz[134].Reverse = TRUE;
   Quiz[135].Reverse = TRUE;
+  Quiz[136].Reverse = TRUE;
   Quiz[137].Reverse = TRUE;
+  Quiz[138].Reverse = TRUE;
+  Quiz[139].Reverse = TRUE;
+  Quiz[141].Reverse = TRUE;
   Quiz[142].Reverse = TRUE;
+  Quiz[144].Reverse = TRUE;
   Quiz[145].Reverse = TRUE;
   Quiz[146].Reverse = TRUE;
+  Quiz[147].Reverse = TRUE;
+  Quiz[149].Reverse = TRUE;
   Quiz[152].Reverse = TRUE;
   Quiz[154].Reverse = TRUE;
+  Quiz[155].Reverse = TRUE;
   Quiz[158].Reverse = TRUE;
   Quiz[159].Reverse = TRUE;
+  Quiz[160].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
@@ -479,7 +490,7 @@ void TQuizJ3::SetupTexts()
   Quiz[159].MyGroup = GROUP_MIXED;
   Quiz[160].MyGroup = GROUP_MIXED;
   Quiz[161].MyGroup = GROUP_MIXED;
-  Quiz[162].MyGroup = GROUP_MIXED;
+  Quiz[162].MyGroup = GROUP_ASPIE_ATTACH;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Is it important for you to find a unique niche where you can acquire unique competence?";
