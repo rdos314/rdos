@@ -67,7 +67,7 @@
 #define VK_1              '1'
 #define VK_2              '2'
 #define VK_3              '3'
-#define VK_4              '4
+#define VK_4              '4'
 #define VK_5              '5'
 #define VK_6              '6'
 #define VK_7              '7'
@@ -98,7 +98,7 @@
 #define VK_W              'W'
 #define VK_X              'X'
 #define VK_Y              'Y'
-#define VK_Z              'Z
+#define VK_Z              'Z'
 #define VK_LWIN           0x5B
 #define VK_RWIN           0x5C
 #define VK_APPS           0x5D
