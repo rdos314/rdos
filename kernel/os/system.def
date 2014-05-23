@@ -244,7 +244,7 @@ app_env                     DD ?
 app_name                    DD ?
 app_cmd_line                DD ?
 app_options                 DD ?
-app_mem_blocks              DW ?
+app_mem_blocks              DD ?
 
 app_vm_psp_seg		        DW ?
 app_pm_psp_sel		        DW ?

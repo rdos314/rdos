@@ -198,8 +198,8 @@ resource_descr	ENDS
 
 pe_mem_struc STRUC
 
-mem_prev	DW ?
-mem_next	DW ?
+mem_prev	DD ?
+mem_next	DD ?
 mem_base	DD ?
 mem_size	DD ?
 mem_alloc   DD ?

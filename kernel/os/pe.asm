@@ -4533,6 +4533,8 @@ allocate_mem    PROC far
     push es
     push eax
     push ecx
+    push esi
+    push edi
 ;
     dec eax
     and ax,0F000h
@@ -4543,43 +4545,45 @@ allocate_mem    PROC far
     mov ax,system_data_sel
     mov ds,ax
     sub edx,ds:flat_base
+    mov ax,flat_sel
+    mov es,ax
 ;
+    push edx
     mov eax,SIZE pe_mem_struc
-    AllocateLocalMem
+    AllocateLocalLinear
+    mov edi,edx
+    pop edx
+;        
     pop ecx
-    mov es:mem_base,edx
-    mov es:mem_size,ecx
+    mov es:[edi].mem_base,edx
+    mov es:[edi].mem_size,ecx
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
     EnterSection ds:app_lib_section     
 ;
-    mov ax,ds:app_mem_blocks
-    or ax,ax
+    mov eax,ds:app_mem_blocks
+    or eax,eax
     je alloc_ins_empty
 ;
-    push ds
-    push si
-    mov ds,ax
-    mov si,ds:mem_prev
-    mov ds:mem_prev,es
-    mov ds,si
-    mov ds:mem_next,es
-    mov es:mem_next,ax
-    mov es:mem_prev,si
-    pop si
-    pop ds
+    mov esi,es:[eax].mem_prev
+    mov es:[eax].mem_prev,edi
+    mov es:[esi].mem_next,edi
+    mov es:[edi].mem_next,eax
+    mov es:[edi].mem_prev,esi
     jmp alloc_ins_done
 
 alloc_ins_empty:
-    mov es:mem_next,es
-    mov es:mem_prev,es
+    mov es:[edi].mem_next,edi
+    mov es:[edi].mem_prev,edi
 
 alloc_ins_done:
-    mov ds:app_mem_blocks,es
+    mov ds:app_mem_blocks,edi
     LeaveSection ds:app_lib_section     
 ;
+    pop edi
+    pop esi
     pop ecx
     pop eax
     pop es
@@ -4605,56 +4609,58 @@ free_mem    PROC far
     push eax
     push ecx
     push edx
-    push si
+    push esi
     push edi
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
+    mov ax,flat_sel
+    mov es,ax
     EnterSection ds:app_lib_section     
 
 free_mem_more:
-    mov ax,ds:app_mem_blocks
-    or ax,ax
+    mov eax,ds:app_mem_blocks
+    or eax,eax
     jz free_mem_failed
-    mov si,ax
+;
+    mov esi,eax
 free_mem_loop:
-    mov es,ax
-
-    cmp edx,es:mem_base
+    cmp edx,es:[eax].mem_base
     je free_mem_ok
 
 free_mem_next:
-    mov ax,es:mem_next
-    cmp ax,si
+    mov eax,es:[eax].mem_next
+    cmp eax,esi
     jne free_mem_loop
 
 free_mem_failed:
     jmp free_mem_done
 
 free_mem_ok:
+    mov edi,eax
+;
     push ds
     mov ax,system_data_sel
     mov ds,ax
-    mov edx,es:mem_base
+    mov edx,es:[edi].mem_base
     add edx,ds:flat_base
     pop ds
 ;
-    mov ecx,es:mem_size
+    mov ecx,es:[edi].mem_size
     FreeLinear
-    mov ds:app_mem_blocks,es
-    mov ax,es:mem_prev
-    cmp ax,ds:app_mem_blocks
+    mov ds:app_mem_blocks,edi
+    mov eax,es:[edi].mem_prev
+    cmp eax,ds:app_mem_blocks
     pushf
-    push ds
-    mov ds:app_mem_blocks,ax
-    mov si,es:mem_next
-    mov ds,ax
-    mov ds:mem_next,si
-    mov ds,si
-    mov ds:mem_prev,ax
-    pop ds
-    FreeMem
+    mov ds:app_mem_blocks,eax
+    mov esi,es:[edi].mem_next
+    mov es:[eax].mem_next,esi
+    mov es:[esi].mem_prev,eax
+;    
+    mov edx,edi
+    mov ecx,SIZE pe_mem_struc
+    FreeLinear
     popf
     jne free_mem_done
 
@@ -4665,7 +4671,7 @@ free_mem_done:
     LeaveSection ds:app_lib_section     
 ;
     pop edi
-    pop si
+    pop esi
     pop edx
     pop ecx
     pop eax
@@ -4693,6 +4699,8 @@ debug_allocate_mem      PROC far
     push es
     push eax
     push ecx
+    push esi
+    push edi
 ;
     push eax
     dec eax
@@ -4704,14 +4712,20 @@ debug_allocate_mem      PROC far
     mov ax,system_data_sel
     mov ds,ax
     sub edx,ds:flat_base
+    mov ax,flat_sel
+    mov es,ax
 ;
+    push edx
     mov eax,SIZE pe_mem_struc
-    AllocateLocalMem
+    AllocateLocalLinear
+    mov edi,edx
+    pop edx
+;        
     pop ecx
-    mov es:mem_base,edx
-    mov es:mem_size,ecx
+    mov es:[edi].mem_base,edx
+    mov es:[edi].mem_size,ecx
     pop eax
-    mov es:mem_alloc,eax
+    mov es:[edi].mem_alloc,eax
 ;
     cmp eax,ecx
     je debug_alloc_fill_ok
@@ -4737,31 +4751,27 @@ debug_alloc_fill_ok:
     mov ds,ds:p_app_sel
     EnterSection ds:app_lib_section     
 ;
-    mov ax,ds:app_mem_blocks
-    or ax,ax
+    mov eax,ds:app_mem_blocks
+    or eax,eax
     je debug_alloc_ins_empty
 ;
-    push ds
-    push si
-    mov ds,ax
-    mov si,ds:mem_prev
-    mov ds:mem_prev,es
-    mov ds,si
-    mov ds:mem_next,es
-    mov es:mem_next,ax
-    mov es:mem_prev,si
-    pop si
-    pop ds
+    mov esi,es:[eax].mem_prev
+    mov es:[eax].mem_prev,edi
+    mov es:[esi].mem_next,edi
+    mov es:[edi].mem_next,eax
+    mov es:[edi].mem_prev,esi
     jmp debug_alloc_ins_done
 
 debug_alloc_ins_empty:
-    mov es:mem_next,es
-    mov es:mem_prev,es
+    mov es:[edi].mem_next,edi
+    mov es:[edi].mem_prev,edi
 
 debug_alloc_ins_done:
-    mov ds:app_mem_blocks,es
+    mov ds:app_mem_blocks,edi
     LeaveSection ds:app_lib_section     
 ;
+    pop edi
+    pop esi
     pop ecx
     pop eax
     pop es
@@ -4787,27 +4797,30 @@ debug_free_mem  PROC far
     push eax
     push ecx
     push edx
-    push si
+    push esi
     push edi
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
+    mov ax,flat_sel
+    mov es,ax
     EnterSection ds:app_lib_section     
 
 debug_free_mem_more:
-    mov ax,ds:app_mem_blocks
-    or ax,ax
+    mov eax,ds:app_mem_blocks
+    or eax,eax
     jz debug_free_mem_failed
-    mov si,ax
+;
+    mov esi,eax
+    
 debug_free_mem_loop:
-    mov es,ax
-    cmp edx,es:mem_base
+    cmp edx,es:[eax].mem_base
     je debug_free_mem_ok
 
 debug_free_mem_next:
-    mov ax,es:mem_next
-    cmp ax,si
+    mov eax,es:[eax].mem_next
+    cmp eax,esi
     jne debug_free_mem_loop
 
 debug_free_mem_failed:
@@ -4815,26 +4828,24 @@ debug_free_mem_failed:
     jmp free_mem_done
 
 debug_free_mem_ok:
-    mov edx,es:mem_base
-    mov ecx,es:mem_size
-    mov eax,es:mem_alloc
+    mov edi,eax
+;    
+    mov edx,es:[edi].mem_base
+    mov ecx,es:[edi].mem_size
+    mov eax,es:[edi].mem_alloc
     cmp eax,ecx
     je debug_free_mem_check_done
 ;
-    push es
     push ecx
     push edi
     mov edi,edx
     add edi,eax
     sub ecx,eax
 ;
-    mov ax,flat_data_sel
-    mov es,ax   
     mov al,0A5h
     repe scas byte ptr es:[edi]
     pop edi
     pop ecx
-    pop es
 ;
     jz debug_free_mem_check_done
 ;
@@ -4844,25 +4855,24 @@ debug_free_mem_check_done:
     push ds
     mov ax,system_data_sel
     mov ds,ax
-    mov edx,es:mem_base
+    mov edx,es:[edi].mem_base
     add edx,ds:flat_base
     pop ds
-    mov ecx,es:mem_size
+    mov ecx,es:[edi].mem_size
     FreeLinear
 ;
-    mov ds:app_mem_blocks,es
-    mov ax,es:mem_prev
-    cmp ax,ds:app_mem_blocks
+    mov ds:app_mem_blocks,edi
+    mov eax,es:[edi].mem_prev
+    cmp eax,ds:app_mem_blocks
     pushf
-    push ds
-    mov ds:app_mem_blocks,ax
-    mov si,es:mem_next
-    mov ds,ax
-    mov ds:mem_next,si
-    mov ds,si
-    mov ds:mem_prev,ax
-    pop ds
-    FreeMem
+    mov ds:app_mem_blocks,eax
+    mov esi,es:[edi].mem_next
+    mov es:[eax].mem_next,esi
+    mov es:[esi].mem_prev,eax
+;    
+    mov edx,edi
+    mov ecx,SIZE pe_mem_struc
+    FreeLinear
     popf
     jne debug_free_mem_done
 
@@ -4873,7 +4883,7 @@ debug_free_mem_done:
     LeaveSection ds:app_lib_section     
 ;
     pop edi
-    pop si
+    pop esi
     pop edx
     pop ecx
     pop eax
