@@ -726,6 +726,20 @@ UpdateOnePort    Proc near
     jz uopResetOk
 ;
     mov dx,si
+    mov ax,PORT_POWER
+    call ClearPortFeature    
+;
+    mov ax,250
+    WaitMilliSec
+;    
+    mov dx,si
+    mov ax,PORT_POWER
+    call SetPortFeature    
+;
+    mov ax,10
+    WaitMilliSec
+;
+    mov dx,si
     mov ax,PORT_RESET
     call SetPortFeature
 ;
@@ -733,7 +747,7 @@ UpdateOnePort    Proc near
     WaitMilliSec
     mov gs:[bx].hps_req_reset,0
     jmp uopDone
-    
+
 uopResetOk:
     mov dx,si
     call GetPortStatus
