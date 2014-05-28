@@ -280,6 +280,22 @@ void TQuizJ5::SetupTexts()
   Quiz[120].Nt = TRUE;
 
   Quiz[12].Reverse = TRUE;
+  Quiz[35].Reverse = TRUE;
+  Quiz[38].Reverse = TRUE;
+  Quiz[84].Reverse = TRUE;
+  Quiz[99].Reverse = TRUE;
+  Quiz[100].Reverse = TRUE;
+  Quiz[101].Reverse = TRUE;
+  Quiz[102].Reverse = TRUE;
+  Quiz[103].Reverse = TRUE;
+  Quiz[104].Reverse = TRUE;
+  Quiz[105].Reverse = TRUE;
+  Quiz[113].Reverse = TRUE;
+  Quiz[114].Reverse = TRUE;
+  Quiz[117].Reverse = TRUE;
+  Quiz[118].Reverse = TRUE;
+  Quiz[119].Reverse = TRUE;
+  Quiz[120].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
