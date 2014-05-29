@@ -78,6 +78,9 @@ int main(int argc, char **argv)
     printf("calc global\r\n");
     Quiz[0]->CalcGlobal();
 
+    printf("group loadings\r\n");
+    Quiz[0]->WriteCsvGroupWeighting("res\\group.csv");
+
     printf("group\r\n");
     Quiz[0]->WriteGroupTable("res\\group.htm", TRUE);
     printf("groupcorr\r\n");
