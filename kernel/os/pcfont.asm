@@ -485,6 +485,7 @@ WritePcLfb24Char    Proc near
     mov edx,eax
     add eax,eax
     add eax,edx
+    shl eax,3
     add edi,eax
     pop eax
 ;    
@@ -643,7 +644,7 @@ WritePcLfb32Char    Proc near
     mul esi
     add edi,eax
     movzx eax,cx
-    shl eax,2
+    shl eax,5
     add edi,eax
     pop eax
 ;    
@@ -841,6 +842,7 @@ set_pcfont_mode Proc near
     jmp set_mode_done
 
 set_mode_graphic:    
+    movzx ebx,ds:v_bpp
     cmp bl,32
     jbe set_mode_do
 ;
