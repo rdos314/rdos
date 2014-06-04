@@ -55,9 +55,7 @@
 #include "ping.h"
 #include "state.h"
 #include "part.h"
-#include "rdfspart.h"
 #include "fatpart.h"
-#include "ffspart.h"
 #include "exit.h"
 #include "echo.h"
 #include "call.h"
@@ -96,11 +94,9 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-static TFsPartitionFactory *rdfs;
 static TFsPartitionFactory *fat12;
 static TFsPartitionFactory *fat16;
 static TFsPartitionFactory *fat32;
-static TFsPartitionFactory *flashfs;
 
 static TCommandFactory *acpi;
 static TCommandFactory *audio;
@@ -209,11 +205,9 @@ TSession::TSession(const char *ipc)
 
     if (Count == 0)
     {
-        rdfs = new TRdfsPartitionFactory;
         fat12 = new TFat12PartitionFactory;
         fat16 = new TFat16PartitionFactory;
         fat32 = new TFat32PartitionFactory;
-        flashfs = new TFlashFsPartitionFactory;
 
         wait = new TWaitFactory;
         volume = new TVolumeFactory;
@@ -344,11 +338,9 @@ TSession::~TSession()
     if (Count == 0)
     {
 
-        delete rdfs;
         delete fat12;
         delete fat16;
         delete fat32;
-        delete flashfs;
 
         delete wait;
         delete volume;

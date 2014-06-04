@@ -33,9 +33,8 @@
 #include "lang.h"
 #include "rmpart.h"
 #include "part.h"
-#include "idedisc.h"
 
-#define PROMPT_BUFFER_SIZE	256
+#define PROMPT_BUFFER_SIZE  256
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -69,7 +68,7 @@ TRemovePartitionFactory::TRemovePartitionFactory()
 ##########################################################################*/
 TCommand *TRemovePartitionFactory::Create(TSession *session, const char *param)
 {
-	return new TRemovePartitionCommand(session, param);
+    return new TRemovePartitionCommand(session, param);
 }
 
 /*##########################################################################
@@ -86,7 +85,7 @@ TCommand *TRemovePartitionFactory::Create(TSession *session, const char *param)
 TRemovePartitionCommand::TRemovePartitionCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_RMPART);
+    FHelpScreen.Load(TEXT_CMDHELP_RMPART);
 }
 
 /*##########################################################################
@@ -102,13 +101,13 @@ TRemovePartitionCommand::TRemovePartitionCommand(TSession *session, const char *
 ##########################################################################*/
 int TRemovePartitionCommand::OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg)
 {
-	switch(ch)
-	{
-		case 'Y':
-			return OptScanBool(optstr, bool, strarg, &FOptY);
-	}
-	OptError(optstr);
-	return E_Useage;
+    switch(ch)
+    {
+        case 'Y':
+            return OptScanBool(optstr, bool, strarg, &FOptY);
+    }
+    OptError(optstr);
+    return E_Useage;
 }
 
 /*##########################################################################
@@ -124,7 +123,7 @@ int TRemovePartitionCommand::OptScan(const char *optstr, int ch, int bool, const
 ##########################################################################*/
 void TRemovePartitionCommand::InitOptions()
 {
-	FOptY = FALSE;
+    FOptY = FALSE;
 }
 
 /*##########################################################################
@@ -141,7 +140,7 @@ void TRemovePartitionCommand::InitOptions()
 int TRemovePartitionCommand::Confirm(TFsPartition *Part)
 {
     char DriveStr[4];
-	char str[40];
+    char str[40];
 
     if (Part->GetDrive())
     {
@@ -149,23 +148,23 @@ int TRemovePartitionCommand::Confirm(TFsPartition *Part)
         DriveStr[1] = ':';
         DriveStr[2] = 0;   
 
-		sprintf(str, "%3.3f MB", Part->GetTotalSpace());
+        sprintf(str, "%3.3f MB", Part->GetTotalSpace());
 
-		FMsg.printf(TEXT_RMPART_DRIVE_HEAD, DriveStr, str);
-		Write(FMsg.GetData());
-	}
-	else
-	{
-		sprintf(str, "%3.3f MB", Part->GetTotalSpace());
+        FMsg.printf(TEXT_RMPART_DRIVE_HEAD, DriveStr, str);
+        Write(FMsg.GetData());
+    }
+    else
+    {
+        sprintf(str, "%3.3f MB", Part->GetTotalSpace());
 
-		FMsg.printf(TEXT_RMPART_PART_HEAD, FPartNr, FDisc->GetDiscNr(), str);
-		Write(FMsg.GetData());
-	}
+        FMsg.printf(TEXT_RMPART_PART_HEAD, FPartNr, FDisc->GetDiscNr(), str);
+        Write(FMsg.GetData());
+    }
 
-	if (FMsg.UserPrompt(PROMPT_RMPART) == 1)
-		return TRUE;
+    if (FMsg.UserPrompt(PROMPT_RMPART) == 1)
+        return TRUE;
 
-	return FALSE;
+    return FALSE;
 }
 
 /*##########################################################################
@@ -183,7 +182,7 @@ int TRemovePartitionCommand::Remove(TFsPartition *Part)
 {
     if (!FOptY)
         if (!Confirm(Part))
-			return 1;
+            return 1;
 
     FDiscPart->Delete(FPartNr);
     return 0;
@@ -204,16 +203,16 @@ int TRemovePartitionCommand::RemovePart()
 {
     TPartition *Part = 0;
     
-	if (FPartNr < FDiscPart->PartCount)
-		Part = FDiscPart->PartArr[FPartNr];
+    if (FPartNr < FDiscPart->PartCount)
+        Part = FDiscPart->PartArr[FPartNr];
 
-	if (Part)
-		if (Part->IsFs())
-			return Remove((TFsPartition *)Part);
+    if (Part)
+        if (Part->IsFs())
+            return Remove((TFsPartition *)Part);
 
-	FMsg.printf(TEXT_RMPART_PART_ERROR, FPartNr);
-	Write(FMsg.GetData());
-	return 1;
+    FMsg.printf(TEXT_RMPART_PART_ERROR, FPartNr);
+    Write(FMsg.GetData());
+    return 1;
 }
 
 /*##########################################################################
@@ -229,20 +228,20 @@ int TRemovePartitionCommand::RemovePart()
 ##########################################################################*/
 int TRemovePartitionCommand::RemoveDisc()
 {
-	if (FDisc->IsValid())
-	{
-		FDiscPart = new TDiscPartition(FDisc);
-		if (RemovePart() == 0)
-		{
-			delete FDiscPart;
-			return 0;
-		}
-		delete FDiscPart;
-	}
+    if (FDisc->IsValid())
+    {
+        FDiscPart = new TDiscPartition(FDisc);
+        if (RemovePart() == 0)
+        {
+            delete FDiscPart;
+            return 0;
+        }
+        delete FDiscPart;
+    }
 
-	FMsg.printf(TEXT_SHOWPART_DISC_ERROR, FDisc->GetDiscNr());
-	Write(FMsg.GetData());
-	return 1;
+    FMsg.printf(TEXT_SHOWPART_DISC_ERROR, FDisc->GetDiscNr());
+    Write(FMsg.GetData());
+    return 1;
 }
 
 /*##########################################################################
@@ -258,32 +257,32 @@ int TRemovePartitionCommand::RemoveDisc()
 ##########################################################################*/
 int TRemovePartitionCommand::Execute(char *param)
 {
-	int ret;
-	int DiscNr;
-	int d;
-	InitOptions();
+    int ret;
+    int DiscNr;
+    int d;
+    InitOptions();
 
-	if (!ScanCmdLine(param, 0))
-		return 1;
+    if (!ScanCmdLine(param, 0))
+        return 1;
 
-	if (FArgCount != 2)
-	{
-		FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
-		Write(FMsg.GetData());
-		return E_Useage;
-	}
+    if (FArgCount != 2)
+    {
+        FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
+        Write(FMsg.GetData());
+        return E_Useage;
+    }
 
-	if (sscanf(FArgList->FName.GetData(), "%d", &DiscNr) != 1)
-	{
-		ErrorSyntax(0);
-		return 1;
-	}
+    if (sscanf(FArgList->FName.GetData(), "%d", &DiscNr) != 1)
+    {
+        ErrorSyntax(0);
+        return 1;
+    }
 
-	if (sscanf(FArgList->FList->FName.GetData(), "%d", &FPartNr) != 1)
-	{
-		ErrorSyntax(0);
-		return 1;
-	}
+    if (sscanf(FArgList->FList->FName.GetData(), "%d", &FPartNr) != 1)
+    {
+        ErrorSyntax(0);
+        return 1;
+    }
 
     for (d = 0; d < 16; d++)
     {
@@ -297,10 +296,10 @@ int TRemovePartitionCommand::Execute(char *param)
 
     if (FDisc)
     {
-  	    ret = RemoveDisc();
-	    delete FDisc;
-	}
+        ret = RemoveDisc();
+        delete FDisc;
+    }
 
-	return ret;
+    return ret;
 }
 

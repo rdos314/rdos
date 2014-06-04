@@ -30,7 +30,6 @@
 
 #include "rdos.h"
 #include "cmdhelp.h"
-#include "idedisc.h"
 #include "lang.h"
 #include "mkpart.h"
 
