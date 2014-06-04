@@ -1364,6 +1364,9 @@ dtCheckCompleted:
     jmp dtCheckCompleted
 
 dtStart:
+    mov ax,250
+    WaitMilliSec
+;
     mov ax,SEG data
     mov ds,ax
 ;

@@ -35,7 +35,6 @@
 #include "lang.h"
 #include "inithd.h"
 #include "part.h"
-#include "idedisc.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -330,7 +329,7 @@ int TInitHdCommand::Execute(char *param)
     {
         if (sscanf(param, "%d %d", &CurrDisc, &NewDisc) == 2)
         {
-            Disc = new TIdeDisc(CurrDisc);
+            Disc = new TDisc(CurrDisc);
             ok = Disc->IsValid();
 
             if (ok)
