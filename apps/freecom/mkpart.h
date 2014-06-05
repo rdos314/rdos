@@ -30,7 +30,7 @@
 
 #include "cmd.h"
 #include "cmdfact.h"
-#include "part.h"
+#include "idepart.h"
 
 class TMakePartitionFactory : public TCommandFactory
 {

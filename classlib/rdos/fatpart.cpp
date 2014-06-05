@@ -38,26 +38,37 @@
 #define FALSE   0
 #define TRUE    !FALSE
 
-/*##################  TFatPartition::TFatPartition  #############
-*   Purpose....: Partition FAT constructor                                                                          #
+/*##################  TIdeFatPartition::TIdeFatPartition  #############
+*   Purpose....: Partition IDE FAT constructor                                                                          #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFatPartition::TFatPartition(TDisc *Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long Start, long Size)
- : TFsPartition(Disc, Type, Parent, Entry, Start, Size)
+TIdeFatPartition::TIdeFatPartition(TDisc *Disc, unsigned char Type, TIdePartitionTable *Parent, int Entry, long Start, long Size)
+ : TIdeFsPartition(Disc, Type, Parent, Entry, Start, Size)
 {
 }
 
-/*##################  TFat12Partition::WriteBootSector  #############
+/*##################  TIdeFatPartition::~TIdeFatPartition  #############
+*   Purpose....: Partition IDE FAT destructor                                                                          #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TIdeFatPartition::~TIdeFatPartition()
+{
+}
+
+/*##################  TIdeFat12Partition::WriteBootSector  #############
 *   Purpose....: Write boot sector                                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TFatPartition::WriteBootSector(const char *BootCode, int BootSize)
+void TIdeFatPartition::WriteBootSector(const char *BootCode, int BootSize)
 {
     char *BootSector;
     TBootParam bootp;
@@ -74,7 +85,7 @@ void TFatPartition::WriteBootSector(const char *BootCode, int BootSize)
     bootp.SectorsPerCyl = Disc->GetSectorsPerCyl();
     bootp.Heads = Disc->GetHeads();
     bootp.HiddenSectors = 0;
-    bootp.Sectors = DriveSectors;
+    bootp.Sectors = Size - 1;
     bootp.Drive = 0x80 + Disc->GetDiscNr();
     bootp.Resv7 = 0;
     bootp.Signature = 0;
@@ -98,281 +109,314 @@ void TFatPartition::WriteBootSector(const char *BootCode, int BootSize)
     delete BootSector;
 }
 
-/*##################  TFat12Partition::TFat12Partition  #############
-*   Purpose....: Partition FAT12 constructor                                                                        #
+/*##################  TIdeFat12Partition::TFat12Partition  #############
+*   Purpose....: Partition IDE FAT12 constructor                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFat12Partition::TFat12Partition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
- : TFatPartition(Disc, 1, Parent, Entry, Start, Size)
+TIdeFat12Partition::TIdeFat12Partition(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size)
+ : TIdeFatPartition(Disc, 1, Parent, Entry, Start, Size)
 {
 }
 
-/*##################  TFat12Partition::GetPartName  #############
+/*##################  TIdeFat12Partition::~TFat12Partition  #############
+*   Purpose....: Partition IDE FAT12 destructor                                                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TIdeFat12Partition::~TIdeFat12Partition()
+{
+}
+
+/*##################  TIdeFat12Partition::GetPartName  #############
 *   Purpose....: Get partition name                                                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-const char *TFat12Partition::GetPartName()
+const char *TIdeFat12Partition::GetPartName()
 {
         return "FAT12";
 }
 
-/*##################  TFat12Partition::Format  #############
-*   Purpose....: Format FAT12 partition                                                     #
+/*##################  TIdeFat12Partition::Format  #############
+*   Purpose....: Format IDE FAT12 partition                                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-int TFat12Partition::Format(const char *BootCode, int BootSize)
+int TIdeFat12Partition::Format(const char *BootCode, int BootSize)
 {
     WriteBootSector(BootCode, BootSize);
-        return RdosFormatDrive(FDisc->GetDiscNr(), Start, Size, "FAT12");
+    return RdosFormatDrive(FDisc->GetDiscNr(), Start, Size, "FAT12");
 }
 
-/*##################  TFat16Partition::TFat16Partition  #############
-*   Purpose....: Partition FAT16 constructor                                                                        #
+/*##################  TIdeFat16Partition::TIdeFat16Partition  #############
+*   Purpose....: Partition IDE FAT16 constructor                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFat16Partition::TFat16Partition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
- : TFatPartition(Disc, 6, Parent, Entry, Start, Size)
+TIdeFat16Partition::TIdeFat16Partition(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size)
+ : TIdeFatPartition(Disc, 6, Parent, Entry, Start, Size)
 {
 }
 
-/*##################  TFat16Partition::GetPartName  #############
+/*##################  TIdeFat16Partition::~TIdeFat16Partition  #############
+*   Purpose....: Partition IDE FAT16 destructor                                                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TIdeFat16Partition::~TIdeFat16Partition()
+{
+}
+
+/*##################  TIdeFat16Partition::GetPartName  #############
 *   Purpose....: Get partition name                                                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-const char *TFat16Partition::GetPartName()
+const char *TIdeFat16Partition::GetPartName()
 {
-        return "FAT16";
+    return "FAT16";
 }
 
-/*##################  TFat16Partition::Format  #############
-*   Purpose....: Format FAT16 partition                                                     #
+/*##################  TIdeFat16Partition::Format  #############
+*   Purpose....: Format IDE FAT16 partition                                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-int TFat16Partition::Format(const char *BootCode, int BootSize)
+int TIdeFat16Partition::Format(const char *BootCode, int BootSize)
 {
     WriteBootSector(BootCode, BootSize);
-        return RdosFormatDrive(FDisc->GetDiscNr(), Start, Size, "FAT16");
+    return RdosFormatDrive(FDisc->GetDiscNr(), Start, Size, "FAT16");
 }
 
-/*##################  TFat32Partition::TFat32Partition  #############
-*   Purpose....: Partition FAT32 constructor                                                                        #
+/*##################  TIdeFat32Partition::TIdeFat32Partition  #############
+*   Purpose....: Partition IDE FAT32 constructor                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFat32Partition::TFat32Partition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
- : TFatPartition(Disc, 11, Parent, Entry, Start, Size)
+TIdeFat32Partition::TIdeFat32Partition(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size)
+ : TIdeFatPartition(Disc, 11, Parent, Entry, Start, Size)
 {
 }
 
-/*##################  TFat32Partition::GetPartName  #############
+/*##################  TIdeFat32Partition::~TIdeFat32Partition  #############
+*   Purpose....: Partition IDE FAT32 destructor                                                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TIdeFat32Partition::~TIdeFat32Partition()
+{
+}
+
+/*##################  TIdeFat32Partition::GetPartName  #############
 *   Purpose....: Get partition name                                                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-const char *TFat32Partition::GetPartName()
+const char *TIdeFat32Partition::GetPartName()
 {
-        return "FAT32";
+    return "FAT32";
 }
 
-/*##################  TFat32Partition::Format  #############
-*   Purpose....: Format FAT32 partition                                                     #
+/*##################  TIdeFat32Partition::Format  #############
+*   Purpose....: Format IDE FAT32 partition                                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-int TFat32Partition::Format(const char *BootCode, int BootSize)
+int TIdeFat32Partition::Format(const char *BootCode, int BootSize)
 {
     WriteBootSector(BootCode, BootSize);
-        return RdosFormatDrive(FDisc->GetDiscNr(), Start, Size, "FAT32");
+    return RdosFormatDrive(FDisc->GetDiscNr(), Start, Size, "FAT32");
 }
 
-/*##################  TFat12PartitionFactory::TFat12PartitionFactory  #############
-*   Purpose....: FAT12 partition factory constructor                                                                        #
+/*##################  TIdeFat12PartitionFactory::TIdeFat12PartitionFactory  #############
+*   Purpose....: IDE FAT12 partition factory constructor                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFat12PartitionFactory::TFat12PartitionFactory()
-  : TFsPartitionFactory(1, "FAT12")
+TIdeFat12PartitionFactory::TIdeFat12PartitionFactory()
+  : TIdeFsPartitionFactory(1, "FAT12")
 {
 }
 
-/*##################  TFat12PartitionFactory::~TFat12PartitionFactory  #############
-*   Purpose....: FAT12 partition factory destructor                                                                         #
+/*##################  TIdeFat12PartitionFactory::~TIdeFat12PartitionFactory  #############
+*   Purpose....: IDE FAT12 partition factory destructor                                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFat12PartitionFactory::~TFat12PartitionFactory()
+TIdeFat12PartitionFactory::~TIdeFat12PartitionFactory()
 {
 }
 
-/*##################  TFat12PartitionFactory::Open  #############
-*   Purpose....: Open FAT12 partition
+/*##################  TIdeFat12PartitionFactory::Open  #############
+*   Purpose....: Open IDE FAT12 partition
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TFat12PartitionFactory::Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
+TIdeFsPartition *TIdeFat12PartitionFactory::Open(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size)
 {
-        return new TFat12Partition(Disc, Parent, Entry, Start, Size);
+    return new TIdeFat12Partition(Disc, Parent, Entry, Start, Size);
 }
 
-/*##################  TFat12PartitionFactory::Create  #############
-*   Purpose....: Create FAT12 partition
+/*##################  TIdeFat12PartitionFactory::Create  #############
+*   Purpose....: Create IDE FAT12 partition
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TFat12PartitionFactory::Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize)
+TIdeFsPartition *TIdeFat12PartitionFactory::Create(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize)
 {
-        TFat12Partition *FatPart;
+    TIdeFat12Partition *FatPart;
 
-        FatPart = new TFat12Partition(Disc, Parent, Entry, Start, Size);
-        if (FatPart->Format(BootCode, BootSize))
-            return FatPart;
-        else
-        {
-            delete FatPart;
-            return 0;
-        }
+    FatPart = new TIdeFat12Partition(Disc, Parent, Entry, Start, Size);
+    if (FatPart->Format(BootCode, BootSize))
+        return FatPart;
+    else
+    {
+        delete FatPart;
+        return 0;
+    }
 }
 
-/*##################  TFat16PartitionFactory::TFat16PartitionFactory  #############
-*   Purpose....: FAT16 partition factory constructor                                                                        #
+/*##################  TIdeFat16PartitionFactory::TIdeFat16PartitionFactory  #############
+*   Purpose....: IDE FAT16 partition factory constructor                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFat16PartitionFactory::TFat16PartitionFactory()
-  : TFsPartitionFactory(6, "FAT16")
+TIdeFat16PartitionFactory::TIdeFat16PartitionFactory()
+  : TIdeFsPartitionFactory(6, "FAT16")
 {
 }
 
-/*##################  TFat16PartitionFactory::~TFat16PartitionFactory  #############
-*   Purpose....: FAT16 partition factory destructor                                                                         #
+/*##################  TIdeFat16PartitionFactory::~TIdeFat16PartitionFactory  #############
+*   Purpose....: IDE FAT16 partition factory destructor                                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFat16PartitionFactory::~TFat16PartitionFactory()
+TIdeFat16PartitionFactory::~TIdeFat16PartitionFactory()
 {
 }
 
-/*##################  TFat16PartitionFactory::Open  #############
-*   Purpose....: Open FAT16 partition
+/*##################  TIdeFat16PartitionFactory::Open  #############
+*   Purpose....: Open IDE FAT16 partition
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TFat16PartitionFactory::Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
+TIdeFsPartition *TIdeFat16PartitionFactory::Open(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size)
 {
-        return new TFat16Partition(Disc, Parent, Entry, Start, Size);
+    return new TIdeFat16Partition(Disc, Parent, Entry, Start, Size);
 }
 
-/*##################  TFat16PartitionFactory::Create  #############
-*   Purpose....: Create FAT16 partition
+/*##################  TIdeFat16PartitionFactory::Create  #############
+*   Purpose....: Create IDE FAT16 partition
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TFat16PartitionFactory::Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize)
+TIdeFsPartition *TIdeFat16PartitionFactory::Create(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize)
 {
-        TFat16Partition *FatPart;
+    TIdeFat16Partition *FatPart;
 
-        FatPart = new TFat16Partition(Disc, Parent, Entry, Start, Size);
-        if (FatPart->Format(BootCode, BootSize))
-            return FatPart;
-        else
-        {
-            delete FatPart;
-            return 0;
-        }
+    FatPart = new TIdeFat16Partition(Disc, Parent, Entry, Start, Size);
+    if (FatPart->Format(BootCode, BootSize))
+        return FatPart;
+    else
+    {
+        delete FatPart;
+        return 0;
+    }
 }
 
-/*##################  TFat32PartitionFactory::TFat32PartitionFactory  #############
-*   Purpose....: FAT32 partition factory constructor                                                                        #
+/*##################  TIdeFat32PartitionFactory::TIdeFat32PartitionFactory  #############
+*   Purpose....: IDE FAT32 partition factory constructor                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFat32PartitionFactory::TFat32PartitionFactory()
-  : TFsPartitionFactory(11, "FAT32")
+TIdeFat32PartitionFactory::TIdeFat32PartitionFactory()
+  : TIdeFsPartitionFactory(11, "FAT32")
 {
 }
 
-/*##################  TFat32PartitionFactory::~TFat32PartitionFactory  #############
-*   Purpose....: FAT32 partition factory destructor                                                                         #
+/*##################  TIdeFat32PartitionFactory::~TIdeFat32PartitionFactory  #############
+*   Purpose....: IDE FAT32 partition factory destructor                                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFat32PartitionFactory::~TFat32PartitionFactory()
+TIdeFat32PartitionFactory::~TIdeFat32PartitionFactory()
 {
 }
 
-/*##################  TFat32PartitionFactory::Open  #############
-*   Purpose....: Open FAT32 partition
+/*##################  TIdeFat32PartitionFactory::Open  #############
+*   Purpose....: Open IDE FAT32 partition
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TFat32PartitionFactory::Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
+TIdeFsPartition *TIdeFat32PartitionFactory::Open(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size)
 {
-        return new TFat32Partition(Disc, Parent, Entry, Start, Size);
+    return new TIdeFat32Partition(Disc, Parent, Entry, Start, Size);
 }
 
-/*##################  TFat32PartitionFactory::Create  #############
-*   Purpose....: Create FAT32 partition
+/*##################  TIdeFat32PartitionFactory::Create  #############
+*   Purpose....: Create IDE FAT32 partition
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TFat32PartitionFactory::Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize)
+TIdeFsPartition *TIdeFat32PartitionFactory::Create(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize)
 {
-        TFat32Partition *FatPart;
+    TIdeFat32Partition *FatPart;
 
-        FatPart = new TFat32Partition(Disc, Parent, Entry, Start, Size);
-        if (FatPart->Format(BootCode, BootSize))
-            return FatPart;
-        else
-        {
-            delete FatPart;
-            return 0;
-        }
+    FatPart = new TIdeFat32Partition(Disc, Parent, Entry, Start, Size);
+    if (FatPart->Format(BootCode, BootSize))
+        return FatPart;
+    else
+    {
+        delete FatPart;
+        return 0;
+    }
 }

@@ -28,72 +28,76 @@
 #ifndef _FATPART_H
 #define _FATPART_H
 
-#include "part.h"
+#include "idepart.h"
 
-class TFatPartition : public TFsPartition
+class TIdeFatPartition : public TIdeFsPartition
 {
 public:
-	TFatPartition(TDisc *Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long Start, long Size);
+        TIdeFatPartition(TDisc *Disc, unsigned char Type, TIdePartitionTable *Parent, int Entry, long Start, long Size);
+        virtual ~TIdeFatPartition();        
 
 protected:
     void WriteBootSector(const char *BootCode, int BootSize);
 };
 
-class TFat12Partition : public TFatPartition
+class TIdeFat12Partition : public TIdeFatPartition
 {
 public:
-	TFat12Partition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
-	virtual const char *GetPartName();
-	virtual int Format(const char *BootCode, int BootSize);
+        TIdeFat12Partition(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size);
+        virtual ~TIdeFat12Partition();        
+        virtual const char *GetPartName();
+        virtual int Format(const char *BootCode, int BootSize);
 };
 
-class TFat16Partition : public TFatPartition
+class TIdeFat16Partition : public TIdeFatPartition
 {
 public:
-	TFat16Partition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
-	virtual const char *GetPartName();
-	virtual int Format(const char *BootCode, int BootSize);
+        TIdeFat16Partition(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size);
+        virtual ~TIdeFat16Partition();        
+        virtual const char *GetPartName();
+        virtual int Format(const char *BootCode, int BootSize);
 };
 
-class TFat32Partition : public TFatPartition
+class TIdeFat32Partition : public TIdeFatPartition
 {
 public:
-	TFat32Partition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
-	virtual const char *GetPartName();
-	virtual int Format(const char *BootCode, int BootSize);
+        TIdeFat32Partition(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size);
+        virtual ~TIdeFat32Partition();        
+        virtual const char *GetPartName();
+        virtual int Format(const char *BootCode, int BootSize);
 };
 
-class TFat12PartitionFactory : public TFsPartitionFactory
+class TIdeFat12PartitionFactory : public TIdeFsPartitionFactory
 {
 public:
-	TFat12PartitionFactory();
-	virtual ~TFat12PartitionFactory();
+        TIdeFat12PartitionFactory();
+        virtual ~TIdeFat12PartitionFactory();
 
 protected:
-	virtual TFsPartition *Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
-	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize);
+        virtual TIdeFsPartition *Open(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size);
+        virtual TIdeFsPartition *Create(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize);
 };
 
-class TFat16PartitionFactory : public TFsPartitionFactory
+class TIdeFat16PartitionFactory : public TIdeFsPartitionFactory
 {
 public:
-	TFat16PartitionFactory();
-	virtual ~TFat16PartitionFactory();
+        TIdeFat16PartitionFactory();
+        virtual ~TIdeFat16PartitionFactory();
 
 protected:
-	virtual TFsPartition *Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
-	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize);
+        virtual TIdeFsPartition *Open(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size);
+        virtual TIdeFsPartition *Create(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize);
 };
 
-class TFat32PartitionFactory : public TFsPartitionFactory
+class TIdeFat32PartitionFactory : public TIdeFsPartitionFactory
 {
 public:
-	TFat32PartitionFactory();
-	virtual ~TFat32PartitionFactory();
+        TIdeFat32PartitionFactory();
+        virtual ~TIdeFat32PartitionFactory();
 
 protected:
-	virtual TFsPartition *Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
-	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize);
+        virtual TIdeFsPartition *Open(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size);
+        virtual TIdeFsPartition *Create(TDisc *Disc, TIdePartitionTable *Parent, int Entry, long Start, long Size, const char *BootCode, int BootSize);
 };
 
 #endif

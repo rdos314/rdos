@@ -135,65 +135,96 @@ void TShowPartitionCommand::InitOptions()
 #   Returns....: *
 #
 ##########################################################################*/
-void TShowPartitionCommand::ShowEntry(int Nr, TPartition *Entry)
+void TShowPartitionCommand::ShowEntry(int Nr, TIdePartition *Entry)
 {
-        const char *Name;
-        int Typ;
-        double TotalSpace;
-        double FreeSpace;
-        int Drive;
-        char DriveStr[4];
-        char str[100];
+    const char *Name;
+    int Typ;
+    double TotalSpace;
+    double FreeSpace;
+    int Drive;
+    char DriveStr[4];
+    char str[100];
 
-        if (Entry)
+    if (Entry)
+    {
+        Name = Entry->GetPartName();
+        Typ = Entry->GetType();
+        TotalSpace = Entry->GetTotalSpace();
+
+        if (Entry->Size)
         {
-                Name = Entry->GetPartName();
-                Typ = Entry->GetType();
-                TotalSpace = Entry->GetTotalSpace();
+            if (Entry->IsFs() && Entry->GetDrive())
+                Drive = Entry->GetDrive()->GetDriveNr();
+            else
+                Drive = 0;
 
-                if (Entry->Size)
-                {
-                        if (Entry->IsFs() && Entry->GetDrive())
-                                Drive = Entry->GetDrive()->GetDriveNr();
-                        else
-                                Drive = 0;
-
-                        if (Drive)
-                        {
-                            DriveStr[0] = 'A' + (char)Drive;
-                            DriveStr[1] = ':';
-                            DriveStr[2] = 0;
+            if (Drive)
+            {
+                DriveStr[0] = 'A' + (char)Drive;
+                DriveStr[1] = ':';
+                DriveStr[2] = 0;
                               
-                            FreeSpace = Entry->GetFreeSpace();
+                FreeSpace = Entry->GetFreeSpace();
 
                 sprintf(str,
-                                                "%d: %s %02hX %08lX-%08lX %8s %15.3f MB %15.3f MB\r\n",
-                                                Nr,
-                                                DriveStr,
-                                                Typ,
-                                                Entry->Start,
-                                                Entry->Start + Entry->Size - 1,
-                                                Name,
-                                                TotalSpace,
-                                                FreeSpace);
-                        }
-                        else
-                                sprintf(str,
-                                                "%d: -- %02hX %08lX-%08lX %8s %15.3f MB\r\n",
-                                                Nr,
-                                                Typ,
-                                                Entry->Start,
-                                                Entry->Start + Entry->Size - 1,
-                                                Name,
-                                                TotalSpace);
-                        Write(str);
-                }
-                else
-                {
-                        FMsg.printf(TEXT_SHOWPART_FREE_ENTRY, Nr);
-                        Write(FMsg.GetData());
-                }
+                             "%d: %s %02hX %08lX-%08lX %8s %15.3f MB %15.3f MB\r\n",
+                             Nr,
+                             DriveStr,
+                             Typ,
+                             Entry->Start,
+                             Entry->Start + Entry->Size - 1,
+                             Name,
+                             TotalSpace,
+                             FreeSpace);
+            }
+            else
+                sprintf(str,
+                            "%d: -- %02hX %08lX-%08lX %8s %15.3f MB\r\n",
+                            Nr,
+                            Typ,
+                            Entry->Start,
+                            Entry->Start + Entry->Size - 1,
+                            Name,
+                            TotalSpace);
+            Write(str);
         }
+        else
+        {
+            FMsg.printf(TEXT_SHOWPART_FREE_ENTRY, Nr);
+            Write(FMsg.GetData());
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TShowPartitionCommand::ShowFreeEntry
+#
+#   Purpose....: Show free entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShowPartitionCommand::ShowFreeEntry(int Nr, TPartition *Entry)
+{
+    const char *Name;
+    double TotalSpace;
+    double FreeSpace;
+    char str[100];
+
+    Name = Entry->GetPartName();
+    TotalSpace = Entry->GetTotalSpace();
+
+    sprintf(str,
+            "%d: -- -- %08lX-%08lX %8s %15.3f MB\r\n",
+             Nr,
+             Entry->Start,
+             Entry->Start + Entry->Size - 1,
+             Name,
+             TotalSpace);
+    Write(str);
 }
 
 /*##########################################################################
@@ -207,10 +238,10 @@ void TShowPartitionCommand::ShowEntry(int Nr, TPartition *Entry)
 #   Returns....: *
 #
 ##########################################################################*/
-void TShowPartitionCommand::ShowTreeTable(TPartitionTable *Part)
+void TShowPartitionCommand::ShowTreeTable(TIdePartitionTable *Part)
 {
         int i;
-        TPartition *Entry;
+        TIdePartition *Entry;
         double TotalSpace;
         char str[100];
 
@@ -231,10 +262,10 @@ void TShowPartitionCommand::ShowTreeTable(TPartitionTable *Part)
 
         for (i = 0; i < 4; i++)
         {
-                Entry = Part->PartArr[i];
+                Entry = (TIdePartition *)Part->PartArr[i];
                 if (Entry)
                         if (Entry->IsTable())
-                                ShowTreeTable((TPartitionTable *)Entry);
+                                ShowTreeTable((TIdePartitionTable *)Entry);
         }
 }
 
@@ -249,7 +280,7 @@ void TShowPartitionCommand::ShowTreeTable(TPartitionTable *Part)
 #   Returns....: *
 #
 ##########################################################################*/
-void TShowPartitionCommand::ShowTree(TDiscPartition *Part)
+void TShowPartitionCommand::ShowTree(TIdeDiscPartition *Part)
 {
         Write("\r\n");
 
@@ -271,11 +302,12 @@ void TShowPartitionCommand::ShowTree(TDiscPartition *Part)
 #   Returns....: *
 #
 ##########################################################################*/
-void TShowPartitionCommand::ShowTable(TDiscPartition *Part)
+void TShowPartitionCommand::ShowTable(TIdeDiscPartition *Part)
 {
     int i;
     TDisc *Disc;
     long long TotalSectors;
+    TPartition *Entry;
 
     Disc = Part->GetDisc();
     TotalSectors = Disc->GetTotalSectors();
@@ -289,7 +321,16 @@ void TShowPartitionCommand::ShowTable(TDiscPartition *Part)
     Write(FMsg.GetData());
 
     for (i = 0; i < Part->PartCount; i++)
-        ShowEntry(i, Part->PartArr[i]);
+    {
+        Entry = Part->PartArr[i];
+        if (Entry)
+        {
+            if (Entry->IsFree())
+                ShowFreeEntry(i, Entry);
+            else
+                ShowEntry(i, (TIdePartition *)Entry);
+        }
+    }
 }
 
 /*##########################################################################
@@ -366,26 +407,41 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
 ##########################################################################*/
 int TShowPartitionCommand::Show(TDisc *Disc)
 {
-    TDiscPartition *DiscPart;
+    TIdeDiscPartition *DiscPart;
+    TPartition *Entry;
+    TIdePartition *IdeEntry;
+    int isgpt = FALSE;
 
     if (Disc->IsValid())
     {            
-        DiscPart = new TDiscPartition(Disc);
+        DiscPart = new TIdeDiscPartition(Disc);
 
-        if (DiscPart->PartCount > 0 && DiscPart->PartArr[0]->GetType() == 0xEE)
+        if (DiscPart->PartCount > 0)
         {
-            ShowGpt(Disc);
-            delete DiscPart;
-            return TRUE;
-        }
-        else
-        {
-            if (FOptD)
-                ShowTree(DiscPart);
+            Entry = DiscPart->PartArr[0];
+            if (!Entry->IsFree())
+            {
+                IdeEntry = (TIdePartition *)Entry;
+                if (IdeEntry->GetType() == 0xEE)
+                    isgpt = TRUE;
+
+            }
+
+            if (isgpt)
+            {
+                ShowGpt(Disc);
+                delete DiscPart;
+                return TRUE;
+            }
             else
-                ShowTable(DiscPart);
-            delete DiscPart;
-            return TRUE;
+            {
+                if (FOptD)
+                    ShowTree(DiscPart);
+                else
+                    ShowTable(DiscPart);
+                delete DiscPart;
+                return TRUE;
+            }
         }
     }
     return FALSE;

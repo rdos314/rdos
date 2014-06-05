@@ -30,14 +30,14 @@
 
 #include "cmd.h"
 #include "cmdfact.h"
-#include "part.h"
+#include "idepart.h"
 #include "gptpart.h"
 
 class TShowPartitionFactory : public TCommandFactory
 {
 public:
-	TShowPartitionFactory();
-	virtual TCommand *Create(TSession *session, const char *param);
+        TShowPartitionFactory();
+        virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -45,22 +45,23 @@ protected:
 class TShowPartitionCommand : public TCommand
 {
 public:
-	TShowPartitionCommand(TSession *session, const char *param);
+        TShowPartitionCommand(TSession *session, const char *param);
 
-	virtual int Execute(char *param);	
+        virtual int Execute(char *param);       
 
 protected:
     void InitOptions();
-	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
+        virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 
-    void ShowEntry(int Nr, TPartition *Entry);
-    void ShowTreeTable(TPartitionTable *Part);
-    void ShowTree(TDiscPartition *Part);
-    void ShowTable(TDiscPartition *Part);
+    void ShowFreeEntry(int Nr, TPartition *Entry);
+    void ShowEntry(int Nr, TIdePartition *Entry);
+    void ShowTreeTable(TIdePartitionTable *Part);
+    void ShowTree(TIdeDiscPartition *Part);
+    void ShowTable(TIdeDiscPartition *Part);
     int Show(TDisc *Disc);
     void ShowGpt(TDisc *Disc);
-	
-	int FOptD;
+        
+        int FOptD;
 
 };
 

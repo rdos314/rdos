@@ -137,7 +137,7 @@ void TRemovePartitionCommand::InitOptions()
 #   Returns....: *
 #
 ##########################################################################*/
-int TRemovePartitionCommand::Confirm(TFsPartition *Part)
+int TRemovePartitionCommand::Confirm(TIdeFsPartition *Part)
 {
     char DriveStr[4];
     char str[40];
@@ -178,7 +178,7 @@ int TRemovePartitionCommand::Confirm(TFsPartition *Part)
 #   Returns....: *
 #
 ##########################################################################*/
-int TRemovePartitionCommand::Remove(TFsPartition *Part)
+int TRemovePartitionCommand::Remove(TIdeFsPartition *Part)
 {
     if (!FOptY)
         if (!Confirm(Part))
@@ -208,7 +208,7 @@ int TRemovePartitionCommand::RemovePart()
 
     if (Part)
         if (Part->IsFs())
-            return Remove((TFsPartition *)Part);
+            return Remove((TIdeFsPartition *)Part);
 
     FMsg.printf(TEXT_RMPART_PART_ERROR, FPartNr);
     Write(FMsg.GetData());
@@ -230,7 +230,7 @@ int TRemovePartitionCommand::RemoveDisc()
 {
     if (FDisc->IsValid())
     {
-        FDiscPart = new TDiscPartition(FDisc);
+        FDiscPart = new TIdeDiscPartition(FDisc);
         if (RemovePart() == 0)
         {
             delete FDiscPart;

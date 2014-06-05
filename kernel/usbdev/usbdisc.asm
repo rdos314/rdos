@@ -1364,9 +1364,6 @@ dtCheckCompleted:
     jmp dtCheckCompleted
 
 dtStart:
-    mov ax,250
-    WaitMilliSec
-;
     mov ax,SEG data
     mov ds,ax
 ;
@@ -1419,15 +1416,31 @@ dtInsDo:
     movzx ecx,bx
     AddWaitForUsbPipe
 ;
+    mov cx,32
+
+dtRetryLoop:
+    push cx
+;    
     call Inquiry    
-    jc dtFailed
+    jc dtRetry
 ;    
     call RequestSense
-    jc dtFailed
+    jc dtRetry
 ;
     call ReadCapacity
-    jc dtFailed
-;
+    jnc dtOk
+
+dtRetry:
+    pop cx
+    sub cx,1
+    jz dtFailed
+;    
+    mov ax,100
+    WaitMilliSec
+    jmp dtRetryLoop
+
+dtOk:
+    pop cx
     mov bx,fs
     mov ecx,10000h
     InstallDisc

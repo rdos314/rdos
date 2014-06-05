@@ -94,9 +94,9 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-static TFsPartitionFactory *fat12;
-static TFsPartitionFactory *fat16;
-static TFsPartitionFactory *fat32;
+static TIdeFsPartitionFactory *ifat12;
+static TIdeFsPartitionFactory *ifat16;
+static TIdeFsPartitionFactory *ifat32;
 
 static TCommandFactory *acpi;
 static TCommandFactory *audio;
@@ -205,9 +205,9 @@ TSession::TSession(const char *ipc)
 
     if (Count == 0)
     {
-        fat12 = new TFat12PartitionFactory;
-        fat16 = new TFat16PartitionFactory;
-        fat32 = new TFat32PartitionFactory;
+        ifat12 = new TIdeFat12PartitionFactory;
+        ifat16 = new TIdeFat16PartitionFactory;
+        ifat32 = new TIdeFat32PartitionFactory;
 
         wait = new TWaitFactory;
         volume = new TVolumeFactory;
@@ -338,9 +338,9 @@ TSession::~TSession()
     if (Count == 0)
     {
 
-        delete fat12;
-        delete fat16;
-        delete fat32;
+        delete ifat12;
+        delete ifat16;
+        delete ifat32;
 
         delete wait;
         delete volume;

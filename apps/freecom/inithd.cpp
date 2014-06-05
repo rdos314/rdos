@@ -34,7 +34,7 @@
 #include "cmdhelp.h"
 #include "lang.h"
 #include "inithd.h"
-#include "part.h"
+#include "idepart.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -355,7 +355,7 @@ int TInitHdCommand::Execute(char *param)
                 ok = TRUE;
             else
             {
-                DiscPart = new TDiscPartition(Disc);
+                DiscPart = new TIdeDiscPartition(Disc);
                 Part = DiscPart->PartArr[0];
                 if (Part)
                     if (Part->Start <= FLoaderSectors + 1)

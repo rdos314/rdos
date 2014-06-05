@@ -98,8 +98,8 @@ TMakePartitionCommand::TMakePartitionCommand(TSession *session, const char *para
 ##########################################################################*/
 int TMakePartitionCommand::Make(TDisc *Disc, const char *FsName, int Size)
 {
-        TDiscPartition *DiscPart;
-        TPartition *part;
+        TIdeDiscPartition *DiscPart;
+        int ok;
         char *BootCode;
         int BootSize;
 
@@ -108,12 +108,12 @@ int TMakePartitionCommand::Make(TDisc *Disc, const char *FsName, int Size)
         BootCode = new char[512];
         BootSize = RdosReadBinaryResource(0, 100, BootCode, 0x1BE);
 
-                DiscPart = new TDiscPartition(Disc);
-                part = DiscPart->Add(FsName, Size, BootCode, BootSize);
+                DiscPart = new TIdeDiscPartition(Disc);
+                ok = DiscPart->Add(FsName, Size, BootCode, BootSize);
 
                 delete BootCode;
 
-                if (part)
+                if (ok)
                 {
                         delete DiscPart;
                         return 0;

@@ -30,35 +30,35 @@
 
 #include "cmd.h"
 #include "cmdfact.h"
-#include "part.h"
+#include "idepart.h"
 
 class TRemovePartitionFactory : public TCommandFactory
 {
 public:
-	TRemovePartitionFactory();
-	virtual TCommand *Create(TSession *session, const char *param);
+        TRemovePartitionFactory();
+        virtual TCommand *Create(TSession *session, const char *param);
 };
 
 class TRemovePartitionCommand : public TCommand
 {
 public:
-	TRemovePartitionCommand(TSession *session, const char *param);
+        TRemovePartitionCommand(TSession *session, const char *param);
 
-	virtual int Execute(char *param);	
+        virtual int Execute(char *param);       
 
 protected:
     void InitOptions();
-	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
+        virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 
-    int Confirm(TFsPartition *Part);
-    int Remove(TFsPartition *Part);
+    int Confirm(TIdeFsPartition *Part);
+    int Remove(TIdeFsPartition *Part);
     int RemovePart();
     int RemoveDisc();
-	
-	int FOptY;
-	TDisc *FDisc;
-	int FPartNr;
-	TDiscPartition *FDiscPart;
+        
+        int FOptY;
+        TDisc *FDisc;
+        int FPartNr;
+        TIdeDiscPartition *FDiscPart;
 
 };
 
