@@ -61,6 +61,9 @@ int main(int argc, char **argv)
     printf("write no answer\r\n");
     Quiz[0]->WriteNoAnswerStats("res\\noans.txt");
 
+    printf("factors\r\n");
+    Quiz[0]->WriteFactors("res\\factors.csv");
+
     printf("import\r\n");
     Quiz[0]->ImportMvsp("pca-done\\allJ5.txt", PCA_TYPE_ALL);
     Quiz[0]->ImportMvsp("pca-done\\maleJ5.txt", PCA_TYPE_MALE);

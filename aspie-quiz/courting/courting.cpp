@@ -30,6 +30,7 @@ struct TMale
     void Hide();
     void Update();
     double GetFemaleDir();
+    double GetFemaleDist();
 
     TFemale *Female;
 
@@ -251,6 +252,27 @@ double TMale::GetFemaleDir()
 
 /*##########################################################################
 #
+#   Name       : TMale::GetFemaleDist
+#
+#   Purpose....: Get female distance
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TMale::GetFemaleDist()
+{
+    double dx, dy;
+
+    dx = X - Female->X;
+    dy = Y - Female->Y;
+
+    return sqrt(dx * dx + dy * dy);
+}
+
+/*##########################################################################
+#
 #   Name       : TMale::Update
 #
 #   Purpose....: Update position
@@ -263,7 +285,7 @@ double TMale::GetFemaleDir()
 void TMale::Update()
 {
     double dx, dy;
-    double turn;
+    double dist;
     
     dx = V * cos(VRot);
     dy = V * sin(VRot);
@@ -274,11 +296,14 @@ void TMale::Update()
     if (Female)
     {
         Rot = GetFemaleDir();
-        VRot = Rot - PI / 8;
+        VRot = Rot - PI / 16;
 
-        turn = Female->VRot - Female->Rot;
+        dist = GetFemaleDist();
 
-        V = (1.0 - turn / PI) * Female->V;
+        if (dist < 25)
+            V = Female->V + (dist - 25.0) / 5.0;
+        else
+            V = Female->V + 0.5;
     }
 }
 
@@ -391,8 +416,10 @@ void TFemale::Update()
 {
     double dist;
     double dx, dy;
+
+    Rot = VRot;
     
-    if (Male)
+/*    if (Male)
     {
         dist = GetMaleDist();
 
@@ -400,7 +427,7 @@ void TFemale::Update()
             Rot = VRot;
         else
             Rot = VRot - PI / 2 * (25 - dist);
-    }
+    } */
     
     dx = V * cos(VRot);
     dy = V * sin(VRot);
@@ -424,6 +451,7 @@ void TFemale::Update()
 ##########################################################################*/
 void SavePng()
 {
+/*
     char FileName[256];
     TBitmapGraphicDevice bitmap(24, SCALE * 210, SCALE * 140);
 
@@ -432,7 +460,8 @@ void SavePng()
     sprintf(FileName, "png\\%d.png", FileNr);
     FileNr++;
 
-    TPngBitmapDevice::Save(FileName, &bitmap);    
+    TPngBitmapDevice::Save(FileName, &bitmap);
+*/
 }
 
 /*##########################################################################
@@ -464,19 +493,19 @@ int main()
     {
         Male.Female = 0;
         Male.X = 200;
-        Male.Y = 30;
-        Male.V = 0;
-        Male.Rot = -PI;
-        Male.VRot = -PI;
+        Male.Y = 120;
+        Male.V = 1.0;
+        Male.Rot = -PI / 2;
+        Male.VRot = -PI / 2;
 
         Female.Male = 0;    
         Female.X = 220;
         Female.Y = 50;
-        Female.V = 1.0;
+        Female.V = 0;
         Female.Rot = -PI;
         Female.VRot = -PI;
     
-        for (i = 0; i < 5; i++)
+        for (i = 0; i < 35; i++)
         {
             Male.Show();
             Female.Show();
@@ -484,9 +513,6 @@ int main()
             SavePng();
 
             RdosWaitMilli(40);
-
-            Female.Rot += PI / 400;
-            Female.VRot = Female.Rot;
 
             Male.Update();
             Female.Update();
@@ -494,8 +520,11 @@ int main()
             Male.Hide();
             Female.Hide();
         }
-    
-        for (i = 0; i < 50; i++)
+
+        Female.V = 0.75;
+        Female.Rot = PI;
+        
+        for (i = 0; i < 20; i++)
         {
             Male.Show();
             Female.Show();
@@ -504,7 +533,7 @@ int main()
 
             RdosWaitMilli(40);
 
-            Female.Rot += PI / 200;
+            Female.Rot += PI / 50;
             Female.VRot = Female.Rot;
 
             Male.Update();
@@ -516,7 +545,7 @@ int main()
 
         Male.Female = &Female;
         
-        for (i = 0; i < 50; i++)
+        for (i = 0; i < 25; i++)
         {
             Male.Show();
             Female.Show();
@@ -525,7 +554,7 @@ int main()
 
             RdosWaitMilli(40);
 
-            Female.Rot -= PI / 200;
+            Female.Rot -= PI / 100;
             Female.VRot = Female.Rot;
 
             Male.Update();
@@ -534,9 +563,6 @@ int main()
             Male.Hide();
             Female.Hide();
         }
-
-        Female.Male = &Male;
-        Female.V = 0.75;
     
         for (i = 0; i < 150; i++)
         {
@@ -548,6 +574,7 @@ int main()
             RdosWaitMilli(40);
 
             Female.VRot -= PI / 600;
+            Female.Rot = Female.VRot;
 
             Male.Update();
             Female.Update();
@@ -566,6 +593,7 @@ int main()
             RdosWaitMilli(40);
 
             Female.VRot -= PI / 150;
+            Female.Rot = Female.VRot;
 
             Male.Update();
             Female.Update();
@@ -584,6 +612,7 @@ int main()
             RdosWaitMilli(40);
 
             Female.VRot -= PI / 600;
+            Female.Rot = Female.VRot;
 
             Male.Update();
             Female.Update();
@@ -602,6 +631,7 @@ int main()
             RdosWaitMilli(40);
 
             Female.VRot -= PI / 150;
+            Female.Rot = Female.VRot;
 
             Male.Update();
             Female.Update();
@@ -620,6 +650,7 @@ int main()
             RdosWaitMilli(40);
 
             Female.VRot -= PI / 400;
+            Female.Rot = Female.VRot;
 
             Male.Update();
             Female.Update();
@@ -641,6 +672,7 @@ int main()
                 Female.V -= 0.01;
 
             Female.VRot -= PI / 200;
+            Female.Rot = Female.VRot;
 
             Male.Update();
             Female.Update();
