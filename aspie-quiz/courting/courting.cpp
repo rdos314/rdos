@@ -505,7 +505,7 @@ int main()
         Female.Rot = -PI;
         Female.VRot = -PI;
     
-        for (i = 0; i < 35; i++)
+        for (i = 0; i < 30; i++)
         {
             Male.Show();
             Female.Show();
@@ -524,7 +524,7 @@ int main()
         Female.V = 0.75;
         Female.Rot = PI;
         
-        for (i = 0; i < 20; i++)
+        for (i = 0; i < 32; i++)
         {
             Male.Show();
             Female.Show();
@@ -533,7 +533,7 @@ int main()
 
             RdosWaitMilli(40);
 
-            Female.Rot += PI / 50;
+            Female.Rot += PI / 75;
             Female.VRot = Female.Rot;
 
             Male.Update();
@@ -545,7 +545,7 @@ int main()
 
         Male.Female = &Female;
         
-        for (i = 0; i < 25; i++)
+        for (i = 0; i < 28; i++)
         {
             Male.Show();
             Female.Show();
@@ -564,7 +564,7 @@ int main()
             Female.Hide();
         }
     
-        for (i = 0; i < 150; i++)
+        for (i = 0; i < 250; i++)
         {
             Male.Show();
             Female.Show();
@@ -602,7 +602,7 @@ int main()
             Female.Hide();
         }
     
-        for (i = 0; i < 200; i++)
+        for (i = 0; i < 175; i++)
         {
             Male.Show();
             Female.Show();
@@ -611,7 +611,7 @@ int main()
 
             RdosWaitMilli(40);
 
-            Female.VRot -= PI / 600;
+            Female.VRot -= PI / 700;
             Female.Rot = Female.VRot;
 
             Male.Update();
@@ -639,7 +639,8 @@ int main()
             Male.Hide();
             Female.Hide();
         }
-    
+
+/*    
         for (i = 0; i < 150; i++)
         {
             Male.Show();
@@ -658,6 +659,8 @@ int main()
             Male.Hide();
             Female.Hide();
         }
+
+*/
 
         for (i = 0; i < 75; i++)
         {
