@@ -141,7 +141,8 @@ void TShowPartitionCommand::ShowEntry(int Nr, TIdePartition *Entry)
     int Typ;
     double TotalSpace;
     double FreeSpace;
-    int Drive;
+    int DriveNr;
+    TDrive *Drive;
     char DriveStr[4];
     char str[100];
 
@@ -154,13 +155,19 @@ void TShowPartitionCommand::ShowEntry(int Nr, TIdePartition *Entry)
         if (Entry->Size)
         {
             if (Entry->IsFs() && Entry->GetDrive())
-                Drive = Entry->GetDrive()->GetDriveNr();
-            else
-                Drive = 0;
-
-            if (Drive)
             {
-                DriveStr[0] = 'A' + (char)Drive;
+                Drive = Entry->GetDrive();
+                if (Drive)
+                    DriveNr = Drive->GetDriveNr();
+                else
+                    DriveNr = 0;
+            }
+            else
+                DriveNr = 0;
+
+            if (DriveNr)
+            {
+                DriveStr[0] = 'A' + (char)DriveNr;
                 DriveStr[1] = ':';
                 DriveStr[2] = 0;
                               

@@ -92,6 +92,7 @@ sd_disc_sel         DW ?
 
 sd_ocr              DD ?
 sd_rca              DD ?
+sd_cid              DD ?,?,?,?
 
 sd_total_sectors    DD ?
 sd_sectors_per_unit DW ?
@@ -674,6 +675,19 @@ SendCmd2    Proc near
     mov word ptr fs:REG_TRANS_MODE,0
     mov word ptr fs:REG_CMD,202h
     call WaitForCompletion
+    jc sc2Done
+;    
+    mov eax,fs:REG_RESP0
+    mov ds:sd_cid,eax
+    mov eax,fs:REG_RESP1
+    mov ds:sd_cid+4,eax
+    mov eax,fs:REG_RESP2
+    mov ds:sd_cid+8,eax
+    mov eax,fs:REG_RESP3
+    mov ds:sd_cid+12,eax
+    clc
+
+sc2Done:    
     ret
 SendCmd2    Endp
 
