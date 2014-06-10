@@ -58,7 +58,7 @@
 #define PCA_TYPE_ASIA           7
 #define PCA_TYPE_FINAL          8
 
-#define GROUP_COUNT             14
+#define GROUP_COUNT             13
 
 #define GROUP_ASPIE_TALENT      0
 #define GROUP_NT_TALENT         1
@@ -66,14 +66,13 @@
 #define GROUP_NT_SENSORY        3
 #define GROUP_ASPIE_NVC         4
 #define GROUP_NT_NVC            5
-#define GROUP_ASPIE_CONTACT     6
-#define GROUP_NT_CONTACT        7
-#define GROUP_ASPIE_SOCIAL      8
-#define GROUP_NT_SOCIAL         9
+#define GROUP_ASPIE_SOCIAL      6
+#define GROUP_NT_SOCIAL         7
+#define GROUP_ASPIE_CONTACT     8
+#define GROUP_NT_CONTACT        9
 #define GROUP_ASPIE_ATTACH      10
 #define GROUP_NT_ATTACH         11
-#define GROUP_NDNT              12
-#define GROUP_MIXED             13
+#define GROUP_MIXED             12
 
 #define POP_TYPE_COUNT			25
 

@@ -623,9 +623,6 @@ void TQuiz::Init()
         Group[GROUP_NT_SENSORY].PosName = "NT sensory problem";
         Group[GROUP_NT_SENSORY].NegName = "NT sensory";
 
-        Group[GROUP_NDNT].PosName = "Aspie";
-        Group[GROUP_NDNT].NegName = "NT";
-
         Group[GROUP_MIXED].PosName = "Aspie mixed";
         Group[GROUP_MIXED].NegName = "NT mixed";
 
@@ -1192,11 +1189,6 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_NT_SENSORY:
                                          file.Write("GROUP_NT_SENSORY");
-
-                break;
-
-            case GROUP_NDNT:
-                                         file.Write("GROUP_NDNT");
 
                 break;
 
@@ -8235,11 +8227,6 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
                                         
                 case GROUP_NT_SENSORY:
                 file->Write("NT_SENSORY");
-                break;
-                    
-                    
-                case GROUP_NDNT:
-                file->Write("ASPIE_NT");
                 break;
                     
                     
