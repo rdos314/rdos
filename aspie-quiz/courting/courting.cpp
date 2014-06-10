@@ -451,7 +451,7 @@ void TFemale::Update()
 ##########################################################################*/
 void SavePng()
 {
-/*
+
     char FileName[256];
     TBitmapGraphicDevice bitmap(24, SCALE * 210, SCALE * 140);
 
@@ -461,7 +461,6 @@ void SavePng()
     FileNr++;
 
     TPngBitmapDevice::Save(FileName, &bitmap);
-*/
 }
 
 /*##########################################################################
