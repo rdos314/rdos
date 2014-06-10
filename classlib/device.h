@@ -389,10 +389,10 @@ public:
         void Disable();
         int IsEnabled() const;
         
-        virtual int IsOpen() const;
-        virtual int IsActive() const;
-        virtual int IsBusy() const;
-        virtual int IsOnline() const;
+        virtual int IsOpen();
+        virtual int IsActive();
+        virtual int IsBusy();
+        virtual int IsOnline();
         virtual void DeviceName(char *Name, int MaxLen) const;
         static void GetDevices(void (*DeviceCallb)(TDevice *Device));
 

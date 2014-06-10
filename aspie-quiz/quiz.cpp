@@ -6998,7 +6998,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
                 file.Write("p <");
                   WriteFieldFooter(file);
 
-                for (grp = 0; grp < GROUP_COUNT - 2; grp++)
+                for (grp = 0; grp < GROUP_COUNT - 1; grp++)
         {
             WriteFieldHeader(file, 4);
                         sprintf(str, "G:%d", grp + 1);
@@ -7054,7 +7054,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
             while (quiz)
             {
                                 NormCorr[cross] = 0.0;
-                                for (j = 0; j < GROUP_COUNT - 2; j++)
+                                for (j = 0; j < GROUP_COUNT - 1; j++)
                                 {
                                         val = quiz->Quiz[q].Group[j].Corr;
                                         if (val >= NormCorr[cross])
@@ -7093,7 +7093,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
                         while (quiz)
             {
                 NormCorr[cross] = 0.0;
-                                for (j = 0; j < GROUP_COUNT - 2; j++)
+                                for (j = 0; j < GROUP_COUNT - 1; j++)
                                 {
                                         val = quiz->Quiz[q].Group[j].Corr;
                                         if (val >= NormCorr[cross])
@@ -7111,7 +7111,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
                         }
                         WriteFieldFooter(file);
 
-                        for (j = 0; j < GROUP_COUNT - 2; j++)
+                        for (j = 0; j < GROUP_COUNT - 1; j++)
                         {
                                 cross = 0;
                                 TopQuiz->ClearUsed(TopQuestion);

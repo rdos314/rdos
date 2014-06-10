@@ -64,7 +64,7 @@ public:
     ~TTcpSocket();
 
     virtual void DeviceName(char *Name, int MaxLen) const;
-    virtual int IsOpen() const;
+    virtual int IsOpen();
     virtual void NotifyClose();
         
     virtual long GetRemoteIP() const;

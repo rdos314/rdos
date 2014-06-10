@@ -5478,7 +5478,7 @@ void TDevice::Close()
 #   Returns....: TRUE if open
 #
 ##########################################################################*/
-int TDevice::IsOpen() const
+int TDevice::IsOpen()
 {
         return FOpen;
 }
@@ -5666,7 +5666,7 @@ void TDevice::Offline()
 #   Returns....: TRUE if online
 #
 ##########################################################################*/
-int TDevice::IsOnline() const
+int TDevice::IsOnline()
 {
         if (FPhysUnit)
                 return FPhysUnit->IsOnline() && FOnline;
@@ -5685,7 +5685,7 @@ int TDevice::IsOnline() const
 #   Returns....: TRUE if open and enabled
 #
 ##########################################################################*/
-int TDevice::IsActive() const
+int TDevice::IsActive()
 {
         return FEnabled && FOpen;
 }
@@ -5801,7 +5801,7 @@ void TDevice::Busy()
 #   Returns....: TRUE if busy
 #
 ##########################################################################*/
-int TDevice::IsBusy() const
+int TDevice::IsBusy()
 {
         return FBusy;
 }

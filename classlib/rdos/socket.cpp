@@ -216,7 +216,7 @@ void TTcpSocket::Add(TWait *Wait)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TTcpSocket::IsOpen() const
+int TTcpSocket::IsOpen()
 {
     if (TDevice::IsOpen() && FHandle)
         return !RdosIsTcpConnectionClosed(FHandle);
