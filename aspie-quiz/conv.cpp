@@ -122,6 +122,7 @@ void ConvJ3();
 void ConvJ4();
 void ConvJ5();
 void ConvJ6();
+void ConvJ7();
 
 void ConvRu();
 
@@ -620,9 +621,10 @@ int main(int argc, char **argv)
     ConvJ3();
     ConvJ4();
     ConvJ5();
+    ConvJ6();
 */
 
-    ConvJ6();
+    ConvJ7();
 
     return 0;
 }
