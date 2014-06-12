@@ -169,6 +169,9 @@ static void ProcessRow(char *str)
 
             case 16:
                  Row.ViewTime = atoi(valstr);
+                 Row.Quiz[126] = Row.ViewTime / 10;
+                 if (Row.Quiz[126] > 5)
+                     Row.Quiz[126] = 5;
                  break;
 
             default:

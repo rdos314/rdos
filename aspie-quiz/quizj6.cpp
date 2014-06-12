@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizJ6::TQuizJ6(const char *FileName)
-  : TQuiz(126),
+  : TQuiz(127),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -112,7 +112,7 @@ int TQuizJ6::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizJ6::GetQuizN()
 {
-    return 126;
+    return 127;
 }
 
 /*##########################################################################
@@ -431,6 +431,7 @@ void TQuizJ6::SetupTexts()
   Quiz[123].MyGroup = GROUP_MIXED;
   Quiz[124].MyGroup = GROUP_MIXED;
   Quiz[125].MyGroup = GROUP_MIXED;
+  Quiz[126].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Is it important for you to find a unique niche where you can acquire unique competence?";
@@ -557,7 +558,8 @@ void TQuizJ6::SetupTexts()
   Quiz[122].Text = "Are you gracious about criticism, correction and direction?";
   Quiz[123].Text = "Do you find it easy to estimate the age of people?";
   Quiz[124].Text = "Do you giggle a lot?";
-  Quiz[125].Text = "Courting over follwing";
+  Quiz[125].Text = "Courting over following";
+  Quiz[126].Text = "Courting view time";
 
 }
 
@@ -742,7 +744,7 @@ void TQuizJ6::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 126; i++)
+    for (i = 0; i < 127; i++)
             DefineGlobalId(i, i);
 }
 
