@@ -552,7 +552,7 @@ void TQuizJ7::SetupTexts()
   Quiz[121].Text = "Can you easily remember verbal instructions?";
   Quiz[122].Text = "Are you gracious about criticism, correction and direction?";
   Quiz[123].Text = "Do you find it easy to estimate the age of people?";
-  Quiz[124].Text = "Are you so slow at recognizing when somebody you have a romantic interest for signals interest for you that you miss the opportunity?";
+  Quiz[124].Text = "Do you realize hours later that somebody that you have a romantic interest for actually showed interest for you, and then feel bad about the missed opportunity to connect?";
 
 }
 
