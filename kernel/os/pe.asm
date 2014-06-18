@@ -457,7 +457,20 @@ eusTake:
     jmp eusDone
 
 eusBlock:
+    push edi
+    mov edi,[edx].fs_name
+    or edi,edi
+    jnz eusNamedBlock
+;    
     UserGateApp acquire_futex_nr
+    jmp eusBlockPop
+
+eusNamedBlock:
+    int 3
+    UserGateApp acquire_named_futex_nr
+
+eusBlockPop:
+    pop edi
 
 eusDone:
     pop ebx

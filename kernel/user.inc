@@ -512,6 +512,12 @@ AcquireFutex	MACRO
 					ENDM
 
 ; IN  ES:(E)BX		Futex structure
+; IN  ES:(E)DI      Futex name
+AcquireNamedFutex	MACRO
+	UserGate acquire_named_futex_nr
+					ENDM
+
+; IN  ES:(E)BX		Futex structure
 ReleaseFutex	MACRO
 	UserGate release_futex_nr
 					ENDM

@@ -17,6 +17,18 @@
 *   Returns....: *
 *   Created....: 96-09-05 le
 *##########################################################################*/
+TSection::TSection(const char *Name)
+{
+    InitializeCriticalSection((LPCRITICAL_SECTION)&FData);
+}
+
+/*##################  TSection::TSection  ####################################
+*   Purpose....: Constructor for TSection
+*   In params..: *
+*   Out params.: *
+*   Returns....: *
+*   Created....: 96-09-05 le
+*##########################################################################*/
 TSection::TSection()
 {
     InitializeCriticalSection((LPCRITICAL_SECTION)&FData);
