@@ -7238,15 +7238,18 @@ check_not_signal:
 check_futex_copy:
     mov al,fs:[si]
     or al,al
-    clc
-    jz check_copy_done
+    jz check_futex_done
 
     inc si
     stos byte ptr es:[edi]
     loop check_futex_copy
-;
+
+check_futex_done:
     xor al,al    
     stos byte ptr es:[edi]
+;
+    xor cx,cx
+    xor edx,edx
     clc
     jmp check_done
 
