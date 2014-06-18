@@ -25,11 +25,12 @@
 #
 ########################################################################*/
 
+#include <string.h>
 #include "section.h"
 #include "rdos.h"
 
-#define     FALSE	0
-#define     TRUE	!FALSE
+#define     FALSE   0
+#define     TRUE    !FALSE
 
 /*##########################################################################
 #
@@ -42,9 +43,14 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TSection::TSection()
+TSection::TSection(const char *Name)
 {
-    FHandle = RdosCreateSection();
+    int len = strlen(Name);
+    
+    FName = new char[len + 1];
+    strcpy(FName, Name);
+    
+    FHandle = RdosCreateSection(FName);
 }
 
 /*##########################################################################
@@ -61,6 +67,7 @@ TSection::TSection()
 TSection::~TSection()
 {
     RdosDeleteSection(FHandle);
+    delete FName;
 }
 
 /*##########################################################################

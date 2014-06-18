@@ -45,7 +45,7 @@
 
 TDirEntry EmptyDir;
 char FOrderby[5];
-TSection FDirSortSection;
+TSection FDirSortSection("DirSort");
 
 #ifdef __WATCOMC__
 #define QSORTAPI

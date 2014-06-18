@@ -177,6 +177,7 @@ static void IpcThread(void *ptr)
 #
 ##########################################################################*/
 TSession::TSession(const char *ipc)
+ : IpcSection("RemoteCommand")
 {
     FArgList = 0;
     FEcho = TRUE;
@@ -281,6 +282,7 @@ TSession::TSession(const char *ipc)
 #
 ##########################################################################*/
 TSession::TSession(const TSession &src)
+ : IpcSection("RemoteCommand")
 {
     Count++;
 

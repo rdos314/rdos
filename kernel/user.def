@@ -699,4 +699,6 @@ program_can_module_nr           = 552
 read_long_disc_nr               = 553
 write_long_disc_nr              = 554
 
+create_named_user_section_nr    = 555
+
 usergate_entries			    = 560

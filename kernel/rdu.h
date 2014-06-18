@@ -699,6 +699,8 @@
 #define usergate_read_long_disc 0x00000229
 #define usergate_write_long_disc 0x0000022A
 
+#define usergate_create_named_user_section 0x0000022B
+
 
 
 #ifdef __FLAT__
@@ -1403,6 +1405,8 @@
 #define CallGate_read_long_disc 0x67 0x9a 41 2 0 0 3 0
 #define CallGate_write_long_disc 0x67 0x9a 42 2 0 0 3 0
 
+#define CallGate_create_named_user_section 0x67 0x9a 43 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2104,5 +2108,7 @@
 
 #define CallGate_read_long_disc 0x3e 0x67 0x9a 41 2 0 0 3 0
 #define CallGate_write_long_disc 0x3e 0x67 0x9a 42 2 0 0 3 0
+
+#define CallGate_create_named_user_section 0x3e 0x67 0x9a 43 2 0 0 3 0
 
 #endif

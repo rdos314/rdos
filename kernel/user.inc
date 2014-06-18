@@ -526,6 +526,12 @@ CreateUserSection	MACRO
 	UserGate create_user_section_nr
 					ENDM
 
+; IN  ES:(E)DI  Section name
+; OUT BX		Section handle
+CreateNamedUserSection	MACRO
+	UserGate create_named_user_section_nr
+					ENDM
+
 ; OUT BX		Section handle
 CreateBlockedUserSection	MACRO
 	UserGate create_blocked_user_section_nr

@@ -45,7 +45,7 @@
 #define FORM_TYPE_IMAGE         8
 #define FORM_TYPE_PANEL         9
 
-TSection TFormControl::FSection;
+TSection TFormControl::FSection("Form");
 int TFormControl::FUseTouch = RdosHasTouch();
 int TFormControl::FUseKeyboard = !RdosHasTouch();
 

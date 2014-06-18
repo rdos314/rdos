@@ -194,7 +194,9 @@ int TFtpFileEntry::IsDir()
 ##########################################################################*/
 TFtp::TFtp(long IP, int port, const char *user, const char *passw)
   : FUser(user),
-    FPassw(passw)
+    FPassw(passw),
+    FAppSection("FTP.App"),
+    FSection("FTP.Gen")
 {
     FIp = IP;
     FPort = port;

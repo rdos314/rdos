@@ -1700,8 +1700,12 @@
     value [eax];
 
 #pragma aux RdosCreateSection = \
+    CallGate_create_named_user_section  \
+    "jnc Validate" \
     CallGate_create_user_section  \
+    "Validate:" \    
     ValidateHandle  \
+    parm [edi] \
     value [ebx];
 
 #pragma aux RdosDeleteSection = \

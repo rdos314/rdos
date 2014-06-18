@@ -52,7 +52,8 @@
 #
 ##########################################################################*/
 TWh1080Device::TWh1080Device()
-  : THidDevice(0x1941, 0x8021)
+  : THidDevice(0x1941, 0x8021),
+    FSection("WH1080")
 {
     FIndoorHumidityTime.AddHour(-1);
     FIndoorTemperatureTime.AddHour(-1);

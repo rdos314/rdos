@@ -255,6 +255,7 @@ void TWaitDevice::Execute()
 #
 ##########################################################################*/
 TWait::TWait()
+ : FListSection("Wait.List")
 {
     FHandle = RdosCreateWait();
         FInstalled = TRUE;

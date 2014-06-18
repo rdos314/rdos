@@ -73,7 +73,7 @@
 #define DEVICE_DATA_BYTEARRAY       20
 #define DEVICE_DATA_SHORTSTRING     128
 
-TSection TDevice::FListSection;
+TSection TDevice::FListSection("Device.List");
 TDevice *TDevice::FDeviceList = 0;
 
 #if !defined(MSVC) && defined(__RDOS__)
@@ -5212,6 +5212,7 @@ void TDevice::GetDevices(void (*DeviceCallb)(TDevice *Device))
 #
 ##########################################################################*/
 TDevice::TDevice()
+  : FPropertySection("Device.Property")
 {
         FIniSection = 0;
         Init();
@@ -5229,6 +5230,7 @@ TDevice::TDevice()
 #
 ##########################################################################*/
 TDevice::TDevice(const char *IniSection)
+  : FPropertySection("Device.Property")
 {
         FIniSection = IniSection;
         Init();
@@ -7182,6 +7184,7 @@ void TDevice::NotifyInstallTag(TDistUnit *unit, TDeviceTag *tag)
 #
 ##########################################################################*/
 TDistUnit::TDistUnit(TDistSystem *DistSystem)
+ : FMsgSection("DistUnit")
 {
         FDistSystem = DistSystem;
         FDistSystem->InsertUnit(this);
@@ -7203,6 +7206,7 @@ TDistUnit::TDistUnit(TDistSystem *DistSystem)
 #
 ##########################################################################*/
 TDistUnit::TDistUnit(TDistSystem *DistSystem, short int UnitType, short int UnitNumber)
+ : FMsgSection("DistUnit")
 {
         FUnitType = UnitType;
         FUnitNumber = UnitNumber;
@@ -8476,6 +8480,8 @@ void TDistSystem::RemoveUnit(TDistUnit *unit)
 #
 ##########################################################################*/
 TDistSystem::TDistSystem(TDistDevice *DistDevice, long Signature)
+  : FUnitSection("Dist.System"),
+    FConfigSection("Dist.Config")
 {
         FSignature = Signature;
         FDistDevice = DistDevice;
@@ -8495,6 +8501,8 @@ TDistSystem::TDistSystem(TDistDevice *DistDevice, long Signature)
 #
 ##########################################################################*/
 TDistSystem::TDistSystem(TDistDevice *DistDevice, long s1, long s2, long s3, long s4)
+  : FUnitSection("Dist.System"),
+    FConfigSection("Dist.Config")
 {
     long sign;
 

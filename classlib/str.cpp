@@ -32,7 +32,7 @@
 #include "str.h"
 #include "section.h"
 
-TSection Section;
+TSection Section("String");
 
 #define ZEROPAD 1               /* pad with zero */
 #define SIGN    2               /* unsigned/signed long */

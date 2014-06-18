@@ -5840,6 +5840,58 @@ create_user_section     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           create_named_user_section
+;
+;           DESCRIPTION:    Create named user section
+;
+;           PARAMETERS:     ES:(E)DI    Section name
+;
+;           RETURNS:        BX          Section handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_named_user_section_name    DB 'Create Named User Section',0
+
+create_named_user_section     PROC near
+    push ds
+    push eax
+    push cx
+;
+    mov cx,SIZE section_handle_seg
+    AllocateHandle
+    mov ds:[ebx].us_value,0
+    mov ds:[ebx].us_list,0
+    mov ds:[ebx].us_owner,0
+    mov ds:[ebx].us_count,0
+    mov ds:[ebx].us_lock,0
+    mov [ebx].hh_sign,SECTION_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
+;
+    pop cx
+    pop eax
+    pop ds
+    ret
+create_named_user_section     ENDP
+
+create_named_user_section16 Proc far
+    push edi
+;
+    movzx edi,di
+    call create_named_user_section
+;
+    pop edi
+    retf32
+create_named_user_section16 Endp
+
+create_named_user_section32 Proc far
+    call create_named_user_section
+    retf32
+create_named_user_section32 Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           create_blocked_user_section
 ;
 ;           DESCRIPTION:    Create blocked user section
@@ -9522,6 +9574,12 @@ timer_free_list_create:
     mov di,OFFSET create_user_section_name
     xor dx,dx
     mov ax,create_user_section_nr
+    RegisterBimodalUserGate
+;
+    mov si,OFFSET create_named_user_section
+    mov di,OFFSET create_named_user_section_name
+    xor dx,dx
+    mov ax,create_named_user_section_nr
     RegisterBimodalUserGate
 ;
     mov si,OFFSET create_blocked_user_section

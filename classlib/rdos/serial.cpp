@@ -281,6 +281,7 @@ void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int
 #
 ##########################################################################*/
 TSerialDevice::TSerialDevice()
+ : FSection("Serial")
 {
     OnChar = 0;    
     FPort = 0;
@@ -303,7 +304,8 @@ TSerialDevice::TSerialDevice()
 #
 ##########################################################################*/
 TSerialDevice::TSerialDevice(const char *IniSection)
- : TWaitDevice(IniSection)
+ : TWaitDevice(IniSection),
+   FSection("Serial")
 {
     OnChar = 0;    
     FPort = 0;
@@ -329,7 +331,8 @@ TSerialDevice::TSerialDevice(const char *IniSection)
 #
 ##########################################################################*/
 TSerialDevice::TSerialDevice(const char *IniSection, int Port, long Baudrate)
-        : TWaitDevice(IniSection)
+ : TWaitDevice(IniSection),
+   FSection("Serial")
 {
         Init(Port, Baudrate, 'N', 8, 1);
 }
@@ -351,7 +354,8 @@ TSerialDevice::TSerialDevice(const char *IniSection, int Port, long Baudrate)
 #
 ##########################################################################*/
 TSerialDevice::TSerialDevice(const char *IniSection, int Port, long Baudrate, char Parity, int DataBits, int StopBits)
-        : TWaitDevice(IniSection)
+ : TWaitDevice(IniSection),
+   FSection("Serial")
 {
         Init(Port, Baudrate, Parity, DataBits, StopBits);
 }
@@ -369,6 +373,7 @@ TSerialDevice::TSerialDevice(const char *IniSection, int Port, long Baudrate, ch
 #
 ##########################################################################*/
 TSerialDevice::TSerialDevice(int Port, long Baudrate)
+  : FSection("Serial")
 {
         Init(Port, Baudrate, 'N', 8, 1);
 }
@@ -389,6 +394,7 @@ TSerialDevice::TSerialDevice(int Port, long Baudrate)
 #
 ##########################################################################*/
 TSerialDevice::TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits)
+  : FSection("Serial")
 {
         Init(Port, Baudrate, Parity, DataBits, StopBits);
 }

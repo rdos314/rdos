@@ -306,7 +306,7 @@ p1:
 ;
     dec ebx
     sub edi,4
-    mov eax,12
+    mov eax,16
     mul ebx
     add eax,4 * MAX_SECTIONS
     mov edx,eax
@@ -319,6 +319,7 @@ p2:
     mov [edx].fs_val,-1
     mov [edx].fs_counter,0
     mov [edx].fs_owner,0
+    mov [edx].fs_sect_name,0
 ;
     pop ebx
     clc
@@ -330,6 +331,58 @@ csDone:
     pop eax    
     ret
 create_us_section   Endp
+
+create_named_us_section   Proc near
+    push eax
+    push ecx
+    push edx
+    push edi
+    push ebp
+;
+    mov ebp,edi
+    
+p1n:
+    mov edx,12345678h
+    mov edi,edx
+    mov ecx,MAX_SECTIONS
+    xor eax,eax
+    repnz scasd
+;
+    stc
+    jnz cnsDone
+;
+    mov ebx,MAX_SECTIONS
+    sub ebx,ecx
+    push ebx
+;
+    dec ebx
+    sub edi,4
+    mov eax,16
+    mul ebx
+    add eax,4 * MAX_SECTIONS
+    mov edx,eax
+
+p2n:    
+    add edx,12345678h    
+    mov [edi],edx
+;    
+    mov [edx].fs_handle,0
+    mov [edx].fs_val,-1
+    mov [edx].fs_counter,0
+    mov [edx].fs_owner,0
+    mov [edx].fs_sect_name,ebp
+;
+    pop ebx
+    clc
+
+cnsDone:
+    pop ebp
+    pop edi
+    pop edx
+    pop ecx
+    pop eax    
+    ret
+create_named_us_section   Endp
 
 free_us_section   Proc near
     push edx
@@ -484,6 +537,11 @@ CreateSections  Proc near
     mov fs:app_create_section_proc+4,es
 ;    
     mov edi,edx
+    add edi,OFFSET create_named_us_section
+    mov fs:app_create_named_section_proc,edi
+    mov fs:app_create_named_section_proc+4,es
+;    
+    mov edi,edx
     add edi,OFFSET free_us_section
     mov fs:app_delete_section_proc,edi
     mov fs:app_delete_section_proc+4,es
@@ -513,6 +571,14 @@ CreateSections  Proc near
 ;
     mov edi,esi
     add edi,OFFSET p2 + 2
+    mov es:[edi],edx
+;
+    mov edi,esi
+    add edi,OFFSET p1n + 1
+    mov es:[edi],edx
+;
+    mov edi,esi
+    add edi,OFFSET p2n + 2
     mov es:[edi],edx
 ;
     mov edi,esi
@@ -557,6 +623,9 @@ section_patch     PROC far
     cmp ax,create_user_section_nr
     je spCreate
 ;    
+    cmp ax,create_named_user_section_nr
+    je spCreateNamed
+;    
     cmp ax,delete_user_section_nr
     je spDelete
 ;    
@@ -587,6 +656,42 @@ spCreate:
     mov es,ax
     mov es,es:p_app_sel
     mov eax,es:app_create_section_proc    
+    sub eax,esi
+    sub eax,6
+    xchg eax,ds:[ebx+2]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+;
+    mov ax,0E890h    
+    xchg ax,ds:[ebx]
+    clc
+;
+    pop esi
+    pop ecx
+    pop edx
+    pop es
+    ret
+
+spCreateNamed:
+    push es
+    push edx
+    push ecx
+    push esi
+;
+    mov esi,ebx
+    push ebx
+    mov bx,ds
+    GetSelectorBaseSize
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax    
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    mov eax,es:app_create_named_section_proc
     sub eax,esi
     sub eax,6
     xchg eax,ds:[ebx+2]

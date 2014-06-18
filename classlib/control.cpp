@@ -37,7 +37,7 @@
 #define     TRUE        !FALSE
 
 static int CurrId = 0;
-static TSection IdSection;
+static TSection IdSection("Control ID");
 
 /*##########################################################################
 #
@@ -2205,6 +2205,8 @@ int TControl::OnRightDown(int x, int y, int ButtonState, int KeyState)
 #
 ##########################################################################*/
 TControlThread::TControlThread()
+ : FListSection("Control.List"),
+   FPaintSection("Control.Paint")
 {
     FGraphic = 0;
     Init();
@@ -2222,6 +2224,8 @@ TControlThread::TControlThread()
 #
 ##########################################################################*/
 TControlThread::TControlThread(TGraphicDevice *dev)
+ : FListSection("Control.List"),
+   FPaintSection("Control.Paint")
 {
     FVbe = dev;
     FGraphic = new TGraphicDevice(*dev);

@@ -46,7 +46,6 @@ public:
 protected:
 
 private:
-	TSection FSection;
 	int FCurrentSize;
 	int *FBuffer;
 	int *FInPtr;

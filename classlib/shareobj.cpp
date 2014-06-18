@@ -48,6 +48,7 @@
 #
 ##########################################################################*/
 TShareObject::TShareObject()
+ : FSection("ShareObj")
 {
 	Init();
 }
@@ -64,6 +65,7 @@ TShareObject::TShareObject()
 #
 ##########################################################################*/
 TShareObject::TShareObject(const void *x, int size)
+ : FSection("ShareObj")
 {
     Init();
     
@@ -83,6 +85,7 @@ TShareObject::TShareObject(const void *x, int size)
 #
 ##########################################################################*/
 TShareObject::TShareObject(const TShareObject &src)
+ : FSection("ShareObj")
 {
     Init();
 

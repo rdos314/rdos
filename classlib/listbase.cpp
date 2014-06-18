@@ -194,6 +194,7 @@ void TListBaseNode::SetData(const void *x, int size)
 #
 ##########################################################################*/
 TListBase::TListBase()
+ : FSection("ListBase")
 {
     Init();
 }
@@ -210,6 +211,7 @@ TListBase::TListBase()
 #
 ##########################################################################*/
 TListBase::TListBase(const TListBase &src)
+ : FSection("ListBase")
 {
     TListBaseNode *p;
 

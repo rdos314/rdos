@@ -43,6 +43,7 @@
 #
 ##########################################################################*/
 TSample::TSample()
+ : FSection("Sample")
 {
 	FIndex = 0;
 	FUnit = 0;
@@ -62,6 +63,7 @@ TSample::TSample()
 #
 ##########################################################################*/
 TSample::TSample(int Index, const char *Unit)
+ : FSection("Sample")
 {
 	int size;
 

@@ -613,7 +613,8 @@ TLabelControl *TLabelFactory::CreateLabel(TControl *control, int xstart, int yst
 #
 ##########################################################################*/
 TLabelControl::TLabelControl(TControlThread *dev, int xstart, int ystart, int xsize, int ysize)
- : TPanelControl(dev)
+ : TPanelControl(dev),
+   FSection("Label")
 {
     Init();
 
@@ -634,7 +635,8 @@ TLabelControl::TLabelControl(TControlThread *dev, int xstart, int ystart, int xs
 #
 ##########################################################################*/
 TLabelControl::TLabelControl(TControl *control, int xstart, int ystart, int xsize, int ysize)
- : TPanelControl(control)
+ : TPanelControl(control),
+   FSection("Label")
 {
     Init();
 
@@ -655,7 +657,8 @@ TLabelControl::TLabelControl(TControl *control, int xstart, int ystart, int xsiz
 #
 ##########################################################################*/
 TLabelControl::TLabelControl(TControlThread *dev)
- : TPanelControl(dev)
+ : TPanelControl(dev),
+   FSection("Label")
 {
     Init();
 }
@@ -672,7 +675,8 @@ TLabelControl::TLabelControl(TControlThread *dev)
 #
 ##########################################################################*/
 TLabelControl::TLabelControl(TControl *control)
- : TPanelControl(control)
+ : TPanelControl(control),
+   FSection("Label")
 {
     Init();
 }

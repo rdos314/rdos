@@ -1002,7 +1002,8 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir, con
  : FProgram(Program),
    FParam(Param),
    FStartDir(StartDir),
-   FLogFile(LogFile, 0)
+   FLogFile(LogFile, 0),
+   FSection("DebugSect")
 {
     ThreadList = 0;
     ModuleList = 0;

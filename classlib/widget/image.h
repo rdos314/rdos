@@ -88,7 +88,6 @@ protected:
 
     int FErase;
 
-    TSection FSection;
     TLoaderThread *FLoader;
     int FLoading;
     int FAbortLoad;

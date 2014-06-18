@@ -192,6 +192,7 @@ void TArrayBaseNode::SetData(const void *x, int size)
 #
 ##########################################################################*/
 TArrayBase::TArrayBase()
+ : FSection("Array Base")
 {
     Init();
 }
@@ -208,6 +209,7 @@ TArrayBase::TArrayBase()
 #
 ##########################################################################*/
 TArrayBase::TArrayBase(const TArrayBase &src)
+ : FSection("Array Base")
 {
     int i;
     TArrayBaseNode *p;

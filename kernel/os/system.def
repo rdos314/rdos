@@ -229,6 +229,7 @@ app_loader_name			    DD ?
 
 app_section_base            DD ?
 app_create_section_proc     DD ?,?
+app_create_named_section_proc DD ?,?
 app_delete_section_proc     DD ?,?
 app_enter_section_proc      DD ?,?
 app_leave_section_proc      DD ?,?
@@ -284,6 +285,7 @@ fs_handle       DD ?
 fs_counter      DD ?
 fs_val          DW ?
 fs_owner        DW ?
+fs_sect_name    DD ?
 
 futex_struc ENDS
 

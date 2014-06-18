@@ -96,6 +96,7 @@ static char DecodeKey(const char *key)
 *   Created....: 96-08-28 le                                                #
 *##########################################################################*/
 TLoaderThread::TLoaderThread()
+ : FSection("Image.Loader")
 {
     FCurrImg = 0;
     
