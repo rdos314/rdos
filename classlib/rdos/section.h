@@ -37,7 +37,7 @@ public:
 	void Leave() const;
 
 private:
-    char *FName;
+    char FName[33];
 	int FHandle;
 };
 

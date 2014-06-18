@@ -458,7 +458,7 @@ eusTake:
 
 eusBlock:
     push edi
-    mov edi,[edx].fs_name
+    mov edi,[ebx].fs_sect_name
     or edi,edi
     jnz eusNamedBlock
 ;    
@@ -466,7 +466,6 @@ eusBlock:
     jmp eusBlockPop
 
 eusNamedBlock:
-    int 3
     UserGateApp acquire_named_futex_nr
 
 eusBlockPop:

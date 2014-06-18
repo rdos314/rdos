@@ -45,10 +45,8 @@
 ##########################################################################*/
 TSection::TSection(const char *Name)
 {
-    int len = strlen(Name);
-    
-    FName = new char[len + 1];
-    strcpy(FName, Name);
+    strncpy(FName, Name, 32);
+    FName[32] = 0;
     
     FHandle = RdosCreateSection(FName);
 }

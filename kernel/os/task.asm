@@ -54,6 +54,7 @@ TLB_LINEAR_SIZE         = 100000h
 
 SLEEP_SEL_WAIT  = 1
 SLEEP_SEL_SIGNAL = 2
+SLEEP_SEL_FUTEX = 3
 
 DEFAULT_GLOBAL  = 25        ; 25% of wakeup-entries are put into global ready-queue
 
@@ -6327,6 +6328,141 @@ acquire_futex32 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           acquire_named_futex
+;
+;           DESCRIPTION:    Acquire named futex
+;
+;           PARAMS:         ES:(E)BX    address to futex struct
+;                           ES:(E)DI    name of section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+acquire_named_futex_name    DB 'Acquire Named Futex',0
+
+acquire_named_futex   Proc near
+    push ds
+    push fs
+    push eax
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    GetThread
+    mov fs,ax
+    mov esi,OFFSET p_list_name
+    mov ecx,31
+
+acquire_named_copy:    
+    mov al,es:[edi]
+    mov fs:[esi],al
+    inc esi
+    inc edi
+    or al,al
+    jz acquire_named_copied
+;
+    loop acquire_named_copy
+
+acquire_named_copied:
+    xor al,al
+    mov fs:[esi],al
+;    
+    mov esi,ebx
+    mov ebx,es:[esi].fs_handle
+    mov ax,FUTEX_HANDLE
+    DerefHandle
+    jnc acquire_named_no_sect
+;    
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:futex_section
+;
+    mov ebx,es:[esi].fs_handle
+    mov ax,FUTEX_HANDLE
+    DerefHandle
+    jnc acquire_named_handle_ok
+;
+    mov cx,SIZE futex_handle_seg
+    AllocateHandle
+    mov ds:[ebx].fh_list,0
+    mov ds:[ebx].fh_lock,0
+    mov [ebx].hh_sign,FUTEX_HANDLE
+;
+    movzx eax,[ebx].hh_handle
+    mov es:[esi].fs_handle,eax
+
+acquire_named_handle_ok:
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    LeaveSection ds:futex_section
+    pop ds
+
+acquire_named_no_sect:
+    call LockCore
+    call cs:lock_futex_proc    
+    mov ax,1
+    xchg ax,es:[esi].fs_val
+    cmp ax,-1
+    je acquire_named_take
+;
+    mov ax,ds
+    push OFFSET acquire_named_done
+    call SaveLockedThread
+    mov ds,ax
+;
+    lea edi,[ebx].fh_list     
+    mov es,fs:ps_curr_thread
+    mov fs:ps_curr_thread,0
+;
+    call InsertBlock32
+    call cs:unlock_futex_proc
+;
+    mov es:p_sleep_sel,SLEEP_SEL_FUTEX
+    mov es:p_sleep_offset,0
+    jmp LoadThread
+
+acquire_named_take:
+    push es
+    mov es,fs:ps_curr_thread
+    mov ax,es:p_futex_id
+    pop es
+    mov es:[esi].fs_owner,ax
+    mov es:[esi].fs_counter,1
+;    
+    call cs:unlock_futex_proc
+    call UnlockCore
+    
+acquire_named_done:
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop fs
+    pop ds    
+    ret
+acquire_named_futex   Endp
+
+acquire_named_futex16 Proc far
+    push ebx
+    push edi
+    movzx edi,di
+    movzx ebx,bx
+    call acquire_named_futex
+    pop edi
+    pop ebx
+    retf32
+acquire_named_futex16 Endp
+
+acquire_named_futex32 Proc far
+    call acquire_named_futex
+    retf32
+acquire_named_futex32 Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           release_futex
 ;
 ;           DESCRIPTION:    Release futex
@@ -6996,6 +7132,7 @@ Wait_state      DB 'Wait',0
 Ready_state     DB 'Ready',0
 Signal_state    DB 'Signal',0
 Debug_state     DB 'Debug',0
+Futex_state     DB 'Section',0
 
 Wakeup_state    DB 'Wakeup ',0 
 Run_state       DB 'Run ', 0
@@ -7092,6 +7229,28 @@ check_not_wait:
     jmp check_copy_zero
     
 check_not_signal:
+    cmp ax,SLEEP_SEL_FUTEX
+    jne check_not_futex
+;
+    mov si,OFFSET p_list_name
+    mov cx,32
+
+check_futex_copy:
+    mov al,fs:[si]
+    or al,al
+    clc
+    jz check_copy_done
+
+    inc si
+    stos byte ptr es:[edi]
+    loop check_futex_copy
+;
+    xor al,al    
+    stos byte ptr es:[edi]
+    clc
+    jmp check_done
+
+check_not_futex:
     cmp ax,SEG data
     jne check_not_task
 ;
@@ -9617,6 +9776,13 @@ timer_free_list_create:
     mov edi,OFFSET acquire_futex_name
     mov dx,virt_es_in
     mov ax,acquire_futex_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET acquire_named_futex16
+    mov esi,OFFSET acquire_named_futex32
+    mov edi,OFFSET acquire_named_futex_name
+    mov dx,virt_es_in
+    mov ax,acquire_named_futex_nr
     RegisterUserGate
 ;
     mov ebx,OFFSET release_futex16
