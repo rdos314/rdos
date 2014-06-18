@@ -351,17 +351,17 @@ void TQuizJ7::SetupTexts()
   Quiz[46].MyGroup = GROUP_ASPIE_NVC;
   Quiz[47].MyGroup = GROUP_ASPIE_NVC;
   Quiz[48].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[49].MyGroup = GROUP_ASPIE_NVC;  
+  Quiz[49].MyGroup = GROUP_NT_NVC;  
   Quiz[50].MyGroup = GROUP_ASPIE_NVC;
   Quiz[51].MyGroup = GROUP_ASPIE_NVC;
   Quiz[52].MyGroup = GROUP_ASPIE_NVC;
   Quiz[53].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[54].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[54].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[55].MyGroup = GROUP_ASPIE_NVC;
   Quiz[56].MyGroup = GROUP_ASPIE_NVC;
   Quiz[57].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[58].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[59].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[58].MyGroup = GROUP_ASPIE_ATTACH;
+  Quiz[59].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[60].MyGroup = GROUP_ASPIE_NVC;
   Quiz[61].MyGroup = GROUP_ASPIE_NVC;
   Quiz[62].MyGroup = GROUP_ASPIE_NVC;
@@ -397,7 +397,7 @@ void TQuizJ7::SetupTexts()
   Quiz[92].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[93].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[94].MyGroup = GROUP_ASPIE_CONTACT;
-  Quiz[95].MyGroup = GROUP_ASPIE_CONTACT;
+  Quiz[95].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[96].MyGroup = GROUP_ASPIE_CONTACT;  
   Quiz[97].MyGroup = GROUP_NT_CONTACT;
   Quiz[98].MyGroup = GROUP_NT_CONTACT;
@@ -417,7 +417,7 @@ void TQuizJ7::SetupTexts()
   Quiz[112].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[113].MyGroup = GROUP_ASPIE_ATTACH;
   Quiz[114].MyGroup = GROUP_ASPIE_ATTACH;
-  Quiz[115].MyGroup = GROUP_ASPIE_ATTACH;
+  Quiz[115].MyGroup = GROUP_ASPIE_CONTACT;
   Quiz[116].MyGroup = GROUP_NT_ATTACH;
   Quiz[117].MyGroup = GROUP_NT_ATTACH;
   Quiz[118].MyGroup = GROUP_NT_ATTACH;
@@ -426,7 +426,7 @@ void TQuizJ7::SetupTexts()
   Quiz[121].MyGroup = GROUP_MIXED;
   Quiz[122].MyGroup = GROUP_MIXED;
   Quiz[123].MyGroup = GROUP_MIXED;
-  Quiz[124].MyGroup = GROUP_MIXED;
+  Quiz[124].MyGroup = GROUP_ASPIE_ATTACH;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Is it important for you to find a unique niche where you can acquire unique competence?";
