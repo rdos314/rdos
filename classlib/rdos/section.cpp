@@ -43,6 +43,24 @@
 #   Returns....: *
 #
 ##########################################################################*/
+TSection::TSection()
+{
+    FName[0] = 0;
+    
+    FHandle = RdosCreateSection("Section");
+}
+
+/*##########################################################################
+#
+#   Name       : TSection::TSection
+#
+#   Purpose....: Constructor for TSection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
 TSection::TSection(const char *Name)
 {
     strncpy(FName, Name, 32);
@@ -65,7 +83,6 @@ TSection::TSection(const char *Name)
 TSection::~TSection()
 {
     RdosDeleteSection(FHandle);
-    delete FName;
 }
 
 /*##########################################################################
