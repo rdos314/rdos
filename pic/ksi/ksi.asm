@@ -71,7 +71,7 @@ Start:
 ;
     PAGE0
     movlw 0x84
-;    movlw 0x4
+;   movlw 0x4
     movwf PORTB
 ;
     PAGE1
@@ -370,6 +370,7 @@ HandleSpi:
     return
 ;
     bcf PORTB,7
+;    
     movwf STATUS
     btfsc STATUS,C
     goto SpiData
@@ -382,23 +383,23 @@ SpiData:
     call HandleData ; 1 = data
 
 SpiLeave:
-    bsf PORTB,7
-
     call Poll
 ;
     btfsc PORTA,0
     goto SpiLeave
 ;
+    bsf PORTB,7
+;    
     movf RxCount,W
     btfss STATUS,Z
     goto SpiHasData
 
 SpEpmty:
-    bcf PORTA,1
+    bcf PORTA,3
     return
     
 SpiHasData:    
-    bsf PORTA,1
+    bsf PORTA,3
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -413,8 +414,6 @@ Poll:
 ;    
     btfss PIR1,5
     return
-;    
-    bcf PORTB,7
 ;    
     movlw RxBufSize
     xorwf RxCount,W
