@@ -209,7 +209,7 @@ HandleCmd:
 ;
     movwf STATUS
     btfsc STATUS,C
-    return
+    goto HandleReceive
 ;
     call GetBit
     btfsc STATUS,C
@@ -389,6 +389,64 @@ hsTxIdle:
 
 hsDone:
     bsf PORTB,7
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;  HandleReceive
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleReceive:
+    movf RxCount,W
+    btfsc STATUS,Z
+    return
+;
+    movf RxHead,W
+    movwf FSR
+    movf INDF,W
+    movwf DataIn
+;
+    movlw 7
+    xorwf DbBits,W
+    btfss STATUS,Z
+    goto RxSendByte
+;
+    movlw 0x7F
+    andwf DataIn,F
+
+RxSendByte:
+    movlw 8
+    movwf BitCnt
+
+RxSendLoop:
+    btfss DataIn,0
+    goto RxClear
+
+RxSet:    
+    call WriteBit1
+    goto RxNext
+
+RxClear:
+    call WriteBit0
+
+RxNext:
+    rrf DataIn,F    
+;
+    decfsz BitCnt,F
+    goto RxSendLoop
+;
+    incf RxHead,F
+    movlw RxBuf + RxBufSize
+    xorwf RxHead,W
+    btfss STATUS,Z
+    goto RxHeadOk
+;
+    movlw RxBuf
+    movwf RxHead
+
+RxHeadOk:
+    decf RxCount,F
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
