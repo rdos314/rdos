@@ -161,6 +161,43 @@ GetByteLoop:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;  WriteBit0/1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteBit0:
+    bcf PORTA,3
+    goto WriteBitL
+
+WriteBit1:
+    bsf PORTA,3
+
+WriteBitL:
+    btfss PORTA,0
+    return    ; return if CTRL = 0
+;
+    btfsc PORTB,0
+    goto WriteBitH
+;
+    call Poll        
+    goto WriteBitL
+
+WriteBitH:
+    btfss PORTA,0
+    return    ; return if CTRL = 0
+
+WriteBitWait:
+    call Poll
+    btfss PORTA,0
+    return    ; return if CTRL = 0
+;
+    btfsc PORTB,0
+    goto WriteBitWait
+;
+    return    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;  HandleCmd
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -180,7 +217,7 @@ HandleCmd:
 ;
     movwf STATUS
     btfss STATUS,C
-    return
+    goto HandleStatus
 ;    
     movlw 6
     movwf BitCnt
@@ -319,6 +356,35 @@ OpenDo:
     movwf RxHead
     clrf RxCount
     return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;  HandleStatus
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleStatus:
+    btfss Flags,OPEN_BIT
+    goto hsClosed
+
+hsOpen:    
+    call WriteBit1
+    jmp hsCheckTx
+
+hsClosed:
+    call WriteBit0
+
+hsCheckTx:
+    btfss Flags,TX_BUSY_BIT
+    goto hsTxIdle
+
+hsTxBusy;
+    call WriteBit1
+    return
+
+hsTxIdle:
+    call WriteBit0 
+    return   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
