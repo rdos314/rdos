@@ -166,9 +166,43 @@ GetByteLoop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleCmd:
-    call GetByte
+    call GetBit
     btfsc STATUS,C
     return
+;
+    movwf STATUS
+    btfsc STATUS,C
+    return
+;
+    call GetBit
+    btfsc STATUS,C
+    return
+;
+    movwf STATUS
+    btfss STATUS,C
+    return
+;    
+    movlw 6
+    movwf BitCnt
+    clrf DataIn
+
+GetCmdLoop:
+    call GetBit
+    btfsc STATUS,C
+    return
+;
+    movwf STATUS
+    rrf DataIn,F
+;
+    decf BitCnt,F
+    btfss STATUS,Z
+    goto GetCmdLoop
+;
+    bsf STATUS,C
+    rrf DataIn,F
+    bcf STATUS,C
+    rrf DataIn,F
+    movf DataIn,W    
 ;
 	movlw 'b'
 	xorwf DataIn,W
