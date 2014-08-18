@@ -371,7 +371,7 @@ HandleStatus:
 
 hsOpen:    
     call WriteBit1
-    jmp hsCheckTx
+    goto hsCheckTx
 
 hsClosed:
     call WriteBit0
