@@ -364,6 +364,8 @@ OpenDo:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleStatus:
+    bcf PORTB,7
+;
     btfss Flags,OPEN_BIT
     goto hsClosed
 
@@ -380,11 +382,14 @@ hsCheckTx:
 
 hsTxBusy;
     call WriteBit1
-    return
+    goto hsDone
 
 hsTxIdle:
     call WriteBit0 
-    return   
+
+hsDone:
+    bsf PORTB,7
+    return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -468,8 +473,6 @@ HandleSpi:
     call GetBit
     btfsc STATUS,C
     return
-;
-    bcf PORTB,7
 ;    
     movwf STATUS
     btfsc STATUS,C
@@ -487,8 +490,6 @@ SpiLeave:
 ;
     btfsc PORTA,0
     goto SpiLeave
-;
-    bsf PORTB,7
 ;    
     movf RxCount,W
     btfss STATUS,Z
