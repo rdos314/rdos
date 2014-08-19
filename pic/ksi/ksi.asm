@@ -364,8 +364,6 @@ OpenDo:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleStatus:
-    bcf PORTB,7
-;
     btfss Flags,OPEN_BIT
     goto hsClosed
 
@@ -388,7 +386,6 @@ hsTxIdle:
     call WriteBit0 
 
 hsDone:
-    bsf PORTB,7
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -574,6 +571,8 @@ Poll:
     btfss PIR1,5
     return
 ;    
+    bcf PORTB,7
+;
     movlw RxBufSize
     xorwf RxCount,W
     btfsc STATUS,Z
@@ -599,6 +598,9 @@ PollNotOverrun:
     incf RxTail,F
     movlw RxBuf + RxBufSize
     xorwf RxTail,W
+;
+    bsf PORTB,7
+
     btfss STATUS,Z
     return
 ;
@@ -608,6 +610,7 @@ PollNotOverrun:
 
 RxOverflow:
     movf RCREG,W
+    goto RxOverflow
     return
              
 END
