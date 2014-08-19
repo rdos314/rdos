@@ -399,6 +399,8 @@ HandleReceive:
     btfsc STATUS,Z
     return
 ;
+    bcf PORTB,7
+    
     movf RxHead,W
     movwf FSR
     movf INDF,W
@@ -444,6 +446,7 @@ RxNext:
 
 RxHeadOk:
     decf RxCount,F
+    bsf PORTB,7
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -570,8 +573,6 @@ Poll:
 ;    
     btfss PIR1,5
     return
-;    
-    bcf PORTB,7
 ;
     movlw RxBufSize
     xorwf RxCount,W
@@ -598,9 +599,6 @@ PollNotOverrun:
     incf RxTail,F
     movlw RxBuf + RxBufSize
     xorwf RxTail,W
-;
-    bsf PORTB,7
-
     btfss STATUS,Z
     return
 ;
@@ -610,7 +608,6 @@ PollNotOverrun:
 
 RxOverflow:
     movf RCREG,W
-    goto RxOverflow
     return
              
 END
