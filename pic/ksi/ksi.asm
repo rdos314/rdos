@@ -527,7 +527,7 @@ TxParityOk:
 HandleSpi:
     call GetBit
     btfsc STATUS,C
-    return
+    goto Poll
 ;    
     movwf STATUS
     btfsc STATUS,C
