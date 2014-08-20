@@ -469,7 +469,10 @@ RxHeadOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleData:
+    bcf PORTB,7
     call GetByte
+    bsf PORTB,7
+;
     btfsc STATUS,C
     return
 ;
