@@ -50,6 +50,7 @@
 #DEFINE RxCount 0x28
 
 #DEFINE DbBits  0x29
+#DEFINE PollW   0x2A
 
 #DEFINE RxBuf  0x30
 #DEFINE RxBufSize 0x40
@@ -120,6 +121,7 @@ GetBitH:
     movlw 1
 
 GetBitWait:
+    call Poll
     btfss PORTA,0
     return    ; return if CTRL = 0
 ;
@@ -561,6 +563,8 @@ Poll:
     btfss PIR1,5
     return
 ;
+    movwf PollW
+;    
     movlw RxBufSize
     xorwf RxCount,W
     btfsc STATUS,Z
@@ -587,14 +591,17 @@ PollNotOverrun:
     movlw RxBuf + RxBufSize
     xorwf RxTail,W
     btfss STATUS,Z
-    return
+    goto PollRestore
 ;
     movlw RxBuf
     movwf RxTail
-    return
+    goto PollRestore
 
 RxOverflow:
     movf RCREG,W
+
+PollRestore:
+    movf PollW,W    
     return
              
 END
