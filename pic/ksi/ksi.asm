@@ -380,9 +380,21 @@ hsCheckTx:
 
 hsTxBusy;
     call WriteBit1
-    goto hsDone
+    goto hsCheckRx
 
 hsTxIdle:
+    call WriteBit0 
+
+hsCheckRx:
+    movf RxCount,W
+    btfsc STATUS,Z
+    goto hsRxIdle
+
+hsRxBusy;
+    call WriteBit1
+    goto hsDone
+
+hsRxIdle:
     call WriteBit0 
 
 hsDone:
