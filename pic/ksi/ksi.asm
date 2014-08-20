@@ -120,7 +120,6 @@ GetBitH:
     movlw 1
 
 GetBitWait:
-    call Poll
     btfss PORTA,0
     return    ; return if CTRL = 0
 ;
