@@ -546,32 +546,8 @@ HandleSpi:
 ;    
     movwf STATUS
     btfsc STATUS,C
-    goto SpiData
-
-SpiCmd    
-    call HandleCmd  ; 0 = command
-    goto SpiLeave
-
-SpiData:    
-    call HandleData ; 1 = data
-
-SpiLeave:
-    call Poll
-;
-    btfsc PORTA,0
-    goto SpiLeave
-;    
-    movf RxCount,W
-    btfss STATUS,Z
-    goto SpiHasData
-
-SpEpmty:
-    bcf PORTA,3
-    return
-    
-SpiHasData:    
-    bsf PORTA,3
-    return
+    goto HandleData ; 1 = data
+    goto HandleCmd  ; 0 = command
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
