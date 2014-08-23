@@ -412,8 +412,6 @@ HandleReceive:
     btfsc STATUS,Z
     return
 ;
-    bcf PORTB,7
-    
     movf RxHead,W
     movwf FSR
     movf INDF,W
@@ -459,7 +457,6 @@ RxNext:
 
 RxHeadOk:
     decf RxCount,F
-    bsf PORTB,7
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -469,9 +466,8 @@ RxHeadOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleData:
-;    bcf PORTB,7
+    bcf PORTB,7
     call GetByte
-;    bsf PORTB,7
 ;
     btfsc STATUS,C
     return
@@ -535,6 +531,7 @@ TxPar7Clear:
 TxParityOk:    
     movf DataIn,W
     movwf TXREG
+    bsf PORTB,7
     return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -566,7 +563,6 @@ Poll:
     btfss PIR1,5
     return
 ;
-    bcf PORTB,7
     movwf PollW
 ;    
     movlw RxBufSize
