@@ -412,7 +412,7 @@ hsClosed:
 hsCheckTx:
     PAGE1
     btfss TXSTA,1
-    goto HsTxIdle
+    goto hsTxIdle
 
 hsTxBusy;
     PAGE0
