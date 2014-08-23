@@ -38,7 +38,6 @@
 #DEFINE DATA_7_BIT          2
 #DEFINE USE_9_BIT           3
 #DEFINE OPEN_BIT            4
-#DEFINE TX_BUSY_BIT         5
 
 #DEFINE DataIn  0x20
 #DEFINE BitCnt  0x21
@@ -81,10 +80,45 @@ Start:
 
 	PAGE0
     clrf Flags
+    goto TestCom
 
 HandleLoop:
     call HandleSpi
     goto HandleLoop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;  TestCom
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TestCom:
+    movlw 15
+    PAGE1
+    movwf SPBRG
+    PAGE0
+;    
+    movlw 0x22
+    PAGE1
+    movwf TXSTA
+    PAGE0
+;    
+    movlw 0x90
+    movwf RCSTA
+;
+    movf RCREG,W
+    movf RCREG,W
+    movf RCREG,W
+
+TestSendLoop:
+    PAGE1
+    btfsc TXSTA,1
+    goto TestSendLoop
+;    
+    PAGE0
+    movlw 'A'
+    movwf TXREG
+    goto TestSendLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -376,14 +410,17 @@ hsClosed:
     call WriteBit0
 
 hsCheckTx:
-    btfss Flags,TX_BUSY_BIT
-    goto hsTxIdle
+    PAGE1
+    btfss TXSTA,1
+    goto HsTxIdle
 
 hsTxBusy;
+    PAGE0
     call WriteBit1
     goto hsCheckRx
 
 hsTxIdle:
+    PAGE0
     call WriteBit0 
 
 hsCheckRx:
