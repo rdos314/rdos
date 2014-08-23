@@ -93,7 +93,7 @@ HandleLoop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TestCom:
-    movlw 15
+    movlw 0xF
     PAGE1
     movwf SPBRG
     PAGE0
@@ -109,6 +109,12 @@ TestCom:
     movf RCREG,W
     movf RCREG,W
     movf RCREG,W
+;    
+    movlw RxBuf
+    movwf RxTail
+    movwf RxHead
+    clrf RxCount
+;
     bsf Flags,OPEN_BIT
     return
     
@@ -278,6 +284,9 @@ GetCmdLoop:
     rrf DataIn,F
     movf DataIn,W    
 ;
+    return
+
+
 	movlw 'b'
 	xorwf DataIn,W
 	btfss STATUS,Z
