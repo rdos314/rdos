@@ -1059,6 +1059,7 @@ swap_file   Proc near
     push es
     pushad
 ;    
+    EnterSection ds:file_list_section
     mov ax,flat_sel
     mov es,ax
     test ds:file_attrib, FILE_ATTRIB_NOBUFFER
@@ -1091,9 +1092,10 @@ swap_file_loop:
 swap_file_next:
     add si,4
     loop swap_file_loop
-;
 
 swap_file_done:
+    LeaveSection ds:file_list_section
+;    
     popad
     pop es
     ret

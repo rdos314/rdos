@@ -469,9 +469,9 @@ RxHeadOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleData:
-    bcf PORTB,7
+;    bcf PORTB,7
     call GetByte
-    bsf PORTB,7
+;    bsf PORTB,7
 ;
     btfsc STATUS,C
     return
@@ -566,6 +566,7 @@ Poll:
     btfss PIR1,5
     return
 ;
+    bcf PORTB,7
     movwf PollW
 ;    
     movlw RxBufSize
