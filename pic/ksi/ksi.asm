@@ -116,7 +116,7 @@ TestCom:
     clrf RxCount
 ;
     bsf Flags,OPEN_BIT
-;    return
+    return
     
 TestSendLoop:
     PAGE1
