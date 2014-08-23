@@ -80,7 +80,7 @@ Start:
 
 	PAGE0
     clrf Flags
-    goto TestCom
+    call TestCom
 
 HandleLoop:
     call HandleSpi
@@ -109,7 +109,9 @@ TestCom:
     movf RCREG,W
     movf RCREG,W
     movf RCREG,W
-
+    bsf Flags,OPEN_BIT
+    return
+    
 TestSendLoop:
     PAGE1
     btfss TXSTA,1
