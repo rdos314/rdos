@@ -112,7 +112,7 @@ TestCom:
 
 TestSendLoop:
     PAGE1
-    btfsc TXSTA,1
+    btfss TXSTA,1
     goto TestSendLoop
 ;    
     PAGE0
