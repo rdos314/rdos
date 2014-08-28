@@ -83,10 +83,10 @@ Start:
 
 HandleLoop:
     call HandleSpi
-    btfsc PORTA,0
-    goto HandleLoop
+;    btfsc PORTA,0
+;    goto HandleLoop
 ;    
-    bcf PORTA,3
+;    bcf PORTA,3
     goto HandleLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
