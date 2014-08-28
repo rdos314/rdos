@@ -245,9 +245,6 @@ GetCmdLoop:
     rrf DataIn,F
     movf DataIn,W    
 ;
-    return
-
-
 	movlw 'b'
 	xorwf DataIn,W
 	btfss STATUS,Z
@@ -383,7 +380,7 @@ hsClosed:
 
 hsCheckTx:
     PAGE1
-    btfss TXSTA,1
+    btfsc TXSTA,1
     goto hsTxIdle
 
 hsTxBusy;
