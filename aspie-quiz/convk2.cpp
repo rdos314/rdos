@@ -233,9 +233,18 @@ static void CalcGroupScore(TQuizRow *Row)
         }
 
         if (totsum)
+        {
             Row->GroupResult[grp] = 100 * sum / totsum;
+            val = 6 * sum / totsum;
+            if (val == 6)
+                val = 5;
+            Row->Quiz[141 + grp] = 1 + val;
+        }
         else
+        {
             Row->GroupResult[grp] = 0;
+            Row->Quiz[141 + grp] = 0;
+        }
     }
 }
 

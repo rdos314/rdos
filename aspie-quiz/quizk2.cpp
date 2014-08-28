@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizK2::TQuizK2(const char *FileName)
-  : TQuiz(141),
+  : TQuiz(153),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -112,7 +112,7 @@ int TQuizK2::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizK2::GetQuizN()
 {
-    return 141;
+    return 153;
 }
 
 /*##########################################################################
@@ -432,6 +432,18 @@ void TQuizK2::SetupTexts()
   Quiz[138].MyGroup = GROUP_MIXED;
   Quiz[139].MyGroup = GROUP_MIXED;
   Quiz[140].MyGroup = GROUP_MIXED;
+  Quiz[141].MyGroup = GROUP_MIXED;
+  Quiz[142].MyGroup = GROUP_MIXED;
+  Quiz[143].MyGroup = GROUP_MIXED;
+  Quiz[144].MyGroup = GROUP_MIXED;
+  Quiz[145].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[147].MyGroup = GROUP_MIXED;
+  Quiz[148].MyGroup = GROUP_MIXED;
+  Quiz[149].MyGroup = GROUP_MIXED;
+  Quiz[150].MyGroup = GROUP_MIXED;
+  Quiz[151].MyGroup = GROUP_MIXED;
+  Quiz[152].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Is it important for you to find a unique niche where you can acquire unique competence?";
@@ -575,6 +587,19 @@ void TQuizK2::SetupTexts()
   Quiz[138].Text = "Scared";
   Quiz[139].Text = "Disgust";
   Quiz[140].Text = "Trauma";
+
+  Quiz[141].Text = "ND Talent";
+  Quiz[142].Text = "NT Talent";
+  Quiz[143].Text = "ND Perception";
+  Quiz[144].Text = "NT Perception";
+  Quiz[145].Text = "ND Communication";
+  Quiz[146].Text = "NT Communication";
+  Quiz[147].Text = "ND Social";
+  Quiz[148].Text = "NT Social";
+  Quiz[149].Text = "ND Contact";
+  Quiz[150].Text = "NT Contact";
+  Quiz[151].Text = "ND Attachment";
+  Quiz[152].Text = "NT Attachment";
 
 }
 
@@ -759,7 +784,7 @@ void TQuizK2::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 141; i++)
+    for (i = 0; i < 153; i++)
             DefineGlobalId(i, i);
 }
 
