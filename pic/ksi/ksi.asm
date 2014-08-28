@@ -80,53 +80,11 @@ Start:
 
 	PAGE0
     clrf Flags
-    call TestCom
 
 HandleLoop:
     call HandleSpi
+    bcf PORTA,3
     goto HandleLoop
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;  TestCom
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TestCom:
-    movlw 0xF
-    PAGE1
-    movwf SPBRG
-    PAGE0
-;    
-    movlw 0x22
-    PAGE1
-    movwf TXSTA
-    PAGE0
-;    
-    movlw 0x90
-    movwf RCSTA
-;
-    movf RCREG,W
-    movf RCREG,W
-    movf RCREG,W
-;    
-    movlw RxBuf
-    movwf RxTail
-    movwf RxHead
-    clrf RxCount
-;
-    bsf Flags,OPEN_BIT
-    return
-    
-TestSendLoop:
-    PAGE1
-    btfss TXSTA,1
-    goto TestSendLoop
-;    
-    PAGE0
-    movlw 'A'
-    movwf TXREG
-    goto TestSendLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
