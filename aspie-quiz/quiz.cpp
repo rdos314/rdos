@@ -12147,7 +12147,7 @@ void TQuiz::WriteIntercorr(const char *filename)
                         else
                                 CorrArr[k] = 0.0;
 
-                    if (CorrArr[k] * CorrArr[k] < 0.04)
+                    if (CorrArr[k] * CorrArr[k] < 0.01)
                         CorrArr[k] = 0.0;
 
                 }
