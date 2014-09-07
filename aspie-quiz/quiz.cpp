@@ -11444,46 +11444,10 @@ void TQuiz::WritePhpGroupWeighting(const char *filename)
 
                         ival = round(100.0 * val);
 
-                        sprintf(str, "%d", ival);
+                        sprintf(str, "%5d", ival);
                         file.Write(str);
 
                         if (grp != GROUP_COUNT - 2)
-                                file.Write(", ");
-
-                }
-                file.Write(");\r\n");
-        }
-
-        file.Write("function GetDxWeights()\r\n");
-        file.Write("{\r\n");
-
-        for (q = 0; q < N; q++)
-        {
-                sprintf(str, "  $gw[%d] = array(0 => ", q);
-                file.Write(str);
-
-                GlobalId = GetGlobalId(q);
-
-                for (dx = 0; dx < DX_COUNT; dx++)
-                {
-                        if (GlobalDxCount[GlobalId][dx])
-                        {
-                                val = GlobalDxSum[GlobalId][dx] / GlobalDxCount[GlobalId][dx];
-                                if (val < 0)
-                                        val = 0;
-                        }
-                        else
-                                val = 0;
-
-                        if (Quiz[q].Reverse)
-                                val = -val;
-
-                        ival = round(100.0 * val);
-
-                        sprintf(str, "%d", ival);
-                        file.Write(str);
-
-                        if (dx != DX_COUNT - 1)
                                 file.Write(", ");
 
                 }

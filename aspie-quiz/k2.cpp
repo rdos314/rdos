@@ -81,6 +81,9 @@ int main(int argc, char **argv)
     printf("calc global\r\n");
     Quiz[0]->CalcGlobal();
 
+    printf("group weights\r\n");
+    Quiz[0]->WritePhpGroupWeighting("res\\grp.php");
+
     printf("group\r\n");
     Quiz[0]->WriteGroupTable("res\\group.htm", TRUE);
     printf("groupcorr\r\n");
