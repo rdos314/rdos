@@ -461,6 +461,30 @@ SetPower    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           Set8Bit
+;
+;           DESCRIPTION:    Set 8-bit mode (if supported)
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Set8Bit  Proc near
+    mov eax,fs:REG_CAP
+    test eax,40000h
+    jz s8bDone
+;        
+    mov al,fs:REG_CONTROL
+    or al,20h
+    mov fs:REG_CONTROL,al
+
+s8bDone:
+    ret
+Set8Bit Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           WaitForCompletion
 ;
 ;           DESCRIPTION:    Wait for completion
@@ -551,13 +575,13 @@ SendCmd8    Proc near
     mov ds:sd_pend_int,0
     mov ds:sd_pend_error,0
     ClearSignal
-    mov dword ptr fs:REG_ARG,1A5h
+    mov dword ptr fs:REG_ARG,1AAh
     mov word ptr fs:REG_TRANS_MODE,0
     mov word ptr fs:REG_CMD,802h
     call WaitForCompletion
 ;
     mov eax,fs:REG_RESP0
-    cmp eax,1A5h
+    cmp eax,1AAh
     clc
     je sc8Done
 ;
@@ -575,26 +599,11 @@ SendCmd8    Endp
 ;           DESCRIPTION:    Send ACMD41
 ;
 ;           PARAMETERS:     FS      SD io space
+;                           EAX     OCR
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendAcmd41    Proc near
-    mov esi,51100000h
-    mov eax,fs:REG_CAP
-    test eax,1000000h
-    jnz sac41HasOcr
-;
-    mov esi,51040000h
-    test eax,2000000h    
-    jnz sac41HasOcr
-;
-    stc
-    jmp sac41Done
-
-sac41HasOcr:
-    mov cx,100
-
-sac41Retry:    
     mov ds:sd_pend_int,0
     mov ds:sd_pend_error,0
     ClearSignal
@@ -609,28 +618,13 @@ sac41Retry:
     mov ds:sd_pend_error,0
     ClearSignal
 ;    
-    mov dword ptr fs:REG_ARG,esi
+    mov dword ptr fs:REG_ARG,eax
     mov word ptr fs:REG_TRANS_MODE,0
     mov word ptr fs:REG_CMD,2902h
     call WaitForCompletion
-;
     mov eax,fs:REG_RESP0
-    test eax,80000000h    
-    jnz sac41PowerOk
-;
-    mov ax,25
-    WaitMilliSec
-;
-    loop sac41Retry
-;
-    stc
-    jmp sac41Done        
-    
-sac41PowerOk:
-    mov ds:sd_ocr,eax
-    clc
 
-sac41Done:    
+sac41Done:
     ret
 SendAcmd41    Endp
 
@@ -673,7 +667,7 @@ SendCmd2    Proc near
     ClearSignal
     mov dword ptr fs:REG_ARG,0
     mov word ptr fs:REG_TRANS_MODE,0
-    mov word ptr fs:REG_CMD,202h
+    mov word ptr fs:REG_CMD,209h
     call WaitForCompletion
     jc sc2Done
 ;    
@@ -827,6 +821,129 @@ SendAcmd6    Proc near
 sac6Done:
     ret
 SendAcmd6    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetOcr
+;
+;           DESCRIPTION:    Get OCR
+;
+;           PARAMETERS:     FS      SD io space
+;
+;           RETURNS:        EAX     OCR
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetOcr    Proc near
+    xor eax,eax
+    call SendAcmd41
+    jc goDone
+;
+    mov ds:sd_ocr,eax
+
+goDone:    
+    ret
+GetOcr    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SelectVoltage
+;
+;           DESCRIPTION:    Select voltage
+;
+;           PARAMETERS:     FS      SD io space
+;                           EAX     OCR detected
+;
+;           RETURNS:        EAX     OCR to setup
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SelectVoltage    Proc near
+    mov edx,eax
+    and edx,0FFFF80h
+    stc
+    jz svDone
+;    
+    mov ecx,fs:REG_CAP
+    test ecx,2000000h
+    jnz sv30Ok
+;
+    and edx,0F80000h
+
+sv30Ok:    
+    mov cx,31
+
+svLoop:    
+    test edx,80000000h
+    jnz svBitOk
+;
+    shl edx,1
+    loop svLoop    
+
+svBitOk:
+    dec cl
+    mov edx,3
+    shl edx,cl
+    and eax,edx
+    clc
+
+svDone:
+    ret
+SelectVoltage   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetOcr
+;
+;           DESCRIPTION:    Set OCR
+;
+;           PARAMETERS:     FS      SD io space
+;                           EAX     OCR
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetOcr    Proc near
+    mov esi,eax
+;    
+    mov edx,50000000h
+    mov eax,fs:REG_CAP+4
+    test al,7
+    jz soUhs1Done
+;
+    mov edx,51000000h
+
+soUhs1Done:
+    or esi,edx
+
+soHasOcr:
+    mov cx,100
+
+soRetry:    
+    mov eax,esi
+    call SendAcmd41
+    jc soDone
+;    
+    test eax,80000000h    
+    jnz soPowerOk
+;
+    mov ax,10
+    WaitMilliSec
+;
+    loop soRetry
+;
+    stc
+    jmp soDone        
+    
+soPowerOk:
+    mov ds:sd_ocr,eax
+    clc
+
+soDone:    
+    ret
+SetOcr    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1021,12 +1138,23 @@ idInserted:
     mov ax,50
     WaitMilliSec
 ;
+;    call Set8Bit
     call SendCmd0        
+;
+    call GetOcr
+    jc idFailed
+;
+    int 3
+    call SelectVoltage
+    jc idFailed
+;
+    mov ds:sd_ocr,eax
+;        
     call SendCmd8
     jc idFailed
-;    
-    call SendAcmd41
-    jc idFailed
+;
+    mov eax,ds:sd_ocr
+    call SetOcr    
 ;
     test ds:sd_ocr,01000000h
     jz idVoltOk
@@ -1042,6 +1170,7 @@ idInserted:
     WaitMilliSec
 
 idVoltOk:
+    int 3
     call SendCmd2
     jc idFailed
 ;    
