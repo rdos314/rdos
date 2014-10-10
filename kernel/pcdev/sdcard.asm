@@ -94,6 +94,8 @@ sd_ocr              DD ?
 sd_rca              DD ?
 sd_cid              DD ?,?,?,?
 
+sd_ccc              DW ?
+
 sd_total_sectors    DD ?
 sd_sectors_per_unit DW ?
 sd_units            DW ?
@@ -713,6 +715,57 @@ SendCmd3    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SwitchFunction
+;
+;           DESCRIPTION:    Switch function
+;
+;           PARAMETERS:     FS      SD io space
+;                           BX      Group
+;                           AL      Value
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SwitchFunction    Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;    
+    mov cl,bl
+    and cl,7
+    shl cl,4
+    mov edx,0Fh
+    shl edx,cl
+    movzx eax,al
+    shl eax,cl
+    not edx
+    and edx,0FFFFFFh
+    or eax,edx
+    or eax,80000000h
+;
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+    mov dword ptr fs:REG_ARG,eax
+    mov word ptr fs:REG_TRANS_MODE,0
+    mov word ptr fs:REG_CMD,61Ah
+    call WaitForCompletion
+;    
+    mov eax,fs:REG_RESP0
+    and eax,edx
+    shr eax,cl
+    and al,0Fh
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax    
+    ret
+SwitchFunction    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SendCmd9
 ;
 ;           DESCRIPTION:    Send CMD9
@@ -722,6 +775,7 @@ SendCmd3    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendCmd9    Proc near
+    mov ds:sd_ccc,0
     mov ds:sd_pend_int,0
     mov ds:sd_pend_error,0
     ClearSignal
@@ -741,6 +795,10 @@ SendCmd9    Proc near
     and eax,3FFFFh
     shl eax,10
     mov ds:sd_total_sectors,eax
+;
+    mov ax,fs:REG_RESP0+9
+    shr ax,4
+    mov ds:sd_ccc,ax
     clc
     jmp sc9Done
     
@@ -948,6 +1006,47 @@ SetOcr    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetHighSpeed
+;
+;           DESCRIPTION:    Set high speed
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetHighSpeed    Proc near
+    mov ax,ds:sd_ccc
+    test ax,400h
+    jz shsDone
+;    
+    mov eax,fs:REG_CAP
+    test eax,200000h
+    jz shsDone
+;
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+    mov dword ptr fs:REG_ARG,80FFFF01h
+    mov word ptr fs:REG_TRANS_MODE,0
+    mov word ptr fs:REG_CMD,61Ah
+    call WaitForCompletion
+    jc shsDone
+;    
+    mov eax,fs:REG_RESP0
+    and al,0Fh
+    cmp al,1
+    clc
+    je shsDone
+;
+    stc    
+
+shsDone:    
+    ret
+SetHighSpeed    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           DisconnectPullup
 ;
 ;           DESCRIPTION:    Disconnect pullup
@@ -1144,7 +1243,6 @@ idInserted:
     call GetOcr
     jc idFailed
 ;
-    int 3
     call SelectVoltage
     jc idFailed
 ;
@@ -1170,7 +1268,6 @@ idInserted:
     WaitMilliSec
 
 idVoltOk:
-    int 3
     call SendCmd2
     jc idFailed
 ;    
@@ -1183,6 +1280,14 @@ idVoltOk:
     call SendCmd7
     jc idFailed
 ;
+    int 3    
+    mov ax,ds:sd_ccc
+    and ax,14h
+    cmp ax,14h
+    jne idFailed
+;    
+    call SetHighSpeed
+;    
     mov ecx,1000
     call SetDataTimeout
     call DisconnectPullup
