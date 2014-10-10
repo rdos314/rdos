@@ -1280,17 +1280,23 @@ idVoltOk:
     call SendCmd7
     jc idFailed
 ;
-    int 3    
     mov ax,ds:sd_ccc
     and ax,14h
     cmp ax,14h
     jne idFailed
 ;    
     call SetHighSpeed
-;    
+    jc idNoHs
+;
+    int 3
+    
+idNoHs:    
     mov ecx,1000
     call SetDataTimeout
     call DisconnectPullup
+;    
+    mov ax,100
+    WaitMilliSec
     clc
     jmp idDone
 
