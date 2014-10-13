@@ -144,10 +144,15 @@ ProcessHubDescr  Proc near
 phdLoop:
     mov gs:[bx].hps_status,0
     mov gs:[bx].hps_req_reset,0
+    mov gs:[bx].hps_req_power,0
     mov gs:[bx].hps_dev_port,0
     mov gs:[bx].hps_attach_thread,0
     mov gs:[bx].hps_detach_thread,0
-    add bx,16
+    mov gs:[bx].hps_timeout,0
+    mov gs:[bx].hps_timeout+4,0
+    mov gs:[bx].hps_power_timeout,0
+    mov gs:[bx].hps_power_timeout+4,0
+    add bx,32
     loop phdLoop
 ;               
     mov gs:hub_attached,1
@@ -538,7 +543,7 @@ HubDetach    Proc near
     pop ds
     ret
 HubDetach   Endp
-
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -589,7 +594,7 @@ attach_thread_name  DB 'Hub Attach', 0
 attach_thread:
     mov si,bx
     dec bx
-    shl bx,4
+    shl bx,5
     add bx,OFFSET hub_port_arr
     mov ax,fs
     mov ds,ax
@@ -606,10 +611,10 @@ attach_thread:
 
 atHasPort:
     LockUsb
-;    
+;
     GetThread
     mov gs:[bx].hps_attach_thread,ax
-;    
+;        
     mov ax,gs:hub_attached
     or ax,ax
     jz atFreeUnlock
@@ -683,7 +688,7 @@ detach_thread_name  DB 'Hub Detach', 0
 detach_thread:
     mov si,bx
     dec bx
-    shl bx,4
+    shl bx,5
     add bx,OFFSET hub_port_arr
     mov ax,fs
     mov ds,ax
@@ -721,23 +726,44 @@ UpdateOnePort    Proc near
     or ax,ax
     jz uopDone
 ;
-    mov al,gs:[bx].hps_req_reset    
+    mov al,gs:[bx].hps_req_power
     or al,al
-    jz uopResetOk
+    jz uopCheckReset
+;
+    mov eax,gs:[bx].hps_power_timeout
+    or eax,gs:[bx].hps_power_timeout+4
+    jnz uopCheckPowerTimeout
+;    
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    mov gs:[bx].hps_power_timeout,eax
+    mov gs:[bx].hps_power_timeout+4,edx
 ;
     mov dx,si
     mov ax,PORT_POWER
     call ClearPortFeature    
+    jmp uopCheckReset
+
+uopCheckPowerTimeout:
+    GetSystemTime
+    sub eax,gs:[bx].hps_power_timeout
+    sbb edx,gs:[bx].hps_power_timeout+4
+    jc uopCheckReset
 ;
-    mov ax,250
-    WaitMilliSec
-;    
     mov dx,si
     mov ax,PORT_POWER
     call SetPortFeature    
 ;
-    mov ax,10
+    mov ax,gs:hub_power_time
     WaitMilliSec
+;
+    mov gs:[bx].hps_req_power,0
+
+uopCheckReset:
+    mov al,gs:[bx].hps_req_reset    
+    or al,al
+    jz uopResetOk
 ;
     mov dx,si
     mov ax,PORT_RESET
@@ -780,6 +806,7 @@ uopResetOk:
     mov bx,si
 ;
     push ds
+    push si
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -788,6 +815,7 @@ uopResetOk:
     mov ax,2
     mov cx,stack0_size
     CreateThread
+    pop si
     pop ds
     jmp uopDone
 
@@ -812,6 +840,7 @@ uopNotConnected:
     mov bx,si
 ;
     push ds
+    push si
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -820,6 +849,7 @@ uopNotConnected:
     mov ax,2
     mov cx,stack0_size
     CreateThread
+    pop si
     pop ds
     jmp uopDone
 
@@ -1015,7 +1045,7 @@ upLoop:
     pop cx
     pop bx 
 ;      
-    add bx,16
+    add bx,32
     inc si
     loop upLoop
 ;           
@@ -1105,15 +1135,19 @@ hub_thread_port_loop:
     jz hub_thread_port_next
 ;
     push ax
+    push bx
+    push si
     push di
     push bp
     call UpdateOnePort
     pop bp
     pop di
+    pop si
+    pop bx
     pop ax
 
 hub_thread_port_next:
-    add bx,16
+    add bx,32
     inc si
     shr al,1
     loop hub_thread_port_loop
@@ -1147,7 +1181,7 @@ hub_wait_port_loop:
     popa
 
 hub_wait_next_port:    
-    add bx,16
+    add bx,32
     inc si
     loop hub_wait_port_loop
 ;   
@@ -1539,7 +1573,7 @@ is_usb_hub_port_connected  Proc far
 ;    
     mov si,dx
     dec si
-    shl si,4
+    shl si,5
     mov ax,gs:[si].hub_port_arr.hps_status
     test al,1
     clc
