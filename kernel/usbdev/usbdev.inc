@@ -121,6 +121,12 @@ free_hub_port_proc     DD ?,?
 
 has_64bit_proc         DD ?,?
 
+;  IN FS        Is stalled?
+is_stalled_proc      DD ?,?
+
+;  IN FS        Clear stalled
+clear_stalled_proc      DD ?,?
+
 usb_controller_id      DW ?
 usb_port_sel_arr       DW MAX_USB_HUB_PORTS DUP(?)
 usb_attach_thread_arr  DW MAX_USB_HUB_PORTS DUP(?)

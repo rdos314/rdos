@@ -562,7 +562,8 @@ ReceiveCsw Proc near
     mov bx,fs:disc_bulk_in_handle
     WasUsbTransactionOk
     jc rcswDone
-;
+    
+rcswOk:
     mov eax,fs:disc_csw_sign
     cmp eax,53425355h
     stc
@@ -574,7 +575,7 @@ ReceiveCsw Proc near
     jne rcswDone
 ;
     mov al,fs:disc_csw_status
-    or al,al
+    or al,al    
     stc
     jnz rcswDone
 ;    
@@ -708,7 +709,7 @@ RequestSense Proc near
     call SendCbw
     jc reqsDone
 ;    
-    mov ax,100
+    mov ax,500
     WaitMilliSec
 ;    
     mov ax,fs

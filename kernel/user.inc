@@ -3013,6 +3013,17 @@ WasUsbTransactionOk      MACRO
 	UserGate was_usb_trans_ok_nr
 						ENDM
 
+;   IN  BX          Handle
+;   OUT CY          Stalled
+IsUsbPipeStalled      MACRO
+	UserGate is_usb_pipe_stalled_nr
+						ENDM
+
+;   IN  BX          Handle
+ClearUsbPipeStalled      MACRO
+	UserGate clear_usb_pipe_stalled_nr
+						ENDM
+
 ;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)
 ;   OUT BX          Handle

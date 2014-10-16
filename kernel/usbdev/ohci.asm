@@ -2431,6 +2431,42 @@ Has64Bit     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           IsStalled
+;
+;           DESCRIPTION:    Check if pipe is stalled
+;
+;       PARAMETERS:         DS      Function selector
+;                           FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsStalled   Proc far
+    int 3
+    clc
+    retf32
+IsStalled   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ClearStalled
+;
+;           DESCRIPTION:    Clear stalled pipe
+;
+;       PARAMETERS:         DS      Function selector
+;                           FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearStalled   Proc far
+    int 3
+    clc
+    retf32
+ClearStalled   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdateQueue
 ;
 ;           DESCRIPTION:    Update done queue
@@ -3154,6 +3190,8 @@ ot19 DD OFFSET UnlockEnum,      SEG code
 ot20 DD OFFSET AllocateHubPort,  SEG code
 ot21 DD OFFSET FreeHubPort,     SEG code
 ot22 DD OFFSET Has64Bit,        SEG code
+ot23 DD OFFSET IsStalled,       SEG code
+ot24 DD OFFSET ClearStalled,    SEG code
 
 InitFunction    Proc near
     push es
@@ -3165,7 +3203,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*23
+    mov cx,2*25
 
 ifTabLoop:
     lods dword ptr cs:[si]

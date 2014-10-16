@@ -2702,6 +2702,75 @@ hb64Fail:
 hb64Done:    
     retf32
 Has64Bit     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IsStalled
+;
+;           DESCRIPTION:    Check if pipe is stalled
+;
+;       PARAMETERS:         DS      Function selector
+;                           FS      Pipe selector
+;
+;       RETURNS:            CY      Stalled
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsStalled   Proc far
+    push es
+    push eax
+    push edx
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov edx,fs:esp_qh
+    mov al,es:[edx].qh_status
+    test al,40h
+    stc
+    jnz issDone
+;
+    clc
+
+issDone:
+    pop edx
+    pop eax
+    pop es        
+    retf32
+IsStalled Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ClearStalled
+;
+;           DESCRIPTION:    Clear stalled pipe
+;
+;       PARAMETERS:         DS      Function selector
+;                           FS      Pipe selector
+;
+;       RETURNS:            CY      Stalled
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearStalled   Proc far
+    push es
+    push eax
+    push edx
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov edx,fs:esp_qh
+    mov es:[edx].qh_size,0
+    mov es:[edx].qh_status,80h
+;
+    pop edx
+    pop eax
+    pop es        
+    retf32
+ClearStalled Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3410,6 +3479,9 @@ et19 DD OFFSET UnlockEnum,      SEG code
 et20 DD OFFSET AllocateHubPort, SEG code
 et21 DD OFFSET FreeHubPort,     SEG code
 et22 DD OFFSET Has64Bit,        SEG code
+et23 DD OFFSET IsStalled,       SEG code
+et24 DD OFFSET ClearStalled,    SEG code
+
 ;
 ;           PARAMETERS:         BH          Bus
 ;                           BL          Device
@@ -3426,7 +3498,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*23
+    mov cx,2*25
 
 ifTabLoop:
     lods dword ptr cs:[si]
