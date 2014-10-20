@@ -769,8 +769,13 @@ uopCheckReset:
     mov ax,PORT_RESET
     call SetPortFeature
 ;
-    mov ax,10
+    mov ax,25
     WaitMilliSec
+;
+    mov dx,si
+    mov ax,PORT_RESET
+    call ClearPortFeature
+;
     mov gs:[bx].hps_req_reset,0
     jmp uopDone
 
