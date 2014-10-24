@@ -3237,6 +3237,12 @@ IsUsbHubPortConnected   MACRO
     OsGate is_usb_hub_port_connected_nr
                     ENDM
 
+; IN  GS      Hub selector
+; IN  DX      Hub port
+ResetUsbHubPort   MACRO
+    OsGate reset_usb_hub_port_nr
+                    ENDM
+
 ; IN  ES      Usb function selector
 ; IN  AX      Pipe sel
 IsValidUsbPipeSel   MACRO

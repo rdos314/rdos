@@ -2561,12 +2561,25 @@ ResetPipe   Proc far
     push ax
     push cx
 ;    
+    mov ax,fs:usbp_hub_sel
+    or ax,ax
+    jz repNoHub
+;
+    push gs
+    mov gs,ax
+    mov dx,fs:usbp_hub_port
+    ResetUsbHubPort
+    pop gs
+    jmp repDone
+       
+repNoHub:
     mov es,fs:usbp_function_sel
     mov cl,es:usbf_port
     mov ax,1
     shl ax,cl
     or ds:ehc_reset,ax
-;
+
+repDone:
     pop cx
     pop ax
     pop es

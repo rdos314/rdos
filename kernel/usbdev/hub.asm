@@ -144,7 +144,7 @@ ProcessHubDescr  Proc near
 phdLoop:
     mov gs:[bx].hps_status,0
     mov gs:[bx].hps_req_reset,0
-    mov gs:[bx].hps_req_power,0
+    mov gs:[bx].hps_ext_reset,0
     mov gs:[bx].hps_dev_port,0
     mov gs:[bx].hps_attach_thread,0
     mov gs:[bx].hps_detach_thread,0
@@ -726,7 +726,7 @@ UpdateOnePort    Proc near
     or ax,ax
     jz uopDone
 ;
-    mov al,gs:[bx].hps_req_power
+    mov al,gs:[bx].hps_ext_reset
     or al,al
     jz uopCheckReset
 ;
@@ -743,7 +743,7 @@ UpdateOnePort    Proc near
     mov dx,si
     mov ax,PORT_POWER
     call ClearPortFeature    
-    jmp uopCheckReset
+    jmp uopNotConnected
 
 uopCheckPowerTimeout:
     GetSystemTime
@@ -757,25 +757,24 @@ uopCheckPowerTimeout:
 ;
     mov ax,gs:hub_power_time
     WaitMilliSec
-;
-    mov gs:[bx].hps_req_power,0
+    mov gs:[bx].hps_ext_reset,0
+    mov gs:[bx].hps_power_timeout,0
+    mov gs:[bx].hps_power_timeout+4,0
 
 uopCheckReset:
     mov al,gs:[bx].hps_req_reset    
     or al,al
     jz uopResetOk
-;
+
+uopDoReset:    
     mov dx,si
     mov ax,PORT_RESET
     call SetPortFeature
 ;
     mov ax,25
     WaitMilliSec
-;
-    mov dx,si
-    mov ax,PORT_RESET
-    call ClearPortFeature
-;
+
+uopResetDone:
     mov gs:[bx].hps_req_reset,0
     jmp uopDone
 
@@ -1591,6 +1590,34 @@ iuhDone:
     pop ax    
     retf32
 is_usb_hub_port_connected  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ResetUsbHubPort
+;
+;   description:    Reset Hub port
+;
+;   Parameters:     GS      Hub selector
+;                   DX      Port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_usb_hub_port_name  DB 'Reset Usb Hub Port', 0
+
+reset_usb_hub_port  Proc far
+    push ax
+    push si
+;    
+    mov si,dx
+    dec si
+    shl si,5
+    mov gs:[si].hub_port_arr.hps_ext_reset,1
+;
+    pop si
+    pop ax    
+    retf32
+reset_usb_hub_port  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1615,6 +1642,12 @@ init    Proc far
     mov edi,OFFSET is_usb_hub_port_connected_name
     xor cl,cl
     mov ax,is_usb_hub_port_connected_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET reset_usb_hub_port
+    mov edi,OFFSET reset_usb_hub_port_name
+    xor cl,cl
+    mov ax,reset_usb_hub_port_nr
     RegisterOsGate
 ;
     mov edi,OFFSET usb_attach

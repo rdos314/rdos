@@ -51,7 +51,7 @@ hps_power_timeout   DD ?,?
 hps_status          DW ?
 hps_dev_port        DB ?
 hps_req_reset       DB ?
-hps_req_power       DB ?
+hps_ext_reset       DB ?
 
 hub_port_status ENDS
 
