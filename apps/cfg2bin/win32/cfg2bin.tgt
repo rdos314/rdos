@@ -67,8 +67,8 @@ n????Include directories:
 1
 17
 WString
-66
-"\rdos\classlib;\rdos\classlib\win32;$(%watcom)/h;$(%watcom)/h/nt"
+72
+"../../../classlib;../../../classlib/win32;$(%watcom)/h;$(%watcom)/h/nt"
 0
 18
 MRState

@@ -91,8 +91,8 @@ r????Include directories:
 1
 23
 WString
-125
-"\rdos\apps\freecom\lib;\rdos\apps\freecom\lang;\rdos\kernel;\rdos\classlib;\rdos\classlib\rdos;$(%watcom)/h;$(%watcom)/rdos"
+91
+".\lib;.\lang;..\..\kernel;..\..\classlib;..\..\classlib\rdos;$(%watcom)/h;$(%watcom)/rdos"
 0
 24
 MRState

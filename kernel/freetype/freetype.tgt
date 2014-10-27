@@ -159,8 +159,8 @@ r????Include directories:
 1
 39
 WString
-80
-"\rdos\kernel\freetype;\rdos\kernel;\rdos\classlib;$(%watcom)/h;$(%watcom)/rdos"
+61
+".\;..\..\kernel;..\..\classlib;$(%watcom)/h;$(%watcom)/rdos"
 0
 40
 MRState
