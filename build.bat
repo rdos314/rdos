@@ -1,53 +1,77 @@
-ide2make -p kernel/acpi/acpi
-wmake -f kernel/acpi/acpi.mk -h -e
+@echo off
 
-ide2make -p kernel/audiodev/audiodev
-wmake -f kernel/audiodev/audiodev.mk -h -e
+echo "Building ACPI"
+ide2make -p kernel/acpi/acpi 1>nul
+wmake -f kernel/acpi/acpi.mk -h -e 1>nul
 
-ide2make -p kernel/boot/boot
-wmake -f kernel/boot/boot.mk -h -e
+echo "Building Audio Device"
+ide2make -p kernel/audiodev/audiodev 1>nul
+wmake -f kernel/audiodev/audiodev.mk -h -e 1>nul
 
-ide2make -p kernel/dosemu/dosemu
-wmake -f kernel/dosemu/dosemu.mk -h -e
+echo "Building BOOT"
+ide2make -p kernel/boot/boot 1>nul
+wmake -f kernel/boot/boot.mk -h -e 1>nul
 
-ide2make -p kernel/freetype/freetype
-wmake -f kernel/freetype/freetype.mk -h -e
+echo "Building DosEmu"
+ide2make -p kernel/dosemu/dosemu 1>nul
+wmake -f kernel/dosemu/dosemu.mk -h -e 1>nul
 
-ide2make -p kernel/netdev/netdev
-wmake -f kernel/netdev/netdev.mk -h -e
+echo "Building FreeType"
+ide2make -p kernel/freetype/freetype 1>nul
+wmake -f kernel/freetype/freetype.mk -h -e 1>nul
 
-ide2make -p kernel/os/os
-wmake -f kernel/os/os.mk -h -e
+echo "Building Net Device"
+ide2make -p kernel/netdev/netdev 1>nul
+wmake -f kernel/netdev/netdev.mk -h -e 1>nul
 
-ide2make -p kernel/pcdev/pcdev
-wmake -f kernel/pcdev/pcdev.mk -h -e
+echo "Building OS"
+ide2make -p kernel/os/os 1>nul
+wmake -f kernel/os/os.mk -h -e 1>nul
 
-ide2make -p kernel/printdev/printdev
-wmake -f kernel/printdev/printdev.mk -h -e
+echo "Building PC Device"
+ide2make -p kernel/pcdev/pcdev 1>nul
+wmake -f kernel/pcdev/pcdev.mk -h -e 1>nul
 
-ide2make -p kernel/touchdev/touchdev
-wmake -f kernel/touchdev/touchdev.mk -h -e
+echo "Building Printer device"
+ide2make -p kernel/printdev/printdev 1>nul
+wmake -f kernel/printdev/printdev.mk -h -e 1>nul
 
-ide2make -p kernel/usbdev/usbdev
-wmake -f kernel/usbdev/usbdev.mk -h -e
+echo "Building Touch Device"
+ide2make -p kernel/touchdev/touchdev 1>nul
+wmake -f kernel/touchdev/touchdev.mk -h -e 1>nul
 
-ide2make -p classlib/rdos/rdos
-wmake -f classlib/rdos/rdos.mk -h -e
+echo "Building USB Device"
+ide2make -p kernel/usbdev/usbdev 1>nul
+wmake -f kernel/usbdev/usbdev.mk -h -e 1>nul
 
-ide2make -p classlib/win32/win32
-wmake -f classlib/win32/win32.mk -h -e
+echo "Building Rdos classlib"
+ide2make -p classlib/rdos/rdos 1>nul
+wmake -f classlib/rdos/rdos.mk -h -e 1>nul
 
-ide2make -p apps/cfg2bin/cfg2bin
-wmake -f apps/cfg2bin/cfg2bin.mk -h -e
+echo "Building Win32 classlib"
+ide2make -p classlib/win32/win32 1>nul
+wmake -f classlib/win32/win32.mk -h -e 1>nul
 
-ide2make -p apps/freecom/command
-wmake -f apps/freecom/command.mk -h -e
+echo "Building Cfg2Bin"
+ide2make -p apps/cfg2bin/cfg2bin 1>nul
+wmake -f apps/cfg2bin/cfg2bin.mk -h -e 1>nul
 
-ide2make -p apps/ftpd/ftpd
-wmake -f apps/ftpd/ftpd.mk -h -e
+echo "Building FreeCom"
+ide2make -p apps/freecom/command 1>nul
+wmake -f apps/freecom/command.mk -h -e 1>nul
 
-ide2make -p apps/tcpwd/tcpwd
-wmake -f apps/tcpwd/tcpwd.mk -h -e
+echo "Building FTP Daemon"
+ide2make -p apps/ftpd/ftpd 1>nul
+wmake -f apps/ftpd/ftpd.mk -h -e 1>nul
 
-ide2make -p apps/telnetd/telnetd
-wmake -f apps/telnetd/telnetd.mk -h -e
+echo "Building MB Edit"
+ide2make -p apps/mbedit/mbedit 1>nul
+wmake -f apps/mbedit/mbedit.mk -h -e 1>nul
+
+echo "Building Watcom TCP Debugger"
+ide2make -p apps/tcpwd/tcpwd 1>nul
+wmake -f apps/tcpwd/tcpwd.mk -h -e 1>nul
+
+echo "Building Telnet Daemon"
+ide2make -p apps/telnetd/telnetd 1>nul
+wmake -f apps/telnetd/telnetd.mk -h -e 1>nul
