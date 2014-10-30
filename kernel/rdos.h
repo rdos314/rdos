@@ -369,6 +369,14 @@ void RDOSAPI RdosEjectPrinterMedia(int Handle);
 void RDOSAPI RdosWaitForPrint(int Handle);
 void RDOSAPI RdosResetPrinter(int Handle);
 
+int RDOSAPI RdosGetLonModules();
+int RDOSAPI RdosOpenLonModule(char ID);
+void RDOSAPI RdosCloseLonModule(int Handle);
+void RDOSAPI RdosAddWaitForLonModule(int Handle, int LonHandle, int ID);
+void RDOSAPI RdosSendLonModuleMsg(int Handle, const char *Buf, int Size);
+int RDOSAPI RdosHasLonModuleMsg(int Handle);
+int RDOSAPI RdosReceiveLonModuleMsg(int Handle, char *Buf);
+
 int RDOSAPI RdosGetMaxCardDev();
 int RDOSAPI RdosOpenCardDev(char ID);
 void RDOSAPI RdosCloseCardDev(int Handle);

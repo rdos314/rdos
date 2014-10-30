@@ -27,8 +27,6 @@
 
 lon_struc	STRUC
 
-lon_init_proc       DD ?,?
-
 ; IN  ES:EDI        Buffer
 ; IN  ECX           Size
 lon_send_proc       DD ?,?
@@ -38,5 +36,7 @@ lon_send_proc       DD ?,?
 lon_receive_proc    DD ?,?
 
 lon_has_msg_proc    DD ?,?
+
+lon_avail_obj       DW ?
 
 lon_struc	ENDS

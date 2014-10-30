@@ -983,6 +983,45 @@
     CallGate_reset_printer  \
     parm [ebx];
 
+#pragma aux RdosGetLonModules = \
+    CallGate_get_lon_modules  \
+    "jc fail" \
+    "movzx eax,al"  \
+    "jmp done" \
+    "fail:" \
+    "xor eax,eax" \
+    "done:" \        
+    value [eax];
+
+#pragma aux RdosOpenLonModule = \
+    CallGate_open_lon_module  \
+    ValidateHandle  \
+    parm [al]  \
+    value [ebx];
+
+#pragma aux RdosCloseLonModule = \
+    CallGate_close_lon_module  \
+    parm [ebx];
+
+#pragma aux RdosAddWaitForLonModule = \
+    CallGate_add_wait_for_lon_module  \
+    parm [ebx] [eax] [ecx];
+
+#pragma aux RdosSendLonModuleMsg = \
+    CallGate_send_lon_module_msg  \
+    parm [ebx] [edi] [ecx];
+
+#pragma aux RdosHasLonModuleMsg = \
+    CallGate_has_lon_module_msg  \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosReceiveLonModuleMsg = \
+    CallGate_receive_lon_module_msg  \
+    parm [ebx] [edi] \
+    value [ecx];
+    
 #pragma aux RdosGetMaxCardDev = \
     CallGate_get_max_carddev  \
     "jc fail" \

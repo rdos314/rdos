@@ -2419,6 +2419,51 @@ ResetPrinter       MACRO
 	UserGate reset_printer_nr
 						ENDM
 
+;;;;;;;;;;;;;; Lonworks ;;;;;;;;;;;;
+
+;   OUT AL      Lon modules #
+GetLonModules       MACRO
+	UserGate get_lon_modules_nr
+						ENDM
+
+;	IN  AL		Lon module #
+;	OUT BX		Lon handle
+OpenLonModule       MACRO
+	UserGate open_lon_module_nr
+						ENDM
+
+;	IN  BX	    Lon handle
+CloseLonModule       MACRO
+	UserGate close_lon_module_nr
+						ENDM
+
+; IN  BX		Wait handle
+; IN  AX        Lon handle
+; IN  ECX       Object ID
+AddWaitForLonModule       MACRO
+	UserGate add_wait_for_lon_module_nr
+						ENDM
+
+; IN  BX		Lon handle
+; IN  ES:(E)DI  Buffer
+; IN  (E)CX     Size
+SendLonModuleMsg       MACRO
+	UserGate send_lon_module_msg_nr
+						ENDM
+
+; IN  BX		Lon handle
+; OUT NC        Message
+HasLonModuleMsg       MACRO
+	UserGate has_lon_module_msg_nr
+						ENDM
+
+; IN  BX		Lon handle
+; IN  ES:(E)DI  Buffer
+; OUT ECX       Size
+ReceiveLonModuleMsg       MACRO
+	UserGate receive_lon_module_msg_nr
+						ENDM
+
 ;;;;;;;;;;;;;; CARD DEVICE ;;;;;;;;;;;;
 
 ;   OUT AL      Card device #

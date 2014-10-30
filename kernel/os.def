@@ -651,5 +651,6 @@ create_can_id_hook_nr       = 538
 delete_can_id_hook_nr       = 539
 
 reset_usb_hub_port_nr       = 540
+add_lon_module_nr           = 541
 
 osgate_entries				= 560

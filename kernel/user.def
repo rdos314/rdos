@@ -705,4 +705,12 @@ acquire_named_futex_nr          = 556
 is_usb_pipe_stalled_nr          = 557
 clear_usb_pipe_stalled_nr       = 558
 
-usergate_entries			    = 560
+get_lon_modules_nr              = 559
+open_lon_module_nr              = 560
+close_lon_module_nr             = 561
+add_wait_for_lon_module_nr      = 562
+send_lon_module_msg_nr          = 563
+has_lon_module_msg_nr           = 564
+receive_lon_module_msg_nr       = 565
+
+usergate_entries			    = 580

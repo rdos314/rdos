@@ -3478,6 +3478,13 @@ AddPrinter      MACRO
     OsGate add_printer_nr
                     ENDM
 
+;;;;;;;;;; Lon works ;;;;;;;;;
+
+;   DS      Lon device selector
+AddLonModule      MACRO
+    OsGate add_lon_module_nr
+                    ENDM
+
 ;;;;;;;;;; Card device ;;;;;;;;;
 
 ;   AX      Controller #

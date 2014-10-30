@@ -650,6 +650,9 @@
 #define osgate_create_can_id_hook 538
 #define osgate_delete_can_id_hook 539
 
+#define osgate_reset_usb_hub_port 540
+#define osgate_add_lon_module 541
+
 
 
 
@@ -1303,4 +1306,7 @@
 #define OsGate_hook_can_gen_bus_msg 0x3E 0x67 0x9a 25 2 0 0 2 0
 #define OsGate_create_can_id_hook 0x3E 0x67 0x9a 26 2 0 0 2 0
 #define OsGate_delete_can_id_hook 0x3E 0x67 0x9a 27 2 0 0 2 0
+
+#define OsGate_reset_usb_hub_port 0x3E 0x67 0x9a 28 2 0 0 2 0
+#define OsGate_add_lon_module 0x3E 0x67 0x9a 29 2 0 0 2 0
 

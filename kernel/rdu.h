@@ -700,6 +700,18 @@
 #define usergate_write_long_disc 0x0000022A
 
 #define usergate_create_named_user_section 0x0000022B
+#define usergate_acquire_named_futex 0x0000022C
+
+#define usergate_is_usb_pipe_stalled 0x0000022D
+#define usergate_clear_usb_pipe_stalled 0x0000022E
+
+#define usergate_get_lon_modules 0x0000022F
+#define usergate_open_lon_module 0x00000230
+#define usergate_close_lon_module 0x00000231
+#define usergate_add_wait_for_lon_module 0x00000232
+#define usergate_send_lon_module_msg 0x00000233
+#define usergate_has_lon_module_msg 0x00000234
+#define usergate_receive_lon_module_msg 0x00000235
 
 
 
@@ -1406,6 +1418,18 @@
 #define CallGate_write_long_disc 0x67 0x9a 42 2 0 0 3 0
 
 #define CallGate_create_named_user_section 0x67 0x9a 43 2 0 0 3 0
+#define CallGate_acquire_named_futex 0x67 0x9a 44 2 0 0 3 0
+
+#define CallGate_is_usb_pipe_stalled 0x67 0x9a 45 2 0 0 3 0
+#define CallGate_clear_usb_pipe_stalled 0x67 0x9a 46 2 0 0 3 0
+
+#define CallGate_get_lon_modules 0x67 0x9a 47 2 0 0 3 0
+#define CallGate_open_lon_module 0x67 0x9a 48 2 0 0 3 0
+#define CallGate_close_lon_module 0x67 0x9a 49 2 0 0 3 0
+#define CallGate_add_wait_for_lon_module 0x67 0x9a 50 2 0 0 3 0
+#define CallGate_send_lon_module_msg 0x67 0x9a 51 2 0 0 3 0
+#define CallGate_has_lon_module_msg 0x67 0x9a 52 2 0 0 3 0
+#define CallGate_receive_lon_module_msg 0x67 0x9a 53 2 0 0 3 0
 
 #else
 
@@ -2110,5 +2134,17 @@
 #define CallGate_write_long_disc 0x3e 0x67 0x9a 42 2 0 0 3 0
 
 #define CallGate_create_named_user_section 0x3e 0x67 0x9a 43 2 0 0 3 0
+#define CallGate_acquire_named_futex 0x3e 0x67 0x9a 44 2 0 0 3 0
+
+#define CallGate_is_usb_pipe_stalled 0x3e 0x67 0x9a 45 2 0 0 3 0
+#define CallGate_clear_usb_pipe_stalled 0x3e 0x67 0x9a 46 2 0 0 3 0
+
+#define CallGate_get_lon_modules 0x3e 0x67 0x9a 47 2 0 0 3 0
+#define CallGate_open_lon_module 0x3e 0x67 0x9a 48 2 0 0 3 0
+#define CallGate_close_lon_module 0x3e 0x67 0x9a 49 2 0 0 3 0
+#define CallGate_add_wait_for_lon_module 0x3e 0x67 0x9a 50 2 0 0 3 0
+#define CallGate_send_lon_module_msg 0x3e 0x67 0x9a 51 2 0 0 3 0
+#define CallGate_has_lon_module_msg 0x3e 0x67 0x9a 52 2 0 0 3 0
+#define CallGate_receive_lon_module_msg 0x3e 0x67 0x9a 53 2 0 0 3 0
 
 #endif
