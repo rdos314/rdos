@@ -34,6 +34,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 INCLUDE system.inc
 INCLUDE ..\handle.inc
+INCLUDE lon.inc
 
 data    SEGMENT byte public 'DATA'
 
