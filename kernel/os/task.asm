@@ -4506,6 +4506,49 @@ timer_expired    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           IrqTimerExpired
+;
+;           DESCRIPTION:    Timer expired notification from normal IRQ
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+irq_timer_expired_name   DB 'IRQ Timer Expired', 0
+
+irq_timer_expired    Proc far
+    mov ax,SEG data
+    mov ds,ax
+
+irq_timer_expired_check:   
+    GetSystemTime
+    call LockTimerGlobal
+    add eax,cs:update_tics
+    adc edx,0
+    mov bx,ds:timer_head
+    sub eax,ds:[bx].timer_lsb
+    sbb edx,ds:[bx].timer_msb
+    jc irq_timer_expired_reload
+;
+    call LocalRemoveTimerGlobal    
+    jmp irq_timer_expired_check
+
+irq_timer_expired_reload: 
+    neg eax
+    ReloadSysTimer
+    jnc irq_timer_expired_done
+;
+    call UnlockTimerGlobal
+    jmp irq_timer_expired_check
+
+irq_timer_expired_done:
+    call UnlockTimerGlobal    
+    retf32
+irq_timer_expired    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           PreemptExpired
 ;
 ;           DESCRIPTION:    Preemption expired notification
@@ -9453,6 +9496,12 @@ timer_free_list_create:
     mov di,OFFSET timer_expired_name
     xor cl,cl
     mov ax,timer_expired_nr
+    RegisterOsGate
+;
+    mov si,OFFSET irq_timer_expired
+    mov di,OFFSET irq_timer_expired_name
+    xor cl,cl
+    mov ax,irq_timer_expired_nr
     RegisterOsGate
 ;
     mov si,OFFSET preempt_timer_expired

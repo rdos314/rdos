@@ -1050,6 +1050,10 @@ TimerExpired    MACRO
     OsGate timer_expired_nr
                         ENDM
 
+IrqTimerExpired    MACRO
+    OsGate irq_timer_expired_nr
+                        ENDM
+
 PreemptExpired    MACRO
     OsGate preempt_expired_nr
                         ENDM
@@ -3139,6 +3143,12 @@ GetAcpiPciDeviceInfo      MACRO
 ;   OUT AL          IRQ #
 GetAcpiPciDeviceIrq      MACRO
 	OsGate get_acpi_pci_device_irq_nr
+	                ENDM
+
+;   IN  ES:EDI      Pnp name buffer
+;   OUT EAX         Memory base or 0
+GetAcpiPnpDeviceMem      MACRO
+	OsGate get_acpi_pnp_device_mem_nr
 	                ENDM
 
 ;;;;;;;;;; Com port ;;;;;;;;;

@@ -653,4 +653,8 @@ delete_can_id_hook_nr       = 539
 reset_usb_hub_port_nr       = 540
 add_lon_module_nr           = 541
 
+get_acpi_pnp_device_mem_nr  = 542
+
+irq_timer_expired_nr        = 543
+
 osgate_entries				= 560

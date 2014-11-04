@@ -2088,8 +2088,25 @@ start_hpet_timer    Proc far
     mov eax,es:[bx].hpetc_config
     test ax,8000h
     jnz start_hpet_msi
+;        
+    push es
+    mov al,2
+    mov ah,12
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET hpet_ioapic_int
+    RequestIrqHandler
+    pop es
 ;
-    int 3       ; not supported!    
+    mov eax,es:hpet_config
+    or al,3
+    mov es:hpet_config,eax
+;    
+    mov bx,OFFSET hpet_counter_arr    
+    mov edx,es:[bx].hpetc_config
+    and dx,NOT 08h
+    or dx,506h 
+    mov es:[bx].hpetc_config,edx
     jmp start_hpet_done
 
 start_hpet_msi: 
@@ -2580,6 +2597,25 @@ hpet_ds_ok:
 ;    
     popad
     iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           HpetIoapicInt
+;
+;               DESCRIPTION:    HPET IOAPIC interrupt
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hpet_ioapic_int Proc far
+    mov ds,ds:hpet_sel
+    mov edx,ds:hpet_int_status
+    mov ds:hpet_int_status,edx  
+    IrqTimerExpired
+    retf32
+hpet_ioapic_int Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3644,6 +3680,76 @@ DisablePic  Endp
 
 apic_tab    DB 'APIC'
 hpet_tab    DB 'HPET'
+pnp_name    DB 'PNP0103', 0
+
+test_gate_name DB 'Test Gate', 0
+
+
+hpt_int Proc far
+    CrashGate
+    retf32
+hpt_int Endp
+
+test_gate   Proc far
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ds:hpet_sel
+    mov eax,es:hpet_cap
+    test ax,8000h
+    jz tg_done
+;
+    mov eax,es:hpet_config
+    or al,3
+    mov es:hpet_config,eax
+;        
+    
+    mov bx,OFFSET hpet_counter_arr    
+ ;
+    push es
+    push bx
+    mov al,2
+    mov ah,12
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET hpt_int
+    RequestIrqHandler
+    pop bx
+    pop es
+;    
+    mov edx,es:[bx].hpetc_config
+    and dx,NOT 08h
+    or dx,506h 
+    mov es:[bx].hpetc_config,edx
+;
+    mov eax,100000h
+    mov es:hpet_int_status,1
+    add eax,es:hpet_count
+    mov es:hpet_counter_arr.hpetc_compare,eax
+    int 3
+
+tg_msi:
+    mov eax,40h
+    mov edx,ds:bsp_id
+    shl edx,12
+    or edx,0FEE00000h
+;
+    mov es:[bx].hpetc_msi_data,eax
+    mov es:[bx].hpetc_msi_ads,edx
+;
+    mov eax,es:[bx].hpetc_config
+    and ax,NOT 0Ah
+    or ax,4104h 
+    mov es:[bx].hpetc_config,eax
+;
+    mov eax,SIZE core_irq_struc
+    AllocateSmallGlobalMem
+    mov es:ci_proc,OFFSET CoreHpetHandler
+    call InsertCoreIrq
+
+tg_done:
+
+    retf32
+test_gate   Endp
 
     
 init    PROC far
@@ -3801,36 +3907,48 @@ init    PROC far
     mov ax,has_global_timer_nr
     RegisterBimodalUserGate
 ;
+    mov si,OFFSET test_gate
+    mov di,OFFSET test_gate_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
+;
     mov eax,dword ptr cs:hpet_tab
     GetAcpiTable
-    jc init_hpet_done
-; 
-    push es
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
+    jc init_hpet_obj
 ;    
-    mov si,OFFSET get_hpet_time
-    mov di,OFFSET get_hpet_time_name
-    xor dx,dx
-    mov ax,get_system_time_nr
-    RegisterBimodalUserGate
-    pop es
-;
-    mov ax,SEG data
-    mov ds,ax
-;      
+    mov ebx,es:hpett_phys_base
+    jmp init_hpet_check
+
+init_hpet_obj: 
+    mov ebx,0FED00000h
+
+init_hpet_check:    
     mov eax,1000h
     AllocateBigLinear
-    mov eax,es:hpett_phys_base
+    mov eax,ebx
     or ax,33h
     xor ebx,ebx
     SetPageEntry
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector16
-    mov ds:hpet_sel,bx
     mov es,bx
+;
+    mov eax,es:hpet_period
+    or eax,eax
+    jz init_hpet_done
+;
+    cmp eax,5F5E100h
+    ja init_hpet_done
+;
+    mov eax,es:hpet_cap
+    or al,al
+    jz init_hpet_done
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:hpet_sel,es
 ;    
     mov eax,es:hpet_config
     and al,NOT 2
@@ -3863,12 +3981,24 @@ init_hpet_loop:
     mov bx,OFFSET hpet_counter_arr    
     mov eax,es:[bx].hpetc_config
     test ax,8000h
-    jz init_hpet_done
+    jnz init_hpet_timer_ok
 ;
     mov ax,cs
     mov ds,ax
     mov es,ax
+;    
+    mov esi,OFFSET get_hpet_time
+    mov edi,OFFSET get_hpet_time_name
+    xor dx,dx
+    mov ax,get_system_time_nr
+    RegisterBimodalUserGate
+;    jmp init_hpet_done  ; test
 ;
+    mov eax,es:[bx].hpetc_int_mask
+    or eax,eax
+    jz init_hpet_done
+
+init_hpet_timer_ok:
     mov esi,OFFSET start_apic_preempt_timer
     mov edi,OFFSET start_apic_preempt_timer_name
     xor cl,cl

@@ -653,6 +653,8 @@
 #define osgate_reset_usb_hub_port 540
 #define osgate_add_lon_module 541
 
+#define osgate_get_acpi_pnp_device_mem 542
+
 
 
 
@@ -1309,4 +1311,6 @@
 
 #define OsGate_reset_usb_hub_port 0x3E 0x67 0x9a 28 2 0 0 2 0
 #define OsGate_add_lon_module 0x3E 0x67 0x9a 29 2 0 0 2 0
+
+#define OsGate_get_acpi_pnp_device_mem 0x3E 0x67 0x9a 30 2 0 0 2 0
 

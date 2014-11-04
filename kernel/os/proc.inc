@@ -84,18 +84,19 @@ ps_preempt_msb	    DD ?
 
 ps_last_lsb         DD ?
 
+; TSC timer support
+
+ps_system_time      DD ?,?
 ps_tsc_guard        DD ?
 ps_last_tsc         DD ?
 
-ps_clock_tics       DW ?
+ps_clock_tics       DW ?  ; not used
 
 ps_lsb_tics         DD ?
 ps_msb_tics         DD ?
 
 ps_global_post_perc DB ?
 ps_curr_post        DB ?
-
-ps_system_time      DD ?,?
 
 ps_linear           DD ?
 ps_syscall_esp      DD ?

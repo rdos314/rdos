@@ -225,6 +225,7 @@ struct TResourceAddress32
 struct TDeviceEntry
 {
     char AcpiName[5];
+    char PnpName[9];
     ACPI_HANDLE Handle;
     ACPI_PCI_ID PciId;
     int SecondaryBus;
@@ -1087,6 +1088,76 @@ void __far ImplGetPciDeviceName(int Index, char *AcpiName)
         RdosSetFailure();
 
     RdosRestoreEax();
+}
+
+/*##########################################################################
+#
+#   Name       : BaseCallback
+#
+#   Purpose....: Base callback
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+ACPI_STATUS BaseCallback(ACPI_HANDLE obj, UINT32 lev, void *context, void **ret)
+{
+    ACPI_STATUS Status;
+    ACPI_BUFFER Buffer;
+    int *base = (int *)context;
+    char *ptr;
+    ACPI_RESOURCE *Resource;
+    int size;
+    ACPI_RESOURCE_FIXED_MEMORY32 *FixedMem32;
+
+    Buffer.Length = 0x4000;
+    Buffer.Pointer = TempResourceBuf;
+
+    Status = AcpiGetCurrentResources(obj, &Buffer);
+    if (Status == AE_OK)
+    {
+        ptr = &TempResourceBuf;
+        Resource = (ACPI_RESOURCE *)ptr;
+        size = Buffer.Length;
+
+        while (size > 0)
+        {            
+            if (Resource->Type == ACPI_RESOURCE_TYPE_FIXED_MEMORY32)
+            {
+                FixedMem32 = (ACPI_RESOURCE_FIXED_MEMORY32 *)&Resource->Data;
+                *base = FixedMem32->Address;
+            }
+            
+            size -= Resource->Length;
+            ptr += Resource->Length;
+            Resource = (ACPI_RESOURCE *)ptr;        
+        }
+    }
+
+    return Status;
+}
+
+/*##########################################################################
+#
+#   Name       : GetAcpiPnpDevice
+#
+#   Purpose....: Get Acpi PNP device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetAcpiPnpDeviceMem "*" rdosdev parm routine [es edi] value [eax]
+int __far ImplGetAcpiPnpDeviceMem(char *PnpName)
+{
+    int Base = 0;
+    void *ret;
+
+    AcpiGetDevices(PnpName, &BaseCallback, &Base, &ret);
+
+    return Base;
 }
 
 /*##########################################################################
@@ -2163,7 +2234,15 @@ void GetHardware()
 
                 Status = AcpiGetObjectInfo(DevEntry->Handle, &DevInfo);
                 if (Status == AE_OK)
-                {
+                { 
+                    if (DevInfo->HardwareId.String)
+                    {
+                        strncpy(DevEntry->PnpName, DevInfo->HardwareId.String, 8);
+                        DevEntry->PnpName[8] = 0;
+                    }
+                    else
+                        DevEntry->PnpName[0] = 0;
+                
                     if (DevInfo->Flags & ACPI_PCI_ROOT_BRIDGE)
                     {
                         Handle = DevEntry->Handle;
@@ -2924,6 +3003,7 @@ int main()
     RdosHookInitTasking(&InitTasking);
     RdosRegisterOsGate(osgate_get_acpi_pci_device_name, (__rdos_gate_callback *)&ImplGetPciDeviceName, "Get PCI Device Name");
     RdosRegisterOsGate(osgate_get_acpi_pci_device_irq, (__rdos_gate_callback *)&ImplGetPciDeviceIrq, "Get PCI Device IRQ");
+    RdosRegisterOsGate(osgate_get_acpi_pnp_device_mem, (__rdos_gate_callback *)&ImplGetAcpiPnpDeviceMem, "Get ACPI Pnp Device Mem");
     RdosRegisterBimodalUserGate(usergate_get_acpi_status, (__rdos_gate_callback *)&ImplGetAcpiStatus, "Get ACPI Status");
     RdosRegisterUserGate(usergate_get_acpi_object, (__rdos_gate_callback *)&ImplGetAcpiObject16, &ImplGetAcpiObject32, "Get ACPI Object");
     RdosRegisterUserGate(usergate_get_acpi_method, (__rdos_gate_callback *)&ImplGetAcpiMethod16, &ImplGetAcpiMethod32, "Get ACPI Method");
