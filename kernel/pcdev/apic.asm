@@ -3977,28 +3977,28 @@ init_hpet_loop:
     and al,NOT 3
     or al,1
     mov es:hpet_config,eax
-;    
-    mov bx,OFFSET hpet_counter_arr    
-    mov eax,es:[bx].hpetc_config
-    test ax,8000h
-    jnz init_hpet_timer_ok
 ;
+    push es
     mov ax,cs
     mov ds,ax
-    mov es,ax
-;    
+    mov es,ax    
     mov esi,OFFSET get_hpet_time
     mov edi,OFFSET get_hpet_time_name
     xor dx,dx
     mov ax,get_system_time_nr
     RegisterBimodalUserGate
-;    jmp init_hpet_done  ; test
-;
-    mov eax,es:[bx].hpetc_int_mask
-    or eax,eax
+    pop es
+;    
+    mov bx,OFFSET hpet_counter_arr    
+    mov eax,es:[bx].hpetc_config
+    test ax,8000h
     jz init_hpet_done
 
 init_hpet_timer_ok:
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
     mov esi,OFFSET start_apic_preempt_timer
     mov edi,OFFSET start_apic_preempt_timer_name
     xor cl,cl
