@@ -1781,6 +1781,11 @@ RequestIrqHandler    MACRO
     OsGate request_irq_handler_nr
                     ENDM
 
+; IN  AL        Global int #
+ForceLevelIrq    MACRO
+    OsGate force_level_irq_nr
+                    ENDM
+
 SetupIrqDetect  MACRO
     OsGate setup_irq_detect_nr
                     ENDM

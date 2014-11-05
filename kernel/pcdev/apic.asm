@@ -944,6 +944,37 @@ CreateIsaIrq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ForceLevelIrq
+;
+;       DESCRIPTION:    Force IRQ to level triggered mode
+;
+;       PARAMETERS:     AL      Global int #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+force_level_irq_name    DB 'Force Level IRQ',0
+
+force_level_irq Proc far
+    push ds
+    push ax
+    push bx
+;    
+    mov bx,SEG data
+    mov ds,bx    
+    movzx bx,al
+    shl bx,4
+    add bx,OFFSET global_int_arr    
+    mov [bx].gi_trigger_mode,0A0h
+;
+    pop bx
+    pop ax
+    pop ds
+    retf32
+force_level_irq Endp    
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           RequestIrqHandler
 ;
 ;       DESCRIPTION:    Request ISA IRQ-based interrupt-handler
@@ -3680,77 +3711,6 @@ DisablePic  Endp
 
 apic_tab    DB 'APIC'
 hpet_tab    DB 'HPET'
-pnp_name    DB 'PNP0103', 0
-
-test_gate_name DB 'Test Gate', 0
-
-
-hpt_int Proc far
-    CrashGate
-    retf32
-hpt_int Endp
-
-test_gate   Proc far
-    mov ax,SEG data
-    mov ds,ax
-    mov es,ds:hpet_sel
-    mov eax,es:hpet_cap
-    test ax,8000h
-    jz tg_done
-;
-    mov eax,es:hpet_config
-    or al,3
-    mov es:hpet_config,eax
-;        
-    
-    mov bx,OFFSET hpet_counter_arr    
- ;
-    push es
-    push bx
-    mov al,2
-    mov ah,12
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET hpt_int
-    RequestIrqHandler
-    pop bx
-    pop es
-;    
-    mov edx,es:[bx].hpetc_config
-    and dx,NOT 08h
-    or dx,506h 
-    mov es:[bx].hpetc_config,edx
-;
-    mov eax,100000h
-    mov es:hpet_int_status,1
-    add eax,es:hpet_count
-    mov es:hpet_counter_arr.hpetc_compare,eax
-    int 3
-
-tg_msi:
-    mov eax,40h
-    mov edx,ds:bsp_id
-    shl edx,12
-    or edx,0FEE00000h
-;
-    mov es:[bx].hpetc_msi_data,eax
-    mov es:[bx].hpetc_msi_ads,edx
-;
-    mov eax,es:[bx].hpetc_config
-    and ax,NOT 0Ah
-    or ax,4104h 
-    mov es:[bx].hpetc_config,eax
-;
-    mov eax,SIZE core_irq_struc
-    AllocateSmallGlobalMem
-    mov es:ci_proc,OFFSET CoreHpetHandler
-    call InsertCoreIrq
-
-tg_done:
-
-    retf32
-test_gate   Endp
-
     
 init    PROC far
     mov ax,SEG data
@@ -3859,6 +3819,12 @@ init    PROC far
     mov ax,disable_all_irq_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET force_level_irq
+    mov edi,OFFSET force_level_irq_name
+    xor cl,cl
+    mov ax,force_level_irq_nr
+    RegisterOsGate
+;
     mov esi,OFFSET request_irq_handler
     mov edi,OFFSET request_irq_handler_name
     xor cl,cl
@@ -3905,12 +3871,6 @@ init    PROC far
     mov di,OFFSET has_local_timer_name
     xor dx,dx
     mov ax,has_global_timer_nr
-    RegisterBimodalUserGate
-;
-    mov si,OFFSET test_gate
-    mov di,OFFSET test_gate_name
-    xor dx,dx
-    mov ax,test_gate_nr
     RegisterBimodalUserGate
 ;
     mov eax,dword ptr cs:hpet_tab

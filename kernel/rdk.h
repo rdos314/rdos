@@ -655,6 +655,9 @@
 
 #define osgate_get_acpi_pnp_device_mem 542
 
+#define osgate_irq_timer_expired 543
+#define osgate_force_level_irq 544
+
 
 
 
@@ -1313,4 +1316,7 @@
 #define OsGate_add_lon_module 0x3E 0x67 0x9a 29 2 0 0 2 0
 
 #define OsGate_get_acpi_pnp_device_mem 0x3E 0x67 0x9a 30 2 0 0 2 0
+
+#define OsGate_irq_timer_expired 0x3E 0x67 0x9a 31 2 0 0 2 0
+#define OsGate_force_level_irq 0x3E 0x67 0x9a 32 2 0 0 2 0
 

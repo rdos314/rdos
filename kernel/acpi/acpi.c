@@ -356,7 +356,8 @@ void __far ImplTestGate(const char *msg)
     ACPI_EVENT_STATUS status;
     ACPI_STATUS ok;
 
-    ok = AcpiGetEventStatus(ACPI_EVENT_SLEEP_BUTTON, &status);
+
+    ok = AcpiGetEventStatus(ACPI_EVENT_POWER_BUTTON, &status);
     if (status & ACPI_EVENT_FLAG_SET)
         RdosSoftReset();
             
@@ -2862,6 +2863,8 @@ void Load()
         GetIrqRouting();
 
         AcpiInstallGlobalEventHandler(&GlobalEvent, 0);
+        AcpiEnableEvent(ACPI_EVENT_POWER_BUTTON, 0);
+        AcpiEnableEvent(ACPI_EVENT_SLEEP_BUTTON, 0);
 
         if (ProcessorArr[0])
         {        

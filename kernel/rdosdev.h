@@ -654,6 +654,7 @@ void RdosSendEoi(int irq);
 int RdosIsIrqFree(int irq);
 
 void RdosRequestIrqHandler(int irq, int prio, __rdos_irq_callback *irq_proc, int ds_sel);
+void RdosForceLevelIrq(int irq);
 
 void RdosSetupIrqDetect();
 int RdosPollIrqDetect();
@@ -1505,6 +1506,10 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
 
 #pragma aux RdosSendEoi = \
     OsGate_send_eoi \
+    parm [eax];
+
+#pragma aux RdosForceLevelIrq = \
+    OsGate_force_level_irq \
     parm [eax];
 
 #pragma aux RdosRequestIrqHandler = \

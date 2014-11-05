@@ -118,6 +118,7 @@
 #include "acpi.h"
 #include "accommon.h"
 #include "acevents.h"
+#include "rdos.h"
 
 
 #define _COMPONENT          ACPI_EVENTS
@@ -132,10 +133,8 @@ AcpiEvSciXruptHandler (
 
 /*******************************************************************************
  *
- * FUNCTION:    AcpiEvSciXruptHandler
- *
- * PARAMETERS:  Context   - Calling Context
- *
+ * FUNCTION:    AcpiEvSciHandler
+*
  * RETURN:      Status code indicates whether interrupt was handled.
  *
  * DESCRIPTION: Interrupt handler that will figure out what function or
@@ -143,16 +142,14 @@ AcpiEvSciXruptHandler (
  *
  ******************************************************************************/
 
-static UINT32 ACPI_SYSTEM_XFACE
-AcpiEvSciXruptHandler (
-    void                    *Context)
+#pragma aux AcpiEvSciHandler "*" rdosdev parm routine
+void __far AcpiEvSciHandler()
 {
-    ACPI_GPE_XRUPT_INFO     *GpeXruptList = Context;
+    ACPI_GPE_XRUPT_INFO     *GpeXruptList = AcpiGbl_GpeXruptListHead;
     UINT32                  InterruptHandled = ACPI_INTERRUPT_NOT_HANDLED;
 
 
     ACPI_FUNCTION_TRACE (EvSciXruptHandler);
-
 
     /*
      * We are guaranteed by the ACPI CA initialization/shutdown code that
@@ -172,7 +169,6 @@ AcpiEvSciXruptHandler (
     InterruptHandled |= AcpiEvGpeDetect (GpeXruptList);
 
     AcpiSciCount++;
-    return_UINT32 (InterruptHandled);
 }
 
 
@@ -229,14 +225,13 @@ AcpiEvInstallSciHandler (
     void)
 {
     UINT32                  Status = AE_OK;
-
+    UINT32                  Level = (UINT32) AcpiGbl_FADT.SciInterrupt;
 
     ACPI_FUNCTION_TRACE (EvInstallSciHandler);
 
-
-    Status = AcpiOsInstallInterruptHandler ((UINT32) AcpiGbl_FADT.SciInterrupt,
-                AcpiEvSciXruptHandler, AcpiGbl_GpeXruptListHead);
-    return_ACPI_STATUS (Status);
+    RdosForceLevelIrq(Level);
+    RdosRequestIrqHandler(Level, 0x10, AcpiEvSciHandler, 0);
+    return AE_OK;
 }
 
 
@@ -263,18 +258,7 @@ ACPI_STATUS
 AcpiEvRemoveSciHandler (
     void)
 {
-    ACPI_STATUS             Status;
-
-
-    ACPI_FUNCTION_TRACE (EvRemoveSciHandler);
-
-
-    /* Just let the OS remove the handler and disable the level */
-
-    Status = AcpiOsRemoveInterruptHandler ((UINT32) AcpiGbl_FADT.SciInterrupt,
-                AcpiEvSciXruptHandler);
-
-    return_ACPI_STATUS (Status);
+    return 0;
 }
 
 
