@@ -340,6 +340,9 @@ heLoop:
     mov edi,fs:hid_report_offset
     mov es,fs:hid_report_sel
     mov bx,fs:[ebx].c_x_index
+    cmp bx,-1
+    je hePopFail
+;    
     GetHidLogMax
     pop ebx
     mov fs:[ebx].c_x_size,eax
@@ -348,6 +351,9 @@ heLoop:
     mov edi,fs:hid_report_offset
     mov es,fs:hid_report_sel
     mov bx,fs:[ebx].c_y_index
+    cmp bx,-1
+    je hePopFail
+;    
     GetHidLogMax
     pop ebx
     mov fs:[ebx].c_y_size,eax
@@ -367,6 +373,14 @@ heLoop:
     pop es
     clc
     jmp heDone                
+
+hePopFail:
+    pop ebx
+    pop ecx
+    pop edi  
+    pop ecx
+    pop ebx
+    pop es
 
 heFail:
     mov eax,fs
