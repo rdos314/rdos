@@ -1528,6 +1528,10 @@
     parm [esi] [edi] \
     modify [eax edx];
 
+#pragma aux RdosGetLongTime = \
+    CallGate_get_time  \
+    value [edx eax];
+
 #pragma aux RdosSetTime = \
     CallGate_get_system_time  \
     "sub esi,eax" \
