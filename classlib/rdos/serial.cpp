@@ -26,6 +26,7 @@
 ########################################################################*/
 
 #include <string.h>
+#include <stdio.h>
 #include "serial.h"
 #include "rdos.h"
 
@@ -264,10 +265,14 @@ void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int
     FParity = Parity;
     FDataBits = DataBits;
     FStopBits = StopBits;
-        FDebugFile = 0;
-        FUseCts = FALSE;
+    FDebugFile = 0;
+    FDumpStarted = FALSE;
+    FWriteDump = FALSE;
+    FEntryCount = 0;
+    FDumpFiles = 0;
+    FUseCts = FALSE;
         
-        OpenPort();
+    OpenPort();
 }
 
 /*##########################################################################
@@ -515,6 +520,204 @@ void TSerialDevice::StopDebug()
     FDebugFile = 0;
 }
 
+/*##########################################################################
+#
+#   Name       : TSerialDevice::DefineEventDebug
+#
+#   Purpose....: Define event debug
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TSerialDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount, int InChannel, int OutChannel)
+{
+    int i;
+    char str[256];
+    int dir = RdosOpenDir(LogPath);
+
+    if (!dir)
+        return FALSE;
+
+    RdosCloseDir(dir);
+
+    // make sure there are the correct number of file stumps
+    for (i = 1; i < DumpFiles; i++) 
+    {
+        sprintf(str, "%s/%d.sdd", LogPath, i);
+
+        int fileHandle = RdosOpenFile(str, 0);
+        if (fileHandle == 0) 
+            fileHandle = RdosCreateFile(str, 0);
+        
+        if (fileHandle == 0) 
+            return FALSE;
+        else
+            RdosCloseFile(fileHandle);
+    }
+
+    FLogPath = LogPath;
+    FInChannel = InChannel;
+    FOutChannel = OutChannel;
+    FNextPos = 0;
+
+    FEntryCount = EntryCount;
+    FEntryArr = new struct TSerialDebug[EntryCount];
+
+    // initialize cache to empty
+    for (i = 0; i < EntryCount; i++) 
+    {
+        FEntryArr[i].Channel = 0;
+        FEntryArr[i].Time = 0;
+        FEntryArr[i].ch = 0;
+    }
+
+    FDumpFiles = DumpFiles;
+
+    return TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TSerialDevice::DumpEvents
+#
+#   Purpose....: Dump buffer to file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TSerialDevice::DumpEvents()
+{
+    if (FDumpFiles && FInChannel && FOutChannel)
+    {
+        Block();
+
+        if (!FDumpStarted)
+        {
+            FDumpStarted = TRUE;
+            Start("Serial Dump", 0x4000);
+        }
+
+        FWriteDump = TRUE;
+        FDumpSignal.Signal();
+
+        Unblock();
+        return TRUE;
+    
+    }
+    else
+        return FALSE;
+}
+
+/*##################  TSerialDevice::GetNextDumpFile  #######################
+*   Purpose....: Get next dump file                                                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSerialDevice::GetNextDumpFile()
+{
+    char OldestName[256];
+    char filename[256];
+    int dir;
+    unsigned long long OldestTime = 0xFFFFFFFFFFFFFFFF;
+    long long time;
+    int idx = 0;
+    long filesize;
+    int attributes;
+
+    dir = RdosOpenDir(FLogPath.GetData());
+
+    if (dir) 
+    {
+        OldestName[0] = 0;
+
+        // now loop over all files to find the oldest file
+        do {
+            time = RdosReadLongDir(dir, idx, 255, filename, &filesize, &attributes);
+            idx++;
+            if (time >= 0 && OldestTime > time && (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
+            { 
+                OldestTime = time;
+                strcpy(OldestName, filename);
+            }
+        } while (time >= 0);
+        
+        RdosCloseDir(dir);
+
+        sprintf(filename, "%s/%s", FLogPath.GetData(), OldestName);
+        return RdosOpenFile(filename, 0);
+    }
+    return 0;
+}
+
+/*##################  TSerialDevice::DumpOnce  #######################
+*   Purpose....: Dump once to file                                                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TSerialDevice::DumpOnce()
+{
+    int pos;
+    int fileHandle = GetNextDumpFile();
+    struct TSerialDebug *DumpArr;
+    
+    if (fileHandle)
+    {
+        DumpArr = new struct TSerialDebug[FEntryCount];
+
+        FEventSection.Enter();
+
+        pos = FNextPos;
+
+        for (int i = 0; i < FEntryCount; i++)
+            DumpArr[i] = FEntryArr[i];
+        
+        FEventSection.Leave();
+        
+        RdosSetFileSize(fileHandle, 0);
+
+        for (int i = pos; i < FEntryCount; i++) 
+            if (FEntryArr[i].Time)
+                RdosWriteFile(fileHandle, &DumpArr[i], sizeof(struct TSerialDebug));
+
+        for (int i = 0; i < pos; i++)
+            if (FEntryArr[i].Time)
+                RdosWriteFile(fileHandle, &DumpArr[i], sizeof(struct TSerialDebug));
+
+        RdosCloseFile(fileHandle);
+
+        delete DumpArr;
+
+    }
+}
+
+/*##################  TSerialDevice::Execute  #######################
+*   Purpose....: Dump thread                                                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TSerialDevice::Execute()
+{
+    while (FInstalled)
+    {
+        if (FWriteDump)
+        {
+            FWriteDump = FALSE;
+            DumpOnce();
+        }
+        FDumpSignal.WaitForever();
+    }
+}
+
 /*##################  TSerialDevice::OpenPort  #######################
 *   Purpose....: Opens V25 comport                                              #
 *   In params..: *                                                          #
@@ -524,9 +727,9 @@ void TSerialDevice::StopDebug()
 *##########################################################################*/
 void TSerialDevice::OpenPort()
 {
-         if (FPort)
-                FHandle = RdosOpenCom(FPort - 1, FBaudrate, FParity, FDataBits, FStopBits, 0x4000, 0x4000);
-         else
+    if (FPort)
+        FHandle = RdosOpenCom(FPort - 1, FBaudrate, FParity, FDataBits, FStopBits, 0x4000, 0x4000);
+    else
         FHandle = 0;
         
     if (FHandle)
@@ -944,13 +1147,25 @@ void TSerialDevice::Write(char ch)
         RdosWriteCom(FHandle, ch);
 
         if (FDebugFile && FOutChannel)
-            {
-                        RdosGetSysTime(&Debug.TimeMSB, &Debug.TimeLSB);
-                        Debug.Channel = FOutChannel;
-                Debug.ch = ch;
+        {
+            Debug.Time = RdosGetLongTime();
+            Debug.Channel = FOutChannel;
+            Debug.ch = ch;
             FDebugFile->Write(&Debug, sizeof(Debug));
-            }
-        }       
+        }
+
+        if (FDumpFiles && FEntryCount && FOutChannel)
+        {
+            FEntryArr[FNextPos].Time = RdosGetLongTime();
+            FEntryArr[FNextPos].Channel = FOutChannel;
+            FEntryArr[FNextPos].ch = ch;
+
+            FNextPos++;
+            if (FNextPos >= FEntryCount)
+                FNextPos = 0;
+        }
+        
+    }       
 }
 
 /*##########################################################################
@@ -1072,15 +1287,26 @@ char TSerialDevice::Read()
         ch = RdosReadCom(FHandle);
 
         if (FDebugFile && FInChannel)
-            {
-                        RdosGetSysTime(&Debug.TimeMSB, &Debug.TimeLSB);
-                Debug.Channel = FInChannel;
-                Debug.ch = ch;
+        {
+            Debug.Time = RdosGetLongTime();
+            Debug.Channel = FInChannel;
+            Debug.ch = ch;
             FDebugFile->Write(&Debug, sizeof(Debug));
-            }   
+        }   
+
+        if (FDumpFiles && FEntryCount && FInChannel)
+        {
+            FEntryArr[FNextPos].Time = RdosGetLongTime();
+            FEntryArr[FNextPos].Channel = FInChannel;
+            FEntryArr[FNextPos].ch = ch;
+
+            FNextPos++;
+            if (FNextPos >= FEntryCount)
+                FNextPos = 0;
+        }
     }
     
-        return ch;
+    return ch;
 }
 
 /*##########################################################################
