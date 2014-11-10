@@ -429,6 +429,7 @@ int RDOSAPI RdosSetFileAttribute(const char *PathName, int Attribute);
 int RDOSAPI RdosOpenDir(const char *PathName);
 void RDOSAPI RdosCloseDir(int Handle);
 int RDOSAPI RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute, unsigned long *MsbTime, unsigned long *LsbTime);
+long long RDOSAPI RdosReadLongDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute);
 
 void RDOSAPI RdosDefineFaultSave(int DiscNr, long StartSector, long Sectors);
 void RDOSAPI RdosClearFaultSave();

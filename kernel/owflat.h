@@ -1307,6 +1307,21 @@
 
 // ReadDir here
 
+#pragma aux RdosReadLongDir = \
+    "push eax" \
+    CallGate_read_dir  \
+    "pop edi" \
+    "jc fail" \
+    "mov [esi],ecx" \
+    "movzx ebx,bx" \
+    "mov [edi],ebx" \
+    "jmp done" \
+    "fail:"\
+    "mov eax,-1" \
+    "mov edx,eax" \
+    "done:" \
+    parm [ebx] [edx] [ecx] [edi] [esi] [eax];
+
 #pragma aux RdosDefineFaultSave = \
     CallGate_define_fault_save  \
     parm [eax] [edx] [ecx];
