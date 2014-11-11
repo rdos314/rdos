@@ -321,8 +321,6 @@ TGptDiscPartition::TGptDiscPartition(TDisc *Disc)
 
     FPrimaryEntry = 0;
     FSecondaryEntry = 0;
-
-    Read();
 }
 
 /*##################  TGptDiscPartition::~TGptDiscPartition  #############
@@ -584,6 +582,14 @@ void TGptDiscPartition::Write()
     {
         if (FSecondaryEntry)
         {
+            WriteGpt(FPrimaryHeader, FSecondaryEntry);
+            WriteGpt(FSecondaryHeader, FSecondaryEntry);
+        }
+        else
+        {
+            FPrimaryEntry = InitGpt(1, FPrimaryHeader);
+            FSecondaryEntry = InitGpt(FDisc->GetTotalSectors() - 1, FSecondaryHeader);
+
             WriteGpt(FPrimaryHeader, FSecondaryEntry);
             WriteGpt(FSecondaryHeader, FSecondaryEntry);
         }

@@ -59,6 +59,7 @@ public:
     TGptDiscPartition(TDisc *Disc);
     ~TGptDiscPartition();
 
+    void Read();
     void Write();
 
     TDisc *GetDisc();
@@ -67,7 +68,6 @@ public:
     int PartCount;
 
 protected:
-    void Read();
     struct TPartEntry *ReadGpt(long long StartLba, char *HeaderBuf);
     struct TPartEntry *InitGpt(long long HeaderLba, char *HeaderBuf);
     void WriteGpt(char *HeaderBuf, struct TPartEntry *Entry);
