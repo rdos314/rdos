@@ -56,25 +56,29 @@ protected:
 class TGptDiscPartition
 {
 public:
-        TGptDiscPartition(TDisc *Disc);
-        ~TGptDiscPartition();
+    TGptDiscPartition(TDisc *Disc);
+    ~TGptDiscPartition();
 
-        void Update();
-        TDisc *GetDisc();
+    void Write();
 
-        TGptPartition *PartArr[MAX_GPT_PART_COUNT];
-        int PartCount;
+    TDisc *GetDisc();
+
+    TGptPartition *PartArr[MAX_GPT_PART_COUNT];
+    int PartCount;
 
 protected:
+    void Read();
     struct TPartEntry *ReadGpt(long long StartLba, char *HeaderBuf);
+    struct TPartEntry *InitGpt(long long HeaderLba, char *HeaderBuf);
+    void WriteGpt(char *HeaderBuf, struct TPartEntry *Entry);
 
-        TDisc *FDisc;
+    TDisc *FDisc;
 
-        char FPrimaryHeader[512];
-        struct TPartEntry *FPrimaryEntry;
+    char FPrimaryHeader[512];
+    struct TPartEntry *FPrimaryEntry;
         
-        char FSecondaryHeader[512];
-        struct TPartEntry *FSecondaryEntry;
+    char FSecondaryHeader[512];
+    struct TPartEntry *FSecondaryEntry;
         
 };
 

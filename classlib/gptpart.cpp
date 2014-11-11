@@ -322,7 +322,7 @@ TGptDiscPartition::TGptDiscPartition(TDisc *Disc)
     FPrimaryEntry = 0;
     FSecondaryEntry = 0;
 
-    Update();
+    Read();
 }
 
 /*##################  TGptDiscPartition::~TGptDiscPartition  #############
@@ -415,20 +415,22 @@ struct TPartEntry *TGptDiscPartition::ReadGpt(long long StartLba, char *HeaderBu
     return 0;
 }
 
-/*##################  TGptDiscPartition::Update  #############
-*   Purpose....: Update partition table
+/*##################  TGptDiscPartition::Read  #############
+*   Purpose....: Read partition table
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TGptDiscPartition::Update()
+void TGptDiscPartition::Read()
 {
     struct TPartHeader *PartHeader;
     TGptPartition *part;
     long long Lba;
     int i;
     struct TPartEntry *EntryData;
+
+    PartCount = 0;
 
     Lba = 1;
     FPrimaryEntry = ReadGpt(Lba, FPrimaryHeader);
@@ -437,24 +439,153 @@ void TGptDiscPartition::Update()
     FSecondaryEntry = ReadGpt(Lba, FSecondaryHeader);
 
     PartHeader = (struct TPartHeader *)FPrimaryHeader;
-    EntryData = FPrimaryEntry;
 
-    for (i = 0; i < PartHeader->EntryCount; i++)
+    if (!PartHeader)
+        PartHeader = (struct TPartHeader *)FPrimaryHeader;
+
+    if (PartHeader)
     {
-        part = new TGptPartition(   FDisc, 
-                                    EntryData->PartGuid,
-                                    EntryData->FirstLba,
-                                    EntryData->LastLba,
-                                    EntryData->Name);
+        EntryData = FPrimaryEntry;
 
-        if (part->Usable)
+        for (i = 0; i < PartHeader->EntryCount; i++)
         {
-            PartArr[PartCount] = part;
-            PartCount++;
-        }
-        else
-            delete part;                        
+            part = new TGptPartition(   FDisc, 
+                                        EntryData->PartGuid,
+                                        EntryData->FirstLba,
+                                        EntryData->LastLba,
+                                        EntryData->Name);
 
-        EntryData++;                        
+            if (part->Usable)
+            {
+                PartArr[PartCount] = part;
+                PartCount++;
+            }
+            else
+                delete part;                        
+
+            EntryData++;                      
+        }  
+    }
+}
+
+/*##################  TGptDiscPartition::WriteGpt  #############
+*   Purpose....: Write GPT table
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TGptDiscPartition::WriteGpt(char *HeaderBuf, struct TPartEntry *Entry)
+{
+    struct TPartHeader *PartHeader;
+    char *EntryBuf = (char *)Entry;
+    char *ptr;
+    int count;
+    int size;
+    int i;
+    int sectors;
+    long long Lba;
+
+    PartHeader = (struct TPartHeader *)HeaderBuf;
+
+    PartHeader->Crc32 = 0;    
+
+    count = PartHeader->EntryCount;                
+    sectors = count * sizeof(struct TPartEntry) / 512;
+    size = sectors * 512;
+    
+    PartHeader->EntryCrc32 = CalcCrc32(EntryBuf, size);
+    PartHeader->Crc32 = CalcCrc32(HeaderBuf, PartHeader->HeaderSize);
+    
+    Lba = PartHeader->CurrLba;
+    FDisc->Write(Lba, HeaderBuf, 512);
+
+    ptr = EntryBuf;
+
+    for (i = 0; i < sectors; i++)
+    {
+        Lba = i + PartHeader->EntryLba;
+        FDisc->Write(Lba, ptr, 512);
+        ptr += 512;
+    }
+}
+
+/*##################  TGptDiscPartition::InitGpt  #############
+*   Purpose....: Init GPT
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+struct TPartEntry *TGptDiscPartition::InitGpt(long long HeaderLba, char *HeaderBuf)
+{
+    int count;
+    int size;
+    int sectors;
+    struct TPartHeader *PartHeader;
+    char *EntryBuf;
+
+    count = PartHeader->EntryCount;                
+    sectors = count * sizeof(struct TPartEntry) / 512;
+    size = sectors * 512;
+
+    EntryBuf = new char[size];
+    memset(EntryBuf, 0, size);
+
+    PartHeader = (struct TPartHeader *)HeaderBuf;
+
+    strcpy(PartHeader->Sign, "EFI PART");
+    PartHeader->Revision[0] = 0;
+    PartHeader->Revision[1] = 0;
+    PartHeader->Revision[2] = 1;
+    PartHeader->Revision[3] = 0;
+
+    PartHeader->HeaderSize = sizeof(struct TPartHeader);
+    PartHeader->Crc32 = 0;    
+    PartHeader->Resv = 0;
+
+    PartHeader->CurrLba = HeaderLba;
+
+    if (HeaderLba == 1)
+        PartHeader->OtherLba = FDisc->GetTotalSectors() - 1;
+    else
+        PartHeader->OtherLba = 1;
+
+    PartHeader->FirstLba = 34;
+    PartHeader->LastLba = FDisc->GetTotalSectors() - 34;
+    RdosCreateUuid(PartHeader->Guid);
+
+    if (HeaderLba == 1)
+        PartHeader->EntryLba = 2;
+    else
+        PartHeader->EntryLba = FDisc->GetTotalSectors() - 33;
+    
+    PartHeader->EntryCount = 128;
+    PartHeader->EntrySize = 128;
+
+    return (struct TPartEntry *)EntryBuf;
+};
+
+/*##################  TGptDiscPartition::Write  #############
+*   Purpose....: Write partition table
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TGptDiscPartition::Write()
+{
+    if (FPrimaryEntry)
+    {
+        WriteGpt(FPrimaryHeader, FPrimaryEntry);
+        WriteGpt(FSecondaryHeader, FPrimaryEntry);
+    }
+    else
+    {
+        if (FSecondaryEntry)
+        {
+            WriteGpt(FPrimaryHeader, FSecondaryEntry);
+            WriteGpt(FSecondaryHeader, FSecondaryEntry);
+        }
     }
 }
