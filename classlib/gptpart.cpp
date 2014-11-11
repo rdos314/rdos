@@ -523,14 +523,16 @@ struct TPartEntry *TGptDiscPartition::InitGpt(long long HeaderLba, char *HeaderB
     struct TPartHeader *PartHeader;
     char *EntryBuf;
 
+    PartHeader = (struct TPartHeader *)HeaderBuf;
+
+    PartHeader->EntryCount = 128;
+
     count = PartHeader->EntryCount;                
     sectors = count * sizeof(struct TPartEntry) / 512;
     size = sectors * 512;
 
     EntryBuf = new char[size];
     memset(EntryBuf, 0, size);
-
-    PartHeader = (struct TPartHeader *)HeaderBuf;
 
     strcpy(PartHeader->Sign, "EFI PART");
     PartHeader->Revision[0] = 0;
@@ -549,7 +551,7 @@ struct TPartEntry *TGptDiscPartition::InitGpt(long long HeaderLba, char *HeaderB
     else
         PartHeader->OtherLba = 1;
 
-    PartHeader->FirstLba = 34;
+    PartHeader->FirstLba = 34 + 32;
     PartHeader->LastLba = FDisc->GetTotalSectors() - 34;
     RdosCreateUuid(PartHeader->Guid);
 
@@ -558,7 +560,6 @@ struct TPartEntry *TGptDiscPartition::InitGpt(long long HeaderLba, char *HeaderB
     else
         PartHeader->EntryLba = FDisc->GetTotalSectors() - 33;
     
-    PartHeader->EntryCount = 128;
     PartHeader->EntrySize = 128;
 
     return (struct TPartEntry *)EntryBuf;

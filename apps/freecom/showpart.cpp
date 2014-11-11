@@ -367,6 +367,8 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
     DiscPart = new TGptDiscPartition(Disc);
     DiscPart->Read();
 
+    Write("\r\n");
+
     FMsg.printf(TEXT_SHOWPART_DISC_GPT, Disc->GetDiscNr(), (int)(TotalSectors >> 32), (int)(TotalSectors & 0xFFFFFFFF));
     Write(FMsg.GetData());
 

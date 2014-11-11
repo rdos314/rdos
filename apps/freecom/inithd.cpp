@@ -35,6 +35,7 @@
 #include "lang.h"
 #include "inithd.h"
 #include "idepart.h"
+#include "gptpart.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -128,6 +129,9 @@ int TInitHdCommand::OptScan(const char *optstr, int ch, int bool, const char *st
 
                 case 'D':
                         return OptScanBool(optstr, bool, strarg, &FOptD);
+
+                case 'G':
+                        return OptScanBool(optstr, bool, strarg, &FOptG);
         }
         OptError(optstr);
         return E_Useage;
@@ -149,6 +153,7 @@ void TInitHdCommand::InitOptions()
         FOptR = 0;
         FOptI = 0;
         FOptD = 0;
+        FOptG = 0;
 }
 
 /*##########################################################################
@@ -298,6 +303,85 @@ void TInitHdCommand::UpdateBootSector(TDisc *Disc, int IdeDisc)
 
 /*##########################################################################
 #
+#   Name       : TInitHdCommand::WriteGptBootSector
+#
+#   Purpose....: Write GPT boot sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TInitHdCommand::WriteGptBootSector(TDisc *Disc)
+{
+    char *BootSector;
+    long long Total;
+    TBootParam bootp;
+
+    Total = Disc->GetTotalSectors();
+    if (Total > 0xFFFFFFFF)
+        Total = 0xFFFFFFFF;
+    
+    bootp.BytesPerSector = Disc->GetBytesPerSector();
+    bootp.Resv1 = 0;
+    bootp.MappingSectors = 0;
+    bootp.Resv3 = 0;
+    bootp.Resv4 = 0;
+    bootp.SmallSectors = 0;
+    bootp.Media = 0xF1;
+    bootp.Resv6 = 0;
+    bootp.SectorsPerCyl = Disc->GetSectorsPerCyl();
+    bootp.Heads = Disc->GetHeads();
+    bootp.HiddenSectors = 0;
+    bootp.Sectors = Total;
+    bootp.Drive = 0x80;
+    bootp.Resv7 = 0;
+    bootp.Signature = 0;
+    bootp.Serial = 0;
+    memset(bootp.Volume, 0, 11);
+    memcpy(bootp.Fs, "RDOS    ", 8);
+
+    BootSector = new char[512];
+
+    Disc->Read(0, BootSector, 512);
+
+    memset(BootSector, 0, 0x1FE);
+    *(BootSector + 0x1FE) = 0x55;
+    *(BootSector + 0x1FF) = 0xAA;
+    RdosReadBinaryResource(0, 100, BootSector, 0x1BE);
+
+    *(BootSector + 0x1BE + 4) = 0xEE;
+    *(long *)(BootSector + 0x1BE + 8) = 34;
+    *(long *)(BootSector + 0x1BE + 0xC) = Total - 34;
+
+    memcpy(BootSector + 11, &bootp, sizeof(bootp));
+
+    Disc->Write(0, BootSector, 512);
+
+    delete BootSector;
+}
+
+/*##########################################################################
+#
+#   Name       : TInitHdCommand::InitGpt
+#
+#   Purpose....: Init GPT 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TInitHdCommand::InitGpt(TDisc *Disc)
+{
+    TGptDiscPartition Part(Disc);
+
+    WriteGptBootSector(Disc);
+    Part.Write();
+}
+
+/*##########################################################################
+#
 #   Name       : TInitHdCommand::Execute
 #
 #   Purpose....: Execute command
@@ -347,8 +431,15 @@ int TInitHdCommand::Execute(char *param)
         Disc = new TDisc(DiscNr);
         ok = Disc->IsValid();
 
+        if (ok && FOptG)
+        {
+            InitGpt(Disc);
+            return 0;
+        }
+
         if (ok)
         {
+        
             LoadBootLoader(Disc);
 
             if (FOptI)
