@@ -75,6 +75,28 @@ TDateTime::TDateTime(const TDateTime &source)
 #
 #   Purpose....: Constructor from raw format
 #
+#   In params..: raw               raw rdos format of date & time
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime::TDateTime(unsigned long long Raw)
+{
+    unsigned long Time[2];
+
+    memcpy(&Time, &Raw, 8);
+
+    FMsb = Time[1];
+    FLsb = Time[0];
+    RawToRecord();
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::TDateTime
+#
+#   Purpose....: Constructor from raw format
+#
 #   In params..: msb, lsb               raw rdos format of date & time
 #   Out params.: *
 #   Returns....: *

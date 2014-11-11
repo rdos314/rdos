@@ -34,6 +34,7 @@ public:
 	TDateTime();
 	TDateTime(const TDateTime &Source);
 	TDateTime(unsigned long Msb, unsigned long Lsb);
+	TDateTime(unsigned long long Raw);
     TDateTime(long double real);
 	TDateTime(int Year, int Month, int Day);
 	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec);

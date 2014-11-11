@@ -8,8 +8,7 @@ class TSerialDebug
 {
 public:
 	short int Channel;
-	unsigned long TimeLSB;
-	unsigned long TimeMSB;
+	unsigned long long Time;
 	char ch;
 };
 

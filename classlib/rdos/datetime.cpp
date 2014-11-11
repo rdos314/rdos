@@ -26,6 +26,7 @@
 ########################################################################*/
 
 #include <math.h>
+#include <memory.h>
 
 #include "rdos.h"
 #include "datetime.h"
@@ -84,6 +85,28 @@ TDateTime::TDateTime(unsigned long Msb, unsigned long Lsb)
         FMsb = Msb;
         FLsb = Lsb;
         RawToRecord();
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::TDateTime
+#
+#   Purpose....: Constructor from raw format
+#
+#   In params..: raw               raw rdos format of date & time
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime::TDateTime(unsigned long long Raw)
+{
+    unsigned long Val[2];
+
+    memcpy(&Val, &Raw, 8);
+
+    FMsb = Val[1];
+    FLsb = Val[0];
+    RawToRecord();
 }
 
 /*##########################################################################
