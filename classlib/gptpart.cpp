@@ -790,6 +790,43 @@ void TGptDiscPartition::Sort()
     }
 }
 
+/*##################  TGptDiscPartition::GetEntry  #############
+*   Purpose....: Get entry to insert new partition into
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+long long TGptDiscPartition::GetFreeLba(long long Size)
+{
+    int i;
+    long long Lba = FPartHeader->FirstLba;
+    struct TPartEntry *CurrEntry;
+
+    CurrEntry = FPartEntry;
+        
+    for (i = 0; i < FPartHeader->EntryCount; i++)
+    {
+        if (CurrEntry->FirstLba)
+        {
+            if (CurrEntry->FirstLba - Lba > Size)
+                return Lba;
+
+            Lba = CurrEntry->LastLba + 1;
+        }
+        else
+        {
+            if (FPartHeader->LastLba - Lba > Size)
+                return Lba;
+            else
+                return 0;
+        }
+        
+        CurrEntry++;
+    }
+    return 0;
+}
+
 /*##################  TGptDiscPartition::Add  #############
 *   Purpose....: Add partition
 *   In params..: *                                                        #
@@ -799,5 +836,10 @@ void TGptDiscPartition::Sort()
 *##########################################################################*/
 int TGptDiscPartition::Add(const char *FsName, long Size, const char *BootCode, int BootSize)
 {
-    return FALSE;
+    long long Lba = GetFreeLba(Size);
+
+    if (Lba)
+        return TRUE;
+    else    
+        return FALSE;
 }

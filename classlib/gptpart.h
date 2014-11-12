@@ -77,6 +77,7 @@ protected:
     void ReadOtherGpt();
     void RecreatePrimaryGpt();
     void Sort();
+    long long GetFreeLba(long long Size);
 
     TDisc *FDisc;
 
