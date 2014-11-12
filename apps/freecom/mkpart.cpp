@@ -32,6 +32,7 @@
 #include "cmdhelp.h"
 #include "lang.h"
 #include "mkpart.h"
+#include "gptpart.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -98,38 +99,56 @@ TMakePartitionCommand::TMakePartitionCommand(TSession *session, const char *para
 ##########################################################################*/
 int TMakePartitionCommand::Make(TDisc *Disc, const char *FsName, int Size)
 {
-        TIdeDiscPartition *DiscPart;
-        int ok;
-        char *BootCode;
-        int BootSize;
+    TIdeDiscPartition *DiscPart;
+    TGptDiscPartition *GptDisc;
+    TPartition *Entry;
+    TIdePartition *IdeEntry;
+    int ok;
+    char *BootCode;
+    int BootSize;
+    int isgpt = FALSE;
 
-        if (Disc->IsValid())
-        {
+    if (Disc->IsValid())
+    {
         BootCode = new char[512];
         BootSize = RdosReadBinaryResource(0, 100, BootCode, 0x1BE);
 
-                DiscPart = new TIdeDiscPartition(Disc);
-                ok = DiscPart->Add(FsName, Size, BootCode, BootSize);
+        DiscPart = new TIdeDiscPartition(Disc);
 
-                delete BootCode;
-
-                if (ok)
-                {
-                        delete DiscPart;
-                        return 0;
-                }
-                else
-                {
-                        FMsg.Load(TEXT_MKPART_ERROR);
-                        Write(FMsg.GetData());
-                        delete DiscPart;
-                        return 1;
-                }
+        if (DiscPart->PartCount > 0)
+        {
+            Entry = DiscPart->PartArr[0];
+            if (!Entry->IsFree())
+            {
+                IdeEntry = (TIdePartition *)Entry;
+                if (IdeEntry->GetType() == 0xEE)
+                    isgpt = TRUE;
+            }
         }
 
-        FMsg.printf(TEXT_SHOWPART_DISC_ERROR, Disc->GetDiscNr());
-        Write(FMsg.GetData());
-        return 1;
+        if (isgpt)
+        {
+            GptDisc = new TGptDiscPartition(Disc);
+            GptDisc->Read();
+            ok = GptDisc->Add(FsName, Size, BootCode, BootSize);
+            delete GptDisc;
+        }
+        else
+            ok = DiscPart->Add(FsName, Size, BootCode, BootSize);
+
+        delete BootCode;
+        delete DiscPart;
+
+        if (ok)
+            return 0;
+        else
+        {
+            FMsg.Load(TEXT_MKPART_ERROR);
+            Write(FMsg.GetData());
+            return 1;
+        }
+    }
+    return 0;    
 }
 
 /*##########################################################################

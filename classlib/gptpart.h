@@ -62,6 +62,8 @@ public:
     void Read();
     void Write();
 
+        int Add(const char *FsName, long Size, const char *BootCode, int BootSize);
+
     TDisc *GetDisc();
 
     TGptPartition *PartArr[MAX_GPT_PART_COUNT];
@@ -69,17 +71,20 @@ public:
 
 protected:
     struct TPartEntry *ReadGpt(long long StartLba, char *HeaderBuf);
-    struct TPartEntry *InitGpt(long long HeaderLba, char *HeaderBuf);
-    void WriteGpt(char *HeaderBuf, struct TPartEntry *Entry);
+    void InitGpt(long long HeaderLba, char *HeaderBuf);
+    void WriteGpt(char *HeaderBuf);
+    void WriteBootSector(long long Sector, int Count, const char *BootCode, int BootSize);
+    void ReadOtherGpt();
+    void RecreatePrimaryGpt();
+    void Sort();
 
     TDisc *FDisc;
 
     char FPrimaryHeader[512];
-    struct TPartEntry *FPrimaryEntry;
-        
     char FSecondaryHeader[512];
-    struct TPartEntry *FSecondaryEntry;
-        
+
+    struct TPartHeader *FPartHeader;
+    struct TPartEntry *FPartEntry;
 };
 
 #endif
