@@ -649,6 +649,7 @@ int RDOSAPI RdosOpenFileDrive(int Drive, const char *FileName);
 int RDOSAPI RdosCreateCrc(unsigned short int CrcPoly);
 void RDOSAPI RdosCloseCrc(int Handle);
 unsigned short int RDOSAPI RdosCalcCrc(int Handle, unsigned short int CrcVal, const char *Buf, int Size);
+unsigned int RDOSAPI RdosCalcCrc32(unsigned int CrcVal, const char *Buf, int Size);
 
 #ifdef __RDOS__     // these are only available in user-mode
 

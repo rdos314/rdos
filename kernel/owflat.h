@@ -2473,6 +2473,11 @@
     CallGate_calc_crc  \
     parm [ebx] [ax] [edi] [ecx] \
     value [ax];
+
+#pragma aux RdosCalcCrc32 = \
+    CallGate_calc_crc32  \
+    parm [eax] [edi] [ecx] \
+    value [eax];
     
 #pragma aux RdosGetCurrentDllHandle = \
     CallGate_get_current_dll  \

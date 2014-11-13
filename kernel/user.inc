@@ -2948,6 +2948,14 @@ CalcCrc      MACRO
 	UserGate calc_crc_nr
 						ENDM
 
+;   IN  EAX         CRC value
+;   IN  ES:(E)DI    Data
+;   IN  (E)CX       Size
+;   OUT EAX         CRC value
+CalcCrc32      MACRO
+	UserGate calc_crc32_nr
+						ENDM
+
 ;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)
 ;   IN  (E)CX       Buffer size

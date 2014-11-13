@@ -713,6 +713,8 @@
 #define usergate_has_lon_module_msg 0x00000234
 #define usergate_receive_lon_module_msg 0x00000235
 
+#define usergate_calc_crc32 0x00000236
+
 
 
 #ifdef __FLAT__
@@ -1431,6 +1433,8 @@
 #define CallGate_has_lon_module_msg 0x67 0x9a 52 2 0 0 3 0
 #define CallGate_receive_lon_module_msg 0x67 0x9a 53 2 0 0 3 0
 
+#define CallGate_calc_crc32 0x67 0x9a 54 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2146,5 +2150,7 @@
 #define CallGate_send_lon_module_msg 0x3e 0x67 0x9a 51 2 0 0 3 0
 #define CallGate_has_lon_module_msg 0x3e 0x67 0x9a 52 2 0 0 3 0
 #define CallGate_receive_lon_module_msg 0x3e 0x67 0x9a 53 2 0 0 3 0
+
+#define CallGate_calc_crc32 0x3e 0x67 0x9a 54 2 0 0 3 0
 
 #endif

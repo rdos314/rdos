@@ -713,4 +713,6 @@ send_lon_module_msg_nr          = 563
 has_lon_module_msg_nr           = 564
 receive_lon_module_msg_nr       = 565
 
+calc_crc32_nr                   = 566
+
 usergate_entries			    = 580
