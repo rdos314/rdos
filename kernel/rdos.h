@@ -251,6 +251,9 @@ void RDOSAPI RdosSetFilledStyle(int handle);
 int RDOSAPI RdosAnsiToUtf8(const char *AnsiStr, char *Utf8Str, int BufferSize);
 int RDOSAPI RdosUtf8ToAnsi(const char *Utf8Str, char *AnsiStr, int BufferSize);
 
+int RDOSAPI RdosAnsiToUtf16(const char *AnsiStr, short int *Utf16Str, int BufferSize);
+int RDOSAPI RdosUtf16ToAnsi(const short int *Utf16Str, char *AnsiStr, int BufferSize);
+
 int RDOSAPI RdosOpenFont(int id, int height);
 void RDOSAPI RdosCloseFont(int font);
 void RDOSAPI RdosGetStringMetrics(int font, const char *str, int *width, int *height);

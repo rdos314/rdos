@@ -499,6 +499,16 @@
     parm [esi] [edi] [ecx]  \
     value [eax];
 
+#pragma aux RdosAnsiToUtf16 = \
+    CallGate_ansi_to_utf16  \
+    parm [esi] [edi] [ecx]  \
+    value [eax];
+
+#pragma aux RdosUtf16ToAnsi = \
+    CallGate_utf16_to_ansi  \
+    parm [esi] [edi] [ecx]  \
+    value [eax];
+
 #pragma aux RdosOpenFont = \
     CallGate_open_font  \
     ValidateHandle \

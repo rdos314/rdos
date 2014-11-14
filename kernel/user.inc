@@ -2596,6 +2596,22 @@ Utf8ToAnsi        MACRO
 	UserGate utf8_to_ansi_nr
 						ENDM
 
+;	IN  DS:(E)SI        ANSI string
+;	IN  DS:(E)DI        UTF-16 string
+;   IN  (E)CX           Buffer size
+;	OUT EAX             String size
+AnsiToUtf16        MACRO
+	UserGate ansi_to_utf16_nr
+						ENDM
+
+;	IN  DS:(E)SI        UTF-16 string
+;	IN  DS:(E)DI        ANSI string
+;   IN  (E)CX           Buffer size
+;	OUT EAX             String size
+Utf16ToAnsi        MACRO
+	UserGate utf16_to_ansi_nr
+						ENDM
+
 ;	IN  AX              Requested font height
 ;   IN  DX              Requested font ID
 ;	OUT	BX				Font handle

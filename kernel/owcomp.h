@@ -113,6 +113,24 @@
     parm [fs esi] [es edi] [ecx]  \
     value [eax];
 
+#pragma aux RdosAnsiToUtf16 = \
+    "push ds" \
+    "mov eax,fs" \
+    "mov ds,eax" \ 
+    CallGate_ansi_to_utf16  \
+    "pop ds" \
+    parm [fs esi] [es edi] [ecx]  \
+    value [eax];
+
+#pragma aux RdosUtf16ToAnsi = \
+    "push ds" \
+    "mov eax,fs" \
+    "mov ds,eax" \ 
+    CallGate_utf16_to_ansi  \
+    "pop ds" \
+    parm [fs esi] [es edi] [ecx]  \
+    value [eax];
+
 #pragma aux RdosOpenFont = \
     CallGate_open_font  \
     ValidateHandle \

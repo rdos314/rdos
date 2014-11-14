@@ -715,4 +715,7 @@ receive_lon_module_msg_nr       = 565
 
 calc_crc32_nr                   = 566
 
+ansi_to_utf16_nr                = 567
+utf16_to_ansi_nr                = 568
+
 usergate_entries			    = 580

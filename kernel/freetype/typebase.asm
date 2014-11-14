@@ -980,6 +980,96 @@ ansi_to_utf8_16 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           AnsiToUtf16
+;
+;           DESCRIPTION:    Convert ANSI (cp 1252) to UTF16
+;
+;           PARAMETERS:     DS:(E)SI        ANSI String 
+;                           (E)CX           Max UTF-16 size
+;                           ES:(E)DI        UTF-16 string
+;
+;           RETURNS:        EAX             Size of UTF-8 string
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ansi_to_utf16_name DB 'Ansi To UTF-16',0
+
+ansi_to_utf16    Proc near
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    xor edx,edx
+    or ecx,ecx
+    jz tawDone
+;
+    sub ecx,1
+    jz tawTerminate
+
+tawLoop: 
+    lods byte ptr ds:[esi]   
+    test al,80h
+    jz tawSimple
+
+tawUnicode:
+    sub al,80h
+    movzx ebx,al
+    add ebx,ebx
+    mov ax,word ptr cs:[ebx].autab
+    or ax,ax
+    jz tawLoop
+    
+tawSimple:
+    movzx ax,al
+    or al,al
+    jz tawTerminate
+;    
+    stos word ptr es:[edi]
+    inc edx
+    sub ecx,1
+    jnz tawLoop
+
+tawTerminate:
+    xor ax,ax
+    stos word ptr es:[edi]
+
+tawDone:
+    mov eax,edx
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx    
+    pop ebx
+    ret
+ansi_to_utf16    Endp
+
+ansi_to_utf16_32 Proc far
+    call ansi_to_utf16
+    ret
+ansi_to_utf16_32 Endp
+
+ansi_to_utf16_16 Proc far
+    push ecx
+    push esi
+    push edi
+;
+    movzx ecx,cx
+    movzx esi,si
+    movzx edi,di    
+    call ansi_to_utf16
+;
+    pop edi
+    pop esi
+    pop ecx
+    ret
+ansi_to_utf16_16 Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           GetUnicode
 ;
 ;           DESCRIPTION:    Get unicode from UTF-8 string
@@ -1204,6 +1294,85 @@ utf8_to_ansi_16 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           Utf16ToAnsi
+;
+;           DESCRIPTION:    Convert UTF-16 to ANSI (cp 1252)
+;
+;           PARAMETERS:     DS:(E)SI        UTF-16 String 
+;                           (E)CX           Max Ansi string size
+;                           ES:(E)DI        Ansi string
+;
+;           RETURNS:        EAX             Size of Ansi string
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+utf16_to_ansi_name DB 'UTF-16 To Ansi',0
+
+utf16_to_ansi    Proc near
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    xor edx,edx
+    or ecx,ecx
+    jz tuwDone
+;
+    sub ecx,1
+    jz tuwTerminate
+
+tuwLoop: 
+    lods word ptr ds:[esi]
+    or ax,ax
+    jz tuwTerminate
+;    
+    movzx eax,ax
+    call FindAnsi
+    or al,al
+    jz tuwLoop
+;    
+    inc edx
+    stos byte ptr es:[edi]
+    sub ecx,1
+    jnz tuwLoop
+
+tuwTerminate:
+    xor al,al    
+    stos byte ptr es:[edi]
+
+tuwDone:
+    mov eax,edx
+;    
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    ret
+utf16_to_ansi    Endp
+
+utf16_to_ansi_32 Proc far
+    call utf16_to_ansi
+    ret
+utf16_to_ansi_32 Endp
+
+utf16_to_ansi_16 Proc far
+    push ecx
+    push esi
+    push edi
+;
+    movzx ecx,cx
+    movzx esi,si
+    movzx edi,di    
+    call utf16_to_ansi
+;
+    pop edi
+    pop esi    
+    ret
+utf16_to_ansi_16 Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           load_adapter_fonts
 ;
 ;           DESCRIPTION:    install all fonts in adapter
@@ -1330,6 +1499,20 @@ init_font_loop:
     mov edi,OFFSET utf8_to_ansi_name
     mov dx,virt_es_in OR virt_ds_in
     mov ax,utf8_to_ansi_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET ansi_to_utf16_16
+    mov esi,OFFSET ansi_to_utf16_32
+    mov edi,OFFSET ansi_to_utf16_name
+    mov dx,virt_es_in OR virt_ds_in
+    mov ax,ansi_to_utf16_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET utf16_to_ansi_16
+    mov esi,OFFSET utf16_to_ansi_32
+    mov edi,OFFSET utf16_to_ansi_name
+    mov dx,virt_es_in OR virt_ds_in
+    mov ax,utf16_to_ansi_nr
     RegisterUserGate
 ;    
     popad
