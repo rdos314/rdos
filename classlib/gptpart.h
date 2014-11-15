@@ -77,8 +77,10 @@ protected:
     void ReadOtherGpt();
     void RecreatePrimaryGpt();
     void Sort();
+    const char *GetGuid(const char *FsName);
     long long GetFreeLba(long long Size);
     struct TPartEntry *InsertEntry(long long Lba);
+    void AddEntry(const char *Guid, long long Lba, long size);
 
     TDisc *FDisc;
 

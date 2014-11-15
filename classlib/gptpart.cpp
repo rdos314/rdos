@@ -718,6 +718,24 @@ void TGptDiscPartition::Sort()
     }
 }
 
+/*##################  TGptDiscPartition::GetGuid  #############
+*   Purpose....: Get GUID
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+const char *TGptDiscPartition::GetGuid(const char *FsName)
+{
+    static char EfiGuid[] = {0x28, 0x73, 0x2A, 0xC1, 0x1F, 0xF8, 0xD2, 0x11, 0xBA, 0x4B, 0x00, 0xA0, 0xC9, 0x3E, 0xC9, 0x3B};
+    static char DataGuid[] = {0xA2, 0xA0, 0xD0, 0xEB, 0xE5,0xB9, 0x33, 0x44, 0x87, 0xC0, 0x68, 0xB6, 0xB7, 0x26, 0x99, 0xC7};
+
+    if (!strcmp(FsName, "EFI"))
+        return EfiGuid;
+    else
+        return DataGuid;
+}
+
 /*##################  TGptDiscPartition::GetEntry  #############
 *   Purpose....: Get entry to insert new partition into
 *   In params..: *                                                        #
@@ -791,6 +809,17 @@ struct TPartEntry *TGptDiscPartition::InsertEntry(long long Lba)
     return CurrEntry;
 }
 
+/*##################  TGptDiscPartition::AddEntry  #############
+*   Purpose....: Add entry
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TGptDiscPartition::AddEntry(const char *Guid, long long Lba, long size)
+{
+}
+
 /*##################  TGptDiscPartition::Add  #############
 *   Purpose....: Add partition
 *   In params..: *                                                        #
@@ -800,15 +829,25 @@ struct TPartEntry *TGptDiscPartition::InsertEntry(long long Lba)
 *##########################################################################*/
 int TGptDiscPartition::Add(const char *FsName, long Size, const char *BootCode, int BootSize)
 {
-    long long Lba = GetFreeLba(Size);
+    long long Lba;
+    const char *Guid;
     struct TPartEntry *Entry;
+    char str[100];
 
-    if (Lba)
+    Guid = GetGuid(FsName);
+
+    if (Guid)
     {
-        Entry = InsertEntry(Lba);
+        UuidToStr(Guid, str);
 
-        return TRUE;
+        Lba = GetFreeLba(Size);
+        if (Lba)
+        {
+            Entry = InsertEntry(Lba);
+            AddEntry(FsName, Lba, Size);
+    
+            return TRUE;
+        }
     }
-    else    
-        return FALSE;
+    return FALSE;
 }
