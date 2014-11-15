@@ -809,17 +809,6 @@ struct TPartEntry *TGptDiscPartition::InsertEntry(long long Lba)
     return CurrEntry;
 }
 
-/*##################  TGptDiscPartition::AddEntry  #############
-*   Purpose....: Add entry
-*   In params..: *                                                        #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-02 le                                                #
-*##########################################################################*/
-void TGptDiscPartition::AddEntry(const char *Guid, long long Lba, long size)
-{
-}
-
 /*##################  TGptDiscPartition::Add  #############
 *   Purpose....: Add partition
 *   In params..: *                                                        #
@@ -832,19 +821,23 @@ int TGptDiscPartition::Add(const char *FsName, long Size, const char *BootCode, 
     long long Lba;
     const char *Guid;
     struct TPartEntry *Entry;
-    char str[100];
+    long ReqSize = Size + 1;
 
     Guid = GetGuid(FsName);
 
     if (Guid)
     {
-        UuidToStr(Guid, str);
-
-        Lba = GetFreeLba(Size);
+        Lba = GetFreeLba(ReqSize);
         if (Lba)
         {
             Entry = InsertEntry(Lba);
-            AddEntry(FsName, Lba, Size);
+
+            memcpy(Entry->PartGuid, Guid, 16);
+            RdosCreateUuid(Entry->UniqueGuid);
+            Entry->FirstLba = Lba;
+            Entry->LastLba = Lba + ReqSize - 1;
+            Entry->Attrib = 0;
+            memset(Entry->Name, 0, 2 * 36);
     
             return TRUE;
         }
