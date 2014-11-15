@@ -131,6 +131,9 @@ int TMakePartitionCommand::Make(TDisc *Disc, const char *FsName, int Size)
             GptDisc = new TGptDiscPartition(Disc);
             GptDisc->Read();
             ok = GptDisc->Add(FsName, Size, BootCode, BootSize);
+            if (ok)
+                GptDisc->Write();        
+
             delete GptDisc;
         }
         else

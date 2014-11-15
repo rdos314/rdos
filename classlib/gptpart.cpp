@@ -206,6 +206,7 @@ void TGptPartition::GetMsFsName()
                 break;
 
             case 'm':
+            case 'R':
                 memcpy(Name, &Buf[0x36], 8);
                 Name[8] = 0;
                 break;
@@ -838,8 +839,13 @@ int TGptDiscPartition::Add(const char *FsName, long Size, const char *BootCode, 
             Entry->LastLba = Lba + ReqSize - 1;
             Entry->Attrib = 0;
             memset(Entry->Name, 0, 2 * 36);
-    
-            return TRUE;
+
+            WriteBootSector(Lba, ReqSize, BootCode, BootSize);
+
+            if (!strcmp(FsName, "EFI"))
+                return RdosFormatDrive(FDisc->GetDiscNr(), Lba, ReqSize, "FAT32");
+            else
+                return RdosFormatDrive(FDisc->GetDiscNr(), Lba, ReqSize, FsName);
         }
     }
     return FALSE;

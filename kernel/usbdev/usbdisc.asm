@@ -49,6 +49,36 @@ part_sectors        DD ?
 
 part_struc      ENDS
 
+gpt_part_struc  STRUC
+
+gpt_sign                DB 8 DUP(?)
+gpt_rev                 DB 4 DUP(?)
+gpt_header_size         DD ?
+gpt_crc32               DD ?
+gpt_resv                DD ?
+gpt_curr_lba            DD ?,?
+gpt_other_lba           DD ?,?
+gpt_first_lba           DD ?,?
+gpt_last_lba            DD ?,?
+gpt_guid                DB 16 DUP(?)
+gpt_entry_lba           DD ?,?
+gpt_entry_count         DD ?
+gpt_entry_size          DD ?
+gpt_entry_crc32         DD ?
+
+gpt_part_struc  ENDS
+
+gpt_entry_struc STRUC
+
+gpe_part_guid           DB 16 DUP(?)
+gpe_unique_guid         DB 16 DUP(?)
+gpe_first_lba           DD ?,?
+gpe_last_lba            DD ?,?
+gpe_attrib              DD ?,?
+gpe_name                DB 36 DUP(?)
+
+gpt_entry_struc ENDS
+
 drive_struc STRUC
 
 drive_nr                DB ?
@@ -899,6 +929,21 @@ WriteSector Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SetupGpt
+;
+;       DESCRIPTION:    Setup GPT drives
+;
+;       PARAMETERS:     FS      Disc sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupGpt    Proc near
+    ret
+SetupGpt    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           SetupDrives
 ;
 ;       DESCRIPTION:    Setup drives
@@ -929,6 +974,14 @@ sdLoop:
     or cl,cl
     jz sdDone
 ;
+    cmp cl,0EEh
+    jne sdNotGpt
+;
+    int 3
+    call SetupGpt
+    jmp sdDone
+    
+sdNotGpt:
     push es
     push edi
     call GetFs
