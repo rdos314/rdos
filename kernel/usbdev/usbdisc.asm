@@ -155,6 +155,8 @@ data    SEGMENT byte public 'DATA'
 
 disc_device_arr     DW MAX_DISCS DUP(?)
 
+fs_name             DB 10 DUP(?)
+
 data    ENDS
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
@@ -929,16 +931,144 @@ WriteSector Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SetupEfiPart
+;       NAME:       GetFsName
 ;
-;       DESCRIPTION:    Setup EFI partition
+;       DESCRIPTION:    Get MS FS name from boot record
 ;
 ;       PARAMETERS:     FS      Disc sel
 ;                       ES:EDI  Entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+GetFsName   Proc near
+    push ds
+    push es
+    pushad
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov esi,edx
+    mov ebp,edx
+    mov es:[edx],eax
+;
+    mov edx,es:[edi].gpe_first_lba
+    mov edi,esi
+    call ReadSector
+;
+    mov ax,SEG data
+    mov es,ax
+    mov ax,flat_sel
+    mov ds,ax
+    mov di,OFFSET fs_name
+;
+    mov al,ds:[esi+3]
+    cmp al,'M'
+    je gfnDos
+;
+    cmp al,'m'
+    je gfnLinux    
+;
+    cmp al,'R'
+    je gfnLinux
+;
+    add esi,3
+    jmp gfnCopyName
+
+gfnLinux:
+    add esi,36h
+    jmp gfnCopyName
+
+gfnDos:
+    add esi,52h
+
+gfnCopyName:
+    mov cx,8
+
+gfnCopyLoop:    
+    mov al,ds:[esi]
+    or al,al
+    jz gfnCopyDone
+;
+    cmp al,' '
+    jz gfnCopyDone
+;
+    stosb
+    inc si
+    loop gfnCopyLoop    
+
+gfnCopyDone:
+    xor al,al
+    stosb
+;    
+    mov edx,ebp
+    mov ecx,1000h
+    FreeLinear
+;
+    popad
+    pop es    
+    pop ds
+    ret
+GetFsName   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupEfiPart
+;
+;       DESCRIPTION:    Setup EFI partition
+;
+;       PARAMETERS:     FS      Disc sel
+;                       BP      Drive offset
+;                       ES:EDI  Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 SetupEfiPart    Proc near
+    push ds
+    push es
+    pushad
+;    
+    call GetFsName
+;
+    push es
+    push edi
+    mov di,SEG data
+    mov es,di
+    mov edi,OFFSET fs_name
+    IsFileSystemAvailable
+    pop edi
+    pop es
+    jc sefipDone
+;
+    push es
+    mov eax,SIZE drive_struc
+    AllocateSmallGlobalMem
+    mov fs:[bp],es
+    AllocateDynamicDrive
+    mov es:drive_nr,al
+    pop es
+;
+    mov edx,es:[edi].gpe_first_lba
+    mov ecx,es:[edi].gpe_last_lba
+    sub ecx,edx
+    inc ecx
+    mov ah,fs:disc_nr
+    OpenDrive
+;
+    push es
+    push edi
+    mov di,SEG data
+    mov es,di
+    mov edi,OFFSET fs_name
+    InstallFileSystem
+    pop edi
+    pop es
+    clc
+
+sefipDone:
+    popad
+    pop es    
+    pop ds
     ret
 SetupEfiPart    Endp
 
@@ -950,11 +1080,56 @@ SetupEfiPart    Endp
 ;       DESCRIPTION:    Setup basic partition
 ;
 ;       PARAMETERS:     FS      Disc sel
+;                       BP      Drive offset
 ;                       ES:EDI  Entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupBasicPart    Proc near
+    push ds
+    push es
+    pushad
+;    
+    call GetFsName
+;
+    push es
+    push edi
+    mov di,SEG data
+    mov es,di
+    mov edi,OFFSET fs_name
+    IsFileSystemAvailable
+    pop edi
+    pop es
+    jc sbpDone
+;
+    push es
+    mov eax,SIZE drive_struc
+    AllocateSmallGlobalMem
+    mov fs:[bp],es
+    AllocateDynamicDrive
+    mov es:drive_nr,al
+    pop es
+;
+    mov edx,es:[edi].gpe_first_lba
+    mov ecx,es:[edi].gpe_last_lba
+    sub ecx,edx
+    inc ecx
+    mov ah,fs:disc_nr
+    OpenDrive
+;
+    push es
+    push edi
+    mov di,SEG data
+    mov es,di
+    mov edi,OFFSET fs_name
+    InstallFileSystem
+    pop edi
+    pop es
+ 
+sbpDone:
+    popad
+    pop es    
+    pop ds
     ret
 SetupBasicPart    Endp
 
@@ -966,12 +1141,12 @@ SetupBasicPart    Endp
 ;       DESCRIPTION:    Setup GPT entry
 ;
 ;       PARAMETERS:     FS      Disc sel
+;                       BP      Drive offset
 ;                       ES:EDI  Entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupGptEntry    Proc near
-    int 3
     mov eax,dword ptr es:[edi].gpe_part_guid
     cmp eax,0C12A7328h
     jne sgpeNotEfi
@@ -1107,6 +1282,9 @@ sgptSectorLoop:
     mov edi,ebp
     or ecx,ecx
     jz sgptEntryDone
+;
+    push bp
+    mov bp,OFFSET disc_drive_arr
 
 sgptEntryLoop:
     mov eax,es:[edi].gpe_last_lba+4
@@ -1126,11 +1304,14 @@ sgptEntryLoop:
     jc sgptEntryNext
 ;
     call SetupGptEntry
+    add bp,2
 
 sgptEntryNext:
     add edi,128 
     sub ecx,1
     jnz sgptEntryLoop
+;
+    pop bp    
 
 sgptEntryDone:     
     pop edi
