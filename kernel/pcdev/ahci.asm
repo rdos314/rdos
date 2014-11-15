@@ -2855,7 +2855,7 @@ InstallGpt1    Proc near
     jae igptDone1
 ;    
     mov eax,-1
-    CalcCrc32
+    UserGateForce32 calc_crc32_nr
     cmp eax,edx
     jne igptDone1
 ;    
@@ -2902,7 +2902,7 @@ igptSectorLoop1:
     shl ecx,7
     mov edi,ebp
     mov eax,-1
-    CalcCrc32
+    UserGateForce32 calc_crc32_nr
 ;    
     pop edi
 ;
@@ -3004,7 +3004,7 @@ InstallGpt2    Proc near
     jae igptDone2
 ;    
     mov eax,-1
-    CalcCrc32
+    UserGateForce32 calc_crc32_nr
     cmp eax,edx
     jne igptDone2
 ;    
@@ -3051,7 +3051,7 @@ igptSectorLoop2:
     shl ecx,7
     mov edi,ebp
     mov eax,-1
-    CalcCrc32
+    UserGateForce32 calc_crc32_nr
 ;    
     pop edi
 ;
