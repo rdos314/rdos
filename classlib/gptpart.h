@@ -78,6 +78,7 @@ protected:
     void RecreatePrimaryGpt();
     void Sort();
     long long GetFreeLba(long long Size);
+    struct TPartEntry *InsertEntry(long long Lba);
 
     TDisc *FDisc;
 
