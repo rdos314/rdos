@@ -929,15 +929,223 @@ WriteSector Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SetupEfiPart
+;
+;       DESCRIPTION:    Setup EFI partition
+;
+;       PARAMETERS:     FS      Disc sel
+;                       ES:EDI  Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupEfiPart    Proc near
+    ret
+SetupEfiPart    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupBasicPart
+;
+;       DESCRIPTION:    Setup basic partition
+;
+;       PARAMETERS:     FS      Disc sel
+;                       ES:EDI  Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupBasicPart    Proc near
+    ret
+SetupBasicPart    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupGptEntry
+;
+;       DESCRIPTION:    Setup GPT entry
+;
+;       PARAMETERS:     FS      Disc sel
+;                       ES:EDI  Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupGptEntry    Proc near
+    int 3
+    mov eax,dword ptr es:[edi].gpe_part_guid
+    cmp eax,0C12A7328h
+    jne sgpeNotEfi
+;
+    mov eax,dword ptr es:[edi].gpe_part_guid+4
+    cmp eax,11D2F81Fh
+    jne sgpeNotEfi
+;    
+    mov eax,dword ptr es:[edi].gpe_part_guid+8
+    cmp eax,0A0004BBAh
+    jne sgpeNotEfi
+;    
+    mov eax,dword ptr es:[edi].gpe_part_guid+12
+    cmp eax,3BC93EC9h
+    jne sgpeNotEfi
+;
+    call SetupEfiPart
+    jmp sgpeDone
+
+sgpeNotEfi:
+    mov eax,dword ptr es:[edi].gpe_part_guid
+    cmp eax,0EBD0A0A2h
+    jne sgpeDone
+;
+    mov eax,dword ptr es:[edi].gpe_part_guid+4
+    cmp eax,4433B9E5h
+    jne sgpeDone
+;    
+    mov eax,dword ptr es:[edi].gpe_part_guid+8
+    cmp eax,0B668C087h
+    jne sgpeDone
+;    
+    mov eax,dword ptr es:[edi].gpe_part_guid+12
+    cmp eax,0C79926B7h
+    jne sgpeDone
+;
+    call SetupBasicPart
+
+sgpeDone:    
+    ret
+SetupGptEntry   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           SetupGpt
 ;
 ;       DESCRIPTION:    Setup GPT drives
 ;
 ;       PARAMETERS:     FS      Disc sel
+;                       ES:EDI  Sector buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupGpt    Proc near
+    pushad
+;    
+    xor ebp,ebp
+    mov edx,1
+    call ReadSector
+;
+    mov eax,dword ptr es:[edi].gpt_sign
+    cmp eax,20494645h
+    jne sgptDone
+;
+    mov eax,dword ptr es:[edi].gpt_sign+4
+    cmp eax,54524150h
+    jne sgptDone
+;
+    xor edx,edx
+    xchg edx,es:[edi].gpt_crc32
+    mov ecx,es:[edi].gpt_header_size
+    cmp ecx,200h
+    jae sgptDone
+;    
+    mov eax,-1
+    UserGateForce32 calc_crc32_nr
+    cmp eax,edx
+    jne sgptDone
+;    
+    mov eax,es:[edi].gpt_entry_size
+    cmp eax,128
+    jne sgptDone
+;
+    mov eax,es:[edi].gpt_entry_lba+4
+    or eax,eax
+    jnz sgptDone
+;
+    mov ecx,es:[edi].gpt_entry_count
+    mov eax,ecx
+    shl eax,7
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    AllocateBigLinear    
+    mov ebp,edx
+;
+    push edx
+    push edi
+;
+    mov ecx,eax
+    shr ecx,9
+    mov edx,es:[edi].gpt_entry_lba
+    mov edi,ebp
+    xor eax,eax
+
+sgptSectorLoop:
+    mov es:[edi],eax
+    call ReadSector
+;
+    inc edx
+    add edi,200h
+    loop sgptSectorLoop
+;
+    pop edi
+    pop edx
+;
+    push edi
+;    
+    mov ecx,es:[edi].gpt_entry_count
+    shl ecx,7
+    mov edi,ebp
+    mov eax,-1
+    UserGateForce32 calc_crc32_nr
+;    
+    pop edi
+;
+    cmp eax,es:[edi].gpt_entry_crc32
+    jne sgptDone
+;
+    push edi
+    mov ecx,es:[edi].gpt_entry_count
+    mov edi,ebp
+    or ecx,ecx
+    jz sgptEntryDone
+
+sgptEntryLoop:
+    mov eax,es:[edi].gpe_last_lba+4
+    or eax,eax
+    jnz sgptEntryNext
+;
+    mov eax,es:[edi].gpe_first_lba+4
+    or eax,eax
+    jnz sgptEntryNext
+;
+    mov eax,es:[edi].gpe_first_lba
+    or eax,eax
+    jz sgptEntryNext
+;
+    mov edx,es:[edi].gpe_last_lba
+    sub edx,eax
+    jc sgptEntryNext
+;
+    call SetupGptEntry
+
+sgptEntryNext:
+    add edi,128 
+    sub ecx,1
+    jnz sgptEntryLoop
+
+sgptEntryDone:     
+    pop edi
+    
+sgptDone:
+    or ebp,ebp
+    jz sgptEnd
+;
+    mov ecx,es:[edi].gpt_entry_count
+    shl ecx,7
+    mov edx,ebp
+    FreeLinear
+        
+sgptEnd:
+    popad
     ret
 SetupGpt    Endp
 
@@ -977,7 +1185,6 @@ sdLoop:
     cmp cl,0EEh
     jne sdNotGpt
 ;
-    int 3
     call SetupGpt
     jmp sdDone
     
