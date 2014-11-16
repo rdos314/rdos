@@ -37,6 +37,7 @@ public:
 	~TDisc();
 
     int IsValid();
+    int IsGpt();
 	int GetDiscNr();
 	int GetBytesPerSector();
 	long long GetTotalSectors();

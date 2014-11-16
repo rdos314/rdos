@@ -363,6 +363,7 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
     long long TotalSectors = Disc->GetTotalSectors();
     long long Start;
     long long End;
+    int DriveNr;
 
     DiscPart = new TGptDiscPartition(Disc);
     DiscPart->Read();
@@ -388,8 +389,20 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
 
         Start = Entry->Start;
         End = Entry->Start + Entry->Size - 1;
+        DriveNr = Disc->GetDrive(Entry->Start, Entry->Size);
 
-        sprintf(str,
+        if (DriveNr)
+            sprintf(str,
+                    "%d: %c: %04lX_%08lX-%04lX_%08lX %8s %8ld MB %s\r\n",
+                    i,
+                    (char)DriveNr + 'A',
+                    (int)(Start >> 32), (int)(Start & 0xFFFFFFFF),
+                    (int)(End >> 32), (int)(End & 0xFFFFFFFF),
+                    Entry->Name,
+                    (int)TotalSpace,
+                    guid);
+        else
+            sprintf(str,
                     "%d: -- %04lX_%08lX-%04lX_%08lX %8s %8ld MB %s\r\n",
                     i,
                     (int)(Start >> 32), (int)(Start & 0xFFFFFFFF),
@@ -418,40 +431,25 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
 int TShowPartitionCommand::Show(TDisc *Disc)
 {
     TIdeDiscPartition *DiscPart;
-    TPartition *Entry;
-    TIdePartition *IdeEntry;
-    int isgpt = FALSE;
-
+    
     if (Disc->IsValid())
     {            
-        DiscPart = new TIdeDiscPartition(Disc);
-
-        if (DiscPart->PartCount > 0)
+        if (Disc->IsGpt())
         {
-            Entry = DiscPart->PartArr[0];
-            if (!Entry->IsFree())
-            {
-                IdeEntry = (TIdePartition *)Entry;
-                if (IdeEntry->GetType() == 0xEE)
-                    isgpt = TRUE;
+            ShowGpt(Disc);
+            return TRUE;
+        }
+        else
+        {
+            DiscPart = new TIdeDiscPartition(Disc);
 
-            }
-
-            if (isgpt)
-            {
-                ShowGpt(Disc);
-                delete DiscPart;
-                return TRUE;
-            }
+            if (FOptD)
+                ShowTree(DiscPart);
             else
-            {
-                if (FOptD)
-                    ShowTree(DiscPart);
-                else
-                    ShowTable(DiscPart);
-                delete DiscPart;
-                return TRUE;
-            }
+                ShowTable(DiscPart);
+
+            delete DiscPart;
+            return TRUE;
         }
     }
     return FALSE;

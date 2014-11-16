@@ -102,6 +102,31 @@ int TDisc::IsValid()
     return FValid;
 }
 
+/*##################  TDisc::IsGpt  #############
+*   Purpose....: Is GPT partitioned disc?                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+int TDisc::IsGpt()
+{
+    char *Buf;
+    unsigned char Type;
+    
+    if (FValid)
+    {            
+        Buf = new char[512];
+        Read(0, Buf, 512);        
+        Type = Buf[0x1BE + 4];
+        delete Buf;
+
+        if (Type == 0xEE)
+            return TRUE;
+    }
+    return FALSE;
+}
+
 /*##################  TDisc::GetDiscNr  #############
 *   Purpose....: Get disc #                                         #
 *   In params..: *                                                          #
