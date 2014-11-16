@@ -101,32 +101,16 @@ int TMakePartitionCommand::Make(TDisc *Disc, const char *FsName, int Size)
 {
     TIdeDiscPartition *DiscPart;
     TGptDiscPartition *GptDisc;
-    TPartition *Entry;
-    TIdePartition *IdeEntry;
     int ok;
     char *BootCode;
     int BootSize;
-    int isgpt = FALSE;
 
     if (Disc->IsValid())
     {
         BootCode = new char[512];
         BootSize = RdosReadBinaryResource(0, 100, BootCode, 0x1BE);
 
-        DiscPart = new TIdeDiscPartition(Disc);
-
-        if (DiscPart->PartCount > 0)
-        {
-            Entry = DiscPart->PartArr[0];
-            if (!Entry->IsFree())
-            {
-                IdeEntry = (TIdePartition *)Entry;
-                if (IdeEntry->GetType() == 0xEE)
-                    isgpt = TRUE;
-            }
-        }
-
-        if (isgpt)
+        if (Disc->IsGpt())
         {
             GptDisc = new TGptDiscPartition(Disc);
             GptDisc->Read();
@@ -137,10 +121,13 @@ int TMakePartitionCommand::Make(TDisc *Disc, const char *FsName, int Size)
             delete GptDisc;
         }
         else
+        {
+            DiscPart = new TIdeDiscPartition(Disc);
             ok = DiscPart->Add(FsName, Size, BootCode, BootSize);
+            delete DiscPart;
+        }
 
         delete BootCode;
-        delete DiscPart;
 
         if (ok)
             return 0;
