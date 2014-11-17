@@ -2179,6 +2179,9 @@ calc_best_loop:
 ;
     mov esi,ebx
     mov edi,eax
+;
+    or edi,edi
+    jz calc_best_done
 
 calc_best_next:
     sub ebx,1
