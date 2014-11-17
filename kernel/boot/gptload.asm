@@ -88,19 +88,6 @@ gpe_name                DB 36 DUP(?)
 
 gpt_entry_struc ENDS
 
-part_struc      STRUC
-
-part_status                 DB ?
-part_start_head         DB ?
-part_start_cyl_sector   DW ?
-part_type                   DB ?
-part_end_head           DB ?
-part_end_cyl_sector         DW ?
-part_start_sector           DD ?
-part_sectors            DD ?
-
-part_struc      ENDS
-
 fat_dir_struc   STRUC
 
 fat_base        DB 8 DUP(?)
@@ -2011,15 +1998,9 @@ fs_fat32:
 
 save_fs:
     mov cs:FatSize,al     ; calc this one
-
-    call WriteHexByte
-
-stopl:
-    jmp stopl
-
+;
     mov al,ds:boot_media
     mov cs:BootMedia,al
-;
 ;    
     movzx eax,ds:boot_resv_sectors
     add eax,cs:BootSector
