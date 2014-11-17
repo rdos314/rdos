@@ -278,6 +278,30 @@ TDisc *TGptDiscPartition::GetDisc()
     return FDisc;
 }
 
+/*##################  TGptDiscPartition::GetStart  #############
+*   Purpose....: Get start of disc
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+long long TGptDiscPartition::GetStart()
+{
+    return FPartHeader->FirstLba;
+}
+
+/*##################  TGptDiscPartition::GetEnd  #############
+*   Purpose....: Get end of disc
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+long long TGptDiscPartition::GetEnd()
+{
+    return FPartHeader->LastLba;
+}
+
 /*##################  TGptDiscPartition::ReadGpt  #############
 *   Purpose....: Read GPT table
 *   In params..: *                                                        #

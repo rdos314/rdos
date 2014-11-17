@@ -66,6 +66,8 @@ public:
     int Remove(long long Lba);
 
     TDisc *GetDisc();
+    long long GetStart();
+    long long GetEnd();
 
     TGptPartition *PartArr[MAX_GPT_PART_COUNT];
     int PartCount;

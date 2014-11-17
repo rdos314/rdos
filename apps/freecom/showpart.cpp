@@ -363,6 +363,7 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
     long long TotalSectors = Disc->GetTotalSectors();
     long long Start;
     long long End;
+    long long CurrLba;
     int DriveNr;
 
     DiscPart = new TGptDiscPartition(Disc);
@@ -376,10 +377,24 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
     FMsg.Load(TEXT_SHOWPART_GPT_HEADER);
     Write(FMsg.GetData());
 
+    CurrLba = DiscPart->GetStart();
+
     for (i = 0; i < DiscPart->PartCount; i++)
     {
-
         Entry = DiscPart->PartArr[i];
+
+        if (CurrLba < Entry->Start)
+        {
+            Start = CurrLba;
+            End = Entry->Start - 1;
+            TotalSpace = (double)(Entry->Start - CurrLba) * (double)512 / (double)0x100000;
+            sprintf(str,
+                    "-: -- %04lX_%08lX-%04lX_%08lX     Free %8ld MB \r\n",
+                    (int)(Start >> 32), (int)(Start & 0xFFFFFFFF),
+                    (int)(End >> 32), (int)(End & 0xFFFFFFFF),
+                    (int)TotalSpace);
+            Write(str);        
+        }
 
         memcpy(name, Entry->Name, 8);
         name[8] = 0;
@@ -411,6 +426,21 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
                     (int)TotalSpace,
                     guid);
 
+        Write(str);        
+
+        CurrLba = Entry->Start + Entry->Size + 1;
+    }
+
+    if (CurrLba < DiscPart->GetEnd())
+    {
+        Start = CurrLba;
+        End = DiscPart->GetEnd();
+        TotalSpace = (double)(End - Start + 1) * (double)512 / (double)0x100000;
+        sprintf(str,
+                "-: -- %04lX_%08lX-%04lX_%08lX     Free %8ld MB \r\n",
+                (int)(Start >> 32), (int)(Start & 0xFFFFFFFF),
+                (int)(End >> 32), (int)(End & 0xFFFFFFFF),
+                (int)TotalSpace);
         Write(str);        
     }
 
