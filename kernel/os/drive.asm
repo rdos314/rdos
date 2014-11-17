@@ -1900,7 +1900,7 @@ set_param_max:
     mov ds:disc_cached_sectors,0
 ;
     mov ecx,OFFSET disc_unit_arr
-    movzx eax,dx
+    mov eax,edx
     shl eax,2
     add eax,ecx
     AllocateSmallGlobalMem
@@ -1910,7 +1910,7 @@ set_param_max:
 ;
     xor eax,eax
     movzx edi,di
-    movzx ecx,dx
+    mov ecx,edx
     rep stos dword ptr es:[edi]
 ;
     mov si,ds

@@ -107,7 +107,7 @@ disc_handle             DW ?
 
 disc_sectors            DD ?
 disc_sectors_per_unit   DW ?
-disc_units              DW ?
+disc_units              DD ?
 
 disc_drive_arr          DW 4 DUP(?)
 
@@ -181,51 +181,90 @@ code    SEGMENT byte public 'CODE'
 CalcParam       Proc near
     pushad
 ;
-    mov eax,1
-    mov edx,fs:disc_sectors
+    mov ebx,1
+    mov eax,fs:disc_sectors
+    xor edx,edx
 
 calc_param_norm_loop:
-    shl eax,1
+    shl ebx,1
+    cmp ebx,10000h
+    je calc_param_done
+;
     shr edx,1
-    cmp eax,edx
-    jc calc_param_norm_loop
+    rcr eax,1
 ;
-    mov esi,edx
-    mov ebx,esi
-    mov ecx,edx
-
-calc_param_chs_loop:
-    xor edx,edx
-    mov eax,fs:disc_sectors
-    div esi
-    cmp ecx,edx
-    jc calc_param_chs_next
-;       
-    mov ecx,edx
-    mov ebx,esi
     or edx,edx
-    jz calc_param_chs_ok
+    jnz calc_param_norm_loop
+;    
+    cmp ebx,eax
+    jc calc_param_norm_loop
 
-calc_param_chs_next:
-    inc esi
-    cmp esi,eax
-    jbe calc_param_chs_loop
+calc_param_done:
+    cmp eax,10000h
+    jc calc_param_in_range
 ;
+    mov eax,0FFFFh
+
+calc_param_in_range:    
+    movzx ebx,ax
+
+    mov fs:disc_sectors_per_unit,ax
+    mov eax,fs:disc_sectors
+    xor edx,edx
+    div ebx
+    mov fs:disc_units,eax
+
+calc_norm_loop:
+    movzx eax,fs:disc_sectors_per_unit
+    mul fs:disc_units
+    sub eax,fs:disc_sectors
+    jnc calc_norm_ok
+;
+    add fs:disc_sectors_per_unit,1
+    jnc calc_norm_loop
+;
+    dec fs:disc_sectors_per_unit
+    inc fs:disc_units
+    jmp calc_norm_loop
+
+calc_norm_ok:
+    movzx eax,fs:disc_sectors_per_unit
+    mov esi,ebx
+    mov edi,-1
+    mov ecx,1000h
+
+calc_best_loop:    
     xor edx,edx
     mov eax,fs:disc_sectors
     div ebx
+    mul ebx
+    sbb eax,fs:disc_sectors
+    neg eax
+;
+    cmp eax,edi
+    ja calc_best_next
+;
+    mov esi,ebx
+    mov edi,eax
+    or edi,edi
+    jz calc_best_done
 
-calc_param_chs_ok:
-    mov edx,eax
-    mov eax,ebx
-;
-    mov fs:disc_sectors_per_unit,ax
-    mov fs:disc_units,dx
-    mul dx
-    push dx
-    push ax
-    pop fs:disc_sectors
-;
+calc_best_next:
+    sub ebx,1
+    jz calc_best_done
+;    
+    loop calc_best_loop 
+
+calc_best_done:    
+    mov ebx,esi
+    mov fs:disc_sectors_per_unit,bx
+    xor edx,edx
+    mov eax,fs:disc_sectors
+    div ebx
+    mov fs:disc_units,eax
+    mul ebx
+    mov fs:disc_sectors,eax
+;    
     popad
     ret
 CalcParam       Endp
@@ -1891,7 +1930,7 @@ dtOk:
 ;
     call CalcParam
     mov ax,fs:disc_sectors_per_unit
-    movzx edx,fs:disc_units
+    mov edx,fs:disc_units
     mov cx,512
     mov si,-1
     mov di,-1

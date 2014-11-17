@@ -356,6 +356,12 @@ void TGptDiscPartition::ReadOtherGpt()
     int Valid = FALSE;
     long long Lba = FPartHeader->OtherLba;
 
+    if (Lba >= FDisc->GetTotalSectors())
+    {
+        Lba = FDisc->GetTotalSectors() - 1;
+        FPartHeader->OtherLba = Lba;
+    }        
+
     FDisc->Read(Lba, FSecondaryHeader, 512);
 
     PartHeader = (struct TPartHeader *)FSecondaryHeader;
