@@ -848,6 +848,7 @@ ReadCapacity Proc near
     xchg al,ah
     rol eax,16
     xchg al,ah
+    inc eax
     mov fs:disc_sectors,eax
     clc
 

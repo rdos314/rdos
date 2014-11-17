@@ -31,6 +31,7 @@
 #include "cmd.h"
 #include "cmdfact.h"
 #include "idepart.h"
+#include "gptpart.h"
 
 class TRemovePartitionFactory : public TCommandFactory
 {
@@ -52,6 +53,8 @@ protected:
 
     int Confirm(TIdeFsPartition *Part);
     int Remove(TIdeFsPartition *Part);
+    int Remove(TGptPartition *Part);
+    int Confirm(TGptPartition *Part);
     int RemovePart();
     int RemoveDisc();
         

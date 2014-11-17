@@ -217,6 +217,70 @@ int TRemovePartitionCommand::RemovePart()
 
 /*##########################################################################
 #
+#   Name       : TRemovePartitionCommand::Confirm
+#
+#   Purpose....: Confirm removing partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRemovePartitionCommand::Confirm(TGptPartition *Part)
+{
+    char DriveStr[4];
+    char str[40];
+    int DriveNr;
+
+    DriveNr = FDisc->GetDrive(Part->Start, Part->Size);
+
+    if (DriveNr)
+    {
+        DriveStr[0] = 'A' + DriveNr;
+        DriveStr[1] = ':';
+        DriveStr[2] = 0;   
+
+        sprintf(str, "%3.3f MB", Part->GetTotalSpace());
+
+        FMsg.printf(TEXT_RMPART_DRIVE_HEAD, DriveStr, str);
+        Write(FMsg.GetData());
+    }
+    else
+    {
+        sprintf(str, "%3.3f MB", Part->GetTotalSpace());
+
+        FMsg.printf(TEXT_RMPART_PART_HEAD, FPartNr, FDisc->GetDiscNr(), str);
+        Write(FMsg.GetData());
+    }
+
+    if (FMsg.UserPrompt(PROMPT_RMPART) == 1)
+        return TRUE;
+
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRemovePartitionCommand::Remove
+#
+#   Purpose....: Remove a partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRemovePartitionCommand::Remove(TGptPartition *Part)
+{
+    if (!FOptY)
+        if (!Confirm(Part))
+            return 1;
+
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TRemovePartitionCommand::RemoveDisc
 #
 #   Purpose....: Remove a partition on selected disc
@@ -228,15 +292,41 @@ int TRemovePartitionCommand::RemovePart()
 ##########################################################################*/
 int TRemovePartitionCommand::RemoveDisc()
 {
+    TGptDiscPartition *GptDisc;
+
     if (FDisc->IsValid())
     {
-        FDiscPart = new TIdeDiscPartition(FDisc);
-        if (RemovePart() == 0)
+        if (FDisc->IsGpt())
         {
-            delete FDiscPart;
-            return 0;
+            GptDisc = new TGptDiscPartition(FDisc);
+            GptDisc->Read();
+
+            if (FPartNr >= 0 && FPartNr < GptDisc->PartCount)
+            {
+                if (GptDisc->PartArr[FPartNr])
+                {
+                    if (Remove(GptDisc->PartArr[FPartNr]) == 0)
+                    {
+                        GptDisc->Remove(GptDisc->PartArr[FPartNr]->Start);
+                        GptDisc->Write();
+                        delete GptDisc;
+                        return 0;
+                    }
+                }
+            }
+
+            delete GptDisc;
         }
-        delete FDiscPart;
+        else
+        {
+            FDiscPart = new TIdeDiscPartition(FDisc);
+            if (RemovePart() == 0)
+            {
+                delete FDiscPart;
+                return 0;
+            }
+            delete FDiscPart;
+        }
     }
 
     FMsg.printf(TEXT_SHOWPART_DISC_ERROR, FDisc->GetDiscNr());

@@ -62,7 +62,8 @@ public:
     void Read();
     void Write();
 
-        int Add(const char *FsName, long Size, const char *BootCode, int BootSize);
+    int Add(const char *FsName, long Size, const char *BootCode, int BootSize);
+    int Remove(long long Lba);
 
     TDisc *GetDisc();
 

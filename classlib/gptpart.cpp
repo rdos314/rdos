@@ -762,7 +762,7 @@ long long TGptDiscPartition::GetFreeLba(long long Size)
     {
         if (CurrEntry->FirstLba)
         {
-            if (CurrEntry->FirstLba - Lba > Size)
+            if (CurrEntry->FirstLba - Lba >= Size)
                 return Lba;
 
             Lba = CurrEntry->LastLba + 1;
@@ -853,6 +853,42 @@ int TGptDiscPartition::Add(const char *FsName, long Size, const char *BootCode, 
             else
                 return RdosFormatDrive(FDisc->GetDiscNr(), Lba, ReqSize, FsName);
         }
+    }
+    return FALSE;
+}
+
+/*##################  TGptDiscPartition::Remove  #############
+*   Purpose....: Remove entry
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+int TGptDiscPartition::Remove(long long Lba)
+{
+    int pos = 0;
+    int i;
+    struct TPartEntry *CurrEntry;
+
+    CurrEntry = FPartEntry;
+
+    for (pos = 0; pos < FPartHeader->EntryCount; pos++)
+    {
+        if (CurrEntry->FirstLba)             
+        {
+            if (Lba == CurrEntry->FirstLba)
+            {
+                for (i = pos + 1; i < FPartHeader->EntryCount; i++)
+                    FPartEntry[i - 1] = FPartEntry[i];
+
+                memset(&FPartEntry[FPartHeader->EntryCount - 1], 0, sizeof(struct TPartEntry));
+                return TRUE;
+            }
+        }
+        else
+            break;
+
+        CurrEntry++;
     }
     return FALSE;
 }
