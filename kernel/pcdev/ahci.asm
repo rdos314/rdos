@@ -2797,6 +2797,7 @@ InstallEfiGptEntry     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InstallStdGptEntry    Proc near
+    mov eax,dword ptr es:[edi].gpe_part_guid
     cmp eax,0EBD0A0A2h
     jne isgpeDone
 ;
