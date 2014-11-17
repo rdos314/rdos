@@ -58,8 +58,10 @@ protected:
     void UpdateBootSector(TDisc *Disc, int IdeDisc);
 	void WriteBootLoader(TDisc *Disc);
 
-    void WriteGptBootSector(TDisc *Disc);
-    void InitGpt(TDisc *Disc);
+    void LoadGptLoader(TDisc *Disc);
+	void WriteGptSector(TDisc *Disc, int IdeDisc);
+    void WriteGptLoader(TDisc *Disc);
+    void InitGpt(TDisc *Disc, int IdeDisc);
 
     int FLoaderSectors;
 	int FOptR;

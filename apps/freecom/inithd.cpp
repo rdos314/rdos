@@ -303,7 +303,28 @@ void TInitHdCommand::UpdateBootSector(TDisc *Disc, int IdeDisc)
 
 /*##########################################################################
 #
-#   Name       : TInitHdCommand::WriteGptBootSector
+#   Name       : TInitHdCommand::LoadGptLoader
+#
+#   Purpose....: Load GPT boot loader into memory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TInitHdCommand::LoadGptLoader(TDisc *Disc)
+{
+        FBootLoader = new char[512 * 16];
+
+        memset(FBootLoader, 0, 512 * 16);
+        FLoaderSize = RdosReadBinaryResource(0, 104, FBootLoader, 512 * 16);
+
+        FLoaderSectors = 16;
+}
+
+/*##########################################################################
+#
+#   Name       : TInitHdCommand::WriteGptSector
 #
 #   Purpose....: Write GPT boot sector
 #
@@ -312,16 +333,18 @@ void TInitHdCommand::UpdateBootSector(TDisc *Disc, int IdeDisc)
 #   Returns....: *
 #
 ##########################################################################*/
-void TInitHdCommand::WriteGptBootSector(TDisc *Disc)
+void TInitHdCommand::WriteGptSector(TDisc *Disc, int IdeDisc)
 {
     char *BootSector;
     long long Total;
     TBootParam bootp;
 
     Total = Disc->GetTotalSectors();
+
+    bootp.BytesPerSector = Disc->GetBytesPerSector();
     if (Total > 0xFFFFFFFF)
         Total = 0xFFFFFFFF;
-    
+
     bootp.BytesPerSector = Disc->GetBytesPerSector();
     bootp.Resv1 = 0;
     bootp.MappingSectors = 0;
@@ -334,7 +357,7 @@ void TInitHdCommand::WriteGptBootSector(TDisc *Disc)
     bootp.Heads = Disc->GetHeads();
     bootp.HiddenSectors = 0;
     bootp.Sectors = Total;
-    bootp.Drive = 0x80;
+    bootp.Drive = 0x80 + IdeDisc;
     bootp.Resv7 = 0;
     bootp.Signature = 0;
     bootp.Serial = 0;
@@ -346,19 +369,45 @@ void TInitHdCommand::WriteGptBootSector(TDisc *Disc)
     Disc->Read(0, BootSector, 512);
 
     memset(BootSector, 0, 0x1FE);
+
+    RdosReadBinaryResource(0, 103, BootSector, 0x1BE);
     *(BootSector + 0x1FE) = 0x55;
     *(BootSector + 0x1FF) = 0xAA;
-    RdosReadBinaryResource(0, 100, BootSector, 0x1BE);
 
     *(BootSector + 0x1BE + 4) = 0xEE;
-    *(long *)(BootSector + 0x1BE + 8) = 34;
-    *(long *)(BootSector + 0x1BE + 0xC) = Total - 34;
+    *(long *)(BootSector + 0x1BE + 8) = 0x22;
+    *(long *)(BootSector + 0x1BE + 0xC) = Total - 0x22;
 
     memcpy(BootSector + 11, &bootp, sizeof(bootp));
 
     Disc->Write(0, BootSector, 512);
 
     delete BootSector;
+}
+
+/*##########################################################################
+#
+#   Name       : TInitHdCommand::WriteGptLoader
+#
+#   Purpose....: Write GPT boot loader
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TInitHdCommand::WriteGptLoader(TDisc *Disc)
+{
+        int Sector;
+        char *ptr;
+
+        ptr = FBootLoader;
+
+        for (Sector = 0x22; Sector < 0x32; Sector++)
+        {
+            Disc->Write(Sector, ptr, 512);
+            ptr += 512;
+        }
 }
 
 /*##########################################################################
@@ -372,11 +421,13 @@ void TInitHdCommand::WriteGptBootSector(TDisc *Disc)
 #   Returns....: *
 #
 ##########################################################################*/
-void TInitHdCommand::InitGpt(TDisc *Disc)
+void TInitHdCommand::InitGpt(TDisc *Disc, int DiscNr)
 {
     TGptDiscPartition Part(Disc);
 
-    WriteGptBootSector(Disc);
+    LoadGptLoader(Disc);
+    WriteGptLoader(Disc);
+    WriteGptSector(Disc, DiscNr);            
     Part.Write();
 }
 
@@ -433,7 +484,7 @@ int TInitHdCommand::Execute(char *param)
 
         if (ok && FOptG)
         {
-            InitGpt(Disc);
+            InitGpt(Disc, DiscNr);
             return 0;
         }
 
