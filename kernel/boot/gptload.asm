@@ -168,7 +168,6 @@ DataSector      DD 0
 SectorsPerFat       DD 0
 CurrentCluster      DD 0
 RootEntries     DW 0
-PartType        DB 0
 FatSize         DB 0
 SafeBoot        DB 0
 SectorsPerCluster   DW 0
@@ -176,6 +175,8 @@ ImageSize       DD 0
 CurrFatSector       DD 0
 
 Tics        DD ?
+
+FsName          DB 10 DUP(?)
 
 OrgTimerVect    DD ?
 BootMedia       DB 0
@@ -1688,25 +1689,8 @@ InvalidDisc db 'Cannot read disc', 0Dh, 0Ah, 0
 InvalidGpt db 'Invalid GPT table', 0Dh, 0Ah, 0
 InvalidCrc db 'Invalid GPT CRC', 0Dh, 0Ah, 0
 MissingPart db 'No Partition to boot from', 0Dh, 0Ah, 0
+InvalidFs db 'Unknown filesystem', 0Dh, 0Ah, 0
 BootNotFound db 'Cannot find boot image', 0Dh, 0Ah, 0
-
-PartTypeTab:
-p00 DB 0
-p01 DB 12
-p02 DB 0
-p03 DB 0
-p04 DB 16
-p05 DB 0
-p06 DB 16
-p07 DB 0
-p08 DB 0
-p09 DB 0
-p0A DB 0
-p0B DB 32
-p0C DB 32
-p0D DB 0
-p0E DB 0
-p0F DB 0
 
 read_part_error:
     mov si,OFFSET InvalidDisc
@@ -1725,6 +1709,11 @@ read_crc_error:
 
 missing_part_error:
     mov si,OFFSET MissingPart
+    call WriteAsciiz
+    jmp part_stop
+
+fs_error:
+    mov si,OFFSET InvalidFs
     call WriteAsciiz
     jmp part_stop
 
@@ -1924,37 +1913,113 @@ find_data_part_next:
     jmp missing_part_error
 
 find_data_part_ok:
-    mov si,OFFSET ok_text
-    call WriteAsciiz
-;
-stopl:
-    jmp stopl
-    
-read_part_ok:
-    mov bx,1BEh
-    mov si,bx
-    mov al,[bx].part_type
-    mov cs:PartType,al
-;    
-    mov edx,[bx].part_start_sector
+    mov edx,es:[di].gpe_first_lba
     mov cs:BootSector,edx
     xor bx,bx
     call ReadSector
     jc read_part_error
 ;
+    mov bx,OFFSET FsName
+    xor si,si
+    mov al,ds:[si+3]
+    cmp al,'M'
+    je find_type_dos
+;
+    cmp al,'m'
+    je find_type_linux
+;
+    cmp al,'R'
+    je find_type_linux
+;
+    add si,3
+    jmp find_copy_fs_name
+
+find_type_linux:
+    add si,36h
+    jmp find_copy_fs_name
+
+find_type_dos:
+    add si,52h
+
+find_copy_fs_name:
+    mov cx,8
+
+find_copy_name_loop:    
+    mov al,ds:[si]
+    or al,al
+    jz find_copy_name_done
+;
+    cmp al,' '
+    jz find_copy_name_done
+;
+    mov cs:[bx],al
+    inc bx
+    inc si
+    loop find_copy_name_loop
+
+find_copy_name_done:
+    xor al,al
+    mov cs:[bx],al
+;
+    mov si,OFFSET FsName
+    mov al,cs:[si]
+    cmp al,'F'
+    jne fs_error
+;
+    inc si
+    mov al,cs:[si]
+    cmp al,'A'
+    jne fs_error
+;
+    inc si
+    mov al,cs:[si]
+    cmp al,'T'
+    jne fs_error
+;
+    inc si
+    mov al,cs:[si]
+    cmp al,'3'
+    je possible_fat32
+;
+    cmp al,'1'
+    jne fs_error
+;
+    inc si
+    mov al,cs:[si]
+    cmp al,'2'
+    je fs_fat12
+;
+    cmp al,'6'
+    jne fs_error
+
+fs_fat16:
+    mov al,16
+    jmp save_fs
+
+fs_fat12:
+    mov al,12
+    jmp save_fs
+
+possible_fat32:
+    inc si
+    mov al,cs:[si]
+    cmp al,'2'
+    jne fs_error
+
+fs_fat32:
+    mov al,32
+
+save_fs:
+    mov cs:FatSize,al     ; calc this one
+
+    call WriteHexByte
+
+stopl:
+    jmp stopl
+
     mov al,ds:boot_media
     mov cs:BootMedia,al
-;    
-    mov al,cs:PartType
-    cmp al,10h
-    jae read_part_error
 ;
-    mov bx,OFFSET PartTypeTab
-    xlat byte ptr cs:PartTypeTab
-    or al,al
-    je read_part_error
-;
-    mov cs:FatSize,al     
 ;    
     movzx eax,ds:boot_resv_sectors
     add eax,cs:BootSector

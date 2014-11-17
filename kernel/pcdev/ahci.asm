@@ -2618,6 +2618,9 @@ GetFsName   Proc near
     cmp al,'m'
     je gfnLinux    
 ;
+    cmp al,'R'
+    je gfnLinux    
+;
     add esi,3
     jmp gfnCopyName
 
