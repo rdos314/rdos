@@ -1687,6 +1687,7 @@ LoadMsg     db 0Dh,0Ah,'Loading Rdos operating system',0
 InvalidDisc db 'Cannot read disc', 0Dh, 0Ah, 0
 InvalidGpt db 'Invalid GPT table', 0Dh, 0Ah, 0
 InvalidCrc db 'Invalid GPT CRC', 0Dh, 0Ah, 0
+MissingPart db 'No Partition to boot from', 0Dh, 0Ah, 0
 BootNotFound db 'Cannot find boot image', 0Dh, 0Ah, 0
 
 PartTypeTab:
@@ -1720,6 +1721,12 @@ read_gpt_error:
 read_crc_error:
     mov si,OFFSET InvalidCrc
     call WriteAsciiz
+    jmp part_stop
+
+missing_part_error:
+    mov si,OFFSET MissingPart
+    call WriteAsciiz
+    jmp part_stop
 
 part_stop:
     jmp part_stop
@@ -1890,6 +1897,33 @@ read_gpt_loop:
     cmp eax,es:gpt_entry_crc32
     jne read_gpt_error
 ;
+    mov ecx,es:gpt_entry_count
+    mov edi,200h
+
+find_data_part_loop:
+    mov eax,dword ptr es:[di].gpe_part_guid
+    cmp eax,0EBD0A0A2h
+    jne find_data_part_next
+;
+    mov eax,dword ptr es:[di].gpe_part_guid+4
+    cmp eax,4433B9E5h
+    jne find_data_part_next
+;    
+    mov eax,dword ptr es:[di].gpe_part_guid+8
+    cmp eax,0B668C087h
+    jne find_data_part_next
+;    
+    mov eax,dword ptr es:[di].gpe_part_guid+12
+    cmp eax,0C79926B7h
+    je find_data_part_ok
+
+find_data_part_next:
+    add di,128 
+    loop find_data_part_loop
+;
+    jmp missing_part_error
+
+find_data_part_ok:
     mov si,OFFSET ok_text
     call WriteAsciiz
 ;
