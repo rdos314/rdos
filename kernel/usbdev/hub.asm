@@ -583,21 +583,21 @@ InitPorts    Endp
 ;
 ;   DESCRIPTION:    Attach thread
 ;
-;   PARAMETERS:     GS      Hub selector
-;                   FS      Device selector
-;                   BX      Port #
+;   PARAMETERS:     BX      Port #
+;                   DX      Hub selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 attach_thread_name  DB 'Hub Attach', 0
 
 attach_thread:
+    mov gs,dx
+    mov ds,gs:hub_dev_sel
+;    
     mov si,bx
     dec bx
     shl bx,5
     add bx,OFFSET hub_port_arr
-    mov ax,fs
-    mov ds,ax
 ;
     mov al,gs:[bx].hps_dev_port
     or al,al
@@ -677,21 +677,21 @@ atDone:
 ;
 ;   DESCRIPTION:    Detach thread
 ;
-;   PARAMETERS:     GS      Hub selector
-;                   FS      Device selector
-;                   BX      Port #
+;   PARAMETERS:     BX      Port #
+;                   DX      Hub selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 detach_thread_name  DB 'Hub Detach', 0
 
 detach_thread:
+    mov gs,dx
+    mov ds,gs:hub_dev_sel
+;
     mov si,bx
     dec bx
     shl bx,5
     add bx,OFFSET hub_port_arr
-    mov ax,fs
-    mov ds,ax
 ;    
     GetThread
     mov gs:[bx].hps_detach_thread,ax
@@ -805,8 +805,7 @@ uopResetOk:
     mov gs:[bx].hps_timeout,eax
     mov gs:[bx].hps_timeout+4,edx
 ;
-    mov bx,ds
-    mov fs,bx
+    mov dx,gs
     mov bx,si
 ;
     push ds
@@ -839,8 +838,7 @@ uopNotConnected:
     mov gs:[bx].hps_timeout,eax
     mov gs:[bx].hps_timeout+4,edx
 ;
-    mov bx,ds
-    mov fs,bx
+    mov dx,gs
     mov bx,si
 ;
     push ds
@@ -946,8 +944,7 @@ UpdateClosedPort    Proc near
     mov gs:[bx].hps_timeout,eax
     mov gs:[bx].hps_timeout+4,edx
 ;
-    mov bx,ds
-    mov fs,bx
+    mov dx,gs
     mov bx,si
 ;
     push ds
