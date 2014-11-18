@@ -2005,11 +2005,15 @@ stop_disc_request   Proc far
     push ds
     push bx
 ;
+    or bx,bx
+    jz sdrDone
+;    
     mov ds,bx
     or ds:disc_flags,DISC_FLAG_STOPPED
     mov bx,ds:disc_thread
     Signal
-;
+
+sdrDone:
     pop bx
     pop ds
     retf32
