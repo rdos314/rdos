@@ -401,8 +401,9 @@ void cdecl main()
         Mouse->OnRightDown = RightDown;
 
 //        vbe = new TVideoGraphicDevice(24, 1366, 768);
+      vbe = new TVideoGraphicDevice(24, 1280, 800);
 //        vbe = new TVideoGraphicDevice(24, 640, 480);
-      vbe = new TVideoGraphicDevice(24, 800, 600);
+//      vbe = new TVideoGraphicDevice(24, 800, 600);
 //      vbe = new TVideoGraphicDevice(1, 240, 128);
 
         ControlThread = new TDisplayControlThread("Control thread", vbe);

@@ -423,6 +423,7 @@ init_usb_device Proc far
     push cx
     push di
 ;
+    InitSection ds:usb_section
     mov ax,ds
     mov es,ax
     mov cx,MAX_USB_HUB_PORTS
@@ -528,11 +529,34 @@ CreateDefaultControl    Proc near
     pop ax
 ;  
     mov fs:usbp_address,al
+;
+    mov cx,100    
+
+cdcLoop:
+    call fword ptr ds:is_transfer_done_proc
+    jnc cdcDone
+;
+    call fword ptr ds:is_connected_proc
+    jc cdcFail
+;
+    mov ax,25
+    WaitMilliSec
+;
+    loop cdcLoop
+
+cdcFail:
+    int 3
+    stc
+    pushf
+    jmp cdcUnlock
+            
+cdcDone:    
     call fword ptr ds:wait_for_completion_proc
     pushf
     FreeMem
     call fword ptr ds:change_address_proc
-;
+
+cdcUnlock:
     push ds
     mov cx,SEG data
     mov ds,cx

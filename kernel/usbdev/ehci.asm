@@ -2573,6 +2573,7 @@ ResetPipe   Proc far
     jmp repDone
        
 repNoHub:
+    int 3
     mov es,fs:usbp_function_sel
     mov cl,es:usbf_port
     mov ax,1
@@ -2810,8 +2811,10 @@ attach_thread:
     movzx di,cl
     add di,di
 ;    
+    EnterSection ds:usb_section    
     GetThread
     mov ds:[di].usb_attach_thread_arr,ax
+    LeaveSection ds:usb_section
 ;
     mov dx,10
 
@@ -2929,7 +2932,9 @@ atUnlock:
     UnlockUsb
 
 atDone:
+    EnterSection ds:usb_section
     mov ds:[di].usb_attach_thread_arr,0
+    LeaveSection ds:usb_section
     TerminateThread
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2957,13 +2962,17 @@ detach_thread:
     movzx di,cl
     add di,di
 ;    
+    EnterSection ds:usb_section
     GetThread
     mov ds:[di].usb_detach_thread_arr,ax
+    LeaveSection ds:usb_section
 ;    
     mov al,cl
     NotifyUsbDetach
 ;
+    EnterSection ds:usb_section
     mov ds:[di].usb_detach_thread_arr,0
+    LeaveSection ds:usb_section    
     TerminateThread
 
     
@@ -2992,8 +3001,10 @@ reset_thread:
     movzx di,cl
     add di,di
 ;    
+    EnterSection ds:usb_section
     GetThread
     mov ds:[di].usb_reset_thread_arr,ax
+    LeaveSection ds:usb_section
 ;    
     mov eax,es:[si].HcPortSc
     and al,NOT 4
@@ -3034,7 +3045,9 @@ rtUnlock:
     UnlockUsb    
 
 rtDone:
+    EnterSection ds:usb_section
     mov ds:[di].usb_reset_thread_arr,0
+    LeaveSection ds:usb_section
     TerminateThread
         
         
@@ -3190,7 +3203,15 @@ upCheckTimeout:
     sbb edx,ds:[di].usb_timeout_arr+4
     jc upDone
 ;
+    EnterSection ds:usb_section
+    mov bx,ds:[di].usb_attach_thread_arr
+    or bx,bx
+    jz upAttachSignalled
+;
     Signal
+
+upAttachSignalled:    
+    LeaveSection ds:usb_section
     jmp upDone    
 
 upCheckDetach:    
@@ -3204,7 +3225,15 @@ upCheckDetach:
     sbb edx,ds:[di].usb_timeout_arr+4
     jc upDone
 ;
+    EnterSection ds:usb_section
+    mov bx,ds:[di].usb_detach_thread_arr
+    or bx,bx
+    jz upDetachSignalled
+;
     Signal
+
+upDetachSignalled:
+    LeaveSection ds:usb_section
     jmp upDone
             
 upCheckReset:    
@@ -3218,7 +3247,15 @@ upCheckReset:
     sbb edx,ds:[di].usb_timeout_arr+4
     jc upDone
 ;
+    EnterSection ds:usb_section
+    mov bx,ds:[di].usb_reset_thread_arr
+    or bx,bx
+    jz upResetSignalled
+;    
     Signal
+
+upResetSignalled:    
+    LeaveSection ds:usb_section
                 
 upDone:    
     popad

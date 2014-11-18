@@ -127,6 +127,8 @@ is_stalled_proc      DD ?,?
 ;  IN FS        Clear stalled
 clear_stalled_proc      DD ?,?
 
+usb_section            section_typ <>
+
 usb_controller_id      DW ?
 usb_port_sel_arr       DW MAX_USB_HUB_PORTS DUP(?)
 usb_attach_thread_arr  DW MAX_USB_HUB_PORTS DUP(?)
