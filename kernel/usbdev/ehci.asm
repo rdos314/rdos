@@ -3198,6 +3198,7 @@ upCheckTimeout:
     or bx,bx
     jz upAttachSignalled
 ;
+    int 3
     Signal
 
 upAttachSignalled:    
@@ -3219,6 +3220,7 @@ upCheckDetach:
     or bx,bx
     jz upDetachSignalled
 ;
+    int 3
     Signal
 
 upDetachSignalled:
@@ -3240,6 +3242,7 @@ upCheckReset:
     or bx,bx
     jz upResetSignalled
 ;    
+    int 3
     Signal
 
 upResetSignalled:    
