@@ -1836,21 +1836,6 @@ void __far ImplSetHidIdle(struct THidReportIdEntry *report, int value)
 
 /*##########################################################################
 #
-#   Name       : Test gate
-#
-##########################################################################*/
-
-#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
-void __far ImplTestGate(const char *msg)
-{
-    int Sel = RdosPointerToSelector(HidArr[1]);
-    int Val;
-
-//    Val = RdosGetSignedHidOutput(Sel, 0x801);    
-}
-
-/*##########################################################################
-#
 #   Name       : AddReportItemSigned
 #
 #   Purpose....: Add report item signed value
@@ -2718,6 +2703,7 @@ void CreateHid(int controller, int device, char *config)
 
             sprintf(ThreadName, "Hid %02hX.%02hX", controller, device);
             RdosCreateKernelThread(5, 0x1000, HidThread, ThreadName, dev);
+
             break;
         }
     }
@@ -2796,6 +2782,20 @@ struct THidDevice *GetHid(int controller, int device)
 
 /*##########################################################################
 #
+#   Name       : Test gate
+#
+##########################################################################*/
+
+#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
+void __far ImplTestGate(const char *msg)
+{
+    struct THidDevice *dev = HidArr[0];
+
+    HidThread(dev);
+}
+
+/*##########################################################################
+#
 #   Name       : main
 #
 #   Purpose....: Initialization
@@ -2833,7 +2833,7 @@ int main()
     RdosRegisterBimodalUserGate(usergate_get_hid_report_output_data, (__rdos_gate_callback *)&ImplGetHidReportOutputData, "Get Hid Report Output Data"); 
     RdosRegisterBimodalUserGate(usergate_get_hid_report_feature_data, (__rdos_gate_callback *)&ImplGetHidReportFeatureData, "Get Hid Report Feature Data"); 
 
-//    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate");
+    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate");
 
     return TRUE;
 }
