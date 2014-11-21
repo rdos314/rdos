@@ -346,8 +346,11 @@ int OpenHid(struct THidDevice *dev)
         return TRUE;
     else
     {
-        CloseHid(dev);
-        return FALSE;
+        dev->ItemCount = 0;
+        dev->ReportDescrSize = 0;
+        return TRUE;
+//        CloseHid(dev);
+//        return FALSE;
     }
 }
 

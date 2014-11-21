@@ -104,7 +104,7 @@ void THidCommand::ShowDevices()
     int ReportNr;
     int ObjNr;
 
-    for (DevNr = 0; DevNr < 0x1000; DevNr++)
+    for (DevNr = 0; DevNr < 0x40; DevNr++)
     {
         ok = RdosGetHidReportItem(DevNr, 0, ItemName);
         if (ok)
@@ -194,10 +194,9 @@ void THidCommand::ShowDevices()
                     }
                 }
             }
+            Write("\r\n");
         }
-        else
-            break;
-        Write("\r\n");
+
     }
 }
 

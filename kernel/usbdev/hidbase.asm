@@ -728,8 +728,7 @@ SetHidProtocol   Proc near
     mov cx,ax
     mov es:usd_type,21h
     mov es:usd_req,0Bh
-;    mov es:usd_value,1
-    mov es:usd_value,0
+    mov es:usd_value,1
     movzx ax,fs:hid_interface
     mov es:usd_index,ax
     mov es:usd_len,0
@@ -956,10 +955,6 @@ ihsDone:
     mov fs:hid_intr_handle,0
     mov fs:hid_intr_size,0
     mov fs:hid_intr_req,0
-;
-    mov al,fs:hid_protocol
-    cmp al,1
-    jnz ihsEnd
 ;
     call SetHidProtocol
 
