@@ -931,6 +931,9 @@ acqSpeedOk:
     mov gs,ds:ehc_reg_sel
     mov gs:HcAsyncList,ebx
 ;
+    mov ax,25
+    WaitMilliSec    
+;
     mov eax,gs:HcCommand
     or al,20h
     mov gs:HcCommand,eax
@@ -3471,6 +3474,9 @@ ciLoop:
     mov fs,ds:ehc_reg_sel
     mov eax,ds:ehc_periodic_phys
     mov fs:HcPeriodicListBase,eax
+;    
+    mov ax,25
+    WaitMilliSec
 ;
     mov eax,fs:HcCommand    
     or al,10h
