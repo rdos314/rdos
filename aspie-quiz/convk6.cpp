@@ -172,10 +172,10 @@ static void ProcessRow(char *str)
                  break;
 
             case 16:
-                 Row.Quiz[128] = 0;
-                 Row.Quiz[129] = 0;
                  Row.Quiz[130] = 0;
                  Row.Quiz[131] = 0;
+                 Row.Quiz[132] = 0;
+                 Row.Quiz[133] = 0;
 
                  if (Age)
                  {
@@ -186,7 +186,7 @@ static void ProcessRow(char *str)
                         case 12:
                         case 13:
                         case 14:
-                            Row.Quiz[128] = val;
+                            Row.Quiz[130] = val;
                             break;
 
                         case 15:
@@ -194,7 +194,7 @@ static void ProcessRow(char *str)
                         case 17:
                         case 18:
                         case 19:
-                            Row.Quiz[129] = val;
+                            Row.Quiz[131] = val;
                             break;
 
                         case 20:
@@ -202,7 +202,7 @@ static void ProcessRow(char *str)
                         case 22:
                         case 23:
                         case 24:
-                            Row.Quiz[130] = val;
+                            Row.Quiz[132] = val;
                             break;
 
                         case 25:
@@ -211,17 +211,17 @@ static void ProcessRow(char *str)
                         case 28:
                         case 29:
                         case 30:
-                            Row.Quiz[131] = val;
+                            Row.Quiz[133] = val;
                             break;
                     }
                  }
                  break;
 
             case 17:
-                 Row.Quiz[132] = 0;
-                 Row.Quiz[133] = 0;
                  Row.Quiz[134] = 0;
                  Row.Quiz[135] = 0;
+                 Row.Quiz[136] = 0;
+                 Row.Quiz[137] = 0;
 
                  if (Age)
                  {
@@ -237,7 +237,7 @@ static void ProcessRow(char *str)
                         case 12:
                         case 13:
                         case 14:
-                            Row.Quiz[132] = val;
+                            Row.Quiz[134] = val;
                             break;
 
                         case 15:
@@ -245,7 +245,7 @@ static void ProcessRow(char *str)
                         case 17:
                         case 18:
                         case 19:
-                            Row.Quiz[133] = val;
+                            Row.Quiz[135] = val;
                             break;
 
                         case 20:
@@ -253,7 +253,7 @@ static void ProcessRow(char *str)
                         case 22:
                         case 23:
                         case 24:
-                            Row.Quiz[134] = val;
+                            Row.Quiz[136] = val;
                             break;
 
                         case 25:
@@ -262,7 +262,7 @@ static void ProcessRow(char *str)
                         case 28:
                         case 29:
                         case 30:
-                            Row.Quiz[135] = val;
+                            Row.Quiz[137] = val;
                             break;
                     }
                  }
@@ -270,13 +270,28 @@ static void ProcessRow(char *str)
 
             default:
                  i = fieldno - 18;
-                 Row.Quiz[i] = atoi(valstr);
+
+                 if (i == 128)
+                 {  
+                    if (Row.Gender == 1)
+                    {
+                        Row.Quiz[128] = atoi(valstr);
+                        Row.Quiz[129] = 0;
+                    }
+                    else
+                    {
+                        Row.Quiz[129] = atoi(valstr);
+                        Row.Quiz[128] = 0;
+                    }
+                 }
+                 else
+                    Row.Quiz[i] = atoi(valstr);
                  break;
         }
     }
 
     HandleRow(&Row);
-    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 136);
+    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 138);
 }
 
 /*################## ConvK6 ##########################

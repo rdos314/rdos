@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizK6::TQuizK6(const char *FileName)
-  : TQuiz(136),
+  : TQuiz(138),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -97,7 +97,7 @@ int TQuizK6::GetPcaCount()
 *##########################################################################*/
 int TQuizK6::GetCatCount(int Question)
 {
-    if (Question < 128)
+    if (Question < 130)
        return 3;
 
     return 10;
@@ -112,7 +112,7 @@ int TQuizK6::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizK6::GetQuizN()
 {
-    return 136;
+    return 138;
 }
 
 /*##########################################################################
@@ -304,6 +304,8 @@ void TQuizK6::SetupTexts()
   Quiz[122].Reverse = TRUE;
   Quiz[123].Reverse = TRUE;
   Quiz[124].Reverse = TRUE;
+  Quiz[126].Reverse = TRUE;
+  Quiz[127].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
@@ -430,9 +432,9 @@ void TQuizK6::SetupTexts()
   Quiz[122].MyGroup = GROUP_MIXED;
   Quiz[123].MyGroup = GROUP_MIXED;
   Quiz[124].MyGroup = GROUP_MIXED;
-  Quiz[125].MyGroup = GROUP_MIXED;
-  Quiz[126].MyGroup = GROUP_MIXED;
-  Quiz[127].MyGroup = GROUP_MIXED;
+  Quiz[125].MyGroup = GROUP_NT_CONTACT;
+  Quiz[126].MyGroup = GROUP_NT_ATTACH;
+  Quiz[127].MyGroup = GROUP_NT_ATTACH;
   Quiz[128].MyGroup = GROUP_MIXED;
   Quiz[129].MyGroup = GROUP_MIXED;
   Quiz[130].MyGroup = GROUP_MIXED;
@@ -441,6 +443,8 @@ void TQuizK6::SetupTexts()
   Quiz[133].MyGroup = GROUP_MIXED;
   Quiz[134].MyGroup = GROUP_MIXED;
   Quiz[135].MyGroup = GROUP_MIXED;
+  Quiz[136].MyGroup = GROUP_MIXED;
+  Quiz[137].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Is it important for you to find a unique niche where you can acquire unique competence?";
@@ -570,16 +574,18 @@ void TQuizK6::SetupTexts()
   Quiz[125].Text = "Do you prefer to hug only a romantic partner?";
   Quiz[126].Text = "Do you need regular sex in a relationship?";
   Quiz[127].Text = "Do you bond with sex?";
+  Quiz[128].Text = "Do you like to protect women even when they didn't ask for it?";
+  Quiz[129].Text = "Do you like to be protected by men?";
 
-  Quiz[128].Text = "12-14 rate";
-  Quiz[129].Text = "15-19 rate";
-  Quiz[130].Text = "20-24 rate";
-  Quiz[131].Text = "25-30 rate";
+  Quiz[130].Text = "12-14 rate";
+  Quiz[131].Text = "15-19 rate";
+  Quiz[132].Text = "20-24 rate";
+  Quiz[133].Text = "25-30 rate";
 
-  Quiz[132].Text = "12-14 time";
-  Quiz[133].Text = "15-19 time";
-  Quiz[134].Text = "20-24 time";
-  Quiz[135].Text = "25-30 time";
+  Quiz[134].Text = "12-14 time";
+  Quiz[135].Text = "15-19 time";
+  Quiz[136].Text = "20-24 time";
+  Quiz[137].Text = "25-30 time";
 
 }
 
@@ -764,7 +770,7 @@ void TQuizK6::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 136; i++)
+    for (i = 0; i < 138; i++)
             DefineGlobalId(i, i);
 }
 
