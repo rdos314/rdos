@@ -27,203 +27,202 @@
 
 .386
 .model flat
-locals
 
-		NAME embuffer
-		
+                NAME embuffer
+                
 INCLUDE x86\emulate.inc
-		
+                
 .data
-		
+                
 ;variables
 
-startbuffer	dd ?	;pointer to the start of the buffer
-endbuffer	dd ?	;pointer to the end of the buffer
-setbuffer	dd ?	;current set position
-readbuffer	dd ?	;current read position
-full_flag	db ?	;s'ils sont tous les deux au debut il nous dit
-			;si le buffer a deja été rempli au moins 1 fois
+startbuffer     dd ?    ;pointer to the start of the buffer
+endbuffer       dd ?    ;pointer to the end of the buffer
+setbuffer       dd ?    ;current set position
+readbuffer      dd ?    ;current read position
+full_flag       db ?    ;s'ils sont tous les deux au debut il nous dit
+                        ;si le buffer a deja été rempli au moins 1 fois
 
-		public	initbuffer
-		public	getvalue
-		public	setvalue
-		extrn	DisAssemble:near
-		extrn	WriteRegs:near
+                public  initbuffer
+                public  getvalue
+                public  setvalue
+                extrn   DisAssemble:near
+                extrn   WriteRegs:near
 .code
 
 
 
 ;++++=+=+=+=+=+=+=+=+=+=+=+=+=+=++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
-;		NAME:		INITBUFFER  			      +
-;		PURPOSE:	Init the buffer			      +	
-;		PARAMETER:	stack contains 			      +
-;				(*buffer ,bufsize)		      +
-;		RETURN:						      +
-;								      +
+;               NAME:           INITBUFFER                            +
+;               PURPOSE:        Init the buffer                       + 
+;               PARAMETER:      stack contains                        +
+;                               (*buffer ,bufsize)                    +
+;               RETURN:                                               +
+;                                                                     +
 ;+=+=+=+++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
 
-initbuffer	proc	near
+initbuffer      proc    near
 
-circularbuffer	equ	[ebp+8]
-buffersize	equ	[ebp+0Ch]
+circularbuffer  equ     [ebp+8]
+buffersize      equ     [ebp+0Ch]
 
-	push	ebp
-	mov	ebp,esp
-	push	ebx
-	push	ecx
-	push	eax
-	push	edi
-	mov	eax,circularbuffer
-	mov	ecx,eax
-	mov	setbuffer,eax
-	mov	readbuffer,eax
-	mov	startbuffer,eax
-	mov	ebx,buffersize 
-	
-	lea	ebx,[ebx*2+ebx]	;* Tprog_position_
-	shl	ebx,1
-	
-	sub	ebx,Tprog_position_
-	add	eax,ebx
-	mov	endbuffer,eax
-	mov	edi,ecx
-	mov	ecx,buffersize 
-	lea	ecx,[ecx*2+ecx]
-	shl	ecx,1
-	mov	ebx,ecx
-	shr	ecx,4
-	xor	eax,eax
+        push    ebp
+        mov     ebp,esp
+        push    ebx
+        push    ecx
+        push    eax
+        push    edi
+        mov     eax,circularbuffer
+        mov     ecx,eax
+        mov     setbuffer,eax
+        mov     readbuffer,eax
+        mov     startbuffer,eax
+        mov     ebx,buffersize 
+        
+        lea     ebx,[ebx*2+ebx] ;* Tprog_position_
+        shl     ebx,1
+        
+        sub     ebx,Tprog_position_
+        add     eax,ebx
+        mov     endbuffer,eax
+        mov     edi,ecx
+        mov     ecx,buffersize 
+        lea     ecx,[ecx*2+ecx]
+        shl     ecx,1
+        mov     ebx,ecx
+        shr     ecx,4
+        xor     eax,eax
 @@1:
-	stosd
-	loop	@@1
-	mov	ecx,ebx
-	and	ecx,3
-	rep	stosb
-	
-	mov	full_flag,0
-	
-	pop	edi
-	pop	eax
-	pop	ecx
-	pop	ebx
-	pop	ebp
-	ret	8	
-initbuffer	endp
+        stosd
+        loop    @@1
+        mov     ecx,ebx
+        and     ecx,3
+        rep     stosb
+        
+        mov     full_flag,0
+        
+        pop     edi
+        pop     eax
+        pop     ecx
+        pop     ebx
+        pop     ebp
+        ret     8       
+initbuffer      endp
 
 ;++++=+=+=+=+=+=+=+=+=+=+=+=+=+=++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
-;		NAME:		GETVALUE  			      +
-;		PURPOSE:	Get the next offset		      +	
-;		PARAMETER:	TCpu *Cpu in the stack 		      +
-;								      +
-;		RETURN:			                              +
-;					                  	      +
+;               NAME:           GETVALUE                              +
+;               PURPOSE:        Get the next offset                   + 
+;               PARAMETER:      TCpu *Cpu in the stack                +
+;                                                                     +
+;               RETURN:                                               +
+;                                                                     +
 ;+=+=+=+++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
 
-getvalue	proc	near
+getvalue        proc    near
 
-Cpu	equ	[ebp+8]
+Cpu     equ     [ebp+8]
 
-	push	ebp
-	mov	ebp,esp
-	push	ecx
-	push	esi
-	push	eax
-	mov	ebp,Cpu
-	
-	cmp	full_flag,1
-	jz	short go_follow
-	mov	eax,setbuffer
-	sub	eax,startbuffer
-	mov	cl,Tprog_position_
-	div	cl
-	movzx	ecx,al
-	mov	eax,startbuffer
-	mov	readbuffer,eax
-	call	go_get_it		
-	jmp	go_end
-	
-go_follow:	
-	mov	eax,endbuffer		;imprime d'abord la partie du dessus
-	sub	eax,setbuffer
-	mov	cl,Tprog_position_
-	div	cl
-	movzx	ecx,al
-	inc	ecx
-	mov	eax,setbuffer
-	mov	readbuffer,eax
-	call	go_get_it	
-	mov	eax,setbuffer		;imprime la partie du dessous
-	sub	eax,startbuffer
-	mov	cl,Tprog_position_
-	div	cl
-	movzx	ecx,al
-	mov	eax,startbuffer
-	mov	readbuffer,eax
-	call	go_get_it	
-	jmp	go_end
-		
+        push    ebp
+        mov     ebp,esp
+        push    ecx
+        push    esi
+        push    eax
+        mov     ebp,Cpu
+        
+        cmp     full_flag,1
+        jz      short go_follow
+        mov     eax,setbuffer
+        sub     eax,startbuffer
+        mov     cl,Tprog_position_
+        div     cl
+        movzx   ecx,al
+        mov     eax,startbuffer
+        mov     readbuffer,eax
+        call    go_get_it               
+        jmp     go_end
+        
+go_follow:      
+        mov     eax,endbuffer           ;imprime d'abord la partie du dessus
+        sub     eax,setbuffer
+        mov     cl,Tprog_position_
+        div     cl
+        movzx   ecx,al
+        inc     ecx
+        mov     eax,setbuffer
+        mov     readbuffer,eax
+        call    go_get_it       
+        mov     eax,setbuffer           ;imprime la partie du dessous
+        sub     eax,startbuffer
+        mov     cl,Tprog_position_
+        div     cl
+        movzx   ecx,al
+        mov     eax,startbuffer
+        mov     readbuffer,eax
+        call    go_get_it       
+        jmp     go_end
+                
 go_get_it:
-	mov	esi,readbuffer
-	lodsd
-	mov	[ebp].reg_eip,eax
-	lodsw
-	mov	[ebp].reg_cs.d_selector,ax
-	mov	readbuffer,esi
-	push	ebp
-	call	DisAssemble
-	push	ebp
-	call	WriteRegs
-	loop	go_get_it	
-	ret
-go_end:	
-	pop	eax
-	pop	esi
-	pop	ecx
-	pop	ebp
-	ret	4
+        mov     esi,readbuffer
+        lodsd
+        mov     [ebp].reg_eip,eax
+        lodsw
+        mov     [ebp].reg_cs.d_selector,ax
+        mov     readbuffer,esi
+        push    ebp
+        call    DisAssemble
+        push    ebp
+        call    WriteRegs
+        loop    go_get_it       
+        ret
+go_end: 
+        pop     eax
+        pop     esi
+        pop     ecx
+        pop     ebp
+        ret     4
 
-getvalue	endp
+getvalue        endp
 
 ;++++=+=+=+=+=+=+=+=+=+=+=+=+=+=++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
-;		NAME:		SETVALUE  			      +
-;		PURPOSE:	Set an offset in the buffer	      +	
-;		PARAMETER:	Tprog_position *position in the stack +
-;								      +
-;		RETURN:						      +
-;								      +
+;               NAME:           SETVALUE                              +
+;               PURPOSE:        Set an offset in the buffer           + 
+;               PARAMETER:      Tprog_position *position in the stack +
+;                                                                     +
+;               RETURN:                                               +
+;                                                                     +
 ;+=+=+=+++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
 
-setvalue	proc	near
+setvalue        proc    near
 
-in_value	equ [ebp+8]
-	
-	push	ebp
-	mov	ebp,esp
-	push	ebx
-	push	ecx
-	push	esi
-	push	edi
-	mov	ebx,setbuffer
-	cmp	ebx,endbuffer
-	jbe	short so_set_it
-	mov	full_flag,1
-	mov	ebx,startbuffer
+in_value        equ [ebp+8]
+        
+        push    ebp
+        mov     ebp,esp
+        push    ebx
+        push    ecx
+        push    esi
+        push    edi
+        mov     ebx,setbuffer
+        cmp     ebx,endbuffer
+        jbe     short so_set_it
+        mov     full_flag,1
+        mov     ebx,startbuffer
 
 so_set_it:
-	mov	esi,in_value
-	mov	edi,ebx
-	mov	ecx,SIZE Tprog_position
-	cld					;on ne sait jamais au cas où
-	rep 	movsb
-	mov	setbuffer,edi		
-	
+        mov     esi,in_value
+        mov     edi,ebx
+        mov     ecx,SIZE Tprog_position
+        cld                                     ;on ne sait jamais au cas où
+        rep     movsb
+        mov     setbuffer,edi           
+        
 so_end:
-	pop	edi
-	pop	esi
-	pop	ecx
-	pop	ebx
-	pop	ebp
-	ret	4
-setvalue	endp
+        pop     edi
+        pop     esi
+        pop     ecx
+        pop     ebx
+        pop     ebp
+        ret     4
+setvalue        endp
 
-	END
+        END

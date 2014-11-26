@@ -25,7 +25,7 @@
 *
 *##########################################################################*/
 
-#ifndef	_FLASH_H
+#ifndef _FLASH_H
 #define _FLASH_H
 
 #include "bus.h"
@@ -34,19 +34,19 @@
 class TFlash : public TBusFunction
 {
 public:
-	TFlash(unsigned long Size);
-	TFlash(TBus *Bus, unsigned long Base, unsigned long Size);
-	~TFlash();
+        TFlash(unsigned long Size);
+        TFlash(TBus *Bus, unsigned long Base, unsigned long Size);
+        ~TFlash();
 
-	virtual int GetSize();
-	virtual void WriteMem(int Num, unsigned unsigned long Offset, char Value);
+        virtual int GetSize();
+        virtual void WriteMem(int Num, unsigned long Offset, char Value);
 
-	void LoadTop(TFile *File);
-	void LoadBottom(TFile *File);
+        void LoadTop(TFile *File);
+        void LoadBottom(TFile *File);
 
 private:
-	int FSize;
-	char *FData;
+        int FSize;
+        char *FData;
 };
 
 #endif

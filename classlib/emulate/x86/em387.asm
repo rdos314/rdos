@@ -30,7 +30,7 @@
 
 PAGE
 
-	NAME em387
+        NAME em387
 
 include x86\emulate.inc
 include x86\emcom.inc
@@ -38,4048 +38,4046 @@ include x86\emseg.inc
 include x86\emfloat.inc
 include x86\emmem.inc
 
-RC_MASK	EQU 0C00h
-RC_RND	EQU 0000h
-RC_DOWN	EQU 0400h
-RC_UP	EQU 0800h
-RC_CHOP	EQU 0C00h
+RC_MASK EQU 0C00h
+RC_RND  EQU 0000h
+RC_DOWN EQU 0400h
+RC_UP   EQU 0800h
+RC_CHOP EQU 0C00h
 
-STATUS_B =		8000h
-STATUS_C3 =		4000h
-STATUS_TOP =	3800h
-STATUS_C2 =		 400h
-STATUS_C1 =		 200h
-STATUS_C0 =		 100h
-STATUS_ES =		  80h
-STATUS_SF =		  40h
-STATUS_PE =		  20h
-STATUS_UE =		  10h
-STATUS_OE =		   8h
-STATUS_ZE =		   4h
-STATUS_DE =		   2h
-STATUS_IE =		   1h
+STATUS_B =              8000h
+STATUS_C3 =             4000h
+STATUS_TOP =    3800h
+STATUS_C2 =              400h
+STATUS_C1 =              200h
+STATUS_C0 =              100h
+STATUS_ES =               80h
+STATUS_SF =               40h
+STATUS_PE =               20h
+STATUS_UE =               10h
+STATUS_OE =                8h
+STATUS_ZE =                4h
+STATUS_DE =                2h
+STATUS_IE =                1h
 
-CONTROL_X = 	1000h
-CONTROL_RC =	0C00h
-CONTROL_PC =	 300h
+CONTROL_X =     1000h
+CONTROL_RC =    0C00h
+CONTROL_PC =     300h
 CONTROL_PM =      20h
-CONTROL_UM =	  10h
-CONTROL_OM =	   8h
-CONTROL_ZM =	   4h
-CONTROL_DM =	   2h
-CONTROL_IM =	   1h
+CONTROL_UM =      10h
+CONTROL_OM =       8h
+CONTROL_ZM =       4h
+CONTROL_DM =       2h
+CONTROL_IM =       1h
 
 TAG_VALID = 00b
-TAG_ZERO =	01b
-TAG_NAN =	10b
+TAG_ZERO =      01b
+TAG_NAN =       10b
 TAG_EMPTY = 11b
 
 .code
 
-const1	DT 1.0
-	
+const1  DT 1.0
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CheckFpTrap
+;               NAME:                   CheckFpTrap
 ;
-;		DESCRIPTION:	Check if FP should trap 
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CheckFpTrap	MACRO
-	local CheckFpTrap_no
-	test [ebp].reg_cr0, CR0_EM OR CR0_TS
-	jz short CheckFpTrap_no
-	dec [ebp].reg_eip                      ;ReadCodeByte has increase this
-	jmp FpFault
-CheckFpTrap_no:	
-			ENDM
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			SaveFp
-;
-;		DESCRIPTION:	Save FP instruction & CS:EIP
+;               DESCRIPTION:    Check if FP should trap 
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SaveFp	MACRO
-	mov dx,word ptr [ebp].math_op
-	mov word ptr [ebp].math_prev_op,dx
-	and al,7
-	mov [ebp].math_op,al
-	mov eax,[ebp].org_eip
-	mov [ebp].math_eip,eax
-	mov ax,[ebp].reg_cs.d_selector
-	mov [ebp].math_cs,ax
-	mov [ebp].math_data_offs,0
-	mov [ebp].math_data_sel,0
-		ENDM
-	
+CheckFpTrap     MACRO
+        local CheckFpTrap_no
+        test [ebp].reg_cr0, CR0_EM OR CR0_TS
+        jz short CheckFpTrap_no
+        dec [ebp].reg_eip                      ;ReadCodeByte has increase this
+        jmp FpFault
+CheckFpTrap_no: 
+                        ENDM
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			SaveFp2
+;               NAME:                   SaveFp
 ;
-;		DESCRIPTION:	Save FP second operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SaveFp2	MACRO
-	mov [ebp].math_op+1,al
-		ENDM
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			OpWord
-;
-;		DESCRIPTION:	Emulate op word ptr
-;
-;		PARAMETERS:		AL		operand
+;               DESCRIPTION:    Save FP instruction & CS:EIP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-OpWord	MACRO op
-
-EmFi&op&Word	Proc near
-	mov bl,al
-	call LoadWordMem
-	push ax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call IntToReal
-	add esp,2
-	push cx
-	push edx
-	push eax
+SaveFp  MACRO
+        mov dx,word ptr [ebp].math_op
+        mov word ptr [ebp].math_prev_op,dx
+        and al,7
+        mov [ebp].math_op,al
+        mov eax,[ebp].org_eip
+        mov [ebp].math_eip,eax
+        mov ax,[ebp].reg_cs.d_selector
+        mov [ebp].math_cs,ax
+        mov [ebp].math_data_offs,0
+        mov [ebp].math_data_sel,0
+                ENDM
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call op&Real
-	add esp,20
 ;
-	xor bl,bl
-	call PutReal
-	ret
-EmFi&op&Word	Endp
+;               NAME:                   SaveFp2
+;
+;               DESCRIPTION:    Save FP second operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	ENDM
+SaveFp2 MACRO
+        mov [ebp].math_op+1,al
+                ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OpDword
+;               NAME:                   OpWord
 ;
-;		DESCRIPTION:	Emulate op dword ptr
+;               DESCRIPTION:    Emulate op word ptr
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OpDword	MACRO op
-
-EmFi&op&Dword	Proc near
-	mov bl,al
-	call LoadDwordMem
-	push eax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call LongToReal
-	add esp,4
-	push cx
-	push edx
-	push eax
-;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call op&Real
-	add esp,20
-;
-	xor bl,bl
-	call PutReal
-	ret
-EmFi&op&Dword	Endp
-
-	ENDM
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			OpSingle
-;
-;		DESCRIPTION:	Emulate op single ptr
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-OpSingle	MACRO op
+OpWord  MACRO op
 
-EmF&op&Single	Proc near
-	mov bl,al
-	call LoadDwordMem
-	push eax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call FloatToReal
-	add esp,4
-	push cx
-	push edx
-	push eax
+EmFi&op&Word    Proc near
+        mov bl,al
+        call LoadWordMem
+        push ax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call IntToReal
+        add esp,2
+        push cx
+        push edx
+        push eax
 ;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call op&Real
-	add esp,20
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call op&Real
+        add esp,20
 ;
-	xor bl,bl
-	call PutReal
-	ret
-EmF&op&Single	Endp
+        xor bl,bl
+        call PutReal
+        ret
+EmFi&op&Word    Endp
 
-	ENDM
+        ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OpDouble
+;               NAME:                   OpDword
 ;
-;		DESCRIPTION:	Emulate op qword ptr
+;               DESCRIPTION:    Emulate op dword ptr
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OpDouble	MACRO op
-
-EmF&op&Double	Proc near
-	mov bl,al
-	call LoadQwordMem
-	push edx
-	push eax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call DoubleToReal
-	add esp,8
-	push cx
-	push edx
-	push eax
-;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call op&Real
-	add esp,20
-;
-	xor bl,bl
-	call PutReal
-	ret
-EmF&op&Double	Endp
-
-	ENDM
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			OpStiSt
-;
-;		DESCRIPTION:	Emulate op st(i),st(0)
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-OpStiSt	MACRO op
+OpDword MACRO op
 
-EmF&op&StiSt	Proc near
-	push ax
-	mov bl,al
-	call GetReal
-	push cx
-	push edx
-	push eax
+EmFi&op&Dword   Proc near
+        mov bl,al
+        call LoadDwordMem
+        push eax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call LongToReal
+        add esp,4
+        push cx
+        push edx
+        push eax
 ;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	mov eax,esp
-	push ebx
-	push eax
-	call op&Real
-	add esp,20
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call op&Real
+        add esp,20
 ;
-	pop bx
-	call PutReal
-	ret
-EmF&op&StiSt	Endp
+        xor bl,bl
+        call PutReal
+        ret
+EmFi&op&Dword   Endp
 
-	ENDM
+        ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OpStSti
+;               NAME:                   OpSingle
 ;
-;		DESCRIPTION:	Emulate op st(0),st(i)
+;               DESCRIPTION:    Emulate op single ptr
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OpStSti	MACRO op
-
-EmF&op&StSti	Proc near
-	mov bl,al
-	call GetReal
-	push cx
-	push edx
-	push eax
-;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call op&Real
-	add esp,20
-;
-	xor bl,bl
-	call PutReal
-	ret
-EmF&op&StSti	Endp
-
-	ENDM
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			OppStiSt
-;
-;		DESCRIPTION:	Emulate opp st(i),st(0)
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-OppStiSt	MACRO op
+OpSingle        MACRO op
 
-EmF&op&pStiSt	Proc near
-	call EmF&op&StiSt
-	call PopReal
-	ret
-EmF&op&pStiSt	Endp
+EmF&op&Single   Proc near
+        mov bl,al
+        call LoadDwordMem
+        push eax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call FloatToReal
+        add esp,4
+        push cx
+        push edx
+        push eax
+;
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call op&Real
+        add esp,20
+;
+        xor bl,bl
+        call PutReal
+        ret
+EmF&op&Single   Endp
 
-	ENDM
+        ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OprWord
+;               NAME:                   OpDouble
 ;
-;		DESCRIPTION:	Emulate op word ptr
+;               DESCRIPTION:    Emulate op qword ptr
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OprWord	MACRO op
-
-EmFi&op&rWord	Proc near
-	mov bl,al
-	call LoadWordMem
-	push ax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call IntToReal
-	add esp,2
-	push cx
-	push edx
-	push eax
-;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	mov eax,esp
-	push ebx
-	push eax
-	call op&Real
-	add esp,20
-;
-	xor bl,bl
-	call PutReal
-	ret
-EmFi&op&rWord	Endp
-
-	ENDM
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			OprDword
-;
-;		DESCRIPTION:	Emulate op dword ptr
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-OprDword	MACRO op
+OpDouble        MACRO op
 
-EmFi&op&rDword	Proc near
-	mov bl,al
-	call LoadDwordMem
-	push eax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call LongToReal
-	add esp,4
-	push cx
-	push edx
-	push eax
+EmF&op&Double   Proc near
+        mov bl,al
+        call LoadQwordMem
+        push edx
+        push eax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call DoubleToReal
+        add esp,8
+        push cx
+        push edx
+        push eax
 ;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	mov eax,esp
-	push ebx
-	push eax
-	call op&Real
-	add esp,20
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call op&Real
+        add esp,20
 ;
-	xor bl,bl
-	call PutReal
-	ret
-EmFi&op&rDword	Endp
+        xor bl,bl
+        call PutReal
+        ret
+EmF&op&Double   Endp
 
-	ENDM
+        ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OprSingle
+;               NAME:                   OpStiSt
 ;
-;		DESCRIPTION:	Emulate op single ptr
+;               DESCRIPTION:    Emulate op st(i),st(0)
 ;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-OprSingle	MACRO op
+OpStiSt MACRO op
 
-EmF&op&rSingle	Proc near
-	mov bl,al
-	call LoadDwordMem
-	push eax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call FloatToReal
-	add esp,4
-	push cx
-	push edx
-	push eax
+EmF&op&StiSt    Proc near
+        push ax
+        mov bl,al
+        call GetReal
+        push cx
+        push edx
+        push eax
 ;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	mov eax,esp
-	push ebx
-	push eax
-	call op&Real
-	add esp,20
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        mov eax,esp
+        push ebx
+        push eax
+        call op&Real
+        add esp,20
 ;
-	xor bl,bl
-	call PutReal
-	ret
-EmF&op&rSingle	Endp
+        pop bx
+        call PutReal
+        ret
+EmF&op&StiSt    Endp
 
-	ENDM
+        ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OprDouble
+;               NAME:                   OpStSti
 ;
-;		DESCRIPTION:	Emulate op qword ptr
+;               DESCRIPTION:    Emulate op st(0),st(i)
 ;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-OprDouble	MACRO op
+OpStSti MACRO op
 
-EmF&op&rDouble	Proc near
-	mov bl,al
-	call LoadQwordMem
-	push edx
-	push eax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call DoubleToReal
-	add esp,8
-	push cx
-	push edx
-	push eax
+EmF&op&StSti    Proc near
+        mov bl,al
+        call GetReal
+        push cx
+        push edx
+        push eax
 ;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	mov eax,esp
-	push ebx
-	push eax
-	call op&Real
-	add esp,20
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call op&Real
+        add esp,20
 ;
-	xor bl,bl
-	call PutReal
-	ret
-EmF&op&rDouble	Endp
+        xor bl,bl
+        call PutReal
+        ret
+EmF&op&StSti    Endp
 
-	ENDM
+        ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OprStiSt
+;               NAME:                   OppStiSt
 ;
-;		DESCRIPTION:	Emulate op st(i),st(0)
+;               DESCRIPTION:    Emulate opp st(i),st(0)
 ;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-OprStiSt	MACRO op
+OppStiSt        MACRO op
 
-EmF&op&rStiSt	Proc near
-	push ax
-	mov bl,al
-	call GetReal
-	push cx
-	push edx
-	push eax
-;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call op&Real
-	add esp,20
-;
-	pop bx
-	call PutReal
-	ret
-EmF&op&rStiSt	Endp
+EmF&op&pStiSt   Proc near
+        call EmF&op&StiSt
+        call PopReal
+        ret
+EmF&op&pStiSt   Endp
 
-	ENDM
+        ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OprStSti
+;               NAME:                   OprWord
 ;
-;		DESCRIPTION:	Emulate op st(0),st(i)
+;               DESCRIPTION:    Emulate op word ptr
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OprStSti	MACRO op
-
-EmF&op&rStSti	Proc near
-	mov bl,al
-	call GetReal
-	push cx
-	push edx
-	push eax
-;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	mov eax,esp
-	push ebx
-	push eax
-	call op&Real
-	add esp,20
-;
-	xor bl,bl
-	call PutReal
-	ret
-EmF&op&rStSti	Endp
-
-	ENDM
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			OprpStiSt
-;
-;		DESCRIPTION:	Emulate opp st(i),st(0)
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-OprpStiSt	MACRO op
+OprWord MACRO op
 
-EmF&op&rpStiSt	Proc near
-	call EmF&op&rStiSt
-	call PopReal
-	ret
-EmF&op&rpStiSt	Endp
+EmFi&op&rWord   Proc near
+        mov bl,al
+        call LoadWordMem
+        push ax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call IntToReal
+        add esp,2
+        push cx
+        push edx
+        push eax
+;
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        mov eax,esp
+        push ebx
+        push eax
+        call op&Real
+        add esp,20
+;
+        xor bl,bl
+        call PutReal
+        ret
+EmFi&op&rWord   Endp
 
-	ENDM
+        ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InvalidFault
+;               NAME:                   OprDword
 ;
-;		DESCRIPTION:	Invalid number exception
+;               DESCRIPTION:    Emulate op dword ptr
 ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InvalidFault	Proc near
-	or [ebp].math_status, STATUS_IE
-	and [ebp].math_status, NOT STATUS_SF
-	test [ebp].math_control, CONTROL_IM
-	jz FpFault
-	ret
-InvalidFault	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			StackOverflowFault
-;
-;		DESCRIPTION:	Stack overflow exception
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StackOverflowFault	Proc near
-	or [ebp].math_status, STATUS_IE OR STATUS_SF OR STATUS_C1
-	test [ebp].math_control, CONTROL_IM
-	jz FpFault
-	ret
-StackOverflowFault	Endp
+OprDword        MACRO op
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+EmFi&op&rDword  Proc near
+        mov bl,al
+        call LoadDwordMem
+        push eax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call LongToReal
+        add esp,4
+        push cx
+        push edx
+        push eax
 ;
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        mov eax,esp
+        push ebx
+        push eax
+        call op&Real
+        add esp,20
 ;
-;		NAME:			StackUnderflowFault
-;
-;		DESCRIPTION:	Stack underflow exception
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        xor bl,bl
+        call PutReal
+        ret
+EmFi&op&rDword  Endp
 
-StackUnderflowFault	Proc near
-	or [ebp].math_status, STATUS_IE OR STATUS_SF
-	and [ebp].math_status, NOT STATUS_C1
-	test [ebp].math_control, CONTROL_IM
-	jz FpFault
-	ret
-StackUnderflowFault	Endp
+        ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetReal
+;               NAME:                   OprSingle
 ;
-;		DESCRIPTION:	Get real from stack
+;               DESCRIPTION:    Emulate op single ptr
 ;
-;		PARAMETERS:		BL		index
-;
-;		RETURNS:		CX:EDX:EAX		Real
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetReal	Proc near
-	mov al,bl
-	movzx ebx,[ebp].math_status
-	rol bx,5
-	add bl,al
-	and bx,7
-	mov cl,bl
-	add cl,cl
-	mov ax,11b
-	shl ax,cl
-	mov cx,[ebp].math_tag
-	and cx,ax
-	cmp ax,cx
-	jne GetRealOk
+OprSingle       MACRO op
+
+EmF&op&rSingle  Proc near
+        mov bl,al
+        call LoadDwordMem
+        push eax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call FloatToReal
+        add esp,4
+        push cx
+        push edx
+        push eax
 ;
-	call InvalidFault
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        mov eax,esp
+        push ebx
+        push eax
+        call op&Real
+        add esp,20
+;
+        xor bl,bl
+        call PutReal
+        ret
+EmF&op&rSingle  Endp
+
+        ENDM
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   OprDouble
+;
+;               DESCRIPTION:    Emulate op qword ptr
+;
+;               PARAMETERS:             AL              operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OprDouble       MACRO op
+
+EmF&op&rDouble  Proc near
+        mov bl,al
+        call LoadQwordMem
+        push edx
+        push eax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call DoubleToReal
+        add esp,8
+        push cx
+        push edx
+        push eax
+;
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        mov eax,esp
+        push ebx
+        push eax
+        call op&Real
+        add esp,20
+;
+        xor bl,bl
+        call PutReal
+        ret
+EmF&op&rDouble  Endp
+
+        ENDM
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   OprStiSt
+;
+;               DESCRIPTION:    Emulate op st(i),st(0)
+;
+;               PARAMETERS:             AL              operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OprStiSt        MACRO op
+
+EmF&op&rStiSt   Proc near
+        push ax
+        mov bl,al
+        call GetReal
+        push cx
+        push edx
+        push eax
+;
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call op&Real
+        add esp,20
+;
+        pop bx
+        call PutReal
+        ret
+EmF&op&rStiSt   Endp
+
+        ENDM
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   OprStSti
+;
+;               DESCRIPTION:    Emulate op st(0),st(i)
+;
+;               PARAMETERS:             AL              operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OprStSti        MACRO op
+
+EmF&op&rStSti   Proc near
+        mov bl,al
+        call GetReal
+        push cx
+        push edx
+        push eax
+;
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        mov eax,esp
+        push ebx
+        push eax
+        call op&Real
+        add esp,20
+;
+        xor bl,bl
+        call PutReal
+        ret
+EmF&op&rStSti   Endp
+
+        ENDM
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   OprpStiSt
+;
+;               DESCRIPTION:    Emulate opp st(i),st(0)
+;
+;               PARAMETERS:             AL              operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OprpStiSt       MACRO op
+
+EmF&op&rpStiSt  Proc near
+        call EmF&op&rStiSt
+        call PopReal
+        ret
+EmF&op&rpStiSt  Endp
+
+        ENDM
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   InvalidFault
+;
+;               DESCRIPTION:    Invalid number exception
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InvalidFault    Proc near
+        or [ebp].math_status, STATUS_IE
+        and [ebp].math_status, NOT STATUS_SF
+        test [ebp].math_control, CONTROL_IM
+        jz FpFault
+        ret
+InvalidFault    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   StackOverflowFault
+;
+;               DESCRIPTION:    Stack overflow exception
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StackOverflowFault      Proc near
+        or [ebp].math_status, STATUS_IE OR STATUS_SF OR STATUS_C1
+        test [ebp].math_control, CONTROL_IM
+        jz FpFault
+        ret
+StackOverflowFault      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   StackUnderflowFault
+;
+;               DESCRIPTION:    Stack underflow exception
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StackUnderflowFault     Proc near
+        or [ebp].math_status, STATUS_IE OR STATUS_SF
+        and [ebp].math_status, NOT STATUS_C1
+        test [ebp].math_control, CONTROL_IM
+        jz FpFault
+        ret
+StackUnderflowFault     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   GetReal
+;
+;               DESCRIPTION:    Get real from stack
+;
+;               PARAMETERS:             BL              index
+;
+;               RETURNS:                CX:EDX:EAX              Real
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetReal Proc near
+        mov al,bl
+        movzx ebx,[ebp].math_status
+        rol bx,5
+        add bl,al
+        and bx,7
+        mov cl,bl
+        add cl,cl
+        mov ax,11b
+        shl ax,cl
+        mov cx,[ebp].math_tag
+        and cx,ax
+        cmp ax,cx
+        jne GetRealOk
+;
+        call InvalidFault
 
 GetRealOk:
-	add ebx,ebx
-	mov eax,ebx
-	add ebx,ebx
-	add ebx,ebx
-	add ebx,eax
-	mov eax,dword ptr [ebp+ebx].math_st0
-	mov edx,dword ptr [ebp+ebx+4].math_st0
-	mov cx,word ptr [ebp+ebx+8].math_st0
-	ret
-GetReal	Endp
+        add ebx,ebx
+        mov eax,ebx
+        add ebx,ebx
+        add ebx,ebx
+        add ebx,eax
+        mov eax,dword ptr [ebp+ebx].math_st0
+        mov edx,dword ptr [ebp+ebx+4].math_st0
+        mov cx,word ptr [ebp+ebx+8].math_st0
+        ret
+GetReal Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PutReal
+;               NAME:                   PutReal
 ;
-;		DESCRIPTION:	Put real onto stack
+;               DESCRIPTION:    Put real onto stack
 ;
-;		PARAMETERS:		BL				Register
-;						CX:EDX:EAX		Real
+;               PARAMETERS:             BL                              Register
+;                                               CX:EDX:EAX              Real
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PutReal	Proc near
-	push ax
-	push cx
-	mov al,bl
-	movzx ebx,[ebp].math_status
-	rol bx,5
-	add bl,al
-	and bx,7
-	mov si,bx
-	add ebx,ebx
-	mov ecx,ebx
-	add ebx,ebx
-	add ebx,ebx
-	add ebx,ecx
-	pop cx
-	pop ax
-	mov dword ptr [ebp+ebx].math_st0,eax
-	mov dword ptr [ebp+ebx+4].math_st0,edx
-	mov word ptr [ebp+ebx+8].math_st0,cx
+PutReal Proc near
+        push ax
+        push cx
+        mov al,bl
+        movzx ebx,[ebp].math_status
+        rol bx,5
+        add bl,al
+        and bx,7
+        mov si,bx
+        add ebx,ebx
+        mov ecx,ebx
+        add ebx,ebx
+        add ebx,ebx
+        add ebx,ecx
+        pop cx
+        pop ax
+        mov dword ptr [ebp+ebx].math_st0,eax
+        mov dword ptr [ebp+ebx+4].math_st0,edx
+        mov word ptr [ebp+ebx+8].math_st0,cx
 ;
-	and cx,7FFFh
-	jz PutRealZero
+        and cx,7FFFh
+        jz PutRealZero
 ;
-	cmp cx,7FFFh
-	jne PutRealNormal
+        cmp cx,7FFFh
+        jne PutRealNormal
 
 PutRealZero:
-	or eax,edx
-	jnz PushRealNan
+        or eax,edx
+        jnz PushRealNan
 ;
-	mov dx,1
-	jmp PutRealTag
+        mov dx,1
+        jmp PutRealTag
 
 PutRealNan:
-	mov dx,2
-	jmp PutRealTag
+        mov dx,2
+        jmp PutRealTag
 
 PutRealNormal:
-	mov dx,0
+        mov dx,0
 
 PutRealTag:
-	mov cx,si
-	add cl,cl
-	mov ax,11b
-	shl ax,cl
-	shl dx,cl
-	mov bx,[ebp].math_tag
-	not ax
-	and bx,ax
-	or bx,dx
-	mov [ebp].math_tag,bx
-	ret
-PutReal	Endp
+        mov cx,si
+        add cl,cl
+        mov ax,11b
+        shl ax,cl
+        shl dx,cl
+        mov bx,[ebp].math_tag
+        not ax
+        and bx,ax
+        or bx,dx
+        mov [ebp].math_tag,bx
+        ret
+PutReal Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PushReal
+;               NAME:                   PushReal
 ;
-;		DESCRIPTION:	Push real onto stack
+;               DESCRIPTION:    Push real onto stack
 ;
-;		PARAMETERS:		CX:EDX:EAX		Real
+;               PARAMETERS:             CX:EDX:EAX              Real
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PushReal	Proc near
-	push ax
-	push cx
-	mov ax,[ebp].math_status
-	mov bx,ax
-	rol bx,5
-	dec bx
-	and bx,7
-	mov cl,bl
-	mov si,bx
-	ror bx,5
-	and ax,NOT STATUS_TOP
-	or ax,bx
-	mov [ebp].math_status,ax
-	add cl,cl
-	mov ax,11b
-	shl ax,cl
-	mov bx,[ebp].math_tag
-	and bx,ax
-	cmp ax,bx
-	je PushNoOv
+PushReal        Proc near
+        push ax
+        push cx
+        mov ax,[ebp].math_status
+        mov bx,ax
+        rol bx,5
+        dec bx
+        and bx,7
+        mov cl,bl
+        mov si,bx
+        ror bx,5
+        and ax,NOT STATUS_TOP
+        or ax,bx
+        mov [ebp].math_status,ax
+        add cl,cl
+        mov ax,11b
+        shl ax,cl
+        mov bx,[ebp].math_tag
+        and bx,ax
+        cmp ax,bx
+        je PushNoOv
 ;
-	call StackOverflowFault
+        call StackOverflowFault
 
 PushNoOv:
-	movzx ebx,si
-	add ebx,ebx
-	mov ecx,ebx
-	add ebx,ebx
-	add ebx,ebx
-	add ebx,ecx
-	pop cx
-	pop ax
-	mov dword ptr [ebp+ebx].math_st0,eax
-	mov dword ptr [ebp+ebx+4].math_st0,edx
-	mov word ptr [ebp+ebx+8].math_st0,cx
+        movzx ebx,si
+        add ebx,ebx
+        mov ecx,ebx
+        add ebx,ebx
+        add ebx,ebx
+        add ebx,ecx
+        pop cx
+        pop ax
+        mov dword ptr [ebp+ebx].math_st0,eax
+        mov dword ptr [ebp+ebx+4].math_st0,edx
+        mov word ptr [ebp+ebx+8].math_st0,cx
 ;
-	and cx,7FFFh
-	jz PushRealZero
+        and cx,7FFFh
+        jz PushRealZero
 ;
-	cmp cx,7FFFh
-	jne PushRealNormal
+        cmp cx,7FFFh
+        jne PushRealNormal
 
 PushRealZero:
-	or eax,edx
-	jnz PushRealNan
+        or eax,edx
+        jnz PushRealNan
 ;
-	mov dx,1
-	jmp PushRealTag
+        mov dx,1
+        jmp PushRealTag
 
 PushRealNan:
-	mov dx,2
-	jmp PushRealTag
+        mov dx,2
+        jmp PushRealTag
 
 PushRealNormal:
-	mov dx,0
+        mov dx,0
 
 PushRealTag:
-	mov cx,si
-	add cl,cl
-	mov ax,11b
-	shl ax,cl
-	shl dx,cl
-	mov bx,[ebp].math_tag
-	not ax
-	and bx,ax
-	or bx,dx
-	mov [ebp].math_tag,bx
-	ret
-PushReal	Endp
+        mov cx,si
+        add cl,cl
+        mov ax,11b
+        shl ax,cl
+        shl dx,cl
+        mov bx,[ebp].math_tag
+        not ax
+        and bx,ax
+        or bx,dx
+        mov [ebp].math_tag,bx
+        ret
+PushReal        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PopReal
+;               NAME:                   PopReal
 ;
-;		DESCRIPTION:	Pop from stack
+;               DESCRIPTION:    Pop from stack
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PopReal	Proc near
-	mov ax,[ebp].math_status
-	mov bx,ax
-	rol bx,5
-	mov cl,bl
-	and cl,7
-	add cl,cl
-	mov ax,11b
-	shl ax,cl
-	or [ebp].math_tag,ax
-	inc bx
-	and bx,7
-	mov cl,bl
-	ror bx,5
-	mov ax,[ebp].math_status
-	and ax,NOT STATUS_TOP
-	or ax,bx
-	mov [ebp].math_status,ax
-	add cl,cl
-	mov ax,11b
-	shl ax,cl
-	mov bx,[ebp].math_tag
-	and bx,ax
-	cmp ax,bx
-	jne PopNoOv
+PopReal Proc near
+        mov ax,[ebp].math_status
+        mov bx,ax
+        rol bx,5
+        mov cl,bl
+        and cl,7
+        add cl,cl
+        mov ax,11b
+        shl ax,cl
+        or [ebp].math_tag,ax
+        inc bx
+        and bx,7
+        mov cl,bl
+        ror bx,5
+        mov ax,[ebp].math_status
+        and ax,NOT STATUS_TOP
+        or ax,bx
+        mov [ebp].math_status,ax
+        add cl,cl
+        mov ax,11b
+        shl ax,cl
+        mov bx,[ebp].math_tag
+        and bx,ax
+        cmp ax,bx
+        jne PopNoOv
 ;
-	call StackUnderflowFault
+        call StackUnderflowFault
 
 PopNoOv:
-	ret
-PopReal	Endp
+        ret
+PopReal Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmWait
+;               NAME:                   EmWait
 ;
-;		DESCRIPTION:	Emulate fwait 
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public EmWait
-
-EmWait	Proc near
-	mov eax,[ebp].reg_cr0
-	and eax,CR0_MP OR CR0_TS
-	cmp eax,CR0_MP OR CR0_TS
-	je FpFault
-	ret
-EmWait	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFinit
-;
-;		DESCRIPTION:	Emulate finit
+;               DESCRIPTION:    Emulate fwait 
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFinit	Proc near
-	mov [ebp].math_control,37Fh
-	mov [ebp].math_status,0
-	mov [ebp].math_tag,0FFFFh
-	mov [ebp].math_eip,0
-	mov [ebp].math_cs,0
-	mov [ebp].math_data_offs,0
-	mov [ebp].math_data_sel,0
-	ret
-EmFinit	Endp
-	
+        public EmWait
+
+EmWait  Proc near
+        mov eax,[ebp].reg_cr0
+        and eax,CR0_MP OR CR0_TS
+        cmp eax,CR0_MP OR CR0_TS
+        je FpFault
+        ret
+EmWait  Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFclex
+;               NAME:                   EmFinit
 ;
-;		DESCRIPTION:	Emulate fclex
+;               DESCRIPTION:    Emulate finit
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFclex	Proc near
-	and [ebp].math_status, 0FF00h
-	ret
-EmFclex	Endp
-	
+EmFinit Proc near
+        mov [ebp].math_control,37Fh
+        mov [ebp].math_status,0
+        mov [ebp].math_tag,0FFFFh
+        mov [ebp].math_eip,0
+        mov [ebp].math_cs,0
+        mov [ebp].math_data_offs,0
+        mov [ebp].math_data_sel,0
+        ret
+EmFinit Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFnop
+;               NAME:                   EmFclex
 ;
-;		DESCRIPTION:	Emulate fnop
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFnop	Proc near
-	ret
-EmFnop	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFdecstp
-;
-;		DESCRIPTION:	Emulate fdecstp
+;               DESCRIPTION:    Emulate fclex
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFdecstp	Proc near
-	mov ax,[ebp].math_status
-	mov bx,ax
-	rol bx,5
-	dec bx
-	and bx,7
-	ror bx,5
-	and ax,NOT STATUS_TOP
-	or ax,bx
-	mov [ebp].math_status,ax
-	ret
-EmFdecstp	Endp
-	
+EmFclex Proc near
+        and [ebp].math_status, 0FF00h
+        ret
+EmFclex Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFincstp
+;               NAME:                   EmFnop
 ;
-;		DESCRIPTION:	Emulate fincstp
+;               DESCRIPTION:    Emulate fnop
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFincstp	Proc near
-	mov ax,[ebp].math_status
-	mov bx,ax
-	rol bx,5
-	inc bx
-	and bx,7
-	ror bx,5
-	and ax,NOT STATUS_TOP
-	or ax,bx
-	mov [ebp].math_status,ax
-	ret
-EmFincstp	Endp
-	
+EmFnop  Proc near
+        ret
+EmFnop  Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFfreeSt
+;               NAME:                   EmFdecstp
 ;
-;		DESCRIPTION:	Emulate ffree
-;
-;		PARAMETERS:		AL		param
+;               DESCRIPTION:    Emulate fdecstp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFfreeSt	Proc near
-	mov cx,[ebp].math_status
-	rol cx,5
-	add cl,al
-	and cl,7
-	add cl,cl
-	mov ax,11b
-	shl ax,cl
-	or [ebp].math_tag,ax
-	ret
-EmFfreeSt	Endp
-	
+EmFdecstp       Proc near
+        mov ax,[ebp].math_status
+        mov bx,ax
+        rol bx,5
+        dec bx
+        and bx,7
+        ror bx,5
+        and ax,NOT STATUS_TOP
+        or ax,bx
+        mov [ebp].math_status,ax
+        ret
+EmFdecstp       Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFldcw
+;               NAME:                   EmFincstp
 ;
-;		DESCRIPTION:	Emulate fldcw
-;
-;		PARAMETERS:		AL		param
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFldcw	Proc near
-	mov bl,al
-	call LoadWordMem
-	mov [ebp].math_data_offs,ebx
-	mov bx,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,bx
-	mov [ebp].math_control,ax
-	ret
-EmFldcw	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFstcw
-;
-;		DESCRIPTION:	Emulate fstcw
-;
-;		PARAMETERS:		AL		param
+;               DESCRIPTION:    Emulate fincstp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFstcw	Proc near
-	mov bl,al
-	mov ax,[ebp].math_control
-	call SaveWordMem
-	mov [ebp].math_data_offs,ebx
-	mov bx,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,bx
-	ret
-EmFstcw	Endp
-	
+EmFincstp       Proc near
+        mov ax,[ebp].math_status
+        mov bx,ax
+        rol bx,5
+        inc bx
+        and bx,7
+        ror bx,5
+        and ax,NOT STATUS_TOP
+        or ax,bx
+        mov [ebp].math_status,ax
+        ret
+EmFincstp       Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFstsw
+;               NAME:                   EmFfreeSt
 ;
-;		DESCRIPTION:	Emulate fstsw
+;               DESCRIPTION:    Emulate ffree
 ;
-;		PARAMETERS:		AL		param
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFstsw	Proc near
-	mov bl,al
-	mov ax,[ebp].math_status
-	call SaveWordMem
-	mov [ebp].math_data_offs,ebx
-	mov bx,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,bx
-	ret
-EmFstsw	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFstswAx
-;
-;		DESCRIPTION:	Emulate fstsw ax
+;               PARAMETERS:             AL              param
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFstswAx	Proc near
-	mov ax,[ebp].math_status
-	mov word ptr [ebp].reg_eax,ax
-	ret
-EmFstswAx	Endp
-	
+EmFfreeSt       Proc near
+        mov cx,[ebp].math_status
+        rol cx,5
+        add cl,al
+        and cl,7
+        add cl,cl
+        mov ax,11b
+        shl ax,cl
+        or [ebp].math_tag,ax
+        ret
+EmFfreeSt       Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LoadEnvPm16
+;               NAME:                   EmFldcw
 ;
-;		DESCRIPTION:	Load 16-bit protected mode environment
+;               DESCRIPTION:    Emulate fldcw
 ;
-;		PARAMETERS:		SS:ESI		Segment descriptor
-;						EBX			Offset
-;
-;		RETURNS:		EBX			Offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadEnvPm16	Proc near
-	call ReadWord
-	add ebx,2
-	mov [ebp].math_control,ax
-;
-	call ReadWord
-	add ebx,2
-	mov [ebp].math_status,ax
-;
-	call ReadWord
-	add ebx,2
-	mov [ebp].math_tag,ax
-;
-	call ReadWord
-	add ebx,2
-	mov word ptr [ebp].math_eip,ax
-;
-	call ReadWord
-	add ebx,2
-	mov [ebp].math_cs,ax
-;
-	call ReadWord
-	add ebx,2
-	mov word ptr [ebp].math_data_offs,ax
-;
-	call ReadWord
-	add ebx,2
-	mov [ebp].math_data_sel,ax
-	ret
-LoadEnvPm16	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			SaveEnvPm16
-;
-;		DESCRIPTION:	Save 16-bit protected mode environment
-;
-;		PARAMETERS:		SS:ESI		Segment descriptor
-;						EBX			Offset
-;
-;		RETURNS:		EBX			Offset
+;               PARAMETERS:             AL              param
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SaveEnvPm16	Proc near
-	mov ax,[ebp].math_control
-	call WriteWord
-	add ebx,2
-;
-	mov ax,[ebp].math_status
-	call WriteWord
-	add ebx,2
-;
-	mov ax,[ebp].math_tag
-	call WriteWord
-	add ebx,2
-;
-	mov eax,[ebp].math_eip
-	call WriteWord
-	add ebx,2
-;
-	mov ax,[ebp].math_cs
-	call WriteWord
-	add ebx,2
-;
-	mov eax,[ebp].math_data_offs
-	call WriteWord
-	add ebx,2
-;
-	mov ax,[ebp].math_data_sel
-	call WriteWord
-	add ebx,2
-	ret
-SaveEnvPm16	Endp
-	
+EmFldcw Proc near
+        mov bl,al
+        call LoadWordMem
+        mov [ebp].math_data_offs,ebx
+        mov bx,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,bx
+        mov [ebp].math_control,ax
+        ret
+EmFldcw Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LoadEnvPm32
+;               NAME:                   EmFstcw
 ;
-;		DESCRIPTION:	Load 32-bit protected mode environment
+;               DESCRIPTION:    Emulate fstcw
 ;
-;		PARAMETERS:		SS:ESI		Segment descriptor
-;						EBX			Offset
-;
-;		RETURNS:		EBX			Offset
+;               PARAMETERS:             AL              param
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadEnvPm32	Proc near
-	call ReadDword
-	add ebx,4
-	mov [ebp].math_control,ax
-;
-	call ReadDword
-	add ebx,4
-	mov [ebp].math_status,ax
-;
-	call ReadDword
-	add ebx,4
-	mov [ebp].math_tag,ax
-;
-	call ReadDword
-	add ebx,4
-	mov [ebp].math_eip,eax
-;
-	call ReadDword
-	add ebx,4
-	mov [ebp].math_cs,ax
-	shr eax,16
-	mov [ebp].math_op,ah
-	mov [ebp+1].math_op,al
-;
-	call ReadDword
-	add ebx,4
-	mov [ebp].math_data_offs,eax
-;
-	call ReadDword
-	add ebx,4
-	mov [ebp].math_data_sel,ax
-	ret
-LoadEnvPm32	Endp
-	
+EmFstcw Proc near
+        mov bl,al
+        mov ax,[ebp].math_control
+        call SaveWordMem
+        mov [ebp].math_data_offs,ebx
+        mov bx,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,bx
+        ret
+EmFstcw Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			SaveEnvPm32
+;               NAME:                   EmFstsw
 ;
-;		DESCRIPTION:	Save 32-bit protected mode environment
+;               DESCRIPTION:    Emulate fstsw
 ;
-;		PARAMETERS:		SS:ESI		Segment descriptor
-;						EBX			Offset
-;
-;		RETURNS:		EBX			Offset
+;               PARAMETERS:             AL              param
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SaveEnvPm32	Proc near
-	mov eax,-1
-	mov ax,[ebp].math_control
-	call WriteDword
-	add ebx,4
-;
-	mov eax,-1
-	mov ax,[ebp].math_status
-	call WriteDword
-	add ebx,4
-;
-	mov eax,-1
-	mov ax,[ebp].math_tag
-	call WriteDword
-	add ebx,4
-;
-	mov eax,[ebp].math_eip
-	call ReadDword
-	add ebx,4
-;
-	mov ah,[ebp].math_op
-	and ah,7
-	mov al,[ebp+1].math_op
-	shl eax,16
-	mov ax,[ebp].math_cs
-	call WriteDword
-	add ebx,4
-;
-	mov eax,[ebp].math_data_offs
-	call ReadDword
-	add ebx,4
-;
-	mov eax,-1
-	mov ax,[ebp].math_data_sel
-	call ReadDword
-	add ebx,4
-	ret
-SaveEnvPm32	Endp
-	
+EmFstsw Proc near
+        mov bl,al
+        mov ax,[ebp].math_status
+        call SaveWordMem
+        mov [ebp].math_data_offs,ebx
+        mov bx,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,bx
+        ret
+EmFstsw Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LoadEnvRm16
+;               NAME:                   EmFstswAx
 ;
-;		DESCRIPTION:	Load 16-bit real mode environment
-;
-;		PARAMETERS:		SS:ESI		Segment descriptor
-;						EBX			Offset
-;
-;		RETURNS:		EBX			Offset
+;               DESCRIPTION:    Emulate fstsw ax
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadEnvRm16	Proc near
-	call ReadWord
-	add ebx,2
-	mov [ebp].math_control,ax
-;
-	call ReadWord
-	add ebx,2
-	mov [ebp].math_status,ax
-;
-	call ReadWord
-	add ebx,2
-	mov [ebp].math_tag,ax
-;
-	call ReadWord
-	add ebx,2
-	mov word ptr [ebp].math_eip,ax
-;
-	call ReadWord
-	add ebx,2
-	mov [ebp].math_op,ah
-	mov [ebp+1].math_op,al
-	and ax,0F000h
-	mov [ebp].math_cs,ax
-;
-	call ReadWord
-	add ebx,2
-	mov word ptr [ebp].math_data_offs,ax
-;
-	call ReadWord
-	add ebx,2
-	and ax,0F000h
-	mov [ebp].math_data_sel,ax
-	ret
-LoadEnvRm16	Endp
-	
+EmFstswAx       Proc near
+        mov ax,[ebp].math_status
+        mov word ptr [ebp].reg_eax,ax
+        ret
+EmFstswAx       Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			SaveEnvRm16
+;               NAME:                   LoadEnvPm16
 ;
-;		DESCRIPTION:	Save 16-bit real mode environment
+;               DESCRIPTION:    Load 16-bit protected mode environment
 ;
-;		PARAMETERS:		SS:ESI		Segment descriptor
-;						EBX			Offset
+;               PARAMETERS:             SS:ESI          Segment descriptor
+;                                               EBX                     Offset
 ;
-;		RETURNS:		EBX			Offset
+;               RETURNS:                EBX                     Offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SaveEnvRm16	Proc near
-	mov ax,[ebp].math_control
-	call WriteWord
-	add ebx,2
+LoadEnvPm16     Proc near
+        call ReadWord
+        add ebx,2
+        mov [ebp].math_control,ax
 ;
-	mov ax,[ebp].math_status
-	call WriteWord
-	add ebx,2
+        call ReadWord
+        add ebx,2
+        mov [ebp].math_status,ax
 ;
-	mov ax,[ebp].math_tag
-	call WriteWord
-	add ebx,2
+        call ReadWord
+        add ebx,2
+        mov [ebp].math_tag,ax
 ;
-	movzx eax,word ptr [ebp].math_eip
-	movzx edx,[ebp].math_cs
-	shl edx,4
-	add eax,edx
-	call WriteWord
-	add ebx,2
+        call ReadWord
+        add ebx,2
+        mov word ptr [ebp].math_eip,ax
 ;
-	movzx eax,word ptr [ebp].math_eip
-	movzx edx,[ebp].math_cs
-	shl edx,4
-	add eax,edx
-	shr eax,4
-	and ah,0F0h
-	mov al,[ebp].math_op
-	and al,7
-	or ah,al
-	mov al,[ebp+1].math_op
-	call WriteWord
-	add ebx,2
+        call ReadWord
+        add ebx,2
+        mov [ebp].math_cs,ax
 ;
-	movzx eax,word ptr [ebp].math_data_offs
-	movzx edx,[ebp].math_data_sel
-	shl edx,4
-	add eax,edx
-	call WriteWord
-	add ebx,2
+        call ReadWord
+        add ebx,2
+        mov word ptr [ebp].math_data_offs,ax
 ;
-	movzx eax,word ptr [ebp].math_data_offs
-	movzx edx,[ebp].math_data_sel
-	shl edx,4
-	add eax,edx
-	shr eax,4
-	and ax,0F000h
-	call WriteWord
-	add ebx,2
-	ret
-SaveEnvRm16	Endp
-	
+        call ReadWord
+        add ebx,2
+        mov [ebp].math_data_sel,ax
+        ret
+LoadEnvPm16     Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFldenv
+;               NAME:                   SaveEnvPm16
 ;
-;		DESCRIPTION:	Emulate fldenv
+;               DESCRIPTION:    Save 16-bit protected mode environment
 ;
-;		PARAMETERS:		AL		param
+;               PARAMETERS:             SS:ESI          Segment descriptor
+;                                               EBX                     Offset
+;
+;               RETURNS:                EBX                     Offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFldenv	Proc near
-	mov bl,al
-	mov bh,bl
-	and bl,0C0h
-	shr bl,2
-	and bh,7
-	shl bh,1
-	or bl,bh
-	test byte ptr [ebp].em_flags,a32
-	jz EmFldenvA16
-	or bl,40h	
+SaveEnvPm16     Proc near
+        mov ax,[ebp].math_control
+        call WriteWord
+        add ebx,2
+;
+        mov ax,[ebp].math_status
+        call WriteWord
+        add ebx,2
+;
+        mov ax,[ebp].math_tag
+        call WriteWord
+        add ebx,2
+;
+        mov eax,[ebp].math_eip
+        call WriteWord
+        add ebx,2
+;
+        mov ax,[ebp].math_cs
+        call WriteWord
+        add ebx,2
+;
+        mov eax,[ebp].math_data_offs
+        call WriteWord
+        add ebx,2
+;
+        mov ax,[ebp].math_data_sel
+        call WriteWord
+        add ebx,2
+        ret
+SaveEnvPm16     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   LoadEnvPm32
+;
+;               DESCRIPTION:    Load 32-bit protected mode environment
+;
+;               PARAMETERS:             SS:ESI          Segment descriptor
+;                                               EBX                     Offset
+;
+;               RETURNS:                EBX                     Offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadEnvPm32     Proc near
+        call ReadDword
+        add ebx,4
+        mov [ebp].math_control,ax
+;
+        call ReadDword
+        add ebx,4
+        mov [ebp].math_status,ax
+;
+        call ReadDword
+        add ebx,4
+        mov [ebp].math_tag,ax
+;
+        call ReadDword
+        add ebx,4
+        mov [ebp].math_eip,eax
+;
+        call ReadDword
+        add ebx,4
+        mov [ebp].math_cs,ax
+        shr eax,16
+        mov [ebp].math_op,ah
+        mov [ebp+1].math_op,al
+;
+        call ReadDword
+        add ebx,4
+        mov [ebp].math_data_offs,eax
+;
+        call ReadDword
+        add ebx,4
+        mov [ebp].math_data_sel,ax
+        ret
+LoadEnvPm32     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   SaveEnvPm32
+;
+;               DESCRIPTION:    Save 32-bit protected mode environment
+;
+;               PARAMETERS:             SS:ESI          Segment descriptor
+;                                               EBX                     Offset
+;
+;               RETURNS:                EBX                     Offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SaveEnvPm32     Proc near
+        mov eax,-1
+        mov ax,[ebp].math_control
+        call WriteDword
+        add ebx,4
+;
+        mov eax,-1
+        mov ax,[ebp].math_status
+        call WriteDword
+        add ebx,4
+;
+        mov eax,-1
+        mov ax,[ebp].math_tag
+        call WriteDword
+        add ebx,4
+;
+        mov eax,[ebp].math_eip
+        call ReadDword
+        add ebx,4
+;
+        mov ah,[ebp].math_op
+        and ah,7
+        mov al,[ebp+1].math_op
+        shl eax,16
+        mov ax,[ebp].math_cs
+        call WriteDword
+        add ebx,4
+;
+        mov eax,[ebp].math_data_offs
+        call ReadDword
+        add ebx,4
+;
+        mov eax,-1
+        mov ax,[ebp].math_data_sel
+        call ReadDword
+        add ebx,4
+        ret
+SaveEnvPm32     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   LoadEnvRm16
+;
+;               DESCRIPTION:    Load 16-bit real mode environment
+;
+;               PARAMETERS:             SS:ESI          Segment descriptor
+;                                               EBX                     Offset
+;
+;               RETURNS:                EBX                     Offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadEnvRm16     Proc near
+        call ReadWord
+        add ebx,2
+        mov [ebp].math_control,ax
+;
+        call ReadWord
+        add ebx,2
+        mov [ebp].math_status,ax
+;
+        call ReadWord
+        add ebx,2
+        mov [ebp].math_tag,ax
+;
+        call ReadWord
+        add ebx,2
+        mov word ptr [ebp].math_eip,ax
+;
+        call ReadWord
+        add ebx,2
+        mov [ebp].math_op,ah
+        mov [ebp+1].math_op,al
+        and ax,0F000h
+        mov [ebp].math_cs,ax
+;
+        call ReadWord
+        add ebx,2
+        mov word ptr [ebp].math_data_offs,ax
+;
+        call ReadWord
+        add ebx,2
+        and ax,0F000h
+        mov [ebp].math_data_sel,ax
+        ret
+LoadEnvRm16     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   SaveEnvRm16
+;
+;               DESCRIPTION:    Save 16-bit real mode environment
+;
+;               PARAMETERS:             SS:ESI          Segment descriptor
+;                                               EBX                     Offset
+;
+;               RETURNS:                EBX                     Offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SaveEnvRm16     Proc near
+        mov ax,[ebp].math_control
+        call WriteWord
+        add ebx,2
+;
+        mov ax,[ebp].math_status
+        call WriteWord
+        add ebx,2
+;
+        mov ax,[ebp].math_tag
+        call WriteWord
+        add ebx,2
+;
+        movzx eax,word ptr [ebp].math_eip
+        movzx edx,[ebp].math_cs
+        shl edx,4
+        add eax,edx
+        call WriteWord
+        add ebx,2
+;
+        movzx eax,word ptr [ebp].math_eip
+        movzx edx,[ebp].math_cs
+        shl edx,4
+        add eax,edx
+        shr eax,4
+        and ah,0F0h
+        mov al,[ebp].math_op
+        and al,7
+        or ah,al
+        mov al,[ebp+1].math_op
+        call WriteWord
+        add ebx,2
+;
+        movzx eax,word ptr [ebp].math_data_offs
+        movzx edx,[ebp].math_data_sel
+        shl edx,4
+        add eax,edx
+        call WriteWord
+        add ebx,2
+;
+        movzx eax,word ptr [ebp].math_data_offs
+        movzx edx,[ebp].math_data_sel
+        shl edx,4
+        add eax,edx
+        shr eax,4
+        and ax,0F000h
+        call WriteWord
+        add ebx,2
+        ret
+SaveEnvRm16     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmFldenv
+;
+;               DESCRIPTION:    Emulate fldenv
+;
+;               PARAMETERS:             AL              param
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFldenv        Proc near
+        mov bl,al
+        mov bh,bl
+        and bl,0C0h
+        shr bl,2
+        and bh,7
+        shl bh,1
+        or bl,bh
+        test byte ptr [ebp].em_flags,a32
+        jz EmFldenvA16
+        or bl,40h       
 EmFldenvA16:
-	movzx ebx,bl
-	call dword ptr [2*ebx].MemTab
+        movzx ebx,bl
+        call dword ptr [2*ebx].MemTab
 ;
-	test [ebp].reg_cr0,CR0_PE
-	jz EmFlenvRm
+        test [ebp].reg_cr0,CR0_PE
+        jz EmFlenvRm
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz EmFlenvRm
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz EmFlenvRm
 
 EmFldenvPm:
-	test byte ptr [ebp].em_flags,d32
-	jnz EmFldenvPm32
+        test byte ptr [ebp].em_flags,d32
+        jnz EmFldenvPm32
 
 EmFldenvPm16:
-	call LoadEnvPm16
-	jmp EmFldenvDone
+        call LoadEnvPm16
+        jmp EmFldenvDone
 
 EmFldenvPm32:
-	call LoadEnvPm32
-	jmp EmFldenvDone
+        call LoadEnvPm32
+        jmp EmFldenvDone
 
 EmFlenvRm:
-	test byte ptr [ebp].em_flags,d32
-	jnz EmulateError
+        test byte ptr [ebp].em_flags,d32
+        jnz EmulateError
 
 EmFldenvRm16:
-	call LoadEnvRm16
+        call LoadEnvRm16
 
 EmFldenvDone:
-	ret
-EmFldenv	Endp
-	
+        ret
+EmFldenv        Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFstenv
+;               NAME:                   EmFstenv
 ;
-;		DESCRIPTION:	Emulate fstenv
+;               DESCRIPTION:    Emulate fstenv
 ;
-;		PARAMETERS:		AL		param
+;               PARAMETERS:             AL              param
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFstenv	Proc near
-	mov bx,word ptr [ebp].math_prev_op
-	mov word ptr [ebp].math_op,bx
+EmFstenv        Proc near
+        mov bx,word ptr [ebp].math_prev_op
+        mov word ptr [ebp].math_op,bx
 ;
-	mov bl,al
-	mov bh,bl
-	and bl,0C0h
-	shr bl,2
-	and bh,7
-	shl bh,1
-	or bl,bh
-	test byte ptr [ebp].em_flags,a32
-	jz EmFstenvA16
-	or bl,40h	
+        mov bl,al
+        mov bh,bl
+        and bl,0C0h
+        shr bl,2
+        and bh,7
+        shl bh,1
+        or bl,bh
+        test byte ptr [ebp].em_flags,a32
+        jz EmFstenvA16
+        or bl,40h       
 EmFstenvA16:
-	movzx ebx,bl
-	call dword ptr [2*ebx].MemTab
+        movzx ebx,bl
+        call dword ptr [2*ebx].MemTab
 ;
-	test [ebp].reg_cr0,CR0_PE
-	jz EmFstenvRm
+        test [ebp].reg_cr0,CR0_PE
+        jz EmFstenvRm
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz EmFstenvRm
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz EmFstenvRm
 
 EmFstenvPm:
-	test byte ptr [ebp].em_flags,d32
-	jnz EmFstenvPm32
+        test byte ptr [ebp].em_flags,d32
+        jnz EmFstenvPm32
 
 EmFstenvPm16:
-	call SaveEnvPm16
-	jmp EmFstenvDone
+        call SaveEnvPm16
+        jmp EmFstenvDone
 
 EmFstenvPm32:
-	call SaveEnvPm32
-	jmp EmFstenvDone
+        call SaveEnvPm32
+        jmp EmFstenvDone
 
 EmFstenvRm:
-	test byte ptr [ebp].em_flags,d32
-	jnz EmulateError
+        test byte ptr [ebp].em_flags,d32
+        jnz EmulateError
 
 EmFstenvRm16:
-	call SaveEnvRm16
+        call SaveEnvRm16
 
 EmFstenvDone:
-	ret
-EmFstenv	Endp
-	
+        ret
+EmFstenv        Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFRstor
+;               NAME:                   EmFRstor
 ;
-;		DESCRIPTION:	Emulate frstor
+;               DESCRIPTION:    Emulate frstor
 ;
-;		PARAMETERS:		AL		param
+;               PARAMETERS:             AL              param
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFRstor	Proc near
-	mov bl,al
-	mov bh,bl
-	and bl,0C0h
-	shr bl,2
-	and bh,7
-	shl bh,1
-	or bl,bh
-	test byte ptr [ebp].em_flags,a32
-	jz EmFrstorA16
-	or bl,40h	
+EmFRstor        Proc near
+        mov bl,al
+        mov bh,bl
+        and bl,0C0h
+        shr bl,2
+        and bh,7
+        shl bh,1
+        or bl,bh
+        test byte ptr [ebp].em_flags,a32
+        jz EmFrstorA16
+        or bl,40h       
 EmFrstorA16:
-	movzx ebx,bl
-	call dword ptr [2*ebx].MemTab
+        movzx ebx,bl
+        call dword ptr [2*ebx].MemTab
 ;
-	test [ebp].reg_cr0,CR0_PE
-	jz EmFrstorRm
+        test [ebp].reg_cr0,CR0_PE
+        jz EmFrstorRm
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz EmFrstorRm
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz EmFrstorRm
 
 EmFrstorPm:
-	test byte ptr [ebp].em_flags,d32
-	jnz EmFrstorPm32
+        test byte ptr [ebp].em_flags,d32
+        jnz EmFrstorPm32
 
 EmFrstorPm16:
-	call LoadEnvPm16
-	jmp EmFrstorSt
+        call LoadEnvPm16
+        jmp EmFrstorSt
 
 EmFrstorPm32:
-	call LoadEnvPm32
-	jmp EmFrstorSt
+        call LoadEnvPm32
+        jmp EmFrstorSt
 
 EmFrstorRm:
-	test byte ptr [ebp].em_flags,d32
-	jnz EmulateError
+        test byte ptr [ebp].em_flags,d32
+        jnz EmulateError
 
 EmFrstorRm16:
-	call LoadEnvRm16
+        call LoadEnvRm16
 
 EmFrstorSt:
-	mov ecx,8
-	lea edi,[ebp].math_st0
+        mov ecx,8
+        lea edi,[ebp].math_st0
 
 EmFrstorLoop:
-	push ecx
-	call ReadTbyte
-	mov ss:[edi],eax
-	mov ss:[edi+4],edx
-	mov ss:[edi+8],cx
-	add edi,10
-	add ebx,10
-	pop ecx
-	loop EmFrstorLoop
+        push ecx
+        call ReadTbyte
+        mov ss:[edi],eax
+        mov ss:[edi+4],edx
+        mov ss:[edi+8],cx
+        add edi,10
+        add ebx,10
+        pop ecx
+        loop EmFrstorLoop
 ;
-	ret
-EmFRstor	Endp
-	
+        ret
+EmFRstor        Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFSave
+;               NAME:                   EmFSave
 ;
-;		DESCRIPTION:	Emulate fsave
+;               DESCRIPTION:    Emulate fsave
 ;
-;		PARAMETERS:		AL		param
+;               PARAMETERS:             AL              param
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFSave	Proc near
-	mov bx,word ptr [ebp].math_prev_op
-	mov word ptr [ebp].math_op,bx
+EmFSave Proc near
+        mov bx,word ptr [ebp].math_prev_op
+        mov word ptr [ebp].math_op,bx
 ;
-	mov bl,al
-	mov bh,bl
-	and bl,0C0h
-	shr bl,2
-	and bh,7
-	shl bh,1
-	or bl,bh
-	test byte ptr [ebp].em_flags,a32
-	jz EmFsaveA16
-	or bl,40h	
+        mov bl,al
+        mov bh,bl
+        and bl,0C0h
+        shr bl,2
+        and bh,7
+        shl bh,1
+        or bl,bh
+        test byte ptr [ebp].em_flags,a32
+        jz EmFsaveA16
+        or bl,40h       
 EmFsaveA16:
-	movzx ebx,bl
-	call dword ptr [2*ebx].MemTab
+        movzx ebx,bl
+        call dword ptr [2*ebx].MemTab
 ;
-	test [ebp].reg_cr0,CR0_PE
-	jz EmFsaveRm
+        test [ebp].reg_cr0,CR0_PE
+        jz EmFsaveRm
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz EmFsaveRm
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz EmFsaveRm
 
 EmFsavePm:
-	test byte ptr [ebp].em_flags,d32
-	jnz EmFsavePm32
+        test byte ptr [ebp].em_flags,d32
+        jnz EmFsavePm32
 
 EmFsavePm16:
-	call SaveEnvPm16
-	jmp EmFsaveSt
+        call SaveEnvPm16
+        jmp EmFsaveSt
 
 EmFsavePm32:
-	call SaveEnvPm32
-	jmp EmFsaveSt
+        call SaveEnvPm32
+        jmp EmFsaveSt
 
 EmFsaveRm:
-	test byte ptr [ebp].em_flags,d32
-	jnz EmulateError
+        test byte ptr [ebp].em_flags,d32
+        jnz EmulateError
 
 EmFsaveRm16:
-	call SaveEnvRm16
+        call SaveEnvRm16
 
 EmFsaveSt:
-	mov ecx,8
-	lea edi,[ebp].math_st0
+        mov ecx,8
+        lea edi,[ebp].math_st0
 
 EmFsaveLoop:
-	push ecx
-	mov eax,ss:[edi]
-	mov edx,ss:[edi+4]
-	mov cx,ss:[edi+8]
-	call WriteTbyte
-	add edi,10
-	add ebx,10
-	pop ecx
-	loop EmFsaveLoop
+        push ecx
+        mov eax,ss:[edi]
+        mov edx,ss:[edi+4]
+        mov cx,ss:[edi+8]
+        call WriteTbyte
+        add edi,10
+        add ebx,10
+        pop ecx
+        loop EmFsaveLoop
 ;
-	ret
-EmFSave	Endp
+        ret
+EmFSave Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFld1
+;               NAME:                   EmFld1
 ;
-;		DESCRIPTION:	Emulate fld1
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Const1	DT 1.0
-
-EmFld1	Proc near
-	mov eax,dword ptr cs:Const1
-	mov edx,dword ptr cs:Const1+4
-	mov cx,word ptr cs:Const1+8
-	call PushReal
-	ret
-EmFld1	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFldl2t
-;
-;		DESCRIPTION:	Emulate fldl2t
+;               DESCRIPTION:    Emulate fld1
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ConstL2t	DW	08AFEh,	0CD1Bh,	0784Bh,	0D49Ah,	4000h
-
-EmFldl2t	Proc near
-	mov eax,dword ptr cs:ConstL2t
-	mov edx,dword ptr cs:ConstL2t+4
-	mov cx,word ptr cs:ConstL2t+8
-	call PushReal
-	ret
-EmFldl2t	Endp
-	
+EmFld1  Proc near
+        mov eax,dword ptr cs:Const1
+        mov edx,dword ptr cs:Const1+4
+        mov cx,word ptr cs:Const1+8
+        call PushReal
+        ret
+EmFld1  Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFldl2e
+;               NAME:                   EmFldl2t
 ;
-;		DESCRIPTION:	Emulate fldl2e
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ConstL2e	DW	0F0BCh,	05C17h,	03B29h,	0B8AAh,	3FFFh
-
-EmFldl2e	Proc near
-	mov eax,dword ptr cs:ConstL2e
-	mov edx,dword ptr cs:ConstL2e+4
-	mov cx,word ptr cs:ConstL2e+8
-	call PushReal
-	ret
-EmFldl2e	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFldpi
-;
-;		DESCRIPTION:	Emulate fldpi
+;               DESCRIPTION:    Emulate fldl2t
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ConstPi		DW	0C235h,	02168h,	0DAA2h,	0C90Fh,	4000h
+ConstL2t        DW      08AFEh, 0CD1Bh, 0784Bh, 0D49Ah, 4000h
 
-EmFldpi	Proc near
-	mov eax,dword ptr cs:ConstPi
-	mov edx,dword ptr cs:ConstPi+4
-	mov cx,word ptr cs:ConstPi+8
-	call PushReal
-	ret
-EmFldpi	Endp
-	
+EmFldl2t        Proc near
+        mov eax,dword ptr cs:ConstL2t
+        mov edx,dword ptr cs:ConstL2t+4
+        mov cx,word ptr cs:ConstL2t+8
+        call PushReal
+        ret
+EmFldl2t        Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFldlg2
+;               NAME:                   EmFldl2e
 ;
-;		DESCRIPTION:	Emulate fldlg2
+;               DESCRIPTION:    Emulate fldl2e
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ConstLg2	DW	0F799h,	0FBCFh,	09A84h,	09A20h,	3FFDh
+ConstL2e        DW      0F0BCh, 05C17h, 03B29h, 0B8AAh, 3FFFh
 
-EmFldlg2	Proc near
-	mov eax,dword ptr cs:ConstLg2
-	mov edx,dword ptr cs:ConstLg2+4
-	mov cx,word ptr cs:ConstLg2+8
-	call PushReal
-	ret
-EmFldlg2	Endp
+EmFldl2e        Proc near
+        mov eax,dword ptr cs:ConstL2e
+        mov edx,dword ptr cs:ConstL2e+4
+        mov cx,word ptr cs:ConstL2e+8
+        call PushReal
+        ret
+EmFldl2e        Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmFldpi
+;
+;               DESCRIPTION:    Emulate fldpi
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConstPi         DW      0C235h, 02168h, 0DAA2h, 0C90Fh, 4000h
+
+EmFldpi Proc near
+        mov eax,dword ptr cs:ConstPi
+        mov edx,dword ptr cs:ConstPi+4
+        mov cx,word ptr cs:ConstPi+8
+        call PushReal
+        ret
+EmFldpi Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmFldlg2
+;
+;               DESCRIPTION:    Emulate fldlg2
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConstLg2        DW      0F799h, 0FBCFh, 09A84h, 09A20h, 3FFDh
+
+EmFldlg2        Proc near
+        mov eax,dword ptr cs:ConstLg2
+        mov edx,dword ptr cs:ConstLg2+4
+        mov cx,word ptr cs:ConstLg2+8
+        call PushReal
+        ret
+EmFldlg2        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFldln2
+;               NAME:                   EmFldln2
 ;
-;		DESCRIPTION:	Emulate fldln2
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ConstLn2	DW	079ACh,	0D1CFh,	017F7h,	0B172h,	3FFEh
-
-EmFldln2	Proc near
-	mov eax,dword ptr cs:ConstLn2
-	mov edx,dword ptr cs:ConstLn2+4
-	mov cx,word ptr cs:ConstLn2+8
-	call PushReal
-	ret
-EmFldln2	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFldz
-;
-;		DESCRIPTION:	Emulate fldz
+;               DESCRIPTION:    Emulate fldln2
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Const0		DT 0.0
+ConstLn2        DW      079ACh, 0D1CFh, 017F7h, 0B172h, 3FFEh
 
-EmFldz	Proc near
-	mov eax,dword ptr cs:Const0
-	mov edx,dword ptr cs:Const0+4
-	mov cx,word ptr cs:Const0+8
-	call PushReal
-	ret
-EmFldz	Endp
+EmFldln2        Proc near
+        mov eax,dword ptr cs:ConstLn2
+        mov edx,dword ptr cs:ConstLn2+4
+        mov cx,word ptr cs:ConstLn2+8
+        call PushReal
+        ret
+EmFldln2        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFildWord
+;               NAME:                   EmFldz
 ;
-;		DESCRIPTION:	Emulate fild word ptr
-;
-;		PARAMETERS:		AL		operand
+;               DESCRIPTION:    Emulate fldz
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFildWord	Proc near
-	mov bl,al
-	call LoadWordMem
-	push ax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call IntToReal
-	add esp,2
-	call PushReal
-	ret
-EmFildWord	Endp
+Const0          DT 0.0
+
+EmFldz  Proc near
+        mov eax,dword ptr cs:Const0
+        mov edx,dword ptr cs:Const0+4
+        mov cx,word ptr cs:Const0+8
+        call PushReal
+        ret
+EmFldz  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFildDword
+;               NAME:                   EmFildWord
 ;
-;		DESCRIPTION:	Emulate fild dword ptr
+;               DESCRIPTION:    Emulate fild word ptr
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFildDword	Proc near
-	mov bl,al
-	call LoadDwordMem
-	push eax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call LongToReal
-	add esp,4
-	call PushReal
-	ret
-EmFildDword	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFildQword
-;
-;		DESCRIPTION:	Emulate fild qword ptr
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFildQword	Proc near
-	mov bl,al
-	call LoadQwordMem
-	push edx
-	push eax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call QwordToReal
-	add esp,8
-	call PushReal
-	ret
-EmFildQword	Endp
+EmFildWord      Proc near
+        mov bl,al
+        call LoadWordMem
+        push ax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call IntToReal
+        add esp,2
+        call PushReal
+        ret
+EmFildWord      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFldSingle
+;               NAME:                   EmFildDword
 ;
-;		DESCRIPTION:	Emulate fld single
+;               DESCRIPTION:    Emulate fild dword ptr
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFldSingle	Proc near
-	mov bl,al
-	call LoadDwordMem
-	push eax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call FloatToReal
-	add esp,4
-	call PushReal
-	ret
-EmFldSingle	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFldDouble
-;
-;		DESCRIPTION:	Emulate fld double
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFldDouble	Proc near
-	mov bl,al
-	call LoadQwordMem
-	push edx
-	push eax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call DoubleToReal
-	add esp,8
-	call PushReal
-	ret
-EmFldDouble	Endp
+EmFildDword     Proc near
+        mov bl,al
+        call LoadDwordMem
+        push eax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call LongToReal
+        add esp,4
+        call PushReal
+        ret
+EmFildDword     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFldExtended
+;               NAME:                   EmFildQword
 ;
-;		DESCRIPTION:	Emulate fld extended
+;               DESCRIPTION:    Emulate fild qword ptr
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFldExtended	Proc near
-	mov bl,al
-	call LoadTbyteMem
-	call PushReal
-	ret
-EmFldExtended	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFbld
-;
-;		DESCRIPTION:	Emulate fbld
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFbld	Proc near
-	mov bl,al
-	call LoadTbyteMem
-	push cx
-	push edx
-	push eax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call BcdToReal
-	add esp,10
-	call PushReal
-	ret
-EmFbld	Endp
+EmFildQword     Proc near
+        mov bl,al
+        call LoadQwordMem
+        push edx
+        push eax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call QwordToReal
+        add esp,8
+        call PushReal
+        ret
+EmFildQword     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFldSt
+;               NAME:                   EmFldSingle
 ;
-;		DESCRIPTION:	Emulate fld st(i)
+;               DESCRIPTION:    Emulate fld single
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFldSt	Proc near
-	and al,7
-	mov bl,al
-	call GetReal
-	call PushReal
-	ret
-EmFldSt	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFistWord
-;
-;		DESCRIPTION:	Emulate fist word ptr
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFistWord	Proc near
-	push ax
-	xor bl,bl
-	call GetReal
-	push cx
-	push edx
-	push eax
-	push esp
-	push dword ptr [ebp].math_control
-	call RealToInt
-	jnc EmFistWordSave
+EmFldSingle     Proc near
+        mov bl,al
+        call LoadDwordMem
+        push eax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call FloatToReal
+        add esp,4
+        call PushReal
+        ret
+EmFldSingle     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	call InvalidFault
+;
+;               NAME:                   EmFldDouble
+;
+;               DESCRIPTION:    Emulate fld double
+;
+;               PARAMETERS:             AL              operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFldDouble     Proc near
+        mov bl,al
+        call LoadQwordMem
+        push edx
+        push eax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call DoubleToReal
+        add esp,8
+        call PushReal
+        ret
+EmFldDouble     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmFldExtended
+;
+;               DESCRIPTION:    Emulate fld extended
+;
+;               PARAMETERS:             AL              operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFldExtended   Proc near
+        mov bl,al
+        call LoadTbyteMem
+        call PushReal
+        ret
+EmFldExtended   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmFbld
+;
+;               DESCRIPTION:    Emulate fbld
+;
+;               PARAMETERS:             AL              operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFbld  Proc near
+        mov bl,al
+        call LoadTbyteMem
+        push cx
+        push edx
+        push eax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call BcdToReal
+        add esp,10
+        call PushReal
+        ret
+EmFbld  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmFldSt
+;
+;               DESCRIPTION:    Emulate fld st(i)
+;
+;               PARAMETERS:             AL              operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFldSt Proc near
+        and al,7
+        mov bl,al
+        call GetReal
+        call PushReal
+        ret
+EmFldSt Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmFistWord
+;
+;               DESCRIPTION:    Emulate fist word ptr
+;
+;               PARAMETERS:             AL              operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFistWord      Proc near
+        push ax
+        xor bl,bl
+        call GetReal
+        push cx
+        push edx
+        push eax
+        push esp
+        push dword ptr [ebp].math_control
+        call RealToInt
+        jnc EmFistWordSave
+;
+        call InvalidFault
 
 EmFistWordSave:
-	add esp,10
-	pop bx
-	call SaveWordMem
-	ret
-EmFistWord	Endp
+        add esp,10
+        pop bx
+        call SaveWordMem
+        ret
+EmFistWord      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFistpWord
+;               NAME:                   EmFistpWord
 ;
-;		DESCRIPTION:	Emulate fistp word ptr
+;               DESCRIPTION:    Emulate fistp word ptr
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFistpWord	Proc near
-	call EmFistWord
-	call PopReal
-	ret
-EmFistpWord	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFistDword
-;
-;		DESCRIPTION:	Emulate fist dword ptr
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFistDword	Proc near
-	push ax
-	xor bl,bl
-	call GetReal
-	push cx
-	push edx
-	push eax
-	push esp
-	push dword ptr [ebp].math_control
-	call RealToLong
-	jnc EmFistDwordSave
+EmFistpWord     Proc near
+        call EmFistWord
+        call PopReal
+        ret
+EmFistpWord     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	call InvalidFault
+;
+;               NAME:                   EmFistDword
+;
+;               DESCRIPTION:    Emulate fist dword ptr
+;
+;               PARAMETERS:             AL              operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFistDword     Proc near
+        push ax
+        xor bl,bl
+        call GetReal
+        push cx
+        push edx
+        push eax
+        push esp
+        push dword ptr [ebp].math_control
+        call RealToLong
+        jnc EmFistDwordSave
+;
+        call InvalidFault
 
 EmFistDwordSave:
-	add esp,10
-	pop bx
-	call SaveDwordMem
-	ret
-EmFistDword	Endp
+        add esp,10
+        pop bx
+        call SaveDwordMem
+        ret
+EmFistDword     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFistpDword
+;               NAME:                   EmFistpDword
 ;
-;		DESCRIPTION:	Emulate fistp dword ptr
+;               DESCRIPTION:    Emulate fistp dword ptr
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFistpDword	Proc near
-	call EmFistDword
-	call PopReal
-	ret
-EmFistpDword	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFistpQword
-;
-;		DESCRIPTION:	Emulate fistp qword ptr
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFistpQword	Proc near
-	push ax
-	xor bl,bl
-	call GetReal
-	push cx
-	push edx
-	push eax
-	push esp
-	push dword ptr [ebp].math_control
-	call RealToQword
-	jnc EmFistpQwordSave
+EmFistpDword    Proc near
+        call EmFistDword
+        call PopReal
+        ret
+EmFistpDword    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	call InvalidFault
+;
+;               NAME:                   EmFistpQword
+;
+;               DESCRIPTION:    Emulate fistp qword ptr
+;
+;               PARAMETERS:             AL              operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFistpQword    Proc near
+        push ax
+        xor bl,bl
+        call GetReal
+        push cx
+        push edx
+        push eax
+        push esp
+        push dword ptr [ebp].math_control
+        call RealToQword
+        jnc EmFistpQwordSave
+;
+        call InvalidFault
 
 EmFistpQwordSave:
-	add esp,10
-	pop bx
-	call SaveQwordMem
-	call PopReal
-	ret
-EmFistpQword	Endp
+        add esp,10
+        pop bx
+        call SaveQwordMem
+        call PopReal
+        ret
+EmFistpQword    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFstSingle
+;               NAME:                   EmFstSingle
 ;
-;		DESCRIPTION:	Emulate fst dword ptr
+;               DESCRIPTION:    Emulate fst dword ptr
 ;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFstSingle	Proc near
-	push ax
-	xor bl,bl
-	call GetReal
-	push cx
-	push edx
-	push eax
-	push esp
-	call RealToFloat
-	jnc EmFstSingleSave
+EmFstSingle     Proc near
+        push ax
+        xor bl,bl
+        call GetReal
+        push cx
+        push edx
+        push eax
+        push esp
+        call RealToFloat
+        jnc EmFstSingleSave
 ;
-	call InvalidFault
+        call InvalidFault
 
 EmFstSingleSave:
-	add esp,10
-	pop bx
-	call SaveDwordMem
-	ret
-EmFstSingle	Endp
+        add esp,10
+        pop bx
+        call SaveDwordMem
+        ret
+EmFstSingle     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFstpSingle
+;               NAME:                   EmFstpSingle
 ;
-;		DESCRIPTION:	Emulate fstp dword ptr
+;               DESCRIPTION:    Emulate fstp dword ptr
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFstpSingle	Proc near
-	call EmFstSingle
-	call PopReal
-	ret
-EmFstpSingle	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFstDouble
-;
-;		DESCRIPTION:	Emulate fst qword ptr
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFstDouble	Proc near
-	push ax
-	xor bl,bl
-	call GetReal
-	push cx
-	push edx
-	push eax
-	push esp
-	call RealToDouble
-	jnc EmFstDoubleSave
+EmFstpSingle    Proc near
+        call EmFstSingle
+        call PopReal
+        ret
+EmFstpSingle    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	call InvalidFault
+;
+;               NAME:                   EmFstDouble
+;
+;               DESCRIPTION:    Emulate fst qword ptr
+;
+;               PARAMETERS:             AL              operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFstDouble     Proc near
+        push ax
+        xor bl,bl
+        call GetReal
+        push cx
+        push edx
+        push eax
+        push esp
+        call RealToDouble
+        jnc EmFstDoubleSave
+;
+        call InvalidFault
 
 EmFstDoubleSave:
-	add esp,10
-	pop bx
-	call SaveQwordMem
-	ret
-EmFstDouble	Endp
+        add esp,10
+        pop bx
+        call SaveQwordMem
+        ret
+EmFstDouble     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFstpDouble
+;               NAME:                   EmFstpDouble
 ;
-;		DESCRIPTION:	Emulate fstp qword ptr
+;               DESCRIPTION:    Emulate fstp qword ptr
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFstpDouble	Proc near
-	call EmFstDouble
-	call PopReal
-	ret
-EmFstpDouble	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFstpExtended
-;
-;		DESCRIPTION:	Emulate fstp tbyte ptr
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFstpExtended	Proc near
-	push ax
-	xor bl,bl
-	call GetReal
-	pop bx
-	call SaveTbyteMem
-	call PopReal
-	ret
-EmFstpExtended	Endp
+EmFstpDouble    Proc near
+        call EmFstDouble
+        call PopReal
+        ret
+EmFstpDouble    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFbstp
+;               NAME:                   EmFstpExtended
 ;
-;		DESCRIPTION:	Emulate fbstp
+;               DESCRIPTION:    Emulate fstp tbyte ptr
 ;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFbstp	Proc near
-	push ax
-	xor bl,bl
-	call GetReal
-	xor ebx,ebx
-	push bx
-	push ebx
-	push ebx
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call RealToBcd
-	jnc EmFbstpSave
+EmFstpExtended  Proc near
+        push ax
+        xor bl,bl
+        call GetReal
+        pop bx
+        call SaveTbyteMem
+        call PopReal
+        ret
+EmFstpExtended  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	call InvalidFault
+;
+;               NAME:                   EmFbstp
+;
+;               DESCRIPTION:    Emulate fbstp
+;
+;               PARAMETERS:             AL              operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFbstp Proc near
+        push ax
+        xor bl,bl
+        call GetReal
+        xor ebx,ebx
+        push bx
+        push ebx
+        push ebx
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call RealToBcd
+        jnc EmFbstpSave
+;
+        call InvalidFault
 
 EmFbstpSave:
-	add esp,10
-	mov ebx,esp
-	pop eax
-	pop edx
-	pop cx
-	pop bx
-	call SaveTbyteMem
-	call PopReal
-	ret
-EmFbstp	Endp
+        add esp,10
+        mov ebx,esp
+        pop eax
+        pop edx
+        pop cx
+        pop bx
+        call SaveTbyteMem
+        call PopReal
+        ret
+EmFbstp Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFstSt
+;               NAME:                   EmFstSt
 ;
-;		DESCRIPTION:	Emulate fst st(i)
+;               DESCRIPTION:    Emulate fst st(i)
 ;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFstSt	Proc near
-	movzx ebx,[ebp].math_status
-	rol bx,5
-	and bl,7
-	mov bh,bl
-	add bl,al
-	and bl,7
-	mov cl,bh
-	add cl,cl
-	mov ax,11b
-	shl ax,cl
-	mov dx,[ebp].math_tag
-	mov si,dx
-	and dx,ax
-	cmp ax,dx
-	jne EmFstStOk
+EmFstSt Proc near
+        movzx ebx,[ebp].math_status
+        rol bx,5
+        and bl,7
+        mov bh,bl
+        add bl,al
+        and bl,7
+        mov cl,bh
+        add cl,cl
+        mov ax,11b
+        shl ax,cl
+        mov dx,[ebp].math_tag
+        mov si,dx
+        and dx,ax
+        cmp ax,dx
+        jne EmFstStOk
 ;
-	call InvalidFault
+        call InvalidFault
 
 EmFstStOk:
-	shr dx,cl
-	mov cl,bl
-	add cl,cl
-	mov ax,11b
-	shl ax,cl
-	shl dx,cl
-	not ax
-	and si,ax
-	or si,dx
-	mov [ebp].math_tag,si
+        shr dx,cl
+        mov cl,bl
+        add cl,cl
+        mov ax,11b
+        shl ax,cl
+        shl dx,cl
+        not ax
+        and si,ax
+        or si,dx
+        mov [ebp].math_tag,si
 ;
-	movzx esi,bh
-	add esi,esi
-	mov eax,esi
-	add esi,esi
-	add esi,esi
-	add esi,eax
+        movzx esi,bh
+        add esi,esi
+        mov eax,esi
+        add esi,esi
+        add esi,esi
+        add esi,eax
 ;
-	movzx edi,bl
-	add edi,edi
-	mov eax,edi
-	add edi,edi
-	add edi,edi
-	add edi,eax
+        movzx edi,bl
+        add edi,edi
+        mov eax,edi
+        add edi,edi
+        add edi,edi
+        add edi,eax
 ;
-	mov eax,dword ptr [ebp+esi].math_st0
-	mov dword ptr [ebp+edi].math_st0,eax
-	mov eax,dword ptr [ebp+esi+4].math_st0
-	mov dword ptr [ebp+edi+4].math_st0,eax
-	mov ax,word ptr [ebp+esi+8].math_st0
-	mov word ptr [ebp+edi+8].math_st0,ax
-	ret
-EmFstSt	Endp
+        mov eax,dword ptr [ebp+esi].math_st0
+        mov dword ptr [ebp+edi].math_st0,eax
+        mov eax,dword ptr [ebp+esi+4].math_st0
+        mov dword ptr [ebp+edi+4].math_st0,eax
+        mov ax,word ptr [ebp+esi+8].math_st0
+        mov word ptr [ebp+edi+8].math_st0,ax
+        ret
+EmFstSt Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFstpSt
+;               NAME:                   EmFstpSt
 ;
-;		DESCRIPTION:	Emulate fstp st(i)
+;               DESCRIPTION:    Emulate fstp st(i)
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFstpSt	Proc near
-	call EmFstSt
-	call PopReal
-	ret
-EmFstpSt	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFxch
-;
-;		DESCRIPTION:	Emulate fxch st(0), st(i)
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFxch	Proc near
-	push ax
-	mov bl,al
-	call GetReal
-	pop bx
-	push cx
-	push edx
-	push eax
-	push bx
-	xor bl,bl
-	call GetReal
-	pop bx
-	call PutReal
-	pop eax
-	pop edx
-	pop cx
-	xor bl,bl
-	call PutReal
-	ret
-EmFxch	Endp
+EmFstpSt        Proc near
+        call EmFstSt
+        call PopReal
+        ret
+EmFstpSt        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFiComWord
+;               NAME:                   EmFxch
 ;
-;		DESCRIPTION:	Emulate ficom word ptr
+;               DESCRIPTION:    Emulate fxch st(0), st(i)
 ;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFiComWord	Proc near
-	mov bl,al
-	call LoadWordMem
-	push ax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call IntToReal
-	add esp,2
-	push cx
-	push edx
-	push eax
-;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call CmpReal
-	add esp,20
-;
-	mov dx,[ebp].math_status
-	and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
-	or dx,ax
-	mov [ebp].math_status,dx
-	ret
-EmFiComWord	Endp
-
-EmFiCompWord	Proc near
-	call EmFiComWord
-	call PopReal
-	ret
-EmFiCompWord	Endp
+EmFxch  Proc near
+        push ax
+        mov bl,al
+        call GetReal
+        pop bx
+        push cx
+        push edx
+        push eax
+        push bx
+        xor bl,bl
+        call GetReal
+        pop bx
+        call PutReal
+        pop eax
+        pop edx
+        pop cx
+        xor bl,bl
+        call PutReal
+        ret
+EmFxch  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFiComDword
+;               NAME:                   EmFiComWord
 ;
-;		DESCRIPTION:	Emulate ficom dword ptr
+;               DESCRIPTION:    Emulate ficom word ptr
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFiComDword	Proc near
-	mov bl,al
-	call LoadDwordMem
-	push eax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call LongToReal
-	add esp,4
-	push cx
-	push edx
-	push eax
-;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call CmpReal
-	add esp,20
-;
-	mov dx,[ebp].math_status
-	and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
-	or dx,ax
-	mov [ebp].math_status,dx
-	ret
-EmFiComDword	Endp
-
-EmFiCompDword	Proc near
-	call EmFiComDword
-	call PopReal
-	ret
-EmFiCompDword	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFComSingle
-;
-;		DESCRIPTION:	Emulate fcom single ptr
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFComSingle	Proc near
-	mov bl,al
-	call LoadDwordMem
-	push eax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call FloatToReal
-	add esp,4
-	push cx
-	push edx
-	push eax
+EmFiComWord     Proc near
+        mov bl,al
+        call LoadWordMem
+        push ax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call IntToReal
+        add esp,2
+        push cx
+        push edx
+        push eax
 ;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call CmpReal
-	add esp,20
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call CmpReal
+        add esp,20
 ;
-	mov dx,[ebp].math_status
-	and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
-	or dx,ax
-	mov [ebp].math_status,dx
-	ret
-EmFComSingle	Endp
+        mov dx,[ebp].math_status
+        and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
+        or dx,ax
+        mov [ebp].math_status,dx
+        ret
+EmFiComWord     Endp
 
-EmFCompSingle	Proc near
-	call EmFComSingle
-	call PopReal
-	ret
-EmFCompSingle	Endp
+EmFiCompWord    Proc near
+        call EmFiComWord
+        call PopReal
+        ret
+EmFiCompWord    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFComDouble
+;               NAME:                   EmFiComDword
 ;
-;		DESCRIPTION:	Emulate fcom qword ptr
+;               DESCRIPTION:    Emulate ficom dword ptr
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFComDouble	Proc near
-	mov bl,al
-	call LoadQwordMem
-	push edx
-	push eax
-	mov [ebp].math_data_offs,ebx
-	mov ax,ss:[ebp+esi].d_selector
-	mov [ebp].math_data_sel,ax
-	push esp
-	call DoubleToReal
-	add esp,8
-	push cx
-	push edx
-	push eax
-;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call CmpReal
-	add esp,20
-;
-	mov dx,[ebp].math_status
-	and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
-	or dx,ax
-	mov [ebp].math_status,dx
-	ret
-EmFComDouble	Endp
-
-EmFCompDouble	Proc near
-	call EmFComDouble
-	call PopReal
-	ret
-EmFCompDouble	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFComStSti
-;
-;		DESCRIPTION:	Emulate fcom st(0),st(i)
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFComStSti	Proc near
-	mov bl,al
-	call GetReal
-	push cx
-	push edx
-	push eax
+EmFiComDword    Proc near
+        mov bl,al
+        call LoadDwordMem
+        push eax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call LongToReal
+        add esp,4
+        push cx
+        push edx
+        push eax
 ;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call CmpReal
-	add esp,20
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call CmpReal
+        add esp,20
 ;
-	mov dx,[ebp].math_status
-	and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
-	or dx,ax
-	mov [ebp].math_status,dx
-	ret
-EmFComStSti	Endp
+        mov dx,[ebp].math_status
+        and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
+        or dx,ax
+        mov [ebp].math_status,dx
+        ret
+EmFiComDword    Endp
 
-EmFCompStSti	Proc near
-	call EmFComStSti
-	call PopReal
-	ret
-EmFCompStSti	Endp
+EmFiCompDword   Proc near
+        call EmFiComDword
+        call PopReal
+        ret
+EmFiCompDword   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFCompp
+;               NAME:                   EmFComSingle
 ;
-;		DESCRIPTION:	Emulate fcom st(0),st(1)
+;               DESCRIPTION:    Emulate fcom single ptr
 ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFCompp	Proc near
-	mov bl,1
-	call GetReal
-	push cx
-	push edx
-	push eax
-;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call CmpReal
-	add esp,20
-;
-	mov dx,[ebp].math_status
-	and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
-	or dx,ax
-	mov [ebp].math_status,dx
-;
-	call PopReal
-	call PopReal
-	ret
-EmFCompp	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFxam
-;
-;		DESCRIPTION:	Emulate fxam
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFxam	Proc near
-	mov cx,[ebp].math_status
-	rol cx,5
-	and cl,7
-	add cl,cl
-	mov ax,11b
-	shl ax,cl
-	and ax,[ebp].math_tag
-	shr ax,cl
-	and ax,3
-	cmp ax,TAG_EMPTY
-	je EmFxamEmpty
+EmFComSingle    Proc near
+        mov bl,al
+        call LoadDwordMem
+        push eax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call FloatToReal
+        add esp,4
+        push cx
+        push edx
+        push eax
 ;
-	cmp ax,TAG_NAN
-	je EmFxamNan
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call CmpReal
+        add esp,20
 ;
-	cmp ax,TAG_ZERO
-	je EmFxamZero
+        mov dx,[ebp].math_status
+        and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
+        or dx,ax
+        mov [ebp].math_status,dx
+        ret
+EmFComSingle    Endp
+
+EmFCompSingle   Proc near
+        call EmFComSingle
+        call PopReal
+        ret
+EmFCompSingle   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmFComDouble
+;
+;               DESCRIPTION:    Emulate fcom qword ptr
+;
+;               PARAMETERS:             AL              operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFComDouble    Proc near
+        mov bl,al
+        call LoadQwordMem
+        push edx
+        push eax
+        mov [ebp].math_data_offs,ebx
+        mov ax,ss:[ebp+esi].d_selector
+        mov [ebp].math_data_sel,ax
+        push esp
+        call DoubleToReal
+        add esp,8
+        push cx
+        push edx
+        push eax
+;
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call CmpReal
+        add esp,20
+;
+        mov dx,[ebp].math_status
+        and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
+        or dx,ax
+        mov [ebp].math_status,dx
+        ret
+EmFComDouble    Endp
+
+EmFCompDouble   Proc near
+        call EmFComDouble
+        call PopReal
+        ret
+EmFCompDouble   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmFComStSti
+;
+;               DESCRIPTION:    Emulate fcom st(0),st(i)
+;
+;               PARAMETERS:             AL              operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFComStSti     Proc near
+        mov bl,al
+        call GetReal
+        push cx
+        push edx
+        push eax
+;
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call CmpReal
+        add esp,20
+;
+        mov dx,[ebp].math_status
+        and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
+        or dx,ax
+        mov [ebp].math_status,dx
+        ret
+EmFComStSti     Endp
+
+EmFCompStSti    Proc near
+        call EmFComStSti
+        call PopReal
+        ret
+EmFCompStSti    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmFCompp
+;
+;               DESCRIPTION:    Emulate fcom st(0),st(1)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFCompp        Proc near
+        mov bl,1
+        call GetReal
+        push cx
+        push edx
+        push eax
+;
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call CmpReal
+        add esp,20
+;
+        mov dx,[ebp].math_status
+        and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
+        or dx,ax
+        mov [ebp].math_status,dx
+;
+        call PopReal
+        call PopReal
+        ret
+EmFCompp        Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmFxam
+;
+;               DESCRIPTION:    Emulate fxam
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFxam  Proc near
+        mov cx,[ebp].math_status
+        rol cx,5
+        and cl,7
+        add cl,cl
+        mov ax,11b
+        shl ax,cl
+        and ax,[ebp].math_tag
+        shr ax,cl
+        and ax,3
+        cmp ax,TAG_EMPTY
+        je EmFxamEmpty
+;
+        cmp ax,TAG_NAN
+        je EmFxamNan
+;
+        cmp ax,TAG_ZERO
+        je EmFxamZero
 
 EmFxamNormal:
-	xor bl,bl
-	call GetReal
-	test cx,7FFFh
-	jz EmFxamDenormal
+        xor bl,bl
+        call GetReal
+        test cx,7FFFh
+        jz EmFxamDenormal
 ;
-	mov bx,STATUS_C2
-	jmp EmFxamSign
+        mov bx,STATUS_C2
+        jmp EmFxamSign
 
 EmFxamDenormal:
-	mov bx,STATUS_C3 OR STATUS_C2
-	jmp EmFxamSign
+        mov bx,STATUS_C3 OR STATUS_C2
+        jmp EmFxamSign
 
 EmFxamEmpty:
-	mov bx,STATUS_C3 OR STATUS_C0
-	jmp EmFxamDone
+        mov bx,STATUS_C3 OR STATUS_C0
+        jmp EmFxamDone
 
 EmFxamNan:
-	xor bl,bl
-	call GetReal
-	and edx,7FFFFFFFh
-	or eax,edx
-	jz EmFxamInfinit
+        xor bl,bl
+        call GetReal
+        and edx,7FFFFFFFh
+        or eax,edx
+        jz EmFxamInfinit
 ;
-	mov bx,STATUS_C0
-	jmp EmFxamSign
+        mov bx,STATUS_C0
+        jmp EmFxamSign
 
 EmFxamInfinit:
-	mov bx,STATUS_C2 OR STATUS_C0
-	jmp EmFxamSign
+        mov bx,STATUS_C2 OR STATUS_C0
+        jmp EmFxamSign
 
 EmFxamZero:
-	xor bl,bl
-	call GetReal
-	mov bx,STATUS_C3
+        xor bl,bl
+        call GetReal
+        mov bx,STATUS_C3
 
 EmFxamSign:
-	test ch,80h
-	jz EmFxamDone
+        test ch,80h
+        jz EmFxamDone
 ;
-	or bx,STATUS_C1	
+        or bx,STATUS_C1 
 
 EmFxamDone:
-	mov dx,[ebp].math_status
-	and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
-	or dx,bx
-	mov [ebp].math_status,dx
-	ret
-EmFxam	Endp
+        mov dx,[ebp].math_status
+        and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
+        or dx,bx
+        mov [ebp].math_status,dx
+        ret
+EmFxam  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFchs
+;               NAME:                   EmFchs
 ;
-;		DESCRIPTION:	Emulate fchs
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFchs	Proc near
-	xor bl,bl
-	call GetReal
-	xor ch,80h
-	xor bl,bl
-	call PutReal
-	ret
-EmFchs	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFabs
-;
-;		DESCRIPTION:	Emulate fabs
+;               DESCRIPTION:    Emulate fchs
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFabs	Proc near
-	xor bl,bl
-	call GetReal
-	and ch,NOT 80h
-	xor bl,bl
-	call PutReal
-	ret
-EmFabs	Endp
+EmFchs  Proc near
+        xor bl,bl
+        call GetReal
+        xor ch,80h
+        xor bl,bl
+        call PutReal
+        ret
+EmFchs  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFrndint
+;               NAME:                   EmFabs
 ;
-;		DESCRIPTION:	Emulate frndint
+;               DESCRIPTION:    Emulate fabs
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFrndint	Proc near
-	xor bl,bl
-	call GetReal
-	push cx
-	push edx
-	push eax
-	push esp
-	push dword ptr [ebp].math_control
-	call RealToQword
-	jnc EmFrndintDo
+EmFabs  Proc near
+        xor bl,bl
+        call GetReal
+        and ch,NOT 80h
+        xor bl,bl
+        call PutReal
+        ret
+EmFabs  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	call InvalidFault
-	add esp,10
-	jmp EmFrndintDone
+;
+;               NAME:                   EmFrndint
+;
+;               DESCRIPTION:    Emulate frndint
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFrndint       Proc near
+        xor bl,bl
+        call GetReal
+        push cx
+        push edx
+        push eax
+        push esp
+        push dword ptr [ebp].math_control
+        call RealToQword
+        jnc EmFrndintDo
+;
+        call InvalidFault
+        add esp,10
+        jmp EmFrndintDone
 
 EmFrndintDo:
-	add esp,10
-	push edx
-	push eax
-	push esp
-	call QwordToReal
-	add esp,8
-	xor bl,bl
-	call PutReal
+        add esp,10
+        push edx
+        push eax
+        push esp
+        call QwordToReal
+        add esp,8
+        xor bl,bl
+        call PutReal
 
 EmFrndintDone:
-	ret
-EmFrndint	Endp
+        ret
+EmFrndint       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			fadd, fiadd, faddp
+;               NAME:                   fadd, fiadd, faddp
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	OpWord Add
-	OpDword Add
-	OpSingle Add
-	OpDouble Add
-	OpStiSt Add
-	OpStSti Add
-	OppStiSt Add
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			fsub, fisub, fsubp
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	OpWord Sub
-	OpDword Sub
-	OpSingle Sub
-	OpDouble Sub
-	OpStiSt Sub
-	OpStSti Sub
-	OppStiSt Sub
+        OpWord Add
+        OpDword Add
+        OpSingle Add
+        OpDouble Add
+        OpStiSt Add
+        OpStSti Add
+        OppStiSt Add
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			fsubr, fisubr, fsubrp
+;               NAME:                   fsub, fisub, fsubp
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	OprWord Sub
-	OprDword Sub
-	OprSingle Sub
-	OprDouble Sub
-	OprStiSt Sub
-	OprStSti Sub
-	OprpStiSt Sub
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			fmul, fimul, fmulp
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	OpWord Mul
-	OpDword Mul
-	OpSingle Mul
-	OpDouble Mul
-	OpStiSt Mul
-	OpStSti Mul
-	OppStiSt Mul
+        OpWord Sub
+        OpDword Sub
+        OpSingle Sub
+        OpDouble Sub
+        OpStiSt Sub
+        OpStSti Sub
+        OppStiSt Sub
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			fdiv, fidiv, fdivp
+;               NAME:                   fsubr, fisubr, fsubrp
 ;
-;		PARAMETERS:		AL		operand
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	OpWord Div
-	OpDword Div
-	OpSingle Div
-	OpDouble Div
-	OpStiSt Div
-	OpStSti Div
-	OppStiSt Div
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			fdivr, fidivr, fdivrp
-;
-;		PARAMETERS:		AL		operand
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	OprWord Div
-	OprDword Div
-	OprSingle Div
-	OprDouble Div
-	OprStiSt Div
-	OprStSti Div
-	OprpStiSt Div
+        OprWord Sub
+        OprDword Sub
+        OprSingle Sub
+        OprDouble Sub
+        OprStiSt Sub
+        OprStSti Sub
+        OprpStiSt Sub
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFsqrt
+;               NAME:                   fmul, fimul, fmulp
 ;
-;		DESCRIPTION:	emulate fsqrt
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFsqrt	Proc near
-	xor bl,bl
-	call GetReal
-	push cx
-	push edx
-	push eax
-	push esp
-	call CalcSqrt
-	add esp,10
-	xor bl,bl
-	call PutReal
-	ret
-EmFsqrt	Endp
+        OpWord Mul
+        OpDword Mul
+        OpSingle Mul
+        OpDouble Mul
+        OpStiSt Mul
+        OpStSti Mul
+        OppStiSt Mul
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFscale
+;               NAME:                   fdiv, fidiv, fdivp
 ;
-;		DESCRIPTION:	emulate fscale
+;               PARAMETERS:             AL              operand
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFscale	Proc near
-	mov bl,1
-	call GetReal
-	push cx
-	push edx
-	push eax
-	push esp
-	mov eax,RC_CHOP
-	push eax
-	call RealToInt
-	jnc EmFscaleIntOk
+        OpWord Div
+        OpDword Div
+        OpSingle Div
+        OpDouble Div
+        OpStiSt Div
+        OpStSti Div
+        OppStiSt Div
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	call InvalidFault
+;
+;               NAME:                   fdivr, fidivr, fdivrp
+;
+;               PARAMETERS:             AL              operand
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        OprWord Div
+        OprDword Div
+        OprSingle Div
+        OprDouble Div
+        OprStiSt Div
+        OprStSti Div
+        OprpStiSt Div
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmFsqrt
+;
+;               DESCRIPTION:    emulate fsqrt
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFsqrt Proc near
+        xor bl,bl
+        call GetReal
+        push cx
+        push edx
+        push eax
+        push esp
+        call CalcSqrt
+        add esp,10
+        xor bl,bl
+        call PutReal
+        ret
+EmFsqrt Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmFscale
+;
+;               DESCRIPTION:    emulate fscale
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFscale        Proc near
+        mov bl,1
+        call GetReal
+        push cx
+        push edx
+        push eax
+        push esp
+        mov eax,RC_CHOP
+        push eax
+        call RealToInt
+        jnc EmFscaleIntOk
+;
+        call InvalidFault
 
 EmFscaleIntOk:
-	add esp,10
-	push ax
-	xor bl,bl
-	call GetReal
-	pop bx
-	test bh,80h
-	jz EmFscaleUp
+        add esp,10
+        push ax
+        xor bl,bl
+        call GetReal
+        pop bx
+        test bh,80h
+        jz EmFscaleUp
 
 EmFscaleDown:
-	neg bx
-	push cx
-	and cx,7FFFh
-	sub cx,bx
-	jnc EmFscaleDownOk
+        neg bx
+        push cx
+        and cx,7FFFh
+        sub cx,bx
+        jnc EmFscaleDownOk
 ;
-	pop cx
-	xor cx,cx
-	xor edx,edx
-	xor eax,eax
-	jmp EmFscaleDone
+        pop cx
+        xor cx,cx
+        xor edx,edx
+        xor eax,eax
+        jmp EmFscaleDone
 
 EmFscaleDownOk:
-	mov bx,cx
-	pop cx
-	and cx,8000h
-	or cx,bx
-	jmp EmFscaleDone
+        mov bx,cx
+        pop cx
+        and cx,8000h
+        or cx,bx
+        jmp EmFscaleDone
 
 EmFscaleUp:
-	push cx
-	and cx,7FFFh
-	or cx,8000h
-	add cx,bx
-	jnc EmFscaleUpOk
+        push cx
+        and cx,7FFFh
+        or cx,8000h
+        add cx,bx
+        jnc EmFscaleUpOk
 ;
-	pop cx
-	or cx,7FFFh
-	mov edx,80000000h	
-	xor eax,eax
-	call InvalidFault
-	jmp EmFscaleDone
+        pop cx
+        or cx,7FFFh
+        mov edx,80000000h       
+        xor eax,eax
+        call InvalidFault
+        jmp EmFscaleDone
 
 EmFscaleUpOk:
-	mov bx,cx
-	and bx,7FFFh
-	pop cx
-	and cx,8000h
-	or cx,bx
+        mov bx,cx
+        and bx,7FFFh
+        pop cx
+        and cx,8000h
+        or cx,bx
 
 EmFscaleDone:
-	xor bl,bl
-	call PutReal
-	ret
-EmFscale	Endp
+        xor bl,bl
+        call PutReal
+        ret
+EmFscale        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFxtract
+;               NAME:                   EmFxtract
 ;
-;		DESCRIPTION:	emulate fxtract
+;               DESCRIPTION:    emulate fxtract
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFxtract	Proc near
-	xor bl,bl
-	call GetReal
-	mov ebx,eax
-	or ebx,edx
-	jz EmFxtractZero
+EmFxtract       Proc near
+        xor bl,bl
+        call GetReal
+        mov ebx,eax
+        or ebx,edx
+        jz EmFxtractZero
 ;
-	mov bx,cx
-	and bx,7FFFh
-	sub bx,3FFFh
-	and cx,8000h
-	or cx,3FFFh
-	push cx
-	push edx
-	push eax
-	push bx
-	push esp
-	call IntToReal
-	add esp,2
-	xor bl,bl
-	call PutReal
-	pop eax
-	pop edx
-	pop cx
-	call PushReal
-	jmp EmFxtractDone
-	
+        mov bx,cx
+        and bx,7FFFh
+        sub bx,3FFFh
+        and cx,8000h
+        or cx,3FFFh
+        push cx
+        push edx
+        push eax
+        push bx
+        push esp
+        call IntToReal
+        add esp,2
+        xor bl,bl
+        call PutReal
+        pop eax
+        pop edx
+        pop cx
+        call PushReal
+        jmp EmFxtractDone
+        
 EmFxtractZero:
-	push cx
-	mov cx,0FFFFh
-	mov edx,80000000h	
-	xor eax,eax
-	xor bl,bl
-	call PutReal
-	pop cx
-	xor eax,eax
-	xor edx,edx
-	call PushReal
-	
+        push cx
+        mov cx,0FFFFh
+        mov edx,80000000h       
+        xor eax,eax
+        xor bl,bl
+        call PutReal
+        pop cx
+        xor eax,eax
+        xor edx,edx
+        call PushReal
+        
 EmFxtractDone:
-	ret
-EmFxtract	Endp
+        ret
+EmFxtract       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFprem
+;               NAME:                   EmFprem
 ;
-;		DESCRIPTION:	emulate fprem
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFprem	Proc near
-	xor bl,bl
-	call GetReal
-	push cx
-	push edx
-	push eax
-	mov bl,1
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	push dword ptr [ebp].math_control
-	call CalcPartialRemainder
-	add esp,20
-	xor bl,bl
-	call PutReal
-	ret
-EmFprem	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFprem1
-;
-;		DESCRIPTION:	emulate fprem1
+;               DESCRIPTION:    emulate fprem
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFprem1	Proc near
-	xor bl,bl
-	call GetReal
-	push cx
-	push edx
-	push eax
-	mov bl,1
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	push dword ptr [ebp].math_control
-	call CalcPartialRemainder
-	add esp,20
-	xor bl,bl
-	call PutReal
-	ret
-EmFprem1	Endp
+EmFprem Proc near
+        xor bl,bl
+        call GetReal
+        push cx
+        push edx
+        push eax
+        mov bl,1
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        push dword ptr [ebp].math_control
+        call CalcPartialRemainder
+        add esp,20
+        xor bl,bl
+        call PutReal
+        ret
+EmFprem Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmF2xm1
+;               NAME:                   EmFprem1
 ;
-;		DESCRIPTION:	emulate f2xm1
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmF2xm1	Proc near
-	xor bl,bl
-	call GetReal
-	push cx
-	push edx
-	push eax
-	push esp
-	call CalcExp2M1
-	add esp,10
-	xor bl,bl
-	call PutReal
-	ret
-EmF2xm1	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFyl2x
-;
-;		DESCRIPTION:	emulate fyl2x
+;               DESCRIPTION:    emulate fprem1
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFyl2x	Proc near
-	xor bl,bl
-	call GetReal
-	push cx
-	push edx
-	push eax
-	push esp
-	call CalcLog2
-	add esp,10
-;
-	push cx
-	push edx
-	push eax
-	call PopReal
-;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call MulReal
-	add esp,20
-;
-	xor bl,bl
-	call PutReal	
-	ret
-EmFyl2x	Endp
+EmFprem1        Proc near
+        xor bl,bl
+        call GetReal
+        push cx
+        push edx
+        push eax
+        mov bl,1
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        push dword ptr [ebp].math_control
+        call CalcPartialRemainder
+        add esp,20
+        xor bl,bl
+        call PutReal
+        ret
+EmFprem1        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFyl2xp1
+;               NAME:                   EmF2xm1
 ;
-;		DESCRIPTION:	emulate fyl2xp1
+;               DESCRIPTION:    emulate f2xm1
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFyl2xp1	Proc near
-	xor bl,bl
-	call GetReal
-	push cx
-	push edx
-	push eax
-	mov ebx,esp
-	push word ptr cs:const1+8
-	push dword ptr cs:const1+4
-	push dword ptr cs:const1
-	push esp
-	push ebx
-	call AddReal
-	add esp,20
-;
-	push cx
-	push edx
-	push eax
-	push esp
-	call CalcLog2
-	add esp,10
-;
-	push cx
-	push edx
-	push eax
-	call PopReal
-;
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call MulReal
-	add esp,20
-;
-	xor bl,bl
-	call PutReal	
-	ret
-EmFyl2xp1	Endp
+EmF2xm1 Proc near
+        xor bl,bl
+        call GetReal
+        push cx
+        push edx
+        push eax
+        push esp
+        call CalcExp2M1
+        add esp,10
+        xor bl,bl
+        call PutReal
+        ret
+EmF2xm1 Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFsin
+;               NAME:                   EmFyl2x
 ;
-;		DESCRIPTION:	emulate fsin
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFsin	Proc near
-	xor bl,bl
-	call GetReal
-	push cx
-	push edx
-	push eax
-	push esp
-	call CalcSin
-	add esp,10
-	xor bl,bl
-	call PutReal
-	ret
-EmFsin	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFcos
-;
-;		DESCRIPTION:	emulate fcos
+;               DESCRIPTION:    emulate fyl2x
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFcos	Proc near
-	xor bl,bl
-	call GetReal
-	push cx
-	push edx
-	push eax
-	push esp
-	call CalcCos
-	add esp,10
-	xor bl,bl
-	call PutReal
-	ret
-EmFcos	Endp
+EmFyl2x Proc near
+        xor bl,bl
+        call GetReal
+        push cx
+        push edx
+        push eax
+        push esp
+        call CalcLog2
+        add esp,10
+;
+        push cx
+        push edx
+        push eax
+        call PopReal
+;
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call MulReal
+        add esp,20
+;
+        xor bl,bl
+        call PutReal    
+        ret
+EmFyl2x Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFsincos
+;               NAME:                   EmFyl2xp1
 ;
-;		DESCRIPTION:	emulate fsincos
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EmFsincos	Proc near
-	xor bl,bl
-	call GetReal
-	push cx
-	push edx
-	push eax
-	push esp
-	call CalcSin
-	xor bl,bl
-	call PutReal
-	push esp
-	call CalcCos
-	add esp,10
-	call PushReal
-	ret
-EmFsincos	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmFptan
-;
-;		DESCRIPTION:	emulate fptan
+;               DESCRIPTION:    emulate fyl2xp1
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFptan	Proc near
-	xor bl,bl
-	call GetReal
-	push cx
-	push edx
-	push eax
-	push esp
-	call CalcCos
+EmFyl2xp1       Proc near
+        xor bl,bl
+        call GetReal
+        push cx
+        push edx
+        push eax
+        mov ebx,esp
+        push word ptr cs:const1+8
+        push dword ptr cs:const1+4
+        push dword ptr cs:const1
+        push esp
+        push ebx
+        call AddReal
+        add esp,20
 ;
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push ebx
-	call CalcSin
+        push cx
+        push edx
+        push eax
+        push esp
+        call CalcLog2
+        add esp,10
 ;
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call DivReal
+        push cx
+        push edx
+        push eax
+        call PopReal
 ;
-	add esp,30
-	xor bl,bl
-	call PutReal
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call MulReal
+        add esp,20
 ;
-	mov eax,dword ptr cs:const1
-	mov edx,dword ptr cs:const1+4
-	mov cx,word ptr cs:const1+8
-	call PushReal
-	ret
-EmFptan	Endp
+        xor bl,bl
+        call PutReal    
+        ret
+EmFyl2xp1       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmFpatan
+;               NAME:                   EmFsin
 ;
-;		DESCRIPTION:	emulate fpatan
+;               DESCRIPTION:    emulate fsin
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmFpatan	Proc near
-	mov bl,1
-	call GetReal
-	push cx
-	push edx
-	push eax
-	xor bl,bl
-	call GetReal
-	mov ebx,esp
-	push cx
-	push edx
-	push eax
-	push esp
-	push ebx
-	call CalcAtan
-	add esp,20
-	mov bl,1
-	call PutReal
-	call PopReal
-	ret
-EmFpatan	Endp
+EmFsin  Proc near
+        xor bl,bl
+        call GetReal
+        push cx
+        push edx
+        push eax
+        push esp
+        call CalcSin
+        add esp,10
+        xor bl,bl
+        call PutReal
+        ret
+EmFsin  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EMD8
+;               NAME:                   EmFcos
 ;
-;		DESCRIPTION:	EMULATE D8 instructions
+;               DESCRIPTION:    emulate fcos
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmD8
+EmFcos  Proc near
+        xor bl,bl
+        call GetReal
+        push cx
+        push edx
+        push eax
+        push esp
+        call CalcCos
+        add esp,10
+        xor bl,bl
+        call PutReal
+        ret
+EmFcos  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmFsincos
+;
+;               DESCRIPTION:    emulate fsincos
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFsincos       Proc near
+        xor bl,bl
+        call GetReal
+        push cx
+        push edx
+        push eax
+        push esp
+        call CalcSin
+        xor bl,bl
+        call PutReal
+        push esp
+        call CalcCos
+        add esp,10
+        call PushReal
+        ret
+EmFsincos       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmFptan
+;
+;               DESCRIPTION:    emulate fptan
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFptan Proc near
+        xor bl,bl
+        call GetReal
+        push cx
+        push edx
+        push eax
+        push esp
+        call CalcCos
+;
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push ebx
+        call CalcSin
+;
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call DivReal
+;
+        add esp,30
+        xor bl,bl
+        call PutReal
+;
+        mov eax,dword ptr cs:const1
+        mov edx,dword ptr cs:const1+4
+        mov cx,word ptr cs:const1+8
+        call PushReal
+        ret
+EmFptan Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmFpatan
+;
+;               DESCRIPTION:    emulate fpatan
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFpatan        Proc near
+        mov bl,1
+        call GetReal
+        push cx
+        push edx
+        push eax
+        xor bl,bl
+        call GetReal
+        mov ebx,esp
+        push cx
+        push edx
+        push eax
+        push esp
+        push ebx
+        call CalcAtan
+        add esp,20
+        mov bl,1
+        call PutReal
+        call PopReal
+        ret
+EmFpatan        Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EMD8
+;
+;               DESCRIPTION:    EMULATE D8 instructions
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public EmD8
 
 EmD8HiTab:
-EmD8C0	DD OFFSET EmFAddStSti,			OFFSET EmFAddStSti
-EmD8C2	DD OFFSET EmFAddStSti,			OFFSET EmFAddStSti
-EmD8C4	DD OFFSET EmFAddStSti,			OFFSET EmFAddStSti
-EmD8C6	DD OFFSET EmFAddStSti,			OFFSET EmFAddStSti
-EmD8C8	DD OFFSET EmFMulStSti,			OFFSET EmFMulStSti
-EmD8CA	DD OFFSET EmFMulStSti,			OFFSET EmFMulStSti
-EmD8CC	DD OFFSET EmFMulStSti,			OFFSET EmFMulStSti
-EmD8CE	DD OFFSET EmFMulStSti,			OFFSET EmFMulStSti
-EmD8D0	DD OFFSET EmFComStSti,			OFFSET EmFComStSti
-EmD8D2	DD OFFSET EmFComStSti,			OFFSET EmFComStSti
-EmD8D4	DD OFFSET EmFComStSti,			OFFSET EmFComStSti
-EmD8D6	DD OFFSET EmFComStSti,			OFFSET EmFComStSti
-EmD8D8	DD OFFSET EmFCompStSti,			OFFSET EmFCompStSti
-EmD8DA	DD OFFSET EmFCompStSti,			OFFSET EmFCompStSti
-EmD8DC	DD OFFSET EmFCompStSti,			OFFSET EmFCompStSti
-EmD8DE	DD OFFSET EmFCompStSti,			OFFSET EmFCompStSti
-EmD8E0	DD OFFSET EmFSubStSti,			OFFSET EmFSubStSti
-EmD8E2	DD OFFSET EmFSubStSti,			OFFSET EmFSubStSti
-EmD8E4	DD OFFSET EmFSubStSti,			OFFSET EmFSubStSti
-EmD8E6	DD OFFSET EmFSubStSti,			OFFSET EmFSubStSti
-EmD8E8	DD OFFSET EmFSubrStSti,			OFFSET EmFSubrStSti
-EmD8EA	DD OFFSET EmFSubrStSti,			OFFSET EmFSubrStSti
-EmD8EC	DD OFFSET EmFSubrStSti,			OFFSET EmFSubrStSti
-EmD8EE	DD OFFSET EmFSubrStSti,			OFFSET EmFSubrStSti
-EmD8F0	DD OFFSET EmFDivStSti,			OFFSET EmFDivStSti
-EmD8F2	DD OFFSET EmFDivStSti,			OFFSET EmFDivStSti
-EmD8F4	DD OFFSET EmFDivStSti,			OFFSET EmFDivStSti
-EmD8F6	DD OFFSET EmFDivStSti,			OFFSET EmFDivStSti
-EmD8F8	DD OFFSET EmFDivrStSti,			OFFSET EmFDivrStSti
-EmD8FA	DD OFFSET EmFDivrStSti,			OFFSET EmFDivrStSti
-EmD8FC	DD OFFSET EmFDivrStSti,			OFFSET EmFDivrStSti
-EmD8FE	DD OFFSET EmFDivrStSti,			OFFSET EmFDivrStSti
+EmD8C0  DD OFFSET EmFAddStSti,                  OFFSET EmFAddStSti
+EmD8C2  DD OFFSET EmFAddStSti,                  OFFSET EmFAddStSti
+EmD8C4  DD OFFSET EmFAddStSti,                  OFFSET EmFAddStSti
+EmD8C6  DD OFFSET EmFAddStSti,                  OFFSET EmFAddStSti
+EmD8C8  DD OFFSET EmFMulStSti,                  OFFSET EmFMulStSti
+EmD8CA  DD OFFSET EmFMulStSti,                  OFFSET EmFMulStSti
+EmD8CC  DD OFFSET EmFMulStSti,                  OFFSET EmFMulStSti
+EmD8CE  DD OFFSET EmFMulStSti,                  OFFSET EmFMulStSti
+EmD8D0  DD OFFSET EmFComStSti,                  OFFSET EmFComStSti
+EmD8D2  DD OFFSET EmFComStSti,                  OFFSET EmFComStSti
+EmD8D4  DD OFFSET EmFComStSti,                  OFFSET EmFComStSti
+EmD8D6  DD OFFSET EmFComStSti,                  OFFSET EmFComStSti
+EmD8D8  DD OFFSET EmFCompStSti,                 OFFSET EmFCompStSti
+EmD8DA  DD OFFSET EmFCompStSti,                 OFFSET EmFCompStSti
+EmD8DC  DD OFFSET EmFCompStSti,                 OFFSET EmFCompStSti
+EmD8DE  DD OFFSET EmFCompStSti,                 OFFSET EmFCompStSti
+EmD8E0  DD OFFSET EmFSubStSti,                  OFFSET EmFSubStSti
+EmD8E2  DD OFFSET EmFSubStSti,                  OFFSET EmFSubStSti
+EmD8E4  DD OFFSET EmFSubStSti,                  OFFSET EmFSubStSti
+EmD8E6  DD OFFSET EmFSubStSti,                  OFFSET EmFSubStSti
+EmD8E8  DD OFFSET EmFSubrStSti,                 OFFSET EmFSubrStSti
+EmD8EA  DD OFFSET EmFSubrStSti,                 OFFSET EmFSubrStSti
+EmD8EC  DD OFFSET EmFSubrStSti,                 OFFSET EmFSubrStSti
+EmD8EE  DD OFFSET EmFSubrStSti,                 OFFSET EmFSubrStSti
+EmD8F0  DD OFFSET EmFDivStSti,                  OFFSET EmFDivStSti
+EmD8F2  DD OFFSET EmFDivStSti,                  OFFSET EmFDivStSti
+EmD8F4  DD OFFSET EmFDivStSti,                  OFFSET EmFDivStSti
+EmD8F6  DD OFFSET EmFDivStSti,                  OFFSET EmFDivStSti
+EmD8F8  DD OFFSET EmFDivrStSti,                 OFFSET EmFDivrStSti
+EmD8FA  DD OFFSET EmFDivrStSti,                 OFFSET EmFDivrStSti
+EmD8FC  DD OFFSET EmFDivrStSti,                 OFFSET EmFDivrStSti
+EmD8FE  DD OFFSET EmFDivrStSti,                 OFFSET EmFDivrStSti
 
 EmD8:
-	CheckFpTrap
-	SaveFp
-	call ReadCodeByte
-	SaveFp2
-	cmp al,0C0h
-	jc EmD8Low
+        CheckFpTrap
+        SaveFp
+        call ReadCodeByte
+        SaveFp2
+        cmp al,0C0h
+        jc EmD8Low
 
 EmD8Hi:
-	sub al,0C0h
-	movzx ebx,al
-	shl ebx,2
-	jmp dword ptr [ebx].EmD8HiTab
+        sub al,0C0h
+        movzx ebx,al
+        shl ebx,2
+        jmp dword ptr [ebx].EmD8HiTab
 
 EmD8LowTab:
-EmD8_000	DD OFFSET EmFAddSingle
-EmD8_001	DD OFFSET EmFMulSingle
-EmD8_010	DD OFFSET EmFComSingle
-EmD8_011	DD OFFSET EmFCompSingle
-EmD8_100	DD OFFSET EmFSubSingle
-EmD8_101	DD OFFSET EmFSubrSingle
-EmD8_110	DD OFFSET EmFDivSingle
-EmD8_111	DD OFFSET EmFDivrSingle
+EmD8_000        DD OFFSET EmFAddSingle
+EmD8_001        DD OFFSET EmFMulSingle
+EmD8_010        DD OFFSET EmFComSingle
+EmD8_011        DD OFFSET EmFCompSingle
+EmD8_100        DD OFFSET EmFSubSingle
+EmD8_101        DD OFFSET EmFSubrSingle
+EmD8_110        DD OFFSET EmFDivSingle
+EmD8_111        DD OFFSET EmFDivrSingle
 
 EmD8Low:
-	movzx ebx,al
-	shr bl,2
-	and bl,0Eh
-	jmp dword ptr [2*ebx].EmD8LowTab
-	
+        movzx ebx,al
+        shr bl,2
+        and bl,0Eh
+        jmp dword ptr [2*ebx].EmD8LowTab
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EMD9
+;               NAME:                   EMD9
 ;
-;		DESCRIPTION:	EMULATE D9 instructions
+;               DESCRIPTION:    EMULATE D9 instructions
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmD9
+        public EmD9
 
 EmD9HiTab:
-emD9C0	DD OFFSET EmFldSt,				OFFSET EmFldSt
-emD9C2	DD OFFSET EmFldSt,				OFFSET EmFldSt
-emD9C4	DD OFFSET EmFldSt,				OFFSET EmFldSt
-emD9C6	DD OFFSET EmFldSt,				OFFSET EmFldSt
-emD9C8	DD OFFSET EmFxch,				OFFSET EmFxch
-emD9CA	DD OFFSET EmFxch,				OFFSET EmFxch
-emD9CC	DD OFFSET EmFxch,				OFFSET EmFxch
-emD9CE	DD OFFSET EmFxch,				OFFSET EmFxch
-emD9D0	DD OFFSET EmFnop,				OFFSET EmulateError
-emD9D2	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9D4	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9D6	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9D8	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9DA	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9DC	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9DE	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9E0	DD OFFSET EmFchs,				OFFSET EmFabs
-emD9E2	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9E4	DD OFFSET EmulateError,			OFFSET EmFxam
-emD9E6	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9E8	DD OFFSET EmFld1,				OFFSET EmFldl2t
-emD9EA	DD OFFSET EmFldl2e,				OFFSET EmFldpi
-emD9EC	DD OFFSET EmFldlg2,				OFFSET EmFldln2
-emD9EE	DD OFFSET EmFldz,				OFFSET EmulateError
-emD9F0	DD OFFSET EmF2xm1,				OFFSET EmFyl2x
-emD9F2	DD OFFSET EmFptan,				OFFSET EmFpatan
-emD9F4	DD OFFSET EmFxtract,			OFFSET EmFprem1
-emD9F6	DD OFFSET EmFdecstp,			OFFSET EmFincstp
-emD9F8	DD OFFSET EmFprem,				OFFSET EmFyl2xp1
-emD9FA	DD OFFSET EmFsqrt,				OFFSET EmFsincos
-emD9FC	DD OFFSET EmFrndint,			OFFSET EmFscale
-emD9FE	DD OFFSET EmFsin,				OFFSET EmFcos
+emD9C0  DD OFFSET EmFldSt,                              OFFSET EmFldSt
+emD9C2  DD OFFSET EmFldSt,                              OFFSET EmFldSt
+emD9C4  DD OFFSET EmFldSt,                              OFFSET EmFldSt
+emD9C6  DD OFFSET EmFldSt,                              OFFSET EmFldSt
+emD9C8  DD OFFSET EmFxch,                               OFFSET EmFxch
+emD9CA  DD OFFSET EmFxch,                               OFFSET EmFxch
+emD9CC  DD OFFSET EmFxch,                               OFFSET EmFxch
+emD9CE  DD OFFSET EmFxch,                               OFFSET EmFxch
+emD9D0  DD OFFSET EmFnop,                               OFFSET EmulateError
+emD9D2  DD OFFSET EmulateError,                 OFFSET EmulateError
+emD9D4  DD OFFSET EmulateError,                 OFFSET EmulateError
+emD9D6  DD OFFSET EmulateError,                 OFFSET EmulateError
+emD9D8  DD OFFSET EmulateError,                 OFFSET EmulateError
+emD9DA  DD OFFSET EmulateError,                 OFFSET EmulateError
+emD9DC  DD OFFSET EmulateError,                 OFFSET EmulateError
+emD9DE  DD OFFSET EmulateError,                 OFFSET EmulateError
+emD9E0  DD OFFSET EmFchs,                               OFFSET EmFabs
+emD9E2  DD OFFSET EmulateError,                 OFFSET EmulateError
+emD9E4  DD OFFSET EmulateError,                 OFFSET EmFxam
+emD9E6  DD OFFSET EmulateError,                 OFFSET EmulateError
+emD9E8  DD OFFSET EmFld1,                               OFFSET EmFldl2t
+emD9EA  DD OFFSET EmFldl2e,                             OFFSET EmFldpi
+emD9EC  DD OFFSET EmFldlg2,                             OFFSET EmFldln2
+emD9EE  DD OFFSET EmFldz,                               OFFSET EmulateError
+emD9F0  DD OFFSET EmF2xm1,                              OFFSET EmFyl2x
+emD9F2  DD OFFSET EmFptan,                              OFFSET EmFpatan
+emD9F4  DD OFFSET EmFxtract,                    OFFSET EmFprem1
+emD9F6  DD OFFSET EmFdecstp,                    OFFSET EmFincstp
+emD9F8  DD OFFSET EmFprem,                              OFFSET EmFyl2xp1
+emD9FA  DD OFFSET EmFsqrt,                              OFFSET EmFsincos
+emD9FC  DD OFFSET EmFrndint,                    OFFSET EmFscale
+emD9FE  DD OFFSET EmFsin,                               OFFSET EmFcos
 
 EmD9:
-	CheckFpTrap
-	SaveFp
-	call ReadCodeByte
-	SaveFp2
-	cmp al,0C0h
-	jc EmD9Low
+        CheckFpTrap
+        SaveFp
+        call ReadCodeByte
+        SaveFp2
+        cmp al,0C0h
+        jc EmD9Low
 
 EmD9Hi:
-	sub al,0C0h
-	movzx ebx,al
-	shl ebx,2
-	jmp dword ptr [ebx].EmD9HiTab
+        sub al,0C0h
+        movzx ebx,al
+        shl ebx,2
+        jmp dword ptr [ebx].EmD9HiTab
 
 EmD9LowTab:
-emD9_000	DD OFFSET EmFldSingle
-emD9_001	DD OFFSET EmulateError
-emD9_010	DD OFFSET EmFstSingle
-emD9_011	DD OFFSET EmFstpSingle
-emD9_100	DD OFFSET EmFldenv
-emD9_101	DD OFFSET EmFldcw
-emD9_110	DD OFFSET EmFstenv
-emD9_111	DD OFFSET EmFstcw
+emD9_000        DD OFFSET EmFldSingle
+emD9_001        DD OFFSET EmulateError
+emD9_010        DD OFFSET EmFstSingle
+emD9_011        DD OFFSET EmFstpSingle
+emD9_100        DD OFFSET EmFldenv
+emD9_101        DD OFFSET EmFldcw
+emD9_110        DD OFFSET EmFstenv
+emD9_111        DD OFFSET EmFstcw
 
 EmD9Low:
-	movzx ebx,al
-	shr bl,2
-	and bl,0Eh
-	jmp dword ptr [2*ebx].EmD9LowTab
-	
+        movzx ebx,al
+        shr bl,2
+        and bl,0Eh
+        jmp dword ptr [2*ebx].EmD9LowTab
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EMDA
+;               NAME:                   EMDA
 ;
-;		DESCRIPTION:	EMULATE DA instructions
+;               DESCRIPTION:    EMULATE DA instructions
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmDA
+        public EmDA
 
 EmDAHiTab:
-EmDAC0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAC2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAC4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAC6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAC8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDACA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDACC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDACE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAD0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAD2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAD4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAD6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAD8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDADA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDADC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDADE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAE0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAE2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAE4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAE6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAE8	DD OFFSET EmulateError,			OFFSET EmFCompp
-EmDAEA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAEC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAEE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAF0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAF2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAF4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAF6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAF8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAFA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAFC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAFE	DD OFFSET EmulateError,			OFFSET EmulateError
+EmDAC0  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAC2  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAC4  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAC6  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAC8  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDACA  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDACC  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDACE  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAD0  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAD2  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAD4  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAD6  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAD8  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDADA  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDADC  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDADE  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAE0  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAE2  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAE4  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAE6  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAE8  DD OFFSET EmulateError,                 OFFSET EmFCompp
+EmDAEA  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAEC  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAEE  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAF0  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAF2  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAF4  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAF6  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAF8  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAFA  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAFC  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDAFE  DD OFFSET EmulateError,                 OFFSET EmulateError
 
 EmDA:
-	CheckFpTrap
-	SaveFp
-	call ReadCodeByte
-	SaveFp2
-	cmp al,0C0h
-	jc EmDALow
+        CheckFpTrap
+        SaveFp
+        call ReadCodeByte
+        SaveFp2
+        cmp al,0C0h
+        jc EmDALow
 
 EmDAHi:
-	sub al,0C0h
-	movzx ebx,al
-	shl ebx,2
-	jmp dword ptr [ebx].EmDAHiTab
+        sub al,0C0h
+        movzx ebx,al
+        shl ebx,2
+        jmp dword ptr [ebx].EmDAHiTab
 
 EmDALowTab:
-EmDA_000	DD OFFSET EmFiAddDword
-EmDA_001	DD OFFSET EmFiMulDword
-EmDA_010	DD OFFSET EmFiComDword
-EmDA_011	DD OFFSET EmFiCompDword
-EmDA_100	DD OFFSET EmFiSubDword
-EmDA_101	DD OFFSET EmFiSubrDword
-EmDA_110	DD OFFSET EmFiDivDword
-EmDA_111	DD OFFSET EmFiDivrDword
+EmDA_000        DD OFFSET EmFiAddDword
+EmDA_001        DD OFFSET EmFiMulDword
+EmDA_010        DD OFFSET EmFiComDword
+EmDA_011        DD OFFSET EmFiCompDword
+EmDA_100        DD OFFSET EmFiSubDword
+EmDA_101        DD OFFSET EmFiSubrDword
+EmDA_110        DD OFFSET EmFiDivDword
+EmDA_111        DD OFFSET EmFiDivrDword
 
 EmDALow:
-	movzx ebx,al
-	shr bl,2
-	and bl,0Eh
-	jmp dword ptr [2*ebx].EmDALowTab
-	
+        movzx ebx,al
+        shr bl,2
+        and bl,0Eh
+        jmp dword ptr [2*ebx].EmDALowTab
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EMDB
+;               NAME:                   EMDB
 ;
-;		DESCRIPTION:	EMULATE DB instructions
+;               DESCRIPTION:    EMULATE DB instructions
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmDB
+        public EmDB
 
 EmDBHiTab:
-EmDBC0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBC2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBC4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBC6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBC8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBCA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBCC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBCE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBD0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBD2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBD4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBD6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBD8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBDA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBDC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBDE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBE0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBE2	DD OFFSET EmFclex,				OFFSET EmFinit
-EmDBE4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBE6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBE8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBEA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBEC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBEE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBF0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBF2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBF4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBF6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBF8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBFA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBFC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBFE	DD OFFSET EmulateError,			OFFSET EmulateError
+EmDBC0  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBC2  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBC4  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBC6  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBC8  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBCA  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBCC  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBCE  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBD0  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBD2  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBD4  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBD6  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBD8  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBDA  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBDC  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBDE  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBE0  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBE2  DD OFFSET EmFclex,                              OFFSET EmFinit
+EmDBE4  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBE6  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBE8  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBEA  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBEC  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBEE  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBF0  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBF2  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBF4  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBF6  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBF8  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBFA  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBFC  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDBFE  DD OFFSET EmulateError,                 OFFSET EmulateError
 
 EmDB:
-	CheckFpTrap
-	SaveFp
-	call ReadCodeByte
-	SaveFp2
-	cmp al,0C0h
-	jc EmDBLow
+        CheckFpTrap
+        SaveFp
+        call ReadCodeByte
+        SaveFp2
+        cmp al,0C0h
+        jc EmDBLow
 
 EmDBHi:
-	sub al,0C0h
-	movzx ebx,al
-	shl ebx,2
-	jmp dword ptr [ebx].EmDBHiTab
+        sub al,0C0h
+        movzx ebx,al
+        shl ebx,2
+        jmp dword ptr [ebx].EmDBHiTab
 
 EmDBLowTab:
-emDB_000	DD OFFSET EmFildDword
-emDB_001	DD OFFSET EmulateError
-emDB_010	DD OFFSET EmFistDword
-emDB_011	DD OFFSET EmFistpDword
-emDB_100	DD OFFSET EmulateError
-emDB_101	DD OFFSET EmFldExtended
-emDB_110	DD OFFSET EmulateError
-emDB_111	DD OFFSET EmFstpExtended
+emDB_000        DD OFFSET EmFildDword
+emDB_001        DD OFFSET EmulateError
+emDB_010        DD OFFSET EmFistDword
+emDB_011        DD OFFSET EmFistpDword
+emDB_100        DD OFFSET EmulateError
+emDB_101        DD OFFSET EmFldExtended
+emDB_110        DD OFFSET EmulateError
+emDB_111        DD OFFSET EmFstpExtended
 
 EmDBLow:
-	movzx ebx,al
-	shr bl,2
-	and bl,0Eh
-	jmp dword ptr [2*ebx].EmDBLowTab
-	
+        movzx ebx,al
+        shr bl,2
+        and bl,0Eh
+        jmp dword ptr [2*ebx].EmDBLowTab
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EMDC
+;               NAME:                   EMDC
 ;
-;		DESCRIPTION:	EMULATE DC instructions
+;               DESCRIPTION:    EMULATE DC instructions
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmDC
+        public EmDC
 
 EmDCHiTab:
-EmDCC0	DD OFFSET EmFAddStiSt,			OFFSET EmFAddStiSt
-EmDCC2	DD OFFSET EmFAddStiSt,			OFFSET EmFAddStiSt
-EmDCC4	DD OFFSET EmFAddStiSt,			OFFSET EmFAddStiSt
-EmDCC6	DD OFFSET EmFAddStiSt,			OFFSET EmFAddStiSt
-EmDCC8	DD OFFSET EmFMulStiSt,			OFFSET EmFMulStiSt
-EmDCCA	DD OFFSET EmFMulStiSt,			OFFSET EmFMulStiSt
-EmDCCC	DD OFFSET EmFMulStiSt,			OFFSET EmFMulStiSt
-EmDCCE	DD OFFSET EmFMulStiSt,			OFFSET EmFMulStiSt
-EmDCD0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDCD2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDCD4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDCD6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDCD8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDCDA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDCDC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDCDE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDCE0	DD OFFSET EmFSubrStiSt,			OFFSET EmFSubrStiSt
-EmDCE2	DD OFFSET EmFSubrStiSt,			OFFSET EmFSubrStiSt
-EmDCE4	DD OFFSET EmFSubrStiSt,			OFFSET EmFSubrStiSt
-EmDCE6	DD OFFSET EmFSubrStiSt,			OFFSET EmFSubrStiSt
-EmDCE8	DD OFFSET EmFSubStiSt,			OFFSET EmFSubStiSt
-EmDCEA	DD OFFSET EmFSubStiSt,			OFFSET EmFSubStiSt
-EmDCEC	DD OFFSET EmFSubStiSt,			OFFSET EmFSubStiSt
-EmDCEE	DD OFFSET EmFSubStiSt,			OFFSET EmFSubStiSt
-EmDCF0	DD OFFSET EmFDivrStiSt,			OFFSET EmFDivrStiSt
-EmDCF2	DD OFFSET EmFDivrStiSt,			OFFSET EmFDivrStiSt
-EmDCF4	DD OFFSET EmFDivrStiSt,			OFFSET EmFDivrStiSt
-EmDCF6	DD OFFSET EmFDivrStiSt,			OFFSET EmFDivrStiSt
-EmDCF8	DD OFFSET EmFDivStiSt,			OFFSET EmFDivStiSt
-EmDCFA	DD OFFSET EmFDivStiSt,			OFFSET EmFDivStiSt
-EmDCFC	DD OFFSET EmFDivStiSt,			OFFSET EmFDivStiSt
-EmDCFE	DD OFFSET EmFDivStiSt,			OFFSET EmFDivStiSt
+EmDCC0  DD OFFSET EmFAddStiSt,                  OFFSET EmFAddStiSt
+EmDCC2  DD OFFSET EmFAddStiSt,                  OFFSET EmFAddStiSt
+EmDCC4  DD OFFSET EmFAddStiSt,                  OFFSET EmFAddStiSt
+EmDCC6  DD OFFSET EmFAddStiSt,                  OFFSET EmFAddStiSt
+EmDCC8  DD OFFSET EmFMulStiSt,                  OFFSET EmFMulStiSt
+EmDCCA  DD OFFSET EmFMulStiSt,                  OFFSET EmFMulStiSt
+EmDCCC  DD OFFSET EmFMulStiSt,                  OFFSET EmFMulStiSt
+EmDCCE  DD OFFSET EmFMulStiSt,                  OFFSET EmFMulStiSt
+EmDCD0  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDCD2  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDCD4  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDCD6  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDCD8  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDCDA  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDCDC  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDCDE  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDCE0  DD OFFSET EmFSubrStiSt,                 OFFSET EmFSubrStiSt
+EmDCE2  DD OFFSET EmFSubrStiSt,                 OFFSET EmFSubrStiSt
+EmDCE4  DD OFFSET EmFSubrStiSt,                 OFFSET EmFSubrStiSt
+EmDCE6  DD OFFSET EmFSubrStiSt,                 OFFSET EmFSubrStiSt
+EmDCE8  DD OFFSET EmFSubStiSt,                  OFFSET EmFSubStiSt
+EmDCEA  DD OFFSET EmFSubStiSt,                  OFFSET EmFSubStiSt
+EmDCEC  DD OFFSET EmFSubStiSt,                  OFFSET EmFSubStiSt
+EmDCEE  DD OFFSET EmFSubStiSt,                  OFFSET EmFSubStiSt
+EmDCF0  DD OFFSET EmFDivrStiSt,                 OFFSET EmFDivrStiSt
+EmDCF2  DD OFFSET EmFDivrStiSt,                 OFFSET EmFDivrStiSt
+EmDCF4  DD OFFSET EmFDivrStiSt,                 OFFSET EmFDivrStiSt
+EmDCF6  DD OFFSET EmFDivrStiSt,                 OFFSET EmFDivrStiSt
+EmDCF8  DD OFFSET EmFDivStiSt,                  OFFSET EmFDivStiSt
+EmDCFA  DD OFFSET EmFDivStiSt,                  OFFSET EmFDivStiSt
+EmDCFC  DD OFFSET EmFDivStiSt,                  OFFSET EmFDivStiSt
+EmDCFE  DD OFFSET EmFDivStiSt,                  OFFSET EmFDivStiSt
 
 EmDC:
-	CheckFpTrap
-	SaveFp
-	call ReadCodeByte
-	SaveFp2
-	cmp al,0C0h
-	jc EmDCLow
+        CheckFpTrap
+        SaveFp
+        call ReadCodeByte
+        SaveFp2
+        cmp al,0C0h
+        jc EmDCLow
 
 EmDCHi:
-	sub al,0C0h
-	movzx ebx,al
-	shl ebx,2
-	jmp dword ptr [ebx].EmDCHiTab
+        sub al,0C0h
+        movzx ebx,al
+        shl ebx,2
+        jmp dword ptr [ebx].EmDCHiTab
 
 EmDCLowTab:
-EmDC_000	DD OFFSET EmFAddDouble
-EmDC_001	DD OFFSET EmFMulDouble
-EmDC_010	DD OFFSET EmFComDouble
-EmDC_011	DD OFFSET EmFCompDouble
-EmDC_100	DD OFFSET EmFSubDouble
-EmDC_101	DD OFFSET EmFSubrDouble
-EmDC_110	DD OFFSET EmFDivDouble
-EmDC_111	DD OFFSET EmFDivrDouble
+EmDC_000        DD OFFSET EmFAddDouble
+EmDC_001        DD OFFSET EmFMulDouble
+EmDC_010        DD OFFSET EmFComDouble
+EmDC_011        DD OFFSET EmFCompDouble
+EmDC_100        DD OFFSET EmFSubDouble
+EmDC_101        DD OFFSET EmFSubrDouble
+EmDC_110        DD OFFSET EmFDivDouble
+EmDC_111        DD OFFSET EmFDivrDouble
 
 EmDCLow:
-	movzx ebx,al
-	shr bl,2
-	and bl,0Eh
-	jmp dword ptr [2*ebx].EmDCLowTab
-	
+        movzx ebx,al
+        shr bl,2
+        and bl,0Eh
+        jmp dword ptr [2*ebx].EmDCLowTab
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EMDD
+;               NAME:                   EMDD
 ;
-;		DESCRIPTION:	EMULATE DD instructions
+;               DESCRIPTION:    EMULATE DD instructions
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmDD
+        public EmDD
 
 EmDDHiTab:
-EmDDC0	DD OFFSET EmFfreeSt,			OFFSET EmFfreeSt
-EmDDC2	DD OFFSET EmFfreeSt,			OFFSET EmFfreeSt
-EmDDC4	DD OFFSET EmFfreeSt,			OFFSET EmFfreeSt
-EmDDC6	DD OFFSET EmFfreeSt,			OFFSET EmFfreeSt
-EmDDC8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDCA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDCC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDCE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDD0	DD OFFSET EmFstSt,				OFFSET EmFstSt
-EmDDD2	DD OFFSET EmFstSt,				OFFSET EmFstSt
-EmDDD4	DD OFFSET EmFstSt,				OFFSET EmFstSt
-EmDDD6	DD OFFSET EmFstSt,				OFFSET EmFstSt
-EmDDD8	DD OFFSET EmFstpSt,				OFFSET EmFstpSt
-EmDDDA	DD OFFSET EmFstpSt,				OFFSET EmFstpSt
-EmDDDC	DD OFFSET EmFstpSt,				OFFSET EmFstpSt
-EmDDDE	DD OFFSET EmFstpSt,				OFFSET EmFstpSt
-EmDDE0	DD OFFSET EmFComStSti,			OFFSET EmFComStSti
-EmDDE2	DD OFFSET EmFComStSti,			OFFSET EmFComStSti
-EmDDE4	DD OFFSET EmFComStSti,			OFFSET EmFComStSti
-EmDDE6	DD OFFSET EmFComStSti,			OFFSET EmFComStSti
-EmDDE8	DD OFFSET EmFCompStSti,			OFFSET EmFCompStSti
-EmDDEA	DD OFFSET EmFCompStSti,			OFFSET EmFCompStSti
-EmDDEC	DD OFFSET EmFCompStSti,			OFFSET EmFCompStSti
-EmDDEE	DD OFFSET EmFCompStSti,			OFFSET EmFCompStSti
-EmDDF0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDF2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDF4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDF6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDF8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDFA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDFC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDFE	DD OFFSET EmulateError,			OFFSET EmulateError
+EmDDC0  DD OFFSET EmFfreeSt,                    OFFSET EmFfreeSt
+EmDDC2  DD OFFSET EmFfreeSt,                    OFFSET EmFfreeSt
+EmDDC4  DD OFFSET EmFfreeSt,                    OFFSET EmFfreeSt
+EmDDC6  DD OFFSET EmFfreeSt,                    OFFSET EmFfreeSt
+EmDDC8  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDDCA  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDDCC  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDDCE  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDDD0  DD OFFSET EmFstSt,                              OFFSET EmFstSt
+EmDDD2  DD OFFSET EmFstSt,                              OFFSET EmFstSt
+EmDDD4  DD OFFSET EmFstSt,                              OFFSET EmFstSt
+EmDDD6  DD OFFSET EmFstSt,                              OFFSET EmFstSt
+EmDDD8  DD OFFSET EmFstpSt,                             OFFSET EmFstpSt
+EmDDDA  DD OFFSET EmFstpSt,                             OFFSET EmFstpSt
+EmDDDC  DD OFFSET EmFstpSt,                             OFFSET EmFstpSt
+EmDDDE  DD OFFSET EmFstpSt,                             OFFSET EmFstpSt
+EmDDE0  DD OFFSET EmFComStSti,                  OFFSET EmFComStSti
+EmDDE2  DD OFFSET EmFComStSti,                  OFFSET EmFComStSti
+EmDDE4  DD OFFSET EmFComStSti,                  OFFSET EmFComStSti
+EmDDE6  DD OFFSET EmFComStSti,                  OFFSET EmFComStSti
+EmDDE8  DD OFFSET EmFCompStSti,                 OFFSET EmFCompStSti
+EmDDEA  DD OFFSET EmFCompStSti,                 OFFSET EmFCompStSti
+EmDDEC  DD OFFSET EmFCompStSti,                 OFFSET EmFCompStSti
+EmDDEE  DD OFFSET EmFCompStSti,                 OFFSET EmFCompStSti
+EmDDF0  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDDF2  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDDF4  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDDF6  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDDF8  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDDFA  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDDFC  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDDFE  DD OFFSET EmulateError,                 OFFSET EmulateError
 
 EmDD:
-	CheckFpTrap
-	SaveFp
-	call ReadCodeByte
-	SaveFp2
-	cmp al,0C0h
-	jc EmDDLow
+        CheckFpTrap
+        SaveFp
+        call ReadCodeByte
+        SaveFp2
+        cmp al,0C0h
+        jc EmDDLow
 
 EmDDHi:
-	sub al,0C0h
-	movzx ebx,al
-	shl ebx,2
-	jmp dword ptr [ebx].EmDDHiTab
+        sub al,0C0h
+        movzx ebx,al
+        shl ebx,2
+        jmp dword ptr [ebx].EmDDHiTab
 
 EmDDLowTab:
-EmDD_000	DD OFFSET EmFldDouble
-EmDD_001	DD OFFSET EmulateError
-EmDD_010	DD OFFSET EmFstDouble
-EmDD_011	DD OFFSET EmFstpDouble
-EmDD_100	DD OFFSET EmFRstor
-EmDD_101	DD OFFSET EmulateError
-EmDD_110	DD OFFSET EmFSave
-EmDD_111	DD OFFSET EmFstsw
+EmDD_000        DD OFFSET EmFldDouble
+EmDD_001        DD OFFSET EmulateError
+EmDD_010        DD OFFSET EmFstDouble
+EmDD_011        DD OFFSET EmFstpDouble
+EmDD_100        DD OFFSET EmFRstor
+EmDD_101        DD OFFSET EmulateError
+EmDD_110        DD OFFSET EmFSave
+EmDD_111        DD OFFSET EmFstsw
 
 EmDDLow:
-	movzx ebx,al
-	shr bl,2
-	and bl,0Eh
-	jmp dword ptr [2*ebx].EmDDLowTab
-	
+        movzx ebx,al
+        shr bl,2
+        and bl,0Eh
+        jmp dword ptr [2*ebx].EmDDLowTab
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EMDE
+;               NAME:                   EMDE
 ;
-;		DESCRIPTION:	EMULATE DE instructions
+;               DESCRIPTION:    EMULATE DE instructions
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmDE
+        public EmDE
 
 EmDEHiTab:
-EmDEC0	DD OFFSET EmFAddpStiSt,			OFFSET EmFAddpStiSt
-EmDEC2	DD OFFSET EmFAddpStiSt,			OFFSET EmFAddpStiSt
-EmDEC4	DD OFFSET EmFAddpStiSt,			OFFSET EmFAddpStiSt
-EmDEC6	DD OFFSET EmFAddpStiSt,			OFFSET EmFAddpStiSt
-EmDEC8	DD OFFSET EmFMulpStiSt,			OFFSET EmFMulpStiSt
-EmDECA	DD OFFSET EmFMulpStiSt,			OFFSET EmFMulpStiSt
-EmDECC	DD OFFSET EmFMulpStiSt,			OFFSET EmFMulpStiSt
-EmDECE	DD OFFSET EmFMulpStiSt,			OFFSET EmFMulpStiSt
-EmDED0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDED2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDED4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDED6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDED8	DD OFFSET EmulateError,			OFFSET EmFCompp
-EmDEDA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDEDC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDEDE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDEE0	DD OFFSET EmFSubrpStiSt,		OFFSET EmFSubrpStiSt
-EmDEE2	DD OFFSET EmFSubrpStiSt,		OFFSET EmFSubrpStiSt
-EmDEE4	DD OFFSET EmFSubrpStiSt,		OFFSET EmFSubrpStiSt
-EmDEE6	DD OFFSET EmFSubrpStiSt,		OFFSET EmFSubrpStiSt
-EmDEE8	DD OFFSET EmFSubpStiSt,			OFFSET EmFSubpStiSt
-EmDEEA	DD OFFSET EmFSubpStiSt,			OFFSET EmFSubpStiSt
-EmDEEC	DD OFFSET EmFSubpStiSt,			OFFSET EmFSubpStiSt
-EmDEEE	DD OFFSET EmFSubpStiSt,			OFFSET EmFSubpStiSt
-EmDEF0	DD OFFSET EmFDivrpStiSt,		OFFSET EmFDivrpStiSt
-EmDEF2	DD OFFSET EmFDivrpStiSt,		OFFSET EmFDivrpStiSt
-EmDEF4	DD OFFSET EmFDivrpStiSt,		OFFSET EmFDivrpStiSt
-EmDEF6	DD OFFSET EmFDivrpStiSt,		OFFSET EmFDivrpStiSt
-EmDEF8	DD OFFSET EmFDivpStiSt,			OFFSET EmFDivpStiSt
-EmDEFA	DD OFFSET EmFDivpStiSt,			OFFSET EmFDivpStiSt
-EmDEFC	DD OFFSET EmFDivpStiSt,			OFFSET EmFDivpStiSt
-EmDEFE	DD OFFSET EmFDivpStiSt,			OFFSET EmFDivpStiSt
+EmDEC0  DD OFFSET EmFAddpStiSt,                 OFFSET EmFAddpStiSt
+EmDEC2  DD OFFSET EmFAddpStiSt,                 OFFSET EmFAddpStiSt
+EmDEC4  DD OFFSET EmFAddpStiSt,                 OFFSET EmFAddpStiSt
+EmDEC6  DD OFFSET EmFAddpStiSt,                 OFFSET EmFAddpStiSt
+EmDEC8  DD OFFSET EmFMulpStiSt,                 OFFSET EmFMulpStiSt
+EmDECA  DD OFFSET EmFMulpStiSt,                 OFFSET EmFMulpStiSt
+EmDECC  DD OFFSET EmFMulpStiSt,                 OFFSET EmFMulpStiSt
+EmDECE  DD OFFSET EmFMulpStiSt,                 OFFSET EmFMulpStiSt
+EmDED0  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDED2  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDED4  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDED6  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDED8  DD OFFSET EmulateError,                 OFFSET EmFCompp
+EmDEDA  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDEDC  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDEDE  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDEE0  DD OFFSET EmFSubrpStiSt,                OFFSET EmFSubrpStiSt
+EmDEE2  DD OFFSET EmFSubrpStiSt,                OFFSET EmFSubrpStiSt
+EmDEE4  DD OFFSET EmFSubrpStiSt,                OFFSET EmFSubrpStiSt
+EmDEE6  DD OFFSET EmFSubrpStiSt,                OFFSET EmFSubrpStiSt
+EmDEE8  DD OFFSET EmFSubpStiSt,                 OFFSET EmFSubpStiSt
+EmDEEA  DD OFFSET EmFSubpStiSt,                 OFFSET EmFSubpStiSt
+EmDEEC  DD OFFSET EmFSubpStiSt,                 OFFSET EmFSubpStiSt
+EmDEEE  DD OFFSET EmFSubpStiSt,                 OFFSET EmFSubpStiSt
+EmDEF0  DD OFFSET EmFDivrpStiSt,                OFFSET EmFDivrpStiSt
+EmDEF2  DD OFFSET EmFDivrpStiSt,                OFFSET EmFDivrpStiSt
+EmDEF4  DD OFFSET EmFDivrpStiSt,                OFFSET EmFDivrpStiSt
+EmDEF6  DD OFFSET EmFDivrpStiSt,                OFFSET EmFDivrpStiSt
+EmDEF8  DD OFFSET EmFDivpStiSt,                 OFFSET EmFDivpStiSt
+EmDEFA  DD OFFSET EmFDivpStiSt,                 OFFSET EmFDivpStiSt
+EmDEFC  DD OFFSET EmFDivpStiSt,                 OFFSET EmFDivpStiSt
+EmDEFE  DD OFFSET EmFDivpStiSt,                 OFFSET EmFDivpStiSt
 
 EmDE:
-	CheckFpTrap
-	SaveFp
-	call ReadCodeByte
-	SaveFp2
-	cmp al,0C0h
-	jc EmDELow
+        CheckFpTrap
+        SaveFp
+        call ReadCodeByte
+        SaveFp2
+        cmp al,0C0h
+        jc EmDELow
 
 EmDEHi:
-	sub al,0C0h
-	movzx ebx,al
-	shl ebx,2
-	jmp dword ptr [ebx].EmDEHiTab
+        sub al,0C0h
+        movzx ebx,al
+        shl ebx,2
+        jmp dword ptr [ebx].EmDEHiTab
 
 EmDELowTab:
-EmDE_000	DD OFFSET EmFiAddWord
-EmDE_001	DD OFFSET EmFiMulWord
-EmDE_010	DD OFFSET EmFiComWord
-EmDE_011	DD OFFSET EmFiCompWord
-EmDE_100	DD OFFSET EmFiSubWord
-EmDE_101	DD OFFSET EmFiSubrWord
-EmDE_110	DD OFFSET EmFiDivWord
-EmDE_111	DD OFFSET EmFiDivrWord
+EmDE_000        DD OFFSET EmFiAddWord
+EmDE_001        DD OFFSET EmFiMulWord
+EmDE_010        DD OFFSET EmFiComWord
+EmDE_011        DD OFFSET EmFiCompWord
+EmDE_100        DD OFFSET EmFiSubWord
+EmDE_101        DD OFFSET EmFiSubrWord
+EmDE_110        DD OFFSET EmFiDivWord
+EmDE_111        DD OFFSET EmFiDivrWord
 
 EmDELow:
-	movzx ebx,al
-	shr bl,2
-	and bl,0Eh
-	jmp dword ptr [2*ebx].EmDELowTab
-	
+        movzx ebx,al
+        shr bl,2
+        and bl,0Eh
+        jmp dword ptr [2*ebx].EmDELowTab
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EMDF
+;               NAME:                   EMDF
 ;
-;		DESCRIPTION:	EMULATE DF instructions
+;               DESCRIPTION:    EMULATE DF instructions
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmDF
+        public EmDF
 
 EmDFHiTab:
-EmDFC0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFC2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFC4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFC6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFC8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFCA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFCC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFCE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFD0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFD2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFD4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFD6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFD8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFDA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFDC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFDE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFE0	DD OFFSET EmFstswAx,			OFFSET EmulateError
-EmDFE2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFE4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFE6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFE8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFEA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFEC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFEE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFF0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFF2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFF4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFF6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFF8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFFA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFFC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFFE	DD OFFSET EmulateError,			OFFSET EmulateError
+EmDFC0  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFC2  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFC4  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFC6  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFC8  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFCA  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFCC  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFCE  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFD0  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFD2  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFD4  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFD6  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFD8  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFDA  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFDC  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFDE  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFE0  DD OFFSET EmFstswAx,                    OFFSET EmulateError
+EmDFE2  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFE4  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFE6  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFE8  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFEA  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFEC  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFEE  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFF0  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFF2  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFF4  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFF6  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFF8  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFFA  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFFC  DD OFFSET EmulateError,                 OFFSET EmulateError
+EmDFFE  DD OFFSET EmulateError,                 OFFSET EmulateError
 
 EmDF:
-	CheckFpTrap
-	SaveFp
-	call ReadCodeByte
-	SaveFp2
-	cmp al,0C0h
-	jc EmDFLow
+        CheckFpTrap
+        SaveFp
+        call ReadCodeByte
+        SaveFp2
+        cmp al,0C0h
+        jc EmDFLow
 
 EmDFHi:
-	sub al,0C0h
-	movzx ebx,al
-	shl ebx,2
-	jmp dword ptr [ebx].EmDFHiTab
+        sub al,0C0h
+        movzx ebx,al
+        shl ebx,2
+        jmp dword ptr [ebx].EmDFHiTab
 
 EmDFLowTab:
-EmDF_000	DD OFFSET EmFildWord
-EmDF_001	DD OFFSET EmulateError
-EmDF_010	DD OFFSET EmFistWord
-EmDF_011	DD OFFSET EmFistpWord
-EmDF_100	DD OFFSET EmFbld
-EmDF_101	DD OFFSET EmFildQword
-EmDF_110	DD OFFSET EmFbstp
-EmDF_111	DD OFFSET EmFistpQword
+EmDF_000        DD OFFSET EmFildWord
+EmDF_001        DD OFFSET EmulateError
+EmDF_010        DD OFFSET EmFistWord
+EmDF_011        DD OFFSET EmFistpWord
+EmDF_100        DD OFFSET EmFbld
+EmDF_101        DD OFFSET EmFildQword
+EmDF_110        DD OFFSET EmFbstp
+EmDF_111        DD OFFSET EmFistpQword
 
 EmDFLow:
-	movzx ebx,al
-	shr bl,2
-	and bl,0Eh
-	jmp dword ptr [2*ebx].EmDFLowTab
+        movzx ebx,al
+        shr bl,2
+        and bl,0Eh
+        jmp dword ptr [2*ebx].EmDFLowTab
 
-	END
+        END

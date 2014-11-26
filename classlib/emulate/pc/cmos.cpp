@@ -31,7 +31,7 @@
 #define TRUE !FALSE
 
 /*##################  TCmos::TCmos  ###############
-*   Purpose....: Constructor for KEYB							            #
+*   Purpose....: Constructor for KEYB                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -40,18 +40,18 @@
 TCmos::TCmos(TBus *Bus, int Base)
   : TBusFunction(Bus)
 {
-	int i;
+    int i;
 
-	for (i = 0; i < 128; i++)
-		FData[i] = 0;
+    for (i = 0; i < 128; i++)
+        FData[i] = 0;
 
-	FPort = 0;
+    FPort = 0;
 
-	DefineIo(0, Base, 2, 0);
+    DefineIo(0, Base, 2, 0);
 }
 
 /*##################  TCmos::GetSize  ###############
-*   Purpose....: Get mapping size of device						            #
+*   Purpose....: Get mapping size of device                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -62,7 +62,7 @@ int TCmos::GetSize()
 }
 
 /*##################  TCmos::Out  ###############
-*   Purpose....: Perform out instruction						            #
+*   Purpose....: Perform out instruction                                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -70,20 +70,20 @@ int TCmos::GetSize()
 *##########################################################################*/
 void TCmos::Out(int Num, int Offset, char Value)
 {
-	switch (Offset)
-	{
-		case 0:
-			FPort = Value & 0x7F;
-			break;
+    switch (Offset)
+    {
+        case 0:
+            FPort = Value & 0x7F;
+            break;
 
-		case 1:
-			FData[FPort] = Value;
-			break;
-	}
+        case 1:
+            FData[FPort] = Value;
+            break;
+    }
 }
 
 /*##################  TCmos::In  ###############
-*   Purpose....: Perform in instruction						            #
+*   Purpose....: Perform in instruction                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -91,15 +91,16 @@ void TCmos::Out(int Num, int Offset, char Value)
 *##########################################################################*/
 char TCmos::In(int Num, int Offset)
 {
-	char Val;
+    char Val;
 
-	switch (Offset)
-	{
-		case 0:
-			return FPort;
+    switch (Offset)
+    {
+        case 0:
+            return FPort;
 
-		case 1:
-			FData[0xA] ^= 0x80;
-			return FData[FPort];
-	}
+        case 1:
+            FData[0xA] ^= 0x80;
+            return FData[FPort];
+    }
+    return -1;
 }

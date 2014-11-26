@@ -27,176 +27,175 @@
 
 .386
 .model flat
-locals
 
-		NAME emdata
-		
-INCLUDE x86\emulate.inc		
-		
+                NAME emdata
+                
+INCLUDE x86\emulate.inc         
+                
 .data
 
-Cpu	equ	[ebp]
+Cpu     equ     [ebp]
 
-data_buffer		db 16 dup (?)
-data_size_copied	dd ?
+data_buffer             db 16 dup (?)
+data_size_copied        dd ?
 
-		public	showdata
-		extrn CondReadLinear:near	
-		extrn WriteChar:near
-		extrn Blank:near
-		extrn WriteHexPtr32:near
-		extrn WriteHexByte:near
-		extrn NewLine:near		
-		extrn SegDsTab		
+                public  showdata
+                extrn CondReadLinear:near       
+                extrn WriteChar:near
+                extrn Blank:near
+                extrn WriteHexPtr32:near
+                extrn WriteHexByte:near
+                extrn NewLine:near              
+                extrn SegDsTab:near          
 
 .code
 
 ;++++=+=+=+=+=+=+=+=+=+=+=+=+=+=++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
-;		NAME:		GETDATA  			      +
-;		PURPOSE:	Read the data pointed by the Cpu      +	
+;               NAME:           GETDATA                               +
+;               PURPOSE:        Read the data pointed by the Cpu      + 
 ;                               gs:esi register                       +
-;					                  	      +
-;		PARAMETER:	EBP contient le Cpu		      +
-;								      +
-;		RETURN:		                                      +
-;					                  	      +
+;                                                                     +
+;               PARAMETER:      EBP contient le Cpu                   +
+;                                                                     +
+;               RETURN:                                               +
+;                                                                     +
 ;+=+=+=+++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
 
-getdata	proc	near
+getdata proc    near
 
 
-	push	esi
-	push	edi
-	push	ecx
-	push	ebx
-	
-	mov 	data_buffer,0
-	mov	data_size_copied,0
+        push    esi
+        push    edi
+        push    ecx
+        push    ebx
+        
+        mov     data_buffer,0
+        mov     data_size_copied,0
 ;
-	movzx 	esi,word ptr Cpu.reg_gs.d_selector
-	mov     esi,dword ptr [4*esi].SegDsTab
-	
+        movzx   esi,word ptr Cpu.reg_gs.d_selector
+        mov     esi,dword ptr [4*esi].SegDsTab
+        
 ; There is no test to see if the access of the segment is 16 or 32 bits
 ;you decide that by your on
 
-	mov 	ebx,Cpu.reg_esi
+        mov     ebx,Cpu.reg_esi
 ;
-	mov 	ecx,ebx
-	sub 	ecx,[ebp+esi].d_limit
-	ja 	short getdata_done
+        mov     ecx,ebx
+        sub     ecx,[ebp+esi].d_limit
+        ja      short getdata_done
 ;
-	neg 	ecx
-	inc 	ecx
-	cmp 	ecx,16
-	jb 	short getdata_read_linear
-	mov 	ecx,16
+        neg     ecx
+        inc     ecx
+        cmp     ecx,16
+        jb      short getdata_read_linear
+        mov     ecx,16
 
 getdata_read_linear:
-	mov	data_size_copied,ecx
-	add 	ebx,[ebp+esi].d_base
-	call 	CondReadLinear		;read bytes in [ebp].req_buf
-	lea	esi,Cpu.req_buf
-	lea	edi,data_buffer
-	mov	ecx,4
-	rep	movsd
-	
+        mov     data_size_copied,ecx
+        add     ebx,[ebp+esi].d_base
+        call    CondReadLinear          ;read bytes in [ebp].req_buf
+        lea     esi,Cpu.req_buf
+        lea     edi,data_buffer
+        mov     ecx,4
+        rep     movsd
+        
 getdata_done:
-	pop	ebx
-	pop	ecx
-	pop	edi
-	pop	esi
-	
-	ret 
-	
-getdata		Endp
+        pop     ebx
+        pop     ecx
+        pop     edi
+        pop     esi
+        
+        ret 
+        
+getdata         Endp
 
 ;++++=+=+=+=+=+=+=+=+=+=+=+=+=+=++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
-;		NAME:		PRINTDATA  			      +
-;		PURPOSE:	Show data to the screen               +	
+;               NAME:           PRINTDATA                             +
+;               PURPOSE:        Show data to the screen               + 
 ;                               ds:esi register                       +
-;					                  	      +
-;		PARAMETER:	                      		      +
-;								      +
-;		RETURN:			                              +
-;					                  	      +
+;                                                                     +
+;               PARAMETER:                                            +
+;                                                                     +
+;               RETURN:                                               +
+;                                                                     +
 ;+=+=+=+++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
 
 
-printdata	proc	near
+printdata       proc    near
 
 ;d'abord on va ecrire l'offset
 ;a priori les registres sont sauvegardés
 
 
-	push	esi
-	push	ecx
-	push	ebx
-	push	edx
-	
-	movzx 	esi,word ptr Cpu.reg_gs.d_selector
-	mov     esi,dword ptr [4*esi].SegDsTab
-	
-	mov 	dx,Cpu.esi.d_selector
-	mov	ebx,Cpu.reg_esi
-	call	WriteHexPtr32
+        push    esi
+        push    ecx
+        push    ebx
+        push    edx
+        
+        movzx   esi,word ptr Cpu.reg_gs.d_selector
+        mov     esi,dword ptr [4*esi].SegDsTab
+        
+        mov     dx,0
+        mov     ebx,Cpu.reg_esi
+        call    WriteHexPtr32
 
 ;un peu d'espace
 
-	mov	ecx,1
-	call	Blank
-		
-;maintenant on va copier les HEX bytes de données	
-	mov 	esi,offset data_buffer
-	mov	ecx,data_size_copied
-	cmp	ecx,0
-	jnz	short @@1
-	inc	ecx
+        mov     ecx,1
+        call    Blank
+                
+;maintenant on va copier les HEX bytes de données       
+        mov     esi,offset data_buffer
+        mov     ecx,data_size_copied
+        cmp     ecx,0
+        jnz     short @@1
+        inc     ecx
 @@1:
-	lodsb
-	call	WriteHexByte
-	push	ecx
-	mov	ecx,1
-	call	Blank
-	pop	ecx
-	loop	@@1		
-	
+        lodsb
+        call    WriteHexByte
+        push    ecx
+        mov     ecx,1
+        call    Blank
+        pop     ecx
+        loop    @@1             
+        
 ;un peu d'espace
-	mov	eax,data_size_copied
-	mov	ecx,eax
-	shl	eax,1
-	add	eax,ecx
-	mov	ecx,DISTANCE_DATA 
-	inc	eax
-	sub	ecx,eax		;pour aligner les instructions * J'ai des problemes pour aligner
+        mov     eax,data_size_copied
+        mov     ecx,eax
+        shl     eax,1
+        add     eax,ecx
+        mov     ecx,DISTANCE_DATA 
+        inc     eax
+        sub     ecx,eax         ;pour aligner les instructions * J'ai des problemes pour aligner
 
-	call	Blank
+        call    Blank
 
-;maintenant on va copier les ASCII bytes de données	
-	mov 	esi,offset data_buffer
-	mov	ecx,data_size_copied
+;maintenant on va copier les ASCII bytes de données     
+        mov     esi,offset data_buffer
+        mov     ecx,data_size_copied
 @@2:
-	lodsb
-	call	WriteChar
-	loop	@@2		
+        lodsb
+        call    WriteChar
+        loop    @@2             
 
-	pop	edx
-	pop	ebx
-	pop	ecx
-	pop	esi
-	
-	ret
-printdata	endp
+        pop     edx
+        pop     ebx
+        pop     ecx
+        pop     esi
+        
+        ret
+printdata       endp
 
 ;++++=+=+=+=+=+=+=+=+=+=+=+=+=+=++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
-;		NAME:		SHOWDATA  			      +
-;					                  	      +
+;               NAME:           SHOWDATA                              +
+;                                                                     +
 
-;		PURPOSE:	Show data commander                   +	
-;					                  	      +
-;		PARAMETER:      TCpu *Cpu in the stack		      +
-;								      +
-;		RETURN:			                              +
-;					                  	      +
+;               PURPOSE:        Show data commander                   + 
+;                                                                     +
+;               PARAMETER:      TCpu *Cpu in the stack                +
+;                                                                     +
+;               RETURN:                                               +
+;                                                                     +
 ;+=+=+=+++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
 ;
 ;  HOW TO USE THE D COMMAND
@@ -204,35 +203,35 @@ printdata	endp
 ; you just type SEG_NBER:OFFSET where SEG_NBER is the rank of the segment 
 ;registre as on the screen ,the first segment is SEG_NBER = 0
 ;
-showdata	proc	near
+showdata        proc    near
 
 ;
-	push	ebp
-	mov	ebp,esp
-	push	ecx
-	push	esi
-	mov	ebp,[ebp+8]
-	mov	ecx,DATA_LINES_NR
+        push    ebp
+        mov     ebp,esp
+        push    ecx
+        push    esi
+        mov     ebp,[ebp+8]
+        mov     ecx,DATA_LINES_NR
 
-;	
+;       
 showdata_loop:
-	call	NewLine
-	call	getdata
-	call	printdata
-	mov	eax,Cpu.reg_esi
-	add	eax,16
-	mov	Cpu.reg_esi,eax
-	loop	showdata_loop
-;	
-	call	NewLine
+        call    NewLine
+        call    getdata
+        call    printdata
+        mov     eax,Cpu.reg_esi
+        add     eax,16
+        mov     Cpu.reg_esi,eax
+        loop    showdata_loop
+;       
+        call    NewLine
 ;
-	pop	esi
-	pop	ecx
-	pop	ebp
-;	
-	ret	4
-		
-showdata	endp
+        pop     esi
+        pop     ecx
+        pop     ebp
+;       
+        ret     4
+                
+showdata        endp
 
 
-	END
+        END

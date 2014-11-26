@@ -25,7 +25,7 @@
 *
 *##########################################################################*/
 
-#ifndef	_PCI_H
+#ifndef _PCI_H
 #define _PCI_H
 
 #include "bus.h"
@@ -43,17 +43,17 @@ public:
 class TPciFunction
 {
 public:
-	TPciFunction(TPci *Pci);
+        TPciFunction(TPci *Pci);
 
     virtual int ReadConfig(int Index);
     virtual int ReadData(int Index);
     virtual void WriteConfig(int Index, int Data);
     virtual void WriteData(int Index, int Data);
 
-	virtual void Out(int Num, int Offset, char Value);
-	virtual char In(int Num, int Offset);
-	virtual void WriteMem(int Num, unsigned unsigned long Offset, char Value);
-	virtual char ReadMem(int Num, unsigned unsigned long Offset);
+        virtual void Out(int Num, int Offset, char Value);
+        virtual char In(int Num, int Offset);
+        virtual void WriteMem(int Num, unsigned long Offset, char Value);
+        virtual char ReadMem(int Num, unsigned long Offset);
 
 protected:
     void DefineIo(int Num, int Base, int Size, char *Data);
@@ -61,7 +61,7 @@ protected:
     void DefineMem(int Num, int Base, int Size, char *Data);
     void UndefineMem(int Num);
 
-	TPci *FPci;
+        TPci *FPci;
     char FConfig[256];
     char FData[256];
     TPciAreaData *FIoArr[256];
@@ -72,10 +72,10 @@ protected:
 class TPciArea
 {
 public:
-	unsigned long Base;
-	unsigned long Size;
-	TPciFunction *func;
-	int Num;
+        unsigned long Base;
+        unsigned long Size;
+        TPciFunction *func;
+        int Num;
 };
 
 class TPciDevice
@@ -99,44 +99,44 @@ public:
 class TPci
 {
 public:
-	TPci(TBus *Isa);
-	~TPci();
+        TPci(TBus *Isa);
+        ~TPci();
 
-	void Out(int Port, char Value);
-	char In(int Port);
-	void WriteMem(unsigned long Address, char Value);
-	char ReadMem(unsigned long Address);
-	
-	void RegisterFunction(TPciFunction *func, int Bus, int Device, int Function);
-	void DefineIo(TPciFunction *func, int Num, int Base, int Size);
-	void UndefineIo(TPciFunction *func, int Num);
-	void DefineMem(TPciFunction *func, int Num, int Base, int Size);
-	void UndefineMem(TPciFunction *func, int Num);
+        void Out(int Port, char Value);
+        char In(int Port);
+        void WriteMem(unsigned long Address, char Value);
+        char ReadMem(unsigned long Address);
+        
+        void RegisterFunction(TPciFunction *func, int Bus, int Device, int Function);
+        void DefineIo(TPciFunction *func, int Num, int Base, int Size);
+        void UndefineIo(TPciFunction *func, int Num);
+        void DefineMem(TPciFunction *func, int Num, int Base, int Size);
+        void UndefineMem(TPciFunction *func, int Num);
 
-	int IsKeyboardEnabled();
-	void EnableKeyboard();
+        int IsKeyboardEnabled();
+        void EnableKeyboard();
 
 protected:
-	int ReadData(int Index);
-	void WriteData(int Index, int Data);
+        int ReadData(int Index);
+        void WriteData(int Index, int Data);
 
-	void DefaultOut(int Port, char Value);
-	char DefaultIn(int Port);
-		
+        void DefaultOut(int Port, char Value);
+        char DefaultIn(int Port);
+                
 private:
-	long FIndex;
-	long FValue;
-	int FIndexChanged;
-	int FDataChanged;
+        long FIndex;
+        long FValue;
+        int FIndexChanged;
+        int FDataChanged;
     int FKeyboardEnabled;
 
-	TBus *FIsa;
+        TBus *FIsa;
     TPciBus *FBusArr[256];
-	int FHookIoMax;
-	int FHookMemMax;
-	TPciArea *FHookIoArr[256];
-	TPciArea *FHookMemArr[256];
-	    
+        int FHookIoMax;
+        int FHookMemMax;
+        TPciArea *FHookIoArr[256];
+        TPciArea *FHookMemArr[256];
+            
 };
 
 #endif
