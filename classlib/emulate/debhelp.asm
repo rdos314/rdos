@@ -27,6 +27,16 @@
 
 .386
 .model flat
+
+include ..\..\kernel\user.def
+
+UserGate32	MACRO gate_nr
+    db 3Eh
+    db 67h
+    db 9Ah
+    dd gate_nr
+    dw 3
+			ENDM
 						
 		NAME  DEBHELP
 
@@ -35,11 +45,6 @@
 FloatBuffer DB 40 DUP(?)
 
 .code
-
-	extrn ShowChar:near
-	extrn ShowSizeString:near
-	extrn ShowAsciiz:near
-	extrn FloatToString:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -154,10 +159,7 @@ RemoveLeading	Endp
     public WriteChar
 
 WriteChar	Proc near
-	pushad
-	push eax
-	call ShowChar
-	popad
+    UserGate32 write_char_nr
 	ret
 WriteChar	Endp
 
@@ -176,11 +178,7 @@ WriteChar	Endp
     public WriteSizeString
 
 WriteSizeString	Proc near
-	pushad
-	push ecx
-	push edi
-	call ShowSizeString
-	popad
+    UserGate32 write_size_string_nr
 	ret
 WriteSizeString	Endp
 
@@ -198,10 +196,7 @@ WriteSizeString	Endp
     public WriteAsciiz
     
 WriteAsciiz	Proc near
-	pushad
-	push edi
-	call ShowAsciiz
-	popad
+    UserGate32 write_asciiz_nr
 	ret
 WriteAsciiz	Endp
 

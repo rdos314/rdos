@@ -39,7 +39,7 @@ Cpu     equ     [ebp]
 data_buffer             db 16 dup (?)
 data_size_copied        dd ?
 
-                public  showdata
+                public  showdata_
                 extrn CondReadLinear:near       
                 extrn WriteChar:near
                 extrn Blank:near
@@ -203,7 +203,7 @@ printdata       endp
 ; you just type SEG_NBER:OFFSET where SEG_NBER is the rank of the segment 
 ;registre as on the screen ,the first segment is SEG_NBER = 0
 ;
-showdata        proc    near
+showdata_        proc    near
 
 ;
         push    ebp
@@ -231,7 +231,7 @@ showdata_loop:
 ;       
         ret     4
                 
-showdata        endp
+showdata_        endp
 
 
         END

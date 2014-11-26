@@ -39,14 +39,9 @@ INCLUDE debhelp.inc
 FloatBuffer DB 40 DUP(?)
 
 .code
-
-        extrn ShowChar:near
-        extrn ShowSizeString:near
-        extrn ShowAsciiz:near
         extrn FloatToString:near
-        extrn _debugflag:dword                ;the underscore because of the C language
+;        extrn _debugflag:dword                ;the underscore because of the C language
         extrn op_code_size:dword
-        extrn data_code_size:byte
         extrn op_in_code:byte
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -752,26 +747,26 @@ WriteTime       ENDP
 WriteCpuReg     Proc near
 ;La modification a consisté à mettre les instructions de tests
 
-        test    _debugflag,INSTRUCTION_CODE_ONLY
-        jnz     short @@6
+;        test    _debugflag,INSTRUCTION_CODE_ONLY
+;        jnz     short @@6
 
-        test    _debugflag,TLB_REGISTER
-        jz      short @@1a
+;        test    _debugflag,TLB_REGISTER
+;        jz      short @@1a
         call    WriteTlb
 @@1a:
         
-        test    _debugflag,SYSTEM_REGISTER
-        jz      short @@2
+;        test    _debugflag,SYSTEM_REGISTER
+;        jz      short @@2
         call    WriteSystemRegs
         
 @@2:    
-        test    _debugflag,DESCRIPTOR_REGISTER
-        jz      short @@3
+;        test    _debugflag,DESCRIPTOR_REGISTER
+;        jz      short @@3
         call WriteDescriptors
 ;
 @@3:
-        test    _debugflag,GENERAL_REGISTER
-        jz      short @@4
+;        test    _debugflag,GENERAL_REGISTER
+;        jz      short @@4
 
         mov edi,OFFSET dword_reg_tab1
         call WriteDwordRegs
@@ -780,8 +775,8 @@ WriteCpuReg     Proc near
         call WriteDwordRegs
 ;
 @@4:
-        test    _debugflag,CONTROL_REGISTER
-        jz      short @@5
+;        test    _debugflag,CONTROL_REGISTER
+;        jz      short @@5
 
         mov edi,OFFSET dword_reg_tab3
         call WriteDwordRegs
@@ -792,8 +787,8 @@ WriteCpuReg     Proc near
 @@6:    
         call WriteInstr
         
-        test    _debugflag,INSTRUCTION_CODE_ONLY
-        jnz     short @@7
+;        test    _debugflag,INSTRUCTION_CODE_ONLY
+;        jnz     short @@7
         call WriteTime
         
 @@7:    
@@ -803,15 +798,15 @@ WriteCpuReg     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteRegs
+;               NAME:                   WriteRegs_
 ;
 ;               DESCRIPTION:    Write CPU registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public WriteRegs
+        public WriteRegs_
 
-WriteRegs       Proc near
+WriteRegs_       Proc near
         push ebp
         mov ebp,esp
         pushad
@@ -822,7 +817,7 @@ WriteRegs       Proc near
         popad
         pop ebp
         ret 4
-WriteRegs       Endp
+WriteRegs_       Endp
 
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -860,13 +855,13 @@ WriteOneFpu Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteFpuRegs
+;               NAME:                   WriteFpuRegs_
 ;
 ;               DESCRIPTION:    Write FPU registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public WriteFpuRegs
+        public WriteFpuRegs_
 
 math0   DB 'ST(0)=', 0
 math1   DB 'ST(1)=', 0
@@ -877,7 +872,7 @@ math5   DB 'ST(5)=', 0
 math6   DB 'ST(6)=', 0
 math7   DB 'ST(7)=', 0
 
-WriteFpuRegs    Proc near
+WriteFpuRegs_    Proc near
         push ebp
         mov ebp,esp
         pushad
@@ -934,7 +929,7 @@ WriteFpuRegs    Proc near
         popad
         pop ebp
         ret 4
-WriteFpuRegs    Endp
+WriteFpuRegs_    Endp
 
 
         END

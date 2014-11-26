@@ -42,8 +42,8 @@ include x86\em387.inc
 
 .code
 
-   extrn setvalue:near
-   extrn GetIntVector:near
+   extrn setvalue_:near
+   extrn GetIntVector_:near
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1002,9 +1002,9 @@ emtFE   DD OFFSET EmFE,                                 OFFSET EmFF
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public Emulate
+        public Emulate_
 
-Emulate Proc near
+Emulate_ Proc near
         push ebp
         mov ebp,esp
         sub     esp,Tprog_position_             ;de l'espace pour fabriquer la structure
@@ -1016,7 +1016,7 @@ Emulate Proc near
         mov     ax,[ebp].reg_cs.d_selector
         mov     [ebx].p_segment,ax
         push    ebx
-        call    setvalue
+        call    setvalue_
 ;
         mov [ebp].running,1
         and [ebp].em_debug, NOT DEBUG_BREAK
@@ -1053,7 +1053,7 @@ emulate_start:
         jz emulate_no_int
 ;
         push ebp
-        call GetIntVector
+        call GetIntVector_
         call HwInt
         jmp emulate_done
 
@@ -1085,6 +1085,6 @@ emulate_done:
         add     esp,Tprog_position_             ;de l'espace pour fabriquer la structure
         pop ebp
         ret 4
-Emulate Endp
+Emulate_ Endp
 
         END

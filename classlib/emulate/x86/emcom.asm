@@ -35,8 +35,8 @@ include x86\emseg.inc
 include x86\empage.inc
 include x86\emtss.inc
 
-	extrn ReadFromIo:near
-	extrn WriteToIo:near
+	extrn ReadFromIo_:near
+	extrn WriteToIo_:near
 
 .code
 
@@ -949,7 +949,7 @@ InPort Proc near
 	push edx
 	push esi
 	push ebp
-	call ReadFromIo
+	call ReadFromIo_
 	ret
 InPort	Endp
 
@@ -974,7 +974,7 @@ OutPort Proc near
 	push edx
 	push esi
 	push ebp
-	call WriteToIo
+	call WriteToIo_
 	ret
 OutPort	Endp
 

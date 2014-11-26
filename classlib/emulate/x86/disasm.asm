@@ -35,23 +35,22 @@ include x86\empage.inc
 
    extrn dis_ass_one:near
    extrn op_code_size:dword
-   extrn data_code_size:byte
-   extrn WriteRegs:near
+   extrn WriteRegs_:near
 
 .code
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DisAssemble
+;               NAME:                   DisAssemble_
 ;
 ;               DESCRIPTION:    Disassemble current instruction
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public DisAssemble
+        public DisAssemble_
 
-DisAssemble     Proc near
+DisAssemble_     Proc near
         push ebp
         mov ebp,esp
         pushad
@@ -88,7 +87,7 @@ disass_done:
         popad
         pop ebp
         ret 4
-DisAssemble     Endp
+DisAssemble_     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -101,9 +100,9 @@ DisAssemble     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public Dis_ass_more
+        public Dis_ass_more_
         
-Dis_ass_more    proc near
+Dis_ass_more_    proc near
 
 
         push    ebp
@@ -116,9 +115,9 @@ Dis_ass_more    proc near
         
 @@1:
         push    ebp
-        call    DisAssemble
+        call    DisAssemble_
         push    ebp
-        call    WriteRegs
+        call    WriteRegs_
         mov     eax,op_code_size
         add     eax,[ebp].reg_eip
         mov     [ebp].reg_eip,eax
@@ -130,7 +129,7 @@ Dis_ass_more    proc near
         pop      ebp
         ret 8
                         
-Dis_ass_more    Endp
+Dis_ass_more_    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -141,9 +140,9 @@ Dis_ass_more    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public ReadInstruction
+        public ReadInstruction_
 
-ReadInstruction Proc near
+ReadInstruction_ Proc near
         push ebp
         mov ebp,esp
         pushad
@@ -179,6 +178,6 @@ read_instr_done:
         popad
         pop ebp
         ret 4
-ReadInstruction Endp
+ReadInstruction_ Endp
 
         END
