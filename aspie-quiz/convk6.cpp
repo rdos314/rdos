@@ -227,8 +227,8 @@ static void ProcessRow(char *str)
                  {
                      val = atoi(valstr);
 
-                     if (val > 40)
-                         val = 40;
+                     if (val >= 40)
+                         val = 39;
 
                      val = val / 4;
 

@@ -98,7 +98,7 @@ int TQuizK6::GetPcaCount()
 int TQuizK6::GetCatCount(int Question)
 {
     if (Question < 130)
-       return 3;
+   return 3;
 
     return 10;
 }
@@ -306,6 +306,7 @@ void TQuizK6::SetupTexts()
   Quiz[124].Reverse = TRUE;
   Quiz[126].Reverse = TRUE;
   Quiz[127].Reverse = TRUE;
+  Quiz[129].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
@@ -435,8 +436,8 @@ void TQuizK6::SetupTexts()
   Quiz[125].MyGroup = GROUP_NT_CONTACT;
   Quiz[126].MyGroup = GROUP_NT_ATTACH;
   Quiz[127].MyGroup = GROUP_NT_ATTACH;
-  Quiz[128].MyGroup = GROUP_MIXED;
-  Quiz[129].MyGroup = GROUP_MIXED;
+  Quiz[128].MyGroup = GROUP_ASPIE_CONTACT;
+  Quiz[129].MyGroup = GROUP_NT_ATTACH;
   Quiz[130].MyGroup = GROUP_MIXED;
   Quiz[131].MyGroup = GROUP_MIXED;
   Quiz[132].MyGroup = GROUP_MIXED;
