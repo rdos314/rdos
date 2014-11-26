@@ -718,6 +718,9 @@
 #define usergate_ansi_to_utf16 0x00000237
 #define usergate_utf16_to_ansi 0x00000238
 
+#define usergate_get_usb_interface 0x00000239
+#define usergate_set_usb_interface 0x0000023A
+
 
 
 #ifdef __FLAT__
@@ -1441,6 +1444,9 @@
 #define CallGate_ansi_to_utf16 0x67 0x9a 55 2 0 0 3 0
 #define CallGate_utf16_to_ansi 0x67 0x9a 56 2 0 0 3 0
 
+#define CallGate_get_usb_interface 0x67 0x9a 57 2 0 0 3 0
+#define CallGate_set_usb_interface 0x67 0x9a 58 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2161,5 +2167,8 @@
 
 #define CallGate_ansi_to_utf16 0x3e 0x67 0x9a 55 2 0 0 3 0
 #define CallGate_utf16_to_ansi 0x3e 0x67 0x9a 56 2 0 0 3 0
+
+#define CallGate_get_usb_interface 0x3e 0x67 0x9a 57 2 0 0 3 0
+#define CallGate_set_usb_interface 0x3e 0x67 0x9a 58 2 0 0 3 0
 
 #endif

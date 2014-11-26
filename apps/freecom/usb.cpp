@@ -170,30 +170,30 @@ void TUsbCommand::ShowClass(char class_id, char sub_class, char protocol, int in
 ##########################################################################*/
 void TUsbCommand::ShowDevice(int control, int device, TUsbDevice *dev)
 {
-        char str[100];
-        int minor;
-        int major;
+    char str[100];
+    int minor;
+    int major;
 
         sprintf(str, "\r\n\r\nController: %d, Device: %d\r\n", control, device);
         Write(str);
 
-        minor = dev->usb_ver & 0xFF;
-        major = (dev->usb_ver >> 8) & 0xFF;
-        sprintf(str, "USB version: %d.%02hX\r\n", major, minor);
-        Write(str);
+    minor = dev->usb_ver & 0xFF;
+    major = (dev->usb_ver >> 8) & 0xFF;
+    sprintf(str, "USB version: %d.%02hX\r\n", major, minor);
+    Write(str);
 
-        ShowClass(dev->class_id, dev->sub_class, dev->proto, 0);
+    ShowClass(dev->class_id, dev->sub_class, dev->proto, 0);
 
-        sprintf(str, "Vendor: %04hX\r\n", dev->vendor);
-        Write(str);
+    sprintf(str, "Vendor: %04hX\r\n", dev->vendor);
+    Write(str);
 
-        minor = dev->device & 0xFF;
-        major = (dev->device >> 8) & 0xFF;
-        sprintf(str, "Product: %04hX %d.%02hX\r\n", dev->prod, major, minor);
-        Write(str);
+    minor = dev->device & 0xFF;
+    major = (dev->device >> 8) & 0xFF;
+    sprintf(str, "Product: %04hX %d.%02hX\r\n", dev->prod, major, minor);
+    Write(str);
 
-        sprintf(str, "Packet size: %d\r\n", dev->maxlen);
-        Write(str);
+    sprintf(str, "Packet size: %d\r\n", dev->maxlen);
+    Write(str);
 }
 
 /*##########################################################################
@@ -209,28 +209,28 @@ void TUsbCommand::ShowDevice(int control, int device, TUsbDevice *dev)
 ##########################################################################*/
 void TUsbCommand::ShowConfig(int config, TUsbConfig *dev)
 {
-        char str[100];
+    char str[100];
     int power;
         
-        sprintf(str, "\r\n  Configuration: %d\r\n", dev->config_id);
+    sprintf(str, "\r\n  Configuration: %d\r\n", dev->config_id);
+    Write(str);
+
+    if (dev->interface_count > 1)
+    {
+        sprintf(str, "  %d interfaces\r\n", dev->interface_count);
         Write(str);
+    }
 
-        if (dev->interface_count > 1)
-        {
-                sprintf(str, "  %d interfaces\r\n", dev->interface_count);
-            Write(str);
-        }
+    if (dev->attrib & 0x40)
+        Write("  Self-powered");
+    else
+        Write("  Bus-powered");
 
-        if (dev->attrib & 0x40)
-            Write("  Self-powered");
-        else
-            Write("  Bus-powered");
-
-        power = (unsigned char)dev->power;
-        power = 2 * (power + 1);
+    power = (unsigned char)dev->power;
+    power = 2 * (power + 1);
         
-        sprintf(str, ", %d mA\r\n", power);
-        Write(str);
+    sprintf(str, ", %d mA\r\n", power);
+    Write(str);
             
 }
 
@@ -245,14 +245,21 @@ void TUsbCommand::ShowConfig(int config, TUsbConfig *dev)
 #   Returns....: *
 #
 ##########################################################################*/
-void TUsbCommand::ShowInterface(TUsbInterface *descr)
+void TUsbCommand::ShowInterface(int control, int device, TUsbInterface *descr)
 {
-        char str[100];
+    char str[100];
+    int InterfaceId = RdosGetUsbInterface(control, device, descr->interface_id);
 
-        sprintf(str, "\r\n    Interface: %d\r\n", descr->interface_id);
-        Write(str);
+    sprintf(str, "\r\n    Interface #: %d\r\n", descr->interface_id);
+    Write(str);
 
-        ShowClass(descr->class_id, descr->sub_class, descr->proto, 4);
+    sprintf(str, "    Alt setting: %d\r\n", descr->alt_setting);
+    Write(str);
+
+    sprintf(str, "    Active setting: %d\r\n", InterfaceId);
+    Write(str);
+
+    ShowClass(descr->class_id, descr->sub_class, descr->proto, 4);
 
 }
 
@@ -269,54 +276,54 @@ void TUsbCommand::ShowInterface(TUsbInterface *descr)
 ##########################################################################*/
 void TUsbCommand::ShowEndpoint(TUsbEndpoint *descr)
 {
-        char str[100];
-        int type;
-        int size;
+    char str[100];
+    int type;
+    int size;
 
-        sprintf(str, "\r\n    Endpoint: %d\r\n", descr->address & 0xF);
-        Write(str);
+    sprintf(str, "\r\n    Endpoint: %d\r\n", descr->address & 0xF);
+    Write(str);
 
-        Write("    ");
+    Write("    ");
 
-        type = descr->attrib & 3;
+    type = descr->attrib & 3;
 
-        switch (type)
-        {
-                case 0:
-                        Write("Control");
-                        break;
+    switch (type)
+    {
+        case 0:
+            Write("Control");
+            break;
 
-                case 1:
-                        if (descr->address & 0x80)
-                                Write("Isochronous IN");
-                        else
-                                Write("Isochronous OUT");
-                        break;
+        case 1:
+            if (descr->address & 0x80)
+                Write("Isochronous IN");
+            else
+                Write("Isochronous OUT");
+            break;
 
-                case 2:
-                        if (descr->address & 0x80)
-                                Write("Bulk IN");
-                        else
-                                Write("Bulk OUT");
-                        break;
+        case 2:
+            if (descr->address & 0x80)
+                Write("Bulk IN");
+            else
+                Write("Bulk OUT");
+            break;
 
-                case 3:
-                        if (descr->address & 0x80)
-                                Write("Interrupt IN");
-                        else
-                                Write("Interrupt OUT");
-                        break;
-        }
+        case 3:
+            if (descr->address & 0x80)
+                Write("Interrupt IN");
+            else
+                Write("Interrupt OUT");
+            break;
+    }
 
-        Write("\r\n");
+    Write("\r\n");
 
-        size = (unsigned char)descr->maxsize;
+    size = (unsigned char)descr->maxsize;
         
-        sprintf(str, "    Packet size %d\r\n", size);
-        Write(str);
+    sprintf(str, "    Packet size %d\r\n", size);
+    Write(str);
 
-        sprintf(str, "    Interval %d\r\n", descr->interval);
-        Write(str);     
+    sprintf(str, "    Interval %d\r\n", descr->interval);
+    Write(str);     
 }
 
 /*##########################################################################
@@ -330,25 +337,25 @@ void TUsbCommand::ShowEndpoint(TUsbEndpoint *descr)
 #   Returns....: *
 #
 ##########################################################################*/
-void TUsbCommand::ShowDescr(TUsbDescr *descr)
+void TUsbCommand::ShowDescr(int control, int device, TUsbDescr *descr)
 {
-        char str[100];
+    char str[100];
 
-        switch (descr->type)
-        {
-                case 4:
-                        ShowInterface((TUsbInterface *)descr);
-                        break;
+    switch (descr->type)
+    {
+        case 4:
+            ShowInterface(control, device, (TUsbInterface *)descr);
+            break;
 
         case 5:
             ShowEndpoint((TUsbEndpoint *)descr);
             break;
             
-                default:
-                        sprintf(str, "\r\n    Unknown descriptor: %02hX\r\n", descr->type);
-                        Write(str);
-                        break;
-        }
+        default:
+            sprintf(str, "\r\n    Unknown descriptor: %02hX\r\n", descr->type);
+            Write(str);
+            break;
+    }
 }
 
 /*##########################################################################
@@ -403,7 +410,7 @@ void TUsbCommand::Show()
                         while (pos < size)
                         {
                             descr = (TUsbDescr *)ptr;
-                            ShowDescr(descr);
+                            ShowDescr(contr, device, descr);
                             ptr += descr->len;
                             pos += descr->len;
                         }

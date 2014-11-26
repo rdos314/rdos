@@ -2828,6 +2828,13 @@
     parm [ebx] [eax] [edx] [edi] [ecx] \
     value [eax];
 
+#pragma aux RdosGetUsbInterface = \
+    CallGate_get_usb_interface \
+    "movzx ecx,cl" \
+    ValidateEdx \
+    parm [ebx] [eax] [edx] \
+    value [ecx];
+
 #pragma aux RdosOpenUsbPipe = \
     CallGate_open_usb_pipe \
     ValidateHandle \

@@ -52,9 +52,9 @@ protected:
         void ShowClass(char class_id, char sub_class, char protocol, int indent);
         void ShowDevice(int control, int device, TUsbDevice *dev);
         void ShowConfig(int config, TUsbConfig *dev);
-        void ShowInterface(TUsbInterface *descr);
+        void ShowInterface(int control, int device, TUsbInterface *descr);
         void ShowEndpoint(TUsbEndpoint *descr);
-        void ShowDescr(TUsbDescr *descr);
+        void ShowDescr(int control, int device, TUsbDescr *descr);
         void Show();
         void Reset();
 
