@@ -33,8 +33,8 @@
 include x86\emulate.inc
 include x86\emseg.inc
 
-	extrn ReadFromMemory_:near
-	extrn WriteToMemory_:near
+	extrn _ReadFromMemory:near
+	extrn _WriteToMemory:near
 
 .code
 
@@ -181,7 +181,7 @@ ReadPhysical Proc near
 	push ebx
 	push esi
 	push ebp
-	call ReadFromMemory_
+	call _ReadFromMemory
 	ret
 ReadPhysical	Endp
 
@@ -204,7 +204,7 @@ WritePhysical Proc near
 	push ebx
 	push esi
 	push ebp
-	call WriteToMemory_
+	call _WriteToMemory
 	ret
 WritePhysical	Endp
 

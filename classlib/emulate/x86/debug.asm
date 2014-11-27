@@ -804,9 +804,9 @@ WriteCpuReg     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public WriteRegs_
+        public _WriteRegs
 
-WriteRegs_       Proc near
+_WriteRegs       Proc near
         push ebp
         mov ebp,esp
         pushad
@@ -817,7 +817,7 @@ WriteRegs_       Proc near
         popad
         pop ebp
         ret 4
-WriteRegs_       Endp
+_WriteRegs       Endp
 
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -861,7 +861,7 @@ WriteOneFpu Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public WriteFpuRegs_
+        public _WriteFpuRegs
 
 math0   DB 'ST(0)=', 0
 math1   DB 'ST(1)=', 0
@@ -872,7 +872,7 @@ math5   DB 'ST(5)=', 0
 math6   DB 'ST(6)=', 0
 math7   DB 'ST(7)=', 0
 
-WriteFpuRegs_    Proc near
+_WriteFpuRegs    Proc near
         push ebp
         mov ebp,esp
         pushad
@@ -929,7 +929,7 @@ WriteFpuRegs_    Proc near
         popad
         pop ebp
         ret 4
-WriteFpuRegs_    Endp
+_WriteFpuRegs    Endp
 
 
         END

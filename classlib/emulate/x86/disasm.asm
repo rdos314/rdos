@@ -35,7 +35,7 @@ include x86\empage.inc
 
    extrn dis_ass_one:near
    extrn op_code_size:dword
-   extrn WriteRegs_:near
+   extrn _WriteRegs:near
 
 .code
         
@@ -48,9 +48,9 @@ include x86\empage.inc
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public DisAssemble_
+        public _DisAssemble
 
-DisAssemble_     Proc near
+_DisAssemble     Proc near
         push ebp
         mov ebp,esp
         pushad
@@ -87,7 +87,7 @@ disass_done:
         popad
         pop ebp
         ret 4
-DisAssemble_     Endp
+_DisAssemble     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -100,9 +100,9 @@ DisAssemble_     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public Dis_ass_more_
+        public _Dis_ass_more
         
-Dis_ass_more_    proc near
+_Dis_ass_more    proc near
 
 
         push    ebp
@@ -115,9 +115,9 @@ Dis_ass_more_    proc near
         
 @@1:
         push    ebp
-        call    DisAssemble_
+        call    _DisAssemble
         push    ebp
-        call    WriteRegs_
+        call    _WriteRegs
         mov     eax,op_code_size
         add     eax,[ebp].reg_eip
         mov     [ebp].reg_eip,eax
@@ -129,7 +129,7 @@ Dis_ass_more_    proc near
         pop      ebp
         ret 8
                         
-Dis_ass_more_    Endp
+_Dis_ass_more    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -140,9 +140,9 @@ Dis_ass_more_    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public ReadInstruction_
+        public _ReadInstruction
 
-ReadInstruction_ Proc near
+_ReadInstruction Proc near
         push ebp
         mov ebp,esp
         pushad
@@ -178,6 +178,6 @@ read_instr_done:
         popad
         pop ebp
         ret 4
-ReadInstruction_ Endp
+_ReadInstruction Endp
 
         END

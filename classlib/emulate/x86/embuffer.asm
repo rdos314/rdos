@@ -43,11 +43,11 @@ readbuffer      dd ?    ;current read position
 full_flag       db ?    ;s'ils sont tous les deux au debut il nous dit
                         ;si le buffer a deja été rempli au moins 1 fois
 
-                public  initbuffer_
-                public  getvalue_
-                public  setvalue_
-                extrn   DisAssemble_:near
-                extrn   WriteRegs_:near
+                public  _initbuffer
+                public  _getvalue
+                public  _setvalue
+                extrn   _DisAssemble:near
+                extrn   _WriteRegs:near
 .code
 
 
@@ -61,7 +61,7 @@ full_flag       db ?    ;s'ils sont tous les deux au debut il nous dit
 ;                                                                     +
 ;+=+=+=+++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
 
-initbuffer_      proc    near
+_initbuffer      proc    near
 
 circularbuffer  equ     [ebp+8]
 buffersize      equ     [ebp+0Ch]
@@ -107,7 +107,7 @@ buffersize      equ     [ebp+0Ch]
         pop     ebx
         pop     ebp
         ret     8       
-initbuffer_      endp
+_initbuffer      endp
 
 ;++++=+=+=+=+=+=+=+=+=+=+=+=+=+=++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
 ;               NAME:           GETVALUE                              +
@@ -118,7 +118,7 @@ initbuffer_      endp
 ;                                                                     +
 ;+=+=+=+++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
 
-getvalue_        proc    near
+_getvalue        proc    near
 
 Cpu     equ     [ebp+8]
 
@@ -169,9 +169,9 @@ go_get_it:
         mov     [ebp].reg_cs.d_selector,ax
         mov     readbuffer,esi
         push    ebp
-        call    DisAssemble_
+        call    _DisAssemble
         push    ebp
-        call    WriteRegs_
+        call    _WriteRegs
         loop    go_get_it       
         ret
 go_end: 
@@ -181,7 +181,7 @@ go_end:
         pop     ebp
         ret     4
 
-getvalue_        endp
+_getvalue        endp
 
 ;++++=+=+=+=+=+=+=+=+=+=+=+=+=+=++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
 ;               NAME:           SETVALUE                              +
@@ -192,7 +192,7 @@ getvalue_        endp
 ;                                                                     +
 ;+=+=+=+++=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=++
 
-setvalue_        proc    near
+_setvalue        proc    near
 
 in_value        equ [ebp+8]
         
@@ -223,6 +223,6 @@ so_end:
         pop     ebx
         pop     ebp
         ret     4
-setvalue_        endp
+_setvalue        endp
 
         END

@@ -42,24 +42,24 @@ TLocation       buffer_val[COUNTBUFFER];
 extern "C"
 {
 
-void  UserBreak(TCpu *Cpu);
-void  ReadInstruction(TCpu *Cpu);
-void  DisAssemble(TCpu *Cpu);
-void  WriteRegs(TCpu *Cpu);
-void  WriteFpuRegs(TCpu *Cpu);
-void  Emulate(TCpu *Cpu);
-char  GetIntVector(TCpu *Cpu);
-void  ReadCode(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
-void  ReadFromMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
-void  WriteToMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
-void  ReadFromIo(TCpu *Cpu, void *Buffer, unsigned short int Port, int Size);
-void  WriteToIo(TCpu *Cpu, void *Buffer, unsigned short int Port, int Size);
-void  Dis_ass_more(TCpu *Cpu, unsigned long count);
-void  initbuffer(void *buffer, unsigned long count);
-void  getvalue(TCpu *Cpu);
-void  setvalue(TLocation *position);
-void  init_follow();            /* to initiate the follow procedure */
-void  showdata(TCpu *Cpu);  /* print ata on the screen */
+void  __cdecl UserBreak(TCpu *Cpu);
+void  __cdecl ReadInstruction(TCpu *Cpu);
+void  __cdecl DisAssemble(TCpu *Cpu);
+void  __cdecl WriteRegs(TCpu *Cpu);
+void  __cdecl WriteFpuRegs(TCpu *Cpu);
+void  __cdecl Emulate(TCpu *Cpu);
+char  __cdecl GetIntVector(TCpu *Cpu);
+void  __cdecl ReadCode(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
+void  __cdecl ReadFromMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
+void  __cdecl WriteToMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
+void  __cdecl ReadFromIo(TCpu *Cpu, void *Buffer, unsigned short int Port, int Size);
+void  __cdecl WriteToIo(TCpu *Cpu, void *Buffer, unsigned short int Port, int Size);
+void  __cdecl Dis_ass_more(TCpu *Cpu, unsigned long count);
+void  __cdecl initbuffer(void *buffer, unsigned long count);
+void  __cdecl getvalue(TCpu *Cpu);
+void  __cdecl setvalue(TLocation *position);
+void  __cdecl init_follow();            /* to initiate the follow procedure */
+void  __cdecl showdata(TCpu *Cpu);  /* print ata on the screen */
 
 }
 
@@ -70,7 +70,7 @@ void  showdata(TCpu *Cpu);  /* print ata on the screen */
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char GetIntVector(TCpu *Cpu)
+char __cdecl GetIntVector(TCpu *Cpu)
 {
         return Cpu->GetIntVector();
 }
@@ -82,7 +82,7 @@ char GetIntVector(TCpu *Cpu)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void ReadFromMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size)
+void  __cdecl ReadFromMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size)
 {
     if (Cpu->CodeFetch)
         Cpu->ReadCode(Buffer, Address, Size);
@@ -97,7 +97,7 @@ void ReadFromMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteToMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size)
+void  __cdecl WriteToMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size)
 {
         Cpu->WriteToMemory(Buffer, Address, Size);
 }
@@ -109,7 +109,7 @@ void WriteToMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void ReadFromIo(TCpu *Cpu, void *Buffer, unsigned short Port, int Size)
+void  __cdecl ReadFromIo(TCpu *Cpu, void *Buffer, unsigned short Port, int Size)
 {
         Cpu->ReadFromIo(Buffer, Port, Size);
 }
@@ -121,7 +121,7 @@ void ReadFromIo(TCpu *Cpu, void *Buffer, unsigned short Port, int Size)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteToIo(TCpu *Cpu, void *Buffer, unsigned short Port, int Size)
+void  __cdecl WriteToIo(TCpu *Cpu, void *Buffer, unsigned short Port, int Size)
 {
         Cpu->WriteToIo(Buffer, Port, Size);
 }

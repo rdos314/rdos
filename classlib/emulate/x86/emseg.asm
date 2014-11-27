@@ -285,9 +285,9 @@ Done:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public UserBreak_
+	public _UserBreak
 
-UserBreak_	Proc near
+_UserBreak	Proc near
 	push ebp
 	mov ebp,[esp+8]
 	test [ebp].em_debug, DEBUG_RESUME
@@ -300,7 +300,7 @@ UserBreak_	Proc near
 user_break_done:
 	pop ebp
 	ret 4
-UserBreak_	Endp
+_UserBreak	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

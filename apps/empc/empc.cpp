@@ -44,12 +44,6 @@ TBus Isa;
 TPci Pci(&Isa);
 TPic Pic0(&Isa, 0x20);
 TPit Pit(&Isa, 0x40);
-TKeyb Keyb(&Isa, 0x60);
-TCmos Cmos(&Isa, 0x70);
-TFlash Flash(0x400000);
-TCpu Cpu;
-void *Eprom;
-char *LowRam;
 
 /*##################  Idle  ###############
 *   Purpose....: Idle                                           #
@@ -101,7 +95,7 @@ void ResetClk(TCpu *Cpu)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char __stdcall GetIntVector(TCpu *Cpu)
+char __cdecl GetIntVector(TCpu *Cpu)
 {
     return Pic0.GetVector();
 }
@@ -163,6 +157,13 @@ void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
 *##########################################################################*/
 void main(void)
 {
+    TKeyb Keyb(&Isa, 0x60);
+    TCmos Cmos(&Isa, 0x70);
+    TFlash Flash(0x400000);
+    TCpu Cpu;
+    void *Eprom;
+    char *LowRam;
+
     TFile FlashFile("demo.rom");
 
     OpenScreen("f:\\sim.log");
