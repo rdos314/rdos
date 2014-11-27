@@ -275,6 +275,77 @@ struct TTagCache
 
 struct THidDevice *HidArr[MAX_HID_DEVICES];
 
+#define DEFAULT_KEYBOARD_SIZE  63
+
+static unsigned char DefaultKeyboardDescriptor[DEFAULT_KEYBOARD_SIZE] =
+        {
+            0x5, 0x1,
+            0x9, 0x6,
+            0xA1,0x1,
+            0x5, 0x7,
+            0x19,0xE0,
+            0x29,0xE7,
+            0x15,0x0,
+            0x25,0x1,
+            0x75,0x1,
+            0x95,0x8,
+            0x81,0x2,
+            0x95,0x1,
+            0x75,0x8,
+            0x81,0x1,
+            0x95,0x5,
+            0x75,0x1,
+            0x5, 0x8,
+            0x19,0x1,
+            0x29,0x5,
+            0x91,0x2,
+            0x95,0x1,
+            0x75,0x3,
+            0x91,0x1,
+            0x95,0x6,
+            0x75,0x8,
+            0x15,0x0,
+            0x25,0x65,
+            0x5, 0x7,
+            0x19,0x0,
+            0x29,0x65,
+            0x81,0x0,
+            0xC0           
+        };
+
+#define DEFAULT_MOUSE_SIZE  50
+
+static unsigned char DefaultMouseDescriptor[DEFAULT_MOUSE_SIZE] =
+        {
+            0x5, 0x1,
+            0x9, 0x2,
+            0xA1,0x1,
+            0x9, 0x1,
+            0xA1,0x0,
+            0x5, 0x9,
+            0x19,0x1,
+            0x29,0x3,
+            0x15,0x0,
+            0x25,0x1,
+            0x95,0x3,
+            0x75,0x1,
+            0x81,0x2,
+            0x95,0x1,
+            0x75,0x5,
+            0x81,0x1,
+            0x5, 0x1,
+            0x9, 0x30,
+            0x9, 0x31,
+            0x15,0x81,
+            0x25,0x7F,
+            0x75,0x8,
+            0x95,0x2,
+            0x81,0x6,
+            0xC0, 0xC0
+        };
+            
+                
+
 /*##########################################################################
 #
 #   Name       : CloseHid
@@ -346,11 +417,35 @@ int OpenHid(struct THidDevice *dev)
         return TRUE;
     else
     {
+        switch (dev->Protocol)
+        {
+            case 1:
+                if (dev->ReportDescrSize >= DEFAULT_KEYBOARD_SIZE)
+                {
+                    dev->ReportDescrSize = DEFAULT_KEYBOARD_SIZE;
+                    memcpy(dev->ReportDescrData, DefaultKeyboardDescriptor, DEFAULT_KEYBOARD_SIZE);
+                    return TRUE;
+                }
+                else
+                    break;
+
+           case 2:                
+                if (dev->ReportDescrSize >= DEFAULT_KEYBOARD_SIZE)
+                {
+                    dev->ReportDescrSize = DEFAULT_MOUSE_SIZE;
+                    memcpy(dev->ReportDescrData, DefaultMouseDescriptor, DEFAULT_MOUSE_SIZE);
+                    return TRUE;
+                }
+                else
+                    break;
+
+            default:            
+                break;
+        }
+        
         dev->ItemCount = 0;
         dev->ReportDescrSize = 0;
-        return TRUE;
-//        CloseHid(dev);
-//        return FALSE;
+        return FALSE;
     }
 }
 

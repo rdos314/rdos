@@ -248,7 +248,7 @@ void TUsbCommand::ShowConfig(int config, TUsbConfig *dev)
 void TUsbCommand::ShowInterface(int control, int device, TUsbInterface *descr)
 {
     char str[100];
-    int InterfaceId = RdosGetUsbInterface(control, device, descr->interface_id);
+//    int InterfaceId = RdosGetUsbInterface(control, device, descr->interface_id);
 
     sprintf(str, "\r\n    Interface #: %d\r\n", descr->interface_id);
     Write(str);
@@ -256,8 +256,8 @@ void TUsbCommand::ShowInterface(int control, int device, TUsbInterface *descr)
     sprintf(str, "    Alt setting: %d\r\n", descr->alt_setting);
     Write(str);
 
-    sprintf(str, "    Active setting: %d\r\n", InterfaceId);
-    Write(str);
+//    sprintf(str, "    Active setting: %d\r\n", InterfaceId);
+//    Write(str);
 
     ShowClass(descr->class_id, descr->sub_class, descr->proto, 4);
 
