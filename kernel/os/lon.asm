@@ -68,18 +68,6 @@ code    SEGMENT byte public use16 'CODE'
     assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           lon_thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-lon_name  DB 'Lon', 0
-
-lon_thread:
-    int 3
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           SendLonModuleMsg
@@ -462,6 +450,10 @@ open_lon_module       Proc far
     mov [ebx].lon_handle_sel,es
     mov [ebx].hh_sign,LON_HANDLE
     mov bx,[ebx].hh_handle
+;
+    mov ax,es
+    mov ds,ax
+    call fword ptr ds:lon_init_proc    
     clc
     jmp open_lon_done
     
@@ -527,9 +519,6 @@ add_lon_module     PROC far
     push bx
     push dx
 ;
-    mov ds:lon_send_proc,0
-    mov ds:lon_receive_proc,0
-    mov ds:lon_has_msg_proc,0
     mov ds:lon_avail_obj,0
 ;
     mov dx,ds
@@ -544,7 +533,7 @@ add_lon_module     PROC far
     pop dx
     pop bx
     pop ds    
-    ret
+    retf32
 add_lon_module     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -575,40 +564,6 @@ delete_lon_handle_done:
 delete_lon_handle       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Init_lon
-;
-;           DESCRIPTION:    init lonworks module
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-init_lon      Proc far
-    push ds
-    push es
-    pusha
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov di,OFFSET lon_name
-    mov si,OFFSET lon_thread
-    mov ax,4
-    mov cx,stack0_size
-    CreateThread
-;       
-    popa
-    pop es
-    pop ds
-    retf32
-init_lon      Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           Init
@@ -625,9 +580,6 @@ init    PROC far
     mov ax,LON_HANDLE
     mov edi,OFFSET delete_lon_handle
     RegisterHandle
-;
-    mov edi,OFFSET init_lon
-    HookInitTasking
 ;
     mov esi,OFFSET add_lon_module
     mov edi,OFFSET add_lon_module_name
