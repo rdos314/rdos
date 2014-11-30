@@ -32,11 +32,11 @@ PAGE
 
         NAME em387
 
-include x86\emulate.inc
-include x86\emcom.inc
-include x86\emseg.inc
-include x86\emfloat.inc
-include x86\emmem.inc
+include \rdos\classlib\emulate\x86\emulate.inc
+include \rdos\classlib\emulate\x86\emcom.inc
+include \rdos\classlib\emulate\x86\emseg.inc
+include \rdos\classlib\emulate\x86\emfloat.inc
+include \rdos\classlib\emulate\x86\emmem.inc
 
 RC_MASK EQU 0C00h
 RC_RND  EQU 0000h

@@ -28,1266 +28,1266 @@
 .386
 .model flat
 
-	NAME emcom
+        NAME emcom
 
-include x86\emulate.inc
-include x86\emseg.inc
-include x86\empage.inc
-include x86\emtss.inc
+include \rdos\classlib\emulate\x86\emulate.inc
+include \rdos\classlib\emulate\x86\emseg.inc
+include \rdos\classlib\emulate\x86\empage.inc
+include \rdos\classlib\emulate\x86\emtss.inc
 
-	extrn _ReadFromIo:near
-	extrn _WriteToIo:near
+        extrn _ReadFromIo:near
+        extrn _WriteToIo:near
 
 .code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ReadByte
+;               NAME:                   ReadByte
 ;
-;		DESCRIPTION:	Read one byte of data
+;               DESCRIPTION:    Read one byte of data
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						SS:ESI	DESCRIPTOR
-;						EBX		OFFSET
+;               PARAMETERS:             SS:EBP  CPU
+;                                               SS:ESI  DESCRIPTOR
+;                                               EBX             OFFSET
 ;
-;		RETURNS:		AL		DATA
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public ReadByte
-
-ReadByte	Proc near
-	push ebx
-	push ecx
-;
-	test [ebp+esi].d_access,ACCESS_READ
-	jz AccessFault
-;
-	mov ecx,ebx
-	sub ecx,[ebp+esi].d_limit
-	ja AccessFault
-;
-	add ebx,[ebp+esi].d_base
-	call ReadLinearByte
-;
-	pop ecx
-	pop ebx
-	ret
-ReadByte	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			ReadWord
-;
-;		DESCRIPTION:	Read one word of data
-;
-;		PARAMETERS:		SS:EBP	CPU
-;						SS:ESI	DESCRIPTOR
-;						EBX		OFFSET
-;
-;		RETURNS:		AX		DATA
+;               RETURNS:                AL              DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public ReadWord
+        public ReadByte
 
-ReadWord	Proc near
-	push ebx
-	push ecx
+ReadByte        Proc near
+        push ebx
+        push ecx
 ;
-	test [ebp+esi].d_access,ACCESS_READ
-	jz AccessFault
+        test [ebp+esi].d_access,ACCESS_READ
+        jz AccessFault
 ;
-	mov ecx,ebx
-	inc ecx
-	sub ecx,[ebp+esi].d_limit
-	ja AccessFault
+        mov ecx,ebx
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
 ;
-	add ebx,[ebp+esi].d_base
-	call ReadLinearWord
+        add ebx,[ebp+esi].d_base
+        call ReadLinearByte
 ;
-	pop ecx
-	pop ebx
-	ret
-ReadWord	Endp
+        pop ecx
+        pop ebx
+        ret
+ReadByte        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ReadDword
+;               NAME:                   ReadWord
 ;
-;		DESCRIPTION:	Read one dword of data
+;               DESCRIPTION:    Read one word of data
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						SS:ESI	DESCRIPTOR
-;						EBX		OFFSET
+;               PARAMETERS:             SS:EBP  CPU
+;                                               SS:ESI  DESCRIPTOR
+;                                               EBX             OFFSET
 ;
-;		RETURNS:		EAX		DATA
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public ReadDword
-
-ReadDword	Proc near
-	push ebx
-	push ecx
-;
-	test [ebp+esi].d_access,ACCESS_READ
-	jz AccessFault
-;
-	mov ecx,ebx
-	add ecx,3
-	sub ecx,[ebp+esi].d_limit
-	ja AccessFault
-;
-	add ebx,[ebp+esi].d_base
-	call ReadLinearDword
-;
-	pop ecx
-	pop ebx
-	ret
-ReadDword	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			ReadFword
-;
-;		DESCRIPTION:	Read one 48-bit word of data
-;
-;		PARAMETERS:		SS:EBP	CPU
-;						SS:ESI	DESCRIPTOR
-;						EBX		OFFSET
-;
-;		RETURNS:		DX:EAX		DATA
+;               RETURNS:                AX              DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public ReadFword
+        public ReadWord
 
-ReadFword	Proc near
-	push ebx
-	push ecx
+ReadWord        Proc near
+        push ebx
+        push ecx
 ;
-	test [ebp+esi].d_access,ACCESS_READ
-	jz AccessFault
+        test [ebp+esi].d_access,ACCESS_READ
+        jz AccessFault
 ;
-	mov ecx,ebx
-	add ecx,5
-	sub ecx,[ebp+esi].d_limit
-	ja AccessFault
+        mov ecx,ebx
+        inc ecx
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
 ;
-	add ebx,[ebp+esi].d_base
-	call ReadLinearFword
+        add ebx,[ebp+esi].d_base
+        call ReadLinearWord
 ;
-	pop ecx
-	pop ebx
-	ret
-ReadFword	Endp
+        pop ecx
+        pop ebx
+        ret
+ReadWord        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ReadQword
+;               NAME:                   ReadDword
 ;
-;		DESCRIPTION:	Read 4 word of data
+;               DESCRIPTION:    Read one dword of data
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						SS:ESI	DESCRIPTOR
-;						EBX		OFFSET
+;               PARAMETERS:             SS:EBP  CPU
+;                                               SS:ESI  DESCRIPTOR
+;                                               EBX             OFFSET
 ;
-;		RETURNS:		EDX:EAX		DATA
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public ReadQword
-
-ReadQword	Proc near
-	push ebx
-	push ecx
-;
-	test [ebp+esi].d_access,ACCESS_READ
-	jz AccessFault
-;
-	mov ecx,ebx
-	add ecx,5
-	sub ecx,[ebp+esi].d_limit
-	ja AccessFault
-;
-	add ebx,[ebp+esi].d_base
-	call ReadLinearQword
-;
-	pop ecx
-	pop ebx
-	ret
-ReadQword	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			ReadTbyte
-;
-;		DESCRIPTION:	Read one tbyte of data
-;
-;		PARAMETERS:		SS:EBP	CPU
-;						SS:ESI	DESCRIPTOR
-;						EBX		OFFSET
-;
-;		RETURNS:		CX:EDX:EAX		DATA
+;               RETURNS:                EAX             DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public ReadTbyte
+        public ReadDword
 
-ReadTbyte	Proc near
-	push ebx
+ReadDword       Proc near
+        push ebx
+        push ecx
 ;
-	test [ebp+esi].d_access,ACCESS_READ
-	jz AccessFault
+        test [ebp+esi].d_access,ACCESS_READ
+        jz AccessFault
 ;
-	mov ecx,ebx
-	add ecx,9
-	sub ecx,[ebp+esi].d_limit
-	ja AccessFault
+        mov ecx,ebx
+        add ecx,3
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
 ;
-	add ebx,[ebp+esi].d_base
-	call ReadLinearTbyte
+        add ebx,[ebp+esi].d_base
+        call ReadLinearDword
 ;
-	pop ebx
-	ret
-ReadTbyte	Endp
+        pop ecx
+        pop ebx
+        ret
+ReadDword       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			WriteByte
+;               NAME:                   ReadFword
 ;
-;		DESCRIPTION:	Write one byte of data
+;               DESCRIPTION:    Read one 48-bit word of data
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						SS:ESI	DESCRIPTOR
-;						EBX		OFFSET
-;						AL		DATA
+;               PARAMETERS:             SS:EBP  CPU
+;                                               SS:ESI  DESCRIPTOR
+;                                               EBX             OFFSET
 ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public WriteByte
-
-WriteByte	Proc near
-	push ebx
-	push ecx
-;
-	test [ebp+esi].d_access,ACCESS_WRITE
-	jz AccessFault
-;
-	mov ecx,ebx
-	sub ecx,[ebp+esi].d_limit
-	ja AccessFault
-;
-	add ebx,[ebp+esi].d_base
-	call WriteLinearByte
-;
-	pop ecx
-	pop ebx
-	ret
-WriteByte	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			WriteWord
-;
-;		DESCRIPTION:	Write one word of data
-;
-;		PARAMETERS:		SS:EBP	CPU
-;						SS:ESI	DESCRIPTOR
-;						EBX		OFFSET
-;						AX		DATA
+;               RETURNS:                DX:EAX          DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public WriteWord
+        public ReadFword
 
-WriteWord	Proc near
-	push ebx
-	push ecx
+ReadFword       Proc near
+        push ebx
+        push ecx
 ;
-	test [ebp+esi].d_access,ACCESS_WRITE
-	jz AccessFault
+        test [ebp+esi].d_access,ACCESS_READ
+        jz AccessFault
 ;
-	mov ecx,ebx
-	inc ecx
-	sub ecx,[ebp+esi].d_limit
-	ja AccessFault
+        mov ecx,ebx
+        add ecx,5
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
 ;
-	add ebx,[ebp+esi].d_base
-	call WriteLinearWord
+        add ebx,[ebp+esi].d_base
+        call ReadLinearFword
 ;
-	pop ecx
-	pop ebx
-	ret
-WriteWord	Endp
+        pop ecx
+        pop ebx
+        ret
+ReadFword       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			WriteDword
+;               NAME:                   ReadQword
 ;
-;		DESCRIPTION:	Write one dword of data
+;               DESCRIPTION:    Read 4 word of data
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						SS:ESI	DESCRIPTOR
-;						EBX		OFFSET
-;						EAX		DATA
+;               PARAMETERS:             SS:EBP  CPU
+;                                               SS:ESI  DESCRIPTOR
+;                                               EBX             OFFSET
 ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public WriteDword
-
-WriteDword	Proc near
-	push ebx
-	push ecx
-;
-	test [ebp+esi].d_access,ACCESS_WRITE
-	jz AccessFault
-;
-	mov ecx,ebx
-	add ecx,3
-	sub ecx,[ebp+esi].d_limit
-	ja AccessFault
-;
-	add ebx,[ebp+esi].d_base
-	call WriteLinearDword
-;
-	pop ecx
-	pop ebx
-	ret
-WriteDword	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			WriteFword
-;
-;		DESCRIPTION:	Write one fword of data
-;
-;		PARAMETERS:		SS:EBP	CPU
-;						SS:ESI	DESCRIPTOR
-;						EBX		OFFSET
-;						DX:EAX		DATA
+;               RETURNS:                EDX:EAX         DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public WriteFword
+        public ReadQword
 
-WriteFword	Proc near
-	push ebx
-	push ecx
+ReadQword       Proc near
+        push ebx
+        push ecx
 ;
-	test [ebp+esi].d_access,ACCESS_WRITE
-	jz AccessFault
+        test [ebp+esi].d_access,ACCESS_READ
+        jz AccessFault
 ;
-	mov ecx,ebx
-	add ecx,5
-	sub ecx,[ebp+esi].d_limit
-	ja AccessFault
+        mov ecx,ebx
+        add ecx,5
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
 ;
-	add ebx,[ebp+esi].d_base
-	call WriteLinearFword
+        add ebx,[ebp+esi].d_base
+        call ReadLinearQword
 ;
-	pop ecx
-	pop ebx
-	ret
-WriteFword	Endp
+        pop ecx
+        pop ebx
+        ret
+ReadQword       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			WriteQword
+;               NAME:                   ReadTbyte
 ;
-;		DESCRIPTION:	Write one qword of data
+;               DESCRIPTION:    Read one tbyte of data
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						SS:ESI	DESCRIPTOR
-;						EBX		OFFSET
-;						EDX:EAX		DATA
+;               PARAMETERS:             SS:EBP  CPU
+;                                               SS:ESI  DESCRIPTOR
+;                                               EBX             OFFSET
 ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public WriteQword
-
-WriteQword	Proc near
-	push ebx
-	push ecx
-;
-	test [ebp+esi].d_access,ACCESS_WRITE
-	jz AccessFault
-;
-	mov ecx,ebx
-	add ecx,7
-	sub ecx,[ebp+esi].d_limit
-	ja AccessFault
-;
-	add ebx,[ebp+esi].d_base
-	call WriteLinearQword
-;
-	pop ecx
-	pop ebx
-	ret
-WriteQword	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			WriteTbyte
-;
-;		DESCRIPTION:	Write one tbyte of data
-;
-;		PARAMETERS:		SS:EBP	CPU
-;						SS:ESI	DESCRIPTOR
-;						EBX		OFFSET
-;						CX:EDX:EAX		DATA
+;               RETURNS:                CX:EDX:EAX              DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public WriteTbyte
+        public ReadTbyte
 
-WriteTbyte	Proc near
-	push ebx
+ReadTbyte       Proc near
+        push ebx
 ;
-	test [ebp+esi].d_access,ACCESS_WRITE
-	jz AccessFault
+        test [ebp+esi].d_access,ACCESS_READ
+        jz AccessFault
 ;
-	push ecx
-	mov ecx,ebx
-	add ecx,9
-	sub ecx,[ebp+esi].d_limit
-	pop ecx
-	ja AccessFault
+        mov ecx,ebx
+        add ecx,9
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
 ;
-	add ebx,[ebp+esi].d_base
-	call WriteLinearTbyte
+        add ebx,[ebp+esi].d_base
+        call ReadLinearTbyte
 ;
-	pop ebx
-	ret
-WriteTbyte	Endp
+        pop ebx
+        ret
+ReadTbyte       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PushWord
+;               NAME:                   WriteByte
 ;
-;		DESCRIPTION:	Push word onto stack
+;               DESCRIPTION:    Write one byte of data
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						AX		DATA
+;               PARAMETERS:             SS:EBP  CPU
+;                                               SS:ESI  DESCRIPTOR
+;                                               EBX             OFFSET
+;                                               AL              DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public PushWord
+        public WriteByte
 
-PushWord	Proc near
-	push esi
-	push ebx
+WriteByte       Proc near
+        push ebx
+        push ecx
 ;
-	mov esi,OFFSET reg_ss
-	test word ptr [ebp+esi].d_access,ACCESS_SIZE
-	jz push_word16
+        test [ebp+esi].d_access,ACCESS_WRITE
+        jz AccessFault
+;
+        mov ecx,ebx
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
+;
+        add ebx,[ebp+esi].d_base
+        call WriteLinearByte
+;
+        pop ecx
+        pop ebx
+        ret
+WriteByte       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   WriteWord
+;
+;               DESCRIPTION:    Write one word of data
+;
+;               PARAMETERS:             SS:EBP  CPU
+;                                               SS:ESI  DESCRIPTOR
+;                                               EBX             OFFSET
+;                                               AX              DATA
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public WriteWord
+
+WriteWord       Proc near
+        push ebx
+        push ecx
+;
+        test [ebp+esi].d_access,ACCESS_WRITE
+        jz AccessFault
+;
+        mov ecx,ebx
+        inc ecx
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
+;
+        add ebx,[ebp+esi].d_base
+        call WriteLinearWord
+;
+        pop ecx
+        pop ebx
+        ret
+WriteWord       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   WriteDword
+;
+;               DESCRIPTION:    Write one dword of data
+;
+;               PARAMETERS:             SS:EBP  CPU
+;                                               SS:ESI  DESCRIPTOR
+;                                               EBX             OFFSET
+;                                               EAX             DATA
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public WriteDword
+
+WriteDword      Proc near
+        push ebx
+        push ecx
+;
+        test [ebp+esi].d_access,ACCESS_WRITE
+        jz AccessFault
+;
+        mov ecx,ebx
+        add ecx,3
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
+;
+        add ebx,[ebp+esi].d_base
+        call WriteLinearDword
+;
+        pop ecx
+        pop ebx
+        ret
+WriteDword      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   WriteFword
+;
+;               DESCRIPTION:    Write one fword of data
+;
+;               PARAMETERS:             SS:EBP  CPU
+;                                               SS:ESI  DESCRIPTOR
+;                                               EBX             OFFSET
+;                                               DX:EAX          DATA
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public WriteFword
+
+WriteFword      Proc near
+        push ebx
+        push ecx
+;
+        test [ebp+esi].d_access,ACCESS_WRITE
+        jz AccessFault
+;
+        mov ecx,ebx
+        add ecx,5
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
+;
+        add ebx,[ebp+esi].d_base
+        call WriteLinearFword
+;
+        pop ecx
+        pop ebx
+        ret
+WriteFword      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   WriteQword
+;
+;               DESCRIPTION:    Write one qword of data
+;
+;               PARAMETERS:             SS:EBP  CPU
+;                                               SS:ESI  DESCRIPTOR
+;                                               EBX             OFFSET
+;                                               EDX:EAX         DATA
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public WriteQword
+
+WriteQword      Proc near
+        push ebx
+        push ecx
+;
+        test [ebp+esi].d_access,ACCESS_WRITE
+        jz AccessFault
+;
+        mov ecx,ebx
+        add ecx,7
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
+;
+        add ebx,[ebp+esi].d_base
+        call WriteLinearQword
+;
+        pop ecx
+        pop ebx
+        ret
+WriteQword      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   WriteTbyte
+;
+;               DESCRIPTION:    Write one tbyte of data
+;
+;               PARAMETERS:             SS:EBP  CPU
+;                                               SS:ESI  DESCRIPTOR
+;                                               EBX             OFFSET
+;                                               CX:EDX:EAX              DATA
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public WriteTbyte
+
+WriteTbyte      Proc near
+        push ebx
+;
+        test [ebp+esi].d_access,ACCESS_WRITE
+        jz AccessFault
+;
+        push ecx
+        mov ecx,ebx
+        add ecx,9
+        sub ecx,[ebp+esi].d_limit
+        pop ecx
+        ja AccessFault
+;
+        add ebx,[ebp+esi].d_base
+        call WriteLinearTbyte
+;
+        pop ebx
+        ret
+WriteTbyte      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   PushWord
+;
+;               DESCRIPTION:    Push word onto stack
+;
+;               PARAMETERS:             SS:EBP  CPU
+;                                               AX              DATA
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public PushWord
+
+PushWord        Proc near
+        push esi
+        push ebx
+;
+        mov esi,OFFSET reg_ss
+        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        jz push_word16
 
 push_word32:
-	mov ebx,[ebp].reg_esp
-	sub ebx,2
-	push ebx
-	call WriteWord
-	pop ebx
-	mov [ebp].reg_esp,ebx
-	jmp push_word_done
+        mov ebx,[ebp].reg_esp
+        sub ebx,2
+        push ebx
+        call WriteWord
+        pop ebx
+        mov [ebp].reg_esp,ebx
+        jmp push_word_done
 
 push_word16:
-	movzx ebx,word ptr [ebp].reg_esp
-	sub bx,2
-	push bx
-	call WriteWord
-	pop bx
-	mov word ptr [ebp].reg_esp,bx
+        movzx ebx,word ptr [ebp].reg_esp
+        sub bx,2
+        push bx
+        call WriteWord
+        pop bx
+        mov word ptr [ebp].reg_esp,bx
 
 push_word_done:
-	pop ebx
-	pop esi
-	ret
-PushWord	Endp
+        pop ebx
+        pop esi
+        ret
+PushWord        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PushDword
+;               NAME:                   PushDword
 ;
-;		DESCRIPTION:	Push dword onto stack
+;               DESCRIPTION:    Push dword onto stack
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						EAX		DATA
+;               PARAMETERS:             SS:EBP  CPU
+;                                               EAX             DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public PushDword
+        public PushDword
 
-PushDword	Proc near
-	push esi
-	push ebx
+PushDword       Proc near
+        push esi
+        push ebx
 ;
-	mov esi,OFFSET reg_ss
-	test word ptr [ebp+esi].d_access,ACCESS_SIZE
-	jz push_dword16
+        mov esi,OFFSET reg_ss
+        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        jz push_dword16
 
 push_dword32:
-	mov ebx,[ebp].reg_esp
-	sub ebx,4
-	push ebx
-	call WriteDword
-	pop ebx
-	mov [ebp].reg_esp,ebx
-	jmp push_dword_done
+        mov ebx,[ebp].reg_esp
+        sub ebx,4
+        push ebx
+        call WriteDword
+        pop ebx
+        mov [ebp].reg_esp,ebx
+        jmp push_dword_done
 
 push_dword16:
-	movzx ebx,word ptr [ebp].reg_esp
-	sub bx,4
-	push bx
-	call WriteDword
-	pop bx
-	mov word ptr [ebp].reg_esp,bx
+        movzx ebx,word ptr [ebp].reg_esp
+        sub bx,4
+        push bx
+        call WriteDword
+        pop bx
+        mov word ptr [ebp].reg_esp,bx
 
 push_dword_done:
-	pop ebx
-	pop esi
-	ret
-PushDword	Endp
+        pop ebx
+        pop esi
+        ret
+PushDword       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PopWord
+;               NAME:                   PopWord
 ;
-;		DESCRIPTION:	pop word from stack
+;               DESCRIPTION:    pop word from stack
 ;
-;		RETURNS:		AX		data popped
+;               RETURNS:                AX              data popped
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public PopWord
+        public PopWord
 
-PopWord	Proc near
-	push esi
-	push ebx
+PopWord Proc near
+        push esi
+        push ebx
 ;
-	mov esi,OFFSET reg_ss
-	test word ptr [ebp+esi].d_access,ACCESS_SIZE
-	jz pop_word16
+        mov esi,OFFSET reg_ss
+        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        jz pop_word16
 
 pop_word32:
-	mov ebx,[ebp].reg_esp
-	push ebx
-	call ReadWord
-	pop ebx
-	add ebx,2
-	mov [ebp].reg_esp,ebx
-	jmp pop_word_done
+        mov ebx,[ebp].reg_esp
+        push ebx
+        call ReadWord
+        pop ebx
+        add ebx,2
+        mov [ebp].reg_esp,ebx
+        jmp pop_word_done
 
 pop_word16:
-	movzx ebx,word ptr [ebp].reg_esp
-	push ebx
-	call ReadWord
-	pop ebx
-	add bx,2
-	mov word ptr [ebp].reg_esp,bx
+        movzx ebx,word ptr [ebp].reg_esp
+        push ebx
+        call ReadWord
+        pop ebx
+        add bx,2
+        mov word ptr [ebp].reg_esp,bx
 
 pop_word_done:
-	pop ebx
-	pop esi
-	ret
-PopWord	Endp
+        pop ebx
+        pop esi
+        ret
+PopWord Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PopDword
+;               NAME:                   PopDword
 ;
-;		DESCRIPTION:	pop dword from stack
+;               DESCRIPTION:    pop dword from stack
 ;
-;		RETURNS:		EAX		data popped
+;               RETURNS:                EAX             data popped
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public PopDword
+        public PopDword
 
-PopDword	Proc near
-	push esi
-	push ebx
+PopDword        Proc near
+        push esi
+        push ebx
 ;
-	mov esi,OFFSET reg_ss
-	test word ptr [ebp+esi].d_access,ACCESS_SIZE
-	jz pop_dword16
+        mov esi,OFFSET reg_ss
+        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        jz pop_dword16
 
 pop_dword32:
-	mov ebx,[ebp].reg_esp
-	push ebx
-	call ReadDword
-	pop ebx
-	add ebx,4
-	mov [ebp].reg_esp,ebx
-	jmp pop_dword_done
+        mov ebx,[ebp].reg_esp
+        push ebx
+        call ReadDword
+        pop ebx
+        add ebx,4
+        mov [ebp].reg_esp,ebx
+        jmp pop_dword_done
 
 pop_dword16:
-	movzx ebx,word ptr [ebp].reg_esp
-	push ebx
-	call ReadDword
-	pop ebx
-	add bx,4
-	mov word ptr [ebp].reg_esp,bx
+        movzx ebx,word ptr [ebp].reg_esp
+        push ebx
+        call ReadDword
+        pop ebx
+        add bx,4
+        mov word ptr [ebp].reg_esp,bx
 
 pop_dword_done:
-	pop ebx
-	pop esi
-	ret
-PopDword	Endp
+        pop ebx
+        pop esi
+        ret
+PopDword        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			AddToStack
+;               NAME:                   AddToStack
 ;
-;		DESCRIPTION:	add value to stack pointer
+;               DESCRIPTION:    add value to stack pointer
 ;
-;		RETURNS:		EAX		value to add to (e)sp
+;               RETURNS:                EAX             value to add to (e)sp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public AddToStack
+        public AddToStack
 
-AddToStack	Proc near
-	test word ptr [ebp].reg_ss.d_access,ACCESS_SIZE
-	jz AddToStack16
+AddToStack      Proc near
+        test word ptr [ebp].reg_ss.d_access,ACCESS_SIZE
+        jz AddToStack16
 
 AddToStack32:
-	add [ebp].reg_esp,eax
-	ret
+        add [ebp].reg_esp,eax
+        ret
 
 AddToStack16:
-	add word ptr [ebp].reg_esp,ax
-	ret
-AddToStack	Endp
+        add word ptr [ebp].reg_esp,ax
+        ret
+AddToStack      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			SubFromStack
+;               NAME:                   SubFromStack
 ;
-;		DESCRIPTION:	sub value from stack pointer
+;               DESCRIPTION:    sub value from stack pointer
 ;
-;		RETURNS:		EAX		value to sub from (e)sp
+;               RETURNS:                EAX             value to sub from (e)sp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public SubFromStack
+        public SubFromStack
 
-SubFromStack	Proc near
-	test word ptr [ebp].reg_ss.d_access,ACCESS_SIZE
-	jz SubFromStack16
+SubFromStack    Proc near
+        test word ptr [ebp].reg_ss.d_access,ACCESS_SIZE
+        jz SubFromStack16
 
 SubFromStack32:
-	sub [ebp].reg_esp,eax
-	ret
+        sub [ebp].reg_esp,eax
+        ret
 
 SubFromStack16:
-	sub word ptr [ebp].reg_esp,ax
-	ret
-SubFromStack	Endp
+        sub word ptr [ebp].reg_esp,ax
+        ret
+SubFromStack    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ReadCodeByte
+;               NAME:                   ReadCodeByte
 ;
-;		DESCRIPTION:	Read byte from cs:eip, update to next position
+;               DESCRIPTION:    Read byte from cs:eip, update to next position
 ;
-;		RETURNS:		AL		data read
+;               RETURNS:                AL              data read
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public ReadCodeByte
+        public ReadCodeByte
 
-ReadCodeByte	Proc near
-	mov esi,OFFSET reg_cs
-	test word ptr [ebp+esi].d_access,ACCESS_SIZE
-	jz read_code_byte16
+ReadCodeByte    Proc near
+        mov esi,OFFSET reg_cs
+        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        jz read_code_byte16
 
 read_code_byte32:
-	push cx
-	mov cl,[ebp+esi].d_access
-	mov ch,cl
-	or cl,ACCESS_READ
-	mov [ebp+esi].d_access,cl
-	push cx
-	mov ebx,[ebp].reg_eip
-	push ebx
-	mov [ebp].code_fetch,1
-	call ReadByte
-	mov [ebp].code_fetch,0
-	pop ebx
-	mov [ebp].reg_eip,ebx
-	inc ebx
-	pop cx
-	mov [ebp+esi].d_access,ch
-	pop cx
-	ret
+        push cx
+        mov cl,[ebp+esi].d_access
+        mov ch,cl
+        or cl,ACCESS_READ
+        mov [ebp+esi].d_access,cl
+        push cx
+        mov ebx,[ebp].reg_eip
+        push ebx
+        mov [ebp].code_fetch,1
+        call ReadByte
+        mov [ebp].code_fetch,0
+        pop ebx
+        mov [ebp].reg_eip,ebx
+        inc ebx
+        pop cx
+        mov [ebp+esi].d_access,ch
+        pop cx
+        ret
 
 read_code_byte16:
-	push cx
-	mov cl,[ebp+esi].d_access
-	mov ch,cl
-	or cl,ACCESS_READ
-	mov [ebp+esi].d_access,cl
-	push cx
-	movzx ebx,word ptr [ebp].reg_eip
-	push bx
-	mov [ebp].code_fetch,1
-	call ReadByte
-	mov [ebp].code_fetch,0
-	pop bx
-	inc bx
-	mov word ptr [ebp].reg_eip,bx
-	pop cx
-	mov [ebp+esi].d_access,ch
-	pop cx
-	ret
-ReadCodeByte	Endp
+        push cx
+        mov cl,[ebp+esi].d_access
+        mov ch,cl
+        or cl,ACCESS_READ
+        mov [ebp+esi].d_access,cl
+        push cx
+        movzx ebx,word ptr [ebp].reg_eip
+        push bx
+        mov [ebp].code_fetch,1
+        call ReadByte
+        mov [ebp].code_fetch,0
+        pop bx
+        inc bx
+        mov word ptr [ebp].reg_eip,bx
+        pop cx
+        mov [ebp+esi].d_access,ch
+        pop cx
+        ret
+ReadCodeByte    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ReadCodeWord
+;               NAME:                   ReadCodeWord
 ;
-;		DESCRIPTION:	Read word from cs:eip, update to next position
+;               DESCRIPTION:    Read word from cs:eip, update to next position
 ;
-;		RETURNS:		AX		data read
+;               RETURNS:                AX              data read
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public ReadCodeWord
+        public ReadCodeWord
 
-ReadCodeWord	Proc near
-	mov esi,OFFSET reg_cs
-	test word ptr [ebp+esi].d_access,ACCESS_SIZE
-	jz read_code_word16
+ReadCodeWord    Proc near
+        mov esi,OFFSET reg_cs
+        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        jz read_code_word16
 
 read_code_word32:
-	push cx
-	mov cl,[ebp+esi].d_access
-	mov ch,cl
-	or cl,ACCESS_READ
-	mov [ebp+esi].d_access,cl
-	push cx
-	mov ebx,[ebp].reg_eip
-	push ebx
-	call ReadWord
-	pop ebx
-	add ebx,2
-	mov [ebp].reg_eip,ebx
-	pop cx
-	mov [ebp+esi].d_access,ch
-	pop cx
-	ret
+        push cx
+        mov cl,[ebp+esi].d_access
+        mov ch,cl
+        or cl,ACCESS_READ
+        mov [ebp+esi].d_access,cl
+        push cx
+        mov ebx,[ebp].reg_eip
+        push ebx
+        call ReadWord
+        pop ebx
+        add ebx,2
+        mov [ebp].reg_eip,ebx
+        pop cx
+        mov [ebp+esi].d_access,ch
+        pop cx
+        ret
 
 read_code_word16:
-	push cx
-	mov cl,[ebp+esi].d_access
-	mov ch,cl
-	or cl,ACCESS_READ
-	mov [ebp+esi].d_access,cl
-	push cx
-	movzx ebx,word ptr [ebp].reg_eip
-	push bx
-	call ReadWord
-	pop bx
-	add bx,2
-	mov word ptr [ebp].reg_eip,bx
-	pop cx
-	mov [ebp+esi].d_access,ch
-	pop cx
-	ret
-ReadCodeWord	Endp
+        push cx
+        mov cl,[ebp+esi].d_access
+        mov ch,cl
+        or cl,ACCESS_READ
+        mov [ebp+esi].d_access,cl
+        push cx
+        movzx ebx,word ptr [ebp].reg_eip
+        push bx
+        call ReadWord
+        pop bx
+        add bx,2
+        mov word ptr [ebp].reg_eip,bx
+        pop cx
+        mov [ebp+esi].d_access,ch
+        pop cx
+        ret
+ReadCodeWord    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ReadCodeDword
+;               NAME:                   ReadCodeDword
 ;
-;		DESCRIPTION:	Read dword from cs:eip, update to next position
+;               DESCRIPTION:    Read dword from cs:eip, update to next position
 ;
-;		RETURNS:		EAX		data read
+;               RETURNS:                EAX             data read
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public ReadCodeDword
+        public ReadCodeDword
 
-ReadCodeDword	Proc near
-	mov esi,OFFSET reg_cs
-	test word ptr [ebp+esi].d_access,ACCESS_SIZE
-	jz read_code_dword16
+ReadCodeDword   Proc near
+        mov esi,OFFSET reg_cs
+        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        jz read_code_dword16
 
 read_code_dword32:
-	push cx
-	mov cl,[ebp+esi].d_access
-	mov ch,cl
-	or cl,ACCESS_READ
-	mov [ebp+esi].d_access,cl
-	push cx
-	mov ebx,[ebp].reg_eip
-	push ebx
-	call ReadDword
-	pop ebx
-	add ebx,4
-	mov [ebp].reg_eip,ebx
-	pop cx
-	mov [ebp+esi].d_access,ch
-	pop cx
-	ret
+        push cx
+        mov cl,[ebp+esi].d_access
+        mov ch,cl
+        or cl,ACCESS_READ
+        mov [ebp+esi].d_access,cl
+        push cx
+        mov ebx,[ebp].reg_eip
+        push ebx
+        call ReadDword
+        pop ebx
+        add ebx,4
+        mov [ebp].reg_eip,ebx
+        pop cx
+        mov [ebp+esi].d_access,ch
+        pop cx
+        ret
 
 read_code_dword16:
-	push cx
-	mov cl,[ebp+esi].d_access
-	mov ch,cl
-	or cl,ACCESS_READ
-	mov [ebp+esi].d_access,cl
-	push cx
-	movzx ebx,word ptr [ebp].reg_eip
-	push bx
-	call ReadDword
-	pop bx
-	add bx,4
-	mov word ptr [ebp].reg_eip,bx
-	pop cx
-	mov [ebp+esi].d_access,ch
-	pop cx
-	ret
-ReadCodeDword	Endp
+        push cx
+        mov cl,[ebp+esi].d_access
+        mov ch,cl
+        or cl,ACCESS_READ
+        mov [ebp+esi].d_access,cl
+        push cx
+        movzx ebx,word ptr [ebp].reg_eip
+        push bx
+        call ReadDword
+        pop bx
+        add bx,4
+        mov word ptr [ebp].reg_eip,bx
+        pop cx
+        mov [ebp+esi].d_access,ch
+        pop cx
+        ret
+ReadCodeDword   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ReadCodeFword
+;               NAME:                   ReadCodeFword
 ;
-;		DESCRIPTION:	Read fword from cs:eip, update to next position
+;               DESCRIPTION:    Read fword from cs:eip, update to next position
 ;
-;		RETURNS:		DX:EAX		data read
+;               RETURNS:                DX:EAX          data read
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public ReadCodeFword
+        public ReadCodeFword
 
-ReadCodeFword	Proc near
-	mov esi,OFFSET reg_cs
-	test word ptr [ebp+esi].d_access,ACCESS_SIZE
-	jz read_code_fword16
+ReadCodeFword   Proc near
+        mov esi,OFFSET reg_cs
+        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        jz read_code_fword16
 
 read_code_fword32:
-	push cx
-	mov cl,[ebp+esi].d_access
-	mov ch,cl
-	or cl,ACCESS_READ
-	mov [ebp+esi].d_access,cl
-	push cx
-	mov ebx,[ebp].reg_eip
-	push ebx
-	call ReadFword
-	pop ebx
-	add ebx,6
-	mov [ebp].reg_eip,ebx
-	pop cx
-	mov [ebp+esi].d_access,ch
-	pop cx
-	ret
+        push cx
+        mov cl,[ebp+esi].d_access
+        mov ch,cl
+        or cl,ACCESS_READ
+        mov [ebp+esi].d_access,cl
+        push cx
+        mov ebx,[ebp].reg_eip
+        push ebx
+        call ReadFword
+        pop ebx
+        add ebx,6
+        mov [ebp].reg_eip,ebx
+        pop cx
+        mov [ebp+esi].d_access,ch
+        pop cx
+        ret
 
 read_code_fword16:
-	push cx
-	mov cl,[ebp+esi].d_access
-	mov ch,cl
-	or cl,ACCESS_READ
-	mov [ebp+esi].d_access,cl
-	push cx
-	movzx ebx,word ptr [ebp].reg_eip
-	push bx
-	call ReadFword
-	pop bx
-	add bx,6
-	mov word ptr [ebp].reg_eip,bx
-	pop cx
-	mov [ebp+esi].d_access,ch
-	pop cx
-	ret
-ReadCodeFword	Endp
+        push cx
+        mov cl,[ebp+esi].d_access
+        mov ch,cl
+        or cl,ACCESS_READ
+        mov [ebp+esi].d_access,cl
+        push cx
+        movzx ebx,word ptr [ebp].reg_eip
+        push bx
+        call ReadFword
+        pop bx
+        add bx,6
+        mov word ptr [ebp].reg_eip,bx
+        pop cx
+        mov [ebp+esi].d_access,ch
+        pop cx
+        ret
+ReadCodeFword   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InPort
+;               NAME:                   InPort
 ;
-;		description:	read from I/O port
+;               description:    read from I/O port
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						DX			IO PORT
-;						SS:ESI		BUFFER
-;						ECX			SIZE
+;               PARAMETERS:             SS:EBP          CPU
+;                                               DX                      IO PORT
+;                                               SS:ESI          BUFFER
+;                                               ECX                     SIZE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public InPort
+        public InPort
 
 InPort Proc near
-	push ecx
-	push edx
-	push esi
-	push ebp
-	call _ReadFromIo
-	ret
-InPort	Endp
+        push ecx
+        push edx
+        push esi
+        push ebp
+        call _ReadFromIo
+        ret
+InPort  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OutPort
+;               NAME:                   OutPort
 ;
-;		description:	write to I/O port
+;               description:    write to I/O port
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						DX			IO PORT
-;						SS:ESI		BUFFER
-;						ECX			SIZE
+;               PARAMETERS:             SS:EBP          CPU
+;                                               DX                      IO PORT
+;                                               SS:ESI          BUFFER
+;                                               ECX                     SIZE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public OutPort
+        public OutPort
 
 OutPort Proc near
-	push ecx
-	push edx
-	push esi
-	push ebp
-	call _WriteToIo
-	ret
-OutPort	Endp
+        push ecx
+        push edx
+        push esi
+        push ebp
+        call _WriteToIo
+        ret
+OutPort Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Inbyte
+;               NAME:                   Inbyte
 ;
-;		description:	read a byte from I/O port
+;               description:    read a byte from I/O port
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						DX			IO PORT
+;               PARAMETERS:             SS:EBP          CPU
+;                                               DX                      IO PORT
 ;
-;		RETURNS:		AL			DATA
+;               RETURNS:                AL                      DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public InByte
+        public InByte
 
 InByte Proc near
-	push ecx
-	push esi
+        push ecx
+        push esi
 ;
-	test [ebp].reg_cr0,CR0_PE
-	jz InByteDo
+        test [ebp].reg_cr0,CR0_PE
+        jz InByteDo
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz InByteVm
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz InByteVm
 ;
-	mov ecx,[ebp].reg_eflags
-	ror cx,4
-	mov	ch,[ebp].reg_cs.d_access
-	and cx,303h
-	cmp cl,ch
-	jnc InByteDo
+        mov ecx,[ebp].reg_eflags
+        ror cx,4
+        mov     ch,[ebp].reg_cs.d_access
+        and cx,303h
+        cmp cl,ch
+        jnc InByteDo
 ;
-	mov ecx,1
-	call CheckBitmap
-	jmp InByteDo
+        mov ecx,1
+        call CheckBitmap
+        jmp InByteDo
 
 InByteVm:
-	mov ecx,1
-	call CheckBitmap
+        mov ecx,1
+        call CheckBitmap
 
 InByteDo:
-	mov ecx,1
-	lea esi,[ebp].req_buf
-	call InPort
-	lea esi,[ebp].req_buf
-	mov al,[esi]
+        mov ecx,1
+        lea esi,[ebp].req_buf
+        call InPort
+        lea esi,[ebp].req_buf
+        mov al,[esi]
 ;
-	pop esi
-	pop ecx
-	ret
-InByte	Endp
+        pop esi
+        pop ecx
+        ret
+InByte  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InWord
+;               NAME:                   InWord
 ;
-;		description:	read a word from I/O port
+;               description:    read a word from I/O port
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						DX			IO PORT
+;               PARAMETERS:             SS:EBP          CPU
+;                                               DX                      IO PORT
 ;
-;		RETURNS:		AX			DATA
+;               RETURNS:                AX                      DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public InWord
+        public InWord
 
 InWord Proc near
-	push ecx
-	push esi
+        push ecx
+        push esi
 ;
-	test [ebp].reg_cr0,CR0_PE
-	jz InWordDo
+        test [ebp].reg_cr0,CR0_PE
+        jz InWordDo
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz InWordVm
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz InWordVm
 ;
-	mov ecx,[ebp].reg_eflags
-	ror cx,4
-	mov	ch,[ebp].reg_cs.d_access
-	and cx,303h
-	cmp cl,ch
-	jnc InWordDo
+        mov ecx,[ebp].reg_eflags
+        ror cx,4
+        mov     ch,[ebp].reg_cs.d_access
+        and cx,303h
+        cmp cl,ch
+        jnc InWordDo
 ;
-	mov ecx,2
-	call CheckBitmap
-	jmp InWordDo
+        mov ecx,2
+        call CheckBitmap
+        jmp InWordDo
 
 InWordVm:
-	mov ecx,2
-	call CheckBitmap
+        mov ecx,2
+        call CheckBitmap
 
 InWordDo:
-	mov ecx,2
-	lea esi,[ebp].req_buf
-	call InPort
-	lea esi,[ebp].req_buf
-	mov ax,[esi]
+        mov ecx,2
+        lea esi,[ebp].req_buf
+        call InPort
+        lea esi,[ebp].req_buf
+        mov ax,[esi]
 ;
-	pop esi
-	pop ecx
-	ret
-InWord	Endp
+        pop esi
+        pop ecx
+        ret
+InWord  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InDword
+;               NAME:                   InDword
 ;
-;		description:	read a dword from I/O port
+;               description:    read a dword from I/O port
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						DX			IO PORT
+;               PARAMETERS:             SS:EBP          CPU
+;                                               DX                      IO PORT
 ;
-;		RETURNS:		EAX			DATA
+;               RETURNS:                EAX                     DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public InDword
+        public InDword
 
 InDword Proc near
-	push ecx
-	push esi
+        push ecx
+        push esi
 ;
-	test [ebp].reg_cr0,CR0_PE
-	jz InDwordDo
+        test [ebp].reg_cr0,CR0_PE
+        jz InDwordDo
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz InDwordVm
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz InDwordVm
 ;
-	mov ecx,[ebp].reg_eflags
-	ror cx,4
-	mov	ch,[ebp].reg_cs.d_access
-	and cx,303h
-	cmp cl,ch
-	jnc InDwordDo
+        mov ecx,[ebp].reg_eflags
+        ror cx,4
+        mov     ch,[ebp].reg_cs.d_access
+        and cx,303h
+        cmp cl,ch
+        jnc InDwordDo
 ;
-	mov ecx,4
-	call CheckBitmap
-	jmp InDwordDo
+        mov ecx,4
+        call CheckBitmap
+        jmp InDwordDo
 
 InDwordVm:
-	mov ecx,4
-	call CheckBitmap
+        mov ecx,4
+        call CheckBitmap
 
 InDwordDo:
-	mov ecx,4
-	lea esi,[ebp].req_buf
-	call InPort
-	lea esi,[ebp].req_buf
-	mov eax,[esi]
+        mov ecx,4
+        lea esi,[ebp].req_buf
+        call InPort
+        lea esi,[ebp].req_buf
+        mov eax,[esi]
 ;
-	pop esi
-	pop ecx
-	ret
-InDword	Endp
+        pop esi
+        pop ecx
+        ret
+InDword Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OutByte
+;               NAME:                   OutByte
 ;
-;		description:	write a byte to I/O port
+;               description:    write a byte to I/O port
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						DX			IO PORT
-;						AL			DATA
+;               PARAMETERS:             SS:EBP          CPU
+;                                               DX                      IO PORT
+;                                               AL                      DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public OutByte
+        public OutByte
 
 OutByte Proc near
-	push ecx
-	push esi
+        push ecx
+        push esi
 ;
-	test [ebp].reg_cr0,CR0_PE
-	jz OutByteDo
+        test [ebp].reg_cr0,CR0_PE
+        jz OutByteDo
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz OutByteVm
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz OutByteVm
 ;
-	mov ecx,[ebp].reg_eflags
-	ror cx,4
-	mov	ch,[ebp].reg_cs.d_access
-	and cx,303h
-	cmp cl,ch
-	jnc OutByteDo
+        mov ecx,[ebp].reg_eflags
+        ror cx,4
+        mov     ch,[ebp].reg_cs.d_access
+        and cx,303h
+        cmp cl,ch
+        jnc OutByteDo
 ;
-	mov ecx,1
-	call CheckBitmap
-	jmp OutByteDo
+        mov ecx,1
+        call CheckBitmap
+        jmp OutByteDo
 
 OutByteVm:
-	mov ecx,1
-	call CheckBitmap
+        mov ecx,1
+        call CheckBitmap
 
 OutByteDo:
-	lea esi,[ebp].req_buf
-	mov [esi],al
-	mov ecx,1
-	call OutPort
+        lea esi,[ebp].req_buf
+        mov [esi],al
+        mov ecx,1
+        call OutPort
 ;
-	pop esi
-	pop ecx
-	ret
-OutByte	Endp
+        pop esi
+        pop ecx
+        ret
+OutByte Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OutWord
+;               NAME:                   OutWord
 ;
-;		description:	write a word to I/O port
+;               description:    write a word to I/O port
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						DX			IO PORT
-;						AX			DATA
+;               PARAMETERS:             SS:EBP          CPU
+;                                               DX                      IO PORT
+;                                               AX                      DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public OutWord
+        public OutWord
 
 OutWord Proc near
-	push ecx
-	push esi
+        push ecx
+        push esi
 ;
-	test [ebp].reg_cr0,CR0_PE
-	jz OutWordDo
+        test [ebp].reg_cr0,CR0_PE
+        jz OutWordDo
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz OutWordVm
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz OutWordVm
 ;
-	mov ecx,[ebp].reg_eflags
-	ror cx,4
-	mov	ch,[ebp].reg_cs.d_access
-	and cx,303h
-	cmp cl,ch
-	jnc OutWordDo
+        mov ecx,[ebp].reg_eflags
+        ror cx,4
+        mov     ch,[ebp].reg_cs.d_access
+        and cx,303h
+        cmp cl,ch
+        jnc OutWordDo
 ;
-	mov ecx,2
-	call CheckBitmap
-	jmp OutWordDo
+        mov ecx,2
+        call CheckBitmap
+        jmp OutWordDo
 
 OutWordVm:
-	mov ecx,2
-	call CheckBitmap
+        mov ecx,2
+        call CheckBitmap
 
 OutWordDo:
-	lea esi,[ebp].req_buf
-	mov [esi],ax
-	mov ecx,2
-	call OutPort
+        lea esi,[ebp].req_buf
+        mov [esi],ax
+        mov ecx,2
+        call OutPort
 ;
-	pop esi
-	pop ecx
-	ret
-OutWord	Endp
+        pop esi
+        pop ecx
+        ret
+OutWord Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OutDword
+;               NAME:                   OutDword
 ;
-;		description:	write a dword to I/O port
+;               description:    write a dword to I/O port
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						DX			IO PORT
-;						EAX			DATA
+;               PARAMETERS:             SS:EBP          CPU
+;                                               DX                      IO PORT
+;                                               EAX                     DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public OutDword
+        public OutDword
 
 OutDword Proc near
-	push ecx
-	push esi
+        push ecx
+        push esi
 ;
-	test [ebp].reg_cr0,CR0_PE
-	jz OutDwordDo
+        test [ebp].reg_cr0,CR0_PE
+        jz OutDwordDo
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz OutDwordVm
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz OutDwordVm
 ;
-	mov ecx,[ebp].reg_eflags
-	ror cx,4
-	mov	ch,[ebp].reg_cs.d_access
-	and cx,303h
-	cmp cl,ch
-	jnc OutDwordDo
+        mov ecx,[ebp].reg_eflags
+        ror cx,4
+        mov     ch,[ebp].reg_cs.d_access
+        and cx,303h
+        cmp cl,ch
+        jnc OutDwordDo
 ;
-	mov ecx,4
-	call CheckBitmap
-	jmp OutDwordDo
+        mov ecx,4
+        call CheckBitmap
+        jmp OutDwordDo
 
 OutDwordVm:
-	mov ecx,4
-	call CheckBitmap
+        mov ecx,4
+        call CheckBitmap
 
 OutDwordDo:
-	lea esi,[ebp].req_buf
-	mov [esi],eax
-	mov ecx,4
-	call OutPort
+        lea esi,[ebp].req_buf
+        mov [esi],eax
+        mov ecx,4
+        call OutPort
 ;
-	pop esi
-	pop ecx
-	ret
-OutDword	Endp
+        pop esi
+        pop ecx
+        ret
+OutDword        Endp
 
-	END
+        END

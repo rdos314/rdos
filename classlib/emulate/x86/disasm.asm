@@ -30,8 +30,8 @@
 
         NAME emulate
 
-include x86\emulate.inc
-include x86\empage.inc
+include \rdos\classlib\emulate\x86\emulate.inc
+include \rdos\classlib\emulate\x86\empage.inc
 
    extrn dis_ass_one:near
    extrn op_code_size:dword

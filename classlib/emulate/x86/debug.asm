@@ -30,9 +30,9 @@
                                                 
                 NAME  DEBUG_
 
-INCLUDE x86\emulate.inc
-INCLUDE x86\emcom.inc
-INCLUDE debhelp.inc
+INCLUDE \rdos\classlib\emulate\x86\emulate.inc
+INCLUDE \rdos\classlib\emulate\x86\emcom.inc
+INCLUDE \rdos\classlib\emulate\debhelp.inc
 
 .data
 

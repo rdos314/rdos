@@ -27,718 +27,718 @@
 
 .386
 .model flat
-						
-		NAME emcontr
+                                                
+                NAME emcontr
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
-include x86\emulate.inc
-include x86\emcom.inc
-include x86\emmem.inc
-include x86\emseg.inc
+include \rdos\classlib\emulate\x86\emulate.inc
+include \rdos\classlib\emulate\x86\emcom.inc
+include \rdos\classlib\emulate\x86\emmem.inc
+include \rdos\classlib\emulate\x86\emseg.inc
 
 .code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			JccShort
+;               NAME:                   JccShort
 ;
-;		DESCRIPTION:	Emulate jcc short
+;               DESCRIPTION:    Emulate jcc short
 ;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-JccShort	Macro op
+JccShort        Macro op
 
-	public Em&op&Short
+        public Em&op&Short
 
-Em&op&Short	Proc near
-	mov ah,byte ptr [ebp].reg_eflags
-	sahf
-	&op Em&op&ShortJump
-	call ReadCodeByte
-	ret
+Em&op&Short     Proc near
+        mov ah,byte ptr [ebp].reg_eflags
+        sahf
+        &op Em&op&ShortJump
+        call ReadCodeByte
+        ret
 
 Em&op&ShortJump:
-	call ReadCodeByte
-	movsx eax,al
-	add eax,[ebp].reg_eip
-	cmp eax,[ebp].reg_cs.d_limit
-	jnc AccessFault
-	mov [ebp].reg_eip,eax
-	ret
-Em&op&Short	Endp
+        call ReadCodeByte
+        movsx eax,al
+        add eax,[ebp].reg_eip
+        cmp eax,[ebp].reg_cs.d_limit
+        jnc AccessFault
+        mov [ebp].reg_eip,eax
+        ret
+Em&op&Short     Endp
 
-		Endm
+                Endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			JecxShort
+;               NAME:                   JecxShort
 ;
-;		DESCRIPTION:	Emulate jecx short
+;               DESCRIPTION:    Emulate jecx short
 ;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-JecxShort	Macro op
+JecxShort       Macro op
 
-	public Em&op&Short
+        public Em&op&Short
 
-Em&op&Short	Proc near
-	test byte ptr [ebp].em_flags,a32
-	jnz Em&op&Short32
+Em&op&Short     Proc near
+        test byte ptr [ebp].em_flags,a32
+        jnz Em&op&Short32
 
 Em&op&Short16:
-	mov ecx,[ebp].reg_ecx
-	mov ah,byte ptr [ebp].reg_eflags
-	sahf
-	db 67h
-	&op Em&op&ShortJump
-	mov [ebp].reg_ecx,ecx
-	call ReadCodeByte
-	ret
+        mov ecx,[ebp].reg_ecx
+        mov ah,byte ptr [ebp].reg_eflags
+        sahf
+        db 67h
+        &op Em&op&ShortJump
+        mov [ebp].reg_ecx,ecx
+        call ReadCodeByte
+        ret
 
 Em&op&Short32:
-	mov ecx,[ebp].reg_ecx
-	mov ah,byte ptr [ebp].reg_eflags
-	sahf
-	&op Em&op&ShortJump
-	mov [ebp].reg_ecx,ecx
-	call ReadCodeByte
-	ret
+        mov ecx,[ebp].reg_ecx
+        mov ah,byte ptr [ebp].reg_eflags
+        sahf
+        &op Em&op&ShortJump
+        mov [ebp].reg_ecx,ecx
+        call ReadCodeByte
+        ret
 
 Em&op&ShortJump:
-	mov [ebp].reg_ecx,ecx
+        mov [ebp].reg_ecx,ecx
 ;
-	call ReadCodeByte
-	movsx eax,al
-	add eax,[ebp].reg_eip
-	cmp eax,[ebp].reg_cs.d_limit
-	jnc AccessFault
-	mov [ebp].reg_eip,eax
-	ret
-Em&op&Short	Endp
+        call ReadCodeByte
+        movsx eax,al
+        add eax,[ebp].reg_eip
+        cmp eax,[ebp].reg_cs.d_limit
+        jnc AccessFault
+        mov [ebp].reg_eip,eax
+        ret
+Em&op&Short     Endp
 
-		Endm
+                Endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			JccNear
+;               NAME:                   JccNear
 ;
-;		DESCRIPTION:	Emulate jcc near
+;               DESCRIPTION:    Emulate jcc near
 ;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-JccNear	Macro op
+JccNear Macro op
 
-	public Em&op&Near
+        public Em&op&Near
 
-Em&op&Near	Proc near
-	mov ah,byte ptr [ebp].reg_eflags
-	sahf
-	&op Em&op&NearJump
-	test byte ptr [ebp].em_flags,d32
-	jz Em&op&NearSkip16
+Em&op&Near      Proc near
+        mov ah,byte ptr [ebp].reg_eflags
+        sahf
+        &op Em&op&NearJump
+        test byte ptr [ebp].em_flags,d32
+        jz Em&op&NearSkip16
 
 Em&op&NearSkip32:
-	call ReadCodeDword
-	ret
+        call ReadCodeDword
+        ret
 
 Em&op&NearSkip16:
-	call ReadCodeWord
-	ret
+        call ReadCodeWord
+        ret
 
 Em&op&NearJump:
-	test byte ptr [ebp].em_flags,d32
-	jz Em&op&Near16
+        test byte ptr [ebp].em_flags,d32
+        jz Em&op&Near16
 
 Em&op&Near32:
-	call ReadCodeDword
-	add eax,[ebp].reg_eip
-	cmp eax,[ebp].reg_cs.d_limit
-	jnc AccessFault
-	mov [ebp].reg_eip,eax
-	ret
+        call ReadCodeDword
+        add eax,[ebp].reg_eip
+        cmp eax,[ebp].reg_cs.d_limit
+        jnc AccessFault
+        mov [ebp].reg_eip,eax
+        ret
 
 Em&op&Near16:
-	call ReadCodeWord
-	add ax,word ptr [ebp].reg_eip
-	movzx eax,ax
-	cmp eax,[ebp].reg_cs.d_limit
-	jnc AccessFault
-	mov word ptr [ebp].reg_eip,ax
-	ret
-Em&op&Near	Endp
+        call ReadCodeWord
+        add ax,word ptr [ebp].reg_eip
+        movzx eax,ax
+        cmp eax,[ebp].reg_cs.d_limit
+        jnc AccessFault
+        mov word ptr [ebp].reg_eip,ax
+        ret
+Em&op&Near      Endp
 
-		Endm
-	
+                Endm
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmCli
+;               NAME:                   EmCli
 ;
-;		DESCRIPTION:	EMULATE cli
+;               DESCRIPTION:    EMULATE cli
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	
-	public EmCli
+        
+        public EmCli
 
-EmCli	proc near
-	test [ebp].reg_cr0,CR0_PE
-	jz EmCliDo
+EmCli   proc near
+        test [ebp].reg_cr0,CR0_PE
+        jz EmCliDo
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jz EmCliPm
+        test byte ptr [ebp].reg_eflags+2,2
+        jz EmCliPm
 ;
-	mov ecx,[ebp].reg_eflags
-	and ecx,EFLAGS_IOPL
-	cmp ecx,EFLAGS_IOPL
-	jne PrivilegeFault
-	jmp EmCliDo
+        mov ecx,[ebp].reg_eflags
+        and ecx,EFLAGS_IOPL
+        cmp ecx,EFLAGS_IOPL
+        jne PrivilegeFault
+        jmp EmCliDo
 
 EmCliPm:
-	mov ecx,[ebp].reg_eflags
-	ror cx,4
-	mov	ch,[ebp].reg_cs.d_access
-	and cx,303h
-	cmp cl,ch
-	jc PrivilegeFault
+        mov ecx,[ebp].reg_eflags
+        ror cx,4
+        mov     ch,[ebp].reg_cs.d_access
+        and cx,303h
+        cmp cl,ch
+        jc PrivilegeFault
 
 EmCliDo:
-	and word ptr [ebp].reg_eflags,NOT 200h
-	ret
-EmCli	endp
-	
+        and word ptr [ebp].reg_eflags,NOT 200h
+        ret
+EmCli   endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmSti
+;               NAME:                   EmSti
 ;
-;		DESCRIPTION:	EMULATE sti
+;               DESCRIPTION:    EMULATE sti
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmSti
+        public EmSti
 
-EmSti	proc near
-	test [ebp].reg_cr0,CR0_PE
-	jz EmStiDo
+EmSti   proc near
+        test [ebp].reg_cr0,CR0_PE
+        jz EmStiDo
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jz EmStiPm
+        test byte ptr [ebp].reg_eflags+2,2
+        jz EmStiPm
 ;
-	mov ecx,[ebp].reg_eflags
-	and ecx,EFLAGS_IOPL
-	cmp ecx,EFLAGS_IOPL
-	jne PrivilegeFault
-	jmp EmStiDo
+        mov ecx,[ebp].reg_eflags
+        and ecx,EFLAGS_IOPL
+        cmp ecx,EFLAGS_IOPL
+        jne PrivilegeFault
+        jmp EmStiDo
 
 EmStiPm:
-	mov ecx,[ebp].reg_eflags
-	ror cx,4
-	mov	ch,[ebp].reg_cs.d_access
-	and cx,303h
-	cmp cl,ch
-	jc PrivilegeFault
+        mov ecx,[ebp].reg_eflags
+        ror cx,4
+        mov     ch,[ebp].reg_cs.d_access
+        and cx,303h
+        cmp cl,ch
+        jc PrivilegeFault
 
 EmStiDo:
-	or word ptr [ebp].reg_eflags,200h
-	ret
-EmSti	endp
-	
+        or word ptr [ebp].reg_eflags,200h
+        ret
+EmSti   endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmJccShort
+;               NAME:                   EmJccShort
 ;
-;		DESCRIPTION:	EMULATE jcc short
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	JccShort Jmp
-	JccShort Jo	
-	JccShort Jno
-	JccShort Jb	
-	JccShort Jnb
-	JccShort Je
-	JccShort Jne
-	JccShort Jbe
-	JccShort Jnbe
-	JccShort Js
-	JccShort Jns
-	JccShort Jp
-	JccShort Jnp
-	JccShort Jl
-	JccShort Jnl
-	JccShort Jle
-	JccShort Jnle
-	JecxShort Jcxz
-	JecxShort Loop
-	JecxShort Loopz
-	JecxShort Loopnz
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmJccNear
-;
-;		DESCRIPTION:	EMULATE jcc near
+;               DESCRIPTION:    EMULATE jcc short
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	JccNear Jmp
-	JccNear Jo	
-	JccNear Jno
-	JccNear Jb	
-	JccNear Jnb
-	JccNear Je
-	JccNear Jne
-	JccNear Jbe
-	JccNear Jnbe
-	JccNear Js
-	JccNear Jns
-	JccNear Jp
-	JccNear Jnp
-	JccNear Jl
-	JccNear Jnl
-	JccNear Jle
-	JccNear Jnle
-	
+        JccShort Jmp
+        JccShort Jo     
+        JccShort Jno
+        JccShort Jb     
+        JccShort Jnb
+        JccShort Je
+        JccShort Jne
+        JccShort Jbe
+        JccShort Jnbe
+        JccShort Js
+        JccShort Jns
+        JccShort Jp
+        JccShort Jnp
+        JccShort Jl
+        JccShort Jnl
+        JccShort Jle
+        JccShort Jnle
+        JecxShort Jcxz
+        JecxShort Loop
+        JecxShort Loopz
+        JecxShort Loopnz
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmJmpNearMem
+;               NAME:                   EmJccNear
 ;
-;		DESCRIPTION:	EMULATE jmp near mem
+;               DESCRIPTION:    EMULATE jcc near
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmJmpNearMem
+        JccNear Jmp
+        JccNear Jo      
+        JccNear Jno
+        JccNear Jb      
+        JccNear Jnb
+        JccNear Je
+        JccNear Jne
+        JccNear Jbe
+        JccNear Jnbe
+        JccNear Js
+        JccNear Jns
+        JccNear Jp
+        JccNear Jnp
+        JccNear Jl
+        JccNear Jnl
+        JccNear Jle
+        JccNear Jnle
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmJmpNearMem
+;
+;               DESCRIPTION:    EMULATE jmp near mem
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EmJmpNearMem	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jz EmJmpNearMem16
+        public EmJmpNearMem
+
+EmJmpNearMem    Proc near
+        test byte ptr [ebp].em_flags,d32
+        jz EmJmpNearMem16
 
 EmJmpNearMem32:
-	mov bl,al
-	call LoadDwordMemReg
-	cmp eax,[ebp].reg_cs.d_limit
-	jnc AccessFault
-	mov [ebp].reg_eip,eax
-	ret
+        mov bl,al
+        call LoadDwordMemReg
+        cmp eax,[ebp].reg_cs.d_limit
+        jnc AccessFault
+        mov [ebp].reg_eip,eax
+        ret
 
 EmJmpNearMem16:
-	mov bl,al
-	call LoadWordMemReg
-	movzx eax,ax
-	cmp eax,[ebp].reg_cs.d_limit
-	jnc AccessFault
-	mov word ptr [ebp].reg_eip,ax
-	ret
-EmJmpNearMem	Endp
-	
+        mov bl,al
+        call LoadWordMemReg
+        movzx eax,ax
+        cmp eax,[ebp].reg_cs.d_limit
+        jnc AccessFault
+        mov word ptr [ebp].reg_eip,ax
+        ret
+EmJmpNearMem    Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmCallNear
+;               NAME:                   EmCallNear
 ;
-;		DESCRIPTION:	EMULATE call near
+;               DESCRIPTION:    EMULATE call near
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmCallNear
+        public EmCallNear
 
-EmCallNear	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jz EmCallNear16
+EmCallNear      Proc near
+        test byte ptr [ebp].em_flags,d32
+        jz EmCallNear16
 
 EmCallNear32:
-	call ReadCodeDword
-	add eax,[ebp].reg_eip
-	cmp eax,[ebp].reg_cs.d_limit
-	jnc AccessFault
-	xchg eax,[ebp].reg_eip
-	call PushDword
-	ret
+        call ReadCodeDword
+        add eax,[ebp].reg_eip
+        cmp eax,[ebp].reg_cs.d_limit
+        jnc AccessFault
+        xchg eax,[ebp].reg_eip
+        call PushDword
+        ret
 
 EmCallNear16:
-	call ReadCodeWord
-	add ax,word ptr [ebp].reg_eip
-	movzx eax,ax
-	cmp eax,[ebp].reg_cs.d_limit
-	jnc AccessFault
-	xchg ax,word ptr [ebp].reg_eip
-	call PushWord
-	ret
-EmCallNear	Endp
-	
+        call ReadCodeWord
+        add ax,word ptr [ebp].reg_eip
+        movzx eax,ax
+        cmp eax,[ebp].reg_cs.d_limit
+        jnc AccessFault
+        xchg ax,word ptr [ebp].reg_eip
+        call PushWord
+        ret
+EmCallNear      Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmCallNearMem
+;               NAME:                   EmCallNearMem
 ;
-;		DESCRIPTION:	EMULATE call near mem
+;               DESCRIPTION:    EMULATE call near mem
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmCallNearMem
+        public EmCallNearMem
 
-EmCallNearMem	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jz EmCallNearMem16
+EmCallNearMem   Proc near
+        test byte ptr [ebp].em_flags,d32
+        jz EmCallNearMem16
 
 EmCallNearMem32:
-	mov bl,al
-	call LoadDwordMemReg
-	cmp eax,[ebp].reg_cs.d_limit
-	jnc AccessFault
-	xchg eax,[ebp].reg_eip
-	call PushDword
-	ret
+        mov bl,al
+        call LoadDwordMemReg
+        cmp eax,[ebp].reg_cs.d_limit
+        jnc AccessFault
+        xchg eax,[ebp].reg_eip
+        call PushDword
+        ret
 
 EmCallNearMem16:
-	mov bl,al
-	call LoadWordMemReg
-	movzx eax,ax
-	cmp eax,[ebp].reg_cs.d_limit
-	jnc AccessFault
-	xchg ax,word ptr [ebp].reg_eip
-	call PushWord
-	ret
-EmCallNearMem	Endp
-	
+        mov bl,al
+        call LoadWordMemReg
+        movzx eax,ax
+        cmp eax,[ebp].reg_cs.d_limit
+        jnc AccessFault
+        xchg ax,word ptr [ebp].reg_eip
+        call PushWord
+        ret
+EmCallNearMem   Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmRetNear
+;               NAME:                   EmRetNear
 ;
-;		DESCRIPTION:	EMULATE retn
+;               DESCRIPTION:    EMULATE retn
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmRetNear
+        public EmRetNear
 
-EmRetNear	proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmRetNear32
+EmRetNear       proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmRetNear32
 
 EmRetNear16:
-	call PopWord
-	movzx eax,ax
-	cmp eax,[ebp].reg_cs.d_limit
-	jnc AccessFault
-	mov word ptr [ebp].reg_eip,ax
-	ret
+        call PopWord
+        movzx eax,ax
+        cmp eax,[ebp].reg_cs.d_limit
+        jnc AccessFault
+        mov word ptr [ebp].reg_eip,ax
+        ret
 
 EmRetNear32:
-	call PopDword
-	cmp eax,[ebp].reg_cs.d_limit
-	jnc AccessFault
-	mov [ebp].reg_eip,eax
-	ret
-EmRetNear	endp
-	
+        call PopDword
+        cmp eax,[ebp].reg_cs.d_limit
+        jnc AccessFault
+        mov [ebp].reg_eip,eax
+        ret
+EmRetNear       endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmRetNearN
+;               NAME:                   EmRetNearN
 ;
-;		DESCRIPTION:	EMULATE retn n
+;               DESCRIPTION:    EMULATE retn n
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmRetNearN
+        public EmRetNearN
 
-EmRetNearN	proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmRetNearN32
+EmRetNearN      proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmRetNearN32
 
 EmRetNearN16:
-	call ReadCodeWord
-	push ax
-	call PopWord
-	movzx eax,ax
-	cmp eax,[ebp].reg_cs.d_limit
-	jnc AccessFault
+        call ReadCodeWord
+        push ax
+        call PopWord
+        movzx eax,ax
+        cmp eax,[ebp].reg_cs.d_limit
+        jnc AccessFault
 ;
-	mov word ptr [ebp].reg_eip,ax
-	pop ax
-	movzx eax,ax
-	call AddToStack	
-	ret
+        mov word ptr [ebp].reg_eip,ax
+        pop ax
+        movzx eax,ax
+        call AddToStack 
+        ret
 
 EmRetNearN32:
-	call ReadCodeWord
-	push ax
-	call PopDword
-	cmp eax,[ebp].reg_cs.d_limit
-	jnc AccessFault
+        call ReadCodeWord
+        push ax
+        call PopDword
+        cmp eax,[ebp].reg_cs.d_limit
+        jnc AccessFault
 ;
-	mov [ebp].reg_eip,eax
-	pop ax
-	movzx eax,ax
-	call AddToStack	
-	ret
-EmRetNearN	endp
-	
+        mov [ebp].reg_eip,eax
+        pop ax
+        movzx eax,ax
+        call AddToStack 
+        ret
+EmRetNearN      endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmJmpFar
+;               NAME:                   EmJmpFar
 ;
-;		DESCRIPTION:	EMULATE jmp far
+;               DESCRIPTION:    EMULATE jmp far
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmJmpFar
+        public EmJmpFar
 
-EmJmpFar	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jz EmJmpFar16
+EmJmpFar        Proc near
+        test byte ptr [ebp].em_flags,d32
+        jz EmJmpFar16
 
 EmJmpFar32:
-	call ReadCodeFword
-	mov bx,dx
-	mov esi,eax
-	call JmpFar
-	ret
+        call ReadCodeFword
+        mov bx,dx
+        mov esi,eax
+        call JmpFar
+        ret
 
 EmJmpFar16:
-	call ReadCodeDword
-	mov ebx,eax
-	movzx esi,ax
-	ror ebx,16
-	call JmpFar
-	ret
-EmJmpFar	Endp
-	
+        call ReadCodeDword
+        mov ebx,eax
+        movzx esi,ax
+        ror ebx,16
+        call JmpFar
+        ret
+EmJmpFar        Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmJmpFarMem
+;               NAME:                   EmJmpFarMem
 ;
-;		DESCRIPTION:	EMULATE jmp far mem
+;               DESCRIPTION:    EMULATE jmp far mem
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmJmpFarMem
+        public EmJmpFarMem
 
-EmJmpFarMem	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jz EmJmpFarMem16
+EmJmpFarMem     Proc near
+        test byte ptr [ebp].em_flags,d32
+        jz EmJmpFarMem16
 
 EmJmpFarMem32:
-	mov bl,al
-	call LoadFwordMem
-	mov bx,dx
-	mov esi,eax
-	call JmpFar
-	ret
+        mov bl,al
+        call LoadFwordMem
+        mov bx,dx
+        mov esi,eax
+        call JmpFar
+        ret
 
 EmJmpFarMem16:
-	mov bl,al
-	call LoadDwordMem
-	mov ebx,eax
-	movzx esi,ax
-	ror ebx,16
-	call JmpFar
-	ret
-EmJmpFarMem	Endp
-	
+        mov bl,al
+        call LoadDwordMem
+        mov ebx,eax
+        movzx esi,ax
+        ror ebx,16
+        call JmpFar
+        ret
+EmJmpFarMem     Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmCallFar
+;               NAME:                   EmCallFar
 ;
-;		DESCRIPTION:	EMULATE call far
+;               DESCRIPTION:    EMULATE call far
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmCallFar
+        public EmCallFar
 
-EmCallFar	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jz EmCallFar16
+EmCallFar       Proc near
+        test byte ptr [ebp].em_flags,d32
+        jz EmCallFar16
 
 EmCallFar32:
-	call ReadCodeFword
-	mov bx,dx
-	mov esi,eax
-	call CallFar32
-	ret
+        call ReadCodeFword
+        mov bx,dx
+        mov esi,eax
+        call CallFar32
+        ret
 
 EmCallFar16:
-	call ReadCodeDword
-	mov ebx,eax
-	movzx esi,ax
-	ror ebx,16
-	call CallFar16
-	ret
-EmCallFar	Endp
-	
+        call ReadCodeDword
+        mov ebx,eax
+        movzx esi,ax
+        ror ebx,16
+        call CallFar16
+        ret
+EmCallFar       Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmCallFarMem
+;               NAME:                   EmCallFarMem
 ;
-;		DESCRIPTION:	EMULATE call far mem
+;               DESCRIPTION:    EMULATE call far mem
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmCallFarMem
+        public EmCallFarMem
 
-EmCallFarMem	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jz EmCallFarMem16
+EmCallFarMem    Proc near
+        test byte ptr [ebp].em_flags,d32
+        jz EmCallFarMem16
 
 EmCallFarMem32:
-	mov bl,al
-	call LoadFwordMem
-	mov bx,dx
-	mov esi,eax
-	call CallFar32
-	ret
+        mov bl,al
+        call LoadFwordMem
+        mov bx,dx
+        mov esi,eax
+        call CallFar32
+        ret
 
 EmCallFarMem16:
-	mov bl,al
-	call LoadDwordMem
-	mov ebx,eax
-	movzx esi,ax
-	ror ebx,16
-	call CallFar16
-	ret
-EmCallFarMem	Endp
-	
+        mov bl,al
+        call LoadDwordMem
+        mov ebx,eax
+        movzx esi,ax
+        ror ebx,16
+        call CallFar16
+        ret
+EmCallFarMem    Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmRetFar
+;               NAME:                   EmRetFar
 ;
-;		DESCRIPTION:	EMULATE retf
+;               DESCRIPTION:    EMULATE retf
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmRetFar
+        public EmRetFar
 
-EmRetFar	proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmRetFar32
+EmRetFar        proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmRetFar32
 
 EmRetFar16:
-	xor cl,cl
-	call RetFar16
-	ret
+        xor cl,cl
+        call RetFar16
+        ret
 
 EmRetFar32:
-	xor cl,cl
-	call RetFar32
-	ret
-EmRetFar	endp
-	
+        xor cl,cl
+        call RetFar32
+        ret
+EmRetFar        endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmRetFarN
+;               NAME:                   EmRetFarN
 ;
-;		DESCRIPTION:	EMULATE retf n
+;               DESCRIPTION:    EMULATE retf n
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmRetFarN
+        public EmRetFarN
 
-EmRetFarN	proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmRetFarN32
+EmRetFarN       proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmRetFarN32
 
 EmRetFarN16:
-	call ReadCodeWord
-	push ax
-	xor cl,cl
-	call RetFar16
-	pop ax
-	movzx eax,ax
-	call AddToStack	
-	ret
+        call ReadCodeWord
+        push ax
+        xor cl,cl
+        call RetFar16
+        pop ax
+        movzx eax,ax
+        call AddToStack 
+        ret
 
 EmRetFarN32:
-	call ReadCodeWord
-	push ax
-	xor cl,cl
-	call RetFar32
-	pop ax
-	movzx eax,ax
-	call AddToStack	
-	ret
-EmRetFarN	endp
-	
+        call ReadCodeWord
+        push ax
+        xor cl,cl
+        call RetFar32
+        pop ax
+        movzx eax,ax
+        call AddToStack 
+        ret
+EmRetFarN       endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmInt3, EmInt
+;               NAME:                   EmInt3, EmInt
 ;
-;		DESCRIPTION:	EMULATE int 3
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public EmInt3
-	public EmInt
-
-EmInt3	Proc near
-	mov al,3
-	call IntFar
-	ret
-EmInt3	Endp
-
-	public EmInt
-
-EmInt	Proc near
-	call ReadCodeByte
-	call IntFar
-	ret
-EmInt	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmIret / EmIretd
-;
-;		DESCRIPTION:	EMULATE iret / iretd
+;               DESCRIPTION:    EMULATE int 3
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmIret
+        public EmInt3
+        public EmInt
 
-EmIret	proc near
-	test [ebp].reg_cr0,CR0_PE
-	jz EmIretNotTss
+EmInt3  Proc near
+        mov al,3
+        call IntFar
+        ret
+EmInt3  Endp
+
+        public EmInt
+
+EmInt   Proc near
+        call ReadCodeByte
+        call IntFar
+        ret
+EmInt   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz EmIretNotTss
 ;
-	test [ebp].reg_eflags,EFLAGS_NT
-	jz EmIretNotTss
+;               NAME:                   EmIret / EmIretd
 ;
-	call IretTss
-	ret
+;               DESCRIPTION:    EMULATE iret / iretd
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public EmIret
+
+EmIret  proc near
+        test [ebp].reg_cr0,CR0_PE
+        jz EmIretNotTss
+;
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz EmIretNotTss
+;
+        test [ebp].reg_eflags,EFLAGS_NT
+        jz EmIretNotTss
+;
+        call IretTss
+        ret
 
 EmIretNotTss:
-	test byte ptr [ebp].em_flags,d32
-	jnz EmIret32
+        test byte ptr [ebp].em_flags,d32
+        jnz EmIret32
 
 EmIret16:
-	call IretFar16
-	ret
+        call IretFar16
+        ret
 
 EmIret32:
-	call IretFar32
-	ret
-EmIret	endp
+        call IretFar32
+        ret
+EmIret  endp
 
-	END
+        END

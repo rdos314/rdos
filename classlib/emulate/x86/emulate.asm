@@ -30,15 +30,15 @@
 
         NAME emulate
 
-include x86\emulate.inc
-include x86\emcom.inc
-include x86\emseg.inc
-include x86\emarithm.inc
-include x86\emtrans.inc
-include x86\emcontr.inc
-include x86\emstring.inc
-include x86\emprot.inc
-include x86\em387.inc
+include \rdos\classlib\emulate\x86\emulate.inc
+include \rdos\classlib\emulate\x86\emcom.inc
+include \rdos\classlib\emulate\x86\emseg.inc
+include \rdos\classlib\emulate\x86\emarithm.inc
+include \rdos\classlib\emulate\x86\emtrans.inc
+include \rdos\classlib\emulate\x86\emcontr.inc
+include \rdos\classlib\emulate\x86\emstring.inc
+include \rdos\classlib\emulate\x86\emprot.inc
+include \rdos\classlib\emulate\x86\em387.inc
 
 .code
 

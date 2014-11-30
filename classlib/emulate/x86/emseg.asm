@@ -30,17 +30,17 @@
 
 PAGE
 
-	NAME emseg
+        NAME emseg
 
-include x86\emulate.inc
-include x86\emcom.inc
-include x86\empage.inc
-include x86\emtss.inc
+include \rdos\classlib\emulate\x86\emulate.inc
+include \rdos\classlib\emulate\x86\emcom.inc
+include \rdos\classlib\emulate\x86\empage.inc
+include \rdos\classlib\emulate\x86\emtss.inc
 
 
 .code
 
-;	extrn NotifyTaskSwitch:near
+;       extrn NotifyTaskSwitch:near
 
 NotifyTaskSwitch    Proc near
     ret 8
@@ -49,1404 +49,1404 @@ NotifyTaskSwitch    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ResetFault
+;               NAME:                   ResetFault
 ;
-;		DESCRIPTION:	Reset fault macro
+;               DESCRIPTION:    Reset fault macro
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ResetFault	Macro
-	mov ax,[ebp].reg_cs.d_selector
-	mov eax,[ebp].org_eip
-	mov [ebp].reg_eip,eax
-	mov eax,[ebp].org_esp
-	mov [ebp].reg_esp,eax
-	mov eax,[ebp].org_stack
-	mov esp,eax
-			Endm
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			LoadDescriptor
-;
-;		DESCRIPTION:	Load descriptor macro
-;
-;		PARAMETERS:		SS:EBP	CPU
-;						BX		Selector
-;
-;		RETURNS:		AX		Selector
-;						ESI		Offset
-;						EAX		Base
-;						ECX		Limit/word count
-;						DX		Access rights
-;						EDI		Descriptor address
-;						NC		Normal descriptor
-;						CY		Gate descriptor
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadDescriptor	MACRO FaultHandler
-	local InLdt
-	local InGdt
-	local LoadIt
-	local LoadAsNormal
-	local LoadCheckAccessed
-	local LoadAsGate
-	local PageGranular
-	local ByteGranular
-	local Done
-	local EplOk
+ResetFault      Macro
+        mov ax,[ebp].reg_cs.d_selector
+        mov eax,[ebp].org_eip
+        mov [ebp].reg_eip,eax
+        mov eax,[ebp].org_esp
+        mov [ebp].reg_esp,eax
+        mov eax,[ebp].org_stack
+        mov esp,eax
+                        Endm
 
-	test bx,0FFFCh
-	jz FaultHandler
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	test bl,4
-	jz InGdt
+;
+;               NAME:                   LoadDescriptor
+;
+;               DESCRIPTION:    Load descriptor macro
+;
+;               PARAMETERS:             SS:EBP  CPU
+;                                               BX              Selector
+;
+;               RETURNS:                AX              Selector
+;                                               ESI             Offset
+;                                               EAX             Base
+;                                               ECX             Limit/word count
+;                                               DX              Access rights
+;                                               EDI             Descriptor address
+;                                               NC              Normal descriptor
+;                                               CY              Gate descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadDescriptor  MACRO FaultHandler
+        local InLdt
+        local InGdt
+        local LoadIt
+        local LoadAsNormal
+        local LoadCheckAccessed
+        local LoadAsGate
+        local PageGranular
+        local ByteGranular
+        local Done
+        local EplOk
+
+        test bx,0FFFCh
+        jz FaultHandler
+;
+        test bl,4
+        jz InGdt
 
 InLdt:
-	test [ebp].reg_ldt.d_access, ACCESS_READ
-	jz FaultHandler
+        test [ebp].reg_ldt.d_access, ACCESS_READ
+        jz FaultHandler
 ;
-	mov edi,OFFSET reg_ldt
-	jmp LoadIt
+        mov edi,OFFSET reg_ldt
+        jmp LoadIt
 
 InGdt:
-	mov edi,OFFSET reg_gdt
+        mov edi,OFFSET reg_gdt
 
 LoadIt:
-	movzx ecx,bx
-	or cl,7
-	dec ecx
-	sub ecx,[ebp+edi].d_limit
-	jnc FaultHandler
+        movzx ecx,bx
+        or cl,7
+        dec ecx
+        sub ecx,[ebp+edi].d_limit
+        jnc FaultHandler
 ;
-	push bx
-	movzx ebx,bx
-	and bl,0F8h
-	add ebx,[ebp+edi].d_base
-	mov edi,ebx
-	call ReadLinearQword
-	pop bx
-	test dh,80h
-	jz SegmentFault
+        push bx
+        movzx ebx,bx
+        and bl,0F8h
+        add ebx,[ebp+edi].d_base
+        mov edi,ebx
+        call ReadLinearQword
+        pop bx
+        test dh,80h
+        jz SegmentFault
 ;
-	test dh,10h
-	jnz LoadCheckAccessed
+        test dh,10h
+        jnz LoadCheckAccessed
 ;
-	test dh,4
-	jz LoadAsNormal
+        test dh,4
+        jz LoadAsNormal
 
 LoadAsGate:
-	xchg ax,dx
-	mov esi,edx
-	movzx dx,ah
-	mov cl,al
-	and cl,0Fh
-	shr eax,16
+        xchg ax,dx
+        mov esi,edx
+        movzx dx,ah
+        mov cl,al
+        and cl,0Fh
+        shr eax,16
 ;
-	push cx
-	mov	cl,byte ptr [ebp].reg_cs.d_access
-	mov ch,bl
-	and cx,303h
-	cmp ch,cl
-	jc EplOk
-	mov cl,ch
+        push cx
+        mov     cl,byte ptr [ebp].reg_cs.d_access
+        mov ch,bl
+        and cx,303h
+        cmp ch,cl
+        jc EplOk
+        mov cl,ch
 EplOk:
-	mov ch,dl
-	shr ch,5
-	and ch,3
-	cmp cl,ch
-	ja FaultHandler
-	pop cx
-	stc
-	jmp Done
+        mov ch,dl
+        shr ch,5
+        and ch,3
+        cmp cl,ch
+        ja FaultHandler
+        pop cx
+        stc
+        jmp Done
 
 LoadCheckAccessed:
-	test dh,1
-	jnz LoadAsNormal
+        test dh,1
+        jnz LoadAsNormal
 ;
-	or dh,1
-	push ax
-	push ebx
-	mov al,dh
-	mov ebx,edi
-	add ebx,5
-	call WriteLinearByte
-	pop ebx
-	pop ax
+        or dh,1
+        push ax
+        push ebx
+        mov al,dh
+        mov ebx,edi
+        add ebx,5
+        call WriteLinearByte
+        pop ebx
+        pop ax
 
-LoadAsNormal:	
-	mov ecx,edx
-	mov cx,ax
-	rol edx,8
-	mov ax,dx
-	xchg al,ah
-	ror eax,16
-	ror edx,16
-	test dh,80h
-	jz ByteGranular
+LoadAsNormal:   
+        mov ecx,edx
+        mov cx,ax
+        rol edx,8
+        mov ax,dx
+        xchg al,ah
+        ror eax,16
+        ror edx,16
+        test dh,80h
+        jz ByteGranular
 
 PageGranular:
-	shl ecx,12
-	or cx,0FFFh
-	clc
-	jmp Done
-	
+        shl ecx,12
+        or cx,0FFFh
+        clc
+        jmp Done
+        
 ByteGranular:
-	and ecx,0FFFFFh
-	clc
+        and ecx,0FFFFFh
+        clc
 
 Done:
-			ENDM
+                        ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			AssertDataDpl
+;               NAME:                   AssertDataDpl
 ;
-;		DESCRIPTION:	Assert that a selector is visible for selector load
+;               DESCRIPTION:    Assert that a selector is visible for selector load
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						BX		Selector
-;						DX		Access rights
+;               PARAMETERS:             SS:EBP  CPU
+;                                               BX              Selector
+;                                               DX              Access rights
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AssertDataDpl	Macro
-	local EplOk
+AssertDataDpl   Macro
+        local EplOk
 
-	push cx
-	mov	cl,byte ptr [ebp].reg_cs.d_access
-	mov ch,bl
-	and cx,303h
-	cmp ch,cl
-	jc EplOk
-	mov cl,ch
+        push cx
+        mov     cl,byte ptr [ebp].reg_cs.d_access
+        mov ch,bl
+        and cx,303h
+        cmp ch,cl
+        jc EplOk
+        mov cl,ch
 EplOk:
-	mov ch,dl
-	shr ch,5
-	and ch,3
-	cmp cl,ch
-	ja LoadFault
-	pop cx
+        mov ch,dl
+        shr ch,5
+        and ch,3
+        cmp cl,ch
+        ja LoadFault
+        pop cx
 
-		Endm
+                Endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			AssertCallDpl
+;               NAME:                   AssertCallDpl
 ;
-;		DESCRIPTION:	Assert that a selector is visible for control transfer
+;               DESCRIPTION:    Assert that a selector is visible for control transfer
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						BX		Selector
-;						DX		Access rights
+;               PARAMETERS:             SS:EBP  CPU
+;                                               BX              Selector
+;                                               DX              Access rights
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AssertCallDpl	Macro
-	local EplOk
-	local Done
+AssertCallDpl   Macro
+        local EplOk
+        local Done
 
-	test [ebp].reg_eflags,EFLAGS_VM
-	jnz Done
+        test [ebp].reg_eflags,EFLAGS_VM
+        jnz Done
 ;
-	push cx
-	mov	cl,byte ptr [ebp].reg_cs.d_access
-	mov ch,bl
-	and cx,303h
-	cmp ch,cl
-	jc EplOk
-	mov cl,ch
+        push cx
+        mov     cl,byte ptr [ebp].reg_cs.d_access
+        mov ch,bl
+        and cx,303h
+        cmp ch,cl
+        jc EplOk
+        mov cl,ch
 EplOk:
-	mov ch,dl
-	shr ch,5
-	and ch,3
-	cmp cl,ch
-	jb ProtectionFault
-	pop cx
+        mov ch,dl
+        shr ch,5
+        and ch,3
+        cmp cl,ch
+        jb ProtectionFault
+        pop cx
 
 Done:
-		Endm
+                Endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			UserBreak
+;               NAME:                   UserBreak
 ;
-;		DESCRIPTION:	User break
+;               DESCRIPTION:    User break
 ;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _UserBreak
+        public _UserBreak
 
-_UserBreak	Proc near
-	push ebp
-	mov ebp,[esp+8]
-	test [ebp].em_debug, DEBUG_RESUME
-	jnz user_break_done
+_UserBreak      Proc near
+        push ebp
+        mov ebp,[esp+8]
+        test [ebp].em_debug, DEBUG_RESUME
+        jnz user_break_done
 ;
-	or [ebp].em_debug, DEBUG_BREAK OR DEBUG_RESUME
-	ResetFault
-	ret
+        or [ebp].em_debug, DEBUG_BREAK OR DEBUG_RESUME
+        ResetFault
+        ret
 
 user_break_done:
-	pop ebp
-	ret 4
-_UserBreak	Endp
+        pop ebp
+        ret 4
+_UserBreak      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			TripleFault
+;               NAME:                   TripleFault
 ;
-;		DESCRIPTION:	Triple fault
+;               DESCRIPTION:    Triple fault
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public TripleFault
-
-TripleFault	Proc near
-	int 3
-	or [ebp].em_flags,triple_faulted
-	or [ebp].em_debug,DEBUG_BREAK
-	ResetFault
-	ret
-TripleFault	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			TrapFault
-;
-;		DESCRIPTION:	Trap (single step) fault
-;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public TrapFault
+        public TripleFault
 
-TrapFault	Proc near
-	xor cx,cx
-	mov al,1
-	call ExcFar	
-	ret
-TrapFault	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmulateError
-;
-;		DESCRIPTION:	Unemulated instruction
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public EmulateError
-	
-EmulateError	Proc near
-	int 3
-	ResetFault
-	or [ebp].em_flags,triple_faulted
-	or [ebp].em_debug,DEBUG_BREAK
-	ret
-EmulateError	Endp
+TripleFault     Proc near
+        int 3
+        or [ebp].em_flags,triple_faulted
+        or [ebp].em_debug,DEBUG_BREAK
+        ResetFault
+        ret
+TripleFault     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			DivFault
+;               NAME:                   TrapFault
 ;
-;		DESCRIPTION:	Div fault
+;               DESCRIPTION:    Trap (single step) fault
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public DivFault
-
-DivFault	Proc near
-	int 3
-	ResetFault
-	xor cx,cx
-	mov al,0
-	call ExcFar	
-	ret
-DivFault	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			OpcodeFault
-;
-;		DESCRIPTION:	Invalid opcode fault
-;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public OpcodeFault
+        public TrapFault
 
-OpcodeFault	Proc near
-	or [ebp].em_flags,single_faulted
-	ResetFault
-	xor cx,cx
-	mov al,6
-	call ExcFar	
-	ret
-OpcodeFault	Endp
+TrapFault       Proc near
+        xor cx,cx
+        mov al,1
+        call ExcFar     
+        ret
+TrapFault       Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmulateError
+;
+;               DESCRIPTION:    Unemulated instruction
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public EmulateError
+        
+EmulateError    Proc near
+        int 3
+        ResetFault
+        or [ebp].em_flags,triple_faulted
+        or [ebp].em_debug,DEBUG_BREAK
+        ret
+EmulateError    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			DoubleFault
+;               NAME:                   DivFault
 ;
-;		DESCRIPTION:	Double fault
+;               DESCRIPTION:    Div fault
 ;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public DoubleFault
+        public DivFault
 
-DoubleFault	Proc near
-	int 3
-	test [ebp].em_flags,double_faulted
-	jnz TripleFault
-	or [ebp].em_flags,double_faulted
-;
-	ResetFault
-	xor cx,cx
-	mov al,8
-	call ExcFar	
-	ret
-DoubleFault	Endp
+DivFault        Proc near
+        int 3
+        ResetFault
+        xor cx,cx
+        mov al,0
+        call ExcFar     
+        ret
+DivFault        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			SegmentFault
+;               NAME:                   OpcodeFault
 ;
-;		DESCRIPTION:	Segment not present fault
+;               DESCRIPTION:    Invalid opcode fault
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						BX		Error code
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public SegmentFault
+        public OpcodeFault
 
-SegmentFault	Proc near
-	test [ebp].em_flags,single_faulted
-	jnz DoubleFault
-	or [ebp].em_flags,single_faulted
-;
-	ResetFault
-	mov cx,1
-	mov al,11
-	call ExcFar	
-	ret
-SegmentFault	Endp
+OpcodeFault     Proc near
+        or [ebp].em_flags,single_faulted
+        ResetFault
+        xor cx,cx
+        mov al,6
+        call ExcFar     
+        ret
+OpcodeFault     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			StackFault
+;               NAME:                   DoubleFault
 ;
-;		DESCRIPTION:	Stack fault
+;               DESCRIPTION:    Double fault
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						BX		Error code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public StackFault
-
-StackFault	Proc near
-	int 3
-	test [ebp].em_flags,single_faulted
-	jnz DoubleFault
-	or [ebp].em_flags,single_faulted
-	ResetFault
-	mov cx,1
-	mov al,12
-	call ExcFar	
-	ret
-StackFault	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			ProtectionFault
-;
-;		DESCRIPTION:	General segment protection exception
-;
-;		PARAMETERS:		SS:EBP	CPU
-;						BX		Error code
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public ProtectionFault
+        public DoubleFault
 
-ProtectionFault	Proc near
-	test [ebp].em_flags,single_faulted
-	jnz DoubleFault
-	or [ebp].em_flags,single_faulted
+DoubleFault     Proc near
+        int 3
+        test [ebp].em_flags,double_faulted
+        jnz TripleFault
+        or [ebp].em_flags,double_faulted
+;
+        ResetFault
+        xor cx,cx
+        mov al,8
+        call ExcFar     
+        ret
+DoubleFault     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   SegmentFault
+;
+;               DESCRIPTION:    Segment not present fault
+;
+;               PARAMETERS:             SS:EBP  CPU
+;                                               BX              Error code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public SegmentFault
+
+SegmentFault    Proc near
+        test [ebp].em_flags,single_faulted
+        jnz DoubleFault
+        or [ebp].em_flags,single_faulted
+;
+        ResetFault
+        mov cx,1
+        mov al,11
+        call ExcFar     
+        ret
+SegmentFault    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   StackFault
+;
+;               DESCRIPTION:    Stack fault
+;
+;               PARAMETERS:             SS:EBP  CPU
+;                                               BX              Error code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public StackFault
+
+StackFault      Proc near
+        int 3
+        test [ebp].em_flags,single_faulted
+        jnz DoubleFault
+        or [ebp].em_flags,single_faulted
+        ResetFault
+        mov cx,1
+        mov al,12
+        call ExcFar     
+        ret
+StackFault      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   ProtectionFault
+;
+;               DESCRIPTION:    General segment protection exception
+;
+;               PARAMETERS:             SS:EBP  CPU
+;                                               BX              Error code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public ProtectionFault
+
+ProtectionFault Proc near
+        test [ebp].em_flags,single_faulted
+        jnz DoubleFault
+        or [ebp].em_flags,single_faulted
 ;
     test [ebp].reg_cs.d_access, ACCESS_SIZE
     jnz gpf_reset
 ;
-	int 3
+        int 3
 
-gpf_reset:	
-	ResetFault
-	mov cx,1
-	mov al,13
-	call ExcFar	
-	ret
-ProtectionFault	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			PageFault
-;
-;		DESCRIPTION:	Page fault exception
-;
-;		PARAMETERS:		SS:EBP	CPU
-;						BX		Error code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public PageFault
-
-PageFault	Proc near
-	test [ebp].em_flags,single_faulted
-	jnz DoubleFault
-	or [ebp].em_flags,single_faulted
-	ResetFault
-	mov cx,1
-	mov al,14
-	call ExcFar	
-	ret
-PageFault	Endp
+gpf_reset:      
+        ResetFault
+        mov cx,1
+        mov al,13
+        call ExcFar     
+        ret
+ProtectionFault Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InvalidTssFault
+;               NAME:                   PageFault
 ;
-;		DESCRIPTION:	Invalid TSS fault
+;               DESCRIPTION:    Page fault exception
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						BX		Error code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public InvalidTssFault
-
-InvalidTssFault	Proc near
-	int 3
-	test [ebp].em_flags,single_faulted
-	jnz DoubleFault
-	or [ebp].em_flags,single_faulted
-	ResetFault
-	mov cx,1
-	mov al,10
-	call ExcFar	
-	ret
-InvalidTssFault	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			FpFault
-;
-;		DESCRIPTION:	Floating point fault
-;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
+;                                               BX              Error code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public FpFault
+        public PageFault
 
-FpFault	Proc near
-	xor cx,cx
-	mov al,7
-	call ExcFar	
-	ret
-FpFault	Endp
+PageFault       Proc near
+        test [ebp].em_flags,single_faulted
+        jnz DoubleFault
+        or [ebp].em_flags,single_faulted
+        ResetFault
+        mov cx,1
+        mov al,14
+        call ExcFar     
+        ret
+PageFault       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LoadFault
+;               NAME:                   InvalidTssFault
 ;
-;		DESCRIPTION:	Segment register load fault
+;               DESCRIPTION:    Invalid TSS fault
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						BX		Error code
-;						ESI		Descriptor
+;               PARAMETERS:             SS:EBP  CPU
+;                                               BX              Error code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public LoadFault
+        public InvalidTssFault
+
+InvalidTssFault Proc near
+        int 3
+        test [ebp].em_flags,single_faulted
+        jnz DoubleFault
+        or [ebp].em_flags,single_faulted
+        ResetFault
+        mov cx,1
+        mov al,10
+        call ExcFar     
+        ret
+InvalidTssFault Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   FpFault
+;
+;               DESCRIPTION:    Floating point fault
+;
+;               PARAMETERS:             SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public FpFault
+
+FpFault Proc near
+        xor cx,cx
+        mov al,7
+        call ExcFar     
+        ret
+FpFault Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   LoadFault
+;
+;               DESCRIPTION:    Segment register load fault
+;
+;               PARAMETERS:             SS:EBP  CPU
+;                                               BX              Error code
+;                                               ESI             Descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public LoadFault
 
 LoadFault:
-	and bl,0FCh
-	cmp esi,OFFSET reg_ss
-	jne ProtectionFault
-	jmp StackFault
+        and bl,0FCh
+        cmp esi,OFFSET reg_ss
+        jne ProtectionFault
+        jmp StackFault
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			IdtFault
+;               NAME:                   IdtFault
 ;
-;		DESCRIPTION:	Segment register idt fault
+;               DESCRIPTION:    Segment register idt fault
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						BX		Error code
+;               PARAMETERS:             SS:EBP  CPU
+;                                               BX              Error code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public IdtFault
+        public IdtFault
 
 IdtFault:
-	and bl,0F8h
-	or bl,2
-	jmp ProtectionFault
+        and bl,0F8h
+        or bl,2
+        jmp ProtectionFault
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			AccessFault
+;               NAME:                   AccessFault
 ;
-;		description:	Fault during access (no error code)
+;               description:    Fault during access (no error code)
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						ESI			REFERENCED DESCRIPTOR
+;               PARAMETERS:             SS:EBP          CPU
+;                                               ESI                     REFERENCED DESCRIPTOR
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public AccessFault
+        public AccessFault
 
 AccessFault:
-	xor bx,bx
-	cmp esi,OFFSET reg_ss
-	jne ProtectionFault
-	jmp StackFault
+        xor bx,bx
+        cmp esi,OFFSET reg_ss
+        jne ProtectionFault
+        jmp StackFault
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PrivilegeFault
+;               NAME:                   PrivilegeFault
 ;
-;		DESCRIPTION:	Privilege fault
+;               DESCRIPTION:    Privilege fault
 ;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public PrivilegeFault
+        public PrivilegeFault
 
 PrivilegeFault:
-	xor bx,bx
-	jmp ProtectionFault
+        xor bx,bx
+        jmp ProtectionFault
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			TransferReal
+;               NAME:                   TransferReal
 ;
-;		DESCRIPTION:	Transfer control within real or v86 mode
+;               DESCRIPTION:    Transfer control within real or v86 mode
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						BX:ESI	New CS:EIP
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TransferReal	Proc near
-	cmp esi,[ebp].reg_cs.d_limit
-	ja ProtectionFault
-;
-	mov [ebp].reg_cs.d_selector,bx
-	mov [ebp].reg_eip,esi
-	movzx ebx,bx
-	shl ebx,4
-	mov [ebp].reg_cs.d_base,ebx
-	mov [ebp].reg_cs.d_access,ACCESS_READ OR ACCESS_WRITE
-	ret
-TransferReal	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			TransferProt
-;
-;		DESCRIPTION:	Transfer control to protected mode
-;
-;		PARAMETERS:		SS:EBP	CPU
-;						BX		CS selector
-;						ESI		EIP
-;						EAX		CS base
-;						ECX		CS limit
-;						DX		CS access
+;               PARAMETERS:             SS:EBP  CPU
+;                                               BX:ESI  New CS:EIP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-TransferProt	Proc near
-	mov [ebp].reg_cs.d_base,eax
-	mov [ebp].reg_cs.d_limit,ecx
-	mov ax,bx
-	mov [ebp].reg_cs.d_selector,ax
-	and al,3
-	test dh,40h
-	jz TransferProtSizeOk
-	or al,ACCESS_SIZE
+TransferReal    Proc near
+        cmp esi,[ebp].reg_cs.d_limit
+        ja ProtectionFault
+;
+        mov [ebp].reg_cs.d_selector,bx
+        mov [ebp].reg_eip,esi
+        movzx ebx,bx
+        shl ebx,4
+        mov [ebp].reg_cs.d_base,ebx
+        mov [ebp].reg_cs.d_access,ACCESS_READ OR ACCESS_WRITE
+        ret
+TransferReal    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   TransferProt
+;
+;               DESCRIPTION:    Transfer control to protected mode
+;
+;               PARAMETERS:             SS:EBP  CPU
+;                                               BX              CS selector
+;                                               ESI             EIP
+;                                               EAX             CS base
+;                                               ECX             CS limit
+;                                               DX              CS access
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TransferProt    Proc near
+        mov [ebp].reg_cs.d_base,eax
+        mov [ebp].reg_cs.d_limit,ecx
+        mov ax,bx
+        mov [ebp].reg_cs.d_selector,ax
+        and al,3
+        test dh,40h
+        jz TransferProtSizeOk
+        or al,ACCESS_SIZE
 
 TransferProtSizeOk:
-	test dl,2
-	jz TransferProtReadOk
-	or al,ACCESS_READ
+        test dl,2
+        jz TransferProtReadOk
+        or al,ACCESS_READ
 
 TransferProtReadOk:
-	mov [ebp].reg_cs.d_access,al
-	mov [ebp].reg_eip,esi
-	ret
-TransferProt	Endp
+        mov [ebp].reg_cs.d_access,al
+        mov [ebp].reg_eip,esi
+        ret
+TransferProt    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LoadStackSelector
+;               NAME:                   LoadStackSelector
 ;
-;		DESCRIPTION:	Load stack segment register
+;               DESCRIPTION:    Load stack segment register
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						AX			VALUE TO LOAD
+;               PARAMETERS:             SS:EBP          CPU
+;                                               AX                      VALUE TO LOAD
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadStackSelector	Proc near
-	mov [ebp].em_pl,0
-	mov bx,ax
-	and ax,0FFFCh
-	jz ProtectionFault
+LoadStackSelector       Proc near
+        mov [ebp].em_pl,0
+        mov bx,ax
+        and ax,0FFFCh
+        jz ProtectionFault
 ;
-	LoadDescriptor StackFault
-	test dl,10h
-	jz StackFault
+        LoadDescriptor StackFault
+        test dl,10h
+        jz StackFault
 ;
-	push cx
-	mov cl,dl
-	and cl,1Ah
-	cmp cl,12h
-	jnz StackFault
+        push cx
+        mov cl,dl
+        and cl,1Ah
+        cmp cl,12h
+        jnz StackFault
 ;
-	mov cl,bl
-	mov ch,byte ptr [ebp].reg_cs.d_selector
-	and cx,303h
-	cmp cl,ch
-	jne StackFault
-	pop cx
+        mov cl,bl
+        mov ch,byte ptr [ebp].reg_cs.d_selector
+        and cx,303h
+        cmp cl,ch
+        jne StackFault
+        pop cx
 ;
-	mov [ebp].reg_ss.d_base,eax
-	mov [ebp].reg_ss.d_limit,ecx
-	mov [ebp].reg_ss.d_selector,bx
+        mov [ebp].reg_ss.d_base,eax
+        mov [ebp].reg_ss.d_limit,ecx
+        mov [ebp].reg_ss.d_selector,bx
 ;
-	and bl,3
-	test dh,40h
-	jz LoadStackSizeOk
+        and bl,3
+        test dh,40h
+        jz LoadStackSizeOk
 ;
-	or bl,ACCESS_SIZE
+        or bl,ACCESS_SIZE
 
 LoadStackSizeOk:
-	or bl,ACCESS_READ OR ACCESS_WRITE
+        or bl,ACCESS_READ OR ACCESS_WRITE
 ;
-	test dl,4
-	jz LoadStackDirOk
+        test dl,4
+        jz LoadStackDirOk
 ;
-	or bl,ACCESS_DIR
+        or bl,ACCESS_DIR
 
 LoadStackDirOk:
-	mov [ebp].reg_ss.d_access,bl
-	ret
-LoadStackSelector	Endp
+        mov [ebp].reg_ss.d_access,bl
+        ret
+LoadStackSelector       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			SwitchStackSelector
+;               NAME:                   SwitchStackSelector
 ;
-;		DESCRIPTION:	Switch stack segment register
+;               DESCRIPTION:    Switch stack segment register
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						AX			VALUE TO LOAD
-;						BX			NEW CS REGISTER (RPL=DPL)
+;               PARAMETERS:             SS:EBP          CPU
+;                                               AX                      VALUE TO LOAD
+;                                               BX                      NEW CS REGISTER (RPL=DPL)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SwitchStackSelector	Proc near
-	push si
-	mov [ebp].em_pl,0
-	push bx
-	mov bx,ax
-	and ax,0FFFCh
-	jz ProtectionFault
+SwitchStackSelector     Proc near
+        push si
+        mov [ebp].em_pl,0
+        push bx
+        mov bx,ax
+        and ax,0FFFCh
+        jz ProtectionFault
 ;
-	LoadDescriptor StackFault
-	test dl,10h
-	jz StackFault
+        LoadDescriptor StackFault
+        test dl,10h
+        jz StackFault
 ;
-	and dl,1Ah
-	cmp dl,12h
-	jnz StackFault
+        and dl,1Ah
+        cmp dl,12h
+        jnz StackFault
 ;
-	pop si
-	push cx
-	mov cx,si
-	mov ch,bl
-	and cx,303h
-	cmp cl,ch
-	jne StackFault
-	pop cx
+        pop si
+        push cx
+        mov cx,si
+        mov ch,bl
+        and cx,303h
+        cmp cl,ch
+        jne StackFault
+        pop cx
 ;
-	mov [ebp].reg_ss.d_base,eax
-	mov [ebp].reg_ss.d_limit,ecx
-	mov [ebp].reg_ss.d_selector,bx
+        mov [ebp].reg_ss.d_base,eax
+        mov [ebp].reg_ss.d_limit,ecx
+        mov [ebp].reg_ss.d_selector,bx
 ;
-	and bl,3
-	test dh,40h
-	jz SwitchStackSizeOk
+        and bl,3
+        test dh,40h
+        jz SwitchStackSizeOk
 ;
-	or bl,ACCESS_SIZE
+        or bl,ACCESS_SIZE
 
 SwitchStackSizeOk:
-	or bl,ACCESS_READ OR ACCESS_WRITE
+        or bl,ACCESS_READ OR ACCESS_WRITE
 ;
-	test dl,4
-	jz SwitchStackDirOk
+        test dl,4
+        jz SwitchStackDirOk
 ;
-	or bl,ACCESS_DIR
+        or bl,ACCESS_DIR
 
 SwitchStackDirOk:
-	mov [ebp].reg_ss.d_access,bl
-	mov bx,si                        ;restore bx
-	pop si
-	ret
-SwitchStackSelector	Endp
+        mov [ebp].reg_ss.d_access,bl
+        mov bx,si                        ;restore bx
+        pop si
+        ret
+SwitchStackSelector     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LoadSelector
+;               NAME:                   LoadSelector
 ;
-;		DESCRIPTION:	Load segment register
+;               DESCRIPTION:    Load segment register
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						ESI			SEGMENT REGISTER TO LOAD
-;						AX			VALUE TO LOAD
+;               PARAMETERS:             SS:EBP          CPU
+;                                               ESI                     SEGMENT REGISTER TO LOAD
+;                                               AX                      VALUE TO LOAD
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadSelector	Proc near
-	mov [ebp].em_pl,0
-	mov bx,ax
+LoadSelector    Proc near
+        mov [ebp].em_pl,0
+        mov bx,ax
 ;
-	and ax,0FFFCh
-	jnz LoadNotNull
+        and ax,0FFFCh
+        jnz LoadNotNull
 ;
-	mov [ebp+esi].d_selector,bx
-	mov [ebp+esi].d_access,0
-	ret
-	
+        mov [ebp+esi].d_selector,bx
+        mov [ebp+esi].d_access,0
+        ret
+        
 LoadNotNull:
-	LoadDescriptor ProtectionFault
-	test dl,10h
-	jz ProtectionFault
+        LoadDescriptor ProtectionFault
+        test dl,10h
+        jz ProtectionFault
 ;
-	AssertDataDpl
-	mov [ebp+esi].d_base,eax
-	mov [ebp+esi].d_limit,ecx
-	mov [ebp+esi].d_selector,bx
+        AssertDataDpl
+        mov [ebp+esi].d_base,eax
+        mov [ebp+esi].d_limit,ecx
+        mov [ebp+esi].d_selector,bx
 ;
-	and bl,3
-	test dh,40h
-	jz LoadSelectorSizeOk
+        and bl,3
+        test dh,40h
+        jz LoadSelectorSizeOk
 ;
-	or bl,ACCESS_SIZE
+        or bl,ACCESS_SIZE
 
 LoadSelectorSizeOk:
-	test dl,8
-	jz LoadDataSelector
+        test dl,8
+        jz LoadDataSelector
 
 LoadCodeSelector:
-	test dl,2
-	jz ProtectionFault
+        test dl,2
+        jz ProtectionFault
 ;
-	or bl,ACCESS_READ
-	mov [ebp+esi].d_access,bl
-	jmp LoadSelectorDone
+        or bl,ACCESS_READ
+        mov [ebp+esi].d_access,bl
+        jmp LoadSelectorDone
 
 LoadDataSelector:
-	or bl,ACCESS_READ
-	test dl,2
-	jz LoadWriteableOk
+        or bl,ACCESS_READ
+        test dl,2
+        jz LoadWriteableOk
 ;
-	or bl,ACCESS_WRITE
+        or bl,ACCESS_WRITE
 
 LoadWriteableOk:
-	test dl,4
-	jz LoadDirOk
+        test dl,4
+        jz LoadDirOk
 ;
-	or bl,ACCESS_DIR
+        or bl,ACCESS_DIR
 
 LoadDirOk:
-	mov [ebp+esi].d_access,bl
+        mov [ebp+esi].d_access,bl
 
 LoadSelectorDone:
-	ret
-LoadSelector	Endp
+        ret
+LoadSelector    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LoadSegment
+;               NAME:                   LoadSegment
 ;
-;		DESCRIPTION:	Load segment register
+;               DESCRIPTION:    Load segment register
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						ESI			SEGMENT REGISTER TO LOAD
-;						AX			VALUE TO LOAD
+;               PARAMETERS:             SS:EBP          CPU
+;                                               ESI                     SEGMENT REGISTER TO LOAD
+;                                               AX                      VALUE TO LOAD
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public LoadSegment
+        public LoadSegment
 
-LoadSegment	Proc near
-	test word ptr [ebp].reg_cr0, CR0_PE
-	jz LoadRealSegment
+LoadSegment     Proc near
+        test word ptr [ebp].reg_cr0, CR0_PE
+        jz LoadRealSegment
 ;
-	test byte ptr [ebp+2].reg_eflags, 2
-	jnz LoadRealSegment
+        test byte ptr [ebp+2].reg_eflags, 2
+        jnz LoadRealSegment
 
-	cmp esi,OFFSET reg_ss
-	je LoadStackSelector
-	jmp LoadSelector
+        cmp esi,OFFSET reg_ss
+        je LoadStackSelector
+        jmp LoadSelector
 
 LoadRealSegment:
-	mov [ebp+esi].d_selector,ax
-	movzx ebx,ax
-	shl ebx,4
-	mov [ebp+esi].d_base,ebx
-	ret
-LoadSegment	Endp
+        mov [ebp+esi].d_selector,ax
+        movzx ebx,ax
+        shl ebx,4
+        mov [ebp+esi].d_base,ebx
+        ret
+LoadSegment     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			TransferEqual
+;               NAME:                   TransferEqual
 ;
-;		DESCRIPTION:	Transfer control to equal priority (jmp)
+;               DESCRIPTION:    Transfer control to equal priority (jmp)
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						BX		New CS
-;						ESI		New EIP
-;						EAX		CS Base
-;						ECX		CS Limit
-;						DX		Access
-;						EDI		Descriptor address
+;               PARAMETERS:             SS:EBP  CPU
+;                                               BX              New CS
+;                                               ESI             New EIP
+;                                               EAX             CS Base
+;                                               ECX             CS Limit
+;                                               DX              Access
+;                                               EDI             Descriptor address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-TransferEqual	Proc near
-	push cx
-	cmp esi,ecx
-	ja ProtectionFault
+TransferEqual   Proc near
+        push cx
+        cmp esi,ecx
+        ja ProtectionFault
 ;
-	test dl,8
-	jz ProtectionFault
+        test dl,8
+        jz ProtectionFault
 ;
-	test dl,4
-	jz EqualNormalCode
+        test dl,4
+        jz EqualNormalCode
 ;
-	AssertCallDpl
-	and bx,0FFFCh
-	mov cl,[ebp].reg_cs.d_access
-	and cl,3
-	or bl,cl
+        AssertCallDpl
+        and bx,0FFFCh
+        mov cl,[ebp].reg_cs.d_access
+        and cl,3
+        or bl,cl
 
 EqualNormalCode:
-	mov cl,bl
-	mov ch,[ebp].reg_cs.d_access
-	and cx,303h
-	cmp cl,ch
-	jne ProtectionFault
+        mov cl,bl
+        mov ch,[ebp].reg_cs.d_access
+        and cx,303h
+        cmp cl,ch
+        jne ProtectionFault
 ;
-	mov cl,dl
-	shr cl,5
-	and cl,3
-	cmp cl,ch
-	jne ProtectionFault
+        mov cl,dl
+        shr cl,5
+        and cl,3
+        cmp cl,ch
+        jne ProtectionFault
 ;
-	pop cx
-	call TransferProt
-	ret
-TransferEqual	Endp
+        pop cx
+        call TransferProt
+        ret
+TransferEqual   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			TransferHigher
+;               NAME:                   TransferHigher
 ;
-;		DESCRIPTION:	Transfer control to higher or equal priority (ret, iret)
+;               DESCRIPTION:    Transfer control to higher or equal priority (ret, iret)
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						BX		New CS
-;						ESI		New EIP
+;               PARAMETERS:             SS:EBP  CPU
+;                                               BX              New CS
+;                                               ESI             New EIP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-TransferHigher	Proc near
-	test [ebp].em_transfer,TRANSFER_FLAGS
-	jz TransferHigherProt
+TransferHigher  Proc near
+        test [ebp].em_transfer,TRANSFER_FLAGS
+        jz TransferHigherProt
 ;
-	test byte ptr [ebp].em_flags,d32
-	jz TransferHigherProt             ;16 bit protected mode
+        test byte ptr [ebp].em_flags,d32
+        jz TransferHigherProt             ;16 bit protected mode
 
-	call PopDword
-	mov ecx,eax
-	test ecx,EFLAGS_VM
-	jnz short TransferHigherVm
+        call PopDword
+        mov ecx,eax
+        test ecx,EFLAGS_VM
+        jnz short TransferHigherVm
 ;
         call PushDword
-	test [ebp].em_transfer,TRANSFER_32
-	jnz TransferHigherProt
+        test [ebp].em_transfer,TRANSFER_32
+        jnz TransferHigherProt
 
-	test byte ptr [ebp].reg_cs.d_access, ACCESS_RPL
-	jnz TransferHigherProt
+        test byte ptr [ebp].reg_cs.d_access, ACCESS_RPL
+        jnz TransferHigherProt
 
 TransferHigherVm:
-	cmp esi,10000h
-	jae ProtectionFault
-	call PopDword
-	cmp eax,10000h
-	jae ProtectionFault
-	push esi
-	push bx
-	push ecx
-	push eax
-	call PopWord
-	push ax
-	mov eax,2
-	call AddToStack
+        cmp esi,10000h
+        jae ProtectionFault
+        call PopDword
+        cmp eax,10000h
+        jae ProtectionFault
+        push esi
+        push bx
+        push ecx
+        push eax
+        call PopWord
+        push ax
+        mov eax,2
+        call AddToStack
 ;
-	call PopWord
-	push ax
-	mov eax,2
-	call AddToStack
+        call PopWord
+        push ax
+        mov eax,2
+        call AddToStack
 ;
-	call PopWord
-	push ax
-	mov eax,2
-	call AddToStack
+        call PopWord
+        push ax
+        mov eax,2
+        call AddToStack
 ;
-	call PopWord
-	push ax
-	mov eax,2
-	call AddToStack
+        call PopWord
+        push ax
+        mov eax,2
+        call AddToStack
 ;
-	call PopWord
-	push ax
-	mov eax,2
-	call AddToStack
-;	
-	pop ax
-	mov [ebp].reg_gs.d_selector,ax
-	movzx eax,ax
-	shl eax,4
-	mov [ebp].reg_gs.d_base,eax
-	mov [ebp].reg_gs.d_limit,0FFFFh
-	mov [ebp].reg_gs.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
-;	
-	pop ax
-	mov [ebp].reg_fs.d_selector,ax
-	movzx eax,ax
-	shl eax,4
-	mov [ebp].reg_fs.d_base,eax
-	mov [ebp].reg_fs.d_limit,0FFFFh
-	mov [ebp].reg_fs.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
-;	
-	pop ax
-	mov [ebp].reg_ds.d_selector,ax
-	movzx eax,ax
-	shl eax,4
-	mov [ebp].reg_ds.d_base,eax
-	mov [ebp].reg_ds.d_limit,0FFFFh
-	mov [ebp].reg_ds.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
-;	
-	pop ax
-	mov [ebp].reg_es.d_selector,ax
-	movzx eax,ax
-	shl eax,4
-	mov [ebp].reg_es.d_base,eax
-	mov [ebp].reg_es.d_limit,0FFFFh
-	mov [ebp].reg_es.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
-;	
-	pop ax
-	mov [ebp].reg_ss.d_selector,ax
-	movzx eax,ax
-	shl eax,4
-	mov [ebp].reg_ss.d_base,eax
-	mov [ebp].reg_ss.d_limit,0FFFFh
-	mov [ebp].reg_ss.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
+        call PopWord
+        push ax
+        mov eax,2
+        call AddToStack
+;       
+        pop ax
+        mov [ebp].reg_gs.d_selector,ax
+        movzx eax,ax
+        shl eax,4
+        mov [ebp].reg_gs.d_base,eax
+        mov [ebp].reg_gs.d_limit,0FFFFh
+        mov [ebp].reg_gs.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
+;       
+        pop ax
+        mov [ebp].reg_fs.d_selector,ax
+        movzx eax,ax
+        shl eax,4
+        mov [ebp].reg_fs.d_base,eax
+        mov [ebp].reg_fs.d_limit,0FFFFh
+        mov [ebp].reg_fs.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
+;       
+        pop ax
+        mov [ebp].reg_ds.d_selector,ax
+        movzx eax,ax
+        shl eax,4
+        mov [ebp].reg_ds.d_base,eax
+        mov [ebp].reg_ds.d_limit,0FFFFh
+        mov [ebp].reg_ds.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
+;       
+        pop ax
+        mov [ebp].reg_es.d_selector,ax
+        movzx eax,ax
+        shl eax,4
+        mov [ebp].reg_es.d_base,eax
+        mov [ebp].reg_es.d_limit,0FFFFh
+        mov [ebp].reg_es.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
+;       
+        pop ax
+        mov [ebp].reg_ss.d_selector,ax
+        movzx eax,ax
+        shl eax,4
+        mov [ebp].reg_ss.d_base,eax
+        mov [ebp].reg_ss.d_limit,0FFFFh
+        mov [ebp].reg_ss.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
 ;
-	pop eax
-	mov [ebp].reg_esp,eax
+        pop eax
+        mov [ebp].reg_esp,eax
 ;
-	pop eax
-	and eax,NOT EFLAGS_UNDEF
-	or al,2
-	mov [ebp].reg_eflags,eax
-;	
-	pop ax
-	mov [ebp].reg_cs.d_selector,ax
-	movzx eax,ax
-	shl eax,4
-	mov [ebp].reg_cs.d_base,eax
-	mov [ebp].reg_cs.d_limit,0FFFFh
-	mov [ebp].reg_cs.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
+        pop eax
+        and eax,NOT EFLAGS_UNDEF
+        or al,2
+        mov [ebp].reg_eflags,eax
+;       
+        pop ax
+        mov [ebp].reg_cs.d_selector,ax
+        movzx eax,ax
+        shl eax,4
+        mov [ebp].reg_cs.d_base,eax
+        mov [ebp].reg_cs.d_limit,0FFFFh
+        mov [ebp].reg_cs.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
 ;
-	pop eax
-	mov [ebp].reg_eip,eax
-	ret
+        pop eax
+        mov [ebp].reg_eip,eax
+        ret
 
 TransferHigherProt:
-	LoadDescriptor ProtectionFault
-	test dl,10h
-	jz ProtectionFault
+        LoadDescriptor ProtectionFault
+        test dl,10h
+        jz ProtectionFault
 ;
-	push ecx
-	push eax
-	cmp esi,ecx
-	ja ProtectionFault
+        push ecx
+        push eax
+        cmp esi,ecx
+        ja ProtectionFault
 ;
-	test dl,8                       ;must be a code segment
-	jz ProtectionFault
+        test dl,8                       ;must be a code segment
+        jz ProtectionFault
 ;
-	test dl,4                         ;conforming or not
-	jz HigherNormalCode
+        test dl,4                         ;conforming or not
+        jz HigherNormalCode
 
 HigherConformingCode:
-	AssertDataDpl
-	and bx,0FFFCh
-	mov cl,dl
-	shr cl,5
-	and cl,3
-	or bl,cl
-	jmp HigherCheckSize
+        AssertDataDpl
+        and bx,0FFFCh
+        mov cl,dl
+        shr cl,5
+        and cl,3
+        or bl,cl
+        jmp HigherCheckSize
 
 HigherNormalCode:
-	mov cl,dl
-	shr cl,5
-	mov ch,bl
-	and cx,303h
-	cmp cl,ch
-	jne ProtectionFault
+        mov cl,dl
+        shr cl,5
+        mov ch,bl
+        and cx,303h
+        cmp cl,ch
+        jne ProtectionFault
 ;
-	or [ebp].em_transfer,cl
-	mov ch,[ebp].reg_cs.d_access
-	and ch,3
-	cmp cl,ch
-	je HigherCheckSize
-	jb ProtectionFault
+        or [ebp].em_transfer,cl
+        mov ch,[ebp].reg_cs.d_access
+        and ch,3
+        cmp cl,ch
+        je HigherCheckSize
+        jb ProtectionFault
 ;
-	or [ebp].em_transfer,TRANSFER_SWITCH
+        or [ebp].em_transfer,TRANSFER_SWITCH
 
 HigherCheckSize:
-	test [ebp].em_transfer,TRANSFER_32
-	jnz Higher32
+        test [ebp].em_transfer,TRANSFER_32
+        jnz Higher32
 
 Higher16:
-	mov ecx,[ebp].reg_eflags
-	test [ebp].em_transfer,TRANSFER_FLAGS
-	jz HigherFlagsDone16
+        mov ecx,[ebp].reg_eflags
+        test [ebp].em_transfer,TRANSFER_FLAGS
+        jz HigherFlagsDone16
 ;
-	call PopWord
-	mov cx,ax
+        call PopWord
+        mov cx,ax
 
 HigherFlagsDone16:
-	push ecx
-	movzx eax,[ebp].em_params
-	shl eax,1
-	call AddToStack
+        push ecx
+        movzx eax,[ebp].em_params
+        shl eax,1
+        call AddToStack
 ;
-	test [ebp].em_transfer,TRANSFER_SWITCH
-	jz HigherStackDone16
+        test [ebp].em_transfer,TRANSFER_SWITCH
+        jz HigherStackDone16
 ;
-	call PopWord
-	push ax
-	call PopWord
-	pop word ptr [ebp].reg_esp
-	call SwitchStackSelector
+        call PopWord
+        push ax
+        call PopWord
+        pop word ptr [ebp].reg_esp
+        call SwitchStackSelector
 
 HigherStackDone16:
-	jmp HigherLoadIt
+        jmp HigherLoadIt
 
 Higher32:
-	mov ecx,[ebp].reg_eflags
-	test [ebp].em_transfer,TRANSFER_FLAGS
-	jz HigherFlagsDone32
+        mov ecx,[ebp].reg_eflags
+        test [ebp].em_transfer,TRANSFER_FLAGS
+        jz HigherFlagsDone32
 ;
-	call PopDword
-	mov ecx,eax
-	test byte ptr [ebp].reg_cs.d_access, ACCESS_RPL
-	jz HigherFlagsDone32
+        call PopDword
+        mov ecx,eax
+        test byte ptr [ebp].reg_cs.d_access, ACCESS_RPL
+        jz HigherFlagsDone32
 ;
-	and ecx,NOT EFLAGS_VM
+        and ecx,NOT EFLAGS_VM
 
 HigherFlagsDone32:
-	push ecx
-	movzx eax,[ebp].em_params
-	shl eax,2
-	call AddToStack
+        push ecx
+        movzx eax,[ebp].em_params
+        shl eax,2
+        call AddToStack
 ;
-	test [ebp].em_transfer,TRANSFER_SWITCH
-	jz HigherStackDone32
+        test [ebp].em_transfer,TRANSFER_SWITCH
+        jz HigherStackDone32
 ;
-	call PopDword
-	push eax
-	call PopWord
-	pop dword ptr [ebp].reg_esp
-	call SwitchStackSelector
-	
+        call PopDword
+        push eax
+        call PopWord
+        pop dword ptr [ebp].reg_esp
+        call SwitchStackSelector
+        
 HigherStackDone32:
 
 HigherLoadIt:
-	mov ecx,[ebp].reg_eflags
-	ror cx,4
-	mov	ch,[ebp].reg_cs.d_access
-	and cx,303h
-	cmp cl,ch
-	pop ecx
-	jc TransferHigherFlagsDone
+        mov ecx,[ebp].reg_eflags
+        ror cx,4
+        mov     ch,[ebp].reg_cs.d_access
+        and cx,303h
+        cmp cl,ch
+        pop ecx
+        jc TransferHigherFlagsDone
 ;
-	and ecx,NOT EFLAGS_UNDEF
-	or cl,2
-	mov [ebp].reg_eflags,ecx
+        and ecx,NOT EFLAGS_UNDEF
+        or cl,2
+        mov [ebp].reg_eflags,ecx
 
 TransferHigherFlagsDone:
-	pop eax
-	pop ecx
-	call TransferProt
-	ret
-TransferHigher	Endp
+        pop eax
+        pop ecx
+        call TransferProt
+        ret
+TransferHigher  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			TransferLower
+;               NAME:                   TransferLower
 ;
-;		DESCRIPTION:	Transfer control to lower or equal priority (call, int)
+;               DESCRIPTION:    Transfer control to lower or equal priority (call, int)
 ;
-;		PARAMETERS:		SS:EBP	CPU
-;						BX		New CS
-;						ESI		New EIP
-;						EDX:EAX	CS Descriptor
-;						ECX		Descriptor address
+;               PARAMETERS:             SS:EBP  CPU
+;                                               BX              New CS
+;                                               ESI             New EIP
+;                                               EDX:EAX CS Descriptor
+;                                               ECX             Descriptor address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-TransferLower	Proc near
-	cmp esi,ecx
-	ja ProtectionFault
+TransferLower   Proc near
+        cmp esi,ecx
+        ja ProtectionFault
 ;
-	push eax
-	push ecx
+        push eax
+        push ecx
 ;
-	test dl,8
-	jz ProtectionFault
+        test dl,8
+        jz ProtectionFault
 ;
-	test dl,4
-	jz LowerNormalCode		;conforming or not ?
+        test dl,4
+        jz LowerNormalCode              ;conforming or not ?
 ;
-	AssertCallDpl		;make sur that the call is from a less privilege segment
+        AssertCallDpl           ;make sur that the call is from a less privilege segment
 ;
-	and bx,0FFFCh
-	mov cl,[ebp].reg_cs.d_access
-	and cl,3			
-	or bl,cl			;take the privilege of the caller (to be conform :-)
-	or [ebp].em_transfer,cl
-	jmp LowerPush
+        and bx,0FFFCh
+        mov cl,[ebp].reg_cs.d_access
+        and cl,3                        
+        or bl,cl                        ;take the privilege of the caller (to be conform :-)
+        or [ebp].em_transfer,cl
+        jmp LowerPush
 
 LowerNormalCode:
-	mov cl,dl		;cl = DPL of the gate
-	shr cl,5
-	mov ch,bl		; ch = RPL 
-	and cx,303h
-	jne ProtectionFault		
+        mov cl,dl               ;cl = DPL of the gate
+        shr cl,5
+        mov ch,bl               ; ch = RPL 
+        and cx,303h
+        jne ProtectionFault             
 ;
-	or [ebp].em_transfer,cl
-	mov ch,[ebp].reg_cs.d_access
-	and ch,3
-	cmp cl,ch
-	je LowerPush
-	ja ProtectionFault
+        or [ebp].em_transfer,cl
+        mov ch,[ebp].reg_cs.d_access
+        and ch,3
+        cmp cl,ch
+        je LowerPush
+        ja ProtectionFault
 ;
-	or [ebp].em_transfer,TRANSFER_SWITCH
+        or [ebp].em_transfer,TRANSFER_SWITCH
 LowerPush:
-	mov al, [ebp].em_transfer
+        mov al, [ebp].em_transfer
         and al,3
-	test [ebp].em_transfer,TRANSFER_32
-	jnz Lower32
+        test [ebp].em_transfer,TRANSFER_32
+        jnz Lower32
 
 Lower16:
-	test [ebp].reg_eflags,EFLAGS_VM
-	jz LowerProt16
+        test [ebp].reg_eflags,EFLAGS_VM
+        jz LowerProt16
 
 LowerVm16:
-	push word ptr [ebp].reg_esp
-	push [ebp].reg_ss.d_selector
-	call GetStack
-	push eax
-	mov ax,dx
-	call SwitchStackSelector
-	pop [ebp].reg_esp
+        push word ptr [ebp].reg_esp
+        push [ebp].reg_ss.d_selector
+        call GetStack
+        push eax
+        mov ax,dx
+        call SwitchStackSelector
+        pop [ebp].reg_esp
 ;
-	mov ax,[ebp].reg_gs.d_selector
-	call PushWord
+        mov ax,[ebp].reg_gs.d_selector
+        call PushWord
 ;
-	mov ax,[ebp].reg_fs.d_selector
-	call PushWord
+        mov ax,[ebp].reg_fs.d_selector
+        call PushWord
 ;
-	mov ax,[ebp].reg_ds.d_selector
-	call PushWord
+        mov ax,[ebp].reg_ds.d_selector
+        call PushWord
 ;
-	mov ax,[ebp].reg_es.d_selector
-	call PushWord
+        mov ax,[ebp].reg_es.d_selector
+        call PushWord
 ;
-	pop ax
-	call PushWord
+        pop ax
+        call PushWord
 ;
-	pop ax
-	call PushWord
+        pop ax
+        call PushWord
 ;
-	mov ax,word ptr [ebp].reg_eflags
-	call PushWord
+        mov ax,word ptr [ebp].reg_eflags
+        call PushWord
 ;
-	mov ax,word ptr [ebp].reg_cs.d_selector
-	call PushWord
+        mov ax,word ptr [ebp].reg_cs.d_selector
+        call PushWord
 ;
-	mov ax,word ptr [ebp].reg_eip
-	call PushWord
+        mov ax,word ptr [ebp].reg_eip
+        call PushWord
 ;
-	test [ebp].em_transfer,TRANSFER_CODE
-	jz LowerZeroSelectors
+        test [ebp].em_transfer,TRANSFER_CODE
+        jz LowerZeroSelectors
 ;
-	mov ax,[ebp].em_errorcode
-	call PushWord
-	jmp LowerZeroSelectors
+        mov ax,[ebp].em_errorcode
+        call PushWord
+        jmp LowerZeroSelectors
 
 LowerProt16:
-	mov al,[ebp].em_transfer
-	test al,TRANSFER_SWITCH
-	jz LowerStackPushed16
+        mov al,[ebp].em_transfer
+        test al,TRANSFER_SWITCH
+        jz LowerStackPushed16
 ;
-	and al,3
-	cmp al,3
-	je ProtectionFault
+        and al,3
+        cmp al,3
+        je ProtectionFault
 ;
-	push word ptr [ebp].reg_ss.d_access
-	push [ebp].reg_ss.d_base
-	push [ebp].reg_ss.d_limit
-	push [ebp].reg_esp
-	push [ebp].reg_ss.d_selector
+        push word ptr [ebp].reg_ss.d_access
+        push [ebp].reg_ss.d_base
+        push [ebp].reg_ss.d_limit
+        push [ebp].reg_esp
+        push [ebp].reg_ss.d_selector
 ;
-	push bx
-	call GetStack
-	push eax
-	mov ax,dx
-	call SwitchStackSelector
-	pop eax
-	mov [ebp].reg_esp,eax
-	pop bx
+        push bx
+        call GetStack
+        push eax
+        mov ax,dx
+        call SwitchStackSelector
+        pop eax
+        mov [ebp].reg_esp,eax
+        pop bx
 ;
-	pop ax
-	call PushWord
-	pop eax
-	mov edi,eax
-	call PushWord
+        pop ax
+        call PushWord
+        pop eax
+        mov edi,eax
+        call PushWord
 ;
-	pop ecx
-	pop edx
-	pop ax
+        pop ecx
+        pop edx
+        pop ax
 ;
-	mov ah,[ebp].em_params
-	or ah,ah
-	jz LowerStackPushed16
+        mov ah,[ebp].em_params
+        or ah,ah
+        jz LowerStackPushed16
 ;
-	push bx
-	mov ebx,edx
-	mov dl,ah
+        push bx
+        mov ebx,edx
+        mov dl,ah
 ;
-	test al,ACCESS_SIZE
-	jnz LowerCopy16
+        test al,ACCESS_SIZE
+        jnz LowerCopy16
 ;
-	movzx esi,si
+        movzx esi,si
 
 LowerCopy16:
-	add ebx,edi
+        add ebx,edi
 
 LowerCopyLoop16:
-	inc edi
-	cmp edi,ecx
-	jbe StackFault
-	xor bx,bx
-	jmp StackFault
+        inc edi
+        cmp edi,ecx
+        jbe StackFault
+        xor bx,bx
+        jmp StackFault
 
 LowerCopyLoopDo16:
-	call ReadWord
-	call PushWord
-	inc edi
-	add ebx,2
-	sub dl,1
-	jnz LowerCopyLoop16
+        call ReadWord
+        call PushWord
+        inc edi
+        add ebx,2
+        sub dl,1
+        jnz LowerCopyLoop16
 
 LowerStackPushed16:
-	test [ebp].em_transfer,TRANSFER_FLAGS
-	jz LowerFlagsPushed16
+        test [ebp].em_transfer,TRANSFER_FLAGS
+        jz LowerFlagsPushed16
 ;
-	mov ax,word ptr [ebp].reg_eflags
-	call PushWord
+        mov ax,word ptr [ebp].reg_eflags
+        call PushWord
 
 LowerFlagsPushed16:
-	mov ax,[ebp].reg_cs.d_selector
-	call PushWord
-	mov ax,word ptr [ebp].reg_eip
-	call PushWord
+        mov ax,[ebp].reg_cs.d_selector
+        call PushWord
+        mov ax,word ptr [ebp].reg_eip
+        call PushWord
 ;
-	test [ebp].em_transfer,TRANSFER_CODE
-	jz LowerLoadIt
+        test [ebp].em_transfer,TRANSFER_CODE
+        jz LowerLoadIt
 ;
-	mov ax,[ebp].em_errorcode
-	call PushWord
-	jmp LowerLoadIt
+        mov ax,[ebp].em_errorcode
+        call PushWord
+        jmp LowerLoadIt
 
 Lower32:
-	test [ebp].reg_eflags,EFLAGS_VM
-	jz LowerProt32
+        test [ebp].reg_eflags,EFLAGS_VM
+        jz LowerProt32
 
 ;state of the stack before and after switch by processor to exception or interrupt handler
 ;
@@ -1466,1579 +1466,1579 @@ Lower32:
 ;esp after switch
 
 LowerVm32:
-	push [ebp].reg_esp
-	push [ebp].reg_ss.d_selector
-	call GetStack
-	push eax
-	mov ax,dx
-	call SwitchStackSelector
-	pop [ebp].reg_esp
+        push [ebp].reg_esp
+        push [ebp].reg_ss.d_selector
+        call GetStack
+        push eax
+        mov ax,dx
+        call SwitchStackSelector
+        pop [ebp].reg_esp
 ;
-	mov eax,2
-	call SubFromStack
-	mov ax,[ebp].reg_gs.d_selector
-	call PushWord
+        mov eax,2
+        call SubFromStack
+        mov ax,[ebp].reg_gs.d_selector
+        call PushWord
 ;
-	mov eax,2
-	call SubFromStack
-	mov ax,[ebp].reg_fs.d_selector
-	call PushWord
+        mov eax,2
+        call SubFromStack
+        mov ax,[ebp].reg_fs.d_selector
+        call PushWord
 ;
-	mov eax,2
-	call SubFromStack
-	mov ax,[ebp].reg_ds.d_selector
-	call PushWord
+        mov eax,2
+        call SubFromStack
+        mov ax,[ebp].reg_ds.d_selector
+        call PushWord
 ;
-	mov eax,2
-	call SubFromStack
-	mov ax,[ebp].reg_es.d_selector
-	call PushWord
+        mov eax,2
+        call SubFromStack
+        mov ax,[ebp].reg_es.d_selector
+        call PushWord
 ;
-	mov eax,2
-	call SubFromStack
-	pop ax                  ;old ss
-	call PushWord
-;	
-	pop eax                 ;old esp
-	call PushDword
+        mov eax,2
+        call SubFromStack
+        pop ax                  ;old ss
+        call PushWord
+;       
+        pop eax                 ;old esp
+        call PushDword
 ;
-	mov eax,[ebp].reg_eflags
-	call PushDword
+        mov eax,[ebp].reg_eflags
+        call PushDword
 ;
-	mov eax,2
-	call SubFromStack
-	mov ax,[ebp].reg_cs.d_selector   ;old cs
-	call PushWord
+        mov eax,2
+        call SubFromStack
+        mov ax,[ebp].reg_cs.d_selector   ;old cs
+        call PushWord
 ;
-	mov eax,[ebp].reg_eip             ;old eip
-	call PushDword
+        mov eax,[ebp].reg_eip             ;old eip
+        call PushDword
 ;
-	test [ebp].em_transfer,TRANSFER_CODE
-	jz LowerZeroSelectors
+        test [ebp].em_transfer,TRANSFER_CODE
+        jz LowerZeroSelectors
 ;
-	movzx eax,[ebp].em_errorcode
-	call PushDword
-	jmp LowerZeroSelectors
+        movzx eax,[ebp].em_errorcode
+        call PushDword
+        jmp LowerZeroSelectors
 
 LowerProt32:
-	mov al,[ebp].em_transfer
-	test al,TRANSFER_SWITCH
-	jz LowerStackPushed32
+        mov al,[ebp].em_transfer
+        test al,TRANSFER_SWITCH
+        jz LowerStackPushed32
 ;
-	and al,3                   ;select the RPL with TRANSFER_RPL
+        and al,3                   ;select the RPL with TRANSFER_RPL
 ;
-	push word ptr [ebp].reg_ss.d_access
-	push [ebp].reg_ss.d_base
-	push [ebp].reg_ss.d_limit
-	push [ebp].reg_esp
-	push [ebp].reg_ss.d_selector
+        push word ptr [ebp].reg_ss.d_access
+        push [ebp].reg_ss.d_base
+        push [ebp].reg_ss.d_limit
+        push [ebp].reg_esp
+        push [ebp].reg_ss.d_selector
 ;
-	call GetStack
-	push eax
-	mov ax,dx
-	call SwitchStackSelector
-	pop [ebp].reg_esp
+        call GetStack
+        push eax
+        mov ax,dx
+        call SwitchStackSelector
+        pop [ebp].reg_esp
 ;
-	mov eax,2
-	call SubFromStack
-	pop ax
-	call PushWord
+        mov eax,2
+        call SubFromStack
+        pop ax
+        call PushWord
 ;
-	pop eax
-	mov edi,eax
-	call PushDword
+        pop eax
+        mov edi,eax
+        call PushDword
 ;
-	pop ecx
-	pop edx
-	pop ax
+        pop ecx
+        pop edx
+        pop ax
 ;
-	mov ah,[ebp].em_params
-	or ah,ah
-	jz LowerStackPushed32
+        mov ah,[ebp].em_params
+        or ah,ah
+        jz LowerStackPushed32
 ;
-	push bx
-	mov ebx,edx
-	mov dl,ah
+        push bx
+        mov ebx,edx
+        mov dl,ah
 ;
-	test al,ACCESS_SIZE
-	jnz LowerCopy32
-	movzx edi,di
+        test al,ACCESS_SIZE
+        jnz LowerCopy32
+        movzx edi,di
 
 LowerCopy32:
-	add ebx,edi
+        add ebx,edi
 
 LowerCopyLoop32:
-	add edi,3
-	cmp edi,ecx
-	jbe LowerCopyLoopDo32
-	xor bx,bx
-	jmp StackFault
+        add edi,3
+        cmp edi,ecx
+        jbe LowerCopyLoopDo32
+        xor bx,bx
+        jmp StackFault
 
 LowerCopyLoopDo32:
-	call ReadDword
-	call PushDword
-	inc edi
-	add ebx,4
-	sub dl,1
-	jnz LowerCopyLoop32
+        call ReadDword
+        call PushDword
+        inc edi
+        add ebx,4
+        sub dl,1
+        jnz LowerCopyLoop32
 
 LowerStackPushed32:
-	test [ebp].em_transfer,TRANSFER_FLAGS
-	jz LowerFlagsPushed32
+        test [ebp].em_transfer,TRANSFER_FLAGS
+        jz LowerFlagsPushed32
 ;
-	mov eax,[ebp].reg_eflags
-	call PushDword
+        mov eax,[ebp].reg_eflags
+        call PushDword
 
 LowerFlagsPushed32:
-	mov eax,2
-	call SubFromStack
-	mov ax,[ebp].reg_cs.d_selector
-	call PushWord
+        mov eax,2
+        call SubFromStack
+        mov ax,[ebp].reg_cs.d_selector
+        call PushWord
 ;
-	mov eax,[ebp].reg_eip
-	call PushDword
+        mov eax,[ebp].reg_eip
+        call PushDword
 ;
-	test [ebp].em_transfer,TRANSFER_CODE
-	jz LowerLoadIt
+        test [ebp].em_transfer,TRANSFER_CODE
+        jz LowerLoadIt
 ;
-	movzx eax,[ebp].em_errorcode
-	call PushDword
-	jmp LowerLoadIt
+        movzx eax,[ebp].em_errorcode
+        call PushDword
+        jmp LowerLoadIt
 
 LowerZeroSelectors:
-	mov [ebp].reg_ds.d_selector,0
-	mov [ebp].reg_ds.d_access,0
+        mov [ebp].reg_ds.d_selector,0
+        mov [ebp].reg_ds.d_access,0
 ;
-	mov [ebp].reg_es.d_selector,0
-	mov [ebp].reg_es.d_access,0
+        mov [ebp].reg_es.d_selector,0
+        mov [ebp].reg_es.d_access,0
 ;
-	mov [ebp].reg_fs.d_selector,0
-	mov [ebp].reg_fs.d_access,0
+        mov [ebp].reg_fs.d_selector,0
+        mov [ebp].reg_fs.d_access,0
 ;
-	mov [ebp].reg_gs.d_selector,0
-	mov [ebp].reg_gs.d_access,0
+        mov [ebp].reg_gs.d_selector,0
+        mov [ebp].reg_gs.d_access,0
 ;
-	and [ebp].reg_eflags, NOT EFLAGS_VM
+        and [ebp].reg_eflags, NOT EFLAGS_VM
 
 LowerLoadIt:
-	pop ecx
-	pop eax
-	call TransferProt
-	ret
-TransferLower	Endp
-	
+        pop ecx
+        pop eax
+        call TransferProt
+        ret
+TransferLower   Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			JmpTss
+;               NAME:                   JmpTss
 ;
-;		DESCRIPTION:	Jump to a new TSS
+;               DESCRIPTION:    Jump to a new TSS
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						BX			TSS SELECTOR
-;						EAX			Base
-;						ECX			Limit
-;						EDI			ADDRESS OF DESCRIPTOR TABLE
+;               PARAMETERS:             SS:EBP          CPU
+;                                               BX                      TSS SELECTOR
+;                                               EAX                     Base
+;                                               ECX                     Limit
+;                                               EDI                     ADDRESS OF DESCRIPTOR TABLE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-JmpTss	Proc near
-	test dl,8
-	jz short JmpTssCheck16
+JmpTss  Proc near
+        test dl,8
+        jz short JmpTssCheck16
 
 JmpTssCheck32:
-	mov dh,ACCESS_SIZE
-	cmp ecx,103
-	jc InvalidTssFault
-	jmp short JmpTssSizeOk
+        mov dh,ACCESS_SIZE
+        cmp ecx,103
+        jc InvalidTssFault
+        jmp short JmpTssSizeOk
 
 JmpTssCheck16:
-	xor dh,dh
-	cmp ecx,44
-	jc InvalidTssFault
+        xor dh,dh
+        cmp ecx,44
+        jc InvalidTssFault
 
 JmpTssSizeOk:
-	call SaveTss
-	push [ebp].reg_tr.d_selector
-	mov [ebp].reg_tr.d_access,dh
-	mov [ebp].reg_tr.d_selector,bx
-	mov [ebp].reg_tr.d_base,eax
-	mov [ebp].reg_tr.d_limit,ecx
-	call LoadTss
+        call SaveTss
+        push [ebp].reg_tr.d_selector
+        mov [ebp].reg_tr.d_access,dh
+        mov [ebp].reg_tr.d_selector,bx
+        mov [ebp].reg_tr.d_base,eax
+        mov [ebp].reg_tr.d_limit,ecx
+        call LoadTss
 ;
-	mov al,dl
-	or al,2
-	mov ebx,edi
-	add ebx,5
-	call WriteLinearByte     ;must set the new task as busy 
+        mov al,dl
+        or al,2
+        mov ebx,edi
+        add ebx,5
+        call WriteLinearByte     ;must set the new task as busy 
 ;
-	pop bx                  ;we have the two tasks visible here
+        pop bx                  ;we have the two tasks visible here
 ;
     movzx eax,[ebp].reg_tr.d_selector
     push eax                           ;task2
     movzx eax,bx
     push eax                           ;task1
-	call NotifyTaskSwitch
-;	
-	LoadDescriptor ProtectionFault
-	jc ProtectionFault
+        call NotifyTaskSwitch
+;       
+        LoadDescriptor ProtectionFault
+        jc ProtectionFault
 ;
-	mov al,dl
-	and al,NOT 2
-	mov ebx,edi
-	add ebx,5
-	call WriteLinearByte     ;must clear the old task as busy'ness 
+        mov al,dl
+        and al,NOT 2
+        mov ebx,edi
+        add ebx,5
+        call WriteLinearByte     ;must clear the old task as busy'ness 
 ;
-	mov bx,[ebp].reg_tr.d_selector
-	and [ebp].reg_eflags,NOT EFLAGS_NT
-	call ValidateTss
-	ret
-JmpTss	Endp
-	
+        mov bx,[ebp].reg_tr.d_selector
+        and [ebp].reg_eflags,NOT EFLAGS_NT
+        call ValidateTss
+        ret
+JmpTss  Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CallTss
+;               NAME:                   CallTss
 ;
-;		DESCRIPTION:	Call to a new TSS
+;               DESCRIPTION:    Call to a new TSS
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						BX			TSS SELECTOR
-;						EAX			Base
-;						ECX			Limit
-;						EDI			ADDRESS OF DESCRIPTOR TABLE
+;               PARAMETERS:             SS:EBP          CPU
+;                                               BX                      TSS SELECTOR
+;                                               EAX                     Base
+;                                               ECX                     Limit
+;                                               EDI                     ADDRESS OF DESCRIPTOR TABLE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CallTss	Proc near
-	test dl,8
-	jz short CallTssCheck16
+CallTss Proc near
+        test dl,8
+        jz short CallTssCheck16
 
 CallTssCheck32:
-	mov dh,ACCESS_SIZE
-	cmp ecx,103
-	jc InvalidTssFault
-	jmp short CallTssSizeOk
+        mov dh,ACCESS_SIZE
+        cmp ecx,103
+        jc InvalidTssFault
+        jmp short CallTssSizeOk
 
 CallTssCheck16:
-	xor dh,dh
-	cmp ecx,44
-	jc InvalidTssFault
+        xor dh,dh
+        cmp ecx,44
+        jc InvalidTssFault
 
 CallTssSizeOk:
-	call SaveTss
-	push [ebp].reg_tr.d_selector
-	mov [ebp].reg_tr.d_access,dh
-	mov [ebp].reg_tr.d_selector,bx
-	mov [ebp].reg_tr.d_base,eax
-	mov [ebp].reg_tr.d_limit,ecx
-	call LoadTss
+        call SaveTss
+        push [ebp].reg_tr.d_selector
+        mov [ebp].reg_tr.d_access,dh
+        mov [ebp].reg_tr.d_selector,bx
+        mov [ebp].reg_tr.d_base,eax
+        mov [ebp].reg_tr.d_limit,ecx
+        call LoadTss
         pop ax        ;the call tak selector
-	push ax       ;used below
-	call SetBacklink
+        push ax       ;used below
+        call SetBacklink
 ;
-	mov al,dl
-	or al,2              ;the busy byte must be set
-	mov ebx,edi
-	add ebx,5
-	call WriteLinearByte
+        mov al,dl
+        or al,2              ;the busy byte must be set
+        mov ebx,edi
+        add ebx,5
+        call WriteLinearByte
 ;
-	pop bx                  ;we have the two tasks visible here
+        pop bx                  ;we have the two tasks visible here
 ;
     movzx eax,[ebp].reg_tr.d_selector
     push eax                           ;task2
     movzx eax,bx
     push eax                           ;task1
-	call NotifyTaskSwitch
-;	
-	LoadDescriptor ProtectionFault
-	jc ProtectionFault
+        call NotifyTaskSwitch
+;       
+        LoadDescriptor ProtectionFault
+        jc ProtectionFault
 ;
-	mov al,dl
-	or al,2         ;the busy byte must be left set
-	mov ebx,edi
-	add ebx,5
-	call WriteLinearByte
+        mov al,dl
+        or al,2         ;the busy byte must be left set
+        mov ebx,edi
+        add ebx,5
+        call WriteLinearByte
 ;
-	mov bx,[ebp].reg_tr.d_selector
-	or [ebp].reg_eflags,EFLAGS_NT
-	call ValidateTss
-	ret
-CallTss	Endp
-	
+        mov bx,[ebp].reg_tr.d_selector
+        or [ebp].reg_eflags,EFLAGS_NT
+        call ValidateTss
+        ret
+CallTss Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RetTss
+;               NAME:                   RetTss
 ;
-;		DESCRIPTION:	Ret to a new TSS
+;               DESCRIPTION:    Ret to a new TSS
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						BX			TSS SELECTOR
-;						EAX			Base
-;						ECX			Limit
-;						EDI			ADDRESS OF DESCRIPTOR TABLE
+;               PARAMETERS:             SS:EBP          CPU
+;                                               BX                      TSS SELECTOR
+;                                               EAX                     Base
+;                                               ECX                     Limit
+;                                               EDI                     ADDRESS OF DESCRIPTOR TABLE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RetTss	Proc near
-	test dl,8
-	jz short RetTssCheck16
+RetTss  Proc near
+        test dl,8
+        jz short RetTssCheck16
 
 RetTssCheck32:
-	mov dh,ACCESS_SIZE
-	cmp ecx,103
-	jc InvalidTssFault
-	jmp short RetTssSizeOk
+        mov dh,ACCESS_SIZE
+        cmp ecx,103
+        jc InvalidTssFault
+        jmp short RetTssSizeOk
 
 RetTssCheck16:
-	xor dh,dh
-	cmp ecx,44
-	jc InvalidTssFault
+        xor dh,dh
+        cmp ecx,44
+        jc InvalidTssFault
 
 RetTssSizeOk:
-	and [ebp].reg_eflags,NOT EFLAGS_NT  ;the NT flag must be cleared
-	call SaveTss
-	push [ebp].reg_tr.d_selector
-	mov [ebp].reg_tr.d_access,dh
-	mov [ebp].reg_tr.d_selector,bx
-	mov [ebp].reg_tr.d_base,eax
-	mov [ebp].reg_tr.d_limit,ecx
-	call LoadTss
+        and [ebp].reg_eflags,NOT EFLAGS_NT  ;the NT flag must be cleared
+        call SaveTss
+        push [ebp].reg_tr.d_selector
+        mov [ebp].reg_tr.d_access,dh
+        mov [ebp].reg_tr.d_selector,bx
+        mov [ebp].reg_tr.d_base,eax
+        mov [ebp].reg_tr.d_limit,ecx
+        call LoadTss
 ;
-	mov al,dl
-	or al,2               ;the busy byte must be left set
-	mov ebx,edi
-	add ebx,5
-	call WriteLinearByte
+        mov al,dl
+        or al,2               ;the busy byte must be left set
+        mov ebx,edi
+        add ebx,5
+        call WriteLinearByte
 ;
-	pop bx                  ;we have the two tasks visible here
+        pop bx                  ;we have the two tasks visible here
 ;
     movzx eax,[ebp].reg_tr.d_selector
     push eax                           ;task2
     movzx eax,bx
     push eax                           ;task1
-	call NotifyTaskSwitch
-;	
-	LoadDescriptor ProtectionFault
-	jc ProtectionFault
+        call NotifyTaskSwitch
+;       
+        LoadDescriptor ProtectionFault
+        jc ProtectionFault
 ;
-	mov al,dl
-	and al,NOT 2       ;the busy byte must be clear for the old task
-	mov ebx,edi
-	add ebx,5
-	call WriteLinearByte
+        mov al,dl
+        and al,NOT 2       ;the busy byte must be clear for the old task
+        mov ebx,edi
+        add ebx,5
+        call WriteLinearByte
 ;
-	mov bx,[ebp].reg_tr.d_selector
-	call ValidateTss
-	ret
-RetTss	Endp
-	
+        mov bx,[ebp].reg_tr.d_selector
+        call ValidateTss
+        ret
+RetTss  Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CondLoadDescriptor
+;               NAME:                   CondLoadDescriptor
 ;
-;		DESCRIPTION:	Load descriptor if privilege allows, no faults
+;               DESCRIPTION:    Load descriptor if privilege allows, no faults
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						BX			SELECTOR TO LOAD
+;               PARAMETERS:             SS:EBP          CPU
+;                                               BX                      SELECTOR TO LOAD
 ;
-;		RETURNS:		NC			VALID
-;							EDX:EAX	DESCRIPTOR
-;						CY			INVALID
-;							BX		ERROR CODE FOR GPF (SELECTOR)
+;               RETURNS:                NC                      VALID
+;                                                       EDX:EAX DESCRIPTOR
+;                                               CY                      INVALID
+;                                                       BX              ERROR CODE FOR GPF (SELECTOR)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CondLoadDescriptor	Proc near
-	test bx,0FFFCh
-	jnz cond_load_descr_not_null
-	stc
-	ret
+CondLoadDescriptor      Proc near
+        test bx,0FFFCh
+        jnz cond_load_descr_not_null
+        stc
+        ret
 
 cond_load_descr_not_null:
-	test bl,4
-	jz cond_load_descr_gdt
+        test bl,4
+        jz cond_load_descr_gdt
 
 cond_load_descr_ldt:
-	test [ebp].reg_ldt.d_access,ACCESS_READ
-	mov edi,OFFSET reg_ldt
-	stc
-	jnz cond_load_descr_do
-	ret
+        test [ebp].reg_ldt.d_access,ACCESS_READ
+        mov edi,OFFSET reg_ldt
+        stc
+        jnz cond_load_descr_do
+        ret
 
 cond_load_descr_gdt:
-	mov edi,OFFSET reg_gdt
+        mov edi,OFFSET reg_gdt
 
 cond_load_descr_do:
-	mov [ebp].em_pl,0
-	movzx ecx,bx
-	or cl,7
-	dec ecx
-	sub ecx,[ebp+edi].d_limit
-	jc cond_load_descr_limit_ok
-	stc
-	ret
+        mov [ebp].em_pl,0
+        movzx ecx,bx
+        or cl,7
+        dec ecx
+        sub ecx,[ebp+edi].d_limit
+        jc cond_load_descr_limit_ok
+        stc
+        ret
 
 cond_load_descr_limit_ok:
-	movzx ecx,bx
-	and cl,0F8h
-	add ecx,[ebp+edi].d_base
-	push bx
-	mov ebx,ecx
-	call ReadLinearQword
-	pop bx
-	test dh,80h
-	jnz cond_load_descr_present
-	stc
-	ret
+        movzx ecx,bx
+        and cl,0F8h
+        add ecx,[ebp+edi].d_base
+        push bx
+        mov ebx,ecx
+        call ReadLinearQword
+        pop bx
+        test dh,80h
+        jnz cond_load_descr_present
+        stc
+        ret
 
 cond_load_descr_present:
-	test dh,1
-	jnz cond_load_descr_accessed
-	or dh,1
-	push bx
-	mov ebx,ecx
-	call WriteLinearQword
-	pop bx
+        test dh,1
+        jnz cond_load_descr_accessed
+        or dh,1
+        push bx
+        mov ebx,ecx
+        call WriteLinearQword
+        pop bx
 
 cond_load_descr_accessed:
-	clc
-	ret
-CondLoadDescriptor	Endp
-	
+        clc
+        ret
+CondLoadDescriptor      Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ValidateSegment
+;               NAME:                   ValidateSegment
 ;
-;		DESCRIPTION:	Validate a selector
+;               DESCRIPTION:    Validate a selector
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						AX			SEGMENT REGISTER TO VALIDATE
+;               PARAMETERS:             SS:EBP          CPU
+;                                               AX                      SEGMENT REGISTER TO VALIDATE
 ;
-;		RETURNS:		NC			VALID
-;							EDX:EAX	DESCRIPTOR
-;						CY			INVALID
-;							BX		ERROR CODE
+;               RETURNS:                NC                      VALID
+;                                                       EDX:EAX DESCRIPTOR
+;                                               CY                      INVALID
+;                                                       BX              ERROR CODE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public ValidateSegment
+        public ValidateSegment
 
-ValidateSegment	Proc near
-	mov bx,ax
-	call CondLoadDescriptor
-	jnc ValidateSegmentDescrOk
-	ret
+ValidateSegment Proc near
+        mov bx,ax
+        call CondLoadDescriptor
+        jnc ValidateSegmentDescrOk
+        ret
 
 ValidateSegmentDescrOk:
-	mov	cl,byte ptr [ebp].reg_cs.d_access
-	mov ch,bl
-	and cx,303h
-	cmp ch,cl
-	jc ValidateSegmentEplOk
-	mov cl,ch
+        mov     cl,byte ptr [ebp].reg_cs.d_access
+        mov ch,bl
+        and cx,303h
+        cmp ch,cl
+        jc ValidateSegmentEplOk
+        mov cl,ch
 ValidateSegmentEplOk:
-	mov ch,dh
-	shr ch,5
-	and ch,3
-	cmp cl,ch
-	jbe ValidateSegmentDplOk
-	stc
-	ret
+        mov ch,dh
+        shr ch,5
+        and ch,3
+        cmp cl,ch
+        jbe ValidateSegmentDplOk
+        stc
+        ret
 
 ValidateSegmentDplOk:
-	test dh,10h
-	jz ValidateSegmentNotAccessible
-	clc
-	ret
+        test dh,10h
+        jz ValidateSegmentNotAccessible
+        clc
+        ret
 
 ValidateSegmentNotAccessible:
-	stc	
-	ret
-ValidateSegment	Endp
+        stc     
+        ret
+ValidateSegment Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ValidateTssLdt
+;               NAME:                   ValidateTssLdt
 ;
-;		DESCRIPTION:	Validate LDT loaded from TSS, and load base & limit
+;               DESCRIPTION:    Validate LDT loaded from TSS, and load base & limit
 ;
-;		PARAMETERS:		SS:EBP		CPU
+;               PARAMETERS:             SS:EBP          CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public ValidateTssLdt
+        public ValidateTssLdt
 
-ValidateTssLdt	Proc near
-	mov [ebp].em_pl,0
-	mov bx,[ebp].reg_ldt.d_selector
-	or bx,bx
-	jz ValidateTssLdtDone
+ValidateTssLdt  Proc near
+        mov [ebp].em_pl,0
+        mov bx,[ebp].reg_ldt.d_selector
+        or bx,bx
+        jz ValidateTssLdtDone
 ;
-	test bx,4
-	jnz InvalidTssFault
-	LoadDescriptor InvalidTssFault
-	and dl,1Fh
-	cmp dl,2
-	jne InvalidTssFault
+        test bx,4
+        jnz InvalidTssFault
+        LoadDescriptor InvalidTssFault
+        and dl,1Fh
+        cmp dl,2
+        jne InvalidTssFault
 ;
-	mov [ebp].reg_ldt.d_base,eax
-	mov [ebp].reg_ldt.d_limit,ecx	
-	mov [ebp].reg_ldt.d_access,ACCESS_READ
+        mov [ebp].reg_ldt.d_base,eax
+        mov [ebp].reg_ldt.d_limit,ecx   
+        mov [ebp].reg_ldt.d_access,ACCESS_READ
 ValidateTssLdtDone:
-	ret
-ValidateTssLdt	Endp
+        ret
+ValidateTssLdt  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ValidateTssCs
+;               NAME:                   ValidateTssCs
 ;
-;		DESCRIPTION:	Validate CS loaded from TSS, and load descriptor
+;               DESCRIPTION:    Validate CS loaded from TSS, and load descriptor
 ;
-;		PARAMETERS:		SS:EBP		CPU
+;               PARAMETERS:             SS:EBP          CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public ValidateTssCs
+        public ValidateTssCs
 
-ValidateTssCs	Proc near
-	mov [ebp].em_pl,0
-	mov bx,[ebp].reg_cs.d_selector
-	LoadDescriptor InvalidTssFault
-	test dl,10h
-	jz InvalidTssFault
+ValidateTssCs   Proc near
+        mov [ebp].em_pl,0
+        mov bx,[ebp].reg_cs.d_selector
+        LoadDescriptor InvalidTssFault
+        test dl,10h
+        jz InvalidTssFault
 ;
-	push cx
-	mov cl,dl
-	and cl,18h
-	cmp cl,18h
-	jne InvalidTssFault
+        push cx
+        mov cl,dl
+        and cl,18h
+        cmp cl,18h
+        jne InvalidTssFault
 ;
-	mov cl,dl
-	shr cl,5
-	mov ch,byte ptr [ebp].reg_cs.d_selector
-	and cx,0303h
-	cmp cl,ch
-	pop cx
-	jne InvalidTssFault
+        mov cl,dl
+        shr cl,5
+        mov ch,byte ptr [ebp].reg_cs.d_selector
+        and cx,0303h
+        cmp cl,ch
+        pop cx
+        jne InvalidTssFault
 ;
-	mov [ebp].reg_cs.d_base,eax
-	mov [ebp].reg_cs.d_limit,ecx
+        mov [ebp].reg_cs.d_base,eax
+        mov [ebp].reg_cs.d_limit,ecx
 ;
-	mov ax,[ebp].reg_cs.d_selector
-	and al,3
-	test dh,40h
-	jz ValidateTssCsSizeOk
-	or al,ACCESS_SIZE
+        mov ax,[ebp].reg_cs.d_selector
+        and al,3
+        test dh,40h
+        jz ValidateTssCsSizeOk
+        or al,ACCESS_SIZE
 
 ValidateTssCsSizeOk:
-	test dl,2
-	jz ValidateTssCsReadOk
-	or al,ACCESS_READ
+        test dl,2
+        jz ValidateTssCsReadOk
+        or al,ACCESS_READ
 
 ValidateTssCsReadOk:
-	mov [ebp].reg_cs.d_access,al
-	ret
-ValidateTssCs	Endp
-	
+        mov [ebp].reg_cs.d_access,al
+        ret
+ValidateTssCs   Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LoadLdt
+;               NAME:                   LoadLdt
 ;
-;		DESCRIPTION:	Load a ldt selector
+;               DESCRIPTION:    Load a ldt selector
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						AX			SEGMENT REGISTER TO VALIDATE
+;               PARAMETERS:             SS:EBP          CPU
+;                                               AX                      SEGMENT REGISTER TO VALIDATE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public LoadLdt
+        public LoadLdt
 
-LoadLdt	Proc near
-	mov [ebp].em_pl,0
-	mov bx,ax
-	test bx,7
-	jnz ProtectionFault
+LoadLdt Proc near
+        mov [ebp].em_pl,0
+        mov bx,ax
+        test bx,7
+        jnz ProtectionFault
 ;
-	or bx,bx
-	jnz LoadLdtNonzero
-	mov [ebp].reg_ldt.d_selector,bx
-	mov [ebp].reg_ldt.d_access,0
-	ret
+        or bx,bx
+        jnz LoadLdtNonzero
+        mov [ebp].reg_ldt.d_selector,bx
+        mov [ebp].reg_ldt.d_access,0
+        ret
 
 LoadLdtNonzero:
-	test bx,4
-	jnz ProtectionFault
+        test bx,4
+        jnz ProtectionFault
 ;
-	LoadDescriptor ProtectionFault
-	and dl,1Fh
-	cmp dl,2
-	jne ProtectionFault
+        LoadDescriptor ProtectionFault
+        and dl,1Fh
+        cmp dl,2
+        jne ProtectionFault
 ;
-	mov [ebp].reg_ldt.d_selector,bx
-	mov [ebp].reg_ldt.d_base,eax
-	mov [ebp].reg_ldt.d_limit,ecx	
-	mov [ebp].reg_ldt.d_access,ACCESS_READ
-	ret
-LoadLdt	Endp
-	
+        mov [ebp].reg_ldt.d_selector,bx
+        mov [ebp].reg_ldt.d_base,eax
+        mov [ebp].reg_ldt.d_limit,ecx   
+        mov [ebp].reg_ldt.d_access,ACCESS_READ
+        ret
+LoadLdt Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LoadTr
+;               NAME:                   LoadTr
 ;
-;		DESCRIPTION:	Load a tr selector
+;               DESCRIPTION:    Load a tr selector
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						AX			SEGMENT REGISTER TO VALIDATE
+;               PARAMETERS:             SS:EBP          CPU
+;                                               AX                      SEGMENT REGISTER TO VALIDATE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public LoadTr
+        public LoadTr
 
-LoadTr	Proc near
-	mov [ebp].em_pl,0
-	mov bx,ax
-	test bx,7
-	jnz InvalidTssFault
+LoadTr  Proc near
+        mov [ebp].em_pl,0
+        mov bx,ax
+        test bx,7
+        jnz InvalidTssFault
 ;
-	or bx,bx
-	jz ProtectionFault
+        or bx,bx
+        jz ProtectionFault
 ;
-	test bx,4
-	jnz ProtectionFault
+        test bx,4
+        jnz ProtectionFault
 ;
-	LoadDescriptor ProtectionFault
-	mov dh,dl
-	and dh,1Fh
-	cmp dh,1
-	je LoadTr16
-	cmp dh,9
-	je LoadTr32
-	jmp ProtectionFault
+        LoadDescriptor ProtectionFault
+        mov dh,dl
+        and dh,1Fh
+        cmp dh,1
+        je LoadTr16
+        cmp dh,9
+        je LoadTr32
+        jmp ProtectionFault
 
 LoadTr16:
-	cmp ecx,44
-	jc InvalidTssFault
+        cmp ecx,44
+        jc InvalidTssFault
 ;
-	mov [ebp].reg_tr.d_selector,bx
-	mov [ebp].reg_tr.d_base,eax
-	mov [ebp].reg_tr.d_limit,ecx	
-	mov [ebp].reg_tr.d_access,ACCESS_READ
+        mov [ebp].reg_tr.d_selector,bx
+        mov [ebp].reg_tr.d_base,eax
+        mov [ebp].reg_tr.d_limit,ecx    
+        mov [ebp].reg_tr.d_access,ACCESS_READ
 ;
-	mov ebx,edi
-	add ebx,5
-	mov al,dl
-	or al,2
-	call WriteLinearByte
-	ret
+        mov ebx,edi
+        add ebx,5
+        mov al,dl
+        or al,2
+        call WriteLinearByte
+        ret
 
 LoadTr32:
-	cmp ecx,104
-	jc InvalidTssFault
+        cmp ecx,104
+        jc InvalidTssFault
 ;
-	mov [ebp].reg_tr.d_selector,bx
-	mov [ebp].reg_tr.d_base,eax
-	mov [ebp].reg_tr.d_limit,ecx	
-	mov [ebp].reg_tr.d_access,ACCESS_READ OR ACCESS_SIZE
+        mov [ebp].reg_tr.d_selector,bx
+        mov [ebp].reg_tr.d_base,eax
+        mov [ebp].reg_tr.d_limit,ecx    
+        mov [ebp].reg_tr.d_access,ACCESS_READ OR ACCESS_SIZE
 ;
-	mov ebx,edi
-	add ebx,5
-	mov al,dl
-	or al,2
-	call WriteLinearByte
-	ret
-LoadTr	Endp
-	
+        mov ebx,edi
+        add ebx,5
+        mov al,dl
+        or al,2
+        call WriteLinearByte
+        ret
+LoadTr  Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			JmpFar
+;               NAME:                   JmpFar
 ;
-;		DESCRIPTION:	Emulate protected mode far jump
+;               DESCRIPTION:    Emulate protected mode far jump
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						BX:ESI		ADDRESS TO JMP TO
+;               PARAMETERS:             SS:EBP          CPU
+;                                               BX:ESI          ADDRESS TO JMP TO
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public JmpFar
+        public JmpFar
 
-JmpFar	Proc near
-	test [ebp].reg_cr0,CR0_PE
-	jz JmpFarReal
+JmpFar  Proc near
+        test [ebp].reg_cr0,CR0_PE
+        jz JmpFarReal
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz JmpFarReal
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz JmpFarReal
 ;
-	mov [ebp].em_pl,0
-	LoadDescriptor ProtectionFault
-	jc short JmpFarGate
+        mov [ebp].em_pl,0
+        LoadDescriptor ProtectionFault
+        jc short JmpFarGate
 ;
-	test dl,10h
-	jnz JmpFarCodeOrData
+        test dl,10h
+        jnz JmpFarCodeOrData
 ;
-	push cx
-	mov cl,dl
-	and cl,0Fh
-	cmp cl,1
-	je JmpFarTssCheckDpl
+        push cx
+        mov cl,dl
+        and cl,0Fh
+        cmp cl,1
+        je JmpFarTssCheckDpl
 ;
-	cmp cl,9
-	je JmpFarTssCheckDpl
-	pop cx
-	jmp ProtectionFault
+        cmp cl,9
+        je JmpFarTssCheckDpl
+        pop cx
+        jmp ProtectionFault
 
 JmpFarGate:
-	and dl,0Fh
+        and dl,0Fh
 ;
-	cmp dl,4
-	je short JmpFarCallGate
+        cmp dl,4
+        je short JmpFarCallGate
 ;
-	cmp dl,0Ch
-	je short JmpFarCallGate
+        cmp dl,0Ch
+        je short JmpFarCallGate
 ;
-	cmp dl,5
-	je JmpFarTssGate
-	jmp ProtectionFault
+        cmp dl,5
+        je JmpFarTssGate
+        jmp ProtectionFault
 
 JmpFarCallGate:
-	mov bx,ax
-	LoadDescriptor ProtectionFault
-	test dl,10h
-	jnz JmpFarCodeOrData
-	jmp ProtectionFault
+        mov bx,ax
+        LoadDescriptor ProtectionFault
+        test dl,10h
+        jnz JmpFarCodeOrData
+        jmp ProtectionFault
 
 JmpFarTssGate:
-	mov bx,ax
-	LoadDescriptor ProtectionFault
-	test dl,10h
-	jnz ProtectionFault
+        mov bx,ax
+        LoadDescriptor ProtectionFault
+        test dl,10h
+        jnz ProtectionFault
 ;
-	push cx
-	mov cl,dl
-	and cl,0Fh	
-	cmp cl,1                           ;16 bit available TSS
-	je short JmpFarTss
+        push cx
+        mov cl,dl
+        and cl,0Fh      
+        cmp cl,1                           ;16 bit available TSS
+        je short JmpFarTss
 ;
-	cmp cl,9
-	je JmpFarTss                         ;32 bit available TSS
-	pop cx
-	jmp ProtectionFault
+        cmp cl,9
+        je JmpFarTss                         ;32 bit available TSS
+        pop cx
+        jmp ProtectionFault
 
 JmpFarTssCheckDpl:
-	AssertDataDpl
+        AssertDataDpl
 
 JmpFarTss:
-	pop cx
-	call JmpTss
-	ret
+        pop cx
+        call JmpTss
+        ret
 
 JmpFarCodeOrData:
-	call TransferEqual
-	ret
+        call TransferEqual
+        ret
 
 JmpFarReal:
-	call TransferReal
-	ret
-JmpFar	Endp
-	
+        call TransferReal
+        ret
+JmpFar  Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CallFar16
+;               NAME:                   CallFar16
 ;
-;		DESCRIPTION:	Emulate protected mode call far
+;               DESCRIPTION:    Emulate protected mode call far
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						BX:ESI		ADDRESS TO JMP TO
+;               PARAMETERS:             SS:EBP          CPU
+;                                               BX:ESI          ADDRESS TO JMP TO
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public CallFar16
+        public CallFar16
 
-CallFar16	Proc near
-	test [ebp].reg_cr0,CR0_PE
-	jz CallFarReal16
+CallFar16       Proc near
+        test [ebp].reg_cr0,CR0_PE
+        jz CallFarReal16
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz CallFarReal16
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz CallFarReal16
 ;
-	mov [ebp].em_pl,0
-	LoadDescriptor ProtectionFault
-	jc CallFarGate16
-	test dl,10h
-	jnz CallFarNormal16
+        mov [ebp].em_pl,0
+        LoadDescriptor ProtectionFault
+        jc CallFarGate16
+        test dl,10h
+        jnz CallFarNormal16
 ;
-	AssertDataDpl
-	push cx                   
-	mov cl,dl
-	and cl,0Fh
-	cmp cl,1
-	je CallFarTss16
-	cmp cl,9
-	je CallFarTss16
-	pop cx                    
-	jmp ProtectionFault
+        AssertDataDpl
+        push cx                   
+        mov cl,dl
+        and cl,0Fh
+        cmp cl,1
+        je CallFarTss16
+        cmp cl,9
+        je CallFarTss16
+        pop cx                    
+        jmp ProtectionFault
 
-CallFarGate16:	
-	and dl,0Fh
-	cmp dl,4
-	jne CallFarGate16Not4
+CallFarGate16:  
+        and dl,0Fh
+        cmp dl,4
+        jne CallFarGate16Not4
 ;
-	mov [ebp].em_params,cl
-	mov [ebp].em_transfer,0
-	mov bx,ax
-	LoadDescriptor ProtectionFault
-	test dl,10h
-	jz ProtectionFault
-	call TransferLower
-	ret
+        mov [ebp].em_params,cl
+        mov [ebp].em_transfer,0
+        mov bx,ax
+        LoadDescriptor ProtectionFault
+        test dl,10h
+        jz ProtectionFault
+        call TransferLower
+        ret
 
 CallFarGate16Not4:
-	cmp dl,0Ch
-	jne CallFarGate16NotC
+        cmp dl,0Ch
+        jne CallFarGate16NotC
 ;
-	mov [ebp].em_params,cl
-	mov [ebp].em_transfer,TRANSFER_32
-	mov bx,ax
-	LoadDescriptor ProtectionFault
-	test dl,10h
-	jz ProtectionFault
-	call TransferLower
-	ret
+        mov [ebp].em_params,cl
+        mov [ebp].em_transfer,TRANSFER_32
+        mov bx,ax
+        LoadDescriptor ProtectionFault
+        test dl,10h
+        jz ProtectionFault
+        call TransferLower
+        ret
 
 CallFarGate16NotC:
-	cmp dl,5
-	jne ProtectionFault
-;	
-	mov bx,ax
-	LoadDescriptor InvalidTssFault
-	test dl,10h
-	jnz ProtectionFault
+        cmp dl,5
+        jne ProtectionFault
+;       
+        mov bx,ax
+        LoadDescriptor InvalidTssFault
+        test dl,10h
+        jnz ProtectionFault
 ;
         push cx
         mov cl,dl
-	and cl,0Fh
-	cmp cl,1
-	je CallFarTss16
+        and cl,0Fh
+        cmp cl,1
+        je CallFarTss16
 ;
-	cmp cl,9
-	je CallFarTss16
+        cmp cl,9
+        je CallFarTss16
 ;
         pop cx              
-	jmp ProtectionFault
+        jmp ProtectionFault
 
 CallFarTss16:
-	pop cx	           
-	call CallTss
-	ret
+        pop cx             
+        call CallTss
+        ret
 
 CallFarNormal16:
-	mov [ebp].em_params,0
-	mov [ebp].em_transfer,0
-	call TransferLower
-	ret
+        mov [ebp].em_params,0
+        mov [ebp].em_transfer,0
+        call TransferLower
+        ret
 
 CallFarReal16:
-	push eax
-	mov ax,[ebp].reg_cs.d_selector
-	call PushWord
-	mov ax,word ptr [ebp].reg_eip
-	call PushWord
-	pop eax
-	call TransferReal
-	ret
-CallFar16	Endp
-	
+        push eax
+        mov ax,[ebp].reg_cs.d_selector
+        call PushWord
+        mov ax,word ptr [ebp].reg_eip
+        call PushWord
+        pop eax
+        call TransferReal
+        ret
+CallFar16       Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CallFar32
+;               NAME:                   CallFar32
 ;
-;		DESCRIPTION:	Emulate protected mode call far
+;               DESCRIPTION:    Emulate protected mode call far
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						BX:ESI		ADDRESS TO JMP TO
+;               PARAMETERS:             SS:EBP          CPU
+;                                               BX:ESI          ADDRESS TO JMP TO
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public CallFar32
+        public CallFar32
 
-CallFar32	Proc near
-	test [ebp].reg_cr0,CR0_PE
-	jz CallFarReal32
+CallFar32       Proc near
+        test [ebp].reg_cr0,CR0_PE
+        jz CallFarReal32
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz CallFarReal32
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz CallFarReal32
 ;
-	mov [ebp].em_pl,0
-	LoadDescriptor ProtectionFault
-	jc CallFarGate32
+        mov [ebp].em_pl,0
+        LoadDescriptor ProtectionFault
+        jc CallFarGate32
 ;
-	test dl,10h
-	jnz CallFarNormal32
+        test dl,10h
+        jnz CallFarNormal32
 ;
-	AssertDataDpl
-	
-	push cx
-	mov cl,dl
-	and cl,0Fh
-	cmp cl,1
-	je CallFarTss32
-	cmp cl,9
-	je CallFarTss32
-	pop cx                    
-	jmp ProtectionFault
+        AssertDataDpl
+        
+        push cx
+        mov cl,dl
+        and cl,0Fh
+        cmp cl,1
+        je CallFarTss32
+        cmp cl,9
+        je CallFarTss32
+        pop cx                    
+        jmp ProtectionFault
 
-CallFarGate32:	
-	and dl,0Fh
-	cmp dl,4
-	jne CallFarGate32Not4
+CallFarGate32:  
+        and dl,0Fh
+        cmp dl,4
+        jne CallFarGate32Not4
 ;
-	mov [ebp].em_params,cl
-	mov [ebp].em_transfer,0
-	mov bx,ax
-	LoadDescriptor ProtectionFault
-	test dl,10h
-	jz ProtectionFault
-	call TransferLower
-	ret
+        mov [ebp].em_params,cl
+        mov [ebp].em_transfer,0
+        mov bx,ax
+        LoadDescriptor ProtectionFault
+        test dl,10h
+        jz ProtectionFault
+        call TransferLower
+        ret
 
 CallFarGate32Not4:
-	cmp dl,0Ch
-	jne CallFarGate32NotC
+        cmp dl,0Ch
+        jne CallFarGate32NotC
 ;
-	mov [ebp].em_params,cl
-	mov [ebp].em_transfer,TRANSFER_32
-	mov bx,ax
-	LoadDescriptor ProtectionFault
-	test dl,10h
-	jz ProtectionFault
-	call TransferLower
-	ret
+        mov [ebp].em_params,cl
+        mov [ebp].em_transfer,TRANSFER_32
+        mov bx,ax
+        LoadDescriptor ProtectionFault
+        test dl,10h
+        jz ProtectionFault
+        call TransferLower
+        ret
 
 CallFarGate32NotC:
-	cmp dl,5
-	jne ProtectionFault
-;	
-	mov bx,ax
-	LoadDescriptor InvalidTssFault
-	test dl,10h
-	jnz ProtectionFault
+        cmp dl,5
+        jne ProtectionFault
+;       
+        mov bx,ax
+        LoadDescriptor InvalidTssFault
+        test dl,10h
+        jnz ProtectionFault
 ;
         push cx
         mov cl,dl
-	and cl,0Fh
-	cmp cl,1
-	je CallFarTss32
+        and cl,0Fh
+        cmp cl,1
+        je CallFarTss32
 ;
-	cmp cl,9
-	je CallFarTss32
+        cmp cl,9
+        je CallFarTss32
 ;
         pop cx                   
-	jmp ProtectionFault
+        jmp ProtectionFault
 
-CallFarTss32:	
+CallFarTss32:   
         pop cx                   
-	call CallTss
-	ret
+        call CallTss
+        ret
 
 CallFarNormal32:
-	mov [ebp].em_params,0
-	mov [ebp].em_transfer,TRANSFER_32
-	call TransferLower
-	ret
+        mov [ebp].em_params,0
+        mov [ebp].em_transfer,TRANSFER_32
+        call TransferLower
+        ret
 
 CallFarReal32:
-	push eax
-	mov eax,2
-	call SubFromStack
-	mov ax,[ebp].reg_cs.d_selector
-	call PushWord
+        push eax
+        mov eax,2
+        call SubFromStack
+        mov ax,[ebp].reg_cs.d_selector
+        call PushWord
 ;
-	mov eax,[ebp].reg_eip
-	call PushDword
+        mov eax,[ebp].reg_eip
+        call PushDword
 ;
-	pop eax
-	call TransferReal
-	ret
-CallFar32	Endp
-	
+        pop eax
+        call TransferReal
+        ret
+CallFar32       Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RetFar16
+;               NAME:                   RetFar16
 ;
-;		DESCRIPTION:	Emulate protected mode retf16
+;               DESCRIPTION:    Emulate protected mode retf16
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						CL			# of params to remove
+;               PARAMETERS:             SS:EBP          CPU
+;                                               CL                      # of params to remove
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public RetFar16
+        public RetFar16
 
-RetFar16	Proc near
-	call PopWord
-	push ax
-	call PopWord
-	mov bx,ax
-	pop si
-	movzx esi,si
+RetFar16        Proc near
+        call PopWord
+        push ax
+        call PopWord
+        mov bx,ax
+        pop si
+        movzx esi,si
 ;
-	test [ebp].reg_cr0,CR0_PE
-	jz RetFarReal16
+        test [ebp].reg_cr0,CR0_PE
+        jz RetFarReal16
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz RetFarReal16
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz RetFarReal16
 ;
-	mov [ebp].em_pl,0
-	mov [ebp].em_params,cl
-	mov [ebp].em_transfer,0
-	call TransferHigher
-	ret
+        mov [ebp].em_pl,0
+        mov [ebp].em_params,cl
+        mov [ebp].em_transfer,0
+        call TransferHigher
+        ret
 
 RetFarReal16:
-	call TransferReal
-	ret
-RetFar16	Endp
-	
+        call TransferReal
+        ret
+RetFar16        Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RetFar32
+;               NAME:                   RetFar32
 ;
-;		DESCRIPTION:	Emulate protected mode retf32
+;               DESCRIPTION:    Emulate protected mode retf32
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						CL			# of params to remove
+;               PARAMETERS:             SS:EBP          CPU
+;                                               CL                      # of params to remove
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public RetFar32
+        public RetFar32
 
-RetFar32	Proc near
-	call PopDword
-	push eax
-	call PopDword
-	mov bx,ax
-	pop esi
+RetFar32        Proc near
+        call PopDword
+        push eax
+        call PopDword
+        mov bx,ax
+        pop esi
 ;
-	test [ebp].reg_cr0,CR0_PE
-	jz RetFarReal32
+        test [ebp].reg_cr0,CR0_PE
+        jz RetFarReal32
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz RetFarReal32
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz RetFarReal32
 ;
-	mov [ebp].em_pl,0
-	mov [ebp].em_params,cl
-	mov [ebp].em_transfer,TRANSFER_32
-	call TransferHigher
-	ret
+        mov [ebp].em_pl,0
+        mov [ebp].em_params,cl
+        mov [ebp].em_transfer,TRANSFER_32
+        call TransferHigher
+        ret
 
 RetFarReal32:
-	call TransferReal
-	ret
-RetFar32	Endp
-	
+        call TransferReal
+        ret
+RetFar32        Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ExcFar
+;               NAME:                   ExcFar
 ;
-;		DESCRIPTION:	Emulate protected mode exception
+;               DESCRIPTION:    Emulate protected mode exception
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						AL			EXCEPTION #
-;						CX			0 IF NO ERROR CODE
-;						BX			ERROR CODE
+;               PARAMETERS:             SS:EBP          CPU
+;                                               AL                      EXCEPTION #
+;                                               CX                      0 IF NO ERROR CODE
+;                                               BX                      ERROR CODE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public ExcFar
+        public ExcFar
 
-ExcFar	Proc near
-	test [ebp].reg_cr0,CR0_PE
-	jz ExcFarReal
+ExcFar  Proc near
+        test [ebp].reg_cr0,CR0_PE
+        jz ExcFarReal
 
 ExcFarPm:
-	mov [ebp].em_pl,0
-	mov [ebp].em_transfer,TRANSFER_FLAGS
-	mov [ebp].em_params,0
-	or cx,cx
-	jz ExcPmErrorOk
+        mov [ebp].em_pl,0
+        mov [ebp].em_transfer,TRANSFER_FLAGS
+        mov [ebp].em_params,0
+        or cx,cx
+        jz ExcPmErrorOk
 ;
-	or [ebp].em_transfer,TRANSFER_CODE
-	mov [ebp].em_errorcode,bx
+        or [ebp].em_transfer,TRANSFER_CODE
+        mov [ebp].em_errorcode,bx
 
 ExcPmErrorOk:
-	movzx bx,al
-	shl bx,3
+        movzx bx,al
+        shl bx,3
 ;
-	movzx ecx,bx
-	or cl,7
-	dec ecx
-	sub ecx,[ebp].reg_idt.d_limit
-	jnc ProtectionFault
+        movzx ecx,bx
+        or cl,7
+        dec ecx
+        sub ecx,[ebp].reg_idt.d_limit
+        jnc ProtectionFault
 ;
-	movzx ecx,bx
-	add ecx,[ebp].reg_idt.d_base
-	mov ebx,ecx
-	call ReadLinearQword
-	test dh,80h
-	jz IdtFault
+        movzx ecx,bx
+        add ecx,[ebp].reg_idt.d_base
+        mov ebx,ecx
+        call ReadLinearQword
+        test dh,80h
+        jz IdtFault
 ;
-	test dh,10h
-	jnz IdtFault
+        test dh,10h
+        jnz IdtFault
 ;
-	mov cl,dh
-	and cl,0Fh
-	cmp cl,5
-	je ExcFarTssGate
+        mov cl,dh
+        and cl,0Fh
+        cmp cl,5
+        je ExcFarTssGate
 ;
-	cmp cl,6
-	je ExcFarInt16
+        cmp cl,6
+        je ExcFarInt16
 ;
-	cmp cl,7
-	je ExcFarTrap16
+        cmp cl,7
+        je ExcFarTrap16
 ;
-	cmp cl,0Eh
-	je ExcFarInt32
+        cmp cl,0Eh
+        je ExcFarInt32
 ;
-	cmp cl,0Fh
-	je ExcFarTrap32
+        cmp cl,0Fh
+        je ExcFarTrap32
 ;
-	jmp IdtFault
+        jmp IdtFault
 
 ExcFarInt16:
-	mov cx,EFLAGS_IF OR EFLAGS_TF
-	jmp ExcFarLoad
+        mov cx,EFLAGS_IF OR EFLAGS_TF
+        jmp ExcFarLoad
 
 ExcFarTrap16:
-	mov cx,EFLAGS_TF
-	jmp ExcFarLoad
+        mov cx,EFLAGS_TF
+        jmp ExcFarLoad
 
 ExcFarInt32:
-	mov cx,EFLAGS_IF OR EFLAGS_TF
-	or [ebp].em_transfer,TRANSFER_32
-	jmp ExcFarLoad
+        mov cx,EFLAGS_IF OR EFLAGS_TF
+        or [ebp].em_transfer,TRANSFER_32
+        jmp ExcFarLoad
 
 ExcFarTrap32:
-	mov cx,EFLAGS_TF
-	or [ebp].em_transfer,TRANSFER_32
+        mov cx,EFLAGS_TF
+        or [ebp].em_transfer,TRANSFER_32
 
 ExcFarLoad:
-	push cx
-	mov dx,ax
-	shr eax,16
-	xchg eax,edx	
-	mov esi,eax
-	mov bx,dx
-	LoadDescriptor ProtectionFault
-	test dl,10h
-	jz ProtectionFault
+        push cx
+        mov dx,ax
+        shr eax,16
+        xchg eax,edx    
+        mov esi,eax
+        mov bx,dx
+        LoadDescriptor ProtectionFault
+        test dl,10h
+        jz ProtectionFault
 ;
-	call TransferLower
+        call TransferLower
 ;
-	pop cx
-	not cx
-	and word ptr [ebp].reg_eflags,cx
-	ret
+        pop cx
+        not cx
+        and word ptr [ebp].reg_eflags,cx
+        ret
 
 ExcFarTssGate:
-	shr eax,16
-	mov bx,ax
-	LoadDescriptor InvalidTssFault
+        shr eax,16
+        mov bx,ax
+        LoadDescriptor InvalidTssFault
 ;
-	test dl,10h
-	jnz ProtectionFault
+        test dl,10h
+        jnz ProtectionFault
 ;
-	and dl,0Fh
-	cmp dl,1
-	je ExcFarTss
+        and dl,0Fh
+        cmp dl,1
+        je ExcFarTss
 ;
-	cmp dl,9
-	je ExcFarTss
+        cmp dl,9
+        je ExcFarTss
 ;
-	jmp ProtectionFault
+        jmp ProtectionFault
 
-ExcFarTss:	
-	call CallTss
-	ret
+ExcFarTss:      
+        call CallTss
+        ret
 
 ExcFarReal:
-	push ax
+        push ax
 ;
-	mov ax,word ptr [ebp].reg_eflags
-	call PushWord
+        mov ax,word ptr [ebp].reg_eflags
+        call PushWord
 ;
-	mov ax,[ebp].reg_cs.d_selector
-	call PushWord
+        mov ax,[ebp].reg_cs.d_selector
+        call PushWord
 ;
-	mov ax,word ptr [ebp].reg_eip
-	call PushWord
+        mov ax,word ptr [ebp].reg_eip
+        call PushWord
 ;
-	or cx,cx
-	jz ExcRealErrorOk
+        or cx,cx
+        jz ExcRealErrorOk
 ;
-	mov ax,bx
-	call PushWord
+        mov ax,bx
+        call PushWord
 
 ExcRealErrorOk:
-	pop bx
-	movzx ebx,bl
-	shl ebx,2
-	add ebx,[ebp].reg_idt.d_base
-	call ReadLinearDword
-	movzx esi,ax
-	shr eax,16
-	mov bx,ax
-	call TransferReal
-	and word ptr [ebp].reg_eflags,NOT (EFLAGS_IF AND EFLAGS_TF)
-	ret
-ExcFar	Endp
-	
+        pop bx
+        movzx ebx,bl
+        shl ebx,2
+        add ebx,[ebp].reg_idt.d_base
+        call ReadLinearDword
+        movzx esi,ax
+        shr eax,16
+        mov bx,ax
+        call TransferReal
+        and word ptr [ebp].reg_eflags,NOT (EFLAGS_IF AND EFLAGS_TF)
+        ret
+ExcFar  Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			IntFar, HwInt
+;               NAME:                   IntFar, HwInt
 ;
-;		DESCRIPTION:	Emulate protected mode int
+;               DESCRIPTION:    Emulate protected mode int
 ;
-;		PARAMETERS:		SS:EBP		CPU
-;						AL			INT #
+;               PARAMETERS:             SS:EBP          CPU
+;                                               AL                      INT #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public IntFar
-	public HwInt
+        public IntFar
+        public HwInt
 
-HwInt	Proc near
-	test [ebp].reg_cr0,CR0_PE
-	jz IntFarReal
+HwInt   Proc near
+        test [ebp].reg_cr0,CR0_PE
+        jz IntFarReal
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jnz IntFarVm
+        test byte ptr [ebp].reg_eflags+2,2
+        jnz IntFarVm
 ;
-	mov [ebp].em_pl,0
-	mov [ebp].em_transfer,TRANSFER_FLAGS
-	mov [ebp].em_params,0
+        mov [ebp].em_pl,0
+        mov [ebp].em_transfer,TRANSFER_FLAGS
+        mov [ebp].em_params,0
 ;
-	movzx bx,al
-	shl bx,3
+        movzx bx,al
+        shl bx,3
 ;
-	movzx ecx,bx
-	or cl,7				;adjust the size of the interrupt number
-	dec ecx				; 0..7FFh but 0FFh*8=7F8h + 7 = 7FFh
-	sub ecx,[ebp].reg_idt.d_limit
-	jnc ProtectionFault
+        movzx ecx,bx
+        or cl,7                         ;adjust the size of the interrupt number
+        dec ecx                         ; 0..7FFh but 0FFh*8=7F8h + 7 = 7FFh
+        sub ecx,[ebp].reg_idt.d_limit
+        jnc ProtectionFault
 ;
-	movzx ecx,bx
-	add ecx,[ebp].reg_idt.d_base
-	mov ebx,ecx
-	call ReadLinearQword
-	test dh,80h			;Is the descriptor present ?
-	jz IdtFault
+        movzx ecx,bx
+        add ecx,[ebp].reg_idt.d_base
+        mov ebx,ecx
+        call ReadLinearQword
+        test dh,80h                     ;Is the descriptor present ?
+        jz IdtFault
 ;
-	test dh,10h			;descriptor type ? 1=Code or Data and 0= System
-	jnz IdtFault
+        test dh,10h                     ;descriptor type ? 1=Code or Data and 0= System
+        jnz IdtFault
 ;
-	xor bx,bx
-	mov cl,dh
+        xor bx,bx
+        mov cl,dh
     jmp IntFarValidated
-	
-HwInt	Endp
+        
+HwInt   Endp
 
-IntFar	Proc near
-	test [ebp].reg_cr0,CR0_PE
-	jz IntFarReal
+IntFar  Proc near
+        test [ebp].reg_cr0,CR0_PE
+        jz IntFarReal
 ;
-	test byte ptr [ebp].reg_eflags+2,2		;test The VM indicator
-	jnz IntFarVm
+        test byte ptr [ebp].reg_eflags+2,2              ;test The VM indicator
+        jnz IntFarVm
 ;
-	mov ecx,[ebp].reg_eflags			;what is this verification for ? ### GIL ????###
-	ror cx,4
-	mov ch,[ebp].reg_cs.d_access
-	and cx,303h
-	cmp cl,ch
-	jc PrivilegeFault
-	jmp IntFarPm
+        mov ecx,[ebp].reg_eflags                        ;what is this verification for ? ### GIL ????###
+        ror cx,4
+        mov ch,[ebp].reg_cs.d_access
+        and cx,303h
+        cmp cl,ch
+        jc PrivilegeFault
+        jmp IntFarPm
 
 IntFarVm:
-	mov ecx,[ebp].reg_eflags
-	and ecx,EFLAGS_IOPL
-	cmp ecx,EFLAGS_IOPL
-	jne PrivilegeFault
+        mov ecx,[ebp].reg_eflags
+        and ecx,EFLAGS_IOPL
+        cmp ecx,EFLAGS_IOPL
+        jne PrivilegeFault
 
 IntFarPm:
-	mov [ebp].em_pl,0
-	mov [ebp].em_transfer,TRANSFER_FLAGS
-	mov [ebp].em_params,0
+        mov [ebp].em_pl,0
+        mov [ebp].em_transfer,TRANSFER_FLAGS
+        mov [ebp].em_params,0
 ;
-	movzx bx,al
-	shl bx,3
+        movzx bx,al
+        shl bx,3
 ;
-	movzx ecx,bx
-	or cl,7				;adjust the size of the interrupt number
-	dec ecx				; 0..7FFh but 0FFh*8=7F8h + 7 = 7FFh
-	sub ecx,[ebp].reg_idt.d_limit
-	jnc ProtectionFault
+        movzx ecx,bx
+        or cl,7                         ;adjust the size of the interrupt number
+        dec ecx                         ; 0..7FFh but 0FFh*8=7F8h + 7 = 7FFh
+        sub ecx,[ebp].reg_idt.d_limit
+        jnc ProtectionFault
 ;
-	movzx ecx,bx
-	add ecx,[ebp].reg_idt.d_base
-	mov ebx,ecx
-	call ReadLinearQword
-	test dh,80h			;Is the descriptor present ?
-	jz IdtFault
+        movzx ecx,bx
+        add ecx,[ebp].reg_idt.d_base
+        mov ebx,ecx
+        call ReadLinearQword
+        test dh,80h                     ;Is the descriptor present ?
+        jz IdtFault
 ;
-	test dh,10h			;descriptor type ? 1=Code or Data and 0= System
-	jnz IdtFault
+        test dh,10h                     ;descriptor type ? 1=Code or Data and 0= System
+        jnz IdtFault
 ;
-	xor bx,bx
-	mov cl,byte ptr [ebp].reg_cs.d_access 	
-	mov ch,dh
-	shr ch,5				; target DPL
-	and cx,303h
-	cmp cl,ch				;CPL <= DPL 
-	ja ProtectionFault
+        xor bx,bx
+        mov cl,byte ptr [ebp].reg_cs.d_access   
+        mov ch,dh
+        shr ch,5                                ; target DPL
+        and cx,303h
+        cmp cl,ch                               ;CPL <= DPL 
+        ja ProtectionFault
 
-	mov cl,dh
+        mov cl,dh
 
 IntFarValidated:
-	and cl,0Fh
-	cmp cl,5
-	je IntFarTssGate
+        and cl,0Fh
+        cmp cl,5
+        je IntFarTssGate
 ;
-	cmp cl,6
-	je IntFarInt16
+        cmp cl,6
+        je IntFarInt16
 ;
-	cmp cl,7
-	je IntFarTrap16
+        cmp cl,7
+        je IntFarTrap16
 ;
-	cmp cl,0Eh
-	je IntFarInt32
+        cmp cl,0Eh
+        je IntFarInt32
 ;
-	cmp cl,0Fh
-	je IntFarTrap32
+        cmp cl,0Fh
+        je IntFarTrap32
 ;
-	jmp IdtFault
+        jmp IdtFault
 
 IntFarInt16:
-	mov cx,EFLAGS_IF OR EFLAGS_TF
-	jmp IntFarLoad
+        mov cx,EFLAGS_IF OR EFLAGS_TF
+        jmp IntFarLoad
 
 IntFarTrap16:
-	mov cx,EFLAGS_TF
-	jmp IntFarLoad
+        mov cx,EFLAGS_TF
+        jmp IntFarLoad
 
 IntFarInt32:
-	mov cx,EFLAGS_IF OR EFLAGS_TF
-	or [ebp].em_transfer,TRANSFER_32
-	jmp IntFarLoad
+        mov cx,EFLAGS_IF OR EFLAGS_TF
+        or [ebp].em_transfer,TRANSFER_32
+        jmp IntFarLoad
 
 IntFarTrap32:
-	mov cx,EFLAGS_TF
-	or [ebp].em_transfer,TRANSFER_32
+        mov cx,EFLAGS_TF
+        or [ebp].em_transfer,TRANSFER_32
 
 IntFarLoad:
-	push cx
-	mov dx,ax
-	shr eax,16
-	xchg eax,edx	
-	mov esi,eax			;get the offset in ESI
-	mov bx,dx			;get the selector in BX
-	LoadDescriptor ProtectionFault
-	test dl,10h
-	jz ProtectionFault
+        push cx
+        mov dx,ax
+        shr eax,16
+        xchg eax,edx    
+        mov esi,eax                     ;get the offset in ESI
+        mov bx,dx                       ;get the selector in BX
+        LoadDescriptor ProtectionFault
+        test dl,10h
+        jz ProtectionFault
 ;
-	call TransferLower
+        call TransferLower
 ;
-	pop cx
-	not cx
-	and word ptr [ebp].reg_eflags,cx
-	ret
+        pop cx
+        not cx
+        and word ptr [ebp].reg_eflags,cx
+        ret
 
 IntFarTssGate:
-	shr eax,16
-	mov bx,ax
-	LoadDescriptor InvalidTssFault
+        shr eax,16
+        mov bx,ax
+        LoadDescriptor InvalidTssFault
 ;
         push cx
         mov cl,dl 
-	test cl,10h
-	jnz ProtectionFault
+        test cl,10h
+        jnz ProtectionFault
 ;
-	and cl,0Fh
-	cmp cl,1
-	je IntFarTss
+        and cl,0Fh
+        cmp cl,1
+        je IntFarTss
 ;
-	cmp cl,9
-	je IntFarTss
+        cmp cl,9
+        je IntFarTss
 ;
         pop cx                     
-	jmp ProtectionFault
+        jmp ProtectionFault
 
-IntFarTss:	
+IntFarTss:      
         pop cx                     
-	call CallTss
-	ret
+        call CallTss
+        ret
 
 IntFarReal:
-	push ax
-	mov ax,word ptr [ebp].reg_eflags
-	call PushWord
-	mov ax,[ebp].reg_cs.d_selector
-	call PushWord
-	mov ax,word ptr [ebp].reg_eip
-	call PushWord
-	pop bx
+        push ax
+        mov ax,word ptr [ebp].reg_eflags
+        call PushWord
+        mov ax,[ebp].reg_cs.d_selector
+        call PushWord
+        mov ax,word ptr [ebp].reg_eip
+        call PushWord
+        pop bx
         movzx ebx,bl
-	shl ebx,2
-	add ebx,[ebp].reg_idt.d_base
-	call ReadLinearDword
-	movzx esi,ax
-	shr eax,16
-	mov bx,ax
-	call TransferReal
-	and word ptr [ebp].reg_eflags,NOT (EFLAGS_IF AND EFLAGS_TF)
-	ret
-IntFar	Endp
-	
+        shl ebx,2
+        add ebx,[ebp].reg_idt.d_base
+        call ReadLinearDword
+        movzx esi,ax
+        shr eax,16
+        mov bx,ax
+        call TransferReal
+        and word ptr [ebp].reg_eflags,NOT (EFLAGS_IF AND EFLAGS_TF)
+        ret
+IntFar  Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			IretFar16
+;               NAME:                   IretFar16
 ;
-;		DESCRIPTION:	Emulate protected mode iret16
+;               DESCRIPTION:    Emulate protected mode iret16
 ;
-;		PARAMETERS:		SS:EBP		CPU
+;               PARAMETERS:             SS:EBP          CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public IretFar16
+        public IretFar16
 
-IretFar16	Proc near
-	call PopWord
-	movzx esi,ax
-	call PopWord
-	mov bx,ax
+IretFar16       Proc near
+        call PopWord
+        movzx esi,ax
+        call PopWord
+        mov bx,ax
 ;
-	test [ebp].reg_cr0,CR0_PE
-	jz IretFarReal16
+        test [ebp].reg_cr0,CR0_PE
+        jz IretFarReal16
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jz IretFarPm16
+        test byte ptr [ebp].reg_eflags+2,2
+        jz IretFarPm16
 
 IretFarVm16:
-	mov ecx,[ebp].reg_eflags
-	and ecx,EFLAGS_IOPL
-	cmp ecx,EFLAGS_IOPL
-	jne PrivilegeFault
-	jmp IretFarReal16
+        mov ecx,[ebp].reg_eflags
+        and ecx,EFLAGS_IOPL
+        cmp ecx,EFLAGS_IOPL
+        jne PrivilegeFault
+        jmp IretFarReal16
 
 IretFarPm16:
-	mov [ebp].em_pl,0
-	mov [ebp].em_params,0
-	mov [ebp].em_transfer,TRANSFER_FLAGS
-	call TransferHigher
-	ret
+        mov [ebp].em_pl,0
+        mov [ebp].em_params,0
+        mov [ebp].em_transfer,TRANSFER_FLAGS
+        call TransferHigher
+        ret
 
 IretFarReal16:
-	call TransferReal
-	call PopWord
-	and eax,NOT EFLAGS_UNDEF
-	or al,2
-	mov word ptr [ebp].reg_eflags,ax
-	ret
-IretFar16	Endp
-	
+        call TransferReal
+        call PopWord
+        and eax,NOT EFLAGS_UNDEF
+        or al,2
+        mov word ptr [ebp].reg_eflags,ax
+        ret
+IretFar16       Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			IretFar32
+;               NAME:                   IretFar32
 ;
-;		DESCRIPTION:	Emulate protected mode iret32
+;               DESCRIPTION:    Emulate protected mode iret32
 ;
-;		PARAMETERS:		SS:EBP		CPU
+;               PARAMETERS:             SS:EBP          CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public IretFar32
+        public IretFar32
 
-IretFar32	Proc near
-	call PopDword
-	mov esi,eax
-	call PopDword
-	mov bx,ax
+IretFar32       Proc near
+        call PopDword
+        mov esi,eax
+        call PopDword
+        mov bx,ax
 ;
-	test [ebp].reg_cr0,CR0_PE
-	jz RetFarReal32
+        test [ebp].reg_cr0,CR0_PE
+        jz RetFarReal32
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jz IretFarPm32
+        test byte ptr [ebp].reg_eflags+2,2
+        jz IretFarPm32
 
 IretFarVm32:
-	mov ecx,[ebp].reg_eflags
-	and ecx,EFLAGS_IOPL
-	cmp ecx,EFLAGS_IOPL
-	jne PrivilegeFault
-	jmp IretFarReal32
+        mov ecx,[ebp].reg_eflags
+        and ecx,EFLAGS_IOPL
+        cmp ecx,EFLAGS_IOPL
+        jne PrivilegeFault
+        jmp IretFarReal32
 
 IretFarPm32:
-	mov [ebp].em_pl,0
-	mov [ebp].em_params,0
-	mov [ebp].em_transfer,TRANSFER_32 OR TRANSFER_FLAGS
-	call TransferHigher
-	ret
+        mov [ebp].em_pl,0
+        mov [ebp].em_params,0
+        mov [ebp].em_transfer,TRANSFER_32 OR TRANSFER_FLAGS
+        call TransferHigher
+        ret
 
 IretFarReal32:
-	call TransferReal
-	ret
-IretFar32	Endp
-	
+        call TransferReal
+        ret
+IretFar32       Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			IretTss
+;               NAME:                   IretTss
 ;
-;		DESCRIPTION:	IRET back to a TSS
+;               DESCRIPTION:    IRET back to a TSS
 ;
-;		PARAMETERS:		SS:EBP		CPU
+;               PARAMETERS:             SS:EBP          CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public IretTss
+        public IretTss
 
-IretTss	Proc near
-	mov [ebp].em_pl,0
-	call GetBacklink
-	mov bx,ax
-	LoadDescriptor ProtectionFault
-	test dl,10h
-	jnz ProtectionFault
+IretTss Proc near
+        mov [ebp].em_pl,0
+        call GetBacklink
+        mov bx,ax
+        LoadDescriptor ProtectionFault
+        test dl,10h
+        jnz ProtectionFault
 ;
-	push cx
-	mov cl,dl
-	and cl,0Fh	
-	cmp cl,3
-	je IretTssDo
+        push cx
+        mov cl,dl
+        and cl,0Fh      
+        cmp cl,3
+        je IretTssDo
 ;
-	cmp cl,0Bh
-	je IretTssDo
-	pop cx
-	jmp ProtectionFault
+        cmp cl,0Bh
+        je IretTssDo
+        pop cx
+        jmp ProtectionFault
 
 IretTssDo:
-	pop cx
-	call RetTss
-	ret
-IretTss	Endp
+        pop cx
+        call RetTss
+        ret
+IretTss Endp
 
-	END
+        END

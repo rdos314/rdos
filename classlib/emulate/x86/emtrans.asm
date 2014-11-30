@@ -27,873 +27,873 @@
 
 .386
 .model flat
-						
-		NAME emtrans
+                                                
+                NAME emtrans
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
-include x86\emulate.inc
-include x86\emcom.inc
-include x86\emmem.inc
-include x86\emseg.inc
+include \rdos\classlib\emulate\x86\emulate.inc
+include \rdos\classlib\emulate\x86\emcom.inc
+include \rdos\classlib\emulate\x86\emmem.inc
+include \rdos\classlib\emulate\x86\emseg.inc
 
 .code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LoadPointer
+;               NAME:                   LoadPointer
 ;
-;		DESCRIPTION:	Load pointer macro
+;               DESCRIPTION:    Load pointer macro
 ;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadPointer		MACRO seg
+LoadPointer             MACRO seg
 
-	public EmL&seg
+        public EmL&seg
 
-EmL&seg	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmL&seg&Dword
+EmL&seg Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmL&seg&Dword
 ;
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	call LoadDwordMem
-	push ax
-	ror eax,16
-	mov esi,OFFSET reg_&seg
-	call LoadSegment
-	pop ax
-	pop bx
-	call SaveWordReg
-	ret
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        call LoadDwordMem
+        push ax
+        ror eax,16
+        mov esi,OFFSET reg_&seg
+        call LoadSegment
+        pop ax
+        pop bx
+        call SaveWordReg
+        ret
 
 EmL&seg&Dword:
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	call LoadFwordMem
-	push eax
-	mov ax,dx
-	mov esi,OFFSET reg_&seg
-	call LoadSegment
-	pop eax
-	pop bx
-	call SaveDwordReg
-	ret
-EmL&seg	Endp
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        call LoadFwordMem
+        push eax
+        mov ax,dx
+        mov esi,OFFSET reg_&seg
+        call LoadSegment
+        pop eax
+        pop bx
+        call SaveDwordReg
+        ret
+EmL&seg Endp
 
-			Endm
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			MoveByteRegIm
-;
-;		DESCRIPTION:	Emulate move byte reg, immediate
-;
-;		PARAMETERS:		SS:EBP	CPU
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-MoveByteRegIm	Macro reg, name
-
-	public EmMove&name&Im
-
-EmMove&name&Im	Proc near
-	call ReadCodeByte
-	mov byte ptr [ebp].reg_e&reg,al
-	ret
-EmMove&name&Im	Endp
-
-			Endm
+                        Endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			MoveWordRegIm
+;               NAME:                   MoveByteRegIm
 ;
-;		DESCRIPTION:	Emulate move (d)word reg, immediate
+;               DESCRIPTION:    Emulate move byte reg, immediate
 ;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MoveWordRegIm	Macro reg, name
+MoveByteRegIm   Macro reg, name
 
-	public EmMove&name&Im
+        public EmMove&name&Im
 
-EmMove&name&Im	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmMoveE&reg&Im
+EmMove&name&Im  Proc near
+        call ReadCodeByte
+        mov byte ptr [ebp].reg_e&reg,al
+        ret
+EmMove&name&Im  Endp
+
+                        Endm
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	call ReadCodeWord
-	mov word ptr [ebp].reg_e&reg,ax
-	ret
+;
+;               NAME:                   MoveWordRegIm
+;
+;               DESCRIPTION:    Emulate move (d)word reg, immediate
+;
+;               PARAMETERS:             SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MoveWordRegIm   Macro reg, name
+
+        public EmMove&name&Im
+
+EmMove&name&Im  Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmMoveE&reg&Im
+;
+        call ReadCodeWord
+        mov word ptr [ebp].reg_e&reg,ax
+        ret
 
 EmMoveE&reg&Im:
-	call ReadCodeDword
-	mov [ebp].reg_e&reg,eax
-	ret
-EmMove&name&Im	Endp
+        call ReadCodeDword
+        mov [ebp].reg_e&reg,eax
+        ret
+EmMove&name&Im  Endp
 
-			Endm
+                        Endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			MovxByteMem
+;               NAME:                   MovxByteMem
 ;
-;		DESCRIPTION:	Emulate movx byte mem
+;               DESCRIPTION:    Emulate movx byte mem
 ;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MovxByteMem	Macro op
+MovxByteMem     Macro op
  
-	public Em&op&ByteMem
+        public Em&op&ByteMem
 
-Em&op&ByteMem	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz Em&op&DwordMem8
+Em&op&ByteMem   Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz Em&op&DwordMem8
 ;
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	call LoadByteMemReg
-	pop bx
-	&op eax,al
-	call SaveWordReg
-	ret
-Em&op&ByteMem	Endp
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        call LoadByteMemReg
+        pop bx
+        &op eax,al
+        call SaveWordReg
+        ret
+Em&op&ByteMem   Endp
 
-Em&op&DwordMem8	Proc near
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	call LoadByteMemReg
-	pop bx
-	&op eax,ax
-	call SaveDwordReg
-	ret
-Em&op&DwordMem8	Endp
+Em&op&DwordMem8 Proc near
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        call LoadByteMemReg
+        pop bx
+        &op eax,ax
+        call SaveDwordReg
+        ret
+Em&op&DwordMem8 Endp
 
-			Endm
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			MovxWordMem
-;
-;		DESCRIPTION:	Emulate movx word mem
-;
-;		PARAMETERS:		SS:EBP	CPU
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-MovxWordMem	Macro op
-
-	public Em&op&WordMem
-
-Em&op&WordMem	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz Em&op&DwordMem16
-;
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	call LoadByteMemReg
-	pop bx
-	&op ax,al
-	call SaveWordReg
-	ret
-Em&op&WordMem	Endp
-
-Em&op&DwordMem16	Proc near
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	call LoadWordMemReg
-	pop bx
-	&op eax,ax
-	call SaveDwordReg
-	ret
-Em&op&DwordMem16	Endp
-
-			Endm
+                        Endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PushReg
+;               NAME:                   MovxWordMem
 ;
-;		DESCRIPTION:	Emulate push reg
+;               DESCRIPTION:    Emulate movx word mem
 ;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PushReg	Macro reg, name
+MovxWordMem     Macro op
 
-	public EmPush&name
+        public Em&op&WordMem
 
-EmPush&name	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmPushE&reg
+Em&op&WordMem   Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz Em&op&DwordMem16
 ;
-	mov ax,word ptr [ebp].reg_e&reg
-	call PushWord
-	ret
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        call LoadByteMemReg
+        pop bx
+        &op ax,al
+        call SaveWordReg
+        ret
+Em&op&WordMem   Endp
+
+Em&op&DwordMem16        Proc near
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        call LoadWordMemReg
+        pop bx
+        &op eax,ax
+        call SaveDwordReg
+        ret
+Em&op&DwordMem16        Endp
+
+                        Endm
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   PushReg
+;
+;               DESCRIPTION:    Emulate push reg
+;
+;               PARAMETERS:             SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PushReg Macro reg, name
+
+        public EmPush&name
+
+EmPush&name     Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmPushE&reg
+;
+        mov ax,word ptr [ebp].reg_e&reg
+        call PushWord
+        ret
 
 EmPushE&reg:
-	mov eax,[ebp].reg_e&reg
-	call PushDword
-	ret
-EmPush&name	Endp
+        mov eax,[ebp].reg_e&reg
+        call PushDword
+        ret
+EmPush&name     Endp
 
-			Endm
+                        Endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PushSreg
+;               NAME:                   PushSreg
 ;
-;		DESCRIPTION:	Emulate push sreg
+;               DESCRIPTION:    Emulate push sreg
 ;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PushSreg	MACRO sreg, name
+PushSreg        MACRO sreg, name
 
-	public EmPush&name
+        public EmPush&name
 
-EmPush&name	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmPush&name&32
+EmPush&name     Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmPush&name&32
 ;
-	mov ax,[ebp].reg_&sreg.d_selector
-	call PushWord
-	ret
+        mov ax,[ebp].reg_&sreg.d_selector
+        call PushWord
+        ret
 
 EmPush&name&32:
-	mov eax,2
-	call SubFromStack
-	mov ax,[ebp].reg_&sreg.d_selector
-	call PushWord
-	ret
-EmPush&name	Endp
+        mov eax,2
+        call SubFromStack
+        mov ax,[ebp].reg_&sreg.d_selector
+        call PushWord
+        ret
+EmPush&name     Endp
 
-			Endm
+                        Endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PopReg
+;               NAME:                   PopReg
 ;
-;		DESCRIPTION:	Emulate pop reg
+;               DESCRIPTION:    Emulate pop reg
 ;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PopReg	Macro reg, name
+PopReg  Macro reg, name
 
-	public EmPop&name
+        public EmPop&name
 
-EmPop&name	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmPopE&reg
+EmPop&name      Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmPopE&reg
 ;
-	call PopWord
-	mov word ptr [ebp].reg_e&reg,ax
-	ret
+        call PopWord
+        mov word ptr [ebp].reg_e&reg,ax
+        ret
 
 EmPopE&reg:
-	call PopDword
-	mov [ebp].reg_e&reg,eax
-	ret
-EmPop&name	Endp
+        call PopDword
+        mov [ebp].reg_e&reg,eax
+        ret
+EmPop&name      Endp
 
-			Endm
+                        Endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PopSreg
+;               NAME:                   PopSreg
 ;
-;		DESCRIPTION:	Emulate pop sreg
+;               DESCRIPTION:    Emulate pop sreg
 ;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PopSreg Macro sreg, name
 
-	public EmPop&name
+        public EmPop&name
 
-EmPop&name	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmPop&name&32
+EmPop&name      Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmPop&name&32
 ;
-	call PopWord
-	mov esi,OFFSET reg_&sreg
-	call LoadSegment
-	ret
+        call PopWord
+        mov esi,OFFSET reg_&sreg
+        call LoadSegment
+        ret
 
 EmPop&name&32:
-	call PopDword
-	mov esi,OFFSET reg_&sreg
-	call LoadSegment
-	ret
-EmPop&name	Endp
+        call PopDword
+        mov esi,OFFSET reg_&sreg
+        call LoadSegment
+        ret
+EmPop&name      Endp
 
-			Endm
+                        Endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			XchgAxReg
+;               NAME:                   XchgAxReg
 ;
-;		DESCRIPTION:	Emulate xchg ax,reg
+;               DESCRIPTION:    Emulate xchg ax,reg
 ;
-;		PARAMETERS:		SS:EBP	CPU
+;               PARAMETERS:             SS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-XchgAxReg	Macro reg, name
+XchgAxReg       Macro reg, name
 
-	public EmXchgAx&name
+        public EmXchgAx&name
 
-EmXchgAx&name	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmXchgEaxE&reg
+EmXchgAx&name   Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmXchgEaxE&reg
 ;
-	mov ax,word ptr [ebp].reg_eax
-	xchg ax,word ptr [ebp].reg_e&reg
-	mov word ptr [ebp].reg_eax,ax
-	ret
+        mov ax,word ptr [ebp].reg_eax
+        xchg ax,word ptr [ebp].reg_e&reg
+        mov word ptr [ebp].reg_eax,ax
+        ret
 
 EmXchgEaxE&reg:
-	mov eax,[ebp].reg_eax
-	xchg eax,[ebp].reg_e&reg
-	mov [ebp].reg_eax,eax
-	ret
-EmXchgAx&name	Endp
+        mov eax,[ebp].reg_eax
+        xchg eax,[ebp].reg_e&reg
+        mov [ebp].reg_eax,eax
+        ret
+EmXchgAx&name   Endp
 
-		Endm
-	
+                Endm
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmMoveByteMemToReg
+;               NAME:                   EmMoveByteMemToReg
 ;
-;		DESCRIPTION:	EMULATE mov reg,byte ptr mem
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public EmMoveByteMemToReg
-
-EmMoveByteMemToReg	Proc near
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	call LoadByteMemReg
-	pop bx
-	call SaveByteReg
-	ret
-EmMoveByteMemToReg	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmMoveWordMemToReg
-;
-;		DESCRIPTION:	EMULATE mov reg,word ptr mem
+;               DESCRIPTION:    EMULATE mov reg,byte ptr mem
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmMoveWordMemToReg
+        public EmMoveByteMemToReg
 
-EmMoveWordMemToReg	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmMoveDwordMemToReg
-;
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	call LoadWordMemReg
-	pop bx
-	call SaveWordReg
-	ret
-EmMoveWordMemToReg	Endp
-
-EmMoveDwordMemToReg	Proc near
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	call LoadDwordMemReg
-	pop bx
-	call SaveDwordReg
-	ret
-EmMoveDwordMemToReg	Endp
-	
+EmMoveByteMemToReg      Proc near
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        call LoadByteMemReg
+        pop bx
+        call SaveByteReg
+        ret
+EmMoveByteMemToReg      Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmMoveByteRegToMem
+;               NAME:                   EmMoveWordMemToReg
 ;
-;		DESCRIPTION:	EMULATE mov byte ptr mem,Reg
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public EmMoveByteRegToMem
-
-EmMoveByteRegToMem	Proc near
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	call LoadByteReg
-	pop bx
-	call SaveByteMemReg
-	ret
-EmMoveByteRegToMem	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmMoveWordRegToMem
-;
-;		DESCRIPTION:	EMULATE mov word ptr mem,Reg
+;               DESCRIPTION:    EMULATE mov reg,word ptr mem
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmMoveWordRegToMem
+        public EmMoveWordMemToReg
 
-EmMoveWordRegToMem	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmMoveDwordRegToMem
+EmMoveWordMemToReg      Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmMoveDwordMemToReg
 ;
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	call LoadWordReg
-	pop bx
-	call SaveWordMemReg
-	ret
-EmMoveWordRegToMem	Endp
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        call LoadWordMemReg
+        pop bx
+        call SaveWordReg
+        ret
+EmMoveWordMemToReg      Endp
 
-EmMoveDwordRegToMem	Proc near
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	call LoadDwordReg
-	pop bx
-	call SaveDwordMemReg
-	ret
-EmMoveDwordRegToMem	Endp
-	
+EmMoveDwordMemToReg     Proc near
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        call LoadDwordMemReg
+        pop bx
+        call SaveDwordReg
+        ret
+EmMoveDwordMemToReg     Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmMoveByteMemToAcc
+;               NAME:                   EmMoveByteRegToMem
 ;
-;		DESCRIPTION:	EMULATE mov al,byte ptr Mem
+;               DESCRIPTION:    EMULATE mov byte ptr mem,Reg
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmMoveByteMemToAcc
+        public EmMoveByteRegToMem
 
-EmMoveByteMemToAcc	Proc near
-	test byte ptr [ebp].em_flags,a32
-	jnz EmMoveByteMemToAcc32
+EmMoveByteRegToMem      Proc near
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        call LoadByteReg
+        pop bx
+        call SaveByteMemReg
+        ret
+EmMoveByteRegToMem      Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	call MemD16
-	call ReadByte
-	mov byte ptr [ebp].reg_eax,al
-	ret
+;
+;               NAME:                   EmMoveWordRegToMem
+;
+;               DESCRIPTION:    EMULATE mov word ptr mem,Reg
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public EmMoveWordRegToMem
+
+EmMoveWordRegToMem      Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmMoveDwordRegToMem
+;
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        call LoadWordReg
+        pop bx
+        call SaveWordMemReg
+        ret
+EmMoveWordRegToMem      Endp
+
+EmMoveDwordRegToMem     Proc near
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        call LoadDwordReg
+        pop bx
+        call SaveDwordMemReg
+        ret
+EmMoveDwordRegToMem     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmMoveByteMemToAcc
+;
+;               DESCRIPTION:    EMULATE mov al,byte ptr Mem
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public EmMoveByteMemToAcc
+
+EmMoveByteMemToAcc      Proc near
+        test byte ptr [ebp].em_flags,a32
+        jnz EmMoveByteMemToAcc32
+;
+        call MemD16
+        call ReadByte
+        mov byte ptr [ebp].reg_eax,al
+        ret
 
 EmMoveByteMemToAcc32:
-	call MemD32
-	call ReadByte
-	mov byte ptr [ebp].reg_eax,al
-	ret
-EmMoveByteMemToAcc	Endp
-	
+        call MemD32
+        call ReadByte
+        mov byte ptr [ebp].reg_eax,al
+        ret
+EmMoveByteMemToAcc      Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmMoveWordMemToAcc
+;               NAME:                   EmMoveWordMemToAcc
 ;
-;		DESCRIPTION:	EMULATE mov reg,word ptr Mem
+;               DESCRIPTION:    EMULATE mov reg,word ptr Mem
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmMoveWordMemToAcc
+        public EmMoveWordMemToAcc
 
-EmMoveWordMemToAcc	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmMoveDwordMemToAcc
+EmMoveWordMemToAcc      Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmMoveDwordMemToAcc
 ;
-	test byte ptr [ebp].em_flags,a32
-	jnz EmMoveWordMemToAcc32
+        test byte ptr [ebp].em_flags,a32
+        jnz EmMoveWordMemToAcc32
 ;
-	call MemD16
-	call ReadWord
-	mov word ptr [ebp].reg_eax,ax
-	ret
+        call MemD16
+        call ReadWord
+        mov word ptr [ebp].reg_eax,ax
+        ret
 
 EmMoveWordMemToAcc32:
-	call MemD32
-	call ReadWord
-	mov word ptr [ebp].reg_eax,ax
-	ret
-EmMoveWordMemToAcc	Endp
+        call MemD32
+        call ReadWord
+        mov word ptr [ebp].reg_eax,ax
+        ret
+EmMoveWordMemToAcc      Endp
 
-EmMoveDwordMemToAcc	Proc near
-	test byte ptr [ebp].em_flags,a32
-	jnz EmMoveDwordMemToAcc32
+EmMoveDwordMemToAcc     Proc near
+        test byte ptr [ebp].em_flags,a32
+        jnz EmMoveDwordMemToAcc32
 ;
-	call MemD16
-	call ReadDword
-	mov [ebp].reg_eax,eax
-	ret
+        call MemD16
+        call ReadDword
+        mov [ebp].reg_eax,eax
+        ret
 
 EmMoveDwordMemToAcc32:
-	call MemD32
-	call ReadDword
-	mov [ebp].reg_eax,eax
-	ret
-EmMoveDwordMemToAcc	Endp
-	
+        call MemD32
+        call ReadDword
+        mov [ebp].reg_eax,eax
+        ret
+EmMoveDwordMemToAcc     Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmMoveByteAccToMem
+;               NAME:                   EmMoveByteAccToMem
 ;
-;		DESCRIPTION:	EMULATE mov byte ptr mem,al
+;               DESCRIPTION:    EMULATE mov byte ptr mem,al
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmMoveByteAccToMem
+        public EmMoveByteAccToMem
 
-EmMoveByteAccToMem	Proc near
-	test byte ptr [ebp].em_flags,a32
-	jnz EmMoveByteAccTomem32
+EmMoveByteAccToMem      Proc near
+        test byte ptr [ebp].em_flags,a32
+        jnz EmMoveByteAccTomem32
 ;
-	call MemD16
-	mov al,byte ptr [ebp].reg_eax
-	call WriteByte
-	ret
+        call MemD16
+        mov al,byte ptr [ebp].reg_eax
+        call WriteByte
+        ret
 
 EmMoveByteAccTomem32:
-	call MemD32
-	mov al,byte ptr [ebp].reg_eax
-	call WriteByte
-	ret
-EmMoveByteAccToMem	Endp
-	
+        call MemD32
+        mov al,byte ptr [ebp].reg_eax
+        call WriteByte
+        ret
+EmMoveByteAccToMem      Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmMoveWordAccToMem
+;               NAME:                   EmMoveWordAccToMem
 ;
-;		DESCRIPTION:	EMULATE mov word ptr mem,(e)ax
+;               DESCRIPTION:    EMULATE mov word ptr mem,(e)ax
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmMoveWordAccToMem
+        public EmMoveWordAccToMem
 
-EmMoveWordAccToMem	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmMoveDwordAccToMem
+EmMoveWordAccToMem      Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmMoveDwordAccToMem
 ;
-	test byte ptr [ebp].em_flags,a32
-	jnz EmMoveWordAccToMem32
+        test byte ptr [ebp].em_flags,a32
+        jnz EmMoveWordAccToMem32
 ;
-	call MemD16
-	mov ax,word ptr [ebp].reg_eax
-	call WriteWord
-	ret
+        call MemD16
+        mov ax,word ptr [ebp].reg_eax
+        call WriteWord
+        ret
 
 EmMoveWordAccToMem32:
-	call MemD32
-	mov ax,word ptr [ebp].reg_eax
-	call WriteWord
-	ret
-EmMoveWordAccToMem	Endp
+        call MemD32
+        mov ax,word ptr [ebp].reg_eax
+        call WriteWord
+        ret
+EmMoveWordAccToMem      Endp
 
-EmMoveDwordAccToMem	Proc near
-	test byte ptr [ebp].em_flags,a32
-	jnz EmMoveDwordAccToMem32
+EmMoveDwordAccToMem     Proc near
+        test byte ptr [ebp].em_flags,a32
+        jnz EmMoveDwordAccToMem32
 ;
-	call MemD16
-	mov eax,[ebp].reg_eax
-	call WriteDword
-	ret
+        call MemD16
+        mov eax,[ebp].reg_eax
+        call WriteDword
+        ret
 
 EmMoveDwordAccToMem32:
-	call MemD32
-	mov eax,[ebp].reg_eax
-	call WriteDword
-	ret
-EmMoveDwordAccToMem	Endp
-	
+        call MemD32
+        mov eax,[ebp].reg_eax
+        call WriteDword
+        ret
+EmMoveDwordAccToMem     Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmMoveByteImToMem
+;               NAME:                   EmMoveByteImToMem
 ;
-;		DESCRIPTION:	EMULATE mov byte ptr mem,im
+;               DESCRIPTION:    EMULATE mov byte ptr mem,im
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmMoveByteImToMem
+        public EmMoveByteImToMem
 
-EmMoveByteImToMem	Proc near
-	call ReadCodeByte
-	mov bl,al
-	and al,38h
-	jnz EmulateError
+EmMoveByteImToMem       Proc near
+        call ReadCodeByte
+        mov bl,al
+        and al,38h
+        jnz EmulateError
 ;
-	mov bh,bl
-	and bl,0C0h
-	cmp bl,0C0h
-	je EmMoveByteImToReg
+        mov bh,bl
+        and bl,0C0h
+        cmp bl,0C0h
+        je EmMoveByteImToReg
 ;
-	shr bl,2
-	and bh,7
-	shl bh,1
-	or bl,bh
-	test byte ptr [ebp].em_flags,a32
-	jz EmMoveByteImToMem16
-	or bl,40h	
+        shr bl,2
+        and bh,7
+        shl bh,1
+        or bl,bh
+        test byte ptr [ebp].em_flags,a32
+        jz EmMoveByteImToMem16
+        or bl,40h       
 EmMoveByteImToMem16:
-	movzx ebx,bl
-	call dword ptr [2*ebx].MemTab
-	push si
-	push ebx
-	call ReadCodeByte
-	pop ebx
-	pop si
-	call WriteByte
-	ret
+        movzx ebx,bl
+        call dword ptr [2*ebx].MemTab
+        push si
+        push ebx
+        call ReadCodeByte
+        pop ebx
+        pop si
+        call WriteByte
+        ret
 
 EmMoveByteImToReg:
-	call ReadCodeByte
-	and bh,7
-	movzx esi,bh
-	mov esi,dword ptr [4*esi].ByteRegTab
-	mov [ebp+esi],al
-	ret
-EmMoveByteImToMem	Endp
-	
+        call ReadCodeByte
+        and bh,7
+        movzx esi,bh
+        mov esi,dword ptr [4*esi].ByteRegTab
+        mov [ebp+esi],al
+        ret
+EmMoveByteImToMem       Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmMoveWordImToMem
+;               NAME:                   EmMoveWordImToMem
 ;
-;		DESCRIPTION:	EMULATE mov word ptr mem,im
+;               DESCRIPTION:    EMULATE mov word ptr mem,im
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmMoveWordImToMem
+        public EmMoveWordImToMem
 
-EmMoveWordImToMem	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmMoveDwordImToMem
+EmMoveWordImToMem       Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmMoveDwordImToMem
 ;
-	call ReadCodeByte
-	mov bl,al
-	and al,38h
-	jnz EmulateError
+        call ReadCodeByte
+        mov bl,al
+        and al,38h
+        jnz EmulateError
 ;
-	mov bh,bl
-	and bl,0C0h
-	cmp bl,0C0h
-	je EmMoveWordImToReg
+        mov bh,bl
+        and bl,0C0h
+        cmp bl,0C0h
+        je EmMoveWordImToReg
 ;
-	shr bl,2
-	and bh,7
-	shl bh,1
-	or bl,bh
-	test byte ptr [ebp].em_flags,a32
-	jz EmMoveWordImToMem16
-	or bl,40h	
+        shr bl,2
+        and bh,7
+        shl bh,1
+        or bl,bh
+        test byte ptr [ebp].em_flags,a32
+        jz EmMoveWordImToMem16
+        or bl,40h       
 EmMoveWordImToMem16:
-	movzx ebx,bl
-	call dword ptr [2*ebx].MemTab
-	push si
-	push ebx
-	call ReadCodeWord
-	pop ebx
-	pop si
-	call WriteWord
-	ret
+        movzx ebx,bl
+        call dword ptr [2*ebx].MemTab
+        push si
+        push ebx
+        call ReadCodeWord
+        pop ebx
+        pop si
+        call WriteWord
+        ret
 
 EmMoveWordImToReg:
-	call ReadCodeWord
-	and bh,7
-	movzx esi,bh
-	mov esi,dword ptr [4*esi].WordRegTab
-	mov [ebp+esi],ax
-	ret
-EmMoveWordImToMem	Endp
+        call ReadCodeWord
+        and bh,7
+        movzx esi,bh
+        mov esi,dword ptr [4*esi].WordRegTab
+        mov [ebp+esi],ax
+        ret
+EmMoveWordImToMem       Endp
 
-EmMoveDwordImToMem	Proc near
-	call ReadCodeByte
-	mov bl,al
-	and al,38h
-	jnz EmulateError
+EmMoveDwordImToMem      Proc near
+        call ReadCodeByte
+        mov bl,al
+        and al,38h
+        jnz EmulateError
 ;
-	mov bh,bl
-	and bl,0C0h
-	cmp bl,0C0h
-	je EmMoveDwordImToReg
+        mov bh,bl
+        and bl,0C0h
+        cmp bl,0C0h
+        je EmMoveDwordImToReg
 ;
-	shr bl,2
-	and bh,7
-	shl bh,1
-	or bl,bh
-	test byte ptr [ebp].em_flags,a32
-	jz EmMoveDwordImToMem16
-	or bl,40h	
+        shr bl,2
+        and bh,7
+        shl bh,1
+        or bl,bh
+        test byte ptr [ebp].em_flags,a32
+        jz EmMoveDwordImToMem16
+        or bl,40h       
 EmMoveDwordImToMem16:
-	movzx ebx,bl
-	call dword ptr [2*ebx].MemTab
-	push si
-	push ebx
-	call ReadCodeDword
-	pop ebx
-	pop si
-	call WriteDword
-	ret
+        movzx ebx,bl
+        call dword ptr [2*ebx].MemTab
+        push si
+        push ebx
+        call ReadCodeDword
+        pop ebx
+        pop si
+        call WriteDword
+        ret
 
 EmMoveDwordImToReg:
-	call ReadCodeDword
-	and bh,7
-	movzx esi,bh
-	mov esi,dword ptr [4*esi].DwordRegTab
-	mov [ebp+esi],eax
-	ret
-EmMoveDwordImToMem	Endp
+        call ReadCodeDword
+        and bh,7
+        movzx esi,bh
+        mov esi,dword ptr [4*esi].DwordRegTab
+        mov [ebp+esi],eax
+        ret
+EmMoveDwordImToMem      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmMoveByteRegIm
+;               NAME:                   EmMoveByteRegIm
 ;
-;		DESCRIPTION:	EMULATE mov byte reg,im
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	MoveByteRegIm ax, Al
-	MoveByteRegIm bx, Bl
-	MoveByteRegIm cx, Cl
-	MoveByteRegIm dx, Dl
-	MoveByteRegIm ax+1, Ah
-	MoveByteRegIm bx+1, Bh
-	MoveByteRegIm cx+1, Ch
-	MoveByteRegIm dx+1, Dh
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmMoveWordRegIm
-;
-;		DESCRIPTION:	EMULATE mov word reg,im
+;               DESCRIPTION:    EMULATE mov byte reg,im
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	MoveWordRegIm ax, Ax
-	MoveWordRegIm bx, Bx
-	MoveWordRegIm cx, Cx
-	MoveWordRegIm dx, Dx
-	MoveWordRegIm sp, Sp
-	MoveWordRegIm bp, Bp
-	MoveWordRegIm si, Si
-	MoveWordRegIm di, Di
+        MoveByteRegIm ax, Al
+        MoveByteRegIm bx, Bl
+        MoveByteRegIm cx, Cl
+        MoveByteRegIm dx, Dl
+        MoveByteRegIm ax+1, Ah
+        MoveByteRegIm bx+1, Bh
+        MoveByteRegIm cx+1, Ch
+        MoveByteRegIm dx+1, Dh
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmLea
+;               NAME:                   EmMoveWordRegIm
 ;
-;		DESCRIPTION:	EMULATE mov lea
+;               DESCRIPTION:    EMULATE mov word reg,im
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmLea
+        MoveWordRegIm ax, Ax
+        MoveWordRegIm bx, Bx
+        MoveWordRegIm cx, Cx
+        MoveWordRegIm dx, Dx
+        MoveWordRegIm sp, Sp
+        MoveWordRegIm bp, Bp
+        MoveWordRegIm si, Si
+        MoveWordRegIm di, Di
 
-EmLea	Proc near
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	mov bh,bl
-	and bl,0C0h
-	cmp bl,0C0h
-	je EmulateError
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	shr bl,2
-	and bh,7
-	shl bh,1
-	or bl,bh
-	test byte ptr [ebp].em_flags,a32
-	jz EmLea16
+;
+;               NAME:                   EmLea
+;
+;               DESCRIPTION:    EMULATE mov lea
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public EmLea
+
+EmLea   Proc near
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        mov bh,bl
+        and bl,0C0h
+        cmp bl,0C0h
+        je EmulateError
+;
+        shr bl,2
+        and bh,7
+        shl bh,1
+        or bl,bh
+        test byte ptr [ebp].em_flags,a32
+        jz EmLea16
 
 EmLea32:
-	test byte ptr [ebp].em_flags,d32
-	jz EmLea32To16
+        test byte ptr [ebp].em_flags,d32
+        jz EmLea32To16
 
 EmLea32To32:
-	or bl,40h	
-	movzx ebx,bl
-	call dword ptr [2*ebx].MemTab
-	mov eax,ebx
-	pop bx	
-	call SaveDwordReg
-	ret
+        or bl,40h       
+        movzx ebx,bl
+        call dword ptr [2*ebx].MemTab
+        mov eax,ebx
+        pop bx  
+        call SaveDwordReg
+        ret
 
 EmLea32To16:
-	movzx ebx,bl
-	call dword ptr [2*ebx].MemTab
-	mov ax,bx
-	pop bx	
-	call SaveWordReg
-	ret
+        movzx ebx,bl
+        call dword ptr [2*ebx].MemTab
+        mov ax,bx
+        pop bx  
+        call SaveWordReg
+        ret
 
 EmLea16:
-	test byte ptr [ebp].em_flags,d32
-	jnz EmLea16To32
+        test byte ptr [ebp].em_flags,d32
+        jnz EmLea16To32
 
 EmLea16To16:
-	movzx ebx,bl
-	call dword ptr [2*ebx].MemTab
-	mov ax,bx
-	pop bx	
-	call SaveWordReg
-	ret
+        movzx ebx,bl
+        call dword ptr [2*ebx].MemTab
+        mov ax,bx
+        pop bx  
+        call SaveWordReg
+        ret
 
 EmLea16To32:
-	or bl,40h	
-	movzx ebx,bl
-	call dword ptr [2*ebx].MemTab
-	movzx eax,bx
-	pop bx	
-	call SaveDwordReg
-	ret
-EmLea	Endp
-	
+        or bl,40h       
+        movzx ebx,bl
+        call dword ptr [2*ebx].MemTab
+        movzx eax,bx
+        pop bx  
+        call SaveDwordReg
+        ret
+EmLea   Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmLds, EmLes, EmLfs, EmLgs, EmLss
+;               NAME:                   EmLds, EmLes, EmLfs, EmLgs, EmLss
 ;
-;		DESCRIPTION:	EMULATE mov lds, les, lfs, lgs, lss
+;               DESCRIPTION:    EMULATE mov lds, les, lfs, lgs, lss
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -901,1000 +901,1000 @@ LoadPointer ds
 LoadPointer es
 LoadPointer fs
 LoadPointer gs
-LoadPointer ss	
-	
+LoadPointer ss  
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmMoveSregToMem
+;               NAME:                   EmMoveSregToMem
 ;
-;		DESCRIPTION:	EMULATE mov mem,sReg
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public EmMoveSregToMem
-
-EmMoveSregToMem	Proc near
-	call ReadCodeByte
-	mov bl,al
-	and al,38h
-	shr al,2
-	movzx si,al
-	cmp al,2*6
-	jnc EmulateError
-;
-	mov esi,dword ptr [2*esi].SegDsTab
-	mov ax,[ebp+esi].d_selector
-	call SaveWordMemReg
-	ret
-EmMoveSregToMem	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmMoveMemToSreg
-;
-;		DESCRIPTION:	EMULATE mov sreg,Mem
+;               DESCRIPTION:    EMULATE mov mem,sReg
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmMoveMemToSreg
+        public EmMoveSregToMem
 
-EmMoveMemToSreg	Proc near
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	call LoadWordMemReg
-	pop bx
-	and bl,38h
-	shr bl,2
-	movzx si,bl
-	cmp bl,2*6
-	jnc EmulateError
+EmMoveSregToMem Proc near
+        call ReadCodeByte
+        mov bl,al
+        and al,38h
+        shr al,2
+        movzx si,al
+        cmp al,2*6
+        jnc EmulateError
 ;
-	mov esi,dword ptr [2*esi].SegDsTab
-	call LoadSegment
-	ret
-EmMoveMemToSreg	Endp
-	
+        mov esi,dword ptr [2*esi].SegDsTab
+        mov ax,[ebp+esi].d_selector
+        call SaveWordMemReg
+        ret
+EmMoveSregToMem Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmMovzx
+;               NAME:                   EmMoveMemToSreg
 ;
-;		DESCRIPTION:	EMULATE movzx
+;               DESCRIPTION:    EMULATE mov sreg,Mem
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MovxByteMem	Movzx
-MovxWordMem	Movzx
-	
+        public EmMoveMemToSreg
+
+EmMoveMemToSreg Proc near
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        call LoadWordMemReg
+        pop bx
+        and bl,38h
+        shr bl,2
+        movzx si,bl
+        cmp bl,2*6
+        jnc EmulateError
+;
+        mov esi,dword ptr [2*esi].SegDsTab
+        call LoadSegment
+        ret
+EmMoveMemToSreg Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmMovsx
+;               NAME:                   EmMovzx
 ;
-;		DESCRIPTION:	EMULATE movsx
+;               DESCRIPTION:    EMULATE movzx
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MovxByteMem	Movsx
-MovxWordMem	Movsx
-	
+MovxByteMem     Movzx
+MovxWordMem     Movzx
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmEnter
+;               NAME:                   EmMovsx
 ;
-;		DESCRIPTION:	EMULATE EmEnter x,y
+;               DESCRIPTION:    EMULATE movsx
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmEnter
-
-EmEnter	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmEnter32
+MovxByteMem     Movsx
+MovxWordMem     Movsx
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	mov ax,word ptr [ebp].reg_ebp
-	call PushWord
-	mov ax,word ptr [ebp].reg_esp
-	mov word ptr [ebp].reg_ebp,ax
-	call ReadCodeWord
-	call SubFromStack
-	call ReadCodeByte
-	or al,al
-	jnz EmulateError
-	ret
+;
+;               NAME:                   EmEnter
+;
+;               DESCRIPTION:    EMULATE EmEnter x,y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public EmEnter
+
+EmEnter Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmEnter32
+;
+        mov ax,word ptr [ebp].reg_ebp
+        call PushWord
+        mov ax,word ptr [ebp].reg_esp
+        mov word ptr [ebp].reg_ebp,ax
+        call ReadCodeWord
+        call SubFromStack
+        call ReadCodeByte
+        or al,al
+        jnz EmulateError
+        ret
 
 EmEnter32:
-	mov eax,[ebp].reg_ebp
-	call PushDword
-	mov eax,[ebp].reg_esp
-	mov [ebp].reg_ebp,eax
-	call ReadCodeWord
-	call SubFromStack
-	call ReadCodeByte
-	or al,al
-	jnz EmulateError
-	ret
-EmEnter	Endp
-	
+        mov eax,[ebp].reg_ebp
+        call PushDword
+        mov eax,[ebp].reg_esp
+        mov [ebp].reg_ebp,eax
+        call ReadCodeWord
+        call SubFromStack
+        call ReadCodeByte
+        or al,al
+        jnz EmulateError
+        ret
+EmEnter Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmLeave
+;               NAME:                   EmLeave
 ;
-;		DESCRIPTION:	EMULATE EmLeave
+;               DESCRIPTION:    EMULATE EmLeave
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmLeave
+        public EmLeave
 
-EmLeave	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmLeave32
+EmLeave Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmLeave32
 ;
-	mov ax,word ptr [ebp].reg_ebp
-	mov word ptr [ebp].reg_esp,ax
-	call PopWord
-	mov word ptr [ebp].reg_ebp,ax
-	ret
+        mov ax,word ptr [ebp].reg_ebp
+        mov word ptr [ebp].reg_esp,ax
+        call PopWord
+        mov word ptr [ebp].reg_ebp,ax
+        ret
 
 EmLeave32:
-	mov eax,[ebp].reg_ebp
-	mov [ebp].reg_esp,eax
-	call PopDword
-	mov [ebp].reg_ebp,eax
-	ret
-EmLeave	Endp
-	
+        mov eax,[ebp].reg_ebp
+        mov [ebp].reg_esp,eax
+        call PopDword
+        mov [ebp].reg_ebp,eax
+        ret
+EmLeave Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmPushMem
+;               NAME:                   EmPushMem
 ;
-;		DESCRIPTION:	EMULATE EmPush Mem
+;               DESCRIPTION:    EMULATE EmPush Mem
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmPushMem
+        public EmPushMem
 
-EmPushMem	Proc near
-	mov bl,al
-	test byte ptr [ebp].em_flags,d32
-	jnz EmPushMem32
+EmPushMem       Proc near
+        mov bl,al
+        test byte ptr [ebp].em_flags,d32
+        jnz EmPushMem32
 ;
-	call LoadWordMemReg
-	call PushWord
-	ret
+        call LoadWordMemReg
+        call PushWord
+        ret
 
 EmPushMem32:
-	call LoadDwordMemReg
-	call PushDword
-	ret
-EmPushMem	Endp
-	
+        call LoadDwordMemReg
+        call PushDword
+        ret
+EmPushMem       Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmPusha
+;               NAME:                   EmPusha
 ;
-;		DESCRIPTION:	EMULATE pusha
+;               DESCRIPTION:    EMULATE pusha
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmPusha
+        public EmPusha
 
-EmPusha	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmPushad
+EmPusha Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmPushad
 ;
-	push word ptr [ebp].reg_esp
-	mov ax,word ptr [ebp].reg_eax
-	call PushWord
-	mov ax,word ptr [ebp].reg_ecx
-	call PushWord
-	mov ax,word ptr [ebp].reg_edx
-	call PushWord
-	mov ax,word ptr [ebp].reg_ebx
-	call PushWord
-	pop ax
-	call PushWord
-	mov ax,word ptr [ebp].reg_ebp
-	call PushWord
-	mov ax,word ptr [ebp].reg_esi
-	call PushWord
-	mov ax,word ptr [ebp].reg_edi
-	call PushWord
-	ret
+        push word ptr [ebp].reg_esp
+        mov ax,word ptr [ebp].reg_eax
+        call PushWord
+        mov ax,word ptr [ebp].reg_ecx
+        call PushWord
+        mov ax,word ptr [ebp].reg_edx
+        call PushWord
+        mov ax,word ptr [ebp].reg_ebx
+        call PushWord
+        pop ax
+        call PushWord
+        mov ax,word ptr [ebp].reg_ebp
+        call PushWord
+        mov ax,word ptr [ebp].reg_esi
+        call PushWord
+        mov ax,word ptr [ebp].reg_edi
+        call PushWord
+        ret
 
 EmPushad:
-	push [ebp].reg_esp
-	mov eax,[ebp].reg_eax
-	call PushDword
-	mov eax,[ebp].reg_ecx
-	call PushDword
-	mov eax,[ebp].reg_edx
-	call PushDword
-	mov eax,[ebp].reg_ebx
-	call PushDword
-	pop eax
-	call PushDword
-	mov eax,[ebp].reg_ebp
-	call PushDword
-	mov eax,[ebp].reg_esi
-	call PushDword
-	mov eax,[ebp].reg_edi
-	call PushDword
-	ret
-EmPusha	Endp
-	
+        push [ebp].reg_esp
+        mov eax,[ebp].reg_eax
+        call PushDword
+        mov eax,[ebp].reg_ecx
+        call PushDword
+        mov eax,[ebp].reg_edx
+        call PushDword
+        mov eax,[ebp].reg_ebx
+        call PushDword
+        pop eax
+        call PushDword
+        mov eax,[ebp].reg_ebp
+        call PushDword
+        mov eax,[ebp].reg_esi
+        call PushDword
+        mov eax,[ebp].reg_edi
+        call PushDword
+        ret
+EmPusha Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmPushIm
+;               NAME:                   EmPushIm
 ;
-;		DESCRIPTION:	EMULATE push im
+;               DESCRIPTION:    EMULATE push im
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmPushIm
+        public EmPushIm
 
-EmPushIm	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmPushIm32
+EmPushIm        Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmPushIm32
 
 EmPushIm16:
-	call ReadCodeWord
-	call PushWord
-	ret
+        call ReadCodeWord
+        call PushWord
+        ret
 
 EmPushIm32:
-	call ReadCodeDword
-	call PushDword
-	ret
-EmPushIm	Endp
-	
+        call ReadCodeDword
+        call PushDword
+        ret
+EmPushIm        Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmPushImsx
+;               NAME:                   EmPushImsx
 ;
-;		DESCRIPTION:	EMULATE push imsx
+;               DESCRIPTION:    EMULATE push imsx
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmPushImsx
+        public EmPushImsx
 
-EmPushImsx	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmPushImsx32
+EmPushImsx      Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmPushImsx32
 
 EmPushImsx16:
-	call ReadCodeByte
-	movsx ax,al
-	call PushWord
-	ret
+        call ReadCodeByte
+        movsx ax,al
+        call PushWord
+        ret
 
 EmPushImsx32:
-	call ReadCodeByte
-	movsx eax,al
-	call PushDword
-	ret
-EmPushImsx	Endp
-	
+        call ReadCodeByte
+        movsx eax,al
+        call PushDword
+        ret
+EmPushImsx      Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmPushReg
+;               NAME:                   EmPushReg
 ;
-;		DESCRIPTION:	EMULATE push reg
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	PushReg ax, Ax
-	PushReg bx, Bx
-	PushReg cx, Cx
-	PushReg dx, Dx
-	PushReg sp, Sp
-	PushReg bp, Bp
-	PushReg si, Si
-	PushReg di, Di
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmPushSreg
-;
-;		DESCRIPTION:	EMULATE push sreg
+;               DESCRIPTION:    EMULATE push reg
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	PushSreg ds, Ds
-	PushSreg es, Es
-	PushSreg cs, Cs
-	PushSreg ss, Ss
-	PushSreg fs, Fs
-	PushSreg gs, Gs
-	
+        PushReg ax, Ax
+        PushReg bx, Bx
+        PushReg cx, Cx
+        PushReg dx, Dx
+        PushReg sp, Sp
+        PushReg bp, Bp
+        PushReg si, Si
+        PushReg di, Di
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmPopMem
+;               NAME:                   EmPushSreg
 ;
-;		DESCRIPTION:	EMULATE EmPop Mem
+;               DESCRIPTION:    EMULATE push sreg
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmPopMem
-
-EmPopMem	Proc near
-	push ax
-	test byte ptr [ebp].em_flags,d32
-	jnz EmPopMem32
+        PushSreg ds, Ds
+        PushSreg es, Es
+        PushSreg cs, Cs
+        PushSreg ss, Ss
+        PushSreg fs, Fs
+        PushSreg gs, Gs
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-	call PopWord
-	pop bx
-	call SaveWordMemReg
-	ret
+;
+;               NAME:                   EmPopMem
+;
+;               DESCRIPTION:    EMULATE EmPop Mem
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public EmPopMem
+
+EmPopMem        Proc near
+        push ax
+        test byte ptr [ebp].em_flags,d32
+        jnz EmPopMem32
+;
+        call PopWord
+        pop bx
+        call SaveWordMemReg
+        ret
 
 EmPopMem32:
-	call PopDword
-	pop bx
-	call SaveDwordMemReg
-	ret
-EmPopMem	Endp
-	
+        call PopDword
+        pop bx
+        call SaveDwordMemReg
+        ret
+EmPopMem        Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmPopa
+;               NAME:                   EmPopa
 ;
-;		DESCRIPTION:	EMULATE Popa
+;               DESCRIPTION:    EMULATE Popa
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmPopa
+        public EmPopa
 
-EmPopa	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmPopad
+EmPopa  Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmPopad
 ;
-	call PopWord
-	mov word ptr [ebp].reg_edi,ax
-	call PopWord
-	mov word ptr [ebp].reg_esi,ax
-	call PopWord
-	mov word ptr [ebp].reg_ebp,ax
-	call PopWord
-	call PopWord
-	mov word ptr [ebp].reg_ebx,ax
-	call PopWord
-	mov word ptr [ebp].reg_edx,ax
-	call PopWord
-	mov word ptr [ebp].reg_ecx,ax
-	call PopWord
-	mov word ptr [ebp].reg_eax,ax
-	ret
+        call PopWord
+        mov word ptr [ebp].reg_edi,ax
+        call PopWord
+        mov word ptr [ebp].reg_esi,ax
+        call PopWord
+        mov word ptr [ebp].reg_ebp,ax
+        call PopWord
+        call PopWord
+        mov word ptr [ebp].reg_ebx,ax
+        call PopWord
+        mov word ptr [ebp].reg_edx,ax
+        call PopWord
+        mov word ptr [ebp].reg_ecx,ax
+        call PopWord
+        mov word ptr [ebp].reg_eax,ax
+        ret
 
 EmPopad:
-	call PopDword
-	mov [ebp].reg_edi,eax
-	call PopDword
-	mov [ebp].reg_esi,eax
-	call PopDword
-	mov [ebp].reg_ebp,eax
-	call PopDword
-	call PopDword
-	mov [ebp].reg_ebx,eax
-	call PopDword
-	mov [ebp].reg_edx,eax
-	call PopDword
-	mov [ebp].reg_ecx,eax
-	call PopDword
-	mov [ebp].reg_eax,eax
-	ret
-EmPopa	Endp
-	
+        call PopDword
+        mov [ebp].reg_edi,eax
+        call PopDword
+        mov [ebp].reg_esi,eax
+        call PopDword
+        mov [ebp].reg_ebp,eax
+        call PopDword
+        call PopDword
+        mov [ebp].reg_ebx,eax
+        call PopDword
+        mov [ebp].reg_edx,eax
+        call PopDword
+        mov [ebp].reg_ecx,eax
+        call PopDword
+        mov [ebp].reg_eax,eax
+        ret
+EmPopa  Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmPopReg
+;               NAME:                   EmPopReg
 ;
-;		DESCRIPTION:	EMULATE pop reg
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	
-	PopReg ax, Ax
-	PopReg bx, Bx
-	PopReg cx, Cx
-	PopReg dx, Dx
-	PopReg sp, Sp
-	PopReg bp, Bp
-	PopReg si, Si
-	PopReg di, Di
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmPopSreg
-;
-;		DESCRIPTION:	EMULATE pop sreg
+;               DESCRIPTION:    EMULATE pop reg
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	
-	PopSreg ds, Ds
-	PopSreg es, Es
-	PopSreg ss, Ss
-	PopSreg fs, Fs
-	PopSreg gs, Gs
-	
+        
+        PopReg ax, Ax
+        PopReg bx, Bx
+        PopReg cx, Cx
+        PopReg dx, Dx
+        PopReg sp, Sp
+        PopReg bp, Bp
+        PopReg si, Si
+        PopReg di, Di
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmXchgByteRegMem
+;               NAME:                   EmPopSreg
 ;
-;		DESCRIPTION:	EMULATE xchg reg,byte ptr Mem
+;               DESCRIPTION:    EMULATE pop sreg
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        
+        PopSreg ds, Ds
+        PopSreg es, Es
+        PopSreg ss, Ss
+        PopSreg fs, Fs
+        PopSreg gs, Gs
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmXchgByteRegMem
+;
+;               DESCRIPTION:    EMULATE xchg reg,byte ptr Mem
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmXchgByteRegMem
+        public EmXchgByteRegMem
 
-EmXchgByteRegMem	Proc near
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	call LoadByteReg
-	pop bx
+EmXchgByteRegMem        Proc near
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        call LoadByteReg
+        pop bx
 ;
-	push bx
-	push ax
-	mov bh,bl
-	and bl,0C0h
-	cmp bl,0C0h
-	je EmXchgByteRegReg
+        push bx
+        push ax
+        mov bh,bl
+        and bl,0C0h
+        cmp bl,0C0h
+        je EmXchgByteRegReg
 ;
-	shr bl,2
-	and bh,7
-	shl bh,1
-	or bl,bh
-	test byte ptr [ebp].em_flags,a32
-	jz EmXchgByteRegMem16
-	or bl,40h	
+        shr bl,2
+        and bh,7
+        shl bh,1
+        or bl,bh
+        test byte ptr [ebp].em_flags,a32
+        jz EmXchgByteRegMem16
+        or bl,40h       
 EmXchgByteRegMem16:
-	movzx ebx,bl
-	call dword ptr [2*ebx].MemTab
-	push ebx
-	call ReadByte
-	pop ebx
-	pop cx
-	push ax
-	mov ax,cx
-	call WriteByte
-	pop ax
-	pop bx
-	call SaveByteReg
-	ret
+        movzx ebx,bl
+        call dword ptr [2*ebx].MemTab
+        push ebx
+        call ReadByte
+        pop ebx
+        pop cx
+        push ax
+        mov ax,cx
+        call WriteByte
+        pop ax
+        pop bx
+        call SaveByteReg
+        ret
 
 EmXchgByteRegReg:
-	and bh,7
-	movzx esi,bh
-	mov esi,dword ptr [4*esi].ByteRegTab
-	pop ax
-	xchg al,[ebp+esi]
-	pop bx
-	call SaveByteReg
-	ret
-EmXchgByteRegMem	Endp
-	
+        and bh,7
+        movzx esi,bh
+        mov esi,dword ptr [4*esi].ByteRegTab
+        pop ax
+        xchg al,[ebp+esi]
+        pop bx
+        call SaveByteReg
+        ret
+EmXchgByteRegMem        Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmXchgWordRegMem
+;               NAME:                   EmXchgWordRegMem
 ;
-;		DESCRIPTION:	EMULATE xchg reg,word ptr Mem
+;               DESCRIPTION:    EMULATE xchg reg,word ptr Mem
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmXchgWordRegMem
+        public EmXchgWordRegMem
 
-EmXchgWordRegMem	Proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmXchgDwordRegMem
+EmXchgWordRegMem        Proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmXchgDwordRegMem
 ;
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	call LoadWordReg
-	pop bx
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        call LoadWordReg
+        pop bx
 ;
-	push bx
-	push ax
-	mov bh,bl
-	and bl,0C0h
-	cmp bl,0C0h
-	je EmXchgWordRegReg
+        push bx
+        push ax
+        mov bh,bl
+        and bl,0C0h
+        cmp bl,0C0h
+        je EmXchgWordRegReg
 ;
-	shr bl,2
-	and bh,7
-	shl bh,1
-	or bl,bh
-	test byte ptr [ebp].em_flags,a32
-	jz EmXchgWordRegMem16
-	or bl,40h	
+        shr bl,2
+        and bh,7
+        shl bh,1
+        or bl,bh
+        test byte ptr [ebp].em_flags,a32
+        jz EmXchgWordRegMem16
+        or bl,40h       
 EmXchgWordRegMem16:
-	movzx ebx,bl
-	call dword ptr [2*ebx].MemTab
-	push ebx
-	call ReadWord
-	pop ebx
-	pop cx
-	push ax
-	mov ax,cx
-	call WriteWord
-	pop ax
-	pop bx
-	call SaveWordReg
-	ret
+        movzx ebx,bl
+        call dword ptr [2*ebx].MemTab
+        push ebx
+        call ReadWord
+        pop ebx
+        pop cx
+        push ax
+        mov ax,cx
+        call WriteWord
+        pop ax
+        pop bx
+        call SaveWordReg
+        ret
 
 EmXchgWordRegReg:
-	and bh,7
-	movzx esi,bh
-	mov esi,dword ptr [4*esi].WordRegTab
-	pop ax
-	xchg ax,[ebp+esi]
-	pop bx
-	call SaveWordReg
-	ret
-EmXchgWordRegMem	Endp
+        and bh,7
+        movzx esi,bh
+        mov esi,dword ptr [4*esi].WordRegTab
+        pop ax
+        xchg ax,[ebp+esi]
+        pop bx
+        call SaveWordReg
+        ret
+EmXchgWordRegMem        Endp
 
-EmXchgDwordRegMem	Proc near
-	call ReadCodeByte
-	mov bl,al
-	push bx
-	call LoadDwordReg
-	pop bx
+EmXchgDwordRegMem       Proc near
+        call ReadCodeByte
+        mov bl,al
+        push bx
+        call LoadDwordReg
+        pop bx
 ;
-	push bx
-	push eax
-	mov bh,bl
-	and bl,0C0h
-	cmp bl,0C0h
-	je EmXchgDwordRegReg
+        push bx
+        push eax
+        mov bh,bl
+        and bl,0C0h
+        cmp bl,0C0h
+        je EmXchgDwordRegReg
 ;
-	shr bl,2
-	and bh,7
-	shl bh,1
-	or bl,bh
-	test byte ptr [ebp].em_flags,a32
-	jz EmXchgDwordRegMem16
-	or bl,40h	
+        shr bl,2
+        and bh,7
+        shl bh,1
+        or bl,bh
+        test byte ptr [ebp].em_flags,a32
+        jz EmXchgDwordRegMem16
+        or bl,40h       
 EmXchgDwordRegMem16:
-	movzx ebx,bl
-	call dword ptr [2*ebx].MemTab
-	push ebx
-	call ReadDword
-	pop ebx
-	pop ecx
-	push eax
-	mov eax,ecx
-	call WriteDword
-	pop eax
-	pop bx
-	call SaveDwordReg
-	ret
+        movzx ebx,bl
+        call dword ptr [2*ebx].MemTab
+        push ebx
+        call ReadDword
+        pop ebx
+        pop ecx
+        push eax
+        mov eax,ecx
+        call WriteDword
+        pop eax
+        pop bx
+        call SaveDwordReg
+        ret
 
 EmXchgDwordRegReg:
-	and bh,7
-	movzx esi,bh
-	mov esi,dword ptr [4*esi].WordRegTab
-	pop eax
-	xchg eax,[ebp+esi]
-	pop bx
-	call SaveDwordReg
-	ret
-EmXchgDwordRegMem	Endp
-	
+        and bh,7
+        movzx esi,bh
+        mov esi,dword ptr [4*esi].WordRegTab
+        pop eax
+        xchg eax,[ebp+esi]
+        pop bx
+        call SaveDwordReg
+        ret
+EmXchgDwordRegMem       Endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmXchgAxReg
+;               NAME:                   EmXchgAxReg
 ;
-;		DESCRIPTION:	EMULATE xchg ax,reg
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	XchgAxReg bx, Bx
-	XchgAxReg cx, Cx
-	XchgAxReg dx, Dx
-	XchgAxReg sp, Sp
-	XchgAxReg bp, Bp
-	XchgAxReg si, Si
-	XchgAxReg di, Di
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			EmInByteDx / EmInByteIm
-;
-;		DESCRIPTION:	EMULERA IN AL,DX
+;               DESCRIPTION:    EMULATE xchg ax,reg
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmInByteIm
+        XchgAxReg bx, Bx
+        XchgAxReg cx, Cx
+        XchgAxReg dx, Dx
+        XchgAxReg sp, Sp
+        XchgAxReg bp, Bp
+        XchgAxReg si, Si
+        XchgAxReg di, Di
 
-EmInByteIm	Proc near
-	call ReadCodeByte
-	movzx dx,al
-	call InByte
-	mov byte ptr [ebp].reg_eax,al
-	ret
-EmInByteIm	Endp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:                   EmInByteDx / EmInByteIm
+;
+;               DESCRIPTION:    EMULERA IN AL,DX
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmInByteDx
+        public EmInByteIm
 
-EmInByteDx	PROC near
-	mov dx,word ptr [ebp].reg_edx
-	call InByte
-	mov byte ptr [ebp].reg_eax,al
-	ret
-EmInByteDx	ENDP
+EmInByteIm      Proc near
+        call ReadCodeByte
+        movzx dx,al
+        call InByte
+        mov byte ptr [ebp].reg_eax,al
+        ret
+EmInByteIm      Endp
+
+        public EmInByteDx
+
+EmInByteDx      PROC near
+        mov dx,word ptr [ebp].reg_edx
+        call InByte
+        mov byte ptr [ebp].reg_eax,al
+        ret
+EmInByteDx      ENDP
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			EmInWordDx / EmInDwordDx / EmInWordIm
+;               NAME:                   EmInWordDx / EmInDwordDx / EmInWordIm
 ;
-;		DESCRIPTION:	EMULERA IN (E)AX,DX
+;               DESCRIPTION:    EMULERA IN (E)AX,DX
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmInWordIm
+        public EmInWordIm
 
-EmInWordIm	Proc near
-	call ReadCodeByte
-	movzx dx,al
-	test byte ptr [ebp].em_flags,d32
-	jnz EmInDwordIm
-	call InWord
-	mov word ptr [ebp].reg_eax,ax
-	ret
+EmInWordIm      Proc near
+        call ReadCodeByte
+        movzx dx,al
+        test byte ptr [ebp].em_flags,d32
+        jnz EmInDwordIm
+        call InWord
+        mov word ptr [ebp].reg_eax,ax
+        ret
 
 EmInDwordIm:
-	call InDword
-	mov [ebp].reg_eax,eax
-	ret
-EmInWordIm	Endp
+        call InDword
+        mov [ebp].reg_eax,eax
+        ret
+EmInWordIm      Endp
 
-	public EmInWordDx
-	
-EmInWordDx	PROC near
-	mov dx,word ptr [ebp].reg_edx
-	test byte ptr [ebp].em_flags,d32
-	jnz EmInDwordDx
-	call InWord
-	mov word ptr [ebp].reg_eax,ax
-	ret
+        public EmInWordDx
+        
+EmInWordDx      PROC near
+        mov dx,word ptr [ebp].reg_edx
+        test byte ptr [ebp].em_flags,d32
+        jnz EmInDwordDx
+        call InWord
+        mov word ptr [ebp].reg_eax,ax
+        ret
 
 EmInDwordDx:
-	call InDword
-	mov [ebp].reg_eax,eax
-	ret
-EmInWordDx	ENDP
+        call InDword
+        mov [ebp].reg_eax,eax
+        ret
+EmInWordDx      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			EmOutByteDx / EmOutByteIm
+;               NAME:                   EmOutByteDx / EmOutByteIm
 ;
-;		DESCRIPTION:	EMULERA OUT DX,AL
+;               DESCRIPTION:    EMULERA OUT DX,AL
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmOutByteIm
+        public EmOutByteIm
 
-EmOutByteIm	Proc near
-	call ReadCodeByte
-	movzx dx,al
-	mov al,byte ptr [ebp].reg_eax
-	call OutByte
-	ret
-EmOutByteIm	Endp
+EmOutByteIm     Proc near
+        call ReadCodeByte
+        movzx dx,al
+        mov al,byte ptr [ebp].reg_eax
+        call OutByte
+        ret
+EmOutByteIm     Endp
 
-	public EmOutByteDx
+        public EmOutByteDx
 
-EmOutByteDx	PROC near
-	mov dx,word ptr [ebp].reg_edx
-	mov al,byte ptr [ebp].reg_eax
-	call OutByte
-	ret
-EmOutByteDx	ENDP
+EmOutByteDx     PROC near
+        mov dx,word ptr [ebp].reg_edx
+        mov al,byte ptr [ebp].reg_eax
+        call OutByte
+        ret
+EmOutByteDx     ENDP
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			EmOutWordDx / EmOutDwordDx / EmOutWordIm
+;               NAME:                   EmOutWordDx / EmOutDwordDx / EmOutWordIm
 ;
-;		DESCRIPTION:	EMULERA OUT DX,(E)AX
+;               DESCRIPTION:    EMULERA OUT DX,(E)AX
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmOutWordIm
+        public EmOutWordIm
 
-EmOutWordIm	Proc near
-	call ReadCodeByte
-	movzx dx,al
-	test byte ptr [ebp].em_flags,d32
-	jnz EmOutDwordIm
-	mov ax,word ptr [ebp].reg_eax
-	call OutWord
-	ret
+EmOutWordIm     Proc near
+        call ReadCodeByte
+        movzx dx,al
+        test byte ptr [ebp].em_flags,d32
+        jnz EmOutDwordIm
+        mov ax,word ptr [ebp].reg_eax
+        call OutWord
+        ret
 
 EmOutDwordIm:
-	mov eax,[ebp].reg_eax
-	call OutDword
-	ret
-EmOutWordIm	Endp
+        mov eax,[ebp].reg_eax
+        call OutDword
+        ret
+EmOutWordIm     Endp
 
-	public EmOutWordDx
-	
-EmOutWordDx	PROC near
-	mov dx,word ptr [ebp].reg_edx
-	test byte ptr [ebp].em_flags,d32
-	jnz EmOutDwordDx
-	mov ax,word ptr [ebp].reg_eax
-	call OutWord
-	ret
+        public EmOutWordDx
+        
+EmOutWordDx     PROC near
+        mov dx,word ptr [ebp].reg_edx
+        test byte ptr [ebp].em_flags,d32
+        jnz EmOutDwordDx
+        mov ax,word ptr [ebp].reg_eax
+        call OutWord
+        ret
 
 EmOutDwordDx:
-	mov eax,[ebp].reg_eax
-	call OutDword
-	ret
-EmOutWordDx	ENDP
-	
+        mov eax,[ebp].reg_eax
+        call OutDword
+        ret
+EmOutWordDx     ENDP
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmPushf / EmPushfd
+;               NAME:                   EmPushf / EmPushfd
 ;
-;		DESCRIPTION:	EMULATE Pushf / Pushfd
+;               DESCRIPTION:    EMULATE Pushf / Pushfd
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmPushf
+        public EmPushf
 
-EmPushf	proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmPushfd
+EmPushf proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmPushfd
 ;
-	test [ebp].reg_cr0,CR0_PE
-	jz EmPushfDo
+        test [ebp].reg_cr0,CR0_PE
+        jz EmPushfDo
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jz EmPushfDo
+        test byte ptr [ebp].reg_eflags+2,2
+        jz EmPushfDo
 ;
-	mov ecx,[ebp].reg_eflags
-	and ecx,EFLAGS_IOPL
-	cmp ecx,EFLAGS_IOPL
-	jne PrivilegeFault
+        mov ecx,[ebp].reg_eflags
+        and ecx,EFLAGS_IOPL
+        cmp ecx,EFLAGS_IOPL
+        jne PrivilegeFault
 
 EmPushfDo:
-	mov ax,word ptr [ebp].reg_eflags
-	call PushWord
-	ret
+        mov ax,word ptr [ebp].reg_eflags
+        call PushWord
+        ret
 
 EmPushfd:
-	test [ebp].reg_cr0,CR0_PE
-	jz EmPushfdDo
+        test [ebp].reg_cr0,CR0_PE
+        jz EmPushfdDo
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jz EmPushfdDo
+        test byte ptr [ebp].reg_eflags+2,2
+        jz EmPushfdDo
 ;
-	mov ecx,[ebp].reg_eflags
-	and ecx,EFLAGS_IOPL
-	cmp ecx,EFLAGS_IOPL
-	jne PrivilegeFault
+        mov ecx,[ebp].reg_eflags
+        and ecx,EFLAGS_IOPL
+        cmp ecx,EFLAGS_IOPL
+        jne PrivilegeFault
 
 EmPushfdDo:
-	mov eax,[ebp].reg_eflags
-	call PushDword
-	ret
-EmPushf	endp
-	
+        mov eax,[ebp].reg_eflags
+        call PushDword
+        ret
+EmPushf endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmPopf / EmPopfd
+;               NAME:                   EmPopf / EmPopfd
 ;
-;		DESCRIPTION:	EMULATE popf / popfd
+;               DESCRIPTION:    EMULATE popf / popfd
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmPopf
+        public EmPopf
 
-EmPopf	proc near
-	test byte ptr [ebp].em_flags,d32
-	jnz EmPopfd
+EmPopf  proc near
+        test byte ptr [ebp].em_flags,d32
+        jnz EmPopfd
 ;
-	call PopWord
-	test [ebp].reg_cr0,CR0_PE
-	jz EmPopfDo
+        call PopWord
+        test [ebp].reg_cr0,CR0_PE
+        jz EmPopfDo
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jz EmPopfPm
+        test byte ptr [ebp].reg_eflags+2,2
+        jz EmPopfPm
 ;
-	mov ecx,[ebp].reg_eflags
-	and ecx,EFLAGS_IOPL
-	cmp ecx,EFLAGS_IOPL
-	jne PrivilegeFault
-	jmp EmPopfDo
+        mov ecx,[ebp].reg_eflags
+        and ecx,EFLAGS_IOPL
+        cmp ecx,EFLAGS_IOPL
+        jne PrivilegeFault
+        jmp EmPopfDo
 
 EmPopfPm:
-	mov ecx,[ebp].reg_eflags
-	ror cx,4
-	mov	ch,[ebp].reg_cs.d_access
-	and cx,303h
-	cmp cl,ch
-	jc EmPopfDone
+        mov ecx,[ebp].reg_eflags
+        ror cx,4
+        mov     ch,[ebp].reg_cs.d_access
+        and cx,303h
+        cmp cl,ch
+        jc EmPopfDone
 
 EmPopfDo:
-	and eax,NOT EFLAGS_UNDEF
-	or al,2
-	mov word ptr [ebp].reg_eflags,ax
+        and eax,NOT EFLAGS_UNDEF
+        or al,2
+        mov word ptr [ebp].reg_eflags,ax
 
 EmPopfDone:
-	ret
+        ret
 
 EmPopfd:
-	call PopDword
-	test [ebp].reg_cr0,CR0_PE
-	jz EmPopfdDo
+        call PopDword
+        test [ebp].reg_cr0,CR0_PE
+        jz EmPopfdDo
 ;
-	test byte ptr [ebp].reg_eflags+2,2
-	jz EmPopfdPm
+        test byte ptr [ebp].reg_eflags+2,2
+        jz EmPopfdPm
 ;
-	mov ecx,[ebp].reg_eflags
-	and ecx,EFLAGS_IOPL
-	cmp ecx,EFLAGS_IOPL
-	jne PrivilegeFault
-	jmp EmPopfdDo
+        mov ecx,[ebp].reg_eflags
+        and ecx,EFLAGS_IOPL
+        cmp ecx,EFLAGS_IOPL
+        jne PrivilegeFault
+        jmp EmPopfdDo
 
 EmPopfdPm:
-	mov ecx,[ebp].reg_eflags
-	ror cx,4
-	mov	ch,[ebp].reg_cs.d_access
-	and cx,303h
-	cmp cl,ch
-	jc EmPopfdDone
+        mov ecx,[ebp].reg_eflags
+        ror cx,4
+        mov     ch,[ebp].reg_cs.d_access
+        and cx,303h
+        cmp cl,ch
+        jc EmPopfdDone
 
 EmPopfdDo:
-	and eax,NOT EFLAGS_UNDEF
-	or al,2
-	mov [ebp].reg_eflags,eax
+        and eax,NOT EFLAGS_UNDEF
+        or al,2
+        mov [ebp].reg_eflags,eax
 
 EmPopfdDone:
-	ret
-EmPopf	endp
-	
+        ret
+EmPopf  endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmLahf
+;               NAME:                   EmLahf
 ;
-;		DESCRIPTION:	EMULATE lahf
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public EmLahf
-
-EmLahf	proc near
-	mov al,byte ptr [ebp].reg_eflags
-	mov byte ptr [ebp].reg_eax+1,al
-	ret
-EmLahf	endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmSahf
-;
-;		DESCRIPTION:	EMULATE sahf
+;               DESCRIPTION:    EMULATE lahf
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmSahf
+        public EmLahf
 
-EmSahf	proc near
-	mov al,byte ptr [ebp].reg_eax+1
-	and al,NOT 28h
-	or al,2
-	mov byte ptr [ebp].reg_eflags,al
-	ret
-EmSahf	endp
-	
+EmLahf  proc near
+        mov al,byte ptr [ebp].reg_eflags
+        mov byte ptr [ebp].reg_eax+1,al
+        ret
+EmLahf  endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmClc
+;               NAME:                   EmSahf
 ;
-;		DESCRIPTION:	EMULATE clc
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public EmClc
-
-EmClc	proc near
-	and byte ptr [ebp].reg_eflags, NOT EFLAGS_CF
-	ret
-EmClc	endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmStc
-;
-;		DESCRIPTION:	EMULATE stc
+;               DESCRIPTION:    EMULATE sahf
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmStc
+        public EmSahf
 
-EmStc	proc near
-	or byte ptr [ebp].reg_eflags, EFLAGS_CF
-	ret
-EmStc	endp
-	
+EmSahf  proc near
+        mov al,byte ptr [ebp].reg_eax+1
+        and al,NOT 28h
+        or al,2
+        mov byte ptr [ebp].reg_eflags,al
+        ret
+EmSahf  endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmCmc
+;               NAME:                   EmClc
 ;
-;		DESCRIPTION:	EMULATE cmc
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public EmCmc
-
-EmCmc	proc near
-	xor byte ptr [ebp].reg_eflags, EFLAGS_CF
-	ret
-EmCmc	endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			EmCld
-;
-;		DESCRIPTION:	EMULATE cld
+;               DESCRIPTION:    EMULATE clc
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmCld
+        public EmClc
 
-EmCld	proc near
-	and word ptr [ebp].reg_eflags, NOT EFLAGS_DF
-	ret
-EmCld	endp
-	
+EmClc   proc near
+        and byte ptr [ebp].reg_eflags, NOT EFLAGS_CF
+        ret
+EmClc   endp
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EmStd
+;               NAME:                   EmStc
 ;
-;		DESCRIPTION:	EMULATE std
+;               DESCRIPTION:    EMULATE stc
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public EmStd
+        public EmStc
 
-EmStd	proc near
-	or word ptr [ebp].reg_eflags, EFLAGS_DF
-	ret
-EmStd	endp
+EmStc   proc near
+        or byte ptr [ebp].reg_eflags, EFLAGS_CF
+        ret
+EmStc   endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmCmc
+;
+;               DESCRIPTION:    EMULATE cmc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	END
+        public EmCmc
+
+EmCmc   proc near
+        xor byte ptr [ebp].reg_eflags, EFLAGS_CF
+        ret
+EmCmc   endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmCld
+;
+;               DESCRIPTION:    EMULATE cld
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public EmCld
+
+EmCld   proc near
+        and word ptr [ebp].reg_eflags, NOT EFLAGS_DF
+        ret
+EmCld   endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmStd
+;
+;               DESCRIPTION:    EMULATE std
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public EmStd
+
+EmStd   proc near
+        or word ptr [ebp].reg_eflags, EFLAGS_DF
+        ret
+EmStd   endp
+
+        END

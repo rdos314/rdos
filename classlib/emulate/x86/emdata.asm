@@ -30,7 +30,7 @@
 
                 NAME emdata
                 
-INCLUDE x86\emulate.inc         
+INCLUDE \rdos\classlib\emulate\x86\emulate.inc         
                 
 .data
 

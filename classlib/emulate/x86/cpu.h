@@ -201,7 +201,7 @@ public:
 	unsigned short int MathCs;
 	unsigned long MathOffset;
 	unsigned short int MathSel;
-	long double st[8];
+	char st[8][10];
 
 	TTlb Reg_tlb;
 	TCacheEntry Reg_cache[128];
