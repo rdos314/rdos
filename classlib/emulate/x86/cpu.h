@@ -30,6 +30,8 @@
 
 #include "pic.h"
 
+#pragma pack( push, 1 )
+
 #define MAX_BREAKPOINTS	16
 
 #define STATE_RESET		0
@@ -257,5 +259,7 @@ protected:
 
 private:
 };
+
+#pragma pack( pop )
 
 #endif

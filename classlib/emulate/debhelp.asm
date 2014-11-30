@@ -31,7 +31,6 @@
 include ..\..\kernel\user.def
 
 UserGate32	MACRO gate_nr
-    db 3Eh
     db 67h
     db 9Ah
     dd gate_nr

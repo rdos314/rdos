@@ -129,6 +129,7 @@ void ConvK3();
 void ConvK4();
 void ConvK5();
 void ConvK6();
+void ConvK7();
 
 void ConvRu();
 
@@ -636,6 +637,7 @@ int main(int argc, char **argv)
     ConvK4();
     ConvK5();
     ConvK6();
-
+    ConvK7();
+    
     return 0;
 }

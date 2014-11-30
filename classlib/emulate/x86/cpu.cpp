@@ -39,29 +39,68 @@ int debugflag;
 TLocation set_val,get_val;
 TLocation       buffer_val[COUNTBUFFER];
 
-extern "C"
-{
+#pragma aux EMAPI "_*" \
+       parm routine [] \
+       value struct float struct routine [eax] \
+       modify [eax ecx edx];
 
-void  __cdecl UserBreak(TCpu *Cpu);
-void  __cdecl ReadInstruction(TCpu *Cpu);
-void  __cdecl DisAssemble(TCpu *Cpu);
-void  __cdecl WriteRegs(TCpu *Cpu);
-void  __cdecl WriteFpuRegs(TCpu *Cpu);
-void  __cdecl Emulate(TCpu *Cpu);
-char  __cdecl GetIntVector(TCpu *Cpu);
-void  __cdecl ReadCode(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
-void  __cdecl ReadFromMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
-void  __cdecl WriteToMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
-void  __cdecl ReadFromIo(TCpu *Cpu, void *Buffer, unsigned short int Port, int Size);
-void  __cdecl WriteToIo(TCpu *Cpu, void *Buffer, unsigned short int Port, int Size);
-void  __cdecl Dis_ass_more(TCpu *Cpu, unsigned long count);
-void  __cdecl initbuffer(void *buffer, unsigned long count);
-void  __cdecl getvalue(TCpu *Cpu);
-void  __cdecl setvalue(TLocation *position);
-void  __cdecl init_follow();            /* to initiate the follow procedure */
-void  __cdecl showdata(TCpu *Cpu);  /* print ata on the screen */
+extern "C" {
 
-}
+void UserBreak(TCpu *Cpu);
+#pragma aux (EMAPI) UserBreak;
+
+void ReadInstruction(TCpu *Cpu);
+#pragma aux (EMAPI) ReadInstruction;
+
+void DisAssemble(TCpu *Cpu);
+#pragma aux (EMAPI) DisAssemble;
+
+void WriteRegs(TCpu *Cpu);
+#pragma aux (EMAPI) WriteRegs;
+
+void WriteFpuRegs(TCpu *Cpu);
+#pragma aux (EMAPI) WriteFpuRegs;
+
+void Emulate(TCpu *Cpu);
+#pragma aux (EMAPI) Emulate;
+
+char GetIntVector(TCpu *Cpu);
+#pragma aux (EMAPI) GetIntVector;
+
+void ReadCode(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
+#pragma aux (EMAPI) ReadCode;
+
+void ReadFromMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
+#pragma aux (EMAPI) ReadFromMemory;
+
+void WriteToMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
+#pragma aux (EMAPI) WriteToMemory;
+
+void ReadFromIo(TCpu *Cpu, void *Buffer, unsigned short int Port, int Size);
+#pragma aux (EMAPI) ReadFromIo;
+
+void WriteToIo(TCpu *Cpu, void *Buffer, unsigned short int Port, int Size);
+#pragma aux (EMAPI) WriteToIo;
+
+void Dis_ass_more(TCpu *Cpu, unsigned long count);
+#pragma aux (EMAPI) Dis_ass_more;
+
+void initbuffer(void *buffer, unsigned long count);
+#pragma aux (EMAPI) initbuffer;
+
+void getvalue(TCpu *Cpu);
+#pragma aux (EMAPI) getvalue;
+
+void setvalue(TLocation *position);
+#pragma aux (EMAPI) setvalue;
+
+void init_follow();            /* to initiate the follow procedure */
+#pragma aux (EMAPI) init_follow;
+
+void showdata(TCpu *Cpu);  /* print ata on the screen */
+#pragma aux (EMAPI) showdata;
+
+};
 
 /*##################  GetIntVector  ###############
 *   Purpose....: Get interrupt vector                                                               #
@@ -70,7 +109,7 @@ void  __cdecl showdata(TCpu *Cpu);  /* print ata on the screen */
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char __cdecl GetIntVector(TCpu *Cpu)
+char GetIntVector(TCpu *Cpu)
 {
         return Cpu->GetIntVector();
 }
@@ -82,7 +121,7 @@ char __cdecl GetIntVector(TCpu *Cpu)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void  __cdecl ReadFromMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size)
+void ReadFromMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size)
 {
     if (Cpu->CodeFetch)
         Cpu->ReadCode(Buffer, Address, Size);
@@ -97,7 +136,7 @@ void  __cdecl ReadFromMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void  __cdecl WriteToMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size)
+void WriteToMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size)
 {
         Cpu->WriteToMemory(Buffer, Address, Size);
 }
@@ -109,7 +148,7 @@ void  __cdecl WriteToMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int 
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void  __cdecl ReadFromIo(TCpu *Cpu, void *Buffer, unsigned short Port, int Size)
+void ReadFromIo(TCpu *Cpu, void *Buffer, unsigned short Port, int Size)
 {
         Cpu->ReadFromIo(Buffer, Port, Size);
 }
@@ -121,7 +160,7 @@ void  __cdecl ReadFromIo(TCpu *Cpu, void *Buffer, unsigned short Port, int Size)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void  __cdecl WriteToIo(TCpu *Cpu, void *Buffer, unsigned short Port, int Size)
+void WriteToIo(TCpu *Cpu, void *Buffer, unsigned short Port, int Size)
 {
         Cpu->WriteToIo(Buffer, Port, Size);
 }
