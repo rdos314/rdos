@@ -1006,7 +1006,7 @@
 #pragma aux RdosOpenLonModule = \
     CallGate_open_lon_module  \
     ValidateHandle  \
-    parm [al]  \
+    parm [al] [esi] [edi] \
     value [ebx];
 
 #pragma aux RdosCloseLonModule = \

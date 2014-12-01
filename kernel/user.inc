@@ -2427,6 +2427,8 @@ GetLonModules       MACRO
 						ENDM
 
 ;	IN  AL		Lon module #
+;   IN  SI      Send buffers
+;   IN  DI      Receive buffers
 ;	OUT BX		Lon handle
 OpenLonModule       MACRO
 	UserGate open_lon_module_nr

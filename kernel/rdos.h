@@ -373,7 +373,7 @@ void RDOSAPI RdosWaitForPrint(int Handle);
 void RDOSAPI RdosResetPrinter(int Handle);
 
 int RDOSAPI RdosGetLonModules();
-int RDOSAPI RdosOpenLonModule(char ID);
+int RDOSAPI RdosOpenLonModule(char ID, int SendBuffers, int ReceiveBuffers);
 void RDOSAPI RdosCloseLonModule(int Handle);
 void RDOSAPI RdosAddWaitForLonModule(int Handle, int LonHandle, int ID);
 void RDOSAPI RdosSendLonModuleMsg(int Handle, const char *Buf, int Size);

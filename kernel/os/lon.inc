@@ -43,4 +43,19 @@ lon_has_msg_proc    DD ?,?
 
 lon_avail_obj       DW ?
 
+lon_send_count      DW ?
+lon_rec_count       DW ?
+
+lon_send_head       DW ?
+lon_rec_head        DW ?
+
+lon_send_tail       DW ?
+lon_rec_tail        DW ?
+
+lon_send_size       DW ?
+lon_rec_size        DW ?
+
+lon_rec_buf         DW ?
+lon_send_buf        DW ?
+
 lon_struc	ENDS

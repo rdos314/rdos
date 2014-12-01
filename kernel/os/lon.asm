@@ -49,8 +49,8 @@ lon_handle_seg  ENDS
 
 lon_wait_header STRUC
 
-lon_obj          wait_obj_header <>
-lon_sel          DW ?
+lon_obj         wait_obj_header <>
+lon_sel         DW ?
 
 lon_wait_header ENDS
 
@@ -420,6 +420,8 @@ get_lon_modules    Endp
 ;       description:    Open lon module
 ;
 ;       PARAMETERS:     AL              Module #
+;                       SI              Send buffers
+;                       DI              Receive buffers
 ;
 ;       RETURNS:        BX              Module handle
 ;
@@ -453,6 +455,25 @@ open_lon_module       Proc far
 ;
     mov ax,es
     mov ds,ax
+;
+    movzx eax,si
+    shl eax,1
+    mov ds:lon_send_size,ax
+    AllocateSmallGlobalMem
+    mov ds:lon_send_buf,es
+    mov ds:lon_send_count,0
+    mov ds:lon_send_head,0
+    mov ds:lon_send_tail,0
+;
+    movzx eax,di
+    shl eax,1
+    mov ds:lon_rec_size,ax
+    AllocateSmallGlobalMem
+    mov ds:lon_rec_buf,es
+    mov ds:lon_rec_count,0
+    mov ds:lon_rec_head,0
+    mov ds:lon_rec_tail,0
+;    
     call fword ptr ds:lon_open_proc    
     clc
     jmp open_lon_done
