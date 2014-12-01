@@ -453,7 +453,7 @@ open_lon_module       Proc far
 ;
     mov ax,es
     mov ds,ax
-    call fword ptr ds:lon_init_proc    
+    call fword ptr ds:lon_open_proc    
     clc
     jmp open_lon_done
     
@@ -492,6 +492,12 @@ close_lon_module       Proc far
     DerefHandle
     jc close_lon_done
 ;
+    push ds
+    push ebx
+    mov ds,ds:[ebx].lon_handle_sel
+    call fword ptr ds:lon_close_proc    
+    pop ebx
+    pop ds
     FreeHandle
 
 close_lon_done:

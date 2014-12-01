@@ -27,7 +27,9 @@
 
 lon_struc	STRUC
 
-lon_init_proc       DD ?,?
+lon_open_proc       DD ?,?
+
+lon_close_proc      DD ?,?
 
 ; IN  ES:EDI        Buffer
 ; IN  ECX           Size
