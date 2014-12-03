@@ -31,17 +31,11 @@ lon_open_proc       DD ?,?
 
 lon_close_proc      DD ?,?
 
-; IN  ES:EDI        Buffer
-; IN  ECX           Size
-lon_send_proc       DD ?,?
-
-; IN  ES:EDI        Buffer
-; OUT ECX           Size
-lon_receive_proc    DD ?,?
-
-lon_has_msg_proc    DD ?,?
+lon_start_send_proc DD ?,?
 
 lon_avail_obj       DW ?
+
+lon_section         section_typ <>
 
 lon_send_count      DW ?
 lon_rec_count       DW ?

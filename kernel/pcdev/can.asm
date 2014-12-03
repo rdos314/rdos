@@ -973,6 +973,40 @@ send_can_bus_msg    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           HasCanSendBuf
+;
+;   DESCRIPTION:    Check if there is a free send buffer
+;
+;   RETURNS:        NC      Has buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_can_send_buf_name   DB 'Has CAN Send Buf', 0
+
+has_can_send_buf    Proc far
+    push ds
+    push esi
+    push edi
+;    
+    mov si,SEG data
+    mov ds,si
+
+    mov esi,ds:can_send_used
+    not esi
+    bsf edi,esi
+;
+    cmp edi,10h
+    cmc
+;
+    pop edi
+    pop esi
+    pop ds    
+    retf32
+has_can_send_buf    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           HookCanBusMsg
 ;
 ;   DESCRIPTION:    Register callback for received CAN bus messages
@@ -1202,6 +1236,11 @@ init    PROC far
     mov esi,OFFSET send_can_bus_msg
     mov edi,OFFSET send_can_bus_msg_name
     mov ax,send_can_bus_msg_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET has_can_send_buf
+    mov edi,OFFSET has_can_send_buf_name
+    mov ax,has_can_send_buf_nr
     RegisterOsGate
 ;
     mov esi,OFFSET hook_gen_bus_msg

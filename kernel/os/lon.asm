@@ -70,6 +70,87 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SendOne
+;
+;       description:    Send one msg
+;
+;       PARAMETERS:     DS              Lon dev
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendOne  Proc near
+    push es
+    push fs
+    push bx
+    push ecx
+    push esi
+    push edi
+;
+    mov fs,ds:lon_send_buf
+    mov ax,ds:lon_send_count
+    cmp ax,ds:lon_send_size
+    je soDone
+;    
+    push ds
+;
+    push es
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov ds,ax    
+    pop ds
+;
+    mov esi,edi
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    pop ds    
+    EnterSection ds:lon_section
+;     
+    mov bx,ds:lon_send_tail
+    mov fs:[bx],es
+    add bx,2
+    mov cx,ds:lon_send_size
+    shl cx,1
+    cmp bx,cx
+    jnz soNoWrap
+
+    xor bx,bx
+
+soNoWrap:
+    mov ds:lon_send_tail,bx
+;    
+    mov cx,ds:lon_send_count
+    or cx,cx
+    jnz soStarted
+;
+    inc cx
+    mov ds:lon_send_count,cx
+    LeaveSection ds:lon_section
+;    
+    call fword ptr ds:lon_start_send_proc
+    jmp soDone
+    
+soStarted:
+    inc cx
+    mov ds:lon_send_count,cx
+    LeaveSection ds:lon_section
+
+soDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop bx
+    pop fs
+    pop es
+    ret
+SendOne Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           SendLonModuleMsg
 ;
 ;       description:    Send message to lon module
@@ -95,12 +176,7 @@ send_lon_module_msg16       Proc far
     movzx ecx,cx
     movzx edi,di
     mov ds,[ebx].lon_handle_sel
-    mov eax,ds:lon_send_proc
-    or eax,eax
-    clc
-    jz send_lon_msg_done16
-;       
-    call ds:lon_send_proc
+    call SendOne
 
 send_lon_msg_done16:
     pop edi
@@ -120,12 +196,7 @@ send_lon_module_msg32       Proc far
     jc send_lon_done32
 ;
     mov ds,[ebx].lon_handle_sel
-    mov eax,ds:lon_send_proc
-    or eax,eax
-    clc
-    jz send_lon_done32
-;       
-    call ds:lon_send_proc
+    call SendOne
 
 send_lon_done32:
     pop ebx
@@ -156,22 +227,102 @@ has_lon_module_msg       Proc far
 ;
     mov ax,LON_HANDLE
     DerefHandle
-    jc has_lon_msg_done
+    jc hlmDone
 ;
     mov ds,[ebx].lon_handle_sel
-    mov eax,ds:lon_has_msg_proc
-    or eax,eax
+    mov ax,ds:lon_rec_count
+    or ax,ax
+    stc
+    jz hlmDone
+;
     clc
-    jz has_lon_msg_done
-;       
-    call ds:lon_has_msg_proc
 
-has_lon_msg_done:
+hlmDone:
     pop ebx
     pop eax
     pop ds
     retf32
 has_lon_module_msg       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReceiveOne
+;
+;       description:    Receive one msg
+;
+;       PARAMETERS:     DS              Lon dev
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveOne  Proc near
+    push fs
+    push bx
+;    
+    EnterSection ds:lon_section
+    mov cx,ds:lon_rec_count
+    or cx,cx
+    jz roFail
+;
+    mov fs,ds:lon_rec_buf
+    mov bx,ds:lon_rec_head
+    xor ax,ax
+    xchg ax,fs:[bx]
+    dec cx
+    mov ds:lon_rec_count,cx
+;
+    add bx,2
+    mov cx,ds:lon_rec_size
+    shl cx,1
+    cmp bx,cx
+    jnz roNoWrap
+    xor bx,bx
+    
+roNoWrap:
+    mov ds:lon_rec_head,bx
+    clc
+    jmp roLeave
+
+roFail:
+    stc
+
+roLeave:
+    LeaveSection ds:lon_section
+    jc roDone
+;
+    mov bx,ax
+    GetSelectorBaseSize
+    jc roDone
+;
+    movzx ecx,cx
+    push ds
+    push es
+    push ecx
+    push esi
+    push edi
+;    
+    mov ds,bx
+    xor esi,esi
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov es,bx
+    xor cx,cx
+    mov ds,cx
+    FreeMem
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+    pop ds    
+                
+roDone:
+    pop bx
+    pop fs
+    ret
+ReceiveOne  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -182,7 +333,8 @@ has_lon_module_msg       Endp
 ;
 ;       PARAMETERS:     BX              Lon handle
 ;                       ES:(E)DI        Buffer
-;                       (E)CX           Size
+;
+;       RETURNS:        ECX             Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -198,15 +350,9 @@ receive_lon_module_msg16       Proc far
     DerefHandle
     jc rec_lon_msg_done16
 ;
-    movzx ecx,cx
     movzx edi,di
     mov ds,[ebx].lon_handle_sel
-    mov eax,ds:lon_receive_proc
-    or eax,eax
-    clc
-    jz rec_lon_msg_done16
-;       
-    call ds:lon_receive_proc
+    call ReceiveOne
 
 rec_lon_msg_done16:
     pop edi
@@ -226,12 +372,7 @@ receive_lon_module_msg32       Proc far
     jc rec_lon_done32
 ;
     mov ds,[ebx].lon_handle_sel
-    mov eax,ds:lon_receive_proc
-    or eax,eax
-    clc
-    jz rec_lon_done32
-;       
-    call ds:lon_receive_proc
+    call ReceiveOne
 
 rec_lon_done32:
     pop ebx
@@ -259,8 +400,9 @@ start_wait_for_lon PROC far
     mov ds,es:lon_sel
     mov ds:lon_avail_obj,es
 ;
-    call ds:lon_has_msg_proc
-    jc start_wait_for_done
+    mov ax,ds:lon_rec_count
+    or ax,ax
+    jz start_wait_for_done
 ;
     mov ds:lon_avail_obj,0
     SignalWait
@@ -269,7 +411,7 @@ start_wait_for_done:
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 start_wait_for_lon Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -290,7 +432,7 @@ stop_wait_for_lon  PROC far
     mov ds:lon_avail_obj,0
 ;
     pop ds
-    ret
+    retf32
 stop_wait_for_lon Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -307,16 +449,19 @@ stop_wait_for_lon Endp
 is_lon_idle    PROC far
     push ds
     push ax
-    push bx
 ;
     mov ds,es:lon_sel
-    call ds:lon_has_msg_proc
-    cmc
-;    
-    pop bx
+    mov ax,ds:lon_rec_count
+    or ax,ax
+    clc
+    jz iliDone
+;
+    stc
+
+iliDone:    
     pop ax
     pop ds
-    ret
+    retf32
 is_lon_idle Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -331,7 +476,7 @@ is_lon_idle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 clear_lon  PROC far
-    ret
+    retf32
 clear_lon Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -355,6 +500,7 @@ aw2 DD OFFSET clear_lon,               SEG code
 aw3 DD OFFSET is_lon_idle,             SEG code
 
 add_wait_for_lon_module   PROC far
+    push ds
     push es
     push ax
     push edi
@@ -387,7 +533,8 @@ add_wait_done:
     pop edi
     pop ax
     pop es
-    ret
+    pop ds
+    retf32
 add_wait_for_lon_module   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -457,22 +604,36 @@ open_lon_module       Proc far
     mov ds,ax
 ;
     movzx eax,si
-    shl eax,1
     mov ds:lon_send_size,ax
+    shl eax,1
     AllocateSmallGlobalMem
     mov ds:lon_send_buf,es
     mov ds:lon_send_count,0
     mov ds:lon_send_head,0
     mov ds:lon_send_tail,0
+;    
+    push di
+    mov cx,ds:lon_send_size
+    xor di,di
+    xor ax,ax
+    rep stosw
+    pop di
 ;
     movzx eax,di
-    shl eax,1
     mov ds:lon_rec_size,ax
+    shl eax,1
     AllocateSmallGlobalMem
     mov ds:lon_rec_buf,es
     mov ds:lon_rec_count,0
     mov ds:lon_rec_head,0
     mov ds:lon_rec_tail,0
+;    
+    push di
+    mov cx,ds:lon_rec_size
+    xor di,di
+    xor ax,ax
+    rep stosw
+    pop di
 ;    
     call fword ptr ds:lon_open_proc    
     clc
@@ -514,10 +675,61 @@ close_lon_module       Proc far
     jc close_lon_done
 ;
     push ds
+    push es
+    push fs
     push ebx
+    push cx
+    push si
+;    
     mov ds,ds:[ebx].lon_handle_sel
     call fword ptr ds:lon_close_proc    
+;
+    mov fs,ds:lon_send_buf
+    mov cx,ds:lon_send_size
+    xor si,si
+
+close_free_send_loop:
+    mov ax,fs:[si]
+    or ax,ax
+    jz close_free_send_next
+;
+    mov es,ax
+    FreeMem
+
+close_free_send_next:
+    add si,2
+    loop close_free_send_loop
+;
+    mov fs,ds:lon_rec_buf
+    mov cx,ds:lon_rec_size
+    xor si,si
+
+close_free_rec_loop:
+    mov ax,fs:[si]
+    or ax,ax
+    jz close_free_rec_next
+;
+    mov es,ax
+    FreeMem
+
+close_free_rec_next:
+    add si,2
+    loop close_free_rec_loop
+;
+    xor ax,ax
+    mov fs,ax
+;    
+    mov es,ds:lon_send_buf
+    FreeMem
+;
+    mov es,ds:lon_rec_buf
+    FreeMem
+;
+    pop si
+    pop cx
     pop ebx
+    pop fs
+    pop es
     pop ds
     FreeHandle
 
@@ -547,6 +759,7 @@ add_lon_module     PROC far
     push dx
 ;
     mov ds:lon_avail_obj,0
+    InitSection ds:lon_section
 ;
     mov dx,ds
     mov bx,SEG data

@@ -658,4 +658,6 @@ get_acpi_pnp_device_mem_nr  = 542
 irq_timer_expired_nr        = 543
 force_level_irq_nr          = 544
 
+has_can_send_buf_nr         = 545
+
 osgate_entries				= 560

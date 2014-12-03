@@ -3520,6 +3520,11 @@ NotifyIrData      MACRO
 
 ;;;;;;;;;; CAN bus ;;;;;;;;;
 
+; OUT  NC       Has buffer
+HasCanSendBuf      MACRO
+    OsGate has_can_send_buf_nr
+                        ENDM
+
 ; IN  EDX:EAX   Data
 ; IN  CL        Size (0..8)
 ; IN  EBX       Identifier
