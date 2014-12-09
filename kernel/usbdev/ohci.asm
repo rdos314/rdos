@@ -2467,6 +2467,22 @@ ClearStalled   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetMaxLen
+;
+;           DESCRIPTION:    Get max len
+;
+;           RETURNS:        AL      Maxlen
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMaxLen   Proc far
+    mov al,8
+    retf32
+GetMaxLen   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdateQueue
 ;
 ;           DESCRIPTION:    Update done queue
@@ -3192,6 +3208,7 @@ ot21 DD OFFSET FreeHubPort,     SEG code
 ot22 DD OFFSET Has64Bit,        SEG code
 ot23 DD OFFSET IsStalled,       SEG code
 ot24 DD OFFSET ClearStalled,    SEG code
+ot25 DD OFFSET GetMaxLen,       SEG code
 
 InitFunction    Proc near
     push es
@@ -3203,7 +3220,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*25
+    mov cx,2*26
 
 ifTabLoop:
     lods dword ptr cs:[si]

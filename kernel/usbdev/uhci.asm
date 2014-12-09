@@ -2590,6 +2590,22 @@ ClearStalled   Proc far
     int 3
     retf32
 ClearStalled   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetMaxLen
+;
+;           DESCRIPTION:    Get max len
+;
+;           RETURNS:        AL      Maxlen
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMaxLen   Proc far
+    mov al,8
+    retf32
+GetMaxLen   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2884,6 +2900,7 @@ ut21 DD OFFSET FreeHubPort,     SEG code
 ut22 DD OFFSET Has64Bit,        SEG code
 ut23 DD OFFSET IsStalled,       SEG code
 ut24 DD OFFSET ClearStalled,    SEG code
+ut25 DD OFFSET GetMaxLen,       SEG code
 
 InitFunction    Proc near
     pushad
@@ -2907,7 +2924,7 @@ ifNotLegacy:
 ;
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*25
+    mov cx,2*26
 
 ifTabLoop:
     lods dword ptr cs:[si]

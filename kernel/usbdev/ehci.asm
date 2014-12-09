@@ -2788,6 +2788,22 @@ ClearStalled   Proc far
     pop es        
     retf32
 ClearStalled Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetMaxLen
+;
+;           DESCRIPTION:    Get max len
+;
+;           RETURNS:        AL      Maxlen
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMaxLen   Proc far
+    mov al,64
+    retf32
+GetMaxLen   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3526,6 +3542,7 @@ et21 DD OFFSET FreeHubPort,     SEG code
 et22 DD OFFSET Has64Bit,        SEG code
 et23 DD OFFSET IsStalled,       SEG code
 et24 DD OFFSET ClearStalled,    SEG code
+et25 DD OFFSET GetMaxLen,       SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -3543,7 +3560,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*25
+    mov cx,2*26
 
 ifTabLoop:
     lods dword ptr cs:[si]

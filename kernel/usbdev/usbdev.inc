@@ -127,6 +127,9 @@ is_stalled_proc      DD ?,?
 ;  IN FS        Clear stalled
 clear_stalled_proc      DD ?,?
 
+; OUT AL        Maxlen
+get_max_len_proc        DD ?,?
+
 usb_section            section_typ <>
 
 usb_controller_id      DW ?
