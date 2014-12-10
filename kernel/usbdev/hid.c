@@ -344,6 +344,35 @@ static unsigned char DefaultMouseDescriptor[DEFAULT_MOUSE_SIZE] =
             0xC0, 0xC0
         };
             
+
+#define EFF_TOUCH_SIZE  45
+
+static unsigned char EffTouchDescriptor[EFF_TOUCH_SIZE] =
+        {
+            0x5, 0xd,
+            0x9, 0x4,
+            0xA1,0x1,
+            0x85,0x1,
+            0x9, 0x22,
+            0xA1,0x2,
+            0x9, 0x42,
+            0x15,0x0,
+            0x25,0x1,
+            0x75,0x1,
+            0x95,0x1,
+            0x81,0x2,
+            0x75,0x7,
+            0x81,0x3,
+            0x5, 0x1,
+            0x26,0xFF, 0xF,
+            0x75,0x10,
+            0x9, 0x30,
+            0x81,0x2,
+            0x9, 0x31,
+            0x81,0x2,
+            0xC0,
+            0xC0           
+        };
                 
 
 /*##########################################################################
@@ -417,6 +446,10 @@ int OpenHid(struct THidDevice *dev)
         return TRUE;
     else
     {
+        dev->ReportDescrSize = EFF_TOUCH_SIZE;
+        memcpy(dev->ReportDescrData, EffTouchDescriptor, EFF_TOUCH_SIZE);
+        return TRUE;
+
         switch (dev->Protocol)
         {
             case 1:

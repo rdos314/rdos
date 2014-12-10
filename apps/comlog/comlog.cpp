@@ -53,8 +53,8 @@ void cdecl main()
         TWait Wait;
         TKeyboardDevice Keyboard;
 
-        TSerialDevice Port1(1, 19200, 'E', 8, 1);
-        TSerialDevice Port2(2, 19200, 'E', 8, 1);
+        TSerialDevice Port1(1, 9600, 'N', 8, 1);
+        TSerialDevice Port2(2, 9600, 'N', 8, 1);
 
         Port1.Open();
         Port2.Open();
@@ -71,7 +71,7 @@ void cdecl main()
                 WaitDevice = Wait.WaitForever();
                 if (WaitDevice == &Port1)
                 {
-                        RdosGetTime(&Debug.TimeMSB, &Debug.TimeLSB);
+                        Debug.Time = RdosGetLongTime();
                         Debug.Channel = 1;
                         Debug.ch = Port1.Read();
                         File->Write(&Debug, sizeof(Debug));
@@ -80,7 +80,7 @@ void cdecl main()
 
                 if (WaitDevice == &Port2)
                 {
-                        RdosGetTime(&Debug.TimeMSB, &Debug.TimeLSB);
+                        Debug.Time = RdosGetLongTime();
                         Debug.Channel = 2;
                         Debug.ch = Port2.Read();
                         File->Write(&Debug, sizeof(Debug));

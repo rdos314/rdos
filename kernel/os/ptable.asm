@@ -1881,9 +1881,9 @@ local_set_thread_page_entry32    Endp
 local_get_thread_page_dir32    Proc near
     push ds
     push edx
+    push esi
 ;    
-    mov eax,cr3
-    push eax
+    mov esi,cr3
 ;    
     mov ds,bp    
     mov eax,ds:p_cr3
@@ -1896,12 +1896,11 @@ local_get_thread_page_dir32    Proc near
     cli
     mov cr3,eax
     mov eax,[edx]
-;    
-    pop edx
-    mov cr3,edx
+    mov cr3,esi
     sti
     xor ebx,ebx
 ;
+    pop esi
     pop edx
     pop ds    
     ret

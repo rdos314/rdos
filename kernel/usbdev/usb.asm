@@ -2450,6 +2450,7 @@ config_usb_device       Proc near
     call fword ptr ds:add_status_in_proc
     call fword ptr ds:issue_transfer_proc
     call fword ptr ds:wait_for_completion_proc
+    call fword ptr ds:was_transfer_ok_proc
 ;
     pushf
     FreeMem
@@ -2510,6 +2511,7 @@ cudNextDescr:
     jmp cudDone
 
 cudFail:
+    int 3
     stc
     
 cudDone: 
