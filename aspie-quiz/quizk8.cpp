@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizK8::TQuizK8(const char *FileName)
-  : TQuiz(130),
+  : TQuiz(132),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -109,7 +109,7 @@ int TQuizK8::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizK8::GetQuizN()
 {
-    return 130;
+    return 132;
 }
 
 /*##########################################################################
@@ -563,6 +563,8 @@ void TQuizK8::SetupTexts()
   Quiz[127].Text = "Do you form attachments with sex?";
   Quiz[128].Text = "Do you believe in supernatural phenomens?";
   Quiz[129].Text = "Do you have psychic abilities?";
+  Quiz[130].Text = "Are you shy?";
+  Quiz[131].Text = "Do you flirt with quick glances?";
 }
 
 /*##########################################################################
@@ -746,7 +748,7 @@ void TQuizK8::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 130; i++)
+    for (i = 0; i < 132; i++)
             DefineGlobalId(i, i);
 }
 
