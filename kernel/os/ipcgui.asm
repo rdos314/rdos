@@ -179,6 +179,35 @@ handle_video  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           HandleKey
+;
+;           DESCRIPTION:    Handle keyboard data
+;
+;           PARAMETERS:     ES:EDI      Msg
+;                           ECX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handle_key  Proc near
+    push ds
+    push es
+    push edi
+    push ecx
+    int 3
+;    
+    xor ecx,ecx
+    ReplyMailslot
+;
+    pop ecx
+    pop edi
+    pop es    
+    pop ds
+    ret
+handle_key  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           IPC thread
 ;
 ;           DESCRIPTION:    IPC thread
@@ -194,7 +223,7 @@ ipc_tab:
 it00    DD OFFSET handle_invalid
 it01    DD OFFSET handle_mode
 it02    DD OFFSET handle_video
-it03    DD OFFSET handle_invalid
+it03    DD OFFSET handle_key
 it04    DD OFFSET handle_invalid
 it05    DD OFFSET handle_invalid
 it06    DD OFFSET handle_invalid

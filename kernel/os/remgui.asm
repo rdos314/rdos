@@ -179,6 +179,48 @@ UpdateVideo Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           UpdateKeyboard
+;
+;               DESCRIPTION:    update keyboard
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateKeyboard  Proc near
+    push ds
+    push es
+    pushad
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ax 
+;
+    ReadKeyEvent
+    jc ukDone
+;    
+    mov edi,OFFSET ReplyBuf
+    mov ds:[edi].kr_op,GUI_REQ_KEY
+    mov ds:[edi].kr_char,ax
+    mov ds:[edi].kr_state,cx
+    mov ds:[edi].kr_virtual,dl
+    mov ds:[edi].kr_scan,dh
+;    
+    mov bx,ds:MailslotHandle
+    mov esi,OFFSET ReqBuf
+    mov ecx,SIZE key_req_struc
+    mov eax,10h    
+    SendMailslot
+    clc
+
+ukDone:
+    popad
+    pop es
+    pop ds
+    ret
+UpdateKeyboard  Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           DebugThread
 ;
 ;               DESCRIPTION:    Debug thread
@@ -227,6 +269,8 @@ rem_gui_init:
 rem_gui_loop:    
     call UpdateMode
     call UpdateVideo
+    call UpdateKeyboard
+    jnc rem_gui_loop
 ;
     mov ax,100
     WaitMilliSec
