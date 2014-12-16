@@ -1821,6 +1821,14 @@ DEBUG [ip-address] [host name]
   host name       Host name to remote debug
 .
 
+:TEXT_CMDHELP_REMOTE
+Remote desktop
+
+REMOTE [ip-address] [host name]
+  ip-address      IP address of remote host
+  host name       Host name of remote host
+.
+
 :TEXT_CMDHELP_AUDIO
 Shows audio information
 

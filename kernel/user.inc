@@ -1146,6 +1146,11 @@ GetCurrIniVar	MACRO
 ;;;;;;;;;;;;;; DEBUGGING ;;;;;;;;;;;
 
 ; IN  EDX           IP address (0 = local)
+RemoteGui      MACRO
+	UserGate remote_gui_nr
+						ENDM
+
+; IN  EDX           IP address (0 = local)
 RemoteDebug      MACRO
 	UserGate remote_debug_nr
 						ENDM

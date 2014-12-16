@@ -41,6 +41,7 @@ INCLUDE ..\os.inc
         extrn init_video:near
         extrn init_pcfont:near
         extrn init_ipc:near
+        extrn init_remote:near
 
 code    SEGMENT byte public 'CODE'
 
@@ -65,6 +66,7 @@ init    PROC far
     call init_mouse
     call init_video
     call init_ipc
+    call init_remote
     clc
         ret
 init    ENDP

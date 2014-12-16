@@ -721,6 +721,8 @@
 #define usergate_get_usb_interface 0x00000239
 #define usergate_set_usb_interface 0x0000023A
 
+#define usergate_remote_gui 0x0000023B
+
 
 
 #ifdef __FLAT__
@@ -1447,6 +1449,8 @@
 #define CallGate_get_usb_interface 0x67 0x9a 57 2 0 0 3 0
 #define CallGate_set_usb_interface 0x67 0x9a 58 2 0 0 3 0
 
+#define CallGate_remote_gui 0x67 0x9a 59 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2170,5 +2174,7 @@
 
 #define CallGate_get_usb_interface 0x3e 0x67 0x9a 57 2 0 0 3 0
 #define CallGate_set_usb_interface 0x3e 0x67 0x9a 58 2 0 0 3 0
+
+#define CallGate_remote_gui 0x3e 0x67 0x9a 59 2 0 0 3 0
 
 #endif

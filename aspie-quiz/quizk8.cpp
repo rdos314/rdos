@@ -432,6 +432,8 @@ void TQuizK8::SetupTexts()
   Quiz[127].MyGroup = GROUP_MIXED;
   Quiz[128].MyGroup = GROUP_MIXED;
   Quiz[129].MyGroup = GROUP_MIXED;
+  Quiz[130].MyGroup = GROUP_MIXED;
+  Quiz[131].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Is it important for you to find a unique niche where you can acquire unique competence?";

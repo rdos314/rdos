@@ -80,6 +80,7 @@
 #include "pci.h"
 #include "debug.h"
 #include "audio.h"
+#include "remote.h"
 
 #include "file.h"
 #include "path.h"
@@ -138,6 +139,7 @@ static TCommandFactory *path;
 static TCommandFactory *rd;
 static TCommandFactory *reboot;
 static TCommandFactory *rem;
+static TCommandFactory *remote;
 static TCommandFactory *rmdir;
 static TCommandFactory *rmpart;
 static TCommandFactory *set;
@@ -221,6 +223,7 @@ TSession::TSession(const char *ipc)
         set = new TSetFactory;
         rmpart = new TRemovePartitionFactory;
         rmdir = new TRmdirFactory;
+        remote = new TRemoteFactory;
         rem = new TRemFactory;
         reboot = new TRebootFactory;
         rd = new TRdFactory;
@@ -354,6 +357,7 @@ TSession::~TSession()
         delete set;
         delete rmpart;
         delete rmdir;
+        delete remote;
         delete rem;
         delete reboot;
         delete rd;

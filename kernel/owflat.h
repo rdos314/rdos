@@ -699,6 +699,10 @@
     CallGate_remote_debug  \
     parm [edx];
 
+#pragma aux RdosRemoteGui = \
+    CallGate_remote_gui  \
+    parm [edx];
+
 #pragma aux RdosDebugTrace = \
     CallGate_debug_trace;
 

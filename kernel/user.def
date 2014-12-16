@@ -721,4 +721,6 @@ utf16_to_ansi_nr                = 568
 get_usb_interface_nr            = 569
 set_usb_interface_nr            = 570
 
+remote_gui_nr                   = 571
+
 usergate_entries			    = 580

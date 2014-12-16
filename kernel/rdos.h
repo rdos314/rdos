@@ -680,6 +680,7 @@ void RDOSAPI RdosContinueDebugEvent(int handle, int thread);
 #endif
 
 void RDOSAPI RdosRemoteDebug(long IP);
+void RDOSAPI RdosRemoteGui(long IP);
 
 int RDOSAPI RdosOpenSyslog();
 void RDOSAPI RdosCloseSyslog(int handle);

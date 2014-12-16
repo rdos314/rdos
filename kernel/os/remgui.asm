@@ -1,6 +1,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; RDOS operating system
-; Copyright (C) 1988-2000, Leif Ekblad
+; Copyright (C) 2000, Leif Ekblad
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
@@ -20,105 +20,128 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; IPCGUI.ASM
-; IPC based GUI
+; REMGUI.ASM
+; Remote GUI interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-INCLUDE ..\driver.def
 INCLUDE protseg.def
-INCLUDE ..\user.def
 INCLUDE ..\os.def
-INCLUDE ..\user.inc
+INCLUDE ..\user.def
 INCLUDE ..\os.inc
+INCLUDE ..\user.inc
 INCLUDE system.def
-INCLUDE system.inc
 
-.386p
+    .386p
+
+data    SEGMENT byte public 'DATA'
+
+MailslotHandle          DW ?
+
+data    ENDS
 
 code    SEGMENT byte public 'CODE'
 
-    assume cs:code
+        assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           IPC thread
+;               NAME:           DebugThread
 ;
-;           DESCRIPTION:    IPC thread
+;               DESCRIPTION:    Debug thread
 ;
-;           PARAMETERS:         
+;               PARAMETERS:     EDX     IP address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ipc_thread_name           DB 'IPC GUI',0
-mailslot_name               DB 'GUI',0
+rem_gui_name   DB 'Remote GUI', 0
+mailslot_name       DB 'GUI',0
 
-ipc_thread:
+rem_gui_process:
+    mov ax,44h
+    EnableFocus
+    SetFocus
+;    
+    int 3
+    mov ax,SEG data
+    mov ds,ax
+;
+    or edx,edx
+    jz rem_gui_local
+;    
     mov ax,cs
     mov es,ax
     mov di,OFFSET mailslot_name
-    mov cx,1000h
-    DefineMailslot
-;
-    movzx eax,cx
-    AllocateGlobalMem
+    GetRemoteMailslot
+    mov ds:MailslotHandle,bx
+    jmp rem_gui_init
 
-ipc_thread_loop:
-    xor di,di
-    ReceiveMailslot
+rem_gui_local:
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET mailslot_name
+    GetLocalMailslot
+    mov ds:MailslotHandle,bx
+
+rem_gui_init: 
     int 3
-    jmp ipc_thread_loop
+    jmp rem_gui_init
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           init_ipc_system
+;               NAME:           RemoteGui
 ;
-;           DESCRIPTION:    Init IPC system
+;               DESCRIPTION:    Remote GUI task
 ;
-;           PARAMETERS:         
+;               PARAMETERS:     EDX     IP address to debug
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_ipc_system     PROC far
+remote_gui_name   DB 'Remote Gui', 0
+
+remote_gui    Proc far
     push ds
     push es
     pusha
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov si,OFFSET ipc_thread
-    mov di,OFFSET ipc_thread_name
-    mov cx,stack0_size
-    mov ax,10
-    CreateThread
+    mov esi,OFFSET rem_gui_process
+    mov edi,OFFSET rem_gui_name
+    mov ecx,stack0_size
+    mov ax,5
+    CreateProcess
     popa
     pop es
     pop ds
     ret
-init_ipc_system     ENDP
+remote_gui    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           init_ipc
+;           NAME:           init_remote
 ;
-;           DESCRIPTION:    Init IPC GUI
-;
-;           PARAMETERS:         
+;           DESCRIPTION:    Init remote GUI
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public init_ipc
-    
-init_ipc  PROC near
+    public init_remote
+
+init_remote Proc near
     mov ax,cs
+    mov ds,ax
     mov es,ax
-    mov edi,OFFSET init_ipc_system
-    HookInitTasking
+;
+    mov esi,OFFSET remote_gui
+    mov edi,OFFSET remote_gui_name
+    xor dx,dx
+    mov ax,remote_gui_nr
+    RegisterBimodalUserGate
     ret
-init_ipc    ENDP
+init_remote    Endp
 
 code    ENDS
 
