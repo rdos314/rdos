@@ -188,6 +188,11 @@ void cdecl main()
     int i;
         char ch;
 
+    RdosWaitMilli(1000);
+
+    RdosSetCurDrive('D' - 'A');
+    RdosSetCurDir("d:\\www");
+
     TDataStore *DataStore;
 
     Node = 0x4301A8C0;
@@ -206,6 +211,8 @@ void cdecl main()
     DataStore = new TDataStore("e:\\data", "Data store", Node, 600);
 //     DataStore->NotifyData = HandleRealData;
 
+    RdosStartWatchdog(60000);
+
      for (;;)
      {
           socket = new TTcpSocket(Node, 601, 600000, 0x4000);
@@ -213,8 +220,11 @@ void cdecl main()
 
           while (socket->IsOpen())
           {
+                RdosKickWatchdog();
+
                 if (socket->WaitForData(25000))
                 {
+                    
                     count = socket->Read((char *)&size, 4);
                     if (count == 4)
                     {
