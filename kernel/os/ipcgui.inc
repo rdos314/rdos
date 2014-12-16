@@ -31,11 +31,23 @@ gr_op		    DB ?
 
 gen_req_struc	ENDS
 
+video_req_struc	STRUC
+
+vr_op		    DB ?
+vr_row          DW ?
+
+video_req_struc	ENDS
+
 mode_reply_struc	STRUC
 
 grm_mode		DW ?
+grm_width       DW ?
+grm_height      DW ?
+grm_row_size    DW ?
+grm_bpp         DB ?
 
 mode_reply_struc	ENDS
 
 GUI_REQ_MODE    	EQU 1
+GUI_REQ_VIDEO       EQU 2
 

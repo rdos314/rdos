@@ -183,6 +183,8 @@ mon_video_data_sel	EQU 438h
 
 mail_code_sel		EQU 440h
 
+real_text_sel       EQU 448h
+
 mon_video_code_sel	EQU 450h
 video_pos_sel		EQU 458h
 

@@ -31,15 +31,150 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\video.inc
 INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ipcgui.inc
 
 .386p
 
+video_focus_seg STRUC
+
+v_handle        DW ?
+
+video_focus_seg ENDS
+
+data    SEGMENT byte public 'DATA'
+
+ReplyBuf                DB 1000h DUP(?)
+
+data    ENDS
+
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HandleInvalid
+;
+;           DESCRIPTION:    Handle unknown function
+;
+;           PARAMETERS:     ES:EDI      Msg
+;                           ECX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handle_invalid  Proc near
+    xor ecx,ecx
+    ReplyMailslot
+    ret
+handle_invalid  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HandleMode
+;
+;           DESCRIPTION:    Handle video mode function
+;
+;           PARAMETERS:     ES:EDI      Msg
+;                           ECX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handle_mode  Proc near
+    push ds
+    push es
+    push edi
+    push ecx
+;    
+    mov ax,video_focus_sel
+    mov ds,ax
+    mov ds,ds:v_handle
+;
+    mov cx,SEG data
+    mov es,cx
+    mov edi,OFFSET ReplyBuf
+    mov ecx,SIZE mode_reply_struc
+;    
+    mov ax,ds:v_mode
+    mov es:[edi].grm_mode,ax
+    mov ax,ds:v_width
+    mov es:[edi].grm_width,ax
+    mov ax,ds:v_height
+    mov es:[edi].grm_height,ax
+    mov ax,ds:v_row_size
+    mov es:[edi].grm_row_size,ax
+    mov al,ds:v_bpp
+    mov es:[edi].grm_bpp,al
+    ReplyMailslot
+;
+    pop ecx
+    pop edi
+    pop es    
+    pop ds
+    ret
+handle_mode  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HandleVideo
+;
+;           DESCRIPTION:    Handle video data function
+;
+;           PARAMETERS:     ES:EDI      Msg
+;                           ECX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handle_video  Proc near
+    push ds
+    push es
+    push edi
+    push ecx
+;    
+    mov ax,video_focus_sel
+    mov ds,ax
+    mov ds,ds:v_handle
+;
+    movzx ecx,ds:v_row_size
+;
+    mov ax,ds:v_mode
+    cmp ax,3
+    je handle_text_video
+
+handle_graph_video:
+    int 3
+
+handle_text_video:    
+    mov ecx,2 * 80
+    mov ax,real_text_sel
+    mov ds,ax
+    movzx eax,es:[edi].vr_row
+    mul ecx
+    mov esi,eax
+;
+    mov ax,SEG data
+    mov es,ax
+    mov edi,OFFSET ReplyBuf
+;
+    push ecx
+    push edi
+    rep movs es:[edi],ds:[esi]        
+    pop edi
+    pop ecx
+;    
+    ReplyMailslot
+;
+    pop ecx
+    pop edi
+    pop es    
+    pop ds
+    ret
+handle_video  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -55,6 +190,24 @@ code    SEGMENT byte public 'CODE'
 ipc_thread_name           DB 'IPC GUI',0
 mailslot_name               DB 'GUI',0
 
+ipc_tab:
+it00    DD OFFSET handle_invalid
+it01    DD OFFSET handle_mode
+it02    DD OFFSET handle_video
+it03    DD OFFSET handle_invalid
+it04    DD OFFSET handle_invalid
+it05    DD OFFSET handle_invalid
+it06    DD OFFSET handle_invalid
+it07    DD OFFSET handle_invalid
+it08    DD OFFSET handle_invalid
+it09    DD OFFSET handle_invalid
+it0A    DD OFFSET handle_invalid
+it0B    DD OFFSET handle_invalid
+it0C    DD OFFSET handle_invalid
+it0D    DD OFFSET handle_invalid
+it0E    DD OFFSET handle_invalid
+it0F    DD OFFSET handle_invalid
+
 ipc_thread:
     mov ax,cs
     mov es,ax
@@ -68,7 +221,14 @@ ipc_thread:
 ipc_thread_loop:
     xor di,di
     ReceiveMailslot
-    int 3
+    movzx ebx,es:[edi].gr_op
+    cmp ebx,10h
+    jb ipc_in_range
+;
+    xor ebx,ebx
+
+ipc_in_range:
+    call cs:[4*ebx].ipc_tab        
     jmp ipc_thread_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -118,6 +278,23 @@ init_ipc  PROC near
     mov es,ax
     mov edi,OFFSET init_ipc_system
     HookInitTasking
+;
+    mov eax,8000h
+    AllocateBigLinear
+    mov bx,real_text_sel
+    mov ecx,eax
+    CreateDataSelector16
+;
+    mov cx,8        
+    xor ebx,ebx
+    mov eax,0B8063h
+
+init_text_loop:    
+    SetPageEntry
+    add edx,1000h
+    add eax,1000h    
+    loop init_text_loop
+;    
     ret
 init_ipc    ENDP
 

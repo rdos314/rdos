@@ -37,15 +37,144 @@ INCLUDE ipcgui.inc
 
 data    SEGMENT byte public 'DATA'
 
+CurrMode                DW ?
+CurrWidth               DW ?
+CurrHeight              DW ?
+CurrRowSize             DW ?
+CurrBpp                 DB ?
+
 MailslotHandle          DW ?
 ReqBuf                  DB 16 DUP(?)
-ReplyBuf                DB 1024 DUP(?)
+ReplyBuf                DB 1000h DUP(?)
 
 data    ENDS
 
 code    SEGMENT byte public 'CODE'
 
         assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           UpdateMode
+;
+;               DESCRIPTION:    update video mode
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateMode  Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ax 
+;       
+    mov bx,ds:MailslotHandle
+    mov esi,OFFSET ReqBuf
+    mov ecx,SIZE gen_req_struc
+    mov edi,OFFSET ReplyBuf
+    mov eax,1000h
+    mov ds:[esi].gr_op,GUI_REQ_MODE    
+    SendMailslot
+;
+    mov ax,es:[edi].grm_mode
+    cmp ax,ds:CurrMode
+    je umDone
+;
+    cmp ax,3
+    je umText
+
+umGraphic:
+    mov ds:CurrMode,ax 
+    mov ax,[edi].grm_row_size
+    mov ds:CurrRowSize,ax
+;    
+    movzx ax,[edi].grm_bpp
+    mov ds:CurrBpp,al
+;
+    mov cx,[edi].grm_width
+    mov ds:CurrWidth,cx
+;    
+    mov dx,[edi].grm_height
+    mov ds:CurrHeight,dx
+;    
+    GetVideoMode
+    SetVideoMode
+    jmp umDone
+
+umText:
+    mov ds:CurrRowSize,2 * 80
+    mov ds:CurrWidth,80
+    mov ds:CurrHeight,25
+    mov ds:CurrMode,ax 
+    SetVideoMode
+
+umDone:
+    popad
+    pop es
+    pop ds
+    ret
+UpdateMode  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           UpdateVideo
+;
+;               DESCRIPTION:    update video data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateVideo  Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ax 
+    mov esi,OFFSET ReqBuf
+    mov ds:[esi].vr_row,0
+    mov ds:[esi].vr_op,GUI_REQ_VIDEO
+
+uvLoop:
+    mov bx,ds:MailslotHandle
+    mov esi,OFFSET ReqBuf
+    mov ecx,SIZE video_req_struc
+    mov edi,OFFSET ReplyBuf
+    mov eax,1000h
+    SendMailslot
+;
+    mov ax,ds:CurrMode
+    cmp ax,3
+    jne uvGraph
+
+uvText:    
+    shr cx,1
+    xor ax,ax
+    mov dx,ds:[esi].vr_row
+    WriteAttributeString
+    jmp uvNext
+
+uvGraph:
+    int 3 
+
+uvNext:  
+    inc ds:[esi].vr_row
+    mov ax,ds:[esi].vr_row    
+    cmp ax,ds:CurrHeight
+    je uvDone
+;
+    jmp uvLoop
+
+uvDone:
+    popad
+    pop es
+    pop ds
+    ret
+UpdateVideo Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -68,6 +197,10 @@ rem_gui_process:
 ;    
     mov ax,SEG data
     mov ds,ax
+    mov ds:CurrMode,3
+    mov ds:CurrRowSize,2 * 80
+    mov ds:CurrWidth,80
+    mov ds:CurrHeight,25
 ;
     or edx,edx
     jz rem_gui_local
@@ -87,8 +220,17 @@ rem_gui_local:
     mov ds:MailslotHandle,bx
 
 rem_gui_init: 
-    int 3
-    jmp rem_gui_init
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ax
+
+rem_gui_loop:    
+    call UpdateMode
+    call UpdateVideo
+;
+    mov ax,100
+    WaitMilliSec
+    jmp rem_gui_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
