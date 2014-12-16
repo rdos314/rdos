@@ -33,6 +33,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE system.def
 INCLUDE system.inc
+INCLUDE ipcgui.inc
 
 .386p
 

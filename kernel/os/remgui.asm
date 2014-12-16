@@ -31,12 +31,15 @@ INCLUDE ..\user.def
 INCLUDE ..\os.inc
 INCLUDE ..\user.inc
 INCLUDE system.def
+INCLUDE ipcgui.inc
 
     .386p
 
 data    SEGMENT byte public 'DATA'
 
 MailslotHandle          DW ?
+ReqBuf                  DB 16 DUP(?)
+ReplyBuf                DB 1024 DUP(?)
 
 data    ENDS
 
@@ -63,7 +66,6 @@ rem_gui_process:
     EnableFocus
     SetFocus
 ;    
-    int 3
     mov ax,SEG data
     mov ds,ax
 ;
