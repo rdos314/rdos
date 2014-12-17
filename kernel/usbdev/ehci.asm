@@ -94,6 +94,7 @@ ehc_hcc_flags       DB ?
 ehc_flags           DW ?
 ehc_ports           DB ?
 ehc_debug_port      DB ?
+ehc_version         DW ?
 ehc_comp_ports      DB ?
 
 ehc_section         section_typ <>
@@ -3557,6 +3558,9 @@ InitFunction    Proc near
 ;
     mov ax,flat_sel
     mov es,ax   
+    mov ax,ds:ehc_version
+    cmp ax,-1
+    je ifDone
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
@@ -3713,7 +3717,8 @@ ifPortDone:
     mov fs:HcInterruptEnable,eax
 ;    
     call CreateInterrupt
-;
+
+ifDone:
     popad
     pop fs
     pop es
@@ -3750,9 +3755,14 @@ AddFunction  Proc near
     AllocateBigLinear
     pop eax
 ;
+    push eax
+    and ax,0F000h
     xor ebx,ebx
     or ax,813h
     SetPageEntry
+    pop eax
+    and eax,0FFFh
+    or edx,eax
 ;
     push ecx
     AllocateGdt
@@ -3789,6 +3799,9 @@ AddFunction  Proc near
     mov cl,es:hcp_CAPLEN
     mov ds:ehc_op_offs,cl
     mov ds:ehc_flags,0
+;
+    mov ax,es:hcp_HCIVERSION
+    mov ds:ehc_version,ax    
 ;
     mov al,byte ptr es:hcp_HCCPARAMS
     mov ds:ehc_hcc_flags,al
@@ -3888,7 +3901,7 @@ InitPciAdapter  Proc near
 ;
     mov cl,10h
     ReadPciDword
-    and ax,0F000h
+    and ax,0FF00h
     mov ebp,eax
     call AddFunction
 ;       
