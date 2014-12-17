@@ -48,6 +48,13 @@ kr_scan         DB ?
 
 key_req_struc	ENDS
 
+focus_req_struc	STRUC
+
+fr_op		    DB ?
+fr_key          DB ?
+
+focus_req_struc	ENDS
+
 mode_reply_struc	STRUC
 
 grm_mode		DW ?
@@ -61,4 +68,6 @@ mode_reply_struc	ENDS
 GUI_REQ_MODE    	EQU 1
 GUI_REQ_VIDEO       EQU 2
 GUI_REQ_KEY         EQU 3
+GUI_REQ_FOCUS       EQU 4
+GUI_REQ_RESET       EQU 5
 

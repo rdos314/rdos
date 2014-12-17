@@ -66,7 +66,8 @@ UpdateMode  Proc near
     push ds
     push es
     pushad
-;
+
+umRetry:
     mov ax,SEG data
     mov ds,ax
     mov es,ax 
@@ -79,7 +80,15 @@ UpdateMode  Proc near
     mov ds:[esi].gr_op,GUI_REQ_MODE    
     SendMailslot
 ;
-    mov ax,es:[edi].grm_mode
+    cmp ecx,SIZE mode_reply_struc
+    je umAnswOk
+;
+    mov ax,25
+    WaitMilliSec
+    jmp umRetry    
+
+umAnswOk:    
+    mov ax,ds:[edi].grm_mode
     cmp ax,ds:CurrMode
     je umDone
 ;
@@ -138,6 +147,9 @@ UpdateVideo  Proc near
     mov esi,OFFSET ReqBuf
     mov ds:[esi].vr_row,0
     mov ds:[esi].vr_op,GUI_REQ_VIDEO
+    mov ax,ds:CurrHeight
+    or ax,ax
+    jz uvDone
 
 uvLoop:
     mov bx,ds:MailslotHandle
@@ -197,17 +209,54 @@ UpdateKeyboard  Proc near
     ReadKeyEvent
     jc ukDone
 ;    
-    mov edi,OFFSET ReplyBuf
-    mov ds:[edi].kr_op,GUI_REQ_KEY
-    mov ds:[edi].kr_char,ax
-    mov ds:[edi].kr_state,cx
-    mov ds:[edi].kr_virtual,dl
-    mov ds:[edi].kr_scan,dh
+    test cx,alt_pressed
+    jz ukNotFunc
+;    
+    cmp dh,53h
+    je ukDel
+;    
+    cmp dh,3Bh
+    jb ukNotFunc
+;
+    cmp dh,44h
+    ja ukNotFunc
+;    
+    mov esi,OFFSET ReqBuf
+    mov ds:[esi].fr_op,GUI_REQ_FOCUS
+    mov ds:[esi].fr_key,dh
 ;    
     mov bx,ds:MailslotHandle
+    mov edi,OFFSET ReplyBuf
+    mov ecx,SIZE focus_req_struc
+    mov eax,1000h    
+    SendMailslot
+    clc
+    jmp ukDone
+
+ukDel:
     mov esi,OFFSET ReqBuf
+    mov ds:[esi].gr_op,GUI_REQ_RESET
+;    
+    mov bx,ds:MailslotHandle
+    mov edi,OFFSET ReplyBuf
+    mov ecx,SIZE gen_req_struc
+    mov eax,1000h    
+    SendMailslot
+    clc
+    jmp ukDone
+
+ukNotFunc:        
+    mov esi,OFFSET ReqBuf
+    mov ds:[esi].kr_op,GUI_REQ_KEY
+    mov ds:[esi].kr_char,ax
+    mov ds:[esi].kr_state,cx
+    mov ds:[esi].kr_virtual,dl
+    mov ds:[esi].kr_scan,dh
+;    
+    mov bx,ds:MailslotHandle
+    mov edi,OFFSET ReplyBuf
     mov ecx,SIZE key_req_struc
-    mov eax,10h    
+    mov eax,1000h    
     SendMailslot
     clc
 
@@ -239,10 +288,10 @@ rem_gui_process:
 ;    
     mov ax,SEG data
     mov ds,ax
-    mov ds:CurrMode,3
-    mov ds:CurrRowSize,2 * 80
-    mov ds:CurrWidth,80
-    mov ds:CurrHeight,25
+    mov ds:CurrMode,0
+    mov ds:CurrRowSize,0
+    mov ds:CurrWidth,0
+    mov ds:CurrHeight,0
 ;
     or edx,edx
     jz rem_gui_local

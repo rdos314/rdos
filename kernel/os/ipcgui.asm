@@ -193,7 +193,15 @@ handle_key  Proc near
     push es
     push edi
     push ecx
-    int 3
+;    
+    mov ax,es:[edi].kr_state
+    SetKeyboardState
+;    
+    mov ax,es:[edi].kr_char
+    xchg al,ah
+    mov dl,es:[edi].kr_virtual
+    mov dh,es:[edi].kr_scan
+    PutKeyboardCode
 ;    
     xor ecx,ecx
     ReplyMailslot
@@ -204,6 +212,69 @@ handle_key  Proc near
     pop ds
     ret
 handle_key  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HandleFocus
+;
+;           DESCRIPTION:    Handle focus data
+;
+;           PARAMETERS:     ES:EDI      Msg
+;                           ECX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handle_focus  Proc near
+    push ds
+    push es
+    push edi
+    push ecx
+;    
+    mov al,es:[edi].fr_key
+    SetFocus
+;    
+    xor ecx,ecx
+    ReplyMailslot
+;
+    pop ecx
+    pop edi
+    pop es    
+    pop ds
+    ret
+handle_focus  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HandleReset
+;
+;           DESCRIPTION:    Handle reset data
+;
+;           PARAMETERS:     ES:EDI      Msg
+;                           ECX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handle_reset  Proc near
+    push ds
+    push es
+    push edi
+    push ecx
+;    
+    xor ecx,ecx
+    ReplyMailslot
+;
+    mov ax,250
+    WaitMilliSec
+    SoftReset    
+;
+    pop ecx
+    pop edi
+    pop es    
+    pop ds
+    ret
+handle_reset  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -224,8 +295,8 @@ it00    DD OFFSET handle_invalid
 it01    DD OFFSET handle_mode
 it02    DD OFFSET handle_video
 it03    DD OFFSET handle_key
-it04    DD OFFSET handle_invalid
-it05    DD OFFSET handle_invalid
+it04    DD OFFSET handle_focus
+it05    DD OFFSET handle_reset
 it06    DD OFFSET handle_invalid
 it07    DD OFFSET handle_invalid
 it08    DD OFFSET handle_invalid
