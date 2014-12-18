@@ -147,8 +147,30 @@ handle_video  Proc near
     je handle_text_video
 
 handle_graph_video:
-    int 3
-
+    mov esi,ds:v_phys_base
+    movzx eax,ds:v_row_size
+    movzx edx,es:[edi].vr_row
+    mul edx
+    add esi,eax
+    movzx eax,es:[edi].vr_offset
+    add esi,eax
+    movzx ecx,es:[edi].vr_size
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov ax,SEG data
+    mov es,ax
+    mov edi,OFFSET ReplyBuf
+;
+    push ecx
+    push edi
+    rep movs es:[edi],ds:[esi]        
+    pop edi
+    pop ecx
+;    
+    ReplyMailslot
+    jmp handle_video_end
+    
 handle_text_video:    
     mov ecx,2 * 80
     mov ax,real_text_sel
@@ -168,7 +190,8 @@ handle_text_video:
     pop ecx
 ;    
     ReplyMailslot
-;
+
+handle_video_end:
     pop ecx
     pop edi
     pop es    

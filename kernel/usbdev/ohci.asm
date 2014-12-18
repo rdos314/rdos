@@ -1005,8 +1005,8 @@ init_pipe_size_ok:
     shr ax,1
     or al,fs:usbp_address
 ;    
-    test fs:usbp_speed,USB_LOW_SPEED
-    jz init_pipe_speed_ok
+    cmp fs:usbp_speed,0
+    jnz init_pipe_speed_ok
 ;
     or ah,20h
 
@@ -1295,6 +1295,7 @@ CreateInterrupt Endp
 ;           DESCRIPTION:    Create control pipe
 ;
 ;       PARAMETERS:     DS      Function selector
+;                       AH      Speed
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
@@ -1304,12 +1305,15 @@ CreateControl   Proc far
     push es
     pushad
 ;    
+    push ax
     mov eax,SIZE ohci_pipe
     AllocateSmallGlobalMem
     xor di,di
     mov cx,ax
     xor al,al
     rep stosb
+    pop ax
+    mov es:usbp_speed,ah
 ;
     mov eax,1000h
     AllocateBigLinear
@@ -1340,6 +1344,7 @@ CreateControl   Endp
 ;           DESCRIPTION:    Create bulk pipe
 ;
 ;       PARAMETERS:     DS      Function selector
+;                       AH      Speed
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
@@ -1349,12 +1354,15 @@ CreateBulk   Proc far
     push es
     pushad
 ;    
+    push ax
     mov eax,SIZE ohci_pipe
     AllocateSmallGlobalMem
     xor di,di
     mov cx,ax
     xor al,al
     rep stosb
+    pop ax
+    mov es:usbp_speed,ah
 ;    
     mov ax,es
     mov fs,ax
@@ -1378,7 +1386,8 @@ CreateBulk   Endp
 ;           DESCRIPTION:    Create interrupt pipe
 ;
 ;       PARAMETERS:     DS      Function selector
-;               AL      Interval
+;                       AL      Interval
+;                       AH      Speed
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
@@ -1388,15 +1397,16 @@ CreateIntr   Proc far
     push es
     pushad
 ;    
-    mov cl,al
+    push ax
     mov eax,SIZE ohci_pipe
     AllocateSmallGlobalMem
-    push cx
     xor di,di
     mov cx,ax
     xor al,al
     rep stosb
-    pop cx
+    pop ax
+    mov es:usbp_speed,ah
+    mov cl,al
 ;    
     mov ax,es
     mov fs,ax
@@ -2704,6 +2714,7 @@ atWaitNotify:
     mov eax,es:[si].HcRhPortStatus
     shr ah,1
     and ah,1
+    xor ah,1
     mov al,cl
     LockedNotifyUsbAttach
     jmp atDone

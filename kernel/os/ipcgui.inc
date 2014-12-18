@@ -35,6 +35,8 @@ video_req_struc	STRUC
 
 vr_op		    DB ?
 vr_row          DW ?
+vr_offset       DW ?
+vr_size         DW ?
 
 video_req_struc	ENDS
 

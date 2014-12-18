@@ -39,17 +39,18 @@ MODE_BULK = 4
 DIR_IN = 80h
 DIR_OUT = 0
 
-USB_LOW_SPEED = 1
-
 usb_dev_struc   STRUC
 
+; IN  AH        Speed
 ; OUT FS        Pipe selector
 create_control_proc	DD ?,?
 
+; IN  AH        Speed
 ; OUT FS        Pipe selector
 create_bulk_proc	DD ?,?
 
 ; IN  AL        Interval
+; IN  AH        Speed
 ; OUT FS        Pipe selector
 create_interrupt_proc	DD ?,?
 

@@ -639,8 +639,8 @@ AllocateTd      PROC near
     mov es:[edx].utd_link,1
     mov es:[edx].utd_va_link,0
     mov es:[edx].utd_control, 19000000h
-    test fs:usbp_speed,USB_LOW_SPEED
-    jz atSpeedOk
+    cmp fs:usbp_speed,0
+    jnz atSpeedOk
 ;
     or es:[edx].utd_control, 4000000h
     
@@ -1562,6 +1562,7 @@ GetIntrQh  ENDP
 ;           DESCRIPTION:    Create control pipe
 ;
 ;       PARAMETERS:     DS      Function selector
+;                       AH      Speed
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
@@ -1571,12 +1572,15 @@ CreateControl   Proc far
     push es
     pushad
 ;    
+    push ax
     mov eax,SIZE uhci_pipe
     AllocateSmallGlobalMem
     xor di,di
     mov cx,ax
     xor al,al
     rep stosb
+    pop ax
+    mov es:usbp_speed,ah
 ;
     mov eax,1000h
     AllocateBigLinear
@@ -1617,6 +1621,7 @@ CreateControl   Endp
 ;           DESCRIPTION:    Create bulk pipe
 ;
 ;       PARAMETERS:     DS      Function selector
+;                       AH      Speed
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
@@ -1626,12 +1631,15 @@ CreateBulk   Proc far
     push es
     pushad
 ;    
+    push ax
     mov eax,SIZE uhci_pipe
     AllocateSmallGlobalMem
     xor di,di
     mov cx,ax
     xor al,al
     rep stosb
+    pop ax
+    mov es:usbp_speed,ah
 ;    
     mov ax,es
     mov fs,ax
@@ -1657,7 +1665,8 @@ CreateBulk   Endp
 ;           DESCRIPTION:    Create interrupt pipe
 ;
 ;       PARAMETERS:     DS      Function selector
-;               AL      Interval
+;                       AL      Interval
+;                       AH      Speed
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
@@ -1668,16 +1677,16 @@ CreateIntr   Proc far
     push gs
     pushad
 ;    
-    mov cl,al
-;
+    push ax
     mov eax,SIZE uhci_pipe
     AllocateSmallGlobalMem
-    push cx
     xor di,di
     mov cx,ax
     xor al,al
     rep stosb
-    pop cx
+    pop ax
+    mov es:usbp_speed,ah
+    mov cl,al
 ;    
     mov ax,es
     mov fs,ax
@@ -2746,6 +2755,7 @@ epNotify:
     pop ax
 ;    
     pop cx
+    xor ah,1
     and ah,1
     mov al,cl
 ;

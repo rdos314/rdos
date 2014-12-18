@@ -490,12 +490,11 @@ CreateDefaultControl    Proc near
     push edi
 ;    
     push ax
+    mov ah,es:usbf_speed
     call fword ptr ds:create_control_proc
 ;    
     mov es:usbf_in_endpoint_arr,fs    
     mov es:usbf_out_endpoint_arr,fs    
-    mov al,es:usbf_speed
-    mov fs:usbp_speed,al
     mov fs:usbp_function_sel,es
     mov fs:usbp_address,0
     mov fs:usbp_endpoint,0
@@ -594,6 +593,7 @@ CreateBulk    Proc near
     push bx
     push dx
 ;    
+    mov ah,es:usbf_speed
     call fword ptr ds:create_bulk_proc    
     movzx bx,dl
     and bx,0Fh
@@ -613,8 +613,6 @@ cbEndpointOk:
     mov fs:usbp_function_sel,es
     mov al,es:usbf_address
     mov fs:usbp_address,al
-    mov al,es:usbf_speed
-    mov fs:usbp_speed,al
     mov fs:usbp_endpoint,dl
     mov fs:usbp_seq,0
     mov fs:usbp_mode,MODE_BULK
@@ -660,6 +658,7 @@ CreateInterrupt    Proc near
     push dx
 ;    
     mov al,dh
+    mov ah,es:usbf_speed
     call fword ptr ds:create_interrupt_proc    
     movzx bx,dl
     and bx,0Fh
@@ -670,8 +669,6 @@ CreateInterrupt    Proc near
     mov fs:usbp_function_sel,es
     mov al,es:usbf_address
     mov fs:usbp_address,al
-    mov al,es:usbf_speed
-    mov fs:usbp_speed,al
     mov fs:usbp_endpoint,dl
     mov fs:usbp_seq,0
     mov fs:usbp_mode,MODE_INTR

@@ -1685,6 +1685,7 @@ InsertQtd   Endp
 ;
 ;       PARAMETERS:     DS      Device selector
 ;                       ES      Function selector
+;                       AH      Speed
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
@@ -1695,6 +1696,7 @@ CreateControl   Proc far
     pushad
 ;    
     push es
+    push ax
     mov eax,SIZE ehci_pipe
     AllocateSmallGlobalMem
     xor di,di
@@ -1703,11 +1705,11 @@ CreateControl   Proc far
     rep stosb
     mov ax,es
     mov fs,ax
+    pop ax
     pop es    
+    mov fs:usbp_speed,ah
 ;    
     call SetupHub
-    mov al,es:usbf_speed
-    mov fs:usbp_speed,al
 ;    
     mov dx,flat_sel
     mov es,dx
@@ -1728,6 +1730,7 @@ CreateControl   Endp
 ;           DESCRIPTION:    Create bulk pipe
 ;
 ;       PARAMETERS:     DS      Function selector
+;                       AH      Speed
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
@@ -1738,6 +1741,7 @@ CreateBulk   Proc far
     pushad
 ;    
     push es
+    push ax
     mov eax,SIZE ehci_pipe
     AllocateSmallGlobalMem
     xor di,di
@@ -1746,11 +1750,11 @@ CreateBulk   Proc far
     rep stosb
     mov ax,es
     mov fs,ax
+    pop ax
     pop es    
+    mov fs:usbp_speed,ah
 ;    
     call SetupHub
-    mov al,es:usbf_speed
-    mov fs:usbp_speed,al
 ;    
     mov dx,flat_sel
     mov es,dx
@@ -1772,6 +1776,7 @@ CreateBulk   Endp
 ;
 ;   PARAMETERS:     DS      Function selector
 ;                   AL      Interval
+;                   AH      Speed
 ;
 ;   RETURNS:        FS      Pipe selector
 ;
@@ -1793,10 +1798,9 @@ CreateIntr   Proc far
     mov fs,ax
     pop ax
     pop es
+    mov fs:usbp_speed,ah
 ;    
     call SetupHub
-    mov dl,es:usbf_speed
-    mov fs:usbp_speed,dl
 ;    
     mov dx,flat_sel
     mov es,dx

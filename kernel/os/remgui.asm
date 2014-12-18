@@ -42,6 +42,13 @@ CurrWidth               DW ?
 CurrHeight              DW ?
 CurrRowSize             DW ?
 CurrBpp                 DB ?
+CurrVideoHandle         DW ?
+CurrBitmapHandle        DW ?
+CurrBitmapOffset        DD ?
+CurrBitmapSel           DW ?
+CurrBufSize             DW ?
+CurrX                   DW ?
+CurrPixels              DW ?
 
 MailslotHandle          DW ?
 ReqBuf                  DB 16 DUP(?)
@@ -91,7 +98,21 @@ umAnswOk:
     mov ax,ds:[edi].grm_mode
     cmp ax,ds:CurrMode
     je umDone
+;    
+    mov bx,ds:CurrVideoHandle
+    or bx,bx
+    jz umCloseOk
 ;
+    mov ds:CurrVideoHandle,0
+;
+    mov bx,ds:CurrBitmapHandle
+    or bx,bx
+    jz umCloseOk
+;
+    CloseBitmap
+    mov ds:CurrBitmapHandle,0        
+
+umCloseOk:
     cmp ax,3
     je umText
 
@@ -99,6 +120,35 @@ umGraphic:
     mov ds:CurrMode,ax 
     mov ax,[edi].grm_row_size
     mov ds:CurrRowSize,ax
+;
+    xor dx,dx
+    mov cx,200h
+    div cx
+    or dx,dx
+    jz umGraphicIncOK
+;
+    inc ax
+
+umGraphicIncOk:
+    mov cx,ax
+    mov ax,[edi].grm_row_size
+    xor dx,dx
+    div cx    
+    mov ds:CurrBufSize,ax
+;
+    shl ax,3
+    movzx cx,[edi].grm_bpp
+    xor dx,dx
+    div cx
+    dec ax
+    and al,NOT 7
+    add ax,8
+    mov ds:CurrPixels,ax
+;
+    mov ax,ds:CurrPixels
+    mul cx
+    shr ax,3
+    mov ds:CurrBufSize,ax        
 ;    
     movzx ax,[edi].grm_bpp
     mov ds:CurrBpp,al
@@ -111,6 +161,17 @@ umGraphic:
 ;    
     GetVideoMode
     SetVideoMode
+    mov ds:CurrVideoHandle,bx
+;
+    movzx ax,ds:CurrBpp
+    mov cx,ds:CurrPixels
+    mov dx,1
+    CreateBitmap
+    mov ds:CurrBitmapHandle,bx
+;
+    GetBitmapInfo
+    mov ds:CurrBitmapSel,es
+    mov ds:CurrBitmapOffset,edi
     jmp umDone
 
 umText:
@@ -152,6 +213,15 @@ UpdateVideo  Proc near
     jz uvDone
 
 uvLoop:
+    mov ds:[esi].vr_offset,0
+    mov ds:CurrX,0
+;    
+    mov ax,ds:CurrMode
+    cmp ax,3
+    jne uvGraph
+
+uvText:    
+    mov ds:[esi].vr_size,2 * 80
     mov bx,ds:MailslotHandle
     mov esi,OFFSET ReqBuf
     mov ecx,SIZE video_req_struc
@@ -159,11 +229,6 @@ uvLoop:
     mov eax,1000h
     SendMailslot
 ;
-    mov ax,ds:CurrMode
-    cmp ax,3
-    jne uvGraph
-
-uvText:    
     shr cx,1
     xor ax,ax
     mov dx,ds:[esi].vr_row
@@ -171,8 +236,44 @@ uvText:
     jmp uvNext
 
 uvGraph:
-    int 3 
+    mov ax,ds:CurrRowSize
+    sub ax,ds:[esi].vr_offset
+    or ax,ax
+    jz uvNext
+;
+    cmp ax,ds:CurrBufSize
+    jbe uvSizeOk
+;
+    mov ax,ds:CurrBufSize
 
+uvSizeOk:
+    mov ds:[esi].vr_size,ax
+;    
+    mov bx,ds:MailslotHandle
+    mov esi,OFFSET ReqBuf
+    mov ecx,SIZE video_req_struc
+    mov es,ds:CurrBitmapSel
+    mov edi,ds:CurrBitmapOffset
+    mov eax,1000h
+    SendMailslot
+;
+    mov di,ds:[esi].vr_row
+    shl edi,16
+    mov di,ds:CurrX
+    mov ax,ds:CurrBitmapHandle
+    mov bx,ds:CurrVideoHandle
+    mov cx,ds:CurrPixels
+    mov dx,1
+    xor esi,esi
+    Blit
+;
+    mov esi,OFFSET ReqBuf
+    mov ax,ds:[esi].vr_size
+    add ds:[esi].vr_offset,ax
+    mov ax,ds:CurrPixels
+    add ds:CurrX,ax
+    jmp uvGraph
+            
 uvNext:  
     inc ds:[esi].vr_row
     mov ax,ds:[esi].vr_row    
@@ -292,6 +393,8 @@ rem_gui_process:
     mov ds:CurrRowSize,0
     mov ds:CurrWidth,0
     mov ds:CurrHeight,0
+    mov ds:CurrVideoHandle,0
+    mov ds:CurrBitmapHandle,0
 ;
     or edx,edx
     jz rem_gui_local
