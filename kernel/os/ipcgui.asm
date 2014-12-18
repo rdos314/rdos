@@ -331,7 +331,67 @@ it0D    DD OFFSET handle_invalid
 it0E    DD OFFSET handle_invalid
 it0F    DD OFFSET handle_invalid
 
+mmap_struc  STRUC
+
+mmap_len    DD ?
+mmap_base   DD ?,?
+mmap_size   DD ?,?
+mmap_type   DD ?
+
+mmap_struc  ENDS
+
 ipc_thread:
+    int 3
+    mov ax,system_data_sel
+    mov ds,ax
+;
+    mov eax,ds:ram2_size
+    or eax,eax
+    jnz h64Fail
+;
+    movzx ecx,ds:multiboot_size
+    mov esi,ds:multiboot_mmap_addr
+    or ecx,ecx
+    jz h64Fail
+;
+    mov ax,flat_sel
+    mov ds,ax    
+
+h64Loop:
+    mov eax,ds:[esi].mmap_type
+    cmp eax,1
+    jne h64Next
+;
+    mov eax,ds:[esi].mmap_base
+    mov ebx,ds:[esi].mmap_base+4
+    add eax,ds:[esi].mmap_size
+    adc ebx,ds:[esi].mmap_size+4
+    sub eax,1
+    sbb ebx,0
+    or ebx,ebx
+    jnz h64Ok
+
+h64Next:    
+    mov eax,ds:[esi].mmap_len
+    add eax,4
+    add esi,eax
+    sub ecx,eax
+    ja h64Loop
+
+h64Fail:
+    stc
+    jmp h64Done
+
+h64Ok:        
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:has_phys64,1
+    clc
+
+h64Done:            
+    int 3
+
+
     mov ax,cs
     mov es,ax
     mov di,OFFSET mailslot_name

@@ -5440,7 +5440,7 @@ local_has64   PROC near
     or eax,eax
     jnz h64Fail
 ;
-    movzx ecx,ds:multiboot_size
+    movzx ecx,ds:multiboot_mmap_len
     mov esi,ds:multiboot_mmap_addr
     or ecx,ecx
     jz h64Fail
