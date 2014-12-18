@@ -49,6 +49,7 @@ CurrBitmapSel           DW ?
 CurrBufSize             DW ?
 CurrX                   DW ?
 CurrPixels              DW ?
+CurrFocus               DW ?
 
 MailslotHandle          DW ?
 ReqBuf                  DB 16 DUP(?)
@@ -78,6 +79,7 @@ umRetry:
     mov ax,SEG data
     mov ds,ax
     mov es,ax 
+    mov ds:CurrFocus,0
 ;       
     mov bx,ds:MailslotHandle
     mov esi,OFFSET ReqBuf
@@ -98,11 +100,19 @@ umAnswOk:
     mov ax,ds:[edi].grm_mode
     cmp ax,ds:CurrMode
     je umDone
-;    
+;   
     mov bx,ds:CurrVideoHandle
     or bx,bx
     jz umCloseOk
 ;
+    push ax
+    GetFocus
+    mov ds:CurrFocus,ax
+;
+    mov ax,3Bh
+    SetFocus
+    pop ax
+;    
     mov ds:CurrVideoHandle,0
 ;
     mov bx,ds:CurrBitmapHandle
@@ -182,6 +192,13 @@ umText:
     SetVideoMode
 
 umDone:
+    mov ax,ds:CurrFocus
+    or ax,ax
+    jz umEnd
+;
+    SetFocus    
+
+umEnd:    
     popad
     pop es
     pop ds
