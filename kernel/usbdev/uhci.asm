@@ -82,6 +82,8 @@ uhc_pipe_list    DW ?
 uhc_spinlock     spinlock_typ <>
 uhc_section      section_typ <>
 
+uhc_reset        DW ?
+
 uhc_pci_bus_dev  DW ?
 uhc_pci_func     DB ?
 
@@ -2470,23 +2472,15 @@ IsConnected   Endp
 ResetPipe   Proc far
     push es
     push ax
-    push dx
-    push si
+    push cx
 ;    
     mov es,fs:usbp_function_sel
-    movzx si,es:usbf_port
-;    
-    mov dx,ds:uhc_io_base
-    add dx,PortscReg1
-    add dx,si
-    add dx,si
+    mov cl,es:usbf_port
+    mov ax,1
+    shl ax,cl
+    lock or ds:uhc_reset,ax
 ;
-    in ax,dx
-    or ax,200h
-    out dx,ax
-; 
-    pop si
-    pop dx
+    pop cx
     pop ax
     pop es
     retf32
@@ -2698,6 +2692,56 @@ detach_thread:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           ResetThread
+;
+;   DESCRIPTION:    Reset thread
+;
+;   PARAMETERS:     FS      Function selector
+;                   BL      Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_thread_name  DB 'UHCI Reset', 0
+
+reset_thread:
+    mov cl,bl
+    mov ax,fs
+    mov ds,ax
+;    
+    movzx si,cl
+    add si,si
+;    
+    GetThread
+    mov ds:[si].usb_reset_thread_arr,ax
+;
+    mov al,cl
+    NotifyUsbDetach
+;    
+    LockUsb
+;    
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg1
+    add dx,si    
+    in ax,dx
+    test al,1
+    jz rtUnlock
+;
+    xor ah,1
+    and ah,1
+    mov al,cl
+    LockedNotifyUsbAttach
+    jmp rtDone
+
+rtUnlock:
+    UnlockUsb    
+
+rtDone:
+    mov ds:[si].usb_reset_thread_arr,0
+    TerminateThread
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdatePort
 ;
 ;           DESCRIPTION:    Update root-hub port status
@@ -2720,6 +2764,87 @@ UpdatePort   Proc near
     mov dx,ds:uhc_io_base
     add dx,PortscReg1
     add dx,si
+;    
+    mov ax,1
+    shl ax,cl
+    test ax,ds:uhc_reset
+    jz upNoReset
+;
+    not ax
+    lock and ds:uhc_reset,ax
+;
+    in ax,dx
+    test al,1
+    jz upNoReset
+;        
+    mov bx,ds:[si].usb_port_sel_arr
+    or bx,bx
+    jz upNoReset
+;    
+    mov bx,ds:[si].usb_attach_thread_arr
+    or bx,ds:[si].usb_detach_thread_arr
+    or bx,ds:[si].usb_reset_thread_arr
+    jnz upCheckTimeout
+;
+    in ax,dx
+    or ax,200h
+    out dx,ax
+;
+    mov ax,50
+    WaitMilliSec
+;
+    in ax,dx
+    and ax,NOT 200h
+    out dx,ax
+;
+    push cx
+    mov cx,10
+
+uprLoop:
+    in ax,dx
+    test ax,4
+    clc
+    jnz uprNotify
+;
+    or ax,4
+    out dx,ax
+    loop uprLoop
+;
+    pop cx
+    stc
+    jmp upDone
+
+uprNotify:
+    push ax
+    mov ax,200
+    WaitMilliSec
+    pop ax
+;    
+    pop cx
+;
+    mov ds:[si].usb_reset_thread_arr,-1
+    GetSystemTime
+    add eax,1193 * 2500
+    adc edx,0
+    shl si,1
+    mov ds:[si].usb_timeout_arr,eax
+    mov ds:[si].usb_timeout_arr+4,edx
+;    
+    mov bx,ds
+    mov fs,bx
+    mov bx,cx
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET reset_thread_name
+    mov esi,OFFSET reset_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+    jmp upDone
+
+upNoReset:
     in ax,dx
     test al,1
     jz upDetach
@@ -2734,6 +2859,7 @@ upAttach:
 ;
     mov bx,ds:[si].usb_attach_thread_arr
     or bx,ds:[si].usb_detach_thread_arr
+    or bx,ds:[si].usb_reset_thread_arr
     jnz upCheckTimeout
 ;
     or ax,200h
@@ -2804,6 +2930,7 @@ upDetach:
 ;
     mov bx,ds:[si].usb_attach_thread_arr
     or bx,ds:[si].usb_detach_thread_arr
+    or bx,ds:[si].usb_reset_thread_arr
     jnz upCheckTimeout
 ;
     mov ds:[si].usb_detach_thread_arr,-1    
@@ -3070,7 +3197,8 @@ AddFunction  Proc near
     mov ds:uhc_pci_func,ch
     mov ds:uhc_pipe_list,0
     InitSpinlock ds:uhc_spinlock
-    InitSection ds:uhc_section
+    mov ds:uhc_reset,0
+InitSection ds:uhc_section
 ;    
     mov eax,1000h
     AllocateBigLinear
