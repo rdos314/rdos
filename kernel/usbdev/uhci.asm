@@ -1782,6 +1782,9 @@ abLoop:
     mov ax,fs:usbp_maxlen
 
 abMinOk:
+    cmp ax,cx
+    jae abLast
+;    
     movzx eax,ax
     push eax
     push cx
@@ -1800,7 +1803,17 @@ abMinOk:
     pop eax
     add edi,eax
     sub cx,ax
-    ja abLoop
+    jmp abLoop
+
+abLast:    
+    call AllocateTd
+    mov ax,si
+    or byte ptr es:[edx].utd_link,4
+    or byte ptr es:[edx].utd_host,al
+    or es:[edx].utd_control,800000h
+    mov eax,edx
+    mov edx,ebp
+    call InsertElem       
     
 abDone:
     popad
@@ -2189,6 +2202,7 @@ WasTransferOk   Endp
 LocalEndTransfer   Proc near
     push es
     push ax
+    push ecx
     push edx
     push edi
 ;    
@@ -2226,6 +2240,7 @@ etDataDone:
 etDone:   
     pop edi
     pop edx
+    pop ecx
     pop ax
     pop es
     ret
