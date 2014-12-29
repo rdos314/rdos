@@ -43,6 +43,7 @@ void AddPca(int Gender, int BirthYear, int ScoreDiff, char *ScoreArr, int Count)
 void ClosePca();
 
 static TFile *quizfile;
+static TFile *csvfile;
 
 /*##################  HandleRow ##########################
 *   Purpose....: Handle a row                                                                   #
@@ -53,6 +54,39 @@ static TFile *quizfile;
 *##########################################################################*/
 static void HandleRow(TQuizRow *Row)
 {
+    int i;
+    char str[80];
+
+    sprintf(str, "%d;", Row->ID);
+    csvfile->Write(str);
+
+    sprintf(str, "%d;%d;", Row->BirthYear, Row->BirthMonth);
+    csvfile->Write(str);
+
+    sprintf(str, "%d;", Row->Gender);
+    csvfile->Write(str);
+
+    sprintf(str, "%d;%d;", Row->Country, Row->Ancestry);
+    csvfile->Write(str);
+
+    sprintf(str, "%d;%d;", Row->Aspie, Row->ADHD);
+    csvfile->Write(str);
+
+    sprintf(str, "%d;%d;", Row->OCD, Row->Social);
+    csvfile->Write(str);
+
+    sprintf(str, "%d;%d;", Row->AsResult, Row->NtResult);
+    csvfile->Write(str);
+    
+    for (i = 0; i < 198; i++)
+    {
+        if (i == 197)
+            sprintf(str, "%d\r\n", Row->Quiz[i]);
+        else
+            sprintf(str, "%d;", Row->Quiz[i]);
+        csvfile->Write(str);
+    }
+    
     quizfile->Write(Row, sizeof(TQuizRow));
 
     printf("K9: %d AS: %d, NT: %d\r\n", Row->ID, Row->AsResult, Row->NtResult);
@@ -300,7 +334,27 @@ void ConvK9()
     long pos = 0;
     TFile infile("raw\\aspie-quiz-k9.csv");
     TFile outfile("bin\\quizk9.bin", 0);
+    TFile rfile("res\\quizk9.csv", 0);
     char *ptr;
+    int i;
+
+    csvfile = &rfile;
+    csvfile->Write("ID;");
+    csvfile->Write("BirthYear;BirthMonth;");
+    csvfile->Write("Gender;");
+    csvfile->Write("Country;Ancestry;");
+    csvfile->Write("AS;ADHD;");
+    csvfile->Write("OCD;Social;");
+    csvfile->Write("AsResult;NtResult;");
+    
+    for (i = 0; i < 198; i++)
+    {
+        if (i == 197)
+            sprintf(buf, "F%03d\r\n", i);
+        else
+            sprintf(buf, "F%03d;", i);
+        csvfile->Write(buf);
+    }
 
     quizfile = &outfile;
     OpenPca("K9");
