@@ -76,6 +76,9 @@ static void ProcessRow(char *str)
     int hour, min, sec;
     TDateTime *time;
     TQuizRow Row;
+    int AgeArr[20];
+    int sum;
+    int count;
 
     ptr = str;
     for (fieldno = 0; ptr; fieldno++)
@@ -203,34 +206,7 @@ static void ProcessRow(char *str)
             case 51:
             case 52:
                 i = fieldno - 34;
-                val = atoi(valstr);
-
-                switch (val)
-                {
-                    case 0:
-                        val = 0;
-                        break;
-
-                    case 1:
-                    case 2:
-                    case 3:
-                    case 4:
-                        val = 1;
-                        break;
-
-                    case 5:
-                    case 6:
-                    case 7:
-                        val = 2;
-                        break;
-
-                    case 8:
-                    case 9:
-                    case 10:
-                        val = 3;
-                        break;
-                }
-                Row.Quiz[127 + i] = val;
+                AgeArr[i] = atoi(valstr);
                 break;
 
             default:
@@ -239,6 +215,47 @@ static void ProcessRow(char *str)
                 break;
         }
     }
+
+    sum = 0;
+    count = 0;
+
+    for (i = 0; i < 19; i++)
+    {
+        if (AgeArr[i])
+        {
+            count++;
+            sum += AgeArr[i];
+        }
+    }
+
+    if (count)
+    {
+        sum = 10 * sum / count;
+
+        for (i = 0; i < 19; i++)
+        {
+            val = AgeArr[i];
+
+            if (val)
+            {
+                val = 50 * val / sum;
+
+                if (val <= 3)
+                    val = 1;
+                else
+                {
+                    if (val >= 7)
+                        val = 3;
+                    else
+                        val = 2;
+                }
+            }
+            Row.Quiz[127 + i] = val;
+        }        
+    }
+    else
+        for (i = 0; i < 19; i++)
+            Row.Quiz[127 + i] = 0;
 
     HandleRow(&Row);
     AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 146);
