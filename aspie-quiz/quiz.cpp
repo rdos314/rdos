@@ -593,8 +593,8 @@ void TQuiz::Init()
         Group[GROUP_NT_TALENT].PosName = "NT ability problem";
         Group[GROUP_NT_TALENT].NegName = "NT ability";
 
-        Group[GROUP_ASPIE_CONTACT].PosName = "Aspie contact";
-        Group[GROUP_ASPIE_CONTACT].NegName = "Aspie contact problem";
+        Group[GROUP_ASPIE_RELATION].PosName = "Aspie relationship";
+        Group[GROUP_ASPIE_RELATION].NegName = "Aspie relationship problem";
 
         Group[GROUP_NT_CONTACT].PosName = "NT contact problem";
         Group[GROUP_NT_CONTACT].NegName = "NT contact";
@@ -611,8 +611,8 @@ void TQuiz::Init()
         Group[GROUP_NT_NVC].PosName = "NT communication problem";
         Group[GROUP_NT_NVC].NegName = "NT communication";
 
-        Group[GROUP_ASPIE_ATTACH].PosName = "Aspie attachment";
-        Group[GROUP_ASPIE_ATTACH].NegName = "Aspie attachment problem";
+        Group[GROUP_ASPIE_BELIEF].PosName = "Aspie belief";
+        Group[GROUP_ASPIE_BELIEF].NegName = "Aspie belief problem";
 
         Group[GROUP_NT_ATTACH].PosName = "NT attachment problem";
         Group[GROUP_NT_ATTACH].NegName = "NT attachment";
@@ -1148,8 +1148,8 @@ void TQuiz::WriteSetupTexts(const char *filename)
                                 file.Write("GROUP_NT_TALENT");
                                 break;
 
-            case GROUP_ASPIE_CONTACT:
-                                         file.Write("GROUP_ASPIE_CONTACT");
+            case GROUP_ASPIE_RELATION:
+                                         file.Write("GROUP_ASPIE_RELATION");
 
                 break;
 
@@ -1173,8 +1173,8 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 file.Write("GROUP_NT_NVC");
                                          break;
 
-            case GROUP_ASPIE_ATTACH:
-                                         file.Write("GROUP_ASPIE_ATTACH");
+            case GROUP_ASPIE_BELIEF:
+                                         file.Write("GROUP_ASPIE_BELIEF");
                 break;
 
             case GROUP_NT_ATTACH:
@@ -8208,16 +8208,16 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
                 file->Write("NT_NVC");
                 break;
                     
-                case GROUP_ASPIE_ATTACH:
-                file->Write("ASPIE_ATTACH");
+                case GROUP_ASPIE_BELIEF:
+                file->Write("ASPIE_BELIEF");
                 break;
                     
                 case GROUP_NT_ATTACH:
                 file->Write("NT_ATTACH");
                 break;
                     
-                case GROUP_ASPIE_CONTACT:
-                file->Write("ASPIE_CONTACT");
+                case GROUP_ASPIE_RELATION:
+                file->Write("ASPIE_RELATION");
                 break;
                     
                     

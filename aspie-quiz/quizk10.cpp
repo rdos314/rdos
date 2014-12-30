@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# quizK9.cpp
-# Quiz class for K9
+# quizK10.cpp
+# Quiz class for K10
 #
 #######################################################################*/
 
@@ -29,8 +29,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "quizk9.h"
-#include "quizdk9.h"
+#include "quizK10.h"
+#include "quizdK10.h"
 
 #define CI      1
 
@@ -41,17 +41,17 @@
 
 /*##########################################################################
 #
-#   Name       : TQuizK9::TQuizK9
+#   Name       : TQuizK10::TQuizK10
 #
-#   Purpose....: Constructor for TQuizK9
+#   Purpose....: Constructor for TQuizK10
 #
 #   In params..: Filename to load quiz from
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizK9::TQuizK9(const char *FileName)
-  : TQuiz(198),
+TQuizK10::TQuizK10(const char *FileName)
+  : TQuiz(146),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -63,39 +63,39 @@ TQuizK9::TQuizK9(const char *FileName)
 
 /*##########################################################################
 #
-#   Name       : TQuizK9::~TQuizK9
+#   Name       : TQuizK10::~TQuizK10
 #
-#   Purpose....: Destructor for TQuizK9
+#   Purpose....: Destructor for TQuizK10
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizK9::~TQuizK9()
+TQuizK10::~TQuizK10()
 {
 }
 
-/*##################  TQuizK9::GetPcaCount ##########################
+/*##################  TQuizK10::GetPcaCount ##########################
 *   Purpose....: Return number of available PCA axises                          #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizK9::GetPcaCount()
+int TQuizK10::GetPcaCount()
 {
         return 4;
 }
 
-/*##################  TQuizK9::GetCatCount ##########################
+/*##################  TQuizK10::GetCatCount ##########################
 *   Purpose....: Return number of categories for question                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizK9::GetCatCount(int Question)
+int TQuizK10::GetCatCount(int Question)
 {
    return 3;
 }
@@ -107,14 +107,14 @@ int TQuizK9::GetCatCount(int Question)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizK9::GetQuizN()
+int TQuizK10::GetQuizN()
 {
-    return 198;
+    return 146;
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizK9::WriteName
+#   Name       : TQuizK10::WriteName
 #
 #   Purpose....: Write quiz name
 #
@@ -123,14 +123,14 @@ int TQuizK9::GetQuizN()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizK9::WriteName(TFile &File)
+void TQuizK10::WriteName(TFile &File)
 {
-    File.Write("K9");
+    File.Write("K10");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizK9::WriteLongName
+#   Name       : TQuizK10::WriteLongName
 #
 #   Purpose....: Write long quiz name
 #
@@ -139,14 +139,14 @@ void TQuizK9::WriteName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizK9::WriteLongName(TFile &File)
+void TQuizK10::WriteLongName(TFile &File)
 {
-    File.Write("K9");
+    File.Write("K10");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizK9::SetupTexts
+#   Name       : TQuizK10::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
 #
@@ -155,7 +155,7 @@ void TQuizK9::WriteLongName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizK9::SetupTexts()
+void TQuizK10::SetupTexts()
 {
   Quiz[0].Aspie = TRUE;
   Quiz[1].Aspie = TRUE;
@@ -427,79 +427,27 @@ void TQuizK9::SetupTexts()
   Quiz[122].MyGroup = GROUP_NT_TALENT;
   Quiz[123].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[124].MyGroup = GROUP_NT_SENSORY;
-  Quiz[125].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[125].MyGroup = GROUP_MIXED;
   Quiz[126].MyGroup = GROUP_MIXED;
   Quiz[127].MyGroup = GROUP_MIXED;
-  Quiz[128].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[129].MyGroup = GROUP_ASPIE_BELIEF;
+  Quiz[128].MyGroup = GROUP_MIXED;
+  Quiz[129].MyGroup = GROUP_MIXED;
   Quiz[130].MyGroup = GROUP_MIXED;
   Quiz[131].MyGroup = GROUP_MIXED;
   Quiz[132].MyGroup = GROUP_MIXED;
   Quiz[133].MyGroup = GROUP_MIXED;
   Quiz[134].MyGroup = GROUP_MIXED;
   Quiz[135].MyGroup = GROUP_MIXED;
-  Quiz[136].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_MIXED;
   Quiz[138].MyGroup = GROUP_MIXED;
-  Quiz[139].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[140].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[139].MyGroup = GROUP_MIXED;
+  Quiz[140].MyGroup = GROUP_MIXED;
   Quiz[141].MyGroup = GROUP_MIXED;
   Quiz[142].MyGroup = GROUP_MIXED;
-  Quiz[143].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[144].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[143].MyGroup = GROUP_MIXED;
+  Quiz[144].MyGroup = GROUP_MIXED;
   Quiz[145].MyGroup = GROUP_MIXED;
-  Quiz[146].MyGroup = GROUP_MIXED;
-  Quiz[147].MyGroup = GROUP_MIXED;
-  Quiz[148].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[149].MyGroup = GROUP_MIXED;
-  Quiz[150].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[151].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[152].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[153].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[154].MyGroup = GROUP_MIXED;
-  Quiz[155].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[156].MyGroup = GROUP_MIXED;
-  Quiz[157].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[158].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[159].MyGroup = GROUP_MIXED;
-  Quiz[160].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[161].MyGroup = GROUP_MIXED;
-  Quiz[162].MyGroup = GROUP_MIXED;
-  Quiz[163].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[164].MyGroup = GROUP_MIXED;
-  Quiz[165].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[166].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[167].MyGroup = GROUP_MIXED;
-  Quiz[168].MyGroup = GROUP_MIXED;
-  Quiz[169].MyGroup = GROUP_MIXED;
-  Quiz[170].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[171].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[172].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[173].MyGroup = GROUP_MIXED;
-  Quiz[174].MyGroup = GROUP_MIXED;
-  Quiz[175].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[176].MyGroup = GROUP_MIXED;
-  Quiz[177].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[178].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[179].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[180].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[181].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[182].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[183].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[184].MyGroup = GROUP_MIXED;
-  Quiz[185].MyGroup = GROUP_MIXED;
-  Quiz[186].MyGroup = GROUP_MIXED;
-  Quiz[187].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[188].MyGroup = GROUP_MIXED;
-  Quiz[189].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[190].MyGroup = GROUP_MIXED;
-  Quiz[191].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[192].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[193].MyGroup = GROUP_ASPIE_BELIEF;
-  Quiz[194].MyGroup = GROUP_MIXED;
-  Quiz[195].MyGroup = GROUP_MIXED;
-  Quiz[196].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[197].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Is it important for you to find a unique niche where you can acquire unique competence?";
@@ -626,88 +574,34 @@ void TQuizK9::SetupTexts()
   Quiz[122].Text = "Can you easily remember verbal instructions?";
   Quiz[123].Text = "Are you gracious about criticism, correction and direction?";
   Quiz[124].Text = "Do you find it easy to estimate the age of people?";
-  Quiz[125].Text = "Do you like to protect people you are attached to even when they didn't ask for it?";
-  Quiz[126].Text = "Do you prefer to hug only a romantic partner?";
-  Quiz[127].Text = "Do you start attachments with sex?";
-  Quiz[128].Text = "Do you believe in supernatural phenomens?";
-  Quiz[129].Text = "Do you have psychic abilities?";
-  Quiz[130].Text = "Are you shy?";
-  Quiz[131].Text = "Do you naturally flirt with quick glances?";
 
-  Quiz[132].Text = "Don't you like situations that are uncertain?"; 
-  Quiz[133].Text = "Do you dislike questions which could be answered in many different ways?";
-  Quiz[134].Text = "Do you find that a well ordered life with regular hours suits your temperament?";
-  Quiz[135].Text = "Do you feel uncomfortable when I don’t understand the reason why an event occurred in your life?"; 
-  Quiz[136].Text = "Do you feel irritated when one person disagrees with what everyone else in a group believes?"; 
-  Quiz[137].Text = "Don't you like to go into a situation without knowing what you can expect from it?";
-  Quiz[138].Text = "When you have made a decision, do you feel relieved?"; 
-  Quiz[139].Text = "When you are confronted with a problem, Are you dying to reach a solution very quickly?";
-  Quiz[140].Text = "Would you quickly become impatient and irritated if you would not find a solution to a problem immediately?";
-  Quiz[141].Text = "Don't you like to be with people who are capable of unexpected actions?";
-  Quiz[142].Text = "Do you dislike it when a person’s statement could mean many different things?";
-  Quiz[143].Text = "Do you find that establishing a consistent routine enables you to enjoy life more?";
-  Quiz[144].Text = "Do you enjoy having a clear and structured mode of life?";
-  Quiz[145].Text = "Do you not usually consult many different opinions before forming your own view?";
-  Quiz[146].Text = "Do you dislike unpredictable situations?";
+  Quiz[125].Text = "Do you prefer to hug only a romantic partner?";
+  Quiz[126].Text = "Do you like to protect people you are attached to even when they didn't ask for it?";
 
-  Quiz[147].Text = "Do you ever feel as if people seem to drop hints about you or say things with a double meaning?";
-  Quiz[148].Text = "Do you ever feel as if things in magazines or on TV were written especially for you?";
-  Quiz[149].Text = "Do you ever feel as if some people are not what they seem to be?";
-  Quiz[150].Text = "Do you ever feel as if you are being persecuted in some way?";
-  Quiz[151].Text = "Do you ever feel as if there is a conspiracy against you?";
-  Quiz[152].Text = "Do you ever feel as if you are, or destined to be someone very important?";
-  Quiz[153].Text = "Do you ever feel that you are a very special or unusual person?";
-  Quiz[154].Text = "Do you ever feel that you are especially close to God?";
-  Quiz[155].Text = "Do you ever think people can communicate telepathically?";
-  Quiz[156].Text = "Do you ever feel as if electrical devices such as computers can influence the way you think?";
-  Quiz[157].Text = "Do you ever feel as if you have been chosen by God in some way?";
-  Quiz[158].Text = "Do you believe in the power of witchcraft, voodoo or the occult?";
-  Quiz[159].Text = "Are you often worried that your partner may be unfaithful?";
-  Quiz[160].Text = "Do you ever feel that you have sinned more than the average person?";
-  Quiz[161].Text = "Do you ever feel that people look at you oddly because of your appearance?";
-  Quiz[162].Text = "Do you ever feel as if you had no thoughts in your head at all?";
-  Quiz[163].Text = "Do you ever feel as if the world is about to end?";
-  Quiz[164].Text = "Do your thoughts ever feel alien to you in some way?";
-  Quiz[165].Text = "Have your thoughts ever been so vivid that you were worried other people would hear them?";
-  Quiz[166].Text = "Do you ever feel as if your own thoughts were being echoed back to you?";
-  Quiz[167].Text = "Do you ever feel as if you are a robot or zombie without a will of your own?";
-
-  Quiz[168].Text = "Imagine you receive a letter and you notice it is not sealed.";
-  Quiz[169].Text = "Imagine that you are walking down the street when you hear your name being called, but when you look around you don’t see anybody.";
-  Quiz[170].Text = "Imagine your food tastes different from usual.";
-  Quiz[171].Text = "Imagine that on your way to work you notice that all the traffic lights turn red as you approach them.";
-  Quiz[172].Text = "Imagine you are standing at a bus stop when the bus you have been waiting for drives past half empty without stopping.";
-  Quiz[173].Text = "Imagine you have a really bad pain in your head.";
-  Quiz[174].Text = "Imagine that while on the bus you notice a stranger staring at you.";
-  Quiz[175].Text = "Imagine you are sitting at home and suddenly you feel very odd.";
-  Quiz[176].Text = "Imagine you applied for a job and did not get it.";
-  Quiz[177].Text = "Imagine that you are on a train when you suddenly have a strong feeling you have been there before.";
-  Quiz[178].Text = "Imagine you get turned down to go out by someone you like or a friend.";
-  Quiz[179].Text = "Imagine that one day you enter a shop and you hear people laughing.";
-  Quiz[180].Text = "Imagine there are police cars outside your house. You suddenly realise you feel uncomfortable.";
-  Quiz[181].Text = "Imagine you are watching television, and suddenly the screen goes blank.";
-  Quiz[182].Text = "Imagine two people in a queue at a supermarket both look your way at the same time and then immediately start to talk to each other.";
-  Quiz[183].Text = "Imagine you are waiting in a café for an acquaintance to arrive, and you suddenly feel a strange shivery feeling inside.";
-  Quiz[184].Text = "Imagine you think you see a shadowy figure moving across the wall of an empty room.";
-  Quiz[185].Text = "Imagine that the phone rings. When you answer, the other party hangs up.";
-  Quiz[186].Text = "Imagine you are watching the news on TV about a recent disaster, and you find yourself feeling guilty.";
-  Quiz[187].Text = "Imagine you are listening to the radio and suddenly there is crackling interference.";
-  Quiz[188].Text = "Imagine that you are sitting on a train, and you think you can hear two people behind you talking about you. When you look round they are reading their papers and not talking to each other.";
-  Quiz[189].Text = "Imagine you are at home; everything is quiet when you hear a sudden fast banging on the walls.";
-  Quiz[190].Text = "Imagine you a reading a newspaper or magazine, and you read an article which has some special relevance to you.";
-  Quiz[191].Text = "Imagine you notice that a person you don’t know is looking at you. You suddenly find yourself feeling unsettled.";
-  Quiz[192].Text = "Imagine that one evening you are sitting at home alone when a door suddenly slams by itself in another room.";
-  Quiz[193].Text = "Imagine someone you know calls you just as you were thinking about them. As you pick up the phone you suddenly realise you are feeling upset.";
-  Quiz[194].Text = "Imagine you are walking down the road when you suddenly notice a careers poster which seems to stand out from your surroundings.";
-  Quiz[195].Text = "Imagine you are on a bus; the driver keeps stopping abruptly, so that you stumble each time.";
-  Quiz[196].Text = "Imagine you hear that a friend is having a party and you have not been invited.";
-  Quiz[197].Text = "Imagine you are dozing on the sofa in front of the TV and you suddenly wake up startled.";
-
+  Quiz[127].Text = "12 years old";
+  Quiz[128].Text = "13 years old";
+  Quiz[129].Text = "14 years old";
+  Quiz[130].Text = "15 years old";
+  Quiz[131].Text = "16 years old";
+  Quiz[132].Text = "17 years old";
+  Quiz[133].Text = "18 years old";
+  Quiz[134].Text = "19 years old";
+  Quiz[135].Text = "20 years old";
+  Quiz[136].Text = "21 years old";
+  Quiz[137].Text = "22 years old";
+  Quiz[138].Text = "23 years old";
+  Quiz[139].Text = "24 years old";
+  Quiz[140].Text = "25 years old";
+  Quiz[141].Text = "26 years old";
+  Quiz[142].Text = "27 years old";
+  Quiz[143].Text = "28 years old";
+  Quiz[144].Text = "29 years old";
+  Quiz[145].Text = "30 years old";
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizK9::LoadPopulations
+#   Name       : TQuizK10::LoadPopulations
 #
 #   Purpose....: Load populations
 #
@@ -716,7 +610,7 @@ void TQuizK9::SetupTexts()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizK9::LoadPopulations()
+void TQuizK10::LoadPopulations()
 {
         TQuizRow Row;
         int i;
@@ -873,7 +767,7 @@ void TQuizK9::LoadPopulations()
 
 /*##########################################################################
 #
-#   Name       : TQuizK9::SetupCross
+#   Name       : TQuizK10::SetupCross
 #
 #   Purpose....: Setup cross-references
 #
@@ -882,17 +776,17 @@ void TQuizK9::LoadPopulations()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizK9::SetupCross()
+void TQuizK10::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 198; i++)
+    for (i = 0; i < 146; i++)
             DefineGlobalId(i, i);
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizK9::GetReferer
+#   Name       : TQuizK10::GetReferer
 #
 #   Purpose....: Get referer population
 #
@@ -901,18 +795,18 @@ void TQuizK9::SetupCross()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizK9::GetReferer(const char *referer, TPopulation *pop)
+void TQuizK10::GetReferer(const char *referer, TPopulation *pop)
 {
 }
 
-/*##################  TQuizK9::ImportMvsp ##########################
+/*##################  TQuizK10::ImportMvsp ##########################
 *   Purpose....: Import MVSP loadings                                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizK9::ImportMvsp(const char *filename, int PcaType)
+void TQuizK10::ImportMvsp(const char *filename, int PcaType)
 {
         char buf[MAX_IN_ROW];
         int size;
