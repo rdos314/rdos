@@ -69,9 +69,9 @@
 #define GROUP_ASPIE_SOCIAL      6
 #define GROUP_NT_SOCIAL         7
 #define GROUP_ASPIE_RELATION    8
-#define GROUP_NT_CONTACT        9
-#define GROUP_ASPIE_BELIEF      10
-#define GROUP_NT_ATTACH         11
+#define GROUP_NT_RELATION       9
+#define GROUP_ASPIE_SPIRIT      10
+#define GROUP_NT_FRIEND         11
 #define GROUP_MIXED             12
 
 #define POP_TYPE_COUNT			25

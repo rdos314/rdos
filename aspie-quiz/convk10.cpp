@@ -77,8 +77,10 @@ static void ProcessRow(char *str)
     TDateTime *time;
     TQuizRow Row;
     int AgeArr[20];
-    int sum;
     int count;
+    int minval;
+    int maxval;
+    int diff;
 
     ptr = str;
     for (fieldno = 0; ptr; fieldno++)
@@ -216,7 +218,8 @@ static void ProcessRow(char *str)
         }
     }
 
-    sum = 0;
+    minval = 10;
+    maxval = 1;
     count = 0;
 
     for (i = 0; i < 19; i++)
@@ -224,32 +227,36 @@ static void ProcessRow(char *str)
         if (AgeArr[i])
         {
             count++;
-            sum += AgeArr[i];
+            val = AgeArr[i];
+
+            if (val > maxval)
+                maxval = val;
+
+            if (val < minval)
+                minval = val;
         }
     }
 
-    if (count)
+    if (count >= 15)
     {
-        sum = 10 * sum / count;
+        diff = maxval - minval;
+        if (diff < 3)
+            count = 0;
+    }
 
+    if (count >= 15)
+    {
         for (i = 0; i < 19; i++)
         {
             val = AgeArr[i];
 
             if (val)
             {
-                val = 50 * val / sum;
-
-                if (val <= 3)
-                    val = 1;
-                else
-                {
-                    if (val >= 7)
-                        val = 3;
-                    else
-                        val = 2;
-                }
+                val = 1 + 3 * (val - minval) / diff;
+                if (val > 3)
+                    val = 3;
             }
+
             Row.Quiz[127 + i] = val;
         }        
     }
