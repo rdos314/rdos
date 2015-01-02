@@ -1225,16 +1225,7 @@ math_emulate_fpu:
     jmp math_done
 
 math_real_fpu:
-    GetThread
-    mov ds,ax
-    mov bx,OFFSET p_math_control
-    clts
-    db 9Bh, 66h, 0DDh, 27h      ;       32-bit frstor [bx]
-;
-    mov bx,core_data_sel
-    mov ds,bx
-    mov ds:ps_math_thread,ax
-    lock or ds:ps_flags,PS_FLAG_FPU
+    FpuException
 
 math_done:
     pop eax

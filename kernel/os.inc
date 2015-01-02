@@ -276,6 +276,10 @@ StartDev32   MACRO
     OsGate start_dev32_nr
                     ENDM
 
+FpuException   MACRO
+    OsGate fpu_exception_nr
+                    ENDM
+
 ;;;;;;;; DESCRIPTORS ;;;;;;;;;;;;
 
 ;  OUT  CX      Size of GDT

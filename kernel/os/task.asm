@@ -233,6 +233,8 @@ flush_tlb_proc              DW OFFSET FlushTlb386
 
 preempt_reload_proc         DW OFFSET TimerPreemptReload
 
+fpu_exception_proc          DW OFFSET FpuExceptionSingle
+
 core_count                  DW 0
 core_arr                    DW MAX_CORES DUP(0)
 
@@ -725,6 +727,71 @@ rb32Done:
     ret
 RemoveBlock32   Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FpuExceptionSingle
+;
+;           DESCRIPTION:    Notification FPU exception, single core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FpuExceptionSingle  Proc near
+    GetThread
+    mov ds,ax
+    mov bx,OFFSET p_math_control
+    clts
+    db 9Bh, 66h, 0DDh, 27h      ;       32-bit frstor [bx]
+;
+    mov bx,core_data_sel
+    mov ds,bx
+    mov ds:ps_math_thread,ax
+    lock or ds:ps_flags,PS_FLAG_FPU
+    ret
+FpuExceptionSingle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FpuExceptionMultiple
+;
+;           DESCRIPTION:    Notification FPU exception, multiple core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FpuExceptionMultiple  Proc near
+    push fs
+    call LockCore
+;    
+    mov ax,fs:ps_curr_thread    
+    mov ds,ax
+    mov bx,OFFSET p_math_control
+    clts
+    db 9Bh, 66h, 0DDh, 27h      ;       32-bit frstor [bx]
+;
+    mov fs:ps_math_thread,ax
+    lock or fs:ps_flags,PS_FLAG_FPU
+;
+    call UnlockCore
+    pop fs    
+    ret
+FpuExceptionMultiple  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FpuException
+;
+;           DESCRIPTION:    Notification FPU exception
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fpu_exception_name  DB 'Fpu Exception',0
+
+fpu_exception       Proc far
+    call cs:fpu_exception_proc
+    retf32
+fpu_exception       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2290,6 +2357,7 @@ start_processor_null_threads    Proc near
     mov ds:lock_futex_proc,OFFSET LockFutexMultiple
     mov ds:unlock_futex_proc,OFFSET UnlockFutexMultiple
     mov ds:flush_tlb_proc,OFFSET FlushTlbMultiple
+    mov ds:fpu_exception_proc,OFFSET FpuExceptionMultiple
 
 start_locks_ok:
     mov ecx,stack0_size
@@ -5162,9 +5230,14 @@ wake_new    ENDP
     
 cleanup_thread:
     call SkipCurrentThread
+    mov ax,fs:ps_curr_thread
+    cmp ax,fs:ps_math_thread
+    jne cleanup_thread_math_ok
+;    
     lock and fs:ps_flags,NOT PS_FLAG_FPU
     mov fs:ps_math_thread,0
-;    
+
+cleanup_thread_math_ok:
     mov bx,cs:system_thread
     Signal    
 ;
@@ -5194,9 +5267,14 @@ cleanup_thread:
     
 cleanup_process:
     call SkipCurrentThread
+    mov ax,fs:ps_curr_thread
+    cmp ax,fs:ps_math_thread
+    jne cleanup_process_math_ok
+;    
     lock and fs:ps_flags,NOT PS_FLAG_FPU
     mov fs:ps_math_thread,0
-;    
+
+cleanup_process_math_ok:    
     mov bx,cs:system_thread
     Signal    
 ;
@@ -9622,6 +9700,12 @@ timer_free_list_create:
     mov di,OFFSET deref_proc_handle_name
     xor cl,cl
     mov ax,deref_proc_handle_nr
+    RegisterOsGate
+;
+    mov si,OFFSET fpu_exception
+    mov di,OFFSET fpu_exception_name
+    xor cl,cl
+    mov ax,fpu_exception_nr
     RegisterOsGate
 ;
     mov si,OFFSET free_proc_handle

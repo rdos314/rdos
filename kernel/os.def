@@ -660,4 +660,6 @@ force_level_irq_nr          = 544
 
 has_can_send_buf_nr         = 545
 
+fpu_exception_nr            = 546
+
 osgate_entries				= 560
