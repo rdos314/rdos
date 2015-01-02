@@ -738,16 +738,34 @@ RemoveBlock32   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FpuExceptionSingle  Proc near
-    GetThread
+    push fs
+;
+    call LockCore
+    mov ax,fs:ps_curr_thread    
+    clts
+;
+    test fs:ps_flags,PS_FLAG_FPU
+    jz fpu_exc_saved
+;    
+    mov bx,fs:ps_math_thread
+    cmp ax,bx
+    je fpu_exc_done
+;
+    mov ds,bx
+    mov bx,OFFSET p_math_control
+    db 9Bh, 66h, 0DDh, 37h      ;       32-bit fsave [bx]
+
+fpu_exc_saved:
     mov ds,ax
     mov bx,OFFSET p_math_control
-    clts
     db 9Bh, 66h, 0DDh, 27h      ;       32-bit frstor [bx]
 ;
-    mov bx,core_data_sel
-    mov ds,bx
-    mov ds:ps_math_thread,ax
-    lock or ds:ps_flags,PS_FLAG_FPU
+    mov fs:ps_math_thread,ax
+    lock or fs:ps_flags,PS_FLAG_FPU
+
+fpu_exc_done:
+    call UnlockCore
+    pop fs    
     ret
 FpuExceptionSingle  Endp
 
@@ -765,9 +783,9 @@ FpuExceptionMultiple  Proc near
     call LockCore
 ;    
     mov ax,fs:ps_curr_thread    
+    clts
     mov ds,ax
     mov bx,OFFSET p_math_control
-    clts
     db 9Bh, 66h, 0DDh, 27h      ;       32-bit frstor [bx]
 ;
     mov fs:ps_math_thread,ax
@@ -807,6 +825,16 @@ fpu_exception       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FpuSaveSingle  Proc near
+    test fs:ps_flags,PS_FLAG_FPU
+    jz fpu_save_single_done
+;
+    push ebx
+    mov ebx,cr0
+    or bl,8
+    mov cr0,ebx    
+    pop ebx
+
+fpu_save_single_done:    
     ret
 FpuSaveSingle  Endp
 
@@ -824,7 +852,7 @@ FpuSaveSingle  Endp
 
 FpuSaveMultiple  Proc near
     test fs:ps_flags,PS_FLAG_FPU
-    jz fpu_save_done
+    jz fpu_save_mult_done
 ;
     push ebx
 ;    
@@ -835,12 +863,12 @@ FpuSaveMultiple  Proc near
     lock and fs:ps_flags,NOT PS_FLAG_FPU
 ;
     mov ebx,cr0
-    or al,8
+    or bl,8
     mov cr0,ebx  
 ;
     pop ebx  
 
-fpu_save_done:
+fpu_save_mult_done:
     ret
 FpuSaveMultiple  Endp
 
@@ -1626,28 +1654,6 @@ load_reload_cr3_loop:
 load_cr3_ok:
     mov ax,es
     mov ds,ax
-;
-    test fs:ps_flags,PS_FLAG_FPU
-    jz load_fpu_ok
-;    
-    mov bx,fs:ps_math_thread
-    cmp ax,bx
-    je load_fpu_ok
-;
-    push ds
-    mov ds,bx
-    mov bx,OFFSET p_math_control
-    clts
-    db 9Bh, 66h, 0DDh, 37h      ;       32-bit fsave [bx]
-    pop ds
-;
-    lock and fs:ps_flags,NOT PS_FLAG_FPU
-;
-    mov eax,cr0
-    or al,8
-    mov cr0,eax    
-
-load_fpu_ok:
     lldt ds:p_ldt
 ;
     mov ax,ds:p_flags
