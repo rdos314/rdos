@@ -8,18 +8,6 @@
 
 void main()
 {
-    TSerialDevice *serial;
-//    RdosTestGate();
-
-
-    serial = new TSerialDevice(6, 9600);
-    serial->Open();
-
-    for (;;)
-    {
-        serial->Write("test");
-        RdosWaitMilli(1000);
-    }
-
+    RdosTestGate();
 }
 
