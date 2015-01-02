@@ -234,6 +234,7 @@ flush_tlb_proc              DW OFFSET FlushTlb386
 preempt_reload_proc         DW OFFSET TimerPreemptReload
 
 fpu_exception_proc          DW OFFSET FpuExceptionSingle
+fpu_save_proc               DW OFFSET FpuSaveSingle
 
 core_count                  DW 0
 core_arr                    DW MAX_CORES DUP(0)
@@ -792,6 +793,38 @@ fpu_exception       Proc far
     call cs:fpu_exception_proc
     retf32
 fpu_exception       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           FpuSaveSingle
+;
+;   DESCRIPTION:    Save FPU on thread switch, single core
+;
+;   PARAMETERS:     FS      Locked core
+;                   DS      Current thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FpuSaveSingle  Proc near
+    ret
+FpuSaveSingle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           FpuSaveMultiple
+;
+;   DESCRIPTION:    Save FPU on thread switch, multiple core
+;
+;   PARAMETERS:     FS      Locked core
+;                   DS      Current thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FpuSaveMultiple  Proc near
+    ret
+FpuSaveMultiple  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1855,8 +1888,8 @@ SaveCurrentThread       Proc near
     push edx
 ;    
     call LockCore    
+;
     GetSystemTime
-;    
     mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
@@ -1898,6 +1931,7 @@ SaveCurrentThread       Proc near
     mov dword ptr ds:p_rsp,esp
 ;
     lss esp,fword ptr fs:ps_stack_offset
+    call cs:fpu_save_proc
     mov edx,dword ptr ds:p_rdx    
     push bp
 ;
@@ -1965,6 +1999,7 @@ SaveLockedThread    Proc near
     mov dword ptr ds:p_rsp,esp
 ;
     lss esp,fword ptr fs:ps_stack_offset        
+    call cs:fpu_save_proc
     mov edx,dword ptr ds:p_rdx
     push bp
 ;
@@ -2031,6 +2066,7 @@ SaveLockedThreadKeepEs    Proc near
     mov dword ptr ds:p_rsp,esp
 ;   
     lss esp,fword ptr fs:ps_stack_offset        
+    call cs:fpu_save_proc
 ;        
     mov edx,dword ptr ds:p_rdx
     push bp
@@ -2358,6 +2394,7 @@ start_processor_null_threads    Proc near
     mov ds:unlock_futex_proc,OFFSET UnlockFutexMultiple
     mov ds:flush_tlb_proc,OFFSET FlushTlbMultiple
     mov ds:fpu_exception_proc,OFFSET FpuExceptionMultiple
+    mov ds:fpu_save_proc,OFFSET FpuSaveMultiple
 
 start_locks_ok:
     mov ecx,stack0_size
@@ -2539,6 +2576,7 @@ debug_block_name        DB 'Debug Block', 0
 
 debug_block:
     lss esp,fword ptr fs:ps_stack_offset        
+    call cs:fpu_save_proc    
 ;
     xor ax,ax
     mov ds,ax
