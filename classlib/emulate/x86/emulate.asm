@@ -283,6 +283,7 @@ em0F01_110      DD OFFSET EmLmswMem
 em0F01_111      DD OFFSET EmulateError
 
 Em0F01:
+        int 3
         call ReadCodeByte
         movzx ebx,al
         shr bl,2
@@ -333,7 +334,7 @@ emt0F08  DD OFFSET EmulateError,                 OFFSET EmNop
 emt0F0A  DD OFFSET EmulateError,                 OFFSET OpcodeFault
 emt0F0C  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0F0E  DD OFFSET EmulateError,                 OFFSET EmulateError
-emt0F10  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt0F10  DD OFFSET EmulateSysCall,                 OFFSET EmulateError
 emt0F12  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0F14  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0F16  DD OFFSET EmulateError,                 OFFSET EmulateError

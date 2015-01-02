@@ -37,6 +37,7 @@ include \rdos\classlib\emulate\x86\emcom.inc
 include \rdos\classlib\emulate\x86\empage.inc
 include \rdos\classlib\emulate\x86\emtss.inc
 
+        extrn _SysCall:near
 
 .code
 
@@ -45,6 +46,26 @@ include \rdos\classlib\emulate\x86\emtss.inc
 NotifyTaskSwitch    Proc near
     ret 8
 NotifyTaskSwitch    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           EmulateSysCall
+;
+;               description:    Emulate syscall
+;
+;               PARAMETERS:     SS:EBP          CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public EmulateSysCall
+
+EmulateSysCall Proc near
+        int 3
+        push ebp
+        call _SysCall
+        ret
+EmulateSysCall  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

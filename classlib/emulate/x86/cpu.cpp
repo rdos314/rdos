@@ -82,6 +82,9 @@ void ReadFromIo(TCpu *Cpu, void *Buffer, unsigned short int Port, int Size);
 void WriteToIo(TCpu *Cpu, void *Buffer, unsigned short int Port, int Size);
 #pragma aux (EMAPI) WriteToIo;
 
+void SysCall(TCpu *Cpu);
+#pragma aux (EMAPI) SysCall;
+
 void Dis_ass_more(TCpu *Cpu, unsigned long count);
 #pragma aux (EMAPI) Dis_ass_more;
 
@@ -153,6 +156,18 @@ void ReadFromIo(TCpu *Cpu, void *Buffer, unsigned short Port, int Size)
         Cpu->ReadFromIo(Buffer, Port, Size);
 }
 
+/*##################  SysCall  ###############
+*   Purpose....: Syscall                                                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void SysCall(TCpu *Cpu)
+{
+        Cpu->SysCall();
+}
+
 /*##################  WriteToIo  ###############
 *   Purpose....: Write to IO                                                                        #
 *   In params..: *                                                          #
@@ -187,6 +202,7 @@ TCpu::TCpu()
         OnIdle = 0;
         OnSetClk = 0;
         OnResetClk = 0;
+        OnSysCall = 0;
         OnReadFromMemory = 0;
         OnWriteToMemory = 0;
         OnReadFromIo = 0;
@@ -377,6 +393,19 @@ char TCpu::GetIntVector()
                 return FPic->GetVector();
         else
                 return 0;
+}
+
+/*##################  TCpu::SysCall  ###############
+*   Purpose....: Do syscall                                                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::SysCall()
+{
+        if (OnSysCall)
+                (*OnSysCall)(this);
 }
 
 /*##################  TCpu::ReadCode  ###############

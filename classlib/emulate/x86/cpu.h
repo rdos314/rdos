@@ -155,6 +155,7 @@ public:
 	void WriteToMemory(void *Buffer, unsigned long Address, int Size);
 	void ReadFromIo(void *Buffer, unsigned short int Port, int Size);
 	void WriteToIo(void *Buffer, unsigned short int Port, int Size);
+	void SysCall();
 	void AddBreakpoint(unsigned short Selector, unsigned long Offset);
 	void ClearBreakpoints();
 
@@ -239,6 +240,7 @@ public:
 	void (*OnWriteToMemory)(TCpu *Cpu, unsigned long Address, char Value);
 	char (*OnReadFromIo)(TCpu *Cpu, unsigned short Port);
 	void (*OnWriteToIo)(TCpu *Cpu, unsigned short Port, char Value);
+	void (*OnSysCall)(TCpu *Cpu);
 
 	TPic *FPic;
 	int FUpdateCycles;

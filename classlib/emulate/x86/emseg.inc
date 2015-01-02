@@ -45,6 +45,7 @@
 	extrn TrapFault:near
 	extrn OpcodeFault:near
 	extrn EmulateError:near
+	extrn EmulateSysCall:near
 	extrn DivFault:near
 	extrn SegmentFault:near
 	extrn StackFault:near

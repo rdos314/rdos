@@ -34,6 +34,7 @@
 #include "pci.h"
 #include "cmos.h"
 #include "flash.h"
+#include "ram.h"
 
 void OpenScreen(const char *FileName);
 void CloseScreen();
@@ -159,16 +160,15 @@ void main(void)
 {
     TKeyb Keyb(&Isa, 0x60);
     TCmos Cmos(&Isa, 0x70);
-    TFlash Flash(0x400000);
+    TFlash Bios(&Isa, 0xFFFF0000, 0x10000);
+    TRam Ram(&Isa, 0, 0x800000);
     TCpu Cpu;
-    void *Eprom;
-    char *LowRam;
 
-    TFile FlashFile("demo.rom");
+    TFile BiosFile("bios.bin");
 
     OpenScreen("f:\\sim.log");
 
-    Flash.LoadTop(&FlashFile);
+    Bios.LoadTop(&BiosFile);
 
     Pit.Counter[0]->Define(&Pic0, 0);
 
