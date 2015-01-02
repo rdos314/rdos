@@ -823,6 +823,24 @@ FpuSaveSingle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FpuSaveMultiple  Proc near
+    test fs:ps_flags,PS_FLAG_FPU
+    jz fpu_save_done
+;
+    push ebx
+;    
+    mov bx,OFFSET p_math_control
+    clts
+    db 9Bh, 66h, 0DDh, 37h      ;       32-bit fsave [bx]
+;
+    lock and fs:ps_flags,NOT PS_FLAG_FPU
+;
+    mov ebx,cr0
+    or al,8
+    mov cr0,ebx  
+;
+    pop ebx  
+
+fpu_save_done:
     ret
 FpuSaveMultiple  Endp
 
