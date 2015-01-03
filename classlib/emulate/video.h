@@ -38,7 +38,10 @@ public:
 
 	virtual int GetSize();
     virtual void WriteMem(int Num, unsigned long Offset, char Value);
-    virtual char ReadMem(int Num, unsigned long Offset);
+
+    char *GetRow(int Row);
+
+    void (*OnTextChange)(TVideo *Video, int Row);
 
 private:
 	char *FData;

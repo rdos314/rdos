@@ -31,7 +31,7 @@
 #define TRUE !FALSE
 
 /*##################  TVideo::TVideo  ###############
-*   Purpose....: Constructor for RAM							            #
+*   Purpose....: Constructor for RAM                                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -40,24 +40,25 @@
 TVideo::TVideo(TBus *Bus)
   : TBusFunction(Bus)
 {
-	int i;
-	int Size = 0x8000;
+        int i;
+        int Size = 0x8000;
 
-	FData = new char[Size];
+        FData = new char[Size];
+        OnTextChange = 0;
 
-	for (i = 0; i < Size; i++)
-	{
-	    if ((i % 1) == 0)
-	        FData[i] = 0x20;
-	    else
-	        FData[i] = 0x7;
-	}
+        for (i = 0; i < Size; i++)
+        {
+            if ((i % 1) == 0)
+                FData[i] = 0x20;
+            else
+                FData[i] = 0x7;
+        }
 
-	DefineMem(0, 0xB8000, Size, FData);
+        DefineMem(0, 0xB8000, Size, FData);
 }
 
 /*##################  TVideo::~TVideo  ###############
-*   Purpose....: Destructor for RAM							            #
+*   Purpose....: Destructor for RAM                                                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -65,12 +66,12 @@ TVideo::TVideo(TBus *Bus)
 *##########################################################################*/
 TVideo::~TVideo()
 {
-	if (FData)
-		delete FData;
+        if (FData)
+                delete FData;
 }
 
 /*##################  TVideo::GetSize  ###############
-*   Purpose....: Get mapping size of device						            #
+*   Purpose....: Get mapping size of device                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -89,17 +90,22 @@ int TVideo::GetSize()
 *##########################################################################*/
 void TVideo::WriteMem(int Num, unsigned long Offset, char Value)
 {
+    int row = Offset / 2 / 80;
+    
     FData[Offset] = Value;
+
+    if (OnTextChange)
+        (*OnTextChange)(this, row);
 }
 
-/*##################  TVideo::ReadMem  ###############
-*   Purpose....: Read video mem                                                                       #
+/*##################  TVideo::GetRow  ###############
+*   Purpose....: Get video row                                                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TVideo::ReadMem(int Num, unsigned long Offset)
+char *TVideo::GetRow(int Row)
 {
-    return FData[Offset];
+    return FData + 2 * 80 * Row;
 }

@@ -52,6 +52,40 @@ TPci Pci(&Isa, 0);
 TPic Pic0(&Isa, 0x20);
 TPit Pit(&Isa, 0x40);
 
+int VideoChange[25];
+
+/*##################  RemoteThread  ###############
+*   Purpose....: Remote thread                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void RemoteThread(void *Param)
+{
+    int row;
+
+    for (row = 0; row < 25; row++)
+        VideoChange[row] = FALSE;
+
+    for (;;)
+    {
+        RdosWaitMilli(250);
+    }
+}
+
+/*##################  TextChange  ###############
+*   Purpose....: Text change notification                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TextChange(TVideo *Video, int Row)
+{
+    VideoChange[Row] = TRUE;    
+}
+
 /*##################  Idle  ###############
 *   Purpose....: Idle                                           #
 *   In params..: *                                                          #
@@ -200,6 +234,10 @@ void main(void)
     TPciIde PciIde(&Pci);
 
     PciIde.AddDisc(1);
+
+    RdosCreateThread(RemoteThread, "empc remote", 0, 0x4000);
+
+    Video.OnTextChange = TextChange;
 
 //    StartRemote();
 
