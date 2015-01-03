@@ -27,6 +27,7 @@
 
 #include <rdos.h>
 #include <stdio.h>
+#include "path.h"
 #include "cpu.h"
 #include "pic.h"
 #include "pit.h"
@@ -42,6 +43,9 @@ void OpenScreen(const char *FileName);
 void CloseScreen();
 
 #define STACK_SIZE  0x4000
+
+#define FALSE 0
+#define TRUE !FALSE
 
 TBus Isa;
 TPci Pci(&Isa, 0);
@@ -151,6 +155,29 @@ void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
     Isa.Out(Port, Value);
 }
 
+/*##################  StartRemote  ###############
+*   Purpose....: Start remote                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+int StartRemote()
+{
+    TPathName StartupDir;
+    int ThreadId;
+    int Handle;
+    char env[2] = {0, 0};
+
+    Handle = RdosSpawn("emdisp.exe", "", StartupDir.Get().GetData(), 0, 0, &ThreadId);
+    if (Handle)
+    {
+        RdosFreeProcessHandle(Handle);
+        return TRUE;
+    }
+    return FALSE;
+}
+
 /*##################  main  ###############
 *   Purpose....: main                           #
 *   In params..: *                                                          #
@@ -173,6 +200,8 @@ void main(void)
     TPciIde PciIde(&Pci);
 
     PciIde.AddDisc(1);
+
+//    StartRemote();
 
 //    OpenScreen("f:\\sim.log");
 

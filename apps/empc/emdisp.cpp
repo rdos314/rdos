@@ -37,4 +37,16 @@
 *##########################################################################*/
 void main(void)
 {
+    char *msg = new char[0x1000];
+    int size;
+
+    RdosDefineMailslot("emdisp", 0x1000);
+
+    RdosWriteString("Remote screen");
+
+    for (;;)
+    {
+        size = RdosReceiveMailslot(msg);
+        RdosReplyMailslot(msg, 0);
+    }        
 }
