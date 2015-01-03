@@ -110,7 +110,7 @@ char __cdecl GetIntVector(TCpu *Cpu)
 *##########################################################################*/
 char ReadFromMemory(TCpu *Cpu, unsigned long Address)
 {
-    return Pci.ReadMem(Address);
+    return Isa.ReadMem(Address);
 }
 
 /*##################  WriteToMemory  ###############
@@ -122,7 +122,7 @@ char ReadFromMemory(TCpu *Cpu, unsigned long Address)
 *##########################################################################*/
 void WriteToMemory(TCpu *Cpu, unsigned long Address, char Value)
 {
-    Pci.WriteMem(Address, Value);
+    Isa.WriteMem(Address, Value);
 }
 
 /*##################  ReadFromIo  ###############
@@ -134,7 +134,7 @@ void WriteToMemory(TCpu *Cpu, unsigned long Address, char Value)
 *##########################################################################*/
 char ReadFromIo(TCpu *Cpu, unsigned short int Port)
 {
-    return Pci.In(Port);
+    return Isa.In(Port);
 }
 
 /*##################  WriteToIo  ###############
@@ -146,7 +146,7 @@ char ReadFromIo(TCpu *Cpu, unsigned short int Port)
 *##########################################################################*/
 void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
 {
-    Pci.Out(Port, Value);
+    Isa.Out(Port, Value);
 }
 
 /*##################  main  ###############
