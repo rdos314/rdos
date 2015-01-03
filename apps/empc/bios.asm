@@ -49,6 +49,8 @@ boot_fs                     DB 8 DUP(?)
 
 boot_struc          ENDS
 
+DiscBase = 700h
+
 _TEXT segment byte public use16 'code'
 
 .386
@@ -365,6 +367,31 @@ fpcDone:
     ret
 FindPciClass      Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           int 13
+;
+;           DESCRIPTION:    Disc int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+int13:
+    push bp
+    mov bp,sp
+;    
+    cmp ah,2
+    jne i13Fail
+;
+
+i13Fail:
+    or byte ptr [bp+6],1
+    jmp i13Done
+
+i13Done:
+    pop bp
+    iret
+        
 start:
     xor ax,ax
     mov ds,ax
@@ -377,8 +404,23 @@ start:
 ;
     mov cl,10h
     call ReadPciDword
-
-
+    test al,1
+    jz disc_done
+;
+    and al,0FCh
+    mov ds:DiscBase,ax    
+;
+    mov bx,13h SHL 2
+    mov word ptr ds:[bx],OFFSET int13
+    mov ds:[bx+2],cs
+;
+    mov ax,201h
+    mov cx,1
+    xor dh,dh
+    mov dl,80h
+    mov bx,7C00h
+    int 13h
+        
 disc_done:    
     int 3
 
