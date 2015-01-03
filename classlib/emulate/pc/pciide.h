@@ -33,8 +33,11 @@
 class TPciIde : public TPciFunction
 {
 public:
-	TPciIde(TPci *Pci);
+	TPciIde(TPci *Pci, int DiscId);
 	~TPciIde();
+
+protected:
+    int FDiscId;
 };
 
 #endif
