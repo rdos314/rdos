@@ -164,7 +164,8 @@ void main(void)
     TFlash BiosShadow(&Isa, 0xF0000, 0x10000, Bios.GetData());
     TFile BiosFile("bios.bin");
     Bios.LoadBottom(&BiosFile);
-    TRam Ram(&Isa, 0, 0x800000);
+    TRam LowRam(&Isa, 0, 0x80000);
+    TRam HighRam(&Isa, 0x100000, 0x700000);
     TCpu Cpu;
 
     OpenScreen("f:\\sim.log");
