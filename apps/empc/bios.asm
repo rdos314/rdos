@@ -677,7 +677,6 @@ i13NotRead:
     cmp ah,42h
     jne i13Fail
 ;
-    int 3
     push es
     push bx
     push cx
@@ -773,7 +772,24 @@ i15Ok:
 ;
     pop bp
     iret    
-        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           int 16
+;
+;           DESCRIPTION:    keyboard int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+int16:
+    int 3
+    push bp
+    mov bp,sp
+;
+    pop bp
+    iret
+            
 start:
     xor eax,eax
     xor ebx,ebx
@@ -791,6 +807,10 @@ start:
 ;
     mov bx,15h SHL 2
     mov word ptr ds:[bx],OFFSET int15
+    mov ds:[bx+2],cs
+;
+    mov bx,16h SHL 2
+    mov word ptr ds:[bx],OFFSET int16
     mov ds:[bx+2],cs
 ;    
     mov bx,101h

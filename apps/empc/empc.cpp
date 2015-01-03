@@ -36,6 +36,7 @@
 #include "flash.h"
 #include "ram.h"
 #include "pciide.h"
+#include "video.h"
 
 void OpenScreen(const char *FileName);
 void CloseScreen();
@@ -167,6 +168,7 @@ void main(void)
     Bios.LoadBottom(&BiosFile);
     TRam LowRam(&Isa, 0, 0x80000);
     TRam HighRam(&Isa, 0x100000, 0x700000);
+    TVideo Video(&Isa);
     TCpu Cpu;
     TPciIde PciIde(&Pci);
 
