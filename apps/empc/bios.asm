@@ -370,17 +370,267 @@ FindPciClass      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CheckDiscReady
+;
+;       DESCRIPTION:    Wait for ready
+;
+;       PARAMETERS:     DX      Io base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckDiscReady      PROC near
+    push ax
+    push cx
+    push dx
+;
+    add dx,7
+    mov cx,10000
+
+CheckDiscBusyLoop:
+    in al,dx
+    test al,80h
+    clc
+    jz CheckDiscReadyDone
+;       
+    loop CheckDiscBusyLoop
+    
+    stc
+    
+CheckDiscReadyDone:
+    pop dx
+    pop cx
+    pop ax
+    ret
+CheckDiscReady      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WaitDiscReady
+;
+;       DESCRIPTION:    Wait for DRDY signal
+;
+;       PARAMETERS:     DX      Io base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitDiscReady       PROC near
+    push ax
+    push cx
+    push dx
+;
+    add dx,7
+    mov cx,10000
+
+WaitDiscReadyLoop:
+    in al,dx
+    test al,40h
+    clc
+    jnz WaitDiscReadyDone
+;       
+    loop WaitDiscReadyLoop
+    
+    stc
+    
+WaitDiscReadyDone:
+    pop dx
+    pop cx
+    pop ax
+    ret
+WaitDiscReady       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CheckDiscStatus
+;
+;       DESCRIPTION:    Check transfer status
+;
+;       PARAMETERS:     DX      Disc io base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckDiscStatus     Proc near
+    push ax
+    push dx
+;
+    add dx,7
+    in al,dx
+    test al,80h
+    jnz CheckDiscStatusFail
+;    
+    test al,20h
+    jnz CheckDiscStatusFail
+
+    test al,40h
+    jz CheckDiscStatusFail
+;
+    test al,10h
+    jz CheckDiscStatusFail
+;
+    test al,1
+    clc
+    jz CheckDiscStatusDone
+;
+    sub dx,6
+    in al,dx
+    
+CheckDiscStatusFail:
+    stc
+
+CheckDiscStatusDone:
+    pop dx
+    pop ax
+    ret
+CheckDiscStatus     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupDisc
+;
+;       DESCRIPTION:    Setup LBA comp. task file
+;
+;       PARAMETERS:     CX      Number of sectors
+;                       EDX     Sector #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupDisc    Proc near
+    push ax
+    push bx
+    push dx
+;
+    push dx
+    mov dx,ds:DiscBase
+    add dx,7
+    in al,dx
+    clc
+    test al,80h
+    jz SetupDiscNotBusy
+;
+    sub dx,7
+    call CheckDiscReady
+
+SetupDiscNotBusy:    
+    pop dx
+    jc SetupDiscDone
+;
+    push edx
+    mov dx,ds:DiscBase
+    inc dx
+;
+    mov al,ah
+    out dx,al
+    inc dx
+;
+    mov al,cl
+    out dx,al
+    inc dx
+;
+    pop ax
+    out dx,al
+    inc dx
+;
+    mov al,ah
+    out dx,al
+    inc dx
+;
+    pop ax
+    out dx,al
+    inc dx
+;
+    mov bl,ah
+    xor al,al
+    shl al,4
+    or al,bl
+    or al,0E0h
+    out dx,al
+;
+    mov dx,ds:DiscBase
+    add dx,7
+    in al,dx
+    test al,40h
+    clc
+    jnz SetupDiscDone
+;
+    sub dx,7
+    call WaitDiscReady
+    
+SetupDiscDone:
+    pop dx
+    pop bx
+    pop ax
+    ret
+SetupDisc    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadDisc
+;
+;       DESCRIPTION:    Read data from device
+;
+;       PARAMETERS:     AL      Command code
+;                       CX      Number of sectors
+;                       ES:BX   Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadDisc    Proc near
+    push cx
+    push dx
+    push di
+;
+    mov di,bx
+    mov dx,ds:DiscBase
+    add dx,7
+    out dx,al
+    sub dx,7
+    
+ReadDiscLoop:
+    push cx
+    mov cx,256
+    rep ins word ptr es:[di],dx
+    pop cx
+;    
+    call CheckDiscStatus
+    jc ReadDiscDone
+;
+    loop ReadDiscLoop
+;
+    clc
+    
+ReadDiscDone:
+    pop di
+    pop dx
+    pop cx
+    ret
+ReadDisc    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ReadSector
 ;
 ;           DESCRIPTION:    Read a sector
 ;
-;           PARAMETERS:     DX:AX       Sector #
+;           PARAMETERS:     EDX         Sector #
 ;                           ES:BX       Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadSector  Proc near
-    int 3
+    push cx
+    mov cx,1
+    call SetupDisc
+    jc rsDone
+;
+    mov al,20h
+    call ReadDisc
+
+rsDone:    
+    pop cx
     ret
 ReadSector  Endp
 
@@ -406,16 +656,13 @@ int13:
     or dh,dh
     jnz i13Fail
 ;
-    push ax
-    push dx
+    push edx
 ;
-    mov ax,cx
-    dec ax
-    xor dx,dx
+    movzx edx,cx
+    dec dx
     call ReadSector
 ;    
-    pop dx
-    pop ax
+    pop edx
     jmp i13Ok    
 
 i13Fail:
@@ -457,9 +704,17 @@ start:
     mov dl,80h
     mov bx,7C00h
     int 13h
-        
-disc_done:    
+;    
     int 3
+    mov ax,es:[bx+1FEh]
+    cmp ax,0AA55h
+    jne disc_done
+;    
+    db 0EAh
+    dw 7C00h
+    dw 0
+            
+disc_done:    
 
     org 0FFF0h
 

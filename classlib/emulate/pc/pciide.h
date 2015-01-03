@@ -43,6 +43,13 @@ public:
 
 protected:
     int FDiscId;
+    int FCount;
+    int FLba;
+    char FSel;
+    char FCmd;
+
+    char FBuf[512];
+    int FPos;
 };
 
 class TPciIde : public TPciFunction

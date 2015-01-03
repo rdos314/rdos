@@ -25,6 +25,7 @@
 *
 *##########################################################################*/
 
+#include "rdos.h"
 #include "pciide.h"
 
 #define FALSE 0
@@ -75,6 +76,44 @@ int TPciIdeUnit::GetSize()
 *##########################################################################*/
 void TPciIdeUnit::Out(int Num, int Offset, char Value)
 {
+    int LVal;
+
+    LVal = (int)Value & 0xFF;
+
+    switch (Offset)
+    {
+        case 0:
+            break;
+
+        case 1:
+            break;
+
+        case 2:
+            FCount = LVal;
+            break;
+
+        case 3:
+            FLba = LVal;
+            break;
+
+        case 4:            
+            FLba |= LVal << 8;
+            break;
+
+        case 5:            
+            FLba |= LVal << 16;
+            break;
+
+        case 6:
+            FSel = Value;
+            break;
+
+        case 7:
+            FCmd = Value;
+            FPos = 0;
+            RdosReadDisc(FDiscId, FLba, FBuf, 512);
+            break;
+    }
 }
 
 /*##################  TPciIdeUnit::In  ###############
@@ -86,6 +125,50 @@ void TPciIdeUnit::Out(int Num, int Offset, char Value)
 *##########################################################################*/
 char TPciIdeUnit::In(int Num, int Offset)
 {
+    char ch;
+    
+    switch (Offset)
+    {
+        case 0:
+            ch = FBuf[FPos];
+            FPos++;
+            return ch;
+
+        case 1:
+            ch = FBuf[FPos];
+            FPos++;
+
+            if (FPos == 512)
+            {
+                FPos = 0;
+                FCount--;
+
+                if (FCount)
+                {
+                    FLba++;
+                    RdosReadDisc(FDiscId, FLba, FBuf, 512);
+                }
+            }
+            return ch;
+
+        case 2:
+            return (char)(FCount & 0xFF);
+
+        case 3:
+            return (char)(FLba & 0xFF);
+
+        case 4:            
+            return (char)((FLba >> 8) & 0xFF);
+
+        case 5:            
+            return (char)((FLba >> 16) & 0xFF);
+
+        case 6:
+            return FSel;
+
+        case 7:
+            return 0x50;
+    }
     return 0xFF;
 }
 
