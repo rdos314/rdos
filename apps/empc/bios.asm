@@ -370,6 +370,23 @@ FindPciClass      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ReadSector
+;
+;           DESCRIPTION:    Read a sector
+;
+;           PARAMETERS:     DX:AX       Sector #
+;                           ES:BX       Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadSector  Proc near
+    int 3
+    ret
+ReadSector  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           int 13
 ;
 ;           DESCRIPTION:    Disc int
@@ -383,10 +400,30 @@ int13:
     cmp ah,2
     jne i13Fail
 ;
+    cmp dl,80h
+    jne i13Fail
+;    
+    or dh,dh
+    jnz i13Fail
+;
+    push ax
+    push dx
+;
+    mov ax,cx
+    dec ax
+    xor dx,dx
+    call ReadSector
+;    
+    pop dx
+    pop ax
+    jmp i13Ok    
 
 i13Fail:
     or byte ptr [bp+6],1
     jmp i13Done
+
+i13Ok:    
+    and byte ptr [bp+6],NOT 1
 
 i13Done:
     pop bp
