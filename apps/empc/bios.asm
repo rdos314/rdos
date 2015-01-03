@@ -621,7 +621,13 @@ ReadDisc    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadSector  Proc near
+    push ds
+    push ax
     push cx
+;
+    xor ax,ax
+    mov ds,ax
+;        
     mov cx,1
     call SetupDisc
     jc rsDone
@@ -631,6 +637,8 @@ ReadSector  Proc near
 
 rsDone:    
     pop cx
+    pop ax
+    pop ds
     ret
 ReadSector  Endp
 
@@ -648,7 +656,7 @@ int13:
     mov bp,sp
 ;    
     cmp ah,2
-    jne i13Fail
+    jne i13NotRead
 ;
     cmp dl,80h
     jne i13Fail
@@ -665,7 +673,37 @@ int13:
     pop edx
     jmp i13Ok    
 
+i13NotRead:
+    cmp ah,42h
+    jne i13Fail
+;
+    int 3
+    push es
+    push bx
+    push cx
+    push edx
+;
+    les bx,ds:[si+4]
+    mov edx,ds:[si+8]
+    mov cx,ds:[si+2]
+    or cx,cx
+    jz i13ExtReadOk
+
+i13ExtReadLoop:
+    call ReadSector
+    inc edx
+    add bx,200h
+    loop i13ExtReadLoop    
+
+i13ExtReadOk:
+    pop edx
+    pop cx
+    pop bx
+    pop es
+    jmp i13Ok
+
 i13Fail:
+    int 3
     or byte ptr [bp+6],1
     jmp i13Done
 
@@ -675,13 +713,86 @@ i13Ok:
 i13Done:
     pop bp
     iret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           int 15
+;
+;           DESCRIPTION:    BIOS int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+int15:
+    push bp
+    mov bp,sp
+;
+    cmp ax,0E820h
+    jne i15Fail
+;
+    cmp edx,534D4150h
+    jne i15Fail
+;
+    or ebx,ebx
+    jnz i15HiMem
+
+i15LowMem:
+    mov ebx,1
+    xor eax,eax
+    mov es:[di],eax
+    mov es:[di+4],eax
+    mov es:[di+12],eax
+    mov eax,0A0000h
+    mov es:[di+8],eax
+    mov eax,1
+    mov es:[di+16],eax
+    mov eax,edx
+    jmp i15Ok
+
+i15HiMem:
+    xor ebx,ebx
+    xor eax,eax
+    mov es:[di+4],eax
+    mov es:[di+12],eax
+    mov eax,100000h
+    mov es:[di],eax
+    mov eax,700000h
+    mov es:[di+8],eax
+    mov eax,1
+    mov es:[di+16],eax
+    mov eax,edx
+    jmp i15Ok
+
+i15Fail:
+    int 3
+    or byte ptr [bp+6],1
+    jmp i13Done
+
+i15Ok:    
+    and byte ptr [bp+6],NOT 1
+;
+    pop bp
+    iret    
         
 start:
+    xor eax,eax
+    xor ebx,ebx
+    xor ecx,ecx
+    xor edx,edx
+    xor esi,esi
+    xor edi,edi
+    xor ebp,ebp
+;    
     xor ax,ax
     mov ds,ax
     mov es,ax
     mov ss,ax
     mov sp,7000h
+;
+    mov bx,15h SHL 2
+    mov word ptr ds:[bx],OFFSET int15
+    mov ds:[bx+2],cs
+;    
     mov bx,101h
     call FindPciClass
     jc disc_done
@@ -705,7 +816,6 @@ start:
     mov bx,7C00h
     int 13h
 ;    
-    int 3
     mov ax,es:[bx+1FEh]
     cmp ax,0AA55h
     jne disc_done
