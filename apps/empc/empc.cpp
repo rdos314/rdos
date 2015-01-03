@@ -174,7 +174,7 @@ void main(void)
 
     PciIde.AddDisc(1);
 
-    OpenScreen("f:\\sim.log");
+//    OpenScreen("f:\\sim.log");
 
     Pit.Counter[0]->Define(&Pic0, 0);
 
