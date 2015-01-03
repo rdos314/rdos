@@ -45,6 +45,7 @@ TPciFunction::TPciFunction(TPci *Pci)
         FConfig[i] = 0;
 
     FPci = Pci;
+    Pci->Add(this);
 }
 
 /*##################  TPciFunction::~PciFunction  ###############
@@ -111,6 +112,25 @@ TPciDevice::~TPciDevice()
     for (i = 0; i < 8; i++)
         if (FunctionArr[i])
             delete FunctionArr[i];
+}
+
+/*##################  TPciDevice::Add  ###############
+*   Purpose....: Add PCI device                                             #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPciDevice::Add(TPciFunction *PciFunction)
+{
+    int func;
+
+    for (func = 0; func < 8; func++)
+        if (FunctionArr[func] == 0)
+            break;
+
+    if (FunctionArr[func] == 0)
+        FunctionArr[func] = PciFunction;
 }
 
 /*##################  TPciDevice::WriteConfig  ###############
@@ -317,5 +337,27 @@ char TPci::In(int Num, int Offset)
 
         default:
             return 0xFF;
+    }
+}
+
+/*##################  TPci::Add  ###############
+*   Purpose....: Add PCI device                                             #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPci::Add(TPciFunction *PciFunction)
+{
+    int dev;
+
+    for (dev = 0; dev < 32; dev++)
+        if (DeviceArr[dev] == 0)
+            break;
+
+    if (DeviceArr[dev] == 0)
+    {
+        DeviceArr[dev] = new TPciDevice;
+        DeviceArr[dev]->Add(PciFunction);
     }
 }

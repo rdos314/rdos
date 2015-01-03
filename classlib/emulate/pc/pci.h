@@ -55,6 +55,8 @@ public:
 	void WriteConfig(int Function, int Register, char Value);
 	char ReadConfig(int Function, int Register);
 
+	void Add(TPciFunction *PciFunction);
+
     TPciFunction *FunctionArr[8];
 };
 
@@ -71,12 +73,14 @@ public:
 
 	void WriteConfig(int Index, char Value);
 	char ReadConfig(int Index);
+
+	void Add(TPciFunction *PciFunction);
                 
 private:
     int FIndex;
     int FPciBus;
     TBus *FBus;
-    TPciDevice *DeviceArr[32];            
+    TPciDevice *DeviceArr[32];
 };
 
 #endif
