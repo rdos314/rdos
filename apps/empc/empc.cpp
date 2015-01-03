@@ -27,7 +27,9 @@
 
 #include <rdos.h>
 #include <stdio.h>
+#include <memory.h>
 #include "path.h"
+#include "sigdev.h"
 #include "cpu.h"
 #include "pic.h"
 #include "pit.h"
@@ -38,6 +40,7 @@
 #include "ram.h"
 #include "pciide.h"
 #include "video.h"
+#include "dispmsg.h"
 
 void OpenScreen(const char *FileName);
 void CloseScreen();
@@ -51,27 +54,35 @@ TBus Isa;
 TPci Pci(&Isa, 0);
 TPic Pic0(&Isa, 0x20);
 TPit Pit(&Isa, 0x40);
+TVideo Video(&Isa);
+TSignalDevice RemoteSignal;
 
 int VideoChange[25];
 
-/*##################  RemoteThread  ###############
-*   Purpose....: Remote thread                                   #
+char MyFocus;
+char DispFocus;
+
+/*##################  StartRemote  ###############
+*   Purpose....: Start remote                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void RemoteThread(void *Param)
+int StartRemote()
 {
-    int row;
+    TPathName StartupDir;
+    int ThreadId;
+    int Handle;
+    char env[2] = {0, 0};
 
-    for (row = 0; row < 25; row++)
-        VideoChange[row] = FALSE;
-
-    for (;;)
+    Handle = RdosSpawn("emdisp.exe", "", StartupDir.Get().GetData(), 0, 0, &ThreadId);
+    if (Handle)
     {
-        RdosWaitMilli(250);
+        RdosFreeProcessHandle(Handle);
+        return TRUE;
     }
+    return FALSE;
 }
 
 /*##################  TextChange  ###############
@@ -83,7 +94,69 @@ void RemoteThread(void *Param)
 *##########################################################################*/
 void TextChange(TVideo *Video, int Row)
 {
-    VideoChange[Row] = TRUE;    
+    if (!VideoChange[Row])
+    {
+        VideoChange[Row] = TRUE;    
+        RemoteSignal.Signal();
+    }    
+}
+
+/*##################  RemoteThread  ###############
+*   Purpose....: Remote thread                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void RemoteThread(void *Param)
+{
+    int row;
+    int size;
+    int RemoteHandle = RdosGetLocalMailslot("emdisp");
+    char *msg = new char[0x1000];
+    char *reply = new char[0x1000];
+    struct TBaseReq *BaseReq = (struct TBaseReq *)msg;
+    struct TVideoReq *VideoReq = (struct TVideoReq *)msg;
+    
+    for (row = 0; row < 25; row++)
+        VideoChange[row] = FALSE;
+
+    if (!RemoteHandle)
+    {
+        StartRemote();
+
+        while (!RemoteHandle)
+        {
+            RdosWaitMilli(100);
+            RemoteHandle = RdosGetLocalMailslot("emdisp");
+        }
+    }
+
+    BaseReq->MsgType = DISP_MSG_FOCUS;
+
+    size = RdosSendMailslot(RemoteHandle, msg, sizeof(struct TBaseReq), reply, 0x1000); 
+
+    if (size == 1)
+        DispFocus = reply[0];
+
+    Video.OnTextChange = TextChange;
+
+    for (;;)
+    {
+        RemoteSignal.WaitForever();
+
+        for (row = 0; row < 25; row++)
+        {
+            if (VideoChange[row])
+            {
+                VideoChange[row] = FALSE;
+                VideoReq->MsgType = DISP_MSG_VIDEO;
+                VideoReq->Row = row;
+                memcpy(VideoReq->Data, Video.GetRow(row), 2 * 80);
+                RdosSendMailslot(RemoteHandle, msg, sizeof(struct TVideoReq), reply, 0x1000); 
+            }                
+        }
+    }
 }
 
 /*##################  Idle  ###############
@@ -189,29 +262,6 @@ void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
     Isa.Out(Port, Value);
 }
 
-/*##################  StartRemote  ###############
-*   Purpose....: Start remote                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-int StartRemote()
-{
-    TPathName StartupDir;
-    int ThreadId;
-    int Handle;
-    char env[2] = {0, 0};
-
-    Handle = RdosSpawn("emdisp.exe", "", StartupDir.Get().GetData(), 0, 0, &ThreadId);
-    if (Handle)
-    {
-        RdosFreeProcessHandle(Handle);
-        return TRUE;
-    }
-    return FALSE;
-}
-
 /*##################  main  ###############
 *   Purpose....: main                           #
 *   In params..: *                                                          #
@@ -229,17 +279,15 @@ void main(void)
     Bios.LoadBottom(&BiosFile);
     TRam LowRam(&Isa, 0, 0x80000);
     TRam HighRam(&Isa, 0x100000, 0x700000);
-    TVideo Video(&Isa);
     TCpu Cpu;
     TPciIde PciIde(&Pci);
+    int Key;
+
+    MyFocus = RdosGetFocus();
 
     PciIde.AddDisc(1);
 
     RdosCreateThread(RemoteThread, "empc remote", 0, 0x4000);
-
-    Video.OnTextChange = TextChange;
-
-//    StartRemote();
 
 //    OpenScreen("f:\\sim.log");
 
@@ -258,7 +306,8 @@ void main(void)
     while (1)
     {
         Cpu.Show();
-        switch (RdosReadKeyboard() & 0xFF)
+        Key = RdosReadKeyboard() & 0xFF;
+        switch (Key)
         {
             case 'f':
             case 'F':

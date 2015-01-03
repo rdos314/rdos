@@ -27,6 +27,34 @@
 
 #include <rdos.h>
 #include <stdio.h>
+#include "dispmsg.h"
+
+char FocusKey;
+
+/*##################  HandleFocus  ###############
+*   Purpose....: Handle focus req                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void HandleFocus()
+{
+    RdosReplyMailslot(&FocusKey, 1);
+}
+
+/*##################  HandleVideo  ###############
+*   Purpose....: Handle video req                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void HandleVideo(struct TVideoReq *req)
+{
+    RdosWriteAttributeString(req->Row, 0, req->Data, 80);
+    RdosReplyMailslot("", 0);
+}
 
 /*##################  main  ###############
 *   Purpose....: main                           #
@@ -39,6 +67,9 @@ void main(void)
 {
     char *msg = new char[0x1000];
     int size;
+    struct TBaseReq *BaseReq = (struct TBaseReq *)msg;
+
+    FocusKey = RdosGetFocus();
 
     RdosDefineMailslot("emdisp", 0x1000);
 
@@ -47,6 +78,24 @@ void main(void)
     for (;;)
     {
         size = RdosReceiveMailslot(msg);
-        RdosReplyMailslot(msg, 0);
+        if (size >= 4)
+        {
+            switch (BaseReq->MsgType)
+            {
+                case DISP_MSG_FOCUS:
+                    HandleFocus();
+                    break;
+
+                case DISP_MSG_VIDEO:
+                    HandleVideo((struct TVideoReq *)msg);
+                    break;
+
+                default:
+                    RdosReplyMailslot(msg, 0);
+                    break;
+            }
+        }
+        else
+            RdosReplyMailslot(msg, 0);
     }        
 }
