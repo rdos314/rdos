@@ -41,6 +41,8 @@ public:
     virtual char ReadConfig(int Register);
     virtual void WriteConfig(int Register, char Data);
 
+    int DefineIoBar(int BarNr, int Size);
+
 protected:
     TPci *FPci;
     char FConfig[256];
@@ -74,12 +76,16 @@ public:
 	void WriteConfig(int Index, char Value);
 	char ReadConfig(int Index);
 
+	TBus *GetBus();
+	int AllocateIo(int Size);
+
 	void Add(TPciFunction *PciFunction);
                 
 private:
     int FIndex;
     int FPciBus;
     TBus *FBus;
+    int FIoBase;
     TPciDevice *DeviceArr[32];
 };
 

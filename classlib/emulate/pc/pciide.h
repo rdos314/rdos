@@ -30,14 +30,31 @@
 
 #include "pci.h"
 
-class TPciIde : public TPciFunction
+class TPciIdeUnit : public TBusFunction
 {
 public:
-	TPciIde(TPci *Pci, int DiscId);
-	~TPciIde();
+	TPciIdeUnit(TBus *Bus, int IoBase, int DiscId);
+	~TPciIdeUnit();
+
+	virtual int GetSize();
+
+	virtual void Out(int Num, int Offset, char Value);
+	virtual char In(int Num, int Offset);
 
 protected:
     int FDiscId;
+};
+
+class TPciIde : public TPciFunction
+{
+public:
+	TPciIde(TPci *Pci);
+	~TPciIde();
+
+	void AddDisc(int DiscId);
+
+protected:
+    TPciIdeUnit *DiscArr[4];
 };
 
 #endif

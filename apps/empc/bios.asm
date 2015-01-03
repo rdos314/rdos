@@ -372,8 +372,14 @@ start:
     mov ss,ax
     mov sp,7000h
     mov bx,101h
-    mov cx,8
     call FindPciClass
+    jc disc_done
+;
+    mov cl,10h
+    call ReadPciDword
+
+
+disc_done:    
     int 3
 
     org 0FFF0h

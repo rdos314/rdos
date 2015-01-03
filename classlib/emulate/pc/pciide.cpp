@@ -30,6 +30,65 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+/*##################  TPciIdeUnit::TPciIdeUnit  ###############
+*   Purpose....: Constructor for PCI IDE unit                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+TPciIdeUnit::TPciIdeUnit(TBus *Bus, int IoBase, int DiscId)
+  : TBusFunction(Bus)
+{
+    FDiscId = DiscId;
+    DefineIo(0, IoBase, 0x10, 0);
+}
+
+/*##################  TPciIdeUnit::~TPciIdeUnit  ###############
+*   Purpose....: Destructor for PCI IDE unit                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+TPciIdeUnit::~TPciIdeUnit()
+{
+}
+
+/*##################  TPciIdeUnit::GetSize  ###############
+*   Purpose....: Get mapping size of device                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+int TPciIdeUnit::GetSize()
+{
+    return 0x10;
+}
+
+/*##################  TPciIdeUnit::Out  ###############
+*   Purpose....: Perform out instruction                                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPciIdeUnit::Out(int Num, int Offset, char Value)
+{
+}
+
+/*##################  TPciIdeUnit::In  ###############
+*   Purpose....: Perform in instruction                                                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TPciIdeUnit::In(int Num, int Offset)
+{
+    return 0xFF;
+}
+
 /*##################  TPciIde::TPciIde  ###############
 *   Purpose....: Constructor for PCI IDE                                       #
 *   In params..: *                                                          #
@@ -37,13 +96,16 @@
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TPciIde::TPciIde(TPci *Pci, int DiscId)
+TPciIde::TPciIde(TPci *Pci)
   : TPciFunction(Pci)
 {
+    int i;
+
+    for (i = 0; i < 4; i++)
+        DiscArr[i] = 0;
+        
     FConfig[0xA] = 1;
     FConfig[0xB] = 1;
-
-    FDiscId = DiscId;
 }
 
 /*##################  TPciIde::~TPciIde  ###############
@@ -55,4 +117,36 @@ TPciIde::TPciIde(TPci *Pci, int DiscId)
 *##########################################################################*/
 TPciIde::~TPciIde()
 {
+    int i;
+
+    for (i = 0; i < 4; i++)
+        if (DiscArr[i])
+            delete DiscArr[i];
+}
+
+/*##################  TPciIde::AddDisc  ###############
+*   Purpose....: Add new disc                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPciIde::AddDisc(int DiscId)
+{
+    int disc;
+    int IoBase;
+    TBus *Bus;
+    TPciIdeUnit *IdeUnit;
+
+    for (disc = 0; disc < 4; disc++)
+        if (DiscArr[disc] == 0)
+            break;
+
+    if (DiscArr[disc] == 0)
+    {
+        IoBase = DefineIoBar(disc, 0x10);
+        Bus = FPci->GetBus();
+        IdeUnit = new TPciIdeUnit(Bus, IoBase, DiscId);
+        DiscArr[disc] = IdeUnit;
+    }
 }

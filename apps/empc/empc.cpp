@@ -168,7 +168,9 @@ void main(void)
     TRam LowRam(&Isa, 0, 0x80000);
     TRam HighRam(&Isa, 0x100000, 0x700000);
     TCpu Cpu;
-    TPciIde PciIde(&Pci, 1);
+    TPciIde PciIde(&Pci);
+
+    PciIde.AddDisc(1);
 
     OpenScreen("f:\\sim.log");
 

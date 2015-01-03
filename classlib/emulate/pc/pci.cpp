@@ -83,6 +83,23 @@ void TPciFunction::WriteConfig(int Register, char Data)
     FConfig[Register] = Data;
 }
 
+/*##################  TPciFunction::DefineIoBar  ###############
+*   Purpose....: Define IO bar                                                               #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+int TPciFunction::DefineIoBar(int BarNr, int Size)
+{
+    int *ptr = (int *)&FConfig[0x10 + 4 * BarNr];
+    int IoBase = FPci->AllocateIo(Size);
+
+    *ptr = IoBase | 1;
+
+    return IoBase;
+}
+
 /*##################  TPciDevice::TPciDevice  ###############
 *   Purpose....: Constructor for PCI device                                                                 #
 *   In params..: *                                                          #
@@ -176,7 +193,9 @@ TPci::TPci(TBus *Bus, int PciBus)
     for (i = 0; i < 32; i++)
         DeviceArr[i] = 0;
 
+    FBus = Bus;
     FPciBus = PciBus | 0x8000;        
+    FIoBase = 0x4000;
     DefineIo(0, 0xCF8, 8, 0);
 }
 
@@ -338,6 +357,31 @@ char TPci::In(int Num, int Offset)
         default:
             return 0xFF;
     }
+}
+
+/*##################  TPci::GetBus  ###############
+*   Purpose....: Get bus                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+TBus *TPci::GetBus()
+{
+    return FBus;
+}
+
+/*##################  TPci::AllocateIo  ###############
+*   Purpose....: Allocate IO range                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+int TPci::AllocateIo(int Size)
+{
+    int IoBase = FIoBase;
+
+    FIoBase += Size;
+    return IoBase;
 }
 
 /*##################  TPci::Add  ###############
