@@ -65,9 +65,9 @@ TPciFunction::~TPciFunction()
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TPciFunction::ReadConfig(int Index)
+char TPciFunction::ReadConfig(int Register)
 {
-    return FConfig[Index];
+    return FConfig[Register];
 }
 
 /*##################  TPciFunction::WriteConfig  ###############
@@ -77,9 +77,9 @@ char TPciFunction::ReadConfig(int Index)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TPciFunction::WriteConfig(int Index, char Data)
+void TPciFunction::WriteConfig(int Register, char Data)
 {
-    FConfig[Index] = Data;
+    FConfig[Register] = Data;
 }
 
 /*##################  TPciDevice::TPciDevice  ###############
@@ -113,6 +113,34 @@ TPciDevice::~TPciDevice()
             delete FunctionArr[i];
 }
 
+/*##################  TPciDevice::WriteConfig  ###############
+*   Purpose....: Write config                                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPciDevice::WriteConfig(int Function, int Register, char Value)
+{
+    if (FunctionArr[Function])
+        FunctionArr[Function]->WriteConfig(Register, Value);
+}
+
+/*##################  TPciDevice::ReadConfig  ###############
+*   Purpose....: Read config                                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TPciDevice::ReadConfig(int Function, int Register)
+{
+    if (FunctionArr[Function])
+        return FunctionArr[Function]->ReadConfig(Register);
+
+    return 0xFF;
+}
+
 /*##################  TPci::TPci  ###############
 *   Purpose....: Constructor for PCI                                                                #
 *   In params..: *                                                          #
@@ -120,15 +148,16 @@ TPciDevice::~TPciDevice()
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TPci::TPci(TBus *Bus)
+TPci::TPci(TBus *Bus, int PciBus)
   : TBusFunction(Bus)
 {
     int i;
 
-    for (i = 0; i < 256; i++)
+    for (i = 0; i < 32; i++)
         DeviceArr[i] = 0;
-        
-        DefineIo(0, 0xCF8, 8, 0);
+
+    FPciBus = PciBus | 0x8000;        
+    DefineIo(0, 0xCF8, 8, 0);
 }
 
 /*##################  TPci::~TPci  ###############
@@ -142,7 +171,7 @@ TPci::~TPci()
 {
     int i;
 
-    for (i = 0; i < 256; i++)
+    for (i = 0; i < 32; i++)
         if (DeviceArr[i])
             delete DeviceArr[i];
 }
@@ -167,6 +196,14 @@ int TPci::GetSize()
 *##########################################################################*/
 void TPci::WriteConfig(int Index, char Value)
 {
+    int Bus = (Index >> 16) & 0xFFFF;
+    int Device = (Index >> 11) & 0x1F;
+    int Function = (Index >> 8) & 0x7;
+    int Register = Index & 0xFF;
+
+    if (Bus == FPciBus)
+        if (DeviceArr[Device])
+            DeviceArr[Device]->WriteConfig(Function, Register, Value);
 }
 
 /*##################  TPci::ReadConfig  ###############
@@ -178,6 +215,15 @@ void TPci::WriteConfig(int Index, char Value)
 *##########################################################################*/
 char TPci::ReadConfig(int Index)
 {
+    int Bus = (Index >> 16) & 0xFFFF;
+    int Device = (Index >> 11) & 0x1F;
+    int Function = (Index >> 8) & 0x7;
+    int Register = Index & 0xFF;
+
+    if (Bus == FPciBus)
+        if (DeviceArr[Device])
+            return DeviceArr[Device]->ReadConfig(Function, Register);
+
     return 0xFF;
 }
 

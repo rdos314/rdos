@@ -38,8 +38,8 @@ public:
     TPciFunction(TPci *Pci);
     ~TPciFunction();
 
-    virtual char ReadConfig(int Index);
-    virtual void WriteConfig(int Index, char Data);
+    virtual char ReadConfig(int Register);
+    virtual void WriteConfig(int Register, char Data);
 
 protected:
     TPci *FPci;
@@ -52,13 +52,16 @@ public:
     TPciDevice();
     ~TPciDevice();
 
+	void WriteConfig(int Function, int Register, char Value);
+	char ReadConfig(int Function, int Register);
+
     TPciFunction *FunctionArr[8];
 };
 
 class TPci : public TBusFunction
 {
 public:
-    TPci(TBus *Bus);
+    TPci(TBus *Bus, int PciBus);
     ~TPci();
 
 	virtual int GetSize();
@@ -71,8 +74,9 @@ public:
                 
 private:
     int FIndex;
+    int FPciBus;
     TBus *FBus;
-    TPciDevice *DeviceArr[256];            
+    TPciDevice *DeviceArr[32];            
 };
 
 #endif

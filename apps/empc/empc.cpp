@@ -42,7 +42,7 @@ void CloseScreen();
 #define STACK_SIZE  0x4000
 
 TBus Isa;
-TPci Pci(&Isa);
+TPci Pci(&Isa, 0);
 TPic Pic0(&Isa, 0x20);
 TPit Pit(&Isa, 0x40);
 
