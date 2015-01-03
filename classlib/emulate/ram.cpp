@@ -31,27 +31,6 @@
 #define TRUE !FALSE
 
 /*##################  TRam::TRam  ###############
-*   Purpose....: Constructor for ram							            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-TRam::TRam(unsigned long Size)
-  : TBusFunction(0)
-{
-	int i;
-
-	FSize = Size;
-	FData = new char[Size];
-
-	for (i = 0; i < Size; i++)
-		*(FData + i) = 0xFF;
-
-	DefineMem(0, 0, Size, FData);
-}
-
-/*##################  TRam::TRam  ###############
 *   Purpose....: Constructor for RAM							            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #

@@ -34,8 +34,8 @@
 class TFlash : public TBusFunction
 {
 public:
-        TFlash(unsigned long Size);
         TFlash(TBus *Bus, unsigned long Base, unsigned long Size);
+        TFlash(TBus *Bus, unsigned long Base, unsigned long Size, char *Data);
         ~TFlash();
 
         virtual int GetSize();
@@ -44,9 +44,12 @@ public:
         void LoadTop(TFile *File);
         void LoadBottom(TFile *File);
 
+        char *GetData();
+
 private:
         int FSize;
         char *FData;
+        int FHasData;
 };
 
 #endif

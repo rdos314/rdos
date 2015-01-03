@@ -31,28 +31,7 @@
 #define TRUE !FALSE
 
 /*##################  TFlash::TFlash  ###############
-*   Purpose....: Constructor for flash							            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-TFlash::TFlash(unsigned long Size)
-  : TBusFunction(0)
-{
-	int i;
-
-	FSize = Size;
-	FData = new char[Size];
-
-	for (i = 0; i < Size; i++)
-		*(FData + i) = 0xFF;
-
-	DefineMem(0, 0, Size, FData);
-}
-
-/*##################  TFlash::TFlash  ###############
-*   Purpose....: Constructor for flash							            #
+*   Purpose....: Constructor for flash                                                              #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -61,19 +40,38 @@ TFlash::TFlash(unsigned long Size)
 TFlash::TFlash(TBus *Bus, unsigned long Base, unsigned long Size)
   : TBusFunction(Bus)
 {
-	int i;
+        int i;
 
-	FSize = Size;
-	FData = new char[Size];
+        FSize = Size;
+    FHasData = TRUE;    
+        FData = new char[Size];
 
-	for (i = 0; i < Size; i++)
-		*(FData + i) = 0xFF;
+        for (i = 0; i < Size; i++)
+                *(FData + i) = 0xFF;
 
-	DefineMem(0, Base, Size, FData);
+        DefineMem(0, Base, Size, FData);
+}
+
+/*##################  TFlash::TFlash  ###############
+*   Purpose....: Constructor for flash                                                              #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+TFlash::TFlash(TBus *Bus, unsigned long Base, unsigned long Size, char *Data)
+  : TBusFunction(Bus)
+{
+        int i;
+
+    FHasData = FALSE;   
+    FData = Data;
+        FSize = Size;
+        DefineMem(0, Base, Size, FData);
 }
 
 /*##################  TFlash::~TFlash  ###############
-*   Purpose....: Destructor for flash							            #
+*   Purpose....: Destructor for flash                                                               #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -81,12 +79,12 @@ TFlash::TFlash(TBus *Bus, unsigned long Base, unsigned long Size)
 *##########################################################################*/
 TFlash::~TFlash()
 {
-	if (FData)
-		delete FData;
+        if (FData && FHasData)
+                delete FData;
 }
 
 /*##################  TFlash::GetSize  ###############
-*   Purpose....: Get mapping size of device						            #
+*   Purpose....: Get mapping size of device                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -96,8 +94,19 @@ int TFlash::GetSize()
     return FSize;
 }
 
+/*##################  TFlash::GetData  ###############
+*   Purpose....: Get data of device                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+char *TFlash::GetData()
+{
+    return FData;
+}
+
 /*##################  TFlash::WriteMem  ###############
-*   Purpose....: Write to data block								            #
+*   Purpose....: Write to data block                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -108,7 +117,7 @@ void TFlash::WriteMem(int Num, unsigned long Offset, char Value)
 }
 
 /*##################  TFlash::LoadTop ###############
-*   Purpose....: Load image at top						            #
+*   Purpose....: Load image at top                                                          #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -116,23 +125,23 @@ void TFlash::WriteMem(int Num, unsigned long Offset, char Value)
 *##########################################################################*/
 void TFlash::LoadTop(TFile *File)
 {
-	int pos;
-	int size;
+        int pos;
+        int size;
 
-	size = File->GetSize();
-	if (size > FSize)
-	{
-		File->SetPos(size - FSize);
-		pos = 0;
-	}
-	else
-		pos = FSize - size;
+        size = File->GetSize();
+        if (size > FSize)
+        {
+                File->SetPos(size - FSize);
+                pos = 0;
+        }
+        else
+                pos = FSize - size;
 
-	File->Read(FData + pos, size);
+        File->Read(FData + pos, size);
 }
 
 /*##################  TFlash::LoadBottom ###############
-*   Purpose....: Load image at bottom						            #
+*   Purpose....: Load image at bottom                                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -140,5 +149,5 @@ void TFlash::LoadTop(TFile *File)
 *##########################################################################*/
 void TFlash::LoadBottom(TFile *File)
 {
-	File->Read(FData, FSize);
+        File->Read(FData, FSize);
 }

@@ -33,7 +33,6 @@
 class TRam : public TBusFunction
 {
 public:
-	TRam(unsigned long Size);
 	TRam(TBus *Bus, unsigned long Base, unsigned long Size);
 	~TRam();
 

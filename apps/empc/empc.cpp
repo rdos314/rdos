@@ -161,14 +161,13 @@ void main(void)
     TKeyb Keyb(&Isa, 0x60);
     TCmos Cmos(&Isa, 0x70);
     TFlash Bios(&Isa, 0xFFFF0000, 0x10000);
+    TFlash BiosShadow(&Isa, 0xF0000, 0x10000, Bios.GetData());
+    TFile BiosFile("bios.bin");
+    Bios.LoadBottom(&BiosFile);
     TRam Ram(&Isa, 0, 0x800000);
     TCpu Cpu;
 
-    TFile BiosFile("bios.bin");
-
     OpenScreen("f:\\sim.log");
-
-    Bios.LoadTop(&BiosFile);
 
     Pit.Counter[0]->Define(&Pic0, 0);
 
