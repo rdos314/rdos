@@ -209,19 +209,6 @@ void ResetClk(TCpu *Cpu)
 {
     Pit.Counter[0]->ResetClk();
     Pit.Counter[2]->ResetClk();
-    Cpu->PendingInt = Pic0.IsIntActive();
-}
-
-/*##################  GetIntVector  ###############
-*   Purpose....: Get interrupt vector                                       #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-char __cdecl GetIntVector(TCpu *Cpu)
-{
-    return Pic0.GetVector();
 }
 
 /*##################  ReadFromMemory  ###############

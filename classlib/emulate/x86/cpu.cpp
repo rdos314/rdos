@@ -373,9 +373,6 @@ void TCpu::NotifySetClk()
 *##########################################################################*/
 void TCpu::NotifyResetClk()
 {
-    if (FInterrupt)
-        PendingInt = FInterrupt->IsIntActive();
-
     if (OnResetClk)
         (*OnResetClk)(this);
 }
@@ -610,9 +607,12 @@ void TCpu::WriteToIo(void *Buffer, unsigned short int Port, int Size)
 *##########################################################################*/
 void TCpu::EmulateOne()
 {
-        FUpdateCycles = TRUE;
-        Emulate(this);
-        FUpdateCycles = FALSE;
+    if (FInterrupt)
+        PendingInt = FInterrupt->IsIntActive();
+
+    FUpdateCycles = TRUE;
+    Emulate(this);
+    FUpdateCycles = FALSE;
 }
 
 /*##################  TCpu::AddCycles  ###############

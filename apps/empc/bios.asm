@@ -52,6 +52,10 @@ boot_struc          ENDS
 DiscBase    = 700h
 TimerTics   = 46Ch
 
+KeyHead     = 1Ah
+KeyTail     = 1Ch
+KeyBuf      = 1Eh
+
 _TEXT segment byte public use16 'code'
 
 .386
@@ -177,10 +181,26 @@ int9:
     push ax
     push bx
 ;    
-    xor ax,ax
+    mov ax,40h
     mov ds,ax
     in al,60h
 ;    
+    mov bx,ds:KeyTail
+    inc bx
+;    
+    cmp bx,KeyBuf + 32
+    jne i9SavePtr
+;
+    mov bx,KeyBuf
+
+i9SavePtr:    
+    cmp bx,ds:KeyHead
+    je i9Eoi
+;    
+    xchg bx,ds:KeyTail
+    mov ds:[bx],al
+
+i9Eoi:
     mov al,20h
     out 20h,al
 ;
@@ -199,6 +219,12 @@ int9:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitKeyboard    Proc near
+    mov ax,40h
+    mov es,ax
+    mov ax,KeyBuf
+    mov es:KeyHead,ax
+    mov es:KeyTail,ax
+;    
     mov bx,9 SHL 2
     mov word ptr ds:[bx],OFFSET int9
     mov ds:[bx+2],cs
@@ -211,6 +237,23 @@ InitKeyboard    Proc near
     mov dx,64h
     mov al,0AAh
     out dx,al
+;
+    mov cx,256
+
+ikWait:
+    mov bx,es:KeyHead
+    cmp bx,es:KeyTail
+    jne ikEnable
+;
+    loop ikWait
+
+ikEnable:
+    mov al,0AEh
+    out dx,al    
+;
+    mov ax,KeyBuf
+    mov es:KeyHead,ax
+    mov es:KeyTail,ax    
     ret
 InitKeyboard    Endp
 
