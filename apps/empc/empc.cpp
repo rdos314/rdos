@@ -278,7 +278,10 @@ void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
 *##########################################################################*/
 void main(void)
 {
+    TPic Pic1(&Isa, 0xA0);
+    Pic0.Cascade(2, &Pic1);
     TCmos Cmos(&Isa, 0x70);
+
     TFlash Bios(&Isa, 0xFFFF0000, 0x10000);
     TFlash BiosShadow(&Isa, 0xF0000, 0x10000, Bios.GetData());
     TFile BiosFile("bios.bin");
@@ -288,6 +291,7 @@ void main(void)
     TCpu Cpu;
     TPciIde PciIde(&Pci);
     int Key;
+
 
     MyFocus = RdosGetFocus();
 
