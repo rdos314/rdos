@@ -58,6 +58,19 @@ _TEXT segment byte public use16 'code'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           int8
+;
+;           DESCRIPTION:    PIT interrupt
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+int8:
+    int 3
+    iret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitPic
 ;
 ;           DESCRIPTION:    Init interrupt controller
@@ -102,6 +115,35 @@ InitPic     Proc near
     out dx,al
     ret
 InitPic     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitPit
+;
+;           DESCRIPTION:    Init interval timer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitPit     Proc near
+    mov dx,43h
+    mov al,36h
+    out dx,al
+    mov al,0FFh
+    mov dx,40h
+    out dx,al
+    out dx,al
+;    
+    mov bx,8 SHL 2
+    mov word ptr ds:[bx],OFFSET int8
+    mov ds:[bx+2],cs
+;
+    mov dx,21h
+    in al,dx
+    and al,NOT 1
+    out dx,al
+    ret
+InitPit     Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -854,6 +896,7 @@ start:
     mov sp,7000h
 ;
     call InitPic    
+    call InitPit
 ;
     mov bx,15h SHL 2
     mov word ptr ds:[bx],OFFSET int15
