@@ -103,6 +103,19 @@ void TextChange(TVideo *Video, int Row)
     }    
 }
 
+/*##################  GetRemoteIpc  ###############
+*   Purpose....: Get remote IPC                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+int GetRemoteIpc()
+{
+//    return RdosGetLocalMailslot("emdisp");
+    return RdosGetRemoteMailslot(0x4101A8C0, "emdisp");
+}
+
 /*##################  RemoteThread  ###############
 *   Purpose....: Remote thread                                   #
 *   In params..: *                                                          #
@@ -114,7 +127,7 @@ void RemoteThread(void *Param)
 {
     int row;
     int size;
-    int RemoteHandle = RdosGetLocalMailslot("emdisp");
+    int RemoteHandle = GetRemoteIpc();
     char *msg = new char[0x1000];
     char *reply = new char[0x1000];
     struct TBaseReq *BaseReq = (struct TBaseReq *)msg;
@@ -130,7 +143,7 @@ void RemoteThread(void *Param)
         while (!RemoteHandle)
         {
             RdosWaitMilli(100);
-            RemoteHandle = RdosGetLocalMailslot("emdisp");
+            RemoteHandle = GetRemoteIpc();
         }
     }
 
@@ -276,7 +289,7 @@ void main(void)
     TFlash BiosShadow(&Isa, 0xF0000, 0x10000, Bios.GetData());
     TFile BiosFile("bios.bin");
     Bios.LoadBottom(&BiosFile);
-    TRam LowRam(&Isa, 0, 0x80000);
+    TRam LowRam(&Isa, 0, 0xA0000);
     TRam HighRam(&Isa, 0x100000, 0x700000);
     TCpu Cpu;
     TPciIde PciIde(&Pci);

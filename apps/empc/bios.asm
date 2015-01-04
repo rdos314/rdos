@@ -50,11 +50,13 @@ boot_fs                     DB 8 DUP(?)
 boot_struc          ENDS
 
 DiscBase    = 700h
+CursorPos   = 450H
 TimerTics   = 46Ch
 
 KeyHead     = 1Ah
 KeyTail     = 1Ch
 KeyBuf      = 1Eh
+
 
 _TEXT segment byte public use16 'code'
 
@@ -176,7 +178,6 @@ InitPit     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 int9:
-    int 3
     push ds
     push ax
     push bx
@@ -184,6 +185,8 @@ int9:
     mov ax,40h
     mov ds,ax
     in al,60h
+    test al,80h
+    jnz i9Eoi
 ;    
     mov bx,ds:KeyTail
     inc bx
@@ -212,6 +215,194 @@ i9Eoi:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           int 16
+;
+;           DESCRIPTION:    keyboard IO int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+key_conv_tab:
+c00     DB      0,              0
+c01     DB      1Bh,    0
+c02     DB      '1',    78h
+c03     DB      '2',    79h
+c04     DB      '3',    7Ah
+c05     DB      '4',    7Bh
+c06     DB      '5',    7Ch
+c07     DB      '6',    7Dh
+c08     DB      '7',    7Eh
+c09     DB      '8',    7Fh
+c0A     DB      '9',    80h
+c0B     DB      '0',    81h
+c0C     DB      '-',    0
+c0D     DB      '=',    0
+c0E     DB      8,          0
+c0F     DB  9,          0Fh
+c10     DB      'q',    10h
+c11     DB      'w',    11h
+c12     DB      'e',    12h
+c13     DB      'r',    13h
+c14     DB      't',    14h
+c15     DB      'y',    15h
+c16     DB      'u',    16h
+c17     DB      'i',    17h
+c18     DB      'o',    18h
+c19     DB      'p',    19h
+c1A     DB      '[',    0
+c1B     DB      ']',    0
+c1C     DB      0Dh,    0Dh
+c1D     DB      0,              0
+c1E     DB      'a',    1Eh
+c1F     DB      's',    1Fh
+c20     DB      'd',    20h
+c21     DB      'f',    21h
+c22     DB      'g',    22h
+c23     DB      'h',    23h
+c24     DB      'j',    24h
+c25     DB      'k',    25h
+c26     DB      'l',    26h
+c27     DB      ';',    0
+c28     DB      60h,    0
+c29     DB      27h,    0
+c2A     DB      0,              0
+c2B     DB      '\',    0
+c2C     DB      'z',    2Ch
+c2D     DB      'x',    2Dh
+c2E     DB      'c',    2Eh
+c2F     DB      'v',    2Fh
+c30     DB      'b',    30h
+c31     DB      'n',    31h
+c32     DB      'm',    32h
+c33     DB      ',',    0
+c34     DB      '.',    0
+c35     DB      '/',    0
+c36     DB      0,              0
+c37     DB      '*',    0
+c38     DB      0,              0
+c39     DB      ' ',    0
+c3A     DB      0,              0
+c3B     DB      3Bh,    0
+c3C     DB      3Ch,    0
+c3D     DB      3Dh,    0
+c3E     DB      3Eh,    0
+c3F     DB      3Fh,    0
+c40     DB      40h,    0
+c41     DB      41h,    0
+c42     DB      42h,    0
+c43     DB      43h,    0
+c44     DB      44h,    0
+c45     DB      0,              0
+c46     DB      0,              0
+c47     DB      47h,    0
+c48     DB      48h,    0
+c49     DB      49h,    0
+c4A     DB      '-',    0
+c4B     DB      4Bh,    0
+c4C     DB      '5',    0
+c4D     DB      4Dh,    0
+c4E     DB      '+',    0
+c4F     DB      4Fh,    0
+c50     DB      50h,    0
+c51     DB      51h,    0
+c52     DB      52h,    0
+c53     DB      53h,    0
+c54     DB      0,              0
+c55     DB      0,              0
+c56     DB      '<',    0
+c57     DB      57h,    0
+c58     DB      58h,    0
+c59     DB      0,              0
+c5A     DB      0,              0
+c5B     DB      0,              0
+c5C     DB      0,              0
+c5D     DB      0,              0
+c5E     DB      0,              0
+c5F     DB      0,              0
+c60     DB      0,              0
+c61     DB      0,              0
+c62     DB      0,              0
+c63     DB      0,              0
+c64     DB      0,              0
+c65     DB      0,              0
+c66     DB      0,              0
+c67     DB      0,              0
+c68     DB      0,              0
+c69     DB      0,              0
+c6A     DB      0,              0
+c6B     DB      0,              0
+c6C     DB      0,              0
+c6D     DB      0,              0
+c6E     DB      0,              0
+c6F     DB      0,              0
+c70     DB      0,              0
+c71     DB      0,              0
+c72     DB      0,              0
+c73     DB      0,              0
+c74     DB      0,              0
+c75     DB      0,              0
+c76     DB      0,              0
+c77     DB      0,              0
+c78     DB      0,              0
+c79     DB      0,              0
+c7A     DB      0,              0
+c7B     DB      0,              0
+c7C     DB      0,              0
+c7D     DB      0,              0
+c7E     DB      0,              0
+c7F     DB      0,              0
+
+int16:
+    push bp
+    mov bp,sp
+    push ds
+    push bx
+;
+    mov bx,40h
+    mov ds,bx
+
+i16Retry:    
+    mov bx,ds:KeyHead
+    cmp bx,ds:KeyTail
+    jz i16Empty
+;
+    mov al,ds:[bx]
+    or ah,ah
+    jnz i16Conv
+;
+    inc bx
+;    
+    cmp bx,KeyBuf + 32
+    jne i16WrapOk
+;
+    mov bx,KeyBuf
+
+i16WrapOk:
+    mov ds:KeyHead,bx
+
+i16Conv:    
+    mov bl,al
+    xor bh,bh
+    add bx,bx
+    mov ax,word ptr cs:[bx].key_conv_tab
+    xchg al,ah
+    and byte ptr [bp+6],NOT 40h
+    jmp i16Done
+
+i16Empty:
+    or ah,ah
+    jz i16Retry
+;
+    or byte ptr [bp+6],40h
+       
+i16Done:
+    pop bx
+    pop ds    
+    pop bp
+    iret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitKeyboard
 ;
 ;           DESCRIPTION:    Init keyboard
@@ -219,6 +410,7 @@ i9Eoi:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitKeyboard    Proc near
+    push es
     mov ax,40h
     mov es,ax
     mov ax,KeyBuf
@@ -227,6 +419,10 @@ InitKeyboard    Proc near
 ;    
     mov bx,9 SHL 2
     mov word ptr ds:[bx],OFFSET int9
+    mov ds:[bx+2],cs
+;
+    mov bx,16h SHL 2
+    mov word ptr ds:[bx],OFFSET int16
     mov ds:[bx+2],cs
 ;    
     mov dx,21h
@@ -254,8 +450,72 @@ ikEnable:
     mov ax,KeyBuf
     mov es:KeyHead,ax
     mov es:KeyTail,ax    
+    pop es
     ret
 InitKeyboard    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           int 10
+;
+;           DESCRIPTION:    Video int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+int10:
+    push ds
+    push ax
+    push bx
+    push cx
+    push dx
+;
+    xor cx,cx
+    mov ds,cx
+;        
+    cmp ah,0Eh
+    jne i10Done
+;
+    mov cx,ds:CursorPos
+    cmp al,0Dh
+    jne i10NotCr
+;    
+    inc ch
+    mov ds:CursorPos,cx
+    jmp i10Done
+
+i10NotCr:
+    cmp al,0Ah    
+    jne i10NotLf
+;
+    xor cl,cl
+    mov ds:CursorPos,cx
+    jmp i10Done
+
+i10NotLf:   
+    mov ah,bl
+    inc word ptr ds:CursorPos
+;    
+    push ax
+    mov al,ch
+    mov dl,80
+    mul dl
+    add al,cl
+    adc ah,0
+    shl ax,1
+    mov bx,ax
+    pop ax
+    mov cx,0B800h
+    mov ds,cx
+    mov ds:[bx],ax
+    
+i10Done:  
+    pop dx 
+    pop cx 
+    pop bx
+    pop ax
+    pop ds
+    iret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -978,23 +1238,6 @@ i15Ok:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           int 16
-;
-;           DESCRIPTION:    keyboard int
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-int16:
-    int 3
-    push bp
-    mov bp,sp
-;
-    pop bp
-    iret
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           start
 ;
 ;           DESCRIPTION:    Startup
@@ -1020,18 +1263,14 @@ start:
     call InitPit
     call InitKeyboard
 ;
-    sti
-
-stl:
-    hlt
-    jmp stl    
+    mov bx,CursorPos
+    mov word ptr ds:[bx],0
+    mov bx,10h SHL 2
+    mov word ptr ds:[bx],OFFSET int10
+    mov ds:[bx+2],cs
 ;
     mov bx,15h SHL 2
     mov word ptr ds:[bx],OFFSET int15
-    mov ds:[bx+2],cs
-;
-    mov bx,16h SHL 2
-    mov word ptr ds:[bx],OFFSET int16
     mov ds:[bx+2],cs
 ;    
     mov bx,101h

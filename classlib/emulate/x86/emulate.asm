@@ -283,7 +283,6 @@ em0F01_110      DD OFFSET EmLmswMem
 em0F01_111      DD OFFSET EmulateError
 
 Em0F01:
-        int 3
         call ReadCodeByte
         movzx ebx,al
         shr bl,2
