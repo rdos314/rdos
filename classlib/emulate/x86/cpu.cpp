@@ -207,7 +207,7 @@ TCpu::TCpu()
         OnWriteToMemory = 0;
         OnReadFromIo = 0;
         OnWriteToIo = 0;
-        FPic = 0;
+        FInterrupt = 0;
         FUpdateCycles = FALSE;
         Reset();
 }
@@ -231,9 +231,9 @@ TCpu::~TCpu()
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TCpu::Define(TPic *Pic)
+void TCpu::Define(TInterrupt *Interrupt)
 {
-        FPic = Pic;
+    FInterrupt = Interrupt;
 }
 
 /*##################  TCpu::Reset  ###############
@@ -373,11 +373,11 @@ void TCpu::NotifySetClk()
 *##########################################################################*/
 void TCpu::NotifyResetClk()
 {
-        if (FPic)
-                PendingInt = FPic->IsIntActive();
+    if (FInterrupt)
+        PendingInt = FInterrupt->IsIntActive();
 
-        if (OnResetClk)
-                (*OnResetClk)(this);
+    if (OnResetClk)
+        (*OnResetClk)(this);
 }
 
 /*##################  TCpu::GetIntVector  ###############
@@ -389,10 +389,10 @@ void TCpu::NotifyResetClk()
 *##########################################################################*/
 char TCpu::GetIntVector()
 {
-        if (FPic)
-                return FPic->GetVector();
-        else
-                return 0;
+    if (FInterrupt)
+        return FInterrupt->GetVector();
+    else
+        return 0;
 }
 
 /*##################  TCpu::SysCall  ###############

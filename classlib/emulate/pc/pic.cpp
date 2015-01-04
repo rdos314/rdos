@@ -37,7 +37,7 @@
 *   Returns....: *                                                          #
 *##########################################################################*/
 TPic::TPic(TBus *Bus, int Base)
-  : TBusFunction(Bus)
+  : TInterrupt(Bus)
 {
 	int i;
 

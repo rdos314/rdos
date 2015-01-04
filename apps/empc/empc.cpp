@@ -55,7 +55,7 @@ TPci Pci(&Isa, 0);
 TPic Pic0(&Isa, 0x20);
 TPit Pit(&Isa, 0x40);
 TVideo Video(&Isa);
-TKeyb Keyb(&Isa, 0x60);
+TKeyb Keyb(&Isa, 0x60, &Pic0, 1);
 
 TSignalDevice RemoteSignal;
 

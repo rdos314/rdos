@@ -20,42 +20,27 @@
 *
 * The author of this program may be contacted at leif@rdos.net
 *
-* KEYB.H
-* PC keyboard emulation
+* INT.H
+* Interrupt emulation
 *
 *##########################################################################*/
 
-#ifndef	_KEYB_H
-#define _KEYB_H
+#ifndef _INT_H
+#define _INT_H
 
 #include "bus.h"
-#include "int.h"
 
-class TKeyb : public TBusFunction
+class TInterrupt : public TBusFunction
 {
 public:
-	TKeyb(TBus *Bus, int Base, TInterrupt *Interrupt, int IntLine);
+    TInterrupt(TBus *Bus);
+    ~TInterrupt();
 
-	virtual int GetSize();
-
-	virtual void Out(int Num, int Offset, char Value);
-	virtual char In(int Num, int Offset);
-
-	void SetRefresh(int Value);
-
-	void NotifyKey(char Code);
-	int GetA20Gate();
-
-private:
-	int FHasData;
-	char FData;
-	int FEnabled;
-	int FLast;
-	int FRefresh;
-	int FWriteOut;
-	char FOut;
-	TInterrupt *FInterrupt;
-	int FIntLine;
+    virtual int IsIntActive() = 0;
+    virtual char GetVector() = 0;
+       
+    virtual void Set(int Number) = 0;
+    virtual void Reset(int Number) = 0;
 };
 
 #endif

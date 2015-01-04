@@ -20,42 +20,33 @@
 *
 * The author of this program may be contacted at leif@rdos.net
 *
-* KEYB.H
-* PC keyboard emulation
+* INT.CPP
+* Interrupt emulation
 *
 *##########################################################################*/
 
-#ifndef	_KEYB_H
-#define _KEYB_H
-
-#include "bus.h"
 #include "int.h"
 
-class TKeyb : public TBusFunction
+#define FALSE 0
+#define TRUE !FALSE
+
+/*##################  TInterrupt::TInterrupt  ###############
+*   Purpose....: Constructor for TInterrupt							            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+TInterrupt::TInterrupt(TBus *Bus)
+  : TBusFunction(Bus)
 {
-public:
-	TKeyb(TBus *Bus, int Base, TInterrupt *Interrupt, int IntLine);
+}
 
-	virtual int GetSize();
-
-	virtual void Out(int Num, int Offset, char Value);
-	virtual char In(int Num, int Offset);
-
-	void SetRefresh(int Value);
-
-	void NotifyKey(char Code);
-	int GetA20Gate();
-
-private:
-	int FHasData;
-	char FData;
-	int FEnabled;
-	int FLast;
-	int FRefresh;
-	int FWriteOut;
-	char FOut;
-	TInterrupt *FInterrupt;
-	int FIntLine;
-};
-
-#endif
+/*##################  TInterrupt::~TInterrupt  ###############
+*   Purpose....: Destructor for TInterrupt							            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+TInterrupt::~TInterrupt()
+{
+}

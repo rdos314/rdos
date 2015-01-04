@@ -31,27 +31,29 @@
 #define TRUE !FALSE
 
 /*##################  TKeyb::TKeyb  ###############
-*   Purpose....: Constructor for KEYB							            #
+*   Purpose....: Constructor for KEYB                                                               #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TKeyb::TKeyb(TBus *Bus, int Base)
+TKeyb::TKeyb(TBus *Bus, int Base, TInterrupt *Interrupt, int IntLine)
   : TBusFunction(Bus)
 {
-	FRefresh = FALSE;
-	FLast = 0;
-	FHasData = FALSE;
-	FEnabled = FALSE;
-	FWriteOut = FALSE;
-	FOut = 1;
+    FRefresh = FALSE;
+    FLast = 0;
+    FHasData = FALSE;
+    FEnabled = FALSE;
+    FWriteOut = FALSE;
+    FOut = 1;
+    FInterrupt = Interrupt;
+    FIntLine = IntLine;
 
-	DefineIo(0, Base, 8, 0);
+    DefineIo(0, Base, 8, 0);
 }
 
 /*##################  TKeyb::GetSize  ###############
-*   Purpose....: Get mapping size of device						            #
+*   Purpose....: Get mapping size of device                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -62,7 +64,7 @@ int TKeyb::GetSize()
 }
 
 /*##################  TKeyb::Out  ###############
-*   Purpose....: Perform out instruction						            #
+*   Purpose....: Perform out instruction                                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -70,59 +72,59 @@ int TKeyb::GetSize()
 *##########################################################################*/
 void TKeyb::Out(int Num, int Offset, char Value)
 {
-	switch (Offset)
-	{
-		case 0:
-			FLast = 0;
-			if (FWriteOut)
-			{
-				FOut = Value;
-				FWriteOut = FALSE;
-				GetA20Gate();
-			}
-			break;
+        switch (Offset)
+        {
+                case 0:
+                        FLast = 0;
+                        if (FWriteOut)
+                        {
+                                FOut = Value;
+                                FWriteOut = FALSE;
+                                GetA20Gate();
+                        }
+                        break;
 
-		case 1:
-			break;
+                case 1:
+                        break;
 
-		case 4:
-			FLast = 4;
-			switch ((unsigned char)Value)
-			{
-				case 0xAA:
-					FHasData = TRUE;
-					FData = 0x55;
-					break;
+                case 4:
+                        FLast = 4;
+                        switch ((unsigned char)Value)
+                        {
+                                case 0xAA:
+                                        FHasData = TRUE;
+                                        FData = 0x55;
+                                        break;
 
-				case 0xAD:
-					FEnabled = FALSE;
-					break;
+                                case 0xAD:
+                                        FEnabled = FALSE;
+                                        break;
 
-				case 0xAE:
-					FEnabled = TRUE;
-					break;
+                                case 0xAE:
+                                        FEnabled = TRUE;
+                                        break;
 
-				case 0xC0:
-					FHasData = TRUE;
-					FData = 0x54;
-					break;
+                                case 0xC0:
+                                        FHasData = TRUE;
+                                        FData = 0x54;
+                                        break;
 
-				case 0xD1:
-					FWriteOut = TRUE;
-					break;
+                                case 0xD1:
+                                        FWriteOut = TRUE;
+                                        break;
 
-				default:
-					break;
-			}
-			break;
+                                default:
+                                        break;
+                        }
+                        break;
 
-		default:
-			break;
-	}
+                default:
+                        break;
+        }
 }
 
 /*##################  TKeyb::In  ###############
-*   Purpose....: Perform in instruction						            #
+*   Purpose....: Perform in instruction                                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -130,44 +132,44 @@ void TKeyb::Out(int Num, int Offset, char Value)
 *##########################################################################*/
 char TKeyb::In(int Num, int Offset)
 {
-	char Val;
+        char Val;
 
-	switch (Offset)
-	{
-		case 0:
-			if (FHasData)
-			{
-				FHasData = FALSE;
-				return FData;
-			}
-			else
-				return 0xFF;
+        switch (Offset)
+        {
+                case 0:
+                        if (FHasData)
+                        {
+                                FHasData = FALSE;
+                                return FData;
+                        }
+                        else
+                                return 0xFF;
 
-		case 1:
-			if (FRefresh)
-				return 0x10;
-			else
-				return 0;
+                case 1:
+                        if (FRefresh)
+                                return 0x10;
+                        else
+                                return 0;
 
-		case 4:
-			Val = 0;
-			if (FHasData)
-				Val |= 1;
+                case 4:
+                        Val = 0;
+                        if (FHasData)
+                                Val |= 1;
 
-			if (FLast == 0)
-				Val |= 8;
+                        if (FLast == 0)
+                                Val |= 8;
 
-			if (FEnabled)
-				Val |= 0x10;			
-			return Val;
+                        if (FEnabled)
+                                Val |= 0x10;                    
+                        return Val;
 
-		default:
-			return 0xFF;
-	}
+                default:
+                        return 0xFF;
+        }
 }
 
 /*##################  TKeyb::SetRefresh  ###############
-*   Purpose....: Set refresh state						            #
+*   Purpose....: Set refresh state                                                          #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -175,11 +177,11 @@ char TKeyb::In(int Num, int Offset)
 *##########################################################################*/
 void TKeyb::SetRefresh(int Value)
 {
-	FRefresh = Value;
+        FRefresh = Value;
 }
 
 /*##################  TKeyb::NotifyKey  ###############
-*   Purpose....: Notify key             						            #
+*   Purpose....: Notify key                                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -190,7 +192,7 @@ void TKeyb::NotifyKey(char Code)
 }
  
 /*##################  TKeyb::GetA20Gate  ###############
-*   Purpose....: Get A20 gate state								            #
+*   Purpose....: Get A20 gate state                                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -198,5 +200,5 @@ void TKeyb::NotifyKey(char Code)
 *##########################################################################*/
 int TKeyb::GetA20Gate()
 {
-	return (FOut & 0x2) >> 1;
+        return (FOut & 0x2) >> 1;
 }

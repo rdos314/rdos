@@ -28,7 +28,7 @@
 #ifndef	_CPU_H
 #define _CPU_H
 
-#include "pic.h"
+#include "int.h"
 
 #pragma pack( push, 1 )
 
@@ -140,7 +140,7 @@ public:
 	void ShowInstruction(int Count);
 	void ShowPreviousInstruction();
 
-	void Define(TPic *Pic);
+	void Define(TInterrupt *Interrupt);
 
 	void Trace();
 	void Pace();
@@ -242,7 +242,7 @@ public:
 	void (*OnWriteToIo)(TCpu *Cpu, unsigned short Port, char Value);
 	void (*OnSysCall)(TCpu *Cpu);
 
-	TPic *FPic;
+	TInterrupt *FInterrupt;
 	int FUpdateCycles;
 
 protected:

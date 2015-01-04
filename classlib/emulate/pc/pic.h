@@ -25,69 +25,72 @@
 *
 *##########################################################################*/
 
-#ifndef	_PIC_H
+#ifndef _PIC_H
 #define _PIC_H
 
-#define MODE_NORMAL	0
-#define MODE_ICW1	1
-#define MODE_ICW2	2
-#define MODE_ICW3	3
-#define MODE_ICW4	4
+#include "int.h"
 
-#define OCW3_RIS	1
-#define OCW3_RR		2
-#define OCW3_POLL	4
+#define MODE_NORMAL     0
+#define MODE_ICW1       1
+#define MODE_ICW2       2
+#define MODE_ICW3       3
+#define MODE_ICW4       4
 
-#define ICW1_ICW4_NEEDED	1
-#define ICW1_SINGLE			2
-#define ICW1_INTERVAL		4
+#define OCW3_RIS        1
+#define OCW3_RR         2
+#define OCW3_POLL       4
 
-#define ICW4_8086			1
-#define ICW4_AUTO_EOI		2
-#define ICW4_MS				4
-#define ICW4_BUF			8
-#define ICW4_SNFM			0x10
+#define ICW1_ICW4_NEEDED        1
+#define ICW1_SINGLE                     2
+#define ICW1_INTERVAL           4
+
+#define ICW4_8086                       1
+#define ICW4_AUTO_EOI           2
+#define ICW4_MS                         4
+#define ICW4_BUF                        8
+#define ICW4_SNFM                       0x10
 
 #include "bus.h"
 
-class TPic : TBusFunction
+class TPic : public TInterrupt
 {
-	public:
-		TPic(TBus *Bus, int Base);
+public:
+        TPic(TBus *Bus, int Base);
 
-		virtual int GetSize();
+        virtual int GetSize();
 
-		virtual void Out(int Num, int Offset, char Value);
-		virtual char In(int Num, int Offset);
+        virtual void Out(int Num, int Offset, char Value);
+        virtual char In(int Num, int Offset);
 
-		void Cascade(int Number, TPic *Pic);
-		void Set(int Number);
-		void Reset(int Number);
-		int IsIntActive();
-		char GetVector();
+        virtual int IsIntActive();
+        virtual char GetVector();
+        virtual void Set(int Number);
+        virtual void Reset(int Number);
 
-	protected:
-		int GetIrr();
-		int GetIsr();
-		void Eoi(int Number);
-		void Command(int Command, int Number);
+        void Cascade(int Number, TPic *Pic);
 
-		TPic *FMaster;
-		int FMasterLine;
+protected:
+    int GetIrr();
+        int GetIsr();
+        void Eoi(int Number);
+        void Command(int Command, int Number);
 
-	private:
-		char FMode;
-		char FRis;
-		char FLowest;
-		char FIcw1;
-		char FIcw2;
-		char FIcw3;
-		char FIcw4;
-		char FIrr;
-		char FIsr;
-		char FImr;
+        TPic *FMaster;
+        int FMasterLine;
 
-		TPic *FCascade[8];
+private:
+        char FMode;
+        char FRis;
+        char FLowest;
+        char FIcw1;
+        char FIcw2;
+        char FIcw3;
+        char FIcw4;
+        char FIrr;
+        char FIsr;
+        char FImr;
+
+        TPic *FCascade[8];
 };
 
 #endif
