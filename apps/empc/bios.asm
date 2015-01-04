@@ -128,6 +128,8 @@ InitPic     Proc near
     out dx,al
     mov dx,0A1h
     out dx,al
+;
+    sti    
     ret
 InitPic     Endp
 
@@ -159,6 +161,58 @@ InitPit     Proc near
     out dx,al
     ret
 InitPit     Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           int9
+;
+;           DESCRIPTION:    Keyboard interrupt
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+int9:
+    int 3
+    push ds
+    push ax
+    push bx
+;    
+    xor ax,ax
+    mov ds,ax
+    in al,60h
+;    
+    mov al,20h
+    out 20h,al
+;
+    pop bx
+    pop ax
+    pop ds    
+    iret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitKeyboard
+;
+;           DESCRIPTION:    Init keyboard
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitKeyboard    Proc near
+    mov bx,9 SHL 2
+    mov word ptr ds:[bx],OFFSET int9
+    mov ds:[bx+2],cs
+;    
+    mov dx,21h
+    in al,dx
+    and al,NOT 2
+    out dx,al
+;
+    mov dx,64h
+    mov al,0AAh
+    out dx,al
+    ret
+InitKeyboard    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -921,6 +975,7 @@ start:
 ;
     call InitPic    
     call InitPit
+    call InitKeyboard
 ;
     sti
 

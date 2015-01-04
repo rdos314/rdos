@@ -41,6 +41,7 @@ public:
        
     virtual void Set(int Number) = 0;
     virtual void Reset(int Number) = 0;
+    virtual void Edge(int Number) = 0;
 };
 
 #endif

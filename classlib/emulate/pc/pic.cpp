@@ -49,6 +49,7 @@ TPic::TPic(TBus *Bus, int Base)
 	FIrr = 0;
 	FImr = 0xFF;
 	FIsr = 0;
+	FEdge = 0;
 	FIcw1 = 0;
 	FIcw2 = 0;
 	FIcw3 = 0;
@@ -170,6 +171,50 @@ void TPic::Reset(int Number)
 		FMaster->Reset(FMasterLine);
 }
 
+/*##################  TPic::Edge  ###############
+*   Purpose....: Edge trigger IRQ line						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TPic::Edge(int Number)
+{
+	char Mask;
+	int CascId = 0;
+    TPic *CascPic = 0;
+
+    while (Number >= 8)
+    {
+        Number -= 8;
+
+        while (CascId < 8)
+        {
+            CascPic = FCascade[CascId];
+            
+            if (CascPic)
+                break;
+            else
+                CascId++;
+        }
+
+        if (CascId == 8)
+            return;
+    }
+
+    if (CascPic)
+    {
+        CascPic->Edge(Number);
+        return;
+    }
+
+	Mask = 1 << Number;
+	FIrr = FIrr | Mask;
+	FEdge = FEdge | Mask;
+
+	if (FMaster && (FIrr & ~FImr) != 0)
+		FMaster->Set(FMasterLine);
+}
+
 /*##################  TPic::GetIrr  ###############
 *   Purpose....: Get highest, non-masked IRR					            #
 *   In params..: *                                                          #
@@ -182,7 +227,7 @@ int TPic::GetIrr()
 	int Mask;
 	int Number;
 
-	Value = FIrr & ~FImr;
+	Value = FIrr & ~FImr & ~FIsr;
 	if (Value)
 	{
 		Number = FLowest;
@@ -266,6 +311,12 @@ void TPic::Eoi(int Number)
 	{
 		Mask = 1 << Number;
 		FIsr = FIsr & ~Mask;
+
+		if (FEdge & Mask)
+		{
+		    FIrr = FIrr & ~Mask;
+		    FEdge = FEdge & ~Mask;
+		}
 	}
 }
 
@@ -303,10 +354,15 @@ void TPic::Command(int Command, int Number)
 *##########################################################################*/
 int TPic::IsIntActive()
 {
-	if (GetIrr() >= 0)
-		return TRUE;
-	else
-		return FALSE;
+    int Irq;
+
+    Irq = GetIrr();
+
+    if (Irq >= 0)
+        if (Irq >= GetIsr())
+            return TRUE;
+    
+    return FALSE;
 }
 
 /*##################  TPic::GetVector  ###############
@@ -327,7 +383,7 @@ char TPic::GetVector()
 			return FCascade[Number]->GetVector();
 
 		Mask = 1 << Number;
-		FIrr = FIrr & ~Mask;
+//		FIrr = FIrr & ~Mask;
 		FIsr = FIsr | Mask;
 		if (FIcw4 && ICW4_8086)
 			return (FIcw2 & 0xF8) | (char)Number;

@@ -66,6 +66,7 @@ public:
         virtual char GetVector();
         virtual void Set(int Number);
         virtual void Reset(int Number);
+        virtual void Edge(int Number);
 
         void Cascade(int Number, TPic *Pic);
 
@@ -89,6 +90,7 @@ private:
         char FIrr;
         char FIsr;
         char FImr;
+        char FEdge;
 
         TPic *FCascade[8];
 };

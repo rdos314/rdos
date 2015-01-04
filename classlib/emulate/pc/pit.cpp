@@ -78,13 +78,8 @@ void TPitCounter::ModifyOut(char Value)
 		if (Value)
 		{
 			if (FInterrupt)
-				FInterrupt->Set(FIrq);
+				FInterrupt->Edge(FIrq);
 		}
-		else
-		{
-			if (FInterrupt)
-				FInterrupt->Reset(FIrq);
-		}	
 	}
 }
 

@@ -43,6 +43,7 @@ public:
 
 	void SetRefresh(int Value);
 
+    int IsEnabled();
 	void NotifyKey(char Code);
 	int GetA20Gate();
 

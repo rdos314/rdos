@@ -159,10 +159,13 @@ void RemoteThread(void *Param)
             }                
         }
 
-        BaseReq->MsgType = DISP_MSG_KEY;
-        size = RdosSendMailslot(RemoteHandle, msg, sizeof(struct TBaseReq), reply, 0x1000); 
-        if (size == 1)
-            Keyb.NotifyKey(reply[0]);
+        if (Keyb.IsEnabled())
+        {
+            BaseReq->MsgType = DISP_MSG_KEY;
+            size = RdosSendMailslot(RemoteHandle, msg, sizeof(struct TBaseReq), reply, 0x1000); 
+            if (size == 1)
+                Keyb.NotifyKey(reply[0]);
+        }
     }
 }
 
