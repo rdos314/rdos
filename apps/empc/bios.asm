@@ -58,6 +58,54 @@ _TEXT segment byte public use16 'code'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           InitPic
+;
+;           DESCRIPTION:    Init interrupt controller
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitPic     Proc near
+    mov dx,20h
+    mov al,11h
+    out dx,al
+;
+    mov dx,0A0h
+    mov al,11h
+    out dx,al
+;
+    mov dx,21h
+    mov al,8
+    out dx,al
+;
+    mov dx,0A1h
+    mov al,70h
+    out dx,al
+;
+    mov dx,21h
+    mov al,4
+    out dx,al
+;
+    mov dx,0A1h
+    mov al,2
+    out dx,al
+;
+    mov al,1
+    mov dx,21h
+    out dx,al
+    mov dx,0A1h
+    out dx,al
+;
+    mov al,0FFh
+    mov dx,21h
+    out dx,al
+    mov dx,0A1h
+    out dx,al
+    ret
+InitPic     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ReadPciByte
 ;
 ;           DESCRIPTION:    Read a 8-bit register
@@ -804,6 +852,8 @@ start:
     mov es,ax
     mov ss,ax
     mov sp,7000h
+;
+    call InitPic    
 ;
     mov bx,15h SHL 2
     mov word ptr ds:[bx],OFFSET int15

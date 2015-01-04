@@ -292,10 +292,6 @@ void main(void)
     TPciIde PciIde(&Pci);
     int Key;
 
-
-    Pic0.Set(14);
-    Pic0.Reset(14);
-
     MyFocus = RdosGetFocus();
 
     PciIde.AddDisc(1);
