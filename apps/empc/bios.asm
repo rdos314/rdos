@@ -49,7 +49,8 @@ boot_fs                     DB 8 DUP(?)
 
 boot_struc          ENDS
 
-DiscBase = 700h
+DiscBase    = 700h
+TimerTics   = 46Ch
 
 _TEXT segment byte public use16 'code'
 
@@ -65,7 +66,21 @@ _TEXT segment byte public use16 'code'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 int8:
-    int 3
+    push ds
+    push ax
+    push bx
+;    
+    xor ax,ax
+    mov ds,ax
+    mov bx,TimerTics
+    add word ptr ds:[bx],1
+    adc word ptr ds:[bx+2],0
+    mov al,20h
+    out 20h,al
+;    
+    pop bx
+    pop ax
+    pop ds
     iret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -879,6 +894,15 @@ int16:
 ;
     pop bp
     iret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           start
+;
+;           DESCRIPTION:    Startup
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             
 start:
     xor eax,eax
@@ -897,6 +921,12 @@ start:
 ;
     call InitPic    
     call InitPit
+;
+    sti
+
+stl:
+    hlt
+    jmp stl    
 ;
     mov bx,15h SHL 2
     mov word ptr ds:[bx],OFFSET int15

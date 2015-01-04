@@ -49,7 +49,7 @@ TPitCounter::TPitCounter()
 	FLatched = FALSE;
 	FByteCounter = 0;
 	FRl = 0;
-	FPic = 0;
+	FInterrupt = 0;
 }
 
 /*##################  TPitCounter::Define  ###############
@@ -58,9 +58,9 @@ TPitCounter::TPitCounter()
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-void TPitCounter::Define(TPic *Pic, int Irq)
+void TPitCounter::Define(TInterrupt *Interrupt, int Irq)
 {
-	FPic = Pic;
+	FInterrupt = Interrupt;
 	FIrq = Irq;
 }
 
@@ -77,13 +77,13 @@ void TPitCounter::ModifyOut(char Value)
 		FOut = Value;
 		if (Value)
 		{
-			if (FPic)
-				FPic->Set(FIrq);
+			if (FInterrupt)
+				FInterrupt->Set(FIrq);
 		}
 		else
 		{
-			if (FPic)
-				FPic->Reset(FIrq);
+			if (FInterrupt)
+				FInterrupt->Reset(FIrq);
 		}	
 	}
 }

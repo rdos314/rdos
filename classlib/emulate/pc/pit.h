@@ -29,7 +29,7 @@
 #define _PIT_H
 
 #include "bus.h"
-#include "pic.h"
+#include "int.h"
 
 class TPitCounter
 {
@@ -37,7 +37,7 @@ class TPitCounter
 public:
 	TPitCounter();
 
-	void Define(TPic *Pic, int Irq);
+	void Define(TInterrupt *Interrupt, int Irq);
 	void SetClk();
 	void ResetClk();
 	void SetGate();
@@ -63,7 +63,7 @@ private:
 	int FLatched;
 	char FByteCounter;
 	char FRl;
-	TPic *FPic;
+	TInterrupt *FInterrupt;
 	int FIrq;
 };
 
