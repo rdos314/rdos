@@ -30,6 +30,7 @@
 
 #define DISP_MSG_FOCUS  1
 #define DISP_MSG_VIDEO  2
+#define DISP_MSG_KEY    3
 
 struct TBaseReq
 {

@@ -177,6 +177,17 @@ void TKeyb::SetRefresh(int Value)
 {
 	FRefresh = Value;
 }
+
+/*##################  TKeyb::NotifyKey  ###############
+*   Purpose....: Notify key             						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TKeyb::NotifyKey(char Code)
+{
+}
  
 /*##################  TKeyb::GetA20Gate  ###############
 *   Purpose....: Get A20 gate state								            #

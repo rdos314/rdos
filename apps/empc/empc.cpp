@@ -55,6 +55,8 @@ TPci Pci(&Isa, 0);
 TPic Pic0(&Isa, 0x20);
 TPit Pit(&Isa, 0x40);
 TVideo Video(&Isa);
+TKeyb Keyb(&Isa, 0x60);
+
 TSignalDevice RemoteSignal;
 
 int VideoChange[25];
@@ -143,7 +145,7 @@ void RemoteThread(void *Param)
 
     for (;;)
     {
-        RemoteSignal.WaitForever();
+        RemoteSignal.WaitTimeout(100);
 
         for (row = 0; row < 25; row++)
         {
@@ -156,6 +158,11 @@ void RemoteThread(void *Param)
                 RdosSendMailslot(RemoteHandle, msg, sizeof(struct TVideoReq), reply, 0x1000); 
             }                
         }
+
+        BaseReq->MsgType = DISP_MSG_KEY;
+        size = RdosSendMailslot(RemoteHandle, msg, sizeof(struct TBaseReq), reply, 0x1000); 
+        if (size == 1)
+            Keyb.NotifyKey(reply[0]);
     }
 }
 
@@ -271,7 +278,6 @@ void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
 *##########################################################################*/
 void main(void)
 {
-    TKeyb Keyb(&Isa, 0x60);
     TCmos Cmos(&Isa, 0x70);
     TFlash Bios(&Isa, 0xFFFF0000, 0x10000);
     TFlash BiosShadow(&Isa, 0xF0000, 0x10000, Bios.GetData());

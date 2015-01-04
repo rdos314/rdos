@@ -42,6 +42,7 @@ public:
 
 	void SetRefresh(int Value);
 
+	void NotifyKey(char Code);
 	int GetA20Gate();
 
 private:
