@@ -93,6 +93,32 @@ void TPic::Cascade(int Number, TPic *Pic)
 void TPic::Set(int Number)
 {
 	char Mask;
+	int CascId = 0;
+    TPic *CascPic = 0;
+
+    while (Number >= 8)
+    {
+        Number -= 8;
+
+        while (CascId < 8)
+        {
+            CascPic = FCascade[CascId];
+            
+            if (CascPic)
+                break;
+            else
+                CascId++;
+        }
+
+        if (CascId == 8)
+            return;
+    }
+
+    if (CascPic)
+    {
+        CascPic->Set(Number);
+        return;
+    }
 
 	Mask = 1 << Number;
 	FIrr = FIrr | Mask;
@@ -110,6 +136,32 @@ void TPic::Set(int Number)
 void TPic::Reset(int Number)
 {
 	char Mask;
+	int CascId = 0;
+    TPic *CascPic = 0;
+
+    while (Number >= 8)
+    {
+        Number -= 8;
+
+        while (CascId < 8)
+        {
+            CascPic = FCascade[CascId];
+            
+            if (CascPic)
+                break;
+            else
+                CascId++;
+        }
+
+        if (CascId == 8)
+            return;
+    }
+
+    if (CascPic)
+    {
+        CascPic->Reset(Number);
+        return;
+    }
 
 	Mask = 1 << Number;
 	FIrr = FIrr & ~Mask;
