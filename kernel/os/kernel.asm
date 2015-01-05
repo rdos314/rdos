@@ -695,8 +695,13 @@ init_cpu_done:
     mov ax,gdt_sel
     mov es,ax
 ;
-    mov cx,1000h - 40h
-    mov di,40h
+    mov cx,1000h - 70h
+    mov di,70h
+    xor al,al
+    rep stosb
+;
+    mov cx,18h
+    mov di,40h    
     xor al,al
     rep stosb
 ;    
