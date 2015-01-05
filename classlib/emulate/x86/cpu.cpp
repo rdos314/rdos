@@ -114,7 +114,7 @@ void showdata(TCpu *Cpu);  /* print ata on the screen */
 *##########################################################################*/
 char GetIntVector(TCpu *Cpu)
 {
-        return Cpu->GetIntVector();
+    return Cpu->AckInt();
 }
 
 /*##################  ReadFromMemory  ###############
@@ -207,7 +207,6 @@ TCpu::TCpu()
         OnWriteToMemory = 0;
         OnReadFromIo = 0;
         OnWriteToIo = 0;
-        FInterrupt = 0;
         FUpdateCycles = FALSE;
         Reset();
 }
@@ -224,16 +223,44 @@ TCpu::~TCpu()
         ClearBreakpoints();
 }
 
-/*##################  TCpu::Define  ###############
-*   Purpose....: Define interupt controller                                                         #
+/*##################  TCpu::SetInt  ###############
+*   Purpose....: Set interrupt state                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TCpu::Define(TInterrupt *Interrupt)
+void TCpu::SetInt(TInterrupt *Interrupt)
 {
+    PendingInt = TRUE;
     FInterrupt = Interrupt;
+}
+
+/*##################  TCpu::ResetInt  ###############
+*   Purpose....: Reset interrupt state                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::ResetInt(TInterrupt *Interrupt)
+{
+    PendingInt = FALSE;
+}
+
+/*##################  TCpu::AckInt  ###############
+*   Purpose....: Acknowledge int                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TCpu::AckInt()
+{
+    if (FInterrupt)
+        return FInterrupt->Ack();
+    else
+        return 0;
 }
 
 /*##################  TCpu::Reset  ###############
@@ -375,21 +402,6 @@ void TCpu::NotifyResetClk()
 {
     if (OnResetClk)
         (*OnResetClk)(this);
-}
-
-/*##################  TCpu::GetIntVector  ###############
-*   Purpose....: Get interrupt vector                                                               #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-char TCpu::GetIntVector()
-{
-    if (FInterrupt)
-        return FInterrupt->GetVector();
-    else
-        return 0;
 }
 
 /*##################  TCpu::SysCall  ###############
@@ -607,9 +619,6 @@ void TCpu::WriteToIo(void *Buffer, unsigned short int Port, int Size)
 *##########################################################################*/
 void TCpu::EmulateOne()
 {
-    if (FInterrupt)
-        PendingInt = FInterrupt->IsIntActive();
-
     FUpdateCycles = TRUE;
     Emulate(this);
     FUpdateCycles = FALSE;

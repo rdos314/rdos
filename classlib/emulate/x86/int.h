@@ -30,18 +30,25 @@
 
 #include "bus.h"
 
+class TCpu;
+
 class TInterrupt : public TBusFunction
 {
 public:
     TInterrupt(TBus *Bus);
     ~TInterrupt();
-
-    virtual int IsIntActive() = 0;
-    virtual char GetVector() = 0;
        
     virtual void Set(int Number) = 0;
     virtual void Reset(int Number) = 0;
     virtual void Edge(int Number) = 0;
+    virtual char Ack() = 0;
+
+    void (*OnSet)(TInterrupt *Int, TCpu *Cpu);
+    void (*OnReset)(TInterrupt *Int, TCpu *Cpu);
+
+protected:
+    void NotifySet(TCpu *Cpu);
+    void NotifyReset(TCpu *Cpu);
 };
 
 #endif

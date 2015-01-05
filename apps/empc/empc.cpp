@@ -182,6 +182,30 @@ void RemoteThread(void *Param)
     }
 }
 
+/*##################  SetInt  ###############
+*   Purpose....: Set int line                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void SetInt(TInterrupt *Interrupt, TCpu *Cpu)
+{
+    Cpu->SetInt(Interrupt);
+}
+
+/*##################  ResetInt  ###############
+*   Purpose....: Reset int line                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void ResetInt(TInterrupt *Interrupt, TCpu *Cpu)
+{
+    Cpu->ResetInt(Interrupt);
+}
+
 /*##################  Idle  ###############
 *   Purpose....: Idle                                           #
 *   In params..: *                                                          #
@@ -296,7 +320,7 @@ void main(void)
     int Key;
 
     MyFocus = RdosGetFocus();
-
+    
     PciIde.AddDisc(1);
 
     RdosCreateThread(RemoteThread, "empc remote", 0, 0x4000);
@@ -305,7 +329,6 @@ void main(void)
 
     Pit.Counter[0]->Define(&Pic0, 0);
 
-    Cpu.Define(&Pic0);
     Cpu.OnSetClk = SetClk;
     Cpu.OnResetClk = ResetClk;
     Cpu.OnIdle = Idle;
@@ -314,6 +337,10 @@ void main(void)
     Cpu.OnReadFromIo = ReadFromIo;
     Cpu.OnWriteToIo = WriteToIo;
     Cpu.Reset();
+
+    Pic0.DefineCpu(&Cpu);
+    Pic0.OnSet = SetInt;
+    Pic0.OnReset = ResetInt;
 
     while (1)
     {

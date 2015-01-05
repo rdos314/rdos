@@ -55,44 +55,46 @@
 class TPic : public TInterrupt
 {
 public:
-        TPic(TBus *Bus, int Base);
+    TPic(TBus *Bus, int Base);
 
-        virtual int GetSize();
+    virtual int GetSize();
 
-        virtual void Out(int Num, int Offset, char Value);
-        virtual char In(int Num, int Offset);
+    virtual void Out(int Num, int Offset, char Value);
+    virtual char In(int Num, int Offset);
 
-        virtual int IsIntActive();
-        virtual char GetVector();
-        virtual void Set(int Number);
-        virtual void Reset(int Number);
-        virtual void Edge(int Number);
+    virtual void Set(int Number);
+    virtual void Reset(int Number);
+    virtual void Edge(int Number);
+    virtual char Ack();
 
-        void Cascade(int Number, TPic *Pic);
+    void DefineCpu(TCpu *Cpu);
+    void Cascade(int Number, TPic *Pic);
 
 protected:
+    void Update();
     int GetIrr();
-        int GetIsr();
-        void Eoi(int Number);
-        void Command(int Command, int Number);
+    int GetIsr();
+    void Eoi(int Number);
+    void Command(int Command, int Number);
 
-        TPic *FMaster;
-        int FMasterLine;
+    TPic *FMaster;
+    int FMasterLine;
+    TCpu *FCpu;
 
 private:
-        char FMode;
-        char FRis;
-        char FLowest;
-        char FIcw1;
-        char FIcw2;
-        char FIcw3;
-        char FIcw4;
-        char FIrr;
-        char FIsr;
-        char FImr;
-        char FEdge;
+    char FMode;
+    char FRis;
+    char FLowest;
+    char FIcw1;
+    char FIcw2;
+    char FIcw3;
+    char FIcw4;
+    char FIrr;
+    char FIsr;
+    char FImr;
+    char FEdge;
 
-        TPic *FCascade[8];
+    TPic *FCascade[8];
 };
 
 #endif

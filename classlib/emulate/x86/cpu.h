@@ -140,7 +140,9 @@ public:
 	void ShowInstruction(int Count);
 	void ShowPreviousInstruction();
 
-	void Define(TInterrupt *Interrupt);
+    void SetInt(TInterrupt *Interrupt);
+    void ResetInt(TInterrupt *Interrupt);
+    char AckInt();
 
 	void Trace();
 	void Pace();
@@ -149,7 +151,6 @@ public:
 
 	virtual void Reset();
 
-	char GetIntVector();
 	void ReadCode(void *Buffer, unsigned long Address, int Size);
 	void ReadFromMemory(void *Buffer, unsigned long Address, int Size);
 	void WriteToMemory(void *Buffer, unsigned long Address, int Size);
@@ -233,6 +234,7 @@ public:
 	char CodeFetch;
 
 // end of common variables with emulate.inc
+
 	void (*OnIdle)(TCpu *Cpu);
 	void (*OnSetClk)(TCpu *Cpu);
 	void (*OnResetClk)(TCpu *Cpu);
@@ -242,8 +244,8 @@ public:
 	void (*OnWriteToIo)(TCpu *Cpu, unsigned short Port, char Value);
 	void (*OnSysCall)(TCpu *Cpu);
 
-	TInterrupt *FInterrupt;
 	int FUpdateCycles;
+	TInterrupt *FInterrupt;
 
 protected:
 	void EmulateOne();

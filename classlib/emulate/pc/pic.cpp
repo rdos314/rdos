@@ -45,6 +45,7 @@ TPic::TPic(TBus *Bus, int Base)
 		FCascade[i] = 0;
 
 	FMaster = 0;
+	FCpu = 0;
 
 	FIrr = 0;
 	FImr = 0xFF;
@@ -70,6 +71,17 @@ TPic::TPic(TBus *Bus, int Base)
 int TPic::GetSize()
 {
     return 2;
+}
+
+/*##################  TPic::DefineCpu  ###############
+*   Purpose....: Define CPU									            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TPic::DefineCpu(TCpu *Cpu)
+{
+    FCpu = Cpu;
 }
 
 /*##################  TPic::Cascade  ###############
@@ -123,9 +135,7 @@ void TPic::Set(int Number)
 
 	Mask = 1 << Number;
 	FIrr = FIrr | Mask;
-
-	if (FMaster && (FIrr & ~FImr) != 0)
-		FMaster->Set(FMasterLine);
+    Update();
 }
 
 /*##################  TPic::Reset  ###############
@@ -166,9 +176,7 @@ void TPic::Reset(int Number)
 
 	Mask = 1 << Number;
 	FIrr = FIrr & ~Mask;
-
-	if (FMaster && (FIrr & ~FImr) == 0)
-		FMaster->Reset(FMasterLine);
+    Update();
 }
 
 /*##################  TPic::Edge  ###############
@@ -210,9 +218,44 @@ void TPic::Edge(int Number)
 	Mask = 1 << Number;
 	FIrr = FIrr | Mask;
 	FEdge = FEdge | Mask;
+    Update();
+}
 
-	if (FMaster && (FIrr & ~FImr) != 0)
-		FMaster->Set(FMasterLine);
+/*##################  TPic::Ack  ###############
+*   Purpose....: Ack reception of interrupt						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+char TPic::Ack()
+{
+	char Mask;
+	int Number;
+    int Active = FALSE;
+
+    Number = GetIrr();
+    if (Number >= 0)
+        if (Number > GetIsr())
+            Active = TRUE;
+
+    if (Active)
+    {
+        Mask = 1 << Number;
+	    FIsr = FIsr | Mask;
+	    Update();
+
+        if (FCascade[Number])
+            return FCascade[Number]->Ack();
+        else
+        {
+            if (FIcw4 && ICW4_8086)
+                return (FIcw2 & 0xF8) | (char)Number;
+        	else
+	    	    return (FIcw2 & 0xF8) | 7;
+	    }
+	}
+	else
+	    return (FIcw2 & 0xF8) | 7;
 }
 
 /*##################  TPic::GetIrr  ###############
@@ -317,6 +360,7 @@ void TPic::Eoi(int Number)
 		    FIrr = FIrr & ~Mask;
 		    FEdge = FEdge & ~Mask;
 		}
+		Update();
 	}
 }
 
@@ -346,52 +390,39 @@ void TPic::Command(int Command, int Number)
 	}
 }
 
-/*##################  TPic::IsIntActive  ###############
-*   Purpose....: Check if any interrupt is pending					            #
+/*##################  TPic::Update  ###############
+*   Purpose....: Update int status   							            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-int TPic::IsIntActive()
-{
-    int Irq;
-
-    Irq = GetIrr();
-
-    if (Irq >= 0)
-        if (Irq >= GetIsr())
-            return TRUE;
-    
-    return FALSE;
-}
-
-/*##################  TPic::GetVector  ###############
-*   Purpose....: Get interrupt vector							            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*##########################################################################*/
-char TPic::GetVector()
+void TPic::Update()
 {
 	int Number;
-	char Mask;
+	char Vector;
+    int Active = FALSE;
 
-	Number = GetIrr();
-	if (Number >= 0)
-	{
-		if (FCascade[Number])
-			return FCascade[Number]->GetVector();
-
-		Mask = 1 << Number;
-//		FIrr = FIrr & ~Mask;
-		FIsr = FIsr | Mask;
-		if (FIcw4 && ICW4_8086)
-			return (FIcw2 & 0xF8) | (char)Number;
-		else
-			return (FIcw2 & 0xF8) | 7;
+    Number = GetIrr();
+    if (Number >= 0)
+        if (Number > GetIsr())
+            Active = TRUE;
+    
+    if (Active)
+    {
+    	if (FMaster)
+    		FMaster->Set(FMasterLine);
+        else
+            if (FCpu)
+                NotifySet(FCpu);
 	}
 	else
-		return (FIcw2 & 0xF8) | 7;
+	{
+	    if (FMaster)
+    		FMaster->Reset(FMasterLine);
+        else
+            if (FCpu)
+        	    NotifyReset(FCpu);
+    }
 }
 
 /*##################  TPic::Out  ###############
@@ -440,6 +471,7 @@ void TPic::Out(int Num, int Offset, char Value)
 				FImr = Value;
 				break;
 		}
+		Update();
 	}
 	else
 	{

@@ -31,7 +31,7 @@
 #define TRUE !FALSE
 
 /*##################  TInterrupt::TInterrupt  ###############
-*   Purpose....: Constructor for TInterrupt							            #
+*   Purpose....: Constructor for TInterrupt                                                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -39,14 +39,40 @@
 TInterrupt::TInterrupt(TBus *Bus)
   : TBusFunction(Bus)
 {
+    OnSet = 0;
+    OnReset = 0;
 }
 
 /*##################  TInterrupt::~TInterrupt  ###############
-*   Purpose....: Destructor for TInterrupt							            #
+*   Purpose....: Destructor for TInterrupt                                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
 TInterrupt::~TInterrupt()
 {
+}
+
+/*##################  TInterrupt::NotifySet  ###############
+*   Purpose....: Notify interrupt line active                                                               #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TInterrupt::NotifySet(TCpu *Cpu)
+{
+    if (OnSet)
+        (*OnSet)(this, Cpu);
+}
+
+/*##################  TInterrupt::NotifyReset  ###############
+*   Purpose....: Notify interrupt line inactive                                                             #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TInterrupt::NotifyReset(TCpu *Cpu)
+{
+    if (OnReset)
+        (*OnReset)(this, Cpu);
 }
