@@ -50,6 +50,7 @@ boot_fs                     DB 8 DUP(?)
 boot_struc          ENDS
 
 DiscBase    = 700h
+BaseSize    = 40Eh
 CursorPos   = 450H
 TimerTics   = 46Ch
 
@@ -1265,6 +1266,9 @@ start:
 ;
     mov bx,CursorPos
     mov word ptr ds:[bx],0
+    mov bx,BaseSize
+    mov word ptr ds:[bx],9E00h
+;
     mov bx,10h SHL 2
     mov word ptr ds:[bx],OFFSET int10
     mov ds:[bx+2],cs

@@ -208,6 +208,21 @@ EmOverrideGs:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:                   EmLock
+;
+;               DESCRIPTION:    EMULATE lock
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmLock:
+        call ReadCodeByte
+        movzx ebx,al
+        shl ebx,2
+        jmp dword ptr [ebx].EmulateTab
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:                   EmREPE
 ;
 ;               DESCRIPTION:    EMULATE repe
@@ -982,7 +997,7 @@ emtE8   DD OFFSET EmCallNear,                   OFFSET EmJmpNear
 emtEA   DD OFFSET EmJmpFar,                             OFFSET EmJmpShort
 emtEC   DD OFFSET EmInByteDx,                   OFFSET EmInWordDx
 emtEE   DD OFFSET EmOutByteDx,                  OFFSET EmOutWordDx
-emtF0   DD OFFSET EmulateError,                 OFFSET EmulateError
+emtF0   DD OFFSET EmLock,                       OFFSET EmulateError
 emtF2   DD OFFSET EmRepne,                              OFFSET EmRepe
 emtF4   DD OFFSET EmHlt,                                OFFSET EmCmc
 emtF6   DD OFFSET EmF6,                                 OFFSET EmF7

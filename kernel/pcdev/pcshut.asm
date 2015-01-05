@@ -618,9 +618,59 @@ word_reg_tab:
 pm_es   EQU -16
 
 abort_pretask:
+    int 3
     cli
     cld
 ;
+    mov bx,ss
+    cmp bx,gdt_sel
+    jne abort_norm_pretask
+;
+    push bp
+    mov bp,sp
+    mov bx,[bp+4]
+    cmp bx,device_code_sel
+    pop bp
+    jnz abort_norm_pretask
+;
+    int 3    
+    push es
+    movzx bx,al
+    mov ax,system_data_sel
+    mov es,ax
+    mov eax,[bp+6]
+    mov dword ptr es:p_rip,eax
+    mov eax,[bp+14]
+    mov dword ptr es:p_rflags,eax
+    mov eax,[bp-4]
+    mov dword ptr es:p_rax,eax
+    mov dword ptr es:p_rcx,ecx
+    mov dword ptr es:p_rdx,edx
+    mov eax,[bp-8]
+    mov dword ptr es:p_rbx,eax
+    movzx eax,bp
+    add eax,18
+    mov dword ptr es:p_rsp,eax
+    mov dword ptr es:p_rsi,esi
+    mov dword ptr es:p_rdi,edi
+    mov ax,[bp+10]
+    mov es:p_cs,ax
+    mov es:p_ss,ss
+    mov ax,[bp-10]
+    mov es:p_ds,ax
+    pop ax
+    mov es:p_es,ax
+    mov es:p_fs,fs
+    mov es:p_gs,gs
+    mov bp,[bp]
+    mov dword ptr es:p_rbp,ebp
+    sldt ax
+    mov es:p_ldt,ax       
+    mov ax,es
+    mov gs,ax
+    jmp abort_fatal_write
+
+abort_norm_pretask:        
     mov ax,system_data_sel
     mov ds,ax
     mov ax,1
@@ -892,16 +942,16 @@ init    Proc far
     mov ds,ax
 ;
     mov bx,shutdown_pretask_gate
-    mov word ptr [bx],OFFSET abort_pretask
-    mov [bx+2],cs
-    mov word ptr [bx+4],8400h
-    mov word ptr [bx+6],0
+    mov word ptr ds:[bx],OFFSET abort_pretask
+    mov ds:[bx+2],cs
+    mov word ptr ds:[bx+4],8400h
+    mov word ptr ds:[bx+6],0
 ;
     mov bx,shutdown_task_gate
-    mov word ptr [bx],OFFSET abort_task
-    mov [bx+2],cs
-    mov word ptr [bx+4],8400h
-    mov word ptr [bx+6],0
+    mov word ptr ds:[bx],OFFSET abort_task
+    mov ds:[bx+2],cs
+    mov word ptr ds:[bx+4],8400h
+    mov word ptr ds:[bx+6],0
     ret
 init    Endp
 

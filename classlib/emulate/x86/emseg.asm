@@ -520,21 +520,15 @@ StackFault      Endp
         public ProtectionFault
 
 ProtectionFault Proc near
-        test [ebp].em_flags,single_faulted
-        jnz DoubleFault
-        or [ebp].em_flags,single_faulted
-;
-    test [ebp].reg_cs.d_access, ACCESS_SIZE
-    jnz gpf_reset
-;
-        int 3
-
-gpf_reset:      
-        ResetFault
-        mov cx,1
-        mov al,13
-        call ExcFar     
-        ret
+    test [ebp].em_flags,single_faulted
+    jnz DoubleFault
+    or [ebp].em_flags,single_faulted
+;    
+    ResetFault
+    mov cx,1
+    mov al,13
+    call ExcFar     
+    ret
 ProtectionFault Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
