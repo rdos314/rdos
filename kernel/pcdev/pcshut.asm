@@ -618,7 +618,6 @@ word_reg_tab:
 pm_es   EQU -16
 
 abort_pretask:
-    int 3
     cli
     cld
 ;
@@ -633,11 +632,12 @@ abort_pretask:
     pop bp
     jnz abort_norm_pretask
 ;
-    int 3    
     push es
     movzx bx,al
     mov ax,system_data_sel
     mov es,ax
+    mov eax,[bp+2]
+    mov es:p_fault_code,eax
     mov eax,[bp+6]
     mov dword ptr es:p_rip,eax
     mov eax,[bp+14]

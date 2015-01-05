@@ -34,6 +34,7 @@ INCLUDE system.def
 INCLUDE port.def
 INCLUDE ..\driver.def
 INCLUDE ..\pcdev\apic.inc
+INCLUDE system.inc
 
 MAJOR_VERSION = 9
 MINOR_VERSION = 5
@@ -621,6 +622,7 @@ init_no_bda:
     xor eax,ecx
     jz init_cpu_ok
 ;
+    mov ds:cpu_feature_flags,1
     mov ds:cpu_type,4
     mov eax,ecx
     xor eax,200000h
