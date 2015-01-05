@@ -687,6 +687,8 @@ abort_pretask_do:
 ;
     mov ax,system_data_sel
     mov es,ax
+    mov eax,[ebp].trap_err
+    mov es:p_fault_code,eax
     mov eax,[ebp].trap_eip
     mov dword ptr es:p_rip,eax
     mov eax,[ebp].trap_eflags
@@ -698,7 +700,7 @@ abort_pretask_do:
     mov eax,[ebp].trap_ebx
     mov dword ptr es:p_rbx,eax
     mov eax,ebp
-    add eax,18
+    add eax,20
     mov dword ptr es:p_rsp,eax
     mov dword ptr es:p_rsi,esi
     mov dword ptr es:p_rdi,edi
@@ -707,7 +709,7 @@ abort_pretask_do:
     mov es:p_ss,ss
     mov ax,[ebp].trap_pds
     mov es:p_ds,ax
-    mov ax,[ebp].pm_es
+    pop ax
     mov es:p_es,ax
     mov es:p_fs,fs
     mov es:p_gs,gs
