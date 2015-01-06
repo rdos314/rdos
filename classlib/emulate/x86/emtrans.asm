@@ -1702,6 +1702,12 @@ EmPushfd:
 
 EmPushfdDo:
         mov eax,[ebp].reg_eflags
+        cmp [ebp].cpu_type,3
+        ja EmPushfdPush
+;
+        and eax,3FFFFh        
+
+EmPushfdPush:
         call PushDword
         ret
 EmPushf endp

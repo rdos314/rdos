@@ -292,6 +292,7 @@ TCpu::TCpu()
         OnWriteToIo = 0;
         FUpdateCycles = FALSE;
         Reset();
+        CpuState.CpuType = 5;
 }
 
 /*##################  TCpu::~TCpu  ###############
@@ -304,6 +305,30 @@ TCpu::TCpu()
 TCpu::~TCpu()
 {
         ClearBreakpoints();
+}
+
+/*##################  TCpu::Force386  ###############
+*   Purpose....: Force 386 CPU                                              #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::Force386()
+{
+    CpuState.CpuType = 3;
+}
+
+/*##################  TCpu::Force486  ###############
+*   Purpose....: Force 486 CPU                                              #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::Force486()
+{
+    CpuState.CpuType = 4;
 }
 
 /*##################  TCpu::SetInt  ###############

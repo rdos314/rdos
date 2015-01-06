@@ -210,6 +210,7 @@ public:
         long TotalCycles;
         char Running;
         char CodeFetch;
+        char CpuType;
 
         TCpu *Cpu;
         
@@ -220,6 +221,10 @@ class TCpu
 public:
     TCpu();
     ~TCpu();
+
+    void Force386();
+    void Force486();
+    
     void Show();
     void ShowFpu();
     void ShowData();

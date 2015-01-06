@@ -329,6 +329,8 @@ void main(void)
 
     Pit.Counter[0]->Define(&Pic0, 0);
 
+    Cpu.Force386();
+
     Cpu.OnSetClk = SetClk;
     Cpu.OnResetClk = ResetClk;
     Cpu.OnIdle = Idle;

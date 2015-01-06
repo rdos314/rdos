@@ -233,4 +233,6 @@ running			DB ?
 
 code_fetch      DB ?
 
+cpu_type        DB ?
+
 cpu_struc	ENDS
