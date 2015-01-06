@@ -818,6 +818,13 @@ prot_init:
 ;
     mov bx,flat_data_sel
     CreateDataSelector32
+
+
+    int 3
+    mov ax,1234h
+    mov ds,ax
+
+
 ;
     StartTasking
     

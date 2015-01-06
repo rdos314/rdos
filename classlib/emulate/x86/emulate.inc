@@ -134,8 +134,8 @@ cache_entry_struc	ENDS
 
 tlb_entry_struc	STRUC
 
-t_tag		DD ?
-t_address	DD ?
+t_tag		DD ?,?
+t_address	DD ?,?
 
 tlb_entry_struc	ENDS
 

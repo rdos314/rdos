@@ -117,8 +117,8 @@ typedef struct
 
 typedef struct
 {
-        unsigned long tag;
-        unsigned long address;
+        unsigned long long tag;
+        unsigned long long address;
 } TTlbEntry;
 
 typedef struct

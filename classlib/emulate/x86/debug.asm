@@ -383,60 +383,6 @@ WriteDescriptors        ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteTlb
-;
-;               DESCRIPTION:    
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TlbUndef DB '[Unused  ]=xxxxxxxx ',0
-
-WriteTlb        PROC near
-        lea edi,[ebp].reg_tlb.tlb
-        mov ecx,8
-WriteTlbRow:
-        push ecx
-        mov ecx,4
-WriteTlbLoop:
-        test [ebp].reg_cr0,CR0_PG
-        jz WriteTlbUndef
-        mov eax,ss:[edi].t_tag
-        cmp eax,-1
-        jne WriteTlbEntry
-
-WriteTlbUndef:
-        push edi
-        mov edi,OFFSET TlbUndef
-        call WriteAsciiz
-        pop edi
-        jmp WriteTlbNext
-
-WriteTlbEntry:
-        push ax
-        mov al,'['
-        call WriteChar
-        pop ax
-        call WriteHexDword
-        mov al,']'
-        call WriteChar
-        mov al,'='
-        call WriteChar
-        mov eax,[edi].t_address
-        call WriteHexDword
-        mov al,' '
-        call WriteChar
-
-WriteTlbNext:
-        add edi,SIZE tlb_entry_struc
-        loop WriteTlbLoop
-        pop ecx
-        loop WriteTlbRow
-        ret
-WriteTlb        ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;               NAME:                   WriteSystemRegs
 ;
 ;               DESCRIPTION:    
@@ -745,53 +691,22 @@ WriteTime       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteCpuReg     Proc near
-;La modification a consisté à mettre les instructions de tests
-
-;        test    _debugflag,INSTRUCTION_CODE_ONLY
-;        jnz     short @@6
-
-;        test    _debugflag,TLB_REGISTER
-;        jz      short @@1a
-        call    WriteTlb
-@@1a:
-        
-;        test    _debugflag,SYSTEM_REGISTER
-;        jz      short @@2
-        call    WriteSystemRegs
-        
-@@2:    
-;        test    _debugflag,DESCRIPTOR_REGISTER
-;        jz      short @@3
+        call WriteSystemRegs
         call WriteDescriptors
 ;
-@@3:
-;        test    _debugflag,GENERAL_REGISTER
-;        jz      short @@4
-
         mov edi,OFFSET dword_reg_tab1
         call WriteDwordRegs
 ;
         mov edi,OFFSET dword_reg_tab2
         call WriteDwordRegs
 ;
-@@4:
-;        test    _debugflag,CONTROL_REGISTER
-;        jz      short @@5
-
         mov edi,OFFSET dword_reg_tab3
         call WriteDwordRegs
 ;
-@@5:
         call WriteEflags
         call WriteCr0
-@@6:    
         call WriteInstr
-        
-;        test    _debugflag,INSTRUCTION_CODE_ONLY
-;        jnz     short @@7
         call WriteTime
-        
-@@7:    
         ret
 WriteCpuReg     Endp
         
