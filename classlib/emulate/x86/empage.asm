@@ -218,23 +218,24 @@ WritePhysical   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   LinearToPhysical
+;               NAME:           LinearToPhysical32
 ;
 ;               description:    Translate a linear address to a physical address
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
+;               PARAMETERS:     EBP             CPU
+;                               EBX             LINEAR ADDRESS
 ;
-;               RETURNS:                EAX             PHYSICAL ADDRESS & ATTRIBUTES
+;               RETURNS:        EAX             PHYSICAL ADDRESS & ATTRIBUTES
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LinearToPhysical        Proc near
+LinearToPhysical32        Proc near
         push ebx
         call SearchTlb32
-        jnc LinearToPhysicalDone
+        jnc LinearToPhysicalDone32
 ;
         call AllocateTlb
+        xor edi,edi
         push esi
         mov [esi].t_tag,ebx
         add esi,OFFSET t_address
@@ -251,7 +252,7 @@ LinearToPhysical        Proc near
 ;
         mov ch,byte ptr [esi].t_address
         test ch,1
-        jnz LinearToPhysicalDirOk
+        jnz LinearToPhysicalDirOk32
 ;
         mov eax,-1
         xchg eax,[esi].t_tag
@@ -259,10 +260,10 @@ LinearToPhysical        Proc near
         xor bx,bx
         jmp PageFault
 
-LinearToPhysicalDirOk:
+LinearToPhysicalDirOk32:
         push ecx
         test ch,20h
-        jnz LinearToPhysicalDirAccessed
+        jnz LinearToPhysicalDirAccessed32
         push esi
         or byte ptr [esi].t_address,20h
         mov ecx,4
@@ -270,7 +271,7 @@ LinearToPhysicalDirOk:
         call WritePhysical
         pop esi
 
-LinearToPhysicalDirAccessed:
+LinearToPhysicalDirAccessed32:
         mov ebx,[esi].t_tag
         shr ebx,10
         and ebx,0FFCh
@@ -288,7 +289,7 @@ LinearToPhysicalDirAccessed:
         pop ecx
         mov cl,byte ptr [esi].t_address
         test cl,1
-        jnz LinearToPhysicalPageOk
+        jnz LinearToPhysicalPageOk32
 ;
         mov eax,-1
         xchg eax,[esi].t_tag
@@ -296,14 +297,14 @@ LinearToPhysicalDirAccessed:
         xor bx,bx
         jmp PageFault
 
-LinearToPhysicalPageOk:
+LinearToPhysicalPageOk32:
         and ch,cl
         and ch,3
         and cl,NOT 3
         or cl,ch
         push ecx
         test cl,20h
-        jnz LinearToPhysicalPageAccessed
+        jnz LinearToPhysicalPageAccessed32
         push esi
         or byte ptr [esi].t_address,20h
         mov ecx,4
@@ -311,7 +312,7 @@ LinearToPhysicalPageOk:
         call WritePhysical
         pop esi
 
-LinearToPhysicalPageAccessed:
+LinearToPhysicalPageAccessed32:
         pop ecx
 ;
         mov eax,[esi].t_tag
@@ -323,33 +324,34 @@ LinearToPhysicalPageAccessed:
         or al,cl
         mov [esi].t_address,eax
 
-LinearToPhysicalDone:
+LinearToPhysicalDone32:
         pop ebx
         ret
-LinearToPhysical        Endp
+LinearToPhysical32        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CondLinearToPhysical
+;               NAME:           CondLinearToPhysical32
 ;
 ;               description:    Translate a linear address to a physical address
 ;                                               no page faults
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
+;               PARAMETERS:     EBP             CPU
+;                               EBX             LINEAR ADDRESS
 ;
-;               RETURNS:                EAX             PHYSICAL ADDRESS & ATTRIBUTES
-;                                               NC              OK
+;               RETURNS:        EAX             PHYSICAL ADDRESS & ATTRIBUTES
+;                               NC              OK
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CondLinearToPhysical    Proc near
+CondLinearToPhysical32    Proc near
         push ebx
         call SearchTlb32
-        jnc CondLinearToPhysicalDone
+        jnc CondLinearToPhysicalDone32
 ;
         call AllocateTlb
+        xor edi,edi
         push esi
         mov [esi].t_tag,ebx
         add esi,OFFSET t_address
@@ -366,16 +368,16 @@ CondLinearToPhysical    Proc near
 ;
         mov ch,byte ptr [esi].t_address
         test ch,1
-        jnz CondLinearToPhysicalDirOk
+        jnz CondLinearToPhysicalDirOk32
 ;
         mov [esi].t_tag,-1
         stc
-        jmp CondLinearToPhysicalDone
+        jmp CondLinearToPhysicalDone32
 
-CondLinearToPhysicalDirOk:
+CondLinearToPhysicalDirOk32:
         push ecx
         test ch,20h
-        jnz CondLinearToPhysicalDirAccessed
+        jnz CondLinearToPhysicalDirAccessed32
         push esi
         or byte ptr [esi].t_address,20h
         mov ecx,4
@@ -383,7 +385,7 @@ CondLinearToPhysicalDirOk:
         call WritePhysical
         pop esi
 
-CondLinearToPhysicalDirAccessed:
+CondLinearToPhysicalDirAccessed32:
         mov ebx,[esi].t_tag
         shr ebx,10
         and ebx,0FFCh
@@ -401,20 +403,20 @@ CondLinearToPhysicalDirAccessed:
         pop ecx
         mov cl,byte ptr [esi].t_address
         test cl,1
-        jnz CondLinearToPhysicalPageOk
+        jnz CondLinearToPhysicalPageOk32
 ;
         mov [esi].t_tag,-1
         stc
-        jmp CondLinearToPhysicalDone
+        jmp CondLinearToPhysicalDone32
 
-CondLinearToPhysicalPageOk:
+CondLinearToPhysicalPageOk32:
         and ch,cl
         and ch,3
         and cl,NOT 3
         or cl,ch
         push ecx
         test cl,20h
-        jnz CondLinearToPhysicalPageAccessed
+        jnz CondLinearToPhysicalPageAccessed32
         push esi
         or byte ptr [esi].t_address,20h
         mov ecx,4
@@ -422,7 +424,7 @@ CondLinearToPhysicalPageOk:
         call WritePhysical
         pop esi
 
-CondLinearToPhysicalPageAccessed:
+CondLinearToPhysicalPageAccessed32:
         pop ecx
 ;
         mov eax,[esi].t_tag
@@ -435,10 +437,10 @@ CondLinearToPhysicalPageAccessed:
         mov [esi].t_address,eax
         clc
 
-CondLinearToPhysicalDone:
+CondLinearToPhysicalDone32:
         pop ebx
         ret
-CondLinearToPhysical    Endp
+CondLinearToPhysical32    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -460,7 +462,7 @@ ReadPagedLoop:
         push ecx
         push esi
 ;
-        call LinearToPhysical
+        call LinearToPhysical32
         test al,4
         jnz ReadLinearPrivOk
         test [ebp].em_pl,ACCESS_RPL
@@ -523,7 +525,7 @@ WritePagedLoop:
         push ecx
         push esi
 ;
-        call LinearToPhysical
+        call LinearToPhysical32
         test al,4
         jnz WritePagedUserOk
         test [ebp].em_pl,ACCESS_RPL
@@ -651,7 +653,7 @@ CondReadPagedLoop:
         push ecx
         push esi
 ;
-        call CondLinearToPhysical
+        call CondLinearToPhysical32
         jc CondReadPagedFailed
 ;
         test al,4
