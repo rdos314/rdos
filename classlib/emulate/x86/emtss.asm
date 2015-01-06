@@ -110,7 +110,10 @@ tss32   ENDS
 SaveTss16       Proc near
         push eax
         push ebx
+        push edi
+;        
         mov ebx,[ebp].reg_tr.d_base
+        xor edi,edi
 ;
         add ebx,OFFSET tss16_ip
         mov ax,word ptr [ebp].reg_eip
@@ -168,6 +171,7 @@ SaveTss16       Proc near
         mov ax,[ebp].reg_ds.d_selector
         call WriteLinearWord
 ;
+        pop edi
         pop ebx
         pop eax
         ret
@@ -187,7 +191,10 @@ SaveTss16       Endp
 SaveTss32       Proc near
         push eax
         push ebx
+        push edi
+;        
         mov ebx,[ebp].reg_tr.d_base
+        xor edi,edi
 ;
         add ebx,OFFSET tss32_eip
         mov eax,[ebp].reg_eip
@@ -253,6 +260,7 @@ SaveTss32       Proc near
         movzx eax,word ptr [ebp].reg_gs.d_selector
         call WriteLinearDword   
 ;
+        pop edi
         pop ebx
         pop eax
         ret
@@ -290,8 +298,10 @@ SaveTss:
 LoadTss16       Proc near
         push eax
         push ebx
+        push edi
 ;
         mov ebx,[ebp].reg_tr.d_base
+        xor edi,edi
 ;
         add ebx,OFFSET tss16_ip
         call ReadLinearWord
@@ -358,6 +368,7 @@ LoadTss16       Proc near
         mov [ebp].reg_ldt.d_selector,ax
         mov [ebp].reg_ldt.d_access,0
 ;
+        pop edi
         pop ebx
         pop eax
         ret
@@ -377,7 +388,10 @@ LoadTss16       Endp
 LoadTss32       Proc near
         push eax
         push ebx
+        push edi
+;        
         mov ebx,[ebp].reg_tr.d_base
+        xor edi,edi
 ;
         add ebx,OFFSET tss32_cr3
         call ReadLinearDword
@@ -475,6 +489,7 @@ LoadTssNoTrap:
         add eax,[ebp].reg_tr.d_base
         mov [ebp].bitmap_base,eax
 ;
+        pop edi
         pop ebx
         pop eax
         ret
@@ -609,8 +624,13 @@ ValidateTss     Endp
 
 GetBacklink     Proc near
         push ebx
+        push edi
+;        
         mov ebx,[ebp].reg_tr.d_base
+        xor edi,edi
         call ReadLinearWord
+;
+        pop edi
         pop ebx
         ret
 GetBacklink     Endp
@@ -631,8 +651,11 @@ GetBacklink     Endp
 
 SetBacklink     Proc near
         push ebx
+        push edi
         mov ebx,[ebp].reg_tr.d_base
+        xor edi,edi
         call WriteLinearWord
+        pop edi
         pop ebx
         ret
 SetBacklink     Endp
@@ -655,6 +678,9 @@ SetBacklink     Endp
 
 GetStack        Proc near
         push ebx
+        push edi
+;        
+        xor edi,edi
         test [ebp].reg_tr.d_access,ACCESS_SIZE
         jnz GetStack32
 
@@ -679,6 +705,7 @@ GetStack32:
         call ReadLinearFword
 
 GetStackDone:
+        pop edi
         pop ebx
         ret
 GetStack        Endp

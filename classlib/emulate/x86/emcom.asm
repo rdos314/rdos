@@ -60,6 +60,7 @@ include \rdos\classlib\emulate\x86\emtss.inc
 ReadByte        Proc near
         push ebx
         push ecx
+        push edi
 ;
         test [ebp+esi].d_access,ACCESS_READ
         jz AccessFault
@@ -69,8 +70,10 @@ ReadByte        Proc near
         ja AccessFault
 ;
         add ebx,[ebp+esi].d_base
+        xor edi,edi
         call ReadLinearByte
 ;
+        pop edi
         pop ecx
         pop ebx
         ret
@@ -96,6 +99,7 @@ ReadByte        Endp
 ReadWord        Proc near
         push ebx
         push ecx
+        push edi
 ;
         test [ebp+esi].d_access,ACCESS_READ
         jz AccessFault
@@ -106,8 +110,10 @@ ReadWord        Proc near
         ja AccessFault
 ;
         add ebx,[ebp+esi].d_base
+        xor edi,edi
         call ReadLinearWord
 ;
+        pop edi
         pop ecx
         pop ebx
         ret
@@ -133,6 +139,7 @@ ReadWord        Endp
 ReadDword       Proc near
         push ebx
         push ecx
+        push edi
 ;
         test [ebp+esi].d_access,ACCESS_READ
         jz AccessFault
@@ -143,8 +150,10 @@ ReadDword       Proc near
         ja AccessFault
 ;
         add ebx,[ebp+esi].d_base
+        xor edi,edi
         call ReadLinearDword
 ;
+        pop edi
         pop ecx
         pop ebx
         ret
@@ -170,6 +179,7 @@ ReadDword       Endp
 ReadFword       Proc near
         push ebx
         push ecx
+        push edi
 ;
         test [ebp+esi].d_access,ACCESS_READ
         jz AccessFault
@@ -180,8 +190,10 @@ ReadFword       Proc near
         ja AccessFault
 ;
         add ebx,[ebp+esi].d_base
+        xor edi,edi
         call ReadLinearFword
 ;
+        pop edi
         pop ecx
         pop ebx
         ret
@@ -207,6 +219,7 @@ ReadFword       Endp
 ReadQword       Proc near
         push ebx
         push ecx
+        push edi
 ;
         test [ebp+esi].d_access,ACCESS_READ
         jz AccessFault
@@ -217,8 +230,10 @@ ReadQword       Proc near
         ja AccessFault
 ;
         add ebx,[ebp+esi].d_base
+        xor edi,edi
         call ReadLinearQword
 ;
+        pop edi
         pop ecx
         pop ebx
         ret
@@ -243,6 +258,7 @@ ReadQword       Endp
 
 ReadTbyte       Proc near
         push ebx
+        push edi
 ;
         test [ebp+esi].d_access,ACCESS_READ
         jz AccessFault
@@ -253,8 +269,10 @@ ReadTbyte       Proc near
         ja AccessFault
 ;
         add ebx,[ebp+esi].d_base
+        xor edi,edi
         call ReadLinearTbyte
 ;
+        pop edi
         pop ebx
         ret
 ReadTbyte       Endp
@@ -278,6 +296,7 @@ ReadTbyte       Endp
 WriteByte       Proc near
         push ebx
         push ecx
+        push edi
 ;
         test [ebp+esi].d_access,ACCESS_WRITE
         jz AccessFault
@@ -287,8 +306,10 @@ WriteByte       Proc near
         ja AccessFault
 ;
         add ebx,[ebp+esi].d_base
+        xor edi,edi
         call WriteLinearByte
 ;
+        pop edi
         pop ecx
         pop ebx
         ret
@@ -313,6 +334,7 @@ WriteByte       Endp
 WriteWord       Proc near
         push ebx
         push ecx
+        push edi
 ;
         test [ebp+esi].d_access,ACCESS_WRITE
         jz AccessFault
@@ -323,8 +345,10 @@ WriteWord       Proc near
         ja AccessFault
 ;
         add ebx,[ebp+esi].d_base
+        xor edi,edi
         call WriteLinearWord
 ;
+        pop edi
         pop ecx
         pop ebx
         ret
@@ -349,6 +373,7 @@ WriteWord       Endp
 WriteDword      Proc near
         push ebx
         push ecx
+        push edi
 ;
         test [ebp+esi].d_access,ACCESS_WRITE
         jz AccessFault
@@ -359,8 +384,10 @@ WriteDword      Proc near
         ja AccessFault
 ;
         add ebx,[ebp+esi].d_base
+        xor edi,edi
         call WriteLinearDword
 ;
+        pop edi
         pop ecx
         pop ebx
         ret
@@ -385,6 +412,7 @@ WriteDword      Endp
 WriteFword      Proc near
         push ebx
         push ecx
+        push edi
 ;
         test [ebp+esi].d_access,ACCESS_WRITE
         jz AccessFault
@@ -395,8 +423,10 @@ WriteFword      Proc near
         ja AccessFault
 ;
         add ebx,[ebp+esi].d_base
+        xor edi,edi
         call WriteLinearFword
 ;
+        pop edi
         pop ecx
         pop ebx
         ret
@@ -421,6 +451,7 @@ WriteFword      Endp
 WriteQword      Proc near
         push ebx
         push ecx
+        push edi
 ;
         test [ebp+esi].d_access,ACCESS_WRITE
         jz AccessFault
@@ -431,8 +462,10 @@ WriteQword      Proc near
         ja AccessFault
 ;
         add ebx,[ebp+esi].d_base
+        xor edi,edi
         call WriteLinearQword
 ;
+        pop edi
         pop ecx
         pop ebx
         ret
@@ -456,6 +489,7 @@ WriteQword      Endp
 
 WriteTbyte      Proc near
         push ebx
+        push edi
 ;
         test [ebp+esi].d_access,ACCESS_WRITE
         jz AccessFault
@@ -468,8 +502,10 @@ WriteTbyte      Proc near
         ja AccessFault
 ;
         add ebx,[ebp+esi].d_base
+        xor edi,edi
         call WriteLinearTbyte
 ;
+        pop edi
         pop ebx
         ret
 WriteTbyte      Endp

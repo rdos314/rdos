@@ -67,13 +67,10 @@ void Emulate(TCpuState *CpuState);
 char GetIntVector(TCpuState *CpuState);
 #pragma aux (EMAPI) GetIntVector;
 
-void ReadCode(TCpuState *CpuState, void *Buffer, unsigned long Address, int Size);
-#pragma aux (EMAPI) ReadCode;
-
-void ReadFromMemory(TCpuState *CpuState, void *Buffer, unsigned long Address, int Size);
+void ReadFromMemory(TCpuState *CpuState, void *Buffer, unsigned long long Address, int Size);
 #pragma aux (EMAPI) ReadFromMemory;
 
-void WriteToMemory(TCpuState *CpuState, void *Buffer, unsigned long Address, int Size);
+void WriteToMemory(TCpuState *CpuState, void *Buffer, unsigned long long Address, int Size);
 #pragma aux (EMAPI) WriteToMemory;
 
 void ReadFromIo(TCpuState *CpuState, void *Buffer, unsigned short int Port, int Size);
@@ -124,7 +121,7 @@ char GetIntVector(TCpuState *CpuState)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void ReadFromMemory(TCpuState *CpuState, void *Buffer, unsigned long Address, int Size)
+void ReadFromMemory(TCpuState *CpuState, void *Buffer, unsigned long long Address, int Size)
 {
     if (CpuState->CodeFetch)
         CpuState->Cpu->ReadCode(Buffer, Address, Size);
@@ -139,7 +136,7 @@ void ReadFromMemory(TCpuState *CpuState, void *Buffer, unsigned long Address, in
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteToMemory(TCpuState *CpuState, void *Buffer, unsigned long Address, int Size)
+void WriteToMemory(TCpuState *CpuState, void *Buffer, unsigned long long Address, int Size)
 {
     CpuState->Cpu->WriteToMemory(Buffer, Address, Size);
 }

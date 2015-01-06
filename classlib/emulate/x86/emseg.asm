@@ -149,8 +149,9 @@ LoadIt:
         movzx ebx,bx
         and bl,0F8h
         add ebx,[ebp+edi].d_base
-        mov edi,ebx
+        xor edi,edi
         call ReadLinearQword
+        mov edi,ebx
         pop bx
         test dh,80h
         jz SegmentFault
@@ -193,10 +194,13 @@ LoadCheckAccessed:
         or dh,1
         push ax
         push ebx
+        push edi
         mov al,dh
         mov ebx,edi
         add ebx,5
+        xor edi,edi
         call WriteLinearByte
+        pop edi
         pop ebx
         pop ax
 
@@ -1685,7 +1689,10 @@ JmpTssSizeOk:
         or al,2
         mov ebx,edi
         add ebx,5
+        push edi
+        xor edi,edi
         call WriteLinearByte     ;must set the new task as busy 
+        pop edi
 ;
         pop bx                  ;we have the two tasks visible here
 ;
@@ -1702,7 +1709,10 @@ JmpTssSizeOk:
         and al,NOT 2
         mov ebx,edi
         add ebx,5
+        push edi
+        xor edi,edi
         call WriteLinearByte     ;must clear the old task as busy'ness 
+        pop edi
 ;
         mov bx,[ebp].reg_tr.d_selector
         and [ebp].reg_eflags,NOT EFLAGS_NT
@@ -1756,7 +1766,10 @@ CallTssSizeOk:
         or al,2              ;the busy byte must be set
         mov ebx,edi
         add ebx,5
+        push edi
+        xor edi,edi
         call WriteLinearByte
+        pop edi
 ;
         pop bx                  ;we have the two tasks visible here
 ;
@@ -1773,7 +1786,10 @@ CallTssSizeOk:
         or al,2         ;the busy byte must be left set
         mov ebx,edi
         add ebx,5
+        push edi
+        xor edi,edi
         call WriteLinearByte
+        pop edi
 ;
         mov bx,[ebp].reg_tr.d_selector
         or [ebp].reg_eflags,EFLAGS_NT
@@ -1825,7 +1841,10 @@ RetTssSizeOk:
         or al,2               ;the busy byte must be left set
         mov ebx,edi
         add ebx,5
+        push edi
+        xor edi,edi
         call WriteLinearByte
+        pop edi
 ;
         pop bx                  ;we have the two tasks visible here
 ;
@@ -1842,7 +1861,10 @@ RetTssSizeOk:
         and al,NOT 2       ;the busy byte must be clear for the old task
         mov ebx,edi
         add ebx,5
+        push edi
+        xor edi,edi
         call WriteLinearByte
+        pop edi
 ;
         mov bx,[ebp].reg_tr.d_selector
         call ValidateTss
@@ -1900,10 +1922,13 @@ cond_load_descr_limit_ok:
         movzx ecx,bx
         and cl,0F8h
         add ecx,[ebp+edi].d_base
-        push bx
+        push ebx
+        push edi
         mov ebx,ecx
+        xor edi,edi
         call ReadLinearQword
-        pop bx
+        pop edi
+        pop ebx
         test dh,80h
         jnz cond_load_descr_present
         stc
@@ -1913,10 +1938,13 @@ cond_load_descr_present:
         test dh,1
         jnz cond_load_descr_accessed
         or dh,1
-        push bx
+        push ebx
+        push edi
         mov ebx,ecx
+        xor edi,edi
         call WriteLinearQword
-        pop bx
+        pop edi
+        pop ebx
 
 cond_load_descr_accessed:
         clc
@@ -2151,7 +2179,10 @@ LoadTr16:
         add ebx,5
         mov al,dl
         or al,2
+        push edi
+        xor edi,edi
         call WriteLinearByte
+        pop edi
         ret
 
 LoadTr32:
@@ -2167,7 +2198,10 @@ LoadTr32:
         add ebx,5
         mov al,dl
         or al,2
+        push edi
+        xor edi,edi
         call WriteLinearByte
+        pop edi
         ret
 LoadTr  Endp
         
@@ -2606,7 +2640,10 @@ ExcPmErrorOk:
         movzx ecx,bx
         add ecx,[ebp].reg_idt.d_base
         mov ebx,ecx
+        push edi
+        xor edi,edi
         call ReadLinearQword
+        pop edi
         test dh,80h
         jz IdtFault
 ;
@@ -2711,7 +2748,10 @@ ExcRealErrorOk:
         movzx ebx,bl
         shl ebx,2
         add ebx,[ebp].reg_idt.d_base
+        push edi
+        xor edi,edi
         call ReadLinearDword
+        pop edi
         movzx esi,ax
         shr eax,16
         mov bx,ax
@@ -2757,8 +2797,11 @@ HwInt   Proc near
 ;
         movzx ecx,bx
         add ecx,[ebp].reg_idt.d_base
+        push edi
         mov ebx,ecx
+        xor edi,edi
         call ReadLinearQword
+        pop edi
         test dh,80h                     ;Is the descriptor present ?
         jz IdtFault
 ;
@@ -2808,8 +2851,11 @@ IntFarPm:
 ;
         movzx ecx,bx
         add ecx,[ebp].reg_idt.d_base
+        push edi
         mov ebx,ecx
+        xor edi,edi
         call ReadLinearQword
+        pop edi
         test dh,80h                     ;Is the descriptor present ?
         jz IdtFault
 ;
@@ -2917,7 +2963,10 @@ IntFarReal:
         movzx ebx,bl
         shl ebx,2
         add ebx,[ebp].reg_idt.d_base
+        push edi
+        xor edi,edi
         call ReadLinearDword
+        pop edi
         movzx esi,ax
         shr eax,16
         mov bx,ax

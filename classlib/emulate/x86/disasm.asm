@@ -81,6 +81,7 @@ disass_read:
 
 disass_read_linear:
         add ebx,[ebp+esi].d_base
+        xor edi,edi
         call CondReadLinear
         call dis_ass_one
 disass_done:
@@ -172,6 +173,7 @@ read_instr_read:
 
 read_instr_linear:      
         add ebx,[ebp+esi].d_base
+        xor edi,edi
         call CondReadLinear
 
 read_instr_done:

@@ -178,6 +178,7 @@ AllocateTlb     Endp
 
 ReadPhysical Proc near
         push ecx
+        push dword ptr 0
         push ebx
         push esi
         push ebp
@@ -201,6 +202,7 @@ ReadPhysical    Endp
 
 WritePhysical Proc near
         push ecx
+        push dword ptr 0
         push ebx
         push esi
         push ebp
@@ -575,17 +577,23 @@ WritePaged      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadLinear
+;               NAME:           ReadLinear
 ;
 ;               description:    read from linear memory
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
-;                                               ECX             NUMBER OF BYTE TO READ
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;                               ECX             NUMBER OF BYTE TO READ
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadLinear Proc near
+        or edi,edi
+        jz ReadLinear32
+;
+        int 3
+
+ReadLinear32:
         test [ebp].reg_cr0,CR0_PG
         jz ReadLinearNormal
         call ReadPaged
@@ -600,13 +608,13 @@ ReadLinear      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteLinear
+;               NAME:           WriteLinear
 ;
 ;               description:    write to linear address
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             PHYSICAL ADDRESS
-;                                               ECX             SIZE
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         PHYSICAL ADDRESS
+;                               ECX             SIZE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -697,21 +705,29 @@ CondReadPaged   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CondReadLinear
+;               NAME:           CondReadLinear
 ;
 ;               description:    conditional read from linear memory
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
-;                                               ECX             NUMBER OF BYTE TO READ
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;                               ECX             NUMBER OF BYTE TO READ
 ;
-;               RETURNS:                ECX             NUMBER OF VALID BYTES
+;               RETURNS:        ECX             NUMBER OF VALID BYTES
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
         public CondReadLinear
 
 CondReadLinear Proc near
+        or edi,edi
+        jz CondReadLinear32
+;
+        int 3
+
+CondReadLinear32:
+        
+        
         test [ebp].reg_cr0,CR0_PG
         jz CondReadLinearNormal
         call CondReadPaged
@@ -728,14 +744,14 @@ CondReadLinear  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadLinearByte
+;               NAME:           ReadLinearByte
 ;
 ;               DESCRIPTION:    Read one byte of data
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
 ;
-;               RETURNS:                AL              DATA
+;               RETURNS:        AL              DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -764,14 +780,14 @@ ReadLinearByte  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadLinearWord
+;               NAME:           ReadLinearWord
 ;
 ;               DESCRIPTION:    Read one word of data
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
 ;
-;               RETURNS:                AX              DATA
+;               RETURNS:        AX              DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -800,14 +816,14 @@ ReadLinearWord  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadLinearDword
+;               NAME:           ReadLinearDword
 ;
 ;               DESCRIPTION:    Read one dword of data
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX             LINEAR ADDRESS
 ;
-;               RETURNS:                EAX             DATA
+;               RETURNS:        EAX             DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -836,14 +852,14 @@ ReadLinearDword Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadLinearFword
+;               NAME:           ReadLinearFword
 ;
 ;               DESCRIPTION:    Read one fword of data
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
 ;
-;               RETURNS:                DX:EAX          DATA
+;               RETURNS:        DX:EAX          DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -871,14 +887,14 @@ ReadLinearFword Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadLinearQword
+;               NAME:           ReadLinearQword
 ;
 ;               DESCRIPTION:    Read one qword of data
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
 ;
-;               RETURNS:                EDX:EAX         DATA
+;               RETURNS:        EDX:EAX         DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -906,14 +922,14 @@ ReadLinearQword Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadLinearTbyte
+;               NAME:           ReadLinearTbyte
 ;
 ;               DESCRIPTION:    Read one tbyte of data
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
 ;
-;               RETURNS:                CX:EDX:EAX              DATA
+;               RETURNS:        CX:EDX:EAX      DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -940,13 +956,13 @@ ReadLinearTbyte Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteLinearByte
+;               NAME:           WriteLinearByte
 ;
 ;               DESCRIPTION:    write one byte of data
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
-;                                               AL              DATA
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;                               AL              DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -977,13 +993,13 @@ WriteLinearByte Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteLinearWord
+;               NAME:           WriteLinearWord
 ;
 ;               DESCRIPTION:    Write one word of data
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
-;                                               AX              DATA
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;                               AX              DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1014,13 +1030,13 @@ WriteLinearWord Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteLinearDword
+;               NAME:           WriteLinearDword
 ;
 ;               DESCRIPTION:    Write one dword of data
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
-;                                               EAX             DATA
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;                               EAX             DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1051,13 +1067,13 @@ WriteLinearDword        Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteLinearFword
+;               NAME:           WriteLinearFword
 ;
 ;               DESCRIPTION:    Write one fword of data
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
-;                                               DX:EAX          DATA
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;                               DX:EAX          DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1089,13 +1105,13 @@ WriteLinearFword        Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteLinearQword
+;               NAME:           WriteLinearQword
 ;
 ;               DESCRIPTION:    Write one qword of data
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
-;                                               EDX:EAX         DATA
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;                               EDX:EAX         DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1127,13 +1143,13 @@ WriteLinearQword        Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteLinearTbyte
+;               NAME:           WriteLinearTbyte
 ;
 ;               DESCRIPTION:    Write one tbyte of data
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
-;                                               CX:EDX:EAX              DATA
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;                               CX:EDX:EAX      DATA
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -93,6 +93,7 @@ getdata proc    near
 getdata_read_linear:
         mov     data_size_copied,ecx
         add     ebx,[ebp+esi].d_base
+        xor     edi,edi
         call    CondReadLinear          ;read bytes in [ebp].req_buf
         lea     esi,Cpu.req_buf
         lea     edi,data_buffer
