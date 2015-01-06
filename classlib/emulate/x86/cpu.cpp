@@ -368,7 +368,7 @@ void TCpu::Reset()
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TCpu::AddBreakpoint(unsigned short Selector, unsigned long Offset)
+void TCpu::AddBreakpoint(unsigned short Selector, unsigned long long Offset)
 {
         int i;
 
@@ -460,7 +460,7 @@ void TCpu::SysCall()
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TCpu::ReadCode(unsigned long Address)
+char TCpu::ReadCode(unsigned long long Address)
 {
     return ReadFromMemory(Address);
 }
@@ -472,7 +472,7 @@ char TCpu::ReadCode(unsigned long Address)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TCpu::ReadFromMemory(unsigned long Address)
+char TCpu::ReadFromMemory(unsigned long long Address)
 {
         if (OnReadFromMemory)
                 return (*OnReadFromMemory)(this, Address);
@@ -487,7 +487,7 @@ char TCpu::ReadFromMemory(unsigned long Address)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TCpu::WriteToMemory(unsigned long Address, char Value)
+void TCpu::WriteToMemory(unsigned long long Address, char Value)
 {
         if (OnWriteToMemory)
                 (*OnWriteToMemory)(this, Address, Value);
@@ -528,7 +528,7 @@ void TCpu::WriteToIo(unsigned short Port, char Value)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TCpu::ReadCode(void *Buffer, unsigned long Address, int Size)
+void TCpu::ReadCode(void *Buffer, unsigned long long Address, int Size)
 {
         int i;
         char *Dest;
@@ -553,7 +553,7 @@ void TCpu::ReadCode(void *Buffer, unsigned long Address, int Size)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TCpu::ReadFromMemory(void *Buffer, unsigned long Address, int Size)
+void TCpu::ReadFromMemory(void *Buffer, unsigned long long Address, int Size)
 {
         int i;
         char *Dest;
@@ -578,7 +578,7 @@ void TCpu::ReadFromMemory(void *Buffer, unsigned long Address, int Size)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TCpu::WriteToMemory(void *Buffer, unsigned long Address, int Size)
+void TCpu::WriteToMemory(void *Buffer, unsigned long long Address, int Size)
 {
         int i;
         char *Dest;

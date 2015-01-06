@@ -90,7 +90,7 @@
 
 typedef struct
 {
- unsigned long Offset;
+ unsigned long long Offset;
  unsigned short int Selector;
 } TLocation;
 
@@ -218,61 +218,61 @@ public:
 class TCpu
 {
 public:
-        TCpu();
-        ~TCpu();
-        void Show();
-        void ShowFpu();
-        void ShowData();
-        void ShowInstruction(int Count);
-        void ShowPreviousInstruction();
+    TCpu();
+    ~TCpu();
+    void Show();
+    void ShowFpu();
+    void ShowData();
+    void ShowInstruction(int Count);
+    void ShowPreviousInstruction();
 
     void SetInt(TInterrupt *Interrupt);
     void ResetInt(TInterrupt *Interrupt);
     char AckInt();
 
-        void Trace();
-        void Pace();
-        void Go();
-        void Break();
+    void Trace();
+    void Pace();
+    void Go();
+    void Break();
 
-        virtual void Reset();
+    virtual void Reset();
 
-        void ReadCode(void *Buffer, unsigned long Address, int Size);
-        void ReadFromMemory(void *Buffer, unsigned long Address, int Size);
-        void WriteToMemory(void *Buffer, unsigned long Address, int Size);
-        void ReadFromIo(void *Buffer, unsigned short int Port, int Size);
-        void WriteToIo(void *Buffer, unsigned short int Port, int Size);
-        void SysCall();
-        void AddBreakpoint(unsigned short Selector, unsigned long Offset);
-        void ClearBreakpoints();
+    void ReadCode(void *Buffer, unsigned long long Address, int Size);
+    void ReadFromMemory(void *Buffer, unsigned long long Address, int Size);
+    void WriteToMemory(void *Buffer, unsigned long long Address, int Size);
+    void ReadFromIo(void *Buffer, unsigned short int Port, int Size);
+    void WriteToIo(void *Buffer, unsigned short int Port, int Size);
+    void SysCall();
+    void AddBreakpoint(unsigned short Selector, unsigned long long Offset);
+    void ClearBreakpoints();
 
-        TCpuState CpuState;
+    TCpuState CpuState;
 
-        void (*OnIdle)(TCpu *Cpu);
-        void (*OnSetClk)(TCpu *Cpu);
-        void (*OnResetClk)(TCpu *Cpu);
-        char (*OnReadFromMemory)(TCpu *Cpu, unsigned long Address);
-        void (*OnWriteToMemory)(TCpu *Cpu, unsigned long Address, char Value);
-        char (*OnReadFromIo)(TCpu *Cpu, unsigned short Port);
-        void (*OnWriteToIo)(TCpu *Cpu, unsigned short Port, char Value);
-        void (*OnSysCall)(TCpu *Cpu);
+    void (*OnIdle)(TCpu *Cpu);
+    void (*OnSetClk)(TCpu *Cpu);
+    void (*OnResetClk)(TCpu *Cpu);
+    char (*OnReadFromMemory)(TCpu *Cpu, unsigned long long Address);
+    void (*OnWriteToMemory)(TCpu *Cpu, unsigned long long Address, char Value);
+    char (*OnReadFromIo)(TCpu *Cpu, unsigned short Port);
+    void (*OnWriteToIo)(TCpu *Cpu, unsigned short Port, char Value);
+    void (*OnSysCall)(TCpu *Cpu);
 
-        int FUpdateCycles;
-        TInterrupt *FInterrupt;
+    int FUpdateCycles;
+    TInterrupt *FInterrupt;
 
 protected:
-        void EmulateOne();
-        void AddCycles(unsigned int Cycles);
-        virtual void NotifyIdle();
-        virtual void NotifySetClk();
-        virtual void NotifyResetClk();
-        virtual char ReadCode(unsigned long Address);
-        virtual char ReadFromMemory(unsigned long Address);
-        virtual void WriteToMemory(unsigned long Address, char Value);
-        virtual char ReadFromIo(unsigned short int Port);
-        virtual void WriteToIo(unsigned short int Port, char Value);
+    void EmulateOne();
+    void AddCycles(unsigned int Cycles);
+    virtual void NotifyIdle();
+    virtual void NotifySetClk();
+    virtual void NotifyResetClk();
+    virtual char ReadCode(unsigned long long Address);
+    virtual char ReadFromMemory(unsigned long long Address);
+    virtual void WriteToMemory(unsigned long long Address, char Value);
+    virtual char ReadFromIo(unsigned short int Port);
+    virtual void WriteToIo(unsigned short int Port, char Value);
 
-        TLocation *FBreakpoints[MAX_BREAKPOINTS];
+    TLocation *FBreakpoints[MAX_BREAKPOINTS];
 
 private:
 };

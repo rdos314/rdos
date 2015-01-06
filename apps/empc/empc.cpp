@@ -255,7 +255,7 @@ void ResetClk(TCpu *Cpu)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char ReadFromMemory(TCpu *Cpu, unsigned long Address)
+char ReadFromMemory(TCpu *Cpu, unsigned long long Address)
 {
     return Isa.ReadMem(Address);
 }
@@ -267,7 +267,7 @@ char ReadFromMemory(TCpu *Cpu, unsigned long Address)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteToMemory(TCpu *Cpu, unsigned long Address, char Value)
+void WriteToMemory(TCpu *Cpu, unsigned long long Address, char Value)
 {
     Isa.WriteMem(Address, Value);
 }

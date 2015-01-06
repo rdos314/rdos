@@ -41,22 +41,22 @@ public:
 class TBusFunction
 {
 public:
-        TBusFunction(TBus *Bus);
+    TBusFunction(TBus *Bus);
 
-        virtual int GetSize() = 0;
+    virtual int GetSize() = 0;
 
-        virtual void Out(int Num, int Offset, char Value);
-        virtual char In(int Num, int Offset);
-        virtual void WriteMem(int Num, unsigned long Offset, char Value);
-        virtual char ReadMem(int Num, unsigned long Offset);
+    virtual void Out(int Num, int Offset, char Value);
+    virtual char In(int Num, int Offset);
+    virtual void WriteMem(int Num, unsigned long Offset, char Value);
+    virtual char ReadMem(int Num, unsigned long Offset);
 
 protected:
     void DefineIo(int Num, int Base, int Size, char *Data);
     void UndefineIo(int Num);
-    void DefineMem(int Num, int Base, int Size, char *Data);
+    void DefineMem(int Num, unsigned long long Base, unsigned long Size, char *Data);
     void UndefineMem(int Num);
 
-        TBus *FBus;
+    TBus *FBus;
     TBusAreaData *FIoArr[256];
     TBusAreaData *FMemArr[256];
     
@@ -65,37 +65,33 @@ protected:
 class TBusArea
 {
 public:
-        unsigned long Base;
-        unsigned long Size;
-        TBusFunction *func;
-        int Num;
+    unsigned long long Base;
+    unsigned long Size;
+    TBusFunction *func;
+    int Num;
 };
 
 class TBus
 {
 public:
-        TBus();
-        ~TBus();
+    TBus();
+    ~TBus();
 
-        void Out(int Port, char Value);
-        char In(int Port);
-        void WriteMem(unsigned long Address, char Value);
-        char ReadMem(unsigned long Address);
+    void Out(int Port, char Value);
+    char In(int Port);
+    void WriteMem(unsigned long long Address, char Value);
+    char ReadMem(unsigned long long Address);
 
-        void DefineIo(TBusFunction *func, int Num, int Base, int Size);
-        void UndefineIo(TBusFunction *func, int Num);
-        void DefineMem(TBusFunction *func, int Num, int Base, int Size);
-        void UndefineMem(TBusFunction *func, int Num);
-        
-protected:
-        int ReadData(int Index);
-        void WriteData(int Index, int Data);
+    void DefineIo(TBusFunction *func, int Num, int Base, int Size);
+    void UndefineIo(TBusFunction *func, int Num);
+    void DefineMem(TBusFunction *func, int Num, unsigned long long Base, unsigned long Size);
+    void UndefineMem(TBusFunction *func, int Num);
                 
 private:
-        int FHookIoMax;
-        int FHookMemMax;
-        TBusArea *FHookIoArr[256];
-        TBusArea *FHookMemArr[256];
+    int FHookIoMax;
+    int FHookMemMax;
+    TBusArea *FHookIoArr[256];
+    TBusArea *FHookMemArr[256];
             
 };
 

@@ -37,19 +37,19 @@
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TFlash::TFlash(TBus *Bus, unsigned long Base, unsigned long Size)
+TFlash::TFlash(TBus *Bus, unsigned long long Base, unsigned long Size)
   : TBusFunction(Bus)
 {
-        int i;
+    int i;
 
-        FSize = Size;
+    FSize = Size;
     FHasData = TRUE;    
-        FData = new char[Size];
+    FData = new char[Size];
 
-        for (i = 0; i < Size; i++)
-                *(FData + i) = 0xFF;
+    for (i = 0; i < Size; i++)
+        *(FData + i) = 0xFF;
 
-        DefineMem(0, Base, Size, FData);
+    DefineMem(0, Base, Size, FData);
 }
 
 /*##################  TFlash::TFlash  ###############
@@ -59,15 +59,15 @@ TFlash::TFlash(TBus *Bus, unsigned long Base, unsigned long Size)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TFlash::TFlash(TBus *Bus, unsigned long Base, unsigned long Size, char *Data)
+TFlash::TFlash(TBus *Bus, unsigned long long Base, unsigned long Size, char *Data)
   : TBusFunction(Bus)
 {
-        int i;
+    int i;
 
     FHasData = FALSE;   
     FData = Data;
-        FSize = Size;
-        DefineMem(0, Base, Size, FData);
+    FSize = Size;
+    DefineMem(0, Base, Size, FData);
 }
 
 /*##################  TFlash::~TFlash  ###############
@@ -79,8 +79,8 @@ TFlash::TFlash(TBus *Bus, unsigned long Base, unsigned long Size, char *Data)
 *##########################################################################*/
 TFlash::~TFlash()
 {
-        if (FData && FHasData)
-                delete FData;
+    if (FData && FHasData)
+        delete FData;
 }
 
 /*##################  TFlash::GetSize  ###############

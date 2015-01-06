@@ -31,28 +31,28 @@
 #define TRUE !FALSE
 
 /*##################  TRam::TRam  ###############
-*   Purpose....: Constructor for RAM							            #
+*   Purpose....: Constructor for RAM                                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TRam::TRam(TBus *Bus, unsigned long Base, unsigned long Size)
+TRam::TRam(TBus *Bus, unsigned long long Base, unsigned long Size)
   : TBusFunction(Bus)
 {
-	int i;
+    int i;
 
-	FSize = Size;
-	FData = new char[Size];
+    FSize = Size;
+    FData = new char[Size];
 
-	for (i = 0; i < Size; i++)
-		*(FData + i) = 0x77;
+    for (i = 0; i < Size; i++)
+        *(FData + i) = 0x77;
 
-	DefineMem(0, Base, Size, FData);
+    DefineMem(0, Base, Size, FData);
 }
 
 /*##################  TRam::~TRam  ###############
-*   Purpose....: Destructor for RAM							            #
+*   Purpose....: Destructor for RAM                                                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -60,12 +60,12 @@ TRam::TRam(TBus *Bus, unsigned long Base, unsigned long Size)
 *##########################################################################*/
 TRam::~TRam()
 {
-	if (FData)
-		delete FData;
+        if (FData)
+                delete FData;
 }
 
 /*##################  TRam::GetSize  ###############
-*   Purpose....: Get mapping size of device						            #
+*   Purpose....: Get mapping size of device                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #

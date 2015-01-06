@@ -33,7 +33,7 @@
 class TRam : public TBusFunction
 {
 public:
-	TRam(TBus *Bus, unsigned long Base, unsigned long Size);
+	TRam(TBus *Bus, unsigned long long Base, unsigned long Size);
 	~TRam();
 
 	virtual int GetSize();

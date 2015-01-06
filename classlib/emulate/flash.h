@@ -34,22 +34,22 @@
 class TFlash : public TBusFunction
 {
 public:
-        TFlash(TBus *Bus, unsigned long Base, unsigned long Size);
-        TFlash(TBus *Bus, unsigned long Base, unsigned long Size, char *Data);
-        ~TFlash();
+    TFlash(TBus *Bus, unsigned long long Base, unsigned long Size);
+    TFlash(TBus *Bus, unsigned long long Base, unsigned long Size, char *Data);
+    ~TFlash();
 
-        virtual int GetSize();
-        virtual void WriteMem(int Num, unsigned long Offset, char Value);
+    virtual int GetSize();
+    virtual void WriteMem(int Num, unsigned long Offset, char Value);
 
-        void LoadTop(TFile *File);
-        void LoadBottom(TFile *File);
+    void LoadTop(TFile *File);
+    void LoadBottom(TFile *File);
 
-        char *GetData();
+    char *GetData();
 
 private:
-        int FSize;
-        char *FData;
-        int FHasData;
+    int FSize;
+    char *FData;
+    int FHasData;
 };
 
 #endif

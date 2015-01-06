@@ -31,7 +31,7 @@
 #define TRUE !FALSE
 
 /*##################  TBusFunction::TBusFunction  ###############
-*   Purpose....: Constructor							            #
+*   Purpose....: Constructor                                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -47,11 +47,11 @@ TBusFunction::TBusFunction(TBus *Bus)
         FMemArr[i] = 0;
     }
 
-	FBus = Bus;
+        FBus = Bus;
 }
 
 /*##################  TBusFunction::WriteMem  ###############
-*   Purpose....: Write to data block								            #
+*   Purpose....: Write to data block                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -63,13 +63,13 @@ void TBusFunction::WriteMem(int Num, unsigned long Offset, char Value)
 
     area = FMemArr[Num];
     if (area)
-		if (area->Data && Offset >= 0 && Offset < area->Size)
-			*(area->Data + Offset) = Value;
+        if (area->Data && Offset >= 0 && Offset < area->Size)
+            *(area->Data + Offset) = Value;
 
 }
 
 /*##################  TBusFunction::ReadMem  ###############
-*   Purpose....: Read from data block								            #
+*   Purpose....: Read from data block                                                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -81,14 +81,14 @@ char TBusFunction::ReadMem(int Num, unsigned long Offset)
 
     area = FMemArr[Num];
     if (area)
-		if (area->Data && Offset >= 0 && Offset < area->Size)
-			return *(area->Data + Offset);
+        if (area->Data && Offset >= 0 && Offset < area->Size)
+            return *(area->Data + Offset);
 
-	return 0xFF;
+    return 0xFF;
 }
 
 /*##################  TBusFunction::Out  ###############
-*   Purpose....: Out to data block								            #
+*   Purpose....: Out to data block                                                                          #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -100,13 +100,13 @@ void TBusFunction::Out(int Num, int Offset, char Value)
 
     area = FIoArr[Num];
     if (area)
-		if (area->Data && Offset >= 0 && Offset < area->Size)
-			*(area->Data + Offset) = Value;
+                if (area->Data && Offset >= 0 && Offset < area->Size)
+                        *(area->Data + Offset) = Value;
 
 }
 
 /*##################  TBusFunction::In  ###############
-*   Purpose....: In from data block								            #
+*   Purpose....: In from data block                                                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -118,14 +118,14 @@ char TBusFunction::In(int Num, int Offset)
 
     area = FIoArr[Num];
     if (area)
-		if (area->Data && Offset >= 0 && Offset < area->Size)
-			return *(area->Data + Offset);
+                if (area->Data && Offset >= 0 && Offset < area->Size)
+                        return *(area->Data + Offset);
 
-	return 0xFF;
+        return 0xFF;
 }
 
 /*##################  TBusFunction::DefineIo  ###############
-*   Purpose....: Define an io area								            #
+*   Purpose....: Define an io area                                                                          #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -138,7 +138,7 @@ void TBusFunction::DefineIo(int Num, int Base, int Size, char *Data)
     if (FIoArr[Num])
     {
         if (FBus)
-    	    FBus->UndefineIo(this, Num);
+            FBus->UndefineIo(this, Num);
         delete FIoArr[Num];
     }
 
@@ -153,7 +153,7 @@ void TBusFunction::DefineIo(int Num, int Base, int Size, char *Data)
 }
 
 /*##################  TBusFunction::UndefineIo  ###############
-*   Purpose....: Undefine an io area								            #
+*   Purpose....: Undefine an io area                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -172,13 +172,13 @@ void TBusFunction::UndefineIo(int Num)
 }
 
 /*##################  TBusFunction::DefineMem  ###############
-*   Purpose....: Define a memory area								            #
+*   Purpose....: Define a memory area                                                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TBusFunction::DefineMem(int Num, int Base, int Size, char *Data)
+void TBusFunction::DefineMem(int Num, unsigned long long Base, unsigned long Size, char *Data)
 {
     TBusAreaData *area;
 
@@ -191,7 +191,7 @@ void TBusFunction::DefineMem(int Num, int Base, int Size, char *Data)
     }
 
     area = new TBusAreaData;
-    area->Base = Base & 0x00FFFFFF;
+    area->Base = Base;
     area->Size = Size;
     area->Data = Data;
     FMemArr[Num] = area;
@@ -201,7 +201,7 @@ void TBusFunction::DefineMem(int Num, int Base, int Size, char *Data)
 }
 
 /*##################  TBusFunction::UndefineMem  ###############
-*   Purpose....: Undefine a memory area								            #
+*   Purpose....: Undefine a memory area                                                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -220,7 +220,7 @@ void TBusFunction::UndefineMem(int Num)
 }
 
 /*##################  TBus::TBus  ###############
-*   Purpose....: Constructor for Bus							            #
+*   Purpose....: Constructor for Bus                                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -231,16 +231,16 @@ TBus::TBus()
     int i;
 
     for (i = 0; i < 256; i++)
-	{
-		FHookIoArr[i] = 0;
-		FHookMemArr[i] = 0;
-	}
-	FHookIoMax = 0;
-	FHookMemMax = 0;
+        {
+                FHookIoArr[i] = 0;
+                FHookMemArr[i] = 0;
+        }
+        FHookIoMax = 0;
+        FHookMemMax = 0;
 }
 
 /*##################  TBus::~TBus  ###############
-*   Purpose....: Destructor for bus					            #
+*   Purpose....: Destructor for bus                                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -251,17 +251,17 @@ TBus::~TBus()
     int i;
 
     for (i = 0; i < 256; i++)
-	{
-		if (FHookIoArr[i])
-			delete FHookIoArr[i];
+        {
+                if (FHookIoArr[i])
+                        delete FHookIoArr[i];
 
-		if (FHookMemArr[i])
-			delete FHookMemArr[i];
-	}
+                if (FHookMemArr[i])
+                        delete FHookMemArr[i];
+        }
 }
 
 /*##################  TBus::DefineIo  ###############
-*   Purpose....: Define an IO area						            #
+*   Purpose....: Define an IO area                                                          #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -269,27 +269,27 @@ TBus::~TBus()
 *##########################################################################*/
 void TBus::DefineIo(TBusFunction *func, int Num, int Base, int Size)
 {
-	TBusArea *area;
-	int i;
+        TBusArea *area;
+        int i;
 
-	area = new TBusArea;
-	area->Base = Base;
-	area->Size = Size;
-	area->func = func;
-	area->Num = Num;
+        area = new TBusArea;
+        area->Base = Base;
+        area->Size = Size;
+        area->func = func;
+        area->Num = Num;
 
-	for (i = 0; i < 256; i++)
-		if (FHookIoArr[i] == 0)
-		{
-			FHookIoArr[i] = area;
-			if (i > FHookIoMax)
-				FHookIoMax = i;
-			break;
-		}
+        for (i = 0; i < 256; i++)
+                if (FHookIoArr[i] == 0)
+                {
+                        FHookIoArr[i] = area;
+                        if (i > FHookIoMax)
+                                FHookIoMax = i;
+                        break;
+                }
 }
 
 /*##################  TBus::UndefineIo  ###############
-*   Purpose....: Undefine an IO area						            #
+*   Purpose....: Undefine an IO area                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -297,52 +297,52 @@ void TBus::DefineIo(TBusFunction *func, int Num, int Base, int Size)
 *##########################################################################*/
 void TBus::UndefineIo(TBusFunction *func, int Num)
 {
-	TBusArea *area;
-	int i;
+        TBusArea *area;
+        int i;
 
-	for (i = 0; i < 256; i++)
-	{
-		area = FHookIoArr[i];
-		if (area)
-			if (area->func == func && area->Num == Num)
-			{
-				delete area;
-				FHookIoArr[i] = 0;
-				break;
-			}
-	}
+        for (i = 0; i < 256; i++)
+        {
+                area = FHookIoArr[i];
+                if (area)
+                        if (area->func == func && area->Num == Num)
+                        {
+                                delete area;
+                                FHookIoArr[i] = 0;
+                                break;
+                        }
+        }
 }
 
 /*##################  TBus::DefineMem  ###############
-*   Purpose....: Define a memory area						            #
+*   Purpose....: Define a memory area                                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TBus::DefineMem(TBusFunction *func, int Num, int Base, int Size)
+void TBus::DefineMem(TBusFunction *func, int Num, unsigned long long Base, unsigned long Size)
 {
-	TBusArea *area;
-	int i;
+        TBusArea *area;
+        int i;
 
-	area = new TBusArea;
-	area->Base = Base & 0x00FFFFFF;
-	area->Size = Size;
-	area->func = func;
-	area->Num = Num;
+        area = new TBusArea;
+        area->Base = Base;
+        area->Size = Size;
+        area->func = func;
+        area->Num = Num;
 
-	for (i = 0; i < 256; i++)
-		if (FHookMemArr[i] == 0)
-		{
-			FHookMemArr[i] = area;
-			if (i > FHookMemMax)
-				FHookMemMax = i;
-			break;
-		}
+        for (i = 0; i < 256; i++)
+                if (FHookMemArr[i] == 0)
+                {
+                        FHookMemArr[i] = area;
+                        if (i > FHookMemMax)
+                                FHookMemMax = i;
+                        break;
+                }
 }
 
 /*##################  TBus::UndefineMem  ###############
-*   Purpose....: Undefine a memory area						            #
+*   Purpose....: Undefine a memory area                                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -350,74 +350,70 @@ void TBus::DefineMem(TBusFunction *func, int Num, int Base, int Size)
 *##########################################################################*/
 void TBus::UndefineMem(TBusFunction *func, int Num)
 {
-	TBusArea *area;
-	int i;
+        TBusArea *area;
+        int i;
 
-	for (i = 0; i < 256; i++)
-	{
-		area = FHookMemArr[i];
-		if (area)
-			if (area->func == func && area->Num == Num)
-			{
-				delete area;
-				FHookMemArr[i] = 0;
-				break;
-			}
-	}
+        for (i = 0; i < 256; i++)
+        {
+                area = FHookMemArr[i];
+                if (area)
+                        if (area->func == func && area->Num == Num)
+                        {
+                                delete area;
+                                FHookMemArr[i] = 0;
+                                break;
+                        }
+        }
 }
 
 /*##################  TBus::WriteMem  ###############
-*   Purpose....: Perform write memory instruction						            #
+*   Purpose....: Perform write memory instruction                                                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TBus::WriteMem(unsigned long Address, char Value)
+void TBus::WriteMem(unsigned long long Address, char Value)
 {
-	TBusArea *area;
-	int i;
+    TBusArea *area;
+    int i;
 
-	Address = Address & 0x00FFFFFF;
-
-	for (i = 0; i <= FHookMemMax; i++)
-	{
-		area = FHookMemArr[i];
-		if (area)
-			if (area->Base <= Address && area->Base + area->Size - 1 >= Address)
-			{
-				area->func->WriteMem(area->Num, Address - area->Base, Value);
-				break;
-			}
-	}
+    for (i = 0; i <= FHookMemMax; i++)
+    {
+        area = FHookMemArr[i];
+        if (area)
+            if (area->Base <= Address && area->Base + area->Size - 1 >= Address)
+            {
+                area->func->WriteMem(area->Num, Address - area->Base, Value);
+                break;
+            }
+    }
 }
 
 /*##################  TBus::ReadMem  ###############
-*   Purpose....: Perform read memory instruction						            #
+*   Purpose....: Perform read memory instruction                                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TBus::ReadMem(unsigned long Address)
+char TBus::ReadMem(unsigned long long Address)
 {
-	TBusArea *area;
-	int i;
+    TBusArea *area;
+    int i;
 
-	Address = Address & 0x00FFFFFF;
-
-	for (i = 0; i <= FHookMemMax; i++)
-	{
-		area = FHookMemArr[i];
-		if (area)
-			if (area->Base <= Address && area->Base + area->Size - 1 >= Address)
-				return area->func->ReadMem(area->Num, Address - area->Base);
-	}
-	return 0xFF;
+    for (i = 0; i <= FHookMemMax; i++)
+    {
+        area = FHookMemArr[i];
+        if (area)
+             if (area->Base <= Address && area->Base + area->Size - 1 >= Address)
+                return area->func->ReadMem(area->Num, Address - area->Base);
+    }
+    return 0xFF;
 }
 
 /*##################  TBus::Out  ###############
-*   Purpose....: Perform out instruction						            #
+*   Purpose....: Perform out instruction                                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -425,23 +421,23 @@ char TBus::ReadMem(unsigned long Address)
 *##########################################################################*/
 void TBus::Out(int Port, char Value)
 {
-	TBusArea *area;
-	int i;
+        TBusArea *area;
+        int i;
 
-	for (i = 0; i <= FHookIoMax; i++)
-	{
-		area = FHookIoArr[i];
-		if (area)
-			if (area->Base <= Port && area->Base + area->Size > Port)
-			{
-				area->func->Out(area->Num, Port - area->Base, Value);
-				break;
-			}
-	}
+        for (i = 0; i <= FHookIoMax; i++)
+        {
+                area = FHookIoArr[i];
+                if (area)
+                        if (area->Base <= Port && area->Base + area->Size > Port)
+                        {
+                                area->func->Out(area->Num, Port - area->Base, Value);
+                                break;
+                        }
+        }
 }
 
 /*##################  TBus::In  ###############
-*   Purpose....: Perform in instruction						            #
+*   Purpose....: Perform in instruction                                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -449,15 +445,15 @@ void TBus::Out(int Port, char Value)
 *##########################################################################*/
 char TBus::In(int Port)
 {
-	TBusArea *area;
-	int i;
+        TBusArea *area;
+        int i;
 
-	for (i = 0; i <= FHookIoMax; i++)
-	{
-		area = FHookIoArr[i];
-		if (area)
-			if (area->Base <= Port && area->Base + area->Size > Port)
-				return area->func->In(area->Num, Port - area->Base);
-	}
-	return 0xFF;
+        for (i = 0; i <= FHookIoMax; i++)
+        {
+                area = FHookIoArr[i];
+                if (area)
+                        if (area->Base <= Port && area->Base + area->Size > Port)
+                                return area->func->In(area->Num, Port - area->Base);
+        }
+        return 0xFF;
 }
