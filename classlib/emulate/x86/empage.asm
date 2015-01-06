@@ -41,86 +41,90 @@ include \rdos\classlib\emulate\x86\emseg.inc
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   FlushTlb
+;               NAME:           FlushTlb
 ;
 ;               description:    Flush TLB register
 ;
-;               PARAMETERS:             EBP             CPU
+;               PARAMETERS:     EBP             CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
         public FlushTlb
 
 FlushTlb        Proc near
-        push ecx
-        push edi
+    push ecx
+    push edi
 ;
-        mov ecx,32
-        lea edi,[ebp].reg_tlb.tlb
-        mov [ebp].reg_tlb.tlb_lru,0
-        mov [ebp].reg_tlb.tlb_lmask,1
-        mov [ebp].reg_tlb.tlb_lptr,edi
+    mov ecx,32
+    lea edi,[ebp].reg_tlb.tlb
+    mov [ebp].reg_tlb.tlb_lru,0
+    mov [ebp].reg_tlb.tlb_lmask,1
+    mov [ebp].reg_tlb.tlb_lptr,edi
 FlushTlbLoop:
-        mov [edi].t_tag,-1
-        add edi,SIZE tlb_entry_struc
-        loop FlushTlbLoop
+    mov [edi].t_tag,-1
+    add edi,SIZE tlb_entry_struc
+    loop FlushTlbLoop
 ;
-        pop edi
-        pop ecx
-        ret
+    pop edi
+    pop ecx
+    ret
 FlushTlb        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   SearchTlb
+;               NAME:           SearchTlb32
 ;
 ;               description:    search TLB for a physical address
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX                     LINEAR ADDRESS
+;               PARAMETERS:     EBP             CPU
+;                               EBX             LINEAR ADDRESS
 ;
-;               RETURNS:                NC                      OK
-;                                                       EAX             PHYSICAL ADDRESS
+;               RETURNS:        NC              OK
+;                               EAX             PHYSICAL ADDRESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SearchTlb Proc near
+SearchTlb32 Proc near
+        push edi
         mov eax,ebx
         and ax,0F000h
         lea edi,[ebp].reg_tlb.tlb
         mov ecx,32
         mov edx,1
-SearchTlbLoop:
+SearchTlbLoop32:
         cmp eax,[edi].t_tag
-        je SearchEntryFound
+        je SearchEntryFound32
         add edi,SIZE tlb_entry_struc
         shl edx,1
-        loop SearchTlbLoop
+        loop SearchTlbLoop32
         stc
+        pop edi
         ret
 
-SearchEntryFound:
+SearchEntryFound32:
         mov eax,[edi].t_address
         or [ebp].reg_tlb.tlb_lru,edx
         clc
+        pop edi
         ret
-SearchTlb       Endp
+SearchTlb32       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   AllocateTlb
+;               NAME:           AllocateTlb
 ;
 ;               description:    Find a free entry in TLB
 ;
-;               PARAMETERS:             EBP             CPU
+;               PARAMETERS:     EBP             CPU
 ;
-;               RETURNS:                SI              ADDRESS OF ENTRY                        
+;               RETURNS:        ESI              ADDRESS OF ENTRY                        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateTlb     Proc near
+        push edi
         mov ecx,32
         lea esi,[ebp].reg_tlb.tlb
 AllocTlbFreeLoop:
@@ -159,6 +163,7 @@ AllocTlbStealSave:
         mov [ebp].reg_tlb.tlb_lmask,edx
 
 AllocTlbDone:
+        pop edi
         ret
 AllocateTlb     Endp
 
@@ -226,7 +231,7 @@ WritePhysical   Endp
 
 LinearToPhysical        Proc near
         push ebx
-        call SearchTlb
+        call SearchTlb32
         jnc LinearToPhysicalDone
 ;
         call AllocateTlb
@@ -341,7 +346,7 @@ LinearToPhysical        Endp
 
 CondLinearToPhysical    Proc near
         push ebx
-        call SearchTlb
+        call SearchTlb32
         jnc CondLinearToPhysicalDone
 ;
         call AllocateTlb
