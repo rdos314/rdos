@@ -204,7 +204,7 @@ public:
 
         short int DisAsmHandle;
         char OpcodeText[80];
-        unsigned long DataOffset;
+        unsigned long long DataOffset;
         unsigned long DataSelector;
         char DataValid;
         long TotalCycles;

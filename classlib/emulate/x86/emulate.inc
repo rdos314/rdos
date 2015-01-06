@@ -221,7 +221,7 @@ req_buf			DB 16 DUP(?)
 dis_sel			DW ?
 
 opcode_text		DB 80 DUP(?)
-data_offset		DD ?
+data_offset		DD ?,?
 data_sel		DD ?
 data_valid		DB ?
 

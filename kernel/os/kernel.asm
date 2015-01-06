@@ -603,6 +603,7 @@ init:
     mov ds:ram1_size,ebx
 
 init_no_bda:   
+    int 3
     mov ds:cpu_type,3
     mov ds:cpu_vendor,0
     mov ds:cpu_feature_flags,0
@@ -776,8 +777,6 @@ prot_init:
     mov di,800h
     xor al,al
     rep stosb
-;
-    int 3
 ;
     call init_pre_tasking
     call init_boot_system

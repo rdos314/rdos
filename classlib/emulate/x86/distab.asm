@@ -60,6 +60,16 @@ mem8d_32a       DD OFFSET mem8d_32a_tab
 mem16d_32a      DD OFFSET mem16d_32a_tab
 mem32d_32a      DD OFFSET mem32d_32a_tab
 
+        public long_mod_rm_tab
+
+long_mod_rm_tab:
+mem64_8d_32a       DD OFFSET mem64_8d_32a_tab
+mem64_16d_32a      DD OFFSET mem64_16d_32a_tab
+mem64_32d_32a      DD OFFSET mem64_32d_32a_tab
+mem64_8d_64a       DD OFFSET mem64_8d_64a_tab
+mem64_16d_64a      DD OFFSET mem64_16d_64a_tab
+mem64_32d_64a      DD OFFSET mem64_32d_64a_tab
+
         public reg_tab
 
 reg_tab:
@@ -68,10 +78,20 @@ reg16d  DD OFFSET mod16d_16a_rm11000
 reg32d  DD OFFSET mod32d_16a_rm11000
 
 
+    public long_reg_tab
+
+long_reg_tab:
+lreg8   DD OFFSET mod64_8d_32a_rm110000
+lreg16  DD OFFSET mod64_16d_32a_rm110000
+lreg32  DD OFFSET mod64_32d_32a_rm110000
+lreg64  DD OFFSET mod64_32d_64a_rm110000
+
         public mem_sib0_tab
+        public long_mem_sib0_tab
 
         public sib_scale_tab
         public sib_index_tab
+        public long_sib_index_tab
 
 blank_sep                       EQU 0
 komma_sep                       EQU 1000h
@@ -114,9 +134,11 @@ sep_tab:
 
         public txt_16
         public txt_32
+        public txt_64
         public b_txt
         public w_txt
         public d_txt
+        public q_txt
 
         public ax_txt
         public eax_txt
@@ -134,6 +156,36 @@ sep_tab:
         public esi_txt
         public di_txt
         public edi_txt
+
+        public rax_txt
+        public rbx_txt
+        public rcx_txt
+        public rdx_txt
+        public rsi_txt
+        public rdi_txt
+        public rsp_txt
+        public rbp_txt
+
+        public r8_txt
+        public r9_txt
+        public r10_txt
+        public r11_txt
+        public r12_txt
+        public r13_txt
+        public r14_txt
+        public r15_txt
+
+        public r8d_txt
+        public r9d_txt
+        public r10d_txt
+        public r11d_txt
+        public r12d_txt
+        public r13d_txt
+        public r14d_txt
+        public r15d_txt
+
+        public uscore_txt
+        public noseg_txt
 
         public cs_txt
         public ds_txt
@@ -160,13 +212,16 @@ txt_C                           DB 'C',0
 txt_D                           DB 'D',0
 txt_E                           DB 'E',0
 txt_F                           DB 'F',0
+noseg_txt                       DB 0
 txt_noth                        DB 0
+uscore_txt                      DB '_',0
 star1                           DB '*1',0
 star2                           DB '*2',0
 star4                           DB '*4',0
 star8                           DB '*8',0
 txt_16                          DB '16',0
 txt_32                          DB '32',0
+txt_64                          DB '64',0
 aaa_txt                         DB 'aaa',0
 aad_txt                         DB 'aad',0
 aam_txt                         DB 'aam',0
@@ -203,6 +258,7 @@ clts_txt                        DB 'clts',0
 cmc_txt                         DB 'cmc',0
 cmp_txt                         DB 'cmp',0
 cmps_txt                        DB 'cmps',0
+cpuid_txt                       DB 'cpuid',0
 cr_txt                          DB 'cr',0
 cs_txt                          DB 'cs',0
 cwd_txt                         DB 'cwd',0
@@ -228,6 +284,7 @@ edi_txt                         DB 'edi',0
 edx_txt                         DB 'edx',0
 enter_txt                       DB 'enter',0
 es_txt                          DB 'es',0
+eip_txt                         DB 'eip',0
 esi_txt                         DB 'esi',0
 esp_txt                         DB 'esp',0
 f2xm1_txt                       DB 'f2xm1',0
@@ -368,10 +425,54 @@ ptr_txt                         DB 'ptr',0
 push_txt                        DB 'push',0
 pusha_txt                       DB 'pusha',0
 pushf_txt                       DB 'pushf',0
+q_txt                           DB 'q',0
 qword_txt                       DB 'qword',0
 qword_ptr_txt           DB 'qword ptr',0
+r10_txt                         DB 'r10',0
+r10d_txt                        DB 'r10d',0
+r10l_txt                        DB 'r10l',0
+r10w_txt                        DB 'r10w',0
+r11_txt                         DB 'r11',0
+r11d_txt                        DB 'r11d',0
+r11l_txt                        DB 'r11l',0
+r11w_txt                        DB 'r11w',0
+r12_txt                         DB 'r12',0
+r12d_txt                        DB 'r12d',0
+r12l_txt                        DB 'r12l',0
+r12w_txt                        DB 'r12w',0
+r13_txt                         DB 'r13',0
+r13d_txt                        DB 'r13d',0
+r13l_txt                        DB 'r13l',0
+r13w_txt                        DB 'r13w',0
+r14_txt                         DB 'r14',0
+r14d_txt                        DB 'r14d',0
+r14l_txt                        DB 'r14l',0
+r14w_txt                        DB 'r14w',0
+r15_txt                         DB 'r15',0
+r15d_txt                        DB 'r15d',0
+r15l_txt                        DB 'r15l',0
+r15w_txt                        DB 'r15w',0
+r8_txt                          DB 'r8',0
+r8d_txt                         DB 'r8d',0
+r8l_txt                         DB 'r8l',0
+r8w_txt                         DB 'r8w',0
+r9_txt                          DB 'r9',0
+r9d_txt                         DB 'r9d',0
+r9l_txt                         DB 'r9l',0
+r9w_txt                         DB 'r9w',0
+rip_txt                         DB 'rip',0
+rax_txt                         DB 'rax',0
+rbp_txt                         DB 'rbp',0
+rbx_txt                         DB 'rbx',0
+rcx_txt                         DB 'rcx',0
+rdi_txt                         DB 'rdi',0
+rdx_txt                         DB 'rdx',0
+rsi_txt                         DB 'rsi',0
+rsp_txt                         DB 'rsp',0
 rcl_txt                         DB 'rcl',0
 rcr_txt                         DB 'rcr',0
+rdmsr_txt                       DB 'rdmsr',0
+rdtsc_txt                       DB 'rdtsc',0
 repnz_txt                       DB 'repnz',0
 repz_txt                        DB 'repz',0
 retf_txt                        DB 'retf',0
@@ -416,6 +517,7 @@ sti_txt                         DB 'sti',0
 stos_txt                        DB 'stos',0
 str_txt                         DB 'str',0
 sub_txt                         DB 'sub',0
+syscall_txt                     DB 'syscall',0
 tbyte_txt                       DB 'tbyte',0
 tbyte_ptr_txt           DB 'tbyte ptr',0
 test_txt                        DB 'test',0
@@ -426,6 +528,7 @@ w_txt                           DB 'w',0
 wait_txt                        DB 'wait',0
 word_txt                        DB 'word',0
 word_ptr_txt            DB 'word ptr',0
+wrmsr_txt                       DB 'wrmsr',0
 xchg_txt                        DB 'xchg',0
 xlat_txt                        DB 'xlat',0
 xor_txt                         DB 'xor',0
@@ -461,7 +564,6 @@ op_cdt_tab                      EQU 0FF7h
         extrn op_address_size:near
         extrn op_wait:near
         extrn op_one:near
-        extrn op_one2:near      
         extrn op_byte:near
         extrn op_word:near
         extrn op_word16:near
@@ -492,7 +594,9 @@ op_cdt_tab                      EQU 0FF7h
         extrn mem_im16:near
         extrn mem_im32:near
         extrn mem_sib:near
+        extrn long_mem_sib:near
 
+        extrn override_rex:near
         extrn override_cs:near
         extrn override_ds:near
         extrn override_ss:near
@@ -501,6 +605,8 @@ op_cdt_tab                      EQU 0FF7h
         extrn override_gs:near
         extrn op_rep:near
 
+        extrn op_lodsb:near
+        extrn op_lodsw:near
         extrn op_string1b:near
         extrn op_string1w:near
         extrn op_string2b:near
@@ -2820,42 +2926,42 @@ opmrC038:
 
 ;
 opmrC100:
-                        DD OFFSET opmr_mem_im8
+                        DD OFFSET opmr_mem_im16
                         DD OFFSET rol_txt - OFFSET mne_tab + blank_sep
                         DD OFFSET word_ptr_txt - OFFSET mne_tab + blank_sep
                         DD null_tab + blank_sep
                         DD 0FFFFFFFFh
 
 opmrC108:
-                        DD OFFSET opmr_mem_im8
+                        DD OFFSET opmr_mem_im16
                         DD OFFSET ror_txt - OFFSET mne_tab + blank_sep
                         DD OFFSET word_ptr_txt - OFFSET mne_tab + blank_sep
                         DD null_tab + blank_sep
                         DD 0FFFFFFFFh
 
 opmrC110:
-                        DD OFFSET opmr_mem_im8
+                        DD OFFSET opmr_mem_im16
                         DD OFFSET rcl_txt - OFFSET mne_tab + blank_sep
                         DD OFFSET word_ptr_txt - OFFSET mne_tab + blank_sep
                         DD null_tab + blank_sep
                         DD 0FFFFFFFFh
 
 opmrC118:
-                        DD OFFSET opmr_mem_im8
+                        DD OFFSET opmr_mem_im16
                         DD OFFSET rcr_txt - OFFSET mne_tab + blank_sep
                         DD OFFSET word_ptr_txt - OFFSET mne_tab + blank_sep
                         DD null_tab + blank_sep
                         DD 0FFFFFFFFh
 
 opmrC120:
-                        DD OFFSET opmr_mem_im8
+                        DD OFFSET opmr_mem_im16
                         DD OFFSET shl_txt - OFFSET mne_tab + blank_sep
                         DD OFFSET word_ptr_txt - OFFSET mne_tab + blank_sep
                         DD null_tab + blank_sep
                         DD 0FFFFFFFFh
 
 opmrC128:
-                        DD OFFSET opmr_mem_im8
+                        DD OFFSET opmr_mem_im16
                         DD OFFSET shr_txt - OFFSET mne_tab + blank_sep
                         DD OFFSET word_ptr_txt - OFFSET mne_tab + blank_sep
                         DD null_tab + blank_sep
@@ -2869,7 +2975,7 @@ opmrC130:
                         DD 0FFFFFFFFh
 
 opmrC138:
-                        DD OFFSET opmr_mem_im8
+                        DD OFFSET opmr_mem_im16
                         DD OFFSET sar_txt - OFFSET mne_tab + blank_sep
                         DD OFFSET word_ptr_txt - OFFSET mne_tab + blank_sep
                         DD null_tab + blank_sep
@@ -3840,8 +3946,8 @@ oppr0F04:
                         DD 0FFFFFFFFh
 
 oppr0F05:
-                        DD OFFSET op_illegal
-                        DD 0FFFFFFFFh
+                        DD OFFSET op_one
+                        DD OFFSET syscall_txt - OFFSET mne_tab + blank_sep
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
@@ -4141,22 +4247,22 @@ oppr0F2F:
                         DD 0FFFFFFFFh
 
 oppr0F30:
-                        DD OFFSET op_illegal
-                        DD 0FFFFFFFFh
+                        DD OFFSET op_one
+                        DD OFFSET wrmsr_txt - OFFSET mne_tab + blank_sep
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
 
 oppr0F31:
-                        DD OFFSET op_illegal
-                        DD 0FFFFFFFFh
+                        DD OFFSET op_one
+                        DD OFFSET rdtsc_txt - OFFSET mne_tab + blank_sep
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
 
 oppr0F32:
-                        DD OFFSET op_illegal
-                        DD 0FFFFFFFFh
+                        DD OFFSET op_one
+                        DD OFFSET rdmsr_txt - OFFSET mne_tab + blank_sep
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
@@ -4925,22 +5031,22 @@ oppr0F9F:
                         DD 0FFFFFFFFh
 
 oppr0FA0:
-                        DD OFFSET op_one2
+                        DD OFFSET op_one
                         DD OFFSET push_txt - OFFSET mne_tab + blank_sep
                         DD OFFSET fs_txt - OFFSET mne_tab + blank_sep
-                        DD null_tab                     
+                        DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
 
 oppr0FA1:
-                        DD OFFSET op_one2
+                        DD OFFSET op_one
                         DD OFFSET pop_txt - OFFSET mne_tab + blank_sep
                         DD OFFSET fs_txt - OFFSET mne_tab + blank_sep
-                        DD null_tab                     
+                        DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
 
 oppr0FA2:
-                        DD OFFSET op_illegal
-                        DD 0FFFFFFFFh
+                        DD OFFSET op_one
+                        DD OFFSET cpuid_txt - OFFSET mne_tab + blank_sep
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
@@ -4981,18 +5087,17 @@ oppr0FA7:
                         DD 0FFFFFFFFh
 
 oppr0FA8:
-                        DD OFFSET op_one2
+                        DD OFFSET op_one
                         DD OFFSET push_txt - OFFSET mne_tab + blank_sep
                         DD OFFSET gs_txt - OFFSET mne_tab + blank_sep
-                        DD null_tab                     
+                        DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
 
 oppr0FA9:
-;                       DD OFFSET op_one
-                        DD OFFSET op_one2
+                        DD OFFSET op_one
                         DD OFFSET pop_txt - OFFSET mne_tab + blank_sep
                         DD OFFSET gs_txt - OFFSET mne_tab + blank_sep
-                        DD null_tab                     
+                        DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
 
 oppr0FAA:
@@ -6851,14 +6956,14 @@ opAB:
                         DD 0FFFFFFFFh
 
 opAC:
-                        DD OFFSET op_string1b
+                        DD OFFSET op_lodsb
                         DD OFFSET lods_txt - OFFSET mne_tab + no_sep
                         DD null_tab + no_sep
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
 
 opAD:
-                        DD OFFSET op_string1w
+                        DD OFFSET op_lodsw
                         DD OFFSET lods_txt - OFFSET mne_tab + no_sep
                         DD null_tab + no_sep
                         DD 0FFFFFFFFh
@@ -7334,9 +7439,9 @@ opEF:
                         DD 0FFFFFFFFh
 
 opF0:
-                        DD OFFSET op_one
+                        DD OFFSET op_rep
                         DD OFFSET lock_txt - OFFSET mne_tab + blank_sep
-                        DD 0FFFFFFFFh
+                        DD null_tab + blank_sep
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
 
@@ -7445,115 +7550,1851 @@ opFF:
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
 
-                public  cr_tab
-                
-;Control register format
+;;;;;;;;;;;;;;;;;;;;;;
+; LONG MAIN_OP_TAB
+;;;;;;;;;;;;;;;;;;;;;;
 
-cr_tab:
+        public long_main_tab
 
-cr0r:
-                        DD OFFSET op_one
-                        DD OFFSET cr_txt - OFFSET mne_tab + no_sep
-                        DD OFFSET txt_0 - OFFSET mne_tab 
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-cr1r:
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-cr2r:
-                        DD OFFSET op_one
-                        DD OFFSET cr_txt - OFFSET mne_tab + no_sep
-                        DD OFFSET txt_2 - OFFSET mne_tab 
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-cr3r:
-                        DD OFFSET op_one
-                        DD OFFSET cr_txt - OFFSET mne_tab + no_sep
-                        DD OFFSET txt_3 - OFFSET mne_tab 
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-cr4r:
-                        DD OFFSET op_one
-                        DD OFFSET cr_txt - OFFSET mne_tab + no_sep
-                        DD OFFSET txt_4 - OFFSET mne_tab 
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-cr5r:
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-cr6r:
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-cr7r:
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
+long_main_tab:
+
+lop00:
+                        DD OFFSET op_mem_reg_byte
+                        DD OFFSET add_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
 
-                public  dr_tab
-                
-;Debug register format
 
-dr_tab:
+lop01:
+                        DD OFFSET op_mem_reg_word
+                        DD OFFSET add_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
 
-dr0r:
+
+lop02:
+                        DD OFFSET op_reg_mem_byte
+                        DD OFFSET add_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop03:
+                        DD OFFSET op_reg_mem_word
+                        DD OFFSET add_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop04:
+                        DD OFFSET op_byte
+                        DD OFFSET add_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop05:
+                        DD OFFSET op_word
+                        DD OFFSET add_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop06:
                         DD OFFSET op_one
-                        DD OFFSET dr_txt - OFFSET mne_tab + no_sep
-                        DD OFFSET txt_0 - OFFSET mne_tab 
+                        DD OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET es_txt - OFFSET mne_tab + blank_sep
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
-dr1r:
+
+lop07:
                         DD OFFSET op_one
-                        DD OFFSET dr_txt - OFFSET mne_tab + no_sep
-                        DD OFFSET txt_1 - OFFSET mne_tab 
+                        DD OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET es_txt - OFFSET mne_tab + blank_sep
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
-dr2r:
+
+lop08:
+                        DD OFFSET op_mem_reg_byte
+                        DD OFFSET or_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop09:
+                        DD OFFSET op_mem_reg_word
+                        DD OFFSET or_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop0A:
+                        DD OFFSET op_reg_mem_byte
+                        DD OFFSET or_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop0B:
+                        DD OFFSET op_reg_mem_word
+                        DD OFFSET or_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop0C:
+                        DD OFFSET op_byte
+                        DD OFFSET or_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop0D:
+                        DD OFFSET op_word
+                        DD OFFSET or_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop0E:
                         DD OFFSET op_one
-                        DD OFFSET dr_txt - OFFSET mne_tab + no_sep
-                        DD OFFSET txt_2 - OFFSET mne_tab 
+                        DD OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET cs_txt - OFFSET mne_tab + blank_sep
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
-dr3r:
+
+lop0F:
+                        DD OFFSET oppr0F00
+                        DD op_protect_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop10:
+                        DD OFFSET op_mem_reg_byte
+                        DD OFFSET adc_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop11:
+                        DD OFFSET op_mem_reg_word
+                        DD OFFSET adc_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop12:
+                        DD OFFSET op_reg_mem_byte
+                        DD OFFSET adc_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop13:
+                        DD OFFSET op_reg_mem_word
+                        DD OFFSET adc_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop14:
+                        DD OFFSET op_byte
+                        DD OFFSET adc_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop15:
+                        DD OFFSET op_word
+                        DD OFFSET adc_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop16:
                         DD OFFSET op_one
-                        DD OFFSET dr_txt - OFFSET mne_tab + no_sep
-                        DD OFFSET txt_3 - OFFSET mne_tab 
+                        DD OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET ss_txt - OFFSET mne_tab + blank_sep
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
-dr4r:
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-dr5r:
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-                        DD 0FFFFFFFFh
-dr6r:
+
+lop17:
                         DD OFFSET op_one
-                        DD OFFSET dr_txt - OFFSET mne_tab + no_sep
-                        DD OFFSET txt_6 - OFFSET mne_tab 
+                        DD OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET ss_txt - OFFSET mne_tab + blank_sep
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
-dr7r:
+
+lop18:
+                        DD OFFSET op_mem_reg_byte
+                        DD OFFSET sbb_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop19:
+                        DD OFFSET op_mem_reg_word
+                        DD OFFSET sbb_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop1A:
+                        DD OFFSET op_reg_mem_byte
+                        DD OFFSET sbb_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop1B:
+                        DD OFFSET op_reg_mem_word
+                        DD OFFSET sbb_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop1C:
+                        DD OFFSET op_byte
+                        DD OFFSET sbb_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop1D:
+                        DD OFFSET op_word
+                        DD OFFSET sbb_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop1E:
                         DD OFFSET op_one
-                        DD OFFSET dr_txt - OFFSET mne_tab + no_sep
-                        DD OFFSET txt_7 - OFFSET mne_tab 
+                        DD OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET ds_txt - OFFSET mne_tab + blank_sep
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
+
+lop1F:
+                        DD OFFSET op_one
+                        DD OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET ds_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop20:
+                        DD OFFSET op_mem_reg_byte
+                        DD OFFSET and_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop21:
+                        DD OFFSET op_mem_reg_word
+                        DD OFFSET and_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop22:
+                        DD OFFSET op_reg_mem_byte
+                        DD OFFSET and_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop23:
+                        DD OFFSET op_reg_mem_word
+                        DD OFFSET and_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop24:
+                        DD OFFSET op_byte
+                        DD OFFSET and_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop25:
+                        DD OFFSET op_word
+                        DD OFFSET and_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop26:
+                        DD OFFSET op_illegal
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop27:
+                        DD OFFSET op_one
+                        DD OFFSET daa_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop28:
+                        DD OFFSET op_mem_reg_byte
+                        DD OFFSET sub_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop29:
+                        DD OFFSET op_mem_reg_word
+                        DD OFFSET sub_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop2A:
+                        DD OFFSET op_reg_mem_byte
+                        DD OFFSET sub_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop2B:
+                        DD OFFSET op_reg_mem_word
+                        DD OFFSET sub_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop2C:
+                        DD OFFSET op_byte
+                        DD OFFSET sub_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop2D:
+                        DD OFFSET op_word
+                        DD OFFSET sub_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop2E:
+                        DD OFFSET op_illegal
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop2F:
+                        DD OFFSET op_one
+                        DD OFFSET das_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop30:
+                        DD OFFSET op_mem_reg_byte
+                        DD OFFSET xor_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop31:
+                        DD OFFSET op_mem_reg_word
+                        DD OFFSET xor_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop32:
+                        DD OFFSET op_reg_mem_byte
+                        DD OFFSET xor_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop33:
+                        DD OFFSET op_reg_mem_word
+                        DD OFFSET xor_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop34:
+                        DD OFFSET op_byte
+                        DD OFFSET xor_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop35:
+                        DD OFFSET op_word
+                        DD OFFSET xor_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop36:
+                        DD OFFSET op_illegal
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop37:
+                        DD OFFSET op_one
+                        DD OFFSET aaa_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop38:
+                        DD OFFSET op_mem_reg_byte
+                        DD OFFSET cmp_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop39:
+                        DD OFFSET op_mem_reg_word
+                        DD OFFSET cmp_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop3A:
+                        DD OFFSET op_reg_mem_byte
+                        DD OFFSET cmp_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop3B:
+                        DD OFFSET op_reg_mem_word
+                        DD OFFSET cmp_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop3C:
+                        DD OFFSET op_byte
+                        DD OFFSET cmp_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop3D:
+                        DD OFFSET op_word
+                        DD OFFSET cmp_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop3E:
+                        DD OFFSET op_illegal
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop3F:
+                        DD OFFSET op_one
+                        DD OFFSET aas_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop40:
+                        DD OFFSET override_rex
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop41:
+                        DD OFFSET override_rex
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop42:
+                        DD OFFSET override_rex
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop43:
+                        DD OFFSET override_rex
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop44:
+                        DD OFFSET override_rex
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop45:
+                        DD OFFSET override_rex
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop46:
+                        DD OFFSET override_rex
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop47:
+                        DD OFFSET override_rex
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop48:
+                        DD OFFSET override_rex
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop49:
+                        DD OFFSET override_rex
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop4A:
+                        DD OFFSET override_rex
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop4B:
+                        DD OFFSET override_rex
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop4C:
+                        DD OFFSET override_rex
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop4D:
+                        DD OFFSET override_rex
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop4E:
+                        DD OFFSET override_rex
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop4F:
+                        DD OFFSET override_rex
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop50:
+                        DD OFFSET op_one
+                        DD OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop51:
+                        DD OFFSET op_one
+                        DD OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DD cx_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop52:
+                        DD OFFSET op_one
+                        DD OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DD dx_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop53:
+                        DD OFFSET op_one
+                        DD OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DD bx_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop54:
+                        DD OFFSET op_one
+                        DD OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DD sp_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop55:
+                        DD OFFSET op_one
+                        DD OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DD bp_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop56:
+                        DD OFFSET op_one
+                        DD OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DD si_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop57:
+                        DD OFFSET op_one
+                        DD OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DD di_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop58:
+                        DD OFFSET op_one
+                        DD OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop59:
+                        DD OFFSET op_one
+                        DD OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DD cx_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop5A:
+                        DD OFFSET op_one
+                        DD OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DD dx_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop5B:
+                        DD OFFSET op_one
+                        DD OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DD bx_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop5C:
+                        DD OFFSET op_one
+                        DD OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DD sp_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop5D:
+                        DD OFFSET op_one
+                        DD OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DD bp_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop5E:
+                        DD OFFSET op_one
+                        DD OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DD si_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop5F:
+                        DD OFFSET op_one
+                        DD OFFSET pop_txt - OFFSET mne_tab + blank_sep
+                        DD di_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop60:
+                        DD OFFSET op_one
+                        DD OFFSET pusha_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop61:
+                        DD OFFSET op_one
+                        DD OFFSET popa_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop62:
+                        DD OFFSET op_reg_mem_word
+                        DD OFFSET bound_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop63:
+                        DD OFFSET op_reg_mem_word
+                        DD OFFSET arpl_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop64:
+                        DD OFFSET override_fs
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop65:
+                        DD OFFSET override_gs
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop66:
+                        DD OFFSET op_data_size
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop67:
+                        DD OFFSET op_address_size
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop68:
+                        DD OFFSET op_word
+                        DD OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop69:
+                        DD OFFSET opmr6900
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop6A:
+                        DD OFFSET op_byte
+                        DD OFFSET push_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop6B:
+                        DD OFFSET opmr6B00
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop6C:
+                        DD OFFSET op_string1b
+                        DD OFFSET ins_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop6D:
+                        DD OFFSET op_string1w
+                        DD OFFSET ins_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop6E:
+                        DD OFFSET op_string1b
+                        DD OFFSET outs_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop6F:
+                        DD OFFSET op_string1w
+                        DD OFFSET outs_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop70:
+                        DD OFFSET op_short
+                        DD OFFSET jo_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop71:
+                        DD OFFSET op_short
+                        DD OFFSET jno_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop72:
+                        DD OFFSET op_short
+                        DD OFFSET jb_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop73:
+                        DD OFFSET op_short
+                        DD OFFSET jnb_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop74:
+                        DD OFFSET op_short
+                        DD OFFSET jz_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop75:
+                        DD OFFSET op_short
+                        DD OFFSET jnz_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop76:
+                        DD OFFSET op_short
+                        DD OFFSET jbe_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop77:
+                        DD OFFSET op_short
+                        DD OFFSET ja_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop78:
+                        DD OFFSET op_short
+                        DD OFFSET js_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop79:
+                        DD OFFSET op_short
+                        DD OFFSET jns_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop7A:
+                        DD OFFSET op_short
+                        DD OFFSET jpe_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop7B:
+                        DD OFFSET op_short
+                        DD OFFSET jpo_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop7C:
+                        DD OFFSET op_short
+                        DD OFFSET jl_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop7D:
+                        DD OFFSET op_short
+                        DD OFFSET jge_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop7E:
+                        DD OFFSET op_short
+                        DD OFFSET jle_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop7F:
+                        DD OFFSET op_short
+                        DD OFFSET jg_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop80:
+                        DD OFFSET opmr8000
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop81:
+                        DD OFFSET opmr8100
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop82:
+                        DD OFFSET opmr8200
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop83:
+                        DD OFFSET opmr8300
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop84:
+                        DD OFFSET op_mem_reg_byte
+                        DD OFFSET test_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop85:
+                        DD OFFSET op_mem_reg_word
+                        DD OFFSET test_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop86:
+                        DD OFFSET op_reg_mem_byte
+                        DD OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop87:
+                        DD OFFSET op_reg_mem_word
+                        DD OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop88:
+                        DD OFFSET op_mem_reg_byte
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop89:
+                        DD OFFSET op_mem_reg_word
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop8A:
+                        DD OFFSET op_reg_mem_byte
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop8B:
+                        DD OFFSET op_reg_mem_word
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop8C:
+                        DD OFFSET opmr8C00
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop8D:
+                        DD OFFSET op_reg_mem_word
+                        DD OFFSET lea_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop8E:
+                        DD OFFSET opmr8E00
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop8F:
+                        DD OFFSET opmr8F00
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop90:
+                        DD OFFSET op_one
+                        DD OFFSET nop_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop91:
+                        DD OFFSET op_one
+                        DD OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD cx_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop92:
+                        DD OFFSET op_one
+                        DD OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD dx_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop93:
+                        DD OFFSET op_one
+                        DD OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD bx_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop94:
+                        DD OFFSET op_one
+                        DD OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD sp_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop95:
+                        DD OFFSET op_one
+                        DD OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD bp_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop96:
+                        DD OFFSET op_one
+                        DD OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD si_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop97:
+                        DD OFFSET op_one
+                        DD OFFSET xchg_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD di_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lop98:
+                        DD OFFSET op_one
+                        DD OFFSET cbw_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop99:
+                        DD OFFSET op_one
+                        DD OFFSET cwd_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop9A:
+                        DD OFFSET op_far
+                        DD OFFSET call_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lop9B:
+                        DD OFFSET op_wait
+                        DD OFFSET wait_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop9C:
+                        DD OFFSET op_one
+                        DD OFFSET pushf_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop9D:
+                        DD OFFSET op_one
+                        DD OFFSET popf_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop9E:
+                        DD OFFSET op_one
+                        DD OFFSET sahf_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lop9F:
+                        DD OFFSET op_one
+                        DD OFFSET lahf_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopA0:
+                        DD OFFSET op_word_mem
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DD OFFSET ds_txt - OFFSET mne_tab + kolon_par_sep
+                        DD null_tab + rhak_sep
+
+lopA1:
+                        DD OFFSET op_word_mem
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET ax_txt - OFFSET mne_tab + komma_sep
+                        DD OFFSET ds_txt - OFFSET mne_tab + kolon_par_sep
+                        DD null_tab + rhak_sep
+
+lopA2:
+                        DD OFFSET op_word_mem
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET ds_txt - OFFSET mne_tab + kolon_par_sep
+                        DD null_tab + par_komma_sep
+                        DD OFFSET al_txt - OFFSET mne_tab + blank_sep
+
+lopA3:
+                        DD OFFSET op_word_mem
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET ds_txt - OFFSET mne_tab + kolon_par_sep
+                        DD null_tab + par_komma_sep
+                        DD OFFSET ax_txt - OFFSET mne_tab + blank_sep
+
+lopA4:
+                        DD OFFSET op_string2b
+                        DD OFFSET movs_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopA5:
+                        DD OFFSET op_string2w
+                        DD OFFSET movs_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopA6:
+                        DD OFFSET op_string2b
+                        DD OFFSET cmps_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopA7:
+                        DD OFFSET op_string2w
+                        DD OFFSET cmps_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopA8:
+                        DD OFFSET op_byte
+                        DD OFFSET test_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopA9:
+                        DD OFFSET op_word
+                        DD OFFSET test_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopAA:
+                        DD OFFSET op_string1b
+                        DD OFFSET stos_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopAB:
+                        DD OFFSET op_string1w
+                        DD OFFSET stos_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopAC:
+                        DD OFFSET op_lodsb
+                        DD OFFSET lods_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopAD:
+                        DD OFFSET op_lodsw
+                        DD OFFSET lods_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopAE:
+                        DD OFFSET op_string1b
+                        DD OFFSET scas_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopAF:
+                        DD OFFSET op_string1w
+                        DD OFFSET scas_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopB0:
+                        DD OFFSET op_byte
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopB1:
+                        DD OFFSET op_byte
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET cl_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopB2:
+                        DD OFFSET op_byte
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET dl_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopB3:
+                        DD OFFSET op_byte
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET bl_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopB4:
+                        DD OFFSET op_byte
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET ah_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopB5:
+                        DD OFFSET op_byte
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET ch_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopB6:
+                        DD OFFSET op_byte
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET dh_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopB7:
+                        DD OFFSET op_byte
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET bh_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopB8:
+                        DD OFFSET op_word
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopB9:
+                        DD OFFSET op_word
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD cx_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopBA:
+                        DD OFFSET op_word
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD dx_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopBB:
+                        DD OFFSET op_word
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD bx_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopBC:
+                        DD OFFSET op_word
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD sp_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopBD:
+                        DD OFFSET op_word
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD bp_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopBE:
+                        DD OFFSET op_word
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD si_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopBF:
+                        DD OFFSET op_word
+                        DD OFFSET mov_txt - OFFSET mne_tab + blank_sep
+                        DD di_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopC0:
+                        DD OFFSET opmrC000
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopC1:
+                        DD OFFSET opmrC100
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopC2:
+                        DD OFFSET op_word16
+                        DD OFFSET retn_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopC3:
+                        DD OFFSET op_add_opsize
+                        DD OFFSET retn_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopC4:
+                        DD OFFSET op_reg_mem_word
+                        DD OFFSET les_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopC5:
+                        DD OFFSET op_reg_mem_word
+                        DD OFFSET lds_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopC6:
+                        DD OFFSET opmrC600
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopC7:
+                        DD OFFSET opmrC700
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopC8:
+                        DD OFFSET op_enter
+                        DD OFFSET enter_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lopC9:
+                        DD OFFSET op_one
+                        DD OFFSET leave_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopCA:
+                        DD OFFSET op_word16
+                        DD OFFSET retf_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopCB:
+                        DD OFFSET op_add_opsize
+                        DD OFFSET retf_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopCC:
+                        DD OFFSET op_one
+                        DD OFFSET int_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET txt_3 - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopCD:
+                        DD OFFSET op_byte
+                        DD OFFSET int_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopCE:
+                        DD OFFSET op_one
+                        DD OFFSET into_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopCF:
+                        DD OFFSET op_add_opsize
+                        DD OFFSET iret_txt - OFFSET mne_tab + no_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopD0:
+                        DD OFFSET opmrD000
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopD1:
+                        DD OFFSET opmrD100
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopD2:
+                        DD OFFSET opmrD200
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopD3:
+                        DD OFFSET opmrD300
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopD4:
+                        DD OFFSET op_byte
+                        DD OFFSET aam_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopD5:
+                        DD OFFSET op_byte
+                        DD OFFSET aad_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopD6:
+                        DD OFFSET op_illegal
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopD7:
+                        DD OFFSET op_one
+                        DD OFFSET xlat_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopD8:
+                        DD OFFSET opmrD800
+                        DD op_math_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopD9:
+                        DD OFFSET opmrD900
+                        DD op_math_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopDA:
+                        DD OFFSET opmrDA00
+                        DD op_math_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopDB:
+                        DD OFFSET opmrDB00
+                        DD op_math_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopDC:
+                        DD OFFSET opmrDC00
+                        DD op_math_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopDD:
+                        DD OFFSET opmrDD00
+                        DD op_math_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopDE:
+                        DD OFFSET opmrDE00
+                        DD op_math_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopDF:
+                        DD OFFSET opmrDF00
+                        DD op_math_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopE0:
+                        DD OFFSET op_short
+                        DD OFFSET loopnz_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lopE1:
+                        DD OFFSET op_short
+                        DD OFFSET loopz_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lopE2:
+                        DD OFFSET op_short
+                        DD OFFSET loop_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lopE3:
+                        DD OFFSET op_short
+                        DD OFFSET jcxz_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lopE4:
+                        DD OFFSET op_byte
+                        DD OFFSET in_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopE5:
+                        DD OFFSET op_byte
+                        DD OFFSET in_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopE6:
+                        DD OFFSET op_byte
+                        DD OFFSET out_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + komma_sep
+                        DD OFFSET al_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopE7:
+                        DD OFFSET op_byte
+                        DD OFFSET out_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + komma_sep
+                        DD ax_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopE8:
+                        DD OFFSET op_near
+                        DD OFFSET call_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopE9:
+                        DD OFFSET op_near
+                        DD OFFSET jmp_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopEA:
+                        DD OFFSET op_far
+                        DD OFFSET jmp_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lopEB:
+                        DD OFFSET op_short
+                        DD OFFSET jmp_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+lopEC:
+                        DD OFFSET op_one
+                        DD OFFSET in_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET al_txt - OFFSET mne_tab + komma_sep
+                        DD OFFSET dx_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopED:
+                        DD OFFSET op_one
+                        DD OFFSET in_txt - OFFSET mne_tab + blank_sep
+                        DD ax_tab + komma_sep
+                        DD OFFSET dx_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopEE:
+                        DD OFFSET op_one
+                        DD OFFSET out_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET dx_txt - OFFSET mne_tab + komma_sep
+                        DD OFFSET al_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopEF:
+                        DD OFFSET op_one
+                        DD OFFSET out_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET dx_txt - OFFSET mne_tab + komma_sep
+                        DD ax_tab + blank_sep
+                        DD 0FFFFFFFFh
+
+lopF0:
+                        DD OFFSET op_rep
+                        DD OFFSET lock_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopF1:
+                        DD OFFSET op_illegal
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopF2:
+                        DD OFFSET op_rep
+                        DD OFFSET repnz_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopF3:
+                        DD OFFSET op_rep
+                        DD OFFSET repz_txt - OFFSET mne_tab + blank_sep
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopF4:
+                        DD OFFSET op_one
+                        DD OFFSET hlt_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopF5:
+                        DD OFFSET op_one
+                        DD OFFSET cmc_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopF6:
+                        DD OFFSET opmrF600
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopF7:
+                        DD OFFSET opmrF700
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopF8:
+                        DD OFFSET op_one
+                        DD OFFSET clc_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopF9:
+                        DD OFFSET op_one
+                        DD OFFSET stc_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopFA:
+                        DD OFFSET op_one
+                        DD OFFSET cli_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopFB:
+                        DD OFFSET op_one
+                        DD OFFSET sti_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopFC:
+                        DD OFFSET op_one
+                        DD OFFSET cld_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopFD:
+                        DD OFFSET op_one
+                        DD OFFSET std_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopFE:
+                        DD OFFSET opmrFE00
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lopFF:
+                        DD OFFSET opmrFF00
+                        DD op_mem_reg_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
 
 mem8d_16a_tab:
 mod8d_16a_rm00000:
@@ -8913,6 +10754,2659 @@ mod32d_32a_rm11111:
                         DD 0FFFFFFFFh
 
 
+mem64_8d_32a_tab:
+mod64_8d_32a_rm000000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET eax_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm000001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ecx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm000010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm000011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ebx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm000100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm000101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET eip_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm000110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET esi_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm000111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edi_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm001000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm001001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm001010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm001011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm001100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm001101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET eip_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm001110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm001111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm010000:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET eax_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm010001:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ecx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm010010:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm010011:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ebx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm010100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm010101:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ebp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm010110:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET esi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm010111:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm011000:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm011001:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm011010:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm011011:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm011100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm011101:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r13d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm011110:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm011111:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm100000:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET eax_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm100001:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ecx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm100010:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm100011:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ebx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm100100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm100101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ebp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm100110:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET esi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm100111:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm101000:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm101001:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm101010:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm101011:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm101100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm101101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r13d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm101110:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm101111:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm110000:
+                        DD OFFSET op_one
+                        DD OFFSET al_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm110001:
+                        DD OFFSET op_one
+                        DD OFFSET cl_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm110010:
+                        DD OFFSET op_one
+                        DD OFFSET dl_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm110011:
+                        DD OFFSET op_one
+                        DD OFFSET bl_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm110100:
+                        DD OFFSET op_one
+                        DD OFFSET ah_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm110101:
+                        DD OFFSET op_one
+                        DD OFFSET ch_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm110110:
+                        DD OFFSET op_one
+                        DD OFFSET dh_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm110111:
+                        DD OFFSET op_one
+                        DD OFFSET bh_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm111000:
+                        DD OFFSET op_one
+                        DD OFFSET r8l_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm111001:
+                        DD OFFSET op_one
+                        DD OFFSET r9l_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm111010:
+                        DD OFFSET op_one
+                        DD OFFSET r10l_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm111011:
+                        DD OFFSET op_one
+                        DD OFFSET r11l_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm111100:
+                        DD OFFSET op_one
+                        DD OFFSET r12l_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm111101:
+                        DD OFFSET op_one
+                        DD OFFSET r13l_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm111110:
+                        DD OFFSET op_one
+                        DD OFFSET r14l_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_32a_rm111111:
+                        DD OFFSET op_one
+                        DD OFFSET r15l_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+mem64_16d_32a_tab:
+mod64_16d_32a_rm000000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET eax_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm000001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ecx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm000010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm000011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ebx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm000100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm000101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET eip_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm000110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET esi_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm000111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edi_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm001000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm001001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm001010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm001011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm001100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm001101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET eip_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm001110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm001111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm010000:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET eax_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm010001:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ecx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm010010:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm010011:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ebx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm010100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm010101:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ebp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm010110:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET esi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm010111:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm011000:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm011001:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm011010:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm011011:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm011100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm011101:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r13d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm011110:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm011111:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm100000:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET eax_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm100001:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ecx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm100010:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm100011:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ebx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm100100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm100101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ebp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm100110:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET esi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm100111:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm101000:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm101001:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm101010:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm101011:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm101100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm101101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r13d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm101110:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm101111:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm110000:
+                        DD OFFSET op_one
+                        DD OFFSET ax_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm110001:
+                        DD OFFSET op_one
+                        DD OFFSET cx_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm110010:
+                        DD OFFSET op_one
+                        DD OFFSET dx_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm110011:
+                        DD OFFSET op_one
+                        DD OFFSET bx_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm110100:
+                        DD OFFSET op_one
+                        DD OFFSET sp_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm110101:
+                        DD OFFSET op_one
+                        DD OFFSET bp_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm110110:
+                        DD OFFSET op_one
+                        DD OFFSET si_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm110111:
+                        DD OFFSET op_one
+                        DD OFFSET di_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+mod64_16d_32a_rm111000:
+                        DD OFFSET op_one
+                        DD OFFSET r8w_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm111001:
+                        DD OFFSET op_one
+                        DD OFFSET r9w_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm111010:
+                        DD OFFSET op_one
+                        DD OFFSET r10w_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm111011:
+                        DD OFFSET op_one
+                        DD OFFSET r11w_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm111100:
+                        DD OFFSET op_one
+                        DD OFFSET r12w_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm111101:
+                        DD OFFSET op_one
+                        DD OFFSET r13w_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm111110:
+                        DD OFFSET op_one
+                        DD OFFSET r14w_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_32a_rm111111:
+                        DD OFFSET op_one
+                        DD OFFSET r15w_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+mem64_32d_32a_tab:
+mod64_32d_32a_rm000000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET eax_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm000001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ecx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm000010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm000011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ebx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm000100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm000101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET eip_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm000110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET esi_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm000111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edi_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm001000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm001001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm001010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm001011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm001100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm001101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET eip_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm001110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm001111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15d_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm010000:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET eax_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm010001:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ecx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm010010:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm010011:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ebx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm010100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm010101:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ebp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm010110:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET esi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm010111:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm011000:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm011001:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm011010:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm011011:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm011100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm011101:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r13d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm011110:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm011111:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm100000:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET eax_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm100001:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ecx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm100010:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm100011:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ebx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm100100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm100101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET ebp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm100110:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET esi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm100111:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET edi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm101000:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm101001:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm101010:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm101011:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm101100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm101101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r13d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm101110:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm101111:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15d_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm110000:
+                        DD OFFSET op_one
+                        DD OFFSET eax_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm110001:
+                        DD OFFSET op_one
+                        DD OFFSET ecx_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm110010:
+                        DD OFFSET op_one
+                        DD OFFSET edx_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm110011:
+                        DD OFFSET op_one
+                        DD OFFSET ebx_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm110100:
+                        DD OFFSET op_one
+                        DD OFFSET esp_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm110101:
+                        DD OFFSET op_one
+                        DD OFFSET ebp_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm110110:
+                        DD OFFSET op_one
+                        DD OFFSET esi_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm110111:
+                        DD OFFSET op_one
+                        DD OFFSET edi_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+mod64_32d_32a_rm111000:
+                        DD OFFSET op_one
+                        DD OFFSET r8d_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm111001:
+                        DD OFFSET op_one
+                        DD OFFSET r9d_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm111010:
+                        DD OFFSET op_one
+                        DD OFFSET r10d_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm111011:
+                        DD OFFSET op_one
+                        DD OFFSET r11d_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm111100:
+                        DD OFFSET op_one
+                        DD OFFSET r12d_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm111101:
+                        DD OFFSET op_one
+                        DD OFFSET r13d_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm111110:
+                        DD OFFSET op_one
+                        DD OFFSET r14d_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_32a_rm111111:
+                        DD OFFSET op_one
+                        DD OFFSET r15d_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+
+mem64_8d_64a_tab:
+mod64_8d_64a_rm000000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rax_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm000001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rcx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm000010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm000011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm000100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm000101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rip_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm000110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rsi_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm000111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdi_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm001000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm001001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm001010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm001011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm001100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm001101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rip_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm001110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm001111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm010000:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rax_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm010001:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rcx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm010010:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm010011:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm010100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm010101:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm010110:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rsi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm010111:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm011000:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm011001:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm011010:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm011011:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm011100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm011101:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r13_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm011110:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm011111:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm100000:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rax_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm100001:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rcx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm100010:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm100011:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm100100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm100101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm100110:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rsi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm100111:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+
+mod64_8d_64a_rm101000:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm101001:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm101010:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm101011:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm101100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm101101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r13_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm101110:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm101111:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+
+mod64_8d_64a_rm110000:
+                        DD OFFSET op_one
+                        DD OFFSET al_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm110001:
+                        DD OFFSET op_one
+                        DD OFFSET cl_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm110010:
+                        DD OFFSET op_one
+                        DD OFFSET dl_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm110011:
+                        DD OFFSET op_one
+                        DD OFFSET bl_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm110100:
+                        DD OFFSET op_one
+                        DD OFFSET ah_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm110101:
+                        DD OFFSET op_one
+                        DD OFFSET ch_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm110110:
+                        DD OFFSET op_one
+                        DD OFFSET dh_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm110111:
+                        DD OFFSET op_one
+                        DD OFFSET bh_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm111000:
+                        DD OFFSET op_one
+                        DD OFFSET r8l_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm111001:
+                        DD OFFSET op_one
+                        DD OFFSET r9l_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm111010:
+                        DD OFFSET op_one
+                        DD OFFSET r10l_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm111011:
+                        DD OFFSET op_one
+                        DD OFFSET r11l_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm111100:
+                        DD OFFSET op_one
+                        DD OFFSET r12l_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm111101:
+                        DD OFFSET op_one
+                        DD OFFSET r13l_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm111110:
+                        DD OFFSET op_one
+                        DD OFFSET r14l_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_8d_64a_rm111111:
+                        DD OFFSET op_one
+                        DD OFFSET r15l_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+mem64_16d_64a_tab:
+mod64_16d_64a_rm000000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rax_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm000001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rcx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm000010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm000011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm000100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm000101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rip_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm000110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rsi_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm000111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdi_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm001000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm001001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm001010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm001011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm001100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm001101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rip_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm001110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm001111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm010000:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rax_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm010001:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rcx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm010010:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm010011:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm010100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm010101:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm010110:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rsi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm010111:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm011000:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm011001:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm011010:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm011011:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm011100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm011101:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r13_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm011110:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm011111:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm100000:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rax_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm100001:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rcx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm100010:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm100011:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm100100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm100101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm100110:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rsi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm100111:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+
+mod64_16d_64a_rm101000:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm101001:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm101010:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm101011:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm101100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm101101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r13_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm101110:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm101111:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+
+mod64_16d_64a_rm110000:
+                        DD OFFSET op_one
+                        DD OFFSET ax_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm110001:
+                        DD OFFSET op_one
+                        DD OFFSET cx_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm110010:
+                        DD OFFSET op_one
+                        DD OFFSET dx_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm110011:
+                        DD OFFSET op_one
+                        DD OFFSET bx_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm110100:
+                        DD OFFSET op_one
+                        DD OFFSET sp_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm110101:
+                        DD OFFSET op_one
+                        DD OFFSET bp_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm110110:
+                        DD OFFSET op_one
+                        DD OFFSET si_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_16d_64a_rm110111:
+                        DD OFFSET op_one
+                        DD OFFSET di_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+mem64_32d_64a_tab:
+mod64_32d_64a_rm000000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rax_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm000001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rcx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm000010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm000011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbx_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm000100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm000101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rip_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm000110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rsi_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm000111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdi_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm001000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm001001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm001010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm001011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm001100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm001101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rip_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm001110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm001111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15_txt - OFFSET mne_tab + rhak_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm010000:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rax_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm010001:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rcx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm010010:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm010011:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm010100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm010101:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm010110:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rsi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm010111:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm011000:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm011001:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm011010:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm011011:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm011100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm011101:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r13_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm011110:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm011111:
+                        DD OFFSET mem_im8
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm100000:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rax_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm100001:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rcx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm100010:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm100011:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm100100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm100101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm100110:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rsi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm100111:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+
+mod64_32d_64a_rm101000:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm101001:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm101010:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm101011:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm101100:
+                        DD OFFSET long_mem_sib
+                        DD null_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm101101:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r13_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm101110:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm101111:
+                        DD OFFSET mem_im32
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + rhak_sep
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm110000:
+                        DD OFFSET op_one
+                        DD OFFSET rax_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm110001:
+                        DD OFFSET op_one
+                        DD OFFSET rcx_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm110010:
+                        DD OFFSET op_one
+                        DD OFFSET rdx_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm110011:
+                        DD OFFSET op_one
+                        DD OFFSET rbx_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm110100:
+                        DD OFFSET op_one
+                        DD OFFSET rsp_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm110101:
+                        DD OFFSET op_one
+                        DD OFFSET rbp_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm110110:
+                        DD OFFSET op_one
+                        DD OFFSET rsi_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm110111:
+                        DD OFFSET op_one
+                        DD OFFSET rdi_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
+mod64_32d_64a_rm111000:
+                        DD OFFSET op_one
+                        DD OFFSET r8_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm111001:
+                        DD OFFSET op_one
+                        DD OFFSET r9_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm111010:
+                        DD OFFSET op_one
+                        DD OFFSET r10_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm111011:
+                        DD OFFSET op_one
+                        DD OFFSET r11_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm111100:
+                        DD OFFSET op_one
+                        DD OFFSET r12_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm111101:
+                        DD OFFSET op_one
+                        DD OFFSET r13_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm111110:
+                        DD OFFSET op_one
+                        DD OFFSET r14_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+mod64_32d_64a_rm111111:
+                        DD OFFSET op_one
+                        DD OFFSET r15_txt - OFFSET mne_tab + blank_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+
 mem_sib0_tab:
 sib0_000:
                         DD OFFSET op_one
@@ -9175,10 +13669,469 @@ sibc_11:
                         DD 0FFFFFFFFh
 
 
+long_mem_sib0_tab:
+lsib0_0000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rax_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib0_0001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rcx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib0_0010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib0_0011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib0_0100:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rsp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib0_0101:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsib0_0110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rsi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib0_0111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib0_1000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib0_1001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib0_1010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib0_1011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib0_1100:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r12_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib0_1101:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsib0_1110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib0_1111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+
+long_mem_sib1_tab:
+lsib1_0000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rax_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib1_0001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rcx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib1_0010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib1_0011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib1_0100:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rsp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib1_0101:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib1_0110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rsi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib1_0111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib1_1000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib1_1001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib1_1010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib1_1011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib1_1100:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r12_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib1_1101:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r13_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib1_1110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib1_1111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+
+long_mem_sib2_tab:
+lsib2_0000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rax_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib2_0001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rcx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib2_0010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib2_0011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbx_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib2_0100:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rsp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib2_0101:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rbp_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib2_0110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rsi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib2_0111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET rdi_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib2_1000:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r8_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib2_1001:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r9_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib2_1010:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r10_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib2_1011:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r11_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib2_1100:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r12_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib2_1101:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r13_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib2_1110:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r14_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+lsib2_1111:
+                        DD OFFSET op_one
+                        DD OFFSET noseg_txt - OFFSET mne_tab + lhak_sep
+                        DD OFFSET r15_txt - OFFSET mne_tab + plus_sep
+                        DD null_tab + no_sep
+                        DD 0FFFFFFFFh
+
+
+long_sib_index_tab:
+lsibi_0000:
+                        DD OFFSET op_one
+                        DD OFFSET rax_txt - OFFSET mne_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsibi_0001:
+                        DD OFFSET op_one
+                        DD OFFSET rcx_txt - OFFSET mne_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsibi_0010:
+                        DD OFFSET op_one
+                        DD OFFSET rdx_txt - OFFSET mne_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsibi_0011:
+                        DD OFFSET op_one
+                        DD OFFSET rbx_txt - OFFSET mne_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsibi_0100:
+                        DD OFFSET op_one
+                        DD OFFSET txt_0 - OFFSET mne_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsibi_0101:
+                        DD OFFSET op_one
+                        DD OFFSET rbp_txt - OFFSET mne_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsibi_0110:
+                        DD OFFSET op_one
+                        DD OFFSET rsi_txt - OFFSET mne_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsibi_0111:
+                        DD OFFSET op_one
+                        DD OFFSET rdi_txt - OFFSET mne_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsibi_1000:
+                        DD OFFSET op_one
+                        DD OFFSET r8_txt - OFFSET mne_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsibi_1001:
+                        DD OFFSET op_one
+                        DD OFFSET r9_txt - OFFSET mne_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsibi_1010:
+                        DD OFFSET op_one
+                        DD OFFSET r10_txt - OFFSET mne_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsibi_1011:
+                        DD OFFSET op_one
+                        DD OFFSET r11_txt - OFFSET mne_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsibi_1100:
+                        DD OFFSET op_one
+                        DD OFFSET r12_txt - OFFSET mne_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsibi_1101:
+                        DD OFFSET op_one
+                        DD OFFSET r13_txt - OFFSET mne_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsibi_1110:
+                        DD OFFSET op_one
+                        DD OFFSET r14_txt - OFFSET mne_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+lsibi_1111:
+                        DD OFFSET op_one
+                        DD OFFSET r15_txt - OFFSET mne_tab + no_sep
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
         public adr_16a_tab
         public adr_32a_tab
+        public long_adr_32a_tab
+        public long_adr_64a_tab
         public adr_sib_tab
         public adr_sib_index_tab
+        public long_adr_sib_tab
+        public long_adr_sib_index_tab
 
         extrn no_adr:near
         extrn bx_adr:near
@@ -9193,6 +14146,32 @@ sibc_11:
         extrn edi_adr:near
         extrn ebp_adr:near
         extrn esp_adr:near
+        extrn eip_adr:near
+        extrn rax_adr:near
+        extrn rbx_adr:near
+        extrn rcx_adr:near
+        extrn rdx_adr:near
+        extrn rsi_adr:near
+        extrn rdi_adr:near
+        extrn rbp_adr:near
+        extrn rsp_adr:near
+        extrn rip_adr:near
+        extrn r8_adr:near
+        extrn r9_adr:near
+        extrn r10_adr:near
+        extrn r11_adr:near
+        extrn r12_adr:near
+        extrn r13_adr:near
+        extrn r14_adr:near
+        extrn r15_adr:near
+        extrn r8d_adr:near
+        extrn r9d_adr:near
+        extrn r10d_adr:near
+        extrn r11d_adr:near
+        extrn r12d_adr:near
+        extrn r13d_adr:near
+        extrn r14d_adr:near
+        extrn r15d_adr:near
 
 adr_16a_tab:
 adr_16a_rm00000:
@@ -9388,6 +14367,392 @@ adr_32a_rm10111:
                         DD OFFSET edi_adr
                         DD OFFSET no_adr
 
+long_adr_32a_tab:
+adr_64_32a_rm000000:
+                        DD OFFSET eax_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm000001:
+                        DD OFFSET ecx_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm000010:
+                        DD OFFSET edx_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm000011:
+                        DD OFFSET ebx_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm000100:
+                        DD OFFSET no_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm000101:
+                        DD OFFSET eip_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm000110:
+                        DD OFFSET esi_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm000111:
+                        DD OFFSET edi_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm001000:
+                        DD OFFSET r8d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm001001:
+                        DD OFFSET r9d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm001010:
+                        DD OFFSET r10d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm001011:
+                        DD OFFSET r11d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm001100:
+                        DD OFFSET no_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm001101:
+                        DD OFFSET eip_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm001110:
+                        DD OFFSET r14d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm001111:
+                        DD OFFSET r15d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm010000:
+                        DD OFFSET eax_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm010001:
+                        DD OFFSET ecx_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm010010:
+                        DD OFFSET edx_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm010011:
+                        DD OFFSET ebx_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm010100:
+                        DD OFFSET no_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm010101:
+                        DD OFFSET ebp_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm010110:
+                        DD OFFSET esi_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm010111:
+                        DD OFFSET edi_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm011000:
+                        DD OFFSET r8d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm011001:
+                        DD OFFSET r9d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm011010:
+                        DD OFFSET r10d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm011011:
+                        DD OFFSET r11d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm011100:
+                        DD OFFSET no_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm011101:
+                        DD OFFSET r13d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm011110:
+                        DD OFFSET r14d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm011111:
+                        DD OFFSET r15d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm100000:
+                        DD OFFSET eax_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm100001:
+                        DD OFFSET ecx_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm100010:
+                        DD OFFSET edx_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm100011:
+                        DD OFFSET ebx_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm100100:
+                        DD OFFSET no_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm100101:
+                        DD OFFSET ebp_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm100110:
+                        DD OFFSET esi_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm100111:
+                        DD OFFSET edi_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm101000:
+                        DD OFFSET r8d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm101001:
+                        DD OFFSET r9d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm101010:
+                        DD OFFSET r10d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm101011:
+                        DD OFFSET r11d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm101100:
+                        DD OFFSET no_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm101101:
+                        DD OFFSET r13d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm101110:
+                        DD OFFSET r14d_adr
+                        DD OFFSET no_adr
+
+adr_64_32a_rm101111:
+                        DD OFFSET r15d_adr
+                        DD OFFSET no_adr
+
+long_adr_64a_tab:
+adr_64_64a_rm000000:
+                        DD OFFSET rax_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm000001:
+                        DD OFFSET rcx_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm000010:
+                        DD OFFSET rdx_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm000011:
+                        DD OFFSET rbx_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm000100:
+                        DD OFFSET no_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm000101:
+                        DD OFFSET rip_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm000110:
+                        DD OFFSET rsi_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm000111:
+                        DD OFFSET rdi_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm001000:
+                        DD OFFSET r8_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm001001:
+                        DD OFFSET r9_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm001010:
+                        DD OFFSET r10_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm001011:
+                        DD OFFSET r11_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm001100:
+                        DD OFFSET no_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm001101:
+                        DD OFFSET rip_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm001110:
+                        DD OFFSET r14_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm001111:
+                        DD OFFSET r15_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm010000:
+                        DD OFFSET rax_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm010001:
+                        DD OFFSET rcx_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm010010:
+                        DD OFFSET rdx_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm010011:
+                        DD OFFSET rbx_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm010100:
+                        DD OFFSET no_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm010101:
+                        DD OFFSET rbp_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm010110:
+                        DD OFFSET rsi_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm010111:
+                        DD OFFSET rdi_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm011000:
+                        DD OFFSET r8_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm011001:
+                        DD OFFSET r9_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm011010:
+                        DD OFFSET r10_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm011011:
+                        DD OFFSET r11_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm011100:
+                        DD OFFSET no_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm011101:
+                        DD OFFSET r13_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm011110:
+                        DD OFFSET r14_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm011111:
+                        DD OFFSET r15_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm100000:
+                        DD OFFSET rax_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm100001:
+                        DD OFFSET rcx_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm100010:
+                        DD OFFSET rdx_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm100011:
+                        DD OFFSET rbx_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm100100:
+                        DD OFFSET no_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm100101:
+                        DD OFFSET rbp_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm100110:
+                        DD OFFSET rsi_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm100111:
+                        DD OFFSET rdi_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm101000:
+                        DD OFFSET r8_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm101001:
+                        DD OFFSET r9_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm101010:
+                        DD OFFSET r10_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm101011:
+                        DD OFFSET r11_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm101100:
+                        DD OFFSET no_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm101101:
+                        DD OFFSET r13_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm101110:
+                        DD OFFSET r14_adr
+                        DD OFFSET no_adr
+
+adr_64_64a_rm101111:
+                        DD OFFSET r15_adr
+                        DD OFFSET no_adr
+
 adr_sib_tab:
 adr_sib0_000:
                         DD OFFSET eax_adr
@@ -9519,5 +14884,376 @@ adr_sibi_110:
 adr_sibi_111:
                         DD OFFSET edi_adr
                         DD OFFSET no_adr
+
+long_adr_sib_tab:
+ladr_sib0_0000:
+                        DD OFFSET rax_adr
+                        DD OFFSET no_adr
+
+ladr_sib0_0001:
+                        DD OFFSET rcx_adr
+                        DD OFFSET no_adr
+
+ladr_sib0_0010:
+                        DD OFFSET rdx_adr
+                        DD OFFSET no_adr
+
+ladr_sib0_0011:
+                        DD OFFSET rbx_adr
+                        DD OFFSET no_adr
+
+ladr_sib0_0100:
+                        DD OFFSET rsp_adr
+                        DD OFFSET no_adr
+
+ladr_sib0_0101:
+                        DD OFFSET no_adr
+                        DD OFFSET no_adr
+
+ladr_sib0_0110:
+                        DD OFFSET rsi_adr
+                        DD OFFSET no_adr
+
+ladr_sib0_0111:
+                        DD OFFSET rdi_adr
+                        DD OFFSET no_adr
+
+ladr_sib0_1000:
+                        DD OFFSET r8_adr
+                        DD OFFSET no_adr
+
+ladr_sib0_1001:
+                        DD OFFSET r9_adr
+                        DD OFFSET no_adr
+
+ladr_sib0_1010:
+                        DD OFFSET r10_adr
+                        DD OFFSET no_adr
+
+ladr_sib0_1011:
+                        DD OFFSET r11_adr
+                        DD OFFSET no_adr
+
+ladr_sib0_1100:
+                        DD OFFSET r12_adr
+                        DD OFFSET no_adr
+
+ladr_sib0_1101:
+                        DD OFFSET no_adr
+                        DD OFFSET no_adr
+
+ladr_sib0_1110:
+                        DD OFFSET r14_adr
+                        DD OFFSET no_adr
+
+ladr_sib0_1111:
+                        DD OFFSET r15_adr
+                        DD OFFSET no_adr
+
+
+ladr_sib1_0000:
+                        DD OFFSET rax_adr
+                        DD OFFSET no_adr
+
+ladr_sib1_0001:
+                        DD OFFSET rcx_adr
+                        DD OFFSET no_adr
+
+ladr_sib1_0010:
+                        DD OFFSET rdx_adr
+                        DD OFFSET no_adr
+
+ladr_sib1_0011:
+                        DD OFFSET rbx_adr
+                        DD OFFSET no_adr
+
+ladr_sib1_0100:
+                        DD OFFSET rsp_adr
+                        DD OFFSET no_adr
+
+ladr_sib1_0101:
+                        DD OFFSET rbp_adr
+                        DD OFFSET no_adr
+
+ladr_sib1_0110:
+                        DD OFFSET rsi_adr
+                        DD OFFSET no_adr
+
+ladr_sib1_0111:
+                        DD OFFSET rdi_adr
+                        DD OFFSET no_adr
+
+
+ladr_sib1_1000:
+                        DD OFFSET r8_adr
+                        DD OFFSET no_adr
+
+ladr_sib1_1001:
+                        DD OFFSET r9_adr
+                        DD OFFSET no_adr
+
+ladr_sib1_1010:
+                        DD OFFSET r10_adr
+                        DD OFFSET no_adr
+
+ladr_sib1_1011:
+                        DD OFFSET r11_adr
+                        DD OFFSET no_adr
+
+ladr_sib1_1100:
+                        DD OFFSET r12_adr
+                        DD OFFSET no_adr
+
+ladr_sib1_1101:
+                        DD OFFSET r13_adr
+                        DD OFFSET no_adr
+
+ladr_sib1_1110:
+                        DD OFFSET r14_adr
+                        DD OFFSET no_adr
+
+ladr_sib1_1111:
+                        DD OFFSET r15_adr
+                        DD OFFSET no_adr
+
+
+ladr_sib2_0000:
+                        DD OFFSET rax_adr
+                        DD OFFSET no_adr
+
+ladr_sib2_0001:
+                        DD OFFSET rcx_adr
+                        DD OFFSET no_adr
+
+ladr_sib2_0010:
+                        DD OFFSET rdx_adr
+                        DD OFFSET no_adr
+
+ladr_sib2_0011:
+                        DD OFFSET rbx_adr
+                        DD OFFSET no_adr
+
+ladr_sib2_0100:
+                        DD OFFSET rsp_adr
+                        DD OFFSET no_adr
+
+ladr_sib2_0101:
+                        DD OFFSET rbp_adr
+                        DD OFFSET no_adr
+
+ladr_sib2_0110:
+                        DD OFFSET rsi_adr
+                        DD OFFSET no_adr
+
+ladr_sib2_0111:
+                        DD OFFSET rdi_adr
+                        DD OFFSET no_adr
+
+ladr_sib2_1000:
+                        DD OFFSET r8_adr
+                        DD OFFSET no_adr
+
+ladr_sib2_1001:
+                        DD OFFSET r9_adr
+                        DD OFFSET no_adr
+
+ladr_sib2_1010:
+                        DD OFFSET r10_adr
+                        DD OFFSET no_adr
+
+ladr_sib2_1011:
+                        DD OFFSET r11_adr
+                        DD OFFSET no_adr
+
+ladr_sib2_1100:
+                        DD OFFSET r12_adr
+                        DD OFFSET no_adr
+
+ladr_sib2_1101:
+                        DD OFFSET r13_adr
+                        DD OFFSET no_adr
+
+ladr_sib2_1110:
+                        DD OFFSET r14_adr
+                        DD OFFSET no_adr
+
+ladr_sib2_1111:
+                        DD OFFSET r15_adr
+                        DD OFFSET no_adr
+
+long_adr_sib_index_tab:
+ladr_sibi_0000:
+                        DD OFFSET rax_adr
+                        DD OFFSET no_adr
+
+ladr_sibi_0001:
+                        DD OFFSET rcx_adr
+                        DD OFFSET no_adr
+
+ladr_sibi_0010:
+                        DD OFFSET rdx_adr
+                        DD OFFSET no_adr
+
+ladr_sibi_0011:
+                        DD OFFSET rbx_adr
+                        DD OFFSET no_adr
+
+ladr_sibi_0100:
+                        DD OFFSET no_adr
+                        DD OFFSET no_adr
+
+ladr_sibi_0101:
+                        DD OFFSET rbp_adr
+                        DD OFFSET no_adr
+
+ladr_sibi_0110:
+                        DD OFFSET rsi_adr
+                        DD OFFSET no_adr
+
+ladr_sibi_0111:
+                        DD OFFSET rdi_adr
+                        DD OFFSET no_adr
+
+ladr_sibi_1000:
+                        DD OFFSET r8_adr
+                        DD OFFSET no_adr
+
+ladr_sibi_1001:
+                        DD OFFSET r9_adr
+                        DD OFFSET no_adr
+
+ladr_sibi_1010:
+                        DD OFFSET r10_adr
+                        DD OFFSET no_adr
+
+ladr_sibi_1011:
+                        DD OFFSET r11_adr
+                        DD OFFSET no_adr
+
+ladr_sibi_1100:
+                        DD OFFSET r12_adr
+                        DD OFFSET no_adr
+
+ladr_sibi_1101:
+                        DD OFFSET r13_adr
+                        DD OFFSET no_adr
+
+ladr_sibi_1110:
+                        DD OFFSET r14_adr
+                        DD OFFSET no_adr
+
+ladr_sibi_1111:
+                        DD OFFSET r15_adr
+                        DD OFFSET no_adr
+
+                public  cr_tab
+                
+;Control register format
+
+cr_tab:
+
+tcr0:
+                        DD OFFSET op_one
+                        DD OFFSET cr_txt - OFFSET mne_tab + no_sep
+                        DD OFFSET txt_0 - OFFSET mne_tab 
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+tcr1:
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+tcr2:
+                        DD OFFSET op_one
+                        DD OFFSET cr_txt - OFFSET mne_tab + no_sep
+                        DD OFFSET txt_2 - OFFSET mne_tab 
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+tcr3:
+                        DD OFFSET op_one
+                        DD OFFSET cr_txt - OFFSET mne_tab + no_sep
+                        DD OFFSET txt_3 - OFFSET mne_tab 
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+tcr4:
+                        DD OFFSET op_one
+                        DD OFFSET cr_txt - OFFSET mne_tab + no_sep
+                        DD OFFSET txt_4 - OFFSET mne_tab 
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+tcr5:
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+tcr6:
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+tcr7:
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+
+                public  dr_tab
+                
+;Debug register format
+
+dr_tab:
+
+tdr0:
+                        DD OFFSET op_one
+                        DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+                        DD OFFSET txt_0 - OFFSET mne_tab 
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+tdr1:
+                        DD OFFSET op_one
+                        DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+                        DD OFFSET txt_1 - OFFSET mne_tab 
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+tdr2:
+                        DD OFFSET op_one
+                        DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+                        DD OFFSET txt_2 - OFFSET mne_tab 
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+tdr3:
+                        DD OFFSET op_one
+                        DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+                        DD OFFSET txt_3 - OFFSET mne_tab 
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+tdr4:
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+tdr5:
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+tdr6:
+                        DD OFFSET op_one
+                        DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+                        DD OFFSET txt_6 - OFFSET mne_tab 
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
+tdr7:
+                        DD OFFSET op_one
+                        DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+                        DD OFFSET txt_7 - OFFSET mne_tab 
+                        DD 0FFFFFFFFh
+                        DD 0FFFFFFFFh
 
         END

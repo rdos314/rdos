@@ -52,6 +52,7 @@ data_48         EQU 3
 
 addr_16         EQU 0
 addr_32         EQU 1
+addr_64         EQU 2
 
 
 .data
@@ -62,6 +63,7 @@ data_mode               DB ?
 edata_mode              DB ?
 override                DD ?
 ignore_ptr              DB ?
+op_rex                  DB ?
 op_in_code              DB 50 DUP(?)
 
 ;ceci pour garder la taille de l'instruction decodée
@@ -86,6 +88,7 @@ op_code_size            DD ?    ;ceci represente la somme de :
 .code
 
         extrn main_tab:near
+        extrn long_main_tab:near
         extrn mne_tab:near
         extrn sep_tab:near
         extrn txt_noth:near
@@ -300,6 +303,448 @@ esp_adr PROC near
         mov eax,[ebp].reg_esp
         ret
 esp_adr ENDP
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   eip_adr
+;
+;               DESCRIPTION:    EIP address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public eip_adr
+
+eip_adr PROC near
+        mov eax,[ebp].reg_eip
+        ret
+eip_adr ENDP
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   rax_adr
+;
+;               DESCRIPTION:    RAX address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public rax_adr
+
+rax_adr PROC near
+        xor eax,eax
+        ret
+rax_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   rbx_adr
+;
+;               DESCRIPTION:    RBX address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public rbx_adr
+
+rbx_adr PROC near
+        xor eax,eax
+        ret
+rbx_adr ENDP
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   rcx_adr
+;
+;               DESCRIPTION:    RCX address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public rcx_adr
+
+rcx_adr PROC near
+        xor eax,eax
+        ret
+rcx_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   rdx_adr
+;
+;               DESCRIPTION:    RDX address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public rdx_adr
+
+rdx_adr PROC near
+        xor eax,eax
+        ret
+rdx_adr ENDP
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   rsi_adr
+;
+;               DESCRIPTION:    RSI address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public rsi_adr
+
+rsi_adr PROC near
+        xor eax,eax
+        ret
+rsi_adr ENDP
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   rdi_adr
+;
+;               DESCRIPTION:    RDI address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public rdi_adr
+
+rdi_adr PROC near
+        xor eax,eax
+        ret
+rdi_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   rbp_adr
+;
+;               DESCRIPTION:    RBP address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public rbp_adr
+
+rbp_adr PROC near
+        xor eax,eax
+        ret
+rbp_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   rsp_adr
+;
+;               DESCRIPTION:    RSP address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public rsp_adr
+
+rsp_adr PROC near
+        xor eax,eax
+        ret
+rsp_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   rip_adr
+;
+;               DESCRIPTION:    RIP address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public rip_adr
+
+rip_adr PROC near
+        xor eax,eax
+        ret
+rip_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   r8_adr
+;
+;               DESCRIPTION:    R8 address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public r8_adr
+
+r8_adr PROC near
+        xor eax,eax
+        ret
+r8_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   r9_adr
+;
+;               DESCRIPTION:    R9 address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public r9_adr
+
+r9_adr PROC near
+        xor eax,eax
+        ret
+r9_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   r10_adr
+;
+;               DESCRIPTION:    R10 address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public r10_adr
+
+r10_adr PROC near
+        xor eax,eax
+        ret
+r10_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   r11_adr
+;
+;               DESCRIPTION:    R11 address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public r11_adr
+
+r11_adr PROC near
+        xor eax,eax
+        ret
+r11_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   r12_adr
+;
+;               DESCRIPTION:    R12 address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public r12_adr
+
+r12_adr PROC near
+        xor eax,eax
+        ret
+r12_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   r13_adr
+;
+;               DESCRIPTION:    R13 address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public r13_adr
+
+r13_adr PROC near
+        xor eax,eax
+        ret
+r13_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   r14_adr
+;
+;               DESCRIPTION:    R14 address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public r14_adr
+
+r14_adr PROC near
+        xor eax,eax
+        ret
+r14_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   r15_adr
+;
+;               DESCRIPTION:    R15 address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public r15_adr
+
+r15_adr PROC near
+        xor eax,eax
+        ret
+r15_adr ENDP
+
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   r8d_adr
+;
+;               DESCRIPTION:    R8d address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public r8d_adr
+
+r8d_adr PROC near
+        xor eax,eax
+        ret
+r8d_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   r9d_adr
+;
+;               DESCRIPTION:    R9d address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public r9d_adr
+
+r9d_adr PROC near
+        xor eax,eax
+        ret
+r9d_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   r10d_adr
+;
+;               DESCRIPTION:    R10d address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public r10d_adr
+
+r10d_adr PROC near
+        xor eax,eax
+        ret
+r10d_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   r11d_adr
+;
+;               DESCRIPTION:    R11d address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public r11d_adr
+
+r11d_adr PROC near
+        xor eax,eax
+        ret
+r11d_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   r12d_adr
+;
+;               DESCRIPTION:    R12d address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public r12d_adr
+
+r12d_adr PROC near
+        xor eax,eax
+        ret
+r12d_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   r13d_adr
+;
+;               DESCRIPTION:    R13d address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public r13d_adr
+
+r13d_adr PROC near
+        xor eax,eax
+        ret
+r13d_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   r14d_adr
+;
+;               DESCRIPTION:    R14d address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public r14d_adr
+
+r14d_adr PROC near
+        xor eax,eax
+        ret
+r14d_adr ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   r15d_adr
+;
+;               DESCRIPTION:    R15d address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public r15d_adr
+
+r15d_adr PROC near
+        xor eax,eax
+        ret
+r15d_adr ENDP
+
+
+
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -455,6 +900,26 @@ calc_out_o_r:
         pop eax
         ret
 calc_ads_offset ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           LONG_CALC_ADS_OFFSET
+;
+;               DESCRIPTION:    Calculate long adress offset
+;
+;               PARAMETERS:             EAX             Table index
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        extrn long_adr_32a_tab:near
+        extrn long_adr_64a_tab:near
+
+long_calc_ads_offset PROC near
+    ret
+long_calc_ads_offset    Endp
 
 PAGE
 
@@ -636,6 +1101,24 @@ PAGE
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        extrn noseg_txt:near
+        
+        public override_rex
+
+override_rex     PROC near
+        mov al,[esi]
+        and al,0Fh
+        mov ds:op_rex,al
+;
+        mov ebx,ds:main_tab
+        mov ds:op_syntax,ebx
+        inc esi
+        mov al,[esi]
+        movzx eax,al
+        call decode_opcode
+        ret
+override_rex     ENDP
 
 
         public override_cs
@@ -1022,6 +1505,82 @@ op_string2d16:
         ret     
 op_string2w     ENDP
 
+        public op_lodsb
+
+op_lodsb     PROC near
+        test al,1
+        jz op_lodsb16
+
+op_lodsb32:
+        mov eax,6
+        call calc_ads_offset
+        mov ds:data_sel,OFFSET ds_txt
+        add_mne b_txt, blank_sep
+        add_mne ds_txt, kolon_par_sep
+        add_mne esi_txt, rhak_sep
+        ret
+
+op_lodsb16:
+        mov eax,4
+        call calc_ads_offset
+        mov ds:data_sel,OFFSET ds_txt
+        add_mne b_txt, blank_sep
+        add_mne ds_txt, kolon_par_sep
+        add_mne si_txt, rhak_sep
+        ret     
+        ret
+op_lodsb     ENDP
+
+        public op_lodsw
+
+op_lodsw     PROC near
+        test [ebp].em_flags,a32
+        jnz op_lodsd
+;        
+        test al,1
+        jz op_lodsw16
+
+op_lodsw32:
+        mov eax,6
+        call calc_ads_offset
+        mov ds:data_sel,OFFSET ds_txt
+        add_mne w_txt, blank_sep
+        add_mne ds_txt, kolon_par_sep
+        add_mne esi_txt, rhak_sep
+        ret
+
+op_lodsw16:
+        mov eax,4
+        call calc_ads_offset
+        mov ds:data_sel,OFFSET ds_txt
+        add_mne w_txt, blank_sep
+        add_mne ds_txt, kolon_par_sep
+        add_mne si_txt, rhak_sep
+        ret
+
+op_lodsd:
+        test al,1
+        jz op_lodsd16
+
+op_lodsd32:
+        mov eax,6
+        call calc_ads_offset
+        mov ds:data_sel,OFFSET ds_txt
+        add_mne d_txt, blank_sep
+        add_mne ds_txt, kolon_par_sep
+        add_mne esi_txt, rhak_sep
+        ret
+
+op_lodsd16:
+        mov eax,6
+        call calc_ads_offset
+        mov ds:data_sel,OFFSET ds_txt
+        add_mne d_txt, blank_sep
+        add_mne ds_txt, kolon_par_sep
+        add_mne si_txt, rhak_sep
+        ret     
+        ret
+op_lodsw     ENDP
 
         public op_string1b
 
@@ -1074,6 +1633,7 @@ op_string1w     ENDP
 
         extrn txt_16:near
         extrn txt_32:near
+        extrn txt_64:near
 
         public op_add_opsize
 
@@ -1476,6 +2036,107 @@ mem_sib PROC near
         ret
 mem_sib ENDP
 
+        public long_mem_sib
+        extrn long_adr_sib_tab:near
+        extrn long_adr_sib_index_tab:near
+
+long_add_sib_ads     PROC near
+        mov ah,[esi-1]
+        and ah,0C0h
+        mov al,[esi]
+        and al,7
+        shr ah,2
+        or al,ah
+;
+        test ds:op_rex,1
+        jz long_sib0_ads_ok
+;
+        or ax,8        
+
+long_sib0_ads_ok:               
+        movzx eax,al
+        shl ax,3
+        mov ebx,eax
+        call cs:dword ptr [ebx].long_adr_sib_tab
+        add [ebp].data_offset,eax
+        adc word ptr [ebp].data_offset+4,bx
+;
+        mov al,[esi]
+        and al,38h
+        shr al,3
+;
+        test ds:op_rex,2
+        jz long_sibi_ads_ok
+;
+        or ax,8        
+
+long_sibi_ads_ok:               
+        movzx eax,al
+        shl ax,3
+        mov ebx,eax
+        call cs:word ptr [ebx].long_adr_sib_index_tab
+        mov cl,[esi]
+        and cl,0C0h
+        shr cl,6
+        shl eax,cl
+        add [ebp].data_offset,eax
+        adc word ptr [ebp].data_offset+4,bx
+        ret
+long_add_sib_ads     ENDP
+
+        public long_mem_sib
+        extrn long_mem_sib0_tab:near
+        extrn long_sib_index_tab:near
+
+long_mem_sib PROC near
+        mov eax,OFFSET long_mem_sib0_tab
+        mov ds:op_syntax,eax
+        mov ax,[esi]
+; al = mod
+; ah = sib-byte
+        and ah,7
+        and al,0C0h     
+        shr al,2
+        or al,ah
+;
+        test ds:op_rex,1
+        jz long_sib0_ok
+;
+        or ax,8        
+
+long_sib0_ok:               
+        xor ah,ah
+        inc esi
+        call decode_opcode
+;
+        mov eax,OFFSET long_sib_index_tab
+        mov ds:op_syntax,eax
+        mov al,[esi]
+        and ax,38h
+        shr ax,3
+;
+        test ds:op_rex,2
+        jz long_sibi_ok
+;
+        or ax,8        
+
+long_sibi_ok:               
+        call decode_opcode      
+        mov eax,OFFSET sib_scale_tab
+        mov ds:op_syntax,eax
+        mov al,[esi]
+        and ax,0C0h
+        shr ax,6
+        call decode_opcode
+        call long_add_sib_ads
+        mov bl,[esi-1]
+        and ebx,0C0h
+        shr ebx,5
+        add ebx,OFFSET mem_disp_tab
+        call dword ptr cs:[2*ebx]
+        ret
+long_mem_sib ENDP
+
         public op_illegal
 
 op_illegal      PROC near
@@ -1494,135 +2155,27 @@ op_one  PROC near
         ret
 op_one  ENDP
 
-        public op_one2
-
-op_one2 PROC near
-        inc     esi 
-        ret
-op_one2 ENDP
-
         public op_reg_cr
 
-op_reg_cr       PROC near
-        mov     bl,data_32
-        movzx   ebx,bl
-        mov     eax,dword ptr [4*ebx].reg_tab
-        mov     op_syntax,eax
-        inc     esi
-        mov     al,[esi+1]
-        and     eax,0C0h                                ;the MOD part of the MOD/RM
-        shr     eax,6
-        mov     ignore_ptr,1                    ;ignore pointer
-        call    decode_opcode
-        
-        mov     eax,[edi-4]
-        and     eax,0FFFh
-        or      eax,komma_sep           ;ajoute la virgule
-        mov     [edi-4],eax
-        
-        mov     ebx,OFFSET cr_tab
-        mov     op_syntax,ebx
-        mov     al,[esi+1]
-        and     eax,38h
-        shl     eax,3
-        call    decode_opcode
-        inc     esi                             ;le dernier byte sera passé au moment
-                                                ;où je recupèrerais la taille
-        
+op_reg_cr       PROC near       
         ret
 op_reg_cr       ENDP
 
         public op_cr_reg
 
 op_cr_reg       PROC near
-
-        inc     esi
-        mov     ebx,OFFSET cr_tab
-        mov     op_syntax,ebx
-        mov     al,[esi+1]
-        and     eax,38h
-        shl     eax,3
-        call    decode_opcode
-
-        mov     eax,[edi-4]
-        and     eax,0FFFh
-        or      eax,komma_sep           ;ajoute la virgule
-        mov     [edi-4],eax
-
-        mov     bl,data_32
-        movzx   ebx,bl
-        mov     eax,dword ptr [4*ebx].reg_tab
-        mov     op_syntax,eax
-        mov     al,[esi+1]
-        and     eax,0C0h                                ;the MOD part of the MOD/RM
-        shr     eax,6
-        mov     ignore_ptr,1                    ;ignore pointer
-        call    decode_opcode
-        inc     esi
-        
         ret
 op_cr_reg       ENDP
-
 
         public op_reg_dr
 
 op_reg_dr       PROC near
-
-        inc     esi
-        mov     bl,data_32
-        movzx   ebx,bl
-        mov     eax,dword ptr [4*ebx].reg_tab
-        mov     op_syntax,eax
-        mov     al,[esi+1]
-        and     eax,0C0h                                ;the MOD part of the MOD/RM
-        shr     eax,6
-        mov     ignore_ptr,1                    ;ignore pointer
-        call    decode_opcode
-        
-        mov     eax,[edi-4]
-        and     eax,0FFFh
-        or      eax,komma_sep           ;ajoute la virgule
-        mov     [edi-4],eax
-        
-        mov     ebx,OFFSET cr_tab
-        mov     op_syntax,ebx
-        mov     al,[esi+1]
-        and     eax,38h
-        shl     eax,3
-        call    decode_opcode
-        inc     esi
-        
         ret
 op_reg_dr       ENDP
 
         public op_dr_reg
 
 op_dr_reg       PROC near
-
-        inc     esi
-        mov     ebx,OFFSET cr_tab
-        mov     op_syntax,ebx
-        mov     al,[esi+1]
-        and     eax,38h
-        shl     eax,3
-        call    decode_opcode
-
-        mov     eax,[edi-4]
-        and     eax,0FFFh
-        or      eax,komma_sep           ;ajoute la virgule
-        mov     [edi-4],eax
-
-        mov     bl,data_32
-        movzx   ebx,bl
-        mov     eax,dword ptr [4*ebx].reg_tab
-        mov     op_syntax,eax
-        mov     al,[esi+1]
-        and     eax,0C0h                                ;the MOD part of the MOD/RM
-        shr     eax,6
-        mov     ignore_ptr,1                    ;ignore pointer
-        call    decode_opcode
-        inc     esi
-
         ret
 op_dr_reg       ENDP
 
@@ -1720,20 +2273,36 @@ mem_op_next             ENDP
 
         extrn ax_txt:near
         extrn eax_txt:near
+        extrn rax_txt:near
         extrn bx_txt:near
         extrn ebx_txt:near
+        extrn rbx_txt:near
         extrn cx_txt:near
         extrn ecx_txt:near
+        extrn rcx_txt:near
         extrn dx_txt:near
         extrn edx_txt:near
+        extrn rdx_txt:near
         extrn sp_txt:near
         extrn esp_txt:near
+        extrn rsp_txt:near
         extrn bp_txt:near
         extrn ebp_txt:near
+        extrn rbp_txt:near
         extrn si_txt:near
         extrn esi_txt:near
+        extrn rsi_txt:near
         extrn di_txt:near
         extrn edi_txt:near
+        extrn rdi_txt:near
+        extrn r8_txt:near
+        extrn r9_txt:near
+        extrn r10_txt:near
+        extrn r11_txt:near
+        extrn r12_txt:near
+        extrn r13_txt:near
+        extrn r14_txt:near
+        extrn r15_txt:near
 
 ax_next PROC near
         test [ebp].em_flags,d32
