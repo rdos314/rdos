@@ -46,52 +46,52 @@ TLocation       buffer_val[COUNTBUFFER];
 
 extern "C" {
 
-void UserBreak(TCpu *Cpu);
+void UserBreak(TCpuState *CpuState);
 #pragma aux (EMAPI) UserBreak;
 
-void ReadInstruction(TCpu *Cpu);
+void ReadInstruction(TCpuState *CpuState);
 #pragma aux (EMAPI) ReadInstruction;
 
-void DisAssemble(TCpu *Cpu);
+void DisAssemble(TCpuState *CpuState);
 #pragma aux (EMAPI) DisAssemble;
 
-void WriteRegs(TCpu *Cpu);
+void WriteRegs(TCpuState *CpuState);
 #pragma aux (EMAPI) WriteRegs;
 
-void WriteFpuRegs(TCpu *Cpu);
+void WriteFpuRegs(TCpuState *CpuState);
 #pragma aux (EMAPI) WriteFpuRegs;
 
-void Emulate(TCpu *Cpu);
+void Emulate(TCpuState *CpuState);
 #pragma aux (EMAPI) Emulate;
 
-char GetIntVector(TCpu *Cpu);
+char GetIntVector(TCpuState *CpuState);
 #pragma aux (EMAPI) GetIntVector;
 
-void ReadCode(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
+void ReadCode(TCpuState *CpuState, void *Buffer, unsigned long Address, int Size);
 #pragma aux (EMAPI) ReadCode;
 
-void ReadFromMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
+void ReadFromMemory(TCpuState *CpuState, void *Buffer, unsigned long Address, int Size);
 #pragma aux (EMAPI) ReadFromMemory;
 
-void WriteToMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
+void WriteToMemory(TCpuState *CpuState, void *Buffer, unsigned long Address, int Size);
 #pragma aux (EMAPI) WriteToMemory;
 
-void ReadFromIo(TCpu *Cpu, void *Buffer, unsigned short int Port, int Size);
+void ReadFromIo(TCpuState *CpuState, void *Buffer, unsigned short int Port, int Size);
 #pragma aux (EMAPI) ReadFromIo;
 
-void WriteToIo(TCpu *Cpu, void *Buffer, unsigned short int Port, int Size);
+void WriteToIo(TCpuState *CpuState, void *Buffer, unsigned short int Port, int Size);
 #pragma aux (EMAPI) WriteToIo;
 
-void SysCall(TCpu *Cpu);
+void SysCall(TCpuState *CpuState);
 #pragma aux (EMAPI) SysCall;
 
-void Dis_ass_more(TCpu *Cpu, unsigned long count);
+void Dis_ass_more(TCpuState *CpuState, unsigned long count);
 #pragma aux (EMAPI) Dis_ass_more;
 
 void initbuffer(void *buffer, unsigned long count);
 #pragma aux (EMAPI) initbuffer;
 
-void getvalue(TCpu *Cpu);
+void getvalue(TCpuState *CpuState);
 #pragma aux (EMAPI) getvalue;
 
 void setvalue(TLocation *position);
@@ -100,7 +100,7 @@ void setvalue(TLocation *position);
 void init_follow();            /* to initiate the follow procedure */
 #pragma aux (EMAPI) init_follow;
 
-void showdata(TCpu *Cpu);  /* print ata on the screen */
+void showdata(TCpuState *CpuState);  /* print ata on the screen */
 #pragma aux (EMAPI) showdata;
 
 };
@@ -112,9 +112,9 @@ void showdata(TCpu *Cpu);  /* print ata on the screen */
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char GetIntVector(TCpu *Cpu)
+char GetIntVector(TCpuState *CpuState)
 {
-    return Cpu->AckInt();
+    return CpuState->Cpu->AckInt();
 }
 
 /*##################  ReadFromMemory  ###############
@@ -124,12 +124,12 @@ char GetIntVector(TCpu *Cpu)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void ReadFromMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size)
+void ReadFromMemory(TCpuState *CpuState, void *Buffer, unsigned long Address, int Size)
 {
-    if (Cpu->CodeFetch)
-        Cpu->ReadCode(Buffer, Address, Size);
+    if (CpuState->CodeFetch)
+        CpuState->Cpu->ReadCode(Buffer, Address, Size);
     else
-            Cpu->ReadFromMemory(Buffer, Address, Size);
+        CpuState->Cpu->ReadFromMemory(Buffer, Address, Size);
 }
 
 /*##################  WriteToMemory  ###############
@@ -139,9 +139,9 @@ void ReadFromMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteToMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size)
+void WriteToMemory(TCpuState *CpuState, void *Buffer, unsigned long Address, int Size)
 {
-        Cpu->WriteToMemory(Buffer, Address, Size);
+    CpuState->Cpu->WriteToMemory(Buffer, Address, Size);
 }
 
 /*##################  ReadFromIo  ###############
@@ -151,21 +151,9 @@ void WriteToMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void ReadFromIo(TCpu *Cpu, void *Buffer, unsigned short Port, int Size)
+void ReadFromIo(TCpuState *CpuState, void *Buffer, unsigned short Port, int Size)
 {
-        Cpu->ReadFromIo(Buffer, Port, Size);
-}
-
-/*##################  SysCall  ###############
-*   Purpose....: Syscall                                                                       #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void SysCall(TCpu *Cpu)
-{
-        Cpu->SysCall();
+    CpuState->Cpu->ReadFromIo(Buffer, Port, Size);
 }
 
 /*##################  WriteToIo  ###############
@@ -175,103 +163,55 @@ void SysCall(TCpu *Cpu)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteToIo(TCpu *Cpu, void *Buffer, unsigned short Port, int Size)
+void WriteToIo(TCpuState *CpuState, void *Buffer, unsigned short Port, int Size)
 {
-        Cpu->WriteToIo(Buffer, Port, Size);
+    CpuState->Cpu->WriteToIo(Buffer, Port, Size);
 }
 
-/*##################  TCpu::TCpu  ###############
-*   Purpose....: Constructor for CPU                                                                #
+/*##################  SysCall  ###############
+*   Purpose....: Syscall                                                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TCpu::TCpu()
+void SysCall(TCpuState *CpuState)
 {
-        int i;
-
-        CodeFetch = 0;
-
-        for (i = 0; i < MAX_BREAKPOINTS; i++)
-                FBreakpoints[i] = 0;
-
-        debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
-        initbuffer(buffer_val,COUNTBUFFER); /* initialise le buffer*/
-
-        OnIdle = 0;
-        OnSetClk = 0;
-        OnResetClk = 0;
-        OnSysCall = 0;
-        OnReadFromMemory = 0;
-        OnWriteToMemory = 0;
-        OnReadFromIo = 0;
-        OnWriteToIo = 0;
-        FUpdateCycles = FALSE;
-        Reset();
+    CpuState->Cpu->SysCall();
 }
 
-/*##################  TCpu::~TCpu  ###############
-*   Purpose....: Destructor for CPU                                                                 #
+/*##################  TCpuState::TCpuState  ###############
+*   Purpose....: Constructor for CPU state                                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TCpu::~TCpu()
-{
-        ClearBreakpoints();
+TCpuState::TCpuState()
+{    
+    Reset();
 }
 
-/*##################  TCpu::SetInt  ###############
-*   Purpose....: Set interrupt state                                                         #
+/*##################  TCpuState::~TCpuState  ###############
+*   Purpose....: Destructor for CPU state                                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TCpu::SetInt(TInterrupt *Interrupt)
-{
-    PendingInt = TRUE;
-    FInterrupt = Interrupt;
+TCpuState::~TCpuState()
+{    
 }
 
-/*##################  TCpu::ResetInt  ###############
-*   Purpose....: Reset interrupt state                                                         #
+/*##################  TCpuState::TCpuState  ###############
+*   Purpose....: Reset CPU state                                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TCpu::ResetInt(TInterrupt *Interrupt)
-{
-    PendingInt = FALSE;
-}
-
-/*##################  TCpu::AckInt  ###############
-*   Purpose....: Acknowledge int                                                         #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-char TCpu::AckInt()
-{
-    if (FInterrupt)
-        return FInterrupt->Ack();
-    else
-        return 0;
-}
-
-/*##################  TCpu::Reset  ###############
-*   Purpose....: Set CPU registers to reset state                                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void TCpu::Reset()
-{
+void TCpuState::Reset()
+{    
         TotalCycles = 0;
         Reg_eax = 0x12345678;
         Reg_ebx = 0x12345678;
@@ -323,6 +263,102 @@ void TCpu::Reset()
         Running = FALSE;
         PendingInt = 0;
         EmDebug = 0;
+}
+
+/*##################  TCpu::TCpu  ###############
+*   Purpose....: Constructor for CPU                                                                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+TCpu::TCpu()
+{
+        int i;
+
+        CpuState.CodeFetch = 0;
+        CpuState.Cpu = this;
+
+        for (i = 0; i < MAX_BREAKPOINTS; i++)
+                FBreakpoints[i] = 0;
+
+        debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
+        initbuffer(buffer_val,COUNTBUFFER); /* initialise le buffer*/
+
+        OnIdle = 0;
+        OnSetClk = 0;
+        OnResetClk = 0;
+        OnSysCall = 0;
+        OnReadFromMemory = 0;
+        OnWriteToMemory = 0;
+        OnReadFromIo = 0;
+        OnWriteToIo = 0;
+        FUpdateCycles = FALSE;
+        Reset();
+}
+
+/*##################  TCpu::~TCpu  ###############
+*   Purpose....: Destructor for CPU                                                                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+TCpu::~TCpu()
+{
+        ClearBreakpoints();
+}
+
+/*##################  TCpu::SetInt  ###############
+*   Purpose....: Set interrupt state                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::SetInt(TInterrupt *Interrupt)
+{
+    CpuState.PendingInt = TRUE;
+    FInterrupt = Interrupt;
+}
+
+/*##################  TCpu::ResetInt  ###############
+*   Purpose....: Reset interrupt state                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::ResetInt(TInterrupt *Interrupt)
+{
+    CpuState.PendingInt = FALSE;
+}
+
+/*##################  TCpu::AckInt  ###############
+*   Purpose....: Acknowledge int                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TCpu::AckInt()
+{
+    if (FInterrupt)
+        return FInterrupt->Ack();
+    else
+        return 0;
+}
+
+/*##################  TCpu::Reset  ###############
+*   Purpose....: Set CPU registers to reset state                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::Reset()
+{
+    CpuState.Reset();
 }
 
 /*##################  TCpu::AddBreakpoint  ###############
@@ -497,7 +533,7 @@ void TCpu::ReadCode(void *Buffer, unsigned long Address, int Size)
         int i;
         char *Dest;
 
-        if (Running)
+        if (CpuState.Running)
                 AddCycles((Size - 1) / 4 + 1);
 
         Dest = (char *)Buffer;
@@ -522,7 +558,7 @@ void TCpu::ReadFromMemory(void *Buffer, unsigned long Address, int Size)
         int i;
         char *Dest;
 
-        if (Running)
+        if (CpuState.Running)
                 AddCycles((Size - 1) / 4 + 1);
 
         Dest = (char *)Buffer;
@@ -547,7 +583,7 @@ void TCpu::WriteToMemory(void *Buffer, unsigned long Address, int Size)
         int i;
         char *Dest;
 
-        if (Running)
+        if (CpuState.Running)
                 AddCycles((Size - 1) / 4 + 1);
 
         Dest = (char *)Buffer;
@@ -572,7 +608,7 @@ void TCpu::ReadFromIo(void *Buffer, unsigned short int Port, int Size)
         char *Dest;
         int i;
 
-        if (Running)
+        if (CpuState.Running)
                 AddCycles((Size - 1) / 4 + 1);
 
         Dest = (char *)Buffer;
@@ -597,7 +633,7 @@ void TCpu::WriteToIo(void *Buffer, unsigned short int Port, int Size)
         char *Dest;
         int i;
 
-        if (Running)
+        if (CpuState.Running)
                 AddCycles((Size - 1) / 4 + 1);
 
         Dest = (char *)Buffer;
@@ -620,7 +656,7 @@ void TCpu::WriteToIo(void *Buffer, unsigned short int Port, int Size)
 void TCpu::EmulateOne()
 {
     FUpdateCycles = TRUE;
-    Emulate(this);
+    Emulate(&CpuState);
     FUpdateCycles = FALSE;
 }
 
@@ -637,8 +673,8 @@ void TCpu::AddCycles(unsigned int Cycles)
 
         if (FUpdateCycles)
         {
-                TotalCycles += Cycles;
-                Total = TotalCycles / 8;
+                CpuState.TotalCycles += Cycles;
+                Total = CpuState.TotalCycles / 8;
                 if (Total & 1)
                         NotifySetClk();
                 else
@@ -655,10 +691,10 @@ void TCpu::AddCycles(unsigned int Cycles)
 *##########################################################################*/
 void TCpu::Break()
 {
-        if (Running)
-                UserBreak(this);
+        if (CpuState.Running)
+                UserBreak(&CpuState);
         else
-                EmDebug |= DEBUG_BREAK;
+                CpuState.EmDebug |= DEBUG_BREAK;
 }
 
 /*##################  TCpu::Trace  ###############
@@ -670,11 +706,11 @@ void TCpu::Break()
 *##########################################################################*/
 void TCpu::Trace()
 {
-        if (ReqBuffer[0] == 0xCC)
-                Reg_eip++;
+        if (CpuState.ReqBuffer[0] == 0xCC)
+                CpuState.Reg_eip++;
         else
                 EmulateOne();
-        ReadInstruction(this);
+        ReadInstruction(&CpuState);
 }
 
 /*##################  TCpu::Pace  ###############
@@ -693,37 +729,37 @@ void TCpu::Pace()
         int CheckDelay;
         int BreakOnEqual = TRUE;
 
-        switch (ReqBuffer[0])
+        switch (CpuState.ReqBuffer[0])
         {
                 case 0xCC:
-                        Reg_eip++;
-                        ReadInstruction(this);
+                        CpuState.Reg_eip++;
+                        ReadInstruction(&CpuState);
                         Done = TRUE;
                         break;
 
                 case 0x9A:
-                        BreakCs = Reg_cs.selector;
-                        BreakEip = Reg_eip + 5;
+                        BreakCs = CpuState.Reg_cs.selector;
+                        BreakEip = CpuState.Reg_eip + 5;
                         EmulateOne();
-                        ReadInstruction(this);
+                        ReadInstruction(&CpuState);
                         Done = FALSE;
                         break;
 
                 case 0xE0:
                 case 0xE1:
                 case 0xE2:
-                        BreakCs = Reg_cs.selector;
-                        BreakEip = Reg_eip + 2;
+                        BreakCs = CpuState.Reg_cs.selector;
+                        BreakEip = CpuState.Reg_eip + 2;
                         EmulateOne();
-                        ReadInstruction(this);
+                        ReadInstruction(&CpuState);
                         Done = FALSE;
                         break;
 
                 case 0xE8:
-                        BreakCs = Reg_cs.selector;
-                        BreakEip = Reg_eip + 3;
+                        BreakCs = CpuState.Reg_cs.selector;
+                        BreakEip = CpuState.Reg_eip + 3;
                         EmulateOne();
-                        ReadInstruction(this);
+                        ReadInstruction(&CpuState);
                         Done = FALSE;
                         break;
 
@@ -733,11 +769,11 @@ void TCpu::Pace()
                         break;
 
                 default:
-                        BreakCs = Reg_cs.selector;
-                        BreakEip = Reg_eip;
+                        BreakCs = CpuState.Reg_cs.selector;
+                        BreakEip = CpuState.Reg_eip;
                         BreakOnEqual = FALSE;
                         EmulateOne();
-                        ReadInstruction(this);
+                        ReadInstruction(&CpuState);
                         Done = FALSE;
                         break;
         }
@@ -746,18 +782,18 @@ void TCpu::Pace()
         while (!Done)
         {
                 if (CheckHlt)
-                        Done = ReqBuffer[0] != 0xF4;
+                        Done = CpuState.ReqBuffer[0] != 0xF4;
                 else
                 {
-                        Done = (BreakCs == Reg_cs.selector &&
-                                        BreakEip == Reg_eip);
+                        Done = (BreakCs == CpuState.Reg_cs.selector &&
+                                        BreakEip == CpuState.Reg_eip);
                         if (!BreakOnEqual)
                                 Done = !Done;
                 }
                 if (!Done)
                 {
                         EmulateOne();
-                        if (EmDebug & DEBUG_BREAK)
+                        if (CpuState.EmDebug & DEBUG_BREAK)
                                 Done = TRUE;
                         else
                         {
@@ -765,13 +801,13 @@ void TCpu::Pace()
                                 {
                                         CheckDelay = 1000;
                                         NotifyIdle();
-                                        if (EmDebug & DEBUG_BREAK)
+                                        if (CpuState.EmDebug & DEBUG_BREAK)
                                                 Done = TRUE;
                                 }
                                 else
                                         CheckDelay--;
                         }
-                        ReadInstruction(this);
+                        ReadInstruction(&CpuState);
                 }
         }
 }
@@ -789,30 +825,26 @@ void TCpu::Go()
         int CheckDelay;
         int i;
 
-        Done = ReqBuffer[0] == 0xCC;
+        Done = CpuState.ReqBuffer[0] == 0xCC;
         CheckDelay = 1000;
         while (!Done)
         {
                 EmulateOne();
-                if (EmDebug & DEBUG_BREAK)
+                if (CpuState.EmDebug & DEBUG_BREAK)
                         Done = TRUE;
 
                 for (i = 0; i < MAX_BREAKPOINTS; i++)
                         if (FBreakpoints[i])
-                                if (Reg_cs.selector == FBreakpoints[i]->Selector && Reg_eip == FBreakpoints[i]->Offset)
+                                if (CpuState.Reg_cs.selector == FBreakpoints[i]->Selector && CpuState.Reg_eip == FBreakpoints[i]->Offset)
                                         Done = TRUE;
-
-// fixed breakpoints for ZFX86
-                if (Reg_eip == 0x2517)
-                        Done = TRUE;
 
                 if (!Done)
                 {
-                        ReadInstruction(this);
-                        if (ReqBuffer[0] == 0xCC)
+                        ReadInstruction(&CpuState);
+                        if (CpuState.ReqBuffer[0] == 0xCC)
                         {
                                 Done = TRUE;
-                                Reg_eip++;
+                                CpuState.Reg_eip++;
                         }
                         else
                         {
@@ -820,7 +852,7 @@ void TCpu::Go()
                                 {
                                         CheckDelay = 1000;
                                         NotifyIdle();
-                                        if (EmDebug & DEBUG_BREAK)
+                                        if (CpuState.EmDebug & DEBUG_BREAK)
                                                 Done = TRUE;
                                 }
                                 else
@@ -839,21 +871,21 @@ void TCpu::Go()
 *##########################################################################*/
 void TCpu::ShowInstruction(int Count)
 {
-        TCpu Cpu_backup;
+        TCpuState Cpu_backup;
 
         debugflag = INSTRUCTION_CODE_ONLY;
-        Cpu_backup = *this;
+        Cpu_backup = CpuState;
         if (NewCs == 0)
-                Dis_ass_more(this, Count);
+                Dis_ass_more(&CpuState, Count);
         else
         {
-                Reg_cs.selector = NewCs;
-                Reg_eip = NewEip;
+                CpuState.Reg_cs.selector = NewCs;
+                CpuState.Reg_eip = NewEip;
                 
-        Dis_ass_more(this, Count);
+        Dis_ass_more(&CpuState, Count);
         }       
         
-        *this = Cpu_backup;
+        CpuState = Cpu_backup;
     debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
 }
 
@@ -866,12 +898,12 @@ void TCpu::ShowInstruction(int Count)
 *##########################################################################*/
 void TCpu::ShowPreviousInstruction()
 {
-        TCpu Cpu_backup;
+        TCpuState Cpu_backup;
 
         debugflag = INSTRUCTION_CODE_ONLY;
-        Cpu_backup = *this;     
-        getvalue(this);
-        *this = Cpu_backup;
+        Cpu_backup = CpuState;     
+        getvalue(&CpuState);
+        CpuState = Cpu_backup;
     debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
 }
 
@@ -884,20 +916,20 @@ void TCpu::ShowPreviousInstruction()
 *##########################################################################*/
 void TCpu::ShowData()
 {
-        TCpu Cpu_backup;
+        TCpuState Cpu_backup;
 
-        Cpu_backup = *this;             /* save Cpu context*/
+        Cpu_backup = CpuState;             /* save Cpu context*/
         if (NewCs == 0)
-                showdata(this);
+                showdata(&CpuState);
         else
         {
-                Reg_gs.selector = NewCs;
-                Reg_esi = NewEip;
+                CpuState.Reg_gs.selector = NewCs;
+                CpuState.Reg_esi = NewEip;
                 
-        showdata(this);
+        showdata(&CpuState);
         }       
 
-        *this = Cpu_backup;
+        CpuState = Cpu_backup;
     debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
 }
 
@@ -910,9 +942,9 @@ void TCpu::ShowData()
 *##########################################################################*/
 void TCpu::Show()
 {
-        DisAssemble(this);
-        WriteFpuRegs(this);
-        WriteRegs(this);
+        DisAssemble(&CpuState);
+        WriteFpuRegs(&CpuState);
+        WriteRegs(&CpuState);
 }
 
 /*##################  TCpu::ShowFpu  ###############
@@ -924,6 +956,6 @@ void TCpu::Show()
 *##########################################################################*/
 void TCpu::ShowFpu()
 {
-        WriteFpuRegs(this);
+        WriteFpuRegs(&CpuState);
 }
 
