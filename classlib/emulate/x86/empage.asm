@@ -170,20 +170,20 @@ AllocateTlb     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadPhysical
+;               NAME:           ReadPhysical
 ;
 ;               description:    read from bus
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             PHYSICAL ADDRESS
-;                                               ESI             BUFFER
-;                                               ECX             NUMBER OF BYTE TO READ
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         PHYSICAL ADDRESS
+;                               ESI             BUFFER
+;                               ECX             NUMBER OF BYTE TO READ
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadPhysical Proc near
         push ecx
-        push dword ptr 0
+        push edi
         push ebx
         push esi
         push ebp
@@ -194,20 +194,20 @@ ReadPhysical    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WritePhysical
+;               NAME:           WritePhysical
 ;
 ;               description:    write to bus
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             PHYSICAL ADDRESS
-;                                               ESI             BUFFER
-;                                               ECX             SIZE
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         PHYSICAL ADDRESS
+;                               ESI             BUFFER
+;                               ECX             SIZE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WritePhysical Proc near
         push ecx
-        push dword ptr 0
+        push edi
         push ebx
         push esi
         push ebp
