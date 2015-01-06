@@ -603,7 +603,6 @@ init:
     mov ds:ram1_size,ebx
 
 init_no_bda:   
-    int 3
     mov ds:cpu_type,3
     mov ds:cpu_vendor,0
     mov ds:cpu_feature_flags,0
@@ -780,6 +779,7 @@ prot_init:
 ;
     call init_pre_tasking
     call init_boot_system
+    int 3
     call start_paging
     call init_paging_trap
     call init_physical

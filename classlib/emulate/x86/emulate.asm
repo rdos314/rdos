@@ -57,12 +57,35 @@ include \rdos\classlib\emulate\x86\em387.inc
 EmCpuid   Proc near
         mov eax,[ebp].reg_eax
         cmp eax,0
-        ja EmCpuidFail
+        je EmCpuid0
 ;
+        cmp eax,1
+        je EmCpuid1        
+;       
+        cmp eax,80000000h
+        je EmCpuidE0        
+;
+        cmp eax,80000001h
+        je EmCpuid1
+;
+        jmp EmCpuidFail        
+
+EmCpuid0:        
+        mov [ebp].reg_eax,80000004h
         mov [ebp].reg_ebx,30303030h
         mov [ebp].reg_ecx,30303030h
         mov [ebp].reg_edx,30303030h
         ret        
+
+EmCpuid1:
+        mov [ebp].reg_eax,600h
+        mov [ebp].reg_edx,861h
+        mov [ebp].reg_ecx,0
+        ret
+
+EmCpuidE0:
+        mov [ebp].reg_eax,80000004h
+        ret
 
 EmCpuidFail:        
         xor bx,bx
