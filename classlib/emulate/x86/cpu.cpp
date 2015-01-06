@@ -256,6 +256,7 @@ void TCpuState::Reset()
         Reg_cr0 = 0x60000010;
         Reg_cr2 = 0x12345678;
         Reg_cr3 = 0x12345678;
+        Reg_cr4 = 0;
         Reg_gdt.base = 0x12345678;
         Reg_gdt.limit = 0x1234;
         Reg_idt.base = 0;

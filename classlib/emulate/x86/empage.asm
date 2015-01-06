@@ -113,6 +113,58 @@ SearchTlb32       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           SearchTlb64
+;
+;               description:    search TLB for a physical address
+;
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;
+;               RETURNS:        NC              OK
+;                               EDX:EAX         PHYSICAL ADDRESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SearchTlb64 Proc near
+        push ebx
+        push esi
+;
+        mov eax,ebx
+        and ax,0F000h
+        lea esi,[ebp].reg_tlb.tlb
+        mov ecx,32
+        mov ebx,1
+
+SearchTlbLoop64:
+        cmp eax,[esi].t_tag
+        jne SearchTlbNext64
+;
+        cmp edi,[esi+4].t_tag
+        je SearchTlbFound64
+
+SearchTlbNext64:
+        add esi,SIZE tlb_entry_struc
+        shl ebx,1
+        loop SearchTlbLoop64
+;        
+        stc
+        pop esi
+        pop ebx
+        ret
+
+SearchTlbFound64:
+        mov eax,[esi].t_address
+        mov edx,[esi+4].t_address
+        or [ebp].reg_tlb.tlb_lru,ebx
+        clc
+        pop esi
+        pop ebx
+        ret
+SearchTlb64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           AllocateTlb
 ;
 ;               description:    Find a free entry in TLB
@@ -445,6 +497,64 @@ CondLinearToPhysical32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           LinearToPhysical64
+;
+;               description:    Translate a linear address to a physical address
+;
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;
+;               RETURNS:        EDX:EAX         PHYSICAL ADDRESS & ATTRIBUTES
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LinearToPhysical64        Proc near
+        int 3
+        push ebx
+        call SearchTlb64
+        jnc LinearToPhysicalDone64
+;
+        call AllocateTlb
+        int 3
+
+LinearToPhysicalDone64:
+        pop ebx
+        ret
+LinearToPhysical64        Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           CondLinearToPhysical64
+;
+;               description:    Translate a linear address to a physical address
+;                                               no page faults
+;
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;
+;               RETURNS:        EDX:EAX         PHYSICAL ADDRESS & ATTRIBUTES
+;                               NC              OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CondLinearToPhysical64    Proc near
+        push ebx
+        call SearchTlb64
+        jnc CondLinearToPhysicalDone64
+;
+        call AllocateTlb
+        int 3
+        stc
+
+CondLinearToPhysicalDone64:
+        pop ebx
+        ret
+CondLinearToPhysical64    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           ReadPaged32
 ;
 ;               description:    Read paged
@@ -587,6 +697,159 @@ WritePaged32      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           ReadPaged64
+;
+;               description:    Read paged
+;
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;                               ECX             NUMBER OF BYTE TO READ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadPaged64       Proc near
+        lea esi,[ebp].req_buf
+
+ReadPagedLoop64:
+        push ebx
+        push ecx
+        push edx
+        push esi
+;
+        call LinearToPhysical64
+        test al,4
+        jnz ReadLinearPrivOk64
+        test [ebp].em_pl,ACCESS_RPL
+        jz ReadLinearPrivOk64
+;
+        mov [ebp].reg_cr2,ebx
+        mov [ebp].reg_cr2+4,edi
+        mov bx,4
+        jmp PageFault
+
+ReadLinearPrivOk64:
+        and ax,0F000h
+        and ebx,0FFFh
+        or eax,ebx
+        mov ebx,eax
+        pop esi
+        pop ecx
+;
+        push ecx
+        push esi
+        not eax
+        and eax,0FFFh
+        inc eax
+        cmp ecx,eax
+        jbe ReadPagedWhole64
+        mov ecx,eax
+ReadPagedWhole64:
+        push ecx
+        call ReadPhysical
+        pop eax
+        pop esi
+        pop edx
+        pop ecx
+        pop ebx
+        sub ecx,eax
+        jz ReadPagedDone64
+;
+        add esi,eax
+        add ebx,eax
+        adc edi,0        
+        jmp ReadPagedLoop64
+
+ReadPagedDone64:
+        ret
+ReadPaged64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           WritePaged64
+;
+;               description:    Write paged
+;
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;                               ECX             NUMBER OF BYTE TO WRITE
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WritePaged64      Proc near
+        lea esi,[ebp].req_buf
+
+WritePagedLoop64:
+        push ebx
+        push ecx
+        push edx
+        push esi
+;
+        call LinearToPhysical64
+        test al,4
+        jnz WritePagedUserOk64
+;
+        test [ebp].em_pl,ACCESS_RPL
+        jz WritePagedUserOk64
+;
+        mov [ebp].reg_cr2,ebx
+        mov [ebp].reg_cr2+4,edi
+        mov bx,4
+        jmp PageFault
+
+WritePagedUserOk64:
+        test al,2
+        jnz WritePagedPrivOk64
+        test [ebp].em_pl,ACCESS_RPL
+        jnz WritePagedPrivFault64
+        test [ebp].reg_cr0,CR0_WP
+        jz WritePagedPrivOk64
+
+WritePagedPrivFault64:
+        mov [ebp].reg_cr2,ebx
+        mov [ebp].reg_cr2+4,edi
+        mov bx,2
+        jmp PageFault
+        
+WritePagedPrivOk64:
+        and ax,0F000h
+        and ebx,0FFFh
+        or eax,ebx
+        mov ebx,eax
+        pop esi
+        pop ecx
+;
+        push ecx
+        push esi
+        not eax
+        and eax,0FFFh
+        inc eax
+        cmp ecx,eax
+        jbe WritePagedWhole64
+        mov ecx,eax
+
+WritePagedWhole64:
+        push ecx
+        call WritePhysical
+        pop eax
+        pop esi
+        pop edx
+        pop ecx
+        pop ebx
+        sub ecx,eax
+        jz WritePagedDone32
+        add esi,eax
+        add ebx,eax
+        adc edi,0
+        jmp WritePagedLoop64
+
+WritePagedDone64:
+        ret
+WritePaged64      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           ReadLinear
 ;
 ;               description:    read from linear memory
@@ -599,11 +862,20 @@ WritePaged32      Endp
 
 ReadLinear Proc near
         test [ebp].reg_cr0,CR0_PG
-        jz ReadLinearNormal
+        jz ReadLinearReal
+;        
+        test [ebp].reg_cr4,20h
+        jz ReadLinear32
+
+ReadLinear64:
+        call ReadPaged64
+        ret
+
+ReadLinear32:        
         call ReadPaged32
         ret
 
-ReadLinearNormal:
+ReadLinearReal:
         xor edi,edi
         lea esi,[ebp].req_buf
         call ReadPhysical
@@ -625,11 +897,20 @@ ReadLinear      Endp
 
 WriteLinear Proc near
         test [ebp].reg_cr0,CR0_PG
-        jz WriteLinearNormal
+        jz WriteLinearReal
+;        
+        test [ebp].reg_cr4,20h
+        jz WriteLinear32
+
+WriteLinear64:
+        call WritePaged64 
+        ret       
+
+WriteLinear32:        
         call WritePaged32
         ret
 
-WriteLinearNormal:
+WriteLinearReal:
         xor edi,edi
         lea esi,[ebp].req_buf
         call WritePhysical
@@ -712,6 +993,84 @@ CondReadPaged32   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           CondReadPaged64
+;
+;               description:    Read paged without page faults
+;
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;                               ECX             NUMBER OF BYTE TO READ
+;
+;               RETURNS:        ECX             NUBER OF BYTES READ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CondReadPaged64   Proc near
+        int 3
+        lea esi,[ebp].req_buf
+
+CondReadPagedLoop64:
+        push ebx
+        push ecx
+        push edx
+        push esi
+;
+        call CondLinearToPhysical64
+        jc CondReadPagedFailed64
+;
+        test al,4
+        jnz CondReadLinearPrivOk64
+        test [ebp].reg_cs.d_access,ACCESS_RPL
+        jz CondReadLinearPrivOk64
+        jmp CondReadPagedDone64
+
+CondReadLinearPrivOk64:
+        and ax,0F000h
+        and ebx,0FFFh
+        or eax,ebx
+        mov ebx,eax
+        pop esi
+        pop ecx
+;
+        push ecx
+        push esi
+        not eax
+        and eax,0FFFh
+        inc eax
+        cmp ecx,eax
+        jbe CondReadPagedWhole64
+        mov ecx,eax
+CondReadPagedWhole64:
+        push ecx
+        call ReadPhysical
+        pop eax
+        pop esi
+        pop edx
+        pop ecx
+        pop ebx
+        add esi,eax
+        add ebx,eax
+        adc edi,0
+        sub ecx,eax
+        jz CondReadPagedDone64
+        jmp CondReadPagedLoop64
+
+CondReadPagedFailed64:
+        pop esi
+        pop edx
+        pop ecx
+        pop ebx
+
+CondReadPagedDone64:
+        mov ecx,esi
+        lea esi,[ebp].req_buf
+        sub ecx,esi
+        ret
+CondReadPaged64   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           CondReadLinear
 ;
 ;               description:    conditional read from linear memory
@@ -728,11 +1087,20 @@ CondReadPaged32   Endp
 
 CondReadLinear Proc near
         test [ebp].reg_cr0,CR0_PG
-        jz CondReadLinearNormal
+        jz CondReadLinearReal
+;        
+        test [ebp].reg_cr4,20h
+        jz CondReadLinear32
+
+CondReadLinear64:
+        call CondReadPaged64 
+        ret       
+
+CondReadLinear32:        
         call CondReadPaged32
         ret
 
-CondReadLinearNormal:
+CondReadLinearReal:
         xor edi,edi
         lea esi,[ebp].req_buf
         push ecx
