@@ -695,7 +695,7 @@ init_cpu_done:
     mov ax,gdt_sel
     mov es,ax
 ;
-    mov cx,1000h - 70h
+    mov cx,800h - 70h
     mov di,70h
     xor al,al
     rep stosb
@@ -769,6 +769,14 @@ init_cpu_done:
 
 prot_init:
     cli
+    mov ax,gdt_sel
+    mov es,ax
+;
+    mov cx,800h
+    mov di,800h
+    xor al,al
+    rep stosb
+;
     call init_pre_tasking
     call init_boot_system
     call start_paging
@@ -818,13 +826,6 @@ prot_init:
 ;
     mov bx,flat_data_sel
     CreateDataSelector32
-
-
-    int 3
-    mov ax,1234h
-    mov ds,ax
-
-
 ;
     StartTasking
     
