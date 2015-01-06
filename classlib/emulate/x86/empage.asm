@@ -593,12 +593,6 @@ WritePaged      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadLinear Proc near
-        or edi,edi
-        jz ReadLinear32
-;
-        int 3
-
-ReadLinear32:
         test [ebp].reg_cr0,CR0_PG
         jz ReadLinearNormal
         call ReadPaged
@@ -725,14 +719,6 @@ CondReadPaged   Endp
         public CondReadLinear
 
 CondReadLinear Proc near
-        or edi,edi
-        jz CondReadLinear32
-;
-        int 3
-
-CondReadLinear32:
-        
-        
         test [ebp].reg_cr0,CR0_PG
         jz CondReadLinearNormal
         call CondReadPaged
