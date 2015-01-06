@@ -216,6 +216,14 @@ void TCpuState::Reset()
         Reg_edx = 0x301;
         Reg_esi = 0x12345678;
         Reg_edi = 0x12345678;
+        Reg_r8 = 0;
+        Reg_r9 = 0;
+        Reg_r10 = 0;
+        Reg_r11 = 0;
+        Reg_r12 = 0;
+        Reg_r13 = 0;
+        Reg_r14 = 0;
+        Reg_r15 = 0;
         Reg_ebp = 0x12345678;
         Reg_esp = 0x0;
         Reg_eflags = 2;
@@ -256,6 +264,10 @@ void TCpuState::Reset()
         Reg_ldt.limit = 0x1234;
         Reg_tr.selector = 0x1234;
         Reg_tr.base = 0x12345678;
+
+        Tag = 0;
+        MathControl = 0;
+        MathStatus = 0;
 
         Running = FALSE;
         PendingInt = 0;
