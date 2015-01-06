@@ -604,6 +604,7 @@ ReadLinear Proc near
         ret
 
 ReadLinearNormal:
+        xor edi,edi
         lea esi,[ebp].req_buf
         call ReadPhysical
         ret
@@ -629,6 +630,7 @@ WriteLinear Proc near
         ret
 
 WriteLinearNormal:
+        xor edi,edi
         lea esi,[ebp].req_buf
         call WritePhysical
         ret
@@ -731,6 +733,7 @@ CondReadLinear Proc near
         ret
 
 CondReadLinearNormal:
+        xor edi,edi
         lea esi,[ebp].req_buf
         push ecx
         call ReadPhysical
