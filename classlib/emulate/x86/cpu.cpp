@@ -293,6 +293,7 @@ TCpu::TCpu()
         FUpdateCycles = FALSE;
         Reset();
         CpuState.CpuType = 5;
+        CpuState.EflagsMask = 0x3FFFD7;
 }
 
 /*##################  TCpu::~TCpu  ###############
@@ -317,6 +318,7 @@ TCpu::~TCpu()
 void TCpu::Force386()
 {
     CpuState.CpuType = 3;
+    CpuState.EflagsMask = 0x3FFD7;
 }
 
 /*##################  TCpu::Force486  ###############
@@ -329,6 +331,7 @@ void TCpu::Force386()
 void TCpu::Force486()
 {
     CpuState.CpuType = 4;
+    CpuState.EflagsMask = 0x7FFD7;
 }
 
 /*##################  TCpu::SetInt  ###############

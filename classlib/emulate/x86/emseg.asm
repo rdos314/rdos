@@ -1136,7 +1136,7 @@ TransferHigherVm:
         mov [ebp].reg_esp,eax
 ;
         pop eax
-        and eax,NOT EFLAGS_UNDEF
+        and eax,[ebp].eflags_mask
         or al,2
         mov [ebp].reg_eflags,eax
 ;       
@@ -1262,7 +1262,7 @@ HigherLoadIt:
         pop ecx
         jc TransferHigherFlagsDone
 ;
-        and ecx,NOT EFLAGS_UNDEF
+        and ecx,[ebp].eflags_mask
         or cl,2
         mov [ebp].reg_eflags,ecx
 
@@ -3017,7 +3017,7 @@ IretFarPm16:
 IretFarReal16:
         call TransferReal
         call PopWord
-        and eax,NOT EFLAGS_UNDEF
+        and eax,[ebp].eflags_mask
         or al,2
         mov word ptr [ebp].reg_eflags,ax
         ret

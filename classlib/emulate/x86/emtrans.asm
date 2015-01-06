@@ -1702,17 +1702,6 @@ EmPushfd:
 
 EmPushfdDo:
         mov eax,[ebp].reg_eflags
-        cmp [ebp].cpu_type,4
-        ja EmPushfdPush
-;
-        and eax,7FFFFh
-;                
-        cmp [ebp].cpu_type,3
-        ja EmPushfdPush
-;
-        and eax,3FFFFh        
-
-EmPushfdPush:
         call PushDword
         ret
 EmPushf endp
@@ -1754,7 +1743,7 @@ EmPopfPm:
         jc EmPopfDone
 
 EmPopfDo:
-        and eax,NOT EFLAGS_UNDEF
+        and eax,[ebp].eflags_mask
         or al,2
         mov word ptr [ebp].reg_eflags,ax
 
@@ -1784,7 +1773,7 @@ EmPopfdPm:
         jc EmPopfdDone
 
 EmPopfdDo:
-        and eax,NOT EFLAGS_UNDEF
+        and eax,[ebp].eflags_mask
         or al,2
         mov [ebp].reg_eflags,eax
 

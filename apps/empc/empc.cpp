@@ -329,8 +329,6 @@ void main(void)
 
     Pit.Counter[0]->Define(&Pic0, 0);
 
-    Cpu.Force486();
-
     Cpu.OnSetClk = SetClk;
     Cpu.OnResetClk = ResetClk;
     Cpu.OnIdle = Idle;
@@ -339,7 +337,7 @@ void main(void)
     Cpu.OnReadFromIo = ReadFromIo;
     Cpu.OnWriteToIo = WriteToIo;
     Cpu.Reset();
-
+    
     Pic0.DefineCpu(&Cpu);
     Pic0.OnSet = SetInt;
     Pic0.OnReset = ResetInt;

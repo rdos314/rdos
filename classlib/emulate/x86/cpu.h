@@ -211,6 +211,7 @@ public:
         char Running;
         char CodeFetch;
         char CpuType;
+        long EflagsMask;
 
         TCpu *Cpu;
         

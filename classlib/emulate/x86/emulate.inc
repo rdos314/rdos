@@ -29,8 +29,6 @@ STATE_RESET		EQU	0
 STATE_IDLE		EQU 1
 STATE_BUSY		EQU 2
 
-EFLAGS_UNDEF	EQU 0FFF80028h
-
 EFLAGS_ID		EQU 200000h
 EFLAGS_VIP		EQU 100000h
 EFLAGS_VIF		EQU 080000h
@@ -234,5 +232,6 @@ running			DB ?
 code_fetch      DB ?
 
 cpu_type        DB ?
+eflags_mask     DD ?
 
 cpu_struc	ENDS
