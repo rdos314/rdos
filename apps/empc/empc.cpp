@@ -315,6 +315,7 @@ void main(void)
     Bios.LoadBottom(&BiosFile);
     TRam LowRam(&Isa, 0, 0xA0000);
     TRam HighRam(&Isa, 0x100000, 0x700000);
+    TRam Ram64(&Isa, 0x100000000, 0x100000);
     TCpu Cpu;
     TPciIde PciIde(&Pci);
     int Key;

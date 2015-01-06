@@ -1196,7 +1196,12 @@ int15:
     jne i15Fail
 ;
     or ebx,ebx
-    jnz i15HiMem
+    jz i15LowMem
+;
+    cmp ebx,1
+    je i15HiMem
+;
+    jmp i15Mem64
 
 i15LowMem:
     mov ebx,1
@@ -1212,7 +1217,7 @@ i15LowMem:
     jmp i15Ok
 
 i15HiMem:
-    xor ebx,ebx
+    mov ebx,2
     xor eax,eax
     mov es:[di+4],eax
     mov es:[di+12],eax
@@ -1222,6 +1227,16 @@ i15HiMem:
     mov es:[di+8],eax
     mov eax,1
     mov es:[di+16],eax
+    mov eax,edx
+    jmp i15Ok
+
+i15Mem64:
+    xor ebx,ebx
+    mov dword ptr es:[di],0
+    mov dword ptr es:[di+4],1
+    mov dword ptr es:[di+8],100000h
+    mov dword ptr es:[di+12],0
+    mov dword ptr es:[di+16],1
     mov eax,edx
     jmp i15Ok
 

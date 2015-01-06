@@ -341,7 +341,6 @@ _UserBreak      Endp
         public TripleFault
 
 TripleFault     Proc near
-        int 3
         or [ebp].em_flags,triple_faulted
         or [ebp].em_debug,DEBUG_BREAK
         ResetFault
@@ -400,7 +399,6 @@ EmulateError    Endp
         public DivFault
 
 DivFault        Proc near
-        int 3
         ResetFault
         xor cx,cx
         mov al,0
@@ -444,7 +442,6 @@ OpcodeFault     Endp
         public DoubleFault
 
 DoubleFault     Proc near
-        int 3
         test [ebp].em_flags,double_faulted
         jnz TripleFault
         or [ebp].em_flags,double_faulted
@@ -497,7 +494,6 @@ SegmentFault    Endp
         public StackFault
 
 StackFault      Proc near
-        int 3
         test [ebp].em_flags,single_faulted
         jnz DoubleFault
         or [ebp].em_flags,single_faulted
@@ -574,7 +570,6 @@ PageFault       Endp
         public InvalidTssFault
 
 InvalidTssFault Proc near
-        int 3
         test [ebp].em_flags,single_faulted
         jnz DoubleFault
         or [ebp].em_flags,single_faulted
