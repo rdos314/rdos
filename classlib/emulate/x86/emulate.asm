@@ -48,6 +48,31 @@ include \rdos\classlib\emulate\x86\em387.inc
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:                   EmCpuid
+;
+;               DESCRIPTION:    cpuid
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmCpuid   Proc near
+        mov eax,[ebp].reg_eax
+        cmp eax,0
+        ja EmCpuidFail
+;
+        mov [ebp].reg_ebx,30303030h
+        mov [ebp].reg_ecx,30303030h
+        mov [ebp].reg_edx,30303030h
+        ret        
+
+EmCpuidFail:        
+        xor bx,bx
+        call ProtectionFault
+        ret
+EmCpuid   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:                   EmNop
 ;
 ;               DESCRIPTION:    nop
@@ -421,7 +446,7 @@ emt0F9A  DD OFFSET EmSetp,                               OFFSET EmSetnp
 emt0F9C  DD OFFSET EmSetl,                               OFFSET EmSetnl
 emt0F9E  DD OFFSET EmSetle,                              OFFSET EmSetnle
 emt0FA0  DD OFFSET EmPushFs,                             OFFSET EmPopFs
-emt0FA2  DD OFFSET OpcodeFault,                  OFFSET EmBtMemReg
+emt0FA2  DD OFFSET EmCpuid,                      OFFSET EmBtMemReg
 emt0FA4  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0FA6  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0FA8  DD OFFSET EmPushGs,                             OFFSET EmPopGs

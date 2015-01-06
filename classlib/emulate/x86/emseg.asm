@@ -380,7 +380,6 @@ TrapFault       Endp
         public EmulateError
         
 EmulateError    Proc near
-        int 3
         ResetFault
         or [ebp].em_flags,triple_faulted
         or [ebp].em_debug,DEBUG_BREAK
