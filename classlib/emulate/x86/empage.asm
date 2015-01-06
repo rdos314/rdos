@@ -445,34 +445,35 @@ CondLinearToPhysical32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   ReadPaged
+;               NAME:           ReadPaged32
 ;
 ;               description:    Read paged
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
-;                                               ECX             NUMBER OF BYTE TO READ
+;               PARAMETERS:     EBP             CPU
+;                               EBX             LINEAR ADDRESS
+;                               ECX             NUMBER OF BYTE TO READ
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadPaged       Proc near
+ReadPaged32       Proc near
+        xor edi,edi
         lea esi,[ebp].req_buf
-ReadPagedLoop:
+ReadPagedLoop32:
         push ebx
         push ecx
         push esi
 ;
         call LinearToPhysical32
         test al,4
-        jnz ReadLinearPrivOk
+        jnz ReadLinearPrivOk32
         test [ebp].em_pl,ACCESS_RPL
-        jz ReadLinearPrivOk
+        jz ReadLinearPrivOk32
 ;
         mov [ebp].reg_cr2,ebx
         mov bx,4
         jmp PageFault
 
-ReadLinearPrivOk:
+ReadLinearPrivOk32:
         and ax,0F000h
         and ebx,0FFFh
         or eax,ebx
@@ -486,9 +487,9 @@ ReadLinearPrivOk:
         and eax,0FFFh
         inc eax
         cmp ecx,eax
-        jbe ReadPagedWhole
+        jbe ReadPagedWhole32
         mov ecx,eax
-ReadPagedWhole:
+ReadPagedWhole32:
         push ecx
         call ReadPhysical
         pop eax
@@ -496,59 +497,61 @@ ReadPagedWhole:
         pop ecx
         pop ebx
         sub ecx,eax
-        jz ReadPagedDone
+        jz ReadPagedDone32
+;
         add esi,eax
         add ebx,eax
-        jmp ReadPagedLoop
+        jmp ReadPagedLoop32
 
-ReadPagedDone:
+ReadPagedDone32:
         ret
-ReadPaged       Endp
+ReadPaged32       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WritePaged
+;               NAME:           WritePaged32
 ;
 ;               description:    Write paged
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
-;                                               ECX             NUMBER OF BYTE TO WRITE
+;               PARAMETERS:     EBP             CPU
+;                               EBX             LINEAR ADDRESS
+;                               ECX             NUMBER OF BYTE TO WRITE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WritePaged      Proc near
+WritePaged32      Proc near
+        xor edi,edi
         lea esi,[ebp].req_buf
-WritePagedLoop:
+WritePagedLoop32:
         push ebx
         push ecx
         push esi
 ;
         call LinearToPhysical32
         test al,4
-        jnz WritePagedUserOk
+        jnz WritePagedUserOk32
         test [ebp].em_pl,ACCESS_RPL
-        jz WritePagedUserOk
+        jz WritePagedUserOk32
 ;
         mov [ebp].reg_cr2,ebx
         mov bx,4
         jmp PageFault
 
-WritePagedUserOk:
+WritePagedUserOk32:
         test al,2
-        jnz WritePagedPrivOk
+        jnz WritePagedPrivOk32
         test [ebp].em_pl,ACCESS_RPL
-        jnz WritePagedPrivFault
+        jnz WritePagedPrivFault32
         test [ebp].reg_cr0,CR0_WP
-        jz WritePagedPrivOk
+        jz WritePagedPrivOk32
 
-WritePagedPrivFault:
+WritePagedPrivFault32:
         mov [ebp].reg_cr2,ebx
         mov bx,2
         jmp PageFault
         
-WritePagedPrivOk:
+WritePagedPrivOk32:
         and ax,0F000h
         and ebx,0FFFh
         or eax,ebx
@@ -562,9 +565,9 @@ WritePagedPrivOk:
         and eax,0FFFh
         inc eax
         cmp ecx,eax
-        jbe WritePagedWhole
+        jbe WritePagedWhole32
         mov ecx,eax
-WritePagedWhole:
+WritePagedWhole32:
         push ecx
         call WritePhysical
         pop eax
@@ -572,14 +575,14 @@ WritePagedWhole:
         pop ecx
         pop ebx
         sub ecx,eax
-        jz WritePagedDone
+        jz WritePagedDone32
         add esi,eax
         add ebx,eax
-        jmp WritePagedLoop
+        jmp WritePagedLoop32
 
-WritePagedDone:
+WritePagedDone32:
         ret
-WritePaged      Endp
+WritePaged32      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -597,7 +600,7 @@ WritePaged      Endp
 ReadLinear Proc near
         test [ebp].reg_cr0,CR0_PG
         jz ReadLinearNormal
-        call ReadPaged
+        call ReadPaged32
         ret
 
 ReadLinearNormal:
@@ -622,7 +625,7 @@ ReadLinear      Endp
 WriteLinear Proc near
         test [ebp].reg_cr0,CR0_PG
         jz WriteLinearNormal
-        call WritePaged
+        call WritePaged32
         ret
 
 WriteLinearNormal:
@@ -634,35 +637,36 @@ WriteLinear     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   CondReadPaged
+;               NAME:           CondReadPaged32
 ;
 ;               description:    Read paged without page faults
 ;
-;               PARAMETERS:             EBP             CPU
-;                                               EBX             LINEAR ADDRESS
-;                                               ECX             NUMBER OF BYTE TO READ
+;               PARAMETERS:     EBP             CPU
+;                               EBX             LINEAR ADDRESS
+;                               ECX             NUMBER OF BYTE TO READ
 ;
-;               RETURNS:                ECX             NUBER OF BYTES READ
+;               RETURNS:        ECX             NUBER OF BYTES READ
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CondReadPaged   Proc near
+CondReadPaged32   Proc near
+        xor edi,edi
         lea esi,[ebp].req_buf
-CondReadPagedLoop:
+CondReadPagedLoop32:
         push ebx
         push ecx
         push esi
 ;
         call CondLinearToPhysical32
-        jc CondReadPagedFailed
+        jc CondReadPagedFailed32
 ;
         test al,4
-        jnz CondReadLinearPrivOk
+        jnz CondReadLinearPrivOk32
         test [ebp].reg_cs.d_access,ACCESS_RPL
-        jz CondReadLinearPrivOk
-        jmp CondReadPagedDone
+        jz CondReadLinearPrivOk32
+        jmp CondReadPagedDone32
 
-CondReadLinearPrivOk:
+CondReadLinearPrivOk32:
         and ax,0F000h
         and ebx,0FFFh
         or eax,ebx
@@ -676,9 +680,9 @@ CondReadLinearPrivOk:
         and eax,0FFFh
         inc eax
         cmp ecx,eax
-        jbe CondReadPagedWhole
+        jbe CondReadPagedWhole32
         mov ecx,eax
-CondReadPagedWhole:
+CondReadPagedWhole32:
         push ecx
         call ReadPhysical
         pop eax
@@ -688,20 +692,20 @@ CondReadPagedWhole:
         add esi,eax
         add ebx,eax
         sub ecx,eax
-        jz CondReadPagedDone
-        jmp CondReadPagedLoop
+        jz CondReadPagedDone32
+        jmp CondReadPagedLoop32
 
-CondReadPagedFailed:
+CondReadPagedFailed32:
         pop esi
         pop ecx
         pop ebx
 
-CondReadPagedDone:
+CondReadPagedDone32:
         mov ecx,esi
         lea esi,[ebp].req_buf
         sub ecx,esi
         ret
-CondReadPaged   Endp
+CondReadPaged32   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -723,7 +727,7 @@ CondReadPaged   Endp
 CondReadLinear Proc near
         test [ebp].reg_cr0,CR0_PG
         jz CondReadLinearNormal
-        call CondReadPaged
+        call CondReadPaged32
         ret
 
 CondReadLinearNormal:
