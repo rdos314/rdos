@@ -777,6 +777,8 @@ prot_init:
     xor al,al
     rep stosb
 ;
+    int 3
+;
     call init_pre_tasking
     call init_boot_system
     call start_paging
