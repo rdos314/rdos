@@ -755,14 +755,12 @@ ReadLinearByte  Proc near
         push ecx
         push edx
         push esi
-        push edi
 ;
         mov ecx,1
         call ReadLinear
         lea esi,[ebp].req_buf
         mov al,[esi]
 ;       
-        pop edi
         pop esi
         pop edx
         pop ecx
@@ -791,14 +789,12 @@ ReadLinearWord  Proc near
         push ecx
         push edx
         push esi
-        push edi
 ;
         mov ecx,2
         call ReadLinear
         lea esi,[ebp].req_buf
         mov ax,[esi]
 ;
-        pop edi
         pop esi
         pop edx
         pop ecx
@@ -827,14 +823,12 @@ ReadLinearDword Proc near
         push ecx
         push edx
         push esi
-        push edi
 ;
         mov ecx,4
         call ReadLinear
         lea esi,[ebp].req_buf
         mov eax,[esi]
 ;
-        pop edi
         pop esi
         pop edx
         pop ecx
@@ -862,7 +856,6 @@ ReadLinearFword Proc near
         push ebx
         push ecx
         push esi
-        push edi
 ;
         mov ecx,6
         call ReadLinear
@@ -870,7 +863,6 @@ ReadLinearFword Proc near
         mov eax,[esi]
         mov dx,[esi+4]
 ;
-        pop edi
         pop esi
         pop ecx
         pop ebx
@@ -897,7 +889,6 @@ ReadLinearQword Proc near
         push ebx
         push ecx
         push esi
-        push edi
 ;
         mov ecx,8
         call ReadLinear
@@ -905,7 +896,6 @@ ReadLinearQword Proc near
         mov eax,[esi]
         mov edx,[esi+4]
 ;
-        pop edi
         pop esi
         pop ecx
         pop ebx
@@ -931,7 +921,6 @@ ReadLinearQword Endp
 ReadLinearTbyte Proc near
         push ebx
         push esi
-        push edi
 ;
         mov ecx,10
         call ReadLinear
@@ -940,7 +929,6 @@ ReadLinearTbyte Proc near
         mov edx,[esi+4]
         mov cx,[esi+8]
 ;
-        pop edi
         pop esi
         pop ebx
         ret
@@ -967,14 +955,12 @@ WriteLinearByte Proc near
         push ecx
         push edx
         push esi
-        push edi
 ;
         lea esi,[ebp].req_buf
         mov [esi],al
         mov ecx,1
         call WriteLinear
 ;
-        pop edi
         pop esi
         pop edx
         pop ecx
@@ -1004,14 +990,12 @@ WriteLinearWord Proc near
         push ecx
         push edx
         push esi
-        push edi
 ;
         lea esi,[ebp].req_buf
         mov [esi],ax
         mov ecx,2
         call WriteLinear
 ;
-        pop edi
         pop esi
         pop edx
         pop ecx
@@ -1041,14 +1025,12 @@ WriteLinearDword        Proc near
         push ecx
         push edx
         push esi
-        push edi
 ;
         lea esi,[ebp].req_buf
         mov [esi],eax
         mov ecx,4
         call WriteLinear
 ;
-        pop edi
         pop esi
         pop edx
         pop ecx
@@ -1078,7 +1060,6 @@ WriteLinearFword        Proc near
         push ecx
         push edx
         push esi
-        push edi
 ;
         lea esi,[ebp].req_buf
         mov [esi],eax
@@ -1086,7 +1067,6 @@ WriteLinearFword        Proc near
         mov ecx,6
         call WriteLinear
 ;
-        pop edi
         pop esi
         pop edx
         pop ecx
@@ -1116,7 +1096,6 @@ WriteLinearQword        Proc near
         push ecx
         push edx
         push esi
-        push edi
 ;
         lea esi,[ebp].req_buf
         mov [esi],eax
@@ -1124,7 +1103,6 @@ WriteLinearQword        Proc near
         mov ecx,8
         call WriteLinear
 ;
-        pop edi
         pop esi
         pop edx
         pop ecx
@@ -1154,7 +1132,6 @@ WriteLinearTbyte        Proc near
         push ecx
         push edx
         push esi
-        push edi
 ;
         lea esi,[ebp].req_buf
         mov [esi],eax
@@ -1163,7 +1140,6 @@ WriteLinearTbyte        Proc near
         mov ecx,10
         call WriteLinear
 ;
-        pop edi
         pop esi
         pop edx
         pop ecx
