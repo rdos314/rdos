@@ -27,8 +27,6 @@
 
 .486
 .model flat
-                                                
-                NAME emarithm
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 

@@ -28,8 +28,6 @@
 .386
 .model flat
 
-        NAME empage
-
 include \rdos\classlib\emulate\x86\emulate.inc
 include \rdos\classlib\emulate\x86\emseg.inc
 

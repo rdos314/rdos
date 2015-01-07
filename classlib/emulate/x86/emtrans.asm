@@ -27,8 +27,6 @@
 
 .386
 .model flat
-                                                
-                NAME emtrans
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 

@@ -28,8 +28,6 @@
 .386
 .387
 .model flat
-                                                
-                NAME  math
 
 .code
 

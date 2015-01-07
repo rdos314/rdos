@@ -27,8 +27,6 @@
 
 .386
 .model flat
-                                                
-                NAME emcontr
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 

@@ -27,8 +27,6 @@
 
 .386
 .model flat
-                                                
-                NAME  DEBUG_
 
 INCLUDE \rdos\classlib\emulate\x86\emulate.inc
 INCLUDE \rdos\classlib\emulate\x86\emcom.inc

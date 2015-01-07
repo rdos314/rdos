@@ -30,8 +30,6 @@
 
 PAGE
 
-        NAME emseg
-
 include \rdos\classlib\emulate\x86\emulate.inc
 include \rdos\classlib\emulate\x86\emcom.inc
 include \rdos\classlib\emulate\x86\empage.inc

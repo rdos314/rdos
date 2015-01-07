@@ -27,8 +27,6 @@
 
 .386
 .model flat
-                                                
-                NAME dismain
 
 INCLUDE \rdos\classlib\emulate\x86\emulate.inc
 

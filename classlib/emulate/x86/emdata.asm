@@ -27,8 +27,6 @@
 
 .386
 .model flat
-
-                NAME emdata
                 
 INCLUDE \rdos\classlib\emulate\x86\emulate.inc         
                 

@@ -27,8 +27,6 @@
 
 .386
 .model flat
-                                                
-                NAME emmem
 
 include \rdos\classlib\emulate\x86\emulate.inc
 include \rdos\classlib\emulate\x86\emcom.inc

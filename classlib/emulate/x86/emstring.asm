@@ -27,8 +27,6 @@
 
 .386
 .model flat
-                                                
-                NAME emstring
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
