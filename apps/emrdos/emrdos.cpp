@@ -48,7 +48,7 @@
 typedef struct TSystemData
 {
     int pad1;
-    short int MapLen;
+    short int MapSize;
     int Feature;
     int LongIdt;
     int MapBase;
@@ -68,13 +68,22 @@ typedef struct TSystemData
     int AllocBase;   
 } TSystemData;
 
+typedef struct TMemMap
+{
+    int len;
+    unsigned long long Base;
+    unsigned long long Size;
+    int Type;
+} TMemMap;
+
 #pragma pack( pop )
 
-#define RDOS_BASE   0x121000
-#define HIGH_BASE   0x100000
-#define GDT_BASE    0x1000
-#define SYSTEM_BASE 0x2000
-#define ALLOC_BASE  0x3000
+#define RDOS_BASE    0x121000
+#define HIGH_BASE    0x100000
+#define GDT_BASE       0x1000
+#define SYSTEM_BASE    0x2000
+#define ALLOC_BASE     0x3000
+#define MEM_MAP_BASE  0x9E000
 
 void OpenScreen(const char *FileName);
 void CloseScreen();
@@ -494,6 +503,7 @@ int Load(char *FileName)
     int Size;
     char *DescrBase = LowRam.GetData() + GDT_BASE;
     TSystemData *SysData = (TSystemData *)(LowRam.GetData() + SYSTEM_BASE);
+    TMemMap *MemMap = (TMemMap *)(LowRam.GetData() + MEM_MAP_BASE);
                 
     img.AddImage(FileName);
 
@@ -525,7 +535,7 @@ int Load(char *FileName)
         data[0x40E] = 0;
         data[0x40F] = 0x9E;
 
-        SysData->Ram1Size = 0x9E000;
+        SysData->Ram1Size = MEM_MAP_BASE;
         SysData->Ram2Base = RDOS_BASE + File.GetSize();
         SysData->Ram2Base--;
         SysData->Ram2Base &= 0xFFFFF000;
@@ -535,7 +545,37 @@ int Load(char *FileName)
         SysData->Rom1Size = File.GetSize();
         SysData->Rom2Size = 0;
         SysData->AllocBase = ALLOC_BASE;
-                
+
+        SysData->MapBase = MEM_MAP_BASE; 
+        SysData->MapSize = 0;
+
+        MemMap->len = sizeof(TMemMap) - 4;
+        MemMap->Base = LowRam.GetBase();
+        MemMap->Size = SysData->MapBase - MemMap->Base;
+        MemMap->Type = 1;
+        MemMap++;
+        SysData->MapSize += sizeof(TMemMap);
+
+        MemMap->len = sizeof(TMemMap) - 4;
+        MemMap->Base = HIGH_BASE;
+        MemMap->Size = RDOS_BASE - HIGH_BASE;
+        MemMap->Type = 1;        
+        MemMap++;
+        SysData->MapSize += sizeof(TMemMap);
+
+        MemMap->len = sizeof(TMemMap) - 4;
+        MemMap->Base = SysData->Ram2Base;
+        MemMap->Size = HIGH_BASE + HighRam.GetSize() - SysData->Ram2Base;
+        MemMap->Type = 1;
+        MemMap++;
+        SysData->MapSize += sizeof(TMemMap);
+
+        MemMap->len = sizeof(TMemMap) - 4;
+        MemMap->Base = Ram64.GetBase();
+        MemMap->Size = Ram64.GetSize();
+        MemMap->Type = 1;
+        SysData->MapSize += sizeof(TMemMap);
+             
         obj = img.FObjectList;
 
         while (obj)
