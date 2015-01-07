@@ -103,8 +103,8 @@ r????Include directories:
 1
 26
 WString
-154
-"..\..\kernel;..\..\classlib;..\..\classlib\rdos;..\..\classlib\emulate;..\..\classlib\emulate\pc;..\..\classlib\emulate\x86;$(%watcom)/h;$(%watcom)/rdos"
+163
+"..\emrem;..\..\kernel;..\..\classlib;..\..\classlib\rdos;..\..\classlib\emulate;..\..\classlib\emulate\pc;..\..\classlib\emulate\x86;$(%watcom)/h;$(%watcom)/rdos"
 0
 27
 WVList
