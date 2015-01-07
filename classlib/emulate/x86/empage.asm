@@ -538,14 +538,151 @@ LinearToPhysical64        Endp
 
 CondLinearToPhysical64    Proc near
         push ebx
+        push ecx
+        push edi
+;        
         call SearchTlb64
         jnc CondLinearToPhysicalDone64
 ;
         call AllocateTlb
         int 3
+;
+        push esi
+        mov [esi].t_tag,ebx
+        mov [esi].t_tag+4,edi
+        add esi,OFFSET t_address
+;
+        xor edi,edi
+        shr ebx,30
+        shl ebx,3
+        mov eax,[ebp].reg_cr3
+        and ax,0F000h
+        add ebx,eax
+        mov ecx,8
+        call ReadPhysical
+        pop esi
+;
+        mov ch,byte ptr [esi].t_address
+        test ch,1
+        jnz CondLinearToPhysicalPtrOk64
+;
+        mov [esi].t_tag,-1
         stc
+        jmp CondLinearToPhysicalDone64
+
+CondLinearToPhysicalPtrOk64:
+        push ecx
+        test ch,20h
+        jnz CondLinearToPhysicalPtrAccessed64
+;
+        push esi
+        or byte ptr [esi].t_address,20h
+        mov ecx,1
+        add esi,OFFSET t_address
+        call WritePhysical
+        pop esi
+
+CondLinearToPhysicalPtrAccessed64:
+        mov ebx,[esi].t_tag
+        shr ebx,21
+        shl ebx,3
+        mov eax,[esi].t_address
+        and ax,0F000h
+        add ebx,eax
+        mov edi,[esi].t_address+4
+        push esi
+        add esi,OFFSET t_address
+        push ebx
+        mov ecx,8
+        call ReadPhysical
+        pop ebx
+        pop esi
+;
+        pop ecx
+        mov cl,byte ptr [esi].t_address
+        test cl,1
+        jnz CondLinearToPhysicalDirOk64
+;
+        mov [esi].t_tag,-1
+        stc
+        jmp CondLinearToPhysicalDone64
+
+CondLinearToPhysicalDirOk64:
+        mov al,cl
+        and ch,cl
+        and ch,3
+        and cl,NOT 3
+        or ch,cl
+        push ecx
+        test al,20h
+        jnz CondLinearToPhysicalDirAccessed64
+;
+        push esi
+        or byte ptr [esi].t_address,20h
+        mov ecx,1
+        add esi,OFFSET t_address
+        call WritePhysical
+        pop esi
+
+CondLinearToPhysicalDirAccessed64:
+        mov ebx,[esi].t_tag
+        shr ebx,12
+        shl ebx,3
+        mov eax,[esi].t_address
+        and ax,0F000h
+        add ebx,eax
+        mov edi,[esi].t_address+4
+        push esi
+        add esi,OFFSET t_address
+        push ebx
+        mov ecx,8
+        call ReadPhysical
+        pop ebx
+        pop esi
+;
+        pop ecx
+        mov cl,byte ptr [esi].t_address
+        test cl,1
+        jnz CondLinearToPhysicalPageOk64
+;
+        mov [esi].t_tag,-1
+        stc
+        jmp CondLinearToPhysicalDone64
+
+CondLinearToPhysicalPageOk64:
+        mov al,cl
+        and ch,cl
+        and ch,3
+        and cl,NOT 3
+        or cl,ch
+        push ecx
+        test al,20h
+        jnz CondLinearToPhysicalPageAccessed64
+;        
+        push esi
+        or byte ptr [esi].t_address,20h
+        mov ecx,1
+        add esi,OFFSET t_address
+        call WritePhysical
+        pop esi
+
+CondLinearToPhysicalPageAccessed64:
+        pop ecx
+;
+        mov eax,[esi].t_tag
+        and ax,0F000h
+        mov [esi].t_tag,eax
+;       
+        mov eax,[esi].t_address
+        and ax,0F000h
+        or al,cl
+        mov [esi].t_address,eax
+        mov edx,[esi].t_address+4
+        clc
 
 CondLinearToPhysicalDone64:
+        pop edi
+        pop ecx
         pop ebx
         ret
 CondLinearToPhysical64    Endp
