@@ -127,6 +127,7 @@ TRdosObject::TRdosObject(TFile *File, int Size)
     FType = 0;
     FData = new char[FSize];
     memset(FData, 0xFF, FSize);
+    FImageOffset = File->GetPos();
     File->Read(FData, FSize);
 }
 
@@ -148,6 +149,7 @@ TRdosObject::TRdosObject(int adapter, int entry, int size)
     FSize = size;
     FType = 0;
     FData = new char[FSize];
+    FImageOffset = 0;
     RdosGetImageData(adapter, entry, FData);
 }
 

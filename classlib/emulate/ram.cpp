@@ -42,6 +42,7 @@ TRam::TRam(TBus *Bus, unsigned long long Base, unsigned long Size)
 {
     int i;
 
+    FBase = Base;
     FSize = Size;
     FData = new char[Size];
 
@@ -73,4 +74,38 @@ TRam::~TRam()
 int TRam::GetSize()
 {
     return FSize;
+}
+
+/*##################  TRam::GetBase  ###############
+*   Purpose....: Get mapping base of device                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+unsigned long long TRam::GetBase()
+{
+    return FBase;
+}
+
+/*##################  TRam::GetData  ###############
+*   Purpose....: Get data of device                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+char *TRam::GetData()
+{
+    return FData;
+}
+
+/*##################  TRam::Load  ###############
+*   Purpose....: Load file                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TRam::Load(unsigned long Offset, TFile *File)
+{
+    File->SetPos(0);
+    File->Read(FData + Offset, File->GetSize());
 }

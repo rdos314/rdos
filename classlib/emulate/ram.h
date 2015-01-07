@@ -25,22 +25,28 @@
 *
 *##########################################################################*/
 
-#ifndef	_RAM_H
+#ifndef _RAM_H
 #define _RAM_H
 
 #include "bus.h"
+#include "file.h"
 
 class TRam : public TBusFunction
 {
 public:
-	TRam(TBus *Bus, unsigned long long Base, unsigned long Size);
-	~TRam();
+    TRam(TBus *Bus, unsigned long long Base, unsigned long Size);
+    ~TRam();
 
-	virtual int GetSize();
+    virtual int GetSize();
+
+    void Load(unsigned long Offset, TFile *File);
+    char *GetData();
+    unsigned long long GetBase();
 
 private:
-	int FSize;
-	char *FData;
+    unsigned long long FBase;
+    int FSize;
+    char *FData;
 };
 
 #endif

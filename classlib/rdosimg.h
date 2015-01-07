@@ -53,6 +53,7 @@ public:
     virtual void WriteObject(TFile *File);
 
     TRdosObject *FLink;
+    int FImageOffset;
 
 protected:
     void CreateObject(int size);
