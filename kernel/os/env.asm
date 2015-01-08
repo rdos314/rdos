@@ -1344,6 +1344,7 @@ init_device_loop:
 ;
     xor al,al
     stosb
+    stosb
 ;
     mov dx,es
     mov bx,SEG data
