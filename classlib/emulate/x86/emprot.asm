@@ -795,5 +795,27 @@ EmVerwMemFailed:
         and byte ptr [ebp].reg_eflags, NOT EFLAGS_ZF
         ret
 EmVerwMem       Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           EmInlvpg
+;
+;               DESCRIPTION:    EMULATE invlpg
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public EmInvlpg
+
+EmInvlpg       Proc near
+        test byte ptr [ebp].reg_cs.d_access, ACCESS_RPL
+        jnz PrivilegeFault
+;
+        mov bl,al
+        call GetMemAddress
+        call FlushTlbEntry
+        ret
+EmInvlpg    Endp
+        
 
         END

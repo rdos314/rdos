@@ -1568,4 +1568,40 @@ SaveDwordReg    Proc near
         ret
 SaveDwordReg    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           GetMemAddress
+;
+;               DESCRIPTION:    Get memory address of operand
+;
+;               PARAMETERS:     BL              op-code
+;
+;               RETURNS:        EDI:EBX         Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public GetMemAddress
+
+GetMemAddress    Proc near
+        mov bh,bl
+        and bl,0C0h
+        cmp bl,0C0h
+        je EmulateError
+;
+        shr bl,2
+        and bh,7
+        shl bh,1
+        or bl,bh
+        test byte ptr [ebp].em_flags,a32
+        jz GetMemAddressDo
+;        
+        or bl,40h
+               
+GetMemAddressDo:
+        movzx ebx,bl
+        call dword ptr [2*ebx].MemTab
+        ret
+GetMemAddress   Endp
+
         END

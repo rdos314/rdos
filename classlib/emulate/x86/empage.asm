@@ -1205,6 +1205,98 @@ WriteLinear     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           FlushTlbEntry
+;
+;               description:    Flush TLB entry
+;
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public FlushTlbEntry
+
+FlushTlbEntry Proc near
+        test [ebp].reg_cr0,CR0_PG
+        jnz FlushTlbPaging
+;
+        ret        
+
+FlushTlbPaging:        
+        test [ebp].reg_cr4,20h
+        jz FlushTlb32
+
+FlushTlb64:
+        push eax
+        push ebx
+        push ecx
+        push esi
+;
+        mov eax,ebx
+        and ax,0F000h
+        lea esi,[ebp].reg_tlb.tlb
+        mov ecx,32
+
+FlushTlbLoop64:
+        cmp eax,[esi].t_tag
+        jne FlushTlbNext64
+;
+        cmp edi,[esi+4].t_tag
+        je FlushTlbFound64
+
+FlushTlbNext64:
+        add esi,SIZE tlb_entry_struc
+        shl ebx,1
+        loop FlushTlbLoop64
+        jmp FlushTlbDone64
+
+FlushTlbFound64:
+        mov eax,-1
+        mov [esi].t_tag,eax
+        mov [esi].t_tag+4,eax
+
+FlushTlbDone64:        
+        pop esi
+        pop ecx
+        pop ebx
+        pop eax
+        ret
+
+FlushTlb32:        
+        push eax
+        push ecx
+        push edi
+;        
+        mov eax,ebx
+        and ax,0F000h
+        lea edi,[ebp].reg_tlb.tlb
+        mov ecx,32
+
+FlushTlbLoop32:
+        cmp eax,[edi].t_tag
+        je FlushTlbFound32
+;
+        add edi,SIZE tlb_entry_struc
+        shl edx,1
+        loop FlushTlbLoop32
+;
+        jmp FlushTlbDone32        
+
+FlushTlbFound32:
+        mov eax,-1
+        mov [esi].t_tag,eax
+        mov [esi].t_tag+4,eax
+
+FlushTlbDone32:
+        pop edi
+        pop ecx
+        pop eax        
+        ret
+FlushTlbEntry      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           CondReadPaged32
 ;
 ;               description:    Read paged without page faults

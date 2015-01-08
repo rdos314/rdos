@@ -341,7 +341,7 @@ em0F01_011      DD OFFSET EmLidtMem
 em0F01_100      DD OFFSET EmSmswMem
 em0F01_101      DD OFFSET EmulateError
 em0F01_110      DD OFFSET EmLmswMem
-em0F01_111      DD OFFSET EmulateError
+em0F01_111      DD OFFSET EmInvlpg
 
 Em0F01:
         call ReadCodeByte

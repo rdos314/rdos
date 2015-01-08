@@ -41,4 +41,6 @@
 
 	extrn CondReadLinear:near
 
+
 	extrn FlushTlb:near
+	extrn FlushTlbEntry:near

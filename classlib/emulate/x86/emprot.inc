@@ -38,6 +38,7 @@
 
 	extrn EmLmswMem:near
 	extrn EmSmswMem:near
+	extrn EmInvlpg:near
 
 	extrn EmLgdtMem:near
 	extrn EmLidtMem:near

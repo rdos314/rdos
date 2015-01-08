@@ -72,3 +72,4 @@
 	extrn SaveWordReg:near
 	extrn SaveDwordReg:near
 
+    extrn GetMemAddress:near
