@@ -365,6 +365,7 @@ ins_txt                         DB 'ins',0
 int_txt                         DB 'int',0
 into_txt                        DB 'into',0
 iret_txt                        DB 'iret',0
+invlpg_txt                      DB 'invlpg',0
 ja_txt                          DB 'ja',0
 jb_txt                          DB 'jb',0
 jbe_txt                         DB 'jbe',0
@@ -3841,7 +3842,7 @@ opp0F0130:
 
 opp0F0138:
                         DD OFFSET opmr_mem3
-                        DD OFFSET smsw_txt - OFFSET mne_tab + blank_sep
+                        DD OFFSET invlpg_txt - OFFSET mne_tab + blank_sep
                         DD null_tab + blank_sep
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
