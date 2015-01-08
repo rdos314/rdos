@@ -45,6 +45,14 @@
 
 #pragma pack( push, 1 )
 
+typedef struct TRomAdapter
+{
+    int Base;
+    int Size;
+    short int Crc;
+    short int Pad;
+} TRomAdapter;
+
 typedef struct TSystemData
 {
     int pad1;
@@ -66,6 +74,8 @@ typedef struct TSystemData
     int Rom2Base;
     int Rom2Size;
     int AllocBase;   
+    short int RomModules;
+    TRomAdapter RomAdapters[16];
 } TSystemData;
 
 typedef struct TMemMap
@@ -160,8 +170,8 @@ void TextChange(TVideo *Video, int Row)
 int GetRemoteIpc()
 {
 //    return RdosGetLocalMailslot("emdisp");
-    return RdosGetRemoteMailslot(0x4101A8C0, "emdisp");
-//    return RdosGetRemoteMailslot(0xA70AA8C0, "emdisp");
+//    return RdosGetRemoteMailslot(0x4101A8C0, "emdisp");
+    return RdosGetRemoteMailslot(0xA70AA8C0, "emdisp");
 }
 
 /*##################  RemoteThread  ###############
@@ -548,6 +558,11 @@ int Load(char *FileName)
 
         SysData->MapBase = MEM_MAP_BASE; 
         SysData->MapSize = 0;
+
+        SysData->RomModules = 1;
+        SysData->RomAdapters[0].Base = SysData->Rom1Base;
+        SysData->RomAdapters[0].Size = SysData->Rom1Size;
+        SysData->RomAdapters[0].Crc = 0;
 
         MemMap->len = sizeof(TMemMap) - 4;
         MemMap->Base = LowRam.GetBase();

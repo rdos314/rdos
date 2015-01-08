@@ -828,6 +828,7 @@ prot_init:
     CreateDataSelector32
 ;
     StartTasking
+    int 3
     
 code    ENDS
 
