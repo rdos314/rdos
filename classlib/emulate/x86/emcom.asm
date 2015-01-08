@@ -769,8 +769,8 @@ read_code_byte32:
         call ReadByte
         mov [ebp].code_fetch,0
         pop ebx
-        mov [ebp].reg_eip,ebx
         inc ebx
+        mov [ebp].reg_eip,ebx
         pop cx
         mov [ebp+esi].d_access,ch
         pop cx
