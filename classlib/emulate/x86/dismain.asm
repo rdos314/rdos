@@ -1512,7 +1512,7 @@ op_lodsb     PROC near
 op_lodsb32:
         mov eax,6
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov [ebp].data_sel,OFFSET ds_txt
         add_mne b_txt, blank_sep
         add_mne ds_txt, kolon_par_sep
         add_mne esi_txt, rhak_sep
@@ -1521,7 +1521,7 @@ op_lodsb32:
 op_lodsb16:
         mov eax,4
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov [ebp].data_sel,OFFSET ds_txt
         add_mne b_txt, blank_sep
         add_mne ds_txt, kolon_par_sep
         add_mne si_txt, rhak_sep
@@ -1541,7 +1541,7 @@ op_lodsw     PROC near
 op_lodsw32:
         mov eax,6
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov [ebp].data_sel,OFFSET ds_txt
         add_mne w_txt, blank_sep
         add_mne ds_txt, kolon_par_sep
         add_mne esi_txt, rhak_sep
@@ -1550,7 +1550,7 @@ op_lodsw32:
 op_lodsw16:
         mov eax,4
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov [ebp].data_sel,OFFSET ds_txt
         add_mne w_txt, blank_sep
         add_mne ds_txt, kolon_par_sep
         add_mne si_txt, rhak_sep
@@ -1563,7 +1563,7 @@ op_lodsd:
 op_lodsd32:
         mov eax,6
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov [ebp].data_sel,OFFSET ds_txt
         add_mne d_txt, blank_sep
         add_mne ds_txt, kolon_par_sep
         add_mne esi_txt, rhak_sep
@@ -1572,7 +1572,7 @@ op_lodsd32:
 op_lodsd16:
         mov eax,6
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov [ebp].data_sel,OFFSET ds_txt
         add_mne d_txt, blank_sep
         add_mne ds_txt, kolon_par_sep
         add_mne si_txt, rhak_sep
