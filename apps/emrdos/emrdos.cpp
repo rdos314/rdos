@@ -160,8 +160,8 @@ void TextChange(TVideo *Video, int Row)
 int GetRemoteIpc()
 {
 //    return RdosGetLocalMailslot("emdisp");
-//    return RdosGetRemoteMailslot(0x4101A8C0, "emdisp");
-    return RdosGetRemoteMailslot(0xA70AA8C0, "emdisp");
+    return RdosGetRemoteMailslot(0x4101A8C0, "emdisp");
+//    return RdosGetRemoteMailslot(0xA70AA8C0, "emdisp");
 }
 
 /*##################  RemoteThread  ###############
@@ -361,7 +361,7 @@ void Start()
 
     MyFocus = RdosGetFocus();
 
-//    RdosCreateThread(RemoteThread, "empc remote", 0, 0x4000);
+    RdosCreateThread(RemoteThread, "empc remote", 0, 0x4000);
 
     Pit.Counter[0]->Define(&Pic0, 0);
     

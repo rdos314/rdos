@@ -148,16 +148,16 @@ tlb_struc	ENDS
 
 cpu_struc	STRUC
 
-reg_cr0			DD ?
-reg_cr2			DD ?
-reg_cr3			DD ?
-reg_cr4			DD ?
-reg_dr0			DD ?
-reg_dr1			DD ?
-reg_dr2			DD ?
-reg_dr3			DD ?
-reg_dr6			DD ?
-reg_dr7			DD ?
+reg_cr0			DD ?,?
+reg_cr2			DD ?,?
+reg_cr3			DD ?,?
+reg_cr4			DD ?,?
+reg_dr0			DD ?,?
+reg_dr1			DD ?,?
+reg_dr2			DD ?,?
+reg_dr3			DD ?,?
+reg_dr6			DD ?,?
+reg_dr7			DD ?,?
 reg_eip			DD ?,?
 reg_eflags		DD ?,?
 reg_eax			DD ?,?

@@ -139,16 +139,16 @@ public:
 
 // don't change data members here, without also changing in emulate.inc file
 
-        unsigned long Reg_cr0;
-        unsigned long Reg_cr2;
-        unsigned long Reg_cr3;
-        unsigned long Reg_cr4;
-        unsigned long Reg_dr0;
-        unsigned long Reg_dr1;
-        unsigned long Reg_dr2;
-        unsigned long Reg_dr3;
-        unsigned long Reg_dr6;
-        unsigned long Reg_dr7;
+        unsigned long long Reg_cr0;
+        unsigned long long Reg_cr2;
+        unsigned long long Reg_cr3;
+        unsigned long long Reg_cr4;
+        unsigned long long Reg_dr0;
+        unsigned long long Reg_dr1;
+        unsigned long long Reg_dr2;
+        unsigned long long Reg_dr3;
+        unsigned long long Reg_dr6;
+        unsigned long long Reg_dr7;
         unsigned long long Reg_eip;
         unsigned long long Reg_eflags;
         unsigned long long Reg_eax;
