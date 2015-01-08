@@ -64,7 +64,7 @@ Em&op&ShortJump:
         movsx eax,al
         add eax,[ebp].reg_eip
         cmp eax,[ebp].reg_cs.d_limit
-        jnc AccessFault
+        ja AccessFault
         mov [ebp].reg_eip,eax
         ret
 Em&op&Short     Endp
@@ -116,7 +116,7 @@ Em&op&ShortJump:
         movsx eax,al
         add eax,[ebp].reg_eip
         cmp eax,[ebp].reg_cs.d_limit
-        jnc AccessFault
+        ja AccessFault
         mov [ebp].reg_eip,eax
         ret
 Em&op&Short     Endp
@@ -161,7 +161,7 @@ Em&op&Near32:
         call ReadCodeDword
         add eax,[ebp].reg_eip
         cmp eax,[ebp].reg_cs.d_limit
-        jnc AccessFault
+        ja AccessFault
         mov [ebp].reg_eip,eax
         ret
 
@@ -170,7 +170,7 @@ Em&op&Near16:
         add ax,word ptr [ebp].reg_eip
         movzx eax,ax
         cmp eax,[ebp].reg_cs.d_limit
-        jnc AccessFault
+        ja AccessFault
         mov word ptr [ebp].reg_eip,ax
         ret
 Em&op&Near      Endp
@@ -328,7 +328,7 @@ EmJmpNearMem32:
         mov bl,al
         call LoadDwordMemReg
         cmp eax,[ebp].reg_cs.d_limit
-        jnc AccessFault
+        ja AccessFault
         mov [ebp].reg_eip,eax
         ret
 
@@ -337,7 +337,7 @@ EmJmpNearMem16:
         call LoadWordMemReg
         movzx eax,ax
         cmp eax,[ebp].reg_cs.d_limit
-        jnc AccessFault
+        ja AccessFault
         mov word ptr [ebp].reg_eip,ax
         ret
 EmJmpNearMem    Endp
@@ -361,7 +361,7 @@ EmCallNear32:
         call ReadCodeDword
         add eax,[ebp].reg_eip
         cmp eax,[ebp].reg_cs.d_limit
-        jnc AccessFault
+        ja AccessFault
         xchg eax,[ebp].reg_eip
         call PushDword
         ret
@@ -371,7 +371,7 @@ EmCallNear16:
         add ax,word ptr [ebp].reg_eip
         movzx eax,ax
         cmp eax,[ebp].reg_cs.d_limit
-        jnc AccessFault
+        ja AccessFault
         xchg ax,word ptr [ebp].reg_eip
         call PushWord
         ret
@@ -396,7 +396,7 @@ EmCallNearMem32:
         mov bl,al
         call LoadDwordMemReg
         cmp eax,[ebp].reg_cs.d_limit
-        jnc AccessFault
+        ja AccessFault
         xchg eax,[ebp].reg_eip
         call PushDword
         ret
@@ -406,7 +406,7 @@ EmCallNearMem16:
         call LoadWordMemReg
         movzx eax,ax
         cmp eax,[ebp].reg_cs.d_limit
-        jnc AccessFault
+        ja AccessFault
         xchg ax,word ptr [ebp].reg_eip
         call PushWord
         ret
@@ -431,14 +431,14 @@ EmRetNear16:
         call PopWord
         movzx eax,ax
         cmp eax,[ebp].reg_cs.d_limit
-        jnc AccessFault
+        ja AccessFault
         mov word ptr [ebp].reg_eip,ax
         ret
 
 EmRetNear32:
         call PopDword
         cmp eax,[ebp].reg_cs.d_limit
-        jnc AccessFault
+        ja AccessFault
         mov [ebp].reg_eip,eax
         ret
 EmRetNear       endp
@@ -464,7 +464,7 @@ EmRetNearN16:
         call PopWord
         movzx eax,ax
         cmp eax,[ebp].reg_cs.d_limit
-        jnc AccessFault
+        ja AccessFault
 ;
         mov word ptr [ebp].reg_eip,ax
         pop ax
@@ -477,7 +477,7 @@ EmRetNearN32:
         push ax
         call PopDword
         cmp eax,[ebp].reg_cs.d_limit
-        jnc AccessFault
+        ja AccessFault
 ;
         mov [ebp].reg_eip,eax
         pop ax

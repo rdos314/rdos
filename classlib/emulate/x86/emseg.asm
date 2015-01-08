@@ -141,7 +141,7 @@ LoadIt:
         or cl,7
         dec ecx
         sub ecx,[ebp+edi].d_limit
-        jnc FaultHandler
+        ja FaultHandler
 ;
         push bx
         movzx ebx,bx
@@ -1906,7 +1906,7 @@ cond_load_descr_do:
         or cl,7
         dec ecx
         sub ecx,[ebp+edi].d_limit
-        jc cond_load_descr_limit_ok
+        jbe cond_load_descr_limit_ok
         stc
         ret
 
@@ -2627,7 +2627,7 @@ ExcPmErrorOk:
         or cl,7
         dec ecx
         sub ecx,[ebp].reg_idt.d_limit
-        jnc ProtectionFault
+        ja ProtectionFault
 ;
         movzx ecx,bx
         add ecx,[ebp].reg_idt.d_base
@@ -2785,7 +2785,7 @@ HwInt   Proc near
         or cl,7                         ;adjust the size of the interrupt number
         dec ecx                         ; 0..7FFh but 0FFh*8=7F8h + 7 = 7FFh
         sub ecx,[ebp].reg_idt.d_limit
-        jnc ProtectionFault
+        ja ProtectionFault
 ;
         movzx ecx,bx
         add ecx,[ebp].reg_idt.d_base
@@ -2839,7 +2839,7 @@ IntFarPm:
         or cl,7                         ;adjust the size of the interrupt number
         dec ecx                         ; 0..7FFh but 0FFh*8=7F8h + 7 = 7FFh
         sub ecx,[ebp].reg_idt.d_limit
-        jnc ProtectionFault
+        ja ProtectionFault
 ;
         movzx ecx,bx
         add ecx,[ebp].reg_idt.d_base
