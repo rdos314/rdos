@@ -1477,6 +1477,8 @@ Lower32:
 ;esp after switch
 
 LowerVm32:
+        push edx
+;
         push [ebp].reg_esp
         push [ebp].reg_ss.d_selector
         call GetStack
@@ -1524,6 +1526,7 @@ LowerVm32:
         mov eax,[ebp].reg_eip             ;old eip
         call PushDword
 ;
+        pop edx
         test [ebp].em_transfer,TRANSFER_CODE
         jz LowerZeroSelectors
 ;

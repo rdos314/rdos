@@ -366,6 +366,9 @@ void Start()
     TPic Pic1(&Isa, 0xA0);
     Pic0.Cascade(2, &Pic1);
     TCmos Cmos(&Isa, 0x70);
+    TFlash Video(&Isa, 0xC0000, 0x10000);
+    TFile VideoFile("video.bin");
+    Video.LoadBottom(&VideoFile);
 
     int Key;
 
@@ -514,6 +517,7 @@ int Load(char *FileName)
     char *DescrBase = LowRam.GetData() + GDT_BASE;
     TSystemData *SysData = (TSystemData *)(LowRam.GetData() + SYSTEM_BASE);
     TMemMap *MemMap = (TMemMap *)(LowRam.GetData() + MEM_MAP_BASE);
+    short int *VmInt = (short int *)LowRam.GetData();
                 
     img.AddImage(FileName);
 
@@ -541,9 +545,13 @@ int Load(char *FileName)
 
         HighRam.Load(RDOS_BASE - HIGH_BASE, &File);
 
+
         data = LowRam.GetData();
         data[0x40E] = 0;
         data[0x40F] = 0x9E;
+
+        VmInt[2 * 0x10] = 0;
+        VmInt[2 * 0x10 + 1] = 0xC000;
 
         SysData->Ram1Size = MEM_MAP_BASE;
         SysData->Ram2Base = RDOS_BASE + File.GetSize();
