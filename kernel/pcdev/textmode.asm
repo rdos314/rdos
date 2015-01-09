@@ -756,10 +756,17 @@ init_mode3      Proc far
     mov ds,ax
     mov ds:v_mode,3
     mov ds:v_buf_base,edx
+    mov ds:v_app_base,edx
     mov ds:v_buf_sel,es
     mov ds:v_has_focus,0
     mov ds:v_row,0
     mov ds:v_col,0
+    mov ds:v_width,80
+    mov ds:v_height,25
+    mov ds:v_bitmap,0
+    mov ds:v_row_size,50
+    mov ds:v_bpp,0 
+       
     InitSection ds:v_section
 ;
     mov bx,gdt_sel
