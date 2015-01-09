@@ -186,23 +186,31 @@ is_valid_usergate_name  DB 'Is Valid User Gate',0
 
 is_valid_usergate       PROC far
     push ds
-    push ax
+    push eax
     push bx
 ;
     mov bx,ax
     mov ax,usergate_sel
     mov ds,ax
     shl bx,USER_GATE_SHIFT
-    mov ax,[bx].user_gate_entry_sel32
-    or ax,ax
-    clc
-    jnz is_valid_gate_done
+;
+    mov ax,cs
+    cmp ax,[bx].user_gate_entry_sel32
+    jne is_valid_gate_ok
+;
+    mov eax,OFFSET illegal_gate32
+    cmp eax,[bx].user_gate_entry_offset32
+    jne is_valid_gate_ok
 ;
     stc
+    jmp is_valid_gate_done
+    
+is_valid_gate_ok:   
+    clc
 
 is_valid_gate_done:
     pop bx
-    pop ax
+    pop eax
     pop ds
     retf32
 is_valid_usergate       ENDP

@@ -332,6 +332,11 @@ it0E    DD OFFSET handle_invalid
 it0F    DD OFFSET handle_invalid
 
 ipc_thread:
+    int 3
+    mov ax,define_mailslot_nr
+    IsValidUserGate
+    jc ipc_term
+;    
     mov ax,cs
     mov es,ax
     mov di,OFFSET mailslot_name
@@ -353,6 +358,9 @@ ipc_thread_loop:
 ipc_in_range:
     call cs:[4*ebx].ipc_tab        
     jmp ipc_thread_loop
+
+ipc_term:
+    TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
