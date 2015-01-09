@@ -704,17 +704,17 @@ local_set_page_entry32       Proc near
     push ds
     push eax
     push ecx
-    push edx
 ;
     or ebx,ebx
     jnz sppDone
 ;
+    push edx
     mov cx,process_page_sel
     mov ds,cx
     shr edx,10
     and dl,0FCh
-;
     xchg eax,[edx]
+    pop edx
     test al,1
     jz sppDone
 ;
@@ -722,7 +722,6 @@ local_set_page_entry32       Proc near
     FlushTlb
 
 sppDone:
-    pop edx
     pop ecx
     pop eax
     pop ds
@@ -2306,15 +2305,15 @@ local_set_page_entry64       Proc near
     push ds
     push eax
     push ecx
-    push edx
 ;    
+    push edx
     mov cx,process_page_sel
     mov ds,cx
     shr edx,9
     and dl,0F8h
-;
     mov [edx+4],ebx
     xchg eax,[edx]
+    pop edx
     test al,1
     jz sppDone64
 ;
@@ -2322,7 +2321,6 @@ local_set_page_entry64       Proc near
     FlushTlb
 
 sppDone64:
-    pop edx
     pop ecx
     pop eax
     pop ds

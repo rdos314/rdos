@@ -541,7 +541,6 @@ LinearToPhysical64        Proc near
         jmp PageFault
 
 LinearToPhysicalPtrOk64:
-        push ecx
         test ch,20h
         jnz LinearToPhysicalPtrAccessed64
 ;
@@ -568,9 +567,8 @@ LinearToPhysicalPtrAccessed64:
         pop ebx
         pop esi
 ;
-        pop ecx
-        mov cl,byte ptr [esi].t_address
-        test cl,1
+        mov ch,byte ptr [esi].t_address
+        test ch,1
         jnz LinearToPhysicalDirOk64
 ;
         mov eax,-1
@@ -583,11 +581,6 @@ LinearToPhysicalPtrAccessed64:
         jmp PageFault
 
 LinearToPhysicalDirOk64:
-        mov al,cl
-        and ch,cl
-        and ch,3
-        and cl,NOT 3
-        or ch,cl
         push ecx
         test al,20h
         jnz LinearToPhysicalDirAccessed64
