@@ -332,7 +332,6 @@ it0E    DD OFFSET handle_invalid
 it0F    DD OFFSET handle_invalid
 
 ipc_thread:
-    int 3
     mov ax,define_mailslot_nr
     IsValidUserGate
     jc ipc_term
