@@ -1286,6 +1286,7 @@ TransferLower   Proc near
 ;
         push eax
         push ecx
+        push edx
 ;
         test dl,8
         jz ProtectionFault
@@ -1477,8 +1478,7 @@ Lower32:
 ;esp after switch
 
 LowerVm32:
-        push edx
-;
+
         push [ebp].reg_esp
         push [ebp].reg_ss.d_selector
         call GetStack
@@ -1526,7 +1526,6 @@ LowerVm32:
         mov eax,[ebp].reg_eip             ;old eip
         call PushDword
 ;
-        pop edx
         test [ebp].em_transfer,TRANSFER_CODE
         jz LowerZeroSelectors
 ;
@@ -1635,6 +1634,7 @@ LowerZeroSelectors:
         and [ebp].reg_eflags, NOT EFLAGS_VM
 
 LowerLoadIt:
+        pop edx
         pop ecx
         pop eax
         call TransferProt
