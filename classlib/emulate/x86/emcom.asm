@@ -947,26 +947,54 @@ ReadCodeDword   Endp
         public ReadCodeFword
 
 ReadCodeFword   Proc near
+        push ecx
+        push edi
+;
         mov esi,OFFSET reg_cs
+        test [ebp+esi].d_access,ACCESS_READ
+        jz AccessFault
+;        
         test word ptr [ebp+esi].d_access,ACCESS_SIZE
         jz read_code_fword16
 
 read_code_fword32:
         mov ebx,[ebp].reg_eip
         push ebx
-        call ReadFword
+;
+        mov ecx,ebx
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
+;
+        add ebx,[ebp+esi].d_base
+        xor edi,edi
+        call ReadLinearFword
+;
         pop ebx
         add ebx,6
         mov [ebp].reg_eip,ebx
+;
+        pop edi
+        pop ecx
         ret
 
 read_code_fword16:
         movzx ebx,word ptr [ebp].reg_eip
         push bx
-        call ReadFword
+;
+        mov ecx,ebx
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
+;
+        add ebx,[ebp+esi].d_base
+        xor edi,edi
+        call ReadLinearFword
+;
         pop bx
         add bx,6
         mov word ptr [ebp].reg_eip,bx
+;        
+        pop edi
+        pop ecx
         ret
 ReadCodeFword   Endp
 
