@@ -223,12 +223,12 @@ DestAds MACRO
         test byte ptr [ebp].em_flags,a32
         jnz dest32
 ;
-        mov si,OFFSET reg_es
+        mov esi,OFFSET reg_es
         movzx ebx,word ptr [ebp].reg_edi
         jmp done
 
 dest32:
-        mov si,OFFSET reg_es
+        mov esi,OFFSET reg_es
         mov ebx,[ebp].reg_edi
 
 done:

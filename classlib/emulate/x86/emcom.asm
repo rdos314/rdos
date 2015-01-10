@@ -35,6 +35,7 @@ include \rdos\classlib\emulate\x86\emtss.inc
 
         extrn _ReadFromIo:near
         extrn _WriteToIo:near
+        extrn ReadLinear:near
 
 .code
 
@@ -753,6 +754,7 @@ SubFromStack    Endp
 
 ReadCodeByte    Proc near
         push ecx
+        push edx
         push edi
 ;
         mov esi,OFFSET reg_cs
@@ -778,7 +780,9 @@ read_code_byte32:
         inc ebx
         mov [ebp].reg_eip,ebx
 ;
+        mov esi,0EFFF0000h
         pop edi
+        pop edx
         pop ecx
         ret
 
@@ -798,7 +802,9 @@ read_code_byte16:
         inc bx
         mov word ptr [ebp].reg_eip,bx
 ;        
+        mov esi,0EFFF0000h
         pop edi
+        pop edx
         pop ecx
         ret
 ReadCodeByte    Endp
