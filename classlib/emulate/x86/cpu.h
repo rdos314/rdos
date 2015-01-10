@@ -195,7 +195,10 @@ public:
         char EmParams;
         short int EmErrorCode;
 
-        unsigned char ReqBuffer[16];
+        unsigned long long CodeStart;
+        unsigned char CodeCache[32];
+
+        unsigned char ReqBuffer[32];
 
         short int DisAsmHandle;
         char OpcodeText[80];

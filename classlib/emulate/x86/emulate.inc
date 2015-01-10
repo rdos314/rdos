@@ -209,7 +209,10 @@ em_transfer		DB ?
 em_params		DB ?
 em_errorcode	DW ?
 
-req_buf			DB 16 DUP(?)
+code_start      DD ?,?
+code_cache      DB 32 DUP(?)
+
+req_buf			DB 32 DUP(?)
 
 dis_sel			DW ?
 
