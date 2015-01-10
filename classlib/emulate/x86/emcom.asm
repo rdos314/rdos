@@ -904,7 +904,11 @@ read_code_dword32:
 ;
         add ebx,[ebp+esi].d_base
         xor edi,edi
-        call ReadLinearDword
+        mov ecx,4
+        lea esi,[ebp].req_buf
+        call ReadLinear
+        lea esi,[ebp].req_buf
+        mov eax,[esi]
 ;
         pop ebx
         add ebx,4
@@ -921,7 +925,11 @@ read_code_dword16:
 ;
         add ebx,[ebp+esi].d_base
         xor edi,edi
-        call ReadLinearDword
+        mov ecx,4
+        lea esi,[ebp].req_buf
+        call ReadLinear
+        lea esi,[ebp].req_buf
+        mov eax,[esi]
 ;
         pop bx
         add bx,4
