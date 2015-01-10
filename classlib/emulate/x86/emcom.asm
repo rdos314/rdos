@@ -876,12 +876,11 @@ ReadCodeDword   Proc near
 
 read_code_dword32:
         mov ebx,[ebp].reg_eip
-        push ebx
-;
         mov ecx,ebx
         sub ecx,[ebp+esi].d_limit
         ja AccessFault
 ;
+        add [ebp].reg_eip,4
         add ebx,[ebp+esi].d_base
         xor edi,edi
         mov ecx,4
@@ -889,20 +888,15 @@ read_code_dword32:
         call ReadLinear
         lea esi,[ebp].req_buf
         mov eax,[esi]
-;
-        pop ebx
-        add ebx,4
-        mov [ebp].reg_eip,ebx
         ret
 
 read_code_dword16:
         movzx ebx,word ptr [ebp].reg_eip
-        push bx
-;
         mov ecx,ebx
         sub ecx,[ebp+esi].d_limit
         ja AccessFault
 ;
+        add word ptr [ebp].reg_eip,4
         add ebx,[ebp+esi].d_base
         xor edi,edi
         mov ecx,4
@@ -910,10 +904,6 @@ read_code_dword16:
         call ReadLinear
         lea esi,[ebp].req_buf
         mov eax,[esi]
-;
-        pop bx
-        add bx,4
-        mov word ptr [ebp].reg_eip,bx
         ret
 ReadCodeDword   Endp
 
