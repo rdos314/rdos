@@ -817,26 +817,54 @@ ReadCodeByte    Endp
         public ReadCodeWord
 
 ReadCodeWord    Proc near
+        push ecx
+        push edi
+;
         mov esi,OFFSET reg_cs
+        test [ebp+esi].d_access,ACCESS_READ
+        jz AccessFault
+;
         test word ptr [ebp+esi].d_access,ACCESS_SIZE
         jz read_code_word16
 
 read_code_word32:
         mov ebx,[ebp].reg_eip
         push ebx
-        call ReadWord
+;
+        mov ecx,ebx
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
+;
+        add ebx,[ebp+esi].d_base
+        xor edi,edi
+        call ReadLinearWord
+;
         pop ebx
         add ebx,2
         mov [ebp].reg_eip,ebx
+;
+        pop edi
+        pop ecx
         ret
 
 read_code_word16:
         movzx ebx,word ptr [ebp].reg_eip
         push bx
-        call ReadWord
+;
+        mov ecx,ebx
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
+;
+        add ebx,[ebp+esi].d_base
+        xor edi,edi
+        call ReadLinearWord
+;
         pop bx
         add bx,2
         mov word ptr [ebp].reg_eip,bx
+;        
+        pop edi
+        pop ecx
         ret
 ReadCodeWord    Endp
 
