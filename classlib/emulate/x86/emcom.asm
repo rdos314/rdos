@@ -819,9 +819,6 @@ ReadCodeByte    Endp
         public ReadCodeWord
 
 ReadCodeWord    Proc near
-        push ecx
-        push edi
-;
         mov esi,OFFSET reg_cs
         test [ebp+esi].d_access,ACCESS_READ
         jz AccessFault
@@ -846,8 +843,9 @@ read_code_word32:
         mov [ebp].reg_eip,ebx
 ;
         mov esi,0EFFF0000h
-        pop edi
-        pop ecx
+        mov ecx,esi
+        mov edx,esi
+        mov edi,esi
         ret
 
 read_code_word16:
@@ -867,8 +865,9 @@ read_code_word16:
         mov word ptr [ebp].reg_eip,bx
 ;        
         mov esi,0EFFF0000h
-        pop edi
-        pop ecx
+        mov ecx,esi
+        mov edx,esi
+        mov edi,esi
         ret
 ReadCodeWord    Endp
 
