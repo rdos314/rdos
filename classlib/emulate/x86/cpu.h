@@ -105,18 +105,6 @@ typedef struct
 
 typedef struct
 {
-        unsigned long tag;
-        char data[16];
-} TCacheLine;
-
-typedef struct
-{
-        TCacheLine data[4];
-        char lru;
-} TCacheEntry;
-
-typedef struct
-{
         unsigned long long tag;
         unsigned long long address;
 } TTlbEntry;
@@ -192,7 +180,6 @@ public:
         char st[8][10];
 
         TTlb Reg_tlb;
-        TCacheEntry Reg_cache[128];
 
         char PendingInt;
 

@@ -116,20 +116,6 @@ d_spare		DB ?
 
 descriptor_struc	ENDS
 
-cache_line_struc	STRUC
-
-c_tag		DD ?
-c_data		DB 16 DUP(?)
-
-cache_line_struc	ENDS
-
-cache_entry_struc	STRUC
-
-c_line		DB 4 * SIZE cache_line_struc DUP(?)
-c_lru		DB ?
-
-cache_entry_struc	ENDS
-
 tlb_entry_struc	STRUC
 
 t_tag		DD ?,?
@@ -208,7 +194,6 @@ math_st6		DT ?
 math_st7		DT ?
 
 reg_tlb			tlb_struc <>
-reg_cache		DB 128 * SIZE cache_entry_struc DUP(?)
 
 pending_int		DB ?
 
