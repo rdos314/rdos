@@ -673,11 +673,11 @@ EmMoveByteImToMem       Proc near
 EmMoveByteImToMem16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadCodeByte
         pop ebx
-        pop si
+        pop esi
         call WriteByte
         ret
 
@@ -725,11 +725,11 @@ EmMoveWordImToMem       Proc near
 EmMoveWordImToMem16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadCodeWord
         pop ebx
-        pop si
+        pop esi
         call WriteWord
         ret
 
@@ -763,11 +763,11 @@ EmMoveDwordImToMem      Proc near
 EmMoveDwordImToMem16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadCodeDword
         pop ebx
-        pop si
+        pop esi
         call WriteDword
         ret
 
@@ -917,7 +917,7 @@ EmMoveSregToMem Proc near
         mov bl,al
         and al,38h
         shr al,2
-        movzx si,al
+        movzx esi,al
         cmp al,2*6
         jnc EmulateError
 ;
@@ -946,7 +946,7 @@ EmMoveMemToSreg Proc near
         pop bx
         and bl,38h
         shr bl,2
-        movzx si,bl
+        movzx esi,bl
         cmp bl,2*6
         jnc EmulateError
 ;

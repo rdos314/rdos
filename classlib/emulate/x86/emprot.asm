@@ -127,7 +127,7 @@ EmMoveCrReg     Proc near
         cmp al,0C0h
         jne EmulateError
 ;
-        movzx si,bl
+        movzx esi,bl
         and esi,3
         mov esi,dword ptr [4*esi].DwordRegTab
         mov eax,[ebp+esi]
@@ -173,7 +173,7 @@ EmMoveRegCr     Proc near
         cmp al,0C0h
         jne EmulateError
 ;
-        movzx si,bl
+        movzx esi,bl
         shr bl,2
         and ebx,0Eh
         call dword ptr [2*ebx].EmLoadCrTab

@@ -174,7 +174,7 @@ Em&op&ByteMemReg16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
         pop ax
-        push si
+        push esi
         push ebx
         push ax
         call ReadByte
@@ -189,7 +189,7 @@ Em&op&ByteMemReg16:
         lahf
         mov byte ptr [ebp].reg_eflags,ah
         pop ebx
-        pop si
+        pop esi
         call WriteByte
         ret
 
@@ -253,7 +253,7 @@ Em&op&WordMemReg16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
         pop ax
-        push si
+        push esi
         push ebx
         push ax
         call ReadWord
@@ -269,7 +269,7 @@ Em&op&WordMemReg16:
         mov byte ptr [ebp].reg_eflags,ah
         mov ax,bx
         pop ebx
-        pop si
+        pop esi
         call WriteWord
         ret
 
@@ -314,7 +314,7 @@ Em&op&DwordMemReg16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
         pop ax
-        push si
+        push esi
         push ebx
         push ax
         call ReadDword
@@ -330,7 +330,7 @@ Em&op&DwordMemReg16:
         mov byte ptr [ebp].reg_eflags,ah
         mov eax,ebx
         pop ebx
-        pop si
+        pop esi
         call WriteDword
         ret
 
@@ -389,7 +389,7 @@ Em&op&ByteMem   Proc near
 Em&op&ByteMem16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadByte
         mov ah,byte ptr [ebp].reg_eflags
@@ -398,7 +398,7 @@ Em&op&ByteMem16:
         lahf
         mov byte ptr [ebp].reg_eflags,ah
         pop ebx
-        pop si
+        pop esi
         call WriteByte
         ret
 
@@ -451,7 +451,7 @@ Em&op&WordMem   Proc near
 Em&op&WordMem16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadWord
         mov dx,ax
@@ -462,7 +462,7 @@ Em&op&WordMem16:
         mov byte ptr [ebp].reg_eflags,ah
         mov ax,dx
         pop ebx
-        pop si
+        pop esi
         call WriteWord
         ret
 
@@ -495,7 +495,7 @@ Em&op&DwordMem  Proc near
 Em&op&DwordMem16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadDword
         mov edx,eax
@@ -506,7 +506,7 @@ Em&op&DwordMem16:
         mov byte ptr [ebp].reg_eflags,ah
         mov eax,edx
         pop ebx
-        pop si
+        pop esi
         call WriteDword
         ret
 
@@ -556,7 +556,7 @@ Em&op&ByteImMem Proc near
 Em&op&ByteImMem16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadByte
         push ax
@@ -569,7 +569,7 @@ Em&op&ByteImMem16:
         lahf
         mov byte ptr [ebp].reg_eflags,ah
         pop ebx
-        pop si
+        pop esi
         call WriteByte
         ret
 
@@ -629,7 +629,7 @@ Em&op&WordImMem Proc near
 Em&op&WordImMem16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadWord
         push ax
@@ -643,7 +643,7 @@ Em&op&WordImMem16:
         mov byte ptr [ebp].reg_eflags,ah
         mov ax,bx
         pop ebx
-        pop si
+        pop esi
         call WriteWord
         ret
 
@@ -684,7 +684,7 @@ Em&op&DwordImMem        Proc near
 Em&op&DwordImMem16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadDword
         push eax
@@ -698,7 +698,7 @@ Em&op&DwordImMem16:
         mov byte ptr [ebp].reg_eflags,ah
         mov eax,ebx
         pop ebx
-        pop si
+        pop esi
         call WriteDword
         ret
 
@@ -833,7 +833,7 @@ Em&op&WordImsxMem       Proc near
 Em&op&WordImsxMem16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadWord
         push ax
@@ -847,7 +847,7 @@ Em&op&WordImsxMem16:
         mov byte ptr [ebp].reg_eflags,ah
         mov ax,bx
         pop ebx
-        pop si
+        pop esi
         call WriteWord
         ret
 
@@ -888,7 +888,7 @@ Em&op&DwordImsxMem      Proc near
 Em&op&DwordImsxMem16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadDword
         push eax
@@ -902,7 +902,7 @@ Em&op&DwordImsxMem16:
         mov byte ptr [ebp].reg_eflags,ah
         mov eax,ebx
         pop ebx
-        pop si
+        pop esi
         call WriteDword
         ret
 
@@ -1344,7 +1344,7 @@ Em&op&ByteMem1  Proc near
 Em&op&ByteMem116:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadByte
         mov ah,byte ptr [ebp].reg_eflags
@@ -1353,7 +1353,7 @@ Em&op&ByteMem116:
         lahf
         mov byte ptr [ebp].reg_eflags,ah
         pop ebx
-        pop si
+        pop esi
         call WriteByte
         ret
 
@@ -1405,7 +1405,7 @@ Em&op&WordMem1  Proc near
 Em&op&WordMem116:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadWord
         mov bx,ax
@@ -1416,7 +1416,7 @@ Em&op&WordMem116:
         mov byte ptr [ebp].reg_eflags,ah
         mov ax,bx
         pop ebx
-        pop si
+        pop esi
         call WriteWord
         ret
 
@@ -1449,7 +1449,7 @@ Em&op&DwordMem1 Proc near
 Em&op&DwordMem116:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadDword
         mov ebx,eax
@@ -1460,7 +1460,7 @@ Em&op&DwordMem116:
         mov byte ptr [ebp].reg_eflags,ah
         mov eax,ebx
         pop ebx
-        pop si
+        pop esi
         call WriteDword
         ret
 
@@ -1511,7 +1511,7 @@ Em&op&ByteMemCl Proc near
 Em&op&ByteMemCl16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadByte
         mov cl,byte ptr [ebp].reg_ecx
@@ -1521,7 +1521,7 @@ Em&op&ByteMemCl16:
         lahf
         mov byte ptr [ebp].reg_eflags,ah
         pop ebx
-        pop si
+        pop esi
         call WriteByte
         ret
 
@@ -1574,7 +1574,7 @@ Em&op&WordMemCl Proc near
 Em&op&WordMemCl16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadWord
         mov bx,ax
@@ -1586,7 +1586,7 @@ Em&op&WordMemCl16:
         mov byte ptr [ebp].reg_eflags,ah
         mov ax,bx
         pop ebx
-        pop si
+        pop esi
         call WriteWord
         ret
 
@@ -1620,7 +1620,7 @@ Em&op&DwordMemCl        Proc near
 Em&op&DwordMemCl16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadDword
         mov ebx,eax
@@ -1632,7 +1632,7 @@ Em&op&DwordMemCl16:
         mov byte ptr [ebp].reg_eflags,ah
         mov eax,ebx
         pop ebx
-        pop si
+        pop esi
         call WriteDword
         ret
 
@@ -1684,7 +1684,7 @@ Em&op&ByteMemIm Proc near
 Em&op&ByteMemIm16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadByte
         push ax
@@ -1697,7 +1697,7 @@ Em&op&ByteMemIm16:
         lahf
         mov byte ptr [ebp].reg_eflags,ah
         pop ebx
-        pop si
+        pop esi
         call WriteByte
         ret
 
@@ -1753,7 +1753,7 @@ Em&op&WordMemIm Proc near
 Em&op&WordMemIm16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadWord
         push ax
@@ -1767,7 +1767,7 @@ Em&op&WordMemIm16:
         mov byte ptr [ebp].reg_eflags,ah
         mov ax,bx
         pop ebx
-        pop si
+        pop esi
         call WriteWord
         ret
 
@@ -1804,7 +1804,7 @@ Em&op&DwordMemIm        Proc near
 Em&op&DwordMemIm16:
         movzx ebx,bl
         call dword ptr [2*ebx].MemTab
-        push si
+        push esi
         push ebx
         call ReadDword
         push eax
@@ -1818,7 +1818,7 @@ Em&op&DwordMemIm16:
         mov byte ptr [ebp].reg_eflags,ah
         mov eax,ebx
         pop ebx
-        pop si
+        pop esi
         call WriteDword
         ret
 
@@ -2194,7 +2194,7 @@ Em&op&MemReg16:
         add ebx,eax
 ;
         push ebx
-        push si
+        push esi
         push cx
         call ReadByte
         pop cx
@@ -2205,7 +2205,7 @@ Em&op&MemReg16:
         lahf
         mov byte ptr [ebp].reg_eflags,ah
 ;       
-        pop si
+        pop esi
         pop ebx
         call WriteByte
         ret
@@ -2273,7 +2273,7 @@ Em&op&ImMem16:
         add ebx,eax
 ;
         push ebx
-        push si
+        push esi
         push cx
         call ReadByte
         pop cx
@@ -2284,7 +2284,7 @@ Em&op&ImMem16:
         lahf
         mov byte ptr [ebp].reg_eflags,ah
 ;       
-        pop si
+        pop esi
         pop ebx
         call WriteByte
         ret

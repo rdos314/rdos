@@ -833,12 +833,12 @@ CondLinearToPhysical64    Endp
 ;               PARAMETERS:     EBP             CPU
 ;                               EBX             LINEAR ADDRESS
 ;                               ECX             NUMBER OF BYTE TO READ
+;                               ESI             Req buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadPaged32       Proc near
         xor edi,edi
-        lea esi,[ebp].req_buf
 ReadPagedLoop32:
         push ebx
         push ecx
@@ -898,12 +898,12 @@ ReadPaged32       Endp
 ;               PARAMETERS:     EBP             CPU
 ;                               EBX             LINEAR ADDRESS
 ;                               ECX             NUMBER OF BYTE TO WRITE
+;                               ESI             Req buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WritePaged32      Proc near
         xor edi,edi
-        lea esi,[ebp].req_buf
 WritePagedLoop32:
         push ebx
         push ecx
@@ -975,11 +975,11 @@ WritePaged32      Endp
 ;               PARAMETERS:     EBP             CPU
 ;                               EDI:EBX         LINEAR ADDRESS
 ;                               ECX             NUMBER OF BYTE TO READ
+;                               ESI             Req buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadPaged64       Proc near
-        lea esi,[ebp].req_buf
 
 ReadPagedLoop64:
         push edi
@@ -1048,11 +1048,11 @@ ReadPaged64       Endp
 ;               PARAMETERS:     EBP             CPU
 ;                               EDI:EBX         LINEAR ADDRESS
 ;                               ECX             NUMBER OF BYTE TO WRITE
+;                               ESI             Req buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WritePaged64      Proc near
-        lea esi,[ebp].req_buf
 
 WritePagedLoop64:
         push edi
@@ -1135,8 +1135,11 @@ WritePaged64      Endp
 ;               PARAMETERS:     EBP             CPU
 ;                               EDI:EBX         LINEAR ADDRESS
 ;                               ECX             NUMBER OF BYTE TO READ
+;                               ESI             Req buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public ReadLinear
 
 ReadLinear Proc near
         test [ebp].reg_cr0,CR0_PG
@@ -1155,7 +1158,6 @@ ReadLinear32:
 
 ReadLinearReal:
         xor edi,edi
-        lea esi,[ebp].req_buf
         call ReadPhysical
         ret
 ReadLinear      Endp
@@ -1170,6 +1172,7 @@ ReadLinear      Endp
 ;               PARAMETERS:     EBP             CPU
 ;                               EDI:EBX         PHYSICAL ADDRESS
 ;                               ECX             SIZE
+;                               ESI             Req buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1505,6 +1508,7 @@ ReadLinearByte  Proc near
         push esi
 ;
         mov ecx,1
+        lea esi,[ebp].req_buf
         call ReadLinear
         lea esi,[ebp].req_buf
         mov al,[esi]
@@ -1539,6 +1543,7 @@ ReadLinearWord  Proc near
         push esi
 ;
         mov ecx,2
+        lea esi,[ebp].req_buf
         call ReadLinear
         lea esi,[ebp].req_buf
         mov ax,[esi]
@@ -1573,6 +1578,7 @@ ReadLinearDword Proc near
         push esi
 ;
         mov ecx,4
+        lea esi,[ebp].req_buf
         call ReadLinear
         lea esi,[ebp].req_buf
         mov eax,[esi]
@@ -1606,6 +1612,7 @@ ReadLinearFword Proc near
         push esi
 ;
         mov ecx,6
+        lea esi,[ebp].req_buf
         call ReadLinear
         lea esi,[ebp].req_buf
         mov eax,[esi]
@@ -1639,6 +1646,7 @@ ReadLinearQword Proc near
         push esi
 ;
         mov ecx,8
+        lea esi,[ebp].req_buf
         call ReadLinear
         lea esi,[ebp].req_buf
         mov eax,[esi]
@@ -1671,6 +1679,7 @@ ReadLinearTbyte Proc near
         push esi
 ;
         mov ecx,10
+        lea esi,[ebp].req_buf
         call ReadLinear
         lea esi,[ebp].req_buf
         mov eax,[esi]

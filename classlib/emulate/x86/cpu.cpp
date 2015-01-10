@@ -266,7 +266,9 @@ void TCpuState::Reset()
         Reg_tr.selector = 0x1234;
         Reg_tr.base = 0x12345678;
 
-        Tag = 0;
+        CodeStart = 0xFFFFFFFFFFFFFFFF;
+
+        Tag = 0; 
         MathControl = 0;
         MathStatus = 0;
 
