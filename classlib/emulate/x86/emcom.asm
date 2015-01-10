@@ -849,6 +849,7 @@ read_code_word32:
         add ebx,2
         mov [ebp].reg_eip,ebx
 ;
+        mov esi,0EFFF0000h
         pop edi
         pop ecx
         ret
@@ -869,6 +870,7 @@ read_code_word16:
         add bx,2
         mov word ptr [ebp].reg_eip,bx
 ;        
+        mov esi,0EFFF0000h
         pop edi
         pop ecx
         ret
@@ -914,6 +916,7 @@ read_code_dword32:
         add ebx,4
         mov [ebp].reg_eip,ebx
 ;
+        mov esi,0EFFF0000h
         pop edi
         pop ecx
         ret
@@ -934,6 +937,7 @@ read_code_dword16:
         add bx,4
         mov word ptr [ebp].reg_eip,bx
 ;        
+        mov esi,0EFFF0000h
         pop edi
         pop ecx
         ret
@@ -979,6 +983,7 @@ read_code_fword32:
         add ebx,6
         mov [ebp].reg_eip,ebx
 ;
+        mov esi,0EFFF0000h
         pop edi
         pop ecx
         ret
@@ -999,6 +1004,7 @@ read_code_fword16:
         add bx,6
         mov word ptr [ebp].reg_eip,bx
 ;        
+        mov esi,0EFFF0000h
         pop edi
         pop ecx
         ret
