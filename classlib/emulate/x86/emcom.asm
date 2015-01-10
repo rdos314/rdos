@@ -772,7 +772,11 @@ read_code_byte32:
 ;
         add ebx,[ebp+esi].d_base
         xor edi,edi
-        call ReadLinearByte
+        mov ecx,1
+        lea esi,[ebp].req_buf
+        call ReadLinear
+        lea esi,[ebp].req_buf
+        mov al,[esi]
 ;
         pop ebx
         inc ebx
@@ -789,7 +793,11 @@ read_code_byte16:
 ;
         add ebx,[ebp+esi].d_base
         xor edi,edi
-        call ReadLinearByte
+        mov ecx,1
+        lea esi,[ebp].req_buf
+        call ReadLinear
+        lea esi,[ebp].req_buf
+        mov al,[esi]
 ;
         pop bx
         inc bx
