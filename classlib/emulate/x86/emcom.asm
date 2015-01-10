@@ -759,9 +759,7 @@ ReadCodeByte    Proc near
 read_code_byte32:
         mov ebx,[ebp].reg_eip
         push ebx
-        mov [ebp].code_fetch,1
         call ReadByte
-        mov [ebp].code_fetch,0
         pop ebx
         inc ebx
         mov [ebp].reg_eip,ebx
@@ -770,9 +768,7 @@ read_code_byte32:
 read_code_byte16:
         movzx ebx,word ptr [ebp].reg_eip
         push bx
-        mov [ebp].code_fetch,1
         call ReadByte
-        mov [ebp].code_fetch,0
         pop bx
         inc bx
         mov word ptr [ebp].reg_eip,bx

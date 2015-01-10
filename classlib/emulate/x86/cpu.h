@@ -207,7 +207,6 @@ public:
         char DataValid;
         long TotalCycles;
         char Running;
-        char CodeFetch;
         char CpuType;
         long EflagsMask;
 
@@ -241,7 +240,6 @@ public:
 
     virtual void Reset();
 
-    void ReadCode(void *Buffer, unsigned long long Address, int Size);
     void ReadFromMemory(void *Buffer, unsigned long long Address, int Size);
     void WriteToMemory(void *Buffer, unsigned long long Address, int Size);
     void ReadFromIo(void *Buffer, unsigned short int Port, int Size);
@@ -270,7 +268,6 @@ protected:
     virtual void NotifyIdle();
     virtual void NotifySetClk();
     virtual void NotifyResetClk();
-    virtual char ReadCode(unsigned long long Address);
     virtual char ReadFromMemory(unsigned long long Address);
     virtual void WriteToMemory(unsigned long long Address, char Value);
     virtual char ReadFromIo(unsigned short int Port);

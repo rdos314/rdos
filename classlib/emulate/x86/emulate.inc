@@ -225,8 +225,6 @@ total_cycles	DD ?
 
 running			DB ?
 
-code_fetch      DB ?
-
 cpu_type        DB ?
 eflags_mask     DD ?
 

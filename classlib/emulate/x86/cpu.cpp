@@ -123,10 +123,7 @@ char GetIntVector(TCpuState *CpuState)
 *##########################################################################*/
 void ReadFromMemory(TCpuState *CpuState, void *Buffer, unsigned long long Address, int Size)
 {
-    if (CpuState->CodeFetch)
-        CpuState->Cpu->ReadCode(Buffer, Address, Size);
-    else
-        CpuState->Cpu->ReadFromMemory(Buffer, Address, Size);
+    CpuState->Cpu->ReadFromMemory(Buffer, Address, Size);
 }
 
 /*##################  WriteToMemory  ###############
@@ -288,7 +285,6 @@ TCpu::TCpu()
 {
         int i;
 
-        CpuState.CodeFetch = 0;
         CpuState.Cpu = this;
 
         for (i = 0; i < MAX_BREAKPOINTS; i++)
@@ -493,18 +489,6 @@ void TCpu::SysCall()
                 (*OnSysCall)(this);
 }
 
-/*##################  TCpu::ReadCode  ###############
-*   Purpose....: Read code                                                                  #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-char TCpu::ReadCode(unsigned long long Address)
-{
-    return ReadFromMemory(Address);
-}
-
 /*##################  TCpu::ReadFromMemory  ###############
 *   Purpose....: Read from memory                                           #
 *   In params..: *                                                          #
@@ -559,31 +543,6 @@ void TCpu::WriteToIo(unsigned short Port, char Value)
 {
         if (OnWriteToIo)
                 (*OnWriteToIo)(this, Port, Value);
-}
-
-/*##################  TCpu::ReadCode  ###############
-*   Purpose....: Read code                                          #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void TCpu::ReadCode(void *Buffer, unsigned long long Address, int Size)
-{
-        int i;
-        char *Dest;
-
-        if (CpuState.Running)
-                AddCycles((Size - 1) / 4 + 1);
-
-        Dest = (char *)Buffer;
-
-        for (i = 0; i < Size; i++)
-        {
-                *Dest = ReadCode(Address);
-                Address++;
-                Dest++;
-        }
 }
 
 /*##################  TCpu::ReadFromMemory  ###############
