@@ -970,7 +970,12 @@ read_code_fword32:
 ;
         add ebx,[ebp+esi].d_base
         xor edi,edi
-        call ReadLinearFword
+        mov ecx,6
+        lea esi,[ebp].req_buf
+        call ReadLinear
+        lea esi,[ebp].req_buf
+        mov eax,[esi]
+        mov dx,[esi+4]
 ;
         pop ebx
         add ebx,6
@@ -987,7 +992,12 @@ read_code_fword16:
 ;
         add ebx,[ebp+esi].d_base
         xor edi,edi
-        call ReadLinearFword
+        mov ecx,6
+        lea esi,[ebp].req_buf
+        call ReadLinear
+        lea esi,[ebp].req_buf
+        mov eax,[esi]
+        mov dx,[esi+4]
 ;
         pop bx
         add bx,6
