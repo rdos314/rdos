@@ -2713,9 +2713,95 @@ EmBsr32 Endp
         ExtByteMem Imul
         ExtWordMem Imul
         WordRegMem Imul
-        WordImMem Imul
-        WordImsxMem Imul
-        
+
+        public EmImulWordImsxMem
+
+EmImulWordImsxMem Proc near
+        call ReadCodeByte
+        test byte ptr [ebp].em_flags,d32
+        jnz EmImulDwordImsxMem
+;
+        push ax
+        mov bl,al
+        call LoadWordMemReg
+        push ax
+        call ReadCodeByte
+        movsx dx,al
+        pop bx
+        mov ah,byte ptr [ebp].reg_eflags
+        sahf
+        imul bx,dx
+        lahf
+        mov byte ptr [ebp].reg_eflags,ah
+        mov ax,bx
+        pop bx
+        call SaveWordReg
+        ret
+EmImulWordImsxMem       Endp
+
+EmImulDwordImsxMem      Proc near
+        push ax
+        mov bl,al
+        call LoadDwordMemReg
+        push eax
+        call ReadCodeByte
+        movsx edx,al
+        pop ebx
+        mov ah,byte ptr [ebp].reg_eflags
+        sahf
+        imul ebx,edx
+        lahf
+        mov byte ptr [ebp].reg_eflags,ah
+        mov eax,ebx
+        pop bx
+        call SaveDwordReg
+        ret
+EmImulDwordImsxMem      Endp
+
+        public EmImulWordImMem
+
+EmImulWordImMem Proc near
+        call ReadCodeByte
+        test byte ptr [ebp].em_flags,d32
+        jnz EmImulDwordImMem
+;
+        push ax
+        mov bl,al
+        call LoadWordMemReg
+        push ax
+        call ReadCodeWord
+        mov dx,ax
+        pop bx
+        mov ah,byte ptr [ebp].reg_eflags
+        sahf
+        imul bx,dx
+        lahf
+        mov byte ptr [ebp].reg_eflags,ah
+        mov ax,bx
+        pop bx
+        call SaveWordReg
+        ret
+EmImulWordImMem       Endp
+
+EmImulDwordImMem      Proc near
+        push ax
+        mov bl,al
+        call LoadDwordMemReg
+        push eax
+        call ReadCodeDword
+        mov edx,eax
+        pop ebx
+        mov ah,byte ptr [ebp].reg_eflags
+        sahf
+        imul ebx,edx
+        lahf
+        mov byte ptr [ebp].reg_eflags,ah
+        mov eax,ebx
+        pop bx
+        call SaveDwordReg
+        ret
+EmImulDwordImMem      Endp
+                
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;

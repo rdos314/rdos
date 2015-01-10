@@ -2814,15 +2814,7 @@ IntFar  Proc near
         jz IntFarReal
 ;
         test byte ptr [ebp].reg_eflags+2,2              ;test The VM indicator
-        jnz IntFarVm
-;
-        mov ecx,[ebp].reg_eflags                        ;what is this verification for ? ### GIL ????###
-        ror cx,4
-        mov ch,[ebp].reg_cs.d_access
-        and cx,303h
-        cmp cl,ch
-        jc PrivilegeFault
-        jmp IntFarPm
+        jz IntFarPm
 
 IntFarVm:
         mov ecx,[ebp].reg_eflags
