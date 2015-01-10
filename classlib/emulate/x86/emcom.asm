@@ -748,6 +748,8 @@ SubFromStack    Endp
 ;
 ;               RETURNS:                AL              data read
 ;
+;               USES:           All registers
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
         public ReadCodeByte
@@ -775,11 +777,6 @@ read_code_byte32:
         pop ebx
         inc ebx
         mov [ebp].reg_eip,ebx
-;
-        mov esi,0EFFF0000h
-        mov ecx,esi
-        mov edx,esi
-        mov edi,esi
         ret
 
 read_code_byte16:
@@ -797,11 +794,6 @@ read_code_byte16:
         pop bx
         inc bx
         mov word ptr [ebp].reg_eip,bx
-;        
-        mov esi,0EFFF0000h
-        mov ecx,esi
-        mov edx,esi
-        mov edi,esi
         ret
 ReadCodeByte    Endp
 
@@ -813,6 +805,8 @@ ReadCodeByte    Endp
 ;               DESCRIPTION:    Read word from cs:eip, update to next position
 ;
 ;               RETURNS:                AX              data read
+;
+;               USES:           All registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -841,11 +835,6 @@ read_code_word32:
         pop ebx
         add ebx,2
         mov [ebp].reg_eip,ebx
-;
-        mov esi,0EFFF0000h
-        mov ecx,esi
-        mov edx,esi
-        mov edi,esi
         ret
 
 read_code_word16:
@@ -863,11 +852,6 @@ read_code_word16:
         pop bx
         add bx,2
         mov word ptr [ebp].reg_eip,bx
-;        
-        mov esi,0EFFF0000h
-        mov ecx,esi
-        mov edx,esi
-        mov edi,esi
         ret
 ReadCodeWord    Endp
 
@@ -879,6 +863,8 @@ ReadCodeWord    Endp
 ;               DESCRIPTION:    Read dword from cs:eip, update to next position
 ;
 ;               RETURNS:                EAX             data read
+;
+;               USES:           All registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -907,11 +893,6 @@ read_code_dword32:
         pop ebx
         add ebx,4
         mov [ebp].reg_eip,ebx
-;
-        mov esi,0EFFF0000h
-        mov ecx,esi
-        mov edx,esi
-        mov edi,esi
         ret
 
 read_code_dword16:
@@ -929,11 +910,6 @@ read_code_dword16:
         pop bx
         add bx,4
         mov word ptr [ebp].reg_eip,bx
-;        
-        mov esi,0EFFF0000h
-        mov ecx,esi
-        mov edx,esi
-        mov edi,esi
         ret
 ReadCodeDword   Endp
 
@@ -945,6 +921,8 @@ ReadCodeDword   Endp
 ;               DESCRIPTION:    Read fword from cs:eip, update to next position
 ;
 ;               RETURNS:                DX:EAX          data read
+;
+;               USES:           All registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -973,10 +951,6 @@ read_code_fword32:
         pop ebx
         add ebx,6
         mov [ebp].reg_eip,ebx
-;
-        mov esi,0EFFF0000h
-        mov ecx,esi
-        mov edi,esi
         ret
 
 read_code_fword16:
@@ -994,10 +968,6 @@ read_code_fword16:
         pop bx
         add bx,6
         mov word ptr [ebp].reg_eip,bx
-;        
-        mov esi,0EFFF0000h
-        mov ecx,esi
-        mov edi,esi
         ret
 ReadCodeFword   Endp
 
