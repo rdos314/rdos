@@ -932,12 +932,11 @@ ReadCodeFword   Proc near
 
 read_code_fword32:
         mov ebx,[ebp].reg_eip
-        push ebx
-;
         mov ecx,ebx
         sub ecx,[ebp+esi].d_limit
         ja AccessFault
 ;
+        add [ebp].reg_eip,6
         add ebx,[ebp+esi].d_base
         xor edi,edi
         mov ecx,6
@@ -946,20 +945,15 @@ read_code_fword32:
         lea esi,[ebp].req_buf
         mov eax,[esi]
         mov dx,[esi+4]
-;
-        pop ebx
-        add ebx,6
-        mov [ebp].reg_eip,ebx
         ret
 
 read_code_fword16:
         movzx ebx,word ptr [ebp].reg_eip
-        push bx
-;
         mov ecx,ebx
         sub ecx,[ebp+esi].d_limit
         ja AccessFault
 ;
+        add word ptr [ebp].reg_eip,6
         add ebx,[ebp+esi].d_base
         xor edi,edi
         mov ecx,6
@@ -968,10 +962,6 @@ read_code_fword16:
         lea esi,[ebp].req_buf
         mov eax,[esi]
         mov dx,[esi+4]
-;
-        pop bx
-        add bx,6
-        mov word ptr [ebp].reg_eip,bx
         ret
 ReadCodeFword   Endp
 
