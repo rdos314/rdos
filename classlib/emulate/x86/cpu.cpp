@@ -290,6 +290,8 @@ TCpu::TCpu()
         for (i = 0; i < MAX_BREAKPOINTS; i++)
                 FBreakpoints[i] = 0;
 
+        FMaxBreak = 0;
+
         debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
         initbuffer(buffer_val,COUNTBUFFER); /* initialise le buffer*/
 
@@ -414,6 +416,9 @@ void TCpu::AddBreakpoint(unsigned short Selector, unsigned long long Offset)
                         FBreakpoints[i] = new TLocation;
                         FBreakpoints[i]->Selector = Selector;
                         FBreakpoints[i]->Offset = Offset;
+
+                        if (i >= FMaxBreak)
+                            FMaxBreak = i + 1;
                         break;
                 }
 }
@@ -428,6 +433,8 @@ void TCpu::AddBreakpoint(unsigned short Selector, unsigned long long Offset)
 void TCpu::ClearBreakpoints()
 {
         int i;
+
+        FMaxBreak = 0;
 
         for (i = 0; i < MAX_BREAKPOINTS; i++)
                 if (FBreakpoints[i])
@@ -833,6 +840,8 @@ void TCpu::Go()
         int Done;
         int CheckDelay;
         int i;
+        long long offset;
+        unsigned char ch;
 
         Done = CpuState.ReqBuffer[0] == 0xCC;
         CheckDelay = 1000;
@@ -842,15 +851,23 @@ void TCpu::Go()
                 if (CpuState.EmDebug & DEBUG_BREAK)
                         Done = TRUE;
 
-                for (i = 0; i < MAX_BREAKPOINTS; i++)
+                for (i = 0; i < FMaxBreak; i++)
                         if (FBreakpoints[i])
                                 if (CpuState.Reg_cs.selector == FBreakpoints[i]->Selector && CpuState.Reg_eip == FBreakpoints[i]->Offset)
                                         Done = TRUE;
 
                 if (!Done)
                 {
-                        ReadInstruction(&CpuState);
-                        if (CpuState.ReqBuffer[0] == 0xCC)
+                        offset = CpuState.Reg_eip  + CpuState.Reg_cs.base - CpuState.CodeStart;
+                        if (offset < 0 || offset >= 0x20)
+                        {
+                            ReadInstruction(&CpuState);
+                            ch = CpuState.ReqBuffer[0];
+                        }
+                        else
+                            ch = CpuState.CodeCache[offset];
+                            
+                        if (ch == 0xCC)
                         {
                                 Done = TRUE;
                                 CpuState.Reg_eip++;

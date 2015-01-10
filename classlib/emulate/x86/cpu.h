@@ -274,6 +274,7 @@ protected:
     virtual void WriteToIo(unsigned short int Port, char Value);
 
     TLocation *FBreakpoints[MAX_BREAKPOINTS];
+    int FMaxBreak;
 
 private:
 };
