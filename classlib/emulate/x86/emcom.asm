@@ -752,26 +752,54 @@ SubFromStack    Endp
         public ReadCodeByte
 
 ReadCodeByte    Proc near
+        push ecx
+        push edi
+;
         mov esi,OFFSET reg_cs
+        test [ebp+esi].d_access,ACCESS_READ
+        jz AccessFault
+;
         test word ptr [ebp+esi].d_access,ACCESS_SIZE
         jz read_code_byte16
 
 read_code_byte32:
         mov ebx,[ebp].reg_eip
         push ebx
-        call ReadByte
+;
+        mov ecx,ebx
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
+;
+        add ebx,[ebp+esi].d_base
+        xor edi,edi
+        call ReadLinearByte
+;
         pop ebx
         inc ebx
         mov [ebp].reg_eip,ebx
+;
+        pop edi
+        pop ecx
         ret
 
 read_code_byte16:
         movzx ebx,word ptr [ebp].reg_eip
         push bx
-        call ReadByte
+;
+        mov ecx,ebx
+        sub ecx,[ebp+esi].d_limit
+        ja AccessFault
+;
+        add ebx,[ebp+esi].d_base
+        xor edi,edi
+        call ReadLinearByte
+;
         pop bx
         inc bx
         mov word ptr [ebp].reg_eip,bx
+;        
+        pop edi
+        pop ecx
         ret
 ReadCodeByte    Endp
 
