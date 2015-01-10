@@ -770,12 +770,19 @@ read_code_byte32:
 ;
         inc [ebp].reg_eip
         add ebx,[ebp+esi].d_base
-        xor edi,edi
-        mov ecx,1
-        lea esi,[ebp].req_buf
-        call ReadLinear
-        lea esi,[ebp].req_buf
-        mov al,[esi]
+;
+        mov eax,[ebp].code_start+4
+        or eax,eax
+        jnz read_code_whole_byte
+;
+        mov eax,ebx
+        sub eax,[ebp].code_start
+        jb read_code_whole_byte
+;
+        cmp eax,1Fh
+        ja read_code_byte
+;                
+        mov al,[ebp+eax].code_cache
         ret
 
 read_code_byte16:
@@ -786,12 +793,57 @@ read_code_byte16:
 ;
         inc word ptr [ebp].reg_eip
         add ebx,[ebp+esi].d_base
+;
+        mov eax,[ebp].code_start+4
+        or eax,eax
+        jnz read_code_whole_byte
+;
+        mov eax,ebx
+        sub eax,[ebp].code_start
+        jb read_code_whole_byte
+;
+        cmp eax,1Fh
+        ja read_code_byte
+;                
+        mov al,[ebp+eax].code_cache
+        ret
+
+read_code_byte:
+        cmp eax,2Fh
+        ja read_code_whole_byte
+;
+        lea esi,[ebp].code_cache + 10h
+        lea edi,[ebp].code_cache
+        movsd
+        movsd
+        movsd
+        movsd
+        add [ebp].code_start,10h
+;        
+        push ebx
+        mov ebx,[ebp].code_start
+        add ebx,10h
         xor edi,edi
-        mov ecx,1
-        lea esi,[ebp].req_buf
+        mov ecx,10h
+        lea esi,[ebp].code_cache + 10h
         call ReadLinear
-        lea esi,[ebp].req_buf
-        mov al,[esi]
+        pop ebx
+        sub ebx,[ebp].code_start
+        mov al,[ebp+ebx].code_cache
+        ret
+
+read_code_whole_byte:        
+        mov [ebp].code_start+4,0
+        push ebx
+        and ebx,NOT 1Fh
+        mov [ebp].code_start,ebx
+        xor edi,edi
+        mov ecx,20h
+        lea esi,[ebp].code_cache
+        call ReadLinear
+        pop ebx
+        sub ebx,[ebp].code_start
+        mov al,[ebp+ebx].code_cache
         ret
 ReadCodeByte    Endp
 
