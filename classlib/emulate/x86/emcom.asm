@@ -753,10 +753,6 @@ SubFromStack    Endp
         public ReadCodeByte
 
 ReadCodeByte    Proc near
-        push ecx
-        push edx
-        push edi
-;
         mov esi,OFFSET reg_cs
         test [ebp+esi].d_access,ACCESS_READ
         jz AccessFault
@@ -781,9 +777,9 @@ read_code_byte32:
         mov [ebp].reg_eip,ebx
 ;
         mov esi,0EFFF0000h
-        pop edi
-        pop edx
-        pop ecx
+        mov ecx,esi
+        mov edx,esi
+        mov edi,esi
         ret
 
 read_code_byte16:
@@ -803,9 +799,9 @@ read_code_byte16:
         mov word ptr [ebp].reg_eip,bx
 ;        
         mov esi,0EFFF0000h
-        pop edi
-        pop edx
-        pop ecx
+        mov ecx,esi
+        mov edx,esi
+        mov edi,esi
         ret
 ReadCodeByte    Endp
 
