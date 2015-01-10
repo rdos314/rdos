@@ -838,7 +838,11 @@ read_code_word32:
 ;
         add ebx,[ebp+esi].d_base
         xor edi,edi
-        call ReadLinearWord
+        mov ecx,2
+        lea esi,[ebp].req_buf
+        call ReadLinear
+        lea esi,[ebp].req_buf
+        mov ax,[esi]
 ;
         pop ebx
         add ebx,2
@@ -855,7 +859,11 @@ read_code_word16:
 ;
         add ebx,[ebp+esi].d_base
         xor edi,edi
-        call ReadLinearWord
+        mov ecx,2
+        lea esi,[ebp].req_buf
+        call ReadLinear
+        lea esi,[ebp].req_buf
+        mov ax,[esi]
 ;
         pop bx
         add bx,2
