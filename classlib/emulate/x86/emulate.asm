@@ -1068,16 +1068,8 @@ emtFE   DD OFFSET EmFE,                                 OFFSET EmFF
 _Emulate Proc near
         push ebp
         mov ebp,esp
-        sub     esp,Tprog_position_             ;de l'espace pour fabriquer la structure
         pushad
-        lea     ebx,[ebp-Tprog_position_]
         mov ebp,[ebp+8]
-        mov     eax,[ebp].reg_eip
-        mov     [ebx].p_offset,eax
-        mov     ax,[ebp].reg_cs.d_selector
-        mov     [ebx].p_segment,ax
-        push    ebx
-        call    _setvalue
 ;
         mov [ebp].running,1
         and [ebp].em_debug, NOT DEBUG_BREAK
@@ -1143,7 +1135,6 @@ emulate_done:
         mov [ebp].running,0
 ;
         popad
-        add     esp,Tprog_position_             ;de l'espace pour fabriquer la structure
         pop ebp
         ret 4
 _Emulate Endp

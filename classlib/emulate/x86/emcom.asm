@@ -764,12 +764,12 @@ ReadCodeByte    Proc near
 
 read_code_byte32:
         mov ebx,[ebp].reg_eip
-        push ebx
 ;
         mov ecx,ebx
         sub ecx,[ebp+esi].d_limit
         ja AccessFault
 ;
+        inc [ebp].reg_eip
         add ebx,[ebp+esi].d_base
         xor edi,edi
         mov ecx,1
@@ -777,20 +777,16 @@ read_code_byte32:
         call ReadLinear
         lea esi,[ebp].req_buf
         mov al,[esi]
-;
-        pop ebx
-        inc ebx
-        mov [ebp].reg_eip,ebx
         ret
 
 read_code_byte16:
         movzx ebx,word ptr [ebp].reg_eip
-        push bx
 ;
         mov ecx,ebx
         sub ecx,[ebp+esi].d_limit
         ja AccessFault
 ;
+        inc word ptr [ebp].reg_eip
         add ebx,[ebp+esi].d_base
         xor edi,edi
         mov ecx,1
@@ -798,10 +794,6 @@ read_code_byte16:
         call ReadLinear
         lea esi,[ebp].req_buf
         mov al,[esi]
-;
-        pop bx
-        inc bx
-        mov word ptr [ebp].reg_eip,bx
         ret
 ReadCodeByte    Endp
 
