@@ -878,12 +878,19 @@ read_code_word32:
 ;
         add [ebp].reg_eip,2
         add ebx,[ebp+esi].d_base
-        xor edi,edi
-        mov ecx,2
-        lea esi,[ebp].req_buf
-        call ReadLinear
-        lea esi,[ebp].req_buf
-        mov ax,[esi]
+;
+        mov eax,[ebp].code_start+4
+        or eax,eax
+        jnz read_code_whole_word
+;
+        mov eax,ebx
+        sub eax,[ebp].code_start
+        jb read_code_whole_word
+;
+        cmp eax,1Eh
+        ja read_code_word
+;                
+        mov ax,word ptr [ebp+eax].code_cache
         ret
 
 read_code_word16:
@@ -894,12 +901,61 @@ read_code_word16:
 ;
         add word ptr [ebp].reg_eip,2
         add ebx,[ebp+esi].d_base
+;
+        mov eax,[ebp].code_start+4
+        or eax,eax
+        jnz read_code_whole_word
+;
+        mov eax,ebx
+        sub eax,[ebp].code_start
+        jb read_code_whole_word
+;
+        cmp eax,1Eh
+        ja read_code_word
+;                
+        mov ax,word ptr [ebp+eax].code_cache
+        ret
+
+read_code_word:
+        cmp eax,2Eh
+        ja read_code_whole_word
+;
+        lea esi,[ebp].code_cache + 10h
+        lea edi,[ebp].code_cache
+        movsd
+        movsd
+        movsd
+        movsd
+        add [ebp].code_start,10h
+;        
+        push ebx
+        mov ebx,[ebp].code_start
+        add ebx,10h
         xor edi,edi
-        mov ecx,2
-        lea esi,[ebp].req_buf
+        mov ecx,10h
+        lea esi,[ebp].code_cache + 10h
         call ReadLinear
-        lea esi,[ebp].req_buf
-        mov ax,[esi]
+        pop ebx
+        sub ebx,[ebp].code_start
+        mov ax,word ptr [ebp+ebx].code_cache
+        ret
+
+read_code_whole_word:        
+        mov [ebp].code_start+4,0
+        push ebx
+        and ebx,NOT 1Fh
+        mov [ebp].code_start,ebx
+        xor edi,edi
+        mov ecx,20h
+        lea esi,[ebp].code_cache
+        call ReadLinear
+        pop ebx
+        mov eax,ebx
+        sub eax,[ebp].code_start
+        cmp eax,1Eh
+        ja read_code_word
+;        
+        mov ax,word ptr [ebp+eax].code_cache
         ret
 ReadCodeWord    Endp
 
