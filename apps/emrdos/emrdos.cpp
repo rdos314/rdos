@@ -304,6 +304,18 @@ void WriteToMemory(TCpu *Cpu, unsigned long long Address, char Value)
     Isa.WriteMem(Address, Value);
 }
 
+/*##################  WriteMemoryByte  ###############
+*   Purpose....:  Write memory byte                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void WriteMemoryByte(TCpu *Cpu, unsigned long long Address, char Value)
+{
+    Isa.WriteMemoryByte(Address, Value);
+}
+
 /*##################  ReadFromIo  ###############
 *   Purpose....: Read from IO                           #
 *   In params..: *                                                          #
@@ -499,6 +511,8 @@ int Load(char *FileName)
     {
         Cpu.DefineBus(&Isa);
         Cpu.OnExtClk = ExtClk;
+
+        Cpu.OnWriteMemoryByte = WriteMemoryByte;
 
         Cpu.OnWriteToMemory = WriteToMemory;
         Cpu.OnReadFromIo = ReadFromIo;

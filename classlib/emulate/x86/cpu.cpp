@@ -77,8 +77,8 @@ long ReadMemoryDword(TCpuState *CpuState, unsigned long long Address);
 long long ReadMemoryQword(TCpuState *CpuState, unsigned long long Address);
 #pragma aux (EMAPI) ReadMemoryQword;
 
-void ReadFromMemory(TCpuState *CpuState, void *Buffer, unsigned long long Address, int Size);
-#pragma aux (EMAPI) ReadFromMemory;
+void WriteMemoryByte(TCpuState *CpuState, unsigned long long Address, char val);
+#pragma aux (EMAPI) WriteMemoryByte;
 
 void WriteToMemory(TCpuState *CpuState, void *Buffer, unsigned long long Address, int Size);
 #pragma aux (EMAPI) WriteToMemory;
@@ -182,6 +182,18 @@ long long ReadMemoryQword(TCpuState *CpuState, unsigned long long Address)
         return CpuState->Bus->ReadMemoryQword(Address);
     else
         return CpuState->Cpu->ReadMemoryQword(Address);
+}
+
+/*##################  WriteMemoryByte  ###############
+*   Purpose....: Write memory byte                                                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void WriteMemoryByte(TCpuState *CpuState, unsigned long long Address, char val)
+{
+    CpuState->Cpu->WriteMemoryByte(Address, val);
 }
 
 /*##################  WriteToMemory  ###############
@@ -364,6 +376,8 @@ TCpu::TCpu()
         OnReadMemoryWord = 0;
         OnReadMemoryDword = 0;
         OnReadMemoryQword = 0;
+
+        OnWriteMemoryByte = 0;
         
         OnWriteToMemory = 0;
         OnReadFromIo = 0;
@@ -639,6 +653,19 @@ long long TCpu::ReadMemoryQword(unsigned long long Address)
         return (*OnReadMemoryQword)(this, Address);
     else
         return 0xFFFFFFFFFFFFFFFF;
+}
+
+/*##################  TCpu::WriteMemoryByte  ###############
+*   Purpose....: Write memory byte                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::WriteMemoryByte(unsigned long long Address, char val)
+{
+    if (OnWriteMemoryByte)
+        (*OnWriteMemoryByte)(this, Address, val);
 }
 
 /*##################  TCpu::WriteToMemory  ###############

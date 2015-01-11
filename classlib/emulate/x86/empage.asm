@@ -36,6 +36,8 @@ include \rdos\classlib\emulate\x86\emseg.inc
         extrn _ReadMemoryDword:near
         extrn _ReadMemoryQword:near
 
+        extrn _WriteMemoryByte:near
+
         extrn _WriteToMemory:near
 
 .code
@@ -463,6 +465,21 @@ ReadPhysical    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WritePhysical Proc near
+        cmp ecx,1
+        jz wpByte
+;
+        jmp wpOther
+
+wpByte:
+        mov al,[esi]
+        push eax
+        push edi
+        push ebx
+        push ebp
+        call _WriteMemoryByte
+        ret
+
+wpOther:        
         inc [ebp].mem_count
         push ecx
         push edi

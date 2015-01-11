@@ -181,6 +181,24 @@ long long TBusFunction::ReadMemoryQword(int Num, unsigned long Offset)
     return 0xFFFFFFFFFFFFFFFF;
 }
 
+/*##################  TBusFunction::WriteMemoryByte  ###############
+*   Purpose....: Write byte                                                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TBusFunction::WriteMemoryByte(int Num, unsigned long Offset, char Value)
+{
+    TBusAreaData *area;
+
+    area = FMemArr[Num];
+    if (area)
+        if (area->Data && Offset >= 0 && Offset < area->Size)
+            *(area->Data + Offset) = Value;
+
+}
+
 /*##################  TBusFunction::DefineIo  ###############
 *   Purpose....: Define an io area                                                                          #
 *   In params..: *                                                          #
@@ -579,4 +597,28 @@ long long TBus::ReadMemoryQword(unsigned long long Address)
                 return area->func->ReadMemoryQword(area->Num, Address - area->Base);
     }
     return 0xFFFFFFFFFFFFFFFF;
+}
+
+/*##################  TBus::WriteMemoryByte  ###############
+*   Purpose....: Perform write memory byte                                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TBus::WriteMemoryByte(unsigned long long Address, char Value)
+{
+    TBusArea *area;
+    int i;
+
+    for (i = 0; i <= FHookMemMax; i++)
+    {
+        area = FHookMemArr[i];
+        if (area)
+            if (area->Base <= Address && area->Base + area->Size - 1 >= Address)
+            {
+                area->func->WriteMemoryByte(area->Num, Address - area->Base, Value);
+                break;
+            }
+    }
 }
