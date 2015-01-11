@@ -223,69 +223,6 @@ WriteCr0        ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteDwordRegs
-;
-;               DESCRIPTION:    
-;
-;               PARAMETERS:             EDI             OFFSET TO TABLE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dword_reg_tab1:
-        DB ' EAX='
-        DD OFFSET reg_eax
-        DB ' EBX='
-        DD OFFSET reg_ebx
-        DB ' ECX='
-        DD OFFSET reg_ecx
-        DB ' EDX='
-        DD OFFSET reg_edx
-        DB 0
-
-dword_reg_tab2:
-        DB ' ESI='
-        DD OFFSET reg_esi
-        DB ' EDI='
-        DD OFFSET reg_edi
-        DB ' ESP='
-        DD OFFSET reg_esp
-        DB ' EBP='
-        DD OFFSET reg_ebp
-        DB 0
-
-dword_reg_tab3:
-        DB ' EPC='
-        DD OFFSET reg_eip
-        DB ' CR2='
-        DD OFFSET reg_cr2
-        DB ' CR3='
-        DD OFFSET reg_cr3
-        DB ' CR4='
-        DD OFFSET reg_cr4
-        DB 0
-
-
-WriteDwordRegs  PROC near
-dword_write_loop:
-        mov al,[edi]
-        or al,al
-        je dword_write_end
-        mov ecx,5
-        call WriteSizeString
-        add edi,5
-        mov esi,[edi]
-        mov eax,[ebp+esi]
-        call WriteHexDword
-        add edi,4
-        jmp dword_write_loop
-dword_write_end:
-        call NewLine
-        ret
-WriteDwordRegs  ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;               NAME:                   WriteInstr
 ;
 ;               DESCRIPTION:    
@@ -346,15 +283,6 @@ WriteInstr      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteCpuReg     Proc near
-        mov edi,OFFSET dword_reg_tab1
-        call WriteDwordRegs
-;
-        mov edi,OFFSET dword_reg_tab2
-        call WriteDwordRegs
-;
-        mov edi,OFFSET dword_reg_tab3
-        call WriteDwordRegs
-;
         call WriteEflags
         call WriteCr0
         call WriteInstr

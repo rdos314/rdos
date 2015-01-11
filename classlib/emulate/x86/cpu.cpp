@@ -1276,13 +1276,31 @@ void TCpu::ShowCpu32()
 
     ShowDescriptor(" TR", &CpuState.Reg_tr);
     ShowDescriptor("LDT", &CpuState.Reg_ldt);
-    ShowDescriptor(" ES", &CpuState.Reg_es);
     ShowDescriptor(" CS", &CpuState.Reg_cs);
     ShowDescriptor(" SS", &CpuState.Reg_ss);
     ShowDescriptor(" DS", &CpuState.Reg_ds);
+    ShowDescriptor(" ES", &CpuState.Reg_es);
     ShowDescriptor(" FS", &CpuState.Reg_fs);
     ShowDescriptor(" GS", &CpuState.Reg_gs);
 
+    printf(" EAX=%08lX", (long)CpuState.Reg_eax);
+    printf(" EBX=%08lX", (long)CpuState.Reg_ebx);
+    printf(" ECX=%08lX", (long)CpuState.Reg_ecx);
+    printf(" EDX=%08lX", (long)CpuState.Reg_edx);
+    printf("\r\n");
+    
+    printf(" ESI=%08lX", (long)CpuState.Reg_esi);
+    printf(" EDI=%08lX", (long)CpuState.Reg_edi);
+    printf(" ESP=%08lX", (long)CpuState.Reg_esp);
+    printf(" EBP=%08lX", (long)CpuState.Reg_ebp);
+    printf("\r\n");
+    
+    printf(" EIP=%08lX", (long)CpuState.Reg_eip);
+    printf(" CR2=%08lX", (long)CpuState.Reg_cr2);
+    printf(" CR3=%08lX", (long)CpuState.Reg_cr3);
+    printf(" CR4=%08lX", (long)CpuState.Reg_cr4);
+    printf("\r\n");
+    
     WriteRegs(&CpuState);
 }
 
