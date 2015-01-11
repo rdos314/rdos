@@ -231,6 +231,18 @@ void TBusFunction::WriteMemoryQword(int Num, unsigned long Offset, long long Val
             *(long long *)(area->Data + Offset) = Value;
 }
 
+/*##################  TBusFunction::InByte  ###############
+*   Purpose....: In byte from data block                                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TBusFunction::InByte(int Num, int Offset)
+{
+    return In(Num, Offset);
+}
+
 /*##################  TBusFunction::DefineIo  ###############
 *   Purpose....: Define an io area                                                                          #
 *   In params..: *                                                          #
@@ -701,4 +713,26 @@ void TBus::WriteMemoryQword(unsigned long long Address, long long Value)
                 break;
             }
     }
+}
+
+/*##################  TBus::InByte  ###############
+*   Purpose....: Perform in instruction                                                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TBus::InByte(int Port)
+{
+        TBusArea *area;
+        int i;
+
+        for (i = 0; i <= FHookIoMax; i++)
+        {
+                area = FHookIoArr[i];
+                if (area)
+                        if (area->Base <= Port && area->Base + area->Size > Port)
+                                return area->func->InByte(area->Num, Port - area->Base);
+        }
+        return 0xFF;
 }

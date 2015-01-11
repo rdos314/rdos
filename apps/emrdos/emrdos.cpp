@@ -340,6 +340,18 @@ void WriteMemoryQword(TCpu *Cpu, unsigned long long Address, long long Value)
     Isa.WriteMemoryQword(Address, Value);
 }
 
+/*##################  ReadIoByte  ###############
+*   Purpose....: Read byte from IO                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char ReadIoByte(TCpu *Cpu, unsigned short int Port)
+{
+    return Isa.InByte(Port);
+}
+
 /*##################  ReadFromIo  ###############
 *   Purpose....: Read from IO                           #
 *   In params..: *                                                          #
@@ -540,6 +552,8 @@ int Load(char *FileName)
         Cpu.OnWriteMemoryWord = WriteMemoryWord;
         Cpu.OnWriteMemoryDword = WriteMemoryDword;
         Cpu.OnWriteMemoryQword = WriteMemoryQword;
+
+        Cpu.OnReadIoByte = ReadIoByte;
 
         Cpu.OnReadFromIo = ReadFromIo;
         Cpu.OnWriteToIo = WriteToIo;

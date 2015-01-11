@@ -58,6 +58,8 @@ public:
     virtual void WriteMemoryDword(int Num, unsigned long Offset, long val);
     virtual void WriteMemoryQword(int Num, unsigned long Offset, long long val);
 
+    virtual char InByte(int Num, int Offset);
+
 protected:
     void DefineIo(int Num, int Base, int Size, char *Data);
     void UndefineIo(int Num);
@@ -97,6 +99,8 @@ public:
     void WriteMemoryWord(unsigned long long Address, short int val);
     void WriteMemoryDword(unsigned long long Address, long val);
     void WriteMemoryQword(unsigned long long Address, long long val);
+
+    char InByte(int Port);
 
     void DefineIo(TBusFunction *func, int Num, int Base, int Size);
     void UndefineIo(TBusFunction *func, int Num);

@@ -89,6 +89,9 @@ void WriteMemoryDword(TCpuState *CpuState, unsigned long long Address, long val)
 void WriteMemoryQword(TCpuState *CpuState, unsigned long long Address, long long val);
 #pragma aux (EMAPI) WriteMemoryQword;
 
+void ReadIoByte(TCpuState *CpuState, unsigned short int Port);
+#pragma aux (EMAPI) ReadIoByte;
+
 void ReadFromIo(TCpuState *CpuState, void *Buffer, unsigned short int Port, int Size);
 #pragma aux (EMAPI) ReadFromIo;
 
@@ -236,6 +239,18 @@ void WriteMemoryDword(TCpuState *CpuState, unsigned long long Address, long val)
 void WriteMemoryQword(TCpuState *CpuState, unsigned long long Address, long long val)
 {
     CpuState->Cpu->WriteMemoryQword(Address, val);
+}
+
+/*##################  ReadIoByte  ###############
+*   Purpose....: Read byte from IO                                                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void ReadIoByte(TCpuState *CpuState, unsigned short Port)
+{
+    CpuState->Cpu->ReadIoByte(Port);
 }
 
 /*##################  ReadFromIo  ###############
@@ -411,6 +426,7 @@ TCpu::TCpu()
         OnWriteMemoryWord = 0;
         OnWriteMemoryDword = 0;
         OnWriteMemoryQword = 0;
+        
         
         OnReadFromIo = 0;
         OnWriteToIo = 0;
@@ -737,6 +753,21 @@ void TCpu::WriteMemoryQword(unsigned long long Address, long long val)
 {
     if (OnWriteMemoryQword)
         (*OnWriteMemoryQword)(this, Address, val);
+}
+
+/*##################  TCpu::ReadIoByte  ###############
+*   Purpose....: Read byte from IO                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TCpu::ReadIoByte(unsigned short Port)
+{
+    if (OnReadIoByte)
+        return (*OnReadIoByte)(this, Port);
+    else
+        return 0xFF;
 }
 
 /*##################  TCpu::ReadFromIo  ###############
