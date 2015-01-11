@@ -264,44 +264,32 @@ void ResetInt(TInterrupt *Interrupt, TCpu *Cpu)
     Cpu->ResetInt(Interrupt);
 }
 
-/*##################  Idle  ###############
-*   Purpose....: Idle                                           #
+/*##################  ExtClk  ###############
+*   Purpose....: Clk notification                                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void Idle(TCpu *Cpu)
+void ExtClk(TCpu *Cpu)
 {
-    if (RdosPollKeyboard())
-    {
-        RdosReadKeyboard();
-        Cpu->Break();
-    }
-}
+    static int PollDelay = 512;
+    
+    PollDelay--;
 
-/*##################  SetClk  ###############
-*   Purpose....: 1 / 8 clk high notification                                #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void SetClk(TCpu *Cpu)
-{
+    if (PollDelay == 0)
+    {
+        PollDelay = 512;
+
+        if (RdosPollKeyboard())
+        {
+            RdosReadKeyboard();
+            Cpu->Break();
+        }
+    }
+
     Pit.Counter[0]->SetClk();
     Pit.Counter[2]->SetClk();
-}
-
-/*##################  ResetClk  ###############
-*   Purpose....: 1 / 8 clk low notification                             #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void ResetClk(TCpu *Cpu)
-{
     Pit.Counter[0]->ResetClk();
     Pit.Counter[2]->ResetClk();
 }
@@ -523,9 +511,7 @@ int Load(char *FileName)
 
     if (img.HasKernel())
     {
-        Cpu.OnSetClk = SetClk;
-        Cpu.OnResetClk = ResetClk;
-        Cpu.OnIdle = Idle;
+        Cpu.OnExtClk = ExtClk;
         Cpu.OnReadFromMemory = ReadFromMemory;
         Cpu.OnWriteToMemory = WriteToMemory;
         Cpu.OnReadFromIo = ReadFromIo;

@@ -297,9 +297,7 @@ TCpu::TCpu()
         debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
         initbuffer(buffer_val,COUNTBUFFER); /* initialise le buffer*/
 
-        OnIdle = 0;
-        OnSetClk = 0;
-        OnResetClk = 0;
+        OnExtClk = 0;
         OnSysCall = 0;
         OnReadFromMemory = 0;
         OnWriteToMemory = 0;
@@ -493,45 +491,6 @@ void TCpu::ClearBreakpoints()
                 }
 }
 
-/*##################  TCpu::NotifyIdle  ###############
-*   Purpose....: Notify idle                                                                                #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void TCpu::NotifyIdle()
-{
-        if (OnIdle)
-                (*OnIdle)(this);
-}
-
-/*##################  TCpu::NotifySetClk  ###############
-*   Purpose....: Notify set clk                                                                             #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void TCpu::NotifySetClk()
-{
-        if (OnSetClk)
-                (*OnSetClk)(this);
-}
-
-/*##################  TCpu::NotifyResetClk  ###############
-*   Purpose....: Notify reset clk                                                                                   #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void TCpu::NotifyResetClk()
-{
-    if (OnResetClk)
-        (*OnResetClk)(this);
-}
-
 /*##################  TCpu::SysCall  ###############
 *   Purpose....: Do syscall                                                 #
 *   In params..: *                                                          #
@@ -713,9 +672,9 @@ int TCpu::EmulateOne()
     while (FExtNs > FExtClkTime)
     {
         FExtNs -= FExtClkTime;
-        
-        NotifySetClk();
-        NotifyResetClk();
+
+        if (OnExtClk)
+            (*OnExtClk)(this);
     }
 
     return FALSE;
@@ -841,18 +800,6 @@ void TCpu::Pace()
                         EmulateOne();
                         if (CpuState.EmDebug & DEBUG_BREAK)
                                 Done = TRUE;
-                        else
-                        {
-                                if (!CheckDelay)
-                                {
-                                        CheckDelay = 1000;
-                                        NotifyIdle();
-                                        if (CpuState.EmDebug & DEBUG_BREAK)
-                                                Done = TRUE;
-                                }
-                                else
-                                        CheckDelay--;
-                        }
                         ReadInstruction(&CpuState);
                 }
         }
@@ -901,18 +848,6 @@ void TCpu::Go()
                         {
                                 Done = TRUE;
                                 CpuState.Reg_eip++;
-                        }
-                        else
-                        {
-                                if (!CheckDelay)
-                                {
-                                        CheckDelay = 1000;
-                                        NotifyIdle();
-                                        if (CpuState.EmDebug & DEBUG_BREAK)
-                                                Done = TRUE;
-                                }
-                                else
-                                        CheckDelay--;
                         }
                 }
         }

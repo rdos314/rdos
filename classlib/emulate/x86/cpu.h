@@ -258,9 +258,7 @@ public:
 
     TCpuState CpuState;
 
-    void (*OnIdle)(TCpu *Cpu);
-    void (*OnSetClk)(TCpu *Cpu);
-    void (*OnResetClk)(TCpu *Cpu);
+    void (*OnExtClk)(TCpu *Cpu);
     char (*OnReadFromMemory)(TCpu *Cpu, unsigned long long Address);
     void (*OnWriteToMemory)(TCpu *Cpu, unsigned long long Address, char Value);
     char (*OnReadFromIo)(TCpu *Cpu, unsigned short Port);
@@ -271,9 +269,6 @@ public:
 
 protected:
     int EmulateOne();
-    virtual void NotifyIdle();
-    virtual void NotifySetClk();
-    virtual void NotifyResetClk();
     virtual char ReadFromMemory(unsigned long long Address);
     virtual void WriteToMemory(unsigned long long Address, char Value);
     virtual char ReadFromIo(unsigned short int Port);
