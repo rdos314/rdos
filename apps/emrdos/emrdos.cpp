@@ -292,78 +292,6 @@ void ExtClk(TCpu *Cpu)
     Pit.Counter[2]->ExtClk();
 }
 
-/*##################  ReadIoByte  ###############
-*   Purpose....: Read byte from IO                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-char ReadIoByte(TCpu *Cpu, unsigned short int Port)
-{
-    return Isa.InByte(Port);
-}
-
-/*##################  ReadIoWord  ###############
-*   Purpose....: Read word from IO                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-short int ReadIoWord(TCpu *Cpu, unsigned short int Port)
-{
-    return Isa.InWord(Port);
-}
-
-/*##################  ReadIoDword  ###############
-*   Purpose....: Read dword from IO                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-long ReadIoDword(TCpu *Cpu, unsigned short int Port)
-{
-    return Isa.InDword(Port);
-}
-
-/*##################  WriteIoByte  ###############
-*   Purpose....: Read from IO                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void WriteIoByte(TCpu *Cpu, unsigned short int Port, char Value)
-{
-    Isa.OutByte(Port, Value);
-}
-
-/*##################  WriteIoWord  ###############
-*   Purpose....: Read from IO                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void WriteIoWord(TCpu *Cpu, unsigned short int Port, short int Value)
-{
-    Isa.OutWord(Port, Value);
-}
-
-/*##################  WriteIoDword  ###############
-*   Purpose....: Read from IO                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void WriteIoDword(TCpu *Cpu, unsigned short int Port, long Value)
-{
-    Isa.OutDword(Port, Value);
-}
-
 /*##################  Start  ###############
 *   Purpose....: Start emulator                                             #
 *   In params..: *                                                          #
@@ -535,15 +463,6 @@ int Load(char *FileName)
     {
         Cpu.DefineBus(&Isa);
         Cpu.OnExtClk = ExtClk;
-
-        Cpu.OnReadIoByte = ReadIoByte;
-        Cpu.OnReadIoWord = ReadIoWord;
-        Cpu.OnReadIoDword = ReadIoDword;
-
-        Cpu.OnWriteIoByte = WriteIoByte;
-        Cpu.OnWriteIoWord = WriteIoWord;
-        Cpu.OnWriteIoDword = WriteIoDword;
-
         Cpu.Reset();
 
         Cpu.CpuState.Reg_gdt.base = GDT_BASE;

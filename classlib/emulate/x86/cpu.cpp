@@ -271,7 +271,10 @@ void WriteMemoryQword(TCpuState *CpuState, unsigned long long Address, long long
 *##########################################################################*/
 char ReadIoByte(TCpuState *CpuState, unsigned short Port)
 {
-    return CpuState->Cpu->ReadIoByte(Port);
+    if (CpuState->Bus)
+        return CpuState->Bus->InByte(Port);
+    else
+        return CpuState->Cpu->ReadIoByte(Port);
 }
 
 /*##################  ReadIoWord  ###############
@@ -283,7 +286,10 @@ char ReadIoByte(TCpuState *CpuState, unsigned short Port)
 *##########################################################################*/
 short int ReadIoWord(TCpuState *CpuState, unsigned short Port)
 {
-    return CpuState->Cpu->ReadIoWord(Port);
+    if (CpuState->Bus)
+        return CpuState->Bus->InWord(Port);
+    else
+        return CpuState->Cpu->ReadIoWord(Port);
 }
 
 /*##################  ReadIoDword  ###############
@@ -295,7 +301,10 @@ short int ReadIoWord(TCpuState *CpuState, unsigned short Port)
 *##########################################################################*/
 long ReadIoDword(TCpuState *CpuState, unsigned short Port)
 {
-    return CpuState->Cpu->ReadIoDword(Port);
+    if (CpuState->Bus)
+        return CpuState->Bus->InDword(Port);
+    else
+        return CpuState->Cpu->ReadIoDword(Port);
 }
 
 /*##################  WriteIoByte  ###############
@@ -307,7 +316,10 @@ long ReadIoDword(TCpuState *CpuState, unsigned short Port)
 *##########################################################################*/
 void WriteIoByte(TCpuState *CpuState, unsigned short Port, char val)
 {
-    CpuState->Cpu->WriteIoByte(Port, val);
+    if (CpuState->Bus)
+        CpuState->Bus->OutByte(Port, val);
+    else
+        CpuState->Cpu->WriteIoByte(Port, val);
 }
 
 /*##################  WriteIoWord  ###############
@@ -319,7 +331,10 @@ void WriteIoByte(TCpuState *CpuState, unsigned short Port, char val)
 *##########################################################################*/
 void WriteIoWord(TCpuState *CpuState, unsigned short Port, short int val)
 {
-    CpuState->Cpu->WriteIoWord(Port, val);
+    if (CpuState->Bus)
+        CpuState->Bus->OutWord(Port, val);
+    else
+        CpuState->Cpu->WriteIoWord(Port, val);
 }
 
 /*##################  WriteIoDword  ###############
@@ -331,7 +346,10 @@ void WriteIoWord(TCpuState *CpuState, unsigned short Port, short int val)
 *##########################################################################*/
 void WriteIoDword(TCpuState *CpuState, unsigned short Port, long val)
 {
-    CpuState->Cpu->WriteIoDword(Port, val);
+    if (CpuState->Bus)
+        CpuState->Bus->OutDword(Port, val);
+    else
+        CpuState->Cpu->WriteIoDword(Port, val);
 }
 
 /*##################  SysCall  ###############
