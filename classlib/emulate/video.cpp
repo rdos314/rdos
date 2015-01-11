@@ -98,6 +98,41 @@ void TVideo::WriteMem(int Num, unsigned long Offset, char Value)
         (*OnTextChange)(this, row);
 }
 
+/*##################  TVideo::WriteMemoryByte  ###############
+*   Purpose....: Write video mem                                                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TVideo::WriteMemoryByte(int Num, unsigned long Offset, char Value)
+{
+    int row = Offset / 2 / 80;
+    
+    FData[Offset] = Value;
+
+    if (OnTextChange)
+        (*OnTextChange)(this, row);
+}
+
+/*##################  TVideo::WriteMemoryWord  ###############
+*   Purpose....: Write video mem                                                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TVideo::WriteMemoryWord(int Num, unsigned long Offset, short int Value)
+{
+    int row = Offset / 2 / 80;
+    char *ptr = &FData[Offset];
+
+    *(short int *)ptr = Value;    
+
+    if (OnTextChange)
+        (*OnTextChange)(this, row);
+}
+
 /*##################  TVideo::GetRow  ###############
 *   Purpose....: Get video row                                                                       #
 *   In params..: *                                                          #

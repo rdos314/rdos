@@ -488,8 +488,6 @@ wpWord:
         test bl,1
         jnz wpWord1
 ;
-        jmp wpOther
-        
         inc [ebp].mem_count
         mov ax,[esi]
         push eax

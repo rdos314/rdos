@@ -39,6 +39,9 @@ public:
 	virtual int GetSize();
     virtual void WriteMem(int Num, unsigned long Offset, char Value);
 
+    virtual void WriteMemoryByte(int Num, unsigned long Offset, char val);
+    virtual void WriteMemoryWord(int Num, unsigned long Offset, short int val);
+
     char *GetRow(int Row);
 
     void (*OnTextChange)(TVideo *Video, int Row);
