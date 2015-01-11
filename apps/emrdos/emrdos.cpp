@@ -328,6 +328,18 @@ void WriteMemoryWord(TCpu *Cpu, unsigned long long Address, short int Value)
     Isa.WriteMemoryWord(Address, Value);
 }
 
+/*##################  WriteMemoryDword  ###############
+*   Purpose....:  Write memory dword                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void WriteMemoryDword(TCpu *Cpu, unsigned long long Address, long Value)
+{
+    Isa.WriteMemoryDword(Address, Value);
+}
+
 /*##################  ReadFromIo  ###############
 *   Purpose....: Read from IO                           #
 *   In params..: *                                                          #
@@ -526,6 +538,7 @@ int Load(char *FileName)
 
         Cpu.OnWriteMemoryByte = WriteMemoryByte;
         Cpu.OnWriteMemoryWord = WriteMemoryWord;
+        Cpu.OnWriteMemoryDword = WriteMemoryDword;
 
         Cpu.OnWriteToMemory = WriteToMemory;
         Cpu.OnReadFromIo = ReadFromIo;

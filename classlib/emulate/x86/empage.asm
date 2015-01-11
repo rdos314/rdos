@@ -38,6 +38,7 @@ include \rdos\classlib\emulate\x86\emseg.inc
 
         extrn _WriteMemoryByte:near
         extrn _WriteMemoryWord:near
+        extrn _WriteMemoryDword:near
 
         extrn _WriteToMemory:near
 
@@ -472,6 +473,9 @@ WritePhysical Proc near
         cmp ecx,2
         je wpWord         
 ;
+        cmp ecx,4
+        je wpDword
+;        
         jmp wpOther
 
 wpByte:
@@ -516,6 +520,69 @@ wpWord1:
 ;
         call _WriteMemoryByte
         ret                
+
+wpDword:
+        test bl,1
+        jnz wpDword1
+;
+        test bl,2
+        jnz wpDword2
+;        
+        inc [ebp].mem_count
+        mov eax,[esi]
+        push eax
+        push edi
+        push ebx
+        push ebp
+        call _WriteMemoryDword
+        ret
+
+wpDword2:
+        mov ax,[esi+2]
+        push eax
+        mov eax,ebx
+        add eax,2
+        push edi
+        push eax
+        push ebp
+;
+        mov ax,[esi]
+        push eax
+        push edi
+        push ebx
+        push ebp
+        call _WriteMemoryWord
+;
+        call _WriteMemoryWord
+        ret                
+
+wpDword1:
+        add [ebp].mem_count,3
+        mov al,[esi+3]
+        push eax
+        push edi
+        mov eax,ebx
+        add eax,3
+        push eax
+        push ebp
+;        
+        mov ax,[esi+1]
+        push eax
+        push edi
+        mov eax,ebx
+        add eax,1
+        push eax
+        push ebp
+;
+        mov al,[esi]
+        push eax
+        push edi
+        push ebx
+        push ebp
+        call _WriteMemoryByte
+        call _WriteMemoryWord
+        call _WriteMemoryByte
+        ret        
 
 wpOther:        
         inc [ebp].mem_count

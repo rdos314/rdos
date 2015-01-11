@@ -41,6 +41,7 @@ public:
 
     virtual void WriteMemoryByte(int Num, unsigned long Offset, char val);
     virtual void WriteMemoryWord(int Num, unsigned long Offset, short int val);
+    virtual void WriteMemoryDword(int Num, unsigned long Offset, long val);
 
     char *GetRow(int Row);
 

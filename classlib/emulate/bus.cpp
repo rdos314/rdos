@@ -215,6 +215,23 @@ void TBusFunction::WriteMemoryWord(int Num, unsigned long Offset, short int Valu
             *(short int *)(area->Data + Offset) = Value;
 }
 
+/*##################  TBusFunction::WriteMemoryDword  ###############
+*   Purpose....: Write dword                                                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TBusFunction::WriteMemoryDword(int Num, unsigned long Offset, long Value)
+{
+    TBusAreaData *area;
+
+    area = FMemArr[Num];
+    if (area)
+        if (area->Data && Offset >= 0 && Offset < area->Size)
+            *(long *)(area->Data + Offset) = Value;
+}
+
 /*##################  TBusFunction::DefineIo  ###############
 *   Purpose....: Define an io area                                                                          #
 *   In params..: *                                                          #
@@ -658,6 +675,30 @@ void TBus::WriteMemoryWord(unsigned long long Address, short int Value)
             if (area->Base <= Address && area->Base + area->Size - 1 >= Address)
             {
                 area->func->WriteMemoryWord(area->Num, Address - area->Base, Value);
+                break;
+            }
+    }
+}
+
+/*##################  TBus::WriteMemoryDword  ###############
+*   Purpose....: Perform write memory dword                                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TBus::WriteMemoryDword(unsigned long long Address, long Value)
+{
+    TBusArea *area;
+    int i;
+
+    for (i = 0; i <= FHookMemMax; i++)
+    {
+        area = FHookMemArr[i];
+        if (area)
+            if (area->Base <= Address && area->Base + area->Size - 1 >= Address)
+            {
+                area->func->WriteMemoryDword(area->Num, Address - area->Base, Value);
                 break;
             }
     }

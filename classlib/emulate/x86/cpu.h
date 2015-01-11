@@ -258,6 +258,7 @@ public:
 
     void WriteMemoryByte(unsigned long long Address, char val);
     void WriteMemoryWord(unsigned long long Address, short int val);
+    void WriteMemoryDword(unsigned long long Address, long val);
 
     void WriteToMemory(void *Buffer, unsigned long long Address, int Size);
     void ReadFromIo(void *Buffer, unsigned short int Port, int Size);
@@ -276,6 +277,7 @@ public:
 
     void (*OnWriteMemoryByte)(TCpu *Cpu, unsigned long long Address, char val);
     void (*OnWriteMemoryWord)(TCpu *Cpu, unsigned long long Address, short int val);
+    void (*OnWriteMemoryDword)(TCpu *Cpu, unsigned long long Address, long val);
     
     void (*OnWriteToMemory)(TCpu *Cpu, unsigned long long Address, char Value);
     char (*OnReadFromIo)(TCpu *Cpu, unsigned short Port);
