@@ -381,57 +381,6 @@ WriteDescriptors        ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   WriteSystemRegs
-;
-;               DESCRIPTION:    
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-sysreg_gdt:
-        DB 'GDT'
-        DD OFFSET reg_gdt
-
-sysreg_idt:
-        DB 'IDT'
-        DD OFFSET reg_idt
-
-        DB 0
-
-WriteSystemRegs PROC near
-        mov edi,OFFSET sysreg_gdt
-write_sysreg_loop:
-        mov al,[edi]
-        or al,al
-        je write_sysreg_done
-        mov ecx,3
-        call WriteSizeString
-        add edi,3
-        mov esi,[edi]
-        push edi
-;
-        mov edi,OFFSET base_text
-        call WriteAsciiz
-;
-        mov eax,[ebp+esi].d_base
-        call WriteHexDword
-;
-        mov edi,OFFSET limit_text
-        call WriteAsciiz
-;
-        mov eax,[ebp+esi].d_limit
-        call WriteHexWord
-        pop edi
-        add edi,4
-        call NewLine
-        jmp write_sysreg_loop
-
-write_sysreg_done:
-        ret
-WriteSystemRegs ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;               NAME:                   WriteDwordRegs
 ;
 ;               DESCRIPTION:    
@@ -555,7 +504,6 @@ WriteInstr      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteCpuReg     Proc near
-        call WriteSystemRegs
         call WriteDescriptors
 ;
         mov edi,OFFSET dword_reg_tab1

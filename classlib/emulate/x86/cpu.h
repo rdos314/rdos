@@ -238,6 +238,7 @@ public:
     void ShowInstruction(int Count);
     void ShowPreviousInstruction();
 
+    void ShowCpu32();
     void ShowExecTime();
 
     void SetInt(TInterrupt *Interrupt);

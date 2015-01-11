@@ -1204,10 +1204,10 @@ void TCpu::ShowData()
 *##########################################################################*/
 void TCpu::Show()
 {
-        DisAssemble(&CpuState);
-        WriteFpuRegs(&CpuState);
-        WriteRegs(&CpuState);
-        ShowExecTime();
+    DisAssemble(&CpuState);
+    WriteFpuRegs(&CpuState);
+    ShowCpu32();
+    ShowExecTime();
 }
 
 /*##################  TCpu::ShowFpu  ###############
@@ -1220,6 +1220,21 @@ void TCpu::Show()
 void TCpu::ShowFpu()
 {
         WriteFpuRegs(&CpuState);
+}
+
+/*##################  TCpu::ShowCpu32  ###############
+*   Purpose....: Show 32-bit CPU registers                                                                             #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::ShowCpu32()
+{
+    printf("GDT BASE=%08lX LIMIT=%04lX\r\n", CpuState.Reg_gdt.base, CpuState.Reg_gdt.limit);
+    printf("IDT BASE=%08lX LIMIT=%04lX\r\n", CpuState.Reg_idt.base, CpuState.Reg_idt.limit);
+
+    WriteRegs(&CpuState);
 }
 
 /*##################  TCpu::ShowExecTime  ###############
