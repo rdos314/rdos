@@ -162,6 +162,25 @@ short int TBusFunction::ReadMemoryWord(int Num, unsigned long Offset)
     return 0xFFFF;
 }
 
+/*##################  TBusFunction::ReadMemoryDword  ###############
+*   Purpose....: Read dword                                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long TBusFunction::ReadMemoryDword(int Num, unsigned long Offset)
+{
+    TBusAreaData *area;
+
+    area = FMemArr[Num];
+    if (area)
+        if (area->Data && Offset >= 0 && Offset < area->Size)
+            return *(long *)(area->Data + Offset);
+
+    return 0xFFFFFFFF;
+}
+
 /*##################  TBusFunction::DefineIo  ###############
 *   Purpose....: Define an io area                                                                          #
 *   In params..: *                                                          #
@@ -538,4 +557,26 @@ short int TBus::ReadMemoryWord(unsigned long long Address)
                 return area->func->ReadMemoryWord(area->Num, Address - area->Base);
     }
     return 0xFFFF;
+}
+
+/*##################  TBus::ReadMemoryDword  ###############
+*   Purpose....: Perform read memory dword                                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long TBus::ReadMemoryDword(unsigned long long Address)
+{
+    TBusArea *area;
+    int i;
+
+    for (i = 0; i <= FHookMemMax; i++)
+    {
+        area = FHookMemArr[i];
+        if (area)
+             if (area->Base <= Address && area->Base + area->Size - 1 >= Address)
+                return area->func->ReadMemoryDword(area->Num, Address - area->Base);
+    }
+    return 0xFFFFFFFF;
 }
