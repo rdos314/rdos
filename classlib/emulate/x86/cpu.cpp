@@ -1316,12 +1316,12 @@ void TCpu::ShowCpu32()
     else
         printf("NC ");
 
-    if (CpuState.Reg_eflags & 0x20)
+    if (CpuState.Reg_eflags & 0x40)
         printf("ZR ");
     else
         printf("NZ ");
 
-    if (CpuState.Reg_eflags & 0x40)
+    if (CpuState.Reg_eflags & 0x80)
         printf("NG ");
     else
         printf("PL ");
@@ -1356,7 +1356,8 @@ void TCpu::ShowCpu32()
     else
         printf("PD ");
 
-    printf("\r\n");
+    int iopl = ((CpuState.Reg_eflags) >> 12) & 0x3;
+    printf("IOPL=%d\r\n", iopl);
     
     WriteRegs(&CpuState);
 }
