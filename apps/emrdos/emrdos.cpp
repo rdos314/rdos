@@ -328,16 +328,16 @@ long ReadMemoryDword(TCpu *Cpu, unsigned long long Address)
     return Isa.ReadMemoryDword(Address);
 }
 
-/*##################  ReadFromMemory  ###############
-*   Purpose....: Read from memory                           #
+/*##################  ReadMemoryQword  ###############
+*   Purpose....: Read qword from memory                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char ReadFromMemory(TCpu *Cpu, unsigned long long Address)
+long long ReadMemoryQword(TCpu *Cpu, unsigned long long Address)
 {
-    return Isa.ReadMem(Address);
+    return Isa.ReadMemoryQword(Address);
 }
 
 /*##################  WriteToMemory  ###############
@@ -549,9 +549,8 @@ int Load(char *FileName)
         Cpu.OnReadMemoryByte = ReadMemoryByte;
         Cpu.OnReadMemoryWord = ReadMemoryWord;
         Cpu.OnReadMemoryDword = ReadMemoryDword;
+        Cpu.OnReadMemoryQword = ReadMemoryQword;
 
-
-        Cpu.OnReadFromMemory = ReadFromMemory;
         Cpu.OnWriteToMemory = WriteToMemory;
         Cpu.OnReadFromIo = ReadFromIo;
         Cpu.OnWriteToIo = WriteToIo;

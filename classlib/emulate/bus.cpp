@@ -68,25 +68,6 @@ void TBusFunction::WriteMem(int Num, unsigned long Offset, char Value)
 
 }
 
-/*##################  TBusFunction::ReadMem  ###############
-*   Purpose....: Read from data block                                                                       #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-char TBusFunction::ReadMem(int Num, unsigned long Offset)
-{
-    TBusAreaData *area;
-
-    area = FMemArr[Num];
-    if (area)
-        if (area->Data && Offset >= 0 && Offset < area->Size)
-            return *(area->Data + Offset);
-
-    return 0xFF;
-}
-
 /*##################  TBusFunction::Out  ###############
 *   Purpose....: Out to data block                                                                          #
 *   In params..: *                                                          #
@@ -179,6 +160,25 @@ long TBusFunction::ReadMemoryDword(int Num, unsigned long Offset)
             return *(long *)(area->Data + Offset);
 
     return 0xFFFFFFFF;
+}
+
+/*##################  TBusFunction::ReadMemoryQword  ###############
+*   Purpose....: Read qword                                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long long TBusFunction::ReadMemoryQword(int Num, unsigned long Offset)
+{
+    TBusAreaData *area;
+
+    area = FMemArr[Num];
+    if (area)
+        if (area->Data && Offset >= 0 && Offset < area->Size)
+            return *(long long *)(area->Data + Offset);
+
+    return 0xFFFFFFFFFFFFFFFF;
 }
 
 /*##################  TBusFunction::DefineIo  ###############
@@ -447,28 +447,6 @@ void TBus::WriteMem(unsigned long long Address, char Value)
     }
 }
 
-/*##################  TBus::ReadMem  ###############
-*   Purpose....: Perform read memory instruction                                                            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-char TBus::ReadMem(unsigned long long Address)
-{
-    TBusArea *area;
-    int i;
-
-    for (i = 0; i <= FHookMemMax; i++)
-    {
-        area = FHookMemArr[i];
-        if (area)
-             if (area->Base <= Address && area->Base + area->Size - 1 >= Address)
-                return area->func->ReadMem(area->Num, Address - area->Base);
-    }
-    return 0xFF;
-}
-
 /*##################  TBus::Out  ###############
 *   Purpose....: Perform out instruction                                                            #
 *   In params..: *                                                          #
@@ -579,4 +557,26 @@ long TBus::ReadMemoryDword(unsigned long long Address)
                 return area->func->ReadMemoryDword(area->Num, Address - area->Base);
     }
     return 0xFFFFFFFF;
+}
+
+/*##################  TBus::ReadMemoryQword  ###############
+*   Purpose....: Perform read memory qword                                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long long TBus::ReadMemoryQword(unsigned long long Address)
+{
+    TBusArea *area;
+    int i;
+
+    for (i = 0; i <= FHookMemMax; i++)
+    {
+        area = FHookMemArr[i];
+        if (area)
+             if (area->Base <= Address && area->Base + area->Size - 1 >= Address)
+                return area->func->ReadMemoryQword(area->Num, Address - area->Base);
+    }
+    return 0xFFFFFFFFFFFFFFFF;
 }

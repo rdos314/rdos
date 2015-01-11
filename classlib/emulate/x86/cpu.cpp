@@ -172,18 +172,6 @@ long long ReadMemoryQword(TCpuState *CpuState, unsigned long long Address)
     return CpuState->Cpu->ReadMemoryQword(Address);
 }
 
-/*##################  ReadFromMemory  ###############
-*   Purpose....: Read from memory                                                                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void ReadFromMemory(TCpuState *CpuState, void *Buffer, unsigned long long Address, int Size)
-{
-    CpuState->Cpu->ReadFromMemory(Buffer, Address, Size);
-}
-
 /*##################  WriteToMemory  ###############
 *   Purpose....: Write to memory                                                                            #
 *   In params..: *                                                          #
@@ -362,8 +350,8 @@ TCpu::TCpu()
         OnReadMemoryByte = 0;
         OnReadMemoryWord = 0;
         OnReadMemoryDword = 0;
+        OnReadMemoryQword = 0;
         
-        OnReadFromMemory = 0;
         OnWriteToMemory = 0;
         OnReadFromIo = 0;
         OnWriteToIo = 0;
@@ -568,21 +556,6 @@ void TCpu::SysCall()
                 (*OnSysCall)(this);
 }
 
-/*##################  TCpu::ReadMemory  ###############
-*   Purpose....: Read from memory                                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-unsigned char TCpu::ReadMemory(unsigned long long Address)
-{
-    if (OnReadFromMemory)
-        return (unsigned char)(*OnReadFromMemory)(this, Address);
-    else
-        return 0xFF;
-}
-
 /*##################  TCpu::ReadMemoryByte  ###############
 *   Purpose....: Read memory byte                                           #
 *   In params..: *                                                          #
@@ -637,31 +610,10 @@ long TCpu::ReadMemoryDword(unsigned long long Address)
 *##########################################################################*/
 long long TCpu::ReadMemoryQword(unsigned long long Address)
 {
-    unsigned long long val;    
-    val = ReadMemory(Address);
-    val |= ReadMemory(Address + 1) << 8;
-    val |= ReadMemory(Address + 2) << 16;
-    val |= ReadMemory(Address + 3) << 24;
-    val |= ReadMemory(Address + 4) << 32;
-    val |= ReadMemory(Address + 5) << 40;
-    val |= ReadMemory(Address + 6) << 48;
-    val |= ReadMemory(Address + 7) << 56;
-    return (long long)val;
-}
-
-/*##################  TCpu::ReadFromMemory  ###############
-*   Purpose....: Read from memory                                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-char TCpu::ReadFromMemory(unsigned long long Address)
-{
-        if (OnReadFromMemory)
-                return (*OnReadFromMemory)(this, Address);
-        else
-                return 0xFF;
+    if (OnReadMemoryQword)
+        return (*OnReadMemoryQword)(this, Address);
+    else
+        return 0xFFFFFFFFFFFFFFFF;
 }
 
 /*##################  TCpu::WriteToMemory  ###############
@@ -703,28 +655,6 @@ void TCpu::WriteToIo(unsigned short Port, char Value)
 {
         if (OnWriteToIo)
                 (*OnWriteToIo)(this, Port, Value);
-}
-
-/*##################  TCpu::ReadFromMemory  ###############
-*   Purpose....: Read from memory                                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void TCpu::ReadFromMemory(void *Buffer, unsigned long long Address, int Size)
-{
-        int i;
-        char *Dest;
-
-        Dest = (char *)Buffer;
-
-        for (i = 0; i < Size; i++)
-        {
-                *Dest = ReadFromMemory(Address);
-                Address++;
-                Dest++;
-        }
 }
 
 /*##################  TCpu::WriteToMemory  ###############

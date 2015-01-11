@@ -248,14 +248,11 @@ public:
 
     virtual void Reset();
 
-    unsigned char ReadMemory(unsigned long long Address);
-
     char ReadMemoryByte(unsigned long long Address);
     short int ReadMemoryWord(unsigned long long Address);
     long ReadMemoryDword(unsigned long long Address);
     long long ReadMemoryQword(unsigned long long Address);
 
-    void ReadFromMemory(void *Buffer, unsigned long long Address, int Size);
     void WriteToMemory(void *Buffer, unsigned long long Address, int Size);
     void ReadFromIo(void *Buffer, unsigned short int Port, int Size);
     void WriteToIo(void *Buffer, unsigned short int Port, int Size);
@@ -269,8 +266,8 @@ public:
     char (*OnReadMemoryByte)(TCpu *Cpu, unsigned long long Address);
     short int (*OnReadMemoryWord)(TCpu *Cpu, unsigned long long Address);
     long (*OnReadMemoryDword)(TCpu *Cpu, unsigned long long Address);
+    long long (*OnReadMemoryQword)(TCpu *Cpu, unsigned long long Address);
     
-    char (*OnReadFromMemory)(TCpu *Cpu, unsigned long long Address);
     void (*OnWriteToMemory)(TCpu *Cpu, unsigned long long Address, char Value);
     char (*OnReadFromIo)(TCpu *Cpu, unsigned short Port);
     void (*OnWriteToIo)(TCpu *Cpu, unsigned short Port, char Value);
@@ -280,7 +277,6 @@ public:
 
 protected:
     int EmulateOne();
-    virtual char ReadFromMemory(unsigned long long Address);
     virtual void WriteToMemory(unsigned long long Address, char Value);
     virtual char ReadFromIo(unsigned short int Port);
     virtual void WriteToIo(unsigned short int Port, char Value);

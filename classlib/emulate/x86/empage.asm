@@ -36,7 +36,6 @@ include \rdos\classlib\emulate\x86\emseg.inc
         extrn _ReadMemoryDword:near
         extrn _ReadMemoryQword:near
 
-        extrn _ReadFromMemory:near
         extrn _WriteToMemory:near
 
 .code
@@ -244,9 +243,105 @@ ReadPhysical Proc near
         je rpWord
 ;
         cmp ecx,4
-        je rpDword
-;        
-        jmp rpOther
+        jbe rpDword
+;
+        test bl,1
+        jnz rpOtherByte
+;
+        test bl,2
+        jnz rpOtherWord
+;
+        test bl,4
+        jnz rpOtherDword
+
+rpOtherQword:  
+        push edi
+        push ecx
+        push ebx
+;
+        inc [ebp].mem_count
+        push edi
+        push ebx
+        push ebp
+        call _ReadMemoryQword
+;
+        pop ebx
+        pop ecx
+        pop edi        
+        mov [esi],eax
+        mov [esi+4],edx
+        add esi,8
+        add ebx,8
+        sub ecx,8
+        ja ReadPhysical
+;
+        ret
+                      
+rpOtherDword:  
+        push edi
+        push ecx
+        push ebx
+;
+        inc [ebp].mem_count
+        push edi
+        push ebx
+        push ebp
+        call _ReadMemoryDword
+;
+        pop ebx
+        pop ecx
+        pop edi        
+        mov [esi],eax
+        add esi,4
+        add ebx,4
+        sub ecx,4
+        ja ReadPhysical
+;
+        ret
+                      
+rpOtherWord:  
+        push edi
+        push ecx
+        push ebx
+;
+        inc [ebp].mem_count
+        push edi
+        push ebx
+        push ebp
+        call _ReadMemoryWord
+;
+        pop ebx
+        pop ecx
+        pop edi        
+        mov [esi],ax
+        add esi,2
+        add ebx,2
+        sub ecx,2
+        ja ReadPhysical
+;
+        ret
+                                            
+rpOtherByte:  
+        push edi
+        push ecx
+        push ebx
+;
+        inc [ebp].mem_count
+        push edi
+        push ebx
+        push ebp
+        call _ReadMemoryByte
+;
+        pop ebx
+        pop ecx
+        pop edi        
+        mov [esi],al
+        inc esi
+        inc ebx
+        sub ecx,1
+        ja ReadPhysical
+;
+        ret        
 
 rpByte:
         inc [ebp].mem_count
@@ -323,6 +418,7 @@ rpDword2:
         ret                
 
 rpDword1:
+        add [ebp].mem_count,3
         push ebx
         push edi
         push ebx
@@ -350,16 +446,6 @@ rpDword1:
         call _ReadMemoryByte
         mov [esi],al
         ret        
-
-rpOther:        
-        inc [ebp].mem_count
-        push ecx
-        push edi
-        push ebx
-        push esi
-        push ebp
-        call _ReadFromMemory
-        ret
 ReadPhysical    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
