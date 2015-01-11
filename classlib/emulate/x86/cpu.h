@@ -212,6 +212,7 @@ public:
         long EflagsMask;
 
         TCpu *Cpu;
+        TBus *Bus;
         
 };
 
@@ -220,6 +221,8 @@ class TCpu
 public:
     TCpu();
     ~TCpu();
+
+    void DefineBus(TBus *Bus);
 
     void Force386();
     void Force486();

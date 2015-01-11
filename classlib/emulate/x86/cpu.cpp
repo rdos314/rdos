@@ -133,7 +133,10 @@ char GetIntVector(TCpuState *CpuState)
 *##########################################################################*/
 char ReadMemoryByte(TCpuState *CpuState, unsigned long long Address)
 {
-    return CpuState->Cpu->ReadMemoryByte(Address);
+    if (CpuState->Bus)
+        return CpuState->Bus->ReadMemoryByte(Address);
+    else
+        return CpuState->Cpu->ReadMemoryByte(Address);
 }
 
 /*##################  ReadMemoryWord  ###############
@@ -145,7 +148,10 @@ char ReadMemoryByte(TCpuState *CpuState, unsigned long long Address)
 *##########################################################################*/
 short int ReadMemoryWord(TCpuState *CpuState, unsigned long long Address)
 {
-    return CpuState->Cpu->ReadMemoryWord(Address);
+    if (CpuState->Bus)
+        return CpuState->Bus->ReadMemoryWord(Address);
+    else
+        return CpuState->Cpu->ReadMemoryWord(Address);
 }
 
 /*##################  ReadMemoryDword  ###############
@@ -157,7 +163,10 @@ short int ReadMemoryWord(TCpuState *CpuState, unsigned long long Address)
 *##########################################################################*/
 long ReadMemoryDword(TCpuState *CpuState, unsigned long long Address)
 {
-    return CpuState->Cpu->ReadMemoryDword(Address);
+    if (CpuState->Bus)
+        return CpuState->Bus->ReadMemoryDword(Address);
+    else
+        return CpuState->Cpu->ReadMemoryDword(Address);
 }
 
 /*##################  ReadMemoryQword  ###############
@@ -169,7 +178,10 @@ long ReadMemoryDword(TCpuState *CpuState, unsigned long long Address)
 *##########################################################################*/
 long long ReadMemoryQword(TCpuState *CpuState, unsigned long long Address)
 {
-    return CpuState->Cpu->ReadMemoryQword(Address);
+    if (CpuState->Bus)
+        return CpuState->Bus->ReadMemoryQword(Address);
+    else
+        return CpuState->Cpu->ReadMemoryQword(Address);
 }
 
 /*##################  WriteToMemory  ###############
@@ -330,6 +342,7 @@ TCpu::TCpu()
         int i;
 
         CpuState.Cpu = this;
+        CpuState.Bus = 0;
 
         for (i = 0; i < MAX_BREAKPOINTS; i++)
                 FBreakpoints[i] = 0;
@@ -370,6 +383,18 @@ TCpu::TCpu()
 TCpu::~TCpu()
 {
         ClearBreakpoints();
+}
+
+/*##################  TCpu::DefineBus  ###############
+*   Purpose....: Define bus                                                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::DefineBus(TBus *Bus)
+{
+    CpuState.Bus = Bus;
 }
 
 /*##################  TCpu::Force386  ###############

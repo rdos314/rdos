@@ -292,54 +292,6 @@ void ExtClk(TCpu *Cpu)
     Pit.Counter[2]->ExtClk();
 }
 
-/*##################  ReadMemoryByte  ###############
-*   Purpose....: Read byte from memory                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-char ReadMemoryByte(TCpu *Cpu, unsigned long long Address)
-{
-    return Isa.ReadMemoryByte(Address);
-}
-
-/*##################  ReadMemoryWord  ###############
-*   Purpose....: Read word from memory                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-short int ReadMemoryWord(TCpu *Cpu, unsigned long long Address)
-{
-    return Isa.ReadMemoryWord(Address);
-}
-
-/*##################  ReadMemoryDword  ###############
-*   Purpose....: Read dword from memory                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-long ReadMemoryDword(TCpu *Cpu, unsigned long long Address)
-{
-    return Isa.ReadMemoryDword(Address);
-}
-
-/*##################  ReadMemoryQword  ###############
-*   Purpose....: Read qword from memory                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-long long ReadMemoryQword(TCpu *Cpu, unsigned long long Address)
-{
-    return Isa.ReadMemoryQword(Address);
-}
-
 /*##################  WriteToMemory  ###############
 *   Purpose....:  Write to memory                           #
 *   In params..: *                                                          #
@@ -545,11 +497,8 @@ int Load(char *FileName)
 
     if (img.HasKernel())
     {
+        Cpu.DefineBus(&Isa);
         Cpu.OnExtClk = ExtClk;
-        Cpu.OnReadMemoryByte = ReadMemoryByte;
-        Cpu.OnReadMemoryWord = ReadMemoryWord;
-        Cpu.OnReadMemoryDword = ReadMemoryDword;
-        Cpu.OnReadMemoryQword = ReadMemoryQword;
 
         Cpu.OnWriteToMemory = WriteToMemory;
         Cpu.OnReadFromIo = ReadFromIo;
