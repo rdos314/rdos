@@ -291,6 +291,10 @@ TCpu::TCpu()
                 FBreakpoints[i] = 0;
 
         FMaxBreak = 0;
+        FCycleTime = 50;
+        FMemTime = 150;
+        FIoTime = 500;
+        FExtClkTime = 838;
 
         debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
         initbuffer(buffer_val,COUNTBUFFER); /* initialise le buffer*/
@@ -345,6 +349,54 @@ void TCpu::Force486()
 {
     CpuState.CpuType = 4;
     CpuState.EflagsMask = 0x7FFD7;
+}
+
+/*##################  TCpu::SetCycleTime  ###############
+*   Purpose....: Set CPU cycle time in nanoseconds                                              #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::SetCycleTime(int ns)
+{
+    FCycleTime = ns;
+}
+
+/*##################  TCpu::SetMemAccessTime  ###############
+*   Purpose....: Set memory access time in nanoseconds                                              #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::SetMemAccessTime(int ns)
+{
+    FMemTime = ns;
+}
+
+/*##################  TCpu::SetIoAccessTime  ###############
+*   Purpose....: Set IO access time in nanoseconds                                              #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::SetIoAccessTime(int ns)
+{
+    FIoTime = ns;
+}
+
+/*##################  TCpu::SetExtClkTime  ###############
+*   Purpose....: Set clock notification interval in nanoseconds                                              #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::SetExtClkTime(int ns)
+{
+    FExtClkTime = ns;
 }
 
 /*##################  TCpu::SetInt  ###############

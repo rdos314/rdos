@@ -195,12 +195,19 @@ math_st7		DT ?
 
 reg_tlb			tlb_struc <>
 
-pending_int		DB ?
-
 org_eip			DD ?
 org_esp			DD ?
 org_stack		DD ?
 
+code_start      DD ?,?
+code_cache      DB 32 DUP(?)
+
+req_buf			DB 32 DUP(?)
+
+io_count        DD ?
+mem_count       DD ?
+
+pending_int     DB ?
 em_flags		DB ?
 em_debug		DB ?
 em_sreg			DB ?
@@ -208,11 +215,6 @@ em_pl			DB ?
 em_transfer		DB ?
 em_params		DB ?
 em_errorcode	DW ?
-
-code_start      DD ?,?
-code_cache      DB 32 DUP(?)
-
-req_buf			DB 32 DUP(?)
 
 dis_sel			DW ?
 

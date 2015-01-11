@@ -181,11 +181,19 @@ public:
 
         TTlb Reg_tlb;
 
-        char PendingInt;
-
         unsigned long OrgEip;
         unsigned long OrgEsp;
         unsigned long OrgStack;
+
+        unsigned long long CodeStart;
+        unsigned char CodeCache[32];
+
+        unsigned char ReqBuffer[32];
+
+        long IoCount;
+        long MemCount;
+
+        char PendingInt;
 
         char EmFlags;
         char EmDebug;
@@ -194,11 +202,6 @@ public:
         char EmTransfer;
         char EmParams;
         short int EmErrorCode;
-
-        unsigned long long CodeStart;
-        unsigned char CodeCache[32];
-
-        unsigned char ReqBuffer[32];
 
         short int DisAsmHandle;
         char OpcodeText[80];
@@ -222,6 +225,11 @@ public:
 
     void Force386();
     void Force486();
+
+    void SetCycleTime(int ns);
+    void SetMemAccessTime(int ns);
+    void SetIoAccessTime(int ns);
+    void SetExtClkTime(int ns);
     
     void Show();
     void ShowFpu();
@@ -275,6 +283,11 @@ protected:
 
     TLocation *FBreakpoints[MAX_BREAKPOINTS];
     int FMaxBreak;
+
+    int FCycleTime;
+    int FMemTime;
+    int FIoTime;
+    int FExtClkTime;
 
 private:
 };
