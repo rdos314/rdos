@@ -68,25 +68,6 @@ void TBusFunction::Out(int Num, int Offset, char Value)
 
 }
 
-/*##################  TBusFunction::In  ###############
-*   Purpose....: In from data block                                                                         #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-char TBusFunction::In(int Num, int Offset)
-{
-    TBusAreaData *area;
-
-    area = FIoArr[Num];
-    if (area)
-                if (area->Data && Offset >= 0 && Offset < area->Size)
-                        return *(area->Data + Offset);
-
-        return 0xFF;
-}
-
 /*##################  TBusFunction::ReadMemoryByte  ###############
 *   Purpose....: Read byte                                                                      #
 *   In params..: *                                                          #
@@ -240,7 +221,14 @@ void TBusFunction::WriteMemoryQword(int Num, unsigned long Offset, long long Val
 *##########################################################################*/
 char TBusFunction::InByte(int Num, int Offset)
 {
-    return In(Num, Offset);
+    TBusAreaData *area;
+
+    area = FIoArr[Num];
+    if (area)
+        if (area->Data && Offset >= 0 && Offset < area->Size)
+            return *(area->Data + Offset);
+
+     return 0xFF;
 }
 
 /*##################  TBusFunction::InWord  ###############
@@ -254,8 +242,24 @@ short int TBusFunction::InWord(int Num, int Offset)
 {
     unsigned short int val;
 
-    val = (unsigned short int)In(Num, Offset) & 0xFF;
-    val |= ((unsigned short int)In(Num, Offset + 1) << 8) & 0xFF00;
+    val = (unsigned short int)InByte(Num, Offset) & 0xFF;
+    val |= ((unsigned short int)InByte(Num, Offset + 1) << 8) & 0xFF00;
+    return val;
+}
+
+/*##################  TBusFunction::InDword  ###############
+*   Purpose....: In dword from data block                                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long TBusFunction::InDword(int Num, int Offset)
+{
+    unsigned long val;
+
+    val = (unsigned long)InWord(Num, Offset) & 0xFFFF;
+    val |= ((unsigned long)InWord(Num, Offset + 2) << 16) & 0xFFFF0000;
     return val;
 }
 
@@ -525,28 +529,6 @@ void TBus::Out(int Port, char Value)
         }
 }
 
-/*##################  TBus::In  ###############
-*   Purpose....: Perform in instruction                                                     #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-char TBus::In(int Port)
-{
-        TBusArea *area;
-        int i;
-
-        for (i = 0; i <= FHookIoMax; i++)
-        {
-                area = FHookIoArr[i];
-                if (area)
-                        if (area->Base <= Port && area->Base + area->Size > Port)
-                                return area->func->In(area->Num, Port - area->Base);
-        }
-        return 0xFF;
-}
-
 /*##################  TBus::ReadMemoryByte  ###############
 *   Purpose....: Perform read memory byte                                                            #
 *   In params..: *                                                          #
@@ -773,4 +755,26 @@ short int TBus::InWord(int Port)
                                 return area->func->InWord(area->Num, Port - area->Base);
         }
         return 0xFFFF;
+}
+
+/*##################  TBus::InDword  ###############
+*   Purpose....: Perform in instruction                                                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long TBus::InDword(int Port)
+{
+        TBusArea *area;
+        int i;
+
+        for (i = 0; i <= FHookIoMax; i++)
+        {
+                area = FHookIoArr[i];
+                if (area)
+                        if (area->Base <= Port && area->Base + area->Size > Port)
+                                return area->func->InDword(area->Num, Port - area->Base);
+        }
+        return 0xFFFFFFFF;
 }

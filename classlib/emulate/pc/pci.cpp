@@ -326,7 +326,7 @@ void TPci::Out(int Num, int Offset, char Value)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TPci::In(int Num, int Offset)
+char TPci::InByte(int Num, int Offset)
 {
     switch (Offset)
     {

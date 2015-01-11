@@ -498,13 +498,13 @@ void TPic::Out(int Num, int Offset, char Value)
 	}
 }
 
-/*##################  TPic::In  ###############
+/*##################  TPic::InByte  ###############
 *   Purpose....: Perform in instruction						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-char TPic::In(int Num, int Offset)
+char TPic::InByte(int Num, int Offset)
 {
 	if (Offset)
 		return FImr;

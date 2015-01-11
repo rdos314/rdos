@@ -263,8 +263,8 @@ public:
 
     char ReadIoByte(unsigned short int Port);
     short int ReadIoWord(unsigned short int Port);
+    long ReadIoDword(unsigned short int Port);
 
-    void ReadFromIo(void *Buffer, unsigned short int Port, int Size);
     void WriteToIo(void *Buffer, unsigned short int Port, int Size);
     void SysCall();
     void AddBreakpoint(unsigned short Selector, unsigned long long Offset);
@@ -285,8 +285,8 @@ public:
 
     char (*OnReadIoByte)(TCpu *Cpu, unsigned short Port);
     short int (*OnReadIoWord)(TCpu *Cpu, unsigned short Port);
+    long (*OnReadIoDword)(TCpu *Cpu, unsigned short Port);
     
-    char (*OnReadFromIo)(TCpu *Cpu, unsigned short Port);
     void (*OnWriteToIo)(TCpu *Cpu, unsigned short Port, char Value);
     void (*OnSysCall)(TCpu *Cpu);
 
@@ -294,7 +294,6 @@ public:
 
 protected:
     int EmulateOne();
-    virtual char ReadFromIo(unsigned short int Port);
     virtual void WriteToIo(unsigned short int Port, char Value);
 
     TLocation *FBreakpoints[MAX_BREAKPOINTS];

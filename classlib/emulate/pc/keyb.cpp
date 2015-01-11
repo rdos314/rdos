@@ -125,14 +125,14 @@ void TKeyb::Out(int Num, int Offset, char Value)
     }
 }
 
-/*##################  TKeyb::In  ###############
+/*##################  TKeyb::InByte  ###############
 *   Purpose....: Perform in instruction                                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TKeyb::In(int Num, int Offset)
+char TKeyb::InByte(int Num, int Offset)
 {
     char Val;
 

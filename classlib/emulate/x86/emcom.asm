@@ -35,8 +35,8 @@ include \rdos\classlib\emulate\x86\emtss.inc
 
         extrn _ReadIoByte:near
         extrn _ReadIoWord:near
+        extrn _ReadIoDword:near
 
-        extrn _ReadFromIo:near
         extrn _WriteToIo:near
         extrn ReadLinear:near
 
@@ -1212,8 +1212,63 @@ InPort Proc near
 ;
         cmp ecx,2
         je ipWord
+
+ipDword:
+        test bl,1
+        jnz ipDword1
+;
+        test bl,2
+        jnz ipDword2
 ;        
-        jmp ipOther
+        inc [ebp].io_count
+        push edx
+        push ebp
+        call _ReadIoDword
+        mov [esi],eax
+        ret
+
+ipDword2:
+        add [ebp].io_count,2
+        mov ax,dx
+        add ax,2
+        push eax
+        push ebp
+;        
+        push edx
+        push ebp
+        call _ReadIoWord
+        mov [esi],ax
+        add esi,2
+;
+        call _ReadIoWord
+        mov [esi],ax        
+        ret
+
+ipDword1:
+        add [ebp].io_count,3
+        mov ax,dx
+        add ax,3
+        push eax
+        push ebp
+;
+        mov ax,dx
+        inc ax
+        push eax
+        push ebp
+;
+        push edx
+        push ebp                
+        call _ReadIoByte
+        mov [esi],al
+        inc esi
+;
+        call _ReadIoWord
+        mov [esi],ax
+        add esi,2        
+;
+        call _ReadIoByte
+        mov [esi],al
+        ret        
 
 ipByte:
         inc [ebp].io_count
@@ -1249,15 +1304,6 @@ ipWord1:
 ;
         call _ReadIoByte
         mov [esi],al
-        ret
-                
-ipOther:        
-        inc [ebp].io_count
-        push ecx
-        push edx
-        push esi
-        push ebp
-        call _ReadFromIo
         ret
 InPort  Endp
 

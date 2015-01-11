@@ -476,13 +476,13 @@ void TPit::Out(int Num, int Offset, char Value)
 	}
 }
 
-/*##################  TPit::In  ###############
+/*##################  TPit::InByte  ###############
 *   Purpose....: Perform in instruction						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-char TPit::In(int Num, int Offset)
+char TPit::InByte(int Num, int Offset)
 {
 	switch (Offset)
 	{

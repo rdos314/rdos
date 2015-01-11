@@ -116,14 +116,14 @@ void TPciIdeUnit::Out(int Num, int Offset, char Value)
     }
 }
 
-/*##################  TPciIdeUnit::In  ###############
+/*##################  TPciIdeUnit::InByte  ###############
 *   Purpose....: Perform in instruction                                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TPciIdeUnit::In(int Num, int Offset)
+char TPciIdeUnit::InByte(int Num, int Offset)
 {
     char ch;
     

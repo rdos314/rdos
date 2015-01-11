@@ -82,14 +82,14 @@ void TCmos::Out(int Num, int Offset, char Value)
     }
 }
 
-/*##################  TCmos::In  ###############
+/*##################  TCmos::InByte  ###############
 *   Purpose....: Perform in instruction                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TCmos::In(int Num, int Offset)
+char TCmos::InByte(int Num, int Offset)
 {
     char Val;
 

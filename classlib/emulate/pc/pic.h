@@ -60,7 +60,7 @@ public:
     virtual int GetSize();
 
     virtual void Out(int Num, int Offset, char Value);
-    virtual char In(int Num, int Offset);
+    virtual char InByte(int Num, int Offset);
 
     virtual void Set(int Number);
     virtual void Reset(int Number);
