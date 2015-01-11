@@ -38,8 +38,13 @@ public:
     TPciFunction(TPci *Pci);
     ~TPciFunction();
 
-    virtual char ReadConfig(int Register);
-    virtual void WriteConfig(int Register, char Data);
+    virtual char ReadByteConfig(int Register);
+    virtual short int ReadWordConfig(int Register);
+    virtual long ReadDwordConfig(int Register);
+    
+    virtual void WriteByteConfig(int Register, char Data);
+    virtual void WriteWordConfig(int Register, short int Data);
+    virtual void WriteDwordConfig(int Register, long Data);
 
     int DefineIoBar(int BarNr, int Size);
 
@@ -54,8 +59,13 @@ public:
     TPciDevice();
     ~TPciDevice();
 
-	void WriteConfig(int Function, int Register, char Value);
-	char ReadConfig(int Function, int Register);
+	void WriteByteConfig(int Function, int Register, char Value);
+	void WriteWordConfig(int Function, int Register, short int Value);
+	void WriteDwordConfig(int Function, int Register, long Value);
+
+	char ReadByteConfig(int Function, int Register);
+	short int ReadWordConfig(int Function, int Register);
+	long ReadDwordConfig(int Function, int Register);
 
 	void Add(TPciFunction *PciFunction);
 
@@ -71,10 +81,19 @@ public:
 	virtual int GetSize();
 
 	virtual void OutByte(int Num, int Offset, char Value);
+	virtual void OutWord(int Num, int Offset, short int Value);
+	virtual void OutDword(int Num, int Offset, long Value);
 	virtual char InByte(int Num, int Offset);
+	virtual short int InWord(int Num, int Offset);
+	virtual long InDword(int Num, int Offset);
 
-	void WriteConfig(int Index, char Value);
-	char ReadConfig(int Index);
+	void WriteByteConfig(int Index, char Value);
+	void WriteWordConfig(int Index, short int Value);
+	void WriteDwordConfig(int Index, long Value);
+
+	char ReadByteConfig(int Index);
+	short int ReadWordConfig(int Index);
+	long ReadDwordConfig(int Index);
 
 	TBus *GetBus();
 	int AllocateIo(int Size);

@@ -59,28 +59,80 @@ TPciFunction::~TPciFunction()
 {
 }
 
-/*##################  TPciFunction::ReadConfig  ###############
+/*##################  TPciFunction::ReadByteConfig  ###############
 *   Purpose....: Read config                                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TPciFunction::ReadConfig(int Register)
+char TPciFunction::ReadByteConfig(int Register)
 {
     return FConfig[Register];
 }
 
-/*##################  TPciFunction::WriteConfig  ###############
+/*##################  TPciFunction::ReadWordConfig  ###############
+*   Purpose....: Read config                                                                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+short int TPciFunction::ReadWordConfig(int Register)
+{
+    short int *ptr = (short int *)&FConfig[Register];
+    return *ptr;
+}
+
+/*##################  TPciFunction::ReadDwordConfig  ###############
+*   Purpose....: Read config                                                                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long TPciFunction::ReadDwordConfig(int Register)
+{
+    long *ptr = (long *)&FConfig[Register];
+    return *ptr;
+}
+
+/*##################  TPciFunction::WriteByteConfig  ###############
 *   Purpose....: Write config                                                               #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TPciFunction::WriteConfig(int Register, char Data)
+void TPciFunction::WriteByteConfig(int Register, char Data)
 {
     FConfig[Register] = Data;
+}
+
+/*##################  TPciFunction::WriteWordConfig  ###############
+*   Purpose....: Write config                                                               #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPciFunction::WriteWordConfig(int Register, short int Data)
+{
+    short int *ptr = (short int *)&FConfig[Register];
+    *ptr = Data;
+}
+
+/*##################  TPciFunction::WriteDwordConfig  ###############
+*   Purpose....: Write config                                                               #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPciFunction::WriteDwordConfig(int Register, long Data)
+{
+    long *ptr = (long *)&FConfig[Register];
+    *ptr = Data;
 }
 
 /*##################  TPciFunction::DefineIoBar  ###############
@@ -150,32 +202,88 @@ void TPciDevice::Add(TPciFunction *PciFunction)
         FunctionArr[func] = PciFunction;
 }
 
-/*##################  TPciDevice::WriteConfig  ###############
+/*##################  TPciDevice::WriteByteConfig  ###############
 *   Purpose....: Write config                                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TPciDevice::WriteConfig(int Function, int Register, char Value)
+void TPciDevice::WriteByteConfig(int Function, int Register, char Value)
 {
     if (FunctionArr[Function])
-        FunctionArr[Function]->WriteConfig(Register, Value);
+        FunctionArr[Function]->WriteByteConfig(Register, Value);
 }
 
-/*##################  TPciDevice::ReadConfig  ###############
+/*##################  TPciDevice::WriteWordConfig  ###############
+*   Purpose....: Write config                                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPciDevice::WriteWordConfig(int Function, int Register, short int Value)
+{
+    if (FunctionArr[Function])
+        FunctionArr[Function]->WriteWordConfig(Register, Value);
+}
+
+/*##################  TPciDevice::WriteDwordConfig  ###############
+*   Purpose....: Write config                                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPciDevice::WriteDwordConfig(int Function, int Register, long Value)
+{
+    if (FunctionArr[Function])
+        FunctionArr[Function]->WriteDwordConfig(Register, Value);
+}
+
+/*##################  TPciDevice::ReadByteConfig  ###############
 *   Purpose....: Read config                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TPciDevice::ReadConfig(int Function, int Register)
+char TPciDevice::ReadByteConfig(int Function, int Register)
 {
     if (FunctionArr[Function])
-        return FunctionArr[Function]->ReadConfig(Register);
+        return FunctionArr[Function]->ReadByteConfig(Register);
 
     return 0xFF;
+}
+
+/*##################  TPciDevice::ReadWordConfig  ###############
+*   Purpose....: Read config                                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+short int TPciDevice::ReadWordConfig(int Function, int Register)
+{
+    if (FunctionArr[Function])
+        return FunctionArr[Function]->ReadWordConfig(Register);
+
+    return 0xFFFF;
+}
+
+/*##################  TPciDevice::ReadDwordConfig  ###############
+*   Purpose....: Read config                                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long TPciDevice::ReadDwordConfig(int Function, int Register)
+{
+    if (FunctionArr[Function])
+        return FunctionArr[Function]->ReadDwordConfig(Register);
+
+    return 0xFFFFFFFF;
 }
 
 /*##################  TPci::TPci  ###############
@@ -226,14 +334,14 @@ int TPci::GetSize()
     return 8;
 }
 
-/*##################  TPci::WriteConfig  ###############
+/*##################  TPci::WriteByteConfig  ###############
 *   Purpose....: Write config                                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TPci::WriteConfig(int Index, char Value)
+void TPci::WriteByteConfig(int Index, char Value)
 {
     int Bus = (Index >> 16) & 0xFFFF;
     int Device = (Index >> 11) & 0x1F;
@@ -242,17 +350,55 @@ void TPci::WriteConfig(int Index, char Value)
 
     if (Bus == FPciBus)
         if (DeviceArr[Device])
-            DeviceArr[Device]->WriteConfig(Function, Register, Value);
+            DeviceArr[Device]->WriteByteConfig(Function, Register, Value);
 }
 
-/*##################  TPci::ReadConfig  ###############
+/*##################  TPci::WriteWordConfig  ###############
+*   Purpose....: Write config                                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPci::WriteWordConfig(int Index, short int Value)
+{
+    int Bus = (Index >> 16) & 0xFFFF;
+    int Device = (Index >> 11) & 0x1F;
+    int Function = (Index >> 8) & 0x7;
+    int Register = Index & 0xFF;
+
+    if (Bus == FPciBus)
+        if (DeviceArr[Device])
+            DeviceArr[Device]->WriteWordConfig(Function, Register, Value);
+}
+
+/*##################  TPci::WriteDwordConfig  ###############
+*   Purpose....: Write config                                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPci::WriteDwordConfig(int Index, long Value)
+{
+    int Bus = (Index >> 16) & 0xFFFF;
+    int Device = (Index >> 11) & 0x1F;
+    int Function = (Index >> 8) & 0x7;
+    int Register = Index & 0xFF;
+
+    if (Bus == FPciBus)
+        if (DeviceArr[Device])
+            DeviceArr[Device]->WriteDwordConfig(Function, Register, Value);
+}
+
+/*##################  TPci::ReadByteConfig  ###############
 *   Purpose....: Read config                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TPci::ReadConfig(int Index)
+char TPci::ReadByteConfig(int Index)
 {
     int Bus = (Index >> 16) & 0xFFFF;
     int Device = (Index >> 11) & 0x1F;
@@ -261,9 +407,51 @@ char TPci::ReadConfig(int Index)
 
     if (Bus == FPciBus)
         if (DeviceArr[Device])
-            return DeviceArr[Device]->ReadConfig(Function, Register);
+            return DeviceArr[Device]->ReadByteConfig(Function, Register);
 
     return 0xFF;
+}
+
+/*##################  TPci::ReadWordConfig  ###############
+*   Purpose....: Read config                                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+short int TPci::ReadWordConfig(int Index)
+{
+    int Bus = (Index >> 16) & 0xFFFF;
+    int Device = (Index >> 11) & 0x1F;
+    int Function = (Index >> 8) & 0x7;
+    int Register = Index & 0xFF;
+
+    if (Bus == FPciBus)
+        if (DeviceArr[Device])
+            return DeviceArr[Device]->ReadWordConfig(Function, Register);
+
+    return 0xFFFF;
+}
+
+/*##################  TPci::ReadDwordConfig  ###############
+*   Purpose....: Read config                                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long TPci::ReadDwordConfig(int Index)
+{
+    int Bus = (Index >> 16) & 0xFFFF;
+    int Device = (Index >> 11) & 0x1F;
+    int Function = (Index >> 8) & 0x7;
+    int Register = Index & 0xFF;
+
+    if (Bus == FPciBus)
+        if (DeviceArr[Device])
+            return DeviceArr[Device]->ReadDwordConfig(Function, Register);
+
+    return 0xFFFFFFFF;
 }
 
 /*##################  TPci::OutByte  ###############
@@ -298,19 +486,19 @@ void TPci::OutByte(int Num, int Offset, char Value)
             break;
 
         case 4:
-            WriteConfig(FIndex, Value);
+            WriteByteConfig(FIndex, Value);
             break;
 
         case 5:
-            WriteConfig(FIndex + 1, Value);
+            WriteByteConfig(FIndex + 1, Value);
             break;
 
         case 6:
-            WriteConfig(FIndex + 2, Value);
+            WriteByteConfig(FIndex + 2, Value);
             break;
 
         case 7:
-            WriteConfig(FIndex + 3, Value);
+            WriteByteConfig(FIndex + 3, Value);
             break;
 
         default:
@@ -319,7 +507,69 @@ void TPci::OutByte(int Num, int Offset, char Value)
     }
 }
 
-/*##################  TPci::In  ###############
+/*##################  TPci::OutWord  ###############
+*   Purpose....: Perform out instruction                                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPci::OutWord(int Num, int Offset, short int Value)
+{
+    int LVal;
+
+    LVal = (int)Value & 0xFFFF;
+
+    switch (Offset)
+    {
+        case 0:
+            FIndex = LVal;
+            break;
+
+        case 2:
+            FIndex |= LVal << 16;
+            break;
+
+        case 4:
+            WriteWordConfig(FIndex, Value);
+            break;
+
+        case 6:
+            WriteWordConfig(FIndex + 2, Value);
+            break;
+
+        default:
+            break;
+
+    }
+}
+
+/*##################  TPci::OutDword  ###############
+*   Purpose....: Perform out instruction                                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPci::OutDword(int Num, int Offset, long Value)
+{
+    switch (Offset)
+    {
+        case 0:
+            FIndex = Value;
+            break;
+
+        case 4:
+            WriteDwordConfig(FIndex, Value);
+            break;
+
+        default:
+            break;
+
+    }
+}
+
+/*##################  TPci::InByte  ###############
 *   Purpose....: Perform in instruction                                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
@@ -343,19 +593,69 @@ char TPci::InByte(int Num, int Offset)
             return (char)((FIndex >> 24) & 0xFF);
 
         case 4:
-            return ReadConfig(FIndex);
+            return ReadByteConfig(FIndex);
 
         case 5:
-            return ReadConfig(FIndex + 1);
+            return ReadByteConfig(FIndex + 1);
 
         case 6:
-            return ReadConfig(FIndex + 2);
+            return ReadByteConfig(FIndex + 2);
 
         case 7:
-            return ReadConfig(FIndex + 3);
+            return ReadByteConfig(FIndex + 3);
 
         default:
             return 0xFF;
+    }
+}
+
+/*##################  TPci::InWord  ###############
+*   Purpose....: Perform in instruction                                                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+short int TPci::InWord(int Num, int Offset)
+{
+    switch (Offset)
+    {
+        case 0:
+            return (short int)(FIndex & 0xFFFF);
+
+        case 2:
+            return (short int)((FIndex >> 16) & 0xFFFF);
+
+        case 4:
+            return ReadWordConfig(FIndex);
+
+        case 6:
+            return ReadWordConfig(FIndex + 2);
+
+        default:
+            return 0xFFFF;
+    }
+}
+
+/*##################  TPci::InDword  ###############
+*   Purpose....: Perform in instruction                                                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long TPci::InDword(int Num, int Offset)
+{
+    switch (Offset)
+    {
+        case 0:
+            return FIndex;
+
+        case 4:
+            return ReadDwordConfig(FIndex);
+
+        default:
+            return 0xFFFFFFFF;
     }
 }
 
