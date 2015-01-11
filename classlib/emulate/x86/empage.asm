@@ -39,8 +39,7 @@ include \rdos\classlib\emulate\x86\emseg.inc
         extrn _WriteMemoryByte:near
         extrn _WriteMemoryWord:near
         extrn _WriteMemoryDword:near
-
-        extrn _WriteToMemory:near
+        extrn _WriteMemoryQword:near
 
 .code
 
@@ -475,8 +474,118 @@ WritePhysical Proc near
 ;
         cmp ecx,4
         je wpDword
+;
+        test bl,1
+        jnz wpOtherByte
+;
+        test bl,2
+        jnz wpOtherWord
+;
+        test bl,4
+        jnz wpOtherDword
+
+wpOtherQword:  
+        cmp ecx,8
+        jb wpOtherDword
 ;        
-        jmp wpOther
+        push edi
+        push ecx
+        push ebx
+;
+        inc [ebp].mem_count
+        mov eax,[esi]
+        mov edx,[esi+4]
+        push edx
+        push eax
+        push edi
+        push ebx
+        push ebp
+        call _WriteMemoryQword
+;
+        pop ebx
+        pop ecx
+        pop edi        
+        add esi,8
+        add ebx,8
+        sub ecx,8
+        ja WritePhysical
+;
+        ret
+                      
+wpOtherDword:  
+        cmp ecx,4
+        jb wpOtherWord
+;        
+        push edi
+        push ecx
+        push ebx
+;
+        inc [ebp].mem_count
+        mov eax,[esi]
+        push eax
+        push edi
+        push ebx
+        push ebp
+        call _WriteMemoryDword
+;
+        pop ebx
+        pop ecx
+        pop edi        
+        add esi,4
+        add ebx,4
+        sub ecx,4
+        ja WritePhysical
+;
+        ret
+                      
+wpOtherWord:  
+        cmp ecx,2
+        jb wpOtherByte
+;
+        push edi
+        push ecx
+        push ebx
+;
+        inc [ebp].mem_count
+        mov ax,[esi]
+        push eax
+        push edi
+        push ebx
+        push ebp
+        call _WriteMemoryWord
+;
+        pop ebx
+        pop ecx
+        pop edi        
+        add esi,2
+        add ebx,2
+        sub ecx,2
+        ja WritePhysical
+;
+        ret
+                                            
+wpOtherByte:  
+        push edi
+        push ecx
+        push ebx
+;
+        inc [ebp].mem_count
+        mov al,[esi]
+        push eax
+        push edi
+        push ebx
+        push ebp
+        call _WriteMemoryByte
+;
+        pop ebx
+        pop ecx
+        pop edi        
+        inc esi
+        inc ebx
+        sub ecx,1
+        ja WritePhysical
+;
+        ret        
 
 wpByte:
         inc [ebp].mem_count
@@ -583,16 +692,6 @@ wpDword1:
         call _WriteMemoryWord
         call _WriteMemoryByte
         ret        
-
-wpOther:        
-        inc [ebp].mem_count
-        push ecx
-        push edi
-        push ebx
-        push esi
-        push ebp
-        call _WriteToMemory
-        ret
 WritePhysical   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

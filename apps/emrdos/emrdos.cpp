@@ -292,18 +292,6 @@ void ExtClk(TCpu *Cpu)
     Pit.Counter[2]->ExtClk();
 }
 
-/*##################  WriteToMemory  ###############
-*   Purpose....:  Write to memory                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void WriteToMemory(TCpu *Cpu, unsigned long long Address, char Value)
-{
-    Isa.WriteMem(Address, Value);
-}
-
 /*##################  WriteMemoryByte  ###############
 *   Purpose....:  Write memory byte                           #
 *   In params..: *                                                          #
@@ -338,6 +326,18 @@ void WriteMemoryWord(TCpu *Cpu, unsigned long long Address, short int Value)
 void WriteMemoryDword(TCpu *Cpu, unsigned long long Address, long Value)
 {
     Isa.WriteMemoryDword(Address, Value);
+}
+
+/*##################  WriteMemoryQword  ###############
+*   Purpose....:  Write memory qword                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void WriteMemoryQword(TCpu *Cpu, unsigned long long Address, long long Value)
+{
+    Isa.WriteMemoryQword(Address, Value);
 }
 
 /*##################  ReadFromIo  ###############
@@ -539,8 +539,8 @@ int Load(char *FileName)
         Cpu.OnWriteMemoryByte = WriteMemoryByte;
         Cpu.OnWriteMemoryWord = WriteMemoryWord;
         Cpu.OnWriteMemoryDword = WriteMemoryDword;
+        Cpu.OnWriteMemoryQword = WriteMemoryQword;
 
-        Cpu.OnWriteToMemory = WriteToMemory;
         Cpu.OnReadFromIo = ReadFromIo;
         Cpu.OnWriteToIo = WriteToIo;
         Cpu.Reset();

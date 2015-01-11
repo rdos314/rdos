@@ -81,23 +81,6 @@ int TVideo::GetSize()
     return 0x8000;
 }
 
-/*##################  TVideo::WriteMem  ###############
-*   Purpose....: Write video mem                                                                        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void TVideo::WriteMem(int Num, unsigned long Offset, char Value)
-{
-    int row = Offset / 2 / 80;
-    
-    FData[Offset] = Value;
-
-    if (OnTextChange)
-        (*OnTextChange)(this, row);
-}
-
 /*##################  TVideo::WriteMemoryByte  ###############
 *   Purpose....: Write video mem                                                                        #
 *   In params..: *                                                          #
@@ -146,6 +129,24 @@ void TVideo::WriteMemoryDword(int Num, unsigned long Offset, long Value)
     char *ptr = &FData[Offset];
 
     *(long *)ptr = Value;    
+
+    if (OnTextChange)
+        (*OnTextChange)(this, row);
+}
+
+/*##################  TVideo::WriteMemoryQword  ###############
+*   Purpose....: Write video mem                                                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TVideo::WriteMemoryQword(int Num, unsigned long Offset, long long Value)
+{
+    int row = Offset / 2 / 80;
+    char *ptr = &FData[Offset];
+
+    *(long long *)ptr = Value;    
 
     if (OnTextChange)
         (*OnTextChange)(this, row);

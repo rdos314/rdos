@@ -86,8 +86,8 @@ void WriteMemoryWord(TCpuState *CpuState, unsigned long long Address, short int 
 void WriteMemoryDword(TCpuState *CpuState, unsigned long long Address, long val);
 #pragma aux (EMAPI) WriteMemoryDword;
 
-void WriteToMemory(TCpuState *CpuState, void *Buffer, unsigned long long Address, int Size);
-#pragma aux (EMAPI) WriteToMemory;
+void WriteMemoryQword(TCpuState *CpuState, unsigned long long Address, long long val);
+#pragma aux (EMAPI) WriteMemoryQword;
 
 void ReadFromIo(TCpuState *CpuState, void *Buffer, unsigned short int Port, int Size);
 #pragma aux (EMAPI) ReadFromIo;
@@ -226,16 +226,16 @@ void WriteMemoryDword(TCpuState *CpuState, unsigned long long Address, long val)
     CpuState->Cpu->WriteMemoryDword(Address, val);
 }
 
-/*##################  WriteToMemory  ###############
-*   Purpose....: Write to memory                                                                            #
+/*##################  WriteMemoryQword  ###############
+*   Purpose....: Write memory qword                                                                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteToMemory(TCpuState *CpuState, void *Buffer, unsigned long long Address, int Size)
+void WriteMemoryQword(TCpuState *CpuState, unsigned long long Address, long long val)
 {
-    CpuState->Cpu->WriteToMemory(Buffer, Address, Size);
+    CpuState->Cpu->WriteMemoryQword(Address, val);
 }
 
 /*##################  ReadFromIo  ###############
@@ -410,8 +410,8 @@ TCpu::TCpu()
         OnWriteMemoryByte = 0;
         OnWriteMemoryWord = 0;
         OnWriteMemoryDword = 0;
+        OnWriteMemoryQword = 0;
         
-        OnWriteToMemory = 0;
         OnReadFromIo = 0;
         OnWriteToIo = 0;
         Reset();
@@ -726,17 +726,17 @@ void TCpu::WriteMemoryDword(unsigned long long Address, long val)
         (*OnWriteMemoryDword)(this, Address, val);
 }
 
-/*##################  TCpu::WriteToMemory  ###############
-*   Purpose....: Write to memory                                            #
+/*##################  TCpu::WriteMemoryQword  ###############
+*   Purpose....: Write memory qword                                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TCpu::WriteToMemory(unsigned long long Address, char Value)
+void TCpu::WriteMemoryQword(unsigned long long Address, long long val)
 {
-        if (OnWriteToMemory)
-                (*OnWriteToMemory)(this, Address, Value);
+    if (OnWriteMemoryQword)
+        (*OnWriteMemoryQword)(this, Address, val);
 }
 
 /*##################  TCpu::ReadFromIo  ###############
@@ -765,28 +765,6 @@ void TCpu::WriteToIo(unsigned short Port, char Value)
 {
         if (OnWriteToIo)
                 (*OnWriteToIo)(this, Port, Value);
-}
-
-/*##################  TCpu::WriteToMemory  ###############
-*   Purpose....:  Write to memory                                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void TCpu::WriteToMemory(void *Buffer, unsigned long long Address, int Size)
-{
-        int i;
-        char *Dest;
-
-        Dest = (char *)Buffer;
-
-        for (i = 0; i < Size; i++)
-        {
-                WriteToMemory(Address, *Dest);
-                Address++;
-                Dest++;
-        }
 }
 
 /*##################  TCpu::ReadFromIo  ###############
