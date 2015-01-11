@@ -288,10 +288,8 @@ void ExtClk(TCpu *Cpu)
         }
     }
 
-    Pit.Counter[0]->SetClk();
-    Pit.Counter[2]->SetClk();
-    Pit.Counter[0]->ResetClk();
-    Pit.Counter[2]->ResetClk();
+    Pit.Counter[0]->ExtClk();
+    Pit.Counter[2]->ExtClk();
 }
 
 /*##################  ReadFromMemory  ###############

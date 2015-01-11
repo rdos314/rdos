@@ -83,98 +83,82 @@ void TPitCounter::ModifyOut(char Value)
 	}
 }
 
-/*##################  TPitCounter::SetClk  ###############
-*   Purpose....: Set clock for a channel						            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*##########################################################################*/
-void TPitCounter::SetClk()
-{
-	if (!FClk)
-		FClk = 1;
-}
-
-/*##################  TPitCounter::ResetClk  ###############
+/*##################  TPitCounter::ExtClk  ###############
 *   Purpose....: Reset clock for a channel						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-void TPitCounter::ResetClk()
+void TPitCounter::ExtClk()
 {
-	if (FClk)
+    FClk = 0;
+
+    if (FRunning)
+	switch (FMode)
 	{
-		FClk = 0;
-		if (FRunning)
-			switch (FMode)
+		case 0:
+		case 4:	
+		case 5:
+			if (FGate)
 			{
-				case 0:
-				case 4:	
-				case 5:
-					if (FGate)
-					{
-						FCount--;
-						if (!FCount)
-						{
-							FRunning = FALSE;
-							ModifyOut(1);
-						}
-					}
-					break;
-
-				case 1:
-					FCount--;
-					if (!FCount)
-					{
-						FRunning = FALSE;
-						ModifyOut(1);
-					}
-					break;
-
-				case 2:
-					if (FGate)
-					{
-						FCount--;
-						if (!FCount)
-						{
-							ModifyOut(0);
-							FCount = FPeriod;
-						}
-						else
-							ModifyOut(1);
-					}
-					else
-						ModifyOut(1);
-					break;
-
-
-				case 3:
-					if (FGate)
-					{
-						if (FCount & 1)
-						{
-							if (FOut)
-								FCount--;
-							else
-								FCount -= 3;
-						}
-						else
-							FCount -= 2;
-
-						if (!FCount)
-						{
-							if (FOut)
-								ModifyOut(0);
-							else
-								ModifyOut(1);
-							FCount = FPeriod;
-						}
-					}
-					break;
-
-
+				FCount--;
+				if (!FCount)
+				{
+					FRunning = FALSE;
+					ModifyOut(1);
+				}
 			}
+			break;
+
+		case 1:
+			FCount--;
+			if (!FCount)
+			{
+		    	FRunning = FALSE;
+				ModifyOut(1);
+			}
+			break;
+
+		case 2:
+			if (FGate)
+			{
+				FCount--;
+				if (!FCount)
+				{
+					ModifyOut(0);
+					FCount = FPeriod;
+				}
+				else
+					ModifyOut(1);
+			}
+			else
+				ModifyOut(1);
+			break;
+
+		case 3:
+			if (FGate)
+			{
+				if (FCount & 1)
+				{
+					if (FOut)
+						FCount--;
+					else
+						FCount -= 3;
+				}
+				else
+					FCount -= 2;
+
+				if (!FCount)
+				{
+					if (FOut)
+						ModifyOut(0);
+		    		else
+						ModifyOut(1);
+					FCount = FPeriod;
+				}
+			}
+			break;
+
 	}
 }
 

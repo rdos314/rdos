@@ -38,8 +38,7 @@ public:
 	TPitCounter();
 
 	void Define(TInterrupt *Interrupt, int Irq);
-	void SetClk();
-	void ResetClk();
+	void ExtClk();
 	void SetGate();
 	void ResetGate();
 
