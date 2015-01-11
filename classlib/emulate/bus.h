@@ -55,6 +55,7 @@ public:
     virtual long long ReadMemoryQword(int Num, unsigned long Offset);
 
     virtual void WriteMemoryByte(int Num, unsigned long Offset, char val);
+    virtual void WriteMemoryWord(int Num, unsigned long Offset, short int val);
 
 protected:
     void DefineIo(int Num, int Base, int Size, char *Data);
@@ -93,6 +94,7 @@ public:
     long long ReadMemoryQword(unsigned long long Address);
 
     void WriteMemoryByte(unsigned long long Address, char val);
+    void WriteMemoryWord(unsigned long long Address, short int val);
 
     void DefineIo(TBusFunction *func, int Num, int Base, int Size);
     void UndefineIo(TBusFunction *func, int Num);
