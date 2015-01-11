@@ -557,7 +557,7 @@ WriteInstr      ENDP
 WriteTime       Proc near
         pushad
         lea edi,[ebp].opcode_text
-        mov eax,[ebp].total_cycles
+        mov eax,[ebp].ltotal_cycles
         xor edx,edx
         mov ecx,10
         div ecx

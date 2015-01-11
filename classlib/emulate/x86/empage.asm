@@ -232,6 +232,7 @@ AllocateTlb     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadPhysical Proc near
+        inc [ebp].mem_count
         push ecx
         push edi
         push ebx
@@ -256,6 +257,7 @@ ReadPhysical    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WritePhysical Proc near
+        inc [ebp].mem_count
         push ecx
         push edi
         push ebx

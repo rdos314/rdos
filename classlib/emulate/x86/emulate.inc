@@ -223,7 +223,7 @@ data_offset		DD ?,?
 data_sel		DD ?
 data_valid		DB ?
 
-total_cycles	DD ?
+ltotal_cycles	DD ?,?
 
 running			DB ?
 

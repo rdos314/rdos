@@ -711,11 +711,20 @@ void TCpu::WriteToIo(void *Buffer, unsigned short int Port, int Size)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TCpu::EmulateOne()
+int TCpu::EmulateOne()
 {
+    int ns;
+    
+    CpuState.MemCount = 0;
+    CpuState.IoCount = 0;
+
     FUpdateCycles = TRUE;
     Emulate(&CpuState);
     FUpdateCycles = FALSE;
+
+    ns = FCycleTime + CpuState.MemCount * FMemTime + CpuState.IoCount * FIoTime;
+
+    return FALSE;
 }
 
 /*##################  TCpu::AddCycles  ###############

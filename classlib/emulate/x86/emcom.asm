@@ -1204,6 +1204,7 @@ ReadCodeFword   Endp
         public InPort
 
 InPort Proc near
+        inc [ebp].io_count
         push ecx
         push edx
         push esi
@@ -1229,6 +1230,7 @@ InPort  Endp
         public OutPort
 
 OutPort Proc near
+        inc [ebp].io_count
         push ecx
         push edx
         push esi
