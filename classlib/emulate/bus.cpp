@@ -275,6 +275,19 @@ void TBusFunction::OutByte(int Num, int Offset, char Value)
     Out(Num, Offset, Value);
 }
 
+/*##################  TBusFunction::OutWord  ###############
+*   Purpose....: Out word to port                                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TBusFunction::OutWord(int Num, int Offset, short int Value)
+{
+    OutByte(Num, Offset, (char)Value);
+    OutByte(Num, Offset + 1, (char)(Value >> 8));
+}
+
 /*##################  TBusFunction::DefineIo  ###############
 *   Purpose....: Define an io area                                                                          #
 *   In params..: *                                                          #
@@ -810,6 +823,30 @@ void TBus::OutByte(int Port, char Value)
                         if (area->Base <= Port && area->Base + area->Size > Port)
                         {
                                 area->func->OutByte(area->Num, Port - area->Base, Value);
+                                break;
+                        }
+        }
+}
+
+/*##################  TBus::OutWord  ###############
+*   Purpose....: Perform out instruction                                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TBus::OutWord(int Port, short int Value)
+{
+        TBusArea *area;
+        int i;
+
+        for (i = 0; i <= FHookIoMax; i++)
+        {
+                area = FHookIoArr[i];
+                if (area)
+                        if (area->Base <= Port && area->Base + area->Size > Port)
+                        {
+                                area->func->OutWord(area->Num, Port - area->Base, Value);
                                 break;
                         }
         }

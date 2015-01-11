@@ -266,6 +266,7 @@ public:
     long ReadIoDword(unsigned short int Port);
 
     void WriteIoByte(unsigned short int Port, char val);
+    void WriteIoWord(unsigned short int Port, short int val);
 
     void WriteToIo(void *Buffer, unsigned short int Port, int Size);
     void SysCall();
@@ -290,6 +291,7 @@ public:
     long (*OnReadIoDword)(TCpu *Cpu, unsigned short Port);
 
     void (*OnWriteIoByte)(TCpu *Cpu, unsigned short Port, char val);
+    void (*OnWriteIoWord)(TCpu *Cpu, unsigned short Port, short int val);
     
     void (*OnWriteToIo)(TCpu *Cpu, unsigned short Port, char Value);
     void (*OnSysCall)(TCpu *Cpu);

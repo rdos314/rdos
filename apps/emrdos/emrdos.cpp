@@ -340,6 +340,18 @@ void WriteIoByte(TCpu *Cpu, unsigned short int Port, char Value)
     Isa.OutByte(Port, Value);
 }
 
+/*##################  WriteIoWord  ###############
+*   Purpose....: Read from IO                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void WriteIoWord(TCpu *Cpu, unsigned short int Port, short int Value)
+{
+    Isa.OutWord(Port, Value);
+}
+
 /*##################  WriteToIo  ###############
 *   Purpose....: Read from IO                           #
 *   In params..: *                                                          #
@@ -529,6 +541,7 @@ int Load(char *FileName)
         Cpu.OnReadIoDword = ReadIoDword;
 
         Cpu.OnWriteIoByte = WriteIoByte;
+        Cpu.OnWriteIoWord = WriteIoWord;
 
         Cpu.OnWriteToIo = WriteToIo;
         Cpu.Reset();

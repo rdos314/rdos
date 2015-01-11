@@ -62,6 +62,7 @@ public:
     virtual long InDword(int Num, int Offset);
 
     virtual void OutByte(int Num, int Offset, char val);
+    virtual void OutWord(int Num, int Offset, short int val);
 
 protected:
     void DefineIo(int Num, int Base, int Size, char *Data);
@@ -107,6 +108,7 @@ public:
     long InDword(int Port);
 
     void OutByte(int Port, char val);
+    void OutWord(int Port, short int val);
 
     void DefineIo(TBusFunction *func, int Num, int Base, int Size);
     void UndefineIo(TBusFunction *func, int Num);
