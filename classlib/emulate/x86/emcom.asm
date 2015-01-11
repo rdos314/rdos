@@ -37,6 +37,8 @@ include \rdos\classlib\emulate\x86\emtss.inc
         extrn _ReadIoWord:near
         extrn _ReadIoDword:near
 
+        extrn _WriteIoByte:near
+        
         extrn _WriteToIo:near
         extrn ReadLinear:near
 
@@ -1324,6 +1326,21 @@ InPort  Endp
         public OutPort
 
 OutPort Proc near
+        cmp ecx,1
+        je opByte
+;
+        jmp opOther
+
+opByte:        
+        inc [ebp].io_count
+        mov al,[esi]
+        push eax
+        push edx
+        push ebp
+        call _WriteIoByte
+        ret
+
+opOther:
         inc [ebp].io_count
         push ecx
         push edx

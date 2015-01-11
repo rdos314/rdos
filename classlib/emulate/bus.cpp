@@ -263,6 +263,18 @@ long TBusFunction::InDword(int Num, int Offset)
     return val;
 }
 
+/*##################  TBusFunction::OutByte  ###############
+*   Purpose....: Out byte to port                                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TBusFunction::OutByte(int Num, int Offset, char Value)
+{
+    Out(Num, Offset, Value);
+}
+
 /*##################  TBusFunction::DefineIo  ###############
 *   Purpose....: Define an io area                                                                          #
 *   In params..: *                                                          #
@@ -777,4 +789,28 @@ long TBus::InDword(int Port)
                                 return area->func->InDword(area->Num, Port - area->Base);
         }
         return 0xFFFFFFFF;
+}
+
+/*##################  TBus::OutByte  ###############
+*   Purpose....: Perform out instruction                                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TBus::OutByte(int Port, char Value)
+{
+        TBusArea *area;
+        int i;
+
+        for (i = 0; i <= FHookIoMax; i++)
+        {
+                area = FHookIoArr[i];
+                if (area)
+                        if (area->Base <= Port && area->Base + area->Size > Port)
+                        {
+                                area->func->OutByte(area->Num, Port - area->Base, Value);
+                                break;
+                        }
+        }
 }

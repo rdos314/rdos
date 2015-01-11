@@ -265,6 +265,8 @@ public:
     short int ReadIoWord(unsigned short int Port);
     long ReadIoDword(unsigned short int Port);
 
+    void WriteIoByte(unsigned short int Port, char val);
+
     void WriteToIo(void *Buffer, unsigned short int Port, int Size);
     void SysCall();
     void AddBreakpoint(unsigned short Selector, unsigned long long Offset);
@@ -286,6 +288,8 @@ public:
     char (*OnReadIoByte)(TCpu *Cpu, unsigned short Port);
     short int (*OnReadIoWord)(TCpu *Cpu, unsigned short Port);
     long (*OnReadIoDword)(TCpu *Cpu, unsigned short Port);
+
+    void (*OnWriteIoByte)(TCpu *Cpu, unsigned short Port, char val);
     
     void (*OnWriteToIo)(TCpu *Cpu, unsigned short Port, char Value);
     void (*OnSysCall)(TCpu *Cpu);

@@ -98,6 +98,9 @@ short int ReadIoWord(TCpuState *CpuState, unsigned short int Port);
 long ReadIoDword(TCpuState *CpuState, unsigned short int Port);
 #pragma aux (EMAPI) ReadIoDword;
 
+void WriteIoByte(TCpuState *CpuState, unsigned short int Port, char val);
+#pragma aux (EMAPI) WriteIoByte;
+
 void WriteToIo(TCpuState *CpuState, void *Buffer, unsigned short int Port, int Size);
 #pragma aux (EMAPI) WriteToIo;
 
@@ -292,6 +295,18 @@ long ReadIoDword(TCpuState *CpuState, unsigned short Port)
     return CpuState->Cpu->ReadIoDword(Port);
 }
 
+/*##################  WriteIoByte  ###############
+*   Purpose....: Write byte to IO                                                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void WriteIoByte(TCpuState *CpuState, unsigned short Port, char val)
+{
+    CpuState->Cpu->WriteIoByte(Port, val);
+}
+
 /*##################  WriteToIo  ###############
 *   Purpose....: Write to IO                                                                        #
 *   In params..: *                                                          #
@@ -457,6 +472,8 @@ TCpu::TCpu()
         OnReadIoByte = 0;
         OnReadIoWord = 0;
         OnReadIoDword = 0;
+
+        OnWriteIoByte = 0;
         
         OnWriteToIo = 0;
         Reset();
@@ -827,6 +844,19 @@ long TCpu::ReadIoDword(unsigned short Port)
         return (*OnReadIoDword)(this, Port);
     else
         return 0xFFFFFFFF;
+}
+
+/*##################  TCpu::WriteIoByte  ###############
+*   Purpose....: Write byte to IO                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::WriteIoByte(unsigned short Port, char Value)
+{
+    if (OnWriteIoByte)
+        (*OnWriteIoByte)(this, Port, Value);
 }
 
 /*##################  TCpu::WriteToIo  ###############
