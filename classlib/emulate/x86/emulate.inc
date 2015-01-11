@@ -223,10 +223,6 @@ data_offset		DD ?,?
 data_sel		DD ?
 data_valid		DB ?
 
-ltotal_cycles	DD ?,?
-
-running			DB ?
-
 cpu_type        DB ?
 eflags_mask     DD ?
 

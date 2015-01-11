@@ -300,34 +300,6 @@ Done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   UserBreak
-;
-;               DESCRIPTION:    User break
-;
-;               PARAMETERS:             SS:EBP  CPU
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-        public _UserBreak
-
-_UserBreak      Proc near
-        push ebp
-        mov ebp,[esp+8]
-        test [ebp].em_debug, DEBUG_RESUME
-        jnz user_break_done
-;
-        or [ebp].em_debug, DEBUG_BREAK OR DEBUG_RESUME
-        ResetFault
-        ret
-
-user_break_done:
-        pop ebp
-        ret 4
-_UserBreak      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;               NAME:                   TripleFault
 ;
 ;               DESCRIPTION:    Triple fault

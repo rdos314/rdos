@@ -1071,7 +1071,6 @@ _Emulate Proc near
         pushad
         mov ebp,[ebp+8]
 ;
-        mov [ebp].running,1
         and [ebp].em_debug, NOT DEBUG_BREAK
         mov al,[ebp].reg_cs.d_access
         and al,ACCESS_RPL
@@ -1132,8 +1131,6 @@ emulate_no_trap:
         and [ebp].em_debug, NOT DEBUG_RESUME
 
 emulate_done:
-        mov [ebp].running,0
-;
         popad
         pop ebp
         ret 4

@@ -208,8 +208,6 @@ public:
         unsigned long long DataOffset;
         unsigned long DataSelector;
         char DataValid;
-        long long TotalCycles;
-        char Running;
         char CpuType;
         long EflagsMask;
 
@@ -271,8 +269,9 @@ public:
     TInterrupt *FInterrupt;
 
 protected:
+    void WriteCycles();
+
     int EmulateOne();
-    void AddCycles(unsigned int Cycles);
     virtual void NotifyIdle();
     virtual void NotifySetClk();
     virtual void NotifyResetClk();
@@ -288,6 +287,9 @@ protected:
     int FMemTime;
     int FIoTime;
     int FExtClkTime;
+
+    int FExtNs;
+    long long FTotalNs;
 
 private:
 };

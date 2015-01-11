@@ -26,6 +26,7 @@
 *##########################################################################*/
 
 #include <stdio.h>
+#include <string.h>
 #include "cpu.h"
 
 #define FALSE 0
@@ -45,9 +46,6 @@ TLocation       buffer_val[COUNTBUFFER];
        modify [eax ecx edx];
 
 extern "C" {
-
-void UserBreak(TCpuState *CpuState);
-#pragma aux (EMAPI) UserBreak;
 
 void ReadInstruction(TCpuState *CpuState);
 #pragma aux (EMAPI) ReadInstruction;
@@ -206,7 +204,6 @@ TCpuState::~TCpuState()
 *##########################################################################*/
 void TCpuState::Reset()
 {    
-        TotalCycles = 0;
         Reg_eax = 0x12345678;
         Reg_ebx = 0x12345678;
         Reg_ecx = 0x12345678;
@@ -269,7 +266,6 @@ void TCpuState::Reset()
         MathControl = 0;
         MathStatus = 0;
 
-        Running = FALSE;
         PendingInt = 0;
         EmDebug = 0;
 }
@@ -295,6 +291,8 @@ TCpu::TCpu()
         FMemTime = 150;
         FIoTime = 500;
         FExtClkTime = 838;
+        FExtNs = 0;
+        FTotalNs = 0;
 
         debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
         initbuffer(buffer_val,COUNTBUFFER); /* initialise le buffer*/
@@ -616,9 +614,6 @@ void TCpu::ReadFromMemory(void *Buffer, unsigned long long Address, int Size)
         int i;
         char *Dest;
 
-        if (CpuState.Running)
-                AddCycles((Size - 1) / 4 + 1);
-
         Dest = (char *)Buffer;
 
         for (i = 0; i < Size; i++)
@@ -640,9 +635,6 @@ void TCpu::WriteToMemory(void *Buffer, unsigned long long Address, int Size)
 {
         int i;
         char *Dest;
-
-        if (CpuState.Running)
-                AddCycles((Size - 1) / 4 + 1);
 
         Dest = (char *)Buffer;
 
@@ -666,9 +658,6 @@ void TCpu::ReadFromIo(void *Buffer, unsigned short int Port, int Size)
         char *Dest;
         int i;
 
-        if (CpuState.Running)
-                AddCycles((Size - 1) / 4 + 1);
-
         Dest = (char *)Buffer;
 
         for (i = 0; i < Size; i++)
@@ -690,9 +679,6 @@ void TCpu::WriteToIo(void *Buffer, unsigned short int Port, int Size)
 {
         char *Dest;
         int i;
-
-        if (CpuState.Running)
-                AddCycles((Size - 1) / 4 + 1);
 
         Dest = (char *)Buffer;
 
@@ -718,35 +704,22 @@ int TCpu::EmulateOne()
     CpuState.MemCount = 0;
     CpuState.IoCount = 0;
 
-    FUpdateCycles = TRUE;
     Emulate(&CpuState);
-    FUpdateCycles = FALSE;
 
     ns = FCycleTime + CpuState.MemCount * FMemTime + CpuState.IoCount * FIoTime;
 
+    FTotalNs += ns;
+    FExtNs += ns;
+
+    while (FExtNs > FExtClkTime)
+    {
+        FExtNs -= FExtClkTime;
+        
+        NotifySetClk();
+        NotifyResetClk();
+    }
+
     return FALSE;
-}
-
-/*##################  TCpu::AddCycles  ###############
-*   Purpose....: Add cpu cycles                                                                             #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void TCpu::AddCycles(unsigned int Cycles)
-{
-        long Total;
-
-        if (FUpdateCycles)
-        {
-                CpuState.TotalCycles += Cycles;
-                Total = CpuState.TotalCycles / 8;
-                if (Total & 1)
-                        NotifySetClk();
-                else
-                        NotifyResetClk();
-        }
 }
 
 /*##################  TCpu::Break  ###############
@@ -758,10 +731,7 @@ void TCpu::AddCycles(unsigned int Cycles)
 *##########################################################################*/
 void TCpu::Break()
 {
-        if (CpuState.Running)
-                UserBreak(&CpuState);
-        else
-                CpuState.EmDebug |= DEBUG_BREAK;
+    CpuState.EmDebug |= DEBUG_BREAK;
 }
 
 /*##################  TCpu::Trace  ###############
@@ -1032,6 +1002,7 @@ void TCpu::Show()
         DisAssemble(&CpuState);
         WriteFpuRegs(&CpuState);
         WriteRegs(&CpuState);
+        WriteCycles();
 }
 
 /*##################  TCpu::ShowFpu  ###############
@@ -1044,5 +1015,74 @@ void TCpu::Show()
 void TCpu::ShowFpu()
 {
         WriteFpuRegs(&CpuState);
+}
+
+/*##################  TCpu::WriteCycles  ###############
+*   Purpose....: Write cycles                                                                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::WriteCycles()
+{
+    long long val;
+    int remain;
+    char str[20];
+
+    val = FTotalNs;    
+    remain = val % 1000;
+    val = val / 1000;
+    if (val)
+        sprintf(&str[16], "%03ld", remain);
+    else
+        sprintf(&str[16], "%3ld", remain);
+    
+// us
+
+    if (val)
+    {
+        remain = val % 1000;
+        val = val / 1000;
+        if (val)
+            sprintf(&str[12], "%03ld", remain);
+        else
+            sprintf(&str[12], "%3ld", remain);
+    }
+    else
+        strcpy(&str[12], "   ");
+
+    str[15] = ' ';
+
+// ms
+
+    if (val)
+    {
+        remain = val % 1000;
+        val = val / 1000;
+        if (val)
+            sprintf(&str[8], "%03ld", remain);
+        else
+            sprintf(&str[8], "%3ld", remain);
+    }
+    else
+        strcpy(&str[8], "   ");
+
+    str[11] = ' ';
+
+// s
+
+    if (val)
+    {
+        sprintf(str, "%7ld", val);
+        str[7] = ',';
+    }
+    else
+    {
+        strcpy(str, "       ");
+        str[7] = ' ';
+    }
+    printf(str);
+    printf("\r\n");
 }
 
