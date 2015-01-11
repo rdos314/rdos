@@ -267,6 +267,7 @@ public:
 
     void (*OnExtClk)(TCpu *Cpu);
     char (*OnReadMemoryByte)(TCpu *Cpu, unsigned long long Address);
+    short int (*OnReadMemoryWord)(TCpu *Cpu, unsigned long long Address);
     
     char (*OnReadFromMemory)(TCpu *Cpu, unsigned long long Address);
     void (*OnWriteToMemory)(TCpu *Cpu, unsigned long long Address, char Value);

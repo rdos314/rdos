@@ -304,6 +304,18 @@ char ReadMemoryByte(TCpu *Cpu, unsigned long long Address)
     return Isa.ReadMemoryByte(Address);
 }
 
+/*##################  ReadMemoryWord  ###############
+*   Purpose....: Read word from memory                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+short int ReadMemoryWord(TCpu *Cpu, unsigned long long Address)
+{
+    return Isa.ReadMemoryWord(Address);
+}
+
 /*##################  ReadFromMemory  ###############
 *   Purpose....: Read from memory                           #
 *   In params..: *                                                          #
@@ -523,6 +535,7 @@ int Load(char *FileName)
     {
         Cpu.OnExtClk = ExtClk;
         Cpu.OnReadMemoryByte = ReadMemoryByte;
+        Cpu.OnReadMemoryWord = ReadMemoryWord;
 
 
         Cpu.OnReadFromMemory = ReadFromMemory;

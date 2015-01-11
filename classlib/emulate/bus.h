@@ -51,6 +51,7 @@ public:
     virtual char ReadMem(int Num, unsigned long Offset);
 
     virtual char ReadMemoryByte(int Num, unsigned long Offset);
+    virtual short int ReadMemoryWord(int Num, unsigned long Offset);
 
 protected:
     void DefineIo(int Num, int Base, int Size, char *Data);
@@ -85,6 +86,7 @@ public:
     char ReadMem(unsigned long long Address);
 
     char ReadMemoryByte(unsigned long long Address);
+    short int ReadMemoryWord(unsigned long long Address);
 
     void DefineIo(TBusFunction *func, int Num, int Base, int Size);
     void UndefineIo(TBusFunction *func, int Num);

@@ -360,6 +360,7 @@ TCpu::TCpu()
         OnExtClk = 0;
         OnSysCall = 0;
         OnReadMemoryByte = 0;
+        OnReadMemoryWord = 0;
         
         OnReadFromMemory = 0;
         OnWriteToMemory = 0;
@@ -591,7 +592,7 @@ unsigned char TCpu::ReadMemory(unsigned long long Address)
 char TCpu::ReadMemoryByte(unsigned long long Address)
 {
     if (OnReadMemoryByte)
-        return (unsigned char)(*OnReadMemoryByte)(this, Address);
+        return (*OnReadMemoryByte)(this, Address);
     else
         return 0xFF;
 }
@@ -605,10 +606,10 @@ char TCpu::ReadMemoryByte(unsigned long long Address)
 *##########################################################################*/
 short int TCpu::ReadMemoryWord(unsigned long long Address)
 {
-    unsigned short int val;    
-    val = ReadMemory(Address);
-    val |= ReadMemory(Address + 1) << 8;
-    return (short int)val;
+    if (OnReadMemoryWord)
+        return (*OnReadMemoryWord)(this, Address);
+    else
+        return 0xFFFF;
 }
 
 /*##################  TCpu::ReadMemoryDword  ###############
