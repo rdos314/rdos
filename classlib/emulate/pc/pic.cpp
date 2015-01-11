@@ -425,13 +425,13 @@ void TPic::Update()
     }
 }
 
-/*##################  TPic::Out  ###############
+/*##################  TPic::OutByte  ###############
 *   Purpose....: Perform out instruction						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-void TPic::Out(int Num, int Offset, char Value)
+void TPic::OutByte(int Num, int Offset, char Value)
 {
 	if (Offset)
 	{

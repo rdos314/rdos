@@ -37,7 +37,7 @@ public:
 
 	virtual int GetSize();
 
-	virtual void Out(int Num, int Offset, char Value);
+	virtual void OutByte(int Num, int Offset, char Value);
 	virtual char InByte(int Num, int Offset);
 
 private:

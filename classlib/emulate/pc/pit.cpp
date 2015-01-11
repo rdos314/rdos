@@ -444,13 +444,13 @@ int TPit::GetSize()
     return 4;
 }
 
-/*##################  TPit::Out  ###############
+/*##################  TPit::OutByte  ###############
 *   Purpose....: Perform out instruction						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-void TPit::Out(int Num, int Offset, char Value)
+void TPit::OutByte(int Num, int Offset, char Value)
 {
 	int Channel;
 

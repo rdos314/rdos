@@ -39,8 +39,8 @@ include \rdos\classlib\emulate\x86\emtss.inc
 
         extrn _WriteIoByte:near
         extrn _WriteIoWord:near
+        extrn _WriteIoDword:near
         
-        extrn _WriteToIo:near
         extrn ReadLinear:near
 
 .code
@@ -1332,8 +1332,63 @@ OutPort Proc near
 ;
         cmp ecx,2
         je opWord
+
+opDword:
+        test bl,1
+        jnz opDword1
+;
+        test bl,2
+        jnz opDword2
 ;        
-        jmp opOther
+        inc [ebp].io_count
+        mov eax,[esi]
+        push eax
+        push edx
+        push ebp
+        call _WriteIoDword
+        ret
+
+opDword2:
+        add [ebp].io_count,2
+        mov ax,[esi+2]
+        push eax
+        mov ax,dx
+        add ax,2
+        push eax
+        push ebp
+;        
+        mov ax,[esi]
+        push eax
+        push edx
+        push ebp
+        call _WriteIoWord
+        call _WriteIoWord
+        ret
+
+opDword1:
+        add [ebp].io_count,3
+        mov al,[esi]
+        push eax
+        mov ax,dx
+        add ax,3
+        push eax
+        push ebp
+;
+        mov ax,[esi+1]
+        push eax
+        mov ax,dx
+        inc ax
+        push eax
+        push ebp
+;
+        mov al,[esi]
+        push eax
+        push edx
+        push ebp                
+        call _WriteIoByte
+        call _WriteIoWord
+        call _WriteIoByte
+        ret        
 
 opByte:        
         inc [ebp].io_count
@@ -1371,15 +1426,6 @@ opWord1:
         push ebp     
         call _WriteIoByte
         call _WriteIoByte
-        ret
-
-opOther:
-        inc [ebp].io_count
-        push ecx
-        push edx
-        push esi
-        push ebp
-        call _WriteToIo
         ret
 OutPort Endp
 

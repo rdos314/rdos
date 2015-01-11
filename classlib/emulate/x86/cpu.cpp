@@ -104,8 +104,8 @@ void WriteIoByte(TCpuState *CpuState, unsigned short int Port, char val);
 void WriteIoWord(TCpuState *CpuState, unsigned short int Port, short int val);
 #pragma aux (EMAPI) WriteIoWord;
 
-void WriteToIo(TCpuState *CpuState, void *Buffer, unsigned short int Port, int Size);
-#pragma aux (EMAPI) WriteToIo;
+void WriteIoDword(TCpuState *CpuState, unsigned short int Port, long val);
+#pragma aux (EMAPI) WriteIoDword;
 
 void SysCall(TCpuState *CpuState);
 #pragma aux (EMAPI) SysCall;
@@ -322,16 +322,16 @@ void WriteIoWord(TCpuState *CpuState, unsigned short Port, short int val)
     CpuState->Cpu->WriteIoWord(Port, val);
 }
 
-/*##################  WriteToIo  ###############
-*   Purpose....: Write to IO                                                                        #
+/*##################  WriteIoDword  ###############
+*   Purpose....: Write dword to IO                                                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteToIo(TCpuState *CpuState, void *Buffer, unsigned short Port, int Size)
+void WriteIoDword(TCpuState *CpuState, unsigned short Port, long val)
 {
-    CpuState->Cpu->WriteToIo(Buffer, Port, Size);
+    CpuState->Cpu->WriteIoDword(Port, val);
 }
 
 /*##################  SysCall  ###############
@@ -490,8 +490,8 @@ TCpu::TCpu()
 
         OnWriteIoByte = 0;
         OnWriteIoWord = 0;
+        OnWriteIoDword = 0;
         
-        OnWriteToIo = 0;
         Reset();
         CpuState.CpuType = 5;
         CpuState.EflagsMask = 0x3FFFD7;
@@ -888,39 +888,17 @@ void TCpu::WriteIoWord(unsigned short Port, short int Value)
         (*OnWriteIoWord)(this, Port, Value);
 }
 
-/*##################  TCpu::WriteToIo  ###############
-*   Purpose....: Write to IO                                        #
+/*##################  TCpu::WriteIoDword  ###############
+*   Purpose....: Write dword to IO                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TCpu::WriteToIo(unsigned short Port, char Value)
+void TCpu::WriteIoDword(unsigned short Port, long Value)
 {
-        if (OnWriteToIo)
-                (*OnWriteToIo)(this, Port, Value);
-}
-
-/*##################  TCpu::WriteToIo  ###############
-*   Purpose....: Read from IO                                       #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void TCpu::WriteToIo(void *Buffer, unsigned short int Port, int Size)
-{
-        char *Dest;
-        int i;
-
-        Dest = (char *)Buffer;
-
-        for (i = 0; i < Size; i++)
-        {
-                WriteToIo(Port, *Dest);
-                Port++;
-                Dest++;
-        }
+    if (OnWriteIoDword)
+        (*OnWriteIoDword)(this, Port, Value);
 }
 
 /*##################  TCpu::EmulateOne  ###############

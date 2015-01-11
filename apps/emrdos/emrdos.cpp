@@ -352,16 +352,16 @@ void WriteIoWord(TCpu *Cpu, unsigned short int Port, short int Value)
     Isa.OutWord(Port, Value);
 }
 
-/*##################  WriteToIo  ###############
+/*##################  WriteIoDword  ###############
 *   Purpose....: Read from IO                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
+void WriteIoDword(TCpu *Cpu, unsigned short int Port, long Value)
 {
-    Isa.Out(Port, Value);
+    Isa.OutDword(Port, Value);
 }
 
 /*##################  Start  ###############
@@ -542,8 +542,8 @@ int Load(char *FileName)
 
         Cpu.OnWriteIoByte = WriteIoByte;
         Cpu.OnWriteIoWord = WriteIoWord;
+        Cpu.OnWriteIoDword = WriteIoDword;
 
-        Cpu.OnWriteToIo = WriteToIo;
         Cpu.Reset();
 
         Cpu.CpuState.Reg_gdt.base = GDT_BASE;

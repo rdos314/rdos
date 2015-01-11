@@ -45,8 +45,6 @@ public:
 
     virtual int GetSize() = 0;
 
-    virtual void Out(int Num, int Offset, char Value);
-
     virtual char ReadMemoryByte(int Num, unsigned long Offset);
     virtual short int ReadMemoryWord(int Num, unsigned long Offset);
     virtual long ReadMemoryDword(int Num, unsigned long Offset);
@@ -63,6 +61,7 @@ public:
 
     virtual void OutByte(int Num, int Offset, char val);
     virtual void OutWord(int Num, int Offset, short int val);
+    virtual void OutDword(int Num, int Offset, long val);
 
 protected:
     void DefineIo(int Num, int Base, int Size, char *Data);
@@ -91,8 +90,6 @@ public:
     TBus();
     ~TBus();
 
-    void Out(int Port, char Value);
-
     char ReadMemoryByte(unsigned long long Address);
     short int ReadMemoryWord(unsigned long long Address);
     long ReadMemoryDword(unsigned long long Address);
@@ -109,6 +106,7 @@ public:
 
     void OutByte(int Port, char val);
     void OutWord(int Port, short int val);
+    void OutDword(int Port, long val);
 
     void DefineIo(TBusFunction *func, int Num, int Base, int Size);
     void UndefineIo(TBusFunction *func, int Num);

@@ -266,14 +266,14 @@ char TPci::ReadConfig(int Index)
     return 0xFF;
 }
 
-/*##################  TPci::Out  ###############
+/*##################  TPci::OutByte  ###############
 *   Purpose....: Perform out instruction                                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TPci::Out(int Num, int Offset, char Value)
+void TPci::OutByte(int Num, int Offset, char Value)
 {
     int LVal;
 

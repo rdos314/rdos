@@ -67,14 +67,14 @@ int TPciIdeUnit::GetSize()
     return 0x10;
 }
 
-/*##################  TPciIdeUnit::Out  ###############
+/*##################  TPciIdeUnit::OutByte  ###############
 *   Purpose....: Perform out instruction                                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TPciIdeUnit::Out(int Num, int Offset, char Value)
+void TPciIdeUnit::OutByte(int Num, int Offset, char Value)
 {
     int LVal;
 

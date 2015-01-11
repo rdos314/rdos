@@ -267,8 +267,8 @@ public:
 
     void WriteIoByte(unsigned short int Port, char val);
     void WriteIoWord(unsigned short int Port, short int val);
+    void WriteIoDword(unsigned short int Port, long val);
 
-    void WriteToIo(void *Buffer, unsigned short int Port, int Size);
     void SysCall();
     void AddBreakpoint(unsigned short Selector, unsigned long long Offset);
     void ClearBreakpoints();
@@ -292,15 +292,14 @@ public:
 
     void (*OnWriteIoByte)(TCpu *Cpu, unsigned short Port, char val);
     void (*OnWriteIoWord)(TCpu *Cpu, unsigned short Port, short int val);
+    void (*OnWriteIoDword)(TCpu *Cpu, unsigned short Port, long val);
     
-    void (*OnWriteToIo)(TCpu *Cpu, unsigned short Port, char Value);
     void (*OnSysCall)(TCpu *Cpu);
 
     TInterrupt *FInterrupt;
 
 protected:
     int EmulateOne();
-    virtual void WriteToIo(unsigned short int Port, char Value);
 
     TLocation *FBreakpoints[MAX_BREAKPOINTS];
     int FMaxBreak;

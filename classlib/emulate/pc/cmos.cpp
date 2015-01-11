@@ -61,14 +61,14 @@ int TCmos::GetSize()
     return 2;
 }
 
-/*##################  TCmos::Out  ###############
+/*##################  TCmos::OutByte  ###############
 *   Purpose....: Perform out instruction                                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TCmos::Out(int Num, int Offset, char Value)
+void TCmos::OutByte(int Num, int Offset, char Value)
 {
     switch (Offset)
     {
