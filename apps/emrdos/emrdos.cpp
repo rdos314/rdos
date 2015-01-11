@@ -292,54 +292,6 @@ void ExtClk(TCpu *Cpu)
     Pit.Counter[2]->ExtClk();
 }
 
-/*##################  WriteMemoryByte  ###############
-*   Purpose....:  Write memory byte                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void WriteMemoryByte(TCpu *Cpu, unsigned long long Address, char Value)
-{
-    Isa.WriteMemoryByte(Address, Value);
-}
-
-/*##################  WriteMemoryWord  ###############
-*   Purpose....:  Write memory word                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void WriteMemoryWord(TCpu *Cpu, unsigned long long Address, short int Value)
-{
-    Isa.WriteMemoryWord(Address, Value);
-}
-
-/*##################  WriteMemoryDword  ###############
-*   Purpose....:  Write memory dword                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void WriteMemoryDword(TCpu *Cpu, unsigned long long Address, long Value)
-{
-    Isa.WriteMemoryDword(Address, Value);
-}
-
-/*##################  WriteMemoryQword  ###############
-*   Purpose....:  Write memory qword                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void WriteMemoryQword(TCpu *Cpu, unsigned long long Address, long long Value)
-{
-    Isa.WriteMemoryQword(Address, Value);
-}
-
 /*##################  ReadIoByte  ###############
 *   Purpose....: Read byte from IO                           #
 *   In params..: *                                                          #
@@ -547,11 +499,6 @@ int Load(char *FileName)
     {
         Cpu.DefineBus(&Isa);
         Cpu.OnExtClk = ExtClk;
-
-        Cpu.OnWriteMemoryByte = WriteMemoryByte;
-        Cpu.OnWriteMemoryWord = WriteMemoryWord;
-        Cpu.OnWriteMemoryDword = WriteMemoryDword;
-        Cpu.OnWriteMemoryQword = WriteMemoryQword;
 
         Cpu.OnReadIoByte = ReadIoByte;
 

@@ -202,7 +202,10 @@ long long ReadMemoryQword(TCpuState *CpuState, unsigned long long Address)
 *##########################################################################*/
 void WriteMemoryByte(TCpuState *CpuState, unsigned long long Address, char val)
 {
-    CpuState->Cpu->WriteMemoryByte(Address, val);
+    if (CpuState->Bus)
+        CpuState->Bus->WriteMemoryByte(Address, val);
+    else
+        CpuState->Cpu->WriteMemoryByte(Address, val);
 }
 
 /*##################  WriteMemoryWord  ###############
@@ -214,7 +217,10 @@ void WriteMemoryByte(TCpuState *CpuState, unsigned long long Address, char val)
 *##########################################################################*/
 void WriteMemoryWord(TCpuState *CpuState, unsigned long long Address, short int val)
 {
-    CpuState->Cpu->WriteMemoryWord(Address, val);
+    if (CpuState->Bus)
+        CpuState->Bus->WriteMemoryWord(Address, val);
+    else
+        CpuState->Cpu->WriteMemoryWord(Address, val);
 }
 
 /*##################  WriteMemoryDword  ###############
@@ -226,7 +232,10 @@ void WriteMemoryWord(TCpuState *CpuState, unsigned long long Address, short int 
 *##########################################################################*/
 void WriteMemoryDword(TCpuState *CpuState, unsigned long long Address, long val)
 {
-    CpuState->Cpu->WriteMemoryDword(Address, val);
+    if (CpuState->Bus)
+        CpuState->Bus->WriteMemoryDword(Address, val);
+    else
+        CpuState->Cpu->WriteMemoryDword(Address, val);
 }
 
 /*##################  WriteMemoryQword  ###############
@@ -238,7 +247,10 @@ void WriteMemoryDword(TCpuState *CpuState, unsigned long long Address, long val)
 *##########################################################################*/
 void WriteMemoryQword(TCpuState *CpuState, unsigned long long Address, long long val)
 {
-    CpuState->Cpu->WriteMemoryQword(Address, val);
+    if (CpuState->Bus)
+        CpuState->Bus->WriteMemoryQword(Address, val);
+    else
+        CpuState->Cpu->WriteMemoryQword(Address, val);
 }
 
 /*##################  ReadIoByte  ###############
