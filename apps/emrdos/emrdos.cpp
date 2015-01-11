@@ -292,6 +292,18 @@ void ExtClk(TCpu *Cpu)
     Pit.Counter[2]->ExtClk();
 }
 
+/*##################  ReadMemoryByte  ###############
+*   Purpose....: Read byte from memory                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char ReadMemoryByte(TCpu *Cpu, unsigned long long Address)
+{
+    return Isa.ReadMemoryByte(Address);
+}
+
 /*##################  ReadFromMemory  ###############
 *   Purpose....: Read from memory                           #
 *   In params..: *                                                          #
@@ -510,6 +522,9 @@ int Load(char *FileName)
     if (img.HasKernel())
     {
         Cpu.OnExtClk = ExtClk;
+        Cpu.OnReadMemoryByte = ReadMemoryByte;
+
+
         Cpu.OnReadFromMemory = ReadFromMemory;
         Cpu.OnWriteToMemory = WriteToMemory;
         Cpu.OnReadFromIo = ReadFromIo;

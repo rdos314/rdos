@@ -31,6 +31,11 @@
 include \rdos\classlib\emulate\x86\emulate.inc
 include \rdos\classlib\emulate\x86\emseg.inc
 
+        extrn _ReadMemoryByte:near
+        extrn _ReadMemoryWord:near
+        extrn _ReadMemoryDword:near
+        extrn _ReadMemoryQword:near
+
         extrn _ReadFromMemory:near
         extrn _WriteToMemory:near
 
@@ -232,6 +237,21 @@ AllocateTlb     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadPhysical Proc near
+        cmp ecx,1
+        je rpByte
+;
+        jmp rpOther
+
+rpByte:
+        inc [ebp].mem_count
+        push edi
+        push ebx
+        push ebp
+        call _ReadMemoryByte
+        mov [esi],al
+        ret
+
+rpOther:        
         inc [ebp].mem_count
         push ecx
         push edi

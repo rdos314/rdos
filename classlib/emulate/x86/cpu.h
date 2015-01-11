@@ -248,6 +248,13 @@ public:
 
     virtual void Reset();
 
+    unsigned char ReadMemory(unsigned long long Address);
+
+    char ReadMemoryByte(unsigned long long Address);
+    short int ReadMemoryWord(unsigned long long Address);
+    long ReadMemoryDword(unsigned long long Address);
+    long long ReadMemoryQword(unsigned long long Address);
+
     void ReadFromMemory(void *Buffer, unsigned long long Address, int Size);
     void WriteToMemory(void *Buffer, unsigned long long Address, int Size);
     void ReadFromIo(void *Buffer, unsigned short int Port, int Size);
@@ -259,6 +266,8 @@ public:
     TCpuState CpuState;
 
     void (*OnExtClk)(TCpu *Cpu);
+    char (*OnReadMemoryByte)(TCpu *Cpu, unsigned long long Address);
+    
     char (*OnReadFromMemory)(TCpu *Cpu, unsigned long long Address);
     void (*OnWriteToMemory)(TCpu *Cpu, unsigned long long Address, char Value);
     char (*OnReadFromIo)(TCpu *Cpu, unsigned short Port);

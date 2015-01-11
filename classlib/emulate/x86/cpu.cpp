@@ -65,6 +65,18 @@ void Emulate(TCpuState *CpuState);
 char GetIntVector(TCpuState *CpuState);
 #pragma aux (EMAPI) GetIntVector;
 
+char ReadMemoryByte(TCpuState *CpuState, unsigned long long Address);
+#pragma aux (EMAPI) ReadMemoryByte;
+
+short int ReadMemoryWord(TCpuState *CpuState, unsigned long long Address);
+#pragma aux (EMAPI) ReadMemoryWord;
+
+long ReadMemoryDword(TCpuState *CpuState, unsigned long long Address);
+#pragma aux (EMAPI) ReadMemoryDword;
+
+long long ReadMemoryQword(TCpuState *CpuState, unsigned long long Address);
+#pragma aux (EMAPI) ReadMemoryQword;
+
 void ReadFromMemory(TCpuState *CpuState, void *Buffer, unsigned long long Address, int Size);
 #pragma aux (EMAPI) ReadFromMemory;
 
@@ -110,6 +122,54 @@ void showdata(TCpuState *CpuState);  /* print ata on the screen */
 char GetIntVector(TCpuState *CpuState)
 {
     return CpuState->Cpu->AckInt();
+}
+
+/*##################  ReadMemoryByte  ###############
+*   Purpose....: Read memory byte                                                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char ReadMemoryByte(TCpuState *CpuState, unsigned long long Address)
+{
+    return CpuState->Cpu->ReadMemoryByte(Address);
+}
+
+/*##################  ReadMemoryWord  ###############
+*   Purpose....: Read memory word                                                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+short int ReadMemoryWord(TCpuState *CpuState, unsigned long long Address)
+{
+    return CpuState->Cpu->ReadMemoryWord(Address);
+}
+
+/*##################  ReadMemoryDword  ###############
+*   Purpose....: Read memory dword                                                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long ReadMemoryDword(TCpuState *CpuState, unsigned long long Address)
+{
+    return CpuState->Cpu->ReadMemoryDword(Address);
+}
+
+/*##################  ReadMemoryQword  ###############
+*   Purpose....: Read memory qword                                                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long long ReadMemoryQword(TCpuState *CpuState, unsigned long long Address)
+{
+    return CpuState->Cpu->ReadMemoryQword(Address);
 }
 
 /*##################  ReadFromMemory  ###############
@@ -299,6 +359,8 @@ TCpu::TCpu()
 
         OnExtClk = 0;
         OnSysCall = 0;
+        OnReadMemoryByte = 0;
+        
         OnReadFromMemory = 0;
         OnWriteToMemory = 0;
         OnReadFromIo = 0;
@@ -502,6 +564,89 @@ void TCpu::SysCall()
 {
         if (OnSysCall)
                 (*OnSysCall)(this);
+}
+
+/*##################  TCpu::ReadMemory  ###############
+*   Purpose....: Read from memory                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+unsigned char TCpu::ReadMemory(unsigned long long Address)
+{
+    if (OnReadFromMemory)
+        return (unsigned char)(*OnReadFromMemory)(this, Address);
+    else
+        return 0xFF;
+}
+
+/*##################  TCpu::ReadMemoryByte  ###############
+*   Purpose....: Read memory byte                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TCpu::ReadMemoryByte(unsigned long long Address)
+{
+    if (OnReadMemoryByte)
+        return (unsigned char)(*OnReadMemoryByte)(this, Address);
+    else
+        return 0xFF;
+}
+
+/*##################  TCpu::ReadMemoryWord  ###############
+*   Purpose....: Read memory word                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+short int TCpu::ReadMemoryWord(unsigned long long Address)
+{
+    unsigned short int val;    
+    val = ReadMemory(Address);
+    val |= ReadMemory(Address + 1) << 8;
+    return (short int)val;
+}
+
+/*##################  TCpu::ReadMemoryDword  ###############
+*   Purpose....: Read memory dword                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long TCpu::ReadMemoryDword(unsigned long long Address)
+{
+    unsigned long val;    
+    val = ReadMemory(Address);
+    val |= ReadMemory(Address + 1) << 8;
+    val |= ReadMemory(Address + 2) << 16;
+    val |= ReadMemory(Address + 3) << 24;
+    return (long)val;
+}
+
+/*##################  TCpu::ReadMemoryQword  ###############
+*   Purpose....: Read memory qword                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long long TCpu::ReadMemoryQword(unsigned long long Address)
+{
+    unsigned long long val;    
+    val = ReadMemory(Address);
+    val |= ReadMemory(Address + 1) << 8;
+    val |= ReadMemory(Address + 2) << 16;
+    val |= ReadMemory(Address + 3) << 24;
+    val |= ReadMemory(Address + 4) << 32;
+    val |= ReadMemory(Address + 5) << 40;
+    val |= ReadMemory(Address + 6) << 48;
+    val |= ReadMemory(Address + 7) << 56;
+    return (long long)val;
 }
 
 /*##################  TCpu::ReadFromMemory  ###############

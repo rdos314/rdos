@@ -124,6 +124,25 @@ char TBusFunction::In(int Num, int Offset)
         return 0xFF;
 }
 
+/*##################  TBusFunction::ReadMemoryByte  ###############
+*   Purpose....: Read byte                                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TBusFunction::ReadMemoryByte(int Num, unsigned long Offset)
+{
+    TBusAreaData *area;
+
+    area = FMemArr[Num];
+    if (area)
+        if (area->Data && Offset >= 0 && Offset < area->Size)
+            return *(area->Data + Offset);
+
+    return 0xFF;
+}
+
 /*##################  TBusFunction::DefineIo  ###############
 *   Purpose....: Define an io area                                                                          #
 *   In params..: *                                                          #
@@ -456,4 +475,26 @@ char TBus::In(int Port)
                                 return area->func->In(area->Num, Port - area->Base);
         }
         return 0xFF;
+}
+
+/*##################  TBus::ReadMemoryByte  ###############
+*   Purpose....: Perform read memory byte                                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TBus::ReadMemoryByte(unsigned long long Address)
+{
+    TBusArea *area;
+    int i;
+
+    for (i = 0; i <= FHookMemMax; i++)
+    {
+        area = FHookMemArr[i];
+        if (area)
+             if (area->Base <= Address && area->Base + area->Size - 1 >= Address)
+                return area->func->ReadMemoryByte(area->Num, Address - area->Base);
+    }
+    return 0xFF;
 }
