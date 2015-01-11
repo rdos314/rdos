@@ -240,6 +240,9 @@ ReadPhysical Proc near
         cmp ecx,1
         je rpByte
 ;
+        cmp ecx,2
+        je rpWord
+;        
         jmp rpOther
 
 rpByte:
@@ -250,6 +253,37 @@ rpByte:
         call _ReadMemoryByte
         mov [esi],al
         ret
+
+rpWord:
+        test bl,1
+        jnz rpWord2
+;
+        inc [ebp].mem_count
+        push edi
+        push ebx
+        push ebp
+        call _ReadMemoryWord
+        mov [esi],ax
+        ret
+
+rpWord2:
+        add [ebp].mem_count,2
+        mov eax,ebx
+        inc eax
+        push edi
+        push eax
+        push ebp
+;
+        push edi
+        push ebx
+        push ebp
+        call _ReadMemoryByte
+        mov [esi],al
+        inc esi
+;
+        call _ReadMemoryByte
+        mov [esi],al
+        ret                
 
 rpOther:        
         inc [ebp].mem_count
