@@ -262,6 +262,7 @@ public:
     void WriteMemoryQword(unsigned long long Address, long long val);
 
     char ReadIoByte(unsigned short int Port);
+    short int ReadIoWord(unsigned short int Port);
 
     void ReadFromIo(void *Buffer, unsigned short int Port, int Size);
     void WriteToIo(void *Buffer, unsigned short int Port, int Size);
@@ -283,6 +284,7 @@ public:
     void (*OnWriteMemoryQword)(TCpu *Cpu, unsigned long long Address, long long val);
 
     char (*OnReadIoByte)(TCpu *Cpu, unsigned short Port);
+    short int (*OnReadIoWord)(TCpu *Cpu, unsigned short Port);
     
     char (*OnReadFromIo)(TCpu *Cpu, unsigned short Port);
     void (*OnWriteToIo)(TCpu *Cpu, unsigned short Port, char Value);

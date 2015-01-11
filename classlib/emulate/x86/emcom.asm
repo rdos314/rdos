@@ -34,6 +34,7 @@ include \rdos\classlib\emulate\x86\empage.inc
 include \rdos\classlib\emulate\x86\emtss.inc
 
         extrn _ReadIoByte:near
+        extrn _ReadIoWord:near
 
         extrn _ReadFromIo:near
         extrn _WriteToIo:near
@@ -1209,6 +1210,9 @@ InPort Proc near
         cmp ecx,1
         je ipByte
 ;
+        cmp ecx,2
+        je ipWord
+;        
         jmp ipOther
 
 ipByte:
@@ -1218,7 +1222,35 @@ ipByte:
         call _ReadIoByte
         mov [esi],al
         ret
-        
+
+ipWord:
+        test dx,1
+        jnz ipWord1
+;        
+        inc [ebp].io_count
+        push edx
+        push ebp
+        call _ReadIoWord
+        mov [esi],ax
+        ret
+
+ipWord1:
+        add [ebp].io_count,2
+        mov ax,dx
+        inc ax
+        push eax
+        push ebp
+;        
+        push edx
+        push ebp     
+        call _ReadIoByte
+        mov [esi],al
+        inc esi
+;
+        call _ReadIoByte
+        mov [esi],al
+        ret
+                
 ipOther:        
         inc [ebp].io_count
         push ecx

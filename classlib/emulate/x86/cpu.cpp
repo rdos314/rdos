@@ -89,8 +89,11 @@ void WriteMemoryDword(TCpuState *CpuState, unsigned long long Address, long val)
 void WriteMemoryQword(TCpuState *CpuState, unsigned long long Address, long long val);
 #pragma aux (EMAPI) WriteMemoryQword;
 
-void ReadIoByte(TCpuState *CpuState, unsigned short int Port);
+char ReadIoByte(TCpuState *CpuState, unsigned short int Port);
 #pragma aux (EMAPI) ReadIoByte;
+
+short int ReadIoWord(TCpuState *CpuState, unsigned short int Port);
+#pragma aux (EMAPI) ReadIoWord;
 
 void ReadFromIo(TCpuState *CpuState, void *Buffer, unsigned short int Port, int Size);
 #pragma aux (EMAPI) ReadFromIo;
@@ -260,9 +263,21 @@ void WriteMemoryQword(TCpuState *CpuState, unsigned long long Address, long long
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void ReadIoByte(TCpuState *CpuState, unsigned short Port)
+char ReadIoByte(TCpuState *CpuState, unsigned short Port)
 {
-    CpuState->Cpu->ReadIoByte(Port);
+    return CpuState->Cpu->ReadIoByte(Port);
+}
+
+/*##################  ReadIoWord  ###############
+*   Purpose....: Read word from IO                                                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+short int ReadIoWord(TCpuState *CpuState, unsigned short Port)
+{
+    return CpuState->Cpu->ReadIoWord(Port);
 }
 
 /*##################  ReadFromIo  ###############
@@ -439,6 +454,8 @@ TCpu::TCpu()
         OnWriteMemoryDword = 0;
         OnWriteMemoryQword = 0;
         
+        OnReadIoByte = 0;
+        OnReadIoWord = 0;
         
         OnReadFromIo = 0;
         OnWriteToIo = 0;
@@ -780,6 +797,21 @@ char TCpu::ReadIoByte(unsigned short Port)
         return (*OnReadIoByte)(this, Port);
     else
         return 0xFF;
+}
+
+/*##################  TCpu::ReadIoWord  ###############
+*   Purpose....: Read word from IO                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+short int TCpu::ReadIoWord(unsigned short Port)
+{
+    if (OnReadIoWord)
+        return (*OnReadIoWord)(this, Port);
+    else
+        return 0xFFFF;
 }
 
 /*##################  TCpu::ReadFromIo  ###############

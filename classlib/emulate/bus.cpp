@@ -243,6 +243,22 @@ char TBusFunction::InByte(int Num, int Offset)
     return In(Num, Offset);
 }
 
+/*##################  TBusFunction::InWord  ###############
+*   Purpose....: In word from data block                                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+short int TBusFunction::InWord(int Num, int Offset)
+{
+    unsigned short int val;
+
+    val = (unsigned short int)In(Num, Offset) & 0xFF;
+    val |= ((unsigned short int)In(Num, Offset + 1) << 8) & 0xFF00;
+    return val;
+}
+
 /*##################  TBusFunction::DefineIo  ###############
 *   Purpose....: Define an io area                                                                          #
 *   In params..: *                                                          #
@@ -735,4 +751,26 @@ char TBus::InByte(int Port)
                                 return area->func->InByte(area->Num, Port - area->Base);
         }
         return 0xFF;
+}
+
+/*##################  TBus::InWord  ###############
+*   Purpose....: Perform in instruction                                                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+short int TBus::InWord(int Port)
+{
+        TBusArea *area;
+        int i;
+
+        for (i = 0; i <= FHookIoMax; i++)
+        {
+                area = FHookIoArr[i];
+                if (area)
+                        if (area->Base <= Port && area->Base + area->Size > Port)
+                                return area->func->InWord(area->Num, Port - area->Base);
+        }
+        return 0xFFFF;
 }
