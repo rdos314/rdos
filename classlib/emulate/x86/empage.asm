@@ -242,6 +242,9 @@ ReadPhysical Proc near
 ;
         cmp ecx,2
         je rpWord
+;
+        cmp ecx,4
+        je rpDword
 ;        
         jmp rpOther
 
@@ -256,7 +259,7 @@ rpByte:
 
 rpWord:
         test bl,1
-        jnz rpWord2
+        jnz rpWord1
 ;
         inc [ebp].mem_count
         push edi
@@ -266,7 +269,7 @@ rpWord:
         mov [esi],ax
         ret
 
-rpWord2:
+rpWord1:
         add [ebp].mem_count,2
         mov eax,ebx
         inc eax
@@ -284,6 +287,69 @@ rpWord2:
         call _ReadMemoryByte
         mov [esi],al
         ret                
+
+rpDword:
+        test bl,1
+        jnz rpDword1
+;
+        test bl,2
+        jnz rpDword2
+;        
+        inc [ebp].mem_count
+        push edi
+        push ebx
+        push ebp
+        call _ReadMemoryDword
+        mov [esi],eax
+        ret
+
+rpDword2:
+        add [ebp].mem_count,2
+        mov eax,ebx
+        add eax,2
+        push edi
+        push eax
+        push ebp
+;
+        push edi
+        push ebx
+        push ebp
+        call _ReadMemoryWord
+        mov [esi],ax
+        add esi,2
+;
+        call _ReadMemoryWord
+        mov [esi],ax
+        ret                
+
+rpDword1:
+        push ebx
+        push edi
+        push ebx
+        push ebp
+        call _ReadMemoryByte
+        pop ebx
+        mov [esi],al
+;
+        inc esi
+        inc ebx        
+;
+        mov eax,ebx
+        add eax,2
+        push edi
+        push eax
+        push ebp
+;
+        push edi
+        push ebx
+        push ebp
+        call _ReadMemoryWord
+        mov [esi],ax
+        add esi,2
+;        
+        call _ReadMemoryByte
+        mov [esi],al
+        ret        
 
 rpOther:        
         inc [ebp].mem_count
