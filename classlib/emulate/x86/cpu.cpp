@@ -1300,6 +1300,63 @@ void TCpu::ShowCpu32()
     printf(" CR3=%08lX", (long)CpuState.Reg_cr3);
     printf(" CR4=%08lX", (long)CpuState.Reg_cr4);
     printf("\r\n");
+
+    if (CpuState.Reg_cr0 & 0x1)
+    {
+        if (CpuState.Reg_eflags & 0x20000)
+            printf("VM ");
+        else
+            printf("PM ");
+    }
+    else
+        printf("RM ");
+
+    if (CpuState.Reg_eflags & 0x1)
+        printf("CY ");
+    else
+        printf("NC ");
+
+    if (CpuState.Reg_eflags & 0x20)
+        printf("ZR ");
+    else
+        printf("NZ ");
+
+    if (CpuState.Reg_eflags & 0x40)
+        printf("NG ");
+    else
+        printf("PL ");
+
+    if (CpuState.Reg_eflags & 0x200)
+        printf("EI ");
+    else
+        printf("DI ");
+
+    if (CpuState.Reg_eflags & 0x400)
+        printf("DN ");
+    else
+        printf("UP ");
+
+    if (CpuState.Reg_eflags & 0x800)
+        printf("OV ");
+    else
+        printf("NV ");
+
+    if (CpuState.Reg_eflags & 0x4000)
+        printf("NT ");
+    else
+        printf("PR ");
+
+    if (CpuState.Reg_cr0 & 0x80000000)
+    {
+        if (CpuState.Reg_cr4 & 0x20)
+            printf("PAE ");
+        else
+            printf("PE ");
+    }
+    else
+        printf("PD ");
+
+    printf("\r\n");
     
     WriteRegs(&CpuState);
 }
