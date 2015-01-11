@@ -1222,6 +1222,46 @@ void TCpu::ShowFpu()
         WriteFpuRegs(&CpuState);
 }
 
+/*##################  TCpu::ShowDescriptor  ###############
+*   Purpose....: Show descriptor                                                                             #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::ShowDescriptor(const char *str, TDescriptor *des)
+{
+    int rpl;
+    int typ;
+
+    printf(str);
+    printf(" SELECTOR=%04lX ", des->selector);
+
+    if (des->access & 0x60)
+    {
+        printf("BASE=%08lX LIMIT=%08lX ", des->base, des->limit);
+
+        rpl = des->access & 3;
+        printf("RPL=%d ", rpl);
+
+        if (des->access & 0x10)
+            printf("DN ");
+            
+        if (des->access & 0x20)
+            printf("RD ");
+
+        if (des->access & 0x40)
+            printf("WR ");
+
+        if (des->access & 0x80)
+            printf("32-BIT\r\n");
+        else
+            printf("16-BIT\r\n");
+    }
+    else
+        printf("INVALID\r\n");
+}
+
 /*##################  TCpu::ShowCpu32  ###############
 *   Purpose....: Show 32-bit CPU registers                                                                             #
 *   In params..: *                                                          #
@@ -1233,6 +1273,15 @@ void TCpu::ShowCpu32()
 {
     printf("GDT BASE=%08lX LIMIT=%04lX\r\n", CpuState.Reg_gdt.base, CpuState.Reg_gdt.limit);
     printf("IDT BASE=%08lX LIMIT=%04lX\r\n", CpuState.Reg_idt.base, CpuState.Reg_idt.limit);
+
+    ShowDescriptor(" TR", &CpuState.Reg_tr);
+    ShowDescriptor("LDT", &CpuState.Reg_ldt);
+    ShowDescriptor(" ES", &CpuState.Reg_es);
+    ShowDescriptor(" CS", &CpuState.Reg_cs);
+    ShowDescriptor(" SS", &CpuState.Reg_ss);
+    ShowDescriptor(" DS", &CpuState.Reg_ds);
+    ShowDescriptor(" FS", &CpuState.Reg_fs);
+    ShowDescriptor(" GS", &CpuState.Reg_gs);
 
     WriteRegs(&CpuState);
 }

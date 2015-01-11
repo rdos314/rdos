@@ -238,6 +238,7 @@ public:
     void ShowInstruction(int Count);
     void ShowPreviousInstruction();
 
+    void ShowDescriptor(const char *str, TDescriptor *des);
     void ShowCpu32();
     void ShowExecTime();
 
