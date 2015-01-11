@@ -305,7 +305,6 @@ TCpu::TCpu()
         OnWriteToMemory = 0;
         OnReadFromIo = 0;
         OnWriteToIo = 0;
-        FUpdateCycles = FALSE;
         Reset();
         CpuState.CpuType = 5;
         CpuState.EflagsMask = 0x3FFFD7;
@@ -1002,7 +1001,7 @@ void TCpu::Show()
         DisAssemble(&CpuState);
         WriteFpuRegs(&CpuState);
         WriteRegs(&CpuState);
-        WriteCycles();
+        ShowExecTime();
 }
 
 /*##################  TCpu::ShowFpu  ###############
@@ -1017,14 +1016,14 @@ void TCpu::ShowFpu()
         WriteFpuRegs(&CpuState);
 }
 
-/*##################  TCpu::WriteCycles  ###############
-*   Purpose....: Write cycles                                                                                   #
+/*##################  TCpu::ShowExecTime  ###############
+*   Purpose....: Show execution time                                                                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TCpu::WriteCycles()
+void TCpu::ShowExecTime()
 {
     long long val;
     int remain;
@@ -1082,6 +1081,8 @@ void TCpu::WriteCycles()
         strcpy(str, "       ");
         str[7] = ' ';
     }
+
+    printf("Execution time: ");
     printf(str);
     printf("\r\n");
 }

@@ -235,6 +235,8 @@ public:
     void ShowInstruction(int Count);
     void ShowPreviousInstruction();
 
+    void ShowExecTime();
+
     void SetInt(TInterrupt *Interrupt);
     void ResetInt(TInterrupt *Interrupt);
     char AckInt();
@@ -265,12 +267,9 @@ public:
     void (*OnWriteToIo)(TCpu *Cpu, unsigned short Port, char Value);
     void (*OnSysCall)(TCpu *Cpu);
 
-    int FUpdateCycles;
     TInterrupt *FInterrupt;
 
 protected:
-    void WriteCycles();
-
     int EmulateOne();
     virtual void NotifyIdle();
     virtual void NotifySetClk();
