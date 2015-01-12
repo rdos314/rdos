@@ -1158,8 +1158,12 @@ void TCpu::ShowFpu()
     short int tag;
 
     reg = (CpuState.MathStatus >> 11) & 7;
+    if (reg)
+        reg--;
+    else
+        reg = 0;
        
-    for (i = 0; i < 8; i++)
+    for (i = 7; i >= 0; i--)
     {
         mask = 0x3 << 2 * reg;
         tag = CpuState.Tag & mask;
@@ -1190,10 +1194,10 @@ void TCpu::ShowFpu()
         printf("\r\n");
 
 
-        if (reg < 7)
-            reg++;
+        if (reg)
+            reg--;
         else
-            reg = 0;
+            reg = 7;
     }
 }
 
