@@ -56,9 +56,6 @@ void DisAssemble(TCpuState *CpuState);
 void WriteRegs(TCpuState *CpuState);
 #pragma aux (EMAPI) WriteRegs;
 
-void WriteFpuRegs(TCpuState *CpuState);
-#pragma aux (EMAPI) WriteFpuRegs;
-
 void FormatFpuReg(const char *Reg, char *Buf);
 #pragma aux (EMAPI) FormatFpuReg;
 
