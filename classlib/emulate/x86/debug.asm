@@ -89,9 +89,6 @@ WriteInstr      Proc near
 
         call    Blank
 ;                                       ##GIL END##     
-        lea     edi,[ebp].opcode_text
-        call    WriteAsciiz
-        call    NewLine
         ret
 WriteInstr      ENDP
 

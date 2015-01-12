@@ -1116,6 +1116,7 @@ void TCpu::Show()
 {
     ShowFpu();
     ShowCpu();
+    ShowInstruction();
     ShowExecTime();
 }
 
