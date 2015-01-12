@@ -59,6 +59,9 @@ void WriteRegs(TCpuState *CpuState);
 void WriteFpuRegs(TCpuState *CpuState);
 #pragma aux (EMAPI) WriteFpuRegs;
 
+void FormatFpuReg(const char *Reg, char *Buf);
+#pragma aux (EMAPI) FormatFpuReg;
+
 void Emulate(TCpuState *CpuState);
 #pragma aux (EMAPI) Emulate;
 
@@ -454,7 +457,7 @@ void TCpuState::Reset()
 
         CodeStart = 0xFFFFFFFFFFFFFFFF;
 
-        Tag = 0; 
+        Tag = 0xFFFF; 
         MathControl = 0;
         MathStatus = 0;
 
@@ -1205,7 +1208,7 @@ void TCpu::ShowData()
 void TCpu::Show()
 {
     DisAssemble(&CpuState);
-    WriteFpuRegs(&CpuState);
+    ShowFpu();
     ShowCpu32();
     ShowExecTime();
 }
@@ -1219,7 +1222,51 @@ void TCpu::Show()
 *##########################################################################*/
 void TCpu::ShowFpu()
 {
-        WriteFpuRegs(&CpuState);
+    char str[40];
+    int top;
+    int i;
+    int reg;
+    short int mask;
+    short int tag;
+
+    reg = (CpuState.MathStatus >> 11) & 7;
+       
+    for (i = 0; i < 8; i++)
+    {
+        mask = 0x3 << 2 * reg;
+        tag = CpuState.Tag & mask;
+        tag = tag >> (2 * reg);
+        tag = tag & 3;
+
+        printf("ST(%d)=", i);
+
+        switch (tag)
+        {
+            case 0:
+                FormatFpuReg(CpuState.st[reg], str);
+                printf(str);
+                break;
+
+            case 1:
+                printf("Zero");
+                break;
+
+            case 2:
+                printf("NaN");
+                break;
+
+            case 3:
+                printf("Empty");
+                break;
+        }
+        printf("\r\n");
+
+
+        if (reg < 7)
+            reg++;
+        else
+            reg = 0;
+    }
 }
 
 /*##################  TCpu::ShowDescriptor  ###############
