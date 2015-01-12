@@ -235,11 +235,9 @@ public:
     void Show();
     void ShowFpu();
     void ShowData();
-    void ShowInstruction(int Count);
-    void ShowPreviousInstruction();
 
-    void ShowDescriptor(const char *str, TDescriptor *des);
-    void ShowCpu32();
+    void ShowCpu();
+    void ShowInstruction();
     void ShowExecTime();
 
     void SetInt(TInterrupt *Interrupt);
@@ -301,6 +299,7 @@ public:
     TInterrupt *FInterrupt;
 
 protected:
+    void ShowDescriptor(const char *str, TDescriptor *des);
     int EmulateOne();
 
     TLocation *FBreakpoints[MAX_BREAKPOINTS];

@@ -110,24 +110,6 @@ void WriteIoDword(TCpuState *CpuState, unsigned short int Port, long val);
 void SysCall(TCpuState *CpuState);
 #pragma aux (EMAPI) SysCall;
 
-void Dis_ass_more(TCpuState *CpuState, unsigned long count);
-#pragma aux (EMAPI) Dis_ass_more;
-
-void initbuffer(void *buffer, unsigned long count);
-#pragma aux (EMAPI) initbuffer;
-
-void getvalue(TCpuState *CpuState);
-#pragma aux (EMAPI) getvalue;
-
-void setvalue(TLocation *position);
-#pragma aux (EMAPI) setvalue;
-
-void init_follow();            /* to initiate the follow procedure */
-#pragma aux (EMAPI) init_follow;
-
-void showdata(TCpuState *CpuState);  /* print ata on the screen */
-#pragma aux (EMAPI) showdata;
-
 };
 
 /*##################  GetIntVector  ###############
@@ -488,7 +470,6 @@ TCpu::TCpu()
         FTotalNs = 0;
 
         debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
-        initbuffer(buffer_val,COUNTBUFFER); /* initialise le buffer*/
 
         OnExtClk = 0;
         OnSysCall = 0;
@@ -1124,77 +1105,6 @@ void TCpu::Go()
         }
 }
 
-/*##################  TCpu::Disassemble  ###############
-*   Purpose....:  Disassemble 20 instruction                                #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 01-05-20                                                   #
-*##########################################################################*/
-void TCpu::ShowInstruction(int Count)
-{
-        TCpuState Cpu_backup;
-
-        debugflag = INSTRUCTION_CODE_ONLY;
-        Cpu_backup = CpuState;
-        if (NewCs == 0)
-                Dis_ass_more(&CpuState, Count);
-        else
-        {
-                CpuState.Reg_cs.selector = NewCs;
-                CpuState.Reg_eip = NewEip;
-                
-        Dis_ass_more(&CpuState, Count);
-        }       
-        
-        CpuState = Cpu_backup;
-    debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
-}
-
-/*##################  TCpu::ShowPreviousInstruction  ###############
-*   Purpose....:  Disassemble previous instruction                  #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 01-05-20                                                   #
-*##########################################################################*/
-void TCpu::ShowPreviousInstruction()
-{
-        TCpuState Cpu_backup;
-
-        debugflag = INSTRUCTION_CODE_ONLY;
-        Cpu_backup = CpuState;     
-        getvalue(&CpuState);
-        CpuState = Cpu_backup;
-    debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
-}
-
-/*##################  TCpu::ShowData  ###############
-*   Purpose....:  print data on the screnn
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 17-06-2001                                                   #
-*##########################################################################*/
-void TCpu::ShowData()
-{
-        TCpuState Cpu_backup;
-
-        Cpu_backup = CpuState;             /* save Cpu context*/
-        if (NewCs == 0)
-                showdata(&CpuState);
-        else
-        {
-                CpuState.Reg_gs.selector = NewCs;
-                CpuState.Reg_esi = NewEip;
-                
-        showdata(&CpuState);
-        }       
-
-        CpuState = Cpu_backup;
-    debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
-}
-
 /*##################  TCpu::Show  ###############
 *   Purpose....: Show registers                                                                             #
 *   In params..: *                                                          #
@@ -1204,10 +1114,25 @@ void TCpu::ShowData()
 *##########################################################################*/
 void TCpu::Show()
 {
-    DisAssemble(&CpuState);
     ShowFpu();
-    ShowCpu32();
+    ShowCpu();
     ShowExecTime();
+}
+
+/*##################  TCpu::ShowInstruction  ###############
+*   Purpose....: Show current instruction                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::ShowInstruction()
+{
+    DisAssemble(&CpuState);    
+    WriteRegs(&CpuState);
+
+    printf(CpuState.OpcodeText);
+    printf("\r\n");
 }
 
 /*##################  TCpu::ShowFpu  ###############
@@ -1306,14 +1231,14 @@ void TCpu::ShowDescriptor(const char *str, TDescriptor *des)
         printf("INVALID\r\n");
 }
 
-/*##################  TCpu::ShowCpu32  ###############
-*   Purpose....: Show 32-bit CPU registers                                                                             #
+/*##################  TCpu::ShowCpu  ###############
+*   Purpose....: Show CPU registers                                                                             #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TCpu::ShowCpu32()
+void TCpu::ShowCpu()
 {
     printf("GDT BASE=%08lX LIMIT=%04lX\r\n", CpuState.Reg_gdt.base, CpuState.Reg_gdt.limit);
     printf("IDT BASE=%08lX LIMIT=%04lX\r\n", CpuState.Reg_idt.base, CpuState.Reg_idt.limit);
@@ -1402,8 +1327,6 @@ void TCpu::ShowCpu32()
 
     int iopl = ((CpuState.Reg_eflags) >> 12) & 0x3;
     printf("IOPL=%d\r\n", iopl);
-    
-    WriteRegs(&CpuState);
 }
 
 /*##################  TCpu::ShowExecTime  ###############

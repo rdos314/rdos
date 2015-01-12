@@ -40,7 +40,6 @@ include \rdos\classlib\emulate\x86\em387.inc
 
 .code
 
-   extrn _setvalue:near
    extrn _GetIntVector:near
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -332,12 +332,6 @@ void Start()
                 RdosReadKeyboard();
                 break;
 
-            case 'd':
-            case 'D':
-                Cpu.ShowData();
-                RdosReadKeyboard();
-                break;
-
             case 'q':
             case 'Q':
                 return;
@@ -357,17 +351,6 @@ void Start()
                 Cpu.Go();
                 break;
 
-            case 'u':
-            case 'U':
-                Cpu.ShowInstruction(20);
-                RdosReadKeyboard();
-                break;
-
-            case 'b':
-            case 'B':
-                Cpu.ShowPreviousInstruction();
-                RdosReadKeyboard();
-                break;
         }
     }
 }
