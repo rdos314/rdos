@@ -593,5 +593,48 @@ fl_c3_zero:
         pop ds
         ret
 FloatToString   ENDP
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;        NAME:           _FormatFpuReg
+;
+;       DESCRIPTION:    Create string for FPU register
+;
+;       PARAMETERS:     Fpu reg
+;                       String (36+ byte long)
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public _FormatFpuReg
+
+_FormatFpuReg Proc near
+    push ebp
+    mov ebp,esp
+    pushad
+;        
+    mov esi,[ebp+8]
+    mov edi,[ebp+12]
+;        
+    finit
+    fld tbyte ptr [esi]
+;
+    push edi        
+    mov al,' '
+    mov ecx,35
+    rep stosb
+    xor al,al
+    stosb
+    pop edi
+;        
+    mov ecx,35
+    mov dl,18
+    call FloatToString
+;    
+    popad
+    pop ebp
+    ret 8
+_FormatFpuReg Endp
 
         END
