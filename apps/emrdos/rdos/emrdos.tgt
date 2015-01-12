@@ -67,8 +67,8 @@ r????Include directories:
 1
 17
 WString
-163
-"\rdos\kernel;\rdos\classlib;\rdos\classlib\rdos;\rdos\classlib\emulate;\rdos\classlib\emulate\pc;\rdos\classlib\emulate\x86;..\emrem;$(%watcom)/h;$(%watcom)/rdos"
+170
+"..\;\rdos\kernel;\rdos\classlib;\rdos\classlib\rdos;\rdos\classlib\emulate;\rdos\classlib\emulate\x86;\rdos\classlib\emulate\pc;..\..\emrem;$(%watcom)/h;$(%watcom)/rdos"
 0
 18
 WVList
@@ -79,8 +79,8 @@ WVList
 0
 19
 MItem
-10
-emrdos.cpp
+13
+..\emrdos.cpp
 20
 WString
 6
@@ -115,8 +115,8 @@ WVList
 0
 27
 MItem
-39
-..\..\classlib\emulate\rdos\emulate.lib
+42
+..\..\..\classlib\emulate\rdos\emulate.lib
 28
 WString
 3
@@ -133,8 +133,8 @@ WVList
 0
 31
 MItem
-28
-..\..\classlib\rdos\rdos.lib
+31
+..\..\..\classlib\rdos\rdos.lib
 32
 WString
 3
