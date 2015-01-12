@@ -581,7 +581,13 @@ setup_global_paging Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+exam:  DT 2.3456
+
 init:
+    fldpi
+    fld1
+    fld cs:exam
+    
     mov ax,flat_sel
     mov ds,ax
 ;
