@@ -2775,6 +2775,8 @@ PAGE
 ;               PARAMETERS:     CPU
 ;                               Code size (0 = 16, 1 = 32)
 ;
+;               RETURNS:        Instruction size
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
         public _DisAsmCodeCache
@@ -2782,7 +2784,11 @@ PAGE
 _DisAsmCodeCache     PROC near
         push ebp
         mov ebp,esp
-        pushad
+        push ebx
+        push ecx
+        push edx
+        push esi
+        push edi
 ;
         mov ebp,[ebp+8]        
         mov edx,[ebp+12]
@@ -2822,9 +2828,13 @@ dis_ass_code_ok:
         pop ecx
         sub ecx,OFFSET op_in_code
         inc ecx
-        mov     op_code_size,ecx
+        mov eax,ecx
 ;        
-        popad
+        pop edi
+        pop esi
+        pop edx
+        pop ecx
+        pop ebx
         pop ebp
         ret 8
 _DisAsmCodeCache     ENDP

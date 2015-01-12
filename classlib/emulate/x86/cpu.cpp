@@ -53,7 +53,7 @@ void FillCache(TCpuState *CpuState, unsigned long long Address);
 void ReadInstruction(TCpuState *CpuState);
 #pragma aux (EMAPI) ReadInstruction;
 
-void DisAsmCodeCache(TCpuState *CpuState, int Bitness);
+int DisAsmCodeCache(TCpuState *CpuState, int Bitness);
 #pragma aux (EMAPI) DisAsmCodeCache;
 
 void WriteRegs(TCpuState *CpuState);
@@ -1133,7 +1133,12 @@ void TCpu::Show()
 void TCpu::ShowInstruction()
 {
     int codesize;
+    int size;
+    int i;
+    int ok;
+    unsigned long long Base;
 
+    memset(CpuState.CodeCache, 0, 0x20);
     FillCache(&CpuState, CpuState.Reg_cs.base + CpuState.Reg_eip);
 
     if (CpuState.Reg_cs.access & 0x80)
@@ -1141,12 +1146,86 @@ void TCpu::ShowInstruction()
     else
          codesize = 0;
 
-    DisAsmCodeCache(&CpuState, codesize);    
+    size = DisAsmCodeCache(&CpuState, codesize);    
 
-    WriteRegs(&CpuState);
+    printf("%04lX:%08lX ", CpuState.Reg_cs.selector, CpuState.Reg_eip);
+    for (i = 0; i < size; i++)
+        printf("%02hX ", CpuState.CodeCache[i]);
+
+    while (i < 10)
+    {
+        printf("   ");
+        i++;
+    }
 
     printf(CpuState.OpcodeText);
     printf("\r\n");
+
+    if (CpuState.DataValid)
+    {
+        ok = FALSE;
+        
+        if (CpuState.Reg_cs.selector == CpuState.DataSelector)
+        {
+            Base = CpuState.Reg_cs.base;
+            size = CpuState.Reg_cs.limit;
+            ok = TRUE;
+        }
+        
+        if (CpuState.Reg_ss.selector == CpuState.DataSelector)
+        {
+            Base = CpuState.Reg_ss.base;
+            size = CpuState.Reg_ss.limit;
+            ok = TRUE;
+        }
+        
+        if (CpuState.Reg_ds.selector == CpuState.DataSelector)
+        {
+            Base = CpuState.Reg_ds.base;
+            size = CpuState.Reg_ds.limit;
+            ok = TRUE;
+        }
+        
+        if (CpuState.Reg_es.selector == CpuState.DataSelector)
+        {
+            Base = CpuState.Reg_es.base;
+            size = CpuState.Reg_es.limit;
+            ok = TRUE;
+        }
+        
+        if (CpuState.Reg_fs.selector == CpuState.DataSelector)
+        {
+            Base = CpuState.Reg_fs.base;
+            size = CpuState.Reg_fs.limit;
+            ok = TRUE;
+        }
+        
+        if (CpuState.Reg_gs.selector == CpuState.DataSelector)
+        {
+            Base = CpuState.Reg_gs.base;
+            size = CpuState.Reg_gs.limit;
+            ok = TRUE;
+        }
+
+        if (ok)
+        {
+            Base += CpuState.DataOffset;
+            memset(CpuState.CodeCache, 0, 0x20);
+            FillCache(&CpuState, Base);
+            
+            printf("%04lX:%08lX ", CpuState.DataSelector, CpuState.DataOffset);
+
+            size -= CpuState.DataOffset;
+            if (size >= 16)
+                size = 16;
+            else
+                size++;
+            
+            for (i = 0; i < size; i++)
+                printf("%02hX ", CpuState.CodeCache[i]);            
+        }
+        printf("\r\n");
+    }
 }
 
 /*##################  TCpu::ShowFpu  ###############
