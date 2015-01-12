@@ -1741,4 +1741,55 @@ OutDwordDo:
         ret
 OutDword        Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           FillCache
+;
+;               DESCRIPTION:    Fill code cache
+;
+;               PARAMETERS:     CPU data
+;                               Linear address
+;
+;               RETURNS:        Data size read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public _FillCache
+
+_FillCache    Proc near
+        push ebp
+        mov ebp,esp
+;        
+        push ebx
+        push ecx
+        push edx
+        push esi
+        push edi
+;
+        mov ebx,[ebp+12]
+        mov edi,[ebp+16]
+        mov ebp,[ebp+8]        
+;
+        mov [ebp].code_start,ebx
+        mov [ebp].code_start+4,edi
+;
+        mov ecx,20h
+        call CondReadLinear
+;      
+        mov eax,ecx
+        lea esi,[ebp].req_buf
+        lea edi,[ebp].code_cache
+        rep movsb
+;
+        pop edi
+        pop esi
+        pop edx
+        pop ecx
+        pop ebx
+;
+        pop ebp            
+        ret 12
+_FillCache    Endp
+
         END

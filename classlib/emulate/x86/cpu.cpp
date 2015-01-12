@@ -47,6 +47,9 @@ TLocation       buffer_val[COUNTBUFFER];
 
 extern "C" {
 
+void FillCache(TCpuState *CpuState, unsigned long long Address);
+#pragma aux (EMAPI) FillCache;
+
 void ReadInstruction(TCpuState *CpuState);
 #pragma aux (EMAPI) ReadInstruction;
 
@@ -1129,6 +1132,8 @@ void TCpu::Show()
 *##########################################################################*/
 void TCpu::ShowInstruction()
 {
+    FillCache(&CpuState, CpuState.Reg_cs.base + CpuState.Reg_eip);
+
     DisAssemble(&CpuState);    
     WriteRegs(&CpuState);
 
