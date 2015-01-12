@@ -53,8 +53,8 @@ void FillCache(TCpuState *CpuState, unsigned long long Address);
 void ReadInstruction(TCpuState *CpuState);
 #pragma aux (EMAPI) ReadInstruction;
 
-void DisAssemble(TCpuState *CpuState);
-#pragma aux (EMAPI) DisAssemble;
+void DisAsmCodeCache(TCpuState *CpuState, int Bitness);
+#pragma aux (EMAPI) DisAsmCodeCache;
 
 void WriteRegs(TCpuState *CpuState);
 #pragma aux (EMAPI) WriteRegs;
@@ -1132,9 +1132,17 @@ void TCpu::Show()
 *##########################################################################*/
 void TCpu::ShowInstruction()
 {
+    int codesize;
+
     FillCache(&CpuState, CpuState.Reg_cs.base + CpuState.Reg_eip);
 
-    DisAssemble(&CpuState);    
+    if (CpuState.Reg_cs.access & 0x80)
+        codesize = 1;
+    else
+         codesize = 0;
+
+    DisAsmCodeCache(&CpuState, codesize);    
+
     WriteRegs(&CpuState);
 
     printf(CpuState.OpcodeText);

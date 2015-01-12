@@ -31,62 +31,9 @@
 include \rdos\classlib\emulate\x86\emulate.inc
 include \rdos\classlib\emulate\x86\empage.inc
 
-   extrn dis_ass_one:near
    extrn op_code_size:dword
-   extrn _WriteRegs:near
 
 .code
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:                   DisAssemble_
-;
-;               DESCRIPTION:    Disassemble current instruction
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-        public _DisAssemble
-
-_DisAssemble     Proc near
-        push ebp
-        mov ebp,esp
-        pushad
-        mov ebp,[ebp+8]
-        mov [ebp].opcode_text,0
-;
-        mov esi,OFFSET reg_cs
-        test word ptr [ebp+esi].d_access,ACCESS_SIZE
-        jz disass_byte16
-
-disass_byte32:
-        mov ebx,[ebp].reg_eip
-        jmp disass_read
-
-disass_byte16:
-        movzx ebx,word ptr [ebp].reg_eip
-
-disass_read:
-        mov ecx,ebx
-        sub ecx,[ebp+esi].d_limit
-        ja disass_done
-;
-        neg ecx
-        inc ecx
-        cmp ecx,16
-        jb disass_read_linear
-        mov ecx,16
-
-disass_read_linear:
-        add ebx,[ebp+esi].d_base
-        xor edi,edi
-        call CondReadLinear
-        call dis_ass_one
-disass_done:
-        popad
-        pop ebp
-        ret 4
-_DisAssemble     Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

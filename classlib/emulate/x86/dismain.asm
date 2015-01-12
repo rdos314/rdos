@@ -2768,39 +2768,30 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   DIS_ASS_ONE
+;               NAME:           DisAsmCodeCache
 ;
-;               DESCRIPTION:    Disassemble one
+;               DESCRIPTION:    Disassemble code cache entry
 ;
-;               PARAMETERS:             ECX             Size of code
+;               PARAMETERS:     CPU
+;                               Code size (0 = 16, 1 = 32)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public dis_ass_one
+        public _DisAsmCodeCache
 
-dis_ass_one     PROC near
-        push eax
-        push ebx
-        push edx
-        push esi
-        push edi
+_DisAsmCodeCache     PROC near
+        push ebp
+        mov ebp,esp
+        pushad
 ;
-        lea esi,[ebp].req_buf
-        mov eax,ecx
+        mov ebp,[ebp+8]        
+        mov edx,[ebp+12]
+;        
+        lea esi,[ebp].code_cache
+        mov ecx,10h
         mov edi,OFFSET op_in_code
         rep movsb
-        mov ecx,10h
-        sub ecx,eax
-        xor al,al
-        rep stosb
 ;
-        xor edi,edi
-        test word ptr [ebp].reg_cs.d_access,ACCESS_SIZE
-        jz disass_one
-        mov edi,1
-
-disass_one:
-        mov edx,edi
         mov esi,OFFSET op_in_code
         mov al,[esi]
         movzx eax,al
@@ -2832,13 +2823,10 @@ dis_ass_code_ok:
         sub ecx,OFFSET op_in_code
         inc ecx
         mov     op_code_size,ecx
-        pop edi
-        add edi,ecx
-        pop esi
-        pop edx
-        pop ebx
-        pop eax
-        ret
-dis_ass_one     ENDP
+;        
+        popad
+        pop ebp
+        ret 8
+_DisAsmCodeCache     ENDP
 
         END 
