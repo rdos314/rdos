@@ -1791,5 +1791,55 @@ _FillCache    Proc near
         pop ebp            
         ret 12
 _FillCache    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   ReadInstruction
+;
+;               DESCRIPTION:    Read next instruction
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public _ReadInstruction
+
+_ReadInstruction Proc near
+        push ebp
+        mov ebp,esp
+        pushad
+        mov ebp,[ebp+8]
+;
+        mov esi,OFFSET reg_cs
+        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        jz read_instr_byte16
+
+read_instr_byte32:
+        mov ebx,[ebp].reg_eip
+        jmp read_instr_read
+
+read_instr_byte16:
+        movzx ebx,word ptr [ebp].reg_eip
+
+read_instr_read:
+        mov ecx,ebx
+        sub ecx,[ebp+esi].d_limit
+        ja read_instr_done
+;
+        neg ecx
+        inc ecx
+        cmp ecx,16
+        jb read_instr_linear
+        mov ecx,16
+
+read_instr_linear:      
+        add ebx,[ebp+esi].d_base
+        xor edi,edi
+        call CondReadLinear
+
+read_instr_done:
+        popad
+        pop ebp
+        ret 4
+_ReadInstruction Endp
 
         END
