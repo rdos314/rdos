@@ -2789,6 +2789,41 @@ IntFar  Proc near
         jz IntFarPm
 
 IntFarVm:
+        test [ebp].reg_cr4,1
+        jz IntFarVmComp
+;
+        push ax
+        mov eax,[ebp].reg_eflags
+        mov ebx,eax
+        and ebx,80000h
+        shr ebx,10
+        and ax,NOT 200h
+        or ax,bx        
+        call PushWord
+;
+        mov ax,[ebp].reg_cs.d_selector
+        call PushWord
+        mov ax,word ptr [ebp].reg_eip
+        call PushWord
+        pop bx
+        movzx ebx,bl
+        shl ebx,2
+        push edi
+        xor edi,edi
+        call ReadLinearDword
+        pop edi
+        movzx esi,ax
+        shr eax,16
+        mov bx,ax
+        mov [ebp].reg_cs.d_selector,bx
+        mov [ebp].reg_eip,esi
+        movzx ebx,bx
+        shl ebx,4
+        mov [ebp].reg_cs.d_base,ebx
+        and dword ptr [ebp].reg_eflags,NOT 80000h
+        ret
+
+IntFarVmComp:
         mov ecx,[ebp].reg_eflags
         and ecx,EFLAGS_IOPL
         cmp ecx,EFLAGS_IOPL
