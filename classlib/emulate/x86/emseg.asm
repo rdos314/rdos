@@ -2995,6 +2995,34 @@ IretFar16       Proc near
         jz IretFarPm16
 
 IretFarVm16:
+        test [ebp].reg_cr4,1
+        jz IretFarVm16Comp
+;
+        mov [ebp].reg_cs.d_selector,bx
+        mov [ebp].reg_eip,esi
+        movzx ebx,bx
+        shl ebx,4
+        mov [ebp].reg_cs.d_base,ebx
+;
+        call PopWord        
+        mov ebx,[ebp].reg_eflags
+        and ebx,NOT 80000h
+        mov bx,ax
+        mov eax,ebx
+;
+        and ebx,200h
+        shl ebx,10
+        or eax,ebx
+        and eax,[ebp].eflags_mask
+        or al,2
+        and ax,NOT 200h
+        mov bx,word ptr [ebp].reg_eflags
+        and bx,200h
+        or ax,bx
+        mov [ebp].reg_eflags,eax
+        ret
+
+IretFarVm16Comp:        
         mov ecx,[ebp].reg_eflags
         and ecx,EFLAGS_IOPL
         cmp ecx,EFLAGS_IOPL
