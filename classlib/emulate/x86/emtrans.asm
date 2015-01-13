@@ -1676,6 +1676,19 @@ EmPushf proc near
         test byte ptr [ebp].reg_eflags+2,2
         jz EmPushfDo
 ;
+        test [ebp].reg_cr4,1
+        jz EmPushfComp
+;
+        mov eax,[ebp].reg_eflags
+        mov ebx,eax
+        and ebx,80000h
+        shr ebx,10
+        and ax,NOT 200h
+        or ax,bx        
+        call PushWord
+        ret
+
+EmPushfComp:
         mov ecx,[ebp].reg_eflags
         and ecx,EFLAGS_IOPL
         cmp ecx,EFLAGS_IOPL
@@ -1693,6 +1706,19 @@ EmPushfd:
         test byte ptr [ebp].reg_eflags+2,2
         jz EmPushfdDo
 ;
+        test [ebp].reg_cr4,1
+        jz EmPushfdComp
+;
+        mov eax,[ebp].reg_eflags
+        mov ebx,eax
+        and ebx,80000h
+        shr ebx,10
+        and ax,NOT 200h
+        or ax,bx        
+        call PushDword
+        ret
+        
+EmPushfdComp:        
         mov ecx,[ebp].reg_eflags
         and ecx,EFLAGS_IOPL
         cmp ecx,EFLAGS_IOPL
@@ -1726,6 +1752,27 @@ EmPopf  proc near
         test byte ptr [ebp].reg_eflags+2,2
         jz EmPopfPm
 ;
+        test [ebp].reg_cr4,1
+        jz EmPopfComp
+;        
+        mov ebx,[ebp].reg_eflags
+        and ebx,NOT 80000h
+        mov bx,ax
+        mov eax,ebx
+;
+        and ebx,200h
+        shl ebx,10
+        or eax,ebx
+        and eax,[ebp].eflags_mask
+        or al,2
+        and ax,NOT 200h
+        mov bx,word ptr [ebp].reg_eflags
+        and bx,200h
+        or ax,bx
+        mov [ebp].reg_eflags,eax
+        ret
+
+EmPopfComp:
         mov ecx,[ebp].reg_eflags
         and ecx,EFLAGS_IOPL
         cmp ecx,EFLAGS_IOPL
@@ -1756,6 +1803,27 @@ EmPopfd:
         test byte ptr [ebp].reg_eflags+2,2
         jz EmPopfdPm
 ;
+        test [ebp].reg_cr4,1
+        jz EmPopfdComp
+;        
+        mov ebx,[ebp].reg_eflags
+        and ebx,NOT 80000h
+        mov bx,ax
+        mov eax,ebx
+;
+        and ebx,200h
+        shl ebx,10
+        or eax,ebx
+        and eax,[ebp].eflags_mask
+        or al,2
+        and ax,NOT 200h
+        mov bx,word ptr [ebp].reg_eflags
+        and bx,200h
+        or ax,bx
+        mov [ebp].reg_eflags,eax
+        ret
+
+EmPopfdComp:
         mov ecx,[ebp].reg_eflags
         and ecx,EFLAGS_IOPL
         cmp ecx,EFLAGS_IOPL

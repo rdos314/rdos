@@ -195,6 +195,13 @@ EmCli   proc near
         test byte ptr [ebp].reg_eflags+2,2
         jz EmCliPm
 ;
+        test [ebp].reg_cr4,1
+        jz EmCliComp
+;
+        and [ebp].reg_eflags,NOT 80000h
+        ret        
+
+EmCliComp:        
         mov ecx,[ebp].reg_eflags
         and ecx,EFLAGS_IOPL
         cmp ecx,EFLAGS_IOPL
@@ -232,6 +239,13 @@ EmSti   proc near
         test byte ptr [ebp].reg_eflags+2,2
         jz EmStiPm
 ;
+        test [ebp].reg_cr4,1
+        jz EmStiComp
+;        
+        or [ebp].reg_eflags,80000h
+        ret        
+
+EmStiComp:
         mov ecx,[ebp].reg_eflags
         and ecx,EFLAGS_IOPL
         cmp ecx,EFLAGS_IOPL

@@ -76,7 +76,7 @@ EmCpuid0:
 
 EmCpuid1:
         mov [ebp].reg_eax,600h
-        mov [ebp].reg_edx,861h
+        mov [ebp].reg_edx,863h
         mov [ebp].reg_ecx,0
         ret
 

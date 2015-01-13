@@ -1412,6 +1412,11 @@ void TCpu::ShowCpu()
     else
         printf("PR ");
 
+    if (CpuState.Reg_eflags & 0x80000)
+        printf("VEI ");
+    else
+        printf("VDI ");
+
     if (CpuState.Reg_cr0 & 0x80000000)
     {
         if (CpuState.Reg_cr4 & 0x20)
