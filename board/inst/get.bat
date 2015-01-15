@@ -21,6 +21,7 @@ copy ..\..\kernel\os\printer.rdv files
 copy ..\..\kernel\os\net.rdv files
 copy ..\..\kernel\os\ip.rdv files
 copy ..\..\kernel\os\ipc.rdv files
+copy ..\..\kernel\os\lon.rdv files
 copy ..\..\kernel\os\kdebug.rdv files
 copy ..\..\kernel\os\tlist.rdv files
 copy ..\..\kernel\os\wd.rdv files
