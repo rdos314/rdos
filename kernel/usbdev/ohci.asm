@@ -2809,13 +2809,24 @@ rtWaitRes:
 ;    
     mov eax,2
     mov es:[si].HcRhPortStatus,eax
-;    
-    mov ax,200
+;
+    mov dx,40
+
+rtWaitNotify:    
+    mov ax,5
     WaitMilliSec
+;
+    mov eax,es:[si].HcRhPortStatus
+    test al,1
+    jz rtUnlock
+;
+    sub dx,1
+    jnz rtWaitNotify
 ;    
     mov eax,es:[si].HcRhPortStatus
     shr ah,1
     and ah,1
+    xor ah,1
     mov al,cl
     LockedNotifyUsbAttach
     jmp rtDone
