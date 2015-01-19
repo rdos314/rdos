@@ -145,6 +145,50 @@ get_max_com_port    Proc far
     retf32
 get_max_com_port    Endp    
     
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IsComAvailable
+;
+;           description:    Check if port is available
+;
+;           PARAMETERS:     AL              Port #
+;
+;           RETURNS:        NC              Available
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_com_available_name DB 'Is Com Available',0
+
+is_com_available    Proc far
+    push ds
+    push bx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx bx,al
+    cmp bx,ds:s_port_count
+    jae is_com_avail_fail
+;    
+    add bx,bx
+    mov ds,ds:[bx].s_port_arr
+    mov al,ds:cd_open
+    or al,al
+    jnz is_com_avail_fail
+;
+    clc
+    jmp is_com_avail_done
+
+is_com_avail_fail:
+    stc
+
+is_com_avail_done:
+    pop bx
+    pop ds
+    retf32
+is_com_available Endp            
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1421,6 +1465,12 @@ init    Proc far
     mov edi,OFFSET get_max_com_port_name
     xor dx,dx
     mov ax,get_max_com_port_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_com_available
+    mov edi,OFFSET is_com_available_name
+    xor dx,dx
+    mov ax,is_com_available_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET open_com

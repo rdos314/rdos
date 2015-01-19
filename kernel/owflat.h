@@ -801,6 +801,12 @@
     "done:" \        
     value [eax];
 
+#pragma aux RdosIsComAvailable = \
+    CallGate_is_com_available  \
+    CarryToBool  \
+    parm [al] \
+    value [eax];
+
 #pragma aux RdosOpenCom = \
     CallGate_open_com  \
     ValidateHandle  \

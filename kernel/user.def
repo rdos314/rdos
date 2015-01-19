@@ -723,4 +723,6 @@ set_usb_interface_nr            = 570
 
 remote_gui_nr                   = 571
 
+is_com_available_nr             = 572
+
 usergate_entries			    = 580

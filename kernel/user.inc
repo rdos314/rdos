@@ -2212,6 +2212,12 @@ GetMaxComPort       MACRO
 						ENDM
 
 ;	IN  AL		Port #
+;   NC          Available
+IsComAvaiable       MACRO
+	UserGate is_com_available_nr
+						ENDM
+
+;	IN  AL		Port #
 ;	IN  AH		# of data bits
 ;	IN  BL		# of stop bits
 ;	IN  BH		parity ('N', 'E' or 'O')
