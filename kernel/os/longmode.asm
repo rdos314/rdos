@@ -1538,6 +1538,7 @@ handle_code_fault   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 init    proc far
+    int 3
     mov ax,cs
     mov ds,ax
     mov es,ax

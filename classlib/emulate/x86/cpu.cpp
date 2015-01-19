@@ -50,6 +50,9 @@ extern "C" {
 void FillCache(TCpuState *CpuState, unsigned long long Address);
 #pragma aux (EMAPI) FillCache;
 
+int LoadDescriptor(TCpuState *CpuState, int Sel, TDescriptor *Descriptor);
+#pragma aux (EMAPI) LoadDescriptor;
+
 void ReadInstruction(TCpuState *CpuState);
 #pragma aux (EMAPI) ReadInstruction;
 
@@ -1106,6 +1109,55 @@ void TCpu::Go()
                         }
                 }
         }
+}
+
+/*##################  TCpu::LoadUserDescriptor  ###############
+*   Purpose....: Load user descriptor                                                                             #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+int TCpu::LoadUserDescriptor(int Sel)
+{
+    return LoadDescriptor(&CpuState, Sel, &UserDescriptor);
+}
+
+/*##################  TCpu::ShowData  ###############
+*   Purpose....: Show data                                                                             #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::ShowData(int Sel, int Offset)
+{
+    unsigned long long Base;
+    int Size;
+    int i;
+    
+    if (LoadDescriptor(&CpuState, Sel, &UserDescriptor))
+    {
+        Base = UserDescriptor.base;
+        Size = CpuState.Reg_gs.limit;
+
+        Base += Offset;
+        memset(CpuState.CodeCache, 0, 0x20);
+        FillCache(&CpuState, Base);
+            
+        printf("%04lX:%08lX ", Sel, Offset);
+
+        Size -= Offset;
+        if (Size >= 16)
+            Size = 16;
+        else
+            Size++;
+            
+        for (i = 0; i < Size; i++)
+            printf("%02hX ", CpuState.CodeCache[i]);            
+
+    }
+    printf("\r\n");
 }
 
 /*##################  TCpu::Show  ###############

@@ -307,6 +307,9 @@ void Start()
     TFlash Video(&Isa, 0xC0000, 0x10000);
     TFile VideoFile("video.bin");
     Video.LoadBottom(&VideoFile);
+    int sel;
+    int offset;
+    int count;
 
     int Key;
 
@@ -349,6 +352,23 @@ void Start()
             case 'g':
             case 'G':
                 Cpu.Go();
+                break;
+
+            case 'd':
+            case 'D':
+                count = scanf("%X:%X", &sel, &offset);
+                if (count == 2)
+                {
+                    for (;;)
+                    {
+                        Cpu.ShowData(sel, offset);
+                        Key = RdosReadKeyboard() & 0xFF;
+                        if (Key == 0xd)
+                            offset += 0x10;
+                        else
+                            break;
+                    }
+                }
                 break;
 
         }

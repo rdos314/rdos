@@ -3127,4 +3127,147 @@ IretTssDo:
         ret
 IretTss Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           LoadDescriptor
+;
+;               DESCRIPTION:    Load descriptor entry
+;
+;               PARAMETERS:     CPU
+;                               Selector
+;                               Descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public _LoadDescriptor
+
+_LoadDescriptor    Proc near
+        push ebp
+        mov ebp,esp
+        pushad
+;        
+        mov eax,[ebp+12]
+        mov esi,[ebp+16]        
+        mov ebp,[ebp+8]
+;
+        mov ebx,eax
+        test bx,0FFFCh
+        jz ldFail
+;
+        test bl,4
+        jz ldInGdt
+
+ldInLdt:
+        test [ebp].reg_ldt.d_access, ACCESS_READ
+        jz ldFail
+;
+        mov edi,OFFSET reg_ldt
+        jmp ldLoadIt
+
+ldInGdt:
+        mov edi,OFFSET reg_gdt
+
+ldLoadIt:
+        movzx ecx,bx
+        or cl,7
+        dec ecx
+        sub ecx,[ebp+edi].d_limit
+        ja ldFail
+;
+        push bx
+        movzx ebx,bx
+        and bl,0F8h
+        add ebx,[ebp+edi].d_base
+        xor edi,edi
+        mov ecx,8
+        push esi
+        call CondReadLinear
+        pop esi
+        pop bx
+;
+        cmp ecx,8
+        jne ldFail
+;        
+        lea edi,[ebp].req_buf
+        mov eax,[edi]
+        mov edx,[edi+4]
+;        
+        test dh,80h
+        jz ldFail
+;
+        test dh,4
+        jnz ldFail
+;
+        mov ecx,edx
+        mov cx,ax
+        rol edx,8
+        mov ax,dx
+        xchg al,ah
+        ror eax,16
+        ror edx,16
+        test dh,80h
+        jz ldByteGranular
+
+ldPageGranular:
+        shl ecx,12
+        or cx,0FFFh
+        jmp ldDesOk
+        
+ldByteGranular:
+        and ecx,0FFFFFh
+
+ldDesOk:
+        mov [esi].d_base,eax
+        mov [esi].d_limit,ecx
+        mov [esi].d_selector,bx
+;
+        and bl,3
+        test dh,40h
+        jz ldLoadSelectorSizeOk
+;
+        or bl,ACCESS_SIZE
+
+ldLoadSelectorSizeOk:
+        test dl,8
+        jz ldLoadDataSelector
+
+ldLoadCodeSelector:
+        test dl,2
+        jz ldFail
+;
+        or bl,ACCESS_READ
+        mov [esi].d_access,bl
+        jmp ldLoadSelectorDone
+
+ldLoadDataSelector:
+        or bl,ACCESS_READ
+        test dl,2
+        jz ldLoadWriteableOk
+;
+        or bl,ACCESS_WRITE
+
+ldLoadWriteableOk:
+        test dl,4
+        jz ldLoadDirOk
+;
+        or bl,ACCESS_DIR
+
+ldLoadDirOk:
+        mov [esi].d_access,bl
+
+ldLoadSelectorDone:
+        mov eax,1
+        jmp ldDone
+
+ldFail:
+        mov [esi].d_access,0
+        xor eax,eax
+
+ldDone:
+        popad
+        pop ebp
+        ret 12
+_LoadDescriptor    Endp
+
         END

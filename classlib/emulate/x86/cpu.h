@@ -234,11 +234,13 @@ public:
     
     void Show();
     void ShowFpu();
-    void ShowData();
 
     void ShowCpu();
     void ShowInstruction();
     void ShowExecTime();
+
+    int LoadUserDescriptor(int Sel);
+    void ShowData(int Sel, int Offset);
 
     void SetInt(TInterrupt *Interrupt);
     void ResetInt(TInterrupt *Interrupt);
@@ -297,6 +299,8 @@ public:
     void (*OnSysCall)(TCpu *Cpu);
 
     TInterrupt *FInterrupt;
+
+    TDescriptor UserDescriptor;
 
 protected:
     void ShowDescriptor(const char *str, TDescriptor *des);
