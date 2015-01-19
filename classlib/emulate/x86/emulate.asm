@@ -41,6 +41,28 @@ include \rdos\classlib\emulate\x86\em387.inc
 .code
 
    extrn _GetIntVector:near
+   extrn _WriteMsr:near
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmWrmsr
+;
+;               DESCRIPTION:            wrmsr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmWrmsr   Proc near
+        mov eax,[ebp].reg_edx
+        push eax
+        mov eax,[ebp].reg_eax
+        push eax
+        mov eax,[ebp].reg_ecx
+        push eax
+        push ebp
+        call _WriteMsr
+        ret
+EmWrmsr Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -409,7 +431,7 @@ emt0F28  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0F2A  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0F2C  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0F2E  DD OFFSET EmulateError,                 OFFSET EmulateError
-emt0F30  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt0F30  DD OFFSET EmWrmsr,                      OFFSET EmulateError
 emt0F32  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0F34  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0F36  DD OFFSET EmulateError,                 OFFSET EmulateError

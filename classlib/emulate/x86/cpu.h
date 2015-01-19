@@ -271,6 +271,8 @@ public:
     void WriteIoWord(unsigned short int Port, short int val);
     void WriteIoDword(unsigned short int Port, long val);
 
+    void WriteMsr(unsigned long Address, long long val);
+
     void SysCall();
     void AddBreakpoint(unsigned short Selector, unsigned long long Offset);
     void ClearBreakpoints();

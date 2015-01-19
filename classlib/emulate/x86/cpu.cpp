@@ -113,6 +113,9 @@ void WriteIoWord(TCpuState *CpuState, unsigned short int Port, short int val);
 void WriteIoDword(TCpuState *CpuState, unsigned short int Port, long val);
 #pragma aux (EMAPI) WriteIoDword;
 
+void WriteMsr(TCpuState *CpuState, unsigned long Address, long long val);
+#pragma aux (EMAPI) WriteMsr;
+
 void SysCall(TCpuState *CpuState);
 #pragma aux (EMAPI) SysCall;
 
@@ -338,6 +341,18 @@ void WriteIoDword(TCpuState *CpuState, unsigned short Port, long val)
         CpuState->Bus->OutDword(Port, val);
     else
         CpuState->Cpu->WriteIoDword(Port, val);
+}
+
+/*##################  WriteMsr  ###############
+*   Purpose....: Write MSR                                                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void WriteMsr(TCpuState *CpuState, unsigned long Address, long long val)
+{
+    CpuState->Cpu->WriteMsr(Address, val);
 }
 
 /*##################  SysCall  ###############
@@ -904,6 +919,17 @@ void TCpu::WriteIoDword(unsigned short Port, long Value)
 {
     if (OnWriteIoDword)
         (*OnWriteIoDword)(this, Port, Value);
+}
+
+/*##################  TCpu::WriteMsr  ###############
+*   Purpose....: Write MSR                                                  #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::WriteMsr(unsigned long Address, long long val)
+{
 }
 
 /*##################  TCpu::EmulateOne  ###############
