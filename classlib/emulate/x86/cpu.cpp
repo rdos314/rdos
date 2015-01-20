@@ -116,6 +116,9 @@ void WriteIoDword(TCpuState *CpuState, unsigned short int Port, long val);
 void WriteMsr(TCpuState *CpuState, unsigned long Address, long long val);
 #pragma aux (EMAPI) WriteMsr;
 
+long long ReadMsr(TCpuState *CpuState, unsigned long Address);
+#pragma aux (EMAPI) ReadMsr;
+
 void SysCall(TCpuState *CpuState);
 #pragma aux (EMAPI) SysCall;
 
@@ -355,6 +358,18 @@ void WriteMsr(TCpuState *CpuState, unsigned long Address, long long val)
     CpuState->Cpu->WriteMsr(Address, val);
 }
 
+/*##################  ReadMsr  ###############
+*   Purpose....: Read MSR                                                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long long ReadMsr(TCpuState *CpuState, unsigned long Address)
+{
+    return CpuState->Cpu->ReadMsr(Address);
+}
+
 /*##################  SysCall  ###############
 *   Purpose....: Syscall                                                                       #
 *   In params..: *                                                          #
@@ -446,6 +461,7 @@ void TCpuState::Reset()
         Reg_cr2 = 0x12345678;
         Reg_cr3 = 0x12345678;
         Reg_cr4 = 0;
+        Reg_efer = 0;
         Reg_gdt.base = 0x12345678;
         Reg_gdt.limit = 0x1234;
         Reg_idt.base = 0;
@@ -930,6 +946,34 @@ void TCpu::WriteIoDword(unsigned short Port, long Value)
 *##########################################################################*/
 void TCpu::WriteMsr(unsigned long Address, long long val)
 {
+    switch (Address)
+    {
+        case 0xC0000080:
+            CpuState.Reg_efer = val;
+            break;
+
+        default:
+            break;
+    }
+}
+
+/*##################  TCpu::ReadMsr  ###############
+*   Purpose....: Read MSR                                                  #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long long TCpu::ReadMsr(unsigned long Address)
+{
+    switch (Address)
+    {
+        case 0xC0000080:
+            return CpuState.Reg_efer;
+
+        default:
+            return 0;
+    }
 }
 
 /*##################  TCpu::EmulateOne  ###############
@@ -1497,10 +1541,15 @@ void TCpu::ShowCpu()
 
     if (CpuState.Reg_cr0 & 0x80000000)
     {
-        if (CpuState.Reg_cr4 & 0x20)
-            printf("PAE ");
+        if (CpuState.Reg_efer & EFER_LME)
+            printf("P64 ");
         else
-            printf("PE ");
+        {
+            if (CpuState.Reg_cr4 & 0x20)
+                printf("PAE ");
+            else
+                printf("P32 ");
+        }
     }
     else
         printf("PD ");

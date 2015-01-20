@@ -67,6 +67,8 @@
 #define CR0_MP                  0x00000002
 #define CR0_PE                  0x00000001
 
+#define EFER_LME                0x100
+
 #define ACCESS_RPL              0x03
 #define ACCESS_DIR              0x10
 #define ACCESS_READ             0x20
@@ -165,6 +167,8 @@ public:
         TDescriptor Reg_ds;
         TDescriptor Reg_fs;
         TDescriptor Reg_gs;
+
+        unsigned long long Reg_efer;
 
         unsigned long BitmapBase;
 
@@ -272,6 +276,7 @@ public:
     void WriteIoDword(unsigned short int Port, long val);
 
     void WriteMsr(unsigned long Address, long long val);
+    long long ReadMsr(unsigned long Address);
 
     void SysCall();
     void AddBreakpoint(unsigned short Selector, unsigned long long Offset);

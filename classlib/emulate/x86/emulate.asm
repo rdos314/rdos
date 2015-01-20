@@ -42,6 +42,7 @@ include \rdos\classlib\emulate\x86\em387.inc
 
    extrn _GetIntVector:near
    extrn _WriteMsr:near
+   extrn _ReadMsr:near
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -63,6 +64,25 @@ EmWrmsr   Proc near
         call _WriteMsr
         ret
 EmWrmsr Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   EmRdmsr
+;
+;               DESCRIPTION:            rdmsr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmRdmsr   Proc near
+        mov eax,[ebp].reg_ecx
+        push eax
+        push ebp
+        call _ReadMsr
+        mov [ebp].reg_edx,edx
+        mov [ebp].reg_eax,eax
+        ret
+EmRdmsr Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -432,7 +452,7 @@ emt0F2A  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0F2C  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0F2E  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0F30  DD OFFSET EmWrmsr,                      OFFSET EmulateError
-emt0F32  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt0F32  DD OFFSET EmRdmsr,                      OFFSET EmulateError
 emt0F34  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0F36  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0F38  DD OFFSET EmulateError,                 OFFSET EmulateError

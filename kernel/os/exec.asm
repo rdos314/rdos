@@ -761,6 +761,52 @@ load_process_fail:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           load_process64
+;
+;           DESCRIPTION:    Run program as 64-bit process
+;
+;       RETURN VALUE:
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_process64:
+    int 3
+    mov ax,SEG data
+    mov ds,ax
+    mov es,bx
+    xor di,di
+    mov al,es:[di+1]
+    cmp al,':'
+    jne load_process_default_drive64
+    mov al,es:[di]
+    sub al,'a'
+    jnc load_process_set_drive64
+;
+    add al,20h
+
+load_process_set_drive64:
+    SetCurDrive
+    
+load_process_default_drive64:
+    sti
+    mov gs,bx
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    mov ax,3Bh
+    EnableFocus
+    SetFocus
+    mov es:app_key,al
+    mov es:app_context,bx
+;
+    mov ax,10
+    WaitMilliSec
+;
+    StartLongExe
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateSpawnProg
 ;
 ;           DESCRIPTION:    Make global copy of program name
@@ -2156,6 +2202,13 @@ run_process     PROC near
     xor edi,edi
     rep movs dword ptr es:[edi],ds:[esi]
     xor edi,edi
+;
+    xor si,si
+    mov ax,es
+    mov ds,ax
+    Is64BitExe
+    jnc run_process64
+;   
     mov bx,es
     mov ax,cs
     mov ds,ax
@@ -2163,7 +2216,19 @@ run_process     PROC near
     mov ax,2
     mov ecx,stack0_size
     CreateProcess
-;
+    jmp run_process_wait
+
+run_process64:
+    mov bx,es
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET load_process64
+    mov ax,202h
+    mov ecx,stack0_size
+    CreateProcess
+
+run_process_wait:    
+
     mov ax,100
     WaitMilliSec
 ;

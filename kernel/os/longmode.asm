@@ -893,6 +893,7 @@ switch_to_long_mode   Proc far
     push edx
     pushf
 ;
+    int 3
     mov ebx,eax
     cli
 ;

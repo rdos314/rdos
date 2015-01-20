@@ -58,6 +58,8 @@ CR0_EM			EQU 00000004h
 CR0_MP			EQU 00000002h
 CR0_PE			EQU 00000001h
 
+EFER_LME        EQU 100h
+
 ACCESS_RPL		EQU 03h
 ACCESS_DIR		EQU 10h
 ACCESS_READ		EQU 20h
@@ -172,6 +174,8 @@ reg_ss			descriptor_struc <>
 reg_ds			descriptor_struc <>
 reg_fs			descriptor_struc <>
 reg_gs			descriptor_struc <>
+
+reg_efer        DD ?,?
 
 bitmap_base		DD ?
 
