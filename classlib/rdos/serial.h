@@ -49,6 +49,7 @@ public:
         TSerialDevice(int Port, long Baudrate);
         TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
         TSerialDevice(const char *IniSection);
+        TSerialDevice(int Port);
         TSerialDevice();
         ~TSerialDevice();
 

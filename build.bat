@@ -75,3 +75,9 @@ wmake -f apps/tcpwd/tcpwd.mk -h -e 1>nul
 echo "Building Telnet Daemon"
 ide2make -p apps/telnetd/telnetd 1>nul
 wmake -f apps/telnetd/telnetd.mk -h -e 1>nul
+
+echo "Building longmode Device"
+cd kernel/os
+jwasm -10 -Zm -bin -Fllongmode.lst longmode.asm 
+cd ..
+cd ..

@@ -328,6 +328,29 @@ TSerialDevice::TSerialDevice(const char *IniSection)
 #
 #   Purpose....: Constructor
 #
+#   In params..: *
+#   Returns....: *
+#
+##########################################################################*/
+TSerialDevice::TSerialDevice(int Port)
+ : FSection("Serial")
+{
+    OnChar = 0;    
+    FPort = Port;
+    FBaudrate = 9600;
+    FParity = 'N';
+    FDataBits = 8;
+    FStopBits = 1;
+    FUseCts = FALSE;
+    FHandle = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TSerialDevice::TSerialDevice
+#
+#   Purpose....: Constructor
+#
 #   In params..: IniSection Parameter section
 #                Port       port number (ie COM1 = 1)
 #                Baudrate   baudrate
