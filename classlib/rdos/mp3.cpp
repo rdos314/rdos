@@ -70,13 +70,11 @@ static void ThreadStartup(void *ptr)
 ##########################################################################*/
 TMp3Player::TMp3Player()
 {
-        FFileHandle = 0;
-        FMapHandle = 0;
-        FFileBuf = 0;
-        FFileSize = 0;
-        FValid = FALSE;
-        FVolume = 100;
-        FThreadRunning = FALSE;
+    FFileBuf = 0;
+    FFileSize = 0;
+    FValid = FALSE;
+    FVolume = 100;
+    FThreadRunning = FALSE;
 }
 
 /*##########################################################################
@@ -334,36 +332,29 @@ void TMp3Player::CalcSongParams()
 void TMp3Player::Load(const char *FileName)
 {
     int size;
+    int handle;
 
     Close();
 
     FValid = FALSE;
 
-    FFileHandle = RdosOpenFile(FileName, 0);
+    handle = RdosOpenFile(FileName, 0);
 
-    if (FFileHandle)
+    if (handle)
     {
-        FFileSize = RdosGetFileSize(FFileHandle);
+        FFileSize = RdosGetFileSize(handle);
 
-        FMapHandle = RdosCreateNamedFileMapping(FileName, FFileSize, FFileHandle);
-        if (FMapHandle)
-        {                 
-            size = FFileSize;
-                        size--;
-            size = size & 0xFFFFF000;
-            size += 0x1000;
-            
-                        FFileBuf = (unsigned char *)RdosAllocateMem(size);
-            RdosMapView(FMapHandle, 0, FFileBuf, FFileSize);
+        FFileBuf = (unsigned char *)RdosAllocateMem(FFileSize);
+        RdosReadFile(handle, FFileBuf, FFileSize);
 
-            FindStart();
-                        Check();
-            if (!ParseTag())
-                CalcSongParams();
+        FindStart();
+        Check();
+        if (!ParseTag())
+            CalcSongParams();
 
-            SetPosition(0);
-        }
+        SetPosition(0);
     }
+    RdosCloseFile(handle);
 }
 
 /*##########################################################################
@@ -379,26 +370,13 @@ void TMp3Player::Load(const char *FileName)
 ##########################################################################*/
 void TMp3Player::Close()
 {
-        FValid = FALSE;
+    FValid = FALSE;
 
-    if (FFileHandle)
+    if (FFileBuf)
     {
-                if (FMapHandle)
-        {
-                        RdosUnmapView(FMapHandle);
-            RdosCloseMapping(FMapHandle);
-                        FMapHandle = 0;
-                }
-
-                if (FFileBuf)
-                {
-                        RdosFreeMem(FFileBuf);
-                        FFileBuf = 0;
-                }
-
-                RdosCloseFile(FFileHandle);
-                FFileHandle = 0;
-        }
+        RdosFreeMem(FFileBuf);
+        FFileBuf = 0;
+    }
 }
 
 /*##########################################################################

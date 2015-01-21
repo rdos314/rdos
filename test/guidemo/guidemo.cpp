@@ -157,6 +157,9 @@ void RandomText(TGraphicDevice *dev)
         x = RdosGetRandom(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
         y = RdosGetRandom(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
 
+        x = 0;
+        y = 0;
+
         sprintf(str, "%d", count);
 
         RandomColor(dev);
@@ -384,7 +387,7 @@ void cdecl main()
         TLabelControl *Label;
         TImageControl *Image;
 
-//        RdosWaitMilli(250);
+        RdosWaitMilli(250);
 
 /*        RdosSetWriteDataBreak(0, 1, &vbe, 4);
         RdosClearBreak(0, 1); */

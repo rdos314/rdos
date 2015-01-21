@@ -95,8 +95,6 @@ protected:
 
 	int FAudioHandle;
 
-	int FFileHandle;
-	int FMapHandle;
 	unsigned char *FFileBuf;
 	int FFileSize;
 	int FValid;
