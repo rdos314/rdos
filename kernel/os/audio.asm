@@ -122,6 +122,9 @@ CreateMixer Proc near
     mov ds:ams_sample_rate,cx
 ;    
     shr cx,4
+    and cx,0FE00h
+    add cx,200h
+;    
     mov ds:ams_buffer_size,cx
     movzx eax,cx
     shl eax,2
@@ -221,8 +224,6 @@ create_audio_out_channel    Proc far
     AllocateSmallGlobalMem
     pop eax
     mov es:aos_sample_rate,ax   
-    shr ax,4
-    mov es:aos_buffer_size,ax
     mov es:aos_bits,cl
     rol edx,16
     mov dx,-1
@@ -247,13 +248,6 @@ create_audio_out_channel    Proc far
 ;    
     mov ds:aos_flags,0
     mov ds:aos_thread,0
-    movzx eax,ds:aos_buffer_size
-    shl eax,2
-    AllocateSmallGlobalMem
-    mov ds:aos_inl_buf_sel,es
-    AllocateSmallGlobalMem
-    mov ds:aos_inr_buf_sel,es
-    mov ds:aos_in_buf_pos,0
 ;    
     mov dx,ds
     mov cx,ds:aos_sample_rate
@@ -265,6 +259,7 @@ create_audio_out_channel    Proc far
     or ax,ax
     jnz caocHasMixer
 ;
+    push dx
     movzx eax,cx
     SetAudioDacRate
     GetAudioDacRate
@@ -272,16 +267,28 @@ create_audio_out_channel    Proc far
     call CreateMixer
     mov ds:ads_out_mixer,ax    
     OpenAudioOut
+    pop dx
 
 caocHasMixer:
     push bx
+    mov ds,dx
     mov es,ax
+    movzx eax,es:ams_buffer_size
+    mov ds:aos_buffer_size,ax    
+    shl eax,2
+    push es
+    AllocateSmallGlobalMem
+    mov ds:aos_inl_buf_sel,es
+    AllocateSmallGlobalMem
+    mov ds:aos_inr_buf_sel,es
+    pop es
+    mov ds:aos_in_buf_pos,0
+;
     mov bx,OFFSET ams_sel_arr
     mov ax,es:ams_count
     shl ax,1
     add bx,ax
     mov es:[bx],dx
-    mov ds,dx
     mov ds:aos_mixer,es
     inc es:ams_count
 ;    

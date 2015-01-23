@@ -1318,7 +1318,6 @@ close_audio_out Proc far
     movzx ebx,bx
     shl ebx,6
     add ebx,OFFSET StreamArr
-    mov es,ds:[ebx].sdSel
 ;
     call WaitForBuffer
 ;
@@ -1328,9 +1327,16 @@ close_audio_out Proc far
     mov ecx,ds:sdBufLen
     shr ecx,2
     xor eax,eax
-    stosd
+    rep stosd
     call WaitForBuffer
 ;    
+    mov es,ds:HdaSel
+    mov eax,1
+    mov cx,ds:InStreamCnt
+    shl eax,cl
+    or es:HdaSSync,eax
+;
+    mov es,ds:[ebx].sdSel
     mov al,es:srControl
     and al,NOT 2
     mov es:srControl,al
@@ -1342,6 +1348,17 @@ caoWait:
     mov al,es:srControl
     test al,2
     jnz caoWait            
+;
+    mov es,ds:HdaSel
+    mov eax,1
+    mov cx,ds:InStreamCnt
+    shl eax,cl
+    not eax
+    and es:HdaSSync,eax
+;
+    mov eax,es:HdaDplBase
+    and al,NOT 1
+    mov es:HdaDplBase,eax
 ;
     mov ds:[ebx].sdFlags,0
 ;    
@@ -1473,10 +1490,37 @@ saoWaitResetDone:
     mov ds:[ebx].sdStatus,al
     mov ds:[ebx].sdFlags, STREAM_FLAG_RUNNING
 ;
+    mov es,ds:HdaSel
+;
+    mov eax,es:HdaDplBase
+    or al,1
+    mov es:HdaDplBase,eax
+;
+    mov eax,1
+    mov cx,ds:InStreamCnt
+    shl eax,cl
+    or es:HdaSSync,eax
+;
+    mov es,ds:[ebx].sdSel
     mov al,es:srControl
     or al,2
     mov es:srControl,al
-        
+
+saoFifo:
+    mov ax,10
+    WaitMilliSec
+;
+    mov al,es:srStatus
+    test al,20h
+    jz saoFifo
+;
+    mov es,ds:HdaSel
+    mov eax,1
+    mov cx,ds:InStreamCnt
+    shl eax,cl
+    not eax
+    and es:HdaSSync,eax
+            
 saoDone:        
     popad
     pop gs

@@ -1250,6 +1250,7 @@ void GetAudioOutputInfo(struct TAudioOutput *widget, char *Info)
     int val;
     int stream;
     int channel;
+    int channels;
     
     strcpy(Info, "Audio Out");
 
@@ -1260,9 +1261,49 @@ void GetAudioOutputInfo(struct TAudioOutput *widget, char *Info)
     val = QueryCodec(widget->Id, widget->Address, widget->Node, 0xF0600);
     stream = (val & 0xF0) >> 4;
     channel = val & 0xF;
-    sprintf(str, ", Stream: %d, Channel: %d", stream,  channel);
+    sprintf(str, ", Stream: %d, ", stream);
     strcat(Info, str);
 
+    val = QueryCodec(widget->Id, widget->Address, widget->Node, 0xF0009);
+    channels = (val >> 12) & 7;
+    if (val & 1)
+        channels++;
+    channels++;
+    sprintf(str, "Channel: %d-%d", channel, channel + channels - 1);
+    strcat(Info, str);
+
+    val = QueryCodec(widget->Id, widget->Address, widget->Node, 0xF000A);
+
+    if (val & 0x100000)
+        strcat(Info, ", 32-bit");
+    else
+    {
+        if (val & 0x80000)
+            strcat(Info, ", 24-bit");
+        else
+        {
+            if (val & 0x40000)
+                strcat(Info, ", 20-bit");
+            else
+            {
+                if (val & 0x20000)
+                    strcat(Info, ", 16-bit");
+            }
+        }
+    }
+
+    val = QueryCodec(widget->Id, widget->Address, widget->Node, 0xF2400);
+    switch (val & 0x3)
+    {
+        case 1:
+            strcat(Info, ", 2 SDOs");
+            break;
+
+        case 2:
+            strcat(Info, ", 4 SDOs");
+            break;
+    }                    
+    
     if ((widget->Cap & 0x10) == 0)
         strcat(Info, ", Global Format");
 
