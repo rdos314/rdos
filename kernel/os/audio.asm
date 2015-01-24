@@ -853,10 +853,9 @@ delete_out_handle       Endp
 ;
 ;           DESCRIPTION:    Mix channel
 ;
-;       PARAMETERS:     SI  In sample rate / size of buffer * 16
-;               DI  Out sample rate / size of buffer * 16
-;               FS  In buffer
-;               ES  Out buffer
+;       PARAMETERS:         DS  Mixer sel
+;                           FS  In buffer
+;                           ES  Out buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -865,7 +864,15 @@ rest = -6
 insize = -8
 
 MixChannel  Proc near
+    push ds
     pushad
+;
+    mov di,ds:ams_sample_rate
+    push ds
+    mov ds,ds:[bx]
+    mov si,ds:aos_sample_rate
+    mov cx,ds:aos_buffer_size
+    pop ds
 ;    
     cmp si,di
     je mcSameRate
@@ -874,13 +881,11 @@ MixChannel  Proc near
     mov bp,sp
     sub sp,8
 ;
-    mov ax,si
-    shr ax,4
+    mov ax,cx
     sub ax,1
     mov [bp].insize,ax
 ;    
-    mov cx,di
-    shr cx,4
+    mov cx,ds:ams_buffer_size
     movzx eax,si
     xor edx,edx
     movzx edi,di
@@ -943,8 +948,6 @@ mcInterpDone:
     jmp mcDone
 
 mcSameRate:
-    mov cx,si
-    shr cx,4
     xor ebx,ebx
 
 mcSameLoop:
@@ -971,6 +974,7 @@ mcSameNext:
 
 mcDone:
     popad
+    pop ds
     ret
 MixChannel  Endp
 
@@ -1023,23 +1027,11 @@ umCheckChanLoop:
     mov cx,ds:ams_count
 
 umMoveLChanLoop:
-    push ds
     push fs
-    push bx
-    push si
-    push di
-;    
-    mov di,ds:ams_sample_rate
-    mov ds,ds:[bx]
-    mov si,ds:aos_sample_rate
-    mov fs,ds:aos_inl_buf_sel
+    mov fs,ds:[bx]
+    mov fs,fs:aos_inl_buf_sel
     call MixChannel
-;
-    pop di
-    pop si    
-    pop bx
     pop fs
-    pop ds
 ;    
     add bx,2
     loop umMoveLChanLoop
@@ -1054,23 +1046,11 @@ umMoveLChanLoop:
     mov cx,ds:ams_count
 
 umMoveRChanLoop:
-    push ds
     push fs
-    push bx
-    push si
-    push di
-;    
-    mov di,ds:ams_sample_rate
-    mov ds,ds:[bx]
-    mov si,ds:aos_sample_rate
-    mov fs,ds:aos_inr_buf_sel
+    mov fs,ds:[bx]
+    mov fs,fs:aos_inr_buf_sel
     call MixChannel
-;
-    pop di
-    pop si    
-    pop bx
     pop fs
-    pop ds
 ;    
     add bx,2
     loop umMoveRChanLoop
