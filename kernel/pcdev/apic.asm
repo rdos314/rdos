@@ -2922,8 +2922,8 @@ InitIoApic    Proc near
     mov di,OFFSET global_int_arr
 
 init_ioapic_isa_trigger_mode:
-    mov [di].gi_trigger_mode,0
-    mov ds:[bx].gi_long_ads,0
+    mov ds:[di].gi_trigger_mode,0
+    mov ds:[di].gi_long_ads,0
     add di,16
     loop init_ioapic_isa_trigger_mode
 ;

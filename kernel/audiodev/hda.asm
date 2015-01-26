@@ -1482,7 +1482,7 @@ saoWaitResetDone:
     mov eax,ds:[ebx].sdBufLen
     shl eax,1   
     mov es:srBufLen,eax
-    mov es:srLvi,2
+    mov es:srLvi,1
     mov eax,ds:[ebx].sdPrdPhys
     mov es:srBdl,eax
     xor eax,eax
