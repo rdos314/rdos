@@ -822,9 +822,12 @@ void ProcessCodec(struct TCodec *codec)
     int node;
     int type;
     int channels;
+    int verb;
 
     Vendor = GetParam(codec, 0, 0);
     SubSys = GetParam(codec, 0, 1);
+
+    Query(codec, 1, 0x70500);
     PowerState = Query(codec, 1, 0xF0500);
 
     val = GetParam(codec, 0, 4);
@@ -851,8 +854,12 @@ void ProcessCodec(struct TCodec *codec)
             count = MAX_WIDGETS;
         node = (val >> 16) & 0xFF;
 
+        Query(codec, codec->AudioNode, 0x70500);
+
         for (i = 0; i < count; i++)
         {
+            Query(codec, node + i, 0x70500);
+
             val = GetParam(codec, node + i, 9);
             type = (val >> 20) & 0xF;
             channels = (val >> 12) & 7;

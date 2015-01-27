@@ -1289,23 +1289,6 @@ open_audio_out  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForBuffer   Proc near
-    mov es,ds:[ebx].sdSel
-
-wfbLoop:
-    mov edi,ds:[ebx].sdCurrPrd
-    cmp edi,ds:[ebx].sdPrd1Linear
-    je wfbBuffer1
-
-wfbBuffer2:
-    mov eax,es:srLinkPos
-    cmp eax,ds:[ebx].sdBufLen
-    jb wfbDone    
-    jmp wfbRetry
-
-wfbBuffer1:
-    mov eax,es:srLinkPos
-    cmp eax,ds:[ebx].sdBufLen
-    ja wfbDone
 
 wfbRetry:
     mov al,ds:[ebx].sdIrq
@@ -1313,7 +1296,7 @@ wfbRetry:
     jnz wfbDone
 ;    
     WaitForSignal
-    jmp wfbLoop
+    jmp wfbRetry
 
 wfbDone:
     and ds:[ebx].sdIrq,NOT 4
