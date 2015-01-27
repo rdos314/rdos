@@ -2258,7 +2258,115 @@ local_create_long_process64       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_free_process64     Proc near
-    int 3
+    mov bx,process_page_sel
+    mov ds,bx
+    mov bx,process_dir_sel
+    mov es,bx
+    xor esi,esi
+    mov ecx,flat_size
+    shr ecx,21
+    xor edi,edi
+
+fpDirLoop64:
+    mov eax,es:[edi]
+    test al,1
+    jz fpNextDir64
+;
+    test ax,800h
+    jnz fpNextDir64
+;
+    push cx
+    mov cx,200h
+
+fpPageLoop64:
+    xor eax,eax
+    xor ebx,ebx
+    xchg eax,[esi]
+    add esi,4
+    xchg ebx,[esi]
+    add esi,4
+    test al,1
+    jz fpNextPage64
+;
+    test ax,800h
+    jnz fpNextPage64
+;
+    FreePhysical
+
+fpNextPage64:
+    loop fpPageLoop64
+;
+    pop cx
+    xor eax,eax
+    xchg eax,es:[edi]
+    xor ebx,ebx
+    xchg ebx,es:[edi+4]
+;
+    FreePhysical
+    jmp fpNextDirPage64
+    
+fpNextDir64:
+    add esi,1000h
+
+fpNextDirPage64:
+    add edi,8
+    loop fpDirLoop64
+;
+    mov eax,flat_size
+    shr eax,21
+    mov cx,800h
+    sub cx,ax
+    mov bx,sys_dir_sel
+    mov ds,bx
+
+fpGlobalLoop64:
+    mov eax,es:[edi]
+    test al,1
+    jz fpGlobalNext64
+;
+    test ax,800h
+    jnz fpGlobalNext64
+;
+    and ax,0F000h
+    mov ebx,[edi]
+    and bx,0F000h
+    cmp eax,ebx
+    jne fpGlobalTestFixed
+;
+    mov eax,es:[edi+4]
+    cmp eax,[edi+4]
+    je fpGlobalNext64
+
+fpGlobalTestFixed:
+    cmp edi,(fixed_process_linear SHR 18) AND 03FFFh
+    je fpGlobalNext64
+;    
+    cmp edi,((fixed_process_linear SHR 18) AND 03FFFh) + 8
+    je fpGlobalNext64
+;
+    cmp edi,(process_page_linear SHR 18) AND 03FFFh
+    je fpGlobalNext64
+;    
+    cmp edi,((process_page_linear SHR 18) AND 03FFFh) + 8
+    je fpGlobalNext64
+;    
+    cmp edi,((process_page_linear SHR 18) AND 03FFFh) + 16
+    je fpGlobalNext64
+;    
+    cmp edi,((process_page_linear SHR 18) AND 03FFFh) + 24
+    je fpGlobalNext64
+;
+    xor eax,eax
+    xchg eax,es:[edi]
+    xor ebx,ebx
+    xchg ebx,es:[edi+4]
+    FreePhysical
+
+fpGlobalNext64:
+    add edi,8
+    sub cx,1
+    jnz fpGlobalLoop64
+;
     ret
 local_free_process64     Endp
 

@@ -119,7 +119,9 @@ sdWidth         DW ?
 sdFlags         DW ?
 sdFormat        DW ?
 sdLastSize      DD ?
+sdThread        DW ?
 sdStatus        DB ?
+sdIrq           DB ?
 
 stream_data ENDS
 
@@ -311,7 +313,7 @@ hdiLoop:
     jz hdiDone
 ;
     test eax,40000000h
-    jz hdiDone
+    jz hdiStream
 ;
     mov ax,es:HdaStateSts
     or ax,ax
@@ -358,8 +360,26 @@ hdiStream:
     mov ebx,OFFSET StreamArr
 
 hdiStreamLoop:    
-    int 3
-    jmp hdiLoop    
+    test eax,1
+    jz hdiStreamNext
+;
+    mov es,ds:[ebx].sdSel
+    mov dl,es:srStatus
+    and dl,1Ch
+    mov es:srStatus,dl
+    or ds:[ebx].sdIrq,dl
+;    
+    push ebx
+    mov bx,ds:[ebx].sdThread    
+    Signal    
+    pop ebx
+
+hdiStreamNext:
+    shr eax,1
+    add ebx,64
+    loop hdiStreamLoop    
+;    
+    jmp hdiLoop
 
 hdiDone:           
     ret
@@ -1228,11 +1248,15 @@ open_audio_out  Proc far
     mov ds:[ebx].sdBufLen,ecx
     mov ds:[ebx].sdFlags,0
 ;
-;    mov es,ds:HdaSel
-;    mov cx,ds:InStreamCnt
-;    mov eax,1
-;    shl eax,cl
-;    or es:HdaIntCtl,eax
+    GetThread
+    mov ds:[ebx].sdThread,ax
+    mov ds:[ebx].sdIrq,0
+;
+    mov es,ds:HdaSel
+    mov cx,ds:InStreamCnt
+    mov eax,1
+    shl eax,cl
+    or es:HdaIntCtl,eax
 ;    
     mov ax,flat_sel
     mov es,ax
@@ -1284,11 +1308,15 @@ wfbBuffer1:
     ja wfbDone
 
 wfbRetry:
-    mov ax,10
-    WaitMilliSec
+    mov al,ds:[ebx].sdIrq
+    test al,4
+    jnz wfbDone
+;    
+    WaitForSignal
     jmp wfbLoop
 
 wfbDone:
+    and ds:[ebx].sdIrq,NOT 4
     ret
 WaitForBuffer   Endp
 
@@ -1336,6 +1364,8 @@ close_audio_out Proc far
     shl eax,cl
     or es:HdaSSync,eax
 ;
+    mov ds:[ebx].sdThread,0
+;    
     mov es,ds:[ebx].sdSel
     mov al,es:srControl
     and al,NOT 2
