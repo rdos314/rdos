@@ -1089,6 +1089,187 @@ LinearToPhysicalPae        Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           LinearToPhysical64
+;
+;               description:    Translate a linear address to a physical address
+;
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;
+;               RETURNS:        EDX:EAX         PHYSICAL ADDRESS & ATTRIBUTES
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LinearToPhysical64        Proc near
+        push ebx
+        call SearchTlb64
+        jnc LinearToPhysicalDone64
+;
+        call AllocateTlb
+        push esi
+        mov [esi].t_tag,ebx
+        mov [esi].t_tag+4,edi
+        add esi,OFFSET t_address
+;
+        mov eax,edi
+        shr eax,16
+        test di,8000h
+        jz LinearToPhysicalLow64
+
+LinearToPhysicalHigh64:
+        cmp ax,-1
+        je LinearToPhysicalCanonical
+        jmp ProtectionFault
+
+LinearToPhysicalLow64:
+        or ax,ax
+        je LinearToPhysicalCanonical
+        jmp ProtectionFault
+
+LinearToPhysicalCanonical:    
+        mov ebx,edi
+        shr ebx,4
+        and ebx,0FF8h
+        mov eax,[ebp].reg_cr3
+        and ax,0F000h
+        add ebx,eax
+        mov ecx,8
+        call ReadPhysical
+        pop esi
+;
+        mov ch,byte ptr [esi].t_address
+        test ch,1
+        jnz LinearToPhysicalPtrOk64
+;
+        mov eax,-1
+        xchg eax,[esi].t_tag
+        mov [ebp].reg_cr2,eax
+        mov eax,-1
+        xchg eax,[esi].t_tag+4
+        mov [ebp].reg_cr2+4,eax
+        xor bx,bx
+        jmp PageFault
+
+LinearToPhysicalPtrOk64:
+        test ch,20h
+        jnz LinearToPhysicalPtrAccessed64
+;
+        push esi
+        or byte ptr [esi].t_address,20h
+        mov ecx,1
+        add esi,OFFSET t_address
+        call WritePhysical
+        pop esi
+
+LinearToPhysicalPtrAccessed64:
+        mov ebx,[esi].t_tag
+        shr ebx,18
+        and ebx,0FF8h
+        mov eax,[esi].t_address
+        and ax,0F000h
+        add ebx,eax
+        mov edi,[esi].t_address+4
+        push esi
+        add esi,OFFSET t_address
+        push ebx
+        mov ecx,8
+        call ReadPhysical
+        pop ebx
+        pop esi
+;
+        mov ch,byte ptr [esi].t_address
+        test ch,1
+        jnz LinearToPhysicalDirOk64
+;
+        mov eax,-1
+        xchg eax,[esi].t_tag
+        mov [ebp].reg_cr2,eax
+        mov eax,-1
+        xchg eax,[esi].t_tag+4
+        mov [ebp].reg_cr2+4,eax
+        xor bx,bx
+        jmp PageFault
+
+LinearToPhysicalDirOk64:
+        push ecx
+        test al,20h
+        jnz LinearToPhysicalDirAccessed64
+;
+        push esi
+        or byte ptr [esi].t_address,20h
+        mov ecx,1
+        add esi,OFFSET t_address
+        call WritePhysical
+        pop esi
+
+LinearToPhysicalDirAccessed64:
+        mov ebx,[esi].t_tag
+        shr ebx,9
+        and ebx,0FF8h
+        mov eax,[esi].t_address
+        and ax,0F000h
+        add ebx,eax
+        mov edi,[esi].t_address+4
+        push esi
+        add esi,OFFSET t_address
+        push ebx
+        mov ecx,8
+        call ReadPhysical
+        pop ebx
+        pop esi
+;
+        pop ecx
+        mov cl,byte ptr [esi].t_address
+        test cl,1
+        jnz LinearToPhysicalPageOk64
+;
+        mov eax,-1
+        xchg eax,[esi].t_tag
+        mov [ebp].reg_cr2,eax
+        mov eax,-1
+        xchg eax,[esi].t_tag+4
+        mov [ebp].reg_cr2+4,eax
+        xor bx,bx
+        jmp PageFault
+
+LinearToPhysicalPageOk64:
+        mov al,cl
+        and ch,cl
+        and ch,3
+        and cl,NOT 3
+        or cl,ch
+        push ecx
+        test al,20h
+        jnz LinearToPhysicalPageAccessed64
+;        
+        push esi
+        or byte ptr [esi].t_address,20h
+        mov ecx,1
+        add esi,OFFSET t_address
+        call WritePhysical
+        pop esi
+
+LinearToPhysicalPageAccessed64:
+        pop ecx
+;
+        mov eax,[esi].t_tag
+        and ax,0F000h
+        mov [esi].t_tag,eax
+;       
+        mov eax,[esi].t_address
+        and ax,0F000h
+        or al,cl
+        mov [esi].t_address,eax
+        mov edx,[esi].t_address+4
+
+LinearToPhysicalDone64:
+        pop ebx
+        ret
+LinearToPhysical64        Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           CondLinearToPhysicalPae
 ;
 ;               description:    Translate a linear address to a physical address
@@ -1251,6 +1432,196 @@ CondLinearToPhysicalDonePae:
         pop ebx
         ret
 CondLinearToPhysicalPae    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           CondLinearToPhysical64
+;
+;               description:    Translate a linear address to a physical address
+;                                               no page faults
+;
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;
+;               RETURNS:        EDX:EAX         PHYSICAL ADDRESS & ATTRIBUTES
+;                               NC              OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CondLinearToPhysical64    Proc near
+        push ebx
+        push ecx
+        push edi
+;        
+        call SearchTlb64
+        jnc CondLinearToPhysicalDone64
+;
+        call AllocateTlb
+;
+        push esi
+        mov [esi].t_tag,ebx
+        mov [esi].t_tag+4,edi
+        add esi,OFFSET t_address
+;
+        mov eax,edi
+        shr eax,16
+        test di,8000h
+        jz CondLinearToPhysicalLow64
+;
+        mov [esi].t_tag,-1
+        stc
+        jmp CondLinearToPhysicalDone64
+
+CondLinearToPhysicalHigh64:
+        cmp ax,-1
+        je CondLinearToPhysicalCanonical
+;
+        mov [esi].t_tag,-1
+        stc
+        jmp CondLinearToPhysicalDone64
+
+CondLinearToPhysicalLow64:
+        or ax,ax
+        je CondLinearToPhysicalCanonical
+        jmp ProtectionFault
+
+CondLinearToPhysicalCanonical:    
+        mov ebx,edi
+        shr ebx,4
+        and ebx,0FF8h
+        mov eax,[ebp].reg_cr3
+        and ax,0F000h
+        add ebx,eax
+        xor edi,edi
+        mov ecx,8
+        call ReadPhysical
+        pop esi
+;
+        mov ch,byte ptr [esi].t_address
+        test ch,1
+        jnz CondLinearToPhysicalPtrOk64
+;
+        mov [esi].t_tag,-1
+        stc
+        jmp CondLinearToPhysicalDone64
+
+CondLinearToPhysicalPtrOk64:
+        push ecx
+        test ch,20h
+        jnz CondLinearToPhysicalPtrAccessed64
+;
+        push esi
+        or byte ptr [esi].t_address,20h
+        mov ecx,1
+        add esi,OFFSET t_address
+        call WritePhysical
+        pop esi
+
+CondLinearToPhysicalPtrAccessed64:
+        mov ebx,[esi].t_tag
+        shr ebx,18
+        and ebx,0FF8h
+        mov eax,[esi].t_address
+        and ax,0F000h
+        add ebx,eax
+        mov edi,[esi].t_address+4
+        push esi
+        add esi,OFFSET t_address
+        push ebx
+        mov ecx,8
+        call ReadPhysical
+        pop ebx
+        pop esi
+;
+        pop ecx
+        mov cl,byte ptr [esi].t_address
+        test cl,1
+        jnz CondLinearToPhysicalDirOk64
+;
+        mov [esi].t_tag,-1
+        stc
+        jmp CondLinearToPhysicalDone64
+
+CondLinearToPhysicalDirOk64:
+        mov al,cl
+        and ch,cl
+        and ch,3
+        and cl,NOT 3
+        or ch,cl
+        push ecx
+        test al,20h
+        jnz CondLinearToPhysicalDirAccessed64
+;
+        push esi
+        or byte ptr [esi].t_address,20h
+        mov ecx,1
+        add esi,OFFSET t_address
+        call WritePhysical
+        pop esi
+
+CondLinearToPhysicalDirAccessed64:
+        mov ebx,[esi].t_tag
+        shr ebx,9
+        and ebx,0FF8h
+        mov eax,[esi].t_address
+        and ax,0F000h
+        add ebx,eax
+        mov edi,[esi].t_address+4
+        push esi
+        add esi,OFFSET t_address
+        push ebx
+        mov ecx,8
+        call ReadPhysical
+        pop ebx
+        pop esi
+;
+        pop ecx
+        mov cl,byte ptr [esi].t_address
+        test cl,1
+        jnz CondLinearToPhysicalPageOk64
+;
+        mov [esi].t_tag,-1
+        stc
+        jmp CondLinearToPhysicalDone64
+
+CondLinearToPhysicalPageOk64:
+        mov al,cl
+        and ch,cl
+        and ch,3
+        and cl,NOT 3
+        or cl,ch
+        push ecx
+        test al,20h
+        jnz CondLinearToPhysicalPageAccessed64
+;        
+        push esi
+        or byte ptr [esi].t_address,20h
+        mov ecx,1
+        add esi,OFFSET t_address
+        call WritePhysical
+        pop esi
+
+CondLinearToPhysicalPageAccessed64:
+        pop ecx
+;
+        mov eax,[esi].t_tag
+        and ax,0F000h
+        mov [esi].t_tag,eax
+;       
+        mov eax,[esi].t_address
+        and ax,0F000h
+        or al,cl
+        mov [esi].t_address,eax
+        mov edx,[esi].t_address+4
+        clc
+
+CondLinearToPhysicalDone64:
+        pop edi
+        pop ecx
+        pop ebx
+        ret
+CondLinearToPhysical64    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1891,6 +2262,35 @@ CondReadPagedPae   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           CondReadPaged64
+;
+;               description:    Read paged without page faults
+;
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;                               ECX             NUMBER OF BYTE TO READ
+;
+;               RETURNS:        ECX             NUBER OF BYTES READ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CondReadPaged64   Proc near
+        lea esi,[ebp].req_buf
+
+CondReadPagedLoop64:
+        push edi
+        push ebx
+        push edx
+        push ecx
+        push esi
+;
+        call CondLinearToPhysical64
+
+CondReadPaged64 Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           CondReadLinear
 ;
 ;               description:    conditional read from linear memory
@@ -1916,7 +2316,7 @@ CondReadLinear Proc near
         jz CondReadLinearPae
 
 CondReadLinear64:
-        int 3
+        call CondReadPaged64
         ret
 
 CondReadLinearPae:
