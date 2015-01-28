@@ -1119,12 +1119,28 @@ LinearToPhysical64        Proc near
 LinearToPhysicalHigh64:
         cmp ax,-1
         je LinearToPhysicalCanonical
-        jmp ProtectionFault
-
+;
+        mov eax,-1
+        xchg eax,[esi].t_tag
+        mov [ebp].reg_cr2,eax
+        mov eax,-1
+        xchg eax,[esi].t_tag+4
+        mov [ebp].reg_cr2+4,eax
+        xor bx,bx
+        jmp PageFault
+ 
 LinearToPhysicalLow64:
         or ax,ax
         je LinearToPhysicalCanonical
-        jmp ProtectionFault
+;
+        mov eax,-1
+        xchg eax,[esi].t_tag
+        mov [ebp].reg_cr2,eax
+        mov eax,-1
+        xchg eax,[esi].t_tag+4
+        mov [ebp].reg_cr2+4,eax
+        xor bx,bx
+        jmp PageFault
 
 LinearToPhysicalCanonical:    
         mov ebx,edi
@@ -1133,12 +1149,55 @@ LinearToPhysicalCanonical:
         mov eax,[ebp].reg_cr3
         and ax,0F000h
         add ebx,eax
+        xor edi,edi
         mov ecx,8
         call ReadPhysical
         pop esi
 ;
         mov ch,byte ptr [esi].t_address
         test ch,1
+        jnz LinearToPhysicalPmlOk64
+;
+        mov eax,-1
+        xchg eax,[esi].t_tag
+        mov [ebp].reg_cr2,eax
+        mov eax,-1
+        xchg eax,[esi].t_tag+4
+        mov [ebp].reg_cr2+4,eax
+        xor bx,bx
+        jmp PageFault
+
+LinearToPhysicalPmlOk64:
+        push ecx
+        test ch,20h
+        jnz LinearToPhysicalPmlAccessed64
+;
+        push esi
+        or byte ptr [esi].t_address,20h
+        mov ecx,1
+        add esi,OFFSET t_address
+        call WritePhysical
+        pop esi
+
+LinearToPhysicalPmlAccessed64:
+        mov ebx,[esi].t_tag+2
+        shr ebx,11
+        and ebx,0FF8h
+        mov eax,[esi].t_address
+        and ax,0F000h
+        add ebx,eax
+        mov edi,[esi].t_address+4
+        push esi
+        add esi,OFFSET t_address
+        push ebx
+        mov ecx,8
+        call ReadPhysical
+        pop ebx
+        pop esi
+;
+        pop ecx
+        mov cl,byte ptr [esi].t_address
+        test cl,1
         jnz LinearToPhysicalPtrOk64
 ;
         mov eax,-1
@@ -1151,7 +1210,13 @@ LinearToPhysicalCanonical:
         jmp PageFault
 
 LinearToPhysicalPtrOk64:
-        test ch,20h
+        mov al,cl
+        and ch,cl
+        and ch,3
+        and cl,NOT 3
+        or ch,cl
+        push ecx
+        test al,20h
         jnz LinearToPhysicalPtrAccessed64
 ;
         push esi
@@ -1177,6 +1242,7 @@ LinearToPhysicalPtrAccessed64:
         pop ebx
         pop esi
 ;
+        pop ecx
         mov ch,byte ptr [esi].t_address
         test ch,1
         jnz LinearToPhysicalDirOk64
@@ -1484,7 +1550,10 @@ CondLinearToPhysicalHigh64:
 CondLinearToPhysicalLow64:
         or ax,ax
         je CondLinearToPhysicalCanonical
-        jmp ProtectionFault
+;
+        mov [esi].t_tag,-1
+        stc
+        jmp CondLinearToPhysicalDone64
 
 CondLinearToPhysicalCanonical:    
         mov ebx,edi
@@ -1971,6 +2040,167 @@ WritePagedPae      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           ReadPaged64
+;
+;               description:    Read paged
+;
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;                               ECX             NUMBER OF BYTE TO READ
+;                               ESI             Req buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadPaged64       Proc near
+
+ReadPagedLoop64:
+        push edi
+        push ebx
+        push edx
+        push ecx
+        push esi
+;
+        call LinearToPhysical64
+        test al,4
+        jnz ReadLinearPrivOk64
+        test [ebp].em_pl,ACCESS_RPL
+        jz ReadLinearPrivOk64
+;
+        mov [ebp].reg_cr2,ebx
+        mov [ebp].reg_cr2+4,edi
+        mov bx,4
+        jmp PageFault
+
+ReadLinearPrivOk64:
+        and ax,0F000h
+        and ebx,0FFFh
+        or eax,ebx
+        mov ebx,eax
+        mov edi,edx
+        pop esi
+        pop ecx
+;
+        push ecx
+        push esi
+        not eax
+        and eax,0FFFh
+        inc eax
+        cmp ecx,eax
+        jbe ReadPagedWhole64
+
+        mov ecx,eax
+        
+ReadPagedWhole64:
+        push ecx
+        call ReadPhysical
+        pop eax
+        pop esi
+        pop ecx
+        pop edx
+        pop ebx
+        pop edi
+        sub ecx,eax
+        jz ReadPagedDone64
+;
+        add esi,eax
+        add ebx,eax
+        adc edi,0        
+        jmp ReadPagedLoop64
+
+ReadPagedDone64:
+        ret
+ReadPaged64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           WritePaged64
+;
+;               description:    Write paged
+;
+;               PARAMETERS:     EBP             CPU
+;                               EDI:EBX         LINEAR ADDRESS
+;                               ECX             NUMBER OF BYTE TO WRITE
+;                               ESI             Req buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WritePaged64      Proc near
+
+WritePagedLoop64:
+        push edi
+        push ebx
+        push edx
+        push ecx
+        push esi
+;
+        call LinearToPhysical64
+        test al,4
+        jnz WritePagedUserOk64
+;
+        test [ebp].em_pl,ACCESS_RPL
+        jz WritePagedUserOk64
+;
+        mov [ebp].reg_cr2,ebx
+        mov [ebp].reg_cr2+4,edi
+        mov bx,4
+        jmp PageFault
+
+WritePagedUserOk64:
+        test al,2
+        jnz WritePagedPrivOk64
+        test [ebp].em_pl,ACCESS_RPL
+        jnz WritePagedPrivFault64
+        test [ebp].reg_cr0,CR0_WP
+        jz WritePagedPrivOk64
+
+WritePagedPrivFault64:
+        mov [ebp].reg_cr2,ebx
+        mov [ebp].reg_cr2+4,edi
+        mov bx,2
+        jmp PageFault
+        
+WritePagedPrivOk64:
+        and ax,0F000h
+        and ebx,0FFFh
+        or eax,ebx
+        mov ebx,eax
+        mov edi,edx
+        pop esi
+        pop ecx
+;
+        push ecx
+        push esi
+        not eax
+        and eax,0FFFh
+        inc eax
+        cmp ecx,eax
+        jbe WritePagedWhole64
+        mov ecx,eax
+
+WritePagedWhole64:
+        push ecx
+        call WritePhysical
+        pop eax
+        pop esi
+        pop ecx
+        pop edx
+        pop ebx
+        pop edi
+        sub ecx,eax
+        jz WritePagedDone64
+        add esi,eax
+        add ebx,eax
+        adc edi,0
+        jmp WritePagedLoop64
+
+WritePagedDone64:
+        ret
+WritePaged64      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           ReadLinear
 ;
 ;               description:    read from linear memory
@@ -1995,7 +2225,7 @@ ReadLinear Proc near
         jz ReadLinearPae
 
 ReadLinear64:
-        int 3
+        call ReadPaged64
         ret
 
 ReadLinearPae:
@@ -2037,7 +2267,7 @@ WriteLinear Proc near
         jz WriteLinearPae
 
 WriteLinear64:
-        int 3
+        call WritePaged64
         ret
 
 WriteLinearPae:
