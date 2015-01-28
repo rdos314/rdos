@@ -45,6 +45,7 @@ write_thread_segment_nr		= 40
 install_device_file_nr      = 41
 check_device_file_nr        = 42
 set_page_emulate_nr			= 43
+invalid_os_nr               = 44
 hook_page_nr				= 45
 unhook_page_nr				= 46
 

@@ -220,6 +220,9 @@ is_valid_osgate PROC far
     mov bx,ax
     mov ax,osgate_sel
     mov ds,ax
+    cmp bx,osgate_entries
+    jae is_valid_fail
+;    
     shl bx,4
     mov ax,cs
     cmp ax,[bx].os_gate_sel
@@ -228,7 +231,8 @@ is_valid_osgate PROC far
     mov eax,OFFSET illegal_gate
     cmp eax,[bx].os_gate_offset
     jne is_valid_ok
-;
+
+is_valid_fail:
     stc
     jmp is_valid_gate_done
     
@@ -265,6 +269,12 @@ do_oscall   Proc near
     pop dword ptr [ebp+12]
 ;   
     mov edi,ds:[ebx+3]
+    cmp edi,osgate_entries
+    jb do_oscall_in_range
+;
+    mov edi,invalid_os_nr    
+
+do_oscall_in_range:    
     shl edi,4
     mov ax,osgate_sel
     mov es,ax

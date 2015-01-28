@@ -192,6 +192,9 @@ is_valid_usergate       PROC far
     mov bx,ax
     mov ax,usergate_sel
     mov ds,ax
+    cmp bx,usergate_entries
+    jae is_valid_gate_fail
+;    
     shl bx,USER_GATE_SHIFT
 ;
     mov ax,cs
@@ -201,7 +204,8 @@ is_valid_usergate       PROC far
     mov eax,OFFSET illegal_gate32
     cmp eax,[bx].user_gate_entry_offset32
     jne is_valid_gate_ok
-;
+
+is_valid_gate_fail:
     stc
     jmp is_valid_gate_done
     

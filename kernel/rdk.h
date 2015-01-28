@@ -45,6 +45,7 @@
 #define osgate_install_device_file 41
 #define osgate_check_device_file 42
 #define osgate_set_page_emulate 43
+#define osgate_invalid_os 44
 #define osgate_hook_page 45
 #define osgate_unhook_page 46
 
@@ -658,6 +659,10 @@
 #define osgate_irq_timer_expired 543
 #define osgate_force_level_irq 544
 
+#define osgate_has_can_send_buf 545
+
+#define osgate_fpu_exception 546
+
 
 
 
@@ -707,6 +712,7 @@
 #define OsGate_install_device_file 0x3E 0x67 0x9a 41 0 0 0 2 0
 #define OsGate_check_device_file 0x3E 0x67 0x9a 42 0 0 0 2 0
 #define OsGate_set_page_emulate 0x3E 0x67 0x9a 43 0 0 0 2 0
+#define OsGate_invalid_os 0x3E 0x67 0x9a 44 0 0 0 2 0
 #define OsGate_hook_page 0x3E 0x67 0x9a 45 0 0 0 2 0
 #define OsGate_unhook_page 0x3E 0x67 0x9a 46 0 0 0 2 0
 
@@ -1319,4 +1325,8 @@
 
 #define OsGate_irq_timer_expired 0x3E 0x67 0x9a 31 2 0 0 2 0
 #define OsGate_force_level_irq 0x3E 0x67 0x9a 32 2 0 0 2 0
+
+#define OsGate_has_can_send_buf 0x3E 0x67 0x9a 33 2 0 0 2 0
+
+#define OsGate_fpu_exception 0x3E 0x67 0x9a 34 2 0 0 2 0
 
