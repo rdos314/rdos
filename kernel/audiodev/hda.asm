@@ -1398,10 +1398,6 @@ caoWait:
     not eax
     and es:HdaSSync,eax
 ;
-    mov eax,es:HdaDplBase
-    and al,NOT 1
-    mov es:HdaDplBase,eax
-;
     mov ds:[ebx].sdFlags,0
 ;    
     popad
@@ -1537,10 +1533,6 @@ saoWaitResetDone:
 ;
     mov es,ds:HdaSel
 ;
-    mov eax,es:HdaDplBase
-    or al,1
-    mov es:HdaDplBase,eax
-;
     mov eax,1
     mov cx,ds:InStreamCnt
     shl eax,cl
@@ -1580,36 +1572,6 @@ saoDone:
     pop ds    
     ret
 send_audio_out  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DebugStream
-;
-;           DESCRIPTION:    Debug stream
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public DebugStream_
-
-DebugStream_    Proc near
-    int 3
-    mov ax,SEG data
-    mov ds,ax
-    mov ebx,ds:OutputFunction
-    shl ebx,1
-    mov ds,ds:[ebx].HdaArr
-;
-    mov bx,ds:InStreamCnt
-    movzx ebx,bx
-    shl ebx,6
-    add ebx,OFFSET StreamArr
-    mov es,ds:[ebx].sdSel
-    mov fs,ds:HdaSel
-    mov edx,fs:HdaDplBase
-    int 3    
-    ret
-DebugStream_    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
