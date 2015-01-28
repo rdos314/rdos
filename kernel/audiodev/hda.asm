@@ -1364,7 +1364,7 @@ close_audio_out Proc far
     mov ax,flat_sel
     mov es,ax
     mov edi,ds:[ebx].sdCurrPrd
-    mov ecx,ds:sdBufLen
+    mov ecx,ds:[ebx].sdBufLen
     shr ecx,2
     xor eax,eax
     rep stosd
