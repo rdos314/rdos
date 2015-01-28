@@ -924,7 +924,7 @@ CondLinearToPhysical32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           LinearToPhysical64
+;               NAME:           LinearToPhysicalPae
 ;
 ;               description:    Translate a linear address to a physical address
 ;
@@ -935,10 +935,10 @@ CondLinearToPhysical32    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LinearToPhysical64        Proc near
+LinearToPhysicalPae        Proc near
         push ebx
         call SearchTlb64
-        jnc LinearToPhysicalDone64
+        jnc LinearToPhysicalDonePae
 ;
         call AllocateTlb
         push esi
@@ -958,7 +958,7 @@ LinearToPhysical64        Proc near
 ;
         mov ch,byte ptr [esi].t_address
         test ch,1
-        jnz LinearToPhysicalPtrOk64
+        jnz LinearToPhysicalPtrOkPae
 ;
         mov eax,-1
         xchg eax,[esi].t_tag
@@ -969,9 +969,9 @@ LinearToPhysical64        Proc near
         xor bx,bx
         jmp PageFault
 
-LinearToPhysicalPtrOk64:
+LinearToPhysicalPtrOkPae:
         test ch,20h
-        jnz LinearToPhysicalPtrAccessed64
+        jnz LinearToPhysicalPtrAccessedPae
 ;
         push esi
         or byte ptr [esi].t_address,20h
@@ -980,7 +980,7 @@ LinearToPhysicalPtrOk64:
         call WritePhysical
         pop esi
 
-LinearToPhysicalPtrAccessed64:
+LinearToPhysicalPtrAccessedPae:
         mov ebx,[esi].t_tag
         shr ebx,18
         and ebx,0FF8h
@@ -998,7 +998,7 @@ LinearToPhysicalPtrAccessed64:
 ;
         mov ch,byte ptr [esi].t_address
         test ch,1
-        jnz LinearToPhysicalDirOk64
+        jnz LinearToPhysicalDirOkPae
 ;
         mov eax,-1
         xchg eax,[esi].t_tag
@@ -1009,10 +1009,10 @@ LinearToPhysicalPtrAccessed64:
         xor bx,bx
         jmp PageFault
 
-LinearToPhysicalDirOk64:
+LinearToPhysicalDirOkPae:
         push ecx
         test al,20h
-        jnz LinearToPhysicalDirAccessed64
+        jnz LinearToPhysicalDirAccessedPae
 ;
         push esi
         or byte ptr [esi].t_address,20h
@@ -1021,7 +1021,7 @@ LinearToPhysicalDirOk64:
         call WritePhysical
         pop esi
 
-LinearToPhysicalDirAccessed64:
+LinearToPhysicalDirAccessedPae:
         mov ebx,[esi].t_tag
         shr ebx,9
         and ebx,0FF8h
@@ -1040,7 +1040,7 @@ LinearToPhysicalDirAccessed64:
         pop ecx
         mov cl,byte ptr [esi].t_address
         test cl,1
-        jnz LinearToPhysicalPageOk64
+        jnz LinearToPhysicalPageOkPae
 ;
         mov eax,-1
         xchg eax,[esi].t_tag
@@ -1051,7 +1051,7 @@ LinearToPhysicalDirAccessed64:
         xor bx,bx
         jmp PageFault
 
-LinearToPhysicalPageOk64:
+LinearToPhysicalPageOkPae:
         mov al,cl
         and ch,cl
         and ch,3
@@ -1059,7 +1059,7 @@ LinearToPhysicalPageOk64:
         or cl,ch
         push ecx
         test al,20h
-        jnz LinearToPhysicalPageAccessed64
+        jnz LinearToPhysicalPageAccessedPae
 ;        
         push esi
         or byte ptr [esi].t_address,20h
@@ -1068,7 +1068,7 @@ LinearToPhysicalPageOk64:
         call WritePhysical
         pop esi
 
-LinearToPhysicalPageAccessed64:
+LinearToPhysicalPageAccessedPae:
         pop ecx
 ;
         mov eax,[esi].t_tag
@@ -1081,15 +1081,15 @@ LinearToPhysicalPageAccessed64:
         mov [esi].t_address,eax
         mov edx,[esi].t_address+4
 
-LinearToPhysicalDone64:
+LinearToPhysicalDonePae:
         pop ebx
         ret
-LinearToPhysical64        Endp
+LinearToPhysicalPae        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           CondLinearToPhysical64
+;               NAME:           CondLinearToPhysicalPae
 ;
 ;               description:    Translate a linear address to a physical address
 ;                                               no page faults
@@ -1102,13 +1102,13 @@ LinearToPhysical64        Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CondLinearToPhysical64    Proc near
+CondLinearToPhysicalPae    Proc near
         push ebx
         push ecx
         push edi
 ;        
         call SearchTlb64
-        jnc CondLinearToPhysicalDone64
+        jnc CondLinearToPhysicalDonePae
 ;
         call AllocateTlb
 ;
@@ -1129,16 +1129,16 @@ CondLinearToPhysical64    Proc near
 ;
         mov ch,byte ptr [esi].t_address
         test ch,1
-        jnz CondLinearToPhysicalPtrOk64
+        jnz CondLinearToPhysicalPtrOkPae
 ;
         mov [esi].t_tag,-1
         stc
-        jmp CondLinearToPhysicalDone64
+        jmp CondLinearToPhysicalDonePae
 
-CondLinearToPhysicalPtrOk64:
+CondLinearToPhysicalPtrOkPae:
         push ecx
         test ch,20h
-        jnz CondLinearToPhysicalPtrAccessed64
+        jnz CondLinearToPhysicalPtrAccessedPae
 ;
         push esi
         or byte ptr [esi].t_address,20h
@@ -1147,7 +1147,7 @@ CondLinearToPhysicalPtrOk64:
         call WritePhysical
         pop esi
 
-CondLinearToPhysicalPtrAccessed64:
+CondLinearToPhysicalPtrAccessedPae:
         mov ebx,[esi].t_tag
         shr ebx,18
         and ebx,0FF8h
@@ -1166,13 +1166,13 @@ CondLinearToPhysicalPtrAccessed64:
         pop ecx
         mov cl,byte ptr [esi].t_address
         test cl,1
-        jnz CondLinearToPhysicalDirOk64
+        jnz CondLinearToPhysicalDirOkPae
 ;
         mov [esi].t_tag,-1
         stc
-        jmp CondLinearToPhysicalDone64
+        jmp CondLinearToPhysicalDonePae
 
-CondLinearToPhysicalDirOk64:
+CondLinearToPhysicalDirOkPae:
         mov al,cl
         and ch,cl
         and ch,3
@@ -1180,7 +1180,7 @@ CondLinearToPhysicalDirOk64:
         or ch,cl
         push ecx
         test al,20h
-        jnz CondLinearToPhysicalDirAccessed64
+        jnz CondLinearToPhysicalDirAccessedPae
 ;
         push esi
         or byte ptr [esi].t_address,20h
@@ -1189,7 +1189,7 @@ CondLinearToPhysicalDirOk64:
         call WritePhysical
         pop esi
 
-CondLinearToPhysicalDirAccessed64:
+CondLinearToPhysicalDirAccessedPae:
         mov ebx,[esi].t_tag
         shr ebx,9
         and ebx,0FF8h
@@ -1208,13 +1208,13 @@ CondLinearToPhysicalDirAccessed64:
         pop ecx
         mov cl,byte ptr [esi].t_address
         test cl,1
-        jnz CondLinearToPhysicalPageOk64
+        jnz CondLinearToPhysicalPageOkPae
 ;
         mov [esi].t_tag,-1
         stc
-        jmp CondLinearToPhysicalDone64
+        jmp CondLinearToPhysicalDonePae
 
-CondLinearToPhysicalPageOk64:
+CondLinearToPhysicalPageOkPae:
         mov al,cl
         and ch,cl
         and ch,3
@@ -1222,7 +1222,7 @@ CondLinearToPhysicalPageOk64:
         or cl,ch
         push ecx
         test al,20h
-        jnz CondLinearToPhysicalPageAccessed64
+        jnz CondLinearToPhysicalPageAccessedPae
 ;        
         push esi
         or byte ptr [esi].t_address,20h
@@ -1231,7 +1231,7 @@ CondLinearToPhysicalPageOk64:
         call WritePhysical
         pop esi
 
-CondLinearToPhysicalPageAccessed64:
+CondLinearToPhysicalPageAccessedPae:
         pop ecx
 ;
         mov eax,[esi].t_tag
@@ -1245,12 +1245,12 @@ CondLinearToPhysicalPageAccessed64:
         mov edx,[esi].t_address+4
         clc
 
-CondLinearToPhysicalDone64:
+CondLinearToPhysicalDonePae:
         pop edi
         pop ecx
         pop ebx
         ret
-CondLinearToPhysical64    Endp
+CondLinearToPhysicalPae    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1397,7 +1397,7 @@ WritePaged32      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           ReadPaged64
+;               NAME:           ReadPagedPae
 ;
 ;               description:    Read paged
 ;
@@ -1408,27 +1408,27 @@ WritePaged32      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadPaged64       Proc near
+ReadPagedPae       Proc near
 
-ReadPagedLoop64:
+ReadPagedLoopPae:
         push edi
         push ebx
         push edx
         push ecx
         push esi
 ;
-        call LinearToPhysical64
+        call LinearToPhysicalPae
         test al,4
-        jnz ReadLinearPrivOk64
+        jnz ReadLinearPrivOkPae
         test [ebp].em_pl,ACCESS_RPL
-        jz ReadLinearPrivOk64
+        jz ReadLinearPrivOkPae
 ;
         mov [ebp].reg_cr2,ebx
         mov [ebp].reg_cr2+4,edi
         mov bx,4
         jmp PageFault
 
-ReadLinearPrivOk64:
+ReadLinearPrivOkPae:
         and ax,0F000h
         and ebx,0FFFh
         or eax,ebx
@@ -1443,10 +1443,11 @@ ReadLinearPrivOk64:
         and eax,0FFFh
         inc eax
         cmp ecx,eax
-        jbe ReadPagedWhole64
+        jbe ReadPagedWholePae
 
         mov ecx,eax
-ReadPagedWhole64:
+        
+ReadPagedWholePae:
         push ecx
         call ReadPhysical
         pop eax
@@ -1456,21 +1457,21 @@ ReadPagedWhole64:
         pop ebx
         pop edi
         sub ecx,eax
-        jz ReadPagedDone64
+        jz ReadPagedDonePae
 ;
         add esi,eax
         add ebx,eax
         adc edi,0        
-        jmp ReadPagedLoop64
+        jmp ReadPagedLoopPae
 
-ReadPagedDone64:
+ReadPagedDonePae:
         ret
-ReadPaged64       Endp
+ReadPagedPae       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           WritePaged64
+;               NAME:           WritePagedPae
 ;
 ;               description:    Write paged
 ;
@@ -1481,42 +1482,42 @@ ReadPaged64       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WritePaged64      Proc near
+WritePagedPae      Proc near
 
-WritePagedLoop64:
+WritePagedLoopPae:
         push edi
         push ebx
         push edx
         push ecx
         push esi
 ;
-        call LinearToPhysical64
+        call LinearToPhysicalPae
         test al,4
-        jnz WritePagedUserOk64
+        jnz WritePagedUserOkPae
 ;
         test [ebp].em_pl,ACCESS_RPL
-        jz WritePagedUserOk64
+        jz WritePagedUserOkPae
 ;
         mov [ebp].reg_cr2,ebx
         mov [ebp].reg_cr2+4,edi
         mov bx,4
         jmp PageFault
 
-WritePagedUserOk64:
+WritePagedUserOkPae:
         test al,2
-        jnz WritePagedPrivOk64
+        jnz WritePagedPrivOkPae
         test [ebp].em_pl,ACCESS_RPL
-        jnz WritePagedPrivFault64
+        jnz WritePagedPrivFaultPae
         test [ebp].reg_cr0,CR0_WP
-        jz WritePagedPrivOk64
+        jz WritePagedPrivOkPae
 
-WritePagedPrivFault64:
+WritePagedPrivFaultPae:
         mov [ebp].reg_cr2,ebx
         mov [ebp].reg_cr2+4,edi
         mov bx,2
         jmp PageFault
         
-WritePagedPrivOk64:
+WritePagedPrivOkPae:
         and ax,0F000h
         and ebx,0FFFh
         or eax,ebx
@@ -1531,10 +1532,10 @@ WritePagedPrivOk64:
         and eax,0FFFh
         inc eax
         cmp ecx,eax
-        jbe WritePagedWhole64
+        jbe WritePagedWholePae
         mov ecx,eax
 
-WritePagedWhole64:
+WritePagedWholePae:
         push ecx
         call WritePhysical
         pop eax
@@ -1544,15 +1545,15 @@ WritePagedWhole64:
         pop ebx
         pop edi
         sub ecx,eax
-        jz WritePagedDone32
+        jz WritePagedDonePae
         add esi,eax
         add ebx,eax
         adc edi,0
-        jmp WritePagedLoop64
+        jmp WritePagedLoopPae
 
-WritePagedDone64:
+WritePagedDonePae:
         ret
-WritePaged64      Endp
+WritePagedPae      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1576,9 +1577,16 @@ ReadLinear Proc near
 ;        
         test [ebp].reg_cr4,20h
         jz ReadLinear32
+;
+        test [ebp].reg_efer,EFER_LME        
+        jz ReadLinearPae
 
 ReadLinear64:
-        call ReadPaged64
+        int 3
+        ret
+
+ReadLinearPae:
+        call ReadPagedPae
         ret
 
 ReadLinear32:        
@@ -1611,9 +1619,16 @@ WriteLinear Proc near
 ;        
         test [ebp].reg_cr4,20h
         jz WriteLinear32
+;
+        test [ebp].reg_efer,EFER_LME        
+        jz WriteLinearPae
 
 WriteLinear64:
-        call WritePaged64 
+        int 3
+        ret
+
+WriteLinearPae:
+        call WritePagedPae
         ret       
 
 WriteLinear32:        
@@ -1795,7 +1810,7 @@ CondReadPaged32   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           CondReadPaged64
+;               NAME:           CondReadPagedPae
 ;
 ;               description:    Read paged without page faults
 ;
@@ -1807,26 +1822,26 @@ CondReadPaged32   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CondReadPaged64   Proc near
+CondReadPagedPae   Proc near
         lea esi,[ebp].req_buf
 
-CondReadPagedLoop64:
+CondReadPagedLoopPae:
         push edi
         push ebx
         push edx
         push ecx
         push esi
 ;
-        call CondLinearToPhysical64
-        jc CondReadPagedFailed64
+        call CondLinearToPhysicalPae
+        jc CondReadPagedFailedPae
 ;
         test al,4
-        jnz CondReadLinearPrivOk64
+        jnz CondReadLinearPrivOkPae
         test [ebp].reg_cs.d_access,ACCESS_RPL
-        jz CondReadLinearPrivOk64
-        jmp CondReadPagedFailed64
+        jz CondReadLinearPrivOkPae
+        jmp CondReadPagedFailedPae
 
-CondReadLinearPrivOk64:
+CondReadLinearPrivOkPae:
         and ax,0F000h
         and ebx,0FFFh
         or eax,ebx
@@ -1841,9 +1856,9 @@ CondReadLinearPrivOk64:
         and eax,0FFFh
         inc eax
         cmp ecx,eax
-        jbe CondReadPagedWhole64
+        jbe CondReadPagedWholePae
         mov ecx,eax
-CondReadPagedWhole64:
+CondReadPagedWholePae:
         push ecx
         call ReadPhysical
         pop eax
@@ -1856,22 +1871,22 @@ CondReadPagedWhole64:
         add ebx,eax
         adc edi,0
         sub ecx,eax
-        jz CondReadPagedDone64
-        jmp CondReadPagedLoop64
+        jz CondReadPagedDonePae
+        jmp CondReadPagedLoopPae
 
-CondReadPagedFailed64:
+CondReadPagedFailedPae:
         pop esi
         pop ecx
         pop edx
         pop ebx
         pop edi
 
-CondReadPagedDone64:
+CondReadPagedDonePae:
         mov ecx,esi
         lea esi,[ebp].req_buf
         sub ecx,esi
         ret
-CondReadPaged64   Endp
+CondReadPagedPae   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1896,9 +1911,16 @@ CondReadLinear Proc near
 ;        
         test [ebp].reg_cr4,20h
         jz CondReadLinear32
+;
+        test [ebp].reg_efer,EFER_LME        
+        jz CondReadLinearPae
 
 CondReadLinear64:
-        call CondReadPaged64 
+        int 3
+        ret
+
+CondReadLinearPae:
+        call CondReadPagedPae 
         ret       
 
 CondReadLinear32:        
