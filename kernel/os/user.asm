@@ -672,6 +672,12 @@ do_usercall16   Proc near
     pop dword ptr [ebp+12]
 ;   
     mov edi,ds:[ebx+3]
+    cmp edi,usergate_entries    
+    jb do_user_in_range16
+;
+    mov edi,invalid_user_nr
+
+do_user_in_range16:    
     shl edi,USER_GATE_SHIFT
     mov ax,usergate_sel
     mov es,ax
@@ -723,6 +729,12 @@ do_usercall32   Proc near
     pop dword ptr [ebp+12]
 ;   
     mov edi,ds:[ebx+3]
+    cmp edi,usergate_entries    
+    jb do_user_in_range32
+;
+    mov edi,invalid_user_nr
+
+do_user_in_range32:    
     shl edi,USER_GATE_SHIFT
     mov ax,usergate_sel
     mov es,ax
@@ -771,6 +783,12 @@ do_usergate32   Proc near
 
 do_usergate32_norm:    
     mov edi,ds:[ebx+2]
+    cmp edi,usergate_entries    
+    jb do_usergate_in_range32
+;
+    mov edi,invalid_user_nr
+
+do_usergate_in_range32:    
     shl edi,USER_GATE_SHIFT
     mov ax,usergate_sel
     mov es,ax

@@ -66,6 +66,8 @@
 #define usergate_free_app_mem 0x0000003A
 #define usergate_get_psp_sel 0x0000003B
 
+#define usergate_invalid_user 0x0000003C
+
 #define usergate_get_debug_thread 0x0000003D
 #define usergate_debug_trace 0x0000003E
 #define usergate_debug_pace 0x0000003F
@@ -796,6 +798,8 @@
 #define CallGate_free_app_mem 0x67 0x9a 58 0 0 0 3 0
 #define CallGate_get_psp_sel 0x67 0x9a 59 0 0 0 3 0
 
+#define CallGate_invalid_user 0x67 0x9a 60 0 0 0 3 0
+
 #define CallGate_get_debug_thread 0x67 0x9a 61 0 0 0 3 0
 #define CallGate_debug_trace 0x67 0x9a 62 0 0 0 3 0
 #define CallGate_debug_pace 0x67 0x9a 63 0 0 0 3 0
@@ -1523,6 +1527,8 @@
 #define CallGate_allocate_app_mem 0x3e 0x67 0x9a 57 0 0 0 3 0
 #define CallGate_free_app_mem 0x3e 0x67 0x9a 58 0 0 0 3 0
 #define CallGate_get_psp_sel 0x3e 0x67 0x9a 59 0 0 0 3 0
+
+#define CallGate_invalid_user 0x3e 0x67 0x9a 60 0 0 0 3 0
 
 #define CallGate_get_debug_thread 0x3e 0x67 0x9a 61 0 0 0 3 0
 #define CallGate_debug_trace 0x3e 0x67 0x9a 62 0 0 0 3 0

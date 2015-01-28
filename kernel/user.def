@@ -66,6 +66,8 @@ allocate_app_mem_nr			= 57
 free_app_mem_nr				= 58
 get_psp_sel_nr				= 59
 
+invalid_user_nr             = 60
+
 get_debug_thread_nr			= 61
 debug_trace_nr				= 62
 debug_pace_nr				= 63
