@@ -122,6 +122,7 @@ sdLastSize      DD ?
 sdThread        DW ?
 sdStatus        DB ?
 sdIrq           DB ?
+sdFrameCounter  DW ?
 
 stream_data ENDS
 
@@ -368,7 +369,12 @@ hdiStreamLoop:
     and dl,1Ch
     mov es:srStatus,dl
     or ds:[ebx].sdIrq,dl
-;    
+    test dl,4
+    jz hdiStreamNotFrame
+;
+    lock add ds:[ebx].sdFrameCounter,1    
+
+hdiStreamNotFrame:    
     push ebx
     mov bx,ds:[ebx].sdThread    
     Signal    
@@ -1248,10 +1254,6 @@ open_audio_out  Proc far
     mov ds:[ebx].sdBufLen,ecx
     mov ds:[ebx].sdFlags,0
 ;
-    GetThread
-    mov ds:[ebx].sdThread,ax
-    mov ds:[ebx].sdIrq,0
-;
     mov es,ds:HdaSel
     mov cx,ds:InStreamCnt
     mov eax,1
@@ -1293,13 +1295,40 @@ WaitForBuffer   Proc near
 wfbRetry:
     mov al,ds:[ebx].sdIrq
     test al,4
-    jnz wfbDone
-;    
+    jnz wfbHasIrq
+
+wfbWait:    
     WaitForSignal
     jmp wfbRetry
 
-wfbDone:
+wfbHasIrq:
     and ds:[ebx].sdIrq,NOT 4
+    lock sub ds:[ebx].sdFrameCounter,1
+    jc wfbDone
+
+wfbSync:
+    lock sub ds:[ebx].sdFrameCounter,1
+    jc wfbWait
+;
+    lock sub ds:[ebx].sdFrameCounter,1
+    jnc wfbSync
+;
+    mov edx,ds:[ebx].sdPrdLinear
+    mov edi,ds:[ebx].sdCurrPrd
+    cmp edi,ds:[ebx].sdPrd1Linear
+    je wfbPrd1
+
+wfbPrd2:
+    mov edi,ds:[ebx].sdPrd1Linear
+    mov ds:[ebx].sdCurrPrd,edi
+    jmp wfbWait
+
+wfbPrd1:
+    mov edi,ds:[ebx].sdPrd2Linear
+    mov ds:[ebx].sdCurrPrd,edi
+    jmp wfbWait
+
+wfbDone:        
     ret
 WaitForBuffer   Endp
 
@@ -1459,6 +1488,9 @@ saoBuffered:
     test ds:[ebx].sdFlags, STREAM_FLAG_RUNNING
     jnz saoDone
 ;    
+    GetThread
+    mov ds:[ebx].sdThread,ax
+;
     mov es,ds:[ebx].sdSel
 ;    
     mov al,es:srControl
@@ -1533,6 +1565,12 @@ saoFifo:
     shl eax,cl
     not eax
     and es:HdaSSync,eax
+;
+    mov dl,es:srStatus
+    mov es:srStatus,dl
+;
+    mov ds:[ebx].sdIrq,4
+    mov ds:[ebx].sdFrameCounter,0
             
 saoDone:        
     popad
@@ -1542,8 +1580,6 @@ saoDone:
     pop ds    
     ret
 send_audio_out  Endp
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
