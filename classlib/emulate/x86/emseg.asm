@@ -2595,6 +2595,134 @@ ExcFarPm:
         mov [ebp].em_errorcode,bx
 
 ExcPmErrorOk:
+        test [ebp].reg_efer,EFER_LME        
+        jz ExcProtIdt
+
+ExcLongIdt: 
+        movzx bx,al
+        shl bx,4
+;
+        movzx ecx,bx
+        or cl,0Fh
+        dec ecx
+        sub ecx,[ebp].reg_idt.d_limit
+        ja ProtectionFault
+;
+        movzx ecx,bx
+        add ecx,[ebp].reg_idt.d_base
+        mov ebx,ecx
+        push ebx
+        add ebx,8
+        push edi
+        xor edi,edi
+        call ReadLinearDword
+        pop edi
+        pop ebx
+;
+        push eax
+;       
+        push edi
+        xor edi,edi
+        call ReadLinearQword
+        pop edi
+;
+        test dh,80h
+        jz IdtFault
+;
+        mov cl,dh
+        and cl,0Fh
+;
+        cmp cl,0Eh
+        je ExcInt64
+;
+        cmp cl,0Fh
+        je ExcTrap64
+;
+        jmp IdtFault
+
+ExcInt64:
+        mov cx,EFLAGS_IF OR EFLAGS_TF
+        or [ebp].em_transfer,TRANSFER_32
+        jmp ExcLoad64
+
+ExcTrap64:
+        mov cx,EFLAGS_TF
+        or [ebp].em_transfer,TRANSFER_32
+
+ExcLoad64:
+        push cx
+        mov dx,ax
+        shr eax,16
+        xchg eax,edx    
+        mov esi,eax
+        mov bx,dx
+;
+        test bx,0FFFCh
+        jz ProtectionFault
+;
+        test bl,4
+        jz ExcInGdt64
+
+ExcInLdt64:
+        test [ebp].reg_ldt.d_access, ACCESS_READ
+        jz ProtectionFault
+;
+        mov edi,OFFSET reg_ldt
+        jmp ExcLoadDesc64
+
+ExcInGdt64:
+        mov edi,OFFSET reg_gdt
+
+ExcLoadDesc64:
+        movzx ecx,bx
+        or cl,7
+        dec ecx
+        sub ecx,[ebp+edi].d_limit
+        ja ProtectionFault
+;
+        push bx
+        movzx ebx,bx
+        and bl,0F8h
+        add ebx,[ebp+edi].d_base
+        xor edi,edi
+        call ReadLinearQword
+        mov edi,ebx
+        pop bx
+        test dh,80h
+        jz SegmentFault
+;
+        test edx,200000h
+        jz ProtectionFault
+;
+        mov cl,dh
+        and cl,1Ch
+        cmp cl,18h
+        jne ProtectionFault
+;
+        mov ecx,edx
+        mov cx,ax
+        rol edx,8
+        mov ax,dx
+        xchg al,ah
+        ror eax,16
+        ror edx,16
+        test dh,80h
+        jz ExcByteGranular64
+
+ExcPageGranular64:
+        shl ecx,12
+        or cx,0FFFh
+        jmp ExcDescDone
+        
+ExcByteGranular64:
+        and ecx,0FFFFFh
+
+ExcDescDone:
+        pop cx
+        pop edi
+        jmp IdtFault
+
+ExcProtIdt:
         movzx bx,al
         shl bx,3
 ;
