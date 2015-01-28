@@ -1500,6 +1500,43 @@ CondLinearToPhysicalCanonical:
 ;
         mov ch,byte ptr [esi].t_address
         test ch,1
+        jnz CondLinearToPhysicalPmlOk64
+;
+        mov [esi].t_tag,-1
+        stc
+        jmp CondLinearToPhysicalDone64
+
+CondLinearToPhysicalPmlOk64:
+        push ecx
+        test ch,20h
+        jnz CondLinearToPhysicalPmlAccessed64
+;
+        push esi
+        or byte ptr [esi].t_address,20h
+        mov ecx,1
+        add esi,OFFSET t_address
+        call WritePhysical
+        pop esi
+
+CondLinearToPhysicalPmlAccessed64:
+        mov ebx,[esi].t_tag+2
+        shr ebx,11
+        and ebx,0FF8h
+        mov eax,[esi].t_address
+        and ax,0F000h
+        add ebx,eax
+        mov edi,[esi].t_address+4
+        push esi
+        add esi,OFFSET t_address
+        push ebx
+        mov ecx,8
+        call ReadPhysical
+        pop ebx
+        pop esi
+;
+        pop ecx
+        mov cl,byte ptr [esi].t_address
+        test cl,1
         jnz CondLinearToPhysicalPtrOk64
 ;
         mov [esi].t_tag,-1
@@ -1507,8 +1544,13 @@ CondLinearToPhysicalCanonical:
         jmp CondLinearToPhysicalDone64
 
 CondLinearToPhysicalPtrOk64:
+        mov al,cl
+        and ch,cl
+        and ch,3
+        and cl,NOT 3
+        or ch,cl
         push ecx
-        test ch,20h
+        test al,20h
         jnz CondLinearToPhysicalPtrAccessed64
 ;
         push esi
@@ -2285,7 +2327,59 @@ CondReadPagedLoop64:
         push esi
 ;
         call CondLinearToPhysical64
+        jc CondReadPagedFailed64
+;
+        test al,4
+        jnz CondReadLinearPrivOk64
+        test [ebp].reg_cs.d_access,ACCESS_RPL
+        jz CondReadLinearPrivOk64
+        jmp CondReadPagedFailed64
 
+CondReadLinearPrivOk64:
+        and ax,0F000h
+        and ebx,0FFFh
+        or eax,ebx
+        mov ebx,eax
+        mov edi,edx
+        pop esi
+        pop ecx
+;
+        push ecx
+        push esi
+        not eax
+        and eax,0FFFh
+        inc eax
+        cmp ecx,eax
+        jbe CondReadPagedWhole64
+        mov ecx,eax
+CondReadPagedWhole64:
+        push ecx
+        call ReadPhysical
+        pop eax
+        pop esi
+        pop ecx
+        pop edx
+        pop ebx
+        pop edi
+        add esi,eax
+        add ebx,eax
+        adc edi,0
+        sub ecx,eax
+        jz CondReadPagedDone64
+        jmp CondReadPagedLoop64
+
+CondReadPagedFailed64:
+        pop esi
+        pop ecx
+        pop edx
+        pop ebx
+        pop edi
+
+CondReadPagedDone64:
+        mov ecx,esi
+        lea esi,[ebp].req_buf
+        sub ecx,esi
+        ret
 CondReadPaged64 Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
