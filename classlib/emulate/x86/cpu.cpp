@@ -1471,23 +1471,59 @@ void TCpu::ShowCpu()
     ShowDescriptor(" FS", &CpuState.Reg_fs);
     ShowDescriptor(" GS", &CpuState.Reg_gs);
 
-    printf(" EAX=%08lX", (long)CpuState.Reg_eax);
-    printf(" EBX=%08lX", (long)CpuState.Reg_ebx);
-    printf(" ECX=%08lX", (long)CpuState.Reg_ecx);
-    printf(" EDX=%08lX", (long)CpuState.Reg_edx);
-    printf("\r\n");
+    if (CpuState.Reg_efer & EFER_LME)
+    {
+        printf(" RAX=%08lX_%08lX", (long)(CpuState.Reg_eax >> 32), (long)CpuState.Reg_eax);
+        printf(" RBX=%08lX_%08lX", (long)(CpuState.Reg_ebx >> 32), (long)CpuState.Reg_ebx);
+        printf(" RCX=%08lX_%08lX", (long)(CpuState.Reg_ecx >> 32), (long)CpuState.Reg_ecx);
+        printf("\r\n");
+
+        printf(" RDX=%08lX_%08lX", (long)(CpuState.Reg_edx >> 32), (long)CpuState.Reg_edx);
+        printf(" RSI=%08lX_%08lX", (long)(CpuState.Reg_esi >> 32), (long)CpuState.Reg_esi);
+        printf(" RDI=%08lX_%08lX", (long)(CpuState.Reg_edi >> 32), (long)CpuState.Reg_edi);
+        printf("\r\n");
+
+        printf("  R8=%08lX_%08lX", (long)(CpuState.Reg_r8 >> 32), (long)CpuState.Reg_r8);
+        printf("  R9=%08lX_%08lX", (long)(CpuState.Reg_r9 >> 32), (long)CpuState.Reg_r9);
+        printf(" R10=%08lX_%08lX", (long)(CpuState.Reg_r10 >> 32), (long)CpuState.Reg_r10);
+        printf("\r\n");
+
+        printf(" R11=%08lX_%08lX", (long)(CpuState.Reg_r11 >> 32), (long)CpuState.Reg_r11);
+        printf(" R12=%08lX_%08lX", (long)(CpuState.Reg_r12 >> 32), (long)CpuState.Reg_r12);
+        printf(" R13=%08lX_%08lX", (long)(CpuState.Reg_r13 >> 32), (long)CpuState.Reg_r13);
+        printf("\r\n");
+
+        printf(" R14=%08lX_%08lX", (long)(CpuState.Reg_r14 >> 32), (long)CpuState.Reg_r14);
+        printf(" R15=%08lX_%08lX", (long)(CpuState.Reg_r15 >> 32), (long)CpuState.Reg_r15);
+        printf(" CR2=%08lX_%08lX", (long)(CpuState.Reg_cr2 >> 32), (long)CpuState.Reg_cr2);
+        printf("\r\n");
+
+        printf(" RIP=%08lX_%08lX", (long)(CpuState.Reg_eip >> 32), (long)CpuState.Reg_eip);
+        printf(" RSP=%08lX_%08lX", (long)(CpuState.Reg_esp >> 32), (long)CpuState.Reg_esp);
+        printf(" RBP=%08lX_%08lX", (long)(CpuState.Reg_ebp >> 32), (long)CpuState.Reg_ebp);
+        printf("\r\n");
+
+    }
+    else
+    {
+        printf(" EAX=%08lX", (long)CpuState.Reg_eax);
+        printf(" EBX=%08lX", (long)CpuState.Reg_ebx);
+        printf(" ECX=%08lX", (long)CpuState.Reg_ecx);
+        printf(" EDX=%08lX", (long)CpuState.Reg_edx);
+        printf("\r\n");
     
-    printf(" ESI=%08lX", (long)CpuState.Reg_esi);
-    printf(" EDI=%08lX", (long)CpuState.Reg_edi);
-    printf(" ESP=%08lX", (long)CpuState.Reg_esp);
-    printf(" EBP=%08lX", (long)CpuState.Reg_ebp);
-    printf("\r\n");
+        printf(" ESI=%08lX", (long)CpuState.Reg_esi);
+        printf(" EDI=%08lX", (long)CpuState.Reg_edi);
+        printf(" ESP=%08lX", (long)CpuState.Reg_esp);
+        printf(" EBP=%08lX", (long)CpuState.Reg_ebp);
+        printf("\r\n");
     
-    printf(" EIP=%08lX", (long)CpuState.Reg_eip);
-    printf(" CR2=%08lX", (long)CpuState.Reg_cr2);
-    printf(" CR3=%08lX", (long)CpuState.Reg_cr3);
-    printf(" CR4=%08lX", (long)CpuState.Reg_cr4);
-    printf("\r\n");
+        printf(" EIP=%08lX", (long)CpuState.Reg_eip);
+        printf(" CR2=%08lX", (long)CpuState.Reg_cr2);
+        printf(" CR3=%08lX", (long)CpuState.Reg_cr3);
+        printf(" CR4=%08lX", (long)CpuState.Reg_cr4);
+        printf("\r\n");
+    }
 
     if (CpuState.Reg_cr0 & 0x1)
     {
