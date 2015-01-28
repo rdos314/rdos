@@ -2267,49 +2267,10 @@ DeleteProcess    Proc near
     FreeMem
     pop es
 ;
-    call LockCore
-    cli
-    mov bx,es
-    mov ax,process_dir_sel
-    mov ds,ax
-    mov esi,alias_linear
-    shr esi,20
-    mov eax,es:p_cr3
-    mov [si],eax
-    mov eax,cr3
-    mov cr3,eax
-;
-    mov ax,flat_sel
-    mov ds,ax
-    mov cx,400h
-    mov edx,handle_linear
-    shr edx,10
-    add edx,alias_linear
-
-cleanup_process_linear_loop:
-    mov eax,[edx]
-    test al,1
-    jz cleanup_process_linear_next
-;
-    xor ebx,ebx
-    FreePhysical
-
-cleanup_process_linear_next:
-    add edx,4
-    loop cleanup_process_linear_loop
-;
-    mov edx,handle_linear
-    shr edx,10
-    add edx,alias_linear
-    mov eax,2
-    mov ecx,1
-    FreePageEntries
-;
     mov eax,es:p_cr3
     xor ebx,ebx
     FreePhysical
 ;
-    sti
     push es
     mov es,es:p_kernel_ss
     FreeMem
@@ -2319,8 +2280,6 @@ cleanup_process_linear_next:
     FreeGdt
 ;    
     FreeMem
-;
-    call UnlockCore
     ret
 DeleteProcess   Endp
     
