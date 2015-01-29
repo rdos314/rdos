@@ -218,6 +218,7 @@ em_sreg			DB ?
 em_pl			DB ?
 em_transfer		DB ?
 em_params		DB ?
+em_ist          DB ?
 em_errorcode	DW ?
 
 dis_sel			DW ?

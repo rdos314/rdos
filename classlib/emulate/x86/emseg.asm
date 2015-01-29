@@ -1612,6 +1612,86 @@ LowerLoadIt:
         call TransferProt
         ret
 TransferLower   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           TransferLong
+;
+;               DESCRIPTION:    Transfer control to long mode
+;
+;               PARAMETERS:     SS:EBP  CPU
+;                               BX      New CS
+;                               EDI:ESI New RIP
+;                               EDX:EAX CS Descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TransferLong   Proc near
+        push eax
+        push ecx
+        push edx
+;
+        test dl,8
+        jz ProtectionFault
+;
+        mov cl,dl               ;cl = DPL of the gate
+        shr cl,5
+        mov ch,bl               ; ch = RPL 
+        and cx,303h
+        jne ProtectionFault             
+;
+        or [ebp].em_transfer,cl
+        mov ch,[ebp].reg_cs.d_access
+        and ch,3
+        cmp cl,ch
+        je LongPush
+;        
+        ja ProtectionFault
+;
+        or [ebp].em_transfer,TRANSFER_SWITCH
+
+LongPush:
+        mov eax,6
+        call SubFromStack
+        mov ax,[ebp].reg_ss.d_selector
+        call PushWord
+;
+        mov eax,[ebp].reg_esp+4
+        call PushDword
+        mov eax,[ebp].reg_esp
+        call PushDword
+;
+        mov eax,[ebp].reg_eflags+4
+        call PushDword
+        mov eax,[ebp].reg_eflags
+        call PushDword
+;
+        mov eax,6
+        call SubFromStack
+        mov ax,[ebp].reg_cs.d_selector
+        call PushWord
+;
+        mov eax,[ebp].reg_eip+4
+        call PushDword
+        mov eax,[ebp].reg_eip
+        call PushDword
+;
+        test [ebp].em_transfer,TRANSFER_CODE
+        jz LongLoadIt
+;
+        xor eax,eax
+        call PushDword        
+        movzx eax,[ebp].em_errorcode
+        call PushDword
+
+LongLoadIt:
+        pop edx
+        pop ecx
+        pop eax
+        call TransferProt
+        ret
+TransferLong   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2618,8 +2698,7 @@ ExcLongIdt:
         call ReadLinearDword
         pop edi
         pop ebx
-;
-        push eax
+        mov edi,eax
 ;       
         push edi
         xor edi,edi
@@ -2651,6 +2730,11 @@ ExcTrap64:
 
 ExcLoad64:
         push cx
+        push edi
+;        
+        and dl,7
+        mov [ebp].em_ist,dl        
+;        
         mov dx,ax
         shr eax,16
         xchg eax,edx    
@@ -2718,9 +2802,13 @@ ExcByteGranular64:
         and ecx,0FFFFFh
 
 ExcDescDone:
-        pop cx
         pop edi
-        jmp IdtFault
+        call TransferLong
+;
+        pop cx
+        not cx
+        and word ptr [ebp].reg_eflags,cx
+        ret
 
 ExcProtIdt:
         movzx bx,al
