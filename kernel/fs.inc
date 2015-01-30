@@ -134,6 +134,13 @@ dfe_file_sel		DW ?
 
 dir_file_entry_data_struc	ENDS
 
+max_dir_entry_data_struc	STRUC
+
+mde_base			dir_entry_data_struc <>
+mde_space           DW ?,?,?
+
+max_dir_entry_data_struc	ENDS
+
 dir_sel_data_struc	STRUC
 
 ds_access_section	read_write_section_typ <>

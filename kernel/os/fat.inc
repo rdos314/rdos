@@ -98,7 +98,7 @@ fat_dir_sel_data_struc	ENDS
 
 fe_struc	STRUC
 
-fe_base				dir_entry_data_struc <>
+fe_base				max_dir_entry_data_struc <>
 
 fe_entry_sector		DD ?
 fe_entry_offset		DW ?
