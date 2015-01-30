@@ -273,7 +273,17 @@ caocHasMixer:
     push bx
     mov ds,dx
     mov es,ax
+;
+    push ecx    
+    push edx
     movzx eax,es:ams_buffer_size
+    movzx edx,ds:aos_sample_rate
+    mul edx
+    movzx ecx,es:ams_sample_rate
+    div ecx
+    pop edx
+    pop ecx
+;    
     mov ds:aos_buffer_size,ax    
     shl eax,2
     push es
