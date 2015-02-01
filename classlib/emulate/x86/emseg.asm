@@ -695,8 +695,19 @@ TransferProt    Proc near
         mov ax,bx
         mov [ebp].reg_cs.d_selector,ax
         and ax,3
+        test dh,20h
+        jz TransferProtNorm
+;
+        test [ebp].reg_efer,EFER_LME        
+        jz ProtectionFault 
+;
+        or ax,ACCESS_64
+        jmp TransferProtSizeOk        
+
+TransferProtNorm:        
         test dh,40h
         jz TransferProtSizeOk
+;
         or ax,ACCESS_32
 
 TransferProtSizeOk:

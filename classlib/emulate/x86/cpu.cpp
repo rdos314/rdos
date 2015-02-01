@@ -1444,7 +1444,12 @@ void TCpu::ShowDescriptor(const char *str, TDescriptor *des)
         if (des->access & 0x80)
             printf("32-BIT\r\n");
         else
-            printf("16-BIT\r\n");
+        {
+            if (des->access & 0x100)
+                printf("64-BIT\r\n");
+            else
+                printf("16-BIT\r\n");
+        }
     }
     else
         printf("INVALID\r\n");
