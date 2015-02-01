@@ -1260,9 +1260,6 @@ void TCpu::ShowInstruction()
     int ok;
     unsigned long long Base;
 
-    memset(CpuState.CodeCache, 0, 0x20);
-    FillCache(&CpuState, CpuState.Reg_cs.base + CpuState.Reg_eip);
-
     if (CpuState.Reg_cs.access & 0x80)
         codesize = 1;
     else
@@ -1273,9 +1270,19 @@ void TCpu::ShowInstruction()
             codesize = 0;
     }
 
+    memset(CpuState.CodeCache, 0, 0x20);
+    if (codesize == 2)
+        FillCache(&CpuState, CpuState.Reg_eip);
+    else
+        FillCache(&CpuState, CpuState.Reg_cs.base + CpuState.Reg_eip);
+
     size = DisAsmCodeCache(&CpuState, codesize);    
 
-    printf("%04lX:%08lX ", CpuState.Reg_cs.selector, CpuState.Reg_eip);
+    if (codesize == 2)
+        printf("%04lX_%08lX ", (long)(CpuState.Reg_eip >> 32), (long)CpuState.Reg_eip);
+    else
+        printf("%04lX:%08lX ", CpuState.Reg_cs.selector, CpuState.Reg_eip);
+    
     for (i = 0; i < size; i++)
         printf("%02hX ", CpuState.CodeCache[i]);
 
