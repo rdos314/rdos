@@ -62,6 +62,7 @@ edata_mode              DB ?
 override                DD ?
 ignore_ptr              DB ?
 op_rex                  DB ?
+root_tab                DD ?
 op_in_code              DB 50 DUP(?)
 
 ;ceci pour garder la taille de l'instruction decodée
@@ -330,7 +331,7 @@ eip_adr ENDP
         public rax_adr
 
 rax_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_eax
         ret
 rax_adr ENDP
 
@@ -347,7 +348,7 @@ rax_adr ENDP
         public rbx_adr
 
 rbx_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_ebx
         ret
 rbx_adr ENDP
         
@@ -363,7 +364,7 @@ rbx_adr ENDP
         public rcx_adr
 
 rcx_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_ecx
         ret
 rcx_adr ENDP
 
@@ -380,7 +381,7 @@ rcx_adr ENDP
         public rdx_adr
 
 rdx_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_edx
         ret
 rdx_adr ENDP
         
@@ -396,7 +397,7 @@ rdx_adr ENDP
         public rsi_adr
 
 rsi_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_esi
         ret
 rsi_adr ENDP
         
@@ -412,7 +413,7 @@ rsi_adr ENDP
         public rdi_adr
 
 rdi_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_edi
         ret
 rdi_adr ENDP
 
@@ -429,7 +430,7 @@ rdi_adr ENDP
         public rbp_adr
 
 rbp_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_ebp
         ret
 rbp_adr ENDP
 
@@ -446,7 +447,7 @@ rbp_adr ENDP
         public rsp_adr
 
 rsp_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_esp
         ret
 rsp_adr ENDP
 
@@ -463,7 +464,7 @@ rsp_adr ENDP
         public rip_adr
 
 rip_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_eip
         ret
 rip_adr ENDP
 
@@ -480,7 +481,7 @@ rip_adr ENDP
         public r8_adr
 
 r8_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_r8
         ret
 r8_adr ENDP
 
@@ -497,7 +498,7 @@ r8_adr ENDP
         public r9_adr
 
 r9_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_r9
         ret
 r9_adr ENDP
 
@@ -514,7 +515,7 @@ r9_adr ENDP
         public r10_adr
 
 r10_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_r10
         ret
 r10_adr ENDP
 
@@ -531,7 +532,7 @@ r10_adr ENDP
         public r11_adr
 
 r11_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_r11
         ret
 r11_adr ENDP
 
@@ -548,7 +549,7 @@ r11_adr ENDP
         public r12_adr
 
 r12_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_r12
         ret
 r12_adr ENDP
 
@@ -565,7 +566,7 @@ r12_adr ENDP
         public r13_adr
 
 r13_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_r13
         ret
 r13_adr ENDP
 
@@ -582,7 +583,7 @@ r13_adr ENDP
         public r14_adr
 
 r14_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_r14
         ret
 r14_adr ENDP
 
@@ -599,7 +600,7 @@ r14_adr ENDP
         public r15_adr
 
 r15_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_r15
         ret
 r15_adr ENDP
 
@@ -617,7 +618,7 @@ r15_adr ENDP
         public r8d_adr
 
 r8d_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_r8
         ret
 r8d_adr ENDP
 
@@ -634,7 +635,7 @@ r8d_adr ENDP
         public r9d_adr
 
 r9d_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_r9
         ret
 r9d_adr ENDP
 
@@ -651,7 +652,7 @@ r9d_adr ENDP
         public r10d_adr
 
 r10d_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_r10
         ret
 r10d_adr ENDP
 
@@ -668,7 +669,7 @@ r10d_adr ENDP
         public r11d_adr
 
 r11d_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_r11
         ret
 r11d_adr ENDP
 
@@ -685,7 +686,7 @@ r11d_adr ENDP
         public r12d_adr
 
 r12d_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_r12
         ret
 r12d_adr ENDP
 
@@ -702,7 +703,7 @@ r12d_adr ENDP
         public r13d_adr
 
 r13d_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_r13
         ret
 r13d_adr ENDP
 
@@ -719,7 +720,7 @@ r13d_adr ENDP
         public r14d_adr
 
 r14d_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_r14
         ret
 r14d_adr ENDP
 
@@ -736,7 +737,7 @@ r14d_adr ENDP
         public r15d_adr
 
 r15d_adr PROC near
-        xor eax,eax
+        mov eax,[ebp].reg_r15
         ret
 r15d_adr ENDP
 
@@ -1109,7 +1110,7 @@ override_rex     PROC near
         and al,0Fh
         mov ds:op_rex,al
 ;
-        mov ebx,ds:main_tab
+        mov ebx,ds:root_tab
         mov ds:op_syntax,ebx
         inc esi
         mov al,[esi]
@@ -1125,7 +1126,7 @@ override_rex     ENDP
 override_cs     PROC near
         mov eax,OFFSET cs_txt
         mov override,eax
-        mov ebx,OFFSET main_tab
+        mov ebx,ds:root_tab
         mov op_syntax,ebx
         inc esi
         mov al,[esi]
@@ -1140,7 +1141,7 @@ override_cs     ENDP
 override_ds     PROC near
         mov eax,OFFSET ds_txt
         mov override,eax
-        mov ebx,OFFSET main_tab
+        mov ebx,ds:root_tab
         mov op_syntax,ebx
         inc esi
         mov al,[esi]
@@ -1155,7 +1156,7 @@ override_ds     ENDP
 override_ss     PROC near
         mov eax,OFFSET ss_txt
         mov override,eax
-        mov ebx,OFFSET main_tab
+        mov ebx,ds:root_tab
         mov op_syntax,ebx
         inc esi
         mov al,[esi]
@@ -1170,7 +1171,7 @@ override_ss     ENDP
 override_es     PROC near
         mov eax,OFFSET es_txt
         mov override,eax
-        mov ebx,OFFSET main_tab
+        mov ebx,ds:root_tab
         mov op_syntax,ebx
         inc esi
         mov al,[esi]
@@ -1185,7 +1186,7 @@ override_es     ENDP
 override_fs     PROC near
         mov eax,OFFSET fs_txt
         mov override,eax
-        mov ebx,OFFSET main_tab
+        mov ebx,ds:root_tab
         mov op_syntax,ebx
         inc esi
         mov al,[esi]
@@ -1200,7 +1201,7 @@ override_fs     ENDP
 override_gs     PROC near
         mov eax,OFFSET gs_txt
         mov override,eax
-        mov ebx,OFFSET main_tab
+        mov ebx,ds:root_tab
         mov op_syntax,ebx
         inc esi
         mov al,[esi]
@@ -1362,7 +1363,7 @@ op_enter        ENDP
         public op_address_size
 
 op_address_size PROC near
-        mov ebx,OFFSET main_tab
+        mov ebx,ds:root_tab
         mov op_syntax,ebx
         xor [ebp].em_flags,a32
         inc esi
@@ -1375,7 +1376,7 @@ op_address_size ENDP
         public op_data_size
 
 op_data_size    PROC near
-        mov ebx,OFFSET main_tab
+        mov ebx,ds:root_tab
         mov op_syntax,ebx
         xor [ebp].em_flags,d32
         inc esi
@@ -1388,7 +1389,7 @@ op_data_size    ENDP
         public op_wait
 
 op_wait PROC near
-        mov ebx,OFFSET main_tab
+        mov ebx,ds:root_tab
         mov op_syntax,ebx
         inc esi
         mov al,[esi]
@@ -1400,7 +1401,7 @@ op_wait ENDP
         public op_rep
 
 op_rep  PROC near
-        mov ebx,OFFSET main_tab
+        mov ebx,ds:root_tab
         mov op_syntax,ebx
         inc esi
         mov al,[esi]
@@ -2798,11 +2799,10 @@ _DisAsmCodeCache     PROC near
         mov edi,OFFSET op_in_code
         rep movsb
 ;
+        mov ebx,OFFSET main_tab
         mov esi,OFFSET op_in_code
         mov al,[esi]
         movzx eax,al
-        mov ebx,OFFSET main_tab
-        mov op_syntax,ebx
         mov edi,OFFSET op_codes
         mov [ebp].em_flags,0
         or dl,dl
@@ -2816,8 +2816,12 @@ _DisAsmCodeCache     PROC near
 
 dis_ass_code64:
         mov [ebp].em_flags,l64
+        mov ebx,OFFSET long_main_tab
 
 dis_ass_code_ok:
+        mov op_syntax,ebx
+        mov root_tab,ebx
+;
         mov ignore_ptr,0
         mov override,0
         mov [ebp].data_sel,0
