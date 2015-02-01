@@ -1039,7 +1039,7 @@ not_op_back:
         test bl,2
         jnz op_sw64
 ;        
-        test al,1
+        test bl,1
         jz op_sw16
 
 op_sw32:

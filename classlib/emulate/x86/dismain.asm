@@ -94,6 +94,14 @@ op_code_size            DD ?    ;ceci represente la somme de :
         extrn cr_tab:near
         extrn dr_tab:near
 
+
+add_mne MACRO com_txt, sep
+        mov eax,OFFSET com_txt
+        sub eax,OFFSET mne_tab
+        add eax,sep
+        mov [edi],eax
+        add edi,4
+                ENDM
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -850,6 +858,56 @@ add_hex_dword   PROC near
         ret
 add_hex_dword   ENDP
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   ADD_HEX_QWORD
+;
+;               DESCRIPTION:    Add hex qword
+;
+;               PARAMETERS:             EDX:EAX             Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extrn uscore_txt:near
+
+add_hex_qword   PROC near
+        push eax
+        push edx
+;
+        push eax
+;
+        push edx        
+        pop dx
+        pop ax
+        xchg al,ah
+        call put_hex_code
+        xchg al,ah
+        call put_hex_code
+        mov al,dh
+        call put_hex_code
+        mov al,dl
+        call put_hex_code
+;
+        add_mne uscore_txt, no_sep
+;
+        pop dx
+        pop ax
+        xchg al,ah
+        call put_hex_code
+        xchg al,ah
+        call put_hex_code
+        mov al,dh
+        call put_hex_code
+        mov al,dl
+        call put_hex_code                
+;
+        pop edx
+        pop eax
+        ret
+add_hex_qword   ENDP
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -934,8 +992,12 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
         extrn mod_rm_tab:near
+        extrn long_mod_rm_tab:near
 
 decode_mem_mode PROC near
+        test [ebp].em_flags,l64
+        jnz decode_mem64
+;        
         mov bx,[ebp].em_flags
         and bx,a32
         mov bh,bl
@@ -964,7 +1026,59 @@ dec_mem_no_ignore:
         shr ah,3
         or al,ah
         movzx eax,al
-        call calc_ads_offset
+        call long_calc_ads_offset
+        inc esi
+        call decode_opcode
+        ret
+
+decode_mem64:
+        xor bl,bl
+        test ds:op_rex,8
+        jz decode_mem64_op_ok
+;
+        mov bl,1
+
+decode_mem64_op_ok:        
+        mov bh,bl
+        add bl,bl
+        add bl,bh
+        mov al,data_mode
+        or al,al
+        je dec64_data_8_sel
+;        
+        test [ebp].em_flags,d32
+        jz dec64_data_8_sel
+;
+        inc al
+
+dec64_data_8_sel:
+        mov ds:edata_mode,al
+;
+        add bl,al
+        movzx ebx,bl
+        mov eax,dword ptr [4*ebx].long_mod_rm_tab
+        mov op_syntax,eax
+;        
+        mov al,[esi+1]
+        mov ah,al
+        and al,7
+        test ds:op_rex,1
+        jz dec64_op_reg_ok
+;
+        or ax,8        
+
+dec64_op_reg_ok:       
+        and ah,0C0h
+        cmp ah,0C0h
+        jne dec64_mem_no_ignore
+;        
+        mov ds:ignore_ptr,1
+
+dec64_mem_no_ignore:
+        shr ah,3
+        or al,ah
+        movzx eax,al
+        call long_calc_ads_offset
         inc esi
         call decode_opcode
         ret
@@ -1045,8 +1159,12 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
         extrn reg_tab:near
+        extrn long_reg_tab:near
 
 decode_reg      PROC near
+        test [ebp].em_flags,l64
+        jnz decode_reg64
+;        
         mov bl,data_mode
         or bl,bl
         je rdata_8_sel
@@ -1059,6 +1177,36 @@ rdata_8_sel:
         mov op_syntax,ecx
         and eax,38h
         shr eax,3
+        mov ignore_ptr,1
+        call decode_opcode
+        ret
+
+decode_reg64:
+        mov bl,3
+        test ds:op_rex,8
+        jnz rdata_64_8_sel
+;
+        mov bl,ds:data_mode
+        or bl,bl
+        je rdata_64_8_sel
+;
+        test [ebp].em_flags,d32
+        jz rdata_64_8_sel
+;
+        inc bl        
+
+rdata_64_8_sel:
+        movzx ebx,bl
+        mov ecx,dword ptr [4*ebx].long_reg_tab
+        mov op_syntax,ecx
+        and eax,38h
+        shr eax,3
+        test ds:op_rex,4
+        jz rdata_64_do
+;
+        or ax,8        
+
+rdata_64_do:        
         mov ignore_ptr,1
         call decode_opcode
         ret
@@ -1222,6 +1370,10 @@ op_byte ENDP
         public op_word
 
 op_word PROC near
+        test [ebp].em_flags,l64
+        jnz op_w64
+
+op_wp:
         test [ebp].em_flags,d32
         jz op_w16
 op_w32:
@@ -1234,6 +1386,17 @@ op_w16:
         call add_hex_word
         add esi,2
         ret
+
+op_w64:
+        test op_rex,8
+        jz op_wp        
+
+opw64_64:
+        mov eax,[esi+1]
+        mov edx,[esi+5]
+        add esi,8
+        call add_hex_qword 
+        ret       
 op_word ENDP
 
         public op_word_mem
@@ -1260,16 +1423,38 @@ op_word_mem     ENDP
         public op_short
 
 op_short        PROC near
-        xor ah,ah
+        xor eax,eax
+        xor edx,edx
         mov al,[esi+1]
         test al,80h
         jz not_op_back
-        mov ah,0FFh
+;
+        movsx eax,al
+        mov edx,-1
+
 not_op_back:
-        add ax,2
-        add ax,word ptr [ebp].reg_eip
-        call add_hex_word
+        add eax,2
+        adc edx,0
+        add eax,[ebp].reg_eip
+        adc edx,[ebp].reg_eip+4
+;        
         add esi,2
+        test [ebp].em_flags,l64
+        jnz op_sw64
+;
+        test [ebp].em_flags,d32
+        jz op_sw16
+
+op_sw32:                
+        call add_hex_dword
+        ret
+
+op_sw16:
+        call add_hex_word
+        ret
+
+op_sw64:
+        call add_hex_qword
         ret
 op_short        ENDP
 
@@ -1410,21 +1595,17 @@ op_rep  PROC near
         ret
 op_rep  ENDP
 
-add_mne MACRO com_txt, sep
-        mov eax,OFFSET com_txt
-        sub eax,OFFSET mne_tab
-        add eax,sep
-        mov [edi],eax
-        add edi,4
-                ENDM
-
         extrn b_txt:near
         extrn w_txt:near
         extrn d_txt:near
+        extrn q_txt:near
 
         public op_string2b
 
 op_string2b     PROC near
+        test [ebp].em_flags,l64
+        jnz op_stringb64
+;        
         test [ebp].em_flags,a32
         jz op_stringb16
 
@@ -1438,6 +1619,7 @@ op_stringb32:
         add_mne ds_txt, kolon_par_sep
         add_mne esi_txt, rhak_sep
         ret
+
 op_stringb16:
         mov eax,4
         call calc_ads_offset
@@ -1448,6 +1630,17 @@ op_stringb16:
         add_mne ds_txt, kolon_par_sep
         add_mne si_txt, rhak_sep
         ret     
+
+op_stringb64:
+        mov eax,6
+        call long_calc_ads_offset
+        mov [ebp].data_sel,OFFSET noseg_txt
+        add_mne b_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rdi_txt, par_komma_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rsi_txt, rhak_sep
+        ret
 op_string2b     ENDP
 
         public op_string2w
@@ -1455,6 +1648,10 @@ op_string2b     ENDP
 op_string2w     PROC near
         test [ebp].em_flags,d32
         jnz op_string2d
+;
+        test [ebp].em_flags,l64
+        jnz op_string2w64
+;        
         test [ebp].em_flags,a32
         jz op_string2w16
 
@@ -1468,6 +1665,7 @@ op_string2w32:
         add_mne ds_txt, kolon_par_sep
         add_mne esi_txt, rhak_sep
         ret
+
 op_string2w16:
         mov eax,4
         call calc_ads_offset
@@ -1478,7 +1676,22 @@ op_string2w16:
         add_mne ds_txt, kolon_par_sep
         add_mne si_txt, rhak_sep
         ret
+
+op_string2w64:
+        mov eax,6
+        call long_calc_ads_offset
+        mov [ebp].data_sel,OFFSET noseg_txt
+        add_mne w_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rdi_txt, par_komma_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rsi_txt, rhak_sep
+        ret
+
 op_string2d:
+        test [ebp].em_flags,l64
+        jnz op_string2d64
+;
         test [ebp].em_flags,a32
         jz op_string2d16
 
@@ -1492,6 +1705,7 @@ op_string2d32:
         add_mne ds_txt, kolon_par_sep
         add_mne esi_txt, rhak_sep
         ret
+
 op_string2d16:
         mov eax,4
         call calc_ads_offset
@@ -1502,11 +1716,25 @@ op_string2d16:
         add_mne ds_txt, kolon_par_sep
         add_mne si_txt, rhak_sep
         ret     
+
+op_string2d64:
+        mov eax,6
+        call long_calc_ads_offset
+        mov [ebp].data_sel,OFFSET noseg_txt
+        add_mne d_txt, blank_sep
+        add_mne noseg_txt, rhak_sep
+        add_mne rdi_txt, par_komma_sep
+        add_mne noseg_txt, rhak_sep
+        add_mne rsi_txt, rhak_sep
+        ret
 op_string2w     ENDP
 
         public op_lodsb
 
 op_lodsb     PROC near
+        test [ebp].em_flags,l64
+        jnz op_lodsb64
+;
         test al,1
         jz op_lodsb16
 
@@ -1527,6 +1755,14 @@ op_lodsb16:
         add_mne ds_txt, kolon_par_sep
         add_mne si_txt, rhak_sep
         ret     
+
+op_lodsb64:
+        mov eax,6
+        call long_calc_ads_offset
+        mov [ebp].data_sel,OFFSET noseg_txt
+        add_mne b_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rsi_txt, rhak_sep
         ret
 op_lodsb     ENDP
 
@@ -1535,6 +1771,9 @@ op_lodsb     ENDP
 op_lodsw     PROC near
         test [ebp].em_flags,a32
         jnz op_lodsd
+;
+        test [ebp].em_flags,l64
+        jnz op_lodsw64
 ;        
         test al,1
         jz op_lodsw16
@@ -1557,7 +1796,19 @@ op_lodsw16:
         add_mne si_txt, rhak_sep
         ret
 
+op_lodsw64:
+        mov eax,6
+        call long_calc_ads_offset
+        mov [ebp].data_sel,OFFSET noseg_txt
+        add_mne w_txt, blank_sep
+        add_mne noseg_txt, rhak_sep
+        add_mne rsi_txt, rhak_sep
+        ret
+
 op_lodsd:
+        test [ebp].em_flags,l64
+        jnz op_lodsd64
+;
         test al,1
         jz op_lodsd16
 
@@ -1578,24 +1829,64 @@ op_lodsd16:
         add_mne ds_txt, kolon_par_sep
         add_mne si_txt, rhak_sep
         ret     
+
+op_lodsd64:
+        test op_rex,8
+        jnz op_lodsq64
+;        
+        mov eax,6
+        call long_calc_ads_offset
+        mov [ebp].data_sel,OFFSET noseg_txt
+        add_mne d_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rsi_txt, rhak_sep
+        ret
+
+op_lodsq64:        
+        mov eax,6
+        call long_calc_ads_offset
+        mov [ebp].data_sel,OFFSET noseg_txt
+        add_mne q_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rsi_txt, rhak_sep
         ret
 op_lodsw     ENDP
 
         public op_string1b
 
 op_string1b     PROC near
+        test [ebp].em_flags,l64
+        jnz op_string1b64
+;        
         test [ebp].em_flags,a32
         jz op_string1b16
+
 op_string1b32:
         mov eax,7
         call calc_ads_offset
+        mov [ebp].data_sel,OFFSET es_txt
         add_mne b_txt, blank_sep
+        add_mne es_txt, kolon_par_sep
+        add_mne edi_txt, rhak_sep
         ret
+
 op_string1b16:
         mov eax,5
         call calc_ads_offset
+        mov [ebp].data_sel,OFFSET es_txt
         add_mne b_txt, blank_sep
+        add_mne es_txt, kolon_par_sep
+        add_mne di_txt, rhak_sep
         ret     
+
+op_string1b64:
+        mov eax,7
+        call long_calc_ads_offset
+        mov [ebp].data_sel,OFFSET noseg_txt
+        add_mne b_txt, blank_sep
+        add_mne noseg_txt,lhak_sep
+        add_mne rdi_txt, rhak_sep
+        ret
 op_string1b     ENDP
 
         public op_string1w
@@ -1603,31 +1894,74 @@ op_string1b     ENDP
 op_string1w     PROC near
         test [ebp].em_flags,d32
         jnz op_string1d
+;
+        test [ebp].em_flags,l64
+        jnz op_string1w64
+;        
         test [ebp].em_flags,a32
         jz op_string1w16
+
 op_string1w32:
         mov eax,7
         call calc_ads_offset
+        mov [ebp].data_sel,OFFSET es_txt
         add_mne w_txt, blank_sep
+        add_mne es_txt, kolon_par_sep
+        add_mne edi_txt, rhak_sep
         ret
+
 op_string1w16:
         mov eax,5
         call calc_ads_offset
+        mov [ebp].data_sel,OFFSET es_txt
         add_mne w_txt, blank_sep
+        add_mne es_txt, kolon_par_sep
+        add_mne di_txt, rhak_sep
         ret
+
+op_string1w64:
+        mov eax,7
+        call long_calc_ads_offset
+        mov [ebp].data_sel,OFFSET noseg_txt
+        add_mne w_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rdi_txt, rhak_sep
+        ret
+        
 op_string1d:
+        test [ebp].em_flags,l64
+        jnz op_string1d64
+;
         test [ebp].em_flags,a32
         jz op_string1d16
+
 op_string1d32:
         mov eax,7
         call calc_ads_offset
+        mov [ebp].data_sel,OFFSET es_txt
         add_mne d_txt, blank_sep
+        add_mne es_txt, kolon_par_sep
+        add_mne edi_txt, rhak_sep
         ret
+
 op_string1d16:
         mov eax,5
         call calc_ads_offset
+        mov [ebp].data_sel,OFFSET es_txt
         add_mne d_txt, blank_sep
+        add_mne es_txt, kolon_par_sep
+        add_mne di_txt, rhak_sep
         ret     
+
+op_string1d64:
+        mov eax,7
+        call long_calc_ads_offset
+        mov [ebp].data_sel,OFFSET noseg_txt
+        add_mne d_txt, blank_sep
+        add_mne noseg_txt, lhak_sep
+        add_mne rdi_txt, rhak_sep
+        ret
+        
 op_string1w     ENDP
 
         extrn txt_16:near
@@ -2793,7 +3127,7 @@ _DisAsmCodeCache     PROC near
 ;
         mov edx,[ebp+12]
         mov ebp,[ebp+8]        
-;        
+;
         lea esi,[ebp].code_cache
         mov ecx,10h
         mov edi,OFFSET op_in_code
