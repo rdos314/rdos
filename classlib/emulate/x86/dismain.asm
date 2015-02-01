@@ -2773,7 +2773,7 @@ PAGE
 ;               DESCRIPTION:    Disassemble code cache entry
 ;
 ;               PARAMETERS:     CPU
-;                               Code size (0 = 16, 1 = 32)
+;                               Code size (0 = 16, 1 = 32, 2 = 64)
 ;
 ;               RETURNS:        Instruction size
 ;
@@ -2790,8 +2790,8 @@ _DisAsmCodeCache     PROC near
         push esi
         push edi
 ;
-        mov ebp,[ebp+8]        
         mov edx,[ebp+12]
+        mov ebp,[ebp+8]        
 ;        
         lea esi,[ebp].code_cache
         mov ecx,10h
@@ -2807,7 +2807,15 @@ _DisAsmCodeCache     PROC near
         mov [ebp].em_flags,0
         or dl,dl
         jz dis_ass_code_ok
+;        
+        cmp dl,1
+        jne dis_ass_code64
+;        
         mov [ebp].em_flags,a32 OR d32
+        jmp dis_ass_code_ok
+
+dis_ass_code64:
+        mov [ebp].em_flags,l64
 
 dis_ass_code_ok:
         mov ignore_ptr,0

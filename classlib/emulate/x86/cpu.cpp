@@ -1266,7 +1266,12 @@ void TCpu::ShowInstruction()
     if (CpuState.Reg_cs.access & 0x80)
         codesize = 1;
     else
-         codesize = 0;
+    {
+        if (CpuState.Reg_cs.access & 0x100)
+            codesize = 2;
+        else
+            codesize = 0;
+    }
 
     size = DisAsmCodeCache(&CpuState, codesize);    
 
