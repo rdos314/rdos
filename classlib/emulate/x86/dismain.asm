@@ -2638,7 +2638,7 @@ mem_op_next             ENDP
         extrn r15_txt:near
 
 ax_next PROC near
-        test [ebp].em_flags,64
+        test [ebp].em_flags,l64
         jnz op_r08
 
 op_axp:                
@@ -2684,7 +2684,7 @@ op_r8:
 ax_next ENDP
 
 bx_next PROC near
-        test [ebp].em_flags,64
+        test [ebp].em_flags,l64
         jnz op_r19
 
 op_bxp:        
@@ -2730,7 +2730,7 @@ op_r9:
 bx_next ENDP
 
 cx_next PROC near
-        test [ebp].em_flags,64
+        test [ebp].em_flags,l64
         jnz op_r210
 
 op_cxp:        
@@ -2776,7 +2776,7 @@ op_r10:
 cx_next ENDP
 
 dx_next PROC near
-        test [ebp].em_flags,64
+        test [ebp].em_flags,l64
         jnz op_r311
 
 op_dxp:        
@@ -2822,7 +2822,7 @@ op_r11:
 dx_next ENDP
 
 sp_next PROC near
-        test [ebp].em_flags,64
+        test [ebp].em_flags,l64
         jnz op_r412
 
 op_spp:        
@@ -2868,7 +2868,7 @@ op_r12:
 sp_next ENDP
 
 bp_next PROC near
-        test [ebp].em_flags,64
+        test [ebp].em_flags,l64
         jnz op_r513
 
 op_bpp:        
@@ -2914,7 +2914,7 @@ op_r13:
 bp_next ENDP
 
 si_next PROC near
-        test [ebp].em_flags,64
+        test [ebp].em_flags,l64
         jnz op_r614
 
 op_sip:        
@@ -2960,7 +2960,7 @@ op_r14:
 si_next ENDP
 
 di_next PROC near
-        test [ebp].em_flags,64
+        test [ebp].em_flags,l64
         jnz op_r715
 
 op_dip:        
