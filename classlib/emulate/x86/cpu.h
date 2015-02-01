@@ -72,8 +72,9 @@
 #define ACCESS_RPL              0x03
 #define ACCESS_DIR              0x10
 #define ACCESS_READ             0x20
-#define ACCESS_WRITE    0x40
-#define ACCESS_SIZE             0x80
+#define ACCESS_WRITE            0x40
+#define ACCESS_32               0x80
+#define ACCESS_64               0x100
 
 #define SINGLE_FAULT    0x10
 #define DOUBLE_FAULT    0x20
@@ -101,8 +102,7 @@ typedef struct
         unsigned long base;
         unsigned long limit;
         unsigned short int selector;
-        unsigned char access;
-        char pad;
+        unsigned short int access;
 } TDescriptor;
 
 typedef struct
@@ -197,9 +197,10 @@ public:
         long IoCount;
         long MemCount;
 
+        short int EmFlags;
+
         char PendingInt;
 
-        char EmFlags;
         char EmDebug;
         char EmSreg;
         char EmPl;

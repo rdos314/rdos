@@ -278,7 +278,7 @@ SaveTss32       Endp
         public SaveTss
 
 SaveTss:
-        test [ebp].reg_tr.d_access,ACCESS_SIZE
+        test [ebp].reg_tr.d_access,ACCESS_32
         jnz SaveTss32
         jmp SaveTss16
 
@@ -507,7 +507,7 @@ LoadTss32       Endp
         public LoadTss
 
 LoadTss:
-        test [ebp].reg_tr.d_access,ACCESS_SIZE
+        test [ebp].reg_tr.d_access,ACCESS_32
         jnz LoadTss32
         jmp LoadTss16
 
@@ -570,7 +570,7 @@ ValidateVmTss:
         ret
 
 ValidatePmTss:
-        mov al,[ebp].reg_cs.d_access
+        mov ax,[ebp].reg_cs.d_access
         and al,3
         mov [ebp].em_pl,al
 ;
@@ -679,7 +679,7 @@ GetStack        Proc near
         push edi
 ;        
         xor edi,edi
-        test [ebp].reg_tr.d_access,ACCESS_SIZE
+        test [ebp].reg_tr.d_access,ACCESS_32
         jnz GetStack32
 
 GetStack16:

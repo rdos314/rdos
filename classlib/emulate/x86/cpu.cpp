@@ -1062,7 +1062,7 @@ void TCpu::Pace()
 
                 case 0x9A:
                         BreakCs = CpuState.Reg_cs.selector;
-                        if (CpuState.Reg_cs.access & ACCESS_SIZE)
+                        if (CpuState.Reg_cs.access & ACCESS_32)
                             BreakEip = CpuState.Reg_eip + 7;
                         else
                             BreakEip = CpuState.Reg_eip + 5;
@@ -1075,7 +1075,7 @@ void TCpu::Pace()
                 case 0xE1:
                 case 0xE2:
                         BreakCs = CpuState.Reg_cs.selector;
-                        if (CpuState.Reg_cs.access & ACCESS_SIZE)
+                        if (CpuState.Reg_cs.access & ACCESS_32)
                             BreakEip = CpuState.Reg_eip + 4;
                         else
                             BreakEip = CpuState.Reg_eip + 2;
@@ -1086,7 +1086,7 @@ void TCpu::Pace()
 
                 case 0xE8:
                         BreakCs = CpuState.Reg_cs.selector;
-                        if (CpuState.Reg_cs.access & ACCESS_SIZE)
+                        if (CpuState.Reg_cs.access & ACCESS_32)
                             BreakEip = CpuState.Reg_eip + 5;
                         else                        
                             BreakEip = CpuState.Reg_eip + 3;

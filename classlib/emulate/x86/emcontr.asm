@@ -211,7 +211,7 @@ EmCliComp:
 EmCliPm:
         mov ecx,[ebp].reg_eflags
         ror cx,4
-        mov     ch,[ebp].reg_cs.d_access
+        mov ch,byte ptr [ebp].reg_cs.d_access
         and cx,303h
         cmp cl,ch
         jc PrivilegeFault
@@ -255,7 +255,7 @@ EmStiComp:
 EmStiPm:
         mov ecx,[ebp].reg_eflags
         ror cx,4
-        mov     ch,[ebp].reg_cs.d_access
+        mov ch,byte ptr [ebp].reg_cs.d_access
         and cx,303h
         cmp cl,ch
         jc PrivilegeFault

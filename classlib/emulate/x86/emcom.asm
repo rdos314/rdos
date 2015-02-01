@@ -534,7 +534,7 @@ PushWord        Proc near
         push ebx
 ;
         mov esi,OFFSET reg_ss
-        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        test word ptr [ebp+esi].d_access,ACCESS_32
         jz push_word16
 
 push_word32:
@@ -579,7 +579,7 @@ PushDword       Proc near
         push ebx
 ;
         mov esi,OFFSET reg_ss
-        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        test word ptr [ebp+esi].d_access,ACCESS_32
         jz push_dword16
 
 push_dword32:
@@ -623,7 +623,7 @@ PopWord Proc near
         push ebx
 ;
         mov esi,OFFSET reg_ss
-        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        test word ptr [ebp+esi].d_access,ACCESS_32
         jz pop_word16
 
 pop_word32:
@@ -667,7 +667,7 @@ PopDword        Proc near
         push ebx
 ;
         mov esi,OFFSET reg_ss
-        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        test word ptr [ebp+esi].d_access,ACCESS_32
         jz pop_dword16
 
 pop_dword32:
@@ -707,7 +707,7 @@ PopDword        Endp
         public AddToStack
 
 AddToStack      Proc near
-        test word ptr [ebp].reg_ss.d_access,ACCESS_SIZE
+        test word ptr [ebp].reg_ss.d_access,ACCESS_32
         jz AddToStack16
 
 AddToStack32:
@@ -733,7 +733,7 @@ AddToStack      Endp
         public SubFromStack
 
 SubFromStack    Proc near
-        test word ptr [ebp].reg_ss.d_access,ACCESS_SIZE
+        test word ptr [ebp].reg_ss.d_access,ACCESS_32
         jz SubFromStack16
 
 SubFromStack32:
@@ -765,7 +765,7 @@ ReadCodeByte    Proc near
         test [ebp+esi].d_access,ACCESS_READ
         jz AccessFault
 ;
-        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        test word ptr [ebp+esi].d_access,ACCESS_32
         jz read_code_byte16
 
 read_code_byte32:
@@ -873,7 +873,7 @@ ReadCodeWord    Proc near
         test [ebp+esi].d_access,ACCESS_READ
         jz AccessFault
 ;
-        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        test word ptr [ebp+esi].d_access,ACCESS_32
         jz read_code_word16
 
 read_code_word32:
@@ -985,7 +985,7 @@ ReadCodeDword   Proc near
         test [ebp+esi].d_access,ACCESS_READ
         jz AccessFault
 ;        
-        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        test word ptr [ebp+esi].d_access,ACCESS_32
         jz read_code_dword16
 
 read_code_dword32:
@@ -1097,7 +1097,7 @@ ReadCodeFword   Proc near
         test [ebp+esi].d_access,ACCESS_READ
         jz AccessFault
 ;        
-        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        test word ptr [ebp+esi].d_access,ACCESS_32
         jz read_code_fword16
 
 read_code_fword32:
@@ -1457,7 +1457,7 @@ InByte Proc near
 ;
         mov ecx,[ebp].reg_eflags
         ror cx,4
-        mov     ch,[ebp].reg_cs.d_access
+        mov ch,byte ptr [ebp].reg_cs.d_access
         and cx,303h
         cmp cl,ch
         jnc InByteDo
@@ -1510,7 +1510,7 @@ InWord Proc near
 ;
         mov ecx,[ebp].reg_eflags
         ror cx,4
-        mov     ch,[ebp].reg_cs.d_access
+        mov ch,byte ptr [ebp].reg_cs.d_access
         and cx,303h
         cmp cl,ch
         jnc InWordDo
@@ -1563,7 +1563,7 @@ InDword Proc near
 ;
         mov ecx,[ebp].reg_eflags
         ror cx,4
-        mov     ch,[ebp].reg_cs.d_access
+        mov ch,byte ptr [ebp].reg_cs.d_access
         and cx,303h
         cmp cl,ch
         jnc InDwordDo
@@ -1615,7 +1615,7 @@ OutByte Proc near
 ;
         mov ecx,[ebp].reg_eflags
         ror cx,4
-        mov     ch,[ebp].reg_cs.d_access
+        mov ch,byte ptr [ebp].reg_cs.d_access
         and cx,303h
         cmp cl,ch
         jnc OutByteDo
@@ -1666,7 +1666,7 @@ OutWord Proc near
 ;
         mov ecx,[ebp].reg_eflags
         ror cx,4
-        mov     ch,[ebp].reg_cs.d_access
+        mov ch,byte ptr [ebp].reg_cs.d_access
         and cx,303h
         cmp cl,ch
         jnc OutWordDo
@@ -1717,7 +1717,7 @@ OutDword Proc near
 ;
         mov ecx,[ebp].reg_eflags
         ror cx,4
-        mov     ch,[ebp].reg_cs.d_access
+        mov ch,byte ptr [ebp].reg_cs.d_access
         and cx,303h
         cmp cl,ch
         jnc OutDwordDo
@@ -1810,7 +1810,7 @@ _ReadInstruction Proc near
         mov ebp,[ebp+8]
 ;
         mov esi,OFFSET reg_cs
-        test word ptr [ebp+esi].d_access,ACCESS_SIZE
+        test word ptr [ebp+esi].d_access,ACCESS_32
         jz read_instr_byte16
 
 read_instr_byte32:

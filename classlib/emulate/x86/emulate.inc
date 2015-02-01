@@ -64,7 +64,8 @@ ACCESS_RPL		EQU 03h
 ACCESS_DIR		EQU 10h
 ACCESS_READ		EQU 20h
 ACCESS_WRITE	EQU 40h
-ACCESS_SIZE		EQU 80h
+ACCESS_32		EQU 80h
+ACCESS_64       EQU 100h
 
 TRANSFER_CPL	EQU 3
 TRANSFER_32		EQU 4
@@ -80,6 +81,7 @@ single_faulted	EQU 10h
 double_faulted	EQU 20h
 triple_faulted	EQU 40h
 trap_fault		EQU 80h
+l64             EQU 100h
 
 DEBUG_BREAK		EQU 1
 DEBUG_RESUME	EQU 2
@@ -113,8 +115,7 @@ descriptor_struc STRUC
 d_base		DD ?
 d_limit		DD ?
 d_selector	DW ?
-d_access	DB ?
-d_spare		DB ?
+d_access	DW ?
 
 descriptor_struc	ENDS
 
@@ -211,8 +212,8 @@ req_buf			DB 32 DUP(?)
 io_count        DD ?
 mem_count       DD ?
 
+em_flags		DW ?
 pending_int     DB ?
-em_flags		DB ?
 em_debug		DB ?
 em_sreg			DB ?
 em_pl			DB ?

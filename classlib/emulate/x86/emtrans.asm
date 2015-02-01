@@ -1782,7 +1782,7 @@ EmPopfComp:
 EmPopfPm:
         mov ecx,[ebp].reg_eflags
         ror cx,4
-        mov     ch,[ebp].reg_cs.d_access
+        mov ch,byte ptr [ebp].reg_cs.d_access
         and cx,303h
         cmp cl,ch
         jc EmPopfDone
@@ -1833,7 +1833,7 @@ EmPopfdComp:
 EmPopfdPm:
         mov ecx,[ebp].reg_eflags
         ror cx,4
-        mov     ch,[ebp].reg_cs.d_access
+        mov ch,byte ptr [ebp].reg_cs.d_access
         and cx,303h
         cmp cl,ch
         jc EmPopfdDone

@@ -935,8 +935,8 @@ PAGE
         extrn mod_rm_tab:near
 
 decode_mem_mode PROC near
-        mov bl,[ebp].em_flags
-        and bl,a32
+        mov bx,[ebp].em_flags
+        and bx,a32
         mov bh,bl
         add bl,bl
         add bl,bh
@@ -985,8 +985,8 @@ PAGE
         extrn st_txt:near
 
 decode_math_mem PROC near
-        mov bl,[ebp].em_flags
-        and bl,a32
+        mov bx,[ebp].em_flags
+        and bx,a32
         mov bh,bl
         add bl,bl
         add bl,bh

@@ -694,18 +694,18 @@ TransferProt    Proc near
         mov [ebp].reg_cs.d_limit,ecx
         mov ax,bx
         mov [ebp].reg_cs.d_selector,ax
-        and al,3
+        and ax,3
         test dh,40h
         jz TransferProtSizeOk
-        or al,ACCESS_SIZE
+        or ax,ACCESS_32
 
 TransferProtSizeOk:
         test dl,2
         jz TransferProtReadOk
-        or al,ACCESS_READ
+        or ax,ACCESS_READ
 
 TransferProtReadOk:
-        mov [ebp].reg_cs.d_access,al
+        mov [ebp].reg_cs.d_access,ax
         mov [ebp].reg_eip,esi
         ret
 TransferProt    Endp
@@ -749,22 +749,22 @@ LoadStackSelector       Proc near
         mov [ebp].reg_ss.d_limit,ecx
         mov [ebp].reg_ss.d_selector,bx
 ;
-        and bl,3
+        and bx,3
         test dh,40h
         jz LoadStackSizeOk
 ;
-        or bl,ACCESS_SIZE
+        or bx,ACCESS_32
 
 LoadStackSizeOk:
-        or bl,ACCESS_READ OR ACCESS_WRITE
+        or bx,ACCESS_READ OR ACCESS_WRITE
 ;
         test dl,4
         jz LoadStackDirOk
 ;
-        or bl,ACCESS_DIR
+        or bx,ACCESS_DIR
 
 LoadStackDirOk:
-        mov [ebp].reg_ss.d_access,bl
+        mov [ebp].reg_ss.d_access,bx
         ret
 LoadStackSelector       Endp
 
@@ -810,22 +810,22 @@ SwitchStackSelector     Proc near
         mov [ebp].reg_ss.d_limit,ecx
         mov [ebp].reg_ss.d_selector,bx
 ;
-        and bl,3
+        and bx,3
         test dh,40h
         jz SwitchStackSizeOk
 ;
-        or bl,ACCESS_SIZE
+        or bx,ACCESS_32
 
 SwitchStackSizeOk:
-        or bl,ACCESS_READ OR ACCESS_WRITE
+        or bx,ACCESS_READ OR ACCESS_WRITE
 ;
         test dl,4
         jz SwitchStackDirOk
 ;
-        or bl,ACCESS_DIR
+        or bx,ACCESS_DIR
 
 SwitchStackDirOk:
-        mov [ebp].reg_ss.d_access,bl
+        mov [ebp].reg_ss.d_access,bx
         mov bx,si                        ;restore bx
         pop si
         ret
@@ -865,11 +865,11 @@ LoadNotNull:
         mov [ebp+esi].d_limit,ecx
         mov [ebp+esi].d_selector,bx
 ;
-        and bl,3
+        and bx,3
         test dh,40h
         jz LoadSelectorSizeOk
 ;
-        or bl,ACCESS_SIZE
+        or bx,ACCESS_32
 
 LoadSelectorSizeOk:
         test dl,8
@@ -879,25 +879,25 @@ LoadCodeSelector:
         test dl,2
         jz ProtectionFault
 ;
-        or bl,ACCESS_READ
-        mov [ebp+esi].d_access,bl
+        or bx,ACCESS_READ
+        mov [ebp+esi].d_access,bx
         jmp LoadSelectorDone
 
 LoadDataSelector:
-        or bl,ACCESS_READ
+        or bx,ACCESS_READ
         test dl,2
         jz LoadWriteableOk
 ;
-        or bl,ACCESS_WRITE
+        or bx,ACCESS_WRITE
 
 LoadWriteableOk:
         test dl,4
         jz LoadDirOk
 ;
-        or bl,ACCESS_DIR
+        or bx,ACCESS_DIR
 
 LoadDirOk:
-        mov [ebp+esi].d_access,bl
+        mov [ebp+esi].d_access,bx
 
 LoadSelectorDone:
         ret
@@ -967,13 +967,13 @@ TransferEqual   Proc near
 ;
         AssertCallDpl
         and bx,0FFFCh
-        mov cl,[ebp].reg_cs.d_access
+        mov cl,byte ptr [ebp].reg_cs.d_access
         and cl,3
         or bl,cl
 
 EqualNormalCode:
         mov cl,bl
-        mov ch,[ebp].reg_cs.d_access
+        mov ch,byte ptr [ebp].reg_cs.d_access
         and cx,303h
         cmp cl,ch
         jne ProtectionFault
@@ -1150,7 +1150,7 @@ HigherNormalCode:
         jne ProtectionFault
 ;
         or [ebp].em_transfer,cl
-        mov ch,[ebp].reg_cs.d_access
+        mov ch,byte ptr [ebp].reg_cs.d_access
         and ch,3
         cmp cl,ch
         je HigherCheckSize
@@ -1220,7 +1220,7 @@ HigherStackDone32:
 HigherLoadIt:
         mov ecx,[ebp].reg_eflags
         ror cx,4
-        mov     ch,[ebp].reg_cs.d_access
+        mov ch,byte ptr [ebp].reg_cs.d_access
         and cx,303h
         cmp cl,ch
         pop ecx
@@ -1269,7 +1269,7 @@ TransferLower   Proc near
         AssertCallDpl           ;make sur that the call is from a less privilege segment
 ;
         and bx,0FFFCh
-        mov cl,[ebp].reg_cs.d_access
+        mov cl,byte ptr [ebp].reg_cs.d_access
         and cl,3                        
         or bl,cl                        ;take the privilege of the caller (to be conform :-)
         or [ebp].em_transfer,cl
@@ -1283,7 +1283,7 @@ LowerNormalCode:
         jne ProtectionFault             
 ;
         or [ebp].em_transfer,cl
-        mov ch,[ebp].reg_cs.d_access
+        mov ch,byte ptr [ebp].reg_cs.d_access
         and ch,3
         cmp cl,ch
         je LowerPush
@@ -1385,7 +1385,7 @@ LowerProt16:
         mov ebx,edx
         mov dl,ah
 ;
-        test al,ACCESS_SIZE
+        test al,ACCESS_32
         jnz LowerCopy16
 ;
         movzx esi,si
@@ -1545,7 +1545,7 @@ LowerProt32:
         mov ebx,edx
         mov dl,ah
 ;
-        test al,ACCESS_SIZE
+        test al,ACCESS_32
         jnz LowerCopy32
         movzx edi,di
 
@@ -1642,7 +1642,7 @@ TransferLong   Proc near
         jne ProtectionFault             
 ;
         or [ebp].em_transfer,cl
-        mov ch,[ebp].reg_cs.d_access
+        mov ch,byte ptr [ebp].reg_cs.d_access
         and ch,3
         cmp cl,ch
         je LongPush
@@ -1713,7 +1713,7 @@ JmpTss  Proc near
         jz short JmpTssCheck16
 
 JmpTssCheck32:
-        mov dh,ACCESS_SIZE
+        mov dh,ACCESS_32
         cmp ecx,103
         jc InvalidTssFault
         jmp short JmpTssSizeOk
@@ -1726,7 +1726,8 @@ JmpTssCheck16:
 JmpTssSizeOk:
         call SaveTss
         push [ebp].reg_tr.d_selector
-        mov [ebp].reg_tr.d_access,dh
+        mov byte ptr [ebp].reg_tr.d_access,dh
+        mov byte ptr [ebp].reg_tr.d_access+1,0
         mov [ebp].reg_tr.d_selector,bx
         mov [ebp].reg_tr.d_base,eax
         mov [ebp].reg_tr.d_limit,ecx
@@ -1787,7 +1788,7 @@ CallTss Proc near
         jz short CallTssCheck16
 
 CallTssCheck32:
-        mov dh,ACCESS_SIZE
+        mov dh,ACCESS_32
         cmp ecx,103
         jc InvalidTssFault
         jmp short CallTssSizeOk
@@ -1800,7 +1801,8 @@ CallTssCheck16:
 CallTssSizeOk:
         call SaveTss
         push [ebp].reg_tr.d_selector
-        mov [ebp].reg_tr.d_access,dh
+        mov byte ptr [ebp].reg_tr.d_access,dh
+        mov byte ptr [ebp].reg_tr.d_access+1,0
         mov [ebp].reg_tr.d_selector,bx
         mov [ebp].reg_tr.d_base,eax
         mov [ebp].reg_tr.d_limit,ecx
@@ -1864,7 +1866,7 @@ RetTss  Proc near
         jz short RetTssCheck16
 
 RetTssCheck32:
-        mov dh,ACCESS_SIZE
+        mov dh,ACCESS_32
         cmp ecx,103
         jc InvalidTssFault
         jmp short RetTssSizeOk
@@ -1878,7 +1880,8 @@ RetTssSizeOk:
         and [ebp].reg_eflags,NOT EFLAGS_NT  ;the NT flag must be cleared
         call SaveTss
         push [ebp].reg_tr.d_selector
-        mov [ebp].reg_tr.d_access,dh
+        mov byte ptr [ebp].reg_tr.d_access,dh
+        mov byte ptr [ebp].reg_tr.d_access+1,0
         mov [ebp].reg_tr.d_selector,bx
         mov [ebp].reg_tr.d_base,eax
         mov [ebp].reg_tr.d_limit,ecx
@@ -2121,18 +2124,18 @@ ValidateTssCs   Proc near
         mov [ebp].reg_cs.d_limit,ecx
 ;
         mov ax,[ebp].reg_cs.d_selector
-        and al,3
+        and ax,3
         test dh,40h
         jz ValidateTssCsSizeOk
-        or al,ACCESS_SIZE
+        or ax,ACCESS_32
 
 ValidateTssCsSizeOk:
         test dl,2
         jz ValidateTssCsReadOk
-        or al,ACCESS_READ
+        or ax,ACCESS_READ
 
 ValidateTssCsReadOk:
-        mov [ebp].reg_cs.d_access,al
+        mov [ebp].reg_cs.d_access,ax
         ret
 ValidateTssCs   Endp
         
@@ -2239,7 +2242,7 @@ LoadTr32:
         mov [ebp].reg_tr.d_selector,bx
         mov [ebp].reg_tr.d_base,eax
         mov [ebp].reg_tr.d_limit,ecx    
-        mov [ebp].reg_tr.d_access,ACCESS_READ OR ACCESS_SIZE
+        mov [ebp].reg_tr.d_access,ACCESS_READ OR ACCESS_32
 ;
         mov ebx,edi
         add ebx,5
@@ -3438,11 +3441,11 @@ ldDesOk:
         mov [esi].d_limit,ecx
         mov [esi].d_selector,bx
 ;
-        and bl,3
+        and bx,3
         test dh,40h
         jz ldLoadSelectorSizeOk
 ;
-        or bl,ACCESS_SIZE
+        or bx,ACCESS_32
 
 ldLoadSelectorSizeOk:
         test dl,8
@@ -3452,25 +3455,25 @@ ldLoadCodeSelector:
         test dl,2
         jz ldFail
 ;
-        or bl,ACCESS_READ
-        mov [esi].d_access,bl
+        or bx,ACCESS_READ
+        mov [esi].d_access,bx
         jmp ldLoadSelectorDone
 
 ldLoadDataSelector:
-        or bl,ACCESS_READ
+        or bx,ACCESS_READ
         test dl,2
         jz ldLoadWriteableOk
 ;
-        or bl,ACCESS_WRITE
+        or bx,ACCESS_WRITE
 
 ldLoadWriteableOk:
         test dl,4
         jz ldLoadDirOk
 ;
-        or bl,ACCESS_DIR
+        or bx,ACCESS_DIR
 
 ldLoadDirOk:
-        mov [esi].d_access,bl
+        mov [esi].d_access,bx
 
 ldLoadSelectorDone:
         mov eax,1

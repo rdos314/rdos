@@ -1113,11 +1113,11 @@ _Emulate Proc near
         mov ebp,[ebp+8]
 ;
         and [ebp].em_debug, NOT DEBUG_BREAK
-        mov al,[ebp].reg_cs.d_access
+        mov ax,[ebp].reg_cs.d_access
         and al,ACCESS_RPL
         mov [ebp].em_pl,al
 ;
-        test [ebp].reg_cs.d_access,ACCESS_SIZE
+        test [ebp].reg_cs.d_access,ACCESS_32
         jz emulate16
 
 emulate32:
