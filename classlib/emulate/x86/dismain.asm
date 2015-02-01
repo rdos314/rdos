@@ -2638,6 +2638,10 @@ mem_op_next             ENDP
         extrn r15_txt:near
 
 ax_next PROC near
+        test [ebp].em_flags,64
+        jnz op_r08
+
+op_axp:                
         test [ebp].em_flags,d32
         jnz op_eax
 op_ax:
@@ -2654,9 +2658,36 @@ op_eax:
         mov [edi],eax
         add edi,4
         ret
+
+op_r08:
+        test ds:op_rex,1
+        jnz op_r8
+;        
+        test ds:op_rex,8
+        jz op_axp
+        
+op_rax:
+        mov eax,OFFSET rax_txt
+        sub eax,OFFSET mne_tab
+        add eax,blank_sep
+        mov [edi],eax
+        add edi,4
+        ret
+        
+op_r8:        
+        mov eax,OFFSET r8_txt
+        sub eax,OFFSET mne_tab
+        add eax,blank_sep
+        mov [edi],eax
+        add edi,4
+        ret
 ax_next ENDP
 
 bx_next PROC near
+        test [ebp].em_flags,64
+        jnz op_r19
+
+op_bxp:        
         test [ebp].em_flags,d32
         jnz op_ebx
 op_bx:
@@ -2673,9 +2704,36 @@ op_ebx:
         mov [edi],eax
         add edi,4
         ret
+
+op_r19:
+        test ds:op_rex,1
+        jnz op_r9
+;        
+        test ds:op_rex,8
+        jz op_bxp
+        
+op_rbx:
+        mov eax,OFFSET rbx_txt
+        sub eax,OFFSET mne_tab
+        add eax,blank_sep
+        mov [edi],eax
+        add edi,4
+        ret
+
+op_r9:
+        mov eax,OFFSET r9_txt
+        sub eax,OFFSET mne_tab
+        add eax,blank_sep
+        mov [edi],eax
+        add edi,4
+        ret
 bx_next ENDP
 
 cx_next PROC near
+        test [ebp].em_flags,64
+        jnz op_r210
+
+op_cxp:        
         test [ebp].em_flags,d32
         jnz op_ecx
 op_cx:
@@ -2692,9 +2750,36 @@ op_ecx:
         mov [edi],eax
         add edi,4
         ret
+
+op_r210:
+        test ds:op_rex,1
+        jnz op_r10
+;        
+        test ds:op_rex,8
+        jz op_cxp
+        
+op_rcx:
+        mov eax,OFFSET rcx_txt
+        sub eax,OFFSET mne_tab
+        add eax,blank_sep
+        mov [edi],eax
+        add edi,4
+        ret
+        
+op_r10:
+        mov eax,OFFSET r10_txt
+        sub eax,OFFSET mne_tab
+        add eax,blank_sep
+        mov [edi],eax
+        add edi,4
+        ret
 cx_next ENDP
 
 dx_next PROC near
+        test [ebp].em_flags,64
+        jnz op_r311
+
+op_dxp:        
         test [ebp].em_flags,d32
         jnz op_edx
 op_dx:
@@ -2711,9 +2796,36 @@ op_edx:
         mov [edi],eax
         add edi,4
         ret
+
+op_r311:
+        test ds:op_rex,1
+        jnz op_r11
+;
+        test ds:op_rex,8
+        jz op_dxp        
+        
+op_rdx:
+        mov eax,OFFSET rdx_txt
+        sub eax,OFFSET mne_tab
+        add eax,blank_sep
+        mov [edi],eax
+        add edi,4
+        ret
+        
+op_r11:
+        mov eax,OFFSET r11_txt
+        sub eax,OFFSET mne_tab
+        add eax,blank_sep
+        mov [edi],eax
+        add edi,4
+        ret
 dx_next ENDP
 
 sp_next PROC near
+        test [ebp].em_flags,64
+        jnz op_r412
+
+op_spp:        
         test [ebp].em_flags,d32
         jnz op_esp
 op_sp:
@@ -2730,9 +2842,36 @@ op_esp:
         mov [edi],eax
         add edi,4
         ret
+
+op_r412:
+        test ds:op_rex,1
+        jnz op_r12
+;
+        test ds:op_rex,8
+        jz op_spp        
+
+op_rsp:
+        mov eax,OFFSET rsp_txt
+        sub eax,OFFSET mne_tab
+        add eax,blank_sep
+        mov [edi],eax
+        add edi,4
+        ret
+        
+op_r12:
+        mov eax,OFFSET r12_txt
+        sub eax,OFFSET mne_tab
+        add eax,blank_sep
+        mov [edi],eax
+        add edi,4
+        ret
 sp_next ENDP
 
 bp_next PROC near
+        test [ebp].em_flags,64
+        jnz op_r513
+
+op_bpp:        
         test [ebp].em_flags,d32
         jnz op_ebp
 op_bp:
@@ -2749,9 +2888,36 @@ op_ebp:
         mov [edi],eax
         add edi,4
         ret
+
+op_r513:
+        test ds:op_rex,1
+        jnz op_r13
+;
+        test ds:op_rex,8
+        jz op_bpp        
+        
+op_rbp:
+        mov eax,OFFSET rbp_txt
+        sub eax,OFFSET mne_tab
+        add eax,blank_sep
+        mov [edi],eax
+        add edi,4
+        ret
+        
+op_r13:
+        mov eax,OFFSET r13_txt
+        sub eax,OFFSET mne_tab
+        add eax,blank_sep
+        mov [edi],eax
+        add edi,4
+        ret
 bp_next ENDP
 
 si_next PROC near
+        test [ebp].em_flags,64
+        jnz op_r614
+
+op_sip:        
         test [ebp].em_flags,d32
         jnz op_esi
 op_si:
@@ -2768,9 +2934,36 @@ op_esi:
         mov [edi],eax
         add edi,4
         ret
+
+op_r614:
+        test ds:op_rex,1
+        jnz op_r14
+;
+        test ds:op_rex,8
+        jz op_sip        
+        
+op_rsi:
+        mov eax,OFFSET rsi_txt
+        sub eax,OFFSET mne_tab
+        add eax,blank_sep
+        mov [edi],eax
+        add edi,4
+        ret
+        
+op_r14:
+        mov eax,OFFSET r14_txt
+        sub eax,OFFSET mne_tab
+        add eax,blank_sep
+        mov [edi],eax
+        add edi,4
+        ret
 si_next ENDP
 
 di_next PROC near
+        test [ebp].em_flags,64
+        jnz op_r715
+
+op_dip:        
         test [ebp].em_flags,d32
         jnz op_edi
 op_di:
@@ -2782,6 +2975,29 @@ op_di:
         ret
 op_edi:
         mov eax,OFFSET edi_txt
+        sub eax,OFFSET mne_tab
+        add eax,blank_sep
+        mov [edi],eax
+        add edi,4
+        ret
+
+op_r715:
+        test ds:op_rex,1
+        jnz op_r15
+;
+        test ds:op_rex,8
+        jz op_dip
+
+op_rdi:
+        mov eax,OFFSET rdi_txt
+        sub eax,OFFSET mne_tab
+        add eax,blank_sep
+        mov [edi],eax
+        add edi,4
+        ret
+
+op_r15:
+        mov eax,OFFSET r15_txt
         sub eax,OFFSET mne_tab
         add eax,blank_sep
         mov [edi],eax
