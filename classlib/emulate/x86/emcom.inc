@@ -52,6 +52,11 @@
 	extrn ReadCodeDword:near
 	extrn ReadCodeFword:near
 
+	extrn ReadLongCodeByte:near
+	extrn ReadLongCodeWord:near
+	extrn ReadLongCodeDword:near
+	extrn ReadLongCodeQword:near
+
 	extrn InByte:near
 	extrn InWord:near
 	extrn InDword:near

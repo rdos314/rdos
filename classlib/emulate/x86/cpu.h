@@ -185,8 +185,8 @@ public:
 
         TTlb Reg_tlb;
 
-        unsigned long OrgEip;
-        unsigned long OrgEsp;
+        unsigned long long OrgEip;
+        unsigned long long OrgEsp;
         unsigned long OrgStack;
 
         unsigned long long CodeStart;

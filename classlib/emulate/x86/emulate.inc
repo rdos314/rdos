@@ -200,8 +200,8 @@ math_st7		DT ?
 
 reg_tlb			tlb_struc <>
 
-org_eip			DD ?
-org_esp			DD ?
+org_eip			DD ?,?
+org_esp			DD ?,?
 org_stack		DD ?
 
 code_start      DD ?,?

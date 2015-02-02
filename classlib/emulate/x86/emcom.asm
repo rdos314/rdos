@@ -1196,6 +1196,311 @@ ReadCodeFword   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           ReadLongCodeByte
+;
+;               DESCRIPTION:    Read byte from rip, update to next position
+;
+;               RETURNS:        AL              data read
+;
+;               USES:           All registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public ReadLongCodeByte
+
+ReadLongCodeByte    Proc near
+        mov eax,[ebp].reg_eip
+        mov edx,[ebp].reg_eip+4
+;
+        sub eax,[ebp].code_start
+        sbb edx,[ebp].code_start+4
+        jnz read_long_code_whole_byte
+;
+        cmp eax,1Fh
+        ja read_long_code_byte
+;                
+        add [ebp].reg_eip,1
+        adc [ebp].reg_eip+4,0
+        mov al,[ebp+eax].code_cache
+        ret
+
+read_long_code_byte:
+        cmp eax,2Fh
+        ja read_long_code_whole_byte
+;
+        lea esi,[ebp].code_cache + 10h
+        lea edi,[ebp].code_cache
+        movsd
+        movsd
+        movsd
+        movsd
+        add [ebp].code_start,10h
+;        
+        push ebx
+        mov ebx,[ebp].code_start
+        mov edi,[ebp].code_start+4
+        add ebx,10h
+        mov ecx,10h
+        lea esi,[ebp].code_cache + 10h
+        call ReadLinear
+        pop ebx
+        sub ebx,[ebp].code_start
+        add [ebp].reg_eip,1
+        adc [ebp].reg_eip+4,0
+        mov al,[ebp+ebx].code_cache
+        ret
+
+read_long_code_whole_byte:        
+        mov edi,[ebp].reg_eip+4
+        mov [ebp].code_start+4,edi
+        mov ebx,[ebp].reg_eip
+        and ebx,NOT 1Fh
+        mov [ebp].code_start,ebx
+        mov ecx,20h
+        lea esi,[ebp].code_cache
+        call ReadLinear
+;        
+        mov ebx,[ebp].reg_eip
+        sub ebx,[ebp].code_start
+        add [ebp].reg_eip,1
+        adc [ebp].reg_eip+4,0
+        mov al,[ebp+ebx].code_cache
+        ret
+ReadLongCodeByte    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           ReadLongCodeWord
+;
+;               DESCRIPTION:    Read word from rip, update to next position
+;
+;               RETURNS:        AX              data read
+;
+;               USES:           All registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public ReadLongCodeWord
+
+ReadLongCodeWord    Proc near
+        mov eax,[ebp].reg_eip
+        mov edx,[ebp].reg_eip+4
+;
+        sub eax,[ebp].code_start
+        sbb edx,[ebp].code_start+4
+        jnz read_long_code_whole_word
+;
+        cmp eax,1Eh
+        ja read_long_code_word
+;                
+        add [ebp].reg_eip,2
+        adc [ebp].reg_eip+4,0
+        mov ax,word ptr [ebp+eax].code_cache
+        ret
+
+read_long_code_word:
+        cmp eax,2Eh
+        ja read_long_code_whole_word
+;
+        lea esi,[ebp].code_cache + 10h
+        lea edi,[ebp].code_cache
+        movsd
+        movsd
+        movsd
+        movsd
+        add [ebp].code_start,10h
+;        
+        push ebx
+        mov ebx,[ebp].code_start
+        mov edi,[ebp].code_start+4
+        add ebx,10h
+        mov ecx,10h
+        lea esi,[ebp].code_cache + 10h
+        call ReadLinear
+        pop ebx
+        sub ebx,[ebp].code_start
+        add [ebp].reg_eip,2
+        adc [ebp].reg_eip+4,0
+        mov ax,word ptr [ebp+ebx].code_cache
+        ret
+
+read_long_code_whole_word:        
+        mov edi,[ebp].reg_eip+4
+        mov [ebp].code_start+4,edi
+        mov ebx,[ebp].reg_eip
+        and ebx,NOT 1Eh
+        mov [ebp].code_start,ebx
+        mov ecx,20h
+        lea esi,[ebp].code_cache
+        call ReadLinear
+;        
+        mov ebx,[ebp].reg_eip
+        sub ebx,[ebp].code_start
+        add [ebp].reg_eip,2
+        adc [ebp].reg_eip+4,0
+        mov ax,word ptr [ebp+ebx].code_cache
+        ret
+ReadLongCodeWord    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           ReadLongCodeDword
+;
+;               DESCRIPTION:    Read dword from rip, update to next position
+;
+;               RETURNS:        EAX             data read
+;
+;               USES:           All registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public ReadLongCodeDword
+
+ReadLongCodeDword    Proc near
+        mov eax,[ebp].reg_eip
+        mov edx,[ebp].reg_eip+4
+;
+        sub eax,[ebp].code_start
+        sbb edx,[ebp].code_start+4
+        jnz read_long_code_whole_dword
+;
+        cmp eax,1Ch
+        ja read_long_code_dword
+;                
+        add [ebp].reg_eip,4
+        adc [ebp].reg_eip+4,0
+        mov eax,dword ptr [ebp+eax].code_cache
+        ret
+
+read_long_code_dword:
+        cmp eax,2Ch
+        ja read_long_code_whole_dword
+;
+        lea esi,[ebp].code_cache + 10h
+        lea edi,[ebp].code_cache
+        movsd
+        movsd
+        movsd
+        movsd
+        add [ebp].code_start,10h
+;        
+        push ebx
+        mov ebx,[ebp].code_start
+        mov edi,[ebp].code_start+4
+        add ebx,10h
+        mov ecx,10h
+        lea esi,[ebp].code_cache + 10h
+        call ReadLinear
+        pop ebx
+        sub ebx,[ebp].code_start
+        add [ebp].reg_eip,4
+        adc [ebp].reg_eip+4,0
+        mov eax,dword ptr [ebp+ebx].code_cache
+        ret
+
+read_long_code_whole_dword:        
+        mov edi,[ebp].reg_eip+4
+        mov [ebp].code_start+4,edi
+        mov ebx,[ebp].reg_eip
+        and ebx,NOT 1Ch
+        mov [ebp].code_start,ebx
+        mov ecx,20h
+        lea esi,[ebp].code_cache
+        call ReadLinear
+;        
+        mov ebx,[ebp].reg_eip
+        sub ebx,[ebp].code_start
+        add [ebp].reg_eip,4
+        adc [ebp].reg_eip+4,0
+        mov eax,dword ptr [ebp+ebx].code_cache
+        ret
+ReadLongCodeDword    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           ReadLongCodeQword
+;
+;               DESCRIPTION:    Read qword from rip, update to next position
+;
+;               RETURNS:        EDX:EAX             data read
+;
+;               USES:           All registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public ReadLongCodeQword
+
+ReadLongCodeQword    Proc near
+        mov eax,[ebp].reg_eip
+        mov edx,[ebp].reg_eip+4
+;
+        sub eax,[ebp].code_start
+        sbb edx,[ebp].code_start+4
+        jnz read_long_code_whole_qword
+;
+        cmp eax,18h
+        ja read_long_code_qword
+;                
+        add [ebp].reg_eip,8
+        adc [ebp].reg_eip+4,0
+        mov edx,dword ptr [ebp+eax].code_cache+4
+        mov eax,dword ptr [ebp+eax].code_cache
+        ret
+
+read_long_code_qword:
+        cmp eax,28h
+        ja read_long_code_whole_qword
+;
+        lea esi,[ebp].code_cache + 10h
+        lea edi,[ebp].code_cache
+        movsd
+        movsd
+        movsd
+        movsd
+        add [ebp].code_start,10h
+;        
+        push ebx
+        mov ebx,[ebp].code_start
+        mov edi,[ebp].code_start+4
+        add ebx,10h
+        mov ecx,10h
+        lea esi,[ebp].code_cache + 10h
+        call ReadLinear
+        pop ebx
+        sub ebx,[ebp].code_start
+        add [ebp].reg_eip,8
+        adc [ebp].reg_eip+4,0
+        mov edx,dword ptr [ebp+ebx].code_cache+4
+        mov eax,dword ptr [ebp+ebx].code_cache
+        ret
+
+read_long_code_whole_qword:        
+        mov edi,[ebp].reg_eip+4
+        mov [ebp].code_start+4,edi
+        mov ebx,[ebp].reg_eip
+        and ebx,NOT 18h
+        mov [ebp].code_start,ebx
+        mov ecx,20h
+        lea esi,[ebp].code_cache
+        call ReadLinear
+;        
+        mov ebx,[ebp].reg_eip
+        sub ebx,[ebp].code_start
+        add [ebp].reg_eip,8
+        adc [ebp].reg_eip+4,0
+        mov eax,dword ptr [ebp+ebx].code_cache
+        mov edx,dword ptr [ebp+ebx].code_cache+4
+        ret
+ReadLongCodeQword    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:                   InPort
 ;
 ;               description:    read from I/O port

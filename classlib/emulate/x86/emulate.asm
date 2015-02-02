@@ -1118,14 +1118,69 @@ _Emulate Proc near
         mov [ebp].em_pl,al
 ;
         test [ebp].reg_cs.d_access,ACCESS_32
-        jz emulate16
+        jz emulate_not32
 
 emulate32:
         mov [ebp].em_flags,a32 OR d32
         jmp emulate_start
 
-emulate16:
+emulate_not32:
+        test [ebp].reg_cs.d_access,ACCESS_64
+        jnz emulate64        
+;
         mov [ebp].em_flags,0
+        jmp emulate_start
+
+emulate64:
+        mov [ebp].em_flags,l64
+;       
+        mov eax,[ebp].reg_eip
+        mov [ebp].org_eip,eax
+        mov eax,[ebp].reg_eip+4
+        mov [ebp].org_eip+4,eax
+;
+        mov eax,[ebp].reg_esp
+        mov [ebp].org_esp,eax
+        mov eax,[ebp].reg_esp+4
+        mov [ebp].org_esp,4,eax
+;        
+        mov eax,esp
+        sub eax,4
+        mov [ebp].org_stack,eax
+;
+        test [ebp].reg_eflags,EFLAGS_IF
+        jz emulate_no_int64
+;
+        mov al,[ebp].pending_int
+        or al,al
+        jz emulate_no_int64
+;
+        push ebp
+        call _GetIntVector
+        call HwInt
+        jmp emulate_done
+
+emulate_no_int64:
+        test [ebp].reg_eflags,EFLAGS_TF
+        jz emulate_no_trap64
+;
+        mov al,1
+        call IntFar
+        jmp emulate_done
+
+emulate_no_trap64:
+        call ReadLongCodeByte
+        test [ebp].em_flags, single_faulted
+        jnz emulate_done
+;
+        movzx ebx,al
+        shl ebx,2
+        call dword ptr [ebx].EmulateTab
+        test [ebp].em_debug, DEBUG_BREAK
+        jnz emulate_done
+;
+        and [ebp].em_debug, NOT DEBUG_RESUME
+        jmp emulate_done
 
 emulate_start:
         mov [ebp].em_sreg,seg_def
