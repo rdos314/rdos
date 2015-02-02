@@ -37,6 +37,7 @@ include \rdos\classlib\emulate\x86\emcontr.inc
 include \rdos\classlib\emulate\x86\emstring.inc
 include \rdos\classlib\emulate\x86\emprot.inc
 include \rdos\classlib\emulate\x86\em387.inc
+include \rdos\classlib\emulate\x86\lntrans.inc
 
 .code
 
@@ -1145,10 +1146,10 @@ lnt48   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt4A   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt4C   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt4E   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt50   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt52   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt54   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt56   DD OFFSET EmulateError,             OFFSET EmulateError
+lnt50   DD OFFSET LongPushRax,              OFFSET LongPushRcx
+lnt52   DD OFFSET LongPushRdx,              OFFSET LongPushRbx
+lnt54   DD OFFSET LongPushRsp,              OFFSET LongPushRbp
+lnt56   DD OFFSET LongPushRsi,              OFFSET LongPushRdi
 lnt58   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt5A   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt5C   DD OFFSET EmulateError,             OFFSET EmulateError
@@ -1274,6 +1275,7 @@ emulate_not32:
 
 emulate64:
         mov [ebp].em_flags,l64
+        mov [ebp].em_rex,0
 ;       
         mov eax,[ebp].reg_eip
         mov [ebp].org_eip,eax

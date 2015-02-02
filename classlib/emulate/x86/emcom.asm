@@ -608,6 +608,37 @@ PushDword       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           PushLong
+;
+;               DESCRIPTION:    Push dword onto stack
+;
+;               PARAMETERS:     SS:EBP       CPU
+;                               EDX:EAX      DATA
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public PushLong
+
+PushLong       Proc near
+        push ebx
+        push edi
+;
+        mov ebx,[ebp].reg_esp
+        mov edi,[ebp].reg_esp+4
+        sub ebx,8
+        sbb edi,0
+        call WriteLinearQword
+        mov [ebp].reg_esp,ebx
+        mov [ebp].reg_esp+4,edi
+;
+        pop edi
+        pop ebx
+        ret
+PushLong       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:                   PopWord
 ;
 ;               DESCRIPTION:    pop word from stack

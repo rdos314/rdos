@@ -20,49 +20,16 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; EMCOM.INC
-; External declarations for common emulations
+; LNTRANS.INC
+; External declarations for move type of instruction emulation
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	extrn ReadByte:near
-	extrn ReadWord:near
-	extrn ReadDword:near
-	extrn ReadFword:near
-	extrn ReadQword:near
-	extrn ReadTbyte:near
-
-	extrn WriteByte:near
-	extrn WriteWord:near
-	extrn WriteDword:near
-	extrn WriteFword:near
-	extrn WriteQword:near
-	extrn WriteTbyte:near
-
-	extrn PushWord:near
-	extrn PushDword:near
-	extrn PushLong:near
-	extrn PopWord:near
-	extrn PopDword:near
-
-	extrn AddToStack:near
-	extrn SubFromStack:near
-
-	extrn ReadCodeByte:near
-	extrn ReadCodeWord:near
-	extrn ReadCodeDword:near
-	extrn ReadCodeFword:near
-
-	extrn ReadLongCodeByte:near
-	extrn ReadLongCodeWord:near
-	extrn ReadLongCodeDword:near
-	extrn ReadLongCodeQword:near
-
-	extrn InByte:near
-	extrn InWord:near
-	extrn InDword:near
-
-	extrn OutByte:near
-	extrn OutWord:near
-	extrn OutDword:near
-
+	extrn LongPushRax:near
+	extrn LongPushRcx:near
+	extrn LongPushRdx:near
+	extrn LongPushRbx:near
+	extrn LongPushRsp:near
+	extrn LongPushRbp:near
+	extrn LongPushRsi:near
+	extrn LongPushRdi:near

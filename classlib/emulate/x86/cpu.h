@@ -207,6 +207,7 @@ public:
         char EmTransfer;
         char EmParams;
         char EmIst;
+        char EmRex;
         short int EmErrorCode;
 
         short int DisAsmHandle;
