@@ -3363,7 +3363,7 @@ AddFunction  Proc near
     mov al,13h
     SetPageEntry
 ;    
-    mov ecx,eax
+    mov ecx,1000h
     AllocateGdt
     CreateDataSelector16
     mov ds,bx

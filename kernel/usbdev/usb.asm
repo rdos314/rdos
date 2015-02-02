@@ -533,7 +533,7 @@ CreateDefaultControl    Proc near
 
 cdcLoop:
     call fword ptr ds:is_transfer_done_proc
-    jnc cdcDone
+    jnc cdcOk
 ;
     call fword ptr ds:is_connected_proc
     jc cdcFail
@@ -547,15 +547,15 @@ cdcFail:
     int 3
     stc
     pushf
-    jmp cdcUnlock
+    jmp cdcDone
             
-cdcDone:    
+cdcOk:    
     call fword ptr ds:wait_for_completion_proc
     pushf
     FreeMem
     call fword ptr ds:change_address_proc
 
-cdcUnlock:
+cdcDone:
     push ds
     mov cx,SEG data
     mov ds,cx
@@ -1306,12 +1306,20 @@ nuaNotify:
     mov bx,ds:usb_controller_id
     mov al,fs:usbp_address
     call trap_usb_attach
+    clc
     jmp nuaDone
 
 nuaFreeDone:
     FreeMem    
+    stc
     
 nuaDone:
+    jnc nuaPipeOk
+;
+    call ClosePipe
+    stc
+
+nuaPipeOk:
     popad
     pop es
     pop fs
