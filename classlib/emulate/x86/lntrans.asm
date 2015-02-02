@@ -50,7 +50,7 @@ include \rdos\classlib\emulate\x86\emcom.inc
 
 LongPushRax Proc near
     test [ebp].em_rex,1
-    jz LongPushR8
+    jnz LongPushR8
 ;
     mov eax,[ebp].reg_eax
     mov edx,[ebp].reg_eax+4
@@ -68,7 +68,7 @@ LongPushRax Endp
 
 LongPushRcx Proc near
     test [ebp].em_rex,1
-    jz LongPushR9
+    jnz LongPushR9
 ;
     mov eax,[ebp].reg_ecx
     mov edx,[ebp].reg_ecx+4
@@ -86,7 +86,7 @@ LongPushRcx Endp
 
 LongPushRdx Proc near
     test [ebp].em_rex,1
-    jz LongPushR10
+    jnz LongPushR10
 ;
     mov eax,[ebp].reg_edx
     mov edx,[ebp].reg_edx+4
@@ -104,7 +104,7 @@ LongPushRdx Endp
 
 LongPushRbx Proc near
     test [ebp].em_rex,1
-    jz LongPushR11
+    jnz LongPushR11
 ;
     mov eax,[ebp].reg_ebx
     mov edx,[ebp].reg_ebx+4
@@ -122,7 +122,7 @@ LongPushRbx Endp
 
 LongPushRsp Proc near
     test [ebp].em_rex,1
-    jz LongPushR12
+    jnz LongPushR12
 ;
     mov eax,[ebp].reg_esp
     mov edx,[ebp].reg_esp+4
@@ -140,7 +140,7 @@ LongPushRsp Endp
 
 LongPushRbp Proc near
     test [ebp].em_rex,1
-    jz LongPushR13
+    jnz LongPushR13
 ;
     mov eax,[ebp].reg_ebp
     mov edx,[ebp].reg_ebp+4
@@ -158,7 +158,7 @@ LongPushRbp Endp
 
 LongPushRsi Proc near
     test [ebp].em_rex,1
-    jz LongPushR14
+    jnz LongPushR14
 ;
     mov eax,[ebp].reg_esi
     mov edx,[ebp].reg_esi+4
@@ -176,7 +176,7 @@ LongPushRsi Endp
 
 LongPushRdi Proc near
     test [ebp].em_rex,1
-    jz LongPushR15
+    jnz LongPushR15
 ;
     mov eax,[ebp].reg_edi
     mov edx,[ebp].reg_edi+4
