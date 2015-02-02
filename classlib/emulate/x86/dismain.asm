@@ -2334,6 +2334,7 @@ mem_disp_tab:
 sib_dn  DD OFFSET sib_d_none
 sib_d8  DD OFFSET sib_im8
 sib_d32 DD OFFSET sib_im32
+sib_n   DD OFFSET sib_d_none
 
 mem_sib PROC near
         mov eax,OFFSET mem_sib0_tab
@@ -2365,7 +2366,7 @@ mem_sib PROC near
         and bx,0C0h
         movzx ebx,bx
         shr ebx,5
-        call dword ptr [2*ebx].mem_disp_tab
+        call dword ptr [4*ebx].mem_disp_tab
         ret
 mem_sib ENDP
 
@@ -2390,7 +2391,7 @@ long_sib0_ads_ok:
         movzx eax,al
         shl ax,3
         mov ebx,eax
-        call cs:dword ptr [ebx].long_adr_sib_tab
+        call dword ptr [ebx].long_adr_sib_tab
         add [ebp].data_offset,eax
         adc word ptr [ebp].data_offset+4,bx
 ;
@@ -2407,7 +2408,7 @@ long_sibi_ads_ok:
         movzx eax,al
         shl ax,3
         mov ebx,eax
-        call cs:word ptr [ebx].long_adr_sib_index_tab
+        call dword ptr [ebx].long_adr_sib_index_tab
         mov cl,[esi]
         and cl,0C0h
         shr cl,6
@@ -2438,15 +2439,15 @@ long_mem_sib PROC near
         or ax,8        
 
 long_sib0_ok:               
-        xor ah,ah
+        movzx eax,al
         inc esi
         call decode_opcode
 ;
         mov eax,OFFSET long_sib_index_tab
         mov ds:op_syntax,eax
         mov al,[esi]
-        and ax,38h
-        shr ax,3
+        and eax,38h
+        shr eax,3
 ;
         test ds:op_rex,2
         jz long_sibi_ok
@@ -2458,15 +2459,15 @@ long_sibi_ok:
         mov eax,OFFSET sib_scale_tab
         mov ds:op_syntax,eax
         mov al,[esi]
-        and ax,0C0h
-        shr ax,6
+        and eax,0C0h
+        shr eax,6
         call decode_opcode
         call long_add_sib_ads
         mov bl,[esi-1]
         and ebx,0C0h
-        shr ebx,5
+        shr ebx,4
         add ebx,OFFSET mem_disp_tab
-        call dword ptr cs:[2*ebx]
+        call dword ptr [ebx]
         ret
 long_mem_sib ENDP
 
