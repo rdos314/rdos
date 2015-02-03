@@ -43,10 +43,6 @@ include \rdos\classlib\emulate\x86\emseg.inc
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddSib  PROC near
-    ret
-AddSib  ENDP
-
 MemEax PROC near
     mov ebx,[ebp].reg_eax
     xor edi,edi
@@ -83,6 +79,18 @@ MemEdi PROC near
     ret
 MemEdi ENDP
 
+MemEbp PROC near
+    mov ebx,[ebp].reg_ebp
+    xor edi,edi
+    ret
+MemEbp ENDP
+
+MemEsp PROC near
+    mov ebx,[ebp].reg_esp
+    xor edi,edi
+    ret
+MemEsp ENDP
+
 MemR8d PROC near
     mov ebx,[ebp].reg_r8
     xor edi,edi
@@ -106,6 +114,18 @@ MemR11d PROC near
     xor edi,edi
     ret
 MemR11d ENDP
+
+MemR12d PROC near
+    mov ebx,[ebp].reg_r12
+    xor edi,edi
+    ret
+MemR12d ENDP
+
+MemR13d PROC near
+    mov ebx,[ebp].reg_r13
+    xor edi,edi
+    ret
+MemR13d ENDP
 
 MemR14d PROC near
     mov ebx,[ebp].reg_r14
@@ -155,6 +175,18 @@ MemRdi PROC near
     ret
 MemRdi ENDP
 
+MemRbp PROC near
+    mov ebx,[ebp].reg_ebp
+    mov edi,[ebp].reg_ebp+4
+    ret
+MemRbp ENDP
+
+MemRsp PROC near
+    mov ebx,[ebp].reg_esp
+    mov edi,[ebp].reg_esp+4
+    ret
+MemRsp ENDP
+
 MemR8 PROC near
     mov ebx,[ebp].reg_r8
     mov edi,[ebp].reg_r8+4
@@ -178,6 +210,18 @@ MemR11 PROC near
     mov edi,[ebp].reg_r11+4
     ret
 MemR11 ENDP
+
+MemR12 PROC near
+    mov ebx,[ebp].reg_r12
+    mov edi,[ebp].reg_r12+4
+    ret
+MemR12 ENDP
+
+MemR13 PROC near
+    mov ebx,[ebp].reg_r13
+    mov edi,[ebp].reg_r13+4
+    ret
+MemR13 ENDP
 
 MemR14 PROC near
     mov ebx,[ebp].reg_r14
@@ -756,33 +800,61 @@ MemRipD32 PROC near
     ret
 MemRipD32 ENDP
 
-MemSib    PROC near
-    xor ebx,ebx
-    xor edi,edi
-    call AddSib
-    ret
-MemSib    ENDP
-
 MemSibD8    PROC near
+    call MemSib
+    push edi
+    push ebx
     call ReadLongCodeByte
     movzx ebx,al
     xor edi,edi
     mov eax,ebx
     rcl eax,1
     rcl edi,1
-    call AddSib
+    pop eax
+    add ebx,eax
+    pop eax
+    adc edi,eax
     ret
 MemSibD8    ENDP
 
 MemSibD32 PROC near
+    call MemSib
+    push edi
+    push ebx
     call ReadLongCodeDword
     mov ebx,eax
     xor edi,edi
     rcl eax,1
     rcl edi,1
-    call AddSib
+    pop eax
+    add ebx,eax
+    pop eax
+    adc edi,eax
     ret
 MemSibD32 ENDP
+
+MemNone PROC near
+    xor ebx,ebx
+    xor edi,edi
+    ret
+MemNone Endp
+
+MemModD32   PROC near
+    xor ebx,ebx
+    xor edi,edi
+;    
+    test al,0C0h
+    jnz mm32Done
+;
+    call ReadLongCodeDword    
+    mov ebx,eax
+    xor edi,edi
+    rcl eax,1
+    rcl edi,1
+
+mm32Done:
+    ret
+MemModD32   ENDP        
 
     public LongMemTab
 
@@ -916,5 +988,77 @@ mem64_111100     DD OFFSET EmulateError
 mem64_111101     DD OFFSET EmulateError
 mem64_111110     DD OFFSET EmulateError
 mem64_111111     DD OFFSET EmulateError
+
+LongSibIndexTab:
+sibi32_0000     DD OFFSET MemEax
+sibi32_0001     DD OFFSET MemEcx
+sibi32_0010     DD OFFSET MemEdx
+sibi32_0011     DD OFFSET MemEbx
+sibi32_0100     DD OFFSET MemNone
+sibi32_0101     DD OFFSET MemEbp
+sibi32_0110     DD OFFSET MemEsi
+sibi32_0111     DD OFFSET MemEdi
+sibi32_1000     DD OFFSET MemR8d
+sibi32_1001     DD OFFSET MemR9d
+sibi32_1010     DD OFFSET MemR10d
+sibi32_1011     DD OFFSET MemR11d
+sibi32_1100     DD OFFSET MemR12d
+sibi32_1101     DD OFFSET MemR13d
+sibi32_1110     DD OFFSET MemR14d
+sibi32_1111     DD OFFSET MemR15d
+sibi64_0000     DD OFFSET MemRax
+sibi64_0001     DD OFFSET MemRcx
+sibi64_0010     DD OFFSET MemRdx
+sibi64_0011     DD OFFSET MemRbx
+sibi64_0100     DD OFFSET MemNone
+sibi64_0101     DD OFFSET MemRbp
+sibi64_0110     DD OFFSET MemRsi
+sibi64_0111     DD OFFSET MemRdi
+sibi64_1000     DD OFFSET MemR8
+sibi64_1001     DD OFFSET MemR9
+sibi64_1010     DD OFFSET MemR10
+sibi64_1011     DD OFFSET MemR11
+sibi64_1100     DD OFFSET MemR12
+sibi64_1101     DD OFFSET MemR13
+sibi64_1110     DD OFFSET MemR14
+sibi64_1111     DD OFFSET MemR15
+
+LongSibBaseTab:
+sibb32_0000     DD OFFSET MemEax
+sibb32_0001     DD OFFSET MemEcx
+sibb32_0010     DD OFFSET MemEdx
+sibb32_0011     DD OFFSET MemEbx
+sibb32_0100     DD OFFSET MemEsp
+sibb32_0101     DD OFFSET MemModD32
+sibb32_0110     DD OFFSET MemEsi
+sibb32_0111     DD OFFSET MemEdi
+sibb32_1000     DD OFFSET MemR8d
+sibb32_1001     DD OFFSET MemR9d
+sibb32_1010     DD OFFSET MemR10d
+sibb32_1011     DD OFFSET MemR11d
+sibb32_1100     DD OFFSET MemR12d
+sibb32_1101     DD OFFSET MemModD32
+sibb32_1110     DD OFFSET MemR14d
+sibb32_1111     DD OFFSET MemR15d
+sibb64_0000     DD OFFSET MemRax
+sibb64_0001     DD OFFSET MemRcx
+sibb64_0010     DD OFFSET MemRdx
+sibb64_0011     DD OFFSET MemRbx
+sibb64_0100     DD OFFSET MemRsp
+sibb64_0101     DD OFFSET MemModD32
+sibb64_0110     DD OFFSET MemRsi
+sibb64_0111     DD OFFSET MemRdi
+sibb64_1000     DD OFFSET MemR8
+sibb64_1001     DD OFFSET MemR9
+sibb64_1010     DD OFFSET MemR10
+sibb64_1011     DD OFFSET MemR11
+sibb64_1100     DD OFFSET MemR12
+sibb64_1101     DD OFFSET MemModD32
+sibb64_1110     DD OFFSET MemR14
+sibb64_1111     DD OFFSET MemR15
+
+MemSib  PROC near
+    ret
+MemSib  ENDP
 
         END
