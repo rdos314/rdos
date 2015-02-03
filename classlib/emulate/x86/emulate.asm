@@ -1093,6 +1093,23 @@ emtF8   DD OFFSET EmClc,                                OFFSET EmStc
 emtFA   DD OFFSET EmCli,                                OFFSET EmSti
 emtFC   DD OFFSET EmCld,                                OFFSET EmStd
 emtFE   DD OFFSET EmFE,                                 OFFSET EmFF
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           LongRex
+;
+;               DESCRIPTION:    Handle rex instruction
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LongRex:
+        and al,0Fh
+        mov [ebp].em_rex,al
+        call ReadLongCodeByte
+        movzx ebx,al
+        shl ebx,2
+        jmp dword ptr [ebx].LongTab
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1138,14 +1155,14 @@ lnt38   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt3A   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt3C   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt3E   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt40   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt42   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt44   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt46   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt48   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt4A   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt4C   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt4E   DD OFFSET EmulateError,             OFFSET EmulateError
+lnt40   DD OFFSET LongRex,                  OFFSET LongRex
+lnt42   DD OFFSET LongRex,                  OFFSET LongRex
+lnt44   DD OFFSET LongRex,                  OFFSET LongRex
+lnt46   DD OFFSET LongRex,                  OFFSET LongRex
+lnt48   DD OFFSET LongRex,                  OFFSET LongRex
+lnt4A   DD OFFSET LongRex,                  OFFSET LongRex
+lnt4C   DD OFFSET LongRex,                  OFFSET LongRex
+lnt4E   DD OFFSET LongRex,                  OFFSET LongRex
 lnt50   DD OFFSET LongPushRax,              OFFSET LongPushRcx
 lnt52   DD OFFSET LongPushRdx,              OFFSET LongPushRbx
 lnt54   DD OFFSET LongPushRsp,              OFFSET LongPushRbp
