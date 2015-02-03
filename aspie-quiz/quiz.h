@@ -66,10 +66,10 @@
 #define GROUP_NT_SENSORY        3
 #define GROUP_ASPIE_NVC         4
 #define GROUP_NT_NVC            5
-#define GROUP_ASPIE_SOCIAL      6
-#define GROUP_NT_SOCIAL         7
-#define GROUP_ASPIE_RELATION    8
-#define GROUP_NT_RELATION       9
+#define GROUP_ASPIE_RELATION    6
+#define GROUP_NT_RELATION       7
+#define GROUP_ASPIE_SOCIAL      8
+#define GROUP_NT_SOCIAL         9
 #define GROUP_MIXED             10
 
 #define POP_TYPE_COUNT			25
