@@ -3366,7 +3366,7 @@ _DisAsmCodeCache     PROC near
         jmp dis_ass_code_ok
 
 dis_ass_code64:
-        mov [ebp].em_flags,l64
+        mov [ebp].em_flags,l64 OR a32 OR d32
         mov ebx,OFFSET long_main_tab
 
 dis_ass_code_ok:
