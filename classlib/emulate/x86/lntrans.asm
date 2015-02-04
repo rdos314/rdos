@@ -35,6 +35,7 @@ include \rdos\classlib\emulate\x86\emcom.inc
 include \rdos\classlib\emulate\x86\lnmem.inc
 include \rdos\classlib\emulate\x86\emmem.inc
 include \rdos\classlib\emulate\x86\emseg.inc
+include \rdos\classlib\emulate\x86\empage.inc
 
 .code
         
@@ -151,6 +152,29 @@ LongXchgWordRegMem        Proc near
 ;
     call ReadLongCodeByte
     mov [ebp].em_modrm,al
+    call GetLongMemRegAds
+    jc LongXchgWordRegs
+;
+    push edi
+    push ebx
+    call LoadLongWordReg
+    pop ebx
+    pop edi
+;        
+    push edi
+    push ebx
+;
+    push ax
+    call ReadLinearWord
+    call SaveLongWordReg
+    pop ax
+;
+    pop ebx
+    pop edi
+    call WriteLinearWord
+    ret    
+
+LongXchgWordRegs:    
     call LoadLongWordReg
     push ax
     call LoadLongWordMemReg
@@ -162,6 +186,29 @@ LongXchgWordRegMem        Proc near
 LongXchgDwordRegMem:
     call ReadLongCodeByte
     mov [ebp].em_modrm,al
+    call GetLongMemRegAds
+    jc LongXchgDwordRegs
+;
+    push edi
+    push ebx
+    call LoadLongDwordReg
+    pop ebx
+    pop edi
+;        
+    push edi
+    push ebx
+;
+    push eax
+    call ReadLinearDword
+    call SaveLongDwordReg
+    pop eax
+;
+    pop ebx
+    pop edi
+    call WriteLinearDword
+    ret    
+
+LongXchgDwordRegs:    
     call LoadLongDwordReg
     push eax
     call LoadLongDwordMemReg
@@ -173,6 +220,31 @@ LongXchgDwordRegMem:
 LongXchgQwordRegMem:
     call ReadLongCodeByte
     mov [ebp].em_modrm,al
+    call GetLongMemRegAds
+    jc LongXchgQwordRegs
+;
+    push edi
+    push ebx
+    call LoadLongQwordReg
+    pop ebx
+    pop edi
+;        
+    push edi
+    push ebx
+;
+    push edx
+    push eax
+    call ReadLinearQword
+    call SaveLongQwordReg
+    pop eax
+    pop edx
+;
+    pop ebx
+    pop edi
+    call WriteLinearQword
+    ret    
+
+LongXchgQwordRegs:    
     call LoadLongQwordReg
     push edx
     push eax

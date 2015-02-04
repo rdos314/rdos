@@ -25,7 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	extrn LongMemTab:near
+    extrn GetLongMemRegAds:near
 
 	extrn LoadLongWordMemReg:near
 	extrn LoadLongDwordMemReg:near

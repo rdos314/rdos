@@ -1322,7 +1322,7 @@ emulate_not32:
         jmp emulate_start
 
 emulate64:
-        mov [ebp].em_flags,l64 OR a32 OR d32
+        mov [ebp].em_flags,l64 OR d32
         mov [ebp].em_rex,0
 ;       
         mov eax,[ebp].reg_eip
