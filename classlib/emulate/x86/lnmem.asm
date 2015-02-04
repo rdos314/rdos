@@ -1189,7 +1189,28 @@ LoadLongWordMemReg Proc near
     cmp bl,0C0h
     je LoadWordMemRegReg
 ;
-    int 3
+    mov bl,[ebp].em_rex
+    shl bl,3
+    and bl,8
+;
+    mov bh,[ebp].em_modrm
+    and bh,7
+    or bl,bh
+;
+    mov bh,[ebp].em_modrm
+    and bh,0C0h
+    shl bh,2
+    or bl,bh    
+;
+    test [ebp].em_flags,a32
+    jnz LoadWordMemRegIndOk
+;
+    or bl,40h
+
+LoadWordMemRegIndOk:
+    movzx esi,bl
+    call dword ptr [4*esi].LongMemTab
+    call ReadLinearWord
     ret
 
 LoadWordMemRegReg:
@@ -1284,7 +1305,28 @@ LoadLongQwordMemReg Proc near
     cmp bl,0C0h
     je LoadQwordMemRegReg
 ;
-    int 3
+    mov bl,[ebp].em_rex
+    shl bl,3
+    and bl,8
+;
+    mov bh,[ebp].em_modrm
+    and bh,7
+    or bl,bh
+;
+    mov bh,[ebp].em_modrm
+    and bh,0C0h
+    shl bh,2
+    or bl,bh    
+;
+    test [ebp].em_flags,a32
+    jnz LoadQwordMemRegIndOk
+;
+    or bl,40h
+
+LoadQwordMemRegIndOk:
+    movzx esi,bl
+    call dword ptr [4*esi].LongMemTab
+    call ReadLinearQword
     ret
 
 LoadQwordMemRegReg:
@@ -1410,7 +1452,30 @@ SaveLongWordMemReg Proc near
     cmp bl,0C0h
     je SaveWordMemRegReg
 ;
-    int 3
+    mov bl,[ebp].em_rex
+    shl bl,3
+    and bl,8
+;
+    mov bh,[ebp].em_modrm
+    and bh,7
+    or bl,bh
+;
+    mov bh,[ebp].em_modrm
+    and bh,0C0h
+    shl bh,2
+    or bl,bh    
+;
+    test [ebp].em_flags,a32
+    jnz SaveWordMemRegIndOk
+;
+    or bl,40h
+
+SaveWordMemRegIndOk:
+    movzx esi,bl
+    push eax
+    call dword ptr [4*esi].LongMemTab
+    pop eax
+    call WriteLinearWord
     ret
 
 SaveWordMemRegReg:
@@ -1507,7 +1572,32 @@ SaveLongQwordMemReg Proc near
     cmp bl,0C0h
     je SaveQwordMemRegReg
 ;
-    int 3
+    mov bl,[ebp].em_rex
+    shl bl,3
+    and bl,8
+;
+    mov bh,[ebp].em_modrm
+    and bh,7
+    or bl,bh
+;
+    mov bh,[ebp].em_modrm
+    and bh,0C0h
+    shl bh,2
+    or bl,bh    
+;
+    test [ebp].em_flags,a32
+    jnz SaveQwordMemRegIndOk
+;
+    or bl,40h
+
+SaveQwordMemRegIndOk:
+    movzx esi,bl
+    push edx
+    push eax
+    call dword ptr [4*esi].LongMemTab
+    pop eax
+    pop edx
+    call WriteLinearQword
     ret
 
 SaveQwordMemRegReg:
