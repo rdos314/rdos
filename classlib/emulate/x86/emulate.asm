@@ -1210,7 +1210,7 @@ lnt86   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt88   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt8A   DD OFFSET EmulateError,             OFFSET LongMoveWordMemToReg
 lnt8C   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt8E   DD OFFSET EmulateError,             OFFSET EmulateError
+lnt8E   DD OFFSET LongMoveMemToSreg,        OFFSET EmulateError
 lnt90   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt92   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt94   DD OFFSET EmulateError,             OFFSET EmulateError

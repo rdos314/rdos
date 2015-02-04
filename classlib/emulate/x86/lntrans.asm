@@ -33,6 +33,8 @@
 include \rdos\classlib\emulate\x86\emulate.inc
 include \rdos\classlib\emulate\x86\emcom.inc
 include \rdos\classlib\emulate\x86\lnmem.inc
+include \rdos\classlib\emulate\x86\emmem.inc
+include \rdos\classlib\emulate\x86\emseg.inc
 
 .code
         
@@ -65,6 +67,33 @@ LongMoveQwordMemToReg     Proc near
         call SaveLongQwordReg
         ret
 LongMoveQwordMemToReg     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongMoveMemToSreg
+;
+;   DESCRIPTION:    EMULATE mov sreg,Mem
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveMemToSreg
+
+LongMoveMemToSreg Proc near
+        call ReadLongCodeByte
+        mov [ebp].em_modrm,al
+        call LoadLongWordMemReg
+        mov bl,[ebp].em_modrm
+        and bl,38h
+        shr bl,2
+        movzx esi,bl
+        cmp bl,2*6
+        jnc EmulateError
+;
+        mov esi,dword ptr [2*esi].SegDsTab
+        call LoadSegment
+        ret
+LongMoveMemToSreg Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

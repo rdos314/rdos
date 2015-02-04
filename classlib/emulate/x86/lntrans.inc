@@ -36,4 +36,6 @@
 
 	extrn LongMoveWordMemToReg:near
 
+	extrn LongMoveMemToSreg:near
+
 	extrn LongMoveAxIm:near

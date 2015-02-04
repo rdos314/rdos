@@ -27,8 +27,10 @@
 
 	extrn LongMemTab:near
 
+	extrn LoadLongWordMemReg:near
 	extrn LoadLongDwordMemReg:near
 	extrn LoadLongQwordMemReg:near
 
+	extrn SaveLongWordReg:near
 	extrn SaveLongDwordReg:near
 	extrn SaveLongQwordReg:near
