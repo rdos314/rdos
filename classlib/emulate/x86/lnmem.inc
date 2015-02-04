@@ -31,6 +31,14 @@
 	extrn LoadLongDwordMemReg:near
 	extrn LoadLongQwordMemReg:near
 
+	extrn LoadLongWordReg:near
+	extrn LoadLongDwordReg:near
+	extrn LoadLongQwordReg:near
+
 	extrn SaveLongWordReg:near
 	extrn SaveLongDwordReg:near
 	extrn SaveLongQwordReg:near
+
+	extrn SaveLongWordMemReg:near
+	extrn SaveLongDwordMemReg:near
+	extrn SaveLongQwordMemReg:near

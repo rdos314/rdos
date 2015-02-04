@@ -1130,6 +1130,21 @@ LongOverrideData:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           LongOverrideCs
+;
+;               DESCRIPTION:    Use cs for addressing
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LongOverrideCs:
+    call ReadLongCodeByte
+    movzx ebx,al
+    shl ebx,2
+    jmp dword ptr [ebx].LongTab
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           LongTab
 ;
 ;               description:    emulate instruction
@@ -1162,7 +1177,7 @@ lnt26   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt28   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt2A   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt2C   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt2E   DD OFFSET EmulateError,             OFFSET EmulateError
+lnt2E   DD OFFSET LongOverrideCs,           OFFSET EmulateError
 lnt30   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt32   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt34   DD OFFSET EmulateError,             OFFSET EmulateError
@@ -1206,7 +1221,7 @@ lnt7E   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt80   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt82   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt84   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt86   DD OFFSET EmulateError,             OFFSET EmulateError
+lnt86   DD OFFSET EmulateError,             OFFSET LongXchgWordRegMem
 lnt88   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt8A   DD OFFSET EmulateError,             OFFSET LongMoveWordMemToReg
 lnt8C   DD OFFSET EmulateError,             OFFSET EmulateError

@@ -130,6 +130,59 @@ LongMoveRaxIm:
     mov [ebp].reg_eax+4,edx
     ret
 LongMoveAxIm  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongXchgWordRegMem
+;
+;   DESCRIPTION:    EMULATE xchg reg,word ptr Mem
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongXchgWordRegMem
+
+LongXchgWordRegMem        Proc near
+    test [ebp].em_rex,8
+    jnz LongXchgQwordRegMem
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongXchgDwordRegMem
+;
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call LoadLongWordReg
+    push ax
+    call LoadLongWordMemReg
+    call SaveLongWordReg
+    pop ax
+    call SaveLongWordMemReg
+    ret    
+
+LongXchgDwordRegMem:
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call LoadLongDwordReg
+    push eax
+    call LoadLongDwordMemReg
+    call SaveLongDwordReg
+    pop eax
+    call SaveLongDwordMemReg
+    ret    
+
+LongXchgQwordRegMem:
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call LoadLongQwordReg
+    push edx
+    push eax
+    call LoadLongQwordMemReg
+    call SaveLongQwordReg
+    pop eax
+    pop edx
+    call SaveLongQwordMemReg
+    ret    
+LongXchgWordRegMem       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

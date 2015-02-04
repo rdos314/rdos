@@ -39,3 +39,5 @@
 	extrn LongMoveMemToSreg:near
 
 	extrn LongMoveAxIm:near
+
+	extrn LongXchgWordRegMem:near
