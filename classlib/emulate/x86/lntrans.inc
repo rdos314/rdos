@@ -33,3 +33,7 @@
 	extrn LongPushRbp:near
 	extrn LongPushRsi:near
 	extrn LongPushRdi:near
+
+	extrn LongMoveWordMemToReg:near
+
+	extrn LongMoveAxIm:near

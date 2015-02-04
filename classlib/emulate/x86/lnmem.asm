@@ -1061,4 +1061,158 @@ MemSib  PROC near
     ret
 MemSib  ENDP
 
+    public LongWordRegTab
+
+LongWordRegTab:
+regl_110000      DD OFFSET reg_eax
+regl_110001      DD OFFSET reg_ecx
+regl_110010      DD OFFSET reg_edx
+regl_110011      DD OFFSET reg_ebx
+regl_110100      DD OFFSET reg_esp
+regl_110101      DD OFFSET reg_ebp
+regl_110110      DD OFFSET reg_esi
+regl_110111      DD OFFSET reg_edi
+regl_111000      DD OFFSET reg_r8
+regl_111001      DD OFFSET reg_r9
+regl_111010      DD OFFSET reg_r10
+regl_111011      DD OFFSET reg_r11
+regl_111100      DD OFFSET reg_r12
+regl_111101      DD OFFSET reg_r13
+regl_111110      DD OFFSET reg_r14
+regl_111111      DD OFFSET reg_r15
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LoadLongDwordMemReg
+;
+;   DESCRIPTION:    Load dword from memory / reg
+;
+;   RETURNS:        EAX             data read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LoadLongDwordMemReg
+
+LoadLongDwordMemReg Proc near
+    mov bl,[ebp].em_modrm
+    and bl,0C0h
+    cmp bl,0C0h
+    je LoadDwordMemRegReg
+;
+    int 3
+    ret
+
+LoadDwordMemRegReg:
+    mov bl,[ebp].em_rex
+    shl bl,3
+    and bl,8
+;    
+    mov bh,[ebp].em_modrm
+    and bh,7
+    or bl,bh
+;
+    movzx esi,bl
+    mov esi,dword ptr [4*esi].LongWordRegTab
+    mov eax,[ebp+esi]
+    ret
+LoadLongDwordMemReg Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LoadLongQwordMemReg
+;
+;   DESCRIPTION:    Load qword from memory / reg
+;
+;   RETURNS:        EDX:EAX             data read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LoadLongQwordMemReg
+
+LoadLongQwordMemReg Proc near
+    mov bl,[ebp].em_modrm
+    and bl,0C0h
+    cmp bl,0C0h
+    je LoadQwordMemRegReg
+;
+    int 3
+    ret
+
+LoadQwordMemRegReg:
+    mov bl,[ebp].em_rex
+    shl bl,3
+    and bl,8
+;    
+    mov bh,[ebp].em_modrm
+    and bh,7
+    or bl,bh
+;
+    movzx esi,bl
+    mov esi,dword ptr [4*esi].LongWordRegTab
+    mov eax,[ebp+esi]
+    mov edx,[ebp+esi+4]
+    ret
+LoadLongQwordMemReg Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;     NAME:          SaveLongDwordReg
+;
+;     DESCRIPTION:   Save dword to reg
+;
+;     PARAMETERS:    EAX             data to save
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public SaveLongDwordReg
+
+SaveLongDwordReg    Proc near
+    mov bl,[ebp].em_rex
+    shl bl,1
+    and bl,8
+;    
+    mov bh,[ebp].em_modrm
+    shr bh,3
+    and bh,7
+    or bl,bh
+;
+    movzx esi,bl
+    mov esi,dword ptr [4*esi].LongWordRegTab
+    mov [ebp+esi],eax
+    ret
+SaveLongDwordReg    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;     NAME:          SaveLongQwordReg
+;
+;     DESCRIPTION:   Save qword to reg
+;
+;     PARAMETERS:    EDX:EAX             data to save
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public SaveLongQwordReg
+
+SaveLongQwordReg    Proc near
+    mov bl,[ebp].em_rex
+    shl bl,1
+    and bl,8
+;    
+    mov bh,[ebp].em_modrm
+    shr bh,3
+    and bh,7
+    or bl,bh
+;
+    movzx esi,bl
+    mov esi,dword ptr [4*esi].LongWordRegTab
+    mov [ebp+esi],eax
+    mov [ebp+esi+4],edx
+    ret
+SaveLongQwordReg    Endp
+
         END

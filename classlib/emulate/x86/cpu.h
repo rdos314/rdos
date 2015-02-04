@@ -208,6 +208,7 @@ public:
         char EmParams;
         char EmIst;
         char EmRex;
+        char EmModrm;
         short int EmErrorCode;
 
         short int DisAsmHandle;

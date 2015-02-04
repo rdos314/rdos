@@ -1110,6 +1110,22 @@ LongRex:
         movzx ebx,al
         shl ebx,2
         jmp dword ptr [ebx].LongTab
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           LongOverrideData
+;
+;               DESCRIPTION:    change size of data between 32 & 64
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LongOverrideData:
+    xor byte ptr [ebp].em_flags,d32
+    call ReadLongCodeByte
+    movzx ebx,al
+    shl ebx,2
+    jmp dword ptr [ebx].LongTab
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1174,7 +1190,7 @@ lnt5E   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt60   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt62   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt64   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt66   DD OFFSET EmulateError,             OFFSET EmulateError
+lnt66   DD OFFSET LongOverrideData,         OFFSET EmulateError
 lnt68   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt6A   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt6C   DD OFFSET EmulateError,             OFFSET EmulateError
@@ -1192,7 +1208,7 @@ lnt82   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt84   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt86   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt88   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt8A   DD OFFSET EmulateError,             OFFSET EmulateError
+lnt8A   DD OFFSET EmulateError,             OFFSET LongMoveWordMemToReg
 lnt8C   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt8E   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt90   DD OFFSET EmulateError,             OFFSET EmulateError
@@ -1215,7 +1231,7 @@ lntB0   DD OFFSET EmulateError,             OFFSET EmulateError
 lntB2   DD OFFSET EmulateError,             OFFSET EmulateError
 lntB4   DD OFFSET EmulateError,             OFFSET EmulateError
 lntB6   DD OFFSET EmulateError,             OFFSET EmulateError
-lntB8   DD OFFSET EmulateError,             OFFSET EmulateError
+lntB8   DD OFFSET LongMoveAxIm,             OFFSET EmulateError
 lntBA   DD OFFSET EmulateError,             OFFSET EmulateError
 lntBC   DD OFFSET EmulateError,             OFFSET EmulateError
 lntBE   DD OFFSET EmulateError,             OFFSET EmulateError
@@ -1291,7 +1307,7 @@ emulate_not32:
         jmp emulate_start
 
 emulate64:
-        mov [ebp].em_flags,l64
+        mov [ebp].em_flags,l64 OR a32 OR d32
         mov [ebp].em_rex,0
 ;       
         mov eax,[ebp].reg_eip
@@ -1302,7 +1318,7 @@ emulate64:
         mov eax,[ebp].reg_esp
         mov [ebp].org_esp,eax
         mov eax,[ebp].reg_esp+4
-        mov [ebp].org_esp,4,eax
+        mov [ebp].org_esp+4,eax
 ;        
         mov eax,esp
         sub eax,4

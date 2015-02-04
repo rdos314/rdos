@@ -32,8 +32,75 @@
 
 include \rdos\classlib\emulate\x86\emulate.inc
 include \rdos\classlib\emulate\x86\emcom.inc
+include \rdos\classlib\emulate\x86\lnmem.inc
 
 .code
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           LongMoveWordMemToReg
+;
+;               DESCRIPTION:    EMULATE mov reg,word ptr mem
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveWordMemToReg
+
+LongMoveWordMemToReg      Proc near
+        test [ebp].em_rex,8
+        jnz LongMoveQwordMemToReg
+;
+        call ReadLongCodeByte
+        mov [ebp].em_modrm,al
+        call LoadLongDwordMemReg
+        call SaveLongDwordReg
+        ret
+LongMoveWordMemToReg      Endp
+
+LongMoveQwordMemToReg     Proc near
+        call ReadLongCodeByte
+        mov [ebp].em_modrm,al
+        call LoadLongQwordMemReg
+        call SaveLongQwordReg
+        ret
+LongMoveQwordMemToReg     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongMoveAxIm
+;
+;   DESCRIPTION:    Emulate move (d)word reg, immediate
+;
+;   PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveAxIm
+
+LongMoveAxIm    Proc near
+    test [ebp].em_rex,8
+    jnz LongMoveRaxIm
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveEaxIm
+;
+    call ReadLongCodeWord
+    mov word ptr [ebp].reg_eax,ax
+    ret
+
+LongMoveEaxIm:
+    call ReadLongCodeDword
+    mov [ebp].reg_eax,eax
+    ret
+
+LongMoveRaxIm:
+    call ReadLongCodeQword
+    mov [ebp].reg_eax,eax
+    mov [ebp].reg_eax+4,edx
+    ret
+LongMoveAxIm  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
