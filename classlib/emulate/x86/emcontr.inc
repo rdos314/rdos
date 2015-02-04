@@ -75,6 +75,8 @@
 	extrn EmRetNear:near
 	extrn EmRetNearN:near
 
+	extrn LongCallNear:near
+
 	extrn EmJmpFar:near
 	extrn EmJmpFarMem:near
 

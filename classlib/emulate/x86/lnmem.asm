@@ -354,6 +354,7 @@ MemRaxD8 PROC near
     mov eax,ebx
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_eax
     adc edi,[ebp].reg_eax+4
     ret
@@ -366,6 +367,7 @@ MemRcxD8 PROC near
     mov eax,ebx
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_ecx
     adc edi,[ebp].reg_ecx+4
     ret
@@ -378,6 +380,7 @@ MemRdxD8 PROC near
     mov eax,ebx
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_edx
     adc edi,[ebp].reg_edx+4
     ret
@@ -390,6 +393,7 @@ MemRbxD8 PROC near
     mov eax,ebx
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_ebx
     adc edi,[ebp].reg_ebx+4
     ret
@@ -402,6 +406,7 @@ MemRbpD8 PROC near
     mov eax,ebx
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_ebp
     adc edi,[ebp].reg_ebp+4
     ret
@@ -414,6 +419,7 @@ MemRsiD8 PROC near
     mov eax,ebx
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_esi
     adc edi,[ebp].reg_esi+4
     ret
@@ -426,6 +432,7 @@ MemRdiD8 PROC near
     mov eax,ebx
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_edi
     adc edi,[ebp].reg_edi+4
     ret
@@ -438,6 +445,7 @@ MemR8D8 PROC near
     mov eax,ebx
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_r8
     adc edi,[ebp].reg_r8+4
     ret
@@ -450,6 +458,7 @@ MemR9D8 PROC near
     mov eax,ebx
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_r9
     adc edi,[ebp].reg_r9+4
     ret
@@ -462,6 +471,7 @@ MemR10D8 PROC near
     mov eax,ebx
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_r10
     adc edi,[ebp].reg_r10+4
     ret
@@ -474,6 +484,7 @@ MemR11D8 PROC near
     mov eax,ebx
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_r11
     adc edi,[ebp].reg_r11+4
     ret
@@ -486,6 +497,7 @@ MemR13D8 PROC near
     mov eax,ebx
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_r13
     adc edi,[ebp].reg_r13+4
     ret
@@ -498,6 +510,7 @@ MemR14D8 PROC near
     mov eax,ebx
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_r14
     adc edi,[ebp].reg_r14+4
     ret
@@ -510,6 +523,7 @@ MemR15D8 PROC near
     mov eax,ebx
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_r15
     adc edi,[ebp].reg_r15+4
     ret
@@ -633,6 +647,7 @@ MemRaxD32 PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_eax
     adc edi,[ebp].reg_eax+4
     ret
@@ -644,6 +659,7 @@ MemRcxD32 PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_ecx
     adc edi,[ebp].reg_ecx+4
     ret
@@ -655,6 +671,7 @@ MemRdxD32 PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_edx
     adc edi,[ebp].reg_edx+4
     ret
@@ -666,6 +683,7 @@ MemRbxD32 PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_ebx
     adc edi,[ebp].reg_ebx+4
     ret
@@ -677,6 +695,7 @@ MemRbpD32 PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_ebp
     adc edi,[ebp].reg_ebp+4
     ret
@@ -688,6 +707,7 @@ MemRsiD32 PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_esi
     adc edi,[ebp].reg_esi+4
     ret
@@ -699,6 +719,7 @@ MemRdiD32 PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_edi
     adc edi,[ebp].reg_edi+4
     ret
@@ -710,6 +731,7 @@ MemR8D32 PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_r8
     adc edi,[ebp].reg_r8+4
     ret
@@ -721,6 +743,7 @@ MemR9D32 PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_r9
     adc edi,[ebp].reg_r9+4
     ret
@@ -732,6 +755,7 @@ MemR10D32 PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_r10
     adc edi,[ebp].reg_r10+4
     ret
@@ -743,6 +767,7 @@ MemR11D32 PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_r11
     adc edi,[ebp].reg_r11+4
     ret
@@ -754,6 +779,7 @@ MemR13D32 PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_r13
     adc edi,[ebp].reg_r13+4
     ret
@@ -765,6 +791,7 @@ MemR14D32 PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_r14
     adc edi,[ebp].reg_r14+4
     ret
@@ -776,6 +803,7 @@ MemR15D32 PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_r15
     adc edi,[ebp].reg_r15+4
     ret
@@ -795,6 +823,7 @@ MemRipD32 PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
     add ebx,[ebp].reg_eip
     adc edi,[ebp].reg_eip+4
     ret
@@ -810,6 +839,7 @@ MemSibD8    PROC near
     mov eax,ebx
     rcl eax,1
     rcl edi,1
+    neg edi
     pop eax
     add ebx,eax
     pop eax
@@ -826,6 +856,7 @@ MemSibD32 PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
     pop eax
     add ebx,eax
     pop eax
@@ -851,6 +882,7 @@ MemModD32   PROC near
     xor edi,edi
     rcl eax,1
     rcl edi,1
+    neg edi
 
 mm32Done:
     ret

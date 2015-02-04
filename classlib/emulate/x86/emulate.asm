@@ -1255,7 +1255,7 @@ lntE0   DD OFFSET EmulateError,             OFFSET EmulateError
 lntE2   DD OFFSET EmulateError,             OFFSET EmulateError
 lntE4   DD OFFSET EmulateError,             OFFSET EmulateError
 lntE6   DD OFFSET EmulateError,             OFFSET EmulateError
-lntE8   DD OFFSET EmulateError,             OFFSET EmulateError
+lntE8   DD OFFSET LongCallNear,             OFFSET EmulateError
 lntEA   DD OFFSET EmulateError,             OFFSET EmulateError
 lntEC   DD OFFSET EmulateError,             OFFSET EmulateError
 lntEE   DD OFFSET EmulateError,             OFFSET EmulateError

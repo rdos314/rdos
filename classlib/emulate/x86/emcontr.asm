@@ -394,6 +394,32 @@ EmCallNear      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           LongCallNear
+;
+;   DESCRIPTION:    EMULATE call near
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongCallNear
+
+LongCallNear      Proc near
+    call ReadLongCodeDword
+    mov ebx,eax
+    xor edx,edx
+    rcl ebx,1
+    sbb edx,0
+    add eax,[ebp].reg_eip
+    adc edx,[ebp].reg_eip+4
+;
+    xchg eax,[ebp].reg_eip
+    xchg edx,[ebp].reg_eip+4
+    call PushLong
+    ret
+LongCallNear      Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:                   EmCallNearMem
 ;
 ;               DESCRIPTION:    EMULATE call near mem
