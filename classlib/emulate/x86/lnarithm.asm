@@ -1,0 +1,149 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Em486 CPU emulator
+; Copyright (C) 1998-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage. For information on commercial usage,
+; contact em486@rdos.net.
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; LNARITHM.ASM
+; Arithmetric group instructions
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+.486
+.model flat
+
+;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
+
+include \rdos\classlib\emulate\x86\emulate.inc
+include \rdos\classlib\emulate\x86\emcom.inc
+include \rdos\classlib\emulate\x86\lnmem.inc
+include \rdos\classlib\emulate\x86\emmem.inc
+include \rdos\classlib\emulate\x86\emseg.inc
+include \rdos\classlib\emulate\x86\empage.inc
+
+.code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           WordMemReg
+;
+;               DESCRIPTION:    Emulate (d)word ptr mem, reg
+;
+;               PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WordRegMem      Macro op1, op2
+
+    public Long&op1&WordRegMem
+
+Long&op1&WordRegMem        Proc near
+    test [ebp].em_rex,8
+    jnz Long&op1&QwordRegMem
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz Long&op1&DwordRegMem
+;
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call LoadLongWordMemReg
+    push ax
+    call LoadLongWordReg
+    pop bx
+    mov cx,ax
+;    
+    mov ah,byte ptr [ebp].reg_eflags
+    sahf
+    &op1 cx,bx
+    lahf
+    mov byte ptr [ebp].reg_eflags,ah
+    mov ax,cx
+    call SaveLongWordReg
+    ret
+
+Long&op1&DwordRegMem:
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call LoadLongDwordMemReg
+    push eax
+    call LoadLongDwordReg
+    pop ebx
+    mov ecx,eax
+;    
+    mov ah,byte ptr [ebp].reg_eflags
+    sahf
+    &op1 ecx,ebx
+    lahf
+    mov byte ptr [ebp].reg_eflags,ah
+    mov eax,ecx
+    call SaveLongDwordReg
+    ret
+
+Long&op1&QwordRegMem:
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call LoadLongQwordMemReg
+    push edx
+    push eax
+    call LoadLongQwordReg
+    pop ebx
+    pop edi
+    mov ecx,eax
+;    
+; edi:ebx = memory operand
+; edx:ecx = register operand
+;
+    mov ah,byte ptr [ebp].reg_eflags
+    sahf
+    &op1 ecx,ebx
+    jz Long&op1&RegMemPossibleZero
+;
+    &op2 edx,edi
+    lahf
+    mov byte ptr [ebp].reg_eflags,ah
+    and ah,NOT 40h
+    jmp Long&op1&RegMemSave
+
+Long&op1&RegMemPossibleZero:
+    &op2 edx,edi
+    lahf
+
+Long&op1&RegMemSave:
+    mov byte ptr [ebp].reg_eflags,ah
+;    
+    mov eax,ecx
+    call SaveLongQwordReg
+    ret
+Long&op1&WordRegMem        Endp
+
+                        Endm
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:                   or
+;
+;   DESCRIPTION:    EMULATE or
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    WordRegMem Or, Or
+
+        END

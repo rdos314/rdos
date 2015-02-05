@@ -38,6 +38,7 @@ include \rdos\classlib\emulate\x86\emstring.inc
 include \rdos\classlib\emulate\x86\emprot.inc
 include \rdos\classlib\emulate\x86\em387.inc
 include \rdos\classlib\emulate\x86\lntrans.inc
+include \rdos\classlib\emulate\x86\lnarithm.inc
 
 .code
 
@@ -1159,7 +1160,7 @@ lnt02   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt04   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt06   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt08   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt0A   DD OFFSET EmulateError,             OFFSET EmulateError
+lnt0A   DD OFFSET EmulateError,             OFFSET LongOrWordRegMem
 lnt0C   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt0E   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt10   DD OFFSET EmulateError,             OFFSET EmulateError
