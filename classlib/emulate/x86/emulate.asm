@@ -1143,6 +1143,151 @@ LongOverrideCs:
     movzx ebx,al
     shl ebx,2
     jmp dword ptr [ebx].LongTab
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           Long0F
+;
+;               DESCRIPTION:    EMULATE 0F instructions
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Long0FTab:
+lnt0F00  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F02  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F04  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F06  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F08  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F0A  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F0C  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F0E  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F10  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F12  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F14  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F16  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F18  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F1A  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F1C  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F1E  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F20  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F22  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F24  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F26  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F28  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F2A  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F2C  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F2E  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F30  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F32  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F34  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F36  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F38  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F3A  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F3C  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F3E  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F40  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F42  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F44  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F46  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F48  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F4A  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F4C  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F4E  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F50  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F52  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F54  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F56  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F58  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F5A  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F5C  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F5E  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F60  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F62  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F64  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F66  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F68  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F6A  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F6C  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F6E  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F70  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F72  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F74  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F76  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F78  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F7A  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F7C  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F7E  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F80  DD OFFSET LongJoNear,                   OFFSET LongJnoNear
+lnt0F82  DD OFFSET LongJbNear,                   OFFSET LongJnbNear
+lnt0F84  DD OFFSET LongJeNear,                   OFFSET LongJneNear
+lnt0F86  DD OFFSET LongJbeNear,                  OFFSET LongJnbeNear
+lnt0F88  DD OFFSET LongJsNear,                   OFFSET LongJnsNear
+lnt0F8A  DD OFFSET LongJpNear,                   OFFSET LongJnpNear
+lnt0F8C  DD OFFSET LongJlNear,                   OFFSET LongJnlNear
+lnt0F8E  DD OFFSET LongJleNear,                  OFFSET LongJnleNear
+lnt0F90  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F92  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F94  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F96  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F98  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F9A  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F9C  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F9E  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FA0  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FA2  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FA4  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FA6  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FA8  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FAA  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FAC  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FAE  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FB0  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FB2  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FB4  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FB6  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FB8  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FBA  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FBC  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FBE  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FC0  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FC2  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FC4  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FC6  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FC8  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FCA  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FCC  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FCE  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FD0  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FD2  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FD4  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FD6  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FD8  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FDA  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FDC  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FDE  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FE0  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FE2  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FE4  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FE6  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FE8  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FEA  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FEC  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FEE  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FF0  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FF2  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FF4  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FF6  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FF8  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FFA  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FFC  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0FFE  DD OFFSET EmulateError,                 OFFSET EmulateError
+
+Long0F:
+        call ReadLongCodeByte
+        movzx ebx,al
+        shl ebx,2
+        jmp dword ptr [ebx].Long0FTab
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1189,7 +1334,7 @@ lnt06   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt08   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt0A   DD OFFSET EmulateError,             OFFSET LongOrWordRegMem
 lnt0C   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt0E   DD OFFSET EmulateError,             OFFSET EmulateError
+lnt0E   DD OFFSET EmulateError,             OFFSET Long0F
 lnt10   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt12   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt14   DD OFFSET EmulateError,             OFFSET EmulateError
@@ -1298,7 +1443,7 @@ lntE0   DD OFFSET EmulateError,             OFFSET EmulateError
 lntE2   DD OFFSET EmulateError,             OFFSET EmulateError
 lntE4   DD OFFSET EmulateError,             OFFSET EmulateError
 lntE6   DD OFFSET EmulateError,             OFFSET EmulateError
-lntE8   DD OFFSET LongCallNear,             OFFSET EmulateError
+lntE8   DD OFFSET LongCallNear,             OFFSET LongJmpNear
 lntEA   DD OFFSET EmulateError,             OFFSET LongJmpShort
 lntEC   DD OFFSET EmulateError,             OFFSET EmulateError
 lntEE   DD OFFSET EmulateError,             OFFSET EmulateError

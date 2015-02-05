@@ -43,6 +43,24 @@
 	extrn LongJleShort:near
 	extrn LongJnleShort:near
 
+	extrn LongJmpNear:near
+	extrn LongJoNear:near
+	extrn LongJnoNear:near
+	extrn LongJbNear:near
+	extrn LongJnbNear:near
+	extrn LongJeNear:near
+	extrn LongJneNear:near
+	extrn LongJbeNear:near
+	extrn LongJnbeNear:near
+	extrn LongJsNear:near
+	extrn LongJnsNear:near
+	extrn LongJpNear:near
+	extrn LongJnpNear:near
+	extrn LongJlNear:near
+	extrn LongJnlNear:near
+	extrn LongJleNear:near
+	extrn LongJnleNear:near
+
 	extrn LongRetNear:near
 
 	extrn LongCallFarMem:near

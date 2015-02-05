@@ -3480,6 +3480,7 @@ dis_ass_code_ok:
 ;
         mov ignore_ptr,0
         mov override,0
+        mov ds:op_rex,0
         mov [ebp].data_sel,0
         mov [ebp].data_offset,0
         mov [ebp].data_offset+4,0

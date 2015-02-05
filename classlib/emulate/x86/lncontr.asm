@@ -74,6 +74,41 @@ Long&op&ShortJump:
 Long&op&Short     Endp
 
                 Endm
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           JccNear
+;
+;               DESCRIPTION:    Emulate jcc near
+;
+;               PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+JccNear Macro op
+
+        public Long&op&Near
+
+Long&op&Near      Proc near
+        mov ah,byte ptr [ebp].reg_eflags
+        sahf
+        &op Long&op&NearJump
+        call ReadLongCodeDword
+        ret
+
+Long&op&NearJump:
+        call ReadLongCodeDword
+        xor edx,edx
+        mov ebx,eax
+        rcl ebx,1
+        sbb edx,0
+        add [ebp].reg_eip,eax
+        adc [ebp].reg_eip+4,edx
+        ret
+Long&op&Near      Endp
+
+                Endm
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -101,6 +136,33 @@ Long&op&Short     Endp
         JccShort Jnl
         JccShort Jle
         JccShort Jnle
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           EmJccNear
+;
+;               DESCRIPTION:    EMULATE jcc near
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        JccNear Jmp
+        JccNear Jo      
+        JccNear Jno
+        JccNear Jb      
+        JccNear Jnb
+        JccNear Je
+        JccNear Jne
+        JccNear Jbe
+        JccNear Jnbe
+        JccNear Js
+        JccNear Jns
+        JccNear Jp
+        JccNear Jnp
+        JccNear Jl
+        JccNear Jnl
+        JccNear Jle
+        JccNear Jnle
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
