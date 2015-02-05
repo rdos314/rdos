@@ -42,3 +42,5 @@
 	extrn LongJnlShort:near
 	extrn LongJleShort:near
 	extrn LongJnleShort:near
+
+	extrn LongRetNear:near

@@ -1253,7 +1253,7 @@ lntBA   DD OFFSET EmulateError,             OFFSET EmulateError
 lntBC   DD OFFSET EmulateError,             OFFSET EmulateError
 lntBE   DD OFFSET EmulateError,             OFFSET EmulateError
 lntC0   DD OFFSET EmulateError,             OFFSET EmulateError
-lntC2   DD OFFSET EmulateError,             OFFSET EmulateError
+lntC2   DD OFFSET EmulateError,             OFFSET LongRetNear
 lntC4   DD OFFSET EmulateError,             OFFSET EmulateError
 lntC6   DD OFFSET EmulateError,             OFFSET EmulateError
 lntC8   DD OFFSET EmulateError,             OFFSET EmulateError

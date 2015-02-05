@@ -99,5 +99,23 @@ Long&op&Short     Endp
         JccShort Jnl
         JccShort Jle
         JccShort Jnle
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           LongRetNear
+;
+;               DESCRIPTION:    EMULATE retn
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public LongRetNear
+
+LongRetNear       proc near
+        call PopLong
+        mov [ebp].reg_eip,eax
+        mov [ebp].reg_eip+4,edx
+        ret
+LongRetNear       endp
 
         END
