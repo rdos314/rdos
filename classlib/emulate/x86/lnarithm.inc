@@ -27,6 +27,7 @@
 
 	extrn LongCmpWordRegMem:near
 	extrn LongCmpByteImAcc:near
+    extrn LongCmpWordImsxMem:near
 
 	extrn LongAddWordRegMem:near
 

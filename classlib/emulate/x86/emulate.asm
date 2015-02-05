@@ -1308,6 +1308,32 @@ Long0F:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           Long83
+;
+;               DESCRIPTION:    EMULATE 83 instructions
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Long83Tab:
+ln83_000        DD OFFSET EmulateError
+ln83_001        DD OFFSET EmulateError
+ln83_010        DD OFFSET EmulateError
+ln83_011        DD OFFSET EmulateError
+ln83_100        DD OFFSET EmulateError
+ln83_101        DD OFFSET EmulateError
+ln83_110        DD OFFSET EmulateError
+ln83_111        DD OFFSET LongCmpWordImsxMem
+
+Long83:
+        call ReadLongCodeByte
+        movzx ebx,al
+        shr bl,2
+        and bl,0Eh
+        jmp dword ptr [2*ebx].Long83Tab
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           LongFF
 ;
 ;               DESCRIPTION:    EMULATE FF instructions
@@ -1408,7 +1434,7 @@ lnt7A   DD OFFSET LongJpShort,              OFFSET LongJnpShort
 lnt7C   DD OFFSET LongJlShort,              OFFSET LongJnlShort
 lnt7E   DD OFFSET LongJleShort,             OFFSET LongJnleShort
 lnt80   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt82   DD OFFSET EmulateError,             OFFSET EmulateError
+lnt82   DD OFFSET EmulateError,             OFFSET Long83
 lnt84   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt86   DD OFFSET EmulateError,             OFFSET LongXchgWordRegMem
 lnt88   DD OFFSET EmulateError,             OFFSET EmulateError
