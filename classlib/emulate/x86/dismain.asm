@@ -326,6 +326,7 @@ eip_adr PROC near
         mov eax,[ebp].reg_eip
         add eax,esi
         sub eax,OFFSET op_in_code
+        add eax,5
         ret
 eip_adr ENDP
         
@@ -477,6 +478,7 @@ rip_adr PROC near
         mov eax,[ebp].reg_eip
         add eax,esi
         sub eax,OFFSET op_in_code
+        add eax,5
         ret
 rip_adr ENDP
 
@@ -1061,7 +1063,8 @@ data_8_sel:
         movzx ebx,bl
         mov eax,dword ptr [4*ebx].mod_rm_tab
         mov op_syntax,eax
-        mov al,[esi+1]
+        inc esi
+        mov al,[esi]
         mov ah,al
         and al,7
         and ah,0C0h
@@ -1073,7 +1076,6 @@ dec_mem_no_ignore:
         or al,ah
         movzx eax,al
         call calc_ads_offset
-        inc esi
         call decode_opcode
         ret
 
@@ -1105,7 +1107,8 @@ dec64_data_8_sel:
         mov eax,dword ptr [4*ebx].long_mod_rm_tab
         mov op_syntax,eax
 ;        
-        mov al,[esi+1]
+        inc esi
+        mov al,[esi]
         mov ah,al
         and al,7
         test ds:op_rex,1
@@ -1125,7 +1128,6 @@ dec64_mem_no_ignore:
         or al,ah
         movzx eax,al
         call long_calc_ads_offset
-        inc esi
         call decode_opcode
         ret
 decode_mem_mode ENDP
@@ -1163,7 +1165,8 @@ mdata_8_sel:
         movzx ebx,bl
         mov eax,dword ptr [4*ebx].mod_rm_tab
         mov op_syntax,eax
-        mov al,[esi+1]
+        inc esi
+        mov al,[esi]
         mov ah,al
         and al,7
         and ah,0C0h
@@ -1186,7 +1189,6 @@ no_math_reg:
         or al,ah
         movzx eax,al
         call calc_ads_offset
-        inc esi
         call decode_opcode
         ret
 decode_math_mem ENDP
@@ -1494,6 +1496,7 @@ not_op_back:
         add esi,2
         add eax,esi
         sub eax,OFFSET op_in_code
+        inc eax
 ;        
         adc edx,0
         add eax,[ebp].reg_eip
@@ -1528,6 +1531,7 @@ op_near32:
         add esi,4
         add eax,esi
         sub eax,OFFSET op_in_code
+        inc eax
         add eax,[ebp].reg_eip
         call add_hex_dword
         ret
@@ -1536,6 +1540,7 @@ op_near16:
         add esi,2
         add eax,esi
         sub eax,OFFSET op_in_code
+        inc eax
         add ax,word ptr [ebp].reg_eip
         call add_hex_word
         ret
@@ -1551,6 +1556,7 @@ op_near32_2:
         add esi,5
         add eax,esi
         sub eax,OFFSET op_in_code
+        inc eax
         add eax,[ebp].reg_eip
         call add_hex_dword
         ret
@@ -1559,6 +1565,7 @@ op_near16_2:
         add esi,3
         add eax,esi
         sub eax,OFFSET op_in_code
+        inc eax
         add ax,word ptr [ebp].reg_eip
         call add_hex_word
         ret

@@ -28,7 +28,7 @@
 #ifdef __GNUC__
 #include <string.h>
 #else
-#include <mem.h>
+#include <memory.h>
 #endif
 
 #include "storlist.h"
