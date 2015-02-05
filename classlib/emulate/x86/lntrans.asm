@@ -110,6 +110,9 @@ LongMoveMemToSreg Endp
     public LongMoveAxIm
 
 LongMoveAxIm    Proc near
+    test [ebp].em_rex,1
+    jnz LongMoveR8Im
+;    
     test [ebp].em_rex,8
     jnz LongMoveRaxIm
 ;
@@ -130,7 +133,456 @@ LongMoveRaxIm:
     mov [ebp].reg_eax,eax
     mov [ebp].reg_eax+4,edx
     ret
+
+LongMoveR8Im:    
+    test [ebp].em_rex,8
+    jnz LongMoveR8qIm
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveR8dIm
+;
+    call ReadLongCodeWord
+    mov word ptr [ebp].reg_r8,ax
+    ret
+
+LongMoveR8dIm:
+    call ReadLongCodeDword
+    mov [ebp].reg_r8,eax
+    ret
+
+LongMoveR8qIm:
+    call ReadLongCodeQword
+    mov [ebp].reg_r8,eax
+    mov [ebp].reg_r8+4,edx
+    ret
 LongMoveAxIm  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongMoveCxIm
+;
+;   DESCRIPTION:    Emulate move (d)word reg, immediate
+;
+;   PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveCxIm
+
+LongMoveCxIm    Proc near
+    test [ebp].em_rex,1
+    jnz LongMoveR9Im
+;    
+    test [ebp].em_rex,8
+    jnz LongMoveRcxIm
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveEcxIm
+;
+    call ReadLongCodeWord
+    mov word ptr [ebp].reg_ecx,ax
+    ret
+
+LongMoveEcxIm:
+    call ReadLongCodeDword
+    mov [ebp].reg_ecx,eax
+    ret
+
+LongMoveRcxIm:
+    call ReadLongCodeQword
+    mov [ebp].reg_ecx,eax
+    mov [ebp].reg_ecx+4,edx
+    ret
+
+LongMoveR9Im:    
+    test [ebp].em_rex,8
+    jnz LongMoveR9qIm
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveR9dIm
+;
+    call ReadLongCodeWord
+    mov word ptr [ebp].reg_r9,ax
+    ret
+
+LongMoveR9dIm:
+    call ReadLongCodeDword
+    mov [ebp].reg_r9,eax
+    ret
+
+LongMoveR9qIm:
+    call ReadLongCodeQword
+    mov [ebp].reg_r9,eax
+    mov [ebp].reg_r9+4,edx
+    ret
+LongMoveCxIm  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongMoveDxIm
+;
+;   DESCRIPTION:    Emulate move (d)word reg, immediate
+;
+;   PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveDxIm
+
+LongMoveDxIm    Proc near
+    test [ebp].em_rex,1
+    jnz LongMoveR10Im
+;    
+    test [ebp].em_rex,8
+    jnz LongMoveRdxIm
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveEdxIm
+;
+    call ReadLongCodeWord
+    mov word ptr [ebp].reg_edx,ax
+    ret
+
+LongMoveEdxIm:
+    call ReadLongCodeDword
+    mov [ebp].reg_edx,eax
+    ret
+
+LongMoveRdxIm:
+    call ReadLongCodeQword
+    mov [ebp].reg_edx,eax
+    mov [ebp].reg_edx+4,edx
+    ret
+
+LongMoveR10Im:    
+    test [ebp].em_rex,8
+    jnz LongMoveR10qIm
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveR10dIm
+;
+    call ReadLongCodeWord
+    mov word ptr [ebp].reg_r10,ax
+    ret
+
+LongMoveR10dIm:
+    call ReadLongCodeDword
+    mov [ebp].reg_r10,eax
+    ret
+
+LongMoveR10qIm:
+    call ReadLongCodeQword
+    mov [ebp].reg_r10,eax
+    mov [ebp].reg_r10+4,edx
+    ret
+LongMoveDxIm  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongMoveBxIm
+;
+;   DESCRIPTION:    Emulate move (d)word reg, immediate
+;
+;   PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveBxIm
+
+LongMoveBxIm    Proc near
+    test [ebp].em_rex,1
+    jnz LongMoveR11Im
+;    
+    test [ebp].em_rex,8
+    jnz LongMoveRbxIm
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveEbxIm
+;
+    call ReadLongCodeWord
+    mov word ptr [ebp].reg_ebx,ax
+    ret
+
+LongMoveEbxIm:
+    call ReadLongCodeDword
+    mov [ebp].reg_ebx,eax
+    ret
+
+LongMoveRbxIm:
+    call ReadLongCodeQword
+    mov [ebp].reg_ebx,eax
+    mov [ebp].reg_ebx+4,edx
+    ret
+
+LongMoveR11Im:    
+    test [ebp].em_rex,8
+    jnz LongMoveR11qIm
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveR11dIm
+;
+    call ReadLongCodeWord
+    mov word ptr [ebp].reg_r11,ax
+    ret
+
+LongMoveR11dIm:
+    call ReadLongCodeDword
+    mov [ebp].reg_r11,eax
+    ret
+
+LongMoveR11qIm:
+    call ReadLongCodeQword
+    mov [ebp].reg_r11,eax
+    mov [ebp].reg_r11+4,edx
+    ret
+LongMoveBxIm  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongMoveSpIm
+;
+;   DESCRIPTION:    Emulate move (d)word reg, immediate
+;
+;   PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveSpIm
+
+LongMoveSpIm    Proc near
+    test [ebp].em_rex,1
+    jnz LongMoveR12Im
+;    
+    test [ebp].em_rex,8
+    jnz LongMoveRspIm
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveEspIm
+;
+    call ReadLongCodeWord
+    mov word ptr [ebp].reg_esp,ax
+    ret
+
+LongMoveEspIm:
+    call ReadLongCodeDword
+    mov [ebp].reg_esp,eax
+    ret
+
+LongMoveRspIm:
+    call ReadLongCodeQword
+    mov [ebp].reg_esp,eax
+    mov [ebp].reg_esp+4,edx
+    ret
+
+LongMoveR12Im:    
+    test [ebp].em_rex,8
+    jnz LongMoveR12qIm
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveR12dIm
+;
+    call ReadLongCodeWord
+    mov word ptr [ebp].reg_r12,ax
+    ret
+
+LongMoveR12dIm:
+    call ReadLongCodeDword
+    mov [ebp].reg_r12,eax
+    ret
+
+LongMoveR12qIm:
+    call ReadLongCodeQword
+    mov [ebp].reg_r12,eax
+    mov [ebp].reg_r12+4,edx
+    ret
+LongMoveSpIm  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongMoveBpIm
+;
+;   DESCRIPTION:    Emulate move (d)word reg, immediate
+;
+;   PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveBpIm
+
+LongMoveBpIm    Proc near
+    test [ebp].em_rex,1
+    jnz LongMoveR13Im
+;    
+    test [ebp].em_rex,8
+    jnz LongMoveRbpIm
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveEbpIm
+;
+    call ReadLongCodeWord
+    mov word ptr [ebp].reg_ebp,ax
+    ret
+
+LongMoveEbpIm:
+    call ReadLongCodeDword
+    mov [ebp].reg_ebp,eax
+    ret
+
+LongMoveRbpIm:
+    call ReadLongCodeQword
+    mov [ebp].reg_ebp,eax
+    mov [ebp].reg_ebp+4,edx
+    ret
+
+LongMoveR13Im:    
+    test [ebp].em_rex,8
+    jnz LongMoveR13qIm
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveR13dIm
+;
+    call ReadLongCodeWord
+    mov word ptr [ebp].reg_r13,ax
+    ret
+
+LongMoveR13dIm:
+    call ReadLongCodeDword
+    mov [ebp].reg_r13,eax
+    ret
+
+LongMoveR13qIm:
+    call ReadLongCodeQword
+    mov [ebp].reg_r13,eax
+    mov [ebp].reg_r13+4,edx
+    ret
+LongMoveBpIm  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongMoveSiIm
+;
+;   DESCRIPTION:    Emulate move (d)word reg, immediate
+;
+;   PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveSiIm
+
+LongMoveSiIm    Proc near
+    test [ebp].em_rex,1
+    jnz LongMoveR14Im
+;    
+    test [ebp].em_rex,8
+    jnz LongMoveRsiIm
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveEsiIm
+;
+    call ReadLongCodeWord
+    mov word ptr [ebp].reg_esi,ax
+    ret
+
+LongMoveEsiIm:
+    call ReadLongCodeDword
+    mov [ebp].reg_esi,eax
+    ret
+
+LongMoveRsiIm:
+    call ReadLongCodeQword
+    mov [ebp].reg_esi,eax
+    mov [ebp].reg_esi+4,edx
+    ret
+
+LongMoveR14Im:    
+    test [ebp].em_rex,8
+    jnz LongMoveR14qIm
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveR14dIm
+;
+    call ReadLongCodeWord
+    mov word ptr [ebp].reg_r14,ax
+    ret
+
+LongMoveR14dIm:
+    call ReadLongCodeDword
+    mov [ebp].reg_r14,eax
+    ret
+
+LongMoveR14qIm:
+    call ReadLongCodeQword
+    mov [ebp].reg_r14,eax
+    mov [ebp].reg_r14+4,edx
+    ret
+LongMoveSiIm  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongMoveDiIm
+;
+;   DESCRIPTION:    Emulate move (d)word reg, immediate
+;
+;   PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveDiIm
+
+LongMoveDiIm    Proc near
+    test [ebp].em_rex,1
+    jnz LongMoveR15Im
+;    
+    test [ebp].em_rex,8
+    jnz LongMoveRdiIm
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveEdiIm
+;
+    call ReadLongCodeWord
+    mov word ptr [ebp].reg_edi,ax
+    ret
+
+LongMoveEdiIm:
+    call ReadLongCodeDword
+    mov [ebp].reg_edi,eax
+    ret
+
+LongMoveRdiIm:
+    call ReadLongCodeQword
+    mov [ebp].reg_edi,eax
+    mov [ebp].reg_edi+4,edx
+    ret
+
+LongMoveR15Im:    
+    test [ebp].em_rex,8
+    jnz LongMoveR15qIm
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveR15dIm
+;
+    call ReadLongCodeWord
+    mov word ptr [ebp].reg_r15,ax
+    ret
+
+LongMoveR15dIm:
+    call ReadLongCodeDword
+    mov [ebp].reg_r15,eax
+    ret
+
+LongMoveR15qIm:
+    call ReadLongCodeQword
+    mov [ebp].reg_r15,eax
+    mov [ebp].reg_r15+4,edx
+    ret
+LongMoveDiIm  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -1297,57 +1297,70 @@ void TCpu::ShowInstruction()
 
     if (CpuState.DataValid)
     {
-        ok = FALSE;
-        
-        if (CpuState.Reg_cs.selector == CpuState.DataSelector)
+        if (codesize == 2)
         {
-            Base = CpuState.Reg_cs.base;
-            size = CpuState.Reg_cs.limit;
+            Base = CpuState.DataOffset;
             ok = TRUE;
         }
+        else
+        {        
+            ok = FALSE;
         
-        if (CpuState.Reg_ss.selector == CpuState.DataSelector)
-        {
-            Base = CpuState.Reg_ss.base;
-            size = CpuState.Reg_ss.limit;
-            ok = TRUE;
-        }
+            if (CpuState.Reg_cs.selector == CpuState.DataSelector)
+            {
+                Base = CpuState.Reg_cs.base;
+                size = CpuState.Reg_cs.limit;
+                ok = TRUE;
+            }
         
-        if (CpuState.Reg_ds.selector == CpuState.DataSelector)
-        {
-            Base = CpuState.Reg_ds.base;
-            size = CpuState.Reg_ds.limit;
-            ok = TRUE;
-        }
+            if (CpuState.Reg_ss.selector == CpuState.DataSelector)
+            {
+                Base = CpuState.Reg_ss.base;
+                size = CpuState.Reg_ss.limit;
+                ok = TRUE;
+            }
         
-        if (CpuState.Reg_es.selector == CpuState.DataSelector)
-        {
-            Base = CpuState.Reg_es.base;
-            size = CpuState.Reg_es.limit;
-            ok = TRUE;
-        }
+            if (CpuState.Reg_ds.selector == CpuState.DataSelector)
+            {
+                Base = CpuState.Reg_ds.base;
+                size = CpuState.Reg_ds.limit;
+                ok = TRUE;
+            }
         
-        if (CpuState.Reg_fs.selector == CpuState.DataSelector)
-        {
-            Base = CpuState.Reg_fs.base;
-            size = CpuState.Reg_fs.limit;
-            ok = TRUE;
-        }
+            if (CpuState.Reg_es.selector == CpuState.DataSelector)
+            {
+                Base = CpuState.Reg_es.base;
+                size = CpuState.Reg_es.limit;
+                ok = TRUE;
+            }
         
-        if (CpuState.Reg_gs.selector == CpuState.DataSelector)
-        {
-            Base = CpuState.Reg_gs.base;
-            size = CpuState.Reg_gs.limit;
-            ok = TRUE;
+            if (CpuState.Reg_fs.selector == CpuState.DataSelector)
+            {
+                Base = CpuState.Reg_fs.base;
+                size = CpuState.Reg_fs.limit;
+                ok = TRUE;
+            }
+        
+            if (CpuState.Reg_gs.selector == CpuState.DataSelector)
+            {
+                Base = CpuState.Reg_gs.base;
+                size = CpuState.Reg_gs.limit;
+                ok = TRUE;
+            }
+
+            if (ok)
+               Base += CpuState.DataOffset;
         }
 
         if (ok)
         {
-            Base += CpuState.DataOffset;
             memset(CpuState.CodeCache, 0, 0x20);
             FillCache(&CpuState, Base);
             
-            printf("%04lX:%08lX ", CpuState.DataSelector, CpuState.DataOffset);
+            if (codesize == 2)
+                printf("%04lX_%08lX ", (long)(CpuState.DataOffset >> 32) , (long)CpuState.DataOffset);
+            else
+                printf("%04lX:%08lX ", CpuState.DataSelector, (long)CpuState.DataOffset);
 
             size -= CpuState.DataOffset;
             if (size >= 16)

@@ -1536,6 +1536,7 @@ CondLinearToPhysical64    Proc near
         jz CondLinearToPhysicalLow64
 ;
         mov [esi].t_tag,-1
+        pop esi
         stc
         jmp CondLinearToPhysicalDone64
 
@@ -1544,6 +1545,7 @@ CondLinearToPhysicalHigh64:
         je CondLinearToPhysicalCanonical
 ;
         mov [esi].t_tag,-1
+        pop esi
         stc
         jmp CondLinearToPhysicalDone64
 
@@ -1552,6 +1554,7 @@ CondLinearToPhysicalLow64:
         je CondLinearToPhysicalCanonical
 ;
         mov [esi].t_tag,-1
+        pop esi
         stc
         jmp CondLinearToPhysicalDone64
 
