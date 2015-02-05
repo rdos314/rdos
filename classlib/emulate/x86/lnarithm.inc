@@ -30,5 +30,6 @@
     extrn LongCmpWordImsxMem:near
 
 	extrn LongAddWordRegMem:near
+    extrn LongAddWordImsxMem:near
 
 	extrn LongOrWordRegMem:near

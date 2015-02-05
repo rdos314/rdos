@@ -1315,7 +1315,7 @@ Long0F:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Long83Tab:
-ln83_000        DD OFFSET EmulateError
+ln83_000        DD OFFSET LongAddWordImsxMem
 ln83_001        DD OFFSET EmulateError
 ln83_010        DD OFFSET EmulateError
 ln83_011        DD OFFSET EmulateError

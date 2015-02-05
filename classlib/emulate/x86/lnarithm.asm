@@ -138,6 +138,184 @@ Long&op1&WordRegMem        Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           WordImsxMem
+;
+;               DESCRIPTION:    Emulate (d)word mem, immediate with sign-extend
+;
+;               PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WordImsxMem     Macro op1, op2
+
+    public Long&op1&WordImsxMem
+
+Long&op1&WordImsxMem       Proc near
+    mov [ebp].em_modrm,al
+    mov [ebp].em_extra_bytes,1
+;
+    test [ebp].em_rex,8
+    jnz Long&op1&QwordImsxMem
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz Long&op1&DwordImsxMem
+;
+    call GetLongMemRegAds
+    jc Long&op1&WordImsxReg
+;
+    call ReadLongCodeByte
+    movsx ax,al
+    push ax
+    call ReadLinearWord
+    pop bx
+    mov cx,ax
+;    
+    mov ah,byte ptr [ebp].reg_eflags
+    sahf
+    &op1 cx,bx
+    lahf
+    mov byte ptr [ebp].reg_eflags,ah
+    mov ax,cx
+    call WriteLinearWord
+    ret
+
+Long&op1&WordImsxReg:
+    call ReadLongCodeByte
+    movsx ax,al
+    push ax
+    call LoadLongWordMemReg
+    pop bx
+    mov cx,ax
+;    
+    mov ah,byte ptr [ebp].reg_eflags
+    sahf
+    &op1 cx,bx
+    lahf
+    mov byte ptr [ebp].reg_eflags,ah
+    mov ax,cx
+    call SaveLongWordMemReg
+    ret
+
+Long&op1&DwordImsxMem:
+    call GetLongMemRegAds
+    jc Long&op1&DwordImsxReg
+;
+    call ReadLongCodeByte
+    movsx eax,al
+    push eax
+    call ReadLinearDword
+    pop ebx
+    mov ecx,eax
+;    
+    mov ah,byte ptr [ebp].reg_eflags
+    sahf
+    &op1 ecx,ebx
+    lahf
+    mov byte ptr [ebp].reg_eflags,ah
+    mov eax,ecx
+    call WriteLinearDword
+    ret
+
+Long&op1&DwordImsxReg:
+    call ReadLongCodeByte
+    movsx eax,al
+    push eax
+    call LoadLongDwordMemReg
+    pop ebx
+    mov ecx,eax
+;    
+    mov ah,byte ptr [ebp].reg_eflags
+    sahf
+    &op1 ecx,ebx
+    lahf
+    mov byte ptr [ebp].reg_eflags,ah
+    mov eax,ecx
+    call SaveLongDwordMemReg
+    ret
+
+Long&op1&QwordImsxMem:
+    call GetLongMemRegAds
+    jc Long&op1&QwordImsxReg
+;
+    call ReadLongCodeByte
+    movsx ecx,al
+    xor edx,edx
+    rcl al,1
+    sbb edx,0 
+    push edx   
+    push ecx
+    call ReadLinearQword
+    pop ebx
+    pop edi
+    mov ecx,eax
+;    
+; edi:ebx = memory operand
+; edx:ecx = register operand
+;
+    mov ah,byte ptr [ebp].reg_eflags
+    sahf
+    &op1 ecx,ebx
+    jz Long&op1&QwordImsxMemPossibleZero
+;
+    &op2 edx,edi
+    lahf
+    mov byte ptr [ebp].reg_eflags,ah
+    and ah,NOT 40h
+    jmp Long&op1&QwordImsxMemSave
+
+Long&op1&QwordImsxMemPossibleZero:
+    &op2 edx,edi
+    lahf
+
+Long&op1&QwordImsxMemSave:
+    mov byte ptr [ebp].reg_eflags,ah
+    mov eax,ecx
+    call WriteLinearQword
+    ret
+
+Long&op1&QwordImsxReg:
+    call ReadLongCodeByte
+    movsx ecx,al
+    xor edx,edx
+    rcl al,1
+    sbb edx,0 
+    push edx   
+    push ecx
+    call LoadLongQwordMemReg
+    pop ebx
+    pop edi
+    mov ecx,eax
+;    
+; edi:ebx = memory operand
+; edx:ecx = register operand
+;
+    mov ah,byte ptr [ebp].reg_eflags
+    sahf
+    &op1 ecx,ebx
+    jz Long&op1&QwordImsxRegPossibleZero
+;
+    &op2 edx,edi
+    lahf
+    mov byte ptr [ebp].reg_eflags,ah
+    and ah,NOT 40h
+    jmp Long&op1&QwordImsxRegSave
+
+Long&op1&QwordImsxRegPossibleZero:
+    &op2 edx,edi
+    lahf
+
+Long&op1&QwordImsxRegSave:
+    mov byte ptr [ebp].reg_eflags,ah
+    mov eax,ecx
+    call SaveLongQwordMemReg
+    ret
+Long&op1&WordImsxMem        Endp
+
+                        Endm
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           or
 ;
 ;   DESCRIPTION:    EMULATE or
@@ -156,6 +334,7 @@ Long&op1&WordRegMem        Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     WordRegMem Add, Adc
+    WordImsxMem Add, Adc
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
