@@ -1199,7 +1199,7 @@ LoadLongWordMemReg Proc near
 ;
     mov bh,[ebp].em_modrm
     and bh,0C0h
-    shl bh,2
+    shr bh,2
     or bl,bh    
 ;
     test [ebp].em_flags,a32
@@ -1257,7 +1257,7 @@ LoadLongDwordMemReg Proc near
 ;
     mov bh,[ebp].em_modrm
     and bh,0C0h
-    shl bh,2
+    shr bh,2
     or bl,bh    
 ;
     test [ebp].em_flags,a32
@@ -1315,7 +1315,7 @@ LoadLongQwordMemReg Proc near
 ;
     mov bh,[ebp].em_modrm
     and bh,0C0h
-    shl bh,2
+    shr bh,2
     or bl,bh    
 ;
     test [ebp].em_flags,a32
@@ -1462,7 +1462,7 @@ SaveLongWordMemReg Proc near
 ;
     mov bh,[ebp].em_modrm
     and bh,0C0h
-    shl bh,2
+    shr bh,2
     or bl,bh    
 ;
     test [ebp].em_flags,a32
@@ -1522,7 +1522,7 @@ SaveLongDwordMemReg Proc near
 ;
     mov bh,[ebp].em_modrm
     and bh,0C0h
-    shl bh,2
+    shr bh,2
     or bl,bh    
 ;
     test [ebp].em_flags,a32
@@ -1582,7 +1582,7 @@ SaveLongQwordMemReg Proc near
 ;
     mov bh,[ebp].em_modrm
     and bh,0C0h
-    shl bh,2
+    shr bh,2
     or bl,bh    
 ;
     test [ebp].em_flags,a32
@@ -1645,7 +1645,7 @@ GetLongMemRegAds Proc near
 ;
     mov bh,[ebp].em_modrm
     and bh,0C0h
-    shl bh,2
+    shr bh,2
     or bl,bh    
 ;
     test [ebp].em_flags,a32
