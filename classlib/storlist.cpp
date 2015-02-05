@@ -25,11 +25,7 @@
 #
 ########################################################################*/
 
-#ifdef __GNUC__
 #include <string.h>
-#else
-#include <memory.h>
-#endif
 
 #include "storlist.h"
 

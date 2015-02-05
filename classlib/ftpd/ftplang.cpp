@@ -26,7 +26,6 @@
 ########################################################################*/
 
 #include <stdio.h>
-#include <mem.h>
 #include <string.h>
 #include <stdarg.h>
 
@@ -54,7 +53,7 @@ int TFtpLangString::FIsLocalHandle = TRUE;
 ##########################################################################*/
 TFtpLangString::TFtpLangString()
 {
-	 FID = DEFAULT_ID;
+     FID = DEFAULT_ID;
 }
 
 /*##########################################################################
@@ -70,7 +69,7 @@ TFtpLangString::TFtpLangString()
 ##########################################################################*/
 TFtpLangString::TFtpLangString(int ID)
 {
-	Load(ID);
+    Load(ID);
 }
 
 /*##########################################################################
@@ -86,18 +85,18 @@ TFtpLangString::TFtpLangString(int ID)
 ##########################################################################*/
 void TFtpLangString::SetLanguage(const char *language)
 {
-	int Handle = RdosLoadDll(language);
+    int Handle = RdosLoadDll(language);
 
-	 if (Handle)
-	 {
-		if (FHandle && !FIsLocalHandle)
-		 {
-			 RdosFreeDll(FHandle);
-			FHandle = 0;
-		 }
-		 FHandle = Handle;
-		FIsLocalHandle = FALSE;
-	 }
+     if (Handle)
+     {
+        if (FHandle && !FIsLocalHandle)
+         {
+             RdosFreeDll(FHandle);
+            FHandle = 0;
+         }
+         FHandle = Handle;
+        FIsLocalHandle = FALSE;
+     }
 }
 
 /*##########################################################################
@@ -113,43 +112,43 @@ void TFtpLangString::SetLanguage(const char *language)
 ##########################################################################*/
 void TFtpLangString::Load(int ID)
 {
-	char str[257];
-	int start;
-	int count;
-	int i;
-	int size;
+    char str[257];
+    int start;
+    int count;
+    int i;
+    int size;
 
-	FID = ID;
+    FID = ID;
 
-	Release();
+    Release();
 
-	start = 0;
-	count = 0;
+    start = 0;
+    count = 0;
 
-	if (FHandle == 0)
-	{
-		FIsLocalHandle = TRUE;
-		FHandle = RdosGetModuleHandle();
-	}
+    if (FHandle == 0)
+    {
+        FIsLocalHandle = TRUE;
+        FHandle = RdosGetModuleHandle();
+    }
 
-	if (FHandle)
-	{
-		size = RdosReadResource(FHandle, ID, str, 256);
-		AllocBuffer(size + 1);
+    if (FHandle)
+    {
+        size = RdosReadResource(FHandle, ID, str, 256);
+        AllocBuffer(size + 1);
 
-		size = RdosReadResource(FHandle, ID, FBuf, 256);
-		*(FBuf+size) = 0;
-	}
-	else
-	{
-		sprintf(str, "Unknown msg ID %d", ID);
-		size = strlen(str);
-		AllocBuffer(size + 1);
-		memcpy(FBuf, str, size);
-		*(FBuf+size) = 0;
+        size = RdosReadResource(FHandle, ID, FBuf, 256);
+        *(FBuf+size) = 0;
+    }
+    else
+    {
+        sprintf(str, "Unknown msg ID %d", ID);
+        size = strlen(str);
+        AllocBuffer(size + 1);
+        memcpy(FBuf, str, size);
+        *(FBuf+size) = 0;
 
-		FID = DEFAULT_ID;
-	}
+        FID = DEFAULT_ID;
+    }
 }
 
 /*##########################################################################
@@ -165,13 +164,13 @@ void TFtpLangString::Load(int ID)
 ##########################################################################*/
 void TFtpLangString::printf(int ID, ...)
 {
-	va_list ap;
-	TFtpLangString temp(ID);
+    va_list ap;
+    TFtpLangString temp(ID);
 
-	va_start(ap, ID);
-	TString::printf(temp.GetData(), ap);
-	va_end(ap);
-	FID = temp.FID;
+    va_start(ap, ID);
+    TString::printf(temp.GetData(), ap);
+    va_end(ap);
+    FID = temp.FID;
 }
 
 /*##########################################################################
@@ -187,12 +186,12 @@ void TFtpLangString::printf(int ID, ...)
 ##########################################################################*/
 void TFtpLangString::Write(TTcpSocket *Socket)
 {
-	char str[5];
+    char str[5];
 
-	sprintf(str, "%03d ", FID);
+    sprintf(str, "%03d ", FID);
 
-	Socket->Write(str);
-	Socket->Write(GetData());
-	Socket->Push();
+    Socket->Write(str);
+    Socket->Write(GetData());
+    Socket->Push();
 }
 

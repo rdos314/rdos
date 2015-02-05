@@ -25,11 +25,7 @@
 #
 ########################################################################*/
 
-#if defined __GNUC__ || defined MSVC
 #include <string.h>
-#else
-#include <mem.h>
-#endif
 
 #include "list.h"
 #include "section.h"
@@ -114,20 +110,20 @@ TListNode::~TListNode()
 ##########################################################################*/
 int TListNode::Compare(const TListNode &n2) const
 {
-	if (FData && n2.FData)
-		return FData->Compare(*n2.FData);
-	else
-	{
-		if (FData || n2.FData)
-		{
-			if (FData)
-				return 1;
-			else
-				return -1;
-		}
-		else
-			return 0;
-	}
+    if (FData && n2.FData)
+        return FData->Compare(*n2.FData);
+    else
+    {
+        if (FData || n2.FData)
+        {
+            if (FData)
+                return 1;
+            else
+                return -1;
+        }
+        else
+            return 0;
+    }
 }
 
 /*##########################################################################
@@ -160,14 +156,14 @@ int TListNode::Compare(const TListBaseNode &n2) const
 ##########################################################################*/
 void TListNode::Load(const TListNode &src)
 {
-	if (FData)
-		*FData = *src.FData;
-	else
-	{
-		if (src.FData)
-			FData = new TShareObject(*src.FData);
-	}
-	FValid = src.FValid;
+    if (FData)
+        *FData = *src.FData;
+    else
+    {
+        if (src.FData)
+            FData = new TShareObject(*src.FData);
+    }
+    FValid = src.FValid;
 }
 
 /*##########################################################################
@@ -184,7 +180,7 @@ void TListNode::Load(const TListNode &src)
 void TListNode::Load(const TListBaseNode &src)
 {
     TListNode *p = (TListNode *)&src;
-	Load(*p);
+    Load(*p);
 }
 
 /*##########################################################################
@@ -201,7 +197,7 @@ void TListNode::Load(const TListBaseNode &src)
 const TListNode &TListNode::operator=(const TListNode &src)
 {
     Load(src);
-	return *this;
+    return *this;
 }
 
 /*##########################################################################
@@ -217,10 +213,10 @@ const TListNode &TListNode::operator=(const TListNode &src)
 ##########################################################################*/
 int TListNode::operator==(const TListNode &ln) const
 {
-	if (Compare(ln) == 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(ln) == 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -236,10 +232,10 @@ int TListNode::operator==(const TListNode &ln) const
 ##########################################################################*/
 int TListNode::operator!=(const TListNode &ln) const
 {
-	if (Compare(ln) == 0)
-		return FALSE;
-	else
-		return TRUE;
+    if (Compare(ln) == 0)
+        return FALSE;
+    else
+        return TRUE;
 }
 
 /*##########################################################################
@@ -255,10 +251,10 @@ int TListNode::operator!=(const TListNode &ln) const
 ##########################################################################*/
 int TListNode::operator>(const TListNode &dest) const
 {
-	if (Compare(dest) > 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) > 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -274,10 +270,10 @@ int TListNode::operator>(const TListNode &dest) const
 ##########################################################################*/
 int TListNode::operator<(const TListNode &dest) const
 {
-	if (Compare(dest) < 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) < 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -293,10 +289,10 @@ int TListNode::operator<(const TListNode &dest) const
 ##########################################################################*/
 int TListNode::operator>=(const TListNode &dest) const
 {
-	if (Compare(dest) >= 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) >= 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -312,10 +308,10 @@ int TListNode::operator>=(const TListNode &dest) const
 ##########################################################################*/
 int TListNode::operator<=(const TListNode &dest) const
 {
-	if (Compare(dest) <= 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) <= 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -377,7 +373,7 @@ TList::~TList()
 ##########################################################################*/
 TListNode *TList::Clone(const TListNode *ln) const
 {
-	return new TListNode(*ln);
+    return new TListNode(*ln);
 }
 
 /*##########################################################################
@@ -394,7 +390,7 @@ TListNode *TList::Clone(const TListNode *ln) const
 TListBaseNode *TList::Clone(const TListBaseNode *ln) const
 {
     TListNode *p = (TListNode *)ln;
-	return new TListNode(*p);
+    return new TListNode(*p);
 }
 
 /*##########################################################################
@@ -448,10 +444,10 @@ int TList::operator!= (const TList &l) const
 ##########################################################################*/
 int TList::operator>(const TList &dest) const
 {
-	if (Compare(dest) > 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) > 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -467,10 +463,10 @@ int TList::operator>(const TList &dest) const
 ##########################################################################*/
 int TList::operator<(const TList &dest) const
 {
-	if (Compare(dest) < 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) < 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -486,10 +482,10 @@ int TList::operator<(const TList &dest) const
 ##########################################################################*/
 int TList::operator>=(const TList &dest) const
 {
-	if (Compare(dest) >= 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) >= 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -505,10 +501,10 @@ int TList::operator>=(const TList &dest) const
 ##########################################################################*/
 int TList::operator<=(const TList &dest) const
 {
-	if (Compare(dest) <= 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) <= 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -524,7 +520,7 @@ int TList::operator<=(const TList &dest) const
 ##########################################################################*/
 TList &TList::operator=(const TList &src)
 {
-	Load(src);
+    Load(src);
     return *this;
 }
 
@@ -541,9 +537,9 @@ TList &TList::operator=(const TList &src)
 ##########################################################################*/
 TList &TList::operator+=(const TList &l)
 {
-	TList list;
-	list.Concat(*this, l);
-	*this = list;
+    TList list;
+    list.Concat(*this, l);
+    *this = list;
     return *this;
 }
 
@@ -560,9 +556,9 @@ TList &TList::operator+=(const TList &l)
 ##########################################################################*/
 TList &TList::operator&=(const TList &l)
 {
-	TList list;
-	list.Intersect(*this, l);
-	*this = list;
+    TList list;
+    list.Intersect(*this, l);
+    *this = list;
     return *this;
 }
 
@@ -579,9 +575,9 @@ TList &TList::operator&=(const TList &l)
 ##########################################################################*/
 TList &TList::operator|=(const TList &l)
 {
-	TList list;
-	list.Union(*this, l);
-	*this = list;
+    TList list;
+    list.Union(*this, l);
+    *this = list;
     return *this;
 }
 
@@ -598,9 +594,9 @@ TList &TList::operator|=(const TList &l)
 ##########################################################################*/
 TList &TList::operator^=(const TList &l)
 {
-	TList list;
-	list.Difference(*this, l);
-	*this = list;
+    TList list;
+    list.Difference(*this, l);
+    *this = list;
     return *this;
 }
 
@@ -637,8 +633,8 @@ TListNode &TList::operator[](int pos)
 ##########################################################################*/
 int TList::Find(const TListNode &ln)
 {
-	const TListNode *p = &ln;
-	return TListBase::Find(p);
+    const TListNode *p = &ln;
+    return TListBase::Find(p);
 }
 
 /*##########################################################################
@@ -654,10 +650,10 @@ int TList::Find(const TListNode &ln)
 ##########################################################################*/
 TListNode &TList::Get()
 {
-	if (FCurrPos)
-		return *(TListNode *)FCurrPos;
-	else
-		return EmptyList;
+    if (FCurrPos)
+        return *(TListNode *)FCurrPos;
+    else
+        return EmptyList;
 }
 
 /*##########################################################################
@@ -673,7 +669,7 @@ TListNode &TList::Get()
 ##########################################################################*/
 void TList::AddFirst(const TListNode &newln)
 {
-	TListBase::AddFirst(Clone(&newln));
+    TListBase::AddFirst(Clone(&newln));
 }
 
 /*##########################################################################
@@ -689,7 +685,7 @@ void TList::AddFirst(const TListNode &newln)
 ##########################################################################*/
 void TList::AddLast(const TListNode &newln)
 {
-	TListBase::AddLast(Clone(&newln));
+    TListBase::AddLast(Clone(&newln));
 }
 
 /*##########################################################################
@@ -705,7 +701,7 @@ void TList::AddLast(const TListNode &newln)
 ##########################################################################*/
 void TList::AddAt(int n, const TListNode &newln)
 {
-	TListBase::AddAt(n, Clone(&newln));
+    TListBase::AddAt(n, Clone(&newln));
 }
 
 /*##########################################################################
@@ -721,7 +717,7 @@ void TList::AddAt(int n, const TListNode &newln)
 ##########################################################################*/
 int TList::Replace(int pos, const TListNode &newln)
 {
-	return TListBase::Replace(pos, &newln);
+    return TListBase::Replace(pos, &newln);
 }
 
 /*##########################################################################
@@ -737,7 +733,7 @@ int TList::Replace(int pos, const TListNode &newln)
 ##########################################################################*/
 TList operator+(const TList &list1, const TList& list2)
 {
-	TList list;
+    TList list;
     list.Concat(list1, list2);
     return list;
 }
@@ -755,7 +751,7 @@ TList operator+(const TList &list1, const TList& list2)
 ##########################################################################*/
 TList operator&(const TList &list1, const TList& list2)
 {
-	TList list;
+    TList list;
     list.Intersect(list1, list2);
     return list;
 }
@@ -773,7 +769,7 @@ TList operator&(const TList &list1, const TList& list2)
 ##########################################################################*/
 TList operator|(const TList &list1, const TList& list2)
 {
-	TList list;
+    TList list;
     list.Union(list1, list2);
     return list;
 }
@@ -791,7 +787,7 @@ TList operator|(const TList &list1, const TList& list2)
 ##########################################################################*/
 TList operator^(const TList &list1, const TList& list2)
 {
-	TList list;
+    TList list;
     list.Difference(list1, list2);
     return list;
 }

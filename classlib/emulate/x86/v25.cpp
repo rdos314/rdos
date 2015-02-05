@@ -26,7 +26,7 @@
 *##########################################################################*/
 
 #include <stdio.h>
-#include <mem.h>
+#include <string.h>
 
 #include "v25.h"
 #include "ram.h"
@@ -35,7 +35,7 @@
 #define TRUE !FALSE
 
 /*##################  TV25Cpu::TV25Cpu  ###############
-*   Purpose....: Constructor for V25 CPU							            #
+*   Purpose....: Constructor for V25 CPU                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -48,7 +48,7 @@ TV25Cpu::TV25Cpu()
 }
 
 /*##################  TV25::~TV25  ###############
-*   Purpose....: Destructor for V25							            #
+*   Purpose....: Destructor for V25                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -61,7 +61,7 @@ TV25Cpu::~TV25Cpu()
 }
 
 /*##################  TV25Cpu::Reset  ###############
-*   Purpose....: Set CPU registers to reset state				            #
+*   Purpose....: Set CPU registers to reset state                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -69,13 +69,13 @@ TV25Cpu::~TV25Cpu()
 *##########################################################################*/
 void TV25Cpu::Reset()
 {
-	TCpu::Reset();
-	Reg_cs.base = 0xF0000;
-	*(FIdb + 0xFFF) = 0xFF;
+    TCpu::Reset();
+    Reg_cs.base = 0xF0000;
+    *(FIdb + 0xFFF) = 0xFF;
 }
 
 /*##################  TV25Cpu::ReadCode  ###############
-*   Purpose....: Read code                      				            #
+*   Purpose....: Read code                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -83,11 +83,11 @@ void TV25Cpu::Reset()
 *##########################################################################*/
 char TV25Cpu::ReadCode(unsigned long Address)
 {
-	return TCpu::ReadCode(Address);
+    return TCpu::ReadCode(Address);
 }
 
 /*##################  TV25Cpu::ReadFromMemory  ###############
-*   Purpose....: Read from memory				            #
+*   Purpose....: Read from memory                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -97,17 +97,17 @@ char TV25Cpu::ReadFromMemory(unsigned long Address)
 {
     unsigned long IdbBase = *(FIdb + 0xFFF) << 12;
 
-	if (Address == 0xFFFFF)
-		return *(FIdb + 0xFFF);
+    if (Address == 0xFFFFF)
+        return *(FIdb + 0xFFF);
 
-	if ((Address & 0xFF000) == IdbBase)
-		return *(FIdb + (Address & 0xFFF));
+    if ((Address & 0xFF000) == IdbBase)
+        return *(FIdb + (Address & 0xFFF));
 
-	return TCpu::ReadFromMemory(Address);
+    return TCpu::ReadFromMemory(Address);
 }
 
 /*##################  TV25Cpu::WriteToMemory  ###############
-*   Purpose....: Write to memory				            #
+*   Purpose....: Write to memory                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -115,7 +115,7 @@ char TV25Cpu::ReadFromMemory(unsigned long Address)
 *##########################################################################*/
 void TV25Cpu::WriteToMemory(unsigned long Address, char Value)
 {
-	unsigned long IdbBase = *(FIdb + 0xFFF) << 12;
+    unsigned long IdbBase = *(FIdb + 0xFFF) << 12;
     
     if (Address == 0xFFFFF)
     {

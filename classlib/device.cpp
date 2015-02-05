@@ -25,11 +25,6 @@
 #
 #######################################################################*/
 
-#if defined __GNUC__ || defined MSVC 
-#include <string.h>
-#else
-#include <mem.h>
-#endif
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>

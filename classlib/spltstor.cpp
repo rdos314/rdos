@@ -25,11 +25,7 @@
 #
 ########################################################################*/
 
-#ifdef __GNUC__
 #include <string.h>
-#else
-#include <mem.h>
-#endif
 
 #include "spltstor.h"
 
@@ -145,22 +141,22 @@ void TSplitStorageList::Recover()
 ##########################################################################*/
 int TSplitStorageList::Read(int entry, char *buf)
 {
-	int i;
-	long count;
-	long lentry;
+    int i;
+    long count;
+    long lentry;
 
     lentry = (long)entry;
 
-	for (i = 0; i < FSplits; i++)
-	{
-	    count = FStoreArr[i]->Size() / (long)FEntrySize;
-	    
-		if (lentry < count)
-			return FStoreArr[i]->Read(lentry * (long)FEntrySize, buf, FEntrySize);
-		else
-			lentry -= count;
-	}
-	return FALSE;
+    for (i = 0; i < FSplits; i++)
+    {
+        count = FStoreArr[i]->Size() / (long)FEntrySize;
+        
+        if (lentry < count)
+            return FStoreArr[i]->Read(lentry * (long)FEntrySize, buf, FEntrySize);
+        else
+            lentry -= count;
+    }
+    return FALSE;
 }
 
 /*##########################################################################
@@ -176,20 +172,20 @@ int TSplitStorageList::Read(int entry, char *buf)
 ##########################################################################*/
 int TSplitStorageList::Write(int entry, const char *buf)
 {
-	int i;
-	long count;
-	long lentry;
+    int i;
+    long count;
+    long lentry;
 
     lentry = (long)entry;
 
-	for (i = 0; i < FSplits; i++)
-	{
-	    count = FStoreArr[i]->Size() / (long)FEntrySize;
-	    
-		if (lentry < count)
-			return FStoreArr[i]->Write(lentry * (long)FEntrySize, buf, FEntrySize);
-		else
-			lentry -= count;
-	}
-	return FALSE;
+    for (i = 0; i < FSplits; i++)
+    {
+        count = FStoreArr[i]->Size() / (long)FEntrySize;
+        
+        if (lentry < count)
+            return FStoreArr[i]->Write(lentry * (long)FEntrySize, buf, FEntrySize);
+        else
+            lentry -= count;
+    }
+    return FALSE;
 }

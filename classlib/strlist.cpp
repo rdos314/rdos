@@ -25,11 +25,7 @@
 #
 ########################################################################*/
 
-#if defined __GNUC__ || defined MSVC
 #include <string.h>
-#else
-#include <mem.h>
-#endif
 
 #include "strlist.h"
 
@@ -67,9 +63,9 @@ TStringListNode::TStringListNode()
 ##########################################################################*/
 TStringListNode::TStringListNode(const TString &str)
 {
- 	FStr = new TString(str);
-	FData = FStr;
-	FValid = TRUE;
+    FStr = new TString(str);
+    FData = FStr;
+    FValid = TRUE;
 }
 
 /*##########################################################################
@@ -85,9 +81,9 @@ TStringListNode::TStringListNode(const TString &str)
 ##########################################################################*/
 TStringListNode::TStringListNode(const TStringListNode &src)
 {
-	FStr = new TString(*src.FStr);
-	FData = FStr;
-	FValid = TRUE;
+    FStr = new TString(*src.FStr);
+    FData = FStr;
+    FValid = TRUE;
 }
 
 /*##########################################################################
@@ -118,20 +114,20 @@ TStringListNode::~TStringListNode()
 ##########################################################################*/
 int TStringListNode::Compare(const TStringListNode &n2) const
 {
-	if (FStr && n2.FStr)
-		return FStr->Compare(*n2.FStr);
-	else
-	{
-		if (FStr || n2.FStr)
-		{
-			if (FStr)
-				return 1;
-			else
-				return -1;
-		}
-		else
-			return 0;
-	}
+    if (FStr && n2.FStr)
+        return FStr->Compare(*n2.FStr);
+    else
+    {
+        if (FStr || n2.FStr)
+        {
+            if (FStr)
+                return 1;
+            else
+                return -1;
+        }
+        else
+            return 0;
+    }
 }
 
 /*##########################################################################
@@ -164,15 +160,15 @@ int TStringListNode::Compare(const TListBaseNode &n2) const
 ##########################################################################*/
 void TStringListNode::Load(const TStringListNode &src)
 {
-	if (FStr)
-		*FStr = *src.FStr;
-	else
-	{
-		if (src.FData)
-			FStr = new TString(*src.FStr);
-	}
-	FData = FStr;
-	FValid = src.FValid;
+    if (FStr)
+        *FStr = *src.FStr;
+    else
+    {
+        if (src.FData)
+            FStr = new TString(*src.FStr);
+    }
+    FData = FStr;
+    FValid = src.FValid;
 }
 
 /*##########################################################################
@@ -188,8 +184,8 @@ void TStringListNode::Load(const TStringListNode &src)
 ##########################################################################*/
 void TStringListNode::Load(const TListBaseNode &src)
 {
-	TStringListNode *p = (TStringListNode *)&src;
-	Load(*p);
+    TStringListNode *p = (TStringListNode *)&src;
+    Load(*p);
 }
 
 /*##########################################################################
@@ -205,8 +201,8 @@ void TStringListNode::Load(const TListBaseNode &src)
 ##########################################################################*/
 const TStringListNode &TStringListNode::operator=(const TStringListNode &src)
 {
-	Load(src);
-	return *this;
+    Load(src);
+    return *this;
 }
 
 /*##########################################################################
@@ -222,10 +218,10 @@ const TStringListNode &TStringListNode::operator=(const TStringListNode &src)
 ##########################################################################*/
 int TStringListNode::operator==(const TStringListNode &ln) const
 {
-	if (Compare(ln) == 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(ln) == 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -241,10 +237,10 @@ int TStringListNode::operator==(const TStringListNode &ln) const
 ##########################################################################*/
 int TStringListNode::operator!=(const TStringListNode &ln) const
 {
-	if (Compare(ln) == 0)
-		return FALSE;
-	else
-		return TRUE;
+    if (Compare(ln) == 0)
+        return FALSE;
+    else
+        return TRUE;
 }
 
 /*##########################################################################
@@ -260,10 +256,10 @@ int TStringListNode::operator!=(const TStringListNode &ln) const
 ##########################################################################*/
 int TStringListNode::operator>(const TStringListNode &dest) const
 {
-	if (Compare(dest) > 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) > 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -279,10 +275,10 @@ int TStringListNode::operator>(const TStringListNode &dest) const
 ##########################################################################*/
 int TStringListNode::operator<(const TStringListNode &dest) const
 {
-	if (Compare(dest) < 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) < 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -298,10 +294,10 @@ int TStringListNode::operator<(const TStringListNode &dest) const
 ##########################################################################*/
 int TStringListNode::operator>=(const TStringListNode &dest) const
 {
-	if (Compare(dest) >= 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) >= 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -317,10 +313,10 @@ int TStringListNode::operator>=(const TStringListNode &dest) const
 ##########################################################################*/
 int TStringListNode::operator<=(const TStringListNode &dest) const
 {
-	if (Compare(dest) <= 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) <= 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -336,7 +332,7 @@ int TStringListNode::operator<=(const TStringListNode &dest) const
 ##########################################################################*/
 TString &TStringListNode::Get() const
 {
-	return *FStr;
+    return *FStr;
 }
 
 /*##########################################################################
@@ -352,14 +348,14 @@ TString &TStringListNode::Get() const
 ##########################################################################*/
 void TStringListNode::Set(TString &str)
 {
-	if (FStr)
-		*FStr = str;
-	else
-	{
-		FStr = new TString(str);
-		FData = FStr;
-	} 
-	FValid = TRUE;
+    if (FStr)
+        *FStr = str;
+    else
+    {
+        FStr = new TString(str);
+        FData = FStr;
+    } 
+    FValid = TRUE;
 }
 
 /*##########################################################################
@@ -459,10 +455,10 @@ int TStringList::operator!= (const TStringList &l) const
 ##########################################################################*/
 int TStringList::operator>(const TStringList &dest) const
 {
-	if (Compare(dest) > 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) > 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -478,10 +474,10 @@ int TStringList::operator>(const TStringList &dest) const
 ##########################################################################*/
 int TStringList::operator<(const TStringList &dest) const
 {
-	if (Compare(dest) < 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) < 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -497,10 +493,10 @@ int TStringList::operator<(const TStringList &dest) const
 ##########################################################################*/
 int TStringList::operator>=(const TStringList &dest) const
 {
-	if (Compare(dest) >= 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) >= 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -516,10 +512,10 @@ int TStringList::operator>=(const TStringList &dest) const
 ##########################################################################*/
 int TStringList::operator<=(const TStringList &dest) const
 {
-	if (Compare(dest) <= 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) <= 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -535,7 +531,7 @@ int TStringList::operator<=(const TStringList &dest) const
 ##########################################################################*/
 TStringList &TStringList::operator=(const TStringList &src)
 {
-	Load(src);
+    Load(src);
     return *this;
 }
 
@@ -552,9 +548,9 @@ TStringList &TStringList::operator=(const TStringList &src)
 ##########################################################################*/
 TStringList &TStringList::operator+=(const TStringList &l)
 {
-	TStringList list;
-	list.Concat(*this, l);
-	*this = list;
+    TStringList list;
+    list.Concat(*this, l);
+    *this = list;
     return *this;
 }
 
@@ -571,9 +567,9 @@ TStringList &TStringList::operator+=(const TStringList &l)
 ##########################################################################*/
 TStringList &TStringList::operator&=(const TStringList &l)
 {
-	TStringList list;
-	list.Intersect(*this, l);
-	*this = list;
+    TStringList list;
+    list.Intersect(*this, l);
+    *this = list;
     return *this;
 }
 
@@ -590,9 +586,9 @@ TStringList &TStringList::operator&=(const TStringList &l)
 ##########################################################################*/
 TStringList &TStringList::operator|=(const TStringList &l)
 {
-	TStringList list;
-	list.Union(*this, l);
-	*this = list;
+    TStringList list;
+    list.Union(*this, l);
+    *this = list;
     return *this;
 }
 
@@ -609,9 +605,9 @@ TStringList &TStringList::operator|=(const TStringList &l)
 ##########################################################################*/
 TStringList &TStringList::operator^=(const TStringList &l)
 {
-	TStringList list;
-	list.Difference(*this, l);
-	*this = list;
+    TStringList list;
+    list.Difference(*this, l);
+    *this = list;
     return *this;
 }
 
@@ -628,12 +624,12 @@ TStringList &TStringList::operator^=(const TStringList &l)
 ##########################################################################*/
 TString &TStringList::operator[](int pos)
 {
-	TStringListNode *p = (TStringListNode *)TListBase::Get(pos);
+    TStringListNode *p = (TStringListNode *)TListBase::Get(pos);
 
-	if (p->IsValid())
-		return p->Get();
-	else
-		return EmptyStr;
+    if (p->IsValid())
+        return p->Get();
+    else
+        return EmptyStr;
 }
 
 /*##########################################################################
@@ -649,7 +645,7 @@ TString &TStringList::operator[](int pos)
 ##########################################################################*/
 TStringListNode *TStringList::Clone(const TStringListNode *ln) const
 {
-	return new TStringListNode(*ln);
+    return new TStringListNode(*ln);
 }
 
 /*##########################################################################
@@ -666,7 +662,7 @@ TStringListNode *TStringList::Clone(const TStringListNode *ln) const
 TListBaseNode *TStringList::Clone(const TListBaseNode *ln) const
 {
     TStringListNode *p = (TStringListNode *)ln;
-	return new TStringListNode(*p);
+    return new TStringListNode(*p);
 }
 
 /*##########################################################################
@@ -682,10 +678,10 @@ TListBaseNode *TStringList::Clone(const TListBaseNode *ln) const
 ##########################################################################*/
 TString &TStringList::Get()
 {
-	if (FCurrPos)
-		return ((TStringListNode *)FCurrPos)->Get();
-	else
-		return EmptyStr;
+    if (FCurrPos)
+        return ((TStringListNode *)FCurrPos)->Get();
+    else
+        return EmptyStr;
 }
 
 /*##########################################################################
@@ -701,8 +697,8 @@ TString &TStringList::Get()
 ##########################################################################*/
 int TStringList::Find(const TString &str)
 {
-	TStringListNode n = TStringListNode(str);
-	return TListBase::Find(&n);
+    TStringListNode n = TStringListNode(str);
+    return TListBase::Find(&n);
 }
 
 /*##########################################################################
@@ -718,8 +714,8 @@ int TStringList::Find(const TString &str)
 ##########################################################################*/
 void TStringList::AddFirst(const TString &str)
 {
-	TStringListNode *p = new TStringListNode(str);
-	TListBase::AddFirst(p);
+    TStringListNode *p = new TStringListNode(str);
+    TListBase::AddFirst(p);
 }
 
 /*##########################################################################
@@ -735,8 +731,8 @@ void TStringList::AddFirst(const TString &str)
 ##########################################################################*/
 void TStringList::AddLast(const TString &str)
 {
-	TStringListNode *p = new TStringListNode(str);
-	TListBase::AddLast(p);
+    TStringListNode *p = new TStringListNode(str);
+    TListBase::AddLast(p);
 }
 
 /*##########################################################################
@@ -752,8 +748,8 @@ void TStringList::AddLast(const TString &str)
 ##########################################################################*/
 void TStringList::AddAt(int n, const TString &str)
 {
-	TStringListNode *p = new TStringListNode(str);
-	TListBase::AddAt(n, p);
+    TStringListNode *p = new TStringListNode(str);
+    TListBase::AddAt(n, p);
 }
 
 /*##########################################################################
@@ -769,8 +765,8 @@ void TStringList::AddAt(int n, const TString &str)
 ##########################################################################*/
 int TStringList::Replace(int pos, const TString &str)
 {
-	TStringListNode n = TStringListNode(str);
-	return TListBase::Replace(pos, &n);
+    TStringListNode n = TStringListNode(str);
+    return TListBase::Replace(pos, &n);
 }
 
 /*##########################################################################
@@ -786,7 +782,7 @@ int TStringList::Replace(int pos, const TString &str)
 ##########################################################################*/
 TStringList operator+(const TStringList &list1, const TStringList& list2)
 {
-	TStringList list;
+    TStringList list;
     list.Concat(list1, list2);
     return list;
 }
@@ -804,7 +800,7 @@ TStringList operator+(const TStringList &list1, const TStringList& list2)
 ##########################################################################*/
 TStringList operator&(const TStringList &list1, const TStringList& list2)
 {
-	TStringList list;
+    TStringList list;
     list.Intersect(list1, list2);
     return list;
 }
@@ -822,7 +818,7 @@ TStringList operator&(const TStringList &list1, const TStringList& list2)
 ##########################################################################*/
 TStringList operator|(const TStringList &list1, const TStringList& list2)
 {
-	TStringList list;
+    TStringList list;
     list.Union(list1, list2);
     return list;
 }
@@ -840,7 +836,7 @@ TStringList operator|(const TStringList &list1, const TStringList& list2)
 ##########################################################################*/
 TStringList operator^(const TStringList &list1, const TStringList& list2)
 {
-	TStringList list;
+    TStringList list;
     list.Difference(list1, list2);
     return list;
 }

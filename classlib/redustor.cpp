@@ -25,11 +25,7 @@
 #
 ########################################################################*/
 
-#ifdef __GNUC__
 #include <string.h>
-#else
-#include <mem.h>
-#endif
 
 #include "redustor.h"
 
@@ -69,7 +65,7 @@ TRedundanceStorageList::TRedundanceStorageList(const TRedundanceStorageList &src
 {
     int i;
     
-	FRedCount = src.FRedCount;
+    FRedCount = src.FRedCount;
 
     for (i = 0; i < FRedCount; i++)
         FRedArr[i] = src.FRedArr[i];
@@ -125,14 +121,14 @@ void TRedundanceStorageList::Recover()
 {
     int i;
 
-	if (FRedArr[0])
-		FMaxEntries = FRedArr[0]->Size() / (long)FEntrySize;
-	else
-		FMaxEntries = 0;
+    if (FRedArr[0])
+        FMaxEntries = FRedArr[0]->Size() / (long)FEntrySize;
+    else
+        FMaxEntries = 0;
 
-	for (i = 0; i < FRedCount; i++)
-		if (FRedArr[i]->Size() / (long)FEntrySize < FMaxEntries)
-			FMaxEntries = FRedArr[0]->Size() / (long)FEntrySize;
+    for (i = 0; i < FRedCount; i++)
+        if (FRedArr[i]->Size() / (long)FEntrySize < FMaxEntries)
+            FMaxEntries = FRedArr[0]->Size() / (long)FEntrySize;
     
     FRecover = TRUE;
     TStorageList::Recover();
@@ -152,41 +148,41 @@ void TRedundanceStorageList::Recover()
 ##########################################################################*/
 int TRedundanceStorageList::Read(int entry, char *buf)
 {
-	int i;
-	int ok = FALSE;
-	long pos;
-	int ValidArr[MAX_REDUNDANCE];
-	int ValidPos;
+    int i;
+    int ok = FALSE;
+    long pos;
+    int ValidArr[MAX_REDUNDANCE];
+    int ValidPos;
     unsigned short int crc;
 
-	pos = (long)entry * (long)FEntrySize;
+    pos = (long)entry * (long)FEntrySize;
 
     if (FRecover)
     {
         ValidPos = -1;
         
-    	for (i = 0; i < FRedCount; i++)
-    	{
-	    	ok = FRedArr[i]->Read(pos, buf, FEntrySize);
-	    	if (ok)
+        for (i = 0; i < FRedCount; i++)
+        {
+            ok = FRedArr[i]->Read(pos, buf, FEntrySize);
+            if (ok)
             {
-    			crc = CalcCrc(buf, FDataSize);
-	    		ok = crc == *(unsigned short int *)(buf + FDataSize);
-	        }
-	        
-            if (ok)	    	
-	    	{
-	    	    ValidArr[i] = TRUE;
-	    	    ValidPos = i;
-	    	}
-	    	else
-	    	    ValidArr[i] = FALSE;
-	    }
+                crc = CalcCrc(buf, FDataSize);
+                ok = crc == *(unsigned short int *)(buf + FDataSize);
+            }
+            
+            if (ok)         
+            {
+                ValidArr[i] = TRUE;
+                ValidPos = i;
+            }
+            else
+                ValidArr[i] = FALSE;
+        }
 
-	    if (ValidPos == -1)
-	        ok = FALSE;
-	    else
-	    	ok = FRedArr[ValidPos]->Read(pos, buf, FEntrySize);
+        if (ValidPos == -1)
+            ok = FALSE;
+        else
+            ok = FRedArr[ValidPos]->Read(pos, buf, FEntrySize);
 
         if (ok)
         {
@@ -204,22 +200,22 @@ int TRedundanceStorageList::Read(int entry, char *buf)
     }
     else
     {
-    	for (i = 0; i < FRedCount && !ok; i++)
-    	{
-	    	ok = FRedArr[i]->Read(pos, buf, FEntrySize);
-	    	if (ok)
+        for (i = 0; i < FRedCount && !ok; i++)
+        {
+            ok = FRedArr[i]->Read(pos, buf, FEntrySize);
+            if (ok)
             {
-    			crc = CalcCrc(buf, FDataSize);
-	    		ok = crc == *(unsigned short int *)(buf + FDataSize);
-	        }
-	    }
+                crc = CalcCrc(buf, FDataSize);
+                ok = crc == *(unsigned short int *)(buf + FDataSize);
+            }
+        }
 
     }
 
     if (!ok && FRedCount)
-    	ok = FRedArr[0]->Read(pos, buf, FEntrySize);        
+        ok = FRedArr[0]->Read(pos, buf, FEntrySize);        
     
-	return ok;
+    return ok;
 }
 
 /*##########################################################################
@@ -235,15 +231,15 @@ int TRedundanceStorageList::Read(int entry, char *buf)
 ##########################################################################*/
 int TRedundanceStorageList::Write(int entry, const char *buf)
 {
-	int i;
-	int ok = FALSE;
-	long pos;
+    int i;
+    int ok = FALSE;
+    long pos;
 
-	pos = (long)entry * (long)FEntrySize;
+    pos = (long)entry * (long)FEntrySize;
 
-	for (i = 0; i < FRedCount; i++)
-		if (FRedArr[i]->Write(pos, buf, FEntrySize))
-			ok = TRUE;
+    for (i = 0; i < FRedCount; i++)
+        if (FRedArr[i]->Write(pos, buf, FEntrySize))
+            ok = TRUE;
 
-	return ok;
+    return ok;
 }

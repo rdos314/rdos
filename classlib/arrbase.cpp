@@ -25,11 +25,7 @@
 #
 ########################################################################*/
 
-#if defined __GNUC__ || defined MSVC
 #include <string.h>
-#else
-#include <mem.h>
-#endif
 
 #include "arrbase.h"
 #include "section.h"
@@ -50,8 +46,8 @@
 ##########################################################################*/
 TArrayBaseNode::TArrayBaseNode()
 {
-	FData = 0;
-	FValid = FALSE;
+    FData = 0;
+    FValid = FALSE;
 }
 
 /*##########################################################################
@@ -67,8 +63,8 @@ TArrayBaseNode::TArrayBaseNode()
 ##########################################################################*/
 TArrayBaseNode::TArrayBaseNode(const void *x, int size)
 {
- 	FData = new TShareObject(x, size);
-	FValid = TRUE;
+    FData = new TShareObject(x, size);
+    FValid = TRUE;
 }
 
 /*##########################################################################
@@ -84,8 +80,8 @@ TArrayBaseNode::TArrayBaseNode(const void *x, int size)
 ##########################################################################*/
 TArrayBaseNode::TArrayBaseNode(const TArrayBaseNode &src)
 {
-	FData = new TShareObject(*src.FData);
-	FValid = TRUE;
+    FData = new TShareObject(*src.FData);
+    FValid = TRUE;
 }
 
 /*##########################################################################
@@ -101,8 +97,8 @@ TArrayBaseNode::TArrayBaseNode(const TArrayBaseNode &src)
 ##########################################################################*/
 TArrayBaseNode::~TArrayBaseNode()
 {
-	if (FData)
-		delete FData;
+    if (FData)
+        delete FData;
 }
 
 /*##########################################################################
@@ -118,7 +114,7 @@ TArrayBaseNode::~TArrayBaseNode()
 ##########################################################################*/
 int TArrayBaseNode::IsValid() const
 {
-	return FValid;
+    return FValid;
 }
 
 /*##########################################################################
@@ -134,10 +130,10 @@ int TArrayBaseNode::IsValid() const
 ##########################################################################*/
 int TArrayBaseNode::GetSize() const
 {
-	if (FData)
-		return FData->GetSize();
-	else
-		return 0;
+    if (FData)
+        return FData->GetSize();
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -153,10 +149,10 @@ int TArrayBaseNode::GetSize() const
 ##########################################################################*/
 const void *TArrayBaseNode::GetData() const
 {
-	if (FData)
-		return FData->GetData();
-	else
-		return 0;
+    if (FData)
+        return FData->GetData();
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -172,12 +168,12 @@ const void *TArrayBaseNode::GetData() const
 ##########################################################################*/
 void TArrayBaseNode::SetData(const void *x, int size)
 {
-	if (FData)
-		FData->SetData(x, size);
-	else
-		FData = new TShareObject(x, size);
+    if (FData)
+        FData->SetData(x, size);
+    else
+        FData = new TShareObject(x, size);
 
-	FValid = TRUE;
+    FValid = TRUE;
 }
 
 /*##########################################################################
@@ -285,7 +281,7 @@ TArrayBaseNode *TArrayBase::Get(int pos)
     
     FSection.Leave();
 
-	return p;
+    return p;
 }
 
 /*##########################################################################
@@ -504,7 +500,7 @@ void TArrayBase::Add(int pos, TArrayBaseNode *p)
 ##########################################################################*/
 void TArrayBase::Remove()
 {
-	TArrayBaseNode *p;
+    TArrayBaseNode *p;
 
     FSection.Enter();
 
@@ -586,10 +582,10 @@ void TArrayBase::Replace(int pos, const TArrayBaseNode *newln)
     if (pos >= FCount)
         return;
 
-	FSection.Enter();
+    FSection.Enter();
 
-	if (FArr[pos])
-	    FArr[pos]->Load(*newln);
+    if (FArr[pos])
+        FArr[pos]->Load(*newln);
         
     FSection.Leave();
 }
@@ -608,7 +604,7 @@ void TArrayBase::Replace(int pos, const TArrayBaseNode *newln)
 void TArrayBase::Concat(const TArrayBase &src1, const TArrayBase& src2)
 {
     int i;
-	TArrayBaseNode *p;
+    TArrayBaseNode *p;
 
     Clear();
 

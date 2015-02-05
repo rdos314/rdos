@@ -25,11 +25,7 @@
 #
 ########################################################################*/
 
-#if defined __GNUC__ || defined MSVC
 #include <string.h>
-#else
-#include <mem.h>
-#endif
 
 #include "strarr.h"
 
@@ -67,9 +63,9 @@ TStringArrayNode::TStringArrayNode()
 ##########################################################################*/
 TStringArrayNode::TStringArrayNode(const TString &str)
 {
- 	FStr = new TString(str);
-	FData = FStr;
-	FValid = TRUE;
+    FStr = new TString(str);
+    FData = FStr;
+    FValid = TRUE;
 }
 
 /*##########################################################################
@@ -85,9 +81,9 @@ TStringArrayNode::TStringArrayNode(const TString &str)
 ##########################################################################*/
 TStringArrayNode::TStringArrayNode(const TStringArrayNode &src)
 {
-	FStr = new TString(*src.FStr);
-	FData = FStr;
-	FValid = TRUE;
+    FStr = new TString(*src.FStr);
+    FData = FStr;
+    FValid = TRUE;
 }
 
 /*##########################################################################
@@ -118,20 +114,20 @@ TStringArrayNode::~TStringArrayNode()
 ##########################################################################*/
 int TStringArrayNode::Compare(const TStringArrayNode &n2) const
 {
-	if (FStr && n2.FStr)
-		return FStr->Compare(*n2.FStr);
-	else
-	{
-		if (FStr || n2.FStr)
-		{
-			if (FStr)
-				return 1;
-			else
-				return -1;
-		}
-		else
-			return 0;
-	}
+    if (FStr && n2.FStr)
+        return FStr->Compare(*n2.FStr);
+    else
+    {
+        if (FStr || n2.FStr)
+        {
+            if (FStr)
+                return 1;
+            else
+                return -1;
+        }
+        else
+            return 0;
+    }
 }
 
 /*##########################################################################
@@ -164,15 +160,15 @@ int TStringArrayNode::Compare(const TArrayBaseNode &n2) const
 ##########################################################################*/
 void TStringArrayNode::Load(const TStringArrayNode &src)
 {
-	if (FStr)
-		*FStr = *src.FStr;
-	else
-	{
-		if (src.FData)
-			FStr = new TString(*src.FStr);
-	}
-	FData = FStr;
-	FValid = src.FValid;
+    if (FStr)
+        *FStr = *src.FStr;
+    else
+    {
+        if (src.FData)
+            FStr = new TString(*src.FStr);
+    }
+    FData = FStr;
+    FValid = src.FValid;
 }
 
 /*##########################################################################
@@ -188,8 +184,8 @@ void TStringArrayNode::Load(const TStringArrayNode &src)
 ##########################################################################*/
 void TStringArrayNode::Load(const TArrayBaseNode &src)
 {
-	TStringArrayNode *p = (TStringArrayNode *)&src;
-	Load(*p);
+    TStringArrayNode *p = (TStringArrayNode *)&src;
+    Load(*p);
 }
 
 /*##########################################################################
@@ -205,8 +201,8 @@ void TStringArrayNode::Load(const TArrayBaseNode &src)
 ##########################################################################*/
 const TStringArrayNode &TStringArrayNode::operator=(const TStringArrayNode &src)
 {
-	Load(src);
-	return *this;
+    Load(src);
+    return *this;
 }
 
 /*##########################################################################
@@ -222,10 +218,10 @@ const TStringArrayNode &TStringArrayNode::operator=(const TStringArrayNode &src)
 ##########################################################################*/
 int TStringArrayNode::operator==(const TStringArrayNode &ln) const
 {
-	if (Compare(ln) == 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(ln) == 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -241,10 +237,10 @@ int TStringArrayNode::operator==(const TStringArrayNode &ln) const
 ##########################################################################*/
 int TStringArrayNode::operator!=(const TStringArrayNode &ln) const
 {
-	if (Compare(ln) == 0)
-		return FALSE;
-	else
-		return TRUE;
+    if (Compare(ln) == 0)
+        return FALSE;
+    else
+        return TRUE;
 }
 
 /*##########################################################################
@@ -260,10 +256,10 @@ int TStringArrayNode::operator!=(const TStringArrayNode &ln) const
 ##########################################################################*/
 int TStringArrayNode::operator>(const TStringArrayNode &dest) const
 {
-	if (Compare(dest) > 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) > 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -279,10 +275,10 @@ int TStringArrayNode::operator>(const TStringArrayNode &dest) const
 ##########################################################################*/
 int TStringArrayNode::operator<(const TStringArrayNode &dest) const
 {
-	if (Compare(dest) < 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) < 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -298,10 +294,10 @@ int TStringArrayNode::operator<(const TStringArrayNode &dest) const
 ##########################################################################*/
 int TStringArrayNode::operator>=(const TStringArrayNode &dest) const
 {
-	if (Compare(dest) >= 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) >= 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -317,10 +313,10 @@ int TStringArrayNode::operator>=(const TStringArrayNode &dest) const
 ##########################################################################*/
 int TStringArrayNode::operator<=(const TStringArrayNode &dest) const
 {
-	if (Compare(dest) <= 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) <= 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -336,7 +332,7 @@ int TStringArrayNode::operator<=(const TStringArrayNode &dest) const
 ##########################################################################*/
 TString &TStringArrayNode::Get() const
 {
-	return *FStr;
+    return *FStr;
 }
 
 /*##########################################################################
@@ -352,14 +348,14 @@ TString &TStringArrayNode::Get() const
 ##########################################################################*/
 void TStringArrayNode::Set(TString &str)
 {
-	if (FStr)
-		*FStr = str;
-	else
-	{
-		FStr = new TString(str);
-		FData = FStr;
-	} 
-	FValid = TRUE;
+    if (FStr)
+        *FStr = str;
+    else
+    {
+        FStr = new TString(str);
+        FData = FStr;
+    } 
+    FValid = TRUE;
 }
 
 /*##########################################################################
@@ -421,7 +417,7 @@ TStringArray::~TStringArray()
 ##########################################################################*/
 TStringArray &TStringArray::operator=(const TStringArray &src)
 {
-	Load(src);
+    Load(src);
     return *this;
 }
 
@@ -438,9 +434,9 @@ TStringArray &TStringArray::operator=(const TStringArray &src)
 ##########################################################################*/
 TStringArray &TStringArray::operator+=(const TStringArray &l)
 {
-	TStringArray arr;
-	arr.Concat(*this, l);
-	*this = arr;
+    TStringArray arr;
+    arr.Concat(*this, l);
+    *this = arr;
     return *this;
 }
 
@@ -457,12 +453,12 @@ TStringArray &TStringArray::operator+=(const TStringArray &l)
 ##########################################################################*/
 TString &TStringArray::operator[](int pos)
 {
-	TStringArrayNode *p = (TStringArrayNode *)TArrayBase::Get(pos);
+    TStringArrayNode *p = (TStringArrayNode *)TArrayBase::Get(pos);
 
-	if (p && p->IsValid())
-		return p->Get();
-	else
-		return EmptyStr;
+    if (p && p->IsValid())
+        return p->Get();
+    else
+        return EmptyStr;
 }
 
 /*##########################################################################
@@ -478,7 +474,7 @@ TString &TStringArray::operator[](int pos)
 ##########################################################################*/
 TStringArrayNode *TStringArray::Clone(const TStringArrayNode *ln) const
 {
-	return new TStringArrayNode(*ln);
+    return new TStringArrayNode(*ln);
 }
 
 /*##########################################################################
@@ -495,7 +491,7 @@ TStringArrayNode *TStringArray::Clone(const TStringArrayNode *ln) const
 TArrayBaseNode *TStringArray::Clone(const TArrayBaseNode *ln) const
 {
     TStringArrayNode *p = (TStringArrayNode *)ln;
-	return new TStringArrayNode(*p);
+    return new TStringArrayNode(*p);
 }
 
 /*##########################################################################
@@ -511,12 +507,12 @@ TArrayBaseNode *TStringArray::Clone(const TArrayBaseNode *ln) const
 ##########################################################################*/
 TString &TStringArray::Get(int pos)
 {
-	TStringArrayNode *p = (TStringArrayNode *)TArrayBase::Get(pos);
+    TStringArrayNode *p = (TStringArrayNode *)TArrayBase::Get(pos);
 
-	if (p && p->IsValid())
-		return p->Get();
-	else
-		return EmptyStr;
+    if (p && p->IsValid())
+        return p->Get();
+    else
+        return EmptyStr;
 }
 
 /*##########################################################################
@@ -532,8 +528,8 @@ TString &TStringArray::Get(int pos)
 ##########################################################################*/
 void TStringArray::Add(const TString &str)
 {
-	TStringArrayNode *p = new TStringArrayNode(str);
-	TArrayBase::Add(p);
+    TStringArrayNode *p = new TStringArrayNode(str);
+    TArrayBase::Add(p);
 }
 
 /*##########################################################################
@@ -549,8 +545,8 @@ void TStringArray::Add(const TString &str)
 ##########################################################################*/
 void TStringArray::Add(int pos, const TString &str)
 {
-	TStringArrayNode *p = new TStringArrayNode(str);
-	TArrayBase::Add(pos, p);
+    TStringArrayNode *p = new TStringArrayNode(str);
+    TArrayBase::Add(pos, p);
 }
 
 /*##########################################################################
@@ -566,8 +562,8 @@ void TStringArray::Add(int pos, const TString &str)
 ##########################################################################*/
 void TStringArray::Replace(int pos, const TString &str)
 {
-	TStringArrayNode n = TStringArrayNode(str);
-	TArrayBase::Replace(pos, &n);
+    TStringArrayNode n = TStringArrayNode(str);
+    TArrayBase::Replace(pos, &n);
 }
 
 /*##########################################################################
@@ -583,7 +579,7 @@ void TStringArray::Replace(int pos, const TString &str)
 ##########################################################################*/
 TStringArray operator+(const TStringArray &arr1, const TStringArray& arr2)
 {
-	TStringArray arr;
+    TStringArray arr;
     arr.Concat(arr1, arr2);
     return arr;
 }

@@ -25,11 +25,7 @@
 #
 ########################################################################*/
 
-#if defined __GNUC__ || defined MSVC
 #include <string.h>
-#else
-#include <mem.h>
-#endif
 
 #include "shareobj.h"
 
@@ -50,7 +46,7 @@
 TShareObject::TShareObject()
  : FSection("ShareObj")
 {
-	Init();
+    Init();
 }
 
 /*##########################################################################
@@ -70,7 +66,7 @@ TShareObject::TShareObject(const void *x, int size)
     Init();
     
     AllocBuffer(size);
-	memcpy(FBuf, x, size);
+    memcpy(FBuf, x, size);
 }
 
 /*##########################################################################
@@ -91,14 +87,14 @@ TShareObject::TShareObject(const TShareObject &src)
 
     src.FSection.Enter();
     
-	FData = src.FData;
-	if (FData)
-	{
-		FBuf = src.FBuf;
-		src.FData->FRefs++;
-	}
+    FData = src.FData;
+    if (FData)
+    {
+        FBuf = src.FBuf;
+        src.FData->FRefs++;
+    }
 
-	src.FSection.Leave();
+    src.FSection.Leave();
 }
 
 /*##########################################################################
@@ -132,9 +128,9 @@ TShareObject::~TShareObject()
 ##########################################################################*/
 void TShareObject::Init()
 {
-	FBuf = 0;
-	FData = 0;
-	OnCreate = 0;
+    FBuf = 0;
+    FData = 0;
+    OnCreate = 0;
 }
 
 /*##########################################################################
@@ -150,10 +146,10 @@ void TShareObject::Init()
 ##########################################################################*/
 TShareObjectData *TShareObject::Create(int size)
 {
-	if (OnCreate)
-		return (*OnCreate)(this, size);
+    if (OnCreate)
+        return (*OnCreate)(this, size);
     else
-    	return (TShareObjectData *)new char[sizeof(TShareObjectData) + size];
+        return (TShareObjectData *)new char[sizeof(TShareObjectData) + size];
 }
 
 /*##########################################################################
@@ -169,7 +165,7 @@ TShareObjectData *TShareObject::Create(int size)
 ##########################################################################*/
 void TShareObject::Destroy(TShareObjectData *obj)
 {
-	delete obj;
+    delete obj;
 }
 
 /*##########################################################################
@@ -188,17 +184,17 @@ void TShareObject::Load(const TShareObject &src)
     src.FSection.Enter();
     FSection.Enter();
 
-	if (FBuf != src.FBuf)
-	{
-		Release();
-		FBuf = src.FBuf;
-		FData = src.FData;
-		if (FData)
-			FData->FRefs++;
-	}
+    if (FBuf != src.FBuf)
+    {
+        Release();
+        FBuf = src.FBuf;
+        FData = src.FData;
+        if (FData)
+            FData->FRefs++;
+    }
 
-	FSection.Leave();
-	src.FSection.Leave();
+    FSection.Leave();
+    src.FSection.Leave();
 }
 
 /*##########################################################################
@@ -266,14 +262,14 @@ void TShareObject::SetData(const void *x, int size)
 {
     FSection.Enter();
     
-	AllocBeforeWrite(size);
-	if (size)
-	{
-		memcpy(FBuf, x, size);
-	    FData->FDataSize = size;
-	}
-	else
-		Init();
+    AllocBeforeWrite(size);
+    if (size)
+    {
+        memcpy(FBuf, x, size);
+        FData->FDataSize = size;
+    }
+    else
+        Init();
 
     FSection.Leave();
 }
@@ -293,18 +289,18 @@ void TShareObject::AllocBuffer(int size)
 {
     FSection.Enter();
 
-	if (size == 0)
-		Init();
-	else
-	{
-	    FData = Create(size);
-		FData->FRefs = 1;
-		FData->FDataSize = size;
-		FData->FAllocSize = size;
-		FBuf = (char *)FData + sizeof(TShareObjectData);
-	}
+    if (size == 0)
+        Init();
+    else
+    {
+        FData = Create(size);
+        FData->FRefs = 1;
+        FData->FDataSize = size;
+        FData->FAllocSize = size;
+        FBuf = (char *)FData + sizeof(TShareObjectData);
+    }
 
-	FSection.Leave();
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -322,15 +318,15 @@ void TShareObject::Release()
 {
     FSection.Enter();
 
-	if (FData)
-	{
-		FData->FRefs--;
-		if (FData->FRefs <= 0)
-		    Destroy(FData);
-	}
-	Init();
+    if (FData)
+    {
+        FData->FRefs--;
+        if (FData->FRefs <= 0)
+            Destroy(FData);
+    }
+    Init();
 
-	FSection.Leave();
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -348,14 +344,14 @@ void TShareObject::Release(TShareObjectData *Data)
 {
     FSection.Enter();
     
-	if (Data)
-	{
+    if (Data)
+    {
         Data->FRefs--;
         if (Data->FRefs <= 0)
             Destroy(Data);
-	}
+    }
 
-	FSection.Leave();
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -373,16 +369,16 @@ void TShareObject::Empty()
 {
     FSection.Enter();
     
-	if (FData)
-	{
-		if (FData->FDataSize)
-		{
-			if (FData->FRefs >= 0)
-				Release();
-		}
-	}
+    if (FData)
+    {
+        if (FData->FDataSize)
+        {
+            if (FData->FRefs >= 0)
+                Release();
+        }
+    }
 
-	FSection.Leave();
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -398,24 +394,24 @@ void TShareObject::Empty()
 ##########################################################################*/
 void TShareObject::CopyBeforeWrite()
 {
-	TShareObjectData* OldData;
-	char* OldBuf;
+    TShareObjectData* OldData;
+    char* OldBuf;
 
-	FSection.Enter();
+    FSection.Enter();
 
-	if (FData)
-	{
-		if (FData->FRefs > 1)
-		{
-			OldData = FData;
-			OldBuf = FBuf;
-			Release();
-			AllocBuffer(OldData->FDataSize);
-			memcpy(FBuf, OldBuf, OldData->FDataSize);
-		}
-	}
+    if (FData)
+    {
+        if (FData->FRefs > 1)
+        {
+            OldData = FData;
+            OldBuf = FBuf;
+            Release();
+            AllocBuffer(OldData->FDataSize);
+            memcpy(FBuf, OldBuf, OldData->FDataSize);
+        }
+    }
 
-	FSection.Leave();
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -435,15 +431,15 @@ void TShareObject::AllocBeforeWrite(int size)
     
     if (FData)
     {
-    	if (FData->FRefs > 1 || size > FData->FAllocSize)
-	    {
-    		Release();
-			AllocBuffer(size);
-    	}
-	}
-	else
-		if (size)
-			AllocBuffer(size);
+        if (FData->FRefs > 1 || size > FData->FAllocSize)
+        {
+            Release();
+            AllocBuffer(size);
+        }
+    }
+    else
+        if (size)
+            AllocBuffer(size);
 
     FSection.Leave();
 }
@@ -455,7 +451,7 @@ void TShareObject::AllocBeforeWrite(int size)
 #   Purpose....: Assign & copy
 #
 #   In params..: SrcLen
-#				 str
+#                str
 #   Out params.: *
 #   Returns....: *
 #
@@ -464,14 +460,14 @@ void TShareObject::AssignCopy(const void *x, int size)
 {
     FSection.Enter();
 
-	AllocBeforeWrite(size);
-	if (size)
-	{
-		memcpy(FBuf, x, size);
-		FData->FDataSize = size;
-	}
-	else
-		Init();
+    AllocBeforeWrite(size);
+    if (size)
+    {
+        memcpy(FBuf, x, size);
+        FData->FDataSize = size;
+    }
+    else
+        Init();
 
     FSection.Leave();
 }
@@ -489,38 +485,38 @@ void TShareObject::AssignCopy(const void *x, int size)
 ##########################################################################*/
 int TShareObject::Compare(const TShareObject &n2) const
 {
-	int size;
-	int res;
-	int ret;
-	int size1;
-	int size2;
+    int size;
+    int res;
+    int ret;
+    int size1;
+    int size2;
 
-	n2.FSection.Enter();
-	FSection.Enter();
+    n2.FSection.Enter();
+    FSection.Enter();
 
-	size1 = FData->FDataSize;
-	size2 = n2.FData->FDataSize;
+    size1 = FData->FDataSize;
+    size2 = n2.FData->FDataSize;
 
-	if (size1 > size2)
-		size = size2;
-	else
-		size = size1;
+    if (size1 > size2)
+        size = size2;
+    else
+        size = size1;
 
-	res = memcmp(FBuf, n2.FBuf, size);
-	if (res == 0)
-	{
-		if (size1 == size2)
-			ret = 0;
-		else
-		{
-			if (size1 > size2)
-				ret = 1;
-			else
-				ret =  -1;
-		}
-	}
-	else
-		ret = res;
+    res = memcmp(FBuf, n2.FBuf, size);
+    if (res == 0)
+    {
+        if (size1 == size2)
+            ret = 0;
+        else
+        {
+            if (size1 > size2)
+                ret = 1;
+            else
+                ret =  -1;
+        }
+    }
+    else
+        ret = res;
 
     FSection.Leave();
     n2.FSection.Leave();
@@ -542,23 +538,23 @@ int TShareObject::Compare(const TShareObject &n2) const
 const TShareObject &TShareObject::operator=(const TShareObject &src)
 {
     src.FSection.Enter();
-	FSection.Enter();
-	
-	if (FBuf != src.FBuf)
-	{
-	    
-		Release();
-		FBuf = src.FBuf;
-		FData = src.FData;
-		if (FData)
-			FData->FRefs++;
+    FSection.Enter();
+    
+    if (FBuf != src.FBuf)
+    {
+        
+        Release();
+        FBuf = src.FBuf;
+        FData = src.FData;
+        if (FData)
+            FData->FRefs++;
 
-	}
-	
-	FSection.Leave();
-	src.FSection.Leave();
-	
-	return *this;
+    }
+    
+    FSection.Leave();
+    src.FSection.Leave();
+    
+    return *this;
 }
 
 /*##########################################################################
@@ -574,10 +570,10 @@ const TShareObject &TShareObject::operator=(const TShareObject &src)
 ##########################################################################*/
 int TShareObject::operator==(const TShareObject &ln) const
 {
-	if (Compare(ln) == 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(ln) == 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -593,10 +589,10 @@ int TShareObject::operator==(const TShareObject &ln) const
 ##########################################################################*/
 int TShareObject::operator!=(const TShareObject &ln) const
 {
-	if (Compare(ln) == 0)
-		return FALSE;
-	else
-		return TRUE;
+    if (Compare(ln) == 0)
+        return FALSE;
+    else
+        return TRUE;
 }
 
 /*##########################################################################
@@ -612,10 +608,10 @@ int TShareObject::operator!=(const TShareObject &ln) const
 ##########################################################################*/
 int TShareObject::operator>(const TShareObject &dest) const
 {
-	if (Compare(dest) > 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) > 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -631,10 +627,10 @@ int TShareObject::operator>(const TShareObject &dest) const
 ##########################################################################*/
 int TShareObject::operator<(const TShareObject &dest) const
 {
-	if (Compare(dest) < 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) < 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -650,10 +646,10 @@ int TShareObject::operator<(const TShareObject &dest) const
 ##########################################################################*/
 int TShareObject::operator>=(const TShareObject &dest) const
 {
-	if (Compare(dest) >= 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) >= 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -669,8 +665,8 @@ int TShareObject::operator>=(const TShareObject &dest) const
 ##########################################################################*/
 int TShareObject::operator<=(const TShareObject &dest) const
 {
-	if (Compare(dest) <= 0)
-		return TRUE;
-	else
-		return FALSE;
+    if (Compare(dest) <= 0)
+        return TRUE;
+    else
+        return FALSE;
 }

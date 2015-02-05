@@ -25,12 +25,7 @@
 #
 ########################################################################*/
 
-#ifdef __GNUC__
 #include <string.h>
-#else
-#include <mem.h>
-#endif
-
 #include "discstor.h"
 
 #define FALSE   0
@@ -49,16 +44,16 @@
 ##########################################################################*/
 TDiscStorage::TDiscStorage(TDisc *Disc)
 {
-	FDisc = 0;
+    FDisc = 0;
 
-	if (Disc->IsValid() && Disc->GetBytesPerSector() == 512)
-	{
-		FDisc = Disc;
-		FStartSector = 0;
-		FSectorCount = Disc->GetTotalSectors();
-	}
-	else
-		FSectorCount = 0;
+    if (Disc->IsValid() && Disc->GetBytesPerSector() == 512)
+    {
+        FDisc = Disc;
+        FStartSector = 0;
+        FSectorCount = Disc->GetTotalSectors();
+    }
+    else
+        FSectorCount = 0;
 }
 
 /*##########################################################################
@@ -74,28 +69,28 @@ TDiscStorage::TDiscStorage(TDisc *Disc)
 ##########################################################################*/
 TDiscStorage::TDiscStorage(TDisc *Disc, long StartSector, int SectorCount)
 {
-	long Sectors;
+    long Sectors;
 
-	FDisc = 0;
+    FDisc = 0;
 
-	if (Disc->IsValid() && Disc->GetBytesPerSector() == 512)
-	{
-		Sectors = Disc->GetTotalSectors();
-		FDisc = Disc;
-		if (StartSector < Sectors)
-		{
-			FStartSector = StartSector;
-			Sectors -= StartSector;
-			if (Sectors > SectorCount)
-				FSectorCount = SectorCount;
-			else
-				FSectorCount = Sectors;
-		}
-		else
-			FSectorCount = 0;
-	}
-	else
-		FSectorCount = 0;
+    if (Disc->IsValid() && Disc->GetBytesPerSector() == 512)
+    {
+        Sectors = Disc->GetTotalSectors();
+        FDisc = Disc;
+        if (StartSector < Sectors)
+        {
+            FStartSector = StartSector;
+            Sectors -= StartSector;
+            if (Sectors > SectorCount)
+                FSectorCount = SectorCount;
+            else
+                FSectorCount = Sectors;
+        }
+        else
+            FSectorCount = 0;
+    }
+    else
+        FSectorCount = 0;
 }
 
 /*##########################################################################
@@ -123,7 +118,7 @@ TDiscStorage::~TDiscStorage()
 ##########################################################################*/
 long TDiscStorage::Size()
 {
-	return 512L * (long)FSectorCount;
+    return 512L * (long)FSectorCount;
 }
 
 /*##########################################################################
@@ -136,51 +131,51 @@ long TDiscStorage::Size()
 ##########################################################################*/
 int TDiscStorage::Read(long offset, char *buf, int size)
 {
-	int RelSector;
-	int OffSector;
-	int CurrSize;
-	char SectorBuf[512];
-	int ok;
+    int RelSector;
+    int OffSector;
+    int CurrSize;
+    char SectorBuf[512];
+    int ok;
 
-	RelSector = (int)(offset / 512L);
-	OffSector = (int)(offset % 512L);
-	CurrSize = 512 - OffSector;
+    RelSector = (int)(offset / 512L);
+    OffSector = (int)(offset % 512L);
+    CurrSize = 512 - OffSector;
 
-	if (CurrSize > size)
-		CurrSize = size;
+    if (CurrSize > size)
+        CurrSize = size;
 
-	ok = TRUE;
+    ok = TRUE;
 
-	while (size && ok)
-	{
-		memset(SectorBuf, 0xFF, 512);
+    while (size && ok)
+    {
+        memset(SectorBuf, 0xFF, 512);
 
-		if (RelSector < FSectorCount)
-		{
-			if (CurrSize == 512)
-				ok = FDisc->Read(FStartSector + RelSector, buf, 512);
-			else
-			{
-				ok = FDisc->Read(FStartSector + RelSector, SectorBuf, 512);
-				memcpy(buf, SectorBuf + OffSector, CurrSize);
-			}
-		}
-		else
-			ok = FALSE;
+        if (RelSector < FSectorCount)
+        {
+            if (CurrSize == 512)
+                ok = FDisc->Read(FStartSector + RelSector, buf, 512);
+            else
+            {
+                ok = FDisc->Read(FStartSector + RelSector, SectorBuf, 512);
+                memcpy(buf, SectorBuf + OffSector, CurrSize);
+            }
+        }
+        else
+            ok = FALSE;
 
-		size -= CurrSize;
-		buf += CurrSize;
+        size -= CurrSize;
+        buf += CurrSize;
 
-		RelSector++;
-		OffSector = 0;
-		CurrSize = 512;
+        RelSector++;
+        OffSector = 0;
+        CurrSize = 512;
 
-		if (CurrSize > size)
-			CurrSize = size;
+        if (CurrSize > size)
+            CurrSize = size;
 
-	}
+    }
 
-	return ok;
+    return ok;
 
 }
 
@@ -194,54 +189,54 @@ int TDiscStorage::Read(long offset, char *buf, int size)
 ##########################################################################*/
 int TDiscStorage::Write(long offset, const char *buf, int size)
 {
-	int RelSector;
-	int OffSector;
-	int CurrSize;
-	char SectorBuf[512];
-	int ok;
+    int RelSector;
+    int OffSector;
+    int CurrSize;
+    char SectorBuf[512];
+    int ok;
 
-	RelSector = (int)(offset / 512L);
-	OffSector = (int)(offset % 512L);
-	CurrSize = 512 - OffSector;
+    RelSector = (int)(offset / 512L);
+    OffSector = (int)(offset % 512L);
+    CurrSize = 512 - OffSector;
 
-	if (CurrSize > size)
-		CurrSize = size;
+    if (CurrSize > size)
+        CurrSize = size;
 
-	ok = TRUE;
+    ok = TRUE;
 
-	while (size && ok)
-	{
-		memset(SectorBuf, 0xFF, 512);
+    while (size && ok)
+    {
+        memset(SectorBuf, 0xFF, 512);
 
-		if (RelSector < FSectorCount)
-		{
-			if (CurrSize == 512)
-				ok = FDisc->Write(FStartSector + RelSector, buf, 512);
-			else
-			{
-				ok = FDisc->Read(FStartSector + RelSector, SectorBuf, 512);
-				if (ok)
-				{
-					memcpy(SectorBuf + OffSector, buf, CurrSize);
-					ok = FDisc->Write(FStartSector + RelSector, SectorBuf, 512);
-				}
-			}
-		}
-		else
-			ok = FALSE;
+        if (RelSector < FSectorCount)
+        {
+            if (CurrSize == 512)
+                ok = FDisc->Write(FStartSector + RelSector, buf, 512);
+            else
+            {
+                ok = FDisc->Read(FStartSector + RelSector, SectorBuf, 512);
+                if (ok)
+                {
+                    memcpy(SectorBuf + OffSector, buf, CurrSize);
+                    ok = FDisc->Write(FStartSector + RelSector, SectorBuf, 512);
+                }
+            }
+        }
+        else
+            ok = FALSE;
 
-		size -= CurrSize;
-		buf += CurrSize;
+        size -= CurrSize;
+        buf += CurrSize;
 
-		RelSector++;
-		OffSector = 0;
-		CurrSize = 512;
+        RelSector++;
+        OffSector = 0;
+        CurrSize = 512;
 
-		if (CurrSize > size)
-			CurrSize = size;
+        if (CurrSize > size)
+            CurrSize = size;
 
-	}
+    }
 
-	return ok;
+    return ok;
 
 }

@@ -25,11 +25,7 @@
 #
 ########################################################################*/
 
-#if defined __GNUC__ || defined MSVC
 #include <string.h>
-#else
-#include <mem.h>
-#endif
 
 #include "listbase.h"
 #include "section.h"
@@ -50,9 +46,9 @@
 ##########################################################################*/
 TListBaseNode::TListBaseNode()
 {
-	FData = 0;
-	FNext = 0;
-	FValid = FALSE;
+    FData = 0;
+    FNext = 0;
+    FValid = FALSE;
 }
 
 /*##########################################################################
@@ -68,9 +64,9 @@ TListBaseNode::TListBaseNode()
 ##########################################################################*/
 TListBaseNode::TListBaseNode(const void *x, int size)
 {
- 	FData = new TShareObject(x, size);
-	FNext = 0;
-	FValid = TRUE;
+    FData = new TShareObject(x, size);
+    FNext = 0;
+    FValid = TRUE;
 }
 
 /*##########################################################################
@@ -86,9 +82,9 @@ TListBaseNode::TListBaseNode(const void *x, int size)
 ##########################################################################*/
 TListBaseNode::TListBaseNode(const TListBaseNode &src)
 {
-	FData = new TShareObject(*src.FData);
-	FNext = 0;
-	FValid = TRUE;
+    FData = new TShareObject(*src.FData);
+    FNext = 0;
+    FValid = TRUE;
 }
 
 /*##########################################################################
@@ -104,8 +100,8 @@ TListBaseNode::TListBaseNode(const TListBaseNode &src)
 ##########################################################################*/
 TListBaseNode::~TListBaseNode()
 {
-	if (FData)
-		delete FData;
+    if (FData)
+        delete FData;
 }
 
 /*##########################################################################
@@ -121,7 +117,7 @@ TListBaseNode::~TListBaseNode()
 ##########################################################################*/
 int TListBaseNode::IsValid() const
 {
-	return FValid;
+    return FValid;
 }
 
 /*##########################################################################
@@ -137,10 +133,10 @@ int TListBaseNode::IsValid() const
 ##########################################################################*/
 int TListBaseNode::GetSize() const
 {
-	if (FData)
-		return FData->GetSize();
-	else
-		return 0;
+    if (FData)
+        return FData->GetSize();
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -156,10 +152,10 @@ int TListBaseNode::GetSize() const
 ##########################################################################*/
 const void *TListBaseNode::GetData() const
 {
-	if (FData)
-		return FData->GetData();
-	else
-		return 0;
+    if (FData)
+        return FData->GetData();
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -175,11 +171,11 @@ const void *TListBaseNode::GetData() const
 ##########################################################################*/
 void TListBaseNode::SetData(const void *x, int size)
 {
-	if (FData)
-		FData->SetData(x, size);
-	else
-		FData = new TShareObject(x, size);
-	FValid = TRUE;
+    if (FData)
+        FData->SetData(x, size);
+    else
+        FData = new TShareObject(x, size);
+    FValid = TRUE;
 }
 
 /*##########################################################################
@@ -257,10 +253,10 @@ TListBase::~TListBase()
 ##########################################################################*/
 void TListBase::Init()
 {
-	FList = 0;
+    FList = 0;
     FCurrPos = 0;
-	FPrevPos = 0;
-	FInvNext = 0;
+    FPrevPos = 0;
+    FInvNext = 0;
 }
 
 /*##########################################################################
@@ -294,7 +290,7 @@ TListBaseNode *TListBase::Get(int pos)
 
     FSection.Leave();
 
-	return p;
+    return p;
 }
 
 /*##########################################################################
@@ -310,54 +306,54 @@ TListBaseNode *TListBase::Get(int pos)
 ##########################################################################*/
 int TListBase::Compare(const TListBase &l) const
 {
-	TListBaseNode *p1;
-	TListBaseNode *p2;
-	int res;
+    TListBaseNode *p1;
+    TListBaseNode *p2;
+    int res;
 
-	FSection.Enter();
+    FSection.Enter();
 
-	if (this == &l)
-		res = 0;
-	else
-	{
-		p1 = FList;
-		p2 = l.FList;
+    if (this == &l)
+        res = 0;
+    else
+    {
+        p1 = FList;
+        p2 = l.FList;
 
-		if (p1 && p2)
-		{
-			while (p1 && p2)
-			{
-				if (p1 == p2)
-				{
-					res = 0;
-					break;
-				}
-				else
-				{
-				    res = p1->Compare(*p2);				    
-					if (res != 0)
-						break;
-				}
-				p1 = p1->FNext;
-				p2 = p2->FNext;
-			}
-		}
-		else
-		{
-			if (p1 == 0 && p2 == 0)
-				res = 0;
-			else
-			{
-			    if (p1)
-			        res = 1;
-			    else
-			        res = -1;
-			}
-		}
-	}
-	FSection.Leave();
+        if (p1 && p2)
+        {
+            while (p1 && p2)
+            {
+                if (p1 == p2)
+                {
+                    res = 0;
+                    break;
+                }
+                else
+                {
+                    res = p1->Compare(*p2);                 
+                    if (res != 0)
+                        break;
+                }
+                p1 = p1->FNext;
+                p2 = p2->FNext;
+            }
+        }
+        else
+        {
+            if (p1 == 0 && p2 == 0)
+                res = 0;
+            else
+            {
+                if (p1)
+                    res = 1;
+                else
+                    res = -1;
+            }
+        }
+    }
+    FSection.Leave();
 
-	return res;
+    return res;
 }
 
 /*##########################################################################
@@ -380,7 +376,7 @@ void TListBase::Load(const TListBase &src)
     FSection.Enter();
 
     if (FList != src.FList)
-	{
+    {
         p = src.FList;
 
         while (p)
@@ -480,7 +476,7 @@ void TListBase::Update(TListBaseNode *ln)
 ##########################################################################*/
 void TListBase::RemoveOldest()
 {
-	TListBaseNode *p;
+    TListBaseNode *p;
     TListBaseNode *prev;
 
     if (FList)
@@ -501,7 +497,7 @@ void TListBase::RemoveOldest()
         Invalidate(p);
         Remove(p);
         delete p;
-	}
+    }
 }
 
 /*##########################################################################
@@ -560,11 +556,11 @@ void TListBase::Invalidate(TListBaseNode *ln)
 ##########################################################################*/
 void TListBase::AddFirst(TListBaseNode *p)
 {
-	FSection.Enter();
-	p->FNext = FList;
-	FList = p;
-	Add(p);
-	FSection.Leave();
+    FSection.Enter();
+    p->FNext = FList;
+    FList = p;
+    Add(p);
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -613,7 +609,7 @@ void TListBase::AddLast(TListBaseNode *p)
 void TListBase::AddAt(int n, TListBaseNode *p)
 {
     TListBaseNode *tp;
-	int pos = 0;
+    int pos = 0;
 
     FSection.Enter();
     if (FList)
@@ -637,7 +633,7 @@ void TListBase::AddAt(int n, TListBaseNode *p)
         }
     }
     else
-	{
+    {
         FList = p;
         p->FNext = 0;
     }
@@ -702,10 +698,10 @@ int TListBase::GetPosition()
         FInvNext = 0;
     }    
 
-	if (FCurrPos)
+    if (FCurrPos)
     {
         while (p && p != FCurrPos)
-		{
+        {
             n++;
             p = p->FNext;
         }
@@ -791,11 +787,11 @@ int TListBase::GotoPrev()
     else
     {
         FPrevPos = 0;
-		p = FList;
+        p = FList;
 
         while (p && p->FNext != FCurrPos) 
-		{
-			FPrevPos = p;
+        {
+            FPrevPos = p;
             p = p->FNext;
         }
         FCurrPos = p;
@@ -819,7 +815,7 @@ int TListBase::GotoPrev()
 ##########################################################################*/
 int TListBase::GotoLast()
 {
-	FSection.Enter();
+    FSection.Enter();
 
     FInvNext = 0;
     FPrevPos = 0;
@@ -856,10 +852,10 @@ int TListBase::Goto(int pos)
     FInvNext = 0;
     FCurrPos = FList;
 
-	while (FCurrPos && n < pos)
+    while (FCurrPos && n < pos)
     {
         n++;
-		FCurrPos = FCurrPos->FNext;
+        FCurrPos = FCurrPos->FNext;
     }
 
     FSection.Leave();    
@@ -885,8 +881,8 @@ int TListBase::Find(const TListBaseNode *ln)
     FInvNext = 0;
     FCurrPos = FList;
 
-	while (FCurrPos && FCurrPos->Compare(*ln))				    
-		FCurrPos = FCurrPos->FNext;
+    while (FCurrPos && FCurrPos->Compare(*ln))                  
+        FCurrPos = FCurrPos->FNext;
 
     FSection.Leave();    
 
@@ -943,7 +939,7 @@ int TListBase::RemoveFirst()
 int TListBase::RemoveLast()
 {
     int success;
-	TListBaseNode *p;
+    TListBaseNode *p;
     TListBaseNode *prev;
 
     FSection.Enter();
@@ -968,7 +964,7 @@ int TListBase::RemoveLast()
         delete p;
         
         success = TRUE;
-	}
+    }
     else
         success = FALSE;
         
@@ -992,7 +988,7 @@ int TListBase::RemoveCurrent()
 {
     int success;
     TListBaseNode *p;
-	TListBaseNode *prev;
+    TListBaseNode *prev;
 
     FSection.Enter();
 
@@ -1017,7 +1013,7 @@ int TListBase::RemoveCurrent()
             Remove(p);
             delete p;
             
-			success = TRUE;
+            success = TRUE;
         }
         else
             success = FALSE;
@@ -1065,7 +1061,7 @@ int TListBase::Remove(int pos)
         {
             if (prev)
                 prev->FNext = p->FNext;    
-			else
+            else
                 FList = p->FNext;
 
             Invalidate(p);
@@ -1098,23 +1094,23 @@ int TListBase::Remove(int pos)
 ##########################################################################*/
 int TListBase::Replace(int pos, const TListBaseNode *newln)
 {
-	int success;
-	TListBaseNode *p;
-	int n = 0;
+    int success;
+    TListBaseNode *p;
+    int n = 0;
 
-	FSection.Enter();
+    FSection.Enter();
 
-	if (FList)
-	{
-		p = FList;
-		while (p && n < pos)
-		{
-			n++;
-			p = p->FNext;
-		}
+    if (FList)
+    {
+        p = FList;
+        while (p && n < pos)
+        {
+            n++;
+            p = p->FNext;
+        }
 
-		if (p)
-		{
+        if (p)
+        {
             p->Load(*newln);
             Update(p);
             success = TRUE;
@@ -1143,7 +1139,7 @@ int TListBase::Replace(int pos, const TListBaseNode *newln)
 ##########################################################################*/
 void TListBase::Concat(const TListBase &list1, const TListBase& list2)
 {
-	TListBaseNode *p;
+    TListBaseNode *p;
 
     Clear();
     FSection.Enter();
@@ -1180,8 +1176,8 @@ void TListBase::Concat(const TListBase &list1, const TListBase& list2)
 ##########################################################################*/
 void TListBase::Intersect(const TListBase &list1, const TListBase& list2)
 {
-	TListBaseNode *p1;
-	TListBaseNode *p2;
+    TListBaseNode *p1;
+    TListBaseNode *p2;
 
     Clear();
     FSection.Enter();
@@ -1193,8 +1189,8 @@ void TListBase::Intersect(const TListBase &list1, const TListBase& list2)
 
         p2 = list2.FList;
 
-    	while (p2 && p1->Compare(*p2))
-    	    p2 = p2->FNext;
+        while (p2 && p1->Compare(*p2))
+            p2 = p2->FNext;
 
         if (p2)
             AddLast(Clone(p1));
@@ -1218,8 +1214,8 @@ void TListBase::Intersect(const TListBase &list1, const TListBase& list2)
 ##########################################################################*/
 void TListBase::Union(const TListBase &list1, const TListBase& list2)
 {
-	TListBaseNode *p1;
-	TListBaseNode *p2;
+    TListBaseNode *p1;
+    TListBaseNode *p2;
 
     Clear();
 
@@ -1240,8 +1236,8 @@ void TListBase::Union(const TListBase &list1, const TListBase& list2)
 
         p1 = list1.FList;
 
-    	while (p1 && p1->Compare(*p2))
-    	    p1 = p1->FNext;
+        while (p1 && p1->Compare(*p2))
+            p1 = p1->FNext;
 
         if (!p1)
             AddLast(Clone(p2));
@@ -1265,8 +1261,8 @@ void TListBase::Union(const TListBase &list1, const TListBase& list2)
 ##########################################################################*/
 void TListBase::Difference(const TListBase &list1, const TListBase& list2)
 {
-	TListBaseNode *p1;
-	TListBaseNode *p2;
+    TListBaseNode *p1;
+    TListBaseNode *p2;
 
     Clear();
 
@@ -1279,8 +1275,8 @@ void TListBase::Difference(const TListBase &list1, const TListBase& list2)
 
         p2 = list2.FList;
 
-    	while (p2 && p1->Compare(*p2))
-    	    p2 = p2->FNext;
+        while (p2 && p1->Compare(*p2))
+            p2 = p2->FNext;
 
         if (!p2)
             AddLast(Clone(p1));
@@ -1295,8 +1291,8 @@ void TListBase::Difference(const TListBase &list1, const TListBase& list2)
 
         p1 = list1.FList;
 
-    	while (p1 && p1->Compare(*p2))
-    	    p1 = p1->FNext;
+        while (p1 && p1->Compare(*p2))
+            p1 = p1->FNext;
 
         if (!p1)
             AddLast(Clone(p2));
@@ -1368,8 +1364,8 @@ void TListBase::RemoveDuplicates()
         np = p->FNext;
         
         tp = FList;
-    	while (tp && tp->Compare(*p))
-    		tp = tp->FNext;
+        while (tp && tp->Compare(*p))
+            tp = tp->FNext;
 
         if (tp)
         {

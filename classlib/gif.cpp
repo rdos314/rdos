@@ -25,19 +25,11 @@
 #
 ########################################################################*/
 
-#ifndef MSVC
 #include "rdos.h"
-#endif
 
 #include "gif.h"
 #include "file.h"
-#if defined __GNUC__ || defined __WATCOMC__
 #include <malloc.h>
-#include <string.h>
-#else
-#include <alloc.h>
-#include <mem.h>
-#endif
 #include <string.h>
 
 #define FALSE   0
