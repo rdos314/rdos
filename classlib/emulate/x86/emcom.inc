@@ -42,8 +42,10 @@
 	extrn PushWord:near
 	extrn PushDword:near
 	extrn PushLong:near
+
 	extrn PopWord:near
 	extrn PopDword:near
+	extrn PopLong:near
 
 	extrn AddToStack:near
 	extrn SubFromStack:near

@@ -1200,10 +1200,10 @@ lnt50   DD OFFSET LongPushRax,              OFFSET LongPushRcx
 lnt52   DD OFFSET LongPushRdx,              OFFSET LongPushRbx
 lnt54   DD OFFSET LongPushRsp,              OFFSET LongPushRbp
 lnt56   DD OFFSET LongPushRsi,              OFFSET LongPushRdi
-lnt58   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt5A   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt5C   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt5E   DD OFFSET EmulateError,             OFFSET EmulateError
+lnt58   DD OFFSET LongPopRax,               OFFSET LongPopRcx
+lnt5A   DD OFFSET LongPopRdx,               OFFSET LongPopRbx
+lnt5C   DD OFFSET LongPopRsp,               OFFSET LongPopRbp
+lnt5E   DD OFFSET LongPopRsi,               OFFSET LongPopRdi
 lnt60   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt62   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt64   DD OFFSET EmulateError,             OFFSET EmulateError

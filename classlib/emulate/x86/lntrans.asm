@@ -411,4 +411,159 @@ LongPushR15:
     ret
 LongPushRdi Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           PopReg
+;
+;               DESCRIPTION:    Emulate pop reg
+;
+;               PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongPopRax
+
+LongPopRax Proc near
+    test [ebp].em_rex,1
+    jnz LongPopR8
+;
+    call PopLong
+    mov [ebp].reg_eax,eax
+    mov [ebp].reg_eax+4,edx
+    ret
+
+LongPopR8:
+    call PopLong
+    mov [ebp].reg_r8,eax
+    mov [ebp].reg_r8+4,edx
+    ret
+LongPopRax Endp
+
+    public LongPopRcx
+
+LongPopRcx Proc near
+    test [ebp].em_rex,1
+    jnz LongPopR9
+;
+    call PopLong
+    mov [ebp].reg_ecx,eax
+    mov [ebp].reg_ecx+4,edx
+    ret
+
+LongPopR9:
+    call PopLong
+    mov [ebp].reg_r9,eax
+    mov [ebp].reg_r9+4,edx
+    ret
+LongPopRcx Endp
+
+    public LongPopRdx
+
+LongPopRdx Proc near
+    test [ebp].em_rex,1
+    jnz LongPopR10
+;
+    call PopLong
+    mov [ebp].reg_edx,eax
+    mov [ebp].reg_edx+4,edx
+    ret
+
+LongPopR10:
+    call PopLong
+    mov [ebp].reg_r10,eax
+    mov [ebp].reg_r10+4,edx
+    ret
+LongPopRdx Endp
+
+    public LongPopRbx
+
+LongPopRbx Proc near
+    test [ebp].em_rex,1
+    jnz LongPopR11
+;
+    call PopLong
+    mov [ebp].reg_ebx,eax
+    mov [ebp].reg_ebx+4,edx
+    ret
+
+LongPopR11:
+    call PopLong
+    mov [ebp].reg_r11,eax
+    mov [ebp].reg_r11+4,edx
+    ret
+LongPopRbx Endp
+
+    public LongPopRsp
+
+LongPopRsp Proc near
+    test [ebp].em_rex,1
+    jnz LongPopR12
+;
+    call PopLong
+    mov [ebp].reg_esp,eax
+    mov [ebp].reg_esp+4,edx
+    ret
+
+LongPopR12:
+    call PopLong
+    mov [ebp].reg_r12,eax
+    mov [ebp].reg_r12+4,edx
+    ret
+LongPopRsp Endp
+
+    public LongPopRbp
+
+LongPopRbp Proc near
+    test [ebp].em_rex,1
+    jnz LongPopR13
+;
+    call PopLong
+    mov [ebp].reg_ebp,eax
+    mov [ebp].reg_ebp+4,edx
+    ret
+
+LongPopR13:
+    call PopLong
+    mov [ebp].reg_r13,eax
+    mov [ebp].reg_r13+4,edx
+    ret
+LongPopRbp Endp
+
+    public LongPopRsi
+
+LongPopRsi Proc near
+    test [ebp].em_rex,1
+    jnz LongPopR14
+;
+    call PopLong
+    mov [ebp].reg_esi,eax
+    mov [ebp].reg_esi+4,edx
+    ret
+
+LongPopR14:
+    call PopLong
+    mov [ebp].reg_r14,eax
+    mov [ebp].reg_r14+4,edx
+    ret
+LongPopRsi Endp
+
+    public LongPopRdi
+
+LongPopRdi Proc near
+    test [ebp].em_rex,1
+    jnz LongPopR15
+;
+    call PopLong
+    mov [ebp].reg_edi,eax
+    mov [ebp].reg_edi+4,edx
+    ret
+
+LongPopR15:
+    call PopLong
+    mov [ebp].reg_r15,eax
+    mov [ebp].reg_r15+4,edx
+    ret
+LongPopRdi Endp
+
         END

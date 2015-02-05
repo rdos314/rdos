@@ -727,6 +727,39 @@ PopDword        Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           PopLong
+;
+;               DESCRIPTION:    Pop qword from stack
+;
+;               PARAMETERS:     SS:EBP       CPU
+;
+;               RETURNS:        EDX:EAX      DATA
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public PopLong
+
+PopLong       Proc near
+        push ebx
+        push edi
+;
+        mov ebx,[ebp].reg_esp
+        mov edi,[ebp].reg_esp+4
+        call ReadLinearQword
+;        
+        add ebx,8
+        adc edi,0
+        mov [ebp].reg_esp,ebx
+        mov [ebp].reg_esp+4,edi
+;
+        pop edi
+        pop ebx
+        ret
+PopLong       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:                   AddToStack
 ;
 ;               DESCRIPTION:    add value to stack pointer
