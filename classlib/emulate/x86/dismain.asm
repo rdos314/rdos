@@ -324,6 +324,8 @@ esp_adr ENDP
 
 eip_adr PROC near
         mov eax,[ebp].reg_eip
+        add eax,esi
+        sub eax,OFFSET op_in_code
         ret
 eip_adr ENDP
         
@@ -473,6 +475,8 @@ rsp_adr ENDP
 
 rip_adr PROC near
         mov eax,[ebp].reg_eip
+        add eax,esi
+        sub eax,OFFSET op_in_code
         ret
 rip_adr ENDP
 
@@ -975,6 +979,48 @@ PAGE
         extrn long_adr_64a_tab:near
 
 long_calc_ads_offset PROC near
+        push eax
+;        
+        test bl,1
+        je lc_a_ad64_64
+
+lc_a_ad64_32:
+        mov ebx,OFFSET long_adr_32a_tab
+        cmp ax,30h
+        jae lcalc_out_o_r
+;
+        mov [ebp].data_valid,1
+        shl eax,3
+        add ebx,eax
+        push ebx        
+        call dword ptr [ebx]
+        add [ebp].data_offset,eax
+        adc word ptr [ebp].data_offset+4,bx
+        pop ebx
+        call dword ptr [ebx+4]
+        add [ebp].data_offset,eax
+        adc word ptr [ebp].data_offset+4,bx
+        jmp lcalc_out_o_r
+
+lc_a_ad64_64:
+        mov ebx,OFFSET long_adr_64a_tab
+        cmp ax,30h
+        jae lcalc_out_o_r
+;
+        mov [ebp].data_valid,1
+        shl eax,3
+        add ebx,eax
+        push ebx
+        call dword ptr [ebx]
+        add [ebp].data_offset,eax
+        adc word ptr [ebp].data_offset+4,bx
+        pop ebx
+        call dword ptr [ebx+4]
+        add [ebp].data_offset,eax
+        adc word ptr [ebp].data_offset+4,bx
+        
+lcalc_out_o_r:
+        pop eax
     ret
 long_calc_ads_offset    Endp
 
@@ -1026,7 +1072,7 @@ dec_mem_no_ignore:
         shr ah,3
         or al,ah
         movzx eax,al
-        call long_calc_ads_offset
+        call calc_ads_offset
         inc esi
         call decode_opcode
         ret
@@ -1075,7 +1121,7 @@ dec64_op_reg_ok:
         mov ds:ignore_ptr,1
 
 dec64_mem_no_ignore:
-        shr ah,3
+        shr ah,2
         or al,ah
         movzx eax,al
         call long_calc_ads_offset
@@ -1266,6 +1312,18 @@ override_rex     PROC near
         call decode_opcode
         ret
 override_rex     ENDP
+        
+        public override_noseg
+
+override_noseg     PROC near
+        mov ebx,ds:root_tab
+        mov ds:op_syntax,ebx
+        inc esi
+        mov al,[esi]
+        movzx eax,al
+        call decode_opcode
+        ret
+override_noseg     ENDP
 
 
         public override_cs
@@ -1433,12 +1491,14 @@ op_short        PROC near
         mov edx,-1
 
 not_op_back:
-        add eax,2
+        add esi,2
+        add eax,esi
+        sub eax,OFFSET op_in_code
+;        
         adc edx,0
         add eax,[ebp].reg_eip
         adc edx,[ebp].reg_eip+4
 ;        
-        add esi,2
         test [ebp].em_flags,l64
         jnz op_sw64
 ;
@@ -1465,17 +1525,19 @@ op_near PROC near
         jz op_near16
 op_near32:
         mov eax,[esi+1]
-        add eax,3
+        add esi,4
+        add eax,esi
+        sub eax,OFFSET op_in_code
         add eax,[ebp].reg_eip
         call add_hex_dword
-        add esi,4
         ret
 op_near16:      
         mov ax,[esi+1]
-        add ax,3
+        add esi,2
+        add eax,esi
+        sub eax,OFFSET op_in_code
         add ax,word ptr [ebp].reg_eip
         call add_hex_word
-        add esi,2
         ret
 op_near ENDP
 
@@ -1486,17 +1548,19 @@ op_near2        PROC near
         jz op_near16_2
 op_near32_2:
         mov eax,[esi+2]
-        add eax,4
+        add esi,5
+        add eax,esi
+        sub eax,OFFSET op_in_code
         add eax,[ebp].reg_eip
         call add_hex_dword
-        add esi,5
         ret
 op_near16_2:    
         mov ax,[esi+2]
-        add ax,4
+        add esi,3
+        add eax,esi
+        sub eax,OFFSET op_in_code
         add ax,word ptr [ebp].reg_eip
         call add_hex_word
-        add esi,3
         ret
 op_near2        ENDP
 
@@ -1513,9 +1577,8 @@ op_far32:
         add eax,kolon_sep
         mov [edi-4],eax
         mov eax,[esi+1]
-        add eax,[ebp].reg_eip
-        call add_hex_dword
         add esi,6
+        call add_hex_dword
         ret
 op_far16:       
         mov ax,[esi+3]

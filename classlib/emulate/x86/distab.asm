@@ -596,6 +596,7 @@ op_cdt_tab                      EQU 0FF7h
         extrn long_mem_sib:near
 
         extrn override_rex:near
+        extrn override_noseg:near
         extrn override_cs:near
         extrn override_ds:near
         extrn override_ss:near
@@ -7893,8 +7894,8 @@ lop2D:
                         DD 0FFFFFFFFh
 
 lop2E:
-                        DD OFFSET op_illegal
-                        DD 0FFFFFFFFh
+                        DD OFFSET override_noseg
+                        DD null_tab + blank_sep
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh
                         DD 0FFFFFFFFh

@@ -171,7 +171,7 @@ int GetRemoteIpc()
 {
 //    return RdosGetLocalMailslot("emdisp");
 //    return RdosGetRemoteMailslot(0x4101A8C0, "emdisp");
-    return RdosGetRemoteMailslot(0xA70AA8C0, "emdisp");
+    return RdosGetRemoteMailslot(0xB70AA8C0, "emdisp");
 }
 
 /*##################  RemoteThread  ###############
