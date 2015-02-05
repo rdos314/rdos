@@ -1457,10 +1457,10 @@ lntA8   DD OFFSET EmulateError,             OFFSET EmulateError
 lntAA   DD OFFSET EmulateError,             OFFSET EmulateError
 lntAC   DD OFFSET EmulateError,             OFFSET EmulateError
 lntAE   DD OFFSET EmulateError,             OFFSET EmulateError
-lntB0   DD OFFSET EmulateError,             OFFSET EmulateError
-lntB2   DD OFFSET EmulateError,             OFFSET EmulateError
-lntB4   DD OFFSET EmulateError,             OFFSET EmulateError
-lntB6   DD OFFSET EmulateError,             OFFSET EmulateError
+lntB0   DD OFFSET LongMoveAlIm,             OFFSET LongMoveClIm
+lntB2   DD OFFSET LongMoveDlIm,             OFFSET LongMoveBlIm
+lntB4   DD OFFSET LongMoveAhIm,             OFFSET LongMoveChIm
+lntB6   DD OFFSET LongMoveDhIm,             OFFSET LongMoveBhIm
 lntB8   DD OFFSET LongMoveAxIm,             OFFSET LongMoveCxIm
 lntBA   DD OFFSET LongMoveDxIm,             OFFSET LongMoveBxIm
 lntBC   DD OFFSET LongMoveSpIm,             OFFSET LongMoveBpIm

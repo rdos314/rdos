@@ -49,6 +49,14 @@
     
 	extrn LongMoveMemToSreg:near
 
+	extrn LongMoveAlIm:near
+	extrn LongMoveBlIm:near
+	extrn LongMoveClIm:near
+	extrn LongMoveDlIm:near
+	extrn LongMoveAhIm:near
+	extrn LongMoveBhIm:near
+	extrn LongMoveChIm:near
+	extrn LongMoveDhIm:near
 	extrn LongMoveAxIm:near
 	extrn LongMoveBxIm:near
 	extrn LongMoveCxIm:near

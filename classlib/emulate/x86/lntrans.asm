@@ -213,6 +213,158 @@ LongMoveMemToSreg Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           LongMoveAlIm
+;
+;   DESCRIPTION:    Emulate move byte reg, immediate
+;
+;   PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveAlIm
+
+LongMoveAlIm    Proc near
+    call ReadLongCodeByte
+    mov byte ptr [ebp].reg_eax,al
+    ret
+LongMoveAlIm  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongMoveClIm
+;
+;   DESCRIPTION:    Emulate move byte reg, immediate
+;
+;   PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveClIm
+
+LongMoveClIm    Proc near
+    call ReadLongCodeByte
+    mov byte ptr [ebp].reg_ecx,al
+    ret
+LongMoveClIm  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongMoveDlIm
+;
+;   DESCRIPTION:    Emulate move byte reg, immediate
+;
+;   PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveDlIm
+
+LongMoveDlIm    Proc near
+    call ReadLongCodeByte
+    mov byte ptr [ebp].reg_edx,al
+    ret
+LongMoveDlIm  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongMoveBlIm
+;
+;   DESCRIPTION:    Emulate move byte reg, immediate
+;
+;   PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveBlIm
+
+LongMoveBlIm    Proc near
+    call ReadLongCodeByte
+    mov byte ptr [ebp].reg_ebx,al
+    ret
+LongMoveBlIm  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongMoveAhIm
+;
+;   DESCRIPTION:    Emulate move byte reg, immediate
+;
+;   PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveAhIm
+
+LongMoveAhIm    Proc near
+    call ReadLongCodeByte
+    mov byte ptr [ebp].reg_eax+1,al
+    ret
+LongMoveAhIm  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongMoveChIm
+;
+;   DESCRIPTION:    Emulate move byte reg, immediate
+;
+;   PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveChIm
+
+LongMoveChIm    Proc near
+    call ReadLongCodeByte
+    mov byte ptr [ebp].reg_ecx+1,al
+    ret
+LongMoveChIm  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongMoveDhIm
+;
+;   DESCRIPTION:    Emulate move byte reg, immediate
+;
+;   PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveDhIm
+
+LongMoveDhIm    Proc near
+    call ReadLongCodeByte
+    mov byte ptr [ebp].reg_edx+1,al
+    ret
+LongMoveDhIm  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LongMoveBhIm
+;
+;   DESCRIPTION:    Emulate move byte reg, immediate
+;
+;   PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveBhIm
+
+LongMoveBhIm    Proc near
+    call ReadLongCodeByte
+    mov byte ptr [ebp].reg_ebx+1,al
+    ret
+LongMoveBhIm  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           LongMoveAxIm
 ;
 ;   DESCRIPTION:    Emulate move (d)word reg, immediate
