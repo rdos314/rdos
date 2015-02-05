@@ -67,3 +67,5 @@
 	extrn LongMoveDiIm:near
 
 	extrn LongXchgWordRegMem:near
+    extrn LongXchgByteRegMem:near
+

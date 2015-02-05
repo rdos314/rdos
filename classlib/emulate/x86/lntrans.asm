@@ -853,6 +853,52 @@ LongMoveDiIm  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           LongXchgByteRegMem
+;
+;   DESCRIPTION:    EMULATE xchg reg,byte ptr Mem
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongXchgByteRegMem
+
+LongXchgByteRegMem        Proc near
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call GetLongMemRegAds
+    jc LongXchgByteRegs
+;
+    push edi
+    push ebx
+    call LoadLongByteReg
+    pop ebx
+    pop edi
+;        
+    push edi
+    push ebx
+;
+    push ax
+    call ReadLinearByte
+    call SaveLongByteReg
+    pop ax
+;
+    pop ebx
+    pop edi
+    call WriteLinearByte
+    ret    
+
+LongXchgByteRegs:    
+    call LoadLongByteReg
+    push ax
+    call LoadLongByteMemReg
+    call SaveLongByteReg
+    pop ax
+    call SaveLongByteMemReg
+    ret    
+LongXchgByteRegMem       Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           LongXchgWordRegMem
 ;
 ;   DESCRIPTION:    EMULATE xchg reg,word ptr Mem

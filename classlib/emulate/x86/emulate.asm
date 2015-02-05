@@ -1436,7 +1436,7 @@ lnt7E   DD OFFSET LongJleShort,             OFFSET LongJnleShort
 lnt80   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt82   DD OFFSET EmulateError,             OFFSET Long83
 lnt84   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt86   DD OFFSET EmulateError,             OFFSET LongXchgWordRegMem
+lnt86   DD OFFSET LongXchgByteRegMem,       OFFSET LongXchgWordRegMem
 lnt88   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt8A   DD OFFSET LongMoveByteMemToReg,     OFFSET LongMoveWordMemToReg
 lnt8C   DD OFFSET EmulateError,             OFFSET EmulateError
