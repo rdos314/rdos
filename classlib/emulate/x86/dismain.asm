@@ -116,6 +116,7 @@ add_mne MACRO com_txt, sep
 
 no_adr  PROC near
         xor eax,eax
+        xor ebx,ebx
         ret
 no_adr  ENDP
         
@@ -132,6 +133,7 @@ no_adr  ENDP
 
 bx_adr  PROC near
         movzx eax,word ptr [ebp].reg_ebx
+        xor ebx,ebx
         ret
 bx_adr  ENDP
         
@@ -148,6 +150,7 @@ bx_adr  ENDP
 
 bp_adr  PROC near
         movzx eax,word ptr [ebp].reg_ebp
+        xor ebx,ebx
         ret
 bp_adr  ENDP
         
@@ -164,6 +167,7 @@ bp_adr  ENDP
 
 si_adr  PROC near
         movzx eax,word ptr [ebp].reg_esi
+        xor ebx,ebx
         ret
 si_adr  ENDP
         
@@ -180,6 +184,7 @@ si_adr  ENDP
 
 di_adr  PROC near
         movzx eax,word ptr [ebp].reg_edi
+        xor ebx,ebx
         ret
 di_adr  ENDP
         
@@ -196,6 +201,7 @@ di_adr  ENDP
 
 eax_adr PROC near
         mov eax,[ebp].reg_eax
+        xor ebx,ebx
         ret
 eax_adr ENDP
         
@@ -212,6 +218,7 @@ eax_adr ENDP
 
 ebx_adr PROC near
         mov eax,[ebp].reg_ebx
+        xor ebx,ebx
         ret
 ebx_adr ENDP
         
@@ -228,6 +235,7 @@ ebx_adr ENDP
 
 ecx_adr PROC near
         mov eax,[ebp].reg_ecx
+        xor ebx,ebx
         ret
 ecx_adr ENDP
         
@@ -244,6 +252,7 @@ ecx_adr ENDP
 
 edx_adr PROC near
         mov eax,[ebp].reg_edx
+        xor ebx,ebx
         ret
 edx_adr ENDP
         
@@ -260,6 +269,7 @@ edx_adr ENDP
 
 esi_adr PROC near
         mov eax,[ebp].reg_esi
+        xor ebx,ebx
         ret
 esi_adr ENDP
         
@@ -276,6 +286,7 @@ esi_adr ENDP
 
 edi_adr PROC near
         mov eax,[ebp].reg_edi
+        xor ebx,ebx
         ret
 edi_adr ENDP
         
@@ -292,6 +303,7 @@ edi_adr ENDP
 
 ebp_adr PROC near
         mov eax,[ebp].reg_ebp
+        xor ebx,ebx
         ret
 ebp_adr ENDP
         
@@ -308,6 +320,7 @@ ebp_adr ENDP
 
 esp_adr PROC near
         mov eax,[ebp].reg_esp
+        xor ebx,ebx
         ret
 esp_adr ENDP
         
@@ -327,6 +340,7 @@ eip_adr PROC near
         add eax,esi
         sub eax,OFFSET op_in_code
         add eax,5
+        xor ebx,ebx
         ret
 eip_adr ENDP
         
@@ -343,6 +357,7 @@ eip_adr ENDP
 
 rax_adr PROC near
         mov eax,[ebp].reg_eax
+        mov ebx,[ebp].reg_eax+4
         ret
 rax_adr ENDP
 
@@ -360,6 +375,7 @@ rax_adr ENDP
 
 rbx_adr PROC near
         mov eax,[ebp].reg_ebx
+        mov ebx,[ebp].reg_ebx+4
         ret
 rbx_adr ENDP
         
@@ -376,6 +392,7 @@ rbx_adr ENDP
 
 rcx_adr PROC near
         mov eax,[ebp].reg_ecx
+        mov ebx,[ebp].reg_ecx+4
         ret
 rcx_adr ENDP
 
@@ -393,6 +410,7 @@ rcx_adr ENDP
 
 rdx_adr PROC near
         mov eax,[ebp].reg_edx
+        mov ebx,[ebp].reg_edx+4
         ret
 rdx_adr ENDP
         
@@ -409,6 +427,7 @@ rdx_adr ENDP
 
 rsi_adr PROC near
         mov eax,[ebp].reg_esi
+        mov ebx,[ebp].reg_esi+4
         ret
 rsi_adr ENDP
         
@@ -425,6 +444,7 @@ rsi_adr ENDP
 
 rdi_adr PROC near
         mov eax,[ebp].reg_edi
+        mov ebx,[ebp].reg_edi+4
         ret
 rdi_adr ENDP
 
@@ -442,6 +462,7 @@ rdi_adr ENDP
 
 rbp_adr PROC near
         mov eax,[ebp].reg_ebp
+        mov ebx,[ebp].reg_ebp+4
         ret
 rbp_adr ENDP
 
@@ -459,6 +480,7 @@ rbp_adr ENDP
 
 rsp_adr PROC near
         mov eax,[ebp].reg_esp
+        mov ebx,[ebp].reg_esp+4
         ret
 rsp_adr ENDP
 
@@ -479,6 +501,7 @@ rip_adr PROC near
         add eax,esi
         sub eax,OFFSET op_in_code
         add eax,5
+        mov ebx,[ebp].reg_eip+4
         ret
 rip_adr ENDP
 
@@ -496,6 +519,7 @@ rip_adr ENDP
 
 r8_adr PROC near
         mov eax,[ebp].reg_r8
+        mov ebx,[ebp].reg_r8+4
         ret
 r8_adr ENDP
 
@@ -513,6 +537,7 @@ r8_adr ENDP
 
 r9_adr PROC near
         mov eax,[ebp].reg_r9
+        mov ebx,[ebp].reg_r9+4
         ret
 r9_adr ENDP
 
@@ -530,6 +555,7 @@ r9_adr ENDP
 
 r10_adr PROC near
         mov eax,[ebp].reg_r10
+        mov ebx,[ebp].reg_r10+4
         ret
 r10_adr ENDP
 
@@ -547,6 +573,7 @@ r10_adr ENDP
 
 r11_adr PROC near
         mov eax,[ebp].reg_r11
+        mov ebx,[ebp].reg_r11+4
         ret
 r11_adr ENDP
 
@@ -564,6 +591,7 @@ r11_adr ENDP
 
 r12_adr PROC near
         mov eax,[ebp].reg_r12
+        mov ebx,[ebp].reg_r12+4
         ret
 r12_adr ENDP
 
@@ -581,6 +609,7 @@ r12_adr ENDP
 
 r13_adr PROC near
         mov eax,[ebp].reg_r13
+        mov ebx,[ebp].reg_r13+4
         ret
 r13_adr ENDP
 
@@ -598,6 +627,7 @@ r13_adr ENDP
 
 r14_adr PROC near
         mov eax,[ebp].reg_r14
+        mov ebx,[ebp].reg_r14+4
         ret
 r14_adr ENDP
 
@@ -615,6 +645,7 @@ r14_adr ENDP
 
 r15_adr PROC near
         mov eax,[ebp].reg_r15
+        mov ebx,[ebp].reg_r15+4
         ret
 r15_adr ENDP
 
@@ -942,7 +973,9 @@ c_a_ad16:
         mov [ebp].data_valid,1
         shl eax,3
         add ebx,eax
+        push ebx
         call dword ptr [ebx]
+        pop ebx
         add [ebp].data_offset,eax
         call dword ptr [ebx+4]
         add [ebp].data_offset,eax
@@ -955,7 +988,9 @@ c_a_ad32:
         mov [ebp].data_valid,1
         shl eax,3
         add ebx,eax
+        push ebx
         call dword ptr [ebx]
+        pop ebx
         add [ebp].data_offset,eax
         call dword ptr [ebx+4]
         add [ebp].data_offset,eax
@@ -997,11 +1032,11 @@ lc_a_ad64_32:
         push ebx        
         call dword ptr [ebx]
         add [ebp].data_offset,eax
-        adc word ptr [ebp].data_offset+4,bx
+        adc [ebp].data_offset+4,ebx
         pop ebx
         call dword ptr [ebx+4]
         add [ebp].data_offset,eax
-        adc word ptr [ebp].data_offset+4,bx
+        adc [ebp].data_offset+4,ebx
         jmp lcalc_out_o_r
 
 lc_a_ad64_64:
@@ -1015,11 +1050,11 @@ lc_a_ad64_64:
         push ebx
         call dword ptr [ebx]
         add [ebp].data_offset,eax
-        adc word ptr [ebp].data_offset+4,bx
+        adc [ebp].data_offset+4,ebx
         pop ebx
         call dword ptr [ebx+4]
         add [ebp].data_offset,eax
-        adc word ptr [ebp].data_offset+4,bx
+        adc [ebp].data_offset+4,ebx
         
 lcalc_out_o_r:
         pop eax
@@ -2463,7 +2498,7 @@ long_sib0_ads_ok:
         mov ebx,eax
         call dword ptr [ebx].long_adr_sib_tab
         add [ebp].data_offset,eax
-        adc word ptr [ebp].data_offset+4,bx
+        adc [ebp].data_offset+4,ebx
 ;
         mov al,[esi]
         and al,38h
@@ -2484,7 +2519,7 @@ long_sibi_ads_ok:
         shr cl,6
         shl eax,cl
         add [ebp].data_offset,eax
-        adc word ptr [ebp].data_offset+4,bx
+        adc [ebp].data_offset+4,ebx
         ret
 long_add_sib_ads     ENDP
 
@@ -3447,6 +3482,7 @@ dis_ass_code_ok:
         mov override,0
         mov [ebp].data_sel,0
         mov [ebp].data_offset,0
+        mov [ebp].data_offset+4,0
         mov [ebp].data_valid,0
 ;
 ; esi = opcode

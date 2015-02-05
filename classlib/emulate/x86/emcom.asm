@@ -1300,14 +1300,13 @@ read_long_code_byte:
         movsd
         add [ebp].code_start,10h
 ;        
-        push ebx
         mov ebx,[ebp].code_start
         mov edi,[ebp].code_start+4
         add ebx,10h
         mov ecx,10h
         lea esi,[ebp].code_cache + 10h
         call ReadLinear
-        pop ebx
+        mov ebx,[ebp].reg_eip
         sub ebx,[ebp].code_start
         add [ebp].reg_eip,1
         adc [ebp].reg_eip+4,0
@@ -1375,14 +1374,13 @@ read_long_code_word:
         movsd
         add [ebp].code_start,10h
 ;        
-        push ebx
         mov ebx,[ebp].code_start
         mov edi,[ebp].code_start+4
         add ebx,10h
         mov ecx,10h
         lea esi,[ebp].code_cache + 10h
         call ReadLinear
-        pop ebx
+        mov ebx,[ebp].reg_eip
         sub ebx,[ebp].code_start
         add [ebp].reg_eip,2
         adc [ebp].reg_eip+4,0
@@ -1450,14 +1448,13 @@ read_long_code_dword:
         movsd
         add [ebp].code_start,10h
 ;        
-        push ebx
         mov ebx,[ebp].code_start
         mov edi,[ebp].code_start+4
         add ebx,10h
         mov ecx,10h
         lea esi,[ebp].code_cache + 10h
         call ReadLinear
-        pop ebx
+        mov ebx,[ebp].reg_eip
         sub ebx,[ebp].code_start
         add [ebp].reg_eip,4
         adc [ebp].reg_eip+4,0
@@ -1527,14 +1524,13 @@ read_long_code_qword:
         movsd
         add [ebp].code_start,10h
 ;        
-        push ebx
         mov ebx,[ebp].code_start
         mov edi,[ebp].code_start+4
         add ebx,10h
         mov ecx,10h
         lea esi,[ebp].code_cache + 10h
         call ReadLinear
-        pop ebx
+        mov ebx,[ebp].reg_eip
         sub ebx,[ebp].code_start
         add [ebp].reg_eip,8
         adc [ebp].reg_eip+4,0
