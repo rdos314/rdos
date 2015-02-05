@@ -1468,7 +1468,7 @@ lntBE   DD OFFSET LongMoveSiIm,             OFFSET LongMoveDiIm
 lntC0   DD OFFSET EmulateError,             OFFSET EmulateError
 lntC2   DD OFFSET EmulateError,             OFFSET LongRetNear
 lntC4   DD OFFSET EmulateError,             OFFSET EmulateError
-lntC6   DD OFFSET EmulateError,             OFFSET EmulateError
+lntC6   DD OFFSET EmulateError,             OFFSET LongMoveWordImToMem
 lntC8   DD OFFSET EmulateError,             OFFSET EmulateError
 lntCA   DD OFFSET EmulateError,             OFFSET EmulateError
 lntCC   DD OFFSET EmulateError,             OFFSET EmulateError
@@ -1539,6 +1539,7 @@ emulate_not32:
 emulate64:
         mov [ebp].em_flags,l64 OR d32
         mov [ebp].em_rex,0
+        mov [ebp].em_extra_bytes,0
 ;       
         mov eax,[ebp].reg_eip
         mov [ebp].org_eip,eax

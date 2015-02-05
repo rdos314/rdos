@@ -786,6 +786,8 @@ MemEipD32 PROC near
     call ReadLongCodeDword
     mov ebx,eax
     add ebx,[ebp].reg_eip
+    movzx eax,[ebp].em_extra_bytes
+    add ebx,eax
     xor edi,edi
     ret
 MemEipD32 ENDP
@@ -798,6 +800,9 @@ MemRipD32 PROC near
     sbb edi,0
     add ebx,[ebp].reg_eip
     adc edi,[ebp].reg_eip+4
+    movzx eax,[ebp].em_extra_bytes
+    add ebx,eax
+    adc edi,0
     ret
 MemRipD32 ENDP
 

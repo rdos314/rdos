@@ -100,6 +100,92 @@ LongMoveWordMemToReg      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           LongMoveWordImToMem
+;
+;               DESCRIPTION:    EMULATE mov word ptr mem,im
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveWordImToMem
+
+LongMoveWordImToMem      Proc near
+    test [ebp].em_rex,8
+    jnz LongMoveQwordImToMem
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveDwordImToMem
+;
+    mov [ebp].em_extra_bytes,2
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call GetLongMemRegAds
+    jc LongMoveWordImToReg
+;
+    push edi
+    push ebx
+    call ReadLongCodeWord
+    pop ebx
+    pop edi
+    call WriteLinearWord
+    ret
+        
+LongMoveWordImToReg:    
+    call ReadLongCodeWord
+    call SaveLongWordMemReg
+    ret
+
+LongMoveDwordImToMem:
+    mov [ebp].em_extra_bytes,4
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call GetLongMemRegAds
+    jc LongMoveDwordImToReg
+;
+    push edi
+    push ebx
+    call ReadLongCodeDword
+    pop ebx
+    pop edi
+    call WriteLinearDword
+    ret
+
+LongMoveDwordImToReg:    
+    call ReadLongCodeDword
+    call SaveLongDwordMemReg
+    ret
+
+LongMoveQwordImToMem:
+    mov [ebp].em_extra_bytes,4
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call GetLongMemRegAds
+    jc LongMoveDwordImToReg
+;
+    push edi
+    push ebx
+    call ReadLongCodeDword
+    mov ebx,eax
+    xor edx,edx
+    rcl ebx,1
+    sbb edx,0
+    pop ebx
+    pop edi
+    call WriteLinearQword
+    ret
+
+LongMoveQwordImToReg:    
+    call ReadLongCodeDword
+    mov ebx,eax
+    xor edx,edx
+    rcl ebx,1
+    sbb edx,0
+    call SaveLongQwordMemReg
+    ret
+LongMoveWordImToMem      Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           LongMoveMemToSreg
 ;
 ;   DESCRIPTION:    EMULATE mov sreg,Mem

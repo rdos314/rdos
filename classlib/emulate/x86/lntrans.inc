@@ -45,7 +45,8 @@
 
 	extrn LongMoveWordMemToReg:near
 	extrn LongMoveByteMemToReg:near
-
+    extrn LongMoveWordImToMem:near
+    
 	extrn LongMoveMemToSreg:near
 
 	extrn LongMoveAxIm:near

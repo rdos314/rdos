@@ -209,6 +209,7 @@ public:
         char EmIst;
         char EmRex;
         char EmModrm;
+        char EmExtraBytes;
         short int EmErrorCode;
 
         short int DisAsmHandle;
