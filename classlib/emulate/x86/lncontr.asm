@@ -34,6 +34,8 @@ include \rdos\classlib\emulate\x86\emulate.inc
 include \rdos\classlib\emulate\x86\emcom.inc
 include \rdos\classlib\emulate\x86\emmem.inc
 include \rdos\classlib\emulate\x86\emseg.inc
+include \rdos\classlib\emulate\x86\lnmem.inc
+include \rdos\classlib\emulate\x86\empage.inc
 
 .code
 
@@ -99,6 +101,52 @@ Long&op&Short     Endp
         JccShort Jnl
         JccShort Jle
         JccShort Jnle
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           LongCallFarMem
+;
+;               DESCRIPTION:    EMULATE call far mem
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public LongCallFarMem
+
+LongCallFarMem       Proc near
+        mov [ebp].em_modrm,al
+;        
+        test [ebp].em_rex,8
+        jnz LongCallFarMem64
+;
+        test byte ptr [ebp].em_flags,d32
+        jz LongCallFarMem16
+
+LongCallFarMem32:
+        call GetLongMemRegAds
+        jc EmulateError
+;
+        call ReadLinearFword
+        mov bx,dx
+        mov esi,eax
+        call CallFar32
+        ret
+
+LongCallFarMem16:
+        call GetLongMemRegAds
+        jc EmulateError
+;
+        call ReadLinearDword
+        mov ebx,eax
+        shr ebx,16
+        movzx esi,ax
+        call CallFar16
+        ret
+
+LongCallFarMem64:
+        jmp EmulateError
+
+LongCallFarMem       Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

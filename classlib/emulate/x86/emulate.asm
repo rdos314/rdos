@@ -1143,6 +1143,32 @@ LongOverrideCs:
     movzx ebx,al
     shl ebx,2
     jmp dword ptr [ebx].LongTab
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           LongFF
+;
+;               DESCRIPTION:    EMULATE FF instructions
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LongFFTab:
+lnFF_000        DD OFFSET EmulateError
+lnFF_001        DD OFFSET EmulateError
+lnFF_010        DD OFFSET EmulateError
+lnFF_011        DD OFFSET LongCallFarMem
+lnFF_100        DD OFFSET EmulateError
+lnFF_101        DD OFFSET EmulateError
+lnFF_110        DD OFFSET EmulateError
+lnFF_111        DD OFFSET EmulateError
+
+LongFF:
+        call ReadLongCodeByte
+        movzx ebx,al
+        shr bl,2
+        and bl,0Eh
+        jmp dword ptr [2*ebx].LongFFTab
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1283,7 +1309,7 @@ lntF6   DD OFFSET EmulateError,             OFFSET EmulateError
 lntF8   DD OFFSET EmulateError,             OFFSET EmulateError
 lntFA   DD OFFSET EmulateError,             OFFSET EmulateError
 lntFC   DD OFFSET EmulateError,             OFFSET EmulateError
-lntFE   DD OFFSET EmulateError,             OFFSET EmulateError
+lntFE   DD OFFSET EmulateError,             OFFSET LongFF
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

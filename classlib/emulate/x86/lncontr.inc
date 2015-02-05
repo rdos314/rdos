@@ -44,3 +44,5 @@
 	extrn LongJnleShort:near
 
 	extrn LongRetNear:near
+
+	extrn LongCallFarMem:near
