@@ -25,4 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+	extrn LongCmpWordRegMem:near
+
 	extrn LongOrWordRegMem:near

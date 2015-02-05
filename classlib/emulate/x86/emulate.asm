@@ -1356,7 +1356,7 @@ lnt32   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt34   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt36   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt38   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt3A   DD OFFSET EmulateError,             OFFSET EmulateError
+lnt3A   DD OFFSET EmulateError,             OFFSET LongCmpWordRegMem
 lnt3C   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt3E   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt40   DD OFFSET LongRex,                  OFFSET LongRex

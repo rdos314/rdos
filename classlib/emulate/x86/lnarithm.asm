@@ -146,4 +146,90 @@ Long&op1&WordRegMem        Endp
 
     WordRegMem Or, Or
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           LongCmpWordRegMem
+;
+;               DESCRIPTION:    Emulate check (d)word reg, mem
+;
+;               PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public LongCmpWordRegMem
+
+LongCmpWordRegMem        Proc near
+    test [ebp].em_rex,8
+    jnz LongCmpQwordRegMem
+;
+    test byte ptr [ebp].em_flags,d32
+    jnz LongCmpDwordRegMem
+;
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call LoadLongWordMemReg
+    push ax
+    call LoadLongWordReg
+    pop bx
+    mov cx,ax
+;    
+    mov ah,byte ptr [ebp].reg_eflags
+    sahf
+    cmp cx,bx
+    lahf
+    mov byte ptr [ebp].reg_eflags,ah
+    ret
+
+LongCmpDwordRegMem:
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call LoadLongDwordMemReg
+    push eax
+    call LoadLongDwordReg
+    pop ebx
+    mov ecx,eax
+;    
+    mov ah,byte ptr [ebp].reg_eflags
+    sahf
+    cmp ecx,ebx
+    lahf
+    mov byte ptr [ebp].reg_eflags,ah
+    ret
+
+LongCmpQwordRegMem:
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call LoadLongQwordMemReg
+    push edx
+    push eax
+    call LoadLongQwordReg
+    pop ebx
+    pop edi
+    mov ecx,eax
+;    
+; edi:ebx = memory operand
+; edx:ecx = register operand
+;
+    mov ah,byte ptr [ebp].reg_eflags
+    sahf
+    sub ecx,ebx
+    jz LongCmpRegMemPossibleZero
+;
+    sbb edx,edi
+    lahf
+    mov byte ptr [ebp].reg_eflags,ah
+    and ah,NOT 40h
+    jmp LongCmpRegMemSave
+
+LongCmpRegMemPossibleZero:
+    sbb edx,edi
+    lahf
+
+LongCmpRegMemSave:
+    mov byte ptr [ebp].reg_eflags,ah
+    ret
+LongCmpWordRegMem        Endp
+
+
         END
