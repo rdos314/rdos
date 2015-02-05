@@ -39,6 +39,7 @@ include \rdos\classlib\emulate\x86\emprot.inc
 include \rdos\classlib\emulate\x86\em387.inc
 include \rdos\classlib\emulate\x86\lntrans.inc
 include \rdos\classlib\emulate\x86\lnarithm.inc
+include \rdos\classlib\emulate\x86\lncontr.inc
 
 .code
 
@@ -1211,14 +1212,14 @@ lnt68   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt6A   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt6C   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt6E   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt70   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt72   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt74   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt76   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt78   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt7A   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt7C   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt7E   DD OFFSET EmulateError,             OFFSET EmulateError
+lnt70   DD OFFSET LongJoShort,              OFFSET LongJnoShort
+lnt72   DD OFFSET LongJbShort,              OFFSET LongJnbShort
+lnt74   DD OFFSET LongJeShort,              OFFSET LongJneShort
+lnt76   DD OFFSET LongJbeShort,             OFFSET LongJnbeShort
+lnt78   DD OFFSET LongJsShort,              OFFSET LongJnsShort
+lnt7A   DD OFFSET LongJpShort,              OFFSET LongJnpShort
+lnt7C   DD OFFSET LongJlShort,              OFFSET LongJnlShort
+lnt7E   DD OFFSET LongJleShort,             OFFSET LongJnleShort
 lnt80   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt82   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt84   DD OFFSET EmulateError,             OFFSET EmulateError
@@ -1272,7 +1273,7 @@ lntE2   DD OFFSET EmulateError,             OFFSET EmulateError
 lntE4   DD OFFSET EmulateError,             OFFSET EmulateError
 lntE6   DD OFFSET EmulateError,             OFFSET EmulateError
 lntE8   DD OFFSET LongCallNear,             OFFSET EmulateError
-lntEA   DD OFFSET EmulateError,             OFFSET EmulateError
+lntEA   DD OFFSET EmulateError,             OFFSET LongJmpShort
 lntEC   DD OFFSET EmulateError,             OFFSET EmulateError
 lntEE   DD OFFSET EmulateError,             OFFSET EmulateError
 lntF0   DD OFFSET EmulateError,             OFFSET EmulateError
