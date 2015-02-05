@@ -27,4 +27,6 @@
 
 	extrn LongCmpWordRegMem:near
 
+	extrn LongAddWordRegMem:near
+
 	extrn LongOrWordRegMem:near

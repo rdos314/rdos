@@ -1082,6 +1082,55 @@ regl_111101      DD OFFSET reg_r13
 regl_111110      DD OFFSET reg_r14
 regl_111111      DD OFFSET reg_r15
 
+    public LongByteRegTab
+
+LongByteRegTab:
+regb_110000      DD OFFSET reg_eax
+regb_110001      DD OFFSET reg_ecx
+regb_110010      DD OFFSET reg_edx
+regb_110011      DD OFFSET reg_ebx
+regb_110100      DD OFFSET reg_eax + 1
+regb_110101      DD OFFSET reg_ecx + 1
+regb_110110      DD OFFSET reg_edx + 1
+regb_110111      DD OFFSET reg_ebx + 1
+regb_111000      DD OFFSET reg_r8
+regb_111001      DD OFFSET reg_r9
+regb_111010      DD OFFSET reg_r10
+regb_111011      DD OFFSET reg_r11
+regb_111100      DD OFFSET reg_r12
+regb_111101      DD OFFSET reg_r13
+regb_111110      DD OFFSET reg_r14
+regb_111111      DD OFFSET reg_r15
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;     NAME:          LoadLongByteReg
+;
+;     DESCRIPTION:   Load byte from reg
+;
+;     RETURN:        AL             data read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LoadLongByteReg
+
+LoadLongByteReg    Proc near
+    mov bl,[ebp].em_rex
+    shl bl,1
+    and bl,8
+;    
+    mov bh,[ebp].em_modrm
+    shr bh,3
+    and bh,7
+    or bl,bh
+;
+    movzx esi,bl
+    mov esi,dword ptr [4*esi].LongByteRegTab
+    mov al,[ebp+esi]
+    ret
+LoadLongByteReg    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1169,6 +1218,64 @@ LoadLongQwordReg    Proc near
     mov edx,[ebp+esi+4]
     ret
 LoadLongQwordReg    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           LoadLongByteMemReg
+;
+;   DESCRIPTION:    Load byte from memory / reg
+;
+;   RETURNS:        AL             data read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LoadLongByteMemReg
+
+LoadLongByteMemReg Proc near
+    mov bl,[ebp].em_modrm
+    and bl,0C0h
+    cmp bl,0C0h
+    je LoadByteMemRegReg
+;
+    mov bl,[ebp].em_rex
+    shl bl,3
+    and bl,8
+;
+    mov bh,[ebp].em_modrm
+    and bh,7
+    or bl,bh
+;
+    mov bh,[ebp].em_modrm
+    and bh,0C0h
+    shr bh,2
+    or bl,bh    
+;
+    test [ebp].em_flags,a32
+    jnz LoadByteMemRegIndOk
+;
+    or bl,40h
+
+LoadByteMemRegIndOk:
+    movzx esi,bl
+    call dword ptr [4*esi].LongMemTab
+    call ReadLinearByte
+    ret
+
+LoadByteMemRegReg:
+    mov bl,[ebp].em_rex
+    shl bl,3
+    and bl,8
+;    
+    mov bh,[ebp].em_modrm
+    and bh,7
+    or bl,bh
+;
+    movzx esi,bl
+    mov esi,dword ptr [4*esi].LongByteRegTab
+    mov al,[ebp+esi]
+    ret
+LoadLongByteMemReg Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1348,6 +1455,35 @@ LoadLongQwordMemReg Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;     NAME:          SaveLongByteReg
+;
+;     DESCRIPTION:   Save byte to reg
+;
+;     PARAMETERS:    AL             data to save
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public SaveLongByteReg
+
+SaveLongByteReg    Proc near
+    mov bl,[ebp].em_rex
+    shl bl,1
+    and bl,8
+;    
+    mov bh,[ebp].em_modrm
+    shr bh,3
+    and bh,7
+    or bl,bh
+;
+    movzx esi,bl
+    mov esi,dword ptr [4*esi].LongByteRegTab
+    mov [ebp+esi],al
+    ret
+SaveLongByteReg    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;     NAME:          SaveLongWordReg
 ;
 ;     DESCRIPTION:   Save word to reg
@@ -1432,6 +1568,66 @@ SaveLongQwordReg    Proc near
     mov [ebp+esi+4],edx
     ret
 SaveLongQwordReg    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SaveLongByteMemReg
+;
+;   DESCRIPTION:    Save byte to memory / reg
+;
+;   PARAMETERS:     AL             data save
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SaveLongByteMemReg
+
+SaveLongByteMemReg Proc near
+    mov bl,[ebp].em_modrm
+    and bl,0C0h
+    cmp bl,0C0h
+    je SaveByteMemRegReg
+;
+    mov bl,[ebp].em_rex
+    shl bl,3
+    and bl,8
+;
+    mov bh,[ebp].em_modrm
+    and bh,7
+    or bl,bh
+;
+    mov bh,[ebp].em_modrm
+    and bh,0C0h
+    shr bh,2
+    or bl,bh    
+;
+    test [ebp].em_flags,a32
+    jnz SaveByteMemRegIndOk
+;
+    or bl,40h
+
+SaveByteMemRegIndOk:
+    movzx esi,bl
+    push eax
+    call dword ptr [4*esi].LongMemTab
+    pop eax
+    call WriteLinearByte
+    ret
+
+SaveByteMemRegReg:
+    mov bl,[ebp].em_rex
+    shl bl,3
+    and bl,8
+;    
+    mov bh,[ebp].em_modrm
+    and bh,7
+    or bl,bh
+;
+    movzx esi,bl
+    mov esi,dword ptr [4*esi].LongByteRegTab
+    mov [ebp+esi],al
+    ret
+SaveLongByteMemReg Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

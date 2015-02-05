@@ -1128,6 +1128,22 @@ LongOverrideData:
     movzx ebx,al
     shl ebx,2
     jmp dword ptr [ebx].LongTab
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           LongOverrideAdr
+;
+;               DESCRIPTION:    change size of address between 16 & 32
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LongOverrideAdr:
+    xor byte ptr [ebp].em_flags,a32
+    call ReadLongCodeByte
+    movzx ebx,al
+    shl ebx,2
+    jmp dword ptr [ebx].LongTab
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1328,7 +1344,7 @@ LongFF:
 
 LongTab:
 lnt00   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt02   DD OFFSET EmulateError,             OFFSET EmulateError
+lnt02   DD OFFSET EmulateError,             OFFSET LongAddWordRegMem
 lnt04   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt06   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt08   DD OFFSET EmulateError,             OFFSET EmulateError
@@ -1378,7 +1394,7 @@ lnt5E   DD OFFSET LongPopRsi,               OFFSET LongPopRdi
 lnt60   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt62   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt64   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt66   DD OFFSET LongOverrideData,         OFFSET EmulateError
+lnt66   DD OFFSET LongOverrideData,         OFFSET LongOverrideAdr
 lnt68   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt6A   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt6C   DD OFFSET EmulateError,             OFFSET EmulateError
@@ -1396,7 +1412,7 @@ lnt82   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt84   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt86   DD OFFSET EmulateError,             OFFSET LongXchgWordRegMem
 lnt88   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt8A   DD OFFSET EmulateError,             OFFSET LongMoveWordMemToReg
+lnt8A   DD OFFSET LongMoveByteMemToReg,     OFFSET LongMoveWordMemToReg
 lnt8C   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt8E   DD OFFSET LongMoveMemToSreg,        OFFSET EmulateError
 lnt90   DD OFFSET EmulateError,             OFFSET EmulateError

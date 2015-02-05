@@ -42,6 +42,25 @@ include \rdos\classlib\emulate\x86\empage.inc
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;               NAME:           LongMoveByteMemToReg
+;
+;               DESCRIPTION:    EMULATE mov reg,byte ptr mem
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongMoveByteMemToReg
+
+LongMoveByteMemToReg      Proc near
+        call ReadLongCodeByte
+        mov [ebp].em_modrm,al
+        call LoadLongByteMemReg
+        call SaveLongByteReg
+        ret
+LongMoveByteMemToReg      Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           LongMoveWordMemToReg
 ;
 ;               DESCRIPTION:    EMULATE mov reg,word ptr mem
@@ -59,15 +78,14 @@ LongMoveWordMemToReg      Proc near
         call LoadLongDwordMemReg
         call SaveLongDwordReg
         ret
-LongMoveWordMemToReg      Endp
 
-LongMoveQwordMemToReg     Proc near
+LongMoveQwordMemToReg:
         call ReadLongCodeByte
         mov [ebp].em_modrm,al
         call LoadLongQwordMemReg
         call SaveLongQwordReg
         ret
-LongMoveQwordMemToReg     Endp
+LongMoveWordMemToReg      Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

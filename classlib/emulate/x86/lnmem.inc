@@ -27,18 +27,22 @@
 
     extrn GetLongMemRegAds:near
 
+	extrn LoadLongByteMemReg:near
 	extrn LoadLongWordMemReg:near
 	extrn LoadLongDwordMemReg:near
 	extrn LoadLongQwordMemReg:near
 
+	extrn LoadLongByteReg:near
 	extrn LoadLongWordReg:near
 	extrn LoadLongDwordReg:near
 	extrn LoadLongQwordReg:near
 
+	extrn SaveLongByteReg:near
 	extrn SaveLongWordReg:near
 	extrn SaveLongDwordReg:near
 	extrn SaveLongQwordReg:near
 
+	extrn SaveLongByteMemReg:near
 	extrn SaveLongWordMemReg:near
 	extrn SaveLongDwordMemReg:near
 	extrn SaveLongQwordMemReg:near

@@ -44,6 +44,7 @@
 	extrn LongPopRdi:near
 
 	extrn LongMoveWordMemToReg:near
+	extrn LongMoveByteMemToReg:near
 
 	extrn LongMoveMemToSreg:near
 
