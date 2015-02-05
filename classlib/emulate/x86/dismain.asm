@@ -3471,16 +3471,24 @@ _DisAsmCodeCache     PROC near
         jmp dis_ass_code_ok
 
 dis_ass_code64:
+        mov ds:op_rex,0
         mov [ebp].em_flags,l64 OR d32
         mov ebx,OFFSET long_main_tab
-
+        mov al,[esi]
+        cmp al,50h
+        jb dis_ass_code_ok
+;
+        cmp al,60h
+        jae dis_ass_code_ok
+;
+        mov ds:op_rex,8
+                
 dis_ass_code_ok:
         mov op_syntax,ebx
         mov root_tab,ebx
 ;
         mov ignore_ptr,0
         mov override,0
-        mov ds:op_rex,0
         mov [ebp].data_sel,0
         mov [ebp].data_offset,0
         mov [ebp].data_offset+4,0
