@@ -242,5 +242,28 @@ LongCmpRegMemSave:
     ret
 LongCmpWordRegMem        Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           LongCmpByteImAcc
+;
+;               DESCRIPTION:    Emulate cmp byte mem, immediate
+;
+;               PARAMETERS:     SS:EBP  CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LongCmpByteImAcc
+
+LongCmpByteImAcc Proc near
+    call ReadLongCodeByte
+    mov bl,byte ptr [ebp].reg_eax
+    mov ah,byte ptr [ebp].reg_eflags
+    sahf
+    cmp bl,al
+    lahf
+    mov byte ptr [ebp].reg_eflags,ah
+    ret
+LongCmpByteImAcc Endp
 
         END

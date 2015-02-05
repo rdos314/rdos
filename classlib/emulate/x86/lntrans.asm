@@ -70,21 +70,31 @@ LongMoveByteMemToReg      Endp
     public LongMoveWordMemToReg
 
 LongMoveWordMemToReg      Proc near
-        test [ebp].em_rex,8
-        jnz LongMoveQwordMemToReg
+    test [ebp].em_rex,8
+    jnz LongMoveQwordMemToReg
 ;
-        call ReadLongCodeByte
-        mov [ebp].em_modrm,al
-        call LoadLongDwordMemReg
-        call SaveLongDwordReg
-        ret
+    test byte ptr [ebp].em_flags,d32
+    jnz LongMoveDwordMemToReg
+;
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call LoadLongWordMemReg
+    call SaveLongWordReg
+    ret
+
+LongMoveDwordMemToReg:
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call LoadLongDwordMemReg
+    call SaveLongDwordReg
+    ret
 
 LongMoveQwordMemToReg:
-        call ReadLongCodeByte
-        mov [ebp].em_modrm,al
-        call LoadLongQwordMemReg
-        call SaveLongQwordReg
-        ret
+    call ReadLongCodeByte
+    mov [ebp].em_modrm,al
+    call LoadLongQwordMemReg
+    call SaveLongQwordReg
+    ret
 LongMoveWordMemToReg      Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
