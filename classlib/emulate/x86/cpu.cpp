@@ -1259,6 +1259,7 @@ void TCpu::ShowInstruction()
     int i;
     int ok;
     unsigned long long Base;
+    unsigned long long Limit;
 
     if (CpuState.Reg_cs.access & 0x80)
         codesize = 1;
@@ -1300,6 +1301,7 @@ void TCpu::ShowInstruction()
         if (codesize == 2)
         {
             Base = CpuState.DataOffset;
+            Limit = 0x7FFFFFFFFFFF;
             ok = TRUE;
         }
         else
@@ -1309,42 +1311,42 @@ void TCpu::ShowInstruction()
             if (CpuState.Reg_cs.selector == CpuState.DataSelector)
             {
                 Base = CpuState.Reg_cs.base;
-                size = CpuState.Reg_cs.limit;
+                Limit = CpuState.Reg_cs.limit;
                 ok = TRUE;
             }
         
             if (CpuState.Reg_ss.selector == CpuState.DataSelector)
             {
                 Base = CpuState.Reg_ss.base;
-                size = CpuState.Reg_ss.limit;
+                Limit = CpuState.Reg_ss.limit;
                 ok = TRUE;
             }
         
             if (CpuState.Reg_ds.selector == CpuState.DataSelector)
             {
                 Base = CpuState.Reg_ds.base;
-                size = CpuState.Reg_ds.limit;
+                Limit = CpuState.Reg_ds.limit;
                 ok = TRUE;
             }
         
             if (CpuState.Reg_es.selector == CpuState.DataSelector)
             {
                 Base = CpuState.Reg_es.base;
-                size = CpuState.Reg_es.limit;
+                Limit = CpuState.Reg_es.limit;
                 ok = TRUE;
             }
         
             if (CpuState.Reg_fs.selector == CpuState.DataSelector)
             {
                 Base = CpuState.Reg_fs.base;
-                size = CpuState.Reg_fs.limit;
+                Limit = CpuState.Reg_fs.limit;
                 ok = TRUE;
             }
         
             if (CpuState.Reg_gs.selector == CpuState.DataSelector)
             {
                 Base = CpuState.Reg_gs.base;
-                size = CpuState.Reg_gs.limit;
+                Limit = CpuState.Reg_gs.limit;
                 ok = TRUE;
             }
 
@@ -1362,12 +1364,17 @@ void TCpu::ShowInstruction()
             else
                 printf("%04lX:%08lX ", CpuState.DataSelector, (long)CpuState.DataOffset);
 
-            size -= CpuState.DataOffset;
-            if (size >= 16)
-                size = 16;
+            if (Limit >= CpuState.DataOffset)
+            {
+                Limit -= CpuState.DataOffset;
+                if (Limit > 16)
+                    size = 16;
+                else
+                    size = Limit + 1;
+            }
             else
-                size++;
-            
+                size = 0;
+                        
             for (i = 0; i < size; i++)
                 printf("%02hX ", CpuState.CodeCache[i]);            
         }
