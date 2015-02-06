@@ -3653,6 +3653,14 @@ GetCanModuleVersion      MACRO
 						ENDM
 
 ;   IN  EAX         Device #
+;   OUT AL          Minor version
+;   OUT AH          Major version
+;   OUT DL          Sub version
+GetCanLoaderVersion      MACRO
+	UserGate get_can_loader_version_nr
+						ENDM
+
+;   IN  EAX         Device #
 ;   IN  ES:(E)DI    Program file
 ProgramCanModule      MACRO
 	UserGate program_can_module_nr

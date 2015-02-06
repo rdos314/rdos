@@ -236,6 +236,16 @@ main:
 @@:		
     mov	[efi_handler], rcx		; ImageHandle
 	mov	[efi_ptr], rdx    		; pointer to SystemTable
+;
+    sub rsp,4*8
+    lea rdx,[_hello]
+    mov rcx,[efi_ptr]
+    mov rcx,[rcx+EFI_SYSTEM_TABLE.ConOut]
+    call [rcx+SIMPLE_TEXT_OUTPUT_INTERFACE.OutputString]
+;
+    add rsp,4*8
+    mov eax,EFI_SUCCESS
+    retn	
 
 ;return to caller (if possible)
 efiexit:	
@@ -253,5 +263,6 @@ section '.data' data readable writeable
 efi_handler:	dq 0
 efi_ptr:	    dq 0
 uefi_rsptmp:	dq 0
+_hello          du 'Hello World', 13, 10, 0
 
 ; section '.reloc' fixups data discardable

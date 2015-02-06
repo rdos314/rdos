@@ -1135,6 +1135,19 @@
     value [eax] \
     modify [ecx edx];
 
+#pragma aux RdosGetCanLoaderVersion = \
+    CallGate_get_can_loader_version  \
+    "movzx ecx,ah" \
+    "mov [esi],ecx" \
+    "movzx ecx,al" \
+    "mov [edi],ecx" \
+    "movzx ecx,dl" \
+    "mov [ebx],ecx" \
+    CarryToBool \
+    parm [eax] [esi] [edi] [ebx] \
+    value [eax] \
+    modify [ecx edx];
+
 #pragma aux RdosProgramCanModule = \
     CallGate_program_can_module  \
     CarryToBool \

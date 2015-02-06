@@ -394,6 +394,7 @@ int RDOSAPI RdosWaitForCard(int Handle, char *Strip);
 
 int RDOSAPI RdosGetCanModuleInfo(int Module, int *ComCount, int *Id);
 int RDOSAPI RdosGetCanModuleVersion(int Module, int *MajorVersion, int *MinorVersion, int *SubVersion);
+int RDOSAPI RdosGetCanLoaderVersion(int Module, int *MajorVersion, int *MinorVersion, int *SubVersion);
 int RDOSAPI RdosCheckCanSerialPort(int ComPort, int *ModuleId, int *PortNr);
 int RDOSAPI RdosProgramCanModule(int Module, const char *ProgramName);
 

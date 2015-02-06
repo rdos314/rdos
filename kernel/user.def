@@ -727,4 +727,6 @@ remote_gui_nr                   = 571
 
 is_com_available_nr             = 572
 
+get_can_loader_version_nr       = 573
+
 usergate_entries			    = 580
