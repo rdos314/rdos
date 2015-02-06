@@ -28,6 +28,15 @@
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 .686p
+
+IA32_EFER       = 0C0000080h
+
+
+IDT_BASE    EQU 10000h
+CR3_BASE    EQU 11000h
+PML4_BASE   EQU 12000h
+PTR_BASE    EQU 13000h
+DIR_BASE    EQU 14000h
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -42,25 +51,92 @@ gdt0:
     dd 0
     dw 0
 gdt8:
-    dw 28h-1
-    dd 92000F80h
-    dw 0
+    dw 0FFFFh
+    dd 9A000000h
+    dw 0CFh
 gdt10:
     dw 0FFFFh
-    dd 9A0F0000h
-    dw 40h
+    dd 92000000h
+    dw 0CFh
 gdt18:
     dw 0FFFFh
-    dd 92000000h
-    dw 0
-gdt20:
-    dw 0FFFFh
-    dd 92001800h
-    dw 0
-
+    dd 9A000000h
+    dw 0EFh
 
 Init32:
-    push eax
+    mov ax,10h
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
+    mov ss,ax
+    mov esp,IDT_BASE - 10h
+;
+    mov edi,CR3_BASE    
+    mov eax,PML4_BASE + 67h
+    stosd
+    xor eax,eax
+    mov ecx,3FFh
+    rep stosd
+;
+    mov edi,PML4_BASE
+    mov eax,PTR_BASE + 67h
+    stosd
+    xor eax,eax
+    mov ecx,3FFh
+    rep stosd
+;
+    mov edi,PTR_BASE
+    mov edx,DIR_BASE
+    mov ecx,400h
+
+init_page_ptr_loop:    
+    mov eax,edx
+    or al,67h
+    stosd
+    xor eax,eax
+    stosd
+    add edx,1000h
+    sub ecx,2
+    cmp edx,0A0000h
+    jne init_page_ptr_loop    
+;
+    rep stosd
+;
+    mov edi,DIR_BASE
+    xor edx,edx
+
+init_page_dir_loop:    
+    mov eax,edx
+    or al,67h
+    stosd
+    xor eax,eax
+    stosd
+    add edx,1000h
+    cmp edi,0A0000h
+    jne init_page_dir_loop
+;
+    int 3
+    mov eax,CR3_BASE
+    mov cr3,eax
+;
+    mov eax,cr4
+    or al,20h
+    mov cr4,eax
+;
+    mov ecx,IA32_EFER
+    rdmsr
+    or eax,101h
+    wrmsr
+;
+    mov eax,cr0
+    or eax,80000000h
+    mov cr0,eax
+;
+    db 0EAh
+    dd OFFSET Init64
+    dw 18h
+    
     
 option PROCALIGN:32 
 
@@ -106,10 +182,19 @@ org OFFSET code64_end
 option PROCALIGN:1
 
 gdt:
-    dw 27h
-    dd 0F0000h + OFFSET gdt0
+    dw 1Fh
+    dd OFFSET gdt0
 
 Start:
+    mov ax,cs
+    mov ds,ax
+    xor ax,ax
+    mov es,ax
+    xor si,si
+    xor di,di
+    mov cx,8000h
+    rep movsw
+;
     mov bx,OFFSET gdt
     lgdt fword ptr cs:[bx]
 ;
@@ -119,14 +204,14 @@ Start:
 ;
     db 0EAh
     dw OFFSET Init32
-    dw 10h
+    dw 8
     
 option PROCALIGN:32
 
 Boot    Proc near
 Boot    Endp
 
-filler db 0FF70h dup (0FFh)
+filler db 0FEB0h dup (0FFh)
 
 init:
     db 0EAh
