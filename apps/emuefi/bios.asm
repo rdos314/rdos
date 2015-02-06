@@ -37,6 +37,28 @@
 
 Code32 segment byte public use32 'code32'
 
+gdt0:
+    dw 0
+    dd 0
+    dw 0
+gdt8:
+    dw 28h-1
+    dd 92000F80h
+    dw 0
+gdt10:
+    dw 0FFFFh
+    dd 9A0F0000h
+    dw 40h
+gdt18:
+    dw 0FFFFh
+    dd 92000000h
+    dw 0
+gdt20:
+    dw 0FFFFh
+    dd 92001800h
+    dw 0
+
+
 Init32:
     push eax
     
@@ -83,16 +105,28 @@ Code16 segment byte public use16 'code16'
 org OFFSET code64_end
 option PROCALIGN:1
 
-Start   proc near
-    push ax
-Start   endp
+gdt:
+    dw 27h
+    dd 0F0000h + OFFSET gdt0
+
+Start:
+    mov bx,OFFSET gdt
+    lgdt fword ptr cs:[bx]
+;
+    mov eax,cr0
+    or al,1
+    mov cr0,eax
+;
+    db 0EAh
+    dw OFFSET Init32
+    dw 10h
     
 option PROCALIGN:32
 
 Boot    Proc near
 Boot    Endp
 
-filler db 0FF90h dup (0FFh)
+filler db 0FF70h dup (0FFh)
 
 init:
     db 0EAh
