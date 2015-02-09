@@ -1,3 +1,3 @@
-project : F:\rdos\aspie-quiz\wconv.exe .SYMBOLIC
+project : C:\rdos\aspie-quiz\wconv.exe .SYMBOLIC
 
-!include F:\rdos\aspie-quiz\wconv.mk1
+!include C:\rdos\aspie-quiz\wconv.mk1
