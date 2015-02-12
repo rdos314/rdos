@@ -655,6 +655,44 @@ open_lon_module       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ResetLonModule
+;
+;       description:    Reset lon module
+;
+;       PARAMETERS:     AL      Module #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_lon_module_name DB 'Reset Lon Module',0
+
+reset_lon_module       Proc far
+    push ds
+    push ax
+    push bx
+    push dx
+;
+    mov dx,SEG data
+    mov ds,dx
+    movzx dx,al
+    cmp dx,ds:lon_module_count
+    jae reset_lon_done
+;    
+    mov bx,dx
+    add bx,bx
+    mov ds,ds:[bx].lon_module_arr
+    call fword ptr ds:lon_reset_proc    
+
+reset_lon_done:
+    pop dx
+    pop bx
+    pop ax
+    pop ds
+    retf32
+reset_lon_module       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CloseLonModule
 ;
 ;       description:    Close lon module
@@ -837,6 +875,12 @@ init    PROC far
     mov edi,OFFSET open_lon_module_name
     xor dx,dx
     mov ax,open_lon_module_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET reset_lon_module
+    mov edi,OFFSET reset_lon_module_name
+    xor dx,dx
+    mov ax,reset_lon_module_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET close_lon_module

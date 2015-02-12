@@ -105,6 +105,8 @@ can_sel                 DW ?
 can_thread              DW ?
 can_int_reg             DW ?
 
+can_reset               DW ?
+
 can_send_section        section_typ <>
 can_rec_section         section_typ <>
 
@@ -702,6 +704,42 @@ sdConf:
 sdDone:
     ret
 SetupDevice Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ResetDevice
+;
+;   DESCRIPTION:    Reset device
+;
+;   RETURNS:        NC      OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetDevice  Proc near
+    mov ax,250
+    WaitMilliSec
+;    
+    mov es,ds:can_sel
+;
+    mov al,16    ; TSEG 1
+    mov ah,7    ; TSEG 2
+    mov bl,4    ; SJW
+    mov cl,1    ; Divisor
+    call SetupBitTiming
+;    
+    mov eax,0Eh
+    mov es:CAN_CONT,eax        
+;
+    xor eax,eax
+    mov ds:can_send_clear,eax
+    mov ds:can_send_used,eax
+    mov ds:can_send_pend,eax
+;    
+    mov ax,250
+    WaitMilliSec
+    ret
+ResetDevice Endp   
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -835,10 +873,30 @@ can_thread_pr:
     mov ds,ax
     GetThread
     mov ds:can_thread,ax
+    mov ds:can_reset,0
+;
     mov es,ds:can_sel    
 
 ctLoop:
     WaitForSignal
+;
+    mov eax,es:CAN_STAT
+    test ax,20h
+    jz ctNotError
+;
+    mov ds:can_reset,1
+
+ctNotError:
+    xor ax,ax
+    xchg ax,ds:can_reset
+    or ax,ax
+    jz ctResetDone
+;
+    EnterSection ds:can_send_section
+    call ResetDevice
+    LeaveSection ds:can_send_section
+        
+ctResetDone: 
     mov eax,ds:can_rec_pend
     or eax,eax
     jz ctTx
@@ -846,7 +904,7 @@ ctLoop:
 ctRecRetry:
     mov si,OFFSET can_rec_arr
     mov bx,1
-    mov cx,20h
+    mov cx,11h
     mov edx,1
 
 ctRecLoop:
@@ -904,6 +962,32 @@ ctSendOk:
     jnz ctRecRetry
 ;
     jmp ctLoop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ResetCanBuffers
+;
+;   DESCRIPTION:    Reset CAN 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_can_buffers_name   DB 'Reset CAN Buffers', 0
+
+reset_can_buffers    Proc far
+    push ds
+    push bx
+;    
+    mov bx,SEG data
+    mov ds,bx
+    mov ds:can_reset,1
+    mov bx,ds:can_thread
+    Signal
+;
+    pop bx
+    pop ds    
+    retf32
+reset_can_buffers    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1232,6 +1316,11 @@ init    PROC far
     mov ds,ax
     mov edi,OFFSET init_can
     HookInitPci
+;
+    mov esi,OFFSET reset_can_buffers
+    mov edi,OFFSET reset_can_buffers_name
+    mov ax,reset_can_buffers_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET send_can_bus_msg
     mov edi,OFFSET send_can_bus_msg_name

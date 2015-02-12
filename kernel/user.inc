@@ -2445,6 +2445,11 @@ OpenLonModule       MACRO
 	UserGate open_lon_module_nr
 						ENDM
 
+;	IN  AL	    Lon module #
+ResetLonModule       MACRO
+	UserGate reset_lon_module_nr
+						ENDM
+
 ;	IN  BX	    Lon handle
 CloseLonModule       MACRO
 	UserGate close_lon_module_nr
@@ -3661,7 +3666,21 @@ GetCanLoaderVersion      MACRO
 						ENDM
 
 ;   IN  EAX         Device #
+;   IN  ES:(E)DI    Buffer
+GetCanSerialNumber      MACRO
+	UserGate get_can_serial_number_nr
+						ENDM
+
+;   IN  EAX         Device #
 ;   IN  ES:(E)DI    Program file
 ProgramCanModule      MACRO
 	UserGate program_can_module_nr
+						ENDM
+
+;   IN  EAX         Device #
+;   OUT AX          Result (0 = ok)
+;   OUT DX          Error code
+;   OUT ECX         Position 
+WaitForCanModuleProgramming      MACRO
+	UserGate wait_for_can_module_progamming_nr
 						ENDM

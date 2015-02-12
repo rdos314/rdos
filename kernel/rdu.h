@@ -728,6 +728,10 @@
 #define usergate_is_com_available 0x0000023C
 
 #define usergate_get_can_loader_version 0x0000023D
+#define usergate_get_can_serial_number 0x0000023E
+#define usergate_wait_for_can_module_programming 0x0000023F
+
+#define usergate_reset_lon_module 0x00000240
 
 
 
@@ -1462,6 +1466,10 @@
 #define CallGate_is_com_available 0x67 0x9a 60 2 0 0 3 0
 
 #define CallGate_get_can_loader_version 0x67 0x9a 61 2 0 0 3 0
+#define CallGate_get_can_serial_number 0x67 0x9a 62 2 0 0 3 0
+#define CallGate_wait_for_can_module_programming 0x67 0x9a 63 2 0 0 3 0
+
+#define CallGate_reset_lon_module 0x67 0x9a 64 2 0 0 3 0
 
 #else
 
@@ -2194,5 +2202,9 @@
 #define CallGate_is_com_available 0x3e 0x67 0x9a 60 2 0 0 3 0
 
 #define CallGate_get_can_loader_version 0x3e 0x67 0x9a 61 2 0 0 3 0
+#define CallGate_get_can_serial_number 0x3e 0x67 0x9a 62 2 0 0 3 0
+#define CallGate_wait_for_can_module_programming 0x3e 0x67 0x9a 63 2 0 0 3 0
+
+#define CallGate_reset_lon_module 0x3e 0x67 0x9a 64 2 0 0 3 0
 
 #endif

@@ -1019,6 +1019,10 @@
     parm [al] [esi] [edi] \
     value [ebx];
 
+#pragma aux RdosResetLonModule = \
+    CallGate_reset_lon_module  \
+    parm [al];
+
 #pragma aux RdosCloseLonModule = \
     CallGate_close_lon_module  \
     parm [ebx];
@@ -1148,6 +1152,11 @@
     value [eax] \
     modify [ecx edx];
 
+#pragma aux RdosGetCanSerialNumber = \
+    CallGate_get_can_serial_number  \
+    CarryToBool \
+    parm [eax] [edi]
+
 #pragma aux RdosProgramCanModule = \
     CallGate_program_can_module  \
     CarryToBool \
@@ -1159,6 +1168,15 @@
     ValidateHandle  \
     parm [edi] [cl] \
     value [ebx];
+
+#pragma aux RdosWaitForCanModuleProgramming = \
+    CallGate_wait_for_can_module_programming  \
+    "movzx edx,dx" \
+    "mov [esi],edx" \
+    "mov [edi],ecx" \
+    parm [eax] [esi] [edi] \
+    value [eax] \
+    modify [edx];
 
 #pragma aux RdosCreateFile = \
     CallGate_create_file  \

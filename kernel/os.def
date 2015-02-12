@@ -663,4 +663,6 @@ has_can_send_buf_nr         = 545
 
 fpu_exception_nr            = 546
 
+reset_can_buffers_nr        = 547
+
 osgate_entries				= 560

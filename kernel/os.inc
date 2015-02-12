@@ -3524,6 +3524,10 @@ NotifyIrData      MACRO
 
 ;;;;;;;;;; CAN bus ;;;;;;;;;
 
+ResetCanBuffers      MACRO
+    OsGate reset_can_buffers_nr
+                        ENDM
+
 ; OUT  NC       Has buffer
 HasCanSendBuf      MACRO
     OsGate has_can_send_buf_nr

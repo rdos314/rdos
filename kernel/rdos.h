@@ -374,6 +374,7 @@ void RDOSAPI RdosWaitForPrint(int Handle);
 void RDOSAPI RdosResetPrinter(int Handle);
 
 int RDOSAPI RdosGetLonModules();
+void RDOSAPI RdosResetLonModule(char ID);
 int RDOSAPI RdosOpenLonModule(char ID, int SendBuffers, int ReceiveBuffers);
 void RDOSAPI RdosCloseLonModule(int Handle);
 void RDOSAPI RdosAddWaitForLonModule(int Handle, int LonHandle, int ID);
@@ -395,8 +396,10 @@ int RDOSAPI RdosWaitForCard(int Handle, char *Strip);
 int RDOSAPI RdosGetCanModuleInfo(int Module, int *ComCount, int *Id);
 int RDOSAPI RdosGetCanModuleVersion(int Module, int *MajorVersion, int *MinorVersion, int *SubVersion);
 int RDOSAPI RdosGetCanLoaderVersion(int Module, int *MajorVersion, int *MinorVersion, int *SubVersion);
+void RDOSAPI RdosGetCanSerialNumber(int Module, char *Buf);
 int RDOSAPI RdosCheckCanSerialPort(int ComPort, int *ModuleId, int *PortNr);
 int RDOSAPI RdosProgramCanModule(int Module, const char *ProgramName);
+int RDOSAPI RdosWaitForCanModuleProgramming(int Module, int *ErrorCode, int *Position);
 
 int RDOSAPI RdosOpenFile(const char *FileName, char Access);
 int RDOSAPI RdosCreateFile(const char *FileName, int Attrib);

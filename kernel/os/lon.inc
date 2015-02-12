@@ -33,6 +33,8 @@ lon_close_proc      DD ?,?
 
 lon_start_send_proc DD ?,?
 
+lon_reset_proc      DD ?,?
+
 lon_avail_obj       DW ?
 
 lon_section         section_typ <>

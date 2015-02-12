@@ -8,6 +8,16 @@
 
 void main()
 {
+    TSerialDevice serial(1, 19200);
+
+    serial.Open();
+
+    for (;;)
+    {
+        serial.Write('A');
+        RdosWaitMilli(250);
+    }
+        
     RdosTestGate();
 }
 
