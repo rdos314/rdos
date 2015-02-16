@@ -36,24 +36,24 @@
 struct TSerialDebug
 {
 public:
-        short int Channel;
-        long long Time;
-        char ch;
+    short int Channel;
+    long long Time;
+    char ch;
 };
 
 class TSerialDevice : public TWaitDevice
 {
 public:
-        TSerialDevice(const char *IniSection, int Port, long Baudrate);
-        TSerialDevice(const char *IniSection, int Port, long Baudrate, char Parity, int DataBits, int StopBits);
-        TSerialDevice(int Port, long Baudrate);
-        TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
-        TSerialDevice(const char *IniSection);
-        TSerialDevice(int Port);
-        TSerialDevice();
-        ~TSerialDevice();
+    TSerialDevice(const char *IniSection, int Port, long Baudrate);
+    TSerialDevice(const char *IniSection, int Port, long Baudrate, char Parity, int DataBits, int StopBits);
+    TSerialDevice(int Port, long Baudrate);
+    TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
+    TSerialDevice(const char *IniSection);
+    TSerialDevice(int Port);
+    TSerialDevice();
+    ~TSerialDevice();
 
-        virtual void DeviceName(char *Name, int MaxLen) const;
+    virtual void DeviceName(char *Name, int MaxLen) const;
 
     void StartDebug(TFile *File, int InChannel, int OutChannel);
     void StopDebug();
@@ -61,72 +61,74 @@ public:
     int DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount, int InChannel, int OutChannel);
     int DumpEvents();
     
-        virtual int IsOpen() const;
-        virtual void Open();
-        virtual void Close();
+    virtual int IsOpen() const;
+    virtual void Open();
+    virtual void Close();
         
-        void Block();
-        void Unblock();
+    void Block();
+    void Unblock();
         
-        virtual void SetBaudrate(long Baudrate);
-        virtual void SetParity(char Parity);
-        virtual void SetDataBits(int Bits);
-        virtual void SetStopBits(int Bits);
-        virtual long GetBaudrate() const;
-        virtual int GetPort() const;
-        virtual char GetParity() const;
-        virtual int GetDataBits() const;
-        virtual int GetStopBits() const;
-        virtual int GetSendBufferSpace();
-        virtual int GetReceiveBufferSpace();
-        virtual void Reset();
-        virtual void Clear();
-        virtual void ResetDtr();
-    virtual void SetDtr();
-        virtual void ResetRts();
-        virtual void SetRts();
-        virtual void EnableAutoRts();
-    virtual void DisableAutoRts();
-        virtual void Write(char ch);
-    virtual void Write(const char *buf, int count);
-        virtual void Write(const char *str);
-        virtual void WaitForSendCompleted();
-        virtual int Poll();
-        virtual char Read();
-        virtual int WaitForChar(long Timeout);
+    void SetBaudrate(long Baudrate);
+    void SetParity(char Parity);
+    void SetDataBits(int Bits);
+    void SetStopBits(int Bits);
+    long GetBaudrate() const;
+    int GetPort() const;
+    char GetParity() const;
+    int GetDataBits() const;
+    int GetStopBits() const;
+    int GetSendBufferSpace();
+    int GetReceiveBufferSpace();
+    void Reset();
+    void Clear();
+    int GetCts();
+    int GetDsr();
+    void ResetDtr();
+    void SetDtr();
+    void ResetRts();
+    void SetRts();
+    void EnableAutoRts();
+    void DisableAutoRts();
+    void Write(char ch);
+    void Write(const char *buf, int count);
+    void Write(const char *str);
+    void WaitForSendCompleted();
+    int Poll();
+    char Read();
+    int WaitForChar(long Timeout);
 
     void EnableCts();
     void DisableCts();
 
-        void (*OnChar)(TSerialDevice *Serial, char ch);
+    void (*OnChar)(TSerialDevice *Serial, char ch);
 
 protected:
-        virtual void SignalNewData();
-        virtual void Add(TWait *Wait);
+    virtual void SignalNewData();
+    virtual void Add(TWait *Wait);
 
-        virtual void Execute();
+    virtual void Execute();
 
 private:
-        void Init(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
-        void OpenPort();
-        int GetNextDumpFile();
-        void DumpOnce();
+    void Init(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
+    void OpenPort();
+    int GetNextDumpFile();
+    void DumpOnce();
 
-        TSection FSection;
-        int FHandle;
+    TSection FSection;
+    int FHandle;
 
     int FPort;
-        long FBaudrate;
-        char FParity;
-        int FDataBits;
-        int FStopBits;
-        int FDataMask;
-        int FAutoRts;
-        int FUseCts;
+    long FBaudrate;
+    char FParity;
+    int FDataBits;
+    int FStopBits;
+    int FDataMask;
+    int FAutoRts;
+    int FUseCts;
         
-        TFile *FDebugFile;
-        int FInChannel;
-        int FOutChannel;
+    TFile *FDebugFile;
+    int FInChannel;
+    int FOutChannel;
 
     int FEntryCount;
     struct TSerialDebug *FEntryArr;
@@ -143,28 +145,28 @@ private:
 class TSerialCommand
 {
 public:
-        TSerialCommand(TSerialDevice *serial);
-        virtual ~TSerialCommand();
-        int Run();
+    TSerialCommand(TSerialDevice *serial);
+    virtual ~TSerialCommand();
+    int Run();
 
 protected:
-        void Block();
-        void Unblock();
-        virtual int Execute() = 0;
-        void Clear();
-        void ResetDtr();
-        void SetDtr();
-        void ResetRts();
-        void SetRts();
-        void EnableAutoRts();
-        void DisableAutoRts();
-        void Write(char ch);
-        void Write(const char *buf, int count);
-        void Write(const char *str);
-        char Read();
+    void Block();
+    void Unblock();
+    virtual int Execute() = 0;
+    void Clear();
+    void ResetDtr();
+    void SetDtr();
+    void ResetRts();
+    void SetRts();
+    void EnableAutoRts();
+    void DisableAutoRts();
+    void Write(char ch);
+    void Write(const char *buf, int count);
+    void Write(const char *str);
+    char Read();
     int WaitForChar(long MaxWait);
 
-        TSerialDevice *FSerial;
+    TSerialDevice *FSerial;
 
 private:
 

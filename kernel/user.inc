@@ -2313,6 +2313,20 @@ GetComSendSpace       MACRO
 	UserGate get_com_send_space_nr
 						ENDM
 
+;	IN  BX		port handle
+;   OUT NC      ON
+;   OUT CY      OFF
+GetCts       MACRO
+	UserGate read_cts_nr
+						ENDM
+
+;	IN  BX		port handle
+;   OUT NC      ON
+;   OUT CY      OFF
+GetDsr       MACRO
+	UserGate read_dsr_nr
+						ENDM
+
 ;;;;;;;;;;;;;; PRINTER ;;;;;;;;;;;;
 
 ;   OUT AL      Printer #

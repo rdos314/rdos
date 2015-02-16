@@ -243,6 +243,10 @@ main:
     mov rcx,[rcx+EFI_SYSTEM_TABLE.ConOut]
     call [rcx+SIMPLE_TEXT_OUTPUT_INTERFACE.OutputString]
 ;
+
+Stopl:
+    jmp Stopl
+    
     add rsp,4*8
     mov eax,EFI_SUCCESS
     retn	
@@ -263,6 +267,6 @@ section '.data' data readable writeable
 efi_handler:	dq 0
 efi_ptr:	    dq 0
 uefi_rsptmp:	dq 0
-_hello          du 'Hello World', 13, 10, 0
+_hello          du 13, 10, 'Hello World', 13, 10, 0
 
 ; section '.reloc' fixups data discardable

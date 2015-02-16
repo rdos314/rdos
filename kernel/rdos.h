@@ -343,6 +343,8 @@ void RDOSAPI RdosEnableCts(int Handle);
 void RDOSAPI RdosDisableCts(int Handle);
 void RDOSAPI RdosEnableAutoRts(int Handle);
 void RDOSAPI RdosDisableAutoRts(int Handle);
+int RDOSAPI RdosGetCts(int Handle);
+int RDOSAPI RdosGetDsr(int Handle);
 void RDOSAPI RdosSetDtr(int Handle);
 void RDOSAPI RdosResetDtr(int Handle);
 void RDOSAPI RdosSetRts(int Handle);

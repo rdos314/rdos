@@ -733,6 +733,9 @@
 
 #define usergate_reset_lon_module 0x00000240
 
+#define usergate_get_cts 0x00000241
+#define usergate_get_dsr 0x00000242
+
 
 
 #ifdef __FLAT__
@@ -1471,6 +1474,9 @@
 
 #define CallGate_reset_lon_module 0x67 0x9a 64 2 0 0 3 0
 
+#define CallGate_get_cts 0x67 0x9a 65 2 0 0 3 0
+#define CallGate_get_dsr 0x67 0x9a 66 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2206,5 +2212,8 @@
 #define CallGate_wait_for_can_module_programming 0x3e 0x67 0x9a 63 2 0 0 3 0
 
 #define CallGate_reset_lon_module 0x3e 0x67 0x9a 64 2 0 0 3 0
+
+#define CallGate_get_cts 0x3e 0x67 0x9a 65 2 0 0 3 0
+#define CallGate_get_dsr 0x3e 0x67 0x9a 66 2 0 0 3 0
 
 #endif

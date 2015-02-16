@@ -1050,6 +1050,44 @@ void TSerialDevice::DisableCts()
 
 /*##########################################################################
 #
+#   Name       : TSerialDevice::GetCts
+#
+#   Purpose....: Get CTS state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TSerialDevice::GetCts()
+{
+    if (FHandle)
+        return RdosGetCts(FHandle);
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TSerialDevice::GetDsr
+#
+#   Purpose....: Get DSR state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TSerialDevice::GetDsr()
+{
+    if (FHandle)
+        return RdosGetDsr(FHandle);
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TSerialDevice::ResetDtr
 #
 #   Purpose....: Reset DTR signal

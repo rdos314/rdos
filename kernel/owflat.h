@@ -852,6 +852,28 @@
     CallGate_disable_auto_rts  \
     parm [ebx];
 
+#pragma aux RdosGetCts = \
+    CallGate_get_cts  \
+    "jc CtsOff" \
+    "mov eax,1" \
+    "jmp CtsDone" \
+    "CtsOff:" \
+    "xor eax,eax" \
+    "CtsDone:" \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosGetDsr = \
+    CallGate_get_dsr  \
+    "jc DsrOff" \
+    "mov eax,1" \
+    "jmp DsrDone" \
+    "DsrOff:" \
+    "xor eax,eax" \
+    "DsrDone:" \
+    parm [ebx] \
+    value [eax];
+
 #pragma aux RdosSetDtr = \
     CallGate_set_dtr  \
     parm [ebx];

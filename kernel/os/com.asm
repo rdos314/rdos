@@ -817,6 +817,96 @@ get_com_send_space      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           get_cts
+;
+;           description:    Get CTS signal
+;
+;           PARAMETERS:     BX          Port handle
+;
+;           RETURNS:        NC          ON
+;                           CY          OFF
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_cts_name DB 'Get CTS',0
+
+get_cts Proc far
+    push ds
+    push ax
+    push ebx
+    push dx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc get_cts_done
+;
+    mov ds,[ebx].port_sel
+    mov ds,ds:com_device
+    mov ebx,ds:cd_get_line_state_proc
+    or ebx,ds:cd_get_line_state_proc+4
+    clc
+    jz get_cts_done
+;    
+    call fword ptr ds:cd_get_line_state_proc
+    rcr al,1
+    cmc
+
+get_cts_done:
+    pop dx
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+get_cts Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           get_dsr
+;
+;           description:    Get DSR signal
+;
+;           PARAMETERS:     BX          Port handle
+;
+;           RETURNS:        NC          ON
+;                           CY          OFF
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_dsr_name DB 'Get DSR',0
+
+get_dsr Proc far
+    push ds
+    push ax
+    push ebx
+    push dx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc get_dsr_done
+;
+    mov ds,[ebx].port_sel
+    mov ds,ds:com_device
+    mov ebx,ds:cd_get_line_state_proc
+    or ebx,ds:cd_get_line_state_proc+4
+    clc
+    jz get_dsr_done
+;
+    call fword ptr ds:cd_get_line_state_proc
+    rcr al,2
+    cmc
+
+get_dsr_done:
+    pop dx
+    pop ebx
+    pop ax
+    pop ds
+    retf32
+get_dsr Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           set_dtr
 ;
 ;           description:    Set DTR signal
@@ -1537,6 +1627,18 @@ init    Proc far
     mov edi,OFFSET disable_auto_rts_name
     xor dx,dx
     mov ax,disable_auto_rts_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_cts
+    mov edi,OFFSET get_cts_name
+    xor dx,dx
+    mov ax,get_cts_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_dsr
+    mov edi,OFFSET get_dsr_name
+    xor dx,dx
+    mov ax,get_dsr_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET set_dtr
