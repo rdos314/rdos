@@ -262,26 +262,26 @@ public:
 
     virtual void Reset();
 
-    char ReadMemoryByte(unsigned long long Address);
-    short int ReadMemoryWord(unsigned long long Address);
-    long ReadMemoryDword(unsigned long long Address);
-    long long ReadMemoryQword(unsigned long long Address);
+    virtual char ReadMemoryByte(unsigned long long Address);
+    virtual short int ReadMemoryWord(unsigned long long Address);
+    virtual long ReadMemoryDword(unsigned long long Address);
+    virtual long long ReadMemoryQword(unsigned long long Address);
 
-    void WriteMemoryByte(unsigned long long Address, char val);
-    void WriteMemoryWord(unsigned long long Address, short int val);
-    void WriteMemoryDword(unsigned long long Address, long val);
-    void WriteMemoryQword(unsigned long long Address, long long val);
+    virtual void WriteMemoryByte(unsigned long long Address, char val);
+    virtual void WriteMemoryWord(unsigned long long Address, short int val);
+    virtual void WriteMemoryDword(unsigned long long Address, long val);
+    virtual void WriteMemoryQword(unsigned long long Address, long long val);
 
-    char ReadIoByte(unsigned short int Port);
-    short int ReadIoWord(unsigned short int Port);
-    long ReadIoDword(unsigned short int Port);
+    virtual char ReadIoByte(unsigned short int Port);
+    virtual short int ReadIoWord(unsigned short int Port);
+    virtual long ReadIoDword(unsigned short int Port);
 
-    void WriteIoByte(unsigned short int Port, char val);
-    void WriteIoWord(unsigned short int Port, short int val);
-    void WriteIoDword(unsigned short int Port, long val);
+    virtual void WriteIoByte(unsigned short int Port, char val);
+    virtual void WriteIoWord(unsigned short int Port, short int val);
+    virtual void WriteIoDword(unsigned short int Port, long val);
 
-    void WriteMsr(unsigned long Address, long long val);
-    long long ReadMsr(unsigned long Address);
+    virtual void WriteMsr(unsigned long Address, long long val);
+    virtual long long ReadMsr(unsigned long Address);
 
     void SysCall();
     void AddBreakpoint(unsigned short Selector, unsigned long long Offset);

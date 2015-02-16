@@ -38,12 +38,17 @@ public:
 
 	virtual void Reset();
 
-protected:
-	virtual char ReadCode(unsigned long Address);
-	virtual char ReadFromMemory(unsigned long Address);
-	virtual void WriteToMemory(unsigned long Address, char Value);
+    virtual char ReadMemoryByte(unsigned long long Address);
+    virtual short int ReadMemoryWord(unsigned long long Address);
+    virtual long ReadMemoryDword(unsigned long long Address);
+    virtual long long ReadMemoryQword(unsigned long long Address);
 
-private:
+    virtual void WriteMemoryByte(unsigned long long Address, char val);
+    virtual void WriteMemoryWord(unsigned long long Address, short int val);
+    virtual void WriteMemoryDword(unsigned long long Address, long val);
+    virtual void WriteMemoryQword(unsigned long long Address, long long val);
+
+protected:
     char *FIdb;
 };
 
