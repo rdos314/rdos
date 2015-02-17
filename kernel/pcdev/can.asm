@@ -1010,7 +1010,9 @@ send_can_bus_msg    Proc far
     push ecx
     push esi
     push edi
+    push bp
 ;    
+    mov bp,2000
     mov si,SEG data
     mov ds,si
 
@@ -1028,6 +1030,24 @@ scRetry:
 ;
     mov ax,1
     WaitMilliSec
+;
+    sub bp,1
+    jnz scRetry
+;
+    int 3        
+    push ds
+    push bx
+;
+    mov bx,SEG data
+    mov ds,bx
+    mov ds:can_reset,1
+    mov bx,ds:can_thread
+    Signal
+;
+    pop bx
+    pop ds  
+;
+    mov bp,2000          
     jmp scRetry
 
 scDo:    
@@ -1046,6 +1066,7 @@ scDo:
     mov bx,ds:can_thread
     Signal
 ;
+    pop bp
     pop edi
     pop esi
     pop ecx
