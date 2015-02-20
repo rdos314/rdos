@@ -893,7 +893,6 @@ switch_to_long_mode   Proc far
     push edx
     pushf
 ;
-    int 3
     mov ebx,eax
     cli
 ;
@@ -1133,7 +1132,6 @@ create_long_thread   Proc far
     pop eax
     mov ah,2
     CreateThread
-    int 3
     pop gs
     ret
 create_long_thread  Endp
@@ -3101,7 +3099,6 @@ protection_fault:
     jne gpfNotInt
 ;
     mov al,[edx+1]
-    int 3
     cmp al,66h
     je gpfRetry
 ;
@@ -4834,6 +4831,7 @@ load_long_regs:
     mov gs,ax    
     or ax,ax
     jnz load_tls_done
+    jmp load_tls_done   ; test, should be removed!
 ;
     push rcx
     mov eax,dword ptr [edx].p_tls_linear
@@ -5367,7 +5365,6 @@ alloc_sect_loop:
     mov rax,long_kernel_data_sel
     mov ss,ax
 ;
-    int 3
     mov rax,long_user_data_sel
     push rax
     push rdx
