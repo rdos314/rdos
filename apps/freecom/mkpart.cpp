@@ -118,12 +118,17 @@ int TMakePartitionCommand::Make(TDisc *Disc, const char *FsName, int Size)
             if (ok)
                 GptDisc->Write();        
 
+            RdosWaitMilli(1000);
+            Disc->WaitForIdle();
             delete GptDisc;
         }
         else
         {
             DiscPart = new TIdeDiscPartition(Disc);
             ok = DiscPart->Add(FsName, Size, BootCode, BootSize);
+
+            RdosWaitMilli(1000);
+            Disc->WaitForIdle();
             delete DiscPart;
         }
 

@@ -48,6 +48,8 @@ public:
 	int Write(long long Sector, const char *buf, int size);
 	int GetDrive(long Start, long Size);
 
+	void WaitForIdle();
+
 	long ChsToLba(const char *Data);
 	void LbaToChs(long Sector, char *Data);
 

@@ -736,4 +736,6 @@ reset_lon_module_nr             = 576
 get_cts_nr                      = 577
 get_dsr_nr                      = 578
 
-usergate_entries			    = 580
+is_disc_idle_nr                 = 579
+
+usergate_entries			    = 600

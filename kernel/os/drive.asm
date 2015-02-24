@@ -2762,6 +2762,47 @@ install_disc_done:
     retf32
 install_disc    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IsDiscIdle
+;
+;           DESCRIPTION:    Check if disc is idle
+;
+;           PARAMETERS:     AL          Disc #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_disc_idle_name       DB 'Is Disc Idle',0
+
+is_disc_idle    Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+;
+    cmp al,MAX_DRIVES
+    jae is_disc_idle_ok
+;
+    movzx bx,al
+    shl bx,1
+    mov ds,ds:[bx].disc_def_arr
+    mov ebx,ds:disc_pend_list
+    or ebx,ebx
+    jz is_disc_idle_ok
+;
+    stc
+    jmp is_disc_idle_done
+
+is_disc_idle_ok:
+    clc
+
+is_disc_idle_done:
+    pop ebx
+    pop ds
+    retf32
+is_disc_idle    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5961,6 +6002,12 @@ init    PROC far
     mov edi,OFFSET set_disc_info_name
     xor dx,dx
     mov ax,set_disc_info_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_disc_idle
+    mov edi,OFFSET is_disc_idle_name
+    xor dx,dx
+    mov ax,is_disc_idle_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET allocate_fixed_drive

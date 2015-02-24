@@ -190,6 +190,19 @@ int TDisc::GetHeads()
     return FHeads;
 }
 
+/*##################  TDisc::WaitForIdle  #############
+*   Purpose....: Wait for disc idle
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TDisc::WaitForIdle()
+{
+    while (!RdosIsDiscIdle(FDisc))
+        RdosWaitMilli(250);
+}
+
 /*##################  TDisc::Read  #############
 *   Purpose....: Read a sector
 *   In params..: *                                                        #

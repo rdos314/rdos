@@ -1684,6 +1684,12 @@ GetFloppyDisc     MACRO
 						ENDM
 
 ;	IN	AL			Disc #
+;   OUT NC          Idle
+IsDiscIdle     MACRO
+	UserGate is_disc_idle_nr
+						ENDM
+
+;	IN	AL			Disc #
 ;	OUT	CX			Bytes / sector
 ;	OUT	EDX:EAX	    Total # of sectors
 ;	OUT SI			BIOS sectors / cylinder

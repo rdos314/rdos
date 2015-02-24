@@ -2451,6 +2451,12 @@
     value [eax] \
     modify [ebx ecx edx esi edi];
 
+#pragma aux RdosIsDiscIdle = \
+    CallGate_is_disc_idle  \
+    CarryToBool \
+    parm [eax]  \
+    value [eax];
+
 #pragma aux RdosReadDisc = \
     CallGate_read_long_disc  \
     CarryToBool \
