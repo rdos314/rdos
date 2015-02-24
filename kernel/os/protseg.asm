@@ -66,8 +66,16 @@ local_get_selector_base_size  PROC near
 get_selector_ldt:
     GetThread
     mov ds,ax
-    mov ds,ds:p_ldt_sel
-    jmp get_selector_check
+    push bx
+    mov dx,bx
+    mov bx,ds:p_ldt_sel
+    mov ax,gdt_sel
+    mov ds,ax
+    cmp dx,ds:[bx]
+    mov ds,bx
+    pop bx
+    jb get_selector_check
+    jmp get_selector_error
 
 get_selector_gdt:
     mov ax,gdt_sel
