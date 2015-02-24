@@ -338,6 +338,27 @@ void TDebugThread::SetupTrace()
 
 /*##########################################################################
 #
+#   Name       : TDebugThread::ClearBreak
+#
+#   Purpose....: Clear breakpoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebugThread::ClearBreak(TDebugBreak *Break)
+{
+    if ((Break->Sel & 0x3) == 0x3)
+    {
+        if (Break->IsActive)
+            RdosWriteThreadMem(ThreadID, Break->Sel, Break->Offset, &Break->Instr, 1);
+        Break->IsActive = FALSE;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TDebugThread::ActivateBreaks
 #
 #   Purpose....: Activate breakpoints
@@ -373,8 +394,8 @@ void TDebugThread::ActivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList
             {
                 RdosReadThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
                 RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &brinstr, 1);
-                b->IsActive = TRUE;
             }
+            b->IsActive = TRUE;
         }
         else
         {
@@ -422,7 +443,8 @@ void TDebugThread::DeactivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchLi
         {
             if ((b->Sel & 0x3) == 0x3)
             {
-                RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
+                if (b->IsActive)
+                    RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
                 b->IsActive = FALSE;
             }
             else
@@ -1924,6 +1946,7 @@ void TDebug::ClearBreak(int Sel, long Offset)
 {
     TDebugBreak *b;
     TDebugBreak *delbr;
+    TDebugThread *mthread;
     
     FSection.Enter();
 
@@ -1934,6 +1957,14 @@ void TDebug::ClearBreak(int Sel, long Offset)
         if (b->Offset == Offset && b->Sel == Sel)
         {
             BreakList = b->Next;
+
+            if (b->IsActive)
+            {
+                mthread = GetMainThread();
+                if (mthread)
+                    mthread->ClearBreak(b);
+            }
+            
             delete b;
         }
         else
@@ -1945,6 +1976,15 @@ void TDebug::ClearBreak(int Sel, long Offset)
                 if (delbr->Offset == Offset && delbr->Sel == Sel)
                 {
                     b->Next = delbr->Next;
+
+
+                    if (delbr->IsActive)
+                    {
+                        mthread = GetMainThread();
+                        if (mthread)
+                            mthread->ClearBreak(delbr);
+                    }
+
                     delete delbr;
                 }
                 else

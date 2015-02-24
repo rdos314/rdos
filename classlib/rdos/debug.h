@@ -124,6 +124,7 @@ public:
     int WriteMem(int Sel, long Offset, char *Buf, int Size);
     void WriteRegs();
 
+    void ClearBreak(TDebugBreak *Break);
     void ActivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList);
     void DeactivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList);
 
