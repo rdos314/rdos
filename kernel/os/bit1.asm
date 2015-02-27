@@ -3246,6 +3246,7 @@ draw_string_char_loop:
     call AntiAlias
     pop cx
 ;
+    inc word ptr [ebp].curr_y
     movzx eax,ds:v_row_size
     shl eax,3
     add edi,eax
