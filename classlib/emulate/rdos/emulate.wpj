@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
-0
-0
+822
+828
 8192
-8660
+8650
 2
 MProject
 3
@@ -30,8 +30,8 @@ VComponent
 WRect
 0
 0
-5662
-4252
+5656
+4242
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 11
 emulate.tgt
 0
-0
+21
 7
