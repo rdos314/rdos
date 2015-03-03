@@ -39,7 +39,7 @@ public:
     virtual int GetSize();
     virtual void OutByte(int Num, int Offset, char val);
 
-    (*OnChange)(TLatch *latch, char val);
+    void (*OnChange)(TLatch *latch, char val);
 
 private:
     char FData;
