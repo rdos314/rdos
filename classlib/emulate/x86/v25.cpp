@@ -45,7 +45,16 @@ TV25Cpu::TV25Cpu()
 {
     FBus = 0;
     memset(FIdb, 0xFF, 0x100);
-    FIdb[0xFF] = 0;
+
+    OnReadP0 = 0;
+    OnWriteP0 = 0;
+    OnReadP1 = 0;
+    OnWriteP1 = 0;
+    OnReadP2 = 0;
+    OnWriteP2 = 0;
+    OnReadPT = 0;
+
+    Reset();
 }
 
 /*##################  TV25::~TV25  ###############
@@ -70,6 +79,14 @@ void TV25Cpu::Reset()
 {
     TCpu::Reset();
     CpuState.Reg_cs.base = 0xF0000;
+
+    FIdb[1] = 0xFF;
+    FIdb[2] = 0;
+    FIdb[9] = 0xFF;
+    FIdb[0xA] = 0;
+    FIdb[0x11] = 0xFF;
+    FIdb[0x12] = 0;
+    FIdb[0x3B] = 0;    
     FIdb[0xFF] = 0;
 }
 
@@ -94,6 +111,50 @@ void TV25Cpu::DefineBus(TBus *Bus)
 *##########################################################################*/
 char TV25Cpu::ReadIdbByte(int offset)
 {
+    char val;
+    char org;
+
+    switch (offset)
+    {
+        case 0:
+            if (OnReadP0)
+                val = (*OnReadP0)(this);
+            else
+                val = FIdb[offset];
+
+            val = val & FIdb[1];
+            org = FIdb[0] & (~FIdb[1]);
+            return val | org;
+
+        case 0x8:
+            if (OnReadP1)
+                val = (*OnReadP1)(this);
+            else
+                val = FIdb[offset];
+
+            val = val & FIdb[0x9];
+            org = FIdb[0x8] & (~FIdb[0x9]);
+            return val | org;
+
+        case 0x10:
+            if (OnReadP2)
+                val = (*OnReadP2)(this);
+            else
+                val = FIdb[offset];
+
+            val = val & FIdb[0x11];
+            org = FIdb[0x10] & (~FIdb[0x11]);
+            return val | org;
+
+        case 0x38:
+            if (OnReadPT)
+                val = (*OnReadPT)(this);
+            else
+                val = FIdb[offset];
+
+            return val;
+    }
+            
     return FIdb[offset];
 }
 
@@ -119,6 +180,38 @@ short int TV25Cpu::ReadIdbWord(int offset)
 *##########################################################################*/
 void TV25Cpu::WriteIdbByte(int offset, char val)
 {
+    char mask;
+
+    switch (offset)
+    {
+        case 0:
+            if (OnWriteP0)
+            {
+                mask = ~FIdb[1];
+                if (mask)
+                    (*OnWriteP0)(this, val, mask);
+            }
+            break;
+
+        case 0x8:
+            if (OnWriteP1)
+            {
+                mask = ~FIdb[0x9];
+                if (mask)
+                    (*OnWriteP1)(this, val, mask);
+            }
+            break;
+
+        case 0x10:
+            if (OnWriteP2)
+            {
+                mask = ~FIdb[0x11];
+                if (mask)
+                    (*OnWriteP2)(this, val, mask);
+            }
+            break;
+    }
+
     FIdb[offset] = val;
 }
 

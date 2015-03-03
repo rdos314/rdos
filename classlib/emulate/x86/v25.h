@@ -49,6 +49,17 @@ public:
     virtual void WriteMemoryDword(unsigned long long Address, long val);
     virtual void WriteMemoryQword(unsigned long long Address, long long val);
 
+    char (*OnReadP0)(TV25Cpu *Cpu);
+    void (*OnWriteP0)(TV25Cpu *Cpu, char val, char mask);
+
+    char (*OnReadP1)(TV25Cpu *Cpu);
+    void (*OnWriteP1)(TV25Cpu *Cpu, char val, char mask);
+
+    char (*OnReadP2)(TV25Cpu *Cpu);
+    void (*OnWriteP2)(TV25Cpu *Cpu, char val, char mask);
+
+    char (*OnReadPT)(TV25Cpu *Cpu);
+
 protected:
     char ReadIdbByte(int offset);
     short int ReadIdbWord(int offset);
