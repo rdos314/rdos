@@ -49,6 +49,14 @@ public:
     virtual void WriteMemoryDword(unsigned long long Address, long val);
     virtual void WriteMemoryQword(unsigned long long Address, long long val);
 
+    virtual char ReadIoByte(unsigned short int Port);
+    virtual short int ReadIoWord(unsigned short int Port);
+
+    virtual void WriteIoByte(unsigned short int Port, char val);
+    virtual void WriteIoWord(unsigned short int Port, short int val);
+
+    virtual void UpdateTime(int ns);
+
     char (*OnReadP0)(TV25Cpu *Cpu);
     void (*OnWriteP0)(TV25Cpu *Cpu, char val, char mask);
 
@@ -64,11 +72,17 @@ protected:
     char ReadIdbByte(int offset);
     short int ReadIdbWord(int offset);
 
+    void SetTmc1(char val);
+    void NotifyTm1();
+    void DecTm1();
+
     void WriteIdbByte(int offset, char val);
     void WriteIdbWord(int offset, short int val);
 
     char FIdb[0x100];
     TBus *FBus;
+
+    int FNs;
 };
 
 #endif

@@ -80,6 +80,8 @@ void TV25Cpu::Reset()
     TCpu::Reset();
     CpuState.Reg_cs.base = 0xF0000;
 
+    FNs = 0;
+
     FIdb[1] = 0xFF;
     FIdb[2] = 0;
     FIdb[9] = 0xFF;
@@ -87,6 +89,7 @@ void TV25Cpu::Reset()
     FIdb[0x11] = 0xFF;
     FIdb[0x12] = 0;
     FIdb[0x3B] = 0;    
+    FIdb[0x91] = 0;
     FIdb[0xFF] = 0;
 }
 
@@ -210,6 +213,10 @@ void TV25Cpu::WriteIdbByte(int offset, char val)
                     (*OnWriteP2)(this, val, mask);
             }
             break;
+
+        case 0x91:
+            SetTmc1(val);
+            break;
     }
 
     FIdb[offset] = val;
@@ -225,6 +232,7 @@ void TV25Cpu::WriteIdbByte(int offset, char val)
 void TV25Cpu::WriteIdbWord(int offset, short int val)
 {
     short int *ptr = (short int *)(FIdb + offset);
+
     *ptr = val;
 }
 
@@ -417,4 +425,158 @@ void TV25Cpu::WriteMemoryDword(unsigned long long Address, long val)
 *##########################################################################*/
 void TV25Cpu::WriteMemoryQword(unsigned long long Address, long long val)
 {
+}
+
+/*##################  TV25Cpu::ReadIoByte  ###############
+*   Purpose....: Read byte from IO                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TV25Cpu::ReadIoByte(unsigned short int Port)
+{
+    if (FBus)
+        return FBus->InByte(Port);
+    else
+        return -1;
+}
+
+/*##################  TV25Cpu::ReadIoWord  ###############
+*   Purpose....: Read word from IO                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+short int TV25Cpu::ReadIoWord(unsigned short int Port)
+{
+    if (FBus)
+        return FBus->InWord(Port);
+    else
+        return -1;
+}
+
+/*##################  TV25Cpu::WriteIoByte  ###############
+*   Purpose....: Write byte to IO                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TV25Cpu::WriteIoByte(unsigned short int Port, char Val)
+{
+    if (FBus)
+        FBus->OutByte(Port, Val);
+}
+
+/*##################  TV25Cpu::WriteIoWord  ###############
+*   Purpose....: Write word to IO                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TV25Cpu::WriteIoWord(unsigned short int Port, short int Val)
+{
+    if (FBus)
+        FBus->OutWord(Port, Val);
+}
+
+/*##################  TV25Cpu::SetTmc1  ###############
+*   Purpose....: Set TMC1 register                                                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TV25Cpu::SetTmc1(char val)
+{
+    short int *sp;
+    short int sval;
+
+    if (val & 0x80)
+    {
+        if ((FIdb[0x91] & 0x80) == 0) 
+        {
+            sp = (short int *)(FIdb + 0x8A);
+            sval = *sp;
+            sp = (short int *)(FIdb + 0x88);
+            *sp = sval;
+        }
+    }            
+}
+
+/*##################  TV25Cpu::NotifyTm1  ###############
+*   Purpose....: Notify TM1                                                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TV25Cpu::NotifyTm1()
+{
+}
+
+/*##################  TV25Cpu::DecTm1  ###############
+*   Purpose....: Decrement TM1                                                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TV25Cpu::DecTm1()
+{
+    short int *sp;
+    short int sval;
+
+    sp = (short int *)(FIdb + 0x88);
+    sval = *sp;
+
+    sval--;
+    if (sval == 0)
+    {
+        sp = (short int *)(FIdb + 0x8A);
+        sval = *sp;
+        sp = (short int *)(FIdb + 0x88);
+        *sp = sval;
+
+        NotifyTm1();
+    }
+    else
+        *sp = sval;
+}
+
+/*##################  TV25Cpu::UpdateTime  ###############
+*   Purpose....: Update time                                                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TV25Cpu::UpdateTime(int ns)
+{
+    if (FIdb[0x91] & 0x80)
+    {
+        FNs += ns;
+
+        if (FIdb[0x91] & 0x40)
+        {
+            while (FNs > 256000)
+            {
+                FNs -= 256000;
+                DecTm1();
+            }
+        }
+        else
+        {
+            while (FNs > 12000)
+            {
+                FNs -= 12000;
+                DecTm1();
+            }
+        }
+    }
+
+    TCpu::UpdateTime(ns);
 }

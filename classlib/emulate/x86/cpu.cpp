@@ -976,6 +976,27 @@ long long TCpu::ReadMsr(unsigned long Address)
     }
 }
 
+/*##################  TCpu::UpdateTime  ###############
+*   Purpose....: Update time                                                                                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::UpdateTime(int ns)
+{
+    FTotalNs += ns;
+    FExtNs += ns;
+
+    while (FExtNs > FExtClkTime)
+    {
+        FExtNs -= FExtClkTime;
+
+        if (OnExtClk)
+            (*OnExtClk)(this);
+    }
+}
+
 /*##################  TCpu::EmulateOne  ###############
 *   Purpose....: Emulate one instruction                                                                                    #
 *   In params..: *                                                          #
@@ -994,16 +1015,7 @@ int TCpu::EmulateOne()
 
     ns = FCycleTime + CpuState.MemCount * FMemTime + CpuState.IoCount * FIoTime;
 
-    FTotalNs += ns;
-    FExtNs += ns;
-
-    while (FExtNs > FExtClkTime)
-    {
-        FExtNs -= FExtClkTime;
-
-        if (OnExtClk)
-            (*OnExtClk)(this);
-    }
+    UpdateTime(ns);
 
     return FALSE;
 }

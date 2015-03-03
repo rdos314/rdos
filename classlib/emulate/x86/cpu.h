@@ -283,6 +283,8 @@ public:
     virtual void WriteMsr(unsigned long Address, long long val);
     virtual long long ReadMsr(unsigned long Address);
 
+    virtual void UpdateTime(int ns);
+    
     void SysCall();
     void AddBreakpoint(unsigned short Selector, unsigned long long Offset);
     void ClearBreakpoints();
