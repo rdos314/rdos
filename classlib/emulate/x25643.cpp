@@ -48,6 +48,7 @@ TX25643::TX25643()
     FClk = 1;
     FSin = 1;
     FSout = 1;
+    FStatus = 0x30;
 }
 
 /*##################  TX25643::~TX25643  ###############
@@ -82,6 +83,8 @@ void TX25643::Load(TFile *File)
 void TX25643::SetCs()
 {
     FEnable = 1;
+    FCmdCount = 0;
+    FCmdVal = 0;
 }
 
 /*##################  TX25643::ResetCs  ###############
@@ -103,6 +106,9 @@ void TX25643::ResetCs()
 *##########################################################################*/
 void TX25643::SetClk()
 {
+    if (FClk == 0 && FEnable == 0)
+        NotifySetClk();
+         
     FClk = 1;
 }
 
@@ -114,6 +120,9 @@ void TX25643::SetClk()
 *##########################################################################*/
 void TX25643::ResetClk()
 {
+    if (FClk == 1 && FEnable == 0)
+        NotifyResetClk();
+         
     FClk = 0;
 }
 
@@ -148,4 +157,113 @@ void TX25643::ResetSin()
 int TX25643::ReadSout()
 {
     return FSout;
+}
+
+/*##################  TX25643::ExecuteCmd  ###############
+*   Purpose....: ExecuteCmd                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TX25643::ExecuteCmd()
+{
+    FDataCount = 0;
+    FDataVal = 0;
+
+    switch (FCmdVal)
+    {
+        case 4:
+            FStatus &= 0xBD;
+            break;
+
+        case 5:
+            FDataVal = FStatus;
+            break;
+            
+        case 6:
+            FStatus |= 2;
+            break;
+
+    }
+}
+
+/*##################  TX25643::ExecuteWrite  ###############
+*   Purpose....: ExecuteWrite                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TX25643::ExecuteWrite()
+{
+    switch (FCmdVal && (FStatus & 2))
+    {
+        case 1:
+            FStatus = FDataVal & 0x7F;
+            break;
+    }
+}
+
+/*##################  TX25643::NotifySetClk  ###############
+*   Purpose....: Notify set CLK trigger                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TX25643::NotifySetClk()
+{
+    if (FCmdCount < 8)
+    {
+        FCmdVal = FCmdVal << 1;
+        FCmdVal |= FSin;
+        FCmdCount++;
+
+        if (FCmdCount == 8)
+            ExecuteCmd();
+    } 
+    else
+    {
+        switch (FCmdVal)
+        {
+            case 1:
+            case 2:
+                if (FDataCount < 8)
+                {                
+                    FDataVal = FDataVal << 1;
+                    FDataVal |= FSin;
+                    FDataCount++;
+
+                    if (FDataCount == 8)
+                        ExecuteWrite();
+                }
+                break;
+        }    
+    }
+}
+
+/*##################  TX25643::NotifyResetClk  ###############
+*   Purpose....: Notify reset CLK trigger                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TX25643::NotifyResetClk()
+{
+    if (FCmdCount == 8)
+    {    
+        switch (FCmdVal)
+        {
+            case 5:
+                if (FDataCount < 8)
+                {                
+                    if (FDataVal & 0x80)
+                        FSout = 1;
+                    else
+                        FSout = 0;
+                        
+                    FDataVal = FDataVal << 1;
+                    FDataCount++;
+                }
+                break;
+        }    
+    }
 }

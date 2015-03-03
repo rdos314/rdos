@@ -20,54 +20,29 @@
 *
 * The author of this program may be contacted at leif@rdos.net
 *
-* X25643.H
-* X25643 emulation
+* LATCH.H
+* IO latch emulation
 *
 *##########################################################################*/
 
-#ifndef _X25643_H
-#define _X25643_H
+#ifndef _LATCH_H
+#define _LATCH_H
 
-#include "file.h"
+#include "bus.h"
 
-class TX25643
+class TLatch : public TBusFunction
 {
 public:
-    TX25643();
-    ~TX25643();
+    TLatch(TBus *Bus, int Address);
+    ~TLatch();
 
-    void Load(TFile *File);
+    virtual int GetSize();
+    virtual void OutByte(int Num, int Offset, char val);
 
-    void SetCs();
-    void ResetCs();
+    (*OnChange)(TLatch *latch, char val);
 
-    void SetClk();
-    void ResetClk();
-
-    void SetSin();
-    void ResetSin();
-
-    int ReadSout();
-    
 private:
-    void ExecuteCmd();
-    void ExecuteWrite();
-    void NotifySetClk();
-    void NotifyResetClk();
-
-    int FEnable;
-    int FClk;
-    int FSin;
-    int FSout;
-    int FStatus;
-
-    int FCmdCount;    
-    int FCmdVal;
-
-    int FDataCount;
-    int FDataVal;
-
-    char FData[0x2000];
+    char FData;
 };
 
 #endif
