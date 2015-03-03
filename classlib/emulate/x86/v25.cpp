@@ -43,8 +43,9 @@
 *##########################################################################*/
 TV25Cpu::TV25Cpu()
 {
-    FIdb = new char[0x1000];
-    memset(FIdb, 0xFF, 0x1000);
+    FBus = 0;
+    memset(FIdb, 0xFF, 0x100);
+    FIdb[0xFF] = 0;
 }
 
 /*##################  TV25::~TV25  ###############
@@ -56,8 +57,6 @@ TV25Cpu::TV25Cpu()
 *##########################################################################*/
 TV25Cpu::~TV25Cpu()
 {
-    if (FIdb)
-        delete FIdb;
 }
 
 /*##################  TV25Cpu::Reset  ###############
@@ -71,7 +70,69 @@ void TV25Cpu::Reset()
 {
     TCpu::Reset();
     CpuState.Reg_cs.base = 0xF0000;
-    *(FIdb + 0xFFF) = 0xFF;
+    FIdb[0xFF] = 0;
+}
+
+/*##################  TV25Cpu::DefineBus  ###############
+*   Purpose....: Define bus                                                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TV25Cpu::DefineBus(TBus *Bus)
+{
+    FBus = Bus;
+}
+
+/*##################  TV25Cpu::ReadIdbByte  ###############
+*   Purpose....: Read byte from IDB                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TV25Cpu::ReadIdbByte(int offset)
+{
+    return FIdb[offset];
+}
+
+/*##################  TV25Cpu::ReadIdbWord  ###############
+*   Purpose....: Read word from IDB                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+short int TV25Cpu::ReadIdbWord(int offset)
+{
+    short int *ptr = (short int *)(FIdb + offset);
+    return *ptr;
+}
+
+/*##################  TV25Cpu::WriteIdbByte  ###############
+*   Purpose....: Write byte to IDB                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TV25Cpu::WriteIdbByte(int offset, char val)
+{
+    FIdb[offset] = val;
+}
+
+/*##################  TV25Cpu::WriteIdbWord  ###############
+*   Purpose....: Write word to IDB                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TV25Cpu::WriteIdbWord(int offset, short int val)
+{
+    short int *ptr = (short int *)(FIdb + offset);
+    *ptr = val;
 }
 
 /*##################  TV25Cpu::ReadMemoryByte  ###############
@@ -83,15 +144,25 @@ void TV25Cpu::Reset()
 *##########################################################################*/
 char TV25Cpu::ReadMemoryByte(unsigned long long Address)
 {
-    unsigned long IdbBase = *(FIdb + 0xFFF) << 12;
+    unsigned long IdbBase = FIdb[0xFF] << 12;
+    int offset;
 
     if (Address == 0xFFFFF)
-        return *(FIdb + 0xFFF);
+        return FIdb[0xFF];
 
     if ((Address & 0xFF000) == IdbBase)
-        return *(FIdb + (Address & 0xFFF));
+    {
+        offset = Address & 0xFFF;
+        if (offset >= 0xF00)
+            return ReadIdbByte(offset & 0xFF);
+        else
+            return -1;
+    }
 
-    return TCpu::ReadMemoryByte(Address);
+    if (FBus)
+        return FBus->ReadMemoryByte(Address);
+    else
+        return -1;
 }
 
 /*##################  TV25Cpu::ReadMemoryWord  ###############
@@ -103,12 +174,82 @@ char TV25Cpu::ReadMemoryByte(unsigned long long Address)
 *##########################################################################*/
 short int TV25Cpu::ReadMemoryWord(unsigned long long Address)
 {
-    unsigned long IdbBase = *(FIdb + 0xFFF) << 12;
+    unsigned long IdbBase = FIdb[0xFF] << 12;
+    int offset;
 
     if ((Address & 0xFF000) == IdbBase)
-        return *((short int *)(FIdb + (Address & 0xFFE)));
+    {
+        offset = Address & 0xFFF;
+        if (offset >= 0xF00)
+            return ReadIdbWord(offset & 0xFF);
+        else
+            return -1;
+    }
 
-    return TCpu::ReadMemoryWord(Address);
+    if (FBus)
+        return FBus->ReadMemoryWord(Address);
+    else
+        return -1;
+}
+
+/*##################  TV25Cpu::ReadMemoryDword  ###############
+*   Purpose....: Read dword from memory                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long TV25Cpu::ReadMemoryDword(unsigned long long Address)
+{
+    unsigned long IdbBase = FIdb[0xFF] << 12;
+    int offset;
+
+    if ((Address & 0xFF000) == IdbBase)
+    {
+        offset = Address & 0xFFF;
+        if (offset >= 0xF00)
+        {
+            offset = offset & 0xFF;
+            return *(long *)(FIdb + offset);
+        }
+        else
+            return -1;
+    }
+
+    if (FBus)
+        return FBus->ReadMemoryDword(Address);
+    else
+        return -1;
+}
+
+/*##################  TV25Cpu::ReadMemoryQword  ###############
+*   Purpose....: Read qword from memory                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+long long TV25Cpu::ReadMemoryQword(unsigned long long Address)
+{
+    unsigned long IdbBase = FIdb[0xFF] << 12;
+    int offset;
+
+    if ((Address & 0xFF000) == IdbBase)
+    {
+        offset = Address & 0xFFF;
+        if (offset >= 0xF00)
+        {
+            offset = offset & 0xFF;
+            return *(long long *)(FIdb + offset);
+        }
+        else
+            return -1;
+    }
+
+    if (FBus)
+        return FBus->ReadMemoryQword(Address);
+    else
+        return -1;
 }
 
 /*##################  TV25Cpu::WriteMemoryByte  ###############
@@ -120,21 +261,24 @@ short int TV25Cpu::ReadMemoryWord(unsigned long long Address)
 *##########################################################################*/
 void TV25Cpu::WriteMemoryByte(unsigned long long Address, char val)
 {
-    unsigned long IdbBase = *(FIdb + 0xFFF) << 12;
+    unsigned long IdbBase = FIdb[0xFF] << 12;
+    int offset;
     
     if (Address == 0xFFFFF)
     {
-        *(FIdb + 0xFFF) = val;
+        FIdb[0xFF] = val;
         return;
     }
 
     if ((Address & 0xFF000) == IdbBase)
     {
-        *(FIdb + (Address & 0xFFF)) = val;
+        offset = Address & 0xFFF;
+        if (offset >= 0xF00)
+            WriteIdbByte(offset & 0xFF, val);
         return;
     }
 
-    TCpu::WriteMemoryByte(Address, val);
+    FBus->WriteMemoryByte(Address, val);
 }
 
 /*##################  TV25Cpu::WriteMemoryWord  ###############
@@ -146,13 +290,38 @@ void TV25Cpu::WriteMemoryByte(unsigned long long Address, char val)
 *##########################################################################*/
 void TV25Cpu::WriteMemoryWord(unsigned long long Address, short int val)
 {
-    unsigned long IdbBase = *(FIdb + 0xFFF) << 12;
+    unsigned long IdbBase = FIdb[0xFF] << 12;
+    int offset;
     
     if ((Address & 0xFF000) == IdbBase)
     {
-        *((short int *)(FIdb + (Address & 0xFFE))) = val;
+        offset = Address & 0xFFF;
+        if (offset >= 0xF00)
+            WriteIdbWord(offset & 0xFF, val);
         return;
     }
 
-    TCpu::WriteMemoryWord(Address, val);
+    FBus->WriteMemoryWord(Address, val);
+}
+
+/*##################  TV25Cpu::WriteMemoryDword  ###############
+*   Purpose....: Write memory dword                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TV25Cpu::WriteMemoryDword(unsigned long long Address, long val)
+{
+}
+
+/*##################  TV25Cpu::WriteMemoryQword  ###############
+*   Purpose....: Write memory qword                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TV25Cpu::WriteMemoryQword(unsigned long long Address, long long val)
+{
 }

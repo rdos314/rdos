@@ -231,7 +231,7 @@ public:
     TCpu();
     ~TCpu();
 
-    void DefineBus(TBus *Bus);
+    virtual void DefineBus(TBus *Bus);
 
     void Force386();
     void Force486();

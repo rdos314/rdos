@@ -37,6 +37,7 @@ public:
 	~TV25Cpu();
 
 	virtual void Reset();
+    virtual void DefineBus(TBus *Bus);
 
     virtual char ReadMemoryByte(unsigned long long Address);
     virtual short int ReadMemoryWord(unsigned long long Address);
@@ -49,7 +50,14 @@ public:
     virtual void WriteMemoryQword(unsigned long long Address, long long val);
 
 protected:
-    char *FIdb;
+    char ReadIdbByte(int offset);
+    short int ReadIdbWord(int offset);
+
+    void WriteIdbByte(int offset, char val);
+    void WriteIdbWord(int offset, short int val);
+
+    char FIdb[0x100];
+    TBus *FBus;
 };
 
 #endif
