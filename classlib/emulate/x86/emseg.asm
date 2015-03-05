@@ -36,6 +36,7 @@ include \rdos\classlib\emulate\x86\empage.inc
 include \rdos\classlib\emulate\x86\emtss.inc
 
         extrn _SysCall:near
+        extrn _Fint:near
 
 .code
 
@@ -64,6 +65,25 @@ EmulateSysCall Proc near
         call _SysCall
         ret
 EmulateSysCall  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           EmFint
+;
+;               description:    Emulate fint
+;
+;               PARAMETERS:     SS:EBP          CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public EmFint
+
+EmFint Proc near
+        push ebp
+        call _Fint
+        ret
+EmFint  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

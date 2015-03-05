@@ -20,8 +20,8 @@
 *
 * The author of this program may be contacted at leif@rdos.net
 *
-* CPU.CPP
-* CPU emulation
+* V25.CPP
+* V25 CPU emulation
 *
 *##########################################################################*/
 
@@ -34,6 +34,277 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+/*##################  TV25Int::TV25Int  ###############
+*   Purpose....: Constructor for V25 interrupt                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+TV25Int::TV25Int(TBus *Bus)
+  : TInterrupt(Bus)
+{
+    FCpu = 0;
+    FIrr = 0;
+    FImr = 0xFFFFFFFF;
+    FIsr = 0;
+    FEdge = 0;
+}
+
+/*##################  TV25Int::GetSize  ###############
+*   Purpose....: Get mapping size of device                                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+int TV25Int::GetSize()
+{
+    return 0;
+}
+
+/*##################  TV25Int::DefineCpu  ###############
+*   Purpose....: Define CPU                                             #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TV25Int::DefineCpu(TCpu *Cpu)
+{
+    FCpu = Cpu;
+}
+
+/*##################  TV25Int::GetIrr  ###############
+*   Purpose....: Get highest, non-masked IRR                                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+int TV25Int::GetIrr()
+{
+    int Value;
+    int Mask;
+    int Number;
+
+    Value = FIrr & ~FImr & ~FIsr;
+    if (Value)
+    {
+        Number = 0;
+        Mask = 1;
+
+        while (TRUE)
+        {
+            if (Mask & Value)
+                return Number;
+            else
+            {
+                Number++;
+                if (Number == 32)
+                    return -1;
+                else
+                    Mask = Mask << 1;
+            }
+        }
+    }
+    else
+        return -1;
+}
+
+/*##################  TV25Int::GetIsr  ###############
+*   Purpose....: Get highest ISR                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+int TV25Int::GetIsr()
+{
+    int Value;
+    int Mask;
+    int Number;
+
+    Value = FIsr;
+    if (Value)
+    {
+        Number = 0;
+        Mask = 1;
+
+        while (TRUE)
+        {
+            if (Mask & Value)
+                return Number;
+            else
+            {
+                Number++;
+                if (Number == 32)
+                    return -1;
+                else
+                    Mask = Mask << 1;
+            }
+        }
+    }
+    else
+        return -1;
+}
+
+/*##################  TV25Int::Update  ###############
+*   Purpose....: Update int status                                          #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TV25Int::Update()
+{
+    int Number;
+    char Vector;
+    int Active = FALSE;
+
+    Number = GetIrr();
+    if (Number >= 0)
+        if (Number > GetIsr())
+            Active = TRUE;
+    
+    if (Active)
+    {
+        if (FCpu)
+            FCpu->SetInt(this);
+    }
+    else
+    {
+        if (FCpu)
+            FCpu->ResetInt(this);
+    }
+}
+
+/*##################  TV25Int::Enable  ###############
+*   Purpose....: Enable IRQ line                                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TV25Int::Enable(int Number)
+{
+    int Mask;
+
+    Mask = 1 << Number;
+    FImr = FImr & ~Mask;
+    Update();
+}
+
+/*##################  TV25Int::Disable  ###############
+*   Purpose....: Disable IRQ line                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TV25Int::Disable(int Number)
+{
+    int Mask;
+
+    Mask = 1 << Number;
+    FImr = FImr | Mask;
+    Update();
+}
+
+/*##################  TV25Int::Edge  ###############
+*   Purpose....: Edge trigger IRQ line                                  #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TV25Int::Edge(int Number)
+{
+    int Mask;
+
+    Mask = 1 << Number;
+    FIrr = FIrr | Mask;
+    FEdge = FEdge | Mask;
+    Update();
+}
+
+/*##################  TV25Int::Set  ###############
+*   Purpose....: Set IRQ line                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TV25Int::Set(int Number)
+{
+    int Mask;
+
+    Mask = 1 << Number;
+    FIrr = FIrr | Mask;
+    Update();
+}
+
+/*##################  TV25Int::Reset  ###############
+*   Purpose....: Reset IRQ line                                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TV25Int::Reset(int Number)
+{
+    int Mask;
+
+    Mask = 1 << Number;
+    FIrr = FIrr & ~Mask;
+    Update();
+}
+
+/*##################  TV25Int::Ack  ###############
+*   Purpose....: Ack reception of interrupt                                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+char TV25Int::Ack()
+{
+    int Mask;
+    int Number;
+    int Active = FALSE;
+
+    Number = GetIrr();
+    if (Number >= 0)
+        if (Number > GetIsr())
+            Active = TRUE;
+
+    if (Active)
+    {
+        Mask = 1 << Number;
+        FIsr = FIsr | Mask;
+        Update();
+
+        return Number;
+    }
+    else
+        return 0;
+}
+
+/*##################  TV25Int::Eoi  ###############
+*   Purpose....: EOI command                                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TV25Int::Eoi()
+{
+    int Mask;
+    int Number;
+
+    Number = GetIsr();
+
+    if (Number >= 0)
+    {
+        Mask = 1 << Number;
+        FIsr = FIsr & ~Mask;
+
+        if (FEdge & Mask)
+        {
+            FIrr = FIrr & ~Mask;
+            FEdge = FEdge & ~Mask;
+        }
+        Update();
+    }
+}
+
 /*##################  TV25Cpu::TV25Cpu  ###############
 *   Purpose....: Constructor for V25 CPU                                        #
 *   In params..: *                                                          #
@@ -43,7 +314,11 @@
 *##########################################################################*/
 TV25Cpu::TV25Cpu()
 {
+    CpuState.CpuType = 1;
+    CpuState.EflagsMask = 0xFFD7;
+
     FBus = 0;
+    FInt = 0;
     memset(FIdb, 0xFF, 0x100);
 
     OnReadP0 = 0;
@@ -66,6 +341,8 @@ TV25Cpu::TV25Cpu()
 *##########################################################################*/
 TV25Cpu::~TV25Cpu()
 {
+    if (FInt)
+        delete FInt;
 }
 
 /*##################  TV25Cpu::Reset  ###############
@@ -103,6 +380,8 @@ void TV25Cpu::Reset()
 void TV25Cpu::DefineBus(TBus *Bus)
 {
     FBus = Bus;
+    FInt = new TV25Int(Bus);
+    FInt->DefineCpu(this);
 }
 
 /*##################  TV25Cpu::ReadIdbByte  ###############
@@ -217,6 +496,19 @@ void TV25Cpu::WriteIdbByte(int offset, char val)
         case 0x91:
             SetTmc1(val);
             break;
+
+        case 0x9C:
+            SetTmic0(val);
+            break;
+            
+        case 0x9D:
+            SetTmic1(val);
+            break;
+            
+        case 0x9E:
+            SetTmic2(val);
+            break;
+            
     }
 
     FIdb[offset] = val;
@@ -483,6 +775,73 @@ void TV25Cpu::WriteIoWord(unsigned short int Port, short int Val)
         FBus->OutWord(Port, Val);
 }
 
+/*##################  TV25Cpu::Fint  ###############
+*   Purpose....: Do EOI                             #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TV25Cpu::Fint()
+{
+    if (FInt)
+        FInt->Eoi();
+}
+
+/*##################  TV25Cpu::SetTmic0  ###############
+*   Purpose....: Set TMIC0 register                                                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TV25Cpu::SetTmic0(char val)
+{
+    if (FInt)
+    {
+        if (val & 0x40)
+            FInt->Disable(28);
+        else
+            FInt->Enable(28);
+    }        
+}
+
+/*##################  TV25Cpu::SetTmic1  ###############
+*   Purpose....: Set TMIC1 register                                                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TV25Cpu::SetTmic1(char val)
+{
+    if (FInt)
+    {
+        if (val & 0x40)
+            FInt->Disable(29);
+        else
+            FInt->Enable(29);
+    }        
+}
+
+/*##################  TV25Cpu::SetTmic2  ###############
+*   Purpose....: Set TMIC2 register                                                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TV25Cpu::SetTmic2(char val)
+{
+    if (FInt)
+    {
+        if (val & 0x40)
+            FInt->Disable(30);
+        else
+            FInt->Enable(30);
+    }        
+}
+
 /*##################  TV25Cpu::SetTmc1  ###############
 *   Purpose....: Set TMC1 register                                                 #
 *   In params..: *                                                          #
@@ -516,6 +875,8 @@ void TV25Cpu::SetTmc1(char val)
 *##########################################################################*/
 void TV25Cpu::NotifyTm1()
 {
+    if (FInt)
+        FInt->Edge(30);
 }
 
 /*##################  TV25Cpu::DecTm1  ###############
@@ -562,17 +923,17 @@ void TV25Cpu::UpdateTime(int ns)
 
         if (FIdb[0x91] & 0x40)
         {
-            while (FNs > 256000)
+            while (FNs > 25600)
             {
-                FNs -= 256000;
+                FNs -= 25600;
                 DecTm1();
             }
         }
         else
         {
-            while (FNs > 12000)
+            while (FNs > 1200)
             {
-                FNs -= 12000;
+                FNs -= 1200;
                 DecTm1();
             }
         }

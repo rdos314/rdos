@@ -559,11 +559,151 @@ emt0FFA  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0FFC  DD OFFSET EmulateError,                 OFFSET EmulateError
 emt0FFE  DD OFFSET EmulateError,                 OFFSET EmulateError
 
+Em0FTab186:
+emt10F00  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F02  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F04  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F06  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F08  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F0A  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F0C  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F0E  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F10  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F12  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F14  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F16  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F18  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F1A  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F1C  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F1E  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F20  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F22  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F24  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F26  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F28  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F2A  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F2C  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F2E  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F30  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F32  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F34  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F36  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F38  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F3A  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F3C  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F3E  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F40  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F42  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F44  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F46  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F48  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F4A  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F4C  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F4E  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F50  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F52  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F54  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F56  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F58  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F5A  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F5C  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F5E  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F60  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F62  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F64  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F66  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F68  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F6A  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F6C  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F6E  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F70  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F72  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F74  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F76  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F78  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F7A  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F7C  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F7E  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F80  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F82  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F84  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F86  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F88  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F8A  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F8C  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F8E  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F90  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F92  DD OFFSET EmFint,                       OFFSET EmulateError
+emt10F94  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F96  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F98  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F9A  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F9C  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10F9E  DD OFFSET EmHlt,                        OFFSET EmulateError
+emt10FA0  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FA2  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FA4  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FA6  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FA8  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FAA  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FAC  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FAE  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FB0  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FB2  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FB4  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FB6  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FB8  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FBA  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FBC  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FBE  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FC0  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FC2  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FC4  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FC6  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FC8  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FCA  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FCC  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FCE  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FD0  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FD2  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FD4  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FD6  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FD8  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FDA  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FDC  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FDE  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FE0  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FE2  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FE4  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FE6  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FE8  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FEA  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FEC  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FEE  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FF0  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FF2  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FF4  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FF6  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FF8  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FFA  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FFC  DD OFFSET EmulateError,                 OFFSET EmulateError
+emt10FFE  DD OFFSET EmulateError,                 OFFSET EmulateError
+
 Em0F:
+        mov al,[ebp].cpu_type
+        cmp al,2
+        jb Em1860F
+;        
         call ReadCodeByte
         movzx ebx,al
         shl ebx,2
         jmp dword ptr [ebx].Em0FTab
+
+Em1860F:
+        call ReadCodeByte
+        movzx ebx,al
+        shl ebx,2
+        jmp dword ptr [ebx].Em0FTab186
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

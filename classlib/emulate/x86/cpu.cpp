@@ -122,6 +122,9 @@ long long ReadMsr(TCpuState *CpuState, unsigned long Address);
 void SysCall(TCpuState *CpuState);
 #pragma aux (EMAPI) SysCall;
 
+void Fint(TCpuState *CpuState);
+#pragma aux (EMAPI) Fint;
+
 };
 
 /*##################  GetIntVector  ###############
@@ -380,6 +383,18 @@ long long ReadMsr(TCpuState *CpuState, unsigned long Address)
 void SysCall(TCpuState *CpuState)
 {
     CpuState->Cpu->SysCall();
+}
+
+/*##################  Fint  ###############
+*   Purpose....: Fint                                                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void Fint(TCpuState *CpuState)
+{
+    CpuState->Cpu->Fint();
 }
 
 /*##################  TCpuState::TCpuState  ###############
@@ -726,6 +741,17 @@ void TCpu::ClearBreakpoints()
                         delete FBreakpoints[i];
                         FBreakpoints[i] = 0;
                 }
+}
+
+/*##################  TCpu::Fint  ###############
+*   Purpose....: Do fint (EOI on V25)                                                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::Fint()
+{
 }
 
 /*##################  TCpu::SysCall  ###############

@@ -30,6 +30,38 @@
 
 #include "cpu.h"
 
+class TV25Int : public TInterrupt
+{
+public:
+    TV25Int(TBus *Bus);
+
+    virtual int GetSize();
+
+    virtual void Set(int Number);
+    virtual void Reset(int Number);
+    virtual void Edge(int Number);
+    virtual char Ack();
+
+    void Enable(int Number);
+    void Disable(int Number);
+    void Eoi();
+
+    void DefineCpu(TCpu *Cpu);
+
+protected:
+    int GetIrr();
+    int GetIsr();
+    void Update();
+
+    TCpu *FCpu;
+    int FIrr;
+    int FImr;
+    int FIsr;
+    int FEdge;
+
+private:
+};
+
 class TV25Cpu : public TCpu
 {
 public:
@@ -55,6 +87,8 @@ public:
     virtual void WriteIoByte(unsigned short int Port, char val);
     virtual void WriteIoWord(unsigned short int Port, short int val);
 
+    virtual void Fint();
+
     virtual void UpdateTime(int ns);
 
     char (*OnReadP0)(TV25Cpu *Cpu);
@@ -73,6 +107,9 @@ protected:
     short int ReadIdbWord(int offset);
 
     void SetTmc1(char val);
+    void SetTmic0(char val);
+    void SetTmic1(char val);
+    void SetTmic2(char val);
     void NotifyTm1();
     void DecTm1();
 
@@ -81,6 +118,7 @@ protected:
 
     char FIdb[0x100];
     TBus *FBus;
+    TV25Int *FInt;
 
     int FNs;
 };

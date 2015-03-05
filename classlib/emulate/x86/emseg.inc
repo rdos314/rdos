@@ -41,6 +41,7 @@
 	extrn LoadSegment:near
 	extrn ValidateTssLdt:near
 	extrn ValidateTssCs:near
+	extrn EmFint:near
 
 	extrn TrapFault:near
 	extrn OpcodeFault:near

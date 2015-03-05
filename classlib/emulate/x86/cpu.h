@@ -283,6 +283,8 @@ public:
     virtual void WriteMsr(unsigned long Address, long long val);
     virtual long long ReadMsr(unsigned long Address);
 
+    virtual void Fint();
+
     virtual void UpdateTime(int ns);
     
     void SysCall();
