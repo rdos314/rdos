@@ -85,6 +85,7 @@ cm_id       DD ?
 cm_data     DD ?,?
 cm_size     DW ?
 cm_msg      DW ?
+cm_signal   DW ?
 
 can_msg_struc   ENDS
 
@@ -113,10 +114,10 @@ can_rec_section         section_typ <>
 can_send_clear          DD ?
 can_send_pend           DD ?
 can_send_used           DD ?
-can_send_arr            DB 16 * 16 DUP(?)
+can_send_arr            DB 16 * 32 DUP(?)
 
 can_rec_pend            DD ?
-can_rec_arr             DB 32 * 16 DUP(?)
+can_rec_arr             DB 32 * 32 DUP(?)
 
 can_id_hook_arr         DD 15 * 4 DUP(?)
 
@@ -256,7 +257,7 @@ rmRetry:
     jc rmRetry 
 
 rmGet:            
-    shl bx,4
+    shl bx,5
     add bx,OFFSET can_rec_arr
     mov ds:[bx].cm_msg,dx
 ;
@@ -359,7 +360,16 @@ ciReg:
     call ClearTxMsg
     sub ebx,11h
     lock bts ds:can_send_clear,ebx
-;    
+;
+    shl ebx,5
+    add ebx,OFFSET can_send_arr
+    mov bx,ds:[ebx].cm_signal
+    or bx,bx
+    jz ciNotifyOk
+;
+    Signal
+
+ciNotifyOk:    
     mov bx,ds:can_thread
     Signal
     jmp ciWriteLoop
@@ -916,7 +926,7 @@ ctRecLoop:
 
 ctRecNext:    
     inc bx
-    add si,16
+    add si,32
     shl edx,1
     loop ctRecLoop
 ;    
@@ -949,7 +959,7 @@ ctSendLoop:
 
 ctSendNext:
     shr eax,1
-    add si,16
+    add si,32
     inc bx
     sub cx,1
     jnz ctSendLoop    
@@ -1053,7 +1063,7 @@ scRetry:
 scDo:    
     bts ds:can_send_used,edi
     bts ds:can_send_pend,edi
-    shl edi,4
+    shl edi,5
     add edi,OFFSET can_send_arr
 ;
     movzx cx,cl
@@ -1061,6 +1071,7 @@ scDo:
     mov ds:[edi].cm_data,eax
     mov ds:[edi].cm_data+4,edx
     mov ds:[edi].cm_size,cx
+    mov ds:[edi].cm_signal,0
 ;
     LeaveSection ds:can_send_section
     mov bx,ds:can_thread
@@ -1074,6 +1085,94 @@ scDo:
     pop ds    
     retf32
 send_can_bus_msg    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SendCanBusSignal
+;
+;   DESCRIPTION:    Send CAN bus message, signal completion
+;
+;   PARAMETERS:     EDX:EAX     Data
+;                   CL          Size (0..8)
+;                   EBX         Identifier
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_can_bus_signal_name   DB 'Send CAN Bus Message Signal', 0
+
+send_can_bus_signal    Proc far
+    push ds
+    push ebx
+    push ecx
+    push esi
+    push edi
+    push bp
+;    
+    mov bp,2000
+    mov si,SEG data
+    mov ds,si
+
+scsRetry:    
+    EnterSection ds:can_send_section
+;    
+    mov esi,ds:can_send_used
+    not esi
+    bsf edi,esi
+;
+    cmp edi,10h
+    jb scsDo
+;
+    LeaveSection ds:can_send_section
+;
+    mov ax,1
+    WaitMilliSec
+;
+    sub bp,1
+    jnz scsRetry
+;
+    int 3        
+    push ds
+    push bx
+;
+    mov bx,SEG data
+    mov ds,bx
+    mov ds:can_reset,1
+    mov bx,ds:can_thread
+    Signal
+;
+    pop bx
+    pop ds  
+;
+    mov bp,2000          
+    jmp scsRetry
+
+scsDo:    
+    bts ds:can_send_used,edi
+    bts ds:can_send_pend,edi
+    shl edi,5
+    add edi,OFFSET can_send_arr
+;
+    movzx cx,cl
+    mov ds:[edi].cm_id,ebx
+    mov ds:[edi].cm_data,eax
+    mov ds:[edi].cm_data+4,edx
+    mov ds:[edi].cm_size,cx
+    GetThread
+    mov ds:[edi].cm_signal,ax
+;
+    LeaveSection ds:can_send_section
+    mov bx,ds:can_thread
+    Signal
+;
+    pop bp
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop ds    
+    retf32
+send_can_bus_signal    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1346,6 +1445,11 @@ init    PROC far
     mov esi,OFFSET send_can_bus_msg
     mov edi,OFFSET send_can_bus_msg_name
     mov ax,send_can_bus_msg_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET send_can_bus_signal
+    mov edi,OFFSET send_can_bus_signal_name
+    mov ax,send_can_bus_signal_nr
     RegisterOsGate
 ;
     mov esi,OFFSET has_can_send_buf
