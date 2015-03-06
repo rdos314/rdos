@@ -361,9 +361,11 @@ ciReg:
     sub ebx,11h
     lock bts ds:can_send_clear,ebx
 ;
-    shl ebx,5
-    add ebx,OFFSET can_send_arr
-    mov bx,ds:[ebx].cm_signal
+    mov edi,ebx
+    shl edi,5
+    add edi,OFFSET can_send_arr
+    xor bx,bx
+    xchg bx,ds:[edi].cm_signal
     or bx,bx
     jz ciNotifyOk
 ;
@@ -1089,19 +1091,21 @@ send_can_bus_msg    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           SendCanBusSignal
+;   NAME:           SendCanBusBlock
 ;
-;   DESCRIPTION:    Send CAN bus message, signal completion
+;   DESCRIPTION:    Send CAN bus message, wait for completion
 ;
 ;   PARAMETERS:     EDX:EAX     Data
 ;                   CL          Size (0..8)
 ;                   EBX         Identifier
 ;
+;   RETURNS:        NC          Successfully transmitted
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-send_can_bus_signal_name   DB 'Send CAN Bus Message Signal', 0
+send_can_bus_block_name   DB 'Send CAN Bus Message Block', 0
 
-send_can_bus_signal    Proc far
+send_can_bus_block    Proc far
     push ds
     push ebx
     push ecx
@@ -1113,7 +1117,7 @@ send_can_bus_signal    Proc far
     mov si,SEG data
     mov ds,si
 
-scsRetry:    
+scbRetry:    
     EnterSection ds:can_send_section
 ;    
     mov esi,ds:can_send_used
@@ -1121,7 +1125,7 @@ scsRetry:
     bsf edi,esi
 ;
     cmp edi,10h
-    jb scsDo
+    jb scbDo
 ;
     LeaveSection ds:can_send_section
 ;
@@ -1129,7 +1133,7 @@ scsRetry:
     WaitMilliSec
 ;
     sub bp,1
-    jnz scsRetry
+    jnz scbRetry
 ;
     int 3        
     push ds
@@ -1145,9 +1149,9 @@ scsRetry:
     pop ds  
 ;
     mov bp,2000          
-    jmp scsRetry
+    jmp scbRetry
 
-scsDo:    
+scbDo:    
     bts ds:can_send_used,edi
     bts ds:can_send_pend,edi
     shl edi,5
@@ -1165,6 +1169,27 @@ scsDo:
     mov bx,ds:can_thread
     Signal
 ;
+    mov bp,200
+
+scbWait:
+    GetSystemTime
+    add eax,11930
+    adc edx,0
+    WaitForSignalWithTimeout
+;
+    mov ax,ds:[edi].cm_signal
+    or ax,ax
+    clc
+    jz scbCompleted
+;
+    sub bp,1
+    jnz scbWait
+;
+    stc    
+
+scbCompleted:
+    mov ds:[edi].cm_signal,0
+;
     pop bp
     pop edi
     pop esi
@@ -1172,7 +1197,7 @@ scsDo:
     pop ebx
     pop ds    
     retf32
-send_can_bus_signal    Endp    
+send_can_bus_block    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1447,9 +1472,9 @@ init    PROC far
     mov ax,send_can_bus_msg_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET send_can_bus_signal
-    mov edi,OFFSET send_can_bus_signal_name
-    mov ax,send_can_bus_signal_nr
+    mov esi,OFFSET send_can_bus_block
+    mov edi,OFFSET send_can_bus_block_name
+    mov ax,send_can_bus_block_nr
     RegisterOsGate
 ;
     mov esi,OFFSET has_can_send_buf

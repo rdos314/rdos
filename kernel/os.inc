@@ -3540,6 +3540,13 @@ SendCanBusMsg      MACRO
     OsGate send_can_bus_msg_nr
                         ENDM
 
+; IN  EDX:EAX   Data
+; IN  CL        Size (0..8)
+; IN  EBX       Identifier
+SendCanBusBlock      MACRO
+    OsGate send_can_bus_block_nr
+                        ENDM
+
 ; IN  ES:EDI    Hook callback
 ;     IN  EDX:EAX   Data
 ;     IN  CL        Size (0..8)
