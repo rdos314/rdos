@@ -57,7 +57,7 @@ static void HandleRow(TQuizRow *Row)
 {
     quizfile->Write(Row, sizeof(TQuizRow));
 
-    printf("F12: %d AS: %d, NT: %d\r\n", Row->ID, Row->AsResult, Row->NtResult);
+    printf("%d, %d, %d, %d, %d\n", Row->ID, Row->Gender, Row->AsResult, Row->NtResult, Row->EqResult);
 }
 
 /*##################  UpdateScore ##########################
@@ -109,6 +109,62 @@ static void UpdateScore(TQuizRow *row)
 		else
 			row->GroupResult[grp] = 0;
 	}
+}
+
+/*################## ProcessEq ##########################
+*   Purpose....: Calculate and export Eq result	   					        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+static void ProcessEq(TQuizRow *row)
+{
+    int i;
+    int sum = 0;
+
+    for (i = 0; i < 40; i++)
+    {
+        switch (i)
+        {
+            case 0:
+            case 2:
+            case 10:
+            case 12:
+            case 13:
+            case 14:
+            case 20:
+            case 21:
+            case 22:
+            case 23:
+            case 25:
+            case 26:
+            case 27:
+            case 28:
+            case 33:
+            case 34:
+            case 35:
+            case 36:
+            case 37:
+            case 38:
+            case 39:
+                if (row->Eq[i] == 3)
+                    sum++;
+
+                if (row->Eq[i] == 4)
+                    sum += 2;
+                break;
+
+            default:
+                if (row->Eq[i] == 1)
+                    sum += 2;
+
+                if (row->Eq[i] == 2)
+                    sum++;
+                break;
+        }
+    }
+    row->EqResult = sum;
 }
 
 /*##################  ProcessRow ##########################
@@ -221,13 +277,20 @@ static void ProcessRow(char *str)
             default:
                  i = fieldno - 16;
 
-         		 Row.Quiz[i] = atoi(valstr);
+                 if (i >= 150)
+                 {
+                     i -= 150;
+                     Row.Eq[i] = atoi(valstr);
+                 }
+                 else
+             		 Row.Quiz[i] = atoi(valstr);
                  break;
 
         }
     }
 
     UpdateScore(&Row);
+    ProcessEq(&Row);
     HandleRow(&Row);
     AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 150);
 }
