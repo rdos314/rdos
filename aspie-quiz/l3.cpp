@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# l2.cpp
-# Analyze L2
+# l3.cpp
+# Analyze L3
 #
 ########################################################################*/
 #include <stdio.h>
@@ -31,7 +31,7 @@
 #include <math.h>
 
 #include "file.h"
-#include "quizl2.h"
+#include "quizl3.h"
 
 #include "pop.h"
 
@@ -41,7 +41,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-TQuizL2 *Quiz[50];
+TQuizL3 *Quiz[50];
 
 /*##################  main ##########################
 *   Purpose....: Program entry-point                                                            #
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     int g;
         
     printf("read data\r\n");
-    Quiz[0] = new TQuizL2("bin\\quizl2.bin");
+    Quiz[0] = new TQuizL3("bin\\quizl3.bin");
 
     printf("write no answer\r\n");
     Quiz[0]->WriteNoAnswerStats("res\\noans.txt");
@@ -65,18 +65,18 @@ int main(int argc, char **argv)
     Quiz[0]->WriteFactors("res\\factors.csv");
 
     printf("import\r\n");
-    Quiz[0]->ImportMvsp("pca-done\\allL2.txt", PCA_TYPE_ALL);
-    Quiz[0]->ImportMvsp("pca-done\\maleL2.txt", PCA_TYPE_MALE);
-    Quiz[0]->ImportMvsp("pca-done\\femL2.txt", PCA_TYPE_FEMALE);
-    Quiz[0]->ImportMvspAspie("pca-done\\grpL2.txt");
+    Quiz[0]->ImportMvsp("pca-done\\allL3.txt", PCA_TYPE_ALL);
+    Quiz[0]->ImportMvsp("pca-done\\maleL3.txt", PCA_TYPE_MALE);
+    Quiz[0]->ImportMvsp("pca-done\\femL3.txt", PCA_TYPE_FEMALE);
+    Quiz[0]->ImportMvspAspie("pca-done\\grpL3.txt");
 
     printf("details\r\n");
 
-    Quiz[0]->WriteSumaryTable("res\\quizl2.htm", FALSE);
+    Quiz[0]->WriteSumaryTable("res\\quizl3.htm", FALSE);
 
     printf("rel\r\n");
 
-    Quiz[0]->WriteIntercorr("res\\rell2.htm");
+    Quiz[0]->WriteIntercorr("res\\rell3.htm");
 
     printf("calc global\r\n");
     Quiz[0]->CalcGlobal();
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     printf("group\r\n");
     Quiz[0]->WriteGroupTable("res\\group.htm", TRUE);
     printf("groupcorr\r\n");
-    Quiz[0]->WriteGroupCorrTable("res\\groupl2.htm");
+    Quiz[0]->WriteGroupCorrTable("res\\groupl3.htm");
 
 }
 
