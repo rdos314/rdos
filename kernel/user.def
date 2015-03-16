@@ -738,4 +738,6 @@ get_dsr_nr                      = 578
 
 is_disc_idle_nr                 = 579
 
+get_disc_vendor_info_nr         = 580
+
 usergate_entries			    = 600

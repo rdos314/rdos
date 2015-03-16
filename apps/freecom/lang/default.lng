@@ -1477,13 +1477,12 @@ PART [/D] [disc]
 Disc %d not found
 .
 
-:TEXT_SHOWPART_DISC_LONG
-Disc %d %04lX_%08lX BIOS sectors / cyl %04X, heads %04X
+:TEXT_SHOWPART_DISC_HEADER
+Disc %d, %s
 .
 
-:TEXT_SHOWPART_DISC_SHORT
-Disc %d
-
+:TEXT_SHOWPART_DISC_LONG
+MBR: %04lX_%08lX BIOS sectors / cyl %04X, heads %04X
 .
 
 :TEXT_SHOWPART_HEADER
@@ -1495,7 +1494,7 @@ Disc %d
 .
 
 :TEXT_SHOWPART_DISC_GPT
-Disc %d %04lX_%08lX
+GPT: %04lX_%08lX sectors
 .
 
 :TEXT_SHOWPART_GPT_HEADER

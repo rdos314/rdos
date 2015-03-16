@@ -84,6 +84,7 @@ disc_pend_count     DW ?
 disc_io_count       DW ?
 
 disc_change_proc        DD ?,?
+disc_vendor_str         DB 256 DUP(?)
 disc_unit_arr           DD ?
 
 disc_def_struc      ENDS
@@ -1942,6 +1943,27 @@ set_disc_param  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GET_DISC_VENDOR_INFO_BUF
+;
+;           DESCRIPTION:    Get disc vendor info buffer
+;
+;           PARAMETERS:     BX          Disc sel
+;
+;           RETURNS:        ES:EDI      Vendor info buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_disc_vendor_info_buf_name     DB 'Get Disc Vendor Info Buf',0
+
+get_disc_vendor_info_buf  Proc far
+    mov es,bx
+    mov edi,OFFSET disc_vendor_str
+    retf32
+get_disc_vendor_info_buf  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SET_DISC_USE32
 ;
 ;           DESCRIPTION:    Set disc to always allocte 32-bit physical blocks
@@ -2732,6 +2754,7 @@ install_disc_loop:
     mov ds:disc_change_proc,0
     mov ds:disc_change_proc+4,0
     mov ds:disc_cached_sectors,0
+    mov ds:disc_vendor_str,0
     pop dword ptr ds:disc_param
     pop dword ptr ds:disc_param+4
     pop ds:disc_handle
@@ -4571,6 +4594,66 @@ set_disc_info   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GET_DISC_VENDOR_INFO
+;
+;           DESCRIPTION:    Get disc vendor info
+;
+;           PARAMETERS:     AL              Disc #
+;
+;           RETURNS;        ES:(E)DI        Vendor buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_disc_vendor_info_name      DB 'Get Disc Vendor Info',0
+
+get_disc_vendor_info   PROC near
+    push ds
+    push ecx
+    push esi
+    push edi
+;
+    cmp al,MAX_DRIVES
+    jae get_disc_vendor_info_fail
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx bx,al
+    add bx,bx
+    mov bx,ds:[bx].disc_def_arr
+    or bx,bx
+    stc
+    jz get_disc_vendor_info_fail
+;
+    mov ds,bx
+    mov esi,OFFSET disc_vendor_str
+    mov ecx,64
+    rep movs dword ptr es:[edi],ds:[esi]
+    clc
+
+get_disc_vendor_info_fail:
+    pop edi
+    pop esi
+    pop ecx
+    pop ds
+    ret
+get_disc_vendor_info   Endp
+
+get_disc_vendor_info16  Proc far
+    push edi
+    movzx edi,di
+    call get_disc_vendor_info
+    pop edi
+    retf32
+get_disc_vendor_info16  Endp
+
+get_disc_vendor_info32  Proc far
+    call get_disc_vendor_info
+    retf32
+get_disc_vendor_info32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ReadShortDisc
 ;
 ;           DESCRIPTION:    Read disc, 32-bit version
@@ -5831,6 +5914,11 @@ init    PROC far
     mov ax,set_disc_param_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET get_disc_vendor_info_buf
+    mov edi,OFFSET get_disc_vendor_info_buf_name
+    mov ax,get_disc_vendor_info_buf_nr
+    RegisterOsGate
+;
     mov esi,OFFSET set_disc_use32
     mov edi,OFFSET set_disc_use32_name
     mov ax,set_disc_use32_nr
@@ -6033,6 +6121,13 @@ init    PROC far
     xor dx,dx
     mov ax,get_drive_disc_param_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_disc_vendor_info16
+    mov esi,OFFSET get_disc_vendor_info32
+    mov edi,OFFSET get_disc_vendor_info_name
+    mov dx,virt_es_in
+    mov ax,get_disc_vendor_info_nr
+    RegisterUserGate
 ;
     mov esi,OFFSET demand_load_drive
     mov edi,OFFSET demand_load_drive_name

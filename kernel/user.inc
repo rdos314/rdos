@@ -1707,6 +1707,12 @@ SetDiscInfo     MACRO
 	UserGate set_disc_info_nr
 						ENDM
 
+;	IN	AL			Disc #
+;   IN  ES:(E)DI    Buffer
+GetDiscVendorInfo     MACRO
+	UserGate get_disc_vendor_info_nr
+						ENDM
+
 ;	OUT	AL		Drive #
 AllocateStaticDrive	MACRO
 	UserGate allocate_static_drive_nr

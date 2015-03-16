@@ -1611,6 +1611,65 @@ CalcParam       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+AddHex  Proc near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ahLow
+;
+    add al,7
+
+ahLow:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ahHigh
+;    
+    add ah,7
+
+ahHigh:
+    add ah,30h
+    stosw
+    ret
+AddHex  Endp
+
+AddDec  Proc near
+    push cx
+    push dx
+;   
+    xor dx,dx 
+    mov cx,1000
+    div cx
+    add al,30h
+    stosb
+;
+    mov ax,dx
+    xor dx,dx 
+    mov cx,100
+    div cx
+    add al,30h
+    stosb    
+;
+    mov ax,dx
+    xor dx,dx 
+    mov cx,10
+    div cx
+    add al,30h
+    stosb
+;
+    mov al,dl
+    add al,30h
+    stosb
+;        
+    pop dx
+    pop cx
+    ret
+AddDec  Endp    
+
 InstallUnit    Proc near
     push gs
     pushad
@@ -1635,6 +1694,163 @@ InstallUnit    Proc near
     mov di,-1
     mov bx,ds:sd_disc_sel
     SetDiscParam
+;
+    push es
+    push edi
+;   
+    GetDiscVendorInfoBuf
+    
+    mov al,'S'
+    stosb
+    mov al,'D'
+    stosb
+    mov al,':'
+    stosb
+;
+    mov al,byte ptr ds:sd_cid+11
+    stosb
+    mov al,byte ptr ds:sd_cid+10
+    stosb
+    mov al,byte ptr ds:sd_cid+9
+    stosb
+    mov al,byte ptr ds:sd_cid+8
+    stosb
+    mov al,byte ptr ds:sd_cid+7
+    stosb
+;
+    mov al,'-'
+    stosb    
+;
+    mov al,byte ptr ds:sd_cid+6
+    shr al,4
+    and al,0Fh
+    add al,30h    
+    stosb
+;
+    mov al,'.'
+    stosb    
+;
+    mov al,byte ptr ds:sd_cid+6
+    and al,0Fh
+    add al,30h    
+    stosb
+;
+    mov al,byte ptr ds:sd_cid+14
+    or al,al
+    jz iuMidOk
+;
+    mov al,';'
+    stosb        
+    mov al,'M'
+    stosb        
+    mov al,'I'
+    stosb        
+    mov al,'D'
+    stosb        
+    mov al,':'
+    stosb        
+;
+    mov al,byte ptr ds:sd_cid+14
+    call AddHex
+
+iuMidOk:
+    mov al,byte ptr ds:sd_cid+13
+    or al,al
+    jz iuOidOk
+;
+    mov al,';'
+    stosb
+    mov al,'O'
+    stosb
+    mov al,'I'
+    stosb
+    mov al,'D'
+    stosb
+    mov al,':'
+    stosb
+;
+    mov al,byte ptr ds:sd_cid+13
+    stosb
+;    
+    mov al,byte ptr ds:sd_cid+12
+    or al,al
+    jz iuOidOk
+;
+    stosb
+
+iuOidOk:
+    mov al,';'
+    stosb
+    mov al,'S'
+    stosb
+    mov al,'E'
+    stosb
+    mov al,'R'
+    stosb
+    mov al,':'
+    stosb
+;
+    mov al,byte ptr ds:sd_cid+5
+    call AddHex    
+;
+    mov al,byte ptr ds:sd_cid+4
+    call AddHex    
+;
+    mov al,byte ptr ds:sd_cid+3
+    call AddHex    
+;
+    mov al,byte ptr ds:sd_cid+2
+    call AddHex    
+;
+    mov al,';'
+    stosb
+    mov al,'D'
+    stosb
+    mov al,'A'
+    stosb
+    mov al,'T'
+    stosb
+    mov al,'E'
+    stosb
+    mov al,':'
+    stosb
+;
+    mov ax,word ptr ds:sd_cid
+    shr ax,4
+    add ax,2000
+    call AddDec
+;
+    mov al,'-'
+    stosb
+;    
+    mov al,byte ptr ds:sd_cid
+    and al,0Fh
+    cmp al,10
+    jb iuLowMonth
+;
+    mov al,'1'
+    stosb
+    mov al,byte ptr ds:sd_cid
+    and al,0Fh
+    sub al,10
+    add al,'0'
+    stosb
+    jmp iuMonthOk
+
+iuLowMonth:
+    mov al,'0'
+    stosb
+    mov al,byte ptr ds:sd_cid
+    and al,0Fh
+    add al,'0'
+    stosb
+
+iuMonthOk:    
+    xor al,al
+    stosb
+;
+    pop edi
+    pop es   
 ;
     push ds
     push es
@@ -2251,6 +2467,10 @@ drive_assign1   Proc far
     mov ax,flat_sel
     mov es,ax
     mov edi,edx    
+;
+    mov ecx,1
+    xor edx,edx
+    call ReadPioSector
 ;
     mov ecx,1
     xor edx,edx

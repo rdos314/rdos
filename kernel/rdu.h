@@ -738,6 +738,8 @@
 
 #define usergate_is_disc_idle 0x00000243
 
+#define usergate_get_disc_vendor_info 0x00000244
+
 
 
 #ifdef __FLAT__
@@ -1481,6 +1483,8 @@
 
 #define CallGate_is_disc_idle 0x67 0x9a 67 2 0 0 3 0
 
+#define CallGate_get_disc_vendor_info 0x67 0x9a 68 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2221,5 +2225,7 @@
 #define CallGate_get_dsr 0x3e 0x67 0x9a 66 2 0 0 3 0
 
 #define CallGate_is_disc_idle 0x3e 0x67 0x9a 67 2 0 0 3 0
+
+#define CallGate_get_disc_vendor_info 0x3e 0x67 0x9a 68 2 0 0 3 0
 
 #endif

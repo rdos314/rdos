@@ -58,6 +58,7 @@ protected:
     void ShowTreeTable(TIdePartitionTable *Part);
     void ShowTree(TIdeDiscPartition *Part);
     void ShowTable(TIdeDiscPartition *Part);
+    void ShowHeader(TDisc *Disc);
     int Show(TDisc *Disc);
     void ShowGpt(TDisc *Disc);
         

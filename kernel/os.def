@@ -666,4 +666,6 @@ fpu_exception_nr            = 546
 reset_can_buffers_nr        = 547
 send_can_bus_block_nr       = 548
 
+get_disc_vendor_info_buf_nr = 549
+
 osgate_entries				= 560

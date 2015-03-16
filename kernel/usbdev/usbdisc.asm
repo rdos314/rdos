@@ -140,7 +140,6 @@ disc_peri               DB ?
 disc_removable          DB ?
 disc_ver                DB ?
 disc_resp_form          DB ?
-disc_add_len            DB ?
 disc_intq_resv          DB 4 DUP(?)
 disc_vendor_str         DB 8 DUP(?)
 disc_prod_str           DB 16 DUP(?)
@@ -1937,6 +1936,34 @@ dtOk:
     mov di,-1
     mov bx,fs:disc_handle
     SetDiscParam
+;
+    push es
+    push cx
+    push si
+    push edi
+;
+    GetDiscVendorInfoBuf
+;
+    mov al,'U'
+    stosb
+    mov al,'S'
+    stosb
+    mov al,'B'
+    stosb
+    mov al,':'
+    stosb
+;
+    mov cx,(16+8+4) SHR 2
+    mov si,OFFSET disc_vendor_str
+    rep movs dword ptr es:[di],fs:[si]    
+;
+    xor al,al
+    stosb
+;
+    pop edi
+    pop si
+    pop cx
+    pop es
 ;
     call SetupDrives
     EndDiscHandler

@@ -2451,6 +2451,14 @@
     value [eax] \
     modify [ebx ecx edx esi edi];
 
+#pragma aux RdosGetDiscVendorInfo = \
+    CallGate_get_disc_vendor_info  \
+    "jnc Ok" \
+    "xor al,al" \
+    "mov [edi],al" \
+    "Ok:" \
+    parm [eax] [edi];
+
 #pragma aux RdosIsDiscIdle = \
     CallGate_is_disc_idle  \
     CarryToBool \

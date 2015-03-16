@@ -289,13 +289,8 @@ void TShowPartitionCommand::ShowTreeTable(TIdePartitionTable *Part)
 ##########################################################################*/
 void TShowPartitionCommand::ShowTree(TIdeDiscPartition *Part)
 {
-        Write("\r\n");
-
-        FMsg.printf(TEXT_SHOWPART_DISC_SHORT, Part->GetDisc()->GetDiscNr());
-        Write(FMsg.GetData());
-
-        if (Part->PartRoot)
-                ShowTreeTable(Part->PartRoot);
+    if (Part->PartRoot)
+        ShowTreeTable(Part->PartRoot);
 }
 
 /*##########################################################################
@@ -319,9 +314,7 @@ void TShowPartitionCommand::ShowTable(TIdeDiscPartition *Part)
     Disc = Part->GetDisc();
     TotalSectors = Disc->GetTotalSectors();
 
-    Write("\r\n");
-
-    FMsg.printf(TEXT_SHOWPART_DISC_LONG, Disc->GetDiscNr(), (int)(TotalSectors >> 32), (int)(TotalSectors & 0xFFFFFFFF), Disc->GetSectorsPerCyl(), Disc->GetHeads());
+    FMsg.printf(TEXT_SHOWPART_DISC_LONG, (int)(TotalSectors >> 32), (int)(TotalSectors & 0xFFFFFFFF), Disc->GetSectorsPerCyl(), Disc->GetHeads());
     Write(FMsg.GetData());
 
     FMsg.Load(TEXT_SHOWPART_HEADER);
@@ -359,7 +352,7 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
     long double TotalSpace;
     char name[10];
     char guid[32];
-    char str[80];
+    char str[256];
     long long TotalSectors = Disc->GetTotalSectors();
     long long Start;
     long long End;
@@ -369,9 +362,7 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
     DiscPart = new TGptDiscPartition(Disc);
     DiscPart->Read();
 
-    Write("\r\n");
-
-    FMsg.printf(TEXT_SHOWPART_DISC_GPT, Disc->GetDiscNr(), (int)(TotalSectors >> 32), (int)(TotalSectors & 0xFFFFFFFF));
+    FMsg.printf(TEXT_SHOWPART_DISC_GPT, (int)(TotalSectors >> 32), (int)(TotalSectors & 0xFFFFFFFF));
     Write(FMsg.GetData());
 
     FMsg.Load(TEXT_SHOWPART_GPT_HEADER);
@@ -449,6 +440,28 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
 
 /*##########################################################################
 #
+#   Name       : TShowPartitionCommand::ShowHeader
+#
+#   Purpose....: Show disc header
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShowPartitionCommand::ShowHeader(TDisc *Disc)
+{
+    char str[256];
+
+    Write("\r\n");
+
+    RdosGetDiscVendorInfo(Disc->GetDiscNr(), str);
+    FMsg.printf(TEXT_SHOWPART_DISC_HEADER, Disc->GetDiscNr(), str);
+    Write(FMsg.GetData());
+}
+
+/*##########################################################################
+#
 #   Name       : TShowPartitionCommand::Show
 #
 #   Purpose....: Show result
@@ -464,6 +477,8 @@ int TShowPartitionCommand::Show(TDisc *Disc)
     
     if (Disc->IsValid())
     {            
+        ShowHeader(Disc);
+        
         if (Disc->IsGpt())
         {
             ShowGpt(Disc);

@@ -2597,6 +2597,12 @@ SetDiscParam    MACRO
     OsGate set_disc_param_nr
                     ENDM
 
+;       IN  BX      Disc sel
+;       OUT ES:DI   Vendor buffer
+GetDiscVendorInfoBuf    MACRO
+    OsGate get_disc_vendor_info_buf_nr
+                    ENDM
+
 ;       IN      BX      Disc sel
 WaitForDiscRequest      MACRO
     OsGate wait_for_disc_request_nr
