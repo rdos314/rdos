@@ -67,6 +67,8 @@ disc_thread             DW ?
 disc_sub_unit           DB ?
 disc_nr             DB ?
 
+disc_model          DB 40 DUP(?)
+
 drive_data      ENDS
 
 ide_data    STRUC
@@ -820,6 +822,15 @@ GetDriveParams  Proc near
     mov dx,fs:disc_io_base
     call ReadTaskFile
     jc get_drive_param_done
+;
+    xor edx,edx
+    mov ecx,10
+
+get_drive_copy_model:
+    mov eax,es:[edi+edx+36h]
+    mov dword ptr fs:[edx].disc_model,eax
+    add edx,4
+    loop get_drive_copy_model    
 ;
     mov ax,es:[edi+166]
     test ax,4000h
@@ -1953,6 +1964,19 @@ install_unit_ok:
     mov di,fs:drive_heads
     mov bx,fs:disc_sel
     SetDiscParam
+;
+    GetDiscVendorInfoBuf
+    mov al,'I'
+    stosb
+    mov al,'D'
+    stosb
+    mov al,'E'
+    stosb
+    mov al,':'
+    stosb
+    mov cx,10
+    mov si,OFFSET disc_model
+    rep movs dword ptr es:[di],fs:[si]
 ;
     push ds
     mov ax,cs

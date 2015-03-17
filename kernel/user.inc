@@ -1709,6 +1709,7 @@ SetDiscInfo     MACRO
 
 ;	IN	AL			Disc #
 ;   IN  ES:(E)DI    Buffer
+;   IN  (E)CX       Buffer size
 GetDiscVendorInfo     MACRO
 	UserGate get_disc_vendor_info_nr
 						ENDM

@@ -455,7 +455,7 @@ void TShowPartitionCommand::ShowHeader(TDisc *Disc)
 
     Write("\r\n");
 
-    RdosGetDiscVendorInfo(Disc->GetDiscNr(), str);
+    RdosGetDiscVendorInfo(Disc->GetDiscNr(), str, 256);
     FMsg.printf(TEXT_SHOWPART_DISC_HEADER, Disc->GetDiscNr(), str);
     Write(FMsg.GetData());
 }

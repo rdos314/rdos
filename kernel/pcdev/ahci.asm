@@ -306,6 +306,8 @@ ap_disc_nr          DB ?
 ap_cap              DD ?
 ap_sata_cap         DW ?
 
+ap_model            DB 48 DUP(?)
+
 ahci_port_struc     ENDS
 
 ;
@@ -2057,6 +2059,15 @@ GetDriveParams  Proc near
     call CondWaitForCompletion
     jc gdpDone
 ;    
+    xor ebx,ebx
+    mov ecx,10
+
+gdpCopyModel:
+    mov eax,es:[esi+ebx+36h]
+    mov dword ptr gs:[ebx].ap_model,eax
+    add ebx,4
+    loop gdpCopyModel
+;
     mov ax,es:[esi+152]
     test gs:ap_cap,HBA_CAP_SNCQ
     jnz gdpSataCapOk
@@ -3523,6 +3534,24 @@ install_disc_unit Proc near
     mov di,-1
     mov bx,ds:ap_disc_sel
     SetDiscParam
+;
+    GetDiscVendorInfoBuf
+    mov al,'S'
+    stosb
+    mov al,'A'
+    stosb
+    mov al,'T'
+    stosb
+    mov al,'A'
+    stosb
+    mov al,':'
+    stosb
+;    
+    mov cx,10
+    mov si,OFFSET ap_model
+    rep movsd
+    xor al,al
+    stosb
 ;
     mov ax,ds
     mov fs,ax

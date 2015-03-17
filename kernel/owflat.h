@@ -2457,7 +2457,7 @@
     "xor al,al" \
     "mov [edi],al" \
     "Ok:" \
-    parm [eax] [edi];
+    parm [eax] [edi] [ecx];
 
 #pragma aux RdosIsDiscIdle = \
     CallGate_is_disc_idle  \

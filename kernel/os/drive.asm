@@ -4599,8 +4599,9 @@ set_disc_info   Endp
 ;           DESCRIPTION:    Get disc vendor info
 ;
 ;           PARAMETERS:     AL              Disc #
+;                           ES:(E)DI        Vendor buffer
+;                           (E)CX           Buffer size
 ;
-;           RETURNS;        ES:(E)DI        Vendor buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4609,6 +4610,7 @@ get_disc_vendor_info_name      DB 'Get Disc Vendor Info',0
 get_disc_vendor_info   PROC near
     push ds
     push ecx
+    push edx
     push esi
     push edi
 ;
@@ -4624,25 +4626,63 @@ get_disc_vendor_info   PROC near
     stc
     jz get_disc_vendor_info_fail
 ;
+    sub ecx,1
+    jbe get_disc_vendor_info_fail
+;
+    cmp ecx,255
+    jb get_disc_vendor_info_size_ok
+;
     mov ds,bx
-    mov esi,OFFSET disc_vendor_str
-    mov ecx,64
-    rep movs dword ptr es:[edi],ds:[esi]
+    mov si,OFFSET disc_vendor_str
+    mov ecx,255
+
+get_disc_vendor_info_size_ok:
+    xor edx,edx
+
+get_disc_vendor_info_copy:
+    lodsb
+    or al,al
+    jz get_disc_vendor_eob
+;
+    inc edx
+    stos byte ptr es:[edi]
+    loop get_disc_vendor_info_copy
+
+get_disc_vendor_eob:    
+
+get_disc_vendor_info_trim:
+    sub edx,1
+    jbe get_disc_vendor_info_term    
+;
+    mov al,es:[edi-1]
+    cmp al,' '
+    jne get_disc_vendor_info_term 
+;       
+    sub edi,1
+    jmp get_disc_vendor_info_trim
+
+get_disc_vendor_info_term:
+    xor al,al
+    stos byte ptr es:[edi]
     clc
 
 get_disc_vendor_info_fail:
     pop edi
     pop esi
+    pop edx
     pop ecx
     pop ds
     ret
 get_disc_vendor_info   Endp
 
 get_disc_vendor_info16  Proc far
+    push ecx
     push edi
     movzx edi,di
+    movzx ecx,cx
     call get_disc_vendor_info
     pop edi
+    pop ecx
     retf32
 get_disc_vendor_info16  Endp
 
