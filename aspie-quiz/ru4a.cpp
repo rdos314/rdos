@@ -54,9 +54,26 @@ int main(int argc, char **argv)
 {
     char str[80];
     int g;
+    TPopPca L1;
+    TPopPca L3;
+    TPopPca Ru;
+    TPopPca Pl;
+    TPopPca Sw;
+    TFile CongFile("res\\congr.txt", 0);
         
     printf("read data\r\n");
     Quiz[0] = new TQuizL1("bin\\quizru4a.bin");
+
+    TQuiz::ImportPopPca("pca\\alll1.txt", &L1);
+    TQuiz::ImportPopPca("pca\\alll3.txt", &L3);
+    TQuiz::ImportPopPca("pca\\ru4a.txt", &Ru);
+    TQuiz::ImportPopPca("pca\\pl4a.txt", &Pl);
+    TQuiz::ImportPopPca("pca\\sw4a.txt", &Sw);
+    TQuiz::ExportPopPcaCongruence("L1-L3", CongFile, &L1, &L3);
+    TQuiz::ExportPopPcaCongruence("L1-Ru", CongFile, &L1, &Ru);
+    TQuiz::ExportPopPcaCongruence("L1-Pl", CongFile, &L1, &Pl);
+    TQuiz::ExportPopPcaCongruence("L1-Sw", CongFile, &L1, &Sw);
+    TQuiz::ExportPopPcaCongruence("Ru-Pl", CongFile, &Ru, &Pl);
 
     printf("write no answer\r\n");
     Quiz[0]->WriteNoAnswerStats("res\\noans.txt");

@@ -1498,7 +1498,7 @@ void TQuiz::ExportPopPcaCongruence(const char *name, TFile &file, TPopPca *pca1,
     int val;
         char str[80];
 
-        count = 150;
+        count = 117;
 
         xsum = 0;
         ysum = 0;

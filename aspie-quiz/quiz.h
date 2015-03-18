@@ -398,6 +398,7 @@ public:
     void ExportQuizGlobalSql(const char *filename);
 
     static TPopPca UkPca;
+    static TPopPca RuPca;
     static TPopPca SePca;
     static TPopPca NoPca;
     static TPopPca BrPca;

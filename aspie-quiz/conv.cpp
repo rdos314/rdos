@@ -141,6 +141,8 @@ void ConvL3();
 
 void ConvRu();
 void ConvRu4a();
+void ConvPl4a();
+void ConvSw4a();
 
 #define MAX_QUESTIONS 400
 
