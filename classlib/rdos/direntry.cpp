@@ -741,6 +741,7 @@ void TDirListNode::Set(TDirEntry &entry)
 TDirList::TDirList()
   : FPathName("")
 {
+    ClearSort();
 	SetDefaultAttributes();
 }
 
@@ -758,6 +759,7 @@ TDirList::TDirList()
 TDirList::TDirList(const char *PathName)
   : FPathName(PathName)
 {
+    ClearSort();
 	SetDefaultAttributes();
 	DoSearch();
 }
@@ -776,6 +778,7 @@ TDirList::TDirList(const char *PathName)
 TDirList::TDirList(const TString &PathName)
   : FPathName(PathName)
 {
+    ClearSort();
 	SetDefaultAttributes();
 	DoSearch();
 }
@@ -794,6 +797,7 @@ TDirList::TDirList(const TString &PathName)
 TDirList::TDirList(const TPathName &PathName)
   : FPathName(PathName.Get())
 {
+    ClearSort();
 	SetDefaultAttributes();
 	DoSearch();
 }
@@ -813,6 +817,7 @@ TDirList::TDirList(const TDirList &source)
   : TListBase(source),
     FPathName(source.FPathName)
 {
+    ClearSort();
     FAttribIgnored = source.FAttribIgnored;
     FAttribRequired = source.FAttribRequired;
 }
