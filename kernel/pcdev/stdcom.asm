@@ -1480,6 +1480,12 @@ init_pci    Proc far
     mov dx,2E8h
     call InitDetect
 ; 
+    mov dx,2A0h
+    call InitDetect
+; 
+    mov dx,2A8h
+    call InitDetect
+; 
     mov dx,3F8h
     call DetectIrq
     jc dt1
@@ -1508,6 +1514,24 @@ dt2:
 
 dt3:   
     mov dx,2E8h
+    call DetectIrq
+    jc dt4
+;    
+    mov ecx,115200
+    call AddPort
+    call InitDetect
+
+dt4:   
+    mov dx,2A0h
+    call DetectIrq
+    jc dt5
+;    
+    mov ecx,115200
+    call AddPort
+    call InitDetect
+
+dt5:   
+    mov dx,2A8h
     call DetectIrq
     jc dtpci
 ;    

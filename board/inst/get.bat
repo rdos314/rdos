@@ -66,6 +66,7 @@ copy \fuelpos\src\rdosdev\nopower.rdv files
 copy \fuelpos\src\rdosdev\preem.rdv files
 copy \fuelpos\src\rdosdev\ioe.rdv files
 copy \fuelpos\src\rdosdev\itc.rdv files
+copy \fuelpos\src\rdosdev\pem.rdv files
 copy \fuelpos\src\rdosdev\cancom.rdv files
 copy ..\..\apps\freecom\command.exe files
 copy ..\..\apps\ftpd\ftpd.exe files
