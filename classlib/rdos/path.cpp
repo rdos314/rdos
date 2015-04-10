@@ -54,13 +54,14 @@ TPathName::TPathName()
 	str = new char[512];
 
 	drive = RdosGetCurDrive();
-	*str = drive + 'a';
-	*(str+1) = ':';
-	*(str+2) = '\\';
+	str[0] = drive + 'a';
+	str[1] = ':';
+	str[2] = '\\';
+    str[3] = 0;
 	RdosGetCurDir(drive, str + 3);
 
-	if (*(str + 3) == '\\')
-		*(str + 3) = 0;
+	if (str[3] == '\\')
+	    str[3] = 0;
 
 	FPathName = str;
 
@@ -84,13 +85,14 @@ TPathName::TPathName(int Drive)
 
 	str = new char[512];
 
-	*str = Drive + 'a';
-	*(str+1) = ':';
-	*(str+2) = '\\';
+	str[0] = Drive + 'a';
+	str[1] = ':';
+	str[2] = '\\';
+	str[3] = 0;
 	RdosGetCurDir(Drive, str + 3);
 
-	if (*(str + 3) == '\\')
-		*(str + 3) = 0;
+	if (str[3] == '\\')
+		str[3] = 0;
 
 	FPathName = str;
 
@@ -213,13 +215,14 @@ void TPathName::Init(const char *PathName)
 		str = new char[512];
 
 		drive = RdosGetCurDrive();
-		*str = drive + 'a';
-		*(str+1) = ':';
-		*(str+2) = '\\';
+		str[0] = drive + 'a';
+		str[1] = ':';
+		str[2] = '\\';
+		str[3] = 0;
 		RdosGetCurDir(drive, str + 3);
 
-		if (*(str + 3) == '\\')
-			*(str + 3) = 0;
+		if (str[3] == '\\')
+			str[3] = 0;
 
 		FPathName = str;
 
@@ -235,13 +238,14 @@ void TPathName::Init(const char *PathName)
 		drive = PathName[0];
 		drive = toupper(drive) - 'A';
 		
-		*str = PathName[0];
-		*(str+1) = ':';
-		*(str+2) = '\\';
+		str[0] = PathName[0];
+		str[1] = ':';
+		str[2] = '\\';
+		str[3] = 0;
 		RdosGetCurDir(drive, str + 3);
 
-		if (*(str + 3) == '\\')
-			*(str + 3) = 0;
+		if (str[3] == '\\')
+			str[3] = 0;
 
 		FPathName = str;
 
@@ -256,13 +260,14 @@ void TPathName::Init(const char *PathName)
 
 		drive = PathName[0];
 		drive = toupper(drive) - 'A';
-		*str = PathName[0];
-		*(str+1) = ':';
-		*(str+2) = '\\';
+		str[0] = PathName[0];
+		str[1] = ':';
+		str[2] = '\\';
+		str[3] = 0;
 		RdosGetCurDir(drive, str + 3);
 
-		if (*(str + 3) == '\\')
-			*(str + 3) = 0;
+		if (str[3] == '\\')
+			str[3] = 0;
 
 		FPathName = str;
 
@@ -479,7 +484,7 @@ int TPathName::HasDrive() const
 	if (size >= 2)
 	{
 		str = FPathName.GetData();
-		if (*(str+1) == ':')
+		if (str[1] == ':')
 			return TRUE;
 		else
 			return FALSE;
@@ -509,14 +514,14 @@ int TPathName::HasFullPath() const
 	if (size >= 2)
 	{
     	str = FPathName.GetData();
-		if (*(str+1) == ':')
+		if (str[1] == ':')
 		{
 			if (size >= 3)
-				if (*(str+2) == '\\')
+				if (str[2] == '\\')
 					return TRUE;
 		}
 		else
-			if (*str == '\\')
+			if (str[0] == '\\')
 				return TRUE;
 	}
 	return FALSE;
@@ -542,7 +547,7 @@ int TPathName::GetDrive() const
 	if (size >= 2)
 	{
 		str = FPathName.GetData();
-		if (*(str+1) == ':')
+		if (str[1] == ':')
 			if (isalpha(*str))
 				return tolower(*str) - 'a';			
 	}
