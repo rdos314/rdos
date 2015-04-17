@@ -474,6 +474,11 @@ can_com_data_sel    EQU 0B78h
 
 xhci_code_sel       EQU 0B80h
 xhci_data_sel       EQU 0B88h
+xhci_hcc_sel        EQU 0B90h
+xhci_reg_sel        EQU 0B98h
+xhci_port_sel       EQU 0BA0h
+xhci_db_sel         EQU 0BA8h
+xhci_rts_sel        EQU 0BB0h
 
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h

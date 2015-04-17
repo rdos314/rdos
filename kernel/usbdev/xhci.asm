@@ -73,6 +73,8 @@ xhc_slot_count      DW ?
 xhc_int_count       DW ?
 xhc_port_count      DW ?
 
+xhc_context_size    DW ?
+
 xhci_func_sel   ENDS
 
 data    SEGMENT byte public 'DATA'
@@ -718,9 +720,9 @@ InitFunction    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreateFunction
+;       NAME:           CreatePrimaryFunction
 ;
-;       DESCRIPTION:    Create XHCI function
+;       DESCRIPTION:    Create primary XHCI function
 ;
 ;       PARAMETERS:     EDX:EAX Register base
 ;
@@ -729,7 +731,210 @@ InitFunction    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateFunction  Proc near
+CreatePrimaryFunction  Proc near
+    push ds
+    pushad
+;
+    push edx
+    push eax
+;    
+    mov ebx,edx
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    push eax
+    and ax,0F000h
+    or ax,813h
+    SetPageEntry
+    pop eax
+    and eax,0FFFh
+    or edx,eax
+;
+    mov ecx,20h
+    mov bx,xhci_hcc_sel
+    CreateDataSelector16
+    mov ds,bx
+;
+    mov eax,ds:hccCap1
+    test al,1
+    jnz cpf64Ok
+;
+    HasPhysical64
+    jnc cpfFail
+
+cpf64Ok:        
+    mov eax,SIZE xhci_func_sel
+    mov cx,ax
+    AllocateSmallGlobalMem
+    xor di,di
+    xor al,al
+    rep stosb
+    int 3
+;
+    mov al,ds:[4]
+    movzx ax,al
+    mov es:xhc_slot_count,ax
+;
+    mov ax,ds:[5]
+    and ax,3FFh
+    cmp ax,8
+    jb cpfIntOk
+;
+    mov ax,8
+
+cpfIntOk:    
+    mov es:xhc_int_count,ax
+;
+    mov al,ds:[7]
+    cmp al,0B0h
+    jb cpfPortsOk
+;
+    mov al,0B0h
+
+cpfPortsOk:    
+    movzx ax,al
+    mov es:xhc_port_count,ax
+;
+    mov cx,20h
+    mov eax,ds:hccCap1
+    test al,4
+    jz cpfContextSizeOk
+;
+    mov cx,40h
+
+cpfContextSizeOk:
+    mov es:xhc_context_size,cx    
+;
+    mov es:xhc_hcc_sel,ds
+;    
+    mov al,ds:[0]
+    movzx eax,al
+    add edx,eax
+    mov cx,40h
+    mov bx,xhci_reg_sel
+    CreateDataSelector16
+    mov es:xhc_reg_sel,bx        
+;
+    pop eax
+    pop ebx
+;
+    push ebx
+    push eax
+;
+    mov cl,ds:[0]
+    movzx ecx,cl
+    add ecx,400h
+    add eax,ecx
+    adc ebx,0
+;    
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    push eax
+    and ax,0F000h
+    or ax,813h
+    SetPageEntry
+    pop eax
+    and eax,0FFFh
+    or edx,eax
+;
+    mov bx,xhci_port_sel
+    movzx ecx,es:xhc_port_count
+    shl ecx,4
+    CreateDataSelector16
+    mov es:xhc_port_sel,bx
+;
+    pop eax
+    pop ebx
+;
+    push ebx
+    push eax
+;    
+    mov ecx,ds:hccDbOff
+    and cl,0FCh
+    add eax,ecx
+    adc ebx,0
+;    
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    push eax
+    and ax,0F000h
+    or ax,813h
+    SetPageEntry
+    pop eax
+    and eax,0FFFh
+    or edx,eax
+;
+    mov bx,xhci_db_sel
+    movzx ecx,es:xhc_slot_count
+    shl ecx,2
+    CreateDataSelector16
+    mov es:xhc_db_sel,bx
+;
+    pop eax
+    pop ebx
+;
+    mov ecx,ds:hccRtsOff
+    and cl,0FCh
+    add eax,ecx
+    adc ebx,0
+;    
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    push eax
+    and ax,0F000h
+    or ax,813h
+    SetPageEntry
+    pop eax
+    and eax,0FFFh
+    or edx,eax
+;
+    mov bx,xhci_rts_sel
+    movzx ecx,es:xhc_int_count
+    shl ecx,5
+    CreateDataSelector16
+    mov es:xhc_rts_sel,bx        
+    clc
+    jmp cpfDone
+
+    mov es:xhc_int_count,ax
+
+cpfFail:    
+    pop eax
+    pop edx
+    stc
+
+cpfDone:
+    popad
+    pop ds
+    ret
+CreatePrimaryFunction Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateSecondaryFunction
+;
+;       DESCRIPTION:    Create secondary XHCI function
+;
+;       PARAMETERS:     EDX:EAX Register base
+;
+;       RETURNS:        NC      OK
+;                           ES  Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateSecondaryFunction  Proc near
     push ds
     pushad
 ;
@@ -757,19 +962,18 @@ CreateFunction  Proc near
 ;
     mov eax,ds:hccCap1
     test al,1
-    jnz cf64Ok
+    jnz csf64Ok
 ;
     HasPhysical64
-    jnc cfFail
+    jnc csfFail
 
-cf64Ok:        
+csf64Ok:        
     mov eax,SIZE xhci_func_sel
     mov cx,ax
     AllocateSmallGlobalMem
     xor di,di
     xor al,al
     rep stosb
-    int 3
 ;
     mov al,ds:[4]
     movzx ax,al
@@ -777,17 +981,33 @@ cf64Ok:
 ;
     mov ax,ds:[5]
     and ax,3FFh
+    cmp ax,8
+    jb csfIntOk
+;
+    mov ax,8
+
+csfIntOk:    
     mov es:xhc_int_count,ax
 ;
     mov al,ds:[7]
     cmp al,0B0h
-    jb cfPortsOk
+    jb csfPortsOk
 ;
     mov al,0B0h
 
-cfPortsOk:    
+csfPortsOk:    
     movzx ax,al
     mov es:xhc_port_count,ax
+;
+    mov cx,20h
+    mov eax,ds:hccCap1
+    test al,4
+    jz csfContextSizeOk
+;
+    mov cx,40h
+
+csfContextSizeOk:
+    mov es:xhc_context_size,cx    
 ;
     mov es:xhc_hcc_sel,ds
 ;    
@@ -801,6 +1021,10 @@ cfPortsOk:
 ;
     pop eax
     pop ebx
+;
+    push ebx
+    push eax
+;
     mov cl,ds:[0]
     movzx ecx,cl
     add ecx,400h
@@ -824,12 +1048,66 @@ cfPortsOk:
     movzx ecx,es:xhc_port_count
     shl ecx,4
     CreateDataSelector16
-    mov ds,bx
-    mov es:xhc_port_sel,ds        
+    int 3
+    mov es:xhc_port_sel,bx
+;
+    pop eax
+    pop ebx
+;
+    mov ecx,ds:hccDbOff
+    and cl,0FCh
+    add eax,ecx
+    adc ebx,0
+;    
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    push eax
+    and ax,0F000h
+    or ax,813h
+    SetPageEntry
+    pop eax
+    and eax,0FFFh
+    or edx,eax
+;
+    AllocateGdt
+    movzx ecx,es:xhc_slot_count
+    shl ecx,2
+    CreateDataSelector16
+    mov es:xhc_db_sel,bx
+;
+    pop eax
+    pop ebx
+;
+    mov ecx,ds:hccRtsOff
+    and cl,0FCh
+    add eax,ecx
+    adc ebx,0
+;    
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    push eax
+    and ax,0F000h
+    or ax,813h
+    SetPageEntry
+    pop eax
+    and eax,0FFFh
+    or edx,eax
+;
+    AllocateGdt
+    movzx ecx,es:xhc_int_count
+    shl ecx,5
+    CreateDataSelector16
+    mov es:xhc_rts_sel,bx        
     clc
-    jmp cfDone
+    jmp csfDone
 
-cfFail:    
+csfFail:    
     mov bx,ds
     xor ax,ax
     mov ds,ax
@@ -838,34 +1116,11 @@ cfFail:
     pop edx
     stc
 
-cfDone:
+csfDone:
     popad
     pop ds
     ret
-CreateFunction Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AddFunction
-;
-;           DESCRIPTION:    Add EHCI function
-;
-;       PARAMETERS:     BX      Bus/device
-;                       CH      Function
-;                       EDX:EAX Register base
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddFunction  Proc near
-    push es
-    call CreateFunction
-    jc afDone
-
-afDone:
-    pop es
-    ret
-AddFunction Endp
+CreateSecondaryFunction Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -904,7 +1159,7 @@ InitPciAdapter  Proc near
 init_pci_base_ok:
     and ax,0FFF0h
     mov ebp,eax
-    call AddFunction
+    call CreatePrimaryFunction
 ;
     mov dx,1
 
@@ -922,7 +1177,7 @@ init_pci_next_device:
     cmp eax,ebp
     je init_pci_done
 ;       
-    call AddFunction
+    call CreateSecondaryFunction
     inc dx
     jmp init_pci_next_device
     
