@@ -50,11 +50,22 @@ hccCap2     DD ?
 
 hcc_cap_struc   ENDS
 
+port_stat_struc STRUC
+
+pss_sc      DD ?
+pss_pmsc    DD ?
+pss_link    DD ?
+pss_lpm     DD ?
+
+port_stat_struc ENDS
+
 xhci_func_sel   STRUC
 
 usb_dev_base        usb_dev_struc <>
 
 xhc_hcc_sel         DW ?
+xhc_reg_sel         DW ?
+xhc_port_sel        DW ?
 xhc_db_sel          DW ?
 xhc_rts_sel         DW ?
 
@@ -722,6 +733,9 @@ CreateFunction  Proc near
     push ds
     pushad
 ;
+    push edx
+    push eax
+;    
     mov ebx,edx
     push eax
     mov eax,1000h
@@ -736,15 +750,10 @@ CreateFunction  Proc near
     and eax,0FFFh
     or edx,eax
 ;
-    push ecx
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector16
-    pop ecx
     mov ds,bx
-;
-    pop cx
-    pop bx    
 ;
     mov eax,ds:hccCap1
     test al,1
@@ -771,8 +780,52 @@ cf64Ok:
     mov es:xhc_int_count,ax
 ;
     mov al,ds:[7]
+    cmp al,0B0h
+    jb cfPortsOk
+;
+    mov al,0B0h
+
+cfPortsOk:    
     movzx ax,al
     mov es:xhc_port_count,ax
+;
+    mov es:xhc_hcc_sel,ds
+;    
+    mov al,ds:[0]
+    movzx eax,al
+    add edx,eax
+    mov cx,40h
+    AllocateGdt
+    CreateDataSelector16
+    mov es:xhc_reg_sel,bx        
+;
+    pop eax
+    pop ebx
+    mov cl,ds:[0]
+    movzx ecx,cl
+    add ecx,400h
+    add eax,ecx
+    adc ebx,0
+;    
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    push eax
+    and ax,0F000h
+    or ax,813h
+    SetPageEntry
+    pop eax
+    and eax,0FFFh
+    or edx,eax
+;
+    AllocateGdt
+    movzx ecx,es:xhc_port_count
+    shl ecx,4
+    CreateDataSelector16
+    mov ds,bx
+    mov es:xhc_port_sel,ds        
     clc
     jmp cfDone
 
@@ -781,6 +834,8 @@ cfFail:
     xor ax,ax
     mov ds,ax
     FreeGdt
+    pop eax
+    pop edx
     stc
 
 cfDone:
@@ -833,6 +888,7 @@ InitPciAdapter  Proc near
     FindPciClass
     jc init_pci_done
 ;
+    int 3
     mov cl,10h
     ReadPciDword
     xor edx,edx
@@ -849,7 +905,7 @@ init_pci_base_ok:
     and ax,0FFF0h
     mov ebp,eax
     call AddFunction
-;       
+;
     mov dx,1
 
 init_pci_next_device:
