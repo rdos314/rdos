@@ -83,6 +83,7 @@ xhc_port_sel        DW ?
 xhc_db_sel          DW ?
 xhc_rts_sel         DW ?
 xhc_device_ptr_sel  DW ?
+xhc_cmd_ring_sel    DW ?
 
 xhc_slot_count      DW ?
 xhc_int_count       DW ?
@@ -90,6 +91,7 @@ xhc_port_count      DW ?
 
 xhc_context_size    DW ?
 xhc_dcba            DD ?,?
+xhc_crcr            DD ?,?
 
 xhci_func_sel   ENDS
 
@@ -935,6 +937,21 @@ cpfContextSizeOk:
     shl ecx,3
     CreateDataSelector16
     mov es:xhc_device_ptr_sel,bx
+;
+    AllocatePhysical64
+    mov es:xhc_crcr,eax
+    mov es:xhc_crcr+4,ebx
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov al,13h
+    SetPageEntry
+;
+    mov bx,xhci_cmd_ring_sel
+    mov ecx,1000h
+    CreateDataSelector16
+    mov es:xhc_cmd_ring_sel,bx
     clc
     jmp cpfDone
 
@@ -1148,6 +1165,21 @@ csfContextSizeOk:
     shl ecx,3
     CreateDataSelector16
     mov es:xhc_device_ptr_sel,bx
+;
+    AllocatePhysical64
+    mov es:xhc_crcr,eax
+    mov es:xhc_crcr+4,ebx
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov al,13h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov es:xhc_cmd_ring_sel,bx
     clc
     jmp csfDone
 
@@ -1208,7 +1240,7 @@ afWaitReseted:
     movzx eax,es:xhc_slot_count
     or ax,200h
     mov ds:orsConfig,eax
-    int 3
+;
     push es
     mov cx,es:xhc_slot_count
     mov es,es:xhc_device_ptr_sel
@@ -1222,6 +1254,21 @@ afWaitReseted:
     mov ds:orsDcbaap,eax
     mov eax,es:xhc_dcba+4
     mov ds:orsDcbaap+4,eax
+;
+    int 3
+    push es
+    mov cx,400h
+    mov es,es:xhc_cmd_ring_sel
+    xor di,di
+    xor eax,eax
+    rep stosd
+    pop es
+    int 3
+;    
+    mov eax,es:xhc_crcr
+    mov ds:orsCrCtrl,eax
+    mov eax,es:xhc_crcr+4
+    mov ds:orsCrCtrl+4,eax
 ;    
     pop ds
     ret

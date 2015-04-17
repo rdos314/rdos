@@ -480,6 +480,7 @@ xhci_port_sel       EQU 0BA0h
 xhci_db_sel         EQU 0BA8h
 xhci_rts_sel        EQU 0BB0h
 xhci_device_ptr_sel EQU 0BB8h
+xhci_cmd_ring_sel   EQU 0BC0h
 
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h
