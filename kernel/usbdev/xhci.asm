@@ -668,7 +668,7 @@ reset_thread:
 ;
 ;           DESCRIPTION:    Init EHCI function
 ;
-;       PARAMETERS:     DS      Function selector
+;       PARAMETERS:         ES      Function selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -700,29 +700,74 @@ et23 DD OFFSET IsStalled,       SEG code
 et24 DD OFFSET ClearStalled,    SEG code
 et25 DD OFFSET GetMaxLen,       SEG code
 
-;
-;           PARAMETERS:         BH          Bus
-;                           BL          Device
-;                           CH          Function
-;               AL      Capability
-
 InitFunction    Proc near
     push es
     push fs
     pushad
 ;
     int 3
-    mov ax,flat_sel
-    mov es,ax   
+    mov ds,es:xhc_reg_sel
+    and ds:orsUsbCmd,NOT 1
+
+ifWaitStop:
+    test ds:orsUsbSts,1
+    jnz ifWaitStopped
+;
+    mov ax,10
+    WaitMilliSec
+    jmp ifWaitStop
+
+ifWaitStopped:    
+    or ds:orsUsbCmd,2
+
+ifWaitReset:
+    test ds:orsUsbCmd,2
+    jz ifWaitReseted
+;
+    mov ax,10
+    WaitMilliSec
+    jmp ifWaitReset
+
+ifWaitReseted:        
+    movzx eax,es:xhc_slot_count
+    or ax,200h
+    mov ds:orsConfig,eax
+;
+    push es
+    mov cx,es:xhc_slot_count
+    mov es,es:xhc_device_ptr_sel
+    xor di,di
+    shl cx,1
+    xor eax,eax
+    rep stosd
+    pop es
 ;    
+    mov eax,es:xhc_dcba
+    mov ds:orsDcbaap,eax
+    mov eax,es:xhc_dcba+4
+    mov ds:orsDcbaap+4,eax
+;
+    push es
+    mov cx,400h
+    mov es,es:xhc_cmd_ring_sel
+    xor di,di
+    xor eax,eax
+    rep stosd
+    pop es
+;    
+    mov eax,es:xhc_crcr
+    mov ds:orsCrCtrl,eax
+    mov eax,es:xhc_crcr+4
+    mov ds:orsCrCtrl+4,eax
+;    
+    int 3
     mov si,OFFSET xhci_tab
     xor di,di
     mov cx,2*26
 
 ifTabLoop:
     lods dword ptr cs:[si]
-    mov ds:[di],eax
-    add di,4
+    stosd
     loop ifTabLoop    
 ;
     InitUsbDevice
@@ -1212,65 +1257,7 @@ CreateSecondaryFunction Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddFunction  Proc near
-    push ds
-;    
-    mov ds,es:xhc_reg_sel
-    and ds:orsUsbCmd,NOT 1
-
-afWaitStop:
-    test ds:orsUsbSts,1
-    jnz afWaitStopped
-;
-    mov ax,10
-    WaitMilliSec
-    jmp afWaitStop
-
-afWaitStopped:    
-    or ds:orsUsbCmd,2
-
-afWaitReset:
-    test ds:orsUsbCmd,2
-    jz afWaitReseted
-;
-    mov ax,10
-    WaitMilliSec
-    jmp afWaitReset
-
-afWaitReseted:        
-    movzx eax,es:xhc_slot_count
-    or ax,200h
-    mov ds:orsConfig,eax
-;
-    push es
-    mov cx,es:xhc_slot_count
-    mov es,es:xhc_device_ptr_sel
-    xor di,di
-    shl cx,1
-    xor eax,eax
-    rep stosd
-    pop es
-;    
-    mov eax,es:xhc_dcba
-    mov ds:orsDcbaap,eax
-    mov eax,es:xhc_dcba+4
-    mov ds:orsDcbaap+4,eax
-;
-    int 3
-    push es
-    mov cx,400h
-    mov es,es:xhc_cmd_ring_sel
-    xor di,di
-    xor eax,eax
-    rep stosd
-    pop es
-    int 3
-;    
-    mov eax,es:xhc_crcr
-    mov ds:orsCrCtrl,eax
-    mov eax,es:xhc_crcr+4
-    mov ds:orsCrCtrl+4,eax
-;    
-    pop ds
+    call InitFunction
     ret
 AddFunction Endp
 
