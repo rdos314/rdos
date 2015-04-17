@@ -50,6 +50,20 @@ hccCap2     DD ?
 
 hcc_cap_struc   ENDS
 
+op_reg_struc    STRUC
+
+orsUsbCmd   DD ?
+orsUsbSts   DD ?
+orsPageSize DD ?
+orsResv1    DD ?,?
+orsDnCtrl   DD ?
+orsCrCtrl   DD ?
+orsResv2    DD ?,?,?,?
+orsDcbaap   DD ?,?
+orsConfig   DD ?
+
+op_reg_struc    ENDS
+
 port_stat_struc STRUC
 
 pss_sc      DD ?
@@ -771,7 +785,6 @@ cpf64Ok:
     xor di,di
     xor al,al
     rep stosb
-    int 3
 ;
     mov al,ds:[4]
     movzx ax,al
@@ -1048,7 +1061,6 @@ csfContextSizeOk:
     movzx ecx,es:xhc_port_count
     shl ecx,4
     CreateDataSelector16
-    int 3
     mov es:xhc_port_sel,bx
 ;
     pop eax
@@ -1125,6 +1137,51 @@ CreateSecondaryFunction Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AddFunction
+;
+;       DESCRIPTION:    Add EHCI function
+;
+;       PARAMETERS:     BX      PCI bus/device
+;                       CH      PCI function
+;                       ES      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddFunction  Proc near
+    push ds
+;    
+    int 3
+    mov ds,es:xhc_reg_sel
+    and ds:orsUsbCmd,NOT 1
+
+afWaitStop:
+    test ds:orsUsbSts,1
+    jnz afWaitStopped
+;
+    mov ax,10
+    WaitMilliSec
+    jmp afWaitStop
+
+afWaitStopped:    
+    int 3
+    or ds:orsUsbCmd,2
+
+afWaitReset:
+    test ds:orsUsbCmd,2
+    jz afWaitReseted
+;
+    mov ax,10
+    WaitMilliSec
+    jmp afWaitReset
+
+afWaitReseted:        
+    pop ds
+    ret
+AddFunction Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitPciAdapter
 ;
 ;           DESCRIPTION:    Init PCI adapter if found
@@ -1160,9 +1217,11 @@ init_pci_base_ok:
     and ax,0FFF0h
     mov ebp,eax
     call CreatePrimaryFunction
-;
     mov dx,1
-
+    jc init_pci_next_device
+;
+    call AddFunction
+    
 init_pci_next_device:
     mov ax,dx
     mov bh,0Ch
@@ -1179,6 +1238,9 @@ init_pci_next_device:
 ;       
     call CreateSecondaryFunction
     inc dx
+    jc init_pci_next_device
+;
+    call AddFunction
     jmp init_pci_next_device
     
 init_pci_done:
