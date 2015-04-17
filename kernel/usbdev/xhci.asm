@@ -35,6 +35,35 @@ INCLUDE ..\pcdev\pci.inc
 INCLUDE usb.inc
 INCLUDE usbdev.inc
 
+hcc_cap_struc   STRUC
+
+hccLen      DB ?
+hccResv     DB ?
+hccVersion  DW ?
+hccParams1  DD ?
+hccParams2  DD ?
+hccParams3  DD ?
+hccCap1     DD ?
+hccDbOff    DD ?
+hccRtsOff   DD ?
+hccCap2     DD ?
+
+hcc_cap_struc   ENDS
+
+xhci_func_sel   STRUC
+
+usb_dev_base        usb_dev_struc <>
+
+xhc_hcc_sel         DW ?
+xhc_db_sel          DW ?
+xhc_rts_sel         DW ?
+
+xhc_slot_count      DW ?
+xhc_int_count       DW ?
+xhc_port_count      DW ?
+
+xhci_func_sel   ENDS
+
 data    SEGMENT byte public 'DATA'
 
 dummy   DB ?
@@ -678,33 +707,107 @@ InitFunction    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CreateFunction
+;
+;       DESCRIPTION:    Create XHCI function
+;
+;       PARAMETERS:     EDX:EAX Register base
+;
+;       RETURNS:        NC      OK
+;                           ES  Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateFunction  Proc near
+    push ds
+    pushad
+;
+    mov ebx,edx
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    push eax
+    and ax,0F000h
+    or ax,813h
+    SetPageEntry
+    pop eax
+    and eax,0FFFh
+    or edx,eax
+;
+    push ecx
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    pop ecx
+    mov ds,bx
+;
+    pop cx
+    pop bx    
+;
+    mov eax,ds:hccCap1
+    test al,1
+    jnz cf64Ok
+;
+    HasPhysical64
+    jnc cfFail
+
+cf64Ok:        
+    mov eax,SIZE xhci_func_sel
+    mov cx,ax
+    AllocateSmallGlobalMem
+    xor di,di
+    xor al,al
+    rep stosb
+    int 3
+;
+    mov al,ds:[4]
+    movzx ax,al
+    mov es:xhc_slot_count,ax
+;
+    mov ax,ds:[5]
+    and ax,3FFh
+    mov es:xhc_int_count,ax
+;
+    mov al,ds:[7]
+    movzx ax,al
+    mov es:xhc_port_count,ax
+    clc
+    jmp cfDone
+
+cfFail:    
+    mov bx,ds
+    xor ax,ax
+    mov ds,ax
+    FreeGdt
+    stc
+
+cfDone:
+    popad
+    pop ds
+    ret
+CreateFunction Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AddFunction
 ;
 ;           DESCRIPTION:    Add EHCI function
 ;
 ;       PARAMETERS:     BX      Bus/device
-;               CH      Function
-;               EAX     Register base
+;                       CH      Function
+;                       EDX:EAX Register base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddFunction  Proc near
     push es
-    push ds
-    push eax
-    push bx
-    push edx
-    push di
-    push bp
-;
-    int 3    
-;    
-    pop bp
-    pop di
-    pop edx
-    pop bx
-    pop eax    
-    pop ds
+    call CreateFunction
+    jc afDone
+
+afDone:
     pop es
     ret
 AddFunction Endp
@@ -732,7 +835,18 @@ InitPciAdapter  Proc near
 ;
     mov cl,10h
     ReadPciDword
-    and ax,0FF00h
+    xor edx,edx
+    test al,4
+    jz init_pci_base_ok
+;
+    push eax    
+    mov cl,14h
+    ReadPciDword
+    mov edx,eax
+    pop eax
+
+init_pci_base_ok:
+    and ax,0FFF0h
     mov ebp,eax
     call AddFunction
 ;       
@@ -770,7 +884,6 @@ InitPciAdapter  Endp
 xhci_name       DB 'XHCI',0
 
 xhci_thread:
-    int 3
     call InitPciAdapter
     int 3
 
