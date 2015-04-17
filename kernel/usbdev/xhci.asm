@@ -57,7 +57,7 @@ orsUsbSts   DD ?
 orsPageSize DD ?
 orsResv1    DD ?,?
 orsDnCtrl   DD ?
-orsCrCtrl   DD ?
+orsCrCtrl   DD ?,?
 orsResv2    DD ?,?,?,?
 orsDcbaap   DD ?,?
 orsConfig   DD ?
@@ -82,12 +82,14 @@ xhc_reg_sel         DW ?
 xhc_port_sel        DW ?
 xhc_db_sel          DW ?
 xhc_rts_sel         DW ?
+xhc_device_ptr_sel  DW ?
 
 xhc_slot_count      DW ?
 xhc_int_count       DW ?
 xhc_port_count      DW ?
 
 xhc_context_size    DW ?
+xhc_dcba            DD ?,?
 
 xhci_func_sel   ENDS
 
@@ -917,10 +919,24 @@ cpfContextSizeOk:
     shl ecx,5
     CreateDataSelector16
     mov es:xhc_rts_sel,bx        
+;
+    AllocatePhysical64
+    mov es:xhc_dcba,eax
+    mov es:xhc_dcba+4,ebx
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov al,13h
+    SetPageEntry
+;
+    mov bx,xhci_device_ptr_sel
+    movzx ecx,es:xhc_slot_count
+    shl ecx,3
+    CreateDataSelector16
+    mov es:xhc_device_ptr_sel,bx
     clc
     jmp cpfDone
-
-    mov es:xhc_int_count,ax
 
 cpfFail:    
     pop eax
@@ -1116,6 +1132,22 @@ csfContextSizeOk:
     shl ecx,5
     CreateDataSelector16
     mov es:xhc_rts_sel,bx        
+;
+    AllocatePhysical64
+    mov es:xhc_dcba,eax
+    mov es:xhc_dcba+4,ebx
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov al,13h
+    SetPageEntry
+;
+    AllocateGdt
+    movzx ecx,es:xhc_slot_count
+    shl ecx,3
+    CreateDataSelector16
+    mov es:xhc_device_ptr_sel,bx
     clc
     jmp csfDone
 
@@ -1150,7 +1182,6 @@ CreateSecondaryFunction Endp
 AddFunction  Proc near
     push ds
 ;    
-    int 3
     mov ds,es:xhc_reg_sel
     and ds:orsUsbCmd,NOT 1
 
@@ -1163,7 +1194,6 @@ afWaitStop:
     jmp afWaitStop
 
 afWaitStopped:    
-    int 3
     or ds:orsUsbCmd,2
 
 afWaitReset:
@@ -1175,6 +1205,24 @@ afWaitReset:
     jmp afWaitReset
 
 afWaitReseted:        
+    movzx eax,es:xhc_slot_count
+    or ax,200h
+    mov ds:orsConfig,eax
+    int 3
+    push es
+    mov cx,es:xhc_slot_count
+    mov es,es:xhc_device_ptr_sel
+    xor di,di
+    shl cx,1
+    xor eax,eax
+    rep stosd
+    pop es
+;    
+    mov eax,es:xhc_dcba
+    mov ds:orsDcbaap,eax
+    mov eax,es:xhc_dcba+4
+    mov ds:orsDcbaap+4,eax
+;    
     pop ds
     ret
 AddFunction Endp
