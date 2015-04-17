@@ -472,6 +472,9 @@ can_data_sel        EQU 0B68h
 can_com_code_sel    EQU 0B70h
 can_com_data_sel    EQU 0B78h
 
+xhci_code_sel       EQU 0B80h
+xhci_data_sel       EQU 0B88h
+
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h
 
