@@ -664,6 +664,23 @@ reset_thread:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           XhciInt
+;
+;           DESCRIPTION:    XHCI interrupt
+;
+;       PARAMETERS:     DS      Function selector
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+XhciInt Proc far    
+    retf32
+XhciInt Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitFunction
 ;
 ;           DESCRIPTION:    Init EHCI function
@@ -729,6 +746,34 @@ ifWaitReset:
     jmp ifWaitReset
 
 ifWaitReseted:        
+    int 3
+    GetPciMsi
+    jc ifIrq
+;
+    push cx
+    mov cx,1
+    mov al,14h
+    AllocateInts
+    pop cx
+    jc ifIrq    
+;
+    SetupPciMsi
+;    
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET XhciInt
+    RequestMsiHandler
+    jmp ifIntDone
+
+ifIrq:
+    GetPciIrqNr
+    mov ah,14h
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET XhciInt
+    RequestIrqHandler
+
+ifIntDone:    
     movzx eax,es:xhc_slot_count
     or ax,200h
     mov ds:orsConfig,eax
