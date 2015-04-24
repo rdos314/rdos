@@ -64,6 +64,20 @@ orsConfig   DD ?
 
 op_reg_struc    ENDS
 
+run_reg_struc   STRUC
+
+rrsIndex    DD ?
+rrsResv     DD 7 DUP(?)
+
+rrsIman     DD ?
+rrsImod     DD ?
+rrsRingSize DD ?
+rrsPad      DD ?
+rrsBase     DD ?,?
+rrsDequeue  DD ?,?
+
+run_reg_struc   ENDS
+
 port_stat_struc STRUC
 
 pss_sc      DD ?
@@ -84,14 +98,16 @@ xhc_db_sel          DW ?
 xhc_rts_sel         DW ?
 xhc_device_ptr_sel  DW ?
 xhc_cmd_ring_sel    DW ?
+xhc_event_ring_sel  DW ?
 
 xhc_slot_count      DW ?
-xhc_int_count       DW ?
 xhc_port_count      DW ?
 
 xhc_context_size    DW ?
 xhc_dcba            DD ?,?
 xhc_crcr            DD ?,?
+xhc_erst            DD ?,?
+
 
 xhci_func_sel   ENDS
 
@@ -681,6 +697,94 @@ XhciInt Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AllocateTrb
+;
+;       DESCRIPTION:    Allocate new TRB
+;
+;       RETURNS:        EBX:EAX     Physical address of TRB
+;                       EDX         Linear address of TRB
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateTrb   Proc near
+    push es
+    push ecx
+    push edi
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov eax,1000h
+    AllocateBigLinear
+;    
+    AllocatePhysical64
+    push eax
+;
+    mov al,13h
+    SetPageEntry
+;
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;    
+    pop eax    
+;        
+    pop edi
+    pop ecx
+    pop es    
+    ret
+AllocateTrb   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateEvent
+;
+;       DESCRIPTION:    Init event ring
+;
+;       PARAMETERS:     ES      Function selector
+;
+;       RETURNS:        EDI     Event ring linear
+;                       EBX:EAX Event ring physical
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateEvent   Proc near
+    push ds
+    push es
+;    
+    mov ds,es:xhc_rts_sel
+;
+    AllocatePhysical64
+    mov es:xhc_erst,eax
+    mov es:xhc_erst+4,ebx
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov al,13h
+    SetPageEntry
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,edx
+    call AllocateTrb
+;
+    mov es:[edi],eax
+    mov es:[edi+4],ebx
+    mov ecx,256
+    mov es:[edi+8],ecx
+    xor ecx,ecx
+    mov es:[edi+12],ecx
+;    
+    pop es
+    pop ds
+    ret
+CreateEvent   Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitFunction
 ;
 ;           DESCRIPTION:    Init EHCI function
@@ -722,7 +826,6 @@ InitFunction    Proc near
     push fs
     pushad
 ;
-    int 3
     mov ds,es:xhc_reg_sel
     and ds:orsUsbCmd,NOT 1
 
@@ -746,7 +849,6 @@ ifWaitReset:
     jmp ifWaitReset
 
 ifWaitReseted:        
-    int 3
     GetPciMsi
     jc ifIrq
 ;
@@ -759,19 +861,23 @@ ifWaitReseted:
 ;
     SetupPciMsi
 ;    
+    push es
     mov di,cs
     mov es,di
     mov edi,OFFSET XhciInt
     RequestMsiHandler
+    pop es
     jmp ifIntDone
 
 ifIrq:
+    push es
     GetPciIrqNr
     mov ah,14h
     mov di,cs
     mov es,di
     mov edi,OFFSET XhciInt
     RequestIrqHandler
+    pop es
 
 ifIntDone:    
     movzx eax,es:xhc_slot_count
@@ -800,12 +906,21 @@ ifIntDone:
     rep stosd
     pop es
 ;    
+    int 3
     mov eax,es:xhc_crcr
     mov ds:orsCrCtrl,eax
     mov eax,es:xhc_crcr+4
     mov ds:orsCrCtrl+4,eax
+;
+    mov ds,es:xhc_rts_sel
+    mov eax,es:xhc_erst
+    mov ebx,es:xhc_erst+4
+    mov ds:rrsBase,eax
+    mov ds:rrsBase+4,ebx
+    mov ds:rrsRingSize,1
+    mov ds:rrsDequeue,eax
+    mov ds:rrsDequeue+4,ebx
 ;    
-    int 3
     mov si,OFFSET xhci_tab
     xor di,di
     mov cx,2*26
@@ -883,16 +998,6 @@ cpf64Ok:
     mov al,ds:[4]
     movzx ax,al
     mov es:xhc_slot_count,ax
-;
-    mov ax,ds:[5]
-    and ax,3FFh
-    cmp ax,8
-    jb cpfIntOk
-;
-    mov ax,8
-
-cpfIntOk:    
-    mov es:xhc_int_count,ax
 ;
     mov al,ds:[7]
     cmp al,0B0h
@@ -1007,8 +1112,7 @@ cpfContextSizeOk:
     or edx,eax
 ;
     mov bx,xhci_rts_sel
-    movzx ecx,es:xhc_int_count
-    shl ecx,5
+    mov ecx,40h
     CreateDataSelector16
     mov es:xhc_rts_sel,bx        
 ;
@@ -1042,6 +1146,12 @@ cpfContextSizeOk:
     mov ecx,1000h
     CreateDataSelector16
     mov es:xhc_cmd_ring_sel,bx
+;
+    call CreateEvent
+    mov bx,xhci_event_ring_sel
+    mov ecx,1000h
+    CreateDataSelector16
+    mov es:xhc_event_ring_sel,bx    
     clc
     jmp cpfDone
 
@@ -1114,16 +1224,6 @@ csf64Ok:
     mov al,ds:[4]
     movzx ax,al
     mov es:xhc_slot_count,ax
-;
-    mov ax,ds:[5]
-    and ax,3FFh
-    cmp ax,8
-    jb csfIntOk
-;
-    mov ax,8
-
-csfIntOk:    
-    mov es:xhc_int_count,ax
 ;
     mov al,ds:[7]
     cmp al,0B0h
@@ -1235,8 +1335,7 @@ csfContextSizeOk:
     or edx,eax
 ;
     AllocateGdt
-    movzx ecx,es:xhc_int_count
-    shl ecx,5
+    mov ecx,40h
     CreateDataSelector16
     mov es:xhc_rts_sel,bx        
 ;
@@ -1270,6 +1369,12 @@ csfContextSizeOk:
     mov ecx,1000h
     CreateDataSelector16
     mov es:xhc_cmd_ring_sel,bx
+;
+    call CreateEvent
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov es:xhc_event_ring_sel,bx    
     clc
     jmp csfDone
 
@@ -1327,7 +1432,6 @@ InitPciAdapter  Proc near
     FindPciClass
     jc init_pci_done
 ;
-    int 3
     mov cl,10h
     ReadPciDword
     xor edx,edx
