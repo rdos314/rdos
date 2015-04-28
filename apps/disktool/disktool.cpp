@@ -33,6 +33,7 @@
 #include "disc.h"
 #include "part.h"
 #include "fatpart.h"
+#include "idepart.h"
 #include "file.h"
 
 #define BOOT_LOADER_SECTORS     16
@@ -46,6 +47,8 @@ int BootSize;
 char *BootLoader;
 int LoaderSize;
 
+static TIdeFsPartitionFactory *ifat16;
+
 /*##########################################################################
 #
 #   Name       : ShowPartEntry
@@ -57,13 +60,14 @@ int LoaderSize;
 #   Returns....: *
 #
 ##########################################################################*/
-void ShowPartEntry(int Nr, TPartition *Entry)
+void ShowPartEntry(int Nr, TIdePartition *Entry)
 {
     const char *Name;
     int Typ;
     double TotalSpace;
     double FreeSpace;
-    int Drive;
+    int DriveNr;
+    TDrive *Drive;
     char DriveStr[4];
 
     if (Entry)
@@ -75,38 +79,42 @@ void ShowPartEntry(int Nr, TPartition *Entry)
         if (Entry->Size)
         {
             if (Entry->IsFs() && Entry->GetDrive())
-                Drive = Entry->GetDrive()->GetDriveNr();
-            else
-                Drive = 0;
-
-            if (Drive)
             {
-                DriveStr[0] = 'A' + (char)Drive;
+                Drive = Entry->GetDrive();
+                if (Drive)
+                    DriveNr = Drive->GetDriveNr();
+                else
+                    DriveNr = 0;
+            }
+            else
+                DriveNr = 0;
+
+            if (DriveNr)
+            {
+                DriveStr[0] = 'A' + (char)DriveNr;
                 DriveStr[1] = ':';
                 DriveStr[2] = 0;
                               
                 FreeSpace = Entry->GetFreeSpace();
 
-                printf(
-                          "%d: %s %02hX %08lX-%08lX %8s %15.3f MB %15.3f MB\r\n",
-                          Nr,
-                          DriveStr,
-                          Typ,
-                          Entry->Start,
-                          Entry->Start + Entry->Size - 1,
-                          Name,
-                          TotalSpace,
-                          FreeSpace);
+                printf(     "%d: %s %02hX %08lX-%08lX %8s %15.3f MB %15.3f MB\r\n",
+                             Nr,
+                             DriveStr,
+                             Typ,
+                             Entry->Start,
+                             Entry->Start + Entry->Size - 1,
+                             Name,
+                             TotalSpace,
+                             FreeSpace);
             }
             else
-                printf(
-                          "%d: -- %02hX %08lX-%08lX %8s %15.3f MB\r\n",
-                          Nr,
-                          Typ,
-                          Entry->Start,
-                          Entry->Start + Entry->Size - 1,
-                          Name,
-                          TotalSpace);
+                printf(     "%d: -- %02hX %08lX-%08lX %8s %15.3f MB\r\n",
+                            Nr,
+                            Typ,
+                            Entry->Start,
+                            Entry->Start + Entry->Size - 1,
+                            Name,
+                            TotalSpace);
         }
         else
             printf("%d: -- No entry\r\n", Nr);
@@ -115,19 +123,52 @@ void ShowPartEntry(int Nr, TPartition *Entry)
 
 /*##########################################################################
 #
-#   Name       : ShowPartTable
+#   Name       : ShowFreeEntry
 #
-#   Purpose....: Show partition table
+#   Purpose....: Show free entry
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void ShowPartTable(TDiscPartition *Part)
+void ShowFreeEntry(int Nr, TPartition *Entry)
+{
+    const char *Name;
+    double TotalSpace;
+    double FreeSpace;
+    char str[100];
+
+    Name = Entry->GetPartName();
+    TotalSpace = Entry->GetTotalSpace();
+
+    sprintf(str,
+            "%d: -- -- %08lX-%08lX %8s %15.3f MB\r\n",
+             Nr,
+             Entry->Start,
+             Entry->Start + Entry->Size - 1,
+             Name,
+             TotalSpace);
+    printf(str);
+}
+
+/*##########################################################################
+#
+#   Name       : ShowPartTable
+#
+#   Purpose....: Show table
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ShowPartTable(TIdeDiscPartition *Part)
 {
     int i;
     TDisc *Disc;
+    long long TotalSectors;
+    TPartition *Entry;
 
     Disc = Part->GetDisc();
 
@@ -138,7 +179,16 @@ void ShowPartTable(TDiscPartition *Part)
     printf("DRV TYPE    SECTORS       FILESYS         TOTAL SIZE          FREE SIZE\r\n");
 
     for (i = 0; i < Part->PartCount; i++)
-        ShowPartEntry(i, Part->PartArr[i]);
+    {
+        Entry = Part->PartArr[i];
+        if (Entry)
+        {
+            if (Entry->IsFree())
+                ShowFreeEntry(i, Entry);
+            else
+                ShowPartEntry(i, (TIdePartition *)Entry);
+        }
+    }
 }
 
 /*##########################################################################
@@ -154,11 +204,11 @@ void ShowPartTable(TDiscPartition *Part)
 ##########################################################################*/
 void ShowOnePart(TDisc *Disc)
 {
-    TDiscPartition *DiscPart;
+    TIdeDiscPartition *DiscPart;
 
     if (Disc->IsValid())
     {
-        DiscPart = new TDiscPartition(Disc);
+        DiscPart = new TIdeDiscPartition(Disc);
         ShowPartTable(DiscPart);
         delete DiscPart;
     }
@@ -234,16 +284,16 @@ int FindUsb()
     TDisc *Disc;
     int i;
     int count = 0;
-    TDiscPartition *DiscPart;
+    TIdeDiscPartition *DiscPart;
     TPartition *Part = 0;
     TDrive *Drive;
     
-    for (DiscNr = 0; DiscNr < 16; DiscNr++)
+    for (DiscNr = 1; DiscNr < 16; DiscNr++)
     {
         Disc = new TDisc(DiscNr);
         if (Disc->IsValid())
         {
-            DiscPart = new TDiscPartition(Disc);
+            DiscPart = new TIdeDiscPartition(Disc);
 
             for (i = 0; i < DiscPart->PartCount; i++)
             {
@@ -424,8 +474,8 @@ void MakeBootable(int DiscNr)
 {
     int ok;
     TDisc *Disc;
-    TDiscPartition *DiscPart;
-    TPartition *Part;
+    TIdeDiscPartition *DiscPart;
+    TIdePartition *Part;
     
     Disc = new TDisc(DiscNr);
     ok = Disc->IsValid();
@@ -434,8 +484,8 @@ void MakeBootable(int DiscNr)
     {
         LoadBootLoader(Disc);
 
-        DiscPart = new TDiscPartition(Disc);
-        Part = DiscPart->PartArr[0];
+        DiscPart = new TIdeDiscPartition(Disc);
+        Part = (TIdePartition *)DiscPart->PartArr[0];
         if (Part)
             if (Part->Start <= LoaderSectors + 1)
                 ok = Part->IsFree();
@@ -470,19 +520,22 @@ void MakeBootable(int DiscNr)
 ##########################################################################*/
 int MakeBootPart(int DiscNr)
 {
+    int ok;
     TDisc *Disc;
-    TDiscPartition *DiscPart;
-    TFat16PartitionFactory fact;
+    TIdeDiscPartition *DiscPart;
 
     Disc = new TDisc(DiscNr);
 
     if (Disc->IsValid())
     {
-        DiscPart = new TDiscPartition(Disc);
-        if (DiscPart->Add("FAT16", 120 * 2048, BootCode, BootSize))
-            return TRUE;
+        DiscPart = new TIdeDiscPartition(Disc);
+        ok = DiscPart->Add("FAT16", 120 * 2048, BootCode, BootSize);
+
+        RdosWaitMilli(1000);
+        Disc->WaitForIdle();
+        delete DiscPart;
     }
-    return FALSE;
+    return ok;
 }
 
 /*##########################################################################
@@ -529,14 +582,14 @@ int RemovePart(TDiscPartition *DiscPart)
 int RemoveDisc(int DiscNr)
 {
     TDisc *Disc;
-    TDiscPartition *DiscPart;
+    TIdeDiscPartition *DiscPart;
     int ok = FALSE;
 
     Disc = new TDisc(DiscNr);
 
     if (Disc->IsValid())
     {
-        DiscPart = new TDiscPartition(Disc);
+        DiscPart = new TIdeDiscPartition(Disc);
         ok = RemovePart(DiscPart);
         delete DiscPart;
     }
@@ -559,14 +612,14 @@ int GetPartCount(int DiscNr)
     int i;
     int count = 0;
     TDisc *Disc;
-    TDiscPartition *DiscPart;
+    TIdeDiscPartition *DiscPart;
     TPartition *Part = 0;
 
     Disc = new TDisc(DiscNr);
 
     if (Disc->IsValid())
     {
-        DiscPart = new TDiscPartition(Disc);
+        DiscPart = new TIdeDiscPartition(Disc);
 
         for (i = 0; i < DiscPart->PartCount; i++)
         {
@@ -663,6 +716,8 @@ int main()
     RdosWaitMilli(2500);
 
     printf("Waiting for USB disc.");
+
+    ifat16 = new TIdeFat16PartitionFactory;
 
     for (i = 0; i < 100; i++)
     {

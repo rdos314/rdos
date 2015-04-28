@@ -314,7 +314,7 @@ void TIdePartitionTable::LbaToChs(long Sector, char *Data)
 void TIdePartitionTable::ProcessOne(int Entry, const char *Data)
 {
     unsigned char Type;
-    TIdePartition *Part;
+    TIdePartition *Part = 0;
     TIdeFsPartition *FsPart = 0;
     TIdePartitionTable *TablePart = 0;
     long PStart;
@@ -335,23 +335,27 @@ void TIdePartitionTable::ProcessOne(int Entry, const char *Data)
         PSize = *(long *)(Data + 0xC);
     }
 
-    Type = *(Data + 4);
-    switch (Type)
+    if (PStart >= 0 && PSize >= 0)
     {
-        case 0:
-            Part = new TIdePartition(FDisc, Type, 0, Entry, PStart, PSize);
-            break;
 
-        case 5:
-        case 0xF:
-            TablePart = new TIdePartitionTable(FDisc, Type, this, Entry, PStart, PSize);
-            Part = TablePart;
-            break;
+        Type = *(Data + 4);
+        switch (Type)
+        {
+            case 0:
+                Part = new TIdePartition(FDisc, Type, 0, Entry, PStart, PSize);
+                break;
 
-        default:
-            FsPart = TIdeFsPartitionFactory::Parse(FDisc, Type, this, Entry, PStart, PSize);
-            Part = FsPart;
-            break;
+            case 5:
+            case 0xF:
+                TablePart = new TIdePartitionTable(FDisc, Type, this, Entry, PStart, PSize);
+                Part = TablePart;
+                break;
+
+            default:
+                FsPart = TIdeFsPartitionFactory::Parse(FDisc, Type, this, Entry, PStart, PSize);
+                Part = FsPart;
+                break;
+        }
     }
 
     if (TablePart)
