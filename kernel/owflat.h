@@ -432,6 +432,21 @@
     CallGate_set_video_mode  \
     modify [ax];
 
+#pragma aux RdosQueryVideoMode = \
+    "push edx" \
+    CallGate_query_video_mode \
+    "movzx ecx,cx" \
+    "mov [esi],ecx" \
+    "movzx edx,dx" \
+    "mov [edi],edx" \
+    "movzx eax,ax" \
+    "pop edx" \
+    "mov [edx],eax" \
+    CarryToBool \
+    parm [eax] [edx] [esi] [edi] \
+    value [eax] \
+    modify [eax ecx edx esi edi];
+
 #pragma aux RdosSetVideoMode = \
     "push ebp" \
     "push esi" \

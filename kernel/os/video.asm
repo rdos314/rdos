@@ -135,6 +135,60 @@ register_video_mode     PROC far
     ret
 register_video_mode     ENDP
 
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           QueryVideoMode
+;
+;           DESCRIPTION:    Query video mode
+;
+;           PARAMETERS:     AX      mode # or 0    
+;
+;           RETURNS:        AX          bits / pixel
+;                           CX          x-resolution
+;                           DX          y-resolution
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+query_video_mode_name     DB 'Query Video Mode',0
+
+query_video_mode  PROC far
+    push ds
+    push bx
+;
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:v_list
+
+query_video_mode_loop:
+    or bx,bx
+    stc
+    jz query_video_mode_done
+;
+    mov ds,bx
+    cmp ax,ds:mode_nr
+    jnz query_video_mode_next
+;    
+    mov cx,ds:mode_x_resol
+    mov dx,ds:mode_y_resol
+    movzx ax,ds:mode_bpp
+    clc    
+    jmp query_video_mode_done
+
+query_video_mode_next:
+    mov bx,ds:mode_link
+    or bx,bx
+    jnz query_video_mode_loop
+;
+    stc
+
+query_video_mode_done:
+    pop bx
+    pop ds
+    ret
+query_video_mode    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3688,6 +3742,12 @@ init_video      PROC near
     xor cl,cl
     mov ax,invert_mouse_nr
     RegisterOsGate
+;
+    mov esi,OFFSET query_video_mode
+    mov edi,OFFSET query_video_mode_name
+    xor dx,dx
+    mov ax,query_video_mode_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_video_mode
     mov edi,OFFSET get_video_mode_name

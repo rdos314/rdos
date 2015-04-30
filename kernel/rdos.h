@@ -239,6 +239,7 @@ int RDOSAPI RdosGetFixedAudioOutput(int *Device, int *Codec, int *Node);
 int RDOSAPI RdosGetJackAudioOutput(int Num, int *Device, int *Codec, int *Node);
 int RDOSAPI RdosGetJackAudioInput(int Num, int *Device, int *Codec, int *Node);
 
+int RDOSAPI RdosQueryVideoMode(int Mode, int *BitsPerPixel, int *xres, int *yres);
 void RDOSAPI RdosSetTextMode();
 int RDOSAPI RdosSetVideoMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
 void RDOSAPI RdosSetClipRect(int handle, int xmin, int ymin, int xmax, int ymax);

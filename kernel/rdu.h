@@ -740,6 +740,8 @@
 
 #define usergate_get_disc_vendor_info 0x00000244
 
+#define usergate_query_video_mode 0x00000245
+
 
 
 #ifdef __FLAT__
@@ -1485,6 +1487,8 @@
 
 #define CallGate_get_disc_vendor_info 0x67 0x9a 68 2 0 0 3 0
 
+#define CallGate_query_video_mode 0x67 0x9a 69 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2227,5 +2231,7 @@
 #define CallGate_is_disc_idle 0x3e 0x67 0x9a 67 2 0 0 3 0
 
 #define CallGate_get_disc_vendor_info 0x3e 0x67 0x9a 68 2 0 0 3 0
+
+#define CallGate_query_video_mode 0x3e 0x67 0x9a 69 2 0 0 3 0
 
 #endif

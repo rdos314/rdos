@@ -2679,6 +2679,14 @@ GetStringMetrics        MACRO
 
 ;;;;;;;;;;; SCREEN, GRAPHICS MODE ;;;;;;;;;;
 
+;	IN  AX		Requested mode
+;	OUT AX		bits / pixel
+;	OUT CX		x-resolution
+;	OUT DX		y-resolution
+QueryVideoMode      MACRO
+	UserGate query_video_mode_nr
+						ENDM
+
 ;	IN  AX		bits / pixel
 ;	IN  CX		x-resolution
 ;	IN  DX		y-resolution
