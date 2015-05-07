@@ -35,6 +35,31 @@ INCLUDE ..\pcdev\pci.inc
 INCLUDE usb.inc
 INCLUDE usbdev.inc
 
+TRB_TYPE_NORMAL         = 1
+TRB_TYPE_SETUP          = 2
+TRB_TYPE_DATA           = 3
+TRB_TYPE_STATUS         = 4
+TRB_TYPE_ISO            = 5
+TRB_TYPE_LINK           = 6
+TRB_TYPE_EVENT          = 7
+TRB_TYPE_NO_OP          = 8
+TRB_TYPE_ENABLE_SLOT    = 9
+TRB_TYPE_DISABLE_SLOT   = 10
+TRB_TYPE_ADDRESS_DEV    = 11
+TRB_TYPE_CONFIGURE_ENDP = 12
+TRB_TYPE_EVALUATE       = 13
+TRB_TYPE_RESET_ENDP     = 14
+TRB_TYPE_STOP_ENDP      = 15
+TRB_TYPE_SET_TR         = 16
+TRB_TYPE_RESET_DEV      = 17
+TRB_TYPE_NO_OP_CMD      = 23
+TRB_TYPE_TRANSFER       = 32
+TRB_TYPE_CMD_COMPLETE   = 33
+TRB_TYPE_PORT_CHANGE    = 34
+TRB_TYPE_CONTROLLER     = 37
+TRB_TYPE_DEV_NOTIFY     = 38
+TRB_TYPE_MFI_WRAP       = 39
+
 hcc_cap_struc   STRUC
 
 hccLen      DB ?
@@ -107,7 +132,7 @@ xhc_context_size    DW ?
 xhc_dcba            DD ?,?
 xhc_crcr            DD ?,?
 xhc_erst            DD ?,?
-
+xhc_edqe            DD ?,?
 
 xhci_func_sel   ENDS
 
@@ -750,11 +775,6 @@ AllocateTrb   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateEvent   Proc near
-    push ds
-    push es
-;    
-    mov ds,es:xhc_rts_sel
-;
     AllocatePhysical64
     mov es:xhc_erst,eax
     mov es:xhc_erst+4,ebx
@@ -765,6 +785,7 @@ CreateEvent   Proc near
     mov al,13h
     SetPageEntry
 ;
+    push es
     mov ax,flat_sel
     mov es,ax
     mov edi,edx
@@ -776,11 +797,45 @@ CreateEvent   Proc near
     mov es:[edi+8],ecx
     xor ecx,ecx
     mov es:[edi+12],ecx
-;    
     pop es
-    pop ds
+;    
+    mov es:xhc_edqe,eax
+    mov es:xhc_edqe+4,ebx    
     ret
 CreateEvent   Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateScratchPad
+;
+;       DESCRIPTION:    Create scratch pad area (if needed)
+;
+;       PARAMETERS:     ES      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateScratchPad   Proc near
+    push ds
+;    
+    mov bx,xhci_hcc_sel
+    mov ds,bx
+    mov eax,ds:hccParams2
+    mov edx,eax
+    shr edx,27
+    and dx,1Fh
+    shr eax,16
+    and dx,3E0h
+    add ax,dx    
+    or ax,ax
+    jz cspDone
+;
+    int 3    
+    
+cspDone:    
+    pop ds
+    ret
+CreateScratchPad   Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -907,6 +962,8 @@ ifIntDone:
     pop es
 ;    
     int 3
+    call CreateScratchPad
+;    
     mov eax,es:xhc_crcr
     mov ds:orsCrCtrl,eax
     mov eax,es:xhc_crcr+4
@@ -917,9 +974,20 @@ ifIntDone:
     mov ebx,es:xhc_erst+4
     mov ds:rrsBase,eax
     mov ds:rrsBase+4,ebx
+;    
     mov ds:rrsRingSize,1
+;
+    mov eax,es:xhc_edqe
+    mov ebx,es:xhc_edqe+4
     mov ds:rrsDequeue,eax
     mov ds:rrsDequeue+4,ebx
+    mov ds:rrsImod,0
+    mov ds:rrsIman,3
+;
+    mov ds,es:xhc_reg_sel
+    or ds:orsUsbCmd,4    
+;
+    or ds:orsUsbCmd,1
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
@@ -930,6 +998,8 @@ ifTabLoop:
     stosd
     loop ifTabLoop    
 ;
+    mov ax,es
+    mov ds,ax
     InitUsbDevice
     int 3
 
