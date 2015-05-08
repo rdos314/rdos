@@ -60,6 +60,15 @@ TRB_TYPE_CONTROLLER     = 37
 TRB_TYPE_DEV_NOTIFY     = 38
 TRB_TYPE_MFI_WRAP       = 39
 
+trb_struc   STRUC
+
+trb_param   DD ?,?
+trb_status  DD ?
+trb_type    DW ?
+trb_control DW ?
+
+trb_struc   ENDS
+
 hcc_cap_struc   STRUC
 
 hccLen      DB ?
@@ -133,6 +142,9 @@ xhc_dcba            DD ?,?
 xhc_crcr            DD ?,?
 xhc_erst            DD ?,?
 xhc_edqe            DD ?,?
+
+xhc_cmd_enque       DW ?
+xhc_cmd_pcs         DW ?
 
 xhci_func_sel   ENDS
 
@@ -722,16 +734,16 @@ XhciInt Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocateTrb
+;       NAME:           AllocateSegment
 ;
-;       DESCRIPTION:    Allocate new TRB
+;       DESCRIPTION:    Allocate new segment
 ;
 ;       RETURNS:        EBX:EAX     Physical address of TRB
 ;                       EDX         Linear address of TRB
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateTrb   Proc near
+AllocateSegment   Proc near
     push es
     push ecx
     push edi
@@ -758,12 +770,33 @@ AllocateTrb   Proc near
     pop ecx
     pop es    
     ret
-AllocateTrb   Endp
+AllocateSegment   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreateEvent
+;       NAME:           SetupLinkTrb
+;
+;       DESCRIPTION:    Setup link TRB
+;
+;       PARAMETERS:     EBX:EAX     Physical link address
+;                       GS:EDI      TRB offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupLinkTrb   Proc near
+    mov gs:[edi].trb_param,eax
+    mov gs:[edi].trb_param+4,ebx
+    mov gs:[edi].trb_status,0
+    mov gs:[edi].trb_type,2 + (TRB_TYPE_LINK SHL 10)
+    mov gs:[edi].trb_control,0
+    ret
+SetupLinkTrb    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateEventRing
 ;
 ;       DESCRIPTION:    Init event ring
 ;
@@ -774,7 +807,7 @@ AllocateTrb   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateEvent   Proc near
+CreateEventRing   Proc near
     AllocatePhysical64
     mov es:xhc_erst,eax
     mov es:xhc_erst+4,ebx
@@ -789,7 +822,7 @@ CreateEvent   Proc near
     mov ax,flat_sel
     mov es,ax
     mov edi,edx
-    call AllocateTrb
+    call AllocateSegment
 ;
     mov es:[edi],eax
     mov es:[edi+4],ebx
@@ -802,7 +835,7 @@ CreateEvent   Proc near
     mov es:xhc_edqe,eax
     mov es:xhc_edqe+4,ebx    
     ret
-CreateEvent   Endp   
+CreateEventRing   Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -836,6 +869,137 @@ cspDone:
     pop ds
     ret
 CreateScratchPad   Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateCommandRing
+;
+;       DESCRIPTION:    Create command ring
+;
+;       PARAMETERS:     ES      Function selector
+;
+;       RETURNS:        EDX     Ring linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateCommandRing   Proc near
+    push gs
+    push edi
+;
+    mov ax,flat_sel
+    mov gs,ax    
+;
+    AllocatePhysical64
+    mov es:xhc_crcr,eax
+    mov es:xhc_crcr+4,ebx
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov al,13h
+    SetPageEntry
+;
+    push es
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,edx
+    mov ecx,3FCh
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    pop es
+;
+    mov eax,es:xhc_crcr
+    mov ebx,es:xhc_crcr+4
+    call SetupLinkTrb
+;
+    mov es:xhc_cmd_enque,0
+    mov es:xhc_cmd_pcs,1
+;
+    pop edi
+    pop gs    
+    ret
+CreateCommandRing   Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WaitForCommandTrb
+;
+;       DESCRIPTION:    Wait for empty command TRB
+;
+;       RETURNS:        GS:EDI      TRB offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForCommandTrb   Proc near
+    push ax
+;    
+    mov gs,es:xhc_cmd_ring_sel
+    movzx edi,es:xhc_cmd_enque
+
+wfctLoop:    
+    mov ax,gs:[di].trb_type
+    test ax,2
+    jz wfctRetry
+;
+    int 3
+    xor gs:[di].trb_type,1
+    xor di,di
+    jmp wfctLoop
+
+wfctRetry:    
+    xor ax,es:xhc_cmd_pcs
+    test al,1
+    jnz wfctOk
+;
+    mov ax,10
+    WaitMilliSec
+    jmp wfctRetry        
+
+wfctOk:
+    mov ax,di
+    add ax,SIZE trb_struc
+    mov es:xhc_cmd_enque,ax
+;
+    mov gs:[di].trb_param,0
+    mov gs:[di].trb_param+4,0
+    mov gs:[di].trb_status,0
+    mov gs:[di].trb_control,0
+;
+    pop ax        
+    ret
+WaitForCommandTrb    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendCommandTrb
+;
+;       DESCRIPTION:    Send command TRB
+;
+;       PARAMETERS:     AL      TRB type
+;                       GS:EDI  TRB offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCommandTrb   Proc near
+    push ds
+    push eax
+;    
+    movzx ax,al
+    shl ax,10
+    or ax,es:xhc_cmd_pcs
+    mov gs:[edi].trb_type,ax
+;
+    mov ds,es:xhc_db_sel
+    xor eax,eax
+    mov ds:[0],eax
+;
+    pop eax
+    pop ds        
+    ret
+SendCommandTrb  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -952,19 +1116,11 @@ ifIntDone:
     mov ds:orsDcbaap,eax
     mov eax,es:xhc_dcba+4
     mov ds:orsDcbaap+4,eax
-;
-    push es
-    mov cx,400h
-    mov es,es:xhc_cmd_ring_sel
-    xor di,di
-    xor eax,eax
-    rep stosd
-    pop es
 ;    
-    int 3
     call CreateScratchPad
 ;    
     mov eax,es:xhc_crcr
+    or al,1
     mov ds:orsCrCtrl,eax
     mov eax,es:xhc_crcr+4
     mov ds:orsCrCtrl+4,eax
@@ -977,10 +1133,6 @@ ifIntDone:
 ;    
     mov ds:rrsRingSize,1
 ;
-    mov eax,es:xhc_edqe
-    mov ebx,es:xhc_edqe+4
-    mov ds:rrsDequeue,eax
-    mov ds:rrsDequeue+4,ebx
     mov ds:rrsImod,0
     mov ds:rrsIman,3
 ;
@@ -1002,6 +1154,10 @@ ifTabLoop:
     mov ds,ax
     InitUsbDevice
     int 3
+    call WaitForCommandTrb
+;
+    mov al,TRB_TYPE_NO_OP_CMD    
+    call SendCommandTrb
 
 ifDone:
     popad
@@ -1202,22 +1358,13 @@ cpfContextSizeOk:
     CreateDataSelector16
     mov es:xhc_device_ptr_sel,bx
 ;
-    AllocatePhysical64
-    mov es:xhc_crcr,eax
-    mov es:xhc_crcr+4,ebx
-;
-    mov eax,1000h
-    AllocateBigLinear
-;
-    mov al,13h
-    SetPageEntry
-;
+    call CreateCommandRing   
     mov bx,xhci_cmd_ring_sel
     mov ecx,1000h
     CreateDataSelector16
     mov es:xhc_cmd_ring_sel,bx
 ;
-    call CreateEvent
+    call CreateEventRing
     mov bx,xhci_event_ring_sel
     mov ecx,1000h
     CreateDataSelector16
@@ -1425,22 +1572,13 @@ csfContextSizeOk:
     CreateDataSelector16
     mov es:xhc_device_ptr_sel,bx
 ;
-    AllocatePhysical64
-    mov es:xhc_crcr,eax
-    mov es:xhc_crcr+4,ebx
-;
-    mov eax,1000h
-    AllocateBigLinear
-;
-    mov al,13h
-    SetPageEntry
-;
+    call CreateCommandRing
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector16
     mov es:xhc_cmd_ring_sel,bx
 ;
-    call CreateEvent
+    call CreateEventRing
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector16
