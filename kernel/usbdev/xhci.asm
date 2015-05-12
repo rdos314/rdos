@@ -69,6 +69,14 @@ trb_control DW ?
 
 trb_struc   ENDS
 
+cmd_struc   STRUC
+
+cmd_thread  DW ?
+cmd_resv    DW ?,?,?
+cmd_event   DD ?,?
+
+cmd_struc   ENDS
+
 hcc_cap_struc   STRUC
 
 hccLen      DB ?
@@ -147,6 +155,8 @@ xhc_cmd_enque       DW ?
 xhc_cmd_pcs         DW ?
 
 xhc_event_thread    DW ?
+xhc_cmd_section     section_typ <>
+xhc_event_ccs       DW ?
 
 xhci_func_sel   ENDS
 
@@ -894,7 +904,7 @@ CreateCommandRing   Proc near
     mov ax,flat_sel
     mov gs,ax    
 ;
-    mov eax,1000h
+    mov eax,2000h
     AllocateBigLinear
 ;
     AllocatePhysical64
@@ -908,11 +918,13 @@ CreateCommandRing   Proc near
     mov ax,flat_sel
     mov es,ax
     mov edi,edx
-    mov ecx,3FCh
+    mov ecx,800h
     xor eax,eax
     rep stos dword ptr es:[edi]
     pop es
 ;
+    mov edi,edx
+    add edi,0FF0h
     mov eax,es:xhc_crcr
     mov ebx,es:xhc_crcr+4
     call SetupLinkTrb
@@ -937,7 +949,12 @@ CreateCommandRing   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForCommandTrb   Proc near
+    push ds
     push ax
+;
+    mov ax,es
+    mov ds,ax
+    EnterSection ds:xhc_cmd_section    
 ;    
     mov gs,es:xhc_cmd_ring_sel
     movzx edi,es:xhc_cmd_enque
@@ -972,6 +989,7 @@ wfctOk:
     mov gs:[di].trb_control,0
 ;
     pop ax        
+    pop ds
     ret
 WaitForCommandTrb    Endp
 
@@ -991,6 +1009,11 @@ SendCommandTrb   Proc near
     push ds
     push eax
 ;    
+    push ax
+    GetThread
+    mov gs:[edi+1000h].cmd_thread,ax
+    pop ax
+;
     movzx ax,al
     shl ax,10
     or ax,es:xhc_cmd_pcs
@@ -1000,10 +1023,133 @@ SendCommandTrb   Proc near
     xor eax,eax
     mov ds:[0],eax
 ;
+    mov ax,es
+    mov ds,ax
+    LeaveSection ds:xhc_cmd_section    
+;
     pop eax
     pop ds        
     ret
 SendCommandTrb  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           error_event
+;
+;       DESCRIPTION:    Invalid event
+;
+;       PARAMETERS:     ES     Function sel
+;                       DS:SI  Event TRB
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+error_event Proc near
+    int 3
+    ret
+error_event Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           command_event
+;
+;       DESCRIPTION:    Command event
+;
+;       PARAMETERS:     ES     Function sel
+;                       DS:SI  Event TRB
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+command_event Proc near
+    int 3
+    mov di,ds:[si]
+    and di,0FF0h
+    mov fs,es:xhc_cmd_ring_sel
+    add di,1000h
+;
+    mov eax,ds:[si+8]
+    mov fs:[di+8],eax
+    mov eax,ds:[si+12]
+    mov fs:[di+12],eax
+;        
+    xor bx,bx
+    xchg bx,fs:[di].cmd_thread
+    Signal
+    ret
+command_event Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Event table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EventTab:
+evt00 DW OFFSET error_event
+evt01 DW OFFSET error_event
+evt02 DW OFFSET error_event
+evt03 DW OFFSET error_event
+evt04 DW OFFSET error_event
+evt05 DW OFFSET error_event
+evt06 DW OFFSET error_event
+evt07 DW OFFSET error_event
+evt08 DW OFFSET error_event
+evt09 DW OFFSET error_event
+evt0A DW OFFSET error_event
+evt0B DW OFFSET error_event
+evt0C DW OFFSET error_event
+evt0D DW OFFSET error_event
+evt0E DW OFFSET error_event
+evt0F DW OFFSET error_event
+evt10 DW OFFSET error_event
+evt11 DW OFFSET error_event
+evt12 DW OFFSET error_event
+evt13 DW OFFSET error_event
+evt14 DW OFFSET error_event
+evt15 DW OFFSET error_event
+evt16 DW OFFSET error_event
+evt17 DW OFFSET error_event
+evt18 DW OFFSET error_event
+evt19 DW OFFSET error_event
+evt1A DW OFFSET error_event
+evt1B DW OFFSET error_event
+evt1C DW OFFSET error_event
+evt1D DW OFFSET error_event
+evt1E DW OFFSET error_event
+evt1F DW OFFSET error_event
+evt20 DW OFFSET error_event
+evt21 DW OFFSET command_event
+evt22 DW OFFSET error_event
+evt23 DW OFFSET error_event
+evt24 DW OFFSET error_event
+evt25 DW OFFSET error_event
+evt26 DW OFFSET error_event
+evt27 DW OFFSET error_event
+evt28 DW OFFSET error_event
+evt29 DW OFFSET error_event
+evt2A DW OFFSET error_event
+evt2B DW OFFSET error_event
+evt2C DW OFFSET error_event
+evt2D DW OFFSET error_event
+evt2E DW OFFSET error_event
+evt2F DW OFFSET error_event
+evt30 DW OFFSET error_event
+evt31 DW OFFSET error_event
+evt32 DW OFFSET error_event
+evt33 DW OFFSET error_event
+evt34 DW OFFSET error_event
+evt35 DW OFFSET error_event
+evt36 DW OFFSET error_event
+evt37 DW OFFSET error_event
+evt38 DW OFFSET error_event
+evt39 DW OFFSET error_event
+evt3A DW OFFSET error_event
+evt3B DW OFFSET error_event
+evt3C DW OFFSET error_event
+evt3D DW OFFSET error_event
+evt3E DW OFFSET error_event
+evt3F DW OFFSET error_event
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1022,12 +1168,35 @@ event_thread:
     mov es,bx
     GetThread
     mov es:xhc_event_thread,ax
+;
+    mov ds,es:xhc_event_ring_sel
+    mov es:xhc_event_ccs,1
+    xor si,si
 
-etLoop:
+etWait:
     WaitForSignal
     int 3
-    jmp etLoop
 
+etNext:    
+    mov eax,ds:[si+12]
+    mov dx,es:xhc_event_ccs
+    and al,1
+    xor dl,al
+    jnz etWait
+;
+    shr ax,10
+    and ax,3Fh
+    mov bx,ax
+    shl bx,1    
+    call cs:[bx].EventTab
+;    
+    add si,16
+    cmp si,1000h
+    jne etNext
+;
+    xor es:xhc_event_ccs,1
+    xor si,si 
+    jmp etNext   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1106,6 +1275,8 @@ InitFunction    Proc near
     pushad
 ;
     call CreateEventThread
+    InitSection es:xhc_cmd_section
+;
     mov ds,es:xhc_reg_sel
     and ds:orsUsbCmd,NOT 1
 
@@ -1434,7 +1605,7 @@ cpfContextSizeOk:
 ;
     call CreateCommandRing   
     mov bx,xhci_cmd_ring_sel
-    mov ecx,1000h
+    mov ecx,2000h
     CreateDataSelector16
     mov es:xhc_cmd_ring_sel,bx
 ;
@@ -1648,7 +1819,7 @@ csfContextSizeOk:
 ;
     call CreateCommandRing
     AllocateGdt
-    mov ecx,1000h
+    mov ecx,2000h
     CreateDataSelector16
     mov es:xhc_cmd_ring_sel,bx
 ;
