@@ -158,6 +158,8 @@ xhc_event_thread    DW ?
 xhc_cmd_section     section_typ <>
 xhc_event_ccs       DW ?
 
+xhc_port_thread     DW ?
+
 xhci_func_sel   ENDS
 
 data    SEGMENT byte public 'DATA'
@@ -1086,6 +1088,37 @@ command_event Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;
+;       NAME:           port_event
+;
+;       DESCRIPTION:    Port status change event
+;
+;       PARAMETERS:     ES     Function sel
+;                       DS:SI  Event TRB
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+port_event Proc near
+    mov cl,ds:[si+3]
+    or cl,cl
+    jz peDone
+;
+    dec cl    
+    movzx di,cl
+    shl di,4
+    mov fs,es:xhc_port_sel
+    mov eax,fs:[di]
+    mov fs:[di],eax
+;
+    mov bx,es:xhc_port_thread
+    Signal
+
+peDone:
+    ret
+port_event Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       Event table
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1125,7 +1158,7 @@ evt1E DW OFFSET error_event
 evt1F DW OFFSET error_event
 evt20 DW OFFSET error_event
 evt21 DW OFFSET command_event
-evt22 DW OFFSET error_event
+evt22 DW OFFSET port_event
 evt23 DW OFFSET error_event
 evt24 DW OFFSET error_event
 evt25 DW OFFSET error_event
@@ -1247,6 +1280,60 @@ CreateEventThread   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           PortThread
+;
+;           DESCRIPTION:    Port thread
+;
+;       PARAMETERS:         BX  Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+port_thread_name   DB 'XHCI Port', 0
+
+port_thread:
+    mov es,bx
+    GetThread
+    mov es:xhc_port_thread,ax
+
+ptLoop:
+    WaitForSignal
+    jmp ptLoop    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreatePortThread
+;
+;           DESCRIPTION:    Create port thread
+;
+;       PARAMETERS:         ES  Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreatePortThread   Proc near
+    push ds
+    push es
+    pushad
+;
+    mov bx,es
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET port_thread_name
+    mov si,OFFSET port_thread
+    mov ax,4
+    mov cx,stack0_size
+    CreateThread
+;
+    popad    
+    pop es
+    pop ds
+    ret
+CreatePortThread   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitFunction
 ;
 ;           DESCRIPTION:    Init EHCI function
@@ -1289,6 +1376,8 @@ InitFunction    Proc near
     pushad
 ;
     call CreateEventThread
+    call CreatePortThread
+;
     InitSection es:xhc_cmd_section
 ;
     mov ds,es:xhc_reg_sel
@@ -1942,19 +2031,6 @@ InitPciAdapter  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           XHCI thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-xhci_name       DB 'XHCI',0
-
-xhci_thread:
-    call InitPciAdapter
-    int 3
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           Init_usb
 ;
 ;           DESCRIPTION:    inits adpater
@@ -1972,17 +2048,8 @@ init_usb    Proc far
 ;    
     mov ax,SEG data
     mov ds,ax
+    call InitPciAdapter
 ;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov di,OFFSET xhci_name
-    mov si,OFFSET xhci_thread
-    mov ax,4
-    mov cx,stack0_size
-    CreateThread
-
-init_usb_done:
     popa
     pop es
     pop ds
