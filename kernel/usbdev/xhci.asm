@@ -964,8 +964,8 @@ wfctLoop:
     test ax,2
     jz wfctRetry
 ;
-    int 3
     xor gs:[di].trb_type,1
+    xor es:xhc_cmd_pcs,1
     xor di,di
     jmp wfctLoop
 
@@ -1175,6 +1175,7 @@ event_thread:
     mov es:xhc_event_thread,ax
 ;
     mov ds,es:xhc_event_ring_sel
+    mov gs,es:xhc_rts_sel
     mov es:xhc_event_ccs,1
     xor si,si
 
@@ -1206,8 +1207,9 @@ etDeq:
     mov eax,es:xhc_edqe
     mov ebx,es:xhc_edqe+4
     or ax,si
-    mov ds:rrsDequeue,eax
-    mov ds:rrsDequeue+4,ebx    
+    or al,8
+    mov gs:rrsDequeue,eax
+    mov gs:rrsDequeue+4,ebx    
     jmp etWait
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1409,15 +1411,6 @@ ifTabLoop:
     mov ax,es
     mov ds,ax
     InitUsbDevice
-    int 3
-
-ifTest:
-
-    call WaitForCommandTrb
-;
-    mov al,TRB_TYPE_NO_OP_CMD    
-    call SendCommandTrb
-    jmp ifTest
 
 ifDone:
     popad
@@ -1874,8 +1867,41 @@ CreateSecondaryFunction Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+test_thread_name    DB 'XHCI Test', 0
+
+test_thread:
+    mov es,bx
+
+ttLoop:
+    call WaitForCommandTrb
+;
+    mov al,TRB_TYPE_NO_OP_CMD    
+    call SendCommandTrb
+    jmp ttLoop
+
+
 AddFunction  Proc near
     call InitFunction
+;
+    int 3
+    mov bx,es
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET test_thread_name
+    mov si,OFFSET test_thread
+    mov ax,4
+    mov cx,stack0_size
+    CreateThread
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET test_thread_name
+    mov si,OFFSET test_thread
+    mov ax,4
+    mov cx,stack0_size
+    CreateThread
     ret
 AddFunction Endp
 
