@@ -146,6 +146,8 @@ xhc_edqe            DD ?,?
 xhc_cmd_enque       DW ?
 xhc_cmd_pcs         DW ?
 
+xhc_event_thread    DW ?
+
 xhci_func_sel   ENDS
 
 data    SEGMENT byte public 'DATA'
@@ -728,6 +730,8 @@ reset_thread:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 XhciInt Proc far    
+    mov bx,ds:xhc_event_thread
+    Signal
     retf32
 XhciInt Endp
 
@@ -890,12 +894,12 @@ CreateCommandRing   Proc near
     mov ax,flat_sel
     mov gs,ax    
 ;
+    mov eax,1000h
+    AllocateBigLinear
+;
     AllocatePhysical64
     mov es:xhc_crcr,eax
     mov es:xhc_crcr+4,ebx
-;
-    mov eax,1000h
-    AllocateBigLinear
 ;
     mov al,13h
     SetPageEntry
@@ -1004,6 +1008,62 @@ SendCommandTrb  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           EventThread
+;
+;           DESCRIPTION:    Event thread
+;
+;       PARAMETERS:         BX  Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+event_thread_name   DB 'XHCI Event', 0
+
+event_thread:
+    mov es,bx
+    GetThread
+    mov es:xhc_event_thread,ax
+
+etLoop:
+    WaitForSignal
+    int 3
+    jmp etLoop
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateEventThread
+;
+;           DESCRIPTION:    Create event thread
+;
+;       PARAMETERS:         ES  Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateEventThread   Proc near
+    push ds
+    push es
+    pushad
+;
+    mov bx,es
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET event_thread_name
+    mov si,OFFSET event_thread
+    mov ax,4
+    mov cx,stack0_size
+    CreateThread
+;
+    popad    
+    pop es
+    pop ds
+    ret
+CreateEventThread   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitFunction
 ;
 ;           DESCRIPTION:    Init EHCI function
@@ -1045,6 +1105,7 @@ InitFunction    Proc near
     push fs
     pushad
 ;
+    call CreateEventThread
     mov ds,es:xhc_reg_sel
     and ds:orsUsbCmd,NOT 1
 
@@ -1080,18 +1141,24 @@ ifWaitReseted:
 ;
     SetupPciMsi
 ;    
+    push ds
     push es
+    mov di,es
+    mov ds,di
     mov di,cs
     mov es,di
     mov edi,OFFSET XhciInt
     RequestMsiHandler
     pop es
+    pop ds
     jmp ifIntDone
 
 ifIrq:
     push es
     GetPciIrqNr
     mov ah,14h
+    mov di,es
+    mov ds,di
     mov di,cs
     mov es,di
     mov edi,OFFSET XhciInt
