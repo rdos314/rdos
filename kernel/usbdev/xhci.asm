@@ -1867,41 +1867,8 @@ CreateSecondaryFunction Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-test_thread_name    DB 'XHCI Test', 0
-
-test_thread:
-    mov es,bx
-
-ttLoop:
-    call WaitForCommandTrb
-;
-    mov al,TRB_TYPE_NO_OP_CMD    
-    call SendCommandTrb
-    jmp ttLoop
-
-
 AddFunction  Proc near
     call InitFunction
-;
-    int 3
-    mov bx,es
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov di,OFFSET test_thread_name
-    mov si,OFFSET test_thread
-    mov ax,4
-    mov cx,stack0_size
-    CreateThread
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov di,OFFSET test_thread_name
-    mov si,OFFSET test_thread
-    mov ax,4
-    mov cx,stack0_size
-    CreateThread
     ret
 AddFunction Endp
 
