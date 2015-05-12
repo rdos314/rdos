@@ -1026,6 +1026,12 @@ SendCommandTrb   Proc near
     mov ax,es
     mov ds,ax
     LeaveSection ds:xhc_cmd_section    
+
+sctWait:
+    WaitForSignal
+    mov ax,gs:[edi+1000h].cmd_thread
+    or ax,ax
+    jnz sctWait
 ;
     pop eax
     pop ds        
@@ -1062,7 +1068,6 @@ error_event Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 command_event Proc near
-    int 3
     mov di,ds:[si]
     and di,0FF0h
     mov fs,es:xhc_cmd_ring_sel
@@ -1175,7 +1180,6 @@ event_thread:
 
 etWait:
     WaitForSignal
-    int 3
 
 etNext:    
     mov eax,ds:[si+12]
@@ -1398,11 +1402,14 @@ ifTabLoop:
     mov ds,ax
     InitUsbDevice
     int 3
-;
+
+ifTest:
+
     call WaitForCommandTrb
 ;
     mov al,TRB_TYPE_NO_OP_CMD    
     call SendCommandTrb
+    jmp ifTest
 
 ifDone:
     popad
