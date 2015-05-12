@@ -1186,7 +1186,7 @@ etNext:
     mov dx,es:xhc_event_ccs
     and al,1
     xor dl,al
-    jnz etWait
+    jnz etDeq
 ;
     shr ax,10
     and ax,3Fh
@@ -1200,7 +1200,15 @@ etNext:
 ;
     xor es:xhc_event_ccs,1
     xor si,si 
-    jmp etNext   
+    jmp etNext
+
+etDeq:
+    mov eax,es:xhc_edqe
+    mov ebx,es:xhc_edqe+4
+    or ax,si
+    mov ds:rrsDequeue,eax
+    mov ds:rrsDequeue+4,ebx    
+    jmp etWait
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1381,7 +1389,7 @@ ifIntDone:
 ;    
     mov ds:rrsRingSize,1
 ;
-    mov ds:rrsImod,0
+    mov ds:rrsImod,400
     mov ds:rrsIman,3
 ;
     mov ds,es:xhc_reg_sel
