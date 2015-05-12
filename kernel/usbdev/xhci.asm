@@ -808,12 +808,12 @@ SetupLinkTrb    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateEventRing   Proc near
+    mov eax,1000h
+    AllocateBigLinear
+;
     AllocatePhysical64
     mov es:xhc_erst,eax
     mov es:xhc_erst+4,ebx
-;
-    mov eax,1000h
-    AllocateBigLinear
 ;
     mov al,13h
     SetPageEntry
@@ -1126,10 +1126,16 @@ ifIntDone:
     mov ds:orsCrCtrl+4,eax
 ;
     mov ds,es:xhc_rts_sel
+;    
+    mov eax,es:xhc_edqe
+    mov ebx,es:xhc_edqe+4
+    mov ds:rrsDequeue,eax
+    mov ds:rrsDequeue+4,ebx    
+;    
     mov eax,es:xhc_erst
     mov ebx,es:xhc_erst+4
     mov ds:rrsBase,eax
-    mov ds:rrsBase+4,ebx
+    mov ds:rrsBase+4,ebx    
 ;    
     mov ds:rrsRingSize,1
 ;
@@ -1154,6 +1160,7 @@ ifTabLoop:
     mov ds,ax
     InitUsbDevice
     int 3
+;
     call WaitForCommandTrb
 ;
     mov al,TRB_TYPE_NO_OP_CMD    
