@@ -3242,8 +3242,8 @@ NotifyUsbDetach MACRO
     OsGate notify_usb_detach_nr
                     ENDM
 
-; IN  AL      Slot #
-; IN  AH      Speed
+; IN  AL      Port #
+; IN  AH      Slot #
 ; IN  DS      Usb device selector
 XhciNotifyUsbAttach MACRO
     OsGate xhci_notify_usb_attach_nr

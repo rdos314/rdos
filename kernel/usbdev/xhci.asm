@@ -841,11 +841,8 @@ attach_thread:
     call EnableSlot
     jc atDone
 ;
-    mov dl,al
-    mov eax,es:[si]   
-    call ConvSpeed
     mov ah,al
-    mov al,dl    
+    mov al,cl
     XhciNotifyUsbAttach
 
 atDone:

@@ -1374,12 +1374,8 @@ notify_usb_detach   Endp
 ;
 ;       Description:    XHCI notify USB attach event
 ;
-;       Parameters:     AL      Usb slot
-;                       AH      Speed
-;                           0 = Low speed
-;                           1 = Full speed
-;                           2 = High speed
-;                           3 = Super speed
+;       Parameters:     AL      Port #
+;                       AH      Slot #
 ;                       DS      USB device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1397,7 +1393,7 @@ xhci_notify_usb_attach       Proc far
     mov ax,ds
     mov es,ax
 ;
-    mov di,bx
+    movzx di,dl
     add di,di
     add di,OFFSET usb_addr_arr
 ;
@@ -1407,8 +1403,7 @@ xhci_notify_usb_attach       Proc far
     mov ds:[di],es
     add bx,bx
     mov ds:[bx].usb_port_sel_arr,es
-    mov es:usbf_address,bl
-    mov es:usbf_speed,dl
+    mov es:usbf_address,dl
 ;
     push ax
     mov cx,MAX_USB_HUB_PORTS
