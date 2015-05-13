@@ -1174,6 +1174,7 @@ unlock_usb    Endp
 ;                           0 = Low speed
 ;                           1 = Full speed
 ;                           2 = High speed
+;                           3 = Super speed
 ;               DS      USB device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

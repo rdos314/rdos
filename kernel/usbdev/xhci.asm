@@ -142,8 +142,8 @@ xhc_device_ptr_sel  DW ?
 xhc_cmd_ring_sel    DW ?
 xhc_event_ring_sel  DW ?
 
-xhc_slot_count      DW ?
-xhc_port_count      DW ?
+xhc_slot_count      DB ?
+xhc_port_count      DB ?
 
 xhc_context_size    DW ?
 xhc_dcba            DD ?,?
@@ -158,7 +158,8 @@ xhc_event_thread    DW ?
 xhc_cmd_section     section_typ <>
 xhc_event_ccs       DW ?
 
-xhc_port_thread     DW ?
+xhc_port_thread         DW ?
+xhc_port_change_mask    DD ?
 
 xhci_func_sel   ENDS
 
@@ -1103,11 +1104,20 @@ port_event Proc near
     or cl,cl
     jz peDone
 ;
-    dec cl    
+    dec cl
+    cmp cl,es:xhc_port_count
+    jae peDone
+;    
+    mov eax,1
+    shl eax,cl
+    lock or es:xhc_port_change_mask,eax
+;    
     movzx di,cl
     shl di,4
     mov fs,es:xhc_port_sel
+;
     mov eax,fs:[di]
+    and eax,0EE03E1h
     mov fs:[di],eax
 ;
     mov bx,es:xhc_port_thread
@@ -1280,6 +1290,85 @@ CreateEventThread   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ConvSpeed
+;
+;           DESCRIPTION:    Convert speed
+;
+;       PARAMETERS:         EAX Port SC
+;
+;       RETURNS:            AL  Speed 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cspTab:
+csp00 DB -1
+csp01 DB 1
+csp02 DB 0
+csp03 DB 2
+csp04 DB 3
+csp05 DB -1  
+csp06 DB -1  
+csp07 DB -1  
+csp08 DB -1  
+csp09 DB -1  
+csp0A DB -1  
+csp0B DB -1  
+csp0C DB -1  
+csp0D DB -1  
+csp0E DB -1  
+csp0F DB -1  
+
+ConvSpeed   Proc near
+    push bx
+    mov bx,ax
+    shr bx,10
+    and bx,0Fh
+    mov al,byte ptr cs:[bx].cspTab
+    pop bx
+    ret
+ConvSpeed   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UpdatePort
+;
+;           DESCRIPTION:    Update port
+;
+;       PARAMETERS:         ES  Function sel
+;                           CL  Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePort  Proc near
+    movzx di,cl
+    shl di,4
+    mov eax,ds:[di]
+    test al,2
+    jnz upAttach
+;
+    test al,1
+    jz upDetach
+;
+    or ax,10h
+    mov ds:[di],eax
+    jmp upDone
+
+upAttach:
+    int 3
+    call ConvSpeed
+    jmp upDone
+
+upDetach:
+    int 3
+
+upDone:
+    ret        
+UpdatePort  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           PortThread
 ;
 ;           DESCRIPTION:    Port thread
@@ -1294,9 +1383,32 @@ port_thread:
     mov es,bx
     GetThread
     mov es:xhc_port_thread,ax
+    mov ds,es:xhc_port_sel
 
 ptLoop:
     WaitForSignal
+    xor eax,eax
+    xchg eax,es:xhc_port_change_mask
+    or eax,eax
+    jz ptLoop
+;
+    xor cl,cl
+
+ptPortLoop:    
+    test al,1
+    jz ptPortNext
+;
+    push eax
+    push cx
+    call UpdatePort
+    pop cx
+    pop eax 
+
+ptPortNext:
+    inc cl
+    shr eax,1
+    jnz ptPortLoop   
+;    
     jmp ptLoop    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1445,7 +1557,7 @@ ifIntDone:
     mov ds:orsConfig,eax
 ;
     push es
-    mov cx,es:xhc_slot_count
+    movzx cx,es:xhc_slot_count
     mov es,es:xhc_device_ptr_sel
     xor di,di
     shl cx,1
@@ -1564,18 +1676,17 @@ cpf64Ok:
     rep stosb
 ;
     mov al,ds:[4]
-    movzx ax,al
-    mov es:xhc_slot_count,ax
+    mov es:xhc_slot_count,al
 ;
     mov al,ds:[7]
-    cmp al,0B0h
+    cmp al,20h
     jb cpfPortsOk
 ;
-    mov al,0B0h
+    mov al,20h
 
 cpfPortsOk:    
-    movzx ax,al
-    mov es:xhc_port_count,ax
+    mov es:xhc_port_count,al
+    mov es:xhc_port_change_mask,0
 ;
     mov cx,20h
     mov eax,ds:hccCap1
@@ -1781,8 +1892,7 @@ csf64Ok:
     rep stosb
 ;
     mov al,ds:[4]
-    movzx ax,al
-    mov es:xhc_slot_count,ax
+    mov es:xhc_slot_count,al
 ;
     mov al,ds:[7]
     cmp al,0B0h
@@ -1791,8 +1901,7 @@ csf64Ok:
     mov al,0B0h
 
 csfPortsOk:    
-    movzx ax,al
-    mov es:xhc_port_count,ax
+    mov es:xhc_port_count,al
 ;
     mov cx,20h
     mov eax,ds:hccCap1
