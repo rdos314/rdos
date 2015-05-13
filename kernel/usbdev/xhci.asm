@@ -185,6 +185,139 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           WaitForCommandTrb
+;
+;       DESCRIPTION:    Wait for empty command TRB
+;
+;       PARAMETERS:     DS          Function sel
+;
+;       RETURNS:        GS:EDI      TRB offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForCommandTrb   Proc near
+    push ax
+;
+    EnterSection ds:xhc_cmd_section    
+;    
+    mov gs,ds:xhc_cmd_ring_sel
+    movzx edi,ds:xhc_cmd_enque
+
+wfctLoop:    
+    mov ax,gs:[di].trb_type
+    test ax,2
+    jz wfctRetry
+;
+    xor gs:[di].trb_type,1
+    xor ds:xhc_cmd_pcs,1
+    xor di,di
+    jmp wfctLoop
+
+wfctRetry:    
+    xor ax,ds:xhc_cmd_pcs
+    test al,1
+    jnz wfctOk
+;
+    mov ax,10
+    WaitMilliSec
+    jmp wfctRetry        
+
+wfctOk:
+    mov ax,di
+    add ax,SIZE trb_struc
+    mov ds:xhc_cmd_enque,ax
+;
+    mov gs:[di].trb_param,0
+    mov gs:[di].trb_param+4,0
+    mov gs:[di].trb_status,0
+    mov gs:[di].trb_control,0
+;
+    pop ax        
+    ret
+WaitForCommandTrb    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendCommandTrb
+;
+;       DESCRIPTION:    Send command TRB
+;
+;       PARAMETERS:     AL      TRB type
+;                       DS      Function sel
+;                       GS:EDI  TRB offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCommandTrb   Proc near
+    push eax
+;    
+    push ax
+    GetThread
+    mov gs:[edi+1000h].cmd_thread,ax
+    pop ax
+;
+    movzx ax,al
+    shl ax,10
+    or ax,ds:xhc_cmd_pcs
+    mov gs:[edi].trb_type,ax
+;
+    push ds
+    mov ds,ds:xhc_db_sel
+    xor eax,eax
+    mov ds:[0],eax
+    pop ds
+;
+    LeaveSection ds:xhc_cmd_section    
+
+sctWait:
+    WaitForSignal
+    mov ax,gs:[edi+1000h].cmd_thread
+    or ax,ax
+    jnz sctWait
+;
+    pop eax
+    ret
+SendCommandTrb  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           EnableSlot
+;
+;       DESCRIPTION:    Enable slot
+;
+;       PARAMETERS:     DS      Function sel
+;
+;       RETRURNS:       AL      Slot ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EnableSlot  Proc near
+    push gs
+    push edi
+;
+    call WaitForCommandTrb
+    mov al,TRB_TYPE_ENABLE_SLOT
+    call SendCommandTrb
+;
+    mov al,gs:[edi+100Bh]
+    cmp al,1
+    stc
+    jne esDone
+;
+    mov al,gs:[edi+100Fh]
+    clc        
+
+esDone:
+    pop edi
+    pop gs    
+    ret
+EnableSlot  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateControl
 ;
 ;           DESCRIPTION:    Create control pipe
@@ -688,7 +821,39 @@ GetMaxLen   Endp
 attach_thread_name  DB 'XHCI Attach', 0
 
 attach_thread:
+    mov cl,dl
+    mov ds,bx
+    mov es,ds:xhc_port_sel
+;    
+    movzx si,cl
+    shl si,4
+;    
+    movzx edi,cl
+    add edi,edi    
+    push edi
+;    
+    EnterSection ds:usb_section    
+    GetThread
+    mov ds:[edi].usb_attach_thread_arr,ax
+    LeaveSection ds:usb_section
+;    
     int 3
+    call EnableSlot
+    jc atDone
+;
+    mov dl,al
+    mov eax,es:[si]   
+    call ConvSpeed
+    mov ah,al
+    mov al,dl    
+    XhciNotifyUsbAttach
+
+atDone:
+    pop edi
+    EnterSection ds:usb_section
+    mov ds:[edi].usb_attach_thread_arr,0
+    LeaveSection ds:usb_section
+
     TerminateThread
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -940,106 +1105,6 @@ CreateCommandRing   Proc near
     ret
 CreateCommandRing   Endp    
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WaitForCommandTrb
-;
-;       DESCRIPTION:    Wait for empty command TRB
-;
-;       RETURNS:        GS:EDI      TRB offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WaitForCommandTrb   Proc near
-    push ds
-    push ax
-;
-    mov ax,es
-    mov ds,ax
-    EnterSection ds:xhc_cmd_section    
-;    
-    mov gs,es:xhc_cmd_ring_sel
-    movzx edi,es:xhc_cmd_enque
-
-wfctLoop:    
-    mov ax,gs:[di].trb_type
-    test ax,2
-    jz wfctRetry
-;
-    xor gs:[di].trb_type,1
-    xor es:xhc_cmd_pcs,1
-    xor di,di
-    jmp wfctLoop
-
-wfctRetry:    
-    xor ax,es:xhc_cmd_pcs
-    test al,1
-    jnz wfctOk
-;
-    mov ax,10
-    WaitMilliSec
-    jmp wfctRetry        
-
-wfctOk:
-    mov ax,di
-    add ax,SIZE trb_struc
-    mov es:xhc_cmd_enque,ax
-;
-    mov gs:[di].trb_param,0
-    mov gs:[di].trb_param+4,0
-    mov gs:[di].trb_status,0
-    mov gs:[di].trb_control,0
-;
-    pop ax        
-    pop ds
-    ret
-WaitForCommandTrb    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           SendCommandTrb
-;
-;       DESCRIPTION:    Send command TRB
-;
-;       PARAMETERS:     AL      TRB type
-;                       GS:EDI  TRB offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendCommandTrb   Proc near
-    push ds
-    push eax
-;    
-    push ax
-    GetThread
-    mov gs:[edi+1000h].cmd_thread,ax
-    pop ax
-;
-    movzx ax,al
-    shl ax,10
-    or ax,es:xhc_cmd_pcs
-    mov gs:[edi].trb_type,ax
-;
-    mov ds,es:xhc_db_sel
-    xor eax,eax
-    mov ds:[0],eax
-;
-    mov ax,es
-    mov ds,ax
-    LeaveSection ds:xhc_cmd_section    
-
-sctWait:
-    WaitForSignal
-    mov ax,gs:[edi+1000h].cmd_thread
-    or ax,ax
-    jnz sctWait
-;
-    pop eax
-    pop ds        
-    ret
-SendCommandTrb  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1341,9 +1406,16 @@ ConvSpeed   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdatePort  Proc near
-    movzx di,cl
-    shl di,4
-    mov eax,ds:[di]
+    push ds
+    push es
+    pushad
+;        
+    movzx si,cl
+    shl si,4
+    movzx edi,cl
+    add edi,edi
+;
+    mov eax,ds:[si]
     test al,2
     jnz upAttach
 ;
@@ -1351,18 +1423,123 @@ UpdatePort  Proc near
     jz upDetach
 ;
     or ax,10h
-    mov ds:[di],eax
+    mov ds:[si],eax
     jmp upDone
 
 upAttach:
-    int 3
-    call ConvSpeed
+    mov ax,es
+    mov ds,ax
+;
+    mov bx,ds:[edi].usb_port_sel_arr
+    or bx,bx
+    jnz upCheckTimeout
+;
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
+    jnz upCheckTimeout
+;
+    mov ds:[edi].usb_attach_thread_arr,-1
+    GetSystemTime
+    add eax,1193 * 2500
+    adc edx,0
+    mov ds:[4*edi].usb_timeout_arr,eax
+    mov ds:[4*edi].usb_timeout_arr+4,edx
+;    
+    mov bx,ds
+    mov dx,cx
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET attach_thread_name
+    mov esi,OFFSET attach_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
     jmp upDone
 
 upDetach:
     int 3
+    mov ax,es
+    mov ds,ax
+;
+    mov bx,ds:[edi].usb_port_sel_arr
+    or bx,bx
+    jz upCheckTimeout
+;    
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
+    jnz upCheckTimeout
+;
+    mov ds:[edi].usb_detach_thread_arr,-1    
+    GetSystemTime
+    add eax,1193 * 2500
+    adc edx,0
+    mov ds:[4*edi].usb_timeout_arr,eax
+    mov ds:[4*edi].usb_timeout_arr+4,edx
+;    
+    mov bx,ds
+    mov dx,cx
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET detach_thread_name
+    mov esi,OFFSET detach_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+    jmp upDone
+
+upCheckTimeout:
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,bx
+    jz upCheckDetach
+;
+    GetSystemTime
+    sub eax,ds:[4*edi].usb_timeout_arr
+    sbb edx,ds:[4*edi].usb_timeout_arr+4
+    jc upDone
+;
+    EnterSection ds:usb_section
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,bx
+    jz upAttachSignalled
+;
+    int 3
+    Signal
+
+upAttachSignalled:    
+    LeaveSection ds:usb_section
+    jmp upDone    
+
+upCheckDetach:    
+    mov bx,ds:[edi].usb_detach_thread_arr
+    or bx,bx
+    jz upDone
+;
+    GetSystemTime
+    sub eax,ds:[4*edi].usb_timeout_arr
+    sbb edx,ds:[4*edi].usb_timeout_arr+4
+    jc upDone
+;
+    EnterSection ds:usb_section
+    mov bx,ds:[di].usb_detach_thread_arr
+    or bx,bx
+    jz upDetachSignalled
+;
+    int 3
+    Signal
+
+upDetachSignalled:
+    LeaveSection ds:usb_section
 
 upDone:
+    popad
+    pop es
+    pop ds
     ret        
 UpdatePort  Endp
 

@@ -668,4 +668,7 @@ send_can_bus_block_nr       = 548
 
 get_disc_vendor_info_buf_nr = 549
 
+xhci_notify_usb_attach_nr   = 550
+xhci_notify_usb_detach_nr   = 551
+
 osgate_entries				= 560

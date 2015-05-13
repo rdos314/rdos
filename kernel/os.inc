@@ -3242,6 +3242,19 @@ NotifyUsbDetach MACRO
     OsGate notify_usb_detach_nr
                     ENDM
 
+; IN  AL      Slot #
+; IN  AH      Speed
+; IN  DS      Usb device selector
+XhciNotifyUsbAttach MACRO
+    OsGate xhci_notify_usb_attach_nr
+                    ENDM
+
+; IN  AL      Slot #
+; IN  DS      Usb device selector
+XhciNotifyUsbDetach MACRO
+    OsGate xhci_notify_usb_detach_nr
+                    ENDM
+
 ; IN  ES:EDI  Callback
 ;       BX    Controller #
 ;       AL    Device address

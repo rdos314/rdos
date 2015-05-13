@@ -1370,6 +1370,205 @@ notify_usb_detach   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           XhciNotifyUsbAttach
+;
+;       Description:    XHCI notify USB attach event
+;
+;       Parameters:     AL      Usb slot
+;                       AH      Speed
+;                           0 = Low speed
+;                           1 = Full speed
+;                           2 = High speed
+;                           3 = Super speed
+;                       DS      USB device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+xhci_notify_usb_attach_name DB 'XHCI Notify USB Attach', 0
+
+xhci_notify_usb_attach       Proc far
+    push gs
+    push fs
+    push es
+    pushad
+;
+    movzx bx,al
+    mov dl,ah
+    mov ax,ds
+    mov es,ax
+;
+    mov di,bx
+    add di,di
+    add di,OFFSET usb_addr_arr
+;
+    mov eax,SIZE usb_function_struc
+    AllocateSmallGlobalMem
+    mov es:usbf_port,bl
+    mov ds:[di],es
+    add bx,bx
+    mov ds:[bx].usb_port_sel_arr,es
+    mov es:usbf_address,bl
+    mov es:usbf_speed,dl
+;
+    push ax
+    mov cx,MAX_USB_HUB_PORTS
+    mov di,OFFSET usbf_port_sel_arr    
+    xor ax,ax
+    rep stosw
+;    
+    mov cx,16
+    mov di,OFFSET usbf_in_endpoint_arr
+    xor ax,ax
+    rep stosw
+;    
+    mov cx,16
+    mov di,OFFSET usbf_out_endpoint_arr
+    xor ax,ax
+    rep stosw
+    pop ax
+;
+    call CreateDefaultControl
+    jc xnuaDone
+;
+    mov eax,8
+    call AllocateBufSel
+
+xnuaRetry:
+    call fword ptr ds:is_connected_proc
+    jc xnuaFreeDone
+;
+    xor edi,edi
+    mov cx,8
+    mov ax,100h
+    call GetDescr
+    movzx ax,es:udd_maxlen
+    or ax,ax
+    jz xnuaRetry
+;
+    mov fs:usbp_maxlen,ax
+    movzx eax,es:udd_len
+    FreeMem
+;
+    call fword ptr ds:is_connected_proc
+    jc xnuaDone
+;    
+    call AllocateBufSel
+    xor edi,edi
+    mov cx,ax
+    mov ax,100h
+    call GetDescr
+    mov fs:usbp_device_sel,es
+    mov ax,es
+    mov gs,ax
+;
+    xor bx,bx
+
+xnuaLoop:
+    call fword ptr ds:is_connected_proc
+    jc xnuaDone
+;    
+    mov eax,8
+    call AllocateBufSel
+    xor edi,edi
+    mov cx,8
+    mov al,bl
+    mov ah,2
+    call GetDescr
+    movzx eax,es:ucd_size
+    FreeMem
+;
+    call fword ptr ds:is_connected_proc
+    jc xnuaDone
+;
+    call AllocateBufSel
+    xor edi,edi
+    mov cx,ax
+    mov al,bl
+    mov ah,2
+    call GetDescr
+    mov di,bx
+    add di,di
+    mov fs:[di].usbp_config_sel,es
+;
+    inc bl
+    cmp bl,16
+    je xnuaNotify
+;    
+    cmp bl,gs:udd_configs
+    jb xnuaLoop
+
+xnuaNotify:
+    call fword ptr ds:is_connected_proc
+    jc xnuaDone
+;    
+    xor ax,ax
+    mov gs,ax
+    mov bx,ds:usb_controller_id
+    mov al,fs:usbp_address
+    call trap_usb_attach
+    clc
+    jmp xnuaDone
+
+xnuaFreeDone:
+    FreeMem    
+    stc
+    
+xnuaDone:
+    jnc xnuaPipeOk
+;
+    call ClosePipe
+    stc
+
+xnuaPipeOk:
+    popad
+    pop es
+    pop fs
+    pop gs
+    retf32
+xhci_notify_usb_attach   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           XhciNotifyUsbDetach
+;
+;           description:    XHCI notify USB detach event
+;
+;       parameters:         AL      Usb slot
+;                           DS      USB device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+xhci_notify_usb_detach_name DB 'XHCI Notify USB Detach', 0
+
+xhci_notify_usb_detach       Proc far
+    push es
+    pushad
+;
+    movzx bx,al
+    add bx,bx
+    xor ax,ax
+    xchg ax,ds:[bx].usb_port_sel_arr
+    or ax,ax
+    jz xnudDone
+;    
+    mov es,ax
+    mov bx,ds:usb_controller_id
+    mov al,es:usbf_address
+    call trap_usb_detach      
+    call CloseDevice
+
+xnudDone:    
+    popad
+    pop es
+    retf32
+xhci_notify_usb_detach   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AddReqBlock
 ;
 ;           description:    Add an request block
@@ -3909,6 +4108,18 @@ init    Proc far
     mov edi,OFFSET notify_usb_detach_name
     xor cl,cl
     mov ax,notify_usb_detach_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET xhci_notify_usb_attach
+    mov edi,OFFSET xhci_notify_usb_attach_name
+    xor cl,cl
+    mov ax,xhci_notify_usb_attach_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET xhci_notify_usb_detach
+    mov edi,OFFSET xhci_notify_usb_detach_name
+    xor cl,cl
+    mov ax,xhci_notify_usb_detach_nr
     RegisterOsGate
 ;
     mov esi,OFFSET hook_usb_attach
