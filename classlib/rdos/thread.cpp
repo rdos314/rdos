@@ -86,6 +86,26 @@ TThread::TThread(const char *ThreadName, int StackSize)
 
 /*##########################################################################
 #
+#   Name       : TThread::TThread
+#
+#   Purpose....: Constructor for TThread		                          
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TThread::TThread(const char *ThreadName, int StackSize, bool Run)
+{
+	FInstalled = TRUE;
+	FThreadRunning = FALSE;
+
+	if (Run)
+		Start(ThreadName, StackSize);
+}
+
+/*##########################################################################
+#
 #   Name       : TThread::~TThread
 #
 #   Purpose....: Destructor for TThread		                          
@@ -116,6 +136,38 @@ void TThread::Stop()
 	FInstalled = FALSE;
 	while (FThreadRunning)
 		RdosWaitMilli(250);
+}
+
+/*##########################################################################
+#
+#   Name       : TThread::IsStopping
+#
+#   Purpose....: Is thread stopping?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TThread::IsStopping()
+{
+    return !FInstalled;
+}
+
+/*##########################################################################
+#
+#   Name       : TThread::IsRunning
+#
+#   Purpose....: Is thread running?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TThread::IsRunning()
+{
+    return FThreadRunning;
 }
 
 /*##########################################################################

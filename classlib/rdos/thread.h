@@ -35,6 +35,7 @@ class TThread
 public:
     TThread();
 	TThread(const char *ThreadName, int StackSize);
+	TThread(const char *ThreadName, int StackSize, bool RunIt);
 	virtual ~TThread();
 
 	virtual void Run();
@@ -43,6 +44,8 @@ public:
 	void *Owner;
 
 protected:
+    bool IsStopping();
+    bool IsRunning();
 
 	void Start(const char *ThreadName, int StackSize);
 	void Start(const char *ThreadName, int Prio, int StackSize);
