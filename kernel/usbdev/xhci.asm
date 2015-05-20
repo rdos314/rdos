@@ -77,6 +77,48 @@ cmd_event   DD ?,?
 
 cmd_struc   ENDS
 
+input_control_context_struc STRUC
+
+icc_drop_mask   DD ?
+icc_add_mask    DD ?
+icc_pad1        DD 5 DUP(?)
+icc_config      DB ?
+icc_interface   DB ?
+icc_alt         DB ?
+icc_pad2        DB ?
+
+input_control_context_struc ENDS
+
+slot_struc  STRUC
+
+s_misc          DD ?
+s_exit_latency  DW ?
+s_root_hub      DB ?
+s_hub_ports     DB ?
+s_tt_slot_id    DB ?
+s_tt_port_nr    DB ?
+s_ttt_int       DW ?
+s_address       DB ?
+s_pad1          DB ?
+s_state         DW ?
+
+slot_struc  ENDS
+
+endpoint_context_struc  STRUC
+
+ec_state        DB ?
+ec_param1       DB ?
+ec_interval     DB ?
+ec_esit_hi      DB ?
+ec_param2       DB ?
+ec_burst_size   DB ?
+ec_packet_size  DW ?
+ec_tr_dequeue   DD ?,?
+ec_avg_len      DW ?
+ec_esit_low     DD ?
+
+endpoint_context_struc  ENDS
+
 hcc_cap_struc   STRUC
 
 hccLen      DB ?
@@ -162,6 +204,17 @@ xhc_port_thread         DW ?
 xhc_port_change_mask    DD ?
 
 xhci_func_sel   ENDS
+
+xhci_dev_struc   STRUC
+
+usb_function_base       usb_function_struc <>
+
+xd_phys                 DD ?,?
+xd_context_offset       DW ?
+xd_slot_offset          DW ?
+xd_ep_arr               DW 32 DUP(?)
+
+xhci_dev_struc    ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -314,6 +367,129 @@ esDone:
     pop gs    
     ret
 EnableSlot  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitInputContext
+;
+;       DESCRIPTION:    Init input context structure
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES:BX   Context offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitInputContext    Proc near
+    pushad
+    popad
+    ret
+InitInputContext    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitSlot
+;
+;       DESCRIPTION:    Init slot structure
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES:BX   Slot offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitSlot    Proc near
+    pushad
+    popad
+    ret
+InitSlot    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitEp
+;
+;       DESCRIPTION:    Init endpoint structure
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES:BX   Endpoint offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitEp    Proc near
+    pushad
+    popad
+    ret
+InitEp    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateDevice
+;
+;       DESCRIPTION:    Allocate device context
+;
+;       PARAMETERS:     DS      Function sel
+;
+;       RETURNS:        ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateDevice    Proc near
+    pushad
+;
+    mov eax,1000h
+    AllocateBigLinear
+;    
+    AllocatePhysical64
+    push ebx
+    push eax
+;
+    mov al,13h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov es,bx
+;    
+    xor edi,edi
+    mov ecx,400h
+    xor eax,eax
+    rep stosd
+;
+    pop eax
+    pop ebx
+    mov dx,SIZE xhci_dev_struc
+    add dx,40h
+    dec dx
+    and dx,0FFC0h
+    add ax,dx
+    mov es:xd_phys,eax
+    mov es:xd_phys+4,ebx
+;
+    mov bx,dx
+    mov dx,ds:xhc_context_size
+    mov es:xd_context_offset,bx
+    call InitInputContext
+;
+    add bx,dx
+    mov es:xd_slot_offset,bx
+    call InitSlot
+;
+    mov di,OFFSET xd_ep_arr
+    mov cx,32
+
+adEpLoop:
+    add bx,dx
+    mov es:[di],bx
+    call InitEp
+    add di,2 
+    loop adEpLoop      
+;
+    popad
+    ret
+AllocateDevice    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -840,6 +1016,8 @@ attach_thread:
     int 3
     call EnableSlot
     jc atDone
+;
+    call AllocateDevice
 ;
     mov ah,al
     mov al,cl

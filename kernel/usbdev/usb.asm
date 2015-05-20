@@ -1377,6 +1377,7 @@ notify_usb_detach   Endp
 ;       Parameters:     AL      Port #
 ;                       AH      Slot #
 ;                       DS      USB device selector
+;                       ES      USB function selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1390,15 +1391,11 @@ xhci_notify_usb_attach       Proc far
 ;
     movzx bx,al
     mov dl,ah
-    mov ax,ds
-    mov es,ax
 ;
     movzx di,dl
     add di,di
     add di,OFFSET usb_addr_arr
 ;
-    mov eax,SIZE usb_function_struc
-    AllocateSmallGlobalMem
     mov es:usbf_port,bl
     mov ds:[di],es
     add bx,bx
