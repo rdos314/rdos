@@ -38,7 +38,7 @@
 
 #define M_PI   3.141592653589793
 
-#define MAX_GROUP_COUNT      	15
+#define MAX_GROUP_COUNT         15
 
 #define MAX_REFERERS            1024
 #define MAX_CROSS               70
@@ -72,7 +72,7 @@
 #define GROUP_NT_SOCIAL         9
 #define GROUP_MIXED             10
 
-#define POP_TYPE_COUNT			25
+#define POP_TYPE_COUNT                  25
 
 #define POP_TYPE_ALL            0
 #define POP_TYPE_AS             1
@@ -97,131 +97,131 @@
 #define POP_TYPE_NT_CONTROL     20
 #define POP_TYPE_AUTISM         21
 #define POP_TYPE_ASPIE_CONTROL  22
-#define POP_TYPE_AXIS_1			23
-#define POP_TYPE_AXIS_2			24
+#define POP_TYPE_AXIS_1                 23
+#define POP_TYPE_AXIS_2                 24
 
 class TBirthMonth
 {
 public:
-	TBirthMonth();
-	void Add(int AsResult, int NtResult, int BirthMonth);
-	int GetFactor(int index);
-	void ExportHistogram(const char *filename);
+        TBirthMonth();
+        void Add(int AsResult, int NtResult, int BirthMonth);
+        int GetFactor(int index);
+        void ExportHistogram(const char *filename);
 
-	int AsCount[15];
-	int NtCount[15];
+        int AsCount[15];
+        int NtCount[15];
 };
 
 class TBirthYear
 {
 public:
-	TBirthYear();
-	void Add(int AsResult, int NtResult, int BirthYear, int Gender);
-	void ExportHistogram(const char *filename);
+        TBirthYear();
+        void Add(int AsResult, int NtResult, int BirthYear, int Gender);
+        void ExportHistogram(const char *filename);
 
-	int MaleCount[110];
-	int FemaleCount[110];
+        int MaleCount[110];
+        int FemaleCount[110];
 };
 
 class TQuiz;
 
 struct TQuizGroup
 {
-	long double Corr;
-	int Count;
+        long double Corr;
+        int Count;
 };
 
 struct TQuizDx
 {
-	long double Corr;
+        long double Corr;
 };
 
 struct TQuizQuestion
 {
-	const char *Text;
-	int AsCount;
-	long double AsMean;
-	long double AsSd;
-	int NtCount;
-	long double NtMean;
-	long double NtSd;
-	long double Chi2;
-	int ChiArr[2][16];
-	int ChiCount[2];
-	long double Corr;
-	int Count;
-	long double Sum;
-	int Used;
-	int NoAnswer;
-	int MyGroup;
-	int Reverse;
-	TQuiz *CrossQuiz;
-	int CrossInd;
-	int GlobalId;
-	int Changed;
-	int Cats;
-	int Nt;
-	int Aspie;
-	TQuizGroup Group[MAX_GROUP_COUNT];
-	TQuizDx Dx[DX_COUNT];
+        const char *Text;
+        int AsCount;
+        long double AsMean;
+        long double AsSd;
+        int NtCount;
+        long double NtMean;
+        long double NtSd;
+        long double Chi2;
+        int ChiArr[2][16];
+        int ChiCount[2];
+        long double Corr;
+        int Count;
+        long double Sum;
+        int Used;
+        int NoAnswer;
+        int MyGroup;
+        int Reverse;
+        TQuiz *CrossQuiz;
+        int CrossInd;
+        int GlobalId;
+        int Changed;
+        int Cats;
+        int Nt;
+        int Aspie;
+        TQuizGroup Group[MAX_GROUP_COUNT];
+        TQuizDx Dx[DX_COUNT];
     long double Pca[MAX_PCA_AXIS];
     long double MalePca[MAX_PCA_AXIS];
-	long double FemalePca[MAX_PCA_AXIS];
-	long double YoungPca[MAX_PCA_AXIS];
+        long double FemalePca[MAX_PCA_AXIS];
+        long double YoungPca[MAX_PCA_AXIS];
     long double OldPca[MAX_PCA_AXIS];
     long double AsiaPca[MAX_PCA_AXIS];
     long double FinalPca[MAX_PCA_AXIS];
-	long double AsPca[MAX_PCA_AXIS];
+        long double AsPca[MAX_PCA_AXIS];
     long double MixedPca[MAX_PCA_AXIS];
     long double AspiePca[MAX_ASPIE_PCA_AXIS];
-	long double GroupPca[MAX_GROUP_COUNT];
-	long double DxPca[DX_COUNT];
+        long double GroupPca[MAX_GROUP_COUNT];
+        long double DxPca[DX_COUNT];
 };
 
 struct TGroupCorr
 {
-	long double Corr;
-	int Count;
+        long double Corr;
+        int Count;
 };
 
 struct TGroupVal
 {
-	int Count;
-	int Sum;
+        int Count;
+        int Sum;
 };
 
 struct TGroupValArr
 {
-	TGroupVal Group[MAX_GROUP_COUNT];
+        TGroupVal Group[MAX_GROUP_COUNT];
 };
 
 struct TGroup
 {
-	const char *PosName;
-	const char *NegName;
-	long double Mean;
-	long double Sd;
-	int Answers;
-	int Count;
-	int Sum;
-	int Questions;
+        const char *PosName;
+        const char *NegName;
+        long double Mean;
+        long double Sd;
+        int Answers;
+        int Count;
+        int Sum;
+        int Questions;
 };
 
 struct TDx
 {
-	const char *Name;
-	int Yes;
-	int No;
-	int Self;
+        const char *Name;
+        int Yes;
+        int No;
+        int Self;
 };
 
 struct TAxis
 {
-	long double MaxCorr;
-	long double MaxDxCorr;
-	long double PcaCorr[2];
-	long double DxCorr[DX_COUNT];
-	long double GroupCorr[MAX_GROUP_COUNT];
+        long double MaxCorr;
+        long double MaxDxCorr;
+        long double PcaCorr[2];
+        long double DxCorr[DX_COUNT];
+        long double GroupCorr[MAX_GROUP_COUNT];
 };
 
 struct TPopPca
@@ -231,8 +231,8 @@ struct TPopPca
 
 struct TUserInfo
 {
-	int BirthYear;
-	int BirthMonth;
+        int BirthYear;
+        int BirthMonth;
     int Count;
     int AsSum;
     int NtSum;
@@ -240,7 +240,7 @@ struct TUserInfo
 
 struct TUserVersionQuiz
 {
-	int Count;
+        int Count;
     long double AsScore;
     long double NtScore;
 };
@@ -263,7 +263,7 @@ public:
     void WriteIntercorr(const char *filename);
     void WriteAsNtCorrelation(const char *filename);
     void WriteAspieAsCorrelation(const char *filename);
-	void WriteAddAsCorrelation(const char *filename);
+        void WriteAddAsCorrelation(const char *filename);
     void WriteGenderAsCorrelation(const char *filename);
     void WriteAddNtCorrelation(const char *filename);
     void WriteLowAsNtCorrelation(const char *filename);
@@ -271,54 +271,54 @@ public:
     void WriteRefererAsCorrelation(const char *filename, const char *header, const char *referer);
     void WriteRefererNtCorrelation(const char *filename, const char *header, const char *referer);
     void WriteAsNtAll(const char *filename);
-	void WriteGroupCorrTable(const char *filename);
-	void WritePcaLoadTable(const char *filename);
+        void WriteGroupCorrTable(const char *filename);
+        void WritePcaLoadTable(const char *filename);
     void WritePcaCorrTable(const char *filename);
-	void WriteGroupTable(const char *filename, int Cross);
+        void WriteGroupTable(const char *filename, int Cross);
     void WriteAverageGroupCorrTable(const char *filename);
     void WriteAveragePcaTable(const char *filename);
-	void WriteAveragePcaCorrTable(const char *filename);
-	void WriteLinkReport(const char *filename);
-	void WritePcaGroupCorr(const char *filename);
+        void WriteAveragePcaCorrTable(const char *filename);
+        void WriteLinkReport(const char *filename);
+        void WritePcaGroupCorr(const char *filename);
     void WriteAxisLoadTable(const char *filename);
     void WriteAverageAxisTable(const char *filename);
-	void WriteDxLoadTable(const char *filename);
-	void WriteAverageDxTable(const char *filename);
-	void WriteVersionRetest(const char *filename);
-	void WriteAncestryChildren(const char *filename, const char *ancestry);
+        void WriteDxLoadTable(const char *filename);
+        void WriteAverageDxTable(const char *filename);
+        void WriteVersionRetest(const char *filename);
+        void WriteAncestryChildren(const char *filename, const char *ancestry);
     void WriteWiki(const char *filename, long double threshold, long double intercorr);
     void WriteQuizWiki(const char *filename);
     void MoveWiki(const char *fromwiki, const char *towiki, long double threshold);
-	void WritePca(const char *filename);
-	void WriteWeighting(const char *filename);
-	void WriteCsvGroupWeighting(const char *filename);
-	void WriteGroupWeighting(const char *filename);
-	void WritePhpWeighting(const char *filename);
-	void WritePhpGroupWeighting(const char *filename);
+        void WritePca(const char *filename);
+        void WriteWeighting(const char *filename);
+        void WriteCsvGroupWeighting(const char *filename);
+        void WriteGroupWeighting(const char *filename);
+        void WritePhpWeighting(const char *filename);
+        void WritePhpGroupWeighting(const char *filename);
 
-	void WriteGlobalCorrelation(const char *filename, int count);
+        void WriteGlobalCorrelation(const char *filename, int count);
     void WriteWikiCorrelation(const char *wiki, const char *filename, int count);
     void WriteWikiNoncorrelated(const char *wiki, const char *filename, int count);
 
     static void PrintGlobalCorrelation(int q1, int q2);
 
-	static void WikiToQuiz(const char *wikifile, const char *quizfile);
+        static void WikiToQuiz(const char *wikifile, const char *quizfile);
 
-	void WriteDsmReport(const char *filename, int PopType);
+        void WriteDsmReport(const char *filename, int PopType);
 
-	static void ExportBirthMonthHistogram(const char *filename);
-	static void ExportBirthYearHistogram(const char *filename);
+        static void ExportBirthMonthHistogram(const char *filename);
+        static void ExportBirthYearHistogram(const char *filename);
 
     void ImportFinalMvsp(const char *filename);
 
-	void ExportHistogram(const char *filename, int PopType, int Width, int All);
-	void ExportDiffHistogram(const char *filename, int PopType, int All);
+        void ExportHistogram(const char *filename, int PopType, int Width, int All);
+        void ExportDiffHistogram(const char *filename, int PopType, int All);
 
-	static void ExportHighestIntercorr(const char *filename);
-	static void ExportAverageIntercorr(const char *filename);
-	static void ExportAveragePosIntercorr(const char *filename);
-	static void ExportAverageNegIntercorr(const char *filename);
-	static void ExportGroupIntercorr(const char *filename, int Group);
+        static void ExportHighestIntercorr(const char *filename);
+        static void ExportAverageIntercorr(const char *filename);
+        static void ExportAveragePosIntercorr(const char *filename);
+        static void ExportAverageNegIntercorr(const char *filename);
+        static void ExportGroupIntercorr(const char *filename, int Group);
 
     void ExportGenderCorr(const char *filename);
     void ExportAgeCorr(const char *filename);
@@ -329,29 +329,32 @@ public:
     void ExportFinalCongruence(const char *filename, TQuiz *QuizFinal);
     void ExportCongruence(const char *filename);
 
-	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
-	void DsmCutoff(const char *filename, int All);
+        void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
+        void DsmCutoff(const char *filename, int All);
 
-	static void ImportPopPca(const char *filename, TPopPca *pca);
-    static void ExportPopPcaCongruence(const char *name, TFile &file, TPopPca *pca1, TPopPca *pca2);
-    static void ExportPopPcaCongruence(const char *filename);
+        static void ImportPopPca(const char *filename, TPopPca *pca);
+    static void ExportPopPcaCongruence(const char *name, TFile &file, TPopPca *pca1, TPopPca *pca2, int count);
+    void ExportPopPcaCongruence(const char *filename);
+
+        static void ImportPopCfa(const char *filename, TPopPca *pca);
+    static void ExportPopCfaCongruence(const char *name, TFile &file, TPopPca *pca1, TPopPca *pca2, int count);
 
     static void ExportFinalPopCongruence(const char *name, TFile &file, TQuiz *FinalQuiz, TPopPca *pca);
     static void ExportFinalPopCongruence(const char *filename, TQuiz *FinalQuiz);
 
     virtual int IsSubQuiz();
 
-	virtual void ImportMvsp(const char *filename, int PcaType) = 0;
-	virtual void ImportMvspAspie(const char *filename);
-	virtual void ExportExcelCase(const char *filename, int PcaType);
-	virtual void ExportExcelAspie(const char *filename);
+        virtual void ImportMvsp(const char *filename, int PcaType) = 0;
+        virtual void ImportMvspAspie(const char *filename);
+        virtual void ExportExcelCase(const char *filename, int PcaType);
+        virtual void ExportExcelAspie(const char *filename);
 
     virtual void ExportExcelAspieItems(const char *filename);
     virtual void ExportExcelNtItems(const char *filename);
 
-	virtual void WriteIQ(const char *filename);
-	virtual void WriteHair(const char *filename);
-	virtual void WriteEye(const char *filename);
+        virtual void WriteIQ(const char *filename);
+        virtual void WriteHair(const char *filename);
+        virtual void WriteEye(const char *filename);
     virtual void WriteRace(const char *filename);
     virtual void WriteStim(const char *filename);
     virtual void WriteABO(const char *filename);
@@ -363,24 +366,24 @@ public:
     virtual void WriteRetest(const char *filename);
     virtual void WriteAQ(const char *filename);
     virtual void WriteSPQ(const char *filename);
-	virtual void WriteLSAS(const char *filename);
-	virtual void WriteMDQ(const char *filename);
+        virtual void WriteLSAS(const char *filename);
+        virtual void WriteMDQ(const char *filename);
     virtual void WriteADD(const char *filename);
     virtual void WriteDyslexia(const char *filename);
     virtual void WriteTS(const char *filename);
-	virtual void WriteGifted(const char *filename);
-	virtual void WriteEat(const char *filename);
+        virtual void WriteGifted(const char *filename);
+        virtual void WriteEat(const char *filename);
     virtual void WriteIPIP(const char *filename);
-	virtual void WritePictureRating(const char *filename);
+        virtual void WritePictureRating(const char *filename);
     virtual void WritePartner(const char *filename);
 
-	void WritePhpGlobalQuestions(const char *filename);
+        void WritePhpGlobalQuestions(const char *filename);
 
-	void CheckCross();
+        void CheckCross();
 
-	void WritePhpQuestions(const char *filename); 
-	void WriteSetupTexts(const char *filename); 
-	void WriteSetupCross(const char *filename); 
+        void WritePhpQuestions(const char *filename); 
+        void WriteSetupTexts(const char *filename); 
+        void WriteSetupCross(const char *filename); 
 
     void WriteOldQuestionCount(const char *filename, int Questions);
     void WriteReverseQuestionCount(const char *filename);
@@ -390,9 +393,9 @@ public:
 
     void ExportGlobalSql(const char *filename);
     void ExportQuizVerSql(const char *filename);
-	void ExportGroupSql(const char *filename);
+        void ExportGroupSql(const char *filename);
     void ExportPopTypeSql(const char *filename);
-	void ExportGlobalCorrSql(const char *filename);
+        void ExportGlobalCorrSql(const char *filename);
     void ExportGlobalAxisSql(const char *filename);
     void ExportQuizCatPopSql(const char *filename);
     void ExportQuizGlobalSql(const char *filename);
@@ -403,24 +406,24 @@ public:
     static TPopPca NoPca;
     static TPopPca BrPca;
     static TPopPca DePca;
-	 static TPopPca CzPca;
-	 static TPopPca NlPca;
+         static TPopPca CzPca;
+         static TPopPca NlPca;
 
-	 static TPopPca CaucasianPca;
-	 static TPopPca AsianPca;
-	 static TPopPca AmerindPca;
-	 static TPopPca AfricanPca;
-	 static TPopPca ArabPca;
-	 static TPopPca AustralPca;
+         static TPopPca CaucasianPca;
+         static TPopPca AsianPca;
+         static TPopPca AmerindPca;
+         static TPopPca AfricanPca;
+         static TPopPca ArabPca;
+         static TPopPca AustralPca;
 
-	 static TPopPca RegionSsaPca;
-	 static TPopPca RegionArabPca;
-	 static TPopPca RegionSouthAsiaPca;
-	 static TPopPca RegionEastAsiaPca;
-	 static TPopPca RegionNorthAsiaPca;
-	 static TPopPca RegionNorthEuropePca;
-	 static TPopPca RegionSouthEuropePca;
-	 static TPopPca RegionEastEuropePca;
+         static TPopPca RegionSsaPca;
+         static TPopPca RegionArabPca;
+         static TPopPca RegionSouthAsiaPca;
+         static TPopPca RegionEastAsiaPca;
+         static TPopPca RegionNorthAsiaPca;
+         static TPopPca RegionNorthEuropePca;
+         static TPopPca RegionSouthEuropePca;
+         static TPopPca RegionEastEuropePca;
 
     static TPopPca RegionEuropePca;
     static TPopPca RegionUsPca;
@@ -439,26 +442,26 @@ public:
     static TPopPca AllAsianPca;
 
 protected:
-	void Init();
-	static int round(long double val);
+        void Init();
+        static int round(long double val);
     static long double GetCutoffChi2(int cats, long double p);
 
     const char *GetGlobalQuestionText(int GlobalId);
-	
+        
     int CalcAsNtDiff(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS], int *AsDiff, int *NtDiff);
     int OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
     void WriteAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
-	void WriteWikiWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
+        void WriteWikiWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
 
-	void WriteDsmReport(TFile &File, TDsmPopulation &DsmPop);
+        void WriteDsmReport(TFile &File, TDsmPopulation &DsmPop);
 
-	virtual void GetReferer(const char *referer, TPopulation *pop) = 0;
-	virtual void WriteName(TFile &File) = 0;
-	virtual void WriteLongName(TFile &File) = 0;
-	virtual int GetPcaCount();
-	virtual int GetCatCount(int Question);
-	virtual int GetQuizN();
-	virtual int IsFinal();
+        virtual void GetReferer(const char *referer, TPopulation *pop) = 0;
+        virtual void WriteName(TFile &File) = 0;
+        virtual void WriteLongName(TFile &File) = 0;
+        virtual int GetPcaCount();
+        virtual int GetCatCount(int Question);
+        virtual int GetQuizN();
+        virtual int IsFinal();
 
     void ExportCurrentGenderCorr(TFile &file);
     void ExportCurrentAgeCorr(TFile &file);
@@ -469,16 +472,16 @@ protected:
     void ExportCurrentFinalCongruence(TFile &file, TQuiz *FinalQuiz);
     void ExportCurrentCongruence(TFile &file, TQuiz *quiz);
 
-	void ProcessDxEntry(char DxArr[DX_COUNT], char DxResult[DX_COUNT]);
-	void GetDxData();
+        void ProcessDxEntry(char DxArr[DX_COUNT], char DxResult[DX_COUNT]);
+        void GetDxData();
 
-	int HasGlobalQuestion(int GlobalId);
+        int HasGlobalQuestion(int GlobalId);
 
-	int GetQuizId(TQuiz *quiz);
+        int GetQuizId(TQuiz *quiz);
 
-	TPopulation *GetPop(int PopType);
-	void DefineCross(int id, TQuiz *quiz);
-	void DefineGlobalId(int Id, int GlobalId);
+        TPopulation *GetPop(int PopType);
+        void DefineCross(int id, TQuiz *quiz);
+        void DefineGlobalId(int Id, int GlobalId);
     TReferer *FindReferer(char *Referer);
     TReferer *AddReferer(char *Search, char *Ref);
     void SortReferers();
@@ -495,21 +498,21 @@ protected:
     void ClearUsed();
     void ClearUsed(int Question);
     TQuiz *GetTopQuizCorr(int *Question);
-	TQuiz *GetTopGroupCorr(int Group, int *Question);
+        TQuiz *GetTopGroupCorr(int Group, int *Question);
     TQuiz *GetHighestCorr(int MyQuestion, int *Question);
 
     void DefineNt(char *Referer);
-	void DefineAspie(char *Referer);
+        void DefineAspie(char *Referer);
 
-	void RotatePair(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int Axis1, int Axis2, long double phi);
-	long double GetAxisCorr(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int Axis,  long double CorrArr[MAX_QUESTIONS]);
-	void CalcAxisCorr(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int AxisCount,  long double CorrArr[MAX_QUESTIONS], long double Result[MAX_ASPIE_PCA_AXIS]);
-	void OptimizePair(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int AxisCount, long double CorrArr[MAX_QUESTIONS], int ToAxis, int FromAxis);
-	void BalancePair(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int AxisCount, long double CorrArr1[MAX_QUESTIONS], long double CorrArr2[MAX_QUESTIONS], int Axis1, int Axis2);
-	void OptimizeGroupLoadings();
-	void OptimizeDxLoadings();
+        void RotatePair(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int Axis1, int Axis2, long double phi);
+        long double GetAxisCorr(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int Axis,  long double CorrArr[MAX_QUESTIONS]);
+        void CalcAxisCorr(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int AxisCount,  long double CorrArr[MAX_QUESTIONS], long double Result[MAX_ASPIE_PCA_AXIS]);
+        void OptimizePair(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int AxisCount, long double CorrArr[MAX_QUESTIONS], int ToAxis, int FromAxis);
+        void BalancePair(long double m[MAX_ASPIE_PCA_AXIS][MAX_QUESTIONS], int AxisCount, long double CorrArr1[MAX_QUESTIONS], long double CorrArr2[MAX_QUESTIONS], int Axis1, int Axis2);
+        void OptimizeGroupLoadings();
+        void OptimizeDxLoadings();
 
-	void DsmCutoff(TFile &file, const char *Text, int PopType);
+        void DsmCutoff(TFile &file, const char *Text, int PopType);
 
     void UpdateReferer(TReferer *ref, int AsResult, int NtResult, int AqResult, char GroupResult[ACTIVE_GROUP_COUNT]);
     void UpdateReferer(TReferer *ref, int AsResult, int NtResult, char GroupResult[ACTIVE_GROUP_COUNT]);
@@ -522,14 +525,14 @@ protected:
 
     void WriteStaple(TFile &File, TPopulation *pop, int Question);
     void WriteCI95(TFile &File, TPopulation *pop, int Question);
-	void WriteCorr95(TFile &File, long double corr, int count);
-	void WriteCorrVal(TFile &File, long double corr, int count);
+        void WriteCorr95(TFile &File, long double corr, int count);
+        void WriteCorrVal(TFile &File, long double corr, int count);
     void WriteChi2(TFile &File, long double chi2);
     void WriteP(TFile &File, int cats, long double chi2);
     void WritePca(TFile &File, long double pca);
     static void WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr);
     void WritePcaCorrRow(TFile &File, const char *comment, int PopType);
-	void WriteReferer(TFile &file, TReferer *ref);
+        void WriteReferer(TFile &file, TReferer *ref);
     void WriteCorrTable(const char *filename, const char *name1, const char *name2, TPopulation *pop1, TPopulation *pop2, long double p);
 
     void WriteLinkQuestion(TFile *file, int Question, int GlobalId);
@@ -540,122 +543,122 @@ protected:
     void WriteAsNtChi2(TFile &File, int Question);
     void WriteAsNtCorr95(TFile &File, int Question);
 
-	void ExportOneCatPopSql(TFile &file, TQuiz *quiz, int id, int q, int poptype);
+        void ExportOneCatPopSql(TFile &file, TQuiz *quiz, int id, int q, int poptype);
     void ExportOneQuizCatPopSql(TFile &file, TQuiz *quiz, int id);
 
-	TPopulationCorrelation PopCorr;
+        TPopulationCorrelation PopCorr;
 
     TPopulation All;
     TPopulation Autism;
     TPopulation LowAs;
-	TPopulation As;
+        TPopulation As;
     TPopulation AsMale;
-	TPopulation AsFemale;
-	TPopulation Add;
-	TPopulation AddMale;
-	TPopulation AddFemale;
-	TPopulation Aspie;
-	TPopulation AspieMale;
-	TPopulation AspieFemale;
-	TPopulation AspieControl;
-	TPopulation YoungMale;
-	TPopulation YoungFemale;
-	TPopulation Mix;
-	TPopulation MixMale;
-	TPopulation MixFemale;
-	TPopulation Nt;
-	TPopulation NtMale;
-	TPopulation NtFemale;
-	TPopulation NtControl;
-	TPopulation Ts;
-	TPopulation Hyperlexia;
-	TPopulation Dyspraxia;
-	TPopulation Dyslexia;
-	TPopulation Dyscalculia;
-	TPopulation OCD;
-	TPopulation ODD;
-	TPopulation Synaesthesia;
-	TPopulation PA;
-	TPopulation Dysgraphia;
-	TPopulation Bipolar;
-	TPopulation Schizophrenia;
-	TPopulation SocialPhobia;
-	TPopulation LowIQ;
-	TPopulation HighIQ;
+        TPopulation AsFemale;
+        TPopulation Add;
+        TPopulation AddMale;
+        TPopulation AddFemale;
+        TPopulation Aspie;
+        TPopulation AspieMale;
+        TPopulation AspieFemale;
+        TPopulation AspieControl;
+        TPopulation YoungMale;
+        TPopulation YoungFemale;
+        TPopulation Mix;
+        TPopulation MixMale;
+        TPopulation MixFemale;
+        TPopulation Nt;
+        TPopulation NtMale;
+        TPopulation NtFemale;
+        TPopulation NtControl;
+        TPopulation Ts;
+        TPopulation Hyperlexia;
+        TPopulation Dyspraxia;
+        TPopulation Dyslexia;
+        TPopulation Dyscalculia;
+        TPopulation OCD;
+        TPopulation ODD;
+        TPopulation Synaesthesia;
+        TPopulation PA;
+        TPopulation Dysgraphia;
+        TPopulation Bipolar;
+        TPopulation Schizophrenia;
+        TPopulation SocialPhobia;
+        TPopulation LowIQ;
+        TPopulation HighIQ;
     TPopulation Exh;
 
-	static int PredYesOk[POP_TYPE_COUNT];
-	static int PredYesFail[POP_TYPE_COUNT];
-	static int PredNoOk[POP_TYPE_COUNT];
-	static int PredNoDxFail[POP_TYPE_COUNT];
-	static int PredSelfOk[POP_TYPE_COUNT];
-	static int PredNoSelfFail[POP_TYPE_COUNT];
+        static int PredYesOk[POP_TYPE_COUNT];
+        static int PredYesFail[POP_TYPE_COUNT];
+        static int PredNoOk[POP_TYPE_COUNT];
+        static int PredNoDxFail[POP_TYPE_COUNT];
+        static int PredSelfOk[POP_TYPE_COUNT];
+        static int PredNoSelfFail[POP_TYPE_COUNT];
 
-	static TBirthMonth BirthMonth;
-	static TBirthYear BirthYear;
+        static TBirthMonth BirthMonth;
+        static TBirthYear BirthYear;
 
-	int UseNtResult;
-	int RefCount;
-	TReferer *RefArr[MAX_REFERERS];
-	TReferer NoRef;
-	TReferer NTRef;
-	TReferer AutismRef;
-	TReferer AsRef;
-	TReferer AspieRef;
-	TReferer TsRef;
-	TReferer AddRef;
-	TReferer SelfAsRef;
-	TReferer MaleAsRef;
-	TReferer FemaleAsRef;
-	TReferer MaleNonAsRef;
-	TReferer FemaleNonAsRef;
-	TReferer FemaleRef;
-	TReferer MaleRef;
-	TReferer MaleAspieRef;
-	TReferer FemaleAspieRef;
-	TReferer MaleAddRef;
-	TReferer FemaleAddRef;
-	TReferer HyperlexiaRef;
-	TReferer DyspraxiaRef;
-	TReferer DyslexiaRef;
-	TReferer SocialPhobiaRef;
-	TReferer MaleSocialRef;
-	TReferer FemaleSocialRef;
-	TReferer DyscalculiaRef;
-	TReferer OCDRef;
-	TReferer MaleOCDRef;
-	TReferer FemaleOCDRef;
-	TReferer ODDRef;
-	TReferer SynaesthesiaRef;
-	TReferer PARef;
-	TReferer DysgraphiaRef;
-	TReferer BipolarRef;
-	TReferer SchizophreniaRef;
-	TReferer AmerindianRef;
-	TReferer MixedAfroAmericanRef;
-	TReferer AfroAmericanRef;
-	TReferer AfricanRef;
-	TReferer MixedAfricanRef;
-	TReferer HispanicRef;
-	TReferer WhiteRef;
-	TReferer ArabRef;
-	TReferer AsianRef;
+        int UseNtResult;
+        int RefCount;
+        TReferer *RefArr[MAX_REFERERS];
+        TReferer NoRef;
+        TReferer NTRef;
+        TReferer AutismRef;
+        TReferer AsRef;
+        TReferer AspieRef;
+        TReferer TsRef;
+        TReferer AddRef;
+        TReferer SelfAsRef;
+        TReferer MaleAsRef;
+        TReferer FemaleAsRef;
+        TReferer MaleNonAsRef;
+        TReferer FemaleNonAsRef;
+        TReferer FemaleRef;
+        TReferer MaleRef;
+        TReferer MaleAspieRef;
+        TReferer FemaleAspieRef;
+        TReferer MaleAddRef;
+        TReferer FemaleAddRef;
+        TReferer HyperlexiaRef;
+        TReferer DyspraxiaRef;
+        TReferer DyslexiaRef;
+        TReferer SocialPhobiaRef;
+        TReferer MaleSocialRef;
+        TReferer FemaleSocialRef;
+        TReferer DyscalculiaRef;
+        TReferer OCDRef;
+        TReferer MaleOCDRef;
+        TReferer FemaleOCDRef;
+        TReferer ODDRef;
+        TReferer SynaesthesiaRef;
+        TReferer PARef;
+        TReferer DysgraphiaRef;
+        TReferer BipolarRef;
+        TReferer SchizophreniaRef;
+        TReferer AmerindianRef;
+        TReferer MixedAfroAmericanRef;
+        TReferer AfroAmericanRef;
+        TReferer AfricanRef;
+        TReferer MixedAfricanRef;
+        TReferer HispanicRef;
+        TReferer WhiteRef;
+        TReferer ArabRef;
+        TReferer AsianRef;
 
-	int FFirst;
+        int FFirst;
 
     int FCount;
 
-	TQuiz *CrossQuiz[MAX_CROSS];
+        TQuiz *CrossQuiz[MAX_CROSS];
 
-	int AspiePcaCount;
-	int N;
-	int GroupValCount;
-	TGroupValArr *GroupValArr;
-	TGroup Group[MAX_GROUP_COUNT];
-	TDx Dx[DX_COUNT];
-	TGroupCorr GroupCorr[MAX_GROUP_COUNT][MAX_GROUP_COUNT];
-	TAxis Axis[MAX_ASPIE_PCA_AXIS];
-	TQuizQuestion Quiz[MAX_QUESTIONS];
+        int AspiePcaCount;
+        int N;
+        int GroupValCount;
+        TGroupValArr *GroupValArr;
+        TGroup Group[MAX_GROUP_COUNT];
+        TDx Dx[DX_COUNT];
+        TGroupCorr GroupCorr[MAX_GROUP_COUNT][MAX_GROUP_COUNT];
+        TAxis Axis[MAX_ASPIE_PCA_AXIS];
+        TQuizQuestion Quiz[MAX_QUESTIONS];
     TUserInfo *UserInfo[MAX_USERS];
 };
 

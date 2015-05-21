@@ -54,26 +54,44 @@ int main(int argc, char **argv)
 {
     char str[80];
     int g;
-    TPopPca L1;
-    TPopPca L3;
-    TPopPca Ru;
-    TPopPca Pl;
-    TPopPca Sw;
+    TPopPca cfa10_1500;
+    TPopPca cfa10_9000;
+    TPopPca cfa10_female;
+    TPopPca cfa10_young;
+    TPopPca cfa10_old;
+    TPopPca cfa12_600;
+    TPopPca cfa12_1500;
+    TPopPca cfa12_3000;
+    TPopPca cfa12_6000;
+    TPopPca cfa12_18000;
+    TPopPca cfa12_repl;
     TFile CongFile("res\\congr.txt", 0);
         
     printf("read data\r\n");
     Quiz[0] = new TQuizL1("bin\\quizru4a.bin");
 
-    TQuiz::ImportPopPca("pca\\alll1.txt", &L1);
-    TQuiz::ImportPopPca("pca\\alll3.txt", &L3);
-    TQuiz::ImportPopPca("pca\\ru4a.txt", &Ru);
-    TQuiz::ImportPopPca("pca\\pl4a.txt", &Pl);
-    TQuiz::ImportPopPca("pca\\sw4a.txt", &Sw);
-    TQuiz::ExportPopPcaCongruence("L1-L3", CongFile, &L1, &L3);
-    TQuiz::ExportPopPcaCongruence("L1-Ru", CongFile, &L1, &Ru);
-    TQuiz::ExportPopPcaCongruence("L1-Pl", CongFile, &L1, &Pl);
-    TQuiz::ExportPopPcaCongruence("L1-Sw", CongFile, &L1, &Sw);
-    TQuiz::ExportPopPcaCongruence("Ru-Pl", CongFile, &Ru, &Pl);
+    TQuiz::ImportPopCfa("pca\\cfa10-1500.txt", &cfa10_1500);
+    TQuiz::ImportPopCfa("pca\\cfa10-9000.txt", &cfa10_9000);
+    TQuiz::ImportPopCfa("pca\\cfa10-female.txt", &cfa10_female);
+    TQuiz::ImportPopCfa("pca\\cfa10-young.txt", &cfa10_young);
+    TQuiz::ImportPopCfa("pca\\cfa10-old.txt", &cfa10_old);
+    TQuiz::ExportPopCfaCongruence("10-factor: 1500-9000", CongFile, &cfa10_1500, &cfa10_9000, 117);
+    TQuiz::ExportPopCfaCongruence("10-factor: 1500-female", CongFile, &cfa10_1500, &cfa10_female, 117);
+    TQuiz::ExportPopCfaCongruence("10-factor: 1500-young", CongFile, &cfa10_1500, &cfa10_young, 117);
+    TQuiz::ExportPopCfaCongruence("10-factor: 1500-old", CongFile, &cfa10_1500, &cfa10_old, 117);
+    TQuiz::ExportPopCfaCongruence("10-factor: young-old", CongFile, &cfa10_young, &cfa10_old, 117);
+
+    TQuiz::ImportPopCfa("pca\\cfa12-600.txt", &cfa12_600);
+    TQuiz::ImportPopCfa("pca\\cfa12-1500.txt", &cfa12_1500);
+    TQuiz::ImportPopCfa("pca\\cfa12-3000.txt", &cfa12_3000);
+    TQuiz::ImportPopCfa("pca\\cfa12-6000.txt", &cfa12_6000);
+    TQuiz::ImportPopCfa("pca\\cfa12-18000.txt", &cfa12_18000);
+    TQuiz::ImportPopCfa("pca\\cfa12-repl.txt", &cfa12_repl);
+    TQuiz::ExportPopCfaCongruence("12-factor: 1500-600", CongFile, &cfa12_1500, &cfa12_600, 121);
+    TQuiz::ExportPopCfaCongruence("12-factor: 1500-3000", CongFile, &cfa12_1500, &cfa12_3000, 121);
+    TQuiz::ExportPopCfaCongruence("12-factor: 1500-6000", CongFile, &cfa12_1500, &cfa12_6000, 121);
+    TQuiz::ExportPopCfaCongruence("12-factor: 1500-18000", CongFile, &cfa12_1500, &cfa12_18000, 121);
+    TQuiz::ExportPopCfaCongruence("12-factor: 1500-repl", CongFile, &cfa12_1500, &cfa12_repl, 121);
 
     printf("write no answer\r\n");
     Quiz[0]->WriteNoAnswerStats("res\\noans.txt");

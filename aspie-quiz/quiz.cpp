@@ -1477,6 +1477,70 @@ void TQuiz::ImportPopPca(const char *filename, TPopPca *pca)
         }
 }
 
+/*##################  TQuiz::ImportPopCfa ##########################
+*   Purpose....: Import pop cfa                                             #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ImportPopCfa(const char *filename, TPopPca *pca)
+{
+        char buf[MAX_IN_ROW];
+        int size;
+        char *rowstr;
+        char *ptr;
+        long pos = 0;
+        int i;
+        long double d;
+        int q;
+        int count;
+        TFile infile(filename);
+
+        while (size = infile.Read(buf, MAX_IN_ROW))
+        {
+                buf[size] = 0;
+                rowstr = strstr(buf, "#");
+                if (rowstr)
+                {
+                        rowstr++;
+                        ptr = strstr(rowstr, "\r");
+                        if (ptr)
+                                 *ptr = 0;
+                        else
+                                 rowstr = 0;
+                }
+
+                pos += strlen(buf) + 1;
+                infile.SetPos(pos);
+
+                if (rowstr)
+                {
+                        for (i = 0; i < strlen(rowstr); i++)
+                        {
+                                switch (rowstr[i])
+                                {
+                                        case ',':
+                                                rowstr[i] = '.';
+                                                break;
+
+                                        case 0x9:
+                                        case 0xd:
+                                                rowstr[i] = ' ';
+                                                break;
+                                }
+                        }
+
+                        if (sscanf(rowstr, "%d %Lf %Lf", &q, &d) == 2)
+                        {
+                            q--;
+                            
+                            pca->Pca[q][0] = d;
+                        }
+                }
+        }
+}
+
 /*##################  TQuiz::ExportPopPcaCongruence ##########################
 *   Purpose....: Export pop pca congruence                                              #
 *   In params..: *                                                          #
@@ -1484,9 +1548,8 @@ void TQuiz::ImportPopPca(const char *filename, TPopPca *pca)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::ExportPopPcaCongruence(const char *name, TFile &file, TPopPca *pca1, TPopPca *pca2)
+void TQuiz::ExportPopPcaCongruence(const char *name, TFile &file, TPopPca *pca1, TPopPca *pca2, int count)
 {
-    int count;
         int axis;
         int q;
         long double rsum[2];
@@ -1497,8 +1560,6 @@ void TQuiz::ExportPopPcaCongruence(const char *name, TFile &file, TPopPca *pca1,
     long double sqsum;
     int val;
         char str[80];
-
-        count = 117;
 
         xsum = 0;
         ysum = 0;
@@ -1537,6 +1598,59 @@ void TQuiz::ExportPopPcaCongruence(const char *name, TFile &file, TPopPca *pca1,
          file.Write(str);
 }
 
+/*##################  TQuiz::ExportPopCfaCongruence ##########################
+*   Purpose....: Export pop CFA congruence                                              #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportPopCfaCongruence(const char *name, TFile &file, TPopPca *pca1, TPopPca *pca2, int count)
+{
+    int axis;
+    int q;
+    long double rsum;
+    long double x;
+    long double y;
+    long double xsum;
+    long double ysum;   
+    long double sqsum;
+    int val;
+    char str[80];
+
+    xsum = 0;
+    ysum = 0;
+
+    rsum = 0;
+
+    for (q = 0; q < count; q++)
+    {
+       x = pca1->Pca[q][0];
+       y = pca2->Pca[q][0];
+
+       rsum += x * y;
+       xsum += x * x;
+       ysum += y * y;
+    }
+
+    if (rsum < 0)
+        rsum = -rsum;
+
+    sqsum = xsum * ysum;
+
+    if (sqsum > 0.0)
+        sqsum = sqrt(xsum * ysum);
+
+    if (sqsum > 0.0)
+        val = round(1000 * (rsum / sqsum));
+    else
+        val = 0;
+
+    file.Write(name);
+    sprintf(str, ": 0.%03d\r\n", val);
+    file.Write(str);
+}
+
 /*##################  TQuiz::ExportPopPcaCongruence ##########################
 *   Purpose....: Export pop pca congruence                                              #
 *   In params..: *                                                          #
@@ -1548,76 +1662,76 @@ void TQuiz::ExportPopPcaCongruence(const char *filename)
 {
         TFile file(filename, 0);
 
-        ExportPopPcaCongruence("Se", file, &UkPca, &SePca);
-        ExportPopPcaCongruence("No", file, &UkPca, &NoPca);
-        ExportPopPcaCongruence("Br", file, &UkPca, &BrPca);
-        ExportPopPcaCongruence("De", file, &UkPca, &DePca);
-        ExportPopPcaCongruence("Cz", file, &UkPca, &CzPca);
-        ExportPopPcaCongruence("Nl", file, &UkPca, &NlPca);
+        ExportPopPcaCongruence("Se", file, &UkPca, &SePca, N);
+        ExportPopPcaCongruence("No", file, &UkPca, &NoPca, N);
+        ExportPopPcaCongruence("Br", file, &UkPca, &BrPca, N);
+        ExportPopPcaCongruence("De", file, &UkPca, &DePca, N);
+        ExportPopPcaCongruence("Cz", file, &UkPca, &CzPca, N);
+        ExportPopPcaCongruence("Nl", file, &UkPca, &NlPca, N);
 
-        ExportPopPcaCongruence("Caucasian - Asian", file, &CaucasianPca, &AsianPca);
-        ExportPopPcaCongruence("Caucasian - Amerind", file, &CaucasianPca, &AmerindPca);
-        ExportPopPcaCongruence("Caucasian - African", file, &CaucasianPca, &AfricanPca);
-        ExportPopPcaCongruence("Caucasian - Arab", file, &CaucasianPca, &ArabPca);
-        ExportPopPcaCongruence("Caucasian - Australian", file, &CaucasianPca, &AustralPca);
+        ExportPopPcaCongruence("Caucasian - Asian", file, &CaucasianPca, &AsianPca, N);
+        ExportPopPcaCongruence("Caucasian - Amerind", file, &CaucasianPca, &AmerindPca, N);
+        ExportPopPcaCongruence("Caucasian - African", file, &CaucasianPca, &AfricanPca, N);
+        ExportPopPcaCongruence("Caucasian - Arab", file, &CaucasianPca, &ArabPca, N);
+        ExportPopPcaCongruence("Caucasian - Australian", file, &CaucasianPca, &AustralPca, N);
 
-        ExportPopPcaCongruence("Asian - Amerind", file, &AsianPca, &AmerindPca);
-        ExportPopPcaCongruence("Asian - African", file, &AsianPca, &AfricanPca);
-        ExportPopPcaCongruence("Asian - Arab", file, &AsianPca, &ArabPca);
-        ExportPopPcaCongruence("Asian - Australian", file, &AsianPca, &AustralPca);
+        ExportPopPcaCongruence("Asian - Amerind", file, &AsianPca, &AmerindPca, N);
+        ExportPopPcaCongruence("Asian - African", file, &AsianPca, &AfricanPca, N);
+        ExportPopPcaCongruence("Asian - Arab", file, &AsianPca, &ArabPca, N);
+        ExportPopPcaCongruence("Asian - Australian", file, &AsianPca, &AustralPca, N);
 
-        ExportPopPcaCongruence("Amerind - African", file, &AmerindPca, &AfricanPca);
-        ExportPopPcaCongruence("Amerind - Arab", file, &AmerindPca, &ArabPca);
-        ExportPopPcaCongruence("Amerind - Australian", file, &AmerindPca, &AustralPca);
+        ExportPopPcaCongruence("Amerind - African", file, &AmerindPca, &AfricanPca, N);
+        ExportPopPcaCongruence("Amerind - Arab", file, &AmerindPca, &ArabPca, N);
+        ExportPopPcaCongruence("Amerind - Australian", file, &AmerindPca, &AustralPca, N);
 
-        ExportPopPcaCongruence("African - Arab", file, &AfricanPca, &ArabPca);
-        ExportPopPcaCongruence("African - Australian", file, &AfricanPca, &AustralPca);
+        ExportPopPcaCongruence("African - Arab", file, &AfricanPca, &ArabPca, N);
+        ExportPopPcaCongruence("African - Australian", file, &AfricanPca, &AustralPca, N);
 
-        ExportPopPcaCongruence("Arab - Australian", file, &ArabPca, &AustralPca);
+        ExportPopPcaCongruence("Arab - Australian", file, &ArabPca, &AustralPca, N);
 
-        ExportPopPcaCongruence("SSA - Arab", file, &RegionSsaPca, &RegionArabPca);
-        ExportPopPcaCongruence("SSA - S Asia", file, &RegionSsaPca, &RegionSouthAsiaPca);
-        ExportPopPcaCongruence("SSA - E Asia", file, &RegionSsaPca, &RegionEastAsiaPca);
-        ExportPopPcaCongruence("SSA - N Asia", file, &RegionSsaPca, &RegionNorthAsiaPca);
-        ExportPopPcaCongruence("SSA - N Europe", file, &RegionSsaPca, &RegionNorthEuropePca);
-        ExportPopPcaCongruence("SSA - S Europe", file, &RegionSsaPca, &RegionSouthEuropePca);
-        ExportPopPcaCongruence("SSA - E Europe", file, &RegionSsaPca, &RegionEastEuropePca);
+        ExportPopPcaCongruence("SSA - Arab", file, &RegionSsaPca, &RegionArabPca, N);
+        ExportPopPcaCongruence("SSA - S Asia", file, &RegionSsaPca, &RegionSouthAsiaPca, N);
+        ExportPopPcaCongruence("SSA - E Asia", file, &RegionSsaPca, &RegionEastAsiaPca, N);
+        ExportPopPcaCongruence("SSA - N Asia", file, &RegionSsaPca, &RegionNorthAsiaPca, N);
+        ExportPopPcaCongruence("SSA - N Europe", file, &RegionSsaPca, &RegionNorthEuropePca, N);
+        ExportPopPcaCongruence("SSA - S Europe", file, &RegionSsaPca, &RegionSouthEuropePca, N);
+        ExportPopPcaCongruence("SSA - E Europe", file, &RegionSsaPca, &RegionEastEuropePca, N);
 
-        ExportPopPcaCongruence("Arab - S Asia", file, &RegionArabPca, &RegionSouthAsiaPca);
-        ExportPopPcaCongruence("Arab - E Asia", file, &RegionArabPca, &RegionEastAsiaPca);
-        ExportPopPcaCongruence("Arab - N Asia", file, &RegionArabPca, &RegionNorthAsiaPca);
-        ExportPopPcaCongruence("Arab - N Europe", file, &RegionArabPca, &RegionNorthEuropePca);
-        ExportPopPcaCongruence("Arab - S Europe", file, &RegionArabPca, &RegionSouthEuropePca);
-        ExportPopPcaCongruence("Arab - E Europe", file, &RegionArabPca, &RegionEastEuropePca);
+        ExportPopPcaCongruence("Arab - S Asia", file, &RegionArabPca, &RegionSouthAsiaPca, N);
+        ExportPopPcaCongruence("Arab - E Asia", file, &RegionArabPca, &RegionEastAsiaPca, N);
+        ExportPopPcaCongruence("Arab - N Asia", file, &RegionArabPca, &RegionNorthAsiaPca, N);
+        ExportPopPcaCongruence("Arab - N Europe", file, &RegionArabPca, &RegionNorthEuropePca, N);
+        ExportPopPcaCongruence("Arab - S Europe", file, &RegionArabPca, &RegionSouthEuropePca, N);
+        ExportPopPcaCongruence("Arab - E Europe", file, &RegionArabPca, &RegionEastEuropePca, N);
 
-        ExportPopPcaCongruence("S Asia - E Asia", file, &RegionSouthAsiaPca, &RegionEastAsiaPca);
-        ExportPopPcaCongruence("S Asia - N Asia", file, &RegionSouthAsiaPca, &RegionNorthAsiaPca);
-        ExportPopPcaCongruence("S Asia - N Europe", file, &RegionSouthAsiaPca, &RegionNorthEuropePca);
-        ExportPopPcaCongruence("S Asia - S Europe", file, &RegionSouthAsiaPca, &RegionSouthEuropePca);
-        ExportPopPcaCongruence("S Asia - E Europe", file, &RegionSouthAsiaPca, &RegionEastEuropePca);
+        ExportPopPcaCongruence("S Asia - E Asia", file, &RegionSouthAsiaPca, &RegionEastAsiaPca, N);
+        ExportPopPcaCongruence("S Asia - N Asia", file, &RegionSouthAsiaPca, &RegionNorthAsiaPca, N);
+        ExportPopPcaCongruence("S Asia - N Europe", file, &RegionSouthAsiaPca, &RegionNorthEuropePca, N);
+        ExportPopPcaCongruence("S Asia - S Europe", file, &RegionSouthAsiaPca, &RegionSouthEuropePca, N);
+        ExportPopPcaCongruence("S Asia - E Europe", file, &RegionSouthAsiaPca, &RegionEastEuropePca, N);
 
-        ExportPopPcaCongruence("E Asia - N Asia", file, &RegionEastAsiaPca, &RegionNorthAsiaPca);
-        ExportPopPcaCongruence("E Asia - N Europe", file, &RegionEastAsiaPca, &RegionNorthEuropePca);
-        ExportPopPcaCongruence("E Asia - S Europe", file, &RegionEastAsiaPca, &RegionSouthEuropePca);
-        ExportPopPcaCongruence("E Asia - E Europe", file, &RegionEastAsiaPca, &RegionEastEuropePca);
+        ExportPopPcaCongruence("E Asia - N Asia", file, &RegionEastAsiaPca, &RegionNorthAsiaPca, N);
+        ExportPopPcaCongruence("E Asia - N Europe", file, &RegionEastAsiaPca, &RegionNorthEuropePca, N);
+        ExportPopPcaCongruence("E Asia - S Europe", file, &RegionEastAsiaPca, &RegionSouthEuropePca, N);
+        ExportPopPcaCongruence("E Asia - E Europe", file, &RegionEastAsiaPca, &RegionEastEuropePca, N);
 
-        ExportPopPcaCongruence("N Asia - N Europe", file, &RegionNorthAsiaPca, &RegionNorthEuropePca);
-        ExportPopPcaCongruence("N Asia - S Europe", file, &RegionNorthAsiaPca, &RegionSouthEuropePca);
-        ExportPopPcaCongruence("N Asia - E Europe", file, &RegionNorthAsiaPca, &RegionEastEuropePca);
+        ExportPopPcaCongruence("N Asia - N Europe", file, &RegionNorthAsiaPca, &RegionNorthEuropePca, N);
+        ExportPopPcaCongruence("N Asia - S Europe", file, &RegionNorthAsiaPca, &RegionSouthEuropePca, N);
+        ExportPopPcaCongruence("N Asia - E Europe", file, &RegionNorthAsiaPca, &RegionEastEuropePca, N);
 
-        ExportPopPcaCongruence("N Europe - S Europe", file, &RegionNorthEuropePca, &RegionSouthEuropePca);
-        ExportPopPcaCongruence("N Europe - E Europe", file, &RegionNorthEuropePca, &RegionEastEuropePca);
+        ExportPopPcaCongruence("N Europe - S Europe", file, &RegionNorthEuropePca, &RegionSouthEuropePca, N);
+        ExportPopPcaCongruence("N Europe - E Europe", file, &RegionNorthEuropePca, &RegionEastEuropePca, N);
 
-        ExportPopPcaCongruence("S Europe - E Europe", file, &RegionSouthEuropePca, &RegionEastEuropePca);
+        ExportPopPcaCongruence("S Europe - E Europe", file, &RegionSouthEuropePca, &RegionEastEuropePca, N);
 
-        ExportPopPcaCongruence("Europe - US", file, &RegionEuropePca, &RegionUsPca);
-        ExportPopPcaCongruence("Europe - Australia", file, &RegionEuropePca, &RegionAustraliaPca);
-        ExportPopPcaCongruence("Europe - Afroamerican", file, &RegionEuropePca, &RegionAfroUsPca);
+        ExportPopPcaCongruence("Europe - US", file, &RegionEuropePca, &RegionUsPca, N);
+        ExportPopPcaCongruence("Europe - Australia", file, &RegionEuropePca, &RegionAustraliaPca, N);
+        ExportPopPcaCongruence("Europe - Afroamerican", file, &RegionEuropePca, &RegionAfroUsPca, N);
 
-        ExportPopPcaCongruence("US - Australia", file, &RegionUsPca, &RegionAustraliaPca);
-        ExportPopPcaCongruence("US - Afroamerican", file, &RegionUsPca, &RegionAfroUsPca);
+        ExportPopPcaCongruence("US - Australia", file, &RegionUsPca, &RegionAustraliaPca, N);
+        ExportPopPcaCongruence("US - Afroamerican", file, &RegionUsPca, &RegionAfroUsPca, N);
 
-        ExportPopPcaCongruence("Australia - Afroamerican", file, &RegionAustraliaPca, &RegionAfroUsPca);
+        ExportPopPcaCongruence("Australia - Afroamerican", file, &RegionAustraliaPca, &RegionAfroUsPca, N);
 
 }
 
