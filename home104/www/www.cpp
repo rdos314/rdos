@@ -195,7 +195,7 @@ void cdecl main()
 
     TDataStore *DataStore;
 
-    Node = 0x4301A8C0;
+    Node = 0x4901A8C0;
 
     for (i = 0; i < 10; i++)
     {
