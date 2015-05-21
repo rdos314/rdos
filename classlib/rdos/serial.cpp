@@ -308,30 +308,6 @@ TSerialDevice::TSerialDevice()
 #   Returns....: *
 #
 ##########################################################################*/
-TSerialDevice::TSerialDevice(const char *IniSection)
- : TWaitDevice(IniSection),
-   FSection("Serial")
-{
-    OnChar = 0;    
-    FPort = 0;
-    FBaudrate = 0;
-    FParity = 0;
-    FDataBits = 0;
-    FStopBits = 0;
-    FUseCts = FALSE;
-    FHandle = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialDevice::TSerialDevice
-#
-#   Purpose....: Constructor
-#
-#   In params..: *
-#   Returns....: *
-#
-##########################################################################*/
 TSerialDevice::TSerialDevice(int Port)
  : FSection("Serial")
 {
@@ -343,49 +319,6 @@ TSerialDevice::TSerialDevice(int Port)
     FStopBits = 1;
     FUseCts = FALSE;
     FHandle = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialDevice::TSerialDevice
-#
-#   Purpose....: Constructor
-#
-#   In params..: IniSection Parameter section
-#                Port       port number (ie COM1 = 1)
-#                Baudrate   baudrate
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSerialDevice::TSerialDevice(const char *IniSection, int Port, long Baudrate)
- : TWaitDevice(IniSection),
-   FSection("Serial")
-{
-        Init(Port, Baudrate, 'N', 8, 1);
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialDevice::TSerialDevice
-#
-#   Purpose....: Constructor
-#
-#   In params..: IniSection Parameter section
-#                Port       port number (ie COM1 = 1)
-#                Baudrate   baudrate
-#                Parity     parity
-#                DataBits   databits
-#                StopBits   stopbits
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSerialDevice::TSerialDevice(const char *IniSection, int Port, long Baudrate, char Parity, int DataBits, int StopBits)
- : TWaitDevice(IniSection),
-   FSection("Serial")
-{
-        Init(Port, Baudrate, Parity, DataBits, StopBits);
 }
 
 /*##########################################################################

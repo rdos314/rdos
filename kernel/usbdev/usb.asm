@@ -1397,6 +1397,7 @@ xhci_notify_usb_attach       Proc far
     add di,OFFSET usb_addr_arr
 ;
     mov es:usbf_port,bl
+    mov es:usbf_flags,USBF_XHCI
     mov ds:[di],es
     add bx,bx
     mov ds:[bx].usb_port_sel_arr,es

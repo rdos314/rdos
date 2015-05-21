@@ -34,7 +34,6 @@ class TLightDevice : public TAdcDevice
 {
 public:
 	TLightDevice(int channel);
-	TLightDevice(const char *IniSection, int channel);
 	~TLightDevice();
 
 	virtual void DeviceName(char *Name, int MaxLen) const;

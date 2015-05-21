@@ -39,7 +39,6 @@ friend class TWait;
 
 public:
 	TWaitDevice();
-	TWaitDevice(const char *IniSection);
 	virtual ~TWaitDevice();
 
 	TWaitDevice *WaitForever();

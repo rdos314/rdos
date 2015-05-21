@@ -51,23 +51,6 @@ TMouseDevice::TMouseDevice()
 
 /*##########################################################################
 #
-#   Name       : TMouseDevice::TMouseDevice
-#
-#   Purpose....: Constructor for TMouseDevice
-#
-#   In params..: IniSection to read parameters from
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TMouseDevice::TMouseDevice(const char *IniSection)
-  : TWaitDevice(IniSection)
-{
-        Init();
-}
-
-/*##########################################################################
-#
 #   Name       : TMouseDevice::~TMouseDevice
 #
 #   Purpose....: Destructor for TMouseDevice                                      

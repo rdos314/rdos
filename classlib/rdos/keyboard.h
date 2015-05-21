@@ -166,7 +166,6 @@ class TKeyboardDevice : public TWaitDevice
 {
 public:
 	TKeyboardDevice();
-	TKeyboardDevice(const char *IniSection);
 	virtual ~TKeyboardDevice();
 
 	virtual void DeviceName(char *Name, int MaxLen) const;

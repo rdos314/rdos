@@ -32,23 +32,6 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-/*##########################################################################
-#
-#   Name       : TCardReaderDevice::TCardReaderDevice
-#
-#   Purpose....: Constructor
-#
-#   In params..: IniSection Parameter section
-#                Port       port number (ie first printer = 1)
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TCardReaderDevice::TCardReaderDevice(const char *IniSection, int Port)
-        : TDevice(IniSection)
-{
-        Init(Port);
-}
 
 /*##########################################################################
 #

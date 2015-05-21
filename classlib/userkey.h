@@ -35,7 +35,6 @@ class TUserKeyboardDevice : public TKeyboardDevice
 {
 public:
 	TUserKeyboardDevice(int Enabled);
-	TUserKeyboardDevice(const char *IniSection, int Enabled);
 	~TUserKeyboardDevice();
 
 	virtual void Clear();

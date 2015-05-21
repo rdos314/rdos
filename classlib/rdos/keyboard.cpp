@@ -51,23 +51,6 @@ TKeyboardDevice::TKeyboardDevice()
 
 /*##########################################################################
 #
-#   Name       : TKeyboardDevice::TKeyboardDevice
-#
-#   Purpose....: Constructor for TKeyboardDevice
-#
-#   In params..: IniSection to read parameters from
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TKeyboardDevice::TKeyboardDevice(const char *IniSection)
-  : TWaitDevice(IniSection)
-{
-        Init();
-}
-
-/*##########################################################################
-#
 #   Name       : TKeyboardDevice::~TKeyboardDevice
 #
 #   Purpose....: Destructor for TKeyboardDevice                                   

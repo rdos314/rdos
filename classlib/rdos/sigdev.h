@@ -34,7 +34,6 @@ class TSignalDevice : public TWaitDevice
 {
 public:
 	TSignalDevice();
-	TSignalDevice(const char *IniSection);
 	virtual ~TSignalDevice();
 
 	virtual void DeviceName(char *Name, int MaxLen) const;

@@ -39,6 +39,8 @@ MODE_BULK = 4
 DIR_IN = 80h
 DIR_OUT = 0
 
+USBF_XHCI   = 1
+
 usb_dev_struc   STRUC
 
 ; IN  AH        Speed
@@ -148,6 +150,7 @@ usb_function_struc  STRUC
 usbf_port               DB ?
 usbf_address            DB ?
 usbf_speed              DB ?
+usbf_flags              DB ?
 usbf_port_sel_arr       DW MAX_USB_HUB_PORTS DUP(?)
 usbf_in_endpoint_arr    DW 16 DUP(?)
 usbf_out_endpoint_arr   DW 16 DUP(?)

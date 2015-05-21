@@ -51,22 +51,6 @@ TLightDevice::TLightDevice(int channel)
 
 /*##########################################################################
 #
-#   Name       : TLightDevice::TLightDevice
-#
-#   Purpose....: Constructor
-#
-#   In params..: Channel #
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TLightDevice::TLightDevice(const char *IniSection, int channel)
-  : TAdcDevice(IniSection, channel)
-{
-}
-
-/*##########################################################################
-#
 #   Name       : TLightDevice::~TLightDevice
 #
 #   Purpose....: Destructor
@@ -86,18 +70,18 @@ TLightDevice::~TLightDevice()
 #
 #   Purpose....: Get device-name
 #
-#   In params..: Name		Device name buffer
-#			   : MaxLen		Max length of name
+#   In params..: Name       Device name buffer
+#              : MaxLen     Max length of name
 #   Out params.: *
 #   Returns....: Real value
 #
 ##########################################################################*/
 void TLightDevice::DeviceName(char *Name, int MaxLen) const
 {
-	char str[80];
+    char str[80];
 
-	sprintf(str, "Light channel #%d", FChannel);
-	strncpy(Name, str, MaxLen);
+    sprintf(str, "Light channel #%d", FChannel);
+    strncpy(Name, str, MaxLen);
 }
 
 /*##########################################################################
@@ -113,7 +97,7 @@ void TLightDevice::DeviceName(char *Name, int MaxLen) const
 ##########################################################################*/
 const char *TLightDevice::GetUnit()
 {
-	return "W/m2";
+    return "W/m2";
 }
 
 /*##########################################################################
@@ -122,12 +106,12 @@ const char *TLightDevice::GetUnit()
 #
 #   Purpose....: Convert from millivolt to real unit
 #
-#   In params..: Val	millivolt value
+#   In params..: Val    millivolt value
 #   Out params.: *
 #   Returns....: Real value
 #
 ##########################################################################*/
 long double TLightDevice::MvToReal(long double value)
 {
-	return TAdcDevice::MvToReal(value) / 100.0 / 50.0;
+    return TAdcDevice::MvToReal(value) / 100.0 / 50.0;
 }

@@ -37,7 +37,6 @@ class TMouseDevice : public TWaitDevice
 {
 public:
 	TMouseDevice();
-	TMouseDevice(const char *IniSection);
 	virtual ~TMouseDevice();
 
 	virtual void DeviceName(char *Name, int MaxLen) const;

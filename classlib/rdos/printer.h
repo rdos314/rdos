@@ -34,7 +34,6 @@
 class TPrinterDevice : public TWaitDevice
 {
 public:
-    TPrinterDevice(const char *IniSection, int Port);
     TPrinterDevice(int Port);
     ~TPrinterDevice();
 

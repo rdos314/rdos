@@ -31,31 +31,11 @@
 
 #include "userkey.h"
 
-#define	FALSE		0
-#define	TRUE		1
+#define FALSE       0
+#define TRUE        1
 
-#define	BUFFER_SIZE	64
-#define BUFFER_POLL_INTERVALL	10
-
-/*##########################################################################
-#
-#   Name       : TUserKeyboardDevice::TUserKeyboardDevice
-#
-#   Purpose....: Constructor for user-mode keyboard
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TUserKeyboardDevice::TUserKeyboardDevice(const char *IniSection, int Enabled)
-	: TKeyboardDevice(IniSection)
-{
-	FCurrentSize = 0;
-	FBuffer = new int[BUFFER_SIZE + 1];
-	FInPtr = FBuffer;
-	FOutPtr = FBuffer;
-}
+#define BUFFER_SIZE 64
+#define BUFFER_POLL_INTERVALL   10
 
 /*##########################################################################
 #
@@ -70,10 +50,10 @@ TUserKeyboardDevice::TUserKeyboardDevice(const char *IniSection, int Enabled)
 ##########################################################################*/
 TUserKeyboardDevice::TUserKeyboardDevice(int Enabled)
 {
-	FCurrentSize = 0;
-	FBuffer = new int[BUFFER_SIZE + 1];
-	FInPtr = FBuffer;
-	FOutPtr = FBuffer;
+    FCurrentSize = 0;
+    FBuffer = new int[BUFFER_SIZE + 1];
+    FInPtr = FBuffer;
+    FOutPtr = FBuffer;
 }
 
 /*##########################################################################
@@ -89,7 +69,7 @@ TUserKeyboardDevice::TUserKeyboardDevice(int Enabled)
 ##########################################################################*/
 TUserKeyboardDevice::~TUserKeyboardDevice()
 {
-	delete FBuffer;
+    delete FBuffer;
 }
 
 /*##########################################################################
@@ -105,19 +85,19 @@ TUserKeyboardDevice::~TUserKeyboardDevice()
 ##########################################################################*/
 void TUserKeyboardDevice::Put(int ch)
 {
-	int Done = FALSE;
+    int Done = FALSE;
 
-	if (KeyPreview != 0)
-		Done = (*KeyPreview)(this, ch);
+    if (KeyPreview != 0)
+        Done = (*KeyPreview)(this, ch);
 
-	if (!Done && BUFFER_SIZE > FCurrentSize)			/* Check if space is available. */
-		if (FInPtr)
-		{
-			*FInPtr = ch;
-			if (++FInPtr >= FBuffer + BUFFER_SIZE)
-				FInPtr = FBuffer;
-			FCurrentSize++;
-		}
+    if (!Done && BUFFER_SIZE > FCurrentSize)            /* Check if space is available. */
+        if (FInPtr)
+        {
+            *FInPtr = ch;
+            if (++FInPtr >= FBuffer + BUFFER_SIZE)
+                FInPtr = FBuffer;
+            FCurrentSize++;
+        }
 }
 
 /*##########################################################################
@@ -133,10 +113,10 @@ void TUserKeyboardDevice::Put(int ch)
 ##########################################################################*/
 int TUserKeyboardDevice::Poll() const
 {
-	if (FCurrentSize)
-		return *FOutPtr;
-	else
-		return 0;
+    if (FCurrentSize)
+        return *FOutPtr;
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -152,16 +132,16 @@ int TUserKeyboardDevice::Poll() const
 ##########################################################################*/
 int TUserKeyboardDevice::Get()
 {
-	int 	ch = 0;
+    int     ch = 0;
 
-	if (FCurrentSize)
-	{
-		ch = *FOutPtr;
-		if (++FOutPtr >= FBuffer + BUFFER_SIZE)
-			FOutPtr = FBuffer;
-		FCurrentSize--;
-	}
-	return ch;
+    if (FCurrentSize)
+    {
+        ch = *FOutPtr;
+        if (++FOutPtr >= FBuffer + BUFFER_SIZE)
+            FOutPtr = FBuffer;
+        FCurrentSize--;
+    }
+    return ch;
 }
 
 /*##########################################################################
@@ -177,7 +157,7 @@ int TUserKeyboardDevice::Get()
 ##########################################################################*/
 void TUserKeyboardDevice::Clear()
 {
-	FInPtr = FBuffer;
-	FOutPtr = FBuffer;
-	FCurrentSize = 0;
+    FInPtr = FBuffer;
+    FOutPtr = FBuffer;
+    FCurrentSize = 0;
 }

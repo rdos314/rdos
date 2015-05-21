@@ -33,7 +33,6 @@
 class TCardReaderDevice : public TDevice
 {
 public:
-    TCardReaderDevice(const char *IniSection, int Port);
     TCardReaderDevice(int Port);
     ~TCardReaderDevice();
 

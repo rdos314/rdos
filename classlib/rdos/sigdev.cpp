@@ -52,23 +52,6 @@ TSignalDevice::TSignalDevice()
 
 /*##########################################################################
 #
-#   Name       : TSignalDevice::TSignalDevice
-#
-#   Purpose....: Constructor for TSignalDevice
-#
-#   In params..: IniSection to read parameters from
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSignalDevice::TSignalDevice(const char *IniSection)
-  : TWaitDevice(IniSection)
-{
-    Init();
-}
-
-/*##########################################################################
-#
 #   Name       : TSignalDevice::~TSignalDevice
 #
 #   Purpose....: Destructor for TSignalDevice                                     

@@ -66,23 +66,6 @@ TWaitDevice::TWaitDevice()
 
 /*##########################################################################
 #
-#   Name       : TWaitDevice::TWaitDevice
-#
-#   Purpose....: Constructor for TWaitDevice                                      
-#
-#   In params..: IniSection to read parameters from
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TWaitDevice::TWaitDevice(const char *IniSection)
-  : TDevice(IniSection)
-{
-        Init();
-}
-
-/*##########################################################################
-#
 #   Name       : TWaitDevice::~TWaitDevice
 #
 #   Purpose....: Destructor for TDevice                                   

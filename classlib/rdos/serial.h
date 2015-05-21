@@ -44,11 +44,8 @@ public:
 class TSerialDevice : public TWaitDevice
 {
 public:
-    TSerialDevice(const char *IniSection, int Port, long Baudrate);
-    TSerialDevice(const char *IniSection, int Port, long Baudrate, char Parity, int DataBits, int StopBits);
     TSerialDevice(int Port, long Baudrate);
     TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
-    TSerialDevice(const char *IniSection);
     TSerialDevice(int Port);
     TSerialDevice();
     ~TSerialDevice();

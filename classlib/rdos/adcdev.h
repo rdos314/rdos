@@ -36,7 +36,6 @@ class TAdcDevice : public TWaitDevice
 {
 public:
 	TAdcDevice(int channel);
-	TAdcDevice(const char *IniSection, int channel);
 	~TAdcDevice();
 
 	int GetChannel();

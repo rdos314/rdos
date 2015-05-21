@@ -34,7 +34,6 @@ class TTempDevice : public TAdcDevice
 {
 public:
 	TTempDevice(int channel);
-	TTempDevice(const char *IniSection, int channel);
 	~TTempDevice();
 
 	virtual void DeviceName(char *Name, int MaxLen) const;

@@ -38,24 +38,6 @@
 #
 #   Purpose....: Constructor
 #
-#   In params..: IniSection Parameter section
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TPrinterDevice::TPrinterDevice(const char *IniSection)
-        : TWaitDevice(IniSection)
-{
-    FHandle = 0;
-    FPort = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TPrinterDevice::TPrinterDevice
-#
-#   Purpose....: Constructor
-#
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
@@ -65,24 +47,6 @@ TPrinterDevice::TPrinterDevice()
 {
     FHandle = 0;
     FPort = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TPrinterDevice::TPrinterDevice
-#
-#   Purpose....: Constructor
-#
-#   In params..: IniSection Parameter section
-#                Port       port number (ie first printer = 1)
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TPrinterDevice::TPrinterDevice(const char *IniSection, int Port)
-        : TWaitDevice(IniSection)
-{
-        Init(Port);
 }
 
 /*##########################################################################
