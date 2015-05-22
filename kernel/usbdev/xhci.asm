@@ -381,8 +381,7 @@ EnableSlot  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitInputContext    Proc near
-    pushad
-    popad
+    mov es:[bx].icc_add_mask,3
     ret
 InitInputContext    Endp
 
@@ -399,8 +398,7 @@ InitInputContext    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitSlot    Proc near
-    pushad
-    popad
+    mov es:[bx].s_misc,08000000h
     ret
 InitSlot    Endp
 
@@ -457,6 +455,7 @@ AllocateDevice    Proc near
     mov ecx,400h
     xor eax,eax
     rep stosd
+    int 3
 ;
     pop eax
     pop ebx

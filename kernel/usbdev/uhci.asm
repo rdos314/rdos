@@ -3099,7 +3099,7 @@ ifTabLoop:
     or ax,4
     out dx,ax
 ; 
-    mov ax,20
+    mov ax,200
     WaitMilliSec
     WaitForEhci
 ;
