@@ -576,6 +576,51 @@ EnableSlot  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AddressDevice
+;
+;       DESCRIPTION:    Address device
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddressDevice  Proc near
+    push gs
+    push edi
+;
+    call WaitForCommandTrb
+;    
+    movzx eax,es:xd_context_offset
+    add eax,es:xd_phys
+    mov gs:[edi].trb_param,eax
+    mov eax,es:xd_phys+4
+    mov gs:[edi].trb_param+4,eax
+;
+    mov ah,es:usbf_address
+    xor al,al
+    mov gs:[edi].trb_control,ax
+;
+    mov al,TRB_TYPE_ADDRESS_DEV
+    call SendCommandTrb
+;
+    mov al,gs:[edi+100Bh]
+    cmp al,1
+    stc
+    jne adDone
+;
+    mov al,gs:[edi+100Fh]
+    clc        
+
+adDone:
+    pop edi
+    pop gs    
+    ret
+AddressDevice  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           InitInputContext
 ;
 ;       DESCRIPTION:    Init input context structure
@@ -604,6 +649,7 @@ InitInputContext    Endp
 
 InitSlot    Proc near
     mov es:[bx].s_misc,08000000h
+    mov es:[bx].s_root_hub,1
     ret
 InitSlot    Endp
 
@@ -662,15 +708,15 @@ AllocateDevice    Proc near
 ;
     pop eax
     pop ebx
+    mov es:xd_phys,eax
+    mov es:xd_phys+4,ebx
+;    
     mov dx,SIZE xhci_dev_struc
     add dx,40h
     dec dx
     and dx,0FFC0h
-    add ax,dx
-    mov es:xd_phys,eax
-    mov es:xd_phys+4,ebx
-;
     mov bx,dx
+;    
     mov dx,ds:xhc_context_size
     mov es:xd_context_offset,bx
     call InitInputContext
@@ -809,9 +855,22 @@ CreateControl   Proc far
 ;
     int 3
     call CreateEndpointRing
+;
     mov bx,es:xd_ep_arr
     mov fs:xp_dev_offset,bx
     mov fs:xp_dev_sel,es
+;
+    mov eax,fs:xp_ring_phys
+    or al,1
+    mov es:[bx].ec_tr_dequeue,eax
+    mov eax,fs:xp_ring_phys+4
+    mov es:[bx].ec_tr_dequeue+4,eax        
+    mov es:[bx].ec_avg_len,8
+;
+    mov al,3 SHL 1
+    or al,4 SHL 3
+    mov es:[bx].ec_param2,al
+    call AddressDevice
 ;
     clc
     popad
@@ -1322,7 +1381,18 @@ attach_thread:
     call EnableSlot
     jc atDone
 ;
+    int 3
     call AllocateDevice
+;
+    mov bx,xhci_device_ptr_sel
+    mov fs,bx
+    movzx bx,al
+    shl bx,3
+    movzx edx,es:xd_slot_offset
+    add edx,es:xd_phys
+    mov fs:[bx],edx
+    mov edx,es:xd_phys+4
+    mov fs:[bx+4],edx
 ;
     mov ah,al
     mov al,cl
