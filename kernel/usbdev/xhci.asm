@@ -209,8 +209,11 @@ xhci_dev_struc   STRUC
 
 usb_function_base       usb_function_struc <>
 
-xd_phys                 DD ?,?
-xd_context_offset       DW ?
+xd_context_linear       DD ?
+xd_context_phys         DD ?,?
+
+xd_input_phys           DD ?,?
+xd_input_offset         DW ?
 xd_slot_offset          DW ?
 xd_ep_arr               DW 32 DUP(?)
 
@@ -591,10 +594,10 @@ AddressDevice  Proc near
 ;
     call WaitForCommandTrb
 ;    
-    movzx eax,es:xd_context_offset
-    add eax,es:xd_phys
+    movzx eax,es:xd_input_offset
+    add eax,es:xd_input_phys
     mov gs:[edi].trb_param,eax
-    mov eax,es:xd_phys+4
+    mov eax,es:xd_input_phys+4
     mov gs:[edi].trb_param+4,eax
 ;
     mov ah,es:usbf_address
@@ -675,7 +678,7 @@ InitEp    Endp
 ;
 ;       NAME:           AllocateDevice
 ;
-;       DESCRIPTION:    Allocate device context
+;       DESCRIPTION:    Allocate device
 ;
 ;       PARAMETERS:     DS      Device sel
 ;
@@ -708,8 +711,8 @@ AllocateDevice    Proc near
 ;
     pop eax
     pop ebx
-    mov es:xd_phys,eax
-    mov es:xd_phys+4,ebx
+    mov es:xd_input_phys,eax
+    mov es:xd_input_phys+4,ebx
 ;    
     mov dx,SIZE xhci_dev_struc
     add dx,40h
@@ -718,7 +721,7 @@ AllocateDevice    Proc near
     mov bx,dx
 ;    
     mov dx,ds:xhc_context_size
-    mov es:xd_context_offset,bx
+    mov es:xd_input_offset,bx
     call InitInputContext
 ;
     add bx,dx
@@ -738,6 +741,45 @@ adEpLoop:
     popad
     ret
 AllocateDevice    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateContext
+;
+;       DESCRIPTION:    Allocate device output context
+;
+;       PARAMETERS:     DS      Device sel
+;                       ES      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateContext    Proc near
+    push es
+    pushad
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov es:xd_context_linear,edx
+;    
+    AllocatePhysical64
+    mov es:xd_context_phys,eax
+    mov es:xd_context_phys+4,ebx
+;
+    mov al,13h
+    SetPageEntry
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+; 
+    popad   
+    pop es
+    ret
+AllocateContext Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1383,15 +1425,15 @@ attach_thread:
 ;
     int 3
     call AllocateDevice
+    call AllocateContext
 ;
     mov bx,xhci_device_ptr_sel
     mov fs,bx
     movzx bx,al
     shl bx,3
-    movzx edx,es:xd_slot_offset
-    add edx,es:xd_phys
+    mov edx,es:xd_context_phys
     mov fs:[bx],edx
-    mov edx,es:xd_phys+4
+    mov edx,es:xd_context_phys+4
     mov fs:[bx+4],edx
 ;
     mov ah,al
