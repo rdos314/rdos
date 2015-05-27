@@ -742,7 +742,9 @@ SetupRootDevice    Proc near
     shl eax,20
     or eax,08000000h
     mov es:[bx].s_misc,eax
-    mov es:[bx].s_root_hub,1
+    mov al,cl
+    inc al
+    mov es:[bx].s_root_hub,al
 ;    
     popad
     pop fs
@@ -840,6 +842,7 @@ CreateControl   Proc far
     mov eax,fs:xp_ring_phys+4
     mov es:[bx].ec_tr_dequeue+4,eax        
     mov es:[bx].ec_avg_len,8
+    mov es:[bx].ec_packet_size,8
 ;
     mov al,3 SHL 1
     or al,4 SHL 3
