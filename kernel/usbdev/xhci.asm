@@ -209,13 +209,15 @@ xhci_dev_struc   STRUC
 
 usb_function_base       usb_function_struc <>
 
-xd_context_linear       DD ?
-xd_context_phys         DD ?,?
+xd_phys                 DD ?,?
+xd_linear               DD ?
 
-xd_input_phys           DD ?,?
-xd_input_offset         DW ?
-xd_slot_offset          DW ?
-xd_ep_arr               DW 32 DUP(?)
+xd_input_context_offset DW ?
+xd_input_slot_offset    DW ?
+xd_input_ep_arr_offset  DW 32 DUP (?)
+
+xd_output_slot_offset   DW ?
+xd_output_ep_arr_offset DW 32 DUP (?)
 
 xhci_dev_struc    ENDS
 
@@ -228,7 +230,6 @@ xp_ring_phys        DD ?,?
 xp_ring_offset      DW ?
 
 xp_dev_sel          DW ?
-xp_dev_offset       DW ?
 
 xhci_pipe   ENDS
 
@@ -594,10 +595,10 @@ AddressDevice  Proc near
 ;
     call WaitForCommandTrb
 ;    
-    movzx eax,es:xd_input_offset
-    add eax,es:xd_input_phys
+    movzx eax,es:xd_input_context_offset
+    add eax,es:xd_phys
     mov gs:[edi].trb_param,eax
-    mov eax,es:xd_input_phys+4
+    mov eax,es:xd_phys+4
     mov gs:[edi].trb_param+4,eax
 ;
     mov ah,es:usbf_address
@@ -620,58 +621,6 @@ adDone:
     pop gs    
     ret
 AddressDevice  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           InitInputContext
-;
-;       DESCRIPTION:    Init input context structure
-;
-;       PARAMETERS:     DS      Function sel
-;                       ES:BX   Context offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitInputContext    Proc near
-    mov es:[bx].icc_add_mask,3
-    ret
-InitInputContext    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           InitSlot
-;
-;       DESCRIPTION:    Init slot structure
-;
-;       PARAMETERS:     DS      Function sel
-;                       ES:BX   Slot offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitSlot    Proc near
-    mov es:[bx].s_misc,08000000h
-    mov es:[bx].s_root_hub,1
-    ret
-InitSlot    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           InitEp
-;
-;       DESCRIPTION:    Init endpoint structure
-;
-;       PARAMETERS:     DS      Function sel
-;                       ES:BX   Endpoint offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitEp    Proc near
-    mov es:[bx].ec_packet_size,8
-    ret
-InitEp    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -711,75 +660,56 @@ AllocateDevice    Proc near
 ;
     pop eax
     pop ebx
-    mov es:xd_input_phys,eax
-    mov es:xd_input_phys+4,ebx
+    mov es:xd_phys,eax
+    mov es:xd_phys+4,ebx
+    mov es:xd_linear,edx
 ;    
-    mov dx,SIZE xhci_dev_struc
-    add dx,40h
-    dec dx
-    and dx,0FFC0h
-    mov bx,dx
-;    
+    mov bx,SIZE xhci_dev_struc
+    add bx,40h
+    dec bx
+    and bx,0FFC0h
     mov dx,ds:xhc_context_size
-    mov es:xd_input_offset,bx
-    call InitInputContext
+;    
+    mov es:xd_input_context_offset,bx
 ;
     add bx,dx
-    mov es:xd_slot_offset,bx
-    call InitSlot
+    mov es:xd_input_slot_offset,bx
 ;
-    mov di,OFFSET xd_ep_arr
+    mov di,OFFSET xd_input_ep_arr_offset
     mov cx,32
 
-adEpLoop:
+adiEpLoop:
     add bx,dx
     mov es:[di],bx
-    call InitEp
     add di,2 
-    loop adEpLoop      
+    loop adiEpLoop      
+;
+    add bx,dx
+    add bx,40h
+    dec bx
+    and bx,0FFC0h
+;    
+    mov es:xd_output_slot_offset,bx
+;
+    mov di,OFFSET xd_output_ep_arr_offset
+    mov cx,32
+
+adoEpLoop:
+    add bx,dx
+    mov es:[di],bx
+    add di,2 
+    loop adoEpLoop      
+;
+    add bx,dx
+    movzx ecx,bx
+    mov edx,es:xd_linear
+    mov bx,es
+    CreateDataSelector16
+    mov es,bx
 ;
     popad
     ret
 AllocateDevice    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           AllocateContext
-;
-;       DESCRIPTION:    Allocate device output context
-;
-;       PARAMETERS:     DS      Device sel
-;                       ES      Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateContext    Proc near
-    push es
-    pushad
-;
-    mov eax,1000h
-    AllocateBigLinear
-    mov es:xd_context_linear,edx
-;    
-    AllocatePhysical64
-    mov es:xd_context_phys,eax
-    mov es:xd_context_phys+4,ebx
-;
-    mov al,13h
-    SetPageEntry
-;
-    mov ax,flat_sel
-    mov es,ax
-    mov edi,edx
-    mov ecx,400h
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-; 
-    popad   
-    pop es
-    ret
-AllocateContext Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -802,13 +732,17 @@ SetupRootDevice    Proc near
     shl di,4
     mov fs,ds:xhc_port_sel
 ;
-    mov bx,es:xd_slot_offset
+    mov bx,es:xd_input_context_offset
+    mov es:[bx].icc_add_mask,3
+;    
+    mov bx,es:xd_input_slot_offset
     mov eax,fs:[di]
     shr eax,10
     and eax,0Fh
     shl eax,20
     or eax,08000000h
     mov es:[bx].s_misc,eax
+    mov es:[bx].s_root_hub,1
 ;    
     popad
     pop fs
@@ -893,14 +827,12 @@ CreateControl   Proc far
     pushad
 ;    
     mov cl,es:usbf_port
-    call SetupRootDevice
-;
     int 3
+    call SetupRootDevice
     call CreateEndpointRing
 ;
-    mov bx,es:xd_ep_arr
-    mov fs:xp_dev_offset,bx
     mov fs:xp_dev_sel,es
+    mov bx,es:xd_input_ep_arr_offset
 ;
     mov eax,fs:xp_ring_phys
     or al,1
@@ -1423,17 +1355,16 @@ attach_thread:
     call EnableSlot
     jc atDone
 ;
-    int 3
     call AllocateDevice
-    call AllocateContext
 ;
     mov bx,xhci_device_ptr_sel
     mov fs,bx
     movzx bx,al
     shl bx,3
-    mov edx,es:xd_context_phys
+    movzx edx,es:xd_output_slot_offset
+    add edx,es:xd_phys
     mov fs:[bx],edx
-    mov edx,es:xd_context_phys+4
+    mov edx,es:xd_phys+4
     mov fs:[bx+4],edx
 ;
     mov ah,al
