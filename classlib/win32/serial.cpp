@@ -8,11 +8,11 @@
 #include "serial.h"
 #include "win32.h"
 
-#define		SEND_BUF_SIZE		1200
-#define		REC_BUF_SIZE		1200
+#define         SEND_BUF_SIZE           1200
+#define         REC_BUF_SIZE            1200
 
 /*##################  TSerialCommand::TSerialCommand ############
-*   Purpose....: Constructor for TSerialCommand	                    #
+*   Purpose....: Constructor for TSerialCommand                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -20,11 +20,11 @@
 *##########################################################################*/
 TSerialCommand::TSerialCommand(TSerialDevice *serial)
 {
-	FSerial = serial;
+        FSerial = serial;
 }
 
 /*##################  TSerialCommand::~TSerialCommand ############
-*   Purpose....: Destructor for TSerialCommand	                    #
+*   Purpose....: Destructor for TSerialCommand                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -35,7 +35,7 @@ TSerialCommand::~TSerialCommand()
 }
 
 /*##################  TSerialCommand::Block   #########################
-*   Purpose....: Block com port											    #
+*   Purpose....: Block com port                                                                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -43,11 +43,11 @@ TSerialCommand::~TSerialCommand()
 *##########################################################################*/
 void TSerialCommand::Block()
 {
-	FSerial->Block();
+        FSerial->Block();
 }
 
 /*##################  TSerialCommand::Unblock   #######################
-*   Purpose....: Unblock com port											    #
+*   Purpose....: Unblock com port                                                                                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -55,11 +55,11 @@ void TSerialCommand::Block()
 *##########################################################################*/
 void TSerialCommand::Unblock()
 {
-	FSerial->Unblock();
+        FSerial->Unblock();
 }
 
 /*##################  TSerialCommand::Run   ###########################
-*   Purpose....: Run commands											    #
+*   Purpose....: Run commands                                                                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -67,16 +67,16 @@ void TSerialCommand::Unblock()
 *##########################################################################*/
 int TSerialCommand::Run()
 {
-	int stat;
+        int stat;
 
-	FSerial->Block();
-	stat = Execute();
-	FSerial->Unblock();
-	return stat;
+        FSerial->Block();
+        stat = Execute();
+        FSerial->Unblock();
+        return stat;
 }
 
 /*##################  TSerialCommand::Clear ###########################
-*   Purpose....: Clear buffers in serial device			                    #
+*   Purpose....: Clear buffers in serial device                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -84,11 +84,11 @@ int TSerialCommand::Run()
 *##########################################################################*/
 void TSerialCommand::Clear()
 {
-	FSerial->Clear();
+        FSerial->Clear();
 }
 
 /*##################  TSerialCommand::ResetDtr #######################
-*   Purpose....: Resets DTR in serial device			                    #
+*   Purpose....: Resets DTR in serial device                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -96,11 +96,11 @@ void TSerialCommand::Clear()
 *##########################################################################*/
 void TSerialCommand::ResetDtr()
 {
-	FSerial->ResetDtr();
+        FSerial->ResetDtr();
 }
 
 /*##################  TSerialCommand::SetDtr #########################
-*   Purpose....: Sets DTR in serial device				                    #
+*   Purpose....: Sets DTR in serial device                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -108,11 +108,11 @@ void TSerialCommand::ResetDtr()
 *##########################################################################*/
 void TSerialCommand::SetDtr()
 {
-	FSerial->SetDtr();
+        FSerial->SetDtr();
 }
 
 /*##################  TSerialCommand::ResetRts #######################
-*   Purpose....: Resets RTS in serial device			                    #
+*   Purpose....: Resets RTS in serial device                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -120,11 +120,11 @@ void TSerialCommand::SetDtr()
 *##########################################################################*/
 void TSerialCommand::ResetRts()
 {
-	FSerial->ResetRts();
+        FSerial->ResetRts();
 }
 
 /*##################  TSerialCommand::SetRts #########################
-*   Purpose....: Sets RTS in serial device				                    #
+*   Purpose....: Sets RTS in serial device                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -132,11 +132,11 @@ void TSerialCommand::ResetRts()
 *##########################################################################*/
 void TSerialCommand::SetRts()
 {
-	FSerial->SetRts();
+        FSerial->SetRts();
 }
 
 /*##################  TSerialCommand::EnableAutoRts #######################
-*   Purpose....: Enable use of RTS for RS485 tx enable	                    #
+*   Purpose....: Enable use of RTS for RS485 tx enable                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -144,11 +144,11 @@ void TSerialCommand::SetRts()
 *##########################################################################*/
 void TSerialCommand::EnableAutoRts()
 {
-	FSerial->EnableAutoRts();
+        FSerial->EnableAutoRts();
 }
 
 /*##################  TSerialCommand::DisableAutoRts #######################
-*   Purpose....: Disable use of RTS for RS485 tx enable	                    #
+*   Purpose....: Disable use of RTS for RS485 tx enable                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -156,11 +156,11 @@ void TSerialCommand::EnableAutoRts()
 *##########################################################################*/
 void TSerialCommand::DisableAutoRts()
 {
-	FSerial->DisableAutoRts();
+        FSerial->DisableAutoRts();
 }
 
 /*##################  TSerialCommand::Write ###########################
-*   Purpose....: Write a char to serial device			                    #
+*   Purpose....: Write a char to serial device                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -168,11 +168,11 @@ void TSerialCommand::DisableAutoRts()
 *##########################################################################*/
 void TSerialCommand::Write(char ch)
 {
-	FSerial->Write(ch);
+        FSerial->Write(ch);
 }
 
 /*##################  TSerialCommand::Write ###########################
-*   Purpose....: Write a buffer to serial device			                    #
+*   Purpose....: Write a buffer to serial device                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -180,11 +180,11 @@ void TSerialCommand::Write(char ch)
 *##########################################################################*/
 void TSerialCommand::Write(const char *buf, int count)
 {
-	FSerial->Write(buf, count);
+        FSerial->Write(buf, count);
 }
 
 /*##################  TSerialCommand::Write ###########################
-*   Purpose....: Write a string to serial device			                #
+*   Purpose....: Write a string to serial device                                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -192,11 +192,11 @@ void TSerialCommand::Write(const char *buf, int count)
 *##########################################################################*/
 void TSerialCommand::Write(const char *str)
 {
-	FSerial->Write(str);
+        FSerial->Write(str);
 }
 
 /*##################  TSerialCommand::Poll ############################
-*   Purpose....: Check if char available at serial device	   		        #
+*   Purpose....: Check if char available at serial device                               #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -204,11 +204,11 @@ void TSerialCommand::Write(const char *str)
 *##########################################################################*/
 int TSerialCommand::Poll()
 {
-	return FSerial->Poll();
+        return FSerial->Poll();
 }
 
 /*##################  TSerialCommand::Read ###########################
-*   Purpose....: Read a char from serial device	            #
+*   Purpose....: Read a char from serial device             #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -216,11 +216,11 @@ int TSerialCommand::Poll()
 *##########################################################################*/
 char TSerialCommand::Read()
 {
-	return FSerial->Read();
+        return FSerial->Read();
 }
 
 /*##################  TSerialCommand::WaitForChar ###########################
-*   Purpose....: Wait for char with timeout from serial device	            #
+*   Purpose....: Wait for char with timeout from serial device              #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -228,37 +228,11 @@ char TSerialCommand::Read()
 *##########################################################################*/
 int TSerialCommand::WaitForChar(long MaxWait)
 {
-	return FSerial->WaitForChar(MaxWait);
+        return FSerial->WaitForChar(MaxWait);
 }
 
 /*##################  TSerialDevice::TSerialDevice ############
-*   Purpose....: Constructor for TSerialDevice			                    #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-TSerialDevice::TSerialDevice(const char *IniSection, int Port, long Baudrate)
-	: TDevice(IniSection)
-{
-	Init(Port, Baudrate, 'N', 8, 1);
-}
-
-/*##################  TSerialDevice::TSerialDevice ############
-*   Purpose....: Constructor for TSerialDevice			                    #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-TSerialDevice::TSerialDevice(const char *IniSection, int Port, long Baudrate, char Parity, int DataBits, int StopBits)
-	: TDevice(IniSection)
-{
-	Init(Port, Baudrate, Parity, DataBits, StopBits);
-}
-
-/*##################  TSerialDevice::TSerialDevice ############
-*   Purpose....: Constructor for TSerialDevice			                    #
+*   Purpose....: Constructor for TSerialDevice                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -266,11 +240,11 @@ TSerialDevice::TSerialDevice(const char *IniSection, int Port, long Baudrate, ch
 *##########################################################################*/
 TSerialDevice::TSerialDevice(int Port, long Baudrate)
 {
-	Init(Port, Baudrate, 'N', 8, 1);
+        Init(Port, Baudrate, 'N', 8, 1);
 }
 
 /*##################  TSerialDevice::TSerialDevice ############
-*   Purpose....: Constructor for TSerialDevice			                    #
+*   Purpose....: Constructor for TSerialDevice                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -278,24 +252,11 @@ TSerialDevice::TSerialDevice(int Port, long Baudrate)
 *##########################################################################*/
 TSerialDevice::TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits)
 {
-	Init(Port, Baudrate, Parity, DataBits, StopBits);
+        Init(Port, Baudrate, Parity, DataBits, StopBits);
 }
 
 /*##################  TSerialDevice::TSerialDevice ############
-*   Purpose....: Constructor for TSerialDevice			                    #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-TSerialDevice::TSerialDevice(const char *IniSection)
-	: TDevice(IniSection)
-{
-	Init(0, 9600, 'N', 8, 1);
-}
-
-/*##################  TSerialDevice::TSerialDevice ############
-*   Purpose....: Constructor for TSerialDevice			                    #
+*   Purpose....: Constructor for TSerialDevice                                      #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -303,11 +264,11 @@ TSerialDevice::TSerialDevice(const char *IniSection)
 *##########################################################################*/
 TSerialDevice::TSerialDevice()
 {
-	Init(0, 9600, 'N', 8, 1);
+        Init(0, 9600, 'N', 8, 1);
 }
 
 /*##################  TSerialDevice::~TSerialDevice ############
-*   Purpose....: Destructor for TSerialDevice			                    #
+*   Purpose....: Destructor for TSerialDevice                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -315,12 +276,12 @@ TSerialDevice::TSerialDevice()
 *##########################################################################*/
 TSerialDevice::~TSerialDevice()
 {
-	if (IsOpen())
-		Close();
+        if (IsOpen())
+                Close();
 }
 
 /*##################  TSerialDevice::Block  #####################
-*   Purpose....: Begin exclusive access to serial channel	                #
+*   Purpose....: Begin exclusive access to serial channel                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -328,11 +289,11 @@ TSerialDevice::~TSerialDevice()
 *##########################################################################*/
 void TSerialDevice::Block()
 {
-	FSection.Enter();
+        FSection.Enter();
 }
 
 /*##################  TSerialDevice::Unblock  #####################
-*   Purpose....: End exclusive access to serial channel	                #
+*   Purpose....: End exclusive access to serial channel                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -340,11 +301,11 @@ void TSerialDevice::Block()
 *##########################################################################*/
 void TSerialDevice::Unblock()
 {
-	FSection.Leave();
+        FSection.Leave();
 }
 
 /*##################  TSerialDevice::Init ####################################
-*   Purpose....: Init for TSerialDevice			                    #
+*   Purpose....: Init for TSerialDevice                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -352,21 +313,21 @@ void TSerialDevice::Unblock()
 *##########################################################################*/
 void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int StopBits)
 {
-	FPortHandle = 0;
-	FPort = Port;
-	FBaudrate = Baudrate;
-	FParity = Parity;
-	FDataBits = DataBits;
-	FStopBits = StopBits;
-	if (IsOpen())
+        FPortHandle = 0;
+        FPort = Port;
+        FBaudrate = Baudrate;
+        FParity = Parity;
+        FDataBits = DataBits;
+        FStopBits = StopBits;
+        if (IsOpen())
     {
-		TDevice::Close();
-		Open();
+                TDevice::Close();
+                Open();
     }
 }
 
 /*##################  TSerialDevice::DeviceName  ####################
-*   Purpose....: Returns device name				                        #
+*   Purpose....: Returns device name                                                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -374,11 +335,11 @@ void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int
 *##########################################################################*/
 void TSerialDevice::DeviceName(char *Name, int MaxLen) const
 {
-	strncpy(Name,"WIN32 COM",MaxLen);
+        strncpy(Name,"WIN32 COM",MaxLen);
 }
 
 /*##################  TSerialDevice::SetComPort  #######################
-*   Purpose....: Change com port					                        #
+*   Purpose....: Change com port                                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -386,20 +347,20 @@ void TSerialDevice::DeviceName(char *Name, int MaxLen) const
 *##########################################################################*/
 void TSerialDevice::SetComPort(int Port)
 {
-	if (IsOpen())
+        if (IsOpen())
     {
-		Close();
-		FPort = Port;
-		Open();
+                Close();
+                FPort = Port;
+                Open();
     }
-	else
+        else
     {
-		FPort = Port;
+                FPort = Port;
     }
 }
 
 /*##################  TSerialDevice::GetPort  #######################
-*   Purpose....: Get com port					                        #
+*   Purpose....: Get com port                                                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -407,11 +368,11 @@ void TSerialDevice::SetComPort(int Port)
 *##########################################################################*/
 int TSerialDevice::GetPort() const
 {
-	return FPort;
+        return FPort;
 }
 
 /*##################  TSerialDevice::SetBaudrate  #####################
-*   Purpose....: Change com port baudrate			                        #
+*   Purpose....: Change com port baudrate                                               #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -419,16 +380,16 @@ int TSerialDevice::GetPort() const
 *##########################################################################*/
 void TSerialDevice::SetBaudrate(long Baudrate)
 {
-	FBaudrate = Baudrate;
-	if (IsOpen())
+        FBaudrate = Baudrate;
+        if (IsOpen())
     {
-	    FCommDCB.BaudRate = FBaudrate;
-    	SetCommState(FPortHandle, &FCommDCB);
-	 }
+            FCommDCB.BaudRate = FBaudrate;
+        SetCommState(FPortHandle, &FCommDCB);
+         }
 }
 
 /*##################  TSerialDevice::GetBaudrate  #######################
-*   Purpose....: Get baudrate					                        #
+*   Purpose....: Get baudrate                                                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -436,11 +397,11 @@ void TSerialDevice::SetBaudrate(long Baudrate)
 *##########################################################################*/
 long TSerialDevice::GetBaudrate() const
 {
-	return FBaudrate;
+        return FBaudrate;
 }
 
 /*##################  TSerialDevice::SetParity  #####################
-*   Purpose....: Change com port parity			                        #
+*   Purpose....: Change com port parity                                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -448,33 +409,33 @@ long TSerialDevice::GetBaudrate() const
 *##########################################################################*/
 void TSerialDevice::SetParity(char Parity)
 {
-	char NewParity;
+        char NewParity;
 
-	switch (Parity)
-	{
-		case 'N':
-		case 'E':
-		case 'O':
-			NewParity = Parity;
-			break;
+        switch (Parity)
+        {
+                case 'N':
+                case 'E':
+                case 'O':
+                        NewParity = Parity;
+                        break;
 
-		default:
-			NewParity = FParity;
-			break;
-	}
+                default:
+                        NewParity = FParity;
+                        break;
+        }
 
-	if (IsOpen())
-	{
-		Close();
-		FParity = NewParity;
-		Open();
-	}
-	else
-		FParity = NewParity;
+        if (IsOpen())
+        {
+                Close();
+                FParity = NewParity;
+                Open();
+        }
+        else
+                FParity = NewParity;
 }
 
 /*##################  TSerialDevice::GetParity  #######################
-*   Purpose....: Get parity					                        #
+*   Purpose....: Get parity                                                             #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -482,11 +443,11 @@ void TSerialDevice::SetParity(char Parity)
 *##########################################################################*/
 char TSerialDevice::GetParity() const
 {
-	return FParity;
+        return FParity;
 }
 
 /*##################  TSerialDevice::SetDataBits  #####################
-*   Purpose....: Change com port number of data bits			                        #
+*   Purpose....: Change com port number of data bits                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -494,34 +455,34 @@ char TSerialDevice::GetParity() const
 *##########################################################################*/
 void TSerialDevice::SetDataBits(int DataBits)
 {
-	int NewDataBits;
+        int NewDataBits;
 
-	switch (DataBits)
-	{
-		case 5:
-		case 6:
-		case 7:
-		case 8:
-			NewDataBits = DataBits;
-			break;
+        switch (DataBits)
+        {
+                case 5:
+                case 6:
+                case 7:
+                case 8:
+                        NewDataBits = DataBits;
+                        break;
 
-		default:
-			NewDataBits = FDataBits;
-			break;
-	}
+                default:
+                        NewDataBits = FDataBits;
+                        break;
+        }
 
-	if (IsOpen())
-	{
-		Close();
-		FDataBits = NewDataBits;
-		Open();
-	}
-	else
-		FDataBits = NewDataBits;
+        if (IsOpen())
+        {
+                Close();
+                FDataBits = NewDataBits;
+                Open();
+        }
+        else
+                FDataBits = NewDataBits;
 }
 
 /*##################  TSerialDevice::GetDataBits  #######################
-*   Purpose....: Get # of data bits					                        #
+*   Purpose....: Get # of data bits                                                             #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -529,11 +490,11 @@ void TSerialDevice::SetDataBits(int DataBits)
 *##########################################################################*/
 int TSerialDevice::GetDataBits() const
 {
-	return FDataBits;
+        return FDataBits;
 }
 
 /*##################  TSerialDevice::SetStopBits  #####################
-*   Purpose....: Change com port number of stop bits			                        #
+*   Purpose....: Change com port number of stop bits                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -541,33 +502,33 @@ int TSerialDevice::GetDataBits() const
 *##########################################################################*/
 void TSerialDevice::SetStopBits(int StopBits)
 {
-	int NewStopBits;
+        int NewStopBits;
 
-	switch (StopBits)
-	{
-		case 1:
-		case 2:
-			NewStopBits = StopBits;
-			break;
+        switch (StopBits)
+        {
+                case 1:
+                case 2:
+                        NewStopBits = StopBits;
+                        break;
 
-		default:
-			NewStopBits = FStopBits;
-			break;
+                default:
+                        NewStopBits = FStopBits;
+                        break;
 
-	}
+        }
 
-	if (IsOpen())
-	{
-		Close();
-		FStopBits = NewStopBits;
-		Open();
-	}
-	else
-		FStopBits = NewStopBits;
+        if (IsOpen())
+        {
+                Close();
+                FStopBits = NewStopBits;
+                Open();
+        }
+        else
+                FStopBits = NewStopBits;
 }
 
 /*##################  TSerialDevice::GetStopBits  #######################
-*   Purpose....: Get # of stop bits					                        #
+*   Purpose....: Get # of stop bits                                                             #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -575,11 +536,11 @@ void TSerialDevice::SetStopBits(int StopBits)
 *##########################################################################*/
 int TSerialDevice::GetStopBits() const
 {
-	return FStopBits;
+        return FStopBits;
 }
 
 /*##################  TSerialDevice::GetSendBufferSpace  #######################
-*   Purpose....: Get send buffer space					                        #
+*   Purpose....: Get send buffer space                                                          #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -587,11 +548,11 @@ int TSerialDevice::GetStopBits() const
 *##########################################################################*/
 int TSerialDevice::GetSendBufferSpace()
 {
-	return 0;
+        return 0;
 }
 
 /*##################  TSerialDevice::GetReceiveBufferSpace  #######################
-*   Purpose....: Get receive buffer space					                        #
+*   Purpose....: Get receive buffer space                                                               #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -599,11 +560,11 @@ int TSerialDevice::GetSendBufferSpace()
 *##########################################################################*/
 int TSerialDevice::GetReceiveBufferSpace()
 {
-	return 0;
+        return 0;
 }
 
 /*##################  TSerialDevice::OpenPort  #######################
-*   Purpose....: Opens win32 comport			                        #
+*   Purpose....: Opens win32 comport                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -611,91 +572,91 @@ int TSerialDevice::GetReceiveBufferSpace()
 *##########################################################################*/
 void TSerialDevice::OpenPort()
 {
-	COMMTIMEOUTS comm_timeouts;
+        COMMTIMEOUTS comm_timeouts;
     HANDLE result;
     char com_name[20];
 
     FPortHandle = 0;
-	wsprintf( com_name, "\\\\.\\COM%d", FPort );
+        wsprintf( com_name, "\\\\.\\COM%d", FPort );
 
-	result = CreateFile(com_name,
-						GENERIC_READ | GENERIC_WRITE,
-						0,
-						NULL,
-						OPEN_EXISTING,
+        result = CreateFile(com_name,
+                                                GENERIC_READ | GENERIC_WRITE,
+                                                0,
+                                                NULL,
+                                                OPEN_EXISTING,
                         0,
-						NULL);
+                                                NULL);
 
-	if (result != INVALID_HANDLE_VALUE)
-    	FPortHandle = result;
+        if (result != INVALID_HANDLE_VALUE)
+        FPortHandle = result;
 
     if (FPortHandle)
     {
-		SetupComm(FPortHandle, REC_BUF_SIZE, SEND_BUF_SIZE);
-	    SetCommMask(FPortHandle, 0);
+                SetupComm(FPortHandle, REC_BUF_SIZE, SEND_BUF_SIZE);
+            SetCommMask(FPortHandle, 0);
 
-		GetCommState(FPortHandle, &FCommDCB );
+                GetCommState(FPortHandle, &FCommDCB );
 
-	    FCommDCB.BaudRate = FBaudrate;
-    	FCommDCB.ByteSize = FDataBits;
+            FCommDCB.BaudRate = FBaudrate;
+        FCommDCB.ByteSize = FDataBits;
         FCommDCB.fOutX = 0;
-		FCommDCB.fOutxCtsFlow = 1;
+                FCommDCB.fOutxCtsFlow = 1;
 
-		switch (FParity)
-		{
-			case 'N':
-		    	FCommDCB.Parity = NOPARITY;
-				break;
+                switch (FParity)
+                {
+                        case 'N':
+                        FCommDCB.Parity = NOPARITY;
+                                break;
 
-			case 'E':
-		    	FCommDCB.Parity = EVENPARITY;
-				break;
+                        case 'E':
+                        FCommDCB.Parity = EVENPARITY;
+                                break;
 
-			case 'O':
-		    	FCommDCB.Parity = ODDPARITY;
-				break;
-		}
+                        case 'O':
+                        FCommDCB.Parity = ODDPARITY;
+                                break;
+                }
 
-		switch (FStopBits)
-		{
-			case 1:
-		    	FCommDCB.StopBits = ONESTOPBIT;
-				break;
+                switch (FStopBits)
+                {
+                        case 1:
+                        FCommDCB.StopBits = ONESTOPBIT;
+                                break;
 
-			case 2:
-		    	FCommDCB.StopBits = TWOSTOPBITS;
-				break;
-				
-		}
-    	FCommDCB.fOutxCtsFlow = 0;
-    	FCommDCB.fOutxDsrFlow = 0;
-    	FCommDCB.fDtrControl = DTR_CONTROL_ENABLE;
-    	FCommDCB.fRtsControl = RTS_CONTROL_ENABLE;
+                        case 2:
+                        FCommDCB.StopBits = TWOSTOPBITS;
+                                break;
+                                
+                }
+        FCommDCB.fOutxCtsFlow = 0;
+        FCommDCB.fOutxDsrFlow = 0;
+        FCommDCB.fDtrControl = DTR_CONTROL_ENABLE;
+        FCommDCB.fRtsControl = RTS_CONTROL_ENABLE;
 
-    	FCommDCB.fBinary = 1;
-    	FCommDCB.fNull = 0;
-    	FCommDCB.EofChar = 0;
-    	FCommDCB.EvtChar = 0;
+        FCommDCB.fBinary = 1;
+        FCommDCB.fNull = 0;
+        FCommDCB.EofChar = 0;
+        FCommDCB.EvtChar = 0;
         FCommDCB.fInX = 0;
         FCommDCB.fOutX = 0;
-    	FCommDCB.XonChar = 0x11;
-    	FCommDCB.XoffChar = 0x13;
-    	FCommDCB.XonLim = (unsigned short)(REC_BUF_SIZE/4);
-    	FCommDCB.XoffLim = 10;
+        FCommDCB.XonChar = 0x11;
+        FCommDCB.XoffChar = 0x13;
+        FCommDCB.XonLim = (unsigned short)(REC_BUF_SIZE/4);
+        FCommDCB.XoffLim = 10;
 
-	    comm_timeouts.ReadIntervalTimeout = MAXDWORD;
-    	comm_timeouts.ReadTotalTimeoutConstant = 0;
-    	comm_timeouts.ReadTotalTimeoutMultiplier = 0;
-    	comm_timeouts.WriteTotalTimeoutMultiplier = 0;
-    	comm_timeouts.WriteTotalTimeoutConstant = 0;
-    	SetCommTimeouts(FPortHandle, &comm_timeouts);
+            comm_timeouts.ReadIntervalTimeout = MAXDWORD;
+        comm_timeouts.ReadTotalTimeoutConstant = 0;
+        comm_timeouts.ReadTotalTimeoutMultiplier = 0;
+        comm_timeouts.WriteTotalTimeoutMultiplier = 0;
+        comm_timeouts.WriteTotalTimeoutConstant = 0;
+        SetCommTimeouts(FPortHandle, &comm_timeouts);
 
-	    SetCommState( FPortHandle, &FCommDCB);
-	}
+            SetCommState( FPortHandle, &FCommDCB);
+        }
 }
 
 /*##################  TSerialDevice::ClosePort  #######################
-*   Purpose....: Closes win32 comport			                        #
+*   Purpose....: Closes win32 comport                                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -703,14 +664,14 @@ void TSerialDevice::OpenPort()
 *##########################################################################*/
 void TSerialDevice::ClosePort()
 {
-	Clear();
-	EscapeCommFunction(FPortHandle, CLRDTR);
-	EscapeCommFunction(FPortHandle, CLRRTS);
-	CloseHandle(FPortHandle);
+        Clear();
+        EscapeCommFunction(FPortHandle, CLRDTR);
+        EscapeCommFunction(FPortHandle, CLRRTS);
+        CloseHandle(FPortHandle);
 }
 
 /*##################  TSerialDevice::Open  ############################
-*   Purpose....: Opens serial com channel			                        #
+*   Purpose....: Opens serial com channel                                               #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -718,20 +679,20 @@ void TSerialDevice::ClosePort()
 *##########################################################################*/
 void TSerialDevice::Open()
 {
-	if (!IsOpen())
+        if (!IsOpen())
     {
-    	FPortHandle = 0;
-		OpenPort();
+        FPortHandle = 0;
+                OpenPort();
         if (FPortHandle)
-    	{
+        {
             Offline();
-        	TDevice::Open();
+                TDevice::Open();
         }
     }
 }
 
 /*##################  TSerialDevice::Close  ###########################
-*   Purpose....: Closes serial com channel			                        #
+*   Purpose....: Closes serial com channel                                              #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -739,16 +700,16 @@ void TSerialDevice::Open()
 *##########################################################################*/
 void TSerialDevice::Close()
 {
-	if (IsOpen())
+        if (IsOpen())
     {
-    	TDevice::Close();
-		ClosePort();
+        TDevice::Close();
+                ClosePort();
         FPortHandle = 0;
     }
 }
 
 /*##################  TSerialDevice::Clear  ###########################
-*   Purpose....: Clear serial com channel				                    #
+*   Purpose....: Clear serial com channel                                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -756,11 +717,11 @@ void TSerialDevice::Close()
 *##########################################################################*/
 void TSerialDevice::Clear()
 {
-	PurgeComm(FPortHandle, PURGE_RXCLEAR | PURGE_TXCLEAR);
+        PurgeComm(FPortHandle, PURGE_RXCLEAR | PURGE_TXCLEAR);
 }
 
 /*##################  TSerialDevice::ResetDtr  ########################
-*   Purpose....: Resets DTR on serial com channel		                    #
+*   Purpose....: Resets DTR on serial com channel                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -768,12 +729,12 @@ void TSerialDevice::Clear()
 *##########################################################################*/
 void TSerialDevice::ResetDtr()
 {
-	FCommDCB.fDtrControl = DTR_CONTROL_DISABLE;
+        FCommDCB.fDtrControl = DTR_CONTROL_DISABLE;
     SetCommState( FPortHandle, &FCommDCB);
 }
 
 /*##################  TSerialDevice::SetDtr  ########################
-*   Purpose....: Sets DTR on serial com channel		                    #
+*   Purpose....: Sets DTR on serial com channel                             #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -781,12 +742,12 @@ void TSerialDevice::ResetDtr()
 *##########################################################################*/
 void TSerialDevice::SetDtr()
 {
-	FCommDCB.fDtrControl = DTR_CONTROL_ENABLE;
+        FCommDCB.fDtrControl = DTR_CONTROL_ENABLE;
     SetCommState( FPortHandle, &FCommDCB);
 }
 
 /*##################  TSerialDevice::ResetRts  ########################
-*   Purpose....: Reset RTS								                    #
+*   Purpose....: Reset RTS                                                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -794,12 +755,12 @@ void TSerialDevice::SetDtr()
 *##########################################################################*/
 void TSerialDevice::ResetRts()
 {
-	FCommDCB.fRtsControl = RTS_CONTROL_DISABLE;
+        FCommDCB.fRtsControl = RTS_CONTROL_DISABLE;
     SetCommState( FPortHandle, &FCommDCB);
 }
 
 /*##################  TSerialDevice::SetRts  ########################
-*   Purpose....: Set RTS								                    #
+*   Purpose....: Set RTS                                                                                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -807,12 +768,12 @@ void TSerialDevice::ResetRts()
 *##########################################################################*/
 void TSerialDevice::SetRts()
 {
-	FCommDCB.fRtsControl = RTS_CONTROL_ENABLE;
+        FCommDCB.fRtsControl = RTS_CONTROL_ENABLE;
     SetCommState(FPortHandle, &FCommDCB);
 }
 
 /*##################  TSerialDevice::EnableAutoRts  ########################
-*   Purpose....: Enables auto-RTS control for RS485		                    #
+*   Purpose....: Enables auto-RTS control for RS485                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -820,12 +781,12 @@ void TSerialDevice::SetRts()
 *##########################################################################*/
 void TSerialDevice::EnableAutoRts()
 {
-	FCommDCB.fRtsControl = RTS_CONTROL_TOGGLE;
+        FCommDCB.fRtsControl = RTS_CONTROL_TOGGLE;
     SetCommState( FPortHandle, &FCommDCB);
 }
 
 /*##################  TSerialDevice::DisableAutoRts  ########################
-*   Purpose....: Disables auto-RTS control for RS485	                    #
+*   Purpose....: Disables auto-RTS control for RS485                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -833,12 +794,12 @@ void TSerialDevice::EnableAutoRts()
 *##########################################################################*/
 void TSerialDevice::DisableAutoRts()
 {
-	FCommDCB.fRtsControl = RTS_CONTROL_ENABLE;
+        FCommDCB.fRtsControl = RTS_CONTROL_ENABLE;
     SetCommState( FPortHandle, &FCommDCB);
 }
 
 /*##################  TSerialDevice::Write  ###########################
-*   Purpose....: Write buffer to serial com channel		                    #
+*   Purpose....: Write buffer to serial com channel                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -846,26 +807,26 @@ void TSerialDevice::DisableAutoRts()
 *##########################################################################*/
 void TSerialDevice::Write(const char *buf, int count)
 {
-	COMSTAT que;
+        COMSTAT que;
     DWORD comerr;
     int status;
     unsigned long written;
 
     ClearCommError(FPortHandle, &comerr, &que);
-    status = WriteFile(	FPortHandle,
-    					buf,
-    					count,
+    status = WriteFile( FPortHandle,
+                                        buf,
+                                        count,
                         &written,
                         0);
     if (status == 0)
     {
         if ( (comerr = GetLastError()) != ERROR_IO_PENDING )
             ClearCommError(FPortHandle, &comerr, &que);
-	}
+        }
 }
 
 /*##################  TSerialDevice::Write  ###########################
-*   Purpose....: Write char to serial com channel		                    #
+*   Purpose....: Write char to serial com channel                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -873,11 +834,11 @@ void TSerialDevice::Write(const char *buf, int count)
 *##########################################################################*/
 void TSerialDevice::Write(char ch)
 {
-	Write(&ch, 1);
+        Write(&ch, 1);
 }
 
 /*##################  TSerialDevice::Write  ###########################
-*   Purpose....: Write string to serial com channel		                    #
+*   Purpose....: Write string to serial com channel                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -885,11 +846,11 @@ void TSerialDevice::Write(char ch)
 *##########################################################################*/
 void TSerialDevice::Write(const char *str)
 {
-	Write(str, strlen(str));
+        Write(str, strlen(str));
 }
 
 /*##################  TSerialDevice::Poll    ###########################
-*   Purpose....: Check if char is available									#
+*   Purpose....: Check if char is available                                                                     #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -897,16 +858,16 @@ void TSerialDevice::Write(const char *str)
 *##########################################################################*/
 int TSerialDevice::Poll()
 {
-	COMSTAT que;
-	DWORD comerr;
+        COMSTAT que;
+        DWORD comerr;
 
-	if (!ClearCommError(FPortHandle, &comerr, &que))
-    	return FALSE;
-	return (que.cbInQue > 0);
+        if (!ClearCommError(FPortHandle, &comerr, &que))
+        return FALSE;
+        return (que.cbInQue > 0);
 }
 
 /*##################  TSerialDevice::Read    ###########################
-*   Purpose....: Read a char from serial com channel	                    #
+*   Purpose....: Read a char from serial com channel                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -914,31 +875,31 @@ int TSerialDevice::Poll()
 *##########################################################################*/
 char TSerialDevice::Read()
 {
-	COMSTAT que;
-	DWORD comerr;
+        COMSTAT que;
+        DWORD comerr;
     char ch;
     unsigned long count;
     int result;
 
     ch = 0;
-	ClearCommError(FPortHandle, &comerr, &que);
+        ClearCommError(FPortHandle, &comerr, &que);
 
-    result = ReadFile(	FPortHandle,
-    					&ch,
+    result = ReadFile(  FPortHandle,
+                                        &ch,
                         1,
                         &count,
-    					0);
+                                        0);
 
     if (result == 0)
     {
-    	if ((comerr = GetLastError()) != ERROR_IO_PENDING)
-        	ClearCommError(FPortHandle, &comerr, &que);
-	}
-	return ch;
+        if ((comerr = GetLastError()) != ERROR_IO_PENDING)
+                ClearCommError(FPortHandle, &comerr, &que);
+        }
+        return ch;
 }
 
 /*##################  TSerialDevice::WaitForChar    ###########################
-*   Purpose....: Wait for char from port				                    #
+*   Purpose....: Wait for char from port                                                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -946,19 +907,19 @@ char TSerialDevice::Read()
 *##########################################################################*/
 int TSerialDevice::WaitForChar(long MaxWait)
 {
-	COMSTAT que;
-	DWORD comerr;
+        COMSTAT que;
+        DWORD comerr;
     DWORD stop = GetTickCount() + MaxWait;
 
-	if (!ClearCommError(FPortHandle, &comerr, &que))
-    	return FALSE;
+        if (!ClearCommError(FPortHandle, &comerr, &que))
+        return FALSE;
 
-	while (que.cbInQue == 0)
+        while (que.cbInQue == 0)
     {
-    	if (GetTickCount() > stop)
-        	return FALSE;
-    	WaitMilli(1);
-		ClearCommError(FPortHandle, &comerr, &que);
+        if (GetTickCount() > stop)
+                return FALSE;
+        WaitMilli(1);
+                ClearCommError(FPortHandle, &comerr, &que);
     }
     return TRUE;
 }

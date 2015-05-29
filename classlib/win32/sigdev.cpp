@@ -36,7 +36,7 @@
 #
 #   Name       : TSignalDevice::TSignalDevice
 #
-#   Purpose....: Constructor for TSignalDevice		                          
+#   Purpose....: Constructor for TSignalDevice                                    
 #
 #   In params..: *
 #   Out params.: *
@@ -45,31 +45,14 @@
 ##########################################################################*/
 TSignalDevice::TSignalDevice()
 {
-	Init();
-}
-
-/*##########################################################################
-#
-#   Name       : TSignalDevice::TSignalDevice
-#
-#   Purpose....: Constructor for TSignalDevice
-#
-#   In params..: IniSection to read parameters from
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSignalDevice::TSignalDevice(const char *IniSection)
-  : TDevice(IniSection)
-{
-    Init();
+        Init();
 }
 
 /*##########################################################################
 #
 #   Name       : TSignalDevice::~TSignalDevice
 #
-#   Purpose....: Destructor for TSignalDevice		                          
+#   Purpose....: Destructor for TSignalDevice                                     
 #
 #   In params..: *
 #   Out params.: *
@@ -98,7 +81,7 @@ void TSignalDevice::Init()
 #
 #   Name       : TSignalDevice::DeviceName
 #
-#   Purpose....: Device name		                          
+#   Purpose....: Device name                                      
 #
 #   In params..: *
 #   Out params.: *
@@ -107,7 +90,7 @@ void TSignalDevice::Init()
 ##########################################################################*/
 void TSignalDevice::DeviceName(char *Name, int MaxLen) const
 {
-	strncpy(Name, "SIGNAL", MaxLen);
+        strncpy(Name, "SIGNAL", MaxLen);
 }
 
 /*##########################################################################
@@ -138,7 +121,7 @@ void TSignalDevice::Clear()
 ##########################################################################*/
 int TSignalDevice::IsSignalled()
 {
-	return TRUE;
+        return TRUE;
 }
 
 /*##########################################################################

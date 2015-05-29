@@ -31,15 +31,14 @@
 class TSignalDevice : public TDevice
 {
 public:
-	TSignalDevice();
-	TSignalDevice(const char *IniSection);
-	virtual ~TSignalDevice();
+        TSignalDevice();
+        virtual ~TSignalDevice();
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
+        virtual void DeviceName(char *Name, int MaxLen) const;
 
     void Clear();
-	void Signal();
-	int IsSignalled();
+        void Signal();
+        int IsSignalled();
 
 protected:
 
