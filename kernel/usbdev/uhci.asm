@@ -2752,6 +2752,7 @@ rtDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdatePort   Proc near
+    push ds
     push ax
     push bx
     push cx
@@ -2988,6 +2989,7 @@ upDone:
     pop cx
     pop bx
     pop ax
+    pop ds
     ret
 UpdatePort   Endp
 
