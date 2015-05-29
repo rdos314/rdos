@@ -2650,9 +2650,22 @@ attach_thread:
     GetThread
     mov ds:[di].usb_attach_thread_arr,ax
 ;
-    mov ax,bx
+    push di
+    mov eax,SIZE usb_function_struc
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,SIZE usb_function_struc
+    xor al,al
+    rep stosb
+    pop di
+;
+    mov es:usbf_speed,bh
+    mov es:usbf_port,bl
+    mov es:usbf_slot,0
+    mov es:usbf_address,0
+;
     LockUsb
-    LockedNotifyUsbAttach
+    XhciNotifyUsbAttach
 ;
     mov ds:[di].usb_attach_thread_arr,0
     TerminateThread
@@ -2729,7 +2742,25 @@ reset_thread:
     xor ah,1
     and ah,1
     mov al,cl
-    LockedNotifyUsbAttach
+;
+    push ax
+    push di
+    mov eax,SIZE usb_function_struc
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,SIZE usb_function_struc
+    xor al,al
+    rep stosb
+    pop di
+    pop ax
+;
+    mov es:usbf_speed,ah
+    mov es:usbf_port,al
+    mov es:usbf_slot,0
+    mov es:usbf_address,0
+;
+    LockUsb
+    XhciNotifyUsbAttach
     jmp rtDone
 
 rtUnlock:
