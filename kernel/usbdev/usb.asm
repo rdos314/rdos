@@ -1397,14 +1397,33 @@ xhci_notify_usb_attach       Proc far
     push es
     pushad
 ;
-    movzx bx,es:usbf_port
-    mov dl,es:usbf_slot
+    mov al,es:usbf_slot
+    or al,al
+    jnz nuaSlot
 ;
-    movzx di,dl
+    push es
+    mov ax,ds
+    mov es,ax
+;
+    mov di,OFFSET usb_addr_arr
+    mov cx,128
+    add di,2
+    xor ax,ax
+    repnz scasw
+    sub di,2
+    sub di,OFFSET usb_addr_arr
+    shr di,1
+    mov ax,di
+    pop es
+    mov es:usbf_address,al
+    
+nuaSlot:
+    movzx di,al
     add di,di
     add di,OFFSET usb_addr_arr
-;
     mov ds:[di],es
+;
+    movzx bx,es:usbf_port
     add bx,bx
     mov ds:[bx].usb_port_sel_arr,es
 ;
