@@ -783,7 +783,6 @@ CreateEndpointRing   Endp
 CreateControl   Proc far
     pushad
 ;    
-    int 3
     mov cl,es:usbf_port
     call SetupRootDevice
     call CreateEndpointRing
@@ -1356,6 +1355,7 @@ attach_thread:
 ;
     mov ah,al
     mov al,cl
+    LockUsb
     XhciNotifyUsbAttach
 
 atDone:
