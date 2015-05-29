@@ -2735,7 +2735,7 @@ atWaitNotify:
     mov es:usbf_port,cl
     mov es:usbf_slot,0
     mov es:usbf_address,0
-    XhciNotifyUsbAttach
+    NotifyUsbAttach
     jmp atDone
 
 atUnlock:
@@ -2864,7 +2864,7 @@ rtWaitNotify:
     mov es:usbf_port,cl
     mov es:usbf_slot,0
     mov es:usbf_address,0
-    XhciNotifyUsbAttach
+    NotifyUsbAttach
     jmp rtDone
 
 rtUnlock:

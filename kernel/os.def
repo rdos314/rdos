@@ -324,7 +324,7 @@ wait_for_signal_timeout_nr  = 299
 notify_ethernet_packet_nr   = 300
 
 init_usb_device_nr          = 301
-locked_notify_usb_attach_nr = 302
+notify_usb_attach_nr        = 302
 notify_usb_detach_nr        = 304
 
 add_com_port_nr             = 305
@@ -667,8 +667,5 @@ reset_can_buffers_nr        = 547
 send_can_bus_block_nr       = 548
 
 get_disc_vendor_info_buf_nr = 549
-
-xhci_notify_usb_attach_nr   = 550
-xhci_notify_usb_detach_nr   = 551
 
 osgate_entries				= 560

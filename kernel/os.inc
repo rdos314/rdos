@@ -3221,11 +3221,10 @@ InitUsbDevice   MACRO
     OsGate init_usb_device_nr
                     ENDM
 
-; IN  AL      Port #
-; IN  AH      Low speed = 1, high speed / full speed = 0
 ; IN  DS      Usb device selector
-LockedNotifyUsbAttach MACRO
-    OsGate locked_notify_usb_attach_nr
+; IN  ES      Usb function selector
+NotifyUsbAttach MACRO
+    OsGate notify_usb_attach_nr
                     ENDM
 
 LockUsb MACRO
@@ -3240,20 +3239,6 @@ UnlockUsb MACRO
 ; IN  DS      Usb device selector
 NotifyUsbDetach MACRO
     OsGate notify_usb_detach_nr
-                    ENDM
-
-; IN  AL      Port #
-; IN  AH      Slot #
-; IN  DS      Usb device selector
-; IN  ES      Usb function selector
-XhciNotifyUsbAttach MACRO
-    OsGate xhci_notify_usb_attach_nr
-                    ENDM
-
-; IN  AL      Slot #
-; IN  DS      Usb device selector
-XhciNotifyUsbDetach MACRO
-    OsGate xhci_notify_usb_detach_nr
                     ENDM
 
 ; IN  ES:EDI  Callback

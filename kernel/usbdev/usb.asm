@@ -1172,33 +1172,32 @@ unlock_usb       Proc far
     retf32
 unlock_usb    Endp
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           LockedNotifyUsbAttach
+;       NAME:           NotifyUsbAttach
 ;
-;           description:    Locked notify USB attach event
+;       Description:    Notify USB attach event
 ;
-;       parameters:     AL      Usb port
-;               AH      Speed
-;                           0 = Low speed
-;                           1 = Full speed
-;                           2 = High speed
-;                           3 = Super speed
-;               DS      USB device selector
+;       Parameters:     DS      USB device selector
+;                       ES      USB function selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-locked_notify_usb_attach_name DB 'Locked Notify USB Attach', 0
+notify_usb_attach_name DB 'Notify USB Attach', 0
 
-locked_notify_usb_attach       Proc far
+notify_usb_attach       Proc far
     push gs
     push fs
     push es
     pushad
 ;
-    movzx bx,al
-    mov dl,ah
+    mov al,es:usbf_slot
+    or al,al
+    jnz nuaSlot
+;
+    push es
     mov ax,ds
     mov es,ax
 ;
@@ -1208,18 +1207,21 @@ locked_notify_usb_attach       Proc far
     xor ax,ax
     repnz scasw
     sub di,2
-;
-    mov eax,SIZE usb_function_struc
-    AllocateSmallGlobalMem
-    mov es:usbf_port,bl
-    mov ds:[di],es
-    add bx,bx
-    mov ds:[bx].usb_port_sel_arr,es
     sub di,OFFSET usb_addr_arr
     shr di,1
     mov ax,di
+    pop es
     mov es:usbf_address,al
-    mov es:usbf_speed,dl
+    
+nuaSlot:
+    movzx di,al
+    add di,di
+    add di,OFFSET usb_addr_arr
+    mov ds:[di],es
+;
+    movzx bx,es:usbf_port
+    add bx,bx
+    mov ds:[bx].usb_port_sel_arr,es
 ;
     push ax
     mov cx,MAX_USB_HUB_PORTS
@@ -1336,8 +1338,7 @@ nuaPipeOk:
     pop fs
     pop gs
     retf32
-locked_notify_usb_attach   Endp
-
+notify_usb_attach   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1375,213 +1376,6 @@ nudDone:
     pop es
     retf32
 notify_usb_detach   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           XhciNotifyUsbAttach
-;
-;       Description:    XHCI notify USB attach event
-;
-;       Parameters:     DS      USB device selector
-;                       ES      USB function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-xhci_notify_usb_attach_name DB 'XHCI Notify USB Attach', 0
-
-xhci_notify_usb_attach       Proc far
-    push gs
-    push fs
-    push es
-    pushad
-;
-    mov al,es:usbf_slot
-    or al,al
-    jnz nuaSlot
-;
-    push es
-    mov ax,ds
-    mov es,ax
-;
-    mov di,OFFSET usb_addr_arr
-    mov cx,128
-    add di,2
-    xor ax,ax
-    repnz scasw
-    sub di,2
-    sub di,OFFSET usb_addr_arr
-    shr di,1
-    mov ax,di
-    pop es
-    mov es:usbf_address,al
-    
-nuaSlot:
-    movzx di,al
-    add di,di
-    add di,OFFSET usb_addr_arr
-    mov ds:[di],es
-;
-    movzx bx,es:usbf_port
-    add bx,bx
-    mov ds:[bx].usb_port_sel_arr,es
-;
-    push ax
-    mov cx,MAX_USB_HUB_PORTS
-    mov di,OFFSET usbf_port_sel_arr    
-    xor ax,ax
-    rep stosw
-;    
-    mov cx,16
-    mov di,OFFSET usbf_in_endpoint_arr
-    xor ax,ax
-    rep stosw
-;    
-    mov cx,16
-    mov di,OFFSET usbf_out_endpoint_arr
-    xor ax,ax
-    rep stosw
-    pop ax
-;
-    call CreateDefaultControl
-    jc xnuaDone
-;
-    mov eax,8
-    call AllocateBufSel
-
-xnuaRetry:
-    call fword ptr ds:is_connected_proc
-    jc xnuaFreeDone
-;
-    xor edi,edi
-    mov cx,8
-    mov ax,100h
-    call GetDescr
-    movzx ax,es:udd_maxlen
-    or ax,ax
-    jz xnuaRetry
-;
-    mov fs:usbp_maxlen,ax
-    movzx eax,es:udd_len
-    FreeMem
-;
-    call fword ptr ds:is_connected_proc
-    jc xnuaDone
-;    
-    call AllocateBufSel
-    xor edi,edi
-    mov cx,ax
-    mov ax,100h
-    call GetDescr
-    mov fs:usbp_device_sel,es
-    mov ax,es
-    mov gs,ax
-;
-    xor bx,bx
-
-xnuaLoop:
-    call fword ptr ds:is_connected_proc
-    jc xnuaDone
-;    
-    mov eax,8
-    call AllocateBufSel
-    xor edi,edi
-    mov cx,8
-    mov al,bl
-    mov ah,2
-    call GetDescr
-    movzx eax,es:ucd_size
-    FreeMem
-;
-    call fword ptr ds:is_connected_proc
-    jc xnuaDone
-;
-    call AllocateBufSel
-    xor edi,edi
-    mov cx,ax
-    mov al,bl
-    mov ah,2
-    call GetDescr
-    mov di,bx
-    add di,di
-    mov fs:[di].usbp_config_sel,es
-;
-    inc bl
-    cmp bl,16
-    je xnuaNotify
-;    
-    cmp bl,gs:udd_configs
-    jb xnuaLoop
-
-xnuaNotify:
-    call fword ptr ds:is_connected_proc
-    jc xnuaDone
-;    
-    xor ax,ax
-    mov gs,ax
-    mov bx,ds:usb_controller_id
-    mov al,fs:usbp_address
-    call trap_usb_attach
-    clc
-    jmp xnuaDone
-
-xnuaFreeDone:
-    FreeMem    
-    stc
-    
-xnuaDone:
-    jnc xnuaPipeOk
-;
-    call ClosePipe
-    stc
-
-xnuaPipeOk:
-    popad
-    pop es
-    pop fs
-    pop gs
-    retf32
-xhci_notify_usb_attach   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           XhciNotifyUsbDetach
-;
-;           description:    XHCI notify USB detach event
-;
-;       parameters:         AL      Usb slot
-;                           DS      USB device selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-xhci_notify_usb_detach_name DB 'XHCI Notify USB Detach', 0
-
-xhci_notify_usb_detach       Proc far
-    push es
-    pushad
-;
-    movzx bx,al
-    add bx,bx
-    xor ax,ax
-    xchg ax,ds:[bx].usb_port_sel_arr
-    or ax,ax
-    jz xnudDone
-;    
-    mov es,ax
-    mov bx,ds:usb_controller_id
-    mov al,es:usbf_address
-    call trap_usb_detach      
-    call CloseDevice
-
-xnudDone:    
-    popad
-    pop es
-    retf32
-xhci_notify_usb_detach   Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4115,28 +3909,16 @@ init    Proc far
     mov ax,unlock_usb_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET locked_notify_usb_attach
-    mov edi,OFFSET locked_notify_usb_attach_name
+    mov esi,OFFSET notify_usb_attach
+    mov edi,OFFSET notify_usb_attach_name
     xor cl,cl
-    mov ax,locked_notify_usb_attach_nr
+    mov ax,notify_usb_attach_nr
     RegisterOsGate
 ;
     mov esi,OFFSET notify_usb_detach
     mov edi,OFFSET notify_usb_detach_name
     xor cl,cl
     mov ax,notify_usb_detach_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET xhci_notify_usb_attach
-    mov edi,OFFSET xhci_notify_usb_attach_name
-    xor cl,cl
-    mov ax,xhci_notify_usb_attach_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET xhci_notify_usb_detach
-    mov edi,OFFSET xhci_notify_usb_detach_name
-    xor cl,cl
-    mov ax,xhci_notify_usb_detach_nr
     RegisterOsGate
 ;
     mov esi,OFFSET hook_usb_attach

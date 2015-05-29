@@ -2665,7 +2665,7 @@ attach_thread:
     mov es:usbf_address,0
 ;
     LockUsb
-    XhciNotifyUsbAttach
+    NotifyUsbAttach
 ;
     mov ds:[di].usb_attach_thread_arr,0
     TerminateThread
@@ -2760,7 +2760,7 @@ reset_thread:
     mov es:usbf_address,0
 ;
     LockUsb
-    XhciNotifyUsbAttach
+    NotifyUsbAttach
     jmp rtDone
 
 rtUnlock:

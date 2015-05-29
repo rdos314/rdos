@@ -1358,7 +1358,7 @@ attach_thread:
     mov es:usbf_address,0
 ;
     LockUsb
-    XhciNotifyUsbAttach
+    NotifyUsbAttach
 
 atDone:
     pop edi

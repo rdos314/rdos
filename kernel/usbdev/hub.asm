@@ -507,8 +507,26 @@ haLowSpeed:
     mov ah,0
         
 haAttach:
+    push ax
+    push cx    
+    push di
+    mov eax,SIZE usb_function_struc
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,SIZE usb_function_struc
+    xor al,al
+    rep stosb
+    pop di
+    pop cx
+    pop ax
+;    
     mov al,gs:[bx].hps_dev_port
-    LockedNotifyUsbAttach
+    mov es:usbf_port,al
+    mov es:usbf_speed,ah
+;    
+    mov es:usbf_slot,0
+    mov es:usbf_address,0
+    NotifyUsbAttach
 
 haDone:    
     pop bx
