@@ -133,6 +133,12 @@ clear_stalled_proc      DD ?,?
 ; OUT AL        Maxlen
 get_max_len_proc        DD ?,?
 
+; IN  FS        Pipe selector
+address_device_proc	DD ?,?
+
+; IN  FS        Pipe selector
+config_device_proc	DD ?,?
+
 usb_section            section_typ <>
 
 usb_controller_id      DW ?

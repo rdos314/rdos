@@ -3532,22 +3532,24 @@ et06 DD OFFSET AddStatusOut,    SEG code
 et07 DD OFFSET AddStatusIn,         SEG code
 et08 DD OFFSET IssueTransfer,       SEG code
 et09 DD OFFSET IsTransferDone,      SEG code
-et10 DD OFFSET EndTransfer,     SEG code
-et11 DD OFFSET WasTransferOk,       SEG code
-et12 DD OFFSET GetDataSize,     SEG code
-et13 DD OFFSET ClosePipe,       SEG code
-et14 DD OFFSET WaitForCompletion,   SEG code
-et15 DD OFFSET ChangeAddress,       SEG code
-et16 DD OFFSET IsConnected,     SEG code
-et17 DD OFFSET ResetPipe,       SEG code
-et18 DD OFFSET LockEnum,        SEG code
-et19 DD OFFSET UnlockEnum,      SEG code
-et20 DD OFFSET AllocateHubPort, SEG code
-et21 DD OFFSET FreeHubPort,     SEG code
-et22 DD OFFSET Has64Bit,        SEG code
-et23 DD OFFSET IsStalled,       SEG code
-et24 DD OFFSET ClearStalled,    SEG code
-et25 DD OFFSET GetMaxLen,       SEG code
+et0A DD OFFSET EndTransfer,     SEG code
+et0B DD OFFSET WasTransferOk,       SEG code
+et0C DD OFFSET GetDataSize,     SEG code
+et0D DD OFFSET ClosePipe,       SEG code
+et0E DD OFFSET WaitForCompletion,   SEG code
+et0F DD OFFSET ChangeAddress,       SEG code
+et10 DD OFFSET IsConnected,     SEG code
+et11 DD OFFSET ResetPipe,       SEG code
+et12 DD OFFSET LockEnum,        SEG code
+et13 DD OFFSET UnlockEnum,      SEG code
+et14 DD OFFSET AllocateHubPort, SEG code
+et15 DD OFFSET FreeHubPort,     SEG code
+et16 DD OFFSET Has64Bit,        SEG code
+et17 DD OFFSET IsStalled,       SEG code
+et18 DD OFFSET ClearStalled,    SEG code
+et19 DD OFFSET GetMaxLen,       SEG code
+et1A DD 0,                      0
+et1B DD 0,                      0
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -3568,7 +3570,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*26
+    mov cx,2*1Ch
 
 ifTabLoop:
     lods dword ptr cs:[si]

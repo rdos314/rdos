@@ -510,6 +510,16 @@ CreateDefaultControl    Proc near
     InitSection ds:usbp_section
     pop ds
 ;    
+    mov ax,word ptr ds:address_device_proc+4
+    or ax,ax
+    jz cdcSendAddress
+;
+    pop ax
+    call fword ptr ds:address_device_proc
+    pushf
+    jmp cdcDone        
+
+cdcSendAddress:    
     mov eax,8
     call AllocateBufSel
     xor edi,edi

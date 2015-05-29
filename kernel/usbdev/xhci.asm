@@ -580,51 +580,6 @@ EnableSlot  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AddressDevice
-;
-;       DESCRIPTION:    Address device
-;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Device sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddressDevice  Proc near
-    push gs
-    push edi
-;
-    call WaitForCommandTrb
-;    
-    movzx eax,es:xd_input_context_offset
-    add eax,es:xd_phys
-    mov gs:[edi].trb_param,eax
-    mov eax,es:xd_phys+4
-    mov gs:[edi].trb_param+4,eax
-;
-    mov ah,es:usbf_address
-    xor al,al
-    mov gs:[edi].trb_control,ax
-;
-    mov al,TRB_TYPE_ADDRESS_DEV
-    call SendCommandTrb
-;
-    mov al,gs:[edi+100Bh]
-    cmp al,1
-    stc
-    jne adDone
-;
-    mov al,gs:[edi+100Fh]
-    clc        
-
-adDone:
-    pop edi
-    pop gs    
-    ret
-AddressDevice  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           AllocateDevice
 ;
 ;       DESCRIPTION:    Allocate device
@@ -828,6 +783,7 @@ CreateEndpointRing   Endp
 CreateControl   Proc far
     pushad
 ;    
+    int 3
     mov cl,es:usbf_port
     call SetupRootDevice
     call CreateEndpointRing
@@ -846,11 +802,60 @@ CreateControl   Proc far
     mov al,3 SHL 1
     or al,4 SHL 3
     mov es:[bx].ec_param2,al
-    call AddressDevice
 ;
     popad
     retf32
 CreateControl   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AddressDevice
+;
+;   DESCRIPTION:    Address device
+;
+;   PARAMETERS:     DS      Function selector
+;                   FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddressDevice   Proc far
+    push es
+    push gs
+    push eax
+    push edi
+;
+    call WaitForCommandTrb
+;    
+    mov es,fs:xp_dev_sel
+    movzx eax,es:xd_input_context_offset
+    add eax,es:xd_phys
+    mov gs:[edi].trb_param,eax
+    mov eax,es:xd_phys+4
+    mov gs:[edi].trb_param+4,eax
+;
+    mov ah,es:usbf_address
+    xor al,al
+    mov gs:[edi].trb_control,ax
+;
+    mov al,TRB_TYPE_ADDRESS_DEV
+    call SendCommandTrb
+;
+    mov al,gs:[edi+100Bh]
+    cmp al,1
+    stc
+    jne adDone
+;
+    mov al,gs:[edi+100Fh]
+    clc        
+
+adDone:
+    pop edi
+    pop eax
+    pop gs    
+    pop es
+    retf32
+AddressDevice   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1121,25 +1126,6 @@ ClosePipe   Proc far
     stc
     retf32
 ClosePipe   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           ChangeAddress
-;
-;   DESCRIPTION:    Change address for pipe
-;
-;   PARAMETERS:     DS      Function selector
-;                   FS      Pipe selector
-;                   AL      Address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ChangeAddress   Proc far
-    int 3
-    stc
-    retf32
-ChangeAddress   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1974,22 +1960,24 @@ et06 DD OFFSET AddStatusOut,    SEG code
 et07 DD OFFSET AddStatusIn,         SEG code
 et08 DD OFFSET IssueTransfer,       SEG code
 et09 DD OFFSET IsTransferDone,      SEG code
-et10 DD OFFSET EndTransfer,     SEG code
-et11 DD OFFSET WasTransferOk,       SEG code
-et12 DD OFFSET GetDataSize,     SEG code
-et13 DD OFFSET ClosePipe,       SEG code
-et14 DD OFFSET WaitForCompletion,   SEG code
-et15 DD OFFSET ChangeAddress,       SEG code
-et16 DD OFFSET IsConnected,     SEG code
-et17 DD OFFSET ResetPipe,       SEG code
-et18 DD OFFSET LockEnum,        SEG code
-et19 DD OFFSET UnlockEnum,      SEG code
-et20 DD OFFSET AllocateHubPort, SEG code
-et21 DD OFFSET FreeHubPort,     SEG code
-et22 DD OFFSET Has64Bit,        SEG code
-et23 DD OFFSET IsStalled,       SEG code
-et24 DD OFFSET ClearStalled,    SEG code
-et25 DD OFFSET GetMaxLen,       SEG code
+et0A DD OFFSET EndTransfer,     SEG code
+et0B DD OFFSET WasTransferOk,       SEG code
+et0C DD OFFSET GetDataSize,     SEG code
+et0D DD OFFSET ClosePipe,       SEG code
+et0E DD OFFSET WaitForCompletion,   SEG code
+et0F DD 0,                      0
+et10 DD OFFSET IsConnected,     SEG code
+et11 DD OFFSET ResetPipe,       SEG code
+et12 DD OFFSET LockEnum,        SEG code
+et13 DD OFFSET UnlockEnum,      SEG code
+et14 DD OFFSET AllocateHubPort, SEG code
+et15 DD OFFSET FreeHubPort,     SEG code
+et16 DD OFFSET Has64Bit,        SEG code
+et17 DD OFFSET IsStalled,       SEG code
+et18 DD OFFSET ClearStalled,    SEG code
+et19 DD OFFSET GetMaxLen,       SEG code
+et1A DD OFFSET AddressDevice,   SEG code
+et1B DD 0,                      0
 
 InitFunction    Proc near
     push es
@@ -2111,7 +2099,7 @@ ifIntDone:
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*26
+    mov cx,2*1Ch
 
 ifTabLoop:
     lods dword ptr cs:[si]

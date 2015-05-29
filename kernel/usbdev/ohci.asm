@@ -3215,22 +3215,24 @@ ot06 DD OFFSET AddStatusOut,    SEG code
 ot07 DD OFFSET AddStatusIn,         SEG code
 ot08 DD OFFSET IssueTransfer,       SEG code
 ot09 DD OFFSET IsTransferDone,      SEG code
-ot10 DD OFFSET EndTransfer,     SEG code
-ot11 DD OFFSET WasTransferOk,       SEG code
-ot12 DD OFFSET GetDataSize,     SEG code
-ot13 DD OFFSET ClosePipe,       SEG code
-ot14 DD OFFSET WaitForCompletion,   SEG code
-ot15 DD OFFSET ChangeAddress,       SEG code
-ot16 DD OFFSET IsConnected,     SEG code
-ot17 DD OFFSET ResetPipe,       SEG code
-ot18 DD OFFSET LockEnum,        SEG code
-ot19 DD OFFSET UnlockEnum,      SEG code
-ot20 DD OFFSET AllocateHubPort,  SEG code
-ot21 DD OFFSET FreeHubPort,     SEG code
-ot22 DD OFFSET Has64Bit,        SEG code
-ot23 DD OFFSET IsStalled,       SEG code
-ot24 DD OFFSET ClearStalled,    SEG code
-ot25 DD OFFSET GetMaxLen,       SEG code
+ot0A DD OFFSET EndTransfer,     SEG code
+ot0B DD OFFSET WasTransferOk,       SEG code
+ot0C DD OFFSET GetDataSize,     SEG code
+ot0D DD OFFSET ClosePipe,       SEG code
+ot0E DD OFFSET WaitForCompletion,   SEG code
+ot0F DD OFFSET ChangeAddress,       SEG code
+ot10 DD OFFSET IsConnected,     SEG code
+ot11 DD OFFSET ResetPipe,       SEG code
+ot12 DD OFFSET LockEnum,        SEG code
+ot13 DD OFFSET UnlockEnum,      SEG code
+ot14 DD OFFSET AllocateHubPort,  SEG code
+ot15 DD OFFSET FreeHubPort,     SEG code
+ot16 DD OFFSET Has64Bit,        SEG code
+ot17 DD OFFSET IsStalled,       SEG code
+ot18 DD OFFSET ClearStalled,    SEG code
+ot19 DD OFFSET GetMaxLen,       SEG code
+ot1A DD 0,                      0
+ot1B DD 0,                      0
 
 InitFunction    Proc near
     push es
@@ -3242,7 +3244,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*26
+    mov cx,2*1Ch
 
 ifTabLoop:
     lods dword ptr cs:[si]
