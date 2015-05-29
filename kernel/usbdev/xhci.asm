@@ -1353,8 +1353,10 @@ attach_thread:
     mov edx,es:xd_phys+4
     mov fs:[bx+4],edx
 ;
-    mov ah,al
-    mov al,cl
+    mov es:usbf_port,cl
+    mov es:usbf_slot,al
+    mov es:usbf_address,0
+;
     LockUsb
     XhciNotifyUsbAttach
 

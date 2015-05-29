@@ -1384,9 +1384,7 @@ notify_usb_detach   Endp
 ;
 ;       Description:    XHCI notify USB attach event
 ;
-;       Parameters:     AL      Port #
-;                       AH      Slot #
-;                       DS      USB device selector
+;       Parameters:     DS      USB device selector
 ;                       ES      USB function selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1399,19 +1397,16 @@ xhci_notify_usb_attach       Proc far
     push es
     pushad
 ;
-    movzx bx,al
-    mov dl,ah
+    movzx bx,es:usbf_port
+    mov dl,es:usbf_slot
 ;
     movzx di,dl
     add di,di
     add di,OFFSET usb_addr_arr
 ;
-    mov es:usbf_port,bl
-    mov es:usbf_flags,USBF_XHCI
     mov ds:[di],es
     add bx,bx
     mov ds:[bx].usb_port_sel_arr,es
-    mov es:usbf_address,dl
 ;
     push ax
     mov cx,MAX_USB_HUB_PORTS
