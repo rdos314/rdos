@@ -2944,10 +2944,21 @@ atWaitNotify:
 ;
     sub dx,1
     jnz atWaitNotify
+;
+    push cx    
+    mov eax,SIZE usb_function_struc
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,SIZE usb_function_struc
+    xor al,al
+    rep stosb
+    pop cx
 ;    
-    mov ah,2
-    mov al,cl
-    LockedNotifyUsbAttach
+    mov es:usbf_port,cl
+    mov es:usbf_slot,0
+    mov es:usbf_address,0
+    mov es:usbf_speed,2
+    XhciNotifyUsbAttach
     jmp atDone
 
 atUnlock:
@@ -3055,10 +3066,21 @@ rtWaitNotify:
 ;
     sub dx,1
     jnz rtWaitNotify
+;
+    push cx    
+    mov eax,SIZE usb_function_struc
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,SIZE usb_function_struc
+    xor al,al
+    rep stosb
+    pop cx
 ;    
-    mov ah,2
-    mov al,cl
-    LockedNotifyUsbAttach
+    mov es:usbf_port,cl
+    mov es:usbf_slot,0
+    mov es:usbf_address,0
+    mov es:usbf_speed,2
+    XhciNotifyUsbAttach
     jmp rtDone
 
 rtUnlock:
