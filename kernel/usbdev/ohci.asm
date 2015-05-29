@@ -2712,11 +2712,30 @@ atWaitNotify:
     jnz atWaitNotify
 ;    
     mov eax,es:[si].HcRhPortStatus
+    push eax
+    push cx    
+    push di
+;
+    mov eax,SIZE usb_function_struc
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,SIZE usb_function_struc
+    xor al,al
+    rep stosb
+;
+    pop di
+    pop cx
+    pop eax
+;
     shr ah,1
     and ah,1
     xor ah,1
-    mov al,cl
-    LockedNotifyUsbAttach
+    mov es:usbf_speed,ah
+;
+    mov es:usbf_port,cl
+    mov es:usbf_slot,0
+    mov es:usbf_address,0
+    XhciNotifyUsbAttach
     jmp atDone
 
 atUnlock:
@@ -2824,11 +2843,28 @@ rtWaitNotify:
     jnz rtWaitNotify
 ;    
     mov eax,es:[si].HcRhPortStatus
+    push eax
+    push cx    
+;
+    mov eax,SIZE usb_function_struc
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,SIZE usb_function_struc
+    xor al,al
+    rep stosb
+;
+    pop cx
+    pop eax
+;
     shr ah,1
     and ah,1
     xor ah,1
-    mov al,cl
-    LockedNotifyUsbAttach
+    mov es:usbf_speed,ah
+;
+    mov es:usbf_port,cl
+    mov es:usbf_slot,0
+    mov es:usbf_address,0
+    XhciNotifyUsbAttach
     jmp rtDone
 
 rtUnlock:
