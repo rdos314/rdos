@@ -29,7 +29,7 @@
 #define BINDATA_H
 
 #include "file.h"
-#include "device.h"
+#include "msgdev.h"
 
 #define RAD_COUNT       10
 #define BIN_DATA_VER    1
@@ -71,12 +71,12 @@ struct TBinDataEntry
     TFloatData HeatTemp;
     TFloatData HeatP;
 
-	TBinRadData Rad[RAD_COUNT];
+        TBinRadData Rad[RAD_COUNT];
 };
 
 struct TBinHeader
 {
-	char Version;
+        char Version;
 };
 
 class TBinData
@@ -113,7 +113,7 @@ protected:
     TDeviceMsg *GetNextCotex(TFile *file);
 
     void CreateRootDir();
-	void CreateDayFile(int year, int month, int day);
+        void CreateDayFile(int year, int month, int day);
     void OpenDayFile(int year, int month, int day);
     
     int FFirstEntry;   
