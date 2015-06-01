@@ -236,6 +236,8 @@ xp_port_sel         DW ?
 xp_port_nr          DB ?
 xp_slot             DB ?
 
+xp_setup_offset     DW ?
+
 xp_ring_enque       DW ?
 xp_ring_pcs         DW ?
 
@@ -981,11 +983,28 @@ CreateIntr  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddSetup    Proc far
-    int 3
+    push eax
+    push si
+;    
     call WaitForEndpointTrb
-
-
-    stc
+    mov eax,es:[edi]
+    mov fs:[si].trb_param,eax
+    mov eax,es:[edi+4]
+    mov fs:[si].trb_param+4,eax
+;
+    mov eax,8
+    mov fs:[si].trb_status,eax    
+;
+    mov ax,TRB_TYPE_SETUP SHL 10
+    or ax,fs:xp_ring_pcs
+    or al,40h
+    mov fs:[si].trb_type,ax
+;
+    mov fs:xp_setup_offset,si
+    clc
+;
+    pop si
+    pop eax
     retf32
 AddSetup    Endp
 
@@ -1024,8 +1043,52 @@ AddOut    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddIn    Proc far
+    push es
+    pushad
+;    
+    push cx
+    mov bx,es
+    GetSelectorBaseSize
+    add edx,edi
+    mov cx,flat_sel
+    mov es,cx
+    mov al,es:[edx]
+    GetPageEntry
+    and ax,0F000h
+    mov cx,dx
+    and cx,0FFFh
+    or ax,cx
+    pop cx
+;
+    call WaitForEndpointTrb
+    mov fs:[si].trb_param,eax
+    mov fs:[si].trb_param+4,ebx
+;
+    movzx eax,cx
+    mov fs:[si].trb_status,eax    
+;
+    mov ax,TRB_TYPE_DATA SHL 10
+    or ax,fs:xp_ring_pcs
+    mov fs:[si].trb_type,ax
+    mov fs:[si].trb_control,1
+;  
+    mov si,fs:xp_setup_offset
+    or si,si
+    jz aiData
+
+aiControl:
+    mov fs:[si].trb_control,3
+    mov fs:xp_setup_offset,0
+    jmp aiDone
+
+aiData:
     int 3
-    stc
+
+aiDone:    
+    clc
+;
+    popad
+    pop es
     retf32
 AddIn    Endp
 
