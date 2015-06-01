@@ -236,6 +236,9 @@ xp_port_sel         DW ?
 xp_port_nr          DB ?
 xp_slot             DB ?
 
+xp_ring_enque       DW ?
+xp_ring_pcs         DW ?
+
 xhci_pipe   ENDS
 
 data    SEGMENT byte public 'DATA'
@@ -756,7 +759,9 @@ CreateEndpointRing   Proc near
     add dx,10h
     dec dx
     and dx,0FFF0h
-    mov fs:xp_ring_offset,dx
+    mov fs:xp_ring_offset,dx    
+    mov fs:xp_ring_enque,dx
+    mov fs:xp_ring_pcs,1
 ;    
     add eax,edx
     mov fs:xp_ring_phys,eax
@@ -770,6 +775,57 @@ CreateEndpointRing   Proc near
     pop es
     ret
 CreateEndpointRing   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WaitForEndpointTrb
+;
+;       DESCRIPTION:    Wait for empty endpoint TRB
+;
+;       PARAMETERS:     FS          Pipe sel
+;
+;       RETURNS:        FS:EDI      TRB offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForEndpointTrb   Proc near
+    push ax
+;    
+    movzx edi,ds:xp_ring_enque
+
+wfetLoop:    
+    mov ax,fs:[di].trb_type
+    test ax,2
+    jz wfetRetry
+;
+    xor fs:[di].trb_type,1
+    xor ds:xp_ring_pcs,1
+    xor di,di
+    jmp wfetLoop
+
+wfetRetry:    
+    xor ax,ds:xp_ring_pcs
+    test al,1
+    jnz wfetOk
+;
+    mov ax,10
+    WaitMilliSec
+    jmp wfetRetry        
+
+wfetOk:
+    mov ax,di
+    add ax,SIZE trb_struc
+    mov ds:xp_ring_enque,ax
+;
+    mov fs:[di].trb_param,0
+    mov fs:[di].trb_param+4,0
+    mov fs:[di].trb_status,0
+    mov fs:[di].trb_control,0
+;
+    pop ax        
+    ret
+WaitForEndpointTrb    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
