@@ -212,6 +212,8 @@ usb_function_base       usb_function_struc <>
 xd_phys                 DD ?,?
 xd_linear               DD ?
 
+xd_dev_sel              DW ?
+
 xd_input_context_offset DW ?
 xd_input_slot_offset    DW ?
 xd_input_ep_arr_offset  DW 32 DUP (?)
@@ -230,6 +232,9 @@ xp_ring_phys        DD ?,?
 xp_ring_offset      DW ?
 
 xp_dev_sel          DW ?
+xp_port_sel         DW ?
+xp_port_nr          DB ?
+xp_slot             DB ?
 
 xhci_pipe   ENDS
 
@@ -618,6 +623,7 @@ AllocateDevice    Proc near
     mov es:xd_phys,eax
     mov es:xd_phys+4,ebx
     mov es:xd_linear,edx
+    mov es:xd_dev_sel,ds
 ;    
     mov bx,SIZE xhci_dev_struc
     add bx,40h
@@ -788,8 +794,14 @@ CreateControl   Proc far
     call CreateEndpointRing
 ;
     mov fs:xp_dev_sel,es
+    mov al,es:usbf_port
+    mov fs:xp_port_nr,al
+    mov ax,ds:xhc_port_sel
+    mov fs:xp_port_sel,ax
+    mov al,es:usbf_slot
+    mov fs:xp_slot,al
+; 
     mov bx,es:xd_input_ep_arr_offset
-;
     mov eax,fs:xp_ring_phys
     or al,1
     mov es:[bx].ec_tr_dequeue,eax
@@ -834,7 +846,7 @@ AddressDevice   Proc far
     mov eax,es:xd_phys+4
     mov gs:[edi].trb_param+4,eax
 ;
-    mov ah,es:usbf_slot
+    mov ah,fs:xp_slot
     xor al,al
     mov gs:[edi].trb_control,ax
 ;
@@ -1140,8 +1152,24 @@ ClosePipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IsConnected   Proc far
-    int 3
+    push es
+    push eax
+    push si
+;
+    movzx si,fs:xp_port_nr
+    shl si,4
+    mov es,fs:xp_port_sel
+    mov eax,es:[si]
+    test al,1
+    clc
+    jnz icDone
+;    
     stc
+
+icDone:
+    pop si
+    pop eax
+    pop es
     retf32
 IsConnected Endp
 
