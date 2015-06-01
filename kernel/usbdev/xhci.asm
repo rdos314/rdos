@@ -785,27 +785,27 @@ CreateEndpointRing   Endp
 ;
 ;       PARAMETERS:     FS          Pipe sel
 ;
-;       RETURNS:        FS:EDI      TRB offset
+;       RETURNS:        FS:ESI      TRB offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForEndpointTrb   Proc near
     push ax
 ;    
-    movzx edi,ds:xp_ring_enque
+    movzx esi,fs:xp_ring_enque
 
 wfetLoop:    
-    mov ax,fs:[di].trb_type
+    mov ax,fs:[si].trb_type
     test ax,2
     jz wfetRetry
 ;
-    xor fs:[di].trb_type,1
+    xor fs:[si].trb_type,1
     xor ds:xp_ring_pcs,1
-    xor di,di
+    mov si,fs:xp_ring_offset
     jmp wfetLoop
 
 wfetRetry:    
-    xor ax,ds:xp_ring_pcs
+    xor ax,fs:xp_ring_pcs
     test al,1
     jnz wfetOk
 ;
@@ -814,14 +814,14 @@ wfetRetry:
     jmp wfetRetry        
 
 wfetOk:
-    mov ax,di
+    mov ax,si
     add ax,SIZE trb_struc
-    mov ds:xp_ring_enque,ax
+    mov fs:xp_ring_enque,ax
 ;
-    mov fs:[di].trb_param,0
-    mov fs:[di].trb_param+4,0
-    mov fs:[di].trb_status,0
-    mov fs:[di].trb_control,0
+    mov fs:[si].trb_param,0
+    mov fs:[si].trb_param+4,0
+    mov fs:[si].trb_status,0
+    mov fs:[si].trb_control,0
 ;
     pop ax        
     ret
@@ -982,6 +982,9 @@ CreateIntr  Endp
 
 AddSetup    Proc far
     int 3
+    call WaitForEndpointTrb
+
+
     stc
     retf32
 AddSetup    Endp
