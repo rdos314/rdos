@@ -782,7 +782,7 @@ CreateEndpointRing   Endp
 
 CreateControl   Proc far
     pushad
-;    
+;   
     mov cl,es:usbf_port
     call SetupRootDevice
     call CreateEndpointRing
@@ -801,6 +801,7 @@ CreateControl   Proc far
     mov al,3 SHL 1
     or al,4 SHL 3
     mov es:[bx].ec_param2,al
+    clc
 ;
     popad
     retf32
@@ -833,7 +834,7 @@ AddressDevice   Proc far
     mov eax,es:xd_phys+4
     mov gs:[edi].trb_param+4,eax
 ;
-    mov ah,es:usbf_address
+    mov ah,es:usbf_slot
     xor al,al
     mov gs:[edi].trb_control,ax
 ;
