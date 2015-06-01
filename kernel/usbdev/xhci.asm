@@ -241,6 +241,8 @@ xp_setup_offset     DW ?
 xp_ring_enque       DW ?
 xp_ring_pcs         DW ?
 
+xp_db_target        DB ?
+
 xhci_pipe   ENDS
 
 data    SEGMENT byte public 'DATA'
@@ -858,6 +860,7 @@ CreateControl   Proc far
     mov fs:xp_port_sel,ax
     mov al,es:usbf_slot
     mov fs:xp_slot,al
+    mov fs:xp_db_target,1
 ; 
     mov bx,es:xd_input_ep_arr_offset
     mov eax,fs:xp_ring_phys
@@ -1152,8 +1155,19 @@ AddStatusIn    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IssueTransfer    Proc far
+    push ds
+    push eax
+    push si
+;
     int 3
-    stc
+    mov ds,ds:xhc_db_sel
+    movzx si,fs:xp_slot
+    shl si,2
+    movzx eax,fs:xp_db_target
+    mov ds:[si],eax
+;
+    pop eax
+    pop ds
     retf32
 IssueTransfer    Endp
 
@@ -1673,6 +1687,24 @@ peDone:
     ret
 port_event Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           transfer_event
+;
+;       DESCRIPTION:    Transfer event
+;
+;       PARAMETERS:     ES     Function sel
+;                       DS:SI  Event TRB
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+transfer_event Proc near
+    int 3
+    ret
+transfer_event Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;       Event table
@@ -1712,7 +1744,7 @@ evt1C DW OFFSET error_event
 evt1D DW OFFSET error_event
 evt1E DW OFFSET error_event
 evt1F DW OFFSET error_event
-evt20 DW OFFSET error_event
+evt20 DW OFFSET transfer_event
 evt21 DW OFFSET command_event
 evt22 DW OFFSET port_event
 evt23 DW OFFSET error_event
