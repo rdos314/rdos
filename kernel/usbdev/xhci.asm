@@ -1105,8 +1105,18 @@ AddIn    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddStatusOut    Proc far
-    int 3
-    stc
+    push eax
+    push si
+;    
+    call WaitForEndpointTrb
+    mov ax,TRB_TYPE_STATUS SHL 10
+    or ax,fs:xp_ring_pcs
+    or al,20h
+    mov fs:[si].trb_type,ax
+    clc
+;
+    pop si
+    pop eax
     retf32
 AddStatusOut    Endp
 
