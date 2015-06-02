@@ -203,6 +203,8 @@ xhc_event_ccs       DW ?
 xhc_port_thread         DW ?
 xhc_port_change_mask    DD ?
 
+xhc_func_sel_arr    DW 256 DUP(?)
+
 xhci_func_sel   ENDS
 
 xhci_dev_struc   STRUC
@@ -220,6 +222,8 @@ xd_input_ep_arr_offset  DW 32 DUP (?)
 
 xd_output_slot_offset   DW ?
 xd_output_ep_arr_offset DW 32 DUP (?)
+
+xd_ep_sel_arr           DW 32 DUP(?)
 
 xhci_dev_struc    ENDS
 
@@ -241,7 +245,11 @@ xp_setup_offset     DW ?
 xp_ring_enque       DW ?
 xp_ring_pcs         DW ?
 
+xp_thread           DW ?
+xp_remain_size      DW ?
+
 xp_db_target        DB ?
+xp_result           DB ?
 
 xhci_pipe   ENDS
 
@@ -861,6 +869,7 @@ CreateControl   Proc far
     mov al,es:usbf_slot
     mov fs:xp_slot,al
     mov fs:xp_db_target,1
+    mov es:xd_ep_sel_arr+2,fs
 ; 
     mov bx,es:xd_input_ep_arr_offset
     mov eax,fs:xp_ring_phys
@@ -1159,13 +1168,19 @@ IssueTransfer    Proc far
     push eax
     push si
 ;
-    int 3
+    GetThread
+    mov fs:xp_thread,ax
+    mov fs:xp_result,-1
+;    
     mov ds,ds:xhc_db_sel
     movzx si,fs:xp_slot
     shl si,2
     movzx eax,fs:xp_db_target
     mov ds:[si],eax
+    WaitForSignal    
+    mov fs:xp_thread,0
 ;
+    pop si
     pop eax
     pop ds
     retf32
@@ -1517,6 +1532,9 @@ attach_thread:
     jc atDone
 ;
     call AllocateDevice
+    movzx bx,al
+    shl bx,1
+    mov ds:[bx].xhc_func_sel_arr,es
 ;
     mov bx,xhci_device_ptr_sel
     mov fs,bx
@@ -1701,7 +1719,33 @@ port_event Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 transfer_event Proc near
-    int 3
+    mov al,ds:[si+0Fh]
+    movzx bx,al
+    shl bx,1
+    mov ax,es:[bx].xhc_func_sel_arr
+    or ax,ax
+    jz teDone
+;
+    mov fs,ax
+    mov al,ds:[si+0Eh]
+    movzx bx,al
+    shl bx,1
+    mov ax,fs:[bx].xd_ep_sel_arr
+    or ax,ax
+    jz teDone
+;
+    mov fs,ax
+    mov ax,ds:[si+8]
+    mov fs:xp_remain_size,ax
+    mov al,ds:[si+0Bh]
+    mov fs:xp_result,al
+    mov bx,fs:xp_thread
+    or bx,bx
+    jz teDone
+;
+    Signal    
+
+teDone:    
     ret
 transfer_event Endp
 
