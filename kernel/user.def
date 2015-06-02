@@ -742,4 +742,7 @@ get_disc_vendor_info_nr         = 580
 
 query_video_mode_nr             = 581
 
+start_can_capture_nr            = 582
+stop_can_capture_nr             = 583
+
 usergate_entries			    = 600

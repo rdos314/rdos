@@ -2908,6 +2908,13 @@
 #pragma aux RdosStopNetCapture = \
     CallGate_stop_net_capture;
 
+#pragma aux RdosStartCanCapture = \
+    CallGate_start_can_capture \
+    parm [ebx];
+
+#pragma aux RdosStopCanCapture = \
+    CallGate_stop_can_capture;
+
 #pragma aux RdosGetUsbDevice = \
     CallGate_get_usb_device \
     ValidateEax \

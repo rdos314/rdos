@@ -740,6 +740,9 @@ void RDOSAPI RdosStopWatchdog();
 void RDOSAPI RdosStartNetCapture(int FileHandle);
 void RDOSAPI RdosStopNetCapture();
 
+void RDOSAPI RdosStartCanCapture(int FileHandle);
+void RDOSAPI RdosStopCanCapture();
+
 int RDOSAPI RdosGetUsbDevice(int Controller, int Device, void *ptr, int maxsize);
 int RDOSAPI RdosGetUsbConfig(int Controller, int Device, int Config, void *ptr, int maxsize);
 int RDOSAPI RdosGetUsbInterface(int Controller, int Device, int Interface);

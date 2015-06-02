@@ -2996,6 +2996,15 @@ StartNetCapture      MACRO
 StopNetCapture      MACRO
 	UserGate stop_net_capture_nr
 						ENDM
+						
+;	IN  BX		File handle
+StartCanCapture      MACRO
+	UserGate start_can_capture_nr
+						ENDM
+						
+StopCanCapture      MACRO
+	UserGate stop_can_capture_nr
+						ENDM
 
 ;   IN  AX          CRC polynom
 ;   OUT BX          CRC handle

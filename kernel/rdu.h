@@ -742,6 +742,9 @@
 
 #define usergate_query_video_mode 0x00000245
 
+#define usergate_start_can_capture 0x00000246
+#define usergate_stop_can_capture 0x00000247
+
 
 
 #ifdef __FLAT__
@@ -1489,6 +1492,9 @@
 
 #define CallGate_query_video_mode 0x67 0x9a 69 2 0 0 3 0
 
+#define CallGate_start_can_capture 0x67 0x9a 70 2 0 0 3 0
+#define CallGate_stop_can_capture 0x67 0x9a 71 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2233,5 +2239,8 @@
 #define CallGate_get_disc_vendor_info 0x3e 0x67 0x9a 68 2 0 0 3 0
 
 #define CallGate_query_video_mode 0x3e 0x67 0x9a 69 2 0 0 3 0
+
+#define CallGate_start_can_capture 0x3e 0x67 0x9a 70 2 0 0 3 0
+#define CallGate_stop_can_capture 0x3e 0x67 0x9a 71 2 0 0 3 0
 
 #endif
