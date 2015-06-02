@@ -246,6 +246,7 @@ xp_ring_enque       DW ?
 xp_ring_pcs         DW ?
 
 xp_thread           DW ?
+xp_size             DW ?
 xp_remain_size      DW ?
 
 xp_db_target        DB ?
@@ -998,6 +999,7 @@ AddSetup    Proc far
     push eax
     push si
 ;    
+    mov fs:xp_size,0
     call WaitForEndpointTrb
     mov eax,es:[edi]
     mov fs:[si].trb_param,eax
@@ -1058,6 +1060,7 @@ AddIn    Proc far
     push es
     pushad
 ;    
+    add fs:xp_size,cx
     push cx
     mov bx,es
     GetSelectorBaseSize
@@ -1171,6 +1174,8 @@ IssueTransfer    Proc far
     GetThread
     mov fs:xp_thread,ax
     mov fs:xp_result,-1
+    mov ax,fs:xp_size
+    mov fs:xp_remain_size,ax
 ;    
     mov ds,ds:xhc_db_sel
     movzx si,fs:xp_slot
@@ -1275,8 +1280,8 @@ WasTransferOk   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetDataSize   Proc far
-    int 3
-    stc
+    mov cx,fs:xp_size
+    sub cx,fs:xp_remain_size
     retf32
 GetDataSize   Endp
 
