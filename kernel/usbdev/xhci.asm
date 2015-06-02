@@ -1177,8 +1177,6 @@ IssueTransfer    Proc far
     shl si,2
     movzx eax,fs:xp_db_target
     mov ds:[si],eax
-    WaitForSignal    
-    mov fs:xp_thread,0
 ;
     pop si
     pop eax
@@ -1219,8 +1217,8 @@ IsTransferDone   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForCompletion   Proc far
-    int 3
-    stc
+    WaitForSignal    
+    mov fs:xp_thread,0
     retf32
 WaitForCompletion   Endp
 
