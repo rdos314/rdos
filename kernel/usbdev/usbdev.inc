@@ -53,6 +53,8 @@ create_bulk_proc	DD ?,?
 
 ; IN  AL        Interval
 ; IN  AH        Speed
+; IN  DL        Pipe #
+; IN  CX        Max packet size
 ; OUT FS        Pipe selector
 create_interrupt_proc	DD ?,?
 

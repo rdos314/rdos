@@ -969,7 +969,8 @@ CreateBulk   Endp
 ;
 ;   PARAMETERS:     DS      Function selector
 ;                   AL      Interval
-;                   AH      Speed
+;                   DL      Pipe #
+;                   CX      Max packet size
 ;
 ;   RETURNS:        FS      Pipe selector
 ;
