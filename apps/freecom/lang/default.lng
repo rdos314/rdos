@@ -1670,6 +1670,23 @@ Capture turned ON. Logfile is %s.
 Capture turned OFF.
 .
 
+:TEXT_CMDHELP_CAN
+Capture CAN traffic
+
+CAN [ON | OFF | file]
+  ON              Turn on CAN capture
+  OFF             Turn off CAN capture
+  file            Logfile for CAN capture (also turns on capture)
+.
+
+:TEXT_CAN_ON
+CAN capture turned ON. Logfile is %s.
+.
+
+:TEXT_CAN_OFF
+Can capture turned OFF.
+.
+
 :TEXT_CMDHELP_USB
 Display list of attached USB devices
 

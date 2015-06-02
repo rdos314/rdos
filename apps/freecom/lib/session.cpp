@@ -69,6 +69,7 @@
 #include "mount.h"
 #include "reboot.h"
 #include "capture.h"
+#include "can.h"
 #include "usb.h"
 #include "info.h"
 #include "volume.h"
@@ -106,6 +107,7 @@ static TCommandFactory *cd;
 static TCommandFactory *chdir;
 static TCommandFactory *cls;
 static TCommandFactory *newsess;
+static TCommandFactory *can;
 static TCommandFactory *capture;
 static TCommandFactory *cpy;
 static TCommandFactory *date;
@@ -258,6 +260,7 @@ TSession::TSession(const char *ipc)
         chdir = new TChdirFactory;
         cd = new TCdFactory;
         capture = new TCaptureFactory;
+        can = new TCanFactory;
         call = new TCallFactory;
         audio = new TAudioFactory;
         acpi = new TAcpiFactory;
@@ -387,6 +390,7 @@ TSession::~TSession()
         delete chdir;
         delete cd;
         delete capture;
+        delete can;
         delete call;
         delete help;
 
