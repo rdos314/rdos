@@ -515,6 +515,7 @@ CreateDefaultControl    Proc near
     jz cdcSendAddress
 ;
     pop ax
+    mov fs:usbp_address,al
     call fword ptr ds:address_device_proc
     pushf
     jmp cdcDone        
@@ -1211,9 +1212,9 @@ notify_usb_attach       Proc far
     shr di,1
     mov ax,di
     pop es
-    mov es:usbf_address,al
     
 nuaSlot:
+    mov es:usbf_address,al
     movzx di,al
     add di,di
     add di,OFFSET usb_addr_arr
