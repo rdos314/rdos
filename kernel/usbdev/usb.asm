@@ -2524,7 +2524,12 @@ cudNextDescr:
     cmp di,gs:ucd_size
     jb cudDescrLoop    
 ;
-    clc    
+    mov ax,word ptr ds:config_device_proc+4
+    or ax,ax
+    clc
+    jz cudDone
+;
+    call fword ptr ds:config_device_proc
     jmp cudDone
 
 cudFail:

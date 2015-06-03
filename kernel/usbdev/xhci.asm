@@ -731,6 +731,55 @@ SetupRootDevice     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AddConfigEp
+;
+;       DESCRIPTION:    Add config EP
+;
+;       PARAMETERS:     DS      Device sel
+;                       ES      Function sel
+;                       FS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddConfigEp Proc near
+    pushad
+;
+    mov bx,es:xd_input_context_offset
+    mov eax,es:[bx].icc_add_mask
+    test al,2
+    jz aceNoReset
+;
+    mov eax,1
+
+aceNoReset:    
+    mov cl,fs:xp_db_target
+    mov edx,1
+    shl edx,cl
+    or eax,edx
+    mov es:[bx].icc_add_mask,eax
+;
+    mov bx,es:xd_input_slot_offset    
+    mov eax,es:[bx].s_misc
+    shr eax,27
+    cmp al,fs:xp_db_target
+    ja aceCountOk
+;
+    mov ecx,es:[bx].s_misc
+    and ecx,07FFFFFFh
+    mov al,fs:xp_db_target
+    inc al
+    shl eax,27
+    or eax,ecx
+    mov es:[bx].s_misc,eax
+
+aceCountOk:
+    popad
+    ret
+AddConfigEp Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CreateEndpointRing
 ;
 ;       DESCRIPTION:    Create endpoint ring
@@ -788,84 +837,6 @@ CreateEndpointRing   Proc near
     pop es
     ret
 CreateEndpointRing   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           ConfigEp
-;
-;   DESCRIPTION:    Configure endpoint
-;
-;   PARAMETERS:     DS      Device selector
-;                   ES      Function selector
-;                   FS      Pipe selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ConfigEp   Proc near
-    push es
-    push gs
-    push eax
-    push ebx
-    push ecx
-    push edi
-;
-    mov es,fs:xp_dev_sel
-    mov bx,es:xd_input_context_offset
-    mov cl,fs:xp_db_target
-    mov eax,1
-    shl eax,cl
-    mov es:[bx].icc_drop_mask,0
-    or al,1
-    mov es:[bx].icc_add_mask,eax
-;
-    mov bx,es:xd_input_slot_offset    
-    mov eax,es:[bx].s_misc
-    shr eax,27
-    cmp al,fs:xp_db_target
-    ja ceCountOk
-;
-    mov ecx,es:[bx].s_misc
-    and ecx,07FFFFFFh
-    mov al,fs:xp_db_target
-    inc al
-    shl eax,27
-    or eax,ecx
-    mov es:[bx].s_misc,eax
-    
-ceCountOk:
-    call WaitForCommandTrb
-;    
-    movzx eax,es:xd_input_context_offset
-    add eax,es:xd_phys
-    mov gs:[edi].trb_param,eax
-    mov eax,es:xd_phys+4
-    mov gs:[edi].trb_param+4,eax
-;
-    mov ah,fs:xp_slot
-    xor al,al
-    mov gs:[edi].trb_control,ax
-;
-    mov al,TRB_TYPE_CONFIGURE_ENDP
-    call SendCommandTrb
-;
-    mov al,gs:[edi+100Bh]
-    cmp al,1
-    stc
-    jne ceDone
-;
-    mov al,gs:[edi+100Fh]
-    clc        
-
-ceDone:
-    pop edi
-    pop ecx
-    pop ebx
-    pop eax
-    pop gs    
-    pop es
-    retf32
-ConfigEp   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1021,6 +992,59 @@ AddressDevice   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           ConfigDevice
+;
+;   DESCRIPTION:    Configure device endpoints
+;
+;   PARAMETERS:     DS      Device selector
+;                   ES      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigDevice   Proc far
+    push es
+    push gs
+    push eax
+    push ebx
+    push ecx
+    push edi
+;
+    call WaitForCommandTrb
+;    
+    movzx eax,es:xd_input_context_offset
+    add eax,es:xd_phys
+    mov gs:[edi].trb_param,eax
+    mov eax,es:xd_phys+4
+    mov gs:[edi].trb_param+4,eax
+;
+    mov ah,fs:xp_slot
+    xor al,al
+    mov gs:[edi].trb_control,ax
+;
+    mov al,TRB_TYPE_CONFIGURE_ENDP
+    call SendCommandTrb
+;
+    mov al,gs:[edi+100Bh]
+    cmp al,1
+    stc
+    jne ceDone
+;
+    mov al,gs:[edi+100Fh]
+    clc        
+
+ceDone:
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    pop gs    
+    pop es
+    retf32
+ConfigDevice   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateBulk
 ;
 ;           DESCRIPTION:    Create bulk pipe
@@ -1037,7 +1061,6 @@ AddressDevice   Endp
 CreateBulk   Proc far
     pushad
 ;   
-    int 3
     call CreateEndpointRing
 ;
     movzx bx,dl
@@ -1081,7 +1104,7 @@ cbDirOk:
 
 cbTypeOk:    
     mov es:[bx].ec_param2,al        
-    call ConfigEp
+    call AddConfigEp
 ;
     popad
     retf32
@@ -1107,7 +1130,6 @@ CreateBulk   Endp
 CreateIntr   Proc far
     pushad
 ;   
-    int 3
     call CreateEndpointRing
 ;
     movzx bx,dl
@@ -1155,7 +1177,7 @@ ciIntOk:
     mov al,3 SHL 1
     or al,7 SHL 3
     mov es:[bx].ec_param2,al        
-    call ConfigEp
+    call AddConfigEp
 ;
     popad
     retf32
@@ -2419,7 +2441,7 @@ et17 DD OFFSET IsStalled,       SEG code
 et18 DD OFFSET ClearStalled,    SEG code
 et19 DD OFFSET GetMaxLen,       SEG code
 et1A DD OFFSET AddressDevice,   SEG code
-et1B DD 0,                      0
+et1B DD OFFSET ConfigDevice,    SEG code
 
 InitFunction    Proc near
     push es
