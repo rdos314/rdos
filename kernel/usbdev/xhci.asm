@@ -792,6 +792,84 @@ CreateEndpointRing   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           ConfigEp
+;
+;   DESCRIPTION:    Configure endpoint
+;
+;   PARAMETERS:     DS      Device selector
+;                   ES      Function selector
+;                   FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigEp   Proc near
+    push es
+    push gs
+    push eax
+    push ebx
+    push ecx
+    push edi
+;
+    mov es,fs:xp_dev_sel
+    mov bx,es:xd_input_context_offset
+    mov cl,fs:xp_db_target
+    mov eax,1
+    shl eax,cl
+    mov es:[bx].icc_drop_mask,0
+    or al,1
+    mov es:[bx].icc_add_mask,eax
+;
+    mov bx,es:xd_input_slot_offset    
+    mov eax,es:[bx].s_misc
+    shr eax,27
+    cmp al,fs:xp_db_target
+    ja ceCountOk
+;
+    mov ecx,es:[bx].s_misc
+    and ecx,07FFFFFFh
+    mov al,fs:xp_db_target
+    inc al
+    shl eax,27
+    or eax,ecx
+    mov es:[bx].s_misc,eax
+    
+ceCountOk:
+    call WaitForCommandTrb
+;    
+    movzx eax,es:xd_input_context_offset
+    add eax,es:xd_phys
+    mov gs:[edi].trb_param,eax
+    mov eax,es:xd_phys+4
+    mov gs:[edi].trb_param+4,eax
+;
+    mov ah,fs:xp_slot
+    xor al,al
+    mov gs:[edi].trb_control,ax
+;
+    mov al,TRB_TYPE_CONFIGURE_ENDP
+    call SendCommandTrb
+;
+    mov al,gs:[edi+100Bh]
+    cmp al,1
+    stc
+    jne ceDone
+;
+    mov al,gs:[edi+100Fh]
+    clc        
+
+ceDone:
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    pop gs    
+    pop es
+    retf32
+ConfigEp   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           WaitForEndpointTrb
 ;
 ;       DESCRIPTION:    Wait for empty endpoint TRB
@@ -870,7 +948,7 @@ CreateControl   Proc far
     mov al,es:usbf_slot
     mov fs:xp_slot,al
     mov fs:xp_db_target,1
-    mov es:xd_ep_sel_arr+2,fs
+    mov es:xd_ep_sel_arr,fs
 ; 
     mov bx,es:xd_input_ep_arr_offset
     mov eax,fs:xp_ring_phys
@@ -947,16 +1025,65 @@ AddressDevice   Endp
 ;
 ;           DESCRIPTION:    Create bulk pipe
 ;
-;       PARAMETERS:     DS      Function selector
+;       PARAMETERS:     DS      Device selector
+;                       ES      Function selector
 ;                       AH      Speed
+;                       DL      Pipe #, bit 7 IN.
 ;
 ;       RETURNS:    FS      Pipe selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateBulk   Proc far
+    pushad
+;   
     int 3
-    stc
+    call CreateEndpointRing
+;
+    movzx bx,dl
+    and bl,7Fh
+    add bx,bx
+    test dl,80h
+    jz cbDirOk
+;    
+    inc bx
+
+cbDirOk:    
+    mov fs:xp_db_target,bl
+;        
+    mov fs:xp_dev_sel,es
+    mov al,es:usbf_port
+    mov fs:xp_port_nr,al
+    mov ax,ds:xhc_port_sel
+    mov fs:xp_port_sel,ax
+    mov al,es:usbf_slot
+    mov fs:xp_slot,al
+;
+    dec bx
+    add bx,bx    
+    mov es:[bx].xd_ep_sel_arr,fs
+; 
+    mov bx,es:[bx].xd_input_ep_arr_offset
+    mov eax,fs:xp_ring_phys
+    or al,1
+    mov es:[bx].ec_tr_dequeue,eax
+    mov eax,fs:xp_ring_phys+4
+    mov es:[bx].ec_tr_dequeue+4,eax        
+    mov es:[bx].ec_avg_len,cx
+    mov es:[bx].ec_packet_size,cx
+;
+    mov al,3 SHL 1
+    or al,2 SHL 3
+    test dl,80h
+    jz cbTypeOk
+;    
+    or al,4 SHL 3
+
+cbTypeOk:    
+    mov es:[bx].ec_param2,al        
+    call ConfigEp
+;
+    popad
     retf32
 CreateBulk   Endp
 
@@ -967,7 +1094,8 @@ CreateBulk   Endp
 ;
 ;   DESCRIPTION:    Create interrupt pipe
 ;
-;   PARAMETERS:     DS      Function selector
+;   PARAMETERS:     DS      Device selector
+;                   ES      Function selector
 ;                   AL      Interval
 ;                   DL      Pipe #
 ;                   CX      Max packet size
@@ -977,8 +1105,59 @@ CreateBulk   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateIntr   Proc far
+    pushad
+;   
     int 3
-    stc
+    call CreateEndpointRing
+;
+    movzx bx,dl
+    add bx,bx
+    inc bx
+    mov fs:xp_db_target,bl
+;        
+    push ax
+    mov fs:xp_dev_sel,es
+    mov al,es:usbf_port
+    mov fs:xp_port_nr,al
+    mov ax,ds:xhc_port_sel
+    mov fs:xp_port_sel,ax
+    mov al,es:usbf_slot
+    mov fs:xp_slot,al
+    pop ax
+;
+    dec bx
+    add bx,bx    
+    mov es:[bx].xd_ep_sel_arr,fs
+; 
+    mov bx,es:[bx].xd_input_ep_arr_offset
+;
+    mov ah,3
+
+ciIntLoop:
+    shr al,1
+    jz ciIntOk
+;
+    inc ah
+    jmp ciIntLoop
+
+ciIntOk:    
+    mov es:[bx].ec_interval,ah
+    mov eax,fs:xp_ring_phys
+    or al,1
+    mov es:[bx].ec_tr_dequeue,eax
+    mov eax,fs:xp_ring_phys+4
+    mov es:[bx].ec_tr_dequeue+4,eax        
+    mov es:[bx].ec_avg_len,8
+    mov es:[bx].ec_packet_size,cx
+    movzx ecx,cx
+    mov es:[bx].ec_esit_low,ecx
+;
+    mov al,3 SHL 1
+    or al,7 SHL 3
+    mov es:[bx].ec_param2,al        
+    call ConfigEp
+;
+    popad
     retf32
 CreateIntr  Endp
 
@@ -1752,6 +1931,7 @@ transfer_event Proc near
     mov fs,ax
     mov al,ds:[si+0Eh]
     movzx bx,al
+    dec bx
     shl bx,1
     mov ax,fs:[bx].xd_ep_sel_arr
     or ax,ax
@@ -2312,7 +2492,6 @@ ifIrq:
 
 ifIntDone:    
     movzx eax,es:xhc_slot_count
-    or ax,200h
     mov ds:orsConfig,eax
 ;
     push es
