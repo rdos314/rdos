@@ -1,0 +1,918 @@
+/*#######################################################################
+# RDOS operating system
+# Copyright (C) 1988-2008, Leif Ekblad
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version. The only exception to this rule
+# is for commercial usage in embedded systems. For information on
+# usage in commercial embedded systems, contact embedded@rdos.net
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# The author of this program may be contacted at leif@rdos.net
+#
+# QuizL5.cpp
+# Quiz class for L5
+#
+#######################################################################*/
+
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+
+#include "quizl5.h"
+#include "quizdl5.h"
+
+#define CI      1
+
+#define MAX_IN_ROW              4096
+
+#define FALSE 0
+#define TRUE !FALSE
+
+/*##########################################################################
+#
+#   Name       : TQuizL5::TQuizL5
+#
+#   Purpose....: Constructor for TQuizL5
+#
+#   In params..: Filename to load quiz from
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TQuizL5::TQuizL5(const char *FileName)
+  : TQuiz(128),
+        FDataFile(FileName)
+{
+        SetupTexts();
+        SetupCross();
+
+        LoadPopulations();
+        Calculate();
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizL5::~TQuizL5
+#
+#   Purpose....: Destructor for TQuizL5
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TQuizL5::~TQuizL5()
+{
+}
+
+/*##################  TQuizL5::GetPcaCount ##########################
+*   Purpose....: Return number of available PCA axises                          #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuizL5::GetPcaCount()
+{
+        return 4;
+}
+
+/*##################  TQuizL5::GetCatCount ##########################
+*   Purpose....: Return number of categories for question                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuizL5::GetCatCount(int Question)
+{
+    return 3;
+}
+
+/*##################  TQuiz::GetQuizN ##########################
+*   Purpose....: Return number of questions in the quiz (not counting fictive or temporary questions)                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuizL5::GetQuizN()
+{
+    return 128;
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizL5::WriteName
+#
+#   Purpose....: Write quiz name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizL5::WriteName(TFile &File)
+{
+    File.Write("L5");
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizL5::WriteLongName
+#
+#   Purpose....: Write long quiz name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizL5::WriteLongName(TFile &File)
+{
+    File.Write("L5");
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizL5::SetupTexts
+#
+#   Purpose....: Init quiz texts and more
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizL5::SetupTexts()
+{
+  Quiz[0].Aspie = TRUE;
+  Quiz[1].Aspie = TRUE;
+  Quiz[2].Aspie = TRUE;
+  Quiz[3].Aspie = TRUE;
+  Quiz[4].Aspie = TRUE;
+  Quiz[5].Nt = TRUE;
+  Quiz[6].Nt = TRUE;
+  Quiz[7].Nt = TRUE;
+  Quiz[8].Nt = TRUE;
+  Quiz[9].Nt = TRUE;
+  Quiz[10].Nt = TRUE;
+  Quiz[11].Nt = TRUE;
+  Quiz[12].Nt = TRUE;
+  Quiz[13].Nt = TRUE;
+  Quiz[14].Nt = TRUE;
+  Quiz[15].Nt = TRUE;
+  Quiz[16].Nt = TRUE;
+  Quiz[17].Nt = TRUE;
+  Quiz[18].Nt = TRUE;
+  Quiz[19].Aspie = TRUE;
+  Quiz[20].Aspie = TRUE;
+  Quiz[21].Aspie = TRUE;
+  Quiz[22].Aspie = TRUE;
+  Quiz[23].Aspie = TRUE;
+  Quiz[24].Aspie = TRUE;
+  Quiz[25].Aspie = TRUE;
+  Quiz[26].Aspie = TRUE;
+  Quiz[27].Aspie = TRUE;
+  Quiz[28].Aspie = TRUE;
+  Quiz[29].Aspie = TRUE;
+  Quiz[30].Aspie = TRUE;
+  Quiz[31].Aspie = TRUE;
+  Quiz[32].Nt = TRUE;
+  Quiz[33].Nt = TRUE;
+  Quiz[34].Nt = TRUE;
+  Quiz[35].Nt = TRUE;
+  Quiz[36].Nt = TRUE;
+  Quiz[37].Nt = TRUE;
+  Quiz[38].Nt = TRUE;
+  Quiz[39].Aspie = TRUE;
+  Quiz[40].Aspie = TRUE;
+  Quiz[41].Aspie = TRUE;
+  Quiz[42].Aspie = TRUE;
+  Quiz[43].Aspie = TRUE;
+  Quiz[44].Aspie = TRUE;
+  Quiz[45].Aspie = TRUE;
+  Quiz[46].Aspie = TRUE;
+  Quiz[47].Aspie = TRUE;
+  Quiz[48].Aspie = TRUE;
+  Quiz[49].Aspie = TRUE;
+  Quiz[50].Aspie = TRUE;
+  Quiz[51].Aspie = TRUE;
+  Quiz[52].Aspie = TRUE;
+  Quiz[53].Aspie = TRUE;
+  Quiz[54].Aspie = TRUE;
+  Quiz[55].Aspie = TRUE;
+  Quiz[56].Nt = TRUE;
+  Quiz[57].Nt = TRUE;
+  Quiz[58].Nt = TRUE;
+  Quiz[59].Nt = TRUE;
+  Quiz[60].Nt = TRUE;
+  Quiz[61].Nt = TRUE;
+  Quiz[62].Nt = TRUE;
+  Quiz[63].Nt = TRUE;
+  Quiz[64].Nt = TRUE;
+  Quiz[65].Nt = TRUE;
+  Quiz[66].Nt = TRUE;
+  Quiz[67].Nt = TRUE;
+  Quiz[68].Nt = TRUE;
+  Quiz[69].Aspie = TRUE;
+  Quiz[70].Aspie = TRUE;
+  Quiz[71].Aspie = TRUE;
+  Quiz[72].Aspie = TRUE;
+  Quiz[73].Aspie = TRUE;
+  Quiz[74].Aspie = TRUE;
+  Quiz[75].Aspie = TRUE;
+  Quiz[76].Aspie = TRUE;
+  Quiz[77].Aspie = TRUE;
+  Quiz[78].Aspie = TRUE;
+  Quiz[79].Aspie = TRUE;
+  Quiz[80].Aspie = TRUE;
+  Quiz[81].Aspie = TRUE;
+  Quiz[82].Aspie = TRUE;
+  Quiz[83].Aspie = TRUE;
+  Quiz[84].Aspie = TRUE;
+  Quiz[85].Aspie = TRUE;
+  Quiz[86].Nt = TRUE;
+  Quiz[87].Nt = TRUE;
+  Quiz[88].Nt = TRUE;
+  Quiz[89].Nt = TRUE;
+  Quiz[90].Nt = TRUE;
+  Quiz[91].Nt = TRUE;
+  Quiz[92].Aspie = TRUE;
+  Quiz[93].Aspie = TRUE;
+  Quiz[94].Aspie = TRUE;
+  Quiz[95].Aspie = TRUE;
+  Quiz[96].Aspie = TRUE;  
+  Quiz[97].Aspie = TRUE;
+  Quiz[98].Aspie = TRUE;
+  Quiz[99].Aspie = TRUE;
+  Quiz[100].Aspie = TRUE;
+  Quiz[101].Nt = TRUE;
+  Quiz[102].Nt = TRUE;
+  Quiz[103].Nt = TRUE;
+  Quiz[104].Nt = TRUE;
+  Quiz[105].Nt = TRUE;
+  Quiz[106].Nt = TRUE;
+  Quiz[107].Nt = TRUE;
+  Quiz[108].Nt = TRUE;  
+  Quiz[109].Nt = TRUE;
+  Quiz[110].Nt = TRUE;
+  Quiz[111].Nt = TRUE;
+  Quiz[112].Nt = TRUE;
+  Quiz[113].Nt = TRUE;
+  Quiz[114].Nt = TRUE;
+  Quiz[115].Nt = TRUE;
+  Quiz[116].Nt = TRUE;
+
+  Quiz[14].Reverse = TRUE;
+  Quiz[32].Reverse = TRUE;
+  Quiz[35].Reverse = TRUE;
+  Quiz[36].Reverse = TRUE;
+  Quiz[86].Reverse = TRUE;
+  Quiz[87].Reverse = TRUE;
+  Quiz[89].Reverse = TRUE;
+  Quiz[90].Reverse = TRUE;
+  Quiz[91].Reverse = TRUE;
+  Quiz[105].Reverse = TRUE;
+  Quiz[107].Reverse = TRUE;
+  Quiz[111].Reverse = TRUE;
+  Quiz[114].Reverse = TRUE;
+  Quiz[117].Reverse = TRUE;
+  Quiz[118].Reverse = TRUE;
+  Quiz[119].Reverse = TRUE;
+  Quiz[120].Reverse = TRUE;
+  Quiz[124].Reverse = TRUE;
+  Quiz[126].Reverse = TRUE;
+
+  Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[2].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[3].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[4].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[5].MyGroup = GROUP_NT_TALENT;
+  Quiz[6].MyGroup = GROUP_NT_TALENT;
+  Quiz[7].MyGroup = GROUP_NT_TALENT;
+  Quiz[8].MyGroup = GROUP_NT_TALENT;
+  Quiz[9].MyGroup = GROUP_NT_TALENT;
+  Quiz[10].MyGroup = GROUP_NT_TALENT;
+  Quiz[11].MyGroup = GROUP_NT_TALENT;
+  Quiz[12].MyGroup = GROUP_NT_TALENT;
+  Quiz[13].MyGroup = GROUP_NT_TALENT;
+  Quiz[14].MyGroup = GROUP_NT_TALENT;
+  Quiz[15].MyGroup = GROUP_NT_TALENT;
+  Quiz[16].MyGroup = GROUP_NT_TALENT;
+  Quiz[17].MyGroup = GROUP_NT_TALENT;
+  Quiz[18].MyGroup = GROUP_NT_TALENT;
+  Quiz[19].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[20].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[21].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[22].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[23].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[24].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[25].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[26].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[27].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[28].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[29].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[30].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[31].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[32].MyGroup = GROUP_NT_SENSORY;
+  Quiz[33].MyGroup = GROUP_NT_SENSORY;
+  Quiz[34].MyGroup = GROUP_NT_SENSORY;
+  Quiz[35].MyGroup = GROUP_NT_SENSORY;
+  Quiz[36].MyGroup = GROUP_NT_SENSORY;
+  Quiz[37].MyGroup = GROUP_NT_SENSORY;
+  Quiz[38].MyGroup = GROUP_NT_SENSORY;
+  Quiz[39].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[40].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[41].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[42].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[43].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[44].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[45].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[46].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[47].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[48].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[49].MyGroup = GROUP_ASPIE_NVC;  
+  Quiz[50].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[51].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[52].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[53].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[54].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[55].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[56].MyGroup = GROUP_NT_NVC;
+  Quiz[57].MyGroup = GROUP_NT_NVC;
+  Quiz[58].MyGroup = GROUP_NT_NVC;
+  Quiz[59].MyGroup = GROUP_NT_NVC;
+  Quiz[60].MyGroup = GROUP_NT_NVC;
+  Quiz[61].MyGroup = GROUP_NT_NVC;
+  Quiz[62].MyGroup = GROUP_NT_NVC;
+  Quiz[63].MyGroup = GROUP_NT_NVC;
+  Quiz[64].MyGroup = GROUP_NT_NVC;
+  Quiz[65].MyGroup = GROUP_NT_NVC;
+  Quiz[66].MyGroup = GROUP_NT_NVC;
+  Quiz[67].MyGroup = GROUP_NT_NVC;
+  Quiz[68].MyGroup = GROUP_NT_NVC;
+  Quiz[69].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[70].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[71].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[72].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[73].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[74].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[75].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[76].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[77].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[78].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[79].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[80].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[81].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[82].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[83].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[84].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[85].MyGroup = GROUP_ASPIE_RELATION;
+  Quiz[86].MyGroup = GROUP_NT_RELATION;
+  Quiz[87].MyGroup = GROUP_NT_RELATION;
+  Quiz[88].MyGroup = GROUP_NT_RELATION;
+  Quiz[89].MyGroup = GROUP_NT_RELATION;
+  Quiz[90].MyGroup = GROUP_NT_RELATION;
+  Quiz[91].MyGroup = GROUP_NT_RELATION;
+  Quiz[92].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[93].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[94].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[95].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[96].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[97].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[98].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[99].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[100].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[101].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[102].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[103].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[104].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[105].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[106].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[107].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[108].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[109].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[110].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[111].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[112].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[113].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[114].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[115].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[116].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[117].MyGroup = GROUP_MIXED;
+  Quiz[118].MyGroup = GROUP_MIXED;
+  Quiz[119].MyGroup = GROUP_MIXED;
+  Quiz[120].MyGroup = GROUP_MIXED;
+  Quiz[121].MyGroup = GROUP_MIXED;
+  Quiz[122].MyGroup = GROUP_MIXED;
+  Quiz[123].MyGroup = GROUP_MIXED;
+  Quiz[124].MyGroup = GROUP_MIXED;
+  Quiz[125].MyGroup = GROUP_MIXED;
+  Quiz[126].MyGroup = GROUP_MIXED;
+  Quiz[127].MyGroup = GROUP_MIXED;
+
+  Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
+  Quiz[1].Text = "Do you have an avid perseverance in gathering and/or cataloguing information on a topic of interest?";
+  Quiz[2].Text = "Is it important for you to find a unique niche where you can acquire unique competence?";
+  Quiz[3].Text = "Do you notice patterns in things all the time?";
+  Quiz[4].Text = "Do you have one special talent which you have emphasised and worked on?";
+  Quiz[5].Text = "Do you get confused by several verbal instructions at the same time?";
+  Quiz[6].Text = "Do you find it difficult to take messages on the telephone and pass them on correctly?";
+  Quiz[7].Text = "Do you find it very hard to learn things that you are not interested in?";
+  Quiz[8].Text = "Do you have difficulty describing & summarising things for example events, conversations or something you've read?";
+  Quiz[9].Text = "Do you have problems filling out forms?";
+  Quiz[10].Text = "Do you find it hard to recognise phone numbers when said in a different way?";
+  Quiz[11].Text = "Do you find it difficult to take notes in lectures?";
+  Quiz[12].Text = "Do you need to do things yourself in order to remember them?";
+  Quiz[13].Text = "Are you easily distracted?";
+  Quiz[14].Text = "If there is an interruption, can you  Quickly return to what you were doing before?";
+  Quiz[15].Text = "Do you need a lot of motivation to do things?";
+  Quiz[16].Text = "Do you have problems finding your way to new places?";
+  Quiz[17].Text = "Do you work slowly on jobs you dislike?";
+  Quiz[18].Text = "Do you have trouble reading clocks?";
+  Quiz[19].Text = "Before doing something or going somewhere, do you need to have a picture in your mind of what's going to happen so as to be able to prepare yourself mentally first?";
+  Quiz[20].Text = "Do you find it disturbing or upsetting when others show up either later or sooner than agreed?";
+  Quiz[21].Text = "Do you dislike when people walk behind you?";
+  Quiz[22].Text = "Do you have certain routines which you need to follow?";
+  Quiz[23].Text = "Do you tend to shut down or have a meltdown when stressed or overwhelmed?";
+  Quiz[24].Text = "Are you bothered by clothes tags or light touch?";
+  Quiz[25].Text = "Are you sensitive to changes in humidity and air pressure?";
+  Quiz[26].Text = "Are you sometimes afraid in safe situations?";
+  Quiz[27].Text = "Do you have extra sensitive hearing?";
+  Quiz[28].Text = "Are your eyes extra sensitive to strong light and glare?";
+  Quiz[29].Text = "Do you dislike it when people stamp their foot in the floor?";
+  Quiz[30].Text = "Do you instinctively become frightened by the sound of a motor-bike?";
+  Quiz[31].Text = "Do you need lists and schedules in order to get things done?";
+  Quiz[32].Text = "Do you instinctively know when it is your turn to speak when talking on the phone?";
+  Quiz[33].Text = "Do you have problems with timing in conversations?";
+  Quiz[34].Text = "Do you have problems recognizing faces (prosopagnosia)?";
+  Quiz[35].Text = "Are you good at interpreting facial expressions?";
+  Quiz[36].Text = "Do you have a good sense of how much pressure to apply when doing things with your hands?";
+  Quiz[37].Text = "Do you find it hard to tell the age of people?";
+  Quiz[38].Text = "Do you have difficulties judging distances, height, depth or speed?";
+  Quiz[39].Text = "Do you wring your hands, rub your hands together or twirl your fingers?";
+  Quiz[40].Text = "In conversations, do you use small sounds that others don't seem to use?";
+  Quiz[41].Text = "Do you rock back-&-forth or side-to-side (e.g. for comfort, to calm yourself, when excited or overstimulated)?";
+  Quiz[42].Text = "Do you tap your ears or press your eyes (e.g. when thinking, when stressed or distressed)?";
+  Quiz[43].Text = "Do you fiddle with things?";
+  Quiz[44].Text = "Do you mistake noises for voices?";
+  Quiz[45].Text = "Have you been accused of staring?";
+  Quiz[46].Text = "Do recently heard tunes or rhythms tend to stick and replay themselves repeatedly in your head?";
+  Quiz[47].Text = "Have your thoughts ever been so vivid that you were worried other people would hear them?";
+  Quiz[48].Text = "Do you have a fascination for slowly flowing water?";
+  Quiz[49].Text = "Do you enjoy spinning in circles?";
+  Quiz[50].Text = "Do you have an urge to jump over things?";
+  Quiz[51].Text = "Do you bite your lip, cheek or tongue (e.g. when thinking, when anxious or nervous)?";
+  Quiz[52].Text = "Do you pace (e.g. when thinking or anxious)?";
+  Quiz[53].Text = "Do you get a pleasurable tingling sensation in the head, scalp or back of the body in response to certain sounds?";
+  Quiz[54].Text = "Do you talk to yourself?";
+  Quiz[55].Text = "Do you feel an urge to peel flakes off yourself and / or others?";
+  Quiz[56].Text = "Do you tend to say things that are considered socially inappropriate when you are tired, frustrated or when you act naturally?";
+  Quiz[57].Text = "Do you tend to express your feelings in ways that may baffle others?";
+  Quiz[58].Text = "Do others often misunderstand you?";
+  Quiz[59].Text = "Is your sense of humor different from mainstream or considered odd?";
+  Quiz[60].Text = "As a teenager, were you usually unaware of social rules & boundaries unless they were clearly spelled out?";
+  Quiz[61].Text = "Do people sometimes think you are smiling at the wrong occasion?";
+  Quiz[62].Text = "Do you forget you are in a social situation when something gets your attention?";
+  Quiz[63].Text = "Is it hard for you to see why some things upset people so much?";
+  Quiz[64].Text = "Do you tend to interpret things literally?";
+  Quiz[65].Text = "In a conversation, do you tend to focus on your own thoughts rather than on what your listener might be thinking?";
+  Quiz[66].Text = "Have others told you that you have an odd posture or gait?";
+  Quiz[67].Text = "Do you realize hours later that somebody that you have a romantic interest for actually showed interest for you, and then feel bad about the missed opportunity to connect?";
+  Quiz[68].Text = "Do you have a monotonous voice?";
+  Quiz[69].Text = "Do you find it easier to understand and communicate with odd & unusual people than with ordinary people?";
+  Quiz[70].Text = "Have you experienced stronger than normal attachments to certain people?";
+  Quiz[71].Text = "Do you have an alternative view of what is attractive in the opposite sex?";
+  Quiz[72].Text = "Do you have an urge to learn the routines of people you know?";
+  Quiz[73].Text = "Do you like to follow (walk behind) people you are attached to?";
+  Quiz[74].Text = "Do you have an urge to observe the habits of humans and/or animals?";
+  Quiz[75].Text = "Have people you formed strong attachments to taken advantage of you?";
+  Quiz[76].Text = "Do you have unusual sexual preferences?";
+  Quiz[77].Text = "Do you like to protect people you are attached to even when they didn't ask for it?";
+  Quiz[78].Text = "Do you feel that you are a very special or unusual person?";
+  Quiz[79].Text = "Do you examine the hair of people you like a lot?";
+  Quiz[80].Text = "Do you have, or used to have, imaginary relationships?";
+  Quiz[81].Text = "Do you tend to look a lot at people you like and little or not at all at people you dislike?";
+  Quiz[82].Text = "Do you have odd hair (for example multiple whorls, standing up when short or other peculiarities)?";
+  Quiz[83].Text = "Do you prefer to construct your own set of spiritual beliefs rather than following existing religions / belief-systems?";
+  Quiz[84].Text = "Are you more sexually attracted to strangers than to people you know well?";
+  Quiz[85].Text = "Do you tend to get romantic feelings for people that persistently shows interest for you?";
+  Quiz[86].Text = "Do you enjoy traditional dating?";
+  Quiz[87].Text = "Do you find yourself at ease in romantic situations?";
+  Quiz[88].Text = "Are you asexual?";
+  Quiz[89].Text = "Do you like tongue-kissing?";
+  Quiz[90].Text = "Do you enjoy travel?";
+  Quiz[91].Text = "Do you take pride in your appearance?";
+  Quiz[92].Text = "Do you see your own activities as more important than other people's?";
+  Quiz[93].Text = "Would you  Quickly become impatient and irritated if you would not find a solution to a problem?";
+  Quiz[94].Text = "Do you usually find faults with opinions that you don't share?";
+  Quiz[95].Text = "Do you expect other people to know your thoughts, experiences and opinions without you having to tell them?";
+  Quiz[96].Text = "Do you feel as if you are being persecuted in some way?";
+  Quiz[97].Text = "Do you have difficulty accepting criticism, correction, and direction?";
+  Quiz[98].Text = "Will you abandon your friends if your activities or ideals clash?";
+  Quiz[99].Text = "Do you obstruct others' plans?";
+  Quiz[100].Text = "Do you feel irritated when one person disagrees with what everyone else in a group believes?";
+  Quiz[101].Text = "Do you prefer to keep to yourself?";
+  Quiz[102].Text = "Do you find it hard to be emotionally close to other people?";
+  Quiz[103].Text = "Do you have a tendency to become stuck when asked  Questions in social situation?";
+  Quiz[104].Text = "Has it been harder for you than for others to keep friends?";
+  Quiz[105].Text = "Are you good at team-work?";
+  Quiz[106].Text = "Do you prefer to only meet people you know, one-on-one, or in small, familiar groups?";
+  Quiz[107].Text = "Do you enjoy big events even if they are crowded?";
+  Quiz[108].Text = "In conversations, do you need extra time to carefully think out your reply, so that there may be a pause before you answer?";
+  Quiz[109].Text = "Do you stay away from situations where people might express affection for you?";
+  Quiz[110].Text = "Do you prefer to do things on your own even if you could use others' help or expertise?";
+  Quiz[111].Text = "Do you find it easy to describe your feelings?";
+  Quiz[112].Text = "Do you dislike it when people drop by to visit you uninvited?";
+  Quiz[113].Text = "Is it hard for you to approach somebody you are attracted to?";
+  Quiz[114].Text = "Do you find it natural to wave or say 'hi' when you meet people?";
+  Quiz[115].Text = "Are you shy?";
+  Quiz[116].Text = "Do you prefer to hug only a romantic partner?";
+  Quiz[117].Text = "Is your sense of humor fairly conventional?";
+  Quiz[118].Text = "Can you easily remember verbal instructions?";
+  Quiz[119].Text = "Do you accept criticism, correction and direction?";
+  Quiz[120].Text = "Do you find it easy to estimate the age of people?";
+
+  Quiz[121].Text = "Do you have a low sex drive?";
+  Quiz[122].Text = "Do you think sexual intercourse is disgusting?";
+  Quiz[123].Text = "Are you homo- or bisexual?";
+  Quiz[124].Text = "Do you enjoy (or think you would enjoy) oral sex?";
+  Quiz[125].Text = "Do you have fetishes?";
+  Quiz[126].Text = "Do experience sexual attraction?";
+  Quiz[127].Text = "Are you depressed?";
+
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizL5::LoadPopulations
+#
+#   Purpose....: Load populations
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizL5::LoadPopulations()
+{
+        TQuizRow Row;
+        int i;
+        int j;
+        int id;
+        TReferer *ref;
+        char DxArr[DX_COUNT];
+        char score;
+        int IdArr[MAX_QUESTIONS];
+        int g;
+        char GroupResult[ACTIVE_GROUP_COUNT];
+        char DxResult[DX_COUNT];
+
+        for (g = 0; g < ACTIVE_GROUP_COUNT; g++)
+                GroupResult[g] = 0;
+
+        for (g = 0; g < DX_COUNT; g++)
+                DxResult[g] = 0;
+
+        for (i = 0; i < N; i++)
+        {
+                Quiz[i].NoAnswer = 0;
+                IdArr[i] = GetGlobalId(i);
+        }
+
+        FDataFile.SetPos(0);
+        while (FDataFile.Read(&Row, sizeof(Row)))
+        {
+                BirthMonth.Add(Row.AsResult, Row.NtResult, Row.BirthMonth);
+                BirthYear.Add(Row.AsResult, Row.NtResult, Row.BirthYear, Row.Gender);
+
+                for (i = 0; i < N; i++)
+                {
+                        if (Row.Quiz[i] == 0)
+                                Quiz[i].NoAnswer++;
+                        else
+                        {
+                                if (i < 150)
+                                {
+                                        score = Row.Quiz[i] - 1;
+                                        id = IdArr[i];
+
+//                                      DsmAs.Add(Row.Aspie, id, score);
+//                                      DsmAdd.Add(Row.ADHD, id, score);
+//                                      DsmSocialPhobia.Add(Row.Social, id, score);
+                                }
+                        }
+                }
+
+                for (i = 0; i < DX_COUNT; i++)
+                        DxArr[i] = DX_STATE_UNKNOWN;
+
+                if (Row.Aspie == 2)
+                        DxArr[DX_AS] = DX_STATE_YES;
+
+                if (Row.Aspie == 1)
+                        DxArr[DX_AS] = DX_STATE_SELF;
+
+                if (Row.Aspie == 0)
+                        DxArr[DX_AS] = DX_STATE_NO;
+
+                if (Row.ADHD == 2)
+                        DxArr[DX_ADD] = DX_STATE_YES;
+
+                if (Row.ADHD == 1)
+                        DxArr[DX_ADD] = DX_STATE_SELF;
+
+                if (Row.ADHD == 0)
+                        DxArr[DX_ADD] = DX_STATE_NO;
+
+                if (Row.OCD == 2)
+                        DxArr[DX_OCD] = DX_STATE_YES;
+
+                if (Row.OCD == 1)
+                        DxArr[DX_OCD] = DX_STATE_SELF;
+
+                if (Row.OCD == 0)
+                        DxArr[DX_OCD] = DX_STATE_NO;
+
+                if (Row.Social == 2)
+                        DxArr[DX_SOCIAL_PHOBIA] = DX_STATE_YES;
+
+                if (Row.Social == 1)
+                        DxArr[DX_SOCIAL_PHOBIA] = DX_STATE_SELF;
+
+                if (Row.Social == 0)
+                        DxArr[DX_SOCIAL_PHOBIA] = DX_STATE_NO;
+
+                All.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+
+                if (Row.Aspie)
+                {
+                        if (Row.AsResult < Row.NtResult)
+                                LowAs.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+
+                        if (Row.Gender == 1)
+                        {
+                                if (Row.BirthYear > 1986)
+                                        YoungMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+
+                                AsMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+                        }
+                        else
+                        {
+                                if (Row.BirthYear > 1986)
+                                        YoungFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+
+                                AsFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+                        }
+
+                        if (Row.Aspie == 2)
+                                As.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+
+                        if (Row.Aspie == 1)
+                                AspieControl.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+                }
+
+                if (Row.ADHD >= 2)
+                {
+                        Add.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+                        if (Row.Gender == 1)
+                                AddMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+                        else
+                                AddFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+                }
+
+                if (Row.Social >= 2)
+                        SocialPhobia.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+
+                if (Row.OCD >= 2)
+                        OCD.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+
+                if (Row.NtResult - Row.AsResult >= 35)
+                {
+                        Nt.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+                        if (Row.Gender == 1)
+                                NtMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+                        else
+                                NtFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+                }
+
+                if (Row.AsResult - Row.NtResult >= 35)
+                {
+
+                        Aspie.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+                        if (Row.Gender == 1)
+                                AspieMale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+                        else
+                                AspieFemale.Add(Row.AsResult, Row.NtResult, DxArr, Row.Gender, Row.Quiz, GroupResult, DxResult);
+                }
+
+        }
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizL5::SetupCross
+#
+#   Purpose....: Setup cross-references
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizL5::SetupCross()
+{
+    int i;
+
+    for (i = 0; i < 128; i++)
+            DefineGlobalId(i, i);
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizL5::GetReferer
+#
+#   Purpose....: Get referer population
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizL5::GetReferer(const char *referer, TPopulation *pop)
+{
+}
+
+/*##################  TQuizL5::ImportMvsp ##########################
+*   Purpose....: Import MVSP loadings                                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizL5::ImportMvsp(const char *filename, int PcaType)
+{
+        char buf[MAX_IN_ROW];
+        int size;
+        char *rowstr;
+        char *ptr;
+        long pos = 0;
+        int i;
+        long double d1, d2, d3, d4;
+        int q;
+        int count;
+        TFile infile(filename);
+
+        while (size = infile.Read(buf, MAX_IN_ROW))
+        {
+            rowstr = strstr(buf, "variable loadings");
+            if (rowstr)
+            {
+                pos += (rowstr - buf);
+                break;
+            }
+            else
+                pos += MAX_IN_ROW - 25;
+
+            infile.SetPos(pos);
+        }
+        
+        infile.SetPos(pos);
+                                
+        while (size = infile.Read(buf, MAX_IN_ROW))
+        {
+                buf[size] = 0;
+                rowstr = strstr(buf, "C");
+                if (rowstr)
+                {
+                        rowstr++;
+                        ptr = strstr(rowstr, "\r");
+                        if (ptr)
+                                 *ptr = 0;
+                        else
+                                 rowstr = 0;
+                }
+
+                pos += strlen(buf) + 1;
+                infile.SetPos(pos);
+
+                if (rowstr)
+                {
+                        for (i = 0; i < strlen(rowstr); i++)
+                        {
+                                switch (rowstr[i])
+                                {
+                                        case ',':
+                                                rowstr[i] = '.';
+                                                break;
+
+                                        case 0x9:
+                                        case 0xd:
+                                                rowstr[i] = ' ';
+                                                break;
+                                }
+                        }
+
+                        if (sscanf(rowstr, "%d %Lf %Lf %Lf %Lf", &q, &d1, &d2, &d3, &d4) == 5)
+                        {
+                                if (PcaType != PCA_TYPE_MIXED)
+                                {
+                                        if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE)
+                                                d2 = -d2;
+
+                                        if (PcaType == PCA_TYPE_ALL)
+                                                d3 = -d3;
+
+//                                      if (PcaType == PCA_TYPE_ALL)
+//                                              d4 = -d4;
+
+//                                      if (d1 > 0 && d2 > 0)
+//                                      {
+//                                              if (d1 > d2)
+//                                              {
+//                                                      d1 = d1 - d2;
+//                                                      d2 = 0;
+//                                              }
+//                                              else
+//                                              {
+//                                                      d2 = d2 - d1;
+//                                                      d1 = 0;
+//                                              }
+//                                      }
+                                }
+
+                                switch (PcaType)
+                                {
+                                        case PCA_TYPE_ALL:
+                                                Quiz[q - 1].Pca[0] = d1;
+                                                Quiz[q - 1].Pca[1] = d2;
+                                                Quiz[q - 1].Pca[2] = d3;
+                                                Quiz[q - 1].Pca[3] = d4;
+                                                break;
+
+                                        case PCA_TYPE_MALE:
+                                                Quiz[q - 1].MalePca[0] = d1;
+                                                Quiz[q - 1].MalePca[1] = d2;
+                                                Quiz[q - 1].MalePca[2] = d3;
+                                                Quiz[q - 1].MalePca[3] = d4;
+                                                break;
+
+                                        case PCA_TYPE_FEMALE:
+                                                Quiz[q - 1].FemalePca[0] = d1;
+                                                Quiz[q - 1].FemalePca[1] = d2;
+                                                Quiz[q - 1].FemalePca[2] = d3;
+                                                Quiz[q - 1].FemalePca[3] = d4;
+                                                break;
+
+                                        case PCA_TYPE_YOUNG:
+                                                Quiz[q - 1].YoungPca[0] = d1;
+                                                Quiz[q - 1].YoungPca[1] = d2;
+                                                Quiz[q - 1].YoungPca[2] = d3;
+                                                Quiz[q - 1].YoungPca[3] = d4;
+                                                break;
+
+                                        case PCA_TYPE_OLD:
+                                                Quiz[q - 1].OldPca[0] = d1;
+                                                Quiz[q - 1].OldPca[1] = d2;
+                                                Quiz[q - 1].OldPca[2] = d3;
+                                                Quiz[q - 1].OldPca[3] = d4;
+                                                break;
+
+                                        case PCA_TYPE_ASIA:
+                                                Quiz[q - 1].AsiaPca[0] = d1;
+                                                Quiz[q - 1].AsiaPca[1] = d2;
+                                                Quiz[q - 1].AsiaPca[2] = d3;
+                                                Quiz[q - 1].AsiaPca[3] = d4;
+                                                break;
+
+                                        case PCA_TYPE_AS:
+                                                Quiz[q - 1].AsPca[0] = d1;
+                                                Quiz[q - 1].AsPca[1] = d2;
+                                                Quiz[q - 1].AsPca[2] = d3;
+                                                Quiz[q - 1].AsPca[3] = d4;
+                                                break;
+
+                                        case PCA_TYPE_MIXED:
+                                                Quiz[q - 1].MixedPca[0] = d1;
+                                                Quiz[q - 1].MixedPca[1] = d2;
+                                                Quiz[q - 1].MixedPca[2] = d3;
+                                                Quiz[q - 1].MixedPca[3] = d4;
+                                                break;
+                                }
+                        }
+                }
+        }
+}
