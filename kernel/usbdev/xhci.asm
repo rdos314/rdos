@@ -1239,8 +1239,51 @@ AddSetup    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddOut    Proc far
+    push es
+    pushad
+;    
+    add fs:xp_size,cx
+    push cx
+    mov bx,es
+    GetSelectorBaseSize
+    add edx,edi
+    mov cx,flat_sel
+    mov es,cx
+    mov al,es:[edx]
+    GetPageEntry
+    and ax,0F000h
+    mov cx,dx
+    and cx,0FFFh
+    or ax,cx
+    pop cx
+;
+    call WaitForEndpointTrb
+    mov fs:[si].trb_param,eax
+    mov fs:[si].trb_param+4,ebx
+;
+    movzx eax,cx
+    mov fs:[si].trb_status,eax    
+;
+    mov ax,TRB_TYPE_DATA SHL 10
+    or ax,fs:xp_ring_pcs
+    mov fs:[si].trb_type,ax
+;  
+    mov si,fs:xp_setup_offset
+    or si,si
+    jz aoData
+
+aoControl:
+    mov fs:[si].trb_control,2
+    mov fs:xp_setup_offset,0
+    jmp aoDone
+
+aoData:
     int 3
-    stc
+    clc
+
+aoDone:
+    popad
+    pop es
     retf32
 AddOut    Endp
 
