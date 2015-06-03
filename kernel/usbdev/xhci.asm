@@ -1278,7 +1278,7 @@ aoControl:
     jmp aoDone
 
 aoData:
-    int 3
+    or fs:[si].trb_type,20h
     clc
 
 aoDone:
@@ -1342,7 +1342,7 @@ aiControl:
     jmp aiDone
 
 aiData:
-    int 3
+    or fs:[si].trb_type,20h
 
 aiDone:    
     clc
@@ -1460,8 +1460,16 @@ IssueTransfer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IsTransferDone   Proc far
-    int 3
+    push ax
+    mov al,fs:xp_result
+    cmp al,1
+    clc
+    je itdDone
+;
     stc
+
+itdDone:
+    pop ax    
     retf32
 IsTransferDone   Endp
 
@@ -1496,8 +1504,7 @@ WaitForCompletion   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EndTransfer   Proc far
-    int 3
-    stc
+    clc
     retf32
 EndTransfer   Endp
 
