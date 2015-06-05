@@ -60,6 +60,8 @@ TRB_TYPE_CONTROLLER     = 37
 TRB_TYPE_DEV_NOTIFY     = 38
 TRB_TYPE_MFI_WRAP       = 39
 
+XP_FLAG_TRANSFER_PENDING   = 1
+
 trb_struc   STRUC
 
 trb_param   DD ?,?
@@ -251,6 +253,8 @@ xp_remain_size      DW ?
 
 xp_db_target        DB ?
 xp_result           DB ?
+
+xp_flags            DB ?
 
 xhci_pipe   ENDS
 
@@ -1430,6 +1434,7 @@ IssueTransfer    Proc far
     GetThread
     mov fs:xp_thread,ax
     mov fs:xp_result,-1
+    or fs:xp_flags, XP_FLAG_TRANSFER_PENDING
     mov ax,fs:xp_size
     mov fs:xp_remain_size,ax
 ;    
@@ -1448,6 +1453,83 @@ IssueTransfer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           LocalIsConnected
+;
+;           DESCRIPTION:    Check if pipe is connected
+;
+;       PARAMETERS:     DS      Function selector
+;               FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalIsConnected   Proc near
+    push es
+    push eax
+    push si
+;
+    movzx si,fs:xp_port_nr
+    shl si,4
+    mov es,fs:xp_port_sel
+    mov eax,es:[si]
+    test al,1
+    clc
+    jnz licDone
+;    
+    stc
+
+licDone:
+    pop si
+    pop eax
+    pop es
+    ret
+LocalIsConnected Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LocalIsTransferDone
+;
+;           DESCRIPTION:    Check if transfer is done
+;
+;       PARAMETERS:     DS      Function selector
+;               FS      Pipe selector
+;
+;       RETURNS:    NC      Transfer is done
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalIsTransferDone   Proc near
+    push es
+    push eax
+    push edx
+;
+    test fs:xp_flags, XP_FLAG_TRANSFER_PENDING
+    jz itdOk
+;    
+    call LocalIsConnected
+    jc itdOk
+;
+    mov al,fs:xp_result
+    cmp al,-1
+    jne itdOk
+
+itdFail:
+    stc
+    jmp itdEnd   
+
+itdOk:
+    clc
+
+itdEnd:    
+    pop edx
+    pop eax
+    pop es
+    ret
+LocalIsTransferDone   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           IsTransferDone
 ;
 ;           DESCRIPTION:    Check if transfer is done
@@ -1460,16 +1542,7 @@ IssueTransfer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IsTransferDone   Proc far
-    push ax
-    mov al,fs:xp_result
-    cmp al,1
-    clc
-    je itdDone
-;
-    stc
-
-itdDone:
-    pop ax    
+    call LocalIsTransferDone
     retf32
 IsTransferDone   Endp
 
@@ -1486,10 +1559,41 @@ IsTransferDone   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForCompletion   Proc far
-    WaitForSignal    
-    mov fs:xp_thread,0
+    push eax
+;
+    test fs:xp_flags, XP_FLAG_TRANSFER_PENDING
+    jz wfcDone
+
+wfcWait:
+    call LocalIsTransferDone
+    jnc wfcDone
+;
+    WaitForSignal
+    jmp wfcWait
+
+wfcDone:
+    call LocalEndTransfer
+;    
+    pop eax
     retf32
 WaitForCompletion   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LocalEndTransfer
+;
+;           DESCRIPTION:    End transfer
+;
+;       PARAMETERS:     DS      Function selector
+;               FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalEndTransfer   Proc near
+    and fs:xp_flags, NOT XP_FLAG_TRANSFER_PENDING
+    ret
+LocalEndTransfer   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1504,6 +1608,7 @@ WaitForCompletion   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EndTransfer   Proc far
+    call LocalEndTransfer
     clc
     retf32
 EndTransfer   Endp
@@ -1524,12 +1629,22 @@ EndTransfer   Endp
 
 WasTransferOk   Proc far
     push ax
+;
+    test fs:xp_flags, XP_FLAG_TRANSFER_PENDING
+    jz wtoNotPending
+;    
+    call LocalEndTransfer
+
+wtoNotPending:
     mov al,fs:xp_result
     cmp al,1
-    clc
-    je wtoDone
+    je wtoOk
 ;
     stc
+    jmp wtoDone
+
+wtoOk:
+    clc
 
 wtoDone:
     pop ax    
@@ -1551,8 +1666,14 @@ WasTransferOk   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetDataSize   Proc far
+    xor cx,cx
+    mov fs:xp_result,1
+    jne gdsDone
+;    
     mov cx,fs:xp_size
     sub cx,fs:xp_remain_size
+
+gdsDone:
     retf32
 GetDataSize   Endp
 
