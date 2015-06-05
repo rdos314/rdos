@@ -866,7 +866,7 @@ wfetLoop:
     jz wfetRetry
 ;
     xor fs:[si].trb_type,1
-    xor ds:xp_ring_pcs,1
+    xor fs:xp_ring_pcs,1
     mov si,fs:xp_ring_offset
     jmp wfetLoop
 
