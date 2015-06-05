@@ -1267,22 +1267,24 @@ AddOut    Proc far
 ;
     movzx eax,cx
     mov fs:[si].trb_status,eax    
-;
-    mov ax,TRB_TYPE_DATA SHL 10
-    or ax,fs:xp_ring_pcs
-    mov fs:[si].trb_type,ax
 ;  
-    mov si,fs:xp_setup_offset
-    or si,si
+    mov ax,fs:xp_setup_offset
+    or ax,ax
     jz aoData
 
 aoControl:
+    mov ax,TRB_TYPE_DATA SHL 10
+    or ax,fs:xp_ring_pcs
+    mov fs:[si].trb_type,ax
     mov fs:[si].trb_control,2
     mov fs:xp_setup_offset,0
     jmp aoDone
 
 aoData:
-    or fs:[si].trb_type,20h
+    mov ax,TRB_TYPE_NORMAL SHL 10
+    or ax,fs:xp_ring_pcs
+    or ax,20h
+    mov fs:[si].trb_type,ax
     clc
 
 aoDone:
@@ -1330,23 +1332,24 @@ AddIn    Proc far
 ;
     movzx eax,cx
     mov fs:[si].trb_status,eax    
-;
-    mov ax,TRB_TYPE_DATA SHL 10
-    or ax,fs:xp_ring_pcs
-    mov fs:[si].trb_type,ax
-    mov fs:[si].trb_control,1
 ;  
-    mov si,fs:xp_setup_offset
-    or si,si
+    mov ax,fs:xp_setup_offset
+    or ax,ax
     jz aiData
 
 aiControl:
+    mov ax,TRB_TYPE_DATA SHL 10
+    or ax,fs:xp_ring_pcs
+    mov fs:[si].trb_type,ax
     mov fs:[si].trb_control,3
     mov fs:xp_setup_offset,0
     jmp aiDone
 
 aiData:
-    or fs:[si].trb_type,20h
+    mov ax,TRB_TYPE_NORMAL SHL 10
+    or ax,fs:xp_ring_pcs
+    or ax,20h
+    mov fs:[si].trb_type,ax
 
 aiDone:    
     clc
