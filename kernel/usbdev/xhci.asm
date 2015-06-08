@@ -1246,7 +1246,7 @@ AddOut    Proc far
     push es
     pushad
 ;    
-    add fs:xp_size,cx
+    mov fs:xp_size,cx
     push cx
     mov bx,es
     GetSelectorBaseSize
@@ -1311,7 +1311,7 @@ AddIn    Proc far
     push es
     pushad
 ;    
-    add fs:xp_size,cx
+    mov fs:xp_size,cx
     push cx
     mov bx,es
     GetSelectorBaseSize
@@ -1643,6 +1643,9 @@ wtoNotPending:
     cmp al,1
     je wtoOk
 ;
+    cmp al,0Dh
+    je wtoOk    
+;
     stc
     jmp wtoDone
 
@@ -1670,9 +1673,13 @@ WasTransferOk   Endp
 
 GetDataSize   Proc far
     xor cx,cx
-    mov fs:xp_result,1
-    jne gdsDone
-;    
+    cmp fs:xp_result,1
+    je gdsOk
+;
+    cmp fs:xp_result,0Dh
+    jne gdsDone    
+    
+gdsOk:
     mov cx,fs:xp_size
     sub cx,fs:xp_remain_size
 
