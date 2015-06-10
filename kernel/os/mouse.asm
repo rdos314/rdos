@@ -105,6 +105,11 @@ md_x        DW ?
 md_y        DW ?
 md_mouse_thread DW ?
 
+md_swap_x       DB ?
+md_swap_y       DB ?
+md_area_x       DW ?
+md_area_y       DW ?
+
 data    ENDS
 
     .386p
@@ -113,6 +118,240 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetValue
+;
+;       Purpose:        Get value from environment
+;
+;       Parameters:     ES:DI   Name
+;
+;       Returns:        NC      Found
+;                       AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+GetValue    Proc near
+    push ds
+    push bx
+    push cx
+    push si
+;
+    LockSysEnv
+    mov ds,bx
+    xor si,si
+    
+find_val:
+    push di
+
+find_val_loop:
+    cmpsb
+    jnz find_val_next
+;       
+    mov al,es:[di]
+    or al,al
+    jnz find_val_loop
+    mov al,[si]
+    cmp al,'='
+    je find_val_found
+
+find_val_next:
+    pop di
+
+find_val_next_bp:
+    lodsb
+    or al,al
+    jnz find_val_next_bp
+;
+    mov al,[si]
+    or al,al
+    jne find_val
+;
+    xor ax,ax
+    stc
+    jmp find_val_done
+
+find_val_found:
+    pop di
+    inc si  
+    xor ax,ax
+
+find_val_digit:
+    mov bl,[si]
+    inc si
+    sub bl,'0'
+    jc find_val_save
+;
+    cmp bl,10
+    jnc find_val_save
+;       
+    mov cx,10
+    mul cx
+    add al,bl
+    adc ah,0
+    jmp find_val_digit
+
+find_val_save:
+    clc
+
+find_val_done:
+    pushf
+    UnlockSysEnv
+    popf
+;
+    pop si
+    pop cx
+    pop bx
+    pop ds
+    ret
+GetValue    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           RecalcX
+;
+;   DESCRIPTION:    Recalc X
+;
+;   PARAMETERS:     AX     Value (0..32767)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RecalcX   Proc near
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    movzx eax,ax
+    cmp ds:md_swap_x,0
+    je rSwapXOk
+;
+    mov edx,eax
+    mov eax,32767
+    sub eax,edx
+
+rSwapXOk:
+    movzx edx,ds:md_area_x
+    or edx,edx
+    jz rDoneX
+;
+    push eax
+    movzx eax,dx
+    shl eax,16
+    xor edx,edx
+;
+    mov ecx,100
+    div ecx
+    mov esi,eax
+;
+    pop eax
+    shl eax,16
+    xor edx,edx
+    div esi
+    mov edi,eax
+;
+    mov eax,10000h
+    sub eax,esi
+    shr eax,2
+    shl eax,16
+    xor edx,edx
+    div esi
+;
+    sub edi,eax
+    mov eax,edi    
+    test eax,80000000h
+    jz rPosX
+;
+    xor eax,eax
+
+rPosX:
+    cmp eax,32767
+    jb rDoneX
+;
+    mov eax,32767    
+
+rDoneX:    
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    ret
+RecalcX  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           RecalcY
+;
+;   DESCRIPTION:    Recalc Y
+;
+;   PARAMETERS:     AX     Value (0..32767)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RecalcY   Proc near
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    movzx eax,ax
+    cmp ds:md_swap_y,0
+    je rSwapYOk
+;
+    mov edx,eax
+    mov eax,32767
+    sub eax,edx
+
+rSwapYOk:
+    movzx edx,ds:md_area_y
+    or edx,edx
+    jz rDoneY
+;
+    push eax
+    movzx eax,dx
+    shl eax,16
+    xor edx,edx
+;
+    mov ecx,100
+    div ecx
+    mov esi,eax
+;
+    pop eax
+    shl eax,16
+    xor edx,edx
+    div esi
+    mov edi,eax
+;
+    mov eax,10000h
+    sub eax,esi
+    shr eax,2
+    shl eax,16
+    xor edx,edx
+    div esi
+;
+    sub edi,eax
+    mov eax,edi    
+    test eax,80000000h
+    jz rPosY
+;
+    xor eax,eax
+
+rPosY:
+    cmp eax,32767
+    jb rDoneY
+;
+    mov eax,32767    
+
+rDoneY:    
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    ret
+RecalcY  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -306,8 +545,14 @@ set_mouse       PROC far
     mov bx,SEG data
     mov ds,bx
     mov ds:md_buttons,ax
-    mov ds:md_x,cx
-    mov ds:md_y,dx
+;
+    mov ax,cx
+    call RecalcX
+    mov ds:md_x,ax
+;
+    mov ax,dx
+    call RecalcY
+    mov ds:md_y,ax
 ;       
     mov bx,ds:md_mouse_thread
     mov ax,mouse_focus_sel
@@ -1532,6 +1777,11 @@ init_focus      ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+swap_x_name       DB 'TOUCH.SWAP.X', 0
+swap_y_name       DB 'TOUCH.SWAP.Y', 0
+area_x_name       DB 'TOUCH.AREA.X', 0
+area_y_name       DB 'TOUCH.AREA.Y', 0
+
 init_mouse_thread       PROC far
     push ds
     push es
@@ -1546,6 +1796,40 @@ init_mouse_thread       PROC far
     mov ds:md_y,0FFFFh
     mov ds:md_mouse_thread,0
 ;
+    mov ax,SEG code
+    mov es,ax
+    mov di,OFFSET swap_x_name
+    mov ds:md_swap_x,0
+    call GetValue       
+    jc itSwapXOk
+;
+    mov ds:md_swap_x,al
+
+itSwapXOk:
+    mov di,OFFSET swap_y_name
+    mov ds:md_swap_y,0
+    call GetValue       
+    jc itSwapYOk
+;
+    mov ds:md_swap_y,al
+
+itSwapYOk:
+    mov di,OFFSET area_x_name
+    mov ds:md_area_x,0
+    call GetValue       
+    jc itAreaXOk
+;
+    mov ds:md_area_x,ax
+
+itAreaXOk:
+    mov di,OFFSET area_y_name
+    mov ds:md_area_y,0
+    call GetValue       
+    jc itAreaYOk
+;
+    mov ds:md_area_y,ax
+
+itAreaYOk:
     mov ax,cs
     mov ds,ax
     mov es,ax
