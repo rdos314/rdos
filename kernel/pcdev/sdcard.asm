@@ -62,6 +62,7 @@ REG_INT_SIG_ENABLE          = 38h
 REG_INT_ERROR_SIG_ENABLE    = 3Ah
 REG_CONTROL2                = 3Eh
 REG_CAP                     = 40h
+REG_VER                     = 0FEh
 
 part_struc      STRUC
 
@@ -292,6 +293,12 @@ SetupInts Proc near
 
 siIrq:
     GetPciIrqNr
+    cmp al,1
+    jne siIrqOk
+;
+    mov al,10h
+
+siIrqOk:    
     mov ah,14h
     mov di,cs
     mov es,di
@@ -306,15 +313,15 @@ SetupInts   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetDefaultSdClock
+;           NAME:           SetDefaultSdClock12
 ;
-;           DESCRIPTION:    Set default SDIO clk rate
+;           DESCRIPTION:    Set default SDIO clk rate for version 1 and 2 controller
 ;
 ;           PARAMETERS:     FS      SD io space
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetDefaultSdClock  Proc near
+SetDefaultSdClock12  Proc near
     mov cx,25
     mov eax,fs:REG_CAP
     shr ax,8
@@ -323,30 +330,30 @@ SetDefaultSdClock  Proc near
     div cx
 ;
     or dx,dx
-    jz sdscMultOk
+    jz sdscMultOk12
 ;
     inc ax
 
-sdscMultOk:
+sdscMultOk12:
     xor cl,cl
 
-sdscExpLoop:
+sdscExpLoop12:
     test ax,8000h
-    jnz sdscExpOk
+    jnz sdscExpOk12
 ;
     shl ax,1
     inc cl
 ;
     or ax,ax
-    jnz sdscExpLoop                
+    jnz sdscExpLoop12                
 
-sdscExpOk:
+sdscExpOk12:
     test ax,7FFFh
-    jz sdscWhole
+    jz sdscWhole12
 ;
     dec cl
 
-sdscWhole:
+sdscWhole12:
     mov ax,0FFFFh
     shr ax,cl
     inc ax
@@ -357,27 +364,96 @@ sdscWhole:
     mov fs:REG_CLK_CONTROL,ax
     mov cx,100    
 
-sdscWait:
+sdscWait12:
     mov ax,1
     WaitMilliSec
 ;
     mov ax,fs:REG_CLK_CONTROL
     test al,2
-    jnz sdscOk
+    jnz sdscOk12
 ;
-    loop sdscWait
+    loop sdscWait12
 ;
     stc
-    jmp sdscDone
+    jmp sdscDone12
 
-sdscOk:
+sdscOk12:
     or ax,4
     mov fs:REG_CLK_CONTROL,ax       
     clc
     
-sdscDone:
+sdscDone12:
     ret
-SetDefaultSdClock  Endp
+SetDefaultSdClock12  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetDefaultSdClock3
+;
+;           DESCRIPTION:    Set default SDIO clk rate for version 3 controller
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetDefaultSdClock3  Proc near
+    mov cx,25
+    mov eax,fs:REG_CAP
+    shr ax,8
+    xor ah,ah
+    xor dx,dx
+    div cx
+;
+    xchg al,ah
+    shl al,6
+    or al,1
+    mov fs:REG_CLK_CONTROL,ax
+    mov cx,100    
+
+sdscWait3:
+    mov ax,1
+    WaitMilliSec
+;
+    mov ax,fs:REG_CLK_CONTROL
+    test al,2
+    jnz sdscOk3
+;
+    loop sdscWait3
+;
+    stc
+    jmp sdscDone3
+
+sdscOk3:
+    or ax,4
+    mov fs:REG_CLK_CONTROL,ax       
+    clc
+    
+sdscDone3:
+    ret
+SetDefaultSdClock3  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetDefaultSdClock
+;
+;           DESCRIPTION:    Set default SDIO clk rate
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetDefaultSdClock   Proc near
+    mov al,fs:REG_VER
+    cmp al,2
+    jb SetDefaultSdClock12
+    jmp SetDefaultSdClock3
+;
+    int 3
+    stc
+    ret    
+SetDefaultSdClock   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

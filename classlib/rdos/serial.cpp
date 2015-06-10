@@ -1234,12 +1234,23 @@ void TSerialDevice::WaitForSendCompleted()
 ##########################################################################*/
 int TSerialDevice::WaitForChar(long Timeout)
 {
+    TWaitDevice *wd;
+
     if (!FWait)
         CreateWait();
 
-        if (FWait && FHandle)
-                if (FWait->WaitTimeout(Timeout) == this)
-                        return TRUE;
+    if (FWait && FHandle)
+    {
+        for (;;)
+        {
+            wd = FWait->WaitTimeout(Timeout);
+            if (wd == this)
+                return TRUE;
+
+            if (wd == 0)
+                return FALSE;
+        }        
+    }
 
     return FALSE;
 }
