@@ -93,79 +93,79 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           MODEM
+;           NAME:           io_modem
 ;
-;           DESCRIPTION:    Modem signals changed
+;           DESCRIPTION:    Modem signals changed, IO version
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-modem   Proc near
+io_modem   Proc near
     mov dx,ds:iopps_base
     add dx,6
     in al,dx
     mov ah,al
 ;       
     test al,10h
-    jz modem_no_cts
+    jz io_modem_no_cts
 ;
     test ds:iopps_flgs, FLG_ENABLE_CTS
-    jz modem_no_cts
+    jz io_modem_no_cts
 ;    
     mov cx,ds:send_count
     or cx,cx
-    jz modem_no_cts
+    jz io_modem_no_cts
 ;
     mov dx,ds:iopps_base
     inc dx
     mov al,IER_BITS + 3
     out dx,al
 
-modem_no_cts:   
+io_modem_no_cts:   
     push ds
     mov ds,ds:iopps_dev_handle
     mov ds:iopds_line,ah
     mov bx,ds:iopds_line_thread
     pop ds
     or bx,bx
-    jz modem_no_signal
+    jz io_modem_no_signal
 ;
     Signal
 
-modem_no_signal:    
+io_modem_no_signal:    
     ret
-modem   Endp
+io_modem   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           LINE_ERR
+;           NAME:           io_line_err
 ;
-;           DESCRIPTION:    Line error occured
+;           DESCRIPTION:    Line error occured, IO version
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-line_err    PROC near
+io_line_err    PROC near
     mov dx,ds:iopps_base
     add dx,5
     in al,dx
     ret
-line_err    ENDP
+io_line_err    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           REC_PR
+;           NAME:           io_rec
 ;
-;           DESCRIPTION:    Received data
+;           DESCRIPTION:    Received data, IO version
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-rec_pr  PROC near
+io_rec  PROC near
     mov es,ds:rec_buf
     mov dx,ds:iopps_base
     RequestSpinlock ds:com_spinlock
@@ -181,10 +181,10 @@ rec_pr  PROC near
 ;       pop ax
 ;       jnz rec_exit
 
-rec_pr_save:
+io_rec_pr_save:
     mov cx,ds:rec_count
     cmp cx,ds:rec_size
-    je rec_exit
+    je io_rec_exit
 ;    
     inc cx
     mov ds:rec_count,cx
@@ -192,46 +192,46 @@ rec_pr_save:
     mov es:[bx],al              ; store char
     inc bx
     cmp bx,ds:rec_size
-    jnz rec_no_wrap
+    jnz io_rec_no_wrap
 ;
     xor bx,bx
     
-rec_no_wrap:
+io_rec_no_wrap:
     mov ds:rec_tail,bx
     ReleaseSpinlock ds:com_spinlock
 ;
     mov bx,ds:avail_obj
     or bx,bx
-    jz rec_done
+    jz io_rec_done
 ;
     mov es,bx
     SignalWait
     mov ds:avail_obj,0
-    jmp rec_done
+    jmp io_rec_done
     
-rec_exit:
+io_rec_exit:
     ReleaseSpinlock ds:com_spinlock
 
-rec_done:
+io_rec_done:
     ret
-rec_pr  ENDP
+io_rec  ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           RTS_OFF
+;           NAME:           IO_RTS_OFF
 ;
-;           DESCRIPTION:    Delayed RTS off
+;           DESCRIPTION:    Delayed RTS off, IO version
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-rts_off PROC far
+io_rts_off PROC far
     mov ds,cx
     mov di,ds:send_count
     or di,di
-    jnz rts_off_done
+    jnz io_rts_off_done
 ;
     push ax
     push dx
@@ -241,87 +241,87 @@ rts_off PROC far
     test al,40h
     pop dx
     pop ax
-    jnz rts_off_dis
+    jnz io_rts_off_dis
 ;
     add eax,ds:iopps_char_time
     adc edx,0
     mov bx,cs
     mov es,bx
-    mov edi,OFFSET rts_off
+    mov edi,OFFSET io_rts_off
     mov bx,cx
     StartTimer
-    jmp rts_off_done
+    jmp io_rts_off_done
     
-rts_off_dis:
+io_rts_off_dis:
     mov dx,ds:iopps_base
     add dx,4
     in al,dx
     and al,NOT 2
     out dx,al
 
-rts_off_done:
+io_rts_off_done:
     retf32
-rts_off Endp
+io_rts_off Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           TRANS_PR
+;           NAME:           io_trans
 ;
-;           DESCRIPTION:    Send data
+;           DESCRIPTION:    Send data, IO version
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-trans_pr    PROC near
+io_trans    PROC near
     mov es,ds:send_buf
     mov dx,ds:iopps_base
     RequestSpinlock ds:com_spinlock
     mov cx,ds:send_count
     or cx,cx                    ;  buffer empty ?
-    jnz trans_not_empty
+    jnz io_trans_not_empty
 
-trans_end:      
+io_trans_end:      
     mov al,IER_BITS + 1
     inc dx
     out dx,al
     ReleaseSpinlock ds:com_spinlock
 ;
     test ds:iopps_flgs, FLG_ENABLE_AUTO_RTS
-    jz trans_signal_wait
+    jz io_trans_signal_wait
 ;
     GetSystemTime
     add eax,ds:iopps_char_time
     adc edx,0
     mov bx,cs
     mov es,bx
-    mov edi,OFFSET rts_off
+    mov edi,OFFSET io_rts_off
     mov bx,ds
     mov cx,bx
     StopTimer
     StartTimer
     mov es,ds:send_buf
         
-trans_signal_wait:
+io_trans_signal_wait:
     mov bx,ds:send_wait
     or bx,bx
-    jz trans_exit
+    jz io_trans_exit
 ;
     Signal
-    jmp trans_exit
+    jmp io_trans_exit
     
-trans_not_empty:    
+io_trans_not_empty:    
     test ds:iopps_flgs, FLG_ENABLE_CTS
-    jz trans_send
+    jz io_trans_send
 ;
     add dx,6
     in al,dx
     sub dx,6
     test al,10h
-    jz trans_end
+    jz io_trans_end
 
-trans_send:
+io_trans_send:
     dec cx
     mov ds:send_count,cx
     mov bx,ds:send_head                 ; get head pointer
@@ -329,59 +329,61 @@ trans_send:
     out dx,al                           ; transmitt char
     inc bx
     cmp bx,ds:send_size
-    jnz trans_not_wrap
+    jnz io_trans_not_wrap
+
     xor bx,bx
-trans_not_wrap:
+    
+io_trans_not_wrap:
     mov ds:send_head,bx
     ReleaseSpinlock ds:com_spinlock
 
-trans_exit:
+io_trans_exit:
     ret
-trans_pr    ENDP
+io_trans    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           COM_INT
+;           NAME:       IO_COM_INT
 ;
 ;       DESCRIPTION:    Serial interrupt
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-serial_tab:
-st_mod  DW OFFSET modem
-st_tx   DW OFFSET trans_pr
-st_rx   DW OFFSET rec_pr
-st_li   DW OFFSET line_err
+io_serial_tab:
+ist_mod  DW OFFSET io_modem
+ist_tx   DW OFFSET io_trans
+ist_rx   DW OFFSET io_rec
+ist_li   DW OFFSET io_line_err
 
-com_int Proc far
+io_com_int Proc far
     mov ax,ds:iopds_handle
     or ax,ax
-    jz com_int_inactive
+    jz io_com_int_inactive
 ;
     mov ds,ax
 
-com_int_loop:
+io_com_int_loop:
     mov dx,ds:iopps_base
     add dx,2
     in al,dx
     test al,1
-    jnz com_int_done
+    jnz io_com_int_done
 ;   
     mov bl,al
     xor bh,bh
     and bx,6
-    call word ptr cs:[bx].serial_tab
-    jmp com_int_loop
+    call word ptr cs:[bx].io_serial_tab
+    jmp io_com_int_loop
 
-com_int_inactive:
+io_com_int_inactive:
     mov dx,ds:iopds_base
     add dx,2
     in al,dx
     test al,1
-    jnz com_int_done
+    jnz io_com_int_done
 ;   
     mov dx,ds:iopds_base
     add dx,6
@@ -401,13 +403,13 @@ com_int_inactive:
 ;   
     mov bx,ds:iopds_line_thread
     or bx,bx
-    jz com_int_done
+    jz io_com_int_done
 ;
     Signal
 
-com_int_done:   
+io_com_int_done:   
     retf32
-com_int Endp
+io_com_int Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1352,7 +1354,7 @@ RequestIRQs Proc near
 ;
     mov ax,cs
     mov es,ax
-    mov edi,OFFSET com_int
+    mov edi,OFFSET io_com_int
 ;    
     mov cx,ds:sd_ports
     or cx,cx
