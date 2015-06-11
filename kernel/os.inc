@@ -3131,6 +3131,25 @@ SetupPciMsi    MACRO
     OsGate setup_pci_msi_nr
                     ENDM
 
+; IN  BH    Bus
+; IN  BL    Device
+; IN  CH    Function
+; OUT CL    MSI-X Register base
+; OUT DL    Number of vectors
+GetPciMsiX    MACRO
+    OsGate get_pci_msix_nr
+                    ENDM
+
+; IN  BH    Bus
+; IN  BL    Device
+; IN  CH    Function
+; IN  CL    MSI Register base
+; IN  AL    Int base
+; OUT ES    Int vector selector
+EnablePciMsiX    MACRO
+    OsGate enable_pci_msix_nr
+                    ENDM
+
 ;;;;;;;;;; ACPI ;;;;;;;;;
 
 ;   IN  EAX     Table name

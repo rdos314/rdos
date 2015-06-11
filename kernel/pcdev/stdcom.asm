@@ -415,6 +415,23 @@ io_com_int Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:       MEM_COM_INT
+;
+;       DESCRIPTION:    Serial interrupt
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_com_int Proc far
+
+mem_com_int_done:   
+    retf32
+mem_com_int Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           io_open_com
 ;
 ;       description:    Open a serial port, IO version
@@ -1452,6 +1469,98 @@ InitPciAdapter  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           InitMemPci
+;
+;       DESCRIPTION:    Init memory-based PCI adapter if found
+;
+;       PARAMETERS:     
+;
+;       RETURNS:        NC      Adapter found
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemPciVendorTab:
+mpci00  DW 1415h, 0C208h
+mpci01  DW 0,     0
+
+InitMemPci  Proc near
+    mov si,OFFSET MemPciVendorTab
+
+mem_init_pci_loop:
+    xor ax,ax
+    mov dx,cs:[si]
+    mov cx,cs:[si+2]
+    or dx,dx
+    stc
+    jz mem_init_pci_done
+;
+    FindPciDevice
+    jnc mem_init_pci_found
+;
+    add si,4
+    jmp mem_init_pci_loop
+
+mem_init_pci_found:
+    int 3
+    GetPciMsiX
+    jc mem_init_pci_irq
+;
+    EnablePciMsiX
+
+mem_init_pci_msi:
+    push cx
+    mov cx,1
+    mov al,14h
+    AllocateInts
+    pop cx
+    jc mem_init_pci_irq
+;    
+    mov dl,1
+    SetupPciMsi
+;    
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET mem_com_int
+    RequestMsiHandler
+    jmp mem_init_pci_done
+
+mem_init_pci_irq:
+    GetPciIrqNr
+    mov ah,14h
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET mem_com_int
+    RequestIrqHandler
+    clc
+
+mem_init_pci_done:
+    mov ecx,3906250
+    ret
+InitMemPci  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           com_pci
+;
+;       DESCRIPTION:    PCI com init thread
+;
+;       PARAMETERS:     
+;
+;       RETURNS:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+com_pci_name    DB 'Init PCI Com', 0
+
+com_pci:
+    call InitMemPci
+    int 3
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:       Init_pci
 ;
 ;       DESCRIPTION:    inits adpater
@@ -1544,9 +1653,15 @@ dt5:
 dtpci:
     call InitPciAdapter
     call RequestIRQs
-;    mov ax,SEG data
-;    mov ds,ax
-;    mov cx,ds:sd_ports
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET com_pci_name
+    mov si,OFFSET com_pci
+    mov ax,4
+    mov cx,stack0_size
+    CreateThread
 ;
     popa
     pop es

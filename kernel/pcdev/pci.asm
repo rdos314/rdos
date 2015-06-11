@@ -1008,6 +1008,122 @@ setup_pci_msi     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetPciMsiX
+;
+;           DESCRIPTION:    Get PCI MSI-X interface
+;
+;           PARAMETERS:     BH          Bus
+;                           BL          Device
+;                           CH          Function
+;
+;           RETURNS:        NC          Success
+;                           CL          MSI register base
+;                           DL          Requested vectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_msix_name DB 'Get PCI MSI-X',0
+
+get_pci_msix     Proc far    
+    push ax
+;    
+    mov al,11h
+    FindPciCapability
+    jc gpmxDone
+;
+    mov cl,al
+    add cl,2
+    ReadPciWord
+    mov dl,al
+    inc dl
+    clc
+
+gpmxDone:       
+    pop ax 
+    retf32
+get_pci_msix     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           EnablePciMsiX
+;
+;           DESCRIPTION:    Enable PCI MSI-X function
+;
+;           PARAMETERS:     BH          Bus
+;                           BL          Device
+;                           CH          Function
+;                           CL          MSI register base
+;
+;           RETURNS:        ES          Selector for message entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enable_pci_msix_name DB 'Enable PCI MSI-X',0
+
+enable_pci_msix     Proc far    
+    push eax
+    push ebx
+    push cx
+    push edx
+    push si
+    push edi
+;
+    push cx
+    mov eax,1000h
+    AllocateBigLinear
+    pop cx
+;    
+    ReadPciWord
+    or ax,8000h
+    WritePciWord
+    mov si,ax
+;
+    add cl,6    
+    ReadPciDword
+    mov edi,eax
+    and di,0FFF8h
+;
+    mov cl,al
+    and cl,7
+    shl cl,2
+    add cl,10h
+    ReadPciDword
+    and al,0F0h
+    add eax,edi
+;
+    push eax
+    and ax,0F000h
+    push ebx
+    xor ebx,ebx
+    mov al,67h
+    SetPageEntry
+    pop ebx
+    pop eax
+;
+    and eax,0E00h
+    add edx,eax
+;    
+    AllocateGdt
+    mov cx,si
+    and cx,1FFh
+    inc cx
+    shl cx,3
+    CreateDataSelector16
+    mov es,bx
+;
+    pop edi
+    pop si
+    pop edx
+    pop cx
+    pop ebx
+    pop eax
+    retf32
+enable_pci_msix     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           bios_pci_int
 ;
 ;           DESCRIPTION:    Handling BIOS PCI int (0B1h, int 1Ah)
@@ -1875,6 +1991,18 @@ init    Proc far
     mov edi,OFFSET setup_pci_msi_name
     xor cl,cl
     mov ax,setup_pci_msi_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_pci_msix
+    mov edi,OFFSET get_pci_msix_name
+    xor cl,cl
+    mov ax,get_pci_msix_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET enable_pci_msix
+    mov edi,OFFSET enable_pci_msix_name
+    xor cl,cl
+    mov ax,enable_pci_msix_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET get_pci_dev_name16

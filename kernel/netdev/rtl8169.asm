@@ -1,3 +1,9 @@
+    xor ch,ch
+    mov cl,PCI_command_reg
+    ReadPciWord
+    or al,PCI_command_IO OR PCI_command_busmstr
+    WritePciWord
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; RDOS operating system
 ; Copyright (C) 1988-2011, Leif Ekblad

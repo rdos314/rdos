@@ -668,4 +668,7 @@ send_can_bus_block_nr       = 548
 
 get_disc_vendor_info_buf_nr = 549
 
+get_pci_msix_nr             = 550
+enable_pci_msix_nr          = 551
+
 osgate_entries				= 560
