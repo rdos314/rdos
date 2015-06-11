@@ -3150,6 +3150,17 @@ EnablePciMsiX    MACRO
     OsGate enable_pci_msix_nr
                     ENDM
 
+; IN  BH    Bus
+; IN  BL    Device
+; IN  CH    Function
+; IN  CL    MSI Register base
+; IN  ES    Int vector selector
+; IN  AL    Int #
+; IN  DL    Entry #
+SetupPciMsiXEntry    MACRO
+    OsGate setup_pci_msix_entry_nr
+                    ENDM
+
 ;;;;;;;;;; ACPI ;;;;;;;;;
 
 ;   IN  EAX     Table name

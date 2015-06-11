@@ -1124,6 +1124,43 @@ enable_pci_msix     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupPciMsiXEntry
+;
+;           DESCRIPTION:    Setup PCI MSI-X entry
+;
+;           PARAMETERS:     BH          Bus
+;                           BL          Device
+;                           CH          Function
+;                           ES          Selector for message entries
+;                           DL          Entry #
+;                           AL          Int #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_pci_msix_entry_name DB 'Setup PCI MSI-X Entry',0
+
+setup_pci_msix_entry     Proc far    
+    push eax
+    push edx
+    push esi
+;    
+    movzx si,dl
+    shl si,8
+;
+    RegisterMsi
+    mov es:[si+4],edx
+    movzx eax,ax
+    mov es:[si],eax
+;
+    pop esi
+    pop edx
+    pop eax
+    retf32
+setup_pci_msix_entry    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           bios_pci_int
 ;
 ;           DESCRIPTION:    Handling BIOS PCI int (0B1h, int 1Ah)
@@ -2003,6 +2040,12 @@ init    Proc far
     mov edi,OFFSET enable_pci_msix_name
     xor cl,cl
     mov ax,enable_pci_msix_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_pci_msix_entry
+    mov edi,OFFSET setup_pci_msix_entry_name
+    xor cl,cl
+    mov ax,setup_pci_msix_entry_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET get_pci_dev_name16

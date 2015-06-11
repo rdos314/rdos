@@ -68,6 +68,31 @@ iopds_irq       DB ?
 
 io_com_device_struc   ENDS
 
+mem_com_device_struc   STRUC
+
+mempds_base_struc    com_device_struc <>
+
+mempds_offset   DD ?
+mempds_sel      DW ?
+mempds_handle    DW ?
+mempds_baud_base     DD ?
+mempds_line_thread   DW ?
+mempds_line      DB ?
+
+mem_com_device_struc   ENDS
+
+ox_bar_header   STRUC
+
+oxb_class           DD ?
+oxb_uart_count      DD ?
+oxb_irq_state       DD ?
+oxb_irq_enable      DD ?
+oxb_irq_disable     DD ?
+oxb_wake_enable     DD ?
+oxb_wake_disable    DD ?
+
+ox_bar_header   ENDS
+
 data    SEGMENT byte public 'DATA'
 
 sd_ports    DW ?
@@ -1355,6 +1380,57 @@ AddIoPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AddMemPort
+;
+;       DESCRIPTION:    Add mem port to list of available ports
+;
+;       PARAMETERS:     DS:EBX  Base
+;                       AL      IRQ
+;                       ECX     Baud base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddMemPort Proc near
+    push ds
+    push es
+    pushad
+;    
+    push ax
+    mov eax,SIZE mem_com_device_struc
+    AllocateSmallGlobalMem
+    mov es:mempds_sel,ds
+    mov es:mempds_offset,ebx
+    mov es:mempds_handle,0
+    mov es:mempds_line_thread,0
+    mov es:mempds_line,0
+    mov es:mempds_baud_base,ecx
+    mov ax,es
+    mov ds,ax
+    pop ax
+;
+    push es
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET mem_com_int
+    RequestMsiHandler
+    pop es
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,ds:sd_ports
+    add bx,bx
+    mov ds:[bx].sd_port_arr,es
+    inc ds:sd_ports
+;
+    popad
+    pop es
+    pop ds  
+    ret
+AddMemPort Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:       RequestIRQs
 ;
 ;       DESCRIPTION:    Request IRQs for all ports
@@ -1501,7 +1577,6 @@ mem_init_pci_loop:
     jmp mem_init_pci_loop
 
 mem_init_pci_found:
-    int 3
     push cx
     mov eax,2000h
     AllocateBigLinear
@@ -1530,40 +1605,43 @@ mem_init_pci_found:
 ;
     pop ecx
     pop ebx
+;
+    mov eax,ds:oxb_uart_count
+    or eax,eax
+    jz mem_init_pci_done        
 ;       
     GetPciMsiX
-    jc mem_init_pci_irq
+    jc mem_init_pci_done    
 ;
+    cmp dl,al
+    jb mem_init_pci_done
+;    
     EnablePciMsiX
+;
+    int 3
+    xor edx,edx
 
-mem_init_pci_msi:
+mem_init_pci_setup:
     push cx
     mov cx,1
     mov al,14h
     AllocateInts
     pop cx
-    jc mem_init_pci_irq
+    jc mem_init_pci_done
 ;    
-    mov dl,1
-    SetupPciMsi
-;    
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET mem_com_int
-    RequestMsiHandler
-    jmp mem_init_pci_done
-
-mem_init_pci_irq:
-    GetPciIrqNr
-    mov ah,14h
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET mem_com_int
-    RequestIrqHandler
+    SetupPciMsiXEntry
+;
+    push ecx
+    mov ecx,3906250
+    call AddMemPort
+    pop ecx
+;
+    inc edx
+    cmp edx,ds:oxb_uart_count
+    jne mem_init_pci_setup
     clc
 
 mem_init_pci_done:
-    mov ecx,3906250
     ret
 InitMemPci  Endp
 
