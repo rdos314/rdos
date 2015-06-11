@@ -43,7 +43,7 @@ IER_BITS    = 8
 FLG_ENABLE_CTS  = 1
 FLG_ENABLE_AUTO_RTS  = 2
 
-pccom_port_struc    STRUC
+io_com_port_struc    STRUC
 
 pps_base_struc  com_port_struc <>
 
@@ -53,20 +53,20 @@ base            DW ?
 dev_handle      DW ?
 baud_base       DD ?
 
-pccom_port_struc    ENDS
+io_com_port_struc    ENDS
 
-pccom_device_struc   STRUC
+io_com_device_struc   STRUC
 
-pds_base_struc    com_device_struc <>
+iopds_base_struc    com_device_struc <>
 
-pds_base      DW ?
-pds_handle    DW ?
-pds_baud_base     DD ?
-pds_line_thread   DW ?
-pds_line      DB ?
-pds_irq       DB ?
+iopds_base      DW ?
+iopds_handle    DW ?
+iopds_baud_base     DD ?
+iopds_line_thread   DW ?
+iopds_line      DB ?
+iopds_irq       DB ?
 
-pccom_device_struc   ENDS
+io_com_device_struc   ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -124,8 +124,8 @@ modem   Proc near
 modem_no_cts:   
     push ds
     mov ds,ds:dev_handle
-    mov ds:pds_line,ah
-    mov bx,ds:pds_line_thread
+    mov ds:iopds_line,ah
+    mov bx,ds:iopds_line_thread
     pop ds
     or bx,bx
     jz modem_no_signal
@@ -357,7 +357,7 @@ st_rx   DW OFFSET rec_pr
 st_li   DW OFFSET line_err
 
 com_int Proc far
-    mov ax,ds:pds_handle
+    mov ax,ds:iopds_handle
     or ax,ax
     jz com_int_inactive
 ;
@@ -377,29 +377,29 @@ com_int_loop:
     jmp com_int_loop
 
 com_int_inactive:
-    mov dx,ds:pds_base
+    mov dx,ds:iopds_base
     add dx,2
     in al,dx
     test al,1
     jnz com_int_done
 ;   
-    mov dx,ds:pds_base
+    mov dx,ds:iopds_base
     add dx,6
     in al,dx
-    mov ds:pds_line,al
+    mov ds:iopds_line,al
 ;   
-    mov dx,ds:pds_base
+    mov dx,ds:iopds_base
     add dx,5
     in al,dx
 ;
-    mov dx,ds:pds_base
+    mov dx,ds:iopds_base
     in al,dx
 ;   
     mov al,IER_BITS + 1
     inc dx
     out dx,al
 ;   
-    mov bx,ds:pds_line_thread
+    mov bx,ds:iopds_line_thread
     or bx,bx
     jz com_int_done
 ;
@@ -433,7 +433,7 @@ open_com    Proc far
 ;
     push ax
     RequestSpinlock ds:com_spinlock
-    mov es:pds_handle,ds
+    mov es:iopds_handle,ds
     mov ds:dev_handle,es
     mov ds:flgs,0
     ReleaseSpinlock ds:com_spinlock
@@ -572,7 +572,7 @@ close_com_not_reserved:
     out dx,al           ; disable rx, tx, line and modem ints
 ;   
     mov es,ds:dev_handle
-    mov es:pds_handle,0
+    mov es:iopds_handle,0
 ;
     pop dx
     pop ax
@@ -900,50 +900,50 @@ reset_com   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       create_port
+;       NAME:           io_create_port
 ;
-;       description:    Create port selector
+;       description:    Create port selector, IO version
 ;
-;       RETURNS:    ES      Port selector
+;       RETURNS:        ES      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-port_tab:
-pt00 DD OFFSET open_com,        SEG code
-pt01 DD OFFSET close_com,       SEG code
-pt02 DD OFFSET enable_cts,      SEG code
-pt03 DD OFFSET disable_cts,     SEG code
-pt04 DD OFFSET set_dtr,         SEG code
-pt05 DD OFFSET reset_dtr,       SEG code
-pt06 DD OFFSET set_rts,         SEG code
-pt07 DD OFFSET reset_rts,       SEG code
-pt08 DD OFFSET enable_auto_rts,     SEG code
-pt09 DD OFFSET disable_auto_rts,    SEG code
-pt10 DD OFFSET flush_com,       SEG code
-pt11 DD OFFSET start_send,      SEG code
-pt12 DD OFFSET reset_port,      SEG code
+io_port_tab:
+ipt00 DD OFFSET open_com,        SEG code
+ipt01 DD OFFSET close_com,       SEG code
+ipt02 DD OFFSET enable_cts,      SEG code
+ipt03 DD OFFSET disable_cts,     SEG code
+ipt04 DD OFFSET set_dtr,         SEG code
+ipt05 DD OFFSET reset_dtr,       SEG code
+ipt06 DD OFFSET set_rts,         SEG code
+ipt07 DD OFFSET reset_rts,       SEG code
+ipt08 DD OFFSET enable_auto_rts,     SEG code
+ipt09 DD OFFSET disable_auto_rts,    SEG code
+ipt10 DD OFFSET flush_com,       SEG code
+ipt11 DD OFFSET start_send,      SEG code
+ipt12 DD OFFSET reset_port,      SEG code
 
-create_port Proc far
+io_create_port Proc far
     push eax
     push cx
     push si
     push di
 ;
-    mov eax,SIZE pccom_port_struc
+    mov eax,SIZE io_com_port_struc
     AllocateSmallGlobalMem
     mov cx,ax
     xor di,di
     xor al,al
     rep stosb
 ;
-    mov si,OFFSET port_tab
+    mov si,OFFSET io_port_tab
     xor di,di
     mov cx,2 * 13
     rep movs dword ptr es:[di],cs:[si]
 ;
-    mov ax,ds:pds_base
+    mov ax,ds:iopds_base
     mov es:base,ax
-    mov eax,ds:pds_baud_base
+    mov eax,ds:iopds_baud_base
     mov es:baud_base,eax
 ;    
     pop di
@@ -951,36 +951,36 @@ create_port Proc far
     pop cx
     pop eax
     retf32
-create_port Endp
+io_create_port Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       reserve_line_state
+;       NAME:           io_reserve_line_state
 ;
-;       description:    Reserve line-state signals
+;       description:    Reserve line-state signals, IO version
 ;
 ;       PARAMETERS:     DS      Com device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reserve_line_state  Proc far
+io_reserve_line_state  Proc far
     push ax
     push dx
 ;    
     mov ds:cd_line_reserved,1
 ;    
-    mov dx,ds:pds_base
+    mov dx,ds:iopds_base
     add dx,6
     in al,dx
-    mov ds:pds_line,al
+    mov ds:iopds_line,al
 ;   
-    mov dx,ds:pds_base
+    mov dx,ds:iopds_base
     add dx,5
     in al,dx
 ;
-    mov dx,ds:pds_base
+    mov dx,ds:iopds_base
     in al,dx
 ;   
     mov al,IER_BITS + 1
@@ -990,25 +990,25 @@ reserve_line_state  Proc far
     pop dx
     pop ax
     retf32
-reserve_line_state  Endp
+io_reserve_line_state  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       device_set_dtr
+;       NAME:           io_device_set_dtr
 ;
-;       description:    Device set DTR signal
+;       description:    Device set DTR signal, IO version
 ;
 ;       PARAMETERS:     DS      Com device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-device_set_dtr  Proc far
+io_device_set_dtr  Proc far
     push ax
     push dx
 ;
-    mov dx,ds:pds_base
+    mov dx,ds:iopds_base
     add dx,4
     in al,dx
     or al,1
@@ -1017,25 +1017,25 @@ device_set_dtr  Proc far
     pop dx
     pop ax
     retf32
-device_set_dtr  Endp
+io_device_set_dtr  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       device_reset_dtr
+;       NAME:           io_device_reset_dtr
 ;
-;       description:    Device reset DTR signal
+;       description:    Device reset DTR signal, IO version
 ;
 ;       PARAMETERS:     DS      Com device selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-device_reset_dtr    Proc far
+io_device_reset_dtr    Proc far
     push ax
     push dx
 ;
-    mov dx,ds:pds_base
+    mov dx,ds:iopds_base
     add dx,4
     in al,dx
     and al,NOT 1
@@ -1044,60 +1044,60 @@ device_reset_dtr    Proc far
     pop dx
     pop ax
     retf32
-device_reset_dtr    Endp
+io_device_reset_dtr    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       get_line_state
+;       NAME:           io_get_line_state
 ;
-;       description:    Get current line-state change
+;       description:    Get current line-state change, IO version
 ;
 ;       PARAMETERS:     DS      Com device selector
 ;
-;       RETURNS:    AL      Line-state
+;       RETURNS:        AL      Line-state
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_line_state  Proc far
+io_get_line_state  Proc far
     push dx
-    mov dx,ds:pds_base
+    mov dx,ds:iopds_base
     add dx,6
     in al,dx
     pop dx
-;    mov al,ds:pds_line
+;    mov al,ds:iopds_line
     shr al,4
     and al,0Fh
     retf32
-get_line_state  Endp
+io_get_line_state  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       wait_for_line_state
+;       NAME:           io_wait_for_line_state
 ;
-;       description:    Wait for line-state change
+;       description:    Wait for line-state change, IO version
 ;
 ;       PARAMETERS:     DS      Com device selector
 ;
-;       RETURNS:    AL      Line-state
+;       RETURNS:        AL      Line-state
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-wait_for_line_state Proc far
+io_wait_for_line_state Proc far
     ClearSignal
     GetThread
-    mov ds:pds_line_thread,ax
+    mov ds:iopds_line_thread,ax
     WaitForSignal
-    mov ds:pds_line_thread,0
+    mov ds:iopds_line_thread,0
 ;
-    mov al,ds:pds_line
+    mov al,ds:iopds_line
     shr al,4
     and al,0Fh
     retf32
-wait_for_line_state Endp
+io_wait_for_line_state Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1268,9 +1268,9 @@ DetectIrq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       AddPort
+;       NAME:       AddIoPort
 ;
-;       DESCRIPTION:    Add port to list of available ports
+;       DESCRIPTION:    Add IO port to list of available ports
 ;
 ;       PARAMETERS:     DX      Base
 ;               AL      IRQ
@@ -1278,7 +1278,7 @@ DetectIrq   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddPort Proc near
+AddIoPort Proc near
     push ds
     push es
     pushad
@@ -1287,15 +1287,15 @@ AddPort Proc near
     mov ax,SEG data
     mov ds,ax
 ;
-    mov eax,SIZE pccom_device_struc
+    mov eax,SIZE io_com_device_struc
     AllocateSmallGlobalMem
-    mov es:pds_base,dx
-    mov es:pds_handle,0
-    mov es:pds_line_thread,0
-    mov es:pds_line,0
-    mov es:pds_baud_base,ecx
+    mov es:iopds_base,dx
+    mov es:iopds_handle,0
+    mov es:iopds_line_thread,0
+    mov es:iopds_line,0
+    mov es:iopds_baud_base,ecx
     pop ax
-    mov es:pds_irq,al
+    mov es:iopds_irq,al
 ;
     mov bx,ds:sd_ports
     add bx,bx
@@ -1309,29 +1309,29 @@ AddPort Proc near
     xor dx,dx
     AddComPort
 ;    
-    mov dword ptr ds:cd_create_proc,OFFSET create_port
+    mov dword ptr ds:cd_create_proc,OFFSET io_create_port
     mov dword ptr ds:cd_create_proc+4,cs
 ;    
-    mov dword ptr ds:cd_reserve_line_proc,OFFSET reserve_line_state
+    mov dword ptr ds:cd_reserve_line_proc,OFFSET io_reserve_line_state
     mov dword ptr ds:cd_reserve_line_proc+4,cs
 ;    
-    mov dword ptr ds:cd_set_dtr_proc,OFFSET device_set_dtr
+    mov dword ptr ds:cd_set_dtr_proc,OFFSET io_device_set_dtr
     mov dword ptr ds:cd_set_dtr_proc+4,cs
 ;    
-    mov dword ptr ds:cd_reset_dtr_proc,OFFSET device_reset_dtr
+    mov dword ptr ds:cd_reset_dtr_proc,OFFSET io_device_reset_dtr
     mov dword ptr ds:cd_reset_dtr_proc+4,cs
 ;    
-    mov dword ptr ds:cd_get_line_state_proc,OFFSET get_line_state
+    mov dword ptr ds:cd_get_line_state_proc,OFFSET io_get_line_state
     mov dword ptr ds:cd_get_line_state_proc+4,cs
 ;    
-    mov dword ptr ds:cd_wait_for_line_state_proc,OFFSET wait_for_line_state
+    mov dword ptr ds:cd_wait_for_line_state_proc,OFFSET io_wait_for_line_state
     mov dword ptr ds:cd_wait_for_line_state_proc+4,cs
 ;
     popad
     pop es
     pop ds  
     ret
-AddPort Endp
+AddIoPort Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1367,7 +1367,7 @@ riLoop:
 ;    
     push ds
     mov ds,dx
-    mov al,ds:pds_irq
+    mov al,ds:iopds_irq
     mov ah,18h
     RequestIrqHandler
     pop ds
@@ -1437,10 +1437,10 @@ init_pci_found:
     ReadPciByte
 ;
     mov ecx,921600
-    call AddPort
+    call AddIoPort
 ;
     add dx,8
-    call AddPort    
+    call AddIoPort    
     clc
 
 init_pci_done:
@@ -1491,7 +1491,7 @@ init_pci    Proc far
     jc dt1
 ;
     mov ecx,115200
-    call AddPort    
+    call AddIoPort    
     call InitDetect
 
 dt1:
@@ -1500,7 +1500,7 @@ dt1:
     jc dt2
 ;
     mov ecx,115200
-    call AddPort
+    call AddIoPort
     call InitDetect
 
 dt2:   
@@ -1509,7 +1509,7 @@ dt2:
     jc dt3
 ;    
     mov ecx,115200
-    call AddPort
+    call AddIoPort
     call InitDetect
 
 dt3:   
@@ -1518,7 +1518,7 @@ dt3:
     jc dt4
 ;    
     mov ecx,115200
-    call AddPort
+    call AddIoPort
     call InitDetect
 
 dt4:   
@@ -1527,7 +1527,7 @@ dt4:
     jc dt5
 ;    
     mov ecx,115200
-    call AddPort
+    call AddIoPort
     call InitDetect
 
 dt5:   
@@ -1536,7 +1536,7 @@ dt5:
     jc dtpci
 ;    
     mov ecx,115200
-    call AddPort
+    call AddIoPort
     call InitDetect
 
 dtpci:
