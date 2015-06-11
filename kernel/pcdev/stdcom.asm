@@ -45,13 +45,13 @@ FLG_ENABLE_AUTO_RTS  = 2
 
 io_com_port_struc    STRUC
 
-pps_base_struc  com_port_struc <>
+iopps_base_struc  com_port_struc <>
 
-char_time       DD ?
-flgs        DB ?
-base            DW ?
-dev_handle      DW ?
-baud_base       DD ?
+iopps_char_time       DD ?
+iopps_flgs            DB ?
+iopps_base            DW ?
+iopps_dev_handle      DW ?
+iopps_baud_base       DD ?
 
 io_com_port_struc    ENDS
 
@@ -101,7 +101,7 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 modem   Proc near
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     add dx,6
     in al,dx
     mov ah,al
@@ -109,21 +109,21 @@ modem   Proc near
     test al,10h
     jz modem_no_cts
 ;
-    test ds:flgs, FLG_ENABLE_CTS
+    test ds:iopps_flgs, FLG_ENABLE_CTS
     jz modem_no_cts
 ;    
     mov cx,ds:send_count
     or cx,cx
     jz modem_no_cts
 ;
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     inc dx
     mov al,IER_BITS + 3
     out dx,al
 
 modem_no_cts:   
     push ds
-    mov ds,ds:dev_handle
+    mov ds,ds:iopps_dev_handle
     mov ds:iopds_line,ah
     mov bx,ds:iopds_line_thread
     pop ds
@@ -148,7 +148,7 @@ modem   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 line_err    PROC near
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     add dx,5
     in al,dx
     ret
@@ -167,10 +167,10 @@ line_err    ENDP
 
 rec_pr  PROC near
     mov es,ds:rec_buf
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     RequestSpinlock ds:com_spinlock
     in al,dx
-;    test ds:flgs, FLG_ENABLE_AUTO_RTS
+;    test ds:iopps_flgs, FLG_ENABLE_AUTO_RTS
 ;    jz rec_pr_save
 ;
 ;    push ax
@@ -235,7 +235,7 @@ rts_off PROC far
 ;
     push ax
     push dx
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     add dx,5
     in al,dx
     test al,40h
@@ -243,7 +243,7 @@ rts_off PROC far
     pop ax
     jnz rts_off_dis
 ;
-    add eax,ds:char_time
+    add eax,ds:iopps_char_time
     adc edx,0
     mov bx,cs
     mov es,bx
@@ -253,7 +253,7 @@ rts_off PROC far
     jmp rts_off_done
     
 rts_off_dis:
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     add dx,4
     in al,dx
     and al,NOT 2
@@ -276,7 +276,7 @@ rts_off Endp
 
 trans_pr    PROC near
     mov es,ds:send_buf
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     RequestSpinlock ds:com_spinlock
     mov cx,ds:send_count
     or cx,cx                    ;  buffer empty ?
@@ -288,11 +288,11 @@ trans_end:
     out dx,al
     ReleaseSpinlock ds:com_spinlock
 ;
-    test ds:flgs, FLG_ENABLE_AUTO_RTS
+    test ds:iopps_flgs, FLG_ENABLE_AUTO_RTS
     jz trans_signal_wait
 ;
     GetSystemTime
-    add eax,ds:char_time
+    add eax,ds:iopps_char_time
     adc edx,0
     mov bx,cs
     mov es,bx
@@ -312,7 +312,7 @@ trans_signal_wait:
     jmp trans_exit
     
 trans_not_empty:    
-    test ds:flgs, FLG_ENABLE_CTS
+    test ds:iopps_flgs, FLG_ENABLE_CTS
     jz trans_send
 ;
     add dx,6
@@ -364,7 +364,7 @@ com_int Proc far
     mov ds,ax
 
 com_int_loop:
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     add dx,2
     in al,dx
     test al,1
@@ -413,20 +413,20 @@ com_int Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       open_com
+;       NAME:           io_open_com
 ;
-;       description:    Open a serial port
+;       description:    Open a serial port, IO version
 ;
 ;       PARAMETERS:     DS      Port selector
-;               ES      Device selector
-;               AH      # of data bits
-;               BL      # of stop bits
-;               BH      parity
-;               ECX     baudrate
+;                       ES      Device selector
+;                       AH      # of data bits
+;                       BL      # of stop bits
+;                       BH      parity
+;                       ECX     baudrate
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_com    Proc far
+io_open_com    Proc far
     push ax
     push dx
     push si
@@ -434,8 +434,8 @@ open_com    Proc far
     push ax
     RequestSpinlock ds:com_spinlock
     mov es:iopds_handle,ds
-    mov ds:dev_handle,es
-    mov ds:flgs,0
+    mov ds:iopps_dev_handle,es
+    mov ds:iopps_flgs,0
     ReleaseSpinlock ds:com_spinlock
     pop ax
 ;
@@ -453,28 +453,28 @@ open_com    Proc far
     or al,ah
 ;
     cmp bh,'E'
-    je open_even
+    je io_open_even
 ;   
     cmp bh,'O'
-    je open_odd
+    je io_open_odd
 ;   
-    jmp open_parity_done
+    jmp io_open_parity_done
 
-open_even:
+io_open_even:
     inc dl
     or al,18h
-    jmp open_parity_done
+    jmp io_open_parity_done
 
-open_odd:
+io_open_odd:
     inc dl
     or al,8
 
-open_parity_done:
+io_open_parity_done:
     push eax
     push edx
 ;
     push dx    
-    mov eax,ds:baud_base
+    mov eax,ds:iopps_baud_base
     xor edx,edx
     div ecx
     mov si,ax
@@ -486,14 +486,14 @@ open_parity_done:
 ;
     movzx edx,dl
     mul edx         ; eax = char tics
-    mov ds:char_time,eax
+    mov ds:iopps_char_time,eax
 ;
     pop edx
     pop eax
 ;
     push ax
     or al,80h
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     add dx,3
     out dx,al           ; set line control to divisor access
 ;
@@ -522,14 +522,14 @@ open_parity_done:
     or al,0Ah
     mov ah,ds:line_reserved
     or ah,ah
-    jnz open_set_dtr
+    jnz io_open_set_dtr
 ;
     or al,1
 
-open_set_dtr:
+io_open_set_dtr:
     out dx,al           ; modem control, DTR = high, RTS = high
 ;
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     in al,dx
     add dx,5
     in al,dx
@@ -540,103 +540,103 @@ open_set_dtr:
     pop dx
     pop ax  
     retf32
-open_com    Endp
+io_open_com    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       close_com
+;       NAME:           io_close_com
 ;
-;       description:    Close serial port
+;       description:    Close serial port, IO version
 ;
 ;       PARAMETERS:     DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-close_com   Proc far
+io_close_com   Proc far
     push es
     push ax
     push dx
 ;
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     inc dx
     xor al,al
     mov ah,ds:line_reserved
     or ah,ah
-    jz close_com_not_reserved
+    jz io_close_com_not_reserved
 ;   
     or al,IER_BITS
 
-close_com_not_reserved:
+io_close_com_not_reserved:
     out dx,al           ; disable rx, tx, line and modem ints
 ;   
-    mov es,ds:dev_handle
+    mov es,ds:iopps_dev_handle
     mov es:iopds_handle,0
 ;
     pop dx
     pop ax
     pop es
     retf32
-close_com   Endp
+io_close_com   Endp
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
 ;
-;       NAME:       EnableCts
+;       NAME:           IoEnableCts
 ;
-;       DESCRIPTION:    Enable CTS signal
+;       DESCRIPTION:    Enable CTS signal, IO version
 ;
 ;       PARAMETERS:     DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-enable_cts  PROC far
+io_enable_cts  PROC far
     cmp ds:line_reserved,0
-    jne enable_cts_done
+    jne io_enable_cts_done
 ;    
-    or ds:flgs,FLG_ENABLE_CTS
+    or ds:iopps_flgs,FLG_ENABLE_CTS
 
-enable_cts_done:
+io_enable_cts_done:
     retf32
-enable_cts Endp
+io_enable_cts Endp
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
 ;
-;       NAME:       DisableCts
+;       NAME:           IoDisableCts
 ;
-;       DESCRIPTION:    Disable CTS signal
+;       DESCRIPTION:    Disable CTS signal, IO version
 ;
 ;       PARAMETERS:     DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disable_cts PROC far
-    and ds:flgs,NOT FLG_ENABLE_CTS
+io_disable_cts PROC far
+    and ds:iopps_flgs,NOT FLG_ENABLE_CTS
     retf32
-disable_cts Endp
+io_disable_cts Endp
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
 ;
-;       NAME:       EnableAutoRts
+;       NAME:           IoEnableAutoRts
 ;
-;       DESCRIPTION:    Enable automatic RTS on send
+;       DESCRIPTION:    Enable automatic RTS on send, IO version
 ;
 ;       PARAMETERS:     DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-enable_auto_rts PROC far
+io_enable_auto_rts PROC far
     push ax
     push dx
 ;
-    or ds:flgs,FLG_ENABLE_AUTO_RTS
-    mov dx,ds:base
+    or ds:iopps_flgs,FLG_ENABLE_AUTO_RTS
+    mov dx,ds:iopps_base
     add dx,4
     in al,dx
     and al,NOT 2
@@ -645,26 +645,26 @@ enable_auto_rts PROC far
     pop dx
     pop ax
     retf32
-enable_auto_rts Endp
+io_enable_auto_rts Endp
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
 ;
-;       NAME:       DisableAutoRts
+;       NAME:           IoDisableAutoRts
 ;
-;       DESCRIPTION:    Disable automatic RTS on send
+;       DESCRIPTION:    Disable automatic RTS on send, IO version
 ;
 ;       PARAMETERS:     DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disable_auto_rts    PROC far
+io_disable_auto_rts    PROC far
     push ax
     push dx
 ;    
-    and ds:flgs,NOT FLG_ENABLE_AUTO_RTS
-    mov dx,ds:base
+    and ds:iopps_flgs,NOT FLG_ENABLE_AUTO_RTS
+    mov dx,ds:iopps_base
     add dx,4
     in al,dx
     or al,2
@@ -673,26 +673,26 @@ disable_auto_rts    PROC far
     pop dx
     pop ax
     retf32
-disable_auto_rts Endp
+io_disable_auto_rts Endp
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
 ;
-;       NAME:       FlushCom
+;       NAME:           IoFlushCom
 ;
-;       DESCRIPTION:    Flush com
+;       DESCRIPTION:    Flush com, IO version
 ;
 ;       PARAMETERS:     DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-flush_com   PROC far
+io_flush_com   PROC far
     push ax
     push dx
 ;
     RequestSpinlock ds:com_spinlock
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     mov al,IER_BITS + 1
     inc dx
     out dx,al
@@ -701,95 +701,95 @@ flush_com   PROC far
     pop dx
     pop ax
     retf32
-flush_com Endp
+io_flush_com Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
 ;
-;       NAME:       ResetPort
+;       NAME:           IoResetPort
 ;
-;       DESCRIPTION:    Reset com
+;       DESCRIPTION:    Reset com, IO version
 ;
 ;       PARAMETERS:     DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_port   PROC far
+io_reset_port   PROC far
     retf32
-reset_port  Endp
+io_reset_port  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       start_send
+;       NAME:           io_start_send
 ;
-;       description:    Start send
+;       description:    Start send, IO version
 ;
 ;       PARAMETERS:     DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_send  PROC far
+io_start_send  PROC far
     push ax
     push dx
 ;
-    test ds:flgs, FLG_ENABLE_AUTO_RTS
-    jz com_send_timer_stopped
+    test ds:iopps_flgs, FLG_ENABLE_AUTO_RTS
+    jz io_com_send_timer_stopped
 ;
     mov bx,ds
     StopTimer
 
-com_send_timer_stopped:
+io_com_send_timer_stopped:
     RequestSpinlock ds:com_spinlock
-    test ds:flgs, FLG_ENABLE_CTS
-    jz com_send_enable
+    test ds:iopps_flgs, FLG_ENABLE_CTS
+    jz io_com_send_enable
 ;
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     add dx,6
     in al,dx
     test al,10h
-    jz com_send_ok
+    jz io_com_send_ok
 
-com_send_enable:
-    test ds:flgs, FLG_ENABLE_AUTO_RTS
-    jz com_send_start
+io_com_send_enable:
+    test ds:iopps_flgs, FLG_ENABLE_AUTO_RTS
+    jz io_com_send_start
 ;   
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     add dx,4
     in al,dx
     or al,2
     out dx,al
 
-com_send_start:
-    mov dx,ds:base
+io_com_send_start:
+    mov dx,ds:iopps_base
     inc dx
     mov al,IER_BITS + 3
     out dx,al
     
-com_send_ok:
+io_com_send_ok:
     ReleaseSpinlock ds:com_spinlock
     pop dx
     pop ax
     retf32
-start_send  ENDP
+io_start_send  ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       set_dtr
+;       NAME:           io_set_dtr
 ;
-;       description:    Set DTR signal
+;       description:    Set DTR signal, IO version
 ;
 ;       PARAMETERS:     DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_dtr Proc far
+io_set_dtr Proc far
     push ax
     push dx
 ;
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     add dx,4
     in al,dx
     or al,1
@@ -798,25 +798,25 @@ set_dtr Proc far
     pop dx
     pop ax
     retf32
-set_dtr Endp
+io_set_dtr Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       reset_dtr
+;       NAME:           io_reset_dtr
 ;
-;       description:    Reset DTR signal
+;       description:    Reset DTR signal, IO version
 ;
 ;       PARAMETERS:     DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_dtr   Proc far
+io_reset_dtr   Proc far
     push ax
     push dx
 ;
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     add dx,4
     in al,dx
     and al,NOT 1
@@ -825,25 +825,25 @@ reset_dtr   Proc far
     pop dx
     pop ax
     retf32
-reset_dtr   Endp
+io_reset_dtr   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       set_rts
+;       NAME:           io_set_rts
 ;
-;       description:    Set RTS signal
+;       description:    Set RTS signal, IO version
 ;
 ;       PARAMETERS:     DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_rts Proc far
+io_set_rts Proc far
     push ax
     push dx
 ;   
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     add dx,4
     in al,dx
     or al,2
@@ -852,25 +852,25 @@ set_rts Proc far
     pop dx
     pop ax
     retf32
-set_rts Endp
+io_set_rts Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       reset_rts
+;       NAME:           io_reset_rts
 ;
-;       description:    Reset RTS signal
+;       description:    Reset RTS signal, IO version
 ;
 ;       PARAMETERS:     DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_rts   Proc far
+io_reset_rts   Proc far
     push ax
     push dx
 ;
-    mov dx,ds:base
+    mov dx,ds:iopps_base
     add dx,4
     in al,dx
     and al,NOT 2
@@ -879,22 +879,22 @@ reset_rts   Proc far
     pop dx
     pop ax
     retf32
-reset_rts   Endp
+io_reset_rts   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       reset_com
+;       NAME:           io_reset_com
 ;
-;       description:    Reset com
+;       description:    Reset com, IO version
 ;
 ;       PARAMETERS:     DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_com   Proc far
+io_reset_com   Proc far
     retf32
-reset_com   Endp
+io_reset_com   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -909,19 +909,19 @@ reset_com   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 io_port_tab:
-ipt00 DD OFFSET open_com,        SEG code
-ipt01 DD OFFSET close_com,       SEG code
-ipt02 DD OFFSET enable_cts,      SEG code
-ipt03 DD OFFSET disable_cts,     SEG code
-ipt04 DD OFFSET set_dtr,         SEG code
-ipt05 DD OFFSET reset_dtr,       SEG code
-ipt06 DD OFFSET set_rts,         SEG code
-ipt07 DD OFFSET reset_rts,       SEG code
-ipt08 DD OFFSET enable_auto_rts,     SEG code
-ipt09 DD OFFSET disable_auto_rts,    SEG code
-ipt10 DD OFFSET flush_com,       SEG code
-ipt11 DD OFFSET start_send,      SEG code
-ipt12 DD OFFSET reset_port,      SEG code
+ipt00 DD OFFSET io_open_com,        SEG code
+ipt01 DD OFFSET io_close_com,       SEG code
+ipt02 DD OFFSET io_enable_cts,      SEG code
+ipt03 DD OFFSET io_disable_cts,     SEG code
+ipt04 DD OFFSET io_set_dtr,         SEG code
+ipt05 DD OFFSET io_reset_dtr,       SEG code
+ipt06 DD OFFSET io_set_rts,         SEG code
+ipt07 DD OFFSET io_reset_rts,       SEG code
+ipt08 DD OFFSET io_enable_auto_rts, SEG code
+ipt09 DD OFFSET io_disable_auto_rts,SEG code
+ipt10 DD OFFSET io_flush_com,       SEG code
+ipt11 DD OFFSET io_start_send,      SEG code
+ipt12 DD OFFSET io_reset_port,      SEG code
 
 io_create_port Proc far
     push eax
@@ -942,9 +942,9 @@ io_create_port Proc far
     rep movs dword ptr es:[di],cs:[si]
 ;
     mov ax,ds:iopds_base
-    mov es:base,ax
+    mov es:iopps_base,ax
     mov eax,ds:iopds_baud_base
-    mov es:baud_base,eax
+    mov es:iopps_baud_base,eax
 ;    
     pop di
     pop si
