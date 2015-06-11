@@ -1502,6 +1502,35 @@ mem_init_pci_loop:
 
 mem_init_pci_found:
     int 3
+    push cx
+    mov eax,2000h
+    AllocateBigLinear
+    pop cx
+;
+    mov cl,10h
+    ReadPciDword
+    and al,0F0h
+;
+    push ebx
+    push ecx
+;    
+    xor ebx,ebx
+    mov al,67h
+    SetPageEntry
+;
+    add eax,1000h
+    add edx,1000h    
+    SetPageEntry
+    sub edx,1000h
+;
+    AllocateGdt
+    mov ecx,2000h
+    CreateDataSelector16
+    mov ds,bx
+;
+    pop ecx
+    pop ebx
+;       
     GetPciMsiX
     jc mem_init_pci_irq
 ;
