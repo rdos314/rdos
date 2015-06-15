@@ -1226,7 +1226,6 @@ mem_device_set_dtr  Proc far
     push ax
     push ebx
 ;
-    int 3
     mov ebx,ds:mempds_offset
     mov es,ds:mempds_sel
 ;
@@ -1256,7 +1255,6 @@ mem_device_reset_dtr    Proc far
     push ax
     push ebx
 ;
-    int 3
     mov ebx,ds:mempds_offset
     mov es,ds:mempds_sel
 ;
@@ -1840,10 +1838,16 @@ mem_init_pci_setup:
 ;    
     SetupPciMsiXEntry
 ;
+    push ebx
     push ecx
+;
+    mov ebx,edx
+    shl ebx,9
+    add ebx,1000h        
     mov ecx,3906250
     call AddMemPort
     pop ecx
+    pop ebx
 ;
     inc edx
     cmp edx,ds:oxb_uart_count
@@ -1853,6 +1857,41 @@ mem_init_pci_setup:
 mem_init_pci_done:
     ret
 InitMemPci  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           com_pci
+;
+;       DESCRIPTION:    PCI com init thread
+;
+;       PARAMETERS:     
+;
+;       RETURNS:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+com_pci_name    DB 'Mem Com Test', 0
+
+com_pci:
+    int 3
+    xor al,al
+    DeviceSetDtr
+    DeviceResetDtr
+;
+    mov al,1
+    DeviceSetDtr
+    DeviceResetDtr
+;
+    mov al,2
+    DeviceSetDtr
+    DeviceResetDtr
+;    
+    mov al,3
+    DeviceSetDtr
+    DeviceResetDtr
+;    
+    TerminateThread        
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1951,6 +1990,15 @@ dtpci:
     call InitPciAdapter
     call RequestIRQs
     call InitMemPci
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET com_pci_name
+    mov si,OFFSET com_pci
+    mov ax,4
+    mov cx,stack0_size
+    CreateThread
 ;
     popa
     pop es
