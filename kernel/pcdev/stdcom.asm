@@ -43,6 +43,19 @@ IER_BITS    = 8
 FLG_ENABLE_CTS  = 1
 FLG_ENABLE_AUTO_RTS  = 2
 
+mem_reg_struc   STRUC
+
+mr_hr           DB ?
+mr_ier          DB ?
+mr_isr_fcr      DB ?
+mr_lcr          DB ?
+mr_mcr          DB ?
+mr_lsr          DB ?
+mr_msr          DB ?
+mr_spr          DB ?
+
+mem_reg_struc   ENDS
+
 io_com_port_struc    STRUC
 
 iopps_base_struc  com_port_struc <>
@@ -1146,6 +1159,178 @@ io_wait_for_line_state Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           mem_create_port
+;
+;       description:    Create port selector, mem version
+;
+;       RETURNS:        ES      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_port_tab:
+
+mem_create_port Proc far
+    int 3
+    retf32
+mem_create_port Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           mem_reserve_line_state
+;
+;       description:    Reserve line-state signals, mem version
+;
+;       PARAMETERS:     DS      Com device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_reserve_line_state  Proc far
+    push es
+    push ax
+    push ebx
+;    
+    int 3
+    mov ds:cd_line_reserved,1
+;    
+    mov ebx,ds:mempds_offset
+    mov es,ds:mempds_sel
+    mov al,es:[ebx].mr_msr
+    mov ds:mempds_line,al    
+;
+    mov al,es:[ebx].mr_lsr    
+    mov al,es:[ebx].mr_hr    
+;
+    mov al,IER_BITS + 1
+    mov es:[ebx].mr_ier,al
+;
+    pop ebx
+    pop ax
+    pop es
+    retf32
+mem_reserve_line_state  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           mem_device_set_dtr
+;
+;       description:    Device set DTR signal, mem version
+;
+;       PARAMETERS:     DS      Com device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_device_set_dtr  Proc far
+    push es
+    push ax
+    push ebx
+;
+    int 3
+    mov ebx,ds:mempds_offset
+    mov es,ds:mempds_sel
+;
+    mov al,es:[ebx].mr_mcr
+    or al,1
+    mov es:[ebx].mr_mcr,al    
+;
+    pop ebx
+    pop ax
+    pop es
+    retf32
+mem_device_set_dtr  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           mem_device_reset_dtr
+;
+;       description:    Device reset DTR signal, mem version
+;
+;       PARAMETERS:     DS      Com device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_device_reset_dtr    Proc far
+    push es
+    push ax
+    push ebx
+;
+    int 3
+    mov ebx,ds:mempds_offset
+    mov es,ds:mempds_sel
+;
+    mov al,es:[ebx].mr_mcr
+    and al,NOT 1
+    mov es:[ebx].mr_mcr,al    
+;   
+    pop ebx
+    pop ax
+    pop es
+    retf32
+mem_device_reset_dtr    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           mem_get_line_state
+;
+;       description:    Get current line-state change, mem version
+;
+;       PARAMETERS:     DS      Com device selector
+;
+;       RETURNS:        AL      Line-state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_get_line_state  Proc far
+    push es
+    push ebx
+;    
+    int 3
+    mov ebx,ds:mempds_offset
+    mov es,ds:mempds_sel
+;
+    mov al,es:[ebx].mr_msr
+    shr al,4
+    and al,0Fh
+;
+    pop ebx
+    pop es    
+    retf32
+mem_get_line_state  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           mem_wait_for_line_state
+;
+;       description:    Wait for line-state change, mem version
+;
+;       PARAMETERS:     DS      Com device selector
+;
+;       RETURNS:        AL      Line-state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_wait_for_line_state Proc far
+    int 3
+    ClearSignal
+    GetThread
+    mov ds:mempds_line_thread,ax
+    WaitForSignal
+    mov ds:mempds_line_thread,0
+;
+    mov al,ds:mempds_line
+    shr al,4
+    and al,0Fh
+    retf32
+mem_wait_for_line_state Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:       InitDetect
 ;
 ;       DESCRIPTION:    Init detect
@@ -1422,6 +1607,31 @@ AddMemPort Proc near
     mov ds:[bx].sd_port_arr,es
     inc ds:sd_ports
 ;
+    mov ax,es
+    mov ds,ax
+;    
+    xor ax,ax
+    xor dx,dx
+    AddComPort
+;    
+    mov dword ptr ds:cd_create_proc,OFFSET mem_create_port
+    mov dword ptr ds:cd_create_proc+4,cs
+;    
+    mov dword ptr ds:cd_reserve_line_proc,OFFSET mem_reserve_line_state
+    mov dword ptr ds:cd_reserve_line_proc+4,cs
+;    
+    mov dword ptr ds:cd_set_dtr_proc,OFFSET mem_device_set_dtr
+    mov dword ptr ds:cd_set_dtr_proc+4,cs
+;    
+    mov dword ptr ds:cd_reset_dtr_proc,OFFSET mem_device_reset_dtr
+    mov dword ptr ds:cd_reset_dtr_proc+4,cs
+;    
+    mov dword ptr ds:cd_get_line_state_proc,OFFSET mem_get_line_state
+    mov dword ptr ds:cd_get_line_state_proc+4,cs
+;    
+    mov dword ptr ds:cd_wait_for_line_state_proc,OFFSET mem_wait_for_line_state
+    mov dword ptr ds:cd_wait_for_line_state_proc+4,cs
+;
     popad
     pop es
     pop ds  
@@ -1618,7 +1828,6 @@ mem_init_pci_found:
 ;    
     EnablePciMsiX
 ;
-    int 3
     xor edx,edx
 
 mem_init_pci_setup:
@@ -1644,25 +1853,6 @@ mem_init_pci_setup:
 mem_init_pci_done:
     ret
 InitMemPci  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           com_pci
-;
-;       DESCRIPTION:    PCI com init thread
-;
-;       PARAMETERS:     
-;
-;       RETURNS:    
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-com_pci_name    DB 'Init PCI Com', 0
-
-com_pci:
-    call InitMemPci
-    int 3
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1760,15 +1950,7 @@ dt5:
 dtpci:
     call InitPciAdapter
     call RequestIRQs
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov di,OFFSET com_pci_name
-    mov si,OFFSET com_pci
-    mov ax,4
-    mov cx,stack0_size
-    CreateThread
+    call InitMemPci
 ;
     popa
     pop es
