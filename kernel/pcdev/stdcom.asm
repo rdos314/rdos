@@ -72,25 +72,38 @@ io_com_device_struc   STRUC
 
 iopds_base_struc    com_device_struc <>
 
-iopds_base      DW ?
-iopds_handle    DW ?
+iopds_base          DW ?
+iopds_handle        DW ?
 iopds_baud_base     DD ?
 iopds_line_thread   DW ?
-iopds_line      DB ?
-iopds_irq       DB ?
+iopds_line          DB ?
+iopds_irq           DB ?
 
 io_com_device_struc   ENDS
+
+mem_com_port_struc    STRUC
+
+mempps_base_struc  com_port_struc <>
+
+mempps_char_time    DD ?
+mempps_baud_base    DD ?
+mempps_offset       DD ?
+mempps_sel          DW ?
+mempps_dev_handle   DW ?
+mempps_flgs         DB ?
+
+mem_com_port_struc    ENDS
 
 mem_com_device_struc   STRUC
 
 mempds_base_struc    com_device_struc <>
 
-mempds_offset   DD ?
-mempds_sel      DW ?
-mempds_handle    DW ?
-mempds_baud_base     DD ?
-mempds_line_thread   DW ?
-mempds_line      DB ?
+mempds_offset       DD ?
+mempds_sel          DW ?
+mempds_handle       DW ?
+mempds_baud_base    DD ?
+mempds_line_thread  DW ?
+mempds_line         DB ?
 
 mem_com_device_struc   ENDS
 
@@ -953,6 +966,500 @@ io_reset_com   Proc far
     retf32
 io_reset_com   Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           mem_open_com
+;
+;       description:    Open a serial port, mem version
+;
+;       PARAMETERS:     DS      Port selector
+;                       ES      Device selector
+;                       AH      # of data bits
+;                       BL      # of stop bits
+;                       BH      parity
+;                       ECX     baudrate
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_open_com    Proc far
+    push es
+    push ax
+    push ebx
+    push dx
+    push si
+;
+    push ax
+    RequestSpinlock ds:com_spinlock
+    mov es:mempds_handle,ds
+    mov ds:mempps_dev_handle,es
+    mov ds:mempps_flgs,0
+    ReleaseSpinlock ds:com_spinlock
+    pop ax
+;
+    mov dl,ah
+    inc dl
+    mov al,ah    
+    sub al,5
+    and al,3
+;
+    add dl,bl
+    mov ah,bl
+    dec ah
+    and ah,1
+    shl ah,2
+    or al,ah
+;
+    cmp bh,'E'
+    je mem_open_even
+;   
+    cmp bh,'O'
+    je mem_open_odd
+;   
+    jmp mem_open_parity_done
+
+mem_open_even:
+    inc dl
+    or al,18h
+    jmp mem_open_parity_done
+
+mem_open_odd:
+    inc dl
+    or al,8
+
+mem_open_parity_done:
+    push eax
+    push ebx
+;
+    push dx    
+    mov eax,ds:mempps_baud_base
+    xor edx,edx
+    div ecx
+    mov si,ax
+;    
+    mov eax,1193000
+    xor edx,edx
+    div ecx         ; eax = 1193000 / baudrate
+    pop dx
+;
+    movzx edx,dl
+    mul edx         ; eax = char tics
+    mov ds:mempps_char_time,eax
+;
+    pop edx
+    pop eax
+;
+    mov ebx,ds:mempps_offset
+    mov es,ds:mempps_sel
+;
+    push ax
+    or al,80h
+    mov es:[ebx].mr_lcr,al      ; set line control to divisor access
+;
+    mov ax,si
+    mov es:[ebx],ax             ; output LSB divisor latch
+;
+    mov al,1
+    mov es:[ebx].mr_isr_fcr,al  ; enable FIFOs if present
+;
+    pop ax
+    mov es:[ebx].mr_lcr,al      ; set line control
+;
+    mov al,IER_BITS + 1
+    mov es:[ebx].mr_ier,al      ; enable rx ints and delta ints, disable tx, line ints
+;
+    mov al,es:[ebx].mr_mcr
+    or al,0Ah
+    mov ah,ds:line_reserved
+    or ah,ah
+    jnz mem_open_set_dtr
+;
+    or al,1
+
+mem_open_set_dtr:
+    mov es:[ebx].mr_mcr,al      ; modem control, DTR = high, RTS = high
+;
+    mov al,es:[ebx]
+    mov al,es:[ebx].mr_lsr
+    mov al,es:[ebx].mr_msr
+;
+    pop si
+    pop dx
+    pop ebx
+    pop ax  
+    pop es
+    retf32
+mem_open_com    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           mem_close_com
+;
+;       description:    Close serial port, mem version
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_close_com   Proc far
+    push es
+    push ax
+    push ebx
+;
+    mov ebx,ds:mempps_offset
+    mov es,ds:mempps_sel
+;
+    xor al,al
+    mov ah,ds:line_reserved
+    or ah,ah
+    jz mem_close_com_not_reserved
+;   
+    or al,IER_BITS
+
+mem_close_com_not_reserved:
+    mov es:[ebx].mr_ier,al          ; disable rx, tx, line and modem ints
+;   
+    mov es,ds:mempps_dev_handle
+    mov es:mempds_handle,0
+;
+    pop ebx
+    pop ax
+    pop es
+    retf32
+mem_close_com   Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   
+;
+;       NAME:           MemEnableCts
+;
+;       DESCRIPTION:    Enable CTS signal, mem version
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_enable_cts  PROC far
+    cmp ds:line_reserved,0
+    jne mem_enable_cts_done
+;    
+    or ds:mempps_flgs,FLG_ENABLE_CTS
+
+mem_enable_cts_done:
+    retf32
+mem_enable_cts Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   
+;
+;       NAME:           MemDisableCts
+;
+;       DESCRIPTION:    Disable CTS signal, mem version
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_disable_cts PROC far
+    and ds:mempps_flgs,NOT FLG_ENABLE_CTS
+    retf32
+mem_disable_cts Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   
+;
+;       NAME:           MemEnableAutoRts
+;
+;       DESCRIPTION:    Enable automatic RTS on send, mem version
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_enable_auto_rts PROC far
+    push es
+    push ax
+    push ebx
+;
+    or ds:mempps_flgs,FLG_ENABLE_AUTO_RTS
+    mov ebx,ds:mempps_offset
+    mov es,ds:mempps_sel
+    mov al,es:[ebx].mr_mcr
+    and al,NOT 2
+    mov es:[ebx].mr_mcr,al
+;   
+    pop ebx
+    pop ax
+    pop es
+    retf32
+mem_enable_auto_rts Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   
+;
+;       NAME:           MemDisableAutoRts
+;
+;       DESCRIPTION:    Disable automatic RTS on send, mem version
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_disable_auto_rts    PROC far
+    push es
+    push ax
+    push ebx
+;    
+    and ds:mempps_flgs,NOT FLG_ENABLE_AUTO_RTS
+    mov ebx,ds:mempps_offset
+    mov es,ds:mempps_sel
+    mov al,es:[ebx].mr_mcr
+    or al,2
+    mov es:[ebx].mr_mcr,al
+;   
+    pop ebx
+    pop ax
+    pop es
+    retf32
+mem_disable_auto_rts Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   
+;
+;       NAME:           MemFlushCom
+;
+;       DESCRIPTION:    Flush com, mem version
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_flush_com   PROC far
+    push es
+    push ax
+    push ebx
+;
+    mov ebx,ds:mempps_offset
+    mov es,ds:mempps_sel
+;
+    RequestSpinlock ds:com_spinlock
+    mov al,IER_BITS + 1
+    mov es:[ebx].mr_ier,al
+    ReleaseSpinlock ds:com_spinlock
+;   
+    pop ebx
+    pop ax
+    pop es
+    retf32
+mem_flush_com Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   
+;
+;       NAME:           MemResetPort
+;
+;       DESCRIPTION:    Reset com, mem version
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_reset_port   PROC far
+    retf32
+mem_reset_port  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           mem_start_send
+;
+;       description:    Start send, mem version
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_start_send  PROC far
+    push es
+    push ax
+    push ebx
+;
+    test ds:mempps_flgs, FLG_ENABLE_AUTO_RTS
+    jz mem_com_send_timer_stopped
+;
+    mov bx,ds
+    StopTimer
+
+mem_com_send_timer_stopped:
+    mov ebx,ds:mempps_offset
+    mov es,ds:mempps_sel
+;
+    RequestSpinlock ds:com_spinlock
+    test ds:mempps_flgs, FLG_ENABLE_CTS
+    jz mem_com_send_enable
+;
+    mov al,es:[ebx].mr_msr
+    test al,10h
+    jz mem_com_send_ok
+
+mem_com_send_enable:
+    test ds:mempps_flgs, FLG_ENABLE_AUTO_RTS
+    jz mem_com_send_start
+;   
+    mov al,es:[ebx].mr_mcr
+    or al,2
+    mov es:[ebx].mr_mcr,al
+
+mem_com_send_start:
+    mov al,IER_BITS + 3
+    mov es:[ebx].mr_ier,al
+    
+mem_com_send_ok:
+    ReleaseSpinlock ds:com_spinlock
+    pop ebx
+    pop ax
+    pop es
+    retf32
+mem_start_send  ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           mem_set_dtr
+;
+;       description:    Set DTR signal, mem version
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_set_dtr Proc far
+    push es
+    push ax
+    push ebx
+;
+    mov ebx,ds:mempps_offset
+    mov es,ds:mempps_sel
+    mov al,es:[ebx].mr_mcr
+    or al,1
+    mov es:[ebx].mr_mcr,al
+;
+    pop ebx
+    pop ax
+    pop es
+    retf32
+mem_set_dtr Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           mem_reset_dtr
+;
+;       description:    Reset DTR signal, mem version
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_reset_dtr   Proc far
+    push es
+    push ax
+    push ebx
+;
+    mov ebx,ds:mempps_offset
+    mov es,ds:mempps_sel
+    mov al,es:[ebx].mr_mcr
+    and al,NOT 1
+    mov es:[ebx].mr_mcr,al
+;
+    pop ebx
+    pop ax
+    pop es
+    retf32
+mem_reset_dtr   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           mem_set_rts
+;
+;       description:    Set RTS signal, mem version
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_set_rts Proc far
+    push es
+    push ax
+    push ebx
+;
+    mov ebx,ds:mempps_offset
+    mov es,ds:mempps_sel
+    mov al,es:[ebx].mr_mcr
+    or al,2
+    mov es:[ebx].mr_mcr,al
+;
+    pop ebx
+    pop ax
+    pop es
+    retf32
+mem_set_rts Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           mem_reset_rts
+;
+;       description:    Reset RTS signal, mem version
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_reset_rts   Proc far
+    push es
+    push ax
+    push ebx
+;
+    mov ebx,ds:mempps_offset
+    mov es,ds:mempps_sel
+    mov al,es:[ebx].mr_mcr
+    and al,NOT 2
+    mov es:[ebx].mr_mcr,al
+;
+    pop ebx
+    pop ax
+    pop es
+    retf32
+mem_reset_rts   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           mem_reset_com
+;
+;       description:    Reset com, mem version
+;
+;       PARAMETERS:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_reset_com   Proc far
+    retf32
+mem_reset_com   Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1168,9 +1675,49 @@ io_wait_for_line_state Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mem_port_tab:
+mpt00 DD OFFSET mem_open_com,        SEG code
+mpt01 DD OFFSET mem_close_com,       SEG code
+mpt02 DD OFFSET mem_enable_cts,      SEG code
+mpt03 DD OFFSET mem_disable_cts,     SEG code
+mpt04 DD OFFSET mem_set_dtr,         SEG code
+mpt05 DD OFFSET mem_reset_dtr,       SEG code
+mpt06 DD OFFSET mem_set_rts,         SEG code
+mpt07 DD OFFSET mem_reset_rts,       SEG code
+mpt08 DD OFFSET mem_enable_auto_rts, SEG code
+mpt09 DD OFFSET mem_disable_auto_rts,SEG code
+mpt10 DD OFFSET mem_flush_com,       SEG code
+mpt11 DD OFFSET mem_start_send,      SEG code
+mpt12 DD OFFSET mem_reset_port,      SEG code
 
 mem_create_port Proc far
-    int 3
+    push eax
+    push cx
+    push si
+    push di
+;
+    mov eax,SIZE mem_com_port_struc
+    AllocateSmallGlobalMem
+    mov cx,ax
+    xor di,di
+    xor al,al
+    rep stosb
+;
+    mov si,OFFSET mem_port_tab
+    xor di,di
+    mov cx,2 * 13
+    rep movs dword ptr es:[di],cs:[si]
+;
+    mov eax,ds:mempds_offset
+    mov es:mempps_offset,eax
+    mov ax,ds:mempds_sel
+    mov es:mempps_sel,ax
+    mov eax,ds:mempds_baud_base
+    mov es:mempps_baud_base,eax
+;    
+    pop di
+    pop si
+    pop cx
+    pop eax
     retf32
 mem_create_port Endp
 
@@ -1857,42 +2404,6 @@ mem_init_pci_setup:
 mem_init_pci_done:
     ret
 InitMemPci  Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           com_pci
-;
-;       DESCRIPTION:    PCI com init thread
-;
-;       PARAMETERS:     
-;
-;       RETURNS:    
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-com_pci_name    DB 'Mem Com Test', 0
-
-com_pci:
-    int 3
-    xor al,al
-    DeviceSetDtr
-    DeviceResetDtr
-;
-    mov al,1
-    DeviceSetDtr
-    DeviceResetDtr
-;
-    mov al,2
-    DeviceSetDtr
-    DeviceResetDtr
-;    
-    mov al,3
-    DeviceSetDtr
-    DeviceResetDtr
-;    
-    TerminateThread        
-    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1990,15 +2501,6 @@ dtpci:
     call InitPciAdapter
     call RequestIRQs
     call InitMemPci
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov di,OFFSET com_pci_name
-    mov si,OFFSET com_pci
-    mov ax,4
-    mov cx,stack0_size
-    CreateThread
 ;
     popa
     pop es
