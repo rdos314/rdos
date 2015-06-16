@@ -119,6 +119,14 @@ oxb_wake_disable    DD ?
 
 ox_bar_header   ENDS
 
+mem_share_struc  STRUC
+
+ms_count            DW ?
+ms_dev_sel          DW ?
+ms_com_dev_arr      DW 16 DUP(?)
+
+mem_share_struc  ENDS
+
 data    SEGMENT byte public 'DATA'
 
 sd_ports    DW ?
@@ -466,18 +474,392 @@ io_com_int Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:       MEM_COM_INT
+;           NAME:           mem_modem
 ;
-;       DESCRIPTION:    Serial interrupt
+;           DESCRIPTION:    Modem signals changed, mem version
+;
+;           PARAMETERS:     DS      Port sel
+;                           ES:EBX  Register address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_modem   Proc near
+    mov al,es:[ebx].mr_msr
+    mov ah,al
+;       
+    test al,10h
+    jz mem_modem_no_cts
+;
+    test ds:mempps_flgs, FLG_ENABLE_CTS
+    jz mem_modem_no_cts
+;    
+    mov cx,ds:send_count
+    or cx,cx
+    jz mem_modem_no_cts
+;
+    mov al,IER_BITS + 3
+    mov es:[ebx].mr_ier,al
+
+mem_modem_no_cts:   
+    push bx
+    push ds
+    mov ds,ds:mempps_dev_handle
+    mov ds:mempds_line,ah
+    mov bx,ds:mempds_line_thread
+    pop ds
+    or bx,bx
+    jz mem_modem_no_signal
+;
+    Signal
+
+mem_modem_no_signal:    
+    pop bx
+    ret
+mem_modem   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           mem_line_err
+;
+;           DESCRIPTION:    Line error occured, mem version
+;
+;           PARAMETERS:     DS      Port sel
+;                           ES:EBX  Register address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_line_err    PROC near
+    mov al,es:[ebx].mr_lsr
+    ret
+mem_line_err    ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           mem_rec
+;
+;           DESCRIPTION:    Received data, mem version
+;
+;           PARAMETERS:     DS      Port sel
+;                           ES:EBX  Register address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_rec  PROC near
+    push es
+    push bx
+;    
+    RequestSpinlock ds:com_spinlock
+    mov al,es:[ebx]
+    mov es,ds:rec_buf
+
+mem_rec_pr_save:
+    mov cx,ds:rec_count
+    cmp cx,ds:rec_size
+    je mem_rec_exit
+;    
+    inc cx
+    mov ds:rec_count,cx
+    mov bx,ds:rec_tail          ; get tail pointer
+    mov es:[bx],al              ; store char
+    inc bx
+    cmp bx,ds:rec_size
+    jnz mem_rec_no_wrap
+;
+    xor bx,bx
+    
+mem_rec_no_wrap:
+    mov ds:rec_tail,bx
+    ReleaseSpinlock ds:com_spinlock
+;
+    mov bx,ds:avail_obj
+    or bx,bx
+    jz mem_rec_done
+;
+    mov es,bx
+    SignalWait
+    mov ds:avail_obj,0
+    jmp mem_rec_done
+    
+mem_rec_exit:
+    ReleaseSpinlock ds:com_spinlock
+
+mem_rec_done:
+    pop bx
+    pop es
+    ret
+mem_rec  ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MEM_RTS_OFF
+;
+;           DESCRIPTION:    Delayed RTS off, mem version
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-mem_com_int Proc far
+mem_rts_off PROC far
+    mov ds,cx
+    mov di,ds:send_count
+    or di,di
+    jnz mem_rts_off_done
+;
+    mov ebx,ds:mempps_offset
+    mov es,ds:mempps_sel
+;
+    push ax
+    mov al,es:[ebx].mr_lsr
+    test al,40h
+    pop ax
+    jnz mem_rts_off_dis
+;
+    add eax,ds:mempps_char_time
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET mem_rts_off
+    mov bx,cx
+    StartTimer
+    jmp mem_rts_off_done
+    
+mem_rts_off_dis:
+    mov al,es:[ebx].mr_mcr
+    and al,NOT 2
+    mov es:[ebx].mr_mcr,al
+
+mem_rts_off_done:
+    retf32
+mem_rts_off Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           mem_trans
+;
+;           DESCRIPTION:    Send data, mem version
+;
+;           PARAMETERS:     DS      Port sel
+;                           ES:EBX  Register address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_trans    PROC near
+    push fs
+;    
+    mov fs,ds:send_buf
+    RequestSpinlock ds:com_spinlock
+    mov cx,ds:send_count
+    or cx,cx                    ;  buffer empty ?
+    jnz mem_trans_not_empty
+
+mem_trans_end:      
+    mov al,IER_BITS + 1
+    mov es:[ebx].mr_ier,al
+    ReleaseSpinlock ds:com_spinlock
+;
+    test ds:mempps_flgs, FLG_ENABLE_AUTO_RTS
+    jz mem_trans_signal_wait
+;
+    GetSystemTime
+    add eax,ds:mempps_char_time
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET mem_rts_off
+    mov bx,ds
+    mov cx,bx
+    StopTimer
+    StartTimer
+
+mem_trans_signal_wait:
+    push bx
+    mov bx,ds:send_wait
+    or bx,bx
+    jz mem_trans_pop_exit
+;
+    Signal
+
+mem_trans_pop_exit:
+    pop bx    
+    jmp mem_trans_exit
+    
+mem_trans_not_empty:    
+    test ds:mempps_flgs, FLG_ENABLE_CTS
+    jz mem_trans_send
+;
+    mov al,es:[ebx].mr_msr
+    test al,10h
+    jz mem_trans_end
+
+mem_trans_send:
+    dec cx
+    mov ds:send_count,cx
+    mov si,ds:send_head                 ; get head pointer
+    mov al,fs:[si]                      ; get char
+    mov es:[ebx],al                     ; transmitt char
+    inc si
+    cmp si,ds:send_size
+    jnz mem_trans_not_wrap
+
+    xor si,si
+    
+mem_trans_not_wrap:
+    mov ds:send_head,si
+    ReleaseSpinlock ds:com_spinlock
+
+mem_trans_exit:
+    pop fs
+    ret
+mem_trans    ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           MemIntBase
+;
+;       DESCRIPTION:    Mem interrupt base code
+;
+;       PARAMETERS:     DS      Device sel
+;
+;       RETURNS:        CY      Handled something
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_serial_tab:
+mst_mod  DW OFFSET mem_modem
+mst_tx   DW OFFSET mem_trans
+mst_rx   DW OFFSET mem_rec
+mst_li   DW OFFSET mem_line_err
+
+MemIntBase Proc near
+    mov ebx,ds:mempds_offset
+    mov es,ds:mempds_sel
+;
+    mov ax,ds:mempds_handle
+    or ax,ax
+    jz mem_com_int_inactive
+;
+    mov ds,ax
+    mov al,es:[ebx].mr_isr_fcr
+    test al,1
+    jnz mem_com_int_ok
+
+mem_com_int_loop:
+    movzx si,al
+    and si,6
+    call word ptr cs:[si].mem_serial_tab
+;    
+    mov al,es:[ebx].mr_isr_fcr
+    test al,1
+    jnz mem_com_int_done
+    jmp mem_com_int_loop
+
+mem_com_int_inactive:
+    mov al,es:[ebx].mr_isr_fcr
+    test al,1
+    jnz mem_com_int_ok
+;   
+    mov al,es:[ebx].mr_msr
+    mov ds:mempds_line,al
+;   
+    mov al,es:[ebx].mr_lsr
+    mov al,es:[ebx]
+;   
+    mov al,IER_BITS + 1
+    mov es:[ebx].mr_ier,al
+;   
+    mov bx,ds:mempds_line_thread
+    or bx,bx
+    jz mem_com_int_done
+;
+    Signal
 
 mem_com_int_done:   
+    stc
+    jmp mem_com_int_end
+
+mem_com_int_ok:
+    clc
+    
+mem_com_int_end:    
+    ret
+MemIntBase Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:       mem_msi_int
+;
+;       DESCRIPTION:    MSI int, mem version
+;
+;       PARAMETERS:     DS      Com device
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_msi_int Proc far
+    call MemIntBase
     retf32
-mem_com_int Endp
+mem_msi_int Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:       mem_shared_int
+;
+;       DESCRIPTION:    Shared IRQ, mem version
+;
+;       PARAMETERS:     DS      Shared mem struc
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_shared_int Proc far
+
+msRetry:
+    mov cx,ds:ms_count
+    mov bx,OFFSET ms_com_dev_arr
+
+msIdleLoop:
+    push ds
+    push bx
+    push cx
+    mov ds,ds:[bx]
+    call MemIntBase
+    pop cx
+    pop bx
+    pop ds
+    jc msBusyLoop
+;
+    add bx,2
+    loop msIdleLoop
+    jmp msDone
+
+msBusyLoop:
+    push ds
+    push bx
+    push cx
+    mov ds,ds:[bx]
+    call MemIntBase
+    pop cx
+    pop bx
+    pop ds
+    add bx,2
+    loop msBusyLoop
+    jmp msRetry
+
+msDone:
+    retf32
+mem_shared_int Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2110,9 +2492,9 @@ AddIoPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AddMemPort
+;       NAME:           AddMsiMemPort
 ;
-;       DESCRIPTION:    Add mem port to list of available ports
+;       DESCRIPTION:    Add MSI mem port to list of available ports
 ;
 ;       PARAMETERS:     DS:EBX  Base
 ;                       AL      IRQ
@@ -2120,7 +2502,7 @@ AddIoPort Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddMemPort Proc near
+AddMsiMemPort Proc near
     push ds
     push es
     pushad
@@ -2141,7 +2523,7 @@ AddMemPort Proc near
     push es
     mov di,cs
     mov es,di
-    mov edi,OFFSET mem_com_int
+    mov edi,OFFSET mem_msi_int
     RequestMsiHandler
     pop es
 ;
@@ -2181,7 +2563,82 @@ AddMemPort Proc near
     pop es
     pop ds  
     ret
-AddMemPort Endp
+AddMsiMemPort Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddIrqMemPort
+;
+;       DESCRIPTION:    Add IRQ mem port to list of available ports
+;
+;       PARAMETERS:     DS:EBX  Base
+;                       AL      IRQ
+;                       ECX     Baud base
+;                       FS      Share mem sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddIrqMemPort Proc near
+    push ds
+    push es
+    pushad
+;    
+    push ax
+    mov eax,SIZE mem_com_device_struc
+    AllocateSmallGlobalMem
+    mov es:mempds_sel,ds
+    mov es:mempds_offset,ebx
+    mov es:mempds_handle,0
+    mov es:mempds_line_thread,0
+    mov es:mempds_line,0
+    mov es:mempds_baud_base,ecx
+    mov ax,es
+    mov ds,ax
+    pop ax
+;
+    mov bx,fs:ms_count
+    add bx,bx
+    mov fs:[bx].ms_com_dev_arr,es
+    inc fs:ms_count
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,ds:sd_ports
+    add bx,bx
+    mov ds:[bx].sd_port_arr,es
+    inc ds:sd_ports
+;
+    mov ax,es
+    mov ds,ax
+;    
+    xor ax,ax
+    xor dx,dx
+    AddComPort
+;    
+    mov dword ptr ds:cd_create_proc,OFFSET mem_create_port
+    mov dword ptr ds:cd_create_proc+4,cs
+;    
+    mov dword ptr ds:cd_reserve_line_proc,OFFSET mem_reserve_line_state
+    mov dword ptr ds:cd_reserve_line_proc+4,cs
+;    
+    mov dword ptr ds:cd_set_dtr_proc,OFFSET mem_device_set_dtr
+    mov dword ptr ds:cd_set_dtr_proc+4,cs
+;    
+    mov dword ptr ds:cd_reset_dtr_proc,OFFSET mem_device_reset_dtr
+    mov dword ptr ds:cd_reset_dtr_proc+4,cs
+;    
+    mov dword ptr ds:cd_get_line_state_proc,OFFSET mem_get_line_state
+    mov dword ptr ds:cd_get_line_state_proc+4,cs
+;    
+    mov dword ptr ds:cd_wait_for_line_state_proc,OFFSET mem_wait_for_line_state
+    mov dword ptr ds:cd_wait_for_line_state_proc+4,cs
+;
+    popad
+    pop es
+    pop ds  
+    ret
+AddIrqMemPort Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2361,21 +2818,22 @@ mem_init_pci_found:
     pop ecx
     pop ebx
 ;
-    mov eax,ds:oxb_uart_count
-    or eax,eax
+    mov edx,ds:oxb_uart_count
+    or edx,edx
     jz mem_init_pci_done        
 ;       
     GetPciMsiX
-    jc mem_init_pci_done    
+    jmp mem_init_irq
+    jc mem_init_irq
 ;
     cmp dl,al
-    jb mem_init_pci_done
+    jb mem_init_irq
 ;    
     EnablePciMsiX
 ;
     xor edx,edx
 
-mem_init_pci_setup:
+mem_msi_setup:
     push cx
     mov cx,1
     mov al,14h
@@ -2392,13 +2850,65 @@ mem_init_pci_setup:
     shl ebx,9
     add ebx,1000h        
     mov ecx,3906250
-    call AddMemPort
+    call AddMsiMemPort
     pop ecx
     pop ebx
 ;
     inc edx
     cmp edx,ds:oxb_uart_count
-    jne mem_init_pci_setup
+    jne mem_msi_setup
+    jmp mem_init_enable_irq
+
+mem_init_irq: 
+    GetPciIrqNr
+    jc mem_init_pci_done
+;
+    push eax
+    mov eax,SIZE mem_share_struc
+    AllocateSmallGlobalMem
+    pop eax
+;    
+    push ds
+    mov bx,es
+    mov ds,bx    
+    mov fs,bx
+    mov bx,cs
+    mov es,bx
+    mov ah,14h
+    mov edi,OFFSET mem_shared_int
+    RequestIrqHandler
+    pop ds
+;  
+    mov fs:ms_count,0
+    xor edx,edx
+
+mem_irq_setup:
+    push ebx
+    push ecx
+;
+    mov ebx,edx
+    shl ebx,9
+    add ebx,1000h        
+    mov ecx,3906250
+    call AddIrqMemPort
+    pop ecx
+    pop ebx
+;
+    inc edx
+    cmp edx,ds:oxb_uart_count
+    jne mem_irq_setup
+
+mem_init_enable_irq:
+    xor eax,eax
+    mov edx,ds:oxb_uart_count
+
+mem_init_mask_loop:    
+    stc
+    rcl eax,1
+    sub edx,1
+    jnz mem_init_mask_loop
+;
+    mov ds:oxb_irq_enable,eax
     clc
 
 mem_init_pci_done:
@@ -2500,6 +3010,10 @@ dt5:
 dtpci:
     call InitPciAdapter
     call RequestIRQs
+;
+    mov ax,25
+    WaitMilliSec
+;
     call InitMemPci
 ;
     popa
