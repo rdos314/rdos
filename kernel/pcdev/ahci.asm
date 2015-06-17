@@ -3996,13 +3996,17 @@ init_ahci    Proc far
     mov ds:has_disc,0
     mov cx,ds:ahci_dev_count
     or cx,cx
-    jz iaDone
+    jz iaFail
 ;
     mov ax,cs
     mov ds,ax
     mov es,ax
     mov edi,OFFSET disc_ctrl
     HookInitDisc
+    jmp iaDone
+
+iaFail:
+    SoftReset
     
 iaDone:
     EndDiscHandler
