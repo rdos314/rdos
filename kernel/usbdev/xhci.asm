@@ -61,6 +61,7 @@ TRB_TYPE_DEV_NOTIFY     = 38
 TRB_TYPE_MFI_WRAP       = 39
 
 XP_FLAG_TRANSFER_PENDING   = 1
+XP_FLAG_CLOSED             = 2
 
 trb_struc   STRUC
 
@@ -204,6 +205,8 @@ xhc_event_ccs       DW ?
 
 xhc_port_thread         DW ?
 xhc_port_change_mask    DD ?
+
+xhc_port_slot_arr   DB 256 DUP(?)
 
 xhc_func_sel_arr    DW 256 DUP(?)
 
@@ -605,6 +608,50 @@ EnableSlot  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           DisableSlot
+;
+;       DESCRIPTION:    Disable slot
+;
+;       PARAMETERS:     DS      Function sel
+;                       AL      Slot ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisableSlot  Proc near
+    push gs
+    push edi
+;
+    push ax
+    call WaitForCommandTrb
+    pop dx
+;    
+    xor eax,eax
+    mov gs:[edi].trb_param,eax
+    mov gs:[edi].trb_param+4,eax
+;
+    mov ah,dl
+    xor al,al
+    mov gs:[edi].trb_control,ax
+    mov al,TRB_TYPE_DISABLE_SLOT
+    call SendCommandTrb
+;
+    mov al,gs:[edi+100Bh]
+    cmp al,1
+    stc
+    jne dsDone
+;
+    mov al,gs:[edi+100Fh]
+    clc        
+
+dsDone:
+    pop edi
+    pop gs    
+    ret
+DisableSlot  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AllocateDevice
 ;
 ;       DESCRIPTION:    Allocate device
@@ -892,6 +939,54 @@ wfetOk:
     pop ax        
     ret
 WaitForEndpointTrb    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           StopEndpoint
+;
+;   DESCRIPTION:    Stop endpoint
+;
+;   PARAMETERS:     DS      Function selector
+;                   FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StopEndpoint   Proc near
+    push es
+    push gs
+    push eax
+    push edi
+;
+    call WaitForCommandTrb
+;    
+    mov es,fs:xp_dev_sel
+    xor eax,eax
+    mov gs:[edi].trb_param,eax
+    mov gs:[edi].trb_param+4,eax
+;
+    mov ah,fs:xp_slot
+    mov al,fs:xp_db_target
+    mov gs:[edi].trb_control,ax
+;
+    mov al,TRB_TYPE_STOP_ENDP
+    call SendCommandTrb
+;
+    mov al,gs:[edi+100Bh]
+    cmp al,1
+    stc
+    jne seDone
+;
+    mov al,gs:[edi+100Fh]
+    clc        
+
+seDone:
+    pop edi
+    pop eax
+    pop gs    
+    pop es
+    ret
+StopEndpoint   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1434,10 +1529,14 @@ IssueTransfer    Proc far
     push eax
     push si
 ;
+    mov fs:xp_result,-1
+    test fs:xp_flags,XP_FLAG_CLOSED
+    jnz itDone
+;
     GetThread
     mov fs:xp_thread,ax
     mov fs:xp_result,-1
-    or fs:xp_flags, XP_FLAG_TRANSFER_PENDING
+    lock or fs:xp_flags, XP_FLAG_TRANSFER_PENDING
     mov ax,fs:xp_size
     mov fs:xp_remain_size,ax
 ;    
@@ -1446,7 +1545,8 @@ IssueTransfer    Proc far
     shl si,2
     movzx eax,fs:xp_db_target
     mov ds:[si],eax
-;
+
+itDone:
     pop si
     pop eax
     pop ds
@@ -1469,6 +1569,10 @@ LocalIsConnected   Proc near
     push es
     push eax
     push si
+;
+    test fs:xp_flags,XP_FLAG_CLOSED
+    stc
+    jnz licDone
 ;
     movzx si,fs:xp_port_nr
     shl si,4
@@ -1594,7 +1698,7 @@ WaitForCompletion   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LocalEndTransfer   Proc near
-    and fs:xp_flags, NOT XP_FLAG_TRANSFER_PENDING
+    lock and fs:xp_flags, NOT XP_FLAG_TRANSFER_PENDING
     ret
 LocalEndTransfer   Endp
 
@@ -1700,8 +1804,33 @@ GetDataSize   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClosePipe   Proc far
-    int 3
-    stc
+    mov fs:xp_result,-1
+    lock or fs:xp_flags,XP_FLAG_CLOSED
+;    
+    test fs:xp_flags,XP_FLAG_TRANSFER_PENDING
+    jz cpIdle
+;    
+    mov bx,fs:xp_thread
+    or bx,bx
+    jz cpIdle
+;
+    Signal    
+
+cpIdle:    
+    mov al,fs:xp_db_target
+    cmp al,1
+    je cpStopped
+;    
+    call StopEndpoint
+
+cpStopped:    
+    mov ax,fs
+    mov es,ax
+    xor ax,ax
+    mov fs,ax
+    FreeMem
+;    
+    clc
     retf32
 ClosePipe   Endp
 
@@ -1941,6 +2070,9 @@ attach_thread:
     shl bx,1
     mov ds:[bx].xhc_func_sel_arr,es
 ;
+    movzx bx,cl    
+    mov ds:[bx].xhc_port_slot_arr,al
+;
     mov bx,xhci_device_ptr_sel
     mov fs,bx
     movzx bx,al
@@ -1981,7 +2113,47 @@ atDone:
 detach_thread_name  DB 'XHCI Detach', 0
 
 detach_thread:
-    int 3
+    mov cl,dl
+    mov ds,bx
+    mov es,ds:xhc_port_sel
+;    
+    movzx si,cl
+    shl si,4
+;    
+    movzx edi,cl
+    add edi,edi    
+    push edi
+;    
+    EnterSection ds:usb_section    
+    GetThread
+    mov ds:[edi].usb_detach_thread_arr,ax
+    LeaveSection ds:usb_section
+;    
+    push ecx
+    movzx bx,cl    
+    mov al,ds:[bx].xhc_port_slot_arr
+    movzx bx,al
+    shl bx,1
+    xor ax,ax
+    xchg ax,ds:[bx].xhc_func_sel_arr
+    mov bx,ax
+    GetSelectorBaseSize    
+    mov ecx,1000h
+    CreateDataSelector16
+    pop ecx
+;    
+    push edi
+    mov al,cl
+    NotifyUsbDetach
+    pop edi
+;
+    movzx bx,cl    
+    mov al,ds:[bx].xhc_port_slot_arr
+    call DisableSlot
+;
+    EnterSection ds:usb_section
+    mov ds:[edi].usb_detach_thread_arr,0
+    LeaveSection ds:usb_section    
     TerminateThread
 
     
@@ -2423,7 +2595,6 @@ upAttach:
     jmp upDone
 
 upDetach:
-    int 3
     mov ax,es
     mov ds,ax
 ;
