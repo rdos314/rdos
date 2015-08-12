@@ -295,8 +295,16 @@ void TQuizL7::SetupTexts()
   Quiz[118].Reverse = TRUE;
   Quiz[119].Reverse = TRUE;
   Quiz[120].Reverse = TRUE;
+  Quiz[121].Reverse = TRUE;
   Quiz[124].Reverse = TRUE;
   Quiz[126].Reverse = TRUE;
+  Quiz[130].Reverse = TRUE;
+  Quiz[132].Reverse = TRUE;
+  Quiz[133].Reverse = TRUE;
+  Quiz[135].Reverse = TRUE;
+  Quiz[137].Reverse = TRUE;
+  Quiz[140].Reverse = TRUE;
+  Quiz[141].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
