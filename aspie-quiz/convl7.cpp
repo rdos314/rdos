@@ -183,6 +183,8 @@ static void ProcessRow(char *str)
                  i = fieldno - 19;
                  if (i < 20)
                     i += 123;
+                 else
+                    i -= 20;
             
                  Row.Quiz[i] = atoi(valstr);
                  break;
@@ -190,7 +192,7 @@ static void ProcessRow(char *str)
     }
 
     HandleRow(&Row);
-    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 143);
+    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 123);
 }
 
 /*################## ConvL7 ##########################
