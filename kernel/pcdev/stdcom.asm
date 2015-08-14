@@ -2822,8 +2822,8 @@ mem_init_pci_found:
     or edx,edx
     jz mem_init_pci_done        
 ;       
+    mov al,dl
     GetPciMsiX
-    jmp mem_init_irq
     jc mem_init_irq
 ;
     cmp dl,al
@@ -2927,6 +2927,14 @@ InitMemPci  Endp
 ;       RETURNS:    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_mem_thread_name    DB 'Init PCI Com', 0
+
+init_mem_thread:
+    int 3
+    call InitMemPci
+    TerminateThread
+
     
 init_pci    Proc far
     push ds
@@ -3013,6 +3021,17 @@ dtpci:
 ;
     mov ax,25
     WaitMilliSec
+;
+; test
+; 
+;    mov ax,cs
+;    mov ds,ax
+;    mov es,ax
+;    mov di,OFFSET init_mem_thread_name
+;    mov si,OFFSET init_mem_thread
+;    mov ax,2
+;    mov cx,stack0_size
+;    CreateThread
 ;
     call InitMemPci
 ;

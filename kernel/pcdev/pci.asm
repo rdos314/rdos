@@ -1080,10 +1080,6 @@ enable_pci_msix     Proc far
     mov si,ax
 ;
     add cl,2
-    xor eax,eax
-    WritePciDword
-;
-    add cl,4
     ReadPciDword
     mov edi,eax
     and di,0FFF8h
@@ -1149,12 +1145,16 @@ setup_pci_msix_entry     Proc far
     push esi
 ;    
     movzx si,dl
-    shl si,3
+    shl si,4
 ;
     RegisterMsi
-    mov es:[si+4],edx
+    mov es:[si],edx
     movzx eax,ax
-    mov es:[si],eax
+    mov es:[si+8],eax
+;
+    xor eax,eax
+    mov es:[si+4],eax
+    mov es:[si+12],eax    
 ;
     pop esi
     pop edx
