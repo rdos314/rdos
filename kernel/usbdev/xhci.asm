@@ -2422,6 +2422,9 @@ event_thread:
     mov es:xhc_event_ccs,1
     xor si,si
 
+    mov ax,500
+    WaitMilliSec
+;
 etWait:
     WaitForSignal
 
@@ -2693,8 +2696,12 @@ port_thread_name   DB 'XHCI Port', 0
 port_thread:
     mov es,bx
     GetThread
+;        
     mov es:xhc_port_thread,ax
     mov ds,es:xhc_port_sel
+;
+    mov ax,500
+    WaitMilliSec
 
 ptLoop:
     WaitForSignal

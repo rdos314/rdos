@@ -2927,19 +2927,14 @@ InitMemPci  Endp
 ;       RETURNS:    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_mem_thread_name    DB 'Init PCI Com', 0
-
-init_mem_thread:
-    int 3
-    call InitMemPci
-    TerminateThread
-
     
 init_pci    Proc far
     push ds
     push es
     pusha
+;
+    call InitMemPci
+    jnc dtdone
 ;
     mov ax,25
     WaitMilliSec
@@ -3018,23 +3013,11 @@ dt5:
 dtpci:
     call InitPciAdapter
     call RequestIRQs
-;
+
     mov ax,25
     WaitMilliSec
-;
-; test
-; 
-;    mov ax,cs
-;    mov ds,ax
-;    mov es,ax
-;    mov di,OFFSET init_mem_thread_name
-;    mov si,OFFSET init_mem_thread
-;    mov ax,2
-;    mov cx,stack0_size
-;    CreateThread
-;
-    call InitMemPci
-;
+
+dtdone:
     popa
     pop es
     pop ds
