@@ -5631,6 +5631,62 @@ tcp_active_wait:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           UpdateTcpMtu
+;
+;       DESCRIPTION:    Update Tcp MTU
+;
+;       PARAMETERS:     EDX     IP address
+;                       DI      Remote port
+;                       CX      New MTU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+update_tcp_mtu_name DB 'Update Tcp MTU', 0
+
+update_tcp_mtu    Proc far
+    push ds
+    pushad
+;    
+    sub cx,64
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:ListSection
+    mov ax,ds:ConnectionList
+
+utmLoop:    
+    or ax,ax
+    jz utmLeave
+;
+    mov ds,ax
+    cmp edx,ds:tcp_remote_ip
+    jne utmNext
+;
+    cmp di,ds:tcp_remote_port
+    jne utmNext
+;
+    mov ds:tcp_mtu,cx
+    lock or ds:tcp_pending,FLAG_SEND_PUSH
+    mov ds:tcp_push_timeout,0
+    mov eax,ds:tcp_send_una
+    mov ds:tcp_send_next,eax
+
+utmNext:    
+    mov ax,ds:tcp_next
+    jmp utmLoop
+
+utmLeave:
+    mov ax,SEG data
+    mov ds,ax
+    LeaveSection ds:ListSection
+;
+    popad
+    pop ds
+    retf32
+update_tcp_mtu  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init_task_tcp
 ;
 ;           DESCRIPTION:    Init tcp driver, tasking part
@@ -5668,6 +5724,12 @@ init_task_tcp    PROC near
     mov edi,OFFSET delete_listen_handle
     mov ax,TCP_SOCKET_HANDLE
     RegisterHandle
+;
+    mov esi,OFFSET update_tcp_mtu
+    mov edi,OFFSET update_tcp_mtu_name
+    xor cl,cl
+    mov ax,update_tcp_mtu_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET open_tcp_connection
     mov edi,OFFSET open_tcp_connection_name

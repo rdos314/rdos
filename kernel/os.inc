@@ -2539,6 +2539,13 @@ NotifyEthernetPacket    MACRO
     OsGate notify_ethernet_packet_nr
                     ENDM
 
+; IN  EDX       Remote IP
+; IN  DI        Remote port
+; IN  CX        New MTU
+UpdateTcpMtu    MACRO
+    OsGate update_tcp_mtu_nr
+                    ENDM
+
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
 
 BeginDiscHandler    MACRO

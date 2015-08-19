@@ -34,6 +34,7 @@ INCLUDE ..\os.inc
 INCLUDE exec.def
 INCLUDE system.inc
 INCLUDE ip.inc
+INCLUDE tcp.inc
 
 TYPE_ECHO_REPLY = 0
 TYPE_UNREACHABLE = 3
@@ -199,6 +200,47 @@ ReceiveEchoReq  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       Name:           ReceiveUnreachable
+;
+;       Purpose:        Received unreachable msg
+;
+;       Parameters:     ECX         Size of data
+;                       EDX         Source IP address
+;                       DS:ESI      Options
+;                       ES:EDI      IP Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveUnreachable    Proc near
+    mov al,es:[edi+1]
+    cmp al,4
+    jne ruDone
+; 
+    add edi,8
+    mov al,es:[edi].ip_proto
+    cmp al,6
+    jne ruDone
+;
+    mov ax,es:[edi-2]
+    xchg al,ah
+    mov cx,ax
+;    
+    mov edx,es:[edi].ip_dest
+    add edi,SIZE ip_header
+    mov ax,es:[edi].tcp_dest
+    xchg al,ah
+    mov di,ax
+    UpdateTcpMtu
+    
+ruDone:
+    xor ax,ax
+    mov ds,ax
+    FreeMem
+    ret
+ReceiveUnreachable    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       Name:           Receive
 ;
 ;       Purpose:        Receive notify from IP
@@ -222,7 +264,7 @@ ReceiveTab:
 rt00 DW OFFSET ReceiveEchoReply
 rt01 DW OFFSET ReceiveDiscard
 rt02 DW OFFSET ReceiveDiscard
-rt03 DW OFFSET ReceiveDiscard
+rt03 DW OFFSET ReceiveUnreachable
 rt04 DW OFFSET ReceiveDiscard
 rt05 DW OFFSET ReceiveDiscard
 rt06 DW OFFSET ReceiveDiscard

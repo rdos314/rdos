@@ -672,4 +672,6 @@ get_pci_msix_nr             = 550
 enable_pci_msix_nr          = 551
 setup_pci_msix_entry_nr     = 552
 
+update_tcp_mtu_nr           = 553
+
 osgate_entries				= 560
