@@ -141,6 +141,10 @@ address_device_proc	DD ?,?
 ; IN  FS        Pipe selector
 config_device_proc	DD ?,?
 
+; IN  FS        Pipe selector
+; IN  AL        Max len
+set_max_len_proc        DD ?,?
+
 usb_section            section_typ <>
 
 usb_controller_id      DW ?

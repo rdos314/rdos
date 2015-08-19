@@ -2624,6 +2624,22 @@ GetMaxLen   Proc far
     mov al,8
     retf32
 GetMaxLen   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetMaxLen
+;
+;           DESCRIPTION:    Set max len
+;
+;           PARAMETERS:     FS      Pipe
+;                           AL      Maxlen
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetMaxLen   Proc far
+    retf32
+SetMaxLen   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3067,7 +3083,7 @@ ut03 DD OFFSET AddSetup,        SEG code
 ut04 DD OFFSET AddOut,          SEG code
 ut05 DD OFFSET AddIn,           SEG code
 ut06 DD OFFSET AddStatusOut,    SEG code
-ut07 DD OFFSET AddStatusIn,         SEG code
+gut07 DD OFFSET AddStatusIn,         SEG code
 ut08 DD OFFSET IssueTransfer,       SEG code
 ut09 DD OFFSET IsTransferDone,      SEG code
 ut0A DD OFFSET EndTransfer,     SEG code
@@ -3086,8 +3102,9 @@ ut16 DD OFFSET Has64Bit,        SEG code
 ut17 DD OFFSET IsStalled,       SEG code
 ut18 DD OFFSET ClearStalled,    SEG code
 ut19 DD OFFSET GetMaxLen,       SEG code
-ut1A DD 0,                          0
-ut1B DD 0,                          0
+ut1A DD 0,                      0
+ut1B DD 0,                      0
+ut1C DD OFFSET SetMaxLen,       SEG code
 
 InitFunction    Proc near
     pushad
@@ -3111,7 +3128,7 @@ ifNotLegacy:
 ;
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*1Ch
+    mov cx,2*1Dh
 
 ifTabLoop:
     lods dword ptr cs:[si]

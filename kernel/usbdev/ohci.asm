@@ -2493,6 +2493,22 @@ GetMaxLen   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetMaxLen
+;
+;           DESCRIPTION:    Set max len
+;
+;           PARAMETERS:     FS      Pipe
+;                           AL      Maxlen
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetMaxLen   Proc far
+    retf32
+SetMaxLen   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdateQueue
 ;
 ;           DESCRIPTION:    Update done queue
@@ -3269,6 +3285,7 @@ ot18 DD OFFSET ClearStalled,    SEG code
 ot19 DD OFFSET GetMaxLen,       SEG code
 ot1A DD 0,                      0
 ot1B DD 0,                      0
+ot1C DD OFFSET SetMaxLen,       SEG code
 
 InitFunction    Proc near
     push es
@@ -3280,7 +3297,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*1Ch
+    mov cx,2*1Dh
 
 ifTabLoop:
     lods dword ptr cs:[si]

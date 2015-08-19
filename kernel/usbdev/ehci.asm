@@ -2809,6 +2809,22 @@ GetMaxLen   Proc far
     mov al,64
     retf32
 GetMaxLen   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetMaxLen
+;
+;           DESCRIPTION:    Set max len
+;
+;           PARAMETERS:     FS      Pipe
+;                           AL      Maxlen
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetMaxLen   Proc far
+    retf32
+SetMaxLen   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3572,6 +3588,7 @@ et18 DD OFFSET ClearStalled,    SEG code
 et19 DD OFFSET GetMaxLen,       SEG code
 et1A DD 0,                      0
 et1B DD 0,                      0
+et1C DD OFFSET SetMaxLen,       SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -3592,7 +3609,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*1Ch
+    mov cx,2*1Dh
 
 ifTabLoop:
     lods dword ptr cs:[si]

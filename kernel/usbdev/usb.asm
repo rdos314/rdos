@@ -1259,7 +1259,13 @@ nuaRetry:
     or ax,ax
     jz nuaRetry
 ;
+    cmp ax,fs:usbp_maxlen
+    je nuaLenOk
+;    
     mov fs:usbp_maxlen,ax
+    call fword ptr ds:set_max_len_proc
+    
+nuaLenOk:
     movzx eax,es:udd_len
     FreeMem
 ;

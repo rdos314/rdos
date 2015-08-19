@@ -2030,6 +2030,63 @@ GetMaxLen   Proc far
     stc
     retf32
 GetMaxLen   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetMaxLen
+;
+;           DESCRIPTION:    Set max len
+;
+;           PARAMETERS:     FS      Pipe
+;                           AL      Maxlen
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetMaxLen   Proc far
+    push es
+    push gs
+    push eax
+    push ebx
+    push ecx
+    push edi
+;
+    mov es,fs:xp_dev_sel
+    mov bx,es:xd_input_ep_arr_offset
+    mov es:[bx].ec_avg_len,ax
+    mov es:[bx].ec_packet_size,ax
+    call WaitForCommandTrb
+;    
+    movzx eax,es:xd_input_context_offset
+    add eax,es:xd_phys
+    mov gs:[edi].trb_param,eax
+    mov eax,es:xd_phys+4
+    mov gs:[edi].trb_param+4,eax
+;
+    mov ah,fs:xp_slot
+    xor al,al
+    mov gs:[edi].trb_control,ax
+;
+    mov al,TRB_TYPE_EVALUATE
+    call SendCommandTrb
+;
+    mov al,gs:[edi+100Bh]
+    cmp al,1
+    stc
+    jne smlDone
+;
+    mov al,gs:[edi+100Fh]
+    clc        
+
+smlDone:
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    pop gs    
+    pop es
+    retf32
+SetMaxLen   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2801,6 +2858,7 @@ et18 DD OFFSET ClearStalled,    SEG code
 et19 DD OFFSET GetMaxLen,       SEG code
 et1A DD OFFSET AddressDevice,   SEG code
 et1B DD OFFSET ConfigDevice,    SEG code
+et1C DD OFFSET SetMaxLen,       SEG code
 
 InitFunction    Proc near
     push es
@@ -2921,7 +2979,7 @@ ifIntDone:
 ;    
     mov si,OFFSET xhci_tab
     xor di,di
-    mov cx,2*1Ch
+    mov cx,2*1Dh
 
 ifTabLoop:
     lods dword ptr cs:[si]
