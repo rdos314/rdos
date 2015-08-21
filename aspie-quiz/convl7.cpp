@@ -173,16 +173,18 @@ static void ProcessRow(char *str)
 
             case 17:
                  Row.Infatuation = atoi(valstr);
+                 Row.Quiz[123] = Row.Infatuation / 10;
                  break;
 
             case 18:
                  Row.Attachment = atoi(valstr);
+                 Row.Quiz[124] = Row.Attachment / 10;
                  break;
 
             default:
                  i = fieldno - 19;
                  if (i < 20)
-                    i += 123;
+                    i += 125;
                  else
                     i -= 20;
             

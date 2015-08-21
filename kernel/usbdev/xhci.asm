@@ -62,6 +62,7 @@ TRB_TYPE_MFI_WRAP       = 39
 
 XP_FLAG_TRANSFER_PENDING   = 1
 XP_FLAG_CLOSED             = 2
+XP_FLAG_DATA               = 4
 
 trb_struc   STRUC
 
@@ -214,21 +215,18 @@ xhci_func_sel   ENDS
 
 xhci_dev_struc   STRUC
 
-usb_function_base       usb_function_struc <>
+usb_function_base        usb_function_struc <>
 
-xd_phys                 DD ?,?
-xd_linear               DD ?
+xd_phys                  DD ?,?
+xd_linear                DD ?
 
-xd_dev_sel              DW ?
+xd_dev_sel               DW ?
 
-xd_input_context_offset DW ?
-xd_input_slot_offset    DW ?
-xd_input_ep_arr_offset  DW 32 DUP (?)
+xd_input_context_offset  DW ?
+xd_device_context_offset DW ?
+xd_input_ep_arr_offset   DW 32 DUP (?)
 
-xd_output_slot_offset   DW ?
-xd_output_ep_arr_offset DW 32 DUP (?)
-
-xd_ep_sel_arr           DW 32 DUP(?)
+xd_ep_sel_arr            DW 32 DUP(?)
 
 xhci_dev_struc    ENDS
 
@@ -253,6 +251,9 @@ xp_ring_pcs         DW ?
 xp_thread           DW ?
 xp_size             DW ?
 xp_remain_size      DW ?
+
+xp_data_head        DW ?
+xp_data_last        DW ?
 
 xp_db_target        DB ?
 xp_result           DB ?
@@ -442,12 +443,21 @@ CreateCommandRing   Proc near
     mov eax,2000h
     AllocateBigLinear
 ;
-    AllocatePhysical64
+    mov ecx,2
+    AllocateMultiplePhysical64
     mov es:xhc_crcr,eax
     mov es:xhc_crcr+4,ebx
 ;
     mov al,13h
     SetPageEntry
+;
+    push eax
+    push edx
+    add eax,1000h
+    add edx,1000h
+    SetPageEntry
+    pop edx
+    pop eax
 ;
     push es
     mov ax,flat_sel
@@ -459,7 +469,7 @@ CreateCommandRing   Proc near
     pop es
 ;
     mov edi,edx
-    add edi,0FF0h
+    add edi,1FF0h
     mov eax,es:xhc_crcr
     mov ebx,es:xhc_crcr+4
     call SetupLinkTrb
@@ -701,7 +711,7 @@ AllocateDevice    Proc near
     mov es:xd_input_context_offset,bx
 ;
     add bx,dx
-    mov es:xd_input_slot_offset,bx
+    mov es:xd_device_context_offset,bx
 ;
     mov di,OFFSET xd_input_ep_arr_offset
     mov cx,32
@@ -717,18 +727,6 @@ adiEpLoop:
     dec bx
     and bx,0FFC0h
 ;    
-    mov es:xd_output_slot_offset,bx
-;
-    mov di,OFFSET xd_output_ep_arr_offset
-    mov cx,32
-
-adoEpLoop:
-    add bx,dx
-    mov es:[di],bx
-    add di,2 
-    loop adoEpLoop      
-;
-    add bx,dx
     movzx ecx,bx
     mov edx,es:xd_linear
     mov bx,es
@@ -763,7 +761,7 @@ SetupRootDevice    Proc near
     mov bx,es:xd_input_context_offset
     mov es:[bx].icc_add_mask,3
 ;    
-    mov bx,es:xd_input_slot_offset
+    mov bx,es:xd_device_context_offset
     mov eax,fs:[di]
     shr eax,10
     and eax,0Fh
@@ -809,7 +807,7 @@ aceNoReset:
     or eax,edx
     mov es:[bx].icc_add_mask,eax
 ;
-    mov bx,es:xd_input_slot_offset    
+    mov bx,es:xd_device_context_offset    
     mov eax,es:[bx].s_misc
     shr eax,27
     cmp al,fs:xp_db_target
@@ -1341,6 +1339,45 @@ AddOut    Proc far
     push es
     pushad
 ;    
+    test fs:xp_flags,XP_FLAG_DATA
+    jz aoFirst
+;
+    mov si,fs:xp_data_last
+    mov ax,fs:[si].trb_type
+    and ax,NOT 20h
+    or ax,10h     
+    mov fs:[si].trb_type,ax
+;
+    add fs:xp_size,cx
+    push cx
+    mov bx,es
+    GetSelectorBaseSize
+    add edx,edi
+    mov cx,flat_sel
+    mov es,cx
+    mov al,es:[edx]
+    GetPageEntry
+    and ax,0F000h
+    mov cx,dx
+    and cx,0FFFh
+    or ax,cx
+    pop cx
+;
+    call WaitForEndpointTrb
+    mov fs:[si].trb_param,eax
+    mov fs:[si].trb_param+4,ebx
+;
+    movzx eax,cx
+    mov fs:[si].trb_status,eax    
+    mov ax,TRB_TYPE_NORMAL SHL 10
+    or ax,fs:xp_ring_pcs
+    or ax,20h
+    mov fs:[si].trb_type,ax
+    mov fs:xp_data_last,si
+    jmp aoDone
+
+aoFirst:    
+    lock or fs:xp_flags, XP_FLAG_DATA
     mov fs:xp_size,cx
     push cx
     mov bx,es
@@ -1373,6 +1410,7 @@ aoControl:
     mov fs:[si].trb_type,ax
     mov fs:[si].trb_control,2
     mov fs:xp_setup_offset,0
+    mov fs:xp_data_head,0
     jmp aoDone
 
 aoData:
@@ -1380,6 +1418,8 @@ aoData:
     or ax,fs:xp_ring_pcs
     or ax,20h
     mov fs:[si].trb_type,ax
+    mov fs:xp_data_head,si
+    mov fs:xp_data_last,si
     clc
 
 aoDone:
@@ -1406,6 +1446,45 @@ AddIn    Proc far
     push es
     pushad
 ;    
+    test fs:xp_flags,XP_FLAG_DATA
+    jz aiFirst
+;
+    mov si,fs:xp_data_last
+    mov ax,fs:[si].trb_type
+    and ax,NOT 20h
+    or ax,10h     
+    mov fs:[si].trb_type,ax
+;
+    add fs:xp_size,cx
+    push cx
+    mov bx,es
+    GetSelectorBaseSize
+    add edx,edi
+    mov cx,flat_sel
+    mov es,cx
+    mov al,es:[edx]
+    GetPageEntry
+    and ax,0F000h
+    mov cx,dx
+    and cx,0FFFh
+    or ax,cx
+    pop cx
+;
+    call WaitForEndpointTrb
+    mov fs:[si].trb_param,eax
+    mov fs:[si].trb_param+4,ebx
+;
+    movzx eax,cx
+    mov fs:[si].trb_status,eax    
+    mov ax,TRB_TYPE_NORMAL SHL 10
+    or ax,fs:xp_ring_pcs
+    or ax,20h
+    mov fs:[si].trb_type,ax
+    mov fs:xp_data_last,si
+    jmp aiDone
+
+aiFirst:    
+    lock or fs:xp_flags, XP_FLAG_DATA
     mov fs:xp_size,cx
     push cx
     mov bx,es
@@ -1438,6 +1517,7 @@ aiControl:
     mov fs:[si].trb_type,ax
     mov fs:[si].trb_control,3
     mov fs:xp_setup_offset,0
+    mov fs:xp_data_head,0
     jmp aiDone
 
 aiData:
@@ -1445,6 +1525,8 @@ aiData:
     or ax,fs:xp_ring_pcs
     or ax,20h
     mov fs:[si].trb_type,ax
+    mov fs:xp_data_head,si
+    mov fs:xp_data_last,si
 
 aiDone:    
     clc
@@ -1533,6 +1615,66 @@ IssueTransfer    Proc far
     test fs:xp_flags,XP_FLAG_CLOSED
     jnz itDone
 ;
+    test fs:xp_flags,XP_FLAG_DATA
+    jz itNorm
+;    
+    mov si,fs:xp_data_head
+    or si,si
+    jz itNorm
+;    
+    cmp si,fs:xp_data_last
+    je itNorm
+;
+    push cx
+    xor cx,cx
+
+itCountLoop:    
+    mov ax,fs:[si].trb_type
+    test ax,2
+    jz itCountNext
+;
+    mov si,fs:xp_ring_offset
+
+itCountNext:    
+    cmp si,fs:xp_data_last
+    je itCountDone
+;
+    add si,SIZE trb_struc
+    inc cx
+    jmp itCountLoop
+
+itCountDone:    
+    mov si,fs:xp_data_head
+
+itMarkLoop:    
+    mov ax,fs:[si].trb_type
+    test ax,2
+    jz itMarkNext
+;
+    mov si,fs:xp_ring_offset
+
+itMarkNext:    
+    cmp si,fs:xp_data_last
+    je itMarkDone
+;
+    movzx eax,cx
+    cmp ax,15
+    jbe itMarkDo
+;
+    mov ax,15
+
+itMarkDo:
+    shl eax,17
+    or fs:[si].trb_status,eax
+;       
+    add si,SIZE trb_struc
+    dec cx
+    jmp itMarkLoop
+
+itMarkDone:    
+    pop cx
+
+itNorm:
     GetThread
     mov fs:xp_thread,ax
     mov fs:xp_result,-1
@@ -1698,7 +1840,7 @@ WaitForCompletion   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LocalEndTransfer   Proc near
-    lock and fs:xp_flags, NOT XP_FLAG_TRANSFER_PENDING
+    lock and fs:xp_flags, NOT (XP_FLAG_TRANSFER_PENDING OR XP_FLAG_DATA)
     ret
 LocalEndTransfer   Endp
 
@@ -2134,7 +2276,7 @@ attach_thread:
     mov fs,bx
     movzx bx,al
     shl bx,3
-    movzx edx,es:xd_output_slot_offset
+    movzx edx,es:xd_device_context_offset
     add edx,es:xd_phys
     mov fs:[bx],edx
     mov edx,es:xd_phys+4
