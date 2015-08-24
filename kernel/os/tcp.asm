@@ -5667,8 +5667,7 @@ utmLoop:
     mov ds:tcp_mtu,cx
     lock or ds:tcp_pending,FLAG_SEND_PUSH
     mov ds:tcp_push_timeout,0
-    mov eax,ds:tcp_send_una
-    mov ds:tcp_send_next,eax
+    mov ds:tcp_resend_timeout,1
 
 utmNext:    
     mov ax,ds:tcp_next
