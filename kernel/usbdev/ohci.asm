@@ -2861,6 +2861,7 @@ rtWaitNotify:
     mov eax,es:[si].HcRhPortStatus
     push eax
     push cx    
+    push di
 ;
     mov eax,SIZE usb_function_struc
     AllocateSmallGlobalMem
@@ -2869,6 +2870,7 @@ rtWaitNotify:
     xor al,al
     rep stosb
 ;
+    pop di
     pop cx
     pop eax
 ;
