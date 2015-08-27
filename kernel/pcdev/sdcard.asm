@@ -1817,11 +1817,10 @@ idVoltOk:
 ;
     mov ax,ds:sd_ver
     cmp ax,2
-    jb idSpeedDone
+    jb idNoHs
 ;
     call SendAcmd6
-
-idSpeedDone:
+;
     mov ax,ds:sd_ccc
     and ax,14h
     cmp ax,14h
