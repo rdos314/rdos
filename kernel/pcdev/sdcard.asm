@@ -612,10 +612,6 @@ SetSdClock   Proc near
     and al,NOT 1
     mov fs:REG_CLK_CONTROL,ax
 ;    
-;    mov al,fs:REG_CONTROL
-;    or al,4
-;    mov fs:REG_CONTROL,ax
-;
     mov al,fs:REG_VER
     cmp al,2
     jb SetSdClock1
@@ -894,7 +890,7 @@ SendCmd11    Proc near
     ClearSignal
     mov dword ptr fs:REG_ARG,0
     mov word ptr fs:REG_TRANS_MODE,0
-    mov word ptr fs:REG_CMD,1102h
+    mov word ptr fs:REG_CMD,0B02h
     call WaitForCompletion
     ret
 SendCmd11    Endp
@@ -1443,6 +1439,34 @@ SetHighSpeed    Proc near
     WaitMilliSec
     call GetCmd6Func
 ;    
+    mov eax,0FF3FFFh
+    mov cx,ds:sd_grp4
+    test cl,8
+    jnz shsSetPower
+;
+    mov eax,0FF2FFFh
+    test cl,4
+    jnz shsSetPower
+;
+    mov eax,0FF1FFFh
+    test cl,2
+    jnz shsSetPower
+;
+    jmp shsSetPowerOk        
+
+shsSetPower:    
+    call SetCmd6
+    mov ax,10
+    WaitMilliSec
+    call GetCmd6Func
+;
+    mov eax,0FF0001h
+    call QueryCmd6
+    mov ax,10
+    WaitMilliSec
+    call GetCmd6Func
+
+shsSetPowerOk:
     mov eax,0FF0001h
     call SetCmd6
     mov ax,10
@@ -1673,24 +1697,67 @@ idOcr:
 ;
     mov ds:sd_ocr,eax
 ;
+    mov ax,ds:sd_ver
+    cmp ax,2
+    jae idsOcr
+;
     call SendCmd8
     jc idFailed
-;
+
+idsOcr:
     mov eax,ds:sd_ocr
     call SetOcr    
 ;
     test ds:sd_ocr,01000000h
     jz idVoltOk
 ;
+    call SendCmd11    
+    jc idFailed
+;
+    mov word ptr fs:REG_INT_STATUS_ENABLE,0
+    mov word ptr fs:REG_INT_SIG_ENABLE,0
+;
+    mov word ptr fs:REG_INT_ERROR_STATUS_ENABLE,0
+    mov word ptr fs:REG_INT_ERROR_SIG_ENABLE,0
+;
+    mov ax,fs:REG_CLK_CONTROL
+    and ax,NOT 4
+    mov fs:REG_CLK_CONTROL,ax
+;
+    mov eax,fs:REG_STATE
+    shr eax,20
+    and al,0Fh
+    jnz idFailed
+;
     mov ax,fs:REG_CONTROL2
     or ax,8
     mov fs:REG_CONTROL2,ax
 ;
-    call SendCmd11    
-    jc idFailed
-;    
-    mov ax,100
+    mov ax,10
     WaitMilliSec
+;
+    mov ax,fs:REG_CONTROL2        
+    test ax,8
+    jz idFailed
+;
+    mov ax,fs:REG_CLK_CONTROL
+    or ax,4
+    mov fs:REG_CLK_CONTROL,ax
+;
+    mov ax,5
+    WaitMilliSec
+;
+    mov eax,fs:REG_STATE
+    shr eax,20
+    and al,0Fh
+    cmp al,0Fh
+    jne idFailed
+;
+    mov word ptr fs:REG_INT_STATUS_ENABLE,1FFh
+    mov word ptr fs:REG_INT_SIG_ENABLE,1FFh
+;
+    mov word ptr fs:REG_INT_ERROR_STATUS_ENABLE,3FFh
+    mov word ptr fs:REG_INT_ERROR_SIG_ENABLE,3FFh
 
 idVoltOk:
     call SendCmd2
