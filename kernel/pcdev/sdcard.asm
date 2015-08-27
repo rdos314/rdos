@@ -1340,6 +1340,8 @@ QueryCmd6    Proc near
     mov word ptr fs:REG_TRANS_MODE,10h
     mov word ptr fs:REG_CMD,63Ah
     WaitForSignal
+    mov ax,10
+    WaitMilliSec
     call GetCmd6Par
     mov eax,fs:REG_RESP0
     ret
@@ -1370,6 +1372,8 @@ SetCmd6    Proc near
     mov word ptr fs:REG_TRANS_MODE,10h
     mov word ptr fs:REG_CMD,63Ah
     WaitForSignal
+    mov ax,10
+    WaitMilliSec 
     call GetCmd6Par
     mov eax,fs:REG_RESP0
     ret
@@ -1414,6 +1418,69 @@ GetCmd6Func Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetSdr25
+;
+;           DESCRIPTION:    Set SDR25 mode
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetSdr25    Proc near
+    mov eax,0FF0001h
+    call SetCmd6
+    mov ax,10
+    WaitMilliSec
+    call GetCmd6Func
+    cmp eax,1h
+    stc
+    jne ss25Done
+;
+    mov cx,50
+    call SetSdClock
+    clc
+
+ss25Done:    
+    ret
+SetSdr25    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetSdr50
+;
+;           DESCRIPTION:    Set SDR50 mode
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetSdr50    Proc near
+    mov eax,0FF1002h
+    call SetCmd6
+    mov ax,10
+    WaitMilliSec
+    call GetCmd6Func
+    cmp eax,100002h
+    stc
+    jne ss50Done
+;
+    mov cx,100
+    call SetSdClock
+;
+    mov ax,fs:REG_CONTROL2
+    and al,NOT 7
+    or al,2
+    mov fs:REG_CONTROL2,ax
+    clc
+
+ss50Done:    
+    ret
+SetSdr50    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SetHighSpeed
 ;
 ;           DESCRIPTION:    Set high speed
@@ -1438,45 +1505,21 @@ SetHighSpeed    Proc near
     mov ax,10
     WaitMilliSec
     call GetCmd6Func
-;    
-    mov eax,0FF3FFFh
-    mov cx,ds:sd_grp4
-    test cl,8
-    jnz shsSetPower
 ;
-    mov eax,0FF2FFFh
-    test cl,4
-    jnz shsSetPower
+    mov ax,ds:sd_grp1
+    test al,4
+    jz shsNot50
 ;
-    mov eax,0FF1FFFh
-    test cl,2
-    jnz shsSetPower
-;
-    jmp shsSetPowerOk        
+    int 3
+    call SetSdr50
+    jnc shsDone
 
-shsSetPower:    
-    call SetCmd6
-    mov ax,10
-    WaitMilliSec
-    call GetCmd6Func
+shsNot50:
+    mov ax,ds:sd_grp1
+    test al,2
+    jz shsDone
 ;
-    mov eax,0FF0001h
-    call QueryCmd6
-    mov ax,10
-    WaitMilliSec
-    call GetCmd6Func
-
-shsSetPowerOk:
-    mov eax,0FF0001h
-    call SetCmd6
-    mov ax,10
-    WaitMilliSec
-    call GetCmd6Func
-    cmp eax,1
-    stc
-    jne shsDone
-;
-    clc
+    call SetSdr25    
 
 shsDone:    
     ret
@@ -1785,10 +1828,6 @@ idSpeedDone:
     jne idFailed
 ;    
     call SetHighSpeed
-    jc idNoHs
-;
-    mov cx,50
-    call SetSdClock
     
 idNoHs:    
     mov ecx,1000
