@@ -95,7 +95,24 @@ sd_ocr              DD ?
 sd_rca              DD ?
 sd_cid              DD ?,?,?,?
 
+sd_cap              DD ?
+sd_ver              DW ?
 sd_ccc              DW ?
+
+sd_power            DW ?
+sd_grp1             DW ?
+sd_grp2             DW ?
+sd_grp3             DW ?
+sd_grp4             DW ?
+sd_grp5             DW ?
+sd_grp6             DW ?
+
+sd_func1            DB ?
+sd_func2            DB ?
+sd_func3            DB ?
+sd_func4            DB ?
+sd_func5            DB ?
+sd_func6            DB ?
 
 sd_total_sectors    DD ?
 sd_sectors_per_unit DW ?
@@ -313,15 +330,15 @@ SetupInts   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetDefaultSdClock12
+;           NAME:           SetDefaultSdClock1
 ;
-;           DESCRIPTION:    Set default SDIO clk rate for version 1 and 2 controller
+;           DESCRIPTION:    Set default SDIO clk rate for version 1 controller
 ;
 ;           PARAMETERS:     FS      SD io space
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetDefaultSdClock12  Proc near
+SetDefaultSdClock1  Proc near
     mov cx,25
     mov eax,fs:REG_CAP
     shr ax,8
@@ -330,30 +347,30 @@ SetDefaultSdClock12  Proc near
     div cx
 ;
     or dx,dx
-    jz sdscMultOk12
+    jz sdscMultOk1
 ;
     inc ax
 
-sdscMultOk12:
+sdscMultOk1:
     xor cl,cl
 
-sdscExpLoop12:
+sdscExpLoop1:
     test ax,8000h
-    jnz sdscExpOk12
+    jnz sdscExpOk1
 ;
     shl ax,1
     inc cl
 ;
     or ax,ax
-    jnz sdscExpLoop12                
+    jnz sdscExpLoop1
 
-sdscExpOk12:
+sdscExpOk1:
     test ax,7FFFh
-    jz sdscWhole12
+    jz sdscWhole1
 ;
     dec cl
 
-sdscWhole12:
+sdscWhole1:
     mov ax,0FFFFh
     shr ax,cl
     inc ax
@@ -364,40 +381,40 @@ sdscWhole12:
     mov fs:REG_CLK_CONTROL,ax
     mov cx,100    
 
-sdscWait12:
+sdscWait1:
     mov ax,1
     WaitMilliSec
 ;
     mov ax,fs:REG_CLK_CONTROL
     test al,2
-    jnz sdscOk12
+    jnz sdscOk1
 ;
-    loop sdscWait12
+    loop sdscWait1
 ;
     stc
-    jmp sdscDone12
+    jmp sdscDone1
 
-sdscOk12:
+sdscOk1:
     or ax,4
     mov fs:REG_CLK_CONTROL,ax       
     clc
     
-sdscDone12:
+sdscDone1:
     ret
-SetDefaultSdClock12  Endp
+SetDefaultSdClock1  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetDefaultSdClock3
+;           NAME:           SetDefaultSdClock2
 ;
-;           DESCRIPTION:    Set default SDIO clk rate for version 3 controller
+;           DESCRIPTION:    Set default SDIO clk rate for version 2 controller
 ;
 ;           PARAMETERS:     FS      SD io space
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetDefaultSdClock3  Proc near
+SetDefaultSdClock2  Proc near
     mov cx,25
     mov eax,fs:REG_CAP
     shr ax,8
@@ -411,27 +428,27 @@ SetDefaultSdClock3  Proc near
     mov fs:REG_CLK_CONTROL,ax
     mov cx,100    
 
-sdscWait3:
+sdscWait2:
     mov ax,1
     WaitMilliSec
 ;
     mov ax,fs:REG_CLK_CONTROL
     test al,2
-    jnz sdscOk3
+    jnz sdscOk2
 ;
-    loop sdscWait3
+    loop sdscWait2
 ;
     stc
-    jmp sdscDone3
+    jmp sdscDone2
 
-sdscOk3:
+sdscOk2:
     or ax,4
     mov fs:REG_CLK_CONTROL,ax       
     clc
     
-sdscDone3:
+sdscDone2:
     ret
-SetDefaultSdClock3  Endp
+SetDefaultSdClock2  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -447,13 +464,167 @@ SetDefaultSdClock3  Endp
 SetDefaultSdClock   Proc near
     mov al,fs:REG_VER
     cmp al,2
-    jb SetDefaultSdClock12
-    jmp SetDefaultSdClock3
+    jb SetDefaultSdClock1
+    je SetDefaultSdClock2
 ;
     int 3
     stc
     ret    
 SetDefaultSdClock   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetSdClock1
+;
+;           DESCRIPTION:    Set SDIO clk rate for version 1 controller
+;
+;           PARAMETERS:     FS      SD io space
+;                           CX      Clk freq in MHz 
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetSdClock1  Proc near
+    mov eax,fs:REG_CAP
+    shr ax,8
+    and ax,3Fh
+    xor dx,dx
+    div cx
+;
+    or dx,dx
+    jz sscMultOk1
+;
+    inc ax
+
+sscMultOk1:
+    xor cl,cl
+
+sscExpLoop1:
+    test ax,8000h
+    jnz sscExpOk1
+;
+    shl ax,1
+    inc cl
+;
+    or ax,ax
+    jnz sscExpLoop1
+
+sscExpOk1:
+    test ax,7FFFh
+    jz sscWhole1
+;
+    dec cl
+
+sscWhole1:
+    mov ax,0FFFFh
+    shr ax,cl
+    inc ax
+    shr ax,2
+;
+    mov ah,al
+    mov al,1
+    mov fs:REG_CLK_CONTROL,ax
+    mov cx,100    
+
+sscWait1:
+    mov ax,1
+    WaitMilliSec
+;
+    mov ax,fs:REG_CLK_CONTROL
+    test al,2
+    jnz sscOk1
+;
+    loop sscWait1
+;
+    stc
+    jmp sscDone1
+
+sscOk1:
+    or ax,4
+    mov fs:REG_CLK_CONTROL,ax       
+    clc
+    
+sscDone1:
+    ret
+SetSdClock1  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetSdClock2
+;
+;           DESCRIPTION:    Set SDIO clk rate for version 2 controller
+;
+;           PARAMETERS:     FS      SD io space
+;                           CX      Clk freq in MHz 
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetSdClock2  Proc near
+    mov eax,fs:REG_CAP
+    shr ax,8
+    xor ah,ah
+    xor dx,dx
+    div cx
+;
+    xchg al,ah
+    shl al,6
+    or al,1
+    mov fs:REG_CLK_CONTROL,ax
+    mov cx,100    
+
+sscWait2:
+    mov ax,1
+    WaitMilliSec
+;
+    mov ax,fs:REG_CLK_CONTROL
+    test al,2
+    jnz sscOk2
+;
+    loop sscWait2
+;
+    stc
+    jmp sscDone2
+
+sscOk2:
+    or ax,4
+    mov fs:REG_CLK_CONTROL,ax       
+    clc
+    
+sscDone2:
+    ret
+SetSdClock2  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetSdClock
+;
+;           DESCRIPTION:    Set default SDIO clk rate
+;
+;           PARAMETERS:     FS      SD io space
+;                           CX      Clk freq in MHz 
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetSdClock   Proc near
+    mov ax,fs:REG_CLK_CONTROL
+    and al,NOT 1
+    mov fs:REG_CLK_CONTROL,ax
+;    
+;    mov al,fs:REG_CONTROL
+;    or al,4
+;    mov fs:REG_CONTROL,ax
+;
+    mov al,fs:REG_VER
+    cmp al,2
+    jb SetSdClock1
+    je SetSdClock2
+;
+    int 3
+    stc
+    ret    
+SetSdClock   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -942,7 +1113,7 @@ SendAcmd6    Proc near
     mov ds:sd_pend_error,0
     ClearSignal
 ;    
-    mov dword ptr fs:REG_ARG,4
+    mov dword ptr fs:REG_ARG,2
     mov word ptr fs:REG_TRANS_MODE,0
     mov word ptr fs:REG_CMD,61Ah
     call WaitForCompletion
@@ -1082,6 +1253,171 @@ SetOcr    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetCmd6Par
+;
+;           DESCRIPTION:    Get cmd6 params
+;
+;           PARAMETERS:     FS      SD io space
+;                           DS      Device
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetCmd6Par  Proc near
+    push eax
+    push ecx
+;    
+    mov eax,fs:REG_BUF
+    xchg al,ah
+    mov ds:sd_power,ax
+    shr eax,16
+    xchg al,ah
+    mov ds:sd_grp6,ax
+;    
+    mov eax,fs:REG_BUF
+    xchg al,ah
+    mov ds:sd_grp5,ax
+    shr eax,16
+    xchg al,ah
+    mov ds:sd_grp4,ax
+;    
+    mov eax,fs:REG_BUF
+    xchg al,ah
+    mov ds:sd_grp3,ax
+    shr eax,16
+    xchg al,ah
+    mov ds:sd_grp2,ax
+;
+    mov eax,fs:REG_BUF
+    xchg al,ah
+    mov ds:sd_grp1,ax
+    shr eax,16
+    mov cl,al
+    and cl,0Fh
+    mov ds:sd_func3,cl
+    mov cl,al
+    shr cl,4
+    and cl,0Fh
+    mov ds:sd_func4,cl
+;    
+    mov cl,ah
+    and cl,0Fh
+    mov ds:sd_func5,cl
+    mov cl,ah
+    shr cl,4
+    and cl,0Fh
+    mov ds:sd_func6,cl
+;
+    mov eax,fs:REG_BUF
+    mov cl,al
+    and cl,0Fh
+    mov ds:sd_func1,cl
+    mov cl,al
+    shr cl,4
+    and cl,0Fh
+    mov ds:sd_func2,cl
+;
+    pop ecx
+    pop eax
+    ret
+GetCmd6Par  Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           QueryCmd6
+;
+;           DESCRIPTION:    Query CMD6
+;
+;           PARAMETERS:     FS      SD io space
+;                           DS      Device
+;                           EAX     Function selection
+;
+;           RETURNS:        EAX     Resp0
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+QueryCmd6    Proc near
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+    mov dword ptr fs:REG_ARG,eax
+    mov word ptr fs:REG_TRANS_MODE,10h
+    mov word ptr fs:REG_CMD,63Ah
+    WaitForSignal
+    call GetCmd6Par
+    mov eax,fs:REG_RESP0
+    ret
+QueryCmd6   Endp    
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetCmd6
+;
+;           DESCRIPTION:    Set CMD6
+;
+;           PARAMETERS:     FS      SD io space
+;                           DS      Device
+;                           EAX     Function selection
+;
+;           RETURNS:        EAX     Resp0
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetCmd6    Proc near
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+    or eax,80000000h
+    mov dword ptr fs:REG_ARG,eax
+    mov word ptr fs:REG_TRANS_MODE,10h
+    mov word ptr fs:REG_CMD,63Ah
+    WaitForSignal
+    call GetCmd6Par
+    mov eax,fs:REG_RESP0
+    ret
+SetCmd6   Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetCmd6Func
+;
+;           DESCRIPTION:    Get cmd6 function selected
+;
+;           PARAMETERS:     FS      SD io space
+;                           DS      Device
+;
+;           RETURNS:        EAX     Function selected
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetCmd6Func    Proc near
+    push cx
+;    
+    xor eax,eax
+    mov al,ds:sd_func6
+    shl al,4
+    or al,ds:sd_func5
+    shl eax,8
+;
+    mov al,ds:sd_func4
+    shl al,4
+    or al,ds:sd_func3
+    shl eax,8
+;
+    mov al,ds:sd_func2
+    shl al,4
+    or al,ds:sd_func1
+;
+    pop cx
+    ret
+GetCmd6Func Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SetHighSpeed
 ;
 ;           DESCRIPTION:    Set high speed
@@ -1093,28 +1429,30 @@ SetOcr    Endp
 SetHighSpeed    Proc near
     mov ax,ds:sd_ccc
     test ax,400h
+    stc
     jz shsDone
 ;    
     mov eax,fs:REG_CAP
     test eax,200000h
+    stc
     jz shsDone
-;
-    mov ds:sd_pend_int,0
-    mov ds:sd_pend_error,0
-    ClearSignal
-    mov dword ptr fs:REG_ARG,80FFFF01h
-    mov word ptr fs:REG_TRANS_MODE,0
-    mov word ptr fs:REG_CMD,61Ah
-    call WaitForCompletion
-    jc shsDone
 ;    
-    mov eax,fs:REG_RESP0
-    and al,0Fh
-    cmp al,1
-    clc
-    je shsDone
+    mov eax,0FF0001h
+    call QueryCmd6
+    mov ax,10
+    WaitMilliSec
+    call GetCmd6Func
+;    
+    mov eax,0FF0001h
+    call SetCmd6
+    mov ax,10
+    WaitMilliSec
+    call GetCmd6Func
+    cmp eax,1
+    stc
+    jne shsDone
 ;
-    stc    
+    clc
 
 shsDone:    
     ret
@@ -1290,6 +1628,11 @@ WritePioSector    Endp
 
 InitDevice    Proc near
     mov fs,ds:sd_reg_sel
+    mov eax,fs:REG_CAP
+    mov ds:sd_cap,eax
+    movzx ax,byte ptr fs:REG_VER
+    mov ds:sd_ver,ax
+;
     mov dword ptr fs:REG_BLOCK_SIZE,200h
     mov word ptr fs:REG_INT_STATUS_ENABLE,1FFh
     mov word ptr fs:REG_INT_SIG_ENABLE,1FFh
@@ -1313,9 +1656,15 @@ idInserted:
     mov ax,50
     WaitMilliSec
 ;
-;    call Set8Bit
     call SendCmd0        
 ;
+    mov ax,ds:sd_ver
+    cmp ax,2
+    jb idOcr
+;    
+    call SendCmd8
+
+idOcr:    
     call GetOcr
     jc idFailed
 ;
@@ -1323,7 +1672,7 @@ idInserted:
     jc idFailed
 ;
     mov ds:sd_ocr,eax
-;        
+;
     call SendCmd8
     jc idFailed
 ;
@@ -1356,6 +1705,13 @@ idVoltOk:
     call SendCmd7
     jc idFailed
 ;
+    mov ax,ds:sd_ver
+    cmp ax,2
+    jb idSpeedDone
+;
+    call SendAcmd6
+
+idSpeedDone:
     mov ax,ds:sd_ccc
     and ax,14h
     cmp ax,14h
@@ -1364,7 +1720,8 @@ idVoltOk:
     call SetHighSpeed
     jc idNoHs
 ;
-    int 3
+    mov cx,50
+    call SetSdClock
     
 idNoHs:    
     mov ecx,1000
