@@ -1510,7 +1510,6 @@ SetHighSpeed    Proc near
     test al,4
     jz shsNot50
 ;
-    int 3
     call SetSdr50
     jnc shsDone
 
@@ -1724,6 +1723,7 @@ idInserted:
     WaitMilliSec
 ;
     call SendCmd0        
+    mov eax,fs:REG_STATE
 ;
     mov ax,ds:sd_ver
     cmp ax,2
@@ -1736,9 +1736,7 @@ idOcr:
     jc idFailed
 ;
     call SelectVoltage
-    jc idFailed
-;
-    mov ds:sd_ocr,eax
+    jc idFailed    mov ds:sd_ocr,eax
 ;
     mov ax,ds:sd_ver
     cmp ax,2
