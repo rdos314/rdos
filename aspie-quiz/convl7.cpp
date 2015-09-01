@@ -169,22 +169,41 @@ static void ProcessRow(char *str)
 
             case 16:
                  Row.Relationship = atoi(valstr);
+
+                 switch (Row.Relationship)
+                 {
+                     case 0:
+                         Row.Quiz[125] = 0;
+                         break;
+                         
+                     case 1:
+                         Row.Quiz[125] = 2;
+                         break;
+
+                     default:
+                         Row.Quiz[125] = 1;
+                         break;
+                 }                        
                  break;
 
             case 17:
+                 Row.OtherPartner = atoi(valstr);
+                 break;
+
+            case 18:
                  Row.Infatuation = atoi(valstr);
                  Row.Quiz[123] = Row.Infatuation / 10;
                  break;
 
-            case 18:
+            case 19:
                  Row.Attachment = atoi(valstr);
                  Row.Quiz[124] = Row.Attachment / 10;
                  break;
 
             default:
-                 i = fieldno - 19;
+                 i = fieldno - 20;
                  if (i < 20)
-                    i += 125;
+                    i += 126;
                  else
                     i -= 20;
             

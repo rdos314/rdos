@@ -19,6 +19,7 @@ struct TQuizRow
 	long NtResult;
 	long Duration;
 	long Relationship;
+	long OtherPartner;
 	long Infatuation;
 	long Attachment;
 	char Quiz[250];

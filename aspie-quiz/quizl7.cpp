@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizL7::TQuizL7(const char *FileName)
-  : TQuiz(145),
+  : TQuiz(146),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -112,7 +112,7 @@ int TQuizL7::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizL7::GetQuizN()
 {
-    return 145;
+    return 146;
 }
 
 /*##########################################################################
@@ -451,6 +451,7 @@ void TQuizL7::SetupTexts()
   Quiz[142].MyGroup = GROUP_MIXED;
   Quiz[143].MyGroup = GROUP_MIXED;
   Quiz[144].MyGroup = GROUP_MIXED;
+  Quiz[145].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Do you have an avid perseverance in gathering and/or cataloguing information on a topic of interest?";
@@ -579,27 +580,28 @@ void TQuizL7::SetupTexts()
 
   Quiz[123].Text = "Infatuation";
   Quiz[124].Text = "Attachment";
+  Quiz[125].Text = "Love at a distance";
 
-  Quiz[125].Text = "I stare into the distance while I think of him/her";
-  Quiz[126].Text = "I feel that I can count on him/her";
-  Quiz[127].Text = "I get shaky knees when I am near him/her";
-  Quiz[128].Text = "I am prepared to share my possessions with him/her";
-  Quiz[129].Text = "I would feel lonely without him/her";
-  Quiz[130].Text = "My feelings for him/her reduce my appetite";
-  Quiz[131].Text = "My thoughts about him/her make it difficult for me to concentrate on something else";
-  Quiz[132].Text = "He/she is the one for me";
-  Quiz[133].Text = "I am afraid that I will say something wrong when I talk to him/her";
-  Quiz[134].Text = "He/she knows everything about me";
-  Quiz[135].Text = "I hope my feelings for him/her will never end";
-  Quiz[136].Text = "I get clammy hands when I am near him/her";
-  Quiz[137].Text = "I feel emotionally connected to him/her";
-  Quiz[138].Text = "I become tense when I am close to him/her";
-  Quiz[139].Text = "He/she can reassure me when I am upset";
-  Quiz[140].Text = "I have a hard time sleeping because I am thinking of him/her";
-  Quiz[141].Text = "I search for alternative meanings to his/her words";
-  Quiz[142].Text = "He/she is the person who can make me feel the happiest";
-  Quiz[143].Text = "He/she is part of my plans for the future";
-  Quiz[144].Text = "I am shy in the presence of him/her";
+  Quiz[126].Text = "I stare into the distance while I think of him/her";
+  Quiz[127].Text = "I feel that I can count on him/her";
+  Quiz[128].Text = "I get shaky knees when I am near him/her";
+  Quiz[129].Text = "I am prepared to share my possessions with him/her";
+  Quiz[130].Text = "I would feel lonely without him/her";
+  Quiz[131].Text = "My feelings for him/her reduce my appetite";
+  Quiz[132].Text = "My thoughts about him/her make it difficult for me to concentrate on something else";
+  Quiz[133].Text = "He/she is the one for me";
+  Quiz[134].Text = "I am afraid that I will say something wrong when I talk to him/her";
+  Quiz[135].Text = "He/she knows everything about me";
+  Quiz[136].Text = "I hope my feelings for him/her will never end";
+  Quiz[137].Text = "I get clammy hands when I am near him/her";
+  Quiz[138].Text = "I feel emotionally connected to him/her";
+  Quiz[139].Text = "I become tense when I am close to him/her";
+  Quiz[140].Text = "He/she can reassure me when I am upset";
+  Quiz[141].Text = "I have a hard time sleeping because I am thinking of him/her";
+  Quiz[142].Text = "I search for alternative meanings to his/her words";
+  Quiz[143].Text = "He/she is the person who can make me feel the happiest";
+  Quiz[144].Text = "He/she is part of my plans for the future";
+  Quiz[145].Text = "I am shy in the presence of him/her";
   
 }
 
@@ -784,7 +786,7 @@ void TQuizL7::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 145; i++)
+    for (i = 0; i < 146; i++)
             DefineGlobalId(i, i);
 }
 
