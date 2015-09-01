@@ -214,6 +214,7 @@ data    STRUC
 MemBase         DD ?
 FlashBase       DD ?
 IoBase              DW ?
+MemSel          DW ?
 Handle              DW ?
 WaitThread      DW ?
 IntStat         DB ?
@@ -247,6 +248,48 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupAccess
+;
+;           DESCRIPTION:    Setup memory or IO access
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupAccess   Proc near
+    pusha
+;
+    mov eax,ds:MemBase
+    or eax,eax
+    jz saIo
+
+saMem:
+    mov ds:IoBase,0
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov eax,ds:MemBase
+    xor ebx,ebx
+    or al,67h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,20h
+    CreateDataSelector16
+;
+    mov ds:MemSel,bx
+    jmp saDone
+
+saIo:
+    mov ds:MemSel,0
+
+saDone:    
+    popa    
+    ret
+SetupAccess   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Reset
 ;
 ;           DESCRIPTION:    Reset controller
@@ -254,8 +297,30 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Reset   Proc near
+    push es
     pusha
 ;
+    mov ax,ds:MemSel
+    or ax,ax
+    jz rIo
+
+rMem:    
+    mov es,ax
+    mov di,PORT
+    mov eax,2
+    mov es:[di],eax
+;
+    mov ax,20
+    WaitMicroSec
+;       
+    mov eax,0
+    mov es:[di],eax
+;
+    mov ax,20
+    WaitMicroSec
+    jmp rDone
+
+rIo:    
     mov dx,ds:IoBase
     add dx,Port
 ;       
@@ -270,8 +335,10 @@ Reset   Proc near
 ;
     mov ax,20
     WaitMicroSec
-;
-    popa    
+
+rDone:
+    popa 
+    pop es   
     ret
 Reset   Endp
 
@@ -302,8 +369,87 @@ EeDelay Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetEeSize       Proc near
+    push es
     pusha
 ;
+    mov ax,ds:MemSel
+    or ax,ax
+    jz gesIo
+
+gesMem:    
+    mov es,ax
+    mov di,EeControl
+;
+    mov al,EECS OR EESK
+    mov es:[di],al
+    call EeDelay
+;
+    mov bx,EE_READ_CMD
+    mov cx,3
+    mov si,4
+
+gesmCodeLoop:
+    mov al,EECS
+    test si,bx
+    jz gesmCodeWrite
+;
+    or al,EEDI
+
+gesmCodeWrite:
+    mov es:[di],al
+    call EeDelay
+;
+    or al,EESK
+    mov es:[di],al
+    call EeDelay    
+;
+    shr si,1
+    loop gesmCodeLoop
+;
+    mov cx,16
+    mov ds:EeAdrLen,0
+    
+gesmAddressLoop:
+    mov al,EECS
+    mov es:[di],al
+    call EeDelay
+;     
+    or al,EESK
+    mov es:[di],al
+    call EeDelay
+;
+    inc ds:EeAdrLen
+    mov al,es:[di]
+    test al,EEDO
+    jz gesiAddressDone
+;
+    loop gesmAddressLoop 
+    stc
+    jmp gesDone 
+
+gesmAddressDone:
+    mov cx,16
+
+gesmDataLoop:
+    mov al,EECS
+    mov es:[di],al
+    call EeDelay
+;
+    or al,EESK
+    mov es:[di],al
+    call EeDelay
+;    
+    mov al,es:[di]
+;
+    loop gesmDataLoop
+;
+    xor al,al
+    mov es:[di],al
+    call EeDelay
+    clc
+    jmp gesDone
+
+gesIo:
     mov dx,ds:IoBase
     add dx,EeControl
 ;
@@ -315,14 +461,14 @@ GetEeSize       Proc near
     mov cx,3
     mov si,4
 
-gesCodeLoop:
+gesiCodeLoop:
     mov al,EECS
     test si,bx
-    jz gesCodeWrite
+    jz gesiCodeWrite
 ;
     or al,EEDI
 
-gesCodeWrite:
+gesiCodeWrite:
     out dx,al
     call EeDelay
 ;
@@ -331,12 +477,12 @@ gesCodeWrite:
     call EeDelay    
 ;
     shr si,1
-    loop gesCodeLoop
+    loop gesiCodeLoop
 ;
     mov cx,16
     mov ds:EeAdrLen,0
     
-gesAddressLoop:
+gesiAddressLoop:
     mov al,EECS
     out dx,al
     call EeDelay
@@ -348,16 +494,16 @@ gesAddressLoop:
     inc ds:EeAdrLen
     in al,dx
     test al,EEDO
-    jz gesAddressDone
+    jz gesiAddressDone
 ;
-    loop gesAddressLoop 
+    loop gesiAddressLoop 
     stc
     jmp gesDone 
 
-gesAddressDone:
+gesiAddressDone:
     mov cx,16
 
-gesDataLoop:
+gesiDataLoop:
     mov al,EECS
     out dx,al
     call EeDelay
@@ -368,7 +514,7 @@ gesDataLoop:
 ;    
     in al,dx
 ;
-    loop gesDataLoop
+    loop gesiDataLoop
 ;
     xor al,al
     out dx,al
@@ -377,6 +523,7 @@ gesDataLoop:
 
 gesDone:       
     popa
+    pop es
     ret
 GetEeSize       Endp
 
@@ -1453,7 +1600,8 @@ pci02   DW 8086h, 103Ah
 pci03   DW 8086h, 1059h
 pci04   DW 8086h, 1209h
 pci05   DW 8086h, 1229h
-pci06   DW 0,     0
+pci06   DW 8086h, 100Eh
+pci07   DW 0,     0
 
 InitPrimaryPciAdapter   Proc near
     mov ax,ether_data_sel
@@ -1497,6 +1645,8 @@ init_pci1_found:
     and dx,0FFE0h
     mov ds:FlashBase,edx
 ;
+    int 3
+    call SetupAccess
     call Reset
 ;    
     call GetEeSize
@@ -1604,6 +1754,7 @@ init_pci2_found:
     and dx,0FFE0h
     mov ds:FlashBase,edx
 ;
+    call SetupAccess
     call Reset
 ;    
     call GetEeSize
