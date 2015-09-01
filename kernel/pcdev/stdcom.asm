@@ -667,6 +667,9 @@ mem_trans_end:
     test ds:mempps_flgs, FLG_ENABLE_AUTO_RTS
     jz mem_trans_signal_wait
 ;
+    push ds
+    push es
+    push bx
     GetSystemTime
     add eax,ds:mempps_char_time
     adc edx,0
@@ -677,6 +680,9 @@ mem_trans_end:
     mov cx,bx
     StopTimer
     StartTimer
+    pop bx
+    pop es
+    pop ds
 
 mem_trans_signal_wait:
     push bx
