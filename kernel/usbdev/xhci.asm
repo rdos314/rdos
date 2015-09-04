@@ -2221,7 +2221,9 @@ SetMaxLen   Proc far
     mov es:[bx].ec_packet_size,ax
     call WaitForCommandTrb
 ;    
-    movzx eax,es:xd_input_context_offset
+    mov bx,es:xd_input_context_offset
+    mov es:[bx].icc_add_mask,2
+    movzx eax,bx
     add eax,es:xd_phys
     mov gs:[edi].trb_param,eax
     mov eax,es:xd_phys+4
@@ -2233,6 +2235,9 @@ SetMaxLen   Proc far
 ;
     mov al,TRB_TYPE_EVALUATE
     call SendCommandTrb
+;
+    mov bx,es:xd_input_context_offset
+    mov es:[bx].icc_add_mask,0
 ;
     mov al,gs:[edi+100Bh]
     cmp al,1
