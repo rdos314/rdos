@@ -1798,7 +1798,7 @@ write_drive     Endp
 perform_one     Proc near
 
 perform_one_loop:
-    mov ecx,255
+    mov ecx,128
     GetDiscRequestArray
     jc perform_one_done
 ;
