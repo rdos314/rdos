@@ -223,8 +223,10 @@ xd_linear                DD ?
 xd_dev_sel               DW ?
 
 xd_input_context_offset  DW ?
-xd_device_context_offset DW ?
+xd_input_slot_offset     DW ?
+xd_output_context_offset DW ?
 xd_input_ep_arr_offset   DW 32 DUP (?)
+xd_output_ep_arr_offset  DW 32 DUP (?)
 
 xd_ep_sel_arr            DW 32 DUP(?)
 
@@ -711,8 +713,7 @@ AllocateDevice    Proc near
     mov es:xd_input_context_offset,bx
 ;
     add bx,dx
-    mov es:xd_device_context_offset,bx
-;
+    mov es:xd_input_slot_offset,bx
     mov di,OFFSET xd_input_ep_arr_offset
     mov cx,32
 
@@ -721,6 +722,21 @@ adiEpLoop:
     mov es:[di],bx
     add di,2 
     loop adiEpLoop      
+;
+    add bx,dx
+    add bx,40h
+    dec bx
+    and bx,0FFC0h
+;    
+    mov es:xd_output_context_offset,bx
+    mov di,OFFSET xd_output_ep_arr_offset
+    mov cx,32
+
+adoEpLoop:
+    add bx,dx
+    mov es:[di],bx
+    add di,2 
+    loop adoEpLoop      
 ;
     add bx,dx
     add bx,40h
@@ -759,9 +775,9 @@ SetupRootDevice    Proc near
     mov fs,ds:xhc_port_sel
 ;
     mov bx,es:xd_input_context_offset
-    mov es:[bx].icc_add_mask,3
+    mov es:[bx].icc_add_mask,0
 ;    
-    mov bx,es:xd_device_context_offset
+    mov bx,es:xd_input_slot_offset
     mov eax,fs:[di]
     shr eax,10
     and eax,0Fh
@@ -807,7 +823,7 @@ aceNoReset:
     or eax,edx
     mov es:[bx].icc_add_mask,eax
 ;
-    mov bx,es:xd_device_context_offset    
+    mov bx,es:xd_input_slot_offset    
     mov eax,es:[bx].s_misc
     shr eax,27
     cmp al,fs:xp_db_target
@@ -1052,12 +1068,15 @@ AddressDevice   Proc far
     push es
     push gs
     push eax
+    push bx
     push edi
 ;
     call WaitForCommandTrb
 ;    
     mov es,fs:xp_dev_sel
-    movzx eax,es:xd_input_context_offset
+    mov bx,es:xd_input_context_offset
+    mov es:[bx].icc_add_mask,3
+    movzx eax,bx
     add eax,es:xd_phys
     mov gs:[edi].trb_param,eax
     mov eax,es:xd_phys+4
@@ -1070,6 +1089,9 @@ AddressDevice   Proc far
     mov al,TRB_TYPE_ADDRESS_DEV
     call SendCommandTrb
 ;
+    mov bx,es:xd_input_context_offset
+    mov es:[bx].icc_add_mask,0
+;
     mov al,gs:[edi+100Bh]
     cmp al,1
     stc
@@ -1080,6 +1102,7 @@ AddressDevice   Proc far
 
 adDone:
     pop edi
+    pop bx
     pop eax
     pop gs    
     pop es
@@ -1107,7 +1130,6 @@ ConfigDevice   Proc far
     push edi
 ;
     call WaitForCommandTrb
-;    
     movzx eax,es:xd_input_context_offset
     add eax,es:xd_phys
     mov gs:[edi].trb_param,eax
@@ -2276,7 +2298,7 @@ attach_thread:
     mov fs,bx
     movzx bx,al
     shl bx,3
-    movzx edx,es:xd_device_context_offset
+    movzx edx,es:xd_output_context_offset
     add edx,es:xd_phys
     mov fs:[bx],edx
     mov edx,es:xd_phys+4
@@ -2621,9 +2643,6 @@ event_thread:
     mov es:xhc_event_ccs,1
     xor si,si
 
-    mov ax,500
-    WaitMilliSec
-;
 etWait:
     WaitForSignal
 
@@ -2898,9 +2917,6 @@ port_thread:
 ;        
     mov es:xhc_port_thread,ax
     mov ds,es:xhc_port_sel
-;
-    mov ax,500
-    WaitMilliSec
 
 ptLoop:
     WaitForSignal
@@ -3318,8 +3334,10 @@ cpfContextSizeOk:
     mov es:xhc_dcba,eax
     mov es:xhc_dcba+4,ebx
 ;
+    push eax
     mov eax,1000h
     AllocateBigLinear
+    pop eax
 ;
     mov al,13h
     SetPageEntry
@@ -3530,8 +3548,10 @@ csfContextSizeOk:
     mov es:xhc_dcba,eax
     mov es:xhc_dcba+4,ebx
 ;
+    push eax
     mov eax,1000h
     AllocateBigLinear
+    pop eax
 ;
     mov al,13h
     SetPageEntry
