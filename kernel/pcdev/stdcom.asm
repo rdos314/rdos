@@ -2220,7 +2220,6 @@ mem_get_line_state  Proc far
     push es
     push ebx
 ;    
-    int 3
     mov ebx,ds:mempds_offset
     mov es,ds:mempds_sel
 ;
@@ -2248,7 +2247,6 @@ mem_get_line_state  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mem_wait_for_line_state Proc far
-    int 3
     ClearSignal
     GetThread
     mov ds:mempds_line_thread,ax

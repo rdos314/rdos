@@ -1481,6 +1481,40 @@ SetSdr50    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetSdr104
+;
+;           DESCRIPTION:    Set SDR104 mode
+;
+;           PARAMETERS:     FS      SD io space
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetSdr104    Proc near
+    mov eax,0FF3003h
+    call SetCmd6
+    mov ax,10
+    WaitMilliSec
+    call GetCmd6Func
+    cmp eax,100003h
+    stc
+    jne ss104Done
+;
+    mov cx,200
+    call SetSdClock
+;
+    mov ax,fs:REG_CONTROL2
+    and al,NOT 7
+    or al,2
+    mov fs:REG_CONTROL2,ax
+    clc
+
+ss104Done:    
+    ret
+SetSdr104    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SetHighSpeed
 ;
 ;           DESCRIPTION:    Set high speed
@@ -1506,6 +1540,14 @@ SetHighSpeed    Proc near
     WaitMilliSec
     call GetCmd6Func
 ;
+    mov ax,ds:sd_grp1
+    test al,8
+    jz shsNot104
+;
+    call SetSdr104
+    jnc shsDone
+
+shsNot104:
     mov ax,ds:sd_grp1
     test al,4
     jz shsNot50
@@ -1860,6 +1902,52 @@ InitDevice  Endp
 read_drive      Proc near
 
 read_drive_loop:
+
+rdLoop:    
+    push ecx
+    mov edi,es:[esi]
+;
+    mov edx,es:[edi].dh_unit
+    movzx eax,ds:sd_sectors_per_unit
+    mul edx
+    movzx ebx,es:[edi].dh_sector
+    add eax,ebx
+    mov edx,eax
+    mov ebx,edx
+    mov ebp,1
+;
+    push esi    
+
+rdSizeLoop:
+    cmp ecx,ebp
+    jbe rdDoTrans
+;
+    add esi,4
+    mov edi,es:[esi]
+;
+    push ebx
+    mov edx,es:[edi].dh_unit
+    movzx eax,ds:sd_sectors_per_unit
+    mul edx
+    movzx ebx,es:[edi].dh_sector
+    add eax,ebx
+    mov edx,eax
+    pop ebx
+;
+    inc ebx
+    cmp ebx,edx
+    jne rdDoTrans
+;
+    inc ebp
+    jmp rdSizeLoop            
+
+rdDoTrans:
+    pop esi
+;    
+    push ebp
+    push esi
+;    
+    mov edi,es:[esi]
     mov edx,es:[edi].dh_unit
     movzx eax,ds:sd_sectors_per_unit
     mul edx
@@ -1867,39 +1955,80 @@ read_drive_loop:
     add eax,ebx
     mov edx,eax
 ;    
-    push ecx
-    push edi
-    mov ecx,1
-    mov edi,es:[edi].dh_data
-    call ReadPioSector
-    pop edi
-    pop ecx
-    jnc read_drive_ok
+    mov fs:REG_BLOCK_COUNT,bp
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+    mov dword ptr fs:REG_ARG,edx
+    mov word ptr fs:REG_TRANS_MODE,36h
+    mov word ptr fs:REG_CMD,123Ah
 
-read_drive_fail:
-    int 3
-    mov es:[edi].dh_state,STATE_BAD
-    mov bx,ds:sd_disc_sel
-    DiscRequestCompleted
+rdSectorLoop:    
+    test word ptr fs:REG_STATE,800h
+    jnz rdReadBuf
+;    
+    WaitForSignal
+    test ds:sd_pend_error,1FFh
+    jz rdSectorLoop
+;   
+    pop esi
+    pop ebp 
+    jmp rdFail
+
+rdReadBuf:
+    mov ds:sd_pend_int,0
+    mov ecx,128
+    mov edi,es:[esi]
+    mov edi,es:[edi].dh_data
+
+rdBufLoop:    
+    mov eax,fs:REG_BUF
+    stos dword ptr es:[edi]
+    loop rdBufLoop        
 ;
     add esi,4
-    mov edi,es:[esi]
-    sub cx,1
-    jnz read_drive_loop
-    jmp read_drive_done
+    sub ebp,1
+    jnz rdSectorLoop
+;
+    pop esi
+    pop ebp 
+    jmp rdOk
+    
+rdFail:
+    int 3
+    pop ecx
 
-read_drive_ok:
+rdFailLoop:    
+    mov edi,es:[esi]
+    mov eax,es:[edi].dh_data
+    mov es:[eax].dh_state,STATE_BAD
+    mov bx,ds:sd_disc_sel
+    DiscRequestCompleted
+    add esi,4
+    sub ecx,1
+    sub ebp,1
+    jnz rdFailLoop
+;    
+    jmp rdNext
+
+rdOk:
+    pop ecx
+
+rdOkLoop:
+    mov edi,es:[esi]
     mov eax,es:[edi].dh_data
     mov es:[edi].dh_state,STATE_USED
     mov bx,ds:sd_disc_sel
     DiscRequestCompleted
-;
     add esi,4
-    mov edi,es:[esi]
-    sub cx,1
-    jnz read_drive_loop
+    sub ecx,1
+    sub ebp,1
+    jnz rdOkLoop
 
-read_drive_done:
+rdNext:
+    or ecx,ecx
+    jnz rdLoop
+;
     ret
 read_drive      Endp
     
