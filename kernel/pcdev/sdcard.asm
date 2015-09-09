@@ -1901,8 +1901,6 @@ InitDevice  Endp
 
 read_drive      Proc near
 
-read_drive_loop:
-
 rdLoop:    
     push ecx
     mov edi,es:[esi]
@@ -2047,44 +2045,51 @@ read_drive      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_drive     Proc near
-    mov edi,es:[esi]
 
-write_drive_loop:
-    mov ebp,1
+wrLoop:    
+    push ecx
+    mov edi,es:[esi]
+;
     mov edx,es:[edi].dh_unit
     movzx eax,ds:sd_sectors_per_unit
     mul edx
     movzx ebx,es:[edi].dh_sector
     add eax,ebx
-    mov ebx,eax
+    mov edx,eax
+    mov ebx,edx
+    mov ebp,1
+;
+    push esi    
 
-write_drive_more:
+wrSizeLoop:
     cmp ecx,ebp
-    jbe write_drive_do
+    jbe wrDoTrans
 ;
-    mov edx,es:[edi].dh_data
-    add edx,200h
+    add esi,4
+    mov edi,es:[esi]
 ;
-    mov eax,ebp
-    shl eax,2
-    mov edi,es:[esi+eax]
-;
-    cmp edx,es:[edi].dh_data
-    jnz write_drive_do
-;    
+    push ebx
     mov edx,es:[edi].dh_unit
     movzx eax,ds:sd_sectors_per_unit
     mul edx
-    movzx edx,es:[edi].dh_sector
-    add eax,edx
+    movzx ebx,es:[edi].dh_sector
+    add eax,ebx
+    mov edx,eax
+    pop ebx
+;
     inc ebx
-    cmp eax,ebx
-    jne write_drive_do
+    cmp ebx,edx
+    jne wrDoTrans
 ;
     inc ebp
-    jmp write_drive_more        
+    jmp wrSizeLoop            
 
-write_drive_do:    
+wrDoTrans:
+    pop esi
+;    
+    push ebp
+    push esi
+;    
     mov edi,es:[esi]
     mov edx,es:[edi].dh_unit
     movzx eax,ds:sd_sectors_per_unit
@@ -2092,44 +2097,84 @@ write_drive_do:
     movzx ebx,es:[edi].dh_sector
     add eax,ebx
     mov edx,eax
-;
-    push ecx
-    mov ecx,ebp
-    mov edi,es:[edi].dh_data
-    call WritePioSector    
-    pop ecx
-    mov edi,es:[esi]
-    jnc write_drive_ok
+;    
+    mov fs:REG_BLOCK_COUNT,bp
+    mov ds:sd_pend_int,0
+    mov ds:sd_pend_error,0
+    ClearSignal
+    mov dword ptr fs:REG_ARG,edx
+    mov word ptr fs:REG_TRANS_MODE,26h
+    mov word ptr fs:REG_CMD,193Ah
 
-write_drive_fail:
-    int 3
+wrSectorLoop:    
+    test word ptr fs:REG_STATE,400h
+    jnz wrWriteBuf
+;    
+    WaitForSignal
+    test ds:sd_pend_error,1FFh
+    jz wrSectorLoop
+;   
+    pop esi
+    pop ebp 
+    jmp wrFail
+
+wrWriteBuf:
+    mov ds:sd_pend_int,0
+    mov ecx,128
     mov edi,es:[esi]
-    mov es:[edi].dh_state,STATE_BAD
+    mov edi,es:[edi].dh_data
+
+wrBufLoop:    
+    mov eax,es:[edi]
+    mov fs:REG_BUF,eax
+    add edi,4
+    loop wrBufLoop        
+;
+    add esi,4
+    sub ebp,1
+    jnz wrSectorLoop
+;
+    pop esi
+    pop ebp 
+;
+    call WaitForTransferComplete
+    jmp wrOk
+    
+wrFail:
+    int 3
+    pop ecx
+
+wrFailLoop:    
+    mov edi,es:[esi]
+    mov eax,es:[edi].dh_data
+    mov es:[eax].dh_state,STATE_BAD
     mov bx,ds:sd_disc_sel
     DiscRequestCompleted
     add esi,4
-    dec cx
-    sub bp,1
-    jnz write_drive_fail
-;
-    or cx,cx
-    jnz write_drive_loop
-    jmp write_drive_done
+    sub ecx,1
+    sub ebp,1
+    jnz wrFailLoop
+;    
+    jmp wrNext
 
-write_drive_ok:
+wrOk:
+    pop ecx
+
+wrOkLoop:
     mov edi,es:[esi]
+    mov eax,es:[edi].dh_data
     mov es:[edi].dh_state,STATE_USED
     mov bx,ds:sd_disc_sel
     DiscRequestCompleted
     add esi,4
-    dec cx
-    sub bp,1
-    jnz write_drive_ok
-;
-    or cx,cx
-    jnz write_drive_loop
+    sub ecx,1
+    sub ebp,1
+    jnz wrOkLoop
 
-write_drive_done:
+wrNext:
+    or ecx,ecx
+    jnz wrLoop
+;
     ret
 write_drive     Endp
 
