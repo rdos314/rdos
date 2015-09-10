@@ -180,20 +180,47 @@ ReceiveEchoReply    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReceiveEchoReq  Proc near
+    push es
+    push edi
+    mov si,es:[0]
+    mov edx,es:[si].ip_source
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET PingOptions
+    mov ah,20h
+    mov al,1
+    CreateIpHeader
+    pop esi
+    pop ds
+    jc rerDone
+;
     mov es:[di].icmp_type,0
     mov es:[di].icmp_checksum,0
+;
+    push cx
+    push si
+    push di
+    add si,4
+    add di,4
+    sub cx,4
+    rep movsb
+    pop di
+    pop si
+    pop cx
+;
     xor ax,ax
     call CalcChecksum
     not ax
     mov es:[di].icmp_checksum,ax
-;
+;        
+    SendIp
+
+rerDone:
+    mov ax,ds
+    mov es,ax
     xor ax,ax
     mov ds,ax
-    mov di,es:[0]
-    mov eax,es:[di].ip_source
-    xchg eax,es:[di].ip_dest
-    mov es:[di].ip_source,eax
-    SendIp
+    FreeMem    
     ret
 ReceiveEchoReq  Endp
 

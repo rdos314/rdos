@@ -2375,7 +2375,7 @@ write_file32:
     mov ax,flat_sel
     mov es,ax
     mov esi,ds:file_dir_entry
-    GetSystemTime
+    GetTime
     mov es:[esi].de_time,eax
     mov es:[esi].de_time+4,edx
     mov edx,esi
@@ -2446,7 +2446,7 @@ write_file16    PROC far
     mov ax,flat_sel
     mov es,ax
     mov esi,ds:file_dir_entry
-    GetSystemTime
+    GetTime
     mov es:[esi].de_time,eax
     mov es:[esi].de_time+4,edx
     mov edx,esi
