@@ -47,6 +47,7 @@ public:
 
     unsigned short int CalcCrc(TCrc *Crc);
     int GetSize();
+    const char *GetData();
     short int GetType();
 
     virtual TString GetInfo() = 0;

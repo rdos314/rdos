@@ -206,6 +206,22 @@ int TRdosObject::GetSize()
 
 /*##########################################################################
 #
+#   Name       : TRdosObject::GetData
+#
+#   Purpose....: Get data of object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TRdosObject::GetData()
+{
+    return FData;
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosObject::GetType
 #
 #   Purpose....: Get type of object
