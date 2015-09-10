@@ -173,15 +173,15 @@ static void ProcessRow(char *str)
                  switch (Row.Relationship)
                  {
                      case 0:
-                         Row.Quiz[125] = 0;
+                         Row.Quiz[126] = 0;
                          break;
                          
                      case 1:
-                         Row.Quiz[125] = 2;
+                         Row.Quiz[126] = 2;
                          break;
 
                      default:
-                         Row.Quiz[125] = 1;
+                         Row.Quiz[126] = 1;
                          break;
                  }                        
                  break;
@@ -192,18 +192,18 @@ static void ProcessRow(char *str)
 
             case 18:
                  Row.Infatuation = atoi(valstr);
-                 Row.Quiz[123] = Row.Infatuation / 10;
+                 Row.Quiz[124] = Row.Infatuation / 10;
                  break;
 
             case 19:
                  Row.Attachment = atoi(valstr);
-                 Row.Quiz[124] = Row.Attachment / 10;
+                 Row.Quiz[125] = Row.Attachment / 10;
                  break;
 
             default:
                  i = fieldno - 20;
                  if (i < 20)
-                    i += 126;
+                    i += 127;
                  else
                     i -= 20;
             
@@ -213,7 +213,7 @@ static void ProcessRow(char *str)
     }
 
     HandleRow(&Row);
-    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 123);
+    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 124);
 }
 
 /*################## ConvL7 ##########################
