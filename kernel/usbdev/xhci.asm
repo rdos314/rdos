@@ -2358,6 +2358,9 @@ attach_thread:
     mov ds:[edi].usb_attach_thread_arr,ax
     LeaveSection ds:usb_section
 ;    
+    mov bx,ds:xhc_port_thread
+    Signal
+;    
     call EnableSlot
     jc atDone
 ;
@@ -2433,6 +2436,9 @@ detach_thread:
     mov ds:[edi].usb_detach_thread_arr,ax
     LeaveSection ds:usb_section
 ;    
+    mov bx,ds:xhc_port_thread
+    Signal
+;    
     push ecx
     movzx bx,cl    
     mov al,ds:[bx].xhc_port_slot_arr
@@ -2502,6 +2508,9 @@ reset_thread:
     GetThread
     mov ds:[edi].usb_reset_thread_arr,ax
     LeaveSection ds:usb_section
+;    
+    mov bx,ds:xhc_port_thread
+    Signal
 ;    
     push ecx
     movzx bx,cl    
@@ -3099,7 +3108,6 @@ upCheckTimeout:
     or bx,bx
     jz upAttachSignalled
 ;
-    int 3
     Signal
 
 upAttachSignalled:    
@@ -3109,7 +3117,7 @@ upAttachSignalled:
 upCheckDetach:    
     mov bx,ds:[edi].usb_detach_thread_arr
     or bx,bx
-    jz upDone
+    jz upCheckReset
 ;
     GetSystemTime
     sub eax,ds:[4*edi].usb_timeout_arr
@@ -3121,10 +3129,30 @@ upCheckDetach:
     or bx,bx
     jz upDetachSignalled
 ;
-    int 3
     Signal
 
 upDetachSignalled:
+    LeaveSection ds:usb_section
+    jmp upDone    
+
+upCheckReset:
+    mov bx,ds:[edi].usb_reset_thread_arr
+    or bx,bx
+    jz upDone
+;
+    GetSystemTime
+    sub eax,ds:[4*edi].usb_timeout_arr
+    sbb edx,ds:[4*edi].usb_timeout_arr+4
+    jc upDone
+;
+    EnterSection ds:usb_section
+    mov bx,ds:[edi].usb_reset_thread_arr
+    or bx,bx
+    jz upResetSignalled
+;
+    Signal
+
+upResetSignalled:    
     LeaveSection ds:usb_section
 
 upDone:
