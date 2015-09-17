@@ -200,6 +200,8 @@ xhc_edqe            DD ?,?
 xhc_cmd_enque       DW ?
 xhc_cmd_pcs         DW ?
 
+xhc_reset           DD ?
+
 xhc_event_thread    DW ?
 xhc_cmd_section     section_typ <>
 xhc_event_ccs       DW ?
@@ -660,6 +662,51 @@ dsDone:
     pop gs    
     ret
 DisableSlot  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ResetSlot
+;
+;       DESCRIPTION:    Reset slot
+;
+;       PARAMETERS:     DS      Function sel
+;                       AL      Slot ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetSlot  Proc near
+    push gs
+    push ax
+    push edi
+;
+    push ax
+    call WaitForCommandTrb
+    pop dx
+;    
+    xor eax,eax
+    mov gs:[edi].trb_param,eax
+    mov gs:[edi].trb_param+4,eax
+;
+    mov ah,dl
+    xor al,al
+    mov gs:[edi].trb_control,ax
+    mov al,TRB_TYPE_RESET_DEV
+    call SendCommandTrb
+;
+    mov al,gs:[edi+100Bh]
+    cmp al,1
+    stc
+    jne rsDone
+;
+    clc        
+
+rsDone:
+    pop edi
+    pop ax
+    pop gs    
+    ret
+ResetSlot  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2045,8 +2092,23 @@ IsConnected Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetPipe   Proc far
-    int 3
-    stc
+    push es
+    push ax
+    push bx
+    push cx
+;    
+    mov cl,fs:xp_port_nr
+    mov eax,1
+    shl eax,cl
+    lock or ds:xhc_reset,eax
+;
+    mov bx,ds:xhc_port_thread
+    Signal  
+;
+    pop cx
+    pop bx
+    pop ax
+    pop es
     retf32
 ResetPipe Endp
 
@@ -2348,7 +2410,6 @@ detach_thread:
 ;    
     movzx edi,cl
     add edi,edi    
-    push edi
 ;    
     EnterSection ds:usb_section    
     GetThread
@@ -2398,7 +2459,99 @@ detach_thread:
 reset_thread_name  DB 'XHCI Reset', 0
 
 reset_thread:
-    int 3
+    mov cl,dl
+    mov ds,bx
+    mov es,ds:xhc_port_sel
+;    
+    movzx si,cl
+    shl si,4
+;    
+    movzx edi,cl
+    add edi,edi    
+    push edi
+;    
+    EnterSection ds:usb_section    
+    GetThread
+    mov ds:[edi].usb_reset_thread_arr,ax
+    LeaveSection ds:usb_section
+;    
+    push ecx
+    movzx bx,cl    
+    mov al,ds:[bx].xhc_port_slot_arr
+    movzx bx,al
+    shl bx,1
+    xor ax,ax
+    xchg ax,ds:[bx].xhc_func_sel_arr
+    mov bx,ax
+    GetSelectorBaseSize    
+    mov ecx,1000h
+    CreateDataSelector16
+    pop ecx
+;    
+    push edi
+    mov al,cl
+    NotifyUsbDetach
+    pop edi
+;
+    movzx bx,cl    
+    mov al,ds:[bx].xhc_port_slot_arr
+    call DisableSlot
+;    
+    mov eax,es:[si]
+    test al,1
+    jz rtDone
+;
+    and eax,0EE03E1h
+    or al,10h
+    mov es:[si],eax
+
+rtCheckResetLoop:
+    mov eax,es:[si]
+    test al,1
+    jz rtDone
+;
+    test al,10h
+    jz rtResetDone    
+;
+    mov ax,25
+    WaitMilliSec
+    jmp rtCheckResetLoop    
+
+rtResetDone:
+    call EnableSlot
+    jc rtDone
+;    
+    call AllocateDevice
+    movzx bx,al
+    shl bx,1
+    mov ds:[bx].xhc_func_sel_arr,es
+;
+    movzx bx,cl    
+    mov ds:[bx].xhc_port_slot_arr,al
+;
+    mov bx,xhci_device_ptr_sel
+    mov fs,bx
+    movzx bx,al
+    shl bx,3
+    movzx edx,es:xd_output_context_offset
+    add edx,es:xd_phys
+    mov fs:[bx],edx
+    mov edx,es:xd_phys+4
+    mov fs:[bx+4],edx
+;
+    mov es:usbf_port,cl
+    mov es:usbf_slot,al
+    mov es:usbf_address,0
+;
+    LockUsb
+    NotifyUsbAttach
+
+rtDone:
+    pop edi
+    EnterSection ds:usb_section
+    mov ds:[edi].usb_reset_thread_arr,0
+    LeaveSection ds:usb_section
+;    
     TerminateThread
         
 
@@ -2775,7 +2928,52 @@ UpdatePort  Proc near
     shl si,4
     movzx edi,cl
     add edi,edi
+;    
+    mov eax,1
+    shl eax,cl
+    test eax,es:xhc_reset
+    jz upNoReset
 ;
+    not eax
+    lock and es:xhc_reset,eax
+;        
+    mov eax,ds:[si]
+    test al,2
+    jz upNoReset
+;
+    mov bx,es:[edi].usb_port_sel_arr
+    or bx,bx
+    jz upNoReset
+;    
+    mov ax,es
+    mov ds,ax
+;    
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
+    jnz upCheckTimeout
+;
+    mov ds:[edi].usb_reset_thread_arr,-1
+    GetSystemTime
+    add eax,1193 * 500
+    adc edx,0
+    mov ds:[4*edi].usb_timeout_arr,eax
+    mov ds:[4*edi].usb_timeout_arr+4,edx
+;    
+    mov bx,ds
+    mov dx,cx
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET reset_thread_name
+    mov esi,OFFSET reset_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+    jmp upDone
+
+upNoReset:
     mov eax,ds:[si]
     test al,2
     jnz upAttach
@@ -2921,13 +3119,14 @@ port_thread:
     GetThread
 ;        
     mov es:xhc_port_thread,ax
+    mov es:xhc_reset,0
     mov ds,es:xhc_port_sel
 
 ptLoop:
     WaitForSignal
     xor eax,eax
     xchg eax,es:xhc_port_change_mask
-    or eax,eax
+    or eax,es:xhc_reset
     jz ptLoop
 ;
     xor cl,cl
