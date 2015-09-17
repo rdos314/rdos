@@ -3160,9 +3160,14 @@ port_thread:
 
 ptLoop:
     WaitForSignal
+
+ptRetry:    
     xor eax,eax
     xchg eax,es:xhc_port_change_mask
     or eax,es:xhc_reset
+    or eax,es:xhc_attach_pend
+    or eax,es:xhc_detach_pend
+    or eax,es:xhc_reset_pend
     jz ptLoop
 ;
     xor cl,cl
@@ -3182,7 +3187,14 @@ ptPortNext:
     shr eax,1
     jnz ptPortLoop   
 ;    
-    jmp ptLoop    
+    mov eax,es:xhc_attach_pend
+    or eax,es:xhc_detach_pend
+    or eax,es:xhc_reset_pend
+    jz ptLoop    
+;
+    mov ax,25
+    WaitMilliSec
+    jmp ptRetry    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
