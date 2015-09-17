@@ -202,6 +202,10 @@ xhc_cmd_pcs         DW ?
 
 xhc_reset           DD ?
 
+xhc_attach_pend     DD ?
+xhc_detach_pend     DD ?
+xhc_reset_pend      DD ?
+
 xhc_event_thread    DW ?
 xhc_cmd_section     section_typ <>
 xhc_event_ccs       DW ?
@@ -2338,6 +2342,10 @@ attach_thread:
     mov ds,bx
     mov es,ds:xhc_port_sel
 ;    
+    mov eax,1
+    shl eax,cl
+    lock or ds:xhc_attach_pend,eax
+;    
     movzx si,cl
     shl si,4
 ;    
@@ -2379,6 +2387,11 @@ attach_thread:
     NotifyUsbAttach
 
 atDone:
+    mov eax,1
+    shl eax,cl
+    not eax
+    lock and ds:xhc_attach_pend,eax
+;
     pop edi
     EnterSection ds:usb_section
     mov ds:[edi].usb_attach_thread_arr,0
@@ -2404,6 +2417,10 @@ detach_thread:
     mov cl,dl
     mov ds,bx
     mov es,ds:xhc_port_sel
+;    
+    mov eax,1
+    shl eax,cl
+    lock or ds:xhc_detach_pend,eax
 ;    
     movzx si,cl
     shl si,4
@@ -2438,6 +2455,11 @@ detach_thread:
     mov al,ds:[bx].xhc_port_slot_arr
     call DisableSlot
 ;
+    mov eax,1
+    shl eax,cl
+    not eax
+    lock and ds:xhc_detach_pend,eax
+;    
     EnterSection ds:usb_section
     mov ds:[edi].usb_detach_thread_arr,0
     LeaveSection ds:usb_section    
@@ -2463,9 +2485,15 @@ reset_thread:
     mov ds,bx
     mov es,ds:xhc_port_sel
 ;    
+    mov eax,1
+    shl eax,cl
+    lock or ds:xhc_reset_pend,eax
+;        
     movzx si,cl
     shl si,4
-;    
+    movzx edi,cl
+    add edi,edi
+;
     movzx edi,cl
     add edi,edi    
     push edi
@@ -2547,6 +2575,11 @@ rtResetDone:
     NotifyUsbAttach
 
 rtDone:
+    mov eax,1
+    shl eax,cl
+    not eax
+    lock and ds:xhc_reset_pend,eax
+;
     pop edi
     EnterSection ds:usb_section
     mov ds:[edi].usb_reset_thread_arr,0
@@ -3120,6 +3153,9 @@ port_thread:
 ;        
     mov es:xhc_port_thread,ax
     mov es:xhc_reset,0
+    mov es:xhc_attach_pend,0
+    mov es:xhc_detach_pend,0
+    mov es:xhc_reset_pend,0
     mov ds,es:xhc_port_sel
 
 ptLoop:
