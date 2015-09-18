@@ -2358,12 +2358,42 @@ attach_thread:
     mov ds:[edi].usb_attach_thread_arr,ax
     LeaveSection ds:usb_section
 ;    
+    LockUsb
+    mov eax,es:[si]
+    test al,1
+    jz atUnlock
+;
+    and eax,0EE03E1h
+    or al,10h
+    mov es:[si],eax
+
+atCheckResetLoop:
+    mov eax,es:[si]
+    test al,1
+    jz atUnlock
+;
+    test al,10h
+    jz atResetDone    
+;
+    mov ax,25
+    WaitMilliSec
+    jmp atCheckResetLoop    
+
+atResetDone:
+    mov ax,25
+    WaitMilliSec
+;
     mov bx,ds:xhc_port_thread
     Signal
 ;    
     call EnableSlot
-    jc atDone
-;
+    jnc atSlotOk
+
+atUnlock:
+    UnlockUsb
+    jmp atDone
+
+atSlotOk:
     call AllocateDevice
     movzx bx,al
     shl bx,1
@@ -2386,7 +2416,6 @@ attach_thread:
     mov es:usbf_slot,al
     mov es:usbf_address,0
 ;
-    LockUsb
     NotifyUsbAttach
 
 atDone:
@@ -2534,9 +2563,10 @@ reset_thread:
     mov al,ds:[bx].xhc_port_slot_arr
     call DisableSlot
 ;    
+    LockUsb
     mov eax,es:[si]
     test al,1
-    jz rtDone
+    jz rtUnlock
 ;
     and eax,0EE03E1h
     or al,10h
@@ -2545,7 +2575,7 @@ reset_thread:
 rtCheckResetLoop:
     mov eax,es:[si]
     test al,1
-    jz rtDone
+    jz rtUnlock
 ;
     test al,10h
     jz rtResetDone    
@@ -2555,9 +2585,17 @@ rtCheckResetLoop:
     jmp rtCheckResetLoop    
 
 rtResetDone:
+    mov ax,25
+    WaitMilliSec
+;
     call EnableSlot
-    jc rtDone
-;    
+    jnc rtEnableOk
+
+rtUnlock:
+    UnlockUsb
+    jmp rtDone
+    
+rtEnableOk: 
     call AllocateDevice
     movzx bx,al
     shl bx,1
@@ -2580,7 +2618,6 @@ rtResetDone:
     mov es:usbf_slot,al
     mov es:usbf_address,0
 ;
-    LockUsb
     NotifyUsbAttach
 
 rtDone:
