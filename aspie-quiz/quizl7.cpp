@@ -296,6 +296,12 @@ void TQuizL7::SetupTexts()
   Quiz[119].Reverse = TRUE;
   Quiz[120].Reverse = TRUE;
   Quiz[121].Reverse = TRUE;
+  Quiz[125].Reverse = TRUE;
+  Quiz[128].Reverse = TRUE;
+  Quiz[130].Reverse = TRUE;
+  Quiz[136].Reverse = TRUE;
+  Quiz[139].Reverse = TRUE;
+  Quiz[141].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
@@ -420,7 +426,7 @@ void TQuizL7::SetupTexts()
   Quiz[120].MyGroup = GROUP_MIXED;
   Quiz[121].MyGroup = GROUP_MIXED;
   Quiz[122].MyGroup = GROUP_MIXED;
-  Quiz[123].MyGroup = GROUP_MIXED;
+  Quiz[123].MyGroup = GROUP_ASPIE_RELATION;
   Quiz[124].MyGroup = GROUP_MIXED;
   Quiz[125].MyGroup = GROUP_MIXED;
   Quiz[126].MyGroup = GROUP_MIXED;
