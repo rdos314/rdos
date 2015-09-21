@@ -2525,7 +2525,7 @@ UpdateQueue   Proc near
     and al,NOT 1
     or eax,eax
     jz update_queue_done
-;   
+;
     mov dx,flat_sel
     mov es,dx
     mov fs,ds:ohc_map_sel

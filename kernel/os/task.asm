@@ -4508,7 +4508,16 @@ FlushTlbMultiple    Proc near
 ;
     call TryLockCore
     pushf
-;    
+    mov ax,fs:ps_curr_thread
+    cmp ax,fs:ps_null_thread
+    jne ftmNorm
+
+ftmIrq:
+    call FlushTlb486
+    popf
+    jmp ftmUnlock
+    
+ftmNorm:    
     call AllocateTlb
     mov es:[edx].th_page_count,cx
     mov es:[edx].th_phys_count,0
@@ -4521,6 +4530,8 @@ FlushTlbMultiple    Proc near
 ;
     popf
     call UpdateTlbList
+
+ftmUnlock:   
     call TryUnlockCore
 ;    
     popad
