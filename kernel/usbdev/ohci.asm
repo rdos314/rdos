@@ -3296,7 +3296,20 @@ InitFunction    Proc near
     GetPciMsi
     jc ifIrq
 ;
-    int 3
+    push cx
+    mov cx,1
+    mov al,14h
+    AllocateInts
+    pop cx
+    jc ifIrq    
+;
+    SetupPciMsi
+;    
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET OhciInt
+    RequestMsiHandler
+    jmp ifIntDone
 
 ifIrq:
     mov ds:ohc_irq,0
@@ -3309,7 +3322,8 @@ ifIrq:
     mov es,di
     mov edi,OFFSET OhciInt
     RequestIrqHandler
-;
+
+ifIntDone:
     mov es,ds:ohc_reg_sel
     mov eax,80000002h
     mov es:HcInterruptEnable,eax    
