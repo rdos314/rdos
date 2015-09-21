@@ -416,13 +416,41 @@ CreateScratchPad   Proc near
     shr edx,27
     and dx,1Fh
     shr eax,16
-    and dx,3E0h
+    and ax,3E0h
     add ax,dx    
     or ax,ax
     jz cspDone
 ;
-    int 3    
-    
+    push fs
+    pushad
+;
+    push ax
+    mov eax,1000h
+    AllocateBigLinear
+    AllocatePhysical64
+    mov al,13h
+    SetPageEntry
+    xor al,al
+    mov si,xhci_device_ptr_sel
+    mov fs,si
+    xor si,si
+    mov fs:[si],eax
+    mov fs:[si+4],ebx
+;
+    mov ax,flat_sel
+    mov fs,ax
+    pop cx
+        
+cspLoop:
+    AllocatePhysical64
+    mov fs:[edx],eax
+    mov fs:[edx+4],ebx
+    add edx,8
+    loop cspLoop
+;
+    popad
+    pop fs    
+        
 cspDone:    
     pop ds
     ret
@@ -3475,6 +3503,47 @@ InitFunction    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           BiosHandoff
+;
+;       DESCRIPTION:    Do BIOS handoff
+;
+;       PARAMETERS:     EDX     HCC linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BiosHandoff Proc near
+    push ds
+    push eax
+    push ebx
+;    
+    mov ax,flat_sel
+    mov ds,ax
+    mov ebx,ds:[edx].hccCap1
+    shr ebx,16
+    or bx,bx
+    jz bhDone
+;
+    cmp bx,1000h
+    jae hbFail
+;
+    mov al,ds:[edx+ebx]
+    cmp al,1
+    jne hbFail
+;
+    mov ds:[edx+ebx+3],1            
+        
+hbFail:
+
+bhDone:    
+    pop ebx
+    pop eax
+    pop ds
+    ret
+BiosHandoff Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CreatePrimaryFunction
 ;
 ;       DESCRIPTION:    Create primary XHCI function
@@ -3507,7 +3576,7 @@ CreatePrimaryFunction  Proc near
     and eax,0FFFh
     or edx,eax
 ;
-    mov ecx,20h
+    mov ecx,1000h
     mov bx,xhci_hcc_sel
     CreateDataSelector16
     mov ds,bx
@@ -3520,6 +3589,8 @@ CreatePrimaryFunction  Proc near
     jnc cpfFail
 
 cpf64Ok:        
+    call BiosHandoff
+;    
     mov eax,SIZE xhci_func_sel
     mov cx,ax
     AllocateSmallGlobalMem
@@ -3738,6 +3809,7 @@ CreateSecondaryFunction  Proc near
     jnc csfFail
 
 csf64Ok:        
+    call BiosHandoff
     mov eax,SIZE xhci_func_sel
     mov cx,ax
     AllocateSmallGlobalMem
