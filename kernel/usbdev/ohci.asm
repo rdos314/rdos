@@ -148,6 +148,11 @@ ohc_enum_section    section_typ <>
 ohc_root_ports      DW ?
 ohc_reset           DW ?
 
+ohc_usb_bus         DB ?
+ohc_usb_dev         DB ?
+ohc_usb_func        DB ?
+ohc_irq             DB ?
+
 ohc_fm_reg          DD ?
 
 ohc_section     section_typ <>
@@ -202,6 +207,7 @@ OhciThread      DW ?
 WaitSection     section_typ <>
 WaitThreadArr   DW 3 DUP(?)
 Started         DB ?
+UseTimer        DB ?
 
 OhciFuncCount   DW ?
 OhciFuncArr     DW MAX_USB_DEVICES DUP(?)
@@ -235,32 +241,19 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OhciInt Proc far
-    mov ax,SEG data
-    mov es,ax
-    mov bx,es:OhciThread
+    mov es,ds:ohc_reg_sel
+    mov eax,es:HcInterruptStatus
+    test eax,2
+    jz oiQueueDone
 ;
-    mov cx,es:OhciFuncCount
-    mov si,OFFSET OhciFuncArr
+    call UpdateQueue
 
-oiSignalLoop:
-    push es
-    mov es,es:[si]
-    mov ds,es:ohc_reg_sel
-    mov eax,ds:HcInterruptStatus
-    mov ds:HcInterruptStatus,eax
-    or es:ohc_int_status,eax
+oiQueueDone:
+    mov es,ds:ohc_reg_sel
+    mov es:HcInterruptStatus,eax
+    or ds:ohc_int_status,eax
 ;
-    and eax,52h
-    jz oiNext
-;    
-    Signal
-
-oiNext:
-    pop es
-    add si,2
-    loop oiSignalLoop
-;
-    ret
+    retf32
 OhciInt  Endp
 
 
@@ -2727,6 +2720,9 @@ atWaitNotify:
     sub dx,1
     jnz atWaitNotify
 ;    
+    mov ax,25
+    WaitMilliSec
+;
     mov eax,es:[si].HcRhPortStatus
     push eax
     push cx    
@@ -3294,6 +3290,37 @@ InitFunction    Proc near
     push fs
     pushad
 ;
+    mov bh,ds:ohc_usb_bus
+    mov bl,ds:ohc_usb_dev
+    mov ch,ds:ohc_usb_func
+    GetPciMsi
+    jc ifIrq
+;
+    int 3
+
+ifIrq:
+    mov ds:ohc_irq,0
+    GetPciIrqNr
+    jc ifIrqFail
+;    
+    mov ds:ohc_irq,al
+    mov ah,14h
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET OhciInt
+    RequestIrqHandler
+;
+    mov es,ds:ohc_reg_sel
+    mov eax,80000002h
+    mov es:HcInterruptEnable,eax    
+    jmp ifIrqDone
+
+ifIrqFail:
+    mov ax,SEG data
+    mov es,ax
+    mov ds:UseTimer,1
+
+ifIrqDone: 
     mov ax,flat_sel
     mov es,ax   
 ;    
@@ -3398,6 +3425,9 @@ AddFunction  Proc near
     push di
     push bp
 ;    
+    push bx
+    push cx
+;
     push eax
     mov eax,1000h
     AllocateBigLinear
@@ -3438,8 +3468,15 @@ AddFunction  Proc near
     mov ds:ohc_reg_sel,bp
     mov ds:ohc_int_status,0
     mov ds:ohc_linear,edx
+    mov bp,bx
 ;
-    push ebx
+    pop cx
+    pop bx
+;    
+    mov ds:ohc_usb_bus,bh
+    mov ds:ohc_usb_dev,bl
+    mov ds:ohc_usb_func,ch
+;
     GetPageEntry
     or ebx,ebx
     jz af32
@@ -3447,10 +3484,8 @@ AddFunction  Proc near
     int 3    
 
 af32:    
-    pop ebx
     and ax,0F000h
     mov ds:ohc_phys,eax
-    mov bp,bx
 ;     
     mov eax,1000h
     AllocateBigLinear
@@ -3548,6 +3583,7 @@ ohci_thread:
     mov ds,ax
     GetThread
     mov ds:OhciThread,ax
+    mov ds:UseTimer,0
 ;    
     mov si,OFFSET OhciFuncArr
     mov cx,ds:OhciFuncCount
@@ -3598,7 +3634,12 @@ otInitLoop:
 ;
     add si,2
     loop otInitLoop
-GetSystemTime
+;
+    mov al,ds:UseTimer
+    or al,al
+    jz otTimerStarted
+;    
+    GetSystemTime
     add eax,11930
     adc edx,0
     mov bx,cs
@@ -3606,7 +3647,8 @@ GetSystemTime
     mov bx,cs
     mov edi,OFFSET ohci_timer
     StartTimer
-;       
+
+otTimerStarted:       
     call UpdateUsb
 
 ohci_thread_loop:
