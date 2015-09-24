@@ -2444,6 +2444,9 @@ atSlotOk:
     mov es:usbf_slot,al
     mov es:usbf_address,0
 ;
+    mov ax,25
+    WaitMilliSec
+;
     NotifyUsbAttach
 
 atDone:
@@ -3226,7 +3229,36 @@ upDone:
     pop ds
     ret        
 UpdatePort  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetPortPower
+;
+;           DESCRIPTION:    Turn on power on port
+;
+;       PARAMETERS:         ES  Function sel
+;                           CL  Port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+SetPortPower  Proc near
+    push eax
+    push si
+;        
+    movzx si,cl
+    shl si,4
+;    
+    mov eax,ds:[si]
+    and eax,0EE03E1h
+    or ax,200h
+    mov ds:[si],eax
+;
+    pop si
+    pop eax
+    ret
+SetPortPower    Endp
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3250,7 +3282,22 @@ port_thread:
     mov es:xhc_detach_pend,0
     mov es:xhc_reset_pend,0
     mov ds,es:xhc_port_sel
+;
+    xor cl,cl
 
+ptPowerLoop:    
+    push cx
+    call SetPortPower
+    pop cx
+
+ptPowerNext:
+    inc cl
+    cmp cl,es:xhc_port_count
+    jb ptPowerLoop
+;
+    mov ax,250
+    WaitMilliSec
+    
 ptLoop:
     WaitForSignal
 
