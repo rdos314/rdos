@@ -31,9 +31,7 @@
 #define PROCNAME(n) (action == ADD || action == UPDATE ? wild(n) : \
                      procname(n, filter_match_case))
 #define BROKEN_FSEEK
-#ifndef __RSXNT__
-#  define HAVE_FSEEKABLE
-#endif
+#define HAVE_FSEEKABLE
 
 
 /* popen
@@ -49,9 +47,7 @@
  * which is more work but seems the standard now.  It also enables
  * converting paths in read DOS archives from assumed OEM to ANSI.
  */
-#ifndef NO_WIN32_OEM
-#  define WIN32_OEM
-#endif
+#define WIN32_OEM
 
 /* Large File Support
  *
