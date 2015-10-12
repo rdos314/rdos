@@ -18,29 +18,14 @@
 #endif
 
 /* enable multibyte character set support by default */
-#ifndef _MBCS
-#  define _MBCS
-#endif
-#if defined(__CYGWIN__)
-#  undef _MBCS
-#endif
+#define _MBCS
 
 /* Get types and stat */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <io.h>
 
-#ifndef MSDOS
-/*
- * Windows 95 (and Windows NT) file systems are (to some extend)
- * extensions of MSDOS. Common features include for example:
- *      FAT or (FAT like) file systems,
- *      '\\' as directory separator in paths,
- *      "\r\n" as record (line) terminator in text files, ...
- */
-#  define MSDOS
-/* inherit MS-DOS file system etc. stuff */
-#endif
+#define MSDOS
 
 #define USE_CASE_MAP
 #define PROCNAME(n) (action == ADD || action == UPDATE ? wild(n) : \
