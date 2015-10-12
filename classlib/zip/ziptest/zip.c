@@ -15,10 +15,8 @@
 
 #include "zip.h"
 #include <time.h>       /* for tzset() declaration */
-#if defined(WIN32) || defined(WINDLL)
-#  define WIN32_LEAN_AND_MEAN
-#  include <windows.h>
-#endif
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #ifdef WINDLL
 #  include <setjmp.h>
 #  include "windll/windll.h"
@@ -30,17 +28,6 @@
 #include "ttyio.h"
 #include <ctype.h>
 #include <errno.h>
-#ifdef VMS
-#  include <stsdef.h>
-#  include "vms/vmsmunch.h"
-#  include "vms/vms.h"
-#endif
-
-#ifdef MACOS
-#  include "macglob.h"
-   extern MacZipGlobals MacZip;
-   extern int error_level;
-#endif
 
 #if (defined(MSDOS) && !defined(__GO32__)) || defined(__human68k__)
 #  include <process.h>
