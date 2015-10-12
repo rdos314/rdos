@@ -262,15 +262,7 @@ struct plist {
 /* Public globals */
 extern uch upper[256];          /* Country dependent case map table */
 extern uch lower[256];
-#ifdef EBCDIC
-extern ZCONST uch ascii[256];   /* EBCDIC <--> ASCII translation tables */
-extern ZCONST uch ebcdic[256];
-#endif /* EBCDIC */
-#if (!defined(USE_ZLIB) || defined(USE_OWN_CRCTAB))
-  extern ZCONST ulg near *crc_32_tab;
-#else
-  extern ZCONST ulg Far *crc_32_tab;
-#endif
+extern ZCONST ulg Far *crc_32_tab;
 
 /* Are these ever used?  6/12/05 EG */
 #ifdef IZ_ISO2OEM_ARRAY         /* ISO 8859-1 (Win CP 1252) --> OEM CP 850 */
