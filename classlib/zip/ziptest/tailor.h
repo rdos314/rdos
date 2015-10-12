@@ -77,13 +77,6 @@ typedef size_t extent;
  * Otherwise, SETLOCALE may be defined here, and then defined again
  * (differently) when <locale.h> is read later.
  */
-#ifdef UNICODE_SUPPORT
-# if defined( UNIX) || defined( VMS)
-#   include <locale.h>
-# endif /* defined( UNIX) || defined( VMS) */
-# include <wchar.h>
-# include <wctype.h>
-#endif /* def UNICODE_SUPPORT */
 
 #ifdef _MBCS
 #   include <locale.h>
