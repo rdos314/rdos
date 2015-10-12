@@ -49,41 +49,10 @@
 
 typedef void zvoid;
 
-#ifdef NO_STRRCHR
-#  define strrchr rindex
-#endif
-
-#ifdef NO_STRCHR
-#  define strchr index
-#endif
-
 /*
  * A couple of forward declarations that are needed on systems that do
  * not supply C runtime library prototypes.
  */
-#ifdef NO_PROTO
-IZ_IMP char *strcpy();
-IZ_IMP char *strcat();
-IZ_IMP char *strrchr();
-/* XXX use !defined(ZMEM) && !defined(__hpux__) ? */
-#if !defined(ZMEM) && defined(NO_STRING_H)
-IZ_IMP char *memset();
-IZ_IMP char *memcpy();
-#endif /* !ZMEM && NO_STRING_H */
-
-/* XXX use !defined(__hpux__) ? */
-#ifdef NO_STDLIB_H
-IZ_IMP char *calloc();
-IZ_IMP char *malloc();
-IZ_IMP char *getenv();
-IZ_IMP long atol();
-#endif /* NO_STDLIB_H */
-
-#ifndef NO_MKTEMP
-IZ_IMP char *mktemp();
-#endif /* !NO_MKTEMP */
-
-#endif /* NO_PROTO */
 
 /*
  * SEEK_* macros, should be defined in stdio.h
