@@ -337,9 +337,7 @@ extern int clear_archive_bits;   /* clear DOS archive bit of included files */
 extern int linkput;             /* Store symbolic links as such */
 extern int noisy;               /* False for quiet operation */
 extern int extra_fields;        /* 0=create minimum, 1=don't copy old, 2=keep old */
-#ifdef NTSD_EAS
- extern int use_privileges;     /* use security privilege overrides */
-#endif
+extern int use_privileges;     /* use security privilege overrides */
 extern int use_descriptors;     /* use data descriptors (extended headings) */
 extern int allow_empty_archive; /* if no files, create empty archive anyway */
 extern int copy_only;           /* 1 = copy archive with no changes */
