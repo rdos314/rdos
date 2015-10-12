@@ -169,7 +169,6 @@ typedef ulg                z_uint4;
  * E. Gordon 9/21/2003
  * Updated 7/24/04 EG
  */
-#ifdef LARGE_FILE_SUPPORT
   /* 64-bit Large File Support */
 
   /* Arguments for all functions are assumed to match the actual
@@ -350,24 +349,6 @@ typedef ulg                z_uint4;
 #   endif
 
 # endif /* WIN32 */
-
-#else
-  /* No Large File Support or default for 64-bit environment */
-
-# define zstat stat
-# define zfstat fstat
-# define zlstat lstat
-# define zfseeko fseek
-# define zftello ftell
-# define zfopen fopen
-# define zfdopen fdopen
-# ifdef UNICODE_SUPPORT
-#   define zwfstat _fstat
-#   define zwstat _wstat
-#   define zw_stat struct _stat
-# endif
-
-#endif
 
 #ifdef LARGE_FILE_SUPPORT         /* E. Gordon 9/12/2003 */
 
