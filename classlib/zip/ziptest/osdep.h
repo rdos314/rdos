@@ -207,19 +207,9 @@ typedef struct _stati64 z_stat;
 
 #define W32_STAT_BANDAID
 
-   int zstat_zipwin32(const char *path, z_stat *buf);
+int zstat_zipwin32(const char *path, z_stat *buf);
 
-#  ifdef UNICODE_SUPPORT
-#   ifdef LARGE_FILE_SUPPORT
-     int zstat_zipwin32w(const wchar_t *pathw, struct _stati64 *buf);
-#   else
-     int zstat_zipwin32w(const wchar_t *pathw, struct _stat *buf);
-#   endif
-#  endif
-
-#  ifdef SSTAT
-#    undef SSTAT
-#  endif
+int zstat_zipwin32w(const wchar_t *pathw, struct _stati64 *buf);
 
 #define SSTAT zstat_zipwin32
 #define SSTATW zstat_zipwin32w
