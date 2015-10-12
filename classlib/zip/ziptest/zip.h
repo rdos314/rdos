@@ -711,18 +711,8 @@ extern struct option_struct far options[];
 
 /* If will support wide for Unicode then need to add */
   /* multi-byte */
-# ifndef MULTIBYTE_GETOPTNS
-#   define MULTIBYTE_GETOPTNS
-# endif
-#ifdef MULTIBYTE_GETOPTNS
-  int mb_clen OF((ZCONST char *));
-# define MB_CLEN(ptr) mb_clen(ptr)
-# define MB_NEXTCHAR(ptr) ((ptr) += MB_CLEN(ptr))
-#else
-  /* no multi-byte */
 # define MB_CLEN(ptr) (1)
 # define MB_NEXTCHAR(ptr) ((ptr)++)
-#endif
 
 
 /* function prototypes */
