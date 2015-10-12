@@ -18,19 +18,11 @@
  * (the latter with UNZIP_INTERNAL defined...).
  */
 
-   ZCONST ulg near *get_crc_table  OF((void));
+ZCONST ulg near *get_crc_table  OF((void));
 
-#if (defined(USE_ZLIB) || defined(CRC_TABLE_ONLY))
-#  ifdef IZ_CRC_BE_OPTIMIZ
-#    undef IZ_CRC_BE_OPTIMIZ
-#  endif
-#else /* !(USE_ZLIB || CRC_TABLE_ONLY) */
-   ulg      crc32           OF((ulg crc, ZCONST uch *buf, extent len));
-#endif /* ?(USE_ZLIB || CRC_TABLE_ONLY) */
+ulg      crc32           OF((ulg crc, ZCONST uch *buf, extent len));
 
-#ifndef CRC_32_TAB
-#  define CRC_32_TAB     crc_32_tab
-#endif
+#define CRC_32_TAB     crc_32_tab
 
 #ifdef CRC32
 #  undef CRC32
