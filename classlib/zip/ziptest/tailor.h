@@ -111,17 +111,9 @@ typedef struct ztimbuf {
 #define ROUNDED_TIME(time)   (time)
 
 typedef ulg                z_uint4;
-# define Z_UINT4_DEFINED
 
-#ifndef FOPR    /* fallback default definitions for FOPR, FOPM, FOPW: */
-#  define FOPR "r"
-#  define FOPM "r+"
-#  define FOPW "w"
-#endif /* fallback definition */
-
-#ifndef FOPW_TMP    /* fallback default for opening writable temp files */
-#  define FOPW_TMP FOPW
-#endif
+#define Z_UINT4_DEFINED
+#define FOPW_TMP FOPW
 
 /* Open the old zip file in exclusive mode if possible (to avoid adding
  * zip file to itself).
