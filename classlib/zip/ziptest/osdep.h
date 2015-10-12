@@ -13,9 +13,7 @@
  * NOTE: Watcom also defines M_I*86 !
  */
 
-#if defined(__WATCOMC__) && defined(__386__)
-#  define WATCOMC_386
-#endif
+#define WATCOMC_386
 
 /* enable multibyte character set support by default */
 #define _MBCS
