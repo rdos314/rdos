@@ -169,7 +169,7 @@ typedef struct _stati64 z_stat;
 #define FS_HPFS_          6    /* filesystem used by OS/2 (and NT 3.x) */
 #define FS_NTFS_          11   /* filesystem used by Windows NT */
 
-#  define Ext_ASCII_TO_Native(string, hostnum, hostver, isuxatt, islochdr) \
+#define Ext_ASCII_TO_Native(string, hostnum, hostver, isuxatt, islochdr) \
     if (((hostnum) == FS_FAT_ && \
          !(((islochdr) || (isuxatt)) && \
            ((hostver) == 25 || (hostver) == 26 || (hostver) == 40))) || \
@@ -180,11 +180,6 @@ typedef struct _stati64 z_stat;
         _ISO_INTERN((string)); \
     }
 
-#if (defined(__RSXNT__) && defined(__CRTRSXNT__))
-#  include <crtrsxnt.h>
-#endif
-
-#ifdef _MBCS
 #  if (!defined(__EMX__) && !defined(__MINGW32__) && !defined(__CYGWIN__))
 #    include <stdlib.h>
 #    include <mbstring.h>
@@ -202,7 +197,6 @@ typedef struct _stati64 z_stat;
      IZ_IMP extern int *_imp____mb_cur_max;
 #    define MB_CUR_MAX (*_imp____mb_cur_max)
 #  endif
-#endif
 
 #ifdef __LCC__
 #  include <time.h>
