@@ -129,16 +129,6 @@ typedef struct _stati64 z_stat;
 #define AnsiToOem CharToOemA
 #define OemToAnsi OemToCharA
 
-/* handlers for OEM <--> ANSI string conversions */
-#if defined(__RSXNT__) || defined(WIN32_CRT_OEM)
-   /* RSXNT uses OEM coded strings in functions supplied by C RTL */
-#  ifdef CRTL_CP_IS_ISO
-#    undef CRTL_CP_IS_ISO
-#  endif
-#  ifndef CRTL_CP_IS_OEM
-#    define CRTL_CP_IS_OEM
-#  endif
-#else
    /* "real" native WIN32 compilers use ANSI coded strings in C RTL calls */
 #  ifndef CRTL_CP_IS_ISO
 #    define CRTL_CP_IS_ISO
@@ -146,7 +136,6 @@ typedef struct _stati64 z_stat;
 #  ifdef CRTL_CP_IS_OEM
 #    undef CRTL_CP_IS_OEM
 #  endif
-#endif
 
 #ifdef CRTL_CP_IS_ISO
    /* C RTL's file system support assumes ANSI coded strings */
