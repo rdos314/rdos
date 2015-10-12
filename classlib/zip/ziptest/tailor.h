@@ -136,16 +136,9 @@ typedef ulg                z_uint4;
 
 #define SBSZ CBSZ     /* copy buf size for STORED entries, see zipup() */
 
-#  ifdef __WATCOMC__
 #    undef huge
 #    undef far
 #    undef near
-#  endif
-#  ifdef THEOS
-#    undef far
-#    undef near
-#  endif
-#  if (!defined(__IBMC__) || !defined(OS2))
 #    ifndef huge
 #      define huge
 #    endif
@@ -155,7 +148,6 @@ typedef ulg                z_uint4;
 #    ifndef near
 #      define near
 #    endif
-#  endif
 #  define nearmalloc malloc
 #  define nearfree free
 #  define farmalloc malloc
