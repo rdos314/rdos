@@ -29,27 +29,12 @@
  */
 
 
-#  define echoff(f)
-#  define echon()
-#  ifdef WIN32
+#define echoff(f)
+#define echon()
 #    ifndef getch
 #      define getch() getch_win32()
 #    endif
-#  else /* !WIN32 */
-#    ifdef __EMX__
-#      ifndef getch
-#        define getch() _read_kbd(0, 1, 0)
-#      endif
-#    else /* !__EMX__ */
-#      ifdef __GO32__
-#        include <pc.h>
-#        define getch() getkey()
-#      else /* !__GO32__ */
-#        include <conio.h>
-#      endif /* ?__GO32__ */
-#    endif /* ?__EMX__ */
-#  endif /* ?WIN32 */
-#  define HAVE_WORKING_GETCH
+#define HAVE_WORKING_GETCH
 
 /* For all other systems, ttyio.c supplies the two functions Echoff() and
  * Echon() for suppressing and (re)enabling console input echo.
