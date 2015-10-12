@@ -105,19 +105,13 @@ typedef struct _stati64 z_stat;
 
 /* Enable use of optimized x86 assembler version of longest_match() for
    MSDOS, WIN32 and OS2 per default.  */
-#if !defined(NO_ASM) && !defined(ASMV)
-#  define ASMV
-#endif
+#define ASMV
 
 /* Enable use of optimized x86 assembler version of crc32() for
    MSDOS, WIN32 and OS2 per default.  */
-#if !defined(NO_ASM) && !defined(ASM_CRC)  && !defined(NO_ASM_CRC)
-#  define ASM_CRC
-#endif
+#define ASM_CRC
 
-#if !defined(__GO32__) && !defined(__EMX__) && !defined(__CYGWIN__)
-#  define NO_UNISTD_H
-#endif
+#define NO_UNISTD_H
 
 /* Microsoft C requires additional attributes attached to all RTL function
  * declarations when linking against the CRTL dll.
