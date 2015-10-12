@@ -292,52 +292,15 @@ extern int filesync;            /* 1=file sync, delete entries not on file syste
 extern int adjust;              /* Adjust the unzipsfx'd zip file */
 extern int level;               /* Compression level */
 extern int translate_eol;       /* Translate end-of-line LF -> CR LF */
-#ifdef VMS
-   extern int vmsver;           /* Append VMS version number to file names */
-   extern int vms_native;       /* Store in VMS format */
-   extern int vms_case_2;       /* ODS2 file name case in VMS. -1: down. */
-   extern int vms_case_5;       /* ODS5 file name case in VMS. +1: preserve. */
+extern int use_longname_ea;     /* use the .LONGNAME EA as the file's name */
 
-/* Accomodation for /NAMES = AS_IS with old header files. */
-# define cma$tis_errno_get_addr CMA$TIS_ERRNO_GET_ADDR
-# define lib$establish LIB$ESTABLISH
-# define lib$get_foreign LIB$GET_FOREIGN
-# define lib$get_input LIB$GET_INPUT
-# define lib$sig_to_ret LIB$SIG_TO_RET
-# define ots$cvt_tu_l OTS$CVT_TU_L
-# define str$concat STR$CONCAT
-# define str$find_first_substring STR$FIND_FIRST_SUBSTRING
-# define str$free1_dx STR$FREE1_DX
-# define sys$asctim SYS$ASCTIM
-# define sys$assign SYS$ASSIGN
-# define sys$bintim SYS$BINTIM
-# define sys$close SYS$CLOSE
-# define sys$connect SYS$CONNECT
-# define sys$dassgn SYS$DASSGN
-# define sys$display SYS$DISPLAY
-# define sys$getjpiw SYS$GETJPIW
-# define sys$open SYS$OPEN
-# define sys$parse SYS$PARSE
-# define sys$qiow SYS$QIOW
-# define sys$read SYS$READ
-# define sys$search SYS$SEARCH
-#endif /* VMS */
-#if defined(OS2) || defined(WIN32)
-   extern int use_longname_ea;   /* use the .LONGNAME EA as the file's name */
-#endif
-#if defined (QDOS) || defined(QLZIP)
-extern short qlflag;
-#endif
 /* 9/26/04 EG */
 extern int no_wild;             /* wildcards are disabled */
 extern int allow_regex;         /* 1 = allow [list] matching (regex) */
 extern int wild_stop_at_dir;    /* wildcards do not include / in matches */
-#ifdef UNICODE_SUPPORT
-  extern int using_utf8;        /* 1 if current character set is UTF-8 */
-# ifdef WIN32
-   extern int no_win32_wide;    /* 1 = no wide functions, like GetFileAttributesW() */
-# endif
-#endif
+extern int using_utf8;        /* 1 if current character set is UTF-8 */
+extern int no_win32_wide;    /* 1 = no wide functions, like GetFileAttributesW() */
+
 /* 10/20/04 */
 extern zoff_t dot_size;         /* if not 0 then display dots every size buffers */
 extern zoff_t dot_count;        /* if dot_size not 0 counts buffers */
@@ -359,24 +322,18 @@ extern int logall;          /* 0 = warnings/errors, 1 = all */
 extern FILE *logfile;           /* pointer to open logfile or NULL */
 extern int logfile_append;      /* append to existing logfile */
 extern char *logfile_path;      /* pointer to path of logfile */
-#ifdef WIN32
 extern int nonlocal_name;       /* Name has non-local characters */
 extern int nonlocal_path;       /* Path has non-local characters */
-#endif
-#ifdef UNICODE_SUPPORT
 /* Unicode 10/12/05 */
 extern int use_wide_to_mb_default;/* use the default MB char instead of escape */
-#endif
 
 extern int hidden_files;        /* process hidden and system files */
 extern int volume_label;        /* add volume label */
 extern int dirnames;            /* include directory names */
 extern int filter_match_case;   /* 1=match case when filter() */
 extern int diff_mode;           /* 1=require --out and only store changed and add */
-#if defined(WIN32)
 extern int only_archive_set;    /* only include if DOS archive bit set */
 extern int clear_archive_bits;   /* clear DOS archive bit of included files */
-#endif
 extern int linkput;             /* Store symbolic links as such */
 extern int noisy;               /* False for quiet operation */
 extern int extra_fields;        /* 0=create minimum, 1=don't copy old, 2=keep old */
