@@ -16,22 +16,6 @@
    These get used if not defined above.
    7/21/2004 EG
 */
-/* If a port hasn't defined ZOFF_T_FORMAT_SIZE_PREFIX
-   then probably need to define all of these. */
-
-
-#if (defined(USE_ZLIB) && defined(ASM_CRC))
-#  undef ASM_CRC
-#endif
-
-#if (defined(USE_ZLIB) && defined(ASMV))
-#  undef ASMV
-#endif
-
-/* When "void" is an alias for "int", prototypes cannot be used. */
-#if (defined(NO_VOID) && !defined(NO_PROTO))
-#  define NO_PROTO
-#endif
 
 /* Used to remove arguments in function prototypes for non-ANSI C */
 #ifndef NO_PROTO
