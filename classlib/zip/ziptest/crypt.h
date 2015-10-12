@@ -25,9 +25,6 @@
 #ifndef __crypt_h   /* don't include more than once */
 #define __crypt_h
 
-#ifdef CRYPT
-#  undef CRYPT
-#endif
 /*
    Logic of selecting "full crypt" code:
    a) default behaviour:
@@ -39,9 +36,6 @@
       - never full crypt code
    NO_CRYPT takes precedence over USE_CRYPT
  */
-#if defined(NO_CRYPT)
-#  define CRYPT  0  /* dummy version */
-#else
 #if defined(USE_CRYPT)
 #  define CRYPT  1  /* full version */
 #else
@@ -51,7 +45,6 @@
 #  define CRYPT  0  /* dummy version for unzip sfx */
 #endif
 #endif /* ?USE_CRYPT */
-#endif /* ?NO_CRYPT */
 
 #if CRYPT
 /* full version */
