@@ -28,15 +28,8 @@
 #define DW_MINORVER    Z_MINORVER
 #define DW_PATCHLEVEL  Z_PATCHLEVEL
 
-#ifndef IZ_COMPANY_NAME               /* might be already defined... */
-#  define IZ_COMPANY_NAME "Info-ZIP"
-#endif
+#define IZ_COMPANY_NAME "RDOS"
 
-#if !defined(WINDLL) && !defined(IZ_VERSION_SYMBOLS_ONLY)
-/* Copyright notice for binary executables--this notice only applies to
- * those (zip, zipcloak, zipsplit, and zipnote), not to this file
- * (revision.h).
- */
 
 #ifndef DEFCPYRT
 /* copyright[] et.al. get defined only once ! */
@@ -135,5 +128,4 @@ ZCONST char * far swlicense[] = {
 "       own source and binary releases."
 };
 #endif /* DEFCPYRT */
-#endif /* !WINDLL && !IZ_VERSION_SYMBOLS_ONLY */
 #endif /* !__revision_h */
