@@ -183,9 +183,6 @@ typedef struct _stati64 z_stat;
 #include <stdlib.h>
 #include <mbstring.h>
 
-#if (defined(__RSXNT__) || defined(__EMX__)) && !defined(tzset)
-#  define tzset _tzset
-#endif
 #ifdef W32_USE_IZ_TIMEZONE
 #  ifdef __BORLANDC__
 #    define tzname tzname
