@@ -265,12 +265,6 @@ extern uch lower[256];
 extern ZCONST ulg Far *crc_32_tab;
 
 /* Are these ever used?  6/12/05 EG */
-#ifdef IZ_ISO2OEM_ARRAY         /* ISO 8859-1 (Win CP 1252) --> OEM CP 850 */
-extern ZCONST uch Far iso2oem[128];
-#endif
-#ifdef IZ_OEM2ISO_ARRAY         /* OEM CP 850 --> ISO 8859-1 (Win CP 1252) */
-extern ZCONST uch Far oem2iso[128];
-#endif
 
 extern char errbuf[FNMAX+4081]; /* Handy place to build error messages */
 extern int recurse;             /* Recurse into directories encountered */
