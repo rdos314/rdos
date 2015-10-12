@@ -94,9 +94,7 @@ int lastchar OF((ZCONST char *ptr));
 
 #define MBSCHR(str,c) (char *)zmbschr((ZCONST unsigned char *)(str), c)
 #define MBSRCHR(str,c) (char *)zmbsrchr((ZCONST unsigned char *)(str), (c))
-#ifndef SETLOCALE
-#   define SETLOCALE(category, locale) setlocale(category, locale)
-#endif /* ndef SETLOCALE */
+#define SETLOCALE(category, locale) setlocale(category, locale)
 
 #define INCSTR(ptr) PREINCSTR(ptr)
 
