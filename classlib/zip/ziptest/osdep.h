@@ -168,7 +168,7 @@ typedef struct _stati64 z_stat;
 #define FS_FAT_           0    /* filesystem used by MS-DOS, OS/2, Win32 */
 #define FS_HPFS_          6    /* filesystem used by OS/2 (and NT 3.x) */
 #define FS_NTFS_          11   /* filesystem used by Windows NT */
-#ifndef Ext_ASCII_TO_Native
+
 #  define Ext_ASCII_TO_Native(string, hostnum, hostver, isuxatt, islochdr) \
     if (((hostnum) == FS_FAT_ && \
          !(((islochdr) || (isuxatt)) && \
@@ -179,7 +179,6 @@ typedef struct _stati64 z_stat;
     } else { \
         _ISO_INTERN((string)); \
     }
-#endif
 
 #if (defined(__RSXNT__) && defined(__CRTRSXNT__))
 #  include <crtrsxnt.h>
