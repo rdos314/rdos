@@ -229,11 +229,9 @@ zoff_t zftello OF((FILE *));
 #define ZIPERR ziperr
 
 
-#if (!defined(USE_ZLIB) && !defined(MY_ZCALLOC))
    /* Any system without a special calloc function */
 #  define zcalloc(items,size) \
           (zvoid far *)calloc((unsigned)(items), (unsigned)(size))
 #  define zcfree    free
-#endif /* !USE_ZLIB && !MY_ZCALLOC */
 
 /* end of tailor.h */
