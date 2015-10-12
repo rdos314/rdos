@@ -183,26 +183,6 @@ typedef struct _stati64 z_stat;
 #include <stdlib.h>
 #include <mbstring.h>
 
-#  if (defined(__LCC__) && !defined(MB_CUR_MAX))
-     IZ_IMP extern int *_imp____mb_cur_max;
-#    define MB_CUR_MAX (*_imp____mb_cur_max)
-#  endif
-
-#ifdef __LCC__
-#  include <time.h>
-#  ifndef tzset
-#    define tzset _tzset
-#  endif
-#  ifndef utime
-#    define utime _utime
-#  endif
-#endif
-#ifdef __MINGW32__
-   IZ_IMP extern void _tzset(void);     /* this is missing in <time.h> */
-#  ifndef tzset
-#    define tzset _tzset
-#  endif
-#endif
 #if (defined(__RSXNT__) || defined(__EMX__)) && !defined(tzset)
 #  define tzset _tzset
 #endif
