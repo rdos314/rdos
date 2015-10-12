@@ -121,22 +121,13 @@ typedef struct _stati64 z_stat;
 /* WIN32 runs solely on little-endian processors; enable support
  * for the 32-bit optimized CRC-32 C code by default.
  */
-#ifdef IZ_CRC_BE_OPTIMIZ
-#  undef IZ_CRC_BE_OPTIMIZ
-#endif
-#if !defined(IZ_CRC_LE_OPTIMIZ) && !defined(NO_CRC_OPTIMIZ)
-#  define IZ_CRC_LE_OPTIMIZ
-#endif
+#define IZ_CRC_LE_OPTIMIZ
 
 /* the following definitions are considered as "obsolete" by Microsoft and
  * might be missing in some versions of <windows.h>
  */
-#ifndef AnsiToOem
-#  define AnsiToOem CharToOemA
-#endif
-#ifndef OemToAnsi
-#  define OemToAnsi OemToCharA
-#endif
+#define AnsiToOem CharToOemA
+#define OemToAnsi OemToCharA
 
 /* handlers for OEM <--> ANSI string conversions */
 #if defined(__RSXNT__) || defined(WIN32_CRT_OEM)
