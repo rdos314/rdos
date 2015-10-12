@@ -31,12 +31,6 @@
 #include <signal.h>
 #include <stdio.h>
 
-#ifdef UNICODE_TEST
-# ifdef WIN32
-#  include <direct.h>
-# endif
-#endif
-
 #ifdef BZIP2_SUPPORT
   /* If IZ_BZIP2 is defined as the location of the bzip2 files then
      assume the location has been added to include path.  For Unix

@@ -67,21 +67,9 @@
 ; Do NOT assemble this source if external crc32 routine from zlib gets used,
 ; or only the precomputed CRC_32_Table is needed.
 ;
-    IFNDEF USE_ZLIB
-    IFNDEF CRC_TABLE_ONLY
 ;
         .386p
         name    crc_i386
-
-    IFDEF NO_ALIGN
-        .model flat
-    ENDIF
-
-    IFNDEF PRE_686
-    IFNDEF __686
-__686   EQU     1 ; optimize for Pentium Pro, Pentium II and compatible CPUs
-    ENDIF
-    ENDIF
 
 extrn   _get_crc_table:near    ; ZCONST ulg near *get_crc_table(void);
 
@@ -126,59 +114,23 @@ STD_LEAVE       MACRO
 ; scratch registers:
 ;   ebx  : index into crc_table array
 ;          (requires upper three bytes = 0 when __686 is undefined)
-    IFNDEF  __686 ; optimize for 386, 486, Pentium
 Do_CRC  MACRO
                 mov     bl,al                ; tmp = c & 0xFF
                 shr     eax,8                ; c = (c >> 8)
                 xor     eax,[edi+ebx*4]      ;  ^ table[tmp]
         ENDM
-    ELSE ; __686 : optimize for Pentium Pro, Pentium II and compatible CPUs
-Do_CRC  MACRO
-                movzx   ebx,al                 ; tmp = c & 0xFF
-                shr     eax,8                  ; c = (c >> 8)
-                xor     eax,[edi+ebx*4]        ;  ^ table[tmp]
-        ENDM
-    ENDIF ; ?__686
+
 Do_CRC_byte     MACRO
                 xor     al, byte ptr [esi]     ; c ^= *buf
                 inc     esi                    ; buf++
                 Do_CRC                         ; c = (c >> 8) ^ table[c & 0xFF]
         ENDM
+
 Do_CRC_byteof   MACRO   ofs
                 xor     al, byte ptr [esi+ofs] ; c ^= *(buf+ofs)
                 Do_CRC                         ; c = (c >> 8) ^ table[c & 0xFF]
         ENDM
-    IFNDEF  NO_32_BIT_LOADS
-      IFDEF IZ_CRCOPTIM_UNFOLDTBL
-        ; the edx register is needed in crc calculation
-        SavLen  EQU     Arg3
 
-UpdCRC_dword    MACRO
-                movzx   ebx,al                 ; tmp = c & 0xFF
-                mov     edx,[edi+ebx*4+3072]   ;  table[256*3+tmp]
-                movzx   ebx,ah                 ; tmp = (c>>8) & 0xFF
-                shr     eax,16                 ;
-                xor     edx,[edi+ebx*4+2048]   ;  ^ table[256*2+tmp]
-                movzx   ebx,al                 ; tmp = (c>>16) & 0xFF
-                shr     eax,8                  ; tmp = (c>>24)
-                xor     edx,[edi+ebx*4+1024]   ;  ^ table[256*1+tmp]
-                mov     eax,[edi+eax*4]        ;  ^ table[256*0+tmp]
-                xor     eax,edx                ; ..
-        ENDM
-UpdCRC_dword_sh MACRO   dwPtrIncr
-                movzx   ebx,al                 ; tmp = c & 0xFF
-                mov     edx,[edi+ebx*4+3072]   ;  table[256*3+tmp]
-                movzx   ebx,ah                 ; tmp = (c>>8) & 0xFF
-                xor     edx,[edi+ebx*4+2048]   ;  ^ table[256*2+tmp]
-                shr     eax,16                 ;
-                movzx   ebx,al                 ; tmp = (c>>16) & 0xFF
-                add     esi, 4*dwPtrIncr       ; ((ulg *)buf) += dwPtrIncr
-                shr     eax,8                  ; tmp = (c>>24)
-                xor     edx,[edi+ebx*4+1024]   ;  ^ table[256*1+tmp]
-                mov     eax,[edi+eax*4]        ;  ^ table[256*0+tmp]
-                xor     eax,edx                ; ..
-        ENDM
-      ELSE ; IZ_CRCOPTIM_UNFOLDTBL
         ; the edx register is not needed anywhere else
         SavLen  EQU     edx
 
@@ -195,7 +147,6 @@ UpdCRC_dword_sh MACRO   dwPtrIncr
                 Do_CRC
                 Do_CRC
         ENDM
-      ENDIF ; ?IZ_CRCOPTIM_UNFOLDTBL
 Do_CRC_dword    MACRO
                 xor     eax, dword ptr [esi]   ; c ^= *(ulg *)buf
                 UpdCRC_dword_sh 1              ; ... ((ulg *)buf)++
@@ -210,7 +161,6 @@ Do_CRC_4dword   MACRO
                 xor     eax, dword ptr [esi+12] ; c ^= *((ulg *)buf]+3
                 UpdCRC_dword_sh	4               ; ... ((ulg *)buf)+=4
         ENDM
-    ENDIF ; !NO_32_BIT_LOADS
 
     IFNDEF NO_ALIGN
 _TEXT   segment use32 para public 'CODE'
@@ -236,9 +186,7 @@ _crc32          proc    near  ; ulg crc32(ulg crc, ZCONST uch *buf, extent len)
                 call    _get_crc_table
                 mov     edi,eax
                 mov     eax,Arg1            ; 1st arg: ulg crc
-    IFNDEF __686
                 sub     ebx,ebx             ; ebx=0; make bl usable as a dword
-    ENDIF
                 mov     ecx,Arg3            ; 3rd arg: extent len
                 not     eax                 ;>   c = ~crc;
 
@@ -323,8 +271,5 @@ fine:
 _crc32          endp
 
 _TEXT   ends
-;
-    ENDIF ; !CRC_TABLE_ONLY
-    ENDIF ; !USE_ZLIB
-;
+
 end
