@@ -187,13 +187,6 @@ typedef struct _stati64 z_stat;
 
 #define MATCHW dosmatchw
 
-#ifdef ZCRYPT_INTERNAL
-#  ifdef WINDLL
-#    define ZCR_SEED2     (unsigned)3141592654L /* use PI as seed pattern */
-#  else
-#    include <process.h>        /* getpid() declaration for srand seed */
-#  endif
-#endif
 
 /* Up to now, all versions of Microsoft C runtime libraries lack the support
  * for customized (non-US) switching rules between daylight saving time and
