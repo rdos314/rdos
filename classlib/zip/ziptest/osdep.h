@@ -203,11 +203,7 @@ typedef struct _stati64 z_stat;
 /* This patch of stat() is useful for at least three compilers.  It is   */
 /* difficult to take a stat() of a root directory under Windows95, so  */
 /* zstat_zipwin32() detects that case and fills in suitable values.    */
-#ifndef __RSXNT__
-#  ifndef W32_STATROOT_FIX
-#    define W32_STATROOT_FIX
-#  endif
-#endif /* !__RSXNT__ */
+#define W32_STATROOT_FIX
 
 #if (defined(NT_TZBUG_WORKAROUND) || defined(W32_STATROOT_FIX))
 #  define W32_STAT_BANDAID
