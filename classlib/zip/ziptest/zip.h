@@ -534,24 +534,10 @@ int procnamew OF((wchar_t *, int));
 int procname OF((char *, int));
 void stamp OF((char *, ulg));
 ulg filetime OF((char *, ulg *, zoff_t *, iztimes *));
-
-   /* Windows Unicode */
-# ifdef UNICODE_SUPPORT
-# ifdef WIN32
-   ulg filetimew OF((wchar_t *, ulg *, zoff_t *, iztimes *));
-   char *get_win32_utf8path OF((char *));
-   wchar_t *local_to_wchar_string OF ((char *));
-# endif
-# endif
-
-# if !(defined(VMS) && defined(VMS_PK_EXTRA))
-   int set_extra_field OF((struct zlist far *, iztimes *));
-# endif /* ?(VMS && VMS_PK_EXTRA) */
-   int deletedir OF((char *));
-# ifdef MY_ZCALLOC
-     zvoid far *zcalloc OF((unsigned int, unsigned int));
-     zvoid zcfree       OF((zvoid far *));
-# endif /* MY_ZCALLOC */
+ulg filetimew OF((wchar_t *, ulg *, zoff_t *, iztimes *));
+char *get_win32_utf8path OF((char *));
+wchar_t *local_to_wchar_string OF ((char *));
+int deletedir OF((char *));
 void version_local OF((void));
 
         /* in util.c */
