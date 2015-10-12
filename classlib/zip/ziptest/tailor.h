@@ -218,65 +218,8 @@ zoff_t zftello OF((FILE *));
  * random seed computation can be used on most systems (all those that
  * supply a UNIX compatible getpid() function).
  */
-#ifdef ZCRYPT_INTERNAL
-#  ifndef ZCR_SEED2
-#    define ZCR_SEED2     (unsigned) getpid()   /* use PID as seed pattern */
-#  endif
-#endif /* ZCRYPT_INTERNAL */
 
-/* The following OS codes are defined in pkzip appnote.txt */
-#ifdef AMIGA
-#  define OS_CODE  0x100
-#endif
-#ifdef VMS
-#  define OS_CODE  0x200
-#endif
-/* unix    3 */
-#ifdef VM_CMS
-#  define OS_CODE  0x400
-#endif
-#ifdef ATARI
-#  define OS_CODE  0x500
-#endif
-#ifdef OS2
-#  define OS_CODE  0x600
-#endif
-#ifdef MACOS
-#  define OS_CODE  0x700
-#endif
-/* z system 8 */
-/* cp/m     9 */
-#ifdef TOPS20
-#  define OS_CODE  0xa00
-#endif
-#ifdef WIN32
-#  define OS_CODE  0xb00
-#endif
-#ifdef QDOS
-#  define OS_CODE  0xc00
-#endif
-#ifdef RISCOS
-#  define OS_CODE  0xd00
-#endif
-#ifdef VFAT
-#  define OS_CODE  0xe00
-#endif
-#ifdef MVS
-#  define OS_CODE  0xf00
-#endif
-#ifdef __BEOS__
-#  define OS_CODE  0x1000
-#endif
-#ifdef TANDEM
-#  define OS_CODE  0x1100
-#endif
-#ifdef THEOS
-#  define OS_CODE  0x1200
-#endif
-/* Yes, there is a gap here. */
-#ifdef __ATHEOS__
-#  define OS_CODE  0x1E00
-#endif
+#define OS_CODE  0xb00
 
 #define NUM_HOSTS 31
 /* Number of operating systems. Should be updated when new ports are made */
