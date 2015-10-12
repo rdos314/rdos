@@ -111,10 +111,6 @@ typedef unsigned long ulg;      /* unsigned 32-bit value */
 /* Forget FILENAME_MAX (incorrectly = 14 on some System V) */
 #define FNMAX 1024
 
-#ifndef MATCH
-#  define MATCH shmatch         /* Default for pattern matching: UNIX style */
-#endif
-
 /* Structure carrying extended timestamp information */
 typedef struct iztimes {
    time_t atime;                /* new access time */
@@ -152,19 +148,15 @@ struct zlist {
   char *iname;                  /* Internal file name after cleanup (stored in archive) */
   char *zname;                  /* External version of internal name */
   char *oname;                  /* Display version of name used in messages */
-#ifdef UNICODE_SUPPORT
   /* Unicode support */
   char *uname;                  /* UTF-8 version of iname */
   /* if uname has chars not in local char set, zuname can be different than zname */
   char *zuname;                 /* Escaped Unicode zname from uname */
   char *ouname;                 /* Display version of zuname */
-# ifdef WIN32
   char *wuname;                 /* Converted back ouname for Win32 */
   wchar_t *namew;               /* Windows wide character version of name */
   wchar_t *inamew;              /* Windows wide character version of iname */
   wchar_t *znamew;              /* Windows wide character version of zname */
-# endif
-#endif
   int mark;                     /* Marker for files to operate on */
   int trash;                    /* Marker for files to delete */
   int current;                  /* Marker for files that are current to what is on OS (filesync) */
@@ -176,14 +168,10 @@ struct flist {
   char *iname;                  /* Internal file name after cleanup */
   char *zname;                  /* External version of internal name */
   char *oname;                  /* Display version of internal name */
-#ifdef UNICODE_SUPPORT
   char *uname;                  /* UTF-8 name */
-# ifdef WIN32
   wchar_t *namew;               /* Windows wide character version of name */
   wchar_t *inamew;              /* Windows wide character version of iname */
   wchar_t *znamew;              /* Windows wide character version of zname */
-# endif
-#endif
   int dosflag;                  /* Set to force MSDOS file attributes */
   uzoff_t usize;                /* usize from initial scan */
   struct flist far *far *lst;   /* Pointer to link pointing here */
@@ -265,17 +253,7 @@ struct plist {
 /* Error return codes and PERR macro */
 #include "ziperr.h"
 
-#if 0            /* Optimization: use the (const) result of crc32(0L,NULL,0) */
-#  define CRCVAL_INITIAL  crc32(0L, (uch *)NULL, 0)
-# if 00 /* not used, should be removed !! */
-#  define ADLERVAL_INITIAL adler16(0U, (uch *)NULL, 0)
-# endif /* 00 */
-#else
-#  define CRCVAL_INITIAL  0L
-# if 00 /* not used, should be removed !! */
-#  define ADLERVAL_INITIAL 1
-# endif /* 00 */
-#endif
+#define CRCVAL_INITIAL  0L
 
 #define DOSTIME_MINIMUM         ((ulg)0x00210000L)
 #define DOSTIME_2038_01_18      ((ulg)0x74320000L)
