@@ -70,75 +70,16 @@
     /* MS C and VC */
 #define LARGE_FILE_SUPPORT
 
-#ifdef LARGE_FILE_SUPPORT
-  /* 64-bit Large File Support */
-
-  /* Only types and the printf format stuff go here.  Functions
-     go in tailor.h since ANSI prototypes are required and the OF define
-     is not defined here. */
-
-# if (defined(_MSC_VER) && (_MSC_VER >= 1100)) || defined(__MINGW32__)
-    /* MS C and VC, MinGW32 */
-    /* these compiler systems use the Microsoft C RTL */
-
     /* base types for file offsets and file sizes */
-    typedef __int64             zoff_t;
-    typedef unsigned __int64    uzoff_t;
+typedef __int64             zoff_t;
+typedef unsigned __int64    uzoff_t;
 
     /* 64-bit stat struct */
-    typedef struct _stati64 z_stat;
+typedef struct _stati64 z_stat;
 
     /* printf format size prefix for zoff_t values */
-#   define ZOFF_T_FORMAT_SIZE_PREFIX "I64"
+#define ZOFF_T_FORMAT_SIZE_PREFIX "ll"
 
-# elif (defined(__GNUC__) || defined(ULONG_LONG_MAX))
-    /* GNU C */
-
-    /* base types for file offsets and file sizes */
-    typedef long long           zoff_t;
-    typedef unsigned long long  uzoff_t;
-
-#  ifdef __CYGWIN__
-    /* Use Cygwin's own stat struct */
-     typedef struct stat z_stat;
-#  else
-    /* 64-bit stat struct */
-    typedef struct _stati64 z_stat;
-#  endif
-
-    /* printf format size prefix for zoff_t values */
-#   define ZOFF_T_FORMAT_SIZE_PREFIX "ll"
-
-# elif (defined(__WATCOMC__) && (__WATCOMC__ >= 1100))
-    /* WATCOM C */
-
-    /* base types for file offsets and file sizes */
-    typedef __int64             zoff_t;
-    typedef unsigned __int64    uzoff_t;
-
-    /* 64-bit stat struct */
-    typedef struct _stati64 z_stat;
-
-    /* printf format size prefix for zoff_t values */
-#   define ZOFF_T_FORMAT_SIZE_PREFIX "ll"
-
-# elif (defined(__IBMC__) && (__IBMC__ >= 350))
-    /* IBM C */
-
-    /* base types for file offsets and file sizes */
-    typedef __int64             zoff_t;
-    typedef unsigned __int64    uzoff_t;
-
-    /* 64-bit stat struct */
-
-    /* printf format size prefix for zoff_t values */
-#   define ZOFF_T_FORMAT_SIZE_PREFIX "I64"
-
-# else
-#   undef LARGE_FILE_SUPPORT
-# endif
-
-#endif
 
 #if 0
 # ifndef ZOFF_T_FORMAT_SIZE_PREFIX
