@@ -467,11 +467,9 @@ int seekable OF((void));
 extern unsigned (*read_buf) OF((char *, unsigned int));
 
         /* in zipfile.c */
-   struct zlist far *zsearch OF((ZCONST char *));
-#  ifdef USE_EF_UT_TIME
-     int get_ef_ut_ztime OF((struct zlist far *, iztimes *));
-#  endif /* USE_EF_UT_TIME */
-   int trash OF((void));
+struct zlist far *zsearch OF((ZCONST char *));
+
+int trash OF((void));
 char *ziptyp OF((char *));
 int readzipfile OF((void));
 int putlocal OF((struct zlist far *, int));
