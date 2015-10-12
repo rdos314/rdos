@@ -96,18 +96,9 @@ typedef struct _stati64 z_stat;
 #define FOPM "r+b"
 #define FOPW "wbS"
 
-#if (defined(__CYGWIN__) && !defined(NO_MKTIME))
-#  define NO_MKTIME             /* Cygnus' mktime() implementation is buggy */
-#endif
-#if (!defined(NT_TZBUG_WORKAROUND) && !defined(NO_NT_TZBUG_WORKAROUND))
-#  define NT_TZBUG_WORKAROUND
-#endif
-#if (defined(UTIL) && defined(NT_TZBUG_WORKAROUND))
-#  undef NT_TZBUG_WORKAROUND    /* the Zip utilities do not use time-stamps */
-#endif
-#if !defined(NO_EF_UT_TIME) && !defined(USE_EF_UT_TIME)
-#  define USE_EF_UT_TIME
-#endif
+#define NT_TZBUG_WORKAROUND
+#define USE_EF_UT_TIME
+
 #if (!defined(NO_NTSD_EAS) && !defined(NTSD_EAS))
 #  define NTSD_EAS
 #endif
