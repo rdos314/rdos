@@ -14,7 +14,6 @@
 #define __UTIL_C
 
 #include "zip.h"
-#include "ebcdic.h"
 #include <ctype.h>
 
 #ifdef MSDOS16
