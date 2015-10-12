@@ -17,10 +17,7 @@
 #include <time.h>       /* for tzset() declaration */
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#ifdef WINDLL
-#  include <setjmp.h>
-#  include "windll/windll.h"
-#endif
+#include <setjmp.h>
 #define DEFCPYRT        /* main module: enable copyright string defines! */
 #include "revision.h"
 #include "crc32.h"
