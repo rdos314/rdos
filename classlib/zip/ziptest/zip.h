@@ -439,12 +439,6 @@ extern unsigned pcount;         /* number of patterns */
 extern unsigned icount;         /* number of include only patterns */
 extern unsigned Rcount;         /* number of -R include patterns */
 
-#ifdef IZ_CHECK_TZ
-extern int zp_tz_is_valid;      /* signals "timezone info is available" */
-#endif
-#if (defined(MACOS) || defined(WINDLL))
-extern int zipstate;            /* flag "zipfile has been stat()'ed */
-#endif
 
 /* Diagnostic functions */
 #ifdef DEBUG
