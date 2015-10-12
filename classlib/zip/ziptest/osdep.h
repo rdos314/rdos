@@ -99,13 +99,9 @@ typedef struct _stati64 z_stat;
 #define NT_TZBUG_WORKAROUND
 #define USE_EF_UT_TIME
 
-#if (!defined(NO_NTSD_EAS) && !defined(NTSD_EAS))
-#  define NTSD_EAS
-#endif
+#define NTSD_EAS
 
-#if (defined(NTSD_EAS) && !defined(ZP_NEED_MEMCOMPR))
-#  define ZP_NEED_MEMCOMPR
-#endif
+#define ZP_NEED_MEMCOMPR
 
 #ifdef WINDLL
 # ifndef NO_ASM
