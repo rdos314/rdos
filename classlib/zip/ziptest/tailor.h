@@ -23,14 +23,7 @@
 
 /* If the compiler can't handle const define ZCONST in osdep.h */
 /* Define const itself in case the system include files are bonkers */
-#ifndef ZCONST
-#  ifdef NO_CONST
-#    define ZCONST
-#    define const
-#  else
 #    define ZCONST const
-#  endif
-#endif
 
 /*
  * Some compiler environments may require additional attributes attached
