@@ -216,18 +216,8 @@ int zstat_zipwin32w(const wchar_t *pathw, struct _stati64 *buf);
 
 int getch_win32(void);
 
-#ifdef __GNUC__
-# define IZ_PACKED      __attribute__((packed))
-#else
 # define IZ_PACKED
-#endif
 
-/* for some (all ?) versions of IBM C Set/2 and IBM C Set++ */
-#ifndef S_IFMT
-#  define S_IFMT 0xF000
-#endif /* !S_IFMT */
-
-#ifdef __WATCOMC__
 #  include <stdio.h>    /* PATH_MAX is defined here */
 #  define NO_MKTEMP
 
@@ -258,4 +248,3 @@ int getch_win32(void);
       */
 #    include <wchar.h>
 #  endif
-#endif /* __WATCOMC__ */
