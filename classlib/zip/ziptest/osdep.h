@@ -67,17 +67,8 @@
    to make large file support automatic unless overridden */
 
 
-#ifndef LARGE_FILE_SUPPORT
-# ifndef NO_LARGE_FILE_SUPPORT
     /* MS C and VC */
-#   if defined(_MSC_VER) || defined(__MINGW32__) || defined(__CYGWIN__)
-#     define LARGE_FILE_SUPPORT
-#   endif
-#   if defined(__WATCOMC__)
-#     define LARGE_FILE_SUPPORT
-#   endif
-# endif
-#endif
+#define LARGE_FILE_SUPPORT
 
 #ifdef LARGE_FILE_SUPPORT
   /* 64-bit Large File Support */
