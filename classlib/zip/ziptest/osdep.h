@@ -183,31 +183,6 @@ typedef struct _stati64 z_stat;
 #include <stdlib.h>
 #include <mbstring.h>
 
-#ifdef W32_USE_IZ_TIMEZONE
-#  ifdef __BORLANDC__
-#    define tzname tzname
-#    define IZTZ_DEFINESTDGLOBALS
-#  endif
-#  ifndef tzset
-#    define tzset _tzset
-#  endif
-#  ifndef timezone
-#    define timezone _timezone
-#  endif
-#  ifndef daylight
-#    define daylight _daylight
-#  endif
-#  ifndef tzname
-#    define tzname _tzname
-#  endif
-#  if (!defined(NEED__ISINDST) && !defined(__BORLANDC__))
-#    define NEED__ISINDST
-#  endif
-#  ifdef IZTZ_GETLOCALETZINFO
-#    undef IZTZ_GETLOCALETZINFO
-#  endif
-#  define IZTZ_GETLOCALETZINFO GetPlatformLocalTimezone
-#endif /* W32_USE_IZ_TIMEZONE */
 
 #ifdef MATCH
 #  undef MATCH
