@@ -80,36 +80,14 @@ typedef struct _stati64 z_stat;
     /* printf format size prefix for zoff_t values */
 #define ZOFF_T_FORMAT_SIZE_PREFIX "ll"
 
-
-#if 0
-# ifndef ZOFF_T_FORMAT_SIZE_PREFIX
-    /* unsupported WIN32 */
-
-    /* base types for file offsets and file sizes */
-    typedef long long           zoff_t;
-    typedef unsigned long long  uzoff_t;
-
-    /* 64-bit stat struct */
-    typedef struct stat z_stat;
-
-    /* printf format size prefix for zoff_t values */
-#   define ZOFF_T_FORMAT_SIZE_PREFIX "ll"
-# endif
-#endif
-
-
 /* Automatically set ZIP64_SUPPORT if supported */
 
 /* MS C and VC */
-#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WATCOMC__)
-# ifdef LARGE_FILE_SUPPORT
 #   ifndef NO_ZIP64_SUPPORT
 #     ifndef ZIP64_SUPPORT
 #       define ZIP64_SUPPORT
 #     endif
 #   endif
-# endif
-#endif
 
 
 #ifndef LARGE_FILE_SUPPORT
