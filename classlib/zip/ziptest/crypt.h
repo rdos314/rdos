@@ -43,17 +43,15 @@
 
 #define CR_MAJORVER        2
 #define CR_MINORVER        91
-#  define CR_BETA_VER      ""
-#  define CR_VERSION_DATE  "05 Jan 2007"       /* last public release date */
-#  define CR_RELEASE
+#define CR_BETA_VER      ""
+#define CR_VERSION_DATE  "05 Jan 2007"       /* last public release date */
+#define CR_RELEASE
 
-#ifndef __G         /* UnZip only, for now (DLL stuff) */
-#  define __G
-#  define __G__
-#  define __GDEF
-#  define __GPRO    void
-#  define __GPRO__
-#endif
+#define __G
+#define __G__
+#define __GDEF
+#define __GPRO    void
+#define __GPRO__
 
 #if defined(MSDOS) || defined(OS2) || defined(WIN32)
 #  ifndef DOS_OS2_W32
