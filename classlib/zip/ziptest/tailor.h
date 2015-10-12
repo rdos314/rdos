@@ -173,32 +173,25 @@ typedef ulg                z_uint4;
 
 /* ---------------------------- */
 
-/* ---------------------------- */
-# ifdef WIN32
-
       /* 64-bit stat functions */
-#     define zstat _stati64
-# ifdef UNICODE_SUPPORT
-#     define zwfstat _fstati64
-#     define zwstat _wstati64
-#     define zw_stat struct _stati64
-# endif
-#     define zfstat _fstati64
-#     define zlstat lstat
+#define zstat _stati64
+#define zwfstat _fstati64
+#define zwstat _wstati64
+#define zw_stat struct _stati64
+#define zfstat _fstati64
+#define zlstat lstat
 
-      /* 64-bit fseeko */
-      /* function in win32.c */
-      int zfseeko OF((FILE *, zoff_t, int));
+/* 64-bit fseeko */
+/* function in win32.c */
+int zfseeko OF((FILE *, zoff_t, int));
 
-      /* 64-bit ftello */
-      /* function in win32.c */
-      zoff_t zftello OF((FILE *));
+/* 64-bit ftello */
+/* function in win32.c */
+zoff_t zftello OF((FILE *));
 
-      /* 64-bit fopen */
-#     define zfopen fopen
-#     define zfdopen fdopen
-
-# endif /* WIN32 */
+/* 64-bit fopen */
+#define zfopen fopen
+#define zfdopen fdopen
 
 #ifdef LARGE_FILE_SUPPORT         /* E. Gordon 9/12/2003 */
 
