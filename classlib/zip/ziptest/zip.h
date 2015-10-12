@@ -597,66 +597,52 @@ int ClearArchiveBitW   OF((wchar_t *));                    /* win32.c */
     Unicode Support
     28 August 2005
   ---------------------------------------------------------------------*/
-#ifdef UNICODE_SUPPORT
 
   /* Default character when a zwchar too big for wchar_t */
-# define zwchar_to_wchar_t_default_char '_'
+#define zwchar_to_wchar_t_default_char '_'
 
   /* Default character string when wchar_t does not convert to mb */
-# define wide_to_mb_default_string "_"
+#define wide_to_mb_default_string "_"
 
   /* wide character type */
-  typedef unsigned long zwchar;
+typedef unsigned long zwchar;
 
   /* check if string is all ASCII */
-  int is_ascii_string OF((char *));
-#ifdef WIN32
-  int is_ascii_stringw OF((wchar_t *));
-  zwchar *wchar_to_wide_string OF((wchar_t *));
-#endif
+int is_ascii_string OF((char *));
+int is_ascii_stringw OF((wchar_t *));
+zwchar *wchar_to_wide_string OF((wchar_t *));
 
   /* convert UTF-8 string to multi-byte string */
-  char *utf8_to_local_string OF((char *));
-  char *utf8_to_escape_string OF((char *));
+char *utf8_to_local_string OF((char *));
+char *utf8_to_escape_string OF((char *));
 
   /* convert UTF-8 string to wide string */
-  zwchar *utf8_to_wide_string OF((char *));
+zwchar *utf8_to_wide_string OF((char *));
 
   /* convert wide string to multi-byte string */
-  char *wide_to_local_string OF((zwchar *));
-  char *wide_to_escape_string OF((zwchar *));
-  char *local_to_escape_string OF((char *));
-#ifdef WIN32
+char *wide_to_local_string OF((zwchar *));
+char *wide_to_escape_string OF((zwchar *));
+char *local_to_escape_string OF((char *));
   /* convert UTF-8 to wchar */
-  wchar_t *utf8_to_wchar_string OF ((char *));
+wchar_t *utf8_to_wchar_string OF ((char *));
 
-  char *wchar_to_local_string OF((wchar_t *));
-#endif
+char *wchar_to_local_string OF((wchar_t *));
 
   /* convert local string to multi-byte display string */
-  char *local_to_display_string OF((char *));
+char *local_to_display_string OF((char *));
 
   /* convert wide character to escape string */
-  char *wide_char_to_escape_string OF((unsigned long));
-
-#if 0
-  /* convert escape string to wide character */
-  unsigned long escape_string_to_wide OF((char *));
-#endif
+char *wide_char_to_escape_string OF((unsigned long));
 
   /* convert local to UTF-8 */
-  char *local_to_utf8_string OF ((char *));
+char *local_to_utf8_string OF ((char *));
 
   /* convert local to wide string */
-  zwchar *local_to_wide_string OF ((char *));
+zwchar *local_to_wide_string OF ((char *));
 
   /* convert wide string to UTF-8 */
-  char *wide_to_utf8_string OF((zwchar *));
-#ifdef WIN32
-  char *wchar_to_utf8_string OF((wchar_t *));
-#endif
-
-#endif /* UNICODE_SUPPORT */
+char *wide_to_utf8_string OF((zwchar *));
+char *wchar_to_utf8_string OF((wchar_t *));
 
 
 /*---------------------------------------------------
