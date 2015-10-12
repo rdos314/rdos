@@ -30,49 +30,33 @@
 ;
 ; Do NOT assemble this source if external crc32 routine from zlib gets used.
 ;
-    IFNDEF USE_ZLIB
 ;
         .386p
-    ifdef ASM_NEW
-        .MODEL  FLAT
-    endif
 
         name    match
 
-    ifdef ASM_NEW
-_BSS    segment public use32
-    else
 _BSS    segment public use32 'DATA'
-    endif
+
         extrn   _match_start  : dword
         extrn   _prev_length  : dword
         extrn   _good_match   : dword
-    ifndef FULL_SEARCH
         extrn   _nice_match   : dword
-    endif
         extrn   _strstart     : dword
         extrn   _max_chain_length : dword
         extrn   _prev         : word
         extrn   _window       : byte
 _BSS    ends
 
-   ifdef WATCOM_DSEG
 DGROUP  group   _BSS
-   endif
 
-   ifdef ASM_NEW
-_TEXT   segment public use32
-   else
 _TEXT   segment para public use32 'CODE'
-   endif
+
         assume CS: _TEXT
         assume DS: _BSS, ES: _BSS, FS: _BSS
         public  _match_init
         public  _longest_match
 
-    ifndef      WSIZE
         WSIZE         equ 32768         ; keep in sync with zip.h !
-    endif
         MIN_MATCH     equ 3
         MAX_MATCH     equ 258
         MIN_LOOKAHEAD equ (MAX_MATCH+MIN_MATCH+1)
@@ -166,11 +150,7 @@ mismatch:
         jle     long_loop
         mov     _match_start,esi        ; match_start = cur_match
         mov     ebx,eax                 ; ebx = best_len = len
-    ifdef FULL_SEARCH
-        cmp     eax,MAX_MATCH           ; len >= MAX_MATCH ?
-    else
         cmp     eax,_nice_match         ; len >= nice_match ?
-    endif
         jl      long_loop
 the_end:
         mov     eax,ebx                 ; result = eax = best_len
@@ -186,7 +166,5 @@ maxmatch:                               ; come here if maximum match
 _longest_match endp
 
 _TEXT   ends
-;
-    ENDIF ; !USE_ZLIB
 ;
 end
