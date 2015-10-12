@@ -466,10 +466,6 @@ void flush_outbuf OF((char *, unsigned *));
 int seekable OF((void));
 extern unsigned (*read_buf) OF((char *, unsigned int));
 
-#  ifdef ZP_NEED_MEMCOMPR
-     ulg memcompress OF((char *, ulg, char *, ulg));
-#  endif
-
         /* in zipfile.c */
    struct zlist far *zsearch OF((ZCONST char *));
 #  ifdef USE_EF_UT_TIME
