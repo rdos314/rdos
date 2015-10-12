@@ -563,13 +563,6 @@ int abbrevmatch OF((char *, char *, int, int));
 void init_upper    OF((void));
 int  namecmp       OF((ZCONST char *string1, ZCONST char *string2));
 
-#ifdef IZ_ISO2OEM_ARRAY
-  char *str_iso_to_oem    OF((char *dst, ZCONST char *src));
-#endif
-#ifdef IZ_OEM2ISO_ARRAY
-  char *str_oem_to_iso    OF((char *dst, ZCONST char *src));
-#endif
-
 zvoid far **search OF((ZCONST zvoid *, ZCONST zvoid far **, extent,
                        int (*)(ZCONST zvoid *, ZCONST zvoid far *)));
 void envargs       OF((int *, char ***, char *, char *));
