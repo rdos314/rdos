@@ -343,20 +343,16 @@ extern int allow_empty_archive; /* if no files, create empty archive anyway */
 extern int copy_only;           /* 1 = copy archive with no changes */
 extern int zip_to_stdout;       /* output to stdout */
 extern int output_seekable;     /* 1 = output seekable 3/13/05 EG */
-#ifdef ZIP64_SUPPORT            /* zip64 globals 10/4/03 E. Gordon */
- extern int force_zip64;        /* force use of zip64 when streaming from stdin */
- extern int zip64_entry;        /* current entry needs Zip64 */
- extern int zip64_archive;      /* at least 1 entry needs zip64 */
-#endif
+extern int force_zip64;        /* force use of zip64 when streaming from stdin */
+extern int zip64_entry;        /* current entry needs Zip64 */
+extern int zip64_archive;      /* at least 1 entry needs zip64 */
 extern int allow_fifo;          /* Allow reading Unix FIFOs, waiting if pipe open */
 extern int show_files;          /* show files to operate on and exit (=2 log only) */
 
 extern char *tempzip;           /* temp file name */
 extern FILE *y;                 /* output file now global for splits */
 
-#ifdef UNICODE_SUPPORT
-  extern int utf8_force;         /* 1=store UTF-8 as standard per AppNote bit 11 */
-#endif
+extern int utf8_force;         /* 1=store UTF-8 as standard per AppNote bit 11 */
 extern int unicode_escape_all;  /* 1=escape all non-ASCII characters in paths */
 extern int unicode_mismatch;    /* unicode mismatch is 0=error, 1=warn, 2=ignore, 3=no */
 
@@ -433,9 +429,7 @@ extern ush zcomlen;             /* Length of zip file comment */
 extern char *zcomment;          /* Zip file comment (not zero-terminated) */
 extern struct flist far **fsort;/* List of files sorted by name */
 extern struct zlist far **zsort;/* List of files sorted by name */
-#ifdef UNICODE_SUPPORT
 extern struct zlist far **zusort;/* List of files sorted by zuname */
-#endif
 extern struct flist far *found; /* List of names found */
 extern struct flist far *far *fnxt;     /* Where to put next in found list */
 extern extent fcount;           /* Count of names in found list */
