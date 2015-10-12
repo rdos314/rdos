@@ -29,13 +29,6 @@
  */
 
 
-#ifdef NLM
-#  define echoff(f)
-#  define echon()
-#  define HAVE_WORKING_GETCH
-#endif
-
-#ifdef DOS_H68_OS2_W32
 #  define echoff(f)
 #  define echon()
 #  ifdef WIN32
@@ -57,7 +50,6 @@
 #    endif /* ?__EMX__ */
 #  endif /* ?WIN32 */
 #  define HAVE_WORKING_GETCH
-#endif /* DOS_H68_OS2_W32 */
 
 /* For all other systems, ttyio.c supplies the two functions Echoff() and
  * Echon() for suppressing and (re)enabling console input echo.
