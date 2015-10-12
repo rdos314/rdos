@@ -183,16 +183,9 @@ typedef struct _stati64 z_stat;
 #include <stdlib.h>
 #include <mbstring.h>
 
-
-#ifdef MATCH
-#  undef MATCH
-#endif
 #define MATCH dosmatch          /* use DOS style wildcard matching */
-#ifdef UNICODE_SUPPORT
-# ifdef WIN32
-#   define MATCHW dosmatchw
-# endif
-#endif
+
+#define MATCHW dosmatchw
 
 #ifdef ZCRYPT_INTERNAL
 #  ifdef WINDLL
