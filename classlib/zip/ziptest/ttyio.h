@@ -17,7 +17,6 @@
 
 #include "crypt.h"  /* ensure that encryption header file has been seen */
 
-#if (CRYPT || (defined(UNZIP) && !defined(FUNZIP)))
 /*
  * Non-echo keyboard/console input support is needed and enabled.
  */
@@ -35,15 +34,5 @@
 #define HAVE_WORKING_GETCH
 
 char *getp OF((__GPRO__ ZCONST char *m, char *p, int n));
-
-#else /* !(CRYPT || (UNZIP && !FUNZIP)) */
-
-/*
- * No need for non-echo keyboard/console input; provide dummy definitions.
- */
-#define echoff(f)
-#define echon()
-
-#endif /* ?(CRYPT || (UNZIP && !FUNZIP)) */
 
 #endif /* !__ttyio_h */
