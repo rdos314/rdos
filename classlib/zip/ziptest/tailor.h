@@ -18,13 +18,8 @@
 */
 
 /* Used to remove arguments in function prototypes for non-ANSI C */
-#ifndef NO_PROTO
 #  define OF(a) a
 #  define OFT(a) a
-#else /* NO_PROTO */
-#  define OF(a) ()
-#  define OFT(a)
-#endif /* ?NO_PROTO */
 
 /* If the compiler can't handle const define ZCONST in osdep.h */
 /* Define const itself in case the system include files are bonkers */
