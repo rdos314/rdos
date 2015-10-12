@@ -116,16 +116,7 @@ typedef struct _stati64 z_stat;
 /* Microsoft C requires additional attributes attached to all RTL function
  * declarations when linking against the CRTL dll.
  */
-#ifdef MSC
-#  ifdef IZ_IMP
-#    undef IZ_IMP
-#  endif
-#  define IZ_IMP _CRTIMP
-#else
-# ifndef IZ_IMP
-#   define IZ_IMP
-# endif
-#endif
+#define IZ_IMP
 
 /* WIN32 runs solely on little-endian processors; enable support
  * for the 32-bit optimized CRC-32 C code by default.
