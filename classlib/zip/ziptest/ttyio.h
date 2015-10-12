@@ -15,9 +15,7 @@
 #ifndef __ttyio_h   /* don't include more than once */
 #define __ttyio_h
 
-#ifndef __crypt_h
-#  include "crypt.h"  /* ensure that encryption header file has been seen */
-#endif
+#include "crypt.h"  /* ensure that encryption header file has been seen */
 
 #if (CRYPT || (defined(UNZIP) && !defined(FUNZIP)))
 /*
