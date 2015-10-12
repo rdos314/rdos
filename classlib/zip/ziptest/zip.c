@@ -26,12 +26,10 @@
 #include <ctype.h>
 #include <errno.h>
 
-#if (defined(MSDOS) && !defined(__GO32__)) || defined(__human68k__)
 #  include <process.h>
 #  if (!defined(P_WAIT) && defined(_P_WAIT))
 #    define P_WAIT _P_WAIT
 #  endif
-#endif
 
 #include <signal.h>
 #include <stdio.h>
