@@ -85,14 +85,7 @@ typedef struct _stati64 z_stat;
 /* MS C and VC */
 #define ZIP64_SUPPORT
 
-  /* UNICODE */
-  /* assume wide character conversion functions */
-# ifndef UNICODE_SUPPORT
-#   ifndef NO_UNICODE_SUPPORT
-#     define UNICODE_SUPPORT
-#   endif
-# endif
-#  define zchar char
+#define zchar char
 
 
 /* File operations--use "b" for binary if allowed or fixed length 512 on VMS
