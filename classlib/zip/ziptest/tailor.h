@@ -193,8 +193,6 @@ zoff_t zftello OF((FILE *));
 #define zfopen fopen
 #define zfdopen fdopen
 
-#ifdef LARGE_FILE_SUPPORT         /* E. Gordon 9/12/2003 */
-
 # ifndef SSTAT
 #  define SSTAT      zstat
 #  ifdef UNICODE_SUPPORT
@@ -211,25 +209,6 @@ zoff_t zftello OF((FILE *));
 #    define LSSTATW  SSTATW
 #  endif
 # endif
-
-#else /* no LARGE_FILE_SUPPORT */
-
-# ifndef SSTAT
-#  define SSTAT      stat
-# endif
-# ifdef S_IFLNK
-#  define LSTAT      lstat
-#  define LSSTAT(n, s)  (linkput ? lstat((n), (s)) : SSTAT((n), (s)))
-# else
-#  define LSTAT      SSTAT
-#  define LSSTAT     SSTAT
-#  ifdef UNICODE_SUPPORT
-#    define LSSTATW  SSTATW
-#  endif
-# endif
-
-#endif
-
 
 /*---------------------------------------------------------------------*/
 
