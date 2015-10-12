@@ -134,11 +134,8 @@ typedef ulg                z_uint4;
 #define CBSZ 16384
 #define ZBSZ 16384
 
-#ifndef SBSZ
-#  define SBSZ CBSZ     /* copy buf size for STORED entries, see zipup() */
-#endif
+#define SBSZ CBSZ     /* copy buf size for STORED entries, see zipup() */
 
-#ifndef MEMORY16
 #  ifdef __WATCOMC__
 #    undef huge
 #    undef far
@@ -163,7 +160,6 @@ typedef ulg                z_uint4;
 #  define nearfree free
 #  define farmalloc malloc
 #  define farfree free
-#endif /* !MEMORY16 */
 
 #ifndef Far
 #  define Far far
