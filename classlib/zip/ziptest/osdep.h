@@ -83,53 +83,16 @@ typedef struct _stati64 z_stat;
 /* Automatically set ZIP64_SUPPORT if supported */
 
 /* MS C and VC */
-#   ifndef NO_ZIP64_SUPPORT
-#     ifndef ZIP64_SUPPORT
-#       define ZIP64_SUPPORT
-#     endif
-#   endif
-
-
-#ifndef LARGE_FILE_SUPPORT
-  /* No Large File Support */
-
-  /* base type for file offsets and file sizes */
-  typedef long zoff_t;
-  typedef unsigned long uzoff_t;
-
-  /* stat struct */
-  typedef struct stat z_stat;
-
-  /* printf format size prefix for zoff_t values */
-# define ZOFF_T_FORMAT_SIZE_PREFIX "l"
-#endif
-
+#define ZIP64_SUPPORT
 
   /* UNICODE */
-#ifdef WIN32
   /* assume wide character conversion functions */
 # ifndef UNICODE_SUPPORT
 #   ifndef NO_UNICODE_SUPPORT
 #     define UNICODE_SUPPORT
 #   endif
 # endif
-#endif
-
-#if 0
-  /* this is now generic */
-# ifdef UNICODE_SUPPORT
-  /* Set up Unicode support - 9/27/05 EG */
-
-  /* type of wide string characters */
-#  define zchar wchar_t
-
-  /* default char string used if a wide char can't be converted */
-#  define zchar_default "_"
-
-# else
 #  define zchar char
-# endif
-#endif
 
 
 /* File operations--use "b" for binary if allowed or fixed length 512 on VMS
