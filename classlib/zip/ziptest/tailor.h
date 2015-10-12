@@ -149,10 +149,6 @@ typedef ulg                z_uint4;
 
 #define Far far
 
-#if (defined(BIG_MEM) || defined(MMAP)) && !defined(DYN_ALLOC)
-#   define DYN_ALLOC
-#endif
-
 
 /* LARGE_FILE_SUPPORT
  *
@@ -176,56 +172,6 @@ typedef ulg                z_uint4;
      function names are mapped below. */
 
 /* ---------------------------- */
-# ifdef UNIX
-
-  /* Assume 64-bit file environment is defined.  The below should all
-     be set to their 64-bit versions automatically.  Neat.  7/20/2004 EG */
-
-    /* 64-bit stat functions */
-#   define zstat stat
-#   define zfstat fstat
-#   define zlstat lstat
-
-# if defined(__alpha) && defined(__osf__)  /* support for osf4.0f */
-    /* 64-bit fseek */
-#   define zfseeko fseek
-
-    /* 64-bit ftell */
-#   define zftello ftell
-
-# else
-     /* 64-bit fseeko */
-#   define zfseeko fseeko
-
-     /* 64-bit ftello */
-#   define zftello ftello
-# endif                                    /* __alpha && __osf__ */
-
-    /* 64-bit fopen */
-#   define zfopen fopen
-#   define zfdopen fdopen
-
-# endif /* UNIX */
-
-/* ---------------------------- */
-# ifdef VMS
-
-    /* 64-bit stat functions */
-#   define zstat stat
-#   define zfstat fstat
-#   define zlstat lstat
-
-    /* 64-bit fseeko */
-#   define zfseeko fseeko
-
-    /* 64-bit ftello */
-#   define zftello ftello
-
-    /* 64-bit fopen */
-#   define zfopen fopen
-#   define zfdopen fdopen
-
-# endif /* def VMS */
 
 /* ---------------------------- */
 # ifdef WIN32
@@ -257,26 +203,6 @@ typedef ulg                z_uint4;
 
 #   endif
 
-#   if defined(__CYGWIN__)
-    /* GNU C, CygWin with its own POSIX compatible runtime library */
-
-      /* 64-bit stat functions */
-#     define zstat stat
-#     define zfstat fstat
-#     define zlstat lstat
-
-      /* 64-bit fseeko */
-#     define zfseeko fseeko
-
-      /* 64-bit ftello */
-#     define zftello ftello
-
-      /* 64-bit fopen */
-#     define zfopen fopen
-#     define zfdopen fdopen
-
-#   endif
-
 #   ifdef __WATCOMC__
     /* WATCOM C */
 
@@ -301,50 +227,6 @@ typedef ulg                z_uint4;
       /* 64-bit fopen */
 #     define zfopen fopen
 #     define zfdopen fdopen
-
-#   endif
-
-#   ifdef _MSC_VER
-    /* MS C and VC */
-
-      /* 64-bit stat functions */
-#     define zstat _stati64
-# ifdef UNICODE_SUPPORT
-#     define zwfstat _fstati64
-#     define zwstat _wstati64
-#     define zw_stat struct _stati64
-# endif
-#     define zfstat _fstati64
-#     define zlstat lstat
-
-      /* 64-bit fseeko */
-      /* function in win32.c */
-      int zfseeko OF((FILE *, zoff_t, int));
-
-      /* 64-bit ftello */
-      /* function in win32.c */
-      zoff_t zftello OF((FILE *));
-
-      /* 64-bit fopen */
-#     define zfopen fopen
-#     define zfdopen fdopen
-
-#   endif
-
-#   ifdef __IBMC__
-      /* IBM C */
-
-      /* 64-bit stat functions */
-
-      /* 64-bit fseeko */
-      /* function in win32.c */
-      int zfseeko OF((FILE *, zoff_t, int));
-
-      /* 64-bit ftello */
-      /* function in win32.c */
-      zoff_t zftello OF((FILE *));
-
-      /* 64-bit fopen */
 
 #   endif
 
