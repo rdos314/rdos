@@ -12,30 +12,9 @@
 /* Automatic setting of the common Microsoft C idenfifier MSC.
  * NOTE: Watcom also defines M_I*86 !
  */
-#if defined(_MSC_VER) || (defined(M_I86) && !defined(__WATCOMC__))
-#  ifndef MSC
-#    define MSC                 /* This should work for older MSC, too!  */
-#  endif
-#endif
-
-/* Tell Microsoft Visual C++ 2005 to leave us alone and
- * let us use standard C functions the way we're supposed to.
- */
-#if defined(_MSC_VER) && (_MSC_VER >= 1400)
-#  ifndef _CRT_SECURE_NO_DEPRECATE
-#    define _CRT_SECURE_NO_DEPRECATE
-#  endif
-#  ifndef _CRT_NONSTDC_NO_DEPRECATE
-#    define _CRT_NONSTDC_NO_DEPRECATE
-#  endif
-#endif
 
 #if defined(__WATCOMC__) && defined(__386__)
 #  define WATCOMC_386
-#endif
-
-#if (defined(__CYGWIN32__) && !defined(__CYGWIN__))
-#  define __CYGWIN__            /* compatibility for CygWin B19 and older */
 #endif
 
 /* enable multibyte character set support by default */
