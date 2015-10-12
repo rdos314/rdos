@@ -87,22 +87,12 @@ typedef unsigned long ulg;      /* unsigned 32-bit value */
 /* Set up portability */
 #include "tailor.h"
 
-#ifdef USE_ZLIB
-#  include "zlib.h"
-#endif
-
-/* In the utilities, the crc32() function is only used for UNICODE_SUPPORT. */
-#if defined(UTIL) && !defined(UNICODE_SUPPORT)
-#  define CRC_TABLE_ONLY
-#endif
-
 #define MIN_MATCH  3
 #define MAX_MATCH  258
 /* The minimum and maximum match lengths */
 
-#ifndef WSIZE
-#  define WSIZE  (0x8000)
-#endif
+#define WSIZE  (0x8000)
+
 /* Maximum window size = 32K. If you are really short of memory, compile
  * with a smaller WSIZE but this reduces the compression ratio for files
  * of size > WSIZE. WSIZE must be a power of two in the current implementation.
@@ -119,11 +109,7 @@ typedef unsigned long ulg;      /* unsigned 32-bit value */
  */
 
 /* Forget FILENAME_MAX (incorrectly = 14 on some System V) */
-#ifdef DOS
-#  define FNMAX 256
-#else
-#  define FNMAX 1024
-#endif
+#define FNMAX 1024
 
 #ifndef MATCH
 #  define MATCH shmatch         /* Default for pattern matching: UNIX style */
