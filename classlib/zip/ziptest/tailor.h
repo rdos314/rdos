@@ -37,19 +37,15 @@
  * case mapping functions. case_map is used to ignore case in comparisons,
  * to_up is used to force upper case even on Unix (for dosify option).
  */
-#  define case_map(c) (c)
-#  define to_up(c)    ((c) >= 'a' && (c) <= 'z' ? (c)-'a'+'A' : (c))
+#define case_map(c) (c)
+#define to_up(c)    ((c) >= 'a' && (c) <= 'z' ? (c)-'a'+'A' : (c))
 
 /* Define void, zvoid, and extent (size_t) */
 #include <stdio.h>
 
-#ifndef NO_STDDEF_H
-#  include <stddef.h>
-#endif /* !NO_STDDEF_H */
+#include <stddef.h>
 
-#ifndef NO_STDLIB_H
-#  include <stdlib.h>
-#endif /* !NO_STDLIB_H */
+#include <stdlib.h>
 
 #ifndef NO_UNISTD_H
 #  include <unistd.h> /* usually defines _POSIX_VERSION */
