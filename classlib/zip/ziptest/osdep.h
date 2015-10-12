@@ -133,26 +133,14 @@ typedef struct _stati64 z_stat;
 #define CRTL_CP_IS_ISO
 
    /* C RTL's file system support assumes ANSI coded strings */
-#  define ISO_TO_INTERN(src, dst)  {if ((src) != (dst)) strcpy((dst), (src));}
-#  define OEM_TO_INTERN(src, dst)  OemToAnsi(src, dst)
-#  define INTERN_TO_ISO(src, dst)  {if ((src) != (dst)) strcpy((dst), (src));}
-#  define INTERN_TO_OEM(src, dst)  AnsiToOem(src, dst)
-#  define _OEM_INTERN(str1) OEM_TO_INTERN(str1, str1)
-#  define _ISO_INTERN(str1) {;}
-#  define _INTERN_OEM(str1) INTERN_TO_OEM(str1, str1)
-#  define _INTERN_ISO(str1) {;}
-
-#ifdef CRTL_CP_IS_OEM
-   /* C RTL's file system support assumes OEM coded strings */
-#  define ISO_TO_INTERN(src, dst)  AnsiToOem(src, dst)
-#  define OEM_TO_INTERN(src, dst)  {if ((src) != (dst)) strcpy((dst), (src));}
-#  define INTERN_TO_ISO(src, dst)  OemToAnsi(src, dst)
-#  define INTERN_TO_OEM(src, dst)  {if ((src) != (dst)) strcpy((dst), (src));}
-#  define _OEM_INTERN(str1) {;}
-#  define _ISO_INTERN(str1) ISO_TO_INTERN(str1, str1)
-#  define _INTERN_OEM(str1) {;}
-#  define _INTERN_ISO(str1) INTERN_TO_ISO(str1, str1)
-#endif /* CRTL_CP_IS_OEM */
+#define ISO_TO_INTERN(src, dst)  {if ((src) != (dst)) strcpy((dst), (src));}
+#define OEM_TO_INTERN(src, dst)  OemToAnsi(src, dst)
+#define INTERN_TO_ISO(src, dst)  {if ((src) != (dst)) strcpy((dst), (src));}
+#define INTERN_TO_OEM(src, dst)  AnsiToOem(src, dst)
+#define _OEM_INTERN(str1) OEM_TO_INTERN(str1, str1)
+#define _ISO_INTERN(str1) {;}
+#define _INTERN_OEM(str1) INTERN_TO_OEM(str1, str1)
+#define _INTERN_ISO(str1) {;}
 
 /* The following "OEM vs. ISO Zip entry names" code has been copied from UnZip.
  * It should be applicable to the generic Zip code. However, currently only
