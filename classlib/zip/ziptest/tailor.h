@@ -78,33 +78,26 @@ typedef size_t extent;
  * (differently) when <locale.h> is read later.
  */
 
-#ifdef _MBCS
-#   include <locale.h>
+#include <locale.h>
 
     /* Multi Byte Character Set */
-    extern char *___tmp_ptr;
-    unsigned char *zmbschr OF((ZCONST unsigned char *, unsigned int));
-    unsigned char *zmbsrchr OF((ZCONST unsigned char *, unsigned int));
-#   define CLEN(ptr) mblen((ZCONST char *)ptr, MB_CUR_MAX)
-#   define PREINCSTR(ptr) (ptr += CLEN(ptr))
-#   define POSTINCSTR(ptr) (___tmp_ptr=(char *)ptr,ptr += CLEN(ptr),___tmp_ptr)
-    int lastchar OF((ZCONST char *ptr));
-#   define MBSCHR(str,c) (char *)zmbschr((ZCONST unsigned char *)(str), c)
-#   define MBSRCHR(str,c) (char *)zmbsrchr((ZCONST unsigned char *)(str), (c))
-#   ifndef SETLOCALE
-#      define SETLOCALE(category, locale) setlocale(category, locale)
-#   endif /* ndef SETLOCALE */
-#else /* !_MBCS */
-#   define CLEN(ptr) 1
-#   define PREINCSTR(ptr) (++(ptr))
-#   define POSTINCSTR(ptr) ((ptr)++)
-#   define lastchar(ptr) ((*(ptr)=='\0') ? '\0' : ptr[strlen(ptr)-1])
-#   define MBSCHR(str, c) strchr(str, c)
-#   define MBSRCHR(str, c) strrchr(str, c)
-#   ifndef SETLOCALE
-#      define SETLOCALE(category, locale)
-#   endif /* ndef SETLOCALE */
-#endif /* ?_MBCS */
+
+extern char *___tmp_ptr;
+unsigned char *zmbschr OF((ZCONST unsigned char *, unsigned int));
+unsigned char *zmbsrchr OF((ZCONST unsigned char *, unsigned int));
+
+#define CLEN(ptr) mblen((ZCONST char *)ptr, MB_CUR_MAX)
+#define PREINCSTR(ptr) (ptr += CLEN(ptr))
+#define POSTINCSTR(ptr) (___tmp_ptr=(char *)ptr,ptr += CLEN(ptr),___tmp_ptr)
+
+int lastchar OF((ZCONST char *ptr));
+
+#define MBSCHR(str,c) (char *)zmbschr((ZCONST unsigned char *)(str), c)
+#define MBSRCHR(str,c) (char *)zmbsrchr((ZCONST unsigned char *)(str), (c))
+#ifndef SETLOCALE
+#   define SETLOCALE(category, locale) setlocale(category, locale)
+#endif /* ndef SETLOCALE */
+
 #define INCSTR(ptr) PREINCSTR(ptr)
 
 
