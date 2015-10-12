@@ -26,10 +26,7 @@
 #include <ctype.h>
 #include <errno.h>
 
-#  include <process.h>
-#  if (!defined(P_WAIT) && defined(_P_WAIT))
-#    define P_WAIT _P_WAIT
-#  endif
+#include <process.h>
 
 #include <signal.h>
 #include <stdio.h>
