@@ -40,26 +40,12 @@
 #define case_map(c) (c)
 #define to_up(c)    ((c) >= 'a' && (c) <= 'z' ? (c)-'a'+'A' : (c))
 
-/* Define void, zvoid, and extent (size_t) */
 #include <stdio.h>
-
 #include <stddef.h>
-
 #include <stdlib.h>
-
-#ifndef NO_UNISTD_H
-#  include <unistd.h> /* usually defines _POSIX_VERSION */
-#endif /* !NO_UNISTD_H */
-
-#ifndef NO_FCNTL_H
-#  include <fcntl.h>
-#endif /* !NO_FNCTL_H */
-
-#ifndef NO_STRING_H
-#  include <string.h>
-#else
-#  include <strings.h>
-#endif /* NO_STRING_H */
+#include <unistd.h> /* usually defines _POSIX_VERSION */
+#include <fcntl.h>
+#include <string.h>
 
 #ifdef NO_VOID
 #  define void int
