@@ -525,21 +525,16 @@ int bfcopy OF((uzoff_t));
 int fcopy OF((FILE *, FILE *, uzoff_t));
 
         /* in system dependent fileio code (<system>.c) */
-# ifdef PROCNAME
-   int wild OF((char *));
-# endif
-   char *in2ex OF((char *));
-   char *ex2in OF((char *, int, int *));
-#if defined(UNICODE_SUPPORT) && defined(WIN32)
-   int has_win32_wide OF((void));
-   wchar_t *in2exw OF((wchar_t *));
-   wchar_t *ex2inw OF((wchar_t *, int, int *));
-   int procnamew OF((wchar_t *, int));
-#endif
-   int procname OF((char *, int));
-   void stamp OF((char *, ulg));
+char *in2ex OF((char *));
+char *ex2in OF((char *, int, int *));
+int has_win32_wide OF((void));
+wchar_t *in2exw OF((wchar_t *));
+wchar_t *ex2inw OF((wchar_t *, int, int *));
+int procnamew OF((wchar_t *, int));
+int procname OF((char *, int));
+void stamp OF((char *, ulg));
+ulg filetime OF((char *, ulg *, zoff_t *, iztimes *));
 
-   ulg filetime OF((char *, ulg *, zoff_t *, iztimes *));
    /* Windows Unicode */
 # ifdef UNICODE_SUPPORT
 # ifdef WIN32
