@@ -22,43 +22,6 @@
  * Non-echo keyboard/console input support is needed and enabled.
  */
 
-#if (defined(MSDOS) || defined(OS2) || defined(WIN32))
-#  ifndef DOS_OS2_W32
-#    define DOS_OS2_W32
-#  endif
-#endif
-
-#if (defined(DOS_OS2_W32) || defined(__human68k__))
-#  ifndef DOS_H68_OS2_W32
-#    define DOS_H68_OS2_W32
-#  endif
-#endif
-
-#if (defined(DOS_OS2_W32) || defined(FLEXOS))
-#  ifndef DOS_FLX_OS2_W32
-#    define DOS_FLX_OS2_W32
-#  endif
-#endif
-
-#if (defined(DOS_H68_OS2_W32) || defined(FLEXOS))
-#  ifndef DOS_FLX_H68_OS2_W32
-#    define DOS_FLX_H68_OS2_W32
-#  endif
-#endif
-
-#if (defined(__ATHEOS__) || defined(__BEOS__) || defined(UNIX))
-#  ifndef ATH_BEO_UNX
-#    define ATH_BEO_UNX
-#  endif
-#endif
-
-#if (defined(VM_CMS) || defined(MVS))
-#  ifndef CMS_MVS
-#    define CMS_MVS
-#  endif
-#endif
-
-
 /* Function prototypes */
 
 /* The following systems supply a `non-echo' character input function "getch()"
