@@ -522,17 +522,9 @@ int rename_split OF((char *, char *));
 int set_filetype OF((char *));
 
 int bfcopy OF((uzoff_t));
-
 int fcopy OF((FILE *, FILE *, uzoff_t));
 
-#ifdef ZMEM
-   char *memset OF((char *, int, unsigned int));
-   char *memcpy OF((char *, char *, unsigned int));
-   int memcmp OF((char *, char *, unsigned int));
-#endif /* ZMEM */
-
         /* in system dependent fileio code (<system>.c) */
-#ifndef UTIL
 # ifdef PROCNAME
    int wild OF((char *));
 # endif
@@ -565,11 +557,9 @@ int fcopy OF((FILE *, FILE *, uzoff_t));
      zvoid far *zcalloc OF((unsigned int, unsigned int));
      zvoid zcfree       OF((zvoid far *));
 # endif /* MY_ZCALLOC */
-#endif /* !UTIL */
 void version_local OF((void));
 
         /* in util.c */
-#ifndef UTIL
 int   fseekable    OF((FILE *));
 char *isshexp      OF((char *));
 #ifdef UNICODE_SUPPORT
@@ -582,7 +572,6 @@ int   shmatch      OF((ZCONST char *, ZCONST char *, int));
 # if defined(DOS) || defined(WIN32)
    int dosmatch    OF((ZCONST char *, ZCONST char *, int));
 # endif /* DOS || WIN32 */
-#endif /* !UTIL */
 
 /* functions to convert zoff_t to a string */
 char *zip_fuzofft      OF((uzoff_t, char *, char*));
