@@ -198,14 +198,7 @@ typedef struct _stati64 z_stat;
  * handling code to the (correctly interpretable) OS system settings, read
  * from the registry.
  */
-#ifdef USE_EF_UT_TIME
-# if (defined(__WATCOMC__) || defined(__CYGWIN__) || \
-      defined(W32_USE_IZ_TIMEZONE))
 #   define iz_w32_prepareTZenv()
-# else
-#   define iz_w32_prepareTZenv()        putenv("TZ=")
-# endif
-#endif
 
 /* This patch of stat() is useful for at least three compilers.  It is   */
 /* difficult to take a stat() of a root directory under Windows95, so  */
