@@ -74,7 +74,6 @@
 extrn   _get_crc_table:near    ; ZCONST ulg near *get_crc_table(void);
 
 ;
-    IFNDEF NO_STD_STACKFRAME
         ; Use a `standard' stack frame setup on routine entry and exit.
         ; Actually, this option is set as default, because it results
         ; in smaller code !!
@@ -91,19 +90,6 @@ STD_LEAVE       MACRO
                 pop     ebp
         ENDM
 
-    ELSE  ; NO_STD_STACKFRAME
-
-STD_ENTRY       MACRO
-        ENDM
-
-        Arg1    EQU     18H[esp]
-        Arg2    EQU     1CH[esp]
-        Arg3    EQU     20H[esp]
-
-STD_LEAVE       MACRO
-        ENDM
-
-    ENDIF ; ?NO_STD_STACKFRAME
 
 ; These two (three) macros make up the loop body of the CRC32 cruncher.
 ; registers modified:
@@ -162,11 +148,7 @@ Do_CRC_4dword   MACRO
                 UpdCRC_dword_sh	4               ; ... ((ulg *)buf)+=4
         ENDM
 
-    IFNDEF NO_ALIGN
 _TEXT   segment use32 para public 'CODE'
-    ELSE
-_TEXT   segment use32
-    ENDIF
         assume  CS: _TEXT
 
         public  _crc32
@@ -191,9 +173,7 @@ _crc32          proc    near  ; ulg crc32(ulg crc, ZCONST uch *buf, extent len)
                 not     eax                 ;>   c = ~crc;
 
                 test    ecx,ecx
-    IFNDEF  NO_UNROLLED_LOOPS
                 jz      bail
-    IFNDEF  NO_32_BIT_LOADS
 align_loop:
                 test    esi,3               ; align buf pointer on next
                 jz      SHORT aligned_now   ;  dword boundary
@@ -201,42 +181,18 @@ align_loop:
                 dec     ecx
                 jnz     align_loop
 aligned_now:
-    ENDIF ; !NO_32_BIT_LOADS
                 mov     SavLen,ecx          ; save current len for later
                 shr     ecx,4               ; ecx = len / 16
                 jz      No_Sixteens
-    IFNDEF NO_ALIGN
 ; align loop head at start of 486 internal cache line !!
                 align   16
-    ENDIF
 Next_Sixteen:
-    IFNDEF  NO_32_BIT_LOADS
                 Do_CRC_4dword
-    ELSE ; NO_32_BIT_LOADS
-                Do_CRC_byteof   0
-                Do_CRC_byteof   1
-                Do_CRC_byteof   2
-                Do_CRC_byteof   3
-                Do_CRC_byteof   4
-                Do_CRC_byteof   5
-                Do_CRC_byteof   6
-                Do_CRC_byteof   7
-                Do_CRC_byteof   8
-                Do_CRC_byteof   9
-                Do_CRC_byteof   10
-                Do_CRC_byteof   11
-                Do_CRC_byteof   12
-                Do_CRC_byteof   13
-                Do_CRC_byteof   14
-                Do_CRC_byteof   15
-                add     esi, 16                 ; buf += 16
-    ENDIF ; ?NO_32_BIT_LOADS
                 dec     ecx
                 jnz     Next_Sixteen
 No_Sixteens:
                 mov     ecx,SavLen
                 and     ecx,00000000FH      ; ecx = len % 16
-    IFNDEF  NO_32_BIT_LOADS
                 shr     ecx,2               ; ecx = len / 4
                 jz      SHORT No_Fours
 Next_Four:
@@ -246,13 +202,9 @@ Next_Four:
 No_Fours:
                 mov     ecx,SavLen
                 and     ecx,000000003H      ; ecx = len % 4
-    ENDIF ; !NO_32_BIT_LOADS
-    ENDIF ; !NO_UNROLLED_LOOPS
                 jz      SHORT bail          ;>   if (len)
-    IFNDEF NO_ALIGN
 ; align loop head at start of 486 internal cache line !!
                 align   16
-    ENDIF
 loupe:                                      ;>     do {
                 Do_CRC_byte                 ;        c = CRC32(c,*buf++,crctab);
                 dec     ecx                 ;>     } while (--len);
