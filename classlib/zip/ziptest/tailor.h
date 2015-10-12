@@ -18,12 +18,12 @@
 */
 
 /* Used to remove arguments in function prototypes for non-ANSI C */
-#  define OF(a) a
-#  define OFT(a) a
+#define OF(a) a
+#define OFT(a) a
 
 /* If the compiler can't handle const define ZCONST in osdep.h */
 /* Define const itself in case the system include files are bonkers */
-#    define ZCONST const
+#define ZCONST const
 
 /*
  * Some compiler environments may require additional attributes attached
@@ -31,9 +31,7 @@
  * linking against a "shared dll" version of the RTL).  Here, we provide
  * the "empty" default for these attributes.
  */
-#ifndef IZ_IMP
-#  define IZ_IMP
-#endif
+#define IZ_IMP
 
 /*
  * case mapping functions. case_map is used to ignore case in comparisons,
