@@ -486,26 +486,19 @@ char *get_extra_field OF((ush, char *, unsigned));
 char *copy_nondup_extra_fields OF((char *, unsigned, char *, unsigned, unsigned *));
 
         /* in fileio.c */
-   char *getnam OF((FILE *));
-   struct flist far *fexpel OF((struct flist far *));
-   char *last OF((char *, int));
-# ifdef UNICODE_SUPPORT
-   wchar_t *lastw OF((wchar_t *, wchar_t));
-# endif
-   char *msname OF((char *));
-# ifdef UNICODE_SUPPORT
-   wchar_t *msnamew OF((wchar_t *));
-# endif
-   int check_dup OF((void));
-   int filter OF((char *, int));
-   int newname OF((char *, int, int));
-# ifdef UNICODE_SUPPORT
-#  ifdef WIN32
-   int newnamew OF((wchar_t *, int, int));
-#  endif
-# endif
+char *getnam OF((FILE *));
+struct flist far *fexpel OF((struct flist far *));
+char *last OF((char *, int));
+wchar_t *lastw OF((wchar_t *, wchar_t));
+char *msname OF((char *));
+wchar_t *msnamew OF((wchar_t *));
+int check_dup OF((void));
+int filter OF((char *, int));
+int newname OF((char *, int, int));
+int newnamew OF((wchar_t *, int, int));
+
    /* used by copy mode */
-   int proc_archive_name OF((char *, int));
+int proc_archive_name OF((char *, int));
 #if (!defined(UTIL) || defined(W32_STATROOT_FIX))
    time_t dos2unixtime OF((ulg));
 #endif
