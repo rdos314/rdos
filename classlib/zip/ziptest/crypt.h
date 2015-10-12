@@ -53,23 +53,8 @@
 #define __GPRO    void
 #define __GPRO__
 
-#if defined(MSDOS) || defined(OS2) || defined(WIN32)
-#  ifndef DOS_OS2_W32
-#    define DOS_OS2_W32
-#  endif
-#endif
-
-#if defined(DOS_OS2_W32) || defined(__human68k__)
-#  ifndef DOS_H68_OS2_W32
-#    define DOS_H68_OS2_W32
-#  endif
-#endif
-
-#if defined(VM_CMS) || defined(MVS)
-#  ifndef CMS_MVS
-#    define CMS_MVS
-#  endif
-#endif
+#define DOS_OS2_W32
+#define DOS_H68_OS2_W32
 
 /* To allow combining of Zip and UnZip static libraries in a single binary,
  * the Zip and UnZip versions of the crypt core functions have to be named
