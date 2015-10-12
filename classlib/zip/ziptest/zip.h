@@ -439,51 +439,17 @@ extern unsigned pcount;         /* number of patterns */
 extern unsigned icount;         /* number of include only patterns */
 extern unsigned Rcount;         /* number of -R include patterns */
 
-
-/* Diagnostic functions */
-#ifdef DEBUG
-# ifdef MSDOS
-#  undef  stderr
-#  define stderr stdout
-# endif
-#  define diag(where) fprintf(stderr, "zip diagnostic: %s\n", where)
-#  define Assert(cond,msg) {if(!(cond)) error(msg);}
-# ifdef THEOS
-#  define Trace(x) _fprintf x
-#  define Tracev(x) {if (verbose) _fprintf x ;}
-#  define Tracevv(x) {if (verbose>1) _fprintf x ;}
-#  define Tracec(c,x) {if (verbose && (c)) _fprintf x ;}
-#  define Tracecv(c,x) {if (verbose>1 && (c)) _fprintf x ;}
-# else
-#  define Trace(x) fprintf x
-#  define Tracev(x) {if (verbose) fprintf x ;}
-#  define Tracevv(x) {if (verbose>1) fprintf x ;}
-#  define Tracec(c,x) {if (verbose && (c)) fprintf x ;}
-#  define Tracecv(c,x) {if (verbose>1 && (c)) fprintf x ;}
-# endif
-#else
-#  define diag(where)
-#  define Assert(cond,msg)
-#  define Trace(x)
-#  define Tracev(x)
-#  define Tracevv(x)
-#  define Tracec(c,x)
-#  define Tracecv(c,x)
-#endif
-
-#ifdef DEBUGNAMES
-#  define free(x) { int *v;Free(x); v=x;*v=0xdeadbeef;x=(void *)0xdeadbeef; }
-#endif
+#define diag(where)
+#define Assert(cond,msg)
+#define Trace(x)
+#define Tracev(x)
+#define Tracevv(x)
+#define Tracec(c,x)
+#define Tracecv(c,x)
 
 /* Public function prototypes */
 
-#ifndef UTIL
-#ifdef USE_ZIPMAIN
-int zipmain OF((int, char **));
-#else
 int main OF((int, char **));
-#endif /* USE_ZIPMAIN */
-#endif
 
 #ifdef EBCDIC
 extern int aflag;
