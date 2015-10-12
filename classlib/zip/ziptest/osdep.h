@@ -205,12 +205,10 @@ typedef struct _stati64 z_stat;
 /* zstat_zipwin32() detects that case and fills in suitable values.    */
 #define W32_STATROOT_FIX
 
-#  define W32_STAT_BANDAID
-#  ifdef LARGE_FILE_SUPPORT         /* E. Gordon 9/12/03 */
+#define W32_STAT_BANDAID
+
    int zstat_zipwin32(const char *path, z_stat *buf);
-#  else
-   int zstat_zipwin32(const char *path, struct stat *buf);
-#  endif
+
 #  ifdef UNICODE_SUPPORT
 #   ifdef LARGE_FILE_SUPPORT
      int zstat_zipwin32w(const wchar_t *pathw, struct _stati64 *buf);
@@ -218,13 +216,13 @@ typedef struct _stati64 z_stat;
      int zstat_zipwin32w(const wchar_t *pathw, struct _stat *buf);
 #   endif
 #  endif
+
 #  ifdef SSTAT
 #    undef SSTAT
 #  endif
-#  define SSTAT zstat_zipwin32
-#  ifdef UNICODE_SUPPORT
-#    define SSTATW zstat_zipwin32w
-#  endif
+
+#define SSTAT zstat_zipwin32
+#define SSTATW zstat_zipwin32w
 
 int getch_win32(void);
 
