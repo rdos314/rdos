@@ -110,23 +110,6 @@ typedef struct ztimbuf {
 /* This macro round a time_t value to the OS specific resolution */
 #define ROUNDED_TIME(time)   (time)
 
-#  if !defined(NO_LIMITS_H)
-#    if (defined(UINT_MAX) && (UINT_MAX == 0xffffffffUL))
-       typedef unsigned int     z_uint4;
-#      define Z_UINT4_DEFINED
-#    else
-#      if (defined(ULONG_MAX) && (ULONG_MAX == 0xffffffffUL))
-         typedef unsigned long    z_uint4;
-#        define Z_UINT4_DEFINED
-#      else
-#        if (defined(USHRT_MAX) && (USHRT_MAX == 0xffffffffUL))
-           typedef unsigned short   z_uint4;
-#          define Z_UINT4_DEFINED
-#        endif
-#      endif
-#    endif
-#  endif /* !defined(NO_LIMITS_H) */
-
 #ifndef Z_UINT4_DEFINED
   typedef ulg                z_uint4;
 # define Z_UINT4_DEFINED
