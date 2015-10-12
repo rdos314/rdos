@@ -193,12 +193,6 @@ zoff_t zftello OF((FILE *));
 #define zfopen fopen
 #define zfdopen fdopen
 
-# ifndef SSTAT
-#  define SSTAT      zstat
-#  ifdef UNICODE_SUPPORT
-#    define SSTATW   zwstat
-#  endif
-# endif
 # ifdef S_IFLNK
 #  define LSTAT      zlstat
 #  define LSSTAT(n, s)  (linkput ? zlstat((n), (s)) : SSTAT((n), (s)))
