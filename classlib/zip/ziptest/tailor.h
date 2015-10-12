@@ -219,26 +219,13 @@ zoff_t zftello OF((FILE *));
  * supply a UNIX compatible getpid() function).
  */
 
-#define OS_CODE  0xb00
+#define OS_CODE  0x300
 
 #define NUM_HOSTS 31
 /* Number of operating systems. Should be updated when new ports are made */
 
-#if defined(DOS) && !defined(OS_CODE)
-#  define OS_CODE  0x000
-#endif
-
-#ifndef OS_CODE
-#  define OS_CODE  0x300  /* assume Unix */
-#endif
-
-/* can't use "return 0" from main() on VMS */
-#ifndef EXIT
-#  define EXIT  exit
-#endif
-#ifndef RETURN
-#  define RETURN return
-#endif
+#define EXIT  exit
+#define RETURN return
 
 #ifndef ZIPERR
 #  define ZIPERR ziperr
