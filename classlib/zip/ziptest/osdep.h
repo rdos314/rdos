@@ -130,14 +130,8 @@ typedef struct _stati64 z_stat;
 #define OemToAnsi OemToCharA
 
    /* "real" native WIN32 compilers use ANSI coded strings in C RTL calls */
-#  ifndef CRTL_CP_IS_ISO
-#    define CRTL_CP_IS_ISO
-#  endif
-#  ifdef CRTL_CP_IS_OEM
-#    undef CRTL_CP_IS_OEM
-#  endif
+#define CRTL_CP_IS_ISO
 
-#ifdef CRTL_CP_IS_ISO
    /* C RTL's file system support assumes ANSI coded strings */
 #  define ISO_TO_INTERN(src, dst)  {if ((src) != (dst)) strcpy((dst), (src));}
 #  define OEM_TO_INTERN(src, dst)  OemToAnsi(src, dst)
@@ -147,7 +141,7 @@ typedef struct _stati64 z_stat;
 #  define _ISO_INTERN(str1) {;}
 #  define _INTERN_OEM(str1) INTERN_TO_OEM(str1, str1)
 #  define _INTERN_ISO(str1) {;}
-#endif /* CRTL_CP_IS_ISO */
+
 #ifdef CRTL_CP_IS_OEM
    /* C RTL's file system support assumes OEM coded strings */
 #  define ISO_TO_INTERN(src, dst)  AnsiToOem(src, dst)
