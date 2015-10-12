@@ -110,10 +110,8 @@ typedef struct ztimbuf {
 /* This macro round a time_t value to the OS specific resolution */
 #define ROUNDED_TIME(time)   (time)
 
-#ifndef Z_UINT4_DEFINED
-  typedef ulg                z_uint4;
+typedef ulg                z_uint4;
 # define Z_UINT4_DEFINED
-#endif
 
 #ifndef FOPR    /* fallback default definitions for FOPR, FOPM, FOPW: */
 #  define FOPR "r"
