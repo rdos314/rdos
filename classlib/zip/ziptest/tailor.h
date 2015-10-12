@@ -18,44 +18,6 @@
 */
 /* If a port hasn't defined ZOFF_T_FORMAT_SIZE_PREFIX
    then probably need to define all of these. */
-#ifndef ZOFF_T_FORMAT_SIZE_PREFIX
-
-# ifdef LARGE_FILE_SUPPORT
-    /* Probably passed in from command line instead of in above
-       includes if get here.  Assume large file support and hope. 8/14/04 EG */
-
-    /* Set the Large File Summit (LFS) defines to turn on large file support
-       in case it helps. */
-
-#   define _LARGEFILE_SOURCE    /* some OSes need this for fseeko */
-#   define _LARGEFILE64_SOURCE
-#   define _FILE_OFFSET_BITS 64 /* select default interface as 64 bit */
-#   define _LARGE_FILES         /* some OSes need this for 64-bit off_t */
-
-    typedef off_t zoff_t;
-    typedef unsigned long long uzoff_t;  /* unsigned zoff_t (12/29/04 EG) */
-
-    /* go with common prefix */
-#   define ZOFF_T_FORMAT_SIZE_PREFIX "ll"
-
-# else
-    /* Default type for offsets and file sizes was ulg but reports
-       of using ulg to create files from 2 GB to 4 GB suggest
-       it doesn't work well.  Now just switch to Zip64 or not
-       support over 2 GB.  7/24/04 EG */
-    /* Now use uzoff_t for unsigned things.  12/29/04 EG */
-    typedef long zoff_t;
-    typedef unsigned long uzoff_t;
-
-#   define ZOFF_T_FORMAT_SIZE_PREFIX "l"
-
-# endif
-
-  typedef struct stat z_stat;
-
-  /* flag that we are defaulting */
-# define USING_DEFAULT_LARGE_FILE_SUPPORT
-#endif
 
 
 #if (defined(USE_ZLIB) && defined(ASM_CRC))
