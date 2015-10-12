@@ -31,20 +31,8 @@
 
 #define echoff(f)
 #define echon()
-#    ifndef getch
-#      define getch() getch_win32()
-#    endif
+#define getch() getch_win32()
 #define HAVE_WORKING_GETCH
-
-/* For all other systems, ttyio.c supplies the two functions Echoff() and
- * Echon() for suppressing and (re)enabling console input echo.
- */
-#ifndef echoff
-#  define echoff(f)  Echoff(__G__ f)
-#  define echon()    Echon(__G)
-   void Echoff OF((__GPRO__ int f));
-   void Echon OF((__GPRO));
-#endif
 
 /* this stuff is used by MORE and also now by the ctrl-S code; fileio.c only */
 #if (defined(UNZIP) && !defined(FUNZIP))
