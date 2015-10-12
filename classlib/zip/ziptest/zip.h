@@ -458,7 +458,6 @@ void error OF((ZCONST char *));
 int encr_passwd OF((int, char *, int, ZCONST char *));
 
         /* in zipup.c */
-#ifndef UTIL
   /* zip64 support 08/31/2003 R.Nausedat */
    int percent OF((uzoff_t, uzoff_t));
 
@@ -476,16 +475,13 @@ int encr_passwd OF((int, char *, int, ZCONST char *));
 #  ifdef BZIP2_SUPPORT
    void bz_compress_free OF((void));
 #  endif
-#endif /* !UTIL */
 
         /* in zipfile.c */
-#ifndef UTIL
    struct zlist far *zsearch OF((ZCONST char *));
 #  ifdef USE_EF_UT_TIME
      int get_ef_ut_ztime OF((struct zlist far *, iztimes *));
 #  endif /* USE_EF_UT_TIME */
    int trash OF((void));
-#endif /* !UTIL */
 char *ziptyp OF((char *));
 int readzipfile OF((void));
 int putlocal OF((struct zlist far *, int));
@@ -502,7 +498,6 @@ char *get_extra_field OF((ush, char *, unsigned));
 char *copy_nondup_extra_fields OF((char *, unsigned, char *, unsigned, unsigned *));
 
         /* in fileio.c */
-#ifndef UTIL
    char *getnam OF((FILE *));
    struct flist far *fexpel OF((struct flist far *));
    char *last OF((char *, int));
@@ -523,11 +518,9 @@ char *copy_nondup_extra_fields OF((char *, unsigned, char *, unsigned, unsigned 
 # endif
    /* used by copy mode */
    int proc_archive_name OF((char *, int));
-#endif /* !UTIL */
 #if (!defined(UTIL) || defined(W32_STATROOT_FIX))
    time_t dos2unixtime OF((ulg));
 #endif
-#ifndef UTIL
    ulg dostime OF((int, int, int, int, int, int));
    ulg unix2dostime OF((time_t *));
    int issymlnk OF((ulg a));
@@ -537,7 +530,6 @@ char *copy_nondup_extra_fields OF((char *, unsigned, char *, unsigned, unsigned 
 #  else /* !S_IFLNK */
 #    define rdsymlnk(p,b,n) (0)
 #  endif /* !S_IFLNK */
-#endif /* !UTIL */
 
 int destroy OF((char *));
 int replace OF((char *, char *));
