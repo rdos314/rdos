@@ -60,7 +60,6 @@
  * the Zip and UnZip versions of the crypt core functions have to be named
  * differently.
  */
-#ifdef ZIP
 #  ifdef REALLY_SHORT_SYMS
 #    define decrypt_byte   zdcrby
 #  else
@@ -68,11 +67,6 @@
 #  endif
 #  define  update_keys     zp_update_keys
 #  define  init_keys       zp_init_keys
-#else /* !ZIP */
-#  ifdef REALLY_SHORT_SYMS
-#    define decrypt_byte   dcrbyt
-#  endif
-#endif /* ?ZIP */
 
 #define IZ_PWLEN  80    /* input buffer size for reading encryption key */
 #ifndef PWLEN           /* for compatibility with previous zcrypt release... */
