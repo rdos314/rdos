@@ -543,16 +543,10 @@ void version_local OF((void));
         /* in util.c */
 int   fseekable    OF((FILE *));
 char *isshexp      OF((char *));
-#ifdef UNICODE_SUPPORT
-# ifdef WIN32
-   wchar_t *isshexpw     OF((wchar_t *));
-   int dosmatchw   OF((ZCONST wchar_t *, ZCONST wchar_t *, int));
-# endif
-#endif
+wchar_t *isshexpw     OF((wchar_t *));
+int dosmatchw   OF((ZCONST wchar_t *, ZCONST wchar_t *, int));
 int   shmatch      OF((ZCONST char *, ZCONST char *, int));
-# if defined(DOS) || defined(WIN32)
-   int dosmatch    OF((ZCONST char *, ZCONST char *, int));
-# endif /* DOS || WIN32 */
+int dosmatch    OF((ZCONST char *, ZCONST char *, int));
 
 /* functions to convert zoff_t to a string */
 char *zip_fuzofft      OF((uzoff_t, char *, char*));
@@ -569,12 +563,6 @@ int abbrevmatch OF((char *, char *, int, int));
 void init_upper    OF((void));
 int  namecmp       OF((ZCONST char *string1, ZCONST char *string2));
 
-#ifdef EBCDIC
-  char *strtoasc     OF((char *str1, ZCONST char *str2));
-  char *strtoebc     OF((char *str1, ZCONST char *str2));
-  char *memtoasc     OF((char *mem1, ZCONST char *mem2, unsigned len));
-  char *memtoebc     OF((char *mem1, ZCONST char *mem2, unsigned len));
-#endif /* EBCDIC */
 #ifdef IZ_ISO2OEM_ARRAY
   char *str_iso_to_oem    OF((char *dst, ZCONST char *src));
 #endif
