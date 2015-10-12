@@ -574,8 +574,6 @@ unsigned int adler16 OF((unsigned int, ZCONST uch *, extent));
 */
         /*  crc functions are now declared in crc32.h */
 
-#ifndef UTIL
-#ifndef USE_ZLIB
         /* in deflate.c */
 void lm_init OF((int, ush *));
 void lm_free OF((void));
@@ -587,78 +585,13 @@ void     ct_init      OF((ush *, int *));
 int      ct_tally     OF((int, int));
 uzoff_t  flush_block  OF((char far *, ulg, int));
 void     bi_init      OF((char *, unsigned int, int));
-#endif /* !USE_ZLIB */
-#endif /* !UTIL */
-
-        /* in system specific assembler code, replacing C code in trees.c */
-#if defined(ASMV) && defined(RISCOS)
-  void     send_bits    OF((int, int));
-  unsigned bi_reverse   OF((unsigned int, int));
-#endif /* ASMV && RISCOS */
-
-/*---------------------------------------------------------------------------
-    VMS-only functions:
-  ---------------------------------------------------------------------------*/
-#ifdef VMS
-   int    vms_stat        OF((char *, stat_t *));              /* vms.c */
-   void   vms_exit        OF((int));                           /* vms.c */
-#ifndef UTIL
-#ifdef VMSCLI
-   ulg    vms_zip_cmdline OF((int *, char ***));                /* cmdline.c */
-   void   VMSCLI_help     OF((void));                           /* cmdline.c */
-#endif /* VMSCLI */
-#endif /* !UTIL */
-#endif /* VMS */
-
-/*
-#ifdef ZIP64_SUPPORT
-   update_local_Zip64_extra_field OF((struct zlist far *, FILE *));
-#endif
-*/
 
 /*---------------------------------------------------------------------------
     WIN32-only functions:
   ---------------------------------------------------------------------------*/
-#ifdef WIN32
-   int ZipIsWinNT         OF((void));                         /* win32.c */
-   int ClearArchiveBit    OF((char *));                       /* win32.c */
-# ifdef UNICODE_SUPPORT
-   int ClearArchiveBitW   OF((wchar_t *));                    /* win32.c */
-# endif
-#endif /* WIN32 */
-
-#if (defined(WINDLL) || defined(DLL_ZIPAPI))
-/*---------------------------------------------------------------------------
-    Prototypes for public Zip API (DLL) functions.
-  ---------------------------------------------------------------------------*/
-#include "api.h"
-#endif /* WINDLL || DLL_ZIPAPI */
-
-
-   /* WIN32_OEM */
-#ifdef WIN32
-/*
-# if defined(UNICODE_SUPPORT) || defined(WIN32_OEM)
-*/
-  /* convert oem to ansi string */
-  char *oem_to_local_string OF((char *, char *));
-/*
-# endif
-*/
-#endif
-
-#ifdef WIN32
-/*
-# if defined(UNICODE_SUPPORT) || defined(WIN32_OEM)
-*/
-  /* convert local string to oem string */
-  char *local_to_oem_string OF((char *, char *));
-/*
-# endif
-*/
-#endif
-
-
+int ZipIsWinNT         OF((void));                         /* win32.c */
+int ClearArchiveBit    OF((char *));                       /* win32.c */
+int ClearArchiveBitW   OF((wchar_t *));                    /* win32.c */
 
 /*---------------------------------------------------------------------
     Unicode Support
