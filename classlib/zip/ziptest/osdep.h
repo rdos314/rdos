@@ -198,7 +198,7 @@ typedef struct _stati64 z_stat;
  * handling code to the (correctly interpretable) OS system settings, read
  * from the registry.
  */
-#   define iz_w32_prepareTZenv()
+#define iz_w32_prepareTZenv()
 
 /* This patch of stat() is useful for at least three compilers.  It is   */
 /* difficult to take a stat() of a root directory under Windows95, so  */
@@ -235,12 +235,7 @@ int getch_win32(void);
     * However, the existence of this symbol is used as "symlinks supported"
     * indicator in the generic Zip code (see tailor.h). So, for a simple
     * work-around, this symbol is undefined here. */
-#  ifdef S_IFLNK
-#    undef S_IFLNK
-#  endif
-#  ifdef UNICODE_SUPPORT
      /* Watcom C does not supply wide-char definitions in the "standard"
       * headers like MSC; so we have to pull in a wchar-specific header.
       */
-#    include <wchar.h>
-#  endif
+#include <wchar.h>
