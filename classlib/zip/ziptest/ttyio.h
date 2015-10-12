@@ -34,21 +34,7 @@
 #define getch() getch_win32()
 #define HAVE_WORKING_GETCH
 
-/* this stuff is used by MORE and also now by the ctrl-S code; fileio.c only */
-#if (defined(UNZIP) && !defined(FUNZIP))
-#  ifdef HAVE_WORKING_GETCH
-#    define FGETCH(f)  getch()
-#  endif
-#  ifndef FGETCH
-     /* default for all systems where no getch()-like function is available */
-     int zgetch OF((__GPRO__ int f));
-#    define FGETCH(f)  zgetch(__G__ f)
-#  endif
-#endif /* UNZIP && !FUNZIP */
-
-#if (CRYPT && !defined(WINDLL))
-   char *getp OF((__GPRO__ ZCONST char *m, char *p, int n));
-#endif
+char *getp OF((__GPRO__ ZCONST char *m, char *p, int n));
 
 #else /* !(CRYPT || (UNZIP && !FUNZIP)) */
 
