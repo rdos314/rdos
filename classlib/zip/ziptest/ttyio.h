@@ -22,18 +22,6 @@
  * Non-echo keyboard/console input support is needed and enabled.
  */
 
-#ifndef __G         /* UnZip only, for now (DLL stuff) */
-#  define __G
-#  define __G__
-#  define __GDEF
-#  define __GPRO    void
-#  define __GPRO__
-#endif
-
-#ifndef ZCONST      /* UnZip only (until have configure script like Zip) */
-#  define ZCONST const
-#endif
-
 #if (defined(MSDOS) || defined(OS2) || defined(WIN32))
 #  ifndef DOS_OS2_W32
 #    define DOS_OS2_W32
