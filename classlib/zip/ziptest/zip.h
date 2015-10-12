@@ -502,12 +502,8 @@ int proc_archive_name OF((char *, int));
 ulg dostime OF((int, int, int, int, int, int));
 ulg unix2dostime OF((time_t *));
 int issymlnk OF((ulg a));
-#  ifdef S_IFLNK
-#    define rdsymlnk(p,b,n) readlink(p,b,n)
-/*   extern int readlink OF((char *, char *, int)); */
-#  else /* !S_IFLNK */
-#    define rdsymlnk(p,b,n) (0)
-#  endif /* !S_IFLNK */
+
+#define rdsymlnk(p,b,n) (0)
 
 int destroy OF((char *));
 int replace OF((char *, char *));
