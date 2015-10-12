@@ -222,16 +222,13 @@ int getch_win32(void);
 #define NO_MKTEMP
 
 /* Get asm routines to link properly without using "__cdecl": */
-#    ifdef ASMV
-#      pragma aux match_init    "_*" parm caller [] modify []
-#      pragma aux longest_match "_*" parm caller [] value [eax] \
+#pragma aux match_init    "_*" parm caller [] modify []
+#pragma aux longest_match "_*" parm caller [] value [eax] \
                                       modify [eax ecx edx]
-#    endif
-#    if defined(ASM_CRC) && !defined(USE_ZLIB)
-#      pragma aux crc32         "_*" parm caller [] value [eax] modify [eax]
-#      pragma aux get_crc_table "_*" parm caller [] value [eax] \
+                                      
+#pragma aux crc32         "_*" parm caller [] value [eax] modify [eax]
+#pragma aux get_crc_table "_*" parm caller [] value [eax] \
                                       modify [eax ecx edx]
-#    endif /* ASM_CRC && !USE_ZLIB */
 
    /* Watcom C (like the other Win32 C compiler systems) does not support
     * symlinks on Win32, but defines the S_IFLNK symbol nevertheless.
