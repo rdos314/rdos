@@ -103,18 +103,6 @@ typedef struct _stati64 z_stat;
 
 #define ZP_NEED_MEMCOMPR
 
-#ifdef WINDLL
-# ifndef NO_ASM
-#   define NO_ASM
-# endif
-# ifndef MSWIN
-#   define MSWIN
-# endif
-# ifndef REENTRANT
-#   define REENTRANT
-# endif
-#endif /* WINDLL */
-
 /* Enable use of optimized x86 assembler version of longest_match() for
    MSDOS, WIN32 and OS2 per default.  */
 #if !defined(NO_ASM) && !defined(ASMV)
