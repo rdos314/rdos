@@ -38,7 +38,6 @@
  */
 #define CRYPT  1  /* full version for zip and main unzip */
 
-#if CRYPT
 /* full version */
 
 #define CR_MAJORVER        2
@@ -60,18 +59,12 @@
  * the Zip and UnZip versions of the crypt core functions have to be named
  * differently.
  */
-#  ifdef REALLY_SHORT_SYMS
-#    define decrypt_byte   zdcrby
-#  else
-#    define decrypt_byte   zp_decrypt_byte
-#  endif
-#  define  update_keys     zp_update_keys
-#  define  init_keys       zp_init_keys
+#define decrypt_byte   zp_decrypt_byte
+#define  update_keys     zp_update_keys
+#define  init_keys       zp_init_keys
 
 #define IZ_PWLEN  80    /* input buffer size for reading encryption key */
-#ifndef PWLEN           /* for compatibility with previous zcrypt release... */
-#  define PWLEN IZ_PWLEN
-#endif
+#define PWLEN IZ_PWLEN
 #define RAND_HEAD_LEN  12       /* length of encryption random header */
 
 /* the crc_32_tab array has to be provided externally for the crypt calculus */
@@ -86,37 +79,8 @@ int  decrypt_byte OF((__GPRO));
 int  update_keys OF((__GPRO__ int c));
 void init_keys OF((__GPRO__ ZCONST char *passwd));
 
-#ifdef ZIP
-   void crypthead OF((ZCONST char *, ulg));
-#  ifdef UTIL
-     int zipcloak OF((struct zlist far *, ZCONST char *));
-     int zipbare OF((struct zlist far *, ZCONST char *));
-#  else
-     unsigned zfwrite OF((zvoid *, extent, extent));
-     extern char *key;
-#  endif
-#endif /* ZIP */
+void crypthead OF((ZCONST char *, ulg));
+unsigned zfwrite OF((zvoid *, extent, extent));
+extern char *key;
 
-#if (defined(UNZIP) && !defined(FUNZIP))
-   int  decrypt OF((__GPRO__ ZCONST char *passwrd));
-#endif
-
-#ifdef FUNZIP
-   extern int encrypted;
-#  ifdef NEXTBYTE
-#    undef NEXTBYTE
-#  endif
-#  define NEXTBYTE \
-   (encrypted? update_keys(__G__ getc(G.in)^decrypt_byte(__G)) : getc(G.in))
-#endif /* FUNZIP */
-
-#else /* !CRYPT */
-/* dummy version */
-
-#define zencode
-#define zdecode
-
-#define zfwrite(b,s,c) bfwrite(b,s,c,BFWRITE_DATA)
-
-#endif /* ?CRYPT */
 #endif /* !__crypt_h */
