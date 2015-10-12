@@ -499,12 +499,9 @@ int newnamew OF((wchar_t *, int, int));
 
    /* used by copy mode */
 int proc_archive_name OF((char *, int));
-#if (!defined(UTIL) || defined(W32_STATROOT_FIX))
-   time_t dos2unixtime OF((ulg));
-#endif
-   ulg dostime OF((int, int, int, int, int, int));
-   ulg unix2dostime OF((time_t *));
-   int issymlnk OF((ulg a));
+ulg dostime OF((int, int, int, int, int, int));
+ulg unix2dostime OF((time_t *));
+int issymlnk OF((ulg a));
 #  ifdef S_IFLNK
 #    define rdsymlnk(p,b,n) readlink(p,b,n)
 /*   extern int readlink OF((char *, char *, int)); */
