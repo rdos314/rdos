@@ -108,14 +108,7 @@ typedef struct ztimbuf {
 } ztimbuf;
 
 /* This macro round a time_t value to the OS specific resolution */
-#ifndef ROUNDED_TIME
-#  define ROUNDED_TIME(time)   (time)
-#endif
-
-/* Some systems define S_IFLNK but do not support symbolic links */
-#if defined (S_IFLNK) && defined(NO_SYMLINKS)
-#  undef S_IFLNK
-#endif
+#define ROUNDED_TIME(time)   (time)
 
 #ifndef Z_UINT4_DEFINED
 #  if !defined(NO_LIMITS_H)
