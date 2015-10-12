@@ -47,16 +47,7 @@
 #include <fcntl.h>
 #include <string.h>
 
-#ifdef NO_VOID
-#  define void int
-   typedef char zvoid;
-#else /* !NO_VOID */
-# ifdef NO_TYPEDEF_VOID
-#  define zvoid void
-# else
-   typedef void zvoid;
-# endif
-#endif /* ?NO_VOID */
+typedef void zvoid;
 
 #ifdef NO_STRRCHR
 #  define strrchr rindex
