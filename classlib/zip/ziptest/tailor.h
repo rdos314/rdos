@@ -64,17 +64,8 @@ typedef void zvoid;
 #define FALSE 0
 #define TRUE 1
 
-#ifdef NO_SIZE_T
-   typedef unsigned int extent;
-   /* define size_t 3/17/05 EG */
-   typedef unsigned int size_t;
-#else
-   typedef size_t extent;
-#endif
+typedef size_t extent;
 
-#ifdef NO_TIME_T
-   typedef long time_t;
-#endif
 
 /* DBCS support for Info-ZIP's zip  (mainly for japanese (-: )
  * by Yoshioka Tsuneo (QWF00133@nifty.ne.jp,tsuneo-y@is.aist-nara.ac.jp)
