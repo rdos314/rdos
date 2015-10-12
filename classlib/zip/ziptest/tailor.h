@@ -58,21 +58,11 @@ typedef void zvoid;
  * SEEK_* macros, should be defined in stdio.h
  */
 /* Define fseek() commands */
-#ifndef SEEK_SET
-#  define SEEK_SET 0
-#endif /* !SEEK_SET */
+#define SEEK_SET 0
+#define SEEK_CUR 1
 
-#ifndef SEEK_CUR
-#  define SEEK_CUR 1
-#endif /* !SEEK_CUR */
-
-#ifndef FALSE
-#  define FALSE 0
-#endif
-
-#ifndef TRUE
-#  define TRUE 1
-#endif
+#define FALSE 0
+#define TRUE 1
 
 #ifdef NO_SIZE_T
    typedef unsigned int extent;
