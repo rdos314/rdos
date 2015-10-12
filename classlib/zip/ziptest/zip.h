@@ -457,23 +457,17 @@ void ziperr OF((int, ZCONST char *));
 void error OF((ZCONST char *));
 int encr_passwd OF((int, char *, int, ZCONST char *));
 
-        /* in zipup.c */
-  /* zip64 support 08/31/2003 R.Nausedat */
-   int percent OF((uzoff_t, uzoff_t));
+/* zip64 support 08/31/2003 R.Nausedat */
+int percent OF((uzoff_t, uzoff_t));
 
-   int zipup OF((struct zlist far *));
-#  ifdef USE_ZLIB
-     void zl_deflate_free OF((void));
-#  else
-     void flush_outbuf OF((char *, unsigned *));
-     int seekable OF((void));
-     extern unsigned (*read_buf) OF((char *, unsigned int));
-#  endif /* !USE_ZLIB */
+int zipup OF((struct zlist far *));
+
+void flush_outbuf OF((char *, unsigned *));
+int seekable OF((void));
+extern unsigned (*read_buf) OF((char *, unsigned int));
+
 #  ifdef ZP_NEED_MEMCOMPR
      ulg memcompress OF((char *, ulg, char *, ulg));
-#  endif
-#  ifdef BZIP2_SUPPORT
-   void bz_compress_free OF((void));
 #  endif
 
         /* in zipfile.c */
