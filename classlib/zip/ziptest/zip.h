@@ -450,26 +450,12 @@ extern unsigned Rcount;         /* number of -R include patterns */
 /* Public function prototypes */
 
 int main OF((int, char **));
-
-#ifdef EBCDIC
-extern int aflag;
-#endif /* EBCDIC */
-#ifdef CMS_MVS
-extern int bflag;
-#endif /* CMS_MVS */
 void zipmessage_nl OF((ZCONST char *, int));
 void zipmessage OF((ZCONST char *, ZCONST char *));
 void zipwarn OF((ZCONST char *, ZCONST char *));
 void ziperr OF((int, ZCONST char *));
-#ifdef UTIL
-#  define error(msg)    ziperr(ZE_LOGIC, msg)
-#else
-   void error OF((ZCONST char *));
-#  ifdef VMSCLI
-     void help OF((void));
-#  endif
-   int encr_passwd OF((int, char *, int, ZCONST char *));
-#endif
+void error OF((ZCONST char *));
+int encr_passwd OF((int, char *, int, ZCONST char *));
 
         /* in zipup.c */
 #ifndef UTIL
