@@ -18,19 +18,8 @@
  * (the latter with UNZIP_INTERNAL defined...).
  */
 
-#ifndef OF
-#  define OF(a) a
-#endif
-#ifndef ZCONST
-#  define ZCONST const
-#endif
-
-#ifdef DYNALLOC_CRCTAB
-   void     free_crc_table  OF((void));
-#endif
-#ifndef USE_ZLIB
    ZCONST ulg near *get_crc_table  OF((void));
-#endif
+
 #if (defined(USE_ZLIB) || defined(CRC_TABLE_ONLY))
 #  ifdef IZ_CRC_BE_OPTIMIZ
 #    undef IZ_CRC_BE_OPTIMIZ
