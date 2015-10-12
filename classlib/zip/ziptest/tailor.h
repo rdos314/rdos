@@ -226,15 +226,8 @@ zoff_t zftello OF((FILE *));
 
 #define EXIT  exit
 #define RETURN return
+#define ZIPERR ziperr
 
-#ifndef ZIPERR
-#  define ZIPERR ziperr
-#endif
-
-#if (defined(USE_ZLIB) && defined(MY_ZCALLOC))
-   /* special zcalloc function is not needed when linked against zlib */
-#  undef MY_ZCALLOC
-#endif
 
 #if (!defined(USE_ZLIB) && !defined(MY_ZCALLOC))
    /* Any system without a special calloc function */
