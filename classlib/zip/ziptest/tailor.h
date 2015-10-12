@@ -118,11 +118,7 @@ typedef ulg                z_uint4;
 /* Open the old zip file in exclusive mode if possible (to avoid adding
  * zip file to itself).
  */
-#ifdef OS2
-#  define FOPR_EX FOPM
-#else
-#  define FOPR_EX FOPR
-#endif
+#define FOPR_EX FOPR
 
 
 /* MSDOS file or directory attributes */
@@ -134,27 +130,9 @@ typedef ulg                z_uint4;
  * This is not mandatory, just a speed optimization. The compressed
  * output is strictly identical.
  */
-#if (defined(MSDOS) && !defined(WIN32)) || defined(i386)
-#    define UNALIGNED_OK
-#endif
-#if defined(mc68020) || defined(vax)
-#    define UNALIGNED_OK
-#endif
-
-#if (defined(SMALL_MEM) && !defined(CBSZ))
-#   define CBSZ 2048 /* buffer size for copying files */
-#   define ZBSZ 2048 /* buffer size for temporary zip file */
-#endif
-
-#if (defined(MEDIUM_MEM) && !defined(CBSZ))
-#  define CBSZ 8192
-#  define ZBSZ 8192
-#endif
-
-#ifndef CBSZ
-#  define CBSZ 16384
-#  define ZBSZ 16384
-#endif
+#define UNALIGNED_OK
+#define CBSZ 16384
+#define ZBSZ 16384
 
 #ifndef SBSZ
 #  define SBSZ CBSZ     /* copy buf size for STORED entries, see zipup() */
