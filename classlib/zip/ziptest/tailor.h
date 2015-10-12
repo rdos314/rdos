@@ -208,7 +208,6 @@ zoff_t zftello OF((FILE *));
  * Modified 2004-12-27 EG
  */
 
-#ifndef FZOFFT_FMT
 # define FZOFFT_FMT      ZOFF_T_FORMAT_SIZE_PREFIX /* printf for zoff_t values */
 
 # ifdef LARGE_FILE_SUPPORT
@@ -216,8 +215,6 @@ zoff_t zftello OF((FILE *));
 # else
 #   define FZOFFT_HEX_WID_VALUE     "8"   /* digits in 32-bit hex values */
 # endif
-
-#endif /* ndef FZOFFT_FMT */
 
 #define FZOFFT_HEX_WID ((char *) -1)
 #define FZOFFT_HEX_DOT_WID ((char *) -2)
