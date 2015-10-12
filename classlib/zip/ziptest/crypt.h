@@ -36,33 +36,16 @@
       - never full crypt code
    NO_CRYPT takes precedence over USE_CRYPT
  */
-#if defined(USE_CRYPT)
-#  define CRYPT  1  /* full version */
-#else
-#if !defined(SFX)
-#  define CRYPT  1  /* full version for zip and main unzip */
-#else
-#  define CRYPT  0  /* dummy version for unzip sfx */
-#endif
-#endif /* ?USE_CRYPT */
+#define CRYPT  1  /* full version for zip and main unzip */
 
 #if CRYPT
 /* full version */
 
-#ifdef CR_BETA
-#  undef CR_BETA    /* this is not a beta release */
-#endif
-
 #define CR_MAJORVER        2
 #define CR_MINORVER        91
-#ifdef CR_BETA
-#  define CR_BETA_VER      "c BETA"
-#  define CR_VERSION_DATE  "05 Jan 2007"       /* last real code change */
-#else
 #  define CR_BETA_VER      ""
 #  define CR_VERSION_DATE  "05 Jan 2007"       /* last public release date */
 #  define CR_RELEASE
-#endif
 
 #ifndef __G         /* UnZip only, for now (DLL stuff) */
 #  define __G
