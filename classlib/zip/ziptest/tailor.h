@@ -147,14 +147,7 @@ typedef ulg                z_uint4;
 #define farmalloc malloc
 #define farfree free
 
-#ifndef Far
-#  define Far far
-#endif
-
-/* MMAP and BIG_MEM cannot be used together -> let MMAP take precedence */
-#if (defined(MMAP) && defined(BIG_MEM))
-#  undef BIG_MEM
-#endif
+#define Far far
 
 #if (defined(BIG_MEM) || defined(MMAP)) && !defined(DYN_ALLOC)
 #   define DYN_ALLOC
