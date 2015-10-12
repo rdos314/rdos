@@ -208,18 +208,10 @@ zoff_t zftello OF((FILE *));
  * Modified 2004-12-27 EG
  */
 
-# define FZOFFT_FMT      ZOFF_T_FORMAT_SIZE_PREFIX /* printf for zoff_t values */
-
-# ifdef LARGE_FILE_SUPPORT
-#   define FZOFFT_HEX_WID_VALUE     "16"  /* width of 64-bit hex values */
-# else
-#   define FZOFFT_HEX_WID_VALUE     "8"   /* digits in 32-bit hex values */
-# endif
-
+#define FZOFFT_FMT      ZOFF_T_FORMAT_SIZE_PREFIX /* printf for zoff_t values */
+#define FZOFFT_HEX_WID_VALUE     "16"  /* width of 64-bit hex values */
 #define FZOFFT_HEX_WID ((char *) -1)
 #define FZOFFT_HEX_DOT_WID ((char *) -2)
-
-
 
 
 /* The following default definition of the second input for the crypthead()
