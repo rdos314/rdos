@@ -218,11 +218,10 @@ int getch_win32(void);
 
 # define IZ_PACKED
 
-#  include <stdio.h>    /* PATH_MAX is defined here */
-#  define NO_MKTEMP
+#include <stdio.h>    /* PATH_MAX is defined here */
+#define NO_MKTEMP
 
 /* Get asm routines to link properly without using "__cdecl": */
-#  ifdef __386__
 #    ifdef ASMV
 #      pragma aux match_init    "_*" parm caller [] modify []
 #      pragma aux longest_match "_*" parm caller [] value [eax] \
@@ -233,7 +232,7 @@ int getch_win32(void);
 #      pragma aux get_crc_table "_*" parm caller [] value [eax] \
                                       modify [eax ecx edx]
 #    endif /* ASM_CRC && !USE_ZLIB */
-#  endif /* __386__ */
+
    /* Watcom C (like the other Win32 C compiler systems) does not support
     * symlinks on Win32, but defines the S_IFLNK symbol nevertheless.
     * However, the existence of this symbol is used as "symlinks supported"
