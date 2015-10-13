@@ -76,10 +76,8 @@ int volume_label = 0;         /* add volume label */
 int dirnames = 1;             /* include directory entries by default */
 int filter_match_case = 1;    /* 1=match case when filter() */
 int diff_mode = 0;            /* 1=require --out and only store changed and add */
-#if defined(WIN32)
 int only_archive_set = 0;     /* include only files with DOS archive bit set */
 int clear_archive_bits = 0;   /* clear DOS archive bit of included files */
-#endif
 int linkput = 0;              /* 1=store symbolic links as such */
 int noisy = 1;                /* 0=quiet operation */
 int extra_fields = 1;         /* 0=create minimum, 1=don't copy old, 2=keep old */
@@ -92,16 +90,11 @@ int show_files = 0;           /* show files to operate on and exit (=2 log only)
 
 int output_seekable = 1;      /* 1 = output seekable 3/13/05 EG */
 
-#ifdef ZIP64_SUPPORT          /* zip64 support 10/4/03 */
-  int force_zip64 = -1;       /* if 1 force entries to be zip64, 0 force not zip64 */
-                              /* mainly for streaming from stdin */
-  int zip64_entry = 0;        /* current entry needs Zip64 */
-  int zip64_archive = 0;      /* if 1 then at least 1 entry needs zip64 */
-#endif
+int force_zip64 = -1;       /* if 1 force entries to be zip64, 0 force not zip64 */                              /* mainly for streaming from stdin */
+int zip64_entry = 0;        /* current entry needs Zip64 */
+int zip64_archive = 0;      /* if 1 then at least 1 entry needs zip64 */
 
-#ifdef NTSD_EAS
-  int use_privileges = 0;     /* 1=use security privilege overrides */
-#endif
+int use_privileges = 0;     /* 1=use security privilege overrides */
 #ifndef RISCOS
 #ifndef QDOS
 #ifndef TANDEM
