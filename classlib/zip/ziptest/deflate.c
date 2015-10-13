@@ -106,18 +106,14 @@
  * Local data used by the "longest match" routines.
  */
 
-#if defined(MMAP) || defined(BIG_MEM)
-  typedef unsigned Pos; /* must be at least 32 bits */
-#else
-  typedef ush Pos;
-#endif
+typedef ush Pos;
+
 typedef unsigned IPos;
 /* A Pos is an index in the character window. We use short instead of int to
  * save space in the various tables. IPos is used only for parameter passing.
  */
 
-#ifndef DYN_ALLOC
-  uch    window[2L*WSIZE];
+uch    window[2L*WSIZE];
   /* Sliding window. Input bytes are read into the second half of the window,
    * and move to the first half later to keep a dictionary of at least WSIZE
    * bytes. With this organization, matches are limited to a distance of
@@ -127,20 +123,16 @@ typedef unsigned IPos;
    * To do: limit the window size to WSIZE+CBSZ if SMALL_MEM (the code would
    * be less efficient since the data would have to be copied WSIZE/CBSZ times)
    */
-  Pos    prev[WSIZE];
+Pos    prev[WSIZE];
   /* Link to older string with same hash index. To limit the size of this
    * array to 64K, this link is maintained only for the last 32K strings.
    * An index in this array is thus a window index modulo 32K.
    */
-  Pos    head[HASH_SIZE];
+Pos    head[HASH_SIZE];
   /* Heads of the hash chains or NIL. If your compiler thinks that
    * HASH_SIZE is a dynamic value, recompile with -DDYN_ALLOC.
    */
-#else
-  uch far * near window = NULL;
-  Pos far * near prev   = NULL;
-  Pos far * near head;
-#endif
+
 ulg window_size;
 /* window size, 2*WSIZE except for MMAP or BIG_MEM, where it is the
  * input file length plus MIN_LOOKAHEAD.
