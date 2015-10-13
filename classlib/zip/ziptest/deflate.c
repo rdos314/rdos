@@ -230,8 +230,8 @@ local void fill_window   OF((void));
 
 local uzoff_t deflate_fast OF((void));    /* now use uzoff_t 7/24/04 EG */
 
-      int  longest_match OF((IPos cur_match));
-      void match_init OF((void)); /* asm code initialization */
+int  longest_match OF((IPos cur_match));
+void match_init OF((void)); /* asm code initialization */
 
 
 /* ===========================================================================
@@ -281,21 +281,6 @@ void lm_init (pack_level, flags)
         window_size = (ulg)2L*WSIZE;
     }
 
-    /* Use dynamic allocation if compiler does not like big static arrays: */
-#ifdef DYN_ALLOC
-    if (window == NULL) {
-        window = (uch far *) zcalloc(WSIZE,   2*sizeof(uch));
-        if (window == NULL) ziperr(ZE_MEM, "window allocation");
-    }
-    if (prev == NULL) {
-        prev   = (Pos far *) zcalloc(WSIZE,     sizeof(Pos));
-        head   = (Pos far *) zcalloc(HASH_SIZE, sizeof(Pos));
-        if (prev == NULL || head == NULL) {
-            ziperr(ZE_MEM, "hash table allocation");
-        }
-    }
-#endif /* DYN_ALLOC */
-
     /* Initialize the hash table (avoiding 64K overflow for 16 bit systems).
      * prev[] will be initialized on the fly.
      */
@@ -306,9 +291,7 @@ void lm_init (pack_level, flags)
      */
     max_lazy_match   = configuration_table[pack_level].max_lazy;
     good_match       = configuration_table[pack_level].good_length;
-#ifndef FULL_SEARCH
     nice_match       = configuration_table[pack_level].nice_length;
-#endif
     max_chain_length = configuration_table[pack_level].max_chain;
     if (pack_level <= 2) {
        *flags |= FAST;
@@ -319,14 +302,10 @@ void lm_init (pack_level, flags)
 
     strstart = 0;
     block_start = 0L;
-#if defined(ASMV) && !defined(RISCOS)
     match_init(); /* initialize the asm code */
-#endif
 
     j = WSIZE;
-#ifndef MAXSEG_64K
     if (sizeof(int) > 2) j <<= 1; /* Can read 64K in one step */
-#endif
     lookahead = (*read_buf)((char*)window, j);
 
     if (lookahead == 0 || lookahead == (unsigned)EOF) {
