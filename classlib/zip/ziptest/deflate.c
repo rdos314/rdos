@@ -461,9 +461,7 @@ local uzoff_t deflate_fast()
         /* Insert the string window[strstart .. strstart+2] in the
          * dictionary, and set hash_head to the head of the hash chain:
          */
-#ifndef DEFL_UNDETERM
         if (lookahead >= MIN_MATCH)
-#endif
         INSERT_STRING(strstart, hash_head);
 
         /* Find the longest match, discarding those <= prev_length.
@@ -474,17 +472,13 @@ local uzoff_t deflate_fast()
              * of window index 0 (in particular we have to avoid a match
              * of the string with itself at the start of the input file).
              */
-#ifndef HUFFMAN_ONLY
-#  ifndef DEFL_UNDETERM
             /* Do not look for matches beyond the end of the input.
              * This is necessary to make deflate deterministic.
              */
             if ((unsigned)nice_match > lookahead) nice_match = (int)lookahead;
-#  endif
             match_length = longest_match (hash_head);
             /* longest_match() sets match_start */
             if (match_length > lookahead) match_length = lookahead;
-#endif
         }
         if (match_length >= MIN_MATCH) {
             check_match(strstart, match_start, match_length);
@@ -497,9 +491,7 @@ local uzoff_t deflate_fast()
              * is not too large. This saves time but degrades compression.
              */
             if (match_length <= max_insert_length
-#ifndef DEFL_UNDETERM
                 && lookahead >= MIN_MATCH
-#endif
                                                  ) {
                 match_length--; /* string at strstart already in hash table */
                 do {
@@ -508,12 +500,6 @@ local uzoff_t deflate_fast()
                     /* strstart never exceeds WSIZE-MAX_MATCH, so there are
                      * always MIN_MATCH bytes ahead.
                      */
-#ifdef DEFL_UNDETERM
-                    /* If lookahead < MIN_MATCH these bytes are garbage,
-                     * but it does not matter since the next lookahead bytes
-                     * will be emitted as literals.
-                     */
-#endif
                 } while (--match_length != 0);
                 strstart++;
             } else {
