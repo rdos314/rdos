@@ -34,8 +34,6 @@
 #include "crypt.h"
 #include "ttyio.h"
 
-#if CRYPT
-
    /* For the encoding task used in Zip (and ZipCloak), we want to initialize
       the crypt algorithm with some reasonably unpredictable bytes, see
       the crypthead() function. The standard rand() library function is
@@ -664,10 +662,3 @@ local int testkey(__G__ h, key)
 } /* end function testkey() */
 
 #endif /* UNZIP && !FUNZIP */
-
-#else /* !CRYPT */
-
-/* something "externally visible" to shut up compiler/linker warnings */
-int zcr_dummy;
-
-#endif /* ?CRYPT */
