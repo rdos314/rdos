@@ -341,34 +341,7 @@ void lm_free()
  *   string (strstart) and its distance is <= MAX_DIST, and prev_length >= 1
  */
 
-#ifdef DEBUG
-/* ===========================================================================
- * Check that the match at match_start is indeed a match.
- */
-local void check_match(start, match, length)
-    IPos start, match;
-    int length;
-{
-    /* check that the match is indeed a match */
-    if (memcmp((char*)window + match,
-                (char*)window + start, length) != EQUAL) {
-        fprintf(mesg,
-            " start %d, match %d, length %d\n",
-            start, match, length);
-        error("invalid match");
-    }
-    if (verbose > 1) {
-        fprintf(mesg,"\\[%d,%d]", start-match, length);
-#ifndef WINDLL
-        do { putc(window[start++], mesg); } while (--length != 0);
-#else
-        do { fprintf(stdout,"%c",window[start++]); } while (--length != 0);
-#endif
-    }
-}
-#else
-#  define check_match(start, match, length)
-#endif
+#define check_match(start, match, length)
 
 /* ===========================================================================
  * Flush the current block, with given end-of-file flag.
