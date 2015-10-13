@@ -4,9 +4,9 @@ projectIdent
 VpeMain
 1
 WRect
-1036
-1248
-6704
+457
+1072
+6698
 7168
 2
 MProject
@@ -28,10 +28,10 @@ WVList
 VComponent
 8
 WRect
-213
-204
-5680
-4291
+207
+195
+5674
+4281
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 7
 zip.tgt
 0
-0
+3
 7
