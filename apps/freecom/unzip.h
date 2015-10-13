@@ -46,6 +46,9 @@ public:
 	TUnzipCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);	
+
+protected:
+    void Unzip(TPathName &ZipFile, TPathName &DestPath);
 };
 
 #endif

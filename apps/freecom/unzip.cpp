@@ -87,6 +87,21 @@ TUnzipCommand::TUnzipCommand(TSession *session, const char *param)
 
 /*##########################################################################
 #
+#   Name       : TUnzipCommand::Unzip
+#
+#   Purpose....: Unzip file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzipCommand::Unzip(TPathName &ZipFile, TPathName &DestPath)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TUnzipCommand::Run
 #
 #   Purpose....: Run command
@@ -110,10 +125,36 @@ int TUnzipCommand::Execute(char *param)
 
     if (arg)
     {
-        TPathName path(arg->FName);
-        path.MakeDir();        
+        TPathName zip(arg->FName);
+        if (zip.IsFile())
+        {
+            TPathName dest;
+
+            arg = arg->FList;
+            if (arg)
+                dest = arg->FName;
+
+            if (!dest.MakeDir())
+            {
+                FMsg.printf(TEXT_ERROR_DIRFCT_FAILED, "UNZIP", dest.Get().GetData());
+                Write(FMsg.GetData());
+                return 1;
+            }
+                
+            Unzip(zip, dest);
+        }
+        else
+        {
+            FMsg.printf(TEXT_ERROR_DIRFCT_FAILED, "UNZIP", zip.Get().GetData());
+            Write(FMsg.GetData());
+            return 1;
+        }        
     }
-    
-    ErrorSyntax(0);
-    return 1;
+    else
+    {    
+        ErrorSyntax(0);
+        return 1;
+    }
+
+    return 0;
 }
