@@ -14,9 +14,6 @@
 #define __GLOBALS_C
 
 #define GLOBALS         /* include definition of errors[] in zip.h */
-#ifndef UTIL
-#define UTIL            /* do not declare the read_buf variable */
-#endif
 
 #include "zip.h"
 
@@ -28,9 +25,6 @@ char errbuf[FNMAX+4081];
 int recurse = 0;        /* 1=recurse into directories encountered */
 int dispose = 0;        /* 1=remove files after put in zip file */
 int pathput = 1;        /* 1=store path with name */
-#ifdef RISCOS
-int scanimage = 1;      /* 1=scan through image files */
-#endif
 int method = BEST;      /* one of BEST, DEFLATE (only), or STORE (only) */
 int dosify = 0;         /* 1=make new entries look like MSDOS */
 int verbose = 0;        /* 1=report oddities in zip file structure */
@@ -39,12 +33,6 @@ int filesync = 0;       /* 1=file sync, delete entries not on file system */
 int adjust = 0;         /* 1=adjust offsets for sfx'd file (keep preamble) */
 int level = 6;          /* 0=fastest compression, 9=best compression */
 int translate_eol = 0;  /* Translate end-of-line LF -> CR LF */
-#ifdef VMS
-   int vmsver = 0;      /* 1=append VMS version number to file names */
-   int vms_native = 0;  /* 1=store in VMS format */
-   int vms_case_2 = 0;  /* ODS2 file name case in VMS.  -1: down. */
-   int vms_case_5 = 0;  /* ODS5 file name case in VMS.  +1: preserve. */
-#endif /* VMS */
 #if defined(OS2) || defined(WIN32)
    int use_longname_ea = 0;  /* 1=use the .LONGNAME EA as the file's name */
 #endif
