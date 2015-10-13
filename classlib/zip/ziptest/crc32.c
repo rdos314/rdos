@@ -25,27 +25,14 @@
 
 #if (!defined(USE_ZLIB) || defined(USE_OWN_CRCTAB))
 
-#ifndef ZCONST
-#  define ZCONST const
-#endif
-
 #include "crc32.h"
 
 /* When only the table of precomputed CRC values is needed, only the basic
    system-independent table containing 256 entries is created; any support
    for "unfolding" optimization is disabled.
  */
-#if (defined(USE_ZLIB) || defined(CRC_TABLE_ONLY))
-#  ifdef IZ_CRCOPTIM_UNFOLDTBL
-#    undef IZ_CRCOPTIM_UNFOLDTBL
-#  endif
-#endif /* (USE_ZLIB || CRC_TABLE_ONLY) */
 
-#if defined(IZ_CRCOPTIM_UNFOLDTBL)
-#  define CRC_TBLS  4
-#else
-#  define CRC_TBLS  1
-#endif
+#define CRC_TBLS  1
 
 
 /*
