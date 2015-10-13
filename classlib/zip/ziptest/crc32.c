@@ -23,8 +23,6 @@
 
 #include "zip.h"
 
-#if (!defined(USE_ZLIB) || defined(USE_OWN_CRCTAB))
-
 #include "crc32.h"
 
 /* When only the table of precomputed CRC values is needed, only the basic
@@ -125,4 +123,3 @@ ZCONST ulg near *get_crc_table OF((void))
 {
   return crc_table;
 }
-#endif /* !USE_ZLIB || USE_OWN_CRCTAB */
