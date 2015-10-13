@@ -33,24 +33,14 @@ int filesync = 0;       /* 1=file sync, delete entries not on file system */
 int adjust = 0;         /* 1=adjust offsets for sfx'd file (keep preamble) */
 int level = 6;          /* 0=fastest compression, 9=best compression */
 int translate_eol = 0;  /* Translate end-of-line LF -> CR LF */
-#if defined(OS2) || defined(WIN32)
-   int use_longname_ea = 0;  /* 1=use the .LONGNAME EA as the file's name */
-#endif
+int use_longname_ea = 0;  /* 1=use the .LONGNAME EA as the file's name */
 /* 9/26/04 */
 int no_wild = 0;             /* 1 = wildcards are disabled */
 int allow_regex = 0;         /* 1 = allow [list] matching */
-#ifdef WILD_STOP_AT_DIR
-   int wild_stop_at_dir = 1; /* default wildcards do not include / in matches */
-#else
-   int wild_stop_at_dir = 0; /* default wildcards do include / in matches */
-#endif
+int wild_stop_at_dir = 0; /* default wildcards do include / in matches */
 
-#ifdef UNICODE_SUPPORT
-   int using_utf8 = 0;       /* 1 if current character set UTF-8 */
-# ifdef WIN32
-   int no_win32_wide = -1; /* 1 = no wide functions, like GetFileAttributesW() */
-# endif
-#endif
+int using_utf8 = 0;       /* 1 if current character set UTF-8 */
+int no_win32_wide = -1; /* 1 = no wide functions, like GetFileAttributesW() */
 
 ulg skip_this_disk = 0;
 int des_good = 0;       /* Good data descriptor found */
