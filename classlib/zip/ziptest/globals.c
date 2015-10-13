@@ -169,13 +169,9 @@ int noisy_splits = 0;             /* note when splits are being created */
 int mesg_line_started = 0;        /* 1=started writing a line to mesg */
 int logfile_line_started = 0;     /* 1=started writing a line to logfile */
 
-#ifdef WIN32
-  int nonlocal_name = 0;          /* Name has non-local characters */
-  int nonlocal_path = 0;          /* Path has non-local characters */
-#endif
-#ifdef UNICODE_SUPPORT
-  int use_wide_to_mb_default = 0;
-#endif
+int nonlocal_name = 0;          /* Name has non-local characters */
+int nonlocal_path = 0;          /* Path has non-local characters */
+int use_wide_to_mb_default = 0;
 
 struct zlist far *zfiles = NULL;  /* Pointer to list of files in zip file */
 /* The limit for number of files using the Zip64 format is 2^64 - 1 (8 bytes)
@@ -189,9 +185,7 @@ int zipfile_exists = 0;           /* 1 if zipfile exists */
 ush zcomlen;                      /* Length of zip file comment */
 char *zcomment = NULL;            /* Zip file comment (not zero-terminated) */
 struct zlist far **zsort;         /* List of files sorted by name */
-#ifdef UNICODE_SUPPORT
-  struct zlist far **zusort;      /* List of files sorted by zuname */
-#endif
+struct zlist far **zusort;      /* List of files sorted by zuname */
 
 /* Files to operate on that are not in zip file */
 struct flist far *found = NULL;   /* List of names found */
