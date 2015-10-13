@@ -542,9 +542,6 @@ uzoff_t deflate()
     int flush;                  /* set if current block must be flushed */
     int match_available = 0;    /* set if previous match exists */
     register unsigned match_length = MIN_MATCH-1; /* length of best match */
-#ifdef DEBUG
-    extern uzoff_t isize;       /* byte length of input file, for debug only */
-#endif
 
     if (level <= 3) return deflate_fast(); /* optimized for speed */
 
@@ -553,9 +550,7 @@ uzoff_t deflate()
         /* Insert the string window[strstart .. strstart+2] in the
          * dictionary, and set hash_head to the head of the hash chain:
          */
-#ifndef DEFL_UNDETERM
         if (lookahead >= MIN_MATCH)
-#endif
         INSERT_STRING(strstart, hash_head);
 
         /* Find the longest match, discarding those <= prev_length.
@@ -569,25 +564,16 @@ uzoff_t deflate()
              * of window index 0 (in particular we have to avoid a match
              * of the string with itself at the start of the input file).
              */
-#ifndef HUFFMAN_ONLY
-#  ifndef DEFL_UNDETERM
             /* Do not look for matches beyond the end of the input.
              * This is necessary to make deflate deterministic.
              */
             if ((unsigned)nice_match > lookahead) nice_match = (int)lookahead;
-#  endif
             match_length = longest_match (hash_head);
             /* longest_match() sets match_start */
             if (match_length > lookahead) match_length = lookahead;
-#endif
 
-#ifdef FILTERED
-            /* Ignore matches of length <= 5 */
-            if (match_length <= 5) {
-#else
             /* Ignore a length 3 match if it is too distant: */
             if (match_length == MIN_MATCH && strstart-match_start > TOO_FAR){
-#endif
                 /* If prev_match is also MIN_MATCH, match_start is garbage
                  * but we will ignore the current match anyway.
                  */
@@ -598,10 +584,8 @@ uzoff_t deflate()
          * match is not better, output the previous match:
          */
         if (prev_length >= MIN_MATCH && match_length <= prev_length) {
-#ifndef DEFL_UNDETERM
             unsigned max_insert = strstart + lookahead - MIN_MATCH;
 
-#endif
             check_match(strstart-1, prev_match, prev_length);
 
             flush = ct_tally(strstart-1-prev_match, prev_length - MIN_MATCH);
@@ -611,7 +595,6 @@ uzoff_t deflate()
              */
             lookahead -= prev_length-1;
             prev_length -= 2;
-#ifndef DEFL_UNDETERM
             do {
                 if (++strstart <= max_insert) {
                     INSERT_STRING(strstart, hash_head);
@@ -621,18 +604,6 @@ uzoff_t deflate()
                 }
             } while (--prev_length != 0);
             strstart++;
-#else /* DEFL_UNDETERM */
-            do {
-                strstart++;
-                INSERT_STRING(strstart, hash_head);
-                /* strstart never exceeds WSIZE-MAX_MATCH, so there are
-                 * always MIN_MATCH bytes ahead. If lookahead < MIN_MATCH
-                 * these bytes are garbage, but it does not matter since the
-                 * next lookahead bytes will always be emitted as literals.
-                 */
-            } while (--prev_length != 0);
-            strstart++;
-#endif /* ?DEFL_UNDETERM */
             match_available = 0;
             match_length = MIN_MATCH-1;
 
