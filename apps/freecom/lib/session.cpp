@@ -82,7 +82,7 @@
 #include "debug.h"
 #include "audio.h"
 #include "remote.h"
-#include "unzip.h"
+#include "unzipc.h"
 #include "wipedir.h"
 
 #include "file.h"

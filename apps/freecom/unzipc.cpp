@@ -20,7 +20,7 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# unzip.cpp
+# unzipc.cpp
 # Unzip command class
 #
 ########################################################################*/
@@ -31,7 +31,7 @@
 #include "cmdhelp.h"
 #include "lang.h"
 #include "unzip.h"
-#include "zip.h"
+#include "unzipc.h"
 #include "rdos.h"
 
 #define FALSE 0
@@ -115,7 +115,22 @@ TUnzipCommand::TUnzipCommand(TSession *session, const char *param)
 ##########################################################################*/
 void TUnzipCommand::InfoCallback(const char *msg)
 {
-    Write(msg);
+    switch (strlen(msg))
+    {
+        case 0:
+            break;
+            
+        case 1:
+            if (*msg == 0xa)
+            {
+                Write("\r\n");
+                break;
+            }
+
+        default:
+            Write(msg);
+            break;
+    }
 }
 
 /*##########################################################################
@@ -131,14 +146,14 @@ void TUnzipCommand::InfoCallback(const char *msg)
 ##########################################################################*/
 void TUnzipCommand::Unzip(TPathName &ZipFile, TPathName &DestPath)
 {
-    TUnzip unzip(ZipFile.Get.GetName());
+    TUnzip unzip(ZipFile.Get().GetData());
     TUnzipFile *file;
     int ok;
     int i;
     const char *filename;
 
     unzip.Owner = this;
-    unzip.OnInfo = InfoCallback;
+    unzip.OnInfo = ::InfoCallback;
 
     for (i = 0; i < unzip.GetFileCount(); i++)
     {
@@ -155,8 +170,12 @@ void TUnzipCommand::Unzip(TPathName &ZipFile, TPathName &DestPath)
             if (file->NeedUpdate(filename))
                 ok = file->Extract(filename);
 
-        if (!ok)                
-            Write("Unpack failed: %s", filename);
+        if (!ok)
+        {    
+            Write("Unpack failed: ");
+            Write(filename);
+            Write("\r\n");
+        }
     }
 }
 

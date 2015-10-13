@@ -149,6 +149,8 @@ public:
 
     void (*OnTrace)(TUnzip *unzip, const char *msg);
     void (*OnInfo)(TUnzip *unzip, int code, const char *msg);
+
+    void *Owner;
     
 protected:
 

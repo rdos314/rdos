@@ -20,13 +20,13 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# unzip.h
-# Unzip command class
+# unzipc.h
+# Unzipc command class
 #
 ########################################################################*/
 
-#ifndef _UNZIP_H
-#define _UNZIP_H
+#ifndef _UNZIPC_H
+#define _UNZIPC_H
 
 #include "cmd.h"
 #include "cmdfact.h"

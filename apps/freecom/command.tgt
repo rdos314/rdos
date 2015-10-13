@@ -91,8 +91,8 @@ r????Include directories:
 1
 23
 WString
-91
-".\lib;.\lang;..\..\kernel;..\..\classlib;..\..\classlib\rdos;$(%watcom)/h;$(%watcom)/rdos"
+110
+".\lib;.\lang;..\..\kernel;..\..\classlib;..\..\classlib\rdos;..\..\classlib\zip;$(%watcom)/h;$(%watcom)/rdos"
 0
 24
 MRState
@@ -1153,8 +1153,8 @@ WVList
 0
 259
 MItem
-9
-unzip.cpp
+10
+unzipc.cpp
 260
 WString
 6
