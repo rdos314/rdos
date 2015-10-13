@@ -47,6 +47,8 @@ public:
 
 	virtual int Execute(char *param);	
 
+    void InfoCallback(const char *msg);
+
 protected:
     void Unzip(TPathName &ZipFile, TPathName &DestPath);
 };

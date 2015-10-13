@@ -31,10 +31,27 @@
 #include "cmdhelp.h"
 #include "lang.h"
 #include "unzip.h"
+#include "zip.h"
 #include "rdos.h"
 
 #define FALSE 0
 #define TRUE !FALSE
+
+/*##########################################################################
+#
+#   Name       : InfoCallback
+#
+#   Purpose....: Unzip info callback
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void InfoCallback(TUnzip *unzip, int code, const char *msg)
+{
+    ((TUnzipCommand *)(unzip->Owner))->InfoCallback(msg);
+}
 
 /*##########################################################################
 #
@@ -87,6 +104,22 @@ TUnzipCommand::TUnzipCommand(TSession *session, const char *param)
 
 /*##########################################################################
 #
+#   Name       : TUnzipCommand::InfoCallback
+#
+#   Purpose....: Info callback
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUnzipCommand::InfoCallback(const char *msg)
+{
+    Write(msg);
+}
+
+/*##########################################################################
+#
 #   Name       : TUnzipCommand::Unzip
 #
 #   Purpose....: Unzip file
@@ -98,6 +131,33 @@ TUnzipCommand::TUnzipCommand(TSession *session, const char *param)
 ##########################################################################*/
 void TUnzipCommand::Unzip(TPathName &ZipFile, TPathName &DestPath)
 {
+    TUnzip unzip(ZipFile.Get.GetName());
+    TUnzipFile *file;
+    int ok;
+    int i;
+    const char *filename;
+
+    unzip.Owner = this;
+    unzip.OnInfo = InfoCallback;
+
+    for (i = 0; i < unzip.GetFileCount(); i++)
+    {
+        file = unzip.GetFile(i);
+        filename = file->GetFileName();
+
+        TPathName path(DestPath);
+        path += filename;
+        filename = path.Get().GetData();
+        
+        ok = file->IsOk();
+
+        if (ok)
+            if (file->NeedUpdate(filename))
+                ok = file->Extract(filename);
+
+        if (!ok)                
+            Write("Unpack failed: %s", filename);
+    }
 }
 
 /*##########################################################################
