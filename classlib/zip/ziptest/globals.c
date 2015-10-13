@@ -95,26 +95,12 @@ int zip64_entry = 0;        /* current entry needs Zip64 */
 int zip64_archive = 0;      /* if 1 then at least 1 entry needs zip64 */
 
 int use_privileges = 0;     /* 1=use security privilege overrides */
-#ifndef RISCOS
-#ifndef QDOS
-#ifndef TANDEM
 char *special = ".Z:.zip:.zoo:.arc:.lzh:.arj"; /* List of special suffixes */
-#else /* TANDEM */
-char *special = " Z: zip: zoo: arc: lzh: arj"; /* List of special suffixes */
-#endif
-#else /* QDOS */
-char *special = "_Z:_zip:_zoo:_arc:_lzh:_arj"; /* List of special suffixes */
-#endif
-#else /* RISCOS */
-char *special = "DDC:D96:68E";
-#endif /* ?RISCOS */
 char *key = NULL;       /* Scramble password if scrambling */
 char *tempath = NULL;   /* Path for temporary files */
 FILE *mesg;             /* stdout by default, stderr for piping */
 
-#ifdef UNICODE_SUPPORT
- int utf8_force = 0;    /* 1=force storing UTF-8 as standard per AppNote bit 11 */
-#endif
+int utf8_force = 0;    /* 1=force storing UTF-8 as standard per AppNote bit 11 */
 int unicode_escape_all = 0; /* 1=escape all non-ASCII characters in paths */
 int unicode_mismatch = 1; /* unicode mismatch is 0=error, 1=warn, 2=ignore, 3=no */
 
