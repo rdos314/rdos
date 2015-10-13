@@ -71,8 +71,6 @@
 
 #include "zip.h"
 
-#ifndef USE_ZLIB
-
 /* ===========================================================================
  * Configuration parameters
  */
@@ -926,4 +924,3 @@ uzoff_t deflate()
 
     return FLUSH_BLOCK(1); /* eof */
 }
-#endif /* !USE_ZLIB */
