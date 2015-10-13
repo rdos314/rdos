@@ -9,18 +9,13 @@
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
 */
 #  include <share.h>
+
 #define fhow         (O_RDONLY|O_BINARY)
 #define fbad         (-1)
 typedef int          ftype;
 
-#  define zopen(n,p) sopen(n,p,SH_DENYNO)
-#ifdef UNICODE_SUPPORT
-# if defined(__CYGWIN__) || defined(__IBMC__)
-#  define zwopen(n,p) wopen(n,p)
-# else
-#  define zwopen(n,p) _wsopen(n,p,_SH_DENYNO)
-# endif
-#endif
+#define zopen(n,p) sopen(n,p,SH_DENYNO)
+#define zwopen(n,p) _wsopen(n,p,_SH_DENYNO)
 
 #define zread(f,b,n) read(f,b,n)
 #define zclose(f)    close(f)
