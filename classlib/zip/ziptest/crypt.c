@@ -122,11 +122,6 @@ void init_keys(__G__ passwd)
     __GDEF
     ZCONST char *passwd;        /* password string with which to modify keys */
 {
-#ifdef IZ_CRC_BE_OPTIMIZ
-    if (cry_crctb_p == NULL) {
-        cry_crctb_p = crytab_init(__G);
-    }
-#endif
     GLOBAL(keys[0]) = 305419896L;
     GLOBAL(keys[1]) = 591751049L;
     GLOBAL(keys[2]) = 878082192L;
@@ -135,29 +130,6 @@ void init_keys(__G__ passwd)
         passwd++;
     }
 }
-
-
-/***********************************************************************
- * Initialize the local copy of the table of precomputed crc32 values.
- * Whereas the public crc32-table is optimized for crc32 calculations
- * on arrays of bytes, the crypt code needs the crc32 values in an
- * byte-order-independent form as 32-bit unsigned numbers. On systems
- * with Big-Endian byte order using the optimized crc32 code, this
- * requires inverting the byte-order of the values in the
- * crypt-crc32-table.
- */
-#ifdef IZ_CRC_BE_OPTIMIZ
-local z_uint4 near *crytab_init(__G)
-    __GDEF
-{
-    int i;
-
-    for (i = 0; i < 256; i++) {
-        crycrctab[i] = REV_BE(CRC_32_TAB[i]);
-    }
-    return crycrctab;
-}
-#endif
 
 
 #ifdef ZIP
