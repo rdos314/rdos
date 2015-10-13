@@ -383,12 +383,6 @@ local void fill_window()
          */
         } else if (strstart >= WSIZE+MAX_DIST && sliding) {
 
-#ifdef FORCE_METHOD
-            /* When methods "stored" or "store_block" are requested, the
-             * current block must be flushed before sliding the window.
-             */
-            if (level <= 2) FLUSH_BLOCK(0), block_start = strstart;
-#endif
             /* By the IN assertion, the window is not empty so we can't confuse
              * more == 0 with more == 64K on a 16 bit machine.
              */
@@ -413,24 +407,16 @@ local void fill_window()
             if (dot_size > 0 && !display_globaldots) {
               /* initial space */
               if (noisy && dot_count == -1) {
-#ifndef WINDLL
                 putc(' ', mesg);
                 fflush(mesg);
-#else
-                fprintf(stdout,"%c",' ');
-#endif
                 dot_count++;
               }
               dot_count++;
               if (dot_size <= (dot_count + 1) * WSIZE) dot_count = 0;
             }
             if ((verbose || noisy) && dot_size && !dot_count) {
-#ifndef WINDLL
               putc('.', mesg);
               fflush(mesg);
-#else
-              fprintf(stdout,"%c",'.');
-#endif
               mesg_line_started = 1;
             }
         }
