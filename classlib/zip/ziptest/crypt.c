@@ -36,7 +36,6 @@
 
 #if CRYPT
 
-#ifdef ZIP
    /* For the encoding task used in Zip (and ZipCloak), we want to initialize
       the crypt algorithm with some reasonably unpredictable bytes, see
       the crypthead() function. The standard rand() library function is
@@ -79,9 +78,6 @@
 #    undef GLOBAL
 #  endif
 #  define GLOBAL(g) g
-#else /* !ZIP */
-#  define GLOBAL(g) G.g
-#endif /* ?ZIP */
 
 local z_uint4 keys[3];       /* keys defining the pseudo-random sequence */
 
