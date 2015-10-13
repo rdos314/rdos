@@ -1859,3 +1859,9 @@ UNZIP Archive [Dest]
   Archive         Archive file
   Dest            Destination path
 .
+
+:TEXT_CMDHELP_WIPEDIR
+Removes (deletes) a directory and all of its contents.
+
+WIPEDIR [drive:]path
+.

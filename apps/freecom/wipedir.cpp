@@ -20,41 +20,39 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# unzip.cpp
-# Unzip command class
+# mkdir.cpp
+# Mkdir command class
 #
 ########################################################################*/
 
 #include <string.h>
-#include <stdio.h>
 
 #include "cmdhelp.h"
 #include "lang.h"
-#include "unzip.h"
-#include "rdos.h"
+#include "wipedir.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
 /*##########################################################################
 #
-#   Name       : TUnzipFactory::TUnzipFactory
+#   Name       : TWipeDirFactory::TWipeDirFactory
 #
-#   Purpose....: Constructor for TUnzipFactory
+#   Purpose....: Constructor for TWipeDirFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TUnzipFactory::TUnzipFactory()
-  : TCommandFactory("UNZIP")
+TWipeDirFactory::TWipeDirFactory()
+  : TCommandFactory("WIPEDIR")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TUnzipFactory::Create
+#   Name       : TWipeDirFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -63,31 +61,31 @@ TUnzipFactory::TUnzipFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TUnzipFactory::Create(TSession *session, const char *param)
+TCommand *TWipeDirFactory::Create(TSession *session, const char *param)
 {
-    return new TUnzipCommand(session, param);
+	return new TWipeDirCommand(session, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TUnzipCommand::TUnzipCommand
+#   Name       : TWipeDirCommand::TWipeDirCommand
 #
-#   Purpose....: Constructor for TUnzipCommand
+#   Purpose....: Constructor for TWipeDirCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TUnzipCommand::TUnzipCommand(TSession *session, const char *param)
+TWipeDirCommand::TWipeDirCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-    FHelpScreen.Load(TEXT_CMDHELP_UNZIP);
+	FHelpScreen.Load(TEXT_CMDHELP_WIPEDIR);
 }
 
 /*##########################################################################
 #
-#   Name       : TUnzipCommand::Run
+#   Name       : TWipeDirCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -96,24 +94,25 @@ TUnzipCommand::TUnzipCommand(TSession *session, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-int TUnzipCommand::Execute(char *param)
+int TWipeDirCommand::Execute(char *param)
 {
-    TArg *arg;
+	TArg *arg;
 
-    if (LeadOptions(&param, 0) != E_None)
-        return 1;
+	if (!ScanCmdLine(param, 0))
+		return 1;
 
-    if (!ScanCmdLine(param, 0))
-        return 1;
+	arg = FArgList;
 
-    arg = FArgList;
-
-    if (arg)
-    {
+	while (arg)
+	{
         TPathName path(arg->FName);
-        path.MakeDir();        
-    }
-    
-    ErrorSyntax(0);
-    return 1;
+        if (!path.WipeDir())
+		{
+			FMsg.printf(TEXT_ERROR_DIRFCT_FAILED, "WIPEDIR", FArgList->FName.GetData());
+			Write(FMsg.GetData());
+			return 1;
+		}
+		arg = arg->FList;
+	}
+	return 0;
 }

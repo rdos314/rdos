@@ -83,6 +83,7 @@
 #include "audio.h"
 #include "remote.h"
 #include "unzip.h"
+#include "wipedir.h"
 
 #include "file.h"
 #include "path.h"
@@ -153,6 +154,7 @@ static TCommandFactory *unzip;
 static TCommandFactory *usb;
 static TCommandFactory *volume;
 static TCommandFactory *wait;
+static TCommandFactory *wipedir;
 
 static TStringList *History;
 static TKeyboardDevice *Keyboard;
@@ -216,6 +218,7 @@ TSession::TSession(const char *ipc)
         ifat16 = new TIdeFat16PartitionFactory;
         ifat32 = new TIdeFat32PartitionFactory;
 
+        wipedir = new TWipeDirFactory;
         wait = new TWaitFactory;
         volume = new TVolumeFactory;
         usb = new TUsbFactory;
@@ -353,6 +356,7 @@ TSession::~TSession()
         delete ifat16;
         delete ifat32;
 
+        delete wipedir;
         delete wait;
         delete volume;
         delete usb;

@@ -138,7 +138,8 @@ int TMkdirCommand::Execute(char *param)
 
 	while (arg)
 	{
-		if (!RdosMakeDir(arg->FName.GetData()))
+        TPathName path(arg->FName);
+        if (!path.MakeDir())
 		{
 			FMsg.printf(TEXT_ERROR_DIRFCT_FAILED, "MD", FArgList->FName.GetData());
 			Write(FMsg.GetData());

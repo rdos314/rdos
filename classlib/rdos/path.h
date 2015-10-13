@@ -71,8 +71,9 @@ public:
 	int AppendFile(const TPathName &NewName) const;
 
 	int IsDir() const;
-	int MakeDir() const;
+    int MakeDir() const;
 	int RemoveDir() const;
+	int WipeDir() const;
 
 	TDirList Find() const;
 	TDirList Find(const char *SearchString) const;

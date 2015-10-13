@@ -48,24 +48,24 @@
 ##########################################################################*/
 TPathName::TPathName()
 {
-	char *str;
-	int drive;
+    char *str;
+    int drive;
 
-	str = new char[512];
+    str = new char[512];
 
-	drive = RdosGetCurDrive();
-	str[0] = drive + 'a';
-	str[1] = ':';
-	str[2] = '\\';
+    drive = RdosGetCurDrive();
+    str[0] = drive + 'a';
+    str[1] = ':';
+    str[2] = '\\';
     str[3] = 0;
-	RdosGetCurDir(drive, str + 3);
+    RdosGetCurDir(drive, str + 3);
 
-	if (str[3] == '\\')
-	    str[3] = 0;
+    if (str[3] == '\\')
+        str[3] = 0;
 
-	FPathName = str;
+    FPathName = str;
 
-	delete str;
+    delete str;
 }
 
 /*##########################################################################
@@ -81,22 +81,22 @@ TPathName::TPathName()
 ##########################################################################*/
 TPathName::TPathName(int Drive)
 {
-	char *str;
+    char *str;
 
-	str = new char[512];
+    str = new char[512];
 
-	str[0] = Drive + 'a';
-	str[1] = ':';
-	str[2] = '\\';
-	str[3] = 0;
-	RdosGetCurDir(Drive, str + 3);
+    str[0] = Drive + 'a';
+    str[1] = ':';
+    str[2] = '\\';
+    str[3] = 0;
+    RdosGetCurDir(Drive, str + 3);
 
-	if (str[3] == '\\')
-		str[3] = 0;
+    if (str[3] == '\\')
+        str[3] = 0;
 
-	FPathName = str;
+    FPathName = str;
 
-	delete str;
+    delete str;
 }
 
 /*##########################################################################
@@ -112,7 +112,7 @@ TPathName::TPathName(int Drive)
 ##########################################################################*/
 TPathName::TPathName(const char *PathName)
 {
-	Init(PathName);
+    Init(PathName);
 }
 
 /*##########################################################################
@@ -128,7 +128,7 @@ TPathName::TPathName(const char *PathName)
 ##########################################################################*/
 TPathName::TPathName(const TString &PathName)
 {
-	Init(PathName.GetData());
+    Init(PathName.GetData());
 }
 
 /*##########################################################################
@@ -207,76 +207,76 @@ TPathName::~TPathName()
 ##########################################################################*/
 void TPathName::Init(const char *PathName)
 {
-	char *str;
-	int drive;
+    char *str;
+    int drive;
 
-	if (strlen(PathName) == 1 && PathName[0] == '.')
-	{
-		str = new char[512];
+    if (strlen(PathName) == 1 && PathName[0] == '.')
+    {
+        str = new char[512];
 
-		drive = RdosGetCurDrive();
-		str[0] = drive + 'a';
-		str[1] = ':';
-		str[2] = '\\';
-		str[3] = 0;
-		RdosGetCurDir(drive, str + 3);
+        drive = RdosGetCurDrive();
+        str[0] = drive + 'a';
+        str[1] = ':';
+        str[2] = '\\';
+        str[3] = 0;
+        RdosGetCurDir(drive, str + 3);
 
-		if (str[3] == '\\')
-			str[3] = 0;
+        if (str[3] == '\\')
+            str[3] = 0;
 
-		FPathName = str;
+        FPathName = str;
 
-		delete str;
+        delete str;
 
-		return;
-	}
+        return;
+    }
 
-	if (strlen(PathName) == 2 && PathName[1] == ':')
-	{
-		str = new char[512];
+    if (strlen(PathName) == 2 && PathName[1] == ':')
+    {
+        str = new char[512];
 
-		drive = PathName[0];
-		drive = toupper(drive) - 'A';
-		
-		str[0] = PathName[0];
-		str[1] = ':';
-		str[2] = '\\';
-		str[3] = 0;
-		RdosGetCurDir(drive, str + 3);
+        drive = PathName[0];
+        drive = toupper(drive) - 'A';
+        
+        str[0] = PathName[0];
+        str[1] = ':';
+        str[2] = '\\';
+        str[3] = 0;
+        RdosGetCurDir(drive, str + 3);
 
-		if (str[3] == '\\')
-			str[3] = 0;
+        if (str[3] == '\\')
+            str[3] = 0;
 
-		FPathName = str;
+        FPathName = str;
 
-		delete str;
+        delete str;
 
-		return;
-	}
+        return;
+    }
 
-	if (strlen(PathName) == 3 && PathName[1] == ':' && PathName[2] == '.')
-	{
-		str = new char[512];
+    if (strlen(PathName) == 3 && PathName[1] == ':' && PathName[2] == '.')
+    {
+        str = new char[512];
 
-		drive = PathName[0];
-		drive = toupper(drive) - 'A';
-		str[0] = PathName[0];
-		str[1] = ':';
-		str[2] = '\\';
-		str[3] = 0;
-		RdosGetCurDir(drive, str + 3);
+        drive = PathName[0];
+        drive = toupper(drive) - 'A';
+        str[0] = PathName[0];
+        str[1] = ':';
+        str[2] = '\\';
+        str[3] = 0;
+        RdosGetCurDir(drive, str + 3);
 
-		if (str[3] == '\\')
-			str[3] = 0;
+        if (str[3] == '\\')
+            str[3] = 0;
 
-		FPathName = str;
+        FPathName = str;
 
-		delete str;
+        delete str;
 
-		return;
-	}
+        return;
+    }
 
-	FPathName = PathName;
+    FPathName = PathName;
 }
 
 /*##########################################################################
@@ -292,8 +292,8 @@ void TPathName::Init(const char *PathName)
 ##########################################################################*/
 const TPathName &TPathName::operator=(const TPathName &src)
 {
-	FPathName = src.FPathName;
-	return *this;
+    FPathName = src.FPathName;
+    return *this;
 }
 
 /*##########################################################################
@@ -309,8 +309,8 @@ const TPathName &TPathName::operator=(const TPathName &src)
 ##########################################################################*/
 const TPathName &TPathName::operator=(const TString &src)
 {
-	FPathName = src;
-	return *this;
+    FPathName = src;
+    return *this;
 }
 
 /*##########################################################################
@@ -326,39 +326,39 @@ const TPathName &TPathName::operator=(const TString &src)
 ##########################################################################*/
 const TPathName &TPathName::operator+=(const TString &str)
 {
-	const char *path;
-	const char *ptr;
-	int pos;
+    const char *path;
+    const char *ptr;
+    int pos;
 
-	path = FPathName.GetData();
-	ptr = str.GetData();
+    path = FPathName.GetData();
+    ptr = str.GetData();
 
-	while (*ptr == '\\' || *ptr == '/')
-		ptr++;
+    while (*ptr == '\\' || *ptr == '/')
+        ptr++;
 
-	if (!strcmp(path, "."))
-		FPathName = str;
-	else
-	{
-		pos = strlen(path);
-		if (pos)
-			pos--;
+    if (!strcmp(path, "."))
+        FPathName = str;
+    else
+    {
+        pos = strlen(path);
+        if (pos)
+            pos--;
 
-		switch (path[pos])
-		{
-			case '\\':
-			case '/':
-				FPathName += ptr;
-				break;
-	
-			default:
-				if (*path && *ptr != '.')
-					FPathName += "\\" + TString(ptr);
-				else
-					FPathName += ptr;
-				break;
-		}	
-	}
+        switch (path[pos])
+        {
+            case '\\':
+            case '/':
+                FPathName += ptr;
+                break;
+    
+            default:
+                if (*path && *ptr != '.')
+                    FPathName += "\\" + TString(ptr);
+                else
+                    FPathName += ptr;
+                break;
+        }   
+    }
     return *this;
 }
 
@@ -375,38 +375,38 @@ const TPathName &TPathName::operator+=(const TString &str)
 ##########################################################################*/
 const TPathName &TPathName::operator+=(const char *str)
 {
-	const char *path;
-	int pos;
+    const char *path;
+    int pos;
 
-	path = FPathName.GetData();
+    path = FPathName.GetData();
 
-	while (*str == '\\' || *str == '/')
-		str++;
+    while (*str == '\\' || *str == '/')
+        str++;
 
-	if (!strcmp(path, "."))
-		FPathName = TString(str);
-	else
-	{
+    if (!strcmp(path, "."))
+        FPathName = TString(str);
+    else
+    {
 
-		pos = strlen(path);
-		if (pos)
-			pos--;
+        pos = strlen(path);
+        if (pos)
+            pos--;
 
-		switch (path[pos])
-		{
-			case '\\':
-			case '/':
-				FPathName += TString(str);
-				break;
+        switch (path[pos])
+        {
+            case '\\':
+            case '/':
+                FPathName += TString(str);
+                break;
 
-			default:
-				if (*path && *str != '.')
-					FPathName += "\\" + TString(str);
-				else
-					FPathName += TString(str);
-				break;
-		}	
-	}
+            default:
+                if (*path && *str != '.')
+                    FPathName += "\\" + TString(str);
+                else
+                    FPathName += TString(str);
+                break;
+        }   
+    }
     return *this;
 }
 
@@ -417,16 +417,16 @@ const TPathName &TPathName::operator+=(const char *str)
 #   Purpose....: Concatenation operator
 #
 #   In params..: path
-#				 str
+#                str
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 TPathName operator+(const TPathName& path, const TString& str)
 {
-	TPathName p(path);
-	p += str;
-	return p;
+    TPathName p(path);
+    p += str;
+    return p;
 }
 
 /*##########################################################################
@@ -436,16 +436,16 @@ TPathName operator+(const TPathName& path, const TString& str)
 #   Purpose....: Concatenation operator
 #
 #   In params..: path
-#				 str
+#                str
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 TPathName operator+(const TPathName& path, const char *str)
 {
-	TPathName p(path);
-	p += str;
-	return p;
+    TPathName p(path);
+    p += str;
+    return p;
 }
 
 /*##########################################################################
@@ -461,7 +461,7 @@ TPathName operator+(const TPathName& path, const char *str)
 ##########################################################################*/
 TString TPathName::Get() const
 {
-	return FPathName;
+    return FPathName;
 }
 
 /*##########################################################################
@@ -477,20 +477,20 @@ TString TPathName::Get() const
 ##########################################################################*/
 int TPathName::HasDrive() const
 {
-	int size;
-	const char *str;
+    int size;
+    const char *str;
 
-	size = FPathName.GetSize();
-	if (size >= 2)
-	{
-		str = FPathName.GetData();
-		if (str[1] == ':')
-			return TRUE;
-		else
-			return FALSE;
-	}			
-	else
-		return FALSE;
+    size = FPathName.GetSize();
+    if (size >= 2)
+    {
+        str = FPathName.GetData();
+        if (str[1] == ':')
+            return TRUE;
+        else
+            return FALSE;
+    }           
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -506,25 +506,25 @@ int TPathName::HasDrive() const
 ##########################################################################*/
 int TPathName::HasFullPath() const
 {
-	int size;
-	const char *str;
+    int size;
+    const char *str;
 
-	size = FPathName.GetSize();
+    size = FPathName.GetSize();
 
-	if (size >= 2)
-	{
-    	str = FPathName.GetData();
-		if (str[1] == ':')
-		{
-			if (size >= 3)
-				if (str[2] == '\\')
-					return TRUE;
-		}
-		else
-			if (str[0] == '\\')
-				return TRUE;
-	}
-	return FALSE;
+    if (size >= 2)
+    {
+        str = FPathName.GetData();
+        if (str[1] == ':')
+        {
+            if (size >= 3)
+                if (str[2] == '\\')
+                    return TRUE;
+        }
+        else
+            if (str[0] == '\\')
+                return TRUE;
+    }
+    return FALSE;
 }
 
 /*##########################################################################
@@ -540,18 +540,18 @@ int TPathName::HasFullPath() const
 ##########################################################################*/
 int TPathName::GetDrive() const
 {
-	int size;
-	const char *str;
+    int size;
+    const char *str;
 
-	size = FPathName.GetSize();
-	if (size >= 2)
-	{
-		str = FPathName.GetData();
-		if (str[1] == ':')
-			if (isalpha(*str))
-				return tolower(*str) - 'a';			
-	}
-	return RdosGetCurDrive();
+    size = FPathName.GetSize();
+    if (size >= 2)
+    {
+        str = FPathName.GetData();
+        if (str[1] == ':')
+            if (isalpha(*str))
+                return tolower(*str) - 'a';         
+    }
+    return RdosGetCurDrive();
 }
 
 /*##########################################################################
@@ -559,7 +559,7 @@ int TPathName::GetDrive() const
 #   Name       : TPathName::GetBaseName
 #
 #   Purpose....: Get base path name. Strips last component. Returns empty
-#				 string if no path separator is found
+#                string if no path separator is found
 #
 #   In params..: *
 #   Out params.: *
@@ -568,47 +568,47 @@ int TPathName::GetDrive() const
 ##########################################################################*/
 TString TPathName::GetBaseName() const
 {
-	TString s;
-	char *newstr;
-	const char *str;
-	const char *ptr;
-	int size;
-	char ch;
-	
-	size = FPathName.GetSize();
-	str = FPathName.GetData();
-	ptr = str;
+    TString s;
+    char *newstr;
+    const char *str;
+    const char *ptr;
+    int size;
+    char ch;
+    
+    size = FPathName.GetSize();
+    str = FPathName.GetData();
+    ptr = str;
 
-	if (size > 2)
-		if (*(str+1) == ':' && isalpha(*str))
-		{
-			str += 2;
-			size -= 2;
-		}
+    if (size > 2)
+        if (*(str+1) == ':' && isalpha(*str))
+        {
+            str += 2;
+            size -= 2;
+        }
 
-	while (size)
-	{
-		size--;
-		ch = *(str + size);
-		if (ch == '\\' || ch == '/')
-			break;
-	}
+    while (size)
+    {
+        size--;
+        ch = *(str + size);
+        if (ch == '\\' || ch == '/')
+            break;
+    }
 
-	if (size == 0)
-	{
-		ch = *str;
-		if (ch == '\\' || ch == '/')
-			size++;
-	}
+    if (size == 0)
+    {
+        ch = *str;
+        if (ch == '\\' || ch == '/')
+            size++;
+    }
 
-	size += str - ptr;
-	newstr = new char[size + 1];
-	memcpy(newstr, ptr, size);
-	*(newstr + size) = 0;
-	s = newstr;
-	delete newstr;
+    size += str - ptr;
+    newstr = new char[size + 1];
+    memcpy(newstr, ptr, size);
+    *(newstr + size) = 0;
+    s = newstr;
+    delete newstr;
 
-	return s;
+    return s;
 }
 
 /*##########################################################################
@@ -624,40 +624,40 @@ TString TPathName::GetBaseName() const
 ##########################################################################*/
 TString TPathName::GetEntryName() const
 {
-	const char *str;
-	int size;
-	char ch;
+    const char *str;
+    int size;
+    char ch;
 
-	size = FPathName.GetSize();
-	str = FPathName.GetData();
+    size = FPathName.GetSize();
+    str = FPathName.GetData();
 
-	if (size > 2)
-		if (*(str+1) == ':' && isalpha(*str))
-		{
-			str += 2;
-			size -= 2;
-		}
+    if (size > 2)
+        if (*(str+1) == ':' && isalpha(*str))
+        {
+            str += 2;
+            size -= 2;
+        }
 
-	size--;
-	str += size;
-	while (size)
-	{
-		size--;
-		ch = *str;
-		if (ch == '\\' || ch == '/')
-		{
-			str++;
-			break;
-		}
-		else
-			str--;
-	}
+    size--;
+    str += size;
+    while (size)
+    {
+        size--;
+        ch = *str;
+        if (ch == '\\' || ch == '/')
+        {
+            str++;
+            break;
+        }
+        else
+            str--;
+    }
 
-	ch = *str;
-	if (ch == '\\' || ch == '/')
-		str++;
+    ch = *str;
+    if (ch == '\\' || ch == '/')
+        str++;
 
-	return TString(str);
+    return TString(str);
 }
 
 /*##########################################################################
@@ -673,68 +673,68 @@ TString TPathName::GetEntryName() const
 ##########################################################################*/
 TString TPathName::GetFullPathName() const
 {
-	TString s;
-	const char *str;
-	char *path;
-	int drive;
-	char drive_str[3];
-	int size;
-	int add;
-	
-	size = FPathName.GetSize();
+    TString s;
+    const char *str;
+    char *path;
+    int drive;
+    char drive_str[3];
+    int size;
+    int add;
+    
+    size = FPathName.GetSize();
 
-	if (size <= 2)
-		add = TRUE;
-	else
-	{
-		str = FPathName.GetData();
-		if (*(str+1) == ':' && isalpha(*str))
-			add = FALSE;
-		else
-			add = TRUE;
-	}		
+    if (size <= 2)
+        add = TRUE;
+    else
+    {
+        str = FPathName.GetData();
+        if (*(str+1) == ':' && isalpha(*str))
+            add = FALSE;
+        else
+            add = TRUE;
+    }       
 
-	if (add)
-	{
-		drive_str[0] = (char)RdosGetCurDrive() + 'a';
-		drive_str[1] = ':';
-		drive_str[2] = 0;
-		s = drive_str + FPathName;
-	}
-	else
-		s = FPathName;
+    if (add)
+    {
+        drive_str[0] = (char)RdosGetCurDrive() + 'a';
+        drive_str[1] = ':';
+        drive_str[2] = 0;
+        s = drive_str + FPathName;
+    }
+    else
+        s = FPathName;
 
-	size = s.GetSize();
+    size = s.GetSize();
 
-	if (size <= 2)
-		add = TRUE;
-	else
-	{
-		str = s.GetData();
-		if (*(str+2) == '\\')
-			add = FALSE;
-		else
-			add = TRUE;
-	}
+    if (size <= 2)
+        add = TRUE;
+    else
+    {
+        str = s.GetData();
+        if (*(str+2) == '\\')
+            add = FALSE;
+        else
+            add = TRUE;
+    }
 
-	if (add)
-	{
-		str = s.GetData();
-		memcpy(drive_str, str, 2);
-		drive_str[2] = 0;
-		drive_str[0] = tolower(drive_str[0]);
-		str += 2;
+    if (add)
+    {
+        str = s.GetData();
+        memcpy(drive_str, str, 2);
+        drive_str[2] = 0;
+        drive_str[0] = tolower(drive_str[0]);
+        str += 2;
 
-		path = new char[0x200];
-		drive = drive_str[0] - 'a';
-		RdosGetCurDir(drive, path);
-		if (*str)
-			s = TString(drive_str) + "\\" + path + "\\" + str;
-		else
-			s = TString(drive_str) + "\\" + path;
-		delete path;
-	}
-	return s;
+        path = new char[0x200];
+        drive = drive_str[0] - 'a';
+        RdosGetCurDir(drive, path);
+        if (*str)
+            s = TString(drive_str) + "\\" + path + "\\" + str;
+        else
+            s = TString(drive_str) + "\\" + path;
+        delete path;
+    }
+    return s;
 }
 
 /*##########################################################################
@@ -750,12 +750,12 @@ TString TPathName::GetFullPathName() const
 ##########################################################################*/
 int TPathName::GetAttribute() const
 {
-	int attrib;
+    int attrib;
 
-	if (RdosGetFileAttribute(FPathName.GetData(), &attrib))
-		return attrib;
-	else
-		return -1;
+    if (RdosGetFileAttribute(FPathName.GetData(), &attrib))
+        return attrib;
+    else
+        return -1;
 }
 
 /*##########################################################################
@@ -771,7 +771,7 @@ int TPathName::GetAttribute() const
 ##########################################################################*/
 int TPathName::SetAttribute(int Attribute) const
 {
-	return RdosSetFileAttribute(FPathName.GetData(), Attribute);
+    return RdosSetFileAttribute(FPathName.GetData(), Attribute);
 }
 
 /*##########################################################################
@@ -857,59 +857,59 @@ int TPathName::DeleteFile() const
 ##########################################################################*/
 int TPathName::MoveFile(const TPathName &NewName) const
 {
-	TFile *src;
-	TFile *dst;
-	int ok;
-	char *buf;
-	int size;
-	TDateTime ftime;
-	int attrib;
-	TPathName *destpath;
+    TFile *src;
+    TFile *dst;
+    int ok;
+    char *buf;
+    int size;
+    TDateTime ftime;
+    int attrib;
+    TPathName *destpath;
 
-	ok = FALSE;
-	dst = 0;
-	src = new TFile(FPathName.GetData());
-	if (src->IsOpen())
-	{
-		ftime = src->GetTime();
-		attrib = GetAttribute();
+    ok = FALSE;
+    dst = 0;
+    src = new TFile(FPathName.GetData());
+    if (src->IsOpen())
+    {
+        ftime = src->GetTime();
+        attrib = GetAttribute();
 
-		if (NewName.IsDir())
-			destpath = new TPathName(NewName + GetEntryName());
-		else
-			destpath = new TPathName(NewName.FPathName);
+        if (NewName.IsDir())
+            destpath = new TPathName(NewName + GetEntryName());
+        else
+            destpath = new TPathName(NewName.FPathName);
 
-		dst = new TFile(destpath->FPathName.GetData(), 0);
+        dst = new TFile(destpath->FPathName.GetData(), 0);
 
-		if (dst->IsOpen())
-		{
-			ok = TRUE;
-			buf = new char[0x1000];
+        if (dst->IsOpen())
+        {
+            ok = TRUE;
+            buf = new char[0x1000];
 
-			size = src->Read(buf, 0x1000);
-			while (ok && size)
-			{
-				ok = (size == dst->Write(buf, size));
-				if (ok)
-					size = src->Read(buf, 0x1000);
-			}
+            size = src->Read(buf, 0x1000);
+            while (ok && size)
+            {
+                ok = (size == dst->Write(buf, size));
+                if (ok)
+                    size = src->Read(buf, 0x1000);
+            }
 
-			if (ok)
-			{
-				delete src;
-				src = 0;
-				DeleteFile();
+            if (ok)
+            {
+                delete src;
+                src = 0;
+                DeleteFile();
 
-				dst->SetTime(ftime);
-				destpath->SetAttribute(attrib);
-			}
+                dst->SetTime(ftime);
+                destpath->SetAttribute(attrib);
+            }
 
-			delete buf;
-		}
+            delete buf;
+        }
 
-		delete destpath;
+        delete destpath;
 
-		if (!ok)
+        if (!ok)
         {
             delete dst;
             dst = 0;
@@ -917,7 +917,7 @@ int TPathName::MoveFile(const TPathName &NewName) const
         }
     }
 
-	if (src)
+    if (src)
         delete src;
 
     if (dst)
@@ -940,55 +940,55 @@ int TPathName::MoveFile(const TPathName &NewName) const
 int TPathName::CopyFile(const TPathName &NewName) const
 {
     TFile *src;
-	TFile *dst;
-	int ok;
-	char *buf;
-	int size;
-	TDateTime ftime;
-	int attrib;
-	TPathName *destpath;
+    TFile *dst;
+    int ok;
+    char *buf;
+    int size;
+    TDateTime ftime;
+    int attrib;
+    TPathName *destpath;
 
-	ok = FALSE;
-	dst = 0;
-	src = new TFile(FPathName.GetData());
-	if (src->IsOpen())
-	{
-		ftime = src->GetTime();
-		attrib = GetAttribute();
+    ok = FALSE;
+    dst = 0;
+    src = new TFile(FPathName.GetData());
+    if (src->IsOpen())
+    {
+        ftime = src->GetTime();
+        attrib = GetAttribute();
 
-		if (NewName.IsDir())
-			destpath = new TPathName(NewName + GetEntryName());
-		else
-			destpath = new TPathName(NewName.FPathName);
+        if (NewName.IsDir())
+            destpath = new TPathName(NewName + GetEntryName());
+        else
+            destpath = new TPathName(NewName.FPathName);
 
-		dst = new TFile(destpath->FPathName.GetData(), 0);
+        dst = new TFile(destpath->FPathName.GetData(), 0);
 
-		if (dst->IsOpen())
-		{
-			ok = TRUE;
-			buf = new char[0x1000];
+        if (dst->IsOpen())
+        {
+            ok = TRUE;
+            buf = new char[0x1000];
 
-			size = src->Read(buf, 0x1000);
-			while (ok && size)
-			{
-				ok = (size == dst->Write(buf, size));
-				if (ok)
-					size = src->Read(buf, 0x1000);
-			}
+            size = src->Read(buf, 0x1000);
+            while (ok && size)
+            {
+                ok = (size == dst->Write(buf, size));
+                if (ok)
+                    size = src->Read(buf, 0x1000);
+            }
 
-			if (ok)
-			{
-				dst->SetTime(ftime);
-				destpath->SetAttribute(attrib);
-			}
+            if (ok)
+            {
+                dst->SetTime(ftime);
+                destpath->SetAttribute(attrib);
+            }
 
-			delete buf;
-		}
+            delete buf;
+        }
 
-		delete destpath;
+        delete destpath;
 
-		if (!ok)
-		{
+        if (!ok)
+        {
             delete dst;
             dst = 0;
             NewName.DeleteFile();
@@ -1019,14 +1019,14 @@ int TPathName::AppendFile(const TPathName &NewName) const
 {
     TFile *src;
     TFile *dst;
-	int ok;
-	char *buf;
-	int size;
+    int ok;
+    char *buf;
+    int size;
     long fsize;
 
     ok = FALSE;
     dst = 0;
-	src = new TFile(FPathName.GetData());
+    src = new TFile(FPathName.GetData());
     if (src->IsOpen())
     {
         dst = new TFile(NewName.FPathName.GetData());
@@ -1039,7 +1039,7 @@ int TPathName::AppendFile(const TPathName &NewName) const
             buf = new char[0x1000];
  
             size = src->Read(buf, 0x1000);
-			while (ok && size)
+            while (ok && size)
             {
                 ok = (size == dst->Write(buf, size));
                 if (ok)
@@ -1086,22 +1086,6 @@ int TPathName::IsDir() const
 
 /*##########################################################################
 #
-#   Name       : TPathName::MakeDir
-#
-#   Purpose....: Make directory
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TPathName::MakeDir() const
-{
-    return RdosMakeDir(FPathName.GetData());
-}
-
-/*##########################################################################
-#
 #   Name       : TPathName::RemoveDir
 #
 #   Purpose....: Remove directory
@@ -1118,6 +1102,97 @@ int TPathName::RemoveDir() const
 
 /*##########################################################################
 #
+#   Name       : TPathName::MakeDir
+#
+#   Purpose....: Create directory and all it's components
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPathName::MakeDir() const
+{
+    int Attrib;
+    
+    if (RdosGetFileAttribute(FPathName.GetData(), &Attrib))
+    {
+        if (Attrib & FILE_ATTRIBUTE_DIRECTORY)
+            return TRUE;
+        else
+            return FALSE;
+    }
+
+    TString Base = GetBaseName();
+
+    if (Base.GetSize())
+    {
+        if (RdosGetFileAttribute(Base.GetData(), &Attrib))
+        {
+            if (Attrib != FILE_ATTRIBUTE_DIRECTORY)
+                return FALSE;
+        }    
+        else
+        {   
+            TPathName SubPath(Base);
+
+            if (!SubPath.MakeDir())
+                return FALSE;
+        }
+    }
+
+    return RdosMakeDir(FPathName.GetData());
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::WipeDir
+#
+#   Purpose....: Wipe directory and all its contents
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPathName::WipeDir() const
+{
+    int Attrib;
+    int ok;
+    
+    if (RdosGetFileAttribute(FPathName.GetData(), &Attrib))
+    {
+        if (Attrib != FILE_ATTRIBUTE_DIRECTORY)
+            return FALSE;
+    }
+
+    TDirList DirList = Find();
+
+    if (DirList.GetSize())
+    {
+        ok = DirList.GotoFirst();
+
+        while (ok)
+        {
+            TDirEntry DirEntry = DirList.Get();
+            TPathName PathName = DirEntry.GetPathName();
+
+            if (PathName.IsFile())
+                PathName.DeleteFile();
+            else
+            {
+                if (!PathName.WipeDir())
+                    return FALSE;
+            }
+            ok = DirList.GotoNext();
+        }
+    }
+
+    return RdosRemoveDir(FPathName.GetData());
+}
+
+/*##########################################################################
+#
 #   Name       : TPathName::Find
 #
 #   Purpose....: Find directory entries
@@ -1129,7 +1204,7 @@ int TPathName::RemoveDir() const
 ##########################################################################*/
 TDirList TPathName::Find() const
 {
-	return TDirList(FPathName);
+    return TDirList(FPathName);
 }
 
 /*##########################################################################
@@ -1145,11 +1220,11 @@ TDirList TPathName::Find() const
 ##########################################################################*/
 TDirList TPathName::Find(const char *SearchString) const
 {
-	TPathName path(*this);
+    TPathName path(*this);
 
-	path += SearchString;
+    path += SearchString;
 
-	return TDirList(path);
+    return TDirList(path);
 }
 
 /*##########################################################################
@@ -1165,9 +1240,9 @@ TDirList TPathName::Find(const char *SearchString) const
 ##########################################################################*/
 TDirList TPathName::Find(const TString &SearchString) const
 {
-	TPathName path(*this);
+    TPathName path(*this);
 
-	path += SearchString;
+    path += SearchString;
 
-	return TDirList(path);
+    return TDirList(path);
 }
