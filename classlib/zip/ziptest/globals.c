@@ -198,7 +198,3 @@ struct plist *patterns = NULL;  /* List of patterns to be matched */
 unsigned pcount = 0;            /* number of patterns */
 unsigned icount = 0;            /* number of include only patterns */
 unsigned Rcount = 0;            /* number of -R include patterns */
-
-#ifdef IZ_CHECK_TZ
-int zp_tz_is_valid;     /* signals "timezone info is available" */
-#endif
