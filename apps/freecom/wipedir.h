@@ -46,6 +46,10 @@ public:
 	TWipeDirCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);	
+
+protected:
+    int WipeDir(TPathName &Path);
+
 };
 
 #endif

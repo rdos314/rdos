@@ -30,6 +30,7 @@
 #include "cmdhelp.h"
 #include "lang.h"
 #include "wipedir.h"
+#include "direntry.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -63,7 +64,7 @@ TWipeDirFactory::TWipeDirFactory()
 ##########################################################################*/
 TCommand *TWipeDirFactory::Create(TSession *session, const char *param)
 {
-	return new TWipeDirCommand(session, param);
+    return new TWipeDirCommand(session, param);
 }
 
 /*##########################################################################
@@ -80,7 +81,57 @@ TCommand *TWipeDirFactory::Create(TSession *session, const char *param)
 TWipeDirCommand::TWipeDirCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_WIPEDIR);
+    FHelpScreen.Load(TEXT_CMDHELP_WIPEDIR);
+}
+
+/*##########################################################################
+#
+#   Name       : TWipeDirCommand::WipeDir
+#
+#   Purpose....: Wipe directory and all its contents
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TWipeDirCommand::WipeDir(TPathName &Path)
+{
+    int ok;
+
+    if (!Path.IsDir())
+        return FALSE;
+
+    TDirList DirList = Path.Find();
+
+    if (DirList.GetSize())
+    {
+        ok = DirList.GotoFirst();
+
+        while (ok)
+        {
+            TDirEntry DirEntry = DirList.Get();
+            TPathName PathName = DirEntry.GetPathName();
+
+            if (PathName.IsFile())
+            {
+                FMsg.printf(TEXT_DELETE_FILE, PathName.Get().GetData());
+                Write(FMsg.GetData());
+                PathName.DeleteFile();
+            }
+            else
+            {
+                FMsg.printf(TEXT_DELETE_FILE, PathName.Get().GetData());
+                Write(FMsg.GetData());
+
+                if (!WipeDir(PathName))
+                    return FALSE;
+            }
+            ok = DirList.GotoNext();
+        }
+    }
+
+    return Path.RemoveDir();
 }
 
 /*##########################################################################
@@ -96,23 +147,23 @@ TWipeDirCommand::TWipeDirCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TWipeDirCommand::Execute(char *param)
 {
-	TArg *arg;
+    TArg *arg;
 
-	if (!ScanCmdLine(param, 0))
-		return 1;
+    if (!ScanCmdLine(param, 0))
+        return 1;
 
-	arg = FArgList;
+    arg = FArgList;
 
-	while (arg)
-	{
+    while (arg)
+    {
         TPathName path(arg->FName);
-        if (!path.WipeDir())
-		{
-			FMsg.printf(TEXT_ERROR_DIRFCT_FAILED, "WIPEDIR", FArgList->FName.GetData());
-			Write(FMsg.GetData());
-			return 1;
-		}
-		arg = arg->FList;
-	}
-	return 0;
+        if (!WipeDir(path))
+        {
+            FMsg.printf(TEXT_ERROR_DIRFCT_FAILED, "WIPEDIR", FArgList->FName.GetData());
+            Write(FMsg.GetData());
+            return 1;
+        }
+        arg = arg->FList;
+    }
+    return 0;
 }
