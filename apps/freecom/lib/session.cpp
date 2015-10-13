@@ -82,6 +82,7 @@
 #include "debug.h"
 #include "audio.h"
 #include "remote.h"
+#include "unzip.h"
 
 #include "file.h"
 #include "path.h"
@@ -148,6 +149,7 @@ static TCommandFactory *set;
 static TCommandFactory *state;
 static TCommandFactory *type;
 static TCommandFactory *timev;
+static TCommandFactory *unzip;
 static TCommandFactory *usb;
 static TCommandFactory *volume;
 static TCommandFactory *wait;
@@ -217,6 +219,7 @@ TSession::TSession(const char *ipc)
         wait = new TWaitFactory;
         volume = new TVolumeFactory;
         usb = new TUsbFactory;
+        unzip = new TUnzipFactory;
         timev = new TTimeFactory;
         type = new TTypeFactory;
         sysinfo = new TSysinfoFactory;
@@ -353,6 +356,7 @@ TSession::~TSession()
         delete wait;
         delete volume;
         delete usb;
+        delete unzip;
         delete timev;
         delete type;
         delete synctime;

@@ -1851,3 +1851,11 @@ Shows audio information
 AUDIO [/D]
   /D              Detailed list of widgets
 .
+
+:TEXT_CMDHELP_UNZIP
+Unzip compressed file
+
+UNZIP Archive [Dest]
+  Archive         Archive file
+  Dest            Destination path
+.
