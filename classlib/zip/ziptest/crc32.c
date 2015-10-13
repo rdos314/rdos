@@ -62,103 +62,6 @@
   word-at-a-time CRC calculation, where a word is four bytes.
 */
 
-#ifdef DYNAMIC_CRC_TABLE
-
-/* =========================================================================
- * Make the crc table. This function is needed only if you want to compute
- * the table dynamically.
- */
-
-local void make_crc_table OF((void));
-
-#if (defined(DYNALLOC_CRCTAB) && defined(REENTRANT))
-   error: Dynamic allocation of CRC table not safe with reentrant code.
-#endif /* DYNALLOC_CRCTAB && REENTRANT */
-
-#ifdef DYNALLOC_CRCTAB
-   local ulg near *crc_table = NULL;
-# if 0          /* not used, since sizeof("near *") <= sizeof(int) */
-   /* Use this section when access to a "local int" is faster than access to
-      a "local pointer" (e.g.: i86 16bit code with far pointers). */
-   local int crc_table_empty = 1;
-#  define CRC_TABLE_IS_EMPTY    (crc_table_empty != 0)
-#  define MARK_CRCTAB_FILLED    crc_table_empty = 0
-#  define MARK_CRCTAB_EMPTY     crc_table_empty = 1
-# else
-   /* Use this section on systems where the size of pointers and ints is
-      equal (e.g.: all 32bit systems). */
-#  define CRC_TABLE_IS_EMPTY    (crc_table == NULL)
-#  define MARK_CRCTAB_FILLED    crc_table = crctab_p
-#  define MARK_CRCTAB_EMPTY     crc_table = NULL
-# endif
-#else /* !DYNALLOC_CRCTAB */
-   local ulg near crc_table[CRC_TBLS*256];
-   local int crc_table_empty = 1;
-#  define CRC_TABLE_IS_EMPTY    (crc_table_empty != 0)
-#  define MARK_CRCTAB_FILLED    crc_table_empty = 0
-#endif /* ?DYNALLOC_CRCTAB */
-
-
-local void make_crc_table()
-{
-  ulg c;                /* crc shift register */
-  int n;                /* counter for all possible eight bit values */
-  int k;                /* byte being shifted into crc apparatus */
-#ifdef DYNALLOC_CRCTAB
-  ulg near *crctab_p;   /* temporary pointer to allocated crc_table area */
-#else /* !DYNALLOC_CRCTAB */
-# define crctab_p crc_table
-#endif /* DYNALLOC_CRCTAB */
-
-#ifdef COMPUTE_XOR_PATTERN
-  /* This piece of code has been left here to explain how the XOR pattern
-   * used in the creation of the crc_table values can be recomputed.
-   * For production versions of this function, it is more efficient to
-   * supply the resultant pattern at compile time.
-   */
-  ulg xor;              /* polynomial exclusive-or pattern */
-  /* terms of polynomial defining this crc (except x^32): */
-  static ZCONST uch p[] = {0,1,2,4,5,7,8,10,11,12,16,22,23,26};
-
-  /* make exclusive-or pattern from polynomial (0xedb88320L) */
-  xor = 0L;
-  for (n = 0; n < sizeof(p)/sizeof(uch); n++)
-    xor |= 1L << (31 - p[n]);
-#else
-# define xor 0xedb88320L
-#endif
-
-#ifdef DYNALLOC_CRCTAB
-  crctab_p = (ulg near *) nearmalloc (CRC_TBLS*256*sizeof(ulg));
-  if (crctab_p == NULL) {
-    ziperr(ZE_MEM, "crc_table allocation");
-  }
-#endif /* DYNALLOC_CRCTAB */
-
-  /* generate a crc for every 8-bit value */
-  for (n = 0; n < 256; n++) {
-    c = (ulg)n;
-    for (k = 8; k; k--)
-      c = c & 1 ? xor ^ (c >> 1) : c >> 1;
-    crctab_p[n] = REV_BE(c);
-  }
-
-#ifdef IZ_CRCOPTIM_UNFOLDTBL
-  /* generate crc for each value followed by one, two, and three zeros */
-  for (n = 0; n < 256; n++) {
-      c = crctab_p[n];
-      for (k = 1; k < 4; k++) {
-          c = CRC32(c, 0, crctab_p);
-          crctab_p[k*256+n] = c;
-      }
-  }
-#endif /* IZ_CRCOPTIM_UNFOLDTBL */
-
-  MARK_CRCTAB_FILLED;
-}
-
-#else /* !DYNAMIC_CRC_TABLE */
-
 #ifdef DYNALLOC_CRCTAB
    error: Inconsistent flags, DYNALLOC_CRCTAB without DYNAMIC_CRC_TABLE.
 #endif
@@ -597,7 +500,6 @@ local ZCONST ulg near crc_table[CRC_TBLS*256] = {
 #  endif /* IZ_CRCOPTIM_UNFOLDTBL */
 # endif /* ? IZ_CRC_BE_OPTIMIZ */
 };
-#endif /* ?DYNAMIC_CRC_TABLE */
 
 /* use "OF((void))" here to work around a Borland TC++ 1.0 problem */
 #ifdef USE_ZLIB
