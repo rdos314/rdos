@@ -68,19 +68,14 @@
       environments.
     */
 #include <time.h>     /* time() function supplies first part of crypt seed */
+
    /* "last resort" source for second part of crypt seed pattern */
 #define ZCR_SEED2 (unsigned)3141592654L     /* use PI as default pattern */
 #define GLOBAL(g) g
 
 local z_uint4 keys[3];       /* keys defining the pseudo-random sequence */
 
-#ifndef Trace
-#  ifdef CRYPT_DEBUG
-#    define Trace(x) fprintf x
-#  else
-#    define Trace(x)
-#  endif
-#endif
+#define Trace(x)
 
 #include "crc32.h"
 
