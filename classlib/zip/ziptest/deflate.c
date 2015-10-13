@@ -98,18 +98,9 @@
 #define SLOW 2
 /* speed options for the general purpose bit flag */
 
-#ifndef TOO_FAR
-#  define TOO_FAR 4096
-#endif
+#define TOO_FAR 4096
+
 /* Matches of length 3 are discarded if their distance exceeds TOO_FAR */
-
-#if (defined(ASMV) && !defined(MSDOS16) && defined(DYN_ALLOC))
-   error: DYN_ALLOC not yet supported in match.S or match32.asm
-#endif
-
-#ifdef MEMORY16
-#  define MAXSEG_64K
-#endif
 
 /* ===========================================================================
  * Local data used by the "longest match" routines.
