@@ -131,9 +131,6 @@ void init_keys(__G__ passwd)
     }
 }
 
-
-#ifdef ZIP
-
 /***********************************************************************
  * Write encryption header to file zfile using the password passwd
  * and the cyclic redundancy check crc.
@@ -410,7 +407,6 @@ unsigned zfwrite(buf, item_size, nb)
 }
 
 #endif /* ?UTIL */
-#endif /* ZIP */
 
 
 #if (defined(UNZIP) && !defined(FUNZIP))
