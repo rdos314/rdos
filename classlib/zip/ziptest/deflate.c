@@ -184,11 +184,7 @@ local unsigned int max_lazy_match;
 unsigned near good_match;
 /* Use a faster search when the previous match is longer than this */
 
-#ifdef  FULL_SEARCH
-# define nice_match MAX_MATCH
-#else
-  int near nice_match; /* Stop searching when current match exceeds this */
-#endif
+int near nice_match; /* Stop searching when current match exceeds this */
 
 
 /* Values for max_lazy_match, good_match, nice_match and max_chain_length,
@@ -235,13 +231,8 @@ local void fill_window   OF((void));
 local uzoff_t deflate_fast OF((void));    /* now use uzoff_t 7/24/04 EG */
 
       int  longest_match OF((IPos cur_match));
-#if defined(ASMV) && !defined(RISCOS)
       void match_init OF((void)); /* asm code initialization */
-#endif
 
-#ifdef DEBUG
-local  void check_match OF((IPos start, IPos match, int length));
-#endif
 
 /* ===========================================================================
  * Update a hash value with the given input byte
