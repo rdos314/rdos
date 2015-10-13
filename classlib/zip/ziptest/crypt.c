@@ -36,10 +36,6 @@
 
 #if CRYPT
 
-#ifndef FALSE
-#  define FALSE 0
-#endif
-
 #ifdef ZIP
    /* For the encoding task used in Zip (and ZipCloak), we want to initialize
       the crypt algorithm with some reasonably unpredictable bytes, see
@@ -87,16 +83,7 @@
 #  define GLOBAL(g) G.g
 #endif /* ?ZIP */
 
-
-#ifdef UNZIP
-   /* char *key = (char *)NULL; moved to globals.h */
-#  ifndef FUNZIP
-     local int testp OF((__GPRO__ ZCONST uch *h));
-     local int testkey OF((__GPRO__ ZCONST uch *h, ZCONST char *key));
-#  endif
-#else /* def UNZIP */           /* moved to globals.h for UnZip */
-   local z_uint4 keys[3];       /* keys defining the pseudo-random sequence */
-#endif /* def UNZIP [else] */
+local z_uint4 keys[3];       /* keys defining the pseudo-random sequence */
 
 #ifndef Trace
 #  ifdef CRYPT_DEBUG
