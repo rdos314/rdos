@@ -9,12 +9,6 @@
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
 */
 #  include <share.h>
-#if (defined(_SH_DENYNO) && !defined(SH_DENYNO))
-#  define SH_DENYNO _SH_DENYNO
-#endif
-#if (defined(SH_DENYNO) && !defined(_SH_DENYNO))
-#  define _SH_DENYNO SH_DENYNO
-#endif
 #define fhow         (O_RDONLY|O_BINARY)
 #define fbad         (-1)
 typedef int          ftype;
