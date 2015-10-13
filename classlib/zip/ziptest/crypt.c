@@ -67,15 +67,10 @@
       as a fallback to allow successful compilation in "beta state"
       environments.
     */
-#  include <time.h>     /* time() function supplies first part of crypt seed */
+#include <time.h>     /* time() function supplies first part of crypt seed */
    /* "last resort" source for second part of crypt seed pattern */
-#  ifndef ZCR_SEED2
-#    define ZCR_SEED2 (unsigned)3141592654L     /* use PI as default pattern */
-#  endif
-#  ifdef GLOBAL         /* used in Amiga system headers, maybe others too */
-#    undef GLOBAL
-#  endif
-#  define GLOBAL(g) g
+#define ZCR_SEED2 (unsigned)3141592654L     /* use PI as default pattern */
+#define GLOBAL(g) g
 
 local z_uint4 keys[3];       /* keys defining the pseudo-random sequence */
 
