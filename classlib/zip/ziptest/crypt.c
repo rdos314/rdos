@@ -79,16 +79,7 @@ local z_uint4 keys[3];       /* keys defining the pseudo-random sequence */
 
 #include "crc32.h"
 
-#ifdef IZ_CRC_BE_OPTIMIZ
-   local z_uint4 near crycrctab[256];
-   local z_uint4 near *cry_crctb_p = NULL;
-   local z_uint4 near *crytab_init OF((__GPRO));
-#  define CRY_CRC_TAB  cry_crctb_p
-#  undef CRC32
-#  define CRC32(c, b, crctab) (crctab[((int)(c) ^ (b)) & 0xff] ^ ((c) >> 8))
-#else
-#  define CRY_CRC_TAB  CRC_32_TAB
-#endif /* ?IZ_CRC_BE_OPTIMIZ */
+#define CRY_CRC_TAB  CRC_32_TAB
 
 /***********************************************************************
  * Return the next byte in the pseudo-random sequence
