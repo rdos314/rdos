@@ -827,21 +827,11 @@ char *tempname(zip)
       return NULL;
     *t = 0;
   }
-#   ifdef NO_MKTEMP
   {
     char *p = t + strlen(t);
     sprintf(p, "%08lx", (ulg)time(NULL));
     return t;
   }
-#   else
-  strcat(t, "ziXXXXXX"); /* must use lowercase for Linux dos file system */
-#     if defined(UNIX) && !defined(NO_MKSTEMP)
-  /* tempname should not be called */
-  return t;
-#     else
-  return mktemp(t);
-#     endif
-#   endif /* NO_MKTEMP */
 }
 
 int fcopy(f, g, n)
