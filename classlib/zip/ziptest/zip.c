@@ -3540,9 +3540,6 @@ char **argv;            /* command line tokens */
       }
       else if (action == ARCHIVE)
       {
-#ifdef DEBUG
-        zoff_t here = zftello(y);
-#endif
 
         DisplayRunningStats();
         if (skip_this_disk - 1 != z->dsk)
@@ -3599,18 +3596,12 @@ char **argv;            /* command line tokens */
             ZIPERR(r, errbuf);
           }
           else /* if (r == ZE_FORM) */ {
-#ifdef DEBUG
-            zoff_t here = zftello(y);
-#endif
 
             /* seek back in output to start of this entry so can overwrite */
             if (zfseeko(y, current_local_offset, SEEK_SET) != 0){
               ZIPERR(r, "could not seek in output file");
             }
             zipwarn("bad - skipping: ", z->oname);
-#ifdef DEBUG
-            here = zftello(y);
-#endif
             tempzn = current_local_offset;
             bytes_this_split = current_local_offset;
           }
@@ -3642,9 +3633,6 @@ char **argv;            /* command line tokens */
           free((zvoid *)(z->iname));
           free((zvoid *)(z->zname));
           free(z->oname);
-#ifdef UNICODE_SUPPORT
-          if (z->uname) free(z->uname);
-#endif /* def UNICODE_SUPPORT */
           if (z->ext)
             /* don't have local extra until zipcopy reads it */
             if (z->extra) free((zvoid *)(z->extra));
@@ -3659,34 +3647,6 @@ char **argv;            /* command line tokens */
           w = &z->nxt;
         }
 
-#ifdef WINDLL
-#ifdef ZIP64_SUPPORT
-        /* int64 support in caller */
-        if (lpZipUserFunctions->ServiceApplication64 != NULL)
-        {
-          if ((*lpZipUserFunctions->ServiceApplication64)(z->zname, z->siz))
-                    ZIPERR(ZE_ABORT, "User terminated operation");
-        }
-        else
-        {
-          /* no int64 support in caller */
-          filesize64 = z->siz;
-          low = (unsigned long)(filesize64 & 0x00000000FFFFFFFF);
-          high = (unsigned long)((filesize64 >> 32) & 0x00000000FFFFFFFF);
-          if (lpZipUserFunctions->ServiceApplication64_No_Int64 != NULL) {
-            if ((*lpZipUserFunctions->ServiceApplication64_No_Int64)(z->zname, low, high))
-                      ZIPERR(ZE_ABORT, "User terminated operation");
-          }
-        }
-#else
-        if (lpZipUserFunctions->ServiceApplication != NULL) {
-          if ((*lpZipUserFunctions->ServiceApplication)(z->zname, z->siz))
-            ZIPERR(ZE_ABORT, "User terminated operation");
-        }
-#endif /* ZIP64_SUPPORT - I added comments around // comments - does that help below? EG */
-/* strange but true: if I delete this and put these two endifs adjacent to
-   each other, the Aztec Amiga compiler never sees the second endif!  WTF?? PK */
-#endif /* WINDLL */
       }
       else
       {
