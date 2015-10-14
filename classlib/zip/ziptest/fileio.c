@@ -29,17 +29,11 @@ time_t mktime OF((struct tm *));
 
 #define PAD 0
 
-#ifdef NO_RENAME
-int rename OF((ZCONST char *, ZCONST char *));
-#endif
-
-
 /* Local functions */
 local int optionerr OF((char *, ZCONST char *, int, int));
 local unsigned long get_shortopt OF((char **, int, int *, int *, char **, int *, int));
 local unsigned long get_longopt OF((char **, int, int *, int *, char **, int *, int));
 
-#ifdef UNICODE_SUPPORT
 local int utf8_char_bytes OF((ZCONST char *utf8));
 local long ucs4_char_from_utf8 OF((ZCONST char **utf8 ));
 local int utf8_from_ucs4_char OF((char *utf8buf, ulg ch));
@@ -47,10 +41,6 @@ local int utf8_to_ucs4_string OF((ZCONST char *utf8, ulg *usc4buf,
                                   int buflen));
 local int ucs4_string_to_utf8 OF((ZCONST ulg *ucs4, char *utf8buf,
                                   int buflen));
-#if 0
-  local int utf8_chars OF((ZCONST char *utf8));
-#endif
-#endif /* UNICODE_SUPPORT */
 
 #ifndef UTIL    /* the companion #endif is a bit of ways down ... */
 
@@ -61,14 +51,8 @@ local int fqcmpz OF((ZCONST zvoid *, ZCONST zvoid *));
 /* Local module level variables. */
 char *label = NULL;                /* global, but only used in `system'.c */
 local z_stat zipstatb;             /* now use z_stat globally - 7/24/04 EG */
-#if defined(UNICODE_SUPPORT) && defined(WIN32)
  local zw_stat zipstatbw;
-#endif
-#if (!defined(MACOS) && !defined(WINDLL))
 local int zipstate = -1;
-#else
-int zipstate;
-#endif
 /* -1 unknown, 0 old zip file exists, 1 new zip file */
 
 #if 0
