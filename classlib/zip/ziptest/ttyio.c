@@ -83,56 +83,6 @@ void Echon(__G)
 
 #if (defined(UNZIP) && !defined(FUNZIP))
 
-#ifdef ATH_BEO_UNX
-
-
-/*
- * Get a character from the given file descriptor without echo or newline.
- */
-int zgetch(__G__ f)
-    __GDEF
-    int f;                      /* file descriptor from which to read */
-{
-#if (defined(USE_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS))
-    char oldmin, oldtim;
-#endif
-    char c;
-    struct sgttyb sg;           /* tty device structure */
-
-    GTTY(f, &sg);               /* get settings */
-#if (defined(USE_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS))
-    oldmin = sg.c_cc[VMIN];     /* save old values */
-    oldtim = sg.c_cc[VTIME];
-    sg.c_cc[VMIN] = 1;          /* need only one char to return read() */
-    sg.c_cc[VTIME] = 0;         /* no timeout */
-    sg.sg_flags &= ~ICANON;     /* canonical mode off */
-#else
-    sg.sg_flags |= CBREAK;      /* cbreak mode on */
-#endif
-    sg.sg_flags &= ~ECHO;       /* turn echo off, too */
-    STTY(f, &sg);               /* set cbreak mode */
-    GLOBAL(echofd) = f;         /* in case ^C hit (not perfect: still CBREAK) */
-
-    read(f, &c, 1);             /* read our character */
-
-#if (defined(USE_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS))
-    sg.c_cc[VMIN] = oldmin;     /* restore old values */
-    sg.c_cc[VTIME] = oldtim;
-    sg.sg_flags |= ICANON;      /* canonical mode on */
-#else
-    sg.sg_flags &= ~CBREAK;     /* cbreak mode off */
-#endif
-    sg.sg_flags |= ECHO;        /* turn echo on */
-    STTY(f, &sg);               /* restore canonical mode */
-    GLOBAL(echofd) = -1;
-
-    return (int)(uch)c;
-}
-
-
-#else /* !ATH_BEO_UNX */
-#ifndef VMS     /* VMS supplies its own variant of getch() */
-
 
 int zgetch(__G__ f)
     __GDEF
@@ -156,8 +106,6 @@ int zgetch(__G__ f)
     return (int)c;
 }
 
-#endif /* !VMS */
-#endif /* ?ATH_BEO_UNX */
 
 #endif /* UNZIP && !FUNZIP */
 #endif /* !HAVE_WORKING_GETCH */
