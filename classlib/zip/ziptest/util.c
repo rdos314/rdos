@@ -16,17 +16,6 @@
 #include "zip.h"
 #include <ctype.h>
 
-#ifdef MSDOS16
-#  include <dos.h>
-#endif
-
-#ifdef NO_MKTIME
-#  ifndef IZ_MKTIME_ONLY
-#    define IZ_MKTIME_ONLY      /* only mktime() related code is pulled in */
-#  endif
-#  include "timezone.c"
-#endif
-
 uch upper[256], lower[256];
 /* Country-dependent case map table */
 
