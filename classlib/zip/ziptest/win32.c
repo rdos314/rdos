@@ -402,11 +402,7 @@ char *getVolumeLabel(drive, vtime, vmode, vutim)
   rootpath[0] = (char)drive;
   if (GetVolumeInformation(drive ? rootpath : NULL, vol, 13, NULL,
                            &fnlen, &flags, NULL, 0))
-#if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-    return (AnsiToOem(vol, vol), vol);
-#else
     return vol;
-#endif
   else
     return NULL;
 }
@@ -428,11 +424,9 @@ int ZipIsWinNT(void)    /* returns TRUE if real NT, FALSE if Win95 or Win32s */
 
 
 #ifndef UTIL
-#ifdef __WATCOMC__
 #  include <io.h>
 #  define _get_osfhandle _os_handle
 /* gaah -- Watcom's docs claim that _get_osfhandle exists, but it doesn't.  */
-#endif
 
 #ifdef HAVE_FSEEKABLE
 /*
