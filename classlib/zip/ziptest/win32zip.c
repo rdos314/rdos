@@ -59,55 +59,6 @@ local time_t label_utim = 0;
 /* Module level constants */
 local ZCONST char wild_match_all[] = "*.*";
 
-
-#ifdef UNICODE_SUPPORT
-
-local zDIRSCANW *OpenDirScanW(nw)
-ZCONST wchar_t *nw;          /* directory to open */
-/* Start searching for files in the MSDOS directory n */
-{
-  zDIRSCANW *dw;         /* malloc'd return value */
-  wchar_t *pw;              /* malloc'd temporary string */
-  wchar_t *qw;
-  size_t i;
-
-  if ((dw = (zDIRSCANW *)malloc(sizeof(zDIRSCANW))) == NULL) {
-    return NULL;
-  }
-
-  if ((pw = (wchar_t *)malloc(wcslen(nw) * sizeof(wchar_t) +
-      (2 + sizeof(wild_match_all)) * sizeof(wchar_t))) == NULL) {
-    if (dw != NULL) free((zvoid *)dw);
-    return NULL;
-  }
-  wcscpy(pw, nw);
-
-  qw = pw + wcslen(pw);
-  if ((qw - pw) > 0 && wcschr(pw, (wchar_t)':') == (qw - 1))
-      *qw++ = (wchar_t)'.';
-  if ((qw - pw) > 0 && wcschr(pw, (wchar_t)'/') != (qw - 1))
-    *qw++ = (wchar_t)'/';
-
-  for (i = 0; i < strlen(wild_match_all); i++) {
-    qw[i] = (wchar_t)wild_match_all[i];
-  }
-  qw[i] = (wchar_t)'\0';
-
-  dw->d_hFindFile = FindFirstFileW(pw, &dw->d_fdw);
-  free((zvoid *)pw);
-
-  if (dw->d_hFindFile == INVALID_HANDLE_VALUE)
-  {
-    free((zvoid *)dw);
-    return NULL;
-  }
-
-  dw->d_first = 1;
-  return dw;
-}
-
-#endif
-
 local zDIRSCAN *OpenDirScan(n)
 ZCONST char *n;          /* directory to open */
 /* Start searching for files in the MSDOS directory n */
