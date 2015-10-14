@@ -1544,15 +1544,7 @@ char **argv;            /* command line tokens */
   FILE *x /*, *y */;    /* input and output zip files (y global) */
   struct zlist far *z;  /* steps through zfiles linked list */
   int bad_open_is_error = 0; /* if read fails, 0=warning, 1=error */
-#if 0
-  /* does not seem used */
-#ifdef WINDLL
-  int retcode;          /* return code for dll */
-#endif /* WINDLL */
-#endif
-#if (!defined(VMS) && !defined(CMS_MVS))
   char *zipbuf;         /* stdio buffer for the zip file */
-#endif /* !VMS && !CMS_MVS */
   FILE *comment_stream; /* set to stderr if anything is read from stdin */
   int all_current;      /* used by File Sync to determine if all entries are current */
 
@@ -1574,56 +1566,12 @@ char **argv;            /* command line tokens */
   int seen_doubledash = 0; /* seen -- argument */
   int key_needed = 0;   /* prompt for encryption key */
   int have_out = 0;     /* if set in_path and out_path different archive */
-#ifdef UNICODE_TEST
-  int create_files = 0;
-#endif
 
   char **args = NULL;  /* could be wide argv */
 
 
-#ifdef THEOS
-  /* the argument expansion from the standard library is full of bugs */
-  /* use mine instead */
-  _setargv(&argc, &argv);
-  setlocale(LC_CTYPE, "I");
-#else
   SETLOCALE(LC_CTYPE, "");
-#endif
 
-#ifdef UNICODE_SUPPORT
-# ifdef UNIX
-  /* For Unix, set the locale to UTF-8.  Any UTF-8 locale is
-     OK and they should all be the same.  This allows seeing,
-     writing, and displaying (if the fonts are loaded) all
-     characters in UTF-8. */
-  {
-    char *loc;
-
-    /*
-      loc = setlocale(LC_CTYPE, NULL);
-      printf("  Initial language locale = '%s'\n", loc);
-    */
-
-    loc = setlocale(LC_CTYPE, "en_US.UTF-8");
-
-    /*
-      printf("langinfo %s\n", nl_langinfo(CODESET));
-    */
-
-    if (loc != NULL) {
-      /* using UTF-8 character set so can set UTF-8 GPBF bit 11 */
-      using_utf8 = 1;
-      /*
-        printf("  Locale set to %s\n", loc);
-      */
-    } else {
-      /*
-        printf("  Could not set Unicode UTF-8 locale\n");
-      */
-    }
-  }
-# endif
-#endif
 
 #if defined(__IBMC__) && defined(__DEBUG_ALLOC__)
   {
