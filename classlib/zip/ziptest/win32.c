@@ -150,7 +150,6 @@ DWORD dwAttr;
 }
 
 
-#ifdef NT_TZBUG_WORKAROUND
 local int FSusesLocalTime(const char *path)
 {
     char  *tmp0;
@@ -224,8 +223,6 @@ local int FSusesLocalTimeW(const wchar_t *path)
 
 } /* end function FSusesLocalTimeW() */
 # endif
-
-#endif /* NT_TZBUG_WORKAROUND */
 
 
 #if (defined(USE_EF_UT_TIME) || defined(NT_TZBUG_WORKAROUND))
