@@ -389,23 +389,15 @@ local int  build_bl_tree  OF((void));
 local void send_all_trees OF((int lcodes, int dcodes, int blcodes));
 local void compress_block OF((ct_data near *ltree, ct_data near *dtree));
 local void set_file_type  OF((void));
-#if (!defined(ASMV) || !defined(RISCOS))
 local void send_bits      OF((int value, int length));
 local unsigned bi_reverse OF((unsigned code, int len));
-#endif
 local void bi_windup      OF((void));
 local void copy_block     OF((char *buf, unsigned len, int header));
 
 
-#ifndef DEBUG
 #  define send_code(c, tree) send_bits(tree[c].Code, tree[c].Len)
    /* Send a code of the given tree. c and tree must not have side effects */
 
-#else /* DEBUG */
-#  define send_code(c, tree) \
-     { if (verbose>1) fprintf(mesg,"\ncd %3d ",(c)); \
-       send_bits(tree[c].Code, tree[c].Len); }
-#endif
 
 #define d_code(dist) \
    ((dist) < 256 ? dist_code[dist] : dist_code[256+((dist)>>7)])
