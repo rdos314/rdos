@@ -80,9 +80,6 @@ ZCONST char *n;          /* directory to open */
     *q++ = '/';
   strcpy(q, wild_match_all);
 
-#if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-  OemToAnsi(p, p);
-#endif
   d->d_hFindFile = FindFirstFile(p, &d->d_fd);
   free((zvoid *)p);
 
@@ -96,27 +93,6 @@ ZCONST char *n;          /* directory to open */
   return d;
 }
 
-
-#ifdef UNICODE_SUPPORT
-
-local struct zdirscanw *GetNextDirEntryW(dw)
-zDIRSCANW *dw;            /* directory stream to read from */
-/* Return pointer to first or next directory entry, or NULL if end. */
-{
-  if (dw->d_first)
-    dw->d_first = 0;
-  else
-  {
-    if (!FindNextFileW(dw->d_hFindFile, &dw->d_fdw))
-        return NULL;
-  }
-#if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-  CharToOemW(dw->d_fdw.cFileName, dw->d_fdw.cFileName);
-#endif
-  return (struct zdirscanw *)dw;
-}
-
-#endif
 
 local struct zdirscan *GetNextDirEntry(d)
 zDIRSCAN *d;            /* directory stream to read from */
