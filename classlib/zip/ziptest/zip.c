@@ -1747,18 +1747,13 @@ char **argv;            /* command line tokens */
   scan_started = 0;           /* space at start of scan has been displayed */
   scan_last = 0;              /* Time last dot displayed for Scanning files message */
   scan_start = 0;             /* Time scanning started for Scanning files message */
-#ifdef UNICODE_SUPPORT
-  use_wide_to_mb_default = 0;
-#endif
   filter_match_case = 1;      /* default is to match case when matching archive entries */
   allow_fifo = 0;             /* 1=allow reading Unix FIFOs, waiting if pipe open */
 
-#if !defined(MACOS) && !defined(USE_ZIPMAIN)
   retcode = setjmp(zipdll_error_return);
   if (retcode) {
     return retcode;
   }
-#endif /* !MACOS */
 #endif /* MACOS || WINDLL */
 
 #if !defined(ALLOW_REGEX) && (defined(MSDOS) || defined(WIN32))
