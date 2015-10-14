@@ -1780,21 +1780,7 @@ char **argv;            /* command line tokens */
 /* For systems that do not have tzset() but supply this function using another
    name (_tzset() or something similar), an appropiate "#define tzset ..."
    should be added to the system specifc configuration section.  */
-#if (!defined(TOPS20) && !defined(VMS))
-#if (!defined(RISCOS) && !defined(MACOS) && !defined(QDOS))
-#if (!defined(BSD) && !defined(MTS) && !defined(CMS_MVS) && !defined(TANDEM))
   tzset();
-#endif
-#endif
-#endif
-
-#ifdef VMSCLI
-  {
-      ulg status = vms_zip_cmdline(&argc, &argv);
-      if (!(status & 1))
-            return status;
-  }
-#endif /* VMSCLI */
 
   /*    Substitutes the extended command line argument list produced by
    *    the MKS Korn Shell in place of the command line info from DOS.
