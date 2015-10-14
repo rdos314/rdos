@@ -1573,36 +1573,6 @@ char **argv;            /* command line tokens */
   SETLOCALE(LC_CTYPE, "");
 
 
-#if defined(__IBMC__) && defined(__DEBUG_ALLOC__)
-  {
-    extern void DebugMalloc(void);
-    atexit(DebugMalloc);
-  }
-#endif
-
-#ifdef QDOS
-  {
-    extern void QDOSexit(void);
-    atexit(QDOSexit);
-  }
-#endif
-
-#ifdef NLM
-  {
-    extern void NLMexit(void);
-    atexit(NLMexit);
-  }
-#endif
-
-#ifdef RISCOS
-  set_prefix();
-#endif
-
-#ifdef __human68k__
-  fflush(stderr);
-  setbuf(stderr, NULL);
-#endif
-
 /* Re-initialize global variables to make the zip dll re-entrant. It is
  * possible that we could get away with not re-initializing all of these
  * but better safe than sorry.
@@ -1618,12 +1588,7 @@ char **argv;            /* command line tokens */
   unzip_path = NULL; /* where to look for unzip command path */
   tempdir = 0;  /* 1=use temp directory (-b) */
   junk_sfx = 0; /* 1=junk the sfx prefix */
-#if defined(AMIGA) || defined(MACOS)
-  filenotes = 0;/* 1=take comments from AmigaDOS/MACOS filenotes */
-#endif
-#ifndef USE_ZIPMAIN
   zipstate = -1;
-#endif
   tempzip = NULL;
   fcount = 0;
   recurse = 0;         /* 1=recurse into directories; 2=match filenames */
@@ -1636,18 +1601,10 @@ char **argv;            /* command line tokens */
   adjust = 0;          /* 1=adjust offsets for sfx'd file (keep preamble) */
   level = 6;           /* 0=fastest compression, 9=best compression */
   translate_eol = 0;   /* Translate end-of-line LF -> CR LF */
-#if defined(OS2) || defined(WIN32)
   use_longname_ea = 0; /* 1=use the .LONGNAME EA as the file's name */
-#endif
-#ifdef NTSD_EAS
   use_privileges = 0;     /* 1=use security privileges overrides */
-#endif
   no_wild = 0;            /* 1 = wildcards are disabled */
-#ifdef WILD_STOP_AT_DIR
-   wild_stop_at_dir = 1;  /* default wildcards do not include / in matches */
-#else
-   wild_stop_at_dir = 0;  /* default wildcards do include / in matches */
-#endif
+  wild_stop_at_dir = 0;  /* default wildcards do include / in matches */
 
   skip_this_disk = 0;
   des_good = 0;           /* Good data descriptor found */
@@ -1680,10 +1637,8 @@ char **argv;            /* command line tokens */
   hidden_files = 0;       /* process hidden and system files */
   volume_label = 0;       /* add volume label */
   dirnames = 1;           /* include directory entries by default */
-#if defined(WIN32)
   only_archive_set = 0;   /* only include if DOS archive bit set */
   clear_archive_bits = 0; /* clear DOS archive bit of included files */
-#endif
   linkput = 0;            /* 1=store symbolic links as such */
   noisy = 1;              /* 0=quiet operation */
   extra_fields = 1;       /* 0=create minimum, 1=don't copy old, 2=keep old */
@@ -1695,16 +1650,10 @@ char **argv;            /* command line tokens */
 
   output_seekable = 1;    /* 1 = output seekable 3/13/05 EG */
 
-#ifdef ZIP64_SUPPORT      /* zip64 support 10/4/03 */
   force_zip64 = -1;       /* if 1 force entries to be zip64 */
                           /* mainly for streaming from stdin */
   zip64_entry = 0;        /* current entry needs Zip64 */
   zip64_archive = 0;      /* if 1 then at least 1 entry needs zip64 */
-#endif
-
-#ifdef UNICODE_SUPPORT
-  utf8_force = 0;         /* 1=force storing UTF-8 as standard per AppNote bit 11 */
-#endif
 
   unicode_escape_all = 0; /* 1=escape all non-ASCII characters in paths */
   unicode_mismatch = 1;   /* unicode mismatch is 0=error, 1=warn, 2=ignore, 3=no */
