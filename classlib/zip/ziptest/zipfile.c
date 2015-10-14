@@ -3043,28 +3043,10 @@ int readzipfile()
   zipfile_exists = 0;
 
   /* If zip file exists, read headers and check structure */
-#ifdef VMS
-  if (zipfile == NULL || !(*zipfile) || !strcmp(zipfile, "-"))
-    return ZE_OK;
-  {
-    int rtype;
-
-    if ((VMSmunch(zipfile, GET_RTYPE, (char *)&rtype) == RMS$_NORMAL) &&
-        (rtype == FAT$C_VARIABLE)) {
-      fprintf(mesg,
-     "\n     Error:  zipfile is in variable-length record format.  Please\n\
-     run \"bilf b %s\" to convert the zipfile to fixed-length\n\
-     record format.\n\n", zipfile);
-      return ZE_FORM;
-    }
-  }
-  readable = ((f = zfopen(zipfile, FOPR)) != NULL);
-#else /* !VMS */
   readable = (zipfile != NULL && *zipfile && strcmp(zipfile, "-"));
   if (readable) {
     readable = ((f = zfopen(zipfile, FOPR)) != NULL);
   }
-#endif /* ?VMS */
 
   /* skip check if streaming */
   if (!readable) {
@@ -3079,78 +3061,21 @@ int readzipfile()
     zipfile_exists = 1;
   }
 
-#ifdef MVS
-  /* Very nasty special case for MVS.  Just because the zipfile has been
-   * opened for reading does not mean that we can actually read the data.
-   * Typical JCL to create a zipfile is
-   *
-   * //ZIPFILE  DD  DISP=(NEW,CATLG),DSN=prefix.ZIP,
-   * //             SPACE=(CYL,(10,10))
-   *
-   * That creates a VTOC entry with an end of file marker (DS1LSTAR) of zero.
-   * Alas the VTOC end of file marker is only used when the file is opened in
-   * append mode.  When a file is opened in read mode, the "other" end of file
-   * marker is used, a zero length data block signals end of file when reading.
-   * With a brand new file which has not been written to yet, it is undefined
-   * what you read off the disk.  In fact you read whatever data was in the same
-   * disk tracks before the zipfile was allocated.  You would be amazed at the
-   * number of application programmers who still do not understand this.  Makes
-   * for interesting and semi-random errors, GIGO.
-   *
-   * Newer versions of SMS will automatically write a zero length block when a
-   * file is allocated.  However not all sites run SMS or they run older levels
-   * so we cannot rely on that.  The only safe thing to do is close the file,
-   * open in append mode (we already know that the file exists), close it again,
-   * reopen in read mode and try to read a data block.  Opening and closing in
-   * append mode will write a zero length block where DS1LSTAR points, making
-   * sure that the VTOC and internal end of file markers are in sync.  Then it
-   * is safe to read data.  If we cannot read one byte of data after all that,
-   * it is a brand new zipfile and must not be read.
-   */
-  if (readable)
-  {
-    char c;
-    fclose(f);
-    /* append mode */
-    if ((f = zfopen(zipfile, "ab")) == NULL) {
-      ZIPERR(ZE_OPEN, zipfile);
-    }
-    fclose(f);
-    /* read mode again */
-    if ((f = zfopen(zipfile, FOPR)) == NULL) {
-      ZIPERR(ZE_OPEN, zipfile);
-    }
-    if (fread(&c, 1, 1, f) != 1) {
-      /* no actual data */
-      readable = 0;
-      fclose(f);
-    }
-    else{
-      fseek(f, 0, SEEK_SET);  /* at least one byte in zipfile, back to the start */
-    }
-  }
-#endif /* MVS */
 
   /* ------------------------ */
   /* new file read */
 
 
 
-#ifndef UTIL
   if (fix == 2) {
     scanzipf_fixnew();
   }
   else
-#endif
   if (readable)
   {
     /* close file as the new scan opens the splits as needed */
     fclose(f);
-# ifndef UTIL
     retval = (fix == 2 && !adjust) ? scanzipf_fixnew() : scanzipf_regnew();
-# else
-    retval = scanzipf_regnew();
-# endif
   }
 
   if (fix != 2 && readable)
