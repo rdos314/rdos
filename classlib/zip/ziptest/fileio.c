@@ -815,15 +815,6 @@ char *tempname(zip)
   if ((t = malloc(strlen(tempath) + L_tmpnam + 2)) == NULL)
     return NULL;
 
-#  ifdef VM_CMS
-  tmpnam(t);
-  /* Remove filemode and replace with tempath, if any. */
-  /* Otherwise A-disk is used by default */
-  *(strrchr(t, ' ')+1) = '\0';
-  if (tempath!=NULL)
-     strcat(t, tempath);
-  return t;
-#  else   /* !VM_CMS */
   /* For MVS */
   tmpnam(t);
   if (tempath != NULL)
@@ -852,7 +843,6 @@ char *tempname(zip)
     }
   }
   return t;
-#  endif  /* !VM_CMS */
 
 # else /* !CMS_MVS */
 
