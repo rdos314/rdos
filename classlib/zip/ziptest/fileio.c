@@ -685,11 +685,6 @@ ulg a;                  /* Attributes returned by filetime() */
 }
 
 
-   /* There is no need for dos2unixtime() in the ZipUtils' code. */
-#define ZP_NEED_GEN_D2U_TIME
-
-#ifdef ZP_NEED_GEN_D2U_TIME
-
 time_t dos2unixtime(dostime)
 ulg dostime;            /* DOS time to convert */
 /* Return the Unix time_t value (GMT/UTC time) for the DOS format (local)
@@ -712,10 +707,6 @@ ulg dostime;            /* DOS time to convert */
 
   return mktime(t);
 }
-
-#undef ZP_NEED_GEN_D2U_TIME
-#endif /* ZP_NEED_GEN_D2U_TIME */
-
 
 #ifndef MACOS
 int destroy(f)
