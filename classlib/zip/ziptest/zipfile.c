@@ -3210,40 +3210,9 @@ int putlocal(z, rewrite)
      If the local header doesn't fit we need to save it for the next disk.
    */
 
-#ifdef ZIP64_SUPPORT
   if (zip64_entry || was_zip64)
     /* update extra field */
     add_local_zip64_extra_field( z );
-#endif /* ZIP64_SUPPORT */
-
-#ifdef UNICODE_SUPPORT
-# if 0
-  /* if UTF-8 bit is set on an existing entry, assume it should be */
-  /* clear the UTF-8 flag */
-  z->flg &= ~UTF8_BIT;
-  z->lflg &= ~UTF8_BIT;
-# endif
-
-  if (z->uname) {
-    /* need UTF-8 name */
-    if (utf8_force || using_utf8) {
-      z->lflg |= UTF8_BIT;
-      z->flg |= UTF8_BIT;
-    }
-    if (z->flg & UTF8_BIT) {
-      /* If this flag is set, then restore UTF-8 as path name */
-      use_uname = 1;
-      nam = strlen(z->uname);
-    } else {
-      /* use extra field */
-      add_Unicode_Path_local_extra_field(z);
-    }
-  } else {
-    /* clear UTF-8 bit as not needed */
-    z->flg &= ~UTF8_BIT;
-    z->lflg &= ~UTF8_BIT;
-  }
-#endif
 
   append_ulong_to_mem(LOCSIG, &block, &offset, &blocksize);     /* local file header signature */
   append_ushort_to_mem(z->ver, &block, &offset, &blocksize);    /* version needed to extract */
@@ -3251,7 +3220,6 @@ int putlocal(z, rewrite)
   append_ushort_to_mem(z->how, &block, &offset, &blocksize);    /* compression method */
   append_ulong_to_mem(z->tim, &block, &offset, &blocksize);     /* last mod file date time */
   append_ulong_to_mem(z->crc, &block, &offset, &blocksize);     /* crc-32 */
-#ifdef ZIP64_SUPPORT        /* zip64 support 09/02/2003 R.Nausedat */
                             /* changes 10/5/03 EG */
   if (zip64_entry) {
     append_ulong_to_mem(0xFFFFFFFF, &block, &offset, &blocksize);	/* compressed size */
@@ -3260,15 +3228,7 @@ int putlocal(z, rewrite)
     append_ulong_to_mem((ulg)z->siz, &block, &offset, &blocksize);/* compressed size */
     append_ulong_to_mem((ulg)z->len, &block, &offset, &blocksize);/* uncompressed size */
   }
-#else
-  append_ulong_to_mem((ulg)z->siz, &block, &offset, &blocksize);    /* compressed size */
-  append_ulong_to_mem((ulg)z->len, &block, &offset, &blocksize);    /* uncompressed size */
-#endif
-#ifdef UNICODE_SUPPORT
-  append_ushort_to_mem(nam, &block, &offset, &blocksize);   /* file name length */
-#else
   append_ushort_to_mem(z->nam, &block, &offset, &blocksize);   /* file name length */
-#endif
 
   append_ushort_to_mem(z->ext, &block, &offset, &blocksize);    /* extra field length */
 
