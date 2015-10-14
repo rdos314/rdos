@@ -250,56 +250,5 @@ char *getp(__G__ m, p, n)
 #endif /* ATH_BEO_UNX || __MINT__ */
 
 
-
-#if (defined(VMS) || defined(CMS_MVS))
-
-char *getp(__G__ m, p, n)
-    __GDEF
-    ZCONST char *m;             /* prompt for password */
-    char *p;                    /* return value: line input */
-    int n;                      /* bytes available in p[] */
-{
-    char c;                     /* one-byte buffer for read() to use */
-    int i;                      /* number of characters input */
-    char *w;                    /* warning on retry */
-    FILE *f;                    /* file structure for SYS$COMMAND device */
-
-#ifdef PASSWD_FROM_STDIN
-    f = stdin;
-#else
-    if ((f = fopen(ctermid(NULL), "r")) == NULL)
-        return NULL;
-#endif
-
-    /* get password */
-    fflush(stdout);
-    w = "";
-    do {
-        if (*w)                 /* bug: VMS apparently adds \n to NULL fputs */
-            fputs(w, stderr);   /* warning if back again */
-        fputs(m, stderr);       /* prompt */
-        fflush(stderr);
-        i = 0;
-        echoff(f);
-        do {                    /* read line, keeping n */
-            if ((c = (char)getc(f)) == '\r')
-                c = '\n';
-            if (i < n)
-                p[i++] = c;
-        } while (c != '\n');
-        echon();
-        PUTC('\n', stderr);  fflush(stderr);
-        w = "(line too long--try again)\n";
-    } while (p[i-1] != '\n');
-    p[i-1] = 0;                 /* terminate at newline */
-#ifndef PASSWD_FROM_STDIN
-    fclose(f);
-#endif
-
-    return p;                   /* return pointer to password */
-
-} /* end function getp() */
-
-#endif /* VMS || CMS_MVS */
 #endif /* ?HAVE_WORKING_GETCH */
 #endif /* CRYPT */
