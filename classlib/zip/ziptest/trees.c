@@ -1209,12 +1209,8 @@ void bi_init (tgt_buf, tgt_size, flsh_allowed)
 
     bi_buf = 0;
     bi_valid = 0;
-#ifdef DEBUG
-    bits_sent = (uzoff_t)0;
-#endif
 }
 
-#if (!defined(ASMV) || !defined(RISCOS))
 /* ===========================================================================
  * Send a value on a given number of bits.
  * IN assertion: length <= 16 and value fits in length bits.
@@ -1223,11 +1219,6 @@ local void send_bits(value, length)
     int value;  /* value to send */
     int length; /* number of bits */
 {
-#ifdef DEBUG
-    Tracevv((stderr," l %2d v %4x ", length, value));
-    Assert(length > 0 && length <= 15, "invalid length");
-    bits_sent += (uzoff_t)length;
-#endif
     /* If not enough room in bi_buf, use (bi_valid) bits from bi_buf and
      * (Buf_size - bi_valid) bits from value to flush the filled bi_buf,
      * then fill in the rest of (value), leaving (length - (Buf_size-bi_valid))
@@ -1258,7 +1249,6 @@ local unsigned bi_reverse(code, len)
     } while (--len > 0);
     return res >> 1;
 }
-#endif /* !ASMV || !RISCOS */
 
 /* ===========================================================================
  * Write out any remaining bits in an incomplete byte.
