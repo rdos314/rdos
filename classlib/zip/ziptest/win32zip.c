@@ -569,16 +569,12 @@ ulg filetime(f, a, n, t)
   }
 
   if (a != NULL) {
-#ifdef WIN32_OEM
     /* When creating DOS-like archives with OEM-charset names, only the
        standard FAT attributes should be used.
        (Note: On a Win32 system, the UNIX style attributes from stat()
               do not contain any additional information...)
      */
     *a = (isstdin ? 0L : (ulg)GetFileMode(name));
-#else
-    *a = ((ulg)s.st_mode << 16) | (isstdin ? 0L : (ulg)GetFileMode(name));
-#endif
   }
   if (n != NULL)
     /* device return -1 */
@@ -592,90 +588,6 @@ ulg filetime(f, a, n, t)
 
   return unix2dostime((time_t *)&s.st_mtime);
 }
-
-#ifdef UNICODE_SUPPORT
-ulg filetimew(fw, a, n, t)
-  wchar_t *fw;          /* name of file to get info on */
-  ulg *a;               /* return value: file attributes */
-  zoff_t *n;            /* return value: file size */
-  iztimes *t;           /* return value: access, modific. and creation times */
-/* If file *f does not exist, return 0.  Else, return the file's last
-   modified date and time as an MSDOS date and time.  The date and
-   time is returned in a long with the date most significant to allow
-   unsigned integer comparison of absolute times.  Also, if a is not
-   a NULL pointer, store the file attributes there, with the high two
-   bytes being the Unix attributes, and the low byte being a mapping
-   of that to DOS attributes.  If n is not NULL, store the file size
-   there.  If t is not NULL, the file's access, modification and creation
-   times are stored there as UNIX time_t values.
-   If f is "-", use standard input as the file. If f is a device, return
-   a file size of -1 */
-{
-  zw_stat sw;           /* results of zstat() */
-
-  /* converted to malloc instead of using FNMAX - 11/8/04 EG */
-  wchar_t *namew;
-  unsigned int len = wcslen(fw);
-  int isstdin = !wcscmp(fw, L"-");
-  wchar_t *labelw = local_to_wchar_string(label);
-
-  if (labelw && wcscmp(fw, labelw) == 0) {
-    if (a != NULL)
-      *a = label_mode;
-    if (n != NULL)
-      *n = -2L; /* convention for a label name */
-    if (t != NULL)
-      t->atime = t->mtime = t->ctime = label_utim;
-    return label_time;
-  }
-  if ((namew = malloc((len + 1) * sizeof(wchar_t))) == NULL) {
-    ZIPERR(ZE_MEM, "filetime");
-  }
-  wcscpy(namew, fw);
-  if (wcsrchr(namew, (wchar_t)'/') == (namew + len - 1))
-    namew[len - 1] = '\0';
-  /* not all systems allow stat'ing a file with / appended */
-
-  /* zip64 support 08/31/2003 R.Nausedat */
-  if (isstdin) {
-    if (zwfstat(fileno(stdin), &sw) != 0) {
-      free(namew);
-      error("fstat(stdin)");
-    }
-    time((time_t *)&sw.st_mtime);       /* some fstat()s return time zero */
-  } else if (LSSTATW(namew, &sw) != 0) {
-             /* Accept about any file kind including directories
-              * (stored with trailing / with -r option)
-              */
-    free(namew);
-    return 0;
-  }
-
-  if (a != NULL) {
-#ifdef WIN32_OEM
-    /* When creating DOS-like archives with OEM-charset names, only the
-       standard FAT attributes should be used.
-       (Note: On a Win32 system, the UNIX style attributes from stat()
-              do not contain any additional information...)
-     */
-    *a = (isstdin ? 0L : (ulg)GetFileModeW(namew));
-#else
-    *a = ((ulg)sw.st_mode << 16) | (isstdin ? 0L : (ulg)GetFileModeW(namew));
-#endif
-  }
-  if (n != NULL)
-    /* device return -1 */
-    *n = (sw.st_mode & S_IFMT) == S_IFREG ? sw.st_size : -1L;
-  if (t != NULL) {
-    t->atime = sw.st_atime;
-    t->mtime = sw.st_mtime;
-    t->ctime = sw.st_ctime;
-  }
-  free(namew);
-
-  return unix2dostime((time_t *)&sw.st_mtime);
-}
-#endif
 
 
 
