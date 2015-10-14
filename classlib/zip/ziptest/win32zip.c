@@ -8,7 +8,6 @@
   If, for some reason, all these files are missing, the Info-ZIP license
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
 */
-#ifndef UTIL    /* this file contains nothing used by UTIL */
 
 #include "zip.h"
 
@@ -1976,5 +1975,3 @@ char *d;                /* directory to delete */
 {
     return rmdir(d);
 }
-
-#endif /* !UTIL */
