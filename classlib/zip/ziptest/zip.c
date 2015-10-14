@@ -1789,17 +1789,12 @@ char **argv;            /* command line tokens */
   /* extract extended argument list from environment */
   expand_args(&argc, &argv);
 
-#ifndef WINDLL
   /* Process arguments */
   diag("processing arguments");
   /* First, check if just the help or version screen should be displayed */
   if (argc == 1 && isatty(1))   /* no arguments, and output screen available */
   {                             /* show help screen */
-# ifdef VMSCLI
-    VMSCLI_help();
-# else
     help();
-# endif
     EXIT(ZE_OK);
   }
   /* Check -v here as env arg can change argc.  Handle --version in main switch. */
@@ -1811,17 +1806,7 @@ char **argv;            /* command line tokens */
     version_info();
     EXIT(ZE_OK);
   }
-# ifndef VMS
-#   ifndef RISCOS
   envargs(&argc, &argv, "ZIPOPT", "ZIP");  /* get options from environment */
-#   else /* RISCOS */
-  envargs(&argc, &argv, "ZIPOPT", "Zip$Options");  /* get options from environment */
-  getRISCOSexts("Zip$Exts");        /* get the extensions to swap from environment */
-#   endif /* ? RISCOS */
-# else /* VMS */
-  envargs(&argc, &argv, "ZIPOPT", "ZIP_OPTS");  /* 4th arg for unzip compat. */
-# endif /* ?VMS */
-#endif /* !WINDLL */
 
   zipfile = tempzip = NULL;
   y = NULL;
