@@ -2681,11 +2681,6 @@ char **argv;            /* command line tokens */
     tempzip = NULL;
     if (zip_attributes && strcmp(zipfile, "-")) {
       setfileattr(out_path, zip_attributes);
-#ifdef VMS
-      /* If the zip file existed previously, restore its record format: */
-      if (x != NULL)
-        (void)VMSmunch(out_path, RESTORE_RTYPE, NULL);
-#endif
     }
 
     set_filetype(out_path);
@@ -2716,7 +2711,6 @@ char **argv;            /* command line tokens */
     ZIPERR(r, zipfile);
   }
 
-#ifndef UTIL
   if (split_method == -1) {
     split_method = 0;
   } else if (!fix && split_method == 0 && total_disks > 1) {
@@ -2740,7 +2734,6 @@ char **argv;            /* command line tokens */
 
   if (noisy_splits && split_size > 0)
     zipmessage("splitsize = ", zip_fuzofft(split_size, NULL, NULL));
-#endif
 
   /* so disk display starts at 1, will be updated when entries are read */
   current_in_disk = 0;
@@ -2775,19 +2768,13 @@ char **argv;            /* command line tokens */
         if ((r = proc_archive_name(filelist->name, filter_match_case)) != ZE_OK) {
           if (r == ZE_MISS) {
             char *n = NULL;
-#ifdef WIN32
             /* Win9x console always uses OEM character coding, and
                WinNT console is set to OEM charset by default, too */
             if ((n = malloc(strlen(filelist->name) + 1)) == NULL)
               ZIPERR(ZE_MEM, "name not matched error");
             INTERN_TO_OEM(filelist->name, n);
-#else
-            n = filelist->name;
-#endif
             zipwarn("not in archive: ", n);
-#ifdef WIN32
             free(n);
-#endif
           }
           else {
             ZIPERR(r, filelist->name);
@@ -2827,11 +2814,7 @@ char **argv;            /* command line tokens */
 
   /* recurse from current directory for -R */
   if (recurse == 2) {
-#ifdef AMIGA
-    if ((r = PROCNAME("")) != ZE_OK)
-#else
     if ((r = PROCNAME(".")) != ZE_OK)
-#endif
     {
       if (r == ZE_MISS) {
         if (bad_open_is_error) {
