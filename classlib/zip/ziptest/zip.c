@@ -2624,11 +2624,7 @@ char **argv;            /* command line tokens */
     if (zipbuf == NULL) {
       ZIPERR(ZE_MEM, tempzip);
     }
-# ifdef _IOFBF
-    setvbuf(y, zipbuf, _IOFBF, ZBSZ);
-# else
     setbuf(y, zipbuf);
-# endif /* _IOBUF */
 
 
     if ((r = readzipfile()) != ZE_OK) {
