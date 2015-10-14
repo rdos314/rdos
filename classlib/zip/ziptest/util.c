@@ -222,37 +222,6 @@ int cs;                 /* force case-sensitive match if TRUE */
 }
 
 
-#ifdef UNICODE_SUPPORT
-
-int dosmatchw(pw, sw, cs)
-ZCONST wchar_t *pw;     /* dos pattern to match    */
-ZCONST wchar_t *sw;     /* string to match it to   */
-int cs;                 /* force case-sensitive match if TRUE */
-/* Treat filenames without periods as having an implicit trailing period */
-{
-  wchar_t *sw1;         /* revised string to match */
-  int r;                /* result */
-
-  if (wcschr(pw, (wchar_t)'.') && !wcschr(sw, (wchar_t)'.') &&
-      ((sw1 = (wchar_t *)malloc((wcslen(sw) + 2) * sizeof(wchar_t))) != NULL))
-  {
-    wcscpy(sw1, sw);
-    wcscat(sw1, L".");
-  }
-  else
-  {
-    /* will usually be OK */
-    sw1 = (wchar_t *)sw;
-  }
-
-  r = recmatchw(pw, sw1, cs) == 1;
-  if (sw != sw1)
-    free((zvoid *)sw1);
-  return r == 1;
-}
-
-#endif
-
 /* XXX  also suitable for OS2?  Atari?  Human68K?  TOPS-20?? */
 
 int dosmatch(p, s, cs)
@@ -313,51 +282,6 @@ int (*cmp) OF((ZCONST zvoid *, ZCONST zvoid far *)); /* comparison function */
   }
   return NULL;          /* If b were in list, it would belong at l */
 }
-
-#ifdef MSDOS16
-
-local unsigned ident(unsigned chr)
-{
-   return chr; /* in al */
-}
-
-void init_upper()
-{
-  static struct country {
-    uch ignore[18];
-    int (far *casemap)(int);
-    uch filler[16];
-  } country_info;
-
-  struct country far *info = &country_info;
-  union REGS regs;
-  struct SREGS sregs;
-  unsigned int c;
-
-  regs.x.ax = 0x3800; /* get country info */
-  regs.x.dx = FP_OFF(info);
-  sregs.ds  = FP_SEG(info);
-  intdosx(&regs, &regs, &sregs);
-  for (c = 0; c < 128; c++) {
-    upper[c] = (uch) toupper(c);
-    lower[c] = (uch) c;
-  }
-  for (; c < sizeof(upper); c++) {
-    upper[c] = (uch) (*country_info.casemap)(ident(c));
-    /* ident() required because casemap takes its parameter in al */
-    lower[c] = (uch) c;
-  }
-  for (c = 0; c < sizeof(upper); c++ ) {
-    unsigned int u = upper[c];
-    if (u != c && lower[u] == (uch) u) {
-      lower[u] = (uch)c;
-    }
-  }
-  for (c = 'A'; c <= 'Z'; c++) {
-    lower[c] = (uch) (c - 'A' + 'a');
-  }
-}
-#else /* !MSDOS16 */
 #  ifndef OS2
 
 void init_upper()
@@ -377,8 +301,6 @@ void init_upper()
 #endif
 }
 #  endif /* !OS2 */
-
-#endif /* ?MSDOS16 */
 
 int namecmp(string1, string2)
   ZCONST char *string1, *string2;
