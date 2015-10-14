@@ -321,17 +321,8 @@ local int procname_win32(n, caseflag, attribs)
     s.st_mode = ((attribs & FILE_ATTRIBUTE_DIRECTORY) ? S_IFDIR : S_IFREG);
   }
   else if (LSSTAT(n, &s)
-#ifdef __TURBOC__
-           /* For this compiler, stat() succeeds on wild card names! */
-           /* Unfortunately, this causes failure on names containing */
-           /* square bracket characters, which are legal in win32.   */
-           || isshexp(n)
-#endif
           )
   {
-#ifdef UNICODE_SUPPORT
-    char *uname = NULL;
-#endif
     /* Not a file or directory--search for shell expression in zip file */
     p = ex2in(n, 0, (int *)NULL);       /* shouldn't affect matching chars */
     m = 1;
@@ -345,36 +336,6 @@ local int procname_win32(n, caseflag, attribs)
         m = 0;
       }
     }
-#ifdef UNICODE_SUPPORT
-    /* also check escaped Unicode names */
-    for (z = zfiles; z != NULL; z = z->nxt) {
-      if (z->zuname) {
-#ifdef WIN32
-        /* It seems something is lost in going from a listed
-           name from zip -su in a console window to using that
-           name in a command line.  This kluge may fix it
-           and just takes zuname, converts to oem (i.e.ouname),
-           then converts it back which ends up not the same as
-           started with.
-         */
-        uname = z->wuname;
-#else
-        uname = z->zuname;
-#endif
-        if (MATCH(p, uname, caseflag))
-        {
-          z->mark = pcount ? filter(uname, caseflag) : 1;
-          if (verbose) {
-              fprintf(mesg, "zip diagnostic: %scluding %s\n",
-                 z->mark ? "in" : "ex", z->oname);
-              fprintf(mesg, "     Escaped Unicode:  %s\n",
-                 z->ouname);
-          }
-          m = 0;
-        }
-      }
-    }
-#endif
     free((zvoid *)p);
     return m ? ZE_MISS : ZE_OK;
   }
