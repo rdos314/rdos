@@ -31,7 +31,6 @@
 #include "zip.h"
 #include "crypt.h"
 
-#if (CRYPT || (defined(UNZIP) && !defined(FUNZIP)))
 /* Non-echo console/keyboard input is needed for (en/de)cryption's password
  * entry, and for UnZip(SFX)'s MORE and Pause features.
  * (The corresponding #endif is found at the end of this module.)
@@ -699,4 +698,3 @@ char *getp(__G__ m, p, n)
 #endif /* VMS || CMS_MVS */
 #endif /* ?HAVE_WORKING_GETCH */
 #endif /* CRYPT */
-#endif /* CRYPT || (UNZIP && !FUNZIP) */
