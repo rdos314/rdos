@@ -1237,12 +1237,7 @@ local int scanzipf_reg(f)
         zcomment = NULL;
         return ferror(f) ? ZE_READ : ZE_EOF;
       }
-#ifdef EBCDIC
-      if (zcomment)
-         memtoebc(zcomment, zcomment, zcomlen);
-#endif /* EBCDIC */
     }
-#ifdef ZIP64_SUPPORT
     /* account for Zip64 EOCD Record and Zip64 EOCD Locator */
 
     /* Z64 EOCDL should be just before EOCD (unless this is an empty archive) */
@@ -1309,19 +1304,6 @@ local int scanzipf_reg(f)
         deltaoff = adjust ? u8 - censiz : 0L;
       }
     }
-#else /* !ZIP64_SUPPORT */
-/*
- * XXX assumes central header immediately precedes end header
- */
-    /* start of central directory */
-    cenbeg = zipbeg - LG(ENDSIZ + b);
-/*
-printf("start of central directory cenbeg %ld\n", cenbeg);
-*/
-
-    /* offset to first entry of archive */
-    deltaoff = adjust ? cenbeg - LG(b + ENDOFF) : 0L;
-#endif /* ?ZIP64_SUPPORT */
 
     if (zipbeg < ZIP64_EOCDL_OFS_SIZE) {
       /* zip file seems empty */
@@ -1362,11 +1344,6 @@ printf("start of central directory cenbeg %ld\n", cenbeg);
       /* Initialize all fields pointing to malloced data to NULL */
       z->zname = z->name = z->iname = z->extra = z->cextra = z->comment = NULL;
       z->oname = NULL;
-#ifdef UNICODE_SUPPORT
-      z->uname = NULL;      /* UTF-8 path */
-      z->zuname = NULL;     /* Escaped local version of uname */
-      z->ouname = NULL;     /* Display version of zuname */
-#endif
 
       /* Link into list */
       *x = z;
@@ -1378,10 +1355,6 @@ printf("start of central directory cenbeg %ld\n", cenbeg);
       {
         sprintf(errbuf, "%lu", (ulg)zcount + 1);
         zipwarn("zero-length name for entry #", errbuf);
-#ifndef DEBUG
-        farfree((zvoid far *)z);
-        return ZE_FORM;
-#endif
       }
       if ((z->iname = malloc(z->nam+1)) ==  NULL ||
           (z->cext && (z->cextra = malloc(z->cext)) == NULL) ||
