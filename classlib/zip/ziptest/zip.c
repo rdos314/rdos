@@ -838,45 +838,13 @@ local void version_info()
     "USE_EF_UT_TIME       (store Universal Time)",
     "NTSD_EAS             (store NT Security Descriptor)",
     "WIN32_OEM            (store file paths on Windows as OEM)",
-#ifdef LARGE_FILE_SUPPORT
-# ifdef USING_DEFAULT_LARGE_FILE_SUPPORT
     "LARGE_FILE_SUPPORT (default settings)",
-# else
-    "LARGE_FILE_SUPPORT   (can read and write large files on file system)",
-# endif
-#endif
-#ifdef ZIP64_SUPPORT
     "ZIP64_SUPPORT        (use Zip64 to store large files in archives)",
-#endif
-#ifdef UNICODE_SUPPORT
-    "UNICODE_SUPPORT      (store and read UTF-8 Unicode paths)",
-#endif
-
-#ifdef UNIX
-    "STORE_UNIX_UIDs_GIDs (store UID/GID sizes/values using new extra field)",
-# ifdef UIDGID_NOT_16BIT
-    "UIDGID_NOT_16BIT     (old Unix 16-bit UID/GID extra field not used)",
-# else
-    "UIDGID_16BIT         (old Unix 16-bit UID/GID extra field also used)",
-# endif
-#endif
-
-#if CRYPT && defined(PASSWD_FROM_STDIN)
-    "PASSWD_FROM_STDIN",
-#endif /* CRYPT & PASSWD_FROM_STDIN */
     NULL
   };
 
   static ZCONST char *zipenv_names[] = {
-#ifndef VMS
-#  ifndef RISCOS
     "ZIP"
-#  else /* RISCOS */
-    "Zip$Options"
-#  endif /* ?RISCOS */
-#else /* VMS */
-    "ZIP_OPTS"
-#endif /* ?VMS */
     ,"ZIPOPT"
 #ifdef AZTEC_C
     ,     /* extremely lame compiler bug workaround */
