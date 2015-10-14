@@ -956,89 +956,6 @@ local void check_zipfile(zipname, zippath)
   char *zippath;
   /* Invoke unzip -t on the given zip file */
 {
-#if (defined(MSDOS) && !defined(__GO32__)) || defined(__human68k__)
-  int status, len;
-  char *path, *p;
-  char *zipnam;
-
-  if ((zipnam = (char *)malloc(strlen(zipname) + 3)) == NULL)
-    ziperr(ZE_MEM, "was creating unzip zipnam");
-
-  strcpy(zipnam, zipname);
-
-  if (unzip_path) {
-    /* if user gave us the unzip to use go with it */
-    char *here;
-    int len;
-    char *cmd;
-
-    /* Replace first {} with archive name.  If no {} append name to string. */
-    here = strstr(unzip_path, "{}");
-
-    if ((cmd = (char *)malloc(strlen(unzip_path) + strlen(zipnam) + 3)) == NULL)
-      ziperr(ZE_MEM, "was creating unzip cmd");
-
-    if (here) {
-      /* have {} so replace with temp name */
-      len = here - unzip_path;
-      strcpy(cmd, unzip_path);
-      cmd[len] = '\0';
-      strcat(cmd, " ");
-      strcat(cmd, zipnam);
-      strcat(cmd, " ");
-      strcat(cmd, here + 2);
-    } else {
-      /* No {} so append temp name to end */
-      strcpy(cmd, unzip_path);
-      strcat(cmd, " ");
-      strcat(cmd, zipnam);
-    }
-
-    status = system(cmd);
-
-    free(unzip_path);
-    unzip_path = NULL;
-    free(cmd);
-  } else {
-    /* Here is where we need to check for the version of unzip the user
-     * has.  If creating a Zip64 archive need UnZip 6 or may fail.
-     */
-    if (check_unzip_version("unzip") == 0)
-      ZIPERR(ZE_TEST, zipfile);
-
-    status = spawnlp(P_WAIT, "unzip", "unzip", verbose ? "-t" : "-tqq",
-                     zipnam, NULL);
-/*
- * unzip isn't in PATH range, assume an absolute path to zip in argv[0]
- * and hope that unzip is in the same directory.
- */
-    if (status == -1) {
-      p = MBSRCHR(zippath, '\\');
-      path = MBSRCHR((p == NULL ? zippath : p), '/');
-      if (path != NULL)
-        p = path;
-      if (p != NULL) {
-        len = (int)(p - zippath) + 1;
-        if ((path = malloc(len + sizeof("unzip.exe"))) == NULL)
-          ziperr(ZE_MEM, "was creating unzip path");
-        memcpy(path, zippath, len);
-        strcpy(&path[len], "unzip.exe");
-
-        if (check_unzip_version(path) == 0)
-          ZIPERR(ZE_TEST, zipfile);
-
-        status = spawnlp(P_WAIT, path, "unzip", verbose ? "-t" : "-tqq",
-                        zipnam, NULL);
-        free(path);
-      }
-      if (status == -1)
-        perror("unzip");
-    }
-  }
-  free(zipnam);
-  if (status != 0) {
-
-#else /* (MSDOS && !__GO32__) || __human68k__ */
   char *cmd;
   int result;
 
@@ -1063,26 +980,14 @@ local void check_zipfile(zipname, zippath)
       strcpy(cmd, unzip_path);
       cmd[len] = '\0';
       strcat(cmd, " ");
-# ifdef UNIX
-      strcat(cmd, "'");    /* accept space or $ in name */
       strcat(cmd, zipname);
-      strcat(cmd, "'");
-# else
-      strcat(cmd, zipname);
-# endif
       strcat(cmd, " ");
       strcat(cmd, here + 2);
     } else {
       /* No {} so append temp name to end */
       strcpy(cmd, unzip_path);
       strcat(cmd, " ");
-# ifdef UNIX
-      strcat(cmd, "'");    /* accept space or $ in name */
       strcat(cmd, zipname);
-      strcat(cmd, "'");
-# else
-      strcat(cmd, zipname);
-# endif
     }
     free(unzip_path);
     unzip_path = NULL;
@@ -1093,31 +998,17 @@ local void check_zipfile(zipname, zippath)
     }
 
     strcpy(cmd, "unzip -t ");
-# ifdef QDOS
-    strcat(cmd, "-Q4 ");
-# endif
     if (!verbose) strcat(cmd, "-qq ");
     if (check_unzip_version("unzip") == 0)
       ZIPERR(ZE_TEST, zipfile);
 
-# ifdef UNIX
-    strcat(cmd, "'");    /* accept space or $ in name */
     strcat(cmd, zipname);
-    strcat(cmd, "'");
-# else
-    strcat(cmd, zipname);
-# endif
   }
 
   result = system(cmd);
-# ifdef VMS
-  /* Convert success severity to 0, others to non-zero. */
-  result = ((result & STS$M_SEVERITY) != STS$M_SUCCESS);
-# endif /* def VMS */
   free(cmd);
   cmd = NULL;
   if (result) {
-#endif /* ?((MSDOS && !__GO32__) || __human68k__) */
 
     fprintf(mesg, "test of %s FAILED\n", zipfile);
     ziperr(ZE_TEST, "original files unmodified");
