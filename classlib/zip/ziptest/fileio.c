@@ -508,19 +508,15 @@ int newname(name, isdir, casesensitive)
 
   /* Discard directory names with zip -rj */
   if (*iname == '\0') {
-#ifndef AMIGA
 /* A null string is a legitimate external directory name in AmigaDOS; also,
  * a command like "zip -r zipfile FOO:" produces an empty internal name.
  */
-# ifndef RISCOS
  /* If extensions needs to be swapped, we will have empty directory names
     instead of the original directory. For example, zipping 'c.', 'c.main'
     should zip only 'main.c' while 'c.' will be converted to '\0' by ex2in. */
 
     if (pathput && !recurse) error("empty name without -j or -r");
 
-# endif /* !RISCOS */
-#endif /* !AMIGA */
     free((zvoid *)iname);
     return ZE_OK;
   }
@@ -539,14 +535,9 @@ int newname(name, isdir, casesensitive)
   }
   if ((zname = in2ex(iname)) == NULL)
     return ZE_MEM;
-#ifdef UNICODE_SUPPORT
-  /* Convert name to display or OEM name */
-  oname = local_to_display_string(iname);
-#else
   if ((oname = malloc(strlen(zname) + 1)) == NULL)
     return ZE_MEM;
   strcpy(oname, zname);
-#endif
   if (undosm == NULL)
     undosm = zname;
   if ((z = zsearch(zname)) != NULL) {
@@ -572,22 +563,12 @@ int newname(name, isdir, casesensitive)
       z->oname = oname;
       z->dosflag = dosflag;
 
-#ifdef FORCE_NEWNAME
-      free((zvoid *)(z->iname));
-      z->iname = iname;
-#else
       /* Better keep the old name. Useful when updating on MSDOS a zip file
        * made on Unix.
        */
       free((zvoid *)iname);
       free((zvoid *)zname);
-#endif /* ? FORCE_NEWNAME */
     }
-#if defined(UNICODE_SUPPORT) && defined(WIN32)
-    z->namew = NULL;
-    z->inamew = NULL;
-    z->znamew = NULL;
-#endif
     if (name == label) {
        label = z->name;
     }
@@ -608,16 +589,10 @@ int newname(name, isdir, casesensitive)
 
     if (zipstate == 1 && (statb = zipstatb, zstat(name, &statb) == 0
       && zipstatb.st_mode  == statb.st_mode
-#ifdef VMS
-      && memcmp(zipstatb.st_ino, statb.st_ino, sizeof(statb.st_ino)) == 0
-      && strcmp(zipstatb.st_dev, statb.st_dev) == 0
-      && zipstatb.st_uid   == statb.st_uid
-#else /* !VMS */
       && zipstatb.st_ino   == statb.st_ino
       && zipstatb.st_dev   == statb.st_dev
       && zipstatb.st_uid   == statb.st_uid
       && zipstatb.st_gid   == statb.st_gid
-#endif /* ?VMS */
       && zipstatb.st_size  == statb.st_size
       && zipstatb.st_mtime == statb.st_mtime
       && zipstatb.st_ctime == statb.st_ctime)) {
