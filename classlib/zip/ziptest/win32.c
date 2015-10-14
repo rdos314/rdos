@@ -462,7 +462,6 @@ FILE *fp;
 {
     if (!zstat(path, buf))
     {
-#ifdef NT_TZBUG_WORKAROUND
         /* stat was successful, now redo the time-stamp fetches */
         int fs_uses_loctime = FSusesLocalTime(path);
         HANDLE h;
@@ -514,31 +513,19 @@ FILE *fp;
             }
         }
 #       undef Ansi_Path
-#endif /* NT_TZBUG_WORKAROUND */
         return 0;
     }
-#ifdef W32_STATROOT_FIX
     else
     {
         DWORD flags;
-#if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-        char *ansi_path = (char *)alloca(strlen(path) + 1);
-
-        OemToAnsi(path, ansi_path);
-#       define Ansi_Path  ansi_path
-#else
 #       define Ansi_Path  path
-#endif
 
         flags = GetFileAttributes(Ansi_Path);
         if (flags != 0xFFFFFFFF && flags & FILE_ATTRIBUTE_DIRECTORY) {
             Trace((stderr, "\nstat(\"%s\",...) failed on existing directory\n",
                    path));
-#ifdef LARGE_FILE_SUPPORT         /* E. Gordon 9/12/03 */
             memset(buf, 0, sizeof(z_stat));
-#else
-            memset(buf, 0, sizeof(struct stat));
-#endif
+
             buf->st_atime = buf->st_ctime = buf->st_mtime =
               dos2unixtime(DOSTIME_MINIMUM);
             /* !!!   you MUST NOT add a cast to the type of "st_mode" here;
@@ -552,7 +539,6 @@ FILE *fp;
         } /* assumes: stat() won't fail on non-dirs without good reason */
 #       undef Ansi_Path
     }
-#endif /* W32_STATROOT_FIX */
     return -1;
 }
 
