@@ -1411,10 +1411,6 @@ local int scanzipf_fixnew()
   /* see if zipfile name ends in .zip */
   plen = strlen(in_path);
 
-#ifdef VMS
-  /* On VMS, adjust plen (and in_path_ext) to avoid the file version. */
-  plen -= strlen(vms_file_version(in_path));
-#endif /* def VMS */
   in_path_ext = zipfile + plen - 4;
 
   if (plen >= 4 &&
@@ -1436,18 +1432,6 @@ local int scanzipf_fixnew()
   }
   else
   {
-
-#ifndef ZIP64_SUPPORT
-    /* 2004-12-06 SMS.
-     * Check for too-big file before doing any serious work.
-     */
-    if (ffile_size( in_file) == EOF) {
-      fclose(in_file);
-      in_file = NULL;
-      zipwarn("input file requires Zip64 support: ", in_path);
-      return ZE_ZIP64;
-    }
-#endif /* ndef ZIP64_SUPPORT */
 
     /* look for End Of Central Directory Record */
 
@@ -1560,10 +1544,6 @@ local int scanzipf_fixnew()
             } else {
               zcomment[zcomlen] = '\0';
             }
-#ifdef EBCDIC
-            if (zcomment)
-               memtoebc(zcomment, zcomment, zcomlen);
-#endif /* EBCDIC */
           }
         }
         if (total_disks != 1)
@@ -1785,9 +1765,6 @@ local int scanzipf_fixnew()
         /* Initialize all fields pointing to malloced data to NULL */
         z->zname = z->name = z->iname = z->extra = z->cextra = z->comment = NULL;
         z->oname = NULL;
-#ifdef UNICODE_SUPPORT
-        z->uname = z->zuname = z->ouname = NULL;
-#endif
 
         /* Attempt to copy entry */
 
