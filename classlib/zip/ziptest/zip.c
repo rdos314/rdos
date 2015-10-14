@@ -2759,28 +2759,6 @@ char **argv;            /* command line tokens */
   if ((action != ADD || d) && zip_to_stdout) {
     ZIPERR(ZE_PARMS, "can't use -d, -f, -u, -U, or -g on stdout\n");
   }
-#if defined(EBCDIC)  && !defined(OS390)
-  if (aflag==ASCII && !translate_eol) {
-    /* Translation to ASCII implies EOL translation!
-     * (on OS390, consistent EOL translation is controlled separately)
-     * The default translation mode is "UNIX" mode (single LF terminators).
-     */
-    translate_eol = 2;
-  }
-#endif
-#ifdef CMS_MVS
-  if (aflag==ASCII && bflag)
-    ZIPERR(ZE_PARMS, "can't use -a with -B");
-#endif
-#ifdef VMS
-  if (!extra_fields && vms_native)
-    {
-      zipwarn("can't use -V with -X, -V ignored", "");
-      vms_native = 0;
-    }
-  if (vms_native && translate_eol)
-    ZIPERR(ZE_PARMS, "can't use -V with -l or -ll");
-#endif
 
   if (noisy) {
     if (fix == 1)
@@ -2816,53 +2794,12 @@ char **argv;            /* command line tokens */
       fprintf(mesg, "sd: Creating new zip file (-FF)\n");
       fflush(mesg);
     }
-#if defined(UNIX) && !defined(NO_MKSTEMP)
-    {
-      int yd;
-      int i;
-
-      /* use mkstemp to avoid race condition and compiler warning */
-
-      if (tempath != NULL)
-      {
-        /* if -b used to set temp file dir use that for split temp */
-        if ((tempzip = malloc(strlen(tempath) + 12)) == NULL) {
-          ZIPERR(ZE_MEM, "allocating temp filename");
-        }
-        strcpy(tempzip, tempath);
-        if (lastchar(tempzip) != '/')
-          strcat(tempzip, "/");
-      }
-      else
-      {
-        /* create path by stripping name and appending template */
-        if ((tempzip = malloc(strlen(zipfile) + 12)) == NULL) {
-        ZIPERR(ZE_MEM, "allocating temp filename");
-        }
-        strcpy(tempzip, zipfile);
-        for(i = strlen(tempzip); i > 0; i--) {
-          if (tempzip[i - 1] == '/')
-            break;
-        }
-        tempzip[i] = '\0';
-      }
-      strcat(tempzip, "ziXXXXXX");
-
-      if ((yd = mkstemp(tempzip)) == EOF) {
-        ZIPERR(ZE_TEMP, tempzip);
-      }
-      if ((y = fdopen(yd, FOPW_TMP)) == NULL) {
-        ZIPERR(ZE_TEMP, tempzip);
-      }
-    }
-#else
     if ((tempzip = tempname(zipfile)) == NULL) {
       ZIPERR(ZE_MEM, "allocating temp filename");
     }
     if ((y = zfopen(tempzip, FOPW_TMP)) == NULL) {
       ZIPERR(ZE_TEMP, tempzip);
     }
-#endif
 
 #if (!defined(VMS) && !defined(CMS_MVS))
     /* Use large buffer to speed up stdio: */
