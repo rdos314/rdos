@@ -220,9 +220,7 @@ struct zlist far *zsearch(n)
 }
 
 #ifndef VMS     /* See [.VMS]VMS.C for VMS-specific ziptyp(). */
-#  ifndef PATHCUT
-#    define PATHCUT '/'
-#  endif
+#define PATHCUT '/'
 
 char *ziptyp(s)
   char *s;             /* file name to force to zip */
