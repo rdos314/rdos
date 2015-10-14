@@ -239,26 +239,7 @@ char *ziptyp(s)
   if (adjust) return t;
 #  ifndef RISCOS
 #    ifndef QDOS
-#      ifdef AMIGA
-  if ((q = MBSRCHR(t, '/')) == NULL)
-    q = MBSRCHR(t, ':');
-  if (MBSRCHR((q ? q + 1 : t), '.') == NULL)
-#      else /* !AMIGA */
-#        ifdef THEOS
-  /* the argument expansion add a dot to the end of file names when
-   * there is no extension and at least one of a argument has wild cards.
-   * So check for at least one character in the extension if there is a dot
-   * in file name */
-  if ((q = MBSRCHR((q = MBSRCHR(t, PATHCUT)) == NULL ? t : q + 1, '.')) == NULL
-    || q[1] == '\0') {
-#        else /* !THEOS */
-#          ifdef TANDEM
-  if (MBSRCHR((q = MBSRCHR(t, '.')) == NULL ? t : q + 1, ' ') == NULL)
-#          else /* !TANDEM */
   if (MBSRCHR((q = MBSRCHR(t, PATHCUT)) == NULL ? t : q + 1, '.') == NULL)
-#          endif /* ?TANDEM */
-#        endif /* ?THEOS */
-#      endif /* ?AMIGA */
 #      ifdef CMS_MVS
     if (strncmp(t,"dd:",3) != 0 && strncmp(t,"DD:",3) != 0)
 #      endif /* CMS_MVS */
