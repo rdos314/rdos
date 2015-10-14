@@ -249,10 +249,6 @@ char *ziptyp(s)
 
 local void write_ushort_to_mem( OFT( ush) usValue,
                                 OFT( char *)pPtr)
-#ifdef NO_PROTO
-  ush usValue;
-  char *pPtr;
-#endif /* def NO_PROTO */
 {
   *pPtr++ = ((char)(usValue) & 0xff);
   *pPtr = ((char)(usValue >> 8) & 0xff);
@@ -266,8 +262,6 @@ char *pPtr;
   write_ushort_to_mem((ush)((uValue >> 16) & 0xffff), pPtr + 2);
 }
 
-#ifdef ZIP64_SUPPORT
-
 local void write_int64_to_mem(l64Value,pPtr)
   uzoff_t l64Value;
   char *pPtr;
@@ -276,65 +270,10 @@ local void write_int64_to_mem(l64Value,pPtr)
   write_ulong_to_mem((ulg)((l64Value >> 32) & 0xffffffff),pPtr + 4);
 }
 
-#endif /* def ZIP64_SUPPORT */
-
-#ifdef UNICODE_SUPPORT
-
-/* Write a string to memory */
-local void write_string_to_mem(strValue, pPtr)
-  char *strValue;
-  char *pPtr;
-{
-  if (strValue != NULL) {
-    int ssize = strlen(strValue);
-    int i;
-
-    for (i = 0; i < ssize; i++) {
-      *(pPtr + i) = *(strValue + i);
-    }
-  }
-}
-
-#endif /* def UNICODE_SUPPORT */
-
-
 
 /* same as above but allocate memory as needed and keep track of current end
    using offset - 2/6/05 EG */
 
-#if 0 /* ubyte version not used */
-local void append_ubyte_to_mem( OFT( unsigned char) ubValue,
-                                OFT( char **) pPtr,
-                                OFT( extent *) offset,
-                                OFT( extent *) blocksize)
-#ifdef NO_PROTO
-  unsigned char ubValue;  /* byte to append */
-  char **pPtr;            /* start of block */
-  extent *offset;         /* next byte to write */
-  extent *blocksize;      /* current size of block */
-#endif /* def NO_PROTO */
-{
-  if (*pPtr == NULL) {
-    /* malloc a 1K block */
-    (*blocksize) = 1024;
-    *pPtr = (char *) malloc(*blocksize);
-    if (*pPtr == NULL) {
-      ziperr(ZE_MEM, "append_ubyte_to_mem");
-    }
-  }
-  /* if (*offset) + 1 > (*blocksize) - 1 */
-  else if ((*offset) > (*blocksize) - (1 + 1)) {
-    /* realloc a bigger block in 1 K increments */
-    (*blocksize) += 1024;
-    *pPtr = realloc(*pPtr, *blocksize);
-    if (*pPtr == NULL) {
-      ziperr(ZE_MEM, "append_ubyte_to_mem");
-    }
-  }
-  *(*pPtr + *offset) = ubValue;
-  (*offset)++;
-}
-#endif
 
 local void append_ushort_to_mem( OFT( ush) usValue,
                                  OFT( char **) pPtr,
