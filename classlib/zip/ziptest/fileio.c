@@ -292,11 +292,9 @@ int proc_archive_name(n, caseflag)
         m = 0;
       }
     }
-#ifdef UNICODE_SUPPORT
     /* also check escaped Unicode names */
     for (z = zfiles; z != NULL; z = z->nxt) {
       if (z->zuname) {
-#ifdef WIN32
         /* It seems something is lost in going from a listed
            name from zip -su in a console window to using that
            name in a command line.  This kluge may fix it
@@ -305,9 +303,6 @@ int proc_archive_name(n, caseflag)
            started with.
          */
         char *zuname = z->wuname;
-#else
-        char *zuname = z->zuname;
-#endif
         if (MATCH(p, zuname, caseflag))
         {
           z->mark = pcount ? filter(zuname, caseflag) : 1;
@@ -321,7 +316,6 @@ int proc_archive_name(n, caseflag)
         }
       }
     }
-#endif
     free((zvoid *)p);
     return m ? ZE_MISS : ZE_OK;
   }
