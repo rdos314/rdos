@@ -1455,36 +1455,6 @@ local int scanzipf_reg(f)
         /* Clear actions */
         z->mark = 0;
         z->trash = 0;
-#ifdef UNICODE_SUPPORT
-        if (unicode_mismatch != 3) {
-          read_Unicode_Path_entry(z);
-          if (z->uname) {
-            /* match based on converted Unicode name */
-            z->name = utf8_to_local_string(z->uname);
-# ifdef EBCDIC
-            /* z->zname is used for printing and must be coded in native charset */
-            strtoebc(z->zname, z->name);
-# else
-            if ((z->zname = malloc(strlen(z->name) + 1)) == NULL) {
-              ZIPERR(ZE_MEM, "scanzipf_reg");
-            }
-            strcpy(z->zname, z->name);
-# endif
-            z->oname = local_to_display_string(z->zname);
-          } else {
-            /* no UTF-8 path */
-            if ((z->name = malloc(strlen(z->iname) + 1)) == NULL) {
-              ZIPERR(ZE_MEM, "scanzipf_reg");
-            }
-            strcpy(z->name, z->iname);
-            if ((z->zname = malloc(strlen(z->iname) + 1)) == NULL) {
-              ZIPERR(ZE_MEM, "scanzipf_reg");
-            }
-            strcpy(z->zname, z->iname);
-            z->oname = local_to_display_string(z->iname);
-          }
-        }
-#else /* !UNICODE_SUPPORT */
 # ifdef UTIL
 /* We only need z->iname in the utils */
         z->name = z->iname;
@@ -1506,7 +1476,6 @@ local int scanzipf_reg(f)
           ZIPERR(ZE_MEM, "scanzipf_reg");
         }
         strcpy(z->oname, z->zname);
-#endif /* ?UNICODE_SUPPORT */
       }
       else {
 #ifdef EBCDIC
