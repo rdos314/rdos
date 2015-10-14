@@ -127,7 +127,6 @@ int cs;                 /* flag: force case-sensitive matching */
       else
         /* compare the remaining literal pattern string with the last bytes
            of the test string to check for a match */
-#ifdef _MBCS
       {
         ZCONST char *q = s;
 
@@ -147,9 +146,6 @@ int cs;                 /* flag: force case-sensitive matching */
           return 0;
         return ((cs ? strcmp(p, q) : namecmp(p, q)) == 0);
       }
-#else /* !_MBCS */
-        return ((cs ? strcmp(p, srest) : namecmp(p, srest)) == 0);
-#endif /* ?_MBCS */
     }
     else
     {
@@ -161,7 +157,6 @@ int cs;                 /* flag: force case-sensitive matching */
     }
   }
 
-#ifndef VMS             /* No bracket matching in VMS */
   /* Parse and process the list of characters and ranges in brackets */
   if (!no_wild && allow_regex && c == '[')
   {
@@ -203,40 +198,12 @@ int cs;                 /* flag: force case-sensitive matching */
     return r ? recmatch(q + CLEN(q), s + CLEN(s), cs) : 0;
                                         /* bracket match failed */
   }
-#endif /* !VMS */
 
   /* If escape ('\'), just compare next character */
   if (!no_wild && c == '\\')
     if ((c = *p++) == '\0')             /* if \ at end, then syntax error */
       return 0;
 
-#ifdef VMS
-  /* 2005-11-06 SMS.
-     Handle "..." wildcard in p with "." or "]" in s.
-  */
-  if ((c == '.') && (*p == '.') && (*(p+ CLEN( p)) == '.') &&
-   ((*s == '.') || (*s == ']')))
-  {
-    /* Match "...]" with "]".  Continue after "]" in both. */
-    if ((*(p+ 2* CLEN( p)) == ']') && (*s == ']'))
-      return recmatch( (p+ 3* CLEN( p)), (s+ CLEN( s)), cs);
-
-    /* Else, look for a reduced match in s, until "]" in or end of s. */
-    for (; *s && (*s != ']'); INCSTR(s))
-      if (*s == '.')
-        /* If reduced match, then continue after "..." in p, "." in s. */
-        if ((c = recmatch( (p+ CLEN( p)), s, cs)) != 0)
-          return (int)c;
-
-    /* Match "...]" with "]".  Continue after "]" in both. */
-    if ((*(p+ 2* CLEN( p)) == ']') && (*s == ']'))
-      return recmatch( (p+ 3* CLEN( p)), (s+ CLEN( s)), cs);
-
-    /* No reduced match.  Quit. */
-    return 2;
-  }
-
-#endif /* def VMS */
 
   /* Just a character--compare it */
   return (cs ? c == *s : case_map((uch)c) == case_map((uch)*s)) ?
