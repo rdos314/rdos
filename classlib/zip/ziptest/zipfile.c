@@ -173,10 +173,6 @@ local void cutpath OF((char *p, int delim));
 
 /* Local data */
 
-#ifdef HANDLE_AMIGA_SFX
-   ulg amiga_sfx_offset;        /* place where size field needs updating */
-#endif
-
 local int zqcmp(a, b)
 ZCONST zvoid *a, *b;          /* pointers to pointers to zip entries */
 /* Used by qsort() to compare entries in the zfile list.
@@ -187,24 +183,6 @@ ZCONST zvoid *a, *b;          /* pointers to pointers to zip entries */
 
   return namecmp(aname, bname);
 }
-
-#ifdef UNICODE_SUPPORT
-local int zuqcmp(a, b)
-ZCONST zvoid *a, *b;          /* pointers to pointers to zip entries */
-/* Used by qsort() to compare entries in the zfile list.
- * Compares the internal names z->zuname */
-{
-  char *aname = (*(struct zlist far **)a)->iname;
-  char *bname = (*(struct zlist far **)b)->iname;
-
-  /* zuname could be NULL */
-  if ((*(struct zlist far **)a)->zuname)
-    aname = (*(struct zlist far **)a)->zuname;
-  if ((*(struct zlist far **)b)->zuname)
-    bname = (*(struct zlist far **)b)->zuname;
-  return namecmp(aname, bname);
-}
-#endif
 
 
 #ifndef UTIL
@@ -226,46 +204,6 @@ ZCONST zvoid far *z;    /* pointer to a pointer to a zip entry */
 {
   return namecmp((char *)n, ((struct zlist far *)z)->zname);
 }
-
-#ifdef UNICODE_SUPPORT
-/* search unicode paths */
-local int zubcmp(n, z)
-ZCONST zvoid *n;        /* string to search for */
-ZCONST zvoid far *z;    /* pointer to a pointer to a zip entry */
-/* Used by search() to compare a target to an entry in the zfile list. */
-{
-  char *zuname = ((struct zlist far *)z)->zuname;
-
-  /* zuname is NULL if no UTF-8 name */
-  if (zuname == NULL)
-    zuname = ((struct zlist far *)z)->zname;
-
-  return namecmp((char *)n, zuname);
-}
-
-#if 0
-/* search escaped unicode paths */
-local int zuebcmp(n, z)
-ZCONST zvoid *n;        /* string to search for */
-ZCONST zvoid far *z;    /* pointer to a pointer to a zip entry */
-/* Used by search() to compare a target to an entry in the zfile list. */
-{
-  char *zuname = ((struct zlist far *)z)->zuname;
-  char *zuename;
-  int k;
-
-  /* zuname is NULL if no UTF-8 name */
-  if (zuname == NULL)
-    zuname = ((struct zlist far *)z)->zname;
-  zuename = local_to_escape_string(zuname);
-  k = namecmp((char *)n, zuename);
-  free(zuename);
-
-  return k;
-}
-#endif
-#endif
-
 
 struct zlist far *zsearch(n)
   ZCONST char *n;      /* name to find */
