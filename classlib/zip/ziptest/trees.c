@@ -340,36 +340,20 @@ unsigned bi_buf;
  * more than 16 bits on some systems.)
  */
 
-#if (!defined(ASMV) || !defined(RISCOS))
-local int bi_valid;
-#else
 int bi_valid;
-#endif
 /* Number of valid bits in bi_buf.  All bits above the last valid bit
  * are always zero.
  */
 
-#if (!defined(ASMV) || !defined(RISCOS))
-local char *out_buf;
-#else
 char *out_buf;
-#endif
 /* Current output buffer. */
 
-#if (!defined(ASMV) || !defined(RISCOS))
-local unsigned out_offset;
-#else
 unsigned out_offset;
-#endif
 /* Current offset in output buffer.
  * On 16 bit machines, the buffer is limited to 64K.
  */
 
-#if !defined(ASMV) || !defined(RISCOS)
-local unsigned out_size;
-#else
 unsigned out_size;
-#endif
 /* Size of current output buffer */
 
 /* Output a 16 bit value to the bit stream, lower (oldest) byte first */
@@ -385,11 +369,6 @@ unsigned out_size;
     flush_outbuf(out_buf, &out_offset); \
   out_buf[out_offset++] = (char) (b); \
 }
-
-#ifdef DEBUG
-local uzoff_t bits_sent;   /* bit length of the compressed data */
-extern uzoff_t isize;      /* byte length of input file */
-#endif
 
 extern long block_start;       /* window offset of current block */
 extern unsigned near strstart; /* window offset of current string */
