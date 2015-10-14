@@ -313,29 +313,6 @@ int namecmp(string1, string2)
   }
 }
 
-#ifdef IZ_ISO2OEM_ARRAY
-char *str_iso_to_oem(dst, src)
-  ZCONST char *src;
-  char *dst;
-{
-  char *dest_start = dst;
-  while (*dst++ = (char)iso2oem[(uch)(*src++)]);
-  return dest_start;
-}
-#endif
-
-#ifdef IZ_OEM2ISO_ARRAY
-char *str_oem_to_iso(dst, src)
-  ZCONST char *src;
-  char *dst;
-{
-  char *dest_start = dst;
-  while (*dst++ = (char)oem2iso[(uch)(*src++)]);
-  return dest_start;
-}
-#endif
-
-
 
 /* DBCS support for Info-ZIP's zip  (mainly for japanese (-: )
  * by Yoshioka Tsuneo (QWF00133@nifty.ne.jp,tsuneo-y@is.aist-nara.ac.jp)
