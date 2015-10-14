@@ -708,7 +708,6 @@ ulg dostime;            /* DOS time to convert */
   return mktime(t);
 }
 
-#ifndef MACOS
 int destroy(f)
   char *f;             /* file to delete */
 /* Delete the file *f, returning non-zero on failure. */
@@ -816,7 +815,6 @@ char *d, *s;            /* destination and source file names */
   }
   return ZE_OK;
 }
-#endif /* !MACOS */
 
 
 int getfileattr(f)
