@@ -222,8 +222,6 @@ int cs;                 /* force case-sensitive match if TRUE */
 }
 
 
-#if defined(DOS) || defined(WIN32)
-
 #ifdef UNICODE_SUPPORT
 
 int dosmatchw(pw, sw, cs)
@@ -283,8 +281,6 @@ int cs;                 /* force case-sensitive match if TRUE */
     free((zvoid *)s1);
   return r == 1;
 }
-
-#endif /* DOS || WIN32 */
 
 zvoid far **search(b, a, n, cmp)
 ZCONST zvoid *b;        /* pointer to value to search for */
