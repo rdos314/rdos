@@ -442,30 +442,6 @@ local void help()
   /* help array */
   static ZCONST char *text[] = {
 "Zip %s (%s). Usage:",
-#ifdef MACOS
-"zip [-options] [-b fm] [-t mmddyyyy] [-n suffixes] [zipfile list] [-xi list]",
-"  The default action is to add or replace zipfile entries from list.",
-" ",
-"  -f   freshen: only changed files  -u   update: only changed or new files",
-"  -d   delete entries in zipfile    -m   move into zipfile (delete OS files)",
-"  -r   recurse into directories     -j   junk (don't record) directory names",
-"  -0   store only                   -l   convert LF to CR LF (-ll CR LF to LF)",
-"  -1   compress faster              -9   compress better",
-"  -q   quiet operation              -v   verbose operation/print version info",
-"  -c   add one-line comments        -z   add zipfile comment",
-"                                    -o   make zipfile as old as latest entry",
-"  -F   fix zipfile (-FF try harder) -D   do not add directory entries",
-"  -T   test zipfile integrity       -X   eXclude eXtra file attributes",
-#  if CRYPT
-"  -e   encrypt                      -n   don't compress these suffixes"
-#  else
-"  -h   show this help               -n   don't compress these suffixes"
-#  endif
-," -h2  show more help",
-"  Macintosh specific:",
-"  -jj  record Fullpath (+ Volname)  -N store finder-comments as comments",
-"  -df  zip only datafork of a file  -S include finder invisible/system files"
-#else /* !MACOS */
 #ifdef VM_CMS
 "zip [-options] [-b fm] [-t mmddyyyy] [-n suffixes] [zipfile list] [-xi list]",
 #else  /* !VM_CMS */
@@ -542,7 +518,6 @@ local void help()
 #else
 ,"  -h2  show more help"
 #endif
-#endif /* ?MACOS */
 #ifdef VMS
 ,"  (Must quote upper-case options, like \"-V\", unless SET PROC/PARSE=EXTEND)"
 #endif /* def VMS */
