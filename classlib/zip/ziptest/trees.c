@@ -1321,9 +1321,6 @@ local void copy_block(block, len, header)
     if (header) {
         PUTSHORT((ush)len);
         PUTSHORT((ush)~len);
-#ifdef DEBUG
-        bits_sent += 2*16;
-#endif
     }
     if (flush_flg) {
         flush_outbuf(out_buf, &out_offset);
@@ -1355,7 +1352,4 @@ local void copy_block(block, len, header)
         memcpy(out_buf + out_offset, block, len);
         out_offset += len;
     }
-#ifdef DEBUG
-    bits_sent += (ulg)len<<3;
-#endif
 }
