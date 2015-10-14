@@ -42,18 +42,6 @@
 
 #define GLOBAL(g) g
 
-#ifdef HAVE_TERMIOS_H
-#  ifndef USE_POSIX_TERMIOS
-#    define USE_POSIX_TERMIOS
-#  endif
-#endif
-
-#if (defined(HAVE_TERMIO_H) || defined(HAVE_SYS_TERMIO_H))
-#  ifndef USE_SYSV_TERMIO
-#    define USE_SYSV_TERMIO
-#  endif
-#endif
-
 #if (defined(UNZIP) && !defined(FUNZIP) && defined(UNIX) && defined(MORE))
 #  include <sys/ioctl.h>
 #  define GOT_IOCTL_H
