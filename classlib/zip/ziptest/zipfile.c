@@ -232,26 +232,10 @@ char *ziptyp(s)
 {
   char *q;              /* temporary pointer */
   char *t;              /* pointer to malloc'ed string */
-#  ifdef THEOS
-  char *r;              /* temporary pointer */
-  char *disk;
-#  endif
 
   if ((t = malloc(strlen(s) + 5)) == NULL)
     return NULL;
   strcpy(t, s);
-#  ifdef __human68k__
-  _toslash(t);
-#  endif
-#  ifdef MSDOS
-  for (q = t; *q; INCSTR(q))
-    if (*q == '\\')
-      *q = '/';
-#  endif /* MSDOS */
-#  if defined(__RSXNT__) || defined(WIN32_CRT_OEM)
-   /* RSXNT/EMX C rtl uses OEM charset */
-  AnsiToOem(t, t);
-#  endif
   if (adjust) return t;
 #  ifndef RISCOS
 #    ifndef QDOS
