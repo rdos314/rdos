@@ -2619,13 +2619,8 @@ char **argv;            /* command line tokens */
       ZIPERR(ZE_TEMP, tempzip);
     }
 
-#if (!defined(VMS) && !defined(CMS_MVS))
     /* Use large buffer to speed up stdio: */
-#if (defined(_IOFBF) || !defined(BUFSIZ))
-    zipbuf = (char *)malloc(ZBSZ);
-#else
     zipbuf = (char *)malloc(BUFSIZ);
-#endif
     if (zipbuf == NULL) {
       ZIPERR(ZE_MEM, tempzip);
     }
@@ -2634,7 +2629,6 @@ char **argv;            /* command line tokens */
 # else
     setbuf(y, zipbuf);
 # endif /* _IOBUF */
-#endif /* !VMS  && !CMS_MVS */
 
 
     if ((r = readzipfile()) != ZE_OK) {
