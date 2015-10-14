@@ -3263,24 +3263,7 @@ char **argv;            /* command line tokens */
   tempzn = 0;
   if (strcmp(zipfile, "-") == 0)
   {
-#ifdef MSDOS
-    /* It is nonsense to emit the binary data stream of a zipfile to
-     * the (text mode) console.  This case should already have been caught
-     * in a call to zipstdout() far above.  Therefore, if the following
-     * failsafe check detects a console attached to stdout, zip is stopped
-     * with an "internal logic error"!  */
-    if (isatty(fileno(stdout)))
-      ZIPERR(ZE_LOGIC, "tried to write binary zipfile data to console!");
-    /* Set stdout mode to binary for MSDOS systems */
-#  ifdef __HIGHC__
-    setmode(stdout, _BINARY);
-#  else
-    setmode(fileno(stdout), O_BINARY);
-#  endif
-    y = zfdopen(fileno(stdout), FOPW);
-#else
     y = stdout;
-#endif
     /* tempzip must be malloced so a later free won't barf */
     tempzip = malloc(4);
     if (tempzip == NULL) {
