@@ -35,9 +35,6 @@
 
 
 /* Local option flags */
-#ifndef DELETE
-#define DELETE  0
-#endif
 #define ADD     1
 #define UPDATE  2
 #define FRESHEN 3
