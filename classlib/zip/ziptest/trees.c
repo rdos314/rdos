@@ -428,19 +428,8 @@ void ct_init(attr, method)
     file_method = method;
     cmpr_len_bits = 0L;
     cmpr_bytelen = (uzoff_t)0;
-#ifdef DEBUG
-    input_len = (uzoff_t)0;
-#endif
 
     if (static_dtree[0].Len != 0) return; /* ct_init already called */
-
-#ifdef DYN_ALLOC
-    d_buf = (ush far *) zcalloc(DIST_BUFSIZE, sizeof(ush));
-    l_buf = (uch far *) zcalloc(LIT_BUFSIZE/2, 2);
-    /* Avoid using the value 64K on 16 bit machines */
-    if (l_buf == NULL || d_buf == NULL)
-        ziperr(ZE_MEM, "ct_init: out of memory");
-#endif
 
     /* Initialize the mapping length (0..255) -> length code (0..28) */
     length = 0;
@@ -765,12 +754,6 @@ local void build_tree(desc)
         tree[node].Freq = (ush)(tree[n].Freq + tree[m].Freq);
         depth[node] = (uch) (Max(depth[n], depth[m]) + 1);
         tree[n].Dad = tree[m].Dad = (ush)node;
-#ifdef DUMP_BL_TREE
-        if (tree == bl_tree) {
-            fprintf(mesg,"\nnode %d(%d), sons %d(%d) %d(%d)",
-                    node, tree[node].Freq, n, tree[n].Freq, m, tree[m].Freq);
-        }
-#endif
         /* and insert the new node in the heap */
         heap[SMALLEST] = node++;
         pqdownheap(tree, SMALLEST);
@@ -987,9 +970,6 @@ uzoff_t flush_block(buf, stored_len, eof)
     /* Determine the best encoding. Compute first the block length in bytes */
     opt_lenb = (opt_len+3+7)>>3;
     static_lenb = (static_len+3+7)>>3;
-#ifdef DEBUG
-    input_len += stored_len; /* for debugging only */
-#endif
 
     Trace((stderr, "\nopt %lu(%lu) stat %lu(%lu) stored %lu lit %u dist %u ",
             opt_lenb, opt_len, static_lenb, static_len, stored_len,
@@ -997,19 +977,12 @@ uzoff_t flush_block(buf, stored_len, eof)
 
     if (static_lenb <= opt_lenb) opt_lenb = static_lenb;
 
-#ifndef PGP /* PGP can't handle stored blocks */
     /* If compression failed and this is the first and last block,
      * the whole file is transformed into a stored file:
      */
-#ifdef FORCE_METHOD
-    if (level == 1 && eof && file_method != NULL &&
-        cmpr_bytelen == (uzoff_t)0 && cmpr_len_bits == 0L
-       ) { /* force stored file */
-#else
     if (stored_len <= opt_lenb && eof && file_method != NULL &&
         cmpr_bytelen == (uzoff_t)0 && cmpr_len_bits == 0L &&
         seekable() && !use_descriptors) {
-#endif
         /* Since LIT_BUFSIZE <= 2*WSIZE, the input data must be there: */
         if (buf == NULL) error ("block vanished");
 
@@ -1017,14 +990,9 @@ uzoff_t flush_block(buf, stored_len, eof)
         cmpr_bytelen = stored_len;
         *file_method = STORE;
     } else
-#endif /* PGP */
 
-#ifdef FORCE_METHOD
-    if (level <= 2 && buf != (char*)NULL) { /* force stored block */
-#else
     if (stored_len+4 <= opt_lenb && buf != (char*)NULL) {
                        /* 4: two words for the lengths */
-#endif
         /* The test buf != NULL is only necessary if LIT_BUFSIZE > WSIZE.
          * Otherwise we can't have processed more than WSIZE input bytes since
          * the last block flush, because compression would have been
@@ -1037,11 +1005,7 @@ uzoff_t flush_block(buf, stored_len, eof)
 
         copy_block(buf, (unsigned)stored_len, 1); /* with header */
 
-#ifdef FORCE_METHOD
-    } else if (level == 3) { /* force static trees */
-#else
     } else if (static_lenb == opt_lenb) {
-#endif
         send_bits((STATIC_TREES<<1)+eof, 3);
         compress_block((ct_data near *)static_ltree, (ct_data near *)static_dtree);
         cmpr_len_bits += 3 + static_len;
