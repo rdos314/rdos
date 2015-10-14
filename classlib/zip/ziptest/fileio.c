@@ -363,18 +363,12 @@ int check_dup()
         sprintf(tempbuf, " second full name: %s\n", nodup[j]->name);
         strcat(errbuf, "                     ");
         strcat(errbuf, tempbuf);
-#ifdef EBCDIC
-        strtoebc(nodup[j]->iname, nodup[j]->iname);
-#endif
         sprintf(tempbuf, "name in zip file repeated: %s", nodup[j]->iname);
         strcat(errbuf, "                     ");
         strcat(errbuf, tempbuf);
         if (pathput == 0) {
           strcat(errbuf, "\n                     this may be a result of using -j");
         }
-#ifdef EBCDIC
-        strtoasc(nodup[j]->iname, nodup[j]->iname);
-#endif
         zipwarn(errbuf, "");
         return ZE_PARMS;
       }
