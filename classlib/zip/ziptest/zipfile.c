@@ -15,9 +15,6 @@
 
 #include "zip.h"
 #include "revision.h"
-#ifdef UNICODE_SUPPORT
-# include "crc32.h"
-#endif
 
 /* for realloc 2/6/2005 EG */
 #include <stdlib.h>
@@ -27,32 +24,16 @@
 /* for toupper() */
 #include <ctype.h>
 
-#ifdef VMS
-#  include "vms/vms.h"
-#  include "vms/vmsmunch.h"
-#  include "vms/vmsdefs.h"
-#endif
-
-#ifdef WIN32
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
-#endif
 
 /*
  * XXX start of zipfile.h
  */
-#ifdef THEOS
- /* Macros cause stack overflow in compiler */
- ush SH(uch* p) { return ((ush)(uch)((p)[0]) | ((ush)(uch)((p)[1]) << 8)); }
- ulg LG(uch* p) { return ((ulg)(SH(p)) | ((ulg)(SH((p)+2)) << 16)); }
-#else /* !THEOS */
  /* Macros for converting integers in little-endian to machine format */
-# define SH(a) ((ush)(((ush)(uch)(a)[0]) | (((ush)(uch)(a)[1]) << 8)))
-# define LG(a) ((ulg)SH(a) | ((ulg)SH((a)+2) << 16))
-# ifdef ZIP64_SUPPORT           /* zip64 support 08/31/2003 R.Nausedat */
-#  define LLG(a) ((zoff_t)LG(a) | ((zoff_t)LG((a)+4) << 32))
-# endif
-#endif /* ?THEOS */
+#define SH(a) ((ush)(((ush)(uch)(a)[0]) | (((ush)(uch)(a)[1]) << 8)))
+#define LG(a) ((ulg)SH(a) | ((ulg)SH((a)+2) << 16))
+#define LLG(a) ((zoff_t)LG(a) | ((zoff_t)LG((a)+4) << 32))
 
 /* Macros for writing machine integers to little-endian format */
 #define PUTSH(a,f) {putc((char)((a) & 0xff),(f)); putc((char)((a) >> 8),(f));}
