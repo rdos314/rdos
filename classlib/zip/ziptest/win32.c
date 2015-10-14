@@ -114,34 +114,6 @@ DWORD dwAttr;
         | (dwAttr&FILE_ATTRIBUTE_ARCHIVE   ? A_ARCHIVE :0));
 }
 
-#ifdef UNICODE_SUPPORT
-int GetFileModeW(wchar_t *namew)
-{
-DWORD dwAttr;
-#if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-  wchar_t *ansi_namew = (wchar_t *)alloca((wcslen(namew) + 1) * sizeof(wchar_t));
-
-  CharToAnsiW(namew, ansi_namew);
-  namew = ansi_namew;
-#endif
-
-  dwAttr = GetFileAttributesW(namew);
-  if ( dwAttr == 0xFFFFFFFF ) {
-    char *name = wchar_to_local_string(namew);
-    zipwarn("reading file attributes failed: ", name);
-    free(name);
-    return(0x20); /* the most likely, though why the error? security? */
-  }
-  return(
-          (dwAttr&FILE_ATTRIBUTE_READONLY  ? A_RONLY   :0)
-        | (dwAttr&FILE_ATTRIBUTE_HIDDEN    ? A_HIDDEN  :0)
-        | (dwAttr&FILE_ATTRIBUTE_SYSTEM    ? A_SYSTEM  :0)
-        | (dwAttr&FILE_ATTRIBUTE_DIRECTORY ? A_DIR     :0)
-        | (dwAttr&FILE_ATTRIBUTE_ARCHIVE   ? A_ARCHIVE :0));
-}
-#endif
-
-
 int ClearArchiveBitW(wchar_t *namew)
 {
 DWORD dwAttr;
@@ -162,12 +134,6 @@ DWORD dwAttr;
 int ClearArchiveBit(char *name)
 {
 DWORD dwAttr;
-#if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-  char *ansi_name = (char *)alloca(strlen(name) + 1);
-
-  OemToAnsi(name, ansi_name);
-  name = ansi_name;
-#endif
 
   dwAttr = GetFileAttributes(name);
   if ( dwAttr == 0xFFFFFFFF ) {
