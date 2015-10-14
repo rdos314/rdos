@@ -43,18 +43,9 @@
 
 extern int noisy;
 
-#ifdef NT_TZBUG_WORKAROUND
 local int FSusesLocalTime(const char *path);
-#ifdef UNICODE_SUPPORt
-local int FSusesLocalTimeW(const wchar_t *path);
-#endif
-#endif
-#if (defined(USE_EF_UT_TIME) || defined(NT_TZBUG_WORKAROUND))
 local int FileTime2utime(FILETIME *pft, time_t *ut);
-#endif
-#if (defined(NT_TZBUG_WORKAROUND) && defined(W32_STAT_BANDAID))
 local int VFatFileTime2utime(const FILETIME *pft, time_t *ut);
-#endif
 
 
 /* FAT / HPFS detection */
