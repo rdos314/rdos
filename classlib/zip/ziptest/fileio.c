@@ -3198,15 +3198,6 @@ unsigned long get_option(pargs, argc, argnum, optchar, value,
         }
       }
 
-#if 0
-    /* argument file code left out
-       so for now let filenames start with @
-    */
-
-    } else if (allow_arg_files && arg[0] == '@') {
-      /* arg file */
-      oERR(ZE_PARMS, no_arg_files_err);
-#endif
 
     } else {
       /* non-option */
