@@ -334,24 +334,16 @@ void error(h)
   ziperr(ZE_LOGIC, h);
 }
 
-#if (!defined(MACOS) && !defined(WINDLL))
 local void handler(s)
 int s;                  /* signal number (ignored) */
 /* Upon getting a user interrupt, turn echo back on for tty and abort
    cleanly using ziperr(). */
 {
-#if defined(AMIGA) && defined(__SASC)
-   _abort();
-#else
-#if !defined(MSDOS) && !defined(__human68k__) && !defined(RISCOS)
   echon();
   putc('\n', mesg);
-#endif /* !MSDOS */
-#endif /* AMIGA && __SASC */
   ziperr(ZE_ABORT, "aborting");
   s++;                                  /* keep some compilers happy */
 }
-#endif /* !MACOS && !WINDLL */
 
 void zipmessage_nl(a, nl)
 ZCONST char *a;     /* message string to output */
