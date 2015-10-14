@@ -2888,9 +2888,6 @@ char **argv;            /* command line tokens */
     fprintf(mesg, "sd: Scanning files to update\n");
     fflush(mesg);
   }
-#ifdef MACOS
-  PrintStatProgress("Getting file information ...");
-#endif
   diag("stating marked entries");
   k = 0;                        /* Initialize marked count */
   scan_started = 0;
@@ -2921,22 +2918,16 @@ char **argv;            /* command line tokens */
       all_current = 0;
     }
     if (z->mark) {
-#ifdef USE_EF_UT_TIME
       iztimes f_utim, z_utim;
       ulg z_tim;
-#endif /* USE_EF_UT_TIME */
       Trace((stderr, "zip diagnostics: marked file=%s\n", z->oname));
 
       csize = z->siz;
       usize = z->len;
       if (action == DELETE) {
         /* only delete files in date range */
-#ifdef USE_EF_UT_TIME
         z_tim = (get_ef_ut_ztime(z, &z_utim) & EB_UT_FL_MTIME) ?
                 unix2dostime(&z_utim.mtime) : z->tim;
-#else /* !USE_EF_UT_TIME */
-#       define z_tim  z->tim
-#endif /* ?USE_EF_UT_TIME */
         if (z_tim < before || (after && z_tim >= after)) {
           /* include in archive */
           z->mark = 0;
@@ -2951,12 +2942,8 @@ char **argv;            /* command line tokens */
         }
       } else if (action == ARCHIVE) {
         /* only keep files in date range */
-#ifdef USE_EF_UT_TIME
         z_tim = (get_ef_ut_ztime(z, &z_utim) & EB_UT_FL_MTIME) ?
                 unix2dostime(&z_utim.mtime) : z->tim;
-#else /* !USE_EF_UT_TIME */
-#       define z_tim  z->tim
-#endif /* ?USE_EF_UT_TIME */
         if (z_tim < before || (after && z_tim >= after)) {
           /* exclude from archive */
           z->mark = 0;
@@ -2976,16 +2963,6 @@ char **argv;            /* command line tokens */
           isdirname = 1;
         }
 
-# if defined(UNICODE_SUPPORT) && defined(WIN32)
-        if (!no_win32_wide) {
-          if (z->namew == NULL) {
-            if (z->uname != NULL)
-              z->namew = utf8_to_wchar_string(z->uname);
-            else
-              z->namew = local_to_wchar_string(z->name);
-          }
-        }
-# endif
 
 #ifdef USE_EF_UT_TIME
 # if defined(UNICODE_SUPPORT) && defined(WIN32)
