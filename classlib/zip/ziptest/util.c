@@ -313,42 +313,6 @@ int namecmp(string1, string2)
   }
 }
 
-#ifdef EBCDIC
-char *strtoasc(char *str1, ZCONST char *str2)
-{
-  char *old;
-  old = str1;
-  while (*str1++ = (char)ascii[(uch)(*str2++)]);
-  return old;
-}
-
-char *strtoebc(char *str1, ZCONST char *str2)
-{
-  char *old;
-  old = str1;
-  while (*str1++ = (char)ebcdic[(uch)(*str2++)]);
-  return old;
-}
-
-char *memtoasc(char *mem1, ZCONST char *mem2, unsigned len)
-{
-  char *old;
-  old = mem1;
-  while (len--)
-     *mem1++ = (char)ascii[(uch)(*mem2++)];
-  return old;
-}
-
-char *memtoebc(char *mem1, ZCONST char *mem2, unsigned len)
-{
-  char *old;
-  old = mem1;
-  while (len--)
-     *mem1++ = (char)ebcdic[(uch)(*mem2++)];
-  return old;
-}
-#endif /* EBCDIC */
-
 #ifdef IZ_ISO2OEM_ARRAY
 char *str_iso_to_oem(dst, src)
   ZCONST char *src;
