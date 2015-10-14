@@ -91,61 +91,11 @@ int IsFileSystemOldFAT(char *dir)
     return lastDriveOldFAT;
 }
 
-#ifdef UNICODE_SUPPORT
-int IsFileSystemOldFATW(wchar_t *dir)
-{
-  static wchar_t lastDrive = (wchar_t)'\0';    /* cached drive of last GetVolumeInformation call */
-  static int lastDriveOldFAT = 0;  /* cached OldFAT value of last GetVolumeInformation call */
-  wchar_t root[4];
-  DWORD vfnsize;
-  DWORD vfsflags;
-
-    /*
-     * We separate FAT and HPFS+other file systems here.
-     * I consider other systems to be similar to HPFS/NTFS, i.e.
-     * support for long file names and being case sensitive to some extent.
-     */
-
-    wcsncpy(root, dir, 3);
-    if ( iswalpha(root[0]) && (root[1] == (wchar_t)':') ) {
-      root[0] = towupper(dir[0]);
-      root[2] = (wchar_t)'\\';
-      root[3] = 0;
-    }
-    else {
-      root[0] = (wchar_t)'\\';
-      root[1] = 0;
-    }
-    if (lastDrive == root[0]) {
-      return lastDriveOldFAT;
-    }
-
-    if ( !GetVolumeInformationW(root, NULL, 0,
-                                NULL, &vfnsize, &vfsflags,
-                                NULL, 0)) {
-        fprintf(mesg, "zip diagnostic: GetVolumeInformation failed\n");
-        return(FALSE);
-    }
-
-    lastDrive = root[0];
-    lastDriveOldFAT = vfnsize <= 12;
-
-    return lastDriveOldFAT;
-}
-#endif
-
-
 /* access mode bits and time stamp */
 
 int GetFileMode(char *name)
 {
 DWORD dwAttr;
-#if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-  char *ansi_name = (char *)alloca(strlen(name) + 1);
-
-  OemToAnsi(name, ansi_name);
-  name = ansi_name;
-#endif
 
   dwAttr = GetFileAttributes(name);
   if ( dwAttr == 0xFFFFFFFF ) {
