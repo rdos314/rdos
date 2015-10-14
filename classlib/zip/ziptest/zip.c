@@ -1350,25 +1350,6 @@ int rename_split(temp_name, out_path)
 int set_filetype(out_path)
   char *out_path;
 {
-#ifdef __BEOS__
-  /* Set the filetype of the zipfile to "application/zip" */
-  setfiletype( out_path, "application/zip" );
-#endif
-
-#ifdef __ATHEOS__
-  /* Set the filetype of the zipfile to "application/x-zip" */
-  setfiletype(out_path, "application/x-zip");
-#endif
-
-#ifdef MACOS
-  /* Set the Creator/Type of the zipfile to 'IZip' and 'ZIP ' */
-  setfiletype(out_path, 'IZip', 'ZIP ');
-#endif
-
-#ifdef RISCOS
-  /* Set the filetype of the zipfile to &DDC */
-  setfiletype(out_path, 0xDDC);
-#endif
   return ZE_OK;
 }
 
