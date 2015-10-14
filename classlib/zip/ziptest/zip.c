@@ -1286,8 +1286,6 @@ local int BlankRunningStats()
   return 0;
 }
 
-#if CRYPT
-#ifndef WINDLL
 int encr_passwd(modeflag, pwbuf, size, zfn)
 int modeflag;
 char *pwbuf;
@@ -1307,21 +1305,6 @@ ZCONST char *zfn;
     }
     return IZ_PW_ENTERED;
 }
-#endif /* !WINDLL */
-#else /* !CRYPT */
-int encr_passwd(modeflag, pwbuf, size, zfn)
-int modeflag;
-char *pwbuf;
-int size;
-ZCONST char *zfn;
-{
-    /* Tell picky compilers to shut up about unused variables */
-    modeflag = modeflag; pwbuf = pwbuf; size = size; zfn = zfn;
-
-    return ZE_LOGIC;    /* This function should never be called! */
-}
-#endif /* CRYPT */
-
 
 /* rename a split
  * A split has a tempfile name until it is closed, then
