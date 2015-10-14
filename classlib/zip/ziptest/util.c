@@ -813,55 +813,6 @@ int WriteNumString( num, outstring )
 }
 
 
-#if 0 /* not used anywhere, should get removed by next release... */
-
-/* Apply the Adler-16 checksum to a set of bytes.
- * Use this function as you would use crc32():
- * - First call this function by passing a NULL pointer instead of buf
- *   OR initialize the checksum register with ADLERVAL_INITIAL.
- * - Iteratively call this function for each buffer fragment.
- * This function returns the updated checksum.
- *
- * IN assertion: chksum is a valid Adler-16 checksum:
- *    (chksum & 0xffU) < ADLER16_BASE && ((chksum >> 8) & 0xffU) < ADLER16_BASE
- *
- * Author: Cosmin Truta.
- * See "proginfo/adler16.txt" for more information.
- */
-
-#define ADLER16_BASE 251        /* The largest prime smaller than 256 */
-
-unsigned int adler16(chksum, buf, len)
-    unsigned int chksum;
-    ZCONST uch *buf;
-    extent len;
-{
-    unsigned int sum1 = chksum & 0xff;
-    unsigned int sum2 = (chksum >> 8) & 0xff;
-    extent i;
-
-    Assert((sum1 < ADLER16_BASE) && (sum2 < ADLER16_BASE),
-           "adler16: invalid checksum");
-
-    if (buf == NULL)
-        return 1;
-
-    for (i = 0; i < len; ++i)
-    {
-        sum1 += buf[i];
-        if (sum1 >= ADLER16_BASE) /* this is faster than modulo ADLER16_BASE */
-            sum1 -= ADLER16_BASE;
-        sum2 += sum1;
-        if (sum2 >= ADLER16_BASE) /* ditto */
-            sum2 -= ADLER16_BASE;
-    }
-
-    return (sum2 << 8) | sum1;
-}
-
-#endif /* 0, not used anywhere */
-
-
 /* returns true if abbrev is abbreviation for matchstring */
 int abbrevmatch (matchstring, abbrev, case_sensitive, minmatch)
   char *matchstring;
