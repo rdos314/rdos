@@ -479,11 +479,7 @@ local void help()
   }
 }
 
-#ifdef VMSCLI
-void help_extended()
-#else
 local void help_extended()
-#endif
 /* Print extended help to stdout. */
 {
   extent i;             /* counter for help array */
@@ -822,9 +818,6 @@ local void help_extended()
     printf(text[i]);
     putchar('\n');
   }
-#ifdef DOS
-  check_for_windows("Zip");
-#endif
 }
 
 /*
