@@ -27,27 +27,6 @@ uch upper[256], lower[256];
 local int recmatch OF((ZCONST char *, ZCONST char *, int));
 local int count_args OF((char *s));
 
-#ifndef HAVE_FSEEKABLE
-
-/* 2004-11-12 SMS.
-   Changed to use z*o() functions, and ftell() test from >= 0 to != -1.
-   This solves problems with negative 32-bit offsets, even on small-file
-   products.
-*/
-int fseekable( fp)
-FILE *fp;
-{
-    zoff_t x;
-
-    return (fp == NULL ||
-     ((zfseeko( fp, ((zoff_t) -1), SEEK_CUR) == 0) &&   /* Seek ok. */
-     ((x = zftello( fp)) != ((zoff_t) -1)) &&           /* Tell ok. */
-     (zfseeko( fp, ((zoff_t) 1), SEEK_CUR) == 0) &&     /* Seek ok. */
-     (zftello( fp) == x+ 1)));                          /* Tells agree. */
-}
-#endif /* HAVE_FSEEKABLE */
-
-
 char *isshexp(p)
 char *p;                /* candidate sh expression */
 /* If p is a sh expression, a pointer to the first special character is
