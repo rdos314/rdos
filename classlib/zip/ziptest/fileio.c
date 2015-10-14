@@ -15,30 +15,11 @@
 
 #include "zip.h"
 #include "crc32.h"
-
-#ifdef MACOS
-#  include "helpers.h"
-#endif
-
-#ifdef VMS
-#  include "vms/vms.h"
-#endif /* def VMS */
-
 #include <time.h>
 
-#ifdef NO_MKTIME
 time_t mktime OF((struct tm *));
-#endif
 
-#ifdef OSF
-#define EXDEV 18   /* avoid a bug in the DEC OSF/1 header files. */
-#else
 #include <errno.h>
-#endif
-
-#ifdef NO_ERRNO
-extern int errno;
-#endif
 
 /* -----------------------
    For long option support
@@ -46,11 +27,7 @@ extern int errno;
 #include <ctype.h>
 
 
-#if defined(VMS) || defined(TOPS20)
-#  define PAD 5
-#else
-#  define PAD 0
-#endif
+#define PAD 0
 
 #ifdef NO_RENAME
 int rename OF((ZCONST char *, ZCONST char *));
