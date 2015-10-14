@@ -3437,28 +3437,6 @@ char **argv;            /* command line tokens */
              (r = zipup(z)) != ZE_OK && r != ZE_OPEN && r != ZE_MISS)
         {
           zipmessage_nl("", 1);
-          /*
-          if (noisy)
-          {
-            if (mesg_line_started) {
-#if (!defined(MACOS) && !defined(WINDLL))
-              putc('\n', mesg);
-              fflush(mesg);
-#else
-              fprintf(stdout, "\n");
-              fflush(stdout);
-#endif
-              mesg_line_started = 0;
-            }
-          }
-          if (logall) {
-            if (logfile_line_started) {
-              fprintf(logfile, "\n");
-              logfile_line_started = 0;
-              fflush(logfile);
-            }
-          }
-          */
           sprintf(errbuf, "was zipping %s", z->name);
           ZIPERR(r, errbuf);
         }
