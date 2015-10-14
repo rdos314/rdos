@@ -753,9 +753,6 @@ char *d, *s;            /* destination and source file names */
     FILE *f, *g;        /* source and destination files */
     int r;              /* temporary variable */
 
-#ifdef RISCOS
-    if (SWI_OS_FSControl_26(s,d,0xA1)!=NULL) {
-#endif
 
     /* Use zfopen for almost all opens where fopen is used.  For
        most OS that support large files we use the 64-bit file
@@ -779,9 +776,6 @@ char *d, *s;            /* destination and source file names */
       return r ? (r == ZE_TEMP ? ZE_WRITE : r) : ZE_WRITE;
     }
     unlink(s);
-#ifdef RISCOS
-    }
-#endif
   }
   return ZE_OK;
 }
@@ -791,15 +785,9 @@ int getfileattr(f)
 char *f;                /* file path */
 /* Return the file attributes for file f or 0 if failure */
 {
-#ifdef __human68k__
-  struct _filbuf buf;
-
-  return _dos_files(&buf, f, 0xff) < 0 ? 0x20 : buf.atr;
-#else
   z_stat s;
 
   return SSTAT(f, &s) == 0 ? (int) s.st_mode : 0;
-#endif
 }
 
 
@@ -808,15 +796,7 @@ char *f;                /* file path */
 int a;                  /* attributes returned by getfileattr() */
 /* Give the file f the attributes a, return non-zero on failure */
 {
-#if defined(TOPS20) || defined (CMS_MVS)
-  return 0;
-#else
-#ifdef __human68k__
-  return _dos_chmod(f, a) < 0 ? -1 : 0;
-#else
   return chmod(f, a);
-#endif
-#endif
 }
 
 
