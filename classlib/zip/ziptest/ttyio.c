@@ -38,18 +38,9 @@
 
 #include "ttyio.h"
 
-#ifndef PUTC
-#  define PUTC putc
-#endif
+#define PUTC putc
 
-#ifdef ZIP
-#  ifdef GLOBAL          /* used in Amiga system headers, maybe others too */
-#    undef GLOBAL
-#  endif
-#  define GLOBAL(g) g
-#else
-#  define GLOBAL(g) G.g
-#endif
+#define GLOBAL(g) g
 
 #if (defined(__ATHEOS__) || defined(__BEOS__))  /* why yes, we do */
 #  define HAVE_TERMIOS_H
