@@ -3028,111 +3028,6 @@ local int scanzipf_regnew()
       /* Clear actions */
       z->mark = 0;
       z->trash = 0;
-#if defined(UNICODE_SUPPORT) && !defined(UTIL)
-      z->zname = in2ex(z->iname);       /* convert to external name */
-      if (z->zname == NULL)
-        return ZE_MEM;
-      if ((z->name = malloc(strlen(z->zname) + 1)) == NULL) {
-        zipwarn("could not allocate memory: scanzipf_reg", "");
-        return ZE_MEM;
-      }
-      strcpy(z->name, z->zname);
-      z->oname = local_to_display_string(z->iname);
-
-# ifdef WIN32
-      z->namew = NULL;
-      z->inamew = NULL;
-      z->znamew = NULL;
-# endif
-
-      if (unicode_mismatch != 3) {
-        if (z->uname) {
-          /* create zuname which is alternate zname for matching based on
-             converted Unicode name */
-          char *name;
-
-          /* Convert UTF-8 to current local character set */
-          name = utf8_to_local_string(z->uname);
-
-          if (name == NULL) {
-            /*
-            zipwarn("illegal UTF-8 name: ", z->uname);
-            */
-            /* not able to convert name, so use iname */
-            if ((name = malloc(strlen(z->iname) + 1)) == NULL) {
-              zipwarn("could not allocate memory: scanzipf_reg", "");
-              return ZE_MEM;
-            }
-            strcpy(name, z->iname);
-          }
-
-# ifdef EBCDIC
-          /* z->zname is used for printing and must be coded in native charset */
-          strtoebc(z->zuname, name);
-# else /* !EBCDIC */
-          if ((z->zuname = malloc(strlen(name) + 1)) == NULL) {
-            zipwarn("could not allocate memory: scanzipf_reg", "");
-            return ZE_MEM;
-          }
-          strcpy(z->zuname, name);
-          /* For output to terminal */
-          if (unicode_escape_all) {
-            char *ouname;
-            /* Escape anything not 7-bit ASCII */
-            ouname = utf8_to_escape_string(z->uname);
-            if (ouname)
-              z->ouname = ouname;
-            else {
-              if ((z->ouname = malloc(strlen(name) + 1)) == NULL) {
-                zipwarn("could not allocate memory: scanzipf_reg", "");
-                return ZE_MEM;
-              }
-              strcpy(z->ouname, name);
-            }
-          } else {
-            if ((z->ouname = malloc(strlen(name) + 1)) == NULL) {
-              zipwarn("could not allocate memory: scanzipf_reg", "");
-              return ZE_MEM;
-            }
-            strcpy(z->ouname, name);
-          }
-#  ifdef WIN32
-
-          if (!no_win32_wide) {
-            z->inamew = utf8_to_wchar_string(z->uname);
-            z->znamew = in2exw(z->inamew); /* convert to external name */
-            if (z->znamew == NULL)
-              return ZE_MEM;
-          }
-
-          local_to_oem_string(z->ouname, z->ouname);
-          /* For matching.  There seems to be something lost
-             in the translation from displaying a name in a
-             console window using zip -su on Win32 and using
-             that name in a command line to match what's in
-             the archive.  This is klugy though.
-          */
-          if ((z->wuname = malloc(strlen(z->ouname) + 1)) == NULL) {
-            zipwarn("could not allocate memory: scanzipf_reg", "");
-            return ZE_MEM;
-          }
-          strcpy(z->wuname, z->ouname);
-          oem_to_local_string(z->wuname, z->wuname);
-#  endif /* WIN32 */
-# endif /* ?EBCDIC */
-        } else {
-          /* no uname */
-# ifdef WIN32
-          if (!no_win32_wide) {
-            z->inamew = local_to_wchar_string(z->iname);
-            z->znamew = in2exw(z->inamew); /* convert to external name */
-            if (z->znamew == NULL)
-              return ZE_MEM;
-          }
-# endif
-        }
-      }
-#else /* !(UNICODE_SUPPORT && !UTIL) */
 # ifdef UTIL
 /* We only need z->iname in the utils */
       z->name = z->iname;
@@ -3157,7 +3052,6 @@ local int scanzipf_regnew()
         return ZE_MEM;
       }
       strcpy(z->oname, z->zname);
-#endif /* ?(UNICODE_SUPPORT && !UTIL) */
 
 #ifndef UTIL
       if (verbose && fix == 0)
