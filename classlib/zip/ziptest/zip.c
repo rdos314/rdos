@@ -235,15 +235,11 @@ int c;                  /* error code from the ZE_ class */
 ZCONST char *h;         /* message about how it happened */
 /* Issue a message for the error, clean up files and memory, and exit. */
 {
-#ifndef WINDLL
-#ifndef MACOS
   static int error_level = 0;
-#endif
 
   if (error_level++ > 0)
      /* avoid recursive ziperr() printouts (his should never happen) */
      EXIT(ZE_LOGIC);  /* ziperr recursion is an internal logic error! */
-#endif /* !WINDLL */
 
   if (mesg_line_started) {
     fprintf(mesg, "\n");
@@ -259,9 +255,6 @@ ZCONST char *h;         /* message about how it happened */
       /* perror("zip I/O error"); */
     fflush(mesg);
     fprintf(mesg, "\nzip error: %s (%s)\n", ZIPERRORS(c), h);
-#ifdef DOS
-    check_for_windows("Zip");
-#endif
     if (logfile) {
       if (PERR(c))
         fprintf(logfile, "zip I/O error: %s\n", strerror(errno));
@@ -276,9 +269,7 @@ ZCONST char *h;         /* message about how it happened */
         fclose(current_local_file);
       if (y != current_local_file && y != NULL)
         fclose(y);
-#ifndef DEBUG
       destroy(tempzip);
-#endif
       free((zvoid *)tempzip);
     } else {
       /* -g option, attempt to restore the old file */
@@ -332,11 +323,7 @@ ZCONST char *h;         /* message about how it happened */
   }
 
   freeup();
-#ifndef WINDLL
   EXIT(c);
-#else
-  longjmp(zipdll_error_return, c);
-#endif
 }
 
 
