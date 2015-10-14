@@ -1056,11 +1056,6 @@ int readlocal(localz, z)
   /* Initialize all fields pointing to malloced data to NULL */
   locz->zname = locz->name = locz->iname = locz->extra = NULL;
   locz->oname = NULL;
-#ifdef UNICODE_SUPPORT
-  locz->uname = NULL;
-  locz->zuname = NULL;
-  locz->ouname = NULL;
-#endif
 
   /* Read file name, extra field and comment field */
   if ((locz->iname = malloc(locz->nam+1)) ==  NULL ||
@@ -1070,25 +1065,17 @@ int readlocal(localz, z)
       (locz->ext && fread(locz->extra, locz->ext, 1, in_file) != 1))
     return ferror(in_file) ? ZE_READ : ZE_EOF;
   locz->iname[z->nam] = '\0';                  /* terminate name */
-#ifdef UNICODE_SUPPORT
-  if (unicode_mismatch != 3)
-    read_Unicode_Path_local_entry(locz);
-#endif
-#ifdef WIN32
   {
     /* translate archive name from OEM if came from OEM-charset environment */
     unsigned hostver = (z->vem & 0xff);
     Ext_ASCII_TO_Native(locz->iname, (z->vem >> 8), hostver,
                         ((z->atx & 0xffff0000L) != 0), TRUE);
   }
-#endif
   if ((locz->name = malloc(locz->nam+1)) ==  NULL)
     return ZE_MEM;
   strcpy(locz->name, locz->iname);
 
-#ifdef ZIP64_SUPPORT
   zip64_entry = adjust_zip_local_entry(locz);
-#endif
 
   /* Compare localz to z */
   if (locz->ver != z->ver) {
