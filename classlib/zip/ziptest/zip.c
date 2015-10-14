@@ -2863,21 +2863,10 @@ char **argv;            /* command line tokens */
  * XXX make some kind of mktemppath() function for each OS.
  */
 
-#ifndef VM_CMS
 /* For CMS, leave tempath NULL.  A-disk will be used as default. */
   /* If -b not specified, make temporary path the same as the zip file */
-#ifdef RISCOS
-  if (tempath == NULL && (p = MBSRCHR(zipfile, '.')) != NULL)
-  {
-#else
-#ifdef QDOS
-  if (tempath == NULL && (p = LastDir(zipfile)) != NULL)
-  {
-#else
   if (tempath == NULL && (p = MBSRCHR(zipfile, '/')) != NULL)
   {
-#endif /* QDOS */
-#endif /* RISCOS */
     if ((tempath = (char *)malloc((int)(p - zipfile) + 1)) == NULL) {
       ZIPERR(ZE_MEM, "was processing arguments");
     }
@@ -2885,7 +2874,6 @@ char **argv;            /* command line tokens */
     strcpy(tempath, zipfile);
     *p = (char)r;
   }
-#endif /* VM_CMS */
 
 #if (defined(IZ_CHECK_TZ) && defined(USE_EF_UT_TIME))
   if (!zp_tz_is_valid) {
