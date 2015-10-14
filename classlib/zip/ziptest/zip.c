@@ -893,23 +893,7 @@ local void version_info()
   }
 }
 
-
-#ifndef PROCNAME
-/* Default to case-sensitive matching of archive entries for the modes
-   that specifically operate on archive entries, as this archive may
-   have come from a system that allows paths in the archive to differ
-   only by case.  Except for adding ARCHIVE (copy mode), this is how it
-   was done before.  Note that some case-insensitive ports (WIN32, VMS)
-   define their own PROCNAME() in their respective osdep.h that use the
-   filter_match_case flag set to FALSE by the -ic option to enable
-   case-insensitive archive entry mathing. */
-#  define PROCNAME(n) procname(n, (action == ARCHIVE || action == DELETE \
-                                   || action == FRESHEN) \
-                                  && filter_match_case)
-#endif /* PROCNAME */
-
 #ifndef WINDLL
-#ifndef MACOS
 local void zipstdout()
 /* setup for writing zip file on stdout */
 {
@@ -924,12 +908,10 @@ local void zipstdout()
     ziperr(r, zipfile);
   */
 }
-#endif /* !MACOS */
 
 local int check_unzip_version(unzippath)
   char *unzippath;
 {
-#ifdef ZIP64_SUPPORT
   /* Here is where we need to check for the version of unzip the user
    * has.  If creating a Zip64 archive need UnZip 6 or may fail.
    */
@@ -966,7 +948,6 @@ local int check_unzip_version(unzippath)
       zipwarn("Need UnZip 6.00 or later to test this Zip64 archive", "");
       return 0;
     }
-#endif
   return 1;
 }
 
