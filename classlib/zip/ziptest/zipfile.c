@@ -488,8 +488,6 @@ char *copy_nondup_extra_fields(oldExtra, oldExtraLen, newExtra, newExtraLen, new
   return returnExtra;
 }
 
-#ifdef ZIP64_SUPPORT           /* zip64 support 08/31/2003 R.Nausedat */
-
 /* searches the cextra member of zlist for a zip64 extra field. if it finds one it  */
 /* updates the len, siz and off members of zlist with the corresponding values of   */
 /* the zip64 extra field, that is if either the len, siz or off member of zlist is  */
@@ -726,98 +724,6 @@ local int add_central_zip64_extra_field(pZipListEntry)
   return ZE_OK;
 }
 
-#if 0
-/* Remove extra field in local extra field
- * Return 1 if found, else 0
- * 12/28/05
- */
-local int remove_local_extra_field(pZEntry, tag)
-  struct zlist far *pZEntry;
-  ulg tag;
-{
-  char  *pExtra;
-  char  *pOldExtra;
-  char  *pOldTemp;
-  char  *pTemp;
-  ush   newEFSize;
-  ush   usTemp;
-  ush   blocksize;
-
-  /* check if we have the extra field ... */
-  pOldExtra = get_extra_field( (ush)tag, pZEntry->extra, pZEntry->ext );
-  if (pOldExtra)
-  {
-    /* We have. Get rid of it. */
-    blocksize = SH( pOldExtra + 2 );
-    newEFSize = pZEntry->ext - blocksize;
-    pExtra = (char *) malloc( newEFSize );
-    if( pExtra == NULL )
-      ziperr(ZE_MEM, "Remove Local Extra Field");
-    /* move all before EF */
-    usTemp = (extent) (pOldExtra - pZEntry->extra);
-    pTemp = pExtra;
-    memcpy( pTemp, pZEntry->extra, usTemp );
-    /* move all after old Zip64 EF */
-    pTemp = pExtra + usTemp;
-    pOldTemp = pOldExtra + blocksize;
-    usTemp = pZEntry->ext - usTemp - blocksize;
-    memcpy( pTemp, pOldTemp, usTemp);
-    /* replace extra fields */
-    pZEntry->ext = newEFSize;
-    free(pZEntry->extra);
-    pZEntry->extra = pExtra;
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
-/* Remove extra field in central extra field
- * Return 1 if found, else 0
- * 12/28/05
- */
-local int remove_central_extra_field(pZEntry, tag)
-  struct zlist far *pZEntry;
-  ulg tag;
-{
-  char  *pExtra;
-  char  *pOldExtra;
-  char  *pOldTemp;
-  char  *pTemp;
-  ush   newEFSize;
-  ush   usTemp;
-  ush   blocksize;
-
-  /* check if we have the extra field ... */
-  pOldExtra = get_extra_field( (ush)tag, pZEntry->cextra, pZEntry->cext );
-  if (pOldExtra)
-  {
-    /* We have. Get rid of it. */
-    blocksize = SH( pOldExtra + 2 );
-    newEFSize = pZEntry->cext - blocksize;
-    pExtra = (char *) malloc( newEFSize );
-    if( pExtra == NULL )
-      ziperr(ZE_MEM, "Remove Local Extra Field");
-    /* move all before EF */
-    usTemp = (extent) (pOldExtra - pZEntry->cextra);
-    pTemp = pExtra;
-    memcpy( pTemp, pZEntry->cextra, usTemp );
-    /* move all after old Zip64 EF */
-    pTemp = pExtra + usTemp;
-    pOldTemp = pOldExtra + blocksize;
-    usTemp = pZEntry->cext - usTemp - blocksize;
-    memcpy( pTemp, pOldTemp, usTemp);
-    /* replace extra fields */
-    pZEntry->cext = newEFSize;
-    free(pZEntry->cextra);
-    pZEntry->cextra = pExtra;
-    return 1;
-  } else {
-    return 0;
-  }
-}
-#endif
-
 /* Add Zip64 extra field to local header
  * 10/5/03 EG
  */
@@ -908,8 +814,6 @@ local int add_local_zip64_extra_field(pZEntry)
 
   return ZE_OK;
 }
-
-# endif /* ZIP64_SUPPORT */
 
 #ifdef UNICODE_SUPPORT
 /* Add UTF-8 path extra field
