@@ -1811,36 +1811,6 @@ char **argv;            /* command line tokens */
   zipfile = tempzip = NULL;
   y = NULL;
   d = 0;                        /* disallow adding to a zip file */
-#if (!defined(MACOS) && !defined(WINDLL) && !defined(NLM))
-  signal(SIGINT, handler);
-#ifdef SIGTERM                  /* AMIGADOS and others have no SIGTERM */
-  signal(SIGTERM, handler);
-#endif
-# if defined(SIGABRT) && !(defined(AMIGA) && defined(__SASC))
-   signal(SIGABRT, handler);
-# endif
-# ifdef SIGBREAK
-   signal(SIGBREAK, handler);
-# endif
-# ifdef SIGBUS
-   signal(SIGBUS, handler);
-# endif
-# ifdef SIGILL
-   signal(SIGILL, handler);
-# endif
-# ifdef SIGSEGV
-   signal(SIGSEGV, handler);
-# endif
-#endif /* !MACOS && !WINDLL && !NLM */
-#ifdef NLM
-  NLMsignals();
-#endif
-
-
-#if defined(UNICODE_SUPPORT) && defined(WIN32)
-  /* check if this Win32 OS has support for wide character calls */
-  has_win32_wide();
-#endif
 
   /* make copy of args that can use with insert_arg() used by get_option() */
   args = copy_args(argv, 0);
@@ -1876,25 +1846,6 @@ char **argv;            /* command line tokens */
   {
     switch (option)
     {
-#ifdef EBCDIC
-      case 'a':
-        aflag = ASCII;
-        printf("Translating to ASCII...\n");
-        break;
-#endif /* EBCDIC */
-#ifdef CMS_MVS
-        case 'B':
-          bflag = 1;
-          printf("Using binary mode...\n");
-          break;
-#endif /* CMS_MVS */
-#ifdef TANDEM
-        case 'B':
-          nskformatopt(value);
-          free(value);
-          break;
-#endif
-
         case '0':
           method = STORE; level = 0; break;
         case '1':  case '2':  case '3':  case '4':
