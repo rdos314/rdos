@@ -802,8 +802,6 @@ int a;                  /* attributes returned by getfileattr() */
 
 /* tempname */
 
-#ifndef VMS /* VMS-specific function is in VMS.C. */
-
 char *tempname(zip)
   char *zip;              /* path name of zip file to generate temp name for */
 
@@ -811,40 +809,6 @@ char *tempname(zip)
 {
   char *t = zip;   /* malloc'ed space for name (use zip to avoid warning) */
 
-# ifdef CMS_MVS
-  if ((t = malloc(strlen(tempath) + L_tmpnam + 2)) == NULL)
-    return NULL;
-
-  /* For MVS */
-  tmpnam(t);
-  if (tempath != NULL)
-  {
-    int l1 = strlen(t);
-    char *dot;
-    if (*t == '\'' && *(t+l1-1) == '\'' && (dot = strchr(t, '.')))
-    {
-      /* MVS and not OE.  tmpnam() returns quoted string of 5 qualifiers.
-       * First is HLQ, rest are timestamps.  User can only replace HLQ.
-       */
-      int l2 = strlen(tempath);
-      if (strchr(tempath, '.') || l2 < 1 || l2 > 8)
-        ziperr(ZE_PARMS, "On MVS and not OE, tempath (-b) can only be HLQ");
-      memmove(t+1+l2, dot, l1+1-(dot-t));  /* shift dot ready for new hlq */
-      memcpy(t+1, tempath, l2);            /* insert new hlq */
-    }
-    else
-    {
-      /* MVS and probably OE.  tmpnam() returns filename based on TMPDIR,
-       * no point in even attempting to change it.  User should modify TMPDIR
-       * instead.
-       */
-      zipwarn("MVS, assumed to be OE, change TMPDIR instead of option -b: ",
-              tempath);
-    }
-  }
-  return t;
-
-# else /* !CMS_MVS */
 /*
  * Do something with TMPDIR, TMP, TEMP ????
  */
@@ -908,9 +872,7 @@ char *tempname(zip)
   return mktemp(t);
 #     endif
 #   endif /* NO_MKTEMP */
-# endif /* CMS_MVS */
 }
-#endif /* !VMS */
 
 int fcopy(f, g, n)
   FILE *f, *g;            /* source and destination files */
