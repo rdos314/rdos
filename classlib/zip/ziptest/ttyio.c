@@ -42,19 +42,6 @@
 
 #define GLOBAL(g) g
 
-#if (defined(__ATHEOS__) || defined(__BEOS__))  /* why yes, we do */
-#  define HAVE_TERMIOS_H
-#endif
-
-#ifdef _POSIX_VERSION
-#  ifndef USE_POSIX_TERMIOS
-#    define USE_POSIX_TERMIOS  /* use POSIX style termio (termios) */
-#  endif
-#  ifndef HAVE_TERMIOS_H
-#    define HAVE_TERMIOS_H     /* POSIX termios.h */
-#  endif
-#endif /* _POSIX_VERSION */
-
 #ifdef UNZIP            /* Zip handles this with the unix/configure script */
 #  ifndef _POSIX_VERSION
 #    if (defined(SYSV) || defined(CRAY)) &&  !defined(__MINT__)
