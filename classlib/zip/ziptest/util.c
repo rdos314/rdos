@@ -488,44 +488,7 @@ void expand_args(argcp, argvp)
       int *argcp;
       char ***argvp;
 {
-#ifdef DOS
-
-/* Do NEVER include (re)definiton of `environ' variable with any version
-   of MSC or BORLAND/Turbo C. These compilers supply an incompatible
-   definition in <stdlib.h>.  */
-#if defined(__GO32__) || defined(__EMX__)
-      extern char **environ;          /* environment */
-#endif /* __GO32__ || __EMX__ */
-      char        **envp;             /* pointer into environment */
-      char        **newargv;          /* new argument list */
-      char        **argp;             /* pointer into new arg list */
-      int           newargc;          /* new argument count */
-
-      /* sanity check */
-      if (environ == NULL
-          || argcp == NULL
-          || argvp == NULL || *argvp == NULL)
-              return;
-      /* find out how many environment arguments there are */
-      for (envp = environ, newargc = 0;
-           *envp != NULL && (*envp)[0] == '~';
-           envp++, newargc++) ;
-      if (newargc == 0)
-              return;                 /* no environment arguments */
-      /* set up new argument list */
-      newargv = (char **) malloc(sizeof(char **) * (newargc+1));
-      if (newargv == NULL)
-              return;                 /* malloc failed */
-      for (argp = newargv, envp = environ;
-           *envp != NULL && (*envp)[0] == '~';
-           *argp++ = &(*envp++)[1]) ;
-      *argp = NULL;                   /* null-terminate the list */
-      /* substitute new argument list in place of old one */
-      *argcp = newargc;
-      *argvp = newargv;
-#else /* !DOS */
       if (argcp || argvp) return;
-#endif /* ?DOS */
 }
 
 
