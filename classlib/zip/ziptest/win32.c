@@ -180,21 +180,8 @@ local int FSusesLocalTime(const char *path)
 
 } /* end function FSusesLocalTime() */
 
-#if (defined(__GNUC__) || defined(ULONG_LONG_MAX))
-   typedef long long            LLONG64;
-   typedef unsigned long long   ULLNG64;
-#elif (defined(__WATCOMC__) && (__WATCOMC__ >= 1100))
-   typedef __int64              LLONG64;
-   typedef unsigned __int64     ULLNG64;
-#elif (defined(_MSC_VER) && (_MSC_VER >= 1100))
-   typedef __int64              LLONG64;
-   typedef unsigned __int64     ULLNG64;
-#elif (defined(__IBMC__) && (__IBMC__ >= 350))
-   typedef __int64              LLONG64;
-   typedef unsigned __int64     ULLNG64;
-#else
-#  define NO_INT64
-#endif
+typedef __int64              LLONG64;
+typedef unsigned __int64     ULLNG64;
 
 #  define UNIX_TIME_ZERO_HI  0x019DB1DEUL
 #  define UNIX_TIME_ZERO_LO  0xD53E8000UL
