@@ -3232,13 +3232,6 @@ int putlocal(z, rewrite)
 
   append_ushort_to_mem(z->ext, &block, &offset, &blocksize);    /* extra field length */
 
-#ifdef UNICODE_SUPPORT
-  if (use_uname) {
-    /* path is UTF-8 */
-    append_string_to_mem(z->uname, nam, &block, &offset, &blocksize);
-  } else
-#endif
-#ifdef WIN32_OEM
   /* store name in OEM character set in archive */
   if ((z->vem & 0xff00) == 0)
   {
@@ -3252,9 +3245,6 @@ int putlocal(z, rewrite)
   } else {
     append_string_to_mem(z->iname, z->nam, &block, &offset, &blocksize); /* file name */
   }
-#else
-  append_string_to_mem(z->iname, z->nam, &block, &offset, &blocksize); /* file name */
-#endif
   if (z->ext) {
     append_string_to_mem(z->extra, z->ext, &block, &offset, &blocksize); /* extra field */
   }
@@ -3306,7 +3296,6 @@ int putextended(z)
 
   append_ulong_to_mem(EXTLOCSIG, &block, &offset, &blocksize);  /* extended local signature */
   append_ulong_to_mem(z->crc, &block, &offset, &blocksize);     /* crc-32 */
-#ifdef ZIP64_SUPPORT
   if (zip64_entry) {
     /* use Zip64 entries */
     append_int64_to_mem(z->siz, &block, &offset, &blocksize);   /* compressed size */
@@ -3381,10 +3370,6 @@ int putextended(z)
     append_ulong_to_mem((ulg)z->siz, &block, &offset, &blocksize);  /* compressed size */
     append_ulong_to_mem((ulg)z->len, &block, &offset, &blocksize);  /* uncompressed size */
   }
-#else
-  append_ulong_to_mem((ulg)z->siz, &block, &offset, &blocksize);    /* compressed size */
-  append_ulong_to_mem((ulg)z->len, &block, &offset, &blocksize);    /* uncompressed size */
-#endif
   /* write the header */
   if (bfwrite(block, 1, offset, BFWRITE_HEADER) != offset) {
     free(block);
