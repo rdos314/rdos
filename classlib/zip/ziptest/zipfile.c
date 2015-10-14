@@ -882,20 +882,11 @@ FILE *file;
    * small file, seems no reason not to always use rewind().
    * 8/5/07 EG
    */
-#if 0
-#ifdef VAXC
-  sts = rewind( file);
-#else /* def VAXC */
-  sts = zfseeko( file, 0, SEEK_SET);
-#endif /* def VAXC [else] */
-#endif
   rewind(file);
 
   return ofs;
 }
 
-
-#ifndef UTIL
 
 local void zipoddities(z)
 struct zlist far *z;
@@ -1277,8 +1268,6 @@ local int scanzipf_fix(f)
     return ZE_OK;
 } /* end of function scanzipf_fix() */
 #endif /* never, scanzipf_fix() no longer used */
-
-#endif /* !UTIL */
 
 /*
  * read_local
