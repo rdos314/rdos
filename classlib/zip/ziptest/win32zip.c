@@ -765,20 +765,14 @@ int set_extra_field(z, z_utim)
   /* create extra field and change z->att if desired */
 {
 
-#ifdef NTSD_EAS
   if(ZipIsWinNT()) {
     /* store SECURITY_DECRIPTOR data in local header,
        and size only in central headers */
     GetSD(z->name, &z->extra, &z->ext, &z->cextra, &z->cext);
   }
-#endif /* NTSD_EAS */
 
-#ifdef USE_EF_UT_TIME
   /* store extended time stamps in both headers */
   return GetExtraTime(z, z_utim);
-#else /* !USE_EF_UT_TIME */
-  return ZE_OK;
-#endif /* ?USE_EF_UT_TIME */
 }
 
 int deletedir(d)
