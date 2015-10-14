@@ -35,34 +35,10 @@ char *p;                /* candidate sh expression */
   for (; *p; INCSTR(p))
     if (*p == '\\' && *(p+1))
       p++;
-#ifdef VMS
-    else if (*p == WILDCHR_SINGLE || *p == WILDCHR_MULTI)
-#else /* !VMS */
     else if (*p == WILDCHR_SINGLE || *p == WILDCHR_MULTI || *p == '[')
-#endif /* ?VMS */
       return p;
   return NULL;
 }
-
-#ifdef UNICODE_SUPPORT
-# ifdef WIN32
-
-wchar_t *isshexpw(pw)
-  wchar_t *pw;          /* candidate sh expression */
-/* If pw is a sh expression, a pointer to the first special character is
-   returned.  Otherwise, NULL is returned. */
-{
-  for (; *pw; pw++)
-    if (*pw == (wchar_t)'\\' && *(pw+1))
-      pw++;
-    else if (*pw == (wchar_t)WILDCHR_SINGLE || *pw == (wchar_t)WILDCHR_MULTI ||
-             *pw == (wchar_t)'[')
-      return pw;
-  return NULL;
-}
-
-# endif
-#endif
 
 
 #ifdef UNICODE_SUPPORT
