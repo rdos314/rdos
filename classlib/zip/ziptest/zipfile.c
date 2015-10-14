@@ -1121,38 +1121,17 @@ local int scanzipf_reg(f)
     char far *u;                /* temporary variable */
     int found;
     char *buf;                  /* temp buffer for reading zipfile */
-# ifdef ZIP64_SUPPORT
     ulg u4;                     /* unsigned 4 byte variable */
     char bf[8];
     uzoff_t u8;                 /* unsigned 8 byte variable */
     uzoff_t censiz;             /* size of central directory */
     uzoff_t z64eocd;            /* Zip64 End Of Central Directory record byte offset */
-# else
-    ush flg;                    /* general purpose bit flag */
-    int m;                      /* mismatch flag */
-# endif
     zoff_t deltaoff = 0;
-
-
-#ifndef ZIP64_SUPPORT
-
-    /* 2004-12-06 SMS.
-     * Check for too-big file before doing any serious work.
-     */
-    if (ffile_size( f) == EOF)
-      return ZE_ZIP64;
-
-#endif /* ndef ZIP64_SUPPORT */
-
 
     buf = malloc(4096 + 4);
     if (buf == NULL)
       return ZE_MEM;
 
-#ifdef HANDLE_AMIGA_SFX
-    amiga_sfx_offset = (fread(buf, 1, 4, f) == 4 && LG(buf) == 0xF3030000);
-    /* == 1 if this file is an Amiga executable (presumably UnZipSFX) */
-#endif
     /* detect spanning signature */
     zfseeko(f, 0, SEEK_SET);
     read_split_archive = (fread(buf, 1, 4, f) == 4 && LG(buf) == 0x08074b50L);
@@ -1240,40 +1219,6 @@ local int scanzipf_reg(f)
 /*
  * Check for a Zip64 EOCD Locator signature - 12/10/04 EG
  */
-#ifndef ZIP64_SUPPORT
-    /* If Zip64 not enabled check if archive being read is Zip64 */
-    /* back up 24 bytes (size of Z64 EOCDL and ENDSIG) */
-    if (zfseeko(f, -24, SEEK_CUR) != 0) {
-        perror("fseek");
-        return ZE_FORM; /* XXX */
-    }
-    /* read Z64 EOCDL if there */
-    if (fread(b, 20, 1, f) != 1) {
-      return ZE_READ;
-    }
-    /* first 4 bytes are the signature if there */
-    if (LG(b) == ZIP64_EOCDL_SIG) {
-      zipwarn("found Zip64 signature - this may be a Zip64 archive", "");
-      zipwarn("PKZIP 4.5 or later needed - set ZIP64_SUPPORT in Zip 3", "");
-      return ZE_ZIP64;
-    }
-
-    /* now should be back at the EOCD signature */
-    if (fread(b, 4, 1, f) != 1) {
-      zipwarn("unable to read after relative seek", "");
-      return ZE_READ;
-    }
-    if (LG(b) != ENDSIG) {
-      zipwarn("unable to relative seek in archive", "");
-      return ZE_FORM;
-    }
-#if 0
-    if (fseek(f, -4, SEEK_CUR) != 0) {
-        perror("fseek");
-        return ZE_FORM; /* XXX */
-    }
-#endif
-#endif
 
     /* Read end header */
     if (fread(b, ENDHEAD, 1, f) != 1)
