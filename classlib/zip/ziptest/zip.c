@@ -3313,53 +3313,12 @@ char **argv;            /* command line tokens */
         in_split_path = get_in_split_path(in_path, 1);
       }
     }
-#if defined(UNIX) && !defined(NO_MKSTEMP)
-    {
-      int yd;
-      int i;
-
-      /* use mkstemp to avoid race condition and compiler warning */
-
-      if (tempath != NULL)
-      {
-        /* if -b used to set temp file dir use that for split temp */
-        if ((tempzip = malloc(strlen(tempath) + 12)) == NULL) {
-          ZIPERR(ZE_MEM, "allocating temp filename");
-        }
-        strcpy(tempzip, tempath);
-        if (lastchar(tempzip) != '/')
-          strcat(tempzip, "/");
-      }
-      else
-      {
-        /* create path by stripping name and appending template */
-        if ((tempzip = malloc(strlen(zipfile) + 12)) == NULL) {
-        ZIPERR(ZE_MEM, "allocating temp filename");
-        }
-        strcpy(tempzip, zipfile);
-        for(i = strlen(tempzip); i > 0; i--) {
-          if (tempzip[i - 1] == '/')
-            break;
-        }
-        tempzip[i] = '\0';
-      }
-      strcat(tempzip, "ziXXXXXX");
-
-      if ((yd = mkstemp(tempzip)) == EOF) {
-        ZIPERR(ZE_TEMP, tempzip);
-      }
-      if ((y = fdopen(yd, FOPW_TMP)) == NULL) {
-        ZIPERR(ZE_TEMP, tempzip);
-      }
-    }
-#else
     if ((tempzip = tempname(zipfile)) == NULL) {
       ZIPERR(ZE_MEM, "allocating temp filename");
     }
     if ((y = zfopen(tempzip, FOPW_TMP)) == NULL) {
       ZIPERR(ZE_TEMP, tempzip);
     }
-#endif
   }
 
   /* Use large buffer to speed up stdio: */
@@ -3378,14 +3337,6 @@ char **argv;            /* command line tokens */
 
   /* Not needed.  Only need Zip64 when input file is larger than 2 GB or reading
      stdin and writing stdout.  This is set in putlocal() for each file. */
-#if 0
-  /* If using descriptors and Zip64 enabled force Zip64 3/13/05 EG */
-# ifdef ZIP64_SUPPORT
-  if (use_descriptors && force_zip64 != 0) {
-    force_zip64 = 1;
-  }
-# endif
-#endif
 
   /* if archive exists, not streaming and not deleting or growing, copy
      any bytes at beginning */
