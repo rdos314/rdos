@@ -1455,39 +1455,21 @@ local int scanzipf_reg(f)
         /* Clear actions */
         z->mark = 0;
         z->trash = 0;
-# ifdef UTIL
-/* We only need z->iname in the utils */
-        z->name = z->iname;
-#  ifdef EBCDIC
-/* z->zname is used for printing and must be coded in native charset */
-        if ((z->zname = malloc(z->nam+1)) ==  NULL)
-          return ZE_MEM;
-        strtoebc(z->zname, z->iname);
-#  else
-        z->zname = z->iname;
-#  endif
-# else /* !UTIL */
         z->zname = in2ex(z->iname);       /* convert to external name */
         if (z->zname == NULL)
           return ZE_MEM;
         z->name = z->zname;
-# endif /* ?UTIL */
         if ((z->oname = malloc(strlen(z->zname) + 1)) == NULL) {
           ZIPERR(ZE_MEM, "scanzipf_reg");
         }
         strcpy(z->oname, z->zname);
       }
       else {
-#ifdef EBCDIC
-        strtoebc(z->iname, z->iname);
-#endif
         zipwarn("local header not found for ", z->iname);
         return ZE_FORM;
       }
-#ifndef UTIL
       if (verbose && fix == 0)
         zipoddities(z);
-#endif
       z = z->nxt;
     }
 
