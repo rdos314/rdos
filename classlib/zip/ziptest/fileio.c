@@ -1882,53 +1882,12 @@ size_t bfwrite(buffer, size, count, mode)
         }
 
         /* open next split */
-#if defined(UNIX) && !defined(NO_MKSTEMP)
-        {
-          int yd;
-          int i;
-
-          /* use mkstemp to avoid race condition and compiler warning */
-
-          if (tempath != NULL)
-          {
-            /* if -b used to set temp file dir use that for split temp */
-            if ((tempzip = malloc(strlen(tempath) + 12)) == NULL) {
-              ZIPERR(ZE_MEM, "allocating temp filename");
-            }
-            strcpy(tempzip, tempath);
-            if (lastchar(tempzip) != '/')
-              strcat(tempzip, "/");
-          }
-          else
-          {
-            /* create path by stripping name and appending template */
-            if ((tempzip = malloc(strlen(zipfile) + 12)) == NULL) {
-            ZIPERR(ZE_MEM, "allocating temp filename");
-            }
-            strcpy(tempzip, zipfile);
-            for(i = strlen(tempzip); i > 0; i--) {
-              if (tempzip[i - 1] == '/')
-                break;
-            }
-            tempzip[i] = '\0';
-          }
-          strcat(tempzip, "ziXXXXXX");
-
-          if ((yd = mkstemp(tempzip)) == EOF) {
-            ZIPERR(ZE_TEMP, tempzip);
-          }
-          if ((y = fdopen(yd, FOPW_TMP)) == NULL) {
-            ZIPERR(ZE_TEMP, tempzip);
-          }
-        }
-#else
         if ((tempzip = tempname(zipfile)) == NULL) {
           ZIPERR(ZE_MEM, "allocating temp filename");
         }
         if ((y = zfopen(tempzip, FOPW_TMP)) == NULL) {
           ZIPERR(ZE_TEMP, tempzip);
         }
-#endif
 
         r = fwrite((char *)buffer + bytes_written, 1, bytes_to_write, y);
         bytes_written += r;
@@ -1987,12 +1946,8 @@ size_t bfwrite(buffer, size, count, mode)
     if (dot_size > 0) {
       /* initial space */
       if (dot_count == -1) {
-#ifndef WINDLL
         putc(' ', mesg);
         fflush(mesg);
-#else
-        fprintf(stdout,"%c",' ');
-#endif
         /* assume a header will be written first, so avoid 0 */
         dot_count = 1;
       }
@@ -2004,12 +1959,8 @@ size_t bfwrite(buffer, size, count, mode)
     }
     if (dot_size && !dot_count) {
       dot_count++;
-#ifndef WINDLL
       putc('.', mesg);
       fflush(mesg);
-#else
-      fprintf(stdout,"%c",'.');
-#endif
       mesg_line_started = 1;
     }
   }
