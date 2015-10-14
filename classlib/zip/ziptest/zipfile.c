@@ -3094,15 +3094,6 @@ int readzipfile()
         *x++ = z;
       qsort((char *)zsort, zcount, sizeof(struct zlist far *), zqcmp);
 
-#ifdef UNICODE_SUPPORT
-      /* sort by zuname (local conversion of UTF-8 name) */
-      if (zl_size / sizeof(struct zlist far *) != zcount ||
-          (x = zusort = (struct zlist far **)malloc(zl_size)) == NULL)
-        return ZE_MEM;
-      for (z = zfiles; z != NULL; z = z->nxt)
-        *x++ = z;
-      qsort((char *)zusort, zcount, sizeof(struct zlist far *), zuqcmp);
-#endif
     }
   }
 
@@ -3141,11 +3132,6 @@ int putlocal(z, rewrite)
   char *block = NULL;   /* mem block to write to */
   extent offset = 0;    /* offset into block */
   extent blocksize = 0; /* size of block */
-#ifdef UNICODE_SUPPORT
-  ush nam = z->nam;     /* size of name to write to header */
-  int use_uname = 0;    /* write uname to header */
-#endif
-#ifdef ZIP64_SUPPORT
   int streaming_in = 0; /* streaming stdin */
   int was_zip64 = 0;
 
@@ -3218,9 +3204,6 @@ int putlocal(z, rewrite)
       z->ver = 20;
     }
   }
-
-
-#endif /* ZIP64_SUPPORT */
 
   /* Instead of writing to the file as we go, to do splits we have to write it
      to memory and see if it will fit before writing the entire local header.
