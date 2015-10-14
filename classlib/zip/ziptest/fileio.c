@@ -160,7 +160,6 @@ char *last(p, c)
     return p;
 }
 
-#if defined(UNICODE_SUPPORT) && defined(WIN32)
 wchar_t *lastw(pw, c)
   wchar_t *pw;            /* sequence of path components */
   wchar_t c;              /* path components separator character */
@@ -173,21 +172,8 @@ wchar_t *lastw(pw, c)
   if ((tw = wcsrchr(pw, c)) != NULL)
     return tw + 1;
   else
-# ifndef AOS_VS
     return pw;
-# else
-/* We want to allow finding of end of path in either AOS/VS-style pathnames
- * or Unix-style pathnames.  This presents a few little problems ...
- */
-  {
-    if (*pw == (wchar_t)'='  ||  *pw == (wchar_t)'^')      /* like ./ and ../ respectively */
-      return pw + 1;
-    else
-      return pw;
-  }
-# endif
 }
-#endif
 
 
 char *msname(n)
@@ -211,19 +197,6 @@ char *msname(n)
       *POSTINCSTR(q) = (char)c;
       f = 0;                            /* new component */
     }
-#ifdef __human68k__
-    else if (ismbblead(c) && *p)
-    {
-      if (f == 7 || f == 11)
-        f++;
-      else if (*p && f < 12 && f != 8)
-      {
-        *q++ = c;
-        *q++ = *p++;
-        f += 2;
-      }
-    }
-#endif /* __human68k__ */
     else if (c == '.')
     {
       if (f == 0)
@@ -246,7 +219,6 @@ char *msname(n)
   return n;
 }
 
-#ifdef UNICODE_SUPPORT
 wchar_t *msnamew(nw)
   wchar_t *nw;
 /* Reduce all path components to MSDOS upper case 8.3 style names. */
@@ -268,19 +240,6 @@ wchar_t *msnamew(nw)
       *qw++ = c;
       f = 0;                            /* new component */
     }
-#ifdef __human68k__
-    else if (ismbblead(c) && *pw)
-    {
-      if (f == 7 || f == 11)
-        f++;
-      else if (*pw && f < 12 && f != 8)
-      {
-        *qw++ = c;
-        *qw++ = *pw++;
-        f += 2;
-      }
-    }
-#endif /* __human68k__ */
     else if (c == '.')
     {
       if (f == 0)
@@ -302,7 +261,6 @@ wchar_t *msnamew(nw)
   *qw = 0;
   return nw;
 }
-#endif
 
 
 int proc_archive_name(n, caseflag)
