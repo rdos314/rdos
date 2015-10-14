@@ -282,25 +282,14 @@ int (*cmp) OF((ZCONST zvoid *, ZCONST zvoid far *)); /* comparison function */
   }
   return NULL;          /* If b were in list, it would belong at l */
 }
-#  ifndef OS2
 
 void init_upper()
 {
   unsigned int c;
-#if defined(ATARI) || defined(CMS_MVS)
-#include <ctype.h>
-/* this should be valid for all other platforms too.   (HD 11/11/95) */
-  for (c = 0; c< sizeof(upper); c++) {
-    upper[c] = islower(c) ? toupper(c) : c;
-    lower[c] = isupper(c) ? tolower(c) : c;
-  }
-#else
   for (c = 0; c < sizeof(upper); c++) upper[c] = lower[c] = (uch)c;
   for (c = 'a'; c <= 'z';        c++) upper[c] = (uch)(c - 'a' + 'A');
   for (c = 'A'; c <= 'Z';        c++) lower[c] = (uch)(c - 'A' + 'a');
-#endif
 }
-#  endif /* !OS2 */
 
 int namecmp(string1, string2)
   ZCONST char *string1, *string2;
