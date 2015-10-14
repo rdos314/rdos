@@ -1009,7 +1009,6 @@ int bfcopy(n)
       {
         des_good = 0;
 
-#ifdef ZIP64_SUPPORT
         if (zip64_entry) {
 
           /* read Zip64 data descriptor */
@@ -1066,7 +1065,6 @@ int bfcopy(n)
 
         }
         else
-#endif
         {
           /* read standard data descriptor */
 
@@ -1144,24 +1142,16 @@ int bfcopy(n)
       if (dot_size > 0) {
         /* initial space */
         if (noisy && dot_count == -1) {
-#ifndef WINDLL
           putc(' ', mesg);
           fflush(mesg);
-#else
-          fprintf(stdout,"%c",' ');
-#endif
           dot_count++;
         }
         dot_count += k;
         if (dot_size <= dot_count) dot_count = 0;
       }
       if ((verbose || noisy) && dot_size && !dot_count) {
-#ifndef WINDLL
         putc('.', mesg);
         fflush(mesg);
-#else
-        fprintf(stdout,"%c",'.');
-#endif
         mesg_line_started = 1;
       }
     }
