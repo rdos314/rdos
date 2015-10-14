@@ -356,9 +356,6 @@ unsigned char *zmbsrchr(str, c)
 }
 
 
-
-#ifndef UTIL
-
 /*****************************************************************
  | envargs - add default options from environment to command line
  |----------------------------------------------------------------
@@ -606,8 +603,6 @@ int is_text_buf(buf_ptr, buf_size)
 
     return result;
 }
-
-#endif /* UTIL */
 
 
 #ifdef DEBUGNAMES
