@@ -42,8 +42,6 @@ local int utf8_to_ucs4_string OF((ZCONST char *utf8, ulg *usc4buf,
 local int ucs4_string_to_utf8 OF((ZCONST ulg *ucs4, char *utf8buf,
                                   int buflen));
 
-#ifndef UTIL    /* the companion #endif is a bit of ways down ... */
-
 local int fqcmp  OF((ZCONST zvoid *, ZCONST zvoid *));
 local int fqcmpz OF((ZCONST zvoid *, ZCONST zvoid *));
 
@@ -683,18 +681,8 @@ int issymlnk(a)
 ulg a;                  /* Attributes returned by filetime() */
 /* Return true if the attributes are those of a symbolic link */
 {
-#ifndef QDOS
-#ifdef S_IFLNK
-  return ((a >> 16) & S_IFMT) == S_IFLNK;
-#else /* !S_IFLNK */
   return (int)a & 0;    /* avoid warning on unused parameter */
-#endif /* ?S_IFLNK */
-#else
-  return 0;
-#endif
 }
-
-#endif /* !UTIL */
 
 
 #if (!defined(UTIL) && !defined(ZP_NEED_GEN_D2U_TIME))
