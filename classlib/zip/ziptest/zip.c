@@ -462,31 +462,8 @@ local void help()
 /*
 "  -R   PKZIP recursion (see manual)",
 */
-#if defined(MSDOS) || defined(OS2)
-"  -$   include volume label         -S   include system and hidden files",
-#endif
-#ifdef AMIGA
-#  if CRYPT
-"  -N   store filenotes as comments  -e   encrypt",
-"  -h   show this help               -n   don't compress these suffixes"
-#  else
-"  -N   store filenotes as comments  -n   don't compress these suffixes"
-#  endif
-#else /* !AMIGA */
-#  if CRYPT
 "  -e   encrypt                      -n   don't compress these suffixes"
-#  else
-"  -h   show this help               -n   don't compress these suffixes"
-#  endif
-#endif /* ?AMIGA */
-#ifdef RISCOS
-,"  -h2  show more help               -I   don't scan thru Image files"
-#else
 ,"  -h2  show more help"
-#endif
-#ifdef VMS
-,"  (Must quote upper-case options, like \"-V\", unless SET PROC/PARSE=EXTEND)"
-#endif /* def VMS */
 ,"  "
   };
 
