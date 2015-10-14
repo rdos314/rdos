@@ -240,8 +240,6 @@ local int FileTime2utime(FILETIME *pft, time_t *ut)
 } /* end function FileTime2utime() */
 
 
-#if (defined(NT_TZBUG_WORKAROUND) && defined(W32_STAT_BANDAID))
-
 local int VFatFileTime2utime(const FILETIME *pft, time_t *ut)
 {
     FILETIME lft;
@@ -304,50 +302,7 @@ local int VFatFileTime2utime(const FILETIME *pft, time_t *ut)
     return (*ut != (time_t)-1L);
 
 } /* end function VFatFileTime2utime() */
-#endif /* NT_TZBUG_WORKAROUND && W32_STAT_BANDAID */
 
-
-#if 0           /* Currently, this is not used at all */
-
-long GetTheFileTime(char *name, iztimes *z_ut)
-{
-HANDLE h;
-FILETIME Modft, Accft, Creft, lft;
-WORD dh, dl;
-#ifdef __RSXNT__        /* RSXNT/EMX C rtl uses OEM charset */
-  char *ansi_name = (char *)alloca(strlen(name) + 1);
-
-  OemToAnsi(name, ansi_name);
-  name = ansi_name;
-#endif
-
-  h = CreateFile(name, FILE_READ_ATTRIBUTES, FILE_SHARE_READ,
-                 NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-  if ( h != INVALID_HANDLE_VALUE ) {
-    BOOL ftOK = GetFileTime(h, &Creft, &Accft, &Modft);
-    CloseHandle(h);
-#ifdef USE_EF_UT_TIME
-    if (ftOK && (z_ut != NULL)) {
-      FileTime2utime(&Modft, &(z_ut->mtime));
-      if (Accft.dwLowDateTime != 0 || Accft.dwHighDateTime != 0)
-          FileTime2utime(&Accft, &(z_ut->atime));
-      else
-          z_ut->atime = z_ut->mtime;
-      if (Creft.dwLowDateTime != 0 || Creft.dwHighDateTime != 0)
-          FileTime2utime(&Creft, &(z_ut->ctime));
-      else
-          z_ut->ctime = z_ut->mtime;
-    }
-#endif
-    FileTimeToLocalFileTime(&ft, &lft);
-    FileTimeToDosDateTime(&lft, &dh, &dl);
-    return(dh<<16) | dl;
-  }
-  else
-    return 0L;
-}
-
-#endif /* never */
 
 
 void ChangeNameForFAT(char *name)
