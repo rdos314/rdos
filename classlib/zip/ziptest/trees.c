@@ -124,8 +124,6 @@
 #include "zip.h"
 #include <ctype.h>
 
-#ifndef USE_ZLIB
-
 /* ===========================================================================
  * Constants
  */
@@ -1470,5 +1468,3 @@ local void copy_block(block, len, header)
     bits_sent += (ulg)len<<3;
 #endif
 }
-
-#endif /* !USE_ZLIB */
