@@ -549,19 +549,11 @@ int zstat_zipwin32w(const wchar_t *pathw, zw_stat *buf)
 {
     if (!zwstat(pathw, buf))
     {
-#ifdef NT_TZBUG_WORKAROUND
         /* stat was successful, now redo the time-stamp fetches */
         int fs_uses_loctime = FSusesLocalTimeW(pathw);
         HANDLE h;
         FILETIME Modft, Accft, Creft;
-#if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-        char *ansi_path = (char *)alloca(strlen(pathw) + 1);
-
-        OemToAnsi(path, ansi_path);
-#       define Ansi_Path  ansi_path
-#else
 #       define Ansi_Path  pathw
-#endif
 
         Trace((stdout, "stat(%s) finds modtime %08lx\n", pathw, buf->st_mtime));
         h = CreateFileW(Ansi_Path, FILE_READ_ATTRIBUTES, FILE_SHARE_READ,
@@ -608,7 +600,6 @@ int zstat_zipwin32w(const wchar_t *pathw, zw_stat *buf)
             }
         }
 #       undef Ansi_Path
-#endif /* NT_TZBUG_WORKAROUND */
         return 0;
     }
 #ifdef W32_STATROOT_FIX
