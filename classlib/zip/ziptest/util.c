@@ -318,7 +318,6 @@ int namecmp(string1, string2)
  * by Yoshioka Tsuneo (QWF00133@nifty.ne.jp,tsuneo-y@is.aist-nara.ac.jp)
  * This code is public domain!   Date: 1998/12/20
  */
-#ifdef _MBCS
 
 char *___tmp_ptr;
 
@@ -355,7 +354,6 @@ unsigned char *zmbsrchr(str, c)
     }
     return match;
 }
-#endif /* _MBCS */
 
 
 
