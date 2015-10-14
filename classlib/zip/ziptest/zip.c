@@ -31,15 +31,6 @@
 #include <signal.h>
 #include <stdio.h>
 
-#ifdef BZIP2_SUPPORT
-  /* If IZ_BZIP2 is defined as the location of the bzip2 files then
-     assume the location has been added to include path.  For Unix
-     this is done by the configure script. */
-  /* Also do not need path for bzip2 include if OS includes support
-     for bzip2 library. */
-# include "bzlib.h"
-#endif
-
 #define MAXCOM 256      /* Maximum one-line comment size */
 
 
@@ -59,28 +50,6 @@ local int test = 0;     /* 1=test zip file with unzip -t */
 local char *unzip_path = NULL; /* where to find unzip */
 local int tempdir = 0;  /* 1=use temp directory (-b) */
 local int junk_sfx = 0; /* 1=junk the sfx prefix */
-#if defined(AMIGA) || defined(MACOS)
-local int filenotes = 0; /* 1=take comments from AmigaDOS/MACOS filenotes */
-#endif
-
-#ifdef EBCDIC
-int aflag = __EBCDIC;   /* Convert EBCDIC to ASCII or stay EBCDIC ? */
-#endif
-#ifdef CMS_MVS
-int bflag = 0;          /* Use text mode as default */
-#endif
-
-#ifdef QDOS
-char _version[] = VERSION;
-#endif
-
-#ifdef WINDLL
-jmp_buf zipdll_error_return;
-#ifdef ZIP64_SUPPORT
-  unsigned long low, high; /* returning 64 bit values for systems without an _int64 */
-  uzoff_t filesize64;
-#endif
-#endif
 
 #if CRYPT
 /* Pointer to crc_table, needed in crypt.c */
