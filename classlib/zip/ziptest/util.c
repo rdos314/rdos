@@ -59,7 +59,6 @@ int cs;                 /* flag: force case-sensitive matching */
      things like / and wildcards are not doublebyte.  This probably
      should not be needed. */
 
-#ifdef _MBCS
   if (CLEN(p) == 2) {
     if (CLEN(s) == 2) {
       return (*p == *s && *(p+1) == *(s+1)) ?
@@ -68,7 +67,6 @@ int cs;                 /* flag: force case-sensitive matching */
       return 0;
     }
   }
-#endif /* ?_MBCS */
 
   c = *POSTINCSTR(p);
 
@@ -85,21 +83,11 @@ int cs;                 /* flag: force case-sensitive matching */
   }
 
   /* WILDCHR_MULTI ('*') matches any number of characters, including zero */
-#ifdef AMIGA
-  if (!no_wild && c == '#' && *p == '?')            /* "#?" is Amiga-ese for "*" */
-    c = WILDCHR_MULTI, p++;
-#endif /* AMIGA */
   if (!no_wild && c == WILDCHR_MULTI)
   {
     if (wild_stop_at_dir) {
       /* Check for an immediately following WILDCHR_MULTI */
-# ifdef AMIGA
-      if ((c = p[0]) == '#' && p[1] == '?') /* "#?" is Amiga-ese for "*" */
-        c = WILDCHR_MULTI, p++;
-      if (c != WILDCHR_MULTI) {
-# else /* !AMIGA */
       if (*p != WILDCHR_MULTI) {
-# endif /* ?AMIGA */
         /* Single WILDCHR_MULTI ('*'): this doesn't match slashes */
         for (; *s && *s != DIRSEP_CHR; INCSTR(s))
           if ((c = recmatch(p, s, cs)) != 0)
