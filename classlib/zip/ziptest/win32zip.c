@@ -695,8 +695,6 @@ local void GetSD(char *path, char **bufptr, ush *size,
 }
 
 
-#ifdef USE_EF_UT_TIME
-
 #define EB_L_UT_SIZE    (EB_HEADSIZE + EB_UT_LEN(3))
 #define EB_C_UT_SIZE    (EB_HEADSIZE + EB_UT_LEN(1))
 
@@ -708,10 +706,6 @@ local int GetExtraTime(struct zlist far *z, iztimes *z_utim)
   /* brain-dead IBM compiler defines time_t as "double", so we have to convert
    * it into unsigned long integer number...
    */
-
-#ifdef IZ_CHECK_TZ
-  if (!zp_tz_is_valid) return ZE_OK;    /* skip silently if no valid TZ info */
-#endif
 
   if(z->ext)
     eb_l_ptr = realloc(z->extra, (z->ext + EB_L_UT_SIZE));
@@ -763,9 +757,6 @@ local int GetExtraTime(struct zlist far *z, iztimes *z_utim)
 
   return ZE_OK;
 }
-
-#endif /* USE_EF_UT_TIME */
-
 
 
 int set_extra_field(z, z_utim)
