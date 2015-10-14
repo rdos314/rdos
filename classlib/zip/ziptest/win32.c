@@ -543,8 +543,6 @@ FILE *fp;
 }
 
 
-
-#ifndef WINDLL
 /* This replacement getch() function was originally created for Watcom C
  * and then additionally used with CYGWIN. Since UnZip 5.4, all other Win32
  * ports apply this replacement rather that their supplied getch() (or
@@ -718,7 +716,6 @@ void version_local()
     return;
 
 } /* end function version_local() */
-#endif /* !WINDLL */
 
 
 /* --------------------------------------------------- */
