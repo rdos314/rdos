@@ -3362,22 +3362,12 @@ char **argv;            /* command line tokens */
 #endif
   }
 
-#if (!defined(VMS) && !defined(CMS_MVS))
   /* Use large buffer to speed up stdio: */
-#if (defined(_IOFBF) || !defined(BUFSIZ))
-  zipbuf = (char *)malloc(ZBSZ);
-#else
   zipbuf = (char *)malloc(BUFSIZ);
-#endif
   if (zipbuf == NULL) {
     ZIPERR(ZE_MEM, tempzip);
   }
-# ifdef _IOFBF
-  setvbuf(y, zipbuf, _IOFBF, ZBSZ);
-# else
   setbuf(y, zipbuf);
-# endif /* _IOBUF */
-#endif /* !VMS  && !CMS_MVS */
 
   /* If not seekable set some flags 3/14/05 EG */
   output_seekable = 1;
