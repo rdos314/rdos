@@ -830,78 +830,14 @@ local void version_info()
   extent i;             /* counter in text arrays */
   char *envptr;
 
-  /* Bzip2 option string storage (with version). */
-
-#ifdef BZIP2_SUPPORT
-  static char bz_opt_ver[81];
-  static char bz_opt_ver2[81];
-  static char bz_opt_ver3[81];
-#endif
 
   /* Options info array */
   static ZCONST char *comp_opts[] = {
-#ifdef ASM_CRC
     "ASM_CRC",
-#endif
-#ifdef ASMV
     "ASMV",
-#endif
-#ifdef DYN_ALLOC
-    "DYN_ALLOC",
-#endif
-#ifdef MMAP
-    "MMAP",
-#endif
-#ifdef BIG_MEM
-    "BIG_MEM",
-#endif
-#ifdef MEDIUM_MEM
-    "MEDIUM_MEM",
-#endif
-#ifdef SMALL_MEM
-    "SMALL_MEM",
-#endif
-#ifdef DEBUG
-    "DEBUG",
-#endif
-#ifdef USE_EF_UT_TIME
     "USE_EF_UT_TIME       (store Universal Time)",
-#endif
-#ifdef NTSD_EAS
     "NTSD_EAS             (store NT Security Descriptor)",
-#endif
-#if defined(WIN32) && defined(NO_W32TIMES_IZFIX)
-    "NO_W32TIMES_IZFIX",
-#endif
-#ifdef VMS
-#ifdef VMSCLI
-    "VMSCLI",
-#endif
-#ifdef VMS_IM_EXTRA
-    "VMS_IM_EXTRA",
-#endif
-#ifdef VMS_PK_EXTRA
-    "VMS_PK_EXTRA",
-#endif
-#endif /* VMS */
-#ifdef WILD_STOP_AT_DIR
-    "WILD_STOP_AT_DIR     (wildcards do not cross directory boundaries)",
-#endif
-#ifdef WIN32_OEM
     "WIN32_OEM            (store file paths on Windows as OEM)",
-#endif
-#ifdef BZIP2_SUPPORT
-    bz_opt_ver,
-    bz_opt_ver2,
-    bz_opt_ver3,
-#endif
-#ifdef S_IFLNK
-# ifdef VMS
-    "SYMLINK_SUPPORT      (symbolic links supported, if C RTL permits)",
-# else
-    "SYMLINK_SUPPORT      (symbolic links supported)",
-# endif
-#endif
 #ifdef LARGE_FILE_SUPPORT
 # ifdef USING_DEFAULT_LARGE_FILE_SUPPORT
     "LARGE_FILE_SUPPORT (default settings)",
