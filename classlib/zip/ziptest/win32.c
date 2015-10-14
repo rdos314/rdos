@@ -595,30 +595,9 @@ int getch_win32(void)
 void version_local()
 {
     static ZCONST char CompiledWith[] = "Compiled with %s%s for %s%s%s.\n\n";
-#if (defined(_MSC_VER) || defined(__WATCOMC__) || defined(__DJGPP__))
     char buf[80];
-#if (defined(_MSC_VER) && (_MSC_VER > 900))
-    char buf2[80];
-#endif
-#endif
 
 /* Define the compiler name and version strings */
-#if defined(_MSC_VER)  /* MSC == MSVC++, including the SDK compiler */
-    sprintf(buf, "Microsoft C %d.%02d ", _MSC_VER/100, _MSC_VER%100);
-#  define COMPILER_NAME1        buf
-#  if (_MSC_VER == 800)
-#    define COMPILER_NAME2      "(Visual C++ v1.1)"
-#  elif (_MSC_VER == 850)
-#    define COMPILER_NAME2      "(Windows NT v3.5 SDK)"
-#  elif (_MSC_VER == 900)
-#    define COMPILER_NAME2      "(Visual C++ v2.x)"
-#  elif (_MSC_VER > 900)
-    sprintf(buf2, "(Visual C++ v%d.%d)", _MSC_VER/100 - 6, _MSC_VER%100/10);
-#    define COMPILER_NAME2      buf2
-#  else
-#    define COMPILER_NAME2      "(bad version)"
-#  endif
-#elif defined(__WATCOMC__)
 #  if (__WATCOMC__ % 10 > 0)
 /* We do this silly test because __WATCOMC__ gives two digits for the  */
 /* minor version, but Watcom packaging prefers to show only one digit. */
@@ -630,72 +609,6 @@ void version_local()
 #  endif /* __WATCOMC__ % 10 > 0 */
 #  define COMPILER_NAME1        buf
 #  define COMPILER_NAME2        ""
-#elif defined(__TURBOC__)
-#  ifdef __BORLANDC__
-#    define COMPILER_NAME1      "Borland C++"
-#    if (__BORLANDC__ == 0x0452)   /* __BCPLUSPLUS__ = 0x0320 */
-#      define COMPILER_NAME2    " 4.0 or 4.02"
-#    elif (__BORLANDC__ == 0x0460)   /* __BCPLUSPLUS__ = 0x0340 */
-#      define COMPILER_NAME2    " 4.5"
-#    elif (__BORLANDC__ == 0x0500)   /* __TURBOC__ = 0x0500 */
-#      define COMPILER_NAME2    " 5.0"
-#    elif (__BORLANDC__ == 0x0520)   /* __TURBOC__ = 0x0520 */
-#      define COMPILER_NAME2    " 5.2 (C++ Builder 1.0)"
-#    elif (__BORLANDC__ == 0x0530)   /* __BCPLUSPLUS__ = 0x0530 */
-#      define COMPILER_NAME2    " 5.3 (C++ Builder 3.0)"
-#    elif (__BORLANDC__ == 0x0540)   /* __BCPLUSPLUS__ = 0x0540 */
-#      define COMPILER_NAME2    " 5.4 (C++ Builder 4.0)"
-#    elif (__BORLANDC__ == 0x0550)   /* __BCPLUSPLUS__ = 0x0550 */
-#      define COMPILER_NAME2    " 5.5 (C++ Builder 5.0)"
-#    elif (__BORLANDC__ == 0x0551)   /* __BCPLUSPLUS__ = 0x0551 */
-#      define COMPILER_NAME2    " 5.5.1 (C++ Builder 5.0.1)"
-#    elif (__BORLANDC__ == 0x0560)   /* __BCPLUSPLUS__ = 0x0560 */
-#      define COMPILER_NAME2    " 5.6 (C++ Builder 6)"
-#    else
-#      define COMPILER_NAME2    " later than 5.6"
-#    endif
-#  else /* !__BORLANDC__ */
-#    define COMPILER_NAME1      "Turbo C"
-#    if (__TURBOC__ >= 0x0400)     /* Kevin:  3.0 -> 0x0401 */
-#      define COMPILER_NAME2    "++ 3.0 or later"
-#    elif (__TURBOC__ == 0x0295)     /* [661] vfy'd by Kevin */
-#      define COMPILER_NAME2    "++ 1.0"
-#    endif
-#  endif /* __BORLANDC__ */
-#elif defined(__GNUC__)
-#  ifdef __RSXNT__
-#    if (defined(__DJGPP__) && !defined(__EMX__))
-    sprintf(buf, "rsxnt(djgpp v%d.%02d) / gcc ",
-            __DJGPP__, __DJGPP_MINOR__);
-#      define COMPILER_NAME1    buf
-#    elif defined(__DJGPP__)
-   sprintf(buf, "rsxnt(emx+djgpp v%d.%02d) / gcc ",
-            __DJGPP__, __DJGPP_MINOR__);
-#      define COMPILER_NAME1    buf
-#    elif (defined(__GO32__) && !defined(__EMX__))
-#      define COMPILER_NAME1    "rsxnt(djgpp v1.x) / gcc "
-#    elif defined(__GO32__)
-#      define COMPILER_NAME1    "rsxnt(emx + djgpp v1.x) / gcc "
-#    elif defined(__EMX__)
-#      define COMPILER_NAME1    "rsxnt(emx)+gcc "
-#    else
-#      define COMPILER_NAME1    "rsxnt(unknown) / gcc "
-#    endif
-#  elif defined(__CYGWIN__)
-#      define COMPILER_NAME1    "Cygnus win32 / gcc "
-#  elif defined(__MINGW32__)
-#      define COMPILER_NAME1    "mingw32 / gcc "
-#  else
-#      define COMPILER_NAME1    "gcc "
-#  endif
-#  define COMPILER_NAME2        __VERSION__
-#elif defined(__LCC__)
-#  define COMPILER_NAME1        "LCC-Win32"
-#  define COMPILER_NAME2        ""
-#else
-#  define COMPILER_NAME1        "unknown compiler (SDK?)"
-#  define COMPILER_NAME2        ""
-#endif
 
 /* Define the compile date string */
 #ifdef __DATE__
