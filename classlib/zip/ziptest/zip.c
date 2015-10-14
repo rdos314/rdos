@@ -3194,23 +3194,11 @@ char **argv;            /* command line tokens */
     else if (zfiles == NULL && (latest || fix || adjust || junk_sfx)) {
       ZIPERR(ZE_NAME, zipfile);
     }
-#ifndef WINDLL
     else if (recurse && (pcount == 0) && (first_listarg > 0)) {
-#ifdef VMS
-      strcpy(errbuf, "try: zip \"");
-      for (i = 1; i < (first_listarg - 1); i++)
-        strcat(strcat(errbuf, args[i]), "\" ");
-      strcat(strcat(errbuf, args[i]), " *.* -i");
-#else /* !VMS */
       strcpy(errbuf, "try: zip");
       for (i = 1; i < first_listarg; i++)
         strcat(strcat(errbuf, " "), args[i]);
-#  ifdef AMIGA
-      strcat(errbuf, " \"\" -i");
-#  else
       strcat(errbuf, " . -i");
-#  endif
-#endif /* ?VMS */
       for (i = first_listarg; i < argc; i++)
         strcat(strcat(errbuf, " "), args[i]);
       ZIPERR(ZE_NONE, errbuf);
@@ -3218,7 +3206,6 @@ char **argv;            /* command line tokens */
     else {
       ZIPERR(ZE_NONE, zipfile);
     }
-#endif /* !WINDLL */
   }
 
   if (filesync && all_current && fcount == 0) {
@@ -3228,16 +3215,10 @@ char **argv;            /* command line tokens */
 
   d = (d && k == 0 && (zipbeg || zfiles != NULL)); /* d true if appending */
 
-#if CRYPT
   /* Initialize the crc_32_tab pointer, when encryption was requested. */
   if (key != NULL) {
     crc_32_tab = get_crc_table();
-#ifdef EBCDIC
-    /* convert encryption key to ASCII (ISO variant for 8-bit ASCII chars) */
-    strtoasc(key, key);
-#endif /* EBCDIC */
   }
-#endif /* CRYPT */
 
   /* Just ignore the spanning signature if a multi-disk archive */
   if (zfiles && total_disks != 1 && zipbeg == 4) {
