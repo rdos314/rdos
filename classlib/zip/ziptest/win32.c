@@ -156,12 +156,6 @@ local int FSusesLocalTime(const char *path)
     char   rootPathName[4];
     char   tmp1[MAX_PATH], tmp2[MAX_PATH];
     DWORD  volSerNo, maxCompLen, fileSysFlags;
-#if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-    char *ansi_path = (char *)alloca(strlen(path) + 1);
-
-    OemToAnsi(path, ansi_path);
-    path = ansi_path;
-#endif
 
     if (isalpha((uch)path[0]) && (path[1] == ':'))
         tmp0 = (char *)path;
@@ -185,45 +179,6 @@ local int FSusesLocalTime(const char *path)
            !strncmp(tmp2, "HPFS", 4);
 
 } /* end function FSusesLocalTime() */
-
-# ifdef UNICODE_SUPPORT
-local int FSusesLocalTimeW(const wchar_t *path)
-{
-    wchar_t  *tmp0;
-    wchar_t   rootPathName[4];
-    wchar_t   tmp1[MAX_PATH], tmp2[MAX_PATH];
-    DWORD  volSerNo, maxCompLen, fileSysFlags;
-#if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-    wchar_t *ansi_path = (wchar_t *)alloca((wcslen(path) + 1) * sizeof(wchar_t));
-
-    CharToAnsiW(path, ansi_path);
-    path = ansi_path;
-#endif
-
-    if (iswalpha(path[0]) && (path[1] == (wchar_t)':'))
-        tmp0 = (wchar_t *)path;
-    else
-    {
-        GetFullPathNameW(path, MAX_PATH, tmp1, &tmp0);
-        tmp0 = &tmp1[0];
-    }
-    wcsncpy(rootPathName, tmp0, 3);   /* Build the root path name, */
-    rootPathName[3] = (wchar_t)'\0';           /* e.g. "A:/"                */
-
-    GetVolumeInformationW(rootPathName, tmp1, (DWORD)MAX_PATH,
-                         &volSerNo, &maxCompLen, &fileSysFlags,
-                         tmp2, (DWORD)MAX_PATH);
-
-    /* Volumes in (V)FAT and (OS/2) HPFS format store file timestamps in
-     * local time!
-     */
-    return !wcsncmp(_wcsupr(tmp2), L"FAT", 3) ||
-           !wcsncmp(tmp2, L"VFAT", 4) ||
-           !wcsncmp(tmp2, L"HPFS", 4);
-
-} /* end function FSusesLocalTimeW() */
-# endif
-
 
 #if (defined(USE_EF_UT_TIME) || defined(NT_TZBUG_WORKAROUND))
 
