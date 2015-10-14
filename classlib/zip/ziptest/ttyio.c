@@ -126,7 +126,6 @@ int zgetch(__G__ f)
  * The entered password is not echoed.
  */
 
-#ifdef HAVE_WORKING_GETCH
 /*
  * For the AMIGA, getch() is defined as Agetch(), which is in
  * amiga/filedate.c; SAS/C 6.x provides a getch(), but since Agetch()
@@ -186,9 +185,4 @@ char *getp(__G__ m, p, n)
 #endif /* !QDOS */
 #endif /* !WINDLL */
 
-
-#else /* !HAVE_WORKING_GETCH */
-
-
-#endif /* ?HAVE_WORKING_GETCH */
 #endif /* CRYPT */
