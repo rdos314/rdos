@@ -846,25 +846,6 @@ local void version_info()
   static ZCONST char *zipenv_names[] = {
     "ZIP"
     ,"ZIPOPT"
-#ifdef AZTEC_C
-    ,     /* extremely lame compiler bug workaround */
-#endif
-#ifndef __RSXNT__
-# ifdef __EMX__
-    ,"EMX"
-    ,"EMXOPT"
-# endif
-# if (defined(__GO32__) && (!defined(__DJGPP__) || __DJGPP__ < 2))
-    ,"GO32"
-    ,"GO32TMP"
-# endif
-# if (defined(__DJGPP__) && __DJGPP__ >= 2)
-    ,"TMPDIR"
-# endif
-#endif /* !__RSXNT__ */
-#ifdef RISCOS
-    ,"Zip$Exts"
-#endif
   };
 
   for (i = 0; i < sizeof(copyright)/sizeof(char *); i++)
