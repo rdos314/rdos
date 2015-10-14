@@ -3156,65 +3156,17 @@ char **argv;            /* command line tokens */
           /* not sU or sU- show normal name in log */
           fprintf(logfile, "  %s\n", z->oname);
 
-#ifdef UNICODE_SUPPORT
-        if (show_files == 3 || show_files == 4) {
-          /* su, su- */
-          /* Include escaped Unicode name if exists under standard name */
-          if (z->ouname) {
-            if (noisy && show_files == 3)
-              fprintf(mesg, "     Escaped Unicode:  %s\n", z->ouname);
-            if (logfile)
-              fprintf(logfile, "     Escaped Unicode:  %s\n", z->ouname);
-          }
-        }
-        if (show_files == 5 || show_files == 6) {
-          /* sU, sU- */
-          /* Display only escaped Unicode name if exists or standard name */
-          if (z->ouname) {
-            /* Unicode name */
-            if (noisy && show_files == 5) {
-              fprintf(mesg, "  %s\n", z->ouname);
-            }
-            if (logfile) {
-              fprintf(logfile, "  %s\n", z->ouname);
-            }
-          } else {
-            /* No Unicode name so use standard name */
-            if (noisy && show_files == 5) {
-              fprintf(mesg, "  %s\n", z->oname);
-            }
-            if (logfile) {
-              fprintf(logfile, "  %s\n", z->oname);
-            }
-          }
-        }
-#endif
       }
     }
     for (f = found; f != NULL; f = f->nxt) {
       count++;
       if ((zoff_t)f->usize > 0)
         bytes += f->usize;
-#ifdef UNICODE_SUPPORT
-      if (unicode_escape_all) {
-        char *escaped_unicode;
-        escaped_unicode = local_to_escape_string(f->zname);
-        if (noisy && (show_files == 1 || show_files == 3 || show_files == 5))
-          /* sf, su, sU */
-          fprintf(mesg, "  %s\n", escaped_unicode);
-        if (logfile)
-          fprintf(logfile, "  %s\n", escaped_unicode);
-        free(escaped_unicode);
-      } else {
-#endif
         if (noisy && (show_files == 1 || show_files == 3 || show_files == 5))
           /* sf, su, sU */
           fprintf(mesg, "  %s\n", f->oname);
         if (logfile)
           fprintf(logfile, "  %s\n", f->oname);
-#ifdef UNICODE_SUPPORT
-      }
-#endif
     }
     if (noisy || logfile == NULL)
       fprintf(mesg, "Total %s entries (%s bytes)\n",
@@ -3233,9 +3185,7 @@ char **argv;            /* command line tokens */
       !(zfiles != NULL &&
         (latest || fix || adjust || junk_sfx || comadd || zipedit))) {
     if (test && (zfiles != NULL || zipbeg != 0)) {
-#ifndef WINDLL
       check_zipfile(zipfile, argv[0]);
-#endif
       RETURN(finish(ZE_OK));
     }
     if (action == UPDATE || action == FRESHEN) {
