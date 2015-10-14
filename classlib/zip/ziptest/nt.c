@@ -42,12 +42,8 @@ Author:
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#ifdef __RSXNT__
-#  include "win32/rsxntwin.h"
-#endif
 #include "nt.h"
 
-#ifdef NTSD_EAS         /* This file is only needed for NTSD handling */
 
 /* Borland C++ does not define FILE_SHARE_DELETE. Others also? */
 #ifndef FILE_SHARE_DELETE
@@ -489,4 +485,3 @@ static VOID InitLocalPrivileges(VOID)
 
     CloseHandle(hToken);
 }
-#endif /* NTSD_EAS */
