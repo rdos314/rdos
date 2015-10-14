@@ -1024,17 +1024,7 @@ uzoff_t flush_block(buf, stored_len, eof)
     init_block();
 
     if (eof) {
-#if defined(PGP) && !defined(MMAP)
-        /* Wipe out sensitive data for pgp */
-# ifdef DYN_ALLOC
-        extern uch *window;
-# else
-        extern uch window[];
-# endif
-        memset(window, 0, (unsigned)(2*WSIZE-1)); /* -1 needed if WSIZE=32K */
-#else /* !PGP */
         Assert(input_len == isize, "bad input size");
-#endif
         bi_windup();
         cmpr_len_bits += 7;  /* align on byte boundary */
     }
