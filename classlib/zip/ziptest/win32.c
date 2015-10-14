@@ -369,12 +369,6 @@ char *x;
 {
     WIN32_FIND_DATA fd;
     HANDLE h;
-#if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-    char *ansi_name = (char *)alloca(strlen(x) + 1);
-
-    OemToAnsi(x, ansi_name);
-    x = ansi_name;
-#endif
 
     if ((h = FindFirstFile(x, &fd)) == INVALID_HANDLE_VALUE)
         return FALSE;
@@ -464,31 +458,16 @@ FILE *fp;
  * detects the case and fills in reasonable values.  Otherwise we get    *
  * effects like failure to extract to a root dir because it's not found. */
 
-#ifdef LARGE_FILE_SUPPORT         /* E. Gordon 9/12/03 */
  int zstat_zipwin32(const char *path, z_stat *buf)
-#else
- int zstat_zipwin32(const char *path, struct stat *buf)
-#endif
 {
-# ifdef LARGE_FILE_SUPPORT         /* E. Gordon 9/12/03 */
     if (!zstat(path, buf))
-# else
-    if (!stat(path, buf))
-# endif
     {
 #ifdef NT_TZBUG_WORKAROUND
         /* stat was successful, now redo the time-stamp fetches */
         int fs_uses_loctime = FSusesLocalTime(path);
         HANDLE h;
         FILETIME Modft, Accft, Creft;
-#if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-        char *ansi_path = (char *)alloca(strlen(path) + 1);
-
-        OemToAnsi(path, ansi_path);
-#       define Ansi_Path  ansi_path
-#else
 #       define Ansi_Path  path
-#endif
 
         Trace((stdout, "stat(%s) finds modtime %08lx\n", path, buf->st_mtime));
         h = CreateFile(Ansi_Path, FILE_READ_ATTRIBUTES, FILE_SHARE_READ,
