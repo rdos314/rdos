@@ -2135,7 +2135,6 @@ local int scanzipf_regnew()
 #   define SCAN_BUFSIZE ENDHEAD
 # endif
 
-#ifdef ZIP64_SUPPORT
 # if EC64REC > SCAN_BUFSIZE
 #   undef SCAN_BUFSIZE
 #   define SCAN_BUFSIZE EC64REC   /* EC64 record should be largest struct */
@@ -2144,13 +2143,11 @@ local int scanzipf_regnew()
 #   undef SCAN_BUFSIZE
 #   define SCAN_BUFSIZE EC64LOC
 # endif
-#endif
 
   char    scbuf[SCAN_BUFSIZE];  /* buffer just enough for all header types */
   char   *split_path;
   ulg     eocdr_disk;
   uzoff_t eocdr_offset;
-# ifdef ZIP64_SUPPORT
   ulg     z64eocdr_disk;
   uzoff_t z64eocdr_offset;
   uzoff_t z64eocdr_size;
@@ -2158,7 +2155,6 @@ local int scanzipf_regnew()
   ush     version_needed = 0;
   zoff_t zip64_eocdr_start;
   zoff_t z64eocdl_offset;
-# endif /* def ZIP64_SUPPORT */
   uzoff_t cd_total_entries;        /* num of entries as read from (Zip64) EOCDR */
   ulg     in_cd_start_disk;        /* central directory start disk */
   uzoff_t in_cd_start_offset;      /* offset of start of cd on cd start disk */
@@ -2182,18 +2178,6 @@ local int scanzipf_regnew()
     zipwarn("could not open input archive", in_path);
     return ZE_OPEN;
   }
-
-#ifndef ZIP64_SUPPORT
-  /* 2004-12-06 SMS.
-   * Check for too-big file before doing any serious work.
-   */
-  if (ffile_size( in_file) == EOF) {
-    fclose(in_file);
-    in_file = NULL;
-    zipwarn("input file requires Zip64 support: ", in_path);
-    return ZE_ZIP64;
-  }
-#endif /* ndef ZIP64_SUPPORT */
 
   /* look for End Of Central Directory Record */
 
