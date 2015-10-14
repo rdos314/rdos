@@ -1655,10 +1655,6 @@ char *get_in_split_path(base_path, disk_number)
   int path_len = 0;
   ulg num = disk_number + 1;
   char ext[6];
-#ifdef VMS
-  int vers_len;                         /* File version length. */
-  char *vers_ptr;                       /* File version string. */
-#endif /* def VMS */
 
   /*
    * A split has extension z01, z02, ..., z99, z100, z101, ... z999
@@ -1686,15 +1682,6 @@ char *get_in_split_path(base_path, disk_number)
   base_len = strlen(base_path) - 3;
   path_len = base_len + strlen(ext);
 
-#ifdef VMS
-  /* On VMS, locate the file version, and adjust base_len accordingly.
-     Note that path_len is correct, as-is.
-  */
-  vers_ptr = vms_file_version( base_path);
-  vers_len = strlen( vers_ptr);
-  base_len -= vers_len;
-#endif /* def VMS */
-
   if ((split_path = malloc(path_len + 1)) == NULL) {
     ZIPERR(ZE_MEM, "split path");
   }
@@ -1703,11 +1690,6 @@ char *get_in_split_path(base_path, disk_number)
   split_path[base_len] = '\0';
   /* add extension */
   strcat(split_path, ext);
-
-#ifdef VMS
-  /* On VMS, append (preserve) the file version. */
-  strcat(split_path, vers_ptr);
-#endif /* def VMS */
 
   return split_path;
 }
@@ -1726,10 +1708,6 @@ char *get_out_split_path(base_path, disk_number)
   int path_len = 0;
   ulg num = disk_number + 1;
   char ext[6];
-#ifdef VMS
-  int vers_len;                         /* File version length. */
-  char *vers_ptr;                       /* File version string. */
-#endif /* def VMS */
 
   /*
    * A split has extension z01, z02, ..., z99, z100, z101, ... z999
@@ -1747,15 +1725,6 @@ char *get_out_split_path(base_path, disk_number)
   base_len = strlen(base_path) - 3;
   path_len = base_len + strlen(ext);
 
-#ifdef VMS
-  /* On VMS, locate the file version, and adjust base_len accordingly.
-     Note that path_len is correct, as-is.
-  */
-  vers_ptr = vms_file_version( base_path);
-  vers_len = strlen( vers_ptr);
-  base_len -= vers_len;
-#endif /* def VMS */
-
   if ((split_path = malloc(path_len + 1)) == NULL) {
     ZIPERR(ZE_MEM, "split path");
   }
@@ -1764,11 +1733,6 @@ char *get_out_split_path(base_path, disk_number)
   split_path[base_len] = '\0';
   /* add extension */
   strcat(split_path, ext);
-
-#ifdef VMS
-  /* On VMS, append (preserve) the file version. */
-  strcat(split_path, vers_ptr);
-#endif /* def VMS */
 
   return split_path;
 }
