@@ -845,63 +845,6 @@ char *tempname(zip)
   return t;
 
 # else /* !CMS_MVS */
-
-#  ifdef TANDEM
-  char cur_subvol [FILENAME_MAX];
-  char temp_subvol [FILENAME_MAX];
-  char *zptr;
-  char *ptr;
-  char *cptr = &cur_subvol[0];
-  char *tptr = &temp_subvol[0];
-  short err;
-  FILE *tempf;
-  int attempts;
-
-  t = (char *)malloc(NAMELEN); /* malloc here as you cannot free */
-                               /* tmpnam allocated storage later */
-
-  zptr = strrchr(zip, TANDEM_DELIMITER);
-
-  if (zptr != NULL) {
-    /* ZIP file specifies a Subvol so make temp file there so it can just
-       be renamed at end */
-
-    *tptr = *cptr = '\0';
-    strcat(cptr, getenv("DEFAULTS"));
-
-    strncat(tptr, zip, _min(FILENAME_MAX, (zptr - zip)) ); /* temp subvol */
-    strncat(t, zip, _min(NAMELEN, ((zptr - zip) + 1)) );   /* temp stem   */
-
-    err = chvol(tptr);
-    ptr = t + strlen(t);  /* point to end of stem */
-  }
-  else
-    ptr = t;
-
-  /* If two zips are running in same subvol then we can get contention problems
-     with the temporary filename.  As a work around we attempt to create
-     the file here, and if it already exists we get a new temporary name */
-
-  attempts = 0;
-  do {
-    attempts++;
-    tmpnam(ptr);  /* Add filename */
-    tempf = zfopen(ptr, FOPW_TMP);    /* Attempt to create file */
-  } while (tempf == NULL && attempts < 100);
-
-  if (attempts >= 100) {
-    ziperr(ZE_TEMP, "Could not get unique temp file name");
-  }
-
-  fclose(tempf);
-
-  if (zptr != NULL) {
-    err = chvol(cptr);  /* Put ourself back to where we came in */
-  }
-
-  return t;
-
-#  else /* !CMS_MVS && !TANDEM */
 /*
  * Do something with TMPDIR, TMP, TEMP ????
  */
@@ -965,7 +908,6 @@ char *tempname(zip)
   return mktemp(t);
 #     endif
 #   endif /* NO_MKTEMP */
-#  endif /* TANDEM */
 # endif /* CMS_MVS */
 }
 #endif /* !VMS */
