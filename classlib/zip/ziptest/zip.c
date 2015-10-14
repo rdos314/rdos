@@ -1756,46 +1756,26 @@ char **argv;            /* command line tokens */
   }
 #endif /* MACOS || WINDLL */
 
-#if !defined(ALLOW_REGEX) && (defined(MSDOS) || defined(WIN32))
   allow_regex = 0;        /* 1 = allow [list] matching (regex) */
-#else
-  allow_regex = 1;
-#endif
 
   mesg = (FILE *) stdout; /* cannot be made at link time for VMS */
   comment_stream = (FILE *)stdin;
 
   init_upper();           /* build case map table */
 
-#ifdef LARGE_FILE_SUPPORT
   /* test if we can support large files - 9/29/04 */
   if (sizeof(zoff_t) < 8) {
     ZIPERR(ZE_COMPERR, "LARGE_FILE_SUPPORT enabled but OS not supporting it");
   }
-#endif
   /* test if sizes are the same - 12/30/04 */
   if (sizeof(uzoff_t) != sizeof(zoff_t)){
     ZIPERR(ZE_COMPERR, "uzoff_t not same size as zoff_t");
   }
 
-#if (defined(WIN32) && defined(USE_EF_UT_TIME))
   /* For the Win32 environment, we may have to "prepare" the environment
      prior to the tzset() call, to work around tzset() implementation bugs.
    */
   iz_w32_prepareTZenv();
-#endif
-
-#if (defined(IZ_CHECK_TZ) && defined(USE_EF_UT_TIME))
-#  ifndef VALID_TIMEZONE
-#     define VALID_TIMEZONE(tmp) \
-             (((tmp = getenv("TZ")) != NULL) && (*tmp != '\0'))
-#  endif
-  zp_tz_is_valid = VALID_TIMEZONE(p);
-#if (defined(AMIGA) || defined(DOS))
-  if (!zp_tz_is_valid)
-    extra_fields = 0;     /* disable storing "UT" time stamps */
-#endif /* AMIGA || DOS */
-#endif /* IZ_CHECK_TZ && USE_EF_UT_TIME */
 
 /* For systems that do not have tzset() but supply this function using another
    name (_tzset() or something similar), an appropiate "#define tzset ..."
