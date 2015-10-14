@@ -577,7 +577,6 @@ int newname(name, isdir, casesensitive)
     /* Check that we are not adding the zip file to itself. This
      * catches cases like "zip -m foo ../dir/foo.zip".
      */
-#ifndef CMS_MVS
 /* Version of stat() for CMS/MVS isn't complete enough to see if       */
 /* files match.  Just let ZIP.C compare the filenames.  That's good    */
 /* enough for CMS anyway since there aren't paths to worry about.      */
@@ -607,7 +606,6 @@ int newname(name, isdir, casesensitive)
          free(oname);
          return ZE_OK;
     }
-#endif  /* CMS_MVS */
 
     /* allocate space and add to list */
     if ((f = (struct flist far *)farmalloc(sizeof(struct flist))) == NULL ||
@@ -626,19 +624,6 @@ int newname(name, isdir, casesensitive)
     strcpy(f->name, name);
     f->iname = iname;
     f->zname = zname;
-#ifdef UNICODE_SUPPORT
-    /* Unicode */
-    f->uname = local_to_utf8_string(iname);
-#ifdef WIN32
-    f->namew = NULL;
-    f->inamew = NULL;
-    f->znamew = NULL;
-    if (strcmp(f->name, "-") == 0) {
-      f->namew = local_to_wchar_string(f->name);
-    }
-#endif
-
-#endif
     f->oname = oname;
     f->dosflag = dosflag;
 
@@ -700,12 +685,6 @@ ulg a;                  /* Attributes returned by filetime() */
 {
 #ifndef QDOS
 #ifdef S_IFLNK
-#ifdef __human68k__
-  int *_dos_importlnenv(void);
-
-  if (_dos_importlnenv() == NULL)
-    return 0;
-#endif
   return ((a >> 16) & S_IFMT) == S_IFLNK;
 #else /* !S_IFLNK */
   return (int)a & 0;    /* avoid warning on unused parameter */
