@@ -491,9 +491,6 @@ char *in2ex(n)
   if ((x = malloc(strlen(n) + 1 + PAD)) == NULL)
     return NULL;
   strcpy(x, n);
-# if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-  AnsiToOem(x, x);
-# endif
   return x;
 }
 
@@ -590,8 +587,6 @@ ulg filetime(f, a, n, t)
 }
 
 
-
-#ifdef NTSD_EAS
 
 /* changed size, csize from size_t to ush 3/10/2005 EG */
 local void GetSD(char *path, char **bufptr, ush *size,
@@ -698,7 +693,6 @@ local void GetSD(char *path, char **bufptr, ush *size,
 
   if(DynBuffer) free(DynBuffer);
 }
-#endif /* NTSD_EAS */
 
 
 #ifdef USE_EF_UT_TIME
