@@ -423,7 +423,6 @@ int ZipIsWinNT(void)    /* returns TRUE if real NT, FALSE if Win95 or Win32s */
 }
 
 
-#ifndef UTIL
 #  include <io.h>
 #  define _get_osfhandle _os_handle
 /* gaah -- Watcom's docs claim that _get_osfhandle exists, but it doesn't.  */
@@ -438,7 +437,6 @@ FILE *fp;
     return GetFileType((HANDLE)_get_osfhandle(fileno(fp))) == FILE_TYPE_DISK;
 }
 #endif /* HAVE_FSEEKABLE */
-#endif /* !UTIL */
 
 
 #if 0 /* seems to be never used; try it out... */
