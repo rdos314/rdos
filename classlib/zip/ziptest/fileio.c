@@ -2024,44 +2024,6 @@ size_t bfwrite(buffer, size, count, mode)
    character set.  The code used here is based on the ANSI mblen function. */
 
   /* moved to zip.h */
-#if 0
-#ifdef UNICODE_SUPPORT
-# define MB_CLEN(ptr) (1)
-# define MB_NEXTCHAR(ptr) ((ptr)++)
-# ifdef MULTIBYTE_GETOPTNS
-#    undef MULTIBYTE_GETOPTNS
-# endif
-#else
-# ifdef _MBCS
-#  ifndef MULTIBYTE_GETOPTNS
-#    define MULTIBYTE_GETOPTNS
-#  endif
-# endif
-/* multibyte character set support
-   Multibyte characters use typically two or more sequential bytes
-   to represent additional characters than can fit in a single byte
-   character set.  The code used here is based on the ANSI mblen function. */
-#  ifdef MULTIBYTE_GETOPTNS
-  local int mb_clen OF((ZCONST char *));  /* declare proto first */
-  local int mb_clen(ptr)
-    ZCONST char *ptr;
-  {
-    /* return the number of bytes that the char pointed to is.  Return 1 if
-       null character or error like not start of valid multibyte character. */
-    int cl;
-
-    cl = mblen(ptr, MB_CUR_MAX);
-    return (cl > 0) ? cl : 1;
-  }
-#  define MB_CLEN(ptr) mb_clen(ptr)
-#  define MB_NEXTCHAR(ptr) ((ptr) += MB_CLEN(ptr))
-# else
-#  define MB_CLEN(ptr) (1)
-#  define MB_NEXTCHAR(ptr) ((ptr)++)
-# endif
-#endif
-#endif
-
 
 /* constants */
 
