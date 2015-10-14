@@ -2875,12 +2875,6 @@ char **argv;            /* command line tokens */
     *p = (char)r;
   }
 
-#if (defined(IZ_CHECK_TZ) && defined(USE_EF_UT_TIME))
-  if (!zp_tz_is_valid) {
-    zipwarn("TZ environment variable not found, cannot use UTC times!!","");
-  }
-#endif /* IZ_CHECK_TZ && USE_EF_UT_TIME */
-
   /* For each marked entry, if not deleting, check if it exists, and if
      updating or freshening, compare date with entry in old zip file.
      Unmark if it doesn't exist or is too old, else update marked count. */
@@ -3065,14 +3059,7 @@ char **argv;            /* command line tokens */
     }
     tf = 0;
     if (action != DELETE && action != FRESHEN) {
-#if defined(UNICODE_SUPPORT) && defined(WIN32)
-      if (!no_win32_wide)
-        tf = filetimew(f->namew, (ulg *)NULL, (zoff_t *)&usize, NULL);
-      else
-        tf = filetime(f->name, (ulg *)NULL, (zoff_t *)&usize, NULL);
-#else
       tf = filetime(f->name, (ulg *)NULL, (zoff_t *)&usize, NULL);
-#endif
     }
 
     if (action == DELETE || action == FRESHEN ||
@@ -3373,10 +3360,6 @@ char **argv;            /* command line tokens */
 
 
   /* Process zip file, updating marked files */
-#ifdef DEBUG
-  if (zfiles != NULL)
-    diag("going through old zip file");
-#endif
   if (zfiles != NULL && show_what_doing) {
     fprintf(mesg, "sd: Going through old zip file\n");
     fflush(mesg);
@@ -3447,9 +3430,6 @@ char **argv;            /* command line tokens */
           z->extra = localz->extra;
           if (localz->nam) free(localz->iname);
           if (localz->nam) free(localz->name);
-#ifdef UNICODE_SUPPORT
-          if (localz->uname) free(localz->uname);
-#endif
           free(localz);
         }
 
