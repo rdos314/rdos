@@ -2957,25 +2957,10 @@ local int scanzipf_regnew()
       /* Clear actions */
       z->mark = 0;
       z->trash = 0;
-# ifdef UTIL
-/* We only need z->iname in the utils */
-      z->name = z->iname;
-#  ifdef EBCDIC
-/* z->zname is used for printing and must be coded in native charset */
-      if ((z->zname = malloc(z->nam+1)) ==  NULL) {
-        zipwarn("could not allocate memory: scanzipf_reg", "");
-        return ZE_MEM;
-      }
-      strtoebc(z->zname, z->iname);
-#  else
-      z->zname = z->iname;
-#  endif
-# else /* !UTIL */
       z->zname = in2ex(z->iname);       /* convert to external name */
       if (z->zname == NULL)
         return ZE_MEM;
       z->name = z->zname;
-# endif /* ?UTIL */
       if ((z->oname = malloc(strlen(z->zname) + 1)) == NULL) {
         zipwarn("could not allocate memory: scanzipf_reg", "");
         return ZE_MEM;
