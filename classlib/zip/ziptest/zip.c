@@ -48,14 +48,8 @@ local char *unzip_path = NULL; /* where to find unzip */
 local int tempdir = 0;  /* 1=use temp directory (-b) */
 local int junk_sfx = 0; /* 1=junk the sfx prefix */
 
-#if CRYPT
 /* Pointer to crc_table, needed in crypt.c */
-# if (!defined(USE_ZLIB) || defined(USE_OWN_CRCTAB))
 ZCONST ulg near *crc_32_tab;
-# else
-ZCONST uLongf *crc_32_tab;
-# endif
-#endif /* CRYPT */
 
 /* Local functions */
 
