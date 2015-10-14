@@ -413,30 +413,6 @@ void envargs(Pargc, Pargv, envstr, envstr2)
 
     /* copy the environment args first, may be changed */
     do {
-#if defined(AMIGA) || defined(UNIX)
-        if (*bufptr == '"') {
-            char *argstart = ++bufptr;
-            *(argv++) = argstart;
-            for (ch = *bufptr; ch != '\0' && ch != '\"';
-                 ch = *PREINCSTR(bufptr))
-                if (ch == '\\' && bufptr[1] != '\0')
-                    ++bufptr;               /* skip to char after backslash */
-            if (ch != '\0')                       /* overwrite trailing '"' */
-                *(bufptr++) = '\0';
-
-            /* remove escape characters */
-            while ((argstart = MBSCHR(argstart, '\\')) != NULL) {
-                strcpy(argstart, argstart + 1);
-                if (*argstart)
-                    ++argstart;
-            }
-        } else {
-            *(argv++) = bufptr;
-            while ((ch = *bufptr) != '\0' && !isspace((uch)ch)) INCSTR(bufptr);
-            if (ch != '\0') *(bufptr++) = '\0';
-        }
-#else
-#  ifdef WIN32
         /* We do not support backslash-quoting of quotes in quoted */
         /* strings under Win32, because backslashes are directory  */
         /* separators and double quotes are illegal in filenames.  */
@@ -449,12 +425,6 @@ void envargs(Pargc, Pargv, envstr, envstr2)
             while ((ch = *bufptr) != '\0' && !isspace((uch)ch)) INCSTR(bufptr);
             if (ch != '\0') *(bufptr++) = '\0';
         }
-#  else
-        *(argv++) = bufptr;
-        while ((ch = *bufptr) != '\0' && !isspace((uch)ch)) INCSTR(bufptr);
-        if (ch != '\0') *(bufptr++) = '\0';
-#  endif
-#endif /* ?(AMIGA || UNIX) */
         while ((ch = *bufptr) != '\0' && isspace((uch)ch)) INCSTR(bufptr);
     } while (ch);
 
