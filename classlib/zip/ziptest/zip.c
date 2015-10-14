@@ -3676,42 +3676,11 @@ char **argv;            /* command line tokens */
         files_so_far++;
         good_bytes_so_far += z->siz;
         bytes_so_far += z->siz;
-#ifdef WINDLL
-#ifdef ZIP64_SUPPORT
-        /* int64 support in caller */
-        if (lpZipUserFunctions->ServiceApplication64 != NULL)
-        {
-          if ((*lpZipUserFunctions->ServiceApplication64)(z->zname, z->siz))
-                    ZIPERR(ZE_ABORT, "User terminated operation");
-        }
-        else
-        {
-          /* no int64 support in caller */
-          filesize64 = z->siz;
-          low = (unsigned long)(filesize64 & 0x00000000FFFFFFFF);
-          high = (unsigned long)((filesize64 >> 32) & 0x00000000FFFFFFFF);
-          if (lpZipUserFunctions->ServiceApplication64_No_Int64 != NULL) {
-            if ((*lpZipUserFunctions->ServiceApplication64_No_Int64)(z->zname, low, high))
-                      ZIPERR(ZE_ABORT, "User terminated operation");
-          }
-        }
-#else
-        if (lpZipUserFunctions->ServiceApplication != NULL) {
-          if ((*lpZipUserFunctions->ServiceApplication)(z->zname, z->siz))
-            ZIPERR(ZE_ABORT, "User terminated operation");
-        }
-#endif /* ZIP64_SUPPORT - I added comments around // comments - does that help below? EG */
-/* strange but true: if I delete this and put these two endifs adjacent to
-   each other, the Aztec Amiga compiler never sees the second endif!  WTF?? PK */
-#endif /* WINDLL */
 
         v = z->nxt;                     /* delete entry from list */
         free((zvoid *)(z->iname));
         free((zvoid *)(z->zname));
         free(z->oname);
-#ifdef UNICODE_SUPPORT
-        if (z->uname) free(z->uname);
-#endif /* def UNICODE_SUPPORT */
         if (z->ext)
           /* don't have local extra until zipcopy reads it */
           if (z->extra) free((zvoid *)(z->extra));
@@ -3731,9 +3700,6 @@ char **argv;            /* command line tokens */
         free((zvoid *)(z->iname));
         free((zvoid *)(z->zname));
         free(z->oname);
-#ifdef UNICODE_SUPPORT
-        if (z->uname) free(z->uname);
-#endif /* def UNICODE_SUPPORT */
         if (z->ext)
           /* don't have local extra until zipcopy reads it */
           if (z->extra) free((zvoid *)(z->extra));
@@ -3804,55 +3770,6 @@ char **argv;            /* command line tokens */
     z->nxt = NULL;
     z->name = f->name;
     f->name = NULL;
-#ifdef UNICODE_SUPPORT
-    z->uname = NULL;          /* UTF-8 name for extra field */
-    z->zuname = NULL;         /* externalized UTF-8 name for matching */
-    z->ouname = NULL;         /* display version of UTF-8 name with OEM */
-
-#if 0
-    /* New AppNote bit 11 allowing storing UTF-8 in path */
-    if (utf8_force && f->uname) {
-      if (f->iname)
-        free(f->iname);
-      if ((f->iname = malloc(strlen(f->uname) + 1)) == NULL)
-        ZIPERR(ZE_MEM, "Unicode bit 11");
-      strcpy(f->iname, f->uname);
-# ifdef WIN32
-      if (f->inamew)
-        free(f->inamew);
-      f->inamew = utf8_to_wchar_string(f->iname);
-# endif
-    }
-#endif
-
-    /* Only set z->uname if have a non-ASCII Unicode name */
-    /* The Unicode path extra field is created if z->uname is not NULL,
-       unless on a UTF-8 system, then instead of creating the extra field
-       set bit 11 in the General Purpose Bit Flag */
-    {
-      int is_ascii = 0;
-
-# ifdef WIN32
-      if (!no_win32_wide)
-        is_ascii = is_ascii_stringw(f->inamew);
-      else
-        is_ascii = is_ascii_string(f->uname);
-# else
-      is_ascii = is_ascii_string(f->uname);
-# endif
-
-      if (z->uname == NULL) {
-        if (!is_ascii)
-          z->uname = f->uname;
-        else
-          free(f->uname);
-      } else {
-        free(f->uname);
-      }
-    }
-    f->uname = NULL;
-
-#endif
     z->iname = f->iname;
     f->iname = NULL;
     z->zname = f->zname;
