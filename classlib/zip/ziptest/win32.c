@@ -253,23 +253,6 @@ local int VFatFileTime2utime(const FILETIME *pft, time_t *ut)
      *       be off by one daylight-saving-time shift (typically 1 hour),
      *       depending on the current state of "is_dst".
      */
-#ifdef CHECK_UTIME_SIGNED_UNSIGNED
-    if ((time_t)0x80000000L < (time_t)0L)
-    {
-        if ((pft->dwHighDateTime < UNIX_TIME_SMIN_HI) ||
-            ((pft->dwHighDateTime == UNIX_TIME_SMIN_HI) &&
-             (pft->dwLowDateTime < UNIX_TIME_SMIN_LO))) {
-            *ut = (time_t)LONG_MIN;
-            return FALSE;
-        if ((pft->dwHighDateTime > UNIX_TIME_SMAX_HI) ||
-            ((pft->dwHighDateTime == UNIX_TIME_SMAX_HI) &&
-             (pft->dwLowDateTime > UNIX_TIME_SMAX_LO))) {
-            *ut = (time_t)LONG_MAX;
-            return FALSE;
-        }
-    }
-    else
-#endif /* CHECK_UTIME_SIGNED_UNSIGNED */
     {
         if ((pft->dwHighDateTime < UNIX_TIME_ZERO_HI) ||
             ((pft->dwHighDateTime == UNIX_TIME_ZERO_HI) &&
@@ -379,13 +362,6 @@ char *GetLongPathEA(char *name)
 {
     return(NULL); /* volunteers ? */
 }
-
-#ifdef UNICODE_SUPPORT
-wchar_t *GetLongPathEAW(wchar_t *name)
-{
-    return(NULL); /* volunteers ? */
-}
-#endif
 
 
 int IsFileNameValid(x)
