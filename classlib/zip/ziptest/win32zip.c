@@ -53,22 +53,8 @@ typedef struct zdirscan {
 local zDIRSCAN        * OpenDirScan      OF((ZCONST char *n));
 local struct zdirscan * GetNextDirEntry  OF((zDIRSCAN *d));
 local void              CloseDirScan     OF((zDIRSCAN *d));
-
-#ifdef UNICODE_SUPPORT
-local zDIRSCANW        * OpenDirScanW     OF((ZCONST wchar_t *wn));
-local struct zdirscanw * GetNextDirEntryW OF((zDIRSCANW *dw));
-local void               CloseDirScanW    OF((zDIRSCANW *dw));
-#endif
-
 local char           *readd        OF((zDIRSCAN *));
-#ifdef UNICODE_SUPPORT
-local wchar_t        *readdw       OF((zDIRSCANW *));
-#endif
-
 local int             wild_recurse OF((char *, char *));
-#ifdef UNICODE_SUPPORT
-local int             wild_recursew OF((wchar_t *, wchar_t *));
-#endif
 
 #ifdef NTSD_EAS
    local void GetSD OF((char *path, char **bufptr, ush *size,
