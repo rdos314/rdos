@@ -2022,19 +2022,6 @@ size_t bfwrite(buffer, size, count, mode)
    Multibyte characters use typically two or more sequential bytes
    to represent additional characters than can fit in a single byte
    character set.  The code used here is based on the ANSI mblen function. */
-#ifdef MULTIBYTE_GETOPTNS
-  int mb_clen(ptr)
-    ZCONST char *ptr;
-  {
-    /* return the number of bytes that the char pointed to is.  Return 1 if
-       null character or error like not start of valid multibyte character. */
-    int cl;
-
-    cl = mblen(ptr, MB_CUR_MAX);
-    return (cl > 0) ? cl : 1;
-  }
-#endif
-
 
   /* moved to zip.h */
 #if 0
