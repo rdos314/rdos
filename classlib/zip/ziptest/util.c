@@ -449,27 +449,12 @@ char *s;
     do {
         /* count and skip args */
         ++count;
-#if defined(AMIGA) || defined(UNIX)
-        if (*s == '\"') {
-            for (ch = *PREINCSTR(s); ch != '\0' && ch != '\"';
-                 ch = *PREINCSTR(s))
-                if (ch == '\\' && s[1] != '\0')
-                    INCSTR(s);
-            if (*s) INCSTR(s);  /* trailing quote */
-        } else
-            while ((ch = *s) != '\0' && !isspace((uch)ch)) INCSTR(s);
-#else
-#  ifdef WIN32
         if (*s == '\"') {
             ++s;                /* leading quote */
             while ((ch = *s) != '\0' && ch != '\"') INCSTR(s);
             if (*s) INCSTR(s);  /* trailing quote */
         } else
             while ((ch = *s) != '\0' && !isspace((uch)ch)) INCSTR(s);
-#  else
-        while ((ch = *s) != '\0' && !isspace((uch)ch)) INCSTR(s);
-#  endif
-#endif /* ?(AMIGA || UNIX) */
         while ((ch = *s) != '\0' && isspace((uch)ch)) INCSTR(s);
     } while (ch);
 
