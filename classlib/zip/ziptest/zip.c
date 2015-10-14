@@ -1881,11 +1881,6 @@ char **argv;            /* command line tokens */
           }
           action = DELETE;
           break;
-#ifdef MACOS
-        case o_df:
-          MacZip.DataForkOnly = true;
-          break;
-#endif /* MACOS */
         case o_db:
           if (negated)
             display_bytes = 0;
@@ -1976,13 +1971,9 @@ char **argv;            /* command line tokens */
           allow_empty_archive = 1;
           break;
         case 'e':   /* Encrypt */
-#if !CRYPT
-          ZIPERR(ZE_PARMS, "encryption not supported");
-#else /* CRYPT */
           if (key)
             free(key);
           key_needed = 1;
-#endif /* !CRYPT */
           break;
         case 'F':   /* fix the zip file */
           fix = 1; break;
@@ -2005,15 +1996,9 @@ char **argv;            /* command line tokens */
           break;
         case 'g':   /* Allow appending to a zip file */
           d = 1;  break;
-#ifndef WINDLL
         case 'h': case 'H': case '?':  /* Help */
-#ifdef VMSCLI
-          VMSCLI_help();
-#else
           help();
-#endif
           RETURN(finish(ZE_OK));
-#endif /* !WINDLL */
 
 #ifndef WINDLL
         case o_h2:  /* Extended Help */
