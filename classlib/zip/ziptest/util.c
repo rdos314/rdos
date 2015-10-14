@@ -25,14 +25,7 @@ uch upper[256], lower[256];
 
 /* Local functions */
 local int recmatch OF((ZCONST char *, ZCONST char *, int));
-#if defined(UNICODE_SUPPORT) && defined(WIN32)
-  local long recmatchw OF((ZCONST wchar_t *, ZCONST wchar_t *, int));
-#endif
 local int count_args OF((char *s));
-
-#ifdef MSDOS16
-  local unsigned ident OF((unsigned chr));
-#endif
 
 #ifndef HAVE_FSEEKABLE
 
