@@ -24,8 +24,8 @@
 /* for toupper() */
 #include <ctype.h>
 
-#  define WIN32_LEAN_AND_MEAN
-#  include <windows.h>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 /*
  * XXX start of zipfile.h
@@ -39,9 +39,7 @@
 #define PUTSH(a,f) {putc((char)((a) & 0xff),(f)); putc((char)((a) >> 8),(f));}
 #define PUTLG(a,f) {PUTSH((a) & 0xffff,(f)) PUTSH((a) >> 16,(f))}
 
-#ifdef ZIP64_SUPPORT           /* zip64 support 08/31/2003 R.Nausedat */
 # define PUTLLG(a,f) {PUTLG((a) & 0xffffffff,(f)) PUTLG((a) >> 32,(f))}
-#endif
 
 
 /* -- Structure of a ZIP file -- */
@@ -109,7 +107,6 @@
 #define ZIP_UWORD32_MAX                  0xFFFFFFFF                    /* border value */
 #define ZIP_EF_HEADER_SIZE               4                             /* size of pre-header of extra fields */
 
-#ifdef ZIP64_SUPPORT
 # define ZIP64_EXTCRC                    0                             /* uncompressed crc-32 for file */
 # define ZIP64_EXTSIZ                    4                             /* compressed size in zip file */
 # define ZIP64_EXTLEN                    12                            /* uncompressed size */
@@ -132,18 +129,8 @@
 /* -------------------------------------------------------------------------------------------------------------------------- */
  local int adjust_zip_local_entry OF((struct zlist far *));
  local void adjust_zip_central_entry OF((struct zlist far *));
-#if 0
- local int remove_local_extra_field OF((struct zlist far *, ulg));
- local int remove_central_extra_field OF((struct zlist far *, ulg));
-#endif
  local int add_central_zip64_extra_field OF((struct zlist far *));
  local int add_local_zip64_extra_field OF((struct zlist far *));
-#endif /* ZIP64_SUPPORT */
-#ifdef UNICODE_SUPPORT
-# define UTF8_PATH_EF_TAG                0x7075                        /* ID for Unicode path (up) extra field */
- local int add_Unicode_Path_local_extra_field OF((struct zlist far *));
- local int add_Unicode_Path_cen_extra_field OF((struct zlist far *));
-#endif
 
 /* New General Purpose Bit Flag bit 11 flags when entry path and
    comment are in UTF-8 */
