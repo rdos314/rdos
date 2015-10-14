@@ -964,14 +964,7 @@ local void check_zipfile(zipname, zippath)
   if ((zipnam = (char *)malloc(strlen(zipname) + 3)) == NULL)
     ziperr(ZE_MEM, "was creating unzip zipnam");
 
-# ifdef MSDOS
-  /* Add quotes for MSDOS.  8/11/04 */
-  strcpy(zipnam, "\"");    /* accept spaces in name and path */
-  strcat(zipnam, zipname);
-  strcat(zipnam, "\"");
-# else
   strcpy(zipnam, zipname);
-# endif
 
   if (unzip_path) {
     /* if user gave us the unzip to use go with it */
@@ -1015,10 +1008,6 @@ local void check_zipfile(zipname, zippath)
 
     status = spawnlp(P_WAIT, "unzip", "unzip", verbose ? "-t" : "-tqq",
                      zipnam, NULL);
-# ifdef __human68k__
-    if (status == -1)
-      perror("unzip");
-# else
 /*
  * unzip isn't in PATH range, assume an absolute path to zip in argv[0]
  * and hope that unzip is in the same directory.
@@ -1046,7 +1035,6 @@ local void check_zipfile(zipname, zippath)
         perror("unzip");
     }
   }
-# endif /* ?__human68k__ */
   free(zipnam);
   if (status != 0) {
 
