@@ -139,14 +139,14 @@
 /* moved out of ZIP64_SUPPORT - 2/6/2005 EG */
 local void write_ushort_to_mem OF((ush, char *));                      /* little endian conversions */
 local void write_ulong_to_mem OF((ulg, char *));
- local void write_int64_to_mem OF((uzoff_t, char *));
- local void write_string_to_mem OF((char *, char *));
+local void write_int64_to_mem OF((uzoff_t, char *));
+local void write_string_to_mem OF((char *, char *));
 local char *get_extra_field OF((ush, char *, unsigned));           /* zip64 */
 
 /* added these self allocators - 2/6/2005 EG */
 local void append_ushort_to_mem OF((ush, char **, extent *, extent *));
 local void append_ulong_to_mem OF((ulg, char **, extent *, extent *));
- local void append_int64_to_mem OF((uzoff_t, char **, extent *, extent *));
+local void append_int64_to_mem OF((uzoff_t, char **, extent *, extent *));
 local void append_string_to_mem OF((char *, int, char**, extent *, extent *));
 
 
@@ -158,33 +158,14 @@ local int is_signature OF((ZCONST char *, ZCONST char *));
 local int at_signature OF((FILE *, ZCONST char *));
 
 local int zqcmp OF((ZCONST zvoid *, ZCONST zvoid *));
-#ifdef UNICODE_SUPPORT
-local int zuqcmp OF((ZCONST zvoid *, ZCONST zvoid *));
-#endif
-#if 0
- local int scanzipf_reg OF((FILE *f));
-#endif
 local int scanzipf_regnew OF((void));
-#ifndef UTIL
- local int rqcmp OF((ZCONST zvoid *, ZCONST zvoid *));
- local int zbcmp OF((ZCONST zvoid *, ZCONST zvoid far *));
-# ifdef UNICODE_SUPPORT
- local int zubcmp OF((ZCONST zvoid *, ZCONST zvoid far *));
-#  if 0
- local int zuebcmp OF((ZCONST zvoid *, ZCONST zvoid far *));
-#  endif
-# endif /* UNICODE_SUPPORT */
- local void zipoddities OF((struct zlist far *));
-# if 0
-  local int scanzipf_fix OF((FILE *f));
-# endif
- local int scanzipf_fixnew OF((void));
-# ifdef USE_EF_UT_TIME
-   local int ef_scan_ut_time OF((char *ef_buf, extent ef_len, int ef_is_cent,
+local int rqcmp OF((ZCONST zvoid *, ZCONST zvoid *));
+local int zbcmp OF((ZCONST zvoid *, ZCONST zvoid far *));
+local void zipoddities OF((struct zlist far *));
+local int scanzipf_fixnew OF((void));
+local int ef_scan_ut_time OF((char *ef_buf, extent ef_len, int ef_is_cent,
                                    iztimes *z_utim));
-# endif /* USE_EF_UT_TIME */
- local void cutpath OF((char *p, int delim));
-#endif /* !UTIL */
+local void cutpath OF((char *p, int delim));
 
 /*
  * XXX end of zipfile.h
