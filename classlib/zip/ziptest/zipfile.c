@@ -2291,10 +2291,6 @@ local int scanzipf_regnew()
       return ferror(in_file) ? ZE_READ : ZE_EOF;
     }
     zcomment[zcomlen] = '\0';
-#ifdef EBCDIC
-    if (zcomment)
-       memtoebc(zcomment, zcomment, zcomlen);
-#endif /* EBCDIC */
   }
 
   if (cd_total_entries == 0) {
@@ -2316,10 +2312,6 @@ local int scanzipf_regnew()
       return ZE_FORM;
     }
 
-#ifdef VMS
-    /* On VMS, adjust plen (and in_path_ext) to avoid the file version. */
-    plen -= strlen(vms_file_version(in_path));
-#endif /* def VMS */
     in_path_ext = zipfile + plen - 4;
 
     if (plen < 4 ||
@@ -2356,9 +2348,7 @@ local int scanzipf_regnew()
   /* Also check for an offset if fix and single disk archive. */
   if ((fix == 1 && total_disks == 1) || adjust) {
     zoff_t cd_start;
-# ifdef ZIP64_SUPPORT
     zoff_t zip64_eocdr_start;
-# endif
 
     /* First attempt.  If the CD start offset and size are valid in the EOCDR
        (meaning they are not the Zip64 flag values that say the actual values
@@ -2419,16 +2409,6 @@ local int scanzipf_regnew()
         return ZE_FORM;
       }
       if (at_signature(in_file, "PK\06\07"))
-#ifndef ZIP64_SUPPORT
-      {
-        fclose(in_file);
-        in_file = NULL;
-        zipwarn("found Zip64 signature - this may be a Zip64 archive", "");
-        zipwarn("Need PKZIP 4.5 or later compatible zip", "");
-        zipwarn("Set ZIP64_SUPPORT in Zip 3", "");
-        return ZE_ZIP64;
-      }
-#else /* ZIP64_SUPPORT */
       {
         z64eocdl_offset = zftello(in_file) - 4;
 
@@ -2495,7 +2475,6 @@ local int scanzipf_regnew()
           }
         }
       }
-#endif
     }
     if (noisy) {
       if (adjust_offset) {
@@ -2537,16 +2516,6 @@ local int scanzipf_regnew()
     return ZE_FORM;
   }
   if (at_signature(in_file, "PK\06\07"))
-#ifndef ZIP64_SUPPORT
-  {
-    fclose(in_file);
-    in_file = NULL;
-    zipwarn("found Zip64 signature - this may be a Zip64 archive", "");
-    zipwarn("Need PKZIP 4.5 or later compatible zip", "");
-    zipwarn("Set ZIP64_SUPPORT in Zip 3", "");
-    return ZE_ZIP64;
-  }
-#else /* ZIP64_SUPPORT */
   {
     z64eocdl_offset = zftello(in_file) - 4;
     /* read Z64 EOCDL */
@@ -2708,7 +2677,6 @@ local int scanzipf_regnew()
       }
     }
   }
-#endif /* ?ZIP64_SUPPORT */
 
   /* Now read the central directory and create the zlist */
 
