@@ -55,14 +55,10 @@ ZCONST ulg near *crc_32_tab;
 
 local void freeup  OF((void));
 local int  finish  OF((int));
-#if (!defined(MACOS) && !defined(WINDLL))
 local void handler OF((int));
 local void license OF((void));
-#ifndef VMSCLI
 local void help    OF((void));
 local void help_extended OF((void));
-#endif /* !VMSCLI */
-#endif /* !MACOS && !WINDLL */
 
 /* prereading of arguments is not supported in new command
    line interpreter get_option() so read filters as arguments
@@ -80,14 +76,10 @@ local long add_name OF((char *filearg));
 local int DisplayRunningStats OF((void));
 local int BlankRunningStats OF((void));
 
-#if !defined(WINDLL)
 local void version_info OF((void));
-# if !defined(MACOS)
 local void zipstdout OF((void));
-# endif /* !MACOS */
 local int check_unzip_version OF((char *unzippath));
 local void check_zipfile OF((char *zipname, char *zippath));
-#endif /* !WINDLL */
 
 /* structure used by add_filter to store filters */
 struct filterlist_struct {
@@ -133,22 +125,6 @@ local void freeup()
       free((zvoid *)(zfiles->comment));
     if (zfiles->oname)
       free((zvoid *)(zfiles->oname));
-#ifdef UNICODE_SUPPORT
-    if (zfiles->uname)
-      free((zvoid *)(zfiles->uname));
-    if (zfiles->zuname)
-      free((zvoid *)(zfiles->zuname));
-    if (zfiles->ouname)
-      free((zvoid *)(zfiles->ouname));
-# ifdef WIN32
-    if (zfiles->namew)
-      free((zvoid *)(zfiles->namew));
-    if (zfiles->inamew)
-      free((zvoid *)(zfiles->inamew));
-    if (zfiles->znamew)
-      free((zvoid *)(zfiles->znamew));
-# endif
-#endif
     farfree((zvoid far *)zfiles);
     zfiles = z;
     zcount--;
