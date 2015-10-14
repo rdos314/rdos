@@ -477,81 +477,8 @@ char *ex2in(x, isdir, pdosflag)
   /* Returned malloc'ed name */
   if (pdosflag)
     *pdosflag = dosflag;
-#if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-  OemToAnsi(n, n);
-#endif
   return n;
 }
-
-#ifdef UNICODE_SUPPORT
-wchar_t *ex2inw(xw, isdir, pdosflag)
-  wchar_t *xw;          /* external file name */
-  int isdir;            /* input: x is a directory */
-  int *pdosflag;        /* output: force MSDOS file attributes? */
-/* Convert the external file name to a zip file name, returning the malloc'ed
-   string or NULL if not enough memory. */
-{
-  wchar_t *nw;          /* internal file name (malloc'ed) */
-  wchar_t *tw;          /* shortened name */
-  int dosflag;
-
-
-  dosflag = dosify || IsFileSystemOldFATW(xw);
-  if (!dosify && use_longname_ea && (tw = GetLongPathEAW(xw)) != NULL)
-  {
-    xw = tw;
-    dosflag = 0;
-  }
-
-  /* Find starting point in name before doing malloc */
-  /* Strip drive specification */
-  tw = *xw && iswascii(*xw) && *(xw + 1) == (wchar_t)':' ? xw + 2 : xw;
-  /* Strip "//host/share/" part of a UNC name */
-  if ((!wcsncmp(xw,L"//",2) || !wcsncmp(xw,L"\\\\",2)) &&
-      (xw[2] != (wchar_t)'\0' && xw[2] != (wchar_t)'/' && xw[2] != (wchar_t)'\\')) {
-    nw = xw + 2;
-    while (*nw != (wchar_t)'\0' && *nw != (wchar_t)'/' && *nw != (wchar_t)'\\')
-      nw++;        /* strip host name */
-    if (*nw != (wchar_t)'\0') {
-      nw++;
-      while (*nw != (wchar_t)'\0' && *nw != (wchar_t)'/' && *nw != (wchar_t)'\\')
-        nw++;      /* strip `share' name */
-    }
-    if (*nw != (wchar_t)'\0')
-      tw = nw++;
-  }
-  /* Strip leading "/" to convert an absolute path into a relative path */
-  while (*tw == (wchar_t)'/' || *tw == (wchar_t)'\\')
-    tw++;
-  /* Strip leading "./" as well as drive letter */
-  while (*tw == (wchar_t)'.' && (tw[1] == (wchar_t)'/' || tw[1] == (wchar_t)'\\'))
-    tw += 2;
-
-  /* Make changes, if any, to the copied name (leave original intact) */
-  for (nw = tw; *nw; nw++)
-    if (*nw == '\\')
-      *nw = '/';
-
-  if (!pathput)
-    tw = lastw(tw, PATH_END);
-
-  /* Malloc space for internal name and copy it */
-  if ((nw = malloc((wcslen(tw) + 1) * sizeof(wchar_t))) == NULL)
-    return NULL;
-  wcscpy(nw, tw);
-
-  if (dosify)
-    msnamew(nw);
-
-  /* Returned malloc'ed name */
-  if (pdosflag)
-    *pdosflag = dosflag;
-#if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-  CharToAnsiW(nw, nw);
-#endif
-  return nw;
-}
-#endif
 
 
 char *in2ex(n)
