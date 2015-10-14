@@ -598,24 +598,15 @@ void version_local()
     char buf[80];
 
 /* Define the compiler name and version strings */
-#  if (__WATCOMC__ % 10 > 0)
 /* We do this silly test because __WATCOMC__ gives two digits for the  */
 /* minor version, but Watcom packaging prefers to show only one digit. */
     sprintf(buf, "Watcom C/C++ %d.%02d", __WATCOMC__ / 100,
             __WATCOMC__ % 100);
-#  else
-    sprintf(buf, "Watcom C/C++ %d.%d", __WATCOMC__ / 100,
-            (__WATCOMC__ % 100) / 10);
-#  endif /* __WATCOMC__ % 10 > 0 */
-#  define COMPILER_NAME1        buf
-#  define COMPILER_NAME2        ""
+#define COMPILER_NAME1        buf
+#define COMPILER_NAME2        ""
 
 /* Define the compile date string */
-#ifdef __DATE__
-#  define COMPILE_DATE " on " __DATE__
-#else
-#  define COMPILE_DATE ""
-#endif
+#define COMPILE_DATE ""
 
     printf(CompiledWith, COMPILER_NAME1, COMPILER_NAME2,
            "\nWindows 9x / Windows NT", " (32-bit)", COMPILE_DATE);
