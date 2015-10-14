@@ -565,14 +565,10 @@ int getch_win32(void)
   int ret = -1;
   DWORD odemode = ~(DWORD)0;
 
-#  ifdef PASSWD_FROM_STDIN
-  stin = GetStdHandle(STD_INPUT_HANDLE);
-#  else
   stin = CreateFile("CONIN$", GENERIC_READ | GENERIC_WRITE,
                     FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
   if (stin == INVALID_HANDLE_VALUE)
     return -1;
-#  endif
   if (GetConsoleMode(stin, &odemode))
     SetConsoleMode(stin, ENABLE_PROCESSED_INPUT);  /* raw except ^C noticed */
   if (ReadFile(stin, &buf, 1, &rc, NULL) && rc == 1)
@@ -586,9 +582,7 @@ int getch_win32(void)
       ret = buf[0];
   if (odemode != ~(DWORD)0)
     SetConsoleMode(stin, odemode);
-#  ifndef PASSWD_FROM_STDIN
   CloseHandle(stin);
-#  endif
   return ret;
 }
 
