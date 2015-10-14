@@ -2890,9 +2890,6 @@ local int scanzipf_regnew()
       /* Initialize all fields pointing to malloced data to NULL */
       z->zname = z->name = z->iname = z->extra = z->cextra = z->comment = NULL;
       z->oname = NULL;
-#ifdef UNICODE_SUPPORT
-      z->uname = z->zuname = z->ouname = NULL;
-#endif
 
       /* Read file name, extra field and comment field */
       if (z->nam == 0)
@@ -2903,9 +2900,7 @@ local int scanzipf_regnew()
           zipwarn("skipping this entry...", "");
           continue;
         }
-#ifndef DEBUG
         return ZE_FORM;
-#endif
       }
       if ((z->iname = malloc(z->nam+1)) ==  NULL ||
           (z->cext && (z->cextra = malloc(z->cext)) == NULL) ||
@@ -2922,54 +2917,21 @@ local int scanzipf_regnew()
         return ferror(in_file) ? ZE_READ : ZE_EOF;
       }
       z->iname[z->nam] = '\0';                  /* terminate name */
-#ifdef UNICODE_SUPPORT
-      if (unicode_mismatch != 3) {
-        if (z->flg & UTF8_BIT) {
-          char *iname;
-          /* path is UTF-8 */
-          if ((z->uname = malloc(strlen(z->iname) + 1)) == NULL) {
-            zipwarn("could not allocate memory: scanzipf_reg", "");
-            return ZE_MEM;
-          }
-          strcpy(z->uname, z->iname);
-          /* Create a local name.  If UTF-8 system this should also be UTF-8 */
-          iname = utf8_to_local_string(z->uname);
-          if (iname) {
-            free(z->iname);
-            z->iname = iname;
-          }
-          else
-            zipwarn("illegal UTF-8 name: ", z->uname);
-        } else {
-          /* check for UTF-8 path extra field */
-          read_Unicode_Path_entry(z);
-        }
-      }
-#endif
 
-#ifdef WIN32
       /* Input path may be OEM */
       {
         unsigned hostver = (z->vem & 0xff);
         Ext_ASCII_TO_Native(z->iname, (z->vem >> 8), hostver,
                             ((z->atx & 0xffff0000L) != 0), FALSE);
       }
-#endif
 
-#ifdef EBCDIC
-      if (z->com)
-         memtoebc(z->comment, z->comment, z->com);
-#endif /* EBCDIC */
-#ifdef WIN32
       /* Comment may be OEM */
       {
         unsigned hostver = (z->vem & 0xff);
         Ext_ASCII_TO_Native(z->comment, (z->vem >> 8), hostver,
                             ((z->atx & 0xffff0000L) != 0), FALSE);
       }
-#endif
 
-#ifdef ZIP64_SUPPORT
       /* zip64 support 08/31/2003 R.Nausedat                          */
       /* here, we have to read the len, siz etc values from the CD    */
       /* entry as we might have to adjust them regarding their        */
@@ -2982,7 +2944,6 @@ local int scanzipf_regnew()
       /* there is a zip64 extra field assigned to a CDH PKZIP */
       /* uses it, we should do so, too.                       */
       adjust_zip_central_entry(z);
-#endif
       /* if adjusting for sfx prefix, add the offset */
       if ((fix ==1 && total_disks == 1) || adjust) z->off += adjust_offset;
 
