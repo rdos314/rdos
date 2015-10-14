@@ -3449,50 +3449,11 @@ char **argv;            /* command line tokens */
             ZIPERR(r, errbuf);
           }
           zipmessage_nl("", 1);
-          /*
-          if (noisy)
-          {
-            if (mesg_line_started) {
-#if (!defined(MACOS) && !defined(WINDLL))
-              putc('\n', mesg);
-              fflush(mesg);
-#else
-              fprintf(stdout, "\n");
-              fflush(stdout);
-#endif
-              mesg_line_started = 0;
-            }
-          }
-          if (logall) {
-            if (logfile_line_started) {
-              fprintf(logfile, "\n");
-              logfile_line_started = 0;
-              fflush(logfile);
-            }
-          }
-          */
         }
         if (r == ZE_OPEN || r == ZE_MISS)
         {
           o = 1;
           zipmessage_nl("", 1);
-          /*
-          if (noisy)
-          {
-#if (!defined(MACOS) && !defined(WINDLL))
-            putc('\n', mesg);
-            fflush(mesg);
-#else
-            fprintf(stdout, "\n");
-#endif
-            mesg_line_started = 0;
-          }
-          if (logall) {
-            fprintf(logfile, "\n");
-            logfile_line_started = 0;
-            fflush(logfile);
-          }
-          */
           if (r == ZE_OPEN) {
             perror(z->oname);
             zipwarn("could not open for reading: ", z->oname);
