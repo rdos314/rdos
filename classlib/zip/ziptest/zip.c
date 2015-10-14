@@ -1508,11 +1508,7 @@ struct option_struct far options[] = {
 
 
 
-#ifndef USE_ZIPMAIN
 int main(argc, argv)
-#else
-int zipmain(argc, argv)
-#endif
 int argc;               /* number of tokens in command line */
 char **argv;            /* command line tokens */
 /* Add, update, freshen, or delete zip entries in a zip file.  See the
