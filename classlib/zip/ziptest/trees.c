@@ -1265,9 +1265,6 @@ local void bi_windup()
     }
     bi_buf = 0;
     bi_valid = 0;
-#ifdef DEBUG
-    bits_sent = (bits_sent+7) & ~7;
-#endif
 }
 
 /* ===========================================================================
