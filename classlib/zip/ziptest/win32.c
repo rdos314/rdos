@@ -197,47 +197,6 @@ typedef unsigned __int64     ULLNG64;
 
 local int FileTime2utime(FILETIME *pft, time_t *ut)
 {
-#ifndef NO_INT64
-    ULLNG64 NTtime;
-
-    NTtime = ((ULLNG64)pft->dwLowDateTime +
-              ((ULLNG64)pft->dwHighDateTime << 32));
-
-    /* underflow and overflow handling */
-#ifdef CHECK_UTIME_SIGNED_UNSIGNED
-    if ((time_t)0x80000000L < (time_t)0L)
-    {
-        if (NTtime < ((ULLNG64)UNIX_TIME_SMIN_LO +
-                      ((ULLNG64)UNIX_TIME_SMIN_HI << 32))) {
-            *ut = (time_t)LONG_MIN;
-            return FALSE;
-        }
-        if (NTtime > ((ULLNG64)UNIX_TIME_SMAX_LO +
-                      ((ULLNG64)UNIX_TIME_SMAX_HI << 32))) {
-            *ut = (time_t)LONG_MAX;
-            return FALSE;
-        }
-    }
-    else
-#endif /* CHECK_UTIME_SIGNED_UNSIGNED */
-    {
-        if (NTtime < ((ULLNG64)UNIX_TIME_ZERO_LO +
-                      ((ULLNG64)UNIX_TIME_ZERO_HI << 32))) {
-            *ut = (time_t)0;
-            return FALSE;
-        }
-        if (NTtime > ((ULLNG64)UNIX_TIME_UMAX_LO +
-                      ((ULLNG64)UNIX_TIME_UMAX_HI << 32))) {
-            *ut = (time_t)ULONG_MAX;
-            return FALSE;
-        }
-    }
-
-    NTtime -= ((ULLNG64)UNIX_TIME_ZERO_LO +
-               ((ULLNG64)UNIX_TIME_ZERO_HI << 32));
-    *ut = (time_t)(NTtime / (unsigned long)NT_QUANTA_PER_UNIX);
-    return TRUE;
-#else /* NO_INT64 (64-bit integer arithmetics may not be supported) */
     /* nonzero if `y' is a leap year, else zero */
 #   define leap(y) (((y)%4 == 0 && (y)%100 != 0) || (y)%400 == 0)
     /* number of leap years from 1970 to `y' (not including `y' itself) */
@@ -295,7 +254,6 @@ local int FileTime2utime(FILETIME *pft, time_t *ut)
     *ut = (time_t)(86400L * days + 3600L * (time_t)w32tm.wHour +
                    (time_t)(60 * w32tm.wMinute + w32tm.wSecond));
     return TRUE;
-#endif /* ?NO_INT64 */
 } /* end function FileTime2utime() */
 
 
