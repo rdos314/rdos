@@ -818,38 +818,8 @@ char *tempname(zip)
       return NULL;
     strcpy(t, tempath);
 
-#   if (!defined(VMS) && !defined(TOPS20))
-#    ifdef MSDOS
-    {
-      char c = (char)lastchar(t);
-      if (c != '/' && c != ':' && c != '\\')
-        strcat(t, "/");
-    }
-#    else
-
-#     ifdef AMIGA
-    {
-      char c = (char)lastchar(t);
-      if (c != '/' && c != ':')
-        strcat(t, "/");
-    }
-#     else /* !AMIGA */
-#      ifdef RISCOS
-    if (lastchar(t) != '.')
-      strcat(t, ".");
-#      else /* !RISCOS */
-
-#       ifdef QDOS
-    if (lastchar(t) != '_')
-      strcat(t, "_");
-#       else
     if (lastchar(t) != '/')
       strcat(t, "/");
-#       endif /* ?QDOS */
-#      endif /* ?RISCOS */
-#     endif  /* ?AMIGA */
-#    endif /* ?MSDOS */
-#   endif /* !VMS && !TOPS20 */
   }
   else
   {
