@@ -3829,50 +3829,18 @@ char **argv;            /* command line tokens */
     fprintf(mesg, "sd: Get comment if any\n");
     fflush(mesg);
   }
-#if defined(AMIGA) || defined(MACOS)
-  if (comadd || filenotes)
-  {
-    if (comadd)
-#else
   if (comadd)
   {
-#endif
     {
       if (comment_stream == NULL) {
-#ifndef RISCOS
         comment_stream = (FILE*)fdopen(fileno(stderr), "r");
-#else
-        comment_stream = stderr;
-#endif
       }
       if ((e = malloc(MAXCOM + 1)) == NULL) {
         ZIPERR(ZE_MEM, "was reading comment lines");
       }
     }
-#ifdef __human68k__
-    setmode(fileno(comment_stream), O_TEXT);
-#endif
-#ifdef MACOS
-    if (noisy) fprintf(mesg, "\nStart commenting files ...\n");
-#endif
     for (z = zfiles; z != NULL; z = z->nxt)
       if (z->mark)
-#if defined(AMIGA) || defined(MACOS)
-        if (filenotes && (p = GetComment(z->zname)))
-        {
-          if (z->comment = malloc(k = strlen(p)+1))
-          {
-            z->com = k;
-            strcpy(z->comment, p);
-          }
-          else
-          {
-            free((zvoid *)e);
-            ZIPERR(ZE_MEM, "was reading filenotes");
-          }
-        }
-        else if (comadd)
-#endif /* AMIGA || MACOS */
         {
           if (noisy)
             fprintf(mesg, "Enter comment for %s:\n", z->oname);
@@ -3891,22 +3859,12 @@ char **argv;            /* command line tokens */
             z->com = (extent)k;
           }
         }
-#ifdef MACOS
-    if (noisy) fprintf(mesg, "\n...done");
-#endif
-#if defined(AMIGA) || defined(MACOS)
-    if (comadd)
-      free((zvoid *)e);
-    GetComment(NULL);           /* makes it free its internal storage */
-#else
     free((zvoid *)e);
-#endif
   }
 
   /* Get multi-line comment for the zip file */
   if (zipedit)
   {
-#ifndef WINDLL
     if (comment_stream == NULL) {
 #ifndef RISCOS
       comment_stream = (FILE*)fdopen(fileno(stderr), "r");
@@ -3966,20 +3924,6 @@ char **argv;            /* command line tokens */
     }
 #endif /* ?MACOS */
     free((zvoid *)e);
-#else /* WINDLL */
-    comment(zcomlen);
-    if ((p = malloc(strlen(szCommentBuf)+1)) == NULL) {
-      ZIPERR(ZE_MEM, "was setting comments to null");
-    }
-    if (szCommentBuf[0] != '\0')
-       lstrcpy(p, szCommentBuf);
-    else
-       p[0] = '\0';
-    free((zvoid *)zcomment);
-    GlobalUnlock(hStr);
-    GlobalFree(hStr);
-    zcomment = p;
-#endif /* WINDLL */
     zcomlen = strlen(zcomment);
   }
 
