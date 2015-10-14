@@ -3999,33 +3999,17 @@ char **argv;            /* command line tokens */
     set_filetype(out_path);
   }
 
-#if defined(WIN32)
   /* All looks good so, if requested, clear the DOS archive bits */
   if (clear_archive_bits) {
     if (noisy)
       zipmessage("Clearing archive bits...", "");
     for (z = zfiles; z != NULL; z = z->nxt)
     {
-# ifdef UNICODE_SUPPORT
-      if (z->mark) {
-        if (!no_win32_wide) {
-          if (!ClearArchiveBitW(z->namew)){
-            zipwarn("Could not clear archive bit for: ", z->oname);
-          }
-        } else {
-          if (!ClearArchiveBit(z->name)){
-            zipwarn("Could not clear archive bit for: ", z->oname);
-          }
-        }
-      }
-# else
       if (!ClearArchiveBit(z->name)){
         zipwarn("Could not clear archive bit for: ", z->oname);
       }
-# endif
     }
   }
-#endif
 
   /* finish logfile (it gets closed in freeup() called by finish()) */
   if (logfile) {
@@ -4052,8 +4036,6 @@ char **argv;            /* command line tokens */
   }
 
   /* Finish up (process -o, -m, clean up).  Exit code depends on o. */
-#if (!defined(VMS) && !defined(CMS_MVS))
   free((zvoid *) zipbuf);
-#endif /* !VMS && !CMS_MVS */
   RETURN(finish(o ? ZE_OPEN : ZE_OK));
 }
