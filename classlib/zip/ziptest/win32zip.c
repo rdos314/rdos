@@ -497,39 +497,11 @@ char *in2ex(n)
   return x;
 }
 
-#ifdef UNICODE_SUPPORT
-wchar_t *in2exw(nw)
-  wchar_t *nw;            /* internal file name */
-/* Convert the zip file name to an external file name, returning the malloc'ed
-   string or NULL if not enough memory. */
-{
-  wchar_t *xw;            /* external file name */
-
-  if ((xw = malloc((wcslen(nw) + 1 + PAD) * sizeof(wchar_t))) == NULL)
-    return NULL;
-  wcscpy(xw, nw);
-# if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-  CharToOemW(xw, xw);
-# endif
-  return xw;
-}
-#endif
-
-
 void stamp(f, d)
   char *f;                /* name of file to change */
   ulg d;                  /* dos-style time to change it to */
 /* Set last updated and accessed time of file f to the DOS time d. */
 {
-#if defined(__TURBOC__) && !defined(__BORLANDC__)
-  int h;                /* file handle */
-
-  if ((h = open(f, 0)) != -1)
-  {
-    setftime(h, (struct ftime *)&d);
-    close(h);
-  }
-#else /* !__TURBOC__ */
 
   struct utimbuf u;     /* argument for utime() */
 
@@ -538,7 +510,6 @@ void stamp(f, d)
 
   /* Set updated and accessed times of f */
   utime(f, &u);
-#endif /* ?__TURBOC__ */
 }
 
 ulg filetime(f, a, n, t)
