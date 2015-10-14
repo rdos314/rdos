@@ -523,33 +523,6 @@ int is_text_buf(buf_ptr, buf_size)
 }
 
 
-#ifdef DEBUGNAMES
-#undef free
-int Free(x)
-void *x;
-{
-    if (x == (void *) 0xdeadbeef)
-        exit(-1);
-    free(x);
-    return 0;
-}
-
-int printnames()
-{
-     struct zlist far *z;
-
-     for (z = zfiles; z != NULL; z = z->nxt)
-           fprintf(mesg, "%s %s %s %p %p %p %08x %08x %08x\n",
-                            z->name, z->zname, z->iname,
-                            z->name, z->zname, z->iname,
-                            *((int *) z->name), *((int *) z->zname),
-                            *((int *) z->iname));
-     return 0;
-}
-
-#endif /* DEBUGNAMES */
-
-
 /* Below is used to format zoff_t values, which can be either long or long long
    depending on if LARGE FILES are supported.  Function provided by SMS.
    10/17/04 EG */
@@ -749,10 +722,8 @@ uzoff_t ReadNumString( numstring )
     mult <<= 20;
   } else if (multchar == 'G') {
     mult <<= 30;
-#ifdef LARGE_FILE_SUPPORT
   } else if (multchar == 'T') {
     mult <<= 40;
-#endif
   } else {
     return (uzoff_t)-1;
   }
