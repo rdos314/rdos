@@ -279,12 +279,6 @@ local void append_ushort_to_mem( OFT( ush) usValue,
                                  OFT( char **) pPtr,
                                  OFT( extent *) offset,
                                  OFT( extent *) blocksize)
-#ifdef NO_PROTO
-  ush usValue;
-  char **pPtr;
-  extent *offset;
-  extent *blocksize;
-#endif /* def NO_PROTO */
 {
   if (*pPtr == NULL) {
     /* malloc a 1K block */
@@ -333,8 +327,6 @@ local void append_ulong_to_mem(uValue, pPtr, offset, blocksize)
   (*offset) += 4;
 }
 
-#ifdef ZIP64_SUPPORT
-
 local void append_int64_to_mem(l64Value, pPtr, offset, blocksize)
   uzoff_t l64Value;
   char **pPtr;
@@ -360,8 +352,6 @@ local void append_int64_to_mem(l64Value, pPtr, offset, blocksize)
   write_int64_to_mem(l64Value, (*pPtr) + (*offset));
   (*offset) += 8;
 }
-
-#endif /* def ZIP64_SUPPORT */
 
 /* Append a string to the memory block. */
 local void append_string_to_mem(strValue, strLength, pPtr, offset, blocksize)
@@ -414,11 +404,6 @@ local void append_string_to_mem(strValue, strLength, pPtr, offset, blocksize)
 char *get_extra_field( OFT( ush) tag,
                        OFT( char *) pExtra,
                        OFT( unsigned) iExtraLen)
-#ifdef NO_PROTO
-  ush tag;              /* tag to look for */
-  char *pExtra;         /* pointer to extra field in memory */
-  unsigned iExtraLen;   /* length of extra field */
-#endif /* def NO_PROTO */
 {
   char  *pTemp;
   ush   usBlockTag;
@@ -502,220 +487,6 @@ char *copy_nondup_extra_fields(oldExtra, oldExtraLen, newExtra, newExtraLen, new
   *newLen = returnExtraLen;
   return returnExtra;
 }
-
-#ifdef UNICODE_SUPPORT
-
-/* The latest format is
-     1 byte     Version of Unicode Path Extra Field
-     4 bytes    Name Field CRC32 Checksum
-     variable   UTF-8 Version Of Name
- */
-
-local void read_Unicode_Path_entry(pZipListEntry)
-  struct zlist far *pZipListEntry;
-{
-  char *pTemp;
-  char *UPath;
-  char *iname;
-  ush ELen;
-  uch Version;
-  ush ULen;
-  ulg chksum = CRCVAL_INITIAL;
-  ulg iname_chksum;
-
-  /* check if we have a Unicode Path extra field ... */
-  pTemp = get_extra_field( UTF8_PATH_EF_TAG, pZipListEntry->cextra, pZipListEntry->cext );
-  pZipListEntry->uname = NULL;
-  if( pTemp == NULL ) {
-    return;
-  }
-
-  /* ... if so, update corresponding entries in struct zlist */
-
-  pTemp += 2;
-
-  /* length of this extra field */
-  ELen = SH(pTemp);
-  pTemp += 2;
-
-  /* version */
-  Version = (uch) *pTemp;
-  pTemp += 1;
-  if (Version > 1) {
-    zipwarn("Unicode Path Extra Field version > 1 - skipping", pZipListEntry->oname);
-    return;
-  }
-
-  /* iname CRC */
-  iname_chksum = LG(pTemp);
-  pTemp += 4;
-
-  /*
-   * Compute the CRC-32 checksum of iname
-   */
-/*
-  crc_16 = crc16f((uch *)(pZipListEntry->iname), strlen(pZipListEntry->iname));
- */
-
-  if ((iname = malloc(strlen(pZipListEntry->iname) + 1)) == NULL) {
-    ZIPERR(ZE_MEM, "write Unicode");
-  }
-  strcpy(iname, pZipListEntry->iname);
-
-  chksum = crc32(chksum, (uch *)(iname), strlen(iname));
-
-  free(iname);
-
-/*  chksum = adler16(ADLERVAL_INITIAL,
-    (uch *)(pZipListEntry->iname), strlen(pZipListEntry->iname));
-*/
-
-  /* If the checksums's don't match then likely iname has been modified and
-   * the Unicode Path is no longer valid
-   */
-  if (chksum != iname_chksum) {
-    printf("unicode_mismatch = %d\n", unicode_mismatch);
-    if (unicode_mismatch == 1) {
-      /* warn and continue */
-      zipwarn("Unicode does not match path - ignoring Unicode: ", pZipListEntry->oname);
-    } else if (unicode_mismatch == 2) {
-      /* ignore and continue */
-    } else if (unicode_mismatch == 0) {
-      /* error */
-      sprintf(errbuf, "Unicode does not match path:  %s\n", pZipListEntry->oname);
-      strcat(errbuf,
-        "                     Likely entry name changed but Unicode not updated\n");
-      strcat(errbuf,
-        "                     Use -UN=i to ignore errors or n for no Unicode paths");
-      zipwarn(errbuf, "");
-      ZIPERR(ZE_FORM, "Unicode path error");
-    }
-    return;
-  }
-
-  ULen = ELen - 5;
-
-  /* UTF-8 Path */
-  if (ULen == 0) {
-    /* standard path is UTF-8 so use that */
-    ULen = pZipListEntry->nam;
-    if ((UPath = malloc(ULen + 1)) == NULL) {
-      return;
-    }
-    strcpy(UPath, pZipListEntry->name);
-  } else {
-    /* use Unicode path */
-    if ((UPath = malloc(ULen + 1)) == NULL) {
-      return;
-    }
-    strncpy(UPath, pTemp, ULen);
-    UPath[ULen] = '\0';
-  }
-  pZipListEntry->uname = UPath;
-  return;
-}
-
-local void read_Unicode_Path_local_entry(pZipListEntry)
-  struct zlist far *pZipListEntry;
-{
-  char *pTemp;
-  char *UPath;
-  char *iname;
-  ush ELen;
-  uch Version;
-  ush ULen;
-  ulg chksum = CRCVAL_INITIAL;
-  ulg iname_chksum;
-
-  /* check if we have a Unicode Path extra field ... */
-  pTemp = get_extra_field( UTF8_PATH_EF_TAG, pZipListEntry->extra, pZipListEntry->ext );
-  pZipListEntry->uname = NULL;
-  if( pTemp == NULL ) {
-    return;
-  }
-
-  /* ... if so, update corresponding entries in struct zlist */
-
-  pTemp += 2;
-
-  /* length of this extra field */
-  ELen = SH(pTemp);
-  pTemp += 2;
-
-  /* version */
-  Version = (uch) *pTemp;
-  pTemp += 1;
-  if (Version > 1) {
-    zipwarn("Unicode Path Extra Field version > 1 - skipping", pZipListEntry->oname);
-    return;
-  }
-
-  /* iname CRC */
-  iname_chksum = LG(pTemp);
-  pTemp += 4;
-
-  /*
-   * Compute 32-bit crc of iname and AND halves to make 16-bit version
-   */
-  /*
-  chksum = adler16(ADLERVAL_INITIAL,
-    (uch *)(pZipListEntry->iname), strlen(pZipListEntry->iname));
-  */
-
-  if ((iname = malloc(strlen(pZipListEntry->iname) + 1)) == NULL) {
-    ZIPERR(ZE_MEM, "write Unicode");
-  }
-  strcpy(iname, pZipListEntry->iname);
-
-  chksum = crc32(chksum, (uch *)(iname), strlen(iname));
-
-  free(iname);
-
-  /* If the checksums's don't match then likely iname has been modified and
-   * the Unicode Path is no longer valid
-   */
-  if (chksum != iname_chksum) {
-    if (unicode_mismatch == 1) {
-      /* warn and continue */
-      zipwarn("Unicode does not match path - ignoring Unicode: ", pZipListEntry->oname);
-    } else if (unicode_mismatch == 2) {
-      /* ignore and continue */
-    } else if (unicode_mismatch == 0) {
-      /* error */
-      sprintf(errbuf, "Unicode does not match path:  %s\n", pZipListEntry->oname);
-      strcat(errbuf,
-        "                     Likely entry name changed but Unicode not updated\n");
-      strcat(errbuf,
-        "                     Use -UN=i to ignore errors or n for no Unicode paths");
-      zipwarn(errbuf, "");
-      ZIPERR(ZE_FORM, "Unicode path error");
-    }
-    return;
-  }
-
-  ULen = ELen - 5;
-
-  /* UTF-8 Path */
-  if (ULen == 0) {
-    /* standard path is UTF-8 so use that */
-    ULen = pZipListEntry->nam;
-    if ((UPath = malloc(ULen + 1)) == NULL) {
-      return;
-    }
-    strcpy(UPath, pZipListEntry->name);
-  } else {
-    /* use Unicode path */
-    if ((UPath = malloc(ULen + 1)) == NULL) {
-      return;
-    }
-    strncpy(UPath, pTemp, ULen);
-    UPath[ULen] = '\0';
-  }
-  pZipListEntry->uname = UPath;
-  return;
-}
-
-#endif /* def UNICODE_SUPPORT */
 
 #ifdef ZIP64_SUPPORT           /* zip64 support 08/31/2003 R.Nausedat */
 
