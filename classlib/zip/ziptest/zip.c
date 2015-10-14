@@ -893,7 +893,6 @@ local void version_info()
   }
 }
 
-#ifndef WINDLL
 local void zipstdout()
 /* setup for writing zip file on stdout */
 {
@@ -1022,7 +1021,6 @@ local void check_zipfile(zipname, zippath)
     fflush(logfile);
   }
 }
-#endif /* !WINDLL */
 
 /* get_filters() is replaced by the following
 local int get_filters(argc, argv)
