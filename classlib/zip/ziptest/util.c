@@ -19,29 +19,9 @@
 uch upper[256], lower[256];
 /* Country-dependent case map table */
 
-
-/* RISC OS uses # as its single-character wildcard */
-#ifdef RISCOS
-#  define WILDCHR_SINGLE '#'
-#  define WILDCHR_MULTI  '*'
-#  define DIRSEP_CHR '.'
-#endif
-
-#ifdef VMS
-#  define WILDCHR_SINGLE '%'
-#  define WILDCHR_MULTI  '*'
-#  define DIRSEP_CHR '.'
-#endif
-
-#ifndef WILDCHR_SINGLE
-#  define WILDCHR_SINGLE '?'
-#endif
-#ifndef WILDCHR_MULTI
-#  define WILDCHR_MULTI '*'
-#endif
-#ifndef DIRSEP_CHR
-#  define DIRSEP_CHR '/'
-#endif
+#define WILDCHR_SINGLE '?'
+#define WILDCHR_MULTI '*'
+#define DIRSEP_CHR '/'
 
 /* Local functions */
 local int recmatch OF((ZCONST char *, ZCONST char *, int));
