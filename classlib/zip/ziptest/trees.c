@@ -167,17 +167,7 @@ local int near extra_blbits[BL_CODES]/* extra bits for each bit length code */
 #define DYN_TREES    2
 /* The three kinds of block type */
 
-#ifndef LIT_BUFSIZE
-#  ifdef SMALL_MEM
-#    define LIT_BUFSIZE  0x2000
-#  else
-#  ifdef MEDIUM_MEM
-#    define LIT_BUFSIZE  0x4000
-#  else
-#    define LIT_BUFSIZE  0x8000
-#  endif
-#  endif
-#endif
+#define LIT_BUFSIZE  0x8000
 #define DIST_BUFSIZE  LIT_BUFSIZE
 /* Sizes of match buffers for literals/lengths and distances.  There are
  * 4 reasons for limiting LIT_BUFSIZE to 64K:
