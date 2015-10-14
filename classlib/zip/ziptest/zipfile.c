@@ -219,7 +219,6 @@ struct zlist far *zsearch(n)
   return NULL;
 }
 
-#ifndef VMS     /* See [.VMS]VMS.C for VMS-specific ziptyp(). */
 #define PATHCUT '/'
 
 char *ziptyp(s)
@@ -237,46 +236,10 @@ char *ziptyp(s)
     return NULL;
   strcpy(t, s);
   if (adjust) return t;
-#  ifndef RISCOS
-#    ifndef QDOS
   if (MBSRCHR((q = MBSRCHR(t, PATHCUT)) == NULL ? t : q + 1, '.') == NULL)
-#      ifdef CMS_MVS
-    if (strncmp(t,"dd:",3) != 0 && strncmp(t,"DD:",3) != 0)
-#      endif /* CMS_MVS */
-#      ifdef THEOS
-    /* insert .zip extension before disk name */
-    if ((r = MBSRCHR(t, ':')) != NULL) {
-        /* save disk name */
-        if ((disk = strdup(r)) == NULL)
-            return NULL;
-        strcpy(r[-1] == '.' ? r - 1 : r, ".zip");
-        strcat(t, disk);
-        free(disk);
-    } else {
-        if (q != NULL && *q == '.')
-          strcpy(q, ".zip");
-        else
-          strcat(t, ".zip");
-    }
-  }
-#      else /* !THEOS */
-#        ifdef TANDEM     /*  Tandem can't cope with extensions */
-    strcat(t, " ZIP");
-#        else /* !TANDEM */
     strcat(t, ".zip");
-#        endif /* ?TANDEM */
-#      endif /* ?THEOS */
-#    else /* QDOS */
-  q = LastDir(t);
-  if(MBSRCHR(q, '_') == NULL && MBSRCHR(q, '.') == NULL)
-  {
-      strcat(t, "_zip");
-  }
-#    endif /* QDOS */
-#  endif /* !RISCOS */
   return t;
 }
-#endif  /* ndef VMS */
 
 /* ---------------------------------------------------- */
 
