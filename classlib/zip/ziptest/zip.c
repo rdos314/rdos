@@ -2840,9 +2840,6 @@ char **argv;            /* command line tokens */
     /* if -u or -f with no args, do all, but, when present, apply filters */
     for (z = zfiles; z != NULL; z = z->nxt) {
       z->mark = pcount ? filter(z->zname, filter_match_case) : 1;
-#ifdef DOS
-      if (z->mark) z->dosflag = 1;      /* force DOS attribs for incl. names */
-#endif
     }
   }
   if (show_what_doing) {
@@ -2869,16 +2866,6 @@ char **argv;            /* command line tokens */
 #ifndef VM_CMS
 /* For CMS, leave tempath NULL.  A-disk will be used as default. */
   /* If -b not specified, make temporary path the same as the zip file */
-#if defined(MSDOS) || defined(__human68k__) || defined(AMIGA)
-  if (tempath == NULL && ((p = MBSRCHR(zipfile, '/')) != NULL ||
-#  ifdef MSDOS
-                          (p = MBSRCHR(zipfile, '\\')) != NULL ||
-#  endif /* MSDOS */
-                          (p = MBSRCHR(zipfile, ':')) != NULL))
-  {
-    if (*p == ':')
-      p++;
-#else
 #ifdef RISCOS
   if (tempath == NULL && (p = MBSRCHR(zipfile, '.')) != NULL)
   {
@@ -2891,7 +2878,6 @@ char **argv;            /* command line tokens */
   {
 #endif /* QDOS */
 #endif /* RISCOS */
-#endif /* MSDOS || __human68k__ || AMIGA */
     if ((tempath = (char *)malloc((int)(p - zipfile) + 1)) == NULL) {
       ZIPERR(ZE_MEM, "was processing arguments");
     }
