@@ -3984,11 +3984,6 @@ char **argv;            /* command line tokens */
   tempzip = NULL;
   if (zip_attributes && strcmp(zipfile, "-")) {
     setfileattr(out_path, zip_attributes);
-#ifdef VMS
-    /* If the zip file existed previously, restore its record format: */
-    if (x != NULL)
-      (void)VMSmunch(out_path, RESTORE_RTYPE, NULL);
-#endif
   }
   if (strcmp(zipfile, "-")) {
     if (show_what_doing) {
