@@ -868,28 +868,11 @@ local void version_info()
 #endif
 
   /* Fill in bzip2 version.  (32-char limit valid as of bzip 1.0.3.) */
-#ifdef BZIP2_SUPPORT
-  sprintf( bz_opt_ver,
-   "BZIP2_SUPPORT        (bzip2 library version %.32s)", BZ2_bzlibVersion());
-  sprintf( bz_opt_ver2,
-   "    bzip2 code and library copyright (c) Julian R Seward");
-  sprintf( bz_opt_ver3,
-   "    (See the bzip2 license for terms of use)");
-#endif
 
   for (i = 0; (int)i < (int)(sizeof(comp_opts)/sizeof(char *) - 1); i++)
   {
     printf("\t%s\n",comp_opts[i]);
   }
-#ifdef USE_ZLIB
-  if (strcmp(ZLIB_VERSION, zlibVersion()) == 0)
-    printf("\tUSE_ZLIB [zlib version %s]\n", ZLIB_VERSION);
-  else
-    printf("\tUSE_ZLIB [compiled with version %s, using version %s]\n",
-      ZLIB_VERSION, zlibVersion());
-  i++;  /* zlib use means there IS at least one compilation option */
-#endif
-#if CRYPT
   printf("\t[encryption, version %d.%d%s of %s] (modified for Zip 3)\n\n",
             CR_MAJORVER, CR_MINORVER, CR_BETA_VER, CR_VERSION_DATE);
   for (i = 0; i < sizeof(cryptnote)/sizeof(char *); i++)
@@ -898,7 +881,6 @@ local void version_info()
     putchar('\n');
   }
   ++i;  /* crypt support means there IS at least one compilation option */
-#endif /* CRYPT */
   if (i == 0)
       puts("\t[none]");
 
@@ -909,9 +891,6 @@ local void version_info()
     printf("%16s:  %s\n", zipenv_names[i],
            ((envptr == (char *)NULL || *envptr == 0) ? "[none]" : envptr));
   }
-#ifdef DOS
-  check_for_windows("Zip");
-#endif
 }
 
 
