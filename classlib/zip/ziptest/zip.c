@@ -3888,24 +3888,6 @@ char **argv;            /* command line tokens */
     zcomment[0] = '\0';
     if (noisy)
       fputs("enter new zip file comment (end with .):\n", mesg);
-#if (defined(AMIGA) && (defined(LATTICE)||defined(__SASC)))
-    flushall();  /* tty input/output is out of sync here */
-#endif
-#ifdef __human68k__
-    setmode(fileno(comment_stream), O_TEXT);
-#endif
-#ifdef MACOS
-    printf("\n enter new zip file comment \n");
-    if (fgets(e, MAXCOM+1, comment_stream) != NULL) {
-        if ((p = malloc((k = strlen(e))+1)) == NULL) {
-            free((zvoid *)e);
-            ZIPERR(ZE_MEM, "was reading comment lines");
-        }
-        strcpy(p, e);
-        if (p[k-1] == '\n') p[--k] = 0;
-        zcomment = p;
-    }
-#else /* !MACOS */
     while (fgets(e, MAXCOM+1, comment_stream) != NULL && strcmp(e, ".\n"))
     {
       if (e[(r = strlen(e)) - 1] == '\n')
@@ -3922,7 +3904,6 @@ char **argv;            /* command line tokens */
       free((zvoid *)zcomment);
       zcomment = p;
     }
-#endif /* ?MACOS */
     free((zvoid *)e);
     zcomlen = strlen(zcomment);
   }
