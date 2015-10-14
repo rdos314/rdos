@@ -180,8 +180,6 @@ local int FSusesLocalTime(const char *path)
 
 } /* end function FSusesLocalTime() */
 
-#if (defined(USE_EF_UT_TIME) || defined(NT_TZBUG_WORKAROUND))
-
 #if (defined(__GNUC__) || defined(ULONG_LONG_MAX))
    typedef long long            LLONG64;
    typedef unsigned long long   ULLNG64;
@@ -312,7 +310,6 @@ local int FileTime2utime(FILETIME *pft, time_t *ut)
     return TRUE;
 #endif /* ?NO_INT64 */
 } /* end function FileTime2utime() */
-#endif /* USE_EF_UT_TIME || NT_TZBUG_WORKAROUND */
 
 
 #if (defined(NT_TZBUG_WORKAROUND) && defined(W32_STAT_BANDAID))
