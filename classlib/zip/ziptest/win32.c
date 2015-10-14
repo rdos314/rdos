@@ -427,7 +427,6 @@ int ZipIsWinNT(void)    /* returns TRUE if real NT, FALSE if Win95 or Win32s */
 #  define _get_osfhandle _os_handle
 /* gaah -- Watcom's docs claim that _get_osfhandle exists, but it doesn't.  */
 
-#ifdef HAVE_FSEEKABLE
 /*
  * return TRUE if file is seekable
  */
@@ -436,23 +435,7 @@ FILE *fp;
 {
     return GetFileType((HANDLE)_get_osfhandle(fileno(fp))) == FILE_TYPE_DISK;
 }
-#endif /* HAVE_FSEEKABLE */
 
-
-#if 0 /* seems to be never used; try it out... */
-char *StringLower(char *szArg)
-{
-  char *szPtr;
-/*  unsigned char *szPtr; */
-  for ( szPtr = szArg; *szPtr; szPtr++ )
-    *szPtr = lower[*szPtr];
-  return szArg;
-}
-#endif /* never */
-
-
-
-#ifdef W32_STAT_BANDAID
 
 /* All currently known variants of WIN32 operating systems (Windows 95/98,
  * WinNT 3.x, 4.0, 5.0) have a nasty bug in the OS kernel concerning
@@ -703,9 +686,6 @@ int zstat_zipwin32w(const wchar_t *pathw, zw_stat *buf)
 }
 
 # endif
-
-
-#endif /* W32_STAT_BANDAID */
 
 
 
