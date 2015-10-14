@@ -185,8 +185,6 @@ ZCONST zvoid *a, *b;          /* pointers to pointers to zip entries */
 }
 
 
-#ifndef UTIL
-
 local int rqcmp(a, b)
 ZCONST zvoid *a, *b;          /* pointers to pointers to zip entries */
 /* Used by qsort() to compare entries in the zfile list.
@@ -215,18 +213,11 @@ struct zlist far *zsearch(n)
   if (zcount) {
     if ((p = search(n, (ZCONST zvoid far **)zsort, zcount, zbcmp)) != NULL)
       return *(struct zlist far **)p;
-#ifdef UNICODE_SUPPORT
-    else if (unicode_mismatch != 3 && fix != 2 &&
-        (p = search(n, (ZCONST zvoid far **)zusort, zcount, zubcmp)) != NULL)
-      return *(struct zlist far **)p;
-#endif
     else
       return NULL;
   }
   return NULL;
 }
-
-#endif /* !UTIL */
 
 #ifndef VMS     /* See [.VMS]VMS.C for VMS-specific ziptyp(). */
 #  ifndef PATHCUT
