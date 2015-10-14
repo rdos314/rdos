@@ -295,13 +295,8 @@ local int near base_length[LENGTH_CODES];
 local int near base_dist[D_CODES];
 /* First normalized distance for each code (0 = distance of 1) */
 
-#ifndef DYN_ALLOC
-  local uch far l_buf[LIT_BUFSIZE];  /* buffer for literals/lengths */
-  local ush far d_buf[DIST_BUFSIZE]; /* buffer for distances */
-#else
-  local uch far *l_buf;
-  local ush far *d_buf;
-#endif
+local uch far l_buf[LIT_BUFSIZE];  /* buffer for literals/lengths */
+local ush far d_buf[DIST_BUFSIZE]; /* buffer for distances */
 
 local uch near flag_buf[(LIT_BUFSIZE/8)];
 /* flag_buf is a bit array distinguishing literals from lengths in
@@ -326,11 +321,6 @@ local ulg static_len;     /* bit length of current block with static trees */
 local uzoff_t cmpr_bytelen;     /* total byte length of compressed file */
 local ulg cmpr_len_bits;        /* number of bits past 'cmpr_bytelen' */
 
-#ifdef DEBUG
-local uzoff_t input_len;        /* total byte length of input file */
-/* input_len is for debugging only since we can get it by other means. */
-#endif
-
 local ush *file_type;       /* pointer to UNKNOWN, BINARY or ASCII */
 local int *file_method;     /* pointer to DEFLATE or STORE */
 
@@ -340,11 +330,7 @@ local int *file_method;     /* pointer to DEFLATE or STORE */
 
 local int flush_flg;
 
-#if (!defined(ASMV) || !defined(RISCOS))
-local unsigned bi_buf;
-#else
 unsigned bi_buf;
-#endif
 /* Output buffer. bits are inserted starting at the bottom (least significant
  * bits). The width of bi_buf must be at least 16 bits.
  */
