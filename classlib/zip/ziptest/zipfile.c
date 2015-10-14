@@ -1890,9 +1890,6 @@ local int scanzipf_fixnew()
         /* Initialize all fields pointing to malloced data to NULL */
         cz->zname = cz->name = cz->iname = cz->extra = cz->cextra = NULL;
         cz->comment = cz->oname = NULL;
-#ifdef UNICODE_SUPPORT
-        cz->uname = cz->zuname = cz->ouname = NULL;
-#endif
 
         /* Read file name, extra field and comment field */
         if (cz->nam == 0)
@@ -1954,44 +1951,20 @@ local int scanzipf_fixnew()
          /* z->off = cz->off; */
           z->dosflag = cz->dosflag;
 
-#ifdef UNICODE_SUPPORT
-          if (unicode_mismatch != 3 && z->uname == NULL) {
-            if (z->flg & UTF8_BIT) {
-              /* path is UTF-8 */
-              if ((z->uname = malloc(strlen(z->iname) + 1)) == NULL) {
-                ZIPERR(ZE_MEM, "reading archive");
-              }
-              strcpy(z->uname, z->iname);
-            } else {
-              /* check for UTF-8 path extra field */
-              read_Unicode_Path_entry(z);
-            }
-          }
-#endif
 
-#ifdef WIN32
           /* Input path may be OEM */
           {
             unsigned hostver = (z->vem & 0xff);
             Ext_ASCII_TO_Native(z->iname, (z->vem >> 8), hostver,
                                 ((z->atx & 0xffff0000L) != 0), FALSE);
           }
-#endif
-
-#ifdef EBCDIC
-          if (z->com)
-             memtoebc(z->comment, z->comment, z->com);
-#endif /* EBCDIC */
-#ifdef WIN32
           /* Comment may be OEM */
           {
             unsigned hostver = (z->vem & 0xff);
             Ext_ASCII_TO_Native(z->comment, (z->vem >> 8), hostver,
                                 ((z->atx & 0xffff0000L) != 0), FALSE);
           }
-#endif
 
-#ifdef ZIP64_SUPPORT
           /* zip64 support 08/31/2003 R.Nausedat                          */
           /* here, we have to read the len, siz etc values from the CD    */
           /* entry as we might have to adjust them regarding their        */
@@ -2006,7 +1979,6 @@ local int scanzipf_fixnew()
   /*
           adjust_zip_central_entry(z);
    */
-#endif
 
         /* Update zipbeg beginning of archive offset, prepare for next header */
 /*
