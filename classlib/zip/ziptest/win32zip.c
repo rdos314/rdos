@@ -165,9 +165,6 @@ local int wild_recurse(whole, wildtail)
 
     if (!isshexp(wildtail)) {
         if (GetFileAttributes(whole) != 0xFFFFFFFF) {    /* file exists? */
-#if defined(__RSXNT__)  /* RSXNT/EMX C rtl uses OEM charset */
-            AnsiToOem(whole, whole);
-#endif
             return procname(whole, 0);
         }
         else
@@ -241,41 +238,6 @@ local int wild_recurse(whole, wildtail)
     return e;
 }
 
-
-#ifdef UNICODE_SUPPORT
-int has_win32_wide() {
-  DWORD r;
-
-  /* test if we have wide function support */
-
-  /* check if already set */
-  if (no_win32_wide != -1)
-    return !no_win32_wide;
-
-  /* assume we don't */
-  no_win32_wide = 1;
-
-  /* get attributes for this directory */
-  r = GetFileAttributes(".");
-
-  /* r should be 16 = FILE_ATTRIBUTE_DIRECTORY */
-  if (r == FILE_ATTRIBUTE_DIRECTORY) {
-    /* now see if it works for the wide version */
-    r = GetFileAttributesW(L".");
-    /* if this fails then we probably don't have wide functions */
-    if (r == 0xFFFFFFFF) {
-      /* error is probably "This function is only valid in Win32 mode." */
-    } else if (r == FILE_ATTRIBUTE_DIRECTORY) {
-      /* worked, so assume we have wide support */
-      no_win32_wide = 0;
-    }
-  }
-
-  return !no_win32_wide;
-}
-#endif
-
-
 int wild(w)
   char *w;               /* path/pattern to match */
 /* If not in exclude mode, expand the pattern based on the contents of the
@@ -284,10 +246,6 @@ int wild(w)
     char *p;             /* path */
     char *q;             /* diskless path */
     int e;               /* result */
-#ifdef UNICODE_SUPPORT
-    wchar_t *pw;         /* wide path */
-    wchar_t *qw;         /* wide diskless path */
-#endif
 
     if (volume_label == 1) {
       volume_label = 2;
@@ -314,35 +272,6 @@ int wild(w)
         if (*q == '\\')
             *q = '/';
 
-#ifdef UNICODE_SUPPORT
-    if (!no_win32_wide) {
-      /* wide char version */
-      pw = local_to_wchar_string(p);
-
-      /* Separate the disk part of the path */
-      if ((qw = wcschr(pw, ':')) != NULL) {
-          if (wcschr(++qw, ':'))     /* sanity check for safety of wild_recurse */
-              return ZE_MISS;
-      } else
-          qw = pw;
-
-      /* Normalize bare disk names */
-      if (qw > pw && !*qw)
-          wcscpy(qw, L".");
-    } else {
-      /* multibyte version */
-      /* Separate the disk part of the path */
-      if ((q = MBSCHR(p, ':')) != NULL) {
-          if (MBSCHR(++q, ':'))     /* sanity check for safety of wild_recurse */
-              return ZE_MISS;
-      } else
-          q = p;
-
-      /* Normalize bare disk names */
-      if (q > p && !*q)
-          strcpy(q, ".");
-    }
-#else
     /* multibyte version */
     /* Separate the disk part of the path */
     if ((q = MBSCHR(p, ':')) != NULL) {
@@ -354,22 +283,9 @@ int wild(w)
     /* Normalize bare disk names */
     if (q > p && !*q)
         strcpy(q, ".");
-#endif
 
     /* Here we go */
-#ifdef UNICODE_SUPPORT
-    if (!no_win32_wide) {
-      /* use wide Unicode directory scan */
-      e = wild_recursew(pw, qw);
-
-      free(pw);
-    } else {
-      /* use multibyte directory scan */
-      e = wild_recurse(p, q);
-    }
-#else
     e = wild_recurse(p, q);
-#endif
     free((zvoid *)p);
     return e;
 }
