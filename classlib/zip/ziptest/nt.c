@@ -44,12 +44,6 @@ Author:
 #include <windows.h>
 #include "nt.h"
 
-/* This macro definition is missing in old versions of MS' winbase.h. */
-#ifndef InterlockedExchangePointer
-#  define InterlockedExchangePointer(Target, Value) \
-      (PVOID)InterlockedExchange((PLONG)(Target), (LONG)(Value))
-#endif
-
 /* private prototypes */
 
 static BOOL Initialize(VOID);
