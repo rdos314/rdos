@@ -139,26 +139,14 @@
 /* moved out of ZIP64_SUPPORT - 2/6/2005 EG */
 local void write_ushort_to_mem OF((ush, char *));                      /* little endian conversions */
 local void write_ulong_to_mem OF((ulg, char *));
-#ifdef ZIP64_SUPPORT
  local void write_int64_to_mem OF((uzoff_t, char *));
-#endif /* def ZIP64_SUPPORT */
-#ifdef UNICODE_SUPPORT
  local void write_string_to_mem OF((char *, char *));
-#endif
-#if 0
 local char *get_extra_field OF((ush, char *, unsigned));           /* zip64 */
-#endif
-#ifdef UNICODE_SUPPORT
-local void read_Unicode_Path_entry OF((struct zlist far *));
-local void read_Unicode_Path_local_entry OF((struct zlist far *));
-#endif
 
 /* added these self allocators - 2/6/2005 EG */
 local void append_ushort_to_mem OF((ush, char **, extent *, extent *));
 local void append_ulong_to_mem OF((ulg, char **, extent *, extent *));
-#ifdef ZIP64_SUPPORT
  local void append_int64_to_mem OF((uzoff_t, char **, extent *, extent *));
-#endif /* def ZIP64_SUPPORT */
 local void append_string_to_mem OF((char *, int, char**, extent *, extent *));
 
 
