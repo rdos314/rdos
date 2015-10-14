@@ -3096,9 +3096,6 @@ char **argv;            /* command line tokens */
     fprintf(mesg, "\n");
     mesg_line_started = 0;
   }
-#ifdef MACOS
-  PrintStatProgress("done");
-#endif
 
   if (show_files) {
     uzoff_t count = 0;
@@ -3159,78 +3156,6 @@ char **argv;            /* command line tokens */
           /* not sU or sU- show normal name in log */
           fprintf(logfile, "  %s\n", z->oname);
 
-#ifdef UNICODE_TEST
-        if (create_files) {
-          int r;
-          int dir = 0;
-          FILE *f;
-
-#if defined(UNICODE_SUPPORT) && defined(WIN32)
-          char *fn = NULL;
-          wchar_t *fnw = NULL;
-
-          if (!no_win32_wide) {
-            if ((fnw = malloc((wcslen(z->znamew) + 120) * sizeof(wchar_t))) == NULL)
-              ZIPERR(ZE_MEM, "sC");
-            wcscpy(fnw, L"testdir/");
-            wcscat(fnw, z->znamew);
-            if (fnw[wcslen(fnw) - 1] == '/')
-              dir = 1;
-            if (dir)
-              r = _wmkdir(fnw);
-            else
-              f = _wfopen(fnw, L"w");
-          } else {
-            if ((fn = malloc(strlen(z->zname) + 120)) == NULL)
-              ZIPERR(ZE_MEM, "sC");
-            strcpy(fn, "testdir/");
-            strcat(fn, z->zname);
-            if (fn[strlen(fn) - 1] == '/')
-              dir = 1;
-            if (dir)
-              r = mkdir(fn);
-            else
-              f = fopen(fn, "w");
-          }
-#else
-          char *fn = NULL;
-          if ((fn = malloc(strlen(z->zname) + 120)) == NULL)
-            ZIPERR(ZE_MEM, "sC");
-          strcpy(fn, "testdir/");
-          if (z->uname)
-            strcat(fn, z->uname);
-          else
-            strcat(fn, z->zname);
-
-          if (fn[strlen(fn) - 1] == '/')
-            dir = 1;
-          if (dir)
-            r = mkdir(fn, 0777);
-          else
-            f = fopen(fn, "w");
-#endif
-          if (dir) {
-            if (r) {
-              if (errno != 17) {
-                printf(" - could not create directory testdir/%s\n", z->oname);
-                perror("    dir");
-              }
-            } else {
-              printf(" - created directory testdir/%s\n", z->oname);
-            }
-          } else {
-            if (f == NULL) {
-              printf(" - could not open testdir/%s\n", z->oname);
-              perror("    file");
-            } else {
-              fclose(f);
-              printf(" - created testdir/%s\n", z->oname);
-              if (z->uname)
-                printf("   u - created testdir/%s\n", z->uname);
-            }
-          }
-        }
-#endif
 #ifdef UNICODE_SUPPORT
         if (show_files == 3 || show_files == 4) {
           /* su, su- */
