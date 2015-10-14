@@ -12,21 +12,12 @@
 #include "zip.h"
 
 #include <ctype.h>
-#if !defined(__EMX__) && !defined(__CYGWIN__)
 #include <direct.h>     /* for rmdir() */
-#endif
 #include <time.h>
 
-#ifndef __BORLANDC__
 #include <sys/utime.h>
-#else
-#include <utime.h>
-#endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h> /* for findfirst/findnext stuff */
-#ifdef __RSXNT__
-#  include "../win32/rsxntwin.h"
-#endif
 
 #include <io.h>
 
