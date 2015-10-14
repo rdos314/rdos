@@ -2964,37 +2964,15 @@ char **argv;            /* command line tokens */
         }
 
 
-#ifdef USE_EF_UT_TIME
-# if defined(UNICODE_SUPPORT) && defined(WIN32)
-        if (!no_win32_wide)
-          tf = filetimew(z->namew, (ulg *)NULL, (zoff_t *)&usize, &f_utim);
-        else
-          tf = filetime(z->name, (ulg *)NULL, (zoff_t *)&usize, &f_utim);
-# else
         tf = filetime(z->name, (ulg *)NULL, (zoff_t *)&usize, &f_utim);
-# endif
-#else /* !USE_EF_UT_TIME */
-# if defined(UNICODE_SUPPORT) && defined(WIN32)
-        if (!no_win32_wide)
-          tf = filetimew(z->namew, (ulg *)NULL, (zoff_t *)&usize, NULL);
-        else
-          tf = filetime(z->name, (ulg *)NULL, (zoff_t *)&usize, NULL);
-# else
-        tf = filetime(z->name, (ulg *)NULL, (zoff_t *)&usize, NULL);
-# endif
-#endif /* ?USE_EF_UT_TIME */
         if (tf == 0)
           /* entry that is not on OS */
           all_current = 0;
         if (tf == 0 ||
             tf < before || (after && tf >= after) ||
             ((action == UPDATE || action == FRESHEN) &&
-#ifdef USE_EF_UT_TIME
              ((get_ef_ut_ztime(z, &z_utim) & EB_UT_FL_MTIME) ?
               f_utim.mtime <= ROUNDED_TIME(z_utim.mtime) : tf <= z->tim)
-#else /* !USE_EF_UT_TIME */
-             tf <= z->tim
-#endif /* ?USE_EF_UT_TIME */
            ))
         {
           z->mark = comadd ? 2 : 0;
