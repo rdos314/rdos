@@ -1672,7 +1672,6 @@ char **argv;            /* command line tokens */
           level = (int)option - '0';  break;
         case 'A':   /* Adjust unzipsfx'd zipfile:  adjust offsets only */
           adjust = 1; break;
-#if defined(WIN32)
         case o_AC:
           clear_archive_bits = 1; break;
         case o_AS:
@@ -1683,7 +1682,6 @@ char **argv;            /* command line tokens */
              directories for the paths as needed. */
           dirnames = 0;
           only_archive_set = 1; break;
-#endif /* MSDOS || OS2 || WIN32 */
         case 'b':   /* Specify path for temporary file */
           tempdir = 1;
           tempath = value;
@@ -2488,7 +2486,6 @@ char **argv;            /* command line tokens */
   -------------------------------------
 */
 
-#if (!defined(MACOS) && !defined(WINDLL))
   if (kk < 3) {               /* zip used as filter */
     zipstdout();
     comment_stream = NULL;
@@ -2509,7 +2506,6 @@ char **argv;            /* command line tokens */
       ZIPERR(ZE_PARMS, "can't use - and -@ together");
     }
   }
-#endif /* !MACOS && !WINDLL */
 
   if (zipfile && !strcmp(zipfile, "-")) {
     if (show_what_doing) {
