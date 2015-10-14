@@ -165,7 +165,6 @@ int e;                  /* exit code */
       t = 0;
       for (z = zfiles; z != NULL; z = z->nxt)
         /* Ignore directories in time comparisons */
-#ifdef USE_EF_UT_TIME
         if (z->iname[z->nam-1] != (char)0x2f)   /* ascii '/' */
         {
           iztimes z_utim;
@@ -176,11 +175,6 @@ int e;                  /* exit code */
           if (t < z_tim)
             t = z_tim;
         }
-#else /* !USE_EF_UT_TIME */
-        if (z->iname[z->nam-1] != (char)0x2f    /* ascii '/' */
-            && t < z->tim)
-          t = z->tim;
-#endif /* ?USE_EF_UT_TIME */
       /* set modified time of zip file to that time */
       if (t != 0)
         stamp(zipfile, t);
