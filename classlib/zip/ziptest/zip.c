@@ -3765,18 +3765,6 @@ char **argv;            /* command line tokens */
       free((zvoid *)(z->iname));
       free((zvoid *)(z->zname));
       free(z->oname);
-#ifdef UNICODE_SUPPORT
-      if (z->uname)
-        free(z->uname);
-# ifdef WIN32
-      if (z->namew)
-        free((zvoid *)(z->namew));
-      if (z->inamew)
-        free((zvoid *)(z->inamew));
-      if (z->znamew)
-        free((zvoid *)(z->znamew));
-# endif
-#endif
       farfree((zvoid far *)z);
     }
     else
@@ -3866,11 +3854,7 @@ char **argv;            /* command line tokens */
   if (zipedit)
   {
     if (comment_stream == NULL) {
-#ifndef RISCOS
       comment_stream = (FILE*)fdopen(fileno(stderr), "r");
-#else
-      comment_stream = stderr;
-#endif
     }
     if ((e = malloc(MAXCOM + 1)) == NULL) {
       ZIPERR(ZE_MEM, "was reading comment lines");
@@ -3909,11 +3893,7 @@ char **argv;            /* command line tokens */
   }
 
   if (display_globaldots) {
-#ifndef WINDLL
     putc('\n', mesg);
-#else
-    fprintf(stdout,"%c",'\n');
-#endif
     mesg_line_started = 0;
   }
 
@@ -3979,20 +3959,11 @@ char **argv;            /* command line tokens */
   */
 
   /* Free some memory before spawning unzip */
-#ifdef USE_ZLIB
-  zl_deflate_free();
-#else
   lm_free();
-#endif
-#ifdef BZIP2_SUPPORT
-  bz_compress_free();
-#endif
 
-#ifndef WINDLL
   /* Test new zip file before overwriting old one or removing input files */
   if (test)
     check_zipfile(tempzip, argv[0]);
-#endif
   /* Replace old zip file with new zip file, leaving only the new one */
   if (strcmp(zipfile, "-") && !d)
   {
