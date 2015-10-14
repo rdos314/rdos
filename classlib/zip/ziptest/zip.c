@@ -2223,10 +2223,6 @@ char **argv;            /* command line tokens */
           add_filter((int) option, value);
           free(value);
           break;
-#ifdef S_IFLNK
-        case 'y':   /* Store symbolic links as such */
-          linkput = 1;  break;
-#endif /* S_IFLNK */
         case 'z':   /* Edit zip file comment */
           zipedit = 1;  break;
         case 'Z':   /* Compression method */
@@ -2238,61 +2234,33 @@ char **argv;            /* command line tokens */
             method = STORE;
           } else if (abbrevmatch("bzip2", value, 0, 1)) {
             /* bzip2 */
-#ifdef BZIP2_SUPPORT
-            method = BZIP2;
-#else
             ZIPERR(ZE_COMPERR, "Compression method bzip2 not enabled");
-#endif
           } else {
-#ifdef BZIP2_SUPPORT
-            zipwarn("valid compression methods are:  store, deflate, bzip2", "");
-#else
             zipwarn("valid compression methods are:  store, deflate)", "");
-#endif
             zipwarn("unknown compression method found:  ", value);
             free(value);
             ZIPERR(ZE_PARMS, "Option -Z (--compression-method):  unknown method");
           }
           free(value);
           break;
-#if defined(MSDOS) || defined(OS2)
-        case '$':   /* Include volume label */
-          volume_label = 1; break;
-#endif
-#ifndef MACOS
         case '@':   /* read file names from stdin */
           comment_stream = NULL;
           s = 1;          /* defer -@ until have zipfile name */
           break;
-#endif /* !MACOS */
         case 'X':
           if (negated)
             extra_fields = 2;
           else
             extra_fields = 0;
           break;
-#ifdef OS2
-        case 'E':
-          /* use the .LONGNAME EA (if any) as the file's name. */
-          use_longname_ea = 1;
-          break;
-#endif
-#ifdef NTSD_EAS
         case '!':
           /* use security privilege overrides */
           use_privileges = 1;
           break;
-#endif
-#ifdef RISCOS
-        case '/':
-          exts2swap = value; /* override Zip$Exts */
-          break;
-#endif
         case o_des:
           use_descriptors = 1;
           break;
 
-#ifdef ZIP64_SUPPORT
         case o_z64:   /* Force creation of Zip64 entries */
           if (negated) {
             force_zip64 = 0;
@@ -2300,7 +2268,6 @@ char **argv;            /* command line tokens */
             force_zip64 = 1;
           }
           break;
-#endif
 
         case o_NON_OPTION_ARG:
           /* not an option */
@@ -2335,12 +2302,10 @@ char **argv;            /* command line tokens */
           {
             case 0:
               /* first non-option arg is zipfile name */
-#if (!defined(MACOS) && !defined(WINDLL))
               if (strcmp(value, "-") == 0) {  /* output zipfile is dash */
                 /* just a dash */
                 zipstdout();
               } else
-#endif /* !MACOS && !WINDLL */
               {
                 /* name of zipfile */
                 if ((zipfile = ziptyp(value)) == NULL) {
@@ -2629,10 +2594,6 @@ char **argv;            /* command line tokens */
     int plen = strlen(out_path);
     char *out_path_ext;
 
-#ifdef VMS
-    /* On VMS, adjust plen (and out_path_ext) to avoid the file version. */
-    plen -= strlen( vms_file_version( out_path));
-#endif /* def VMS */
     out_path_ext = out_path+ plen- 4;
 
     if (plen < 4 ||
@@ -2657,14 +2618,6 @@ char **argv;            /* command line tokens */
   if (pcount && patterns == NULL) {
     filterlist_to_patterns();
   }
-
-#if (defined(MSDOS) || defined(OS2)) && !defined(WIN32)
-  if ((kk == 3 || kk == 4) && volume_label == 1) {
-    /* read volume label */
-    PROCNAME(NULL);
-    kk = 4;
-  }
-#endif
 
   if (have_out && kk == 3) {
     copy_only = 1;
