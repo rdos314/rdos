@@ -616,19 +616,7 @@ void version_local()
 } /* end function version_local() */
 
 
-/* --------------------------------------------------- */
-/* Large File Support
- *
- * Moved to Win32i64.c to avoid conflicts in same name functions
- * in WiZ using UnZip and Zip libraries.
- * 9/25/2003
- */
 
-
-
-/*
-# if defined(UNICODE_SUPPORT) || defined(WIN32_OEM)
-*/
 /* convert oem to ansi character string */
 char *oem_to_local_string(local_string, oem_string)
   char *local_string;
@@ -639,14 +627,7 @@ char *oem_to_local_string(local_string, oem_string)
 
   return local_string;
 }
-/*
-# endif
-*/
 
-
-/*
-#if defined(UNICODE_SUPPORT) || defined(WIN32_OEM)
-*/
 /* convert local to oem character string */
 char *local_to_oem_string(oem_string, local_string)
   char *oem_string;
@@ -656,7 +637,3 @@ char *local_to_oem_string(oem_string, local_string)
   CharToOem(local_string, oem_string);
   return oem_string;
 }
-/*
-#endif
-*/
-
