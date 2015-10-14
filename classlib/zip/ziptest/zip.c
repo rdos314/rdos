@@ -425,7 +425,6 @@ ZCONST char *a, *b;     /* message strings juxtaposed in output */
   }
 }
 
-#ifndef WINDLL
 local void license()
 /* Print license information to stdout. */
 {
@@ -1126,7 +1125,6 @@ local void version_info()
   check_for_windows("Zip");
 #endif
 }
-#endif /* !WINDLL */
 
 
 #ifndef PROCNAME
