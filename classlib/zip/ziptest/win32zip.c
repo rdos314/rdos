@@ -26,14 +26,6 @@
 #define HIDD_SYS_BITS (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)
 
 
-#ifdef UNICODE_SUPPORT
-typedef struct zdirscanw {
-  HANDLE d_hFindFile;
-  int    d_first;
-  WIN32_FIND_DATAW d_fdw;
-} zDIRSCANW;
-#endif
-
 typedef struct zdirscan {
   HANDLE d_hFindFile;
   int    d_first;
@@ -41,9 +33,6 @@ typedef struct zdirscan {
 } zDIRSCAN;
 
 #define INVALID_WIN32_FILE_ATTRIBS ~0
-#ifdef UNICODE_SUPPORT
-#define GetDirAttribsW(d)   ((d)->d_fdw.dwFileAttributes)
-#endif
 #define GetDirAttribs(d)   ((d)->d_fd.dwFileAttributes)
 
 #include "win32zip.h"
@@ -56,17 +45,10 @@ local void              CloseDirScan     OF((zDIRSCAN *d));
 local char           *readd        OF((zDIRSCAN *));
 local int             wild_recurse OF((char *, char *));
 
-#ifdef NTSD_EAS
-   local void GetSD OF((char *path, char **bufptr, ush *size,
+local void GetSD OF((char *path, char **bufptr, ush *size,
                         char **cbufptr, ush *csize));
-#endif
-#ifdef USE_EF_UT_TIME
-   local int GetExtraTime OF((struct zlist far *z, iztimes *z_utim));
-#endif
+local int GetExtraTime OF((struct zlist far *z, iztimes *z_utim));
 local int procname_win32 OF((char *n, int caseflag, DWORD attribs));
-#ifdef UNICODE_SUPPORT
-local int procname_win32w OF((wchar_t *n, int caseflag, DWORD attribs));
-#endif
 
 /* Module level variables */
 extern char *label /* = NULL */ ;       /* defined in fileio.c */
