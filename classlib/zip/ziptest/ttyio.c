@@ -190,58 +190,5 @@ char *getp(__G__ m, p, n)
 #else /* !HAVE_WORKING_GETCH */
 
 
-#if (defined(ATH_BEO_UNX) || defined(__MINT__))
-
-#ifndef _PATH_TTY
-#  ifdef __MINT__
-#    define _PATH_TTY ttyname(2)
-#  else
-#    define _PATH_TTY "/dev/tty"
-#  endif
-#endif
-
-char *getp(__G__ m, p, n)
-    __GDEF
-    ZCONST char *m;             /* prompt for password */
-    char *p;                    /* return value: line input */
-    int n;                      /* bytes available in p[] */
-{
-    char c;                     /* one-byte buffer for read() to use */
-    int i;                      /* number of characters input */
-    char *w;                    /* warning on retry */
-    int f;                      /* file descriptor for tty device */
-
-    /* turn off echo on tty */
-
-    if ((f = open(_PATH_TTY, 0)) == -1)
-        return NULL;
-    /* get password */
-    w = "";
-    do {
-        fputs(w, stderr);       /* warning if back again */
-        fputs(m, stderr);       /* prompt */
-        fflush(stderr);
-        i = 0;
-        echoff(f);
-        do {                    /* read line, keeping n */
-            read(f, &c, 1);
-            if (i < n)
-                p[i++] = c;
-        } while (c != '\n');
-        echon();
-        PUTC('\n', stderr);  fflush(stderr);
-        w = "(line too long--try again)\n";
-    } while (p[i-1] != '\n');
-    p[i-1] = 0;                 /* terminate at newline */
-
-    close(f);
-
-    return p;                   /* return pointer to password */
-
-} /* end function getp() */
-
-#endif /* ATH_BEO_UNX || __MINT__ */
-
-
 #endif /* ?HAVE_WORKING_GETCH */
 #endif /* CRYPT */
