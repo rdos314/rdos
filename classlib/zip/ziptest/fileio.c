@@ -685,19 +685,8 @@ ulg a;                  /* Attributes returned by filetime() */
 }
 
 
-#if (!defined(UTIL) && !defined(ZP_NEED_GEN_D2U_TIME))
    /* There is no need for dos2unixtime() in the ZipUtils' code. */
-#  define ZP_NEED_GEN_D2U_TIME
-#endif
-#if ((defined(OS2) || defined(VMS)) && defined(ZP_NEED_GEN_D2U_TIME))
-   /* OS/2 and VMS use a special solution to handle time-stams of files. */
-#  undef ZP_NEED_GEN_D2U_TIME
-#endif
-#if (defined(W32_STATROOT_FIX) && !defined(ZP_NEED_GEN_D2U_TIME))
-   /* The Win32 stat()-bandaid to fix stat'ing root directories needs
-    * dos2unixtime() to calculate the time-stamps. */
-#  define ZP_NEED_GEN_D2U_TIME
-#endif
+#define ZP_NEED_GEN_D2U_TIME
 
 #ifdef ZP_NEED_GEN_D2U_TIME
 
