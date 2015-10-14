@@ -442,57 +442,23 @@ local void help()
   /* help array */
   static ZCONST char *text[] = {
 "Zip %s (%s). Usage:",
-#ifdef VM_CMS
-"zip [-options] [-b fm] [-t mmddyyyy] [-n suffixes] [zipfile list] [-xi list]",
-#else  /* !VM_CMS */
 "zip [-options] [-b path] [-t mmddyyyy] [-n suffixes] [zipfile list] [-xi list]",
-#endif /* ?VM_CMS */
 "  The default action is to add or replace zipfile entries from list, which",
 "  can include the special name - to compress standard input.",
 "  If zipfile and list are omitted, zip compresses stdin to stdout.",
 "  -f   freshen: only changed files  -u   update: only changed or new files",
 "  -d   delete entries in zipfile    -m   move into zipfile (delete OS files)",
 "  -r   recurse into directories     -j   junk (don't record) directory names",
-#ifdef THEOS
-"  -0   store only                   -l   convert CR to CR LF (-ll CR LF to CR)",
-#else
 "  -0   store only                   -l   convert LF to CR LF (-ll CR LF to LF)",
-#endif
 "  -1   compress faster              -9   compress better",
 "  -q   quiet operation              -v   verbose operation/print version info",
 "  -c   add one-line comments        -z   add zipfile comment",
 "  -@   read names from stdin        -o   make zipfile as old as latest entry",
 "  -x   exclude the following names  -i   include only the following names",
-#ifdef EBCDIC
-#ifdef CMS_MVS
-"  -a   translate to ASCII           -B   force binary read (text is default)",
-#else  /* !CMS_MVS */
-"  -a   translate to ASCII",
-#endif /* ?CMS_MVS */
-#endif /* EBCDIC */
-#ifdef TANDEM
-"                                    -Bn  set Enscribe formatting options",
-#endif
 "  -F   fix zipfile (-FF try harder) -D   do not add directory entries",
 "  -A   adjust self-extracting exe   -J   junk zipfile prefix (unzipsfx)",
 "  -T   test zipfile integrity       -X   eXclude eXtra file attributes",
-#ifdef VMS
-"  -C   preserve case of file names  -C-  down-case all file names",
-"  -C2  preserve case of ODS2 names  -C2- down-case ODS2 file names* (*=default)",
-"  -C5  preserve case of ODS5 names* -C5- down-case ODS5 file names",
-"  -V   save VMS file attributes (-VV also save allocated blocks past EOF)",
-"  -w   store file version numbers\
-   -ww  store file version numbers as \".nnn\"",
-#endif /* def VMS */
-#ifdef NTSD_EAS
 "  -!   use privileges (if granted) to obtain all aspects of WinNT security",
-#endif /* NTSD_EAS */
-#ifdef OS2
-"  -E   use the .LONGNAME Extended attribute (if found) as filename",
-#endif /* OS2 */
-#ifdef S_IFLNK
-"  -y   store symbolic links as the link instead of the referenced file",
-#endif /* !S_IFLNK */
 /*
 "  -R   PKZIP recursion (see manual)",
 */
