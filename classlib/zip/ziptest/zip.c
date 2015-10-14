@@ -2000,31 +2000,17 @@ char **argv;            /* command line tokens */
           help();
           RETURN(finish(ZE_OK));
 
-#ifndef WINDLL
         case o_h2:  /* Extended Help */
           help_extended();
           RETURN(finish(ZE_OK));
-#endif /* !WINDLL */
 
         /* -i is with -x */
-#if defined(VMS) || defined(WIN32)
         case o_ic:  /* Ignore case (case-insensitive matching of archive entries) */
           if (negated)
             filter_match_case = 1;
           else
             filter_match_case = 0;
           break;
-#endif
-#ifdef RISCOS
-        case 'I':   /* Don't scan through Image files */
-          scanimage = 0;
-          break;
-#endif
-#ifdef MACOS
-        case o_jj:   /* store absolute path including volname */
-            MacZip.StoreFullPath = true;
-            break;
-#endif /* ?MACOS */
         case 'j':   /* Junk directory names */
           pathput = 0;  break;
         case 'J':   /* Junk sfx prefix */
@@ -2057,11 +2043,9 @@ char **argv;            /* command line tokens */
           else
             logall = 1;
           break;
-#ifndef WINDLL
         case 'L':   /* Show license */
           license();
           RETURN(finish(ZE_OK));
-#endif
         case 'm':   /* Delete files added or updated in zip file */
           dispose = 1;  break;
         case o_mm:  /* To prevent use of -mm for -MM */
@@ -2076,10 +2060,6 @@ char **argv;            /* command line tokens */
         case o_nw:  /* no wildcards - wildcards are handled like other characters */
           no_wild = 1;
           break;
-#if defined(AMIGA) || defined(MACOS)
-        case 'N':   /* Get zipfile comments from AmigaDOS/MACOS filenotes */
-          filenotes = 1; break;
-#endif
         case 'o':   /* Set zip file time to time of latest file in it */
           latest = 1;  break;
         case 'O':   /* Set output file different than input archive */
@@ -2093,27 +2073,11 @@ char **argv;            /* command line tokens */
           if (key != NULL) {
             free(key);
           }
-#if CRYPT
           key = value;
           key_needed = 0;
-#else
-          ZIPERR(ZE_PARMS, "encryption not supported");
-#endif /* CRYPT */
           break;
-#if defined(QDOS) || defined(QLZIP)
-        case 'Q':
-          qlflag  = strtol(value, NULL, 10);
-       /* qlflag  = strtol((p+1), &p, 10); */
-       /* p--; */
-          if (qlflag == 0) qlflag = 4;
-          free(value);
-          break;
-#endif
         case 'q':   /* Quiet operation */
           noisy = 0;
-#ifdef MACOS
-          MacZip.MacZip_Noisy = false;
-#endif  /* MACOS */
           if (verbose) verbose--;
           break;
         case 'r':   /* Recurse into subdirectories, match full path */
@@ -2132,11 +2096,6 @@ char **argv;            /* command line tokens */
 
         case o_sc:  /* show command line args */
           show_args = 1; break;
-#ifdef UNICODE_TEST
-        case o_sC:  /* create empty files from archive names */
-          create_files = 1;
-          show_files = 1; break;
-#endif
         case o_sd:  /* show debugging */
           show_what_doing = 1; break;
         case o_sf:  /* show files to operate on */
@@ -2147,20 +2106,6 @@ char **argv;            /* command line tokens */
           break;
         case o_so:  /* show all options */
           show_options = 1; break;
-#ifdef UNICODE_SUPPORT
-        case o_su:  /* -sf but also show Unicode if exists */
-          if (!negated)
-            show_files = 3;
-          else
-            show_files = 4;
-          break;
-        case o_sU:  /* -sf but only show Unicode if exists or normal if not */
-          if (!negated)
-            show_files = 5;
-          else
-            show_files = 6;
-          break;
-#endif
 
         case 's':   /* enable split archives */
           /* get the split size from value */
@@ -2208,14 +2153,8 @@ char **argv;            /* command line tokens */
           noisy_splits = 1;
           break;
 
-#if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(ATARI)
         case 'S':
           hidden_files = 1; break;
-#endif /* MSDOS || OS2 || WIN32 || ATARI */
-#ifdef MACOS
-        case 'S':
-          MacZip.IncludeInvisible = true; break;
-#endif /* MACOS */
         case 't':   /* Exclude files earlier than specified date */
           {
             int yyyy, mm, dd;       /* results of sscanf() */
@@ -2259,37 +2198,6 @@ char **argv;            /* command line tokens */
           }
           action = ARCHIVE;
           break;
-#ifdef UNICODE_SUPPORT
-        case o_UN:   /* Unicode */
-          if (abbrevmatch("quit", value, 0, 1)) {
-            /* Unicode path mismatch is error */
-            unicode_mismatch = 0;
-          } else if (abbrevmatch("warn", value, 0, 1)) {
-            /* warn of mismatches and continue */
-            unicode_mismatch = 1;
-          } else if (abbrevmatch("ignore", value, 0, 1)) {
-            /* ignore mismatches and continue */
-            unicode_mismatch = 2;
-          } else if (abbrevmatch("no", value, 0, 1)) {
-            /* no use Unicode path */
-            unicode_mismatch = 3;
-          } else if (abbrevmatch("escape", value, 0, 1)) {
-            /* escape all non-ASCII characters */
-            unicode_escape_all = 1;
-
-          } else if (abbrevmatch("UTF8", value, 0, 1)) {
-            /* force storing UTF-8 as standard per AppNote bit 11 */
-            utf8_force = 1;
-
-          } else {
-            zipwarn("-UN must be Quit, Warn, Ignore, No, Escape, or UTF8: ", value);
-
-            free(value);
-            ZIPERR(ZE_PARMS, "-UN (unicode) bad value");
-          }
-          free(value);
-          break;
-#endif
         case 'u':   /* Update zip file--overwrite only if newer */
           if (action != ADD) {
             ZIPERR(ZE_PARMS, "specify just one action");
@@ -2301,86 +2209,13 @@ char **argv;            /* command line tokens */
           if (option == o_ve ||      /* --version */
               (argcnt == 2 && strlen(args[1]) == 2)) { /* -v only */
             /* display version */
-#ifndef WINDLL
             version_info();
-#else
-            zipwarn("version information not supported for dll", "");
-#endif
             RETURN(finish(ZE_OK));
           } else {
             noisy = 1;
             verbose++;
           }
           break;
-#ifdef VMS
-        case 'C':  /* Preserve case (- = down-case) all. */
-          if (negated)
-          { /* Down-case all. */
-            if ((vms_case_2 > 0) || (vms_case_5 > 0))
-            {
-              ZIPERR( ZE_PARMS, "Conflicting case directives (-C-)");
-            }
-            vms_case_2 = -1;
-            vms_case_5 = -1;
-          }
-          else
-          { /* Not negated.  Preserve all. */
-            if ((vms_case_2 < 0) || (vms_case_5 < 0))
-            {
-              ZIPERR( ZE_PARMS, "Conflicting case directives (-C)");
-            }
-            vms_case_2 = 1;
-            vms_case_5 = 1;
-          }
-          break;
-        case o_C2:  /* Preserve case (- = down-case) ODS2. */
-          if (negated)
-          { /* Down-case ODS2. */
-            if (vms_case_2 > 0)
-            {
-              ZIPERR( ZE_PARMS, "Conflicting case directives (-C2-)");
-            }
-            vms_case_2 = -1;
-          }
-          else
-          { /* Not negated.  Preserve ODS2. */
-            if (vms_case_2 < 0)
-            {
-              ZIPERR( ZE_PARMS, "Conflicting case directives (-C2)");
-            }
-            vms_case_2 = 1;
-          }
-          break;
-        case o_C5:  /* Preserve case (- = down-case) ODS5. */
-          if (negated)
-          { /* Down-case ODS5. */
-            if (vms_case_5 > 0)
-            {
-              ZIPERR( ZE_PARMS, "Conflicting case directives (-C5-)");
-            }
-            vms_case_5 = -1;
-          }
-          else
-          { /* Not negated.  Preserve ODS5. */
-            if (vms_case_5 < 0)
-            {
-              ZIPERR( ZE_PARMS, "Conflicting case directives (-C5)");
-            }
-            vms_case_5 = 1;
-          }
-          break;
-        case 'V':   /* Store in VMS format.  (Record multiples.) */
-          vms_native = 1; break;
-          /* below does work with new parser but doesn't allow tracking
-             -VV separately, like adding a separate description */
-          /* vms_native++; break; */
-        case o_VV:  /* Store in VMS specific format */
-          vms_native = 2; break;
-        case 'w':   /* Append the VMS version number */
-          vmsver |= 1;  break;
-        case o_ww:   /* Append the VMS version number as ".nnn". */
-          vmsver |= 3;  break;
-#endif /* VMS */
         case o_ws:  /* Wildcards do not include directory boundaries in matches */
           wild_stop_at_dir = 1;
           break;
