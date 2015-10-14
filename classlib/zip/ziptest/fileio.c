@@ -886,18 +886,10 @@ int fcopy(f, g, n)
 
 /* from zipfile.c */
 
-#ifdef THEOS
- /* Macros cause stack overflow in compiler */
- ush SH(uch* p) { return ((ush)(uch)((p)[0]) | ((ush)(uch)((p)[1]) << 8)); }
- ulg LG(uch* p) { return ((ulg)(SH(p)) | ((ulg)(SH((p)+2)) << 16)); }
-#else /* !THEOS */
  /* Macros for converting integers in little-endian to machine format */
-# define SH(a) ((ush)(((ush)(uch)(a)[0]) | (((ush)(uch)(a)[1]) << 8)))
-# define LG(a) ((ulg)SH(a) | ((ulg)SH((a)+2) << 16))
-# ifdef ZIP64_SUPPORT           /* zip64 support 08/31/2003 R.Nausedat */
-#  define LLG(a) ((zoff_t)LG(a) | ((zoff_t)LG((a)+4) << 32))
-# endif
-#endif /* ?THEOS */
+#define SH(a) ((ush)(((ush)(uch)(a)[0]) | (((ush)(uch)(a)[1]) << 8)))
+#define LG(a) ((ulg)SH(a) | ((ulg)SH((a)+2) << 16))
+#define LLG(a) ((zoff_t)LG(a) | ((zoff_t)LG((a)+4) << 32))
 
 
 /* always copies from global in_file to global output file y */
