@@ -28,11 +28,6 @@
 #include <windows.h>
 /* for LARGE_FILE_SUPPORT but may not be needed */
 #include <io.h>
-
-#ifdef __RSXNT__
-#  include <alloca.h>
-#  include "../win32/rsxntwin.h"
-#endif
 #include "win32zip.h"
 
 #define A_RONLY    0x01
@@ -45,11 +40,6 @@
 
 #define EAID     0x0009
 
-#if (defined(__MINGW32__) && !defined(USE_MINGW_GLOBBING))
-   int _CRT_glob = 0;   /* suppress command line globbing by C RTL */
-#endif
-
-#ifndef UTIL
 
 extern int noisy;
 
@@ -705,9 +695,6 @@ char *getVolumeLabel(drive, vtime, vmode, vutim)
   else
     return NULL;
 }
-
-#endif /* !UTIL */
-
 
 
 int ZipIsWinNT(void)    /* returns TRUE if real NT, FALSE if Win95 or Win32s */
