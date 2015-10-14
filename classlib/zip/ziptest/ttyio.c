@@ -111,15 +111,6 @@ int zgetch(__G__ f)
 #endif /* !HAVE_WORKING_GETCH */
 
 
-#if CRYPT                       /* getp() is only used with full encryption */
-
-/*
- * Simple compile-time check for source compatibility between
- * zcrypt and ttyio:
- */
-#if (!defined(CR_MAJORVER) || (CR_MAJORVER < 2) || (CR_MINORVER < 7))
-   error:  This Info-ZIP tool requires zcrypt 2.7 or later.
-#endif
 
 /*
  * Get a password of length n-1 or less into *p using the prompt *m.
@@ -178,5 +169,3 @@ char *getp(__G__ m, p, n)
     return p;                   /* return pointer to password */
 
 } /* end function getp() */
-
-#endif /* CRYPT */
