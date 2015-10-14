@@ -724,22 +724,9 @@ char *d, *s;            /* destination and source file names */
  */
 {
   z_stat t;         /* results of stat() */
-#if defined(CMS_MVS)
-  /* cmsmvs.h defines FOPW_TEMP as memory(hiperspace).  Since memory is
-   * lost at end of run, always do copy instead of rename.
-   */
-  int copy = 1;
-#else
   int copy = 0;
-#endif
   int d_exists;
 
-#if defined(VMS) || defined(CMS_MVS)
-  /* stat() is broken on VMS remote files (accessed through Decnet).
-   * This patch allows creation of remote zip files, but is not sufficient
-   * to update them or compress remote files */
-  unlink(d);
-#else /* !(VMS || CMS_MVS) */
   d_exists = (LSTAT(d, &t) == 0);
   if (d_exists)
   {
@@ -747,37 +734,20 @@ char *d, *s;            /* destination and source file names */
      * respect existing soft and hard links!
      */
     if (t.st_nlink > 1
-# ifdef S_IFLNK
-        || (t.st_mode & S_IFMT) == S_IFLNK
-# endif
         )
        copy = 1;
     else if (unlink(d))
        return ZE_CREAT;                 /* Can't erase zip file--give up */
   }
-#endif /* ?(VMS || CMS_MVS) */
-#ifndef CMS_MVS
   if (!copy) {
       if (rename(s, d)) {               /* Just move s on top of d */
           copy = 1;                     /* failed ? */
-#if !defined(VMS) && !defined(ATARI) && !defined(AZTEC_C)
-#if !defined(CMS_MVS) && !defined(RISCOS) && !defined(QDOS)
     /* For VMS, ATARI, AMIGA Aztec, VM_CMS, MVS, RISCOS,
        always assume that failure is EXDEV */
           if (errno != EXDEV
-#  ifdef THEOS
-           && errno != EEXIST
-#  else
-#    ifdef ENOTSAM
-           && errno != ENOTSAM /* Used at least on Turbo C */
-#    endif
-#  endif
               ) return ZE_CREAT;
-#endif /* !CMS_MVS && !RISCOS */
-#endif /* !VMS && !ATARI && !AZTEC_C */
       }
   }
-#endif /* !CMS_MVS */
 
   if (copy) {
     FILE *f, *g;        /* source and destination files */
