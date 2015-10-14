@@ -434,22 +434,14 @@ local void license()
     puts(swlicense[i]);
 }
 
-#ifdef VMSCLI
-void help()
-#else
 local void help()
-#endif
 /* Print help (along with license info) to stdout. */
 {
   extent i;             /* counter for help array */
 
   /* help array */
   static ZCONST char *text[] = {
-#ifdef VMS
-"Zip %s (%s). Usage: zip == \"$ disk:[dir]zip.exe\"",
-#else
 "Zip %s (%s). Usage:",
-#endif
 #ifdef MACOS
 "zip [-options] [-b fm] [-t mmddyyyy] [-n suffixes] [zipfile list] [-xi list]",
 "  The default action is to add or replace zipfile entries from list.",
