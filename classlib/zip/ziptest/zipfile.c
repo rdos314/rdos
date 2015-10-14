@@ -1366,12 +1366,7 @@ local int scanzipf_reg(f)
         return ferror(f) ? ZE_READ : ZE_EOF;
       z->iname[z->nam] = '\0';                  /* terminate name */
 
-#ifdef EBCDIC
-      if (z->com)
-         memtoebc(z->comment, z->comment, z->com);
-#endif /* EBCDIC */
 
-#ifdef ZIP64_SUPPORT
       /* zip64 support 08/31/2003 R.Nausedat                          */
       /* here, we have to read the len, siz etc values from the CD    */
       /* entry as we might have to adjust them regarding their        */
@@ -1390,7 +1385,6 @@ local int scanzipf_reg(f)
       /* there is a zip64 extra field assigned to a CDH PKZIP */
       /* uses it, we should do so, too.                       */
       adjust_zip_central_entry(z);
-#endif /* ZIP64_SUPPORT */
 
       /* Update zipbeg offset, prepare for next header */
       if (z->off < zipbeg)
@@ -1418,9 +1412,6 @@ local int scanzipf_reg(f)
         /* Compare name and extra fields */
         if (n != z->nam)
         {
-#ifdef EBCDIC
-          strtoebc(z->iname, z->iname);
-#endif
           zipwarn("name lengths in local and central differ for ", z->iname);
           return ZE_FORM;
         }
@@ -1434,9 +1425,6 @@ local int scanzipf_reg(f)
         if (memcmp(t, z->iname, z->nam))
         {
           free((zvoid *)t);
-#ifdef EBCDIC
-          strtoebc(z->iname, z->iname);
-#endif
           zipwarn("names in local and central differ for ", z->iname);
           return ZE_FORM;
         }
@@ -1457,81 +1445,12 @@ local int scanzipf_reg(f)
           }
         }
 
-#ifdef ZIP64_SUPPORT       /* zip64 support 09/02/2003 R.Nausedat */
         /*
         for now the below is left out if ZIP64_SUPPORT is defined as the fields
         len, siz and off in struct zlist are type of int64 if ZIP64_SUPPORT
         is defined. In either way, the values read from the central directory
         should be valid. comments are welcome
         */
-#else /* !ZIP64_SUPPORT */
-        /* Check extended local header if there is one */
-        /* bit 3 */
-        if ((z->lflg & 8) != 0)
-        {
-          char buf2[16];
-          ulg s;                        /* size of compressed data */
-
-          s = LG(LOCSIZ + b);
-          if (s == 0)
-            s = LG((CENSIZ-CENVER) + (char far *)(&(z->ver)));
-          if (zfseeko(f, (z->off + (4+LOCHEAD) + z->nam + z->ext + s), SEEK_SET)
-              || (fread(buf2, 16, 1, f) != 1))
-            return ferror(f) ? ZE_READ : ZE_EOF;
-          if (LG(buf2) != EXTLOCSIG)
-          {
-# ifdef EBCDIC
-            strtoebc(z->iname, z->iname);
-# endif
-            zipwarn("extended local header not found for ", z->iname);
-            return ZE_FORM;
-          }
-          /* overwrite the unknown values of the local header: */
-          for (n = 0; n < 12; n++)
-            b[LOCCRC+n] = buf2[4+n];
-        }
-
-        /* Compare local header with that part of central header (except
-           for the reserved bits in the general purpose flags and except
-           for the already checked entry name length */
-        /* If I have read this right we are stepping through the z struct
-           here as a byte array.  Need to fix this.  5/25/2005 EG */
-        u = (char far *)(&(z->ver));
-        flg = SH((CENFLG-CENVER) + u);          /* Save central flags word */
-        u[CENFLG-CENVER+1] &= 0x1f;             /* Mask reserved flag bits */
-        b[LOCFLG+1] &= 0x1f;
-        for (m = 0, n = 0; n < LOCNAM; n++) {
-          if (b[n] != u[n])
-          {
-            if (!m)
-            {
-              zipwarn("local and central headers differ for ", z->iname);
-              m = 1;
-            }
-            if (noisy)
-            {
-              sprintf(errbuf, " offset %u--local = %02x, central = %02x",
-                      (unsigned)n, (uch)b[n], (uch)u[n]);
-              zipwarn(errbuf, "");
-            }
-          }
-        }
-        if (m && !adjust)
-          return ZE_FORM;
-
-        /* Complete the setup of the zlist entry by translating the remaining
-         * central header fields in memory, starting with the fields with
-         * highest offset. This order of the conversion commands takes into
-         * account potential buffer overlaps caused by structure padding.
-         */
-        z->len = LG((CENLEN-CENVER) + u);
-        z->siz = LG((CENSIZ-CENVER) + u);
-        z->crc = LG((CENCRC-CENVER) + u);
-        z->tim = LG((CENTIM-CENVER) + u);   /* time and date into one long */
-        z->how = SH((CENHOW-CENVER) + u);
-        z->flg = flg;                       /* may be different from z->lflg */
-        z->ver = SH((CENVER-CENVER) + u);
-#endif /* ?ZIP64_SUPPORT */
 
         /* Clear actions */
         z->mark = 0;
