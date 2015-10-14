@@ -3715,14 +3715,6 @@ char **argv;            /* command line tokens */
     f->zname = NULL;
     z->oname = f->oname;
     f->oname = NULL;
-#if defined(UNICODE_SUPPORT) && defined(WIN32)
-    z->namew = f->namew;
-    f->namew = NULL;
-    z->inamew = f->inamew;
-    f->inamew = NULL;
-    z->znamew = f->znamew;
-    f->znamew = NULL;
-#endif
     z->ext = z->cext = z->com = 0;
     z->extra = z->cextra = NULL;
     z->mark = 1;
@@ -3746,24 +3738,6 @@ char **argv;            /* command line tokens */
     if ((r = zipup(z)) != ZE_OK  && r != ZE_OPEN && r != ZE_MISS)
     {
       zipmessage_nl("", 1);
-      /*
-      if (noisy)
-      {
-#if (!defined(MACOS) && !defined(WINDLL))
-        putc('\n', mesg);
-        fflush(mesg);
-#else
-        fprintf(stdout, "\n");
-#endif
-        mesg_line_started = 0;
-        fflush(mesg);
-      }
-      if (logall) {
-        fprintf(logfile, "\n");
-        logfile_line_started = 0;
-        fflush(logfile);
-      }
-      */
       sprintf(errbuf, "was zipping %s", z->oname);
       ZIPERR(r, errbuf);
     }
@@ -3771,24 +3745,6 @@ char **argv;            /* command line tokens */
     {
       o = 1;
       zipmessage_nl("", 1);
-      /*
-      if (noisy)
-      {
-#if (!defined(MACOS) && !defined(WINDLL))
-        putc('\n', mesg);
-        fflush(mesg);
-#else
-        fprintf(stdout, "\n");
-#endif
-        mesg_line_started = 0;
-        fflush(mesg);
-      }
-      if (logall) {
-        fprintf(logfile, "\n");
-        logfile_line_started = 0;
-        fflush(logfile);
-      }
-      */
       if (r == ZE_OPEN) {
         perror("zip warning");
         if (logfile)
