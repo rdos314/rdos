@@ -51,18 +51,14 @@ local int fqcmpz OF((ZCONST zvoid *, ZCONST zvoid *));
 /* Local module level variables. */
 char *label = NULL;                /* global, but only used in `system'.c */
 local z_stat zipstatb;             /* now use z_stat globally - 7/24/04 EG */
- local zw_stat zipstatbw;
+local zw_stat zipstatbw;
 local int zipstate = -1;
 /* -1 unknown, 0 old zip file exists, 1 new zip file */
-
-#if 0
-char *getnam(n, fp)
-char *n;                /* where to put name (must have >=FNMAX+1 bytes) */
-#endif
 
 /* converted to return string pointer from malloc to avoid
    size limitation - 11/8/04 EG */
 #define GETNAM_MAX 9000 /* hopefully big enough for now */
+
 char *getnam(fp)
   FILE *fp;
   /* Read a \n or \r delimited name from stdin into n, and return
@@ -84,7 +80,6 @@ char *getnam(fp)
     *p++ = (char) c;
     c = getc(fp);
   } while (c != EOF && (c != '\n' && c != '\r'));
-#ifdef WIN32
 /*
  * WIN32 strips off trailing spaces and periods in filenames
  * XXX what about a filename that only consists of spaces ?
@@ -95,7 +90,6 @@ char *getnam(fp)
       break;
     --p;
   }
-#endif
   *p = 0;
   /* malloc a copy */
   if ((p = malloc(strlen(name) + 1)) == NULL) {
@@ -122,18 +116,14 @@ struct flist far *f;    /* entry to delete */
     free((zvoid *)(f->zname));
   if (f->iname != NULL)
     free((zvoid *)(f->iname));
-#ifdef UNICODE_SUPPORT
   if (f->uname)
     free((zvoid *)f->uname);
-# ifdef WIN32
   if (f->namew)
     free((zvoid *)f->namew);
   if (f->inamew)
     free((zvoid *)f->inamew);
   if (f->znamew)
     free((zvoid *)f->znamew);
-# endif
-#endif
   farfree((zvoid far *)f);
   fcount--;                             /* decrement count */
   return t;                             /* return pointer to next */
@@ -167,19 +157,7 @@ char *last(p, c)
   if ((t = strrchr(p, c)) != NULL)
     return t + 1;
   else
-#ifndef AOS_VS
     return p;
-#else
-/* We want to allow finding of end of path in either AOS/VS-style pathnames
- * or Unix-style pathnames.  This presents a few little problems ...
- */
-  {
-    if (*p == '='  ||  *p == '^')      /* like ./ and ../ respectively */
-      return p + 1;
-    else
-      return p;
-  }
-#endif
 }
 
 #if defined(UNICODE_SUPPORT) && defined(WIN32)
