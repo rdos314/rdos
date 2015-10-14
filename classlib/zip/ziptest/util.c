@@ -20,8 +20,6 @@ uch upper[256], lower[256];
 /* Country-dependent case map table */
 
 
-#ifndef UTIL /* UTIL picks out namecmp code (all utils) */
-
 /* RISC OS uses # as its single-character wildcard */
 #ifdef RISCOS
 #  define WILDCHR_SINGLE '#'
@@ -580,8 +578,6 @@ int (*cmp) OF((ZCONST zvoid *, ZCONST zvoid far *)); /* comparison function */
   }
   return NULL;          /* If b were in list, it would belong at l */
 }
-
-#endif /* !UTIL */
 
 #ifdef MSDOS16
 
