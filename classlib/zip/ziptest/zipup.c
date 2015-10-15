@@ -677,33 +677,9 @@ local unsigned file_read(buf, size)
   char *b;
   zoff_t isize_prev;    /* Previous isize.  Used for overflow check. */
 
-#if defined(MMAP) || defined(BIG_MEM)
-  if (remain == 0L) {
-    return 0;
-  } else if (remain != (ulg)-1L) {
-    /* The window data is already in place. We still compute the crc
-     * by 32K blocks instead of once on whole file to keep a certain
-     * locality of reference.
-     */
-    Assert(buf == (char*)window + isize, "are you lost?");
-    if ((ulg)size > remain) size = (unsigned)remain;
-    if (size > WSIZE) size = WSIZE; /* don't touch all pages at once */
-    remain -= (ulg)size;
-    len = size;
-  } else
-#endif /* MMAP || BIG_MEM */
   if (translate_eol == 0) {
     len = zread(ifile, buf, size);
     if (len == (unsigned)EOF || len == 0) return len;
-#ifdef OS390
-    b = buf;
-    if (aflag == ASCII) {
-      while (*b != '\0') {
-        *b = (char)ascii[(uch)*b];
-        b++;
-      }
-    }
-#endif
   } else if (translate_eol == 1) {
     /* translate_eol == 1 */
     /* Transform LF to CR LF */
@@ -719,21 +695,6 @@ local unsigned file_read(buf, size)
     }
 
     if (file_binary != 1) {
-#ifdef EBCDIC
-      if (aflag == ASCII)
-      {
-         do {
-            char c;
-
-            if ((c = *b++) == '\n') {
-               *buf++ = CR; *buf++ = LF; len++;
-            } else {
-              *buf++ = (char)ascii[(uch)c];
-            }
-         } while (--size != 0);
-      }
-      else
-#endif /* EBCDIC */
       {
          do {
             if ((*buf++ = *b++) == '\n') *(buf-1) = CR, *buf++ = LF, len++;
@@ -759,21 +720,6 @@ local unsigned file_read(buf, size)
 
     if (file_binary != 1) {
       buf[len] = '\n'; /* I should check if next char is really a \n */
-#ifdef EBCDIC
-      if (aflag == ASCII)
-      {
-         do {
-            char c;
-
-            if ((c = *b++) == '\r' && *b == '\n') {
-               len--;
-            } else {
-               *buf++ = (char)(c == '\n' ? LF : ascii[(uch)c]);
-            }
-         } while (--size != 0);
-      }
-      else
-#endif /* EBCDIC */
       {
          do {
             if (( *buf++ = *b++) == CR && *b == LF) buf--, len--;
@@ -781,11 +727,6 @@ local unsigned file_read(buf, size)
       }
       if (len == 0) {
          zread(ifile, buf, 1); len = 1; /* keep single \r if EOF */
-#ifdef EBCDIC
-         if (aflag == ASCII) {
-            *buf = (char)(*buf == '\n' ? LF : ascii[(uch)(*buf)]);
-         }
-#endif
       } else {
          buf -= len;
          if (buf[len-1] == CTRLZ) len--; /* suppress final ^Z */
