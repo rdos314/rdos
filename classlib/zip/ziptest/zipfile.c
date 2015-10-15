@@ -3468,7 +3468,6 @@ int putcentral(z)
   }
 
 
-#ifdef WIN32_OEM
   /* store name in OEM character set in archive */
   if ((z->vem & 0xff00) == 0)
   {
@@ -3482,15 +3481,11 @@ int putcentral(z)
   } else {
     append_string_to_mem(z->iname, z->nam, &block, &offset, &blocksize);
   }
-#else
-  append_string_to_mem(z->iname, z->nam, &block, &offset, &blocksize);
-#endif
 
   if (z->cext) {
     append_string_to_mem(z->cextra, z->cext, &block, &offset, &blocksize);
   }
   if (z->com) {
-#ifdef WIN32_OEM
     /* store comment in OEM character set in archive */
     if ((z->vem & 0xff00) == 0)
     {
@@ -3504,9 +3499,6 @@ int putcentral(z)
     } else {
       append_string_to_mem(z->comment, z->com, &block, &offset, &blocksize);
     }
-#else
-    append_string_to_mem(z->comment, z->com, &block, &offset, &blocksize);
-#endif
   }
 
   /* write the header */
