@@ -747,72 +747,6 @@ local unsigned file_read(buf, size)
   return len;
 }
 
-
-#ifdef USE_ZLIB
-
-local int zl_deflate_init(pack_level)
-    int pack_level;
-{
-    unsigned i;
-    int windowBits;
-    int err = Z_OK;
-    int zp_err = ZE_OK;
-
-    if (zlib_version[0] != ZLIB_VERSION[0]) {
-        sprintf(errbuf, "incompatible zlib version (expected %s, found %s)",
-              ZLIB_VERSION, zlib_version);
-        zp_err = ZE_LOGIC;
-    } else if (strcmp(zlib_version, ZLIB_VERSION) != 0) {
-        fprintf(mesg,
-                "\twarning:  different zlib version (expected %s, using %s)\n",
-                ZLIB_VERSION, zlib_version);
-    }
-
-    /* windowBits = log2(WSIZE) */
-    for (i = ((unsigned)WSIZE), windowBits = 0; i != 1; i >>= 1, ++windowBits);
-
-    zstrm.zalloc = (alloc_func)Z_NULL;
-    zstrm.zfree = (free_func)Z_NULL;
-
-    Trace((stderr, "initializing deflate()\n"));
-    err = deflateInit2(&zstrm, pack_level, Z_DEFLATED, -windowBits, 8, 0);
-
-    if (err == Z_MEM_ERROR) {
-        sprintf(errbuf, "cannot initialize zlib deflate");
-        zp_err = ZE_MEM;
-    } else if (err != Z_OK) {
-        sprintf(errbuf, "zlib deflateInit failure (%d)", err);
-        zp_err = ZE_LOGIC;
-    }
-
-    deflInit = TRUE;
-    return zp_err;
-}
-
-
-void zl_deflate_free()
-{
-    int err;
-
-    if (f_obuf != NULL) {
-        free(f_obuf);
-        f_obuf = NULL;
-    }
-    if (f_ibuf != NULL) {
-        free(f_ibuf);
-        f_ibuf = NULL;
-    }
-    if (deflInit) {
-        err = deflateEnd(&zstrm);
-        if (err != Z_OK && err !=Z_DATA_ERROR) {
-            ziperr(ZE_LOGIC, "zlib deflateEnd failed");
-        }
-        deflInit = FALSE;
-    }
-}
-
-#else /* !USE_ZLIB */
-
 # ifdef ZP_NEED_MEMCOMPR
 /* ===========================================================================
  * In-memory read function. As opposed to file_read(), this function
@@ -868,7 +802,6 @@ int seekable()
 {
     return fseekable(y);
 }
-#endif /* ?USE_ZLIB */
 
 
 /* ===========================================================================
