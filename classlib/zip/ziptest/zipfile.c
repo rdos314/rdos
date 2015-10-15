@@ -963,7 +963,6 @@ int readlocal(localz, z)
   char buf[LOCHEAD + 1];
   struct zlist far *locz;
 
-#ifndef UTIL
   ulg start_disk = 0;
   uzoff_t start_offset = 0;
   char *split_path;
@@ -997,7 +996,6 @@ int readlocal(localz, z)
       split_path = get_in_split_path(in_path, start_disk);
     }
   }
-#endif
 
   /* For utilities assume archive is on one disk for now */
 
