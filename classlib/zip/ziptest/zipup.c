@@ -566,11 +566,7 @@ struct zlist far *z;    /* zip entry to compress */
       if ((r = putextended(z)) != ZE_OK)
         return r;
       /* if Zip64 and not seekable then Zip64 data descriptor */
-#ifdef ZIP64_SUPPORT
       tempzn += (zip64_entry ? 24L : 16L);
-#else
-      tempzn += 16L;
-#endif
       z->flg = z->lflg; /* if z->flg modified by deflate */
     } else {
       /* ftell() not as useful across splits */
@@ -579,16 +575,7 @@ struct zlist far *z;    /* zip entry to compress */
                 zip_fzofft(s, NULL, NULL), zip_fzofft(bytes_this_entry, NULL, NULL));
         error("incorrect compressed size");
       }
-#if 0
        /* seek ok, ftell() should work, check compressed size */
-# if !defined(VMS) && !defined(CMS_MVS)
-      if (p - o != s) {
-        fprintf(mesg, " s=%s, actual=%s ",
-                zip_fzofft(s, NULL, NULL), zip_fzofft(p-o, NULL, NULL));
-        error("incorrect compressed size");
-      }
-# endif /* !VMS && !CMS_MVS */
-#endif /* 0 */
       z->how = (ush)m;
       switch (m)
       {
@@ -597,10 +584,6 @@ struct zlist far *z;    /* zip entry to compress */
       /* Need PKUNZIP 2.0 for DEFLATE */
       case DEFLATE:
         z->ver = 20; break;
-#ifdef BZIP2_SUPPORT
-      case BZIP2:
-        z->ver = 46; break;
-#endif
       }
       /*
        * The encryption header needs the crc, but we don't have it
@@ -636,14 +619,10 @@ struct zlist far *z;    /* zip entry to compress */
         /* encrypted file, extended header still required */
         if ((r = putextended(z)) != ZE_OK)
           return r;
-#ifdef ZIP64_SUPPORT
         if (zip64_entry)
           tempzn += 24L;
         else
           tempzn += 16L;
-#else
-        tempzn += 16L;
-#endif
       }
     }
   } /* isdir */
@@ -663,11 +642,6 @@ struct zlist far *z;    /* zip entry to compress */
       fprintf( mesg, "\t(in=%s) (out=%s)",
                zip_fzofft(isize, NULL, "u"), zip_fzofft(s, NULL, "u"));
     }
-#ifdef BZIP2_SUPPORT
-    if (m == BZIP2)
-      fprintf(mesg, " (bzipped %d%%)\n", percent(isize, s));
-    else
-#endif
     if (m == DEFLATE)
       fprintf(mesg, " (deflated %d%%)\n", percent(isize, s));
     else
@@ -677,11 +651,6 @@ struct zlist far *z;    /* zip entry to compress */
   }
   if (logall)
   {
-#ifdef BZIP2_SUPPORT
-    if (m == BZIP2)
-      fprintf(logfile, " (bzipped %d%%)\n", percent(isize, s));
-    else
-#endif
     if (m == DEFLATE)
       fprintf(logfile, " (deflated %d%%)\n", percent(isize, s));
     else
