@@ -50,39 +50,15 @@ unsigned (*read_buf) OF((char *buf, unsigned size)) = file_read;
 /* Local data */
 local ulg crc;                  /* crc on uncompressed file data */
 local ftype ifile;              /* file to compress */
-#if defined(MMAP) || defined(BIG_MEM)
-  local ulg remain;
-  /* window bytes not yet processed.
-   *  special value "(ulg)-1L" reserved to signal normal reads.
-   */
-#endif /* MMAP || BIG_MEM */
-#ifdef USE_ZLIB
-  local int deflInit = FALSE;   /* flag: zlib deflate is initialized */
-  local z_stream zstrm;         /* zlib's data interface structure */
-  local char *f_ibuf = NULL;
-  local char *f_obuf = NULL;
-#else /* !USE_ZLIB */
-  local char file_outbuf[1024]; /* output buffer for compression to file */
+local char file_outbuf[1024]; /* output buffer for compression to file */
 
-# ifdef ZP_NEED_MEMCOMPR
-    local char *in_buf;
+local char *in_buf;
     /* Current input buffer, in_buf is used only for in-memory compression. */
-    local unsigned in_offset;
+local unsigned in_offset;
     /* Current offset in input buffer. in_offset is used only for in-memory
      * compression. On 16 bit machines, the buffer is limited to 64K.
      */
-    local unsigned in_size;     /* size of current input buffer */
-# endif /* ZP_NEED_MEMCOMPR */
-#endif /* ?USE_ZLIB */
-
-#ifdef BZIP2_SUPPORT
-    local int bzipInit;         /* flag: bzip2lib is initialized */
-    local bz_stream bstrm;      /* zlib's data interface structure */
-# if !defined(USE_ZLIB)
-    local char *f_ibuf = NULL;
-    local char *f_obuf = NULL;
-# endif /* !USE_ZLIB */
-#endif /* BZIP2_SUPPORT */
+local unsigned in_size;     /* size of current input buffer */
 
 #ifdef DEBUG
     zoff_t isize;               /* input file size. global only for debugging */
