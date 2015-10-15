@@ -442,16 +442,9 @@ struct zlist far *z;    /* zip entry to compress */
   else if (m != STORE) {
     if (set_type) z->att = (ush)UNKNOWN;
     /* ... is finally set in file compression routine */
-#ifdef BZIP2_SUPPORT
-    if (m == BZIP2) {
-      s = bzfilecompress(z, &m);
-    }
-    else
-#endif /* BZIP2_SUPPORT */
     {
       s = filecompress(z, &m);
     }
-#ifndef PGP
     if (z->att == (ush)BINARY && translate_eol && file_binary) {
       if (translate_eol == 1)
         zipwarn("has binary so -l ignored", "");
@@ -464,7 +457,6 @@ struct zlist far *z;    /* zip entry to compress */
       else
         zipwarn("-ll used on binary file - corrupted?", "");
     }
-#endif
   }
   else
   {
@@ -484,9 +476,6 @@ struct zlist far *z;    /* zip entry to compress */
       }
       isize = k;
 
-#ifdef MINIX
-      q = k;
-#endif /* MINIX */
     }
     else
     {
@@ -503,12 +492,8 @@ struct zlist far *z;    /* zip entry to compress */
           if (dot_size > 0) {
             /* initial space */
             if (noisy && dot_count == -1) {
-#ifndef WINDLL
               putc(' ', mesg);
               fflush(mesg);
-#else
-              fprintf(stdout,"%c",' ');
-#endif
               dot_count++;
             }
             dot_count++;
