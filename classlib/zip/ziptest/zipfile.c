@@ -3923,11 +3923,9 @@ int zipcopy(z)
 
   e = 0;
   if (z->lflg & 8) {
-#ifdef ZIP64_SUPPORT
     if (zip64_entry)
       e = 24;
     else
-#endif
       e = 16;
   }
   /* 4 is signature */
@@ -3942,13 +3940,9 @@ int zipcopy(z)
       return ZE_MEM;
     }
     strcpy(z->oname, localz->iname);
-#ifndef UTIL
-# ifdef WIN32
     /* Win9x console always uses OEM character coding, and
        WinNT console is set to OEM charset by default, too */
     _INTERN_OEM(z->oname);
-# endif
-#endif
     sprintf(errbuf, " copying: %s ", z->oname);
     zipmessage_nl(errbuf, 0);
   }
@@ -3981,9 +3975,6 @@ int zipcopy(z)
       if (localz->ext) free(localz->extra);
       if (localz->nam) free(localz->iname);
       if (localz->nam) free(localz->name);
-#ifdef UNICODE_SUPPORT
-      if (localz->uname) free(localz->uname);
-#endif
       free(localz);
       ZIPERR(ZE_ABORT, "Could not find split");
   }
@@ -3996,9 +3987,6 @@ int zipcopy(z)
         r = ZE_FORM;
 
       if (fix == 2) {
-#ifdef DEBUG
-        zoff_t here = zftello(y);
-#endif
 
         /* fix == 2 skips right to next disk */
         skip_this_disk = 0;
@@ -4015,9 +4003,6 @@ int zipcopy(z)
       if (localz->ext) free(localz->extra);
       if (localz->nam) free(localz->iname);
       if (localz->nam) free(localz->name);
-#ifdef UNICODE_SUPPORT
-      if (localz->uname) free(localz->uname);
-#endif
       free(localz);
       return r;
   }
@@ -4045,9 +4030,6 @@ int zipcopy(z)
       if (localz->ext) free(localz->extra);
       if (localz->nam) free(localz->iname);
       if (localz->nam) free(localz->name);
-#ifdef UNICODE_SUPPORT
-      if (localz->uname) free(localz->uname);
-#endif
       free(localz);
       return ZE_FORM;
     }
@@ -4096,9 +4078,6 @@ int zipcopy(z)
     z->atx = 0;
     z->name = localz->name;
     z->iname = localz->iname;
-#ifdef UNICODE_SUPPORT
-    z->uname = localz->uname;
-#endif
     if ((z->zname = malloc(localz->nam + 1)) == NULL) {
       return ZE_MEM;
     }
@@ -4107,9 +4086,6 @@ int zipcopy(z)
     if (localz->ext) free(localz->extra);
     if (localz->nam) free(localz->iname);
     if (localz->nam) free(localz->name);
-#ifdef UNICODE_SUPPORT
-    if (localz->uname) free(localz->uname);
-#endif
     free(localz);
   }
 
