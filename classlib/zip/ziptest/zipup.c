@@ -301,33 +301,9 @@ struct zlist far *z;    /* zip entry to compress */
       m = STORE;
       q = 0;
     }
-#ifdef THEOS
-    else if (((a >> 16) & S_IFMT) == S_IFLIB) {   /* library */
-      ifile = fbad;
-      m = STORE;
-      q = 0;
-    }
-#endif
     else {
-#ifdef CMS_MVS
-      if (bflag) {
-        if ((ifile = zopen(z->name, fhowb)) == fbad)
-           return ZE_OPEN;
-      }
-      else
-#endif /* CMS_MVS */
-#if defined(UNICODE_SUPPORT) && defined(WIN32)
-      if (!no_win32_wide) {
-        if ((ifile = zwopen(z->namew, fhow)) == fbad)
-          return ZE_OPEN;
-      } else {
-        if ((ifile = zopen(z->name, fhow)) == fbad)
-          return ZE_OPEN;
-      }
-#else
       if ((ifile = zopen(z->name, fhow)) == fbad)
         return ZE_OPEN;
-#endif
     }
 
     z->tim = tim;
