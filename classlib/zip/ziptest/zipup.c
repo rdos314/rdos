@@ -649,36 +649,6 @@ struct zlist far *z;    /* zip entry to compress */
     fflush(logfile);
   }
 
-#ifdef WINDLL
-# ifdef ZIP64_SUPPORT
-   /* The DLL api has been updated and uses a different
-      interface.  7/24/04 EG */
-   if (lpZipUserFunctions->ServiceApplication64 != NULL)
-    {
-    if ((*lpZipUserFunctions->ServiceApplication64)(z->zname, isize))
-                ZIPERR(ZE_ABORT, "User terminated operation");
-    }
-  else
-   {
-   filesize64 = isize;
-   low = (unsigned long)(filesize64 & 0x00000000FFFFFFFF);
-   high = (unsigned long)((filesize64 >> 32) & 0x00000000FFFFFFFF);
-   if (lpZipUserFunctions->ServiceApplication64_No_Int64 != NULL) {
-    if ((*lpZipUserFunctions->ServiceApplication64_No_Int64)(z->zname, low, high))
-                ZIPERR(ZE_ABORT, "User terminated operation");
-    }
-   }
-# else
-  if (lpZipUserFunctions->ServiceApplication != NULL)
-  {
-    if ((*lpZipUserFunctions->ServiceApplication)(z->zname, isize))
-    {
-      ZIPERR(ZE_ABORT, "User terminated operation");
-    }
-  }
-# endif
-#endif
-
   return ZE_OK;
 }
 
