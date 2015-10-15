@@ -274,11 +274,7 @@ struct zlist far *z;    /* zip entry to compress */
   z->ext = z->cext = 0;
 
   /* Select method based on the suffix and the global method */
-#ifndef RISCOS
   m = special != NULL && suffixes(z->name, special) ? STORE : method;
-#else /* RISCOS  must set m after setting extra field */
-  m = method;
-#endif /* ?RISCOS */
 
   /* For now force deflate if using descriptors.  Instead zip and unzip
      could check bytes read against compressed size in each data descriptor
@@ -287,25 +283,10 @@ struct zlist far *z;    /* zip entry to compress */
      probably doesn't hurt to force deflation when streaming.  12/30/04 EG
   */
 
-  /* Now is a good time.  For now allow storing for testing.  12/16/05 EG */
-  /* By release need to force deflation based on reports some inflate
-     streamed data to find the end of the data */
-  /* Need to handle bzip2 */
-#ifdef NO_STREAMING_STORE
-  if (use_descriptors && m == STORE)
-  {
-      m = DEFLATE;
-  }
-#endif
-
   /* Open file to zip up unless it is stdin */
   if (strcmp(z->name, "-") == 0)
   {
     ifile = (ftype)zstdin;
-#if defined(MSDOS) || defined(__human68k__)
-    if (isatty(zstdin) == 0)  /* keep default mode if stdin is a terminal */
-      setmode(zstdin, O_BINARY);
-#endif
     z->tim = tim;
   }
   else
