@@ -4105,8 +4105,6 @@ int zipcopy(z)
 }
 
 
-#ifdef USE_EF_UT_TIME
-
 local int ef_scan_ut_time(ef_buf, ef_len, ef_is_cent, z_utim)
 char *ef_buf;                   /* buffer containing extra field */
 extent ef_len;                  /* total length of extra field */
@@ -4244,8 +4242,6 @@ iztimes *z_utim;
 
   return r;
 }
-
-#endif /* USE_EF_UT_TIME */
 
 
 local void cutpath(p, delim)
