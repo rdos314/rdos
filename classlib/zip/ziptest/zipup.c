@@ -528,20 +528,14 @@ struct zlist far *z;    /* zip entry to compress */
   tempzn += s;
   p = tempzn; /* save for future fseek() */
 
-#if (!defined(MSDOS) || defined(OS2))
-#if !defined(VMS) && !defined(CMS_MVS) && !defined(__mpexl)
   /* Check input size (but not in VMS -- variable record lengths mess it up)
    * and not on MSDOS -- diet in TSR mode reports an incorrect file size)
    */
-#ifndef TANDEM /* Tandem EOF does not match byte count unless Unstructured */
   if (!translate_eol && q != -1L && isize != q)
   {
     Trace((mesg, " i=%lu, q=%lu ", isize, q));
     zipwarn(" file size changed while zipping ", z->name);
   }
-#endif /* !TANDEM */
-#endif /* !VMS && !CMS_MVS && !__mpexl */
-#endif /* (!MSDOS || OS2) */
 
   if (isdir)
   {
@@ -559,17 +553,11 @@ struct zlist far *z;    /* zip entry to compress */
     /* Try to rewrite the local header with correct information */
     z->crc = crc;
     z->siz = s;
-#if CRYPT
     if (!isdir && key != NULL)
       z->siz += RAND_HEAD_LEN;
-#endif /* CRYPT */
     z->len = isize;
     /* if can seek back to local header */
-#ifdef BROKEN_FSEEK
     if (use_descriptors || !fseekable(y) || zfseeko(y, z->off, SEEK_SET))
-#else
-    if (use_descriptors || zfseeko(y, z->off, SEEK_SET))
-#endif
     {
       if (z->how != (ush) m)
          error("can't rewrite method");
