@@ -2944,10 +2944,8 @@ local int scanzipf_regnew()
       }
       strcpy(z->oname, z->zname);
 
-#ifndef UTIL
       if (verbose && fix == 0)
         zipoddities(z);
-#endif
 
       /* Link into list */
       *x = z;
