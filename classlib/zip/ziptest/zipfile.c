@@ -4105,9 +4105,6 @@ int zipcopy(z)
 }
 
 
-
-#ifndef UTIL
-
 #ifdef USE_EF_UT_TIME
 
 local int ef_scan_ut_time(ef_buf, ef_len, ef_is_cent, z_utim)
@@ -4386,4 +4383,3 @@ int trash()
   return ZE_OK;
 }
 
-#endif /* !UTIL */
