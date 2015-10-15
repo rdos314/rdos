@@ -40,25 +40,11 @@ local unsigned mem_read OF((char *buf, unsigned size));
 /* zip64 support 08/29/2003 R.Nausedat */
 local zoff_t filecompress OF((struct zlist far *z_entry, int *cmpr_method));
 
-#ifdef BZIP2_SUPPORT
-local zoff_t bzfilecompress OF((struct zlist far *z_entry, int *cmpr_method));
-#endif
-
 /* Deflate "internal" global data (currently not in zip.h) */
-#if defined(MMAP) || defined(BIG_MEM)
-# ifdef USE_ZLIB
-    local uch *window = NULL;   /* Used to read all input file at once */
-    local ulg window_size;      /* size of said window */
-# else /* !USE_ZLIB */
-    extern uch *window;         /* Used to read all input file at once */
-#endif /* ?USE_ZLIB */
-#endif /* MMAP || BIG_MEM */
-#ifndef USE_ZLIB
-  extern ulg window_size;       /* size of said window */
+extern ulg window_size;       /* size of said window */
 
-  unsigned (*read_buf) OF((char *buf, unsigned size)) = file_read;
+unsigned (*read_buf) OF((char *buf, unsigned size)) = file_read;
   /* Current input function. Set to mem_read for in-memory compression */
-#endif /* !USE_ZLIB */
 
 
 /* Local data */
