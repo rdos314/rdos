@@ -205,14 +205,7 @@ struct zlist far *z;    /* zip entry to compress */
   file_binary = -1;      /* not set, set after first read */
   file_binary_final = 0; /* not set, set after first read */
 
-#if defined(UNICODE_SUPPORT) && defined(WIN32)
-  if (!no_win32_wide)
-    tim = filetimew(z->namew, &a, &q, &f_utim);
-  else
-    tim = filetime(z->name, &a, &q, &f_utim);
-#else
   tim = filetime(z->name, &a, &q, &f_utim);
-#endif
   if (tim == 0 || q == (zoff_t) -3)
     return ZE_OPEN;
 
@@ -279,13 +272,6 @@ struct zlist far *z;    /* zip entry to compress */
   }
   z->extra = z->cextra = NULL;
   z->ext = z->cext = 0;
-
-#if defined(MMAP) || defined(BIG_MEM)
-  remain = (ulg)-1L; /* changed only for MMAP or BIG_MEM */
-#endif /* MMAP || BIG_MEM */
-#if (!defined(USE_ZLIB) || defined(MMAP) || defined(BIG_MEM))
-  window_size = 0L;
-#endif /* !USE_ZLIB || MMAP || BIG_MEM */
 
   /* Select method based on the suffix and the global method */
 #ifndef RISCOS
