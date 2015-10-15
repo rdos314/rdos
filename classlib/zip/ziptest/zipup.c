@@ -291,29 +291,12 @@ struct zlist far *z;    /* zip entry to compress */
   }
   else
   {
-#if !(defined(VMS) && defined(VMS_PK_EXTRA))
     if (extra_fields) {
       /* create extra field and change z->att and z->atx if desired */
       set_extra_field(z, &f_utim);
-# ifdef QLZIP
-      if(qlflag)
-          a |= (S_IXUSR) << 16;   /* Cross compilers don't set this */
-# endif
-# ifdef RISCOS
-      m = special != NULL && filetypes(z->extra, special) ? STORE : method;
-# endif /* RISCOS */
 
       /* For now allow store for testing */
-#ifdef NO_STREAMING_STORE
-      /* For now force deflation if using data descriptors. */
-      if (use_descriptors && m == STORE)
-      {
-        m = DEFLATE;
-      }
-#endif
-
     }
-#endif /* !(VMS && VMS_PK_EXTRA) */
     l = issymlnk(a);
     if (l) {
       ifile = fbad;
@@ -324,33 +307,9 @@ struct zlist far *z;    /* zip entry to compress */
       m = STORE;
       q = 0;
     }
-#ifdef THEOS
-    else if (((a >> 16) & S_IFMT) == S_IFLIB) {   /* library */
-      ifile = fbad;
-      m = STORE;
-      q = 0;
-    }
-#endif
     else {
-#ifdef CMS_MVS
-      if (bflag) {
-        if ((ifile = zopen(z->name, fhowb)) == fbad)
-           return ZE_OPEN;
-      }
-      else
-#endif /* CMS_MVS */
-#if defined(UNICODE_SUPPORT) && defined(WIN32)
-      if (!no_win32_wide) {
-        if ((ifile = zwopen(z->namew, fhow)) == fbad)
-          return ZE_OPEN;
-      } else {
-        if ((ifile = zopen(z->name, fhow)) == fbad)
-          return ZE_OPEN;
-      }
-#else
       if ((ifile = zopen(z->name, fhow)) == fbad)
         return ZE_OPEN;
-#endif
     }
 
     z->tim = tim;
