@@ -839,36 +839,12 @@ ulg memcompress(tgt, tgtsize, src, srcsize)
     ulg crc;
     unsigned out_total;
     int method   = DEFLATE;
-#ifdef USE_ZLIB
-    int err      = Z_OK;
-#else
     ush att      = (ush)UNKNOWN;
     ush flags    = 0;
-#endif
 
     if (tgtsize <= (ulg)6L) error("target buffer too small");
     out_total = 2 + 4;
 
-#ifdef USE_ZLIB
-    if (!deflInit) {
-        err = zl_deflate_init(level);
-        if (err != ZE_OK)
-            ziperr(err, errbuf);
-    }
-
-    zstrm.next_in = (Bytef *)src;
-    zstrm.avail_in = (uInt)srcsize;
-    zstrm.next_out = (Bytef *)(tgt + out_total);
-    zstrm.avail_out = (uInt)tgtsize - (uInt)out_total;
-
-    err = deflate(&zstrm, Z_FINISH);
-    if (err != Z_STREAM_END)
-        error("output buffer too small for in-memory compression");
-    out_total += (unsigned)zstrm.total_out;
-
-    if ((err = deflateReset(&zstrm)) != Z_OK)
-        error("zlib deflateReset failed");
-#else /* !USE_ZLIB */
     read_buf  = mem_read;
     in_buf    = src;
     in_size   = (unsigned)srcsize;
@@ -880,7 +856,6 @@ ulg memcompress(tgt, tgtsize, src, srcsize)
     lm_init((level != 0 ? level : 1), &flags);
     out_total += (unsigned)deflate();
     window_size = 0L; /* was updated by lm_init() */
-#endif /* ?USE_ZLIB */
 
     crc = CRCVAL_INITIAL;
     crc = crc32(crc, (uch *)src, (extent)srcsize);
