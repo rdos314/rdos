@@ -3826,9 +3826,6 @@ int zipcopy(z)
   /* Initialize all fields pointing to malloced data to NULL */
   localz->zname = localz->name = localz->iname = localz->extra = NULL;
   localz->oname = NULL;
-#ifdef UNICODE_SUPPORT
-  localz->uname = NULL;
-#endif
 
   /* Read file name, extra field and comment field */
   if ((localz->iname = malloc(localz->nam+1)) ==  NULL ||
@@ -3842,40 +3839,14 @@ int zipcopy(z)
     return ZE_MEM;
   strcpy(localz->name, localz->iname);
 
-#ifdef ZIP64_SUPPORT
   zip64_entry = adjust_zip_local_entry(localz);
-#endif
 
   localz->vem = 0;
   if (fix != 2) {
     /* Need vem to determine if iname is Win32 OEM name */
     localz->vem = z->vem;
 
-#ifdef UNICODE_SUPPORT
-    if (unicode_mismatch != 3) {
-      if (z->flg & UTF8_BIT) {
-        char *iname;
-        /* path is UTF-8 */
-        localz->uname = localz->iname;
-        iname = utf8_to_local_string(localz->uname);
-        if (iname == NULL) {
-          /* a bad UTF-8 character in name likely - go with (probably messed up) uname */
-          if ((localz->iname = malloc(strlen(localz->uname) + 1)) == NULL) {
-            return ZE_MEM;
-          }
-          strcpy(localz->iname, localz->uname);
-        } else {
-          /* go with local character set iname */
-          localz->iname = iname;
-        }
-      } else {
-        /* check for UTF-8 path extra field */
-        read_Unicode_Path_local_entry(localz);
-      }
-    }
-#endif
 
-#ifdef WIN32_OEM
       /* If fix == 2 and reading local headers first, vem is not in the local
          header so we don't know when to do OEM translation, as the ver field
          is set to MSDOS (0) by all unless something specific is needed.
@@ -3884,20 +3855,9 @@ int zipcopy(z)
     if ((z->vem & 0xff00) == 0)
       /* assume archive name is OEM if from DOS */
       oem_to_local_string(localz->iname, localz->iname);
-#endif
   }
 
   if (fix == 2) {
-# ifdef WIN32
-#  ifdef UNICODE_SUPPORT
-    localz->namew = NULL;
-    localz->inamew = NULL;
-    localz->znamew = NULL;
-    z->namew = NULL;
-    z->inamew = NULL;
-    z->znamew = NULL;
-#  endif
-# endif
     /* set z from localz */
     z->flg = localz->lflg;
     z->len = localz->len;
@@ -3924,34 +3884,6 @@ int zipcopy(z)
     localz->len = z->len;
     localz->siz = z->siz;
   }
-
-#if 0
-  if (fix > 1) {
-    if (zfseeko(in_file, z->off + n, SEEK_SET)) /* seek to compressed data */
-      return ferror(in_file) ? ZE_READ : ZE_EOF;
-
-    if (fix > 2) {
-      /* Update length of entry's name, it may have been changed.  This is
-         needed to support the ZipNote ability to rename archive entries. */
-      z->nam = strlen(z->iname);
-      n = (uzoff_t)((LOCHEAD) + (ulg)z->nam + (ulg)z->ext);
-    }
-
-    /* do not trust the old compressed size */
-    if (putlocal(z, PUTLOCAL_WRITE) != ZE_OK)
-      return ZE_TEMP;
-
-    z->off = tempzn;
-    tempzn += n;
-    n = z->siz;
-  } else {
-    if (zfseeko(in_file, z->off, SEEK_SET))     /* seek to local header */
-      return ferror(in_file) ? ZE_READ : ZE_EOF;
-
-    z->off = tempzn;
-    n += z->siz;
-  }
-#endif
 
   /* from zipnote */
   if (fix == 3) {
