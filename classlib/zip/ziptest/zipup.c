@@ -362,30 +362,13 @@ struct zlist far *z;    /* zip entry to compress */
    */
 
   /* (Assume ext, cext, com, and zname already filled in.) */
-#if defined(OS2) || defined(WIN32)
-# ifdef WIN32_OEM
   /* When creating OEM-coded names on Win32, the entries must always be marked
      as "created on MSDOS" (OS_CODE = 0), because UnZip needs to handle archive
      entry names just like those created by Zip's MSDOS port.
    */
   z->vem = (ush)(dosify ? 20 : 0 + Z_MAJORVER * 10 + Z_MINORVER);
-# else
-  z->vem = (ush)(z->dosflag ? (dosify ? 20 : /* Made under MSDOS by PKZIP 2.0 */
-                               (0 + Z_MAJORVER * 10 + Z_MINORVER))
-                 : OS_CODE + Z_MAJORVER * 10 + Z_MINORVER);
-  /* For a plain old (8+3) FAT file system, we cheat and pretend that the file
-   * was not made on OS2/WIN32 but under DOS. unzip is confused otherwise.
-   */
-# endif
-#else /* !(OS2 || WIN32) */
-  z->vem = (ush)(dosify ? 20 : OS_CODE + Z_MAJORVER * 10 + Z_MINORVER);
-#endif /* ?(OS2 || WIN32) */
 
   z->ver = (ush)(m == STORE ? 10 : 20); /* Need PKUNZIP 2.0 except for store */
-#ifdef BZIP2_SUPPORT
-  if (method == BZIP2)
-      z->ver = (ush)(m == STORE ? 10 : 46);
-#endif
   z->crc = 0;  /* to be updated later */
   /* Assume first that we will need an extended local header: */
   if (isdir)
