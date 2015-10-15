@@ -35,8 +35,6 @@
  * 9/25/04 EG
  */
 
-#if defined(LARGE_FILE_SUPPORT) && !defined(__CYGWIN__)
-
 /* 64-bit buffered ftello
  *
  * Win32 does not provide a 64-bit buffered
@@ -92,24 +90,5 @@ int zfseeko(stream, offset, origin)
     return 0;
   }
 }
-#endif  /* Win32 LARGE_FILE_SUPPORT */
 
-#if 0
-FILE* zfopen(filename,mode)
-char *filename;
-char *mode;
-{
-FILE* fTemp;
-  
-  fTemp = fopen(filename,mode);
-  if( fTemp == NULL )
-    return NULL;
-  
-  /* sorry, could not make VC60 and its rtl work properly without setting the file buffer to NULL. the  */
-  /* problem seems to be _telli64 which seems to return the max stream position, comments are welcome   */
-  setbuf(fTemp,NULL);
-
-  return fTemp;
-}
-#endif
 /* --------------------------------------------------- */
