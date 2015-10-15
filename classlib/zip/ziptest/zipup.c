@@ -60,14 +60,10 @@ local unsigned in_offset;
      */
 local unsigned in_size;     /* size of current input buffer */
 
-#ifdef DEBUG
-    zoff_t isize;               /* input file size. global only for debugging */
-#else /* !DEBUG */
-    local zoff_t isize;         /* input file size. global only for debugging */
-#endif /* ?DEBUG */
+local zoff_t isize;         /* input file size. global only for debugging */
   /* If file_read detects binary it sets this flag - 12/16/04 EG */
-  local int file_binary = 0;        /* first buf */
-  local int file_binary_final = 0;  /* for bzip2 for entire file.  assume text until find binary */
+local int file_binary = 0;        /* first buf */
+local int file_binary_final = 0;  /* for bzip2 for entire file.  assume text until find binary */
 
 
 /* moved check to function 3/14/05 EG */
@@ -76,11 +72,9 @@ int is_seekable(y)
 {
   zoff_t pos;
 
-#ifdef BROKEN_FSEEK
   if (!fseekable(y)) {
     return 0;
   }
-#endif
 
   pos = zftello(y);
   if (zfseeko(y, pos, SEEK_SET)) {
