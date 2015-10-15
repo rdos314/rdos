@@ -500,12 +500,8 @@ struct zlist far *z;    /* zip entry to compress */
             if (dot_size <= (dot_count + 1) * SBSZ) dot_count = 0;
           }
           if ((verbose || noisy) && dot_size && !dot_count) {
-#ifndef WINDLL
             putc('.', mesg);
             fflush(mesg);
-#else
-            fprintf(stdout,"%c",'.');
-#endif
             mesg_line_started = 1;
           }
         }
@@ -522,30 +518,18 @@ struct zlist far *z;    /* zip entry to compress */
   }
   if (ifile != fbad)
     zclose(ifile);
-#ifdef MMAP
-  if (remain != (ulg)-1L) {
-    munmap((caddr_t) window, window_size);
-    window = NULL;
-  }
-#endif /*MMAP */
 
   tempzn += s;
   p = tempzn; /* save for future fseek() */
 
-#if (!defined(MSDOS) || defined(OS2))
-#if !defined(VMS) && !defined(CMS_MVS) && !defined(__mpexl)
   /* Check input size (but not in VMS -- variable record lengths mess it up)
    * and not on MSDOS -- diet in TSR mode reports an incorrect file size)
    */
-#ifndef TANDEM /* Tandem EOF does not match byte count unless Unstructured */
   if (!translate_eol && q != -1L && isize != q)
   {
     Trace((mesg, " i=%lu, q=%lu ", isize, q));
     zipwarn(" file size changed while zipping ", z->name);
   }
-#endif /* !TANDEM */
-#endif /* !VMS && !CMS_MVS && !__mpexl */
-#endif /* (!MSDOS || OS2) */
 
   if (isdir)
   {
