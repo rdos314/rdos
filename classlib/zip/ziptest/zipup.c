@@ -22,8 +22,6 @@
 #include <ctype.h>
 #include <errno.h>
 
-#ifndef UTIL            /* This module contains no code for Zip Utilities */
-
 #include "revision.h"
 #include "crc32.h"
 #include "crypt.h"
@@ -1919,4 +1917,3 @@ int *cmpr_method;
 }
 
 #endif /* BZIP2_SUPPORT */
-#endif /* !UTIL */
