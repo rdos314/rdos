@@ -3521,15 +3521,7 @@ int putend( OFT( uzoff_t) n,
             OFT( extent) m,
             OFT( char *) z
           )
-#ifdef NO_PROTO
-  uzoff_t n;                /* number of entries in central directory */
-  uzoff_t s;                /* size of central directory */
-  uzoff_t c;                /* offset of central directory */
-  extent m;                 /* length of zip file comment (0 if none) */
-  char *z;                  /* zip file comment if m != 0 */
-#endif /* def NO_PROTO */
 {
-#ifdef ZIP64_SUPPORT        /* zip64 support 09/05/2003 R.Nausedat */
   ush vem;          /* version made by */
   int iNeedZip64 = 0;
 
@@ -3645,33 +3637,9 @@ int putend( OFT( uzoff_t) n,
     /* 4 bytes    offset of start of central directory with respect to the starting disk number */
     append_ulong_to_mem((ulg)cd_start_offset, &block, &offset, &blocksize);
 
-#else /* !ZIP64_SUPPORT */
-  char *block = NULL;   /* mem block to write to */
-  extent offset = 0;    /* offset into block */
-  extent blocksize = 0; /* size of block */
-
-  /* end of central dir signature */
-  append_ulong_to_mem(ENDSIG, &block, &offset, &blocksize);
-  /* 2 bytes    number of this disk */
-  append_ushort_to_mem((ush)current_disk, &block, &offset, &blocksize);
-  /* 2 bytes    number of the disk with the start of the central directory */
-  append_ushort_to_mem((ush)cd_start_disk, &block, &offset, &blocksize);
-  /* 2 bytes    total number of entries in the central directory on this disk */
-  append_ushort_to_mem((ush)cd_entries_this_disk, &block, &offset, &blocksize);
-  /* 2 bytes    total number of entries in the central directory */
-  append_ushort_to_mem((ush)n, &block, &offset, &blocksize);
-  /* 4 bytes    size of the central directory */
-  append_ulong_to_mem((ulg)s, &block, &offset, &blocksize);
-  /* 4 bytes    offset of start of central directory with respect to the starting disk number */
-  append_ulong_to_mem((ulg)cd_start_offset, &block, &offset, &blocksize);
-#endif /* ZIP64_SUPPORT */
-
   /* size of comment */
   append_ushort_to_mem((ush)m, &block, &offset, &blocksize);
   /* Write the comment, if any */
-#ifdef EBCDIC
-  memtoasc(z, z, m);
-#endif
   if (m) {
     /* PKWare defines the archive comment to be ASCII only so no OEM conversion */
     append_string_to_mem(z, m, &block, &offset, &blocksize);
@@ -3683,21 +3651,6 @@ int putend( OFT( uzoff_t) n,
     return ZE_TEMP;
   }
   free(block);
-
-#ifdef HANDLE_AMIGA_SFX
-  if (amiga_sfx_offset && zipbeg /* -J zeroes this */) {
-    s = zftello(y);
-    while (s & 3) s++, putc(0, f);   /* final marker must be longword aligned */
-    PUTLG(0xF2030000 /* 1010 in Motorola byte order */, f);
-    c = (s - amiga_sfx_offset - 4) / 4;  /* size of archive part in longwords */
-    if (zfseeko(y, amiga_sfx_offset, SEEK_SET) != 0)
-      return ZE_TEMP;
-    c = ((c >> 24) & 0xFF) | ((c >> 8) & 0xFF00)
-         | ((c & 0xFF00) << 8) | ((c & 0xFF) << 24);     /* invert byte order */
-    PUTLG(c, y);
-    zfseeko(y, 0, SEEK_END);                                  /* just in case */
-  }
-#endif
 
   return ZE_OK;
 } /* end function putend() */
