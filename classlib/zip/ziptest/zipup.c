@@ -291,29 +291,6 @@ struct zlist far *z;    /* zip entry to compress */
   }
   else
   {
-#if !(defined(VMS) && defined(VMS_PK_EXTRA))
-    if (extra_fields) {
-      /* create extra field and change z->att and z->atx if desired */
-      set_extra_field(z, &f_utim);
-# ifdef QLZIP
-      if(qlflag)
-          a |= (S_IXUSR) << 16;   /* Cross compilers don't set this */
-# endif
-# ifdef RISCOS
-      m = special != NULL && filetypes(z->extra, special) ? STORE : method;
-# endif /* RISCOS */
-
-      /* For now allow store for testing */
-#ifdef NO_STREAMING_STORE
-      /* For now force deflation if using data descriptors. */
-      if (use_descriptors && m == STORE)
-      {
-        m = DEFLATE;
-      }
-#endif
-
-    }
-#endif /* !(VMS && VMS_PK_EXTRA) */
     l = issymlnk(a);
     if (l) {
       ifile = fbad;
