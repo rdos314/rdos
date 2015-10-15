@@ -451,7 +451,6 @@ struct zlist far *z;    /* zip entry to compress */
     {
       s = filecompress(z, &m);
     }
-#ifndef PGP
     if (z->att == (ush)BINARY && translate_eol && file_binary) {
       if (translate_eol == 1)
         zipwarn("has binary so -l ignored", "");
@@ -464,7 +463,6 @@ struct zlist far *z;    /* zip entry to compress */
       else
         zipwarn("-ll used on binary file - corrupted?", "");
     }
-#endif
   }
   else
   {
@@ -484,9 +482,6 @@ struct zlist far *z;    /* zip entry to compress */
       }
       isize = k;
 
-#ifdef MINIX
-      q = k;
-#endif /* MINIX */
     }
     else
     {
@@ -503,24 +498,16 @@ struct zlist far *z;    /* zip entry to compress */
           if (dot_size > 0) {
             /* initial space */
             if (noisy && dot_count == -1) {
-#ifndef WINDLL
               putc(' ', mesg);
               fflush(mesg);
-#else
-              fprintf(stdout,"%c",' ');
-#endif
               dot_count++;
             }
             dot_count++;
             if (dot_size <= (dot_count + 1) * SBSZ) dot_count = 0;
           }
           if ((verbose || noisy) && dot_size && !dot_count) {
-#ifndef WINDLL
             putc('.', mesg);
             fflush(mesg);
-#else
-            fprintf(stdout,"%c",'.');
-#endif
             mesg_line_started = 1;
           }
         }
@@ -537,12 +524,6 @@ struct zlist far *z;    /* zip entry to compress */
   }
   if (ifile != fbad)
     zclose(ifile);
-#ifdef MMAP
-  if (remain != (ulg)-1L) {
-    munmap((caddr_t) window, window_size);
-    window = NULL;
-  }
-#endif /*MMAP */
 
   tempzn += s;
   p = tempzn; /* save for future fseek() */
