@@ -4228,10 +4228,6 @@ iztimes *z_utim;
 {
   int r;
 
-#ifdef IZ_CHECK_TZ
-  if (!zp_tz_is_valid) return 0;
-#endif
-
   /* First, scan local extra field. */
   r = ef_scan_ut_time(z->extra, z->ext, FALSE, z_utim);
 
@@ -4253,29 +4249,10 @@ int delim;              /* path component separator char */
 {
   char *r;              /* pointer to last path delimiter */
 
-#ifdef VMS                      /* change [w.x.y]z to [w.x]y.DIR */
-  if ((r = MBSRCHR(p, ']')) != NULL)
-  {
-    *r = 0;
-    if ((r = MBSRCHR(p, '.')) != NULL)
-    {
-      *r = ']';
-      strcat(r, ".DIR;1");     /* this assumes a little padding--see PAD */
-    } else {
-      *p = 0;
-    }
-  } else {
-    if ((r = MBSRCHR(p, delim)) != NULL)
-      *r = 0;
-    else
-      *p = 0;
-  }
-#else /* !VMS */
   if ((r = MBSRCHR(p, delim)) != NULL)
     *r = 0;
   else
     *p = 0;
-#endif /* ?VMS */
 }
 
 int trash()
