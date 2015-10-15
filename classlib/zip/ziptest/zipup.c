@@ -399,11 +399,7 @@ struct zlist far *z;    /* zip entry to compress */
       set_type = 1;
   }
   /* Attributes from filetime(), flag bits from set_extra_field(): */
-#if defined(DOS) || defined(OS2) || defined(WIN32)
   z->atx = z->dosflag ? a & 0xff : a | (z->atx & 0x0000ff00);
-#else
-  z->atx = dosify ? a & 0xff : a | (z->atx & 0x0000ff00);
-#endif /* DOS || OS2 || WIN32 */
 
   if ((r = putlocal(z, PUTLOCAL_WRITE)) != ZE_OK) {
     if (ifile != fbad)
@@ -420,13 +416,11 @@ struct zlist far *z;    /* zip entry to compress */
   tempzn += 4 + LOCHEAD + z->nam + z->ext;
 
 
-#if CRYPT
   if (!isdir && key != NULL) {
     crypthead(key, z->crc);
     z->siz += RAND_HEAD_LEN;  /* to be updated later */
     tempzn += RAND_HEAD_LEN;
   }
-#endif /* CRYPT */
   if (ferror(y)) {
     if (ifile != fbad)
       zclose(ifile);
@@ -454,12 +448,6 @@ struct zlist far *z;    /* zip entry to compress */
   else if (m != STORE) {
     if (set_type) z->att = (ush)UNKNOWN;
     /* ... is finally set in file compression routine */
-#ifdef BZIP2_SUPPORT
-    if (m == BZIP2) {
-      s = bzfilecompress(z, &m);
-    }
-    else
-#endif /* BZIP2_SUPPORT */
     {
       s = filecompress(z, &m);
     }
