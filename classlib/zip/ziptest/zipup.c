@@ -93,15 +93,6 @@ int percent(n, m)
 {
   zoff_t p;
 
-#if 0
-  if (n > 0xffffffL)            /* If n >= 16M */
-  {                             /*  then divide n and m by 256 */
-    n += 0x80;  n >>= 8;
-    m += 0x80;  m >>= 8;
-  }
-  return n > m ? (int)(1 + (200 * (n - m)/n)) / 2 : 0;
-#endif
-
 /* 2004-12-01 SMS.
  * Changed to do big-n test only for small zoff_t.
  * Changed big-n arithmetic to accomodate apparently negative values
@@ -142,8 +133,6 @@ int percent(n, m)
   return (int)p;  /* Return (rounded) % reduction. */
 }
 
-
-#ifndef RISCOS
 
 local int suffixes(a, s)
   char *a;                      /* name to check suffix of */
@@ -193,38 +182,6 @@ local int suffixes(a, s)
     }
   return m;
 }
-
-#else /* RISCOS */
-
-local int filetypes(a, s)
-char *a;                        /* extra field of file to check filetype of */
-char *s;                        /* list of filetypes separated by : or ; */
-/* Return true if a is any of the filetypes in the list s. */
-{
- char *p;                       /* pointer into special */
- char typestr[4];               /* filetype hex string taken from a */
-
- if ((((unsigned*)a)[2] & 0xFFF00000) != 0xFFF00000) {
- /* The file is not filestamped, always try to compress it */
-   return 0;
- }
-
- sprintf(typestr,"%.3X",(((unsigned*)a)[2] & 0x000FFF00) >> 8);
-
- for (p=s;p<=s+strlen(s)-3;p+=3) { /* p+=3 to skip 3 hex type */
-   while (*p==':' || *p==';')
-     p++;
-
-   if (typestr[0] == toupper(p[0]) &&
-       typestr[1] == toupper(p[1]) &&
-       typestr[2] == toupper(p[2]))
-     return 1;
- }
- return 0;
-}
-#endif /* ?RISCOS */
-
-
 
 /* Note: a zip "entry" includes a local header (which includes the file
    name), an encryption header if encrypting, the compressed data
