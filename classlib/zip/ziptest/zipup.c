@@ -547,17 +547,11 @@ struct zlist far *z;    /* zip entry to compress */
     /* Try to rewrite the local header with correct information */
     z->crc = crc;
     z->siz = s;
-#if CRYPT
     if (!isdir && key != NULL)
       z->siz += RAND_HEAD_LEN;
-#endif /* CRYPT */
     z->len = isize;
     /* if can seek back to local header */
-#ifdef BROKEN_FSEEK
     if (use_descriptors || !fseekable(y) || zfseeko(y, z->off, SEEK_SET))
-#else
-    if (use_descriptors || zfseeko(y, z->off, SEEK_SET))
-#endif
     {
       if (z->how != (ush) m)
          error("can't rewrite method");
@@ -566,11 +560,7 @@ struct zlist far *z;    /* zip entry to compress */
       if ((r = putextended(z)) != ZE_OK)
         return r;
       /* if Zip64 and not seekable then Zip64 data descriptor */
-#ifdef ZIP64_SUPPORT
       tempzn += (zip64_entry ? 24L : 16L);
-#else
-      tempzn += 16L;
-#endif
       z->flg = z->lflg; /* if z->flg modified by deflate */
     } else {
       /* ftell() not as useful across splits */
