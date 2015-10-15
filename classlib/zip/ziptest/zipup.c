@@ -314,65 +314,6 @@ struct zlist far *z;    /* zip entry to compress */
 
     z->tim = tim;
 
-#if defined(VMS) && defined(VMS_PK_EXTRA)
-    /* vms_get_attributes must be called after vms_open() */
-    if (extra_fields) {
-      /* create extra field and change z->att and z->atx if desired */
-      vms_get_attributes(ifile, z, &f_utim);
-    }
-#endif /* VMS && VMS_PK_EXTRA */
-
-#if defined(MMAP) || defined(BIG_MEM)
-    /* Map ordinary files but not devices. This code should go in fileio.c */
-    if (!translate_eol && m != STORE && q != -1L && (ulg)q > 0 &&
-        (ulg)q + MIN_LOOKAHEAD > (ulg)q) {
-# ifdef MMAP
-      /* Map the whole input file in memory */
-      if (window != NULL)
-        free(window);  /* window can't be a mapped file here */
-      window_size = (ulg)q + MIN_LOOKAHEAD;
-      remain = window_size & (PAGESIZE-1);
-      /* If we can't touch the page beyond the end of file, we must
-       * allocate an extra page.
-       */
-      if (remain > MIN_LOOKAHEAD) {
-        window = (uch*)mmap(0, window_size, PROT_READ, MAP_PRIVATE, ifile, 0);
-      } else {
-        window = (uch*)valloc(window_size - remain + PAGESIZE);
-        if (window != NULL) {
-          window = (uch*)mmap((char*)window, window_size - remain, PROT_READ,
-                        MAP_PRIVATE | MAP_FIXED, ifile, 0);
-        } else {
-          window = (uch*)(-1);
-        }
-      }
-      if (window == (uch*)(-1)) {
-        Trace((mesg, " mmap failure on %s\n", z->name));
-        window = NULL;
-        window_size = 0L;
-        remain = (ulg)-1L;
-      } else {
-        remain = (ulg)q;
-      }
-# else /* !MMAP, must be BIG_MEM */
-      /* Read the whole input file at once */
-      window_size = (ulg)q + MIN_LOOKAHEAD;
-      window = window ? (uch*) realloc(window, (unsigned)window_size)
-                      : (uch*) malloc((unsigned)window_size);
-      /* Just use normal code if big malloc or realloc fails: */
-      if (window != NULL) {
-        remain = (ulg)zread(ifile, (char*)window, q+1);
-        if (remain != (ulg)q) {
-          fprintf(mesg, " q=%lu, remain=%lu ", (ulg)q, remain);
-          error("can't read whole file at once");
-        }
-      } else {
-        window_size = 0L;
-      }
-# endif /* ?MMAP */
-    }
-#endif /* MMAP || BIG_MEM */
-
   } /* strcmp(z->name, "-") == 0 */
 
   if (extra_fields == 2) {
