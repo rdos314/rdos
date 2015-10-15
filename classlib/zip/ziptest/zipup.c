@@ -308,27 +308,6 @@ struct zlist far *z;    /* zip entry to compress */
 
     z->tim = tim;
 
-#if defined(MMAP) || defined(BIG_MEM)
-    /* Map ordinary files but not devices. This code should go in fileio.c */
-    if (!translate_eol && m != STORE && q != -1L && (ulg)q > 0 &&
-        (ulg)q + MIN_LOOKAHEAD > (ulg)q) {
-      /* Read the whole input file at once */
-      window_size = (ulg)q + MIN_LOOKAHEAD;
-      window = window ? (uch*) realloc(window, (unsigned)window_size)
-                      : (uch*) malloc((unsigned)window_size);
-      /* Just use normal code if big malloc or realloc fails: */
-      if (window != NULL) {
-        remain = (ulg)zread(ifile, (char*)window, q+1);
-        if (remain != (ulg)q) {
-          fprintf(mesg, " q=%lu, remain=%lu ", (ulg)q, remain);
-          error("can't read whole file at once");
-        }
-      } else {
-        window_size = 0L;
-      }
-    }
-#endif /* MMAP || BIG_MEM */
-
   } /* strcmp(z->name, "-") == 0 */
 
   if (extra_fields == 2) {
