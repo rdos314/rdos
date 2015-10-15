@@ -1112,21 +1112,6 @@ int readlocal(localz, z)
 
 local char sigbuf[4];   /* signature found */
 
-#if 0 /* currently unused */
-/* copy signature */
-char *copy_sig(copyto, copyfrom)
-  char *copyto;
-  char *copyfrom;
-{
-  int i;
-
-  for (i = 0; i < 4; i++) {
-    copyto[i] = copyfrom[i];
-  }
-  return copyto;
-}
-#endif /* currently unused */
-
 
 local int find_next_signature(f)
   FILE *f;
@@ -1337,8 +1322,6 @@ local int at_signature(f, signature)
   return 0;
 }
 
-
-#ifndef UTIL
 
 local int scanzipf_fixnew()
 /*
@@ -1987,10 +1970,8 @@ local int scanzipf_fixnew()
           zcount++;
  */
 
-#ifndef UTIL
           if (verbose)
             zipoddities(z);
-#endif
 
           current_offset = zftello(y);
 
@@ -2077,8 +2058,6 @@ local int scanzipf_fixnew()
   return ZE_OK;
 
 } /* end of function scanzipf_fixnew() */
-
-#endif /* !UTIL */
 
 
 
