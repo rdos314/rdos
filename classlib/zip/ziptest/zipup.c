@@ -25,111 +25,12 @@
 #include "revision.h"
 #include "crc32.h"
 #include "crypt.h"
-#ifdef USE_ZLIB
-#  include "zlib.h"
-#endif
-#ifdef BZIP2_SUPPORT
-#  ifdef BZIP2_USEBZIP2DIR
-#    include "bzip2/bzlib.h"
-#  else
-#    include "bzlib.h"
-#  endif
-#endif
-
-#ifdef OS2
-#  include "os2/os2zip.h"
-#endif
-
-#if defined(MMAP)
-#  include <sys/mman.h>
-#  ifndef PAGESIZE   /* used to be SYSV, what about pagesize on SVR3 ? */
-#    define PAGESIZE getpagesize()
-#  endif
-#  if defined(NO_VALLOC) && !defined(valloc)
-#    define valloc malloc
-#  endif
-#endif
 
 /* Use the raw functions for MSDOS and Unix to save on buffer space.
    They're not used for VMS since it doesn't work (raw is weird on VMS).
  */
 
-#ifdef AMIGA
-#  include "amiga/zipup.h"
-#endif /* AMIGA */
-
-#ifdef AOSVS
-#  include "aosvs/zipup.h"
-#endif /* AOSVS */
-
-#ifdef ATARI
-#  include "atari/zipup.h"
-#endif
-
-#ifdef __BEOS__
-#  include "beos/zipup.h"
-#endif
-
-#ifdef __ATHEOS__
-#  include "atheos/zipup.h"
-#endif /* __ATHEOS__ */
-
-#ifdef __human68k__
-#  include "human68k/zipup.h"
-#endif /* __human68k__ */
-
-#ifdef MACOS
-#  include "macos/zipup.h"
-#endif
-
-#ifdef DOS
-#  include "msdos/zipup.h"
-#endif /* DOS */
-
-#ifdef NLM
-#  include "novell/zipup.h"
-#  include <nwfattr.h>
-#endif
-
-#ifdef OS2
-#  include "os2/zipup.h"
-#endif /* OS2 */
-
-#ifdef RISCOS
-#  include "acorn/zipup.h"
-#endif
-
-#ifdef TOPS20
-#  include "tops20/zipup.h"
-#endif
-
-#ifdef UNIX
-#  include "unix/zipup.h"
-#endif
-
-#ifdef CMS_MVS
-#  include "zipup.h"
-#endif /* CMS_MVS */
-
-#ifdef TANDEM
-#  include "zipup.h"
-#endif /* TANDEM */
-
-#ifdef VMS
-#  include "vms/zipup.h"
-#endif /* VMS */
-
-#ifdef QDOS
-#  include "qdos/zipup.h"
-#endif /* QDOS */
-
-#ifdef WIN32
-#  include "zipup.h"
-#endif
-
-#ifdef THEOS
-#  include "theos/zipup.h"
-#endif
+#include "zipup.h"
 
 /* Local functions */
 #ifndef RISCOS
