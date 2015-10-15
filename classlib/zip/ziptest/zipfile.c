@@ -3403,36 +3403,11 @@ int putcentral(z)
   extent blocksize = 0; /* size of block */
   uzoff_t off = 0;      /* offset to start of local header */
   ush nam = z->nam;     /* size of name to write to header */
-#ifdef UNICODE_SUPPORT
-  int use_uname = 0;    /* write uname to header */
-#endif
 
-#ifdef ZIP64_SUPPORT        /* zip64 support 09/02/2003 R.Nausedat */
   int iRes;
-#endif
-
-#ifdef UNICODE_SUPPORT
-  if (z->uname) {
-    if (utf8_force) {
-      z->flg |= UTF8_BIT;
-    }
-    if (z->flg & UTF8_BIT) {
-      /* If this flag is set, then restore UTF-8 as path name */
-      use_uname = 1;
-      nam = strlen(z->uname);
-    } else {
-      add_Unicode_Path_cen_extra_field(z);
-    }
-  } else {
-    /* clear UTF-8 bit as not needed */
-    z->flg &= ~UTF8_BIT;
-    z->lflg &= ~UTF8_BIT;
-  }
-#endif
 
   off = z->off;
 
-#ifdef ZIP64_SUPPORT        /* zip64 support 09/02/2003 R.Nausedat */
   if (z->siz > ZIP_UWORD32_MAX || z->len > ZIP_UWORD32_MAX ||
       z->off > ZIP_UWORD32_MAX || z->dsk > ZIP_UWORD16_MAX || (force_zip64 == 1))
   {
@@ -3492,38 +3467,7 @@ int putcentral(z)
     append_ulong_to_mem((ulg)off, &block, &offset, &blocksize); /* offset of local header */
   }
 
-#else /* !ZIP64_SUPPORT */
 
-  append_ulong_to_mem(CENSIG, &block, &offset, &blocksize);     /* central file header signature */
-  append_ushort_to_mem(z->vem, &block, &offset, &blocksize);    /* version made by */
-  append_ushort_to_mem(z->ver, &block, &offset, &blocksize);    /* version needed to extract */
-  append_ushort_to_mem(z->flg, &block, &offset, &blocksize);    /* general purpose bit flag */
-  append_ushort_to_mem(z->how, &block, &offset, &blocksize);    /* compression method */
-  append_ulong_to_mem(z->tim, &block, &offset, &blocksize);     /* last mod file date time */
-  append_ulong_to_mem(z->crc, &block, &offset, &blocksize);     /* crc-32 */
-  append_ulong_to_mem((ulg)z->siz, &block, &offset, &blocksize);  /* compressed size */
-  append_ulong_to_mem((ulg)z->len, &block, &offset, &blocksize);  /* uncompressed size */
-  append_ushort_to_mem(nam, &block, &offset, &blocksize);       /* file name length */
-  append_ushort_to_mem(z->cext, &block, &offset, &blocksize);   /* extra field length */
-  append_ushort_to_mem(z->com, &block, &offset, &blocksize);    /* file comment length */
-  append_ushort_to_mem((ush)z->dsk, &block, &offset, &blocksize); /* disk number start */
-  append_ushort_to_mem(z->att, &block, &offset, &blocksize);    /* internal file attributes */
-  append_ulong_to_mem(z->atx, &block, &offset, &blocksize);     /* external file attributes */
-  append_ulong_to_mem((ulg)off, &block, &offset, &blocksize);   /* relative offset of local header */
-
-#endif /* ZIP64_SUPPORT */
-
-#ifdef EBCDIC
-  if (z->com)
-    memtoasc(z->comment, z->comment, z->com);
-#endif /* EBCDIC */
-
-#ifdef UNICODE_SUPPORT
-  if (use_uname) {
-    /* path is UTF-8 */
-    append_string_to_mem(z->uname, nam, &block, &offset, &blocksize);
-  } else
-#endif
 #ifdef WIN32_OEM
   /* store name in OEM character set in archive */
   if ((z->vem & 0xff00) == 0)
