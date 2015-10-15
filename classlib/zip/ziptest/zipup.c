@@ -33,19 +33,9 @@
 #include "zipup.h"
 
 /* Local functions */
-#ifndef RISCOS
-   local int suffixes OF((char *, char *));
-#else
-   local int filetypes OF((char *, char *));
-#endif
+local int suffixes OF((char *, char *));
 local unsigned file_read OF((char *buf, unsigned size));
-#ifdef USE_ZLIB
-  local int zl_deflate_init OF((int pack_level));
-#else /* !USE_ZLIB */
-# ifdef ZP_NEED_MEMCOMPR
-    local unsigned mem_read OF((char *buf, unsigned size));
-# endif
-#endif /* ?USE_ZLIB */
+local unsigned mem_read OF((char *buf, unsigned size));
 
 /* zip64 support 08/29/2003 R.Nausedat */
 local zoff_t filecompress OF((struct zlist far *z_entry, int *cmpr_method));
