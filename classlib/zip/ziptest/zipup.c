@@ -747,7 +747,6 @@ local unsigned file_read(buf, size)
   return len;
 }
 
-# ifdef ZP_NEED_MEMCOMPR
 /* ===========================================================================
  * In-memory read function. As opposed to file_read(), this function
  * does not perform end-of-line translation, and does not update the
@@ -771,7 +770,6 @@ local unsigned mem_read(b, bsize)
         return 0; /* end of input */
     }
 }
-# endif /* ZP_NEED_MEMCOMPR */
 
 
 /* ===========================================================================
@@ -811,162 +809,6 @@ local zoff_t filecompress(z_entry, cmpr_method)
     struct zlist far *z_entry;
     int *cmpr_method;
 {
-#ifdef USE_ZLIB
-    int err = Z_OK;
-    unsigned mrk_cnt = 1;
-    int maybe_stored = FALSE;
-    ulg cmpr_size;
-#if defined(MMAP) || defined(BIG_MEM)
-    unsigned ibuf_sz = (unsigned)SBSZ;
-#else
-#   define ibuf_sz ((unsigned)SBSZ)
-#endif
-#ifndef OBUF_SZ
-#  define OBUF_SZ ZBSZ
-#endif
-    unsigned u;
-
-#if defined(MMAP) || defined(BIG_MEM)
-    if (remain == (ulg)-1L && f_ibuf == NULL)
-#else /* !(MMAP || BIG_MEM */
-    if (f_ibuf == NULL)
-#endif /* MMAP || BIG_MEM */
-        f_ibuf = (char *)malloc(SBSZ);
-    if (f_obuf == NULL)
-        f_obuf = (char *)malloc(OBUF_SZ);
-#if defined(MMAP) || defined(BIG_MEM)
-    if ((remain == (ulg)-1L && f_ibuf == NULL) || f_obuf == NULL)
-#else /* !(MMAP || BIG_MEM */
-    if (f_ibuf == NULL || f_obuf == NULL)
-#endif /* MMAP || BIG_MEM */
-        ziperr(ZE_MEM, "allocating zlib file-I/O buffers");
-
-    if (!deflInit) {
-        err = zl_deflate_init(level);
-        if (err != ZE_OK)
-            ziperr(err, errbuf);
-    }
-
-    if (level <= 2) {
-        z_entry->flg |= 4;
-    } else if (level >= 8) {
-        z_entry->flg |= 2;
-    }
-#if defined(MMAP) || defined(BIG_MEM)
-    if (remain != (ulg)-1L) {
-        zstrm.next_in = (Bytef *)window;
-        ibuf_sz = (unsigned)WSIZE;
-    } else
-#endif /* MMAP || BIG_MEM */
-    {
-        zstrm.next_in = (Bytef *)f_ibuf;
-    }
-    zstrm.avail_in = file_read(zstrm.next_in, ibuf_sz);
-    if (zstrm.avail_in < ibuf_sz) {
-        unsigned more = file_read(zstrm.next_in + zstrm.avail_in,
-                                  (ibuf_sz - zstrm.avail_in));
-        if (more == EOF || more == 0) {
-            maybe_stored = TRUE;
-        } else {
-            zstrm.avail_in += more;
-        }
-    }
-    zstrm.next_out = (Bytef *)f_obuf;
-    zstrm.avail_out = OBUF_SZ;
-
-    if (!maybe_stored) while (zstrm.avail_in != 0 && zstrm.avail_in != EOF) {
-        err = deflate(&zstrm, Z_NO_FLUSH);
-        if (err != Z_OK && err != Z_STREAM_END) {
-            sprintf(errbuf, "unexpected zlib deflate error %d", err);
-            ziperr(ZE_LOGIC, errbuf);
-        }
-        if (zstrm.avail_out == 0) {
-            if (zfwrite(f_obuf, 1, OBUF_SZ) != OBUF_SZ) {
-                ziperr(ZE_TEMP, "error writing to zipfile");
-            }
-            zstrm.next_out = (Bytef *)f_obuf;
-            zstrm.avail_out = OBUF_SZ;
-        }
-        if (zstrm.avail_in == 0) {
-            if (verbose || noisy)
-                while((unsigned)(zstrm.total_in / (uLong)WSIZE) > mrk_cnt) {
-                    mrk_cnt++;
-                    if (!display_globaldots) {
-                      if (dot_size > 0) {
-                        /* initial space */
-                        if (noisy && dot_count == -1) {
-#ifndef WINDLL
-                          putc(' ', mesg);
-                          fflush(mesg);
-#else
-                          fprintf(stdout,"%c",' ');
-#endif
-                          dot_count++;
-                        }
-                        dot_count++;
-                        if (dot_size <= (dot_count + 1) * WSIZE) dot_count = 0;
-                      }
-                      if (noisy && dot_size && !dot_count) {
-#ifndef WINDLL
-                        putc('.', mesg);
-                        fflush(mesg);
-#else
-                        fprintf(stdout,"%c",'.');
-#endif
-                        mesg_line_started = 1;
-                      }
-                    }
-                }
-#if defined(MMAP) || defined(BIG_MEM)
-            if (remain == (ulg)-1L)
-                zstrm.next_in = (Bytef *)f_ibuf;
-#else
-            zstrm.next_in = (Bytef *)f_ibuf;
-#endif
-            zstrm.avail_in = file_read(zstrm.next_in, ibuf_sz);
-        }
-    }
-
-    do {
-        err = deflate(&zstrm, Z_FINISH);
-        if (maybe_stored) {
-            if (err == Z_STREAM_END && zstrm.total_out >= zstrm.total_in &&
-                fseekable(zipfile)) {
-                /* deflation does not reduce size, switch to STORE method */
-                unsigned len_out = (unsigned)zstrm.total_in;
-                if (zfwrite(f_ibuf, 1, len_out) != len_out) {
-                    ziperr(ZE_TEMP, "error writing to zipfile");
-                }
-                zstrm.total_out = (uLong)len_out;
-                *cmpr_method = STORE;
-                break;
-            } else {
-                maybe_stored = FALSE;
-            }
-        }
-        if (zstrm.avail_out < OBUF_SZ) {
-            unsigned len_out = OBUF_SZ - zstrm.avail_out;
-            if (zfwrite(f_obuf, 1, len_out) != len_out) {
-                ziperr(ZE_TEMP, "error writing to zipfile");
-            }
-            zstrm.next_out = (Bytef *)f_obuf;
-            zstrm.avail_out = OBUF_SZ;
-        }
-    } while (err == Z_OK);
-
-    if (err != Z_STREAM_END) {
-        sprintf(errbuf, "unexpected zlib deflate error %d", err);
-        ziperr(ZE_LOGIC, errbuf);
-    }
-
-    if (z_entry->att == (ush)UNKNOWN)
-        z_entry->att = (ush)(zstrm.data_type == Z_ASCII ? ASCII : BINARY);
-    cmpr_size = (ulg)zstrm.total_out;
-
-    if ((err = deflateReset(&zstrm)) != Z_OK)
-        ziperr(ZE_LOGIC, "zlib deflateReset failed");
-    return cmpr_size;
-#else /* !USE_ZLIB */
 
     /* Set the defaults for file compression. */
     read_buf = file_read;
@@ -976,7 +818,6 @@ local zoff_t filecompress(z_entry, cmpr_method)
     ct_init(&z_entry->att, cmpr_method);
     lm_init(level, &z_entry->flg);
     return deflate();
-#endif /* ?USE_ZLIB */
 }
 
 #ifdef ZP_NEED_MEMCOMPR
