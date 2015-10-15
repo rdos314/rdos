@@ -737,7 +737,6 @@ local unsigned file_read(buf, size)
   return len;
 }
 
-# ifdef ZP_NEED_MEMCOMPR
 /* ===========================================================================
  * In-memory read function. As opposed to file_read(), this function
  * does not perform end-of-line translation, and does not update the
@@ -761,7 +760,6 @@ local unsigned mem_read(b, bsize)
         return 0; /* end of input */
     }
 }
-# endif /* ZP_NEED_MEMCOMPR */
 
 
 /* ===========================================================================
@@ -806,29 +804,17 @@ local zoff_t filecompress(z_entry, cmpr_method)
     unsigned mrk_cnt = 1;
     int maybe_stored = FALSE;
     ulg cmpr_size;
-#if defined(MMAP) || defined(BIG_MEM)
-    unsigned ibuf_sz = (unsigned)SBSZ;
-#else
 #   define ibuf_sz ((unsigned)SBSZ)
-#endif
 #ifndef OBUF_SZ
 #  define OBUF_SZ ZBSZ
 #endif
     unsigned u;
 
-#if defined(MMAP) || defined(BIG_MEM)
-    if (remain == (ulg)-1L && f_ibuf == NULL)
-#else /* !(MMAP || BIG_MEM */
     if (f_ibuf == NULL)
-#endif /* MMAP || BIG_MEM */
         f_ibuf = (char *)malloc(SBSZ);
     if (f_obuf == NULL)
         f_obuf = (char *)malloc(OBUF_SZ);
-#if defined(MMAP) || defined(BIG_MEM)
-    if ((remain == (ulg)-1L && f_ibuf == NULL) || f_obuf == NULL)
-#else /* !(MMAP || BIG_MEM */
     if (f_ibuf == NULL || f_obuf == NULL)
-#endif /* MMAP || BIG_MEM */
         ziperr(ZE_MEM, "allocating zlib file-I/O buffers");
 
     if (!deflInit) {
@@ -842,12 +828,6 @@ local zoff_t filecompress(z_entry, cmpr_method)
     } else if (level >= 8) {
         z_entry->flg |= 2;
     }
-#if defined(MMAP) || defined(BIG_MEM)
-    if (remain != (ulg)-1L) {
-        zstrm.next_in = (Bytef *)window;
-        ibuf_sz = (unsigned)WSIZE;
-    } else
-#endif /* MMAP || BIG_MEM */
     {
         zstrm.next_in = (Bytef *)f_ibuf;
     }
@@ -885,24 +865,15 @@ local zoff_t filecompress(z_entry, cmpr_method)
                       if (dot_size > 0) {
                         /* initial space */
                         if (noisy && dot_count == -1) {
-#ifndef WINDLL
-                          putc(' ', mesg);
-                          fflush(mesg);
-#else
                           fprintf(stdout,"%c",' ');
-#endif
                           dot_count++;
                         }
                         dot_count++;
                         if (dot_size <= (dot_count + 1) * WSIZE) dot_count = 0;
                       }
                       if (noisy && dot_size && !dot_count) {
-#ifndef WINDLL
                         putc('.', mesg);
                         fflush(mesg);
-#else
-                        fprintf(stdout,"%c",'.');
-#endif
                         mesg_line_started = 1;
                       }
                     }
