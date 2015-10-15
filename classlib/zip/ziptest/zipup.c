@@ -143,20 +143,8 @@ local int suffixes(a, s)
   char *p;                      /* pointer into special */
   char *q;                      /* pointer into name a */
 
-#ifdef QDOS
-  short dlen = devlen(a);
-  a = a + dlen;
-#endif
-
   m = 1;
-#ifdef VMS
-  if( (q = strrchr(a,';')) != NULL )    /* Cut out VMS file version */
-    --q;
-  else
-    q = a + strlen(a) - 1;
-#else /* !VMS */
   q = a + strlen(a) - 1;
-#endif /* ?VMS */
   for (p = s + strlen(s) - 1; p >= s; p--)
     if (*p == ':' || *p == ';')
     {
@@ -165,14 +153,7 @@ local int suffixes(a, s)
       else
       {
         m = 1;
-#ifdef VMS
-        if( (q = strrchr(a,';')) != NULL )      /* Cut out VMS file version */
-          --q;
-        else
-          q = a + strlen(a) - 1;
-#else /* !VMS */
         q = a + strlen(a) - 1;
-#endif /* ?VMS */
       }
     }
     else
@@ -217,14 +198,6 @@ struct zlist far *z;    /* zip entry to compress */
   char *tempextra = NULL;
   char *tempcextra = NULL;
 
-
-#ifdef WINDLL
-# ifdef ZIP64_SUPPORT
-  extern _int64 filesize64;
-  extern unsigned long low;
-  extern unsigned long high;
-#  endif
-#endif
 
   z->nam = strlen(z->iname);
   isdir = z->iname[z->nam-1] == (char)0x2f; /* ascii[(unsigned)('/')] */
