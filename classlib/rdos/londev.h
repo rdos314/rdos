@@ -34,7 +34,7 @@ class TLonDevice : public TDevice
 {
 public:
 	TLonDevice(int lonid);
-	~TLonDevice();
+	virtual ~TLonDevice();
 
 	virtual void NotifyMsg(char *msg, int size);
 
