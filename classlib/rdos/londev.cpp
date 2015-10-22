@@ -80,6 +80,22 @@ TLonDevice::~TLonDevice()
 
 /*##########################################################################
 #
+#   Name       : TLonDevice::SendMsg
+#
+#   Purpose....: Send a message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::SendMsg(const char *msg, int size)
+{
+    RdosSendLonModuleMsg(FLonHandle, msg, size);
+}
+
+/*##########################################################################
+#
 #   Name       : TLonDevice::NotifyMsg
 #
 #   Purpose....: Notify message
@@ -112,13 +128,18 @@ void TLonDevice::Execute()
 
     while (FInstalled)
     {
-        RdosWaitTimeout(wait, 1000);
-
-        if (RdosHasLonModuleMsg(FLonHandle))
+        if (IsOpen())
         {
-            size = RdosReceiveLonModuleMsg(FLonHandle, buf);
-            NotifyMsg(buf, size);
+            RdosWaitTimeout(wait, 1000);
+
+            if (RdosHasLonModuleMsg(FLonHandle))
+            {
+                size = RdosReceiveLonModuleMsg(FLonHandle, buf);
+                NotifyMsg(buf, size);
+            }
         }
+        else
+            RdosWaitMilli(100);
     }
 
     RdosCloseWait(wait);
