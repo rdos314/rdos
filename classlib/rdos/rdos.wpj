@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
-192
-0
+1566
+526
 8192
-8808
+8806
 2
 MProject
 3
@@ -29,7 +29,7 @@ VComponent
 8
 WRect
 384
-502
+497
 5632
 4096
 0
@@ -39,5 +39,5 @@ WFileName
 8
 rdos.tgt
 0
-17
+0
 7
