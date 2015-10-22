@@ -89,7 +89,7 @@ TLonDevice::~TLonDevice()
 #   Returns....: *
 #
 ##########################################################################*/
-void TLonDevice::NotifyMsg(char *msg, int size)
+void TLonDevice::NotifyMsg(const char *msg, int size)
 {
 }
 

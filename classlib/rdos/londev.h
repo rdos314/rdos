@@ -36,7 +36,7 @@ public:
 	TLonDevice(int lonid);
 	virtual ~TLonDevice();
 
-	virtual void NotifyMsg(char *msg, int size);
+	virtual void NotifyMsg(const char *msg, int size);
 
 protected:
 	virtual void Execute();
