@@ -39,6 +39,8 @@ public:
 	virtual void NotifyMsg(char *msg, int size);
 
 protected:
+	virtual void Execute();
+
     int FLonHandle;
     int FLonId;
 };

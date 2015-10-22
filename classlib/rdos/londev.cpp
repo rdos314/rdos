@@ -25,6 +25,7 @@
 #
 ########################################################################*/
 
+#include <stdio.h>
 #include "rdos.h"
 #include "londev.h"
 
@@ -41,8 +42,16 @@
 ##########################################################################*/
 TLonDevice::TLonDevice(int lonid)
 {
+    char str[80];
+    
     FLonId = lonid;
-    FLonHandle = 0;
+    FLonHandle = RdosOpenLonModule(lonid, 20, 10);
+
+    if (FLonHandle)
+    {
+        sprintf(str, "Lon Handler #%s", lonid);
+        Start(str, 0x6000);
+    }
 }
 
 /*##########################################################################
@@ -59,7 +68,14 @@ TLonDevice::TLonDevice(int lonid)
 TLonDevice::~TLonDevice()
 {
     if (FLonHandle)
+    {
+        Stop();
+
+        while (IsRunning())
+            RdosWaitMilli(25);
+            
         RdosCloseLonModule(FLonHandle);
+    }
 }
 
 /*##########################################################################
@@ -75,4 +91,36 @@ TLonDevice::~TLonDevice()
 ##########################################################################*/
 void TLonDevice::NotifyMsg(char *msg, int size)
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::Execute
+#
+#   Purpose....: Message handler loop
+#
+##########################################################################*/
+void TLonDevice::Execute()
+{
+    char *buf;
+    int size;
+    int wait = RdosCreateWait();
+
+    buf = new char[255];
+
+    RdosAddWaitForLonModule(wait, FLonHandle, (int)this);
+
+    while (FInstalled)
+    {
+        RdosWaitTimeout(wait, 1000);
+
+        if (RdosHasLonModuleMsg(FLonHandle))
+        {
+            size = RdosReceiveLonModuleMsg(FLonHandle, buf);
+            NotifyMsg(buf, size);
+        }
+    }
+
+    RdosCloseWait(wait);
+    delete buf;
 }
