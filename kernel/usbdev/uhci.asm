@@ -2666,6 +2666,55 @@ attach_thread:
     GetThread
     mov ds:[di].usb_attach_thread_arr,ax
 ;
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg1
+    add dx,di    
+;
+    in ax,dx
+    or ax,200h
+    out dx,ax
+;
+    mov ax,50
+    WaitMilliSec
+;
+    LockUsb
+;
+    in ax,dx
+    and ax,NOT 200h
+    out dx,ax
+;
+    push cx
+    mov cx,10
+
+atLoop:
+    in ax,dx
+    test ax,4
+    clc
+    jnz atNotify
+;
+    or ax,4
+    out dx,ax
+    loop atLoop
+;
+    pop cx
+    stc
+    jmp atDone
+
+atNotify:
+    pop cx
+;    
+    mov ax,200
+    WaitMilliSec
+;
+    in ax,dx
+    test al,1
+    jz atUnlock
+;
+    xor ah,1
+    and ah,1
+    mov al,bl
+;
+	push ax
     push di
     mov eax,SIZE usb_function_struc
     AllocateSmallGlobalMem
@@ -2674,15 +2723,20 @@ attach_thread:
     xor al,al
     rep stosb
     pop di
+	pop ax
 ;
-    mov es:usbf_speed,bh
-    mov es:usbf_port,bl
+    mov es:usbf_speed,ah
+    mov es:usbf_port,al
     mov es:usbf_slot,0
     mov es:usbf_address,0
 ;
-    LockUsb
     NotifyUsbAttach
-;
+    jmp atDone
+
+atUnlock:
+    UnlockUsb    
+
+atDone:
     mov ds:[di].usb_attach_thread_arr,0
     TerminateThread
     
@@ -2746,11 +2800,46 @@ reset_thread:
     mov al,cl
     NotifyUsbDetach
 ;    
-    LockUsb
-;    
     mov dx,ds:uhc_io_base
     add dx,PortscReg1
     add dx,si    
+;
+    in ax,dx
+    or ax,200h
+    out dx,ax
+;
+    mov ax,50
+    WaitMilliSec
+;    
+    LockUsb
+;
+    in ax,dx
+    and ax,NOT 200h
+    out dx,ax
+;
+    push cx
+    mov cx,10
+
+rtLoop:
+    in ax,dx
+    test ax,4
+    clc
+    jnz rtNotify
+;
+    or ax,4
+    out dx,ax
+    loop rtLoop
+;
+    pop cx
+    stc
+    jmp rtDone
+
+rtNotify:    
+    pop cx
+;
+    mov ax,200
+    WaitMilliSec
+;    
     in ax,dx
     test al,1
     jz rtUnlock
@@ -2775,7 +2864,6 @@ reset_thread:
     mov es:usbf_slot,0
     mov es:usbf_address,0
 ;
-    LockUsb
     NotifyUsbAttach
     jmp rtDone
 
@@ -2834,42 +2922,6 @@ UpdatePort   Proc near
     or bx,ds:[si].usb_reset_thread_arr
     jnz upCheckTimeout
 ;
-    in ax,dx
-    or ax,200h
-    out dx,ax
-;
-    mov ax,50
-    WaitMilliSec
-;
-    in ax,dx
-    and ax,NOT 200h
-    out dx,ax
-;
-    push cx
-    mov cx,10
-
-uprLoop:
-    in ax,dx
-    test ax,4
-    clc
-    jnz uprNotify
-;
-    or ax,4
-    out dx,ax
-    loop uprLoop
-;
-    pop cx
-    stc
-    jmp upDone
-
-uprNotify:
-    push ax
-    mov ax,200
-    WaitMilliSec
-    pop ax
-;    
-    pop cx
-;
     mov ds:[si].usb_reset_thread_arr,-1
     GetSystemTime
     add eax,1193 * 2500
@@ -2910,40 +2962,6 @@ upAttach:
     or bx,ds:[si].usb_reset_thread_arr
     jnz upCheckTimeout
 ;
-    or ax,200h
-    out dx,ax
-;
-    mov ax,50
-    WaitMilliSec
-;
-    in ax,dx
-    and ax,NOT 200h
-    out dx,ax
-;
-    push cx
-    mov cx,10
-
-epLoop:
-    in ax,dx
-    test ax,4
-    clc
-    jnz epNotify
-;
-    or ax,4
-    out dx,ax
-    loop epLoop
-;
-    pop cx
-    stc
-    jmp upDone
-
-epNotify:
-    push ax
-    mov ax,200
-    WaitMilliSec
-    pop ax
-;    
-    pop cx
     xor ah,1
     and ah,1
     mov al,cl

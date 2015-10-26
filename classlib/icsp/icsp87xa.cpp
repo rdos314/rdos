@@ -281,6 +281,7 @@ int TIcsp87Xa::DoProgram()
                 if (!ok)
                 {
                 	RdosResetICSP(FHandle);
+    				RdosWaitMilli(25);
                 	adr = 0;
         			ptr = buf;
                             
@@ -304,7 +305,7 @@ int TIcsp87Xa::DoProgram()
 		    			adr++;
 			    	}
 				    SendCmd(CMD_PROGRAM_ERASE);
-    				RdosWaitMilli(8);
+    				RdosWaitMilli(25);
 	    			SendCmd(CMD_END_PROGRAM);
 		    		SendCmd(CMD_INCR_ADDRESS);
 			    }
