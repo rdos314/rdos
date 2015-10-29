@@ -2304,7 +2304,7 @@ typedef struct LonNmUpdateAliasRequest
 typedef struct LonNmUpdateDomainRequest
 {
     unsigned char     Index;
-    LonDomain   Domain;
+    LonDomain         Domain;
 } LonNmUpdateDomainRequest;
 
 /*
@@ -2405,19 +2405,15 @@ typedef union LonExplicitData        /* Message data                            
     LonNmReadMemoryRequest      ReadMemory;
     LonNmWriteMemoryRequest     WriteMemory;
     LonNmQuerySiDataRequest     QuerySiDataRequest;
-#if LON_NM_QUERY_FUNCTIONS
     LonNmQueryDomainRequest     QueryDomainRequest;
     LonNmQueryNvAliasRequest    QueryNvAliasRequest;
     LonNmQueryAddressRequest    QueryAddressRequest;
     LonNdQueryStatusResponse    QueryStatusResponse;
     LonNdQueryXcvrResponse      QueryXcvrStatusResponse;
-#endif  /* LON_NM_QUERY_FUNCTIONS */
-#if LON_NM_UPDATE_FUNCTIONS
     LonNmUpdateAddressRequest   UpdateAddressRequest;
     LonNmUpdateDomainRequest    UpdateDomainRequest;
     LonNmUpdateNvRequest        UpdateNvRequest;
     LonNmUpdateAliasRequest     UpdateAliasRequest;
-#endif  /* LON_NM_UPDATE_FUNCTIONS */
 } LonExplicitData;
  
 typedef struct LonExplicitMessage
@@ -2426,9 +2422,7 @@ typedef struct LonExplicitMessage
     unsigned char      Attributes_2;   /* contains priority, path, completionCode, explicitAddressing, altPath, pool, response. Use LON_-_* macros */
     unsigned char      Length;         /* Length of message code and data to follow    */
     /* not including any explicit address field.    */
-#if LON_EXPLICIT_ADDRESSING
     LonExplicitAddress  Address; /* Optional explicit addressing information   */
-#endif  /* LON_EXPLICIT_ADDRESSING */
     unsigned char      Code;           /* Message code                                 */
     LonExplicitData    Data;
 } LonExplicitMessage;
@@ -2491,9 +2485,7 @@ typedef struct LonNvMessage
 
     unsigned char             Length;             /* Length of network variable data to follow    */
     /* not including any explicit address field.    */
-#if LON_EXPLICIT_ADDRESSING
-    LonExplicitAddress  Address;   /* Optional explicit addressing information   */
-#endif
+    LonExplicitAddress        Address;            /* Optional explicit addressing information   */
     unsigned char             Index;              /* NV index                                     */
     unsigned char             AliasIndex;         /* Alias index.                                 */
     unsigned char             NvData[1];          /* "length" bytes of NV data                    */
