@@ -170,25 +170,25 @@ typedef LON_STRUCT_BEGIN(LdvDriverStatus)
 {
     LdvDriverState      DriverState;
     LdvRxStates         RxState;
-    LonByte             RxBufferReadyIndex;     /* Receive buffer index which contains an incoming message */
-    LonByte             RxBufferReceiveIndex;   /* Receive buffer index which is in the process of receiving 
+    unsigned char             RxBufferReadyIndex;     /* Receive buffer index which contains an incoming message */
+    unsigned char             RxBufferReceiveIndex;   /* Receive buffer index which is in the process of receiving 
                                                  * an incoming message */
-    LonByte             RxNextFree;             /* Position into the receive buffer where the next incoming
+    unsigned char             RxNextFree;             /* Position into the receive buffer where the next incoming
                                                  * byte will be stored */
-    LonByte             RxPayloadLen;           /* Size of the incoming message payload */
+    unsigned char             RxPayloadLen;           /* Size of the incoming message payload */
     LdvTxStates         TxState;
     LdvTxStates         TxNextState;
-    LonByte             TxBufferEmptyIndex;     /* Transmit buffer index which is empty */
-    LonByte             TxBufferTransmitIndex;  /* Transmit buffer index which is in the process of
+    unsigned char             TxBufferEmptyIndex;     /* Transmit buffer index which is empty */
+    unsigned char             TxBufferTransmitIndex;  /* Transmit buffer index which is in the process of
                                                  * transmitting an outgoing message */
-    LonByte             TxNextChar;             /* Position into the transmit buffer where the next byte to be
+    unsigned char             TxNextChar;             /* Position into the transmit buffer where the next byte to be
                                                  * transmitted is stored */
-    LonByte             TxPayloadLen;           /* Size of the outgoing message payload */
-    const LonByte*      pTxMsg;                 /* Pointer to the message being transmitted or to be transmitted */
-    LonByte             RxTimeout;              /* Receiver timer. If the receiver timer expires while waiting
+    unsigned char             TxPayloadLen;           /* Size of the outgoing message payload */
+    const unsigned char*      pTxMsg;                 /* Pointer to the message being transmitted or to be transmitted */
+    unsigned char             RxTimeout;              /* Receiver timer. If the receiver timer expires while waiting
                                                  * for an incoming message, abort the ongoing receive transaction
                                                  * and reset the SCI */
-    LonByte             DrvWakeupTime;          /* A period of time the driver waits before bringing the SCI back
+    unsigned char             DrvWakeupTime;          /* A period of time the driver waits before bringing the SCI back
                                                  * to normal after resetting the SCI */
     LonUbits32          KeepAliveTimeout;       /* Keep-alive timer. If there is no activity on the serial lines for
                                                  * an extended period of time, nudge the Micro Server to tell it that the 
@@ -210,7 +210,7 @@ typedef LON_ENUM_BEGIN(LdvRxBufferState)
 typedef LON_STRUCT_BEGIN(LdvSysRxBuffer)
 {
     LdvRxBufferState    State;
-    LonByte             Data[LDV_RXBUFSIZE];
+    unsigned char             Data[LDV_RXBUFSIZE];
 } LON_STRUCT_END(LdvSysRxBuffer);
 
 /* Transmit buffer state    */
@@ -226,7 +226,7 @@ typedef LON_ENUM_BEGIN(LdvTxBufferState)
 typedef LON_STRUCT_BEGIN(LdvSysTxBuffer)
 {
     LdvTxBufferState    State;
-    LonByte             Data[LDV_TXBUFSIZE];
+    unsigned char             Data[LDV_TXBUFSIZE];
 } LON_STRUCT_END(LdvSysTxBuffer);
 
 /* Types of index used for incrementing. See function CyclicIncrement */

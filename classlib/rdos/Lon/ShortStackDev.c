@@ -29,7 +29,7 @@
  *  Self-identification data
  *  DO NOT EDIT
  */
-static const LonByte siData[] =
+static const unsigned char siData[] =
 {
     0x00, 0x09, 0x00, 0x00, 0x00, 0x00, 0x7F, 0x00, 
     0x7F
@@ -39,7 +39,7 @@ static const LonByte siData[] =
  *  Application initialization data
  *  DO NOT EDIT
  */
-static const LonByte appInitData[] =
+static const unsigned char appInitData[] =
 {
     /* 16-bit application signature: */
     LON_APP_SIGNATURE/256u, LON_APP_SIGNATURE%256u,
@@ -63,13 +63,13 @@ static const LonMtDescription mtTable[] =
     TRUE      /* tag only allows for explicit addressing */
 }; /* end of MT table */
 
-const LonByte* LonGetSiData(unsigned* pLength)
+const unsigned char* LonGetSiData(unsigned* pLength)
 {
     *pLength = (unsigned)sizeof(siData);
     return siData;
 }
 
-const LonByte* LonGetAppInitData(void)
+const unsigned char* LonGetAppInitData(void)
 {
     return appInitData;
 }

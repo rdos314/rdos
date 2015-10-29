@@ -298,7 +298,7 @@ const LonApiError LonNvdDeserializeNvs(void)
  */
 void LonMsgArrived(const LonReceiveAddress* const pAddress, const LonCorrelator correlator, 
                    const LonBool priority, const LonServiceType serviceType, const LonBool authenticated, 
-                   const LonByte code, const LonByte* const pData, const unsigned dataLength)
+                   const unsigned char code, const unsigned char* const pData, const unsigned dataLength)
 {
     /* 
      * TO DO
@@ -320,8 +320,8 @@ void LonMsgArrived(const LonReceiveAddress* const pAddress, const LonCorrelator 
  * This callback occurs when a message arrives in response to an earlier request, 
  * sent with the <LonSendMsg> API.
  */
-void LonResponseArrived(const LonResponseAddress* const pAddress, const unsigned tag, const LonByte code, 
-                        const LonByte* const pData, const unsigned dataLength)
+void LonResponseArrived(const LonResponseAddress* const pAddress, const unsigned tag, const unsigned char code, 
+                        const unsigned char* const pData, const unsigned dataLength)
 {
     /*
      * TO DO
@@ -781,7 +781,7 @@ void LonVersionReceived(unsigned appMajor, unsigned appMinor, unsigned appBuild,
  * excessive or out-of-sync link layer bit rates.
  * This callback is part of the optional utility API (LON_UTILITY_FUNCTIONS).
  */
-void LonEchoReceived(const LonByte data[LON_ECHO_SIZE]) 
+void LonEchoReceived(const unsigned char data[LON_ECHO_SIZE]) 
 {
     /* 
      * TO DO

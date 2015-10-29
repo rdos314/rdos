@@ -23,12 +23,12 @@
 #include "ShortStackIsiApi.h"
 #include "ShortStackApi.h"
 
-static LonByte IsiSequenceNumber = 0x80;
+static unsigned char IsiSequenceNumber = 0x80;
 
 /*
  * Internal functions 
  */
-LonApiError SendDownlinkRpc(IsiDownlinkRpcCode code, LonByte param1, LonByte param2, void* pData, unsigned len);
+LonApiError SendDownlinkRpc(IsiDownlinkRpcCode code, unsigned char param1, unsigned char param2, void* pData, unsigned len);
 void HandleDownlinkRpcAck(IsiRpcMessage* pMsg, LonBool bSuccess);
 void HandleUplinkRpc(IsiRpcMessage* pMsg);
 
@@ -38,7 +38,7 @@ void HandleUplinkRpc(IsiRpcMessage* pMsg);
  * This function handles making an ISI call down to the Micro Server.
  * It returns an error if a buffer can't be allocated.
  */
-LonApiError SendDownlinkRpc(IsiDownlinkRpcCode code, LonByte param1, LonByte param2, void* pData, unsigned len)
+LonApiError SendDownlinkRpc(IsiDownlinkRpcCode code, unsigned char param1, unsigned char param2, void* pData, unsigned len)
 {
     LonApiError result = LonApiNoError;
     IsiRpcMessage* pMsg;
@@ -68,8 +68,8 @@ LonApiError SendDownlinkRpc(IsiDownlinkRpcCode code, LonByte param1, LonByte par
  */
 void HandleDownlinkRpcAck(IsiRpcMessage* pMsg, LonBool bSuccess)
 {
-    LonByte param1 = pMsg->Parameters[0];
-    LonByte param2 = pMsg->Parameters[1];
+    unsigned char param1 = pMsg->Parameters[0];
+    unsigned char param2 = pMsg->Parameters[1];
 
     if (bSuccess) 
     {
@@ -120,10 +120,10 @@ void HandleDownlinkRpcAck(IsiRpcMessage* pMsg, LonBool bSuccess)
  */
 void HandleUplinkRpc(IsiRpcMessage* pMsg)
 {
-    LonByte returnValue = 0;
+    unsigned char returnValue = 0;
     LonSmipCmd returnCommand = LonIsiAck;
-    LonByte param1 = pMsg->Parameters[0];
-    LonByte param2 = pMsg->Parameters[1];
+    unsigned char param1 = pMsg->Parameters[0];
+    unsigned char param2 = pMsg->Parameters[1];
     IsiRpcMessage* pResp;
     
     if (!(pMsg->RpcCode & IsiRpcUnacknowledged)) 
@@ -197,8 +197,8 @@ void HandleUplinkRpc(IsiRpcMessage* pMsg)
         #ifdef ISI_HOST_GETPRIMARYDID
         case IsiRpcGetPrimaryDid:
         {
-            const LonByte* p;
-            p = (LonByte*) IsiGetPrimaryDid((unsigned*) &returnValue);
+            const unsigned char* p;
+            p = (unsigned char*) IsiGetPrimaryDid((unsigned*) &returnValue);
             memcpy(&(pResp->RpcData.Data), p, returnValue);
             pResp->RpcData.Length = returnValue;
             break;
@@ -227,8 +227,8 @@ void HandleUplinkRpc(IsiRpcMessage* pMsg)
         
         case IsiRpcGetConnection:
         {
-            const LonByte* p;
-            p = (LonByte*) IsiGetConnection(param1);
+            const unsigned char* p;
+            p = (unsigned char*) IsiGetConnection(param1);
             memcpy(&(pResp->RpcData.Data), p, sizeof(IsiConnection));
             pResp->RpcData.Length = sizeof(IsiConnection);
             break;

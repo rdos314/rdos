@@ -231,7 +231,7 @@ extern volatile void* const LonGetNvValue(const unsigned index);
  * in the 0x00..0x2f range.
  */
 extern const LonApiError LonSendResponse(const LonCorrelator correlator, 
-          const LonByte code, const LonByte* const pData, const unsigned length);
+          const unsigned char code, const unsigned char* const pData, const unsigned length);
 
 /*
  * Function: LonGetUniqueId
@@ -283,9 +283,9 @@ extern const LonApiError LonSendResponse(const LonCorrelator correlator,
  * to the same data.
  */
 #ifdef __cplusplus
-extern "C" const LonApiError LonGetVersion(LonByte* const pVersion);
+extern "C" const LonApiError LonGetVersion(unsigned char* const pVersion);
 #else
-extern const LonApiError LonGetVersion(LonByte* const pVersion);
+extern const LonApiError LonGetVersion(unsigned char* const pVersion);
 #endif
 /*
  * Function: LonSendServicePin
@@ -385,16 +385,16 @@ extern "C" const LonApiError LonSendMsg(const unsigned tag, const LonBool priori
                                     const LonServiceType serviceType, 
                                     const LonBool authenticated,
                                     const LonSendAddress* const pDestAddr, 
-                                    const LonByte code, 
-                                    const LonByte* const pData, const unsigned length);
+                                    const unsigned char code, 
+                                    const unsigned char* const pData, const unsigned length);
 #else
 
 extern const LonApiError LonSendMsg(const unsigned tag, const LonBool priority, 
                                     const LonServiceType serviceType, 
                                     const LonBool authenticated,
                                     const LonSendAddress* const pDestAddr, 
-                                    const LonByte code, 
-                                    const LonByte* const pData, const unsigned length);
+                                    const unsigned char code, 
+                                    const unsigned char* const pData, const unsigned length);
 
 #endif
 
@@ -889,7 +889,7 @@ extern const LonApiError LonQueryVersion(void);
  * addition without overflow. When the response is received, the API activates the
  * <LonEchoReceived> callback. 
  */ 
-extern const LonApiError LonRequestEcho(const LonByte data[LON_ECHO_SIZE]);
+extern const LonApiError LonRequestEcho(const unsigned char data[LON_ECHO_SIZE]);
 
 
 #endif /* LON_UTILITY_FUNCTIONS */
@@ -1086,8 +1086,8 @@ extern void LonMsgArrived(const LonReceiveAddress* const pAddress,
                           const LonBool priority, 
                           const LonServiceType serviceType, 
                           const LonBool authenticated, 
-                          const LonByte code, 
-                          const LonByte* const pData, const unsigned dataLength);
+                          const unsigned char code, 
+                          const unsigned char* const pData, const unsigned dataLength);
 /*
  * Callback: LonResponseArrived
  * Occurs when a response arrived.
@@ -1105,8 +1105,8 @@ extern void LonMsgArrived(const LonReceiveAddress* const pAddress,
  */
 extern void LonResponseArrived(const LonResponseAddress* const pAddress, 
                                const unsigned tag, 
-                               const LonByte code, 
-                               const LonByte* const pData, const unsigned dataLength);
+                               const unsigned char code, 
+                               const unsigned char* const pData, const unsigned dataLength);
 
 /* 
  * Callback: LonMsgCompleted
@@ -1460,7 +1460,7 @@ extern void LonVersionReceived(unsigned appMajor, unsigned appMinor, unsigned ap
  * excessive or out-of-sync link layer bit rates.
  * This callback is part of the optional utility API (LON_UTILITY_FUNCTIONS).
  */
-extern void LonEchoReceived(const LonByte data[LON_ECHO_SIZE]);
+extern void LonEchoReceived(const unsigned char data[LON_ECHO_SIZE]);
 
 #endif  /* LON_UTILITY_FUNCTIONS */
 

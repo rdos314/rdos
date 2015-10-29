@@ -119,8 +119,8 @@ typedef LON_ENUM_BEGIN(LonMtIndex)
 typedef struct 
 {
     volatile void* const pData;  /* pointer to network variable data   */
-    LonByte DeclaredSize;        /* declared, initial and maximum size */
-    LonByte Attributes;          /* See macro definitions above        */
+    unsigned char DeclaredSize;        /* declared, initial and maximum size */
+    unsigned char Attributes;          /* See macro definitions above        */
 } LonNvDescription;
 
 /*
@@ -131,8 +131,8 @@ typedef LonBool LonMtDescription;
 /*
  *  Prototypes for access functions:
  */
-extern const LonByte* LonGetSiData(unsigned* pLength);
-extern const LonByte* LonGetAppInitData(void);
+extern const unsigned char* LonGetSiData(unsigned* pLength);
+extern const unsigned char* LonGetAppInitData(void);
 extern const LonNvDescription* const LonGetNvTable(void);
 extern const LonMtDescription* const LonGetMtTable(void);
 

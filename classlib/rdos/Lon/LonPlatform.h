@@ -78,7 +78,7 @@
  *  
  *  typedef struct 
  *  {
- *      LonByte flags_1;  // contains alpha, beta 
+ *      unsigned char flags_1;  // contains alpha, beta 
  *      …
  *  } Example;
  *
@@ -105,8 +105,8 @@
  *  where LonWord is defined as follows:
  *  typedef LON_STRUCT_BEGIN(LonWord) 
  *  {
- *      LonByte  msb;    
- *      LonByte  lsb;    
+ *      unsigned char  msb;    
+ *      unsigned char  lsb;    
  *  } LON_STRUCT_END(LonWord);
  *
  ***************************************************************************/
@@ -157,7 +157,7 @@
      *
      * To enhance portability between different platforms, no aggregate shall 
      * contain multi-byte scalars, but shall use multiple byte-sized scalars 
-     * instead. We will define only the basic type LonByte and the rest 
+     * instead. We will define only the basic type unsigned char and the rest 
      * (LonWord, LonDoubleWord) derive from it.
      *
      * Note that "float" type variables are handled through a "float_type" 
@@ -173,8 +173,6 @@
     typedef unsigned long   LonUbits32;         /* 32-bits */
     typedef signed   long   LonBits32;          /* 32-bits, signed */
     
-    typedef LonUbits8       LonByte;            /* 8-bits */
-    
     /*
      *  typedef: LonWord
      *  Holds a 16-bit numerical value.
@@ -187,8 +185,8 @@
      */
     typedef LON_STRUCT_BEGIN(LonWord) 
     {
-        LonByte  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
-        LonByte  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
+        unsigned char  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
+        unsigned char  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
     } LON_STRUCT_END(LonWord);
     
     /*
@@ -261,7 +259,7 @@
      *
      * To enhance portability between different platforms, no aggregate shall 
      * contain multi-byte scalars, but shall use multiple byte-sized scalars 
-     * instead. We will define only the basic type LonByte and the rest 
+     * instead. We will define only the basic type unsigned char and the rest 
      * (LonWord, LonDoubleWord) derive from it.
      *
      * Note that "float" type variables are handled through a "float_type" 
@@ -277,7 +275,7 @@
     typedef unsigned long   LonUbits32;         /* 32-bits */
     typedef signed   long   LonBits32;          /* 32-bits, signed */
     
-    typedef LonUbits8       LonByte;            /* 8-bits */
+    typedef LonUbits8       unsigned char;            /* 8-bits */
     
     /*
      *  typedef: LonWord
@@ -291,8 +289,8 @@
      */
     typedef LON_STRUCT_BEGIN(LonWord) 
     {
-        LonByte  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
-        LonByte  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
+        unsigned char  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
+        unsigned char  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
     } LON_STRUCT_END(LonWord);
     
     /*
@@ -349,7 +347,7 @@
      *
      * To enhance portability between different platforms, no aggregate shall 
      * contain multi-byte scalars, but shall use multiple byte-sized scalars 
-     * instead. We will define only the basic type LonByte and the rest 
+     * instead. We will define only the basic type unsigned char and the rest 
      * (LonWord, LonDoubleWord) derive from it.
      *
      * Note that "float" type variables are handled through a "float_type" 
@@ -365,11 +363,11 @@
     typedef unsigned long   LonUbits32;         /* 32-bits */
     typedef signed   long   LonBits32;          /* 32-bits, signed */
     
-    typedef LonUbits8       LonByte;            /* 8-bits */
+    typedef LonUbits8       unsigned char;            /* 8-bits */
     
     #define LON_ENUM_BEGIN(n)   enum 
     #define LON_ENUM_END(n)     n
-    #define LON_ENUM(n)         LonByte 
+    #define LON_ENUM(n)         unsigned char 
 
     #define LON_STRUCT_BEGIN(n) struct __declspec(align(1)) 
     #define LON_STRUCT_END(n)   n
@@ -395,8 +393,8 @@
      */
     typedef LON_STRUCT_BEGIN(LonWord) 
     {
-        LonByte  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
-        LonByte  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
+        unsigned char  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
+        unsigned char  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
     } LON_STRUCT_END(LonWord);
     
     /*
@@ -460,7 +458,7 @@
      *
      * To enhance portability between different platforms, no aggregate shall 
      * contain multi-byte scalars, but shall use multiple byte-sized scalars 
-     * instead. We will define only the basic type LonByte and the rest 
+     * instead. We will define only the basic type unsigned char and the rest 
      * (LonWord, LonDoubleWord) derive from it.
      *
      * Note that "float" type variables are handled through a "float_type" 
@@ -476,7 +474,7 @@
     typedef unsigned long   LonUbits32;         /* 32-bits */
     typedef signed   long   LonBits32;          /* 32-bits, signed */
     
-    typedef LonUbits8       LonByte;            /* 8-bits */
+    typedef LonUbits8       unsigned char;            /* 8-bits */
     
     #define LON_ENUM_BEGIN(n)   enum
     #define LON_ENUM_END(n)     n
@@ -506,8 +504,8 @@
      */
     typedef LON_STRUCT_BEGIN(LonWord) 
     {
-        LonByte  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
-        LonByte  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
+        unsigned char  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
+        unsigned char  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
     } LON_STRUCT_END(LonWord);
     
     /*
@@ -564,7 +562,7 @@
      *
      * To enhance portability between different platforms, no aggregate shall 
      * contain multi-byte scalars, but shall use multiple byte-sized scalars 
-     * instead. We will define only the basic type LonByte and the rest 
+     * instead. We will define only the basic type unsigned char and the rest 
      * (LonWord, LonDoubleWord) derive from it.
      *
      * Note that "float" type variables are handled through a "float_type" 
@@ -580,7 +578,7 @@
     typedef unsigned long   LonUbits32;         /* 32-bits */
     typedef signed   long   LonBits32;          /* 32-bits, signed */
     
-    typedef LonUbits8       LonByte;            /* 8-bits */
+    typedef LonUbits8       unsigned char;            /* 8-bits */
     
     #define LON_ENUM_BEGIN(n)   enum
     #define LON_ENUM_END(n)     n
@@ -610,8 +608,8 @@
      */
     typedef LON_STRUCT_BEGIN(LonWord) 
     {
-        LonByte  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
-        LonByte  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
+        unsigned char  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
+        unsigned char  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
     } LON_STRUCT_END(LonWord);
     
     /*
@@ -673,7 +671,7 @@
      *
      * To enhance portability between different platforms, no aggregate shall 
      * contain multi-byte scalars, but shall use multiple byte-sized scalars 
-     * instead. We will define only the basic type LonByte and the rest 
+     * instead. We will define only the basic type unsigned char and the rest 
      * (LonWord, LonDoubleWord) derive from it.
      *
      * Note that "float" type variables are handled through a "float_type" 
@@ -689,11 +687,11 @@
     typedef unsigned long   LonUbits32;         /* 32-bits */
     typedef signed   long   LonBits32;          /* 32-bits, signed */
     
-    typedef LonUbits8       LonByte;            /* 8-bits */
+    typedef LonUbits8       unsigned char;            /* 8-bits */
     
     #define LON_ENUM_BEGIN(n)   enum
     #define LON_ENUM_END(n)     n
-    #define LON_ENUM(n)         LonByte
+    #define LON_ENUM(n)         unsigned char
 
     #define LON_STRUCT_BEGIN(n) struct 
     #define LON_STRUCT_END(n)   __attribute((__packed__)) n
@@ -719,8 +717,8 @@
      */
     typedef LON_STRUCT_BEGIN(LonWord) 
     {
-        LonByte  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
-        LonByte  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
+        unsigned char  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
+        unsigned char  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
     } LON_STRUCT_END(LonWord);
     
     /*
@@ -782,7 +780,7 @@
      *
      * To enhance portability between different platforms, no aggregate shall 
      * contain multi-byte scalars, but shall use multiple byte-sized scalars 
-     * instead. We will define only the basic type LonByte and the rest 
+     * instead. We will define only the basic type unsigned char and the rest 
      * (LonWord, LonDoubleWord) derive from it.
      *
      * Note that "float" type variables are handled through a "float_type" 
@@ -797,12 +795,10 @@
     typedef signed   short  LonBits16;          /* 16-bits, signed */
     typedef unsigned long   LonUbits32;         /* 32-bits */
     typedef signed   long   LonBits32;          /* 32-bits, signed */
-    
-    typedef LonUbits8       LonByte;            /* 8-bits */
-    
+        
     #define LON_ENUM_BEGIN(n)   enum
     #define LON_ENUM_END(n)     n
-    #define LON_ENUM(n)         LonByte
+    #define LON_ENUM(n)         unsigned char
 
     #define LON_STRUCT_BEGIN(n) _Packed struct 
     #define LON_STRUCT_END(n)   n
@@ -828,8 +824,8 @@
      */
     typedef LON_STRUCT_BEGIN(LonWord) 
     {
-        LonByte  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
-        LonByte  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
+        unsigned char  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
+        unsigned char  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
     } LON_STRUCT_END(LonWord);
     
     /*

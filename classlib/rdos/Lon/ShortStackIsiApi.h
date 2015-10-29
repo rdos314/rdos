@@ -541,7 +541,7 @@ extern void IsiIsBecomingHostReceived(unsigned assembly, LonBool isBecomingHost)
  * parameter.  Note that the Micro Server is not guaranteed to return ACKs and
  * NACKs in order.
  */
-extern void IsiApiComplete(IsiDownlinkRpcCode code, LonByte sequence, LonBool success);
+extern void IsiApiComplete(IsiDownlinkRpcCode code, unsigned char sequence, LonBool success);
 
 /*
  * ******************************************************************************
@@ -824,7 +824,7 @@ extern LonBool IsiQueryHeartbeat(unsigned nvIndex);
  * This callback returns the value of the network variable specified by the index
  * nvIndex.
  */
-extern const unsigned* IsiGetNvValue(unsigned nvIndex, LonByte* pLength);
+extern const unsigned* IsiGetNvValue(unsigned nvIndex, unsigned char* pLength);
 
 /* 
  * Callback:   IsiUserCommand

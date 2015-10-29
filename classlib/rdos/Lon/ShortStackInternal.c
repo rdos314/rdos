@@ -32,12 +32,12 @@
 /* 
  * Forward declarations for functions used internally by the ShortStack Api.
  */
-const LonApiError VerifyNv(const LonByte nvIndex, LonByte nvLength);
-void  PrepareNvMessage(LonSmipMsg* pSmipMsg, const LonByte nvIndex, const LonByte* const pData, const LonByte len);
-const LonApiError SendNv(const LonByte nvIndex);
+const LonApiError VerifyNv(const unsigned char nvIndex, unsigned char nvLength);
+void  PrepareNvMessage(LonSmipMsg* pSmipMsg, const unsigned char nvIndex, const unsigned char* const pData, const unsigned char len);
+const LonApiError SendNv(const unsigned char nvIndex);
 const LonApiError SendNvPollResponse(const LonSmipMsg* pSmipMsg);
-const LonApiError SendLocal(const LonSmipCmd command, const void* const pData, const LonByte length);
-const LonApiError WriteNvLocal(const LonByte index, const void* const pData, const LonByte length);
+const LonApiError SendLocal(const LonSmipCmd command, const void* const pData, const unsigned char length);
+const LonApiError WriteNvLocal(const unsigned char index, const void* const pData, const unsigned char length);
 
 /***********************************************************************************
  * VerifyNv
@@ -59,7 +59,7 @@ const LonApiError WriteNvLocal(const LonByte index, const void* const pData, con
  * Returns:    lonApiNoError for success, or an appropriate error code otherwise
  ********************************************************************************** */
 
-const LonApiError VerifyNv(const LonByte nvIndex, LonByte nvLength) 
+const LonApiError VerifyNv(const unsigned char nvIndex, unsigned char nvLength) 
 {
     LonApiError result = LonApiNoError;
 
@@ -103,7 +103,7 @@ const LonApiError VerifyNv(const LonByte nvIndex, LonByte nvLength)
  * Returns:     Non-zero error code if an error occurs.
  *              Zero if the message was prepared successfully.
  **********************************************************************************/
-void PrepareNvMessage(LonSmipMsg* pSmipMsg, const LonByte nvIndex, const LonByte* const pData, const LonByte len)
+void PrepareNvMessage(LonSmipMsg* pSmipMsg, const unsigned char nvIndex, const unsigned char* const pData, const unsigned char len)
 {
     memset(pSmipMsg, 0, sizeof(LonSmipMsg));
     
@@ -114,7 +114,7 @@ void PrepareNvMessage(LonSmipMsg* pSmipMsg, const LonByte nvIndex, const LonByte
     NVMSG.Length = len;
     if (len  &&  pData != NULL)
         memcpy(NVMSG.NvData, pData, len);
-    pSmipMsg->Header.Length = (LonByte) (sizeof(LonNvMessage) - sizeof(NVMSG.NvData) + len);
+    pSmipMsg->Header.Length = (unsigned char) (sizeof(LonNvMessage) - sizeof(NVMSG.NvData) + len);
 }
 
 /***********************************************************************************
@@ -130,7 +130,7 @@ void PrepareNvMessage(LonSmipMsg* pSmipMsg, const LonByte nvIndex, const LonByte
  *
  * Caveats:     On success, this will result in network traffic.
  **********************************************************************************/
-const LonApiError SendNv(const LonByte nvIndex)
+const LonApiError SendNv(const unsigned char nvIndex)
 {
     LonApiError result = VerifyNv(nvIndex, LonGetCurrentNvSize(nvIndex));
 
@@ -145,7 +145,7 @@ const LonApiError SendNv(const LonByte nvIndex)
         else 
         {
             const LonNvDescription* const pNvTable = LonGetNvTable();
-            PrepareNvMessage(pSmipMsg, nvIndex, (LonByte *) pNvTable[nvIndex].pData, (LonByte) LonGetCurrentNvSize(nvIndex));
+            PrepareNvMessage(pSmipMsg, nvIndex, (unsigned char *) pNvTable[nvIndex].pData, (unsigned char) LonGetCurrentNvSize(nvIndex));
             LdvPutMsg(pSmipMsg);
         }
     }
@@ -165,7 +165,7 @@ const LonApiError SendNv(const LonByte nvIndex)
 const LonApiError SendNvPollResponse(const LonSmipMsg* pSmipMsg)
 {
     const unsigned nvIndex = NVMSG.Index;
-    LonApiError result = VerifyNv((LonByte) nvIndex, LonGetCurrentNvSize(nvIndex));
+    LonApiError result = VerifyNv((unsigned char) nvIndex, LonGetCurrentNvSize(nvIndex));
 
     if (result == LonApiNoError) 
     {
@@ -184,12 +184,12 @@ const LonApiError SendNvPollResponse(const LonSmipMsg* pSmipMsg)
             LON_SET_ATTRIBUTE((*pNvResponse), LON_NVMSG_PRIORITY, LON_GET_ATTRIBUTE(NVMSG, LON_NVMSG_PRIORITY));
             /* Set the response attribute */
             LON_SET_ATTRIBUTE((*pNvResponse), LON_NVMSG_RESPONSE, 1);
-            pNvResponse->Length = (LonByte) nvLength;
+            pNvResponse->Length = (unsigned char) nvLength;
             /* If alias index is valid, i.e., it is not 128, then treat as alias. */
-            pNvResponse->Index = (LonByte) ((aliasIndex & 0x80) ? nvIndex : aliasIndex); /* To Do: Define a macro for 0x80 */
+            pNvResponse->Index = (unsigned char) ((aliasIndex & 0x80) ? nvIndex : aliasIndex); /* To Do: Define a macro for 0x80 */
             pNvResponse->AliasIndex = aliasIndex;
             memcpy(pNvResponse->NvData, (const void*) nvTable[nvIndex].pData, nvLength);
-            pSmipResponse->Header.Length = (LonByte) (sizeof(LonNvMessage) - sizeof(NVMSG.NvData) + nvLength);
+            pSmipResponse->Header.Length = (unsigned char) (sizeof(LonNvMessage) - sizeof(NVMSG.NvData) + nvLength);
             pSmipResponse->Header.Command = (LonSmipCmd) (nvIndex < LON_NV_ESCAPE_SEQUENCE ? (LonNiNv | nvIndex) : (LonNiNv | LON_NV_ESCAPE_SEQUENCE));
             LdvPutMsg(pSmipResponse);
         }
@@ -208,7 +208,7 @@ const LonApiError SendNvPollResponse(const LonSmipMsg* pSmipMsg)
  * Returns:     None-Zero error code if an error occurs.
  *              Zero if the local NI command message has been buffered by the driver.
  **********************************************************************************/
-const LonApiError SendLocal(const LonSmipCmd command, const void* const pData, const LonByte length)
+const LonApiError SendLocal(const LonSmipCmd command, const void* const pData, const unsigned char length)
 {
     LonSmipMsg* pSmipMsg = NULL;
     LonApiError result = LonApiNoError;
@@ -244,7 +244,7 @@ const LonApiError SendLocal(const LonSmipCmd command, const void* const pData, c
  * Returns:     Zero if the NV was updated successfully.
  *              None-zero error code if an error occurs
  **********************************************************************************/
-const LonApiError WriteNvLocal(const LonByte index, const void* const pData, const LonByte length)
+const LonApiError WriteNvLocal(const unsigned char index, const void* const pData, const unsigned char length)
 {
     LonApiError result = VerifyNv(index, length);
 

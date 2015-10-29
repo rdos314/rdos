@@ -137,7 +137,7 @@ typedef LON_ENUM_BEGIN(IsiScope)
 typedef LON_STRUCT_BEGIN(IsiConnectionId) 
 {
     /* A unique identifier for the connection host, based on the host’s unique ID. */
-    LonByte         UniqueId[LON_UNIQUE_ID_LENGTH - 1]; 
+    unsigned char         UniqueId[LON_UNIQUE_ID_LENGTH - 1]; 
     /* Connection host-allocated serial number.*/
     LonWord         SerialNumber;                       
 } LON_STRUCT_END(IsiConnectionId);
@@ -212,10 +212,10 @@ typedef LON_STRUCT_BEGIN(IsiConnectionHeader)
 typedef LON_STRUCT_BEGIN(IsiConnection)
 {
     IsiConnectionHeader Header;
-    LonByte     Host;
-    LonByte     Member;
-    LonByte     Attributes1;    /* contains state, extend, csme, width. See ISI_CONN_STATE_*, _EXTEND_*, _CSME_* and _WIDTH_* macros */
-    LonByte     Attributes2;    /* contains offset, auto. See ISI_CONN_OFFSET_* and _AUTO_* macros */
+    unsigned char     Host;
+    unsigned char     Member;
+    unsigned char     Attributes1;    /* contains state, extend, csme, width. See ISI_CONN_STATE_*, _EXTEND_*, _CSME_* and _WIDTH_* macros */
+    unsigned char     Attributes2;    /* contains offset, auto. See ISI_CONN_OFFSET_* and _AUTO_* macros */
 } LON_STRUCT_END(IsiConnection);
 
 /*
@@ -264,27 +264,27 @@ typedef LON_STRUCT_BEGIN(IsiConnection)
 typedef LON_STRUCT_BEGIN(IsiCsmoData)
 {
     /* The group (or: device category) that this connection applies to. */
-    LonByte     Group;
-    LonByte     Attributes1;    /* contains Direction, Width. See ISI_CSMO_DIR_* and _WIDTH_* macros */
+    unsigned char     Group;
+    unsigned char     Attributes1;    /* contains Direction, Width. See ISI_CSMO_DIR_* and _WIDTH_* macros */
     /* Functional profile number of the functional profile that defines the 
        functional block containing this input or output, or zero if none. */
     LonWord     Profile;
     /* NV type index of the NV type for the network variable, or zero if none
        specified. The NV type index is an index into resource file that defines the
        network variable type for the network variable on offer. */
-    LonByte     NvType;
+    unsigned char     NvType;
     /* Variant number for the offered network variable. Variants can be defined for
        any functional profile/member number pair. */
-    LonByte     Variant;
+    unsigned char     Variant;
     LON_STRUCT_NESTED_BEGIN(Extended) 
     {
-        LonByte     Attributes2;    /* contains Ack, Poll, Scope. See ISI_CSMO_ACK_*, _POLL_* and _SCOPE_* macros */
+        unsigned char     Attributes2;    /* contains Ack, Poll, Scope. See ISI_CSMO_ACK_*, _POLL_* and _SCOPE_* macros */
         /* The first 6 bytes of the connection host’s standard program ID. 
            The last two standard program ID bytes (channel type and model
            number) are not included. */
-        LonByte     Application[LON_PROGRAM_ID_LENGTH - 2];
+        unsigned char     Application[LON_PROGRAM_ID_LENGTH - 2];
         /* NV member number within the functional block, or zero if none. */
-        LonByte     Member;
+        unsigned char     Member;
     } LON_STRUCT_NESTED_END(Extended);    
 } LON_STRUCT_END(IsiCsmoData);
 
@@ -366,16 +366,16 @@ typedef LON_ENUM_BEGIN(IsiUplinkRpcCode)
 typedef LON_STRUCT_BEGIN(IsiRpcMessage)
 {
     LonSmipHdr  Header;         /* Message header, where command can be one of IsiCmd, IsiAck, IsiNack */
-    LonByte     RpcCode;        /* RPC Function Code */
-    LonByte     SequenceNumber; /* A sequence number for correlation */
-    LonByte     Parameters[2];  /* Two 1-byte parameters */ 
+    unsigned char     RpcCode;        /* RPC Function Code */
+    unsigned char     SequenceNumber; /* A sequence number for correlation */
+    unsigned char     Parameters[2];  /* Two 1-byte parameters */ 
     LON_STRUCT_NESTED_BEGIN(RpcData) 
     {
-        LonByte Length;         /* Length of the complete RpcData structure */
-        LonByte Data[31];       /* Contains data like IsiCsmoData, IsiConnection and so on. */
+        unsigned char Length;         /* Length of the complete RpcData structure */
+        unsigned char Data[31];       /* Contains data like IsiCsmoData, IsiConnection and so on. */
     } LON_STRUCT_NESTED_END(RpcData); 
 } LON_STRUCT_END(IsiRpcMessage);
 
-#define IsiRpcMessageLength(p)  ((LonByte)((sizeof(IsiRpcMessage) - 2 - sizeof(((IsiRpcMessage*)0)->RpcData.Data) + (p)->RpcData.Length)))
+#define IsiRpcMessageLength(p)  ((unsigned char)((sizeof(IsiRpcMessage) - 2 - sizeof(((IsiRpcMessage*)0)->RpcData.Data) + (p)->RpcData.Length)))
 
 #endif /* SHORTSTACK_ISI_TYPES_H */

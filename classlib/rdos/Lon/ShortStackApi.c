@@ -47,7 +47,7 @@ static volatile LonResetNotification lastResetNotification;
  * Make no assumptions about the previous contents while using it.  
  * If required, NULL out all data before use.
  */
-LonByte ResponseData[LON_MAX_MSG_DATA];
+unsigned char ResponseData[LON_MAX_MSG_DATA];
 
 /* 
  * Typedef used to keep track of local NM/ND messages.
@@ -67,15 +67,15 @@ NmNdStatus CurrentNmNdStatus = NO_NM_ND_PENDING;
  * Forward declarations for functions used internally by the ShortStack Api.
  * These functions are implemented in ShortStackInternal.c.  
  */
-extern const LonApiError VerifyNv(const LonByte nvIndex, LonByte nvLength);
-extern void  PrepareNvMessage(LonSmipMsg* pSmipMsg, const LonByte nvIndex, const LonByte* const pData, const LonByte len);
-extern const LonApiError SendNv(const LonByte nvIndex);
+extern const LonApiError VerifyNv(const unsigned char nvIndex, unsigned char nvLength);
+extern void  PrepareNvMessage(LonSmipMsg* pSmipMsg, const unsigned char nvIndex, const unsigned char* const pData, const unsigned char len);
+extern const LonApiError SendNv(const unsigned char nvIndex);
 extern const LonApiError SendNvPollResponse(const LonSmipMsg* pSmipMsg);
-extern const LonApiError SendLocal(const LonSmipCmd command, const void* const pData, const LonByte length);
-extern const LonApiError WriteNvLocal(const LonByte index, const void* const pData, const LonByte length);
+extern const LonApiError SendLocal(const LonSmipCmd command, const void* const pData, const unsigned char length);
+extern const LonApiError WriteNvLocal(const unsigned char index, const void* const pData, const unsigned char length);
 
 #if LON_ISI_ENABLED
-extern LonApiError SendDownlinkRpc(IsiDownlinkRpcCode code, LonByte param1, LonByte param2, void* pData, unsigned len);
+extern LonApiError SendDownlinkRpc(IsiDownlinkRpcCode code, unsigned char param1, unsigned char param2, void* pData, unsigned len);
 extern void HandleDownlinkRpcAck(IsiRpcMessage* pMsg, LonBool bSuccess);
 extern void HandleUplinkRpc(IsiRpcMessage* pMsg);
 #endif /* LON_ISI_ENABLED */
@@ -112,10 +112,10 @@ const LonApiError LonInit(void)
     if (result == LonApiNoError)
     {
         LonSmipMsg smipMsg;
-        LonByte nTotalNvCount;
-        LonByte nTotalNvsSent;
+        unsigned char nTotalNvCount;
+        unsigned char nTotalNvsSent;
         
-        const LonByte *pInitData = LonGetAppInitData();
+        const unsigned char *pInitData = LonGetAppInitData();
         
         /* The LonGetAppInitData function returns a structure containing the application 
            initialization data followed by the network variable initialization data. 
@@ -133,8 +133,8 @@ const LonApiError LonInit(void)
         nTotalNvsSent = 0;
         while (result == LonApiNoError)
         {
-            LonByte nStartIndex;
-            LonByte nStopIndex;
+            unsigned char nStartIndex;
+            unsigned char nStopIndex;
             
             /* Calculate the number of nvs that can be sent in this message */
             nStartIndex = nTotalNvsSent;
@@ -210,7 +210,7 @@ void LonEventHandler(void)
 
         switch (pSmipMsg->Header.Command)
         {
-            case ((LonByte) LonNiComm | (LonByte) LonNiIncoming):
+            case ((unsigned char) LonNiComm | (unsigned char) LonNiIncoming):
             {
                 /* Is an incoming message    */
                 LonBool bFailure = FALSE;
@@ -274,7 +274,7 @@ void LonEventHandler(void)
                                     /* Send NV response to the network.           */
                                     const LonNvDescription* const nvTable = LonGetNvTable();
     
-                                    ResponseData[0] = (LonByte) nvIndex;
+                                    ResponseData[0] = (unsigned char) nvIndex;
                                     memcpy(&ResponseData[1], (const void*) nvTable[nvIndex].pData, nvLength);
                                     bFailure = (LonSendResponse(correlator, LON_NM_SUCCESS(LonNmNvFetch), ResponseData, nvLength + 1) != LonApiNoError);
                                 }
@@ -301,7 +301,7 @@ void LonEventHandler(void)
                                 bFailure = TRUE;
                             else if ((LonMemoryWrite(LON_GET_UNSIGNED_WORD(EXPMSG.Data.WriteMemory.Address),
                                                 EXPMSG.Data.WriteMemory.Count, 
-                                                ((LonByte*) &EXPMSG.Data.WriteMemory.Form) + 1) == LonApiNoError)
+                                                ((unsigned char*) &EXPMSG.Data.WriteMemory.Form) + 1) == LonApiNoError)
                                     && (LonSendResponse(correlator, LON_NM_SUCCESS(LonNmWriteMemory), NULL, 0) == LonApiNoError))
                                 bFailure = FALSE;
                             else
@@ -313,7 +313,7 @@ void LonEventHandler(void)
                             {
                                 unsigned offset = LON_GET_UNSIGNED_WORD(EXPMSG.Data.QuerySiDataRequest.Offset);
                                 unsigned siDataLength = 0;
-                                const LonByte* pSiData = LonGetSiData(&siDataLength);
+                                const unsigned char* pSiData = LonGetSiData(&siDataLength);
                                 if (EXPMSG.Data.QuerySiDataRequest.Count > LON_MAX_MSG_DATA
                                     || offset + EXPMSG.Data.QuerySiDataRequest.Count > siDataLength) 
                                     bFailure = TRUE;
@@ -339,13 +339,13 @@ void LonEventHandler(void)
                                                   (LonBool) LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_PRIORITY),
                                                   (LonServiceType) LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_SERVICE),
                                                   (LonBool) LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_AUTHENTICATED),
-                                                  (LonApplicationMessageCode) EXPMSG.Code, EXPMSG.Data.Data, (LonByte)(EXPMSG.Length-1));
+                                                  (LonApplicationMessageCode) EXPMSG.Code, EXPMSG.Data.Data, (unsigned char)(EXPMSG.Length-1));
                                 #else    /* ifndef(LON_EXPLICIT_ADDRESSING)    */
                                     LonMsgArrived(NULL, correlator, 
                                                   (LonBool) LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_PRIORITY),
                                                   (LonServiceType) LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_SERVICE),
                                                   (LonBool) LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_AUTHENTICATED),
-                                                  (LonApplicationMessageCode) EXPMSG.Code, EXPMSG.Data.Data, (LonByte)(EXPMSG.Length-1));
+                                                  (LonApplicationMessageCode) EXPMSG.Code, EXPMSG.Data.Data, (unsigned char)(EXPMSG.Length-1));
                                 #endif    /* LON_EXPLICIT_ADDRESSING            */
                             #else     /* ifndef(LON_APPLICATION_MESSAGES)    */
                                 bFailure = TRUE;
@@ -358,12 +358,12 @@ void LonEventHandler(void)
                     /* Indicates that the receiving network management message   */
                     /* or explicit message is not supported by the ShortStack,   */
                     /* or that it failed to execute that message.                */
-                    LonSendResponse(correlator, (LonByte)LON_NM_FAILURE(EXPMSG.Code), NULL, 0);
+                    LonSendResponse(correlator, (unsigned char)LON_NM_FAILURE(EXPMSG.Code), NULL, 0);
                 }
                 break;
             }
 
-            case ((LonByte) LonNiComm | (LonByte) LonNiResponse):
+            case ((unsigned char) LonNiComm | (unsigned char) LonNiResponse):
             {
                 if (LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_COMPLETIONCODE))
                 {
@@ -465,11 +465,11 @@ void LonEventHandler(void)
                                 #if    LON_EXPLICIT_ADDRESSING
                                     LonResponseArrived(&(EXPMSG.Address.Response), 
                                                        LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_TAG), 
-                                                       (LonApplicationMessageCode) EXPMSG.Code, EXPMSG.Data.Data, (LonByte)(EXPMSG.Length-1));
+                                                       (LonApplicationMessageCode) EXPMSG.Code, EXPMSG.Data.Data, (unsigned char)(EXPMSG.Length-1));
                                 #else
                                     LonResponseArrived(NULL, 
                                                        LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_TAG), 
-                                                       (LonApplicationMessageCode) EXPMSG.Code, EXPMSG.Data.Data, (LonByte)(EXPMSG.Length-1));
+                                                       (LonApplicationMessageCode) EXPMSG.Code, EXPMSG.Data.Data, (unsigned char)(EXPMSG.Length-1));
                                 #endif
                             #endif    /* LON_APPLICATION_MESSAGES    */
                         }
@@ -599,7 +599,7 @@ void LonEventHandler(void)
  */
 const LonApiError LonPollNv(const unsigned nvIndex)
 {
-    LonApiError result = VerifyNv((LonByte) nvIndex, 0);
+    LonApiError result = VerifyNv((unsigned char) nvIndex, 0);
     
     if (result == LonApiNoError) 
     {
@@ -623,7 +623,7 @@ const LonApiError LonPollNv(const unsigned nvIndex)
         } 
         else 
         {
-            PrepareNvMessage(pSmipMsg, (LonByte) nvIndex, NULL, 0);
+            PrepareNvMessage(pSmipMsg, (unsigned char) nvIndex, NULL, 0);
             LON_SET_ATTRIBUTE(NVMSG, LON_NVMSG_NVPOLL, 1);
             LdvPutMsg(pSmipMsg);
         }
@@ -648,7 +648,7 @@ const LonApiError LonPollNv(const unsigned nvIndex)
  */
 const LonApiError LonPropagateNv(const unsigned nvIndex)
 {
-    LonApiError result = VerifyNv((LonByte) nvIndex, LonGetCurrentNvSize(nvIndex));
+    LonApiError result = VerifyNv((unsigned char) nvIndex, LonGetCurrentNvSize(nvIndex));
 
     if (result == LonApiNoError) 
     {
@@ -657,7 +657,7 @@ const LonApiError LonPropagateNv(const unsigned nvIndex)
             /* can only propagate output network variables: */
             result = LonApiNvPropagateInputNv;     
         else
-            result = SendNv((LonByte) nvIndex);
+            result = SendNv((unsigned char) nvIndex);
     }
     return result;
 }
@@ -680,7 +680,7 @@ const LonApiError LonPropagateNv(const unsigned nvIndex)
 const unsigned LonGetDeclaredNvSize(const unsigned nvIndex)
 {
     unsigned returnSize = 0;
-    LonApiError result = VerifyNv((LonByte) nvIndex, 0);
+    LonApiError result = VerifyNv((unsigned char) nvIndex, 0);
 
     if (result == LonApiNoError) 
     {
@@ -710,7 +710,7 @@ const unsigned LonGetDeclaredNvSize(const unsigned nvIndex)
 volatile void* const LonGetNvValue(const unsigned nvIndex)
  {
     volatile void* p = NULL;
-    LonApiError result = VerifyNv((LonByte) nvIndex, 0);
+    LonApiError result = VerifyNv((unsigned char) nvIndex, 0);
 
     if (result == LonApiNoError) 
     {
@@ -740,7 +740,7 @@ volatile void* const LonGetNvValue(const unsigned nvIndex)
  * in the 0x00..0x2f range.
  */
 const LonApiError LonSendResponse(const LonCorrelator correlator, 
-    const LonByte code, const LonByte* const pData, const unsigned length)
+    const unsigned char code, const unsigned char* const pData, const unsigned length)
 {
     LonApiError result = LonApiNoError;
     LonSmipMsg* pSmipMsg = NULL;
@@ -762,10 +762,10 @@ const LonApiError LonSendResponse(const LonCorrelator correlator,
     
         pSmipMsg->Header.Command = (LonSmipCmd) (LonNiComm | 
                                     (LON_GET_ATTRIBUTE(correlator, LON_CORRELATOR_PRIORITY) ? 
-                                     (LonByte) LonNiNonTxQueuePriority : (LonByte) LonNiNonTxQueue));
-        pSmipMsg->Header.Length = (LonByte)(sizeof(LonExplicitMessage) - sizeof(EXPMSG.Data) + length);
+                                     (unsigned char) LonNiNonTxQueuePriority : (unsigned char) LonNiNonTxQueue));
+        pSmipMsg->Header.Length = (unsigned char)(sizeof(LonExplicitMessage) - sizeof(EXPMSG.Data) + length);
     
-        EXPMSG.Length = (LonByte)(length + 1);
+        EXPMSG.Length = (unsigned char)(length + 1);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_SERVICE, LonServiceRequest);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_RESPONSE, 1);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_TAG, LON_GET_ATTRIBUTE(correlator, LON_CORRELATOR_TAG));
@@ -834,7 +834,7 @@ const LonApiError LonGetUniqueId(LonUniqueId* const pNid)
  * See also the <LonGetLastResetNotification> function for alternative access 
  * to the same data.
  */
-const LonApiError LonGetVersion(LonByte* const pVersion)
+const LonApiError LonGetVersion(unsigned char* const pVersion)
 {
     LonApiError result = LonApiVersionNotAvailable;
     if (pVersion != NULL && lastResetNotification.Version != 0xFF) 
@@ -941,7 +941,7 @@ const volatile LonResetNotification* const LonGetLastResetNotification(void)
  */
 const LonApiError LonSendMsg(const unsigned tag, const LonBool priority, const LonServiceType serviceType, 
             const LonBool authenticated, const LonSendAddress* const pDestAddr,
-            const LonByte code, const LonByte* const pData, const unsigned length)
+            const unsigned char code, const unsigned char* const pData, const unsigned length)
 {
     LonSmipMsg* pSmipMsg = NULL;
     LonApiError result = LonApiNoError;
@@ -970,14 +970,14 @@ const LonApiError LonSendMsg(const unsigned tag, const LonBool priority, const L
                                                             (priority ? LonNiTxQueuePriority : LonNiTxQueue);
         
         memset(pSmipMsg, 0, sizeof(LonSmipMsg));
-        pSmipMsg->Header.Command = (LonSmipCmd) ((LonByte) LonNiComm | queue);
+        pSmipMsg->Header.Command = (LonSmipCmd) ((unsigned char) LonNiComm | queue);
     
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_SERVICE, serviceType);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_TAG, tag);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_AUTHENTICATED, authenticated);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_MSGTYPE, LonMessageExplicit);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_PRIORITY, priority);
-        EXPMSG.Length = (LonByte)(length + 1);
+        EXPMSG.Length = (unsigned char)(length + 1);
         EXPMSG.Code = code;
     
         memcpy(EXPMSG.Data.Data, (void *)pData, length);
@@ -990,7 +990,7 @@ const LonApiError LonSendMsg(const unsigned tag, const LonBool priority, const L
         }
         #endif
     
-        pSmipMsg->Header.Length = (LonByte) (sizeof(LonExplicitMessage) - sizeof(EXPMSG.Data) + length);    
+        pSmipMsg->Header.Length = (unsigned char) (sizeof(LonExplicitMessage) - sizeof(EXPMSG.Data) + length);    
         LdvPutMsg(pSmipMsg);
     }
     return result;
@@ -1032,14 +1032,14 @@ const LonApiError LonQueryDomainConfig(const unsigned index)
         memset(pSmipMsg, 0, sizeof(LonSmipMsg));
     
         pSmipMsg->Header.Command = LonNiNetManagement;
-        pSmipMsg->Header.Length = (LonByte)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmQueryDomainRequest));
+        pSmipMsg->Header.Length = (unsigned char)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmQueryDomainRequest));
     
         EXPMSG.Code = LonNmQueryDomain;
-        EXPMSG.Length = (LonByte)(sizeof(LonNmQueryDomainRequest) + 1);
+        EXPMSG.Length = (unsigned char)(sizeof(LonNmQueryDomainRequest) + 1);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_SERVICE, LonServiceRequest);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_TAG, NM_ND_TAG);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_AUTHENTICATED, TRUE);
-        EXPMSG.Data.QueryDomainRequest.Index = (LonByte) index;
+        EXPMSG.Data.QueryDomainRequest.Index = (unsigned char) index;
     
         LdvPutMsg(pSmipMsg);
         CurrentNmNdStatus = NM_PENDING;
@@ -1074,7 +1074,7 @@ const LonApiError LonQueryNvConfig(const unsigned index)
         result = LonApiNmNdAlreadyPending;
     else 
     {
-        VerifyNv((LonByte) index, 0);
+        VerifyNv((unsigned char) index, 0);
     
         if (result == LonApiNoError) 
         {
@@ -1092,14 +1092,14 @@ const LonApiError LonQueryNvConfig(const unsigned index)
                 
                 if (index < 255)
                 {
-                    pSmipMsg->Header.Length = (LonByte)(LON_SICB_MIN_OVERHEAD + sizeof(LonByte));
-                    EXPMSG.Length = (LonByte)(sizeof(LonByte) + 1);
-                    EXPMSG.Data.QueryNvAliasRequest.Index = (LonByte) index;
+                    pSmipMsg->Header.Length = (unsigned char)(LON_SICB_MIN_OVERHEAD + sizeof(unsigned char));
+                    EXPMSG.Length = (unsigned char)(sizeof(unsigned char) + 1);
+                    EXPMSG.Data.QueryNvAliasRequest.Index = (unsigned char) index;
                 }
                 else
                 {
-                    pSmipMsg->Header.Length = (LonByte)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmQueryNvAliasRequest));
-                    EXPMSG.Length = (LonByte)(sizeof(LonNmQueryNvAliasRequest) + 1);
+                    pSmipMsg->Header.Length = (unsigned char)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmQueryNvAliasRequest));
+                    EXPMSG.Length = (unsigned char)(sizeof(LonNmQueryNvAliasRequest) + 1);
                     EXPMSG.Data.QueryNvAliasRequest.Index = 255;
                     LON_SET_UNSIGNED_WORD(EXPMSG.Data.QueryNvAliasRequest.LongIndex, index);
                 }
@@ -1154,14 +1154,14 @@ const LonApiError LonQueryAliasConfig(const unsigned index)
         
         if (queryIndex < 255u)
         {
-            pSmipMsg->Header.Length = (LonByte)(LON_SICB_MIN_OVERHEAD + sizeof(LonByte));
-            EXPMSG.Length = (LonByte)(sizeof(LonByte) + 1);
-            EXPMSG.Data.QueryNvAliasRequest.Index = (LonByte)queryIndex;
+            pSmipMsg->Header.Length = (unsigned char)(LON_SICB_MIN_OVERHEAD + sizeof(unsigned char));
+            EXPMSG.Length = (unsigned char)(sizeof(unsigned char) + 1);
+            EXPMSG.Data.QueryNvAliasRequest.Index = (unsigned char)queryIndex;
         }
         else
         {
-            pSmipMsg->Header.Length = (LonByte)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmQueryNvAliasRequest));
-            EXPMSG.Length = (LonByte)(sizeof(LonNmQueryNvAliasRequest) + 1);
+            pSmipMsg->Header.Length = (unsigned char)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmQueryNvAliasRequest));
+            EXPMSG.Length = (unsigned char)(sizeof(LonNmQueryNvAliasRequest) + 1);
             EXPMSG.Data.QueryNvAliasRequest.Index = 255u;
             LON_SET_UNSIGNED_WORD(EXPMSG.Data.QueryNvAliasRequest.LongIndex, queryIndex);
         }
@@ -1206,14 +1206,14 @@ const LonApiError LonQueryAddressConfig(const unsigned index)
         memset(pSmipMsg, 0, sizeof(LonSmipMsg));
     
         pSmipMsg->Header.Command = LonNiNetManagement;
-        pSmipMsg->Header.Length = (LonByte)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmQueryAddressRequest));
+        pSmipMsg->Header.Length = (unsigned char)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmQueryAddressRequest));
     
         EXPMSG.Code = LonNmQueryAddr;
-        EXPMSG.Length = (LonByte)(sizeof(LonNmQueryAddressRequest) + 1);
+        EXPMSG.Length = (unsigned char)(sizeof(LonNmQueryAddressRequest) + 1);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_SERVICE, LonServiceRequest);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_TAG, NM_ND_TAG);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_AUTHENTICATED, TRUE);
-        EXPMSG.Data.QueryAddressRequest.Index = (LonByte) index;
+        EXPMSG.Data.QueryAddressRequest.Index = (unsigned char) index;
     
         LdvPutMsg(pSmipMsg);
         CurrentNmNdStatus = NM_PENDING;
@@ -1253,12 +1253,12 @@ const LonApiError LonQueryConfigData(void)
         pSmipMsg->Header.Length = LON_SICB_MIN_OVERHEAD + sizeof(LonNmReadMemoryRequest);
     
         EXPMSG.Code = LonNmReadMemory;
-        EXPMSG.Length = (LonByte)(sizeof(LonNmReadMemoryRequest) + 1);
+        EXPMSG.Length = (unsigned char)(sizeof(LonNmReadMemoryRequest) + 1);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_SERVICE, LonServiceRequest);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_TAG, NM_ND_TAG);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_AUTHENTICATED, TRUE);
         EXPMSG.Data.ReadMemory.Mode = LonConfigStructRelative;
-        EXPMSG.Data.ReadMemory.Count = (LonByte) sizeof(LonConfigData);
+        EXPMSG.Data.ReadMemory.Count = (unsigned char) sizeof(LonConfigData);
         LON_SET_UNSIGNED_WORD(EXPMSG.Data.ReadMemory.Address, 0);
     
         LdvPutMsg(pSmipMsg);
@@ -1457,7 +1457,7 @@ const LonApiError LonUpdateAddressConfig(const unsigned index, const LonAddress*
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_SERVICE, LonServiceRequest);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_TAG, NM_ND_TAG);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_AUTHENTICATED, TRUE);
-        EXPMSG.Data.UpdateAddressRequest.Index = (LonByte) index;
+        EXPMSG.Data.UpdateAddressRequest.Index = (unsigned char) index;
         EXPMSG.Data.UpdateAddressRequest.Address = *pAddress;
     
         LdvPutMsg(pSmipMsg);
@@ -1499,7 +1499,7 @@ const LonApiError LonUpdateAliasConfig(const unsigned index, const LonAliasConfi
         memset(pSmipMsg, 0, sizeof(LonSmipMsg));
     
         pSmipMsg->Header.Command = LonNiNetManagement;
-        pSmipMsg->Header.Length = (LonByte)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmUpdateAliasRequest));
+        pSmipMsg->Header.Length = (unsigned char)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmUpdateAliasRequest));
     
         EXPMSG.Code = LonNmUpdateNvConfig;
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_SERVICE, LonServiceRequest);
@@ -1509,14 +1509,14 @@ const LonApiError LonUpdateAliasConfig(const unsigned index, const LonAliasConfi
         if (actualIndex < 255)
         {
             /* Use the short form of the request */
-            EXPMSG.Length = (LonByte) (sizeof(LonByte) + sizeof(((LonNmUpdateAliasRequest*)0x0)->Request.ShortForm) + 1);
-            EXPMSG.Data.UpdateAliasRequest.ShortIndex = (LonByte) actualIndex;  
+            EXPMSG.Length = (unsigned char) (sizeof(unsigned char) + sizeof(((LonNmUpdateAliasRequest*)0x0)->Request.ShortForm) + 1);
+            EXPMSG.Data.UpdateAliasRequest.ShortIndex = (unsigned char) actualIndex;  
             EXPMSG.Data.UpdateAliasRequest.Request.ShortForm.AliasConfig = *pAlias;
         }
         else
         {
             /* Use the long form of the request */
-            EXPMSG.Length = (LonByte) (sizeof(LonByte) + sizeof(((LonNmUpdateAliasRequest*)0x0)->Request.LongForm) + 1);
+            EXPMSG.Length = (unsigned char) (sizeof(unsigned char) + sizeof(((LonNmUpdateAliasRequest*)0x0)->Request.LongForm) + 1);
             EXPMSG.Data.UpdateAliasRequest.ShortIndex = 255;  
             LON_SET_UNSIGNED_WORD(EXPMSG.Data.UpdateAliasRequest.Request.LongForm.LongIndex, actualIndex);
             EXPMSG.Data.UpdateAliasRequest.Request.LongForm.AliasConfig = *pAlias;
@@ -1558,19 +1558,19 @@ const LonApiError LonUpdateConfigData(const LonConfigData* const pConfigData)
         memset(pSmipMsg, 0, sizeof(LonSmipMsg));
     
         pSmipMsg->Header.Command = LonNiNetManagement;
-        pSmipMsg->Header.Length = (LonByte)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmWriteMemoryRequest) + sizeof(LonConfigData));
+        pSmipMsg->Header.Length = (unsigned char)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmWriteMemoryRequest) + sizeof(LonConfigData));
     
         EXPMSG.Code = LonNmWriteMemory;
-        EXPMSG.Length = (LonByte) (sizeof(LonNmWriteMemoryRequest) + sizeof(LonConfigData) + 1);
+        EXPMSG.Length = (unsigned char) (sizeof(LonNmWriteMemoryRequest) + sizeof(LonConfigData) + 1);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_SERVICE, LonServiceRequest);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_TAG, NM_ND_TAG);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_AUTHENTICATED, TRUE);
         EXPMSG.Data.WriteMemory.Mode = LonConfigStructRelative;         /* Configuration address relative memory write */
         LON_SET_UNSIGNED_WORD(EXPMSG.Data.WriteMemory.Address, 0);
-        EXPMSG.Data.WriteMemory.Count = (LonByte) sizeof(LonConfigData); 
+        EXPMSG.Data.WriteMemory.Count = (unsigned char) sizeof(LonConfigData); 
         EXPMSG.Data.WriteMemory.Form = LonConfigCsRecalculationReset;   /* recalculate just configuration checksum     */
     
-        memcpy((LonByte*)&(EXPMSG.Data) + sizeof(LonNmWriteMemoryRequest), pConfigData, sizeof(LonConfigData));
+        memcpy((unsigned char*)&(EXPMSG.Data) + sizeof(LonNmWriteMemoryRequest), pConfigData, sizeof(LonConfigData));
     
         LdvPutMsg(pSmipMsg);
         CurrentNmNdStatus = NM_PENDING;
@@ -1610,14 +1610,14 @@ const LonApiError LonUpdateDomainConfig(const unsigned index, const LonDomain* c
         memset(pSmipMsg, 0, sizeof(LonSmipMsg));
     
         pSmipMsg->Header.Command = LonNiNetManagement;
-        pSmipMsg->Header.Length = (LonByte)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmUpdateDomainRequest));
+        pSmipMsg->Header.Length = (unsigned char)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmUpdateDomainRequest));
     
         EXPMSG.Code = LonNmUpdateDomain;
-        EXPMSG.Length = (LonByte)(sizeof(LonNmUpdateDomainRequest) + 1);
+        EXPMSG.Length = (unsigned char)(sizeof(LonNmUpdateDomainRequest) + 1);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_SERVICE, LonServiceRequest);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_TAG, NM_ND_TAG);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_AUTHENTICATED, TRUE);
-        EXPMSG.Data.UpdateDomainRequest.Index = (LonByte)index;
+        EXPMSG.Data.UpdateDomainRequest.Index = (unsigned char)index;
         EXPMSG.Data.UpdateDomainRequest.Domain = *pDomain;
     
         LdvPutMsg(pSmipMsg);
@@ -1652,7 +1652,7 @@ const LonApiError LonUpdateNvConfig(const unsigned index, const LonNvConfig* con
         result = LonApiNmNdAlreadyPending;
     else 
     {
-        VerifyNv((LonByte) index, 0);
+        VerifyNv((unsigned char) index, 0);
 
         if (result == LonApiNoError) 
         {
@@ -1665,7 +1665,7 @@ const LonApiError LonUpdateNvConfig(const unsigned index, const LonNvConfig* con
                 memset(pSmipMsg, 0, sizeof(LonSmipMsg));
             
                 pSmipMsg->Header.Command = LonNiNetManagement;
-                pSmipMsg->Header.Length = (LonByte)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmUpdateNvRequest));
+                pSmipMsg->Header.Length = (unsigned char)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmUpdateNvRequest));
                 
                 EXPMSG.Code = LonNmUpdateNvConfig;
                 LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_SERVICE, LonServiceRequest);
@@ -1675,14 +1675,14 @@ const LonApiError LonUpdateNvConfig(const unsigned index, const LonNvConfig* con
                 if (index < 255) /* index should always be less than 255 for this shortstack implementation as only a maximum of 254 nvs is possible*/
                 {
                     /* Use the short form of the request */
-                    EXPMSG.Length = (LonByte) (sizeof(LonByte) + sizeof(((LonNmUpdateNvRequest*)0x0)->Request.ShortForm) + 1);
-                    EXPMSG.Data.UpdateNvRequest.ShortIndex = (LonByte) index;  
+                    EXPMSG.Length = (unsigned char) (sizeof(unsigned char) + sizeof(((LonNmUpdateNvRequest*)0x0)->Request.ShortForm) + 1);
+                    EXPMSG.Data.UpdateNvRequest.ShortIndex = (unsigned char) index;  
                     EXPMSG.Data.UpdateNvRequest.Request.ShortForm.NvConfig = *pNvConfig;
                 }
                 else
                 {
                     /* Use the long form of the request */
-                    EXPMSG.Length = (LonByte) (sizeof(LonByte) + sizeof(((LonNmUpdateAliasRequest*)0x0)->Request.LongForm) + 1);
+                    EXPMSG.Length = (unsigned char) (sizeof(unsigned char) + sizeof(((LonNmUpdateAliasRequest*)0x0)->Request.LongForm) + 1);
                     EXPMSG.Data.UpdateNvRequest.ShortIndex = 255;  
                     LON_SET_UNSIGNED_WORD(EXPMSG.Data.UpdateNvRequest.Request.LongForm.LongIndex, index);
                     EXPMSG.Data.UpdateNvRequest.Request.LongForm.NvConfig = *pNvConfig;
@@ -1754,7 +1754,7 @@ const LonApiError LonClearStatus(void)
  */
 const LonApiError LonSendPing(void)
 {
-    LonByte data[2];
+    unsigned char data[2];
     data[0] = LonUsopPing;
     data[1] = 0; /* Payload length should be at least two; so send a dummy byte. */
     return SendLocal(LonNiUsop, data, 2);
@@ -1780,13 +1780,13 @@ const LonApiError LonSendPing(void)
  */
 const LonApiError LonNvIsBound(const unsigned index)
 {
-    LonApiError result = VerifyNv((LonByte) index, 0);
+    LonApiError result = VerifyNv((unsigned char) index, 0);
 
     if (result == LonApiNoError) 
     {
-        LonByte data[2];
+        unsigned char data[2];
         data[0] = LonUsopNvIsBound;
-        data[1] = (LonByte) index;
+        data[1] = (unsigned char) index;
         result = SendLocal(LonNiUsop, data, 2);
     }
     return result;  
@@ -1818,9 +1818,9 @@ const LonApiError LonMtIsBound(const unsigned index)
         result = LonApiIndexInvalid;
     else
     {
-        LonByte data[2];
+        unsigned char data[2];
         data[0] = LonUsopMtIsBound;
-        data[1] = (LonByte) index;
+        data[1] = (unsigned char) index;
         result = SendLocal(LonNiUsop, data, 2);
     }
     return result;
@@ -1839,7 +1839,7 @@ const LonApiError LonMtIsBound(const unsigned index)
  */
 const LonApiError LonGoUnconfigured(void)
 {
-    LonByte data[2];
+    unsigned char data[2];
     data[0] = LonUsopGoUcfg;
     data[1] = 0; /* Payload length should be at least two; so send a dummy byte. */
     return SendLocal(LonNiUsop, data, 2);
@@ -1859,7 +1859,7 @@ const LonApiError LonGoUnconfigured(void)
  */
 const LonApiError LonGoConfigured(void)
 {
-    LonByte data[2];
+    unsigned char data[2];
     data[0] = LonUsopGoCfg;
     data[1] = 0; /* Payload length should be at least two; so send a dummy byte. */
     return SendLocal(LonNiUsop, data, 2);
@@ -1883,7 +1883,7 @@ const LonApiError LonGoConfigured(void)
  */
 const LonApiError LonQueryAppSignature(LonBool bInvalidate)
 {
-    LonByte data[2];
+    unsigned char data[2];
     data[0] = LonUsopQueryAppSignature;
     data[1] = bInvalidate ? 1 : 0;
     return SendLocal(LonNiUsop, data, 2);
@@ -1904,7 +1904,7 @@ const LonApiError LonQueryAppSignature(LonBool bInvalidate)
  */
 const LonApiError LonQueryVersion() 
 {
-    const LonByte data[2] = { LonUsopVersion, 0 };
+    const unsigned char data[2] = { LonUsopVersion, 0 };
     return SendLocal(LonNiUsop, data, 2);
 }
 
@@ -1922,9 +1922,9 @@ const LonApiError LonQueryVersion()
  * addition without overflow. When the response is received, the API activates the
  * <LonEchoReceived> callback. 
  */ 
-const LonApiError LonRequestEcho(const LonByte data[LON_ECHO_SIZE])
+const LonApiError LonRequestEcho(const unsigned char data[LON_ECHO_SIZE])
 {
-    LonByte payload[1+LON_ECHO_SIZE] = { LonUsopEcho };
+    unsigned char payload[1+LON_ECHO_SIZE] = { LonUsopEcho };
     memcpy(&payload[1], data, LON_ECHO_SIZE);
     return SendLocal(LonNiUsop, payload, 1+LON_ECHO_SIZE);
 }

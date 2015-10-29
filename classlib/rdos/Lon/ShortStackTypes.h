@@ -214,7 +214,7 @@ typedef LON_ENUM_BEGIN(LonApiError)
  *  and converts a LonUbits16 into a LonWord.
  */
 #define LON_GET_UNSIGNED_WORD(n)          (((LonUbits16)((n).msb) << 8)+(LonUbits16)((n).lsb))
-#define LON_SET_UNSIGNED_WORD(n, v)       (n).msb = (LonByte)((v)>>8); (n).lsb = (LonByte)(v)
+#define LON_SET_UNSIGNED_WORD(n, v)       (n).msb = (unsigned char)((v)>>8); (n).lsb = (unsigned char)(v)
 
 /*
  *  Macros: LON_GET_SIGNED_WORD, LON_SET_SIGNED_WORD
@@ -312,31 +312,31 @@ typedef LON_ENUM_BEGIN(LonApiError)
  *  See <LonDirectModeTransceiver> for direct-mode transceiver parameters.
  *  Previously named xcvr_status_struct. 
  */
-typedef LonByte  LonTransceiverParameters[LON_COMMUNICATIONS_PARAMETER_LENGTH];
+typedef unsigned char  LonTransceiverParameters[LON_COMMUNICATIONS_PARAMETER_LENGTH];
 
 /*
  *  Typedef: LonUniqueId
  *  Holds the unique ID.
  */
-typedef LonByte  LonUniqueId[LON_UNIQUE_ID_LENGTH];
+typedef unsigned char  LonUniqueId[LON_UNIQUE_ID_LENGTH];
 
 /*
  *  Typedef: LonProgramId
  *  Holds the program ID.
  */
-typedef LonByte  LonProgramId[LON_PROGRAM_ID_LENGTH];
+typedef unsigned char  LonProgramId[LON_PROGRAM_ID_LENGTH];
 
 /*
  *  Typedef: LonDomainId
  *  Holds a single domain identifier.
  */
-typedef LonByte  LonDomainId[LON_DOMAIN_ID_MAX_LENGTH];
+typedef unsigned char  LonDomainId[LON_DOMAIN_ID_MAX_LENGTH];
 
 /*
  *  Typedef: LonAuthenticationKey
  *  Holds a single authentication key.
  */
-typedef LonByte  LonAuthenticationKey[LON_AUTHENTICATION_KEY_LENGTH];
+typedef unsigned char  LonAuthenticationKey[LON_AUTHENTICATION_KEY_LENGTH];
 
 /*
  *  Typedef: LonLocationId
@@ -346,25 +346,25 @@ typedef LonByte  LonAuthenticationKey[LON_AUTHENTICATION_KEY_LENGTH];
  *  Note that this is misleading, because this data is not limited to ASCII characters 
  *  or other similar requirements that could be inferred from the word "string".
  */
-typedef LonByte  LonLocationId[LON_LOCATION_LENGTH];
+typedef unsigned char  LonLocationId[LON_LOCATION_LENGTH];
 
 /*
  *  Typedef: LonSubnetId
  *  Holds a subnet identifier.
  */
-typedef LonByte  LonSubnetId;
+typedef unsigned char  LonSubnetId;
 
 /*
  *  Typedef: LonGroupId
  *  Holds a group identifier.
  */
-typedef LonByte  LonGroupId;
+typedef unsigned char  LonGroupId;
 
 /*
  *  Typedef: LonNodeId
  *  Holds a node identifier. 
  */
-typedef LonByte  LonNodeId;
+typedef unsigned char  LonNodeId;
 
 /* 
  *  Enumeration: LonNeuronModel
@@ -662,10 +662,10 @@ typedef LON_ENUM_BEGIN(LonTransmitTimer)
 
 typedef LON_STRUCT_BEGIN(LonSendGroup) 
 {
-    LonByte     TypeSize;       /* contains type, size. See LON_SENDGROUP_TYPE_* and _SIZE_* macros */
-    LonByte     DomainMember;   /* contains domain, member. See LON_SENDGROUP_DOMAIN_* and _MEMBER_* macros */
-    LonByte     RepeatRetry;    /* contains repeat, retry. See LON_SENDGROUP_REPEAT_* and _RETRY_* macros */
-    LonByte     ReceiveTransmit;/* contains receive and transmit timers. See LON_SENDGROUP_RECEIVE_* and _TRANSMIT_* macros */
+    unsigned char     TypeSize;       /* contains type, size. See LON_SENDGROUP_TYPE_* and _SIZE_* macros */
+    unsigned char     DomainMember;   /* contains domain, member. See LON_SENDGROUP_DOMAIN_* and _MEMBER_* macros */
+    unsigned char     RepeatRetry;    /* contains repeat, retry. See LON_SENDGROUP_REPEAT_* and _RETRY_* macros */
+    unsigned char     ReceiveTransmit;/* contains receive and transmit timers. See LON_SENDGROUP_RECEIVE_* and _TRANSMIT_* macros */
     LonGroupId  GroupId;     /* the group ID, 0..255 */
 } LON_STRUCT_END(LonSendGroup);
 
@@ -715,9 +715,9 @@ typedef LON_STRUCT_BEGIN(LonSendGroup)
 typedef LON_STRUCT_BEGIN(LonSendSubnetNode) 
 {
     LON_ENUM(LonAddressType)    Type;           /* should be LonAddressSubnetNode for subnet/node addressing */
-    LonByte                     DomainNode;     /* contains domain, node. See LON_SENDSN_DOMAIN_* and _NODE_* macros */
-    LonByte                     RepeatRetry;    /* contains repeat, retry. See LON_SENDSN_REPEAT_* and _RETRY_* macros */
-    LonByte                     RsvdTransmit;   /* contains transmit (top 4 bits are unused). See LON_SENDSN_TRANSMIT_TIMER_* macros */
+    unsigned char                     DomainNode;     /* contains domain, node. See LON_SENDSN_DOMAIN_* and _NODE_* macros */
+    unsigned char                     RepeatRetry;    /* contains repeat, retry. See LON_SENDSN_REPEAT_* and _RETRY_* macros */
+    unsigned char                     RsvdTransmit;   /* contains transmit (top 4 bits are unused). See LON_SENDSN_TRANSMIT_TIMER_* macros */
     LonSubnetId                 Subnet;         /* destination subnet number, 1..255    */
 } LON_STRUCT_END(LonSendSubnetNode);
 
@@ -760,9 +760,9 @@ typedef LON_STRUCT_BEGIN(LonSendSubnetNode)
 typedef LON_STRUCT_BEGIN(LonSendUniqueId) 
 {
     LON_ENUM(LonAddressType)    Type;           /* should be LonAddressNeuronId */
-    LonByte                     Domain;         /* contains the domain index. See LON_SENDNID_DOMAIN_*  macro. The remaining 7 bits must be zero */
-    LonByte                     RepeatRetry;    /* contains repeat, retry. See LON_SENDNID_REPEAT_* and _RETRY_* macros */
-    LonByte                     RsvdTransmit;   /* contains transmit (top 4 bits are unused). See LON_SENDNID_TRANSMIT_TIMER_* macros */
+    unsigned char                     Domain;         /* contains the domain index. See LON_SENDNID_DOMAIN_*  macro. The remaining 7 bits must be zero */
+    unsigned char                     RepeatRetry;    /* contains repeat, retry. See LON_SENDNID_REPEAT_* and _RETRY_* macros */
+    unsigned char                     RsvdTransmit;   /* contains transmit (top 4 bits are unused). See LON_SENDNID_TRANSMIT_TIMER_* macros */
     LonSubnetId                 Subnet;         /* destination subnet number, 1..255, or zero to pass all routers    */
     LonUniqueId                 NeuronId;       /* 48-bit unique ID of Neuron Chip or Smart Transceiver */
 } LON_STRUCT_END(LonSendUniqueId);
@@ -813,9 +813,9 @@ typedef LON_STRUCT_BEGIN(LonSendUniqueId)
 typedef LON_STRUCT_BEGIN(LonSendBroadcast) 
 {
     LON_ENUM(LonAddressType)    Type;               /* should be LonAddressBroadcast */
-    LonByte                     DomainRsvdBacklog;  /* contains domain, backlog (6th bit is unused). See LON_SENDBCAST_DOMAIN_* and _BACKLOG_* macros */
-    LonByte                     RepeatRetry;        /* contains repeat, retry. See LON_SENDBCAST_REPEAT_* and _RETRY_* macros */
-    LonByte                     RsvdTransmit;       /* contains transmit (top 4 bits are unused). See LON_SENDBCAST_TRANSMIT_TIMER_* macros */
+    unsigned char                     DomainRsvdBacklog;  /* contains domain, backlog (6th bit is unused). See LON_SENDBCAST_DOMAIN_* and _BACKLOG_* macros */
+    unsigned char                     RepeatRetry;        /* contains repeat, retry. See LON_SENDBCAST_REPEAT_* and _RETRY_* macros */
+    unsigned char                     RsvdTransmit;       /* contains transmit (top 4 bits are unused). See LON_SENDBCAST_TRANSMIT_TIMER_* macros */
     LonSubnetId                 Subnet;             /* destination subnet number, 1..255 for subnet broadcast, zero for domain broadcast */
 } LON_STRUCT_END(LonSendBroadcast);
 
@@ -875,8 +875,8 @@ typedef LON_UNION_BEGIN(LonSendAddress)
 
 typedef LON_STRUCT_BEGIN(LonReceiveSubnetNode) 
 {
-    LonByte     Subnet;
-    LonByte     Node;       /* node identifier, use LON_RECEIVESN_NODE_* macros */
+    unsigned char     Subnet;
+    unsigned char     Node;       /* node identifier, use LON_RECEIVESN_NODE_* macros */
 } LON_STRUCT_END(LonReceiveSubnetNode);
 
 /*
@@ -968,7 +968,7 @@ typedef LON_ENUM_BEGIN(LonReceiveDestinationAddressFormat)
 
 typedef LON_STRUCT_BEGIN(LonReceiveAddress) 
 {
-    LonByte                 DomainFormat;   /* contains domain, flexDomain, format. Use LON_RECEIVEADDRESS_* macros to access data */
+    unsigned char                 DomainFormat;   /* contains domain, flexDomain, format. Use LON_RECEIVEADDRESS_* macros to access data */
     LonReceiveSubnetNode    Source;
     LonReceiveDestination   Destination;
 } LON_STRUCT_END(LonReceiveAddress);
@@ -990,8 +990,8 @@ typedef LON_STRUCT_BEGIN(LonReceiveAddress)
 
 typedef LON_STRUCT_BEGIN(LonResponseSource) 
 {
-    LonByte Subnet;     /* subnet ID */
-    LonByte Node;       /* contains node, isNode. Use LON_RESPONSESOURCE_NODE_* and LON_RESPONSESOURCE_IS_SUBNETNODE_* macros */
+    unsigned char Subnet;     /* subnet ID */
+    unsigned char Node;       /* contains node, isNode. Use LON_RESPONSESOURCE_NODE_* and LON_RESPONSESOURCE_IS_SUBNETNODE_* macros */
 } LON_STRUCT_END(LonResponseSource);
 
 /*
@@ -1012,7 +1012,7 @@ typedef LON_STRUCT_BEGIN(LonResponseSource)
 typedef LON_STRUCT_BEGIN(LonResponseSubnetNode) 
 {
     LonSubnetId Subnet;         /* subnet ID */
-    LonByte     Node;           /* node ID, use LON_RESPONSESN_NODE_* macros */
+    unsigned char     Node;           /* node ID, use LON_RESPONSESN_NODE_* macros */
 } LON_STRUCT_END(LonResponseSubnetNode);
 
 /*
@@ -1037,9 +1037,9 @@ typedef LON_STRUCT_BEGIN(LonResponseSubnetNode)
 typedef LON_STRUCT_BEGIN(LonResponseGroup) 
 {
     LonSubnetId Subnet;         /* subnet ID */
-    LonByte     Node;
-    LonByte     Group;
-    LonByte     Member;         /* use LON_RESPGROUP_MEMBER_* macros for access */
+    unsigned char     Node;
+    unsigned char     Group;
+    unsigned char     Member;         /* use LON_RESPGROUP_MEMBER_* macros for access */
 } LON_STRUCT_END(LonResponseGroup);
 
 /*
@@ -1070,7 +1070,7 @@ typedef LON_UNION_BEGIN(LonResponseDestination)
 
 typedef LON_STRUCT_BEGIN(LonResponseAddress) 
 {
-    LonByte                 Domain;         /* contains domain, flexDomain. Use LON_RESPONSEADDRESS_* macros */
+    unsigned char                 Domain;         /* contains domain, flexDomain. Use LON_RESPONSEADDRESS_* macros */
     LonResponseSource       Source;
     LonResponseDestination  Destination;
 } LON_STRUCT_END(LonResponseAddress);
@@ -1131,10 +1131,10 @@ typedef LON_UNION_BEGIN(LonExplicitAddress)
 
 typedef LON_STRUCT_BEGIN(LonAddressTableGroup) 
 {
-    LonByte     TypeSize;               /* contains type, size. Use the LON_ADDRESS_GROUP_* macros */
-    LonByte     DomainMember;           /* contains domain, member. Use the LON_ADDRESS_GROUP_* macros */
-    LonByte     RepeatRetry;            /* contains repeatTimer, retry. Use the LON_ADDRESS_GROUP_* macros */
-    LonByte     ReceiveTransmit;        /* contains receive and transmit timer. Use Lon_ADDRESS_GROUP_* macros */
+    unsigned char     TypeSize;               /* contains type, size. Use the LON_ADDRESS_GROUP_* macros */
+    unsigned char     DomainMember;           /* contains domain, member. Use the LON_ADDRESS_GROUP_* macros */
+    unsigned char     RepeatRetry;            /* contains repeatTimer, retry. Use the LON_ADDRESS_GROUP_* macros */
+    unsigned char     ReceiveTransmit;        /* contains receive and transmit timer. Use Lon_ADDRESS_GROUP_* macros */
     LonGroupId  Group;                  /* the group identifier */
 } LON_STRUCT_END(LonAddressTableGroup);
 
@@ -1164,8 +1164,8 @@ typedef LON_STRUCT_BEGIN(LonAddressTableGroup)
 typedef LON_STRUCT_BEGIN(LonAddressTableSubnetNode) 
 {
     LON_ENUM(LonAddressType)    Type;           /* should be LonAddressSubnetNode   */
-    LonByte                     DomainNode;     /* contains domain, node. Use LON_ADDRESS_SN_* macros */
-    LonByte                     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_SN_* macros */
+    unsigned char                     DomainNode;     /* contains domain, node. Use LON_ADDRESS_SN_* macros */
+    unsigned char                     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_SN_* macros */
     LON_ENUM(LonTransmitTimer)  TransmitTimer;
     LonSubnetId                 Subnet;
 } LON_STRUCT_END(LonAddressTableSubnetNode);
@@ -1196,8 +1196,8 @@ typedef LON_STRUCT_BEGIN(LonAddressTableSubnetNode)
 typedef LON_STRUCT_BEGIN(LonAddressTableBroadcast) 
 {
     LON_ENUM(LonAddressType)    Type;           /* should be LonAddressBroadcast */
-    LonByte                     DomainBacklog;  /* contains domain, backlog. Use LON_ADDRESS_BROADCAST_* macros */
-    LonByte                     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_BROADCAST_* macros instead */
+    unsigned char                     DomainBacklog;  /* contains domain, backlog. Use LON_ADDRESS_BROADCAST_* macros */
+    unsigned char                     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_BROADCAST_* macros instead */
     LON_ENUM(LonTransmitTimer)  TransmitTimer;
     LonSubnetId                 Subnet;
 } LON_STRUCT_END(LonAddressTableBroadcast);
@@ -1217,8 +1217,8 @@ typedef LON_STRUCT_BEGIN(LonAddressTableBroadcast)
 typedef LON_STRUCT_BEGIN(LonAddressTableTurnaround) 
 {
     LON_ENUM(LonAddressType)    Type;           /* should be LonAddressTurnaround */
-    LonByte                     Turnaround;     /* 1: turnaround record. 0: not in use */
-    LonByte                     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_TURNAROUND_* macros */
+    unsigned char                     Turnaround;     /* 1: turnaround record. 0: not in use */
+    unsigned char                     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_TURNAROUND_* macros */
     LON_ENUM(LonTransmitTimer)  TransmitTimer; 
 } LON_STRUCT_END(LonAddressTableTurnaround);
 
@@ -1283,8 +1283,8 @@ typedef LON_STRUCT_BEGIN(LonDomain)
 {
     LonDomainId             Id;         
     LonSubnetId             Subnet;
-    LonByte                 NodeClone;          /* contains nonclone, node. Use LON_DOMAIN_* macros */
-    LonByte                 InvalidIdLength;    /* use LON_DOMAIN_INVALID_* and LON_DOMAIN_ID_LENGTH_* macros */
+    unsigned char                 NodeClone;          /* contains nonclone, node. Use LON_DOMAIN_* macros */
+    unsigned char                 InvalidIdLength;    /* use LON_DOMAIN_INVALID_* and LON_DOMAIN_ID_LENGTH_* macros */
     LonAuthenticationKey    Key;
 } LON_STRUCT_END(LonDomain);
 
@@ -1322,9 +1322,9 @@ typedef LON_STRUCT_BEGIN(LonDomain)
 
 typedef LON_STRUCT_BEGIN(LonNvConfig) 
 {
-    LonByte     SelhiDirPrio;   /* contains selectorHigh, direction (input or output), priority. Use LON_NV_* macros */
-    LonByte     SelectorLow;
-    LonByte     Attributes;     /* contains turnaround, service, authentication, and address table index. Use LON_NV_* macros */
+    unsigned char     SelhiDirPrio;   /* contains selectorHigh, direction (input or output), priority. Use LON_NV_* macros */
+    unsigned char     SelectorLow;
+    unsigned char     Attributes;     /* contains turnaround, service, authentication, and address table index. Use LON_NV_* macros */
 } LON_STRUCT_END(LonNvConfig);
 
 /*
@@ -1334,7 +1334,7 @@ typedef LON_STRUCT_BEGIN(LonNvConfig)
 typedef LON_STRUCT_BEGIN(LonAliasConfig) 
 {
     LonNvConfig     Alias;
-    LonByte         Primary;
+    unsigned char         Primary;
     LonWord         HostPrimary;   /* iff primary is 0xFF */
 } LON_STRUCT_END(LonAliasConfig);
 
@@ -1374,8 +1374,8 @@ typedef LON_STRUCT_BEGIN(LonAliasConfig)
 
 typedef LON_STRUCT_BEGIN(LonDirectModeTransceiver) 
 {
-    LonByte      Parameter_1;    /* contains collission-detect, bit-sync-threshold, filter, and hysteresis. Use LON_DIRECT_XCVR_* macros */
-    LonByte      Parameter_2;    /* contains cd-to-end-packet, cd-tail, cd-preamble. Use LON_DIRECT_XCVR_* macros */
+    unsigned char      Parameter_1;    /* contains collission-detect, bit-sync-threshold, filter, and hysteresis. Use LON_DIRECT_XCVR_* macros */
+    unsigned char      Parameter_2;    /* contains cd-to-end-packet, cd-tail, cd-preamble. Use LON_DIRECT_XCVR_* macros */
 } LON_STRUCT_END(LonDirectModeTransceiver);
 
 /*
@@ -1416,21 +1416,21 @@ typedef LON_STRUCT_BEGIN(LonConfigData)
 {
     LonWord         ChannelId;
     LonLocationId   Location;
-    LonByte         Clock;              /* Input clock and communications clock; use LON_CONFIG_* macros */
-    LonByte         CommConfiguration;  /* Communications type and pin direction; use LON_CONFIG_* macros */
-    LonByte         PreambleLength;     /* Length of the preamble for Direct mode; set to zero for all other modes */
-    LonByte         PacketCycle;        /* Packet cycle duration used for counting down the backlog */
-    LonByte         Beta2Control;       /* Beta 2 slot width */
-    LonByte         TransmitInterpacket;/* Interpacket padding after transmitting */
-    LonByte         ReceiveInterpacket; /* Interpacket padding after receiving */
-    LonByte         NodePriority;       /* Priority slot used by the device when sending priority messages (1 to 255) */
-    LonByte         ChannelPriorities;  /* Number of priority slots on the channel (0 to 255) */
+    unsigned char         Clock;              /* Input clock and communications clock; use LON_CONFIG_* macros */
+    unsigned char         CommConfiguration;  /* Communications type and pin direction; use LON_CONFIG_* macros */
+    unsigned char         PreambleLength;     /* Length of the preamble for Direct mode; set to zero for all other modes */
+    unsigned char         PacketCycle;        /* Packet cycle duration used for counting down the backlog */
+    unsigned char         Beta2Control;       /* Beta 2 slot width */
+    unsigned char         TransmitInterpacket;/* Interpacket padding after transmitting */
+    unsigned char         ReceiveInterpacket; /* Interpacket padding after receiving */
+    unsigned char         NodePriority;       /* Priority slot used by the device when sending priority messages (1 to 255) */
+    unsigned char         ChannelPriorities;  /* Number of priority slots on the channel (0 to 255) */
     LON_UNION_BEGIN(CommunicationParameters) 
     {
         LonTransceiverParameters    TransceiverParameters;  /* Array of seven transceiver-specific parameters for Special-Purpose mode transceivers */
         LonDirectModeTransceiver    DirectModeParameters;   /* Controls the operation of the transceiver port for direct mode transceivers */
     } LON_UNION_END(CommunicationParameters);
-    LonByte         Config_1;           /* Pre-emption timeout, network management authentication flag, and non-group receive timer; use LON_CONFIG_* macros */
+    unsigned char         Config_1;           /* Pre-emption timeout, network management authentication flag, and non-group receive timer; use LON_CONFIG_* macros */
 } LON_STRUCT_END(LonConfigData);
 
 /*
@@ -1448,7 +1448,7 @@ typedef LON_STRUCT_BEGIN(LonStatus)
     LonWord                     MissedMessages;
     LON_ENUM(LonResetCause)     ResetCause;
     LON_ENUM(LonNodeState)      NodeState;
-    LonByte                     VersionNumber;
+    unsigned char                     VersionNumber;
     LON_ENUM(LonSystemError)    ErrorLog;
     LON_ENUM(LonNeuronModel)    ModelNumber;
 } LON_STRUCT_END(LonStatus);
@@ -1611,7 +1611,7 @@ typedef LON_ENUM_BEGIN(LonNvOrigin)
 
 typedef struct 
 {
-    LonByte     Attributes; /* Contains Priority, ServiceType, Tag. Use LON_CORRELATOR_* macros */
+    unsigned char     Attributes; /* Contains Priority, ServiceType, Tag. Use LON_CORRELATOR_* macros */
 } LonCorrelator;
 
 /*
@@ -1714,7 +1714,7 @@ typedef LON_ENUM_BEGIN(LonSmipCmd)
  */
 typedef LON_STRUCT_BEGIN(LonSmipHdr) 
 {
-    LonByte                 Length;        /* Length of the data to follow, not including the <LonSmipCmd> preamble */
+    unsigned char                 Length;        /* Length of the data to follow, not including the <LonSmipCmd> preamble */
     LON_ENUM(LonSmipCmd)    Command;       /* Network interface command, possibly OR'ed with additional information (such as the queue identifier) */ 
 } LON_STRUCT_END(LonSmipHdr);
 
@@ -1735,7 +1735,7 @@ typedef LON_STRUCT_BEGIN(LonSmipHdr)
 typedef LON_STRUCT_BEGIN(LonSmipMsg) 
 {
     LonSmipHdr  Header;                     /* message header   */
-    LonByte     Payload[LON_SMIP_MAX_DATA];    /* message payload. */
+    unsigned char     Payload[LON_SMIP_MAX_DATA];    /* message payload. */
 } LON_STRUCT_END(LonSmipMsg);
 
 /* 
@@ -1794,22 +1794,22 @@ typedef LON_STRUCT_BEGIN(LonResetNotification)
     /*
      *  The following fields were present since Shortstack 2.0
      */
-    LonByte                     State;              /* use LON_RESET_STATE_* macros                 */
-    LonByte                     Version;            /* link layer protocol version number           */
+    unsigned char                     State;              /* use LON_RESET_STATE_* macros                 */
+    unsigned char                     Version;            /* link layer protocol version number           */
 
     /*
      *  The following fields are only present if the link layer protocol version
      *  number (reported via the version field) indicates version 3 or higher
      */
-    LonByte                     Flags;              
+    unsigned char                     Flags;              
     LonWord                     Key;                /* this Micro Server's key                      */
     LON_ENUM(LonResetCause)     ResetCause;         /* last known cause of Micro Server reset   */
     LON_ENUM(LonSystemError)    ErrorLog;           /* last error from the Micro Server's error log */
     LonUniqueId                 UniqueId;           /*  Micro Server's unique ID (Neuron ID)        */
 
-    LonByte                     MaxAddresses;       /* size of the address table                    */
-    LonByte                     MaxDomains;         /* size of the domain table                     */
-    LonByte                     MaxAliases;         /* size of the alias table                      */
+    unsigned char                     MaxAddresses;       /* size of the address table                    */
+    unsigned char                     MaxDomains;         /* size of the domain table                     */
+    unsigned char                     MaxAliases;         /* size of the alias table                      */
 } LON_STRUCT_END(LonResetNotification);
 
 /* 
@@ -1820,7 +1820,7 @@ typedef LON_STRUCT_BEGIN(LonResetNotification)
  */
 typedef LON_STRUCT_BEGIN(LonNmNvFetchRequest) 
 {
-    LonByte     Index;
+    unsigned char     Index;
     LonWord     EscapeIndex;  /* exists iff index==0xFF    */
 } LON_STRUCT_END(LonNmNvFetchRequest);
 
@@ -1865,7 +1865,7 @@ typedef LON_UNION_BEGIN(LonNmInstallRequest)
             {
                 /* Used when NvInfoType is *LonNvInfoSdText* */
                 LonWord Offset;         /* Byte offset from beginning of SD text */
-                LonByte Length;         /* Maximum number of SD bytes to return  */
+                unsigned char Length;         /* Maximum number of SD bytes to return  */
             } LON_STRUCT_NESTED_END(SdText);
         } LON_UNION_NESTED_END(AdditionalParameters);
     } LON_STRUCT_NESTED_END(QueryNvInfo);
@@ -1880,7 +1880,7 @@ typedef LON_UNION_BEGIN(LonNmInstallRequest)
             {
                 /* Used when NodeInfoType is *LonNodeInfoSdText* */
                 LonWord Offset;        /* Byte offset from beginning of SD text */
-                LonByte Length;        /* Maximum number of SD bytes to return  */
+                unsigned char Length;        /* Maximum number of SD bytes to return  */
             } LON_STRUCT_NESTED_END(SdText);
         } LON_UNION_NESTED_END(AdditionalParameters);
     } LON_STRUCT_NESTED_END(QueryNodeInfo);
@@ -2042,11 +2042,11 @@ typedef LON_UNION_BEGIN(LonNmInstallResponse)
     /* Response for requested info LonInstallQueryNvInfo, LonNvInfoDescriptor */
     LON_STRUCT_NESTED_BEGIN(NvDescriptor)
     {
-        LonByte LengthAndOrigin;    /* Use LON_NV_DESC_LENGTH_* and LON_NV_DESC_ORIGIN_* macros */
-        LonByte Defaults;           /* Use LON_NV_DESC_IS_OUTPUT_* and LON_NV_DESC_DFLT_* macros */
-        LonByte BasicAttributes;    /* Use LON_NV_DESC_ATTR_* macros */
-        LonByte SnvtIndex;
-        LonByte ExtendedAttributes; /* Use LON_NV_DESC_EXT_ATTR_* macros */
+        unsigned char LengthAndOrigin;    /* Use LON_NV_DESC_LENGTH_* and LON_NV_DESC_ORIGIN_* macros */
+        unsigned char Defaults;           /* Use LON_NV_DESC_IS_OUTPUT_* and LON_NV_DESC_DFLT_* macros */
+        unsigned char BasicAttributes;    /* Use LON_NV_DESC_ATTR_* macros */
+        unsigned char SnvtIndex;
+        unsigned char ExtendedAttributes; /* Use LON_NV_DESC_EXT_ATTR_* macros */
         LonWord ArraySize;
         LonWord ArrayElement;
         char    NvName[LON_NV_NAME_LEN]; /* Optional field - Included only if
@@ -2056,8 +2056,8 @@ typedef LON_UNION_BEGIN(LonNmInstallResponse)
     /* Response for requested info LonInstallQueryNvInfo, LonNvInfoRateEstimate */
     LON_STRUCT_NESTED_BEGIN(NvRate)
     {
-        LonByte    RateEstimate;       /* Encoded rate estimate. Only valid if 'LON_NV_DESC_EXT_ATTR_RE_AVAIL' is set in NV NvDescriptor */
-        LonByte    MaxRateEstimate;    /* Encoded max rate estimate. Only valid if 'LON_NV_DESC_EXT_ATTR_MRE_AVAIL' is set in NV NvDescriptor */
+        unsigned char    RateEstimate;       /* Encoded rate estimate. Only valid if 'LON_NV_DESC_EXT_ATTR_RE_AVAIL' is set in NV NvDescriptor */
+        unsigned char    MaxRateEstimate;    /* Encoded max rate estimate. Only valid if 'LON_NV_DESC_EXT_ATTR_MRE_AVAIL' is set in NV NvDescriptor */
     } LON_STRUCT_NESTED_END(NvRate);
 
     /* Response for requested info LonInstallQueryNvInfo,  LonNvInfoName */
@@ -2066,19 +2066,19 @@ typedef LON_UNION_BEGIN(LonNmInstallResponse)
     /* Response for requested info LonInstallQueryNvInfo, LonNvInfoSdText */
     LON_STRUCT_NESTED_BEGIN(NvSd)
     {
-        LonByte    Length;      /* Number of bytes of SD text returned */
-        LonByte    Text[1];     /* SD text - actual length is Length above. 
+        unsigned char    Length;      /* Number of bytes of SD text returned */
+        unsigned char    Text[1];     /* SD text - actual length is Length above. 
                                  * Might not be NULL terminated. */
     } LON_STRUCT_NESTED_END(NvSd);
 
     /* Response for requested info LonInstallQueryNvInfo, LonNvInfoSnvtIndex */
-    LonByte    SnvtTypeIndex;
+    unsigned char    SnvtTypeIndex;
 
     /* Response for requested info LonInstallQueryNodeInfo, LonNodeInfoSdText */
     LON_STRUCT_NESTED_BEGIN(NodeSd)
     {
-        LonByte    Length;      /* Number of bytes of SD text returned */
-        LonByte    Text[1];     /* SD text - actual length is Length above. 
+        unsigned char    Length;      /* Number of bytes of SD text returned */
+        unsigned char    Text[1];     /* SD text - actual length is Length above. 
                                  * Might not be NULL terminated. */
     } LON_STRUCT_NESTED_END(NodeSd);
 } LON_UNION_END(LonNmInstallResponse) ;
@@ -2137,7 +2137,7 @@ typedef LON_STRUCT_BEGIN(LonNmReadMemoryRequest)
 {
     LON_ENUM(LonMemoryReadWriteMode)    Mode;
     LonWord                             Address;
-    LonByte                             Count;
+    unsigned char                             Count;
 } LON_STRUCT_END(LonNmReadMemoryRequest);
 
 /*
@@ -2153,7 +2153,7 @@ typedef LON_STRUCT_BEGIN(LonNmWriteMemoryRequest)
 {
     LON_ENUM(LonMemoryReadWriteMode)    Mode;
     LonWord                             Address;
-    LonByte                             Count;
+    unsigned char                             Count;
     LON_ENUM(LonMemoryWriteForm)        Form;
     /* <count> bytes of data following... */
 } LON_STRUCT_END(LonNmWriteMemoryRequest);
@@ -2194,7 +2194,7 @@ typedef LON_ENUM_BEGIN(LonApplicationMessageCode)
  */
 typedef LON_STRUCT_BEGIN(LonNmQueryDomainRequest) 
 {
-    LonByte Index;             /* Domain index                 */
+    unsigned char Index;             /* Domain index                 */
 } LON_STRUCT_END(LonNmQueryDomainRequest);
 
 /*
@@ -2207,7 +2207,7 @@ typedef LON_STRUCT_BEGIN(LonNmQueryDomainRequest)
  */
 typedef LON_STRUCT_BEGIN(LonNmQueryNvAliasRequest) 
 {
-    LonByte Index;              /* NV config table index                 */
+    unsigned char Index;              /* NV config table index                 */
     LonWord LongIndex;          /* Used only when Index is 255           */
 } LON_STRUCT_END(LonNmQueryNvAliasRequest);
 
@@ -2217,7 +2217,7 @@ typedef LON_STRUCT_BEGIN(LonNmQueryNvAliasRequest)
  */
 typedef LON_STRUCT_BEGIN(LonNmQueryAddressRequest) 
 {
-    LonByte Index;             /* address table index                 */
+    unsigned char Index;             /* address table index                 */
 } LON_STRUCT_END(LonNmQueryAddressRequest);
 
 /*
@@ -2249,7 +2249,7 @@ typedef LON_STRUCT_BEGIN(LonNdQueryXcvrResponse)
 typedef LON_STRUCT_BEGIN(LonNmQuerySiDataRequest) 
 {
       LonWord   Offset;
-      LonByte   Count;
+      unsigned char   Count;
 } LON_STRUCT_END(LonNmQuerySiDataRequest);
 
 /*
@@ -2258,7 +2258,7 @@ typedef LON_STRUCT_BEGIN(LonNmQuerySiDataRequest)
  */
 typedef LON_STRUCT_BEGIN(LonNmUpdateAddressRequest) 
 {
-    LonByte     Index;
+    unsigned char     Index;
     LonAddress  Address;
 } LON_STRUCT_END(LonNmUpdateAddressRequest);
 
@@ -2275,7 +2275,7 @@ typedef LON_STRUCT_BEGIN(LonNmUpdateAddressRequest)
  */
 typedef LON_STRUCT_BEGIN(LonNmUpdateNvRequest) 
 {
-    LonByte      ShortIndex;
+    unsigned char      ShortIndex;
 
     LON_UNION_NESTED_BEGIN(Request) 
     {
@@ -2307,7 +2307,7 @@ typedef LON_STRUCT_BEGIN(LonNmUpdateNvRequest)
 
 typedef LON_STRUCT_BEGIN(LonNmUpdateAliasRequest) 
 {
-    LonByte      ShortIndex;
+    unsigned char      ShortIndex;
 
     LON_UNION_NESTED_BEGIN(Request) 
     {
@@ -2329,7 +2329,7 @@ typedef LON_STRUCT_BEGIN(LonNmUpdateAliasRequest)
  */
 typedef LON_STRUCT_BEGIN(LonNmUpdateDomainRequest) 
 {
-    LonByte     Index;
+    unsigned char     Index;
     LonDomain   Domain;
 } LON_STRUCT_END(LonNmUpdateDomainRequest);
 
@@ -2424,17 +2424,17 @@ typedef LON_ENUM_BEGIN(LonCompletionType)
  
 typedef LON_STRUCT_BEGIN(LonExplicitMessage) 
 {
-    LonByte      Attributes_1;   /* contains msgType, serviceType, authenticated, tag. Use LON_EXPMSG_* macros */
-    LonByte      Attributes_2;   /* contains priority, path, completionCode, explicitAddressing, altPath, pool, response. Use LON_-_* macros */
-    LonByte      Length;         /* Length of message code and data to follow    */
+    unsigned char      Attributes_1;   /* contains msgType, serviceType, authenticated, tag. Use LON_EXPMSG_* macros */
+    unsigned char      Attributes_2;   /* contains priority, path, completionCode, explicitAddressing, altPath, pool, response. Use LON_-_* macros */
+    unsigned char      Length;         /* Length of message code and data to follow    */
     /* not including any explicit address field.    */
 #if LON_EXPLICIT_ADDRESSING
     LonExplicitAddress  Address; /* Optional explicit addressing information   */
 #endif  /* LON_EXPLICIT_ADDRESSING */
-    LonByte      Code;           /* Message code                                 */
+    unsigned char      Code;           /* Message code                                 */
     LON_UNION_BEGIN(Data)        /* Message data                                 */
     {
-        LonByte                     Data[1];
+        unsigned char                     Data[1];
         LonNmNvFetchRequest         NvFetch;
         LonNmInstallRequest         Install;
         LonNmSetNodeModeRequest     NodeMode;
@@ -2510,17 +2510,17 @@ typedef LON_STRUCT_BEGIN(LonExplicitMessage)
 
 typedef LON_STRUCT_BEGIN(LonNvMessage) 
 { 
-    LonByte             Attributes_1;       /* contains msgType, nvPoll, and tag (4th and 5th bits are unused). Use LON_NVMSG_* macros */
-    LonByte             Attributes_2;       /* contains priority, path, completionCode, addressingMode, turnaround, pool, and response. Use LON_NVMSG_* macros. */
+    unsigned char             Attributes_1;       /* contains msgType, nvPoll, and tag (4th and 5th bits are unused). Use LON_NVMSG_* macros */
+    unsigned char             Attributes_2;       /* contains priority, path, completionCode, addressingMode, turnaround, pool, and response. Use LON_NVMSG_* macros. */
 
-    LonByte             Length;             /* Length of network variable data to follow    */
+    unsigned char             Length;             /* Length of network variable data to follow    */
     /* not including any explicit address field.    */
 #if LON_EXPLICIT_ADDRESSING
     LonExplicitAddress  Address;   /* Optional explicit addressing information   */
 #endif
-    LonByte             Index;              /* NV index                                     */
-    LonByte             AliasIndex;         /* Alias index.                                 */
-    LonByte             NvData[1];          /* "length" bytes of NV data                    */
+    unsigned char             Index;              /* NV index                                     */
+    unsigned char             AliasIndex;         /* Alias index.                                 */
+    unsigned char             NvData[1];          /* "length" bytes of NV data                    */
 } LON_STRUCT_END(LonNvMessage);
 
 /* Literal defines the maximum NV size    */

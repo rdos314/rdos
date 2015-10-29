@@ -25,7 +25,7 @@
  * Forward declarations for functions used internally by the ShortStack ISI API.
  * These functions are implemented in ShortStackIsiInternal.c.  
  */
-extern LonApiError SendDownlinkRpc(IsiDownlinkRpcCode code, LonByte param1, LonByte param2, void* pData, unsigned len);
+extern LonApiError SendDownlinkRpc(IsiDownlinkRpcCode code, unsigned char param1, unsigned char param2, void* pData, unsigned len);
 
 /*
  * Function: IsiStop
