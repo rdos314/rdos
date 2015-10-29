@@ -190,11 +190,11 @@ typedef struct LdvDriverStatus
                                                  * and reset the SCI */
     unsigned char             DrvWakeupTime;          /* A period of time the driver waits before bringing the SCI back
                                                  * to normal after resetting the SCI */
-    LonUbits32          KeepAliveTimeout;       /* Keep-alive timer. If there is no activity on the serial lines for
+    unsigned long          KeepAliveTimeout;       /* Keep-alive timer. If there is no activity on the serial lines for
                                                  * an extended period of time, nudge the Micro Server to tell it that the 
                                                  * host is still active. This isn't required by the Micro Server, but
                                                  * may be required by the underlying hardware (e.g., RS-232 chip) */
-    LonUbits32          PutMsgTimeout;          /* Put message blocking timeout. */
+    unsigned long          PutMsgTimeout;          /* Put message blocking timeout. */
 } LdvDriverStatus;
 
 /* Receive buffer state    */
