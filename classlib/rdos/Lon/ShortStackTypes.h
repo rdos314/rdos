@@ -208,13 +208,6 @@ typedef enum LonApiError
  * This section contains the enumerations and data types used with the ShortStack LonTalk Compact 2.1 API
  */
 
-/*
- *  Macros: LON_GET_SIGNED_WORD, LON_SET_SIGNED_WORD
- *  Converts LonWord into a LonBits16 
- *  and converts a LonBits16 into a LonWord.
- */
-#define LON_GET_SIGNED_WORD(n)            ((LonBits16)LON_GET_UNSIGNED_WORD(n))
-#define LON_SET_SIGNED_WORD(n, v)         LON_SET_UNSIGNED_WORD(n, v)
 
 /*
  *  Macros: LON_GET_UNSIGNED_DOUBLEWORD, LON_SET_UNSIGNED_DOUBLEWORD
