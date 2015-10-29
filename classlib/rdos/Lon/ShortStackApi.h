@@ -1421,7 +1421,7 @@ extern void LonGoConfiguredReceived(void);
  * this callback is called. 
  * This callback is part of the optional utility API (LON_UTILITY_FUNCTIONS).
  */
-extern void LonAppSignatureReceived(LonWord appSignature);
+extern void LonAppSignatureReceived(short int appSignature);
 
 /* 
  * Callback: LonVersionReceived

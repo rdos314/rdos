@@ -1320,7 +1320,7 @@ typedef struct LonAliasConfig
 {
     LonNvConfig     Alias;
     unsigned char         Primary;
-    LonWord         HostPrimary;   /* iff primary is 0xFF */
+    short int         HostPrimary;   /* iff primary is 0xFF */
 } LonAliasConfig;
 
 /*
@@ -1399,7 +1399,7 @@ typedef struct LonDirectModeTransceiver
 
 typedef struct LonConfigData
 {
-    LonWord         ChannelId;
+    short int         ChannelId;
     LonLocationId   Location;
     unsigned char         Clock;              /* Input clock and communications clock; use LON_CONFIG_* macros */
     unsigned char         CommConfiguration;  /* Communications type and pin direction; use LON_CONFIG_* macros */
@@ -1426,11 +1426,11 @@ typedef struct LonConfigData
  */
 typedef struct LonStatus
 {
-    LonWord                     TransmitErrors;
-    LonWord                     TransactionTimeouts;
-    LonWord                     ReceiveTransactionsFull;
-    LonWord                     LostMessages;
-    LonWord                     MissedMessages;
+    short int                     TransmitErrors;
+    short int                     TransactionTimeouts;
+    short int                     ReceiveTransactionsFull;
+    short int                     LostMessages;
+    short int                     MissedMessages;
     LonResetCause     ResetCause;
     LonNodeState      NodeState;
     unsigned char                     VersionNumber;
@@ -1787,7 +1787,7 @@ typedef struct LonResetNotification
      *  number (reported via the version field) indicates version 3 or higher
      */
     unsigned char                     Flags;              
-    LonWord                     Key;                /* this Micro Server's key                      */
+    short int                     Key;                /* this Micro Server's key                      */
     LonResetCause     ResetCause;         /* last known cause of Micro Server reset   */
     LonSystemError    ErrorLog;           /* last error from the Micro Server's error log */
     LonUniqueId                 UniqueId;           /*  Micro Server's unique ID (Neuron ID)        */
@@ -1806,7 +1806,7 @@ typedef struct LonResetNotification
 typedef struct LonNmNvFetchRequest
 {
     unsigned char     Index;
-    LonWord     EscapeIndex;  /* exists iff index==0xFF    */
+    short int     EscapeIndex;  /* exists iff index==0xFF    */
 } LonNmNvFetchRequest;
 
 /*
@@ -1832,7 +1832,7 @@ typedef union LonAdditionalParameters
     struct SdText
     {
        /* Used when NodeInfoType is *LonNodeInfoSdText* */
-       LonWord Offset;        /* Byte offset from beginning of SD text */
+       short int Offset;        /* Byte offset from beginning of SD text */
        unsigned char Length;        /* Maximum number of SD bytes to return  */
     } SdText;
 } LonAdditionalParameters;
@@ -1849,7 +1849,7 @@ typedef union LonNmInstallRequest
     {
         LonInstallCommand Command; /* *LonInstallQueryNvInfo* */
         LonNvInfoType     NvInfoType;  /* Requested network variable information */
-        LonWord                     NvIndex; /* Network variable index */
+        short int                     NvIndex; /* Network variable index */
 
         /* The following parameters are used only if NvInfoType is 
          * *LonNvInfoSdText*, and should be omitted when other types of NV 
@@ -2027,8 +2027,8 @@ typedef union LonNmInstallResponse
         unsigned char BasicAttributes;    /* Use LON_NV_DESC_ATTR_* macros */
         unsigned char SnvtIndex;
         unsigned char ExtendedAttributes; /* Use LON_NV_DESC_EXT_ATTR_* macros */
-        LonWord ArraySize;
-        LonWord ArrayElement;
+        short int ArraySize;
+        short int ArrayElement;
         char    NvName[LON_NV_NAME_LEN]; /* Optional field - Included only if
                                         LON_NV_DESC_EXT_ATTR_NAME_SUPPLIED flag is set. */
     } NvDescriptor;
@@ -2116,7 +2116,7 @@ typedef enum LonMemoryWriteForm
 typedef struct LonNmReadMemoryRequest
 {
     LonMemoryReadWriteMode    Mode;
-    LonWord                             Address;
+    short int                             Address;
     unsigned char                             Count;
 } LonNmReadMemoryRequest;
 
@@ -2132,7 +2132,7 @@ typedef struct LonNmReadMemoryRequest
 typedef struct LonNmWriteMemoryRequest 
 {
     LonMemoryReadWriteMode    Mode;
-    LonWord                             Address;
+    short int                             Address;
     unsigned char                             Count;
     LonMemoryWriteForm        Form;
     /* <count> bytes of data following... */
@@ -2188,7 +2188,7 @@ typedef struct LonNmQueryDomainRequest
 typedef struct LonNmQueryNvAliasRequest 
 {
     unsigned char Index;              /* NV config table index                 */
-    LonWord LongIndex;          /* Used only when Index is 255           */
+    short int LongIndex;          /* Used only when Index is 255           */
 } LonNmQueryNvAliasRequest;
 
 /*
@@ -2228,7 +2228,7 @@ typedef struct LonNdQueryXcvrResponse
  */
 typedef struct LonNmQuerySiDataRequest
 {
-      LonWord   Offset;
+      short int   Offset;
       unsigned char   Count;
 } LonNmQuerySiDataRequest;
 
@@ -2265,7 +2265,7 @@ typedef struct LonNmUpdateNvRequest
         } ShortForm;
         struct LongForm
         {
-            LonWord         LongIndex;
+            short int         LongIndex;
             LonNvConfig     NvConfig;
         } LongForm;
     } Request;
@@ -2294,7 +2294,7 @@ typedef union LonNmRequest
 
     struct LongForm2
     {
-        LonWord         LongIndex;
+        short int         LongIndex;
         LonAliasConfig  AliasConfig;
     } LongForm2;
 } LonNmRequest;

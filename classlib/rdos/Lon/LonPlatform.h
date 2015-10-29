@@ -134,30 +134,8 @@ typedef unsigned short  LonUbits16;         /* 16-bits */
 typedef signed   short  LonBits16;          /* 16-bits, signed */
 typedef unsigned long   LonUbits32;         /* 32-bits */
 typedef signed   long   LonBits32;          /* 32-bits, signed */
-        
-    /*
-     *  typedef: LonWord
-     *  Holds a 16-bit numerical value.
-     *
-     *  The LonWord structure holds a 16-bit unsigned value in big-endian 
-     *  ordering through two separate high-order and low-order bytes. 
-     *  Use the <LON_SET_SIGNED_WORD> or <LON_SET_UNSIGNED_WORD> macro to 
-     *  obtain the signed or unsigned numerical value in the correct byte 
-     *  ordering.
-     */
 
-/*
-typedef struct LonWord
-{
-    unsigned char  msb;    
-    unsigned char  lsb;    
-} LonWord;
-*/
-
-typedef unsigned short int LonWord;
-
-    
-    /*
+      /*
      *  typedef: LonDoubleWord
      *  Holds a 32-bit numerical value.
      *
@@ -170,8 +148,8 @@ typedef unsigned short int LonWord;
 
 typedef struct LonDoubleWord
 {
-    LonWord  msw;    /* high-order word, the most significant word, the 0x1234 in 0x12345678 */
-    LonWord  lsw;    /* low-order word, the least significant word, the 0x5678 in 0x12345678 */
+    short int  msw;    /* high-order word, the most significant word, the 0x1234 in 0x12345678 */
+    short int  lsw;    /* low-order word, the least significant word, the 0x5678 in 0x12345678 */
 } LonDoubleWord;
 
 typedef int bool;

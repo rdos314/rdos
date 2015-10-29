@@ -139,7 +139,7 @@ typedef struct IsiConnectionId
     /* A unique identifier for the connection host, based on the host’s unique ID. */
     unsigned char         UniqueId[LON_UNIQUE_ID_LENGTH - 1]; 
     /* Connection host-allocated serial number.*/
-    LonWord         SerialNumber;                       
+    short int         SerialNumber;                       
 } IsiConnectionId;
 
 /*
@@ -155,7 +155,7 @@ typedef struct IsiConnectionHeader
     IsiConnectionId     ConnectionId;
     /* Selector value 0 – 0x2FFF. The most significant 2 bits must be cleared 
        and are reserved for future extension. */
-    LonWord             Selector;
+    short int             Selector;
 } IsiConnectionHeader;
 
 /*
@@ -268,7 +268,7 @@ typedef struct IsiCsmoData
     unsigned char     Attributes1;    /* contains Direction, Width. See ISI_CSMO_DIR_* and _WIDTH_* macros */
     /* Functional profile number of the functional profile that defines the 
        functional block containing this input or output, or zero if none. */
-    LonWord     Profile;
+    short int     Profile;
     /* NV type index of the NV type for the network variable, or zero if none
        specified. The NV type index is an index into resource file that defines the
        network variable type for the network variable on offer. */

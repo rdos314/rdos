@@ -527,7 +527,7 @@ void LonEventHandler(void)
                         
                     case LonUsopQueryAppSignature:
                     {
-                        LonWord appSignature = RdosSwapShort((short int)pSmipMsg->Payload);
+                        short int appSignature = RdosSwapShort((short int)pSmipMsg->Payload);
                         LonAppSignatureReceived(appSignature);
                         break;
                     }

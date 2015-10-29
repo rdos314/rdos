@@ -732,7 +732,7 @@ void LonGoConfiguredReceived(void)
  * this callback is called. 
  * This callback is part of the optional utility API (LON_UTILITY_FUNCTIONS).
  */
-void LonAppSignatureReceived(LonWord appSignature)
+void LonAppSignatureReceived(short int appSignature)
 {
     /* 
      * TO DO
