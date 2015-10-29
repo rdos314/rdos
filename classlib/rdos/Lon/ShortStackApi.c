@@ -23,9 +23,7 @@
 #include "ShortStackDev.h"
 #include "ShortStackApi.h"
 
-#if LON_ISI_ENABLED
 #include "ShortStackIsiApi.h"
-#endif /* LON_ISI_ENABLED */
 
 /* 
  * Following are a few macros that are used internally to access 
@@ -76,11 +74,9 @@ extern const LonApiError SendNvPollResponse(const LonSmipMsg* pSmipMsg);
 extern const LonApiError SendLocal(const LonSmipCmd command, const void* const pData, const unsigned char length);
 extern const LonApiError WriteNvLocal(const unsigned char index, const void* const pData, const unsigned char length);
 
-#if LON_ISI_ENABLED
 extern LonApiError SendDownlinkRpc(IsiDownlinkRpcCode code, unsigned char param1, unsigned char param2, void* pData, unsigned len);
 extern void HandleDownlinkRpcAck(IsiRpcMessage* pMsg, bool bSuccess);
 extern void HandleUplinkRpc(IsiRpcMessage* pMsg);
-#endif /* LON_ISI_ENABLED */
 
 /*
  * Function: LonInit
@@ -228,11 +224,7 @@ void LonEventHandler(void)
                     else if (WriteNvLocal(NVMSG.Index, NVMSG.NvData, NVMSG.Length) == LonApiNoError) 
                     {
                         /* Process NV update message */
-                        #if LON_EXPLICIT_ADDRESSING
                             LonNvUpdateOccurred(NVMSG.Index, &(EXPMSG.Address.Receive));
-                        #else 
-                            LonNvUpdateOccurred(NVMSG.Index, NULL);
-                        #endif /* LON_EXPLICIT_ADDRESSING */
                     }
                 }
                 else
@@ -283,16 +275,10 @@ void LonEventHandler(void)
                             }
                             break;
                             
-                        #if     LON_DMF_ENABLED    
                         case LonNmReadMemory:
                             /* Process Read Memory network management message        */
                             if (EXPMSG.Data.ReadMemory.Mode != LonAbsoluteMemory) 
                                 bFailure = TRUE;
-                            else if ((LonMemoryRead(RdosSwapShort(EXPMSG.Data.ReadMemory.Address), 
-                                              EXPMSG.Data.ReadMemory.Count, &ResponseData[0]) == LonApiNoError)
-                                    && (LonSendResponse(correlator, LON_NM_SUCCESS(LonNmReadMemory), 
-                                        &ResponseData[0], EXPMSG.Data.ReadMemory.Count) == LonApiNoError))
-                                bFailure = FALSE;
                             else
                                 bFailure = TRUE;
                             break;
@@ -301,15 +287,9 @@ void LonEventHandler(void)
                             /* Process Write Memory network management message        */
                             if (EXPMSG.Data.WriteMemory.Mode != LonAbsoluteMemory) 
                                 bFailure = TRUE;
-                            else if ((LonMemoryWrite(RdosSwapShort(EXPMSG.Data.WriteMemory.Address),
-                                                EXPMSG.Data.WriteMemory.Count, 
-                                                ((unsigned char*) &EXPMSG.Data.WriteMemory.Form) + 1) == LonApiNoError)
-                                    && (LonSendResponse(correlator, LON_NM_SUCCESS(LonNmWriteMemory), NULL, 0) == LonApiNoError))
-                                bFailure = FALSE;
-                            else
+                            else 
                                 bFailure = TRUE;
                             break;
-                        #endif      /* LON_DMF_ENABLED */
                             
                         case LonNmQuerySiData:
                             {
@@ -335,23 +315,11 @@ void LonEventHandler(void)
 
                         default:
                             /* Process explicit application messages here.   */
-                            #if    LON_APPLICATION_MESSAGES 
-                                #if    LON_EXPLICIT_ADDRESSING
                                     LonMsgArrived(&(EXPMSG.Address.Receive), correlator, 
                                                   (bool) LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_PRIORITY),
                                                   (LonServiceType) LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_SERVICE),
                                                   (bool) LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_AUTHENTICATED),
                                                   (LonApplicationMessageCode) EXPMSG.Code, EXPMSG.Data.Data, (unsigned char)(EXPMSG.Length-1));
-                                #else    /* ifndef(LON_EXPLICIT_ADDRESSING)    */
-                                    LonMsgArrived(NULL, correlator, 
-                                                  (bool) LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_PRIORITY),
-                                                  (LonServiceType) LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_SERVICE),
-                                                  (bool) LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_AUTHENTICATED),
-                                                  (LonApplicationMessageCode) EXPMSG.Code, EXPMSG.Data.Data, (unsigned char)(EXPMSG.Length-1));
-                                #endif    /* LON_EXPLICIT_ADDRESSING            */
-                            #else     /* ifndef(LON_APPLICATION_MESSAGES)    */
-                                bFailure = TRUE;
-                            #endif    /* LON_APPLICATION_MESSAGES            */
                             break;
                     }
                 }
@@ -376,10 +344,8 @@ void LonEventHandler(void)
                     }
                     else
                     {
-                        #if    LON_APPLICATION_MESSAGES
                             LonMsgCompleted(LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_TAG), 
                                             (bool)(LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_COMPLETIONCODE) == LonCompletionSuccess));
-                        #endif    /* LON_APPLICATION_MESSAGES */
                     }
                 }
                 else
@@ -395,11 +361,7 @@ void LonEventHandler(void)
                         if (VerifyNv(NVMSG.Index, NVMSG.Length) == LonApiNoError) 
                         {
                             if (WriteNvLocal(NVMSG.Index, NVMSG.NvData, NVMSG.Length) == LonApiNoError)
-                                #if LON_EXPLICIT_ADDRESSING
                                     LonNvUpdateOccurred(NVMSG.Index, &(EXPMSG.Address.Receive));
-                                #else
-                                    LonNvUpdateOccurred(NVMSG.Index, NULL);
-                                #endif
                         }
                     } 
                     else 
@@ -411,7 +373,6 @@ void LonEventHandler(void)
                          */
                         if (LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_TAG) == NM_ND_TAG)
                         {
-                            #if LON_NM_QUERY_FUNCTIONS
                             if (CurrentNmNdStatus == NM_PENDING)
                             {
                                 /* Process the response to a local NM/ND message    */
@@ -457,23 +418,14 @@ void LonEventHandler(void)
                                         break;
                                 }
                             }
-                            #endif  /* LON_NM_QUERY_FUNCTIONS */
                             CurrentNmNdStatus = NO_NM_ND_PENDING;
                         }
                         else
                         {
                             /* Explicit message response. */
-                            #if    LON_APPLICATION_MESSAGES
-                                #if    LON_EXPLICIT_ADDRESSING
                                     LonResponseArrived(&(EXPMSG.Address.Response), 
                                                        LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_TAG), 
                                                        (LonApplicationMessageCode) EXPMSG.Code, EXPMSG.Data.Data, (unsigned char)(EXPMSG.Length-1));
-                                #else
-                                    LonResponseArrived(NULL, 
-                                                       LON_GET_ATTRIBUTE(EXPMSG, LON_EXPMSG_TAG), 
-                                                       (LonApplicationMessageCode) EXPMSG.Code, EXPMSG.Data.Data, (unsigned char)(EXPMSG.Length-1));
-                                #endif
-                            #endif    /* LON_APPLICATION_MESSAGES    */
                         }
                     }
                 }
@@ -500,7 +452,6 @@ void LonEventHandler(void)
                 LonServicePinHeld();
                 break;
                 
-            #if LON_UTILITY_FUNCTIONS
             case LonNiUsop:
                 /* A response to one of the utility functions has arrived. */
                 switch (pSmipMsg->Payload[0])
@@ -540,9 +491,7 @@ void LonEventHandler(void)
                         break;
                 }
                 break;
-            #endif /* LON_UTILITY_FUNCTIONS */
             
-            #if LON_ISI_ENABLED                
             case LonIsiNack:
                 /* Received a Nack from the Micro Server regarding the Downlink Rpc.*/
                 HandleDownlinkRpcAck((IsiRpcMessage*) pSmipMsg, FALSE);
@@ -557,7 +506,6 @@ void LonEventHandler(void)
                 /* Received an uplink Rpc from the Micro Server. */
                 HandleUplinkRpc((IsiRpcMessage*) pSmipMsg);
                 break;
-            #endif /* LON_ISI_ENABLED */
         }
 
         /* Release the receive buffer back to the serial driver. */
@@ -898,7 +846,6 @@ const volatile LonResetNotification* const LonGetLastResetNotification(void)
     return &lastResetNotification;
 }
 
-#if LON_APPLICATION_MESSAGES
 /*
  * Function: LonSendMsg
  * Send an explicit (non-NV) message. 
@@ -956,12 +903,10 @@ const LonApiError LonSendMsg(const unsigned tag, const bool priority, const LonS
         /* declared in the Neuron C model file. tag          */
         /* must range from 0 to min(LonMtCount-1, ND_TAG-1). */
         result =  LonApiMsgInvalidMsgTag;
-    #if    LON_EXPLICIT_ADDRESSING
     else if (pDestAddr == NULL && pMtTable[tag])
         /* Return failure if the message tag is associated with nonbind modifier   */
         /* and the explicit address is not present.                                */
         result = LonApiMsgExplicitAddrMissing;
-    #endif /* LON_EXPLICIT_ADDRESSING */
     else if (LdvAllocateMsg(&pSmipMsg) != LonApiNoError)
         result = LonApiTxBufIsFull;
     else 
@@ -982,22 +927,18 @@ const LonApiError LonSendMsg(const unsigned tag, const bool priority, const LonS
     
         memcpy(EXPMSG.Data.Data, (void *)pData, length);
     
-        #if    LON_EXPLICIT_ADDRESSING
         if (pDestAddr != NULL) 
         {
             memcpy(&(EXPMSG.Address), (void *)pDestAddr, sizeof(LonSendAddress));
             LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_EXPLICITADDR, 1);
         }
-        #endif
     
         pSmipMsg->Header.Length = (unsigned char) (sizeof(LonExplicitMessage) - sizeof(EXPMSG.Data) + length);    
         LdvPutMsg(pSmipMsg);
     }
     return result;
 }
-#endif    /* LON_APPLICATION_MESSAGES    */
 
-#if LON_NM_QUERY_FUNCTIONS
 /*
  * Function: LonQueryDomainConfig
  * Request a copy of a local domain table record.
@@ -1355,9 +1296,7 @@ const LonApiError LonQueryTransceiverStatus(void)
     }
     return result;
 }
-#endif /* LON_NM_QUERY_FUNCTIONS */
 
-#if LON_NM_UPDATE_FUNCTIONS
 /*
  * Function: LonSetNodeMode
  * Sets the ShortStack Micro Server's mode and state.
@@ -1736,9 +1675,7 @@ const LonApiError LonClearStatus(void)
     }    
     return result;
 }
-#endif    /* LON_NM_UPDATE_FUNCTIONS */
 
-#if LON_UTILITY_FUNCTIONS
 /*
  * Function: LonSendPing
  * Sends a ping command to the ShortStack Micro Server.
@@ -1929,4 +1866,3 @@ const LonApiError LonRequestEcho(const unsigned char data[LON_ECHO_SIZE])
     return SendLocal(LonNiUsop, payload, 1+LON_ECHO_SIZE);
 }
 
-#endif /* LON_UTILITY_FUNCTIONS */

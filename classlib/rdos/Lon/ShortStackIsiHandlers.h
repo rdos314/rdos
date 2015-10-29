@@ -266,11 +266,6 @@
  *  and the connection table local to the Micro Server, but you cannot implement both on the 
  *  host.
  */
-#ifdef ISI_HOST_CREATECSMO
-#   ifdef ISI_HOST_CONNECTIONTABLE
-#       error "You cannot implement both the connection table and the IsiCreateCsmo callback on the host"
-#   endif
-#endif
 
 /*
  *  Callback: IsiGetRepeatCount

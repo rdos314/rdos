@@ -21,7 +21,6 @@
 #include "ShortStackDev.h"
 #include "ShortStackIsiApi.h"
 
-#ifdef ISI_HOST_CREATEPERIODICMSG
 /* 
  * Callback:   IsiCreatePeriodicMsg
  * Specifies whether the application has any messages for the ISI engine to send
@@ -48,9 +47,7 @@ bool IsiCreatePeriodicMsg(void)
      */
     return FALSE;
 }
-#endif
 
-#ifdef ISI_HOST_UPDATEUSERINTERFACE
 /* 
  * Callback:   IsiUpdateUserInterface
  * Provides status feedback from the ISI engine.
@@ -75,9 +72,7 @@ void IsiUpdateUserInterface(IsiEvent event, unsigned parameter)
      * TO DO
      */
 }
-#endif
 
-#ifdef ISI_HOST_CREATECSMO
 /* 
  * Callback:   IsiCreateCsmo
  * Constructs the IsiCsmoData portion of a CSMO Message.
@@ -95,9 +90,7 @@ void IsiCreateCsmo(unsigned assembly, IsiCsmoData* pCsmo)
      */
     pCsmo = NULL;
 }
-#endif
 
-#ifdef ISI_HOST_GETPRIMARYGROUP
 /* 
  * Callback:   IsiGetPrimaryGroup
  * Returns the group ID for the specified assembly.
@@ -115,9 +108,7 @@ unsigned IsiGetPrimaryGroup(unsigned assembly)
      */
     return ISI_DEFAULT_GROUP;
 }
-#endif
 
-#ifdef ISI_HOST_GETASSEMBLY
 /* 
  * Callback:   IsiGetAssembly
  * Returns the number of the first assembly that can join the enrollment
@@ -142,9 +133,7 @@ unsigned IsiGetAssembly(const IsiCsmoData* pCsmo, bool automatic)
      */
     return ISI_NO_ASSEMBLY;
 }
-#endif
 
-#ifdef ISI_HOST_GETNEXTASSEMBLY
 /* 
  * Callback:   IsiGetNextAssembly
  * Returns the next applicable assembly following the one indicated with the
@@ -171,9 +160,7 @@ unsigned IsiGetNextAssembly(const IsiCsmoData* pCsmo, bool automatic, unsigned a
      */
     return ISI_NO_ASSEMBLY;
 }
-#endif
 
-#ifdef ISI_HOST_GETNVINDEX
 /* 
  * Callback:   IsiGetNvIndex
  * Returns the network variable index 0 – 254 of the network variable at the
@@ -194,9 +181,7 @@ unsigned IsiGetNvIndex(unsigned assembly, unsigned offset)
      */
     return ISI_NO_INDEX;
 }
-#endif
 
-#ifdef ISI_HOST_GETNEXTNVINDEX
 /* 
  * Callback:   IsiGetNextNvIndex
  * Returns the network variable index of the network variable at the specified 
@@ -217,9 +202,7 @@ unsigned IsiGetNextNvIndex(unsigned assembly, unsigned offset, unsigned previous
      */
     return ISI_NO_INDEX;
 }
-#endif
 
-#ifdef ISI_HOST_GETPRIMARYDID
 /* 
  * Callback:   IsiGetPrimaryDid
  * Returns a pointer to the default primary domain ID for the device.
@@ -243,9 +226,7 @@ const unsigned* IsiGetPrimaryDid(unsigned* pLength)
     *pLength = 0;
     return NULL;
 }
-#endif
 
-#ifdef ISI_HOST_GETWIDTH
 /* 
  * Callback:   IsiGetWidth
  * Returns the width in the specified assembly.
@@ -263,9 +244,7 @@ unsigned IsiGetWidth(unsigned assembly)
      */
     return 0;
 }
-#endif
 
-#ifdef ISI_HOST_CONNECTIONTABLE
 /* 
  * Callback:   IsiGetConnectionTableSize
  * Returns the number of entries in the connection table. 
@@ -328,9 +307,7 @@ void IsiSetConnection(IsiConnection* pConnection, unsigned index)
      * TO DO
      */
 }
-#endif
 
-#ifdef ISI_HOST_GETREPEATCOUNT
 /* 
  * Callback:   IsiGetRepeatCount
  * Specifies the repeat count used with all network variable connections, where 
@@ -351,9 +328,7 @@ const unsigned IsiGetRepeatCount(void)
      */
     return 0;
 }
-#endif
 
-#ifdef ISI_HOST_QUERYHEARTBEAT
 /* 
  * Callback:   IsiQueryHeartbeat
  * Returns TRUE if a heartbeat for the network variable with the global index
@@ -371,7 +346,6 @@ bool IsiQueryHeartbeat(unsigned index)
      */
     return FALSE;
 }
-#endif
 
 /* 
  * Callback:   IsiGetNvValue

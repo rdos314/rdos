@@ -19,9 +19,7 @@
 
 #include "ShortStackDev.h"
 #include "ShortStackApi.h"
-#if LON_DMF_ENABLED
 #include "string.h"         /* Required for memcpy */
-#endif /* LON_DMF_ENABLED */
 
 /* 
  * Callback:   LonResetOccurred
@@ -243,7 +241,6 @@ const unsigned LonGetCurrentNvSize(const unsigned nvIndex)
  */
 const LonApiError LonNvdDeserializeNvs(void)
 {
-#if LON_PERSISTENT_NVS
     /*
      * TO DO:
      * This application implements eeprom network variables and/or configuration network variables.
@@ -263,16 +260,8 @@ const LonApiError LonNvdDeserializeNvs(void)
  
  
     return LonApiInitializationFailure;
-#else
-    /*
-     * This application implements no eeprom network variables or configuration network variables.
-     * No change to this code is needed
-     */
-    return LonApiNoError;
-#endif  /* LON_PERSISTENT_NVS */
 }
 
-#if LON_APPLICATION_MESSAGES
 
 /*
  * Callback: LonMsgArrived
@@ -355,10 +344,6 @@ void LonMsgCompleted(const unsigned tag, const bool success)
      */
 }
 
-#endif    /* LON_APPLICATION_MESSAGES    */
-
-
-#if LON_NM_QUERY_FUNCTIONS    /* used to be extended API callbacks */
 
 /*
  * Callback: LonDomainConfigReceived
@@ -522,108 +507,6 @@ void LonTransceiverStatusReceived(const LonTransceiverParameters* const pStatus,
      */
 }
 
-#endif /* LON_NM_QUERY_FUNCTIONS */
-
-#if LON_DMF_ENABLED
-
-/* 
- * Callback: LonMemoryRead
- * Read memory in the ShortStack device's memory space.
- *
- * Parameters:
- * address - virtual address of the memory to be read
- * size - number of bytes to read
- * pData - pointer to a buffer to store the requested data
- *
- * Remarks:
- * The ShortStack event handler calls <LonMemoryRead> whenever it receives a 
- * network management memory read request that fits into the registered file 
- * access window. This callback function is used to read data starting at the 
- * specified virtual Smart Transceiver memory. This applies to template files, 
- * configuration property value files, user-defined files, and possibly to other 
- * data. The address space for this command is limited to the Smart 
- * Transceiver’s 64 KB address space.
- */
-const LonApiError LonMemoryRead(const unsigned address, const unsigned size, void* const pData) 
-{
-    char* pHostAddress = NULL;
-    LonMemoryDriver driver = LonMemoryDriverUnknown;
-    LonApiError result = LonTranslateWindowArea(FALSE, address, size, &pHostAddress, &driver);
- 
-    if (result == LonApiNoError) 
-    {
-        if (driver == LonMemoryDriverStandard) 
-        {
-            (void) memcpy(pData, pHostAddress, size);
-        } 
-        else 
-        {
-            /*
-             * TO DO: add code to support alternative data storage, 
-             * such as using paged memory, or serial interface memory 
-             * devices such as IIC EEPROM devices. When completing  
-             * with success, return LonApiNoError.
-             */
- 
- 
- 
-            result = LonApiDmfNoDriver;
-        }
-    }
-    return result;
-}
- 
-/* 
- * Callback: LonMemoryWrite
- * Update memory in the ShortStack device's memory space.
- *
- * Parameters:
- * address - virtual address of the memory to be update
- * size - number of bytes to write
- * pData - pointer to the data to write
- *
- * Remarks:
- * The ShortStack event handler calls <LonMemoryWrite> whenever it receives a 
- * network management memory write request that fits into the registered file 
- * access window. This callback function is used to write data at the specified 
- * virtual Smart Transceiver memory.  This applies to configuration property 
- * value files, user-defined files, and possibly to other data. The address space 
- * for this command is limited to the Smart Transceiver’s 64 KB address space.
- */
-const LonApiError LonMemoryWrite(const unsigned address, const unsigned size, const void* const pData) 
-{
-    char* pHostAddress = NULL;
-    LonMemoryDriver driver = LonMemoryDriverUnknown;
-    LonApiError result = LonTranslateWindowArea(TRUE, address, size, &pHostAddress, &driver);
- 
- 
-    if (result == LonApiNoError) 
-    {
-        if (driver == LonMemoryDriverStandard) 
-        {
-            (void) memcpy(pHostAddress, pData, size);
-        }
-        else
-        {
-            /*
-             * TO DO: add code to support alternative data storage, 
-             * such as using paged memory, or serial interface memory 
-             * devices such as IIC EEPROM devices. When completing  
-             * with success, return LonApiNoError.
-             */
- 
- 
- 
-            result = LonApiDmfNoDriver;
-        }
-    }
-    return result;
-}
-
-#endif  /* LON_DMF_ENABLED */
-
-
-#if LON_UTILITY_FUNCTIONS
 /* 
  * Callback: LonPingReceived
  * The ShortStack Micro Server has sent a ping command.
@@ -787,6 +670,3 @@ void LonEchoReceived(const unsigned char data[LON_ECHO_SIZE])
      * TO DO
      */
 }
-
-#endif  /* LON_UTILITY_FUNCTIONS */
-

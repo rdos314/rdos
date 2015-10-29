@@ -1655,15 +1655,11 @@ typedef enum LonSmipCmd
     LonNiOffLine        = 0x80,        /* Downlink: Ask node go offline  */
     LonNiFlush          = 0x90,        /* Downlink                       */
     LonNiFlushIgnore    = 0xA0,        /* Downlink                       */
-    LonNiSleep          = 0xB0,        /* Not supported by ShortStack Micro Server   */
-    
-    #if LON_ISI_ENABLED    
+    LonNiSleep          = 0xB0,        /* Not supported by ShortStack Micro Server   */    
     LonIsiNack          = 0xBC,        /* Uplink: ISI Nack in response to a downlink RPC */
     LonIsiAck           = 0xBD,        /* Uplink: ISI Ack in response to a downlink RPC */
     LonIsiCmd           = 0xBE,        /* Downlink: ISI Downlink RPC */
-                                       /* Uplink: ISI Uplink RPC */
-    #endif /* LON_ISI_ENABLED */
-    
+                                       /* Uplink: ISI Uplink RPC */    
     LonNiNv             = 0xC0         /* Special case for downlink NV updates and polls.
                                        Least significant 6 bits contain NV index. */
 } LonSmipCmd;

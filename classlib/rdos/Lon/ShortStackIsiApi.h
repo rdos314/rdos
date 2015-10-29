@@ -546,7 +546,6 @@ extern void IsiApiComplete(IsiDownlinkRpcCode code, unsigned char sequence, bool
  * Skeletons for these callback functions are provided in ShortStackIsiHandlers.c.
  */
 
-#ifdef ISI_HOST_CREATEPERIODICMSG
 /* 
  * Callback:   IsiCreatePeriodicMsg
  * Specifies whether the application has any messages for the ISI engine to send
@@ -567,9 +566,6 @@ extern void IsiApiComplete(IsiDownlinkRpcCode code, unsigned char sequence, bool
  * API functions while the <IsiCreatePeriodicMsg> callback is running.
  */
 extern bool IsiCreatePeriodicMsg(void);
-#endif
-
-#ifdef ISI_HOST_UPDATEUSERINTERFACE
 /* 
  * Callback:   IsiUpdateUserInterface
  * Provides status feedback from the ISI engine.
@@ -589,9 +585,6 @@ extern bool IsiCreatePeriodicMsg(void);
  * engine is running or not.
  */
 extern void IsiUpdateUserInterface(IsiEvent event, unsigned parameter);
-#endif
-
-#ifdef ISI_HOST_CREATECSMO
 /* 
  * Callback:   IsiCreateCsmo
  * Constructs the IsiCsmoData portion of a CSMO Message.
@@ -603,9 +596,7 @@ extern void IsiUpdateUserInterface(IsiEvent event, unsigned parameter);
  * This function has the same effect if the ISI engine is running or not.
  */
 extern void IsiCreateCsmo(unsigned assembly, IsiCsmoData* pCsmo);
-#endif
 
-#ifdef ISI_HOST_GETPRIMARYGROUP
 /* 
  * Callback:   IsiGetPrimaryGroup
  * Returns the group ID for the specified assembly.
@@ -617,9 +608,7 @@ extern void IsiCreateCsmo(unsigned assembly, IsiCsmoData* pCsmo);
  * The function operates whether the ISI engine is running or not.
  */
 extern unsigned IsiGetPrimaryGroup(unsigned assembly);
-#endif
 
-#ifdef ISI_HOST_GETASSEMBLY
 /* 
  * Callback:   IsiGetAssembly
  * Returns the number of the first assembly that can join the enrollment
@@ -638,9 +627,7 @@ extern unsigned IsiGetPrimaryGroup(unsigned assembly);
  * The function operates whether the ISI engine is running or not.
  */
 extern unsigned IsiGetAssembly(const IsiCsmoData* pCsmo, bool automatic);
-#endif
 
-#ifdef ISI_HOST_GETNEXTASSEMBLY
 /* 
  * Callback:   IsiGetNextAssembly
  * Returns the next applicable assembly following the one indicated with the
@@ -661,9 +648,7 @@ extern unsigned IsiGetAssembly(const IsiCsmoData* pCsmo, bool automatic);
  * is running or not.
  */
 extern unsigned IsiGetNextAssembly(const IsiCsmoData* pCsmo, bool automatic, unsigned assembly);
-#endif
 
-#ifdef ISI_HOST_GETNVINDEX
 /* 
  * Callback:   IsiGetNvIndex
  * Returns the network variable index 0 – 254 of the network variable at the
@@ -678,9 +663,7 @@ extern unsigned IsiGetNextAssembly(const IsiCsmoData* pCsmo, bool automatic, uns
  * The function operates whether the ISI engine is running or not.
  */
 extern unsigned IsiGetNvIndex(unsigned assembly, unsigned offset);
-#endif
 
-#ifdef ISI_HOST_GETNEXTNVINDEX
 /* 
  * Callback:   IsiGetNextNvIndex
  * Returns the network variable index of the network variable at the specified 
@@ -695,9 +678,7 @@ extern unsigned IsiGetNvIndex(unsigned assembly, unsigned offset);
  * The function operates whether the ISI engine is running or not.
  */
 extern unsigned IsiGetNextNvIndex(unsigned assembly, unsigned offset, unsigned previous);
-#endif
 
-#ifdef ISI_HOST_GETPRIMARYDID
 /* 
  * Callback:   IsiGetPrimaryDid
  * Returns a pointer to the default primary domain ID for the device.
@@ -714,9 +695,7 @@ extern unsigned IsiGetNextNvIndex(unsigned assembly, unsigned offset, unsigned p
  * the <IsiGetPrimaryDid> callback, stop and re-start the ISI engine.
  */
 extern const unsigned* IsiGetPrimaryDid(unsigned* pLength);
-#endif
 
-#ifdef ISI_HOST_GETWIDTH
 /* 
  * Callback:   IsiGetWidth
  * Returns the width in the specified assembly.
@@ -728,9 +707,7 @@ extern const unsigned* IsiGetPrimaryDid(unsigned* pLength);
  * assemblies. This function operates whether the ISI engine is running or not.
  */
 extern unsigned IsiGetWidth(unsigned assembly);
-#endif
 
-#ifdef ISI_HOST_CONNECTIONTABLE
 /* 
  * Callback:   IsiGetConnectionTableSize
  * Returns the number of entries in the connection table. 
@@ -776,9 +753,7 @@ extern IsiConnection* IsiGetConnection(unsigned index);
  * This function is called frequently, and should return as soon as possible.
  */
 extern void IsiSetConnection(IsiConnection* pConnection, unsigned index);
-#endif
 
-#ifdef ISI_HOST_GETREPEATCOUNT
 /* 
  * Callback:   IsiGetRepeatCount
  * Specifies the repeat count used with all network variable connections, where 
@@ -793,9 +768,7 @@ extern void IsiSetConnection(IsiConnection* pConnection, unsigned index);
  * This function operates whether the ISI engine is running or not.
  */
 extern const unsigned IsiGetRepeatCount(void);
-#endif
 
-#ifdef ISI_HOST_QUERYHEARTBEAT
 /* 
  * Callback:   IsiQueryHeartbeat
  * Returns TRUE if a heartbeat for the network variable with the global index
@@ -807,7 +780,6 @@ extern const unsigned IsiGetRepeatCount(void);
  * callback (including any alias connections) whenever the heartbeat is due.
  */
 extern bool IsiQueryHeartbeat(unsigned nvIndex);
-#endif
 
 /* 
  * Callback:   IsiGetNvValue

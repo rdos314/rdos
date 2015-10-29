@@ -141,19 +141,14 @@ void HandleUplinkRpc(IsiRpcMessage* pMsg)
 
     switch (pMsg->RpcCode) 
     {
-        #ifdef ISI_HOST_CREATEPERIODICMSG
         case IsiRpcCreatePeriodicMsg:
             returnValue = IsiCreatePeriodicMsg();
             break;
-        #endif
 
-        #ifdef ISI_HOST_UPDATEUSERINTERFACE
         case IsiRpcUpdateUserInterface:
             IsiUpdateUserInterface((IsiEvent) param1, param2);
             break;
-        #endif
 
-        #ifdef ISI_HOST_CREATECSMO
         case IsiRpcCreateCsmo:
         {
             IsiCsmoData csmo;
@@ -162,39 +157,27 @@ void HandleUplinkRpc(IsiRpcMessage* pMsg)
             pResp->RpcData.Length = sizeof(IsiCsmoData);
             break;
         }
-        #endif
 
-        #ifdef ISI_HOST_GETPRIMARYGROUP
         case IsiRpcGetPrimaryGroup:
             returnValue = IsiGetPrimaryGroup(param1);
             break;
-        #endif
 
-        #ifdef ISI_HOST_GETASSEMBLY
         case IsiRpcGetAssembly: 
             returnValue = IsiGetAssembly((IsiCsmoData*) &((pMsg->RpcData).Data), param1);
             break;
-        #endif
 
-        #ifdef ISI_HOST_GETNEXTASSEMBLY
         case IsiRpcGetNextAssembly: 
             returnValue = IsiGetNextAssembly((IsiCsmoData*) &(pMsg->RpcData.Data), param1, param2);
             break;
-        #endif
 
-        #ifdef ISI_HOST_GETNVINDEX
         case IsiRpcGetNvIndex:
             returnValue = IsiGetNvIndex(param1, param2);
             break;
-        #endif
 
-        #ifdef ISI_HOST_GETNEXTNVINDEX
         case IsiRpcGetNextNvIndex:
             returnValue = IsiGetNextNvIndex(param1, param2, pMsg->RpcData.Data[0]);
             break;
-        #endif
 
-        #ifdef ISI_HOST_GETPRIMARYDID
         case IsiRpcGetPrimaryDid:
         {
             const unsigned char* p;
@@ -203,13 +186,10 @@ void HandleUplinkRpc(IsiRpcMessage* pMsg)
             pResp->RpcData.Length = returnValue;
             break;
         }
-        #endif
 
-        #ifdef ISI_HOST_GETWIDTH
         case IsiRpcGetWidth:
             returnValue = IsiGetWidth(param1);
             break;
-        #endif
 
         case IsiRpcGetNvValue:
         {
@@ -220,7 +200,6 @@ void HandleUplinkRpc(IsiRpcMessage* pMsg)
             break;
         }
         
-        #ifdef ISI_HOST_CONNECTIONTABLE
         case IsiRpcGetConnTabSize:
             returnValue = IsiGetConnectionTableSize();
             break;
@@ -237,19 +216,14 @@ void HandleUplinkRpc(IsiRpcMessage* pMsg)
         case IsiRpcSetConnection: 
             IsiSetConnection((IsiConnection*) &(pMsg->RpcData.Data), param1);
             break;
-        #endif
             
-        #ifdef ISI_HOST_QUERYHEARTBEAT
         case IsiRpcQueryHeartbeat:
             returnValue = IsiQueryHeartbeat(param1);
             break;
-        #endif
 
-        #ifdef ISI_HOST_GETREPEATCOUNT
         case IsiRpcGetRepeatCount:
             returnValue = IsiGetRepeatCount();
             break;
-        #endif
             
         case IsiRpcUserCommand:
             returnValue = IsiUserCommand(param1, param2, (pMsg->RpcData).Data, (pMsg->RpcData).Length);
