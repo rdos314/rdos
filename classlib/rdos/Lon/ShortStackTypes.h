@@ -660,14 +660,14 @@ typedef enum LonTransmitTimer
 #define LON_SENDGROUP_TRANSMIT_TIMER_SHIFT  0
 #define LON_SENDGROUP_TRANSMIT_TIMER_FIELD  ReceiveTransmit
 
-typedef LON_STRUCT_BEGIN(LonSendGroup) 
+typedef struct LonSendGroup
 {
     unsigned char     TypeSize;       /* contains type, size. See LON_SENDGROUP_TYPE_* and _SIZE_* macros */
     unsigned char     DomainMember;   /* contains domain, member. See LON_SENDGROUP_DOMAIN_* and _MEMBER_* macros */
     unsigned char     RepeatRetry;    /* contains repeat, retry. See LON_SENDGROUP_REPEAT_* and _RETRY_* macros */
     unsigned char     ReceiveTransmit;/* contains receive and transmit timers. See LON_SENDGROUP_RECEIVE_* and _TRANSMIT_* macros */
     LonGroupId  GroupId;     /* the group ID, 0..255 */
-} LON_STRUCT_END(LonSendGroup);
+} LonSendGroup;
 
 /*
  *  Typedef: LonSendSubnetNode
@@ -712,14 +712,14 @@ typedef LON_STRUCT_BEGIN(LonSendGroup)
 #define LON_SENDSN_TRANSMIT_TIMER_SHIFT  0
 #define LON_SENDSN_TRANSMIT_TIMER_FIELD  RsvdTransmit
 
-typedef LON_STRUCT_BEGIN(LonSendSubnetNode) 
+typedef struct LonSendSubnetNode
 {
     enum LonAddressType    Type;           /* should be LonAddressSubnetNode for subnet/node addressing */
     unsigned char                     DomainNode;     /* contains domain, node. See LON_SENDSN_DOMAIN_* and _NODE_* macros */
     unsigned char                     RepeatRetry;    /* contains repeat, retry. See LON_SENDSN_REPEAT_* and _RETRY_* macros */
     unsigned char                     RsvdTransmit;   /* contains transmit (top 4 bits are unused). See LON_SENDSN_TRANSMIT_TIMER_* macros */
     LonSubnetId                 Subnet;         /* destination subnet number, 1..255    */
-} LON_STRUCT_END(LonSendSubnetNode);
+} LonSendSubnetNode;
 
 /*
  *  Typedef: LonSendUniqueId
@@ -757,7 +757,7 @@ typedef LON_STRUCT_BEGIN(LonSendSubnetNode)
 #define LON_SENDNID_TRANSMIT_TIMER_SHIFT    0
 #define LON_SENDNID_TRANSMIT_TIMER_FIELD    RsvdTransmit
 
-typedef LON_STRUCT_BEGIN(LonSendUniqueId) 
+typedef struct LonSendUniqueId
 {
     LonAddressType              Type;           /* should be LonAddressNeuronId */
     unsigned char                     Domain;         /* contains the domain index. See LON_SENDNID_DOMAIN_*  macro. The remaining 7 bits must be zero */
@@ -765,7 +765,7 @@ typedef LON_STRUCT_BEGIN(LonSendUniqueId)
     unsigned char                     RsvdTransmit;   /* contains transmit (top 4 bits are unused). See LON_SENDNID_TRANSMIT_TIMER_* macros */
     LonSubnetId                 Subnet;         /* destination subnet number, 1..255, or zero to pass all routers    */
     LonUniqueId                 NeuronId;       /* 48-bit unique ID of Neuron Chip or Smart Transceiver */
-} LON_STRUCT_END(LonSendUniqueId);
+} LonSendUniqueId;
 
 /*
  *  Typedef: LonSendBroadcast
@@ -810,14 +810,14 @@ typedef LON_STRUCT_BEGIN(LonSendUniqueId)
 #define LON_SENDBCAST_TRANSMIT_TIMER_SHIFT  0
 #define LON_SENDBCAST_TRANSMIT_TIMER_FIELD  RsvdTransmit
 
-typedef LON_STRUCT_BEGIN(LonSendBroadcast) 
+typedef struct LonSendBroadcast 
 {
     LonAddressType              Type;               /* should be LonAddressBroadcast */
     unsigned char                     DomainRsvdBacklog;  /* contains domain, backlog (6th bit is unused). See LON_SENDBCAST_DOMAIN_* and _BACKLOG_* macros */
     unsigned char                     RepeatRetry;        /* contains repeat, retry. See LON_SENDBCAST_REPEAT_* and _RETRY_* macros */
     unsigned char                     RsvdTransmit;       /* contains transmit (top 4 bits are unused). See LON_SENDBCAST_TRANSMIT_TIMER_* macros */
     LonSubnetId                 Subnet;             /* destination subnet number, 1..255 for subnet broadcast, zero for domain broadcast */
-} LON_STRUCT_END(LonSendBroadcast);
+} LonSendBroadcast;
 
 /*
  *  Typedef: LonSendUnassigned
@@ -826,10 +826,10 @@ typedef LON_STRUCT_BEGIN(LonSendBroadcast)
  *  Sets the first 2 bytes of the address table entry to 0.
  *  Previously named SendUnassigned.
  */
-typedef LON_STRUCT_BEGIN(LonSendUnassigned) 
+typedef struct LonSendUnassigned
 {
     LonAddressType    Type;   /* should be LonAddressUnassigned */
-} LON_STRUCT_END(LonSendUnassigned);
+} LonSendUnassigned;
 
 /*
  *  Typedef: LonSendLocal
@@ -837,10 +837,10 @@ typedef LON_STRUCT_BEGIN(LonSendUnassigned)
  *
  *  Previously named SendLocal.
  */
-typedef LON_STRUCT_BEGIN(LonSendLocal) 
+typedef struct LonSendLocal
 {
     LonAddressType    Type;   /* should be LonAddressLocal */
-} LON_STRUCT_END(LonSendLocal);
+} LonSendLocal;
 
 /*
  * Typedef: LonSendAddress
@@ -873,11 +873,11 @@ typedef LON_UNION_BEGIN(LonSendAddress)
 #define LON_RECEIVESN_NODE_SHIFT    0
 #define LON_RECEIVESN_NODE_FIELD    Node
 
-typedef LON_STRUCT_BEGIN(LonReceiveSubnetNode) 
+typedef struct LonReceiveSubnetNode
 {
     unsigned char     Subnet;
     unsigned char     Node;       /* node identifier, use LON_RECEIVESN_NODE_* macros */
-} LON_STRUCT_END(LonReceiveSubnetNode);
+} LonReceiveSubnetNode;
 
 /*
  *  Typedef: LonReceiveUniqueId
@@ -886,11 +886,11 @@ typedef LON_STRUCT_BEGIN(LonReceiveSubnetNode)
  *  Used with <LonReceiveDestination>.
  *  Previously named RcvNrnid.
  */
-typedef LON_STRUCT_BEGIN(LonReceiveUniqueId) 
+typedef struct LonReceiveUniqueId
 {
     LonSubnetId Subnet;
     LonUniqueId UniqueId;
-} LON_STRUCT_END(LonReceiveUniqueId);
+} LonReceiveUniqueId;
 
 /*
  *  Typedef: LonReceiveGroup
@@ -898,10 +898,10 @@ typedef LON_STRUCT_BEGIN(LonReceiveUniqueId)
  *
  *  Used with <LonReceiveDestination>.
  */
-typedef LON_STRUCT_BEGIN(LonReceiveGroup) 
+typedef struct LonReceiveGroup
 {
     LonGroupId  GroupId;             /* 0..255 */
-} LON_STRUCT_END(LonReceiveGroup);
+} LonReceiveGroup;
 
 /*
  *  Typedef: LonReceiveBroadcast
@@ -909,10 +909,10 @@ typedef LON_STRUCT_BEGIN(LonReceiveGroup)
  *
  *  Used with <LonReceiveDestination>.
  */
-typedef LON_STRUCT_BEGIN(LonReceiveBroadcast) 
+typedef struct LonReceiveBroadcast
 {
     LonSubnetId SubnetId;       /* 1..255 for subnet broadcast, zero for domain broadcast */
-} LON_STRUCT_END(LonReceiveBroadcast);
+} LonReceiveBroadcast;
 
 /*
  *  Typedef: LonReceiveDestination
@@ -966,12 +966,12 @@ typedef enum LonReceiveDestinationAddressFormat
 #define LON_RECEIVEADDRESS_FORMAT_SHIFT     0
 #define LON_RECEIVEADDRESS_FORMAT_FIELD     DomainFormat
 
-typedef LON_STRUCT_BEGIN(LonReceiveAddress) 
+typedef struct LonReceiveAddress
 {
     unsigned char                 DomainFormat;   /* contains domain, flexDomain, format. Use LON_RECEIVEADDRESS_* macros to access data */
     LonReceiveSubnetNode    Source;
     LonReceiveDestination   Destination;
-} LON_STRUCT_END(LonReceiveAddress);
+} LonReceiveAddress;
 
 /*
  *  Typedef: LonResponseSource
@@ -988,11 +988,11 @@ typedef LON_STRUCT_BEGIN(LonReceiveAddress)
 #define LON_RESPONSESOURCE_NODE_SHIFT    0
 #define LON_RESPONSESOURCE_NODE_FIELD    Node
 
-typedef LON_STRUCT_BEGIN(LonResponseSource) 
+typedef struct LonResponseSource
 {
     unsigned char Subnet;     /* subnet ID */
     unsigned char Node;       /* contains node, isNode. Use LON_RESPONSESOURCE_NODE_* and LON_RESPONSESOURCE_IS_SUBNETNODE_* macros */
-} LON_STRUCT_END(LonResponseSource);
+} LonResponseSource;
 
 /*
  *  Typedef: LonResponseSubnetNode
@@ -1009,11 +1009,11 @@ typedef LON_STRUCT_BEGIN(LonResponseSource)
 #define LON_RESPONSESN_NODE_SHIFT 0
 #define LON_RESPONSESN_NODE_FIELD Node
 
-typedef LON_STRUCT_BEGIN(LonResponseSubnetNode) 
+typedef struct LonResponseSubnetNode
 {
     LonSubnetId Subnet;         /* subnet ID */
     unsigned char     Node;           /* node ID, use LON_RESPONSESN_NODE_* macros */
-} LON_STRUCT_END(LonResponseSubnetNode);
+} LonResponseSubnetNode;
 
 /*
  *  Typedef: LonResponseGroup
@@ -1034,13 +1034,13 @@ typedef LON_STRUCT_BEGIN(LonResponseSubnetNode)
 #define LON_RESPGROUP_MEMBER_SHIFT  0
 #define LON_RESPGROUP_MEMBER_FIELD  Member
 
-typedef LON_STRUCT_BEGIN(LonResponseGroup) 
+typedef struct LonResponseGroup
 {
     LonSubnetId Subnet;         /* subnet ID */
     unsigned char     Node;
     unsigned char     Group;
     unsigned char     Member;         /* use LON_RESPGROUP_MEMBER_* macros for access */
-} LON_STRUCT_END(LonResponseGroup);
+} LonResponseGroup;
 
 /*
  *  Typedef: LonResponseDestination
@@ -1068,12 +1068,12 @@ typedef LON_UNION_BEGIN(LonResponseDestination)
 #define LON_RESPONSEADDRESS_FLEX_SHIFT      6
 #define LON_RESPONSEADDRESS_FLEX_FIELD      Domain
 
-typedef LON_STRUCT_BEGIN(LonResponseAddress) 
+typedef struct LonResponseAddress
 {
     unsigned char                 Domain;         /* contains domain, flexDomain. Use LON_RESPONSEADDRESS_* macros */
     LonResponseSource       Source;
     LonResponseDestination  Destination;
-} LON_STRUCT_END(LonResponseAddress);
+} LonResponseAddress;
 
 /*
  * Typedef: LonExplicitAddress
@@ -1129,14 +1129,14 @@ typedef LON_UNION_BEGIN(LonExplicitAddress)
 #define LON_ADDRESS_GROUP_TRANSMIT_TIMER_SHIFT  0
 #define LON_ADDRESS_GROUP_TRANSMIT_TIMER_FIELD  ReceiveTransmit
 
-typedef LON_STRUCT_BEGIN(LonAddressTableGroup) 
+typedef struct LonAddressTableGroup
 {
     unsigned char     TypeSize;               /* contains type, size. Use the LON_ADDRESS_GROUP_* macros */
     unsigned char     DomainMember;           /* contains domain, member. Use the LON_ADDRESS_GROUP_* macros */
     unsigned char     RepeatRetry;            /* contains repeatTimer, retry. Use the LON_ADDRESS_GROUP_* macros */
     unsigned char     ReceiveTransmit;        /* contains receive and transmit timer. Use Lon_ADDRESS_GROUP_* macros */
     LonGroupId  Group;                  /* the group identifier */
-} LON_STRUCT_END(LonAddressTableGroup);
+} LonAddressTableGroup;
 
 /*
  *  Typedef: LonAddressTableSubnetNode
@@ -1161,14 +1161,14 @@ typedef LON_STRUCT_BEGIN(LonAddressTableGroup)
 #define LON_ADDRESS_SN_RETRY_SHIFT      0
 #define LON_ADDRESS_SN_RETRY_FIELD      RepeatRetry
 
-typedef LON_STRUCT_BEGIN(LonAddressTableSubnetNode) 
+typedef struct LonAddressTableSubnetNode
 {
     LonAddressType    Type;           /* should be LonAddressSubnetNode   */
     unsigned char                     DomainNode;     /* contains domain, node. Use LON_ADDRESS_SN_* macros */
     unsigned char                     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_SN_* macros */
     LonTransmitTimer   TransmitTimer;
     LonSubnetId                 Subnet;
-} LON_STRUCT_END(LonAddressTableSubnetNode);
+} LonAddressTableSubnetNode;
 
 /*
  *  Typedef: LonAddressTableBroadcast
@@ -1193,14 +1193,14 @@ typedef LON_STRUCT_BEGIN(LonAddressTableSubnetNode)
 #define LON_ADDRESS_BROADCAST_RETRY_SHIFT   0
 #define LON_ADDRESS_BROADCAST_RETRY_FIELD   RepeatRetry
 
-typedef LON_STRUCT_BEGIN(LonAddressTableBroadcast) 
+typedef struct LonAddressTableBroadcast
 {
     LonAddressType    Type;           /* should be LonAddressBroadcast */
     unsigned char                     DomainBacklog;  /* contains domain, backlog. Use LON_ADDRESS_BROADCAST_* macros */
     unsigned char                     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_BROADCAST_* macros instead */
     LonTransmitTimer  TransmitTimer;
     LonSubnetId                 Subnet;
-} LON_STRUCT_END(LonAddressTableBroadcast);
+} LonAddressTableBroadcast;
 
 /*
  *  Typedef: LonAddressTableTurnaround
@@ -1214,13 +1214,13 @@ typedef LON_STRUCT_BEGIN(LonAddressTableBroadcast)
 #define LON_ADDRESS_TURNAROUND_RETRY_SHIFT          0   
 #define LON_ADDRESS_TURNAROUND_RETRY_FIELD          RepeatRetry
 
-typedef LON_STRUCT_BEGIN(LonAddressTableTurnaround) 
+typedef struct LonAddressTableTurnaround
 {
     LonAddressType    Type;           /* should be LonAddressTurnaround */
     unsigned char                     Turnaround;     /* 1: turnaround record. 0: not in use */
     unsigned char                     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_TURNAROUND_* macros */
     LonTransmitTimer  TransmitTimer; 
-} LON_STRUCT_END(LonAddressTableTurnaround);
+} LonAddressTableTurnaround;
 
 /*
  * ******************************************************************************
@@ -1279,14 +1279,14 @@ typedef enum LonDomainLength
 #define LON_DOMAIN_ID_LENGTH_SHIFT  0
 #define LON_DOMAIN_ID_LENGTH_FIELD  InvalidIdLength
 
-typedef LON_STRUCT_BEGIN(LonDomain) 
+typedef struct LonDomain
 {
     LonDomainId             Id;         
     LonSubnetId             Subnet;
     unsigned char                 NodeClone;          /* contains nonclone, node. Use LON_DOMAIN_* macros */
     unsigned char                 InvalidIdLength;    /* use LON_DOMAIN_INVALID_* and LON_DOMAIN_ID_LENGTH_* macros */
     LonAuthenticationKey    Key;
-} LON_STRUCT_END(LonDomain);
+} LonDomain;
 
 /*
  *  Typedef: LonNvConfig
@@ -1320,23 +1320,23 @@ typedef LON_STRUCT_BEGIN(LonDomain)
 #define LON_NV_ADDRESS_SHIFT    0
 #define LON_NV_ADDRESS_FIELD    Attributes
 
-typedef LON_STRUCT_BEGIN(LonNvConfig) 
+typedef struct LonNvConfig
 {
     unsigned char     SelhiDirPrio;   /* contains selectorHigh, direction (input or output), priority. Use LON_NV_* macros */
     unsigned char     SelectorLow;
     unsigned char     Attributes;     /* contains turnaround, service, authentication, and address table index. Use LON_NV_* macros */
-} LON_STRUCT_END(LonNvConfig);
+} LonNvConfig;
 
 /*
  *  Typedef: LonAliasConfig
  *  Defines a network variable alias.
  */
-typedef LON_STRUCT_BEGIN(LonAliasConfig) 
+typedef struct LonAliasConfig
 {
     LonNvConfig     Alias;
     unsigned char         Primary;
     LonWord         HostPrimary;   /* iff primary is 0xFF */
-} LON_STRUCT_END(LonAliasConfig);
+} LonAliasConfig;
 
 /*
  *  Typedef: LonDirectModeTransceiver
@@ -1372,11 +1372,11 @@ typedef LON_STRUCT_BEGIN(LonAliasConfig)
 #define LON_DIRECT_XCVR_CDPREAMBLE_SHIFT    0
 #define LON_DIRECT_XCVR_CDPREAMBLE_FIELD    Parameter_2
 
-typedef LON_STRUCT_BEGIN(LonDirectModeTransceiver) 
+typedef struct LonDirectModeTransceiver
 {
     unsigned char      Parameter_1;    /* contains collission-detect, bit-sync-threshold, filter, and hysteresis. Use LON_DIRECT_XCVR_* macros */
     unsigned char      Parameter_2;    /* contains cd-to-end-packet, cd-tail, cd-preamble. Use LON_DIRECT_XCVR_* macros */
-} LON_STRUCT_END(LonDirectModeTransceiver);
+} LonDirectModeTransceiver;
 
 /*
  *  Typedef: LonConfigData
@@ -1412,7 +1412,7 @@ typedef LON_STRUCT_BEGIN(LonDirectModeTransceiver)
 #define LON_CONFIG_PREEMPT_SHIFT        0
 #define LON_CONFIG_PREEMPT_FIELD        Config_1
 
-typedef LON_STRUCT_BEGIN(LonConfigData) 
+typedef struct LonConfigData
 {
     LonWord         ChannelId;
     LonLocationId   Location;
@@ -1431,7 +1431,7 @@ typedef LON_STRUCT_BEGIN(LonConfigData)
         LonDirectModeTransceiver    DirectModeParameters;   /* Controls the operation of the transceiver port for direct mode transceivers */
     } LON_UNION_END(CommunicationParameters);
     unsigned char         Config_1;           /* Pre-emption timeout, network management authentication flag, and non-group receive timer; use LON_CONFIG_* macros */
-} LON_STRUCT_END(LonConfigData);
+} LonConfigData;
 
 /*
  *  Typedef: LonStatus
@@ -1439,7 +1439,7 @@ typedef LON_STRUCT_BEGIN(LonConfigData)
  *
  *  Previously named status_struct.
  */
-typedef LON_STRUCT_BEGIN(LonStatus) 
+typedef struct LonStatus
 {
     LonWord                     TransmitErrors;
     LonWord                     TransactionTimeouts;
@@ -1451,7 +1451,7 @@ typedef LON_STRUCT_BEGIN(LonStatus)
     unsigned char                     VersionNumber;
     LonSystemError    ErrorLog;
     LonNeuronModel    ModelNumber;
-} LON_STRUCT_END(LonStatus);
+} LonStatus;
 
 /*
  * ******************************************************************************
@@ -1712,11 +1712,11 @@ typedef enum LonSmipCmd
  *  The preamble (header) has a length field which specifies the message payload to follow
  *  a network interface command, not including the preamble bytes themselves.
  */
-typedef LON_STRUCT_BEGIN(LonSmipHdr) 
+typedef struct LonSmipHdr
 {
     unsigned char                 Length;        /* Length of the data to follow, not including the <LonSmipCmd> preamble */
     LonSmipCmd    Command;       /* Network interface command, possibly OR'ed with additional information (such as the queue identifier) */ 
-} LON_STRUCT_END(LonSmipHdr);
+} LonSmipHdr;
 
 /* Maximum data size of SMIP message, excluding hdr   */
 /* LON_APP_OUTPUT_BUFSIZE reflects the application    */
@@ -1732,11 +1732,11 @@ typedef LON_STRUCT_BEGIN(LonSmipHdr)
  *  link layer packet, but the packet's header must be examined to determine the actual packet structure, and
  *  the packet's actual size.
  */
-typedef LON_STRUCT_BEGIN(LonSmipMsg) 
+typedef struct LonSmipMsg
 {
     LonSmipHdr  Header;                     /* message header   */
     unsigned char     Payload[LON_SMIP_MAX_DATA];    /* message payload. */
-} LON_STRUCT_END(LonSmipMsg);
+} LonSmipMsg;
 
 /* 
  *  Enumeration: LonUsopCmd
@@ -1787,7 +1787,7 @@ typedef enum LonUsopCmd
 #define LON_RESET_IO9_VALID_SHIFT       0
 #define LON_RESET_IO9_VALID_FIELD       Flags
 
-typedef LON_STRUCT_BEGIN(LonResetNotification) 
+typedef struct LonResetNotification
 {
     LonSmipHdr                  Header;             /* message header                                   */
 
@@ -1810,7 +1810,7 @@ typedef LON_STRUCT_BEGIN(LonResetNotification)
     unsigned char                     MaxAddresses;       /* size of the address table                    */
     unsigned char                     MaxDomains;         /* size of the domain table                     */
     unsigned char                     MaxAliases;         /* size of the alias table                      */
-} LON_STRUCT_END(LonResetNotification);
+} LonResetNotification;
 
 /* 
  *  Typedef: LonNmNvFetchRequest
@@ -1818,11 +1818,11 @@ typedef LON_STRUCT_BEGIN(LonResetNotification)
  *
  *  Previously named NM_NV_fetch_request.
  */
-typedef LON_STRUCT_BEGIN(LonNmNvFetchRequest) 
+typedef struct LonNmNvFetchRequest
 {
     unsigned char     Index;
     LonWord     EscapeIndex;  /* exists iff index==0xFF    */
-} LON_STRUCT_END(LonNmNvFetchRequest);
+} LonNmNvFetchRequest;
 
 /*
  *  Macro: LON_NV_NAME_LEN
@@ -1844,12 +1844,12 @@ typedef LON_STRUCT_BEGIN(LonNmNvFetchRequest)
 
 typedef LON_UNION_BEGIN(LonNmInstallRequest) 
 {
-    LON_STRUCT_NESTED_BEGIN(Wink)
+    struct Wink
     {
         LonInstallCommand Command; /* *LonInstallWink* */
-    } LON_STRUCT_NESTED_END(Wink);
+    } Wink;
 
-    LON_STRUCT_NESTED_BEGIN(QueryNvInfo)
+    struct QueryNvInfo
     {
         LonInstallCommand Command; /* *LonInstallQueryNvInfo* */
         LonNvInfoType     NvInfoType;  /* Requested network variable information */
@@ -1861,29 +1861,29 @@ typedef LON_UNION_BEGIN(LonNmInstallRequest)
          */
         LON_UNION_NESTED_BEGIN(AdditionalParameters)
         {
-            LON_STRUCT_NESTED_BEGIN(SdText)
+            struct SdText
             {
                 /* Used when NvInfoType is *LonNvInfoSdText* */
                 LonWord Offset;         /* Byte offset from beginning of SD text */
                 unsigned char Length;         /* Maximum number of SD bytes to return  */
-            } LON_STRUCT_NESTED_END(SdText);
+            } SdText;
         } LON_UNION_NESTED_END(AdditionalParameters);
-    } LON_STRUCT_NESTED_END(QueryNvInfo);
+    } QueryNvInfo;
 
-    LON_STRUCT_NESTED_BEGIN(QueryNodeInfo)
+    struct QueryNodeInfo
     {
         LonInstallCommand Command;      /* *LonInstallQueryNodeInfo*  */
         LonNodeInfoType   NodeInfoType; /* Requested node information */
         LON_UNION_NESTED_BEGIN(AdditionalParameters)
         {
-            LON_STRUCT_NESTED_BEGIN(SdText)
+            struct SdText2
             {
                 /* Used when NodeInfoType is *LonNodeInfoSdText* */
                 LonWord Offset;        /* Byte offset from beginning of SD text */
                 unsigned char Length;        /* Maximum number of SD bytes to return  */
-            } LON_STRUCT_NESTED_END(SdText);
+            } SdText2;
         } LON_UNION_NESTED_END(AdditionalParameters);
-    } LON_STRUCT_NESTED_END(QueryNodeInfo);
+    } QueryNodeInfo;
 
 } LON_UNION_END(LonNmInstallRequest);
 
@@ -2040,7 +2040,7 @@ typedef LON_UNION_BEGIN(LonNmInstallRequest)
 typedef LON_UNION_BEGIN(LonNmInstallResponse) 
 {
     /* Response for requested info LonInstallQueryNvInfo, LonNvInfoDescriptor */
-    LON_STRUCT_NESTED_BEGIN(NvDescriptor)
+    struct NvDescriptor
     {
         unsigned char LengthAndOrigin;    /* Use LON_NV_DESC_LENGTH_* and LON_NV_DESC_ORIGIN_* macros */
         unsigned char Defaults;           /* Use LON_NV_DESC_IS_OUTPUT_* and LON_NV_DESC_DFLT_* macros */
@@ -2051,36 +2051,36 @@ typedef LON_UNION_BEGIN(LonNmInstallResponse)
         LonWord ArrayElement;
         char    NvName[LON_NV_NAME_LEN]; /* Optional field - Included only if
                                         LON_NV_DESC_EXT_ATTR_NAME_SUPPLIED flag is set. */
-    } LON_STRUCT_NESTED_END(NvDescriptor);
+    } NvDescriptor;
 
     /* Response for requested info LonInstallQueryNvInfo, LonNvInfoRateEstimate */
-    LON_STRUCT_NESTED_BEGIN(NvRate)
+    struct NvRate
     {
         unsigned char    RateEstimate;       /* Encoded rate estimate. Only valid if 'LON_NV_DESC_EXT_ATTR_RE_AVAIL' is set in NV NvDescriptor */
         unsigned char    MaxRateEstimate;    /* Encoded max rate estimate. Only valid if 'LON_NV_DESC_EXT_ATTR_MRE_AVAIL' is set in NV NvDescriptor */
-    } LON_STRUCT_NESTED_END(NvRate);
+    } NvRate;
 
     /* Response for requested info LonInstallQueryNvInfo,  LonNvInfoName */
     char    NvName[LON_NV_NAME_LEN];   /* NV name. Only valid if 'nm' set in NV NvDescriptor */
 
     /* Response for requested info LonInstallQueryNvInfo, LonNvInfoSdText */
-    LON_STRUCT_NESTED_BEGIN(NvSd)
+    struct NvSd
     {
         unsigned char    Length;      /* Number of bytes of SD text returned */
         unsigned char    Text[1];     /* SD text - actual length is Length above. 
                                  * Might not be NULL terminated. */
-    } LON_STRUCT_NESTED_END(NvSd);
+    } NvSd;
 
     /* Response for requested info LonInstallQueryNvInfo, LonNvInfoSnvtIndex */
     unsigned char    SnvtTypeIndex;
 
     /* Response for requested info LonInstallQueryNodeInfo, LonNodeInfoSdText */
-    LON_STRUCT_NESTED_BEGIN(NodeSd)
+    struct NodeSd
     {
         unsigned char    Length;      /* Number of bytes of SD text returned */
         unsigned char    Text[1];     /* SD text - actual length is Length above. 
                                  * Might not be NULL terminated. */
-    } LON_STRUCT_NESTED_END(NodeSd);
+    } NodeSd;
 } LON_UNION_END(LonNmInstallResponse) ;
 
 /* 
@@ -2089,11 +2089,11 @@ typedef LON_UNION_BEGIN(LonNmInstallResponse)
  *
  *  Previously named NM_set_node_mode_request. 
  */
-typedef LON_STRUCT_BEGIN(LonNmSetNodeModeRequest) 
+typedef struct LonNmSetNodeModeRequest 
 {
     LonNodeMode   Mode;
     LonNodeState  State;  /* iff mode == LonChangeState */
-} LON_STRUCT_END(LonNmSetNodeModeRequest);
+} LonNmSetNodeModeRequest;
 
 /*
  *  Enumeration: LonMemoryReadWriteMode
@@ -2133,12 +2133,12 @@ typedef enum LonMemoryWriteForm
  *
  *  Previously named NM_read_memory_request.
  */
-typedef LON_STRUCT_BEGIN(LonNmReadMemoryRequest) 
+typedef struct LonNmReadMemoryRequest
 {
     LonMemoryReadWriteMode    Mode;
     LonWord                             Address;
     unsigned char                             Count;
-} LON_STRUCT_END(LonNmReadMemoryRequest);
+} LonNmReadMemoryRequest;
 
 /*
  *  Typedef: LonNmWriteMemoryRequest
@@ -2149,14 +2149,14 @@ typedef LON_STRUCT_BEGIN(LonNmReadMemoryRequest)
  *  the field *Form*.
  *  Previously named NM_write_memory_request.
  */
-typedef LON_STRUCT_BEGIN(LonNmWriteMemoryRequest) 
+typedef struct LonNmWriteMemoryRequest 
 {
     LonMemoryReadWriteMode    Mode;
     LonWord                             Address;
     unsigned char                             Count;
     LonMemoryWriteForm        Form;
     /* <count> bytes of data following... */
-} LON_STRUCT_END(LonNmWriteMemoryRequest);
+} LonNmWriteMemoryRequest;
 
 /*
  *  Enumeration: LonApplicationMessageCode
@@ -2192,10 +2192,10 @@ typedef enum LonApplicationMessageCode
  *
  *  Previously named NM_query_domain_request.
  */
-typedef LON_STRUCT_BEGIN(LonNmQueryDomainRequest) 
+typedef struct LonNmQueryDomainRequest
 {
     unsigned char Index;             /* Domain index                 */
-} LON_STRUCT_END(LonNmQueryDomainRequest);
+} LonNmQueryDomainRequest;
 
 /*
  *  Typedef: LonNmQueryNvAliasRequest
@@ -2205,20 +2205,20 @@ typedef LON_STRUCT_BEGIN(LonNmQueryDomainRequest)
  *  255 (escape index). If the latter, the request should also contain
  *  the 16-bit index following this escape index.
  */
-typedef LON_STRUCT_BEGIN(LonNmQueryNvAliasRequest) 
+typedef struct LonNmQueryNvAliasRequest 
 {
     unsigned char Index;              /* NV config table index                 */
     LonWord LongIndex;          /* Used only when Index is 255           */
-} LON_STRUCT_END(LonNmQueryNvAliasRequest);
+} LonNmQueryNvAliasRequest;
 
 /*
  *  Typedef: LonNmQueryAddressRequest
  *  Message structure used with *LonNmQueryAddr*.
  */
-typedef LON_STRUCT_BEGIN(LonNmQueryAddressRequest) 
+typedef struct LonNmQueryAddressRequest 
 {
     unsigned char Index;             /* address table index                 */
-} LON_STRUCT_END(LonNmQueryAddressRequest);
+} LonNmQueryAddressRequest;
 
 /*
  *  Typedef: LonNdQueryStatusResponse
@@ -2226,10 +2226,10 @@ typedef LON_STRUCT_BEGIN(LonNmQueryAddressRequest)
  *
  *  Previously named ND_query_status_response.
  */
-typedef LON_STRUCT_BEGIN(LonNdQueryStatusResponse) 
+typedef struct LonNdQueryStatusResponse
 {
     LonStatus   Status;
-} LON_STRUCT_END(LonNdQueryStatusResponse);
+} LonNdQueryStatusResponse;
 
 /*
  *  Typedef: LonNdQueryXcvrResponse
@@ -2237,30 +2237,30 @@ typedef LON_STRUCT_BEGIN(LonNdQueryStatusResponse)
  *
  *  Previously named ND_query_xcvr_response.
  */
-typedef LON_STRUCT_BEGIN(LonNdQueryXcvrResponse) 
+typedef struct LonNdQueryXcvrResponse
 {
     LonTransceiverParameters    Status;
-} LON_STRUCT_END(LonNdQueryXcvrResponse);
+} LonNdQueryXcvrResponse;
 
 /*
  *  Typedef: LonNmQuerySiDataRequest
  *  Message structure used to receive a request to read the SI/SD data.
  */
-typedef LON_STRUCT_BEGIN(LonNmQuerySiDataRequest) 
+typedef struct LonNmQuerySiDataRequest
 {
       LonWord   Offset;
       unsigned char   Count;
-} LON_STRUCT_END(LonNmQuerySiDataRequest);
+} LonNmQuerySiDataRequest;
 
 /*
  *  Typedef: LonNmUpdateAddressRequest
  *  Message structure used with *LonNmUpdateAddr* requests.
  */
-typedef LON_STRUCT_BEGIN(LonNmUpdateAddressRequest) 
+typedef struct LonNmUpdateAddressRequest 
 {
     unsigned char     Index;
     LonAddress  Address;
-} LON_STRUCT_END(LonNmUpdateAddressRequest);
+} LonNmUpdateAddressRequest;
 
 /* 
  *  Typedef: LonNmUpdateNvRequest
@@ -2273,23 +2273,23 @@ typedef LON_STRUCT_BEGIN(LonNmUpdateAddressRequest)
  *  Note that the data structure shown is an abstraction; the actual message frame used is
  *  the smallest possible. 
  */
-typedef LON_STRUCT_BEGIN(LonNmUpdateNvRequest) 
+typedef struct LonNmUpdateNvRequest
 {
     unsigned char      ShortIndex;
 
     LON_UNION_NESTED_BEGIN(Request) 
     {
-        LON_STRUCT_NESTED_BEGIN(ShortForm) 
+        struct ShortForm
         {
             LonNvConfig     NvConfig;
-        } LON_STRUCT_NESTED_END(ShortForm);
-        LON_STRUCT_NESTED_BEGIN(LongForm) 
+        } ShortForm;
+        struct LongForm
         {
             LonWord         LongIndex;
             LonNvConfig     NvConfig;
-        } LON_STRUCT_NESTED_END(LongForm);
+        } LongForm;
     } LON_UNION_NESTED_END(Request);
-} LON_STRUCT_END(LonNmUpdateNvRequest);
+} LonNmUpdateNvRequest;
 
 /* 
  *  Typedef: LonNmUpdateAliasRequest
@@ -2305,33 +2305,33 @@ typedef LON_STRUCT_BEGIN(LonNmUpdateNvRequest)
  *  the smallest possible. 
  */
 
-typedef LON_STRUCT_BEGIN(LonNmUpdateAliasRequest) 
+typedef struct LonNmUpdateAliasRequest 
 {
     unsigned char      ShortIndex;
 
     LON_UNION_NESTED_BEGIN(Request) 
     {
-        LON_STRUCT_NESTED_BEGIN(ShortForm) 
+        struct ShortForm2
         {
             LonAliasConfig  AliasConfig;
-        } LON_STRUCT_NESTED_END(ShortForm);
-        LON_STRUCT_NESTED_BEGIN(LongForm) 
+        } ShortForm2;
+        struct LongForm2
         {
             LonWord         LongIndex;
             LonAliasConfig  AliasConfig;
-        } LON_STRUCT_NESTED_END(LongForm);
+        } LongForm2;
     } LON_UNION_NESTED_END(Request);
-} LON_STRUCT_END(LonNmUpdateAliasRequest);
+} LonNmUpdateAliasRequest;
 
 /*
  *  Typedef: LonNmUpdateDomainRequest
  *  Message structure used with the *LonNmUpdateDomain* request.
  */
-typedef LON_STRUCT_BEGIN(LonNmUpdateDomainRequest) 
+typedef struct LonNmUpdateDomainRequest
 {
     unsigned char     Index;
     LonDomain   Domain;
-} LON_STRUCT_END(LonNmUpdateDomainRequest);
+} LonNmUpdateDomainRequest;
 
 /*
 *  Enumeration: LonServiceType
@@ -2422,7 +2422,7 @@ typedef enum LonCompletionType
 #define LON_EXPMSG_RESPONSE_SHIFT   0
 #define LON_EXPMSG_RESPONSE_FIELD   Attributes_2
  
-typedef LON_STRUCT_BEGIN(LonExplicitMessage) 
+typedef struct LonExplicitMessage
 {
     unsigned char      Attributes_1;   /* contains msgType, serviceType, authenticated, tag. Use LON_EXPMSG_* macros */
     unsigned char      Attributes_2;   /* contains priority, path, completionCode, explicitAddressing, altPath, pool, response. Use LON_-_* macros */
@@ -2455,7 +2455,7 @@ typedef LON_STRUCT_BEGIN(LonExplicitMessage)
         LonNmUpdateAliasRequest     UpdateAliasRequest;
 #endif  /* LON_NM_UPDATE_FUNCTIONS */
     } LON_UNION_END(Data);
-} LON_STRUCT_END(LonExplicitMessage);
+} LonExplicitMessage;
 
 #define LON_SICB_MIN_OVERHEAD ( sizeof(LonExplicitMessage) - sizeof(((LonExplicitMessage*)0x0)->Data) )
 
@@ -2508,7 +2508,7 @@ typedef LON_STRUCT_BEGIN(LonExplicitMessage)
 #define LON_NVMSG_RESPONSE_SHIFT    0
 #define LON_NVMSG_RESPONSE_FIELD    Attributes_2
 
-typedef LON_STRUCT_BEGIN(LonNvMessage) 
+typedef struct LonNvMessage
 { 
     unsigned char             Attributes_1;       /* contains msgType, nvPoll, and tag (4th and 5th bits are unused). Use LON_NVMSG_* macros */
     unsigned char             Attributes_2;       /* contains priority, path, completionCode, addressingMode, turnaround, pool, and response. Use LON_NVMSG_* macros. */
@@ -2521,7 +2521,7 @@ typedef LON_STRUCT_BEGIN(LonNvMessage)
     unsigned char             Index;              /* NV index                                     */
     unsigned char             AliasIndex;         /* Alias index.                                 */
     unsigned char             NvData[1];          /* "length" bytes of NV data                    */
-} LON_STRUCT_END(LonNvMessage);
+} LonNvMessage;
 
 /* Literal defines the maximum NV size    */
 #define LON_MAX_MSG_NV_DATA (LON_SMIP_MAX_DATA - sizeof(LonNvMessage) + 1)

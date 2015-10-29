@@ -134,13 +134,13 @@ typedef enum IsiScope
  *
  *  This structure contains the unique connection ID for a connection.
  */
-typedef LON_STRUCT_BEGIN(IsiConnectionId) 
+typedef struct IsiConnectionId
 {
     /* A unique identifier for the connection host, based on the host’s unique ID. */
     unsigned char         UniqueId[LON_UNIQUE_ID_LENGTH - 1]; 
     /* Connection host-allocated serial number.*/
     LonWord         SerialNumber;                       
-} LON_STRUCT_END(IsiConnectionId);
+} IsiConnectionId;
 
 /*
  *  Typedef: IsiConnectionHeader
@@ -149,14 +149,14 @@ typedef LON_STRUCT_BEGIN(IsiConnectionId)
  *  Following the ISI Message Header, all connection-related messages start with
  *  this structure.
  */
-typedef LON_STRUCT_BEGIN(IsiConnectionHeader) 
+typedef struct IsiConnectionHeader
 {
     /* See <IsiConnectionId>. */
     IsiConnectionId     ConnectionId;
     /* Selector value 0 – 0x2FFF. The most significant 2 bits must be cleared 
        and are reserved for future extension. */
     LonWord             Selector;
-} LON_STRUCT_END(IsiConnectionHeader);
+} IsiConnectionHeader;
 
 /*
  *  Typedef: IsiConnection
@@ -209,14 +209,14 @@ typedef LON_STRUCT_BEGIN(IsiConnectionHeader)
 #define ISI_CONN_AUTO_SHIFT     1
 #define ISI_CONN_AUTO_FIELD     Attributes2
 
-typedef LON_STRUCT_BEGIN(IsiConnection)
+typedef struct IsiConnection
 {
     IsiConnectionHeader Header;
     unsigned char     Host;
     unsigned char     Member;
     unsigned char     Attributes1;    /* contains state, extend, csme, width. See ISI_CONN_STATE_*, _EXTEND_*, _CSME_* and _WIDTH_* macros */
     unsigned char     Attributes2;    /* contains offset, auto. See ISI_CONN_OFFSET_* and _AUTO_* macros */
-} LON_STRUCT_END(IsiConnection);
+} IsiConnection;
 
 /*
  *  Typedef: IsiCsmoData
@@ -261,7 +261,7 @@ typedef LON_STRUCT_BEGIN(IsiConnection)
 #define ISI_CSMO_SCOPE_SHIFT    4
 #define ISI_CSMO_SCOPE_FIELD    Attributes2
 
-typedef LON_STRUCT_BEGIN(IsiCsmoData)
+typedef struct IsiCsmoData
 {
     /* The group (or: device category) that this connection applies to. */
     unsigned char     Group;
@@ -276,7 +276,7 @@ typedef LON_STRUCT_BEGIN(IsiCsmoData)
     /* Variant number for the offered network variable. Variants can be defined for
        any functional profile/member number pair. */
     unsigned char     Variant;
-    LON_STRUCT_NESTED_BEGIN(Extended) 
+    struct Extended 
     {
         unsigned char     Attributes2;    /* contains Ack, Poll, Scope. See ISI_CSMO_ACK_*, _POLL_* and _SCOPE_* macros */
         /* The first 6 bytes of the connection host’s standard program ID. 
@@ -285,8 +285,8 @@ typedef LON_STRUCT_BEGIN(IsiCsmoData)
         unsigned char     Application[LON_PROGRAM_ID_LENGTH - 2];
         /* NV member number within the functional block, or zero if none. */
         unsigned char     Member;
-    } LON_STRUCT_NESTED_END(Extended);    
-} LON_STRUCT_END(IsiCsmoData);
+    } Extended;    
+} IsiCsmoData;
 
 /*
  * This flag determines whether a message is supposed to be responded to.
@@ -363,18 +363,18 @@ typedef enum IsiUplinkRpcCode
  *
  *  This structure defines the format of the data in the ISI remote procedure call messages.
  */
-typedef LON_STRUCT_BEGIN(IsiRpcMessage)
+typedef struct IsiRpcMessage
 {
     LonSmipHdr  Header;         /* Message header, where command can be one of IsiCmd, IsiAck, IsiNack */
     unsigned char     RpcCode;        /* RPC Function Code */
     unsigned char     SequenceNumber; /* A sequence number for correlation */
     unsigned char     Parameters[2];  /* Two 1-byte parameters */ 
-    LON_STRUCT_NESTED_BEGIN(RpcData) 
+    struct RpcData 
     {
         unsigned char Length;         /* Length of the complete RpcData structure */
         unsigned char Data[31];       /* Contains data like IsiCsmoData, IsiConnection and so on. */
-    } LON_STRUCT_NESTED_END(RpcData); 
-} LON_STRUCT_END(IsiRpcMessage);
+    } RpcData; 
+} IsiRpcMessage;
 
 #define IsiRpcMessageLength(p)  ((unsigned char)((sizeof(IsiRpcMessage) - 2 - sizeof(((IsiRpcMessage*)0)->RpcData.Data) + (p)->RpcData.Length)))
 

@@ -207,11 +207,11 @@ typedef enum LdvRxBufferState
 } LdvRxBufferState;
 
 /* Definition of receive buffer    */
-typedef LON_STRUCT_BEGIN(LdvSysRxBuffer)
+typedef struct LdvSysRxBuffer
 {
     LdvRxBufferState    State;
     unsigned char             Data[LDV_RXBUFSIZE];
-} LON_STRUCT_END(LdvSysRxBuffer);
+} LdvSysRxBuffer;
 
 /* Transmit buffer state    */
 typedef enum LdvTxBufferState
@@ -223,11 +223,11 @@ typedef enum LdvTxBufferState
 } LdvTxBufferState;
 
 /* Definition of transmit buffer    */
-typedef LON_STRUCT_BEGIN(LdvSysTxBuffer)
+typedef struct LdvSysTxBuffer
 {
     LdvTxBufferState    State;
     unsigned char             Data[LDV_TXBUFSIZE];
-} LON_STRUCT_END(LdvSysTxBuffer);
+} LdvSysTxBuffer;
 
 /* Types of index used for incrementing. See function CyclicIncrement */
 typedef enum LdvIndexType

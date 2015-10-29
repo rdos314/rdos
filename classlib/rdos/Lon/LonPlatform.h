@@ -135,12 +135,6 @@
     typedef unsigned long   LonUbits32;         /* 32-bits */
     typedef signed   long   LonBits32;          /* 32-bits, signed */
 
-    #define LON_STRUCT_BEGIN(n) _Packed struct 
-    #define LON_STRUCT_END(n)   n
-        
-    #define LON_STRUCT_NESTED_BEGIN(n)  _Packed struct 
-    #define LON_STRUCT_NESTED_END(n)    n
-
     #define LON_UNION_BEGIN(n)  _Packed  union
     #define LON_UNION_END(n)    n
         
@@ -157,11 +151,11 @@
      *  obtain the signed or unsigned numerical value in the correct byte 
      *  ordering.
      */
-    typedef LON_STRUCT_BEGIN(LonWord) 
+    typedef struct LonWord
     {
         unsigned char  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
         unsigned char  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
-    } LON_STRUCT_END(LonWord);
+    } LonWord;
     
     /*
      *  typedef: LonDoubleWord
@@ -173,11 +167,11 @@
      *  macro to obtain the signed or unsigned numerical value in the correct 
      *  byte ordering.
      */
-    typedef LON_STRUCT_BEGIN(LonDoubleWord) 
+    typedef struct LonDoubleWord
     {
         LonWord  msw;    /* high-order word, the most significant word, the 0x1234 in 0x12345678 */
         LonWord  lsw;    /* low-order word, the least significant word, the 0x5678 in 0x12345678 */
-    } LON_STRUCT_END(LonDoubleWord);
+    } LonDoubleWord;
         
     /*
      * Basic boolean type. You must make sure to have a type with the name 
