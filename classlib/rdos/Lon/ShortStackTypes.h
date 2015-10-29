@@ -2000,9 +2000,9 @@ typedef struct LonNvDescriptor
     unsigned char BasicAttributes;    /* Use LON_NV_DESC_ATTR_* macros */
     unsigned char SnvtIndex;
     unsigned char ExtendedAttributes; /* Use LON_NV_DESC_EXT_ATTR_* macros */
-    short int ArraySize;
-    short int ArrayElement;
-    char    NvName[LON_NV_NAME_LEN]; /* Optional field - Included only if
+    short int     ArraySize;
+    short int     ArrayElement;
+    char          NvName[LON_NV_NAME_LEN]; /* Optional field - Included only if
                                         LON_NV_DESC_EXT_ATTR_NAME_SUPPLIED flag is set. */
 } LonNvDescriptor;
 
@@ -2097,8 +2097,8 @@ typedef enum LonMemoryWriteForm
 typedef struct LonNmReadMemoryRequest
 {
     LonMemoryReadWriteMode    Mode;
-    short int                             Address;
-    unsigned char                             Count;
+    short int                 Address;
+    unsigned char             Count;
 } LonNmReadMemoryRequest;
 
 /*
@@ -2113,8 +2113,8 @@ typedef struct LonNmReadMemoryRequest
 typedef struct LonNmWriteMemoryRequest 
 {
     LonMemoryReadWriteMode    Mode;
-    short int                             Address;
-    unsigned char                             Count;
+    short int                 Address;
+    unsigned char             Count;
     LonMemoryWriteForm        Form;
     /* <count> bytes of data following... */
 } LonNmWriteMemoryRequest;
@@ -2209,7 +2209,7 @@ typedef struct LonNdQueryXcvrResponse
  */
 typedef struct LonNmQuerySiDataRequest
 {
-      short int   Offset;
+      short int       Offset;
       unsigned char   Count;
 } LonNmQuerySiDataRequest;
 
@@ -2220,7 +2220,7 @@ typedef struct LonNmQuerySiDataRequest
 typedef struct LonNmUpdateAddressRequest 
 {
     unsigned char     Index;
-    LonAddress  Address;
+    LonAddress        Address;
 } LonNmUpdateAddressRequest;
 
 /* 
@@ -2234,22 +2234,29 @@ typedef struct LonNmUpdateAddressRequest
  *  Note that the data structure shown is an abstraction; the actual message frame used is
  *  the smallest possible. 
  */
+
+typedef struct LonNmShortForm
+{
+    LonNvConfig     NvConfig;
+} LonNmShortForm;
+
+typedef struct LonNmLongForm
+{
+    short int         LongIndex;
+    LonNvConfig     NvConfig;
+} LonNmLongForm;
+
+typedef union LonNmRequest 
+{
+    LonNmShortForm  ShortForm;
+    LonNmLongForm   LongForm;
+} LonNmRequest;
+
+
 typedef struct LonNmUpdateNvRequest
 {
     unsigned char      ShortIndex;
-
-    union Request 
-    {
-        struct ShortForm
-        {
-            LonNvConfig     NvConfig;
-        } ShortForm;
-        struct LongForm
-        {
-            short int         LongIndex;
-            LonNvConfig     NvConfig;
-        } LongForm;
-    } Request;
+    LonNmRequest       Request;
 } LonNmUpdateNvRequest;
 
 /* 
@@ -2266,24 +2273,27 @@ typedef struct LonNmUpdateNvRequest
  *  the smallest possible. 
  */
 
-typedef union LonNmRequest
+typedef struct LonAliasShortForm
 {
-    struct ShortForm2
-    {
-        LonAliasConfig  AliasConfig;
-    } ShortForm2;
+    LonAliasConfig  AliasConfig;
+} LonAliasShortForm;
 
-    struct LongForm2
-    {
-        short int         LongIndex;
-        LonAliasConfig  AliasConfig;
-    } LongForm2;
-} LonNmRequest;
+typedef struct LonAliasLongForm
+{
+    short int       LongIndex;
+    LonAliasConfig  AliasConfig;
+} LonAliasLongForm;
+
+typedef union LonNmAliasRequest
+{
+    LonAliasShortForm ShortForm;
+    LonAliasLongForm  LongForm;
+} LonNmAliasRequest;
 
 typedef struct LonNmUpdateAliasRequest 
 {
-    unsigned char      ShortIndex;
-    LonNmRequest       Request;
+    unsigned char           ShortIndex;
+    LonNmAliasRequest       Request;
 
 } LonNmUpdateAliasRequest;
 

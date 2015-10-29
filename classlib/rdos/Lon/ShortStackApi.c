@@ -1509,17 +1509,17 @@ const LonApiError LonUpdateAliasConfig(const unsigned index, const LonAliasConfi
         if (actualIndex < 255)
         {
             /* Use the short form of the request */
-            EXPMSG.Length = (unsigned char) (sizeof(unsigned char) + sizeof(((LonNmUpdateAliasRequest*)0x0)->Request.ShortForm2) + 1);
+            EXPMSG.Length = (unsigned char) (sizeof(unsigned char) + sizeof(((LonNmUpdateAliasRequest*)0x0)->Request.ShortForm) + 1);
             EXPMSG.Data.UpdateAliasRequest.ShortIndex = (unsigned char) actualIndex;  
-            EXPMSG.Data.UpdateAliasRequest.Request.ShortForm2.AliasConfig = *pAlias;
+            EXPMSG.Data.UpdateAliasRequest.Request.ShortForm.AliasConfig = *pAlias;
         }
         else
         {
             /* Use the long form of the request */
-            EXPMSG.Length = (unsigned char) (sizeof(unsigned char) + sizeof(((LonNmUpdateAliasRequest*)0x0)->Request.LongForm2) + 1);
+            EXPMSG.Length = (unsigned char) (sizeof(unsigned char) + sizeof(((LonNmUpdateAliasRequest*)0x0)->Request.LongForm) + 1);
             EXPMSG.Data.UpdateAliasRequest.ShortIndex = 255;  
-            EXPMSG.Data.UpdateAliasRequest.Request.LongForm2.LongIndex = RdosSwapShort(actualIndex);
-            EXPMSG.Data.UpdateAliasRequest.Request.LongForm2.AliasConfig = *pAlias;
+            EXPMSG.Data.UpdateAliasRequest.Request.LongForm.LongIndex = RdosSwapShort(actualIndex);
+            EXPMSG.Data.UpdateAliasRequest.Request.LongForm.AliasConfig = *pAlias;
         }
     
         LdvPutMsg(pSmipMsg);
@@ -1682,7 +1682,7 @@ const LonApiError LonUpdateNvConfig(const unsigned index, const LonNvConfig* con
                 else
                 {
                     /* Use the long form of the request */
-                    EXPMSG.Length = (unsigned char) (sizeof(unsigned char) + sizeof(((LonNmUpdateAliasRequest*)0x0)->Request.LongForm2) + 1);
+                    EXPMSG.Length = (unsigned char) (sizeof(unsigned char) + sizeof(((LonNmUpdateAliasRequest*)0x0)->Request.LongForm) + 1);
                     EXPMSG.Data.UpdateNvRequest.ShortIndex = 255;  
                     EXPMSG.Data.UpdateNvRequest.Request.LongForm.LongIndex = RdosSwapShort(index);
                     EXPMSG.Data.UpdateNvRequest.Request.LongForm.NvConfig = *pNvConfig;
