@@ -210,24 +210,6 @@ typedef enum LonApiError
 
 
 /*
- *  Macros: LON_GET_UNSIGNED_DOUBLEWORD, LON_SET_UNSIGNED_DOUBLEWORD
- *  Converts LonDoubleWord into a LonUbits32 
- *  and converts a LonUbits32 into a LonDoubleWord.
- */
-#define LON_GET_UNSIGNED_DOUBLEWORD(n)    ((((LonUbits32)LON_GET_UNSIGNED_WORD((n).msw)) << 16) \
-                                          +(LonUbits32)LON_GET_UNSIGNED_WORD((n).lsw))
-#define LON_SET_UNSIGNED_DOUBLEWORD(n, v) LON_SET_UNSIGNED_WORD((n).msw, (LonBits16) ((v) >> 16)); \
-                                          LON_SET_UNSIGNED_WORD((n).lsw, (LonBits16) (v))
-
-/*
- *  Macros: LON_GET_SIGNED_DOUBLEWORD, LON_SET_SIGNED_DOUBLEWORD
- *  Converts LonDoubleWord into a LonBits32
- *  and converts a LonBits32 into a LonDoubleWord.
- */
-#define LON_GET_SIGNED_DOUBLEWORD(n)    ((LonBits32)LON_GET_UNSIGNED_DOUBLEWORD(n))
-#define LON_SET_SIGNED_DOUBLEWORD(n, v) LON_SET_UNSIGNED_DOUBLEWORD(n, v)
-
-/*
  *  Macros: LON_GET_ATTRIBUTE, LON_SET_ATTRIBUTE
  *  Gets(sets) attributes from(to) a field by appropriately masking and shifting.
  */

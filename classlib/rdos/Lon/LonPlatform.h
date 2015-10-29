@@ -144,11 +144,18 @@ typedef signed   long   LonBits32;          /* 32-bits, signed */
      *  byte ordering.
      */
 
+/*
+
 typedef struct LonDoubleWord
 {
-    short int  msw;    /* high-order word, the most significant word, the 0x1234 in 0x12345678 */
-    short int  lsw;    /* low-order word, the least significant word, the 0x5678 in 0x12345678 */
+    short int  msw;
+    short int  lsw;  
 } LonDoubleWord;
+
+*/
+
+typedef int LonDoubleWord;
+
 
 typedef int bool;
 
