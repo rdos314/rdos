@@ -129,33 +129,6 @@
      * for more details about Builder-generated type definitions including 
      * details about "float" type handling.  
      */
-    
-typedef unsigned long   LonUbits32;         /* 32-bits */
-typedef signed   long   LonBits32;          /* 32-bits, signed */
-
-      /*
-     *  typedef: LonDoubleWord
-     *  Holds a 32-bit numerical value.
-     *
-     *  The LonDoubleWord structure holds a 32-bit unsigned value in big-endian 
-     *  ordering through two separate high-order and low-order <LonWord> members.
-     *  Use the <LON_SET_SIGNED_DOUBLEWORD> or <LON_SET_UNSIGNED_DOUBLEWORD> 
-     *  macro to obtain the signed or unsigned numerical value in the correct 
-     *  byte ordering.
-     */
-
-/*
-
-typedef struct LonDoubleWord
-{
-    short int  msw;
-    short int  lsw;  
-} LonDoubleWord;
-
-*/
-
-typedef int LonDoubleWord;
-
 
 typedef int bool;
 
