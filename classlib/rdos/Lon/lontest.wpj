@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
-1091
-409
-3968
-8611
+146
+321
+4547
+8708
 2
 MProject
 3
@@ -30,8 +30,8 @@ VComponent
 WRect
 0
 0
-5680
-4291
+5674
+4281
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 11
 lontest.tgt
 0
-1
+9
 7
