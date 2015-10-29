@@ -29,9 +29,11 @@
  * Following are a few macros that are used internally to access 
  * network variable and application message details.
  */
-#define PSICB   ((LonSicb*)pSmipMsg->Payload)
-#define EXPMSG  (PSICB->ExplicitMessage)
-#define NVMSG   (PSICB->NvMessage)
+
+ 
+// #define PSICB   ((LonSicb*)pSmipMsg->Payload)
+#define EXPMSG  (pScib->ExplicitMessage)
+#define NVMSG   (pScib->NvMessage)
 
 /*
  * Following is the reset message buffer. Any uplink reset message will be copied
@@ -192,6 +194,7 @@ const LonApiError LonInit(void)
 void LonEventHandler(void)
 {
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
 
     /* Force the serial driver to flush its transmit buffers */
     LdvFlushMsgs();
@@ -552,6 +555,7 @@ const LonApiError LonPollNv(const unsigned nvIndex)
     if (result == LonApiNoError) 
     {
         LonSmipMsg* pSmipMsg = NULL;
+        LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
         const LonNvDescription* const nvTable = LonGetNvTable();
 
         if (LON_GET_ATTRIBUTE(nvTable[nvIndex], LON_NVDESC_OUTPUT)) 
@@ -692,6 +696,7 @@ const LonApiError LonSendResponse(const LonCorrelator correlator,
 {
     LonApiError result = LonApiNoError;
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
 
     if (length > LON_MAX_MSG_DATA)
         /* Returns failure if the response data is too big */
@@ -891,6 +896,7 @@ const LonApiError LonSendMsg(const unsigned tag, const bool priority, const LonS
             const unsigned char code, const unsigned char* const pData, const unsigned length)
 {
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
     LonApiError result = LonApiNoError;
     const LonMtDescription* const pMtTable = LonGetMtTable();
     LonSmipQueue queue;
@@ -960,6 +966,7 @@ const LonApiError LonSendMsg(const unsigned tag, const bool priority, const LonS
 const LonApiError LonQueryDomainConfig(const unsigned index)
 {
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
     LonApiError result = LonApiNoError;
     
     if (CurrentNmNdStatus != NO_NM_ND_PENDING)
@@ -1009,6 +1016,7 @@ const LonApiError LonQueryDomainConfig(const unsigned index)
 const LonApiError LonQueryNvConfig(const unsigned index)
 {
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
     LonApiError result = LonApiNoError;
     
     if (CurrentNmNdStatus != NO_NM_ND_PENDING)
@@ -1074,6 +1082,7 @@ const LonApiError LonQueryNvConfig(const unsigned index)
 const LonApiError LonQueryAliasConfig(const unsigned index)
 {
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
     LonApiError result = LonApiNoError;
     unsigned queryIndex = index + LonNvCount;
 
@@ -1134,6 +1143,7 @@ const LonApiError LonQueryAliasConfig(const unsigned index)
 const LonApiError LonQueryAddressConfig(const unsigned index)
 {
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
     LonApiError result = LonApiNoError;
 
     if (CurrentNmNdStatus != NO_NM_ND_PENDING)
@@ -1180,6 +1190,7 @@ const LonApiError LonQueryAddressConfig(const unsigned index)
 const LonApiError LonQueryConfigData(void)
 {
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
     LonApiError result = LonApiNoError;
 
     if (CurrentNmNdStatus != NO_NM_ND_PENDING)
@@ -1225,6 +1236,7 @@ const LonApiError LonQueryConfigData(void)
 const LonApiError LonQueryStatus(void)
 {
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
     LonApiError result = LonApiNoError;
 
     if (CurrentNmNdStatus != NO_NM_ND_PENDING)
@@ -1272,6 +1284,7 @@ const LonApiError LonQueryStatus(void)
 const LonApiError LonQueryTransceiverStatus(void)
 {
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
     LonApiError result = LonApiNoError;
 
     if (CurrentNmNdStatus != NO_NM_ND_PENDING)
@@ -1330,6 +1343,7 @@ const LonApiError LonQueryTransceiverStatus(void)
 const LonApiError LonSetNodeMode(LonNodeMode mode, LonNodeState state)
 {
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
     LonApiError result = LonApiNoError;
 
     if (CurrentNmNdStatus != NO_NM_ND_PENDING)
@@ -1376,6 +1390,7 @@ const LonApiError LonSetNodeMode(LonNodeMode mode, LonNodeState state)
 const LonApiError LonUpdateAddressConfig(const unsigned index, const LonAddress* pAddress)
 {
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
     LonApiError result = LonApiNoError;
 
     if (CurrentNmNdStatus != NO_NM_ND_PENDING)
@@ -1424,6 +1439,7 @@ const LonApiError LonUpdateAddressConfig(const unsigned index, const LonAddress*
 const LonApiError LonUpdateAliasConfig(const unsigned index, const LonAliasConfig* pAlias)
 {
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
     LonApiError result = LonApiNoError;
 
     if (CurrentNmNdStatus != NO_NM_ND_PENDING)
@@ -1486,6 +1502,7 @@ const LonApiError LonUpdateAliasConfig(const unsigned index, const LonAliasConfi
 const LonApiError LonUpdateConfigData(const LonConfigData* const pConfigData)
 {
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
     LonApiError result = LonApiNoError;
 
     if (CurrentNmNdStatus != NO_NM_ND_PENDING)
@@ -1536,6 +1553,7 @@ const LonApiError LonUpdateConfigData(const LonConfigData* const pConfigData)
 const LonApiError LonUpdateDomainConfig(const unsigned index, const LonDomain* const pDomain)
 {
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
     LonApiError result = LonApiNoError;
 
     if (CurrentNmNdStatus != NO_NM_ND_PENDING)
@@ -1585,6 +1603,7 @@ const LonApiError LonUpdateDomainConfig(const unsigned index, const LonDomain* c
 const LonApiError LonUpdateNvConfig(const unsigned index, const LonNvConfig* const pNvConfig)
 {
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
     LonApiError result = LonApiNoError;
     
     if (CurrentNmNdStatus != NO_NM_ND_PENDING)
@@ -1651,6 +1670,7 @@ const LonApiError LonUpdateNvConfig(const unsigned index, const LonNvConfig* con
 const LonApiError LonClearStatus(void)
 {
     LonSmipMsg* pSmipMsg = NULL;
+    LonSicb * pScib = (LonSicb*)pSmipMsg->Payload;
     LonApiError result = LonApiNoError;
 
     if (CurrentNmNdStatus != NO_NM_ND_PENDING)
