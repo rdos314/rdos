@@ -130,10 +130,10 @@
      * details about "float" type handling.  
      */
     
-    typedef unsigned short  LonUbits16;         /* 16-bits */
-    typedef signed   short  LonBits16;          /* 16-bits, signed */
-    typedef unsigned long   LonUbits32;         /* 32-bits */
-    typedef signed   long   LonBits32;          /* 32-bits, signed */
+typedef unsigned short  LonUbits16;         /* 16-bits */
+typedef signed   short  LonBits16;          /* 16-bits, signed */
+typedef unsigned long   LonUbits32;         /* 32-bits */
+typedef signed   long   LonBits32;          /* 32-bits, signed */
         
     /*
      *  typedef: LonWord
@@ -145,11 +145,11 @@
      *  obtain the signed or unsigned numerical value in the correct byte 
      *  ordering.
      */
-    typedef struct LonWord
-    {
-        unsigned char  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
-        unsigned char  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
-    } LonWord;
+typedef struct LonWord
+{
+    unsigned char  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
+    unsigned char  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
+} LonWord;
     
     /*
      *  typedef: LonDoubleWord
@@ -161,24 +161,17 @@
      *  macro to obtain the signed or unsigned numerical value in the correct 
      *  byte ordering.
      */
-    typedef struct LonDoubleWord
-    {
-        LonWord  msw;    /* high-order word, the most significant word, the 0x1234 in 0x12345678 */
-        LonWord  lsw;    /* low-order word, the least significant word, the 0x5678 in 0x12345678 */
-    } LonDoubleWord;
-        
-    /*
-     * Basic boolean type. You must make sure to have a type with the name 
-     * 'LonBool' defined, and that type must accept TRUE and FALSE (defined 
-     * below).
-     */
-    typedef int     LonBool;                      
-    #ifndef TRUE
-        #define TRUE    1
-    #endif
-    #ifndef FALSE
-        #define FALSE   0
-    #endif
+
+typedef struct LonDoubleWord
+{
+    LonWord  msw;    /* high-order word, the most significant word, the 0x1234 in 0x12345678 */
+    LonWord  lsw;    /* low-order word, the least significant word, the 0x5678 in 0x12345678 */
+} LonDoubleWord;
+
+typedef int bool;
+
+#define TRUE    1
+#define FALSE   0
 
 
 #endif  /* _LON_PLATFORM_H */

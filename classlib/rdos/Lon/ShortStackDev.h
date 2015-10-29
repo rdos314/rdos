@@ -126,7 +126,7 @@ typedef struct
 /*
  *  Message Tag Table Type Definition
  */
-typedef LonBool LonMtDescription;
+typedef bool LonMtDescription;
 
 /*
  *  Prototypes for access functions:

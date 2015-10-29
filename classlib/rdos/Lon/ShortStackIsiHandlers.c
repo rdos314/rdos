@@ -41,7 +41,7 @@
  * Do not send any messages, start other network transactions, or call other ISI 
  * API functions while the <IsiCreatePeriodicMsg> callback is running.
  */
-LonBool IsiCreatePeriodicMsg(void)
+bool IsiCreatePeriodicMsg(void)
 {
     /* 
      * TO DO
@@ -135,7 +135,7 @@ unsigned IsiGetPrimaryGroup(unsigned assembly)
  * for the duration of this function call.
  * The function operates whether the ISI engine is running or not.
  */
-unsigned IsiGetAssembly(const IsiCsmoData* pCsmo, LonBool automatic)
+unsigned IsiGetAssembly(const IsiCsmoData* pCsmo, bool automatic)
 {
     /* 
      * TO DO
@@ -164,7 +164,7 @@ unsigned IsiGetAssembly(const IsiCsmoData* pCsmo, LonBool automatic)
  * duration of this function call. The function operates whether the ISI engine 
  * is running or not.
  */
-unsigned IsiGetNextAssembly(const IsiCsmoData* pCsmo, LonBool automatic, unsigned assembly)
+unsigned IsiGetNextAssembly(const IsiCsmoData* pCsmo, bool automatic, unsigned assembly)
 {
     /* 
      * TO DO
@@ -364,7 +364,7 @@ const unsigned IsiGetRepeatCount(void)
  * is running, the engine queries bound output network variables using this 
  * callback (including any alias connections) whenever the heartbeat is due.
  */
-LonBool IsiQueryHeartbeat(unsigned index)
+bool IsiQueryHeartbeat(unsigned index)
 {
     /* 
      * TO DO
@@ -418,7 +418,7 @@ unsigned IsiUserCommand(unsigned param1, unsigned param2, const void* pData, uns
  * Remarks:
  * This callback contains the results of the <IsiQueryIsConnected> function.
  */
-void IsiIsConnectedReceived(unsigned assembly, LonBool isConnected)
+void IsiIsConnectedReceived(unsigned assembly, bool isConnected)
 {
     /* 
      * TO DO
@@ -470,7 +470,7 @@ void IsiProtocolVersionReceived(unsigned version)
  * Remarks:
  * This callback contains the results of the <IsiQueryIsRunning> function.
  */
-void IsiIsRunningReceived(LonBool isRunning)
+void IsiIsRunningReceived(bool isRunning)
 {
     /* 
      * TO DO
@@ -489,7 +489,7 @@ void IsiIsRunningReceived(LonBool isRunning)
  * Remarks:
  * This callback contains the results of the <IsiQueryIsBecomingHost> function.
  */
-void IsiIsBecomingHostReceived(unsigned assembly, LonBool isBecomingHost)
+void IsiIsBecomingHostReceived(unsigned assembly, bool isBecomingHost)
 {
     /* 
      * TO DO
@@ -513,7 +513,7 @@ void IsiIsBecomingHostReceived(unsigned assembly, LonBool isBecomingHost)
  * parameter.  Note that the Micro Server is not guaranteed to return ACKs and
  * NACKs in order.
  */
-void IsiApiComplete(IsiDownlinkRpcCode code, unsigned char sequence, LonBool success)
+void IsiApiComplete(IsiDownlinkRpcCode code, unsigned char sequence, bool success)
 {
     /* 
      * TO DO

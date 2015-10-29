@@ -381,17 +381,17 @@ extern const volatile LonResetNotification* const LonGetLastResetNotification(vo
  */
 
 #ifdef __cplusplus
-extern "C" const LonApiError LonSendMsg(const unsigned tag, const LonBool priority, 
+extern "C" const LonApiError LonSendMsg(const unsigned tag, const bool priority, 
                                     const LonServiceType serviceType, 
-                                    const LonBool authenticated,
+                                    const bool authenticated,
                                     const LonSendAddress* const pDestAddr, 
                                     const unsigned char code, 
                                     const unsigned char* const pData, const unsigned length);
 #else
 
-extern const LonApiError LonSendMsg(const unsigned tag, const LonBool priority, 
+extern const LonApiError LonSendMsg(const unsigned tag, const bool priority, 
                                     const LonServiceType serviceType, 
-                                    const LonBool authenticated,
+                                    const bool authenticated,
                                     const LonSendAddress* const pDestAddr, 
                                     const unsigned char code, 
                                     const unsigned char* const pData, const unsigned length);
@@ -858,7 +858,7 @@ extern const LonApiError LonGoConfigured(void);
  * invalidates its copy of the signature *AFTER* reporting it to the host.
  * This function is part of the optional utility API (LON_UTILITY_FUNCTIONS).
  */
-extern const LonApiError LonQueryAppSignature(LonBool bInvalidate);
+extern const LonApiError LonQueryAppSignature(bool bInvalidate);
 
 /* 
  * Function: LonQueryVersion 
@@ -1016,7 +1016,7 @@ extern void LonNvUpdateOccurred(const unsigned index, const LonReceiveAddress* c
  * <LonPropagateNv> or <LonPollNv> API functions.  The index parameter 
  * delivered with this callback matches the one from the API invocation.
  */
-extern void LonNvUpdateCompleted(const unsigned index, const LonBool success);
+extern void LonNvUpdateCompleted(const unsigned index, const bool success);
 
 /*
  * Callback: LonGetCurrentNvSize
@@ -1083,9 +1083,9 @@ extern const LonApiError LonNvdDeserializeNvs(void);
  */
 extern void LonMsgArrived(const LonReceiveAddress* const pAddress, 
                           const LonCorrelator correlator,
-                          const LonBool priority, 
+                          const bool priority, 
                           const LonServiceType serviceType, 
-                          const LonBool authenticated, 
+                          const bool authenticated, 
                           const unsigned char code, 
                           const unsigned char* const pData, const unsigned dataLength);
 /*
@@ -1128,7 +1128,7 @@ extern void LonResponseArrived(const LonResponseAddress* const pAddress,
  * destination devices, and unsuccessful if the transaction timeout expires 
  * before responses have been received from all destinations devices.
  */
-extern void LonMsgCompleted(const unsigned tag, const LonBool success);
+extern void LonMsgCompleted(const unsigned tag, const bool success);
 
 #endif    /* LON_APPLICATION_MESSAGES    */
 
@@ -1150,7 +1150,7 @@ extern void LonMsgCompleted(const unsigned tag, const LonBool success);
  * This callback is part of the optional network management query API 
  * (LON_NM_QUERY_FUNCTIONS).
  */
-extern void LonDomainConfigReceived(const LonDomain* const pDomain, const LonBool success);
+extern void LonDomainConfigReceived(const LonDomain* const pDomain, const bool success);
 
 /*
  * Callback: LonNvConfigReceived
@@ -1167,7 +1167,7 @@ extern void LonDomainConfigReceived(const LonDomain* const pDomain, const LonBoo
  * <LonNvConfig> data. This callback is part of the optional 
  * network management query API (LON_NM_QUERY_FUNCTIONS).
  */
-extern void LonNvConfigReceived(const LonNvConfig* const pNvConfig, const LonBool success);
+extern void LonNvConfigReceived(const LonNvConfig* const pNvConfig, const bool success);
 
 /*
  * Callback: LonAliasConfigReceived
@@ -1185,7 +1185,7 @@ extern void LonNvConfigReceived(const LonNvConfig* const pNvConfig, const LonBoo
  * This callback is part of the optional network management query API 
  * (LON_NM_QUERY_FUNCTIONS).
  */
-extern void LonAliasConfigReceived(const LonAliasConfig* const pAliasConfig, const LonBool success);
+extern void LonAliasConfigReceived(const LonAliasConfig* const pAliasConfig, const bool success);
 
 /*
  * Callback:   LonAddressConfigReceived
@@ -1202,7 +1202,7 @@ extern void LonAliasConfigReceived(const LonAliasConfig* const pAliasConfig, con
  * <LonAddress> data. This callback is part of the optional network management 
  * query API (LON_NM_QUERY_FUNCTIONS).
  */
-extern void LonAddressConfigReceived(const LonAddress* const pAddress, const LonBool success);
+extern void LonAddressConfigReceived(const LonAddress* const pAddress, const bool success);
 
 /*
  * Callback: LonConfigDataReceived
@@ -1220,7 +1220,7 @@ extern void LonAddressConfigReceived(const LonAddress* const pAddress, const Lon
  * This callback is part of the optional network management query API 
  * (LON_NM_QUERY_FUNCTIONS).
  */
-extern void LonConfigDataReceived(const LonConfigData* const pConfigData, const LonBool success);
+extern void LonConfigDataReceived(const LonConfigData* const pConfigData, const bool success);
 
 /*
  * Callback: LonStatusReceived
@@ -1237,7 +1237,7 @@ extern void LonConfigDataReceived(const LonConfigData* const pConfigData, const 
  * <LonStatus> data. This callback is part of the optional network management 
  * query API (LON_NM_QUERY_FUNCTIONS).
  */
-extern void LonStatusReceived(const LonStatus* const pStatus, const LonBool success);
+extern void LonStatusReceived(const LonStatus* const pStatus, const bool success);
 
 /*
  * Callback: LonTransceiverStatusReceived
@@ -1259,7 +1259,7 @@ extern void LonStatusReceived(const LonStatus* const pStatus, const LonBool succ
  * transceiver type, this callback will declare a failure through the second 
  * parameter.
  */
-extern void LonTransceiverStatusReceived(const LonTransceiverParameters* const pStatus, const LonBool success);
+extern void LonTransceiverStatusReceived(const LonTransceiverParameters* const pStatus, const bool success);
 #endif  /* LON_NM_QUERY_FUNCTIONS */
 
 #if LON_DMF_ENABLED
@@ -1290,7 +1290,7 @@ extern void LonTransceiverStatusReceived(const LonTransceiverParameters* const p
  *
  * Note that this function is generated by the LonTalk Interface Developer. 
  */
-extern const LonApiError LonTranslateWindowArea(LonBool write, unsigned start, unsigned size, 
+extern const LonApiError LonTranslateWindowArea(bool write, unsigned start, unsigned size, 
                                          char** ppHostAddress, LonMemoryDriver* driver);
 
 /* 
@@ -1364,7 +1364,7 @@ extern void LonPingReceived(void);
  * is bound. This callback is part of the optional 
  * utility API (LON_UTILITY_FUNCTIONS).
  */
-extern void LonNvIsBoundReceived(const unsigned index, const LonBool bound);
+extern void LonNvIsBoundReceived(const unsigned index, const bool bound);
 
 /* 
  * Callback: LonMtIsBoundReceived
@@ -1380,7 +1380,7 @@ extern void LonNvIsBoundReceived(const unsigned index, const LonBool bound);
  * is bound. This callback is part of the optional 
  * utility API (LON_UTILITY_FUNCTIONS).
  */
-extern void LonMtIsBoundReceived(const unsigned index, const LonBool bound);
+extern void LonMtIsBoundReceived(const unsigned index, const bool bound);
 
 /* 
  * Callback: LonGoUnconfiguredReceived

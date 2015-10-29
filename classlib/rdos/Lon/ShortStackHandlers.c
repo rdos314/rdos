@@ -169,7 +169,7 @@ void LonNvUpdateOccurred(const unsigned index, const LonReceiveAddress* const pS
  * <LonPropagateNv> or <LonPollNv> API functions.  The index parameter 
  * delivered with this callback matches the one from the API invocation.
  */
-void LonNvUpdateCompleted(const unsigned index, const LonBool success)
+void LonNvUpdateCompleted(const unsigned index, const bool success)
 {
     /* 
      * TO DO
@@ -297,7 +297,7 @@ const LonApiError LonNvdDeserializeNvs(void)
  * All pointers are only valid for the duration of this callback. 
  */
 void LonMsgArrived(const LonReceiveAddress* const pAddress, const LonCorrelator correlator, 
-                   const LonBool priority, const LonServiceType serviceType, const LonBool authenticated, 
+                   const bool priority, const LonServiceType serviceType, const bool authenticated, 
                    const unsigned char code, const unsigned char* const pData, const unsigned dataLength)
 {
     /* 
@@ -348,7 +348,7 @@ void LonResponseArrived(const LonResponseAddress* const pAddress, const unsigned
  * destination devices, and unsuccessful if the transaction timeout expires 
  * before responses have been received from all destinations devices.
  */
-void LonMsgCompleted(const unsigned tag, const LonBool success)
+void LonMsgCompleted(const unsigned tag, const bool success)
 {
     /* 
      * TO DO
@@ -376,7 +376,7 @@ void LonMsgCompleted(const unsigned tag, const LonBool success)
  * This callback is part of the optional network management query API 
  * (LON_NM_QUERY_FUNCTIONS).
  */
-void LonDomainConfigReceived(const LonDomain* const pDomain, const LonBool success)
+void LonDomainConfigReceived(const LonDomain* const pDomain, const bool success)
 {
     /* 
      * TO DO
@@ -398,7 +398,7 @@ void LonDomainConfigReceived(const LonDomain* const pDomain, const LonBool succe
  * <LonNvConfig> data. This callback is part of the optional 
  * network management query API (LON_NM_QUERY_FUNCTIONS).
  */
-void LonNvConfigReceived(const LonNvConfig* const pNvConfig, const LonBool success)
+void LonNvConfigReceived(const LonNvConfig* const pNvConfig, const bool success)
 {
     /* 
      * TO DO
@@ -421,7 +421,7 @@ void LonNvConfigReceived(const LonNvConfig* const pNvConfig, const LonBool succe
  * This callback is part of the optional network management query API 
  * (LON_NM_QUERY_FUNCTIONS).
  */
-void LonAliasConfigReceived(const LonAliasConfig* const pAliasConfig, const LonBool success)
+void LonAliasConfigReceived(const LonAliasConfig* const pAliasConfig, const bool success)
 {
     /* 
      * TO DO
@@ -443,7 +443,7 @@ void LonAliasConfigReceived(const LonAliasConfig* const pAliasConfig, const LonB
  * <LonAddress> data. This callback is part of the optional network management 
  * query API (LON_NM_QUERY_FUNCTIONS).
  */
-void LonAddressConfigReceived(const LonAddress* const pAddress, const LonBool success)
+void LonAddressConfigReceived(const LonAddress* const pAddress, const bool success)
 {
     /* 
      * TO DO
@@ -466,7 +466,7 @@ void LonAddressConfigReceived(const LonAddress* const pAddress, const LonBool su
  * This callback is part of the optional network management query API 
  * (LON_NM_QUERY_FUNCTIONS).
  */
-void LonConfigDataReceived(const LonConfigData* const pConfigData, const LonBool success)
+void LonConfigDataReceived(const LonConfigData* const pConfigData, const bool success)
 {
     /* 
      * TO DO
@@ -488,7 +488,7 @@ void LonConfigDataReceived(const LonConfigData* const pConfigData, const LonBool
  * <LonStatus> data. This callback is part of the optional network management 
  * query API (LON_NM_QUERY_FUNCTIONS).
  */
-void LonStatusReceived(const LonStatus* const pStatus, const LonBool success)
+void LonStatusReceived(const LonStatus* const pStatus, const bool success)
 {
     /* 
      * TO DO
@@ -515,7 +515,7 @@ void LonStatusReceived(const LonStatus* const pStatus, const LonBool success)
  * transceiver type, this callback will declare a failure through the second 
  * parameter.
  */
-void LonTransceiverStatusReceived(const LonTransceiverParameters* const pStatus, const LonBool success)
+void LonTransceiverStatusReceived(const LonTransceiverParameters* const pStatus, const bool success)
 {
     /* 
      * TO DO
@@ -655,7 +655,7 @@ void LonPingReceived(void)
  * is bound. This callback is part of the optional 
  * utility API (LON_UTILITY_FUNCTIONS).
  */
-void LonNvIsBoundReceived(const unsigned index, const LonBool bound)
+void LonNvIsBoundReceived(const unsigned index, const bool bound)
 {
     /* 
      * TO DO
@@ -676,7 +676,7 @@ void LonNvIsBoundReceived(const unsigned index, const LonBool bound)
  * is bound. This callback is part of the optional 
  * utility API (LON_UTILITY_FUNCTIONS).
  */
-void LonMtIsBoundReceived(const unsigned index, const LonBool bound)
+void LonMtIsBoundReceived(const unsigned index, const bool bound)
 {
     /* 
      * TO DO

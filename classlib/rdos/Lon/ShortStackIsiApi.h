@@ -121,7 +121,7 @@ extern const LonApiError IsiReturnToFactoryDefaults(void);
  * This function has unpredictable effect on an ISI-S device and therefore 
  * should only be used with an ISI-DA device. 
  */
-extern const LonApiError IsiAcquireDomain(LonBool sharedServicePin);
+extern const LonApiError IsiAcquireDomain(bool sharedServicePin);
 
 /*
  * Function: IsiStartDeviceAcquisition
@@ -471,7 +471,7 @@ extern const LonApiError IsiIssueHeartbeat(unsigned index);
  * Remarks:
  * This callback contains the results of the <IsiQueryIsConnected> function.
  */
-extern void IsiIsConnectedReceived(unsigned assembly, LonBool isConnected);
+extern void IsiIsConnectedReceived(unsigned assembly, bool isConnected);
 
 /* 
  * Callback:   IsiImplementationVersionReceived
@@ -508,7 +508,7 @@ extern void IsiProtocolVersionReceived(unsigned version);
  * Remarks:
  * This callback contains the results of the <IsiQueryIsRunning> function.
  */
-extern void IsiIsRunningReceived(LonBool isRunning);
+extern void IsiIsRunningReceived(bool isRunning);
 
 /* 
  * Callback:   IsiIsBecomingHostReceived
@@ -522,7 +522,7 @@ extern void IsiIsRunningReceived(LonBool isRunning);
  * Remarks:
  * This callback contains the results of the <IsiQueryIsBecomingHost> function.
  */
-extern void IsiIsBecomingHostReceived(unsigned assembly, LonBool isBecomingHost);
+extern void IsiIsBecomingHostReceived(unsigned assembly, bool isBecomingHost);
 
 /* 
  * Callback:   IsiApiComplete
@@ -541,7 +541,7 @@ extern void IsiIsBecomingHostReceived(unsigned assembly, LonBool isBecomingHost)
  * parameter.  Note that the Micro Server is not guaranteed to return ACKs and
  * NACKs in order.
  */
-extern void IsiApiComplete(IsiDownlinkRpcCode code, unsigned char sequence, LonBool success);
+extern void IsiApiComplete(IsiDownlinkRpcCode code, unsigned char sequence, bool success);
 
 /*
  * ******************************************************************************
@@ -573,7 +573,7 @@ extern void IsiApiComplete(IsiDownlinkRpcCode code, unsigned char sequence, LonB
  * Do not send any messages, start other network transactions, or call other ISI 
  * API functions while the <IsiCreatePeriodicMsg> callback is running.
  */
-extern LonBool IsiCreatePeriodicMsg(void);
+extern bool IsiCreatePeriodicMsg(void);
 #endif
 
 #ifdef ISI_HOST_UPDATEUSERINTERFACE
@@ -644,7 +644,7 @@ extern unsigned IsiGetPrimaryGroup(unsigned assembly);
  * for the duration of this function call.
  * The function operates whether the ISI engine is running or not.
  */
-extern unsigned IsiGetAssembly(const IsiCsmoData* pCsmo, LonBool automatic);
+extern unsigned IsiGetAssembly(const IsiCsmoData* pCsmo, bool automatic);
 #endif
 
 #ifdef ISI_HOST_GETNEXTASSEMBLY
@@ -667,7 +667,7 @@ extern unsigned IsiGetAssembly(const IsiCsmoData* pCsmo, LonBool automatic);
  * duration of this function call. The function operates whether the ISI engine 
  * is running or not.
  */
-extern unsigned IsiGetNextAssembly(const IsiCsmoData* pCsmo, LonBool automatic, unsigned assembly);
+extern unsigned IsiGetNextAssembly(const IsiCsmoData* pCsmo, bool automatic, unsigned assembly);
 #endif
 
 #ifdef ISI_HOST_GETNVINDEX
@@ -813,7 +813,7 @@ extern const unsigned IsiGetRepeatCount(void);
  * is running, the engine queries bound output network variables using this 
  * callback (including any alias connections) whenever the heartbeat is due.
  */
-extern LonBool IsiQueryHeartbeat(unsigned nvIndex);
+extern bool IsiQueryHeartbeat(unsigned nvIndex);
 #endif
 
 /* 

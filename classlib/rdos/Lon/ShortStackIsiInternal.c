@@ -29,7 +29,7 @@ static unsigned char IsiSequenceNumber = 0x80;
  * Internal functions 
  */
 LonApiError SendDownlinkRpc(IsiDownlinkRpcCode code, unsigned char param1, unsigned char param2, void* pData, unsigned len);
-void HandleDownlinkRpcAck(IsiRpcMessage* pMsg, LonBool bSuccess);
+void HandleDownlinkRpcAck(IsiRpcMessage* pMsg, bool bSuccess);
 void HandleUplinkRpc(IsiRpcMessage* pMsg);
 
 /*
@@ -66,7 +66,7 @@ LonApiError SendDownlinkRpc(IsiDownlinkRpcCode code, unsigned char param1, unsig
 /*
  * HandleDownlinkRpcAck
  */
-void HandleDownlinkRpcAck(IsiRpcMessage* pMsg, LonBool bSuccess)
+void HandleDownlinkRpcAck(IsiRpcMessage* pMsg, bool bSuccess)
 {
     unsigned char param1 = pMsg->Parameters[0];
     unsigned char param2 = pMsg->Parameters[1];

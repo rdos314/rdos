@@ -105,7 +105,7 @@ const LonApiError IsiReturnToFactoryDefaults(void)
  * This function has unpredictable effect on an ISI-S device and therefore 
  * should only be used with an ISI-DA device. 
  */
-const LonApiError IsiAcquireDomain(LonBool sharedServicePin)
+const LonApiError IsiAcquireDomain(bool sharedServicePin)
 {
     return SendDownlinkRpc(IsiRpcAcquireDomain, sharedServicePin, 0, NULL, 0);
 }

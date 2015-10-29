@@ -1292,7 +1292,7 @@ typedef struct LonDomain
  *  Typedef: LonNvConfig
  *  The network variable configuration structure.
  */
-#define LON_NV_PRIORITY_MASK    0x80        /* use LonBool */
+#define LON_NV_PRIORITY_MASK    0x80        /* use bool */
 #define LON_NV_PRIORITY_SHIFT   7
 #define LON_NV_PRIORITY_FIELD   SelhiDirPrio
 
@@ -1304,7 +1304,7 @@ typedef struct LonDomain
 #define LON_NV_SELHIGH_SHIFT    0
 #define LON_NV_SELHIGH_FIELD    SelhiDirPrio
 
-#define LON_NV_TURNAROUND_MASK  0x80        /* use LonBool */
+#define LON_NV_TURNAROUND_MASK  0x80        /* use bool */
 #define LON_NV_TURNAROUND_SHIFT 7
 #define LON_NV_TURNAROUND_FIELD Attributes
 
@@ -1312,7 +1312,7 @@ typedef struct LonDomain
 #define LON_NV_SERVICE_SHIFT    5
 #define LON_NV_SERVICE_FIELD    Attributes
 
-#define LON_NV_AUTHENTICATION_MASK  0x10    /* use LonBool */
+#define LON_NV_AUTHENTICATION_MASK  0x10    /* use bool */
 #define LON_NV_AUTHENTICATION_SHIFT 4
 #define LON_NV_AUTHENTICATION_FIELD Attributes
 
@@ -1767,11 +1767,11 @@ typedef enum LonUsopCmd
  *  The Micro Server provides an uplink reset notification with every reset.
  *  Previously named LonResetMsg.
  */
-#define LON_RESET_STATE_CSERROR_MASK    0x02    /* Use LonBool. True if a checksum error has occurred  */
+#define LON_RESET_STATE_CSERROR_MASK    0x02    /* Use bool. True if a checksum error has occurred  */
 #define LON_RESET_STATE_CSERROR_SHIFT   1
 #define LON_RESET_STATE_CSERROR_FIELD   State
 
-#define LON_RESET_STATE_UNCNFG_MASK     0x01    /* Use LonBool. True if the Micro Server is unconfigured. */
+#define LON_RESET_STATE_UNCNFG_MASK     0x01    /* Use bool. True if the Micro Server is unconfigured. */
 #define LON_RESET_STATE_UNCNFG_SHIFT    0
 #define LON_RESET_STATE_UNCNFG_FIELD    State
 
@@ -2384,7 +2384,7 @@ typedef enum LonCompletionType
 #define LON_EXPMSG_SERVICE_SHIFT    5   
 #define LON_EXPMSG_SERVICE_FIELD    Attributes_1
 
-#define LON_EXPMSG_AUTHENTICATED_MASK   0x10        /* use LonBool   */
+#define LON_EXPMSG_AUTHENTICATED_MASK   0x10        /* use bool   */
 #define LON_EXPMSG_AUTHENTICATED_SHIFT  4
 #define LON_EXPMSG_AUTHENTICATED_FIELD  Attributes_1
 
@@ -2392,11 +2392,11 @@ typedef enum LonCompletionType
 #define LON_EXPMSG_TAG_SHIFT        0
 #define LON_EXPMSG_TAG_FIELD        Attributes_1
 
-#define LON_EXPMSG_PRIORITY_MASK    0x80           /* use LonBool */
+#define LON_EXPMSG_PRIORITY_MASK    0x80           /* use bool */
 #define LON_EXPMSG_PRIORITY_SHIFT   7
 #define LON_EXPMSG_PRIORITY_FIELD   Attributes_2
 
-#define LON_EXPMSG_PATH_MASK        0x40            /* use LonBool. True -> use alternate path */
+#define LON_EXPMSG_PATH_MASK        0x40            /* use bool. True -> use alternate path */
 #define LON_EXPMSG_PATH_SHIFT       6
 #define LON_EXPMSG_PATH_FIELD       Attributes_2
 
@@ -2404,19 +2404,19 @@ typedef enum LonCompletionType
 #define LON_EXPMSG_COMPLETIONCODE_SHIFT 4
 #define LON_EXPMSG_COMPLETIONCODE_FIELD Attributes_2
 
-#define LON_EXPMSG_EXPLICITADDR_MASK    0x08            /* use LonBool. True -> use explicit address (implicit via address table otherwise) */
+#define LON_EXPMSG_EXPLICITADDR_MASK    0x08            /* use bool. True -> use explicit address (implicit via address table otherwise) */
 #define LON_EXPMSG_EXPLICITADDR_SHIFT   3
 #define LON_EXPMSG_EXPLICITADDR_FIELD   Attributes_2
 
-#define LON_EXPMSG_ALTPATH_MASK     0x04            /* use LonBool. True -> use path specified in 'path'. Use default otherwise */
+#define LON_EXPMSG_ALTPATH_MASK     0x04            /* use bool. True -> use path specified in 'path'. Use default otherwise */
 #define LON_EXPMSG_ALTPATH_SHIFT    2
 #define LON_EXPMSG_ALTPATH_FIELD    Attributes_2
 
-#define LON_EXPMSG_POOL_MASK        0x02            /* use LonBool. True -> incoming */
+#define LON_EXPMSG_POOL_MASK        0x02            /* use bool. True -> incoming */
 #define LON_EXPMSG_POOL_SHIFT       1
 #define LON_EXPMSG_POOL_FIELD       Attributes_2
 
-#define LON_EXPMSG_RESPONSE_MASK    0x01            /* use LonBool. Set to True for responses only */
+#define LON_EXPMSG_RESPONSE_MASK    0x01            /* use bool. Set to True for responses only */
 #define LON_EXPMSG_RESPONSE_SHIFT   0
 #define LON_EXPMSG_RESPONSE_FIELD   Attributes_2
 
@@ -2472,7 +2472,7 @@ typedef struct LonExplicitMessage
 #define LON_NVMSG_MSGTYPE_SHIFT     7
 #define LON_NVMSG_MSGTYPE_FIELD     Attributes_1
 
-#define LON_NVMSG_NVPOLL_MASK       0x40        /* use LonBool   */
+#define LON_NVMSG_NVPOLL_MASK       0x40        /* use bool   */
 #define LON_NVMSG_NVPOLL_SHIFT      6
 #define LON_NVMSG_NVPOLL_FIELD      Attributes_1
 
@@ -2480,11 +2480,11 @@ typedef struct LonExplicitMessage
 #define LON_NVMSG_TAG_SHIFT         0
 #define LON_NVMSG_TAG_FIELD         Attributes_1
 
-#define LON_NVMSG_PRIORITY_MASK     0x80        /* use LonBool */
+#define LON_NVMSG_PRIORITY_MASK     0x80        /* use bool */
 #define LON_NVMSG_PRIORITY_SHIFT    7
 #define LON_NVMSG_PRIORITY_FIELD    Attributes_2
 
-#define LON_NVMSG_PATH_MASK         0x40         /* Use LonBool. False: use primary path (incoming only) */ 
+#define LON_NVMSG_PATH_MASK         0x40         /* Use bool. False: use primary path (incoming only) */ 
 #define LON_NVMSG_PATH_SHIFT        6
 #define LON_NVMSG_PATH_FIELD        Attributes_2
 
@@ -2492,19 +2492,19 @@ typedef struct LonExplicitMessage
 #define LON_NVMSG_COMPLETIONCODE_SHIFT   4
 #define LON_NVMSG_COMPLETIONCODE_FIELD   Attributes_2
 
-#define LON_NVMSG_EXPLADDR_MASK     0x08            /* use LonBool. True -> use explicit address (implicit via address table otherwise) */
+#define LON_NVMSG_EXPLADDR_MASK     0x08            /* use bool. True -> use explicit address (implicit via address table otherwise) */
 #define LON_NVMSG_EXPLADDR_SHIFT    3
 #define LON_NVMSG_EXPLADDR_FIELD    Attributes_2
 
-#define LON_NVMSG_TURNAROUND_MASK   0x04            /* use LonBool. True -> turnaround poll, False -> other */
+#define LON_NVMSG_TURNAROUND_MASK   0x04            /* use bool. True -> turnaround poll, False -> other */
 #define LON_NVMSG_TURNAROUND_SHIFT  2
 #define LON_NVMSG_TURNAROUND_FIELD  Attributes_2
 
-#define LON_NVMSG_POOL_MASK         0x02            /* use LonBool. True -> incoming */
+#define LON_NVMSG_POOL_MASK         0x02            /* use bool. True -> incoming */
 #define LON_NVMSG_POOL_SHIFT        1
 #define LON_NVMSG_POOL_FIELD        Attributes_2
 
-#define LON_NVMSG_RESPONSE_MASK     0x01            /* use LonBool. Set to True for responses only */
+#define LON_NVMSG_RESPONSE_MASK     0x01            /* use bool. Set to True for responses only */
 #define LON_NVMSG_RESPONSE_SHIFT    0
 #define LON_NVMSG_RESPONSE_FIELD    Attributes_2
 
