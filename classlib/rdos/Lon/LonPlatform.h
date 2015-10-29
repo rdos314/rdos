@@ -112,8 +112,6 @@
  ***************************************************************************/
 #ifndef _LON_PLATFORM_H
 #define _LON_PLATFORM_H
-
-#define  WATCOM_X86
      
     /* 
      * GCC_NIOS C programs.  Assume GCC_NIOS is defined.
@@ -124,8 +122,6 @@
      * processor, be sure to change LITTLE_ENDIAN to BIG_ENDIAN 
      *
      */
-
-    #define WATCOM_X86_HOSTED       /* runs in the WATCOM X86 C environment */
 
     /*
      * indicate a compiler/platform has been defined
