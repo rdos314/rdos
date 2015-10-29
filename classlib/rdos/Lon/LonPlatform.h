@@ -130,7 +130,6 @@
      * details about "float" type handling.  
      */
     
-    typedef signed   char   LonBits8;           /* 8-bits, signed */
     typedef unsigned short  LonUbits16;         /* 16-bits */
     typedef signed   short  LonBits16;          /* 16-bits, signed */
     typedef unsigned long   LonUbits32;         /* 32-bits */
@@ -193,28 +192,5 @@
         #define FALSE   0
     #endif
 
-
-/*
- *  **************************************************************************
- *  NEURON C type equivalents:
- *  These types are used by LonTalk Interface Developer-Builder generated type 
- *  definitions. Each NEURON C equivalent type is a host-platform dependent 
- *  type definition that is equivalent to the respective NEURON C type. 
- *
- *  For your information, a NEURON C "int" and "short" are both 8-bit scalars,
- *  a NEURON C "long" is a 16 bit variable. See the ShortStack or FTXL 
- *  documentation for more details about LonTalk Interface Developer-Builder 
- *  generated types.
- *  ************************************************************************** 
- */
- 
-typedef unsigned char   ncuChar;    /* equivalent of NEURON C "unsigned char"   */
-typedef unsigned char  ncuShort;   /* equivalent of NEURON C "unsigned short"  */
-typedef unsigned char   ncuInt;     /* equivalent of NEURON C "unsigned int"    */
-typedef LonWord     ncuLong;    /* equivalent of NEURON C "unsigned long"   */
-typedef LonBits8    ncsChar;    /* equivalent of NEURON C "signed char"     */
-typedef LonBits8    ncsShort;   /* equivalent of NEURON C "signed short"    */
-typedef LonBits8    ncsInt;     /* equivalent of NEURON C "signed int"      */
-typedef LonWord     ncsLong;    /* equivalent of NEURON C "signed long"     */
 
 #endif  /* _LON_PLATFORM_H */
