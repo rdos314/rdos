@@ -1992,50 +1992,56 @@ typedef union LonNmInstallRequest
 #define LON_NV_DESC_EXT_ATTR_NAME_SUPPLIED_SHIFT  3
 #define LON_NV_DESC_EXT_ATTR_NAME_SUPPLIED_FIELD  ExtendedAttributes
 
+/* Response for requested info LonInstallQueryNvInfo, LonNvInfoDescriptor */
+typedef struct LonNvDescriptor
+{
+    unsigned char LengthAndOrigin;    /* Use LON_NV_DESC_LENGTH_* and LON_NV_DESC_ORIGIN_* macros */
+    unsigned char Defaults;           /* Use LON_NV_DESC_IS_OUTPUT_* and LON_NV_DESC_DFLT_* macros */
+    unsigned char BasicAttributes;    /* Use LON_NV_DESC_ATTR_* macros */
+    unsigned char SnvtIndex;
+    unsigned char ExtendedAttributes; /* Use LON_NV_DESC_EXT_ATTR_* macros */
+    short int ArraySize;
+    short int ArrayElement;
+    char    NvName[LON_NV_NAME_LEN]; /* Optional field - Included only if
+                                        LON_NV_DESC_EXT_ATTR_NAME_SUPPLIED flag is set. */
+} LonNvDescriptor;
+
+/* Response for requested info LonInstallQueryNvInfo, LonNvInfoRateEstimate */
+typedef struct LonNvRate
+{
+    unsigned char    RateEstimate;       /* Encoded rate estimate. Only valid if 'LON_NV_DESC_EXT_ATTR_RE_AVAIL' is set in NV NvDescriptor */
+    unsigned char    MaxRateEstimate;    /* Encoded max rate estimate. Only valid if 'LON_NV_DESC_EXT_ATTR_MRE_AVAIL' is set in NV NvDescriptor */
+} LonNvRate;
+
+/* Response for requested info LonInstallQueryNvInfo, LonNvInfoSdText */
+typedef struct LonNvSd
+{
+    unsigned char    Length;      /* Number of bytes of SD text returned */
+    unsigned char    Text[1];     /* SD text - actual length is Length above. 
+                                  * Might not be NULL terminated. */
+} LonNvSd;
+
+/* Response for requested info LonInstallQueryNodeInfo, LonNodeInfoSdText */
+typedef struct LonNodeSd
+{
+    unsigned char    Length;      /* Number of bytes of SD text returned */
+    unsigned char    Text[1];     /* SD text - actual length is Length above. 
+                                  * Might not be NULL terminated. */
+} LonNodeSd;
+
 typedef union LonNmInstallResponse 
 {
-    /* Response for requested info LonInstallQueryNvInfo, LonNvInfoDescriptor */
-    struct NvDescriptor
-    {
-        unsigned char LengthAndOrigin;    /* Use LON_NV_DESC_LENGTH_* and LON_NV_DESC_ORIGIN_* macros */
-        unsigned char Defaults;           /* Use LON_NV_DESC_IS_OUTPUT_* and LON_NV_DESC_DFLT_* macros */
-        unsigned char BasicAttributes;    /* Use LON_NV_DESC_ATTR_* macros */
-        unsigned char SnvtIndex;
-        unsigned char ExtendedAttributes; /* Use LON_NV_DESC_EXT_ATTR_* macros */
-        short int ArraySize;
-        short int ArrayElement;
-        char    NvName[LON_NV_NAME_LEN]; /* Optional field - Included only if
-                                        LON_NV_DESC_EXT_ATTR_NAME_SUPPLIED flag is set. */
-    } NvDescriptor;
-
-    /* Response for requested info LonInstallQueryNvInfo, LonNvInfoRateEstimate */
-    struct NvRate
-    {
-        unsigned char    RateEstimate;       /* Encoded rate estimate. Only valid if 'LON_NV_DESC_EXT_ATTR_RE_AVAIL' is set in NV NvDescriptor */
-        unsigned char    MaxRateEstimate;    /* Encoded max rate estimate. Only valid if 'LON_NV_DESC_EXT_ATTR_MRE_AVAIL' is set in NV NvDescriptor */
-    } NvRate;
+    LonNvDescriptor   NvDescriptor;
+    LonNvRate         NvRate;
+    LonNvSd           NvSd;
+    LonNodeSd         NodeSd;
 
     /* Response for requested info LonInstallQueryNvInfo,  LonNvInfoName */
-    char    NvName[LON_NV_NAME_LEN];   /* NV name. Only valid if 'nm' set in NV NvDescriptor */
-
-    /* Response for requested info LonInstallQueryNvInfo, LonNvInfoSdText */
-    struct NvSd
-    {
-        unsigned char    Length;      /* Number of bytes of SD text returned */
-        unsigned char    Text[1];     /* SD text - actual length is Length above. 
-                                 * Might not be NULL terminated. */
-    } NvSd;
+    char              NvName[LON_NV_NAME_LEN];   /* NV name. Only valid if 'nm' set in NV NvDescriptor */
 
     /* Response for requested info LonInstallQueryNvInfo, LonNvInfoSnvtIndex */
-    unsigned char    SnvtTypeIndex;
+    unsigned char     SnvtTypeIndex;
 
-    /* Response for requested info LonInstallQueryNodeInfo, LonNodeInfoSdText */
-    struct NodeSd
-    {
-        unsigned char    Length;      /* Number of bytes of SD text returned */
-        unsigned char    Text[1];     /* SD text - actual length is Length above. 
-                                 * Might not be NULL terminated. */
-    } NodeSd;
 } LonNmInstallResponse;
 
 /* 
