@@ -53,7 +53,7 @@ typedef LON_ENUM_BEGIN(LonMtIndex)
 
 #define LON_APP_OUTPUT_BUFSIZE 66u
 #define LON_APP_INPUT_BUFSIZE  66u
-#define LON_ISI_ENABLED   0x00   /* 0x20: ISI API supported, 0x00 otherwise. Also enabled expl. addressing! */
+#define LON_ISI_ENABLED   0x20   /* 0x20: ISI API supported, 0x00 otherwise. Also enabled expl. addressing! */
 #define LON_APP_SIGNATURE 1922u
 #define LON_SERVICE_PIN_TIMER 0u
 #define LON_EXPLICIT_ADDRESSING  (0x20|LON_ISI_ENABLED)    /* 0x20: enable expl. addressing (zero to disable) */

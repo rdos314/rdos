@@ -20,7 +20,6 @@
 #ifndef _SHORTSTACK_TYPES_H
 #define _SHORTSTACK_TYPES_H
 
-#include "ifsfmess.h"
 /*
  * *****************************************************************************
  * TITLE: SHORTSTACK TYPES
@@ -2456,10 +2455,6 @@ typedef LON_STRUCT_BEGIN(LonExplicitMessage)
     LON_UNION_BEGIN(Data)        /* Message data                                 */
     {
         LonByte                     Data[1];
-        LMSG                        lonMsg;
-        LMSG2                       lonMsg2;
-        LMSGHB                      lonHb;
-        IFSFMESSDATA                ifsfData;
         LonNmNvFetchRequest         NvFetch;
         LonNmInstallRequest         Install;
         LonNmSetNodeModeRequest     NodeMode;
