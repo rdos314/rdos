@@ -21,8 +21,6 @@
 #define LDV_SCI_H
 
 
-// #include "Processor.h"
-#include "LonPlatform.h"
 #include "ShortStackDev.h"
 #include "ShortStackApi.h"
 

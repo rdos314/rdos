@@ -33,13 +33,6 @@
  * Note this file is best included through ShortStackDev.h, which is generated 
  * by the LonTalk Interface Developer. 
  */
-#ifndef _LON_PLATFORM_H
-#   error You must include LonPlatform.h first (prefer including ShortStackDev.h)
-#endif  /* _LON_PLATFORM_H */
-
-#ifndef DEFINED_SHORTSTACKDEV_H
-#   error You must include ShortStackDev.h first
-#endif  /* DEFINED_SHORTSTACKDEV_H */
 
 #include "ShortStackIsiTypes.h"
 #include "ShortStackIsiHandlers.h"

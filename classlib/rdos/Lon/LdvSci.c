@@ -19,7 +19,11 @@
 
 // #include "Processor.h"
 #include "malloc.h"
-#include "LonPlatform.h"
+
+typedef int bool;
+#define FALSE 0
+#define TRUE !FALSE
+
 #include "LdvSci.h"
 
 

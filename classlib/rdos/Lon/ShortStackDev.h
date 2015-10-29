@@ -22,7 +22,11 @@
 #define DEFINED_SHORTSTACKDEV_H
 
 #include <stddef.h>
-#include "LonPlatform.h"
+
+typedef int bool;
+#define FALSE 0
+#define TRUE !FALSE
+
 #include "LonNvTypes.h"
 #include "LonCpTypes.h"
 
