@@ -45,11 +45,7 @@
  * Closes and unloads the conection to the dll
  *
  */
-#ifdef __cplusplus
-extern "C" const void LonClose();
-#else
 extern const void LonClose();
-#endif
 
 /*
  * Function: LonInit
@@ -66,11 +62,7 @@ extern const void LonClose();
  * Note that the Micro Server disables all network communication until this 
  * function completes successfully.
  */
-#ifdef __cplusplus
-extern "C" const LonApiError LonInit(void);
-#else
 extern const LonApiError LonInit(void);
-#endif
 /*
  * Function: LonEventHandler
  * Periodic service to the ShortStack LonTalk Compact API. 
@@ -91,11 +83,7 @@ extern const LonApiError LonInit(void);
  * the device and InputBufferCount is the number of input buffers defined for 
  * the application.
  */
-#ifdef __cplusplus
-extern "C" void LonEventHandler(void);
-#else
 extern void LonEventHandler(void);
-#endif
 
 /*
  * Function: LonPollNv
@@ -137,11 +125,7 @@ extern void LonEventHandler(void);
  * response service. See the User's Guide for more information about the use of
  * those service types with ISI.
  */
-#ifdef __cplusplus
-extern "C" const LonApiError LonPollNv(const unsigned index);
-#else
 extern const LonApiError LonPollNv(const unsigned index);
-#endif
 /*
  * Function: LonPropagateNv
  * Propagates the value of a bound output network variable to the network.
@@ -157,11 +141,7 @@ extern const LonApiError LonPollNv(const unsigned index);
  * buffered by the driver, otherwise, an appropriate error code is returned.
  * See <LonNvUpdateCompleted> for the completion event that accompanies this API.
  */
-#ifdef __cplusplus
-extern "C" const LonApiError LonPropagateNv(const unsigned index);
-#else
 extern const LonApiError LonPropagateNv(const unsigned index);
-#endif
 
 /*
  * Function: LonGetDeclaredNvSize
@@ -245,11 +225,7 @@ extern const LonApiError LonSendResponse(const LonCorrelator correlator,
  *
  * Previously named lonGetNeuronId.
  */
-#ifdef __cplusplus
-  extern "C" const LonApiError LonGetUniqueId(LonUniqueId* const pId);
-#else
   extern const LonApiError LonGetUniqueId(LonUniqueId* const pId);
-#endif
 /*
  * Function: LonGetVersion
  * Provides the link layer protocol version number.
@@ -270,11 +246,7 @@ extern const LonApiError LonSendResponse(const LonCorrelator correlator,
  * See also the <LonGetLastResetNotification> function for alternative access 
  * to the same data.
  */
-#ifdef __cplusplus
-extern "C" const LonApiError LonGetVersion(unsigned char* const pVersion);
-#else
 extern const LonApiError LonGetVersion(unsigned char* const pVersion);
-#endif
 /*
  * Function: LonSendServicePin
  * Propagates a service pin message.
@@ -286,11 +258,7 @@ extern const LonApiError LonGetVersion(unsigned char* const pVersion);
  * Use this function to propagate a service pin message to the network. 
  * The function will fail if the device is not yet fully initialized.
  */
-#ifdef __cplusplus
-extern "C" const LonApiError LonSendServicePin(void);
-#else
 extern const LonApiError LonSendServicePin(void);
-#endif
 /*
  * Function: LonSendReset
  * Sends a reset message.
@@ -302,11 +270,7 @@ extern const LonApiError LonSendServicePin(void);
  * Use this function to send a reset message to the Micro Server. 
  * The function will fail if the device is not yet fully initialized.
  */
-#ifdef __cplusplus
-extern "C" const LonApiError LonSendReset(void);
-#else
 extern const LonApiError LonSendReset(void);
-#endif
 /*
  * Function: LonGetLastResetNotification
  * Returns a pointer to the most recent reset notification, if any.
@@ -366,15 +330,6 @@ extern const volatile LonResetNotification* const LonGetLastResetNotification(vo
  * will be no effect, and the application will not receive a callback (if any).
  */
 
-#ifdef __cplusplus
-extern "C" const LonApiError LonSendMsg(const unsigned tag, const bool priority, 
-                                    const LonServiceType serviceType, 
-                                    const bool authenticated,
-                                    const LonSendAddress* const pDestAddr, 
-                                    const unsigned char code, 
-                                    const unsigned char* const pData, const unsigned length);
-#else
-
 extern const LonApiError LonSendMsg(const unsigned tag, const bool priority, 
                                     const LonServiceType serviceType, 
                                     const bool authenticated,
@@ -382,7 +337,6 @@ extern const LonApiError LonSendMsg(const unsigned tag, const bool priority,
                                     const unsigned char code, 
                                     const unsigned char* const pData, const unsigned length);
 
-#endif
 
 /*
  * ******************************************************************************
@@ -417,11 +371,7 @@ extern const LonApiError LonSendMsg(const unsigned tag, const bool priority,
  * This function is part of the optional network management query API 
  * (LON_NM_QUERY_FUNCTIONS).
  */
-#ifdef __cplusplus
-extern "C" const LonApiError LonQueryDomainConfig(const unsigned index);
-#else
 extern  const LonApiError LonQueryDomainConfig(const unsigned index);
-#endif
 
 /*
  * Function: LonQueryNvConfig
@@ -481,11 +431,7 @@ extern const LonApiError LonQueryAliasConfig(const unsigned index);
  * callback. This function is part of the optional network management query API 
  * (LON_NM_QUERY_FUNCTIONS).
  */
-#ifdef __cplusplus
-extern "C" const LonApiError LonQueryAddressConfig(const unsigned index);
-#else
 extern  const LonApiError LonQueryAddressConfig(const unsigned index);
-#endif
 /*
  * Function: LonQueryConfigData
  * Request a copy of local configuration data.
@@ -501,11 +447,7 @@ extern  const LonApiError LonQueryAddressConfig(const unsigned index);
  * callback. This function is part of the optional network management query API 
  * (LON_NM_QUERY_FUNCTIONS).
  */
-#ifdef __cplusplus
-extern "C" const LonApiError LonQueryConfigData(void);
-#else
 extern const LonApiError LonQueryConfigData(void);
-#endif
 
 /*
  * Function: LonQueryStatus
@@ -542,11 +484,7 @@ extern const LonApiError LonQueryStatus(void);
  * calls this function for any other transceiver type, the function will seem to 
  * work, but the corresponding callback handler will declare a failure.
  */
-#ifdef __cplusplus
-extern "C" const LonApiError LonQueryTransceiverStatus(void);
-#else
 extern const LonApiError LonQueryTransceiverStatus(void);
-#endif
 
 /*
  * Function: LonSetNodeMode
@@ -688,11 +626,7 @@ extern const LonApiError LonUpdateConfigData(const LonConfigData* const pConfig)
  * This function is part of the optional network management update API 
  * (LON_NM_UPDATE_FUNCTIONS).
  */
-#ifdef __cplusplus
-extern "C" const LonApiError LonUpdateDomainConfig(const unsigned index, const LonDomain* const pDomain);
-#else
 extern const LonApiError LonUpdateDomainConfig(const unsigned index, const LonDomain* const pDomain);
-#endif
 /*
  * Function: LonUpdateNvConfig
  * Updates a network variable configuration table record in the Micro Server.
@@ -794,11 +728,7 @@ extern const LonApiError LonMtIsBound(const unsigned index);
  * Call this function to put the Micro Server into the unconfigured state.
  * This function is part of the optional utility API (LON_UTILITY_FUNCTIONS).
  */
-#ifdef __cplusplus
-extern "C" const LonApiError LonGoUnconfigured(void);
-#else
 extern const LonApiError LonGoUnconfigured(void);
-#endif
 /*
  * Function: LonGoConfigured
  * Puts the local node into the configured state.
@@ -811,11 +741,7 @@ extern const LonApiError LonGoUnconfigured(void);
  * mode.
  * This function is part of the optional utility API (LON_UTILITY_FUNCTIONS).
  */
-#ifdef __cplusplus
-extern "C" const LonApiError LonGoConfigured(void);
-#else
 extern const LonApiError LonGoConfigured(void);
-#endif
 
 /*
  * Function: LonQueryAppSignature
@@ -1368,11 +1294,7 @@ extern void LonEchoReceived(const unsigned char data[LON_ECHO_SIZE]);
  * Remarks:
  * This function is called to disconnect the dll.
  */
-#ifdef __cplusplus
-extern "C" void LdvClose();
-#else
 extern  void LdvClose();
-#endif
 
 /*
  * Function: LdvInit
@@ -1382,11 +1304,7 @@ extern  void LdvClose();
  * This function is called to initialize the serial driver.
  * Previously named ldv_init.
  */
-#ifdef __cplusplus
-extern "C" void LdvInit(void);
-#else
 extern  void LdvInit(void);
-#endif
 /*
  * Function: LdvReset
  * Reset the serial driver.
@@ -1400,11 +1318,7 @@ extern  void LdvInit(void);
  * The driver should drop all pending receive and transmit transactions and go 
  * back to the initial state.
  */
-#ifdef __cplusplus
-extern "C" void LdvReset(void);
-#else 
 extern void LdvReset(void);
-#endif
 /*
  * Function: LdvFlushMsgs
  * Complete pending transmissions.
@@ -1414,11 +1328,7 @@ extern void LdvReset(void);
  * transmissions.
  * Previously named ldv_flush_msgs.
  */
-#ifdef __cplusplus
-extern "C" void LdvFlushMsgs(void);
-#else
 extern void LdvFlushMsgs(void);
-#endif
 /*
  * Function: LdvAllocateMsg
  * Allocates a transmit buffer from the serial driver.
@@ -1437,11 +1347,7 @@ extern void LdvFlushMsgs(void);
  * by calling <LdvPutMsg>. 
  * Previously named ldv_allocate_msg.
  */
-#ifdef __cplusplus
-extern "C" LonApiError LdvAllocateMsg(LonSmipMsg **ppMsg);
-#else
 extern LonApiError LdvAllocateMsg(LonSmipMsg **ppMsg); 
-#endif
 /*
  * Function: LdvPutMsg
  * Sends a message downlink.
@@ -1456,11 +1362,7 @@ extern LonApiError LdvAllocateMsg(LonSmipMsg **ppMsg);
  * the driver. Therefore, the caller must not use this memory anymore.
  * Previously named ldv_put_msg.
  */
-#ifdef __cplusplus
-extern "C" void LdvPutMsg(const LonSmipMsg* pMsg);
-#else
 extern void LdvPutMsg(const LonSmipMsg* pMsg);
-#endif
 /*
  * Function: LdvPutMsgBlocking
  * Sends a message downlink using a blocking call.
@@ -1479,11 +1381,7 @@ extern void LdvPutMsg(const LonSmipMsg* pMsg);
  * typically used to send the initialization messages to the Micro Server.
  * Previously named ldv_put_msg_init.
  */
-#ifdef __cplusplus
-extern "C" LonApiError LdvPutMsgBlocking(const LonSmipMsg* pMsg);
-#else
 extern LonApiError LdvPutMsgBlocking(const LonSmipMsg* pMsg);
-#endif
 
 /*
  * Function: LdvGetMsg
@@ -1504,11 +1402,7 @@ extern LonApiError LdvPutMsgBlocking(const LonSmipMsg* pMsg);
  * by calling <LdvReleaseMsg>. 
  * Previously named ldv_get_msg.
  */
-#ifdef __cplusplus
-extern "C" LonApiError LdvGetMsg(LonSmipMsg** pMsg);
-#else
 extern LonApiError LdvGetMsg(LonSmipMsg** pMsg);
-#endif
 
 /*
  * Function: LdvReleaseMsg
@@ -1524,10 +1418,6 @@ extern LonApiError LdvGetMsg(LonSmipMsg** pMsg);
  * must not use this memory anymore.
  * Previously named ldv_release_msg.
  */
-#ifdef __cplusplus
-extern "C" void LdvReleaseMsg(const LonSmipMsg* pMsg);
-#else
 extern void LdvReleaseMsg(const LonSmipMsg* pMsg);
-#endif
 
 #endif /* _SHORTSTACK_API_H */

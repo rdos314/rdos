@@ -78,11 +78,7 @@
  * start and stop bits), and LDV_DRVWAKEUPTIME a whole message time.
  * Note that these timeouts are in milliseconds.
  */
-#if (SS_BAUD_RATE == 0)
-    #define LDV_RXTIMEOUT       2
-#elif (SS_BAUD_RATE == 1)
-    #define LDV_RXTIMEOUT       4
-#endif
+#define LDV_RXTIMEOUT       2
 #define LDV_DRVWAKEUPTIME       255 
 
 /*
