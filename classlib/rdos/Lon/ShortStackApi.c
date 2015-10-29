@@ -18,6 +18,8 @@
  */
 
 #include <string.h>
+#include "rdos.h"
+
 #include "ShortStackDev.h"
 #include "ShortStackApi.h"
 
@@ -286,7 +288,7 @@ void LonEventHandler(void)
                             /* Process Read Memory network management message        */
                             if (EXPMSG.Data.ReadMemory.Mode != LonAbsoluteMemory) 
                                 bFailure = TRUE;
-                            else if ((LonMemoryRead(LON_GET_UNSIGNED_WORD(EXPMSG.Data.ReadMemory.Address), 
+                            else if ((LonMemoryRead(RdosSwapShort(EXPMSG.Data.ReadMemory.Address), 
                                               EXPMSG.Data.ReadMemory.Count, &ResponseData[0]) == LonApiNoError)
                                     && (LonSendResponse(correlator, LON_NM_SUCCESS(LonNmReadMemory), 
                                         &ResponseData[0], EXPMSG.Data.ReadMemory.Count) == LonApiNoError))
@@ -299,7 +301,7 @@ void LonEventHandler(void)
                             /* Process Write Memory network management message        */
                             if (EXPMSG.Data.WriteMemory.Mode != LonAbsoluteMemory) 
                                 bFailure = TRUE;
-                            else if ((LonMemoryWrite(LON_GET_UNSIGNED_WORD(EXPMSG.Data.WriteMemory.Address),
+                            else if ((LonMemoryWrite(RdosSwapShort(EXPMSG.Data.WriteMemory.Address),
                                                 EXPMSG.Data.WriteMemory.Count, 
                                                 ((unsigned char*) &EXPMSG.Data.WriteMemory.Form) + 1) == LonApiNoError)
                                     && (LonSendResponse(correlator, LON_NM_SUCCESS(LonNmWriteMemory), NULL, 0) == LonApiNoError))
@@ -311,7 +313,7 @@ void LonEventHandler(void)
                             
                         case LonNmQuerySiData:
                             {
-                                unsigned offset = LON_GET_UNSIGNED_WORD(EXPMSG.Data.QuerySiDataRequest.Offset);
+                                unsigned offset = (unsigned)RdosSwapShort(EXPMSG.Data.QuerySiDataRequest.Offset);
                                 unsigned siDataLength = 0;
                                 const unsigned char* pSiData = LonGetSiData(&siDataLength);
                                 if (EXPMSG.Data.QuerySiDataRequest.Count > LON_MAX_MSG_DATA
@@ -525,9 +527,7 @@ void LonEventHandler(void)
                         
                     case LonUsopQueryAppSignature:
                     {
-                        LonWord appSignature;
-                        appSignature.msb = pSmipMsg->Payload[1];
-                        appSignature.lsb = pSmipMsg->Payload[2];
+                        LonWord appSignature = RdosSwapShort((short int)pSmipMsg->Payload);
                         LonAppSignatureReceived(appSignature);
                         break;
                     }
@@ -1101,7 +1101,7 @@ const LonApiError LonQueryNvConfig(const unsigned index)
                     pSmipMsg->Header.Length = (unsigned char)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmQueryNvAliasRequest));
                     EXPMSG.Length = (unsigned char)(sizeof(LonNmQueryNvAliasRequest) + 1);
                     EXPMSG.Data.QueryNvAliasRequest.Index = 255;
-                    LON_SET_UNSIGNED_WORD(EXPMSG.Data.QueryNvAliasRequest.LongIndex, index);
+                    EXPMSG.Data.QueryNvAliasRequest.LongIndex = RdosSwapShort(index);
                 }
             
                 LdvPutMsg(pSmipMsg);
@@ -1163,7 +1163,7 @@ const LonApiError LonQueryAliasConfig(const unsigned index)
             pSmipMsg->Header.Length = (unsigned char)(LON_SICB_MIN_OVERHEAD + sizeof(LonNmQueryNvAliasRequest));
             EXPMSG.Length = (unsigned char)(sizeof(LonNmQueryNvAliasRequest) + 1);
             EXPMSG.Data.QueryNvAliasRequest.Index = 255u;
-            LON_SET_UNSIGNED_WORD(EXPMSG.Data.QueryNvAliasRequest.LongIndex, queryIndex);
+            EXPMSG.Data.QueryNvAliasRequest.LongIndex = RdosSwapShort(queryIndex);
         }
     
         LdvPutMsg(pSmipMsg);
@@ -1259,7 +1259,7 @@ const LonApiError LonQueryConfigData(void)
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_AUTHENTICATED, TRUE);
         EXPMSG.Data.ReadMemory.Mode = LonConfigStructRelative;
         EXPMSG.Data.ReadMemory.Count = (unsigned char) sizeof(LonConfigData);
-        LON_SET_UNSIGNED_WORD(EXPMSG.Data.ReadMemory.Address, 0);
+        EXPMSG.Data.ReadMemory.Address = 0;
     
         LdvPutMsg(pSmipMsg);
         CurrentNmNdStatus = NM_PENDING;
@@ -1518,7 +1518,7 @@ const LonApiError LonUpdateAliasConfig(const unsigned index, const LonAliasConfi
             /* Use the long form of the request */
             EXPMSG.Length = (unsigned char) (sizeof(unsigned char) + sizeof(((LonNmUpdateAliasRequest*)0x0)->Request.LongForm2) + 1);
             EXPMSG.Data.UpdateAliasRequest.ShortIndex = 255;  
-            LON_SET_UNSIGNED_WORD(EXPMSG.Data.UpdateAliasRequest.Request.LongForm2.LongIndex, actualIndex);
+            EXPMSG.Data.UpdateAliasRequest.Request.LongForm2.LongIndex = RdosSwapShort(actualIndex);
             EXPMSG.Data.UpdateAliasRequest.Request.LongForm2.AliasConfig = *pAlias;
         }
     
@@ -1566,7 +1566,7 @@ const LonApiError LonUpdateConfigData(const LonConfigData* const pConfigData)
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_TAG, NM_ND_TAG);
         LON_SET_ATTRIBUTE(EXPMSG, LON_EXPMSG_AUTHENTICATED, TRUE);
         EXPMSG.Data.WriteMemory.Mode = LonConfigStructRelative;         /* Configuration address relative memory write */
-        LON_SET_UNSIGNED_WORD(EXPMSG.Data.WriteMemory.Address, 0);
+        EXPMSG.Data.WriteMemory.Address = 0;
         EXPMSG.Data.WriteMemory.Count = (unsigned char) sizeof(LonConfigData); 
         EXPMSG.Data.WriteMemory.Form = LonConfigCsRecalculationReset;   /* recalculate just configuration checksum     */
     
@@ -1684,7 +1684,7 @@ const LonApiError LonUpdateNvConfig(const unsigned index, const LonNvConfig* con
                     /* Use the long form of the request */
                     EXPMSG.Length = (unsigned char) (sizeof(unsigned char) + sizeof(((LonNmUpdateAliasRequest*)0x0)->Request.LongForm2) + 1);
                     EXPMSG.Data.UpdateNvRequest.ShortIndex = 255;  
-                    LON_SET_UNSIGNED_WORD(EXPMSG.Data.UpdateNvRequest.Request.LongForm.LongIndex, index);
+                    EXPMSG.Data.UpdateNvRequest.Request.LongForm.LongIndex = RdosSwapShort(index);
                     EXPMSG.Data.UpdateNvRequest.Request.LongForm.NvConfig = *pNvConfig;
                 }
             

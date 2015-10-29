@@ -145,11 +145,17 @@ typedef signed   long   LonBits32;          /* 32-bits, signed */
      *  obtain the signed or unsigned numerical value in the correct byte 
      *  ordering.
      */
+
+/*
 typedef struct LonWord
 {
-    unsigned char  msb;    /* high-order byte, the most significant byte, the 0x12 in 0x1234 */
-    unsigned char  lsb;    /* low-order byte, the least significant byte, the 0x34 in 0x1234 */
+    unsigned char  msb;    
+    unsigned char  lsb;    
 } LonWord;
+*/
+
+typedef unsigned short int LonWord;
+
     
     /*
      *  typedef: LonDoubleWord
