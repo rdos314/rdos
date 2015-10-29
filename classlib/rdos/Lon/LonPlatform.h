@@ -130,8 +130,6 @@
      * details about "float" type handling.  
      */
     
-typedef unsigned short  LonUbits16;         /* 16-bits */
-typedef signed   short  LonBits16;          /* 16-bits, signed */
 typedef unsigned long   LonUbits32;         /* 32-bits */
 typedef signed   long   LonBits32;          /* 32-bits, signed */
 
