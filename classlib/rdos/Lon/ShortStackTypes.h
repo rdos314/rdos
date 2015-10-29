@@ -193,12 +193,6 @@ typedef enum LonApiError
     /*    80   */   LonApiDmfNoDriver           = 83  /* No DMF driver defined. */
 } LonApiError;
 
-/*
- * Macro: LON_SUCCESS
- * Use the LON_SUCCESS macro to convert a <LonApiError> code into a boolean 
- * success or failure indicator
- */
-#define LON_SUCCESS(n)   ((n) == LonApiNoError)
 
 /*
  * ******************************************************************************
