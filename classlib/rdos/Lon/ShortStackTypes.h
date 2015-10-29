@@ -1373,10 +1373,16 @@ typedef struct LonDirectModeTransceiver
 #define LON_CONFIG_PREEMPT_SHIFT        0
 #define LON_CONFIG_PREEMPT_FIELD        Config_1
 
+typedef union LonComParam
+{
+    LonTransceiverParameters    TransceiverParameters;  /* Array of seven transceiver-specific parameters for Special-Purpose mode transceivers */
+    LonDirectModeTransceiver    DirectModeParameters;   /* Controls the operation of the transceiver port for direct mode transceivers */
+} LonComParam;
+
 typedef struct LonConfigData
 {
-    short int         ChannelId;
-    LonLocationId   Location;
+    short int             ChannelId;
+    LonLocationId         Location;
     unsigned char         Clock;              /* Input clock and communications clock; use LON_CONFIG_* macros */
     unsigned char         CommConfiguration;  /* Communications type and pin direction; use LON_CONFIG_* macros */
     unsigned char         PreambleLength;     /* Length of the preamble for Direct mode; set to zero for all other modes */
@@ -1386,11 +1392,7 @@ typedef struct LonConfigData
     unsigned char         ReceiveInterpacket; /* Interpacket padding after receiving */
     unsigned char         NodePriority;       /* Priority slot used by the device when sending priority messages (1 to 255) */
     unsigned char         ChannelPriorities;  /* Number of priority slots on the channel (0 to 255) */
-    union CommunicationParameters
-    {
-        LonTransceiverParameters    TransceiverParameters;  /* Array of seven transceiver-specific parameters for Special-Purpose mode transceivers */
-        LonDirectModeTransceiver    DirectModeParameters;   /* Controls the operation of the transceiver port for direct mode transceivers */
-    } CommunicationParameters;
+    LonComParam           CommunicationParameters;
     unsigned char         Config_1;           /* Pre-emption timeout, network management authentication flag, and non-group receive timer; use LON_CONFIG_* macros */
 } LonConfigData;
 
