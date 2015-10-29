@@ -113,25 +113,6 @@
 #ifndef _LON_PLATFORM_H
 #define _LON_PLATFORM_H
      
-    /* 
-     * GCC_NIOS C programs.  Assume GCC_NIOS is defined.
-     *
-     * This is the correct choice for the Nios II platform.
-     * This section also assumes that C programs run on a LITTLE_ENDIAN machine,
-     * which is the typical case.  If you are running a C program on a BIG_ENDIAN
-     * processor, be sure to change LITTLE_ENDIAN to BIG_ENDIAN 
-     *
-     */
-
-    /*
-     * indicate a compiler/platform has been defined
-     */
-    #if !defined(_LON_PLATFORM_DEFINED)
-        #define _LON_PLATFORM_DEFINED
-    #else
-        #error Multiple platform definitions
-    #endif
-        
     /*
      * Compiler-dependent types for signed and unsigned 8-bit, 16-bit scalars, 
      * and 32-bit scalars. All LonTalk Interface Developer-Builder generated 
@@ -149,7 +130,6 @@
      * details about "float" type handling.  
      */
     
-    typedef unsigned char   LonUbits8;          /* 8-bits */
     typedef signed   char   LonBits8;           /* 8-bits, signed */
     typedef unsigned short  LonUbits16;         /* 16-bits */
     typedef signed   short  LonBits16;          /* 16-bits, signed */
@@ -213,18 +193,6 @@
         #define FALSE   0
     #endif
 
-/*
- *  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *  No change should be required to the following section, because it 
- *  does not contain compiler or target platform dependencies.
- *  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
- */
- 
-/* some error checking first: */
-#if !defined(_LON_PLATFORM_DEFINED)
-    #error  Platform definition is missing
-#endif
- 
 
 /*
  *  **************************************************************************
@@ -240,9 +208,9 @@
  *  ************************************************************************** 
  */
  
-typedef LonUbits8   ncuChar;    /* equivalent of NEURON C "unsigned char"   */
-typedef LonUbits8   ncuShort;   /* equivalent of NEURON C "unsigned short"  */
-typedef LonUbits8   ncuInt;     /* equivalent of NEURON C "unsigned int"    */
+typedef unsigned char   ncuChar;    /* equivalent of NEURON C "unsigned char"   */
+typedef unsigned char  ncuShort;   /* equivalent of NEURON C "unsigned short"  */
+typedef unsigned char   ncuInt;     /* equivalent of NEURON C "unsigned int"    */
 typedef LonWord     ncuLong;    /* equivalent of NEURON C "unsigned long"   */
 typedef LonBits8    ncsChar;    /* equivalent of NEURON C "signed char"     */
 typedef LonBits8    ncsShort;   /* equivalent of NEURON C "signed short"    */
