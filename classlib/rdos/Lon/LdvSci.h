@@ -26,14 +26,6 @@
 #include "ShortStackDev.h"
 #include "ShortStackApi.h"
 
-/*
- * Pull in platform specific pragmas, definitions etc. 
- * For example, packing directives to align objects on byte boundary.
- */
-#ifdef  INCLUDE_LON_BEGIN_END
-#   include "LonBegin.h"    
-#endif  /* INCLUDE_LON_BEGIN_END */
-
 /******************************************************************************************
  * Define the driver's receive/transmit buffer size and count.
  *
@@ -246,11 +238,4 @@ typedef LON_ENUM_BEGIN(LdvIndexType)
     LdvIndexTxBufferTransmit
 } LON_ENUM_END(LdvIndexType);
 
-/*
- * Restore packing directives.
- */
-#ifdef  INCLUDE_LON_BEGIN_END
-#   include "LonEnd.h"    
-#endif  /* INCLUDE_LON_BEGIN_END */
-
-#endif /* LDV_SCI_H */
+#endif
