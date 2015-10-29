@@ -848,7 +848,7 @@ typedef struct LonSendLocal
  *
  * Previously named SendAddrDtl.
  */
-typedef LON_UNION_BEGIN(LonSendAddress) 
+typedef union LonSendAddress
 {
     LonSendUnassigned   Unassigned;
     LonSendGroup        Group;      
@@ -856,7 +856,7 @@ typedef LON_UNION_BEGIN(LonSendAddress)
     LonSendBroadcast    Broadcast;
     LonSendUniqueId     UniqueId;
     LonSendLocal        Local;
-} LON_UNION_END(LonSendAddress);
+} LonSendAddress;
 
 /*
  *  Typedef: LonReceiveSubnetNode
@@ -920,13 +920,13 @@ typedef struct LonReceiveBroadcast
  *
  *  Previously named RcvDestAddr.
  */
-typedef LON_UNION_BEGIN(LonReceiveDestination) 
+typedef union LonReceiveDestination
 {
     LonReceiveBroadcast     Broadcast;
     LonReceiveGroup         Group;
     LonReceiveSubnetNode    SubnetNode;
     LonReceiveUniqueId      UniqueId;
-} LON_UNION_END(LonReceiveDestination);
+} LonReceiveDestination;
 
 /*
  *  Enumeration: LonReceiveDestinationAddressFormat
@@ -1048,11 +1048,11 @@ typedef struct LonResponseGroup
  *
  *  Previously named RespDestAddr. 
  */
-typedef LON_UNION_BEGIN(LonResponseDestination) 
+typedef union LonResponseDestination
 {
     LonResponseSubnetNode   SubnetNode;
     LonResponseGroup        Group;
-} LON_UNION_END(LonResponseDestination);
+} LonResponseDestination;
 
 /*
  *  Typedef: LonResponseAddress
@@ -1083,12 +1083,12 @@ typedef struct LonResponseAddress
  * must be enabled. 
  * Previously named ExplicitAddr.
  */
-typedef LON_UNION_BEGIN(LonExplicitAddress) 
+typedef union LonExplicitAddress
 {
     LonReceiveAddress   Receive;
     LonSendAddress      Send;
     LonResponseAddress  Response;
-} LON_UNION_END(LonExplicitAddress);
+} LonExplicitAddress;
 
 /*
  * Typedef: LonAddressTableGroup
@@ -1235,13 +1235,13 @@ typedef struct LonAddressTableTurnaround
  *  Typedef: LonAddress
  *  Describes one record of the address table.
  */
-typedef LON_UNION_BEGIN(LonAddress) 
+typedef union LonAddress 
 {
     LonAddressTableGroup        Group;
     LonAddressTableSubnetNode   SubnetNode;
     LonAddressTableBroadcast    Broadcast;
     LonAddressTableTurnaround   Turnaround;
-} LON_UNION_END(LonAddress);
+} LonAddress;
 
 /*
  *  Enumeration: LonDomainLength
@@ -1425,11 +1425,11 @@ typedef struct LonConfigData
     unsigned char         ReceiveInterpacket; /* Interpacket padding after receiving */
     unsigned char         NodePriority;       /* Priority slot used by the device when sending priority messages (1 to 255) */
     unsigned char         ChannelPriorities;  /* Number of priority slots on the channel (0 to 255) */
-    LON_UNION_BEGIN(CommunicationParameters) 
+    union CommunicationParameters
     {
         LonTransceiverParameters    TransceiverParameters;  /* Array of seven transceiver-specific parameters for Special-Purpose mode transceivers */
         LonDirectModeTransceiver    DirectModeParameters;   /* Controls the operation of the transceiver port for direct mode transceivers */
-    } LON_UNION_END(CommunicationParameters);
+    } CommunicationParameters;
     unsigned char         Config_1;           /* Pre-emption timeout, network management authentication flag, and non-group receive timer; use LON_CONFIG_* macros */
 } LonConfigData;
 
@@ -1842,7 +1842,18 @@ typedef struct LonNmNvFetchRequest
  *  particular command type.
  */
 
-typedef LON_UNION_BEGIN(LonNmInstallRequest) 
+typedef union LonAdditionalParameters
+{
+    struct SdText
+    {
+       /* Used when NodeInfoType is *LonNodeInfoSdText* */
+       LonWord Offset;        /* Byte offset from beginning of SD text */
+       unsigned char Length;        /* Maximum number of SD bytes to return  */
+    } SdText;
+} LonAdditionalParameters;
+
+
+typedef union LonNmInstallRequest
 {
     struct Wink
     {
@@ -1859,33 +1870,17 @@ typedef LON_UNION_BEGIN(LonNmInstallRequest)
          * *LonNvInfoSdText*, and should be omitted when other types of NV 
          * information are being queried.
          */
-        LON_UNION_NESTED_BEGIN(AdditionalParameters)
-        {
-            struct SdText
-            {
-                /* Used when NvInfoType is *LonNvInfoSdText* */
-                LonWord Offset;         /* Byte offset from beginning of SD text */
-                unsigned char Length;         /* Maximum number of SD bytes to return  */
-            } SdText;
-        } LON_UNION_NESTED_END(AdditionalParameters);
+        LonAdditionalParameters AdditionalParameters;
     } QueryNvInfo;
 
     struct QueryNodeInfo
     {
         LonInstallCommand Command;      /* *LonInstallQueryNodeInfo*  */
         LonNodeInfoType   NodeInfoType; /* Requested node information */
-        LON_UNION_NESTED_BEGIN(AdditionalParameters)
-        {
-            struct SdText2
-            {
-                /* Used when NodeInfoType is *LonNodeInfoSdText* */
-                LonWord Offset;        /* Byte offset from beginning of SD text */
-                unsigned char Length;        /* Maximum number of SD bytes to return  */
-            } SdText2;
-        } LON_UNION_NESTED_END(AdditionalParameters);
+        LonAdditionalParameters AdditionalParameters;
     } QueryNodeInfo;
 
-} LON_UNION_END(LonNmInstallRequest);
+} LonNmInstallRequest;
 
 /*
  *  Typedef: LonNmInstallResponse
@@ -2037,7 +2032,7 @@ typedef LON_UNION_BEGIN(LonNmInstallRequest)
 #define LON_NV_DESC_EXT_ATTR_NAME_SUPPLIED_SHIFT  3
 #define LON_NV_DESC_EXT_ATTR_NAME_SUPPLIED_FIELD  ExtendedAttributes
 
-typedef LON_UNION_BEGIN(LonNmInstallResponse) 
+typedef union LonNmInstallResponse 
 {
     /* Response for requested info LonInstallQueryNvInfo, LonNvInfoDescriptor */
     struct NvDescriptor
@@ -2081,7 +2076,7 @@ typedef LON_UNION_BEGIN(LonNmInstallResponse)
         unsigned char    Text[1];     /* SD text - actual length is Length above. 
                                  * Might not be NULL terminated. */
     } NodeSd;
-} LON_UNION_END(LonNmInstallResponse) ;
+} LonNmInstallResponse;
 
 /* 
  *  Typedef: LonNmSetNodeModeRequest
@@ -2277,7 +2272,7 @@ typedef struct LonNmUpdateNvRequest
 {
     unsigned char      ShortIndex;
 
-    LON_UNION_NESTED_BEGIN(Request) 
+    union Request 
     {
         struct ShortForm
         {
@@ -2288,7 +2283,7 @@ typedef struct LonNmUpdateNvRequest
             LonWord         LongIndex;
             LonNvConfig     NvConfig;
         } LongForm;
-    } LON_UNION_NESTED_END(Request);
+    } Request;
 } LonNmUpdateNvRequest;
 
 /* 
@@ -2305,22 +2300,25 @@ typedef struct LonNmUpdateNvRequest
  *  the smallest possible. 
  */
 
+typedef union LonNmRequest
+{
+    struct ShortForm2
+    {
+        LonAliasConfig  AliasConfig;
+    } ShortForm2;
+
+    struct LongForm2
+    {
+        LonWord         LongIndex;
+        LonAliasConfig  AliasConfig;
+    } LongForm2;
+} LonNmRequest;
+
 typedef struct LonNmUpdateAliasRequest 
 {
     unsigned char      ShortIndex;
+    LonNmRequest       Request;
 
-    LON_UNION_NESTED_BEGIN(Request) 
-    {
-        struct ShortForm2
-        {
-            LonAliasConfig  AliasConfig;
-        } ShortForm2;
-        struct LongForm2
-        {
-            LonWord         LongIndex;
-            LonAliasConfig  AliasConfig;
-        } LongForm2;
-    } LON_UNION_NESTED_END(Request);
 } LonNmUpdateAliasRequest;
 
 /*
@@ -2421,6 +2419,30 @@ typedef enum LonCompletionType
 #define LON_EXPMSG_RESPONSE_MASK    0x01            /* use LonBool. Set to True for responses only */
 #define LON_EXPMSG_RESPONSE_SHIFT   0
 #define LON_EXPMSG_RESPONSE_FIELD   Attributes_2
+
+typedef union LonExplicitData        /* Message data                                 */
+{
+    unsigned char               Data[1];
+    LonNmNvFetchRequest         NvFetch;
+    LonNmInstallRequest         Install;
+    LonNmSetNodeModeRequest     NodeMode;
+    LonNmReadMemoryRequest      ReadMemory;
+    LonNmWriteMemoryRequest     WriteMemory;
+    LonNmQuerySiDataRequest     QuerySiDataRequest;
+#if LON_NM_QUERY_FUNCTIONS
+    LonNmQueryDomainRequest     QueryDomainRequest;
+    LonNmQueryNvAliasRequest    QueryNvAliasRequest;
+    LonNmQueryAddressRequest    QueryAddressRequest;
+    LonNdQueryStatusResponse    QueryStatusResponse;
+    LonNdQueryXcvrResponse      QueryXcvrStatusResponse;
+#endif  /* LON_NM_QUERY_FUNCTIONS */
+#if LON_NM_UPDATE_FUNCTIONS
+    LonNmUpdateAddressRequest   UpdateAddressRequest;
+    LonNmUpdateDomainRequest    UpdateDomainRequest;
+    LonNmUpdateNvRequest        UpdateNvRequest;
+    LonNmUpdateAliasRequest     UpdateAliasRequest;
+#endif  /* LON_NM_UPDATE_FUNCTIONS */
+} LonExplicitData;
  
 typedef struct LonExplicitMessage
 {
@@ -2432,29 +2454,7 @@ typedef struct LonExplicitMessage
     LonExplicitAddress  Address; /* Optional explicit addressing information   */
 #endif  /* LON_EXPLICIT_ADDRESSING */
     unsigned char      Code;           /* Message code                                 */
-    LON_UNION_BEGIN(Data)        /* Message data                                 */
-    {
-        unsigned char                     Data[1];
-        LonNmNvFetchRequest         NvFetch;
-        LonNmInstallRequest         Install;
-        LonNmSetNodeModeRequest     NodeMode;
-        LonNmReadMemoryRequest      ReadMemory;
-        LonNmWriteMemoryRequest     WriteMemory;
-        LonNmQuerySiDataRequest     QuerySiDataRequest;
-#if LON_NM_QUERY_FUNCTIONS
-        LonNmQueryDomainRequest     QueryDomainRequest;
-        LonNmQueryNvAliasRequest    QueryNvAliasRequest;
-        LonNmQueryAddressRequest    QueryAddressRequest;
-        LonNdQueryStatusResponse    QueryStatusResponse;
-        LonNdQueryXcvrResponse      QueryXcvrStatusResponse;
-#endif  /* LON_NM_QUERY_FUNCTIONS */
-#if LON_NM_UPDATE_FUNCTIONS
-        LonNmUpdateAddressRequest   UpdateAddressRequest;
-        LonNmUpdateDomainRequest    UpdateDomainRequest;
-        LonNmUpdateNvRequest        UpdateNvRequest;
-        LonNmUpdateAliasRequest     UpdateAliasRequest;
-#endif  /* LON_NM_UPDATE_FUNCTIONS */
-    } LON_UNION_END(Data);
+    LonExplicitData    Data;
 } LonExplicitMessage;
 
 #define LON_SICB_MIN_OVERHEAD ( sizeof(LonExplicitMessage) - sizeof(((LonExplicitMessage*)0x0)->Data) )
@@ -2535,11 +2535,11 @@ typedef struct LonNvMessage
 ****************************************************************************
 */
 
-typedef LON_UNION_BEGIN(LonSicb) 
+typedef union LonSicb
 {
     LonExplicitMessage  ExplicitMessage;
     LonNvMessage        NvMessage;
-} LON_UNION_END(LonSicb);
+} LonSicb;
 
 
 #endif /* _SHORTSTACK_TYPES_H */

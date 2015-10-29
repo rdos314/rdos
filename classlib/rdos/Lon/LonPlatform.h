@@ -134,12 +134,6 @@
     typedef signed   short  LonBits16;          /* 16-bits, signed */
     typedef unsigned long   LonUbits32;         /* 32-bits */
     typedef signed   long   LonBits32;          /* 32-bits, signed */
-
-    #define LON_UNION_BEGIN(n)  _Packed  union
-    #define LON_UNION_END(n)    n
-        
-    #define LON_UNION_NESTED_BEGIN(n)   _Packed union 
-    #define LON_UNION_NESTED_END(n)     n
         
     /*
      *  typedef: LonWord
