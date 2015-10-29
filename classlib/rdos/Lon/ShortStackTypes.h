@@ -627,7 +627,7 @@ typedef struct LonSendGroup
     unsigned char     DomainMember;   /* contains domain, member. See LON_SENDGROUP_DOMAIN_* and _MEMBER_* macros */
     unsigned char     RepeatRetry;    /* contains repeat, retry. See LON_SENDGROUP_REPEAT_* and _RETRY_* macros */
     unsigned char     ReceiveTransmit;/* contains receive and transmit timers. See LON_SENDGROUP_RECEIVE_* and _TRANSMIT_* macros */
-    LonGroupId  GroupId;     /* the group ID, 0..255 */
+    LonGroupId        GroupId;     /* the group ID, 0..255 */
 } LonSendGroup;
 
 /*
@@ -675,10 +675,10 @@ typedef struct LonSendGroup
 
 typedef struct LonSendSubnetNode
 {
-    enum LonAddressType    Type;           /* should be LonAddressSubnetNode for subnet/node addressing */
-    unsigned char                     DomainNode;     /* contains domain, node. See LON_SENDSN_DOMAIN_* and _NODE_* macros */
-    unsigned char                     RepeatRetry;    /* contains repeat, retry. See LON_SENDSN_REPEAT_* and _RETRY_* macros */
-    unsigned char                     RsvdTransmit;   /* contains transmit (top 4 bits are unused). See LON_SENDSN_TRANSMIT_TIMER_* macros */
+    enum LonAddressType         Type;           /* should be LonAddressSubnetNode for subnet/node addressing */
+    unsigned char               DomainNode;     /* contains domain, node. See LON_SENDSN_DOMAIN_* and _NODE_* macros */
+    unsigned char               RepeatRetry;    /* contains repeat, retry. See LON_SENDSN_REPEAT_* and _RETRY_* macros */
+    unsigned char               RsvdTransmit;   /* contains transmit (top 4 bits are unused). See LON_SENDSN_TRANSMIT_TIMER_* macros */
     LonSubnetId                 Subnet;         /* destination subnet number, 1..255    */
 } LonSendSubnetNode;
 
@@ -721,9 +721,9 @@ typedef struct LonSendSubnetNode
 typedef struct LonSendUniqueId
 {
     LonAddressType              Type;           /* should be LonAddressNeuronId */
-    unsigned char                     Domain;         /* contains the domain index. See LON_SENDNID_DOMAIN_*  macro. The remaining 7 bits must be zero */
-    unsigned char                     RepeatRetry;    /* contains repeat, retry. See LON_SENDNID_REPEAT_* and _RETRY_* macros */
-    unsigned char                     RsvdTransmit;   /* contains transmit (top 4 bits are unused). See LON_SENDNID_TRANSMIT_TIMER_* macros */
+    unsigned char               Domain;         /* contains the domain index. See LON_SENDNID_DOMAIN_*  macro. The remaining 7 bits must be zero */
+    unsigned char               RepeatRetry;    /* contains repeat, retry. See LON_SENDNID_REPEAT_* and _RETRY_* macros */
+    unsigned char               RsvdTransmit;   /* contains transmit (top 4 bits are unused). See LON_SENDNID_TRANSMIT_TIMER_* macros */
     LonSubnetId                 Subnet;         /* destination subnet number, 1..255, or zero to pass all routers    */
     LonUniqueId                 NeuronId;       /* 48-bit unique ID of Neuron Chip or Smart Transceiver */
 } LonSendUniqueId;
@@ -774,9 +774,9 @@ typedef struct LonSendUniqueId
 typedef struct LonSendBroadcast 
 {
     LonAddressType              Type;               /* should be LonAddressBroadcast */
-    unsigned char                     DomainRsvdBacklog;  /* contains domain, backlog (6th bit is unused). See LON_SENDBCAST_DOMAIN_* and _BACKLOG_* macros */
-    unsigned char                     RepeatRetry;        /* contains repeat, retry. See LON_SENDBCAST_REPEAT_* and _RETRY_* macros */
-    unsigned char                     RsvdTransmit;       /* contains transmit (top 4 bits are unused). See LON_SENDBCAST_TRANSMIT_TIMER_* macros */
+    unsigned char               DomainRsvdBacklog;  /* contains domain, backlog (6th bit is unused). See LON_SENDBCAST_DOMAIN_* and _BACKLOG_* macros */
+    unsigned char               RepeatRetry;        /* contains repeat, retry. See LON_SENDBCAST_REPEAT_* and _RETRY_* macros */
+    unsigned char               RsvdTransmit;       /* contains transmit (top 4 bits are unused). See LON_SENDBCAST_TRANSMIT_TIMER_* macros */
     LonSubnetId                 Subnet;             /* destination subnet number, 1..255 for subnet broadcast, zero for domain broadcast */
 } LonSendBroadcast;
 
@@ -929,7 +929,7 @@ typedef enum LonReceiveDestinationAddressFormat
 
 typedef struct LonReceiveAddress
 {
-    unsigned char                 DomainFormat;   /* contains domain, flexDomain, format. Use LON_RECEIVEADDRESS_* macros to access data */
+    unsigned char           DomainFormat;   /* contains domain, flexDomain, format. Use LON_RECEIVEADDRESS_* macros to access data */
     LonReceiveSubnetNode    Source;
     LonReceiveDestination   Destination;
 } LonReceiveAddress;
@@ -972,7 +972,7 @@ typedef struct LonResponseSource
 
 typedef struct LonResponseSubnetNode
 {
-    LonSubnetId Subnet;         /* subnet ID */
+    LonSubnetId       Subnet;         /* subnet ID */
     unsigned char     Node;           /* node ID, use LON_RESPONSESN_NODE_* macros */
 } LonResponseSubnetNode;
 
@@ -997,7 +997,7 @@ typedef struct LonResponseSubnetNode
 
 typedef struct LonResponseGroup
 {
-    LonSubnetId Subnet;         /* subnet ID */
+    LonSubnetId       Subnet;         /* subnet ID */
     unsigned char     Node;
     unsigned char     Group;
     unsigned char     Member;         /* use LON_RESPGROUP_MEMBER_* macros for access */
@@ -1031,7 +1031,7 @@ typedef union LonResponseDestination
 
 typedef struct LonResponseAddress
 {
-    unsigned char                 Domain;         /* contains domain, flexDomain. Use LON_RESPONSEADDRESS_* macros */
+    unsigned char           Domain;         /* contains domain, flexDomain. Use LON_RESPONSEADDRESS_* macros */
     LonResponseSource       Source;
     LonResponseDestination  Destination;
 } LonResponseAddress;
@@ -1096,7 +1096,7 @@ typedef struct LonAddressTableGroup
     unsigned char     DomainMember;           /* contains domain, member. Use the LON_ADDRESS_GROUP_* macros */
     unsigned char     RepeatRetry;            /* contains repeatTimer, retry. Use the LON_ADDRESS_GROUP_* macros */
     unsigned char     ReceiveTransmit;        /* contains receive and transmit timer. Use Lon_ADDRESS_GROUP_* macros */
-    LonGroupId  Group;                  /* the group identifier */
+    LonGroupId        Group;                  /* the group identifier */
 } LonAddressTableGroup;
 
 /*
@@ -1125,10 +1125,10 @@ typedef struct LonAddressTableGroup
 typedef struct LonAddressTableSubnetNode
 {
     LonAddressType    Type;           /* should be LonAddressSubnetNode   */
-    unsigned char                     DomainNode;     /* contains domain, node. Use LON_ADDRESS_SN_* macros */
-    unsigned char                     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_SN_* macros */
-    LonTransmitTimer   TransmitTimer;
-    LonSubnetId                 Subnet;
+    unsigned char     DomainNode;     /* contains domain, node. Use LON_ADDRESS_SN_* macros */
+    unsigned char     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_SN_* macros */
+    LonTransmitTimer  TransmitTimer;
+    LonSubnetId       Subnet;
 } LonAddressTableSubnetNode;
 
 /*
@@ -1157,10 +1157,10 @@ typedef struct LonAddressTableSubnetNode
 typedef struct LonAddressTableBroadcast
 {
     LonAddressType    Type;           /* should be LonAddressBroadcast */
-    unsigned char                     DomainBacklog;  /* contains domain, backlog. Use LON_ADDRESS_BROADCAST_* macros */
-    unsigned char                     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_BROADCAST_* macros instead */
+    unsigned char     DomainBacklog;  /* contains domain, backlog. Use LON_ADDRESS_BROADCAST_* macros */
+    unsigned char     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_BROADCAST_* macros instead */
     LonTransmitTimer  TransmitTimer;
-    LonSubnetId                 Subnet;
+    LonSubnetId       Subnet;
 } LonAddressTableBroadcast;
 
 /*
@@ -1178,8 +1178,8 @@ typedef struct LonAddressTableBroadcast
 typedef struct LonAddressTableTurnaround
 {
     LonAddressType    Type;           /* should be LonAddressTurnaround */
-    unsigned char                     Turnaround;     /* 1: turnaround record. 0: not in use */
-    unsigned char                     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_TURNAROUND_* macros */
+    unsigned char     Turnaround;     /* 1: turnaround record. 0: not in use */
+    unsigned char     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_TURNAROUND_* macros */
     LonTransmitTimer  TransmitTimer; 
 } LonAddressTableTurnaround;
 
@@ -1244,8 +1244,8 @@ typedef struct LonDomain
 {
     LonDomainId             Id;         
     LonSubnetId             Subnet;
-    unsigned char                 NodeClone;          /* contains nonclone, node. Use LON_DOMAIN_* macros */
-    unsigned char                 InvalidIdLength;    /* use LON_DOMAIN_INVALID_* and LON_DOMAIN_ID_LENGTH_* macros */
+    unsigned char           NodeClone;          /* contains nonclone, node. Use LON_DOMAIN_* macros */
+    unsigned char           InvalidIdLength;    /* use LON_DOMAIN_INVALID_* and LON_DOMAIN_ID_LENGTH_* macros */
     LonAuthenticationKey    Key;
 } LonDomain;
 
@@ -1294,8 +1294,8 @@ typedef struct LonNvConfig
  */
 typedef struct LonAliasConfig
 {
-    LonNvConfig     Alias;
-    unsigned char         Primary;
+    LonNvConfig       Alias;
+    unsigned char     Primary;
     short int         HostPrimary;   /* iff primary is 0xFF */
 } LonAliasConfig;
 
@@ -1404,14 +1404,14 @@ typedef struct LonConfigData
  */
 typedef struct LonStatus
 {
-    short int                     TransmitErrors;
-    short int                     TransactionTimeouts;
-    short int                     ReceiveTransactionsFull;
-    short int                     LostMessages;
-    short int                     MissedMessages;
+    short int         TransmitErrors;
+    short int         TransactionTimeouts;
+    short int         ReceiveTransactionsFull;
+    short int         LostMessages;
+    short int         MissedMessages;
     LonResetCause     ResetCause;
     LonNodeState      NodeState;
-    unsigned char                     VersionNumber;
+    unsigned char     VersionNumber;
     LonSystemError    ErrorLog;
     LonNeuronModel    ModelNumber;
 } LonStatus;
@@ -1677,8 +1677,8 @@ typedef enum LonSmipCmd
  */
 typedef struct LonSmipHdr
 {
-    unsigned char                 Length;        /* Length of the data to follow, not including the <LonSmipCmd> preamble */
-    LonSmipCmd    Command;       /* Network interface command, possibly OR'ed with additional information (such as the queue identifier) */ 
+    unsigned char   Length;        /* Length of the data to follow, not including the <LonSmipCmd> preamble */
+    LonSmipCmd      Command;       /* Network interface command, possibly OR'ed with additional information (such as the queue identifier) */ 
 } LonSmipHdr;
 
 /* Maximum data size of SMIP message, excluding hdr   */
@@ -1697,7 +1697,7 @@ typedef struct LonSmipHdr
  */
 typedef struct LonSmipMsg
 {
-    LonSmipHdr  Header;                     /* message header   */
+    LonSmipHdr        Header;                     /* message header   */
     unsigned char     Payload[LON_SMIP_MAX_DATA];    /* message payload. */
 } LonSmipMsg;
 
@@ -1752,27 +1752,27 @@ typedef enum LonUsopCmd
 
 typedef struct LonResetNotification
 {
-    LonSmipHdr                  Header;             /* message header                                   */
+    LonSmipHdr       Header;             /* message header                                   */
 
     /*
      *  The following fields were present since Shortstack 2.0
      */
-    unsigned char                     State;              /* use LON_RESET_STATE_* macros                 */
-    unsigned char                     Version;            /* link layer protocol version number           */
+    unsigned char    State;              /* use LON_RESET_STATE_* macros                 */
+    unsigned char    Version;            /* link layer protocol version number           */
 
     /*
      *  The following fields are only present if the link layer protocol version
      *  number (reported via the version field) indicates version 3 or higher
      */
-    unsigned char                     Flags;              
-    short int                     Key;                /* this Micro Server's key                      */
+    unsigned char     Flags;              
+    short int         Key;                /* this Micro Server's key                      */
     LonResetCause     ResetCause;         /* last known cause of Micro Server reset   */
     LonSystemError    ErrorLog;           /* last error from the Micro Server's error log */
-    LonUniqueId                 UniqueId;           /*  Micro Server's unique ID (Neuron ID)        */
+    LonUniqueId       UniqueId;           /*  Micro Server's unique ID (Neuron ID)        */
 
-    unsigned char                     MaxAddresses;       /* size of the address table                    */
-    unsigned char                     MaxDomains;         /* size of the domain table                     */
-    unsigned char                     MaxAliases;         /* size of the alias table                      */
+    unsigned char     MaxAddresses;       /* size of the address table                    */
+    unsigned char     MaxDomains;         /* size of the domain table                     */
+    unsigned char     MaxAliases;         /* size of the alias table                      */
 } LonResetNotification;
 
 /* 
@@ -1784,7 +1784,7 @@ typedef struct LonResetNotification
 typedef struct LonNmNvFetchRequest
 {
     unsigned char     Index;
-    short int     EscapeIndex;  /* exists iff index==0xFF    */
+    short int         EscapeIndex;  /* exists iff index==0xFF    */
 } LonNmNvFetchRequest;
 
 /*
@@ -1815,34 +1815,31 @@ typedef union LonAdditionalParameters
     } SdText;
 } LonAdditionalParameters;
 
-
-typedef union LonNmInstallRequest
+typedef struct LonQueryNvInfo
 {
-    struct Wink
-    {
-        LonInstallCommand Command; /* *LonInstallWink* */
-    } Wink;
-
-    struct QueryNvInfo
-    {
-        LonInstallCommand Command; /* *LonInstallQueryNvInfo* */
-        LonNvInfoType     NvInfoType;  /* Requested network variable information */
-        short int                     NvIndex; /* Network variable index */
+    LonInstallCommand Command; /* *LonInstallQueryNvInfo* */
+    LonNvInfoType     NvInfoType;  /* Requested network variable information */
+    short int                     NvIndex; /* Network variable index */
 
         /* The following parameters are used only if NvInfoType is 
          * *LonNvInfoSdText*, and should be omitted when other types of NV 
          * information are being queried.
          */
-        LonAdditionalParameters AdditionalParameters;
-    } QueryNvInfo;
+    LonAdditionalParameters AdditionalParameters;
+} LonQueryNvInfo;
 
-    struct QueryNodeInfo
-    {
-        LonInstallCommand Command;      /* *LonInstallQueryNodeInfo*  */
-        LonNodeInfoType   NodeInfoType; /* Requested node information */
-        LonAdditionalParameters AdditionalParameters;
-    } QueryNodeInfo;
+typedef struct LonQueryNodeInfo
+{
+    LonInstallCommand Command;      /* *LonInstallQueryNodeInfo*  */
+    LonNodeInfoType   NodeInfoType; /* Requested node information */
+    LonAdditionalParameters AdditionalParameters;
+} LonQueryNodeInfo;
 
+typedef union LonNmInstallRequest
+{
+    LonInstallCommand  Wink;
+    LonQueryNvInfo     QueryNvInfo;
+    LonQueryNodeInfo   QueryNodeInfo;
 } LonNmInstallRequest;
 
 /*
