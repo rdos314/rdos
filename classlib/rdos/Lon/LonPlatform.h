@@ -133,10 +133,6 @@
         #error Multiple platform definitions
     #endif
 
-    #define LON_ENUM_BEGIN(n)   enum
-    #define LON_ENUM_END(n)     n
-    #define LON_ENUM(n)         n 
-
     #define LON_STRUCT_BEGIN(n) struct 
     #define LON_STRUCT_END(n)   n
         
@@ -234,10 +230,6 @@
     #else
         #error Multiple platform definitions
     #endif
-
-    #define LON_ENUM_BEGIN(n)   enum
-    #define LON_ENUM_END(n)     n
-    #define LON_ENUM(n)         n 
 
     #define LON_STRUCT_BEGIN(n) struct 
     #define LON_STRUCT_END(n)   n
@@ -364,10 +356,6 @@
     typedef signed   long   LonBits32;          /* 32-bits, signed */
     
     typedef LonUbits8       unsigned char;            /* 8-bits */
-    
-    #define LON_ENUM_BEGIN(n)   enum 
-    #define LON_ENUM_END(n)     n
-    #define LON_ENUM(n)         unsigned char 
 
     #define LON_STRUCT_BEGIN(n) struct __declspec(align(1)) 
     #define LON_STRUCT_END(n)   n
@@ -475,10 +463,6 @@
     typedef signed   long   LonBits32;          /* 32-bits, signed */
     
     typedef LonUbits8       unsigned char;            /* 8-bits */
-    
-    #define LON_ENUM_BEGIN(n)   enum
-    #define LON_ENUM_END(n)     n
-    #define LON_ENUM(n)         n 
 
     #define LON_STRUCT_BEGIN(n) struct 
     #define LON_STRUCT_END(n)   n
@@ -579,10 +563,6 @@
     typedef signed   long   LonBits32;          /* 32-bits, signed */
     
     typedef LonUbits8       unsigned char;            /* 8-bits */
-    
-    #define LON_ENUM_BEGIN(n)   enum
-    #define LON_ENUM_END(n)     n
-    #define LON_ENUM(n)         n 
 
     #define LON_STRUCT_BEGIN(n) struct 
     #define LON_STRUCT_END(n)   n
@@ -688,10 +668,6 @@
     typedef signed   long   LonBits32;          /* 32-bits, signed */
     
     typedef LonUbits8       unsigned char;            /* 8-bits */
-    
-    #define LON_ENUM_BEGIN(n)   enum
-    #define LON_ENUM_END(n)     n
-    #define LON_ENUM(n)         unsigned char
 
     #define LON_STRUCT_BEGIN(n) struct 
     #define LON_STRUCT_END(n)   __attribute((__packed__)) n
@@ -795,10 +771,6 @@
     typedef signed   short  LonBits16;          /* 16-bits, signed */
     typedef unsigned long   LonUbits32;         /* 32-bits */
     typedef signed   long   LonBits32;          /* 32-bits, signed */
-        
-    #define LON_ENUM_BEGIN(n)   enum
-    #define LON_ENUM_END(n)     n
-    #define LON_ENUM(n)         unsigned char
 
     #define LON_STRUCT_BEGIN(n) _Packed struct 
     #define LON_STRUCT_END(n)   n

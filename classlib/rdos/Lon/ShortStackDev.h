@@ -29,22 +29,22 @@
 /*
  *  Enumeration: LonNvIndex
  */
-typedef LON_ENUM_BEGIN(LonNvIndex)
+typedef enum LonNvIndex
 {
     LonNvCount = 0
-} LON_ENUM_END(LonNvIndex);
+} LonNvIndex;
 
 #define LON_PERSISTENT_NVS  0
 
 /*
  *  Enumeration: LonMtIndex
  */
-typedef LON_ENUM_BEGIN(LonMtIndex)
+typedef enum LonMtIndex
 {
     LonMtIndexIfsfNonbindMT = 0,
     LonMtIndexMyDummyTagNotB = 1,
     LonMtCount = 2
-} LON_ENUM_END(LonMtIndex);
+} LonMtIndex;
 
 
 /*

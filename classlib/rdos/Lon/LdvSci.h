@@ -139,7 +139,7 @@
 // #define DISABLE_TX_INT()        (AT91F_US_DisableIt(COM0, AT91C_US_TXRDY))                   
 
 /* SCI transmitter state    */
-typedef LON_ENUM_BEGIN(LdvTxStates)
+typedef enum LdvTxStates
 {
     LdvTxIdle       = 0,    /* Transmitter is idle */
     LdvTxCmd,               /* The command byte needs to be transmitted */
@@ -148,25 +148,25 @@ typedef LON_ENUM_BEGIN(LdvTxStates)
     LdvTxInfo_2,            /* The second info byte needs to be transmitted */
     LdvTxPayload,           /* Transmitter is in the middle of sending the message payload */
     LdvTxDone               /* Have completed sending the entire message */
-} LON_ENUM_END(LdvTxStates);
+} LdvTxStates;
 
 /* SCI receiver state    */
-typedef LON_ENUM_BEGIN(LdvRxStates)
+typedef enum LdvRxStates
 {
     LdvRxIdle       = 0,    /* Receiver is idle */
     LdvRxPayload,           /* The length byte has been received, waiting for the rest of the message */
     LdvRxIgnore             /* Ignore the rest of the message */
-} LON_ENUM_END(LdvRxStates);
+} LdvRxStates;
 
 /* Serial driver state    */
-typedef LON_ENUM_BEGIN(LdvDriverState)
+typedef enum LdvDriverState
 {
     LdvDriverSleep   = 0,        /* The driver is disabled */
     LdvDriverNormal  = 1         /* The driver is ready to receive and transmit messages */
-} LON_ENUM_END(LdvDriverState);
+} LdvDriverState;
 
 /* Serial driver status    */
-typedef LON_STRUCT_BEGIN(LdvDriverStatus)
+typedef struct LdvDriverStatus
 {
     LdvDriverState      DriverState;
     LdvRxStates         RxState;
@@ -195,16 +195,16 @@ typedef LON_STRUCT_BEGIN(LdvDriverStatus)
                                                  * host is still active. This isn't required by the Micro Server, but
                                                  * may be required by the underlying hardware (e.g., RS-232 chip) */
     LonUbits32          PutMsgTimeout;          /* Put message blocking timeout. */
-} LON_STRUCT_END(LdvDriverStatus);
+} LdvDriverStatus;
 
 /* Receive buffer state    */
-typedef LON_ENUM_BEGIN(LdvRxBufferState)
+typedef enum LdvRxBufferState
 {
     LdvRxBufferEmpty,        /* Buffer is empty */
     LdvRxBufferReceiving,    /* Buffer is being used by driver for receiving */
     LdvRxBufferReady,        /* Buffer is ready for processing */
     LdvRxBufferProcessing    /* Buffer is being processed by the API */
-} LON_ENUM_END(LdvRxBufferState);
+} LdvRxBufferState;
 
 /* Definition of receive buffer    */
 typedef LON_STRUCT_BEGIN(LdvSysRxBuffer)
@@ -214,13 +214,13 @@ typedef LON_STRUCT_BEGIN(LdvSysRxBuffer)
 } LON_STRUCT_END(LdvSysRxBuffer);
 
 /* Transmit buffer state    */
-typedef LON_ENUM_BEGIN(LdvTxBufferState)
+typedef enum LdvTxBufferState
 {
     LdvTxBufferEmpty,        /* Buffer is empty */
     LdvTxBufferFilling,      /* Buffer is being filled by the API */
     LdvTxBufferReady,        /* Buffer is ready for transmitting */
     LdvTxBufferTransmitting  /* Buffer is being transmitted by the driver */
-} LON_ENUM_END(LdvTxBufferState);
+} LdvTxBufferState;
 
 /* Definition of transmit buffer    */
 typedef LON_STRUCT_BEGIN(LdvSysTxBuffer)
@@ -230,12 +230,12 @@ typedef LON_STRUCT_BEGIN(LdvSysTxBuffer)
 } LON_STRUCT_END(LdvSysTxBuffer);
 
 /* Types of index used for incrementing. See function CyclicIncrement */
-typedef LON_ENUM_BEGIN(LdvIndexType)
+typedef enum LdvIndexType
 {
     LdvIndexRxBufferReady,
     LdvIndexRxBufferReceive,
     LdvIndexTxBufferEmpty,
     LdvIndexTxBufferTransmit
-} LON_ENUM_END(LdvIndexType);
+} LdvIndexType;
 
 #endif

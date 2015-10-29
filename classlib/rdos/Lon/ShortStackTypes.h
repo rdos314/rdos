@@ -56,7 +56,7 @@
  *
  * Previously named nm_error.
  */
-typedef LON_ENUM_BEGIN(LonSystemError) 
+typedef enum LonSystemError
 {
     /*   0 */    LonNoError                 = 0,
 
@@ -120,7 +120,7 @@ typedef LON_ENUM_BEGIN(LonSystemError)
     /* 162 */    LonReadWriteSemaphoreSet   = 162u,
     /* 163 */    LonApplSignatureBad        = 163u,
     /* 164 */    LonRouterFirmwareVersionMismatch = 164u
-} LON_ENUM_END(LonSystemError);
+} LonSystemError;
 
 /*
  * Enumeration: LonApiError
@@ -134,7 +134,7 @@ typedef LON_ENUM_BEGIN(LonSystemError)
  *
  * Previously named api_error_code.
  */
-typedef LON_ENUM_BEGIN(LonApiError) 
+typedef enum LonApiError
 {
     /*    0    */    LonApiNoError = 0,         /* no error. Use the LON_SUCCESS macro to test for this condition */
     /*
@@ -191,7 +191,7 @@ typedef LON_ENUM_BEGIN(LonApiError)
     /*    78   */   LonApiDmfOutOfRange         = 81, /* DMF address + count is out of range for operation. */
     /*    79   */   LonApiDmfReadOnly           = 82, /* Write to read-only DMF area. */
     /*    80   */   LonApiDmfNoDriver           = 83  /* No DMF driver defined. */
-} LON_ENUM_END(LonApiError);
+} LonApiError;
 
 /*
  * Macro: LON_SUCCESS
@@ -374,7 +374,7 @@ typedef unsigned char  LonNodeId;
  *  An FTXL Transceiver has modal code LonNeuron3120E4Code (14).
  *  Previously named nm_model_code.
  */
-typedef LON_ENUM_BEGIN(LonNeuronModel) 
+typedef enum LonNeuronModel
 {
     /*   0 */    LonNeuron3150Code    =  0,  /* 3150, FT 3150, CY7C53150 */
     /*   1 */    LonNeuronPl3150Code  =  1,  /* PL 3150 */ 
@@ -391,7 +391,7 @@ typedef LON_ENUM_BEGIN(LonNeuronModel)
     /*  17 */    LonNeuronPl3170Code  = 17,  /* PL 3170 */
     /*  32 */    LonNeuronFt5000Code  = 32,  /* FT 5000 */
     /*  33 */    LonNeuron5000Code    = 33   /* Neuron 5000 */
-} LON_ENUM_END(LonNeuronModel);
+} LonNeuronModel;
 
 /*
  *  Enumeration: LonNeuronState
@@ -439,7 +439,7 @@ typedef LON_ENUM_BEGIN(LonNeuronModel)
  *
  *  Previously named nm_node_state.
  */
-typedef LON_ENUM_BEGIN(LonNodeState) 
+typedef enum LonNodeState
 {
     /*  0 */    LonStateInvalid          = 0,    /* invalid or Echelon use only          */
     /*  1 */    LonStateInvalid_1        = 1,    /* equivalent to StateInvalid          */
@@ -451,7 +451,7 @@ typedef LON_ENUM_BEGIN(LonNodeState)
     /*  7 */    LonStateInvalid_7        = 7,    /* equivalent to StateInvalid          */
     /* 12 */    LonSoftOffLine           = (LonConfigOnLine|LON_OFFLINE_BIT), /* (12) configured, soft-offline        */
     /*0x8C*/    LonConfigByPass          = 0x8C  /* configured, in bypass mode          */
-} LON_ENUM_END(LonNodeState);
+} LonNodeState;
 
 /*
  * Enumeration: LonNodeMode
@@ -459,13 +459,13 @@ typedef LON_ENUM_BEGIN(LonNodeState)
  *
  * Previously named nm_node_mode.
  */
-typedef LON_ENUM_BEGIN(LonNodeMode) 
+typedef enum LonNodeMode
 {
     LonApplicationOffLine  = 0,
     LonApplicationOnLine   = 1,
     LonApplicationReset    = 2,
     LonChangeState         = 3
-} LON_ENUM_END(LonNodeMode);
+} LonNodeMode;
 
 /*
  *  Enumeration: LonResetCause
@@ -473,14 +473,14 @@ typedef LON_ENUM_BEGIN(LonNodeMode)
  *
  *  The reset cause can be accessed through the <LonStatus> structure.
  */
-typedef LON_ENUM_BEGIN(LonResetCause) 
+typedef enum LonResetCause
 {
     /* 0x00 */  LonResetCleared     = 0x00,
     /* 0x01 */  LonPowerUpReset     = 0x01,
     /* 0x02 */  LonExternalReset    = 0x02,
     /* 0x0C */  LonWatchdogReset    = 0x0C,
     /* 0x14 */  LonSoftwareReset    = 0x14
-} LON_ENUM_END(LonResetCause);
+} LonResetCause;
 
 /*
  *  Enumeration: LonAddressType
@@ -489,14 +489,14 @@ typedef LON_ENUM_BEGIN(LonResetCause)
  *  This enumeration holds the literals for the 'type' field of destination addresses for outgoing messages.
  *  Previously named AddrType.
  */
-typedef LON_ENUM_BEGIN(LonAddressType) 
+typedef enum LonAddressType
 {
     /*  0 */    LonAddressUnassigned    = 0,
     /*  1 */    LonAddressSubnetNode,
     /*  2 */    LonAddressUniqueId,         /* Previously named LonAddressNeuronId */
     /*  3 */    LonAddressBroadcast,
     /*127 */    LonAddressLocal         = 127
-} LON_ENUM_END(LonAddressType);
+} LonAddressType;
 
 /*
  *  Enumeration: LonRepeatTimer
@@ -504,7 +504,7 @@ typedef LON_ENUM_BEGIN(LonAddressType)
  *
  *  This enumeration defines the encoded repeat timer values.
  */
-typedef LON_ENUM_BEGIN(LonRepeatTimer) 
+typedef enum LonRepeatTimer
 {
     /*  0 */ LonRpt16,      /* 16 ms */
     /*  1 */ LonRpt24,      /* 24 ms */
@@ -522,7 +522,7 @@ typedef LON_ENUM_BEGIN(LonRepeatTimer)
     /* 13 */ LonRpt1536,    /* 1536 ms */
     /* 14 */ LonRpt2048,    /* 2048 ms */
     /* 15 */ LonRpt3072     /* 3072 ms */
-} LON_ENUM_END(LonRepeatTimer);
+} LonRepeatTimer;
 
 /*
  *  Enumeration: LonReceiveTimer
@@ -531,7 +531,7 @@ typedef LON_ENUM_BEGIN(LonRepeatTimer)
  *  This enumeration defines the encoded receive timer values used with groups. 
  *  For the non-group receive timer, see <LonNonGroupReceiveTimer>.
  */
-typedef LON_ENUM_BEGIN(LonReceiveTimer) 
+typedef enum LonReceiveTimer
 {
     /*  0 */ LonRcv128,     /* 128 ms */
     /*  1 */ LonRcv192,     /* 192 ms */
@@ -549,7 +549,7 @@ typedef LON_ENUM_BEGIN(LonReceiveTimer)
     /* 13 */ LonRcv12288,   /* 12288 ms */
     /* 14 */ LonRcv16384,   /* 16384 ms */
     /* 15 */ LonRcv24576    /* 24576 ms */
-} LON_ENUM_END(LonReceiveTimer);
+} LonReceiveTimer;
 
 /*
  *  Enumeration: LonNonGroupReceiveTimer
@@ -567,7 +567,7 @@ typedef LonReceiveTimer LonNonGroupReceiveTimer;
  *
  *  This enumeration defines the encoded transmit timer values.
  */
-typedef LON_ENUM_BEGIN(LonTransmitTimer) 
+typedef enum LonTransmitTimer
 {
     /*  0 */ LonTx16,      /* 16 ms */
     /*  1 */ LonTx24,      /* 24 ms */
@@ -585,7 +585,7 @@ typedef LON_ENUM_BEGIN(LonTransmitTimer)
     /* 13 */ LonTx1536,    /* 1536 ms */
     /* 14 */ LonTx2048,    /* 2048 ms */
     /* 15 */ LonTx3072     /* 3072 ms */
-} LON_ENUM_END(LonTransmitTimer);
+} LonTransmitTimer;
 
 /*
  * ******************************************************************************
@@ -714,7 +714,7 @@ typedef LON_STRUCT_BEGIN(LonSendGroup)
 
 typedef LON_STRUCT_BEGIN(LonSendSubnetNode) 
 {
-    LON_ENUM(LonAddressType)    Type;           /* should be LonAddressSubnetNode for subnet/node addressing */
+    enum LonAddressType    Type;           /* should be LonAddressSubnetNode for subnet/node addressing */
     unsigned char                     DomainNode;     /* contains domain, node. See LON_SENDSN_DOMAIN_* and _NODE_* macros */
     unsigned char                     RepeatRetry;    /* contains repeat, retry. See LON_SENDSN_REPEAT_* and _RETRY_* macros */
     unsigned char                     RsvdTransmit;   /* contains transmit (top 4 bits are unused). See LON_SENDSN_TRANSMIT_TIMER_* macros */
@@ -759,7 +759,7 @@ typedef LON_STRUCT_BEGIN(LonSendSubnetNode)
 
 typedef LON_STRUCT_BEGIN(LonSendUniqueId) 
 {
-    LON_ENUM(LonAddressType)    Type;           /* should be LonAddressNeuronId */
+    LonAddressType              Type;           /* should be LonAddressNeuronId */
     unsigned char                     Domain;         /* contains the domain index. See LON_SENDNID_DOMAIN_*  macro. The remaining 7 bits must be zero */
     unsigned char                     RepeatRetry;    /* contains repeat, retry. See LON_SENDNID_REPEAT_* and _RETRY_* macros */
     unsigned char                     RsvdTransmit;   /* contains transmit (top 4 bits are unused). See LON_SENDNID_TRANSMIT_TIMER_* macros */
@@ -812,7 +812,7 @@ typedef LON_STRUCT_BEGIN(LonSendUniqueId)
 
 typedef LON_STRUCT_BEGIN(LonSendBroadcast) 
 {
-    LON_ENUM(LonAddressType)    Type;               /* should be LonAddressBroadcast */
+    LonAddressType              Type;               /* should be LonAddressBroadcast */
     unsigned char                     DomainRsvdBacklog;  /* contains domain, backlog (6th bit is unused). See LON_SENDBCAST_DOMAIN_* and _BACKLOG_* macros */
     unsigned char                     RepeatRetry;        /* contains repeat, retry. See LON_SENDBCAST_REPEAT_* and _RETRY_* macros */
     unsigned char                     RsvdTransmit;       /* contains transmit (top 4 bits are unused). See LON_SENDBCAST_TRANSMIT_TIMER_* macros */
@@ -828,7 +828,7 @@ typedef LON_STRUCT_BEGIN(LonSendBroadcast)
  */
 typedef LON_STRUCT_BEGIN(LonSendUnassigned) 
 {
-    LON_ENUM(LonAddressType)    Type;   /* should be LonAddressUnassigned */
+    LonAddressType    Type;   /* should be LonAddressUnassigned */
 } LON_STRUCT_END(LonSendUnassigned);
 
 /*
@@ -839,7 +839,7 @@ typedef LON_STRUCT_BEGIN(LonSendUnassigned)
  */
 typedef LON_STRUCT_BEGIN(LonSendLocal) 
 {
-    LON_ENUM(LonAddressType)    Type;   /* should be LonAddressLocal */
+    LonAddressType    Type;   /* should be LonAddressLocal */
 } LON_STRUCT_END(LonSendLocal);
 
 /*
@@ -936,14 +936,14 @@ typedef LON_UNION_BEGIN(LonReceiveDestination)
  *  allowing to select the corresponding member in <LonReceiveDestinationAddress>.
  *  Previously named RcvDstAddrFormat.
  */
-typedef LON_ENUM_BEGIN(LonReceiveDestinationAddressFormat) 
+typedef enum LonReceiveDestinationAddressFormat
 {
     /*  0 */ LonReceiveDestinationAddressBroadcast  = 0,
     /*  1 */ LonReceiveDestinationAddressGroup,
     /*  2 */ LonReceiveDestinationAddressSubnetNode,
     /*  3 */ LonReceiveDestinationAddressUniqueId,
     /*  4 */ LonReceiveDestinationAddressTurnaround
-} LON_ENUM_END(LonReceiveDestinationAddressFormat);
+} LonReceiveDestinationAddressFormat;
 
 /*
  *  Typedef: LonReceiveAddress
@@ -1163,10 +1163,10 @@ typedef LON_STRUCT_BEGIN(LonAddressTableGroup)
 
 typedef LON_STRUCT_BEGIN(LonAddressTableSubnetNode) 
 {
-    LON_ENUM(LonAddressType)    Type;           /* should be LonAddressSubnetNode   */
+    LonAddressType    Type;           /* should be LonAddressSubnetNode   */
     unsigned char                     DomainNode;     /* contains domain, node. Use LON_ADDRESS_SN_* macros */
     unsigned char                     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_SN_* macros */
-    LON_ENUM(LonTransmitTimer)  TransmitTimer;
+    LonTransmitTimer   TransmitTimer;
     LonSubnetId                 Subnet;
 } LON_STRUCT_END(LonAddressTableSubnetNode);
 
@@ -1195,10 +1195,10 @@ typedef LON_STRUCT_BEGIN(LonAddressTableSubnetNode)
 
 typedef LON_STRUCT_BEGIN(LonAddressTableBroadcast) 
 {
-    LON_ENUM(LonAddressType)    Type;           /* should be LonAddressBroadcast */
+    LonAddressType    Type;           /* should be LonAddressBroadcast */
     unsigned char                     DomainBacklog;  /* contains domain, backlog. Use LON_ADDRESS_BROADCAST_* macros */
     unsigned char                     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_BROADCAST_* macros instead */
-    LON_ENUM(LonTransmitTimer)  TransmitTimer;
+    LonTransmitTimer  TransmitTimer;
     LonSubnetId                 Subnet;
 } LON_STRUCT_END(LonAddressTableBroadcast);
 
@@ -1216,10 +1216,10 @@ typedef LON_STRUCT_BEGIN(LonAddressTableBroadcast)
 
 typedef LON_STRUCT_BEGIN(LonAddressTableTurnaround) 
 {
-    LON_ENUM(LonAddressType)    Type;           /* should be LonAddressTurnaround */
+    LonAddressType    Type;           /* should be LonAddressTurnaround */
     unsigned char                     Turnaround;     /* 1: turnaround record. 0: not in use */
     unsigned char                     RepeatRetry;    /* contains repeat timer and retry. Use LON_ADDRESS_TURNAROUND_* macros */
-    LON_ENUM(LonTransmitTimer)  TransmitTimer; 
+    LonTransmitTimer  TransmitTimer; 
 } LON_STRUCT_END(LonAddressTableTurnaround);
 
 /*
@@ -1249,13 +1249,13 @@ typedef LON_UNION_BEGIN(LonAddress)
  *
  *  This enumeration encodes the length of the domain.
  */
-typedef LON_ENUM_BEGIN(LonDomainLength) 
+typedef enum LonDomainLength
 {
     /*  0 */ LonDomainLength_0  = 0,
     /*  1 */ LonDomainLength_1  = 1,
     /*  3 */ LonDomainLength_3  = 3,
     /*  6 */ LonDomainLength_6  = 6
-} LON_ENUM_END(LonDomainLength);
+} LonDomainLength;
 
 /*
  *  Typedef: LonDomain
@@ -1446,11 +1446,11 @@ typedef LON_STRUCT_BEGIN(LonStatus)
     LonWord                     ReceiveTransactionsFull;
     LonWord                     LostMessages;
     LonWord                     MissedMessages;
-    LON_ENUM(LonResetCause)     ResetCause;
-    LON_ENUM(LonNodeState)      NodeState;
+    LonResetCause     ResetCause;
+    LonNodeState      NodeState;
     unsigned char                     VersionNumber;
-    LON_ENUM(LonSystemError)    ErrorLog;
-    LON_ENUM(LonNeuronModel)    ModelNumber;
+    LonSystemError    ErrorLog;
+    LonNeuronModel    ModelNumber;
 } LON_STRUCT_END(LonStatus);
 
 /*
@@ -1467,7 +1467,7 @@ typedef LON_STRUCT_BEGIN(LonStatus)
  *
  *  Previously named NM_message_code.
  */
-typedef LON_ENUM_BEGIN(LonNmMessageCode) 
+typedef enum LonNmMessageCode
 {
     /* codes for network diagnostic commands */
     LonNdQueryStatus                   = 0x51,
@@ -1503,7 +1503,7 @@ typedef LON_ENUM_BEGIN(LonNmMessageCode)
     LonNmDeviceEscape                  = 0x7D,
     LonNmRouterEscape                  = 0x7E,
     LonNmServicePin                    = 0x7F
-} LON_ENUM_END(LonNmMessageCode);
+} LonNmMessageCode;
 
 /*
  *  Enumeration: LonInstallCommand
@@ -1511,12 +1511,12 @@ typedef LON_ENUM_BEGIN(LonNmMessageCode)
  *  data version 2 is required for any device that supports dynamic network 
  *  variables. Used by <LonNmInstallRequest>.
  */
-typedef LON_ENUM_BEGIN(LonInstallCommand) 
+typedef enum LonInstallCommand
 {
     LonInstallWink              = 0,    /* Basic application wink                     */
     LonInstallQueryNvInfo       = 4,    /* Query network variable information         */
     LonInstallQueryNodeInfo     = 5     /* Query node self-documentation information  */
-} LON_ENUM_END(LonInstallCommand);
+} LonInstallCommand;
 
 /*
  *  Enumeration: LonNvInfoType
@@ -1524,14 +1524,14 @@ typedef LON_ENUM_BEGIN(LonInstallCommand)
  *  *LonInstallQueryNvInfo. Used by <LonNmInstallRequest> when *Command* is 
  *  set to *LonInstallQueryNvInfo*. 
  */
-typedef LON_ENUM_BEGIN(LonNvInfoType) 
+typedef enum LonNvInfoType
 {
     LonNvInfoDescriptor         = 0,    /* Query NV description (LonNmInstallResponse.NvDescriptor) */
     LonNvInfoRateEstimate       = 1,    /* Query NV rate estimates (LonNmInstallResponse.NvRate) */
     LonNvInfoName               = 2,    /* Query NV Name (LonNmInstallResponse.NvName) */
     LonNvInfoSdText             = 3,    /* Query NV self-documentation string (LonNmInstallResponse.NvSd) */
     LonNvInfoSnvtIndex          = 4     /* Query NV SNVT index (LonNmInstallResponse.SnvtTypeIndex) */
-} LON_ENUM_END(LonNvInfoType);
+} LonNvInfoType;
 
 /*
  *  Enumeration: LonNodeInfoType
@@ -1539,22 +1539,22 @@ typedef LON_ENUM_BEGIN(LonNvInfoType)
  *  Used by <LonNmInstallRequest> when *Command* is set to 
  *  *LonInstallQueryNodeInfo*. 
  */
-typedef LON_ENUM_BEGIN(LonNodeInfoType) 
+typedef enum LonNodeInfoType
 {
     LonNodeInfoSdText             = 3     /* Query node self-documentation string (LonNmInstallResponse.NodeSd) */
-} LON_ENUM_END(LonNodeInfoType);
+} LonNodeInfoType;
 
 /*
  *  Enumeration: LonNvOrigin
  *  Defines the origins of a network variable.  Use the LON_NV_DESC_ORIGIN_* 
  *  macros with the <LonNmInstallResponse> union.
  */
-typedef LON_ENUM_BEGIN(LonNvOrigin) 
+typedef enum LonNvOrigin
 {
     LonNvOriginUndefined    = 0,    /* Not currently defined */
     LonNvOriginStatic       = 1,    /* Statically defined     */
     LonNvOriginDynamic      = 2     /* Dynamically defined     */
-} LON_ENUM_END(LonNvOrigin);
+} LonNvOrigin;
 
 /* 
  *  Macro: LON_NM_FAILURE
@@ -1646,7 +1646,7 @@ typedef struct
  *  The queue specifier is OR'ed with the <LonSmipCmd> for the LonNiComm and LonNiNetManagement
  *  commands, and used with the command field of the <LonSmipHdr> preamble.
  */
-typedef LON_ENUM_BEGIN(LonSmipQueue) 
+typedef enum LonSmipQueue
 {
     LonNiTxQueue            =  2,             /* Transaction queue                        */
     LonNiTxQueuePriority    =  3,             /* Priority transaction queue               */
@@ -1654,7 +1654,7 @@ typedef LON_ENUM_BEGIN(LonSmipQueue)
     LonNiNonTxQueuePriority =  5,             /* Priority non-transaction queue           */
     LonNiResponse           =  6,             /* Response msg & completion event queue    */
     LonNiIncoming           =  8              /* Received message queue                   */
-} LON_ENUM_END(LonSmipQueue);
+} LonSmipQueue;
 
 /* 
  *  Enumeration: LonSmipCmd
@@ -1666,7 +1666,7 @@ typedef LON_ENUM_BEGIN(LonSmipQueue)
  *  specifier is OR'ed with the LonNiComm and LonNiNetManagement commands. See the definitions
  *  of the individual commands in this enumeration for more.
  */
-typedef LON_ENUM_BEGIN(LonSmipCmd) 
+typedef enum LonSmipCmd
 {
     LonNiNull           = 0x00,
     LonNiXOff           = 0x01,        /* software flow control                    */
@@ -1703,7 +1703,7 @@ typedef LON_ENUM_BEGIN(LonSmipCmd)
     
     LonNiNv             = 0xC0         /* Special case for downlink NV updates and polls.
                                        Least significant 6 bits contain NV index. */
-} LON_ENUM_END(LonSmipCmd);
+} LonSmipCmd;
 
 /*
  *  Typedef: LonSmipHdr
@@ -1715,7 +1715,7 @@ typedef LON_ENUM_BEGIN(LonSmipCmd)
 typedef LON_STRUCT_BEGIN(LonSmipHdr) 
 {
     unsigned char                 Length;        /* Length of the data to follow, not including the <LonSmipCmd> preamble */
-    LON_ENUM(LonSmipCmd)    Command;       /* Network interface command, possibly OR'ed with additional information (such as the queue identifier) */ 
+    LonSmipCmd    Command;       /* Network interface command, possibly OR'ed with additional information (such as the queue identifier) */ 
 } LON_STRUCT_END(LonSmipHdr);
 
 /* Maximum data size of SMIP message, excluding hdr   */
@@ -1748,7 +1748,7 @@ typedef LON_STRUCT_BEGIN(LonSmipMsg)
 
 #define LON_ECHO_SIZE           6              /* size of Echo data */ 
 
-typedef LON_ENUM_BEGIN(LonUsopCmd) 
+typedef enum LonUsopCmd
 {
     LonUsopPing                 = 0x01,        /* Ping  */
     LonUsopNvIsBound            = 0x02,        /* Is Bound Nv   */
@@ -1758,7 +1758,7 @@ typedef LON_ENUM_BEGIN(LonUsopCmd)
     LonUsopQueryAppSignature    = 0x06,        /* Query App Signature  */    
     LonUsopVersion              = 0x07,        /* Query Micro Server version details */
     LonUsopEcho                 = 0x0A         /* Request Echo */      
-} LON_ENUM_END(LonUsopCmd);
+} LonUsopCmd;
 
 /*
  *  Typedef: LonResetNotification
@@ -1803,8 +1803,8 @@ typedef LON_STRUCT_BEGIN(LonResetNotification)
      */
     unsigned char                     Flags;              
     LonWord                     Key;                /* this Micro Server's key                      */
-    LON_ENUM(LonResetCause)     ResetCause;         /* last known cause of Micro Server reset   */
-    LON_ENUM(LonSystemError)    ErrorLog;           /* last error from the Micro Server's error log */
+    LonResetCause     ResetCause;         /* last known cause of Micro Server reset   */
+    LonSystemError    ErrorLog;           /* last error from the Micro Server's error log */
     LonUniqueId                 UniqueId;           /*  Micro Server's unique ID (Neuron ID)        */
 
     unsigned char                     MaxAddresses;       /* size of the address table                    */
@@ -1846,13 +1846,13 @@ typedef LON_UNION_BEGIN(LonNmInstallRequest)
 {
     LON_STRUCT_NESTED_BEGIN(Wink)
     {
-        LON_ENUM(LonInstallCommand) Command; /* *LonInstallWink* */
+        LonInstallCommand Command; /* *LonInstallWink* */
     } LON_STRUCT_NESTED_END(Wink);
 
     LON_STRUCT_NESTED_BEGIN(QueryNvInfo)
     {
-        LON_ENUM(LonInstallCommand) Command; /* *LonInstallQueryNvInfo* */
-        LON_ENUM(LonNvInfoType)     NvInfoType;  /* Requested network variable information */
+        LonInstallCommand Command; /* *LonInstallQueryNvInfo* */
+        LonNvInfoType     NvInfoType;  /* Requested network variable information */
         LonWord                     NvIndex; /* Network variable index */
 
         /* The following parameters are used only if NvInfoType is 
@@ -1872,8 +1872,8 @@ typedef LON_UNION_BEGIN(LonNmInstallRequest)
 
     LON_STRUCT_NESTED_BEGIN(QueryNodeInfo)
     {
-        LON_ENUM(LonInstallCommand) Command;      /* *LonInstallQueryNodeInfo*  */
-        LON_ENUM(LonNodeInfoType)   NodeInfoType; /* Requested node information */
+        LonInstallCommand Command;      /* *LonInstallQueryNodeInfo*  */
+        LonNodeInfoType   NodeInfoType; /* Requested node information */
         LON_UNION_NESTED_BEGIN(AdditionalParameters)
         {
             LON_STRUCT_NESTED_BEGIN(SdText)
@@ -2091,8 +2091,8 @@ typedef LON_UNION_BEGIN(LonNmInstallResponse)
  */
 typedef LON_STRUCT_BEGIN(LonNmSetNodeModeRequest) 
 {
-    LON_ENUM(LonNodeMode)   Mode;
-    LON_ENUM(LonNodeState)  State;  /* iff mode == LonChangeState */
+    LonNodeMode   Mode;
+    LonNodeState  State;  /* iff mode == LonChangeState */
 } LON_STRUCT_END(LonNmSetNodeModeRequest);
 
 /*
@@ -2101,14 +2101,14 @@ typedef LON_STRUCT_BEGIN(LonNmSetNodeModeRequest)
  *
  *  Previously named nm_mem_mode.
  */
-typedef LON_ENUM_BEGIN(LonMemoryReadWriteMode) 
+typedef enum LonMemoryReadWriteMode 
 {
     LonAbsoluteMemory           = 0,         /* Address is absolute Neuron memory address */
     LonReadOnlyRelative         = 1,         /* Address is offset into read-only memory structures */
     LonConfigStructRelative     = 2,         /* Address is offset into configuration data structures */
     LonStatisticStructRelative  = 3,         /* Address is offset into statistics data structures */
     LonMemoryModeReserved_A     = 4          /* Reserved for Echelon internal use only */
-} LON_ENUM_END(LonMemoryReadWriteMode);
+} LonMemoryReadWriteMode;
 
 /*
  *  Enumeration: LonMemoryWriteForm
@@ -2116,7 +2116,7 @@ typedef LON_ENUM_BEGIN(LonMemoryReadWriteMode)
  *
  *  Previously named nm_mem_form.
  */  
-typedef LON_ENUM_BEGIN(LonMemoryWriteForm) 
+typedef enum LonMemoryWriteForm
 {
     LonNoAction                     = 0,
     LonBothCsRecalculation          = 1,
@@ -2125,7 +2125,7 @@ typedef LON_ENUM_BEGIN(LonMemoryWriteForm)
     LonOnlyReset                    = 8,
     LonBothCsRecalculationReset     = 9,
     LonConfigCsRecalculationReset   = 12
-} LON_ENUM_END(LonMemoryWriteForm);
+} LonMemoryWriteForm;
 
 /* 
  *  Typedef: LonNmReadMemoryRequest
@@ -2135,7 +2135,7 @@ typedef LON_ENUM_BEGIN(LonMemoryWriteForm)
  */
 typedef LON_STRUCT_BEGIN(LonNmReadMemoryRequest) 
 {
-    LON_ENUM(LonMemoryReadWriteMode)    Mode;
+    LonMemoryReadWriteMode    Mode;
     LonWord                             Address;
     unsigned char                             Count;
 } LON_STRUCT_END(LonNmReadMemoryRequest);
@@ -2151,10 +2151,10 @@ typedef LON_STRUCT_BEGIN(LonNmReadMemoryRequest)
  */
 typedef LON_STRUCT_BEGIN(LonNmWriteMemoryRequest) 
 {
-    LON_ENUM(LonMemoryReadWriteMode)    Mode;
+    LonMemoryReadWriteMode    Mode;
     LonWord                             Address;
     unsigned char                             Count;
-    LON_ENUM(LonMemoryWriteForm)        Form;
+    LonMemoryWriteForm        Form;
     /* <count> bytes of data following... */
 } LON_STRUCT_END(LonNmWriteMemoryRequest);
 
@@ -2175,7 +2175,7 @@ typedef LON_STRUCT_BEGIN(LonNmWriteMemoryRequest)
  *  
  *  Previously named _NA_appl_msg_code.
  */
-typedef LON_ENUM_BEGIN(LonApplicationMessageCode) 
+typedef enum LonApplicationMessageCode
 {
     LonApplicationMsg       = 0x00,
     LonApplicationIsi       = 0x3D,
@@ -2184,7 +2184,7 @@ typedef LON_ENUM_BEGIN(LonApplicationMessageCode)
     LonForeignMsg           = 0x40,
     LonForeignIsOffLine     = 0x4F,
     LonLastMessageCode      = 0x4F
-} LON_ENUM_END(LonApplicationMessageCode);
+} LonApplicationMessageCode;
 
 /*
  *  Typedef: LonNmQueryDomainRequest
@@ -2339,13 +2339,13 @@ typedef LON_STRUCT_BEGIN(LonNmUpdateDomainRequest)
 *
 *  Previously named ServiceType.
 */
-typedef LON_ENUM_BEGIN(LonServiceType) 
+typedef enum LonServiceType
 {
     LonServiceAcknowledged       = 0,    /* ACKD         */
     LonServiceRepeated           = 1,    /* UNACKD_RPT   */
     LonServiceUnacknowledged     = 2,    /* UNACKD       */
     LonServiceRequest            = 3     /* REQUEST      */
-} LON_ENUM_END(LonServiceType);
+} LonServiceType;
 
 /*
 *  Enumeration: LonMessageType
@@ -2353,11 +2353,11 @@ typedef LON_ENUM_BEGIN(LonServiceType)
 *
 *  Previously named MsgType.
 */
-typedef LON_ENUM_BEGIN(LonMessageType) 
+typedef enum LonMessageType
 {
     LonMessageExplicit      = 0,    /* TYPE_MSG */
     LonMessageNv            = 1     /* TYPE_NV  */
-} LON_ENUM_END(LonMessageType);
+} LonMessageType;
 
 /*
 *  Enumeration: LonCompletionCode
@@ -2365,12 +2365,12 @@ typedef LON_ENUM_BEGIN(LonMessageType)
 *
 *  Previously named ComplType.
 */
-typedef LON_ENUM_BEGIN(LonCompletionType) 
+typedef enum LonCompletionType
 {
     LonCompletionNotComplete    = 0,             /* MSG_NOT_COMPL, Not a completion event         */
     LonCompletionSuccess        = 1,             /* MSG_SUCCEEDS, Successful completion event    */
     LonCompletionFailure        = 2              /* MSG_FAILS, Failed completion event        */
-} LON_ENUM_END(LonCompletionType);
+} LonCompletionType;
 
 /*
 *  Typedef: LonExplicitMessage

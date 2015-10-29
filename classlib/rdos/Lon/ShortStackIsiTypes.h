@@ -50,7 +50,7 @@
  *  This enumeration represents the possible events that are passed to the 
  *  host when the ISI engine does a callback.
  */
-typedef LON_ENUM_BEGIN(IsiEvent)
+typedef enum IsiEvent
 {
     IsiNormal           = 0,
     IsiRun              = 1,
@@ -66,7 +66,7 @@ typedef LON_ENUM_BEGIN(IsiEvent)
     IsiRetry            = 11,
     IsiWink             = 12,
     IsiRegistered       = 13
-} LON_ENUM_END(IsiEvent);
+} IsiEvent;
 
 /* 
  *  Enumeration: IsiType
@@ -75,12 +75,12 @@ typedef LON_ENUM_BEGIN(IsiEvent)
  *  This enumeration specifies the ISI protocol to be implemented by the ISI
  *  engine.
  */
-typedef LON_ENUM_BEGIN(IsiType)
+typedef enum IsiType
 {
     IsiTypeS,                       /* Use for ISI-S and ISI-S/C */
     IsiTypeDa,                      /* Use for Isi-DA and Isi-DA/C */
     IsiTypeDas                      /* Use for ISI-DAS and ISI-DAS/C */
-} LON_ENUM_END(IsiType);
+} IsiType;
 
 /* 
  *  Enumeration: IsiStartFlags
@@ -89,14 +89,14 @@ typedef LON_ENUM_BEGIN(IsiType)
  *  This enumeration represents option flags for the <IsiStart> function used to 
  *  start the ISI engine. Use a combination of these flags with the <IsiStart> function.
  */
-typedef LON_ENUM_BEGIN(IsiStartFlags)
+typedef enum IsiStartFlags
 {
     IsiFlagNone                 = 0,    /* Does nothing */
     IsiFlagExtended             = 1,    /* Enables use of extended DRUM and enrollment messages */
     IsiFlagHeartbeat            = 2,    /* Enables ISI NV heartbeats */
     IsiFlagApplicationPeriodic  = 4,    /* Enables IsiApplicationPeriodic() */
     IsiFlagSupplyDiagnostics    = 8     /* Enables UpdateDiagnostics callback */
-} LON_ENUM_END(IsiStartFlags);
+} IsiStartFlags;
 
 /* 
  *  Enumeration: IsiDirection
@@ -105,13 +105,13 @@ typedef LON_ENUM_BEGIN(IsiStartFlags)
  *  This enumeration represents the direction of the network variable
  *  on offer in a CSMO.
  */
-typedef LON_ENUM_BEGIN(IsiDirection)
+typedef enum IsiDirection
 {
     IsiDirectionOutput          = 0,    
     IsiDirectionInput           = 1,    
     IsiDirectionAny             = 2,    
     IsiDirectionVarious         = 3
-} LON_ENUM_END(IsiDirection);
+} IsiDirection;
 
 /* 
  *  Enumeration: IsiScope
@@ -122,11 +122,11 @@ typedef LON_ENUM_BEGIN(IsiDirection)
  *  resource file containing the functional profile and network variable type
  *  definitions specified by the Profile and NvType fields.
  */
-typedef LON_ENUM_BEGIN(IsiScope)
+typedef enum IsiScope
 {
     IsiScopeStandard            = 0,    
     IsiScopeManufacturer        = 3
-} LON_ENUM_END(IsiScope);
+} IsiScope;
 
 /*
  *  Typedef: IsiConnectionId
@@ -302,7 +302,7 @@ typedef LON_STRUCT_BEGIN(IsiCsmoData)
  *  of maintaining certain number values as these must be consistent
  *  with the Micro Server's implementation.
  */
-typedef LON_ENUM_BEGIN(IsiDownlinkRpcCode)
+typedef enum IsiDownlinkRpcCode
 {
     IsiRpcStop                      = 0,
     IsiRpcStart                     = 1,
@@ -325,7 +325,7 @@ typedef LON_ENUM_BEGIN(IsiDownlinkRpcCode)
     IsiRpcFetchDevice               = 18,        
     IsiRpcFetchDomain               = 19,
     IsiRpcIssueHeartbeat            = 20
-} LON_ENUM_END(IsiDownlinkRpcCode);
+} IsiDownlinkRpcCode;
 
 /* 
  *  Enumeration: IsiUplinkRpcCode
@@ -336,7 +336,7 @@ typedef LON_ENUM_BEGIN(IsiDownlinkRpcCode)
  *  of maintaining certain number values as these must be consistent
  *  with the Micro Server's implementation.
  */
-typedef LON_ENUM_BEGIN(IsiUplinkRpcCode)
+typedef enum IsiUplinkRpcCode
 {
     IsiRpcCreatePeriodicMsg         = 0,
     IsiRpcUpdateUserInterface       = 1  | IsiRpcUnacknowledged,
@@ -355,7 +355,7 @@ typedef LON_ENUM_BEGIN(IsiUplinkRpcCode)
     IsiRpcQueryHeartbeat            = 14,
     IsiRpcGetRepeatCount            = 15,
     IsiRpcUserCommand               = 64
-} LON_ENUM_END(IsiUplinkRpcCode);
+} IsiUplinkRpcCode;
 
 /*
  *  Typedef: IsiRpcMessage
