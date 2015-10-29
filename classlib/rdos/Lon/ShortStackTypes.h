@@ -209,14 +209,6 @@ typedef enum LonApiError
  */
 
 /*
- *  Macros: LON_GET_UNSIGNED_WORD, LON_SET_UNSIGNED_WORD
- *  Converts LonWord into a LonUbits16
- *  and converts a LonUbits16 into a LonWord.
- */
-#define LON_GET_UNSIGNED_WORD(n)          (((LonUbits16)((n).msb) << 8)+(LonUbits16)((n).lsb))
-#define LON_SET_UNSIGNED_WORD(n, v)       (n).msb = (unsigned char)((v)>>8); (n).lsb = (unsigned char)(v)
-
-/*
  *  Macros: LON_GET_SIGNED_WORD, LON_SET_SIGNED_WORD
  *  Converts LonWord into a LonBits16 
  *  and converts a LonBits16 into a LonWord.
