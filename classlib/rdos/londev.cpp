@@ -67,6 +67,40 @@
 #define LonNiNonTxQueuePriority   5     /* Priority non-transaction queue           */
 #define LonNiResponse             6     /* Response msg & completion event queue    */
 #define LonNiIncoming             8     /* Received message queue                   */
+
+#define LonNdQueryStatus                   0x51
+#define LonNdProxy                         0x52
+#define LonNdClearStatus                   0x53
+#define LonNdQueryXcvr                     0x54
+#define LonNdQueryStatusFlexDomain         0x56
+
+    /* codes for network management commands */
+#define LonNmExpanded                      0x60
+#define LonNmQueryId                       0x61
+#define LonNmRespondToQuery                0x62
+#define LonNmUpdateDomain                  0x63
+#define LonNmLeaveDomain                   0x64
+#define LonNmUpdateKey                     0x65
+#define LonNmUpdateAddr                    0x66
+#define LonNmQueryAddr                     0x67
+#define LonNmQueryNvConfig                 0x68
+#define LonNmUpdateGroupAddr               0x69
+#define LonNmQueryDomain                   0x6A
+#define LonNmUpdateNvConfig                0x6B
+#define LonNmSetNodeMode                   0x6C
+#define LonNmReadMemory                    0x6D
+#define LonNmWriteMemory                   0x6E
+#define LonNmChecksumRecalculation         0x6F
+#define LonNmWink                          0x70
+#define LonNmInstall                       LonNmWink /* See <LonInstallCommand> */
+#define LonNmAppCommand                    LonNmWink
+#define LonNmMemoryRefresh                 0x71
+#define LonNmQuerySiData                   0x72
+#define LonNmQuerySnvt                     LonNmQuerySiData
+#define LonNmNvFetch                       0x73
+#define LonNmDeviceEscape                  0x7D
+#define LonNmRouterEscape                  0x7E
+#define LonNmServicePin                    0x7F
  
 struct LonExplicitMessage
 {
@@ -233,6 +267,30 @@ void TLonDevice::HandleIncomingNvMsg(const char *msg, int size)
 void TLonDevice::HandleIncomingExpMsg(const char *msg, int size)
 {
     LonExplicitMessage *Expl = (LonExplicitMessage*)(msg + 1);
+
+    switch (Expl->Code)
+    {
+        case LonNmSetNodeMode:
+            break;
+            
+        case LonNmNvFetch:
+            break;                            
+
+        case LonNmReadMemory:
+            break;
+                            
+        case LonNmWriteMemory:
+            break;
+                            
+        case LonNmQuerySiData:
+            break;
+
+        case LonNmWink:
+            break;
+
+        default:
+            break;
+    }
 }
 
 /*##########################################################################
