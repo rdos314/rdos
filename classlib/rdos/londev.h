@@ -40,6 +40,17 @@ public:
 	virtual void SendMsg(const char *msg, int size);
 
 protected:
+    virtual void HandleIncomingNvMsg(const char *msg, int size);
+    virtual void HandleIncomingExpMsg(const char *msg, int size);
+    virtual void HandleResponseMsg(const char *msg, int size);
+    virtual void HandleReset(const char *msg, int size);
+    virtual void HandleService(const char *msg, int size);
+    virtual void HandleServiceHeld(const char *msg, int size);
+    virtual void HandleUsop(const char *msg, int size);
+    virtual void HandleIsiNack(const char *msg, int size);
+    virtual void HandleIsiAck(const char *msg, int size);
+    virtual void HandleIsiCmd(const char *msg, int size);
+
 	virtual void Execute();
 
     int FLonHandle;

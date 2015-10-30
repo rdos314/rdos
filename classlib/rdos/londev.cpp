@@ -29,45 +29,54 @@
 #include "rdos.h"
 #include "londev.h"
 
-enum LonSmipCmd
-{
-    LonNiNull           = 0x00,
-    LonNiXOff           = 0x01,        /* software flow control                    */
-    LonNiXOn            = 0x02,
-    LonNiService        = 0x06,        /* Uplink: Service pin has been pressed     */
-                                       /* Downlink: to send a service pin message  */
-    LonNiAppInit        = 0x08,        /* Downlink, APPINIT command                */
-    LonNiSiData         = 0x0A,        /* Downlink, SIDATA command                 */
-    LonNiNvInit         = 0x0B,        /* Downlink, NVINIT command                 */
-    LonNiServiceHeld    = 0x0B,        /* Uplink, delayed service pin notification command */
-    LonNiNascentKey     = 0x0C,        /* Downlink, set nascent key                        */
-    LonNiUsop           = 0x0D,        /* Downlink, send an extended local command to Micro Server   */
-    LonNiComm           = 0x10,        /* Data transfer to/from network (lower nibble is   */
-                                       /* LonSmipQueue value)                              */
-    LonNiNetManagement  = 0x20,        /* Local network management/diagnostics (lower      */
-                                       /* nibble is LonSmipQueue value)                    */
-    LonNiPhase          = 0x40,        /* Lower nibble contains phase reading.                                      */
-    LonNiReset          = 0x50,        /* Uplink: node resets            */
-                                       /* Downlink: ask node to reset    */
-    LonNiFlushComplete  = 0x60,        /* Uplink                         */
-    LonNiFlushCancel    = 0x60,        /* Downlink                       */
-    LonNiOnLine         = 0x70,        /* Downlink: Ask node go online   */
-    LonNiOffLine        = 0x80,        /* Downlink: Ask node go offline  */
-    LonNiFlush          = 0x90,        /* Downlink                       */
-    LonNiFlushIgnore    = 0xA0,        /* Downlink                       */
-    LonNiSleep          = 0xB0,        /* Not supported by ShortStack Micro Server   */    
-    LonIsiNack          = 0xBC,        /* Uplink: ISI Nack in response to a downlink RPC */
-    LonIsiAck           = 0xBD,        /* Uplink: ISI Ack in response to a downlink RPC */
-    LonIsiCmd           = 0xBE,        /* Downlink: ISI Downlink RPC */
-                                       /* Uplink: ISI Uplink RPC */    
-    LonNiNv             = 0xC0         /* Special case for downlink NV updates and polls.
+#define LonNiNull           0x00
+#define LonNiXOff           0x01        /* software flow control                    */
+#define LonNiXOn            0x02
+#define LonNiService        0x06        /* Uplink: Service pin has been pressed     */
+                                        /* Downlink: to send a service pin message  */
+#define LonNiAppInit        0x08        /* Downlink, APPINIT command                */
+#define LonNiSiData         0x0A        /* Downlink, SIDATA command                 */
+#define LonNiNvInit         0x0B        /* Downlink, NVINIT command                 */
+#define LonNiServiceHeld    0x0B        /* Uplink, delayed service pin notification command */
+#define LonNiNascentKey     0x0C        /* Downlink, set nascent key                        */
+#define LonNiUsop           0x0D        /* Downlink, send an extended local command to Micro Server   */
+#define LonNiComm           0x10        /* Data transfer to/from network (lower nibble is   */
+                                        /* LonSmipQueue value)                              */
+#define LonNiNetManagement  0x20        /* Local network management/diagnostics (lower      */
+                                        /* nibble is LonSmipQueue value)                    */
+#define LonNiPhase          0x40        /* Lower nibble contains phase reading.                                      */
+#define LonNiReset          0x50        /* Uplink: node resets            */
+                                        /* Downlink: ask node to reset    */
+#define LonNiFlushComplete  0x60        /* Uplink                         */
+#define LonNiFlushCancel    0x60        /* Downlink                       */
+#define LonNiOnLine         0x70        /* Downlink: Ask node go online   */
+#define LonNiOffLine        0x80        /* Downlink: Ask node go offline  */
+#define LonNiFlush          0x90        /* Downlink                       */
+#define LonNiFlushIgnore    0xA0        /* Downlink                       */
+#define LonNiSleep          0xB0        /* Not supported by ShortStack Micro Server   */    
+#define LonIsiNack          0xBC        /* Uplink: ISI Nack in response to a downlink RPC */
+#define LonIsiAck           0xBD        /* Uplink: ISI Ack in response to a downlink RPC */
+#define LonIsiCmd           0xBE        /* Downlink: ISI Downlink RPC */
+                                        /* Uplink: ISI Uplink RPC */    
+#define LonNiNv             0xC0        /* Special case for downlink NV updates and polls.
                                        Least significant 6 bits contain NV index. */
-};
 
-struct LonSmipMsg
+#define LonNiTxQueue              2     /* Transaction queue                        */
+#define LonNiTxQueuePriority      3     /* Priority transaction queue               */
+#define LonNiNonTxQueue           4     /* Non-transaction queue                    */
+#define LonNiNonTxQueuePriority   5     /* Priority non-transaction queue           */
+#define LonNiResponse             6     /* Response msg & completion event queue    */
+#define LonNiIncoming             8     /* Received message queue                   */
+ 
+struct LonExplicitMessage
 {
-    LonSmipCmd        Command;         /* Network interface command, possibly OR'ed with additional information (such as the queue identifier) */ 
-    unsigned char     Payload[1];      /* message payload. */
+    unsigned char      Attributes_1;   /* contains msgType, serviceType, authenticated, tag. Use LON_EXPMSG_* macros */
+    unsigned char      Attributes_2;   /* contains priority, path, completionCode, explicitAddressing, altPath, pool, response. Use LON_-_* macros */
+    unsigned char      Length;         /* Length of message code and data to follow    */
+                                       /* not including any explicit address field.    */
+    unsigned char      Address[11];    /* Optional explicit addressing information   */
+    unsigned char      Code;           /* Message code                                 */
+    unsigned char      Data;
 };
 
 /*##########################################################################
@@ -137,6 +146,157 @@ void TLonDevice::SendMsg(const char *msg, int size)
 
 /*##########################################################################
 #
+#   Name       : TLonDevice::HandleReset
+#
+#   Purpose....: Handle RESET message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleReset(const char *msg, int size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleService
+#
+#   Purpose....: Handle service PIN message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleService(const char *msg, int size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleServiceHeld
+#
+#   Purpose....: Handle service PIN held message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleServiceHeld(const char *msg, int size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleUsop
+#
+#   Purpose....: Handle unsupported message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleUsop(const char *msg, int size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleIncomingNvMsg
+#
+#   Purpose....: Handle incoming NV message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleIncomingNvMsg(const char *msg, int size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleIncomingExpMsg
+#
+#   Purpose....: Handle incoming explicit message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleIncomingExpMsg(const char *msg, int size)
+{
+    LonExplicitMessage *Expl = (LonExplicitMessage*)(msg + 1);
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleResponseMsg
+#
+#   Purpose....: Handle response message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleResponseMsg(const char *msg, int size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleIsiNack
+#
+#   Purpose....: Handle ISI NACK message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleIsiNack(const char *msg, int size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleIsiAck
+#
+#   Purpose....: Handle ISI ACK message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleIsiAck(const char *msg, int size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleIsiCmd
+#
+#   Purpose....: Handle ISI CMD message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleIsiCmd(const char *msg, int size)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TLonDevice::NotifyMsg
 #
 #   Purpose....: Notify message
@@ -148,10 +308,51 @@ void TLonDevice::SendMsg(const char *msg, int size)
 ##########################################################################*/
 void TLonDevice::NotifyMsg(const char *msg, int size)
 {
-    LonSmipCmd cmd;
-    LonSmipMsg* pSmipMsg = (LonSmipMsg*)msg;
+    LonExplicitMessage *Expl = (LonExplicitMessage*)(msg + 1);
+    unsigned char NvMsg;
 
-    cmd = pSmipMsg->Command;
+    switch (msg[0])
+    {
+        case LonNiComm | LonNiIncoming:
+            NvMsg = (Expl->Attributes_1 & 0x80) >> 7;
+            if (NvMsg)
+                HandleIncomingNvMsg(msg, size);
+            else
+                HandleIncomingExpMsg(msg, size);
+            break;
+            
+        case LonNiComm | LonNiResponse:
+            HandleResponseMsg(msg, size);
+            break;
+            
+        case LonNiReset:
+            HandleReset(msg, size);
+            break;
+
+        case LonNiService:
+            HandleService(msg, size);
+            break;
+
+        case LonNiServiceHeld:
+            HandleServiceHeld(msg, size);
+            break;
+
+        case LonNiUsop:
+            HandleUsop(msg, size);
+            break;
+            
+        case LonIsiNack:
+            HandleIsiNack(msg, size);
+            break;
+
+        case LonIsiAck:
+            HandleIsiAck(msg, size);
+            break;
+
+        case LonIsiCmd:
+            HandleIsiCmd(msg, size);
+            break;
+    }                       
 }
 
 /*##########################################################################
