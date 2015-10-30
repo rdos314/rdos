@@ -29,6 +29,47 @@
 #include "rdos.h"
 #include "londev.h"
 
+enum LonSmipCmd
+{
+    LonNiNull           = 0x00,
+    LonNiXOff           = 0x01,        /* software flow control                    */
+    LonNiXOn            = 0x02,
+    LonNiService        = 0x06,        /* Uplink: Service pin has been pressed     */
+                                       /* Downlink: to send a service pin message  */
+    LonNiAppInit        = 0x08,        /* Downlink, APPINIT command                */
+    LonNiSiData         = 0x0A,        /* Downlink, SIDATA command                 */
+    LonNiNvInit         = 0x0B,        /* Downlink, NVINIT command                 */
+    LonNiServiceHeld    = 0x0B,        /* Uplink, delayed service pin notification command */
+    LonNiNascentKey     = 0x0C,        /* Downlink, set nascent key                        */
+    LonNiUsop           = 0x0D,        /* Downlink, send an extended local command to Micro Server   */
+    LonNiComm           = 0x10,        /* Data transfer to/from network (lower nibble is   */
+                                       /* LonSmipQueue value)                              */
+    LonNiNetManagement  = 0x20,        /* Local network management/diagnostics (lower      */
+                                       /* nibble is LonSmipQueue value)                    */
+    LonNiPhase          = 0x40,        /* Lower nibble contains phase reading.                                      */
+    LonNiReset          = 0x50,        /* Uplink: node resets            */
+                                       /* Downlink: ask node to reset    */
+    LonNiFlushComplete  = 0x60,        /* Uplink                         */
+    LonNiFlushCancel    = 0x60,        /* Downlink                       */
+    LonNiOnLine         = 0x70,        /* Downlink: Ask node go online   */
+    LonNiOffLine        = 0x80,        /* Downlink: Ask node go offline  */
+    LonNiFlush          = 0x90,        /* Downlink                       */
+    LonNiFlushIgnore    = 0xA0,        /* Downlink                       */
+    LonNiSleep          = 0xB0,        /* Not supported by ShortStack Micro Server   */    
+    LonIsiNack          = 0xBC,        /* Uplink: ISI Nack in response to a downlink RPC */
+    LonIsiAck           = 0xBD,        /* Uplink: ISI Ack in response to a downlink RPC */
+    LonIsiCmd           = 0xBE,        /* Downlink: ISI Downlink RPC */
+                                       /* Uplink: ISI Uplink RPC */    
+    LonNiNv             = 0xC0         /* Special case for downlink NV updates and polls.
+                                       Least significant 6 bits contain NV index. */
+};
+
+struct LonSmipMsg
+{
+    LonSmipCmd        Command;         /* Network interface command, possibly OR'ed with additional information (such as the queue identifier) */ 
+    unsigned char     Payload[1];      /* message payload. */
+};
+
 /*##########################################################################
 #
 #   Name       : TLonDevice::TLonDevice
@@ -107,6 +148,10 @@ void TLonDevice::SendMsg(const char *msg, int size)
 ##########################################################################*/
 void TLonDevice::NotifyMsg(const char *msg, int size)
 {
+    LonSmipCmd cmd;
+    LonSmipMsg* pSmipMsg = (LonSmipMsg*)msg;
+
+    cmd = pSmipMsg->Command;
 }
 
 /*##########################################################################
