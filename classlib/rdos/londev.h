@@ -50,10 +50,19 @@ protected:
     virtual void HandleReset(const char *msg, int size);
     virtual void HandleService(const char *msg, int size);
     virtual void HandleServiceHeld(const char *msg, int size);
-    virtual void HandleUsop(const char *msg, int size);
     virtual void HandleIsiNack(const char *msg, int size);
     virtual void HandleIsiAck(const char *msg, int size);
     virtual void HandleIsiCmd(const char *msg, int size);
+
+    virtual void HandlePingReceived();
+    virtual void HandleNvIsBoundReceived(unsigned char index, unsigned char bound);
+    virtual void HandleMtIsBoundReceived(unsigned char index, unsigned char bound);
+    virtual void HandleGoUnconfiguredReceived();
+    virtual void HandleGoConfiguredReceived();
+    virtual void HandleAppSignatureReceived(short int AppSignature);
+    virtual void HandleVersionReceived(unsigned char AppMajor, unsigned char AppMinor, unsigned char AppBuild,
+                                       unsigned char CoreMajor, unsigned char CoreMinor, unsigned char CoreBuild);
+    virtual void HandleEchoReceived(const char *msg);
 
 	virtual void Execute();
 

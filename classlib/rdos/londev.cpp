@@ -101,6 +101,15 @@
 #define LonNmDeviceEscape                  0x7D
 #define LonNmRouterEscape                  0x7E
 #define LonNmServicePin                    0x7F
+
+#define LonUsopPing                 0x01        /* Ping  */
+#define LonUsopNvIsBound            0x02        /* Is Bound Nv   */
+#define LonUsopMtIsBound            0x03        /* Is Bound Mt   */
+#define LonUsopGoUcfg               0x04        /* Go Unconfigured   */
+#define LonUsopGoCfg                0x05        /* Go Configured   */    
+#define LonUsopQueryAppSignature    0x06        /* Query App Signature  */    
+#define LonUsopVersion              0x07        /* Query Micro Server version details */
+#define LonUsopEcho                 0x0A        /* Request Echo */      
  
 struct LonExplicitMessage
 {
@@ -220,21 +229,6 @@ void TLonDevice::HandleService(const char *msg, int size)
 #
 ##########################################################################*/
 void TLonDevice::HandleServiceHeld(const char *msg, int size)
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TLonDevice::HandleUsop
-#
-#   Purpose....: Handle unsupported message
-#
-#   In params..: msg        Lon message
-#   Out params.: size       Size of lon message
-#   Returns....: *
-#
-##########################################################################*/
-void TLonDevice::HandleUsop(const char *msg, int size)
 {
 }
 
@@ -400,6 +394,170 @@ void TLonDevice::HandleIsiCmd(const char *msg, int size)
 
 /*##########################################################################
 #
+#   Name       : TLonDevice::HandlePingReceived
+#
+#  The ShortStack Micro Server has sent a ping command.
+# 
+#  Remarks:
+#  The ShortStack Micro Server has sent a ping command. This command can be
+#  a response to the ping command sent by the host application
+#  to the Micro Server. This callback is part of the optional 
+#  utility API.
+#
+##########################################################################*/
+void TLonDevice::HandlePingReceived()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleNvIsBoundReceived
+#
+#   Callback following a call to <LonNvIsBound>.
+#
+#   Parameters:
+#    index - index of the network variable
+#    bound - indicates whether the network variable is bound 
+#
+#  Remarks:
+#  The Micro Server has responded to the <LonNvIsBound> request. The boolean
+#  variable *bound* tells whether the network variable identified by index
+#  is bound. This callback is part of the optional 
+#  utility API.
+#
+##########################################################################*/
+void TLonDevice::HandleNvIsBoundReceived(unsigned char index, unsigned char bound)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleMtIsBoundReceived
+#
+#  Callback following a call to <LonMtIsBound>.
+#
+#  Parameters:
+#   index - index of the message tag
+#   bound - indicates whether the message tag is bound
+#
+#  Remarks:
+#  The Micro Server has responded to the <LonMtIsBound> request. The boolean
+#  variable *bound* tells whether the message tag identified by index
+#  is bound. This callback is part of the optional 
+#  utility API.
+#
+##########################################################################*/
+void TLonDevice::HandleMtIsBoundReceived(unsigned char index, unsigned char bound)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleGoUnconfiguredReceived
+#
+#   Callback following a call to <LonGoUnconfigured>.
+#
+#   Remarks:
+#   The Micro Server has responded to the <LonGoUnconfigured> request. 
+#   If the Micro Server was in a configured state before the <LonGoUnconfigured> 
+#   request was sent, it will reset after going to the unconfigured state. 
+#   This callback is part of the optional utility API.
+#
+##########################################################################*/
+void TLonDevice::HandleGoUnconfiguredReceived()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleGoConfiguredReceived
+#
+#   Callback following a call to <LonGoConfigured>.
+#
+#   Remarks:
+#   The Micro Server has responded to the <LonGoConfigured> request. 
+#   The Micro Server will not reset after going into the configured state unless
+#   some serious error, such as an application checksum error, is detected in the
+#   process.
+#   This callback is part of the optional utility API.
+#
+##########################################################################*/
+void TLonDevice::HandleGoConfiguredReceived()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleAppSignatureReceived
+#
+#   Callback following a call to <LonQueryAppSignature>.
+#
+#   Parameter:
+#   appSignature - Micro Server's copy of the host's application signature
+# 
+#   Remarks:
+#   The Micro Server has responded to the <LonQueryAppSignature> request. 
+#   If the *bInvalidate* flag was set to TRUE in the <LonQueryAppSignature> 
+#   request, the Micro Server has already invalidated the signature by the time 
+#   this callback is called. 
+#   This callback is part of the optional utility API.
+#
+##########################################################################*/
+void TLonDevice::HandleAppSignatureReceived(short int AppSignature)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleVersionReceived
+#
+#   Callback following a call to <LonQueryVersion>.
+#
+#   Parameters:
+#    appMajor - the major version number for the Micro Server application, 0..255
+#    appMinor - the minor version number for the Micro Server application, 0..255
+#    appBuild - the build number for the Micro Server application, 0..255
+#    coreMajor - the major version number for the Micro Server core library, 0..255
+#    coreMinor - the minor version number for the Micro Server core library, 0..255
+#    coreBuild - the build number for the Micro Server core library, 0..255
+#
+#   Remarks:
+#   The Micro Server has responded to a <LonQueryVersion> request. 
+#   This callback is part of the optional utility API.
+#
+##########################################################################*/
+void TLonDevice::HandleVersionReceived(unsigned char AppMajor, unsigned char AppMinor, unsigned char AppBuild,
+                                       unsigned char CoreMajor, unsigned char CoreMinor, unsigned char CoreBuild)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleEchoReceived
+#
+#   Callback following a call to <LonRequestEcho>.
+#
+#   Parameters:
+#   LON_ECHO_SIZE payload bytes, as sent through <LonRequestEcho>, but modified by the
+#    Micro Server by adding one to each byte, using an unsigned 8-bit addition without
+#   overflow detection.
+#
+#   Remarks:
+#   The Micro Server has responded to a <LonRequestEcho> request. The host application
+#   should now confirm that the echoed data matches the expectations; mismatching data
+#   can indicate an incorrect host application or link layer driver, or permanent or
+#   transient link layer errors. These link layer errors could, for example, be
+#   introduced by incorrect line termination, excessive coupling or cross-talk, or by
+#   excessive or out-of-sync link layer bit rates.
+#   This callback is part of the optional utility API.
+#
+##########################################################################*/
+void TLonDevice::HandleEchoReceived(const char *msg)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TLonDevice::NotifyMsg
 #
 #   Purpose....: Notify message
@@ -457,7 +615,42 @@ void TLonDevice::NotifyMsg(const char *msg, int size)
             break;
 
         case LonNiUsop:
-            HandleUsop(msg, size);
+            switch (msg[1])
+            {
+                case LonUsopPing:
+                    HandlePingReceived();
+                    break;
+                        
+                case LonUsopNvIsBound:
+                    HandleNvIsBoundReceived(msg[2], msg[3]);
+                    break;
+                        
+                case LonUsopMtIsBound:
+                    HandleMtIsBoundReceived(msg[2], msg[3]);
+                    break;
+                        
+                case LonUsopGoUcfg:
+                    HandleGoUnconfiguredReceived();
+                    break;
+                        
+                case LonUsopGoCfg:
+                    HandleGoConfiguredReceived();
+                    break;
+                        
+                case LonUsopQueryAppSignature:
+                    short int appSignature = RdosSwapShort((short int)msg[1]);
+                    HandleAppSignatureReceived(appSignature);
+                    break;
+
+                case LonUsopVersion:
+                    HandleVersionReceived(msg[2], msg[3], msg[4],
+                                          msg[5], msg[6], msg[7]);
+                    break;
+                    
+                case LonUsopEcho:
+                    HandleEchoReceived(&msg[2]);                    
+                    break;
+            }
             break;
             
         case LonIsiNack:
