@@ -295,16 +295,61 @@ void TLonDevice::HandleIncomingExpMsg(const char *msg, int size)
 
 /*##########################################################################
 #
-#   Name       : TLonDevice::HandleResponseMsg
+#   Name       : TLonDevice::HandleCompletedNvMsg
 #
-#   Purpose....: Handle response message
+#   Purpose....: Handle completed NV message
 #
 #   In params..: msg        Lon message
 #   Out params.: size       Size of lon message
 #   Returns....: *
 #
 ##########################################################################*/
-void TLonDevice::HandleResponseMsg(const char *msg, int size)
+void TLonDevice::HandleCompletedNvMsg(const char *msg, int size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleCompletedExpMsg
+#
+#   Purpose....: Handle completed explicit message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleCompletedExpMsg(const char *msg, int size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleResponseNvMsg
+#
+#   Purpose....: Handle response NV message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleResponseNvMsg(const char *msg, int size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleResponseExpMsg
+#
+#   Purpose....: Handle response explicit message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleResponseExpMsg(const char *msg, int size)
 {
 }
 
@@ -367,6 +412,7 @@ void TLonDevice::HandleIsiCmd(const char *msg, int size)
 void TLonDevice::NotifyMsg(const char *msg, int size)
 {
     LonExplicitMessage *Expl = (LonExplicitMessage*)(msg + 1);
+    unsigned char CompletionCode;
     unsigned char NvMsg;
 
     switch (msg[0])
@@ -380,7 +426,22 @@ void TLonDevice::NotifyMsg(const char *msg, int size)
             break;
             
         case LonNiComm | LonNiResponse:
-            HandleResponseMsg(msg, size);
+            NvMsg = (Expl->Attributes_1 & 0x80) >> 7;
+            CompletionCode = (Expl->Attributes_2 & 0x30) >> 6;
+            if (CompletionCode)
+            {
+                if (NvMsg)
+                    HandleCompletedNvMsg(msg, size);
+                else
+                    HandleCompletedExpMsg(msg, size);
+            }
+            else
+            {
+                if (NvMsg)
+                    HandleResponseNvMsg(msg, size);
+                else
+                    HandleResponseExpMsg(msg, size);
+            }
             break;
             
         case LonNiReset:
