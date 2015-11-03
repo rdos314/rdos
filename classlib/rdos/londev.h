@@ -90,7 +90,7 @@ protected:
                                      const char *Data,
                                      unsigned char Size);
 
-        virtual void Execute();
+    virtual void Execute();
 
     int FNmPending;
     int FNdPending;
