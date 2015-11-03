@@ -43,7 +43,7 @@ protected:
     virtual void HandleIncomingNvMsg(const char *msg, int size);
     virtual void HandleIncomingExpMsg(const char *msg, int size);
     virtual void HandleCompletedNvMsg(const char *msg, int size);
-    virtual void HandleCompletedExpMsg(const char *msg, int size);
+    virtual void HandleCompletedExpMsg(unsigned char Tag, unsigned char CompletionCode);
     virtual void HandleResponseNvMsg(const char *msg, int size);
     virtual void HandleResponseExpMsg(const char *msg, int size);
 

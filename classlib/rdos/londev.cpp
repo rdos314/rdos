@@ -442,7 +442,7 @@ void TLonDevice::HandleCompletedNvMsg(const char *msg, int size)
 #   Returns....: *
 #
 ##########################################################################*/
-void TLonDevice::HandleCompletedExpMsg(const char *msg, int size)
+void TLonDevice::HandleCompletedExpMsg(unsigned char Tag, unsigned char CompletionCode)
 {
 }
 
@@ -699,6 +699,7 @@ void TLonDevice::HandleEchoReceived(const char *msg)
 void TLonDevice::NotifyMsg(const char *msg, int size)
 {
     LonExplicitMessage *Expl = (LonExplicitMessage*)(msg + 1);
+    unsigned char Tag;
     unsigned char CompletionCode;
     unsigned char NvMsg;
 
@@ -715,12 +716,16 @@ void TLonDevice::NotifyMsg(const char *msg, int size)
         case LonNiComm | LonNiResponse:
             NvMsg = (Expl->Attributes_1 & 0x80) >> 7;
             CompletionCode = (Expl->Attributes_2 & 0x30) >> 6;
+
             if (CompletionCode)
             {
                 if (NvMsg)
                     HandleCompletedNvMsg(msg, size);
                 else
-                    HandleCompletedExpMsg(msg, size);
+                {
+                    Tag = Expl->Attributes_1 & 0xF;
+                    HandleCompletedExpMsg(Tag, CompletionCode);
+                }
             }
             else
             {
