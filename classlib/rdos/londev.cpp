@@ -110,7 +110,10 @@
 #define LonUsopQueryAppSignature    0x06        /* Query App Signature  */    
 #define LonUsopVersion              0x07        /* Query Micro Server version details */
 #define LonUsopEcho                 0x0A        /* Request Echo */      
- 
+
+#define FALSE 0
+#define TRUE    !FALSE
+
 struct LonExplicitMessage
 {
     unsigned char      Attributes_1;   /* contains msgType, serviceType, authenticated, tag. Use LON_EXPMSG_* macros */
@@ -136,6 +139,9 @@ struct LonExplicitMessage
 TLonDevice::TLonDevice(int lonid)
 {
     char str[80];
+
+    FNmPending = FALSE;
+    FNdPending = FALSE;
     
     FLonId = lonid;
     FLonHandle = RdosOpenLonModule(lonid, 20, 10);
@@ -200,6 +206,8 @@ void TLonDevice::SendMsg(const char *msg, int size)
 ##########################################################################*/
 void TLonDevice::HandleReset(const char *msg, int size)
 {
+    FNmPending = FALSE;
+    FNdPending = FALSE;
 }
 
 /*##########################################################################
@@ -463,6 +471,115 @@ void TLonDevice::HandleResponseNvMsg(const char *msg, int size)
 
 /*##########################################################################
 #
+#   Name       : TLonDevice::HandleNmQueryDomainResponse
+#
+#   Purpose....: Handle Nm query domain response
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleNmQueryDomainResponse(const char *Msg, unsigned char Size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleNmQueryNvConfigResponse
+#
+#   Purpose....: Handle Nm query Nv config
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleNmQueryNvConfigResponse(const char *Msg, unsigned char Size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleNmQueryAddrResponse
+#
+#   Purpose....: Handle Nm query address response
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleNmQueryAddrResponse(const char *Msg, unsigned char Size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleNmReadMemoryResponse
+#
+#   Purpose....: Handle Nm read memory response
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleNmReadMemoryResponse(const char *Msg, unsigned char Size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleNdQueryStatusResponse
+#
+#   Purpose....: Handle Nd query status response
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleNdQueryStatusResponse(const char *Msg, unsigned char Size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleNdQueryXcvrResponse
+#
+#   Purpose....: Handle Nd query transceiver response
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleNdQueryXcvrResponse(const char *Msg, unsigned char Size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleResponseMsg
+#
+#   Purpose....: Handle response message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleResponseMsg(  const char *Address,
+                                     unsigned char Tag,
+                                     unsigned char Code,
+                                     const char *Data,
+                                     unsigned char Size)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TLonDevice::HandleResponseExpMsg
 #
 #   Purpose....: Handle response explicit message
@@ -474,6 +591,65 @@ void TLonDevice::HandleResponseNvMsg(const char *msg, int size)
 ##########################################################################*/
 void TLonDevice::HandleResponseExpMsg(const char *msg, int size)
 {
+    LonExplicitMessage *Expl = (LonExplicitMessage*)(msg + 1);
+    unsigned char Tag = Expl->Attributes_1 & 0xF;
+    unsigned char Len = Expl->Length - 1;
+    const char *Data = (const char *)&Expl->Data;
+
+    if (Tag == 0xF)
+    {
+        if (FNmPending)
+        {
+            switch ((Expl->Code & 0x1F) | 0x60)
+            {
+                case LonNmQueryDomain:
+                    HandleNmQueryDomainResponse(Data, Len);
+                    break;
+                    
+                case LonNmQueryNvConfig:
+                    HandleNmQueryNvConfigResponse(Data, Len);
+                    break;
+                    
+                case LonNmQueryAddr:
+                    HandleNmQueryAddrResponse(Data, Len);
+                    break;
+                    
+                case LonNmReadMemory:
+                    HandleNmReadMemoryResponse(Data, Len);
+                    break;
+                    
+                default:
+                    break;
+            }
+        }
+        
+        if (FNdPending)
+        {
+            switch ((Expl->Code & 0xF) | 0x50)
+            {
+                case LonNdQueryStatus:
+                    HandleNdQueryStatusResponse(Data, Len);
+                    break;
+                    
+                case LonNdQueryXcvr:
+                    HandleNdQueryXcvrResponse(Data, Len);
+                    break;
+                    
+                default:
+                    break;
+            }
+        }
+        FNmPending = FALSE;
+        FNdPending = FALSE;
+    }
+    else
+    {
+        HandleResponseMsg(  (const char *)Expl->Address,
+                            Tag, 
+                            Expl->Code,
+                            Data,
+                            Len);
+    }
 }
 
 /*##########################################################################
@@ -613,6 +789,8 @@ void TLonDevice::HandleGoUnconfiguredReceived()
 ##########################################################################*/
 void TLonDevice::HandleGoConfiguredReceived()
 {
+    FNmPending = FALSE;
+    FNdPending = FALSE;
 }
 
 /*##########################################################################

@@ -33,11 +33,11 @@
 class TLonDevice : public TDevice
 {
 public:
-	TLonDevice(int lonid);
-	virtual ~TLonDevice();
+        TLonDevice(int lonid);
+        virtual ~TLonDevice();
 
-	virtual void NotifyMsg(const char *msg, int size);
-	virtual void SendMsg(const char *msg, int size);
+        virtual void NotifyMsg(const char *msg, int size);
+        virtual void SendMsg(const char *msg, int size);
 
 protected:
     virtual void HandleIncomingNvMsg(const char *msg, int size);
@@ -78,7 +78,22 @@ protected:
                                      const char *Data,
                                      unsigned char Size);
 
-	virtual void Execute();
+    virtual void HandleNmQueryDomainResponse(const char *Msg, unsigned char Size);
+    virtual void HandleNmQueryNvConfigResponse(const char *Msg, unsigned char Size);
+    virtual void HandleNmQueryAddrResponse(const char *Msg, unsigned char Size);
+    virtual void HandleNmReadMemoryResponse(const char *Msg, unsigned char Size);
+    virtual void HandleNdQueryStatusResponse(const char *Msg, unsigned char Size);
+    virtual void HandleNdQueryXcvrResponse(const char *Msg, unsigned char Size);
+    virtual void HandleResponseMsg(  const char *Address,
+                                     unsigned char Tag,
+                                     unsigned char Code,
+                                     const char *Data,
+                                     unsigned char Size);
+
+        virtual void Execute();
+
+    int FNmPending;
+    int FNdPending;
 
     int FLonHandle;
     int FLonId;
