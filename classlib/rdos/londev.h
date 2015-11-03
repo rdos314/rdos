@@ -64,6 +64,20 @@ protected:
                                        unsigned char CoreMajor, unsigned char CoreMinor, unsigned char CoreBuild);
     virtual void HandleEchoReceived(const char *msg);
 
+    virtual void HandleNmSetNodeMode(const char *Msg, unsigned char Size);
+    virtual void HandleNmNvFetch(const char *Msg, unsigned char Size);
+    virtual void HandleNmReadMemory(const char *Msg, unsigned char Size);
+    virtual void HandleNmWriteMemory(const char *Msg, unsigned char Size);
+    virtual void HandleNmQuerySiData(const char *Msg, unsigned char Size);
+    virtual void HandleNmWink();
+    virtual void HandleIncomingMsg(  const char *Address,
+                                     unsigned char Priority,
+                                     unsigned char Service,
+                                     unsigned char Auth,
+                                     unsigned char Code,
+                                     const char *Data,
+                                     unsigned char Size);
+
 	virtual void Execute();
 
     int FLonHandle;

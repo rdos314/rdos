@@ -249,6 +249,117 @@ void TLonDevice::HandleIncomingNvMsg(const char *msg, int size)
 
 /*##########################################################################
 #
+#   Name       : TLonDevice::HandleNmSetNodeMode
+#
+#   Purpose....: Handle Nm Set Node Mode
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleNmSetNodeMode(const char *Msg, unsigned char Size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleNmNvFetch
+#
+#   Purpose....: Handle Nm Nv fetch
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleNmNvFetch(const char *Msg, unsigned char Size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleNmReadMemory
+#
+#   Purpose....: Handle Nm Read Memory
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleNmReadMemory(const char *Msg, unsigned char Size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleNmWriteMemory
+#
+#   Purpose....: Handle Nm Write Memory
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleNmWriteMemory(const char *Msg, unsigned char Size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleNmQuerySiData
+#
+#   Purpose....: Handle Nm Query si Data
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleNmQuerySiData(const char *Msg, unsigned char Size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleNmWink
+#
+#   Purpose....: Handle Nm Wink
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleNmWink()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::HandleIncomingMsg
+#
+#   Purpose....: Handle incoming message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::HandleIncomingMsg(  const char *Address,
+                                     unsigned char Priority,
+                                     unsigned char Service,
+                                     unsigned char Auth,
+                                     unsigned char Code,
+                                     const char *Data,
+                                     unsigned char Size)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TLonDevice::HandleIncomingExpMsg
 #
 #   Purpose....: Handle incoming explicit message
@@ -261,28 +372,46 @@ void TLonDevice::HandleIncomingNvMsg(const char *msg, int size)
 void TLonDevice::HandleIncomingExpMsg(const char *msg, int size)
 {
     LonExplicitMessage *Expl = (LonExplicitMessage*)(msg + 1);
+    unsigned char Priority = (Expl->Attributes_2 & 0x80) >> 7;
+    unsigned char Service = (Expl->Attributes_1 & 0x60) >> 5;
+    unsigned char Auth = (Expl->Attributes_1 & 0x10) >> 4;
+    unsigned char Len = Expl->Length - 1;
+    const char *Data = (const char *)&Expl->Data;
 
     switch (Expl->Code)
     {
         case LonNmSetNodeMode:
+            HandleNmSetNodeMode(Data, Len);
             break;
             
         case LonNmNvFetch:
+            HandleNmNvFetch(Data, Len);
             break;                            
 
         case LonNmReadMemory:
+            HandleNmReadMemory(Data, Len);
             break;
                             
         case LonNmWriteMemory:
+            HandleNmWriteMemory(Data, Len);
             break;
                             
         case LonNmQuerySiData:
+            HandleNmQuerySiData(Data, Len);
             break;
 
         case LonNmWink:
+            HandleNmWink();
             break;
 
         default:
+            HandleIncomingMsg(  (const char *)Expl->Address,
+                                Priority,
+                                Service,
+                                Auth,
+                                Expl->Code,
+                                Data,
+                                Len);
             break;
     }
 }
