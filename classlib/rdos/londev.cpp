@@ -26,6 +26,7 @@
 ########################################################################*/
 
 #include <stdio.h>
+#include <memory.h>
 #include "rdos.h"
 #include "londev.h"
 
@@ -111,8 +112,23 @@
 #define LonUsopVersion              0x07        /* Query Micro Server version details */
 #define LonUsopEcho                 0x0A        /* Request Echo */      
 
+#define LonAddressUnassigned    0
+#define LonAddressSubnetNode    1
+#define LonAddressUniqueId      2
+#define LonAddressBroadcast     3
+#define LonAddressLocal         127
+
 #define FALSE 0
 #define TRUE    !FALSE
+
+struct LonSendSubnetNode
+{
+    unsigned char               Type;           /* should be LonAddressSubnetNode for subnet/node addressing */
+    unsigned char               DomainNode;     /* contains domain, node. See LON_SENDSN_DOMAIN_* and _NODE_* macros */
+    unsigned char               RepeatRetry;    /* contains repeat, retry. See LON_SENDSN_REPEAT_* and _RETRY_* macros */
+    unsigned char               RsvdTransmit;   /* contains transmit (top 4 bits are unused). See LON_SENDSN_TRANSMIT_TIMER_* macros */
+    unsigned char               Subnet;         /* destination subnet number, 1..255    */
+};
 
 struct LonExplicitMessage
 {
@@ -191,6 +207,58 @@ TLonDevice::~TLonDevice()
 void TLonDevice::SendMsg(const char *msg, int size)
 {
     RdosSendLonModuleMsg(FLonHandle, msg, size);
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::SendExplicitMsg
+#
+#   Purpose....: Send an explicit message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::SendExplicitMsg(   unsigned char Domain,
+                                    unsigned char SubNet,
+                                    unsigned char Node,
+                                    unsigned char Service,
+                                    unsigned char Tag,
+                                    unsigned char Auth,
+                                    unsigned char RepeatTimer,
+                                    unsigned char Retries,
+                                    unsigned char TransmitTimer,
+                                    unsigned char Code,
+                                    const char *Data,
+                                    unsigned char Size)
+{
+    char Buf[300];
+    LonExplicitMessage *expl = (LonExplicitMessage *)&Buf[1];
+    LonSendSubnetNode *dest = (LonSendSubnetNode *)expl->Address;
+
+    Buf[0] = LonNiComm | LonNiNonTxQueue;
+
+    expl->Attributes_1 = 0;
+    expl->Attributes_1 |= (Service << 5) & 0x60;
+    expl->Attributes_1 |= Tag & 0xF;  
+    expl->Attributes_1 |= (Auth << 4) & 0x10;
+
+    expl->Attributes_2 = 8;
+
+    dest->Type = LonAddressSubnetNode;
+    dest->Subnet = SubNet;
+    dest->DomainNode = Node & 0x7F;
+    dest->DomainNode |= (Domain << 7) & 0x80;
+    dest->RepeatRetry = Retries & 0xF;
+    dest->RepeatRetry |= (RepeatTimer << 4) & 0xF0;
+    dest->RsvdTransmit = TransmitTimer & 0xF; 
+
+    expl->Code = Code;    
+    expl->Length = Size;
+    memcpy(&expl->Data, Data, Size);
+
+//    RdosSendLonModuleMsg(FLonHandle, Buf, Size + 14);
 }
 
 /*##########################################################################

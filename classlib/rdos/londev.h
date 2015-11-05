@@ -33,11 +33,24 @@
 class TLonDevice : public TDevice
 {
 public:
-        TLonDevice(int lonid);
-        virtual ~TLonDevice();
+    TLonDevice(int lonid);
+    virtual ~TLonDevice();
 
-        virtual void NotifyMsg(const char *msg, int size);
-        virtual void SendMsg(const char *msg, int size);
+    virtual void NotifyMsg(const char *msg, int size);
+    virtual void SendMsg(const char *msg, int size);
+
+    void SendExplicitMsg(   unsigned char Domain,
+                            unsigned char SubNet,
+                            unsigned char Node,
+                            unsigned char Service,
+                            unsigned char Tag,
+                            unsigned char Auth,
+                            unsigned char RepeatTimer,
+                            unsigned char Retries,
+                            unsigned char TransmitTimer,
+                            unsigned char Code,
+                            const char *Data,
+                            unsigned char Size);
 
 protected:
     virtual void HandleIncomingNvMsg(const char *msg, int size);
