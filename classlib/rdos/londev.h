@@ -39,7 +39,8 @@ public:
     virtual void NotifyMsg(const char *msg, int size);
     virtual void SendMsg(const char *msg, int size);
 
-    void SendExplicitMsg(   unsigned char Domain,
+    char *CreateExplicitMsg(char *Buffer,
+                            unsigned char Domain,
                             unsigned char SubNet,
                             unsigned char Node,
                             unsigned char Service,
@@ -49,7 +50,6 @@ public:
                             unsigned char Retries,
                             unsigned char TransmitTimer,
                             unsigned char Code,
-                            const char *Data,
                             unsigned char Size);
 
 protected:

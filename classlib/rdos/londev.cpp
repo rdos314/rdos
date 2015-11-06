@@ -211,16 +211,27 @@ void TLonDevice::SendMsg(const char *msg, int size)
 
 /*##########################################################################
 #
-#   Name       : TLonDevice::SendExplicitMsg
+#   Name       : TLonDevice::CreateExplicitMsg
 #
-#   Purpose....: Send an explicit message
+#   Purpose....: Create an explicit message
 #
-#   In params..: msg        Lon message
-#   Out params.: size       Size of lon message
-#   Returns....: *
+#   In params..: Buffer     Message buffer
+#                Domain     Lon domain
+#                SubNet     Destination subnet
+#                Node       Destination node
+#                Service    Service field
+#                Tag        Tag field
+#                Auth       Authentication field
+#                RepeatTimer 
+#                Retries
+#                TransmitTimer
+#                Code       Lon message code
+#                Size       Size of data
+#   Returns....: Address to data buffer
 #
 ##########################################################################*/
-void TLonDevice::SendExplicitMsg(   unsigned char Domain,
+char *TLonDevice::CreateExplicitMsg(char *Buffer,
+                                    unsigned char Domain,
                                     unsigned char SubNet,
                                     unsigned char Node,
                                     unsigned char Service,
@@ -230,14 +241,13 @@ void TLonDevice::SendExplicitMsg(   unsigned char Domain,
                                     unsigned char Retries,
                                     unsigned char TransmitTimer,
                                     unsigned char Code,
-                                    const char *Data,
                                     unsigned char Size)
 {
-    char Buf[300];
-    LonExplicitMessage *expl = (LonExplicitMessage *)&Buf[1];
+    LonExplicitMessage *expl = (LonExplicitMessage *)&Buffer[1];
     LonSendSubnetNode *dest = (LonSendSubnetNode *)expl->Address;
 
-    Buf[0] = LonNiComm | LonNiNonTxQueue;
+    Buffer[0] = LonNiComm | LonNiNonTxQueue;
+    memset(expl->Address, 0, 11);
 
     expl->Attributes_1 = 0;
     expl->Attributes_1 |= (Service << 5) & 0x60;
@@ -256,9 +266,8 @@ void TLonDevice::SendExplicitMsg(   unsigned char Domain,
 
     expl->Code = Code;    
     expl->Length = Size;
-    memcpy(&expl->Data, Data, Size);
 
-//    RdosSendLonModuleMsg(FLonHandle, Buf, Size + 14);
+    return (char *)&expl->Data;
 }
 
 /*##########################################################################
