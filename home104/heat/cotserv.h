@@ -28,6 +28,7 @@
 #ifndef _COTSERV_H
 #define _COTSERV_H
 
+#include "msgdev.h"
 #include "str.h"
 #include "socket.h"
 #include "heatdata.h"
@@ -36,7 +37,7 @@ class TCotexSocketServer : public TSocketServer
 {
 public:
     TCotexSocketServer(const char *Name, int StackSize, TTcpSocket *Socket);
-	~TCotexSocketServer();
+        ~TCotexSocketServer();
 
 protected:
     void AddRadData(TRadData *data, TDeviceMsg *doc);
