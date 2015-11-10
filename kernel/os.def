@@ -674,4 +674,6 @@ setup_pci_msix_entry_nr     = 552
 
 update_tcp_mtu_nr           = 553
 
+notify_lon_data_nr          = 554
+
 osgate_entries				= 560

@@ -3622,3 +3622,11 @@ DeleteCanIdHook      MACRO
 StartCanCom      MACRO
     OsGate start_can_com_nr
                         ENDM
+
+;;;;;;;;;; LON ;;;;;;;;;
+
+; IN ECX     Size of lon data
+; IN ES:EDI  Pointer to data
+NotifyLonData      MACRO
+    OsGate notify_lon_data_nr
+                        ENDM

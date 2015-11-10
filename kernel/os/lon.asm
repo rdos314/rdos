@@ -54,6 +54,19 @@ lon_sel         DW ?
 
 lon_wait_header ENDS
 
+capture_block   STRUC
+
+cb_prev     DD ?
+cb_next     DD ?
+
+cb_time     DD ?,?
+cb_src      DB ?
+cb_len      DB ?
+cb_data     DB 118 DUP(?)
+
+capture_block   ENDS
+
+
 data    SEGMENT byte public 'DATA'
 
 capture_section     section_typ <>
@@ -92,6 +105,75 @@ SendOne  Proc near
     push ecx
     push esi
     push edi
+;
+    push ds
+    push ax
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:capture_section
+    mov ax,ds:capture_thread
+    or ax,ax
+    jz soLeave
+;    
+    push es
+    pushad
+;    
+    mov ax,es
+    mov ds,ax
+    mov esi,edi
+    mov bx,flat_sel
+    mov es,bx
+    mov eax,SIZE capture_block
+    AllocateSmallLinear
+    mov edi,edx
+;    
+    GetTime
+    mov es:[edi].cb_time+4,edx
+    mov es:[edi].cb_time,eax
+    mov es:[edi].cb_src,'T'
+    mov es:[edi].cb_len,cl
+    cmp ecx,118
+    jb soSizeOk
+;
+    mov ecx,118
+
+soSizeOk:    
+    mov edx,edi
+    add edi,OFFSET cb_data
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov bx,SEG data
+    mov ds,bx
+;
+    mov eax,ds:capture_list
+    or eax,eax
+    jne soQueue
+
+soEmpty:
+    mov es:[edx].cb_prev,edx
+    mov es:[edx].cb_next,edx
+    mov ds:capture_list,edx
+    jmp soSignal
+
+soQueue:
+    mov ebx,es:[eax].cb_prev
+    mov es:[eax].cb_prev,edx
+    mov es:[ebx].cb_next,edx
+    mov es:[edx].cb_prev,ebx
+    mov es:[edx].cb_next,eax    
+
+soSignal:
+    mov bx,ds:capture_thread
+    Signal
+;
+    popad
+    pop es
+
+soLeave:
+    LeaveSection ds:capture_section
+;    
+    pop ax
+    pop ds    
 ;
     mov fs,ds:lon_send_buf
     mov ax,ds:lon_send_count
@@ -849,6 +931,92 @@ delete_lon_handle       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           NotifyLonData
+;
+;           description:    Notify reception of Lon data
+;
+;       parameters:         ECX     Size of packet
+;                           ES:EDI  Pointer to packet
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_lon_data_name DB 'Notify Lon Data', 0
+
+notify_lon_data  Proc far
+    push ds
+    push ax
+;
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:capture_section
+    mov ax,ds:capture_thread
+    or ax,ax
+    jz nldLeave
+;    
+    push es
+    pushad
+;    
+    mov ax,es
+    mov ds,ax
+    mov esi,edi
+    mov bx,flat_sel
+    mov es,bx
+    mov eax,SIZE capture_block
+    AllocateSmallLinear
+    mov edi,edx
+;    
+    GetTime
+    mov es:[edi].cb_time+4,edx
+    mov es:[edi].cb_time,eax
+    mov es:[edi].cb_src,'T'
+    mov es:[edi].cb_len,cl
+    cmp ecx,118
+    jb nldSizeOk
+;
+    mov ecx,118
+
+nldSizeOk:    
+    add edi,OFFSET cb_data
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov bx,SEG data
+    mov ds,bx
+;
+    mov eax,ds:capture_list
+    or eax,eax
+    jne nldQueue
+
+nldEmpty:
+    mov es:[edx].cb_prev,edx
+    mov es:[edx].cb_next,edx
+    mov ds:capture_list,edx
+    jmp nldSignal
+
+nldQueue:
+    mov ebx,es:[eax].cb_prev
+    mov es:[eax].cb_prev,edx
+    mov es:[ebx].cb_next,edx
+    mov es:[edx].cb_prev,ebx
+    mov es:[edx].cb_next,eax    
+
+nldSignal:
+    mov bx,ds:capture_thread
+    Signal
+;
+    popad
+    pop es
+
+nldLeave:
+    LeaveSection ds:capture_section
+;    
+    pop ax
+    pop ds    
+    retf32
+notify_lon_data  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CaptureThread
 ;
 ;           description:    Capture thread
@@ -864,7 +1032,60 @@ capture_thread_pr:
     GetThread
     mov ds:capture_thread,ax
     LeaveSection ds:capture_section
-    int 3
+;    
+    mov bx,ds:capture_handle
+    GetFileSize
+    SetFilePos
+
+ctpLoop:
+    WaitForSignal
+
+ctpMore:
+    EnterSection ds:capture_section    
+    mov ax,ds:capture_thread
+    or ax,ax
+    jz ctpExit
+;
+    mov edx,ds:capture_list
+    or edx,edx
+    jz ctpNext
+;
+    push ebx
+    mov eax,es:[edx].cb_next
+    mov ebx,es:[edx].cb_prev
+    mov es:[ebx].cb_next,eax
+    mov es:[eax].cb_prev,ebx
+    pop ebx
+    cmp eax,edx
+    jne ctpUnlink
+;
+    mov ds:capture_list,0
+    jmp ctpWrite
+
+ctpUnlink:
+    mov ds:capture_list,eax
+
+ctpWrite:       
+    LeaveSection ds:capture_section
+;    
+    mov edi,edx
+    mov ecx,128
+    add edi,8
+    UserGateForce32 write_file_nr
+;
+    add ecx,8
+    FreeLinear    
+    jmp ctpMore
+    
+ctpNext:
+    LeaveSection ds:capture_section
+    jmp ctpLoop
+
+ctpExit:  
+    mov ds:capture_thread,0
+    LeaveSection ds:capture_section
+    retf    
+    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -970,6 +1191,12 @@ init    PROC far
     mov edi,OFFSET add_lon_module_name
     xor cl,cl
     mov ax,add_lon_module_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET notify_lon_data
+    mov edi,OFFSET notify_lon_data_name
+    xor cl,cl
+    mov ax,notify_lon_data_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_lon_modules
