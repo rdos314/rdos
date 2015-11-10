@@ -3625,8 +3625,7 @@ StartCanCom      MACRO
 
 ;;;;;;;;;; LON ;;;;;;;;;
 
-; IN ECX     Size of lon data
-; IN ES:EDI  Pointer to data
+; IN ES  Lon data
 NotifyLonData      MACRO
     OsGate notify_lon_data_nr
                         ENDM

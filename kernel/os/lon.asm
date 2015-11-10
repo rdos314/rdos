@@ -935,8 +935,7 @@ delete_lon_handle       Endp
 ;
 ;           description:    Notify reception of Lon data
 ;
-;       parameters:         ECX     Size of packet
-;                           ES:EDI  Pointer to packet
+;       parameters:         ES      Lon data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -956,9 +955,12 @@ notify_lon_data  Proc far
     push es
     pushad
 ;    
+    mov bx,es
+    GetSelectorBaseSize
+;    
     mov ax,es
     mov ds,ax
-    mov esi,edi
+    xor esi,esi
     mov bx,flat_sel
     mov es,bx
     mov eax,SIZE capture_block
@@ -968,7 +970,7 @@ notify_lon_data  Proc far
     GetTime
     mov es:[edi].cb_time+4,edx
     mov es:[edi].cb_time,eax
-    mov es:[edi].cb_src,'T'
+    mov es:[edi].cb_src,'R'
     mov es:[edi].cb_len,cl
     cmp ecx,118
     jb nldSizeOk
@@ -976,6 +978,7 @@ notify_lon_data  Proc far
     mov ecx,118
 
 nldSizeOk:    
+    mov edx,edi
     add edi,OFFSET cb_data
     rep movs byte ptr es:[edi],ds:[esi]
 ;
@@ -1029,6 +1032,8 @@ capture_thread_name DB 'Lon Capture', 0
 capture_thread_pr:
     mov bx,SEG data
     mov ds,bx
+    mov bx,flat_sel
+    mov es,bx
     GetThread
     mov ds:capture_thread,ax
     LeaveSection ds:capture_section
