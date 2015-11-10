@@ -745,4 +745,7 @@ query_video_mode_nr             = 581
 start_can_capture_nr            = 582
 stop_can_capture_nr             = 583
 
+start_lon_capture_nr            = 584
+stop_lon_capture_nr             = 585
+
 usergate_entries			    = 600

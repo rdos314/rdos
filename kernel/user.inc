@@ -3005,6 +3005,15 @@ StartCanCapture      MACRO
 StopCanCapture      MACRO
 	UserGate stop_can_capture_nr
 						ENDM
+						
+;	IN  BX		File handle
+StarLonCapture      MACRO
+	UserGate start_lon_capture_nr
+						ENDM
+						
+StopLonCapture      MACRO
+	UserGate stop_lon_capture_nr
+						ENDM
 
 ;   IN  AX          CRC polynom
 ;   OUT BX          CRC handle

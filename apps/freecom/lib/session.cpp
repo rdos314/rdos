@@ -70,6 +70,7 @@
 #include "reboot.h"
 #include "capture.h"
 #include "can.h"
+#include "lon.h"
 #include "usb.h"
 #include "info.h"
 #include "volume.h"
@@ -127,6 +128,7 @@ static TCommandFactory *info;
 static TCommandFactory *initfd;
 static TCommandFactory *inithd;
 static TCommandFactory *keyb;
+static TCommandFactory *lon;
 static TCommandFactory *md;
 static TCommandFactory *mkdir;
 static TCommandFactory *mkpart;
@@ -246,6 +248,7 @@ TSession::TSession(const char *ipc)
         mkpart = new TMakePartitionFactory;
         mkdir = new TMkdirFactory;
         md = new TMdFactory;
+        lon = new TLonFactory;
         keyb = new TKeybFactory;
         inithd = new TInitHdFactory;
         initfd = new TInitFdFactory;
@@ -382,6 +385,7 @@ TSession::~TSession()
         delete mkpart;
         delete mkdir;
         delete md;
+        delete lon;
         delete inithd;
         delete initfd;
         delete info;

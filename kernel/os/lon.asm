@@ -56,6 +56,11 @@ lon_wait_header ENDS
 
 data    SEGMENT byte public 'DATA'
 
+capture_section     section_typ <>
+capture_handle      DW ?
+capture_thread      DW ?
+capture_list        DD ?
+
 lon_module_count    DW ?
 lon_module_arr      DW MAX_MODULES DUP(?)
 
@@ -842,6 +847,108 @@ delete_lon_handle_done:
 delete_lon_handle       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CaptureThread
+;
+;           description:    Capture thread
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+capture_thread_name DB 'Lon Capture', 0
+
+capture_thread_pr:
+    mov bx,SEG data
+    mov ds,bx
+    GetThread
+    mov ds:capture_thread,ax
+    LeaveSection ds:capture_section
+    int 3
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StartLonCapture
+;
+;           description:    Start capturing lon-packets
+;
+;       parameters:     BX      File handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_lon_capture_name DB 'Start Lon Capture', 0
+
+start_lon_capture       Proc far
+    push ds
+    push es
+    push ax
+    push bx
+    push cx
+    push si
+    push di
+;    
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:capture_section
+;
+    mov ds:capture_handle,bx
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov si,OFFSET capture_thread_pr
+    mov di,OFFSET capture_thread_name
+    mov ax,3
+    mov cx,stack0_size
+    CreateThread
+;       
+    pop di
+    pop si
+    pop cx
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    retf32
+start_lon_capture       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StopLonCapture
+;
+;           description:    Stop capturing lon-packets
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_lon_capture_name DB 'Stop Lon Capture', 0
+
+stop_lon_capture    Proc far
+    push ds
+    push bx
+;    
+    mov bx,SEG data
+    mov ds,bx
+    EnterSection ds:capture_section
+    xor bx,bx
+    xchg bx,ds:capture_thread
+    or bx,bx
+    jz sncThreadDone
+;    
+    Signal
+    mov bx,ds:capture_handle
+    CloseFile
+
+sncThreadDone:
+    mov ds:capture_handle,0
+    LeaveSection ds:capture_section    
+;
+    pop bx
+    pop ds    
+    retf32
+stop_lon_capture    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           Init
@@ -915,9 +1022,25 @@ init    PROC far
     mov ax,receive_lon_module_msg_nr
     RegisterUserGate
 ;
+    mov esi,OFFSET start_lon_capture
+    mov edi,OFFSET start_lon_capture_name
+    xor dx,dx
+    mov ax,start_lon_capture_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET stop_lon_capture
+    mov edi,OFFSET stop_lon_capture_name
+    xor dx,dx
+    mov ax,stop_lon_capture_nr
+    RegisterBimodalUserGate
+;
     mov ax,SEG data
     mov ds,ax
     mov ds:lon_module_count,0    
+    InitSection ds:capture_section
+    mov ds:capture_handle,0
+    mov ds:capture_thread,0
+    mov ds:capture_list,0
     ret
 init    ENDP
 

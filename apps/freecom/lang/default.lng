@@ -1687,6 +1687,23 @@ CAN capture turned ON. Logfile is %s.
 Can capture turned OFF.
 .
 
+:TEXT_CMDHELP_LON
+Capture Lon traffic
+
+LON [ON | OFF | file]
+  ON              Turn on Lon capture
+  OFF             Turn off Lon capture
+  file            Logfile for Lon capture (also turns on capture)
+.
+
+:TEXT_LON_ON
+Lon capture turned ON. Logfile is %s.
+.
+
+:TEXT_LON_OFF
+Lon capture turned OFF.
+.
+
 :TEXT_CMDHELP_USB
 Display list of attached USB devices
 
