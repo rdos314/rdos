@@ -195,6 +195,26 @@ TLonDevice::~TLonDevice()
 
 /*##########################################################################
 #
+#   Name       : TLonDevice::UpdateDomainConfig
+#
+#   Purpose....: Update domain config
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::UpdateDomainConfig(unsigned char Index, TLonDomain *Domain)
+{
+    char Buf[40] = {0x7F, 0xA, 0x11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x63};
+
+    Buf[15] = Index;
+    memcpy(Buf + 16, Domain, sizeof(TLonDomain));
+    RdosSendLonModuleMsg(FLonHandle, Buf, 16 + sizeof(TLonDomain));
+}
+
+/*##########################################################################
+#
 #   Name       : TLonDevice::SendMsg
 #
 #   Purpose....: Send a message
