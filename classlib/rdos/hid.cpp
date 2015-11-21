@@ -173,9 +173,14 @@ int THidDevice::Write(const char *buf, int size)
 ##########################################################################*/
 void THidDevice::Reset()
 {
+    int Pipe;
+    
     if (FHidHandle)
     {
+        Pipe = RdosGetHidPipe(FHidHandle);    
+        RdosResetUsbPipe(Pipe);
         RdosCloseHid(FHidHandle);
+        RdosWaitMilli(2500);
 
         FHidHandle = RdosOpenHid(FController, FDevice);
         while (!FHidHandle)
