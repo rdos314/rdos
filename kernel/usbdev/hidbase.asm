@@ -1201,7 +1201,7 @@ open_hid    Proc far
     movzx ebx,bx
     movzx eax,al
     call GetHid
-    mov bx,ax
+    mov bx,dx
     pop edx
     or bx,bx
     jz open_hid_done
@@ -1226,6 +1226,7 @@ open_hid    Proc far
     push bx
     CreateWait
     mov ax,bx
+    pop bx
     mov ds:[ebx].hh_control_wait,ax
 ;
     push bx
@@ -1270,7 +1271,7 @@ open_hid    Proc far
     clc
 
 open_hid_done:        
-    pop ax
+    pop eax
     pop es
     pop ds
     ret
@@ -1420,7 +1421,7 @@ read_hid_get_data:
     stc
     jnz read_hid_done
 ;    
-    mov fs,ds:hid_intr_buf
+    mov fs,ds:[ebx].hh_intr_buf
     mov eax,fs:[0]
     stos dword ptr es:[edi]
     mov eax,fs:[4]

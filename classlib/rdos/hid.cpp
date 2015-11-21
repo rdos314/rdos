@@ -47,24 +47,22 @@
 ##########################################################################*/
 THidDevice::THidDevice(unsigned short int vendor, unsigned short int prod)
 {
-    int contr;
-    int device;
     int size;
     TUsbDevice UsbDevice;
     int pipe;
 
     FHidHandle = 0;
     
-    for (contr = 0; contr < 256; contr++)
+    for (FController = 0; FController < 256; FController++)
     {
-        for (device = 1; device < 128; device++)
+        for (FDevice = 1; FDevice < 128; FDevice++)
         {
-            size = RdosGetUsbDevice(contr, device, &UsbDevice, sizeof(TUsbDevice));
+            size = RdosGetUsbDevice(FController, FDevice, &UsbDevice, sizeof(TUsbDevice));
             if (size >= sizeof(TUsbDevice))
             {
                 if (UsbDevice.vendor == vendor && (unsigned short int)UsbDevice.prod == prod)
                 {
-                    FHidHandle = RdosOpenHid(contr, device);
+                    FHidHandle = RdosOpenHid(FController, FDevice);
                     return;
                 }
             }
@@ -160,4 +158,30 @@ int THidDevice::Write(const char *buf, int size)
         return RdosWriteHid(FHidHandle, buf, size);
     else
         return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : THidDevice::Reset
+#
+#   Purpose....: Reset USB unit
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THidDevice::Reset()
+{
+    if (FHidHandle)
+    {
+        RdosCloseHid(FHidHandle);
+
+        FHidHandle = RdosOpenHid(FController, FDevice);
+        while (!FHidHandle)
+        {
+            RdosWaitMilli(2500);
+            FHidHandle = RdosOpenHid(FController, FDevice);
+        }        
+    }
 }

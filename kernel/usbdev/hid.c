@@ -1848,6 +1848,47 @@ int GetOutputReportSize(struct THidReportIdEntry *report)
 
 /*##########################################################################
 #
+#   Name       : IsValidHid
+#
+#   Purpose....: Check if usable hid device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int IsValidHid(struct THidDevice *dev)
+{
+    int r;
+    int i;
+    struct THidReportIdEntry *report;
+    struct THidReportEntry *entry;
+
+    for (r = 0; r < MAX_REPORT_IDS; r++)
+    {
+        report = dev->ReportIdArr[r];
+        if (report)
+        {
+            for (i = 0; i < report->InputCount; i++)
+            {
+                entry = &report->InputArr[i];
+                if (entry->UsagePage < 0xFF00)
+                    return TRUE;
+            }
+
+            for (i = 0; i < report->OutputCount; i++)
+            {
+                entry = &report->OutputArr[i];
+                if (entry->UsagePage < 0xFF00)
+                    return TRUE;
+            }
+        }
+    }
+    return FALSE;
+}        
+
+/*##########################################################################
+#
 #   Name       : ImplFindHidOutput
 #
 #   Purpose....: Find HID output
@@ -2740,40 +2781,46 @@ void __far HidThread(void *param)
         PrepareReportIds(dev);
         CreateReportIdArrays(dev);
         LoadReportIdArrays(dev);
-        StartInputReports(dev);
-        if (CreateIntrPipe(dev))
+
+        ok = IsValidHid(dev);
+        if (ok)
         {
-            while (!dev->StopReq)
+            StartInputReports(dev);
+            if (CreateIntrPipe(dev))
             {
-                ReportData = WaitForReport(dev);
-
-                if (dev->StopReq)
-                    break;
-
-                if (ReportData)
+                while (!dev->StopReq)
                 {
-                    if (dev->ReportIdArr[0])
-                        Report = 0;
-                    else
+                    ReportData = WaitForReport(dev);
+
+                    if (dev->StopReq)
+                        break;
+
+                    if (ReportData)
                     {
-                        Report = *ReportData;
-                        ReportData++;
+                        if (dev->ReportIdArr[0])
+                            Report = 0;
+                        else
+                        {
+                            Report = *ReportData;
+                            ReportData++;
+                        }
+    
+                        report = dev->ReportIdArr[Report];
+
+                        if (report)
+                            for (Table = 0; Table < report->TableCount; Table++)
+                                HidHandleReport(report->TableArr[Table].Index,
+                                            report->TableArr[Table].Handle,
+                                            ReportData); 
                     }
-
-                    report = dev->ReportIdArr[Report];
-
-                    if (report)
-                        for (Table = 0; Table < report->TableCount; Table++)
-                            HidHandleReport(report->TableArr[Table].Index,
-                                        report->TableArr[Table].Handle,
-                                        ReportData); 
                 }
             }
+            CloseHid(dev);
         }
-        CloseHid(dev);
     }
 
     dev->IsRunning = FALSE;
+    dev->Thread = 0;
     RdosTerminateThread();
 }
 
@@ -2904,8 +2951,15 @@ struct THidDevice *GetHid(int controller, int device)
     {
         dev = HidArr[i];
         if (dev)
+        {
             if (dev->Controller == controller && dev->Device == device)
-                return dev;
+            {
+                if (dev->Thread)
+                    return 0;
+                else
+                    return dev;
+            }
+        }
     }
 
     return 0;

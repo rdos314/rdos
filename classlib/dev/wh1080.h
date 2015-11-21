@@ -73,7 +73,7 @@ protected:
     int ReadMeassure(int Offset, char *Buffer);
 
     void Setup();
-    void ReadWhole();
+    int ReadWhole();
     void ReadCurr();
     void DecodeData(char *Buffer);
     

@@ -37,7 +37,7 @@
 #include "datetime.h"
 #include "circ.h"
 #include "vp.h"
-#include "climate.h"
+// #include "climate.h"
 #include "power.h"
 #include "videodev.h"
 #include "radcntrl.h"
@@ -137,7 +137,7 @@ int main()
     TCirc *Circ;
     TVp *Vp;
     TPower *Power;
-    TClimate *Climate;
+//    TClimate *Climate;
     int i;
     int id;
     int diostat;
@@ -261,8 +261,8 @@ int main()
     Vp = new TVp(control);
     Store->Add(Vp);
 
-    Climate = new TClimate(control);
-    Store->Add(Climate);
+//    Climate = new TClimate(control);
+//    Store->Add(Climate);
 
     Power = new TPower(control);
     Store->Add(Power);
@@ -457,7 +457,8 @@ int main()
         Label->SetText(str);
 
 
-        ambient = (int)(10.0 * Climate->GetOutdoorTemperature());
+//        ambient = (int)(10.0 * Climate->GetOutdoorTemperature());
+        ambient = 20;
 
         summer = FALSE;
 

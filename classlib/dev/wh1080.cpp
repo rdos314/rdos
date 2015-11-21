@@ -31,8 +31,8 @@
 #include "wh1080.h"
 #include "rdos.h"
 
-#define     FALSE	0
-#define     TRUE	!FALSE
+#define     FALSE       0
+#define     TRUE        !FALSE
 
 // Control block offsets:
 #define WH1080_SAMPLING_INTERVAL    16  // Position of sampling interval
@@ -64,6 +64,8 @@ TWh1080Device::TWh1080Device()
     FWindGustTime.AddHour(-1);
     FWindDirTime.AddHour(-1);
     FRainTime.AddHour(-1);
+
+    FOutdoorTemperature = 2.0;
 
     if (FHidHandle)
         Start("WH1080", 0x4000);
@@ -719,7 +721,10 @@ void TWh1080Device::Setup()
                 WriteFixedBlock(Buffer);
             }
             break;
-        }       
+        }
+        else
+            Reset();
+                   
         RdosWaitMilli(1000);
     }
 }
@@ -742,7 +747,7 @@ void TWh1080Device::DecodeData(char *Buffer)
     unsigned char uhi;
     int val;
 
-    if ((Buffer[0] == 1) && ((Buffer[15] & 0x40) == 0))
+    if (Buffer[0] == 1)
     {
         FSection.Enter();
         
@@ -848,7 +853,7 @@ void TWh1080Device::DecodeData(char *Buffer)
 #   Returns....: *
 #
 ##########################################################################*/
-void TWh1080Device::ReadWhole()
+int TWh1080Device::ReadWhole()
 {
     int ok;
     char Buffer[32];
@@ -871,13 +876,20 @@ void TWh1080Device::ReadWhole()
             pos = *(unsigned short int *)(Buffer + 30);
         else
             Read(Buffer, 8, 2500);
+
+        for (Offset = 0x20; ok && Offset < 0x100; Offset += 0x20)
+            ok = ReadBlock(Offset, Buffer);
+
+        if (ok)
+            ok = ReadBlock(pos, Buffer);
+
+        return TRUE;
     }
-
-    for (Offset = 0x20; ok && Offset < 0x100; Offset += 0x20)
-        ok = ReadBlock(Offset, Buffer);
-
-    if (ok)
-        ok = ReadBlock(pos, Buffer);
+    else
+    {
+        Reset();
+        return FALSE;
+    }
 }
 
 /*##########################################################################
@@ -956,13 +968,18 @@ void TWh1080Device::ReadCurr()
 void TWh1080Device::Execute()
 {
     FReadPos = 0;
-
-    Setup();
+    int ok = FALSE;
 
     while (FInstalled)
     {
-        ReadWhole();
-        ReadCurr();
-        RdosWaitMilli(15000);
+        if (!ok)
+            Setup();
+
+        ok = ReadWhole();
+        if (ok)
+        {
+            ReadCurr();
+            RdosWaitMilli(15000);
+        }
     }
 }

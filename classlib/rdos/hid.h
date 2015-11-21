@@ -42,7 +42,10 @@ public:
 protected:
     int Read(char *buf, int size, int timeout);
     int Write(const char *buf, int size);
+    void Reset();
 
+    int FController;
+    int FDevice;
     int FHidHandle;
 };
 
