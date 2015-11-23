@@ -331,6 +331,54 @@ char *TLonDevice::CreateExplicitMsg(char *Buffer,
 
 /*##########################################################################
 #
+#   Name       : TLonDevice::CreateBroadcastMsg
+#
+#   Purpose....: Create a broadcast message
+#
+#   In params..: Buffer     Message buffer
+#                Service    Service field
+#                Tag        Tag field
+#                Auth       Authentication field
+#                RepeatTimer 
+#                Retries
+#                TransmitTimer
+#                Code       Lon message code
+#                Size       Size of data
+#   Returns....: Address to data buffer
+#
+##########################################################################*/
+char *TLonDevice::CreateBroadcastMsg(char *Buffer,
+                                    unsigned char Code,
+                                    unsigned char Size)
+{
+    LonExplicitMessage *expl = (LonExplicitMessage *)&Buffer[1];
+
+    Buffer[0] = LonNiComm | LonNiNonTxQueue;
+    memset(expl->Address, 0, 11);
+
+    expl->Attributes_1 = 0x4F;
+    expl->Attributes_2 = 8;
+
+    expl->Address[0] = 3;
+    expl->Address[1] = 0x80;
+    expl->Address[2] = 4;
+    expl->Address[3] = 6;
+    expl->Address[4] = 0;
+    expl->Address[5] = 0;
+    expl->Address[6] = 0;
+    expl->Address[7] = 0;
+    expl->Address[8] = 0;
+    expl->Address[9] = 0;
+    expl->Address[10] = 0;
+
+    expl->Code = Code;    
+    expl->Length = Size;
+
+    return (char *)&expl->Data;
+}
+
+/*##########################################################################
+#
 #   Name       : TLonDevice::NotifyStarted
 #
 #   Purpose....: Notify that lon handler has started

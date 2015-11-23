@@ -62,6 +62,10 @@ public:
                             unsigned char Code,
                             unsigned char Size);
 
+    char *CreateBroadcastMsg(char *Buffer,
+                             unsigned char Code,
+                             unsigned char Size);
+
     void UpdateDomainConfig(unsigned char Index, TLonDomain *Domain);
     void GoConfigured();
 
