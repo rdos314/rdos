@@ -29,14 +29,15 @@
 #define _LONDEV_H
 
 #include "device.h"
+#include "sigdev.h"
 
 struct TLonDomain
 {
-    unsigned char           LonDomainId[6];
+    unsigned char           Id[6];
     unsigned char           Subnet;
     unsigned char           NodeClone;          /* contains nonclone, node. Use LON_DOMAIN_* macros */
     unsigned char           InvalidIdLength;    /* use LON_DOMAIN_INVALID_* and LON_DOMAIN_ID_LENGTH_* macros */
-    unsigned char           LonAuthenticationKey[6];
+    unsigned char           Key[6];
 };
 
 class TLonDevice : public TDevice
@@ -62,8 +63,11 @@ public:
                             unsigned char Size);
 
     void UpdateDomainConfig(unsigned char Index, TLonDomain *Domain);
+    void GoConfigured();
 
 protected:
+    virtual void NotifyStarted();
+
     virtual void HandleIncomingNvMsg(const char *msg, int size);
     virtual void HandleIncomingExpMsg(const char *msg, int size);
     virtual void HandleCompletedNvMsg(const char *msg, int size);
@@ -121,6 +125,12 @@ protected:
 
     int FLonHandle;
     int FLonId;
+
+    int FDomainReq;
+    int FGoConfiguredReq;
+    
+    TSection FSection;
+    TSignalDevice FSignal;
 };
 
 #endif

@@ -153,11 +153,14 @@ struct LonExplicitMessage
 #
 ##########################################################################*/
 TLonDevice::TLonDevice(int lonid)
+  : FSection("LonDevice")
 {
     char str[80];
 
     FNmPending = FALSE;
     FNdPending = FALSE;
+    FDomainReq = FALSE;
+    FGoConfiguredReq = FALSE;
     
     FLonId = lonid;
     FLonHandle = RdosOpenLonModule(lonid, 20, 10);
@@ -206,11 +209,47 @@ TLonDevice::~TLonDevice()
 ##########################################################################*/
 void TLonDevice::UpdateDomainConfig(unsigned char Index, TLonDomain *Domain)
 {
-    char Buf[40] = {0x7F, 0xA, 0x11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x63};
+    char Buf[40] = {0x20, 0x7F, 0xA, 0x11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x63};
 
-    Buf[15] = Index;
-    memcpy(Buf + 16, Domain, sizeof(TLonDomain));
-    RdosSendLonModuleMsg(FLonHandle, Buf, 16 + sizeof(TLonDomain));
+    FSection.Enter();
+
+    FSignal.Clear();
+    FDomainReq = TRUE;
+
+    Buf[16] = Index;
+    memcpy(Buf + 17, Domain, sizeof(TLonDomain));
+    RdosSendLonModuleMsg(FLonHandle, Buf, 17 + sizeof(TLonDomain));
+
+    FSignal.WaitTimeout(10000);
+
+    FDomainReq = FALSE;
+
+    FSection.Leave();    
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::GoConfigured
+#
+#   Purpose....: Go configured
+#
+##########################################################################*/
+void TLonDevice::GoConfigured()
+{
+    char Buf[] = {0xd, 5, 0};
+
+    FSection.Enter();
+
+    FSignal.Clear();
+    FGoConfiguredReq = TRUE;
+
+    RdosSendLonModuleMsg(FLonHandle, Buf, 3);
+
+    FSignal.WaitTimeout(10000);
+
+    FGoConfiguredReq = FALSE;
+
+    FSection.Leave();    
 }
 
 /*##########################################################################
@@ -288,6 +327,17 @@ char *TLonDevice::CreateExplicitMsg(char *Buffer,
     expl->Length = Size;
 
     return (char *)&expl->Data;
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::NotifyStarted
+#
+#   Purpose....: Notify that lon handler has started
+#
+##########################################################################*/
+void TLonDevice::NotifyStarted()
+{
 }
 
 /*##########################################################################
@@ -736,6 +786,13 @@ void TLonDevice::HandleResponseExpMsg(const char *msg, int size)
                     break;
             }
         }
+
+        if (FDomainReq)
+        {
+            FDomainReq = FALSE;
+            FSignal.Signal();
+        }
+        
         FNmPending = FALSE;
         FNdPending = FALSE;
     }
@@ -886,6 +943,12 @@ void TLonDevice::HandleGoUnconfiguredReceived()
 ##########################################################################*/
 void TLonDevice::HandleGoConfiguredReceived()
 {
+    if (FGoConfiguredReq)
+    {
+        FGoConfiguredReq = FALSE;
+        FSignal.Signal();
+    }
+
     FNmPending = FALSE;
     FNdPending = FALSE;
 }
@@ -1092,6 +1155,12 @@ void TLonDevice::Execute()
     buf = new char[255];
 
     RdosAddWaitForLonModule(wait, FLonHandle, (int)this);
+
+    while (FInstalled && !IsOpen())
+        RdosWaitMilli(100);    
+
+    if (IsOpen())
+        NotifyStarted();
 
     while (FInstalled)
     {
