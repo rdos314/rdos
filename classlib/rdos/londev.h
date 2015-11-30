@@ -30,6 +30,15 @@
 
 #include "device.h"
 #include "sigdev.h"
+#include "str.h"
+
+struct TLonDebug
+{
+    long long Time;
+    char Src;
+    unsigned char Len;
+    char Data[118];
+};
 
 struct TLonDomain
 {
@@ -68,6 +77,11 @@ public:
 
     void UpdateDomainConfig(unsigned char Index, TLonDomain *Domain);
     void GoConfigured();
+
+    int DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount);
+    int DumpEvents();
+
+    void DumpThread();
 
 protected:
     virtual void NotifyStarted();
@@ -123,6 +137,8 @@ protected:
                                      unsigned char Size);
 
     virtual void Execute();
+    int GetNextDumpFile();
+    void DumpOnce();
 
     int FNmPending;
     int FNdPending;
@@ -135,6 +151,18 @@ protected:
     
     TSection FSection;
     TSignalDevice FSignal;
+
+    int FEntryCount;
+    struct TLonDebug *FEntryArr;
+
+    TSection FDumpSection;
+    TSection FEventSection;
+    TSignalDevice FDumpSignal;
+    int FDumpFiles;
+    int FWriteDump;
+    int FDumpStarted;
+    int FNextPos;
+    TString FLogPath;
 };
 
 #endif
