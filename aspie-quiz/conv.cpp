@@ -140,6 +140,8 @@ void ConvL2();
 void ConvL3();
 void ConvL5();
 void ConvL7();
+void ConvL8();
+void ConvL9();
 
 void ConvBr1();
 void ConvEn1();
@@ -668,11 +670,13 @@ int main(int argc, char **argv)
     ConvL3();
     ConvRu4a();
     ConvL5();
-
-*/
-
     ConvJE2();
     ConvL7();
+   ConvL8();
+ 
+*/
+
+    ConvL9();
         
     return 0;
 }
