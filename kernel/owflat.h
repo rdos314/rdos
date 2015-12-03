@@ -807,9 +807,10 @@
     value [eax];
 
 #pragma aux RdosGetMaxComPort = \
+    "clc" \
     CallGate_get_max_com_port  \
     "jc fail" \
-    "movzx eax,al"  \
+    "movzx eax,ax"  \
     "jmp done" \
     "fail:" \
     "xor eax,eax" \

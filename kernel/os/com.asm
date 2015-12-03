@@ -141,6 +141,7 @@ get_max_com_port    Proc far
     mov ax,SEG data
     mov ds,ax
     mov ax,ds:s_port_count
+    clc
     pop ds
     retf32
 get_max_com_port    Endp    
