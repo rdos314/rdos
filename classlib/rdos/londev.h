@@ -78,6 +78,9 @@ public:
     void UpdateDomainConfig(unsigned char Index, TLonDomain *Domain);
     void GoConfigured();
 
+    void Reset();
+    void SetResetLimit(int ResetLimit);
+
     int DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount);
     int DumpEvents();
 
@@ -163,6 +166,9 @@ protected:
     int FDumpStarted;
     int FNextPos;
     TString FLogPath;
+    int FResetReq;
+    int FResponseCounter;
+    int FResetLimit;
 };
 
 #endif

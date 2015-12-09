@@ -180,6 +180,8 @@ TLonDevice::TLonDevice(int lonid)
     FWriteDump = FALSE;
     FEntryCount = 0;
     FDumpFiles = 0;
+    FResponseCounter = 0;
+    FResetLimit = 0;
     
     FLonId = lonid;
     FLonHandle = RdosOpenLonModule(lonid, 20, 10);
@@ -213,6 +215,30 @@ TLonDevice::~TLonDevice()
             
         RdosCloseLonModule(FLonHandle);
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::SetResetLimit
+#
+#   Purpose....: Set number of unacked packets before RESET
+#
+##########################################################################*/
+void TLonDevice::SetResetLimit(int ResetLimit)
+{
+    FResetLimit = ResetLimit;
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::Reset
+#
+#   Purpose....: Reset lon module
+#
+##########################################################################*/
+void TLonDevice::Reset()
+{
+    FResetReq = TRUE;
 }
 
 /*##########################################################################
@@ -286,7 +312,12 @@ void TLonDevice::SendMsg(const char *msg, int size)
 {
     int dumpsize;
 
-    RdosSendLonModuleMsg(FLonHandle, msg, size);
+
+    if (FLonHandle)
+    {
+        FResponseCounter++;
+        RdosSendLonModuleMsg(FLonHandle, msg, size);
+    }
 
     if (FDumpFiles && FEntryCount)
     {
@@ -1439,6 +1470,8 @@ void TLonDevice::Execute()
     int dumpsize;
     int wait = RdosCreateWait();
 
+    FResetReq = FALSE;
+
     buf = new char[255];
 
     RdosAddWaitForLonModule(wait, FLonHandle, (int)this);
@@ -1453,10 +1486,36 @@ void TLonDevice::Execute()
     {
         if (IsOpen())
         {
+            if (FResetLimit)
+            {
+                if (FResetLimit < FResponseCounter)
+                {
+                    FResetReq = TRUE;
+                    FResponseCounter = 0;
+                }
+            }
+        
+            if (FResetReq)
+            {
+                RdosCloseLonModule(FLonHandle);
+                FLonHandle = 0;
+                RdosCloseWait(wait);
+
+                RdosWaitMilli(15000);
+
+                FLonHandle = RdosOpenLonModule(FLonId, 20, 10);
+                wait = RdosCreateWait();
+                RdosAddWaitForLonModule(wait, FLonHandle, (int)this);
+
+                FResetReq = FALSE;
+            }
+        
             RdosWaitTimeout(wait, 1000);
 
             if (RdosHasLonModuleMsg(FLonHandle))
             {
+                FResponseCounter = 0;
+
                 size = RdosReceiveLonModuleMsg(FLonHandle, buf);
                 NotifyMsg(buf, size);
 
