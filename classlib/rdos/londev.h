@@ -88,6 +88,7 @@ public:
 
 protected:
     virtual void NotifyStarted();
+    virtual void NotifyLonReset();
 
     virtual void HandleIncomingNvMsg(const char *msg, int size);
     virtual void HandleIncomingExpMsg(const char *msg, int size);

@@ -463,6 +463,17 @@ void TLonDevice::NotifyStarted()
 
 /*##########################################################################
 #
+#   Name       : TLonDevice::NotifyLonReset
+#
+#   Purpose....: Notify lon RESET
+#
+##########################################################################*/
+void TLonDevice::NotifyLonReset()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TLonDevice::HandleReset
 #
 #   Purpose....: Handle RESET message
@@ -1497,6 +1508,7 @@ void TLonDevice::Execute()
         
             if (FResetReq)
             {
+                NotifyLonReset();
                 RdosCloseLonModule(FLonHandle);
                 FLonHandle = 0;
                 RdosCloseWait(wait);
