@@ -167,7 +167,8 @@ static void StartLonDump(void *ptr)
 TLonDevice::TLonDevice(int lonid)
   : FSection("LonDevice"),
     FDumpSection("LonDump"),
-    FEventSection("LonEvent")
+    FEventSection("LonEvent"),
+    FSendSection("LonSend")
 {
     char str[80];
 
@@ -263,7 +264,7 @@ void TLonDevice::UpdateDomainConfig(unsigned char Index, TLonDomain *Domain)
 
     Buf[16] = Index;
     memcpy(Buf + 17, Domain, sizeof(TLonDomain));
-    SendMsg(Buf, 17 + sizeof(TLonDomain));
+    SendMsgNoWait(Buf, 17 + sizeof(TLonDomain));
 
     FSignal.WaitTimeout(10000);
 
@@ -288,7 +289,7 @@ void TLonDevice::GoConfigured()
     FSignal.Clear();
     FGoConfiguredReq = TRUE;
 
-    SendMsg(Buf, 3);
+    SendMsgNoWait(Buf, 3);
 
     FSignal.WaitTimeout(10000);
 
@@ -308,16 +309,59 @@ void TLonDevice::GoConfigured()
 #   Returns....: *
 #
 ##########################################################################*/
-void TLonDevice::SendMsg(const char *msg, int size)
+void TLonDevice::SendMsg(const char *msg, int size, int timeout)
 {
     int dumpsize;
 
-
     if (FLonHandle)
     {
+        FSendSection.Enter();
+        FSendSignal.Clear();
         FResponseCounter++;
         RdosSendLonModuleMsg(FLonHandle, msg, size);
+        FSendSignal.WaitTimeout(timeout);
+        FSendSection.Leave();
     }
+
+    if (FDumpFiles && FEntryCount)
+    {
+        FDumpSection.Enter();
+        
+        if (size > 118)
+            dumpsize = 118;
+        else
+            dumpsize = size;
+    
+        FEntryArr[FNextPos].Time = RdosGetLongTime();
+        FEntryArr[FNextPos].Src = 'T';
+        FEntryArr[FNextPos].Len = (unsigned char)size;
+        memcpy(FEntryArr[FNextPos].Data, msg, dumpsize);
+
+        FNextPos++;
+        if (FNextPos >= FEntryCount)
+            FNextPos = 0;
+
+        FDumpSection.Leave();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TLonDevice::SendMsgNoWait
+#
+#   Purpose....: Send a message
+#
+#   In params..: msg        Lon message
+#   Out params.: size       Size of lon message
+#   Returns....: *
+#
+##########################################################################*/
+void TLonDevice::SendMsgNoWait(const char *msg, int size)
+{
+    int dumpsize;
+
+    if (FLonHandle)
+        RdosSendLonModuleMsg(FLonHandle, msg, size);
 
     if (FDumpFiles && FEntryCount)
     {
@@ -1186,6 +1230,8 @@ void TLonDevice::NotifyMsg(const char *msg, int size)
         case LonNiComm | LonNiResponse:
             NvMsg = (Expl->Attributes_1 & 0x80) >> 7;
             CompletionCode = (Expl->Attributes_2 & 0x30) >> 6;
+
+            FSendSignal.Signal();
 
             if (CompletionCode)
             {

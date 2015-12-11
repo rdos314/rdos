@@ -56,7 +56,8 @@ public:
     virtual ~TLonDevice();
 
     virtual void NotifyMsg(const char *msg, int size);
-    virtual void SendMsg(const char *msg, int size);
+    virtual void SendMsg(const char *msg, int size, int timeout);
+    virtual void SendMsgNoWait(const char *msg, int size);
 
     char *CreateExplicitMsg(char *Buffer,
                             unsigned char Domain,
@@ -170,6 +171,9 @@ protected:
     int FResetReq;
     int FResponseCounter;
     int FResetLimit;
+
+    TSection FSendSection;
+    TSignalDevice FSendSignal;
 };
 
 #endif
