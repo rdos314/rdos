@@ -440,8 +440,15 @@ send_arp_driver_loop:
     mov ecx,ebp
     push fs
     mov fs,ds:[bx]
+    call fword ptr fs:d_get_link_state
+    jc send_arp_driver_fail
+;    
     call fword ptr fs:d_get_buffer
+    clc
+
+send_arp_driver_fail:    
     pop fs
+    jc send_arp_driver_next
 ;
     mov ah,ds:class_id
     xor al,al
@@ -493,7 +500,8 @@ send_arp_driver_loop:
     pop ds
     pop fs
     pop esi
-;       
+
+send_arp_driver_next:       
     add bx,2
     pop cx
     sub cx,1
@@ -593,11 +601,14 @@ receive_arp_check_dest:
     repz cmps byte ptr ds:[si],[di]
     jnz receive_arp_forward_req
 ;
-    push es
     mov fs,bx
     mov ax,es
     mov gs,ax
 ;
+    call fword ptr fs:d_get_link_state
+    jc receive_arp_done
+;
+    push es
     mov cx,SIZE arp_data
     xor ah,ah
     mov al,gs:ar_data.arp_hw_len
@@ -606,6 +617,7 @@ receive_arp_check_dest:
     mov al,gs:ar_data.arp_prot_len
     add cx,ax
     add cx,ax
+;
     call fword ptr fs:d_get_buffer
 ;
     mov bp,di
@@ -661,11 +673,14 @@ receive_arp_forward_req:
     cmp bp,ds:prot_driver
     je receive_arp_done
 ;
-    push es
     mov ax,es
     mov gs,ax
     mov fs,bp
 ;
+    call fword ptr fs:d_get_link_state
+    jc receive_arp_done
+;
+    push es
     mov cx,SIZE arp_data
     xor ah,ah
     mov al,gs:ar_data.arp_hw_len
@@ -732,11 +747,14 @@ receive_arp_forward_driver_loop:
     cmp bp,gs:[bx]
     je receive_arp_forward_driver_next
 ;
-    push es
     mov fs,gs:[bx]
     mov ax,es
     mov gs,ax
 ;
+    call fword ptr fs:d_get_link_state
+    jc receive_arp_forward_driver_next
+;
+    push es
     mov cx,SIZE arp_data
     xor ah,ah
     mov al,gs:ar_data.arp_hw_len
@@ -1776,6 +1794,9 @@ req_arp  Proc far
     push edi
     push bp
 ;
+    call fword ptr fs:d_get_link_state
+    jc req_arp_done
+;
     mov bp,ds
     mov gs,bx
     mov ds,fs:d_class
@@ -1829,7 +1850,8 @@ req_arp  Proc far
     mov dx,806h
     mov esi,OFFSET broadcast_addr
     call fword ptr fs:d_send
-;
+
+req_arp_done:
     pop bp
     pop edi
     pop esi
