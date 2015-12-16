@@ -156,6 +156,7 @@ RxCurrDescr         DW ?
 RxCurrLinear        DD ?
 TxCurrDescr         DW ?
 TxLastDescr         DW ?
+HwId                DW ?
 TxSection           section_typ <>
 EthernetAddress     DB 6 DUP(?)
 EeAdrLen            DB ?
@@ -763,6 +764,104 @@ ihDone:
     out dx,al    
     ret
 InitHardware    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FindHardware
+;
+;       DESCRIPTION:    Find hardware
+;
+;       PARAMETERS:     DS driver data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mac_tab:
+mt3E DW 07CF0h, 5020h, 51
+mt3D DW 07CF0h, 5010h, 50
+mt3C DW 07CF0h, 5000h, 49
+mt3B DW 07CF0h, 5410h, 46
+mt3A DW 07CF0h, 5400h, 45
+mt39 DW 07CF0h, 5C80h, 44
+mt38 DW 07CF0h, 5090h, 42
+mt37 DW 07CF0h, 4C10h, 41
+mt36 DW 07CF0h, 4C00h, 40
+mt35 DW 07C80h, 4880h, 38
+mt34 DW 07CF0h, 4810h, 36
+mt33 DW 07CF0h, 4800h, 35
+mt32 DW 07C80h, 2C80h, 34
+mt31 DW 07CF0h, 2C20h, 33
+mt30 DW 07CF0h, 2C10h, 32
+mt2F DW 07C80h, 2C00h, 33
+mt2E DW 07CF0h, 2830h, 26
+mt2D DW 07CF0h, 2810h, 25
+mt2C DW 07C80h, 2800h, 26
+mt2B DW 07CF0h, 2880h, 27
+mt2A DW 07CF0h, 28A0h, 28
+mt29 DW 07CF0h, 28B0h, 31
+mt28 DW 07CF0h, 3CB0h, 24
+mt27 DW 07CF0h, 3C90h, 23
+mt26 DW 07CF0h, 3C80h, 18
+mt25 DW 07C80h, 3C80h, 24
+mt24 DW 07CF0h, 3C00h, 19
+mt23 DW 07CF0h, 3C20h, 20
+mt22 DW 07CF0h, 3C30h, 21
+mt21 DW 07CF0h, 3C40h, 22
+mt20 DW 07C80h, 3C00h, 22
+mt1F DW 07CF0h, 3800h, 12
+mt1E DW 07CF0h, 3850h, 17
+mt1D DW 07C80h, 3800h, 17
+mt1C DW 07C80h, 3000h, 11
+mt1B DW 07CF0h, 4490h, 39
+mt1A DW 07C80h, 4480h, 39
+mt19 DW 0FC80h, 4400h, 37
+mt18 DW 07CF0h, 40B0h, 30
+mt17 DW 07CF0h, 40A0h, 30
+mt16 DW 07CF0h, 4090h, 29
+mt15 DW 07C80h, 4080h, 30
+mt14 DW 07CF0h, 34A0h, 9
+mt13 DW 07CF0h, 24A0h, 9
+mt12 DW 07CF0h, 3490h, 8
+mt11 DW 07CF0h, 2490h, 8
+mt10 DW 07CF0h, 3480h, 7
+mt0F DW 07CF0h, 2480h, 7
+mt0E DW 07CF0h, 3400h, 13
+mt0D DW 07CF0h, 3430h, 10
+mt0C DW 07CF0h, 3420h, 16
+mt0B DW 07C80h, 3480h, 9
+mt0A DW 07C80h, 2480h, 9
+mt09 DW 07C80h, 3400h, 16
+mt08 DW 0FC80h, 3880h, 15
+mt07 DW 0FC80h, 3080h, 14
+mt06 DW 0FC80h, 9800h, 6
+mt05 DW 0FC80h, 1800h, 5
+mt04 DW 0FC80h, 1000h, 4
+mt03 DW 0FC80h, 0400h, 3
+mt02 DW 0FC80h, 0080h, 2
+mt01 DW 0FC80h, 0000h, 1
+mt00 DW 00000h, 0000h, 0   
+
+FindHardware    Proc near
+    mov dx,ds:IoBase
+    add dx,REG_TCR
+    in eax,dx
+    shr eax,16
+    mov bx,OFFSET mac_tab
+
+fhLoop:    
+    mov dx,ax
+    and dx,cs:[bx]
+    cmp dx,cs:[bx+2]
+    je fhOk
+;
+    add bx,6    
+    jmp fhLoop
+
+fhOk:
+    mov ax,cs:[bx+4]
+    mov ds:HwId,ax
+    ret
+FindHardware   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1704,6 +1803,7 @@ init_pci1_found:
 ;    
     call SetupInts
     call InitHardware
+    call FindHardware
 ;
     mov ax,25
     WaitMilliSec
@@ -1785,6 +1885,7 @@ init_pci2_found:
 ;
     call SetupInts
     call InitHardware
+    call FindHardware
 ;
     mov ax,1
     WaitMilliSec

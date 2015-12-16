@@ -215,6 +215,8 @@ soNoWrap:
 ;
     inc cx
     mov ds:lon_send_count,cx
+    xor bx,bx
+    mov es,bx
     LeaveSection ds:lon_section
 ;    
     call fword ptr ds:lon_start_send_proc
@@ -223,6 +225,8 @@ soNoWrap:
 soStarted:
     inc cx
     mov ds:lon_send_count,cx
+    xor bx,bx
+    mov es,bx
     LeaveSection ds:lon_section
 
 soDone:
