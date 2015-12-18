@@ -33,8 +33,8 @@ INCLUDE ..\user.inc
 INCLUDE ..\pcdev\pci.inc
 INCLUDE ..\os\net.inc
 
-RX_DESCR_COUNT = 64
-TX_DESCR_COUNT = 32
+RX_DESCR_COUNT = 256
+TX_DESCR_COUNT = 128
 
 ; The EEPROM commands include the alway-set leading bit.
 
@@ -64,6 +64,17 @@ IR_RER = 2
 IR_ROK = 1
 IR_MASK = 3FFh
 
+ERIAR_WRITE_CMD = 80000000h
+ERIAR_MASK_0001 = 01000h
+ERIAR_MASK_0011 = 03000h
+ERIAR_MASK_0100 = 04000h
+ERIAR_MASK_0101 = 05000h
+ERIAR_MASK_1111 = 0F000h
+
+PHY_10      = 4
+PHY_100     = 8
+PHY_1000    = 10h
+
 REG_IDR0 = 0                ; Ethernet hardware address. 
 REG_MAR0 = 8                ; Multicast
 REG_DTCCR = 10h
@@ -90,6 +101,9 @@ REG_TBICSR0 = 64h
 REG_TBI_ANAR = 68h
 REG_TBI_LPAR = 6Ah
 REG_PHYStatus = 6Ch
+
+REG_ERIDR = 70h
+REG_ERIAR = 74h
 
 REG_RMS = 0DAh
 REG_CCR = 0E0h
@@ -416,6 +430,7 @@ rrLoop:
 ;
     sub di,32
     or es:[di].rx_flags,RX_EOR
+    mov ds:RxCurrDescr,0
 ;
     popad
     pop es
@@ -752,6 +767,7 @@ ihResetDone:
 
 ihDone:
     mov ds:Isr,0
+    mov ds:RxCurrDescr,0
 ;    
     mov dx,ds:IoBase
     add dx,REG_PHYAR
@@ -764,6 +780,205 @@ ihDone:
     out dx,al    
     ret
 InitHardware    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadEri
+;
+;       DESCRIPTION:    Read eri register
+;
+;       PARAMETERS:     DS      Ether sel
+;                       BX      Register #
+;                       CX      Type
+;
+;                      
+;       RETURNS:        EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadEri   Proc near
+    mov dx,ds:IoBase
+    add dx,REG_ERIAR
+    mov ax,cx
+    shl eax,16
+    or ax,bx
+    or ax,ERIAR_MASK_1111
+    out dx,eax
+;
+    mov ax,1
+    WaitMilliSec
+;    
+    mov dx,ds:IoBase
+    add dx,REG_ERIDR
+    in eax,dx       
+    ret
+ReadEri     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteEri
+;
+;       DESCRIPTION:    Write eri register
+;
+;       PARAMETERS:     DS      Ether sel
+;                       BX      Register #
+;                       ECX     Type & mask
+;                       EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteEri   Proc near
+    mov dx,ds:IoBase
+    add dx,REG_ERIDR
+    out dx,eax
+;    
+    mov dx,ds:IoBase
+    add dx,REG_ERIAR
+    mov eax,ecx
+    or ax,bx
+    or eax,ERIAR_WRITE_CMD
+    out dx,eax
+;
+    mov ax,1
+    WaitMilliSec
+    ret
+WriteEri     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LinkPatch
+;
+;       DESCRIPTION:    Patch link state change
+;
+;       PARAMETERS:     DS      Ether sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LinkPatch   Proc near
+    mov ax,ds:HwId
+    cmp ax,34
+    je lp34_38
+;    
+    cmp ax,38
+    je lp34_38
+;
+    cmp ax,35
+    je lp35_36
+;
+    cmp ax,36
+    je lp35_36    
+;    
+    cmp ax,37
+    je lp37
+;
+    ret    
+
+lp34_38:
+    mov dx,ds:IoBase
+    add dx,REG_PHYStatus    
+    in al,dx
+    test al,PHY_1000
+    jnz lp34_38_1000
+;
+    test al,PHY_100
+    jnz lp34_38_100    
+
+lp34_38_10:
+    mov bx,1BCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,1Fh
+    call WriteEri
+;        
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,3Fh
+    call WriteEri
+    ret
+
+lp34_38_100:
+    mov bx,1BCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,1Fh
+    call WriteEri
+;        
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,5
+    call WriteEri
+    ret
+
+lp34_38_1000:
+    mov bx,1BCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,11h
+    call WriteEri
+;        
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,5h
+    call WriteEri
+    ret
+
+lp35_36:
+    mov dx,ds:IoBase
+    add dx,REG_PHYStatus    
+    in al,dx
+    test al,PHY_1000
+    jnz lp35_36_1000
+
+lp35_36_10_100:
+    mov bx,1BCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,1Fh
+    call WriteEri
+;        
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,3Fh
+    call WriteEri
+    ret
+
+lp35_36_1000:
+    mov bx,1BCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,11h
+    call WriteEri
+;        
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,5h
+    call WriteEri
+    ret
+
+lp37:
+    mov dx,ds:IoBase
+    add dx,REG_PHYStatus    
+    in al,dx
+    test al,PHY_10
+    jnz lp37_10
+
+lp37_100:
+    mov bx,1D0h
+    mov ecx,ERIAR_MASK_0011
+    xor eax,eax
+    call WriteEri
+    ret
+
+lp37_10:
+    mov bx,1D0h
+    mov ecx,ERIAR_MASK_0011
+    mov eax,4D02h
+    call WriteEri
+;
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_0011
+    mov eax,60h
+    call WriteEri
+    ret
+LinkPatch   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -860,6 +1075,8 @@ fhLoop:
 fhOk:
     mov ax,cs:[bx+4]
     mov ds:HwId,ax
+;
+    call LinkPatch    
     ret
 FindHardware   Endp
 
@@ -901,6 +1118,9 @@ rhResetDone:
     pop cx
 
 rhDone:    
+    call ResetRxRing
+    call ResetTxRing        
+;
     mov dx,ds:IoBase
     add dx,REG_RDSAR + 4
     xor eax,eax
@@ -952,6 +1172,7 @@ rhDone:
     mov al,40h
     out dx,al    
 ;
+    mov ds:RxCurrDescr,0
     mov ds:Isr,0
     mov dx,ds:IoBase
     add dx,REG_ISR
@@ -988,9 +1209,9 @@ niLoop:
     jz niDone
 ;
     mov si,1
-    mov ds:Isr,ax
     out dx,ax
     and ax,di
+    or ds:Isr,ax
     test ax,IR_ROK OR IR_RDU OR IR_FOVW OR IR_SER
     jz niNotRx
 ;
@@ -1172,10 +1393,19 @@ Preview2:
 preview_do:
     mov es,ds:RxRingSel
     mov cx,RX_DESCR_COUNT
-    xor bx,bx
-    mov si,OFFSET RxLinearArr
+    mov bx,ds:RxCurrDescr
+    add bx,16
+    mov si,bx
+    shr si,4
     
 preview_loop:
+    cmp si,RX_DESCR_COUNT
+    jb preview_no_wrap
+;
+    xor bx,bx
+    xor si,si
+
+preview_no_wrap:    
     test es:[bx].rx_flags,RX_OWN
     jnz preview_next
 ;
@@ -1187,7 +1417,7 @@ preview_loop:
     mov es:[bx].rx_flags,RX_OWN
 
 preview_next:
-    add si,4
+    inc si
     add bx,16
     loop preview_loop
 ;    
@@ -1199,14 +1429,18 @@ preview_next:
     test ds:Isr,IR_FOVW OR IR_RDU
     jz preview_failed
 ;
-    mov ax,ds:Isr
+    EnterSection ds:TxSection
     call ResetHardware    
+    LeaveSection ds:TxSection
+    jmp preview_do
 
 preview_failed:
     stc
     jmp preview_done        
 
 preview_found:
+    shl si,2
+    add si,OFFSET RxLinearArr
     mov ax,flat_sel
     mov es,ax
     mov edx,ds:[si]
@@ -1347,6 +1581,8 @@ GetBuffer2:
 
 get_buffer:
     mov es,ds:TxRingSel
+
+get_buffer_retry:
     EnterSection ds:TxSection
     mov si,ds:TxCurrDescr
     mov ax,si
@@ -1360,16 +1596,14 @@ get_buffer_first_descr:
     xor ax,ax
 
 get_buffer_save_curr:
-    mov ds:TxCurrDescr,ax
-;
     mov bx,si
     shr si,2
     add si,OFFSET TxLinearArr
-
-get_buffer_retry:
+;
     test es:[bx].tx_flags,TX_OWN
     jz get_buffer_take
 ;
+    LeaveSection ds:TxSection
     int 3
     mov dx,ds:IoBase
     add dx,REG_TPPoll
@@ -1381,6 +1615,7 @@ get_buffer_retry:
     jmp get_buffer_retry
 
 get_buffer_take:
+    mov ds:TxCurrDescr,ax
     LeaveSection ds:TxSection
 ;
     add cx,14
@@ -1985,6 +2220,21 @@ get_mac_address16   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           patch_thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+patch_thread_name   DB 'RTL8169 Patch', 0
+
+patch_thread:
+    int 3
+    mov ax,ether_data_sel
+    mov ds,ax
+    call LinkPatch
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init_net
 ;
 ;           DESCRIPTION:    inits adpater
@@ -2005,6 +2255,15 @@ init_net    Proc far
 ;
     inc ax
     call InitSecondaryPciAdapter
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET patch_thread_name
+    mov esi,OFFSET patch_thread
+    mov ax,2
+    mov cx,1000h
+;    CreateThread
 ;    
     popa
     pop es
