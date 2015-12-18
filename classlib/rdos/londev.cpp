@@ -1558,6 +1558,7 @@ void TLonDevice::Execute()
                 RdosCloseLonModule(FLonHandle);
                 FLonHandle = 0;
                 RdosCloseWait(wait);
+                RdosResetLonModule(FLonId);
 
                 RdosWaitMilli(15000);
 
