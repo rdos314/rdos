@@ -165,12 +165,13 @@ RxRingSel           DW ?
 RxRingPhys          DD ?
 TxRingSel           DW ?
 TxRingPhys          DD ?
-TxThread            DW ?
 RxCurrDescr         DW ?
 RxCurrLinear        DD ?
 TxCurrDescr         DW ?
 TxLastDescr         DW ?
+SuperThread         DW ?
 HwId                DW ?
+PhyTimeout          DD ?,?
 TxSection           section_typ <>
 EthernetAddress     DB 6 DUP(?)
 EeAdrLen            DB ?
@@ -849,140 +850,6 @@ WriteEri     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           LinkPatch
-;
-;       DESCRIPTION:    Patch link state change
-;
-;       PARAMETERS:     DS      Ether sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LinkPatch   Proc near
-    mov ax,ds:HwId
-    cmp ax,34
-    je lp34_38
-;    
-    cmp ax,38
-    je lp34_38
-;
-    cmp ax,35
-    je lp35_36
-;
-    cmp ax,36
-    je lp35_36    
-;    
-    cmp ax,37
-    je lp37
-;
-    ret    
-
-lp34_38:
-    mov dx,ds:IoBase
-    add dx,REG_PHYStatus    
-    in al,dx
-    test al,PHY_1000
-    jnz lp34_38_1000
-;
-    test al,PHY_100
-    jnz lp34_38_100    
-
-lp34_38_10:
-    mov bx,1BCh
-    mov ecx,ERIAR_MASK_1111
-    mov eax,1Fh
-    call WriteEri
-;        
-    mov bx,1DCh
-    mov ecx,ERIAR_MASK_1111
-    mov eax,3Fh
-    call WriteEri
-    ret
-
-lp34_38_100:
-    mov bx,1BCh
-    mov ecx,ERIAR_MASK_1111
-    mov eax,1Fh
-    call WriteEri
-;        
-    mov bx,1DCh
-    mov ecx,ERIAR_MASK_1111
-    mov eax,5
-    call WriteEri
-    ret
-
-lp34_38_1000:
-    mov bx,1BCh
-    mov ecx,ERIAR_MASK_1111
-    mov eax,11h
-    call WriteEri
-;        
-    mov bx,1DCh
-    mov ecx,ERIAR_MASK_1111
-    mov eax,5h
-    call WriteEri
-    ret
-
-lp35_36:
-    mov dx,ds:IoBase
-    add dx,REG_PHYStatus    
-    in al,dx
-    test al,PHY_1000
-    jnz lp35_36_1000
-
-lp35_36_10_100:
-    mov bx,1BCh
-    mov ecx,ERIAR_MASK_1111
-    mov eax,1Fh
-    call WriteEri
-;        
-    mov bx,1DCh
-    mov ecx,ERIAR_MASK_1111
-    mov eax,3Fh
-    call WriteEri
-    ret
-
-lp35_36_1000:
-    mov bx,1BCh
-    mov ecx,ERIAR_MASK_1111
-    mov eax,11h
-    call WriteEri
-;        
-    mov bx,1DCh
-    mov ecx,ERIAR_MASK_1111
-    mov eax,5h
-    call WriteEri
-    ret
-
-lp37:
-    mov dx,ds:IoBase
-    add dx,REG_PHYStatus    
-    in al,dx
-    test al,PHY_10
-    jnz lp37_10
-
-lp37_100:
-    mov bx,1D0h
-    mov ecx,ERIAR_MASK_0011
-    xor eax,eax
-    call WriteEri
-    ret
-
-lp37_10:
-    mov bx,1D0h
-    mov ecx,ERIAR_MASK_0011
-    mov eax,4D02h
-    call WriteEri
-;
-    mov bx,1DCh
-    mov ecx,ERIAR_MASK_0011
-    mov eax,60h
-    call WriteEri
-    ret
-LinkPatch   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           FindHardware
 ;
 ;       DESCRIPTION:    Find hardware
@@ -1075,8 +942,6 @@ fhLoop:
 fhOk:
     mov ax,cs:[bx+4]
     mov ds:HwId,ax
-;
-    call LinkPatch    
     ret
 FindHardware   Endp
 
@@ -1212,13 +1077,15 @@ niLoop:
     out dx,ax
     and ax,di
     or ds:Isr,ax
-    test ax,IR_ROK OR IR_RDU OR IR_FOVW OR IR_SER
-    jz niNotRx
+    test ax,IR_RDU OR IR_FOVW
+    jz niNotOv
 ;
-    mov bx,ax
-    and bx,IR_RDU OR IR_FOVW
-    not bx
-    and di,bx
+    mov bx,ds:SuperThread
+    Signal
+
+niNotOv:    
+    test ax,IR_ROK OR IR_SER
+    jz niNotRx
 ;    
     mov bx,ds:Handle
     or bx,bx
@@ -1228,30 +1095,11 @@ niLoop:
     jmp niLoop
 
 niNotRx:
-    test ax,IR_TOK OR IR_TER
-    jz niNotTx
-;
-    mov bx,ds:TxThread
-    or bx,bx
-    jz niNotTx
-;
-    Signal
-    jmp niLoop
-
-niNotTx:
     test ax,IR_LinkChg
     jz niDone
 ;
-    mov dx,ds:IoBase
-    add dx,REG_PHYStatus
-    in al,dx
-    test al,2
-    jnz niDone
-;
-    mov dx,ds:IoBase
-    add dx,REG_PHYAR
-    mov eax,80001240h
-    out dx,eax
+    mov bx,ds:SuperThread
+    Signal
         
 niDone:
     mov dx,ds:IoBase
@@ -1297,13 +1145,15 @@ ntLoop:
     mov si,1
     or ds:Isr,ax
     out dx,ax
-    test ax,IR_ROK OR IR_RDU OR IR_FOVW OR IR_SER
-    jz ntNotRx
+    test ax,IR_RDU OR IR_FOVW
+    jz ntNotOv
 ;
-    mov bx,ax
-    and bx,IR_RDU OR IR_FOVW
-    not bx
-    and di,bx
+    mov bx,ds:SuperThread
+    Signal
+
+ntNotOv:    
+    test ax,IR_ROK OR IR_SER
+    jz ntNotRx
 ;
     mov bx,ds:Handle
     or bx,bx
@@ -1313,30 +1163,11 @@ ntLoop:
     jmp ntLoop
 
 ntNotRx:
-    test ax,IR_TOK OR IR_TER
-    jz ntNotTx
-;
-    mov bx,ds:TxThread
-    or bx,bx
-    jz ntNotTx
-;
-    Signal
-    jmp ntLoop
-
-ntNotTx:
     test ax,IR_LinkChg
     jz ntDone
 ;
-    mov dx,ds:IoBase
-    add dx,REG_PHYStatus
-    in al,dx
-    test al,2
-    jnz ntDone
-;
-    mov dx,ds:IoBase
-    add dx,REG_PHYAR
-    mov eax,80001240h
-    out dx,eax
+    mov bx,ds:SuperThread
+    Signal
         
 ntDone:
     mov dx,ds:IoBase
@@ -1425,16 +1256,6 @@ preview_next:
     add dx,REG_IMR
     mov ax,IR_MASK
     out dx,ax
-;
-    test ds:Isr,IR_FOVW OR IR_RDU
-    jz preview_failed
-;
-    EnterSection ds:TxSection
-    call ResetHardware    
-    LeaveSection ds:TxSection
-    jmp preview_do
-
-preview_failed:
     stc
     jmp preview_done        
 
@@ -1935,56 +1756,217 @@ SetupInts    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           PhyTimeout
+;           NAME:           UpdateLink
 ;
-;           DESCRIPTION:    PHY timer
+;           DESCRIPTION:    Update link state
 ;
-;       PARAMETERS:     
-;
-;           RETURNS:        
+;       PARAMETERS:         DS      Data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PhyTimeout  Proc far
-    push edi
+UpdateLink  Proc near
+    push ax
 ;    
-    push eax
-    push cx
-    push edx
-;    
-    mov ds,cx
-    mov edi,1193 * 250
-;
     mov dx,ds:IoBase
     add dx,REG_PHYStatus
     in al,dx
     test al,2
-    jnz phy_timeout_next
+    jnz ulPatch
+;
+    GetSystemTime
+    sub eax,ds:PhyTimeout
+    sbb edx,ds:PhyTimeout+4
+    jc ulDone 
 ;
     mov dx,ds:IoBase
     add dx,REG_PHYAR
-    mov eax,80000200h
+;    mov eax,80000200h
     mov eax,80001240h
     out dx,eax
 ;
-    mov edi,1193 * 5000
-
-phy_timeout_next:
-    pop edx
-    pop cx
-    pop eax
-;    
-    add eax,edi
+    GetSystemTime
+    add eax,1193 * 5000
     adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET PhyTimeout
-    mov bx,cx
-    StartTimer
+    mov ds:PhyTimeout,eax
+    mov ds:PhyTimeout+4,edx
+    jmp ulDone
+
+ulPatch:
+    mov ax,ds:HwId
+    cmp ax,34
+    je ul34_38
+;    
+    cmp ax,38
+    je ul34_38
 ;
-    pop edi
-    retf32
-PhyTimeout  Endp
+    cmp ax,35
+    je ul35_36
+;
+    cmp ax,36
+    je ul35_36    
+;    
+    cmp ax,37
+    je ul37
+;
+    jmp ulDone 
+
+ul34_38:
+    mov dx,ds:IoBase
+    add dx,REG_PHYStatus    
+    in al,dx
+    test al,PHY_1000
+    jnz ul34_38_1000
+;
+    test al,PHY_100
+    jnz ul34_38_100    
+
+ul34_38_10:
+    mov bx,1BCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,1Fh
+    call WriteEri
+;        
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,3Fh
+    call WriteEri
+    jmp ulDone
+
+ul34_38_100:
+    mov bx,1BCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,1Fh
+    call WriteEri
+;        
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,5
+    call WriteEri
+    jmp ulDone
+
+ul34_38_1000:
+    mov bx,1BCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,11h
+    call WriteEri
+;        
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,5h
+    call WriteEri
+    jmp ulDone
+
+ul35_36:
+    mov dx,ds:IoBase
+    add dx,REG_PHYStatus    
+    in al,dx
+    test al,PHY_1000
+    jnz ul35_36_1000
+
+ul35_36_10_100:
+    mov bx,1BCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,1Fh
+    call WriteEri
+;        
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,3Fh
+    call WriteEri
+    jmp ulDone
+
+ul35_36_1000:
+    mov bx,1BCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,11h
+    call WriteEri
+;        
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_1111
+    mov eax,5h
+    call WriteEri
+    jmp ulDone
+
+ul37:
+    mov dx,ds:IoBase
+    add dx,REG_PHYStatus    
+    in al,dx
+    test al,PHY_10
+    jnz ul37_10
+
+ul37_100:
+    mov bx,1D0h
+    mov ecx,ERIAR_MASK_0011
+    xor eax,eax
+    call WriteEri
+    jmp ulDone
+
+ul37_10:
+    mov bx,1D0h
+    mov ecx,ERIAR_MASK_0011
+    mov eax,4D02h
+    call WriteEri
+;
+    mov bx,1DCh
+    mov ecx,ERIAR_MASK_0011
+    mov eax,60h
+    call WriteEri
+
+ulDone:
+    pop ax
+    ret
+UpdateLink  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           supervisor_thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+super_thread:
+    mov ds,bx
+    GetThread
+    mov ds:SuperThread,ax
+;    
+    GetSystemTime    
+    add eax,119300
+    adc edx,0
+    mov ds:PhyTimeout,eax
+    mov ds:PhyTimeout+4,edx
+    
+stLoop:
+    mov dx,ds:IoBase
+    add dx,REG_PHYStatus
+    in al,dx
+    test al,2
+    jnz stNoTimeout
+
+stTimeout:
+    mov eax,ds:PhyTimeout
+    mov edx,ds:PhyTimeout+4
+    WaitForSignalWithTimeout
+    jmp stHandle
+
+stNoTimeout:
+    WaitForSignal
+
+stHandle:    
+    xor ax,ax
+    xchg ax,ds:Isr
+;    
+    test ax,IR_RDU OR IR_FOVW
+    jz stRecOk
+;
+    push ax
+    EnterSection ds:TxSection
+    call ResetHardware    
+    LeaveSection ds:TxSection
+    pop ax
+
+stRecOk:    
+    call UpdateLink
+    jmp stLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1999,8 +1981,11 @@ PhyTimeout  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DriverName1     DB 'RTL8169-1',0
-DriverName2     DB 'RTL8169-2',0
+DriverName1     DB 'Net RTL8169-1',0
+DriverName2     DB 'Net RTL8169-2',0
+
+SupervisorName1 DB 'Super RTL8169-1',0
+SupervisorName2 DB 'Super RTL8169-2',0
 
 PciVendorTab:
 pci00   DW 10ECh, 8129h
@@ -2062,16 +2047,6 @@ init_pci1_found:
     StartTimer
 
 init_pci1_int_ok:        
-    GetSystemTime    
-    add eax,119300
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET PhyTimeout
-    mov bx,ds
-    mov cx,bx
-    StartTimer
-;
     push ds
     mov ax,cs
     mov ds,ax
@@ -2084,6 +2059,19 @@ init_pci1_int_ok:
     RegisterNetDriver
     pop ds
     mov ds:Handle,bx
+;
+    push ds
+    mov bx,ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET super_thread
+    mov edi,OFFSET SupervisorName1
+    mov ax,2
+    mov cx,1000h
+    CreateThread
+    pop ds
+;    
     mov ax,bp   
     clc
 
@@ -2142,16 +2130,6 @@ init_pci2_found:
     StartTimer
 
 init_pci2_int_ok:        
-    GetSystemTime    
-    add eax,119300
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET PhyTimeout
-    mov bx,ds
-    mov cx,bx
-    StartTimer
-;
     push ds
     mov ax,cs
     mov ds,ax
@@ -2164,6 +2142,19 @@ init_pci2_int_ok:
     RegisterNetDriver
     pop ds
     mov ds:Handle,bx
+;
+    push ds
+    mov bx,ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET super_thread
+    mov edi,OFFSET SupervisorName2
+    mov ax,2
+    mov cx,1000h
+    CreateThread
+    pop ds
+;
     mov ax,bp   
     clc
 
@@ -2220,21 +2211,6 @@ get_mac_address16   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           patch_thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-patch_thread_name   DB 'RTL8169 Patch', 0
-
-patch_thread:
-    int 3
-    mov ax,ether_data_sel
-    mov ds,ax
-    call LinkPatch
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           Init_net
 ;
 ;           DESCRIPTION:    inits adpater
@@ -2255,15 +2231,6 @@ init_net    Proc far
 ;
     inc ax
     call InitSecondaryPciAdapter
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET patch_thread_name
-    mov esi,OFFSET patch_thread
-    mov ax,2
-    mov cx,1000h
-;    CreateThread
 ;    
     popa
     pop es
