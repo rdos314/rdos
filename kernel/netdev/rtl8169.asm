@@ -171,6 +171,8 @@ TxCurrDescr         DW ?
 TxLastDescr         DW ?
 SuperThread         DW ?
 HwId                DW ?
+ReadPhyProc         DW ?
+WritePhyProc        DW ?
 PhyTimeout          DD ?,?
 TxSection           section_typ <>
 EthernetAddress     DB 6 DUP(?)
@@ -554,16 +556,16 @@ ResetTxRing   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WritePhy
+;           NAME:           WritePhy8169
 ;
-;           DESCRIPTION:    Write to phy
+;           DESCRIPTION:    Write to phy, 8169 version
 ;
 ;           PARAMETERS:     DL      Register
 ;                           AX      Data
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WritePhy    Proc near
+WritePhy8169    Proc near
     push eax
     push cx
     push dx
@@ -580,26 +582,29 @@ WritePhy    Proc near
     out dx,eax
     xor cx,cx
 
-wpWait:    
+wpWait8169:    
     pause
     in eax,dx
     test eax,80000000h
-    jz wpDone
-    loop wpWait
+    jz wpDone8169
+    loop wpWait8169
 
-wpDone:
+wpDone8169:
+    mov ax,20
+    WaitMicroSec
+;    
     pop dx
     pop cx
     pop eax
     ret
-WritePhy    Endp    
+WritePhy8169    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReadPhy
+;           NAME:           ReadPhy8169
 ;
-;           DESCRIPTION:    Read from phy
+;           DESCRIPTION:    Read from phy, 8169 version
 ;
 ;           PARAMETERS:     DL      Register
 ;
@@ -607,7 +612,7 @@ WritePhy    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadPhy    Proc near
+ReadPhy8169    Proc near
     push cx
     push dx
 ;    
@@ -621,19 +626,194 @@ ReadPhy    Proc near
     out dx,eax
     xor cx,cx
 
-rpWait:    
+rpWait8169:    
     pause
     in eax,dx
     test eax,80000000h
-    jnz rpDone
+    jnz rpDone8169
 ;
-    loop rpWait
+    loop rpWait8169
 
-rpDone:
+rpDone8169:
+    push eax
+    mov ax,20
+    WaitMicroSec
+    pop eax
+;    
     pop dx
     pop cx
     ret
-ReadPhy    Endp    
+ReadPhy8169    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WritePhy8169g
+;
+;           DESCRIPTION:    Write to phy, 8169g version
+;
+;           PARAMETERS:     DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WritePhy8169g    Proc near
+    int 3
+    ret
+WritePhy8169g   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadPhy8169g
+;
+;           DESCRIPTION:    Read from phy, 8169g version
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadPhy8169g    Proc near
+    int 3
+    ret
+ReadPhy8169g    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WritePhy8168dp1
+;
+;           DESCRIPTION:    Write to phy, 8168dp1 version
+;
+;           PARAMETERS:     DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WritePhy8168dp1    Proc near
+    int 3
+    ret
+WritePhy8168dp1   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadPhy8168dp1
+;
+;           DESCRIPTION:    Read from phy, 8168dp1 version
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadPhy8168dp1    Proc near
+    int 3
+    ret
+ReadPhy8168dp1    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WritePhy8168dp2
+;
+;           DESCRIPTION:    Write to phy, 8168dp2 version
+;
+;           PARAMETERS:     DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WritePhy8168dp2    Proc near
+    int 3
+    ret
+WritePhy8168dp2   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadPhy8168dp2
+;
+;           DESCRIPTION:    Read from phy, 8168dp2 version
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadPhy8168dp2    Proc near
+    int 3
+    ret
+ReadPhy8168dp2    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadEri
+;
+;       DESCRIPTION:    Read eri register
+;
+;       PARAMETERS:     DS      Ether sel
+;                       BX      Register #
+;                       CX      Type
+;
+;                      
+;       RETURNS:        EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadEri   Proc near
+    mov dx,ds:IoBase
+    add dx,REG_ERIAR
+    mov ax,cx
+    shl eax,16
+    or ax,bx
+    or ax,ERIAR_MASK_1111
+    out dx,eax
+;
+    mov ax,1
+    WaitMilliSec
+;    
+    mov dx,ds:IoBase
+    add dx,REG_ERIDR
+    in eax,dx       
+    ret
+ReadEri     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteEri
+;
+;       DESCRIPTION:    Write eri register
+;
+;       PARAMETERS:     DS      Ether sel
+;                       BX      Register #
+;                       ECX     Type & mask
+;                       EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteEri   Proc near
+    mov dx,ds:IoBase
+    add dx,REG_ERIDR
+    out dx,eax
+;    
+    mov dx,ds:IoBase
+    add dx,REG_ERIAR
+    mov eax,ecx
+    or ax,bx
+    or eax,ERIAR_WRITE_CMD
+    out dx,eax
+;
+    mov ax,1
+    WaitMilliSec
+    ret
+WriteEri     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -785,71 +965,6 @@ InitHardware    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ReadEri
-;
-;       DESCRIPTION:    Read eri register
-;
-;       PARAMETERS:     DS      Ether sel
-;                       BX      Register #
-;                       CX      Type
-;
-;                      
-;       RETURNS:        EAX     Value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadEri   Proc near
-    mov dx,ds:IoBase
-    add dx,REG_ERIAR
-    mov ax,cx
-    shl eax,16
-    or ax,bx
-    or ax,ERIAR_MASK_1111
-    out dx,eax
-;
-    mov ax,1
-    WaitMilliSec
-;    
-    mov dx,ds:IoBase
-    add dx,REG_ERIDR
-    in eax,dx       
-    ret
-ReadEri     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WriteEri
-;
-;       DESCRIPTION:    Write eri register
-;
-;       PARAMETERS:     DS      Ether sel
-;                       BX      Register #
-;                       ECX     Type & mask
-;                       EAX     Value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteEri   Proc near
-    mov dx,ds:IoBase
-    add dx,REG_ERIDR
-    out dx,eax
-;    
-    mov dx,ds:IoBase
-    add dx,REG_ERIAR
-    mov eax,ecx
-    or ax,bx
-    or eax,ERIAR_WRITE_CMD
-    out dx,eax
-;
-    mov ax,1
-    WaitMilliSec
-    ret
-WriteEri     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           FindHardware
 ;
 ;       DESCRIPTION:    Find hardware
@@ -859,69 +974,69 @@ WriteEri     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mac_tab:
-mt3E DW 07CF0h, 5020h, 51
-mt3D DW 07CF0h, 5010h, 50
-mt3C DW 07CF0h, 5000h, 49
-mt3B DW 07CF0h, 5410h, 46
-mt3A DW 07CF0h, 5400h, 45
-mt39 DW 07CF0h, 5C80h, 44
-mt38 DW 07CF0h, 5090h, 42
-mt37 DW 07CF0h, 4C10h, 41
-mt36 DW 07CF0h, 4C00h, 40
-mt35 DW 07C80h, 4880h, 38
-mt34 DW 07CF0h, 4810h, 36
-mt33 DW 07CF0h, 4800h, 35
-mt32 DW 07C80h, 2C80h, 34
-mt31 DW 07CF0h, 2C20h, 33
-mt30 DW 07CF0h, 2C10h, 32
-mt2F DW 07C80h, 2C00h, 33
-mt2E DW 07CF0h, 2830h, 26
-mt2D DW 07CF0h, 2810h, 25
-mt2C DW 07C80h, 2800h, 26
-mt2B DW 07CF0h, 2880h, 27
-mt2A DW 07CF0h, 28A0h, 28
-mt29 DW 07CF0h, 28B0h, 31
-mt28 DW 07CF0h, 3CB0h, 24
-mt27 DW 07CF0h, 3C90h, 23
-mt26 DW 07CF0h, 3C80h, 18
-mt25 DW 07C80h, 3C80h, 24
-mt24 DW 07CF0h, 3C00h, 19
-mt23 DW 07CF0h, 3C20h, 20
-mt22 DW 07CF0h, 3C30h, 21
-mt21 DW 07CF0h, 3C40h, 22
-mt20 DW 07C80h, 3C00h, 22
-mt1F DW 07CF0h, 3800h, 12
-mt1E DW 07CF0h, 3850h, 17
-mt1D DW 07C80h, 3800h, 17
-mt1C DW 07C80h, 3000h, 11
-mt1B DW 07CF0h, 4490h, 39
-mt1A DW 07C80h, 4480h, 39
-mt19 DW 0FC80h, 4400h, 37
-mt18 DW 07CF0h, 40B0h, 30
-mt17 DW 07CF0h, 40A0h, 30
-mt16 DW 07CF0h, 4090h, 29
-mt15 DW 07C80h, 4080h, 30
-mt14 DW 07CF0h, 34A0h, 9
-mt13 DW 07CF0h, 24A0h, 9
-mt12 DW 07CF0h, 3490h, 8
-mt11 DW 07CF0h, 2490h, 8
-mt10 DW 07CF0h, 3480h, 7
-mt0F DW 07CF0h, 2480h, 7
-mt0E DW 07CF0h, 3400h, 13
-mt0D DW 07CF0h, 3430h, 10
-mt0C DW 07CF0h, 3420h, 16
-mt0B DW 07C80h, 3480h, 9
-mt0A DW 07C80h, 2480h, 9
-mt09 DW 07C80h, 3400h, 16
-mt08 DW 0FC80h, 3880h, 15
-mt07 DW 0FC80h, 3080h, 14
-mt06 DW 0FC80h, 9800h, 6
-mt05 DW 0FC80h, 1800h, 5
-mt04 DW 0FC80h, 1000h, 4
-mt03 DW 0FC80h, 0400h, 3
-mt02 DW 0FC80h, 0080h, 2
-mt01 DW 0FC80h, 0000h, 1
-mt00 DW 00000h, 0000h, 0   
+mt3E DW 07CF0h, 5020h, 51, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt3D DW 07CF0h, 5010h, 50, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt3C DW 07CF0h, 5000h, 49, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt3B DW 07CF0h, 5410h, 46, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt3A DW 07CF0h, 5400h, 45, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt39 DW 07CF0h, 5C80h, 44, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt38 DW 07CF0h, 5090h, 42, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt37 DW 07CF0h, 4C10h, 41, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt36 DW 07CF0h, 4C00h, 40, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt35 DW 07C80h, 4880h, 38, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt34 DW 07CF0h, 4810h, 36, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt33 DW 07CF0h, 4800h, 35, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt32 DW 07C80h, 2C80h, 34, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt31 DW 07CF0h, 2C20h, 33, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt30 DW 07CF0h, 2C10h, 32, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt2F DW 07C80h, 2C00h, 33, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt2E DW 07CF0h, 2830h, 26, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt2D DW 07CF0h, 2810h, 25, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt2C DW 07C80h, 2800h, 26, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt2B DW 07CF0h, 2880h, 27, OFFSET ReadPhy8168dp1,  OFFSET WritePhy8168dp1
+mt2A DW 07CF0h, 28A0h, 28, OFFSET ReadPhy8168dp2,  OFFSET WritePhy8168dp2
+mt29 DW 07CF0h, 28B0h, 31, OFFSET ReadPhy8168dp2,  OFFSET WritePhy8168dp2
+mt28 DW 07CF0h, 3CB0h, 24, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt27 DW 07CF0h, 3C90h, 23, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt26 DW 07CF0h, 3C80h, 18, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt25 DW 07C80h, 3C80h, 24, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt24 DW 07CF0h, 3C00h, 19, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt23 DW 07CF0h, 3C20h, 20, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt22 DW 07CF0h, 3C30h, 21, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt21 DW 07CF0h, 3C40h, 22, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt20 DW 07C80h, 3C00h, 22, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt1F DW 07CF0h, 3800h, 12, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt1E DW 07CF0h, 3850h, 17, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt1D DW 07C80h, 3800h, 17, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt1C DW 07C80h, 3000h, 11, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt1B DW 07CF0h, 4490h, 39, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt1A DW 07C80h, 4480h, 39, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt19 DW 0FC80h, 4400h, 37, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt18 DW 07CF0h, 40B0h, 30, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt17 DW 07CF0h, 40A0h, 30, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt16 DW 07CF0h, 4090h, 29, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt15 DW 07C80h, 4080h, 30, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt14 DW 07CF0h, 34A0h, 9,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt13 DW 07CF0h, 24A0h, 9,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt12 DW 07CF0h, 3490h, 8,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt11 DW 07CF0h, 2490h, 8,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt10 DW 07CF0h, 3480h, 7,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0F DW 07CF0h, 2480h, 7,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0E DW 07CF0h, 3400h, 13, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0D DW 07CF0h, 3430h, 10, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0C DW 07CF0h, 3420h, 16, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0B DW 07C80h, 3480h, 9,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0A DW 07C80h, 2480h, 9,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt09 DW 07C80h, 3400h, 16, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt08 DW 0FC80h, 3880h, 15, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt07 DW 0FC80h, 3080h, 14, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt06 DW 0FC80h, 9800h, 6,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt05 DW 0FC80h, 1800h, 5,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt04 DW 0FC80h, 1000h, 4,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt03 DW 0FC80h, 0400h, 3,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt02 DW 0FC80h, 0080h, 2,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt01 DW 0FC80h, 0000h, 1,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt00 DW 00000h, 0000h, 0,  OFFSET ReadPhy8169,     OFFSET WritePhy8169 
 
 FindHardware    Proc near
     mov dx,ds:IoBase
@@ -936,12 +1051,16 @@ fhLoop:
     cmp dx,cs:[bx+2]
     je fhOk
 ;
-    add bx,6    
+    add bx,10  
     jmp fhLoop
 
 fhOk:
     mov ax,cs:[bx+4]
     mov ds:HwId,ax
+    mov ax,cs:[bx+6]
+    mov ds:ReadPhyProc,ax
+    mov ax,cs:[bx+8]
+    mov ds:WritePhyProc,ax
     ret
 FindHardware   Endp
 
