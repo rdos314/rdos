@@ -3026,7 +3026,6 @@ UpdateLink  Proc near
     sbb edx,ds:PhyTimeout+4
     jc ulDone 
 ;
-    int 3
     mov ax,ADV_10_HALF OR ADV_10_FULL OR ADV_100_HALF OR ADV_100_FULL
     cmp ds:IoCfg,2
     je ulNoHigh
