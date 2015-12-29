@@ -75,6 +75,13 @@ PHY_10      = 4
 PHY_100     = 8
 PHY_1000    = 10h
 
+ADV_10_HALF     = 20h
+ADV_10_FULL     = 40h
+ADV_100_HALF    = 80h
+ADV_100_FULL    = 100h
+ADV_1000_HALF   = 400h
+ADV_1000_FULL   = 800h
+
 REG_IDR0 = 0                ; Ethernet hardware address. 
 REG_MAR0 = 8                ; Multicast
 REG_DTCCR = 10h
@@ -159,6 +166,7 @@ tx_descr    ENDS
 data    STRUC
 
 IoBase              DW ?
+IoCfg               DW ?
 Handle              DW ?
 Isr                 DW ?
 RxRingSel           DW ?
@@ -817,6 +825,1050 @@ WriteEri     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       NAME:          Config8169
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Wait100ms   Proc near
+   mov ax,100
+   WaitMilliSec
+   ret
+Wait100ms   ENDP
+
+ConfigNone:
+  DW -1
+
+Config8169s:
+  DW 01Fh,  00001h
+  DW 006h,  0006Eh 
+  DW 008h,  00708h
+  DW 015h,  04000h
+  DW 018h,  065C7h
+
+  DW 01Fh,  00001h
+  DW 003h,  000A1h
+  DW 002h,  00008h
+  DW 001h,  00120h
+  DW 000h,  01000h
+  DW 004h,  00800h
+  DW 004h,  00000h
+
+  DW 003h,  0FF41h
+  DW 002h,  0DF60h
+  DW 001h,  00140h
+  DW 000h,  00077h
+  DW 004h,  07800h
+  DW 004h,  07000h
+
+  DW 003h,  0802Fh
+  DW 002h,  04F02h
+  DW 001h,  00409h
+  DW 000h,  0F0F9h
+  DW 004h,  09800h
+  DW 004h,  09000h
+
+  DW 003h,  0DF01h
+  DW 002h,  0DF20h
+  DW 001h,  0FF95h
+  DW 000h,  0BA00h
+  DW 004h,  0A800h
+  DW 004h,  0A000h
+
+  DW 003h,  0FF41h
+  DW 002h,  0DF20h
+  DW 001h,  00140h
+  DW 000h,  000BBh
+  DW 004h,  0B800h
+  DW 004h,  0B000h
+
+  DW 003h,  0DF41h
+  DW 002h,  0DC60h
+  DW 001h,  06340h
+  DW 000h,  0007Dh
+  DW 004h,  0D800h
+  DW 004h,  0D000h
+
+  DW 003h,  0DF01h
+  DW 002h,  0DF20h
+  DW 001h,  0100Ah
+  DW 000h,  0A0FFh
+  DW 004h,  0F800h
+  DW 004h,  0F000h
+
+  DW 01Fh,  00000h
+  DW 00Bh,  00000h
+  DW 000h,  09200h
+  DW -1
+
+Config8169sb:
+  DW 01Fh,  00002h
+  DW 001h,  090D0h
+  DW 01Fh,  00000h
+  DW -1
+  
+Config8169scdq:
+  DW 01Fh,  00001h
+  DW 010h,  0F01Bh
+  DW 01Fh,  00000h
+  DW -1
+      
+Config8169scd:
+  DW 01Fh,  00001h
+  DW 004h,  00000h
+
+  DW 003h,  000A1h
+  DW 002h,  00008h
+  DW 001h,  00120h
+  DW 000h,  01000h
+  DW 004h,  00800h
+  DW 004h,  09000h
+
+  DW 003h,  0802Fh
+  DW 002h,  04F02h
+  DW 001h,  00409h
+  DW 000h,  0F099h
+  DW 004h,  09800h
+  DW 004h,  0A000h
+
+  DW 003h,  0DF01h
+  DW 002h,  0DF20h
+  DW 001h,  0FF95h
+  DW 000h,  0BA00h
+  DW 004h,  0A800h
+  DW 004h,  0F000h
+
+  DW 003h,  0DF01h
+  DW 002h,  0DF20h
+  DW 001h,  0101Ah
+  DW 000h,  0A0FFh
+  DW 004h,  0F800h
+  DW 004h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00001h
+  DW 010h,  0F41Bh
+  DW 014h,  0FB54h
+  DW 018h,  0F5C7h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00001h
+  DW 017h,  00CC0h
+  DW 01Fh,  00000h
+  DW -1
+      
+Config8169sce:
+  DW 01Fh,  00001h
+  DW 004h,  00000h
+
+  DW 003h,  000A1h
+  DW 002h,  00008h
+  DW 001h,  00120h
+  DW 000h,  01000h
+  DW 004h,  00800h
+  DW 004h,  09000h
+
+  DW 003h,  0802Fh
+  DW 002h,  04F02h
+  DW 001h,  00409h
+  DW 000h,  0F099h
+  DW 004h,  09800h
+  DW 004h,  0A000h
+
+  DW 003h,  0DF01h
+  DW 002h,  0DF20h
+  DW 001h,  0FF95h
+  DW 000h,  0BA00h
+  DW 004h,  0A800h
+  DW 004h,  0F000h
+
+  DW 003h,  0DF01h
+  DW 002h,  0DF20h
+  DW 001h,  0101Ah
+  DW 000h,  0A0FFh
+  DW 004h,  0F800h
+  DW 004h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00001h
+  DW 00Bh,  08480h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00001h
+  DW 018h,  067C7h
+  DW 004h,  02000h
+  DW 003h,  0002Fh
+  DW 002h,  04360h
+  DW 001h,  00109h
+  DW 000h,  03022h
+  DW 004h,  02800h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00001h
+  DW 017h,  00CC0h
+  DW 01Fh,  00000h
+  DW -1
+
+Config8168bb:
+  DW 01Fh,  00001h
+  DW 116h,  00001h
+  DW 010h,  0F41Bh
+  DW 01Fh,  00000h
+  DW -1
+
+Config8168bef:  
+  DW 01Fh,  00000h
+  DW 01Dh,  00F00h
+  DW 01Fh,  00002h
+  DW 00Ch,  01EC8h
+  DW 01Fh,  00000h
+  DW -1
+  
+Config8168cp1: 
+  DW 01Fh,  00000h
+  DW 01Dh,  00F00h
+  DW 01Fh,  00002h
+  DW 00Ch,  01EC8h
+  DW 01Fh,  00000h
+  DW -1
+  
+Config8168cp2: 
+  DW 01Fh,  00000h
+  DW 114h,  00020h
+  DW 10Dh,  00020h
+  DW 01Fh,  00001h
+  DW 01Dh,  03D98h
+  DW 01Fh,  00000h
+  DW -1
+   
+  
+Config8168c1: 
+  DW 01Fh,  00001h
+  DW 012h,  02300h
+  DW 01Fh,  00002h
+  DW 000h,  088D4h
+  DW 001h,  082B1h
+  DW 003h,  07002h
+  DW 008h,  09E30h
+  DW 009h,  001F0h
+  DW 00Ah,  05500h
+  DW 00Ch,  000C8h
+  DW 01Fh,  00003h
+  DW 012h,  0C096h
+  DW 016h,  0000Ah
+  DW 01Fh,  00000h
+  DW 01Fh,  00000h
+  DW 009h,  02000h
+  DW 009h,  00000h  
+  DW 114h,  00020h
+  DW 10Dh,  00020h
+  DW 01Fh,  00000h
+  DW -1
+  
+Config8168c2: 
+  DW 01Fh,  00001h
+  DW 012h,  02300h
+  DW 003h,  0802Fh
+  DW 002h,  04F02h
+  DW 001h,  00409h
+  DW 000h,  0F099h
+  DW 004h,  09800h
+  DW 004h,  09000h
+  DW 01Dh,  03D98h
+  DW 01Fh,  00002h
+  DW 00Ch,  07EB8h
+  DW 006h,  00761h
+  DW 01Fh,  00003h
+  DW 016h,  00F0Ah
+  DW 01Fh,  00000h
+  DW 116h,  00001h
+  DW 114h,  00020h
+  DW 10Dh,  00020h
+  DW 01Fh,  00000h
+  DW -1
+     
+Config8168c3: 
+  DW 01Fh,  00001h
+  DW 012h,  02300h
+  DW 01Dh,  03D98h
+  DW 01Fh,  00002h
+  DW 00Ch,  07EB8h
+  DW 006h,  05461h
+  DW 01Fh,  00003h
+  DW 016h,  00F0Ah
+  DW 01Fh,  00000h
+  DW 116h,  00001h
+  DW 114h,  00020h
+  DW 10Dh,  00020h
+  DW 01Fh,  00000h
+  DW -1
+
+Config8168d1_d2: 
+  DW 01Fh,  00001h
+  DW 006h,  04064h
+  DW 007h,  02863h
+  DW 008h,  0059Ch
+  DW 009h,  026B4h
+  DW 00Ah,  06A19h
+  DW 00Bh,  0DCC8h
+  DW 010h,  0F06Dh
+  DW 014h,  07F68h
+  DW 018h,  07FD9h
+  DW 01Ch,  0F0FFh
+  DW 01Dh,  03D9Ch
+  DW 01Fh,  00003h
+  DW 012h,  0F49Fh
+  DW 013h,  0070Bh
+  DW 01Ah,  005ADh
+  DW 014h,  094C0h
+
+  DW 01Fh,  00002h
+  DW 006h,  05561h
+  DW 01Fh,  00005h
+  DW 005h,  08332h
+  DW 006h,  05561h
+
+  DW 01Fh,  00001h
+  DW 017h,  00CC0h
+  DW 01Fh,  00000h
+  DW 00Dh,  0F880h
+  DW 01Fh,  00002h
+  DW 202h,  00100h,  00600h
+  DW 203h,  00000h,  0E000h
+  DW 01Fh,  00002h
+  DW 10Fh,  00017h
+  DW 01Fh,  00005h
+  DW 005h,  0001Bh
+  DW 01Fh,  00000h
+  DW -1
+
+Config8168d3: 
+  DW 01Fh,  00002h
+  DW 010h,  00008h
+  DW 00Dh,  0006Ch
+
+  DW 01Fh,  00000h
+  DW 00Dh,  0F880h
+
+  DW 01Fh,  00001h
+  DW 017h,  00CC0h
+
+  DW 01Fh,  00001h
+  DW 00Bh,  0A4D8h
+  DW 009h,  0281Ch
+  DW 007h,  02883h
+  DW 00Ah,  06B35h
+  DW 01Dh,  03DA4h
+  DW 01Ch,  0EFFDh
+  DW 014h,  07F52h
+  DW 018h,  07FC6h
+  DW 008h,  00601h
+  DW 006h,  04063h
+  DW 010h,  0F074h
+
+  DW 01Fh,  00003h
+  DW 013h,  00789h
+  DW 012h,  0F4BDh
+  DW 01Ah,  004FDh
+  DW 01Fh,  00000h
+  DW 000h,  09200h
+
+  DW 01Fh,  00005h
+  DW 001h,  00340h
+
+  DW 01Fh,  00001h
+  DW 004h,  04000h
+  DW 003h,  01D21h
+  DW 002h,  00C32h
+  DW 001h,  00200h
+  DW 000h,  05554h
+  DW 004h,  04800h
+  DW 004h,  04000h
+  DW 004h,  0F000h
+  DW 003h,  0DF01h
+  DW 002h,  0DF20h
+  DW 001h,  0101Ah
+  DW 000h,  0A0FFh
+  DW 004h,  0F800h
+  DW 004h,  0F000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00007h
+  DW 01Eh,  00023h
+  DW 016h,  00000h
+  DW 01Fh,  00000h
+  DW -1
+
+Config8168d4:
+  DW 01Fh,  00001h
+  DW 017h,  00CC0h
+
+  DW 01Fh,  00007h
+  DW 01Eh,  0002Dh
+  DW 018h,  00040h
+  DW 01Fh,  00000h
+  DW 10Dh,  00020h
+  DW -1 
+
+Config8168e1:
+  DW 01Fh,  00005h
+  DW 005h,  08B80h
+  DW 006h,  0C896h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00001h
+  DW 00Bh,  06C20h
+  DW 007h,  02872h
+  DW 01Ch,  0EFFFh
+  DW 01Fh,  00003h
+  DW 014h,  06420h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00007h
+  DW 01Eh,  0002Fh
+  DW 015h,  01919h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00007h
+  DW 01Eh,  000ACh
+  DW 018h,  00006h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00007h
+  DW 01Eh,  00023h
+  DW 217h,  00006h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00002h
+  DW 01Eh,  0002Dh
+  DW 218h,  00050h,  00000h
+  DW 01Fh,  00000h
+  DW 214h,  08000h,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B85h
+  DW 206h,  00000h,  02000h
+
+  DW 01Fh,  00007h
+  DW 01Eh,  00020h
+  DW 215h,  00000h,  01100h
+
+  DW 01Fh,  00006h
+  DW 000h,  05A00h
+  DW 01Fh,  00000h
+  DW 00Dh,  00007h
+  DW 00Eh,  0003Ch
+  DW 00Dh,  04007h
+  DW 00Eh,  00000h
+  DW 00Dh,  00000h  
+  DW -1
+
+Config8168e2:
+  DW 01Fh,  00004h
+  DW 01Fh,  00007h
+  DW 01Eh,  000ACh
+  DW 018h,  00006h
+  DW 01Fh,  00002h
+  DW 01Fh,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00003h
+  DW 009h,  0A20Fh
+  DW 01Fh,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B5Bh
+  DW 006h,  09222h
+  DW 005h,  08B6Dh
+  DW 006h,  08000h
+  DW 005h,  08B76h
+  DW 006h,  08000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B80h
+  DW 217h,  00006h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00004h
+  DW 01Fh,  00007h
+  DW 01Eh,  0002Dh
+  DW 218h,  00010h,  00000h
+  DW 01Fh,  00002h
+  DW 01Fh,  0000h
+  DW 214h,  08000h,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B86h
+  DW 206h,  00001h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B85h
+  DW 206h,  04000h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B85h
+  DW 206h,  00000h,  02000h
+  DW 01Fh,  00004h
+  DW 01Fh,  00007h
+  DW 01Eh,  00020h
+  DW 215h,  00000h,  00100h
+  DW 01Fh,  00002h
+  DW 01Fh,  00000h
+  DW 00Dh,  00007h
+  DW 00Eh,  0003Ch
+  DW 00Dh,  04007h
+  DW 00Eh,  00000h
+  DW 00Dh,  00000h
+
+  DW 01Fh,  00003h
+  DW 219h,  00000h,  00001h
+  DW 210h,  00000h,  00400h
+  DW 01Fh,  00000h 
+  DW -1
+
+Config8168f:
+  DW 01Fh,  00005h
+  DW 005h,  08B80h
+  DW 206h,  00006h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00007h
+  DW 01Eh,  0002Dh
+  DW 218h,  00010h,  00000h
+  DW 01Fh,  00000h
+  DW 214h,  08000h,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B86h
+  DW 206h,  00001h,  00000h
+  DW 01Fh,  00000h
+  DW -1
+  
+Config8168f1_f2:
+  DW 01Fh,  00003h
+  DW 009h,  0A20Fh
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B55h
+  DW 006h,  00000h
+  DW 005h,  08B5Eh
+  DW 006h,  00000h
+  DW 005h,  08B67h
+  DW 006h,  00000h
+  DW 005h,  08B70h
+  DW 006h,  00000h
+  DW 01Fh,  00000h
+  DW 01Fh,  00007h
+  DW 01Eh,  00078h
+  DW 017h,  00000h
+  DW 019h,  000FBh
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B79h
+  DW 006h,  0AA00h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00003h
+  DW 001h,  0328Ah
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B85h
+  DW 206h,  04000h,  00000h
+  DW 01Fh,  00000h
+  DW -1
+  
+Config8411:
+  DW 01Fh,  00005h
+  DW 005h,  08B80h
+  DW 206h,  00006h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00007h
+  DW 01Eh,  0002Dh
+  DW 218h,  00010h,  00000h
+  DW 01Fh,  00000h
+  DW 214h,  08000h,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B86h
+  DW 206h,  00001h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B85h
+  DW 206h,  04000h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00003h
+  DW 009h,  0A20Fh
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B55h
+  DW 006h,  00000h
+  DW 005h,  08B5Eh
+  DW 006h,  00000h
+  DW 005h,  08B67h
+  DW 006h,  00000h
+  DW 005h,  08B70h
+  DW 006h,  00000h
+  DW 01Fh,  00000h
+  DW 01Fh,  00007h
+  DW 01Eh,  00078h
+  DW 017h,  00000h
+  DW 019h,  000AAh
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B79h
+  DW 006h,  0AA00h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00003h
+  DW 001h,  0328Ah
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B54h
+  DW 206h,  00000h,  00800h
+  DW 005h,  08B5Dh
+  DW 206h,  00000h,  00800h
+  DW 005h,  08A7Ch
+  DW 206h,  00000h,  00100h
+  DW 005h,  08A7Fh
+  DW 206h,  00100h,  00000h
+  DW 005h,  08A82h
+  DW 206h,  00000h,  00100h
+  DW 005h,  08A85h
+  DW 206h,  00000h,  00100h
+  DW 005h,  08A88h
+  DW 206h,  00000h,  00100h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B85h
+  DW 206h,  08000h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00005h
+  DW 005h,  08B85h
+  DW 206h,  00000h,  02000h
+  DW 01Fh,  00004h
+  DW 01Fh,  00007h
+  DW 01Eh,  00020h
+  DW 215h,  00000h,  00100h
+  DW 01Fh,  00000h
+  DW 00Dh,  00007h
+  DW 00Eh,  0003Ch
+  DW 00Dh,  04007h
+  DW 00Eh,  00000h
+  DW 00Dh,  00000h
+
+  DW 01Fh,  00003h
+  DW 219h,  00000h,  00001h
+  DW 210h,  00000h,  00400h
+  DW 01Fh,  00000h 
+  DW -1
+   
+Config8168g1:
+  DW 01Fh,  00A44h
+  DW 211h,  0000Ch,  00000h
+
+  DW 01Fh,  00BCCh
+  DW 214h,  00100h,  00000h
+  DW 01Fh,  00A44h
+  DW 211h,  000C0h,  00000h
+  DW 01Fh,  00A43h
+  DW 013h,  08084h
+  DW 214h,  00000h,  06000h
+  DW 210h,  01003h,  00000h
+
+  DW 01Fh,  00A4Bh
+  DW 211h,  00004h,  00000h
+
+  DW 01Fh,  00A43h
+  DW 013h,  08012h
+  DW 214h,  08000h,  00000h
+
+  DW 01Fh,  00C42h
+  DW 211h,  04000h,  02000h
+
+  DW 01Fh,  00BCDh
+  DW 014h,  05065h
+  DW 014h,  0D065h
+  DW 01Fh,  00BC8h
+  DW 011h,  05655h
+  DW 01Fh,  00BCDh
+  DW 014h,  01065h
+  DW 014h,  09065h
+  DW 014h,  01065h
+
+  DW 01Fh,  00000h
+  DW -1
+    
+Config8168g2:
+  DW -1
+
+Config8168h1:
+  DW 01Fh,  00A43h
+  DW 013h,  0809Bh
+  DW 214h,  08000h,  0F800h
+  DW 013h,  080A2h
+  DW 214h,  08000h,  0FF00h
+  DW 013h,  080A4h
+  DW 214h,  08500h,  0FF00h
+  DW 013h,  0809Ch
+  DW 214h,  0BD00h,  0FF00h
+
+  DW 01Fh,  00A43h
+  DW 013h,  080ADh
+  DW 214h,  07000h,  0F800h
+  DW 013h,  080B4h
+  DW 214h,  05000h,  0FF00h
+  DW 013h,  080ACh
+  DW 214h,  04000h,  0FF00h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00A43h
+  DW 013h,  0808Eh
+  DW 214h,  01200h,  0FF00h
+  DW 013h,  08090h
+  DW 214h,  0E500h,  0FF00h
+  DW 013h,  08092h
+  DW 214h,  09F00h,  0FF00h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00A44h
+  DW 211h,  00800h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00BCAh
+  DW 217h,  04000h,  03000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00A43h
+  DW 013h,  0803Fh
+  DW 214h,  00000h,  03000h
+  DW 013h,  08047h
+  DW 214h,  00000h,  03000h
+  DW 013h,  0804Fh
+  DW 214h,  00000h,  03000h
+  DW 013h,  08057h
+  DW 214h,  00000h,  03000h
+  DW 013h,  0805Fh
+  DW 214h,  00000h,  03000h
+  DW 013h,  08067h
+  DW 214h,  00000h,  03000h
+  DW 013h,  0806Fh
+  DW 214h,  00000h,  03000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00A44h
+  DW 214h,  00000h,  00080h
+  DW 01Fh,  00000h
+  DW -1  
+  
+Config8168h2:
+  DW 01Fh,  00A43h
+  DW 013h,  0808Ah
+  DW 214h,  0000Ah,  0003Fh
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00A43h
+  DW 013h,  00811h
+  DW 214h,  00800h,  00000h
+  DW 01Fh,  00A42h
+  DW 216h,  00002h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00A44h
+  DW 211h,  00800h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00A44h
+  DW 214h,  00000h,  00080h
+  DW 01Fh,  00000h
+  DW -1
+
+Config8168ep1:
+  DW 01Fh,  00A44h
+  DW 211h,  0000Ch,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00BCCh
+  DW 214h,  00000h,  00100h
+  DW 01Fh,  00A44h
+  DW 211h,  000C0h,  00000h
+  DW 01Fh,  00A43h
+  DW 013h,  08084h
+  DW 214h,  00000h,  06000h
+  DW 210h,  01003h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00A4Bh
+  DW 211h,  00004h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00A43h
+  DW 013h,  08012h
+  DW 214h,  08000h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00C42h
+  DW 211h,  04000h,  02000h
+  DW 01Fh,  00000h
+  DW -1
+
+Config8168ep2:
+  DW 01Fh,  00BCCh
+  DW 214h,  00000h,  00100h
+  DW 01Fh,  00A44h
+  DW 211h,  000C0h,  00000h
+  DW 01Fh,  00A43h
+  DW 013h,  08084h
+  DW 214h,  00000h,  06000h
+  DW 210h,  01003h,  00000h
+
+  DW 01Fh,  00A43h
+  DW 013h,  08012h
+  DW 214h,  08000h,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00C42h
+  DW 211h,  04000h,  02000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00A43h
+  DW 013h,  080F3h
+  DW 214h,  08B00h,  07400h
+  DW 013h,  080F0h
+  DW 214h,  03A00h,  0C500h
+  DW 013h,  080EFh
+  DW 214h,  00500h,  0FA00h
+  DW 013h,  080F6h
+  DW 214h,  06E00h,  09100h
+  DW 013h,  080ECh
+  DW 214h,  06800h,  09700h
+  DW 013h,  080EDh
+  DW 214h,  07C00h,  08300h
+  DW 013h,  080F2h
+  DW 214h,  0F400h,  00B00h
+  DW 013h,  080F4h
+  DW 214h,  08500h,  07A00h
+  DW 01Fh,  00A43h
+  DW 013h,  08110h
+  DW 214h,  0A800h,  05700h
+  DW 013h,  0810Fh
+  DW 214h,  01D00h,  0E200h
+  DW 013h,  08111h
+  DW 214h,  0F500h,  00A00h
+  DW 013h,  08113h
+  DW 214h,  06100h,  09E00h
+  DW 013h,  08115h
+  DW 214h,  09200h,  06D00h
+  DW 013h,  0810Eh
+  DW 214h,  00400h,  0FB00h
+  DW 013h,  0810Ch
+  DW 214h,  07C00h,  08300h
+  DW 013h,  0810Bh
+  DW 214h,  05A00h,  0A500h
+  DW 01Fh,  00A43h
+  DW 013h,  080D1h
+  DW 214h,  0FF00h,  00000h
+  DW 013h,  080CDh
+  DW 214h,  09E00h,  06100h
+  DW 013h,  080D3h
+  DW 214h,  00E00h,  0F100h
+  DW 013h,  080D5h
+  DW 214h,  0CA00h,  03500h
+  DW 013h,  080D7h
+  DW 214h,  08400h,  07B00h
+
+  DW 01Fh,  00BCDh
+  DW 014h,  05065h
+  DW 014h,  0D065h
+  DW 01Fh,  00BC8h
+  DW 012h,  000EDh
+  DW 01Fh,  00BCDh
+  DW 014h,  01065h
+  DW 014h,  09065h
+  DW 014h,  01065h
+  DW 01Fh,  00000h
+  DW -1
+  
+Config8102e:
+  DW 01Fh,  00000h
+  DW 111h,  01000h
+  DW 119h,  02000h
+  DW 110h,  08000h
+
+  DW 01Fh,  00003h
+  DW 008h,  0441Dh
+  DW 001h,  09100h
+  DW 01Fh,  00000h
+  DW -1
+
+Config8105e:
+  DW 01Fh,  00000h
+  DW 018h,  00310h
+
+  DW 01Fh,  00005h
+  DW 01Ah,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00004h
+  DW 01Ch,  00000h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00001h
+  DW 015h,  07701h
+  DW 01Fh,  00000h
+  DW -1
+
+Config8402:
+  DW 01Fh,  00000h
+  DW 018h,  00310h
+
+  DW 01Fh,  00004h
+  DW 010h,  0401Fh
+  DW 019h,  07030h
+  DW 01Fh,  00000h
+  DW -1
+
+Config8106e:
+  DW 01Fh,  00000h
+  DW 018h,  00310h
+  DW 400h,  OFFSET Wait100ms
+
+  DW 300h,  001B0h,  ERIAR_MASK_0011,  00000h
+  DW 01Fh,  00004h
+  DW 010h,  0C07Fh
+  DW 019h,  07030h
+  DW 01Fh,  00000h
+  DW 300h,  001D0h,  ERIAR_MASK_0011,  00000h
+  DW -1
+
+ConfigTab:
+ct00 DW OFFSET ConfigNone
+ct01 DW OFFSET ConfigNone
+ct02 DW OFFSET Config8169s
+ct03 DW OFFSET Config8169s
+ct04 DW OFFSET Config8169sb
+ct05 DW OFFSET Config8169scd
+ct06 DW OFFSET Config8169sce
+ct07 DW OFFSET Config8102e
+ct08 DW OFFSET Config8102e
+ct09 DW OFFSET Config8102e
+ct10 DW OFFSET ConfigNone
+ct11 DW OFFSET Config8168bb
+ct12 DW OFFSET Config8168bef
+ct13 DW OFFSET ConfigNone
+ct14 DW OFFSET ConfigNone
+ct15 DW OFFSET ConfigNone
+ct16 DW OFFSET ConfigNone
+ct17 DW OFFSET Config8168bef
+ct18 DW OFFSET Config8168cp1
+ct19 DW OFFSET Config8168c1
+ct20 DW OFFSET Config8168c2
+ct21 DW OFFSET Config8168c3
+ct22 DW OFFSET ConfigNone
+ct23 DW OFFSET Config8168cp2
+ct24 DW OFFSET Config8168cp2
+ct25 DW OFFSET Config8168d1_d2
+ct26 DW OFFSET Config8168d1_d2
+ct27 DW OFFSET Config8168d3
+ct28 DW OFFSET Config8168d4
+ct29 DW OFFSET Config8105e
+ct30 DW OFFSET Config8105e
+ct31 DW OFFSET ConfigNone
+ct32 DW OFFSET Config8168e1
+ct33 DW OFFSET Config8168e1
+ct34 DW OFFSET Config8168e2
+ct35 DW OFFSET Config8168f1_f2
+ct36 DW OFFSET Config8168f1_f2
+ct37 DW OFFSET Config8402
+ct38 DW OFFSET Config8411
+ct39 DW OFFSET Config8106e
+ct40 DW OFFSET Config8168g1
+ct41 DW OFFSET ConfigNone
+ct42 DW OFFSET Config8168g2
+ct43 DW OFFSET Config8168g2
+ct44 DW OFFSET Config8168g2
+ct45 DW OFFSET Config8168h1
+ct46 DW OFFSET Config8168h2
+ct47 DW OFFSET Config8168h1
+ct48 DW OFFSET Config8168h2
+ct49 DW OFFSET Config8168ep1
+ct50 DW OFFSET Config8168ep2
+ct51 DW OFFSET Config8168ep2
+
+Config  Proc near
+    mov si,ds:HwId
+    add si,si
+    mov si,cs:[si].ConfigTab
+
+cLoop:
+    mov ax,cs:[si]
+    cmp ah,0
+    je cWrite
+;
+    cmp ah,1
+    je cPatch
+;
+    cmp ah,2
+    je cMerge
+;
+    cmp ah,3
+    je cEri
+;
+    cmp ah,4
+    je cCall
+;        
+    jmp cDone
+
+cWrite:
+    mov dl,al
+    mov ax,cs:[si+2]
+    call ds:WritePhyProc
+    add si,4
+    jmp cLoop
+
+cPatch:
+    int 3
+    add si,4
+    jmp cLoop
+
+cMerge:
+    int 3
+    add si,6
+    jmp cLoop
+
+cEri:
+    mov bx,cs:[si+2]
+    movzx ecx,word ptr cs:[si+4]
+    movzx eax,word ptr cs:[si+6]
+    call WriteEri
+    add si,8
+    jmp cLoop
+
+cCall:
+    call word ptr cs:[si+2]
+    add si,4
+    jmp cLoop
+
+cDone:
+    ret
+Config  Endp            
+    
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;
 ;       NAME:           InitHardware
 ;
@@ -950,10 +2002,10 @@ ihDone:
     mov ds:Isr,0
     mov ds:RxCurrDescr,0
 ;    
-    mov dx,ds:IoBase
-    add dx,REG_PHYAR
-    mov eax,80008000h
-    out dx,eax
+;    mov dx,ds:IoBase
+;    add dx,REG_PHYAR
+;    mov eax,80008000h
+;    out dx,eax
 ;
     mov dx,ds:IoBase
     add dx,REG_TPPoll
@@ -1875,6 +2927,53 @@ SetupInts    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SetSpeed
+;
+;       DESCRIPTION:    Set speed
+;
+;       PARAMETERS:     DS      Data
+;                       AX      Advertiser
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetSpeed  Proc near
+    mov si,ax
+    and si,ADV_10_HALF OR ADV_10_FULL OR ADV_100_HALF OR ADV_100_FULL
+    mov di,ax
+    and di,ADV_1000_HALF OR ADV_1000_FULL
+;
+    mov dl,1Fh
+    xor ax,ax
+    call ds:WritePhyProc
+;
+    mov dl,4
+    call ds:ReadPhyProc
+    and ax,NOT (ADV_10_HALF OR ADV_10_FULL OR ADV_100_HALF OR ADV_100_FULL)
+    or si,ax
+    or si,0C00h
+;
+    mov dl,9
+    call ds:ReadPhyProc
+    and ax,NOT (ADV_1000_HALF OR ADV_1000_FULL)
+    or di,ax
+;
+    mov dl,4
+    mov ax,si
+    call ds:WritePhyProc
+;
+    mov dl,9
+    mov ax,di
+    call ds:WritePhyProc
+;
+    mov dl,0
+    mov ax,1200h
+    call ds:WritePhyProc
+    ret
+SetSpeed    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdateLink
 ;
 ;           DESCRIPTION:    Update link state
@@ -1897,11 +2996,15 @@ UpdateLink  Proc near
     sbb edx,ds:PhyTimeout+4
     jc ulDone 
 ;
-    mov dx,ds:IoBase
-    add dx,REG_PHYAR
-;    mov eax,80000200h
-    mov eax,80001240h
-    out dx,eax
+    int 3
+    mov ax,ADV_10_HALF OR ADV_10_FULL OR ADV_100_HALF OR ADV_100_FULL
+    cmp ds:IoCfg,2
+    je ulNoHigh
+;
+    or ax,ADV_1000_HALF OR ADV_1000_FULL
+
+ulNoHigh:    
+    call SetSpeed
 ;
     GetSystemTime
     add eax,1193 * 5000
@@ -2107,11 +3210,14 @@ SupervisorName1 DB 'Super RTL8169-1',0
 SupervisorName2 DB 'Super RTL8169-2',0
 
 PciVendorTab:
-pci00   DW 10ECh, 8129h
-pci01   DW 1186h, 4300h
-pci02   DW 10ECh, 8168h
-pci03   DW 10ECh, 8136h
-pci04   DW 0,     0
+pci00   DW 10ECh, 8129h,    0
+pci01   DW 10ECh, 8136h,    2
+pci02   DW 10ECh, 8167h,    0
+pci03   DW 10ECh, 8168h,    1
+pci04   DW 10ECh, 8169h,    0
+pci05   DW 1186h, 4300h,    0
+pci06   DW 1186h, 4302h,    0
+pci07   DW 0,     0
 
 InitPrimaryPciAdapter   Proc near
     mov bp,ax
@@ -2129,7 +3235,7 @@ init_pci1_loop:
     FindPciDevice
     jnc init_pci1_found
 ;
-    add si,4
+    add si,6
     jmp init_pci1_loop
 
 init_pci1_found:
@@ -2139,10 +3245,13 @@ init_pci1_found:
     mov dx,ax
     and dx,0FFE0h
     mov ds:IoBase,dx
+    mov si,cs:[si+4]
+    mov ds:IoCfg,si
 ;    
     call SetupInts
     call InitHardware
     call FindHardware
+    call Config
 ;
     mov ax,25
     WaitMilliSec
@@ -2214,7 +3323,7 @@ init_pci2_loop:
     FindPciDevice
     jnc init_pci2_found
 ;
-    add si,4
+    add si,6
     jmp init_pci2_loop
 
 init_pci2_found:
@@ -2224,10 +3333,13 @@ init_pci2_found:
     mov dx,ax
     and dx,0FFE0h
     mov ds:IoBase,dx
+    mov si,cs:[si+4]
+    mov ds:IoCfg,si
 ;
     call SetupInts
     call InitHardware
     call FindHardware
+    call Config
 ;
     mov ax,1
     WaitMilliSec
