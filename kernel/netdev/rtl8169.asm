@@ -1308,6 +1308,9 @@ Config8168e2:
   DW 206h,  04000h,  00000h
   DW 01Fh,  00000h
 
+  DW 500h,  001B0h
+  DD ERIAR_MASK_1111,  00000h,  00003h
+
   DW 01Fh,  00005h
   DW 005h,  08B85h
   DW 206h,  00000h,  02000h
@@ -1746,12 +1749,16 @@ Config8106e:
   DW 018h,  00310h
   DW 400h,  OFFSET Wait100ms
 
-  DW 300h,  001B0h,  ERIAR_MASK_0011,  00000h
+  DW 300h,  001B0h
+  DD ERIAR_MASK_0011,  00000h
+
   DW 01Fh,  00004h
   DW 010h,  0C07Fh
   DW 019h,  07030h
   DW 01Fh,  00000h
-  DW 300h,  001D0h,  ERIAR_MASK_0011,  00000h
+
+  DW 300h,  001D0h
+  DD ERIAR_MASK_0011,  00000h
   DW -1
 
 ConfigTab:
@@ -1829,6 +1836,9 @@ cLoop:
 ;
     cmp ah,4
     je cCall
+;
+    cmp ah,5
+    je cEriMerge
 ;        
     jmp cDone
 
@@ -1845,16 +1855,36 @@ cPatch:
     jmp cLoop
 
 cMerge:
-    int 3
+    mov dl,al
+    call ds:ReadPhyProc
+    mov cx,cs:[si+4]
+    not cx
+    and ax,cx
+    or ax,cs:[si+2]
+    call ds:WritePhyProc
     add si,6
     jmp cLoop
 
 cEri:
     mov bx,cs:[si+2]
-    movzx ecx,word ptr cs:[si+4]
-    movzx eax,word ptr cs:[si+6]
+    mov ecx,cs:[si+4]
+    mov eax,cs:[si+8]
     call WriteEri
-    add si,8
+    add si,12
+    jmp cLoop
+
+cEriMerge:
+    mov bx,cs:[si+2]
+    xor ecx,ecx
+    call ReadEri
+;
+    mov ecx,cs:[si+8]
+    not ecx
+    and eax,ecx
+    or eax,cs:[si+12]
+    mov ecx,cs:[si+4]
+    call WriteEri
+    add si,16
     jmp cLoop
 
 cCall:
@@ -3150,6 +3180,7 @@ super_thread:
     mov ds,bx
     GetThread
     mov ds:SuperThread,ax
+;    call Config
 ;    
     GetSystemTime    
     add eax,119300
