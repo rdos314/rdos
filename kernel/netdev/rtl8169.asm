@@ -1850,7 +1850,10 @@ cWrite:
     jmp cLoop
 
 cPatch:
-    int 3
+    mov dl,al
+    call ds:ReadPhyProc
+    or ax,cs:[si+2]
+    call ds:WritePhyProc
     add si,4
     jmp cLoop
 
