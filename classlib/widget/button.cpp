@@ -2667,16 +2667,12 @@ void TButtonControl::CreateFont(int xsize, int ysize)
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonControl::DrawAliasedText(TGraphicDevice *dev, TButtonFactoryParam &Param, int xstart, int ystart, int xsize, int ysize)
+void TButtonControl::DrawAliasedText(TGraphicDevice *dev, TButtonFactoryParam &Param, int xstart, int ystart, int xsize, int ysize, const char *text, TFont *font)
 {
-    const char *text = FText.GetData();
     int x, y;
     int xtext, ytext;
 
-    if (FFont == 0)
-        CreateFont(xsize, ysize);
-
-    FFont->GetStringMetrics(text, &xtext, &ytext);
+    font->GetStringMetrics(text, &xtext, &ytext);
 
     x = (xsize - xtext) / 2;
     y = (ysize - ytext) / 2;
@@ -2687,7 +2683,7 @@ void TButtonControl::DrawAliasedText(TGraphicDevice *dev, TButtonFactoryParam &P
     x += xstart;
     y += ystart;
         
-    dev->SetFont(FFont);
+    dev->SetFont(font);
 
     dev->SetDrawColor(Param.ShadowR, Param.ShadowG, Param.ShadowB);
     dev->DrawString(x, y, text);
@@ -2700,8 +2696,29 @@ void TButtonControl::DrawAliasedText(TGraphicDevice *dev, TButtonFactoryParam &P
     dev->DrawString(x - 1, y + 1, text);
     dev->DrawString(x + 1, y - 1, text);
 
-         dev->SetDrawColor(Param.DrawR, Param.DrawG, Param.DrawB);
+    dev->SetDrawColor(Param.DrawR, Param.DrawG, Param.DrawB);
     dev->DrawString(x, y, text);
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::DrawText
+#
+#   Purpose....: Draw text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::DrawText(TGraphicDevice *dev, TButtonFactoryParam &Param, int xstart, int ystart, int xsize, int ysize)
+{
+    const char *text = FText.GetData();
+
+    if (FFont == 0)
+        CreateFont(xsize, ysize);
+
+    DrawAliasedText(dev, Param, xstart, ystart, xsize, ysize, text, FFont);
 }
 
 /*##########################################################################
@@ -2725,7 +2742,7 @@ void TButtonControl::PaintButton(TGraphicDevice *dev, int xstart, int ystart, in
             else
                 PaintDescrButton(dev, xstart, ystart, xsize, ysize, state);
 
-                    DrawAliasedText(dev, FUp, xstart, ystart, xsize, ysize);
+            DrawText(dev, FUp, xstart, ystart, xsize, ysize);
             break;
 
         case STATE_DOWN:
@@ -2734,7 +2751,7 @@ void TButtonControl::PaintButton(TGraphicDevice *dev, int xstart, int ystart, in
             else
                 PaintDescrButton(dev, xstart, ystart, xsize, ysize, state);
 
-                    DrawAliasedText(dev, FDown, xstart, ystart, xsize, ysize);
+            DrawText(dev, FDown, xstart, ystart, xsize, ysize);
             break;
         
         case STATE_DISABLED:
@@ -2743,7 +2760,7 @@ void TButtonControl::PaintButton(TGraphicDevice *dev, int xstart, int ystart, in
             else
                 PaintDescrButton(dev, xstart, ystart, xsize, ysize, state);
 
-                    DrawAliasedText(dev, FDisabled, xstart, ystart, xsize, ysize);
+            DrawText(dev, FDisabled, xstart, ystart, xsize, ysize);
             break;
     }
 }
@@ -2898,28 +2915,28 @@ void TButtonControl::NotifyResize()
 ##########################################################################*/
 void TButtonControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height)
 {
-        int xmax = xmin + width - 1;
-        int ymax = ymin + height - 1;
+    int xmax = xmin + width - 1;
+    int ymax = ymin + height - 1;
 
-        if (IsVisible())
-        {
-                SetClipRect(    dev,
-                                                xmin, ymin,
-                                                xmax, ymax);
+    if (IsVisible())
+    {
+        SetClipRect(    dev,
+                        xmin, ymin,
+                        xmax, ymax);
 
-                dev->SetLgopNone();
-                dev->SetFilledStyle();
+        dev->SetLgopNone();
+        dev->SetFilledStyle();
 
         if (IsEnabled())
         {
             if (FPressed)
-                                         PaintButton(dev, xmin, ymin, width, height, STATE_DOWN);
-                                else
-                                         PaintButton(dev, xmin, ymin, width, height, STATE_UP);
-                  }
-                  else
-                                PaintButton(dev, xmin, ymin, width, height, STATE_DISABLED);
-         }
+                PaintButton(dev, xmin, ymin, width, height, STATE_DOWN);
+            else
+                PaintButton(dev, xmin, ymin, width, height, STATE_UP);
+        }
+        else
+            PaintButton(dev, xmin, ymin, width, height, STATE_DISABLED);
+    }
     else
     {
         FPressed = FALSE;
