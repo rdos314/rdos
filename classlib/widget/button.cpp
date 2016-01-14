@@ -1448,6 +1448,12 @@ TButtonControl::~TButtonControl()
     if (FFont)
         delete FFont;
 
+    if (FLowerFont)
+        delete FLowerFont;
+
+    if (FUpperFont)
+        delete FUpperFont;
+
     if (FUpBitmap)
         delete FUpBitmap;
 
@@ -1472,27 +1478,29 @@ TButtonControl::~TButtonControl()
 void TButtonControl::Init(char ch)
 {
     FUpBitmap = 0;
-        FDownBitmap = 0;
+    FDownBitmap = 0;
     FDisabledBitmap = 0;
 
     FFont = 0;
+    FLowerFont = 0;
+    FUpperFont = 0;
 
     FDown.ShiftX = 2;
     FDown.ShiftY = 2;
 
     FDisabled.BorderWidth = 0;
     
-        FDisabled.ButtonR = 128;
-        FDisabled.ButtonG = 128;
-        FDisabled.ButtonB = 128;
+    FDisabled.ButtonR = 128;
+    FDisabled.ButtonG = 128;
+    FDisabled.ButtonB = 128;
 
-        FDisabled.ShadowR = 128;
-        FDisabled.ShadowG = 128;
-        FDisabled.ShadowB = 128;
+    FDisabled.ShadowR = 128;
+    FDisabled.ShadowG = 128;
+    FDisabled.ShadowB = 128;
 
-        FDisabled.DrawR = 150;
-        FDisabled.DrawG = 150;
-        FDisabled.DrawB = 150;
+    FDisabled.DrawR = 150;
+    FDisabled.DrawG = 150;
+    FDisabled.DrawB = 150;
     
     FPressed = FALSE;
     FKey = ch;
@@ -1604,6 +1612,106 @@ const char *TButtonControl::GetText()
 
 /*##########################################################################
 #
+#   Name       : TButtonControl::SetUpperText
+#
+#   Purpose....: Set upper control text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::SetUpperText(const char *text)
+{
+    FUpperText = text;
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::SetUpperText
+#
+#   Purpose....: Set upper control text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::SetUpperText(TString &text)
+{
+    FUpperText = text;
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::GetUpperText
+#
+#   Purpose....: Get upper text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TButtonControl::GetUpperText()
+{
+    return FUpperText.GetData();
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::SetLowerText
+#
+#   Purpose....: Set lower control text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::SetLowerText(const char *text)
+{
+    FLowerText = text;
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::SetLowerText
+#
+#   Purpose....: Set lower control text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::SetLowerText(TString &text)
+{
+    FLowerText = text;
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::GetLowerText
+#
+#   Purpose....: Get lower text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TButtonControl::GetLowerText()
+{
+    return FLowerText.GetData();
+}
+
+/*##########################################################################
+#
 #   Name       : TButtonControl::SetKey
 #
 #   Purpose....: Set control key
@@ -1648,6 +1756,32 @@ void TButtonControl::Set(const char *IniName, const char *IniSection)
                 delete FFont;
 
             FFont = new TFont(size);
+        }
+    }
+
+    if (Ini.ReadVar("LowerFont.Size", str, 255))
+    {
+        size = atoi(str);
+
+        if (size)
+        {
+            if (FLowerFont)
+                delete FLowerFont;
+
+            FUpperFont = new TFont(size);
+        }
+    }
+
+    if (Ini.ReadVar("UpperFont.Size", str, 255))
+    {
+        size = atoi(str);
+
+        if (size)
+        {
+            if (FUpperFont)
+                delete FUpperFont;
+
+            FUpperFont = new TFont(size);
         }
     }
 
@@ -1837,6 +1971,12 @@ void TButtonControl::Set(const char *IniName, const char *IniSection)
 
     if (Ini.ReadVar("Text", str, 255))
         SetText(str);
+
+    if (Ini.ReadVar("UpperText", str, 255))
+        SetUpperText(str);
+
+    if (Ini.ReadVar("LowerText", str, 255))
+        SetLowerText(str);
 
     TControl::Set(IniName, IniSection);
 }
@@ -2086,6 +2226,122 @@ void TButtonControl::SetFont(TFont *Font)
 TFont *TButtonControl::GetFont()
 {
     return FFont;
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::SetLowerFont
+#
+#   Purpose....: Set lower font
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::SetLowerFont(int height)
+{
+    if (FLowerFont)
+        delete FLowerFont;
+
+    FLowerFont = new TFont(height);
+
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::SetLowerFont
+#
+#   Purpose....: Set lower font
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::SetLowerFont(TFont *Font)
+{
+    if (FLowerFont)
+        delete FLowerFont;
+
+    FLowerFont = new TFont(*Font);
+
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::GetLowerFont
+#
+#   Purpose....: Get lower font
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFont *TButtonControl::GetLowerFont()
+{
+    return FLowerFont;
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::SetUpperFont
+#
+#   Purpose....: Set upper font
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::SetUpperFont(int height)
+{
+    if (FUpperFont)
+        delete FUpperFont;
+
+    FUpperFont = new TFont(height);
+
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::SetUpperFont
+#
+#   Purpose....: Set upper font
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::SetUpperFont(TFont *Font)
+{
+    if (FUpperFont)
+        delete FUpperFont;
+
+    FUpperFont = new TFont(*Font);
+
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::GetUpperFont
+#
+#   Purpose....: Get upper font
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFont *TButtonControl::GetUpperFont()
+{
+    return FUpperFont;
 }
 
 /*##########################################################################

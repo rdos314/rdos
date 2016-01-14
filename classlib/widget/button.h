@@ -162,8 +162,15 @@ public:
 
     void SetText(const char *text);
     void SetText(TString &text);
-
     const char *GetText();
+
+    void SetUpperText(const char *text);
+    void SetUpperText(TString &text);
+    const char *GetUpperText();
+
+    void SetLowerText(const char *text);
+    void SetLowerText(TString &text);
+    const char *GetLowerText();
 
     void SetKey(char key);
 
@@ -184,8 +191,15 @@ public:
 
     void SetFont(int height);
     void SetFont(TFont *Font);
-
     TFont *GetFont();
+
+    void SetUpperFont(int height);
+    void SetUpperFont(TFont *Font);
+    TFont *GetUpperFont();
+
+    void SetLowerFont(int height);
+    void SetLowerFont(TFont *Font);
+    TFont *GetLowerFont();
     
     void SetUpButtonColor(int r, int g, int b);
     void SetDownButtonColor(int r, int g, int b);
@@ -246,8 +260,12 @@ private:
     TBitmapGraphicDevice *FDisabledBitmap;
     
     TFont *FFont;
+    TFont *FLowerFont;
+    TFont *FUpperFont;
 
     TString FText;
+    TString FLowerText;
+    TString FUpperText;
 	char FKey;
     int FPressed;
     int FKeepDown;
