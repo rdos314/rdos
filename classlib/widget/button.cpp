@@ -1253,6 +1253,20 @@ TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, ch
 
     SetParam(button);
 
+    if (Ini.ReadVar("LowerFont.Size", str, 255))
+    {
+        size = atoi(str);
+        if (size)
+            button->SetLowerFont(size);
+    }
+
+    if (Ini.ReadVar("UpperFont.Size", str, 255))
+    {
+        size = atoi(str);
+        if (size)
+            button->SetUpperFont(size);
+    }
+
     return button;
 }
 
@@ -1308,6 +1322,20 @@ TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char
     button = new TButtonControl(control, FFont, text, ch, x, y, width, height);
 
     SetParam(button);
+
+    if (Ini.ReadVar("LowerFont.Size", str, 255))
+    {
+        size = atoi(str);
+        if (size)
+            button->SetLowerFont(size);
+    }
+
+    if (Ini.ReadVar("UpperFont.Size", str, 255))
+    {
+        size = atoi(str);
+        if (size)
+            button->SetUpperFont(size);
+    }
 
     return button;
 }
@@ -2958,6 +2986,39 @@ void TButtonControl::DrawAliasedText(TGraphicDevice *dev, TButtonFactoryParam &P
 
 /*##########################################################################
 #
+#   Name       : TButtonControl::DrawNonAliasedText
+#
+#   Purpose....: Draw non-aliased text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::DrawNonAliasedText(TGraphicDevice *dev, TButtonFactoryParam &Param, int xstart, int ystart, int xsize, int ysize, const char *text, TFont *font)
+{
+    int x, y;
+    int xtext, ytext;
+
+    font->GetStringMetrics(text, &xtext, &ytext);
+
+    x = (xsize - xtext) / 2;
+    y = (ysize - ytext) / 2;
+
+    x += Param.ShiftX;
+    y += Param.ShiftY;
+
+    x += xstart;
+    y += ystart;
+        
+    dev->SetFont(font);
+
+    dev->SetDrawColor(Param.DrawR, Param.DrawG, Param.DrawB);
+    dev->DrawString(x, y, text);
+}
+
+/*##########################################################################
+#
 #   Name       : TButtonControl::DrawText
 #
 #   Purpose....: Draw text
@@ -2969,12 +3030,58 @@ void TButtonControl::DrawAliasedText(TGraphicDevice *dev, TButtonFactoryParam &P
 ##########################################################################*/
 void TButtonControl::DrawText(TGraphicDevice *dev, TButtonFactoryParam &Param, int xstart, int ystart, int xsize, int ysize)
 {
-    const char *text = FText.GetData();
+    const char *text;
+    int x;
+    int y;
 
-    if (FFont == 0)
-        CreateFont(xsize, ysize);
+    if (FUpperFont)
+    {
+        text = FUpperText.GetData();
+        if (strlen(text))
+        {
+            FUpperFont->GetStringMetrics(text, &x, &y);
+            if (x < xsize && y < ysize)
+            {
+                if (y > 25)
+                    DrawAliasedText(dev, Param, xstart, ystart, xsize, y, text, FUpperFont);
+                else                    
+                    DrawNonAliasedText(dev, Param, xstart, ystart, xsize, y, text, FUpperFont);
 
-    DrawAliasedText(dev, Param, xstart, ystart, xsize, ysize, text, FFont);
+                ystart += y;
+                ysize -= y;
+            }
+        }
+    }
+
+    if (FLowerFont)
+    {
+        text = FLowerText.GetData();
+        if (strlen(text))
+        {
+            FLowerFont->GetStringMetrics(text, &x, &y);
+            if (x < xsize && y < ysize)
+            {
+                if (y > 25)
+                    DrawAliasedText(dev, Param, xstart, ystart + ysize - y, xsize, y, text, FLowerFont);
+                else
+                    DrawNonAliasedText(dev, Param, xstart, ystart + ysize - y, xsize, y, text, FLowerFont);
+
+                ysize -= y;
+            }
+        }
+    }
+
+    if (ysize > 0 && xsize > 0)
+    {
+        text = FText.GetData();
+        if (strlen(text))
+        {
+            if (FFont == 0)
+                CreateFont(xsize, ysize);
+
+            DrawAliasedText(dev, Param, xstart, ystart, xsize, ysize, text, FFont);
+        }
+    }            
 }
 
 /*##########################################################################

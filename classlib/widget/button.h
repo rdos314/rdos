@@ -234,6 +234,7 @@ protected:
 
     void CreateFont(int xsize, int ysize);
     void DrawAliasedText(TGraphicDevice *dev, TButtonFactoryParam &Param, int xstart, int ystart, int xsize, int ysize, const char *text, TFont *font);
+    void DrawNonAliasedText(TGraphicDevice *dev, TButtonFactoryParam &Param, int xstart, int ystart, int xsize, int ysize, const char *text, TFont *font);
     void DrawText(TGraphicDevice *dev, TButtonFactoryParam &Param, int xstart, int ystart, int xsize, int ysize);
 
     void PaintDescrButton(TGraphicDevice *dev, int xstart, int ystart, int xsize, int ysize, int state);
