@@ -229,6 +229,7 @@ GetResponse Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckVersion    Proc near
+    push cx
     call ClearPort
     jc cvDone
 ;    
@@ -254,7 +255,8 @@ CheckVersion    Proc near
 ;
     clc    
 
-cvDone:    
+cvDone:   
+    pop cx 
     ret
 CheckVersion    Endp
 
@@ -270,6 +272,7 @@ CheckVersion    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetScaling    Proc near
+    push cx
     mov ds:td_out_buf,0FFh
     mov ds:td_out_buf+1,0
     mov ds:td_out_buf+2,0
@@ -291,6 +294,7 @@ GetScaling    Proc near
     clc
 
 gsDone:
+    pop cx
     ret
 GetScaling    Endp
 
@@ -306,6 +310,7 @@ GetScaling    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnableController    Proc near
+    push cx
     mov ds:td_out_buf,0F1h
     mov ds:td_out_buf+1,0
     mov ds:td_out_buf+2,0
@@ -323,6 +328,7 @@ EnableController    Proc near
     clc
 
 ecDone:
+    pop cx
     ret
 EnableController    Endp
 
@@ -370,14 +376,22 @@ touch_thread    Proc far
     xor ecx,ecx
     AddWaitForCom
 ;
+    mov cx,16
+
+ttRetry:
     call CheckVersion
-    jc ttEnd
+    jc ttNext
 ;
     call GetScaling    
-    jc ttEnd
+    jc ttNext
 ;    
     call EnableController
-    jc ttEnd
+    jnc ttStart
+
+ttNext:
+    loop ttRetry
+;
+    jmp ttEnd        
 
 ttStart:
     mov si,ds:td_port
