@@ -220,7 +220,8 @@ access_sti_thread_proc      DW OFFSET AccessStiThreadSingle
 lock_ready_proc             DW OFFSET LockReadySingle
 unlock_ready_proc           DW OFFSET UnlockReadySingle
 
-wakeup_proc                 DW OFFSET WakeupSingle
+insert_wakeup_proc          DW OFFSET InsertWakeupSingle
+remove_wakeup_proc          DW OFFSET RemoveWakeupSingle
 
 lock_kernel_section_proc    DW OFFSET LockKernelSectionSingle
 unlock_kernel_section_proc  DW OFFSET UnlockKernelSectionSingle
@@ -1503,13 +1504,11 @@ load_thread_tlb_flush_ok:
 
 load_thread_wakeup_loop:    
     cli
-    mov si,OFFSET ps_wakeup_list
-    mov ax,fs:[si]
+    mov ax,fs:ps_wakeup_list
     or ax,ax
     jz load_thread_wakeup_done
 ;
-    call RemoveCoreBlock
-    sti
+    call cs:remove_wakeup_proc
     call cs:access_sti_thread_proc
 ;
     mov di,es:p_prio
@@ -2371,7 +2370,8 @@ start_processor_null_threads    Proc near
     mov ds:access_sti_thread_proc,OFFSET AccessStiThreadMultiple
     mov ds:lock_ready_proc,OFFSET LockReadyMultiple
     mov ds:unlock_ready_proc,OFFSET UnlockReadyMultiple
-    mov ds:wakeup_proc,OFFSET WakeupMultiple
+    mov ds:insert_wakeup_proc,OFFSET InsertWakeupMultiple
+    mov ds:remove_wakeup_proc,OFFSET RemoveWakeupMultiple
     mov ds:lock_kernel_section_proc,OFFSET LockKernelSectionMultiple
     mov ds:unlock_kernel_section_proc,OFFSET UnlockKernelSectionMultiple
     mov ds:lock_user_section_proc,OFFSET LockUserSectionMultiple
@@ -2506,7 +2506,49 @@ null_hlt:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WakeupSingle
+;           NAME:           RemoveWakeupSingle
+;
+;           DESCRIPTION:    Remove wakeup thread, single core
+;
+;           RETURNS:        ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveWakeupSingle  PROC near
+    push si
+    cli
+    mov si,OFFSET ps_wakeup_list
+    call RemoveCoreBlock
+    sti
+    pop si    
+    ret
+RemoveWakeupSingle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           RemoveWakeupMultiple
+;
+;           DESCRIPTION:    Remove wakeup thread, multiple core
+;
+;           RETURNS:        ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveWakeupMultiple  PROC near
+    push si
+    cli
+    mov si,OFFSET ps_wakeup_list
+    call RemoveCoreBlock
+    sti
+    pop si    
+    ret
+RemoveWakeupMultiple  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InsertWakeupSingle
 ;
 ;           DESCRIPTION:    Insert thread into run list, single core
 ;
@@ -2514,7 +2556,7 @@ null_hlt:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WakeupSingle  PROC near
+InsertWakeupSingle  PROC near
     push di
     cli
     mov di,OFFSET ps_wakeup_list
@@ -2522,12 +2564,12 @@ WakeupSingle  PROC near
     sti
     pop di
     ret
-WakeupSingle  Endp
+InsertWakeupSingle  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WakeupMultiple
+;           NAME:           InsertWakeupMultiple
 ;
 ;           DESCRIPTION:    Insert thread into run list, multiple core
 ;
@@ -2535,7 +2577,7 @@ WakeupSingle  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WakeupMultiple  PROC near
+InsertWakeupMultiple  PROC near
     push di
     cli
     mov di,OFFSET ps_wakeup_list
@@ -2543,7 +2585,7 @@ WakeupMultiple  PROC near
     sti
     pop di
     ret
-WakeupMultiple  Endp
+InsertWakeupMultiple  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2575,7 +2617,7 @@ WakeThread      PROC near
     call RemoveBlock32
     mov es:p_data,eax
     call cs:unlock_list_proc
-    call cs:wakeup_proc
+    call cs:insert_wakeup_proc
     
 wtUnlock:    
     call TryUnlockCore
@@ -5282,7 +5324,7 @@ wake_new    PROC near
     call SaveCurrentThread
 ;
     mov es,dx
-    call cs:wakeup_proc
+    call cs:insert_wakeup_proc
     jmp ContinueCurrentThread
 
 wake_new_other_core:
@@ -5496,7 +5538,7 @@ signal_thread   PROC far
     cmp ax,SLEEP_SEL_SIGNAL
     jne signal_unlock
 ;
-    call cs:wakeup_proc
+    call cs:insert_wakeup_proc
     mov es:p_sleep_sel,0
     mov es:p_signal,0
 
@@ -5775,7 +5817,7 @@ lcsUnblock:
     sub esi,OFFSET cs_list
     call cs:unlock_kernel_section_proc
 ;    
-    call cs:wakeup_proc
+    call cs:insert_wakeup_proc
 
 lcsUnblocked:
     pop di
@@ -6328,7 +6370,7 @@ lusUnblock:
     mov es:p_data,0
     call cs:unlock_user_section_proc
 ;
-    call cs:wakeup_proc
+    call cs:insert_wakeup_proc
 
 lusUnblocked:
     pop di
@@ -6703,7 +6745,7 @@ release_futex   Proc near
 ;
     push es    
     mov es,cx
-    call cs:wakeup_proc
+    call cs:insert_wakeup_proc
     pop es
 ;    
     pop di
@@ -7145,7 +7187,7 @@ wake_until      PROC far
     mov ax,fs:ps_sel
     mov fs,ax
     mov es,cx
-    call cs:wakeup_proc
+    call cs:insert_wakeup_proc
     retf32
 wake_until      ENDP
 
