@@ -2438,6 +2438,8 @@ null_thread0:
     mov es:p_sleep_sel,fs
     mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
+    mov ax,fs:ps_id
+    mov es:p_core_id,ax
     lock or fs:ps_flags,PS_FLAG_ACTIVE
 ;
     mov ax,start_core_nr
@@ -2466,6 +2468,8 @@ null_thread:
     mov es:p_sleep_sel,fs
     mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
+    mov ax,fs:ps_id
+    mov es:p_core_id,ax
 ;
     push OFFSET null_loop_start
     call SaveCurrentThread
@@ -7968,6 +7972,10 @@ init_thread_block       PROC near
     mov fs,ax
     inc fs:ms_thread_count
     mov es:p_process_sel,ax
+;
+    GetCore
+    mov ax,fs:ps_id
+    mov es:p_core_id,ax
     pop fs
 ;
     mov es:p_cli_spinlock,0
@@ -9448,6 +9456,8 @@ init_first_process      Proc near
     mov fs:ps_null_thread,es
     mov es:p_cli_spinlock,0
     mov es:p_sti_spinlock,0
+    mov ax,fs:ps_id
+    mov es:p_core_id,ax
     ret
 init_first_process      Endp
     

@@ -386,6 +386,7 @@ p_wait_list		    DW ?
 p_kill			    DB ?
 p_is_waiting	    DB ?
 p_ref_count		    DW ?
+p_core_id           DW ?
 
 p_int_locked_stack	DW ? 
 p_int_prot16_stack	DW ?
