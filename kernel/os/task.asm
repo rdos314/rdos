@@ -2606,6 +2606,7 @@ InsertWakeupMultiple  PROC near
     je iwmTryLockSelf
 ;    
     push fs
+;    mov fs,di
 
 iwmTryLockOther:    
     mov ax,fs:ps_wakeup_spinlock
@@ -2629,7 +2630,16 @@ iwmLockedOther:
     mov di,OFFSET ps_wakeup_list
     call InsertCoreBlock
     sti
+;
+;    mov di,es:p_prio
+;    cmp di,fs:ps_prio_act
     mov fs:ps_wakeup_spinlock,0
+;    jbe iwmIntOk
+;
+;    mov al,80h
+;    SendInt    
+
+iwmIntOk:
     pop fs
     jmp iwmDone
 
