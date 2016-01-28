@@ -2537,10 +2537,31 @@ RemoveWakeupSingle  Endp
 
 RemoveWakeupMultiple  PROC near
     push si
+
+rwmTryLock:    
+    mov si,fs:ps_wakeup_spinlock
+    or si,si
+    je rwmGet
+;
+    sti
+    pause
+    jmp rwmTryLock
+
+rwmGet:
     cli
+    inc si
+    xchg si,fs:ps_wakeup_spinlock
+    or si,si
+    je rwmLocked
+;
+    jmp rwmTryLock
+
+rwmLocked:
     mov si,OFFSET ps_wakeup_list
     call RemoveCoreBlock
     sti
+;
+    mov fs:ps_wakeup_spinlock,0    
     pop si    
     ret
 RemoveWakeupMultiple  Endp
@@ -2579,10 +2600,30 @@ InsertWakeupSingle  Endp
 
 InsertWakeupMultiple  PROC near
     push di
+
+iwmTryLock:    
+    mov di,fs:ps_wakeup_spinlock
+    or di,di
+    je iwmGet
+;
+    sti
+    pause
+    jmp iwmTryLock
+
+iwmGet:
     cli
+    inc di
+    xchg di,fs:ps_wakeup_spinlock
+    or di,di
+    je iwmLocked
+;
+    jmp iwmTryLock
+
+iwmLocked:
     mov di,OFFSET ps_wakeup_list
     call InsertCoreBlock
     sti
+    mov fs:ps_wakeup_spinlock,0
     pop di
     ret
 InsertWakeupMultiple  Endp
