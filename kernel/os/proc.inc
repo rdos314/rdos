@@ -98,6 +98,8 @@ ps_msb_tics         DD ?
 ps_global_post_perc DB ?
 ps_curr_post        DB ?
 
+ps_wakeup_spinlock  DW ?
+
 ps_linear           DD ?
 ps_syscall_esp      DD ?
 ps_syscall_eip      DD ?

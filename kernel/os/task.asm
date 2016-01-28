@@ -2798,6 +2798,7 @@ ptab_init:
     loop ptab_init
 ;
     mov es:ps_wakeup_list,0
+    mov es:ps_wakeup_spinlock,0
     mov es:ps_nesting,-1
     mov es:ps_curr_thread,0
     mov es:ps_last_thread,-1
