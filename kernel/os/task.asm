@@ -2496,6 +2496,26 @@ null_hlt:
     hlt
     jmp null_loop
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ActiveThread
+;
+;           DESCRIPTION:    Insert thread into run list
+;
+;           PARAMETERS:     ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ActivateThread  PROC near
+    push di
+    cli
+    mov di,OFFSET ps_wakeup_list
+    call InsertCoreBlock
+    sti
+    pop di
+    ret
+ActivateThread  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2528,10 +2548,7 @@ WakeThread      PROC near
     mov es:p_data,eax
     call cs:unlock_list_proc
 ;
-    cli
-    mov di,OFFSET ps_wakeup_list
-    call InsertCoreBlock
-    sti
+    call ActivateThread
     
 wtUnlock:    
     call TryUnlockCore
@@ -5237,10 +5254,7 @@ wake_new    PROC near
     call SaveCurrentThread
 ;
     mov es,dx
-    cli
-    mov di,OFFSET ps_wakeup_list
-    call InsertCoreBlock
-    sti
+    call ActivateThread
     jmp ContinueCurrentThread
 
 wake_new_other_core:
@@ -5454,10 +5468,7 @@ signal_thread   PROC far
     cmp ax,SLEEP_SEL_SIGNAL
     jne signal_unlock
 ;
-    push di
-    mov di,OFFSET ps_wakeup_list
-    call InsertCoreBlock
-    pop di
+    call ActivateThread
     mov es:p_sleep_sel,0
     mov es:p_signal,0
 
@@ -5736,10 +5747,7 @@ lcsUnblock:
     sub esi,OFFSET cs_list
     call cs:unlock_kernel_section_proc
 ;    
-    cli
-    mov di,OFFSET ps_wakeup_list
-    call InsertCoreBlock
-    sti
+    call ActivateThread
 
 lcsUnblocked:
     pop di
@@ -6292,10 +6300,7 @@ lusUnblock:
     mov es:p_data,0
     call cs:unlock_user_section_proc
 ;
-    cli
-    mov di,OFFSET ps_wakeup_list
-    call InsertCoreBlock
-    sti
+    call ActivateThread
 
 lusUnblocked:
     pop di
@@ -6670,10 +6675,7 @@ release_futex   Proc near
 ;
     push es    
     mov es,cx
-    cli
-    mov di,OFFSET ps_wakeup_list
-    call InsertCoreBlock
-    sti
+    call ActivateThread
     pop es
 ;    
     pop di
@@ -7115,10 +7117,7 @@ wake_until      PROC far
     mov ax,fs:ps_sel
     mov fs,ax
     mov es,cx
-    cli
-    mov di,OFFSET ps_wakeup_list
-    call InsertCoreBlock
-    sti
+    call ActivateThread
     retf32
 wake_until      ENDP
 

@@ -3,11 +3,78 @@
 #include <stdlib.h>
 #include <string.h>
 #include "serial.h"
+#include "section.h"
 
 #include <math.h>
 
-void main()
+struct TParam
 {
-    RdosTestGate();
+    int ID;
+};
+
+struct TSect
+{
+    TSection *Section;
+    int Owner;
+    int Active;
+};
+
+TSect *SectionArr[4];
+
+static void TestThread(void *ptr)
+{
+    int i;
+    TParam *param = (TParam *)ptr;
+    int count;
+    TSect *sect;
+
+    for (;;)
+    {
+        i = RdosGetRandom(4);
+        sect = SectionArr[i];
+        
+        sect->Section->Enter();
+        sect->Active++;
+        sect->Owner = param->ID;
+        count = RdosGetRandom(200);
+        for (i = 0; i < count; i++)
+            if (sect->Active != 1)
+                printf("Active wrong: %d\r\n", sect->Active);        
+
+        if (sect->Owner != param->ID)
+            printf("Section failed\r\n");        
+
+        sect->Active--;
+        sect->Section->Leave();    
+
+        count = RdosGetRandom(400);
+        RdosWaitMicro(count);
+    }
 }
 
+void main()
+{
+    char str[80];
+    int i;
+    TParam *param;
+
+    for (i = 0; i < 4; i++)
+    {
+        sprintf(str, "Section #%d", i);
+        SectionArr[i] = new TSect;
+        SectionArr[i]->Section = new TSection(str);
+        SectionArr[i]->Owner = 0;
+        SectionArr[i]->Active = 0;
+    }
+
+    for (i = 0; i < 32; i++)
+    {
+        param = new TParam;
+        param->ID = i;
+        sprintf(str, "Test #%d", i);
+        RdosCreateThread(TestThread, str, param, 0x4000);
+   }
+
+   for (;;)
+       RdosWaitMilli(200);
+}
