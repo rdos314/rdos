@@ -2441,8 +2441,7 @@ null_thread0:
     mov es:p_sleep_sel,fs
     mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
-    mov ax,fs:ps_id
-    mov es:p_core_id,ax
+    mov es:p_core,fs
     lock or fs:ps_flags,PS_FLAG_ACTIVE
 ;
     mov ax,start_core_nr
@@ -2471,8 +2470,7 @@ null_thread:
     mov es:p_sleep_sel,fs
     mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
-    mov ax,fs:ps_id
-    mov es:p_core_id,ax
+    mov es:p_core,fs
 ;
     push OFFSET null_loop_start
     call SaveCurrentThread
@@ -2599,17 +2597,19 @@ InsertWakeupSingle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InsertWakeupMultiple  PROC near
+    push ax
     push di
 ;
-    mov di,es:p_core_id
-    cmp di,fs:ps_id
+    mov ax,fs
+    mov di,es:p_core
+    cmp ax,di
     je iwmTryLockSelf
 ;    
     push fs
 
 iwmTryLockOther:    
-    mov di,fs:ps_wakeup_spinlock
-    or di,di
+    mov ax,fs:ps_wakeup_spinlock
+    or ax,ax
     je iwmGetOther
 ;
     sti
@@ -2618,9 +2618,9 @@ iwmTryLockOther:
 
 iwmGetOther:
     cli
-    inc di
-    xchg di,fs:ps_wakeup_spinlock
-    or di,di
+    inc ax
+    xchg ax,fs:ps_wakeup_spinlock
+    or ax,ax
     je iwmLockedOther
 ;
     jmp iwmTryLockOther
@@ -2634,8 +2634,8 @@ iwmLockedOther:
     jmp iwmDone
 
 iwmTryLockSelf:    
-    mov di,fs:ps_wakeup_spinlock
-    or di,di
+    mov ax,fs:ps_wakeup_spinlock
+    or ax,ax
     je iwmGetSelf
 ;
     sti
@@ -2644,9 +2644,9 @@ iwmTryLockSelf:
 
 iwmGetSelf:
     cli
-    inc di
-    xchg di,fs:ps_wakeup_spinlock
-    or di,di
+    inc ax
+    xchg ax,fs:ps_wakeup_spinlock
+    or ax,ax
     je iwmLockedSelf
 ;
     jmp iwmTryLockSelf
@@ -2659,6 +2659,7 @@ iwmLockedSelf:
 
 iwmDone:    
     pop di
+    pop ax
     ret
 InsertWakeupMultiple  Endp
 
@@ -8115,8 +8116,7 @@ init_thread_block       PROC near
     mov es:p_process_sel,ax
 ;
     GetCore
-    mov ax,fs:ps_id
-    mov es:p_core_id,ax
+    mov es:p_core,fs
     pop fs
 ;
     mov es:p_cli_spinlock,0
@@ -9597,8 +9597,7 @@ init_first_process      Proc near
     mov fs:ps_null_thread,es
     mov es:p_cli_spinlock,0
     mov es:p_sti_spinlock,0
-    mov ax,fs:ps_id
-    mov es:p_core_id,ax
+    mov es:p_core,fs
     ret
 init_first_process      Endp
     
