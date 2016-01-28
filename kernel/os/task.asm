@@ -2600,30 +2600,64 @@ InsertWakeupSingle  Endp
 
 InsertWakeupMultiple  PROC near
     push di
+;
+    mov di,es:p_core_id
+    cmp di,fs:ps_id
+    je iwmTryLockSelf
+;    
+    push fs
 
-iwmTryLock:    
+iwmTryLockOther:    
     mov di,fs:ps_wakeup_spinlock
     or di,di
-    je iwmGet
+    je iwmGetOther
 ;
     sti
     pause
-    jmp iwmTryLock
+    jmp iwmTryLockOther
 
-iwmGet:
+iwmGetOther:
     cli
     inc di
     xchg di,fs:ps_wakeup_spinlock
     or di,di
-    je iwmLocked
+    je iwmLockedOther
 ;
-    jmp iwmTryLock
+    jmp iwmTryLockOther
 
-iwmLocked:
+iwmLockedOther:
     mov di,OFFSET ps_wakeup_list
     call InsertCoreBlock
     sti
     mov fs:ps_wakeup_spinlock,0
+    pop fs
+    jmp iwmDone
+
+iwmTryLockSelf:    
+    mov di,fs:ps_wakeup_spinlock
+    or di,di
+    je iwmGetSelf
+;
+    sti
+    pause
+    jmp iwmTryLockSelf
+
+iwmGetSelf:
+    cli
+    inc di
+    xchg di,fs:ps_wakeup_spinlock
+    or di,di
+    je iwmLockedSelf
+;
+    jmp iwmTryLockSelf
+
+iwmLockedSelf:
+    mov di,OFFSET ps_wakeup_list
+    call InsertCoreBlock
+    sti
+    mov fs:ps_wakeup_spinlock,0
+
+iwmDone:    
     pop di
     ret
 InsertWakeupMultiple  Endp
