@@ -2245,8 +2245,8 @@ start_processor_null_threads    Proc near
     mov ds:lock_sti_thread_proc,OFFSET LockStiThreadMultiple
     mov ds:unlock_sti_thread_proc,OFFSET UnlockStiThreadMultiple
     mov ds:access_sti_thread_proc,OFFSET AccessStiThreadMultiple
-    mov ds:insert_wakeup_proc,OFFSET InsertWakeupMultiple
-    mov ds:remove_wakeup_proc,OFFSET RemoveWakeupMultiple
+;    mov ds:insert_wakeup_proc,OFFSET InsertWakeupMultiple
+;    mov ds:remove_wakeup_proc,OFFSET RemoveWakeupMultiple
     mov ds:lock_kernel_section_proc,OFFSET LockKernelSectionMultiple
     mov ds:unlock_kernel_section_proc,OFFSET UnlockKernelSectionMultiple
     mov ds:lock_user_section_proc,OFFSET LockUserSectionMultiple
