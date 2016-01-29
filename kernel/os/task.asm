@@ -203,13 +203,6 @@ system_thread               DW 0
 lock_list_proc              DW OFFSET LockListSingle
 unlock_list_proc            DW OFFSET UnlockListSingle
 
-lock_cli_thread_proc        DW OFFSET LockCliThreadSingle
-unlock_cli_thread_proc      DW OFFSET UnlockCliThreadSingle
-
-lock_sti_thread_proc        DW OFFSET LockStiThreadSingle
-unlock_sti_thread_proc      DW OFFSET UnlockStiThreadSingle
-access_sti_thread_proc      DW OFFSET AccessStiThreadSingle
-
 insert_wakeup_proc          DW OFFSET InsertWakeupSingle
 remove_wakeup_proc          DW OFFSET RemoveWakeupSingle
 
@@ -1430,7 +1423,6 @@ load_thread_wakeup_loop:
     jz load_thread_wakeup_done
 ;
     call cs:remove_wakeup_proc
-;    call cs:access_sti_thread_proc
 ;
     mov di,es:p_prio
     call InsertCoreBlock
@@ -2240,11 +2232,6 @@ start_processor_null_threads    Proc near
 ;
     mov ds:lock_list_proc,OFFSET LockListMultiple
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
-    mov ds:lock_cli_thread_proc,OFFSET LockCliThreadMultiple
-    mov ds:unlock_cli_thread_proc,OFFSET UnlockCliThreadMultiple
-    mov ds:lock_sti_thread_proc,OFFSET LockStiThreadMultiple
-    mov ds:unlock_sti_thread_proc,OFFSET UnlockStiThreadMultiple
-    mov ds:access_sti_thread_proc,OFFSET AccessStiThreadMultiple
     mov ds:insert_wakeup_proc,OFFSET InsertWakeupMultiple
     mov ds:remove_wakeup_proc,OFFSET RemoveWakeupMultiple
     mov ds:lock_kernel_section_proc,OFFSET LockKernelSectionMultiple
@@ -2977,84 +2964,6 @@ UnlockListSingle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           LockCliThreadSingle
-;
-;           DESCRIPTION:    Lock thread with cli, single processor version
-;
-;           PARAMETERS:     ES      Thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockCliThreadSingle  Proc near
-    cli
-    ret
-LockCliThreadSingle  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockCliThreadSingle
-;
-;           DESCRIPTION:    Unlock thread with cli, single processor version
-;
-;           PARAMETERS:     ES      Thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockCliThreadSingle    Proc near
-    sti
-    ret
-UnlockCliThreadSingle    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LockStiThreadSingle
-;
-;           DESCRIPTION:    Lock thread with sti, single processor version
-;
-;           PARAMETERS:     ES      Thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockStiThreadSingle  Proc near
-    ret
-LockStiThreadSingle  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockStiThreadSingle
-;
-;           DESCRIPTION:    Unlock thread with sti, single processor version
-;
-;           PARAMETERS:     ES      Thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockStiThreadSingle    Proc near
-    ret
-UnlockStiThreadSingle    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AccessStiThreadSingle
-;
-;           DESCRIPTION:    Access thread lock with sti, single processor version
-;
-;           PARAMETERS:     ES      Thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AccessStiThreadSingle  Proc near
-    ret
-AccessStiThreadSingle  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           LockKernelSectionSingle
 ;
 ;           DESCRIPTION:    Lock kernel critical section, single processor version
@@ -3205,132 +3114,6 @@ UnlockListMultiple      Proc near
     pop ds    
     ret
 UnlockListMultiple      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LockCliThreadMultiple
-;
-;           DESCRIPTION:    Lock thread with cli, multiple processor version
-;
-;           PARAMETERS:     ES      Thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockCliThreadMultiple    Proc near
-    push ax
-
-lctSpinLock:    
-    sti
-    mov ax,es:p_cli_spinlock
-    or ax,ax
-    je lctGet
-;
-    pause
-    jmp lctSpinLock
-
-lctGet:
-    cli
-    inc ax
-    xchg ax,es:p_cli_spinlock
-    or ax,ax
-    jne lctSpinLock
-
-lctDone:
-    pop ax    
-    ret
-LockCliThreadMultiple    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockCliThreadMultiple
-;
-;           DESCRIPTION:    Unlock thread with cli, multiple processor version
-;
-;           PARAMETERS:     ES      Thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockCliThreadMultiple      Proc near
-    mov es:p_cli_spinlock,0
-    sti
-    ret
-UnlockCliThreadMultiple      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LockStiThreadMultiple
-;
-;           DESCRIPTION:    Lock thread with sti, multiple processor version
-;
-;           PARAMETERS:     ES      Thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockStiThreadMultiple    Proc near
-    push ax
-    mov ax,1
-
-lstSpinLock:    
-    xchg ax,es:p_sti_spinlock
-    or ax,ax
-    je lstGet
-;
-    pause
-    jmp lstSpinLock
-
-lstGet:
-    pop ax    
-    ret
-LockStiThreadMultiple    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockStiThreadMultiple
-;
-;           DESCRIPTION:    Unlock thread with sti, multiple processor version
-;
-;           PARAMETERS:     ES      Thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockStiThreadMultiple      Proc near
-    mov es:p_sti_spinlock,0
-    ret
-UnlockStiThreadMultiple      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AccessStiThreadMultiple
-;
-;           DESCRIPTION:    Access lock thread with sti, multiple processor version
-;
-;           PARAMETERS:     ES      Thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AccessStiThreadMultiple    Proc near
-    push ax
-    mov ax,1
-
-astSpinLock:    
-    xchg ax,es:p_sti_spinlock
-    or ax,ax
-    je astGet
-;
-    pause
-    jmp astSpinLock
-
-astGet:
-    mov es:p_sti_spinlock,ax
-    pop ax    
-    ret
-AccessStiThreadMultiple    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5409,7 +5192,6 @@ signal_thread   PROC far
 ;
     mov es,bx
     call TryLockCore
-;    call cs:lock_cli_thread_proc
     mov es:p_signal,1
     mov ax,es:p_sleep_sel
     cmp ax,SLEEP_SEL_SIGNAL
@@ -5424,7 +5206,6 @@ signal_thread   PROC far
     call cs:insert_wakeup_proc
 
 signal_unlock:
-;    call cs:unlock_cli_thread_proc
     call TryUnlockCore
     
 signal_done:       
@@ -5471,28 +5252,22 @@ wait_for_signal PROC far
     call LockCore
 ;    
     mov es,fs:ps_curr_thread
-;    call cs:lock_sti_thread_proc
     xor al,al
-;    call cs:lock_cli_thread_proc
     xchg al,es:p_signal
     or al,al
     jnz wait_for_signal_unlock
 ;
     mov es:p_sleep_sel,SLEEP_SEL_SIGNAL
     mov es:p_sleep_offset,0    
-;    call cs:unlock_cli_thread_proc
 ;
     push OFFSET wait_for_signal_done
     call SaveLockedThreadKeepEs
-;    call cs:unlock_sti_thread_proc    
     xor ax,ax
     mov es,ax
     mov fs:ps_curr_thread,ax
     jmp LoadThread
 
 wait_for_signal_unlock:
-;    call cs:unlock_cli_thread_proc
-;    call cs:unlock_sti_thread_proc
     call UnlockCore
 
 wait_for_signal_done:       
@@ -5551,20 +5326,16 @@ wait_for_signal_timeout PROC far
     StartTimer
 ;    
     mov es,bx
-;    call cs:lock_sti_thread_proc
     xor al,al
-;    call cs:lock_cli_thread_proc
     xchg al,es:p_signal
     or al,al
     jnz wait_for_signal_timeout_unlock
 ;
     mov es:p_sleep_sel,SLEEP_SEL_SIGNAL
     mov es:p_sleep_offset,0    
-;    call cs:unlock_cli_thread_proc
 ;
     push OFFSET wait_for_signal_timeout_clear
     call SaveLockedThreadKeepEs
-;    call cs:unlock_sti_thread_proc   
     xor ax,ax
     mov es,ax 
     mov fs:ps_curr_thread,ax
@@ -5578,8 +5349,6 @@ wait_for_signal_timeout_clear:
     jmp wait_for_signal_timeout_done
     
 wait_for_signal_timeout_unlock:
-;    call cs:unlock_cli_thread_proc
-;    call cs:unlock_sti_thread_proc
     mov bx,fs:ps_curr_thread
     StopTimer
     call UnlockCore
@@ -7922,8 +7691,6 @@ init_thread_block       PROC near
     mov es:p_core,fs
     pop fs
 ;
-    mov es:p_cli_spinlock,0
-    mov es:p_sti_spinlock,0
     mov ax,ds:p_app_sel
     mov es:p_app_sel,ax
     mov ax,ds:p_ldt_sel
@@ -9246,8 +9013,6 @@ create_first_thread       PROC near
 ;
     mov es:p_debug_proc,0
     mov es:p_flags,0
-    mov es:p_cli_spinlock,0
-    mov es:p_sti_spinlock,0
     mov es:p_signal,0
     mov es:p_parent_switch,0
     mov es:p_wait_list,0
@@ -9398,8 +9163,6 @@ init_first_process      Proc near
     mov ds:p_es,fs
     GetCore
     mov fs:ps_null_thread,es
-    mov es:p_cli_spinlock,0
-    mov es:p_sti_spinlock,0
     mov es:p_core,fs
     ret
 init_first_process      Endp
