@@ -2471,7 +2471,6 @@ InsertWakeupSingle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InsertWakeupMultiple  PROC near
-    jmp InsertWakeupSingle
     push ax
     push di
 ;
@@ -2580,7 +2579,8 @@ WakeThread      PROC near
     call RemoveBlock32
     mov es:p_data,eax
     call cs:unlock_list_proc
-    call cs:insert_wakeup_proc
+    call InsertWakeupSingle
+;    call cs:insert_wakeup_proc
     
 wtUnlock:    
     call TryUnlockCore
@@ -5202,7 +5202,8 @@ wake_new    PROC near
     call SaveCurrentThread
 ;
     mov es,dx
-    call cs:insert_wakeup_proc
+    call InsertWakeupSingle
+;    call cs:insert_wakeup_proc
     jmp ContinueCurrentThread
 
 wake_new_other_core:
@@ -5422,7 +5423,8 @@ signal_thread   PROC far
     jne signal_unlock
 ;    
     mov es:p_signal,0
-    call cs:insert_wakeup_proc
+;    call cs:insert_wakeup_proc
+    call InsertWakeupSingle
 
 signal_unlock:
     call cs:unlock_cli_thread_proc
@@ -5699,7 +5701,8 @@ lcsUnblock:
     sub esi,OFFSET cs_list
     call cs:unlock_kernel_section_proc
 ;    
-    call cs:insert_wakeup_proc
+;    call cs:insert_wakeup_proc
+    call InsertWakeupSingle
 
 lcsUnblocked:
     pop di
@@ -6252,7 +6255,8 @@ lusUnblock:
     mov es:p_data,0
     call cs:unlock_user_section_proc
 ;
-    call cs:insert_wakeup_proc
+;    call cs:insert_wakeup_proc
+    call InsertWakeupSingle
 
 lusUnblocked:
     pop di
@@ -6627,7 +6631,8 @@ release_futex   Proc near
 ;
     push es    
     mov es,cx
-    call cs:insert_wakeup_proc
+;    call cs:insert_wakeup_proc
+    call InsertWakeupSingle
     pop es
 ;    
     pop di
@@ -7066,7 +7071,8 @@ get_cpu_time    ENDP
 wake_until      PROC far
     call TryLockCore
     mov es,cx
-    call cs:insert_wakeup_proc
+;    call cs:insert_wakeup_proc
+    call InsertWakeupSingle
     call TryUnlockCore
     retf32
 wake_until      ENDP
