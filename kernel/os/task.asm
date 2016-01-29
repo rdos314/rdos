@@ -2409,7 +2409,6 @@ RemoveWakeupSingle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RemoveWakeupMultiple  PROC near
-    jmp RemoveWakeupSingle
     push si
 
 rwmTryLock:    
@@ -2417,7 +2416,7 @@ rwmTryLock:
     or si,si
     je rwmGet
 ;
-    sti
+;    sti
     pause
     jmp rwmTryLock
 
@@ -2476,6 +2475,8 @@ InsertWakeupMultiple  PROC near
     push ax
     push di
 ;
+    jmp iwmTryLockSelf
+    
     mov ax,fs
     mov di,es:p_core
     cmp ax,di
@@ -2524,7 +2525,7 @@ iwmTryLockSelf:
     or ax,ax
     je iwmGetSelf
 ;
-    sti
+;    sti
     pause
     jmp iwmTryLockSelf
 
