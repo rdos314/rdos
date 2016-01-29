@@ -5189,21 +5189,20 @@ signal_thread   PROC far
     jz signal_done
 ;
     mov es,bx
-    call TryLockCore
     mov es:p_signal,1
+;    
     mov ax,es:p_sleep_sel
     cmp ax,SLEEP_SEL_SIGNAL
-    jne signal_unlock
+    jne signal_done
 ;
     xor ax,ax
     xchg ax,es:p_sleep_sel
     cmp ax,SLEEP_SEL_SIGNAL
-    jne signal_unlock
+    jne signal_done
 ;    
+    call TryLockCore
     mov es:p_signal,0
     call cs:insert_wakeup_proc
-
-signal_unlock:
     call TryUnlockCore
     
 signal_done:       
@@ -5247,17 +5246,22 @@ wait_for_signal PROC far
     push fs
     push ax
 ;
-    call LockCore
-;    
-    mov es,fs:ps_curr_thread
+    GetThread
+    mov es,ax
     xor al,al
     xchg al,es:p_signal
     or al,al
-    jnz wait_for_signal_unlock
+    jnz wait_for_signal_done
 ;
     mov es:p_sleep_sel,SLEEP_SEL_SIGNAL
     mov es:p_sleep_offset,0    
 ;
+    xor al,al
+    xchg al,es:p_signal
+    or al,al
+    jnz wait_for_signal_done
+;
+    call LockCore
     push OFFSET wait_for_signal_done
     call SaveLockedThreadKeepEs
     xor ax,ax
@@ -5265,10 +5269,9 @@ wait_for_signal PROC far
     mov fs:ps_curr_thread,ax
     jmp LoadThread
 
-wait_for_signal_unlock:
-    call UnlockCore
-
 wait_for_signal_done:       
+    mov es:p_sleep_sel,0
+;
     pop ax
     pop fs
     pop es
@@ -5314,12 +5317,11 @@ wait_for_signal_timeout PROC far
     push cx
     push edi
 ;
-    call LockCore
-;
+    GetThread
+    mov bx,ax
     mov cx,cs
     mov es,cx
     mov edi,OFFSET signal_timeout    
-    mov bx,fs:ps_curr_thread
     mov cx,bx
     StartTimer
 ;    
@@ -5327,11 +5329,17 @@ wait_for_signal_timeout PROC far
     xor al,al
     xchg al,es:p_signal
     or al,al
-    jnz wait_for_signal_timeout_unlock
+    jnz wait_for_signal_timeout_done
 ;
     mov es:p_sleep_sel,SLEEP_SEL_SIGNAL
     mov es:p_sleep_offset,0    
 ;
+    xor al,al
+    xchg al,es:p_signal
+    or al,al
+    jnz wait_for_signal_timeout_done
+;
+    call LockCore
     push OFFSET wait_for_signal_timeout_clear
     call SaveLockedThreadKeepEs
     xor ax,ax
@@ -5340,17 +5348,10 @@ wait_for_signal_timeout PROC far
     jmp LoadThread
 
 wait_for_signal_timeout_clear:
-    call LockCore
-    mov bx,fs:ps_curr_thread
+    GetThread
+    mov bx,ax
     StopTimer
-    call UnlockCore
-    jmp wait_for_signal_timeout_done
     
-wait_for_signal_timeout_unlock:
-    mov bx,fs:ps_curr_thread
-    StopTimer
-    call UnlockCore
-
 wait_for_signal_timeout_done:
     pop edi
     pop cx
