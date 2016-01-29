@@ -1430,7 +1430,7 @@ load_thread_wakeup_loop:
     jz load_thread_wakeup_done
 ;
     call cs:remove_wakeup_proc
-    call cs:access_sti_thread_proc
+;    call cs:access_sti_thread_proc
 ;
     mov di,es:p_prio
     call InsertCoreBlock
@@ -5411,7 +5411,7 @@ signal_thread   PROC far
 ;
     mov es,bx
     call TryLockCore
-    call cs:lock_cli_thread_proc
+;    call cs:lock_cli_thread_proc
     mov es:p_signal,1
     mov ax,es:p_sleep_sel
     cmp ax,SLEEP_SEL_SIGNAL
@@ -5423,11 +5423,10 @@ signal_thread   PROC far
     jne signal_unlock
 ;    
     mov es:p_signal,0
-;    call cs:insert_wakeup_proc
-    call InsertWakeupSingle
+    call cs:insert_wakeup_proc
 
 signal_unlock:
-    call cs:unlock_cli_thread_proc
+;    call cs:unlock_cli_thread_proc
     call TryUnlockCore
     
 signal_done:       
@@ -5474,28 +5473,28 @@ wait_for_signal PROC far
     call LockCore
 ;    
     mov es,fs:ps_curr_thread
-    call cs:lock_sti_thread_proc
+;    call cs:lock_sti_thread_proc
     xor al,al
-    call cs:lock_cli_thread_proc
+;    call cs:lock_cli_thread_proc
     xchg al,es:p_signal
     or al,al
     jnz wait_for_signal_unlock
 ;
     mov es:p_sleep_sel,SLEEP_SEL_SIGNAL
     mov es:p_sleep_offset,0    
-    call cs:unlock_cli_thread_proc
+;    call cs:unlock_cli_thread_proc
 ;
     push OFFSET wait_for_signal_done
     call SaveLockedThreadKeepEs
-    call cs:unlock_sti_thread_proc    
+;    call cs:unlock_sti_thread_proc    
     xor ax,ax
     mov es,ax
     mov fs:ps_curr_thread,ax
     jmp LoadThread
 
 wait_for_signal_unlock:
-    call cs:unlock_cli_thread_proc
-    call cs:unlock_sti_thread_proc
+;    call cs:unlock_cli_thread_proc
+;    call cs:unlock_sti_thread_proc
     call UnlockCore
 
 wait_for_signal_done:       
@@ -5554,20 +5553,20 @@ wait_for_signal_timeout PROC far
     StartTimer
 ;    
     mov es,bx
-    call cs:lock_sti_thread_proc
+;    call cs:lock_sti_thread_proc
     xor al,al
-    call cs:lock_cli_thread_proc
+;    call cs:lock_cli_thread_proc
     xchg al,es:p_signal
     or al,al
     jnz wait_for_signal_timeout_unlock
 ;
     mov es:p_sleep_sel,SLEEP_SEL_SIGNAL
     mov es:p_sleep_offset,0    
-    call cs:unlock_cli_thread_proc
+;    call cs:unlock_cli_thread_proc
 ;
     push OFFSET wait_for_signal_timeout_clear
     call SaveLockedThreadKeepEs
-    call cs:unlock_sti_thread_proc   
+;    call cs:unlock_sti_thread_proc   
     xor ax,ax
     mov es,ax 
     mov fs:ps_curr_thread,ax
@@ -5581,8 +5580,8 @@ wait_for_signal_timeout_clear:
     jmp wait_for_signal_timeout_done
     
 wait_for_signal_timeout_unlock:
-    call cs:unlock_cli_thread_proc
-    call cs:unlock_sti_thread_proc
+;    call cs:unlock_cli_thread_proc
+;    call cs:unlock_sti_thread_proc
     mov bx,fs:ps_curr_thread
     StopTimer
     call UnlockCore
