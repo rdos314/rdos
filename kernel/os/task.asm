@@ -56,8 +56,6 @@ SLEEP_SEL_WAIT  = 1
 SLEEP_SEL_SIGNAL = 2
 SLEEP_SEL_FUTEX = 3
 
-DEFAULT_GLOBAL  = 25        ; 25% of wakeup-entries are put into global ready-queue
-
 section_handle_seg          STRUC
 
 us_base     handle_header <>
@@ -152,11 +150,6 @@ cr_edi      EQU -34
 
 data    SEGMENT byte public 'DATA'
 
-global_ptab         DW 256 DUP(?)
-global_prio_act     DW ?
-
-global_spinlock     DW ?
-
 term_thread_list    DW ?
 term_proc_list      DW ?
 
@@ -216,9 +209,6 @@ unlock_cli_thread_proc      DW OFFSET UnlockCliThreadSingle
 lock_sti_thread_proc        DW OFFSET LockStiThreadSingle
 unlock_sti_thread_proc      DW OFFSET UnlockStiThreadSingle
 access_sti_thread_proc      DW OFFSET AccessStiThreadSingle
-
-lock_ready_proc             DW OFFSET LockReadySingle
-unlock_ready_proc           DW OFFSET UnlockReadySingle
 
 insert_wakeup_proc          DW OFFSET InsertWakeupSingle
 remove_wakeup_proc          DW OFFSET RemoveWakeupSingle
@@ -2255,8 +2245,6 @@ start_processor_null_threads    Proc near
     mov ds:lock_sti_thread_proc,OFFSET LockStiThreadMultiple
     mov ds:unlock_sti_thread_proc,OFFSET UnlockStiThreadMultiple
     mov ds:access_sti_thread_proc,OFFSET AccessStiThreadMultiple
-    mov ds:lock_ready_proc,OFFSET LockReadyMultiple
-    mov ds:unlock_ready_proc,OFFSET UnlockReadyMultiple
     mov ds:insert_wakeup_proc,OFFSET InsertWakeupMultiple
     mov ds:remove_wakeup_proc,OFFSET RemoveWakeupMultiple
     mov ds:lock_kernel_section_proc,OFFSET LockKernelSectionMultiple
@@ -3065,36 +3053,6 @@ AccessStiThreadSingle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           LockReadySingle
-;
-;           DESCRIPTION:    Lock global ready-queue, single processor version
-;
-;           PARAMETERS:     DS      Task sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockReadySingle  Proc near
-    ret
-LockReadySingle  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockReadySingle
-;
-;           DESCRIPTION:    Unlock global ready-queue, single processor version
-;
-;           PARAMETERS:     DS      Task sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockReadySingle    Proc near
-    ret
-UnlockReadySingle    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           LockKernelSectionSingle
 ;
 ;           DESCRIPTION:    Lock kernel critical section, single processor version
@@ -3371,59 +3329,6 @@ astGet:
     pop ax    
     ret
 AccessStiThreadMultiple    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LockReadyMultiple
-;
-;           DESCRIPTION:    Lock global ready-queue, multiple processor version
-;
-;           PARAMETERS:     DS      Task sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockReadyMultiple  Proc near
-    push ax
-    sti
-
-lrSpinLock:    
-    mov ax,ds:global_spinlock
-    or ax,ax
-    je lrGet
-;
-    pause
-    jmp lrSpinLock
-
-lrGet:
-    inc ax
-    xchg ax,ds:global_spinlock
-    or ax,ax
-    je lrDone
-;
-    jmp lrSpinLock
-
-lrDone:
-    pop ax    
-    ret
-LockReadyMultiple  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockReadyMultiple
-;
-;           DESCRIPTION:    Unlock global ready-queue, multiple processor version
-;
-;           PARAMETERS:     DS      Task sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockReadyMultiple    Proc near
-    mov ds:global_spinlock,0
-    sti
-    ret
-UnlockReadyMultiple    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -9561,18 +9466,6 @@ init       PROC far
     mov ds:tlb_remain_linear,eax
 ;
     InitSection ds:futex_section
-    mov ds:global_spinlock,0
-    xor ax,ax
-    mov bx,OFFSET global_ptab
-    mov ds:global_prio_act,bx
-;
-    mov cx,256
-
-glob_ptab_init:
-    mov ds:[bx],ax
-    add bx,2
-    loop glob_ptab_init
-;
     mov ds:timer_spinlock,0
     mov bx,OFFSET timer_entries
     mov ds:[bx].timer_next,0
