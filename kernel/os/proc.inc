@@ -95,9 +95,6 @@ ps_clock_tics       DW ?  ; not used
 ps_lsb_tics         DD ?
 ps_msb_tics         DD ?
 
-ps_global_post_perc DB ?
-ps_curr_post        DB ?
-
 ps_wakeup_spinlock  DW ?
 
 ps_linear           DD ?

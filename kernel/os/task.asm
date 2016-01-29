@@ -916,74 +916,6 @@ notify_time_drift  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           HandleGlobal
-;
-;           DESCRIPTION:    Handle global list
-;
-;           PARAMETERS:     DS      Task sel
-;                           FS      Core selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HandleGlobal    Proc near
-    mov si,ds:global_prio_act
-    cmp si,fs:ps_prio_act
-    jb hgDone
-;
-    test fs:ps_flags,PS_FLAG_MOVE
-    jz hgTake
-;
-    lock and fs:ps_flags,NOT PS_FLAG_MOVE
-    jmp hgDone
-
-hgTake:
-    call cs:lock_ready_proc
-;
-    mov si,ds:global_prio_act
-    mov ax,[si]
-    or ax,ax
-    jz hgUnlockDone
-;    
-    cmp si,fs:ps_prio_act
-    jae hgRemove
-
-hgUnlockDone:
-    call cs:unlock_ready_proc
-    jmp hgDone    
-
-hgRemove:
-    call RemoveBlock
-;
-    mov ax,[si]
-    or ax,ax
-    jnz hgUnlock
-
-hgPrioLoop:
-    or si,si
-    jz hgSavePrio
-;    
-    sub si,2
-    mov ax,[si]
-    or ax,ax
-    jz hgPrioLoop
-
-hgSavePrio:
-    mov ds:global_prio_act,si
-
-hgUnlock:
-    call cs:unlock_ready_proc
-;
-    mov di,es:p_prio
-    call InsertCoreBlock
-    mov fs:ps_prio_act,di
-
-hgDone:    
-    ret
-HandleGlobal   Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           HandlePreempt
 ;
 ;           DESCRIPTION:    Handle preempt
@@ -1160,7 +1092,6 @@ GetNextThread    Proc near
     sti
     lock and fs:ps_flags,NOT PS_FLAG_PRIO_CHANGE
 ;
-    call HandleGlobal
     call HandlePreempt
     call HandlePrio
     call GetPrioThread
@@ -1512,38 +1443,11 @@ load_thread_wakeup_loop:
     call cs:access_sti_thread_proc
 ;
     mov di,es:p_prio
-    or di,di
-    jz load_wakeup_local_do
-;    
-    mov al,fs:ps_curr_post
-    add al,fs:ps_global_post_perc
-    sub al,100
-    jnc load_thread_wakeup_global
-
-load_wakeup_local:
-    add al,100
-    mov fs:ps_curr_post,al
-
-load_wakeup_local_do:    
     call InsertCoreBlock
     cmp di,fs:ps_prio_act
     jbe load_thread_wakeup_loop
 ;       
     mov fs:ps_prio_act,di
-    jmp load_thread_wakeup_loop
-
-load_thread_wakeup_global:
-    mov fs:ps_curr_post,al
-;
-    call cs:lock_ready_proc
-    call InsertBlock
-    cmp di,ds:global_prio_act
-    jb load_thread_global_unlock
-;
-    mov ds:global_prio_act,di
-
-load_thread_global_unlock:
-    call cs:unlock_ready_proc    
     jmp load_thread_wakeup_loop
     
 load_thread_wakeup_done:
@@ -2165,23 +2069,6 @@ ContinueCurrentThread:
     or di,di
     je cctPop
 ;
-    test fs:ps_flags,PS_FLAG_PREEMPT
-    jz cctLocal
-;
-    mov ax,SEG data
-    mov ds,ax
-    call cs:lock_ready_proc
-    call InsertBlock
-    cmp di,ds:global_prio_act
-    jb cctGlobalUnlock
-;
-    mov ds:global_prio_act,di
-
-cctGlobalUnlock:
-    call cs:unlock_ready_proc    
-    jmp cctPop
-        
-cctLocal:
     call InsertCoreBlock
     cmp di,fs:ps_prio_act
     jbe cctPop
@@ -2934,8 +2821,6 @@ ptab_init:
     mov es:ps_math_thread,0
     mov es:ps_apic,-1
     mov es:ps_last_lsb,0
-    mov es:ps_global_post_perc,DEFAULT_GLOBAL
-    mov es:ps_curr_post,0
     mov es:ps_tlb_flush,0
     mov es:ps_lsb_tics,0
     mov es:ps_msb_tics,0
