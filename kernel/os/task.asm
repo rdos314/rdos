@@ -2245,8 +2245,8 @@ start_processor_null_threads    Proc near
     mov ds:lock_sti_thread_proc,OFFSET LockStiThreadMultiple
     mov ds:unlock_sti_thread_proc,OFFSET UnlockStiThreadMultiple
     mov ds:access_sti_thread_proc,OFFSET AccessStiThreadMultiple
-;    mov ds:insert_wakeup_proc,OFFSET InsertWakeupMultiple
-;    mov ds:remove_wakeup_proc,OFFSET RemoveWakeupMultiple
+    mov ds:insert_wakeup_proc,OFFSET InsertWakeupMultiple
+    mov ds:remove_wakeup_proc,OFFSET RemoveWakeupMultiple
     mov ds:lock_kernel_section_proc,OFFSET LockKernelSectionMultiple
     mov ds:unlock_kernel_section_proc,OFFSET UnlockKernelSectionMultiple
     mov ds:lock_user_section_proc,OFFSET LockUserSectionMultiple
@@ -2409,6 +2409,7 @@ RemoveWakeupSingle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RemoveWakeupMultiple  PROC near
+    jmp RemoveWakeupSingle
     push si
 
 rwmTryLock:    
@@ -2471,6 +2472,7 @@ InsertWakeupSingle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InsertWakeupMultiple  PROC near
+    jmp InsertWakeupSingle
     push ax
     push di
 ;
@@ -5413,9 +5415,13 @@ signal_thread   PROC far
     cmp ax,SLEEP_SEL_SIGNAL
     jne signal_unlock
 ;
-    call cs:insert_wakeup_proc
-    mov es:p_sleep_sel,0
+    xor ax,ax
+    xchg ax,es:p_sleep_sel
+    cmp ax,SLEEP_SEL_SIGNAL
+    jne signal_unlock
+;    
     mov es:p_signal,0
+    call cs:insert_wakeup_proc
 
 signal_unlock:
     call cs:unlock_cli_thread_proc
@@ -7057,12 +7063,10 @@ get_cpu_time    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 wake_until      PROC far
-    mov ax,core_data_sel
-    mov fs,ax
-    mov ax,fs:ps_sel
-    mov fs,ax
+    call TryLockCore
     mov es,cx
     call cs:insert_wakeup_proc
+    call TryUnlockCore
     retf32
 wake_until      ENDP
 
