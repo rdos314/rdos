@@ -2557,9 +2557,8 @@ rwmGet:
 rwmLocked:
     mov si,OFFSET ps_wakeup_list
     call RemoveCoreBlock
-    sti
-;
     mov fs:ps_wakeup_spinlock,0    
+    sti
     pop si    
     ret
 RemoveWakeupMultiple  Endp
@@ -2606,7 +2605,7 @@ InsertWakeupMultiple  PROC near
     je iwmTryLockSelf
 ;    
     push fs
-;    mov fs,di
+    mov fs,di
 
 iwmTryLockOther:    
     mov ax,fs:ps_wakeup_spinlock
@@ -2629,15 +2628,15 @@ iwmGetOther:
 iwmLockedOther:
     mov di,OFFSET ps_wakeup_list
     call InsertCoreBlock
-    sti
 ;
-;    mov di,es:p_prio
-;    cmp di,fs:ps_prio_act
+    mov di,es:p_prio
+    cmp di,fs:ps_prio_act
     mov fs:ps_wakeup_spinlock,0
-;    jbe iwmIntOk
+    sti
+    jbe iwmIntOk
 ;
-;    mov al,80h
-;    SendInt    
+    mov al,80h
+    SendInt    
 
 iwmIntOk:
     pop fs
@@ -2664,8 +2663,8 @@ iwmGetSelf:
 iwmLockedSelf:
     mov di,OFFSET ps_wakeup_list
     call InsertCoreBlock
-    sti
     mov fs:ps_wakeup_spinlock,0
+    sti
 
 iwmDone:    
     pop di

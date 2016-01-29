@@ -879,14 +879,14 @@ void __far PowerThread(void *param)
             }
         }
 
-        SwitchOneIrq(MinLoadCore);
+/*        SwitchOneIrq(MinLoadCore); */
 
         if (HighCount > 1)
             Core = HighArr[RdosGetRandom(HighCount)];
         else
             Core = HighArr[0];
             
-        MoveOneTask(Core);
+/*        MoveOneTask(Core); */
 
         if (MaxCpuLoad > 60)
         {
