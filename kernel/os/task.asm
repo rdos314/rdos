@@ -2270,6 +2270,7 @@ null_thread:
     mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
     mov es:p_core,fs
+    mov es:p_wanted_core,0
 ;
     push OFFSET null_loop_start
     call SaveCurrentThread
@@ -2955,6 +2956,36 @@ gpnDone:
     pop ax
     retf32
 get_core_num   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetThreadCore
+;
+;       DESCRIPTION:    Set core for a thread
+;
+;       PARAMETERS:     AX      Core #
+;                       ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_thread_core_name      DB 'Set Thread Core',0
+
+set_thread_core   Proc far
+    push bx
+;
+    cmp ax,cs:core_count
+    jae stcDone
+;    
+    mov bx,ax
+    add bx,bx
+    mov bx,cs:[bx].core_arr
+    mov es:p_wanted_core,bx
+
+stcDone:
+    pop bx
+    retf32
+set_thread_core   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -7721,6 +7752,7 @@ init_thread_block       PROC near
     pop fs
 ;
     mov es:p_signal_spinlock,0
+    mov es:p_wanted_core,0
     mov ax,ds:p_app_sel
     mov es:p_app_sel,ax
     mov ax,ds:p_ldt_sel
@@ -9044,6 +9076,7 @@ create_first_thread       PROC near
     mov es:p_debug_proc,0
     mov es:p_flags,0
     mov es:p_signal_spinlock,0
+    mov es:p_wanted_core,0
     mov es:p_signal,0
     mov es:p_parent_switch,0
     mov es:p_wait_list,0
@@ -9195,6 +9228,7 @@ init_first_process      Proc near
     GetCore
     mov fs:ps_null_thread,es
     mov es:p_signal_spinlock,0
+    mov es:p_wanted_core,0
     mov es:p_core,fs
     ret
 init_first_process      Endp
@@ -9413,6 +9447,12 @@ timer_free_list_create:
     mov di,OFFSET leave_long_int_name
     xor cl,cl
     mov ax,leave_long_int_nr
+    RegisterOsGate
+;
+    mov si,OFFSET set_thread_core
+    mov di,OFFSET set_thread_core_name
+    xor cl,cl
+    mov ax,set_thread_core_nr
     RegisterOsGate
 ;
     mov si,OFFSET debug_block

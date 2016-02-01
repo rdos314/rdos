@@ -676,4 +676,6 @@ update_tcp_mtu_nr           = 553
 
 notify_lon_data_nr          = 554
 
+set_thread_core_nr          = 555
+
 osgate_entries				= 560

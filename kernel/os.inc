@@ -1094,6 +1094,12 @@ EnterC3    MACRO
     OsGate enter_c3_nr
                     ENDM
 
+;  IN  ES   Thread sel
+;  IN  AX   Core #
+SetThreadCore    MACRO
+    OsGate set_thread_core_nr
+                    ENDM
+
 ;;;;;;;;;;; Signal & waits ;;;;;;;;;;;;;;;;
 
 ClearSignal     MACRO
