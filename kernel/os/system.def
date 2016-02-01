@@ -361,6 +361,7 @@ p_data			    DD ?
 p_thread_sel	    DW ?
 p_tss_sel           DW ?
 p_app_sel		    DW ?
+p_signal_spinlock   DW ?
 p_free_proc		    DD ?,?
 p_cr3			    DD ?
 p_tls_linear        DQ ?

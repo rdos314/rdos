@@ -206,6 +206,9 @@ unlock_list_proc            DW OFFSET UnlockListSingle
 insert_wakeup_proc          DW OFFSET InsertWakeupSingle
 remove_wakeup_proc          DW OFFSET RemoveWakeupSingle
 
+lock_signal_proc            DW OFFSET LockSignalSingle
+unlock_signal_proc          DW OFFSET UnlockSignalSingle
+
 lock_kernel_section_proc    DW OFFSET LockKernelSectionSingle
 unlock_kernel_section_proc  DW OFFSET UnlockKernelSectionSingle
 
@@ -1924,74 +1927,6 @@ SaveLockedThread   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SaveLockedThreadKeepEs
-;
-;           DESCRIPTION:    Save state of current thread when lock is already taken
-;
-;       PARAMETERS:     Stack, return IP
-;               FS      Core selector
-;
-;       RETURNS:    SS:SP       Processor stack
-;                   GS      Clear
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SaveLockedThreadKeepEs    Proc near       
-    push fs
-    push ds
-    push eax
-    push edx
-;
-    GetSystemTime
-    mov ds,fs:ps_curr_thread
-    sub eax,fs:ps_last_lsb
-    add ds:p_lsb_tics,eax
-    adc ds:p_msb_tics,0
-    add fs:ps_lsb_tics,eax
-    adc fs:ps_msb_tics,0
-;
-    pushfd
-    pop eax
-    or ax,200h
-    mov dword ptr ds:p_rflags,eax
-    mov dword ptr ds:p_rcx,ecx
-    mov dword ptr ds:p_rbx,ebx
-    mov dword ptr ds:p_rbp,ebp
-    mov dword ptr ds:p_rsi,esi
-    mov dword ptr ds:p_rdi,edi
-    mov ds:p_es,es
-    mov ds:p_cs,cs
-    mov ds:p_ss,ss
-    mov ds:p_gs,gs
-;
-    pop dword ptr ds:p_rdx
-    pop eax
-    mov dword ptr ds:p_rax,eax
-;
-    pop ds:p_ds
-    pop ds:p_fs
-    pop bp
-    pop dx
-    movzx edx,dx
-    mov dword ptr ds:p_rip,edx
-    mov dword ptr ds:p_rsp,esp
-;   
-    lss esp,fword ptr fs:ps_stack_offset        
-    call cs:fpu_save_proc
-;        
-    mov edx,dword ptr ds:p_rdx
-    push bp
-;
-    xor bp,bp
-    mov ds,bp
-    mov gs,bp    
-    ret
-SaveLockedThreadKeepEs   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           SkipCurrentThread
 ;
 ;           DESCRIPTION:    Skip current thread (no save of registers)
@@ -2234,6 +2169,8 @@ start_processor_null_threads    Proc near
     mov ds:unlock_list_proc,OFFSET UnlockListMultiple
     mov ds:insert_wakeup_proc,OFFSET InsertWakeupMultiple
     mov ds:remove_wakeup_proc,OFFSET RemoveWakeupMultiple
+    mov ds:lock_signal_proc,OFFSET LockSignalMultiple
+    mov ds:unlock_signal_proc,OFFSET UnlockSignalMultiple
     mov ds:lock_kernel_section_proc,OFFSET LockKernelSectionMultiple
     mov ds:unlock_kernel_section_proc,OFFSET UnlockKernelSectionMultiple
     mov ds:lock_user_section_proc,OFFSET LockUserSectionMultiple
@@ -2433,6 +2370,7 @@ RemoveWakeupMultiple  Endp
 ;           DESCRIPTION:    Insert thread into run list, single core
 ;
 ;           PARAMETERS:     ES      Thread
+;                           FS      Core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2454,6 +2392,7 @@ InsertWakeupSingle  Endp
 ;           DESCRIPTION:    Insert thread into run list, multiple core
 ;
 ;           PARAMETERS:     ES      Thread
+;                           FS      Core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2533,6 +2472,93 @@ iwmDone:
     pop ax
     ret
 InsertWakeupMultiple  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockSignalSingle
+;
+;           DESCRIPTION:    Lock signal, single core
+;
+;           PARAMETERS:     ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockSignalSingle  PROC near
+    cli
+    ret
+LockSignalSingle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockSignalMultiple
+;
+;           DESCRIPTION:    Lock signal, multiple core
+;
+;           PARAMETERS:     ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockSignalMultiple  PROC near
+    push ax
+
+lsmTryLock:    
+    mov ax,es:p_signal_spinlock
+    or ax,ax
+    je lsmGet
+;
+    sti
+    pause
+    jmp lsmTryLock
+
+lsmGet:
+    cli
+    inc ax
+    xchg ax,es:p_signal_spinlock
+    or ax,ax
+    je lsmLocked
+;
+    sti
+    jmp lsmTryLock
+
+lsmLocked:
+    pop ax
+    ret
+LockSignalMultiple  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockSignalSingle
+;
+;           DESCRIPTION:    Unlock signal, single core
+;
+;           PARAMETERS:     ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockSignalSingle  PROC near
+    sti
+    ret
+UnlockSignalSingle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockSignalMultiple
+;
+;           DESCRIPTION:    Unlock signal, multiple core
+;
+;           PARAMETERS:     ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockSignalMultiple  PROC near
+    mov es:p_signal_spinlock,0
+    sti
+    ret
+UnlockSignalMultiple  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5189,22 +5215,26 @@ signal_thread   PROC far
     jz signal_done
 ;
     mov es,bx
+    call TryLockCore
+    call cs:lock_signal_proc
     mov es:p_signal,1
 ;    
     mov ax,es:p_sleep_sel
     cmp ax,SLEEP_SEL_SIGNAL
-    jne signal_done
-;
-    xor ax,ax
-    xchg ax,es:p_sleep_sel
-    cmp ax,SLEEP_SEL_SIGNAL
-    jne signal_done
+    jne signal_unlock_signal
 ;    
-    call TryLockCore
+    mov es:p_sleep_sel,0
     mov es:p_signal,0
-    call cs:insert_wakeup_proc
+    call cs:unlock_signal_proc
+    call cs:insert_wakeup_proc    
+    jmp signal_unlock_core
+
+signal_unlock_signal:
+    call cs:unlock_signal_proc
+
+signal_unlock_core:
     call TryUnlockCore
-    
+
 signal_done:       
     pop ax
     verr ax
@@ -5214,7 +5244,7 @@ signal_done:
     
 signal_fs_ok:
     mov fs,ax
-;       
+;
     pop ax
     verr ax
     jz signal_es_ok
@@ -5226,7 +5256,6 @@ signal_es_ok:
     pop ax
     retf32
 signal_thread   ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5246,32 +5275,31 @@ wait_for_signal PROC far
     push fs
     push ax
 ;
-    GetThread
-    mov es,ax
+    call LockCore
+    mov es,fs:ps_curr_thread
+    call cs:lock_signal_proc
+;    
     xor al,al
     xchg al,es:p_signal
     or al,al
-    jnz wait_for_signal_done
+    jnz wait_for_signal_unlock
 ;
     mov es:p_sleep_sel,SLEEP_SEL_SIGNAL
-    mov es:p_sleep_offset,0    
+    mov es:p_sleep_offset,0
+    call cs:unlock_signal_proc
 ;
-    xor al,al
-    xchg al,es:p_signal
-    or al,al
-    jnz wait_for_signal_done
-;
-    call LockCore
     push OFFSET wait_for_signal_done
-    call SaveLockedThreadKeepEs
+    call SaveLockedThread
     xor ax,ax
     mov es,ax
     mov fs:ps_curr_thread,ax
     jmp LoadThread
 
+wait_for_signal_unlock:
+    call cs:unlock_signal_proc
+    call UnlockCore
+
 wait_for_signal_done:       
-    mov es:p_sleep_sel,0
-;
     pop ax
     pop fs
     pop es
@@ -5317,35 +5345,37 @@ wait_for_signal_timeout PROC far
     push cx
     push edi
 ;
-    GetThread
-    mov bx,ax
+    call LockCore
+    mov es,fs:ps_curr_thread
+    call cs:lock_signal_proc
+;    
+    xor al,al
+    xchg al,es:p_signal
+    or al,al
+    jnz wait_for_signal_timeout_unlock
+;
+    mov es:p_sleep_sel,SLEEP_SEL_SIGNAL
+    mov es:p_sleep_offset,0    
+    call cs:unlock_signal_proc
+;
+    mov bx,es
     mov cx,cs
     mov es,cx
     mov edi,OFFSET signal_timeout    
     mov cx,bx
     StartTimer
-;    
-    mov es,bx
-    xor al,al
-    xchg al,es:p_signal
-    or al,al
-    jnz wait_for_signal_timeout_done
 ;
-    mov es:p_sleep_sel,SLEEP_SEL_SIGNAL
-    mov es:p_sleep_offset,0    
-;
-    xor al,al
-    xchg al,es:p_signal
-    or al,al
-    jnz wait_for_signal_timeout_done
-;
-    call LockCore
     push OFFSET wait_for_signal_timeout_clear
-    call SaveLockedThreadKeepEs
+    call SaveLockedThread
     xor ax,ax
     mov es,ax 
     mov fs:ps_curr_thread,ax
     jmp LoadThread
+
+wait_for_signal_timeout_unlock:
+    call cs:unlock_signal_proc
+    call UnlockCore
+    jmp wait_for_signal_timeout_done
 
 wait_for_signal_timeout_clear:
     GetThread
@@ -7690,6 +7720,7 @@ init_thread_block       PROC near
     mov es:p_core,fs
     pop fs
 ;
+    mov es:p_signal_spinlock,0
     mov ax,ds:p_app_sel
     mov es:p_app_sel,ax
     mov ax,ds:p_ldt_sel
@@ -9012,6 +9043,7 @@ create_first_thread       PROC near
 ;
     mov es:p_debug_proc,0
     mov es:p_flags,0
+    mov es:p_signal_spinlock,0
     mov es:p_signal,0
     mov es:p_parent_switch,0
     mov es:p_wait_list,0
@@ -9162,6 +9194,7 @@ init_first_process      Proc near
     mov ds:p_es,fs
     GetCore
     mov fs:ps_null_thread,es
+    mov es:p_signal_spinlock,0
     mov es:p_core,fs
     ret
 init_first_process      Endp
