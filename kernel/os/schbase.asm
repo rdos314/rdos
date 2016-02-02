@@ -50,13 +50,13 @@ _TEXT    SEGMENT byte public 'CODE'
 
     assume cs:_TEXT
 
+    extrn IdToHandle:near
 
 test_gate_name db 'TEST', 0
 
 test_gate   Proc far
-    GetThread
-    movzx eax,ax
-    call ThreadTerminated
+    mov eax,5
+    call IdToHandle
     ret
 test_gate   Endp
 
@@ -554,6 +554,12 @@ InitScheduler_    Proc near
     mov edi,OFFSET suspend_and_signal_thread_name
     xor dx,dx
     mov ax,suspend_and_signal_thread_nr
+    RegisterBimodalUserGate
+;
+    mov esi,test_gate
+    mov edi,OFFSET test_gate_name
+    xor dx,dx
+    mov ax,test_gate_nr
     RegisterBimodalUserGate
 ;
     mov ebx,SEG data
