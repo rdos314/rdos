@@ -286,16 +286,13 @@ get_thread_state    Proc near
     push edx
     push esi
     push edi
-    movzx ebx,ax
-    shl ebx,1
-    mov ax,SEG data
-    mov ds,ax
-    cli
-    mov ax,ds:[ebx].thread_arr
-    or ax,ax
+;    
+    movzx eax,ax
+    call IdToHandle
+    or eax,eax
     stc
     jz get_state_done
-;
+;    
     mov ds,ax
     mov ax,ds:p_id
     mov es:[edi].st_id,ax
@@ -315,7 +312,6 @@ get_thread_state    Proc near
     add edi,OFFSET st_list
     mov bx,ds
 ;    
-    sti
     mov ax,SEG data
     mov ds,ax
     mov esi,OFFSET state_arr
@@ -335,7 +331,6 @@ get_state_found:
     clc
 
 get_state_done:
-    sti
     pop edi
     pop esi
     pop edx
