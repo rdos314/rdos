@@ -65,7 +65,6 @@ ENDIF
     extrn init_mem:near
     extrn init_gdt:near
     extrn init_idt:near
-    extrn init_state:near
     extrn init_thread:near
     extrn init_handle:near
     extrn init_mem_sels:near
@@ -808,7 +807,6 @@ prot_init:
     call init_physical_gates
     call init_mem_sels
     call init_tsc
-    call init_state
     call init_thread
     call init_handle
     call init_int
