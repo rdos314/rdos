@@ -42,8 +42,6 @@ data    SEGMENT byte public 'DATA'
 state_hooks         DW ?
 state_arr           DD 2*32 DUP(?)
 
-thread_arr          DW 256 DUP(?)
-
 data    ENDS
 
 _TEXT    SEGMENT byte public 'CODE'
@@ -79,16 +77,7 @@ create_thread    Proc far
     push ecx
     push edi
 ;    
-    mov ax,SEG data
-    mov es,ax
-    mov edi,OFFSET thread_arr
-    xor eax,eax
-    mov ecx,256
-    repne scasw
     GetThread
-    sub edi,2
-    stosw
-;
     push eax
     movzx eax,ax
     call ThreadCreated
@@ -124,16 +113,6 @@ terminate_thread    Proc far
     GetThread
     movzx eax,ax
     call ThreadTerminated
-;
-    GetThread
-    mov cx,SEG data
-    mov es,ecx
-    mov edi,OFFSET thread_arr
-    mov ecx,256
-    repne scasw
-    sub edi,2
-    xor eax,eax
-    stosw
 ;
     pop edi
     pop ecx
@@ -418,33 +397,16 @@ suspend_and_signal_thread       PROC far
     push ecx
     push esi
 ;
+    movzx eax,ax
+    call IdToHandle
+    or eax,eax
+    stc
+    jz suspend_signal_done
+;
     mov bx,ax
-    mov ecx,256
-    mov ax,SEG data
-    mov ds,eax
-    xor esi,esi
-
-suspend_signal_loop:
-    mov ax,ds:[esi].thread_arr
-    or ax,ax
-    jz suspend_signal_next
-;
-    mov es,eax   
-    cmp bx,es:p_id
-    je suspend_signal_found
-
-suspend_signal_next:
-    add esi,2
-    loop suspend_signal_loop
-;
-    stc    
-    jmp suspend_signal_done    
-
-suspend_signal_found:
-    mov bx,es
+    mov es,ax
     or es:p_flags,THREAD_FLAG_SUSPEND
     Signal
-    sti
     clc
 
 suspend_signal_done:
@@ -534,13 +496,6 @@ init_state_hooks:
     mov es:[edi+4],cs
     add edi,8
     loop init_state_hooks
-;
-    mov ax,SEG data
-    mov es,ax
-    mov di,OFFSET thread_arr
-    xor ax,ax
-    mov cx,256
-    rep stosw
 ;
     popad
     pop es
