@@ -239,47 +239,29 @@ hook_state      Endp
 thread_to_sel_name DB 'Thread To Sel',0
 
 thread_to_sel   Proc far
-    push ds
-    push es
     push eax
     push ecx
+    push edx
     push esi
+    push edi
 ;    
-    mov ecx,256
-    mov ax,SEG data
-    mov ds,eax
-    xor esi,esi
-
-thread_to_sel_loop:
-    mov ax,ds:[esi].thread_arr
-    or ax,ax
-    jz thread_to_sel_next
+    movzx eax,bx
+    call IdToHandle
+    or eax,eax
+    stc
+    jz thread_to_sel_done
 ;
-    mov es,eax   
-    cmp bx,es:p_id
-    je thread_to_sel_found
-
-thread_to_sel_next:
-    add esi,2
-    loop thread_to_sel_loop
-;
-    xor bx,bx
-    stc    
-    jmp thread_to_sel_done    
-
-thread_to_sel_found:
-    mov bx,es
+    mov bx,ax
     clc
 
 thread_to_sel_done:
+    pop edi
     pop esi
+    pop edx
     pop ecx
-    pop eax
-    pop es
-    pop ds    
+    pop eax    
     ret
 thread_to_sel   Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
