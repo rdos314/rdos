@@ -376,29 +376,13 @@ suspend_thread  PROC far
     push ecx
     push esi
 ;
-    mov bx,ax
-    mov ecx,256
-    mov ax,SEG data
-    mov ds,eax
-    xor esi,esi
-
-suspend_thread_loop:
-    mov ax,ds:[esi].thread_arr
-    or ax,ax
-    jz suspend_thread_next
-;
-    mov es,ax   
-    cmp bx,es:p_id
-    je suspend_thread_found
-
-suspend_thread_next:
-    add esi,2
-    loop suspend_thread_loop
-;
-    stc    
-    jmp suspend_thread_done    
-
-suspend_thread_found:
+    movzx eax,ax
+    call IdToHandle
+    or eax,eax
+    stc
+    jz suspend_thread_done
+;    
+    mov es,ax
     or es:p_flags,THREAD_FLAG_SUSPEND
     clc
 
