@@ -42,8 +42,6 @@ data    SEGMENT byte public 'DATA'
 state_hooks         DW ?
 state_arr           DD 2*32 DUP(?)
 
-next_tid            DW ?
-
 thread_arr          DW 256 DUP(?)
 
 data    ENDS
@@ -91,14 +89,11 @@ create_thread    Proc far
     sub edi,2
     stosw
 ;
-    mov cx,es:next_tid
-    inc cx
-    mov es:next_tid,cx
-    mov es,ax
-    mov es:p_id,cx
-;
+    push eax
     movzx eax,ax
     call ThreadCreated
+    pop es
+    mov es:p_id,ax
 ;
     pop edi
     pop ecx
@@ -575,7 +570,6 @@ init_state_hooks:
 ;
     mov ax,SEG data
     mov es,ax
-    mov es:next_tid,0
     mov di,OFFSET thread_arr
     xor ax,ax
     mov cx,256
