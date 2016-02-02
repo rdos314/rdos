@@ -73,9 +73,28 @@ test_gate   Endp
     extrn ThreadCreated:near
 
 create_thread    Proc far
+    push es
+    push eax
+    push ecx
+    push edi
+;    
+    mov ax,system_data_sel
+    mov es,ax
+    mov edi,OFFSET thread_arr
+    xor eax,eax
+    mov ecx,256
+    repne scasw
     GetThread
+    sub edi,2
+    stosw
+;
     movzx eax,ax
     call ThreadCreated
+;
+    pop edi
+    pop ecx
+    pop eax
+    pop es    
     ret
 create_thread    Endp
 
@@ -93,9 +112,29 @@ create_thread    Endp
     extrn ThreadTerminated:near
 
 terminate_thread    Proc far
+    push es
+    push eax
+    push ecx
+    push edi
+;    
     GetThread
     movzx eax,ax
     call ThreadTerminated
+;
+    GetThread
+    mov cx,system_data_sel
+    mov es,ecx
+    mov edi,OFFSET thread_arr
+    mov ecx,256
+    repne scasw
+    sub edi,2
+    xor eax,eax
+    stosw
+;
+    pop edi
+    pop ecx
+    pop eax
+    pop es   
     ret
 terminate_thread    Endp
 
@@ -527,6 +566,7 @@ init_state_hooks:
 ;
     mov ax,system_data_sel
     mov es,ax
+    mov es:next_pid,0
     mov di,OFFSET thread_arr
     xor ax,ax
     mov cx,256

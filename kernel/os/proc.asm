@@ -83,16 +83,6 @@ code    SEGMENT byte public use16 'CODE'
 trap_create_thread      PROC near
     sti
     push cx
-    mov ax,system_data_sel
-    mov es,ax
-    mov di,OFFSET thread_arr
-    xor ax,ax
-    mov cx,256
-    repne scasw
-    GetThread
-    sub di,2
-    stosw
-;
     mov ax,proc_data_sel
     mov ds,ax
     mov cl,ds:create_thread_hooks
@@ -147,16 +137,6 @@ trap_terminate_thread_loop:
     dec cl
     jnz trap_terminate_thread_loop
 trap_terminate_thread_done:
-    mov ax,system_data_sel
-    mov ds,ax
-    mov es,ax
-    mov di,OFFSET thread_arr
-    GetThread
-    mov cx,256
-    repne scasw
-    sub di,2
-    xor ax,ax
-    stosw
     pop cx
     ret
 trap_terminate_thread   ENDP
@@ -943,15 +923,6 @@ init_thread     PROC near
     mov ds:create_process_hooks,al
     mov ds:terminate_process_hooks,al
     mov ds:init_tasking_hooks,al
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov es,ax
-    mov ds:next_pid,0
-    mov di,OFFSET thread_arr
-    mov cx,256
-    xor ax,ax
-    rep stosw
 ;
     mov eax,OFFSET terminate_user_end - OFFSET terminate_user_start
     AllocateSmallLinear
