@@ -42,6 +42,8 @@ data    SEGMENT byte public 'DATA'
 state_hooks         DW ?
 state_arr           DD 2*32 DUP(?)
 
+thread_arr                      DW 256 DUP(?)
+
 data    ENDS
 
 _TEXT    SEGMENT byte public 'CODE'
@@ -78,7 +80,7 @@ create_thread    Proc far
     push ecx
     push edi
 ;    
-    mov ax,system_data_sel
+    mov ax,SEG data
     mov es,ax
     mov edi,OFFSET thread_arr
     xor eax,eax
@@ -122,7 +124,7 @@ terminate_thread    Proc far
     call ThreadTerminated
 ;
     GetThread
-    mov cx,system_data_sel
+    mov cx,SEG data
     mov es,ecx
     mov edi,OFFSET thread_arr
     mov ecx,256
@@ -242,7 +244,7 @@ thread_to_sel   Proc far
     push esi
 ;    
     mov ecx,256
-    mov ax,system_data_sel
+    mov ax,SEG data
     mov ds,eax
     xor esi,esi
 
@@ -302,7 +304,7 @@ get_thread_state    Proc near
     push edi
     movzx ebx,ax
     shl ebx,1
-    mov ax,system_data_sel
+    mov ax,SEG data
     mov ds,ax
     cli
     mov ax,ds:[ebx].thread_arr
@@ -397,7 +399,7 @@ suspend_thread  PROC far
 ;
     mov bx,ax
     mov ecx,256
-    mov ax,system_data_sel
+    mov ax,SEG data
     mov ds,eax
     xor esi,esi
 
@@ -455,7 +457,7 @@ suspend_and_signal_thread       PROC far
 ;
     mov bx,ax
     mov ecx,256
-    mov ax,system_data_sel
+    mov ax,SEG data
     mov ds,eax
     xor esi,esi
 
@@ -564,7 +566,7 @@ init_state_hooks:
     add edi,8
     loop init_state_hooks
 ;
-    mov ax,system_data_sel
+    mov ax,SEG data
     mov es,ax
     mov es:next_pid,0
     mov di,OFFSET thread_arr

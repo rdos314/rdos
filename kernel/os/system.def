@@ -133,7 +133,7 @@ long_size           DD ?
 
 debug_list			DW ?
 
-thread_arr			DW 256 DUP(?)
+filler_arr			DW 256 DUP(?)
 
 next_pid			DW ?
 
