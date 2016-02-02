@@ -7782,16 +7782,6 @@ init_thread_block       PROC near
 ;
     mov es:p_sleep_sel,0
     mov es:p_sleep_offset,0
-    push ds
-    mov ax,system_data_sel
-    mov ds,ax
-    cli
-    mov ax,ds:next_pid
-    mov es:p_id,ax
-    inc ax
-    mov ds:next_pid,ax
-    sti
-    pop ds
     ret
 init_thread_block       ENDP
 
@@ -9102,16 +9092,6 @@ first_move_pad:
 first_move_done:
     mov es:p_sleep_sel,0
     mov es:p_sleep_offset,0
-    push ds
-    mov ax,system_data_sel
-    mov ds,ax
-    cli
-    mov ax,ds:next_pid
-    mov es:p_id,ax
-    inc ax
-    mov ds:next_pid,ax
-    sti
-    pop ds  
     ret
 create_first_thread       ENDP
 

@@ -1094,6 +1094,11 @@ EnterC3    MACRO
     OsGate enter_c3_nr
                     ENDM
 
+;   OUT AX      Thread ID
+CreateThreadId    MACRO
+    OsGate create_thread_id_nr
+                        ENDM
+
 ;  IN  ES   Thread sel
 ;  IN  AX   Core #
 SetThreadCore    MACRO

@@ -135,7 +135,7 @@ debug_list			DW ?
 
 filler_arr			DW 256 DUP(?)
 
-next_pid			DW ?
+filler_pid			DW ?
 
 rom_shadow			DW ?
 ram1_size			DD ?
