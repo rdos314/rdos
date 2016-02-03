@@ -438,6 +438,28 @@ move_thread_to_core PROC far
     pop eax    
     ret
 move_thread_to_core ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetThreadCore
+;
+;           DESCRIPTION:    Set new core for thread
+;
+;           PARAMETER:      AX          Core #
+;                           DX          Thread handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SetThreadCore_
+    
+SetThreadCore_ PROC near
+    push es
+    mov es,dx
+    SetThreadCore
+    pop es
+    ret
+SetThreadCore_ ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

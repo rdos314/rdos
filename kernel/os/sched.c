@@ -41,11 +41,15 @@ struct TThread
     int Valid;
     int Handle;
     int ID;
+    int Core;
 };
 
 struct TThread ThreadArr[MAX_THREADS];
 
 extern void InitScheduler();
+
+extern void SetThreadCore(int Core, int ThreadHandle);
+#pragma aux SetThreadCore parm routine [edx eax]
     
 /*##########################################################################
 #
@@ -66,6 +70,7 @@ void ThreadCreated(int handle, int ID)
             ThreadArr[i].Valid = TRUE;
             ThreadArr[i].Handle = handle;
             ThreadArr[i].ID = ID;
+            ThreadArr[i].Core = 0;
             break;
         }
     }
@@ -136,6 +141,27 @@ int IdToHandle(int ID)
 #pragma aux MoveThread "*" rdosdev parm routine [eax ebx]
 void MoveThread(int Core, int ThreadId)
 {
+    int i;
+    
+    if (Core < RdosGetCoreCount())
+    {
+/*        RdosEnterKernelSection(&ThreadSection);     */
+
+        for (i = 0; i < MAX_THREADS; i++)
+        {
+            if (ThreadArr[i].Valid && ThreadArr[i].ID == ThreadId) 
+            {
+                if (Core != ThreadArr[i].Core)
+                {
+                    ThreadArr[i].Core = Core;
+                    SetThreadCore(Core, ThreadArr[i].Handle);
+                }
+                break;
+            }
+        }
+
+/*        RdosLeaveKernelSection(&ThreadSection);     */
+    }
 }
     
 /*##########################################################################
