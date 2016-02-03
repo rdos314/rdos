@@ -295,7 +295,6 @@ struct TDeviceEntry *PciRootArr[MAX_PCI_ROOT_COUNT];
 int PciDevCount = 0;
 struct TDeviceEntry *PciDevArr[MAX_PCI_DEV_COUNT];
 
-int ActiveProcessors = 1;
 int ProcessorCount = 0;
 struct TProcessorEntry *ProcessorArr[MAX_PROCESSOR_COUNT];
 
@@ -322,8 +321,6 @@ int CpuVer;
 char CpuVendor[40];
 int FeatureFlags;
 int BaseFreq;
-int MaxCpuLoad;
-int MinCpuLoad;
 
 int Irt;
 int Rvo;
@@ -335,9 +332,6 @@ int CurrFid;
 int ReqVid;
 int ReqFid;
 int RvoVid;
-
-long long CoreTicsArr[MAX_PROCESSOR_COUNT];
-long long NullTicsArr[MAX_PROCESSOR_COUNT];
 
 typedef void (power_init_callback)();
 typedef void (power_update_callback)(int diff);
@@ -361,17 +355,6 @@ void __far ImplTestGate(const char *msg)
     if (status & ACPI_EVENT_FLAG_SET)
         RdosSoftReset();
             
-}
-    
-/*##########################################################################
-#
-#   Name       : GetActiveCores
-#
-##########################################################################*/
-#pragma aux ImplGetActiveCores "*" rdosdev parm routine value [eax]
-int __far ImplGetActiveCores()
-{
-    return ActiveProcessors;
 }
     
 /*##########################################################################
@@ -787,40 +770,6 @@ void UpdateIntelPss(int diff)
     
 /*##########################################################################
 #
-#   Name       : StartCore
-#
-##########################################################################*/
-void StartCore()
-{
-    int CoreId;
-
-    if (ActiveProcessors < ProcessorCount)
-    {
-        CoreId = RdosGetCoreNum(ActiveProcessors);
-        RdosStartCore(CoreId);
-        ActiveProcessors++;
-    }
-}
-    
-/*##########################################################################
-#
-#   Name       : StopCore
-#
-##########################################################################*/
-void StopCore()
-{
-/*
-    if (ActiveProcessors > 1 && RdosHasGlobalTimer())
-    {
-        SwitchAllIrqs(0);
-        ActiveProcessors--;
-        ReqShutdown(ActiveProcessors);
-    }
-*/    
-}
-    
-/*##########################################################################
-#
 #   Name       : InitFreq
 #
 ##########################################################################*/
@@ -841,110 +790,6 @@ void __far ImplUpdateFreq(int Diff)
 {
     if (power_update_proc)
         (*power_update_proc)(Diff);
-}
-    
-/*##########################################################################
-#
-#   Name       : PowerThread
-#
-##########################################################################*/
-#pragma aux PowerThread "*" rdosdev parm routine [es edi]
-void __far PowerThread(void *param)
-{
-    long long CoreTics;
-    long long NullTics;
-    long long CoreDiff;
-    long long NullDiff;
-    int Updated;
-    int Core;
-    int CpuLoad;
-    int MinLoadCore;
-    int HighCount;
-    int HighArr[MAX_PROCESSOR_COUNT];
-
-    RdosInitFreq();
-
-    for (Core = 0; Core < ProcessorCount; Core++)
-        RdosGetCoreLoad(Core, &NullTicsArr[Core], &CoreTicsArr[Core]);
-
-    for (;;)
-    {
-        RdosWaitMilli(250);
-
-        MinCpuLoad = 110;
-        MaxCpuLoad = 0;
-        MinLoadCore = 0;
-        HighCount = 0;
-
-        Updated = FALSE;
-
-        for (Core = 0; Core < ProcessorCount; Core++)
-        {
-            RdosGetCoreLoad(Core, &NullTics, &CoreTics);
-            CoreDiff = CoreTics - CoreTicsArr[Core];
-            NullDiff = NullTics - NullTicsArr[Core];
-            CoreTicsArr[Core] = CoreTics;
-            NullTicsArr[Core] = NullTics;
-
-            if (CoreDiff)
-            {
-                CpuLoad = 100 - (int)(100 * NullDiff / CoreDiff);
-
-                if (CpuLoad == MaxCpuLoad)
-                {
-                    HighArr[HighCount] = Core;
-                    HighCount++;
-                }
-                
-                if (CpuLoad > MaxCpuLoad)
-                {
-                    MaxCpuLoad = CpuLoad;
-                    HighArr[0] = Core;
-                    HighCount = 1;
-                }
-
-                if (CpuLoad < MinCpuLoad)
-                {
-                    MinCpuLoad = CpuLoad;
-                    MinLoadCore = Core;
-                }
-            }
-        }
-
-/*        SwitchOneIrq(MinLoadCore); */
-
-        if (HighCount > 1)
-            Core = HighArr[RdosGetRandom(HighCount)];
-        else
-            Core = HighArr[0];
-            
-/*        MoveOneTask(Core); */
-
-        if (MaxCpuLoad > 60)
-        {
-            if (ActiveProcessors == ProcessorCount)
-            {
-                Updated = TRUE;
-                RdosUpdateFreq(-1);
-            }
-            else
-                StartCore();
-        }
-
-        if (MaxCpuLoad < 30)
-        {
-            if (PowerState == PowerStateCount - 1)
-                StopCore();
-            else        
-            {
-                Updated = TRUE;
-                RdosUpdateFreq(1);
-            }
-        }
-
-        if (!Updated)
-            RdosUpdateFreq(0);
-    }
 }
 
 /*##########################################################################
@@ -2996,9 +2841,6 @@ void __far InitTasking()
         }
     }
 
-    if (power_init_proc || RdosGetCoreCount() > 1)
-        RdosCreateKernelThread(5, 0x1000, &PowerThread, "ACPI Power", 0);
-
     ProcessorCount = RdosGetCoreCount();
 } 
 
@@ -3043,8 +2885,6 @@ int main()
     RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, (__rdos_gate_callback *)&ImplGetCpuTemperature, "Get CPU Temperature");
     RdosRegisterOsGate(osgate_init_freq, (__rdos_gate_callback *)&ImplInitFreq, "Init Frequency");
     RdosRegisterOsGate(osgate_update_freq, (__rdos_gate_callback *)&ImplUpdateFreq, "Update Frequency");
-
-    RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
 
 //    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }

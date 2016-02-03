@@ -29,7 +29,8 @@
 #include "rdosdev.h"
 #include "string.h"
 
-#define MAX_THREADS     256
+#define MAX_THREADS             256
+#define MAX_PROCESSOR_COUNT     32
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -43,6 +44,15 @@ struct TThread
     int ID;
     int Core;
 };
+
+int ActiveProcessors = 1;
+int ProcessorCount = 0;
+
+long long CoreTicsArr[MAX_PROCESSOR_COUNT];
+long long NullTicsArr[MAX_PROCESSOR_COUNT];
+
+int MaxCpuLoad;
+int MinCpuLoad;
 
 struct TThread ThreadArr[MAX_THREADS];
 
@@ -176,15 +186,152 @@ void MoveThread(int Core, int ThreadId)
     
 /*##########################################################################
 #
+#   Name       : GetActiveCores
+#
+##########################################################################*/
+#pragma aux ImplGetActiveCores "*" rdosdev parm routine value [eax]
+int __far ImplGetActiveCores()
+{
+    return ActiveProcessors;
+}
+    
+/*##########################################################################
+#
+#   Name       : StartCore
+#
+##########################################################################*/
+void StartCore()
+{
+    int CoreId;
+
+    if (ActiveProcessors < ProcessorCount)
+    {
+        CoreId = RdosGetCoreNum(ActiveProcessors);
+        RdosStartCore(CoreId);
+        ActiveProcessors++;
+    }
+}
+    
+/*##########################################################################
+#
+#   Name       : StopCore
+#
+##########################################################################*/
+void StopCore()
+{
+/*
+    if (ActiveProcessors > 1 && RdosHasGlobalTimer())
+    {
+        SwitchAllIrqs(0);
+        ActiveProcessors--;
+        ReqShutdown(ActiveProcessors);
+    }
+*/    
+}
+    
+/*##########################################################################
+#
 #   Name       : Scheduler thread
 #
 ##########################################################################*/
 #pragma aux SchedulerThread "*" rdosdev parm routine [es edi]
 void __far SchedulerThread(void *param)
 {
+    long long CoreTics;
+    long long NullTics;
+    long long CoreDiff;
+    long long NullDiff;
+    int Updated;
+    int Core;
+    int CpuLoad;
+    int MinLoadCore;
+    int HighCount;
+    int HighArr[MAX_PROCESSOR_COUNT];
+
+    ProcessorCount = RdosGetCoreCount();
+
+    RdosInitFreq();
+
+    for (Core = 0; Core < ProcessorCount; Core++)
+        RdosGetCoreLoad(Core, &NullTicsArr[Core], &CoreTicsArr[Core]);
+
     for (;;)
     {
         RdosWaitMilli(250);
+
+        MinCpuLoad = 110;
+        MaxCpuLoad = 0;
+        MinLoadCore = 0;
+        HighCount = 0;
+
+        Updated = FALSE;
+
+        for (Core = 0; Core < ProcessorCount; Core++)
+        {
+            RdosGetCoreLoad(Core, &NullTics, &CoreTics);
+            CoreDiff = CoreTics - CoreTicsArr[Core];
+            NullDiff = NullTics - NullTicsArr[Core];
+            CoreTicsArr[Core] = CoreTics;
+            NullTicsArr[Core] = NullTics;
+
+            if (CoreDiff)
+            {
+                CpuLoad = 100 - (int)(100 * NullDiff / CoreDiff);
+
+                if (CpuLoad == MaxCpuLoad)
+                {
+                    HighArr[HighCount] = Core;
+                    HighCount++;
+                }
+                
+                if (CpuLoad > MaxCpuLoad)
+                {
+                    MaxCpuLoad = CpuLoad;
+                    HighArr[0] = Core;
+                    HighCount = 1;
+                }
+
+                if (CpuLoad < MinCpuLoad)
+                {
+                    MinCpuLoad = CpuLoad;
+                    MinLoadCore = Core;
+                }
+            }
+        }
+
+/*        SwitchOneIrq(MinLoadCore); */
+
+        if (HighCount > 1)
+            Core = HighArr[RdosGetRandom(HighCount)];
+        else
+            Core = HighArr[0];
+            
+/*        MoveOneTask(Core); */
+
+        if (MaxCpuLoad > 60)
+        {
+            if (ActiveProcessors == ProcessorCount)
+            {
+                Updated = TRUE;
+                RdosUpdateFreq(-1);
+            }
+            else
+                StartCore();
+        }
+
+        if (MaxCpuLoad < 30)
+        {
+/*            if (PowerState == PowerStateCount - 1)
+                StopCore();
+            else         */
+            {
+                Updated = TRUE;
+                RdosUpdateFreq(1);
+            }
+        }
+
+        if (!Updated)
+            RdosUpdateFreq(0);
     }
 }
 
@@ -242,6 +389,8 @@ int main()
     InitScheduler();
     InitThreadList();
     RdosHookInitTasking(&InitTasking);
+
+    RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
 
     RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }
