@@ -49,6 +49,7 @@ _TEXT    SEGMENT byte public 'CODE'
     assume cs:_TEXT
 
     extrn IdToHandle:near
+    extrn MoveThread:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -393,6 +394,21 @@ suspend_and_signal_thread       ENDP
 move_to_core_name  DB 'Move To Core',0
 
 move_to_core PROC far
+    push es
+    push eax
+    push ebx
+;
+    movzx eax,ax
+    push eax
+    GetThread
+    mov es,eax
+    movzx ebx,es:p_id
+    pop eax
+    call MoveThread
+;
+    pop ebx
+    pop eax
+    pop es
     ret
 move_to_core ENDP
     
@@ -411,6 +427,15 @@ move_to_core ENDP
 move_thread_to_core_name  DB 'Move Thread To Core',0
 
 move_thread_to_core PROC far
+    push eax
+    push ebx
+;
+    movzx eax,ax
+    movzx ebx,bx    
+    call MoveThread
+;
+    pop ebx
+    pop eax    
     ret
 move_thread_to_core ENDP
 
