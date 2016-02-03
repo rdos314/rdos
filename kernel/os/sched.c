@@ -50,6 +50,13 @@ extern void InitScheduler();
 
 extern void SetThreadCore(int Core, int ThreadHandle);
 #pragma aux SetThreadCore parm routine [edx eax]
+
+#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
+
+void __far ImplTestGate(const char *msg)
+{
+    RdosUpdateFreq(-1);
+}
     
 /*##########################################################################
 #
@@ -232,4 +239,6 @@ int main()
     InitScheduler();
     InitThreadList();
     RdosHookInitTasking(&InitTasking);
+
+    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }

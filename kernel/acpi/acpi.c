@@ -810,6 +810,30 @@ void StopCore()
     
 /*##########################################################################
 #
+#   Name       : InitFreq
+#
+##########################################################################*/
+#pragma aux ImplInitFreq "*" rdosdev parm routine 
+void __far ImplInitFreq()
+{
+    if (power_init_proc)
+        (*power_init_proc)();
+}
+    
+/*##########################################################################
+#
+#   Name       : UpdateFreq
+#
+##########################################################################*/
+#pragma aux ImplUpdateFreq "*" rdosdev parm routine [eax]
+void __far ImplUpdateFreq(int Diff)
+{
+    if (power_update_proc)
+        (*power_update_proc)(Diff);
+}
+    
+/*##########################################################################
+#
 #   Name       : PowerThread
 #
 ##########################################################################*/
@@ -829,8 +853,7 @@ void __far PowerThread(void *param)
 
     ProcessorCount = RdosGetCoreCount();
 
-    if (power_init_proc)
-        (*power_init_proc)();
+    RdosInitFreq();
 
     for (Core = 0; Core < ProcessorCount; Core++)
         RdosGetCoreLoad(Core, &NullTicsArr[Core], &CoreTicsArr[Core]);
@@ -893,9 +916,7 @@ void __far PowerThread(void *param)
             if (ActiveProcessors == ProcessorCount)
             {
                 Updated = TRUE;
-                
-                if (power_update_proc)
-                    (*power_update_proc)(-1);
+                RdosUpdateFreq(-1);
             }
             else
                 StartCore();
@@ -908,15 +929,12 @@ void __far PowerThread(void *param)
             else        
             {
                 Updated = TRUE;
-
-                if (power_update_proc)
-                    (*power_update_proc)(1);
+                RdosUpdateFreq(1);
             }
         }
 
         if (!Updated)
-            if (power_update_proc)
-                (*power_update_proc)(0);        
+            RdosUpdateFreq(0);
     }
 }
 
@@ -3012,6 +3030,9 @@ int main()
     RdosRegisterUserGate(usergate_get_acpi_method, (__rdos_gate_callback *)&ImplGetAcpiMethod16, &ImplGetAcpiMethod32, "Get ACPI Method");
     RdosRegisterUserGate(usergate_get_acpi_device, (__rdos_gate_callback *)&ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
     RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, (__rdos_gate_callback *)&ImplGetCpuTemperature, "Get CPU Temperature");
+
+    RdosRegisterOsGate(osgate_init_freq, (__rdos_gate_callback *)&ImplInitFreq, "Init Frequency");
+    RdosRegisterOsGate(osgate_update_freq, (__rdos_gate_callback *)&ImplUpdateFreq, "Update Frequency");
 
 //    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }

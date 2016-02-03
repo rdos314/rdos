@@ -60,6 +60,8 @@ void main()
     int i;
     TParam *param;
 
+    RdosTestGate();
+
     for (i = 0; i < 4; i++)
     {
         sprintf(str, "Section #%d", i);

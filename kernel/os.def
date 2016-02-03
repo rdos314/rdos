@@ -680,4 +680,7 @@ set_thread_core_nr          = 555
 
 create_thread_id_nr         = 556
 
+init_freq_nr                = 557
+update_freq_nr              = 558
+
 osgate_entries				= 560

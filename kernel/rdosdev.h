@@ -597,6 +597,8 @@ void RdosStartCore(int core);
 void RdosSendNmi(int core);
 void RdosSendInt(int core, int int_num);
 void RdosEnterC3();
+void RdosInitFreq();
+void RdosUpdateFreq(int diff);
 
 void RdosClearSignal();
 void RdosSignal(int thread);
@@ -1296,6 +1298,13 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
 
 #pragma aux RdosEnterC3 = \
     OsGate_enter_c3;
+
+#pragma aux RdosInitFreq = \
+    OsGate_init_freq;
+
+#pragma aux RdosUpdateFreq = \
+    OsGate_update_freq  \
+    parm [eax];
 
 #pragma aux RdosSendNmi = \
     "push fs" \
@@ -2086,13 +2095,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     OsGate_init_usb_device \
     "pop ds" \
     parm [edx];
-
-#pragma aux RdosLockedNotifyUsbAttach = \
-    "push ds" \
-    "mov ds,edx" \
-    OsGate_locked_notify_usb_attach \
-    "pop ds" \
-    parm [edx] [al] [ah];
 
 #pragma aux RdosNotifyUsbDetach = \
     "push ds" \

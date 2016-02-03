@@ -1094,6 +1094,15 @@ EnterC3    MACRO
     OsGate enter_c3_nr
                     ENDM
 
+InitFreq    MACRO
+    OsGate init_freq_nr
+                    ENDM
+
+;  EAX  Difference  (-1 = decrease, +1 = increase)  
+UpdateFreq    MACRO
+    OsGate update_freq_nr
+                    ENDM
+
 ;   OUT AX      Thread ID
 CreateThreadId    MACRO
     OsGate create_thread_id_nr

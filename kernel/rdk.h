@@ -324,7 +324,7 @@
 #define osgate_notify_ethernet_packet 300
 
 #define osgate_init_usb_device 301
-#define osgate_locked_notify_usb_attach 302
+#define osgate_notify_usb_attach 302
 #define osgate_notify_usb_detach 304
 
 #define osgate_add_com_port 305
@@ -663,6 +663,26 @@
 
 #define osgate_fpu_exception 546
 
+#define osgate_reset_can_buffers 547
+#define osgate_send_can_bus_block 548
+
+#define osgate_get_disc_vendor_info_buf 549
+
+#define osgate_get_pci_msix 550
+#define osgate_enable_pci_msix 551
+#define osgate_setup_pci_msix_entry 552
+
+#define osgate_update_tcp_mtu 553
+
+#define osgate_notify_lon_data 554
+
+#define osgate_set_thread_core 555
+
+#define osgate_create_thread_id 556
+
+#define osgate_init_freq 557
+#define osgate_update_freq 558
+
 
 
 
@@ -991,7 +1011,7 @@
 #define OsGate_notify_ethernet_packet 0x3E 0x67 0x9a 44 1 0 0 2 0
 
 #define OsGate_init_usb_device 0x3E 0x67 0x9a 45 1 0 0 2 0
-#define OsGate_locked_notify_usb_attach 0x3E 0x67 0x9a 46 1 0 0 2 0
+#define OsGate_notify_usb_attach 0x3E 0x67 0x9a 46 1 0 0 2 0
 #define OsGate_notify_usb_detach 0x3E 0x67 0x9a 48 1 0 0 2 0
 
 #define OsGate_add_com_port 0x3E 0x67 0x9a 49 1 0 0 2 0
@@ -1329,4 +1349,24 @@
 #define OsGate_has_can_send_buf 0x3E 0x67 0x9a 33 2 0 0 2 0
 
 #define OsGate_fpu_exception 0x3E 0x67 0x9a 34 2 0 0 2 0
+
+#define OsGate_reset_can_buffers 0x3E 0x67 0x9a 35 2 0 0 2 0
+#define OsGate_send_can_bus_block 0x3E 0x67 0x9a 36 2 0 0 2 0
+
+#define OsGate_get_disc_vendor_info_buf 0x3E 0x67 0x9a 37 2 0 0 2 0
+
+#define OsGate_get_pci_msix 0x3E 0x67 0x9a 38 2 0 0 2 0
+#define OsGate_enable_pci_msix 0x3E 0x67 0x9a 39 2 0 0 2 0
+#define OsGate_setup_pci_msix_entry 0x3E 0x67 0x9a 40 2 0 0 2 0
+
+#define OsGate_update_tcp_mtu 0x3E 0x67 0x9a 41 2 0 0 2 0
+
+#define OsGate_notify_lon_data 0x3E 0x67 0x9a 42 2 0 0 2 0
+
+#define OsGate_set_thread_core 0x3E 0x67 0x9a 43 2 0 0 2 0
+
+#define OsGate_create_thread_id 0x3E 0x67 0x9a 44 2 0 0 2 0
+
+#define OsGate_init_freq 0x3E 0x67 0x9a 45 2 0 0 2 0
+#define OsGate_update_freq 0x3E 0x67 0x9a 46 2 0 0 2 0
 
