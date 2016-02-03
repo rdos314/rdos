@@ -748,4 +748,7 @@ stop_can_capture_nr             = 583
 start_lon_capture_nr            = 584
 stop_lon_capture_nr             = 585
 
+move_to_core_nr                 = 586
+move_thread_to_core_nr          = 587
+
 usergate_entries			    = 600

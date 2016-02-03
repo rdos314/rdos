@@ -2577,6 +2577,7 @@ void TDebug::SignalNewData()
     int handle;
     TDebugThread *newt;
     TDebugThread *t;
+    char str[40];
 
     RdosWaitMilli(5);
 
@@ -2591,8 +2592,9 @@ void TDebug::SignalNewData()
             break;
 
         case EVENT_CREATE_THREAD:
-            LogMsg("Create thread");
             RdosGetDebugEventData(FHandle, &cte);
+            sprintf(str, "Create thread, ID: %d", cte.Thread);
+            LogMsg(str);
             HandleCreateThread(&cte);
             FThreadChanged = TRUE;
             break;

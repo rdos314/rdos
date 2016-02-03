@@ -50,14 +50,6 @@ _TEXT    SEGMENT byte public 'CODE'
 
     extrn IdToHandle:near
 
-test_gate_name db 'TEST', 0
-
-test_gate   Proc far
-    mov eax,5
-    call IdToHandle
-    ret
-test_gate   Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -73,20 +65,15 @@ test_gate   Endp
 
 create_thread    Proc far
     push es
-    push eax
-    push ecx
-    push edi
+    pushad
 ;    
     GetThread
-    push eax
     movzx eax,ax
+    mov es,eax
+    movzx edx,es:p_id
     call ThreadCreated
-    pop es
-    mov es:p_id,ax
 ;
-    pop edi
-    pop ecx
-    pop eax
+    popad
     pop es    
     ret
 create_thread    Endp
@@ -105,19 +92,13 @@ create_thread    Endp
     extrn ThreadTerminated:near
 
 terminate_thread    Proc far
-    push es
-    push eax
-    push ecx
-    push edi
+    pushad
 ;    
     GetThread
     movzx eax,ax
     call ThreadTerminated
 ;
-    pop edi
-    pop ecx
-    pop eax
-    pop es   
+    popad
     ret
 terminate_thread    Endp
 
@@ -259,12 +240,7 @@ get_thread_state_name DB 'Get Thread State',0
 
 get_thread_state    Proc near
     push ds
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
+    pushad
 ;    
     movzx eax,ax
     call IdToHandle
@@ -310,12 +286,7 @@ get_state_found:
     clc
 
 get_state_done:
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
+    popad
     pop ds
     ret
 get_thread_state    Endp
@@ -350,10 +321,7 @@ suspend_thread_name     DB 'Suspend Thread',0
 suspend_thread  PROC far
     push ds
     push es
-    push eax
-    push ebx
-    push ecx
-    push esi
+    pushad
 ;
     movzx eax,ax
     call IdToHandle
@@ -366,10 +334,7 @@ suspend_thread  PROC far
     clc
 
 suspend_thread_done:
-    pop esi
-    pop ecx
-    pop ebx
-    pop eax
+    popad
     pop es
     pop ds
     ret
@@ -392,10 +357,7 @@ suspend_and_signal_thread_name  DB 'Suspend and Signal Thread',0
 suspend_and_signal_thread       PROC far
     push ds
     push es
-    push eax
-    push ebx
-    push ecx
-    push esi
+    pushad
 ;
     movzx eax,ax
     call IdToHandle
@@ -410,15 +372,47 @@ suspend_and_signal_thread       PROC far
     clc
 
 suspend_signal_done:
-    pop esi
-    pop ecx
-    pop ebx
-    pop eax
+    popad
     pop es
     pop ds
     ret
 suspend_and_signal_thread       ENDP
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           MoveToCore
+;
+;           DESCRIPTION:    Move current thread to new core
+;
+;           PARAMETER:      AX          Core #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+move_to_core_name  DB 'Move To Core',0
+
+move_to_core PROC far
+    ret
+move_to_core ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           MoveThreadToCore
+;
+;           DESCRIPTION:    Move thread to new core
+;
+;           PARAMETER:      AX          Core #
+;                           BX          Thread ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+move_thread_to_core_name  DB 'Move Thread To Core',0
+
+move_thread_to_core PROC far
+    ret
+move_thread_to_core ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -437,6 +431,18 @@ InitScheduler_    Proc near
     push ds
     push es
     pushad
+;
+    mov bx,SEG data
+    mov es,ebx
+    mov es:state_hooks,0
+    mov ecx,32
+    mov edi,OFFSET state_arr
+    
+init_state_hooks:
+    mov dword ptr es:[edi],OFFSET default_state
+    mov es:[edi+4],cs
+    add edi,8
+    loop init_state_hooks
 ;    
     mov ax,cs
     mov ds,ax
@@ -479,23 +485,17 @@ InitScheduler_    Proc near
     mov ax,suspend_and_signal_thread_nr
     RegisterBimodalUserGate
 ;
-    mov esi,test_gate
-    mov edi,OFFSET test_gate_name
+    mov esi,OFFSET move_to_core
+    mov edi,OFFSET move_to_core_name
     xor dx,dx
-    mov ax,test_gate_nr
+    mov ax,move_to_core_nr
     RegisterBimodalUserGate
 ;
-    mov ebx,SEG data
-    mov es,ebx
-    mov es:state_hooks,0
-    mov ecx,32
-    mov edi,OFFSET state_arr
-    
-init_state_hooks:
-    mov dword ptr es:[edi],OFFSET default_state
-    mov es:[edi+4],cs
-    add edi,8
-    loop init_state_hooks
+    mov esi,OFFSET move_thread_to_core
+    mov edi,OFFSET move_thread_to_core_name
+    xor dx,dx
+    mov ax,move_thread_to_core_nr
+    RegisterBimodalUserGate
 ;
     popad
     pop es

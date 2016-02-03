@@ -456,6 +456,17 @@ GetCoreId        MACRO
 	UserGate get_core_id_nr
 						ENDM
 
+; IN AX          Core nr
+MoveToCore        MACRO
+	UserGate move_to_core_nr
+						ENDM
+
+; IN AX          Core nr
+; IN BX          Thread #
+MoveThreadToCore        MACRO
+	UserGate move_thread_to_core_nr
+						ENDM
+
 ; IN  AX         Number of milliseconds
 WaitMilliSec        MACRO
 	UserGate wait_milli_nr

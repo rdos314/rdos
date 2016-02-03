@@ -748,6 +748,9 @@
 #define usergate_start_lon_capture 0x00000248
 #define usergate_stop_lon_capture 0x00000249
 
+#define usergate_move_to_core 0x0000024A
+#define usergate_move_thread_to_core 0x0000024B
+
 
 
 #ifdef __FLAT__
@@ -1501,6 +1504,9 @@
 #define CallGate_start_lon_capture 0x67 0x9a 72 2 0 0 3 0
 #define CallGate_stop_lon_capture 0x67 0x9a 73 2 0 0 3 0
 
+#define CallGate_move_to_core 0x67 0x9a 74 2 0 0 3 0
+#define CallGate_move_thread_to_core 0x67 0x9a 75 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2251,5 +2257,8 @@
 
 #define CallGate_start_lon_capture 0x3e 0x67 0x9a 72 2 0 0 3 0
 #define CallGate_stop_lon_capture 0x3e 0x67 0x9a 73 2 0 0 3 0
+
+#define CallGate_move_to_core 0x3e 0x67 0x9a 74 2 0 0 3 0
+#define CallGate_move_thread_to_core 0x3e 0x67 0x9a 75 2 0 0 3 0
 
 #endif

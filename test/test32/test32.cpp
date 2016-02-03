@@ -28,6 +28,8 @@ static void TestThread(void *ptr)
     int count;
     TSect *sect;
 
+    RdosMoveToCore(param->ID % 4);
+
     for (;;)
     {
         i = RdosGetRandom(4);
@@ -57,8 +59,6 @@ void main()
     char str[80];
     int i;
     TParam *param;
-
-    RdosTestGate();
 
     for (i = 0; i < 4; i++)
     {

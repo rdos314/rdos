@@ -1482,6 +1482,14 @@
     parm [eax] \
     value [eax];
 
+#pragma aux RdosMoveToCore = \
+    CallGate_move_to_core  \
+    parm [eax];
+
+#pragma aux RdosMoveThreadToCore = \
+    CallGate_move_thread_to_core  \
+    parm [eax ebx];
+
 #pragma aux RdosHasHardReset = \
     CallGate_has_hard_reset \
     CarryToBool \

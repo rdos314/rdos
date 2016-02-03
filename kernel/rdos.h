@@ -450,6 +450,8 @@ int RDOSAPI RdosGetFaultThreadTss(int ThreadNr, Tss *tss);
 int RDOSAPI RdosGetThreadState(int ThreadNr, ThreadState *State);
 int RDOSAPI RdosSuspendThread(int Thread);
 int RDOSAPI RdosSuspendAndSignalThread(int Thread);
+void RDOSAPI RdosMoveToCore(int Core);
+void RDOSAPI RdosMoveThreadToCore(int Core, int ThreadNr);
 
 int RDOSAPI RdosGetImageHeader(int Adapter, int Entry, TRdosObjectHeader *Header);
 int RDOSAPI RdosGetImageData(int Adapter, int Entry, void *Buf);

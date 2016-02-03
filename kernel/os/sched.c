@@ -43,7 +43,6 @@ struct TThread
     int ID;
 };
 
-int  NextPid = 0;
 struct TThread ThreadArr[MAX_THREADS];
 
 extern void InitScheduler();
@@ -53,16 +52,12 @@ extern void InitScheduler();
 #   Name       : ThreadCreated
 #
 ##########################################################################*/
-#pragma aux ThreadCreated "*" rdosdev parm routine [eax] value [eax]
-int ThreadCreated(int handle)
+#pragma aux ThreadCreated "*" rdosdev parm routine [eax edx]
+void ThreadCreated(int handle, int ID)
 {
     int i;
-    int pid;
 
     RdosEnterKernelSection(&ThreadSection);    
-
-    NextPid++;
-    pid = NextPid;
 
     for (i = 0; i < MAX_THREADS; i++)
     {
@@ -70,14 +65,12 @@ int ThreadCreated(int handle)
         {
             ThreadArr[i].Valid = TRUE;
             ThreadArr[i].Handle = handle;
-            ThreadArr[i].ID = pid;
+            ThreadArr[i].ID = ID;
             break;
         }
     }
 
     RdosLeaveKernelSection(&ThreadSection);    
-
-    return pid;
 }
     
 /*##########################################################################
