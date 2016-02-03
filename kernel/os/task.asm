@@ -1449,6 +1449,10 @@ load_thread_wakeup_done:
     jz load_reload_loop
 ;
     mov es:p_core,ax
+    mov dx,fs
+    cmp dx,ax
+    jz load_reload_loop
+;    
     call cs:insert_wakeup_proc
     jmp load_thread_loop
 
