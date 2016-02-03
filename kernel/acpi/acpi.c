@@ -561,7 +561,7 @@ void UpdateEist(int diff)
         }
     }
 
-    ReqPStateUpdate(ActiveProcessors);
+    ReqPStateUpdate(RdosGetActiveCores());
 }
     
 /*##########################################################################
@@ -733,7 +733,7 @@ void UpdateAmdK10(int diff)
     if (PowerState != NewState)
         PowerState = NewState;
 
-    ReqPStateUpdate(ActiveProcessors);
+    ReqPStateUpdate(RdosGetActiveCores());
 }
     
 /*##########################################################################
@@ -782,7 +782,7 @@ void UpdateIntelPss(int diff)
     if (PowerState != NewState)
         PowerState = NewState;
 
-    ReqPStateUpdate(ActiveProcessors);
+    ReqPStateUpdate(RdosGetActiveCores());
 }
     
 /*##########################################################################
