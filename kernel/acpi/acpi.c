@@ -365,6 +365,17 @@ void __far ImplTestGate(const char *msg)
     
 /*##########################################################################
 #
+#   Name       : GetActiveCores
+#
+##########################################################################*/
+#pragma aux ImplGetActiveCores "*" rdosdev parm routine value [eax]
+int __far ImplGetActiveCores()
+{
+    return ActiveProcessors;
+}
+    
+/*##########################################################################
+#
 #   Name       : ReadReg
 #
 ##########################################################################*/
@@ -850,8 +861,6 @@ void __far PowerThread(void *param)
     int MinLoadCore;
     int HighCount;
     int HighArr[MAX_PROCESSOR_COUNT];
-
-    ProcessorCount = RdosGetCoreCount();
 
     RdosInitFreq();
 
@@ -2989,6 +2998,8 @@ void __far InitTasking()
 
     if (power_init_proc || RdosGetCoreCount() > 1)
         RdosCreateKernelThread(5, 0x1000, &PowerThread, "ACPI Power", 0);
+
+    ProcessorCount = RdosGetCoreCount();
 } 
 
 /*##########################################################################
@@ -3030,9 +3041,10 @@ int main()
     RdosRegisterUserGate(usergate_get_acpi_method, (__rdos_gate_callback *)&ImplGetAcpiMethod16, &ImplGetAcpiMethod32, "Get ACPI Method");
     RdosRegisterUserGate(usergate_get_acpi_device, (__rdos_gate_callback *)&ImplGetAcpiDevice16, &ImplGetAcpiDevice32, "Get ACPI Device");
     RdosRegisterBimodalUserGate(usergate_get_cpu_temperature, (__rdos_gate_callback *)&ImplGetCpuTemperature, "Get CPU Temperature");
-
     RdosRegisterOsGate(osgate_init_freq, (__rdos_gate_callback *)&ImplInitFreq, "Init Frequency");
     RdosRegisterOsGate(osgate_update_freq, (__rdos_gate_callback *)&ImplUpdateFreq, "Update Frequency");
+
+    RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
 
 //    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }

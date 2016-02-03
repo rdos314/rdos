@@ -472,6 +472,7 @@ void RDOSAPI RdosTerminateThread();
 int RDOSAPI RdosGetThreadHandle();
 
 int RDOSAPI RdosHasGlobalTimer();
+int RDOSAPI RdosGetActiveCores();
 int RDOSAPI RdosGetCoreLoad(int Core, long long *NullTics, long long *CoreTics);
 int RDOSAPI RdosGetCoreDuty(int Core, long long *CoreTics, long long *TotalTics);
 

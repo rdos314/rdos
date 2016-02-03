@@ -55,7 +55,10 @@ extern void SetThreadCore(int Core, int ThreadHandle);
 
 void __far ImplTestGate(const char *msg)
 {
-    RdosUpdateFreq(-1);
+    int val;
+
+    val = RdosGetActiveCores();
+    val++;
 }
     
 /*##########################################################################

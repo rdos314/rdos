@@ -805,6 +805,10 @@
     CarryToBool \    
     value [eax];
 
+#pragma aux RdosGetActiveCores = \
+    CallGate_get_active_cores \
+    value [eax];
+
 #pragma aux RdosGetCoreLoad = \
     CallGate_get_core_load \
     "mov fs:[esi],ebx" \
