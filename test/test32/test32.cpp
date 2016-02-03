@@ -38,7 +38,7 @@ static void TestThread(void *ptr)
         sect->Section->Enter();
         sect->Active++;
         sect->Owner = param->ID;
-        count = RdosGetRandom(500);
+        count = 300;
         for (i = 0; i < count; i++)
             if (sect->Active != 1)
                 printf("Active wrong: %d\r\n", sect->Active);        
@@ -49,7 +49,7 @@ static void TestThread(void *ptr)
         sect->Active--;
         sect->Section->Leave();    
 
-        count = RdosGetRandom(500);
+        count = 300;
         for (i = 0; i < count; i++)
             ;
     }
@@ -70,7 +70,7 @@ void main()
         SectionArr[i]->Active = 0;
     }
 
-    for (i = 0; i < 16; i++)
+    for (i = 0; i < 4; i++)
     {
         param = new TParam;
         param->ID = i;

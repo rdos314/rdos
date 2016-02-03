@@ -55,6 +55,7 @@ TLB_LINEAR_SIZE         = 100000h
 SLEEP_SEL_WAIT  = 1
 SLEEP_SEL_SIGNAL = 2
 SLEEP_SEL_FUTEX = 3
+SLEEP_SEL_SECTION = 4
 
 section_handle_seg          STRUC
 
@@ -5476,8 +5477,8 @@ ecsBlock:
     call InsertBlock32
     call cs:unlock_kernel_section_proc
 ;
-    mov es:p_sleep_sel,ds
-    mov es:p_sleep_offset,edi    
+    mov es:p_sleep_sel,SLEEP_SEL_SECTION
+    mov es:p_sleep_offset,0
     jmp LoadThread
 
 ecsUnlock:
@@ -7075,7 +7076,8 @@ Wait_state      DB 'Wait',0
 Ready_state     DB 'Ready',0
 Signal_state    DB 'Signal',0
 Debug_state     DB 'Debug',0
-Futex_state     DB 'Section',0
+Futex_state     DB 'User Section',0
+Section_state    DB 'Kernel Section',0
 
 Wakeup_state    DB 'Wakeup ',0 
 Run_state       DB 'Run ', 0
@@ -7172,6 +7174,13 @@ check_not_wait:
     jmp check_copy_zero
     
 check_not_signal:
+    cmp ax,SLEEP_SEL_SECTION
+    jne check_not_kernel
+;
+    mov si,OFFSET Section_state
+    jmp check_copy_zero
+    
+check_not_kernel:
     cmp ax,SLEEP_SEL_FUTEX
     jne check_not_futex
 ;
