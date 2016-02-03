@@ -3256,6 +3256,7 @@ InitPrimaryPciAdapter   Proc near
     mov bp,ax
     mov ax,ether_data_sel
     mov ds,ax
+    mov ds:Handle,0
     mov si,OFFSET PciVendorTab
 init_pci1_loop:
     mov ax,bp
@@ -3344,6 +3345,7 @@ InitSecondaryPciAdapter Proc near
     mov bp,ax
     mov ax,ether_data2_sel
     mov ds,ax
+    mov ds:Handle,0
     mov si,OFFSET PciVendorTab
 init_pci2_loop:
     mov ax,bp
