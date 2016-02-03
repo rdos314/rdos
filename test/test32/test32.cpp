@@ -49,7 +49,9 @@ static void TestThread(void *ptr)
         sect->Active--;
         sect->Section->Leave();    
 
-        RdosWaitMilli(1);
+        count = RdosGetRandom(500);
+        for (i = 0; i < count; i++)
+            ;
     }
 }
 
@@ -68,7 +70,7 @@ void main()
         SectionArr[i]->Active = 0;
     }
 
-    for (i = 0; i < 32; i++)
+    for (i = 0; i < 16; i++)
     {
         param = new TParam;
         param->ID = i;

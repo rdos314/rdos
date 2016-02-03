@@ -35,8 +35,6 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-struct TKernelSection ThreadSection;
-
 struct TThread
 {
     int Valid;
@@ -44,6 +42,9 @@ struct TThread
     int ID;
     int Core;
 };
+
+struct TKernelSection ThreadSection;
+struct TKernelSection CoreSection;
 
 int ActiveProcessors = 1;
 int ProcessorCount = 0;
@@ -69,6 +70,40 @@ void __far ImplTestGate(const char *msg)
 
     val = RdosGetActiveCores();
     val++;
+}
+    
+/*##########################################################################
+#
+#   Name       : StartCore
+#
+##########################################################################*/
+void StartCore()
+{
+    int CoreId;
+
+    if (ActiveProcessors < ProcessorCount)
+    {
+        CoreId = RdosGetCoreNum(ActiveProcessors);
+        RdosStartCore(CoreId);
+        ActiveProcessors++;
+    }
+}
+    
+/*##########################################################################
+#
+#   Name       : StopCore
+#
+##########################################################################*/
+void StopCore()
+{
+/*
+    if (ActiveProcessors > 1 && RdosHasGlobalTimer())
+    {
+        SwitchAllIrqs(0);
+        ActiveProcessors--;
+        ReqShutdown(ActiveProcessors);
+    }
+*/    
 }
     
 /*##########################################################################
@@ -165,7 +200,14 @@ void MoveThread(int Core, int ThreadId)
     
     if (Core < RdosGetCoreCount())
     {
-/*        RdosEnterKernelSection(&ThreadSection);     */
+        RdosEnterKernelSection(&CoreSection); 
+
+        while (ActiveProcessors <= Core)
+            StartCore();
+
+        RdosLeaveKernelSection(&CoreSection); 
+
+        RdosEnterKernelSection(&ThreadSection); 
 
         for (i = 0; i < MAX_THREADS; i++)
         {
@@ -180,7 +222,7 @@ void MoveThread(int Core, int ThreadId)
             }
         }
 
-/*        RdosLeaveKernelSection(&ThreadSection);     */
+        RdosLeaveKernelSection(&ThreadSection);
     }
 }
     
@@ -193,40 +235,6 @@ void MoveThread(int Core, int ThreadId)
 int __far ImplGetActiveCores()
 {
     return ActiveProcessors;
-}
-    
-/*##########################################################################
-#
-#   Name       : StartCore
-#
-##########################################################################*/
-void StartCore()
-{
-    int CoreId;
-
-    if (ActiveProcessors < ProcessorCount)
-    {
-        CoreId = RdosGetCoreNum(ActiveProcessors);
-        RdosStartCore(CoreId);
-        ActiveProcessors++;
-    }
-}
-    
-/*##########################################################################
-#
-#   Name       : StopCore
-#
-##########################################################################*/
-void StopCore()
-{
-/*
-    if (ActiveProcessors > 1 && RdosHasGlobalTimer())
-    {
-        SwitchAllIrqs(0);
-        ActiveProcessors--;
-        ReqShutdown(ActiveProcessors);
-    }
-*/    
 }
     
 /*##########################################################################
@@ -301,6 +309,8 @@ void __far SchedulerThread(void *param)
 
 /*        SwitchOneIrq(MinLoadCore); */
 
+        RdosEnterKernelSection(&CoreSection); 
+
         if (HighCount > 1)
             Core = HighArr[RdosGetRandom(HighCount)];
         else
@@ -332,6 +342,8 @@ void __far SchedulerThread(void *param)
 
         if (!Updated)
             RdosUpdateFreq(0);
+
+        RdosLeaveKernelSection(&CoreSection); 
     }
 }
 
@@ -354,6 +366,7 @@ void InitThreadList()
         ThreadArr[i].Valid = FALSE;
         
     RdosInitKernelSection(&ThreadSection);
+    RdosInitKernelSection(&CoreSection);
 }
 
 /*##########################################################################
