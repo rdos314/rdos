@@ -38,7 +38,7 @@ static void TestThread(void *ptr)
         sect->Section->Enter();
         sect->Active++;
         sect->Owner = param->ID;
-        count = RdosGetRandom(200);
+        count = RdosGetRandom(500);
         for (i = 0; i < count; i++)
             if (sect->Active != 1)
                 printf("Active wrong: %d\r\n", sect->Active);        
@@ -49,8 +49,7 @@ static void TestThread(void *ptr)
         sect->Active--;
         sect->Section->Leave();    
 
-        count = RdosGetRandom(400);
-        RdosWaitMicro(count);
+        RdosWaitMilli(1);
     }
 }
 
@@ -59,8 +58,6 @@ void main()
     char str[80];
     int i;
     TParam *param;
-
-    RdosTestGate();
 
     for (i = 0; i < 4; i++)
     {

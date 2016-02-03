@@ -1442,6 +1442,15 @@ load_thread_wakeup_done:
     mov es,ax
     sti    
     call GetNextThread
+;
+    xor ax,ax
+    xchg ax,es:p_wanted_core
+    or ax,ax
+    jz load_reload_loop
+;
+    mov es:p_core,ax
+    call cs:insert_wakeup_proc
+    jmp load_thread_loop
 
 load_reload_loop:
     call cs:preempt_reload_proc
@@ -1457,12 +1466,10 @@ load_retry:
     mov di,es:p_prio
     call InsertCoreFirst
     cmp di,fs:ps_prio_act
-    jbe load_retry_do
+    jbe load_thread_loop
 ;
     mov fs:ps_prio_act,di
     lock or fs:ps_flags,PS_FLAG_PRIO_CHANGE
-
-load_retry_do:
     jmp load_thread_loop
 
 load_a_task:

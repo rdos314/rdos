@@ -1628,6 +1628,7 @@ send_int  Proc far
     push ecx
     push edx
 ;    
+    mov edx,fs:ps_apic
     cli
     shl edx,24
     mov cx,apic_mem_sel
