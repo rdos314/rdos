@@ -72,6 +72,7 @@ create_thread    Proc far
     movzx eax,ax
     mov es,eax
     movzx edx,es:p_id
+    movzx ecx,es:p_prio
     call ThreadCreated
 ;
     popad

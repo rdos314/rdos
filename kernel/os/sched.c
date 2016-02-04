@@ -41,6 +41,7 @@ struct TThread
     int Handle;
     int ID;
     int Core;
+    int Prio;
     long long BaseTics;
 };
 
@@ -66,7 +67,8 @@ int MinCpuLoad;
 struct TThread ThreadArr[MAX_THREADS];
 
 int StatCount = 0;
-struct TThreadState StatArr[MAX_THREADS];
+int NullStatArr[MAX_PROCESSOR_COUNT];
+struct TThreadState ThreadStatArr[MAX_THREADS];
 
 extern void InitScheduler();
 
@@ -126,8 +128,8 @@ void StopCore()
 #   Name       : ThreadCreated
 #
 ##########################################################################*/
-#pragma aux ThreadCreated "*" rdosdev parm routine [eax edx]
-void ThreadCreated(int handle, int ID)
+#pragma aux ThreadCreated "*" rdosdev parm routine [eax edx ecx]
+void ThreadCreated(int handle, int ID, int Prio)
 {
     int i;
 
@@ -141,6 +143,7 @@ void ThreadCreated(int handle, int ID)
             ThreadArr[i].Handle = handle;
             ThreadArr[i].ID = ID;
             ThreadArr[i].Core = 0;
+            ThreadArr[i].Prio = Prio;
             ThreadArr[i].BaseTics = 0;
             break;
         }
@@ -264,13 +267,13 @@ void __far SchedulerThread(void *param)
     long long Tics;
     int Diff;
     int i;
+    int Core;
     
     long long CoreTics;
     long long NullTics;
     long long CoreDiff;
     long long NullDiff;
     int Updated;
-    int Core;
     int CpuLoad;
     int MinLoadCore;
     int HighCount;
@@ -298,10 +301,22 @@ void __far SchedulerThread(void *param)
                 Tics = GetThreadTics(ThreadArr[i].Handle);
                 Diff = (int)(Tics - ThreadArr[i].BaseTics);
                 ThreadArr[i].BaseTics = Tics;
-                StatArr[i].ID = ThreadArr[i].ID;
-                StatArr[i].Core = ThreadArr[i].Core;
-                StatArr[i].Tics = Diff;
-                StatCount++;
+
+                if (ThreadArr[i].Prio)
+                {                    
+                    if (Diff)
+                    {
+                        ThreadStatArr[StatCount].ID = ThreadArr[i].ID;
+                        ThreadStatArr[StatCount].Core = ThreadArr[i].Core;
+                        ThreadStatArr[StatCount].Tics = Diff;
+                        StatCount++;
+                    }
+                }
+                else
+                {
+                    Core = ThreadArr[i].Core;
+                    NullStatArr[Core] = Diff;
+                }
             }
         } 
 
