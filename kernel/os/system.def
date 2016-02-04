@@ -379,6 +379,7 @@ p_signal		    DB ?
 p_parent_switch	    DB ?
 p_lib_sel		    DW ?
 p_stack_sel		    DW ?
+p_sleep_type        DW ?
 p_sleep_sel		    DW ?
 p_sleep_offset	    DD ?
 p_wait_list		    DW ?

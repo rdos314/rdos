@@ -52,10 +52,12 @@ MAX_TLB_PHYS_ENTRIES    = 10
 ;TLB_LINEAR_SIZE         = 10000h
 TLB_LINEAR_SIZE         = 100000h
 
-SLEEP_SEL_WAIT  = 1
-SLEEP_SEL_SIGNAL = 2
-SLEEP_SEL_FUTEX = 3
-SLEEP_SEL_SECTION = 4
+SLEEP_TYPE_WAIT  = 1
+SLEEP_TYPE_SIGNAL = 2
+SLEEP_TYPE_FUTEX = 3
+SLEEP_TYPE_SECTION = 4
+SLEEP_TYPE_DEBUG = 5
+SLEEP_TYPE_SUSPEND = 6
 
 section_handle_seg          STRUC
 
@@ -1478,6 +1480,7 @@ load_retry:
     jmp load_thread_loop
 
 load_a_task:
+    mov es:p_sleep_type,0
     lock or fs:ps_flags,PS_FLAG_LOADING
     mov ax,gdt_sel
     mov ds,ax
@@ -2658,6 +2661,7 @@ debug_block_do:
     call InsertBlock32
     call cs:unlock_list_proc
 ;
+    mov es:p_sleep_type,SLEEP_TYPE_DEBUG
     mov es:p_sleep_sel,ds
     mov es:p_sleep_offset,edi
     jmp LoadThread        
@@ -5198,6 +5202,7 @@ sleep_thread    PROC far
     call InsertBlock32
     call cs:unlock_list_proc
 ;        
+    mov es:p_sleep_type,SLEEP_TYPE_SUSPEND
     mov es:p_sleep_sel,ds
     mov es:p_sleep_offset,edi
     jmp LoadThread
@@ -5264,11 +5269,11 @@ signal_thread   PROC far
     call cs:lock_signal_proc
     mov es:p_signal,1
 ;    
-    mov ax,es:p_sleep_sel
-    cmp ax,SLEEP_SEL_SIGNAL
+    mov ax,es:p_sleep_type
+    cmp ax,SLEEP_TYPE_SIGNAL
     jne signal_unlock_signal
 ;    
-    mov es:p_sleep_sel,0
+    mov es:p_sleep_type,0
     mov es:p_signal,0
     call cs:unlock_signal_proc
     call cs:insert_wakeup_proc    
@@ -5329,8 +5334,7 @@ wait_for_signal PROC far
     or al,al
     jnz wait_for_signal_unlock
 ;
-    mov es:p_sleep_sel,SLEEP_SEL_SIGNAL
-    mov es:p_sleep_offset,0
+    mov es:p_sleep_type,SLEEP_TYPE_SIGNAL
     call cs:unlock_signal_proc
 ;
     push OFFSET wait_for_signal_done
@@ -5399,8 +5403,7 @@ wait_for_signal_timeout PROC far
     or al,al
     jnz wait_for_signal_timeout_unlock
 ;
-    mov es:p_sleep_sel,SLEEP_SEL_SIGNAL
-    mov es:p_sleep_offset,0    
+    mov es:p_sleep_type,SLEEP_TYPE_SIGNAL
     call cs:unlock_signal_proc
 ;
     mov bx,es
@@ -5476,9 +5479,10 @@ ecsBlock:
 ;
     call InsertBlock32
     call cs:unlock_kernel_section_proc
-;
-    mov es:p_sleep_sel,SLEEP_SEL_SECTION
-    mov es:p_sleep_offset,0
+;    
+    mov es:p_sleep_type,SLEEP_TYPE_SECTION
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,esi
     jmp LoadThread
 
 ecsUnlock:
@@ -5494,7 +5498,7 @@ ecsDone:
     
 ecsFs:
     mov fs,ax
-;
+;    
     pop dx
     pop ax
     retf32
@@ -5523,7 +5527,7 @@ leave_section   PROC far
     mov ax,ds:[esi].cs_list
     cmp ax,-1
     je lcsUnlockList
-;    
+;
     or ax,ax
     jnz lcsUnblock
 ;
@@ -5539,7 +5543,7 @@ lcsUnblock:
     call RemoveBlock32
     mov es:p_data,0
     sub esi,OFFSET cs_list
-    call cs:unlock_kernel_section_proc
+    call cs:unlock_kernel_section_proc    
 ;    
     call cs:insert_wakeup_proc
 
@@ -5972,6 +5976,7 @@ eusBlock:
     call InsertBlock32
     call cs:unlock_user_section_proc
 ;
+    mov es:p_sleep_type,SLEEP_TYPE_SECTION
     mov es:p_sleep_sel,ds
     mov es:p_sleep_offset,edi    
     jmp LoadThread
@@ -6239,8 +6244,9 @@ acquire_no_sect:
     call InsertBlock32
     call cs:unlock_futex_proc
 ;
+    mov es:p_sleep_type,SLEEP_TYPE_FUTEX
     mov es:p_sleep_sel,ds
-    mov es:p_sleep_offset,edi    
+    mov es:p_sleep_offset,esi
     jmp LoadThread
 
 acquire_take:
@@ -6370,8 +6376,9 @@ acquire_named_no_sect:
     call InsertBlock32
     call cs:unlock_futex_proc
 ;
-    mov es:p_sleep_sel,SLEEP_SEL_FUTEX
-    mov es:p_sleep_offset,0
+    mov es:p_sleep_type,SLEEP_TYPE_FUTEX
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,esi
     jmp LoadThread
 
 acquire_named_take:
@@ -6944,7 +6951,8 @@ wait_until      PROC far
     mov es,fs:ps_curr_thread
     mov fs:ps_curr_thread,0
 ;
-    mov es:p_sleep_sel,SLEEP_SEL_WAIT
+    mov es:p_sleep_type,SLEEP_TYPE_WAIT
+    mov es:p_sleep_sel,0
     mov es:p_sleep_offset,0
     jmp LoadThread
 
@@ -6995,7 +7003,8 @@ wait_milli_sec  PROC far
     mov es,fs:ps_curr_thread
     mov fs:ps_curr_thread,0
 ;
-    mov es:p_sleep_sel,SLEEP_SEL_WAIT
+    mov es:p_sleep_type,SLEEP_TYPE_WAIT
+    mov es:p_sleep_sel,0
     mov es:p_sleep_offset,0    
     jmp LoadThread
 
@@ -7047,7 +7056,8 @@ wait_micro_sec  PROC far
     mov es,fs:ps_curr_thread
     mov fs:ps_curr_thread,0
 ;
-    mov es:p_sleep_sel,SLEEP_SEL_WAIT
+    mov es:p_sleep_type,SLEEP_TYPE_WAIT
+    mov es:p_sleep_sel,0
     mov es:p_sleep_offset,0
     jmp LoadThread
 
@@ -7077,7 +7087,8 @@ Ready_state     DB 'Ready',0
 Signal_state    DB 'Signal',0
 Debug_state     DB 'Debug',0
 Futex_state     DB 'User Section',0
-Section_state    DB 'Kernel Section',0
+Section_state   DB 'Kernel Section',0
+Suspend_state   DB 'Suspend',0
 
 Wakeup_state    DB 'Wakeup ',0 
 Run_state       DB 'Run ', 0
@@ -7111,7 +7122,10 @@ check_cpu_loop:
     mov eax,fs:p_sleep_offset
     cmp ax,OFFSET ps_wakeup_list
     je check_wakeup_ok
-    jmp check_cpu_ready_ok
+;
+    mov ax,fs:p_sleep_type
+    or ax,ax
+    jz check_cpu_ready_ok
 
 check_cpu_next:
     inc dx
@@ -7159,29 +7173,43 @@ check_copy_id_done:
     
 check_not_cpu:
     mov fs,bx
-    mov ax,fs:p_sleep_sel
-    cmp ax,SLEEP_SEL_WAIT
+    mov ax,fs:p_sleep_type
+    cmp ax,SLEEP_TYPE_WAIT
     jne check_not_wait
 ;
     mov si,OFFSET Wait_state
     jmp check_copy_zero
 
 check_not_wait:
-    cmp ax,SLEEP_SEL_SIGNAL
+    cmp ax,SLEEP_TYPE_SIGNAL
     jne check_not_signal
 ;
     mov si,OFFSET Signal_state
     jmp check_copy_zero
     
 check_not_signal:
-    cmp ax,SLEEP_SEL_SECTION
+    cmp ax,SLEEP_TYPE_DEBUG
+    jne check_not_debug
+;
+    mov si,OFFSET Debug_state
+    jmp check_copy_cpu
+    
+check_not_debug:
+    cmp ax,SLEEP_TYPE_SECTION
     jne check_not_kernel
 ;
     mov si,OFFSET Section_state
-    jmp check_copy_zero
+    jmp check_copy_sleep
     
 check_not_kernel:
-    cmp ax,SLEEP_SEL_FUTEX
+    cmp ax,SLEEP_TYPE_SUSPEND
+    jne check_not_suspend
+;
+    mov si,OFFSET Suspend_state
+    jmp check_copy_sleep
+    
+check_not_suspend:
+    cmp ax,SLEEP_TYPE_FUTEX
     jne check_not_futex
 ;
     mov si,OFFSET p_list_name
@@ -7207,20 +7235,9 @@ check_futex_done:
 
 check_not_futex:
     cmp ax,SEG data
-    jne check_not_task
+    jne check_failed
 ;
     mov si,OFFSET Ready_state
-    jmp check_copy_cpu
-
-check_not_task:
-    cmp ax,system_data_sel
-    jne check_not_system
-;       
-    mov eax,fs:p_sleep_offset
-    cmp eax,OFFSET debug_list
-    jne check_not_system
-;
-    mov si,OFFSET Debug_state
     jmp check_copy_cpu
 
 check_copy_zero:
@@ -7254,7 +7271,7 @@ check_copy_done:
     clc
     jmp check_done
     
-check_not_system:
+check_failed:
     stc
 
 check_done:
@@ -7790,6 +7807,7 @@ init_thread_block       PROC near
     mov es:p_ref_count,0
     mov es:p_is_waiting,0
     mov es:p_flags,0
+    mov es:p_sleep_sel,0
 ;
     add dx,dx
     mov es:p_prio,dx
@@ -9252,6 +9270,7 @@ init_first_process      Proc near
     mov es:p_signal_spinlock,0
     mov es:p_wanted_core,0
     mov es:p_core,fs
+    mov es:p_sleep_sel,0
     ret
 init_first_process      Endp
     

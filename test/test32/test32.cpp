@@ -27,14 +27,19 @@ static void TestThread(void *ptr)
     TParam *param = (TParam *)ptr;
     int count;
     TSect *sect;
+    int sectnr = 0;
 
     RdosMoveToCore(param->ID % 4);
 
     for (;;)
     {
-        i = RdosGetRandom(4);
-        sect = SectionArr[i];
+        if (sectnr == 3)
+            sectnr = 0;
+        else
+            sectnr++;
         
+        sect = SectionArr[sectnr];
+
         sect->Section->Enter();
         sect->Active++;
         sect->Owner = param->ID;
