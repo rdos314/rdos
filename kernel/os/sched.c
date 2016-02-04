@@ -45,11 +45,25 @@ struct TThread
     long long BaseTics;
 };
 
+struct TCore
+{
+    long long NullBaseTics;
+    long long CoreBaseTics;
+};
+
 struct TThreadState
 {
     int ID;
     int Core;
-    int Tics;
+    int Load;
+};
+
+struct TCoreState
+{
+    int NullTics;
+    int CoreTics;
+    int ThreadCount;
+    int Load;
 };
 
 struct TKernelSection ThreadSection;
@@ -57,18 +71,14 @@ struct TKernelSection CoreSection;
 
 int ActiveProcessors = 1;
 int ProcessorCount = 0;
-
-long long CoreTicsArr[MAX_PROCESSOR_COUNT];
-long long NullTicsArr[MAX_PROCESSOR_COUNT];
-
-int MaxCpuLoad;
-int MinCpuLoad;
+int CurrLoad = 0;
 
 struct TThread ThreadArr[MAX_THREADS];
+struct TCore CoreArr[MAX_PROCESSOR_COUNT];
 
 int StatCount = 0;
-int NullStatArr[MAX_PROCESSOR_COUNT];
 struct TThreadState ThreadStatArr[MAX_THREADS];
+struct TCoreState CoreStatArr[MAX_PROCESSOR_COUNT];
 
 extern void InitScheduler();
 
@@ -268,23 +278,24 @@ void __far SchedulerThread(void *param)
     int Diff;
     int i;
     int Core;
-    
-    long long CoreTics;
+    int Load;
     long long NullTics;
-    long long CoreDiff;
-    long long NullDiff;
-    int Updated;
-    int CpuLoad;
-    int MinLoadCore;
-    int HighCount;
-    int HighArr[MAX_PROCESSOR_COUNT];
+    long long CoreTics;
+    int NullTime;
+    int CoreTime;
+    int NullSum;
+    int CoreSum;
 
     ProcessorCount = RdosGetCoreCount();
 
     RdosInitFreq();
 
     for (Core = 0; Core < ProcessorCount; Core++)
-        RdosGetCoreLoad(Core, &NullTicsArr[Core], &CoreTicsArr[Core]);
+    {
+        RdosGetCoreLoad(Core, &NullTics, &CoreTics);
+        CoreArr[Core].CoreBaseTics = CoreTics;
+        CoreArr[Core].NullBaseTics = NullTics;
+    }
 
     for (;;)
     {
@@ -294,6 +305,52 @@ void __far SchedulerThread(void *param)
 
         RdosEnterKernelSection(&ThreadSection); 
 
+        for (Core = 0; Core < ProcessorCount; Core++)
+        {
+            CoreStatArr[Core].ThreadCount = 0;
+            RdosGetCoreLoad(Core, &NullTics, &CoreTics);
+            CoreStatArr[Core].CoreTics = (int)(CoreTics - CoreArr[Core].CoreBaseTics);
+            CoreArr[Core].CoreBaseTics = CoreTics;
+            CoreStatArr[Core].NullTics = (int)(NullTics - CoreArr[Core].NullBaseTics);
+            CoreArr[Core].NullBaseTics = NullTics;
+        }
+
+        NullSum = 0;
+        CoreSum = 0;
+        
+        for (Core = 0; Core < ActiveProcessors; Core++)
+        {
+            NullTime = CoreStatArr[Core].NullTics;
+            CoreTime = CoreStatArr[Core].CoreTics;
+
+            NullSum += NullTime;
+            CoreSum += CoreTime;
+    
+            if (CoreTime)
+                Load = 1000 - 1000 * NullTime / CoreTime;
+            else
+                Load = 0;
+
+            if (Load < 0)
+                Load = 0;
+
+            if (Load > 1000)
+                Load = 1000;
+
+            CoreStatArr[Core].Load = Load;                
+        }
+
+        if (CoreSum)
+            CurrLoad = 1000 - 1000 * NullSum / CoreSum;
+        else
+            CurrLoad = 0;
+
+        if (CurrLoad < 0)
+            CurrLoad = 0;
+
+        if (CurrLoad > 1000)
+            CurrLoad = 1000;
+
         for (i = 0; i < MAX_THREADS; i++)
         {
             if (ThreadArr[i].Valid)
@@ -302,101 +359,38 @@ void __far SchedulerThread(void *param)
                 Diff = (int)(Tics - ThreadArr[i].BaseTics);
                 ThreadArr[i].BaseTics = Tics;
 
-                if (ThreadArr[i].Prio)
-                {                    
-                    if (Diff)
-                    {
-                        ThreadStatArr[StatCount].ID = ThreadArr[i].ID;
-                        ThreadStatArr[StatCount].Core = ThreadArr[i].Core;
-                        ThreadStatArr[StatCount].Tics = Diff;
-                        StatCount++;
+                Core = ThreadArr[i].Core;
+
+                Load = 0;
+                
+                if (Core < ProcessorCount)
+                {
+                    CoreStatArr[Core].ThreadCount++;        
+
+                    if (ThreadArr[i].Prio)
+                    {            
+                        if (CoreStatArr[Core].CoreTics)
+                            Load = 1000 * Diff / CoreStatArr[Core].CoreTics;
+                        else
+                            Load = 0;
                     }
                 }
-                else
+
+                if (Load)
                 {
-                    Core = ThreadArr[i].Core;
-                    NullStatArr[Core] = Diff;
+                    ThreadStatArr[StatCount].ID = ThreadArr[i].ID;
+                    ThreadStatArr[StatCount].Core = ThreadArr[i].Core;
+                    ThreadStatArr[StatCount].Load = Load;
+                    StatCount++;
                 }
             }
         } 
 
         RdosLeaveKernelSection(&ThreadSection); 
 
-        MinCpuLoad = 110;
-        MaxCpuLoad = 0;
-        MinLoadCore = 0;
-        HighCount = 0;
-
-        Updated = FALSE;
-
-        for (Core = 0; Core < ProcessorCount; Core++)
-        {
-            RdosGetCoreLoad(Core, &NullTics, &CoreTics);
-            CoreDiff = CoreTics - CoreTicsArr[Core];
-            NullDiff = NullTics - NullTicsArr[Core];
-            CoreTicsArr[Core] = CoreTics;
-            NullTicsArr[Core] = NullTics;
-
-            if (CoreDiff)
-            {
-                CpuLoad = 100 - (int)(100 * NullDiff / CoreDiff);
-
-                if (CpuLoad == MaxCpuLoad)
-                {
-                    HighArr[HighCount] = Core;
-                    HighCount++;
-                }
-                
-                if (CpuLoad > MaxCpuLoad)
-                {
-                    MaxCpuLoad = CpuLoad;
-                    HighArr[0] = Core;
-                    HighCount = 1;
-                }
-
-                if (CpuLoad < MinCpuLoad)
-                {
-                    MinCpuLoad = CpuLoad;
-                    MinLoadCore = Core;
-                }
-            }
-        }
-
-/*        SwitchOneIrq(MinLoadCore); */
-
         RdosEnterKernelSection(&CoreSection); 
 
-        if (HighCount > 1)
-            Core = HighArr[RdosGetRandom(HighCount)];
-        else
-            Core = HighArr[0];
-            
-/*        MoveOneTask(Core); */
-
-        if (MaxCpuLoad > 60)
-        {
-            if (ActiveProcessors == ProcessorCount)
-            {
-                Updated = TRUE;
-                RdosUpdateFreq(-1);
-            }
-            else
-                StartCore();
-        }
-
-        if (MaxCpuLoad < 30)
-        {
-/*            if (PowerState == PowerStateCount - 1)
-                StopCore();
-            else         */
-            {
-                Updated = TRUE;
-                RdosUpdateFreq(1);
-            }
-        }
-
-        if (!Updated)
-            RdosUpdateFreq(0);
+        RdosUpdateFreq(0);
 
         RdosLeaveKernelSection(&CoreSection); 
     }
