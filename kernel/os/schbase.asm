@@ -460,6 +460,30 @@ SetThreadCore_ PROC near
     pop es
     ret
 SetThreadCore_ ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetThreadTics
+;
+;           DESCRIPTION:    Get thread tics
+;
+;           PARAMETER:      AX          Thread handle
+;
+;           RETURNS:        EDX:EAX     Tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetThreadTics_
+    
+GetThreadTics_ PROC near
+    push es
+    mov es,ax
+    mov edx,es:p_msb_tics
+    mov eax,es:p_lsb_tics    
+    pop es
+    ret
+GetThreadTics_ ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

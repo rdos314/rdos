@@ -28,22 +28,32 @@ static void TestThread(void *ptr)
     int count;
     TSect *sect;
     int sectnr = 0;
+    int left = 0;
 
     RdosMoveToCore(param->ID % 4);
 
     for (;;)
     {
-        if (sectnr == 3)
-            sectnr = 0;
+        if (left)
+        {
+            left--;
+            if (sectnr == 3)
+                sectnr = 0;
+            else
+                sectnr++;
+        }
         else
-            sectnr++;
+        {
+            sectnr = RdosGetRandom(4);
+            left = RdosGetRandom(50000);
+            count = RdosGetRandom(300);
+        }
         
         sect = SectionArr[sectnr];
 
         sect->Section->Enter();
         sect->Active++;
         sect->Owner = param->ID;
-        count = 300;
         for (i = 0; i < count; i++)
             if (sect->Active != 1)
                 printf("Active wrong: %d\r\n", sect->Active);        
@@ -54,9 +64,7 @@ static void TestThread(void *ptr)
         sect->Active--;
         sect->Section->Leave();    
 
-        count = 300;
-        for (i = 0; i < count; i++)
-            ;
+        RdosWaitMicro(25);
     }
 }
 
@@ -65,6 +73,8 @@ void main()
     char str[80];
     int i;
     TParam *param;
+
+    RdosTestGate();
 
     for (i = 0; i < 4; i++)
     {
@@ -75,7 +85,7 @@ void main()
         SectionArr[i]->Active = 0;
     }
 
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 24; i++)
     {
         param = new TParam;
         param->ID = i;

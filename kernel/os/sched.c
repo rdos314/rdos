@@ -41,6 +41,14 @@ struct TThread
     int Handle;
     int ID;
     int Core;
+    long long BaseTics;
+};
+
+struct TThreadState
+{
+    int ID;
+    int Core;
+    int Tics;
 };
 
 struct TKernelSection ThreadSection;
@@ -57,19 +65,26 @@ int MinCpuLoad;
 
 struct TThread ThreadArr[MAX_THREADS];
 
+int StatCount = 0;
+struct TThreadState StatArr[MAX_THREADS];
+
 extern void InitScheduler();
 
 extern void SetThreadCore(int Core, int ThreadHandle);
 #pragma aux SetThreadCore parm routine [edx eax]
 
+extern long long GetThreadTics(int ThreadHandle);
+#pragma aux GetThreadTics parm routine [eax] value [edx eax]
+
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
 {
-    int val;
-
-    val = RdosGetActiveCores();
-    val++;
+    int handle = ThreadArr[0].Handle;
+    long long Tics;
+    
+    Tics = GetThreadTics(handle);
+    Tics++;
 }
     
 /*##########################################################################
@@ -126,6 +141,7 @@ void ThreadCreated(int handle, int ID)
             ThreadArr[i].Handle = handle;
             ThreadArr[i].ID = ID;
             ThreadArr[i].Core = 0;
+            ThreadArr[i].BaseTics = 0;
             break;
         }
     }
@@ -245,6 +261,10 @@ int __far ImplGetActiveCores()
 #pragma aux SchedulerThread "*" rdosdev parm routine [es edi]
 void __far SchedulerThread(void *param)
 {
+    long long Tics;
+    int Diff;
+    int i;
+    
     long long CoreTics;
     long long NullTics;
     long long CoreDiff;
@@ -266,6 +286,26 @@ void __far SchedulerThread(void *param)
     for (;;)
     {
         RdosWaitMilli(250);
+
+        StatCount = 0;
+
+        RdosEnterKernelSection(&ThreadSection); 
+
+        for (i = 0; i < MAX_THREADS; i++)
+        {
+            if (ThreadArr[i].Valid)
+            {
+                Tics = GetThreadTics(ThreadArr[i].Handle);
+                Diff = (int)(Tics - ThreadArr[i].BaseTics);
+                ThreadArr[i].BaseTics = Tics;
+                StatArr[i].ID = ThreadArr[i].ID;
+                StatArr[i].Core = ThreadArr[i].Core;
+                StatArr[i].Tics = Diff;
+                StatCount++;
+            }
+        } 
+
+        RdosLeaveKernelSection(&ThreadSection); 
 
         MinCpuLoad = 110;
         MaxCpuLoad = 0;
