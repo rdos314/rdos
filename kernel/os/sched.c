@@ -93,13 +93,8 @@ extern long long GetThreadTics(int ThreadHandle);
 
 void __far ImplTestGate(const char *msg)
 {
-    int handle = ThreadArr[0].Handle;
-    long long Tics;
-    
-    Tics = GetThreadTics(handle);
-    Tics++;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : StartCore
@@ -286,6 +281,13 @@ void __far SchedulerThread(void *param)
     int CoreTime;
     int NullSum;
     int CoreSum;
+    int HighestCore;
+    int HighestLoad;
+    int LowestCore;
+    int LowestLoad;
+    int OptLoad;
+    int BestLoad;
+    int BestThread;
 
     ProcessorCount = RdosGetCoreCount();
 
@@ -409,6 +411,73 @@ void __far SchedulerThread(void *param)
 
         if (CurrLoad > 400)
             StartCore();
+
+
+        if (ActiveProcessors > 1)
+        {
+            HighestLoad = -1;
+            LowestLoad = 1100;
+        
+            for (Core = 0; Core < ActiveProcessors; Core++)
+            {
+                Load = CoreStatArr[Core].Load;
+
+                if (Load > HighestLoad)
+                {
+                    HighestCore = Core;
+                    HighestLoad = Load;
+                }
+    
+                if (Load < LowestLoad)
+                {
+                    LowestCore = Core;
+                    LowestLoad =  Load;
+                }
+            }
+
+            OptLoad = (HighestLoad - LowestLoad) / 2;
+
+            if (OptLoad > 100)
+            {
+                BestLoad = 2000;
+
+                for (i = 0; i < StatCount; i++)
+                {
+                    if (ThreadStatArr[i].Core == HighestCore)
+                    {
+                        Load = ThreadStatArr[i].Load;
+
+                        if (Load > OptLoad)
+                            Load = Load - OptLoad;
+                        else
+                            Load = OptLoad - Load;
+
+                        if (Load < BestLoad)
+                        {
+                            BestLoad = Load;
+                            BestThread = i;
+                        }                
+                    }
+                }
+
+                RdosEnterKernelSection(&ThreadSection); 
+    
+                for (i = 0; i < MAX_THREADS; i++)
+                {
+                    if (ThreadArr[i].Valid && ThreadArr[i].ID == ThreadStatArr[BestThread].ID)
+                    {
+                        if (LowestCore != ThreadArr[i].Core)
+                        {
+                            ThreadArr[i].Core = LowestCore;
+                            SetThreadCore(LowestCore, ThreadArr[i].Handle);
+                        }
+                        break;
+                    }
+                }
+
+                RdosLeaveKernelSection(&ThreadSection);
+            }
+        }    
     }
 }
 

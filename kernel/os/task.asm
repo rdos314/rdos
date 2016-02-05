@@ -1895,8 +1895,24 @@ SaveLockedThread    Proc near
     push eax
     push edx
 ;
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jnz sltSave
+;
+    add esp,12
+    pop bp
+    lss esp,fword ptr fs:ps_stack_offset        
+    push bp
+;
+    xor bp,bp
+    mov ds,bp
+    mov es,bp
+    mov gs,bp    
+    ret
+    
+sltSave:    
+    mov ds,ax
     GetSystemTime
-    mov ds,fs:ps_curr_thread
     sub eax,fs:ps_last_lsb
     add ds:p_lsb_tics,eax
     adc ds:p_msb_tics,0

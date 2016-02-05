@@ -30,8 +30,6 @@ static void TestThread(void *ptr)
     int sectnr = 0;
     int left = 0;
 
-    RdosMoveToCore(param->ID % 4);
-
     for (;;)
     {
         if (left)
@@ -73,8 +71,6 @@ void main()
     char str[80];
     int i;
     TParam *param;
-
-    RdosTestGate();
 
     for (i = 0; i < 4; i++)
     {
