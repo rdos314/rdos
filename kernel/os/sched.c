@@ -72,6 +72,7 @@ struct TKernelSection CoreSection;
 int ActiveProcessors = 1;
 int ProcessorCount = 0;
 int CurrLoad = 0;
+int MaxLoad = 0;
 
 struct TThread ThreadArr[MAX_THREADS];
 struct TCore CoreArr[MAX_PROCESSOR_COUNT];
@@ -302,6 +303,7 @@ void __far SchedulerThread(void *param)
         RdosWaitMilli(250);
 
         StatCount = 0;
+        MaxLoad = 0;
 
         RdosEnterKernelSection(&ThreadSection); 
 
@@ -336,6 +338,9 @@ void __far SchedulerThread(void *param)
 
             if (Load > 1000)
                 Load = 1000;
+
+            if (Load > MaxLoad)
+                MaxLoad = Load;
 
             CoreStatArr[Core].Load = Load;                
         }
@@ -390,9 +395,20 @@ void __far SchedulerThread(void *param)
 
         RdosEnterKernelSection(&CoreSection); 
 
-        RdosUpdateFreq(0);
+        if (MaxLoad > 600)
+            RdosUpdateFreq(-1);
+        else
+        {
+            if (MaxLoad < 300)            
+                RdosUpdateFreq(1);
+            else
+                RdosUpdateFreq(0);
+        }
 
         RdosLeaveKernelSection(&CoreSection); 
+
+        if (CurrLoad > 400)
+            StartCore();
     }
 }
 
