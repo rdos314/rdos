@@ -42,6 +42,7 @@ struct TThread
     int ID;
     int Core;
     int Prio;
+    int IdleCount;
     long long BaseTics;
 };
 
@@ -150,6 +151,7 @@ void ThreadCreated(int handle, int ID, int Prio)
             ThreadArr[i].ID = ID;
             ThreadArr[i].Core = 0;
             ThreadArr[i].Prio = Prio;
+            ThreadArr[i].IdleCount = 0;
             ThreadArr[i].BaseTics = 0;
             break;
         }
@@ -374,7 +376,7 @@ void __far SchedulerThread(void *param)
                 {
                     CoreStatArr[Core].ThreadCount++;        
 
-                    if (ThreadArr[i].Prio)
+                    if (ThreadArr[i].Prio && ThreadArr[i].Prio < 10)
                     {            
                         if (CoreStatArr[Core].CoreTics)
                             Load = 1000 * Diff / CoreStatArr[Core].CoreTics;
@@ -389,7 +391,11 @@ void __far SchedulerThread(void *param)
                     ThreadStatArr[StatCount].Core = ThreadArr[i].Core;
                     ThreadStatArr[StatCount].Load = Load;
                     StatCount++;
+
+                    ThreadArr[i].IdleCount = 0;
                 }
+                else
+                    ThreadArr[i].IdleCount++;
             }
         } 
 
@@ -475,6 +481,16 @@ void __far SchedulerThread(void *param)
                     }
                 }
 
+                for (i = 0; i < MAX_THREADS; i++)
+                {
+                    if (ThreadArr[i].Valid && ThreadArr[i].Core != 0 && ThreadArr[i].Prio && ThreadArr[i].IdleCount > 16)
+                    {
+                        ThreadArr[i].Core = 0;
+                        ThreadArr[i].IdleCount = 0;
+                        SetThreadCore(0, ThreadArr[i].Handle);
+                    }
+                }
+ 
                 RdosLeaveKernelSection(&ThreadSection);
             }
         }    
