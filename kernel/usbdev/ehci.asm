@@ -3133,8 +3133,6 @@ UpdatePort   Proc near
     movzx edi,cl
     add edi,edi
 ;    
-    mov eax,es:[2*edi].HcPortSc
-    mov es:[2*edi].HcPortSc,eax    ; reset change bit!    
 ;    
     mov ax,1
     shl ax,cl
