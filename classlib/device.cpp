@@ -259,6 +259,8 @@ void TDevice::Init()
     OnOffline = 0;
     OnIdle = 0;
     OnBusy = 0;
+    OnOpen = 0;
+    OnClose = 0;
     OnStateChange = 0;
 
     InsertDevice();
@@ -363,7 +365,12 @@ void TDevice::DeviceName(char *Name, int MaxLen) const
 void TDevice::NotifyOpen()
 {
     FOpen = TRUE;
+
+    if (OnOpen)
+        (*OnOpen)(this);
 }
+
+
 
 /*##########################################################################
 #
@@ -402,6 +409,9 @@ void TDevice::Open()
 void TDevice::NotifyClose()
 {
     FOpen = FALSE;
+
+    if (OnClose)
+        (*OnClose)(this);
 }
 
 /*##########################################################################

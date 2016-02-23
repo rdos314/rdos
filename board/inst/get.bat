@@ -2,6 +2,7 @@ copy rdos.cfg files
 copy ..\..\kernel\os\kernel.exe files
 copy ..\..\kernel\os\sysenter.rdv files
 copy ..\..\kernel\os\longmode.bin files
+copy ..\..\kernel\os\sched.rdv files
 copy ..\..\kernel\os\task.rdv files
 copy ..\..\kernel\freetype\freetype.rdv files
 copy ..\..\kernel\os\util.rdv files

@@ -80,6 +80,8 @@ public:
     void (*OnOffline)(TDevice *Device);
     void (*OnIdle)(TDevice *Device);
     void (*OnBusy)(TDevice *Device);
+    void (*OnOpen)(TDevice *Device);
+    void (*OnClose)(TDevice *Device);
 
     void *StateData;
     void (*OnStateChange)(TDevice *Device);
