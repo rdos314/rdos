@@ -1040,13 +1040,7 @@ ipaLoop:
     pop bx
     test fs:hba_ghc,HBA_GHC_AE
     jnz ipaAdd
-;
-    push ax
-    mov ax,ide_code_sel
-    verr ax
-    pop ax    
-    jz ipaNext
-;    
+;   
     mov fs:hba_ghc,HBA_GHC_AE
     
 ipaAdd:

@@ -568,7 +568,22 @@ ReadTaskFile    Proc near
     pop dx
     
 ReadTaskFileInt:
-    WaitForSignal
+    push eax
+    push edx
+    GetSystemTime
+    add eax,1193 * 500
+    adc edx,0
+    WaitForSignalWithTimeout
+    pop edx
+    pop eax
+;       
+    push dx
+    add dx,7
+    in al,dx
+    pop dx
+    test al,80h
+    jnz ReadTaskFileInt
+;
     push ecx
     mov ecx,256
     rep ins word ptr es:[edi],dx
@@ -623,8 +638,24 @@ WriteTaskFileLoop:
     out dx,ax
     loop WriteTaskFileLoop
     pop cx
+
+WriteTaskFileWait:       
+    push eax
+    push edx
+    GetSystemTime
+    add eax,1193 * 500
+    adc edx,0
+    WaitForSignalWithTimeout
+    pop edx
+    pop eax
 ;       
-    WaitForSignal
+    push dx
+    add dx,7
+    in al,dx
+    pop dx
+    test al,80h
+    jnz WriteTaskFileWait
+;
     call CheckStatus
     jc WriteTaskFileDone
 ;       
@@ -2776,7 +2807,7 @@ cpbOk:
     mov di,es:ide_pci_count
     add di,di
     mov es:[di].ide_io_arr,si
-;    
+;
     push ds
     push es
     push ax    
@@ -2846,7 +2877,7 @@ CheckPciIde Proc near
     mov si,ax
     GetPciIrqNr
     jc cpiBar1Done
-;    
+;
     call CheckPciBar
 
 cpiBar1Done:
@@ -3138,8 +3169,13 @@ init_ide_pci:
     mov es:ide_pci_count,0
 ;
     call CheckPciIde
+    mov ax,ahci_code_sel
+    verr ax
+    jz init_ide_check_count
+;
     call CheckPciSata
-;    
+
+init_ide_check_count:    
     mov cx,es:ide_pci_count
     or cx,cx
     jz init_ide_exit
