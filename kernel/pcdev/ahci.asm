@@ -3295,6 +3295,7 @@ perform_one     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 req_discbuf_thread:
+    AddThreadInt
     mov ax,flat_sel
     mov es,ax
     mov ax,fs
@@ -3372,6 +3373,7 @@ NotifyCmdList   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_discbuf_thread:
+	AddThreadInt
     mov ax,flat_sel
     mov es,ax
     mov ax,fs

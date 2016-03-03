@@ -2902,6 +2902,7 @@ evt3F DW OFFSET error_event
 event_thread_name   DB 'XHCI Event', 0
 
 event_thread:
+    AddThreadInt
     mov es,bx
     GetThread
     mov es:xhc_event_thread,ax

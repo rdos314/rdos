@@ -2236,6 +2236,7 @@ perform_one     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 discbuf_thread:
+    AddThreadInt
     mov ax,fs
     mov ds,ax
     mov fs,ds:sd_reg_sel    

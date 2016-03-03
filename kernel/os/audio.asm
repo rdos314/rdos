@@ -1105,6 +1105,7 @@ UpdateMixer Endp
 audio_name      DB 'Audio',0
 
 audio_thread:
+    AddThreadInt
     mov ax,SEG data
     mov ds,ax
     GetThread

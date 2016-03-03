@@ -1403,6 +1403,7 @@ init_pci_devices    Endp
 init_pci_thread_name DB 'Init PCI', 0
 
 init_pci_thread Proc far
+    AddThreadInt
     mov ax,SEG data
     mov ds,ax
     mov cx,ds:pci_init_hooks

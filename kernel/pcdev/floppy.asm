@@ -1899,6 +1899,7 @@ perform_one     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 discbuf_thread:
+    AddThreadInt
     GetThread
     mov fs:disc_thread,ax
     mov bx,fs:disc_sel

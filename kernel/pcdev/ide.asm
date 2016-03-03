@@ -1800,6 +1800,7 @@ perform_one     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 discbuf_thread:
+    AddThreadInt
     mov ax,flat_sel
     mov es,ax
 ;

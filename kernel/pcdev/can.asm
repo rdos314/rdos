@@ -900,6 +900,7 @@ HandleReceive   Endp
 can_thread_name DB 'CAN-bus', 0
 
 can_thread_pr:
+    AddTHreadInt
     mov ax,SEG data
     mov ds,ax
     GetThread

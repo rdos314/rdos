@@ -3982,6 +3982,7 @@ InitPciAdapter  Endp
 ehci_name       DB 'EHCI',0
 
 ehci_thread:
+    AddThreadInt
     mov ax,SEG data
     mov ds,ax
     GetThread

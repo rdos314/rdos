@@ -1114,7 +1114,6 @@ SetThreadCore    MACRO
     OsGate set_thread_core_nr
                     ENDM
 
-;  IN  ES   Thread sel
 ;  IN  AL   Int #
 AddThreadInt    MACRO
     OsGate add_thread_int_nr

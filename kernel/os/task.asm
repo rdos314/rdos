@@ -3030,14 +3030,19 @@ set_thread_core   Endp
 ;       DESCRIPTION:    Add an int association for a thread
 ;
 ;       PARAMETERS:     AL      Int #
-;                       ES      Thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 add_thread_int_name      DB 'Add Thread Int',0
 
 add_thread_int   Proc far
+    push es
+    push ax
+    GetThread
+    mov es,ax    
     add es:p_int_count,1
+    pop ax
+    pop es
     retf32
 add_thread_int   Endp
 
