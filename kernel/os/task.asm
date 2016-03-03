@@ -2304,6 +2304,7 @@ null_thread:
     mov fs:ps_null_thread,ax
     mov es:p_core,fs
     mov es:p_wanted_core,0
+    mov es:p_int_count,0
 ;
     push OFFSET null_loop_start
     call SaveCurrentThread
@@ -3020,6 +3021,25 @@ stcDone:
     pop bx
     retf32
 set_thread_core   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddThreadInt
+;
+;       DESCRIPTION:    Add an int association for a thread
+;
+;       PARAMETERS:     AL      Int #
+;                       ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_thread_int_name      DB 'Add Thread Int',0
+
+add_thread_int   Proc far
+    add es:p_int_count,1
+    retf32
+add_thread_int   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -7808,6 +7828,7 @@ init_thread_block       PROC near
 ;
     mov es:p_signal_spinlock,0
     mov es:p_wanted_core,0
+    mov es:p_int_count,0
     mov ax,ds:p_app_sel
     mov es:p_app_sel,ax
     mov ax,ds:p_ldt_sel
@@ -9133,6 +9154,7 @@ create_first_thread       PROC near
     mov es:p_flags,0
     mov es:p_signal_spinlock,0
     mov es:p_wanted_core,0
+    mov es:p_int_count,0
     mov es:p_signal,0
     mov es:p_parent_switch,0
     mov es:p_wait_list,0
@@ -9285,6 +9307,7 @@ init_first_process      Proc near
     mov fs:ps_null_thread,es
     mov es:p_signal_spinlock,0
     mov es:p_wanted_core,0
+    mov es:p_int_count,0
     mov es:p_core,fs
     mov es:p_sleep_sel,0
     ret
@@ -9511,6 +9534,12 @@ timer_free_list_create:
     mov di,OFFSET set_thread_core_name
     xor cl,cl
     mov ax,set_thread_core_nr
+    RegisterOsGate
+;
+    mov si,OFFSET add_thread_int
+    mov di,OFFSET add_thread_int_name
+    xor cl,cl
+    mov ax,add_thread_int_nr
     RegisterOsGate
 ;
     mov si,OFFSET debug_block

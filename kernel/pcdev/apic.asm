@@ -2779,13 +2779,13 @@ tlb_flush_int:
     push es
     push fs
     pushad
+;
+    NotifyFlushTlb    
 ;    
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-;
-    NotifyFlushTlb    
 ;    
     popad
     pop fs

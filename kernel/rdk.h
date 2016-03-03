@@ -683,6 +683,8 @@
 #define osgate_init_freq 557
 #define osgate_update_freq 558
 
+#define osgate_add_thread_int 559
+
 
 
 
@@ -1369,4 +1371,6 @@
 
 #define OsGate_init_freq 0x3E 0x67 0x9a 45 2 0 0 2 0
 #define OsGate_update_freq 0x3E 0x67 0x9a 46 2 0 0 2 0
+
+#define OsGate_add_thread_int 0x3E 0x67 0x9a 47 2 0 0 2 0
 
