@@ -2793,6 +2793,64 @@ tlb_flush_int:
     pop ds
     iretd    
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           force_schedule_int
+;
+;           DESCRIPTION:    Force schedule int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+force_schedule_int:
+    pushad
+    push ds
+    push es
+    push fs
+;
+    xor ax,ax
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+;
+    EnterInt
+;    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+;
+    LeaveInt
+;
+    pop ax
+    verr ax
+    jz FsExitFs
+;    
+    xor ax,ax
+
+FsExitFs:
+    mov fs,ax
+;
+    pop ax
+    verr ax
+    jz FsExitEs
+;    
+    xor ax,ax
+
+FsExitEs:
+    mov es,ax
+;
+    pop ax
+    verr ax
+    jz FsExitDs
+;    
+    xor ax,ax
+
+FsExitDs:
+    mov ds,ax
+    popad
+    iretd    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -2887,6 +2945,10 @@ siHpetOk:
     SetupLongPreemptTimerInt
 
 siPreemptTimerOk:
+    mov al,84h
+    mov esi,OFFSET force_schedule_int
+    SetupIntGate
+;    
     popad
     pop ds
     ret

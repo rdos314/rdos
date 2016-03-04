@@ -2317,6 +2317,8 @@ null_thread:
     jmp LoadThread
 
 null_loop_start:
+    mov ss,es:p_kernel_ss
+    mov esp,es:p_kernel_esp
     GetCore
     
 null_loop:
@@ -2470,8 +2472,13 @@ iwmLockedOther:
     mov fs:ps_wakeup_spinlock,0
     sti
     jbe iwmIntOk
+;    
+    test fs:ps_flags,PS_FLAG_PREEMPT
+    jnz iwmIntOk
+;    
+    lock or fs:ps_flags,PS_FLAG_PREEMPT
 ;
-    mov al,80h
+    mov al,84h
     SendInt    
 
 iwmIntOk:
