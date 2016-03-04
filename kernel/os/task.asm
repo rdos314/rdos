@@ -2482,6 +2482,7 @@ iwmLockedOther:
     SendInt    
 
 iwmIntOk:
+    sti
     pop fs
     jmp iwmDone
 
@@ -4341,6 +4342,7 @@ stcLoop:
 ;
     mov al,81h
     SendInt
+    sti
 
 stcNext:
     add bx,2
