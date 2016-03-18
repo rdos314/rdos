@@ -9630,6 +9630,7 @@ AddLogCore    Proc near
     inc ds:sc_cores
     shl si,5
     add si,OFFSET sc_phys
+    mov edi,edx
 ;
     AllocatePhysical64
     mov dword ptr ds:[si].scp_core_phys,eax
@@ -9657,7 +9658,13 @@ AddLogCore    Proc near
     mov dword ptr ds:[si].scp_log_phys+12,ebx
     mov al,13h
     SetPageEntry
-
+;    
+    mov ax,flat_sel
+    mov es,ax
+    mov ecx,1000h
+    xor eax,eax
+    rep stos dword ptr es:[edi]    
+        
 alcDone:    
     ret
 AddLogCore    Endp
