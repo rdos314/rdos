@@ -1588,6 +1588,21 @@ DelayMs Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;               NAME:           AddToCrashLog
+;
+;               DESCRIPTION:    Add dumped data to crash log
+;
+;       PARAMETERS:     FS      Core selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddToCrashLog   Proc near
+    ret
+AddToCrashLog   Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;               NAME:           SaveCore
 ;
 ;               DESCRIPTION:    Save core state
@@ -2170,11 +2185,13 @@ nmi_user:
 ;
     pop eax
     mov fs:cs_ss,ax
+    call AddToCrashLog    
     CrashNmi
 
 nmi_kernel:
     mov fs:cs_ss,ss
     mov dword ptr fs:cs_rsp,esp
+    call AddToCrashLog    
     CrashNmi
 
 nmi_v86:
@@ -2195,6 +2212,7 @@ nmi_v86:
 ;
     pop eax
     mov fs:cs_gs,ax 
+    call AddToCrashLog    
     CrashNmi
 
 nmi_ret:
@@ -2304,7 +2322,9 @@ crash_gate_int:
     mov fs:cs_tr,ax
 ;
     sgdt fs:cs_gdtr
-    sidt fs:cs_idtr            
+    sidt fs:cs_idtr      
+    call AddToCrashLog    
+;          
     ExecuteCrashHandler
 
 cgiChain:
@@ -2383,6 +2403,8 @@ cgiChain:
 ;
     sgdt fs:cs_gdtr
     sidt fs:cs_idtr
+    call AddToCrashLog    
+
     CrashNmi
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2473,6 +2495,7 @@ crash_fault_vm:
 ;    
     mov eax,[ebp].trap_esp
     mov dword ptr fs:cs_rsp,eax
+    call AddToCrashLog    
     ExecuteCrashHandler
 
 crash_fault_chain:
@@ -2517,12 +2540,14 @@ crash_fault_chain_pm:
 ;    
     mov eax,[ebp].trap_esp
     mov dword ptr fs:cs_rsp,eax
+    call AddToCrashLog    
     CrashNmi
     
 crash_fault_chain_kernel:
     mov eax,ebp
     add eax,trap_esp
     mov dword ptr fs:cs_rsp,eax
+    call AddToCrashLog    
     CrashNmi
 
 crash_fault_chain_vm:
@@ -2543,6 +2568,7 @@ crash_fault_chain_vm:
 ;    
     mov eax,[ebp].trap_esp
     mov dword ptr fs:cs_rsp,eax
+    call AddToCrashLog    
     CrashNmi
 
 
@@ -2660,6 +2686,7 @@ crash_tss:
 ;
     sgdt fword ptr fs:cs_gdtr
     sidt fword ptr fs:cs_idtr
+    call AddToCrashLog    
     ExecuteCrashHandler
 
 crash_tss_chain:    
@@ -2757,6 +2784,7 @@ crash_tss_chain:
 ;
     sgdt fword ptr fs:cs_gdtr
     sidt fword ptr fs:cs_idtr
+    call AddToCrashLog    
     CrashNmi
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
