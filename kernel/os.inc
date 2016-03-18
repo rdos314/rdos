@@ -1559,7 +1559,7 @@ CrashNmi       MACRO
                     ENDM
 
 CrashGate       MACRO
-    int 84h
+    int 85h
                     ENDM
 
 ;   SS:EBP       Fault stack
