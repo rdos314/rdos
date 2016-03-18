@@ -2847,21 +2847,25 @@ create_long_tss   Endp
 ;
 ;           DESCRIPTION:    Add dump core
 ;
-;           PARAMETERS:         
+;           PARAMETERS:     ES  core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddDumpCore    Proc near
+    pushad
     push ds
     push es
-    pushad
 ;    
     mov si,core_image_sel
     mov ds,si
     mov si,ds:ic_cores
     cmp si,16
-    jae adcDone
+    jb adcDo
 ;
+    xor si,si
+    jmp adcDone    
+
+adcDo:
     mov eax,4000h
     AllocateBigLinear
 ;
@@ -2914,9 +2918,11 @@ AddDumpCore    Proc near
     rep stos dword ptr es:[edi]    
         
 adcDone:
-    popad
     pop es
     pop ds    
+;
+    mov es:ps_dump_offset,si    
+    popad
     ret
 AddDumpCore    Endp
 
@@ -9676,45 +9682,6 @@ ccdSetup:
     ret
 CreateCoreDump  Endp    
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           SaveCores
-;
-;           DESCRIPTION:    Save cores
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-SaveCores    Proc near
-    mov bx,core_image_sel
-    mov ds,bx
-    mov bx,flat_sel
-    mov es,bx
-    mov cx,ds:ic_cores
-    mov si,OFFSET ic_linear
-
-scl:
-    mov al,cl
-    add al,0A0h
-    mov edi,ds:[si]
-;    
-    push ecx
-    mov ecx,4000h
-    rep stos byte ptr es:[edi]
-    pop ecx
-;
-    add si,4
-    loop scl    
-;    
-    mov bx,core_save_sel
-    mov ds,bx
-    mov ds:sc_sign,SAVE_CORE_SIGN
-    ret
-SaveCores    Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -9733,7 +9700,7 @@ test_gate_pr    Proc far
     mov bx,ds:core_dump_sel
     mov es,bx
 ;    
-    call SaveCores
+    CrashGate
     retf32
 test_gate_pr    Endp
 

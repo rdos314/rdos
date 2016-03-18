@@ -98,6 +98,8 @@ ps_apic             DD ?
 ps_acpi             DB ?
 ps_tlb_flush        DB ?
 
+ps_dump_offset      DW ?
+
 ps_preempt_lsb      DD ?
 ps_preempt_msb	    DD ?
 
