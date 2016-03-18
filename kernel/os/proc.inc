@@ -51,6 +51,20 @@ timer_owner		DW ?
 
 timer_struc	ENDS
 
+PROC_LOG_ENTRIES    = 1FEh
+
+; should always be 16 bytes!
+
+proc_log_struc  STRUC
+
+pls_time        DD ?,?
+pls_type        DW ?
+pls_proc        DW ?
+pls_data        DD ?
+
+proc_log_struc  ENDS
+
+
 processor_seg   STRUC
 
 ps_ptab             DW 256 DUP(?)
@@ -61,6 +75,11 @@ ps_wakeup_list      DW ?
 ps_id               DW ?
 
 ps_sel              DW ?
+
+ps_sched_count      DW ?
+ps_log_count        DW ?
+ps_log_sel          DW ?
+ps_log_entry        DW ?
 
 ps_stack_offset     DD ?
 ps_stack_sel        DW ?

@@ -236,6 +236,65 @@ core_arr                    DW MAX_CORES DUP(0)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AddLog
+;
+;       DESCRIPTION:    Add log entry
+;
+;       PARAMETERS:     FS      Process sel
+;                       AX      Type
+;                       EDX     Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddLog    Proc near
+    push ebp
+    mov ebp,esp
+    push es
+    push bx
+;    
+    mov bx,fs:ps_log_sel
+    or bx,bx
+    jnz alDo
+;
+    push eax
+    mov eax,PROC_LOG_ENTRIES SHL 4
+    AllocateGlobalMem
+    mov fs:ps_log_sel,es
+    mov bx,es
+    pop eax
+
+alDo:
+    mov es,bx
+    mov bx,fs:ps_log_entry
+    shl bx,4
+    mov es:[bx].pls_type,ax
+    mov es:[bx].pls_data,edx
+    GetSystemTime
+    mov es:[bx].pls_time,eax
+    mov es:[bx].pls_time+4,edx
+    mov ax,[ebp+4]
+    mov es:[bx].pls_proc,ax    
+;
+    shr bx,4
+    inc bx
+    cmp bx,PROC_LOG_ENTRIES    
+    jb alSavePos
+;
+    xor bx,bx
+
+alSavePos:
+    mov fs:ps_log_entry,bx
+    inc fs:ps_log_count        
+;
+    pop bx
+    pop es
+    pop ebp    
+    ret
+AddLog    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           LockTimerGlobal
 ;
 ;       DESCRIPTION:    Lock timer struc, global version
@@ -1431,7 +1490,7 @@ load_thread_wakeup_loop:
     jz load_thread_wakeup_done
 ;
     call cs:remove_wakeup_proc
-;
+;    
     mov di,es:p_prio
     call InsertCoreBlock
     cmp di,fs:ps_prio_act
@@ -1456,6 +1515,13 @@ load_thread_wakeup_done:
     cmp dx,ax
     jz load_reload_loop
 ;    
+    mov ax,fs:ps_sched_count
+    cmp ax,10
+    jb load_reload_wakeup
+;
+    call AddLog
+
+load_reload_wakeup:
     call cs:insert_wakeup_proc
     jmp load_thread_loop
 
@@ -2437,7 +2503,22 @@ InsertWakeupMultiple  PROC near
     push ax
     push di
 ;
+    mov ax,fs:ps_sched_count
+    cmp ax,10
+    jb iwmLogOk
+;
+    push ebp
+    mov ebp,esp
+    mov ax,[ebp+8]
+    push edx
+    mov dx,fs
+    call AddLog
+    pop edx
+    pop ebp
+
+iwmLogOk:
     mov ax,fs
+;
     mov di,es:p_core
     cmp ax,di
     je iwmTryLockSelf
@@ -2892,6 +2973,11 @@ core_timer_list_create:
     mov es:[bx].timer_next,ax
     mov bx,ax
     loop core_timer_list_create
+;       
+    mov es:ps_sched_count,0
+    mov es:ps_log_count,0
+    mov es:ps_log_sel,0
+    mov es:ps_log_entry,0
 ;
     call create_long_tss
     mov es:ps_long_tr,bx
@@ -9362,6 +9448,284 @@ start_tasking:
     call init_first_process
     jmp init_first_thread
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CreateCoreDump
+;
+;           DESCRIPTION:    Create core dump
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateCoreDump    Proc near
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:core_dump_sel,0
+;    
+    mov eax,1000h
+    AllocateBigLinear
+;
+    xor ebx,ebx
+    mov eax,core_save_phys
+    and eax,NOT 0FFFh
+    mov al,13h
+    SetPageEntry
+;
+    mov bx,core_save_sel
+    mov eax,core_save_phys
+    and eax,0FFFh
+    add edx,eax
+    mov ecx,SIZE save_core_struc
+    CreateDataSelector16
+    mov ds,bx
+    mov eax,ds:sc_sign
+    cmp eax,SAVE_CORE_SIGN
+    jnz ccdSetup
+;
+    mov cx,ds:sc_cores
+    cmp cx,MAX_SAVE_CORES
+    ja ccdSetup
+;
+    or cx,cx    
+    jz ccdSetup    
+;    
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov eax,SIZE image_core_struc
+    AllocateSmallGlobalMem
+    mov bx,core_save_sel
+    mov ds,bx
+    mov cx,ds:sc_cores
+    mov es:ic_cores,cx
+    mov si,OFFSET sc_phys
+    mov di,OFFSET ic_linear
+
+ccdLoop:
+    push es
+    push cx
+    push di
+;    
+    push edx
+    mov eax,4000h
+    AllocateBigLinear
+    mov es:[di],edx
+    mov edi,edx
+    pop edx
+;    
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov eax,dword ptr ds:[si].scp_core_phys
+    mov ebx,dword ptr ds:[si].scp_core_phys+4
+    mov al,13h
+    SetPageEntry
+;
+    push si
+    mov esi,edx
+    mov ecx,400h
+    rep movs dword ptr es:[edi],es:[esi]
+    pop si
+;    
+    mov eax,dword ptr ds:[si].scp_stack_phys
+    mov ebx,dword ptr ds:[si].scp_stack_phys+4
+    mov al,13h
+    SetPageEntry
+;
+    push si
+    mov esi,edx
+    mov ecx,400h
+    rep movs dword ptr es:[edi],es:[esi]
+    pop si
+;    
+    mov eax,dword ptr ds:[si].scp_log_phys
+    mov ebx,dword ptr ds:[si].scp_log_phys+4
+    mov al,13h
+    SetPageEntry
+;
+    push si
+    mov esi,edx
+    mov ecx,400h
+    rep movs dword ptr es:[edi],es:[esi]
+    pop si
+;    
+    mov eax,dword ptr ds:[si].scp_log_phys+8
+    mov ebx,dword ptr ds:[si].scp_log_phys+12
+    mov al,13h
+    SetPageEntry
+;
+    push si
+    mov esi,edx
+    mov ecx,400h
+    rep movs dword ptr es:[edi],es:[esi]
+    pop si
+;        
+    pop di
+    pop cx
+    pop es
+;
+    add si,SIZE save_core_phys_struc
+    add di,4    
+    sub cx,1
+    jnz ccdLoop
+;    
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+    mov ecx,1000h
+    FreeLinear
+;       
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:core_dump_sel,es
+
+ccdSetup:
+    mov bx,core_save_sel
+    mov ds,bx
+    mov ds:sc_sign,0
+    mov ds:sc_cores,0            
+;
+    mov eax,SIZE image_core_struc
+    mov bx,core_image_sel
+    AllocateFixedSystemMem
+    mov es:ic_cores,0        
+    ret
+CreateCoreDump  Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AddLogCore
+;
+;           DESCRIPTION:    Add log core
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+AddLogCore    Proc near
+    mov si,core_image_sel
+    mov ds,si
+    mov si,ds:ic_cores
+    cmp si,16
+    jae alcDone
+;
+    mov eax,4000h
+    AllocateBigLinear
+;
+    inc ds:ic_cores
+    shl si,2
+    add si,OFFSET ic_linear
+;    
+    mov ds:[si],edx
+;    
+    mov si,core_save_sel
+    mov ds,si
+    mov si,ds:sc_cores
+;
+    inc ds:sc_cores
+    shl si,5
+    add si,OFFSET sc_phys
+;
+    AllocatePhysical64
+    mov dword ptr ds:[si].scp_core_phys,eax
+    mov dword ptr ds:[si].scp_core_phys+4,ebx
+    mov al,13h
+    SetPageEntry
+    add edx,1000h
+;        
+    AllocatePhysical64
+    mov dword ptr ds:[si].scp_stack_phys,eax
+    mov dword ptr ds:[si].scp_stack_phys+4,ebx
+    mov al,13h
+    SetPageEntry
+    add edx,1000h
+;        
+    AllocatePhysical64
+    mov dword ptr ds:[si].scp_log_phys,eax
+    mov dword ptr ds:[si].scp_log_phys+4,ebx
+    mov al,13h
+    SetPageEntry
+    add edx,1000h
+;        
+    AllocatePhysical64
+    mov dword ptr ds:[si].scp_log_phys+8,eax
+    mov dword ptr ds:[si].scp_log_phys+12,ebx
+    mov al,13h
+    SetPageEntry
+
+alcDone:    
+    ret
+AddLogCore    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SaveCores
+;
+;           DESCRIPTION:    Save cores
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+SaveCores    Proc near
+    mov bx,core_image_sel
+    mov ds,bx
+    mov bx,flat_sel
+    mov es,bx
+    mov cx,ds:ic_cores
+    mov si,OFFSET ic_linear
+
+scl:
+    mov al,cl
+    add al,0A0h
+    mov edi,ds:[si]
+;    
+    push ecx
+    mov ecx,4000h
+    rep stos byte ptr es:[edi]
+    pop ecx
+;
+    add si,4
+    loop scl    
+;    
+    mov bx,core_save_sel
+    mov ds,bx
+    mov ds:sc_sign,SAVE_CORE_SIGN
+    ret
+SaveCores    Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           Test gate
+;
+;               DESCRIPTION:    Test gate
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_gate_name    DB 'Test Gate',0
+
+test_gate_pr    Proc far
+    mov ax,system_data_sel
+    mov ds,ax
+    mov bx,ds:core_dump_sel
+    mov es,bx
+;    
+    call AddLogCore
+    call AddLogCore
+    call SaveCores
+    retf32
+test_gate_pr    Endp
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -9376,7 +9740,7 @@ start_tasking:
 init       PROC far
     pusha
     push ds
-;
+;    
     mov ax,SEG data
     mov ds,ax
     mov ds:term_thread_list,0
@@ -9616,6 +9980,12 @@ timer_free_list_create:
     mov ax,fpu_exception_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET test_gate_pr
+    mov edi,OFFSET test_gate_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
+;
     mov si,OFFSET free_proc_handle
     mov di,OFFSET free_proc_handle_name
     xor dx,dx
@@ -9845,6 +10215,8 @@ timer_free_list_create:
 ;
     mov edi,OFFSET check_list
     HookState
+;
+    call CreateCoreDump
 ;
     mov eax,4000h
     AllocateBigLinear

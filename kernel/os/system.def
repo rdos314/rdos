@@ -29,8 +29,8 @@
 ; rom modules in RDOS
 ;
 
-BootMemSign		EQU 675E4B72h
-AllocMemSign	EQU 9AE58C5Dh
+BootMemSign             EQU 675E4B72h
+AllocMemSign    EQU 9AE58C5Dh
 
 RdosSign EQU 5A1E75D4h
 
@@ -52,11 +52,11 @@ RdosLongMode = 20
 
 RdosEnd = 0E5E5h
 
-adapter_typ	STRUC
-adapter_base	DD ?
-adapter_size	DD ?
-adapter_crc		DW ?
-adapter_typ	ENDS
+adapter_typ     STRUC
+adapter_base    DD ?
+adapter_size    DD ?
+adapter_crc             DW ?
+adapter_typ     ENDS
 
 rdos_header  STRUC
 
@@ -116,13 +116,13 @@ long_mode_header   ENDS
 
 boot64_pages        = 16
 
-system_seg	STRUC
+system_seg      STRUC
 
 dum1                        DD ?
 
 multiboot_mmap_len          DW ?
 
-cpu_ext_feature_flags   	DD ?
+cpu_ext_feature_flags           DD ?
 
 long_idt_ads                DD ?
 
@@ -131,27 +131,27 @@ multiboot_mmap_addr         DD ?
 long_base           DD ?
 long_size           DD ?
 
-debug_list			DW ?
+debug_list                      DW ?
 
-filler_arr			DW 256 DUP(?)
+filler_arr                      DW 256 DUP(?)
 
-filler_pid			DW ?
+filler_pid                      DW ?
 
-rom_shadow			DW ?
-ram1_size			DD ?
-ram2_base			DD ?
-ram2_size			DD ?
-rom1_base			DD ?
-rom1_size			DD ?
-rom2_base			DD ?
-rom2_size			DD ?
+rom_shadow                      DW ?
+ram1_size                       DD ?
+ram2_base                       DD ?
+ram2_size                       DD ?
+rom1_base                       DD ?
+rom1_size                       DD ?
+rom2_base                       DD ?
+rom2_size                       DD ?
 
-alloc_base			DD ?
+alloc_base                      DD ?
 
-rom_modules			DW ?
-rom_adapters		DD 16 DUP(?,?,?)
+rom_modules                     DW ?
+rom_adapters            DD 16 DUP(?,?,?)
 
-check_point			DW ?
+check_point                     DW ?
 
 cpu_type            DB ?
 cpu_vendor          DB 13 DUP(?)
@@ -166,8 +166,8 @@ flat_base           DD ?
 sys_tsc_tics        DD ?
 sys_tsc_rest        DW ?
 
-page_spinlock		spinlock_typ <>
-gdt_section			section_typ <>
+page_spinlock           spinlock_typ <>
+gdt_section                     section_typ <>
 
 enter_patch_proc    DW ?
 leave_patch_proc    DW ?
@@ -175,16 +175,18 @@ leave_patch_proc    DW ?
 patch_spinlock      DW ?
 shut_spinlock       DW ?
 
-patch_section		section_typ <>
+patch_section           section_typ <>
 
 multiboot_size      DW ?
 multiboot_sel       DW ?
 
+core_dump_sel       DW ?
+
 has_phys64          DB ?
 
-system_size			DB ?
+system_size                     DB ?
 
-system_seg	ENDS
+system_seg      ENDS
 
 phys_header     STRUC
 
@@ -204,28 +206,28 @@ phys_bitmap_header   ENDS
 phys_header_start    = 8
 phys_bitmap_start    = 2000h
 
-app_seg	STRUC
+app_seg STRUC
 
-app_next			        DW ?
+app_next                                DW ?
 
-app_get_cmd_line_proc	    DD ?,?
-app_get_exe_proc		    DD ?,?
-app_get_env_proc		    DD ?,?
+app_get_cmd_line_proc       DD ?,?
+app_get_exe_proc                    DD ?,?
+app_get_env_proc                    DD ?,?
 app_set_options_proc        DD ?,?
 app_get_options_proc        DD ?,?
-app_allocate_mem_proc	    DD ?,?
-app_free_mem_proc		    DD ?,?
-app_debug_allocate_mem_proc	DD ?,?
-app_debug_free_mem_proc		DD ?,?
-app_init_thread_proc	    DD ?,?
-app_free_thread_proc	    DD ?,?
-app_spawn_proc			    DD ?,?
-app_clone_proc	            DD ?,?
-app_close_proc			    DD ?,?
+app_allocate_mem_proc       DD ?,?
+app_free_mem_proc                   DD ?,?
+app_debug_allocate_mem_proc     DD ?,?
+app_debug_free_mem_proc         DD ?,?
+app_init_thread_proc        DD ?,?
+app_free_thread_proc        DD ?,?
+app_spawn_proc                      DD ?,?
+app_clone_proc              DD ?,?
+app_close_proc                      DD ?,?
 app_load_dll_proc           DD ?,?
 app_patch_proc              DD ?,?
 app_get_current_dll_proc    DD ?,?
-app_loader_name			    DD ?
+app_loader_name                     DD ?
 
 app_section_base            DD ?
 app_create_section_proc     DD ?,?
@@ -234,7 +236,7 @@ app_delete_section_proc     DD ?,?
 app_enter_section_proc      DD ?,?
 app_leave_section_proc      DD ?,?
 
-app_exit_code			    DW ?
+app_exit_code                       DW ?
 app_fork_id                 DW ?
 
 app_handle                  DW ?
@@ -247,37 +249,37 @@ app_cmd_line                DD ?
 app_options                 DD ?
 app_mem_blocks              DD ?
 
-app_vm_psp_seg		        DW ?
-app_pm_psp_sel		        DW ?
-app_vm_mem_strat	        DW ?
-app_vm_dta_seg		        DW ?
-app_pm_dta_sel		        DW ?
-app_dta_offset		        DD ?
-app_psp_mode		        DB ?
-app_dta_mode		        DB ?
-app_find_sel		        DW ?
+app_vm_psp_seg                  DW ?
+app_pm_psp_sel                  DW ?
+app_vm_mem_strat                DW ?
+app_vm_dta_seg                  DW ?
+app_pm_dta_sel                  DW ?
+app_dta_offset                  DD ?
+app_psp_mode                    DB ?
+app_dta_mode                    DB ?
+app_find_sel                    DW ?
 
-app_ldt_section		        section_typ <>
-app_ldt_data_sel	        DW ?
-app_ldt_free		        DW ?
-app_ldt_sel			        DW ?
-app_parent_ldt		        DW ?
+app_ldt_section                 section_typ <>
+app_ldt_data_sel                DW ?
+app_ldt_free                    DW ?
+app_ldt_sel                             DW ?
+app_parent_ldt                  DW ?
 
-app_context			        DW ?
-app_bitness			        DB ?
+app_context                             DW ?
+app_bitness                             DB ?
 app_key                     DB ?
 
-app_pm_int			        DD 100h DUP(?,?)
-app_pm_exc			        DD 20h DUP(?,?)
+app_pm_int                              DD 100h DUP(?,?)
+app_pm_exc                              DD 20h DUP(?,?)
 
 app_exe_name                DB 100h DUP(?)
 
-app_seg	ENDS
+app_seg ENDS
 
-block_seg	STRUC
-	b_next			DW ?
-	b_prev			DW ?
-block_seg	ENDS
+block_seg       STRUC
+        b_next                  DW ?
+        b_prev                  DW ?
+block_seg       ENDS
 
 futex_struc STRUC
 
@@ -293,7 +295,7 @@ THREAD_FLAG_CREATE  = 1
 THREAD_FLAG_BP      = 2
 THREAD_FLAG_SUSPEND = 4
 
-thread_seg	STRUC
+thread_seg      STRUC
 
 p_rax           DQ ?
 p_rbx           DQ ?
@@ -314,86 +316,86 @@ p_r14           DQ ?
 p_r15           DQ ?
 p_rflags        DQ ?
 
-p_es			DW ?
-p_cs			DW ?
-p_ss			DW ?
-p_ds			DW ?
-p_fs			DW ?
-p_gs			DW ?
+p_es                    DW ?
+p_cs                    DW ?
+p_ss                    DW ?
+p_ds                    DW ?
+p_fs                    DW ?
+p_gs                    DW ?
 
-p_ldt			DW ?
+p_ldt                   DW ?
 
 p_kernel_esp    DD ?
-p_kernel_ss		DW ?
+p_kernel_ss             DW ?
 p_kernel_stack  DD ?
 p_linear        DD ?
 
-p_dr0			DQ ?
-p_dr1			DQ ?
-p_dr2			DQ ?
-p_dr3			DQ ?
-p_dr7			DQ ?
+p_dr0                   DQ ?
+p_dr1                   DQ ?
+p_dr2                   DQ ?
+p_dr3                   DQ ?
+p_dr7                   DQ ?
 
-p_math_control	    DW ?,?
-p_math_status		DW ?,?
-p_math_tag		    DW ?,?
-p_math_eip		    DD ?
-p_math_cs			DW ?
-p_math_op			DB ?,?
-p_math_data_offs	DD ?
-p_math_data_sel	    DW ?,?
-p_math_st0		    DT ?
-p_math_st1		    DT ?
-p_math_st2		    DT ?
-p_math_st3		    DT ?
-p_math_st4		    DT ?
-p_math_st5		    DT ?
-p_math_st6		    DT ?
-p_math_st7		    DT ?
-p_math_prev_op	    DB ?,?
+p_math_control      DW ?,?
+p_math_status           DW ?,?
+p_math_tag                  DW ?,?
+p_math_eip                  DD ?
+p_math_cs                       DW ?
+p_math_op                       DB ?,?
+p_math_data_offs        DD ?
+p_math_data_sel     DW ?,?
+p_math_st0                  DT ?
+p_math_st1                  DT ?
+p_math_st2                  DT ?
+p_math_st3                  DT ?
+p_math_st4                  DT ?
+p_math_st5                  DT ?
+p_math_st6                  DT ?
+p_math_st7                  DT ?
+p_math_prev_op      DB ?,?
 
-p_next			    DW ?
-p_prev			    DW ?
-p_prio			    DW ?
-p_lsb_tics		    DD ?
-p_msb_tics		    DD ?
-p_data			    DD ?
-p_thread_sel	    DW ?
+p_next                      DW ?
+p_prev                      DW ?
+p_prio                      DW ?
+p_lsb_tics                  DD ?
+p_msb_tics                  DD ?
+p_data                      DD ?
+p_thread_sel        DW ?
 p_tss_sel           DW ?
-p_app_sel		    DW ?
+p_app_sel                   DW ?
 p_signal_spinlock   DW ?
-p_free_proc		    DD ?,?
-p_cr3			    DD ?
+p_free_proc                 DD ?,?
+p_cr3                       DD ?
 p_tls_linear        DQ ?
-p_vm_deb_sel	    DW ?
-p_vm_deb_offs	    DD ?
-p_pm_deb_sel	    DW ?
-p_pm_deb_offs	    DD ?
-p_id			    DW ?
+p_vm_deb_sel        DW ?
+p_vm_deb_offs       DD ?
+p_pm_deb_sel        DW ?
+p_pm_deb_offs       DD ?
+p_id                        DW ?
 p_futex_id          DW ?
 p_flags             DW ?
-p_events		    DW ?
-p_process_sel	    DW ?
-p_ldt_sel		    DW ?
-p_signal		    DB ?
-p_parent_switch	    DB ?
-p_lib_sel		    DW ?
-p_stack_sel		    DW ?
+p_events                    DW ?
+p_process_sel       DW ?
+p_ldt_sel                   DW ?
+p_signal                    DB ?
+p_parent_switch     DB ?
+p_lib_sel                   DW ?
+p_stack_sel                 DW ?
 p_sleep_type        DW ?
-p_sleep_sel		    DW ?
-p_sleep_offset	    DD ?
-p_wait_list		    DW ?
-p_kill			    DB ?
-p_is_waiting	    DB ?
-p_ref_count		    DW ?
+p_sleep_sel                 DW ?
+p_sleep_offset      DD ?
+p_wait_list                 DW ?
+p_kill                      DB ?
+p_is_waiting        DB ?
+p_ref_count                 DW ?
 p_core              DW ?
 p_wanted_core       DW ?
 p_int_count         DW ?
 
-p_int_locked_stack	DW ? 
-p_int_prot16_stack	DW ?
-p_int_prot32_stack	DW ?
-p_int_real_stack	DD ?
+p_int_locked_stack      DW ? 
+p_int_prot16_stack      DW ?
+p_int_prot32_stack      DW ?
+p_int_real_stack        DD ?
 
 p_fault_vector      DB ?
 p_fault_space       DB ?
@@ -401,19 +403,19 @@ p_fault_code        DD ?
 
 p_mailslot_sel      DW ?
 
-p_forecolor	        DB ?
-p_backcolor	        DB ?
-p_row			    DW ?
-p_col			    DW ?
+p_forecolor             DB ?
+p_backcolor             DB ?
+p_row                       DW ?
+p_col                       DW ?
 
 p_debug_proc        DD ?
 p_debug_event       DW ?
 
 p_list_name         DB 32 DUP(?)
     
-thread_name		    DB 32 DUP(?)
+thread_name                 DB 32 DUP(?)
 
-thread_seg	ENDS
+thread_seg      ENDS
 
 proc_descr_seg  STRUC
 
@@ -426,73 +428,73 @@ pd_dr2          DD ?
 pd_dr3          DD ?
 pd_dr7          DD ?
 pd_ref_count    DB ?
-pd_section		section_typ <>    
+pd_section              section_typ <>    
 
 proc_descr_seg  ENDS
 
-process_seg	STRUC
+process_seg     STRUC
 
-ms_virt_flags	DW ?
-ms_wait_sti		DW ?
-ms_cli_thread	DW ?
-ms_thread_count	DW ?
+ms_virt_flags   DW ?
+ms_wait_sti             DW ?
+ms_cli_thread   DW ?
+ms_thread_count DW ?
 ms_pd_sel       DW ?
 ms_iopl         DW ?
 
-process_seg	ENDS
+process_seg     ENDS
 
-tss32_seg		STRUC
+tss32_seg               STRUC
 
-tss32_back_link	    DD ?
-tss32_esp0		    DD ?
-tss32_ess0		    DW ?,?
-tss32_esp1		    DD ?
-tss32_ess1		    DW ?,?
-tss32_esp2		    DD ?
-tss32_ess2		    DW ?,?
-tss32_cr3			DD ?
-tss32_eip			DD ?
-tss32_eflags		DD ?
-tss32_eax			DD ?
-tss32_ecx			DD ?
-tss32_edx			DD ?
-tss32_ebx			DD ?
-tss32_esp			DD ?
-tss32_ebp			DD ?
-tss32_esi			DD ?
-tss32_edi			DD ?
-tss32_es			DW ?,?
-tss32_cs			DW ?,?
-tss32_ss			DW ?,?
-tss32_ds			DW ?,?
-tss32_fs			DW ?,?
-tss32_gs			DW ?,?
-tss32_ldt			DW ?,?
-tss32_t			    DW ?
-tss32_bitmap		DW ?
+tss32_back_link     DD ?
+tss32_esp0                  DD ?
+tss32_ess0                  DW ?,?
+tss32_esp1                  DD ?
+tss32_ess1                  DW ?,?
+tss32_esp2                  DD ?
+tss32_ess2                  DW ?,?
+tss32_cr3                       DD ?
+tss32_eip                       DD ?
+tss32_eflags            DD ?
+tss32_eax                       DD ?
+tss32_ecx                       DD ?
+tss32_edx                       DD ?
+tss32_ebx                       DD ?
+tss32_esp                       DD ?
+tss32_ebp                       DD ?
+tss32_esi                       DD ?
+tss32_edi                       DD ?
+tss32_es                        DW ?,?
+tss32_cs                        DW ?,?
+tss32_ss                        DW ?,?
+tss32_ds                        DW ?,?
+tss32_fs                        DW ?,?
+tss32_gs                        DW ?,?
+tss32_ldt                       DW ?,?
+tss32_t                     DW ?
+tss32_bitmap            DW ?
 
 tss32_io_bitmap     DW 40h DUP(?)
 
 tss32_bitmap_space  DW ?
 
-tss32_seg		ENDS
+tss32_seg               ENDS
 
-tss64_seg		STRUC
+tss64_seg               STRUC
 
-tss64_resv1   	    DD ?
-tss64_rsp0		    DQ ?
-tss64_rsp1		    DQ ?
-tss64_rsp2		    DQ ?
+tss64_resv1         DD ?
+tss64_rsp0                  DQ ?
+tss64_rsp1                  DQ ?
+tss64_rsp2                  DQ ?
 
 tss64_resv2         DQ ?
 
-tss64_ist1		    DQ ?
-tss64_ist2		    DQ ?
-tss64_ist3		    DQ ?
-tss64_ist4		    DQ ?
-tss64_ist5		    DQ ?
-tss64_ist6		    DQ ?
-tss64_ist7		    DQ ?
+tss64_ist1                  DQ ?
+tss64_ist2                  DQ ?
+tss64_ist3                  DQ ?
+tss64_ist4                  DQ ?
+tss64_ist5                  DQ ?
+tss64_ist6                  DQ ?
+tss64_ist7                  DQ ?
 
 tss64_resv3         DQ ?
 tss64_resv4         DW ?
@@ -504,3 +506,35 @@ tss64_io_bitmap     DW 40h DUP(?)
 tss64_bitmap_space  DW ?
     
 tss64_seg       ENDS
+
+MAX_SAVE_CORES = 16
+SAVE_CORE_SIGN  = 1A56CEB1h
+
+; should always be 32 bytes!!
+
+save_core_phys_struc    STRUC
+
+scp_core_phys   DQ ?
+scp_stack_phys  DQ ?
+scp_log_phys    DQ ?,?
+
+save_core_phys_struc    ENDS
+
+save_core_struc  STRUC
+
+sc_sign     DD ?
+sc_cores    DW ?
+sc_phys     DB MAX_SAVE_CORES * (SIZE save_core_phys_struc) DUP(?)
+
+save_core_struc  ENDS
+
+CORE_IMAGE_BASE_OFFSET    = 0
+CORE_IMAGE_STACK_OFFSET   = 1000h
+CORE_IMAGE_LOG_OFFSET     = 2000h
+
+image_core_struc  STRUC
+
+ic_cores    DW ?
+ic_linear   DD MAX_SAVE_CORES DUP(?)
+
+image_core_struc  ENDS

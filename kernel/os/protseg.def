@@ -34,6 +34,11 @@ thread_data_size	EQU 0FFFFh
 
 stack0_size			EQU 1000h
 
+;
+; physical address space
+;
+
+core_save_phys      EQU 00011EC00h
 
 ;
 ; linear address space
