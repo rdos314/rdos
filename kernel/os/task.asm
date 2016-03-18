@@ -2840,6 +2840,86 @@ create_long_tss   Proc near
     ret
 create_long_tss   Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AddDumpCore
+;
+;           DESCRIPTION:    Add dump core
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddDumpCore    Proc near
+    push ds
+    push es
+    pushad
+;    
+    mov si,core_image_sel
+    mov ds,si
+    mov si,ds:ic_cores
+    cmp si,16
+    jae adcDone
+;
+    mov eax,4000h
+    AllocateBigLinear
+;
+    inc ds:ic_cores
+    shl si,2
+    add si,OFFSET ic_linear
+;    
+    mov ds:[si],edx
+;    
+    mov si,core_save_sel
+    mov ds,si
+    mov si,ds:sc_cores
+;
+    inc ds:sc_cores
+    shl si,5
+    add si,OFFSET sc_phys
+    mov edi,edx
+;
+    AllocatePhysical64
+    mov dword ptr ds:[si].scp_core_phys,eax
+    mov dword ptr ds:[si].scp_core_phys+4,ebx
+    mov al,13h
+    SetPageEntry
+    add edx,1000h
+;        
+    AllocatePhysical64
+    mov dword ptr ds:[si].scp_stack_phys,eax
+    mov dword ptr ds:[si].scp_stack_phys+4,ebx
+    mov al,13h
+    SetPageEntry
+    add edx,1000h
+;        
+    AllocatePhysical64
+    mov dword ptr ds:[si].scp_log_phys,eax
+    mov dword ptr ds:[si].scp_log_phys+4,ebx
+    mov al,13h
+    SetPageEntry
+    add edx,1000h
+;        
+    AllocatePhysical64
+    mov dword ptr ds:[si].scp_log_phys+8,eax
+    mov dword ptr ds:[si].scp_log_phys+12,ebx
+    mov al,13h
+    SetPageEntry
+;    
+    mov ax,flat_sel
+    mov es,ax
+    mov ecx,1000h
+    xor eax,eax
+    rep stos dword ptr es:[edi]    
+        
+adcDone:
+    popad
+    pop es
+    pop ds    
+    ret
+AddDumpCore    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2989,6 +3069,7 @@ core_timer_list_create:
     mov es:ps_long_ldt,0
     mov es:ps_syscall_esp,0
     mov es:ps_syscall_eip,0
+    call AddDumpCore
 ;    
     mov ax,es:ps_id     
 ;
@@ -9595,80 +9676,6 @@ ccdSetup:
     ret
 CreateCoreDump  Endp    
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           AddLogCore
-;
-;           DESCRIPTION:    Add log core
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-AddLogCore    Proc near
-    mov si,core_image_sel
-    mov ds,si
-    mov si,ds:ic_cores
-    cmp si,16
-    jae alcDone
-;
-    mov eax,4000h
-    AllocateBigLinear
-;
-    inc ds:ic_cores
-    shl si,2
-    add si,OFFSET ic_linear
-;    
-    mov ds:[si],edx
-;    
-    mov si,core_save_sel
-    mov ds,si
-    mov si,ds:sc_cores
-;
-    inc ds:sc_cores
-    shl si,5
-    add si,OFFSET sc_phys
-    mov edi,edx
-;
-    AllocatePhysical64
-    mov dword ptr ds:[si].scp_core_phys,eax
-    mov dword ptr ds:[si].scp_core_phys+4,ebx
-    mov al,13h
-    SetPageEntry
-    add edx,1000h
-;        
-    AllocatePhysical64
-    mov dword ptr ds:[si].scp_stack_phys,eax
-    mov dword ptr ds:[si].scp_stack_phys+4,ebx
-    mov al,13h
-    SetPageEntry
-    add edx,1000h
-;        
-    AllocatePhysical64
-    mov dword ptr ds:[si].scp_log_phys,eax
-    mov dword ptr ds:[si].scp_log_phys+4,ebx
-    mov al,13h
-    SetPageEntry
-    add edx,1000h
-;        
-    AllocatePhysical64
-    mov dword ptr ds:[si].scp_log_phys+8,eax
-    mov dword ptr ds:[si].scp_log_phys+12,ebx
-    mov al,13h
-    SetPageEntry
-;    
-    mov ax,flat_sel
-    mov es,ax
-    mov ecx,1000h
-    xor eax,eax
-    rep stos dword ptr es:[edi]    
-        
-alcDone:    
-    ret
-AddLogCore    Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -9726,8 +9733,6 @@ test_gate_pr    Proc far
     mov bx,ds:core_dump_sel
     mov es,bx
 ;    
-    call AddLogCore
-    call AddLogCore
     call SaveCores
     retf32
 test_gate_pr    Endp
