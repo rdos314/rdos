@@ -538,3 +538,68 @@ ic_cores    DW ?
 ic_linear   DD MAX_SAVE_CORES DUP(?)
 
 image_core_struc  ENDS
+
+LOG_CORE_SIGN  = 2E65EBBAh
+
+LOG_CORE_FLAG_VALID = 1
+
+core_log_seg_struc  STRUC
+
+clss_sel        DW ?
+clss_flags      DW ?
+clss_base       DD ?
+clss_size       DD ?
+
+core_log_seg_struc  ENDS
+
+core_log_struc  STRUC
+
+cls_filler      DB 12 DUP(?)
+cls_sign        DD ?
+
+cls_irq         DD ?
+cls_fault       DD ?
+
+cls_cr0         DD ?
+cls_cr2         DD ?
+cls_cr3         DD ?
+cls_cr4         DD ?
+
+cls_dr0         DD ?
+cls_dr1         DD ?
+cls_dr2         DD ?
+cls_dr3         DD ?
+cls_dr7         DD ?
+
+cls_rip         DQ ?
+cls_rflags      DQ ?
+cls_rax         DQ ?
+cls_rcx         DQ ?
+cls_rdx         DQ ?
+cls_rbx         DQ ?
+cls_rsp         DQ ?
+cls_rbp         DQ ?
+cls_rsi         DQ ?
+cls_rdi         DQ ?
+cls_r8          DQ ?
+cls_r9          DQ ?
+cls_r10         DQ ?
+cls_r11         DQ ?
+cls_r12         DQ ?
+cls_r13         DQ ?
+cls_r14         DQ ?
+cls_r15         DQ ?
+
+cls_es          core_log_seg_struc <>
+cls_cs          core_log_seg_struc <>
+cls_ss          core_log_seg_struc <>
+cls_ds          core_log_seg_struc <>
+cls_fs          core_log_seg_struc <>
+cls_gs          core_log_seg_struc <>
+
+cls_ldt         core_log_seg_struc <>
+cls_tr          core_log_seg_struc <>
+cls_gdtr        core_log_seg_struc <>
+cls_idtr        core_log_seg_struc <>
+
+core_log_struc  ENDS
