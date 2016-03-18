@@ -2235,58 +2235,6 @@ WriteCoreThreads    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WriteGlobalThreads
-;
-;           DESCRIPTION:    Write global threads
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-global_msg DB 'Global threads', 0
-
-WriteGlobalThreads   PROC near
-    push es
-    mov ax,cs
-    mov es,ax
-    mov ax,task_data_sel
-    mov ds,ax
-;
-    mov di,OFFSET global_msg
-    call ShowAsciiz
-    call NewLine    
-;
-    xor si,si
-    mov cx,256
-    xor ax,ax
-
-wgtLoop:
-    mov bx,[si]
-    or bx,bx
-    jz wgtNext
-;
-    mov es,bx
-    call WriteOneThread
-
-wgtListLoop:    
-    mov dx,es:p_next
-    cmp bx,dx
-    je wgtNext
-;
-    mov es,dx
-    call WriteOneThread
-    jmp wgtListLoop    
-
-wgtNext:
-    inc ax
-    add si,2
-    loop wgtLoop
-;
-    pop es
-    ret
-WriteGlobalThreads    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           SetViewType
 ;
 ;           DESCRIPTION:    
@@ -2324,13 +2272,6 @@ ShowCrashCore    Proc near
     mov ax,SEG data
     mov ds,ax
     call Clear
-;    
-    mov ax,gs
-    or ax,ax
-    jnz sccCore
-;
-    call WriteGlobalThreads
-    jmp sccDone    
 
 sccCore:    
     mov al,ds:view_type

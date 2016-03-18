@@ -1762,6 +1762,13 @@ crash_nmi:
 execute_crash_handler_name  DB 'Execute Crash Handler', 0
 
 execute_crash_handler:
+    mov ax,wd_code_sel
+    verr ax
+    jnz execute_crash_do
+;
+;    SoftReset
+
+execute_crash_do:
     call SetupBiosPic
     call SetupBiosPit
     call InitVideo
@@ -1833,16 +1840,8 @@ not_regs:
     GetCoreNumber
     jnc handle_next_set
 ;
-    mov dx,word ptr gs:ps_flags
-    mov ds:curr_num,-1
     xor ax,ax
-    mov gs,ax
-    test dx,PS_FLAG_LONG_MODE
-    jz handle_func
-;
-    mov eax,gs:cs_cr3
-    SwitchToProtectedMode
-    jmp handle_func
+    GetCoreNumber
         
 handle_next_set:
     push dx
@@ -2002,13 +2001,6 @@ enter_crash_debug    Proc far
     push ax
 ;       
     cli
-    mov ax,wd_code_sel
-    verr ax
-    jnz enter_do
-;
-    SoftReset
-
-enter_do:
     mov ax,system_data_sel
     mov ds,ax
     mov ax,1
@@ -2019,11 +2011,6 @@ enter_do:
     GetCore
     or fs:ps_flags,PS_FLAG_NMI
     stc
-    mov ax,730h
-
-stopl:
-    jmp stopl
-    
     jmp enter_done
 
 enter_fault_do:
