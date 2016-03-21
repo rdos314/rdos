@@ -30,8 +30,20 @@
 
 #define MAX_CRASH_INFO_CORES    16
 
+class TCrashSelectorInfo
+{
+public:
+    short int Selector;
+    int Base;
+    int Limit;
+    int Valid;
+    char InfoText[32];
+};
+    
+
 class TCrashCoreInfo
 {
+public:
     int Irq;
     int Fault;
     int Cr0;
@@ -45,8 +57,8 @@ class TCrashCoreInfo
     int Dr3;
     int Dr7;
 
-    long long RIp;
-    long long RFlags;
+    long long Rip;
+    long long Rflags;
     long long Rax;
     long long Rcx;
     long long Rdx;
@@ -63,6 +75,15 @@ class TCrashCoreInfo
     long long R13;
     long long R14;
     long long R15;
+
+    TCrashSelectorInfo Es;
+    TCrashSelectorInfo Cs;
+    TCrashSelectorInfo Ss;
+    TCrashSelectorInfo Ds;
+    TCrashSelectorInfo Fs;
+    TCrashSelectorInfo Gs;
+    TCrashSelectorInfo Ldt;
+    TCrashSelectorInfo Tr;
 };
 
 class TCrashInfo

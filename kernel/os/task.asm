@@ -2872,6 +2872,7 @@ adcDo:
     inc ds:ic_cores
     shl si,2
     add si,OFFSET ic_linear
+    mov es:ps_dump_offset,si    
 ;    
     mov ds:[si],edx
 ;    
@@ -2920,8 +2921,6 @@ adcDo:
 adcDone:
     pop es
     pop ds    
-;
-    mov es:ps_dump_offset,si    
     popad
     ret
 AddDumpCore    Endp
@@ -9721,7 +9720,8 @@ has_crash_info    Endp
 ;
 ;           DESCRIPTION:    Get crash info for core
 ;
-;           PARAMETERS:         
+;           PARAMETERS:     AX      Core #
+;                           ES:EDI  Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -9729,20 +9729,44 @@ get_crash_core_name    DB 'Get Crash Core Info',0
 
 get_crash_core    Proc near
     push ds
-    push ebx
+    push eax
+    push ecx
+    push esi
+    push edi
 ;
-    mov bx,system_data_sel
-    mov ds,bx
-    mov bx,ds:core_dump_sel
-    or bx,bx
-    stc
-    jz gcciDone
+    mov si,system_data_sel
+    mov ds,si
+    mov si,ds:core_dump_sel
+    or si,si
+    jz gcciFail
 ;
-    mov ds,bx
+    mov ds,si
+    cmp ax,ds:ic_cores
+    jae gcciFail
+;
+    mov si,ax
+    shl si,2
+    mov esi,ds:[si].ic_linear
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov eax,ds:[esi].cls_sign
+    cmp eax,LOG_CORE_SIGN
+    jne gcciFail
+;    
+    mov ecx,1000h
+    rep movs dword ptr es:[edi],ds:[esi]    
     clc    
+    jmp gcciDone
+
+gcciFail:
+    stc
 
 gcciDone:   
-    pop ebx
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
     pop ds 
     ret
 get_crash_core    Endp

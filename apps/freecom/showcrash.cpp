@@ -25,6 +25,7 @@
 #
 ########################################################################*/
 
+#include <stdio.h>
 #include <string.h>
 
 #include "cmdhelp.h"
@@ -65,7 +66,7 @@ TShowCrashFactory::TShowCrashFactory()
 ##########################################################################*/
 TCommand *TShowCrashFactory::Create(TSession *session, const char *param)
 {
-	return new TShowCrashCommand(session, param);
+    return new TShowCrashCommand(session, param);
 }
 
 /*##########################################################################
@@ -82,7 +83,96 @@ TCommand *TShowCrashFactory::Create(TSession *session, const char *param)
 TShowCrashCommand::TShowCrashCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_SHOWCRASH);
+    FHelpScreen.Load(TEXT_CMDHELP_SHOWCRASH);
+}
+
+/*##########################################################################
+#
+#   Name       : TShowCrashCommand::WriteSel
+#
+#   Purpose....: Write a single selector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShowCrashCommand::WriteSelector(const char *Name, TCrashSelectorInfo *info)
+{
+    char str[81];
+
+    Write(Name);
+    Write("=");
+
+    sprintf(str,"%04hX", info->Selector);    
+    Write(str);
+
+    if (info->Valid)
+    {    
+        sprintf(str," %08lX (%08lX) ", info->Base, info->Limit);    
+        Write(str);
+
+        Write(info->InfoText);
+    }
+    Write("\r\n");
+}
+
+/*##########################################################################
+#
+#   Name       : TShowCrashCommand::WriteCore
+#
+#   Purpose....: Write a single core
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShowCrashCommand::WriteCore(int core, TCrashCoreInfo *info)
+{
+    char str[81];
+
+    sprintf(str, "Core=%d\r\n", core);
+    Write(str);
+    
+    sprintf(str, "CS:EIP=%04hX:%08lX\r\n", info->Cs.Selector, (int)info->Rip);
+    Write(str);
+    
+    sprintf(str, "SS:ESP=%04hX:%08lX\r\n", info->Ss.Selector, (int)info->Rsp); 
+    Write(str);
+
+    sprintf(str,"EAX=%08lX ", (int)info->Rax);    
+    Write(str);
+
+    sprintf(str, "EBX=%08lX ", (int)info->Rbx);    
+    Write(str);
+
+    sprintf(str, "ECX=%08lX ", (int)info->Rcx);    
+    Write(str);
+
+    sprintf(str, "EDX=%08lX\r\n", (int)info->Rdx);    
+    Write(str);
+
+    sprintf(str, "ESI=%08lX ", (int)info->Rsi);    
+    Write(str);
+
+    sprintf(str, "EDI=%08lX ", (int)info->Rdi);    
+    Write(str);
+
+    sprintf(str, "EBP=%08lX ", (int)info->Rbp);    
+    Write(str);
+
+    sprintf(str, "EFL=%08lX\r\n", (int)info->Rflags);        
+    Write(str);
+
+    WriteSelector("CS", &info->Cs);
+    WriteSelector("DS", &info->Ds);
+    WriteSelector("ES", &info->Es);
+    WriteSelector("FS", &info->Fs);
+    WriteSelector("GS", &info->Gs);
+    WriteSelector("SS", &info->Ss);
+
+    Write("\r\n");
 }
 
 /*##########################################################################
@@ -98,9 +188,12 @@ TShowCrashCommand::TShowCrashCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TShowCrashCommand::Execute(char *param)
 {
+    int core;
     TCrashInfo info;
 
-	Write("\r\n");
+    for (core = 0; core < MAX_CRASH_INFO_CORES; core++)
+        if (info.CrashInfo[core])
+            WriteCore(core, info.CrashInfo[core]);
 
-	return 0;
+    return 0;
 }

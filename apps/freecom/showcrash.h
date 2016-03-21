@@ -30,12 +30,13 @@
 
 #include "cmd.h"
 #include "cmdfact.h"
+#include "crash.h"
 
 class TShowCrashFactory : public TCommandFactory
 {
 public:
-	TShowCrashFactory();
-	virtual TCommand *Create(TSession *session, const char *param);
+    TShowCrashFactory();
+    virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -43,9 +44,12 @@ protected:
 class TShowCrashCommand : public TCommand
 {
 public:
-	TShowCrashCommand(TSession *session, const char *param);
+    TShowCrashCommand(TSession *session, const char *param);
 
-	virtual int Execute(char *param);	
+protected:
+    void WriteSelector(const char *Name, TCrashSelectorInfo *info);
+    void WriteCore(int core, TCrashCoreInfo *info);
+    virtual int Execute(char *param);       
 };
 
 #endif

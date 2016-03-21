@@ -1585,6 +1585,87 @@ dmDone:
     popad
     ret
 DelayMs Endp
+
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           AddCrashSeg
+;
+;               DESCRIPTION:    Add crash segment
+;
+;       PARAMETERS:     FS      Core selector
+;                       BX      Selector
+;                       DS:EDI  Info buffer
+;                       EAX     Selector offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddCrashSeg   Proc near
+    push es
+    pushad
+;    
+    add edi,eax
+    mov ds:[edi].clss_sel,bx
+    mov ds:[edi].clss_flags,0
+;    
+    and bx,NOT 3
+    or bx,bx
+    jz acsDone
+;
+    test bx,4
+    jz acsGdt
+
+acsLdt:
+    jmp acsDone      ; doesn't work yet
+
+acsGdt:
+    movzx ecx,word ptr fs:cs_gdtr
+    mov edx,dword ptr fs:cs_gdtr+2
+
+acsDo:
+    and bx,0FFF8h
+    cmp bx,cx
+    ja acsDone
+;
+    mov ax,flat_sel
+    mov es,ax
+    movzx ebx,bx
+    add ebx,edx
+;
+    mov al,es:[ebx+5]
+    movzx ax,al
+    mov ds:[edi].clss_flags,ax
+;
+    test al,80h
+    jz acsDone
+;
+    xor ecx,ecx
+    mov cl,es:[ebx+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,[ebx]
+    test byte ptr es:[ebx+6],80h
+    jz acsSmall
+;
+    shl ecx,12
+    or cx,0FFFh
+
+acsSmall:
+    mov edx,es:[ebx+2]
+    rol edx,8
+    mov dl,es:[ebx+7]
+    ror edx,8
+;
+    mov ds:[edi].clss_base,edx
+    mov ds:[edi].clss_size,ecx
+
+acsDone:
+    popad
+    pop es
+    ret
+AddCrashSeg Endp
+    
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1658,6 +1739,38 @@ AddToCrashLog   Proc near
     mov dword ptr ds:[edi].cls_rsi,eax
     mov eax,dword ptr fs:cs_rdi
     mov dword ptr ds:[edi].cls_rdi,eax
+;
+    mov bx,fs:cs_es
+    mov eax,OFFSET cls_es
+    call AddCrashSeg
+;
+    mov bx,fs:cs_cs
+    mov eax,OFFSET cls_cs
+    call AddCrashSeg
+;
+    mov bx,fs:cs_ss
+    mov eax,OFFSET cls_ss
+    call AddCrashSeg
+;
+    mov bx,fs:cs_ds
+    mov eax,OFFSET cls_ds
+    call AddCrashSeg
+;
+    mov bx,fs:cs_fs
+    mov eax,OFFSET cls_fs
+    call AddCrashSeg
+;
+    mov bx,fs:cs_gs
+    mov eax,OFFSET cls_gs
+    call AddCrashSeg
+;
+    mov bx,fs:cs_ldt
+    mov eax,OFFSET cls_ldt
+    call AddCrashSeg
+;
+    mov bx,fs:cs_tr
+    mov eax,OFFSET cls_tr
+    call AddCrashSeg
 ;
     mov ds:[edi].cls_sign,LOG_CORE_SIGN
 ;
