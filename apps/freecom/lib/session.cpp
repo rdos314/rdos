@@ -85,6 +85,7 @@
 #include "remote.h"
 #include "unzipc.h"
 #include "wipedir.h"
+#include "showcrash.h"
 
 #include "file.h"
 #include "path.h"
@@ -149,6 +150,7 @@ static TCommandFactory *remote;
 static TCommandFactory *rmdir;
 static TCommandFactory *rmpart;
 static TCommandFactory *set;
+static TCommandFactory *showcrash;
 static TCommandFactory *state;
 static TCommandFactory *type;
 static TCommandFactory *timev;
@@ -242,6 +244,12 @@ TSession::TSession(const char *ipc)
         pci = new TPciFactory;
         pause = new TPauseFactory;
         path = new TPathFactory;
+
+        if (RdosHasCrashInfo())
+            showcrash = new TShowCrashFactory;
+        else
+            showcrash = 0;
+            
         showpart = new TShowPartitionFactory;
         move = new TMoveFactory;
         mount = new TMountFactory;
@@ -405,6 +413,9 @@ TSession::~TSession()
         delete can;
         delete call;
         delete help;
+
+        if (showcrash)
+            delete showcrash;
 
         delete History;
         delete Keyboard;
