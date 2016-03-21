@@ -753,4 +753,7 @@ move_thread_to_core_nr          = 587
 
 get_active_cores_nr             = 588
 
+has_crash_info_nr               = 589
+get_crash_core_info_nr          = 590
+
 usergate_entries			    = 600

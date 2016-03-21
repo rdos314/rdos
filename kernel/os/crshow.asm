@@ -2272,6 +2272,7 @@ ShowCrashCore    Proc near
     mov ax,SEG data
     mov ds,ax
     call Clear
+;
 
 sccCore:    
     mov al,ds:view_type

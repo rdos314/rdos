@@ -1882,3 +1882,9 @@ Removes (deletes) a directory and all of its contents.
 
 WIPEDIR [drive:]path
 .
+
+:TEXT_CMDHELP_SHOWCRASH
+Shows previous crash log
+
+SHOWCRASH
+.

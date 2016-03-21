@@ -1418,6 +1418,17 @@
 #pragma aux RdosClearFaultSave = \
     CallGate_clear_fault_save;
 
+#pragma aux RdosHasCrashInfo = \
+    CallGate_has_crash_info  \
+    CarryToBool \
+    value [eax];
+
+#pragma aux RdosGetCrashCoreInfo = \
+    CallGate_get_crash_core_info  \
+    CarryToBool \
+    parm [eax] \
+    value [eax];
+
 #pragma aux RdosGetImageHeader = \
     CallGate_get_image_header  \
     CarryToBool \

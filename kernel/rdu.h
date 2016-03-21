@@ -753,6 +753,9 @@
 
 #define usergate_get_active_cores 0x0000024C
 
+#define usergate_has_crash_info 0x0000024D
+#define usergate_get_crash_core_info 0x0000024E
+
 
 
 #ifdef __FLAT__
@@ -1511,6 +1514,9 @@
 
 #define CallGate_get_active_cores 0x67 0x9a 76 2 0 0 3 0
 
+#define CallGate_has_crash_info 0x67 0x9a 77 2 0 0 3 0
+#define CallGate_get_crash_core_info 0x67 0x9a 78 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2266,5 +2272,8 @@
 #define CallGate_move_thread_to_core 0x3e 0x67 0x9a 75 2 0 0 3 0
 
 #define CallGate_get_active_cores 0x3e 0x67 0x9a 76 2 0 0 3 0
+
+#define CallGate_has_crash_info 0x3e 0x67 0x9a 77 2 0 0 3 0
+#define CallGate_get_crash_core_info 0x3e 0x67 0x9a 78 2 0 0 3 0
 
 #endif

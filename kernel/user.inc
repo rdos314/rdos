@@ -1309,6 +1309,16 @@ GetFaultThreadTss     MACRO
 	UserGate get_fault_thread_tss_nr
 						ENDM
 
+HasCrashInfo     MACRO
+	UserGate has_crash_info_nr
+						ENDM
+
+; IN  AX            Core #
+; IN  ES:(E)DI      Data buffer
+GetCrashCoreInfo     MACRO
+	UserGate get_crash_core_info_nr
+						ENDM
+
 ; IN  BX            Selector
 ; OUT ECX           Limit
 ; OUT AL            Bitness (16 or 32)
