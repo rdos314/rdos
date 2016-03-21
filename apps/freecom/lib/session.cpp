@@ -110,6 +110,7 @@ static TCommandFactory *call;
 static TCommandFactory *cd;
 static TCommandFactory *chdir;
 static TCommandFactory *cls;
+static TCommandFactory *crash;
 static TCommandFactory *newsess;
 static TCommandFactory *can;
 static TCommandFactory *capture;
@@ -150,7 +151,6 @@ static TCommandFactory *remote;
 static TCommandFactory *rmdir;
 static TCommandFactory *rmpart;
 static TCommandFactory *set;
-static TCommandFactory *showcrash;
 static TCommandFactory *state;
 static TCommandFactory *type;
 static TCommandFactory *timev;
@@ -244,12 +244,6 @@ TSession::TSession(const char *ipc)
         pci = new TPciFactory;
         pause = new TPauseFactory;
         path = new TPathFactory;
-
-        if (RdosHasCrashInfo())
-            showcrash = new TShowCrashFactory;
-        else
-            showcrash = 0;
-            
         showpart = new TShowPartitionFactory;
         move = new TMoveFactory;
         mount = new TMountFactory;
@@ -271,6 +265,12 @@ TSession::TSession(const char *ipc)
         del = new TDelFactory;
         debug = new TDebugFactory;
         date = new TDateFactory;
+
+        if (RdosHasCrashInfo())
+            crash = new TShowCrashFactory;
+        else
+            crash = 0;
+            
         cpy = new TCopyFactory;
         newsess = new TNewSessionFactory;
         cls = new TClsFactory;
@@ -414,8 +414,8 @@ TSession::~TSession()
         delete call;
         delete help;
 
-        if (showcrash)
-            delete showcrash;
+        if (crash)
+            delete crash;
 
         delete History;
         delete Keyboard;

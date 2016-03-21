@@ -448,7 +448,7 @@ int RDOSAPI RdosGetFaultThreadState(int ThreadNr, ThreadState *State);
 int RDOSAPI RdosGetFaultThreadTss(int ThreadNr, Tss *tss);
 
 int RDOSAPI RdosHasCrashInfo();
-int RDOSAPI RdosGetCrashCoreInfo(int Core);
+int RDOSAPI RdosGetCrashCoreInfo(int Core, char *CrashBuf);
 
 int RDOSAPI RdosGetThreadState(int ThreadNr, ThreadState *State);
 int RDOSAPI RdosSuspendThread(int Thread);

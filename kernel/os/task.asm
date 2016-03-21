@@ -9682,6 +9682,81 @@ ccdSetup:
     ret
 CreateCoreDump  Endp    
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           HasCrashInfo
+;
+;           DESCRIPTION:    Check for crash info
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_crash_info_name    DB 'Has Crash Info',0
+
+has_crash_info    Proc far
+    push ds
+    push ax
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ax,ds:core_dump_sel
+    or ax,ax
+    stc
+    jz hciDone
+;
+    clc    
+
+hciDone:   
+    pop ax
+    pop ds 
+    retf32
+has_crash_info    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetCrashCoreInfo
+;
+;           DESCRIPTION:    Get crash info for core
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_crash_core_name    DB 'Get Crash Core Info',0
+
+get_crash_core    Proc near
+    push ds
+    push ebx
+;
+    mov bx,system_data_sel
+    mov ds,bx
+    mov bx,ds:core_dump_sel
+    or bx,bx
+    stc
+    jz gcciDone
+;
+    mov ds,bx
+    clc    
+
+gcciDone:   
+    pop ebx
+    pop ds 
+    ret
+get_crash_core    Endp
+
+get_crash_core16:
+    push edi
+    movzx edi,di
+    call get_crash_core
+    pop edi
+    retf32
+
+get_crash_core32:
+    call get_crash_core
+    retf32
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -10190,6 +10265,19 @@ timer_free_list_create:
     mov edi,OFFSET cleanup_futex_name
     mov dx,virt_es_in
     mov ax,cleanup_futex_nr
+    RegisterUserGate
+;
+    mov si,OFFSET has_crash_info
+    mov di,OFFSET has_crash_info_name
+    xor cl,cl
+    mov ax,has_crash_info_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_crash_core16
+    mov esi,OFFSET get_crash_core32
+    mov edi,OFFSET get_crash_core_name
+    mov dx,virt_es_in
+    mov ax,get_crash_core_info_nr
     RegisterUserGate
 ;
     mov edi,OFFSET check_list

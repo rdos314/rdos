@@ -1426,7 +1426,7 @@
 #pragma aux RdosGetCrashCoreInfo = \
     CallGate_get_crash_core_info  \
     CarryToBool \
-    parm [eax] \
+    parm [eax] [edi] \
     value [eax];
 
 #pragma aux RdosGetImageHeader = \

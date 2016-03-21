@@ -30,6 +30,7 @@
 #include "cmdhelp.h"
 #include "lang.h"
 #include "showcrash.h"
+#include "crash.h"
 #include "rdos.h"
 
 #define FALSE 0
@@ -47,7 +48,7 @@
 #
 ##########################################################################*/
 TShowCrashFactory::TShowCrashFactory()
-  : TCommandFactory("SHOWCRASH")
+  : TCommandFactory("CRASH")
 {
 }
 
@@ -97,6 +98,8 @@ TShowCrashCommand::TShowCrashCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TShowCrashCommand::Execute(char *param)
 {
+    TCrashInfo info;
+
 	Write("\r\n");
 
 	return 0;
