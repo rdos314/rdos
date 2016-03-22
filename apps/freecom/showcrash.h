@@ -48,6 +48,10 @@ public:
 
 protected:
     void WriteSelector(const char *Name, TCrashSelectorInfo *info);
+    void WriteDt(const char *Name, TCrashSelectorInfo *info);
+    void WriteFlags(long long flags);
+    void WriteThread(TCrashThreadInfo *info);
+    void WriteStack(char *data, int sel, int base, int size);
     void WriteCore(int core, TCrashCoreInfo *info);
     virtual int Execute(char *param);       
 };

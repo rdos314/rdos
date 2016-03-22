@@ -1590,6 +1590,100 @@ DelayMs Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;               NAME:           AddCrashThread
+;
+;               DESCRIPTION:    Add crash thread
+;
+;       PARAMETERS:     FS      Core selector
+;                       BX      Thread
+;                       DS:EDI  Info buffer
+;                       AX      State
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddCrashThread   Proc near
+    push es
+    pushad
+;    
+    mov cx,ds:[edi].cls_threads
+    cmp cx,MAX_LOG_THREADS
+    jae actDone
+;
+    inc ds:[edi].cls_threads
+    push ax
+    mov ax,SIZE core_log_thread_struc
+    mul cx
+    add ax,OFFSET cls_thread_arr
+    movzx eax,ax
+    add edi,eax
+    pop ax
+;
+    mov ds:[edi].clt_sel,bx
+    mov ds:[edi].clt_state,ax
+    mov es,bx
+    mov ax,es:p_prio
+    mov ds:[edi].clt_prio,ax
+;
+    mov cx,8
+    mov si,OFFSET thread_name
+    add edi,OFFSET clt_name
+
+actLoop:
+    mov eax,es:[si]
+    mov ds:[edi],eax
+    add si,4
+    add edi,4
+    loop actLoop    
+
+actDone:
+    popad
+    pop es
+    ret
+AddCrashThread Endp
+
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           AddCrashThreadList
+;
+;               DESCRIPTION:    Add crash thread list
+;
+;       PARAMETERS:     FS      Core selector
+;                       SI      Thread list
+;                       DS:EDI  Info buffer
+;                       AX      State
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddCrashThreadList   Proc near
+    push es
+    push bx
+    push dx
+;    
+    mov bx,fs:[si]
+    or bx,bx
+    jz actlDone
+;
+    mov dx,bx
+
+actlMore:    
+    call AddCrashThread  
+    mov es,bx
+    mov bx,es:p_next
+    cmp bx,dx
+    jne actlMore  
+
+actlDone:
+    pop dx
+    pop bx
+    pop es
+    ret
+AddCrashThreadList Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;               NAME:           AddCrashSeg
 ;
 ;               DESCRIPTION:    Add crash segment
@@ -1692,6 +1786,7 @@ AddToCrashLog   Proc near
     mov ax,flat_sel
     mov ds,ax
 ;
+    mov ds:[edi].cls_threads,0
     mov eax,fs:cs_irq
     mov ds:[edi].cls_irq,eax
     mov eax,fs:cs_fault
@@ -1772,6 +1867,60 @@ AddToCrashLog   Proc near
     mov eax,OFFSET cls_tr
     call AddCrashSeg
 ;
+    movzx ecx,word ptr fs:cs_gdtr
+    mov ds:[edi].cls_gdtr.clss_size,ecx
+    mov edx,dword ptr fs:cs_gdtr+2
+    mov ds:[edi].cls_gdtr.clss_base,edx
+;
+    movzx ecx,word ptr fs:cs_idtr
+    mov ds:[edi].cls_idtr.clss_size,ecx
+    mov edx,dword ptr fs:cs_idtr+2
+    mov ds:[edi].cls_idtr.clss_base,edx
+;
+    mov bx,fs:ps_curr_thread
+    or bx,bx
+    jz aclNoCurr
+;
+    mov ax,LOG_CORE_THREAD_RUNNING
+    call AddCrashThread
+        
+aclNoCurr:
+    mov ax,LOG_CORE_THREAD_WAKEUP
+    mov si,OFFSET ps_wakeup_list
+    call AddCrashThreadList
+;
+    mov ax,LOG_CORE_THREAD_READY
+    mov cx,256
+    mov si,OFFSET ps_ptab
+
+aclReadyLoop:
+    call AddCrashThreadList
+    add si,2
+    loop aclReadyLoop
+;
+    mov ecx,ds:[edi].cls_ss.clss_size
+    cmp ecx,0FFFh
+    jne aclStackDone
+;    
+    push ds
+    push es
+    push esi
+    push edi
+;    
+    mov ax,ds
+    mov es,ax
+    mov ds,fs:cs_ss
+    xor esi,esi
+    mov ecx,400h
+    add edi,CORE_IMAGE_STACK_OFFSET
+    rep movs dword ptr es:[edi],ds:[esi]
+;
+    pop edi
+    pop esi
+    pop es
+    pop ds
+    
+aclStackDone:
     mov ds:[edi].cls_sign,LOG_CORE_SIGN
 ;
     mov bx,core_save_sel

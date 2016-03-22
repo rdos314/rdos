@@ -552,6 +552,22 @@ clss_size       DD ?
 
 core_log_seg_struc  ENDS
 
+LOG_CORE_THREAD_RUNNING = 1
+LOG_CORE_THREAD_WAKEUP = 2
+LOG_CORE_THREAD_READY = 3
+
+MAX_LOG_THREADS = 50
+
+core_log_thread_struc  STRUC
+
+clt_sel         DW ?
+clt_prio        DW ?
+clt_state       DW ?
+clt_name        DB 32 DUP(?)
+
+core_log_thread_struc  ENDS
+
+
 core_log_struc  STRUC
 
 cls_filler      DB 12 DUP(?)
@@ -601,5 +617,9 @@ cls_ldt         core_log_seg_struc <>
 cls_tr          core_log_seg_struc <>
 cls_gdtr        core_log_seg_struc <>
 cls_idtr        core_log_seg_struc <>
+
+cls_threads     DW ?
+
+cls_thread_arr  DB MAX_LOG_THREADS * SIZE core_log_thread_struc DUP(?)
 
 core_log_struc  ENDS

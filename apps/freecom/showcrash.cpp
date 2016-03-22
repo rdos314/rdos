@@ -119,6 +119,169 @@ void TShowCrashCommand::WriteSelector(const char *Name, TCrashSelectorInfo *info
 
 /*##########################################################################
 #
+#   Name       : TShowCrashCommand::WriteDt
+#
+#   Purpose....: Write descriptor table
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShowCrashCommand::WriteDt(const char *Name, TCrashSelectorInfo *info)
+{
+    char str[81];
+
+    Write(Name);
+    Write("=");
+
+    sprintf(str,"%08lX (%08lX) ", info->Base, info->Limit);    
+    Write(str);
+    Write("\r\n");
+}
+
+/*##########################################################################
+#
+#   Name       : TShowCrashCommand::WriteFlags
+#
+#   Purpose....: Write flags
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShowCrashCommand::WriteFlags(long long flags)
+{
+    int iopl = (((int)flags) >> 12) & 0x3;
+    char str[10];
+     
+    if (flags & 0x1)
+        Write("CY ");
+    else
+        Write("NC ");
+
+    if (flags & 0x40)
+        Write("ZR ");
+    else
+        Write("NZ ");
+
+    if (flags & 0x200)
+        Write("EI ");
+    else
+        Write("DI ");
+
+    if (flags & 0x4000)
+        Write("NT ");
+     else
+        Write("PR ");
+
+    if (flags & 0x20000)
+        Write("VM ");
+    else
+        Write("PM ");
+
+    sprintf(str, "IOPL=%d\r\n", iopl);
+    Write(str);
+}
+
+/*##########################################################################
+#
+#   Name       : TShowCrashCommand::WriteThread
+#
+#   Purpose....: Write thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShowCrashCommand::WriteThread(TCrashThreadInfo *info)
+{
+    char str[81];
+
+    sprintf(str,"%04hX ", info->Selector);    
+    Write(str);
+
+    sprintf(str,"PRIO=%d ", info->Prio);    
+    Write(str);
+
+    Write(info->NameText);
+    Write(" ");
+    Write(info->StateText);
+    Write("\r\n");
+}
+
+/*##########################################################################
+#
+#   Name       : TShowCrashCommand::WriteStack
+#
+#   Purpose....: Write stack
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShowCrashCommand::WriteStack(char *data, int sel, int base, int size)
+{
+    int ads;
+    char *ptr;
+    char str[10];
+    int i;
+    short int sval;
+    
+    while (size >= 16)
+    {
+        ads = base + size - 16;
+        ptr = data + size - 16;
+
+        sprintf(str,"%04hX:%04hX ", sel, ads);
+        Write(str);
+
+        for (i = 0; i < 8; i++)
+        {
+            sval = *((short int *)(ptr + 2 * i));
+            sprintf(str,"%04hX", sval);
+            Write(str);
+
+            if (i == 7)
+                Write("\r\n");
+            else
+                Write(" ");
+        }
+        size -= 16;                
+    }
+
+    if (size)
+    {
+        ads = base + size - 16;
+        ptr = data + size - 16;
+
+        sprintf(str,"%04hX:%04hX ", sel, ads);
+        Write(str);
+
+        size = size / 2;
+    
+       for (i = 0; i < 8 - size; i++)
+            Write("     ");
+
+        for (i = 8 - size; i < 8; i++)
+        {
+            sval = *((short int *)(ptr + 2 * i));
+            sprintf(str,"%04hX", sval);
+            Write(str);
+
+            if (i == 7)
+                Write("\r\n");
+            else
+                Write(" ");
+        }        
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TShowCrashCommand::WriteCore
 #
 #   Purpose....: Write a single core
@@ -130,6 +293,7 @@ void TShowCrashCommand::WriteSelector(const char *Name, TCrashSelectorInfo *info
 ##########################################################################*/
 void TShowCrashCommand::WriteCore(int core, TCrashCoreInfo *info)
 {
+    int i;
     char str[81];
 
     sprintf(str, "Core=%d\r\n", core);
@@ -159,11 +323,10 @@ void TShowCrashCommand::WriteCore(int core, TCrashCoreInfo *info)
     sprintf(str, "EDI=%08lX ", (int)info->Rdi);    
     Write(str);
 
-    sprintf(str, "EBP=%08lX ", (int)info->Rbp);    
+    sprintf(str, "EBP=%08lX\r\n", (int)info->Rbp);    
     Write(str);
 
-    sprintf(str, "EFL=%08lX\r\n", (int)info->Rflags);        
-    Write(str);
+    WriteFlags(info->Rflags);
 
     WriteSelector("CS", &info->Cs);
     WriteSelector("DS", &info->Ds);
@@ -171,6 +334,29 @@ void TShowCrashCommand::WriteCore(int core, TCrashCoreInfo *info)
     WriteSelector("FS", &info->Fs);
     WriteSelector("GS", &info->Gs);
     WriteSelector("SS", &info->Ss);
+    WriteSelector("LDT", &info->Ldt);
+    WriteDt("GDT", &info->Gdt);
+    WriteDt("IDT", &info->Idt);
+
+    sprintf(str, "CR0=%08lX ", info->Cr0);    
+    Write(str);
+
+    sprintf(str, "CR2=%08lX ", info->Cr2);    
+    Write(str);
+
+    sprintf(str, "CR3=%08lX ", info->Cr3);    
+    Write(str);
+
+    sprintf(str, "CR4=%08lX\r\n", info->Cr4);    
+    Write(str);
+
+    WriteSelector("TR", &info->Tr);
+
+    for (i = 0; i < info->ThreadCount; i++)
+        WriteThread(info->ThreadArr[i]);
+
+    if (info->StackData)
+        WriteStack(info->StackData, info->Ss.Selector, (int)info->Rsp, info->StackSize);
 
     Write("\r\n");
 }

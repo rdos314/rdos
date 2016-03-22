@@ -40,6 +40,14 @@ struct TRdosSelector
     int Limit;
 };
 
+struct TRdosThread
+{
+    short int Sel;
+    short int Prio;
+    short int State;
+    char Name[32];
+};
+
 struct TRdosCrashCore
 {
     char Filler[12];
@@ -89,6 +97,10 @@ struct TRdosCrashCore
     struct TRdosSelector Tr;
     struct TRdosSelector Gdtr;
     struct TRdosSelector Idtr;
+
+    short int ThreadCount;
+
+    struct TRdosThread ThreadArr[50];
 };
 
 static char CrashBuf[0x4000];
@@ -223,6 +235,108 @@ static void DecodeCrashSelector(TCrashSelectorInfo *info, struct TRdosSelector *
 
 /*##########################################################################
 #
+#   Name       : DecodeDt
+#
+#   Purpose....: Decode descriptor table
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void DecodeDt(TCrashSelectorInfo *info, struct TRdosSelector *raw)
+{
+    info->InfoText[0] = 0;
+    info->Selector = 0;
+    info->Base = raw->Base;
+    info->Limit = raw->Limit;
+    info->Valid = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : DecodeCrashThread
+#
+#   Purpose....: Decode crash thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void DecodeCrashThread(TCrashThreadInfo *info, struct TRdosThread *raw)
+{
+    switch (raw->State)
+    {
+        case 1:
+            strcpy(info->StateText, "Running");
+            break;
+
+        case 2:
+            strcpy(info->StateText, "Wakeup");
+            break;
+
+        case 3:
+            strcpy(info->StateText, "Ready");
+            break;
+
+        default:
+            strcpy(info->StateText, "Unknown");
+            break;
+    }
+
+    info->Selector = raw->Sel;
+    info->Prio = raw->Prio;
+    strncpy(info->NameText, raw->Name, 32);
+    info->NameText[32] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TCrashCoreInfo::TCrashCoreInfo
+#
+#   Purpose....: Constructor for TCrashCoreInfo
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TCrashCoreInfo::TCrashCoreInfo()
+{
+    int i;
+
+    StackData = 0;
+
+    for (i = 0; i < MAX_CRASH_INFO_THREADS; i++)
+        ThreadArr[i] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TCrashCoreInfo::~TCrashCoreInfo
+#
+#   Purpose....: Destructor for TCrashCoreInfo
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TCrashCoreInfo::~TCrashCoreInfo()
+{
+    int i;
+
+    if (StackData)
+        delete StackData;
+        
+    for (i = 0; i < MAX_CRASH_INFO_THREADS; i++)
+        if (ThreadArr[i])
+            delete ThreadArr[i];
+}
+
+/*##########################################################################
+#
 #   Name       : TCrashInfo::TCrashInfo
 #
 #   Purpose....: Constructor for TCrashInfo
@@ -279,6 +393,9 @@ void TCrashInfo::GetCrashInfo(int Core)
 {
     struct TRdosCrashCore *raw;
     TCrashCoreInfo *info;
+    TCrashThreadInfo *thread;
+    int i;
+    char *ptr;
 
     if (RdosGetCrashCoreInfo(Core, CrashBuf))
     {
@@ -327,6 +444,33 @@ void TCrashInfo::GetCrashInfo(int Core)
 
         DecodeCrashSelector(&info->Ldt, &raw->Ldt);
         DecodeCrashSelector(&info->Tr, &raw->Tr);
+
+        DecodeDt(&info->Gdt, &raw->Gdtr);
+        DecodeDt(&info->Idt, &raw->Idtr);
+
+        info->ThreadCount = raw->ThreadCount;
+        if (info->ThreadCount > MAX_CRASH_INFO_THREADS)
+            info->ThreadCount = MAX_CRASH_INFO_THREADS;
+
+        for (i = 0; i < info->ThreadCount; i++)
+        {
+            thread = new TCrashThreadInfo;
+            info->ThreadArr[i] = thread;            
+            DecodeCrashThread(thread, &raw->ThreadArr[i]);
+        }
+
+        if (info->Ss.Limit == 0xFFF)
+            info->StackSize = 0x1000 - (int)info->Rsp;
+        else
+            info->StackSize = 0;
+
+        if (info->StackSize > 0)
+        {
+            info->StackData = new char[info->StackSize];
+            ptr = &CrashBuf[0x1000];
+            ptr += 0x1000 - info->StackSize;
+            memcpy(info->StackData, ptr, info->StackSize);
+        }
         
         CrashInfo[Core] = info;
     }    

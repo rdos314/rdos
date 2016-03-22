@@ -29,6 +29,7 @@
 #define _CRASHINFO_H
 
 #define MAX_CRASH_INFO_CORES    16
+#define MAX_CRASH_INFO_THREADS  50
 
 class TCrashSelectorInfo
 {
@@ -40,10 +41,22 @@ public:
     char InfoText[32];
 };
     
+class TCrashThreadInfo
+{
+public:
+    short int Selector;
+    int Prio;
+    char StateText[32];
+    char NameText[33];
+};
+    
 
 class TCrashCoreInfo
 {
 public:
+    TCrashCoreInfo();
+    ~TCrashCoreInfo();
+    
     int Irq;
     int Fault;
     int Cr0;
@@ -84,6 +97,15 @@ public:
     TCrashSelectorInfo Gs;
     TCrashSelectorInfo Ldt;
     TCrashSelectorInfo Tr;
+
+    TCrashSelectorInfo Gdt;
+    TCrashSelectorInfo Idt;
+
+    int StackSize;
+    char *StackData;
+
+    int ThreadCount;
+    TCrashThreadInfo *ThreadArr[MAX_CRASH_INFO_THREADS];
 };
 
 class TCrashInfo
