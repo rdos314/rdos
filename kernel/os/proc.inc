@@ -51,7 +51,7 @@ timer_owner		DW ?
 
 timer_struc	ENDS
 
-PROC_LOG_ENTRIES    = 1FEh
+PROC_LOG_ENTRIES    = 200h
 
 ; should always be 16 bytes!
 

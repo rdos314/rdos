@@ -2814,7 +2814,13 @@ force_schedule_int:
     mov fs,ax
 ;
     EnterInt
-    inc ds:ps_sched_count
+;
+    
+    xor edx,edx
+    mov ax,2
+    mov bx,OFFSET force_schedule_int
+    AddSchedulerLog
+
 ;    
     mov ax,apic_mem_sel
     mov ds,ax
@@ -2822,7 +2828,6 @@ force_schedule_int:
     mov ds:APIC_EOI,eax
 ;
     LeaveInt
-    dec ds:ps_sched_count
 ;
     pop ax
     verr ax

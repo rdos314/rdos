@@ -39,6 +39,7 @@ class TCrashLogInfo
 public:
     TCrashLogInfo(unsigned long Msb, unsigned long Lsb);
 
+    int Core;
     TDateTime Time;
     short int Type;
     short int Proc;
@@ -137,8 +138,12 @@ public:
 
     TCrashCoreInfo *CrashInfo[MAX_CRASH_INFO_CORES];
 
+    int LogCount;
+    TCrashLogInfo *LogArr[MAX_CRASH_INFO_CORES * MAX_CRASH_INFO_LOGS];
+
 private:
     void GetCrashInfo(int Core);
+    void InsertLog(TCrashLogInfo *log);
 };
 
 #endif

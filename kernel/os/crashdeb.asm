@@ -1944,12 +1944,12 @@ aclLogProcess:
     or cx,cx
     jz aclLogDone
 ;
-    cmp cx,0FFh
-    jbe aclLogSize1Ok
+    cmp cx,PROC_LOG_ENTRIES
+    jbe aclLogSizeOk
 ;
-    mov cx,0FFh
+    mov cx,200h
 
-aclLogSize1Ok:    
+aclLogSizeOk:    
     push ds
     push es
     push esi
@@ -1959,9 +1959,9 @@ aclLogSize1Ok:
     mov es,ax
     mov ds,fs:ps_log_sel
     mov bx,fs:ps_log_entry
-    add edi,CORE_IMAGE_LOG_OFFSET + 10h
+    add edi,CORE_IMAGE_LOG_OFFSET
 
-aclLogLoop1:    
+aclLogLoop:    
     movzx esi,bx
     shl esi,4
     push ecx
@@ -1971,65 +1971,17 @@ aclLogLoop1:
 ;
     inc bx
     cmp bx,PROC_LOG_ENTRIES
-    jne aclLogNext1
+    jne aclLogNext
 ;
     xor bx,bx
 
-aclLogNext1:
-    loop aclLogLoop1    
+aclLogNext:
+    loop aclLogLoop
 ;
     pop edi
     pop esi
     pop es
     pop ds        
-;
-    mov cx,fs:ps_log_count
-    sub cx,0FFh
-    jc aclLogDone
-    jz aclLogDone
-;
-    cmp cx,0FFh
-    jbe aclLogSize2Ok
-;
-    mov cx,0FFh
-
-aclLogSize2Ok:    
-    push ds
-    push es
-    push esi
-    push edi
-;    
-    mov bx,fs:ps_log_entry
-    add bx,0FFh
-    cmp bx,PROC_LOG_ENTRIES
-    jb aclLogPosOk
-;
-    sub bx,PROC_LOG_ENTRIES
-    
-aclLogPosOk:
-    add edi,CORE_IMAGE_LOG_OFFSET + 1010h
-
-aclLogLoop2:    
-    movzx esi,bx
-    shl esi,4
-    push ecx
-    mov ecx,4
-    rep movs dword ptr es:[edi],ds:[esi]
-    pop ecx
-;
-    inc bx
-    cmp bx,PROC_LOG_ENTRIES
-    jne aclLogNext2
-;
-    xor bx,bx
-
-aclLogNext2:
-    loop aclLogLoop2    
-;
-    pop edi
-    pop esi
-    pop es
-    pop ds
 
 aclLogDone:    
     mov ds:[edi].cls_sign,LOG_CORE_SIGN

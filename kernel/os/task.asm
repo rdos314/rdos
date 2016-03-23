@@ -240,20 +240,25 @@ core_arr                    DW MAX_CORES DUP(0)
 ;
 ;       DESCRIPTION:    Add log entry
 ;
-;       PARAMETERS:     FS      Process sel
-;                       AX      Type
+;       PARAMETERS:     AX      Type
+;                       BX      Proc
 ;                       EDX     Data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddLog    Proc near
-    push ebp
-    mov ebp,esp
+add_log_name  DB 'Add Schedule Log',0
+
+add_log       Proc far
     push es
-    push bx
+    push fs
+    push si
+;
+    mov si,core_data_sel
+    mov fs,si
+    mov fs,fs:ps_sel
 ;    
-    mov bx,fs:ps_log_sel
-    or bx,bx
+    mov si,fs:ps_log_sel
+    or si,si
     jnz alDo
 ;
     push eax
@@ -262,43 +267,42 @@ AddLog    Proc near
     mov fs:ps_log_sel,es
     mov fs:ps_log_entry,0
     mov fs:ps_log_count,0
-    mov bx,es
+    mov si,es
     pop eax
 
 alDo:
-    mov es,bx
-    mov bx,fs:ps_log_entry
-    shl bx,4
-    mov es:[bx].pls_type,ax
-    mov es:[bx].pls_data,edx
+    mov es,si
+    mov si,fs:ps_log_entry
+    shl si,4
+    mov es:[si].pls_type,ax
+    mov es:[si].pls_data,edx
+    mov es:[si].pls_proc,bx    
     GetSystemTime
-    mov es:[bx].pls_time,eax
-    mov es:[bx].pls_time+4,edx
-    mov ax,[ebp+4]
-    mov es:[bx].pls_proc,ax    
+    mov es:[si].pls_time,eax
+    mov es:[si].pls_time+4,edx
 ;
-    shr bx,4
-    inc bx
-    cmp bx,PROC_LOG_ENTRIES    
+    shr si,4
+    inc si
+    cmp si,PROC_LOG_ENTRIES    
     jb alSavePos
 ;
-    xor bx,bx
+    xor si,si
 
 alSavePos:
-    mov fs:ps_log_entry,bx
-    mov bx,fs:ps_log_count
-    cmp bx,PROC_LOG_ENTRIES
+    mov fs:ps_log_entry,si
+    mov si,fs:ps_log_count
+    cmp si,PROC_LOG_ENTRIES
     je alDone
 ; 
-    inc bx   
-    mov fs:ps_log_count,bx
+    inc si   
+    mov fs:ps_log_count,si
 
 alDone:
-    pop bx
+    pop si
+    pop fs
     pop es
-    pop ebp    
-    ret
-AddLog    Endp
+    retf32
+add_log    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1523,9 +1527,13 @@ load_thread_wakeup_done:
     cmp dx,ax
     jz load_reload_loop
 ;    
+    push fs
+    mov fs,ax
+    movzx edx,fs:ps_id
+    pop fs
     mov ax,1
-    movzx edx,ax
-    call AddLog
+    mov bx,es
+    AddSchedulerLog
 
 load_reload_wakeup:
     call cs:insert_wakeup_proc
@@ -2508,15 +2516,6 @@ InsertWakeupSingle  Endp
 InsertWakeupMultiple  PROC near
     push ax
     push di
-;
-;    push ebp
-;    mov ebp,esp
-;    mov ax,[ebp+8]
-;    push edx
-;    mov dx,fs
-;    call AddLog
-;    pop edx
-;    pop ebp
 
 iwmLogOk:
     mov ax,fs
@@ -10058,6 +10057,12 @@ timer_free_list_create:
     mov di,OFFSET fpu_exception_name
     xor cl,cl
     mov ax,fpu_exception_nr
+    RegisterOsGate
+;
+    mov si,OFFSET add_log
+    mov di,OFFSET add_log_name
+    xor cl,cl
+    mov ax,add_scheduler_log_nr
     RegisterOsGate
 ;
     mov esi,OFFSET test_gate_pr

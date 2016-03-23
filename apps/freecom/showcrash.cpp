@@ -375,6 +375,47 @@ void TShowCrashCommand::WriteCore(int core, TCrashCoreInfo *info)
 
 /*##########################################################################
 #
+#   Name       : TShowCrashCommand::WriteLog
+#
+#   Purpose....: Write log entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShowCrashCommand::WriteLog(TCrashLogInfo *info)
+{
+    int i;
+    char str[81];
+
+    sprintf(str, "%04d-%02d-%02d %02d.%02d.%02d,%03d %03d ", 
+                    info->Time.GetYear(),
+                    info->Time.GetMonth(),
+                    info->Time.GetDay(),
+                    info->Time.GetHour(),
+                    info->Time.GetMin(),
+                    info->Time.GetSec(),
+                    info->Time.GetMilliSec(),
+                    info->Time.GetMicroSec());
+    Write(str);
+
+    sprintf(str, "CORE=%d ", info->Core); 
+    Write(str);
+
+    sprintf(str, "TYPE=%d ", info->Type); 
+    Write(str);
+    
+    sprintf(str, "PROC=%04hX ", info->Proc);
+    Write(str);
+    
+    sprintf(str, "DATA=%08hX\r\n", info->Data);
+    Write(str);
+}
+
+
+/*##########################################################################
+#
 #   Name       : TShowCrashCommand::Run
 #
 #   Purpose....: Run command
@@ -388,10 +429,16 @@ int TShowCrashCommand::Execute(char *param)
 {
     int core;
     TCrashInfo info;
+    int i;
 
     for (core = 0; core < MAX_CRASH_INFO_CORES; core++)
         if (info.CrashInfo[core])
             WriteCore(core, info.CrashInfo[core]);
+
+    for (i = 0; i < info.LogCount; i++)
+        WriteLog(info.LogArr[i]);
+
+    Write("\r\n");
 
     return 0;
 }

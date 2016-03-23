@@ -52,6 +52,7 @@ protected:
     void WriteFlags(long long flags);
     void WriteThread(TCrashThreadInfo *info);
     void WriteStack(char *data, int sel, int base, int size);
+    void WriteLog(TCrashLogInfo *info);
     void WriteCore(int core, TCrashCoreInfo *info);
     virtual int Execute(char *param);       
 };

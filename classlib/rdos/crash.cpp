@@ -400,6 +400,8 @@ TCrashInfo::TCrashInfo()
 {
     int i;
 
+    LogCount = 0;
+
     for (i = 0; i < MAX_CRASH_INFO_CORES; i++)
         CrashInfo[i] = 0;
 
@@ -522,11 +524,14 @@ void TCrashInfo::GetCrashInfo(int Core)
             if (rawlog->Type)
             {   
                 log = new TCrashLogInfo(rawlog->MsbTime, rawlog->LsbTime);
+                log->Core = Core;
                 log->Type = rawlog->Type;
                 log->Proc = rawlog->Proc;
                 log->Data = rawlog->Data;
                 info->LogArr[info->LogCount] = log;            
                 info->LogCount++;
+
+                InsertLog(log);
             }
         }
 
@@ -545,4 +550,32 @@ void TCrashInfo::GetCrashInfo(int Core)
         
         CrashInfo[Core] = info;
     }    
+}
+
+/*##########################################################################
+#
+#   Name       : TCrashInfo::InsertLog
+#
+#   Purpose....: Insert log into sorted list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCrashInfo::InsertLog(TCrashLogInfo *log)
+{
+    TCrashLogInfo *temp;
+    int pos;
+    int i;
+
+    for (pos = 0; pos < LogCount; pos++)
+        if (LogArr[pos]->Time > log->Time)
+            break;
+
+    for (i = LogCount; i >= pos; i--)
+        LogArr[i + 1] = LogArr[i];
+
+    LogArr[pos] = log;    
+    LogCount++;
 }
