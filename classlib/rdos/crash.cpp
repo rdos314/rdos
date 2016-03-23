@@ -32,6 +32,15 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+struct TRdosLog
+{
+    unsigned long LsbTime;
+    unsigned long MsbTime;
+    short int Type;
+    short int Proc;
+    int Data;
+};
+
 struct TRdosSelector
 {
     short int Sel;
@@ -45,12 +54,16 @@ struct TRdosThread
     short int Sel;
     short int Prio;
     short int State;
+    short int Core;
+    short int WantedCore;
     char Name[32];
 };
 
 struct TRdosCrashCore
 {
-    char Filler[12];
+    char Filler[10];
+
+    short int Core;
     int Sign;
 
     int Irq;
@@ -264,7 +277,7 @@ static void DecodeDt(TCrashSelectorInfo *info, struct TRdosSelector *raw)
 #   Returns....: *
 #
 ##########################################################################*/
-static void DecodeCrashThread(TCrashThreadInfo *info, struct TRdosThread *raw)
+static void DecodeCrashThread(short int Core, TCrashThreadInfo *info, struct TRdosThread *raw)
 {
     switch (raw->State)
     {
@@ -287,8 +300,38 @@ static void DecodeCrashThread(TCrashThreadInfo *info, struct TRdosThread *raw)
 
     info->Selector = raw->Sel;
     info->Prio = raw->Prio;
+
+    if (Core != raw->Core)
+        info->Core = raw->Core;
+    else
+        info->Core = 0;
+
+    if (Core != raw->WantedCore)
+        info->WantedCore = raw->WantedCore;
+    else
+        info->WantedCore = 0;
+            
     strncpy(info->NameText, raw->Name, 32);
     info->NameText[32] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TCrashCoreInfo::TCrashLogInfo
+#
+#   Purpose....: Constructor for TCrashLogInfo
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TCrashLogInfo::TCrashLogInfo(unsigned long Msb, unsigned long Lsb)
+  : Time(Msb, Lsb)
+{
+    Type = 0;
+    Proc = 0;
+    Data = 0;
 }
 
 /*##########################################################################
@@ -310,6 +353,9 @@ TCrashCoreInfo::TCrashCoreInfo()
 
     for (i = 0; i < MAX_CRASH_INFO_THREADS; i++)
         ThreadArr[i] = 0;
+
+    for (i = 0; i < MAX_CRASH_INFO_LOGS; i++)
+        LogArr[i] = 0;
 }
 
 /*##########################################################################
@@ -333,6 +379,10 @@ TCrashCoreInfo::~TCrashCoreInfo()
     for (i = 0; i < MAX_CRASH_INFO_THREADS; i++)
         if (ThreadArr[i])
             delete ThreadArr[i];
+        
+    for (i = 0; i < MAX_CRASH_INFO_LOGS; i++)
+        if (LogArr[i])
+            delete LogArr[i];
 }
 
 /*##########################################################################
@@ -394,6 +444,8 @@ void TCrashInfo::GetCrashInfo(int Core)
     struct TRdosCrashCore *raw;
     TCrashCoreInfo *info;
     TCrashThreadInfo *thread;
+    struct TRdosLog *rawlog;
+    TCrashLogInfo *log;
     int i;
     char *ptr;
 
@@ -448,6 +500,8 @@ void TCrashInfo::GetCrashInfo(int Core)
         DecodeDt(&info->Gdt, &raw->Gdtr);
         DecodeDt(&info->Idt, &raw->Idtr);
 
+        info->Core = raw->Core;
+        
         info->ThreadCount = raw->ThreadCount;
         if (info->ThreadCount > MAX_CRASH_INFO_THREADS)
             info->ThreadCount = MAX_CRASH_INFO_THREADS;
@@ -456,7 +510,24 @@ void TCrashInfo::GetCrashInfo(int Core)
         {
             thread = new TCrashThreadInfo;
             info->ThreadArr[i] = thread;            
-            DecodeCrashThread(thread, &raw->ThreadArr[i]);
+            DecodeCrashThread(info->Core, thread, &raw->ThreadArr[i]);
+        }
+
+        info->LogCount = 0;
+        for (i = 0; i < MAX_CRASH_INFO_LOGS; i++)
+        {
+            ptr = &CrashBuf[0x2000 + 16 * i];
+            rawlog = (struct TRdosLog *)ptr;
+
+            if (rawlog->Type)
+            {   
+                log = new TCrashLogInfo(rawlog->MsbTime, rawlog->LsbTime);
+                log->Type = rawlog->Type;
+                log->Proc = rawlog->Proc;
+                log->Data = rawlog->Data;
+                info->LogArr[info->LogCount] = log;            
+                info->LogCount++;
+            }
         }
 
         if (info->Ss.Limit == 0xFFF)

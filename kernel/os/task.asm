@@ -260,6 +260,8 @@ AddLog    Proc near
     mov eax,PROC_LOG_ENTRIES SHL 4
     AllocateGlobalMem
     mov fs:ps_log_sel,es
+    mov fs:ps_log_entry,0
+    mov fs:ps_log_count,0
     mov bx,es
     pop eax
 
@@ -284,8 +286,14 @@ alDo:
 
 alSavePos:
     mov fs:ps_log_entry,bx
-    inc fs:ps_log_count        
-;
+    mov bx,fs:ps_log_count
+    cmp bx,PROC_LOG_ENTRIES
+    je alDone
+; 
+    inc bx   
+    mov fs:ps_log_count,bx
+
+alDone:
     pop bx
     pop es
     pop ebp    
@@ -1515,10 +1523,8 @@ load_thread_wakeup_done:
     cmp dx,ax
     jz load_reload_loop
 ;    
-    mov ax,fs:ps_sched_count
-    cmp ax,10
-    jb load_reload_wakeup
-;
+    mov ax,1
+    movzx edx,ax
     call AddLog
 
 load_reload_wakeup:
@@ -2503,18 +2509,14 @@ InsertWakeupMultiple  PROC near
     push ax
     push di
 ;
-    mov ax,fs:ps_sched_count
-    cmp ax,10
-    jb iwmLogOk
-;
-    push ebp
-    mov ebp,esp
-    mov ax,[ebp+8]
-    push edx
-    mov dx,fs
-    call AddLog
-    pop edx
-    pop ebp
+;    push ebp
+;    mov ebp,esp
+;    mov ax,[ebp+8]
+;    push edx
+;    mov dx,fs
+;    call AddLog
+;    pop edx
+;    pop ebp
 
 iwmLogOk:
     mov ax,fs

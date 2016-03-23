@@ -206,6 +206,18 @@ void TShowCrashCommand::WriteThread(TCrashThreadInfo *info)
     sprintf(str,"PRIO=%d ", info->Prio);    
     Write(str);
 
+    if (info->Core)
+    {
+        sprintf(str,"CORE=%d ", info->Core);    
+        Write(str);
+    }
+
+    if (info->WantedCore)
+    {
+        sprintf(str,"WCORE=%d ", info->WantedCore);    
+        Write(str);
+    }
+
     Write(info->NameText);
     Write(" ");
     Write(info->StateText);
@@ -296,7 +308,7 @@ void TShowCrashCommand::WriteCore(int core, TCrashCoreInfo *info)
     int i;
     char str[81];
 
-    sprintf(str, "Core=%d\r\n", core);
+    sprintf(str, "Core=%d (%04hX)\r\n", core, info->Core);
     Write(str);
     
     sprintf(str, "CS:EIP=%04hX:%08lX\r\n", info->Cs.Selector, (int)info->Rip);

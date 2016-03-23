@@ -563,6 +563,8 @@ core_log_thread_struc  STRUC
 clt_sel         DW ?
 clt_prio        DW ?
 clt_state       DW ?
+clt_core        DW ?
+clt_wanted_core DW ?
 clt_name        DB 32 DUP(?)
 
 core_log_thread_struc  ENDS
@@ -570,7 +572,9 @@ core_log_thread_struc  ENDS
 
 core_log_struc  STRUC
 
-cls_filler      DB 12 DUP(?)
+cls_filler      DB 10 DUP(?)
+
+cls_core        DW ?
 cls_sign        DD ?
 
 cls_irq         DD ?

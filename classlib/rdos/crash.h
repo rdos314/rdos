@@ -30,6 +30,20 @@
 
 #define MAX_CRASH_INFO_CORES    16
 #define MAX_CRASH_INFO_THREADS  50
+#define MAX_CRASH_INFO_LOGS     0x200
+
+#include "datetime.h"
+
+class TCrashLogInfo
+{
+public:
+    TCrashLogInfo(unsigned long Msb, unsigned long Lsb);
+
+    TDateTime Time;
+    short int Type;
+    short int Proc;
+    int Data;
+};
 
 class TCrashSelectorInfo
 {
@@ -46,6 +60,8 @@ class TCrashThreadInfo
 public:
     short int Selector;
     int Prio;
+    int Core;
+    int WantedCore;
     char StateText[32];
     char NameText[33];
 };
@@ -56,7 +72,9 @@ class TCrashCoreInfo
 public:
     TCrashCoreInfo();
     ~TCrashCoreInfo();
-    
+
+    short int Core;    
+
     int Irq;
     int Fault;
     int Cr0;
@@ -106,18 +124,21 @@ public:
 
     int ThreadCount;
     TCrashThreadInfo *ThreadArr[MAX_CRASH_INFO_THREADS];
+
+    int LogCount;
+    TCrashLogInfo *LogArr[MAX_CRASH_INFO_LOGS];
 };
 
 class TCrashInfo
 {
 public:
-        TCrashInfo();
-        virtual ~TCrashInfo();
+    TCrashInfo();
+    virtual ~TCrashInfo();
 
     TCrashCoreInfo *CrashInfo[MAX_CRASH_INFO_CORES];
 
 private:
-        void GetCrashInfo(int Core);
+    void GetCrashInfo(int Core);
 };
 
 #endif

@@ -1622,7 +1622,12 @@ AddCrashThread   Proc near
     mov ds:[edi].clt_state,ax
     mov es,bx
     mov ax,es:p_prio
+    shr ax,1
     mov ds:[edi].clt_prio,ax
+    mov ax,es:p_core
+    mov ds:[edi].clt_core,ax
+    mov ax,es:p_wanted_core
+    mov ds:[edi].clt_wanted_core,ax
 ;
     mov cx,8
     mov si,OFFSET thread_name
@@ -1787,6 +1792,8 @@ AddToCrashLog   Proc near
     mov ds,ax
 ;
     mov ds:[edi].cls_threads,0
+    mov ax,fs
+    mov ds:[edi].cls_core,ax
     mov eax,fs:cs_irq
     mov ds:[edi].cls_irq,eax
     mov eax,fs:cs_fault
@@ -1921,6 +1928,110 @@ aclReadyLoop:
     pop ds
     
 aclStackDone:
+    mov cx,fs:ps_log_count
+    cmp cx,PROC_LOG_ENTRIES    
+    jb aclLogFew
+
+aclLogMany:
+    mov fs:ps_log_count,PROC_LOG_ENTRIES
+    jmp aclLogProcess
+
+aclLogFew:
+    mov fs:ps_log_entry,0    
+
+aclLogProcess:
+    mov cx,fs:ps_log_count
+    or cx,cx
+    jz aclLogDone
+;
+    cmp cx,0FFh
+    jbe aclLogSize1Ok
+;
+    mov cx,0FFh
+
+aclLogSize1Ok:    
+    push ds
+    push es
+    push esi
+    push edi
+;
+    mov ax,ds
+    mov es,ax
+    mov ds,fs:ps_log_sel
+    mov bx,fs:ps_log_entry
+    add edi,CORE_IMAGE_LOG_OFFSET + 10h
+
+aclLogLoop1:    
+    movzx esi,bx
+    shl esi,4
+    push ecx
+    mov ecx,4
+    rep movs dword ptr es:[edi],ds:[esi]
+    pop ecx
+;
+    inc bx
+    cmp bx,PROC_LOG_ENTRIES
+    jne aclLogNext1
+;
+    xor bx,bx
+
+aclLogNext1:
+    loop aclLogLoop1    
+;
+    pop edi
+    pop esi
+    pop es
+    pop ds        
+;
+    mov cx,fs:ps_log_count
+    sub cx,0FFh
+    jc aclLogDone
+    jz aclLogDone
+;
+    cmp cx,0FFh
+    jbe aclLogSize2Ok
+;
+    mov cx,0FFh
+
+aclLogSize2Ok:    
+    push ds
+    push es
+    push esi
+    push edi
+;    
+    mov bx,fs:ps_log_entry
+    add bx,0FFh
+    cmp bx,PROC_LOG_ENTRIES
+    jb aclLogPosOk
+;
+    sub bx,PROC_LOG_ENTRIES
+    
+aclLogPosOk:
+    add edi,CORE_IMAGE_LOG_OFFSET + 1010h
+
+aclLogLoop2:    
+    movzx esi,bx
+    shl esi,4
+    push ecx
+    mov ecx,4
+    rep movs dword ptr es:[edi],ds:[esi]
+    pop ecx
+;
+    inc bx
+    cmp bx,PROC_LOG_ENTRIES
+    jne aclLogNext2
+;
+    xor bx,bx
+
+aclLogNext2:
+    loop aclLogLoop2    
+;
+    pop edi
+    pop esi
+    pop es
+    pop ds
+
+aclLogDone:    
     mov ds:[edi].cls_sign,LOG_CORE_SIGN
 ;
     mov bx,core_save_sel
