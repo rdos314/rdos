@@ -39,17 +39,17 @@ PS_FLAG_SHUTDOWN    = 400h
 PS_FLAG_MOVE        = 800h
 PS_FLAG_LONG_MODE   = 1000h
 
-timer_struc	STRUC
+timer_struc     STRUC
 
-timer_next		DW ?
-timer_sel		DW ?
-timer_lsb		DD ?
-timer_msb		DD ?
+timer_next              DW ?
+timer_sel               DW ?
+timer_lsb               DD ?
+timer_msb               DD ?
 timer_offset    DD ?
-timer_id		DD ?
-timer_owner		DW ?
+timer_id                DD ?
+timer_owner             DW ?
 
-timer_struc	ENDS
+timer_struc     ENDS
 
 PROC_LOG_ENTRIES    = 200h
 
@@ -64,6 +64,13 @@ pls_data        DD ?
 
 proc_log_struc  ENDS
 
+proc_tlb32_struc        STRUC
+
+pt32_locked     DD ?
+pt32_used       DD ?
+pt32_linear_arr DD 32 DUP(?)
+
+proc_tlb32_struc        ENDS
 
 processor_seg   STRUC
 
@@ -101,7 +108,7 @@ ps_tlb_flush        DB ?
 ps_dump_offset      DW ?
 
 ps_preempt_lsb      DD ?
-ps_preempt_msb	    DD ?
+ps_preempt_msb      DD ?
 
 ps_last_lsb         DD ?
 
@@ -127,9 +134,16 @@ ps_long_tr          DW ?
 ps_long_ldt         DW ?
 ps_tr_linear        DD ?
 
+ps_global_tlb       proc_tlb32_struc <>
+
+ps_cr3              DD ?
+ps_local_tlb        proc_tlb32_struc <>
+
+ps_work_tlb         proc_tlb32_struc <>
+
 ps_timer_spinlock   DW ?
-ps_timer_head		DW ?
-ps_timer_free		DW ?
+ps_timer_head           DW ?
+ps_timer_free           DW ?
 ps_timer_entries    DB 256 * SIZE timer_struc DUP(?)
 
 cs_irq              DD ?

@@ -1637,6 +1637,8 @@ load_reload_cr3_loop:
 ;
     mov eax,es:p_cr3
     mov cr3,eax
+    mov fs:ps_cr3,eax
+    mov fs:ps_local_tlb.pt32_used,0
 
 load_cr3_ok:
     mov ax,es
@@ -3036,6 +3038,10 @@ ptab_init:
     mov es:ps_tlb_flush,0
     mov es:ps_lsb_tics,0
     mov es:ps_msb_tics,0
+    mov es:ps_global_tlb.pt32_locked,0
+    mov es:ps_global_tlb.pt32_used,0
+    mov es:ps_local_tlb.pt32_locked,0
+    mov es:ps_local_tlb.pt32_used,0
 ;    
     mov es:cs_usel,flat_sel
     mov es:cs_uoffs,0
@@ -9786,6 +9792,90 @@ get_crash_core32:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;    NAME:           AddCoreTlb
+;
+;    DESCRIPTION:    Add core TLB
+;
+;    PARAMETERS:     EDX        Linear address
+;                    FS         Core
+;                    BX         TLB list
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddCoreTlb     Proc near
+    push eax
+    push ecx
+    push di
+
+actTryLock:
+    mov eax,fs:[bx].pt32_used
+    not eax
+    bsf ecx,eax
+    jz actDone
+;
+    lock bts fs:[bx].pt32_locked,ecx
+    jc actTryLock
+;
+    mov di,cx
+    shl di,2
+    mov fs:[bx+di].pt32_linear_arr,edx
+;
+    lock bts fs:[bx].pt32_used,ecx
+    jnc actUnlock
+;
+    lock btc fs:[bx].pt32_locked,ecx
+    jmp actTryLock
+
+actUnlock:
+    lock btc fs:[bx].pt32_locked,ecx
+
+actDone:    
+    pop di
+    pop ecx
+    pop eax
+    ret
+AddCoreTlb     Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;    NAME:           AddTlbEntry
+;
+;    DESCRIPTION:    Add TLB entry
+;
+;    PARAMETERS:     EDX        Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddTlbEntry     Proc near
+    push fs
+    push bx
+    push cx
+    push si
+;
+    mov cx,cs:core_count
+    mov si,OFFSET core_arr
+
+ateLoop:
+    mov fs,cs:[si]
+    mov bx,OFFSET ps_global_tlb
+    call AddCoreTlb
+
+ateNext:
+    add si,2
+    sub cx,1
+    jnz ateLoop    
+;
+    pop si
+    pop cx
+    pop bx
+    pop fs        
+    ret
+AddTlbEntry     Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;               NAME:           Test gate
 ;
 ;               DESCRIPTION:    Test gate
@@ -9795,12 +9885,14 @@ get_crash_core32:
 test_gate_name    DB 'Test Gate',0
 
 test_gate_pr    Proc far
-    mov ax,system_data_sel
-    mov ds,ax
-    mov bx,ds:core_dump_sel
-    mov es,bx
-;    
-    CrashGate
+    mov cx,40
+
+tgLoop:    
+    mov edx,120000h
+    call AddTlbEntry
+    add edx,1000h
+    loop tgLoop 
+    
     retf32
 test_gate_pr    Endp
 
