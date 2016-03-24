@@ -134,11 +134,7 @@ ps_long_tr          DW ?
 ps_long_ldt         DW ?
 ps_tr_linear        DD ?
 
-ps_global_tlb       proc_tlb32_struc <>
-
-ps_cr3              DD ?
-ps_local_tlb        proc_tlb32_struc <>
-
+ps_tlb              proc_tlb32_struc <>
 ps_work_tlb         proc_tlb32_struc <>
 
 ps_timer_spinlock   DW ?

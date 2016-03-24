@@ -1466,18 +1466,18 @@ LeaveInt    MACRO
     
     sub ds:ps_nesting,1
     jnc tucDone
-;
-    mov ax,ds:ps_curr_thread
-    or ax,ax
-    jz tucDone
 ;    
-    mov eax,ds:ps_global_tlb.pt32_used
-    or eax,ds:ps_local_tlb.pt32_used
+    mov eax,ds:ps_tlb.pt32_used
+    or eax,eax
     jz tucTlbDone
 ;
     OsGate do_flush_tlb_nr
 
 tucTlbDone:    
+    mov ax,ds:ps_curr_thread
+    or ax,ax
+    jz tucDone
+;
     test ds:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
     jnz tucSwap
 ;    

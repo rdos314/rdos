@@ -1639,14 +1639,11 @@ load_reload_cr3_loop:
 ;
     mov eax,es:p_cr3
     mov cr3,eax
-    and ax,0F000h
-    mov fs:ps_cr3,eax
-    mov fs:ps_local_tlb.pt32_used,0
-    mov fs:ps_global_tlb.pt32_used,0
+    mov fs:ps_tlb.pt32_used,0
 
 load_cr3_ok:
-    mov eax,fs:ps_local_tlb.pt32_used
-    or eax,fs:ps_global_tlb.pt32_used
+    mov eax,fs:ps_tlb.pt32_used
+    or eax,eax
     jz load_cr3_flush_ok
 ;
     call cs:flush_tlb_proc
@@ -3050,13 +3047,8 @@ ptab_init:
     mov es:ps_tlb_flush,0
     mov es:ps_lsb_tics,0
     mov es:ps_msb_tics,0
-    mov es:ps_global_tlb.pt32_locked,0
-    mov es:ps_global_tlb.pt32_used,0
-    mov es:ps_local_tlb.pt32_locked,0
-    mov es:ps_local_tlb.pt32_used,0
-    mov eax,cr3
-    and ax,0F000h
-    mov es:ps_cr3,eax
+    mov es:ps_tlb.pt32_locked,0
+    mov es:ps_tlb.pt32_used,0
 ;    
     mov es:cs_usel,flat_sel
     mov es:cs_uoffs,0
@@ -3653,8 +3645,8 @@ tucRetry:
     sub fs:ps_nesting,1
     jnc tucDone
 ;
-    mov eax,fs:ps_global_tlb.pt32_used
-    or eax,fs:ps_local_tlb.pt32_used
+    mov eax,fs:ps_tlb.pt32_used
+    or eax,eax
     jz tucTlbDone
 ;
     call cs:flush_tlb_proc
@@ -3708,8 +3700,8 @@ ucRetry:
     CrashGate
 
 ucNestOk:    
-    mov eax,fs:ps_global_tlb.pt32_used
-    or eax,fs:ps_local_tlb.pt32_used
+    mov eax,fs:ps_tlb.pt32_used
+    or eax,eax
     jz ucTlbDone
 ;
     call cs:flush_tlb_proc
@@ -3923,14 +3915,13 @@ leave_long_int  Endp
 ;    DESCRIPTION:    Flush TLB entries in a table
 ;
 ;    PARAMETERS:     FS     Core
-;                    BX     Table
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FlushTlbTable  Proc near
     push eax
 ;    
-    mov eax,fs:[bx].pt32_used
+    mov eax,fs:ps_tlb.pt32_used
     or eax,eax
     jz fttDone
 ;
@@ -3947,10 +3938,10 @@ FlushTlbTable  Proc near
     mov cx,fs
     mov es,cx
     mov cx,32
-    lea si,[bx].pt32_linear_arr
+    mov si,OFFSET ps_tlb.pt32_linear_arr
     mov di,OFFSET ps_work_tlb.pt32_linear_arr
     rep movs dword ptr es:[di],es:[si]
-    lock xor fs:[bx].pt32_used,eax
+    lock xor fs:ps_tlb.pt32_used,eax
 ;
     mov cx,32
     mov di,OFFSET ps_work_tlb.pt32_linear_arr
@@ -3977,8 +3968,7 @@ fttNext:
     jmp fttDone
 
 fttAll:
-    mov fs:ps_local_tlb.pt32_used,0
-    mov fs:ps_global_tlb.pt32_used,0
+    mov fs:ps_tlb.pt32_used,0
     mov eax,cr3
     mov cr3,eax
 
@@ -4002,13 +3992,11 @@ FlushTlb386    Proc near
     push eax
 
 ft386Again:
-    mov eax,fs:ps_global_tlb.pt32_used
-    or eax,fs:ps_local_tlb.pt32_used
+    mov eax,fs:ps_tlb.pt32_used
+    or eax,eax
     jz ft386Done
 ;
-    mov fs:ps_global_tlb.pt32_used,0
-    mov fs:ps_local_tlb.pt32_used,0
-;    
+    mov fs:ps_tlb.pt32_used,0    
     mov eax,cr3
     mov cr3,eax
     jmp ft386Again
@@ -4035,14 +4023,10 @@ FlushTlb486    Proc near
     push bx
 
 ft486Again:
-    mov eax,fs:ps_global_tlb.pt32_used
-    or eax,fs:ps_local_tlb.pt32_used
+    mov eax,fs:ps_tlb.pt32_used
+    or eax,eax
     jz ft486Done
 ;    
-    mov bx,OFFSET ps_global_tlb
-    call FlushTlbTable
-;    
-    mov bx,OFFSET ps_local_tlb
     call FlushTlbTable
     jmp ft486Again
 
@@ -4789,7 +4773,6 @@ FlushTlbMultiple    Endp
 ;
 ;    PARAMETERS:     EDX        Linear address
 ;                    FS         Core
-;                    BX         TLB list
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4799,26 +4782,26 @@ AddCoreTlb     Proc near
     push di
 
 actTryLock:
-    mov eax,fs:[bx].pt32_used
+    mov eax,fs:ps_tlb.pt32_used
     not eax
     bsf ecx,eax
     jz actDone
 ;
-    lock bts fs:[bx].pt32_locked,ecx
+    lock bts fs:ps_tlb.pt32_locked,ecx
     jc actTryLock
 ;
     mov di,cx
     shl di,2
-    mov fs:[bx+di].pt32_linear_arr,edx
+    mov fs:[di].ps_tlb.pt32_linear_arr,edx
 ;
-    lock bts fs:[bx].pt32_used,ecx
+    lock bts fs:ps_tlb.pt32_used,ecx
     jnc actUnlock
 ;
-    lock btc fs:[bx].pt32_locked,ecx
+    lock btc fs:ps_tlb.pt32_locked,ecx
     jmp actTryLock
 
 actUnlock:
-    lock btc fs:[bx].pt32_locked,ecx
+    lock btc fs:ps_tlb.pt32_locked,ecx
 
 actDone:    
     pop di
@@ -4841,49 +4824,14 @@ AddCoreTlb     Endp
 AddTlbEntry     Proc near
     push fs
     push eax
-    push bx
     push cx
     push si
 ;
-    cmp edx,system_mem_start
-    jae ateGlobal
-    jmp ateGlobal
-
-ateLocal:    
-    mov eax,cr3
-    and ax,0F000h
-;
     mov cx,cs:core_count
     or cx,cx
     jz ateDone
 ;    
     mov si,OFFSET core_arr
-    mov bx,OFFSET ps_local_tlb
-
-atelLoop:
-    mov fs,cs:[si]
-    cmp eax,fs:ps_cr3
-    jne atelNext
-;    
-    test fs:ps_flags,PS_FLAG_ACTIVE
-    jz atelNext
-;    
-    call AddCoreTlb
-
-atelNext:
-    add si,2
-    sub cx,1
-    jnz atelLoop    
-;
-    jmp ateDone    
-
-ateGlobal:    
-    mov cx,cs:core_count
-    or cx,cx
-    jz ateDone
-;    
-    mov si,OFFSET core_arr
-    mov bx,OFFSET ps_global_tlb
 
 ategLoop:
     mov fs,cs:[si]
@@ -4900,7 +4848,6 @@ ategNext:
 ateDone:
     pop si
     pop cx
-    pop bx
     pop eax
     pop fs        
     ret
@@ -4930,8 +4877,8 @@ nfLoop:
     je nfNext
 ;    
     mov fs,bx
-    mov eax,fs:ps_global_tlb.pt32_used
-    or eax,fs:ps_local_tlb.pt32_used
+    mov eax,fs:ps_tlb.pt32_used
+    or eax,eax
     jz nfNext
 ;
     test fs:ps_flags,PS_FLAG_ACTIVE
