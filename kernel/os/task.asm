@@ -3054,7 +3054,9 @@ ptab_init:
     mov es:ps_global_tlb.pt32_used,0
     mov es:ps_local_tlb.pt32_locked,0
     mov es:ps_local_tlb.pt32_used,0
-    mov es:ps_cr3,0
+    mov eax,cr3
+    and ax,0F000h
+    mov es:ps_cr3,eax
 ;    
     mov es:cs_usel,flat_sel
     mov es:cs_uoffs,0
@@ -3651,17 +3653,19 @@ tucRetry:
     sub fs:ps_nesting,1
     jnc tucDone
 ;
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz tucDone
-;
     mov eax,fs:ps_global_tlb.pt32_used
     or eax,fs:ps_local_tlb.pt32_used
     jz tucTlbDone
 ;
+    mov eax,cr3
+    mov cr3,eax
     call cs:flush_tlb_proc
 
 tucTlbDone:    
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz tucDone
+;
     test fs:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
     jnz tucSwap
 ;    
@@ -4850,6 +4854,9 @@ ateLocal:
     and ax,0F000h
 ;
     mov cx,cs:core_count
+    or cx,cx
+    jz ateDone
+;    
     mov si,OFFSET core_arr
     mov bx,OFFSET ps_local_tlb
 
@@ -4872,6 +4879,9 @@ atelNext:
 
 ateGlobal:    
     mov cx,cs:core_count
+    or cx,cx
+    jz ateDone
+;    
     mov si,OFFSET core_arr
     mov bx,OFFSET ps_global_tlb
 
@@ -4907,43 +4917,40 @@ AddTlbEntry     Endp
 
 NotifyFlush     Proc near
     push fs
-    pusha
+    pushad
 ;
-    mov ax,core_data_sel
-    mov fs,ax
-    mov dx,fs:ps_sel
-;
+    call TryLockCore
+    mov dx,fs
     mov cx,cs:core_count
     mov si,OFFSET core_arr
 
 nfLoop:
     mov bx,cs:[si]
+    cmp dx,bx
+    je nfNext
+;    
     mov fs,bx
     mov eax,fs:ps_global_tlb.pt32_used
     or eax,fs:ps_local_tlb.pt32_used
     jz nfNext
 ;
-    cmp dx,bx
-    jz nfSelf
-
-nfOther:
     test fs:ps_flags,PS_FLAG_ACTIVE
     jz nfNext
-;    
+;   
     mov al,84h
     SendInt
     jmp nfNext
-
-nfSelf:
-;    call TryLockCore    
-;    call TryUnlockCore
 
 nfNext:
     add si,2
     sub cx,1
     jnz nfLoop    
 ;
-    popa
+    mov fs,dx
+    call TryUnlockCore 
+
+nfDone:
+    popad
     pop fs        
     ret
 NotifyFlush     Endp
@@ -4978,7 +4985,12 @@ ftlbDone:
     pop edx    
     pop cx
 ;
-    call cs:fl_tlb_proc
+    call NotifyFlush
+    push eax
+;    mov eax,cr3
+;    mov cr3,eax
+    pop eax
+;    call cs:fl_tlb_proc
     retf32
 flush_tlb Endp
 
@@ -10178,7 +10190,7 @@ test_gate_name    DB 'Test Gate',0
 
 test_gate_pr    Proc far
     GetCore
-    call cs:flush_tlb_proc
+    call NotifyFlush
     jmp test_gate_pr
     
     retf32
@@ -10713,6 +10725,7 @@ timer_free_list_create:
 ;
     mov edx,gdt_linear
     CreateCore
+    or es:ps_flags,PS_FLAG_ACTIVE
 ;
     pop ds
     popa
