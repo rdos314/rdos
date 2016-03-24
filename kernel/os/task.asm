@@ -1527,13 +1527,13 @@ load_thread_wakeup_done:
     cmp dx,ax
     jz load_reload_loop
 ;    
-    push fs
-    mov fs,ax
-    movzx edx,fs:ps_id
-    pop fs
-    mov ax,1
-    mov bx,es
-    AddSchedulerLog
+;    push fs
+;    mov fs,ax
+;    movzx edx,fs:ps_id
+;    pop fs
+;    mov ax,1
+;    mov bx,es
+;    AddSchedulerLog
 
 load_reload_wakeup:
     call cs:insert_wakeup_proc

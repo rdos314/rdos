@@ -2814,13 +2814,11 @@ force_schedule_int:
     mov fs,ax
 ;
     EnterInt
-;
-    
-    xor edx,edx
-    mov ax,2
-    mov bx,OFFSET force_schedule_int
-    AddSchedulerLog
-
+;    
+;    xor edx,edx
+;    mov ax,2
+;    mov bx,OFFSET force_schedule_int
+;    AddSchedulerLog
 ;    
     mov ax,apic_mem_sel
     mov ds,ax
