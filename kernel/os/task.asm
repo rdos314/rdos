@@ -3959,14 +3959,17 @@ ft486Again:
 ;    
     cmp eax,-1
     je ft486All
-    jmp ft486All
+;    jmp ft486All
 ;
+    push ds
     push es
     push cx
     push edx
     push si
     push di
 ;
+    mov cx,flat_sel
+    mov ds,cx
     mov cx,fs
     mov es,cx
     mov cx,32
@@ -3974,7 +3977,7 @@ ft486Again:
 
 ftt486Loop:    
     mov edx,es:[di]    
-    invlpg [edx]
+    invlpg ds:[edx]
 ;
     add di,4
     sub cx,1
@@ -3987,6 +3990,7 @@ ftt486Loop:
     pop edx
     pop cx
     pop es    
+    pop ds
     jmp ft486Again
 
 
