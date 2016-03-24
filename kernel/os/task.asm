@@ -3654,7 +3654,14 @@ tucRetry:
     mov ax,fs:ps_curr_thread
     or ax,ax
     jz tucDone
-;    
+;
+    mov eax,fs:ps_global_tlb.pt32_used
+    or eax,fs:ps_local_tlb.pt32_used
+    jz tucTlbDone
+;
+    call cs:flush_tlb_proc
+
+tucTlbDone:    
     test fs:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
     jnz tucSwap
 ;    
@@ -3699,6 +3706,13 @@ ucRetry:
     CrashGate
 
 ucNestOk:    
+    mov eax,fs:ps_global_tlb.pt32_used
+    or eax,fs:ps_local_tlb.pt32_used
+    jz ucTlbDone
+;
+    call cs:flush_tlb_proc
+
+ucTlbDone:    
     test fs:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
     jnz ucSwap
 ;    
@@ -4881,6 +4895,58 @@ ateDone:
     pop fs        
     ret
 AddTlbEntry     Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;    NAME:           NotifyFlush
+;
+;    DESCRIPTION:    Notify flush to cores
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyFlush     Proc near
+    push fs
+    pusha
+;
+    mov ax,core_data_sel
+    mov fs,ax
+    mov dx,fs:ps_sel
+;
+    mov cx,cs:core_count
+    mov si,OFFSET core_arr
+
+nfLoop:
+    mov bx,cs:[si]
+    mov fs,bx
+    mov eax,fs:ps_global_tlb.pt32_used
+    or eax,fs:ps_local_tlb.pt32_used
+    jz nfNext
+;
+    cmp dx,bx
+    jz nfSelf
+
+nfOther:
+    test fs:ps_flags,PS_FLAG_ACTIVE
+    jz nfNext
+;    
+    mov al,84h
+    SendInt
+    jmp nfNext
+
+nfSelf:
+;    call TryLockCore    
+;    call TryUnlockCore
+
+nfNext:
+    add si,2
+    sub cx,1
+    jnz nfLoop    
+;
+    popa
+    pop fs        
+    ret
+NotifyFlush     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
