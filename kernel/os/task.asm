@@ -3907,76 +3907,6 @@ lliDone:
     retf32
 leave_long_int  Endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;    NAME:           FlushTlbTable
-;
-;    DESCRIPTION:    Flush TLB entries in a table
-;
-;    PARAMETERS:     FS     Core
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FlushTlbTable  Proc near
-    push eax
-;    
-    mov eax,fs:ps_tlb.pt32_used
-    or eax,eax
-    jz fttDone
-;
-    cmp eax,-1
-    je fttAll
-    jmp fttAll
-;
-    push es
-    push cx
-    push edx
-    push si
-    push di
-;
-    mov cx,fs
-    mov es,cx
-    mov cx,32
-    mov si,OFFSET ps_tlb.pt32_linear_arr
-    mov di,OFFSET ps_work_tlb.pt32_linear_arr
-    rep movs dword ptr es:[di],es:[si]
-    lock xor fs:ps_tlb.pt32_used,eax
-;
-    mov cx,32
-    mov di,OFFSET ps_work_tlb.pt32_linear_arr
-    mov esi,1
-
-fttLoop:    
-    test esi,eax
-    jz fttNext
-;
-    mov edx,es:[di]    
-    invlpg [edx]
-
-fttNext:
-    add di,4
-    shl esi,1
-    sub cx,1
-    jnz fttLoop
-;
-    pop di
-    pop si
-    pop edx
-    pop cx
-    pop es    
-    jmp fttDone
-
-fttAll:
-    mov fs:ps_tlb.pt32_used,0
-    mov eax,cr3
-    mov cr3,eax
-
-fttDone:    
-    pop eax
-    ret
-FlushTlbTable Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -4027,7 +3957,52 @@ ft486Again:
     or eax,eax
     jz ft486Done
 ;    
-    call FlushTlbTable
+    cmp eax,-1
+    je ft486All
+    jmp ft486All
+;
+    push es
+    push cx
+    push edx
+    push si
+    push di
+;
+    mov cx,fs
+    mov es,cx
+    mov cx,32
+    mov si,OFFSET ps_tlb.pt32_linear_arr
+    mov di,OFFSET ps_work_tlb.pt32_linear_arr
+    rep movs dword ptr es:[di],es:[si]
+    lock xor fs:ps_tlb.pt32_used,eax
+;
+    mov cx,32
+    mov di,OFFSET ps_work_tlb.pt32_linear_arr
+    mov esi,1
+
+ft486Loop:    
+    test esi,eax
+    jz ft486Next
+;
+    mov edx,es:[di]    
+    invlpg [edx]
+
+ft486Next:
+    add di,4
+    shl esi,1
+    sub cx,1
+    jnz ft486Loop
+;
+    pop di
+    pop si
+    pop edx
+    pop cx
+    pop es    
+    jmp ft486Again
+
+ft486All:
+    mov fs:ps_tlb.pt32_used,0
+    mov eax,cr3
+    mov cr3,eax
     jmp ft486Again
 
 ft486Done:    
@@ -4035,7 +4010,6 @@ ft486Done:
     pop eax
     ret
 FlushTlb486    Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
