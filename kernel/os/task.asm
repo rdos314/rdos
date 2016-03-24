@@ -3980,8 +3980,8 @@ ft486Again:
     mov esi,1
 
 ft486Loop:    
-    test esi,eax
-    jz ft486Next
+;    test esi,eax
+;    jz ft486Next
 ;
     mov edx,es:[di]    
     invlpg [edx]
@@ -4783,62 +4783,54 @@ actDone:
     pop eax
     ret
 AddCoreTlb     Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;    NAME:           AddTlbEntry
-;
-;    DESCRIPTION:    Add TLB entry
-;
-;    PARAMETERS:     EDX        Linear address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddTlbEntry     Proc near
-    push fs
-    push eax
-    push cx
-    push si
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-    mov cx,cs:core_count
+;
+;           NAME:           FlushTLB
+;
+;           DESCRIPTION:    Flush TLB entries
+;
+;           PARAMETERS:     CX    Number of entries
+;                           EDX   Linear base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+flush_tlb_name DB 'Flush Tlb', 0
+
+flush_tlb Proc far
+    push fs
+    pushad
+;
     or cx,cx
-    jz ateDone
+    jz nfDone    
+
+ftlbLoop:
+    push cx
+    push edx
 ;    
+    mov cx,cs:core_count
     mov si,OFFSET core_arr
 
-ategLoop:
+ateLoop:
     mov fs,cs:[si]
     test fs:ps_flags,PS_FLAG_ACTIVE
-    jz ategNext
+    jz ateNext
 ;    
     call AddCoreTlb
 
-ategNext:
+ateNext:
     add si,2
     sub cx,1
-    jnz ategLoop    
+    jnz ateLoop    
 
 ateDone:
-    pop si
+    pop edx
     pop cx
-    pop eax
-    pop fs        
-    ret
-AddTlbEntry     Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
 ;
-;    NAME:           NotifyFlush
-;
-;    DESCRIPTION:    Notify flush to cores
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NotifyFlush     Proc near
-    push fs
-    pushad
+    add edx,1000h
+    sub cx,1
+    jnz ftlbLoop    
 ;
     call TryLockCore
     mov dx,fs
@@ -4871,47 +4863,8 @@ nfNext:
     call TryUnlockCore 
 
 nfDone:
-    popad
-    pop fs        
-    ret
-NotifyFlush     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FlushTLB
-;
-;           DESCRIPTION:    Flush TLB entries
-;
-;           PARAMETERS:     CX    Number of entries
-;                           EDX   Linear base
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-flush_tlb_name DB 'Flush Tlb', 0
-
-flush_tlb Proc far
-    push cx
-    push edx
-;
-    or cx,cx
-    jz ftlbDone    
-
-ftlbLoop:
-    call AddTlbEntry
-    add edx,1000h
-    loop ftlbLoop    
-
-ftlbDone:
-    pop edx    
-    pop cx
-;
-    call NotifyFlush
-    push eax
-;    mov eax,cr3
-;    mov cr3,eax
-    pop eax
-;    call cs:fl_tlb_proc
+    popad    
+    pop fs
     retf32
 flush_tlb Endp
 
@@ -10110,10 +10063,6 @@ get_crash_core32:
 test_gate_name    DB 'Test Gate',0
 
 test_gate_pr    Proc far
-    GetCore
-    call NotifyFlush
-    jmp test_gate_pr
-    
     retf32
 test_gate_pr    Endp
 
