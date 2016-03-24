@@ -3657,8 +3657,6 @@ tucRetry:
     or eax,fs:ps_local_tlb.pt32_used
     jz tucTlbDone
 ;
-    mov eax,cr3
-    mov cr3,eax
     call cs:flush_tlb_proc
 
 tucTlbDone:    
