@@ -225,6 +225,8 @@ unlock_futex_proc           DW OFFSET UnlockFutexSingle
 
 fl_tlb_proc                 DW OFFSET FlTlb386
 
+flush_tlb_proc              DW OFFSET FlushTlb386
+
 preempt_reload_proc         DW OFFSET TimerPreemptReload
 
 fpu_exception_proc          DW OFFSET FpuExceptionSingle
@@ -2277,6 +2279,7 @@ start_processor_null_threads    Proc near
     mov ds,ax
     mov ds,ds:patch_sel
     mov ds:fl_tlb_proc,OFFSET FlTlb486
+    mov ds:flush_tlb_proc,OFFSET FlushTlb486
 ;    
     GetCoreCount
     cmp cx,1
@@ -3888,6 +3891,143 @@ lliSwap:
 lliDone:
     retf32
 leave_long_int  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;    NAME:           FlushTlbTable
+;
+;    DESCRIPTION:    Flush TLB entries in a table
+;
+;    PARAMETERS:     FS     Core
+;                    BX     Table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FlushTlbTable  Proc near
+    push eax
+;    
+    mov eax,fs:[bx].pt32_used
+    or eax,eax
+    jz fttDone
+;
+    cmp eax,-1
+    je fttAll
+;
+    push es
+    push cx
+    push edx
+    push si
+    push di
+;
+    mov cx,fs
+    mov es,cx
+    mov cx,32
+    lea si,[bx].pt32_linear_arr
+    mov di,OFFSET ps_work_tlb.pt32_linear_arr
+    rep movs dword ptr es:[di],es:[si]
+    lock xor fs:[bx].pt32_used,eax
+;
+    mov cx,32
+    mov di,OFFSET ps_work_tlb.pt32_linear_arr
+    mov esi,1
+
+fttLoop:    
+    test esi,eax
+    jz fttNext
+;
+    mov edx,es:[di]    
+    invlpg [edx]
+
+fttNext:
+    add di,4
+    shl esi,1
+    sub cx,1
+    jnz fttLoop
+;
+    pop di
+    pop si
+    pop edx
+    pop cx
+    pop es    
+    jmp fttDone
+
+fttAll:
+    mov fs:ps_local_tlb.pt32_used,0
+    mov fs:ps_global_tlb.pt32_used,0
+    mov eax,cr3
+    mov cr3,eax
+
+fttDone:    
+    pop eax
+    ret
+FlushTlbTable Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FlushTlb386
+;
+;           DESCRIPTION:    Flush TLB entries, 386 processor version
+;
+;           PARAMETERS:     FS  Core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FlushTlb386    Proc near
+    push eax
+
+ft386Again:
+    mov eax,fs:ps_global_tlb.pt32_used
+    or eax,fs:ps_local_tlb.pt32_used
+    jz ft386Done
+;
+    mov fs:ps_global_tlb.pt32_used,0
+    mov fs:ps_local_tlb.pt32_used,0
+;    
+    mov eax,cr3
+    mov cr3,eax
+    jmp ft386Again
+
+ft386Done:    
+    pop eax
+    ret
+FlushTlb386    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FlushTlb486
+;
+;           DESCRIPTION:    Flush TLB entries, 486 or higher processor version
+;
+;           PARAMETERS:     FS  Core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FlushTlb486    Proc near
+    push eax
+    push bx
+
+ft486Again:
+    mov eax,fs:ps_global_tlb.pt32_used
+    or eax,fs:ps_local_tlb.pt32_used
+    jz ft486Done
+;    
+    mov bx,OFFSET ps_global_tlb
+    call FlushTlbTable
+;    
+    mov bx,OFFSET ps_local_tlb
+    call FlushTlbTable
+    jmp ft486Again
+
+ft486Done:    
+    pop bx
+    pop eax
+    ret
+FlushTlb486    Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -9928,76 +10068,6 @@ get_crash_core16:
 get_crash_core32:
     call get_crash_core
     retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;    NAME:           HandleTlbTable
-;
-;    DESCRIPTION:    Handle TLB entries in a table
-;
-;    PARAMETERS:     FS     Core
-;                    BX     Table
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HandleTlbTable  Proc near
-    push eax
-;    
-    mov eax,fs:[bx].pt32_used
-    or eax,eax
-    jz httDone
-;
-    cmp eax,-1
-    je httAll
-;
-    push es
-    push cx
-    push edx
-    push si
-    push di
-;
-    mov cx,fs
-    mov es,cx
-    mov cx,32
-    lea si,[bx].pt32_linear_arr
-    mov di,OFFSET ps_work_tlb.pt32_linear_arr
-    rep movs dword ptr es:[di],es:[si]
-    lock xor fs:[bx].pt32_used,eax
-;
-    mov cx,32
-    mov di,OFFSET ps_work_tlb.pt32_linear_arr
-    mov esi,1
-
-httLoop:    
-    test esi,eax
-    jz httNext
-;
-    mov edx,es:[di]    
-    invlpg [edx]
-
-httNext:
-    add di,4
-    shl esi,1
-    sub cx,1
-    jnz httLoop
-;
-    pop di
-    pop si
-    pop edx
-    pop cx
-    pop es    
-
-httAll:
-    mov fs:ps_local_tlb.pt32_used,0
-    mov fs:ps_global_tlb.pt32_used,0
-    mov eax,cr3
-    mov cr3,eax
-
-httDone:    
-    pop eax
-    ret
-HandleTlbTable Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -10012,11 +10082,7 @@ test_gate_name    DB 'Test Gate',0
 
 test_gate_pr    Proc far
     GetCore
-    mov bx,OFFSET ps_local_tlb
-    call HandleTlbTable
-;    
-    mov bx,OFFSET ps_global_tlb
-    call HandleTlbTable
+    call cs:flush_tlb_proc
     jmp test_gate_pr
     
     retf32
