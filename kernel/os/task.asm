@@ -1641,10 +1641,17 @@ load_reload_cr3_loop:
     mov cr3,eax
     and ax,0F000h
     mov fs:ps_cr3,eax
-;    mov fs:ps_local_tlb.pt32_used,0
-;    mov fs:ps_global_tlb.pt32_used,0
+    mov fs:ps_local_tlb.pt32_used,0
+    mov fs:ps_global_tlb.pt32_used,0
 
 load_cr3_ok:
+    mov eax,fs:ps_local_tlb.pt32_used
+    or eax,fs:ps_global_tlb.pt32_used
+    jz load_cr3_flush_ok
+;
+    call cs:flush_tlb_proc
+
+load_cr3_flush_ok:
     mov ax,es
     mov ds,ax
     lldt ds:p_ldt
