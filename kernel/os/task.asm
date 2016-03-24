@@ -3981,8 +3981,8 @@ ft486Again:
     mov esi,1
     
 ft486Loop:    
-;    test esi,eax
-;    jz ft486Next
+    test esi,eax
+    jz ft486Next
 ;
     mov edx,fs:[di]    
     invlpg es:[edx]
