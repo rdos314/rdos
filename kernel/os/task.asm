@@ -3936,6 +3936,7 @@ FlushTlbTable  Proc near
 ;
     cmp eax,-1
     je fttAll
+    jmp fttAll
 ;
     push es
     push cx
@@ -4846,6 +4847,7 @@ AddTlbEntry     Proc near
 ;
     cmp edx,system_mem_start
     jae ateGlobal
+    jmp ateGlobal
 
 ateLocal:    
     mov eax,cr3
