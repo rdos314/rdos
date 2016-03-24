@@ -1460,6 +1460,7 @@ EnterInt    MACRO
 LeaveInt    MACRO
     local tucDone
     local tucSwap
+    local tucTlbDone
 
     pop ds
     
@@ -1470,6 +1471,13 @@ LeaveInt    MACRO
     or ax,ax
     jz tucDone
 ;    
+    mov eax,ds:ps_global_tlb.pt32_used
+    or eax,ds:ps_local_tlb.pt32_used
+    jz tucTlbDone
+;
+    OsGate do_flush_tlb_nr
+
+tucTlbDone:    
     test ds:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
     jnz tucSwap
 ;    
@@ -3211,29 +3219,29 @@ GetAcpiTable    MACRO
 ;   IN  EAX         PCI device #
 ;   IN  ES:EDI      ACPI name buffer
 GetAcpiPciDeviceName      MACRO
-	OsGate get_acpi_pci_device_name_nr
-	                ENDM
+        OsGate get_acpi_pci_device_name_nr
+                        ENDM
 
 ;   IN  EAX         PCI device #
 ;   OUT BH          Bus
 ;   OUT BL          Device
 ;   OUT CH          Function
 GetAcpiPciDeviceInfo      MACRO
-	OsGate get_acpi_pci_device_info_nr
-	                ENDM
+        OsGate get_acpi_pci_device_info_nr
+                        ENDM
 
 ;   IN  EAX         PCI device #
 ;   IN  EDX         Pin #
 ;   OUT AL          IRQ #
 GetAcpiPciDeviceIrq      MACRO
-	OsGate get_acpi_pci_device_irq_nr
-	                ENDM
+        OsGate get_acpi_pci_device_irq_nr
+                        ENDM
 
 ;   IN  ES:EDI      Pnp name buffer
 ;   OUT EAX         Memory base or 0
 GetAcpiPnpDeviceMem      MACRO
-	OsGate get_acpi_pnp_device_mem_nr
-	                ENDM
+        OsGate get_acpi_pnp_device_mem_nr
+                        ENDM
 
 ;;;;;;;;;; Com port ;;;;;;;;;
 

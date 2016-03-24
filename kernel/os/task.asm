@@ -4095,6 +4095,29 @@ FlTlb486    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           DoFlushTlb
+;
+;           DESCRIPTION:    Flush TLB callback from leave int
+;
+;           PARAMETERS:     DS  Core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+do_flush_tlb_name  DB 'Do Flush TLB', 0
+
+do_flush_tlb  Proc far
+    push fs
+;    
+    mov fs,ds:ps_sel
+    call cs:flush_tlb_proc
+;
+    pop fs
+    retf32    
+do_flush_tlb   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           LockTlbBlock
 ;
 ;       DESCRIPTION:    Lock TLB block
@@ -10341,6 +10364,12 @@ timer_free_list_create:
     mov di,OFFSET fpu_exception_name
     xor cl,cl
     mov ax,fpu_exception_nr
+    RegisterOsGate
+;
+    mov si,OFFSET do_flush_tlb
+    mov di,OFFSET do_flush_tlb_name
+    xor cl,cl
+    mov ax,do_flush_tlb_nr
     RegisterOsGate
 ;
     mov si,OFFSET add_log

@@ -687,4 +687,6 @@ add_thread_int_nr           = 559
 
 add_scheduler_log_nr        = 560
 
+do_flush_tlb_nr             = 561
+
 osgate_entries				= 580
