@@ -223,7 +223,7 @@ unlock_user_section_proc    DW OFFSET UnlockUserSectionSingle
 lock_futex_proc             DW OFFSET LockFutexSingle
 unlock_futex_proc           DW OFFSET UnlockFutexSingle
 
-flush_tlb_proc              DW OFFSET FlushTlb386
+fl_tlb_proc                 DW OFFSET FlTlb386
 
 preempt_reload_proc         DW OFFSET TimerPreemptReload
 
@@ -1637,8 +1637,10 @@ load_reload_cr3_loop:
 ;
     mov eax,es:p_cr3
     mov cr3,eax
+    and ax,0F000h
     mov fs:ps_cr3,eax
-    mov fs:ps_local_tlb.pt32_used,0
+;    mov fs:ps_local_tlb.pt32_used,0
+;    mov fs:ps_global_tlb.pt32_used,0
 
 load_cr3_ok:
     mov ax,es
@@ -2274,7 +2276,7 @@ start_processor_null_threads    Proc near
     mov ax,SEG data
     mov ds,ax
     mov ds,ds:patch_sel
-    mov ds:flush_tlb_proc,OFFSET FlushTlb486
+    mov ds:fl_tlb_proc,OFFSET FlTlb486
 ;    
     GetCoreCount
     cmp cx,1
@@ -2292,7 +2294,7 @@ start_processor_null_threads    Proc near
     mov ds:unlock_user_section_proc,OFFSET UnlockUserSectionMultiple
     mov ds:lock_futex_proc,OFFSET LockFutexMultiple
     mov ds:unlock_futex_proc,OFFSET UnlockFutexMultiple
-    mov ds:flush_tlb_proc,OFFSET FlushTlbMultiple
+    mov ds:fl_tlb_proc,OFFSET FlushTlbMultiple
     mov ds:fpu_exception_proc,OFFSET FpuExceptionMultiple
     mov ds:fpu_save_proc,OFFSET FpuSaveMultiple
 
@@ -3042,6 +3044,7 @@ ptab_init:
     mov es:ps_global_tlb.pt32_used,0
     mov es:ps_local_tlb.pt32_locked,0
     mov es:ps_local_tlb.pt32_used,0
+    mov es:ps_cr3,0
 ;    
     mov es:cs_usel,flat_sel
     mov es:cs_uoffs,0
@@ -3889,7 +3892,7 @@ leave_long_int  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FlushTlb386
+;           NAME:           FlTlb386
 ;
 ;           DESCRIPTION:    Flush TLB entries, 386 processor version
 ;
@@ -3898,18 +3901,18 @@ leave_long_int  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FlushTlb386    Proc near
+FlTlb386    Proc near
     push eax
     mov eax,cr3
     mov cr3,eax
     pop eax
     ret
-FlushTlb386    Endp
+FlTlb386    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FlushTlb486
+;           NAME:           FlTlb486
 ;
 ;           DESCRIPTION:    Flush TLB entries, 486+ processor version
 ;
@@ -3918,7 +3921,7 @@ FlushTlb386    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FlushTlb486    Proc near
+FlTlb486    Proc near
     push ds
     push ax
     push cx
@@ -3947,7 +3950,7 @@ ft4Done:
     pop ax
     pop ds
     ret
-FlushTlb486    Endp
+FlTlb486    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4185,7 +4188,7 @@ InsertTlb   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FlushTlbMulti
+;           NAME:           FlTlbMulti
 ;
 ;           DESCRIPTION:    Flush TLB entries
 ;
@@ -4195,12 +4198,12 @@ InsertTlb   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FlushTlbMulti     Proc near
+FlTlbMulti     Proc near
     push ax
 ;
     mov ax,fs:ps_id
     bt es:[edx].th_core_bits,ax
-    jnc ftDone
+    jnc ftmDone
 ;
     push cx
     push edi
@@ -4208,10 +4211,10 @@ FlushTlbMulti     Proc near
     mov edi,es:[edx].th_linear
     mov cx,es:[edx].th_page_count
 
-ftLoop:
+ftmLoop:
     invlpg es:[edi]
     add edi,1000h
-    loop ftLoop
+    loop ftmLoop
 ;    
     mov ax,fs:ps_id
     btr es:[edx].th_core_bits,ax
@@ -4220,10 +4223,10 @@ ftLoop:
     pop edi
     pop cx
 
-ftDone:
+ftmDone:
     pop ax    
     ret
-FlushTlbMulti   Endp
+FlTlbMulti   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4249,7 +4252,7 @@ ftlLoop:
     or edx,edx
     jz ftlEmpty
 ;
-    call FlushTlbMulti
+    call FlTlbMulti
     mov ax,es:[edx].th_remain_cores
     or ax,ax
     jz ftlRemove
@@ -4562,7 +4565,7 @@ FlushTlbMultiple    Proc near
     jne ftmNorm
 
 ftmIrq:
-    call FlushTlb486
+    call FlTlb486
     popf
     jmp ftmUnlock
     
@@ -4589,6 +4592,125 @@ ftmUnlock:
     pop ds
     ret
 FlushTlbMultiple    Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;    NAME:           AddCoreTlb
+;
+;    DESCRIPTION:    Add core TLB
+;
+;    PARAMETERS:     EDX        Linear address
+;                    FS         Core
+;                    BX         TLB list
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddCoreTlb     Proc near
+    push eax
+    push ecx
+    push di
+
+actTryLock:
+    mov eax,fs:[bx].pt32_used
+    not eax
+    bsf ecx,eax
+    jz actDone
+;
+    lock bts fs:[bx].pt32_locked,ecx
+    jc actTryLock
+;
+    mov di,cx
+    shl di,2
+    mov fs:[bx+di].pt32_linear_arr,edx
+;
+    lock bts fs:[bx].pt32_used,ecx
+    jnc actUnlock
+;
+    lock btc fs:[bx].pt32_locked,ecx
+    jmp actTryLock
+
+actUnlock:
+    lock btc fs:[bx].pt32_locked,ecx
+
+actDone:    
+    pop di
+    pop ecx
+    pop eax
+    ret
+AddCoreTlb     Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;    NAME:           AddTlbEntry
+;
+;    DESCRIPTION:    Add TLB entry
+;
+;    PARAMETERS:     EDX        Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddTlbEntry     Proc near
+    push fs
+    push eax
+    push bx
+    push cx
+    push si
+;
+    cmp edx,system_mem_start
+    jae ateGlobal
+
+ateLocal:    
+    mov eax,cr3
+    and ax,0F000h
+;
+    mov cx,cs:core_count
+    mov si,OFFSET core_arr
+    mov bx,OFFSET ps_local_tlb
+
+atelLoop:
+    mov fs,cs:[si]
+    cmp eax,fs:ps_cr3
+    jne atelNext
+;    
+    test fs:ps_flags,PS_FLAG_ACTIVE
+    jz atelNext
+;    
+    call AddCoreTlb
+
+atelNext:
+    add si,2
+    sub cx,1
+    jnz atelLoop    
+;
+    jmp ateDone    
+
+ateGlobal:    
+    mov cx,cs:core_count
+    mov si,OFFSET core_arr
+    mov bx,OFFSET ps_global_tlb
+
+ategLoop:
+    mov fs,cs:[si]
+    test fs:ps_flags,PS_FLAG_ACTIVE
+    jz ategNext
+;    
+    call AddCoreTlb
+
+ategNext:
+    add si,2
+    sub cx,1
+    jnz ategLoop    
+
+ateDone:
+    pop si
+    pop cx
+    pop bx
+    pop eax
+    pop fs        
+    ret
+AddTlbEntry     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4597,12 +4719,30 @@ FlushTlbMultiple    Endp
 ;
 ;           DESCRIPTION:    Flush TLB entries
 ;
+;           PARAMETERS:     CX    Number of entries
+;                           EDX   Linear base
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 flush_tlb_name DB 'Flush Tlb', 0
 
 flush_tlb Proc far
-    call cs:flush_tlb_proc
+    push cx
+    push edx
+;
+    or cx,cx
+    jz ftlbDone    
+
+ftlbLoop:
+    call AddTlbEntry
+    add edx,1000h
+    loop ftlbLoop    
+
+ftlbDone:
+    pop edx    
+    pop cx
+;
+    call cs:fl_tlb_proc
     retf32
 flush_tlb Endp
 
@@ -9788,90 +9928,76 @@ get_crash_core16:
 get_crash_core32:
     call get_crash_core
     retf32
-   
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;    NAME:           AddCoreTlb
+;    NAME:           HandleTlbTable
 ;
-;    DESCRIPTION:    Add core TLB
+;    DESCRIPTION:    Handle TLB entries in a table
 ;
-;    PARAMETERS:     EDX        Linear address
-;                    FS         Core
-;                    BX         TLB list
+;    PARAMETERS:     FS     Core
+;                    BX     Table
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddCoreTlb     Proc near
+HandleTlbTable  Proc near
     push eax
-    push ecx
-    push di
-
-actTryLock:
+;    
     mov eax,fs:[bx].pt32_used
-    not eax
-    bsf ecx,eax
-    jz actDone
+    or eax,eax
+    jz httDone
 ;
-    lock bts fs:[bx].pt32_locked,ecx
-    jc actTryLock
+    cmp eax,-1
+    je httAll
 ;
-    mov di,cx
-    shl di,2
-    mov fs:[bx+di].pt32_linear_arr,edx
+    push es
+    push cx
+    push edx
+    push si
+    push di
 ;
-    lock bts fs:[bx].pt32_used,ecx
-    jnc actUnlock
+    mov cx,fs
+    mov es,cx
+    mov cx,32
+    lea si,[bx].pt32_linear_arr
+    mov di,OFFSET ps_work_tlb.pt32_linear_arr
+    rep movs dword ptr es:[di],es:[si]
+    lock xor fs:[bx].pt32_used,eax
 ;
-    lock btc fs:[bx].pt32_locked,ecx
-    jmp actTryLock
+    mov cx,32
+    mov di,OFFSET ps_work_tlb.pt32_linear_arr
+    mov esi,1
 
-actUnlock:
-    lock btc fs:[bx].pt32_locked,ecx
+httLoop:    
+    test esi,eax
+    jz httNext
+;
+    mov edx,es:[di]    
+    invlpg [edx]
 
-actDone:    
+httNext:
+    add di,4
+    shl esi,1
+    sub cx,1
+    jnz httLoop
+;
     pop di
-    pop ecx
+    pop si
+    pop edx
+    pop cx
+    pop es    
+
+httAll:
+    mov fs:ps_local_tlb.pt32_used,0
+    mov fs:ps_global_tlb.pt32_used,0
+    mov eax,cr3
+    mov cr3,eax
+
+httDone:    
     pop eax
     ret
-AddCoreTlb     Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;    NAME:           AddTlbEntry
-;
-;    DESCRIPTION:    Add TLB entry
-;
-;    PARAMETERS:     EDX        Linear address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddTlbEntry     Proc near
-    push fs
-    push bx
-    push cx
-    push si
-;
-    mov cx,cs:core_count
-    mov si,OFFSET core_arr
-
-ateLoop:
-    mov fs,cs:[si]
-    mov bx,OFFSET ps_global_tlb
-    call AddCoreTlb
-
-ateNext:
-    add si,2
-    sub cx,1
-    jnz ateLoop    
-;
-    pop si
-    pop cx
-    pop bx
-    pop fs        
-    ret
-AddTlbEntry     Endp
+HandleTlbTable Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -9885,13 +10011,13 @@ AddTlbEntry     Endp
 test_gate_name    DB 'Test Gate',0
 
 test_gate_pr    Proc far
-    mov cx,40
-
-tgLoop:    
-    mov edx,120000h
-    call AddTlbEntry
-    add edx,1000h
-    loop tgLoop 
+    GetCore
+    mov bx,OFFSET ps_local_tlb
+    call HandleTlbTable
+;    
+    mov bx,OFFSET ps_global_tlb
+    call HandleTlbTable
+    jmp test_gate_pr
     
     retf32
 test_gate_pr    Endp
