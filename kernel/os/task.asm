@@ -3970,6 +3970,35 @@ ft486Again:
     mov cx,fs
     mov es,cx
     mov cx,32
+    mov di,OFFSET ps_tlb.pt32_linear_arr
+
+ftt486Loop:    
+    mov edx,es:[di]    
+    invlpg [edx]
+;
+    add di,4
+    sub cx,1
+    jnz ftt486Loop
+;    
+    lock xor fs:ps_tlb.pt32_used,eax
+;
+    pop di
+    pop si
+    pop edx
+    pop cx
+    pop es    
+    jmp ft486Again
+
+
+    push es
+    push cx
+    push edx
+    push si
+    push di
+;
+    mov cx,fs
+    mov es,cx
+    mov cx,32
     mov si,OFFSET ps_tlb.pt32_linear_arr
     mov di,OFFSET ps_work_tlb.pt32_linear_arr
     rep movs dword ptr es:[di],es:[si]
