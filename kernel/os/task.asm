@@ -3959,41 +3959,7 @@ ft486Again:
 ;    
     cmp eax,-1
     je ft486All
-;    jmp ft486All
 ;
-    push ds
-    push es
-    push cx
-    push edx
-    push si
-    push di
-;
-    mov cx,flat_sel
-    mov ds,cx
-    mov cx,fs
-    mov es,cx
-    mov cx,32
-    mov di,OFFSET ps_tlb.pt32_linear_arr
-
-ftt486Loop:    
-    mov edx,es:[di]    
-    invlpg ds:[edx]
-;
-    add di,4
-    sub cx,1
-    jnz ftt486Loop
-;    
-    lock xor fs:ps_tlb.pt32_used,eax
-;
-    pop di
-    pop si
-    pop edx
-    pop cx
-    pop es    
-    pop ds
-    jmp ft486Again
-
-
     push es
     push cx
     push edx
@@ -4008,16 +3974,18 @@ ftt486Loop:
     rep movs dword ptr es:[di],es:[si]
     lock xor fs:ps_tlb.pt32_used,eax
 ;
+    mov cx,flat_sel
+    mov es,cx
     mov cx,32
     mov di,OFFSET ps_work_tlb.pt32_linear_arr
     mov esi,1
-
+    
 ft486Loop:    
 ;    test esi,eax
 ;    jz ft486Next
 ;
-    mov edx,es:[di]    
-    invlpg [edx]
+    mov edx,fs:[di]    
+    invlpg es:[edx]
 
 ft486Next:
     add di,4
