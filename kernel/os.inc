@@ -1522,10 +1522,6 @@ UpdatePstate  MACRO
     OsGate update_pstate_nr
                         ENDM
 
-NotifyFlushTlb    MACRO
-    OsGate notify_flush_tlb_nr
-                        ENDM
-
 FlushTlb    MACRO
     OsGate flush_tlb_nr
                         ENDM
@@ -1877,11 +1873,6 @@ SetupLongTimerInt   MACRO
 ; IN  AL        IRQ #
 SetupLongPreemptInt   MACRO
     OsGate setup_long_preempt_int_nr
-                    ENDM
-
-; IN  AL        IRQ #
-SetupLongTlbFlushInt   MACRO
-    OsGate setup_long_tlb_flush_int_nr
                     ENDM
 
 ; IN  AL        IRQ #

@@ -31,7 +31,6 @@ PS_FLAG_TIMER       = 4
 PS_FLAG_NMI         = 8
 PS_FLAG_INIT_CLOCK  = 10h
 PS_FLAG_ACTIVE      = 20h
-PS_FLAG_FLUSH       = 40h
 PS_FLAG_LOADING     = 80h
 PS_FLAG_FPU         = 100h
 PS_FLAG_P_STATE     = 200h
@@ -103,7 +102,6 @@ ps_gdt_size         DW ?
 
 ps_apic             DD ?
 ps_acpi             DB ?
-ps_tlb_flush        DB ?
 
 ps_dump_offset      DW ?
 

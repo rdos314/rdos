@@ -2768,34 +2768,6 @@ mixed_ds_ok:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           tlb_flush_int
-;
-;           DESCRIPTION:    TLB flush int
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-tlb_flush_int:
-    push ds
-    push es
-    push fs
-    pushad
-;
-    NotifyFlushTlb    
-;    
-    mov ax,apic_mem_sel
-    mov ds,ax
-    xor eax,eax
-    mov ds:APIC_EOI,eax
-;    
-    popad
-    pop fs
-    pop es
-    pop ds
-    iretd    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           force_schedule_int
 ;
 ;           DESCRIPTION:    Force schedule int
@@ -2914,18 +2886,6 @@ siTimerOk:
     SetupLongPreemptInt
 
 siPreemptOk:
-    mov al,81h
-    mov esi,OFFSET tlb_flush_int
-    SetupIntGate
-;    
-    mov ax,setup_long_tlb_flush_int_nr
-    IsValidOsGate
-    jc siTlbFlushOk
-;    
-    mov al,81h
-    SetupLongTlbFlushInt
-
-siTlbFlushOk:
     mov al,82h
     mov esi,OFFSET hpet_int
     SetupIntGate

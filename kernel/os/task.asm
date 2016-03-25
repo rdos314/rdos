@@ -47,11 +47,6 @@ MSR_SYSENTER_EIP = 176h
 
 MAX_CORES   = 64
 
-TLB_FIXED_SIZE          = 64
-MAX_TLB_PHYS_ENTRIES    = 10
-;TLB_LINEAR_SIZE         = 10000h
-TLB_LINEAR_SIZE         = 100000h
-
 SLEEP_TYPE_WAIT  = 1
 SLEEP_TYPE_SIGNAL = 2
 SLEEP_TYPE_FUTEX = 3
@@ -79,24 +74,6 @@ fh_list     DW ?
 fh_lock     DW ?
 
 futex_handle_seg          ENDS
-
-tlb_struc   STRUC
-
-th_next             DD ?
-
-th_remain_cores     DW ?
-
-th_core_bits        DW (MAX_CORES SHR 4) DUP(?)
-
-th_linear           DD ?
-th_page_count       DW ?
-th_phys_count       DW ?
-
-th_spare            DW ?
-
-th_phys_arr         DD MAX_TLB_PHYS_ENTRIES DUP(?)
-
-tlb_struc   ENDS
 
 proc_handle_seg     STRUC
 
@@ -157,17 +134,9 @@ term_thread_list    DW ?
 term_proc_list      DW ?
 
 list_lock           DW ?
-
-tlb_spinlock        DW ?
-tlb_list            DD ?
  
 sys_lsb_tics_base   DD ?
 sys_msb_tics_base   DD ?
-
-tlb_block_spinlock  DW ?
-tlb_block_list      DD ?
-tlb_curr_linear     DD ?
-tlb_remain_linear   DD ?
 
 next_pid            DW ?
 
@@ -222,8 +191,6 @@ unlock_user_section_proc    DW OFFSET UnlockUserSectionSingle
 
 lock_futex_proc             DW OFFSET LockFutexSingle
 unlock_futex_proc           DW OFFSET UnlockFutexSingle
-
-fl_tlb_proc                 DW OFFSET FlTlb386
 
 flush_tlb_proc              DW OFFSET FlushTlb386
 
@@ -1484,18 +1451,6 @@ load_thread_loop:
     mov ds,ax
     xor ax,ax
     mov es,ax
-;
-    xor al,al
-    xchg al,fs:ps_tlb_flush
-    or al,al
-    jz load_thread_tlb_flush_ok
-;
-    mov ax,flat_sel
-    mov es,ax
-    stc
-    call UpdateTlbList    
-
-load_thread_tlb_flush_ok:
 
 load_thread_wakeup_loop:    
     cli
@@ -1572,7 +1527,7 @@ load_a_task:
 
 load_long_mode:
     test fs:ps_flags,PS_FLAG_LONG_MODE
-    jnz load_check_flush
+    jnz load_not_flush
 ;    
     mov bx,fs:ps_long_tr
     and byte ptr ds:[bx+5],NOT 2
@@ -1581,7 +1536,6 @@ load_long_mode:
     mov eax,es:p_cr3
     SwitchToLongMode
     lock or fs:ps_flags,PS_FLAG_LONG_MODE
-    lock and fs:ps_flags, NOT PS_FLAG_FLUSH
     jmp load_not_flush
 
 load_protected_mode:    
@@ -1590,19 +1544,12 @@ load_protected_mode:
 ;
     mov eax,es:p_cr3
     SwitchToProtectedMode
-    lock and fs:ps_flags, NOT (PS_FLAG_FLUSH OR PS_FLAG_LONG_MODE)
+    lock and fs:ps_flags, NOT PS_FLAG_LONG_MODE
 
 load_prot_switch_ok:    
     mov bx,es:p_tss_sel
     and byte ptr ds:[bx+5],NOT 2
     ltr bx
-
-load_check_flush:    
-    test fs:ps_flags,PS_FLAG_FLUSH
-    jz load_not_flush
-;
-    lock and fs:ps_flags, NOT PS_FLAG_FLUSH
-    jmp load_reload_cr3
 
 load_not_flush:
     mov edx,io_focus_linear
@@ -2282,7 +2229,6 @@ start_processor_null_threads    Proc near
     mov ax,SEG data
     mov ds,ax
     mov ds,ds:patch_sel
-    mov ds:fl_tlb_proc,OFFSET FlTlb486
     mov ds:flush_tlb_proc,OFFSET FlushTlb486
 ;    
     GetCoreCount
@@ -2301,7 +2247,6 @@ start_processor_null_threads    Proc near
     mov ds:unlock_user_section_proc,OFFSET UnlockUserSectionMultiple
     mov ds:lock_futex_proc,OFFSET LockFutexMultiple
     mov ds:unlock_futex_proc,OFFSET UnlockFutexMultiple
-    mov ds:fl_tlb_proc,OFFSET FlushTlbMultiple
     mov ds:fpu_exception_proc,OFFSET FpuExceptionMultiple
     mov ds:fpu_save_proc,OFFSET FpuSaveMultiple
 
@@ -3044,7 +2989,6 @@ ptab_init:
     mov es:ps_math_thread,0
     mov es:ps_apic,-1
     mov es:ps_last_lsb,0
-    mov es:ps_tlb_flush,0
     mov es:ps_lsb_tics,0
     mov es:ps_msb_tics,0
     mov es:ps_tlb.pt32_locked,0
@@ -4087,647 +4031,6 @@ do_flush_tlb  Proc far
     pop fs
     retf32    
 do_flush_tlb   ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           LockTlbBlock
-;
-;       DESCRIPTION:    Lock TLB block
-;
-;       PARAMETERS:     DS      Task sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockTlbBlock    Proc near
-
-ltbSpinLock:    
-    mov ax,ds:tlb_block_spinlock
-    or ax,ax
-    je ltbGet
-;
-    pause
-    jmp ltbSpinLock
-
-ltbGet:
-    cli
-    inc ax
-    xchg ax,ds:tlb_block_spinlock
-    or ax,ax
-    je ltbDone
-;
-    jmp ltbSpinLock
-
-ltbDone:
-    ret
-LockTlbBlock    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           UnlockTlbBlock
-;
-;       DESCRIPTION:    Unlock TLB block
-;
-;       PARAMETERS:     DS      Task sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockTlbBlock    Proc near
-    mov ds:tlb_block_spinlock,0
-    sti
-    ret
-UnlockTlbBlock    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           AllocateTlbBlock
-;
-;       DESCRIPTION:    Allocate 64-byte TLB block
-;
-;       PARAMETERS:     DS      Task sel
-;                       ES      Flat sel
-;
-;       RETURNS:        EDX     Data address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateTlbBlock PROC near
-    push eax
-;    
-    call LockTlbBlock
-    mov edx,ds:tlb_block_list
-    or edx,edx
-    jnz atbDone
-;
-    push ecx
-    sub ds:tlb_remain_linear,1000h
-    jnz atbUseMore
-;
-    CrashGate
-
-atbUseMore:
-    mov edx,ds:tlb_curr_linear
-    add ds:tlb_curr_linear,1000h
-    mov ds:tlb_block_list,edx
-    mov ecx,64
-    
-atbLoop:
-    mov eax,edx
-    add eax,ecx
-    mov es:[edx],eax
-    mov edx,eax
-    test dx,0FFFh
-    jnz atbLoop
-;
-    sub edx,ecx
-    mov dword ptr es:[edx],0
-    mov edx,ds:tlb_block_list
-    pop ecx
-
-atbDone:
-    mov eax,es:[edx]
-    mov ds:tlb_block_list,eax
-    call UnlockTlbBlock
-;
-    pop eax
-    ret
-AllocateTlbBlock ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           FreeTlbBlock
-;
-;       DESCRIPTION:    Free 64-byte TLB block
-;
-;       PARAMETERS:     DS      Task sel
-;                       ES      Flat sel
-;                       EDX     Data address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeTlbBlock     PROC near
-    push eax
-;    
-    call LockTlbBlock
-    mov eax,ds:tlb_block_list
-    mov es:[edx],eax
-    mov ds:tlb_block_list,edx
-    call UnlockTlbBlock
-;       
-    pop eax
-    ret
-FreeTlbBlock     ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LockTlb
-;
-;           DESCRIPTION:    Lock TLB
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockTlb    Proc near
-    mov ax,SEG data
-    mov ds,ax
-
-ltmSpinLock:    
-    mov ax,ds:tlb_spinlock
-    or ax,ax
-    je ltmGet
-;
-    pause
-    jmp ltmSpinLock
-
-ltmGet:
-    cli
-    inc ax
-    xchg ax,ds:tlb_spinlock
-    or ax,ax
-    je ltmDone
-;
-    jmp ltmSpinLock
-
-ltmDone:
-    ret
-LockTlb    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockTlb
-;
-;           DESCRIPTION:    Unlock TLB
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockTlb    Proc near
-    mov ds:tlb_spinlock,0
-    sti
-    ret
-UnlockTlb    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AllocateTlb
-;
-;           DESCRIPTION:    Allocate TLB header
-;
-;           PARAMETERS:     ES      Flat sel
-;                           EDX     Linear base
-;                           FS      Core sel
-;
-;           RETURNS:        EDX     Entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateTlb     Proc near
-    push ecx
-;    
-    push edx
-    call AllocateTlbBlock
-    pop es:[edx].th_linear
-    mov es:[edx].th_remain_cores,0
-;
-    lea edi,[edx].th_core_bits
-    xor al,al
-    mov ecx,MAX_CORES SHR 3
-    rep stos byte ptr es:[edi]
-;    
-    pop ecx
-    ret
-AllocateTlb     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           InsertTlb
-;
-;           DESCRIPTION:    Insert TLB entry
-;
-;           PARAMETERS:     ES      Flat sel
-;                           EDX     Entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertTlb     Proc near
-    mov eax,ds:tlb_list
-    mov es:[edx].th_next,eax
-    mov ds:tlb_list,edx
-    ret
-InsertTlb   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FlTlbMulti
-;
-;           DESCRIPTION:    Flush TLB entries
-;
-;           PARAMETERS:     ES      Flat sel
-;                           FS      Core sel
-;                           EDX     Entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FlTlbMulti     Proc near
-    push ax
-;
-    mov ax,fs:ps_id
-    bt es:[edx].th_core_bits,ax
-    jnc ftmDone
-;
-    push cx
-    push edi
-;    
-    mov edi,es:[edx].th_linear
-    mov cx,es:[edx].th_page_count
-
-ftmLoop:
-    invlpg es:[edi]
-    add edi,1000h
-    loop ftmLoop
-;    
-    mov ax,fs:ps_id
-    btr es:[edx].th_core_bits,ax
-    dec es:[edx].th_remain_cores
-;    
-    pop edi
-    pop cx
-
-ftmDone:
-    pop ax    
-    ret
-FlTlbMulti   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FlushTlbList
-;
-;           DESCRIPTION:    Flush TLB list
-;
-;           PARAMETERS:     DS      Task sel
-;                           ES      Flat sel
-;                           FS      Core sel
-;
-;           RETURNS:        NC      List is done
-;                           CY  ES  Entry that should be finalized
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FlushTlbList     Proc near
-    xor esi,esi
-    mov edx,ds:tlb_list
-
-ftlLoop:
-    or edx,edx
-    jz ftlEmpty
-;
-    call FlTlbMulti
-    mov ax,es:[edx].th_remain_cores
-    or ax,ax
-    jz ftlRemove
-;
-    mov esi,edx
-    mov edx,es:[edx].th_next
-    jmp ftlLoop
-
-ftlRemove:
-    or esi,esi
-    jz ftlRemoveHead
-;
-    mov eax,es:[edx].th_next
-    mov es:[esi].th_next,eax
-    stc
-    jmp ftlDone
-        
-ftlRemoveHead:
-    mov eax,es:[edx].th_next
-    mov ds:tlb_list,eax
-    stc 
-    jmp ftlDone      
-
-ftlEmpty:
-    clc
-
-ftlDone:    
-    ret
-FlushTlbList   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FreeTlb
-;
-;           DESCRIPTION:    Free TLB entries
-;
-;           PARAMETERS:     ES      Flat sel
-;                           FS      Core sel
-;                           EDX     Entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeTlb     Proc near
-    push eax
-    push ebx
-    push cx
-    push esi
-;    
-    mov cx,es:[edx].th_phys_count
-    lea esi,[edx].th_phys_arr
-    
-frtLoop:
-    mov eax,es:[esi]
-    xor ebx,ebx
-    FreePhysical
-    add esi,4
-    loop frtLoop
-
-frtDone:
-    pop esi
-    pop cx
-    pop ebx
-    pop eax    
-    ret
-FreeTlb   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UpdateTlbList
-;
-;           DESCRIPTION:    Update TLB list (scheduler should be locked)
-;
-;           PARAMETERS:     FS  Core sel
-;                           ES  Flat sel
-;                           DS  Task sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateTlbList    Proc near
-
-utlBaseLoop:
-    call LockTlb    
-    call FlushTlbList
-    pushf
-    call UnlockTlb
-    popf
-    sti
-    jnc utlDone
-;    
-    mov ax,es:[edx].th_phys_count
-    or ax,ax
-    jz utlBaseFreeBlock
-;    
-    call FreeTlb
-
-utlBaseFreeBlock:    
-    call FreeTlbBlock
-    jmp utlBaseLoop
-       
-utlDone:    
-    ret
-UpdateTlbList   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           NotifyFlushTlb
-;
-;           DESCRIPTION:    Flush request from core ISR (81)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_flush_tlb_name  DB 'Notify Flush TLB', 0
-
-notify_flush_tlb   Proc far
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,flat_sel
-    mov es,ax
-;    
-    call TryLockCore
-    call UpdateTlbList
-    call TryUnlockCore
-    retf32
-notify_flush_tlb   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupGlobalTlbCores
-;
-;           DESCRIPTION:    Setup global TLB cores that should handle the request
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupGlobalTlbCores    Proc near
-    push fs
-;
-    mov bx,OFFSET core_arr
-    mov cx,cs:core_count
-
-sgtcLoop:
-    mov fs,cs:[bx]
-    test fs:ps_flags,PS_FLAG_ACTIVE
-    jz sgtcNext
-;    
-    test fs:ps_flags,PS_FLAG_LOADING
-    jnz sgtcAdd
-;    
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz sgtcNoThread
-;
-    cmp ax,fs:ps_null_thread
-    je sgtcFlush
-
-sgtcAdd:        
-    mov ax,fs:ps_id
-    bts es:[edx].th_core_bits,ax
-    inc es:[edx].th_remain_cores
-    jmp sgtcNext
-
-sgtcNoThread:
-    test fs:ps_flags,PS_FLAG_LOADING
-    jnz sgtcAdd
-
-sgtcFlush:
-    lock or fs:ps_flags,PS_FLAG_FLUSH
-
-sgtcNext:
-    add bx,2
-    loop sgtcLoop
-;
-    pop fs
-    ret
-SetupGlobalTlbCores Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupProcessTlbCores
-;
-;           DESCRIPTION:    Setup process TLB cores that should handle the request
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupProcessTlbCores    Proc near
-    push ds
-    push fs
-;
-    mov bx,OFFSET core_arr
-    mov cx,cs:core_count
-    mov edi,cr3
-
-sptcLoop:
-    mov fs,cs:[bx]
-    test fs:ps_flags,PS_FLAG_ACTIVE
-    jz sptcNext
-;    
-    test fs:ps_flags,PS_FLAG_LOADING
-    jnz sptcAdd
-;
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz sptcNoThread
-;
-    cmp ax,fs:ps_null_thread
-    je sptcFlush
-;    
-    mov ds,ax
-    cmp edi,ds:p_cr3
-    jne sptcFlush
-
-sptcAdd:
-    mov ax,fs:ps_id
-    bts es:[edx].th_core_bits,ax
-    inc es:[edx].th_remain_cores
-    jmp sptcNext
-
-sptcNoThread:
-    test fs:ps_flags,PS_FLAG_LOADING
-    jnz sptcAdd
-    
-sptcFlush:  
-    lock or fs:ps_flags,PS_FLAG_FLUSH
-    
-sptcNext:
-    add bx,2
-    loop sptcLoop
-;
-    pop fs
-    pop ds
-    ret
-SetupProcessTlbCores Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SignalTlbCores
-;
-;           DESCRIPTION:    Signal cores that have new, pending requests
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SignalTlbCores    Proc near
-    push fs
-;
-    mov fs:ps_tlb_flush,1
-    mov si,fs:ps_sel
-    mov bx,OFFSET core_arr
-    mov cx,cs:core_count
-    xor di,di
-
-stcLoop:
-    bt es:[edx].th_core_bits,di
-    jnc stcNext
-;    
-    mov ax,cs:[bx]
-    cmp ax,si
-    je stcNext
-;
-    mov fs,ax
-    mov al,1
-    xchg al,fs:ps_tlb_flush
-    or al,al
-    jnz stcNext    
-;
-    mov al,81h
-    SendInt
-    sti
-
-stcNext:
-    add bx,2
-    inc di
-    loop stcLoop
-;
-    pop fs
-    ret
-SignalTlbCores  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FlushTlbMultiple
-;
-;           DESCRIPTION:    Flush TLB entries, multiple processor version
-;
-;           PARAMETERS:     CX      Number of entries
-;                           EDX     Linear address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FlushTlbMultiple    Proc near
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,flat_sel
-    mov es,ax
-;
-    call TryLockCore
-    pushf
-    mov ax,fs:ps_curr_thread
-    cmp ax,fs:ps_null_thread
-    jne ftmNorm
-
-ftmIrq:
-    call FlTlb486
-    popf
-    jmp ftmUnlock
-    
-ftmNorm:    
-    call AllocateTlb
-    mov es:[edx].th_page_count,cx
-    mov es:[edx].th_phys_count,0
-;    
-    call LockTlb
-    call SetupProcessTlbCores
-    call InsertTlb
-    call UnlockTlb
-    call SignalTlbCores
-;
-    popf
-    call UpdateTlbList
-
-ftmUnlock:   
-    call TryUnlockCore
-;    
-    popad
-    pop fs
-    pop es
-    pop ds
-    ret
-FlushTlbMultiple    Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -10078,16 +9381,7 @@ init       PROC far
     mov ds:term_thread_list,0
     mov ds:term_proc_list,0
     mov ds:list_lock,0
-    mov ds:tlb_spinlock,0
-    mov ds:tlb_list,0
-    mov ds:tlb_block_spinlock,0
-    mov ds:tlb_block_list,0
     mov ds:next_pid,0
-;
-    mov eax,TLB_LINEAR_SIZE
-    AllocateBigLinear
-    mov ds:tlb_curr_linear,edx    
-    mov ds:tlb_remain_linear,eax
 ;
     InitSection ds:futex_section
     mov ds:timer_spinlock,0
@@ -10178,12 +9472,6 @@ timer_free_list_create:
     mov di,OFFSET preempt_timer_expired_name
     xor cl,cl
     mov ax,preempt_timer_expired_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET notify_flush_tlb
-    mov edi,OFFSET notify_flush_tlb_name
-    xor cl,cl
-    mov ax,notify_flush_tlb_nr
     RegisterOsGate
 ;
     mov esi,OFFSET flush_tlb
