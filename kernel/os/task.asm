@@ -3949,8 +3949,6 @@ FlushTlb386    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FlushTlb486    Proc near
-    push eax
-    push bx
 
 ft486Again:
     mov eax,fs:ps_tlb.pt32_used
@@ -3961,11 +3959,8 @@ ft486Again:
     je ft486All
 ;
     push es
-    push cx
-    push edx
-    push si
-    push di
-;
+    pushad
+;    
     mov cx,fs
     mov es,cx
     mov cx,32
@@ -3993,10 +3988,7 @@ ft486Next:
     sub cx,1
     jnz ft486Loop
 ;
-    pop di
-    pop si
-    pop edx
-    pop cx
+    popad
     pop es    
     jmp ft486Again
 
@@ -4007,8 +3999,6 @@ ft486All:
     jmp ft486Again
 
 ft486Done:    
-    pop bx
-    pop eax
     ret
 FlushTlb486    Endp
 
