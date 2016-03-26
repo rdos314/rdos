@@ -3949,69 +3949,6 @@ FlushTlb486    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FlTlb386
-;
-;           DESCRIPTION:    Flush TLB entries, 386 processor version
-;
-;           PARAMETERS:     CX      Number of entries
-;                           EDX     Linear address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FlTlb386    Proc near
-    push eax
-    mov eax,cr3
-    mov cr3,eax
-    pop eax
-    ret
-FlTlb386    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FlTlb486
-;
-;           DESCRIPTION:    Flush TLB entries, 486+ processor version
-;
-;           PARAMETERS:     CX      Number of entries
-;                           EDX     Linear address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FlTlb486    Proc near
-    push ds
-    push ax
-    push cx
-    push edx
-;
-    cmp cx,4
-    jae ft4All
-;
-    mov ax,flat_sel
-    mov ds,ax
-
-ft4Loop:
-    invlpg [edx]
-    add edx,1000h
-    loop ft4Loop
-;
-    jmp ft4Done
-        
-ft4All:    
-    mov edx,cr3
-    mov cr3,edx
-
-ft4Done:    
-    pop edx
-    pop cx
-    pop ax
-    pop ds
-    ret
-FlTlb486    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           DoFlushTlb
 ;
 ;           DESCRIPTION:    Flush TLB callback from leave int
@@ -4055,9 +3992,15 @@ actTryLock:
     bsf ecx,eax
     jz actDone
 ;
+    cli
     lock bts fs:ps_tlb.pt32_locked,ecx
-    jc actTryLock
+    jnc actLockOk
 ;
+    sti
+    pause
+    jmp actTryLock
+
+actLockOk:
     mov di,cx
     shl di,2
     mov fs:[di].ps_tlb.pt32_linear_arr,edx
@@ -4066,10 +4009,13 @@ actTryLock:
     jnc actUnlock
 ;
     lock btc fs:ps_tlb.pt32_locked,ecx
+    sti
+    pause
     jmp actTryLock
 
 actUnlock:
     lock btc fs:ps_tlb.pt32_locked,ecx
+    sti
 
 actDone:    
     pop di
