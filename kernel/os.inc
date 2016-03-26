@@ -1458,41 +1458,50 @@ EnterInt    MACRO
                         ENDM
 
 LeaveInt    MACRO
+    local tucRetry
     local tucDone
     local tucSwap
     local tucTlbDone
 
-    pop ds
-    
-    sub ds:ps_nesting,1
+    pop fs
+
+tucRetry:    
+    cli    
+    sub fs:ps_nesting,1
     jnc tucDone
 ;    
-    mov eax,ds:ps_tlb.pt32_used
+    mov eax,fs:ps_tlb.pt32_used
     or eax,eax
     jz tucTlbDone
 ;
+    add fs:ps_nesting,1
+    jnc tucRetry
+;    
+    sti
     OsGate do_flush_tlb_nr
+    jmp tucRetry
 
 tucTlbDone:    
-    mov ax,ds:ps_curr_thread
+    mov ax,fs:ps_curr_thread
     or ax,ax
     jz tucDone
 ;
-    test ds:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
+    test fs:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
     jnz tucSwap
 ;    
-    mov ax,ds:ps_wakeup_list
+    mov ax,fs:ps_wakeup_list
     or ax,ax
     jz tucDone
 
 tucSwap:
-    add ds:ps_nesting,1
+    add fs:ps_nesting,1
+    jnc tucRetry
+;
     sti
-    mov ax,ds
-    mov fs,ax
     OsGate irq_schedule_nr
 
 tucDone:
+    sti
                         ENDM
 
 ;  OUT FS       Core sel

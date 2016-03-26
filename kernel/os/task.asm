@@ -3593,7 +3593,12 @@ tucRetry:
     or eax,eax
     jz tucTlbDone
 ;
+    add fs:ps_nesting,1
+    jnc tucRetry
+;
+    sti
     call cs:flush_tlb_proc
+    jmp tucRetry
 
 tucTlbDone:    
     mov ax,fs:ps_curr_thread
@@ -3648,7 +3653,12 @@ ucNestOk:
     or eax,eax
     jz ucTlbDone
 ;
+    add fs:ps_nesting,1
+    jnc ucRetry
+;
+    sti
     call cs:flush_tlb_proc
+    jmp ucRetry
 
 ucTlbDone:    
     test fs:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
@@ -3953,19 +3963,14 @@ FlushTlb486    Endp
 ;
 ;           DESCRIPTION:    Flush TLB callback from leave int
 ;
-;           PARAMETERS:     DS  Core
+;           PARAMETERS:     FS  Core, locked
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 do_flush_tlb_name  DB 'Do Flush TLB', 0
 
 do_flush_tlb  Proc far
-    push fs
-;    
-    mov fs,ds:ps_sel
     call cs:flush_tlb_proc
-;
-    pop fs
     retf32    
 do_flush_tlb   ENDP
    

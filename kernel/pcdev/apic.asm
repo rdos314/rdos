@@ -1228,7 +1228,6 @@ MsiEntry:
     mov ds,cs:msi_handler_data
     call fword ptr cs:msi_handler_ads
 ;
-    cli    
     LeaveInt
 ;
     pop ax
