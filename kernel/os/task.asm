@@ -1646,6 +1646,10 @@ load_actions_done:
     or ax,ax
     jnz load_relock
 ;
+    mov eax,fs:ps_tlb.pt32_used
+    or eax,eax
+    jnz load_relock
+;    
     test fs:ps_flags,PS_FLAG_TIMER
     jz load_regs
 
@@ -3989,20 +3993,37 @@ do_flush_tlb   ENDP
 AddCoreTlb     Proc near
     push eax
     push ecx
+    push si
     push di
+;
+    xor si,si 
 
 actTryLock:
     mov eax,fs:ps_tlb.pt32_used
+    or eax,fs:ps_tlb.pt32_locked
     not eax
     bsf ecx,eax
-    jz actDone
+    jnz actHasEntry
 ;
+    mov fs:ps_tlb.pt32_used,-1
+    mov fs:ps_tlb.pt32_locked,0
+    jmp actDone
+
+actHasEntry:    
     cli
     lock bts fs:ps_tlb.pt32_locked,ecx
     jnc actLockOk
 ;
     sti
     pause
+;    
+    inc si
+    cmp si,50
+    jb actTryLock
+;
+    mov eax,fs:ps_tlb.pt32_locked
+    mov edx,fs:ps_tlb.pt32_used
+    CrashGate
     jmp actTryLock
 
 actLockOk:
@@ -4016,6 +4037,14 @@ actLockOk:
     lock btc fs:ps_tlb.pt32_locked,ecx
     sti
     pause
+;    
+    inc si
+    cmp si,50
+    jb actTryLock
+;
+    mov eax,fs:ps_tlb.pt32_locked
+    mov edx,fs:ps_tlb.pt32_used
+    CrashGate
     jmp actTryLock
 
 actUnlock:
@@ -4024,6 +4053,7 @@ actUnlock:
 
 actDone:    
     pop di
+    pop si
     pop ecx
     pop eax
     ret
@@ -4095,9 +4125,12 @@ nfLoop:
     test fs:ps_flags,PS_FLAG_ACTIVE
     jz nfNext
 ;   
+    mov ax,fs:ps_nesting
+    cmp ax,-1
+    jne nfNext
+;        
     mov al,84h
     SendInt
-    jmp nfNext
 
 nfNext:
     add si,2
