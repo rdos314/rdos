@@ -4002,10 +4002,15 @@ do_flush_tlb   ENDP
 AddCoreTlb     Proc near
     push eax
     push ecx
-    push si
     push di
 ;
-    xor si,si 
+    cmp edx,system_mem_start 
+    jae actTryLock
+;
+    mov eax,cr3
+    and ax,0F000h
+    cmp eax,fs:ps_cr3
+    jne actDone
 
 actTryLock:
     mov eax,fs:ps_tlb.pt32_used
@@ -4025,14 +4030,6 @@ actHasEntry:
 ;
     sti
     pause
-;    
-    inc si
-    cmp si,50
-    jb actTryLock
-;
-    mov eax,fs:ps_tlb.pt32_locked
-    mov edx,fs:ps_tlb.pt32_used
-    CrashGate
     jmp actTryLock
 
 actLockOk:
@@ -4046,14 +4043,6 @@ actLockOk:
     lock btc fs:ps_tlb.pt32_locked,ecx
     sti
     pause
-;    
-    inc si
-    cmp si,50
-    jb actTryLock
-;
-    mov eax,fs:ps_tlb.pt32_locked
-    mov edx,fs:ps_tlb.pt32_used
-    CrashGate
     jmp actTryLock
 
 actUnlock:
@@ -4062,7 +4051,6 @@ actUnlock:
 
 actDone:    
     pop di
-    pop si
     pop ecx
     pop eax
     ret
