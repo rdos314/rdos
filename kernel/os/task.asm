@@ -2520,6 +2520,10 @@ iwmLockedOther:
 ;    
     lock or fs:ps_flags,PS_FLAG_PREEMPT
 ;
+    mov ax,fs:ps_nesting
+    cmp ax,-1
+    jne iwmIntOk
+;    
     mov al,84h
     SendInt    
 
