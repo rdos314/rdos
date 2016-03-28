@@ -1587,6 +1587,8 @@ load_reload_cr3_loop:
     mov eax,es:p_cr3
     mov cr3,eax
     mov fs:ps_tlb.pt32_used,0
+    and ax,0F000h
+    mov fs:ps_cr3,eax
 
 load_cr3_ok:
     mov eax,fs:ps_tlb.pt32_used
@@ -3001,6 +3003,9 @@ ptab_init:
     mov es:ps_msb_tics,0
     mov es:ps_tlb.pt32_locked,0
     mov es:ps_tlb.pt32_used,0
+    mov eax,cr3
+    and ax,0F000h
+    mov es:ps_cr3,eax
 ;    
     mov es:cs_usel,flat_sel
     mov es:cs_uoffs,0
