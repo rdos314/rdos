@@ -2170,16 +2170,8 @@ not_regs:
     GetCoreNumber
     jnc handle_next_set
 ;
-    mov dx,word ptr gs:ps_flags
-    mov ds:curr_num,0
     xor ax,ax
-    mov gs,ax
-    test dx,PS_FLAG_LONG_MODE
-    jz handle_func
-;
-    mov eax,gs:cs_cr3
-    SwitchToProtectedMode
-    jmp handle_func
+    GetCoreNumber
         
 handle_next_set:
     push dx
