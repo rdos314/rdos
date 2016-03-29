@@ -2785,7 +2785,7 @@ force_schedule_int:
     mov fs,ax
 ;
     EnterInt
-    inc fs:ps_sched_count
+    inc ds:ps_sched_count
 ;    
 ;    xor edx,edx
 ;    mov ax,2

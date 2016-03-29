@@ -1656,8 +1656,8 @@ load_actions_done:
     jz load_regs
 
 load_relock:
-    sti
     call LockCore
+    sti
     jmp load_retry
         
 load_regs:
@@ -1862,6 +1862,7 @@ SaveCurrentThread       Proc near
     push edx
 ;    
     call LockCore    
+    sti
 ;
     GetSystemTime
     mov ds,fs:ps_curr_thread
@@ -2015,6 +2016,7 @@ SaveLockedThread   Endp
 
 SkipCurrentThread       Proc near       
     call LockCore
+    sti
     push eax
     push ds
     GetSystemTime
@@ -2100,8 +2102,8 @@ run_ap_core:
     StartSyscall
 
 run_core_do:  
-    sti
     call LockCore
+    sti
     lock or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadThread
     
@@ -2375,7 +2377,14 @@ null_loop:
     mov fs:ps_curr_thread,0
     ShutdownCore    
 
-null_hlt:    
+null_hlt:  
+    mov ax,fs:ps_nesting
+    cmp ax,-1
+    je null_nest_ok
+;
+    CrashGate
+
+null_nest_ok:      
     hlt
     jmp null_loop
 
@@ -3580,7 +3589,6 @@ TryLockCore   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockCore      Proc near
-    pushf
     cli
     push word ptr core_data_sel
     pop fs
@@ -3591,7 +3599,6 @@ LockCore      Proc near
     CrashGate
 
 lcDone:     
-    popf
     ret
 LockCore      Endp
 
@@ -3620,8 +3627,11 @@ tucRetry:
     jz tucTlbDone
 ;
     add fs:ps_nesting,1
-    jnc tucRetry
+    jc tucFlush
 ;
+    CrashGate    
+
+tucFlush:
     sti
     call cs:flush_tlb_proc
     jmp tucRetry
@@ -3640,8 +3650,11 @@ tucTlbDone:
 
 tucSwap:
     add fs:ps_nesting,1
-    jnc tucRetry
+    jc tucSched
 ;
+    CrashGate
+
+tucSched:
     sti
     push OFFSET tucDone
     call SaveLockedThread
@@ -3680,8 +3693,11 @@ ucNestOk:
     jz ucTlbDone
 ;
     add fs:ps_nesting,1
-    jnc ucRetry
+    jc ucFlush
 ;
+    CrashGate    
+
+ucFlush:
     sti
     call cs:flush_tlb_proc
     jmp ucRetry
@@ -3696,8 +3712,11 @@ ucTlbDone:
 
 ucSwap:
     add fs:ps_nesting,1
-    jnc ucRetry
+    jc ucSched
 ;
+    CrashGate
+
+ucSched:
     sti
     push OFFSET ucDone
     call SaveLockedThread
@@ -3840,6 +3859,7 @@ unlock_task     Endp
 enter_long_int_name  DB 'Enter Long Int',0
 
 enter_long_int   Proc far
+    cli
     mov ax,core_data_sel
     mov ds,ax
     add ds:ps_nesting,1
@@ -4765,6 +4785,7 @@ init_first_thread:
     mov ds:p_kernel_esp,eax
 ;    
     call LockCore
+    sti
     mov di,es:p_prio
     mov fs:ps_prio_act,di
     call InsertCoreBlock
@@ -5126,6 +5147,7 @@ wait_for_signal PROC far
     push ax
 ;
     call LockCore
+    sti
     mov es,fs:ps_curr_thread
     call cs:lock_signal_proc
 ;    
@@ -5195,6 +5217,7 @@ wait_for_signal_timeout PROC far
     push edi
 ;
     call LockCore
+    sti
     mov es,fs:ps_curr_thread
     call cs:lock_signal_proc
 ;    
@@ -5259,6 +5282,7 @@ enter_section   PROC far
     push fs
 ;    
     call LockCore
+    sti
     call cs:lock_kernel_section_proc
     mov dx,ds:[esi].cs_list
     cmp dx,-1
@@ -5323,6 +5347,7 @@ leave_section   PROC far
     push fs
 ;
     call LockCore
+    sti
     call cs:lock_kernel_section_proc
     mov ax,ds:[esi].cs_list
     cmp ax,-1
@@ -5451,6 +5476,7 @@ cond_enter_section   PROC far
     push fs
 ;    
     call LockCore
+    sti
     call cs:lock_kernel_section_proc
     push ds
     mov ds,fs:ps_curr_thread
@@ -5529,6 +5555,7 @@ cecsUnlockFail:
     
 cecsDone:
     call LockCore
+    sti
     push ds
     push bx
 ;    
@@ -5756,6 +5783,7 @@ enter_user_section      PROC far
     je eusDone
 ;
     call LockCore
+    sti
     call cs:lock_user_section_proc
     mov ax,ds:[ebx].us_list
     cmp ax,-1
@@ -5882,6 +5910,7 @@ lusNotCountError:
     jc lusDone
 ;    
     call LockCore
+    sti
     call cs:lock_user_section_proc
     mov ax,ds:[ebx].us_list
     or ax,ax
@@ -6027,6 +6056,7 @@ acquire_handle_ok:
 
 acquire_no_sect:
     call LockCore
+    sti
     call cs:lock_futex_proc    
     mov ax,1
     xchg ax,es:[esi].fs_val
@@ -6159,6 +6189,7 @@ acquire_named_handle_ok:
 
 acquire_named_no_sect:
     call LockCore
+    sti
     call cs:lock_futex_proc    
     mov ax,1
     xchg ax,es:[esi].fs_val
@@ -6248,6 +6279,7 @@ release_futex   Proc near
     jc release_done
 ;
     call LockCore
+    sti
     call cs:lock_futex_proc    
 ;    
     mov ax,ds:[ebx].fh_list

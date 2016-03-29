@@ -1462,6 +1462,8 @@ EnterInt    MACRO
 
 LeaveInt    MACRO
     local tucRetry
+    local tucFlush
+    local tucSched
     local tucDone
     local tucSwap
     local tucTlbDone
@@ -1478,8 +1480,11 @@ tucRetry:
     jz tucTlbDone
 ;
     add fs:ps_nesting,1
-    jnc tucRetry
-;    
+    jc tucFlush
+;
+    CrashGate
+
+tucFlush:
     sti
     OsGate do_flush_tlb_nr
     jmp tucRetry
@@ -1498,8 +1503,11 @@ tucTlbDone:
 
 tucSwap:
     add fs:ps_nesting,1
-    jnc tucRetry
+    jc tucSched
 ;
+    CrashGate    
+
+tucSched:
     sti
     OsGate irq_schedule_nr
 
