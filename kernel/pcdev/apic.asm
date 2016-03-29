@@ -767,7 +767,6 @@ IsaIrqEntry:
     mov fs,ax
 ;
     EnterInt
-    sti
 ;       
     mov ds,cs:isa_irq_handler_data
     call fword ptr cs:isa_irq_handler_ads
@@ -1223,7 +1222,6 @@ MsiEntry:
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-    sti
 ;       
     mov ds,cs:msi_handler_data
     call fword ptr cs:msi_handler_ads

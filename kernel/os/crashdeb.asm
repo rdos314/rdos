@@ -1842,6 +1842,9 @@ AddToCrashLog   Proc near
     mov eax,dword ptr fs:cs_rdi
     mov dword ptr ds:[edi].cls_rdi,eax
 ;
+    mov ax,fs:ps_nesting
+    mov ds:[edi].cls_nesting,ax
+;
     mov bx,fs:cs_es
     mov eax,OFFSET cls_es
     call AddCrashSeg

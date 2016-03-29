@@ -75,6 +75,7 @@ public:
     ~TCrashCoreInfo();
 
     short int Core;    
+    short int Nesting;
 
     int Irq;
     int Fault;

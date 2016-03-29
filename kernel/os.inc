@@ -1451,10 +1451,12 @@ AddSchedulerLog    MACRO
                         ENDM
 
 EnterInt    MACRO
+    cli
     mov ax,core_data_sel
     mov ds,ax
-    add ds:ps_nesting,1
     push ds:ps_sel
+    add ds:ps_nesting,1
+    sti
                         ENDM
 
 LeaveInt    MACRO

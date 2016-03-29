@@ -208,13 +208,13 @@ void TShowCrashCommand::WriteThread(TCrashThreadInfo *info)
 
     if (info->Core)
     {
-        sprintf(str,"CORE=%d ", info->Core);    
+        sprintf(str,"CORE=%04hX ", info->Core);    
         Write(str);
     }
 
     if (info->WantedCore)
     {
-        sprintf(str,"WCORE=%d ", info->WantedCore);    
+        sprintf(str,"WCORE=%04hX ", info->WantedCore);    
         Write(str);
     }
 
@@ -360,6 +360,9 @@ void TShowCrashCommand::WriteCore(int core, TCrashCoreInfo *info)
     Write(str);
 
     sprintf(str, "CR4=%08lX\r\n", info->Cr4);    
+    Write(str);
+
+    sprintf(str, "NEST=%d\r\n", (int)info->Nesting);    
     Write(str);
 
     WriteSelector("TR", &info->Tr);

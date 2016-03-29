@@ -610,6 +610,8 @@ cls_r13         DQ ?
 cls_r14         DQ ?
 cls_r15         DQ ?
 
+cls_nesting     DW ?
+
 cls_es          core_log_seg_struc <>
 cls_cs          core_log_seg_struc <>
 cls_ss          core_log_seg_struc <>

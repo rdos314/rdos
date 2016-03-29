@@ -99,6 +99,8 @@ struct TRdosCrashCore
     long long R14;
     long long R15;
 
+    short int Nesting;
+
     struct TRdosSelector Es;
     struct TRdosSelector Cs;
     struct TRdosSelector Ss;
@@ -488,6 +490,8 @@ void TCrashInfo::GetCrashInfo(int Core)
         info->R13 = raw->R13;
         info->R14 = raw->R14;
         info->R15 = raw->R15;
+
+        info->Nesting = raw->Nesting;
 
         DecodeCrashSelector(&info->Es, &raw->Es);
         DecodeCrashSelector(&info->Cs, &raw->Cs);

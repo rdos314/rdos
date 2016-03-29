@@ -1656,7 +1656,6 @@ load_actions_done:
     jz load_regs
 
 load_relock:
-    sti
     call LockCore
     jmp load_retry
         
@@ -2100,7 +2099,6 @@ run_ap_core:
     StartSyscall
 
 run_core_do:  
-    sti
     call LockCore
     lock or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadThread
@@ -3549,10 +3547,12 @@ UnlockFutexMultiple    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TryLockCore   Proc near
+    cli
     push word ptr core_data_sel
     pop fs
-    add fs:ps_nesting,1
     mov fs,fs:ps_sel
+    add fs:ps_nesting,1
+    sti
     ret
 TryLockCore   Endp
 
@@ -3570,15 +3570,17 @@ TryLockCore   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockCore      Proc near
+    cli
     push word ptr core_data_sel
     pop fs
+    mov fs,fs:ps_sel
     add fs:ps_nesting,1
     jc lcDone
 ;
     CrashGate
 
 lcDone:     
-    mov fs,fs:ps_sel
+    sti
     ret
 LockCore      Endp
 
@@ -3799,9 +3801,11 @@ unlock_task     Proc far
     push fs
     push ax
 ;    
+    cli
     mov ax,core_data_sel
     mov fs,ax
     mov fs,fs:ps_sel
+    sti
     call UnlockCore
 ;
     pop ax
@@ -4082,6 +4086,9 @@ ftlbLoop:
     push edx
 ;    
     mov cx,cs:core_count
+    or cx,cx
+    jz ateDone
+;
     mov si,OFFSET core_arr
 
 ateLoop:
@@ -4104,9 +4111,12 @@ ateDone:
     sub cx,1
     jnz ftlbLoop    
 ;
+    mov cx,cs:core_count
+    or cx,cx
+    jz nfDone
+;
     call TryLockCore
     mov dx,fs
-    mov cx,cs:core_count
     mov si,OFFSET core_arr
 
 nfLoop:
@@ -4158,7 +4168,6 @@ timer_expired_name   DB 'Timer Expired', 0
 
 timer_expired    Proc far
     call TryLockCore
-    sti
     mov ax,SEG data
     mov ds,ax
 
