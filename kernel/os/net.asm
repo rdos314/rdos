@@ -1230,6 +1230,7 @@ register_net_driver     Proc far
     AllocateSmallGlobalMem
     pop eax
     mov es:d_packet_size,ecx
+    mov es:d_thread,0
     mov edi,OFFSET d_preview
     mov ecx,SIZE driver_data - OFFSET d_preview
     rep movs byte ptr es:[edi],ds:[esi]
@@ -1307,6 +1308,7 @@ register_ppp_driver     Proc far
     AllocateSmallGlobalMem
     pop eax
     mov es:d_packet_size,ecx
+    mov es:d_thread,0
     mov edi,OFFSET d_preview
     mov ecx,SIZE driver_data - OFFSET d_preview
     rep movs byte ptr es:[edi],ds:[esi]

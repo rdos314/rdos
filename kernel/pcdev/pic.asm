@@ -98,6 +98,7 @@ IrqEntry1:
     mov fs,ax
 ;
     EnterInt
+    sti
 ;       
     mov ds,cs:irq_handler_data
     call fword ptr cs:irq_handler_ads
@@ -175,6 +176,7 @@ IrqEntry2:
     mov fs,ax
 ;
     EnterInt
+    sti
 ;       
     mov ds,cs:irq_handler_data
     call fword ptr cs:irq_handler_ads

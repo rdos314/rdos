@@ -1656,6 +1656,7 @@ load_actions_done:
     jz load_regs
 
 load_relock:
+    sti
     call LockCore
     jmp load_retry
         
@@ -2099,6 +2100,7 @@ run_ap_core:
     StartSyscall
 
 run_core_do:  
+    sti
     call LockCore
     lock or fs:ps_flags,PS_FLAG_PREEMPT    
     jmp LoadThread
@@ -2706,6 +2708,7 @@ WakeThread      ENDP
 debug_block_name        DB 'Debug Block', 0
 
 debug_block:
+    mov ds,fs:ps_curr_thread
     lss esp,fword ptr fs:ps_stack_offset        
     call cs:fpu_save_proc    
 ;
@@ -3552,7 +3555,6 @@ TryLockCore   Proc near
     pop fs
     mov fs,fs:ps_sel
     add fs:ps_nesting,1
-    sti
     ret
 TryLockCore   Endp
 
@@ -3570,6 +3572,7 @@ TryLockCore   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockCore      Proc near
+    pushf
     cli
     push word ptr core_data_sel
     pop fs
@@ -3580,7 +3583,7 @@ LockCore      Proc near
     CrashGate
 
 lcDone:     
-    sti
+    popf
     ret
 LockCore      Endp
 
@@ -3801,11 +3804,12 @@ unlock_task     Proc far
     push fs
     push ax
 ;    
+    pushf
     cli
     mov ax,core_data_sel
     mov fs,ax
     mov fs,fs:ps_sel
-    sti
+    popf
     call UnlockCore
 ;
     pop ax
@@ -4116,6 +4120,7 @@ ateDone:
     jz nfDone
 ;
     call TryLockCore
+    sti
     mov dx,fs
     mov si,OFFSET core_arr
 
@@ -4168,6 +4173,7 @@ timer_expired_name   DB 'Timer Expired', 0
 
 timer_expired    Proc far
     call TryLockCore
+    sti
     mov ax,SEG data
     mov ds,ax
 
