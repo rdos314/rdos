@@ -2672,6 +2672,7 @@ WakeThread      PROC near
 ;    
     mov ds,dx
     call TryLockCore
+    sti
 ;
     mov di,ds:[esi]
     or di,di
@@ -4262,6 +4263,7 @@ preempt_expired_name   DB 'Preempt Expired', 0
 
 preempt_expired    Proc far
     call TryLockCore
+    sti
     jc reload_preempt_locked
 ;
     lock or fs:ps_flags,PS_FLAG_PREEMPT
@@ -4299,6 +4301,7 @@ preempt_timer_expired_name   DB 'Preempt Timer Expired', 0
 
 preempt_timer_expired    Proc far
     call TryLockCore
+    sti
     jc reload_timer_preempt_locked
 ;
     lock or fs:ps_flags,PS_FLAG_TIMER    
@@ -4554,6 +4557,7 @@ start_core_timer     PROC far
     pushad
 ;
     call TryLockCore
+    sti
     pushf
     call LockTimerCore
 ;    
@@ -5047,6 +5051,7 @@ signal_thread   PROC far
 ;
     mov es,bx
     call TryLockCore
+    sti
     call cs:lock_signal_proc
     mov es:p_signal,1
 ;    
@@ -5374,6 +5379,7 @@ cond_section_timeout Proc far
 ;    
     mov es,cx
     call TryLockCore
+    sti
 ;    
     mov eax,es:p_data
     cmp eax,-1
@@ -6695,6 +6701,7 @@ get_cpu_time    ENDP
 
 wake_until      PROC far
     call TryLockCore
+    sti
     mov es,cx
     call cs:insert_wakeup_proc
     call TryUnlockCore
