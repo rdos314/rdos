@@ -2785,6 +2785,7 @@ force_schedule_int:
     mov fs,ax
 ;
     EnterInt
+    inc fs:ps_sched_count
 ;    
 ;    xor edx,edx
 ;    mov ax,2
@@ -2798,6 +2799,7 @@ force_schedule_int:
     sti
 ;
     LeaveInt
+    dec fs:ps_sched_count
 ;
     pop ax
     verr ax

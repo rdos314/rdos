@@ -2526,6 +2526,13 @@ iwmLockedOther:
     cmp ax,-1
     jne iwmIntOk
 ;    
+    mov ax,fs:ps_sched_count
+    cmp ax,10
+    jb iwmIntSend
+;
+    CrashGate
+
+iwmIntSend:    
     mov al,84h
     SendInt    
 
@@ -4141,7 +4148,14 @@ nfLoop:
     mov ax,fs:ps_nesting
     cmp ax,-1
     jne nfNext
-;        
+;    
+    mov ax,fs:ps_sched_count
+    cmp ax,10
+    jb nfIntSend
+;
+    CrashGate
+
+nfIntSend:           
     mov al,84h
     SendInt
 
