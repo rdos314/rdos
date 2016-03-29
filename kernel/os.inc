@@ -1453,11 +1453,9 @@ AddSchedulerLog    MACRO
 EnterInt    MACRO
     cli
     mov ax,core_data_sel
-    mov ds,ax
-    mov ds,ds:ps_sel
-    add ds:ps_nesting,1
-    push ds
-
+    mov fs,ax
+    mov fs,fs:ps_sel
+    add fs:ps_nesting,1
                         ENDM
 
 LeaveInt    MACRO
@@ -1467,8 +1465,6 @@ LeaveInt    MACRO
     local tucDone
     local tucSwap
     local tucTlbDone
-
-    pop fs
 
 tucRetry:    
     cli    
