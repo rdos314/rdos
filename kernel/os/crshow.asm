@@ -2126,10 +2126,12 @@ WriteCpuReg64     Endp
 ;
 ;           PARAMETERS:     ES      Thread
 ;                           AX      Prio
+;                           DI      State offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteOneThread   PROC near
+    push es
     push ax
     push ebx
     push cx
@@ -2154,13 +2156,19 @@ WriteOneThread   PROC near
     mov dx,es:p_cs
     mov ebx,dword ptr es:p_rip
     call WriteHexPtr32
-    call NewLine
 ;
     pop di
+;
+    mov ax,cs
+    mov es,ax
+    call ShowAsciiz
+    call NewLine
+;    
     pop dx
     pop cx
     pop ebx
     pop ax
+    pop es
     ret
 WriteOneThread Endp
 
@@ -2175,6 +2183,11 @@ WriteOneThread Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+null_thread_name        DB ' Null',0
+curr_thread_name        DB ' Curr',0
+ready_thread_name       DB ' Rdy ',0
+wake_thread_name        DB ' Wake',0
+
 WriteCoreThreads   PROC near
     push es
     mov ax,cs
@@ -2187,6 +2200,7 @@ WriteCoreThreads   PROC near
     mov ax,gs:ps_null_thread
     mov es,ax
     xor ax,ax
+    mov di,OFFSET null_thread_name
     call WriteOneThread
 ;
     mov si,OFFSET ps_ptab
@@ -2199,6 +2213,7 @@ wctLoop:
     jz wctNext
 ;
     mov es,bx
+    mov di,OFFSET ready_thread_name
     call WriteOneThread
 
 wctListLoop:    
@@ -2207,6 +2222,7 @@ wctListLoop:
     je wctNext
 ;
     mov es,dx
+    mov di,OFFSET ready_thread_name
     call WriteOneThread
     jmp wctListLoop    
 
@@ -2215,6 +2231,29 @@ wctNext:
     add si,2
     loop wctLoop
 ;
+    mov bx,gs:ps_wakeup_list
+    or bx,bx
+    jz wcwDone
+;
+    mov es,bx
+    mov ax,es:p_prio
+    shr ax,1
+    mov di,OFFSET wake_thread_name
+    call WriteOneThread
+
+wcwListLoop:    
+    mov dx,es:p_next
+    cmp bx,dx
+    je wcwDone
+;
+    mov es,dx
+    mov ax,es:p_prio
+    shr ax,1
+    mov di,OFFSET wake_thread_name
+    call WriteOneThread
+    jmp wcwListLoop    
+
+wcwDone:
     mov ax,gs:ps_curr_thread
     or ax,ax
     jz wctDone
@@ -2225,6 +2264,7 @@ wctNext:
     mov es,ax
     mov ax,es:p_prio
     shr ax,1
+    mov di,OFFSET curr_thread_name
     call WriteOneThread
 
 wctDone:
