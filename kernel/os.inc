@@ -1595,8 +1595,15 @@ lsiSwap:
 lsiSched:
     sti
     OsGate irq_schedule_nr
+;    
     cli
-    jmp lsiDecNest
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:ps_sel
+    mov es,fs:ps_curr_thread
+    mov ax,fs:ps_nesting
+    cmp ax,-1
+    je lsiDecNest
         
 lsiStillLocked:
     mov ax,es
@@ -1614,14 +1621,7 @@ lsiLast:
     jnz lsiRetry
 
 lsiDecNest:
-    sub es:p_nest_count,1
-    jnz lsiDone
-;
-    mov ax,es:p_nest_unwind
-    or ax,ax
-    jz lsiDone
-;
-    CrashGate        
+    dec es:p_nest_count
 
 lsiDone:            
     sti
