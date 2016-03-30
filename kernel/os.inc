@@ -1511,6 +1511,124 @@ tucDone:
     sti
                         ENDM
 
+
+;   OUT FS  Core
+;   OUT ES  Thread
+EnterSmpInt    MACRO
+    local esiDone
+    
+    cli
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:ps_sel
+    add fs:ps_nesting,1
+;
+    mov ax,fs:ps_curr_thread
+    mov es,ax
+    or ax,ax
+    jz esiDone
+;    
+    inc es:p_nest_count
+    mov ax,es:p_nest_count
+    cmp ax,10
+    jb esiDone
+;
+    mov ax,es:p_nest_unwind
+    or ax,ax
+    jnz esiDone
+;    
+    add fs:ps_nesting,1
+    mov es:p_nest_unwind,1
+        
+esiDone:    
+                        ENDM
+;   IN FS  Core
+;   IN ES  Thread
+LeaveSmpInt    MACRO
+    local lsiRetry
+    local lsiFlush
+    local lsiSched
+    local lsiSwap
+    local lsiTlbDone
+    local LsiDecNest
+    local LsiLast
+    local lsiStillLocked
+    local LsiDone
+    
+lsiRetry:    
+    cli    
+    sub fs:ps_nesting,1
+    jnc lsiStillLocked
+;    
+    mov ax,es
+    or ax,ax
+    jz lsiDone
+;
+    mov eax,fs:ps_tlb.pt32_used
+    or eax,eax
+    jz lsiTlbDone
+;
+    add fs:ps_nesting,1
+    jc lsiFlush
+;
+    CrashGate
+
+lsiFlush:
+    sti
+    OsGate do_flush_tlb_nr
+    jmp lsiRetry
+
+lsiTlbDone:    
+    test fs:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
+    jnz lsiSwap
+;    
+    mov ax,fs:ps_wakeup_list
+    or ax,ax
+    jz lsiDecNest
+
+lsiSwap:
+    add fs:ps_nesting,1
+    jc lsiSched
+;
+    CrashGate    
+
+lsiSched:
+    sti
+    OsGate irq_schedule_nr
+    cli
+    jmp lsiDecNest
+        
+lsiStillLocked:
+    mov ax,es
+    or ax,ax
+    jz lsiDone
+;
+    mov ax,es:p_nest_count
+    cmp ax,1
+    jne lsiDecNest
+
+lsiLast:
+    xor ax,ax
+    xchg ax,es:p_nest_unwind
+    or ax,ax
+    jnz lsiRetry
+
+lsiDecNest:
+    sub es:p_nest_count,1
+    jnz lsiDone
+;
+    mov ax,es:p_nest_unwind
+    or ax,ax
+    jz lsiDone
+;
+    CrashGate        
+
+lsiDone:            
+    sti
+                        ENDM
+
+
+
 ;  OUT FS       Core sel
 TryLockTask    MACRO
     OsGate try_lock_task_nr

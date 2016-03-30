@@ -761,14 +761,10 @@ IsaIrqEntry:
     push es
     push fs
 ;
-    xor ax,ax
-    mov ds,ax
-    mov es,ax
-    mov fs,ax
-;
-    EnterInt
+    EnterSmpInt
     sti
     push fs
+    push es
 ;       
     mov ds,cs:isa_irq_handler_data
     call fword ptr cs:isa_irq_handler_ads
@@ -777,13 +773,14 @@ IsaIrqEntry:
     jmp cs:isa_irq_chain
 
 IsaIrqExit:
+    pop es
     pop fs
     cli    
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-    LeaveInt
+    LeaveSmpInt
 ;
     pop ax
     verr ax
@@ -1215,24 +1212,21 @@ MsiEntry:
     push es
     push fs
 ;
-    xor ax,ax
-    mov ds,ax
-    mov es,ax
-    mov fs,ax
-;
-    EnterInt
+    EnterSmpInt
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
     sti
     push fs
+    push es
 ;       
     mov ds,cs:msi_handler_data
     call fword ptr cs:msi_handler_ads
 ;
+    pop es
     pop fs
-    LeaveInt
+    LeaveSmpInt
 ;
     pop ax
     verr ax
@@ -2783,22 +2777,13 @@ force_schedule_int:
     push es
     push fs
 ;
-    xor ax,ax
-    mov ds,ax
-    mov es,ax
-    mov fs,ax
-;
-    EnterInt
-    inc fs:ps_sched_count
-;    
+    EnterSmpInt
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
     sti
-;
-    LeaveInt
-    dec fs:ps_sched_count
+    LeaveSmpInt
 ;
     pop ax
     verr ax

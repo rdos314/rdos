@@ -2349,6 +2349,8 @@ null_thread:
     mov es:p_core,fs
     mov es:p_wanted_core,0
     mov es:p_int_count,0
+    mov es:p_nest_count,0
+    mov es:p_nest_unwind,0
 ;
     push OFFSET null_loop_start
     call SaveCurrentThread
@@ -2382,6 +2384,11 @@ null_hlt:
     cmp ax,-1
     je null_nest_ok
 ;
+    mov ax,fs:ps_curr_thread
+    mov es,ax
+    mov cx,es:p_nest_count
+    mov dx,es:p_nest_unwind
+;    
     CrashGate
 
 null_nest_ok:      
@@ -2535,13 +2542,6 @@ iwmLockedOther:
     cmp ax,-1
     jne iwmIntOk
 ;    
-    mov ax,fs:ps_sched_count
-    cmp ax,10
-    jb iwmIntSend
-;
-    CrashGate
-
-iwmIntSend:    
     mov al,84h
     SendInt    
 
@@ -3596,6 +3596,15 @@ LockCore      Proc near
     add fs:ps_nesting,1
     jc lcDone
 ;
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz lcThreadOk
+;
+    mov es,ax
+    mov cx,es:p_nest_count
+    mov dx,es:p_nest_unwind
+
+lcThreadOk:    
     CrashGate
 
 lcDone:     
@@ -3756,6 +3765,8 @@ LoadUnlockCore    Endp
 ;           NAME:           IrqSchedule
 ;
 ;           DESCRIPTION:    IRQ scheduling
+;
+;           PARAMETERS:     FS  Core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4169,13 +4180,6 @@ nfLoop:
     cmp ax,-1
     jne nfNext
 ;    
-    mov ax,fs:ps_sched_count
-    cmp ax,10
-    jb nfIntSend
-;
-    CrashGate
-
-nfIntSend:           
     mov al,84h
     SendInt
 
@@ -7627,6 +7631,8 @@ init_thread_block       PROC near
     mov es:p_signal_spinlock,0
     mov es:p_wanted_core,0
     mov es:p_int_count,0
+    mov es:p_nest_count,0
+    mov es:p_nest_unwind,0
     mov ax,ds:p_app_sel
     mov es:p_app_sel,ax
     mov ax,ds:p_ldt_sel
@@ -8953,6 +8959,8 @@ create_first_thread       PROC near
     mov es:p_signal_spinlock,0
     mov es:p_wanted_core,0
     mov es:p_int_count,0
+    mov es:p_nest_count,0
+    mov es:p_nest_unwind,0
     mov es:p_signal,0
     mov es:p_parent_switch,0
     mov es:p_wait_list,0
@@ -9106,6 +9114,8 @@ init_first_process      Proc near
     mov es:p_signal_spinlock,0
     mov es:p_wanted_core,0
     mov es:p_int_count,0
+    mov es:p_nest_count,0
+    mov es:p_nest_unwind,0
     mov es:p_core,fs
     mov es:p_sleep_sel,0
     ret

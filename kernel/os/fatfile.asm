@@ -664,10 +664,10 @@ get_file_cluster_loop:
 	jnz get_file_cluster_next
 ;
 	mov edx,es:[eax-4]
-	push ax
+	push eax
 	mov al,fs:file_drive
 	call next_cluster
-	pop ax
+	pop eax
 	mov es:[eax],edx
 
 get_file_cluster_next:
