@@ -2782,7 +2782,6 @@ force_schedule_int:
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-    sti
     LeaveSmpInt
 ;
     pop ax

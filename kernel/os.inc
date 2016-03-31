@@ -1624,7 +1624,6 @@ lsiDecNest:
     dec es:p_nest_count
 
 lsiDone:            
-    sti
                         ENDM
 
 
