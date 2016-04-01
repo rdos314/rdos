@@ -9394,11 +9394,36 @@ test_gate_name    DB 'Test Gate',0
 test_gate_pr    Proc far
     mov ax,1234h
     push ax
+    pop ds
+;
+    nop
+    mov ax,1BBh
+    mov ds,ax        
+;    
+    mov ax,1234h
+    push ax
     pop es
 ;
     nop
     mov ax,1BBh
     mov es,ax        
+;    
+    push fs
+    mov ax,1234h
+    push ax
+    pop fs
+;
+    nop
+    pop fs
+;    
+    mov ax,1BBh
+    mov gs,ax
+;    
+    mov ax,1234h
+    push ax
+    pop gs
+;
+    nop
     retf32
 test_gate_pr    Endp
 

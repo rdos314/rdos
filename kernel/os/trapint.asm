@@ -1503,7 +1503,6 @@ pop_ds32:
     jmp ret_seg32
     
 pop_es:
-    int 3
     mov ax,[ebp].trap_esp
     and ax,0FFFCh
     mov bx,[ebp].trap_err
@@ -1532,6 +1531,68 @@ pop_es32:
     inc dword ptr [ebp].trap_eip
     xor ax,ax
     mov es,ax
+    jmp ret_ds_seg32
+    
+pop_fs:
+    mov ax,[ebp].trap_esp
+    and ax,0FFFCh
+    mov bx,[ebp].trap_err
+    and bx,0FFFCh
+    cmp ax,bx
+    je pop_fs_clear
+    jmp emulate
+
+pop_fs_clear:    
+    mov bx,[ebp].trap_cs
+    GetSelectorBitness
+    cmp al,16
+    je pop_fs16
+;
+    cmp al,32
+    je pop_fs32
+    jmp emulate    
+
+pop_fs16:    
+    add dword ptr [ebp].trap_eip,2
+    xor ax,ax
+    mov fs,ax
+    jmp ret_ds_seg16
+    
+pop_fs32:    
+    add dword ptr [ebp].trap_eip,2
+    xor ax,ax
+    mov fs,ax
+    jmp ret_ds_seg32
+    
+pop_gs:
+    mov ax,[ebp].trap_esp
+    and ax,0FFFCh
+    mov bx,[ebp].trap_err
+    and bx,0FFFCh
+    cmp ax,bx
+    je pop_gs_clear
+    jmp emulate
+
+pop_gs_clear:    
+    mov bx,[ebp].trap_cs
+    GetSelectorBitness
+    cmp al,16
+    je pop_gs16
+;
+    cmp al,32
+    je pop_gs32
+    jmp emulate    
+
+pop_gs16:    
+    add dword ptr [ebp].trap_eip,2
+    xor ax,ax
+    mov gs,ax
+    jmp ret_ds_seg16
+    
+pop_gs32:    
+    add dword ptr [ebp].trap_eip,2
+    xor ax,ax
+    mov gs,ax
     jmp ret_ds_seg32
 
 ret_ds_seg16:
@@ -1584,6 +1645,16 @@ load_opov:
     je load_sreg
     jmp emulate
 
+fault_0F:
+    mov al,ds:[ebx+1]
+    cmp al,0A1h
+    je pop_fs
+;
+    cmp al,0A9h
+    je pop_gs 
+;       
+    jmp emulate    
+
 fault_call_tab:
 flt_00 DW OFFSET emulate,            OFFSET emulate
 flt_02 DW OFFSET emulate,            OFFSET emulate
@@ -1592,7 +1663,7 @@ flt_06 DW OFFSET emulate,            OFFSET pop_es
 flt_08 DW OFFSET emulate,            OFFSET emulate
 flt_0A DW OFFSET emulate,            OFFSET emulate
 flt_0C DW OFFSET emulate,            OFFSET emulate
-flt_0E DW OFFSET emulate,            OFFSET emulate
+flt_0E DW OFFSET emulate,            OFFSET fault_0F
 flt_10 DW OFFSET emulate,            OFFSET emulate
 flt_12 DW OFFSET emulate,            OFFSET emulate
 flt_14 DW OFFSET emulate,            OFFSET emulate
