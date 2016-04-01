@@ -2494,7 +2494,7 @@ iwmLockedOther:
     cmp ax,-1
     jne iwmIntOk
 ;    
-    mov al,84h
+    mov al,81h
     SendInt    
 
 iwmIntOk:
@@ -4132,7 +4132,7 @@ nfLoop:
     cmp ax,-1
     jne nfNext
 ;    
-    mov al,84h
+    mov al,81h
     SendInt
 
 nfNext:

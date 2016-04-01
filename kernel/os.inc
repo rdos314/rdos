@@ -2005,6 +2005,11 @@ SetupLongSpuriousInt   MACRO
                     ENDM
 
 ; IN  AL        IRQ #
+SetupLongScheduleInt   MACRO
+    OsGate setup_long_schedule_int_nr
+                    ENDM
+
+; IN  AL        IRQ #
 SetupLongTimerInt   MACRO
     OsGate setup_long_timer_int_nr
                     ENDM

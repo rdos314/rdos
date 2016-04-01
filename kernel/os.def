@@ -688,4 +688,6 @@ do_flush_tlb_nr             = 561
 
 get_sel_bitness_nr          = 562
 
+setup_long_schedule_int_nr  = 563
+
 osgate_entries				= 580

@@ -2689,10 +2689,22 @@ siTimerOk:
     SetupLongPreemptInt
 
 siPreemptOk:
+    mov al,81h
+    mov esi,OFFSET force_schedule_int
+    SetupIntGate
+;        
+    mov ax,setup_long_schedule_int_nr
+    IsValidOsGate
+    jc siSchedOk
+;    
+    mov al,82h
+    SetupLongScheduleInt
+
+siSchedOk:
     mov al,82h
     mov esi,OFFSET hpet_int
     SetupIntGate
-;    
+;        
     mov ax,setup_long_hpet_int_nr
     IsValidOsGate
     jc siHpetOk
@@ -2713,10 +2725,6 @@ siHpetOk:
     SetupLongPreemptTimerInt
 
 siPreemptTimerOk:
-    mov al,84h
-    mov esi,OFFSET force_schedule_int
-    SetupIntGate
-;    
     popad
     pop ds
     ret
