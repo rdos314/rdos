@@ -782,33 +782,9 @@ IsaIrqExit:
     mov ds:APIC_EOI,eax
     LeaveSmpInt
 ;
-    pop ax
-    verr ax
-    jz IrqExitFs
-;    
-    xor ax,ax
-
-IrqExitFs:
-    mov fs,ax
-;
-    pop ax
-    verr ax
-    jz IrqExitEs
-;    
-    xor ax,ax
-
-IrqExitEs:
-    mov es,ax
-;
-    pop ax
-    verr ax
-    jz IrqExitDs
-;    
-    xor ax,ax
-
-IrqExitDs:
-    mov ds,ax
-;
+    pop fs
+    pop es
+    pop ds
     popad
     iretd
 
@@ -1228,33 +1204,9 @@ MsiEntry:
     pop fs
     LeaveSmpInt
 ;
-    pop ax
-    verr ax
-    jz MsiExitFs
-;    
-    xor ax,ax
-
-MsiExitFs:
-    mov fs,ax
-;
-    pop ax
-    verr ax
-    jz MsiExitEs
-;    
-    xor ax,ax
-
-MsiExitEs:
-    mov es,ax
-;
-    pop ax
-    verr ax
-    jz MsiExitDs
-;    
-    xor ax,ax
-
-MsiExitDs:
-    mov ds,ax
-;
+    pop fs
+    pop es
+    pop ds
     popad
     iretd
     
@@ -2391,23 +2343,8 @@ ghtGet:
     mov ds:time_spinlock,0
     sti
 ;
-    pop cx
-    verr cx
-    jz hpet_time_es_ok
-;
-    xor cx,cx
-    
-hpet_time_es_ok:
-    mov es,cx
-;
-    pop cx
-    verr cx
-    jz hpet_time_ds_ok
-;
-    xor cx,cx
-    
-hpet_time_ds_ok:
-    mov ds,cx
+    pop es
+    pop ds
     pop ecx
     retf32
 get_hpet_time  Endp
@@ -2532,33 +2469,9 @@ timer_int:
 ;    
     TimerExpired
 ;
-    pop ax
-    verr ax
-    jz timer_fs_ok
-;
-    xor ax,ax
-
-timer_fs_ok:
-    mov fs,ax
-;    
-    pop ax
-    verr ax
-    jz timer_es_ok
-;
-    xor ax,ax
-
-timer_es_ok:
-    mov es,ax
-;    
-    pop ax
-    verr ax
-    jz timer_ds_ok
-;
-    xor ax,ax
-
-timer_ds_ok:
-    mov ds,ax
-;    
+    pop fs
+    pop es
+    pop ds
     popad
     iretd
 
@@ -2597,33 +2510,9 @@ hpet_int:
     TimerExpired
 
 hpet_int_done:
-    pop ax
-    verr ax
-    jz hpet_fs_ok
-;
-    xor ax,ax
-
-hpet_fs_ok:
-    mov fs,ax
-;    
-    pop ax
-    verr ax
-    jz hpet_es_ok
-;
-    xor ax,ax
-
-hpet_es_ok:
-    mov es,ax
-;    
-    pop ax
-    verr ax
-    jz hpet_ds_ok
-;
-    xor ax,ax
-
-hpet_ds_ok:
-    mov ds,ax
-;    
+    pop fs
+    pop es
+    pop ds
     popad
     iretd
 
@@ -2674,33 +2563,9 @@ preempt_int:
 ;    
     PreemptExpired
 ;
-    pop ax
-    verr ax
-    jz preempt_fs_ok
-;
-    xor ax,ax
-
-preempt_fs_ok:
-    mov fs,ax
-;    
-    pop ax
-    verr ax
-    jz preempt_es_ok
-;
-    xor ax,ax
-
-preempt_es_ok:
-    mov es,ax
-;    
-    pop ax
-    verr ax
-    jz preempt_ds_ok
-;
-    xor ax,ax
-
-preempt_ds_ok:
-    mov ds,ax
-;    
+    pop fs
+    pop es
+    pop ds
     popad
     iretd
 
@@ -2732,33 +2597,9 @@ mixed_int:
 ;    
     PreemptTimerExpired
 ;
-    pop ax
-    verr ax
-    jz mixed_fs_ok
-;
-    xor ax,ax
-
-mixed_fs_ok:
-    mov fs,ax
-;    
-    pop ax
-    verr ax
-    jz mixed_es_ok
-;
-    xor ax,ax
-
-mixed_es_ok:
-    mov es,ax
-;    
-    pop ax
-    verr ax
-    jz mixed_ds_ok
-;
-    xor ax,ax
-
-mixed_ds_ok:
-    mov ds,ax
-;    
+    pop fs
+    pop es
+    pop ds
     popad
     iretd
 
@@ -2784,32 +2625,9 @@ force_schedule_int:
     mov ds:APIC_EOI,eax
     LeaveSmpInt
 ;
-    pop ax
-    verr ax
-    jz FsExitFs
-;    
-    xor ax,ax
-
-FsExitFs:
-    mov fs,ax
-;
-    pop ax
-    verr ax
-    jz FsExitEs
-;    
-    xor ax,ax
-
-FsExitEs:
-    mov es,ax
-;
-    pop ax
-    verr ax
-    jz FsExitDs
-;    
-    xor ax,ax
-
-FsExitDs:
-    mov ds,ax
+    pop fs
+    pop es
+    pop ds
     popad
     iretd    
 
