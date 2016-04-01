@@ -1412,6 +1412,200 @@ t12_ret:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+load_ds Proc near
+    add ebx,2
+    mov [ebp].trap_eip,ebx
+    mov word ptr [ebp].trap_pds,0
+    ret
+load_ds Endp
+
+load_es Proc near
+    add ebx,2
+    mov [ebp].trap_eip,ebx
+    xor ax,ax
+    mov es,ax
+    ret
+load_es Endp
+
+load_fs Proc near
+    add ebx,2
+    mov [ebp].trap_eip,ebx
+    xor ax,ax
+    mov fs,ax
+    ret
+load_fs Endp
+
+load_gs Proc near
+    add ebx,2
+    mov [ebp].trap_eip,ebx
+    xor ax,ax
+    mov gs,ax
+    ret
+load_gs Endp
+
+load_seg_tab:
+lst00  DW OFFSET load_es
+lst01  DW OFFSET emulate
+lst02  DW OFFSET emulate
+lst03  DW OFFSET load_ds
+lst04  DW OFFSET load_fs
+lst05  DW OFFSET load_gs
+lst06  DW OFFSET emulate
+lst07  DW OFFSET emulate
+
+load_sreg   Proc near
+    mov al,ds:[ebx+1]
+    and al,0C0h
+    cmp al,0C0h
+    jne lsEm
+;    
+    mov al,ds:[ebx+1]
+    and al,38h
+    shr al,3
+    movzx eax,al
+    jmp word ptr cs:[eax*2].load_seg_tab
+
+lsEm:
+    jmp emulate    
+load_sreg   Endp
+
+load_opov:
+    inc ebx
+    mov al,ds:[ebx]
+    cmp al,8Eh
+    je load_sreg
+    jmp emulate
+
+fault_call_tab:
+flt_00 DW OFFSET emulate,            OFFSET emulate
+flt_02 DW OFFSET emulate,            OFFSET emulate
+flt_04 DW OFFSET emulate,            OFFSET emulate
+flt_06 DW OFFSET emulate,            OFFSET emulate
+flt_08 DW OFFSET emulate,            OFFSET emulate
+flt_0A DW OFFSET emulate,            OFFSET emulate
+flt_0C DW OFFSET emulate,            OFFSET emulate
+flt_0E DW OFFSET emulate,            OFFSET emulate
+flt_10 DW OFFSET emulate,            OFFSET emulate
+flt_12 DW OFFSET emulate,            OFFSET emulate
+flt_14 DW OFFSET emulate,            OFFSET emulate
+flt_16 DW OFFSET emulate,            OFFSET emulate
+flt_18 DW OFFSET emulate,            OFFSET emulate
+flt_1A DW OFFSET emulate,            OFFSET emulate
+flt_1C DW OFFSET emulate,            OFFSET emulate
+flt_1E DW OFFSET emulate,            OFFSET emulate
+flt_20 DW OFFSET emulate,            OFFSET emulate
+flt_22 DW OFFSET emulate,            OFFSET emulate
+flt_24 DW OFFSET emulate,            OFFSET emulate
+flt_26 DW OFFSET emulate,            OFFSET emulate
+flt_28 DW OFFSET emulate,            OFFSET emulate
+flt_2A DW OFFSET emulate,            OFFSET emulate
+flt_2C DW OFFSET emulate,            OFFSET emulate
+flt_2E DW OFFSET emulate,            OFFSET emulate
+flt_30 DW OFFSET emulate,            OFFSET emulate
+flt_32 DW OFFSET emulate,            OFFSET emulate
+flt_34 DW OFFSET emulate,            OFFSET emulate
+flt_36 DW OFFSET emulate,            OFFSET emulate
+flt_38 DW OFFSET emulate,            OFFSET emulate
+flt_3A DW OFFSET emulate,            OFFSET emulate
+flt_3C DW OFFSET emulate,            OFFSET emulate
+flt_3E DW OFFSET emulate,            OFFSET emulate
+flt_40 DW OFFSET emulate,            OFFSET emulate
+flt_42 DW OFFSET emulate,            OFFSET emulate
+flt_44 DW OFFSET emulate,            OFFSET emulate
+flt_46 DW OFFSET emulate,            OFFSET emulate
+flt_48 DW OFFSET emulate,            OFFSET emulate
+flt_4A DW OFFSET emulate,            OFFSET emulate
+flt_4C DW OFFSET emulate,            OFFSET emulate
+flt_4E DW OFFSET emulate,            OFFSET emulate
+flt_50 DW OFFSET emulate,            OFFSET emulate
+flt_52 DW OFFSET emulate,            OFFSET emulate
+flt_54 DW OFFSET emulate,            OFFSET emulate
+flt_56 DW OFFSET emulate,            OFFSET emulate
+flt_58 DW OFFSET emulate,            OFFSET emulate
+flt_5A DW OFFSET emulate,            OFFSET emulate
+flt_5C DW OFFSET emulate,            OFFSET emulate
+flt_5E DW OFFSET emulate,            OFFSET emulate
+flt_60 DW OFFSET emulate,            OFFSET emulate
+flt_62 DW OFFSET emulate,            OFFSET emulate
+flt_64 DW OFFSET emulate,            OFFSET emulate
+flt_66 DW OFFSET load_opov,          OFFSET emulate
+flt_68 DW OFFSET emulate,            OFFSET emulate
+flt_6A DW OFFSET emulate,            OFFSET emulate
+flt_6C DW OFFSET emulate,            OFFSET emulate
+flt_6E DW OFFSET emulate,            OFFSET emulate
+flt_70 DW OFFSET emulate,            OFFSET emulate
+flt_72 DW OFFSET emulate,            OFFSET emulate
+flt_74 DW OFFSET emulate,            OFFSET emulate
+flt_76 DW OFFSET emulate,            OFFSET emulate
+flt_78 DW OFFSET emulate,            OFFSET emulate
+flt_7A DW OFFSET emulate,            OFFSET emulate
+flt_7C DW OFFSET emulate,            OFFSET emulate
+flt_7E DW OFFSET emulate,            OFFSET emulate
+flt_80 DW OFFSET emulate,            OFFSET emulate
+flt_82 DW OFFSET emulate,            OFFSET emulate
+flt_84 DW OFFSET emulate,            OFFSET emulate
+flt_86 DW OFFSET emulate,            OFFSET emulate
+flt_88 DW OFFSET emulate,            OFFSET emulate
+flt_8A DW OFFSET emulate,            OFFSET emulate
+flt_8C DW OFFSET emulate,            OFFSET emulate
+flt_8E DW OFFSET load_sreg,          OFFSET emulate
+flt_90 DW OFFSET emulate,            OFFSET emulate
+flt_92 DW OFFSET emulate,            OFFSET emulate
+flt_94 DW OFFSET emulate,            OFFSET emulate
+flt_96 DW OFFSET emulate,            OFFSET emulate
+flt_98 DW OFFSET emulate,            OFFSET emulate
+flt_9A DW OFFSET emulate,            OFFSET emulate
+flt_9C DW OFFSET emulate,            OFFSET emulate
+flt_9E DW OFFSET emulate,            OFFSET emulate
+flt_A0 DW OFFSET emulate,            OFFSET emulate
+flt_A2 DW OFFSET emulate,            OFFSET emulate
+flt_A4 DW OFFSET emulate,            OFFSET emulate
+flt_A6 DW OFFSET emulate,            OFFSET emulate
+flt_A8 DW OFFSET emulate,            OFFSET emulate
+flt_AA DW OFFSET emulate,            OFFSET emulate
+flt_AC DW OFFSET emulate,            OFFSET emulate
+flt_AE DW OFFSET emulate,            OFFSET emulate
+flt_B0 DW OFFSET emulate,            OFFSET emulate
+flt_B2 DW OFFSET emulate,            OFFSET emulate
+flt_B4 DW OFFSET emulate,            OFFSET emulate
+flt_B6 DW OFFSET emulate,            OFFSET emulate
+flt_B8 DW OFFSET emulate,            OFFSET emulate
+flt_BA DW OFFSET emulate,            OFFSET emulate
+flt_BC DW OFFSET emulate,            OFFSET emulate
+flt_BE DW OFFSET emulate,            OFFSET emulate
+flt_C0 DW OFFSET emulate,            OFFSET emulate
+flt_C2 DW OFFSET emulate,            OFFSET emulate
+flt_C4 DW OFFSET emulate,            OFFSET emulate
+flt_C6 DW OFFSET emulate,            OFFSET emulate
+flt_C8 DW OFFSET emulate,            OFFSET emulate
+flt_CA DW OFFSET emulate,            OFFSET emulate
+flt_CC DW OFFSET emulate,            OFFSET emulate
+flt_CE DW OFFSET emulate,            OFFSET emulate
+flt_D0 DW OFFSET emulate,            OFFSET emulate
+flt_D2 DW OFFSET emulate,            OFFSET emulate
+flt_D4 DW OFFSET emulate,            OFFSET emulate
+flt_D6 DW OFFSET emulate,            OFFSET emulate
+flt_D8 DW OFFSET emulate,            OFFSET emulate
+flt_DA DW OFFSET emulate,            OFFSET emulate
+flt_DC DW OFFSET emulate,            OFFSET emulate
+flt_DE DW OFFSET emulate,            OFFSET emulate
+flt_E0 DW OFFSET emulate,            OFFSET emulate
+flt_E2 DW OFFSET emulate,            OFFSET emulate
+flt_E4 DW OFFSET emulate,            OFFSET emulate
+flt_E6 DW OFFSET emulate,            OFFSET emulate
+flt_E8 DW OFFSET emulate,            OFFSET emulate
+flt_EA DW OFFSET emulate,            OFFSET emulate
+flt_EC DW OFFSET emulate,            OFFSET emulate
+flt_EE DW OFFSET emulate,            OFFSET emulate
+flt_F0 DW OFFSET emulate,            OFFSET emulate
+flt_F2 DW OFFSET emulate,            OFFSET emulate
+flt_F4 DW OFFSET emulate,            OFFSET emulate
+flt_F6 DW OFFSET emulate,            OFFSET emulate
+flt_F8 DW OFFSET emulate,            OFFSET emulate
+flt_FA DW OFFSET emulate,            OFFSET emulate
+flt_FC DW OFFSET emulate,            OFFSET emulate
+flt_FE DW OFFSET emulate,            OFFSET emulate
+
 trap_13:
     push ebp
     mov ebp,esp
@@ -1585,6 +1779,17 @@ t13_default:
     mov ds,ax
     call ds:leave_patch_proc
 ;
+    mov bx,[ebp].trap_cs
+    test bx,3
+    jnz t13_em_app
+;    
+    mov ds,[ebp].trap_cs
+    mov ebx,[ebp].trap_eip
+    movzx eax,byte ptr [ebx]
+    call word ptr cs:[eax*2].fault_call_tab
+    jmp t13_end
+
+t13_em_app:
     call emulate
     jmp t13_end
 

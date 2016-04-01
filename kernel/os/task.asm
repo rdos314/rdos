@@ -9392,6 +9392,32 @@ get_crash_core32:
 test_gate_name    DB 'Test Gate',0
 
 test_gate_pr    Proc far
+    mov ax,1234h
+    mov ds,ax
+    mov bx,ax
+    mov es,ax
+    mov bx,ax
+    mov fs,ax
+    mov bx,ax
+    mov gs,ax
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
+;
+    mov eax,1234h        
+    mov ds,eax
+    mov bx,ax
+    mov es,eax
+    mov bx,ax
+    mov fs,eax
+    mov bx,ax
+    mov gs,eax
+;
+    xor ax,ax
+    mov gs,ax
     retf32
 test_gate_pr    Endp
 
