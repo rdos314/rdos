@@ -9379,54 +9379,6 @@ get_crash_core16:
 get_crash_core32:
     call get_crash_core
     retf32
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:           Test gate
-;
-;               DESCRIPTION:    Test gate
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_gate_name    DB 'Test Gate',0
-
-test_gate_pr    Proc far
-    mov ax,1234h
-    push ax
-    pop ds
-;
-    nop
-    mov ax,1BBh
-    mov ds,ax        
-;    
-    mov ax,1234h
-    push ax
-    pop es
-;
-    nop
-    mov ax,1BBh
-    mov es,ax        
-;    
-    push fs
-    mov ax,1234h
-    push ax
-    pop fs
-;
-    nop
-    pop fs
-;    
-    mov ax,1BBh
-    mov gs,ax
-;    
-    mov ax,1234h
-    push ax
-    pop gs
-;
-    nop
-    retf32
-test_gate_pr    Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -9678,12 +9630,6 @@ timer_free_list_create:
     xor cl,cl
     mov ax,add_scheduler_log_nr
     RegisterOsGate
-;
-    mov esi,OFFSET test_gate_pr
-    mov edi,OFFSET test_gate_name
-    xor dx,dx
-    mov ax,test_gate_nr
-    RegisterBimodalUserGate
 ;
     mov si,OFFSET free_proc_handle
     mov di,OFFSET free_proc_handle_name

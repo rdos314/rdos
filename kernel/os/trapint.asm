@@ -1602,8 +1602,8 @@ ret_ds_seg16:
     jmp ret_seg16
 
 ret_ds_seg32:
-    add sp,6
-    xor ax,ax
+    add sp,2
+    pop eax
     mov ds,ax
     jmp ret_seg32
 

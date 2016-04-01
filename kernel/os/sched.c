@@ -95,12 +95,6 @@ extern long long GetThreadTics(int ThreadHandle);
 extern int GetThreadIntCount(int ThreadHandle);
 #pragma aux GetThreadIntCount parm routine [eax] value [eax]
 
-#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
-
-void __far ImplTestGate(const char *msg)
-{
-}
-
 /*##########################################################################
 #
 #   Name       : StartCore
@@ -561,6 +555,4 @@ int main()
     RdosHookInitTasking(&InitTasking);
 
     RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
-
-    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }
