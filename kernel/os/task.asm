@@ -1710,39 +1710,15 @@ load_kernel:
     mov edi,dword ptr ds:p_rdi
 ;
     mov ax,ds:p_es
-    verr ax
-    jz load_kernel_es
-;
-    xor ax,ax
-    
-load_kernel_es:
     mov es,ax
 ;       
     mov ax,ds:p_fs
-    verr ax
-    jz load_kernel_fs
-;
-    xor ax,ax
-    
-load_kernel_fs:
     mov fs,ax
 ;       
     mov ax,ds:p_gs
-    verr ax
-    jz load_kernel_gs
-;
-    xor ax,ax
-    
-load_kernel_gs:
     mov gs,ax
 ;       
     mov ax,ds:p_ds
-    verr ax
-    jz load_kernel_ds
-;
-    xor ax,ax
-    
-load_kernel_ds:
     push ax
     mov eax,dword ptr ds:p_rax
     pop ds
@@ -1770,39 +1746,15 @@ load_pm_app:
     mov edi,dword ptr ds:p_rdi
 ;
     mov ax,ds:p_es
-    verr ax
-    jz load_pm_app_es
-;
-    xor ax,ax
-    
-load_pm_app_es:
     mov es,ax
 ;       
     mov ax,ds:p_fs
-    verr ax
-    jz load_pm_app_fs
-;
-    xor ax,ax
-    
-load_pm_app_fs:
     mov fs,ax
 ;       
     mov ax,ds:p_gs
-    verr ax
-    jz load_pm_app_gs
-;
-    xor ax,ax
-    
-load_pm_app_gs:
     mov gs,ax
 ;       
     mov ax,ds:p_ds
-    verr ax
-    jz load_pm_app_ds
-;
-    xor ax,ax
-    
-load_pm_app_ds:
     push ax
     mov eax,dword ptr ds:p_rax
     pop ds
@@ -5111,23 +5063,8 @@ signal_unlock_core:
     call TryUnlockCore
 
 signal_done:       
-    pop ax
-    verr ax
-    jz signal_fs_ok
-;
-    xor ax,ax
-    
-signal_fs_ok:
-    mov fs,ax
-;
-    pop ax
-    verr ax
-    jz signal_es_ok
-;
-    xor ax,ax
-    
-signal_es_ok:
-    mov es,ax
+    pop fs
+    pop es
     pop ax
     retf32
 signal_thread   ENDP
@@ -5318,15 +5255,7 @@ ecsUnlock:
     call UnlockCore
     
 ecsDone:
-    pop ax
-    verr ax
-    jz ecsFs
-;
-    xor ax,ax
-    
-ecsFs:
-    mov fs,ax
-;    
+    pop fs
     pop dx
     pop ax
     retf32
@@ -5389,15 +5318,7 @@ lcsUnlock:
     call UnlockCore
 
 lcsDone:
-    pop ax
-    verr ax
-    jz lcsFs
-;
-    xor ax,ax
-    
-lcsFs:
-    mov fs,ax
-;
+    pop fs
     pop dx
     pop ax
     retf32
@@ -5579,15 +5500,7 @@ cecsDone:
     clc
 
 cecsLeave:
-    pop ax
-    verr ax
-    jz cecsFs
-;
-    xor ax,ax
-    
-cecsFs:
-    mov fs,ax
-;
+    pop fs
     pop edx
     pop eax
     retf32
@@ -5820,24 +5733,8 @@ eusDone:
     inc ds:[ebx].us_count
 
 eusEnd:
-    pop ax
-    verr ax
-    jz eusFs
-;
-    xor ax,ax
-    
-eusFs:
-    mov fs,ax
-;
-    pop ax
-    verr ax
-    jz eusDs
-;
-    xor ax,ax
-    
-eusDs:
-    mov ds,ax
-;
+    pop fs
+    pop ds
     pop dx
     pop ebx
     pop ax
@@ -5930,24 +5827,8 @@ lusUnlock:
     call UnlockCore
 
 lusDone:
-    pop ax
-    verr ax
-    jz lusFs
-;
-    xor ax,ax
-    
-lusFs:
-    mov fs,ax
-;
-    pop ax
-    verr ax
-    jz lusDs
-;
-    xor ax,ax
-    
-lusDs:
-    mov ds,ax
-;
+    pop fs
+    pop ds
     pop dx
     pop ebx
     pop ax
@@ -8352,34 +8233,10 @@ create_tss_done:
     pop ecx
     pop ebx
     pop eax
-;
-    pop ax
-    verr ax
-    jz crp_zero_gs
-    xor ax,ax
-crp_zero_gs:
-    mov gs,ax
-;
-    pop ax
-    verr ax
-    jz crp_zero_fs
-    xor ax,ax
-crp_zero_fs:
-    mov fs,ax
-;
-    pop ax
-    verr ax
-    jz crp_zero_es
-    xor ax,ax
-crp_zero_es:
-    mov es,ax
-;
-    pop ax
-    verr ax
-    jz crp_zero_ds
-    xor ax,ax
-crp_zero_ds:
-    mov ds,ax
+    pop gs
+    pop fs
+    pop es
+    pop ds
     popf
     pop ebp
     add esp,30
@@ -8692,33 +8549,10 @@ create_mod_tss_done:
     pop ebx
     pop eax
 ;
-    pop ax
-    verr ax
-    jz crm_zero_gs
-    xor ax,ax
-crm_zero_gs:
-    mov gs,ax
-;
-    pop ax
-    verr ax
-    jz crm_zero_fs
-    xor ax,ax
-crm_zero_fs:
-    mov fs,ax
-;
-    pop ax
-    verr ax
-    jz crm_zero_es
-    xor ax,ax
-crm_zero_es:
-    mov es,ax
-;
-    pop ax
-    verr ax
-    jz crm_zero_ds
-    xor ax,ax
-crm_zero_ds:
-    mov ds,ax
+    pop gs
+    pop fs
+    pop es;
+    pop ds
     popf
     pop ebp
     add esp,30

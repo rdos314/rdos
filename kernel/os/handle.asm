@@ -487,15 +487,7 @@ free_handle     PROC far
     LeaveSection ds:handle_section
     xor bx,bx
 ;
-    pop ax
-    verr ax
-    jz free_handle_load_ds
-;
-    xor ax,ax
-
-free_handle_load_ds:
-    mov ds,ax
-;
+    pop ds
     pop si
     pop ax
     retf32

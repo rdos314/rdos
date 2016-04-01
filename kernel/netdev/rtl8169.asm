@@ -2756,14 +2756,7 @@ sPadOk:
     pop si
     pop dx
     pop bx
-    pop ax
-    verr ax
-    jz send_load_ds
-;
-    xor ax,ax
-    
-send_load_ds:
-    mov ds,ax
+    pop ds
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -826,41 +826,10 @@ restore_context PROC far
     popad
     popf
 ;
-    pop ax
-    pushf
-    verr ax
-    jz restore_zero_gs
-    xor ax,ax
-restore_zero_gs:
-    mov gs,ax
-    popf
-;
-    pop ax
-    pushf
-    verr ax
-    jz restore_zero_fs
-    xor ax,ax
-restore_zero_fs:
-    mov fs,ax
-    popf
-;
-    pop ax
-    pushf
-    verr ax
-    jz restore_zero_es
-    xor ax,ax
-restore_zero_es:
-    mov es,ax
-    popf
-;
-    pop ax
-    pushf
-    verr ax
-    jz restore_zero_ds
-    xor ax,ax
-restore_zero_ds:
-    mov ds,ax
-    popf
+    pop gs
+    pop fs
+    pop es
+    pop ds
     retf32
 restore_context ENDP
 
