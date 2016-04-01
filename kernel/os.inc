@@ -416,6 +416,12 @@ CreateTaskGateSelector  MACRO
     OsGate create_task_gate_sel_nr
                             ENDM
 
+;       BX          DESCRIPTOR
+;       AL          Bitness (16, 32 or 64)
+GetSelectorBitness     MACRO
+    OsGate get_sel_bitness_nr
+                    ENDM
+
 ;       AX      SELECTOR
 ;       NC      EAX     SEGEMENT
 ;       CY      EAX = F000

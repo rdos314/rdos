@@ -604,6 +604,57 @@ create_code_sel32       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetSelectorBitness
+;
+;           DESCRIPTION:    Get selector bitness
+;
+;           PARAMETERS:     BX      DESCRIPTOR
+;
+;           RETURNS:        AL      Bitness (16, 32 or 64)
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_sel_bitness_name DB 'Get Selector Bitness',0
+
+get_sel_bitness       PROC far
+    push ds
+    push bx
+;
+    test bx,4
+    jz get_bitness_gdt
+
+get_bitness_ldt:
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_ldt_sel
+    jmp get_bitness_dt_ok
+
+get_bitness_gdt:
+    mov ax,gdt_sel
+    mov ds,ax
+
+get_bitness_dt_ok:
+    and bx,0FFF8h
+    mov bl,[bx+6]
+    mov al,64
+    test bl,20h
+    jnz get_bitness_ok
+;
+    mov al,32
+    test bl,40h
+    jnz get_bitness_ok
+;
+    mov al,16
+
+get_bitness_ok:        
+    pop bx
+    pop ds
+    retf32
+get_sel_bitness       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateLongCodeSelector
 ;
 ;           DESCRIPTION:    Create long mode code selector
@@ -1414,6 +1465,12 @@ init_os_protseg PROC near
     mov edi,OFFSET create_task_gate_sel_name
     xor cl,cl
     mov ax,create_task_gate_sel_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_sel_bitness
+    mov edi,OFFSET get_sel_bitness_name
+    xor cl,cl
+    mov ax,get_sel_bitness_nr
     RegisterOsGate
 ;
     ret

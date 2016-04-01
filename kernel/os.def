@@ -686,4 +686,6 @@ add_scheduler_log_nr        = 560
 
 do_flush_tlb_nr             = 561
 
+get_sel_bitness_nr          = 562
+
 osgate_entries				= 580
