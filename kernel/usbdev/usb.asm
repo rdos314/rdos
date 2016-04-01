@@ -803,15 +803,7 @@ cpConfNext:
 ;
     call fword ptr ds:close_pipe_proc
 ;
-    pop ax
-    verr ax
-    jz close_pipe_es
-;
-    xor ax,ax
-    
-close_pipe_es:
-    mov es,ax
-;
+    pop es
     pop cx
     pop bx
     pop ax
