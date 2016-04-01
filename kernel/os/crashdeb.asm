@@ -3227,7 +3227,7 @@ init_crashdeb    PROC near
     RegisterOsGate
 ;
     xor bl,bl
-    mov al,85h
+    mov al,84h
     mov esi,OFFSET crash_gate_int
     SetupIntGate
 ;    
@@ -3235,7 +3235,7 @@ init_crashdeb    PROC near
     IsValidOsGate
     jc icDone
 ;    
-    mov al,85h
+    mov al,84h
     SetupLongCrashGate
 
 icDone:
