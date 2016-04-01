@@ -3815,7 +3815,7 @@ unlock_task     Endp
 ;
 ;   DESCRIPTION:    Enter long mode int
 ;
-;   RETURNS:        AX      Locked core selector
+;   RETURNS:        EAX      Locked core selector (high) and thread (low)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3827,6 +3827,28 @@ enter_long_int   Proc far
     mov ds,ax
     add ds:ps_nesting,1
     mov ax,ds:ps_sel
+    mov fs,ax
+    shl eax,16
+;
+    mov ax,fs:ps_curr_thread
+    mov es,ax
+    or ax,ax
+    jz eliDone
+;    
+    inc es:p_nest_count
+    mov ax,es:p_nest_count
+    cmp ax,10
+    jb eliDone
+;
+    mov ax,es:p_nest_unwind
+    or ax,ax
+    jnz eliDone
+;    
+    add fs:ps_nesting,1
+    mov es:p_nest_unwind,1
+        
+eliDone:
+    mov ax,es
     retf32
 enter_long_int  Endp
 
@@ -3837,37 +3859,87 @@ enter_long_int  Endp
 ;
 ;   DESCRIPTION:    Leave long mode int
 ;
-;   PARAMETERS:     AX      Locked core selector
+;   PARAMETERS:     EAX      Locked core selector (high) and thread (low)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 leave_long_int_name  DB 'Leave Long Int',0
 
 leave_long_int   Proc far
-    mov ds,ax
-    sub ds:ps_nesting,1
-    jnc lliDone
-;
-    mov ax,ds:ps_curr_thread
+    mov es,ax
+    shr eax,16
+    mov fs,ax
+    
+lliRetry:    
+    cli    
+    sub fs:ps_nesting,1
+    jnc lliStillLocked
+;    
+    mov ax,es
     or ax,ax
     jz lliDone
-;    
-    test ds:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
+;
+    mov eax,fs:ps_tlb.pt32_used
+    or eax,eax
+    jz lliTlbDone
+;
+    add fs:ps_nesting,1
+    jc lliFlush
+;
+    CrashGate
+
+lliFlush:
+    sti
+    call cs:flush_tlb_proc
+    jmp lliRetry
+
+lliTlbDone:    
+    test fs:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
     jnz lliSwap
 ;    
-    mov ax,ds:ps_wakeup_list
+    mov ax,fs:ps_wakeup_list
     or ax,ax
-    jz lliDone
+    jz lliDecNest
 
 lliSwap:
-    add ds:ps_nesting,1
-    sti
-    mov ax,ds
-    mov fs,ax
+    add fs:ps_nesting,1
+    jc lliSched
 ;
-    push OFFSET lliDone
+    CrashGate    
+
+lliSched:
+    sti
+    push OFFSET lliSwapDone
     call SaveLockedThread
     jmp ContinueCurrentThread
+
+lliSwapDone:
+    cli
+    mov ax,core_data_sel
+    mov fs,ax
+    mov fs,fs:ps_sel
+    mov es,fs:ps_curr_thread
+    mov ax,fs:ps_nesting
+    cmp ax,-1
+    je lliDecNest
+        
+lliStillLocked:
+    mov ax,es
+    or ax,ax
+    jz lliDone
+;
+    mov ax,es:p_nest_count
+    cmp ax,1
+    jne lliDecNest
+
+lliLast:
+    xor ax,ax
+    xchg ax,es:p_nest_unwind
+    or ax,ax
+    jnz lliRetry
+
+lliDecNest:
+    dec es:p_nest_count
 
 lliDone:
     retf32

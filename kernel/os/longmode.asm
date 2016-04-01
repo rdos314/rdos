@@ -316,6 +316,28 @@ setup_long_spurious_int Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           SetupLongScheduleInt
+;
+;   DESCRIPTION:    Setup long-mode scheduler int
+;
+;   PARAMETERS:     AL      Interrupt #
+;                   BL      DPL
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_long_schedule_int_name   DB 'Setup Long Schedule Int', 0
+    
+setup_long_schedule_int  proc far
+    push esi
+    mov esi,OFFSET schedule_int
+    SetupLongIntGate
+    pop esi
+    ret
+setup_long_schedule_int Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           SetupLongTimerInt
 ;
 ;   DESCRIPTION:    Setup long-mode timer int
@@ -1565,6 +1587,12 @@ init    proc far
     mov edi,OFFSET setup_long_spurious_int_name
     xor cl,cl
     mov ax,setup_long_spurious_int_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_long_schedule_int
+    mov edi,OFFSET setup_long_schedule_int_name
+    xor cl,cl
+    mov ax,setup_long_schedule_int_nr
     RegisterOsGate
 ;
     mov esi,OFFSET setup_long_timer_int
@@ -3915,6 +3943,63 @@ nmi_int:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 spurious_int:
+    iretq
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:          schedule_int
+;
+;      DESCRIPTION:    Scheduler int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+schedule_int:
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push rbp
+;    
+    mov ax,long_kernel_data_sel
+    mov ss,ax
+;
+    mov eax,ds
+    push rax
+;
+    mov eax,es
+    push rax
+;            
+    mov eax,fs
+    push rax
+;
+    xor eax,eax
+    mov ds,eax
+    mov es,eax
+    mov fs,eax
+;
+    EnterLongInt
+    SendEoi
+    LeaveLongInt
+;
+    pop rax
+    mov fs,eax
+;
+    pop rax
+    mov es,eax
+;
+    pop rax
+    mov ds,eax
+;
+    pop rbp
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
     iretq
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
