@@ -4340,9 +4340,9 @@ UpdateCombinedTimer    Proc near
 ;    
     mov ax,SEG data
     mov ds,ax
+    lock and fs:ps_flags,NOT PS_FLAG_TIMER_EXPIRED
 
 uctLoop:
-    lock and fs:ps_flags,NOT PS_FLAG_PREEMPT_TIMER   
     GetSystemTime
     call LockTimerCore
     add eax,cs:update_tics
@@ -4372,6 +4372,12 @@ uctPreempt:
 ;
     call UnlockTimerCore
     lock or fs:ps_flags,PS_FLAG_PREEMPT
+;
+    GetSystemTime
+    add eax,1193
+    adc edx,0
+    mov fs:ps_preempt_lsb,eax
+    mov fs:ps_preempt_msb,edx
     jmp uctLoop
 
 uctReload:
