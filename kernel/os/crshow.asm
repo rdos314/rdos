@@ -1205,13 +1205,6 @@ wpfNoPreempt:
     call ShowAsciiz
 
 wpfNoPrio:
-    test gs:ps_flags,PS_FLAG_PREEMPT_TIMER
-    jz wpfNoTimer
-;
-    mov di, OFFSET flag_timer
-    call ShowAsciiz
-
-wpfNoTimer:
     pop fs
     ret
 WriteProcFlags     ENDP

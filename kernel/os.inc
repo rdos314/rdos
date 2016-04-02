@@ -1500,7 +1500,7 @@ tucFlush:
     jmp tucRetry
 
 tucTlbDone:    
-    test fs:ps_flags,PS_FLAG_PREEMPT_TIMER OR PS_FLAG_PREEMPT
+    test fs:ps_flags,PS_FLAG_PREEMPT
     jnz tucSwap
 ;    
     mov ax,fs:ps_wakeup_list
@@ -1605,7 +1605,7 @@ lsiFlush:
     jmp lsiRetry
 
 lsiTlbDone:    
-    test fs:ps_flags,PS_FLAG_PREEMPT_TIMER OR PS_FLAG_PREEMPT
+    test fs:ps_flags,PS_FLAG_PREEMPT
     jnz lsiSwap
 ;    
     mov ax,fs:ps_wakeup_list
