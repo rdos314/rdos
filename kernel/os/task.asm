@@ -3592,11 +3592,11 @@ tucRetry:
     CrashGate
 
 tucHandleTimer:
-;    sti
-;    pushad
-;    call UpdateTimer
-;    popad
-;    jmp tucRetry
+    sti
+    pushad
+    call UpdateTimer
+    popad
+    jmp tucRetry
     
 tucTimerOk:      
     mov eax,fs:ps_tlb.pt32_used
@@ -3674,11 +3674,11 @@ ucNestOk:
     CrashGate
 
 ucHandleTimer:
-;    sti
-;    pushad
-;    call UpdateTimer
-;    popad
-;    jmp ucRetry
+    sti
+    pushad
+    call UpdateTimer
+    popad
+    jmp ucRetry
     
 ucTimerOk:      
     mov eax,fs:ps_tlb.pt32_used
@@ -3916,11 +3916,11 @@ lliRetry:
     CrashGate
 
 lliHandleTimer:
-;    sti
-;    pushad
-;    call UpdateTimer
-;    popad
-;    jmp lliRetry
+    sti
+    pushad
+    call UpdateTimer
+    popad
+    jmp lliRetry
     
 lliTimerOk:    
     mov ax,es
