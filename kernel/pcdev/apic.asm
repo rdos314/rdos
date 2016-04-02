@@ -2521,16 +2521,13 @@ timer_int:
     push es
     push fs
 ;
-    xor ax,ax
-    mov es,ax
-    mov fs,ax
-;    
+    EnterSmpInt    
+    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-;    
-    TimerExpired
+    LeaveSmpInt
 ;
     pop ax
     verr ax
@@ -2579,24 +2576,20 @@ hpet_int:
     push es
     push fs
 ;
-    xor ax,ax
-    mov es,ax
-    mov fs,ax
-;    
     mov ax,SEG data
     mov ds,ax
     mov ds,ds:hpet_sel
     mov edx,ds:hpet_int_status
     mov ds:hpet_int_status,edx
-;
+;    
+    EnterSmpInt    
+    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-;  
-    TimerExpired
-
-hpet_int_done:
+    LeaveSmpInt
+;    
     pop ax
     verr ax
     jz hpet_fs_ok
