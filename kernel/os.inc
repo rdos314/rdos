@@ -1466,6 +1466,8 @@ EnterInt    MACRO
 
 LeaveInt    MACRO
     local tucRetry
+    local tucHandleTimer
+    local tucTimerOk
     local tucFlush
     local tucSched
     local tucDone
@@ -1476,7 +1478,25 @@ tucRetry:
     cli    
     sub fs:ps_nesting,1
     jnc tucDone
-;    
+;
+    test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    jz tucTimerOk
+;
+    add fs:ps_nesting,1
+    jc tucHandleTimer
+;
+    CrashGate
+
+tucHandleTimer:
+    sti
+    OsGate irq_timer_expired_nr
+    jmp tucRetry
+    
+tucTimerOk:      
+    mov ax,fs:ps_curr_thread
+    or ax,ax
+    jz tucDone
+;
     mov eax,fs:ps_tlb.pt32_used
     or eax,eax
     jz tucTlbDone
@@ -1492,10 +1512,6 @@ tucFlush:
     jmp tucRetry
 
 tucTlbDone:    
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz tucDone
-;
     test fs:ps_flags,PS_FLAG_PREEMPT_TIMER OR PS_FLAG_PREEMPT
     jnz tucSwap
 ;    
@@ -1552,6 +1568,8 @@ esiDone:
 ;   IN ES  Thread
 LeaveSmpInt    MACRO
     local lsiRetry
+    local lsiTimerOk
+    local lsiHandleTimer
     local lsiFlush
     local lsiSched
     local lsiSwap
@@ -1565,11 +1583,25 @@ lsiRetry:
     cli    
     sub fs:ps_nesting,1
     jnc lsiStillLocked
-;    
+;
+    test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    jz lsiTimerOk
+;
+    add fs:ps_nesting,1
+    jc lsiHandleTimer
+;
+    CrashGate
+
+lsiHandleTimer:
+    sti
+    OsGate irq_timer_expired_nr
+    jmp lsiRetry
+    
+lsiTimerOk:    
     mov ax,es
     or ax,ax
     jz lsiDone
-;
+;    
     mov eax,fs:ps_tlb.pt32_used
     or eax,eax
     jz lsiTlbDone

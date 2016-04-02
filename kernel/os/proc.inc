@@ -37,6 +37,7 @@ PS_FLAG_P_STATE        = 200h
 PS_FLAG_SHUTDOWN       = 400h
 PS_FLAG_MOVE           = 800h
 PS_FLAG_LONG_MODE      = 1000h
+PS_FLAG_TIMER_EXPIRED  = 2000h
 
 timer_struc     STRUC
 

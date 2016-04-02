@@ -2639,10 +2639,10 @@ hpet_ds_ok:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 hpet_ioapic_int Proc far
+    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     mov ds,ds:hpet_sel
     mov edx,ds:hpet_int_status
     mov ds:hpet_int_status,edx  
-    IrqTimerExpired
     retf32
 hpet_ioapic_int Endp
 
