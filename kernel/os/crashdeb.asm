@@ -1509,6 +1509,7 @@ ci40    DW      40h,        OFFSET hwint
 ci80    DW      80h,        OFFSET hwint
 ci81    DW      81h,        OFFSET hwint
 ci82    DW      82h,        OFFSET hwint
+ci83    DW      83h,        OFFSET hwint
 ci_end  DW      0FFFFh
 
 SetupFaultHandlers      PROC near

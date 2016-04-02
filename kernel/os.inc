@@ -1064,6 +1064,10 @@ PreemptExpired    MACRO
     OsGate preempt_expired_nr
                         ENDM
 
+PreemptTimerExpired    MACRO
+    OsGate preempt_timer_expired_nr
+                        ENDM
+
 ;   IN  FS      Processor selector
 SendNmi    MACRO
     OsGate send_nmi_nr

@@ -1982,7 +1982,7 @@ start_sys_preempt_timer    Proc far
 ;    
     mov ax,apic_mem_sel
     mov ds,ax
-    mov eax,40h
+    mov eax,83h
     mov ds:APIC_TIMER,eax
     xor eax,eax
 ;
@@ -2716,6 +2716,64 @@ preempt_ds_ok:
     popad
     iretd
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           MixedInt
+;
+;               DESCRIPTION:    Mixed timer & preempt interrupt
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mixed_int:
+    pushad
+    push ds
+    push es
+    push fs
+;
+    xor ax,ax
+    mov es,ax
+    mov fs,ax
+;    
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+;    
+    PreemptTimerExpired
+;
+    pop ax
+    verr ax
+    jz mixed_fs_ok
+;
+    xor ax,ax
+
+mixed_fs_ok:
+    mov fs,ax
+;    
+    pop ax
+    verr ax
+    jz mixed_es_ok
+;
+    xor ax,ax
+
+mixed_es_ok:
+    mov es,ax
+;    
+    pop ax
+    verr ax
+    jz mixed_ds_ok
+;
+    xor ax,ax
+
+mixed_ds_ok:
+    mov ds,ax
+;    
+    popad
+    iretd
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2849,6 +2907,18 @@ siSchedOk:
     SetupLongHpetInt
 
 siHpetOk:
+    mov al,83h
+    mov esi,OFFSET mixed_int
+    SetupIntGate
+;    
+    mov ax,setup_long_timer_int_nr
+    IsValidOsGate
+    jc siPreemptTimerOk
+;    
+    mov al,83h
+    SetupLongTimerInt
+
+siPreemptTimerOk:
     popad
     pop ds
     ret
