@@ -1647,18 +1647,22 @@ load_actions_done:
     mov ax,fs:ps_wakeup_list
     or ax,ax
     jnz load_relock
+;    
+    test fs:ps_flags,PS_FLAG_PREEMPT_TIMER
+    jnz load_relock
 ;
     mov eax,fs:ps_tlb.pt32_used
     or eax,eax
-    jnz load_relock
-;    
-    test fs:ps_flags,PS_FLAG_PREEMPT_TIMER
     jz load_regs
+;
+    call LockCore
+    sti
+    jmp load_retry
 
 load_relock:
     call LockCore
     sti
-    jmp load_retry
+    jmp load_thread_loop
         
 load_regs:
     test fs:ps_flags,PS_FLAG_LONG_MODE
