@@ -3583,6 +3583,22 @@ tucRetry:
     sub fs:ps_nesting,1
     jnc tucDone
 ;
+    test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    jz tucTimerOk
+;
+    add fs:ps_nesting,1
+    jc tucHandleTimer
+;
+    CrashGate
+
+tucHandleTimer:
+;    sti
+;    pushad
+;    call UpdateTimer
+;    popad
+;    jmp tucRetry
+    
+tucTimerOk:      
     mov eax,fs:ps_tlb.pt32_used
     or eax,eax
     jz tucTlbDone
@@ -3649,6 +3665,22 @@ ucRetry:
     CrashGate
 
 ucNestOk:    
+    test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    jz ucTimerOk
+;
+    add fs:ps_nesting,1
+    jc ucHandleTimer
+;
+    CrashGate
+
+ucHandleTimer:
+;    sti
+;    pushad
+;    call UpdateTimer
+;    popad
+;    jmp ucRetry
+    
+ucTimerOk:      
     mov eax,fs:ps_tlb.pt32_used
     or eax,eax
     jz ucTlbDone
@@ -3874,7 +3906,23 @@ lliRetry:
     cli    
     sub fs:ps_nesting,1
     jnc lliStillLocked
-;    
+;
+    test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    jz lliTimerOk
+;
+    add fs:ps_nesting,1
+    jc lliHandleTimer
+;
+    CrashGate
+
+lliHandleTimer:
+;    sti
+;    pushad
+;    call UpdateTimer
+;    popad
+;    jmp lliRetry
+    
+lliTimerOk:    
     mov ax,es
     or ax,ax
     jz lliDone
@@ -4234,13 +4282,10 @@ flush_tlb Endp
 
 UpdateTimer    Proc near
     push ds
-    push eax
-    push ebx
-    push edx
 ;    
-    lock and fs:ps_flags,NOT PS_FLAG_TIMER_EXPIRED
     mov ax,SEG data
     mov ds,ax
+    lock and fs:ps_flags,NOT PS_FLAG_TIMER_EXPIRED
 
 update_timer_check:   
     GetSystemTime
@@ -4266,9 +4311,6 @@ update_timer_reload:
 update_timer_done:
     call UnlockTimerGlobal    
 ;
-    pop edx
-    pop ebx
-    pop eax 
     pop ds   
     ret
 UpdateTimer    Endp
