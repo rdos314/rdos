@@ -1060,6 +1060,7 @@ TimerExpired    MACRO
     OsGate timer_expired_nr
                         ENDM
 
+;  FS   Locked core
 IrqTimerExpired    MACRO
     OsGate irq_timer_expired_nr
                         ENDM

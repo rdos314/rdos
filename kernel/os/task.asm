@@ -4228,7 +4228,7 @@ flush_tlb Endp
 ;
 ;           DESCRIPTION:    Update timers
 ;
-;           PARAMETERS:         
+;           PARAMETERS:     FS  locked core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4238,6 +4238,7 @@ UpdateTimer    Proc near
     push ebx
     push edx
 ;    
+    lock and fs:ps_flags,NOT PS_FLAG_TIMER_EXPIRED
     mov ax,SEG data
     mov ds,ax
 
@@ -4279,7 +4280,7 @@ UpdateTimer    Endp
 ;
 ;           DESCRIPTION:    Timer expired notification
 ;
-;           PARAMETERS:         
+;           PARAMETERS:     
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4300,7 +4301,7 @@ timer_expired    Endp
 ;
 ;           DESCRIPTION:    Timer expired notification from normal IRQ
 ;
-;           PARAMETERS:         
+;           PARAMETERS:     FS          Locked core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
