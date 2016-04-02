@@ -25,18 +25,18 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PS_FLAG_PREEMPT     = 1
-PS_FLAG_PRIO_CHANGE = 2
-PS_FLAG_TIMER       = 4
-PS_FLAG_NMI         = 8
-PS_FLAG_INIT_CLOCK  = 10h
-PS_FLAG_ACTIVE      = 20h
-PS_FLAG_LOADING     = 80h
-PS_FLAG_FPU         = 100h
-PS_FLAG_P_STATE     = 200h
-PS_FLAG_SHUTDOWN    = 400h
-PS_FLAG_MOVE        = 800h
-PS_FLAG_LONG_MODE   = 1000h
+PS_FLAG_PREEMPT        = 1
+PS_FLAG_PRIO_CHANGE    = 2
+PS_FLAG_PREEMPT_TIMER  = 4
+PS_FLAG_NMI            = 8
+PS_FLAG_INIT_CLOCK     = 10h
+PS_FLAG_ACTIVE         = 20h
+PS_FLAG_LOADING        = 80h
+PS_FLAG_FPU            = 100h
+PS_FLAG_P_STATE        = 200h
+PS_FLAG_SHUTDOWN       = 400h
+PS_FLAG_MOVE           = 800h
+PS_FLAG_LONG_MODE      = 1000h
 
 timer_struc     STRUC
 

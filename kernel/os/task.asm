@@ -1293,7 +1293,7 @@ AddCallback Endp
 TimerPreemptReload  Proc near
 
 preempt_reload_loop:
-    lock and fs:ps_flags,NOT PS_FLAG_TIMER   
+    lock and fs:ps_flags,NOT PS_FLAG_PREEMPT_TIMER   
     GetSystemTime
 ;
     call LockTimerCore
@@ -1652,7 +1652,7 @@ load_actions_done:
     or eax,eax
     jnz load_relock
 ;    
-    test fs:ps_flags,PS_FLAG_TIMER
+    test fs:ps_flags,PS_FLAG_PREEMPT_TIMER
     jz load_regs
 
 load_relock:
@@ -3602,7 +3602,7 @@ tucTlbDone:
     or ax,ax
     jz tucDone
 ;
-    test fs:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
+    test fs:ps_flags,PS_FLAG_PREEMPT_TIMER OR PS_FLAG_PREEMPT
     jnz tucSwap
 ;    
     mov ax,fs:ps_wakeup_list
@@ -3664,7 +3664,7 @@ ucFlush:
     jmp ucRetry
 
 ucTlbDone:    
-    test fs:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
+    test fs:ps_flags,PS_FLAG_PREEMPT_TIMER OR PS_FLAG_PREEMPT
     jnz ucSwap
 ;    
     mov ax,fs:ps_wakeup_list
@@ -3894,7 +3894,7 @@ lliFlush:
     jmp lliRetry
 
 lliTlbDone:    
-    test fs:ps_flags,PS_FLAG_TIMER OR PS_FLAG_PREEMPT
+    test fs:ps_flags,PS_FLAG_PREEMPT_TIMER OR PS_FLAG_PREEMPT
     jnz lliSwap
 ;    
     mov ax,fs:ps_wakeup_list
@@ -4366,7 +4366,7 @@ preempt_timer_expired    Proc far
     sti
     jc reload_timer_preempt_locked
 ;
-    lock or fs:ps_flags,PS_FLAG_TIMER    
+    lock or fs:ps_flags,PS_FLAG_PREEMPT_TIMER    
     jmp reload_timer_preempt_done
 
 reload_timer_preempt_locked:
@@ -4374,7 +4374,7 @@ reload_timer_preempt_locked:
     mov ds,ax
 
 reload_timer_preempt_loop:
-    lock and fs:ps_flags,NOT PS_FLAG_TIMER   
+    lock and fs:ps_flags,NOT PS_FLAG_PREEMPT_TIMER   
     GetSystemTime
     call LockTimerCore
     add eax,cs:update_tics
@@ -4654,11 +4654,11 @@ start_core_insert:
     popf
     jc start_core_reload_timer_loop
 ;
-    lock or fs:ps_flags,PS_FLAG_TIMER    
+    lock or fs:ps_flags,PS_FLAG_PREEMPT_TIMER    
     jmp start_core_reload_timer_done
 
 start_core_reload_timer_loop:
-    lock and fs:ps_flags,NOT PS_FLAG_TIMER   
+    lock and fs:ps_flags,NOT PS_FLAG_PREEMPT_TIMER   
     mov es,fs:ps_curr_thread
     GetSystemTime
     call LockTimerCore
