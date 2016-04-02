@@ -4450,91 +4450,6 @@ preempt_expired    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           PreemptTimerExpired
-;
-;           DESCRIPTION:    Preemption or timer expired notification
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-preempt_timer_expired_name   DB 'Preempt Timer Expired', 0
-
-preempt_timer_expired    Proc far
-    call TryLockCore
-    sti
-    jc reload_timer_preempt_locked
-;
-    lock or fs:ps_flags,PS_FLAG_PREEMPT_TIMER    
-    jmp reload_timer_preempt_done
-
-reload_timer_preempt_locked:
-    mov ax,SEG data
-    mov ds,ax
-
-reload_timer_preempt_loop:
-    lock and fs:ps_flags,NOT PS_FLAG_PREEMPT_TIMER   
-    GetSystemTime
-    call LockTimerCore
-    add eax,cs:update_tics
-    adc edx,0
-    mov bx,fs:ps_timer_head
-    mov ecx,fs:ps_preempt_msb
-    cmp ecx,fs:[bx].timer_msb
-    jc reload_check_preempt
-    jnz reload_check_timer
-;       
-    mov ecx,fs:ps_preempt_lsb
-    cmp ecx,fs:[bx].timer_lsb
-    jc reload_check_preempt
-
-reload_check_timer:
-    sub eax,fs:[bx].timer_lsb
-    sbb edx,fs:[bx].timer_msb
-    jc reload_timer_preempt_do
-;       
-    call LocalRemoveTimerCore
-    jmp reload_timer_preempt_loop
-
-reload_check_preempt:
-    sub eax,fs:ps_preempt_lsb
-    sbb edx,fs:ps_preempt_msb
-    jc reload_timer_preempt_do
-;
-    call UnlockTimerCore
-    lock or fs:ps_flags,PS_FLAG_PREEMPT
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz reload_preempt_block
-;    
-    push OFFSET reload_timer_preempt_end
-    call SaveLockedThread
-    jmp ContinueCurrentThread
-
-reload_preempt_block:
-    sti
-    GetSystemTime
-    add eax,1193
-    adc edx,0
-    mov fs:ps_preempt_lsb,eax
-    mov fs:ps_preempt_msb,edx
-    jmp reload_timer_preempt_loop
-
-reload_timer_preempt_do:
-    neg eax
-    ReloadSysPreemptTimer
-    call UnlockTimerCore
-
-reload_timer_preempt_done:
-    call TryUnlockCore
-
-reload_timer_preempt_end:       
-    retf32
-preempt_timer_expired    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           START_TIMER
 ;
 ;           DESCRIPTION:    Start a timer, global version
@@ -9490,12 +9405,6 @@ timer_free_list_create:
     mov di,OFFSET timer_expired_name
     xor cl,cl
     mov ax,timer_expired_nr
-    RegisterOsGate
-;
-    mov si,OFFSET preempt_timer_expired
-    mov di,OFFSET preempt_timer_expired_name
-    xor cl,cl
-    mov ax,preempt_timer_expired_nr
     RegisterOsGate
 ;
     mov esi,OFFSET flush_tlb

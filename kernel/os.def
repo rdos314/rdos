@@ -415,7 +415,6 @@ get_core_nr                 = 368
 get_core_count_nr           = 369
 run_ap_core_nr              = 370
 
-preempt_timer_expired_nr    = 371
 timer_expired_nr            = 372
 
 reload_sys_timer_nr         = 373

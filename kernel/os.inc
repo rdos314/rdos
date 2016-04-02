@@ -1069,10 +1069,6 @@ PreemptExpired    MACRO
     OsGate preempt_expired_nr
                         ENDM
 
-PreemptTimerExpired    MACRO
-    OsGate preempt_timer_expired_nr
-                        ENDM
-
 ClearHpet    MACRO
     OsGate clear_hpet_nr
                         ENDM
