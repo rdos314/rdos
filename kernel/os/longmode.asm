@@ -4037,8 +4037,7 @@ timer_int:
     mov es,eax
     mov fs,eax
 ;
-    SendEoi
-    TimerExpired
+    LongTimerHandler
 ;    
     pop rax
     mov fs,eax
@@ -4205,9 +4204,7 @@ hpet_int:
     mov es,eax
     mov fs,eax
 ;
-    ClearHpet
-    SendEoi
-    TimerExpired
+    LongHpetHandler
 ;    
     pop rax
     mov fs,eax

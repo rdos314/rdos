@@ -1056,10 +1056,6 @@ SwitchAllCoreIrqs    MACRO
     OsGate switch_all_core_irqs_nr
                         ENDM
 
-TimerExpired    MACRO
-    OsGate timer_expired_nr
-                        ENDM
-
 ;  FS   Locked core
 IrqTimerExpired    MACRO
     OsGate irq_timer_expired_nr
@@ -1688,6 +1684,14 @@ EnterLongInt    MACRO
 ;  IN   AX Locked core
 LeaveLongInt    MACRO
     OsGate leave_long_int_nr
+                        ENDM
+
+LongTimerHandler    MACRO
+    OsGate long_timer_handler_nr
+                        ENDM
+
+LongHpetHandler    MACRO
+    OsGate long_hpet_handler_nr
                         ENDM
 
 UpdatePstate  MACRO                        
