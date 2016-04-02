@@ -1503,6 +1503,13 @@ load_reload_loop:
 load_retry:
     mov ax,SEG data
     mov ds,ax
+;
+    test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    jz load_timer_not_expired
+;
+    call UpdateTimer
+
+load_timer_not_expired:        
     mov ax,es
     cmp ax,fs:ps_null_thread
     je load_thread_loop
@@ -1648,21 +1655,17 @@ load_actions_done:
     or ax,ax
     jnz load_relock
 ;    
-    test fs:ps_flags,PS_FLAG_PREEMPT_TIMER
-    jnz load_relock
+    test fs:ps_flags,PS_FLAG_PREEMPT_TIMER OR PS_FLAG_TIMER_EXPIRED
+    jnz load_relock    
 ;
     mov eax,fs:ps_tlb.pt32_used
     or eax,eax
     jz load_regs
-;
-    call LockCore
-    sti
-    jmp load_retry
 
 load_relock:
     call LockCore
     sti
-    jmp load_thread_loop
+    jmp load_retry
         
 load_regs:
     test fs:ps_flags,PS_FLAG_LONG_MODE
