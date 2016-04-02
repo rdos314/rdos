@@ -4327,39 +4327,18 @@ UpdateTimer    Endp
 ;
 ;           NAME:           TimerExpired
 ;
-;           DESCRIPTION:    Timer expired notification
-;
-;           PARAMETERS:     
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-timer_expired_name   DB 'Timer Expired', 0
-
-timer_expired    Proc far
-    call TryLockCore
-    sti
-    call UpdateTimer
-    call TryUnlockCore
-    retf32
-timer_expired    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           IrqTimerExpired
-;
 ;           DESCRIPTION:    Timer expired notification from normal IRQ
 ;
 ;           PARAMETERS:     FS          Locked core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-irq_timer_expired_name   DB 'IRQ Timer Expired', 0
+timer_expired_name   DB 'Timer Expired', 0
 
-irq_timer_expired    Proc far
+timer_expired    Proc far
     call UpdateTimer
     retf32
-irq_timer_expired    Endp
+timer_expired    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -9436,12 +9415,6 @@ timer_free_list_create:
     mov di,OFFSET timer_expired_name
     xor cl,cl
     mov ax,timer_expired_nr
-    RegisterOsGate
-;
-    mov si,OFFSET irq_timer_expired
-    mov di,OFFSET irq_timer_expired_name
-    xor cl,cl
-    mov ax,irq_timer_expired_nr
     RegisterOsGate
 ;
     mov si,OFFSET preempt_timer_expired

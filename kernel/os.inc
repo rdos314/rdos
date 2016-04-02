@@ -1057,8 +1057,8 @@ SwitchAllCoreIrqs    MACRO
                         ENDM
 
 ;  FS   Locked core
-IrqTimerExpired    MACRO
-    OsGate irq_timer_expired_nr
+TimerExpired    MACRO
+    OsGate timer_expired_nr
                         ENDM
 
 PreemptExpired    MACRO
@@ -1486,7 +1486,7 @@ tucRetry:
 
 tucHandleTimer:
     sti
-    OsGate irq_timer_expired_nr
+    OsGate timer_expired_nr
     jmp tucRetry
     
 tucTimerOk:      
@@ -1591,7 +1591,7 @@ lsiRetry:
 
 lsiHandleTimer:
     sti
-    OsGate irq_timer_expired_nr
+    OsGate timer_expired_nr
     jmp lsiRetry
     
 lsiTimerOk:    
