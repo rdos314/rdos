@@ -2463,6 +2463,56 @@ has_local_timer  Proc far
 has_local_timer    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LongTimerHandler
+;
+;           DESCRIPTION:    Long timer int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+long_timer_handler_name    DB 'Long Timer Handler', 0
+
+long_timer_handler      Proc far
+    EnterSmpInt    
+    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+    LeaveSmpInt
+    retf32
+long_timer_handler      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LongHpetHandler
+;
+;           DESCRIPTION:    Long HPET int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+long_hpet_handler_name    DB 'Long Hpet Handler', 0
+
+long_hpet_handler      Proc far
+    mov ax,SEG data
+    mov ds,ax
+    mov ds,ds:hpet_sel
+    mov edx,ds:hpet_int_status
+    mov ds:hpet_int_status,edx
+;    
+    EnterSmpInt    
+    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+    LeaveSmpInt
+    retf32
+long_hpet_handler       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;               NAME:           SpuriousInt
@@ -3976,6 +4026,12 @@ init    PROC far
     mov ax,reload_sys_preempt_timer_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET long_timer_handler
+    mov edi,OFFSET long_timer_handler_name
+    xor cl,cl
+    mov ax,long_timer_handler_nr
+    RegisterOsGate
+;
     mov si,OFFSET get_pit_time
     mov di,OFFSET get_pit_time_name
     xor dx,dx
@@ -4102,6 +4158,12 @@ init_hpet_timer_ok:
     mov edi,OFFSET clear_hpet_name
     xor cl,cl
     mov ax,clear_hpet_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET long_hpet_handler
+    mov edi,OFFSET long_hpet_handler_name
+    xor cl,cl
+    mov ax,long_hpet_handler_nr
     RegisterOsGate
 ;
     mov si,OFFSET has_global_timer

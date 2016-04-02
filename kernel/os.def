@@ -690,4 +690,7 @@ get_sel_bitness_nr          = 562
 
 setup_long_schedule_int_nr  = 563
 
+long_timer_handler_nr       = 564
+long_hpet_handler_nr        = 565
+
 osgate_entries				= 580
