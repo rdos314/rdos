@@ -115,9 +115,33 @@ IrqExit1:
     out INT0_CONTROL,al
     LeaveInt
 ;
-    pop fs
-    pop es
-    pop ds
+    pop ax
+    verr ax
+    jz IrqExitFs1
+;    
+    xor ax,ax
+
+IrqExitFs1:
+    mov fs,ax
+;
+    pop ax
+    verr ax
+    jz IrqExitEs1
+;    
+    xor ax,ax
+
+IrqExitEs1:
+    mov es,ax
+;
+    pop ax
+    verr ax
+    jz IrqExitDs1
+;    
+    xor ax,ax
+
+IrqExitDs1:
+    mov ds,ax
+;
     popad
     iretd
 
@@ -175,9 +199,33 @@ IrqExit2:
     out INT1_CONTROL,al
     LeaveInt
 ;
-    pop fs
-    pop es
-    pop ds
+    pop ax
+    verr ax
+    jz IrqExitFs2
+;    
+    xor ax,ax
+
+IrqExitFs2:
+    mov fs,ax
+;
+    pop ax
+    verr ax
+    jz IrqExitEs2
+;    
+    xor ax,ax
+
+IrqExitEs2:
+    mov es,ax
+;
+    pop ax
+    verr ax
+    jz IrqExitDs2
+;    
+    xor ax,ax
+
+IrqExitDs2:
+    mov ds,ax
+;
     popad
     iretd
 
@@ -920,9 +968,33 @@ timer_int:
 ;
     PreemptTimerExpired
 ;
-    pop fs
-    pop es
-    pop ds
+    pop ax
+    verr ax
+    jz timer_fs_ok
+;
+    xor ax,ax
+
+timer_fs_ok:
+    mov fs,ax
+;    
+    pop ax
+    verr ax
+    jz timer_es_ok
+;
+    xor ax,ax
+
+timer_es_ok:
+    mov es,ax
+;    
+    pop ax
+    verr ax
+    jz timer_ds_ok
+;
+    xor ax,ax
+
+timer_ds_ok:
+    mov ds,ax
+;    
     popad
     iretd
 
