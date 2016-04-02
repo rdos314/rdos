@@ -4506,35 +4506,8 @@ start_global_insert_first:
 ;
     call TryLockCore
     call UnlockTimerGlobal    
-    push es
-    pushad
-
-start_global_retry:    
-    GetSystemTime
-    call LockTimerGlobal
-    add eax,cs:update_tics
-    adc edx,0
-    mov bx,ds:timer_head
-    sub eax,ds:[bx].timer_lsb
-    sbb edx,ds:[bx].timer_msb
-    jc start_global_reload
-;    
-    call LocalRemoveTimerGlobal
-    jmp start_global_retry
-
-start_global_reload:    
-    neg eax
-    ReloadSysTimer
-    jnc start_global_idle
-;
-    call UnlockTimerGlobal
-    jmp start_global_retry
-
-start_global_idle:    
-    call UnlockTimerGlobal
+    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     call TryUnlockCore
-    popad
-    pop es
     jmp start_global_done
     
 start_global_try_next:
@@ -4639,7 +4612,6 @@ start_core_timer     PROC far
 ;
     call TryLockCore
     sti
-    pushf
     call LockTimerCore
 ;    
     mov si,fs:ps_timer_free
@@ -4669,71 +4641,11 @@ start_core_insert:
     pop fs:[si].timer_next
     mov si,fs:[si].timer_next
     mov fs:[si].timer_next,bx
-    call UnlockTimerCore
-    popf
-    jc start_core_reload_timer_loop
-;
-    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
-    jmp start_core_reload_timer_done
-
-start_core_reload_timer_loop:
-    lock and fs:ps_flags,NOT PS_FLAG_TIMER_EXPIRED
-    mov es,fs:ps_curr_thread
-    GetSystemTime
-    call LockTimerCore
-    add eax,cs:update_tics
-    adc edx,0
-    mov bx,fs:ps_timer_head
-    mov ecx,fs:ps_preempt_msb
-    cmp ecx,fs:[bx].timer_msb
-    jc start_core_reload_check_preempt
-    jnz start_core_reload_check_timer
-;       
-    mov ecx,fs:ps_preempt_lsb
-    cmp ecx,fs:[bx].timer_lsb
-    jc start_core_reload_check_preempt
-
-start_core_reload_check_timer:
-    sub eax,fs:[bx].timer_lsb
-    sbb edx,fs:[bx].timer_msb
-    jc start_core_reload_timer_do
-;       
-    call LocalRemoveTimerCore
-    jmp start_core_reload_timer_loop
-
-start_core_reload_check_preempt:
-    sub eax,fs:ps_preempt_lsb
-    sbb edx,fs:ps_preempt_msb
-    jc start_core_reload_timer_do
-;
-    call UnlockTimerCore
-    lock or fs:ps_flags,PS_FLAG_PREEMPT
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz start_core_reload_preempt_block
 ;    
-    push OFFSET start_core_reload_timer_end
-    call SaveLockedThread
-    jmp ContinueCurrentThread
-
-start_core_reload_preempt_block:
-    sti
-    GetSystemTime
-    add eax,1193
-    adc edx,0
-    mov fs:ps_preempt_lsb,eax
-    mov fs:ps_preempt_msb,edx
-    jmp start_core_reload_timer_loop
-
-start_core_reload_timer_do:
-    neg eax
-    ReloadSysPreemptTimer
     call UnlockTimerCore
-
-start_core_reload_timer_done:
+    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     call TryUnlockCore
-
-start_core_reload_timer_end:       
+;
     popad
     pop fs
     pop es
