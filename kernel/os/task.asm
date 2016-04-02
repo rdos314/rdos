@@ -4224,6 +4224,57 @@ flush_tlb Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           UpdateTimer
+;
+;           DESCRIPTION:    Update timers
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateTimer    Proc near
+    push ds
+    push eax
+    push ebx
+    push edx
+;    
+    mov ax,SEG data
+    mov ds,ax
+
+update_timer_check:   
+    GetSystemTime
+    call LockTimerGlobal
+    add eax,cs:update_tics
+    adc edx,0
+    mov bx,ds:timer_head
+    sub eax,ds:[bx].timer_lsb
+    sbb edx,ds:[bx].timer_msb
+    jc update_timer_reload
+;
+    call LocalRemoveTimerGlobal    
+    jmp update_timer_check
+
+update_timer_reload: 
+    neg eax
+    ReloadSysTimer
+    jnc update_timer_done
+;
+    call UnlockTimerGlobal
+    jmp update_timer_check
+
+update_timer_done:
+    call UnlockTimerGlobal    
+;
+    pop edx
+    pop ebx
+    pop eax 
+    pop ds   
+    ret
+UpdateTimer    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           TimerExpired
 ;
 ;           DESCRIPTION:    Timer expired notification
@@ -4237,32 +4288,7 @@ timer_expired_name   DB 'Timer Expired', 0
 timer_expired    Proc far
     call TryLockCore
     sti
-    mov ax,SEG data
-    mov ds,ax
-
-timer_expired_check:   
-    GetSystemTime
-    call LockTimerGlobal
-    add eax,cs:update_tics
-    adc edx,0
-    mov bx,ds:timer_head
-    sub eax,ds:[bx].timer_lsb
-    sbb edx,ds:[bx].timer_msb
-    jc timer_expired_reload
-;
-    call LocalRemoveTimerGlobal    
-    jmp timer_expired_check
-
-timer_expired_reload: 
-    neg eax
-    ReloadSysTimer
-    jnc timer_expired_done
-;
-    call UnlockTimerGlobal
-    jmp timer_expired_check
-
-timer_expired_done:
-    call UnlockTimerGlobal    
+    call UpdateTimer
     call TryUnlockCore
     retf32
 timer_expired    Endp
@@ -4281,32 +4307,7 @@ timer_expired    Endp
 irq_timer_expired_name   DB 'IRQ Timer Expired', 0
 
 irq_timer_expired    Proc far
-    mov ax,SEG data
-    mov ds,ax
-
-irq_timer_expired_check:   
-    GetSystemTime
-    call LockTimerGlobal
-    add eax,cs:update_tics
-    adc edx,0
-    mov bx,ds:timer_head
-    sub eax,ds:[bx].timer_lsb
-    sbb edx,ds:[bx].timer_msb
-    jc irq_timer_expired_reload
-;
-    call LocalRemoveTimerGlobal    
-    jmp irq_timer_expired_check
-
-irq_timer_expired_reload: 
-    neg eax
-    ReloadSysTimer
-    jnc irq_timer_expired_done
-;
-    call UnlockTimerGlobal
-    jmp irq_timer_expired_check
-
-irq_timer_expired_done:
-    call UnlockTimerGlobal    
+    call UpdateTimer
     retf32
 irq_timer_expired    Endp
 
