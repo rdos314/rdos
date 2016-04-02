@@ -1056,6 +1056,10 @@ SwitchAllCoreIrqs    MACRO
     OsGate switch_all_core_irqs_nr
                         ENDM
 
+UseOwnPreemptTimer    MACRO
+    OsGate use_own_preempt_timer_nr
+                        ENDM
+
 ;  FS   Locked core
 TimerExpired    MACRO
     OsGate timer_expired_nr

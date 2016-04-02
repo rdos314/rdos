@@ -4123,6 +4123,8 @@ init_hpet_loop:
     jz init_hpet_done
 
 init_hpet_timer_ok:
+    UseOwnPreemptTimer
+;    
     mov ax,cs
     mov ds,ax
     mov es,ax

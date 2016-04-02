@@ -958,15 +958,11 @@ timer_int:
     push es
     push fs
 ;
-    xor ax,ax
-    mov ds,ax
-    mov es,ax
-    mov fs,ax
-;
+    EnterInt
+    lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     mov al,20h
     out INT0_CONTROL,al
-;
-    PreemptTimerExpired
+    LeaveInt
 ;
     pop ax
     verr ax

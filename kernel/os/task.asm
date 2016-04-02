@@ -194,7 +194,7 @@ unlock_futex_proc           DW OFFSET UnlockFutexSingle
 
 flush_tlb_proc              DW OFFSET FlushTlb386
 
-update_timer_proc           DW OFFSET UpdateOwnTimer
+update_timer_proc           DW OFFSET UpdateCombinedTimer
 
 preempt_reload_proc         DW OFFSET TimerPreemptReload
 
@@ -4382,6 +4382,31 @@ uctReload:
     pop ds   
     ret
 UpdateCombinedTimer    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UseCombinedTimer
+;
+;           DESCRIPTION:    Use combined timer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+use_own_preempt_timer_name   DB 'Use Own Preempt Timer', 0
+
+use_own_preempt_timer    Proc far
+    push ds
+    push ax
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ds,ds:patch_sel
+    mov ds:update_timer_proc,OFFSET UpdateOwnTimer
+;
+    pop ax
+    pop ds
+    retf32
+use_own_preempt_timer      Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -9447,6 +9472,12 @@ timer_free_list_create:
     mov di,OFFSET run_ap_core_name
     xor cl,cl
     mov ax,run_ap_core_nr
+    RegisterOsGate
+;
+    mov si,OFFSET use_own_preempt_timer
+    mov di,OFFSET use_own_preempt_timer_name
+    xor cl,cl
+    mov ax,use_own_preempt_timer_nr
     RegisterOsGate
 ;
     mov si,OFFSET preempt_expired
