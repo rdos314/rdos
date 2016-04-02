@@ -194,6 +194,8 @@ unlock_futex_proc           DW OFFSET UnlockFutexSingle
 
 flush_tlb_proc              DW OFFSET FlushTlb386
 
+update_timer_proc           DW OFFSET UpdateOwnTimer
+
 preempt_reload_proc         DW OFFSET TimerPreemptReload
 
 fpu_exception_proc          DW OFFSET FpuExceptionSingle
@@ -1507,7 +1509,7 @@ load_retry:
     test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     jz load_timer_not_expired
 ;
-    call UpdateTimer
+    call cs:update_timer_proc
 
 load_timer_not_expired:        
     mov ax,es
@@ -3601,7 +3603,7 @@ tucRetry:
 tucHandleTimer:
     sti
     pushad
-    call UpdateTimer
+    call cs:update_timer_proc
     popad
     jmp tucRetry
     
@@ -3683,7 +3685,7 @@ ucNestOk:
 ucHandleTimer:
     sti
     pushad
-    call UpdateTimer
+    call cs:update_timer_proc
     popad
     jmp ucRetry
     
@@ -3925,7 +3927,7 @@ lliRetry:
 lliHandleTimer:
     sti
     pushad
-    call UpdateTimer
+    call cs:update_timer_proc
     popad
     jmp lliRetry
     
@@ -4279,22 +4281,22 @@ flush_tlb Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           UpdateTimer
+;           NAME:           UpdateOwnTimer
 ;
-;           DESCRIPTION:    Update timers
+;           DESCRIPTION:    Update timers without preempt
 ;
 ;           PARAMETERS:     FS  locked core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateTimer    Proc near
+UpdateOwnTimer    Proc near
     push ds
 ;    
     mov ax,SEG data
     mov ds,ax
     lock and fs:ps_flags,NOT PS_FLAG_TIMER_EXPIRED
 
-update_timer_check:   
+uotCheck:   
     GetSystemTime
     call LockTimerGlobal
     add eax,cs:update_tics
@@ -4302,25 +4304,84 @@ update_timer_check:
     mov bx,ds:timer_head
     sub eax,ds:[bx].timer_lsb
     sbb edx,ds:[bx].timer_msb
-    jc update_timer_reload
+    jc uotReload
 ;
     call LocalRemoveTimerGlobal    
-    jmp update_timer_check
+    jmp uotCheck
 
-update_timer_reload: 
+uotReload: 
     neg eax
     ReloadSysTimer
-    jnc update_timer_done
+    jnc uotDone
 ;
     call UnlockTimerGlobal
-    jmp update_timer_check
+    jmp uotCheck
 
-update_timer_done:
+uotDone:
     call UnlockTimerGlobal    
 ;
     pop ds   
     ret
-UpdateTimer    Endp
+UpdateOwnTimer    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UpdateCombinedTimer
+;
+;           DESCRIPTION:    Update combined timer
+;
+;           PARAMETERS:     FS  locked core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateCombinedTimer    Proc near
+    push ds
+;    
+    mov ax,SEG data
+    mov ds,ax
+
+uctLoop:
+    lock and fs:ps_flags,NOT PS_FLAG_PREEMPT_TIMER   
+    GetSystemTime
+    call LockTimerCore
+    add eax,cs:update_tics
+    adc edx,0
+    mov bx,fs:ps_timer_head
+    mov ecx,fs:ps_preempt_msb
+    cmp ecx,fs:[bx].timer_msb
+    jc uctPreempt
+    jnz uctTimer
+;       
+    mov ecx,fs:ps_preempt_lsb
+    cmp ecx,fs:[bx].timer_lsb
+    jc uctPreempt
+
+uctTimer:
+    sub eax,fs:[bx].timer_lsb
+    sbb edx,fs:[bx].timer_msb
+    jc uctReload
+;       
+    call LocalRemoveTimerCore
+    jmp uctLoop
+
+uctPreempt:
+    sub eax,fs:ps_preempt_lsb
+    sbb edx,fs:ps_preempt_msb
+    jc uctReload
+;
+    call UnlockTimerCore
+    lock or fs:ps_flags,PS_FLAG_PREEMPT
+    jmp uctLoop
+
+uctReload:
+    neg eax
+    ReloadSysPreemptTimer
+    call UnlockTimerCore
+;
+    pop ds   
+    ret
+UpdateCombinedTimer    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4336,7 +4397,7 @@ UpdateTimer    Endp
 timer_expired_name   DB 'Timer Expired', 0
 
 timer_expired    Proc far
-    call UpdateTimer
+    call cs:update_timer_proc
     retf32
 timer_expired    Endp
 
@@ -4356,25 +4417,8 @@ preempt_expired_name   DB 'Preempt Expired', 0
 preempt_expired    Proc far
     call TryLockCore
     sti
-    jc reload_preempt_locked
-;
     lock or fs:ps_flags,PS_FLAG_PREEMPT
-    jmp reload_preempt_done
-
-reload_preempt_locked:
-    lock or fs:ps_flags,PS_FLAG_PREEMPT
-    mov ax,fs:ps_curr_thread
-    or ax,ax
-    jz reload_preempt_done
-;    
-    push OFFSET reload_preempt_end
-    call SaveLockedThread
-    jmp ContinueCurrentThread
-
-reload_preempt_done:
     call TryUnlockCore
-
-reload_preempt_end:       
     retf32
 preempt_expired    Endp
 
