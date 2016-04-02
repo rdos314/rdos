@@ -2706,16 +2706,13 @@ preempt_int:
     push es
     push fs
 ;
-    xor ax,ax
-    mov es,ax
-    mov fs,ax
-;    
+    EnterSmpInt    
+    lock or fs:ps_flags,PS_FLAG_PREEMPT
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-;    
-    PreemptExpired
+    LeaveSmpInt
 ;
     pop ax
     verr ax
