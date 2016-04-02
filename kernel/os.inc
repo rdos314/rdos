@@ -2061,11 +2061,6 @@ SetupLongPreemptInt   MACRO
                     ENDM
 
 ; IN  AL        IRQ #
-SetupLongPreemptTimerInt   MACRO
-    OsGate setup_long_preempt_timer_int_nr
-                    ENDM
-
-; IN  AL        IRQ #
 SetupLongHpetInt   MACRO
     OsGate setup_long_hpet_int_nr
                     ENDM
