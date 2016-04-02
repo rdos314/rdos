@@ -1060,17 +1060,8 @@ UseOwnPreemptTimer    MACRO
     OsGate use_own_preempt_timer_nr
                         ENDM
 
-;  FS   Locked core
-TimerExpired    MACRO
-    OsGate timer_expired_nr
-                        ENDM
-
 PreemptExpired    MACRO
     OsGate preempt_expired_nr
-                        ENDM
-
-ClearHpet    MACRO
-    OsGate clear_hpet_nr
                         ENDM
 
 ;   IN  FS      Processor selector

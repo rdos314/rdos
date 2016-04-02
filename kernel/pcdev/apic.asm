@@ -1965,34 +1965,6 @@ rmhDone:
 request_msi_handler  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:           ClearHpet
-;
-;               DESCRIPTION:    Clear HPET
-;
-;               PARAMETERS:             
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-clear_hpet_name DB 'Clear HPET', 0
-
-clear_hpet  Proc far
-    push ds
-    push eax
-;    
-    mov ax,SEG data
-    mov ds,ax
-    mov ds,ds:hpet_sel
-    mov eax,ds:hpet_int_status
-    mov ds:hpet_int_status,eax
-;
-    pop eax
-    pop ds
-    retf32
-clear_hpet  Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;               NAME:           StartSysPreemptTimer
@@ -4081,12 +4053,6 @@ init_hpet_timer_ok:
     mov edi,OFFSET reload_hpet_timer_name
     xor cl,cl
     mov ax,reload_sys_timer_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET clear_hpet
-    mov edi,OFFSET clear_hpet_name
-    xor cl,cl
-    mov ax,clear_hpet_nr
     RegisterOsGate
 ;
     mov esi,OFFSET long_hpet_handler

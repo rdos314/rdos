@@ -559,7 +559,6 @@ setup_long_spurious_int_nr  = 472
 setup_long_timer_int_nr     = 473
 setup_long_preempt_int_nr   = 474
 setup_long_hpet_int_nr      = 477
-clear_hpet_nr               = 478
 
 setup_long_crash_gate_nr    = 479
 
