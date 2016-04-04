@@ -797,6 +797,14 @@ halt_sys:
     jmp halt_sys
     
 abort_task:
+    mov ax,wd_code_sel
+    verr ax
+    jnz abort_task_no_wd
+
+abort_task_wd:
+    SoftReset
+
+abort_task_no_wd:
     cli
     cld
 ;
