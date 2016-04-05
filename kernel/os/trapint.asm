@@ -1962,9 +1962,9 @@ t13_default:
     test bx,3
     jnz t13_em_app
 ;    
-    mov ax,wd_code_sel
-    verr ax
-    jnz t13_em_app
+;    mov ax,wd_code_sel
+;    verr ax
+;    jnz t13_em_app
 ;
     mov ds,[ebp].trap_cs
     mov ebx,[ebp].trap_eip

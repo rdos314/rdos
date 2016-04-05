@@ -137,8 +137,6 @@ hpet_counter_struc  STRUC
 hpetc_config        DD ?
 hpetc_int_mask      DD ?
 hpetc_compare       DD ?,?
-hpetc_msi_data      DD ?
-hpetc_msi_ads       DD ?
 hpetc_resv          DD ?,?
 
 hpet_counter_struc  ENDS
@@ -158,15 +156,6 @@ hpet_count          DD ?,?,?,?
 hpet_counter_arr    DB 32 * SIZE hpet_counter_struc DUP(?)
 
 hpet_struc      ENDS
-
-msi_core_irq_struc  STRUC
-
-msi_bus         DB ?
-msi_device      DB ?
-msi_function    DB ?
-msi_reg         DB ?
-
-msi_core_irq_struc  ENDS
 
 ioapic_core_irq_struc   STRUC
 
@@ -1655,17 +1644,6 @@ register_msi  Proc far
 ;
     mov dx,SEG data
     mov ds,dx
-;
-    push es
-    push eax
-    mov eax,SIZE msi_core_irq_struc
-    AllocateSmallGlobalMem
-    mov es:msi_bus,bh
-    mov es:msi_device,bl
-    mov es:msi_function,ch
-    mov es:msi_reg,cl
-    pop eax
-    pop es
 ;    
     xor ah,ah
     mov edx,ds:bsp_id
@@ -1841,9 +1819,6 @@ start_hpet_msi:
     mov edx,ds:bsp_id
     shl edx,12
     or edx,0FEE00000h
-;
-    mov es:[bx].hpetc_msi_data,eax
-    mov es:[bx].hpetc_msi_ads,edx
 ;
     mov eax,es:[bx].hpetc_config
     and ax,NOT 0Ah
