@@ -458,7 +458,7 @@ int main()
 
 
 //        ambient = (int)(10.0 * Climate->GetOutdoorTemperature());
-        ambient = 20;
+        ambient = 120;
 
         summer = FALSE;
 
