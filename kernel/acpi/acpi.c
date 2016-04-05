@@ -58,15 +58,6 @@ extern int GetExtFeatureFlags();
 extern int GetCpuInfo();
 #pragma aux GetCpuInfo value [eax]
 
-extern void SwitchOneIrq(int Core);
-#pragma aux SwitchOneIrq parm routine [eax]
-
-extern void SwitchAllIrqs(int Core);
-#pragma aux SwitchAllIrqs parm routine [eax]
-
-extern void MoveOneTask(int Core);
-#pragma aux MoveOneTask parm routine [eax]
-
 #define MAX_DEVICE_COUNT        1024
 #define MAX_PCI_ROOT_COUNT      8
 #define MAX_PCI_IRQ_COUNT       256

@@ -1046,16 +1046,6 @@ RunApCore    MACRO
     OsGate run_ap_core_nr
                         ENDM
 
-;   IN  FS      Processor selector to interrupt
-SwitchOneCoreIrq    MACRO
-    OsGate switch_one_core_irq_nr
-                        ENDM
-
-;   IN  FS      Processor selector to interrupt
-SwitchAllCoreIrqs    MACRO
-    OsGate switch_all_core_irqs_nr
-                        ENDM
-
 UseOwnPreemptTimer    MACRO
     OsGate use_own_preempt_timer_nr
                         ENDM
