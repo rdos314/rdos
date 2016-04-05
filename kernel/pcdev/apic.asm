@@ -498,50 +498,6 @@ get_ioapic_state    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CoreIoApicHandler
-;
-;       DESCRIPTION:    Callback to move IO-APIC entry
-;
-;       PARAMETERS:     DS      IOAPIC structure
-;                       FS      New core to serve IRQ
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CoreIoApicHandler Proc near
-    push ds
-    push es
-    push eax
-    push bx
-;    
-    mov al,ds:ioapic_num
-    mov es,ds:ioapic_sel
-;
-    mov ax,SEG data
-    mov ds,ax    
-;       
-    mov bl,11h
-    add bl,al
-    add bl,al
-;
-    LockIoApic
-;
-    mov es:ioapic_regsel,bl
-    mov eax,fs:ps_apic
-    shl eax,24
-    mov es:ioapic_window,eax
-;
-    UnlockIoApic
-;    
-    pop bx
-    pop eax
-    pop es
-    pop ds
-    ret
-CoreIoApicHandler Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           AddIoApicHandler
 ;
 ;       DESCRIPTION:    Add core mover for IO-APIC
