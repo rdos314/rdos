@@ -159,17 +159,7 @@ hpet_counter_arr    DB 32 * SIZE hpet_counter_struc DUP(?)
 
 hpet_struc      ENDS
 
-core_irq_struc  STRUC
-
-;  DS       This struct
-;  FS       New core
-ci_proc         DW ?
-
-core_irq_struc  ENDS
-
 msi_core_irq_struc  STRUC
-
-msi_base        core_irq_struc <>
 
 msi_bus         DB ?
 msi_device      DB ?
@@ -179,8 +169,6 @@ msi_reg         DB ?
 msi_core_irq_struc  ENDS
 
 ioapic_core_irq_struc   STRUC
-
-ioapic_base     core_irq_struc <>
 
 ioapic_sel      DW ?
 ioapic_num      DB ?
@@ -211,17 +199,12 @@ hpet_counters       DW ?
 
 detected_irqs       DD ?,?
 
-core_irq_count      DW ?
-core_irq_curr       DW ?
-
 ioapic_count        DW ?
 ioapic_arr          DW 16 DUP(?)
 
 redir_arr           DB 16 DUP(?)
 
 global_int_arr      DD 256 DUP(?,?,?,?)
-
-core_irq_arr        DW 256 DUP(?)
 
 data    ENDS
 
@@ -458,33 +441,6 @@ UnlockIoApic    MACRO
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:           InsertCoreIrq
-;
-;               DESCRIPTION:    Insert new redirectable IRQ handler
-;
-;               PARAMETERS:     DS      data segment
-;                               ES      IRQ selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertCoreIrq   Proc near
-    push ax
-    push bx
-;
-    mov bx,ds:core_irq_count
-    add bx,bx
-    add bx,OFFSET core_irq_arr
-    mov ds:[bx],es
-    inc ds:core_irq_count
-;    
-    pop bx
-    pop ax
-    ret
-InsertCoreIrq   Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;               NAME:           Get IOAPIC state
 ;
 ;               DESCRIPTION:    Get state for IOAPIC int
@@ -605,9 +561,6 @@ AddIoApicHandler    Proc near
 ;    
     mov es:ioapic_sel,fs
     mov es:ioapic_num,al
-    mov es:ci_proc,OFFSET CoreIoApicHandler
-;
-    call InsertCoreIrq
 ;
     pop es
     ret
@@ -1724,38 +1677,6 @@ disable_all_irq Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CoreMsiHandler
-;
-;       DESCRIPTION:    Callback to move MSI handler
-;
-;       PARAMETERS:     DS      MSI structure
-;                       FS      New core to serve IRQ
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CoreMsiHandler  Proc near
-    push eax
-    push bx
-    push cx
-;    
-    mov eax,fs:ps_apic
-    shl eax,12
-    or eax,0FEE00000h
-    mov bh,ds:msi_bus
-    mov bl,ds:msi_device
-    mov ch,ds:msi_function
-    mov cl,ds:msi_reg
-    WritePciDword
-;
-    pop cx
-    pop bx
-    pop eax
-    ret
-CoreMsiHandler  Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           RegisterMsi
 ;
 ;       DESCRIPTION:    Register MSI and return parameters
@@ -1787,8 +1708,6 @@ register_msi  Proc far
     mov es:msi_device,bl
     mov es:msi_function,ch
     mov es:msi_reg,cl
-    mov es:ci_proc,OFFSET CoreMsiHandler
-    call InsertCoreIrq
     pop eax
     pop es
 ;    
@@ -1917,39 +1836,6 @@ reload_sys_preempt_timer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CoreHpetHandler
-;
-;       DESCRIPTION:    Callback to move HPET handler
-;
-;       PARAMETERS:     DS      MSI structure
-;                       FS      New core to serve IRQ
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CoreHpetHandler Proc near
-    push es
-    push eax
-    push bx
-;    
-    mov ax,SEG data
-    mov es,ax
-    mov es,es:hpet_sel
-    mov bx,OFFSET hpet_counter_arr    
-;    
-    mov eax,fs:ps_apic
-    shl eax,12
-    or eax,0FEE00000h
-    mov es:[bx].hpetc_msi_ads,eax
-;
-    pop bx
-    pop eax
-    pop es
-    ret
-CoreHpetHandler Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           StartSysTimer
 ;
 ;           DESCRIPTION:    Start HPET sys timer
@@ -2007,11 +1893,6 @@ start_hpet_msi:
     and ax,NOT 0Ah
     or ax,4104h 
     mov es:[bx].hpetc_config,eax
-;
-    mov eax,SIZE core_irq_struc
-    AllocateSmallGlobalMem
-    mov es:ci_proc,OFFSET CoreHpetHandler
-    call InsertCoreIrq
 
 start_hpet_done:
     xor eax,eax
@@ -2765,8 +2646,6 @@ InitIoApic    Proc near
     mov ax,SEG data
     mov ds,ax
     mov ds:ioapic_count,0
-    mov ds:core_irq_count,0
-    mov ds:core_irq_curr,0
 ;
     push es
     mov ax,SEG data
