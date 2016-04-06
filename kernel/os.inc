@@ -1443,7 +1443,7 @@ EnterInt    MACRO
     mov ax,core_data_sel
     mov fs,ax
     mov fs,fs:ps_sel
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
                         ENDM
 
 LeaveInt    MACRO
@@ -1458,15 +1458,19 @@ LeaveInt    MACRO
 
 tucRetry:    
     cli    
-    sub fs:ps_nesting,1
+    lock sub fs:ps_nesting,1
     jnc tucDone
 ;
     test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     jz tucTimerOk
 ;
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     jc tucHandleTimer
 ;
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz tucHandleTimer
+;    
     CrashGate
 
 tucHandleTimer:
@@ -1483,9 +1487,13 @@ tucTimerOk:
     or eax,eax
     jz tucTlbDone
 ;
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     jc tucFlush
 ;
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz tucFlush
+;    
     CrashGate
 
 tucFlush:
@@ -1502,9 +1510,13 @@ tucTlbDone:
     jz tucDone
 
 tucSwap:
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     jc tucSched
 ;
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz tucSched
+;    
     CrashGate    
 
 tucSched:
@@ -1525,7 +1537,7 @@ EnterSmpInt    MACRO
     mov ax,core_data_sel
     mov fs,ax
     mov fs,fs:ps_sel
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
 ;
     mov ax,fs:ps_curr_thread
     mov es,ax
@@ -1541,7 +1553,7 @@ EnterSmpInt    MACRO
     or ax,ax
     jnz esiDone
 ;    
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     mov es:p_nest_unwind,1
         
 esiDone:    
@@ -1563,15 +1575,19 @@ LeaveSmpInt    MACRO
     
 lsiRetry:    
     cli    
-    sub fs:ps_nesting,1
+    lock sub fs:ps_nesting,1
     jnc lsiStillLocked
 ;
     test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     jz lsiTimerOk
 ;
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     jc lsiHandleTimer
 ;
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz lsiHandleTimer
+;    
     CrashGate
 
 lsiHandleTimer:
@@ -1588,9 +1604,13 @@ lsiTimerOk:
     or eax,eax
     jz lsiTlbDone
 ;
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     jc lsiFlush
 ;
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz lsiFlush
+;    
     CrashGate
 
 lsiFlush:
@@ -1607,9 +1627,13 @@ lsiTlbDone:
     jz lsiDecNest
 
 lsiSwap:
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     jc lsiSched
 ;
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz lsiSched
+;    
     CrashGate    
 
 lsiSched:

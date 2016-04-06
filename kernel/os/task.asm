@@ -3531,7 +3531,7 @@ TryLockCore   Proc near
     push word ptr core_data_sel
     pop fs
     mov fs,fs:ps_sel
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     ret
 TryLockCore   Endp
 
@@ -3553,18 +3553,13 @@ LockCore      Proc near
     push word ptr core_data_sel
     pop fs
     mov fs,fs:ps_sel
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     jc lcDone
 ;
-    mov ax,fs:ps_curr_thread
+    mov ax,fs:ps_nesting
     or ax,ax
-    jz lcThreadOk
+    je lcDone
 ;
-    mov es,ax
-    mov cx,es:p_nest_count
-    mov dx,es:p_nest_unwind
-
-lcThreadOk:    
     CrashGate
 
 lcDone:     
@@ -3588,15 +3583,19 @@ TryUnlockCore    Proc near
     
 tucRetry:    
     cli
-    sub fs:ps_nesting,1
+    lock sub fs:ps_nesting,1
     jnc tucDone
 ;
     test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     jz tucTimerOk
 ;
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     jc tucHandleTimer
 ;
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz tucHandleTimer
+;    
     CrashGate
 
 tucHandleTimer:
@@ -3611,9 +3610,13 @@ tucTimerOk:
     or eax,eax
     jz tucTlbDone
 ;
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     jc tucFlush
 ;
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz tucFlush
+;    
     CrashGate    
 
 tucFlush:
@@ -3634,9 +3637,13 @@ tucTlbDone:
     jz tucDone
 
 tucSwap:
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     jc tucSched
 ;
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz tucSched
+;    
     CrashGate
 
 tucSched:
@@ -3667,18 +3674,26 @@ UnlockCore    Proc near
     
 ucRetry:    
     cli
-    sub fs:ps_nesting,1
+    lock sub fs:ps_nesting,1
     jc ucNestOk
 ;
+    mov ax,fs:ps_nesting
+    cmp ax,-1
+    je ucNestOk
+;    
     CrashGate
 
 ucNestOk:    
     test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     jz ucTimerOk
 ;
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     jc ucHandleTimer
 ;
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz ucHandleTimer
+;    
     CrashGate
 
 ucHandleTimer:
@@ -3693,9 +3708,13 @@ ucTimerOk:
     or eax,eax
     jz ucTlbDone
 ;
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     jc ucFlush
 ;
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz ucFlush
+;    
     CrashGate    
 
 ucFlush:
@@ -3712,9 +3731,13 @@ ucTlbDone:
     jz ucDone
 
 ucSwap:
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     jc ucSched
 ;
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz ucSched
+;    
     CrashGate
 
 ucSched:
@@ -3742,9 +3765,13 @@ UnlockCore    Endp
 
 LoadUnlockCore    Proc near
     cli
-    sub fs:ps_nesting,1
+    lock sub fs:ps_nesting,1
     jc lulcDone
 ;
+    mov ax,fs:ps_nesting
+    cmp ax,-1
+    je lulcDone
+;    
     CrashGate
 
 lulcDone:       
@@ -3865,7 +3892,7 @@ enter_long_int   Proc far
     cli
     mov ax,core_data_sel
     mov ds,ax
-    add ds:ps_nesting,1
+    lock add ds:ps_nesting,1
     mov ax,ds:ps_sel
     mov fs,ax
     shl eax,16
@@ -3884,7 +3911,7 @@ enter_long_int   Proc far
     or ax,ax
     jnz eliDone
 ;    
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     mov es:p_nest_unwind,1
         
 eliDone:
@@ -3912,13 +3939,13 @@ leave_long_int   Proc far
     
 lliRetry:    
     cli    
-    sub fs:ps_nesting,1
+    lock sub fs:ps_nesting,1
     jnc lliStillLocked
 ;
     test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     jz lliTimerOk
 ;
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     jc lliHandleTimer
 ;
     CrashGate
@@ -3939,7 +3966,7 @@ lliTimerOk:
     or eax,eax
     jz lliTlbDone
 ;
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     jc lliFlush
 ;
     CrashGate
@@ -3958,7 +3985,7 @@ lliTlbDone:
     jz lliDecNest
 
 lliSwap:
-    add fs:ps_nesting,1
+    lock add fs:ps_nesting,1
     jc lliSched
 ;
     CrashGate    
