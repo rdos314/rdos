@@ -816,6 +816,34 @@ enter_c3    Proc far
     pop fs
     ret
 enter_c3    Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetIntelTemperature
+;
+;       DESCRIPTION:    Get Intel CPU temperature
+;
+;       RETURNS:        EAX     Temperature in 1/10th of degrees celsius
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetIntelTermOffset_
+    
+GetIntelTermOffset_    Proc near
+    push ecx
+    push edx
+;
+    mov ecx,19Ch    
+    rdmsr
+;
+    shr eax,16
+    and eax,7Fh
+;    
+    pop edx
+    pop ecx
+    ret
+GetIntelTermOffset_ Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

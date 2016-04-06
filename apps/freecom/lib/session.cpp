@@ -86,6 +86,7 @@
 #include "unzipc.h"
 #include "wipedir.h"
 #include "showcrash.h"
+#include "temp.h"
 
 #include "file.h"
 #include "path.h"
@@ -154,6 +155,7 @@ static TCommandFactory *set;
 static TCommandFactory *state;
 static TCommandFactory *type;
 static TCommandFactory *timev;
+static TCommandFactory *temp;
 static TCommandFactory *unzip;
 static TCommandFactory *usb;
 static TCommandFactory *volume;
@@ -227,8 +229,9 @@ TSession::TSession(const char *ipc)
         volume = new TVolumeFactory;
         usb = new TUsbFactory;
         unzip = new TUnzipFactory;
-        timev = new TTimeFactory;
         type = new TTypeFactory;
+        timev = new TTimeFactory;
+        temp = new TTempFactory;
         sysinfo = new TSysinfoFactory;
         synctime = new TSyncTimeFactory;
         state = new TStateFactory;
@@ -374,6 +377,7 @@ TSession::~TSession()
         delete unzip;
         delete timev;
         delete type;
+        delete temp;
         delete synctime;
         delete state;
         delete set;

@@ -688,4 +688,6 @@ long_hpet_handler_nr        = 565
 
 use_own_preempt_timer_nr    = 566
 
+fault_reset_nr              = 567
+
 osgate_entries				= 580

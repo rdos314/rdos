@@ -58,6 +58,9 @@ extern int GetExtFeatureFlags();
 extern int GetCpuInfo();
 #pragma aux GetCpuInfo value [eax]
 
+extern int GetIntelTermOffset();
+#pragma aux GetIntelTermOffset value [eax]
+
 #define MAX_DEVICE_COUNT        1024
 #define MAX_PCI_ROOT_COUNT      8
 #define MAX_PCI_IRQ_COUNT       256
@@ -1571,6 +1574,7 @@ int __far ImplGetCpuTemperature()
     ACPI_HANDLE Object;
     ACPI_BUFFER Buffer;
     char ValStr[11];
+    int val = 0;
 
     Status = AcpiGetHandle(0, "\\PCI0\\PIDE", &Object);
     if (Status == AE_OK)
@@ -1586,7 +1590,24 @@ int __far ImplGetCpuTemperature()
             RdosSetFailure();
     }
     else
-        RdosSetFailure();
+    {
+        if (strstr(CpuVendor, "Intel"))
+        {
+            val = GetIntelTermOffset();
+
+            if (val)
+            {
+                val = 10 * (115 - val);
+                RdosSetSuccess();
+            }
+            else
+                RdosSetFailure();
+        }
+        else
+            RdosSetFailure();
+        
+    }        
+    return val;
 }
 
 /*##########################################################################
@@ -2758,7 +2779,10 @@ void __far InitTasking()
     long long status;
 
     if (UseAcpiReset())
+    {
         RdosRegisterBimodalUserGate(usergate_soft_reset, (__rdos_gate_callback *)&ImplSoftReset, "Soft Reset");
+        RdosRegisterOsGate(osgate_fault_reset, (__rdos_gate_callback *)&ImplSoftReset, "Fault Reset");
+    }        
 
     InitOsAcpi();
     Load();

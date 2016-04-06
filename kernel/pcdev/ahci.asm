@@ -3422,6 +3422,7 @@ notify_discbuf_retry:
     pop ds
 
 notify_do_reset:
+    int 3
     inc gs:ap_restart_count            
     and ds:hba_pxcmd,NOT HBA_PXCMD_ST
 

@@ -1888,3 +1888,17 @@ Shows previous crash log
 
 SHOWCRASH
 .
+
+:TEXT_CMDHELP_TEMP
+Shows CPU temperature
+
+TEMP
+.
+
+:TEXT_CPU_TEMP
+CPU temperature is %d.%01d degrees
+.
+
+:TEXT_NO_CPU_TEMP
+CPU temperature not supported
+.

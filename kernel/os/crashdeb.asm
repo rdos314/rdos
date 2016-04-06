@@ -2095,6 +2095,10 @@ execute_crash_handler:
 ;
     mov ax,5
     call DelayMs
+    FaultReset
+;    
+    mov ax,500
+    call DelayMs
     SoftReset
 
 execute_crash_do:

@@ -802,6 +802,7 @@ abort_task:
     jnz abort_task_no_wd
 
 abort_task_wd:
+    FaultReset
     SoftReset
 
 abort_task_no_wd:

@@ -1008,6 +1008,10 @@ StopTimer       MACRO
 
 ;;;;;;;;;;; Processor ;;;;;;;;;;;;;;;;
 
+FaultReset    MACRO
+    OsGate fault_reset_nr
+                        ENDM
+
 ;   IN  AL      Global int #
 ;   OUT EDX:EAX IO-APIC state
 GetIoApicState    MACRO

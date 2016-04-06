@@ -415,7 +415,6 @@
 #define osgate_get_core_count 369
 #define osgate_run_ap_core 370
 
-#define osgate_preempt_timer_expired 371
 #define osgate_timer_expired 372
 
 #define osgate_reload_sys_timer 373
@@ -461,8 +460,6 @@
 #define osgate_start_sys_preempt_timer 400
 #define osgate_reload_sys_preempt_timer 401
 
-#define osgate_notify_flush_tlb 402
-
 #define osgate_is_valid_usb_pipe_sel 403
 
 #define osgate_hook_net_link_up 404
@@ -506,9 +503,6 @@
 
 #define osgate_lock_file 431
 #define osgate_unlock_file 432
-
-#define osgate_switch_one_core_irq 433
-#define osgate_switch_all_core_irqs 434
 
 #define osgate_app_patch 435
 
@@ -561,10 +555,7 @@
 #define osgate_setup_long_spurious_int 472
 #define osgate_setup_long_timer_int 473
 #define osgate_setup_long_preempt_int 474
-#define osgate_setup_long_tlb_flush_int 475
-#define osgate_setup_long_preempt_timer_int 476
 #define osgate_setup_long_hpet_int 477
-#define osgate_clear_hpet 478
 
 #define osgate_setup_long_crash_gate 479
 
@@ -656,7 +647,6 @@
 
 #define osgate_get_acpi_pnp_device_mem 542
 
-#define osgate_irq_timer_expired 543
 #define osgate_force_level_irq 544
 
 #define osgate_has_can_send_buf 545
@@ -684,6 +674,21 @@
 #define osgate_update_freq 558
 
 #define osgate_add_thread_int 559
+
+#define osgate_add_scheduler_log 560
+
+#define osgate_do_flush_tlb 561
+
+#define osgate_get_sel_bitness 562
+
+#define osgate_setup_long_schedule_int 563
+
+#define osgate_long_timer_handler 564
+#define osgate_long_hpet_handler 565
+
+#define osgate_use_own_preempt_timer 566
+
+#define osgate_fault_reset 567
 
 
 
@@ -1104,7 +1109,6 @@
 #define OsGate_get_core_count 0x3E 0x67 0x9a 113 1 0 0 2 0
 #define OsGate_run_ap_core 0x3E 0x67 0x9a 114 1 0 0 2 0
 
-#define OsGate_preempt_timer_expired 0x3E 0x67 0x9a 115 1 0 0 2 0
 #define OsGate_timer_expired 0x3E 0x67 0x9a 116 1 0 0 2 0
 
 #define OsGate_reload_sys_timer 0x3E 0x67 0x9a 117 1 0 0 2 0
@@ -1150,8 +1154,6 @@
 #define OsGate_start_sys_preempt_timer 0x3E 0x67 0x9a 144 1 0 0 2 0
 #define OsGate_reload_sys_preempt_timer 0x3E 0x67 0x9a 145 1 0 0 2 0
 
-#define OsGate_notify_flush_tlb 0x3E 0x67 0x9a 146 1 0 0 2 0
-
 #define OsGate_is_valid_usb_pipe_sel 0x3E 0x67 0x9a 147 1 0 0 2 0
 
 #define OsGate_hook_net_link_up 0x3E 0x67 0x9a 148 1 0 0 2 0
@@ -1195,9 +1197,6 @@
 
 #define OsGate_lock_file 0x3E 0x67 0x9a 175 1 0 0 2 0
 #define OsGate_unlock_file 0x3E 0x67 0x9a 176 1 0 0 2 0
-
-#define OsGate_switch_one_core_irq 0x3E 0x67 0x9a 177 1 0 0 2 0
-#define OsGate_switch_all_core_irqs 0x3E 0x67 0x9a 178 1 0 0 2 0
 
 #define OsGate_app_patch 0x3E 0x67 0x9a 179 1 0 0 2 0
 
@@ -1250,10 +1249,7 @@
 #define OsGate_setup_long_spurious_int 0x3E 0x67 0x9a 216 1 0 0 2 0
 #define OsGate_setup_long_timer_int 0x3E 0x67 0x9a 217 1 0 0 2 0
 #define OsGate_setup_long_preempt_int 0x3E 0x67 0x9a 218 1 0 0 2 0
-#define OsGate_setup_long_tlb_flush_int 0x3E 0x67 0x9a 219 1 0 0 2 0
-#define OsGate_setup_long_preempt_timer_int 0x3E 0x67 0x9a 220 1 0 0 2 0
 #define OsGate_setup_long_hpet_int 0x3E 0x67 0x9a 221 1 0 0 2 0
-#define OsGate_clear_hpet 0x3E 0x67 0x9a 222 1 0 0 2 0
 
 #define OsGate_setup_long_crash_gate 0x3E 0x67 0x9a 223 1 0 0 2 0
 
@@ -1345,7 +1341,6 @@
 
 #define OsGate_get_acpi_pnp_device_mem 0x3E 0x67 0x9a 30 2 0 0 2 0
 
-#define OsGate_irq_timer_expired 0x3E 0x67 0x9a 31 2 0 0 2 0
 #define OsGate_force_level_irq 0x3E 0x67 0x9a 32 2 0 0 2 0
 
 #define OsGate_has_can_send_buf 0x3E 0x67 0x9a 33 2 0 0 2 0
@@ -1373,4 +1368,19 @@
 #define OsGate_update_freq 0x3E 0x67 0x9a 46 2 0 0 2 0
 
 #define OsGate_add_thread_int 0x3E 0x67 0x9a 47 2 0 0 2 0
+
+#define OsGate_add_scheduler_log 0x3E 0x67 0x9a 48 2 0 0 2 0
+
+#define OsGate_do_flush_tlb 0x3E 0x67 0x9a 49 2 0 0 2 0
+
+#define OsGate_get_sel_bitness 0x3E 0x67 0x9a 50 2 0 0 2 0
+
+#define OsGate_setup_long_schedule_int 0x3E 0x67 0x9a 51 2 0 0 2 0
+
+#define OsGate_long_timer_handler 0x3E 0x67 0x9a 52 2 0 0 2 0
+#define OsGate_long_hpet_handler 0x3E 0x67 0x9a 53 2 0 0 2 0
+
+#define OsGate_use_own_preempt_timer 0x3E 0x67 0x9a 54 2 0 0 2 0
+
+#define OsGate_fault_reset 0x3E 0x67 0x9a 55 2 0 0 2 0
 

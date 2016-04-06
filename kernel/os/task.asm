@@ -9462,6 +9462,12 @@ timer_free_list_create:
     mov ax,add_scheduler_log_nr
     RegisterOsGate
 ;
+    mov si,OFFSET soft_reset
+    mov di,OFFSET soft_reset_name
+    xor dx,dx
+    mov ax,fault_reset_nr
+    RegisterOsGate
+;
     mov si,OFFSET free_proc_handle
     mov di,OFFSET free_proc_handle_name
     xor dx,dx
