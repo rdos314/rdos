@@ -137,6 +137,8 @@ hpet_counter_struc  STRUC
 hpetc_config        DD ?
 hpetc_int_mask      DD ?
 hpetc_compare       DD ?,?
+hpetc_msi_data      DD ?
+hpetc_msi_ads       DD ?
 hpetc_resv          DD ?,?
 
 hpet_counter_struc  ENDS
@@ -1819,6 +1821,9 @@ start_hpet_msi:
     mov edx,ds:bsp_id
     shl edx,12
     or edx,0FEE00000h
+;
+    mov es:[bx].hpetc_msi_data,eax
+    mov es:[bx].hpetc_msi_ads,edx
 ;
     mov eax,es:[bx].hpetc_config
     and ax,NOT 0Ah
