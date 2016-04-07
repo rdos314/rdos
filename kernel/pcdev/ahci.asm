@@ -291,6 +291,7 @@ ap_flags            DW ?
 ap_is               DD ?
 ap_errors           DD ?
 ap_restart_count    DW ?
+ap_retry_count      DW ?
 
 ap_spinlock         spinlock_typ <>
 ap_slot_mask        DD ?
@@ -909,6 +910,7 @@ apPhysLoop:
     mov ds:ap_reserved_mask,0
     mov ds:ap_is,0
     mov ds:ap_errors,0
+    mov ds:ap_retry_count,0
     mov ds:ap_restart_count,0
     InitSpinlock ds:ap_spinlock
 ;
@@ -3373,7 +3375,7 @@ NotifyCmdList   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_discbuf_thread:
-	AddThreadInt
+    AddThreadInt
     mov ax,flat_sel
     mov es,ax
     mov ax,fs
@@ -3384,7 +3386,7 @@ notify_discbuf_thread:
 
 notify_discbuf_loop:
     GetSystemTime
-    add eax,1193 * 250
+    add eax,1193 * 100
     adc edx,0
     WaitForSignalWithTimeout
 ;    
@@ -3406,12 +3408,26 @@ notify_discbuf_retry:
 ;
     mov eax,ds:hba_pxcmd
     test eax,HBA_PXCMD_CR
-    jnz notify_discbuf_loop
+    jz notify_discbuf_has_data
 ;
     mov edx,ds:hba_pxci
     or edx,edx
-    jz notify_discbuf_loop
+    jnz notify_discbuf_has_data
 ;    
+    mov ax,gs:ap_retry_count
+    cmp ax,300
+    ja notify_discbuf_try_reset
+;
+    inc gs:ap_retry_count
+    jmp notify_discbuf_loop
+
+notify_discbuf_has_data:
+    mov gs:ap_retry_count,0
+    jmp notify_discbuf_loop
+
+notify_discbuf_try_reset:
+    int 3
+    mov gs:ap_retry_count,0
     mov ax,gs:ap_restart_count
     cmp ax,3
     jb notify_do_reset
@@ -3447,6 +3463,7 @@ notify_wait_start:
     jmp notify_discbuf_loop
 
 notify_cmd_check:
+    mov gs:ap_retry_count,0
     mov gs:ap_restart_count,0
     xor cx,cx
     mov ds,gs:ap_cmd_sel

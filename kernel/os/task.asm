@@ -3769,6 +3769,14 @@ LoadUnlockCore    Proc near
     jc lulcDone
 ;
     mov ax,fs:ps_nesting
+    or ax,ax
+    jne lulcCrash
+;
+    lock sub fs:ps_nesting,1
+    jc lulcDone
+
+lulcCrash:    
+    mov ax,fs:ps_nesting
     cmp ax,-1
     je lulcDone
 ;    
