@@ -118,9 +118,10 @@
 
 # include <stdlib.h>
 # include <time.h>
-# include <stdio.h>
-# include <memory.h>
 
+# include "e_os2.h"
+#  include <stdio.h>
+# include <memory.h>
 # include "ossl_typ.h"
 # include "stack.h"
 # include "safestack.h"
@@ -208,6 +209,11 @@ typedef struct {
 /* predec of the BIO type */
 typedef struct bio_st BIO_dummy;
 
+struct crypto_ex_data_st {
+    STACK_OF(void) *sk;
+};
+DEFINE_STACK_OF(void)
+
 /*
  * Per class, we have a STACK of function pointers.
  */
@@ -233,6 +239,24 @@ typedef struct bio_st BIO_dummy;
  * needed in Win32 where the application malloc and the library malloc may
  * not be the same.
  */
+#define OPENSSL_malloc_init() \
+    CRYPTO_set_mem_functions(CRYPTO_malloc, CRYPTO_realloc, CRYPTO_free)
+
+int CRYPTO_mem_ctrl(int mode);
+
+# define OPENSSL_malloc(num) malloc(num)
+# define OPENSSL_zalloc(num) malloc(num)
+# define OPENSSL_realloc(addr, num) malloc(num)
+# define OPENSSL_clear_realloc(addr, old_num, num) malloc(num)
+# define OPENSSL_clear_free(addr, num) free(addr)
+# define OPENSSL_free(addr) free(addr)
+# define OPENSSL_memdup(str, s) memdup(str, s)
+# define OPENSSL_strdup(str) strdup(str)
+# define OPENSSL_strndup(str, n) strndup(str, n)
+# define OPENSSL_secure_malloc(num) malloc(num)
+# define OPENSSL_secure_zalloc(num) malloc(num)
+# define OPENSSL_secure_free(addr) free(addr)
+# define OPENSSL_secure_actual_size(ptr)
 
 size_t OPENSSL_strlcpy(char *dst, const char *src, size_t siz);
 size_t OPENSSL_strlcat(char *dst, const char *src, size_t siz);
@@ -257,7 +281,7 @@ typedef void CRYPTO_EX_free (void *parent, void *ptr, CRYPTO_EX_DATA *ad,
                              int idx, long argl, void *argp);
 typedef int CRYPTO_EX_dup (CRYPTO_EX_DATA *to, CRYPTO_EX_DATA *from,
                            void *srcp, int idx, long argl, void *argp);
-typedef int CRYPTO_get_ex_new_index(int class_index, long argl, void *argp,
+__owur int CRYPTO_get_ex_new_index(int class_index, long argl, void *argp,
                             CRYPTO_EX_new *new_func, CRYPTO_EX_dup *dup_func,
                             CRYPTO_EX_free *free_func);
 /* No longer use an index. */
