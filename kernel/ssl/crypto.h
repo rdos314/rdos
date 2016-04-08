@@ -119,27 +119,12 @@
 # include <stdlib.h>
 # include <time.h>
 # include <stdio.h>
+# include <memory.h>
 
 # include "ossl_typ.h"
-
-#if 0
 # include "stack.h"
 # include "safestack.h"
 # include "opensslv.h"
-# include "opensslconf.h"
-#endif
-
-
-# if OPENSSL_API_COMPAT < 0x10100000L
-#  define SSLeay                  OpenSSL_version_num
-#  define SSLeay_version          OpenSSL_version
-#  define SSLEAY_VERSION_NUMBER   OPENSSL_VERSION_NUMBER
-#  define SSLEAY_VERSION          OPENSSL_VERSION
-#  define SSLEAY_CFLAGS           OPENSSL_CFLAGS
-#  define SSLEAY_BUILT_ON         OPENSSL_BUILT_ON
-#  define SSLEAY_PLATFORM         OPENSSL_PLATFORM
-#  define SSLEAY_DIR              OPENSSL_DIR
-# endif /* OPENSSL_API_COMPAT */
 
 /*
  * When changing the CRYPTO_LOCK_* list, be sure to maintin the text lock
@@ -194,26 +179,11 @@
 # define CRYPTO_READ             4
 # define CRYPTO_WRITE            8
 
-# ifndef OPENSSL_NO_LOCKING
-#  ifndef CRYPTO_w_lock
-#   define CRYPTO_w_lock(type)     \
-        CRYPTO_lock(CRYPTO_LOCK|CRYPTO_WRITE,type,OPENSSL_FILE,OPENSSL_LINE)
-#   define CRYPTO_w_unlock(type)   \
-        CRYPTO_lock(CRYPTO_UNLOCK|CRYPTO_WRITE,type,OPENSSL_FILE,OPENSSL_LINE)
-#   define CRYPTO_r_lock(type)     \
-        CRYPTO_lock(CRYPTO_LOCK|CRYPTO_READ,type,OPENSSL_FILE,OPENSSL_LINE)
-#   define CRYPTO_r_unlock(type)   \
-        CRYPTO_lock(CRYPTO_UNLOCK|CRYPTO_READ,type,OPENSSL_FILE,OPENSSL_LINE)
-#   define CRYPTO_add(addr,amount,type)    \
-        CRYPTO_add_lock(addr,amount,type,OPENSSL_FILE,OPENSSL_LINE)
-#  endif
-# else
 #  define CRYPTO_w_lock(a)
 #  define CRYPTO_w_unlock(a)
 #  define CRYPTO_r_lock(a)
 #  define CRYPTO_r_unlock(a)
 #  define CRYPTO_add(a,b,c)       ((*(a))+=(b))
-# endif
 
 /*
  * Some applications as well as some parts of OpenSSL need to allocate and

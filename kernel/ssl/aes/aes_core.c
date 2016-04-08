@@ -29,6 +29,7 @@
 
 #include <stdlib.h>
 
+#include "e_os2.h"
 #include "crypto.h"
 #include "aes.h"
 #include "aes_locl.h"
