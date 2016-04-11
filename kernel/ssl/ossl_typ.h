@@ -57,24 +57,26 @@
 
 #include <limits.h>
 
-typedef struct asn1_string_st ASN1_INTEGER;
-typedef struct asn1_string_st ASN1_ENUMERATED;
-typedef struct asn1_string_st ASN1_BIT_STRING;
-typedef struct asn1_string_st ASN1_OCTET_STRING;
-typedef struct asn1_string_st ASN1_PRINTABLESTRING;
-typedef struct asn1_string_st ASN1_T61STRING;
-typedef struct asn1_string_st ASN1_IA5STRING;
-typedef struct asn1_string_st ASN1_GENERALSTRING;
-typedef struct asn1_string_st ASN1_UNIVERSALSTRING;
-typedef struct asn1_string_st ASN1_BMPSTRING;
-typedef struct asn1_string_st ASN1_UTCTIME;
-typedef struct asn1_string_st ASN1_TIME;
-typedef struct asn1_string_st ASN1_GENERALIZEDTIME;
-typedef struct asn1_string_st ASN1_VISIBLESTRING;
-typedef struct asn1_string_st ASN1_UTF8STRING;
-typedef struct asn1_string_st ASN1_STRING;
-typedef int ASN1_BOOLEAN;
-typedef int ASN1_NULL;
+
+# include "e_os2.h"
+
+#  define ASN1_INTEGER            ASN1_STRING
+#  define ASN1_ENUMERATED         ASN1_STRING
+#  define ASN1_BIT_STRING         ASN1_STRING
+#  define ASN1_OCTET_STRING       ASN1_STRING
+#  define ASN1_PRINTABLESTRING    ASN1_STRING
+#  define ASN1_T61STRING          ASN1_STRING
+#  define ASN1_IA5STRING          ASN1_STRING
+#  define ASN1_UTCTIME            ASN1_STRING
+#  define ASN1_GENERALIZEDTIME    ASN1_STRING
+#  define ASN1_TIME               ASN1_STRING
+#  define ASN1_GENERALSTRING      ASN1_STRING
+#  define ASN1_UNIVERSALSTRING    ASN1_STRING
+#  define ASN1_BMPSTRING          ASN1_STRING
+#  define ASN1_VISIBLESTRING      ASN1_STRING
+#  define ASN1_UTF8STRING         ASN1_STRING
+#  define ASN1_BOOLEAN            int
+#  define ASN1_NULL               int
 
 typedef struct asn1_object_st ASN1_OBJECT;
 
@@ -82,6 +84,17 @@ typedef struct ASN1_ITEM_st ASN1_ITEM;
 typedef struct asn1_pctx_st ASN1_PCTX;
 typedef struct asn1_sctx_st ASN1_SCTX;
 
+# ifdef OPENSSL_SYS_WIN32
+#  undef X509_NAME
+#  undef X509_EXTENSIONS
+#  undef PKCS7_ISSUER_AND_SERIAL
+#  undef OCSP_REQUEST
+#  undef OCSP_RESPONSE
+# endif
+
+# ifdef BIGNUM
+#  undef BIGNUM
+# endif
 typedef struct bio_st BIO;
 typedef struct bignum_st BIGNUM;
 typedef struct bignum_ctx BN_CTX;
@@ -163,7 +176,22 @@ typedef struct ocsp_req_ctx_st OCSP_REQ_CTX;
 typedef struct ocsp_response_st OCSP_RESPONSE;
 typedef struct ocsp_responder_id_st OCSP_RESPID;
 
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L && \
+    defined(INTMAX_MAX) && defined(UINTMAX_MAX)
+typedef intmax_t ossl_intmax_t;
+typedef uintmax_t ossl_uintmax_t;
+#else
+/*
+ * Not long long, because the C-library can only be expected to provide
+ * strtoll(), strtoull() at the same time as intmax_t and strtoimax(),
+ * strtoumax().  Since we use these for parsing arguments, we need the
+ * conversion functions, not just the sizes.
+ */
 typedef long ossl_intmax_t;
 typedef unsigned long ossl_uintmax_t;
+#endif
 
+#ifdef  __cplusplus
+}
+#endif
 #endif                          /* def HEADER_OPENSSL_TYPES_H */
