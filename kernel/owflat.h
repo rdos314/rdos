@@ -823,6 +823,36 @@
     parm [al] \
     value [eax];
 
+#pragma aux RdosGetStdComPar = \
+    CallGate_get_std_com_par  \
+    "jc fail" \
+    "movzx eax,al" \
+    "mov [ebx],eax" \
+    "movzx edx,dx" \
+    "mov [esi],edx" \
+    "mov [edi],ecx" \
+    "mov eax,1" \
+    "jmp done" \
+    "fail:" \
+    "xor eax,eax" \
+    "done:" \
+    parm [al] [ebx] [esi] [edi] \
+    value [eax] \
+    modify [ecx edx];
+
+#pragma aux RdosGetUsbComPar = \
+    CallGate_get_usb_com_par  \
+    "jc fail" \
+    "movzx eax,ax" \
+    "mov [esi],eax" \
+    "mov eax,1" \
+    "jmp done" \
+    "fail:" \
+    "xor eax,eax" \
+    "done:" \
+    parm [al] [esi] \
+    value [eax];
+
 #pragma aux RdosOpenCom = \
     CallGate_open_com  \
     ValidateHandle  \

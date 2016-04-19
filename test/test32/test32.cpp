@@ -72,6 +72,9 @@ void main()
     int i;
     TParam *param;
 
+    RdosWaitMilli(2000);
+    RdosSoftReset();
+
     RdosTestGate();
 
     for (i = 0; i < 4; i++)

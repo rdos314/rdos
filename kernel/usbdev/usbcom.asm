@@ -77,49 +77,50 @@ ups_base_struc  com_port_struc <>
 
 ups_device_sel      DW ?
 ups_controller      DW ?
-ups_device      DW ?
+ups_device          DW ?
 ups_control_wait    DW ?
 ups_control_pipe    DW ?
-ups_index       DW ?
+ups_index           DW ?
 ups_device_type     DW ?
-ups_divisor     DD ?
+ups_divisor         DD ?
 ups_timer_active    DB ?
 ups_data_bits       DB ?
 ups_stop_bits       DB ?
-ups_parity      DB ?
-ups_control     DB ?
+ups_parity          DB ?
+ups_control         DB ?
 
 ups_pl_control      DB ?
-ups_pl_buf      DB 7 DUP(?)
+ups_pl_buf          DB 7 DUP(?)
 
 usbcom_port_struc       ENDS
 
 usbcom_device_struc   STRUC
 
-uds_base_struc    com_device_struc <>
+uds_base_struc      com_device_struc <>
 
-uds_section     section_typ <>
-uds_port_sel    DW ?
+uds_section         section_typ <>
+uds_port_sel        DW ?
 uds_device_type     DW ?
-uds_in_size     DW ?
-uds_out_size    DW ?
+uds_in_size         DW ?
+uds_out_size        DW ?
 uds_interface       DB ?
-uds_intr_in     DB ?
-uds_bulk_in     DB ?
-uds_bulk_out    DB ?
+uds_intr_in         DB ?
+uds_bulk_in         DB ?
+uds_bulk_out        DB ?
 uds_intr_handle     DW ?
 uds_in_handle       DW ?
 uds_out_handle      DW ?
 uds_intr_buffer     DW ?
 uds_in_buffer       DW ?
 uds_out_buffer      DW ?
-uds_intr_req    DW ?
-uds_in_req      DW ?
-uds_out_req     DW ?
-uds_link        DW ?
+uds_intr_req        DW ?
+uds_in_req          DW ?
+uds_out_req         DW ?
+uds_link            DW ?
 uds_port_offset     DW ?
-uds_flag        DB ?
+uds_flag            DB ?
 uds_intr_interval   DB ?
+uds_port_nr         DW ?
 
 usbcom_device_struc   ENDS
 
@@ -147,6 +148,59 @@ IFDEF __WASM__
 ELSE
     .386p
 ENDIF
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           GetUsbComPar
+;
+;   DESCRIPTION:    Get  USB com param
+;
+;   PARAMETERS:     AL      Port #
+;
+;   RETURNS:        NC      OK
+;                       AX  Device type
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_usb_com_par_name    DB 'Get USB Com Param', 0
+
+get_usb_com_par Proc far
+    push ds
+    push es
+    push bx
+;
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,OFFSET sd_port_arr
+    mov cx,ds:sd_ports
+    movzx ax,al
+    or cx,cx
+    jz gscpFail
+
+gscpLoop:
+    mov es,ds:[bx]
+    cmp ax,es:uds_port_nr
+    je gscpFound
+;
+    add bx,2
+    loop gscpLoop
+
+gscpFail:
+    stc
+    jmp gscpDone
+
+gscpFound:
+    mov ax,es:uds_device_type
+    clc
+
+gscpDone:
+    pop bx
+    pop es
+    pop ds
+    retf32
+get_usb_com_par     ENDP    
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3948,6 +4002,7 @@ apNoRecover:
     movzx dx,al
     mov ax,bx
     AddComPort
+    mov ds:uds_port_nr,ax
 
 apDone:
     popad
@@ -4634,6 +4689,12 @@ init    Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET get_usb_com_par
+    mov edi,OFFSET get_usb_com_par_name
+    xor dx,dx
+    mov ax,get_usb_com_par_nr
+    RegisterBimodalUserGate
 ;
     mov edi,OFFSET usb_attach
     HookUsbAttach

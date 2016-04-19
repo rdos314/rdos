@@ -78,6 +78,7 @@ iopds_baud_base     DD ?
 iopds_line_thread   DW ?
 iopds_line          DB ?
 iopds_irq           DB ?
+iopds_port_nr       DW ?
 
 io_com_device_struc   ENDS
 
@@ -147,6 +148,64 @@ IFDEF __WASM__
 ELSE
     .386p
 ENDIF
+;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           GetStdComPar
+;
+;   DESCRIPTION:    Get std com parame
+;
+;   PARAMETERS:     AL      Port #
+;
+;   RETURNS:        NC      OK
+;                       AL  IRQ
+;                       DX  IO base
+;                       ECX Baud base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_std_com_par_name    DB 'Get Std Com Param', 0
+
+get_std_com_par Proc far
+    push ds
+    push es
+    push bx
+;
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,OFFSET sd_port_arr
+    mov cx,ds:sd_ports
+    movzx ax,al
+    or cx,cx
+    jz gscpFail
+
+gscpLoop:
+    mov es,ds:[bx]
+    cmp ax,es:iopds_port_nr
+    je gscpFound
+;
+    add bx,2
+    loop gscpLoop
+
+gscpFail:
+    stc
+    jmp gscpDone
+
+gscpFound:
+    mov dx,es:iopds_base
+    mov ecx,es:iopds_baud_base
+    mov al,es:iopds_irq
+    clc
+
+gscpDone:
+    pop bx
+    pop es
+    pop ds
+    retf32
+get_std_com_par     ENDP    
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2326,7 +2385,7 @@ InitDetect  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DetectIrq   Proc near
+DetectIrqOnce   Proc near
     push ebx
     push cx
     push ebp
@@ -2361,7 +2420,7 @@ DetectIrq   Proc near
     pop edx
     or eax,eax
     stc
-    jz diDone
+    jz dioDone
 ;
     mov ebp,eax
 ;    
@@ -2396,32 +2455,83 @@ DetectIrq   Proc near
     not eax
     and eax,ebp
     stc
-    jz diDone
+    jz dioDone
 ;
     xor cx,cx
     mov ebx,1
 
-diGetNrLoop:
+dioGetNrLoop:
     test eax,ebx
-    jnz diGetNrDone
+    jnz dioGetNrDone
 ;
     shl ebx,1
     inc cx
-    jmp diGetNrLoop
+    jmp dioGetNrLoop
 
-diGetNrDone:
+dioGetNrDone:
     not ebx
     and eax,ebx
     stc
-    jnz diDone
+    jnz dioDone
 ;
     mov ax,cx
     clc    
 
-diDone:
+dioDone:
     pop ebp
     pop cx
     pop ebx
+    ret
+DetectIrqOnce   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       DetectIrq
+;
+;       DESCRIPTION:    Detect IRQ for a serial base address
+;
+;       PARAMETERS:     DX      Base
+;
+;       RETURNS:    AL      IRQ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DetectIrq   Proc near
+    push bx
+    push cx
+    mov cx,3
+
+diCheckLoop:
+    call DetectIrqOnce
+    jnc diOk
+;    
+    loop diCheckLoop
+    stc
+    jmp diDone
+
+diOk:    
+    mov bl,al
+    mov cx,3
+
+diVerLoop:
+    call DetectIrqOnce
+    jnc diVer
+;    
+    loop diVerLoop
+    stc
+    jmp diDone
+
+diVer:
+    cmp al,bl
+    clc
+    je diDone
+;
+    stc        
+
+diDone:
+    pop cx    
+    pop bx
     ret
 DetectIrq   Endp
 
@@ -2468,6 +2578,7 @@ AddIoPort Proc near
     xor ax,ax
     xor dx,dx
     AddComPort
+    mov ds:iopds_port_nr,ax
 ;    
     mov dword ptr ds:cd_create_proc,OFFSET io_create_port
     mov dword ptr ds:cd_create_proc+4,cs
@@ -3041,6 +3152,13 @@ init    Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET get_std_com_par
+    mov edi,OFFSET get_std_com_par_name
+    xor dx,dx
+    mov ax,get_std_com_par_nr
+    RegisterBimodalUserGate
+;
     mov edi,OFFSET init_pci
     HookInitPci
     clc

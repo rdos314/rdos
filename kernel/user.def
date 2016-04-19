@@ -756,4 +756,7 @@ get_active_cores_nr             = 588
 has_crash_info_nr               = 589
 get_crash_core_info_nr          = 590
 
+get_std_com_par_nr              = 591
+get_usb_com_par_nr              = 592
+
 usergate_entries			    = 600

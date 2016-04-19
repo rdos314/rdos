@@ -756,6 +756,9 @@
 #define usergate_has_crash_info 0x0000024D
 #define usergate_get_crash_core_info 0x0000024E
 
+#define usergate_get_std_com_par 0x0000024F
+#define usergate_get_usb_com_par 0x00000250
+
 
 
 #ifdef __FLAT__
@@ -1517,6 +1520,9 @@
 #define CallGate_has_crash_info 0x67 0x9a 77 2 0 0 3 0
 #define CallGate_get_crash_core_info 0x67 0x9a 78 2 0 0 3 0
 
+#define CallGate_get_std_com_par 0x67 0x9a 79 2 0 0 3 0
+#define CallGate_get_usb_com_par 0x67 0x9a 80 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2275,5 +2281,8 @@
 
 #define CallGate_has_crash_info 0x3e 0x67 0x9a 77 2 0 0 3 0
 #define CallGate_get_crash_core_info 0x3e 0x67 0x9a 78 2 0 0 3 0
+
+#define CallGate_get_std_com_par 0x3e 0x67 0x9a 79 2 0 0 3 0
+#define CallGate_get_usb_com_par 0x3e 0x67 0x9a 80 2 0 0 3 0
 
 #endif

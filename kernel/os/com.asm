@@ -1450,9 +1450,11 @@ add_wait_for_com    ENDP
 ;
 ;           DESCRIPTION:    Add a serial port
 ;
-;           PARAMETERS:         AX      Controller #
-;                               DX      Device #
-;                               DS      Com device selector
+;           PARAMETERS:     AX      Controller #
+;                           DX      Device #
+;                           DS      Com device selector
+;
+;           RETURNS:        AX      Port #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1481,6 +1483,7 @@ add_com_port    Proc far
     mov ds:cd_open,0
     mov ds:cd_com_port,bl
 ;
+    mov ax,bx
     add bx,bx
     mov es:[bx].s_port_arr,ds
     inc es:s_port_count

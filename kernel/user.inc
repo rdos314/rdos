@@ -2256,6 +2256,22 @@ IsComAvaiable       MACRO
 	UserGate is_com_available_nr
 						ENDM
 
+;   IN AL      Port #
+;   NC         OK
+;   OUT AL     IRQ #
+;   OUT DX     IO Base
+;   OUT ECX    Baud base
+GetStdComPar       MACRO
+	UserGate get_std_com_par_nr
+						ENDM
+
+;   IN AL      Port #
+;   NC         OK
+;   OUT AX     Device type
+GetUsbComPar       MACRO
+	UserGate get_usb_com_par_nr
+						ENDM
+
 ;	IN  AL		Port #
 ;	IN  AH		# of data bits
 ;	IN  BL		# of stop bits

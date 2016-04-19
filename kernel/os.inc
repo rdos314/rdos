@@ -3424,6 +3424,7 @@ GetAcpiPnpDeviceMem      MACRO
 ; IN  AX      Controller #
 ; IN  DX      Device #
 ; IN  DS      Com device selector
+; OUT AX      Com port #
 AddComPort      MACRO
     OsGate add_com_port_nr
                     ENDM
