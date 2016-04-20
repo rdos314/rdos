@@ -3426,7 +3426,6 @@ notify_discbuf_has_data:
     jmp notify_discbuf_loop
 
 notify_discbuf_try_reset:
-    int 3
     mov gs:ap_retry_count,0
     mov ax,gs:ap_restart_count
     cmp ax,3
@@ -3438,7 +3437,6 @@ notify_discbuf_try_reset:
     pop ds
 
 notify_do_reset:
-    int 3
     inc gs:ap_restart_count            
     and ds:hba_pxcmd,NOT HBA_PXCMD_ST
 

@@ -72,6 +72,12 @@ void main()
     int i;
     TParam *param;
 
+    int PortCount;
+    int ModuleId;
+
+    while (!RdosGetCanModuleInfo(1, &PortCount, &ModuleId))
+        RdosWaitMilli(250);
+
     RdosWaitMilli(2000);
     RdosSoftReset();
 
