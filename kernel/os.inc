@@ -2850,6 +2850,12 @@ DiscRequestCompleted    MACRO
                     ENDM
 
 ;       IN      BX      Disc sel
+;       IN      EDI     Disc handle
+DiscRequestRetry    MACRO
+    OsGate disc_request_retry_nr
+                    ENDM
+
+;       IN      BX      Disc sel
 ;       IN      AX      Sector
 ;       IN      DX      Unit
 ;       OUT     EDI     Disc handle

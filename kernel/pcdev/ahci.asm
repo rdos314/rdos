@@ -3366,6 +3366,55 @@ NotifyCmdList   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           RetryCmdList
+;
+;       DESCRIPTION:    Retry command list
+;
+;       PARAMETERS:     ES      Flat sel
+;                       GS      Port sel
+;                       AL      CMD list #
+;                       CX      Entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RetryCmdList   Proc near
+    push ds
+    push bx
+    push si
+    push edi
+;
+    mov ds,gs:ap_slot_sel
+    movzx si,al
+    add si,si
+    mov si,ds:[si].as_index_arr
+    add si,act_prd
+    or cx,cx
+    jz rclDone
+
+rclLoop:
+    xor edi,edi
+    xchg edi,ds:[si].ape_handle
+    or edi,edi
+    jz rclNext
+;
+    mov bx,gs:ap_disc_sel
+    DiscRequestRetry
+
+rclNext:
+    add si,10h
+    loop rclLoop
+        
+rclDone:
+    pop edi
+    pop si    
+    pop bx
+    pop ds
+    ret
+RetryCmdList   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           notify_discbuf_thread
 ;
 ;       DESCRIPTION:    Thread to handle completed requests
@@ -3414,8 +3463,16 @@ notify_discbuf_retry:
     or edx,edx
     jnz notify_discbuf_has_data
 ;    
+    mov eax,gs:ap_active_mask
+    or eax,eax
+    jnz notify_discbuf_has_active
+;    
+    mov gs:ap_retry_count,0
+    jmp notify_discbuf_loop
+
+notify_discbuf_has_active:
     mov ax,gs:ap_retry_count
-    cmp ax,300
+    cmp ax,100
     ja notify_discbuf_try_reset
 ;
     inc gs:ap_retry_count
@@ -3426,6 +3483,37 @@ notify_discbuf_has_data:
     jmp notify_discbuf_loop
 
 notify_discbuf_try_reset:
+    int 3
+    mov ds,gs:ap_hba_sel
+    mov eax,gs:ap_active_mask
+;
+    xor cx,cx
+    mov ds,gs:ap_cmd_sel
+    xor si,si
+    mov ebx,1
+
+notify_retry_loop:
+    shr eax,1
+    jnc notify_retry_next
+;
+    push eax
+    push cx
+    mov ax,si
+    shr ax,5
+    mov cx,ds:[si].acl_prdtl
+    call RetryCmdList
+    pop cx
+    pop eax
+    
+notify_retry_next:
+    shl ebx,1
+    add si,20h
+    or eax,eax
+    jnz notify_retry_loop
+;    
+    int 3
+
+
     mov gs:ap_retry_count,0
     mov ax,gs:ap_restart_count
     cmp ax,3

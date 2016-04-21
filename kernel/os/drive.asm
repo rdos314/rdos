@@ -2514,6 +2514,48 @@ disc_request_completed  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           disc_request_retry
+;
+;           DESCRIPTION:    Disc request retry
+;
+;           PARAMETERS:     BX          Disc selector
+;                           EDI         Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disc_request_retry_name     DB 'Disc Request Retry', 0
+
+disc_request_retry  Proc far
+    push ds
+    push es
+    push eax
+    push bx
+    push dx
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov ds,bx
+    EnterSection ds:disc_section
+    dec ds:disc_io_count
+;       
+    and es:[edi].dh_flags, NOT (FLAG_IO_PENDING OR FLAG_IO_BUSY)
+    call insert_pending
+;
+    LeaveSection ds:disc_section
+    xor edi,edi
+;
+    pop dx
+    pop bx
+    pop eax
+    pop es
+    pop ds
+    retf32
+disc_request_retry  Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           get_disc_request_array
 ;
 ;           DESCRIPTION:    get a disc request array
@@ -6022,6 +6064,11 @@ init    PROC far
     mov esi,OFFSET disc_request_completed
     mov edi,OFFSET disc_request_completed_name
     mov ax,disc_request_completed_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET disc_request_retry
+    mov edi,OFFSET disc_request_retry_name
+    mov ax,disc_request_retry_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_disc_request_array

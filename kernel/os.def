@@ -690,4 +690,6 @@ use_own_preempt_timer_nr    = 566
 
 fault_reset_nr              = 567
 
+disc_request_retry_nr       = 568
+
 osgate_entries				= 580
