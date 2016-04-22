@@ -2064,38 +2064,33 @@ wait_for_disc_request   Proc far
     mov es,ax
 ;
     ClearSignal
+    GetThread
+    mov ds:disc_thread,ax
 
 wait_for_disc_req_loop:
     EnterSection ds:disc_section
-    GetThread
-    mov ds:disc_thread,ax
     call update_async_write
     call update_async_timer
     LeaveSection ds:disc_section
 ;
-    RequestSpinlock ds:disc_spinlock
     mov ebx,ds:disc_pend_list
     or ebx,ebx
+    clc
     jnz wait_for_disc_req_done    
-;
-    ReleaseSpinlock ds:disc_spinlock
-    sti
 ;
     test ds:disc_flags,DISC_FLAG_STOPPED
     stc
-    jnz wait_for_disc_req_end
+    jnz wait_for_disc_req_done
 ;    
-    WaitForSignal
-    mov ds:disc_thread,0
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    WaitForSignalWithTimeout
     jmp wait_for_disc_req_loop
         
 wait_for_disc_req_done:
     mov ds:disc_thread,0
-    ReleaseSpinlock ds:disc_spinlock
-    clc
-    jmp wait_for_disc_req_end
-
-wait_for_disc_req_end:
+;
     popad
     pop es
     pop ds
@@ -2543,6 +2538,9 @@ disc_request_retry  Proc far
 ;
     LeaveSection ds:disc_section
     xor edi,edi
+;
+    mov bx,ds:disc_thread
+    Signal
 ;
     pop dx
     pop bx

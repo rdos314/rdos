@@ -279,6 +279,9 @@ ap_physical         DD ?
 ap_pages            DW ?
 ap_device           DW ?
 
+ap_fis_phys         DD ?
+ap_cmd_phys         DD ?
+
 ap_hba_sel          DW ?
 ap_fis_sel          DW ?
 ap_cmd_sel          DW ?
@@ -1147,6 +1150,7 @@ spDo:
     mov gs:hba_pxfbu,0
     mov eax,gs:hba_pxfb
     or gs:hba_pxcmd,HBA_PXCMD_FRE OR HBA_PXCMD_SUD
+    mov es:ap_fis_phys,eax
     ret
 StartPort Endp
 
@@ -1533,6 +1537,7 @@ apPort:
     mov es:hba_pxclb,eax
     mov es:hba_pxclbu,0
     or es:hba_pxcmd,HBA_PXCMD_ST
+    mov gs:ap_cmd_phys,eax
 ;
     push ds
     push si
@@ -3438,12 +3443,12 @@ notify_discbuf_loop:
     add eax,1193 * 100
     adc edx,0
     WaitForSignalWithTimeout
-;    
+
+notify_discbuf_retry:
     mov ds,gs:ap_hba_sel
     mov eax,HBA_PXI_DP OR HBA_PXI_DHR
     mov ds:hba_pxis,eax
-
-notify_discbuf_retry:
+;    
     mov ds,gs:ap_hba_sel
     RequestSpinlock gs:ap_spinlock
     mov edx,ds:hba_pxci
@@ -3483,9 +3488,16 @@ notify_discbuf_has_data:
     jmp notify_discbuf_loop
 
 notify_discbuf_try_reset:
-    int 3
+    mov gs:ap_retry_count,0
+;    
     mov ds,gs:ap_hba_sel
+    and ds:hba_pxcmd,NOT HBA_PXCMD_ST
+;    
+    RequestSpinlock gs:ap_spinlock
+    mov eax,gs:ap_slot_mask
+    mov gs:ap_reserved_mask,eax
     mov eax,gs:ap_active_mask
+    ReleaseSpinlock gs:ap_spinlock       
 ;
     xor cx,cx
     mov ds,gs:ap_cmd_sel
@@ -3510,23 +3522,9 @@ notify_retry_next:
     add si,20h
     or eax,eax
     jnz notify_retry_loop
-;    
-    int 3
-
-
-    mov gs:ap_retry_count,0
-    mov ax,gs:ap_restart_count
-    cmp ax,3
-    jb notify_do_reset
-;
-    int 3
-    push ds
-    mov ds,gs:ap_fis_sel
-    pop ds
 
 notify_do_reset:
-    inc gs:ap_restart_count            
-    and ds:hba_pxcmd,NOT HBA_PXCMD_ST
+    mov ds,gs:ap_hba_sel
 
 notify_wait_reset:
     mov ax,25
@@ -3534,7 +3532,30 @@ notify_wait_reset:
     test ds:hba_pxcmd,HBA_PXCMD_ST
     jnz notify_wait_reset        
 ;
-    or ds:hba_pxcmd,HBA_PXCMD_ST        
+    and ds:hba_pxcmd,NOT HBA_PXCMD_FRE
+
+notify_wait_idle:
+    mov ax,25
+    WaitMilliSec
+    test ds:hba_pxcmd,HBA_PXCMD_FR
+    jnz notify_wait_idle
+;
+    mov eax,gs:ap_fis_phys
+    mov ds:hba_pxfb,eax
+    mov ds:hba_pxfbu,0
+    mov eax,ds:hba_pxfb
+    or ds:hba_pxcmd,HBA_PXCMD_FRE OR HBA_PXCMD_SUD
+
+notify_wait_frrun:
+    mov ax,25
+    WaitMilliSec
+    test ds:hba_pxcmd,HBA_PXCMD_FR
+    jz notify_wait_frrun
+;
+    mov eax,gs:ap_cmd_phys
+    mov ds:hba_pxclb,eax
+    mov ds:hba_pxclbu,0
+    or ds:hba_pxcmd,HBA_PXCMD_ST
 
 notify_wait_start:
     mov ax,25
@@ -3545,7 +3566,9 @@ notify_wait_start:
     mov ax,100
     WaitMilliSec
 ;
-    mov ds:hba_pxci,edx
+    xor eax,eax
+    mov gs:ap_active_mask,eax
+    mov gs:ap_reserved_mask,eax
     jmp notify_discbuf_loop
 
 notify_cmd_check:
