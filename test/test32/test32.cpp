@@ -75,13 +75,13 @@ void main()
     int PortCount;
     int ModuleId;
 
-    while (!RdosGetCanModuleInfo(1, &PortCount, &ModuleId))
-        RdosWaitMilli(250);
+//    while (!RdosGetCanModuleInfo(1, &PortCount, &ModuleId))
+//        RdosWaitMilli(250);
 
-    RdosWaitMilli(2000);
-    RdosSoftReset();
+//    RdosWaitMilli(2000);
+//    RdosSoftReset();
 
-    RdosTestGate();
+//    RdosTestGate();
 
     for (i = 0; i < 4; i++)
     {
