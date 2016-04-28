@@ -55,80 +55,76 @@
  * [including the GNU Public Licence.]
  */
 
-#include "blowfish.h"
-#include "bf_locl.h"
+#include "des_locl.h"
 
-void BF_cbc_encrypt(const unsigned char *in, unsigned char *out, long length,
-                    const BF_KEY *schedule, unsigned char *ivec, int encrypt)
+/*
+ * The input and output are loaded in multiples of 8 bits. What this means is
+ * that if you have numbits=12 and length=2 the first 12 bits will be
+ * retrieved from the first byte and half the second.  The second 12 bits
+ * will come from the 3rd and half the 4th byte.
+ */
+void DES_ofb_encrypt(const unsigned char *in, unsigned char *out, int numbits,
+                     long length, DES_key_schedule *schedule,
+                     DES_cblock *ivec)
 {
-    register BF_LONG tin0, tin1;
-    register BF_LONG tout0, tout1, xor0, xor1;
+    register DES_LONG d0, d1, vv0, vv1, v0, v1, n = (numbits + 7) / 8;
+    register DES_LONG mask0, mask1;
     register long l = length;
-    BF_LONG tin[2];
+    register int num = numbits;
+    DES_LONG ti[2];
+    unsigned char *iv;
 
-    if (encrypt) {
-        n2l(ivec, tout0);
-        n2l(ivec, tout1);
-        ivec -= 8;
-        for (l -= 8; l >= 0; l -= 8) {
-            n2l(in, tin0);
-            n2l(in, tin1);
-            tin0 ^= tout0;
-            tin1 ^= tout1;
-            tin[0] = tin0;
-            tin[1] = tin1;
-            BF_encrypt(tin, schedule);
-            tout0 = tin[0];
-            tout1 = tin[1];
-            l2n(tout0, out);
-            l2n(tout1, out);
-        }
-        if (l != -8) {
-            n2ln(in, tin0, tin1, l + 8);
-            tin0 ^= tout0;
-            tin1 ^= tout1;
-            tin[0] = tin0;
-            tin[1] = tin1;
-            BF_encrypt(tin, schedule);
-            tout0 = tin[0];
-            tout1 = tin[1];
-            l2n(tout0, out);
-            l2n(tout1, out);
-        }
-        l2n(tout0, ivec);
-        l2n(tout1, ivec);
+    if (num > 64)
+        return;
+    if (num > 32) {
+        mask0 = 0xffffffffL;
+        if (num >= 64)
+            mask1 = mask0;
+        else
+            mask1 = (1L << (num - 32)) - 1;
     } else {
-        n2l(ivec, xor0);
-        n2l(ivec, xor1);
-        ivec -= 8;
-        for (l -= 8; l >= 0; l -= 8) {
-            n2l(in, tin0);
-            n2l(in, tin1);
-            tin[0] = tin0;
-            tin[1] = tin1;
-            BF_decrypt(tin, schedule);
-            tout0 = tin[0] ^ xor0;
-            tout1 = tin[1] ^ xor1;
-            l2n(tout0, out);
-            l2n(tout1, out);
-            xor0 = tin0;
-            xor1 = tin1;
-        }
-        if (l != -8) {
-            n2l(in, tin0);
-            n2l(in, tin1);
-            tin[0] = tin0;
-            tin[1] = tin1;
-            BF_decrypt(tin, schedule);
-            tout0 = tin[0] ^ xor0;
-            tout1 = tin[1] ^ xor1;
-            l2nn(tout0, tout1, out, l + 8);
-            xor0 = tin0;
-            xor1 = tin1;
-        }
-        l2n(xor0, ivec);
-        l2n(xor1, ivec);
+        if (num == 32)
+            mask0 = 0xffffffffL;
+        else
+            mask0 = (1L << num) - 1;
+        mask1 = 0x00000000L;
     }
-    tin0 = tin1 = tout0 = tout1 = xor0 = xor1 = 0;
-    tin[0] = tin[1] = 0;
+
+    iv = &(*ivec)[0];
+    c2l(iv, v0);
+    c2l(iv, v1);
+    ti[0] = v0;
+    ti[1] = v1;
+    while (l-- > 0) {
+        ti[0] = v0;
+        ti[1] = v1;
+        DES_encrypt1((DES_LONG *)ti, schedule, DES_ENCRYPT);
+        vv0 = ti[0];
+        vv1 = ti[1];
+        c2ln(in, d0, d1, n);
+        in += n;
+        d0 = (d0 ^ vv0) & mask0;
+        d1 = (d1 ^ vv1) & mask1;
+        l2cn(d0, d1, out, n);
+        out += n;
+
+        if (num == 32) {
+            v0 = v1;
+            v1 = vv0;
+        } else if (num == 64) {
+            v0 = vv0;
+            v1 = vv1;
+        } else if (num > 32) {  /* && num != 64 */
+            v0 = ((v1 >> (num - 32)) | (vv0 << (64 - num))) & 0xffffffffL;
+            v1 = ((vv0 >> (num - 32)) | (vv1 << (64 - num))) & 0xffffffffL;
+        } else {                /* num < 32 */
+
+            v0 = ((v0 >> num) | (v1 << (32 - num))) & 0xffffffffL;
+            v1 = ((v1 >> num) | (vv0 << (32 - num))) & 0xffffffffL;
+        }
+    }
+    iv = &(*ivec)[0];
+    l2c(v0, iv);
+    l2c(v1, iv);
+    v0 = v1 = d0 = d1 = ti[0] = ti[1] = vv0 = vv1 = 0;
 }
