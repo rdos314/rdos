@@ -61,6 +61,7 @@ public:
 
     void Read();
     void Write();
+    void Write(int Resv);
 
     int Add(const char *FsName, long Size, const char *BootCode, int BootSize);
     int Remove(long long Lba);
@@ -74,7 +75,7 @@ public:
 
 protected:
     struct TPartEntry *ReadGpt(long long StartLba, char *HeaderBuf);
-    void InitGpt(long long HeaderLba, char *HeaderBuf);
+    void InitGpt(long long HeaderLba, char *HeaderBuf, int Resv);
     void WriteGpt(char *HeaderBuf);
     void WriteBootSector(long long Sector, int Count, const char *BootCode, int BootSize);
     void ReadOtherGpt();

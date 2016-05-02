@@ -62,12 +62,14 @@ protected:
 	void WriteGptSector(TDisc *Disc, int IdeDisc);
     void WriteGptLoader(TDisc *Disc);
     void InitGpt(TDisc *Disc, int IdeDisc);
+    void InitUefi(TDisc *Disc, int IdeDisc);
 
     int FLoaderSectors;
 	int FOptR;
     int FOptI;
     int FOptD;
     int FOptG;
+    int FOptU;
 	char *FBootLoader;
 	int FLoaderSize;
 };

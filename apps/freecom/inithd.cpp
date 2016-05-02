@@ -132,6 +132,9 @@ int TInitHdCommand::OptScan(const char *optstr, int ch, int bool, const char *st
 
                 case 'G':
                         return OptScanBool(optstr, bool, strarg, &FOptG);
+
+                case 'U':
+                        return OptScanBool(optstr, bool, strarg, &FOptU);
         }
         OptError(optstr);
         return E_Useage;
@@ -154,6 +157,7 @@ void TInitHdCommand::InitOptions()
         FOptI = 0;
         FOptD = 0;
         FOptG = 0;
+        FOptU = 0;
 }
 
 /*##########################################################################
@@ -375,8 +379,11 @@ void TInitHdCommand::WriteGptSector(TDisc *Disc, int IdeDisc)
     *(BootSector + 0x1FF) = 0xAA;
 
     *(BootSector + 0x1BE + 4) = 0xEE;
-    *(long *)(BootSector + 0x1BE + 8) = 0x22;
-    *(long *)(BootSector + 0x1BE + 0xC) = Total - 0x22;
+    *(long *)(BootSector + 0x1BE + 8) = 1;
+    if (Total > 0xFFFFFFFF)
+        *(long *)(BootSector + 0x1BE + 0xC) = 0xFFFFFFFF;
+    else
+        *(long *)(BootSector + 0x1BE + 0xC) = (int)Total - 1;
 
     memcpy(BootSector + 11, &bootp, sizeof(bootp));
 
@@ -428,6 +435,50 @@ void TInitHdCommand::InitGpt(TDisc *Disc, int DiscNr)
     LoadGptLoader(Disc);
     WriteGptLoader(Disc);
     WriteGptSector(Disc, DiscNr);            
+    Part.Write(FLoaderSectors);
+}
+
+/*##########################################################################
+#
+#   Name       : TInitHdCommand::InitUefi
+#
+#   Purpose....: Init UEFI
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TInitHdCommand::InitUefi(TDisc *Disc, int IdeDisc)
+{
+    char *BootSector;
+    long long Total;
+    TGptDiscPartition Part(Disc);
+
+    Total = Disc->GetTotalSectors();
+
+    BootSector = new char[512];
+
+    memset(BootSector, 0, 0x1FE);
+
+    *(BootSector + 0x1FE) = 0x55;
+    *(BootSector + 0x1FF) = 0xAA;
+
+    *(BootSector + 0x1BE + 2) = 2;
+    *(BootSector + 0x1BE + 4) = 0xEE;
+    *(BootSector + 0x1BE + 5) = 0xFF;
+    *(BootSector + 0x1BE + 6) = 0xFF;
+    *(BootSector + 0x1BE + 7) = 0xFF;
+    *(long *)(BootSector + 0x1BE + 8) = 1;
+    if (Total > 0xFFFFFFFF)
+        *(long *)(BootSector + 0x1BE + 0xC) = 0xFFFFFFFF;
+    else
+        *(long *)(BootSector + 0x1BE + 0xC) = (int)Total - 1;
+
+    Disc->Write(0, BootSector, 512);
+
+    delete BootSector;
+
     Part.Write();
 }
 
@@ -485,6 +536,12 @@ int TInitHdCommand::Execute(char *param)
         if (ok && FOptG)
         {
             InitGpt(Disc, DiscNr);
+            return 0;
+        }
+
+        if (ok && FOptU)
+        {
+            InitUefi(Disc, DiscNr);
             return 0;
         }
 

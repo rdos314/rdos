@@ -566,7 +566,7 @@ void TGptDiscPartition::WriteGpt(char *HeaderBuf)
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TGptDiscPartition::InitGpt(long long HeaderLba, char *HeaderBuf)
+void TGptDiscPartition::InitGpt(long long HeaderLba, char *HeaderBuf, int Resv)
 {
     struct TPartHeader *PartHeader;
 
@@ -591,7 +591,7 @@ void TGptDiscPartition::InitGpt(long long HeaderLba, char *HeaderBuf)
     else
         PartHeader->OtherLba = 1;
 
-    PartHeader->FirstLba = 34 + 32;
+    PartHeader->FirstLba = 34 + Resv;
     PartHeader->LastLba = FDisc->GetTotalSectors() - 34;
     RdosCreateUuid(PartHeader->Guid);
 
@@ -610,7 +610,7 @@ void TGptDiscPartition::InitGpt(long long HeaderLba, char *HeaderBuf)
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TGptDiscPartition::Write()
+void TGptDiscPartition::Write(int resv)
 {
     int count;
     int size;
@@ -619,8 +619,8 @@ void TGptDiscPartition::Write()
 
     if (!FPartEntry)
     {
-        InitGpt(1, FPrimaryHeader);
-        InitGpt(FDisc->GetTotalSectors() - 1, FSecondaryHeader);
+        InitGpt(1, FPrimaryHeader, resv);
+        InitGpt(FDisc->GetTotalSectors() - 1, FSecondaryHeader, resv);
 
         FPartHeader = (struct TPartHeader *)FPrimaryHeader;
                 
@@ -637,6 +637,18 @@ void TGptDiscPartition::Write()
 
     WriteGpt(FPrimaryHeader);
     WriteGpt(FSecondaryHeader);
+}
+
+/*##################  TGptDiscPartition::Write  #############
+*   Purpose....: Write partition table
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TGptDiscPartition::Write()
+{
+    Write(0);
 }
 
 /*##################  TGptDiscPartition::WriteBootSector  #############
