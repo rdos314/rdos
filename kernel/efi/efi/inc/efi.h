@@ -38,7 +38,6 @@ Revision History
 #include "efipciio.h"
 #include "efiprot.h"
 #include "eficon.h"
-#include "efigop.h"
 #include "efiser.h"
 #include "efi_nii.h"
 #include "efipxebc.h"
