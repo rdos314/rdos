@@ -458,7 +458,7 @@ int main()
 
 
 //        ambient = (int)(10.0 * Climate->GetOutdoorTemperature());
-        ambient = 120;
+        ambient = 200;
 
         summer = FALSE;
 
@@ -520,6 +520,8 @@ int main()
                 RadArr[i]->SetAmbient(ambient);
              }
         }
+
+        circmax = 0;
 
         if (count)
             Circ->SetMaxMotor(circmax);
