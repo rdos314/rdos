@@ -1962,18 +1962,51 @@ rdDoTrans:
     mov word ptr fs:REG_CMD,123Ah
 
 rdSectorLoop:    
+    push eax
+    push edx
+    push esi
+    push edi
+;
+    GetSystemTime
+    mov edi,edx
+    mov esi,eax
+    add esi,1193 * 1000 * 10
+    adc edi,0
+
+rdSectorRetry:        
     test word ptr fs:REG_STATE,800h
     jnz rdReadBuf
 ;    
-    WaitForSignal
+    GetSystemTime
+    sub eax,esi
+    sbb edx,edi
+    jc rdSectorNotTimeout
+;
+    mov eax,fs:REG_STATE
+    CrashGate 
+
+rdSectorNotTimeout:       
+    mov eax,esi    
+    mov edx,edi
+    WaitForSignalWithTimeout
     test ds:sd_pend_error,1FFh
-    jz rdSectorLoop
+    jz rdSectorRetry
 ;   
+    pop edi
+    pop esi
+    pop edx
+    pop eax
+;
     pop esi
     pop ebp 
     jmp rdFail
 
 rdReadBuf:
+    pop edi
+    pop esi
+    pop edx
+    pop eax
+;   
     mov ds:sd_pend_int,0
     mov ecx,128
     mov edi,es:[esi]
@@ -1993,7 +2026,8 @@ rdBufLoop:
     jmp rdOk
     
 rdFail:
-    int 3
+    mov ax,ds:sd_pend_error
+    CrashGate
     pop ecx
 
 rdFailLoop:    
@@ -2107,18 +2141,51 @@ wrDoTrans:
     mov word ptr fs:REG_CMD,193Ah
 
 wrSectorLoop:    
+    push eax
+    push edx
+    push esi
+    push edi
+;
+    GetSystemTime
+    mov edi,edx
+    mov esi,eax
+    add esi,1193 * 1000 * 10
+    adc edi,0
+
+wrSectorRetry:        
     test word ptr fs:REG_STATE,400h
     jnz wrWriteBuf
 ;    
-    WaitForSignal
+    GetSystemTime
+    sub eax,esi
+    sbb edx,edi
+    jc wrSectorNotTimeout
+;
+    mov eax,fs:REG_STATE
+    CrashGate 
+
+wrSectorNotTimeout:       
+    mov eax,esi    
+    mov edx,edi
+    WaitForSignalWithTimeout
     test ds:sd_pend_error,1FFh
-    jz wrSectorLoop
+    jz wrSectorRetry
+;   
+    pop edi
+    pop esi
+    pop edx
+    pop eax
 ;   
     pop esi
     pop ebp 
     jmp wrFail
 
 wrWriteBuf:
+    pop edi
+    pop esi
+    pop edx
+    pop eax
+;   
     mov ds:sd_pend_int,0
     mov ecx,128
     mov edi,es:[esi]
@@ -2141,7 +2208,8 @@ wrBufLoop:
     jmp wrOk
     
 wrFail:
-    int 3
+    mov ax,ds:sd_pend_error
+    CrashGate
     pop ecx
 
 wrFailLoop:    
