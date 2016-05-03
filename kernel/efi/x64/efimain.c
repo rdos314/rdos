@@ -160,6 +160,8 @@ static void CheckFs(EFI_HANDLE handle)
         {
             GetFileSystemInfo(Root);
             GetFileInfo(Root);
+
+            Root->Close(Root);
         }
     } 
 }
