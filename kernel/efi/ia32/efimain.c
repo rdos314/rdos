@@ -15,6 +15,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
  
     /* Store the system table for future use in other functions */
     ST = SystemTable;
+    BS = SystemTable->BootServices;
 
     ST->ConOut->OutputString(ST->ConOut, L"Before GOP\n\r");
 
