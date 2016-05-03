@@ -22,6 +22,7 @@ EFI_FILE_IO_INTERFACE *Fs;
 EFI_FILE_HANDLE Root;
 char FsInfoData[1024];
 EFI_FILE_SYSTEM_INFO *FsInfo;
+EFI_FILE_INFO *FileInfo;
 
 void *Interface;
 EFI_HANDLE *FsArr;
@@ -111,6 +112,44 @@ static void InitGop()
     ShowUsedMode();
 }
 
+static void GetFileInfo(EFI_FILE_HANDLE DirHandle)
+{
+    unsigned int Size = 1024;
+    FileInfo = (EFI_FILE_INFO *)FsInfoData;
+
+    if (DirHandle->GetInfo(DirHandle, &GenericFileInfo, &Size, FsInfoData) == EFI_SUCCESS)
+    {
+        Clear();
+        sprintf(tempstr, "Path: <");
+        Write();
+
+        ST->ConOut->OutputString(ST->ConOut, FileInfo->FileName);
+
+        Clear();
+        sprintf(tempstr, ">\n\r");
+        Write();
+    }
+}
+
+static void GetFileSystemInfo(EFI_FILE_HANDLE DirHandle)
+{
+    unsigned int Size = 1024;
+    FsInfo = (EFI_FILE_SYSTEM_INFO *)FsInfoData;
+
+    if (DirHandle->GetInfo(DirHandle, &FileSystemInfo, &Size, FsInfoData) == EFI_SUCCESS)
+    {
+        Clear();
+        sprintf(tempstr, "Volume label: <");
+        Write();
+
+        ST->ConOut->OutputString(ST->ConOut, FsInfo->VolumeLabel);
+
+        Clear();
+        sprintf(tempstr, ">\n\r");
+        Write();
+    }
+}
+
 static void CheckFs(EFI_HANDLE handle)
 {
     if (BS->HandleProtocol(handle, &FileSystemProtocol, &Interface) == EFI_SUCCESS)
@@ -119,21 +158,8 @@ static void CheckFs(EFI_HANDLE handle)
 
         if (Fs->OpenVolume(Fs, &Root) == EFI_SUCCESS)
         {
-            unsigned int Size = 1024;
-
-            FsInfo = (EFI_FILE_SYSTEM_INFO *)FsInfoData;
-            if (Root->GetInfo(Root, &FileSystemInfo, &Size, FsInfo) == EFI_SUCCESS)
-            {
-                Clear();
-                sprintf(tempstr, "Volume label: <");
-                Write();
-
-                ST->ConOut->OutputString(ST->ConOut, FsInfo->VolumeLabel);
-
-                Clear();
-                sprintf(tempstr, ">\n\r");
-                Write();
-            }
+            GetFileSystemInfo(Root);
+            GetFileInfo(Root);
         }
     } 
 }
