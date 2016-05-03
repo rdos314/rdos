@@ -32,12 +32,32 @@ void Write(const char *buf)
     }
 }
 
+void ShowMode(int Mode)
+{
+    unsigned int Size;
+    EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Info;
+    char str[256];
+
+    if (Gop->QueryMode(Gop, Mode, &Size, &Info) == EFI_SUCCESS)
+    {
+        sprintf(str, "Mode: %d\n\r", Mode);
+        Write(str);    
+
+        sprintf(str, "Width: %d\n\r", Info->HorizontalResolution);
+        Write(str);    
+
+        sprintf(str, "Height: %d\n\r", Info->VerticalResolution);
+        Write(str);    
+    }
+}
+
 
 EFI_STATUS InitGop()
 {
     EFI_STATUS Status;
     void *Interface;
     char str[256];
+    int i;
 
     Status = BS->LocateProtocol(&GopProtocol, 0, &Interface);
 
@@ -52,8 +72,8 @@ EFI_STATUS InitGop()
     sprintf(str, "GOP Mode: %d\n\r", Gop->Mode->Mode);
     Write(str);    
 
-    sprintf(str, "LFB: %08hX (%08hX)\n\r", Gop->Mode->FrameBufferBase, Gop->Mode->FrameBufferSize);
-    Write(str);    
+    for (i = 0; i <= Gop->Mode->MaxMode; i++)
+        ShowMode(i);
 
     return Status;
 }
