@@ -219,6 +219,11 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
     ST = SystemTable;
     BS = SystemTable->BootServices;
 
+    InitGop();
+
+    if (EFI_ERROR(Status))
+        return Status;
+
     Status = BS->HandleProtocol(ImageHandle, &LoadedImageProtocol, &Interface);
     if (EFI_ERROR(Status))
         return Status;
@@ -238,16 +243,13 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
         Clear();
         sprintf(tempstr, ">\n\r");
         Write();
+
+        CheckFs(Image->DeviceHandle);
     }
     else
         return -1;
 
-    InitGop();
-
-    if (EFI_ERROR(Status))
-        return Status;
-
-    InitFs();
+//    InitFs();
   
     /* Now wait for a keystroke before continuing, otherwise your
        message will flash off the screen before you see it.
