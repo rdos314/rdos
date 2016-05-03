@@ -17,10 +17,16 @@ EFI_GRAPHICS_PIXEL_FORMAT PixelFormat;
 EFI_PHYSICAL_ADDRESS LfbBase;
 unsigned int LfbSize;
 
+unsigned int FsCount;
+
+void *Interface;
+void **IntArr;
 char tempstr[256];
 CHAR16 wstr[] = { 0, 0 };
 EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Info;
 EFI_STATUS Status;
+
+
 
 static void Clear()
 {
@@ -77,8 +83,6 @@ static void ShowUsedMode()
 
 static void InitGop()
 {
-    void *Interface;
-
     Status = BS->LocateProtocol(&GopProtocol, 0, &Interface);
 
     if (EFI_ERROR(Status))
@@ -118,6 +122,14 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 
     if (EFI_ERROR(Status))
         return Status;
+
+    FsCount = 0;
+    BS->LocateHandleBuffer(ByProtocol, &FileSystemProtocol, 0, &FsCount, &IntArr);
+    
+    Clear();
+    sprintf(tempstr, "FS count: %d, ", FsCount);
+    Write();
+
   
     /* Now wait for a keystroke before continuing, otherwise your
        message will flash off the screen before you see it.
@@ -127,6 +139,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
     Status = ST->ConIn->Reset(ST->ConIn, FALSE);
     if (EFI_ERROR(Status))
         return Status;
+
  
     /* Now wait until a key becomes available.  This is a simple
        polling implementation.  You could try and use the WaitForKey
