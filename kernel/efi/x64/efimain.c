@@ -150,6 +150,27 @@ static void GetFileSystemInfo(EFI_FILE_HANDLE DirHandle)
     }
 }
 
+static void GetFiles(EFI_FILE_HANDLE DirHandle)
+{
+    unsigned int Size = 1024;
+    FileInfo = (EFI_FILE_INFO *)FsInfoData;
+
+    DirHandle->SetPosition(DirHandle, 0);
+
+    if (DirHandle->Read(DirHandle, &Size, FsInfoData) == EFI_SUCCESS)
+    {
+        Clear();
+        sprintf(tempstr, "Path: <");
+        Write();
+
+        ST->ConOut->OutputString(ST->ConOut, FileInfo->FileName);
+
+        Clear();
+        sprintf(tempstr, ">\n\r");
+        Write();
+    }
+}
+
 static void CheckFs(EFI_HANDLE handle)
 {
     if (BS->HandleProtocol(handle, &FileSystemProtocol, &Interface) == EFI_SUCCESS)
@@ -160,6 +181,7 @@ static void CheckFs(EFI_HANDLE handle)
         {
             GetFileSystemInfo(Root);
             GetFileInfo(Root);
+            GetFiles(Root);
 
             Root->Close(Root);
         }
