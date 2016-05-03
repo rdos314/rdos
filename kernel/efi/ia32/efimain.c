@@ -15,6 +15,7 @@ EFI_STATUS InitGop()
 {
     EFI_STATUS Status;
     void *Interface;
+    char str[256];
 
     Status = BS->LocateProtocol(&GopProtocol, 0, &Interface);
 
@@ -26,7 +27,7 @@ EFI_STATUS InitGop()
 
     Gop = (EFI_GRAPHICS_OUTPUT_PROTOCOL *)Interface;
 
-    printf("GOP Mode: %d", Gop->Mode->Mode);
+    sprintf(str, "GOP Mode: %d", Gop->Mode->Mode);
 
     return Status;
 }
