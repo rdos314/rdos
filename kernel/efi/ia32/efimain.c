@@ -125,6 +125,11 @@ EFI_STATUS InitGop()
             ST->ConOut->OutputString(ST->ConOut, L"GOP Mode Set Failed\n\r");
             return Status;
         }
+
+        Clear(str, 256);
+        sprintf(str, "Mode %d: Base: %d\n\r", VideoMode, Gop->Mode->FrameBufferBase);
+        Write(str);
+
     }
 
     return Status;
