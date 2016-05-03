@@ -1,4 +1,4 @@
-OUTPUT = bootx86.efi
+OUTPUT = bootia32.efi
 
 EFI_CC ?= gcc
 
