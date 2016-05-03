@@ -16,7 +16,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
     /* Store the system table for future use in other functions */
     ST = SystemTable;
 
-    Status = LibLocateProtocol(EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID, &Interface);
+    Status = BS->LocateProtocol(&GopProtocol, 0, &Interface);
     if (EFI_ERROR(Status))
         return Status;
  
