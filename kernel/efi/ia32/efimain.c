@@ -1,4 +1,5 @@
 #include <efi.h>
+#include <efilib.h>
 
 EFI_SYSTEM_TABLE         *ST;
 EFI_BOOT_SERVICES        *BS;
@@ -10,9 +11,14 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
     EFI_STATUS Status;
     EFI_INPUT_KEY Key;
+    void *Interface;
  
     /* Store the system table for future use in other functions */
     ST = SystemTable;
+
+    Status = LibLocateProtocol(EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID, &Interface);
+    if (EFI_ERROR(Status))
+        return Status;
  
     /* Say hi */
     Status = ST->ConOut->OutputString(ST->ConOut, L"Hello World\n\r");
