@@ -127,7 +127,7 @@ EFI_STATUS InitGop()
         }
 
         Clear(str, 256);
-        sprintf(str, "Used mode %d: Base: %08lX", VideoMode, Gop->Mode->FrameBufferBase);
+        sprintf(str, "Used mode %d, base: %08lX, scan: %d", VideoMode, Gop->Mode->FrameBufferBase, ScanLine);
         Write(str);
 
         Clear(str, 256);
