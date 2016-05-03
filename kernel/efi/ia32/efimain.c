@@ -9,6 +9,14 @@ EFI_RUNTIME_SERVICES     *RT;
 
 EFI_GRAPHICS_OUTPUT_PROTOCOL *Gop;
 
+void Clear(char *buf, int size)
+{
+    int i;
+
+    for (i = 0; i < size; i++)
+        buf[i] = 0;
+}
+
 void Write(const char *buf)
 {
     int count = 0;
@@ -40,6 +48,7 @@ void ShowMode(int Mode)
 
     if (Gop->QueryMode(Gop, Mode, &Size, &Info) == EFI_SUCCESS)
     {
+        Clear(str, 256);
         sprintf(str, "Mode %d: %dx%d", Mode, Info->HorizontalResolution, Info->VerticalResolution);
         Write(str);
         
@@ -50,7 +59,7 @@ void ShowMode(int Mode)
                 break;
 
             case PixelBlueGreenRedReserved8BitPerColor:
-                ST->ConOut->OutputString(ST->ConOut, L"8-bit BRG\n\r");
+                ST->ConOut->OutputString(ST->ConOut, L"8-bit BGR\n\r");
                 break;
 
             case PixelBitMask:
@@ -82,6 +91,7 @@ EFI_STATUS InitGop()
 
     Gop = (EFI_GRAPHICS_OUTPUT_PROTOCOL *)Interface;
 
+    Clear(str, 256);
     sprintf(str, "GOP Mode: %d\n\r", Gop->Mode->Mode);
     Write(str);    
 
