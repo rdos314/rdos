@@ -18,9 +18,11 @@ EFI_PHYSICAL_ADDRESS LfbBase;
 unsigned int LfbSize;
 
 unsigned int FsCount;
+EFI_FILE_IO_INTERFACE *Fs;
+EFI_FILE_HANDLE Root;
 
 void *Interface;
-void **IntArr;
+EFI_HANDLE *FsArr;
 char tempstr[256];
 CHAR16 wstr[] = { 0, 0 };
 EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Info;
@@ -109,6 +111,34 @@ static void InitGop()
     return Status;
 }
 
+static void CheckFs(EFI_HANDLE handle)
+{
+    if (BS->HandleProtocol(handle, &FileSystemProtocol, &Interface) == EFI_SUCCESS)
+    {
+        Fs = (EFI_FILE_IO_INTERFACE*)Interface;
+
+        if (Fs->OpenVolume(Fs, &Root) == EFI_SUCCESS)
+        {
+            Clear();
+            sprintf(tempstr, "FS volume OK\n\r");
+            Write();
+        }
+    } 
+}
+
+static void InitFs()
+{
+    FsCount = 0;
+    BS->LocateHandleBuffer(ByProtocol, &FileSystemProtocol, 0, &FsCount, &FsArr);
+    
+    Clear();
+    sprintf(tempstr, "FS count: %d\n\r", FsCount);
+    Write();
+
+    for (int i = 0; i < FsCount; i++)
+        CheckFs(FsArr[i]);
+}
+
  
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
@@ -123,13 +153,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
     if (EFI_ERROR(Status))
         return Status;
 
-    FsCount = 0;
-    BS->LocateHandleBuffer(ByProtocol, &FileSystemProtocol, 0, &FsCount, &IntArr);
-    
-    Clear();
-    sprintf(tempstr, "FS count: %d, ", FsCount);
-    Write();
-
+    InitFs();
   
     /* Now wait for a keystroke before continuing, otherwise your
        message will flash off the screen before you see it.
