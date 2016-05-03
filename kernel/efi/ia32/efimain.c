@@ -1,33 +1,49 @@
 #include <efi.h>
 #include <efilib.h>
+#include <efiprot.h>
+#include <stdio.h>
 
 EFI_SYSTEM_TABLE         *ST;
 EFI_BOOT_SERVICES        *BS;
 EFI_RUNTIME_SERVICES     *RT;
 
+EFI_GRAPHICS_OUTPUT_PROTOCOL *Gop;
+
 #include <efilib.h>
+
+EFI_STATUS InitGop()
+{
+    EFI_STATUS Status;
+    void *Interface;
+
+    Status = BS->LocateProtocol(&GopProtocol, 0, &Interface);
+
+    if (EFI_ERROR(Status))
+    {
+        ST->ConOut->OutputString(ST->ConOut, L"GOP Not found\n\r");
+        return Status;
+    }
+
+    Gop = (EFI_GRAPHICS_OUTPUT_PROTOCOL *)Interface;
+
+    printf("GOP Mode: %d", Gop->Mode->Mode);
+
+    return Status;
+}
+
  
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
     EFI_STATUS Status;
     EFI_INPUT_KEY Key;
-    void *Interface;
  
     /* Store the system table for future use in other functions */
     ST = SystemTable;
     BS = SystemTable->BootServices;
 
-    ST->ConOut->OutputString(ST->ConOut, L"Before GOP\n\r");
-
-    Status = BS->LocateProtocol(&GopProtocol, 0, &Interface);
-
-    ST->ConOut->OutputString(ST->ConOut, L"After GOP\n\r");
-
+    Status = InitGop();
     if (EFI_ERROR(Status))
-    {
-        ST->ConOut->OutputString(ST->ConOut, L"GOP Failed\n\r");
         return Status;
-    }
  
     /* Say hi */
     Status = ST->ConOut->OutputString(ST->ConOut, L"Hello World\n\r");
