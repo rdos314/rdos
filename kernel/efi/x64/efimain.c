@@ -125,7 +125,13 @@ static void CheckFs(EFI_HANDLE handle)
             if (Root->GetInfo(Root, &FileSystemInfo, &Size, FsInfo) == EFI_SUCCESS)
             {
                 Clear();
-                sprintf(tempstr, "FS volume OK\n\r");
+                sprintf(tempstr, "Volume label: <");
+                Write();
+
+                ST->ConOut->OutputString(ST->ConOut, FsInfo->VolumeLabel);
+
+                Clear();
+                sprintf(tempstr, ">\n\r");
                 Write();
             }
         }
