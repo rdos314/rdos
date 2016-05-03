@@ -9,7 +9,29 @@ EFI_RUNTIME_SERVICES     *RT;
 
 EFI_GRAPHICS_OUTPUT_PROTOCOL *Gop;
 
-#include <efilib.h>
+void Write(const char *buf)
+{
+    int count = 0;
+    CHAR16 str[] = { 0, 0 };
+
+    while(buf[count])
+    {
+        str[0] = (CHAR16)buf[count];
+                
+        if(ST->ConOut->OutputString(ST->ConOut, str) == EFI_SUCCESS)
+        {
+            if(buf[count] == '\n')
+            {
+                str[0] = '\r';
+                ST->ConOut->OutputString(ST->ConOut, str);
+            }
+            count++;
+        }
+        else
+            break;
+    }
+}
+
 
 EFI_STATUS InitGop()
 {
@@ -28,6 +50,7 @@ EFI_STATUS InitGop()
     Gop = (EFI_GRAPHICS_OUTPUT_PROTOCOL *)Interface;
 
     sprintf(str, "GOP Mode: %d", Gop->Mode->Mode);
+    Write(str);    
 
     return Status;
 }
