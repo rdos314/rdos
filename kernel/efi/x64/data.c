@@ -106,6 +106,8 @@ EFI_GUID PxeCallbackProtocol      = EFI_PXE_BASE_CODE_CALLBACK_PROTOCOL;
 EFI_GUID NetworkInterfaceIdentifierProtocol = EFI_NETWORK_INTERFACE_IDENTIFIER_PROTOCOL;
 EFI_GUID UiProtocol               = EFI_UI_PROTOCOL;
 EFI_GUID PciIoProtocol            = EFI_PCI_IO_PROTOCOL;
+EFI_GUID GopProtocol              = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+
 //
 // File system information IDs
 //
