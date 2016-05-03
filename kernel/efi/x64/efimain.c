@@ -20,6 +20,8 @@ unsigned int LfbSize;
 unsigned int FsCount;
 EFI_FILE_IO_INTERFACE *Fs;
 EFI_FILE_HANDLE Root;
+char FsInfoData[1024];
+EFI_FILE_SYSTEM_INFO *FsInfo;
 
 void *Interface;
 EFI_HANDLE *FsArr;
@@ -107,8 +109,6 @@ static void InitGop()
     LfbSize = Gop->Mode->FrameBufferSize;
 
     ShowUsedMode();
-
-    return Status;
 }
 
 static void CheckFs(EFI_HANDLE handle)
@@ -119,9 +119,15 @@ static void CheckFs(EFI_HANDLE handle)
 
         if (Fs->OpenVolume(Fs, &Root) == EFI_SUCCESS)
         {
-            Clear();
-            sprintf(tempstr, "FS volume OK\n\r");
-            Write();
+            unsigned int Size = 1024;
+
+            FsInfo = (EFI_FILE_SYSTEM_INFO *)FsInfoData;
+            if (Root->GetInfo(Root, &FileSystemInfo, &Size, FsInfo) == EFI_SUCCESS)
+            {
+                Clear();
+                sprintf(tempstr, "FS volume OK\n\r");
+                Write();
+            }
         }
     } 
 }
@@ -135,7 +141,7 @@ static void InitFs()
     sprintf(tempstr, "FS count: %d\n\r", FsCount);
     Write();
 
-    for (int i = 0; i < FsCount; i++)
+    for (unsigned int i = 0; i < FsCount; i++)
         CheckFs(FsArr[i]);
 }
 
