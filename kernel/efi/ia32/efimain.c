@@ -9,6 +9,12 @@ EFI_RUNTIME_SERVICES     *RT;
 
 EFI_GRAPHICS_OUTPUT_PROTOCOL *Gop;
 
+unsigned int VideoMode;
+unsigned int Width;
+unsigned int Height;
+unsigned int ScanLine;
+
+
 void Clear(char *buf, int size)
 {
     int i;
@@ -48,8 +54,16 @@ void ShowMode(int Mode)
 
     if (Gop->QueryMode(Gop, Mode, &Size, &Info) == EFI_SUCCESS)
     {
+        if (Info->HorizontalResolution > Width)
+        {
+            VideoMode = Mode;
+            Width = Info->HorizontalResolution;
+            Height = Info->VerticalResolution;
+            ScanLine = Info->PixelsPerScanLine;
+        }
+        
         Clear(str, 256);
-        sprintf(str, "Mode %d: %dx%d", Mode, Info->HorizontalResolution, Info->VerticalResolution);
+        sprintf(str, "Mode %d: %dx%d, ", Mode, Info->HorizontalResolution, Info->VerticalResolution);
         Write(str);
         
         switch (Info->PixelFormat)
@@ -93,10 +107,25 @@ EFI_STATUS InitGop()
 
     Clear(str, 256);
     sprintf(str, "GOP Mode: %d\n\r", Gop->Mode->Mode);
-    Write(str);    
+    Write(str);
+
+    VideoMode = 0;
+    Width = 0;
+    Height = 0;
 
     for (i = 0; i <= Gop->Mode->MaxMode; i++)
         ShowMode(i);
+
+    if (VideoMode)
+    {
+        Status = Gop->SetMode(Gop, VideoMode);
+
+        if (EFI_ERROR(Status))
+        {
+            ST->ConOut->OutputString(ST->ConOut, L"GOP Mode Set Failed\n\r");
+            return Status;
+        }
+    }
 
     return Status;
 }
