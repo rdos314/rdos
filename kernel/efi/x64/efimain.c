@@ -7,6 +7,7 @@ EFI_SYSTEM_TABLE         *ST;
 EFI_BOOT_SERVICES        *BS;
 EFI_RUNTIME_SERVICES     *RT;
 
+EFI_LOADED_IMAGE *Image;
 EFI_GRAPHICS_OUTPUT_PROTOCOL *Gop;
 
 unsigned int VideoMode;
@@ -216,6 +217,21 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
     /* Store the system table for future use in other functions */
     ST = SystemTable;
     BS = SystemTable->BootServices;
+
+    Status = BS->HandleProtocol(ImageHandle, &LoadedImageProtocol, &Interface);
+    if (EFI_ERROR(Status))
+        return Status;
+
+    Image = (EFI_LOADED_IMAGE *)Interface;
+
+    if (Image->FilePath->Type == MEDIA_DEVICE_PATH && Image->FilePath->SubType == MEDIA_FILEPATH_DP)
+    {
+        Clear();
+        sprintf(tempstr, "Loaded image type: %d, subtype: %d\n\r", (int)Image->FilePath->Type, (int)Image->FilePath->SubType);
+        Write();
+    }
+    else
+        return -1;
 
     InitGop();
 
