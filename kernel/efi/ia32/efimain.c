@@ -40,14 +40,27 @@ void ShowMode(int Mode)
 
     if (Gop->QueryMode(Gop, Mode, &Size, &Info) == EFI_SUCCESS)
     {
-        sprintf(str, "Mode: %d\n\r", Mode);
-        Write(str);    
+        sprintf(str, "Mode %d: %dx%d", Mode, Info->HorizontalResolution, Info->VerticalResolution);
+        Write(str);
+        
+        switch (Info->PixelFormat)
+        {
+            case PixelRedGreenBlueReserved8BitPerColor:
+                ST->ConOut->OutputString(ST->ConOut, L"8-bit RGB\n\r");
+                break;
 
-        sprintf(str, "Width: %d\n\r", Info->HorizontalResolution);
-        Write(str);    
+            case PixelBlueGreenRedReserved8BitPerColor:
+                ST->ConOut->OutputString(ST->ConOut, L"8-bit BRG\n\r");
+                break;
 
-        sprintf(str, "Height: %d\n\r", Info->VerticalResolution);
-        Write(str);    
+            case PixelBitMask:
+                ST->ConOut->OutputString(ST->ConOut, L"Bit mask\n\r");
+                break;
+
+            case PixelBltOnly:
+                ST->ConOut->OutputString(ST->ConOut, L"Blit only\n\r");
+                break;
+        }
     }
 }
 
