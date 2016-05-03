@@ -16,9 +16,17 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
     /* Store the system table for future use in other functions */
     ST = SystemTable;
 
+    ST->ConOut->OutputString(ST->ConOut, L"Before GOP\n\r");
+
     Status = BS->LocateProtocol(&GopProtocol, 0, &Interface);
+
+    ST->ConOut->OutputString(ST->ConOut, L"After GOP\n\r");
+
     if (EFI_ERROR(Status))
+    {
+        ST->ConOut->OutputString(ST->ConOut, L"GOP Failed\n\r");
         return Status;
+    }
  
     /* Say hi */
     Status = ST->ConOut->OutputString(ST->ConOut, L"Hello World\n\r");
