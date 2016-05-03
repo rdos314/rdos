@@ -49,7 +49,10 @@ EFI_STATUS InitGop()
 
     Gop = (EFI_GRAPHICS_OUTPUT_PROTOCOL *)Interface;
 
-    sprintf(str, "GOP Mode: %d", Gop->Mode->Mode);
+    sprintf(str, "GOP Mode: %d\n\r", Gop->Mode->Mode);
+    Write(str);    
+
+    sprintf(str, "LFB: %08hX (%08hX)\n\r", Gop->Mode->FrameBufferBase, Gop->Mode->FrameBufferSize);
     Write(str);    
 
     return Status;
