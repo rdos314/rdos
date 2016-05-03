@@ -1,24 +1,124 @@
 #include <efi.h>
+#include <efilib.h>
+#include <efiprot.h>
+#include <stdio.h>
 
 EFI_SYSTEM_TABLE         *ST;
 EFI_BOOT_SERVICES        *BS;
 EFI_RUNTIME_SERVICES     *RT;
 
-#include <efilib.h>
+EFI_GRAPHICS_OUTPUT_PROTOCOL *Gop;
+
+unsigned int VideoMode;
+unsigned int Width;
+unsigned int Height;
+unsigned int ScanLine;
+EFI_GRAPHICS_PIXEL_FORMAT PixelFormat;
+EFI_PHYSICAL_ADDRESS LfbBase;
+unsigned int LfbSize;
+
+char tempstr[256];
+CHAR16 wstr[] = { 0, 0 };
+EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Info;
+EFI_STATUS Status;
+
+static void Clear()
+{
+    for (int i = 0; i < 256; i++)
+        tempstr[i] = 0;
+}
+
+static void Write()
+{
+    int count = 0;
+
+    while(tempstr[count])
+    {
+        wstr[0] = (CHAR16)tempstr[count];
+                
+        ST->ConOut->OutputString(ST->ConOut, wstr);
+        count++;
+    }
+}
+
+static void ShowUsedMode()
+{        
+    Clear();
+    sprintf(tempstr, "GOP: %dx%d, ", Width, Height);
+    Write();
+
+    Clear();
+        
+    switch (PixelFormat)
+    {
+        case PixelRedGreenBlueReserved8BitPerColor:
+            sprintf(tempstr, "8-bit RGB, ");
+            break;
+
+        case PixelBlueGreenRedReserved8BitPerColor:
+            sprintf(tempstr, "8-bit BGR, ");
+            break;
+
+        case PixelBitMask:
+            sprintf(tempstr, "Bit mask, ");
+            break;
+
+        case PixelBltOnly:
+            sprintf(tempstr, "Blit only, ");
+            break;
+    }
+    Write();
+
+    Clear();
+    sprintf(tempstr, "Base: %08lX, Size: %08lX\n\r", LfbBase, LfbSize);
+    Write();
+}
+
+
+static void InitGop()
+{
+    void *Interface;
+
+    Status = BS->LocateProtocol(&GopProtocol, 0, &Interface);
+
+    if (EFI_ERROR(Status))
+    {
+        Clear();
+        sprintf(tempstr, "GOP Not found\n\r");
+        Write();
+        return Status;
+    }
+
+    Gop = (EFI_GRAPHICS_OUTPUT_PROTOCOL *)Interface;
+
+    Info = Gop->Mode->Info;
+    Width = Info->HorizontalResolution;
+    Height = Info->VerticalResolution;
+    ScanLine = Info->PixelsPerScanLine;
+    PixelFormat = Info->PixelFormat;
+
+    LfbBase = Gop->Mode->FrameBufferBase;
+    LfbSize = Gop->Mode->FrameBufferSize;
+
+    ShowUsedMode();
+
+    return Status;
+}
+
  
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
-    EFI_STATUS Status;
     EFI_INPUT_KEY Key;
  
     /* Store the system table for future use in other functions */
     ST = SystemTable;
- 
-    /* Say hi */
-    Status = ST->ConOut->OutputString(ST->ConOut, L"Hello World\n\r");
+    BS = SystemTable->BootServices;
+
+    InitGop();
+
     if (EFI_ERROR(Status))
         return Status;
- 
+  
     /* Now wait for a keystroke before continuing, otherwise your
        message will flash off the screen before you see it.
  
