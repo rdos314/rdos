@@ -127,7 +127,11 @@ EFI_STATUS InitGop()
         }
 
         Clear(str, 256);
-        sprintf(str, "Mode %d: Base: %d\n\r", VideoMode, Gop->Mode->FrameBufferBase);
+        sprintf(str, "Mode %d: Base: %hX\n\r", VideoMode, Gop->Mode->FrameBufferBase);
+        Write(str);
+
+        Clear(str, 256);
+        sprintf(str, " %d: %dx%d\r\n", Width, Height);
         Write(str);
 
     }
