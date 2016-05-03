@@ -157,17 +157,25 @@ static void GetFiles(EFI_FILE_HANDLE DirHandle)
 
     DirHandle->SetPosition(DirHandle, 0);
 
-    if (DirHandle->Read(DirHandle, &Size, FsInfoData) == EFI_SUCCESS)
+    while (Size)
     {
-        Clear();
-        sprintf(tempstr, "Path: <");
-        Write();
+        Size = 1024;
+        
+        if (DirHandle->Read(DirHandle, &Size, FsInfoData) == EFI_SUCCESS)
+        {
+            if (Size)
+            {
+                Clear();
+                sprintf(tempstr, "Path: <");
+                Write();
 
-        ST->ConOut->OutputString(ST->ConOut, FileInfo->FileName);
+                ST->ConOut->OutputString(ST->ConOut, FileInfo->FileName);
 
-        Clear();
-        sprintf(tempstr, ">\n\r");
-        Write();
+                Clear();
+                sprintf(tempstr, ">\n\r");
+                Write();
+            }
+        }
     }
 }
 
@@ -180,7 +188,6 @@ static void CheckFs(EFI_HANDLE handle)
         if (Fs->OpenVolume(Fs, &Root) == EFI_SUCCESS)
         {
             GetFileSystemInfo(Root);
-            GetFileInfo(Root);
             GetFiles(Root);
 
             Root->Close(Root);
