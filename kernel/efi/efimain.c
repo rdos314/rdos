@@ -45,11 +45,19 @@ CHAR16 wstr[256];
 #define MENU_WIDTH 40
 #define MENU_ROWS  20
 
+struct BootEntry
+{
+    EFI_HANDLE Volume;
+    CHAR16 FileName[256];
+    char MenuStr[MENU_WIDTH + 1];    
+};
+
 int StartRow;
 int StartCol;
 int SelectedRow;
 int MenuRows = 0;
-int MenuStr[MENU_ROWS][MENU_WIDTH + 1];
+EFI_HANDLE CurrVolume;
+struct BootEntry MenuArr[MENU_ROWS];
 
 EFI_INPUT_KEY Key;
  
@@ -339,6 +347,16 @@ static char *strstr(char *string, char *substring)
         b = substring;
     }
     return (char *) 0;
+}
+
+static void wstrcpy(CHAR16 *dest, const CHAR16 *src)
+{
+    int i;
+
+    for (i = 0; src[i] != '\0'; i++)
+        dest[i] = src[i];
+
+    dest[i] = '\0';
 }
 
 static char *sprintn(char *nbuf, uintmax_t num, int base, int *lenp, int upper)
@@ -866,10 +884,13 @@ static void GetFileSystemInfo(EFI_FILE_HANDLE DirHandle)
     }
 }
 
-static void AddMenuRow(const char *str)
+static void AddMenuRow(const char *str, const CHAR16 *FileName)
 {
     int i;
-    char *ptr = MenuStr[MenuRows];
+    char *ptr = MenuArr[MenuRows].MenuStr;
+
+    wstrcpy(MenuArr[MenuRows].FileName, FileName);
+    MenuArr[MenuRows].Volume = CurrVolume;
 
     MenuRows++;
 
@@ -921,7 +942,7 @@ static void GetNormalFile(EFI_FILE_HANDLE DirHandle)
                             strcat(str, buf);
                             strcat(str, ")");
                         }
-                        AddMenuRow(str);
+                        AddMenuRow(str, FileInfo->FileName);
                     }
                 }
             }
@@ -960,7 +981,7 @@ static void GetSafeFile(EFI_FILE_HANDLE DirHandle)
                             strcat(str, buf);
                             strcat(str, ")");
                         }
-                        AddMenuRow(str);
+                        AddMenuRow(str, FileInfo->FileName);
                     }
                 }
             }
@@ -1015,7 +1036,7 @@ static void GetOtherFiles(EFI_FILE_HANDLE DirHandle)
                                 strcat(str, buf);
                                 strcat(str, ")");
                             }
-                            AddMenuRow(str);
+                            AddMenuRow(str, FileInfo->FileName);
                         }
                     }
                 }
@@ -1032,6 +1053,8 @@ static void CheckFs(EFI_HANDLE handle)
 
         if (Fs->OpenVolume(Fs, &Root) == EFI_SUCCESS)
         {
+            CurrVolume = handle;
+
             GetFileSystemInfo(Root);
             GetNormalFile(Root);
             GetSafeFile(Root);
@@ -1108,7 +1131,7 @@ static void DrawBox(int StartRow, int StartCol, int InnerRows, int InnerCols)
 
 static void DrawRow(int Row)
 {
-    ConvertToWide(wstr, MenuStr[Row]);
+    ConvertToWide(wstr, MenuArr[Row].MenuStr);
 
     if (SelectedRow == Row)
         ST->ConOut->SetAttribute(ST->ConOut, EFI_BLACK | EFI_BACKGROUND_LIGHTGRAY);
