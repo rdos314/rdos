@@ -950,6 +950,11 @@ static void DrawRow(int Row)
 {
     ConvertToWide(wstr, MenuStr[Row]);
 
+    if (SelectedRow == Row)
+        ST->ConOut->SetAttribute(ST->ConOut, EFI_BLACK | EFI_BACKGROUND_LIGHTGRAY);
+    else
+        ST->ConOut->SetAttribute(ST->ConOut, EFI_WHITE | EFI_BACKGROUND_BLACK);
+
     ST->ConOut->SetCursorPosition(ST->ConOut, StartCol + 2, StartRow + 1 + Row);
     ST->ConOut->OutputString(ST->ConOut, wstr);
 }
@@ -961,11 +966,19 @@ static void AddMenuRow(const char *str)
 
     MenuRows++;
 
-    for (i = 0; i < MENU_WIDTH && *str; i++)
+    *ptr = ' ';
+    ptr++;
+
+    for (i = 1; i < MENU_WIDTH; i++)
     {
-        *ptr = *str;
+        if (*str)
+        {
+            *ptr = *str;
+            str++;
+        }
+        else
+            *ptr = ' ';
         ptr++;
-        str++;
     }
     *ptr = 0;
 }
@@ -992,10 +1005,12 @@ static void InitText()
     StartCol = TextCols / 2 - MENU_WIDTH / 2;
     SelectedRow = 0;
 
-    DrawBox(StartRow, StartCol, MenuRows, MENU_WIDTH + 1);
+    DrawBox(StartRow, StartCol, MenuRows, MENU_WIDTH + 2);
 
     for (i = 0; i < MenuRows; i++)
         DrawRow(i);
+
+    ST->ConOut->SetAttribute(ST->ConOut, EFI_WHITE | EFI_BACKGROUND_BLACK);
 }
  
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
