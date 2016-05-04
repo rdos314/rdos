@@ -1,3 +1,4 @@
+#include <lib.h>
 #include <efi.h>
 #include <efilib.h>
 #include <efiprot.h>
@@ -28,63 +29,572 @@ EFI_FILE_INFO *FileInfo;
 
 void *Interface;
 EFI_HANDLE *FsArr;
-char tempstr[256];
-CHAR16 wstr[] = { 0, 0 };
 EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Info;
 EFI_STATUS Status;
 
+char nbuf[32];
+
+//
+// Root device path
+//
+
+EFI_DEVICE_PATH RootDevicePath[] = {
+   {END_DEVICE_PATH_TYPE, END_ENTIRE_DEVICE_PATH_SUBTYPE, {END_DEVICE_PATH_LENGTH,0}}
+};
+
+EFI_DEVICE_PATH EndDevicePath[] = {
+   {END_DEVICE_PATH_TYPE, END_ENTIRE_DEVICE_PATH_SUBTYPE, {END_DEVICE_PATH_LENGTH, 0}}
+};
+
+EFI_DEVICE_PATH EndInstanceDevicePath[] = {
+   {END_DEVICE_PATH_TYPE, END_INSTANCE_DEVICE_PATH_SUBTYPE, {END_DEVICE_PATH_LENGTH, 0}}
+};
 
 
-static void Clear()
+//
+// EFI IDs
+//
+
+EFI_GUID EfiGlobalVariable  = EFI_GLOBAL_VARIABLE;
+EFI_GUID NullGuid = { 0,0,0,{0,0,0,0,0,0,0,0} };
+
+//
+// Protocol IDs
+//
+
+EFI_GUID DevicePathProtocol       = DEVICE_PATH_PROTOCOL;
+EFI_GUID LoadedImageProtocol      = LOADED_IMAGE_PROTOCOL;
+EFI_GUID TextInProtocol           = SIMPLE_TEXT_INPUT_PROTOCOL;
+EFI_GUID TextOutProtocol          = SIMPLE_TEXT_OUTPUT_PROTOCOL;
+EFI_GUID BlockIoProtocol          = BLOCK_IO_PROTOCOL;
+EFI_GUID DiskIoProtocol           = DISK_IO_PROTOCOL;
+EFI_GUID FileSystemProtocol       = SIMPLE_FILE_SYSTEM_PROTOCOL;
+EFI_GUID LoadFileProtocol         = LOAD_FILE_PROTOCOL;
+EFI_GUID DeviceIoProtocol         = DEVICE_IO_PROTOCOL;
+EFI_GUID UnicodeCollationProtocol = UNICODE_COLLATION_PROTOCOL;
+EFI_GUID SerialIoProtocol         = SERIAL_IO_PROTOCOL;
+EFI_GUID SimpleNetworkProtocol    = EFI_SIMPLE_NETWORK_PROTOCOL;
+EFI_GUID PxeBaseCodeProtocol      = EFI_PXE_BASE_CODE_PROTOCOL;
+EFI_GUID PxeCallbackProtocol      = EFI_PXE_BASE_CODE_CALLBACK_PROTOCOL;
+EFI_GUID NetworkInterfaceIdentifierProtocol = EFI_NETWORK_INTERFACE_IDENTIFIER_PROTOCOL;
+EFI_GUID UiProtocol               = EFI_UI_PROTOCOL;
+EFI_GUID PciIoProtocol            = EFI_PCI_IO_PROTOCOL;
+EFI_GUID GopProtocol              = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+
+//
+// File system information IDs
+//
+
+EFI_GUID GenericFileInfo           = EFI_FILE_INFO_ID;
+EFI_GUID FileSystemInfo            = EFI_FILE_SYSTEM_INFO_ID;
+EFI_GUID FileSystemVolumeLabelInfo = EFI_FILE_SYSTEM_VOLUME_LABEL_INFO_ID;
+
+//
+// Reference implementation public protocol IDs
+//
+
+EFI_GUID InternalShellProtocol = INTERNAL_SHELL_GUID;
+EFI_GUID VariableStoreProtocol = VARIABLE_STORE_PROTOCOL;
+EFI_GUID LegacyBootProtocol = LEGACY_BOOT_PROTOCOL;
+EFI_GUID VgaClassProtocol = VGA_CLASS_DRIVER_PROTOCOL;
+
+EFI_GUID TextOutSpliterProtocol = TEXT_OUT_SPLITER_PROTOCOL;
+EFI_GUID ErrorOutSpliterProtocol = ERROR_OUT_SPLITER_PROTOCOL;
+EFI_GUID TextInSpliterProtocol = TEXT_IN_SPLITER_PROTOCOL;
+/* Added for GOP support */
+EFI_GUID GraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+
+EFI_GUID AdapterDebugProtocol = ADAPTER_DEBUG_PROTOCOL;
+
+//
+// Device path media protocol IDs
+//
+EFI_GUID PcAnsiProtocol = DEVICE_PATH_MESSAGING_PC_ANSI;
+EFI_GUID Vt100Protocol  = DEVICE_PATH_MESSAGING_VT_100;
+
+//
+// EFI GPT Partition Type GUIDs
+//
+EFI_GUID EfiPartTypeSystemPartitionGuid = EFI_PART_TYPE_EFI_SYSTEM_PART_GUID;
+EFI_GUID EfiPartTypeLegacyMbrGuid = EFI_PART_TYPE_LEGACY_MBR_GUID;
+
+
+//
+// Reference implementation Vendor Device Path Guids
+//
+EFI_GUID UnknownDevice      = UNKNOWN_DEVICE_GUID;
+
+//
+// Configuration Table GUIDs
+//
+
+EFI_GUID MpsTableGuid             = MPS_TABLE_GUID;
+EFI_GUID AcpiTableGuid            = ACPI_TABLE_GUID;
+EFI_GUID SMBIOSTableGuid          = SMBIOS_TABLE_GUID;
+EFI_GUID SalSystemTableGuid       = SAL_SYSTEM_TABLE_GUID;
+
+//
+// Network protocol GUIDs
+//
+EFI_GUID Ip4ServiceBindingProtocol = EFI_IP4_SERVICE_BINDING_PROTOCOL;
+EFI_GUID Ip4Protocol = EFI_IP4_PROTOCOL;
+EFI_GUID Udp4ServiceBindingProtocol = EFI_UDP4_SERVICE_BINDING_PROTOCOL;
+EFI_GUID Udp4Protocol = EFI_UDP4_PROTOCOL;
+EFI_GUID Tcp4ServiceBindingProtocol = EFI_TCP4_SERVICE_BINDING_PROTOCOL;
+EFI_GUID Tcp4Protocol = EFI_TCP4_PROTOCOL;
+
+
+static void WriteChar(char ch)
 {
-    for (int i = 0; i < 256; i++)
-        tempstr[i] = 0;
+    CHAR16 wstr[] = { 0, 0 };
+
+    wstr[0] = (CHAR16)ch;            
+    ST->ConOut->OutputString(ST->ConOut, wstr);
 }
 
-static void Write()
-{
-    int count = 0;
 
-    while(tempstr[count])
+char const hex2ascii_data[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+
+#define hex2ascii(hex)  (hex2ascii_data[hex])
+#define toupper(c)      ((c) - 0x20 * (((c) >= 'a') && ((c) <= 'z')))
+
+static int strlen(const char *s)
+{
+    int l = 0;
+    while (*s++)
+        l++;
+    return l;
+}
+
+
+static char *sprintn(char *nbuf, uintmax_t num, int base, int *lenp, int upper)
+{
+    char *p, c;
+
+    p = nbuf;
+    *p = '\0';
+    do
     {
-        wstr[0] = (CHAR16)tempstr[count];
-                
-        ST->ConOut->OutputString(ST->ConOut, wstr);
-        count++;
+        c = hex2ascii(num % base);
+        *++p = upper ? toupper(c) : c;
     }
+    while (num /= base);
+
+    if (lenp)
+        *lenp = p - nbuf;
+    return (p);
+}
+
+int printf(const char *fmt, ...)
+{
+    char *d;
+    const char *p, *percent, *q;
+    unsigned char *up;
+    int radix = 10;
+    int ch, n;
+    uintmax_t num;
+    int base, lflag, qflag, tmp, width, ladjust, sharpflag, neg, sign, dot;
+    int cflag, hflag, jflag, tflag, zflag;
+    int dwidth, upper;
+    char padc;
+    int stop = 0, retval = 0;
+    va_list ap;
+
+    va_start(ap, fmt);
+
+    num = 0;
+
+    if (fmt == NULL)
+         fmt = "(fmt null)\n";
+
+    for (;;)
+    {
+        padc = ' ';
+        width = 0;
+        while ((ch = (unsigned char)*fmt++) != '%' || stop)
+        {
+            if (ch == '\0')
+                return (retval);
+            WriteChar(ch);
+        }
+        percent = fmt - 1;
+        qflag = 0; lflag = 0; ladjust = 0; sharpflag = 0; neg = 0;
+        sign = 0; dot = 0; dwidth = 0; upper = 0;
+        cflag = 0; hflag = 0; jflag = 0; tflag = 0; zflag = 0;
+reswitch:
+        switch (ch = (unsigned char)*fmt++)
+        {
+            case '.':
+                dot = 1;
+                goto reswitch;
+
+            case '#':
+                sharpflag = 1;
+                goto reswitch;
+
+            case '+':
+                sign = 1;
+                goto reswitch;
+
+            case '-':
+                ladjust = 1;
+                goto reswitch;
+
+            case '%':
+                WriteChar(ch);
+                break;
+
+            case '*':
+                if (!dot)
+                {
+                    width = va_arg(ap, int);
+                    if (width < 0)
+                    {
+                        ladjust = !ladjust;
+                        width = -width;
+                    }
+                }
+                else
+                    dwidth = va_arg(ap, int);
+                goto reswitch;
+
+            case '0':
+                if (!dot)
+                {
+                    padc = '0';
+                    goto reswitch;
+                }
+
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                for (n = 0;; ++fmt)
+                {
+                    n = n * 10 + ch - '0';
+                    ch = *fmt;
+                    if (ch < '0' || ch > '9')
+                        break;
+                }
+                if (dot)
+                    dwidth = n;
+                else
+                    width = n;
+                goto reswitch;
+
+            case 'b':
+                num = (unsigned int)va_arg(ap, int);
+                p = va_arg(ap, char *);
+                for (q = sprintn(nbuf, num, *p++, NULL, 0); *q;)
+                    WriteChar(*q--);
+
+                if (num == 0)
+                    break;
+
+                for (tmp = 0; *p;)
+                {
+                    n = *p++;
+                    if (num & (1 << (n - 1)))
+                    {
+                        WriteChar(tmp ? ',' : '<');
+                        for (; (n = *p) > ' '; ++p)
+                            WriteChar(n);
+                        tmp = 1;
+                    }
+                    else
+                        for (; *p > ' '; ++p)
+                            continue;
+                }
+                if (tmp)
+                    WriteChar('>');
+                break;
+
+            case 'c':
+                WriteChar(va_arg(ap, int));
+                break;
+
+            case 'D':
+                up = va_arg(ap, unsigned char *);
+                p = va_arg(ap, char *);
+                if (!width)
+                    width = 16;
+                while(width--)
+                {
+                    WriteChar(hex2ascii(*up >> 4));
+                    WriteChar(hex2ascii(*up & 0x0f));
+                    up++;
+                    if (width)
+                        for (q=p;*q;q++)
+                            WriteChar(*q);
+                }
+                break;
+
+            case 'd':
+            case 'i':
+                base = 10;
+                sign = 1;
+                goto handle_sign;
+
+            case 'h':
+                if (hflag)
+                {
+                    hflag = 0;
+                    cflag = 1;
+                }
+                else
+                    hflag = 1;
+                goto reswitch;
+
+            case 'j':
+                jflag = 1;
+                goto reswitch;
+
+            case 'l':
+                if (lflag)
+                {
+                    lflag = 0;
+                    qflag = 1;
+                }
+                else
+                    lflag = 1;
+                goto reswitch;
+
+            case 'n':
+                if (jflag)
+                    *(va_arg(ap, intmax_t *)) = retval;
+                else if (qflag)
+                    *(va_arg(ap, long long *)) = retval;
+                else if (lflag)
+                    *(va_arg(ap, long *)) = retval;
+                else if (zflag)
+                    *(va_arg(ap, int *)) = retval;
+                else if (hflag)
+                    *(va_arg(ap, short *)) = retval;
+                else if (cflag)
+                    *(va_arg(ap, char *)) = retval;
+                else
+                    *(va_arg(ap, int *)) = retval;
+                break;
+
+            case 'o':
+                base = 8;
+                goto handle_nosign;
+
+            case 'p':
+                base = 16;
+                sharpflag = (width == 0);
+                sign = 0;
+                num = (uintptr_t)va_arg(ap, void *);
+                goto number;
+
+            case 'q':
+                qflag = 1;
+                goto reswitch;
+
+            case 'r':
+                base = radix;
+                if (sign)
+                    goto handle_sign;
+                goto handle_nosign;
+
+            case 's':
+                p = va_arg(ap, char *);
+                if (p == NULL)
+                    p = "(null)";
+                if (!dot)
+                    n = strlen (p);
+                else
+                    for (n = 0; n < dwidth && p[n]; n++)
+                        continue;
+
+                width -= n;
+
+                if (!ladjust && width > 0)
+                    while (width--)
+                        WriteChar(padc);
+                    while (n--)
+                        WriteChar(*p++);
+                    if (ladjust && width > 0)
+                        while (width--)
+                            WriteChar(padc);
+                break;
+
+            case 't':
+                tflag = 1;
+                goto reswitch;
+
+            case 'u':
+                base = 10;
+                goto handle_nosign;
+
+            case 'X':
+                upper = 1;
+
+            case 'x':
+                base = 16;
+                goto handle_nosign;
+
+            case 'y':
+                base = 16;
+                sign = 1;
+                goto handle_sign;
+
+            case 'z':
+                zflag = 1;
+                goto reswitch;
+
+handle_nosign:
+                sign = 0;
+                if (jflag)
+                    num = va_arg(ap, uintmax_t);
+                else if (qflag)
+                    num = va_arg(ap, unsigned long long);
+                else if (tflag)
+                    num = va_arg(ap, void *);
+                else if (lflag)
+                    num = va_arg(ap, unsigned long);
+                else if (zflag)
+                    num = va_arg(ap, int);
+                else if (hflag)
+                    num = (unsigned short int)va_arg(ap, int);
+                else if (cflag)
+                    num = (unsigned char)va_arg(ap, int);
+                else
+                    num = va_arg(ap, unsigned int);
+                goto number;
+
+handle_sign:
+                if (jflag)
+                    num = va_arg(ap, intmax_t);
+                else if (qflag)
+                    num = va_arg(ap, long long);
+                else if (tflag)
+                    num = va_arg(ap, void *);
+                else if (lflag)
+                    num = va_arg(ap, long);
+                else if (hflag)
+                    num = (short)va_arg(ap, int);
+                else if (cflag)
+                    num = (char)va_arg(ap, int);
+                else
+                    num = va_arg(ap, int);
+number:
+                if (sign && (intmax_t)num < 0)
+                {
+                    neg = 1;
+                    num = -(intmax_t)num;
+                }
+                p = sprintn(nbuf, num, base, &tmp, upper);
+                if (sharpflag && num != 0)
+                {
+                    if (base == 8)
+                        tmp++;
+                    else if (base == 16)
+                        tmp += 2;
+                }
+                if (neg)
+                    tmp++;
+
+                if (!ladjust && padc != '0' && width && (width -= tmp) > 0)
+                    while (width--)
+                        WriteChar(padc);
+                if (neg)
+                        WriteChar('-');
+                if (sharpflag && num != 0)
+                {
+                    if (base == 8)
+                    {
+                        WriteChar('0');
+                    }
+                    else if (base == 16)
+                    {
+                        WriteChar('0');
+                        WriteChar('x');
+                    }
+                }
+                if (!ladjust && width && (width -= tmp) > 0)
+                    while (width--)
+                        WriteChar(padc);
+
+                while (*p)
+                    WriteChar(*p--);
+
+                if (ladjust && width && (width -= tmp) > 0)
+                    while (width--)
+                        WriteChar(padc);
+
+                break;
+
+            default:
+                while (percent < fmt)
+                    WriteChar(*percent++);
+                stop = 1;
+                break;
+        }
+    }
+    va_end(ap);
+    return 0;
+}
+
+static void ShowMode(int Mode)
+{
+    unsigned int Size;
+
+    if (Gop->QueryMode(Gop, Mode, &Size, &Info) == EFI_SUCCESS)
+    {
+        printf("Mode %d: %dx%d, ", Mode, Info->HorizontalResolution, Info->VerticalResolution);
+        
+        switch (Info->PixelFormat)
+        {
+            case PixelRedGreenBlueReserved8BitPerColor:
+                printf("8-bit RGB, ");
+                break;
+
+            case PixelBlueGreenRedReserved8BitPerColor:
+                printf("8-bit BGR, ");
+                break;
+
+            case PixelBitMask:
+                printf("Bit mask, ");
+                break;
+
+            case PixelBltOnly:
+                printf("Blit only, ");
+                break;
+        }
+    }
+    printf("\n\r");
 }
 
 static void ShowUsedMode()
 {        
-    Clear();
-    sprintf(tempstr, "GOP: %dx%d, ", Width, Height);
-    Write();
-
-    Clear();
+    printf("GOP: %dx%d, ", Width, Height);
         
     switch (PixelFormat)
     {
         case PixelRedGreenBlueReserved8BitPerColor:
-            sprintf(tempstr, "8-bit RGB, ");
+            printf("8-bit RGB, ");
             break;
 
         case PixelBlueGreenRedReserved8BitPerColor:
-            sprintf(tempstr, "8-bit BGR, ");
+            printf("8-bit BGR, ");
             break;
 
         case PixelBitMask:
-            sprintf(tempstr, "Bit mask, ");
+            printf("Bit mask, ");
             break;
 
         case PixelBltOnly:
-            sprintf(tempstr, "Blit only, ");
+            printf("Blit only, ");
             break;
     }
-    Write();
 
-    Clear();
-    sprintf(tempstr, "Base: %08lX, Size: %08lX\n\r", LfbBase, LfbSize);
-    Write();
+    printf("Base: %08lX, Size: %08lX\n\r", LfbBase, LfbSize);
 }
 
 
@@ -94,9 +604,7 @@ static void InitGop()
 
     if (EFI_ERROR(Status))
     {
-        Clear();
-        sprintf(tempstr, "GOP Not found\n\r");
-        Write();
+        printf("GOP Not found\n\r");
         return Status;
     }
 
@@ -111,6 +619,9 @@ static void InitGop()
     LfbBase = Gop->Mode->FrameBufferBase;
     LfbSize = Gop->Mode->FrameBufferSize;
 
+    for (unsigned int i = 0; i < Gop->Mode->MaxMode; i++)
+        ShowMode(i);
+
     ShowUsedMode();
 }
 
@@ -121,15 +632,11 @@ static void GetFileInfo(EFI_FILE_HANDLE DirHandle)
 
     if (DirHandle->GetInfo(DirHandle, &GenericFileInfo, &Size, FsInfoData) == EFI_SUCCESS)
     {
-        Clear();
-        sprintf(tempstr, "Path: <");
-        Write();
+        printf("Path: <");
 
         ST->ConOut->OutputString(ST->ConOut, FileInfo->FileName);
 
-        Clear();
-        sprintf(tempstr, ">\n\r");
-        Write();
+        printf(">\n\r");
     }
 }
 
@@ -140,15 +647,11 @@ static void GetFileSystemInfo(EFI_FILE_HANDLE DirHandle)
 
     if (DirHandle->GetInfo(DirHandle, &FileSystemInfo, &Size, FsInfoData) == EFI_SUCCESS)
     {
-        Clear();
-        sprintf(tempstr, "Volume label: <");
-        Write();
+        printf("Volume label: <");
 
         ST->ConOut->OutputString(ST->ConOut, FsInfo->VolumeLabel);
 
-        Clear();
-        sprintf(tempstr, ">\n\r");
-        Write();
+        printf(">\n\r");
     }
 }
 
@@ -167,15 +670,9 @@ static void GetFiles(EFI_FILE_HANDLE DirHandle)
         {
             if (Size)
             {
-                Clear();
-                sprintf(tempstr, "Path: <");
-                Write();
-
+                printf("Path: <");
                 ST->ConOut->OutputString(ST->ConOut, FileInfo->FileName);
-
-                Clear();
-                sprintf(tempstr, ">\n\r");
-                Write();
+                printf(">\n\r");
             }
         }
     }
@@ -202,9 +699,7 @@ static void InitFs()
     FsCount = 0;
     BS->LocateHandleBuffer(ByProtocol, &FileSystemProtocol, 0, &FsCount, &FsArr);
     
-    Clear();
-    sprintf(tempstr, "FS count: %d\n\r", FsCount);
-    Write();
+    printf("FS count: %d\n\r", FsCount);
 
     for (unsigned int i = 0; i < FsCount; i++)
         CheckFs(FsArr[i]);
@@ -234,15 +729,9 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
     {
         LoadedPath = (FILEPATH_DEVICE_PATH *)Image->FilePath;
 
-        Clear();
-        sprintf(tempstr, "Loaded image :<");
-        Write();
-
+        printf("Loaded image :<");
         ST->ConOut->OutputString(ST->ConOut, LoadedPath->PathName);
-
-        Clear();
-        sprintf(tempstr, ">\n\r");
-        Write();
+        printf(">\n\r");
 
         CheckFs(Image->DeviceHandle);
     }
