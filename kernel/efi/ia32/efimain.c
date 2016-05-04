@@ -541,6 +541,34 @@ number:
     return 0;
 }
 
+static void ShowMode(int Mode)
+{
+    unsigned int Size;
+
+    if (Gop->QueryMode(Gop, Mode, &Size, &Info) == EFI_SUCCESS)
+    {
+        printf("Mode %d: %dx%d, ", Mode, Info->HorizontalResolution, Info->VerticalResolution);
+        
+        switch (Info->PixelFormat)
+        {
+            case PixelRedGreenBlueReserved8BitPerColor:
+                printf("8-bit RGB, ");
+                break;
+
+            case PixelBlueGreenRedReserved8BitPerColor:
+                printf("8-bit BGR, ");
+                break;
+
+            case PixelBitMask:
+                printf("Bit mask, ");
+                break;
+
+            case PixelBltOnly:
+                printf("Blit only, ");
+                break;
+        }
+    }
+}
 
 static void ShowUsedMode()
 {        
@@ -589,6 +617,9 @@ static void InitGop()
 
     LfbBase = Gop->Mode->FrameBufferBase;
     LfbSize = Gop->Mode->FrameBufferSize;
+
+    for (unsigned int i = 0; i < Gop->Mode->MaxMode; i++)
+        ShowMode(i);
 
     ShowUsedMode();
 }
