@@ -541,7 +541,7 @@ number:
     return 0;
 }
 
-static void ShowMode(int Mode)
+static int ShowMode(int Mode)
 {
     unsigned int Size;
 
@@ -552,23 +552,24 @@ static void ShowMode(int Mode)
         switch (Info->PixelFormat)
         {
             case PixelRedGreenBlueReserved8BitPerColor:
-                printf("8-bit RGB, ");
+                printf("8-bit RGB\n\r");
                 break;
 
             case PixelBlueGreenRedReserved8BitPerColor:
-                printf("8-bit BGR, ");
+                printf("8-bit BGR\n\r");
                 break;
 
             case PixelBitMask:
-                printf("Bit mask, ");
+                printf("Bit mask\n\r");
                 break;
 
             case PixelBltOnly:
-                printf("Blit only, ");
+                printf("Blit only\n\r");
                 break;
         }
+        return 1;
     }
-    printf("\n\r");
+    return 0;
 }
 
 static void ShowUsedMode()
@@ -597,6 +598,19 @@ static void ShowUsedMode()
     printf("Base: %08lX, Size: %08lX\n\r", LfbBase, LfbSize);
 }
 
+static void ShowAvailableModes()
+{
+    ShowMode(0);
+    ShowMode(1);
+    ShowMode(2);
+    ShowMode(3);
+    ShowMode(4);
+    ShowMode(5);
+    ShowMode(6);
+    ShowMode(7);
+    ShowMode(8);
+    ShowMode(9);
+}
 
 static void InitGop()
 {
@@ -619,9 +633,7 @@ static void InitGop()
     LfbBase = Gop->Mode->FrameBufferBase;
     LfbSize = Gop->Mode->FrameBufferSize;
 
-    for (unsigned int i = 0; i < Gop->Mode->MaxMode; i++)
-        ShowMode(i);
-
+    ShowAvailableModes();
     ShowUsedMode();
 }
 
