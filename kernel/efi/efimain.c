@@ -33,6 +33,8 @@ EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Info;
 EFI_STATUS Status;
 
 char nbuf[32];
+char str[256];
+CHAR16 wstr[256];
 
 //
 // Root device path
@@ -156,7 +158,56 @@ static void WriteChar(char ch)
 char const hex2ascii_data[] = "0123456789abcdefghijklmnopqrstuvwxyz";
 
 #define hex2ascii(hex)  (hex2ascii_data[hex])
-#define toupper(c)      ((c) - 0x20 * (((c) >= 'a') && ((c) <= 'z')))
+
+static int isupper(int c)
+{
+    if((c >= 'A') && (c <= 'Z'))
+        return 1;
+    else
+        return 0;
+}
+
+static int islower(int c)
+{
+    if((c >= 'a') && (c <= 'z'))
+        return 1;
+    else
+        return 0;
+}
+
+static int tolower(int c)
+{
+    if((c >= 'A') && (c <= 'Z'))
+        return c - 'A' + 'a';
+    else
+        return c;
+}
+
+static int toupper(int c)
+{
+    if((c >= 'a') && (c <= 'z'))
+        return c - 'a' + 'A';
+    else
+        return c;
+}
+
+static int isdigit(int c)
+{
+    if((c >= '0') && (c <= '9'))
+        return 1;
+    else
+        return 0;
+}
+
+static int isalpha(int c)
+{
+    return isupper(c) || islower(c);
+}
+
+static int isalnum(int c)
+{
+    return isalpha(c) || isdigit(c);
+}
 
 static int strlen(const char *s)
 {
@@ -541,6 +592,31 @@ number:
     return 0;
 }
 
+static void ConvertToWide(CHAR16 *dest, const char *src)
+{
+    int i = 0;
+
+    while (src[i])
+    {
+        dest[i] = (CHAR16)src[i];
+        i++;
+    }
+    dest[i] = 0;
+}
+
+static void ConvertFromWide(char *dest, const CHAR16 *src)
+{
+    int i = 0;
+
+    while (src[i])
+    {
+        dest[i] = (char)src[i];
+        i++;
+    }
+    dest[i] = 0;
+}
+
+
 static int ShowMode(int Mode)
 {
     unsigned int Size;
@@ -682,8 +758,9 @@ static void GetFiles(EFI_FILE_HANDLE DirHandle)
         {
             if (Size)
             {
+                ConvertFromWide(str, FileInfo->FileName);
                 printf("Path: <");
-                ST->ConOut->OutputString(ST->ConOut, FileInfo->FileName);
+                printf(str);
                 printf(">\n\r");
             }
         }
@@ -749,6 +826,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
     }
     else
         return -1;
+
 
 //    InitFs();
   
