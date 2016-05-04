@@ -889,6 +889,54 @@ static void InitFs()
         CheckFs(FsArr[i]);
 }
 
+static void DrawBox(int StartRow, int StartCol, int InnerRows, int InnerCols)
+{
+    int i;
+
+    for (i = 0; i < InnerCols; i++)
+        wstr[i] = BOXDRAW_DOUBLE_HORIZONTAL;
+    wstr[InnerCols] = 0;
+
+    ST->ConOut->SetCursorPosition(ST->ConOut, StartCol + 1, StartRow);
+    ST->ConOut->OutputString(ST->ConOut, wstr);
+
+    ST->ConOut->SetCursorPosition(ST->ConOut, StartCol + 1, StartRow + InnerRows + 1);
+    ST->ConOut->OutputString(ST->ConOut, wstr);
+
+    wstr[0] = BOXDRAW_DOUBLE_DOWN_RIGHT;
+    wstr[1] = 0;
+    ST->ConOut->SetCursorPosition(ST->ConOut, StartCol, StartRow);
+    ST->ConOut->OutputString(ST->ConOut, wstr);
+
+    wstr[0] = BOXDRAW_DOUBLE_DOWN_LEFT;
+    wstr[1] = 0;
+    ST->ConOut->SetCursorPosition(ST->ConOut, StartCol + InnerCols + 1, StartRow);
+    ST->ConOut->OutputString(ST->ConOut, wstr);
+
+    wstr[0] = BOXDRAW_DOUBLE_UP_RIGHT;
+    wstr[1] = 0;
+    ST->ConOut->SetCursorPosition(ST->ConOut, StartCol, StartRow + InnerRows + 1);
+    ST->ConOut->OutputString(ST->ConOut, wstr);
+
+    wstr[0] = BOXDRAW_DOUBLE_UP_LEFT;
+    wstr[1] = 0;
+    ST->ConOut->SetCursorPosition(ST->ConOut, StartCol + InnerCols + 1, StartRow + InnerRows + 1);
+    ST->ConOut->OutputString(ST->ConOut, wstr);
+
+    wstr[0] = BOXDRAW_DOUBLE_VERTICAL;
+    wstr[1] = 0;
+
+    for (i = 0; i < InnerRows; i++)
+    {
+        ST->ConOut->SetCursorPosition(ST->ConOut, StartCol, StartRow + i + 1);
+        ST->ConOut->OutputString(ST->ConOut, wstr);
+
+        ST->ConOut->SetCursorPosition(ST->ConOut, StartCol + InnerCols + 1, StartRow + i + 1);
+        ST->ConOut->OutputString(ST->ConOut, wstr);
+    }
+
+}
+
 static void InitText()
 {
     TextMode = ST->ConOut->Mode->Mode;
@@ -899,7 +947,9 @@ static void InitText()
         TextRows = 25;
     }
 
-    printf("Mode: %d, %dx%d\n\r", TextMode, TextRows, TextCols);    
+    printf("Mode: %d, %dx%d\n\r", TextMode, TextRows, TextCols);
+
+    DrawBox(20, 50, 2, 50); 
 }
  
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
