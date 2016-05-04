@@ -51,6 +51,9 @@ int SelectedRow;
 int MenuRows = 0;
 int MenuStr[MENU_ROWS][MENU_WIDTH + 1];
 
+EFI_INPUT_KEY Key;
+ 
+
 //
 // Root device path
 //
@@ -1116,7 +1119,7 @@ static void DrawRow(int Row)
     ST->ConOut->OutputString(ST->ConOut, wstr);
 }
 
-static void InitText()
+static void SetupMenu()
 {
     int i;
 
@@ -1143,11 +1146,45 @@ static void InitText()
 
     ST->ConOut->SetAttribute(ST->ConOut, EFI_WHITE | EFI_BACKGROUND_BLACK);
 }
- 
+
+static void HandleMenu()
+{
+    for (;;)
+    {
+        while ((Status = ST->ConIn->ReadKeyStroke(ST->ConIn, &Key)) == EFI_NOT_READY)
+            ;
+
+        switch (Key.ScanCode)
+        {
+            case SCAN_UP:
+                if (SelectedRow > 0)
+                {
+                    SelectedRow--;
+                    DrawRow(SelectedRow);
+                    DrawRow(SelectedRow + 1);
+                }
+                break;
+
+            case SCAN_DOWN:
+                if (SelectedRow < MenuRows - 1)
+                {
+                    SelectedRow++;
+                    DrawRow(SelectedRow);
+                    DrawRow(SelectedRow - 1);
+                }
+                break;
+  
+            default:
+                break;
+        }
+
+        if (Key.UnicodeChar == CHAR_CARRIAGE_RETURN)
+            break;
+    }
+}
+            
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
-    EFI_INPUT_KEY Key;
- 
     /* Store the system table for future use in other functions */
     ST = SystemTable;
     BS = SystemTable->BootServices;
@@ -1179,8 +1216,11 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 
     if (MenuRows)
     {
-        InitText();
+        SetupMenu();
+        HandleMenu();
+        ST->ConOut->ClearScreen(ST->ConOut);
     }
+    
   
     /* Now wait for a keystroke before continuing, otherwise your
        message will flash off the screen before you see it.
