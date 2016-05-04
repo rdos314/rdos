@@ -20,6 +20,10 @@ EFI_GRAPHICS_PIXEL_FORMAT PixelFormat;
 EFI_PHYSICAL_ADDRESS LfbBase;
 unsigned int LfbSize;
 
+unsigned int TextMode;
+unsigned int TextRows;
+unsigned int TextCols;
+
 unsigned int FsCount;
 EFI_FILE_IO_INTERFACE *Fs;
 EFI_FILE_HANDLE Root;
@@ -885,6 +889,18 @@ static void InitFs()
         CheckFs(FsArr[i]);
 }
 
+static void InitText()
+{
+    TextMode = ST->ConOut->Mode->Mode;
+
+    if (ST->ConOut->QueryMode(ST->ConOut, TextMode, &TextCols, &TextRows) != EFI_SUCCESS)
+    {
+        TextCols = 80;
+        TextRows = 25;
+    }
+
+    printf("Mode: %d, %dx%d\n\r", TextMode, TextRows, TextCols);    
+}
  
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
@@ -920,6 +936,9 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 
 
 //    InitFs();
+
+    InitText();
+
   
     /* Now wait for a keystroke before continuing, otherwise your
        message will flash off the screen before you see it.
