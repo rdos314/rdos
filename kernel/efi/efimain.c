@@ -803,15 +803,25 @@ static void GetFiles(EFI_FILE_HANDLE DirHandle)
         {
             if (Size)
             {
-                ConvertFromWide(str, FileInfo->FileName);
-                strlower(str);
-                substr = strstr(str, ".bin");
-                if (substr)
-                    printf("possible RDOS binary");
-                
-                printf("Path: <");
-                printf(str);
-                printf(">\n\r");
+                if (FileInfo->Attribute & EFI_FILE_DIRECTORY)
+                {
+                    printf("Directory <");
+                    ConvertFromWide(str, FileInfo->FileName);
+                    strlower(str);
+                    printf(str);
+                    printf(">\n\r");
+                }
+                else
+                {
+                    ConvertFromWide(str, FileInfo->FileName);
+                    strlower(str);
+                    printf("File: <");
+                    printf(str);
+                    substr = strstr(str, ".bin");
+                    if (substr)
+                        printf(" possible RDOS binary");
+                    printf(">\n\r");
+                }
             }
         }
     }
