@@ -43,6 +43,9 @@ CHAR16 wstr[256];
 #define MENU_WIDTH 40
 #define MENU_ROWS  20
 
+int StartRow;
+int StartCol;
+int SelectedRow;
 int MenuRows = 0;
 int MenuStr[MENU_ROWS][MENU_WIDTH + 1];
 
@@ -943,6 +946,14 @@ static void DrawBox(int StartRow, int StartCol, int InnerRows, int InnerCols)
 
 }
 
+static void DrawRow(int Row)
+{
+    ConvertToWide(wstr, MenuStr[Row]);
+
+    ST->ConOut->SetCursorPosition(ST->ConOut, StartCol + 2, StartRow + 1 + Row);
+    ST->ConOut->OutputString(ST->ConOut, wstr);
+}
+
 static void AddMenuRow(const char *str)
 {
     int i;
@@ -961,6 +972,8 @@ static void AddMenuRow(const char *str)
 
 static void InitText()
 {
+    int i;
+
     TextMode = ST->ConOut->Mode->Mode;
 
     if (ST->ConOut->QueryMode(ST->ConOut, TextMode, &TextCols, &TextRows) != EFI_SUCCESS)
@@ -975,7 +988,14 @@ static void InitText()
     AddMenuRow("Row 2");
     AddMenuRow("Row 3");
 
-    DrawBox(20, 50, MenuRows, MENU_WIDTH + 1); 
+    StartRow = 20;
+    StartCol = TextCols / 2 - MENU_WIDTH / 2;
+    SelectedRow = 0;
+
+    DrawBox(StartRow, StartCol, MenuRows, MENU_WIDTH + 1);
+
+    for (i = 0; i < MenuRows; i++)
+        DrawRow(i);
 }
  
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
