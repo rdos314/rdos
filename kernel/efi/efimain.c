@@ -24,6 +24,7 @@ unsigned int TextMode;
 unsigned int TextRows;
 unsigned int TextCols;
 
+unsigned int CurrFs;
 unsigned int FsCount;
 EFI_FILE_IO_INTERFACE *Fs;
 EFI_FILE_HANDLE Root;
@@ -38,6 +39,7 @@ EFI_STATUS Status;
 
 char nbuf[32];
 char str[256];
+char buf[256];
 CHAR16 wstr[256];
 
 #define MENU_WIDTH 40
@@ -254,6 +256,59 @@ static int strcmp(const char *s1, const char *s2)
         if (*s1 == '\0')
             return 0;
     return ((*(unsigned char *)s1 < *(unsigned char *)s2) ? -1 : +1);
+}
+
+static void strcpy(char *dest, const char *src)
+{
+    int i;
+
+    for (i = 0; src[i] != '\0'; i++)
+        dest[i] = src[i];
+
+    dest[i] = '\0';
+}
+
+static char *strcat(char *dest, const char *src)
+{
+    int i,j;
+
+    for (i = 0; dest[i] != '\0'; i++)
+        ;
+
+    for (j = 0; src[j] != '\0'; j++)
+        dest[i+j] = src[j];
+
+    dest[i+j] = '\0';
+    return dest;
+}
+
+void reverse(char *s)
+{
+     int i, j;
+     char c;
+ 
+     for (i = 0, j = strlen(s)-1; i<j; i++, j--)
+     {
+         c = s[i];
+         s[i] = s[j];
+         s[j] = c;
+    }
+}
+
+static void itoa(int n, char *s)
+{
+     int i, sign;
+ 
+     if ((sign = n) < 0)  /* record sign */
+         n = -n;          /* make n positive */
+     i = 0;
+     do {       /* generate digits in reverse order */
+         s[i++] = n % 10 + '0';   /* get next digit */
+     } while ((n /= 10) > 0);     /* delete it */
+     if (sign < 0)
+         s[i++] = '-';
+     s[i] = '\0';
+     reverse(s);
 }
 
 static char *strstr(char *string, char *substring)
@@ -808,7 +863,109 @@ static void GetFileSystemInfo(EFI_FILE_HANDLE DirHandle)
     }
 }
 
-static void GetFiles(EFI_FILE_HANDLE DirHandle)
+static void AddMenuRow(const char *str)
+{
+    int i;
+    char *ptr = MenuStr[MenuRows];
+
+    MenuRows++;
+
+    *ptr = ' ';
+    ptr++;
+
+    for (i = 1; i < MENU_WIDTH; i++)
+    {
+        if (*str)
+        {
+            *ptr = *str;
+            str++;
+        }
+        else
+            *ptr = ' ';
+        ptr++;
+    }
+    *ptr = 0;
+}
+
+static void GetNormalFile(EFI_FILE_HANDLE DirHandle)
+{
+    unsigned int Size = 1024;
+    FileInfo = (EFI_FILE_INFO *)FsInfoData;
+    char *substr;
+
+    DirHandle->SetPosition(DirHandle, 0);
+
+    while (Size)
+    {
+        Size = 1024;
+        
+        if (DirHandle->Read(DirHandle, &Size, FsInfoData) == EFI_SUCCESS)
+        {
+            if (Size)
+            {
+                if ((FileInfo->Attribute & EFI_FILE_DIRECTORY) == 0)
+                {
+                    ConvertFromWide(str, FileInfo->FileName);
+                    strlower(str);
+
+                    if (!strcmp(str, "rdos.bin"))
+                    {
+                        strcpy(str, "RDOS - normal boot"); 
+                        if (CurrFs)
+                        {
+                            strcat(str, " (part");
+                            itoa(CurrFs, buf);
+                            strcat(str, buf);
+                            strcat(str, ")");
+                        }
+                        AddMenuRow(str);
+                    }
+                }
+            }
+        }
+    }
+}
+
+static void GetSafeFile(EFI_FILE_HANDLE DirHandle)
+{
+    unsigned int Size = 1024;
+    FileInfo = (EFI_FILE_INFO *)FsInfoData;
+    char *substr;
+
+    DirHandle->SetPosition(DirHandle, 0);
+
+    while (Size)
+    {
+        Size = 1024;
+        
+        if (DirHandle->Read(DirHandle, &Size, FsInfoData) == EFI_SUCCESS)
+        {
+            if (Size)
+            {
+                if ((FileInfo->Attribute & EFI_FILE_DIRECTORY) == 0)
+                {
+                    ConvertFromWide(str, FileInfo->FileName);
+                    strlower(str);
+
+                    if (!strcmp(str, "safe.bin"))
+                    {
+                        strcpy(str, "RDOS - safe mode boot"); 
+                        if (CurrFs)
+                        {
+                            strcat(str, " (part");
+                            itoa(CurrFs, buf);
+                            strcat(str, buf);
+                            strcat(str, ")");
+                        }
+                        AddMenuRow(str);
+                    }
+                }
+            }
+        }
+    }
+}
+
+static void GetOtherFiles(EFI_FILE_HANDLE DirHandle)
 {
     unsigned int Size = 1024;
     FileInfo = (EFI_FILE_INFO *)FsInfoData;
@@ -827,44 +984,37 @@ static void GetFiles(EFI_FILE_HANDLE DirHandle)
             {
                 isrdos = 0;
 
-                if (FileInfo->Attribute & EFI_FILE_DIRECTORY)
-                {
-                    printf("Directory <");
-                    ConvertFromWide(str, FileInfo->FileName);
-                    strlower(str);
-                    printf(str);
-                    printf(">\n\r");
-                }
-                else
+                if ((FileInfo->Attribute & EFI_FILE_DIRECTORY) == 0)
                 {
                     ConvertFromWide(str, FileInfo->FileName);
                     strlower(str);
-                    printf("File: <");
-                    printf(str);
-                    printf(">");
 
                     if (!strcmp(str, "rdos.bin"))
-                    {
-                        printf(" rdos normal boot");
                         isrdos = 1;
-                    }
 
-                    if (!strcmp(str, "safe.bin"))
-                    {
-                        printf(" rdos safe boot");
+                    if (!isrdos && !strcmp(str, "safe.bin"))
                         isrdos = 1;
-                    }
 
                     if (!isrdos)
                     {
                         substr = strstr(str, ".bin");
                         if (substr)
                         {
-                            isrdos = 1;
-                            printf(" possible RDOS binary");
+                            strcpy(buf, str);
+                            strcpy(str, "RDOS - ");
+                            strcat(str, buf);
+                            strcat(str, " boot");
+
+                            if (CurrFs)
+                            {
+                                strcat(str, " (part");
+                                itoa(CurrFs, buf);
+                                strcat(str, buf);
+                                strcat(str, ")");
+                            }
+                            AddMenuRow(str);
                         }
                     }
-                    printf("\n\r");
                 }
             }
         }
@@ -880,8 +1030,9 @@ static void CheckFs(EFI_HANDLE handle)
         if (Fs->OpenVolume(Fs, &Root) == EFI_SUCCESS)
         {
             GetFileSystemInfo(Root);
-            GetFiles(Root);
-
+            GetNormalFile(Root);
+            GetSafeFile(Root);
+            GetOtherFiles(Root);
             Root->Close(Root);
         }
     } 
@@ -889,13 +1040,15 @@ static void CheckFs(EFI_HANDLE handle)
 
 static void InitFs()
 {
+    CurrFs = 0;
+    CheckFs(Image->DeviceHandle);
+
     FsCount = 0;
     BS->LocateHandleBuffer(ByProtocol, &FileSystemProtocol, 0, &FsCount, &FsArr);
-    
-    printf("FS count: %d\n\r", FsCount);
 
-    for (unsigned int i = 0; i < FsCount; i++)
-        CheckFs(FsArr[i]);
+    for (CurrFs = 1; CurrFs <= FsCount; CurrFs++)
+        if (FsArr[CurrFs - 1] != Image->DeviceHandle)
+            CheckFs(FsArr[CurrFs - 1]);
 }
 
 static void DrawBox(int StartRow, int StartCol, int InnerRows, int InnerCols)
@@ -963,30 +1116,6 @@ static void DrawRow(int Row)
     ST->ConOut->OutputString(ST->ConOut, wstr);
 }
 
-static void AddMenuRow(const char *str)
-{
-    int i;
-    char *ptr = MenuStr[MenuRows];
-
-    MenuRows++;
-
-    *ptr = ' ';
-    ptr++;
-
-    for (i = 1; i < MENU_WIDTH; i++)
-    {
-        if (*str)
-        {
-            *ptr = *str;
-            str++;
-        }
-        else
-            *ptr = ' ';
-        ptr++;
-    }
-    *ptr = 0;
-}
-
 static void InitText()
 {
     int i;
@@ -1002,10 +1131,6 @@ static void InitText()
     printf("Mode: %d, %dx%d\n\r", TextMode, TextRows, TextCols);
 
     ST->ConOut->ClearScreen(ST->ConOut);
-
-    AddMenuRow("Row 1");
-    AddMenuRow("Row 2");
-    AddMenuRow("Row 3");
 
     StartRow = 1;
     StartCol = TextCols / 2 - MENU_WIDTH / 2;
@@ -1046,16 +1171,16 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
         ST->ConOut->OutputString(ST->ConOut, LoadedPath->PathName);
         printf(">\n\r");
 
-        CheckFs(Image->DeviceHandle);
     }
     else
         return -1;
 
+    InitFs();
 
-//    InitFs();
-
-    InitText();
-
+    if (MenuRows)
+    {
+        InitText();
+    }
   
     /* Now wait for a keystroke before continuing, otherwise your
        message will flash off the screen before you see it.
