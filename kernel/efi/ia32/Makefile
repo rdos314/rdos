@@ -4,7 +4,7 @@ EFI_CC ?= gcc
 
 CFLAGS = -I../inc -I../efi -I../efi/inc -I../efi/inc/ia32 -I../efi/inc/protocol -Wall -Wextra -Wno-long-long -g -ffreestanding
 
-OBJS = efimain.o data.o misc.o
+OBJS = efimain.o data.o
 
 all: $(OUTPUT)
 
