@@ -997,11 +997,13 @@ static void InitText()
 
     printf("Mode: %d, %dx%d\n\r", TextMode, TextRows, TextCols);
 
+    ST->ConOut->ClearScreen(ST->ConOut);
+
     AddMenuRow("Row 1");
     AddMenuRow("Row 2");
     AddMenuRow("Row 3");
 
-    StartRow = 20;
+    StartRow = 1;
     StartCol = TextCols / 2 - MENU_WIDTH / 2;
     SelectedRow = 0;
 
