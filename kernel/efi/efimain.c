@@ -2,7 +2,7 @@
 #include <efi.h>
 #include <efilib.h>
 #include <efiprot.h>
-#include <stdio.h>
+#include <stdarg.h>
 
 EFI_SYSTEM_TABLE         *ST;
 EFI_BOOT_SERVICES        *BS;
