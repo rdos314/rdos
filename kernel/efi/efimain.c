@@ -235,6 +235,14 @@ static void strlower(char *s)
     }
 }
 
+static int strcmp(const char *s1, const char *s2)
+{
+    for ( ; *s1 == *s2; s1++, s2++)
+        if (*s1 == '\0')
+            return 0;
+    return ((*(unsigned char *)s1 < *(unsigned char *)s2) ? -1 : +1);
+}
+
 static char *strstr(char *string, char *substring)
 {
     char *a, *b;
@@ -792,6 +800,7 @@ static void GetFiles(EFI_FILE_HANDLE DirHandle)
     unsigned int Size = 1024;
     FileInfo = (EFI_FILE_INFO *)FsInfoData;
     char *substr;
+    int isrdos;
 
     DirHandle->SetPosition(DirHandle, 0);
 
@@ -803,6 +812,8 @@ static void GetFiles(EFI_FILE_HANDLE DirHandle)
         {
             if (Size)
             {
+                isrdos = 0;
+
                 if (FileInfo->Attribute & EFI_FILE_DIRECTORY)
                 {
                     printf("Directory <");
@@ -817,10 +828,30 @@ static void GetFiles(EFI_FILE_HANDLE DirHandle)
                     strlower(str);
                     printf("File: <");
                     printf(str);
-                    substr = strstr(str, ".bin");
-                    if (substr)
-                        printf(" possible RDOS binary");
-                    printf(">\n\r");
+                    printf(">");
+
+                    if (!strcmp(str, "rdos.bin"))
+                    {
+                        printf(" rdos normal boot");
+                        isrdos = 1;
+                    }
+
+                    if (!strcmp(str, "safe.bin"))
+                    {
+                        printf(" rdos safe boot");
+                        isrdos = 1;
+                    }
+
+                    if (!isrdos)
+                    {
+                        substr = strstr(str, ".bin");
+                        if (substr)
+                        {
+                            isrdos = 1;
+                            printf(" possible RDOS binary");
+                        }
+                    }
+                    printf("\n\r");
                 }
             }
         }
