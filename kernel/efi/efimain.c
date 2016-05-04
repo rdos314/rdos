@@ -40,6 +40,12 @@ char nbuf[32];
 char str[256];
 CHAR16 wstr[256];
 
+#define MENU_WIDTH 40
+#define MENU_ROWS  20
+
+int MenuRows = 0;
+int MenuStr[MENU_ROWS][MENU_WIDTH + 1];
+
 //
 // Root device path
 //
@@ -937,6 +943,22 @@ static void DrawBox(int StartRow, int StartCol, int InnerRows, int InnerCols)
 
 }
 
+static void AddMenuRow(const char *str)
+{
+    int i;
+    char *ptr = MenuStr[MenuRows];
+
+    MenuRows++;
+
+    for (i = 0; i < MENU_WIDTH && *str; i++)
+    {
+        *ptr = *str;
+        ptr++;
+        str++;
+    }
+    *ptr = 0;
+}
+
 static void InitText()
 {
     TextMode = ST->ConOut->Mode->Mode;
@@ -949,7 +971,11 @@ static void InitText()
 
     printf("Mode: %d, %dx%d\n\r", TextMode, TextRows, TextCols);
 
-    DrawBox(20, 50, 2, 50); 
+    AddMenuRow("Row 1");
+    AddMenuRow("Row 2");
+    AddMenuRow("Row 3");
+
+    DrawBox(20, 50, MenuRows, MENU_WIDTH + 1); 
 }
  
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
