@@ -902,6 +902,10 @@ static void DrawBox(int StartRow, int StartCol, int InnerRows, int InnerCols)
 {
     int i;
 
+    ConvertToWide(wstr, "          RDOS UEFI boot-loader");
+    ST->ConOut->SetCursorPosition(ST->ConOut, StartCol + 2, StartRow - 1);
+    ST->ConOut->OutputString(ST->ConOut, wstr);
+
     for (i = 0; i < InnerCols; i++)
         wstr[i] = BOXDRAW_DOUBLE_HORIZONTAL;
     wstr[InnerCols] = 0;
