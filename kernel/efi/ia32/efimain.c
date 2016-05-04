@@ -568,6 +568,7 @@ static void ShowMode(int Mode)
                 break;
         }
     }
+    printf("\n\r");
 }
 
 static void ShowUsedMode()
