@@ -7,157 +7,250 @@ EFI_SYSTEM_TABLE         *ST;
 EFI_BOOT_SERVICES        *BS;
 EFI_RUNTIME_SERVICES     *RT;
 
+EFI_LOADED_IMAGE *Image;
+FILEPATH_DEVICE_PATH *LoadedPath;
 EFI_GRAPHICS_OUTPUT_PROTOCOL *Gop;
 
 unsigned int VideoMode;
 unsigned int Width;
 unsigned int Height;
 unsigned int ScanLine;
+EFI_GRAPHICS_PIXEL_FORMAT PixelFormat;
+EFI_PHYSICAL_ADDRESS LfbBase;
+unsigned int LfbSize;
+
+unsigned int FsCount;
+EFI_FILE_IO_INTERFACE *Fs;
+EFI_FILE_HANDLE Root;
+char FsInfoData[1024];
+EFI_FILE_SYSTEM_INFO *FsInfo;
+EFI_FILE_INFO *FileInfo;
+
+void *Interface;
+EFI_HANDLE *FsArr;
+char tempstr[256];
+CHAR16 wstr[] = { 0, 0 };
+EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Info;
+EFI_STATUS Status;
 
 
-void Clear(char *buf, int size)
+
+static void Clear()
 {
-    int i;
-
-    for (i = 0; i < size; i++)
-        buf[i] = 0;
+    for (int i = 0; i < 256; i++)
+        tempstr[i] = 0;
 }
 
-void Write(const char *buf)
+static void Write()
 {
     int count = 0;
-    CHAR16 str[] = { 0, 0 };
 
-    while(buf[count])
+    while(tempstr[count])
     {
-        str[0] = (CHAR16)buf[count];
+        wstr[0] = (CHAR16)tempstr[count];
                 
-        if(ST->ConOut->OutputString(ST->ConOut, str) == EFI_SUCCESS)
-        {
-            if(buf[count] == '\n')
-            {
-                str[0] = '\r';
-                ST->ConOut->OutputString(ST->ConOut, str);
-            }
-            count++;
-        }
-        else
+        ST->ConOut->OutputString(ST->ConOut, wstr);
+        count++;
+    }
+}
+
+static void ShowUsedMode()
+{        
+    Clear();
+    sprintf(tempstr, "GOP: %dx%d, ", Width, Height);
+    Write();
+
+    Clear();
+        
+    switch (PixelFormat)
+    {
+        case PixelRedGreenBlueReserved8BitPerColor:
+            sprintf(tempstr, "8-bit RGB, ");
+            break;
+
+        case PixelBlueGreenRedReserved8BitPerColor:
+            sprintf(tempstr, "8-bit BGR, ");
+            break;
+
+        case PixelBitMask:
+            sprintf(tempstr, "Bit mask, ");
+            break;
+
+        case PixelBltOnly:
+            sprintf(tempstr, "Blit only, ");
             break;
     }
-}
+    Write();
 
-void ShowMode(int Mode)
-{
-    unsigned int Size;
-    EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Info;
-    char str[256];
-
-    if (Gop->QueryMode(Gop, Mode, &Size, &Info) == EFI_SUCCESS)
-    {
-        if (Info->HorizontalResolution > Width)
-        {
-            VideoMode = Mode;
-            Width = Info->HorizontalResolution;
-            Height = Info->VerticalResolution;
-            ScanLine = Info->PixelsPerScanLine;
-        }
-        
-        Clear(str, 256);
-        sprintf(str, "Mode %d: %dx%d, ", Mode, Info->HorizontalResolution, Info->VerticalResolution);
-        Write(str);
-        
-        switch (Info->PixelFormat)
-        {
-            case PixelRedGreenBlueReserved8BitPerColor:
-                ST->ConOut->OutputString(ST->ConOut, L"8-bit RGB\n\r");
-                break;
-
-            case PixelBlueGreenRedReserved8BitPerColor:
-                ST->ConOut->OutputString(ST->ConOut, L"8-bit BGR\n\r");
-                break;
-
-            case PixelBitMask:
-                ST->ConOut->OutputString(ST->ConOut, L"Bit mask\n\r");
-                break;
-
-            case PixelBltOnly:
-                ST->ConOut->OutputString(ST->ConOut, L"Blit only\n\r");
-                break;
-        }
-    }
+    Clear();
+    sprintf(tempstr, "Base: %08lX, Size: %08lX\n\r", LfbBase, LfbSize);
+    Write();
 }
 
 
-EFI_STATUS InitGop()
+static void InitGop()
 {
-    EFI_STATUS Status;
-    void *Interface;
-    char str[256];
-    int i;
-
     Status = BS->LocateProtocol(&GopProtocol, 0, &Interface);
 
     if (EFI_ERROR(Status))
     {
-        ST->ConOut->OutputString(ST->ConOut, L"GOP Not found\n\r");
+        Clear();
+        sprintf(tempstr, "GOP Not found\n\r");
+        Write();
         return Status;
     }
 
     Gop = (EFI_GRAPHICS_OUTPUT_PROTOCOL *)Interface;
 
-    Clear(str, 256);
-    sprintf(str, "GOP Mode: %d\n\r", Gop->Mode->Mode);
-    Write(str);
+    Info = Gop->Mode->Info;
+    Width = Info->HorizontalResolution;
+    Height = Info->VerticalResolution;
+    ScanLine = Info->PixelsPerScanLine;
+    PixelFormat = Info->PixelFormat;
 
-    VideoMode = 0;
-    Width = 0;
-    Height = 0;
+    LfbBase = Gop->Mode->FrameBufferBase;
+    LfbSize = Gop->Mode->FrameBufferSize;
 
-    for (i = 0; i <= Gop->Mode->MaxMode; i++)
-        ShowMode(i);
+    ShowUsedMode();
+}
 
-    if (VideoMode)
+static void GetFileInfo(EFI_FILE_HANDLE DirHandle)
+{
+    unsigned int Size = 1024;
+    FileInfo = (EFI_FILE_INFO *)FsInfoData;
+
+    if (DirHandle->GetInfo(DirHandle, &GenericFileInfo, &Size, FsInfoData) == EFI_SUCCESS)
     {
-        Status = Gop->SetMode(Gop, VideoMode);
+        Clear();
+        sprintf(tempstr, "Path: <");
+        Write();
 
-        if (EFI_ERROR(Status))
-        {
-            ST->ConOut->OutputString(ST->ConOut, L"GOP Mode Set Failed\n\r");
-            return Status;
-        }
+        ST->ConOut->OutputString(ST->ConOut, FileInfo->FileName);
 
-        Clear(str, 256);
-        sprintf(str, "Used mode %d, base: %08lX, scan: %d", VideoMode, Gop->Mode->FrameBufferBase, ScanLine);
-        Write(str);
-
-        Clear(str, 256);
-        sprintf(str, " %dx%d\n\r", Width, Height);
-        Write(str);
-
+        Clear();
+        sprintf(tempstr, ">\n\r");
+        Write();
     }
+}
 
-    return Status;
+static void GetFileSystemInfo(EFI_FILE_HANDLE DirHandle)
+{
+    unsigned int Size = 1024;
+    FsInfo = (EFI_FILE_SYSTEM_INFO *)FsInfoData;
+
+    if (DirHandle->GetInfo(DirHandle, &FileSystemInfo, &Size, FsInfoData) == EFI_SUCCESS)
+    {
+        Clear();
+        sprintf(tempstr, "Volume label: <");
+        Write();
+
+        ST->ConOut->OutputString(ST->ConOut, FsInfo->VolumeLabel);
+
+        Clear();
+        sprintf(tempstr, ">\n\r");
+        Write();
+    }
+}
+
+static void GetFiles(EFI_FILE_HANDLE DirHandle)
+{
+    unsigned int Size = 1024;
+    FileInfo = (EFI_FILE_INFO *)FsInfoData;
+
+    DirHandle->SetPosition(DirHandle, 0);
+
+    while (Size)
+    {
+        Size = 1024;
+        
+        if (DirHandle->Read(DirHandle, &Size, FsInfoData) == EFI_SUCCESS)
+        {
+            if (Size)
+            {
+                Clear();
+                sprintf(tempstr, "Path: <");
+                Write();
+
+                ST->ConOut->OutputString(ST->ConOut, FileInfo->FileName);
+
+                Clear();
+                sprintf(tempstr, ">\n\r");
+                Write();
+            }
+        }
+    }
+}
+
+static void CheckFs(EFI_HANDLE handle)
+{
+    if (BS->HandleProtocol(handle, &FileSystemProtocol, &Interface) == EFI_SUCCESS)
+    {
+        Fs = (EFI_FILE_IO_INTERFACE*)Interface;
+
+        if (Fs->OpenVolume(Fs, &Root) == EFI_SUCCESS)
+        {
+            GetFileSystemInfo(Root);
+            GetFiles(Root);
+
+            Root->Close(Root);
+        }
+    } 
+}
+
+static void InitFs()
+{
+    FsCount = 0;
+    BS->LocateHandleBuffer(ByProtocol, &FileSystemProtocol, 0, &FsCount, &FsArr);
+    
+    Clear();
+    sprintf(tempstr, "FS count: %d\n\r", FsCount);
+    Write();
+
+    for (unsigned int i = 0; i < FsCount; i++)
+        CheckFs(FsArr[i]);
 }
 
  
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
-    EFI_STATUS Status;
     EFI_INPUT_KEY Key;
  
     /* Store the system table for future use in other functions */
     ST = SystemTable;
     BS = SystemTable->BootServices;
 
-    Status = InitGop();
+    InitGop();
+
     if (EFI_ERROR(Status))
         return Status;
- 
-    /* Say hi */
-    Status = ST->ConOut->OutputString(ST->ConOut, L"Hello World\n\r");
+
+    Status = BS->HandleProtocol(ImageHandle, &LoadedImageProtocol, &Interface);
     if (EFI_ERROR(Status))
         return Status;
- 
+
+    Image = (EFI_LOADED_IMAGE *)Interface;
+
+    if (Image->FilePath->Type == MEDIA_DEVICE_PATH && Image->FilePath->SubType == MEDIA_FILEPATH_DP)
+    {
+        LoadedPath = (FILEPATH_DEVICE_PATH *)Image->FilePath;
+
+        Clear();
+        sprintf(tempstr, "Loaded image :<");
+        Write();
+
+        ST->ConOut->OutputString(ST->ConOut, LoadedPath->PathName);
+
+        Clear();
+        sprintf(tempstr, ">\n\r");
+        Write();
+
+        CheckFs(Image->DeviceHandle);
+    }
+    else
+        return -1;
+
+//    InitFs();
+  
     /* Now wait for a keystroke before continuing, otherwise your
        message will flash off the screen before you see it.
  
@@ -166,6 +259,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
     Status = ST->ConIn->Reset(ST->ConIn, FALSE);
     if (EFI_ERROR(Status))
         return Status;
+
  
     /* Now wait until a key becomes available.  This is a simple
        polling implementation.  You could try and use the WaitForKey
