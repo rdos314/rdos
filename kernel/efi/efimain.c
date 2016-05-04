@@ -217,6 +217,50 @@ static int strlen(const char *s)
     return l;
 }
 
+static void strupper(char *s)
+{
+    while (*s)
+    {
+        *s = (char)toupper(*s);
+        s++;
+    }
+}
+
+static void strlower(char *s)
+{
+    while (*s)
+    {
+        *s = (char)tolower(*s);
+        s++;
+    }
+}
+
+static char *strstr(char *string, char *substring)
+{
+    char *a, *b;
+
+    b = substring;
+    if (*b == 0)
+        return string;
+
+    for ( ; *string != 0; string += 1)
+    {
+        if (*string != *b)
+            continue;
+
+        a = string;
+        while (1)
+        {
+            if (*b == 0)
+                return string;
+
+            if (*a++ != *b++) 
+                break;
+        }
+        b = substring;
+    }
+    return (char *) 0;
+}
 
 static char *sprintn(char *nbuf, uintmax_t num, int base, int *lenp, int upper)
 {
@@ -747,6 +791,7 @@ static void GetFiles(EFI_FILE_HANDLE DirHandle)
 {
     unsigned int Size = 1024;
     FileInfo = (EFI_FILE_INFO *)FsInfoData;
+    char *substr;
 
     DirHandle->SetPosition(DirHandle, 0);
 
@@ -759,6 +804,11 @@ static void GetFiles(EFI_FILE_HANDLE DirHandle)
             if (Size)
             {
                 ConvertFromWide(str, FileInfo->FileName);
+                strlower(str);
+                substr = strstr(str, ".bin");
+                if (substr)
+                    printf("possible RDOS binary");
+                
                 printf("Path: <");
                 printf(str);
                 printf(">\n\r");
