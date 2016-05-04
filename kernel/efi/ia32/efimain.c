@@ -31,6 +31,8 @@ EFI_HANDLE *FsArr;
 EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Info;
 EFI_STATUS Status;
 
+char nbuf[32];
+
 
 static void WriteChar(char ch)
 {
@@ -73,13 +75,11 @@ static char *sprintn(char *nbuf, uintmax_t num, int base, int *lenp, int upper)
     return (p);
 }
 
-
-int printf(char const *fmt, void *arg, va_list ap)
+int printf(const char *fmt, ...)
 {
-    char nbuf[MAXNBUF];
     char *d;
     const char *p, *percent, *q;
-    u_char *up;
+    unsigned char *up;
     int radix = 10;
     int ch, n;
     uintmax_t num;
@@ -88,6 +88,9 @@ int printf(char const *fmt, void *arg, va_list ap)
     int dwidth, upper;
     char padc;
     int stop = 0, retval = 0;
+    va_list ap;
+
+    va_start(ap, fmt);
 
     num = 0;
 
@@ -98,7 +101,7 @@ int printf(char const *fmt, void *arg, va_list ap)
     {
         padc = ' ';
         width = 0;
-        while ((ch = (u_char)*fmt++) != '%' || stop)
+        while ((ch = (unsigned char)*fmt++) != '%' || stop)
         {
             if (ch == '\0')
                 return (retval);
@@ -109,7 +112,7 @@ int printf(char const *fmt, void *arg, va_list ap)
         sign = 0; dot = 0; dwidth = 0; upper = 0;
         cflag = 0; hflag = 0; jflag = 0; tflag = 0; zflag = 0;
 reswitch:
-        switch (ch = (u_char)*fmt++)
+        switch (ch = (unsigned char)*fmt++)
         {
             case '.':
                 dot = 1;
@@ -175,9 +178,9 @@ reswitch:
                 goto reswitch;
 
             case 'b':
-                num = (u_int)va_arg(ap, int);
+                num = (unsigned int)va_arg(ap, int);
                 p = va_arg(ap, char *);
-                for (q = ksprintn(nbuf, num, *p++, NULL, 0); *q;)
+                for (q = sprintn(nbuf, num, *p++, NULL, 0); *q;)
                     WriteChar(*q--);
 
                 if (num == 0)
@@ -206,7 +209,7 @@ reswitch:
                 break;
 
             case 'D':
-                up = va_arg(ap, u_char *);
+                up = va_arg(ap, unsigned char *);
                 p = va_arg(ap, char *);
                 if (!width)
                     width = 16;
@@ -255,7 +258,7 @@ reswitch:
                 if (jflag)
                     *(va_arg(ap, intmax_t *)) = retval;
                 else if (qflag)
-                    *(va_arg(ap, quad_t *)) = retval;
+                    *(va_arg(ap, long long *)) = retval;
                 else if (lflag)
                     *(va_arg(ap, long *)) = retval;
                 else if (zflag)
@@ -340,28 +343,28 @@ handle_nosign:
                 if (jflag)
                     num = va_arg(ap, uintmax_t);
                 else if (qflag)
-                    num = va_arg(ap, u_quad_t);
+                    num = va_arg(ap, unsigned long long);
                 else if (tflag)
-                    num = va_arg(ap, ptrdiff_t);
+                    num = va_arg(ap, void *);
                 else if (lflag)
-                    num = va_arg(ap, u_long);
+                    num = va_arg(ap, unsigned long);
                 else if (zflag)
                     num = va_arg(ap, int);
                 else if (hflag)
-                    num = (u_short)va_arg(ap, int);
+                    num = (unsigned short int)va_arg(ap, int);
                 else if (cflag)
-                    num = (u_char)va_arg(ap, int);
+                    num = (unsigned char)va_arg(ap, int);
                 else
-                    num = va_arg(ap, u_int);
+                    num = va_arg(ap, unsigned int);
                 goto number;
 
 handle_sign:
                 if (jflag)
                     num = va_arg(ap, intmax_t);
                 else if (qflag)
-                    num = va_arg(ap, quad_t);
+                    num = va_arg(ap, long long);
                 else if (tflag)
-                    num = va_arg(ap, ptrdiff_t);
+                    num = va_arg(ap, void *);
                 else if (lflag)
                     num = va_arg(ap, long);
                 else if (hflag)
@@ -424,6 +427,8 @@ number:
                 break;
         }
     }
+    va_end(ap);
+    return 0;
 }
 
 
