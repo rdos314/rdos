@@ -1242,6 +1242,10 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
         SetupMenu();
         HandleMenu();
         ST->ConOut->ClearScreen(ST->ConOut);
+
+        printf("Booting: <");
+        ST->ConOut->OutputString(ST->ConOut, MenuArr[SelectedRow].FileName);
+        printf(">\n\r");
     }
     
   
