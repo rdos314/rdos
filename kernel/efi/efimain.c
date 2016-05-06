@@ -1211,9 +1211,11 @@ static void HandleMenu()
 
 static void LoadRdosBinary()
 {
+    unsigned int FileSize = MenuArr[SelectedRow].FileSize;
+
     printf("Booting: <");
     ST->ConOut->OutputString(ST->ConOut, MenuArr[SelectedRow].FileName);
-    printf(">\n\r");
+    printf(">, %d bytes\n\r", FileSize);
 
     Fs = MenuArr[SelectedRow].Volume;
 
