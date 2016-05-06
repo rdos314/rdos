@@ -50,6 +50,7 @@ struct BootEntry
 {
     EFI_FILE_IO_INTERFACE *Volume;
     CHAR16 FileName[256];
+    unsigned int FileSize;
     char MenuStr[MENU_WIDTH + 1];    
 };
 
@@ -885,13 +886,14 @@ static void GetFileSystemInfo(EFI_FILE_HANDLE DirHandle)
     }
 }
 
-static void AddMenuRow(const char *str, const CHAR16 *FileName)
+static void AddMenuRow(const char *str, const CHAR16 *FileName, UINT64 FileSize)
 {
     int i;
     char *ptr = MenuArr[MenuRows].MenuStr;
 
     wstrcpy(MenuArr[MenuRows].FileName, FileName);
     MenuArr[MenuRows].Volume = CurrVolume;
+    MenuArr[MenuRows].FileSize = (unsigned int)FileSize;
 
     MenuRows++;
 
@@ -943,7 +945,7 @@ static void GetNormalFile(EFI_FILE_HANDLE DirHandle)
                             strcat(str, buf);
                             strcat(str, ")");
                         }
-                        AddMenuRow(str, FileInfo->FileName);
+                        AddMenuRow(str, FileInfo->FileName, FileInfo->FileSize);
                     }
                 }
             }
@@ -982,7 +984,7 @@ static void GetSafeFile(EFI_FILE_HANDLE DirHandle)
                             strcat(str, buf);
                             strcat(str, ")");
                         }
-                        AddMenuRow(str, FileInfo->FileName);
+                        AddMenuRow(str, FileInfo->FileName, FileInfo->FileSize);
                     }
                 }
             }
@@ -1037,7 +1039,7 @@ static void GetOtherFiles(EFI_FILE_HANDLE DirHandle)
                                 strcat(str, buf);
                                 strcat(str, ")");
                             }
-                            AddMenuRow(str, FileInfo->FileName);
+                            AddMenuRow(str, FileInfo->FileName, FileInfo->FileSize);
                         }
                     }
                 }
@@ -1219,7 +1221,6 @@ static void LoadRdosBinary()
     {
         if (Root->Open(Root, &FileHandle, MenuArr[SelectedRow].FileName, EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY | EFI_FILE_HIDDEN | EFI_FILE_SYSTEM) == EFI_SUCCESS)
         {
-            printf("Opened ok\n\r");
             FileHandle->Close(FileHandle);
         }
         else
