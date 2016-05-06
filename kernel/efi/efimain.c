@@ -1232,7 +1232,7 @@ static int LoadRdosBinary()
         {
             if (BS->AllocatePages(AllocateAddress, EfiRuntimeServicesData, RdosImagePages, &RdosImageBase) == EFI_SUCCESS)
             {
-                if (FileHandle->Read(FileHandle, FileSize, &RdosImageBase) == EFI_SUCCESS)
+                if (FileHandle->Read(FileHandle, FileSize, RdosImageBase) == EFI_SUCCESS)
                     ok = 1;
                 else
                 {
