@@ -1634,7 +1634,7 @@ lntF2   DD OFFSET EmulateError,             OFFSET EmulateError
 lntF4   DD OFFSET EmulateError,             OFFSET EmulateError
 lntF6   DD OFFSET EmulateError,             OFFSET EmulateError
 lntF8   DD OFFSET EmulateError,             OFFSET EmulateError
-lntFA   DD OFFSET EmulateError,             OFFSET EmulateError
+lntFA   DD OFFSET EmCli,                    OFFSET EmSti
 lntFC   DD OFFSET EmulateError,             OFFSET EmulateError
 lntFE   DD OFFSET EmulateError,             OFFSET LongFF
 

@@ -84,7 +84,7 @@ int StartRemote()
     int Handle;
     char env[2] = {0, 0};
 
-    Handle = RdosSpawn("emdisp.exe", "", StartupDir.Get().GetData(), 0, 0, &ThreadId);
+    Handle = RdosSpawn("emrem.exe", "", StartupDir.Get().GetData(), 0, 0, &ThreadId);
     if (Handle)
     {
         RdosFreeProcessHandle(Handle);
@@ -118,9 +118,9 @@ void TextChange(TVideo *Video, int Row)
 *##########################################################################*/
 int GetRemoteIpc()
 {
-//    return RdosGetLocalMailslot("emdisp");
+    return RdosGetLocalMailslot("emdisp");
 //    return RdosGetRemoteMailslot(0x4101A8C0, "emdisp");
-    return RdosGetRemoteMailslot(0xB70AA8C0, "emdisp");
+//    return RdosGetRemoteMailslot(0xB70AA8C0, "emdisp");
 }
 
 /*##################  RemoteThread  ###############
@@ -255,11 +255,14 @@ void Start()
     TCmos Cmos(&Isa, 0x70);
     TFlash Bios(&Isa, 0xFFFF0000, 0x10000);
     TFlash BiosShadow(&Isa, 0xF0000, 0x10000, Bios.GetData());
-    TFile BiosFile("bios.bin");
-    Bios.LoadBottom(&BiosFile);
-    TFlash Video(&Isa, 0xC0000, 0x10000);
-    TFile VideoFile("video.bin");
-    Video.LoadBottom(&VideoFile);
+//    TFile BiosFile("bios.bin");
+//    Bios.LoadBottom(&BiosFile);
+//    TFlash Video(&Isa, 0xC0000, 0x10000);
+//    TFile VideoFile("video.bin");
+//    Video.LoadBottom(&VideoFile);
+    TFile LoaderFile("bootrdos.bin");
+    HighRam.Load(0x110000 - HIGH_BASE, &LoaderFile);
+
     int sel;
     int offset;
     int count;
@@ -279,6 +282,12 @@ void Start()
     Pic0.DefineCpu(&Cpu);
     Pic0.OnSet = SetInt;
     Pic0.OnReset = ResetInt;
+
+    Cpu.CpuState.Reg_eip = 0x110008;
+    Cpu.CpuState.Reg_efer = EFER_LME;
+    Cpu.CpuState.Reg_cs.base = 0;
+    Cpu.CpuState.Reg_cs.limit = 0xFFFFFFFF;
+    Cpu.CpuState.Reg_cs.access = ACCESS_64;
 
     while (1)
     {
