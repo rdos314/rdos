@@ -64,6 +64,9 @@ EFI_FILE_IO_INTERFACE *CurrVolume;
 struct BootEntry MenuArr[MENU_ROWS];
 
 EFI_INPUT_KEY Key;
+
+EFI_PHYSICAL_ADDRESS RdosImageBase = RDOS_BASE;
+unsigned int RdosImagePages;
  
 
 //
@@ -1211,11 +1214,11 @@ static void HandleMenu()
     }
 }
 
-static void LoadRdosBinary()
+static int LoadRdosBinary()
 {
     unsigned int FileSize = MenuArr[SelectedRow].FileSize;
-    EFI_PHYSICAL_ADDRESS Base = RDOS_BASE;
-    unsigned int Pages = FileSize / 0x1000 + 1;
+    RdosImagePages = FileSize / 0x1000 + 1;
+    int ok = 0;
 
     printf("Booting: <");
     ST->ConOut->OutputString(ST->ConOut, MenuArr[SelectedRow].FileName);
@@ -1227,10 +1230,18 @@ static void LoadRdosBinary()
     {
         if (Root->Open(Root, &FileHandle, MenuArr[SelectedRow].FileName, EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY | EFI_FILE_HIDDEN | EFI_FILE_SYSTEM) == EFI_SUCCESS)
         {
-            if (BS->AllocatePages(AllocateAddress, EfiRuntimeServicesData, Pages, &Base) == EFI_SUCCESS)
+            if (BS->AllocatePages(AllocateAddress, EfiRuntimeServicesData, RdosImagePages, &RdosImageBase) == EFI_SUCCESS)
             {
-                printf("Memory allocated\n\r");
+                if (FileHandle->Read(FileHandle, FileSize, &RdosImageBase) == EFI_SUCCESS)
+                    ok = 1;
+                else
+                {
+                    BS->FreePages(RdosImageBase, RdosImagePages);
+                    printf("Failed to read RDOS image\n\r");
+                }
             }
+            else
+                printf("Failed to allocate fixed memory for RDOS boot\n\r");
 
             FileHandle->Close(FileHandle);
         }
@@ -1241,6 +1252,8 @@ static void LoadRdosBinary()
     }
     else
         printf("Cannot open volume\n\r");
+
+    return ok;
 }
             
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
@@ -1280,7 +1293,11 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
         HandleMenu();
         ST->ConOut->ClearScreen(ST->ConOut);
 
-        LoadRdosBinary();
+        if (LoadRdosBinary())
+        {
+            printf("Image loaded\n\r");
+            BS->FreePages(RdosImageBase, RdosImagePages);
+        }
     }
     
   
