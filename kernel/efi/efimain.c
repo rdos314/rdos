@@ -31,6 +31,7 @@ EFI_FILE_HANDLE Root;
 char FsInfoData[1024];
 EFI_FILE_SYSTEM_INFO *FsInfo;
 EFI_FILE_INFO *FileInfo;
+EFI_FILE_HANDLE FileHandle;
 
 void *Interface;
 EFI_HANDLE *FsArr;
@@ -47,7 +48,7 @@ CHAR16 wstr[256];
 
 struct BootEntry
 {
-    EFI_HANDLE Volume;
+    EFI_FILE_IO_INTERFACE *Volume;
     CHAR16 FileName[256];
     char MenuStr[MENU_WIDTH + 1];    
 };
@@ -56,7 +57,7 @@ int StartRow;
 int StartCol;
 int SelectedRow;
 int MenuRows = 0;
-EFI_HANDLE CurrVolume;
+EFI_FILE_IO_INTERFACE *CurrVolume;
 struct BootEntry MenuArr[MENU_ROWS];
 
 EFI_INPUT_KEY Key;
@@ -1053,7 +1054,7 @@ static void CheckFs(EFI_HANDLE handle)
 
         if (Fs->OpenVolume(Fs, &Root) == EFI_SUCCESS)
         {
-            CurrVolume = handle;
+            CurrVolume = Fs;
 
             GetFileSystemInfo(Root);
             GetNormalFile(Root);
@@ -1205,6 +1206,30 @@ static void HandleMenu()
             break;
     }
 }
+
+static void LoadRdosBinary()
+{
+    printf("Booting: <");
+    ST->ConOut->OutputString(ST->ConOut, MenuArr[SelectedRow].FileName);
+    printf(">\n\r");
+
+    Fs = MenuArr[SelectedRow].Volume;
+
+    if (Fs->OpenVolume(Fs, &Root) == EFI_SUCCESS)
+    {
+        if (Root->Open(Root, &FileHandle, MenuArr[SelectedRow].FileName, EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY | EFI_FILE_HIDDEN | EFI_FILE_SYSTEM) == EFI_SUCCESS)
+        {
+            printf("Opened ok\n\r");
+            FileHandle->Close(FileHandle);
+        }
+        else
+            printf("Cannot open file\n\r");
+            
+        Root->Close(Root);
+    }
+    else
+        printf("Cannot open volume\n\r");
+}
             
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
@@ -1243,9 +1268,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
         HandleMenu();
         ST->ConOut->ClearScreen(ST->ConOut);
 
-        printf("Booting: <");
-        ST->ConOut->OutputString(ST->ConOut, MenuArr[SelectedRow].FileName);
-        printf(">\n\r");
+        LoadRdosBinary();
     }
     
   
