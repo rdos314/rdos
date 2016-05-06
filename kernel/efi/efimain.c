@@ -83,8 +83,14 @@ struct LoaderParam
 
 unsigned int LoaderParamPos = (unsigned int)(RDOS_LOADER + 2);
 struct LoaderParam *LoaderData;
-    
 
+char MemMapBuf[4096];
+EFI_MEMORY_DESCRIPTOR *MemMap = (EFI_MEMORY_DESCRIPTOR *)MemMapBuf;
+unsigned int MemMapSize = 4096;
+unsigned int MapKey;
+unsigned int MemDescrSize;
+unsigned int MemDescrVersion;
+    
 
 //
 // Root device path
@@ -1365,9 +1371,15 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
         {
             if (LoadBootLoader())
             {
-                printf("Loader ok\n\r");
-
-                StartLoader();
+                if (BS->GetMemoryMap(&MemMapSize, MemMap, &MapKey, &MemDescrSize, &MemDescrVersion) == EFI_SUCCESS)
+                {
+                    if (BS->ExitBootServices(ImageHandle, MapKey) == EFI_SUCCESS)
+                        StartLoader();
+                    else
+                        printf("Exit boot services failed\n\r");
+                }
+                else
+                    printf("Get memory map failed\n\r");
 
                 BS->FreePages(RdosLoaderBase, RdosLoaderPages);
             }
@@ -1375,7 +1387,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
             BS->FreePages(RdosImageBase, RdosImagePages);
         }
     }
-    
+
+    printf("Failed to load, press any key to continue\n\r");    
   
     /* Now wait for a keystroke before continuing, otherwise your
        message will flash off the screen before you see it.
