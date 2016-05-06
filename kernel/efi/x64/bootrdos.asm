@@ -28,6 +28,8 @@
 
 .686p
 
+IA32_EFER       = 0C0000080h
+
 Code32 segment byte public use32 'code32'
 
 
@@ -89,6 +91,17 @@ prot_init:
     mov gs,ax
     mov ss,ax
     mov esp,120000h
+;
+    mov eax,cr0
+    and eax,7FFFFFFFh
+    mov cr0,eax
+;
+    mov ecx,IA32_EFER
+    rdmsr
+    and eax,0FFFFFEFFh   
+    wrmsr
+;
+
     
 Code32  Ends
 

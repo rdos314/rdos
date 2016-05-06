@@ -64,6 +64,14 @@ gdt_ptr:
 
 init:
     cli
+    mov rdi,lfb_base
+    mov rcx,10000h
+    mov rax,80808080h
+    rep stosq
+
+stopl:
+    jmp stopl    
+    
     lgdt tbyte ptr gdt_ptr
     db 0EAh
     dd OFFSET prot_init

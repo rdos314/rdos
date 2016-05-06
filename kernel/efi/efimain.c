@@ -4,6 +4,7 @@
 #include <efiprot.h>
 #include <stdarg.h>
 
+#define RDOS_LOADER 0x110000
 #define RDOS_BASE 0x121000
 
 EFI_SYSTEM_TABLE         *ST;
@@ -65,9 +66,25 @@ struct BootEntry MenuArr[MENU_ROWS];
 
 EFI_INPUT_KEY Key;
 
+EFI_PHYSICAL_ADDRESS RdosLoaderBase = RDOS_LOADER;
+unsigned int RdosLoaderPages = 16;
+
 EFI_PHYSICAL_ADDRESS RdosImageBase = RDOS_BASE;
 unsigned int RdosImagePages;
- 
+
+unsigned int LoaderEntry = (unsigned int)RDOS_LOADER;
+void (*StartLoaderProc)();
+
+struct LoaderParam
+{
+    EFI_PHYSICAL_ADDRESS Lfb;
+    EFI_PHYSICAL_ADDRESS Param;
+};
+
+unsigned int LoaderParamPos = (unsigned int)(RDOS_LOADER + 2);
+struct LoaderParam *LoaderData;
+    
+
 
 //
 // Root device path
@@ -1255,6 +1272,57 @@ static int LoadRdosBinary()
 
     return ok;
 }
+
+static int LoadBootLoader()
+{
+    int ok = 0;
+
+    printf("Loading boot-loader <");
+    strcpy(str, "efi\\rdos\\boot64.bin");
+    ConvertToWide(wstr, str);
+    ST->ConOut->OutputString(ST->ConOut, wstr);
+    printf(">\n\r");
+
+    Fs = MenuArr[SelectedRow].Volume;
+
+    if (Fs->OpenVolume(Fs, &Root) == EFI_SUCCESS)
+    {
+        if (Root->Open(Root, &FileHandle, wstr, EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY | EFI_FILE_HIDDEN | EFI_FILE_SYSTEM) == EFI_SUCCESS)
+        {
+            if (BS->AllocatePages(AllocateAddress, EfiRuntimeServicesData, RdosLoaderPages, &RdosLoaderBase) == EFI_SUCCESS)
+            {
+                if (FileHandle->Read(FileHandle, 0x10000, RdosLoaderBase) == EFI_SUCCESS)
+                    ok = 1;
+                else
+                {
+                    BS->FreePages(RdosLoaderBase, RdosLoaderPages);
+                    printf("Failed to read RDOS loader\n\r");
+                }
+            }
+            else
+                printf("Failed to allocate fixed memory for RDOS loader\n\r");
+
+            FileHandle->Close(FileHandle);
+        }
+        else
+            printf("Cannot open loader file\n\r");
+            
+        Root->Close(Root);
+    }
+    else
+        printf("Cannot open volume\n\r");
+
+    return ok;
+}
+
+static void StartLoader()
+{
+    StartLoaderProc = (void *)LoaderEntry;
+    LoaderData = (struct LoaderParam *)LoaderParamPos;
+
+    LoaderData->Lfb = LfbBase;
+    (*StartLoaderProc)();
+}
             
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
@@ -1295,7 +1363,15 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 
         if (LoadRdosBinary())
         {
-            printf("Image loaded\n\r");
+            if (LoadBootLoader())
+            {
+                printf("Loader ok\n\r");
+
+                StartLoader();
+
+                BS->FreePages(RdosLoaderBase, RdosLoaderPages);
+            }
+
             BS->FreePages(RdosImageBase, RdosImagePages);
         }
     }
