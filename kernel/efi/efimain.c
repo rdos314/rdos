@@ -4,6 +4,8 @@
 #include <efiprot.h>
 #include <stdarg.h>
 
+#define RDOS_BASE 0x121000
+
 EFI_SYSTEM_TABLE         *ST;
 EFI_BOOT_SERVICES        *BS;
 EFI_RUNTIME_SERVICES     *RT;
@@ -1212,6 +1214,8 @@ static void HandleMenu()
 static void LoadRdosBinary()
 {
     unsigned int FileSize = MenuArr[SelectedRow].FileSize;
+    EFI_PHYSICAL_ADDRESS Base = RDOS_BASE;
+    unsigned int Pages = FileSize / 0x1000 + 1;
 
     printf("Booting: <");
     ST->ConOut->OutputString(ST->ConOut, MenuArr[SelectedRow].FileName);
@@ -1223,6 +1227,11 @@ static void LoadRdosBinary()
     {
         if (Root->Open(Root, &FileHandle, MenuArr[SelectedRow].FileName, EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY | EFI_FILE_HIDDEN | EFI_FILE_SYSTEM) == EFI_SUCCESS)
         {
+            if (BS->AllocatePages(AllocateAddress, EfiRuntimeServicesData, Pages, &Base) == EFI_SUCCESS)
+            {
+                printf("Memory allocated\n\r");
+            }
+
             FileHandle->Close(FileHandle);
         }
         else
