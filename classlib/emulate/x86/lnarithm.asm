@@ -533,6 +533,31 @@ LongCmpImsxMemSave:
     mov byte ptr [ebp].reg_eflags,ah
     ret
 LongCmpWordImsxMem        Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           LongLgdtMem
+;
+;               DESCRIPTION:    EMULATE lgdt mem
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+     public LongLgdtMem
+
+LongLgdtMem       Proc near
+    test byte ptr [ebp].reg_cs.d_access, ACCESS_RPL
+    jnz PrivilegeFault
+;
+    mov [ebp].em_modrm,al
+    call LoadLongFwordMem
+    mov word ptr [ebp].reg_gdt.d_limit,ax
+    ror edx,16
+    ror eax,16
+    mov dx,ax
+    mov [ebp].reg_gdt.d_base,edx
+    ret
+LongLgdtMem       Endp
 
 
         END

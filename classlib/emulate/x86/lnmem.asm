@@ -1865,4 +1865,45 @@ GetLongMemRegReg:
     ret
 GetLongMemRegAds Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           LoadLongFwordMem
+;
+;               DESCRIPTION:    Load fword from memory
+;
+;               PARAMETERS:             BL                      op-code
+;
+;               RETURNS:                DX:EAX          data read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public LoadLongFwordMem
+
+LoadLongFwordMem    Proc near
+    mov bl,[ebp].em_rex
+    shl bl,3
+    and bl,8
+;
+    mov bh,[ebp].em_modrm
+    and bh,7
+    or bl,bh
+;
+    mov bh,[ebp].em_modrm
+    and bh,0C0h
+    shr bh,2
+    or bl,bh    
+;
+    test [ebp].em_flags,a32
+    jnz LoadFwordMemIndOk
+;
+    or bl,40h
+
+LoadFwordMemIndOk:
+    movzx esi,bl
+    call dword ptr [4*esi].LongMemTab
+    call ReadLinearFword
+    ret
+LoadLongFwordMem    Endp
+
         END

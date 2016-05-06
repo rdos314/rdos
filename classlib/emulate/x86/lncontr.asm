@@ -227,5 +227,25 @@ LongRetNear       proc near
         mov [ebp].reg_eip+4,edx
         ret
 LongRetNear       endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:       LongJmpFar
+;
+;               DESCRIPTION:    EMULATE jmp far
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public LongJmpFar
+
+LongJmpFar       Proc near
+    call ReadLongCodeDword
+    mov esi,eax
+    call ReadLongCodeWord
+    mov bx,ax
+    call JmpFar
+    ret
+LongJmpFar       Endp
 
         END

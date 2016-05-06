@@ -33,3 +33,5 @@
     extrn LongAddWordImsxMem:near
 
 	extrn LongOrWordRegMem:near
+
+    extrn LongLgdtMem:near

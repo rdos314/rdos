@@ -1299,6 +1299,58 @@ LongOverrideCs:
     movzx ebx,al
     shl ebx,2
     jmp dword ptr [ebx].LongTab
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   Long0F00
+;
+;               DESCRIPTION:    EMULATE 0F00 instructions
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Long0F00Tab:
+ln0F00_000      DD OFFSET EmulateError
+ln0F00_001      DD OFFSET EmulateError
+ln0F00_010      DD OFFSET EmulateError
+ln0F00_011      DD OFFSET EmulateError
+ln0F00_100      DD OFFSET EmulateError
+ln0F00_101      DD OFFSET EmulateError
+ln0F00_110      DD OFFSET EmulateError
+ln0F00_111      DD OFFSET EmulateError
+
+Long0F00:
+        call ReadLongCodeByte
+        movzx ebx,al
+        shr bl,2
+        and bl,0Eh
+        jmp dword ptr [2*ebx].Long0F00Tab
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   Long0F01
+;
+;               DESCRIPTION:    EMULATE 0F01 instructions
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Long0F01Tab:
+ln0F01_000      DD OFFSET EmulateError
+ln0F01_001      DD OFFSET EmulateError
+ln0F01_010      DD OFFSET LongLgdtMem
+ln0F01_011      DD OFFSET EmulateError
+ln0F01_100      DD OFFSET EmulateError
+ln0F01_101      DD OFFSET EmulateError
+ln0F01_110      DD OFFSET EmulateError
+ln0F01_111      DD OFFSET EmulateError
+
+Long0F01:
+        call ReadLongCodeByte
+        movzx ebx,al
+        shr bl,2
+        and bl,0Eh
+        jmp dword ptr [2*ebx].Long0F01Tab
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1310,7 +1362,7 @@ LongOverrideCs:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Long0FTab:
-lnt0F00  DD OFFSET EmulateError,                 OFFSET EmulateError
+lnt0F00  DD OFFSET Long0F00,                     OFFSET Long0F01
 lnt0F02  DD OFFSET EmulateError,                 OFFSET EmulateError
 lnt0F04  DD OFFSET EmulateError,                 OFFSET EmulateError
 lnt0F06  DD OFFSET EmulateError,                 OFFSET EmulateError
@@ -1626,7 +1678,7 @@ lntE2   DD OFFSET EmulateError,             OFFSET EmulateError
 lntE4   DD OFFSET EmulateError,             OFFSET EmulateError
 lntE6   DD OFFSET EmulateError,             OFFSET EmulateError
 lntE8   DD OFFSET LongCallNear,             OFFSET LongJmpNear
-lntEA   DD OFFSET EmulateError,             OFFSET LongJmpShort
+lntEA   DD OFFSET LongJmpFar,               OFFSET LongJmpShort
 lntEC   DD OFFSET EmulateError,             OFFSET EmulateError
 lntEE   DD OFFSET EmulateError,             OFFSET EmulateError
 lntF0   DD OFFSET EmulateError,             OFFSET EmulateError

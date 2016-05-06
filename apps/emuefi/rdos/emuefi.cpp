@@ -283,11 +283,12 @@ void Start()
     Pic0.OnSet = SetInt;
     Pic0.OnReset = ResetInt;
 
-    Cpu.CpuState.Reg_eip = 0x110008;
+    Cpu.CpuState.Reg_eip = 0x110000;
     Cpu.CpuState.Reg_efer = EFER_LME;
     Cpu.CpuState.Reg_cs.base = 0;
     Cpu.CpuState.Reg_cs.limit = 0xFFFFFFFF;
     Cpu.CpuState.Reg_cs.access = ACCESS_64;
+    Cpu.CpuState.Reg_cr0 = 1;
 
     while (1)
     {

@@ -46,3 +46,5 @@
 	extrn SaveLongWordMemReg:near
 	extrn SaveLongDwordMemReg:near
 	extrn SaveLongQwordMemReg:near
+
+	extrn LoadLongFwordMem:near
