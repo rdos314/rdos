@@ -337,6 +337,7 @@ WriteChar       Proc near
     movzx eax,ax
     movzx edx,cs:text_col
     shl edx,3
+    xchg eax,edx
     call GetLfbPos
     pop ax
 ;
@@ -378,10 +379,41 @@ wcNext:
     inc bx
 ;
     loop wcRowLoop    
+    inc ds:text_col
 ;
     popad        
     ret
 WriteChar       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           WriteStr
+;
+;   DESCRIPTION:    Write a string
+;
+;   PARAMETERS:     DS:SI       string
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteStr       Proc near
+    push ax
+    push si
+
+wsLoop:
+    mov al,ds:[si]
+    or al,al
+    jz wsDone
+;
+    call WriteChar
+    inc si
+    jmp wsLoop
+
+wsDone:
+    pop si
+    pop ax
+    ret
+WriteStr    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -396,6 +428,8 @@ WriteChar       Endp
 
     public start
 
+rdos_str DB 'RDOS operating system', 0
+
 start:
     mov ds:scan_size,eax
     mov ds:text_row,0
@@ -403,8 +437,8 @@ start:
     mov ds:fore_col,0FFFFFFh
     mov ds:back_col,0
 ;    
-    mov al,'r'
-    call WriteChar
+    mov si,OFFSET rdos_str
+    call WriteStr
     
 stopl:
     jmp stopl
