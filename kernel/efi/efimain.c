@@ -1339,7 +1339,7 @@ static int LoadBootLoader()
     return ok;
 }
 
-static void AddMem(unsigned long long Base, unsigned long long Size)
+static void ShowMem(unsigned long long Base, unsigned long long Size)
 {
     unsigned int lsb, msb;
 
@@ -1352,7 +1352,18 @@ static void AddMem(unsigned long long Base, unsigned long long Size)
     lsb = (unsigned int)Base;
     msb = (unsigned int)(Base >> 32);
     printf("%08lX_%08lX\n\r", msb, lsb);
+}
 
+static void DumpMem()
+{
+    int i;
+
+    for (i = 0; i < MemMapCount; i++)
+        ShowMem(MemMapArr[i].Base, MemMapArr[i].Size);
+}
+
+static void AddMem(unsigned long long Base, unsigned long long Size)
+{
     MemMapArr[MemMapCount].Len = 0x14;
     MemMapArr[MemMapCount].Base = Base;
     MemMapArr[MemMapCount].Size = Size;
@@ -1375,9 +1386,6 @@ static int ConvertMemoryMap()
     
     if (BS->GetMemoryMap(&MemMapSize, MemMap, &MapKey, &MemDescrSize, &MemDescrVersion) == EFI_SUCCESS)
     {
-        printf("Memory map size: %d\n\r", MemMapSize);
-        printf("Descriptor size: %d\n\r", MemDescrSize);
-
         ptr = (char *)MemMap;
         count = MemMapSize / MemDescrSize;
 
@@ -1424,7 +1432,10 @@ static int ConvertMemoryMap()
 
         if (has_entry)
             AddMem(Base, Size);
+//        DumpMem();
+        return 1;
     }
+                        
     return 0;
 }
 
