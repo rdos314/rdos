@@ -333,6 +333,7 @@ WriteChar       Proc near
     mov ax,cs:text_row
     mov cx,19
     mul cx
+    add ax,4
     movzx eax,ax
     movzx edx,cs:text_col
     shl edx,3

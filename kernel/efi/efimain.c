@@ -1288,11 +1288,8 @@ static int LoadBootLoader()
 {
     int ok = 0;
 
-    printf("Loading boot-loader <");
     strcpy(str, "efi\\rdos\\boot64.bin");
     ConvertToWide(wstr, str);
-    ST->ConOut->OutputString(ST->ConOut, wstr);
-    printf(">\n\r");
 
     Fs = MenuArr[SelectedRow].Volume;
 
@@ -1303,7 +1300,10 @@ static int LoadBootLoader()
             if (BS->AllocatePages(AllocateAddress, EfiRuntimeServicesData, RdosLoaderPages, &RdosLoaderBase) == EFI_SUCCESS)
             {
                 if (FileHandle->Read(FileHandle, 0x10000, RdosLoaderBase) == EFI_SUCCESS)
+                {
                     ok = 1;
+                    ST->ConOut->ClearScreen(ST->ConOut);
+                }
                 else
                 {
                     BS->FreePages(RdosLoaderBase, RdosLoaderPages);
@@ -1328,6 +1328,7 @@ static int LoadBootLoader()
 
 static void StartLoader()
 {
+ 
     StartLoaderProc = (void *)LoaderEntry;
     LoaderData = (struct LoaderParam *)LoaderParamPos;
 
