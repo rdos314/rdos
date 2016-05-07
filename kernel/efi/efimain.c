@@ -1334,7 +1334,10 @@ static void StartLoader()
     LoaderData->Lfb = LfbBase;
     LoaderData->LfbWidth = Width;
     LoaderData->LfbHeight = Height;
-    LoaderData->LfbLineSize = 3 * Width;
+    if (ScanLine)
+        LoaderData->LfbLineSize = 4 * ScanLine;
+    else
+        LoaderData->LfbLineSize = 4 * Width;
     LoaderData->LfbFlags = 0;
 
     switch (PixelFormat)

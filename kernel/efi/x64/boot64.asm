@@ -31,7 +31,7 @@ param_struc     STRUC
 lfb_base        DD ?,?
 lfb_width       DD ?
 lfb_height      DD ?
-lfb_line_size   DD ?
+lfb_line_size   DD 1024
 lfb_flags       DD ?
 
 param_struc     ENDS
@@ -174,6 +174,17 @@ init:
     mov ss,ax
     mov esp,0FFF0h
     jmp start
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           GetLfb
+;
+;   DESCRIPTION:    Get LFB base
+;
+;   RETURNS:        EDI         LFB linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public GetLfb
 
@@ -181,6 +192,40 @@ GetLfb  Proc near
     mov edi,cs:param.lfb_base
     ret
 GetLfb  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           GetLfbPos
+;
+;   DESCRIPTION:    Get LFB position
+;
+;   PARAMETERS:     EAX         X
+;                   EDX         Y
+;
+;   RETURNS:        EDI         LFB linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetLfbPos
+
+GetLfbPos  Proc near
+    push eax
+    push edx
+;    
+    push eax
+    mov eax,cs:param.lfb_line_size
+    mul edx
+    mov edi,cs:param.lfb_base
+    add edi,eax
+    pop eax
+    shl eax,2
+    add edi,eax
+;
+    pop edx
+    pop eax    
+    ret
+GetLfbPos  Endp
 
     extern start:near
 

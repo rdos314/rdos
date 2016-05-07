@@ -38,16 +38,27 @@ IMAGE_BASE = 110000h
 _TEXT segment byte public use16 'CODE'
 
     extern GetLfb:near
+    extern GetLfbPos:near
 
     .386p
 
     public start
 
 start:
-    call GetLfb
-    mov ecx,10000h
-    mov eax,80706050h
-    rep stos dword ptr es:[edi]    
+    mov bl,80h
+    xor eax,eax
+    xor edx,edx
+    mov cx,500
+
+draw_loop:
+    call GetLfbPos
+    mov es:[edi],bl
+    mov es:[edi+1],bl
+    mov es:[edi+2],bl
+;
+    inc eax
+    inc edx
+    loop draw_loop
     
 stopl:
     jmp stopl
