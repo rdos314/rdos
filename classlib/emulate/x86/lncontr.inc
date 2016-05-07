@@ -65,4 +65,3 @@
 
 	extrn LongCallFarMem:near
 
-	extrn LongJmpFar:near

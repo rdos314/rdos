@@ -1175,6 +1175,15 @@ LongPushR15:
     ret
 LongPushRdi Endp
 
+    public LongPushf
+
+LongPushf Proc near
+    mov eax,[ebp].reg_eflags
+    mov edx,[ebp].reg_eflags+4
+    call PushLong
+    ret
+LongPushf Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1329,5 +1338,14 @@ LongPopR15:
     mov [ebp].reg_r15+4,edx
     ret
 LongPopRdi Endp
+
+    public LongPopf
+
+LongPopf Proc near
+    call PopLong
+    mov [ebp].reg_eflags,eax
+    mov [ebp].reg_eflags+4,edx
+    ret
+LongPopf Endp
 
         END

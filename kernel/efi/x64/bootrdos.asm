@@ -30,6 +30,15 @@
 
 IA32_EFER       = 0C0000080h
 
+
+param_struc     STRUC
+
+lfb_base        DD ?,?
+uefi_data       DD ?,?
+
+param_struc     ENDS
+
+
 Code32 segment byte public use32 'code32'
 
 
@@ -40,10 +49,9 @@ Code32 segment byte public use32 'code32'
 ;
 
     db 0Ebh
-    db 42h
+    db 38h + SIZE param_struc
 
-lfb_base        DQ ?
-uefi_data       DQ ?
+param   param_struc <>
 
 rom_gdt:
 gdt0:
@@ -65,23 +73,28 @@ gdt18:
 gdt20:
     dw 0FFFFh
     dd 92000000h
-    dw 8Fh
+    dw 0CFh
 
 gdt_ptr:
     dw 28h-1
     dq OFFSET rom_gdt
 
-init64:
-    db 0FAh
-    db 2Eh
-    db 0Fh
-    db 01h
-    db 15h
-    dd 0FFFFFFEDh
-;
-    db 0EAh
+prot_ptr:
     dd OFFSET prot_init
     dw 18h
+
+init64:
+    db 0FAh    ; cli
+    db 0Fh     ; lgdt gdt_ptr
+    db 01h
+    db 15h
+    dd 0FFFFFFE8h
+;
+    db 0B8h    ; mov eax,OFFSET prot_ptr
+    dd OFFSET prot_ptr
+;
+    db 0FFh    ; call far [eax]
+    db 18h
 
 prot_init:
     mov eax,20h
@@ -91,6 +104,17 @@ prot_init:
     mov gs,ax
     mov ss,ax
     mov esp,120000h
+;
+    mov edi,cs:param.lfb_base
+    mov ecx,10000h
+    mov eax,80706050h
+    rep stosd
+
+stopl:
+    jmp stopl
+
+
+
 ;
     mov eax,cr0
     and eax,7FFFFFFFh

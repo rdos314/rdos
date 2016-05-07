@@ -289,6 +289,7 @@ void Start()
     Cpu.CpuState.Reg_cs.limit = 0xFFFFFFFF;
     Cpu.CpuState.Reg_cs.access = ACCESS_64;
     Cpu.CpuState.Reg_cr0 = 1;
+    Cpu.CpuState.Reg_esp = 0x120000;
 
     while (1)
     {

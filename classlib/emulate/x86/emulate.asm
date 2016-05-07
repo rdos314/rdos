@@ -1639,7 +1639,7 @@ lnt94   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt96   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt98   DD OFFSET EmulateError,             OFFSET EmulateError
 lnt9A   DD OFFSET EmulateError,             OFFSET EmulateError
-lnt9C   DD OFFSET EmulateError,             OFFSET EmulateError
+lnt9C   DD OFFSET LongPushf,                OFFSET LongPopf
 lnt9E   DD OFFSET EmulateError,             OFFSET EmulateError
 lntA0   DD OFFSET EmulateError,             OFFSET EmulateError
 lntA2   DD OFFSET EmulateError,             OFFSET EmulateError
@@ -1678,7 +1678,7 @@ lntE2   DD OFFSET EmulateError,             OFFSET EmulateError
 lntE4   DD OFFSET EmulateError,             OFFSET EmulateError
 lntE6   DD OFFSET EmulateError,             OFFSET EmulateError
 lntE8   DD OFFSET LongCallNear,             OFFSET LongJmpNear
-lntEA   DD OFFSET LongJmpFar,               OFFSET LongJmpShort
+lntEA   DD OFFSET EmulateError,             OFFSET LongJmpShort
 lntEC   DD OFFSET EmulateError,             OFFSET EmulateError
 lntEE   DD OFFSET EmulateError,             OFFSET EmulateError
 lntF0   DD OFFSET EmulateError,             OFFSET EmulateError

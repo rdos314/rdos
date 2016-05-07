@@ -34,6 +34,8 @@
 	extrn LongPushRsi:near
 	extrn LongPushRdi:near
 
+        extrn LongPushf:near
+
 	extrn LongPopRax:near
 	extrn LongPopRcx:near
 	extrn LongPopRdx:near
@@ -42,6 +44,8 @@
 	extrn LongPopRbp:near
 	extrn LongPopRsi:near
 	extrn LongPopRdi:near
+
+        extrn LongPopf:near
 
 	extrn LongMoveWordMemToReg:near
 	extrn LongMoveByteMemToReg:near

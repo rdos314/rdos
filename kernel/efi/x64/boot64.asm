@@ -29,12 +29,18 @@
 
 Code64 segment byte public use64 'code64'
 
+param_struc     STRUC
+
+lfb_base        DQ ?
+uefi_data       DQ ?
+
+param_struc     ENDS
+
     org 0110000h
 
     jmp init
 
-lfb_base        DQ ?
-uefi_data       DQ ?
+param   param_struc <>
 
 rom_gdt:
 gdt0:
@@ -62,22 +68,18 @@ gdt_ptr:
     dw 28h-1
     dq OFFSET rom_gdt
 
-init:
-    cli
-    mov rdi,lfb_base
-    mov rcx,10000h
-    mov rax,80808080h
-    rep stosq
-
-stopl:
-    jmp stopl    
-    
-    lgdt tbyte ptr gdt_ptr
-    db 0EAh
+prot_ptr:
     dd OFFSET prot_init
     dw 18h
 
+init:
+    cli
+    lgdt tbyte ptr gdt_ptr
+    mov eax,OFFSET prot_ptr
+    call fword ptr [rax]
+
 prot_init:
+
     
 Code64  Ends
 
