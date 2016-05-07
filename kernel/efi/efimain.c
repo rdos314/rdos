@@ -75,10 +75,15 @@ unsigned int RdosImagePages;
 unsigned int LoaderEntry = (unsigned int)RDOS_LOADER;
 void (*StartLoaderProc)();
 
+#define PIXEL_REVERSE  1
+
 struct LoaderParam
 {
     EFI_PHYSICAL_ADDRESS Lfb;
-    EFI_PHYSICAL_ADDRESS Param;
+    unsigned int LfbWidth;
+    unsigned int LfbHeight;
+    unsigned int LfbLineSize;
+    unsigned int LfbFlags;
 };
 
 unsigned int LoaderParamPos = (unsigned int)(RDOS_LOADER + 2);
@@ -1327,6 +1332,21 @@ static void StartLoader()
     LoaderData = (struct LoaderParam *)LoaderParamPos;
 
     LoaderData->Lfb = LfbBase;
+    LoaderData->LfbWidth = Width;
+    LoaderData->LfbHeight = Height;
+    LoaderData->LfbLineSize = 3 * Width;
+    LoaderData->LfbFlags = 0;
+
+    switch (PixelFormat)
+    {
+        case PixelRedGreenBlueReserved8BitPerColor:
+            break;
+
+        case PixelBlueGreenRedReserved8BitPerColor:
+            LoaderData->LfbFlags | PIXEL_REVERSE;
+            break;
+    };
+
     (*StartLoaderProc)();
 }
             

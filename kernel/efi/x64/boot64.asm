@@ -29,11 +29,15 @@
 param_struc     STRUC
 
 lfb_base        DD ?,?
-uefi_data       DD ?,?
+lfb_width       DD ?
+lfb_height      DD ?
+lfb_line_size   DD ?
+lfb_flags       DD ?
+
+param_struc     ENDS
 
 IMAGE_BASE = 110000h
 
-param_struc     ENDS
 
 _TEXT segment byte public use16 'CODE'
 
