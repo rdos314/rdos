@@ -1326,6 +1326,86 @@ static int LoadBootLoader()
     return ok;
 }
 
+static void AddMem(unsigned long long Base, unsigned long long Size)
+{
+    unsigned int lsb, msb;
+
+    lsb = (unsigned int)Base;
+    msb = (unsigned int)(Base >> 32);
+    printf("%08lX_%08lX-", msb, lsb);
+
+    Base += Size;
+    Base--;
+    lsb = (unsigned int)Base;
+    msb = (unsigned int)(Base >> 32);
+    printf("%08lX_%08lX\n\r", msb, lsb);
+}
+
+static int ConvertMemoryMap()
+{
+    int i;
+    int count;
+    char *ptr;
+    EFI_MEMORY_DESCRIPTOR *memptr;
+    unsigned long long Base;
+    unsigned long long Size;
+    int has_entry = 0;
+    
+    if (BS->GetMemoryMap(&MemMapSize, MemMap, &MapKey, &MemDescrSize, &MemDescrVersion) == EFI_SUCCESS)
+    {
+        printf("Memory map size: %d\n\r", MemMapSize);
+        printf("Descriptor size: %d\n\r", MemDescrSize);
+
+        ptr = (char *)MemMap;
+        count = MemMapSize / MemDescrSize;
+
+        for (i = 0; i < count; i++)
+        {
+            memptr = (EFI_MEMORY_DESCRIPTOR *)ptr;
+            
+            switch (memptr->Type)
+            {
+                case EfiLoaderCode:
+                case EfiLoaderData:
+                case EfiBootServicesCode:
+                case EfiBootServicesData:
+                case EfiConventionalMemory:
+                    if (has_entry)
+                    {
+                        if (Base + Size == memptr->PhysicalStart)
+                            Size += memptr->NumberOfPages << 12;
+                        else
+                        {
+                            AddMem(Base, Size);
+                            Base = memptr->PhysicalStart;
+                            Size = memptr->NumberOfPages << 12;
+                        }
+                    }
+                    else
+                    {
+                        Base = memptr->PhysicalStart;
+                        Size = memptr->NumberOfPages << 12;
+                        has_entry = 1;
+                    }
+                    break;
+
+                default:
+                    if (has_entry)
+                    {
+                        AddMem(Base, Size);
+                        has_entry = 0;
+                    }
+                    break;
+            }
+            ptr += MemDescrSize;
+        }
+
+        if (has_entry)
+            AddMem(Base, Size);
+    }
+    return 0;
+}
+
 static void StartLoader()
 {
  
@@ -1395,7 +1475,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
         {
             if (LoadBootLoader())
             {
-                if (BS->GetMemoryMap(&MemMapSize, MemMap, &MapKey, &MemDescrSize, &MemDescrVersion) == EFI_SUCCESS)
+                if (ConvertMemoryMap())
                 {
                     if (BS->ExitBootServices(ImageHandle, MapKey) == EFI_SUCCESS)
                         StartLoader();
