@@ -173,6 +173,7 @@ init:
     mov ds,ax
     mov ss,ax
     mov esp,0FFF0h
+    mov eax,cs:param.lfb_line_size
     jmp start
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
