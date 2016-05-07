@@ -105,6 +105,15 @@ prot_init:
     mov ss,ax
     mov esp,120000h
 ;
+    mov eax,cr0
+    and eax,7FFFFFFFh
+    mov cr0,eax
+;
+    mov ecx,IA32_EFER
+    rdmsr
+    and eax,0FFFFFEFFh   
+    wrmsr
+;
     mov edi,cs:param.lfb_base
     mov ecx,10000h
     mov eax,80706050h
@@ -115,16 +124,6 @@ stopl:
 
 
 
-;
-    mov eax,cr0
-    and eax,7FFFFFFFh
-    mov cr0,eax
-;
-    mov ecx,IA32_EFER
-    rdmsr
-    and eax,0FFFFFEFFh   
-    wrmsr
-;
 
     
 Code32  Ends
