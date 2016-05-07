@@ -20,7 +20,7 @@ MCommand
 5
 WFileName
 10
-emuefi.tgt
+boot64.tgt
 6
 WVList
 1
@@ -30,14 +30,14 @@ VComponent
 WRect
 0
 0
-5680
-4266
+5690
+4295
 0
 0
 9
 WFileName
 10
-emuefi.tgt
+boot64.tgt
 0
-1
+0
 7

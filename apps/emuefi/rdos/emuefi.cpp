@@ -260,7 +260,7 @@ void Start()
 //    TFlash Video(&Isa, 0xC0000, 0x10000);
 //    TFile VideoFile("video.bin");
 //    Video.LoadBottom(&VideoFile);
-    TFile LoaderFile("boot64.bin");
+    TFile LoaderFile("boot32.bin");
     HighRam.Load(0x110000 - HIGH_BASE, &LoaderFile);
 
     int sel;
@@ -284,10 +284,11 @@ void Start()
     Pic0.OnReset = ResetInt;
 
     Cpu.CpuState.Reg_eip = 0x110000;
-    Cpu.CpuState.Reg_efer = EFER_LME;
+//    Cpu.CpuState.Reg_efer = EFER_LME;
     Cpu.CpuState.Reg_cs.base = 0;
     Cpu.CpuState.Reg_cs.limit = 0xFFFFFFFF;
-    Cpu.CpuState.Reg_cs.access = ACCESS_64;
+//    Cpu.CpuState.Reg_cs.access = ACCESS_64 | ACCESS_READ;
+    Cpu.CpuState.Reg_cs.access = ACCESS_32 | ACCESS_READ;
     Cpu.CpuState.Reg_cr0 = 1;
     Cpu.CpuState.Reg_esp = 0x120000;
 

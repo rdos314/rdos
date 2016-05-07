@@ -25,7 +25,7 @@ MCommand
 6
 MItem
 10
-boot64.bin
+boot32.bin
 7
 WString
 5
@@ -63,8 +63,8 @@ WVList
 0
 15
 MItem
-14
-x64\boot64.asm
+13
+..\boot32.asm
 16
 WString
 6
@@ -81,8 +81,8 @@ WVList
 0
 19
 MItem
-9
-zboot.asm
+13
+..\loader.asm
 20
 WString
 6
