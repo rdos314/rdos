@@ -50,8 +50,8 @@ gdt0:
     dd 0
     dw 0
 gdt8:
-    dw 10h*8-1
-    dd 92000000h
+    dw 0
+    dd 0
     dw 0
 gdt10:
     dw 28h-1
@@ -150,13 +150,26 @@ prot_init:
 
 init:
     mov ax,20h
-    mov ds,ax
     mov es,ax
     mov fs,ax
     mov gs,ax
+;
+    mov ebx,OFFSET gdt8 + IMAGE_BASE
+    mov edx,IMAGE_BASE
+    mov cx,-1
+    mov [ebx],cx
+    mov [ebx+2],edx
+    mov al,92h
+    xchg al,[ebx+5]
+    xor cl,cl
+    mov ch,al
+    mov [ebx+6],cx
+;
+    mov ax,8
+    mov ds,ax
     mov ss,ax
-    mov sp,0
-    call start
+    mov esp,0FFF0h
+    jmp start
 
     public GetLfb
 
