@@ -260,7 +260,7 @@ void Start()
 //    TFlash Video(&Isa, 0xC0000, 0x10000);
 //    TFile VideoFile("video.bin");
 //    Video.LoadBottom(&VideoFile);
-    TFile LoaderFile("bootrdos.bin");
+    TFile LoaderFile("boot64.bin");
     HighRam.Load(0x110000 - HIGH_BASE, &LoaderFile);
 
     int sel;
