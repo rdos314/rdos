@@ -90,11 +90,9 @@ init64:
     db 15h
     dd 0FFFFFFE8h
 ;
-    db 0B8h    ; mov eax,OFFSET prot_ptr
-    dd OFFSET prot_ptr
-;
-    db 0FFh    ; call far [eax]
-    db 18h
+    db 0FFh
+    db 1Dh
+    dd 0FFFFFFECh
 
 prot_init:
     mov eax,20h

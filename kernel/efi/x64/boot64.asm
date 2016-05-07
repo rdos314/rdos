@@ -75,8 +75,7 @@ prot_ptr:
 init:
     cli
     lgdt tbyte ptr gdt_ptr
-    mov eax,OFFSET prot_ptr
-    call fword ptr [rax]
+    call fword ptr prot_ptr
 
 prot_init:
 
