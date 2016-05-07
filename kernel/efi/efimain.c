@@ -5,6 +5,7 @@
 #include <stdarg.h>
 
 #define RDOS_LOADER 0x110000
+#define RDOS_MEM  0x120000
 #define RDOS_BASE 0x121000
 
 EFI_SYSTEM_TABLE         *ST;
@@ -95,7 +96,19 @@ unsigned int MemMapSize = 4096;
 unsigned int MapKey;
 unsigned int MemDescrSize;
 unsigned int MemDescrVersion;
-    
+
+struct MemMapEntry
+{
+    unsigned int Len;
+    unsigned long long Base;
+    unsigned long long Size;
+    unsigned int Type;
+};
+
+EFI_PHYSICAL_ADDRESS RdosMemBase = RDOS_MEM;
+unsigned int RdosMemPages = 1;
+unsigned int MemMapCount;
+struct MemMapEntry *MemMapArr;    
 
 //
 // Root device path
@@ -1297,7 +1310,7 @@ static int LoadBootLoader()
     {
         if (Root->Open(Root, &FileHandle, wstr, EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY | EFI_FILE_HIDDEN | EFI_FILE_SYSTEM) == EFI_SUCCESS)
         {
-            if (BS->AllocatePages(AllocateAddress, EfiRuntimeServicesData, RdosLoaderPages, &RdosLoaderBase) == EFI_SUCCESS)
+            if (BS->AllocatePages(AllocateAddress, EfiBootServicesData, RdosLoaderPages, &RdosLoaderBase) == EFI_SUCCESS)
             {
                 if (FileHandle->Read(FileHandle, 0x10000, RdosLoaderBase) == EFI_SUCCESS)
                 {
@@ -1339,6 +1352,12 @@ static void AddMem(unsigned long long Base, unsigned long long Size)
     lsb = (unsigned int)Base;
     msb = (unsigned int)(Base >> 32);
     printf("%08lX_%08lX\n\r", msb, lsb);
+
+    MemMapArr[MemMapCount].Len = 0x14;
+    MemMapArr[MemMapCount].Base = Base;
+    MemMapArr[MemMapCount].Size = Size;
+    MemMapArr[MemMapCount].Type = 1;
+    MemMapCount++;
 }
 
 static int ConvertMemoryMap()
@@ -1350,6 +1369,9 @@ static int ConvertMemoryMap()
     unsigned long long Base;
     unsigned long long Size;
     int has_entry = 0;
+
+    MemMapCount = 0;
+    MemMapArr = (struct MemMapEntry *)RdosMemBase;    
     
     if (BS->GetMemoryMap(&MemMapSize, MemMap, &MapKey, &MemDescrSize, &MemDescrVersion) == EFI_SUCCESS)
     {
@@ -1475,15 +1497,20 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
         {
             if (LoadBootLoader())
             {
-                if (ConvertMemoryMap())
+                if (BS->AllocatePages(AllocateAddress, EfiBootServicesData, RdosMemPages, &RdosMemBase) == EFI_SUCCESS)
                 {
-                    if (BS->ExitBootServices(ImageHandle, MapKey) == EFI_SUCCESS)
-                        StartLoader();
+                    if (ConvertMemoryMap())
+                    {
+                        if (BS->ExitBootServices(ImageHandle, MapKey) == EFI_SUCCESS)
+                            StartLoader();
+                        else
+                            printf("Exit boot services failed\n\r");
+                    }
                     else
-                        printf("Exit boot services failed\n\r");
+                        printf("Get memory map failed\n\r");
                 }
                 else
-                    printf("Get memory map failed\n\r");
+                    printf("Allocate memory map failed\n\r");
 
                 BS->FreePages(RdosLoaderBase, RdosLoaderPages);
             }
