@@ -73,7 +73,7 @@ gdt18:
 gdt20:
     dw 0FFFFh
     dd 92000000h
-    dw 0CFh
+    dw 08Fh
 
 gdt_ptr:
     dw 28h-1
@@ -95,14 +95,6 @@ init64:
     dd 0FFFFFFECh
 
 prot_init:
-    mov eax,20h
-    mov ds,ax
-    mov es,ax
-    mov fs,ax
-    mov gs,ax
-    mov ss,ax
-    mov esp,120000h
-;
     mov eax,cr0
     and eax,7FFFFFFFh
     mov cr0,eax
@@ -111,6 +103,31 @@ prot_init:
     rdmsr
     and eax,0FFFFFEFFh   
     wrmsr
+;
+    mov eax,20h
+    mov ds,ax
+;
+    mov ebx,OFFSET gdt18
+    mov edx,110000h
+    mov [ebx+2],edx
+    mov al,9Ah
+    xchg al,[ebx+5]
+    xor cl,cl
+    mov ch,al
+    mov [ebx+6],cx
+;
+    db 0EAh
+    dd OFFSET seg_init - 110000h
+    dw 18h
+
+seg_init:    
+    mov eax,20h
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
+    mov ss,ax
+    mov esp,120000h
 ;
     mov edi,cs:param.lfb_base
     mov ecx,10000h

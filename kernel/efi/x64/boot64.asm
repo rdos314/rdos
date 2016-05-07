@@ -25,20 +25,22 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-.x64
-
-Code64 segment byte public use64 'code64'
 
 param_struc     STRUC
 
-lfb_base        DQ ?
-uefi_data       DQ ?
+lfb_base        DD ?,?
+uefi_data       DD ?,?
+
+IMAGE_BASE = 110000h
 
 param_struc     ENDS
 
-    org 0110000h
+_TEXT segment byte public use16 'CODE'
 
-    jmp init
+    .386p
+
+    db 0Ebh            ; jmp init64
+    db 38h + SIZE param_struc
 
 param   param_struc <>
 
@@ -53,7 +55,7 @@ gdt8:
     dw 0
 gdt10:
     dw 28h-1
-    dd 92000000h + OFFSET rom_gdt
+    dd 92000000h + OFFSET rom_gdt + IMAGE_BASE
     dw 0
 gdt18:
     dw 0FFFFh
@@ -62,24 +64,107 @@ gdt18:
 gdt20:
     dw 0FFFFh
     dd 92000000h
-    dw 8Fh
+    dw 08Fh
 
 gdt_ptr:
     dw 28h-1
-    dq OFFSET rom_gdt
+    dd OFFSET rom_gdt + IMAGE_BASE
+    dd 0
 
 prot_ptr:
-    dd OFFSET prot_init
+    dd OFFSET prot_init + IMAGE_BASE
+    dw 18h
+
+init64:
+    db 0FAh    ; cli
+    db 0Fh     ; lgdt gdt_ptr
+    db 01h
+    db 15h
+    dd 0FFFFFFE8h
+;
+    db 0FFh
+    db 1Dh
+    dd 0FFFFFFECh
+
+prot_init:
+    db 0Fh     ; mov eax,cr0
+    db 20h
+    db 0C0h
+;
+    db 25h     ; and eax,7FFFFFFFh
+    dd 07FFFFFFFh
+;
+    db 0Fh     ; mov cr0,eax
+    db 22h
+    db 0C0h
+;
+    db 0B9h    ; mov ecx,IA32_EFER
+    dd 0C0000080h
+;
+    db 0Fh     ; rdmsr
+    db 32h
+;
+    db 25h     ; and eax,0FFFFFEFFh
+    dd 0FFFFFEFFh
+;
+    db 0Fh     ; wrmsr
+    db 30h
+;
+    db 0B8h    ; mov eax,20h
+    dd 20h
+;
+    db 8Eh     ; mov ds,eax
+    db 0D8h
+;
+    db 0BBh    ; mov ebx,OFFSET gdt18
+    dd OFFSET gdt18 + IMAGE_BASE
+;
+    db 0BAh    ; mov edx,IMAGE_BASE
+    dd IMAGE_BASE
+;
+    db 89h     ; mov [ebx+2],edx
+    db 53h
+    db 02h
+;
+    db 0B0h    ; mov al,9Ah
+    db 9Ah
+;
+    db 86h     ; xchg al,[ebx+5]
+    db 43h
+    db 5
+;
+    db 32h     ; xor cl,cl
+    db 0C9h
+;
+    db 8Ah     ; mov ch,al
+    db 0E8h
+;
+    db 66h     ; mov [ebx+6],cx
+    db 89h
+    db 4Bh
+    db 6
+;
+    db 0EAh    ; jmp 18:init
+    dd OFFSET init
     dw 18h
 
 init:
-    cli
-    lgdt tbyte ptr gdt_ptr
-    call fword ptr prot_ptr
-
-prot_init:
-
+    mov ax,20h
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
+    mov ss,ax
+    mov sp,0
+;
+    mov edi,cs:param.lfb_base
+    mov ecx,10000h
+    mov eax,80706050h
+    rep stos dword ptr es:[edi]    
     
-Code64  Ends
+stopl:
+    jmp stopl
+
+_TEXT  Ends
 
     end
