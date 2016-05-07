@@ -20,7 +20,7 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; bootrdos.ASM
+; boot64.asm
 ; 64-bit RDOS boot
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -156,14 +156,16 @@ init:
     mov gs,ax
     mov ss,ax
     mov sp,0
-;
+    call start
+
+    public GetLfb
+
+GetLfb  Proc near
     mov edi,cs:param.lfb_base
-    mov ecx,10000h
-    mov eax,80706050h
-    rep stos dword ptr es:[edi]    
-    
-stopl:
-    jmp stopl
+    ret
+GetLfb  Endp
+
+    extern start:near
 
 _TEXT  Ends
 
