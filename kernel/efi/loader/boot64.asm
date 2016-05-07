@@ -31,7 +31,7 @@ param_struc     STRUC
 lfb_base        DD ?,?
 lfb_width       DD ?
 lfb_height      DD ?
-lfb_line_size   DD 1024
+lfb_line_size   DD ?
 lfb_flags       DD ?
 mem_entries     DD ?
 
@@ -228,6 +228,24 @@ GetLfbPos  Proc near
     pop eax    
     ret
 GetLfbPos  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           GetMemCount
+;
+;   DESCRIPTION:    Get memory block count
+;
+;   RETURNS:        ECX		Memory block count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetMemCount
+
+GetMemCount  Proc near
+    mov ecx,cs:param.mem_entries
+    ret
+GetMemCount  Endp
 
     extern start:near
 

@@ -198,6 +198,24 @@ GetLfbPos  Proc near
     pop eax    
     ret
 GetLfbPos  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           GetMemCount
+;
+;   DESCRIPTION:    Get memory block count
+;
+;   RETURNS:        ECX		Memory block count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetMemCount
+
+GetMemCount  Proc near
+    mov ecx,cs:param.mem_entries
+    ret
+GetMemCount  Endp
 
     extern start:near
 

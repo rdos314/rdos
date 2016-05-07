@@ -78,6 +78,8 @@ void (*StartLoaderProc)();
 
 #define PIXEL_REVERSE  1
 
+#pragma pack( push, 1 )
+
 struct LoaderParam
 {
     EFI_PHYSICAL_ADDRESS Lfb;
@@ -88,6 +90,16 @@ struct LoaderParam
     unsigned int MemEntries;
 };
 
+struct MemMapEntry
+{
+    unsigned int Len;
+    unsigned long long Base;
+    unsigned long long Size;
+    unsigned int Type;
+};
+
+#pragma pack( pop )
+
 unsigned int LoaderParamPos = (unsigned int)(RDOS_LOADER + 2);
 struct LoaderParam *LoaderData;
 
@@ -97,14 +109,6 @@ unsigned int MemMapSize = 4096;
 unsigned int MapKey;
 unsigned int MemDescrSize;
 unsigned int MemDescrVersion;
-
-struct MemMapEntry
-{
-    unsigned int Len;
-    unsigned long long Base;
-    unsigned long long Size;
-    unsigned int Type;
-};
 
 EFI_PHYSICAL_ADDRESS RdosMemBase = RDOS_MEM;
 unsigned int RdosMemPages = 1;

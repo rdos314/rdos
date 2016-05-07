@@ -25,58 +25,24 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-param_struc     STRUC
-
-lfb_base        DD ?,?
-uefi_data       DD ?,?
-
-param_struc     ENDS
-
 IMAGE_BASE = 110000h
+MEM_BASE = 120000h
 
-DefaultIdtEntry     MACRO
-    dw OFFSET DefaultInt
-    dw device_code_sel
-    dw 8E00h
-    dw 0
-                    ENDM
+mmap_struc  STRUC
 
-BootIdtEntry        MACRO Offs
-    dw OFFSET Offs
-    dw device_code_sel
-    dw 8E00h
-    dw 0
-                    ENDM
+mmap_len    DD ?
+mmap_base   DD ?,?
+mmap_size   DD ?,?
+mmap_type   DD ?
 
-BootExceptionOnePar     MACRO Entry
-    push bp
-    mov bp,sp
-    sti
-    push eax
-    push ebx
-    push ds
-    mov al,Entry
-    ShutDownPreTask
-                ENDM
-
-BootExceptionNoPar      MACRO Entry
-    push dword ptr 0
-    push bp
-    mov bp,sp
-    sti
-    push eax
-    push ebx
-    push ds
-    mov al,Entry
-    ShutDownPreTask
-                ENDM
+mmap_struc  ENDS
 
 
 _TEXT segment byte public use16 'CODE'
 
     extern GetLfb:near
     extern GetLfbPos:near
+    extern GetMemCount:near
 
     .386p
 
@@ -602,7 +568,49 @@ start:
 ;
     mov eax,12345678h
     call WriteHexDword
-    
+;
+    mov ds:text_row,1
+    mov ds:text_col,0
+    mov ebx,MEM_BASE
+    call GetMemCount
+
+mLoop:
+    or cx,cx
+    jz stopl
+;
+    mov eax,es:[ebx].mmap_base + 4
+    call WriteHexDword
+    mov al,'_'
+    call WriteChar
+    mov eax,es:[ebx].mmap_base
+    call WriteHexDword
+;
+    mov al,'-'
+    call WriteChar
+;
+    mov eax,es:[ebx].mmap_base
+    mov edx,es:[ebx].mmap_base + 4
+    add eax,es:[ebx].mmap_size
+    adc edx,es:[ebx].mmap_size + 4
+    sub eax,1
+    sbb edx,0
+;
+    push eax
+    mov eax,edx
+    call WriteHexDword
+    mov al,'_'
+    call WriteChar
+    pop eax
+    call WriteHexDword
+;
+    add ebx,es:[ebx].mmap_len
+    add ebx,4
+    inc ds:text_row
+    mov ds:text_col,0
+;
+    dec cx
+    jmp mLoop
+       
 stopl:
     jmp stopl
 
