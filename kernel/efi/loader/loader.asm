@@ -35,6 +35,44 @@ param_struc     ENDS
 
 IMAGE_BASE = 110000h
 
+DefaultIdtEntry     MACRO
+    dw OFFSET DefaultInt
+    dw device_code_sel
+    dw 8E00h
+    dw 0
+                    ENDM
+
+BootIdtEntry        MACRO Offs
+    dw OFFSET Offs
+    dw device_code_sel
+    dw 8E00h
+    dw 0
+                    ENDM
+
+BootExceptionOnePar     MACRO Entry
+    push bp
+    mov bp,sp
+    sti
+    push eax
+    push ebx
+    push ds
+    mov al,Entry
+    ShutDownPreTask
+                ENDM
+
+BootExceptionNoPar      MACRO Entry
+    push dword ptr 0
+    push bp
+    mov bp,sp
+    sti
+    push eax
+    push ebx
+    push ds
+    mov al,Entry
+    ShutDownPreTask
+                ENDM
+
+
 _TEXT segment byte public use16 'CODE'
 
     extern GetLfb:near
@@ -414,6 +452,128 @@ wsDone:
     pop ax
     ret
 WriteStr    Endp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SingleHex
+;
+;           DESCRIPTION:
+;
+;           PARAMETERS:         AL          Value in
+;                           AX          Value out
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SingleHex       Proc near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb shLow1
+;
+    add al,7
+
+shLow1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb shHigh1
+;
+    add ah,7
+
+shHigh1:
+    add ah,30h
+    ret
+SingleHex  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteHexByte
+;
+;       DESCRIPTION:
+;
+;       PARAMETERS:     AL          HEX DATA IN
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteHexByte    Proc near
+    push ax
+    push di
+;
+    call SingleHex
+    mov di,ax
+    mov al,ah
+    call WriteChar
+    mov ax,di
+    call WriteChar
+;
+    pop di
+    pop ax
+    ret
+WriteHexByte  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteHexWord
+;
+;       DESCRIPTION:
+;
+;       PARAMETERS:     AX          HEX DATA IN
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteHexWord    Proc near
+    push ax
+    push si
+    push di
+;
+    mov si,ax
+    shr ax,8
+    call SingleHex
+    mov di,ax
+    call WriteChar
+    mov ax,di
+    mov al,ah
+    call WriteChar
+    mov ax,si
+    call SingleHex
+    mov di,ax
+    call WriteChar
+    mov ax,di
+    mov al,ah
+    call WriteChar
+;
+    pop di
+    pop si
+    pop ax
+    ret
+WriteHexWord  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteHexDword
+;
+;       DESCRIPTION:
+;
+;       PARAMETERS:     EAX          HEX DATA IN
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteHexDword    Proc near
+    push eax
+    shr eax,16
+    call WriteHexWord
+    pop eax
+    call WriteHexWord
+    ret
+WriteHexDword   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -428,7 +588,7 @@ WriteStr    Endp
 
     public start
 
-rdos_str DB 'RDOS operating system', 0
+rdos_str DB 'RDOS operating system ', 0
 
 start:
     mov ds:scan_size,eax
@@ -439,6 +599,9 @@ start:
 ;    
     mov si,OFFSET rdos_str
     call WriteStr
+;
+    mov eax,12345678h
+    call WriteHexDword
     
 stopl:
     jmp stopl
