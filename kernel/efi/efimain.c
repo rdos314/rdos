@@ -85,6 +85,7 @@ struct LoaderParam
     unsigned int LfbHeight;
     unsigned int LfbLineSize;
     unsigned int LfbFlags;
+    unsigned int MemEntries;
 };
 
 unsigned int LoaderParamPos = (unsigned int)(RDOS_LOADER + 2);
@@ -1463,6 +1464,8 @@ static void StartLoader()
             LoaderData->LfbFlags | PIXEL_REVERSE;
             break;
     };
+
+    LoaderData->MemEntries = MemMapCount;
 
     (*StartLoaderProc)();
 }

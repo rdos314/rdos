@@ -33,6 +33,7 @@ lfb_width       DD ?
 lfb_height      DD ?
 lfb_line_size   DD 1024
 lfb_flags       DD ?
+mem_entries     DD ?
 
 param_struc     ENDS
 
