@@ -1306,7 +1306,11 @@ static int LoadBootLoader()
 {
     int ok = 0;
 
-    strcpy(str, "efi\\rdos\\boot64.bin");
+    if (sizeof(void *) == 4)
+        strcpy(str, "efi\\rdos\\boot32.bin");
+    else
+        strcpy(str, "efi\\rdos\\boot64.bin");
+
     ConvertToWide(wstr, str);
 
     Fs = MenuArr[SelectedRow].Volume;
