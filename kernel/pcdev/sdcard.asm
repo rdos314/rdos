@@ -1986,8 +1986,9 @@ rdSectorRetry:
     CrashGate 
 
 rdSectorNotTimeout:       
-    mov eax,esi    
-    mov edx,edi
+    GetSystemTime
+    add eax,1193 * 200
+    adc edx,0
     WaitForSignalWithTimeout
     test ds:sd_pend_error,1FFh
     jz rdSectorRetry
@@ -2165,8 +2166,9 @@ wrSectorRetry:
     CrashGate 
 
 wrSectorNotTimeout:       
-    mov eax,esi    
-    mov edx,edi
+    GetSystemTime
+    add eax,1193 * 200
+    adc edx,0
     WaitForSignalWithTimeout
     test ds:sd_pend_error,1FFh
     jz wrSectorRetry
