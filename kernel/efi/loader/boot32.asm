@@ -19,7 +19,6 @@
 ; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ;
 ; The author of this program may be contacted at leif@rdos.net
-;
 ; boot32.asm
 ; 32-bit RDOS boot
 ;
@@ -206,7 +205,7 @@ GetLfbPos  Endp
 ;
 ;   DESCRIPTION:    Get memory block count
 ;
-;   RETURNS:        ECX		Memory block count
+;   RETURNS:        ECX         Memory block count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
