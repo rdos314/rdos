@@ -581,7 +581,6 @@ setup_global_paging Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init:
-    int 3
     mov ax,flat_sel
     mov ds,ax
 ;
