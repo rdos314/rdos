@@ -1180,7 +1180,6 @@ start:
 ;        
     call GetAllAdapters
     call StartShutDownDevice
-    int 3
     call GetBootDevice
     jnc DoBoot
 ;
@@ -1195,6 +1194,12 @@ DoStop:
 DoBoot:
     mov ax,flat_sel
     mov ds,ax
+    mov es,ax
+    xor di,di
+    xor eax,eax
+    mov cx,400h
+    rep stosd
+;
     push word ptr kernel_code
     mov ecx,[esi].len
     add esi,SIZE rdos_header
