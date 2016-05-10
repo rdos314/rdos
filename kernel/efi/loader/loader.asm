@@ -54,6 +54,8 @@ _TEXT segment byte public use16 'CODE'
 
     .386p
 
+crc_tab         DW 256 DUP(?)
+
 text_row        DW ?
 text_col        DW ?
 scan_size       DD ?
@@ -426,6 +428,7 @@ wsDone:
     pop ax
     ret
 WriteStr    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -598,59 +601,99 @@ RamFound:
     ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           CreateCrc
+;
+;   DESCRIPTION:    Creates CRC table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateCrc      MACRO
+    mov ax,8
+    mov ds,ax
+    mov ax,1021h
+;
+    xor cl,cl
+    mov bx,OFFSET crc_tab
+    
+create_crc_loop:   
+    xor dx,dx
+    xor dh,cl
+    shl dx,1
+    jnc no_xor0
+;
+    xor dx,ax
+
+no_xor0:
+    shl dx,1
+    jnc no_xor1
+;
+    xor dx,ax 
+
+no_xor1:       
+    shl dx,1
+    jnc no_xor2
+;
+    xor dx,ax 
+
+no_xor2:       
+    shl dx,1
+    jnc no_xor3
+;
+    xor dx,ax 
+
+no_xor3:       
+    shl dx,1
+    jnc no_xor4
+;
+    xor dx,ax 
+
+no_xor4:       
+    shl dx,1
+    jnc no_xor5
+;
+    xor dx,ax 
+
+no_xor5:       
+    shl dx,1
+    jnc no_xor6
+;
+    xor dx,ax 
+
+no_xor6:       
+    shl dx,1
+    jnc no_xor7
+;
+    xor dx,ax 
+
+no_xor7:      
+    mov ds:[bx],dx
+    add bx,2
+    inc cx
+    or cl,cl
+    jnz create_crc_loop
+    ENDM
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;   NAME:           CalcCrc
 ;
 ;   DESCRIPTION:    Calculate CRC for a byte
 ;
-;   PARAMETERS:     AL      CRC
+;   PARAMETERS:     AX      CRC
 ;                   DS:ESI  Data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CalcCrc Proc near
-    push cx
-    mov cl,[esi]
+CalcCrc MACRO
+    mov bl,ds:[esi]
+    xor bl,ah
+    shl ax,8
+    xor ax,cs:[2*ebx].crc_tab
     inc esi
-    xor ah,cl
-;
-    mov cx,1021h
-    shl ax,1
-    jnc no_xor0
-    xor ax,cx
-no_xor0:
-    shl ax,1
-    jnc no_xor1
-    xor ax,cx
-no_xor1:
-    shl ax,1
-    jnc no_xor2
-    xor ax,cx
-no_xor2:
-    shl ax,1
-    jnc no_xor3
-    xor ax,cx
-no_xor3:
-    shl ax,1
-    jnc no_xor4
-    xor ax,cx
-no_xor4:
-    shl ax,1
-    jnc no_xor5
-    xor ax,cx
-no_xor5:
-    shl ax,1
-    jnc no_xor6
-    xor ax,cx
-no_xor6:
-    shl ax,1
-    jnc no_xor7
-    xor ax,cx
-no_xor7:
-    pop cx
-    ret
-CalcCrc Endp
+    ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -701,9 +744,11 @@ GetAdapterNextDriver:
     add esi,SIZE rdos_header
     sub ecx,SIZE rdos_header
     jz GetAdapterCrcDone
+;
+    xor ebx,ebx
 
 GetAdapterCrcLoop:
-    call CalcCrc
+    CalcCrc
     sub ecx,1
     jnz GetAdapterCrcLoop
 
@@ -747,9 +792,11 @@ AdapterCrc  Proc near
     xor ax,ax
     push ecx
     push esi
+;    
+    xor ebx,ebx
 
 AdapterCrcLoop:
-    call CalcCrc
+    CalcCrc
     sub ecx,1
     jnz AdapterCrcLoop
 ;
@@ -851,6 +898,7 @@ GetAllAdapters  Endp
 rdos_str DB 'RDOS operating system ', 0
 
 start:
+    CreateCrc
     xor esi,esi
     AllocatePage
     mov edx,esi
@@ -901,6 +949,7 @@ start:
     call GetMemCount
     mov ds:multiboot_mmap_len,cx
     mov ds:multiboot_mmap_addr,120000h
+    int 3
     call GetAllAdapters
 
 ;
