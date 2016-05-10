@@ -25,6 +25,13 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+INCLUDE \rdos\kernel\os.def
+INCLUDE \rdos\kernel\os.inc
+INCLUDE \rdos\kernel\driver.def
+INCLUDE \rdos\kernel\os\port.def
+INCLUDE \rdos\kernel\os\system.def
+INCLUDE \rdos\kernel\os\system.inc
+
 IMAGE_BASE = 110000h
 MEM_BASE = 120000h
 
@@ -540,6 +547,50 @@ WriteHexDword    Proc near
     call WriteHexWord
     ret
 WriteHexDword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocatePage
+;
+;       DESCRIPTION:    Allocate a single page
+;
+;       PARAMETERS:     ESI     Memory base
+;
+;       RETURNS:        ESI     Page allocated
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocatePage    Proc near
+    mov ax,flat_sel
+    mov ds,ax
+    jmp LowRamNext
+    
+LowRamLoop:
+    mov eax,AllocMemSign
+    mov [esi],eax
+    cmp eax,[esi]
+    je RamFound
+    
+LowRamNext:
+    add esi,1000h
+    cmp esi,9F000h
+    jc LowRamLoop
+;    
+    mov esi,100000h
+
+HighRamLoop:
+    mov eax,AllocMemSign
+    mov [esi],eax
+    cmp eax,[esi]
+    je RamFound
+;    
+    add esi,1000h
+    jmp HighRamLoop
+    
+RamFound:
+    ret
+AllocatePage    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -557,6 +608,41 @@ WriteHexDword   Endp
 rdos_str DB 'RDOS operating system ', 0
 
 start:
+    xor esi,esi
+    call AllocatePage
+    mov edx,esi
+    mov edi,esi
+    xor esi,esi
+    mov ax,gdt_sel
+    mov ds,ax
+    mov ecx,2*5
+    rep movs dword ptr es:[edi],ds:[esi]
+    mov ax,flat_sel
+    mov ds,ax
+    mov esi,edx
+    mov ebx,gdt_sel
+    add ebx,esi
+    mov word ptr [ebx],0FFFh
+    mov [ebx+2],esi
+    lgdt fword ptr ds:[ebx]
+;
+    mov byte ptr [ebx+5],92h
+    mov word ptr [ebx+6],0
+;    
+    call AllocatePage
+    mov ax,gdt_sel
+    mov ds,ax
+    mov bx,system_data_sel
+    mov word ptr [bx],0FFFh
+    mov [bx+2],esi
+    mov byte ptr [bx+5],92h
+    mov word ptr [bx+6],0
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:alloc_base,esi
+    int 3
+;
     mov ds:scan_size,eax
     mov ds:text_row,0
     mov ds:text_col,0

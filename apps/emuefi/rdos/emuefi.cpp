@@ -262,6 +262,8 @@ void Start()
 //    Video.LoadBottom(&VideoFile);
     TFile LoaderFile("boot32.bin");
     HighRam.Load(0x110000 - HIGH_BASE, &LoaderFile);
+    TFile RdosFile("rdos.bin");
+    HighRam.Load(0x121000 - HIGH_BASE, &RdosFile);
 
     int sel;
     int offset;
