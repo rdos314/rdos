@@ -184,6 +184,17 @@ core_dump_sel       DW ?
 
 has_phys64          DB ?
 
+efi_lfb             DD ?
+efi_width           DW ?
+efi_height          DW ?
+efi_scan_size       DD ?
+efi_flags           DD ?
+efi_text_row        DW ?
+efi_text_col        DW ?
+efi_fore_col        DD ?
+efi_back_col        DD ?
+
+
 system_size                     DB ?
 
 system_seg      ENDS
