@@ -709,34 +709,45 @@ CalcCrc MACRO
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+SignError       DB 'Rdos Signature Not Found',0
+SizeError       DB 'To Large boot image',0
+CrcError        DB 'CRC error', 0
+
 GetAdapter  Proc near
     push ds
+    push esi
     mov ax,flat_sel
     mov ds,ax
 
-GetAdapterSearch:
+GetAdapterNextDriver:
     mov eax,[esi]
     cmp eax,RdosSign
-    stc
-    jne GetAdapterDone
+    je GetAdapterSignOk
 ;    
-    push esi
-    xor ecx,ecx
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET SignError
+    call WriteStr
+    stc
+    jmp GetAdapterDone
 
-GetAdapterNextDriver:
-    cmp [esi].sign,RdosSign
-    stc
-    jne GetAdapterDone
-;    
+GetAdapterSignOk:        
     cmp [esi].typ,RdosEnd
     je GetAdapterOk
 ;    
     mov edx,[esi].len
     add ecx,edx
     cmp ecx,1000000h
-    cmc
-    jc GetAdapterDone
-;    
+    jc GetAdapterSizeOk
+;
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET SizeError
+    call WriteStr
+    stc
+    jmp GetAdapterDone
+
+GetAdapterSizeOk:    
     xor ax,ax
     push ecx
     push esi
@@ -756,17 +767,24 @@ GetAdapterCrcDone:
     pop esi
     pop ecx
     cmp ax,[esi].crc
+    je GetAdapterCrcOk
+;
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET CrcError
+    call WriteStr
     stc
-    jne GetAdapterDone
-;    
+    jmp GetAdapterDone    
+
+GetAdapterCrcOk:    
     add esi,edx
     jmp GetAdapterNextDriver
 
 GetAdapterOk:
-    pop esi
     clc
 
 GetAdapterDone:
+    pop esi
     pop ds
     ret
 GetAdapter  Endp
@@ -816,42 +834,16 @@ AdapterCrc  Endp
 ;   PARAMETERS:     ESI     Adapter base
 ;                   ECX     Size of adapter
 ;                   AX      Adapter CRC
-;                   BX      Current Adapter record
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddAdapter      Proc near
-    push dx
-    push di
     add ecx,SIZE rdos_header
-    mov di,OFFSET rom_adapters
-    mov dx,ds:rom_modules
-
-AddAdapterCheck:
-    or dx,dx
-    jz AddAdapterDo
-;    
-    cmp ecx,[di].adapter_size
-    jne AddAdapterCheckNext
-;    
-    cmp ax,[di].adapter_crc
-    je AddAdapterEnd
-
-AddAdapterCheckNext:
-    dec dx
-    add di,SIZE adapter_typ
-    jmp AddAdapterCheck
-    
-AddAdapterDo:
-    inc ds:rom_modules
+    mov ds:rom_modules,1
+    mov bx,OFFSET rom_adapters
     mov [bx].adapter_base,esi
     mov [bx].adapter_size,ecx
     mov [bx].adapter_crc,ax
-    add bx,SIZE adapter_typ
-
-AddAdapterEnd:
-    pop di
-    pop dx
     ret
 AddAdapter      Endp
 
@@ -898,6 +890,12 @@ GetAllAdapters  Endp
 rdos_str DB 'RDOS operating system ', 0
 
 start:
+    mov ds:scan_size,eax
+    mov ds:text_row,0
+    mov ds:text_col,0
+    mov ds:fore_col,0FFFFFFh
+    mov ds:back_col,0
+;    
     CreateCrc
     xor esi,esi
     AllocatePage
@@ -955,11 +953,6 @@ start:
 ;
 ; test
 ;
-    mov ds:scan_size,eax
-    mov ds:text_row,0
-    mov ds:text_col,0
-    mov ds:fore_col,0FFFFFFh
-    mov ds:back_col,0
 ;    
     mov si,OFFSET rdos_str
     call WriteStr
