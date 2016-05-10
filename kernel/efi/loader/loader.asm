@@ -868,7 +868,6 @@ BootIdtEntry        MACRO Offs
 BootExceptionOnePar     MACRO Entry
     push bp
     mov bp,sp
-    sti
     push eax
     push ebx
     push ds
@@ -880,7 +879,6 @@ BootExceptionNoPar      MACRO Entry
     push dword ptr 0
     push bp
     mov bp,sp
-    sti
     push eax
     push ebx
     push ds
@@ -1120,20 +1118,8 @@ start:
     mov ds:efi_scan_size,ecx
 ;        
     call GetAllAdapters
-
-    mov ax,cs
-    mov ds,ax
-    mov si,OFFSET DebugText
-    call WriteStr
-
-stopll:
-    jmp stopll
-    
     call StartShutDownDevice
-    
 ;
-    mov ax,idt_sel
-    mov ds,ax
     mov ax,1234h
     mov ds,ax
 
