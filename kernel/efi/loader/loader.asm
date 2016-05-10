@@ -1040,6 +1040,64 @@ StartShutDeviceInitied:
 StartShutDeviceEnd:     
     ret
 StartShutDownDevice     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           GetBootDevice
+;
+;   DESCRIPTION:    Get header of boot-device
+;
+;   RETURNS:        NC
+;                   ESI             Boot device base
+;                   CY              No boot device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetBootDevice   Proc near
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov cx,ds:rom_modules
+    mov bx,OFFSET rom_adapters
+    or cx,cx
+    jz GetBootDeviceFail
+
+GetBootAdapterLoop:
+    push bx
+    push cx
+    mov esi,[bx].adapter_base
+
+GetBootDeviceLoop:
+    cmp es:[esi].typ,RdosKernel
+    je GetBootDeviceOk
+;
+    cmp es:[esi].typ,RdosEnd
+    je GetBootNextAdapter
+;
+    add esi,es:[esi].len
+    jmp GetBootDeviceLoop
+
+GetBootNextAdapter:
+    pop cx
+    pop bx
+    add bx,SIZE adapter_typ
+    loop GetBootAdapterLoop
+;    
+    jmp GetBootDeviceFail
+
+GetBootDeviceOk:
+    pop cx
+    pop bx
+    clc
+    jmp GetBootDeviceEnd
+
+GetBootDeviceFail:      
+    stc
+GetBootDeviceEnd:
+    ret
+GetBootDevice   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1054,7 +1112,7 @@ StartShutDownDevice     Endp
 
     public start
 
-DebugText   DB 'Here', 0
+NoBootText DB 'No kernel to boot up',0
 
 start:
     CreateCrc
@@ -1122,9 +1180,37 @@ start:
 ;        
     call GetAllAdapters
     call StartShutDownDevice
+    int 3
+    call GetBootDevice
+    jnc DoBoot
 ;
-    mov ax,1234h
+    mov ax,cs
     mov ds,ax
+    mov si,OFFSET NoBootText
+    call WriteStr
+
+DoStop:
+    jmp DoStop
+
+DoBoot:
+    mov ax,flat_sel
+    mov ds,ax
+    push word ptr kernel_code
+    mov ecx,[esi].len
+    add esi,SIZE rdos_header
+    push word ptr [esi].init_ip
+    add esi,SIZE simple_device_header
+    mov ax,gdt_sel
+    mov ds,ax
+    dec cx
+    mov bx,kernel_code
+    mov [bx],cx
+    mov [bx+2],esi
+    mov ah,9Ah
+    xchg ah,[bx+5]
+    xor al,al
+    mov [bx+6],ax
+    retf
 
 
 _TEXT  Ends
