@@ -48,6 +48,18 @@ echo "Building SSL Device"
 ide2make -p kernel/ssl/ssl 1>nul
 wmake -f kernel/ssl/ssl.mk -h -e 1>nul
 
+echo "Building EFI device"
+ide2make -p kernel/efi/efi 1>nul
+wmake -f kernel/efi/efi.mk -h -e 1>nul
+
+echo "Building EFI 32-bit loader"
+ide2make -p kernel/efi/loader/boot32 1>nul
+wmake -f kernel/efi/loader/boot32.mk -h -e 1>nul
+
+echo "Building EFI 64-bit loader"
+ide2make -p kernel/efi/loader/boot64 1>nul
+wmake -f kernel/efi/loader/boot64.mk -h -e 1>nul
+
 echo "Building Rdos classlib"
 ide2make -p classlib/rdos/rdos 1>nul
 wmake -f classlib/rdos/rdos.mk -h -e 1>nul
