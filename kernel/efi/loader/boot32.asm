@@ -153,6 +153,9 @@ init:
 ;
 ;   RETURNS:        EDI         LFB linear
 ;                   ECX         Line size
+;                   EAX         Width
+;                   EDX         Height
+;                   EBX         Flags
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -161,6 +164,9 @@ init:
 GetLfb  Proc near
     mov edi,cs:param.lfb_base
     mov ecx,cs:param.lfb_line_size
+    mov eax,cs:param.lfb_width
+    mov edx,cs:param.lfb_height
+    mov ebx,cs:param.lfb_flags
     ret
 GetLfb  Endp
     

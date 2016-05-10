@@ -42,6 +42,17 @@
 #include "video.h"
 #include "dispmsg.h"
 
+struct UefiParam
+{
+    short int Pad;
+    long long LfbBase;
+    int Width;
+    int Height;
+    int LineSize;
+    int Flags;
+    int MemEntries;
+};
+
 void OpenScreen(const char *FileName);
 void CloseScreen();
 
@@ -255,6 +266,9 @@ void Start()
     TCmos Cmos(&Isa, 0x70);
     TFlash Bios(&Isa, 0xFFFF0000, 0x10000);
     TFlash BiosShadow(&Isa, 0xF0000, 0x10000, Bios.GetData());
+    struct UefiParam *UefiParam;
+    char *ptr;
+
 //    TFile BiosFile("bios.bin");
 //    Bios.LoadBottom(&BiosFile);
 //    TFlash Video(&Isa, 0xC0000, 0x10000);
@@ -264,6 +278,17 @@ void Start()
     HighRam.Load(0x110000 - HIGH_BASE, &LoaderFile);
     TFile RdosFile("rdos.bin");
     HighRam.Load(0x121000 - HIGH_BASE, &RdosFile);
+
+    ptr = HighRam.GetData();
+    ptr += 0x110000 - HIGH_BASE;
+
+    UefiParam = (struct UefiParam *)ptr;
+    UefiParam->LfbBase = 0x6F0000;
+    UefiParam->Width = 640;
+    UefiParam->Height = 480;
+    UefiParam->LineSize = 4 * 640;
+    UefiParam->Flags = 0;
+    UefiParam->MemEntries = 0;
 
     int sel;
     int offset;

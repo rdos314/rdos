@@ -44,38 +44,6 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;   NAME:           GetEfiParam
-;
-;   DESCRIPTION:    Get EFI parameters
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetEfiParam Proc near
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ax,flat_sel
-    mov es,ax
-    mov esi,LOADER_BASE
-    mov edi,es:[esi].lfb_base
-    mov ds:efi_lfb,edi
-    mov eax,es:[esi].lfb_width
-    mov ds:efi_width,ax
-    mov eax,es:[esi].lfb_height
-    mov ds:efi_height,ax
-    mov eax,es:[esi].lfb_line_size
-    mov ds:efi_scan_size,eax
-    mov eax,es:[esi].lfb_flags
-    mov ds:efi_flags,eax
-    mov ds:efi_text_row,0
-    mov ds:efi_text_col,0
-    mov ds:efi_fore_col,0FFFFFFh
-    mov ds:efi_back_col,0
-    ret
-GetEfiParam Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;   NAME:           Font8x19
 ;
 ;   DESCRIPTION:    8x19 font
@@ -356,12 +324,12 @@ LocalWriteChar       Proc near
     push es
     pushad
 ;   
+    push ax
     mov ax,system_data_sel
     mov ds,ax
     mov ax,flat_sel
     mov es,ax
 ; 
-    push ax
     mov ax,ds:efi_text_row
     mov cx,19
     mul cx
@@ -635,8 +603,12 @@ WriteDwordReg PROC near
     inc dl
     mov al,es:[di]
     or al,al
-    jnz WriteDwordReg
-;    
+    jz WriteDwordRegDone
+;
+    inc ds:efi_text_col
+    jmp WriteDwordReg
+
+WriteDwordRegDone:    
     ret
 WriteDwordReg ENDP
 
@@ -665,8 +637,12 @@ WriteWordReg  PROC near
     inc dl
     mov al,es:[di]
     or al,al
-    jnz WriteWordReg
-;    
+    jz WriteWordRegDone
+;
+    inc ds:efi_text_col
+    jmp WriteWordReg
+
+WriteWordRegDone:    
     ret
 WriteWordReg  ENDP
 
@@ -864,6 +840,9 @@ word_reg_tab:
 
 pm_es   EQU -16
 
+
+test_str  DB 'TEST'
+
 abort_pretask:
     cli
     cld
@@ -968,8 +947,6 @@ abort_pretask_do:
     mov gs,ax
 
 abort_fatal_write:
-    call GetEfiParam
-;   
     mov ax,system_data_sel
     mov ds,ax 
     mov ax,flat_sel
@@ -997,7 +974,7 @@ abort_clear_loop:
     mov cx,24
     call WriteString
 ; 
-    add ds:efi_text_row,2
+    add ds:efi_text_col,2
     call WriteFault
 ;    
     inc ds:efi_text_row
@@ -1064,8 +1041,6 @@ abort_task_do:
 ;
     mov ecx,cr3
     mov cr3,ecx
-;
-    call GetEfiParam
 ;   
     mov ax,system_data_sel
     mov ds,ax 

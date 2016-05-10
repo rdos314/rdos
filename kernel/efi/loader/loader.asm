@@ -1116,6 +1116,9 @@ start:
     call GetLfb
     mov ds:efi_lfb,edi
     mov ds:efi_scan_size,ecx
+    mov ds:efi_width,ax
+    mov ds:efi_height,dx
+    mov ds:efi_flags,ebx
 ;        
     call GetAllAdapters
     call StartShutDownDevice
