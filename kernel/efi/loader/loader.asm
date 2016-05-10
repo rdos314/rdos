@@ -34,6 +34,7 @@ INCLUDE \rdos\kernel\os\system.inc
 
 IMAGE_BASE = 110000h
 MEM_BASE = 120000h
+RDOS_BASE = 121000h
 
 mmap_struc  STRUC
 
@@ -595,6 +596,244 @@ HighRamLoop:
     
 RamFound:
     ENDM
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CalcCrc
+;
+;   DESCRIPTION:    Calculate CRC for a byte
+;
+;   PARAMETERS:     AL      CRC
+;                   DS:ESI  Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcCrc Proc near
+    push cx
+    mov cl,[esi]
+    inc esi
+    xor ah,cl
+;
+    mov cx,1021h
+    shl ax,1
+    jnc no_xor0
+    xor ax,cx
+no_xor0:
+    shl ax,1
+    jnc no_xor1
+    xor ax,cx
+no_xor1:
+    shl ax,1
+    jnc no_xor2
+    xor ax,cx
+no_xor2:
+    shl ax,1
+    jnc no_xor3
+    xor ax,cx
+no_xor3:
+    shl ax,1
+    jnc no_xor4
+    xor ax,cx
+no_xor4:
+    shl ax,1
+    jnc no_xor5
+    xor ax,cx
+no_xor5:
+    shl ax,1
+    jnc no_xor6
+    xor ax,cx
+no_xor6:
+    shl ax,1
+    jnc no_xor7
+    xor ax,cx
+no_xor7:
+    pop cx
+    ret
+CalcCrc Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           GetAdapter
+;
+;   DESCRIPTION:
+;
+;   PARAMETERS:     ESI     Adress to start search at
+;
+;   RETURNS:        ESI     Adapter base
+;                   ECX     Size of adapter
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetAdapter  Proc near
+    push ds
+    mov ax,flat_sel
+    mov ds,ax
+
+GetAdapterSearch:
+    mov eax,[esi]
+    cmp eax,RdosSign
+    stc
+    jne GetAdapterDone
+;    
+    push esi
+    xor ecx,ecx
+
+GetAdapterNextDriver:
+    cmp [esi].sign,RdosSign
+    stc
+    jne GetAdapterDone
+;    
+    cmp [esi].typ,RdosEnd
+    je GetAdapterOk
+;    
+    mov edx,[esi].len
+    add ecx,edx
+    cmp ecx,1000000h
+    cmc
+    jc GetAdapterDone
+;    
+    xor ax,ax
+    push ecx
+    push esi
+    mov ecx,edx
+    add esi,SIZE rdos_header
+    sub ecx,SIZE rdos_header
+    jz GetAdapterCrcDone
+
+GetAdapterCrcLoop:
+    call CalcCrc
+    sub ecx,1
+    jnz GetAdapterCrcLoop
+
+GetAdapterCrcDone:
+    pop esi
+    pop ecx
+    cmp ax,[esi].crc
+    stc
+    jne GetAdapterDone
+;    
+    add esi,edx
+    jmp GetAdapterNextDriver
+
+GetAdapterOk:
+    pop esi
+    clc
+
+GetAdapterDone:
+    pop ds
+    ret
+GetAdapter  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AdapterCrc
+;
+;   DESCRIPTION:
+;
+;   PARAMETERS:     ESI     Adapter base
+;                   ECX     Size of adapter
+;
+;   RETURNS:        AX          Adapter CRC
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AdapterCrc  Proc near
+    push ds
+    mov ax,flat_sel
+    mov ds,ax
+    xor ax,ax
+    push ecx
+    push esi
+
+AdapterCrcLoop:
+    call CalcCrc
+    sub ecx,1
+    jnz AdapterCrcLoop
+;
+    pop esi
+    pop ecx
+    pop ds
+    ret
+AdapterCrc  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AddAdapter
+;
+;   DESCRIPTION:
+;
+;   PARAMETERS:     ESI     Adapter base
+;                   ECX     Size of adapter
+;                   AX      Adapter CRC
+;                   BX      Current Adapter record
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddAdapter      Proc near
+    push dx
+    push di
+    add ecx,SIZE rdos_header
+    mov di,OFFSET rom_adapters
+    mov dx,ds:rom_modules
+
+AddAdapterCheck:
+    or dx,dx
+    jz AddAdapterDo
+;    
+    cmp ecx,[di].adapter_size
+    jne AddAdapterCheckNext
+;    
+    cmp ax,[di].adapter_crc
+    je AddAdapterEnd
+
+AddAdapterCheckNext:
+    dec dx
+    add di,SIZE adapter_typ
+    jmp AddAdapterCheck
+    
+AddAdapterDo:
+    inc ds:rom_modules
+    mov [bx].adapter_base,esi
+    mov [bx].adapter_size,ecx
+    mov [bx].adapter_crc,ax
+    add bx,SIZE adapter_typ
+
+AddAdapterEnd:
+    pop di
+    pop dx
+    ret
+AddAdapter      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           GetAllAdapters
+;
+;   DESCRIPTION:
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetAllAdapters  Proc near
+    mov ax,system_data_sel
+    mov ds,ax
+    mov esi,ds:rom1_base
+    mov ds:rom_modules,0
+    mov bx,OFFSET rom_adapters
+
+get_adapters_loop:
+    call GetAdapter
+    jc get_adapters_done
+;
+    call AdapterCrc
+    call AddAdapter
+
+get_adapters_done:
+    ret
+GetAllAdapters  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -654,7 +893,7 @@ start:
     mov ds:ram2_base,100000h
     mov ds:ram2_size,0
 ;    
-    mov ds:rom1_base,IMAGE_BASE
+    mov ds:rom1_base,RDOS_BASE
     mov ds:rom1_size,0
     mov ds:rom2_size,0
     mov ds:rom_shadow,0
@@ -662,6 +901,7 @@ start:
     call GetMemCount
     mov ds:multiboot_mmap_len,cx
     mov ds:multiboot_mmap_addr,120000h
+    call GetAllAdapters
 
 ;
 ; test
