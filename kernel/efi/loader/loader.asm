@@ -792,64 +792,6 @@ GetAdapter  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           AdapterCrc
-;
-;   DESCRIPTION:
-;
-;   PARAMETERS:     ESI     Adapter base
-;                   ECX     Size of adapter
-;
-;   RETURNS:        AX          Adapter CRC
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AdapterCrc  Proc near
-    push ds
-    mov ax,flat_sel
-    mov ds,ax
-    xor ax,ax
-    push ecx
-    push esi
-;    
-    xor ebx,ebx
-
-AdapterCrcLoop:
-    CalcCrc
-    sub ecx,1
-    jnz AdapterCrcLoop
-;
-    pop esi
-    pop ecx
-    pop ds
-    ret
-AdapterCrc  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           AddAdapter
-;
-;   DESCRIPTION:
-;
-;   PARAMETERS:     ESI     Adapter base
-;                   ECX     Size of adapter
-;                   AX      Adapter CRC
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddAdapter      Proc near
-    add ecx,SIZE rdos_header
-    mov ds:rom_modules,1
-    mov bx,OFFSET rom_adapters
-    mov [bx].adapter_base,esi
-    mov [bx].adapter_size,ecx
-    mov [bx].adapter_crc,ax
-    ret
-AddAdapter      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;   NAME:           GetAllAdapters
 ;
 ;   DESCRIPTION:
@@ -867,8 +809,12 @@ get_adapters_loop:
     call GetAdapter
     jc get_adapters_done
 ;
-    call AdapterCrc
-    call AddAdapter
+    add ecx,SIZE rdos_header
+    mov ds:rom_modules,1
+    mov bx,OFFSET rom_adapters
+    mov [bx].adapter_base,esi
+    mov [bx].adapter_size,ecx
+    mov [bx].adapter_crc,0
 
 get_adapters_done:
     ret
