@@ -561,7 +561,12 @@ WriteHexDword   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocatePage    Proc near
+AllocatePage    MACRO
+    Local LowRamLoop
+    Local HighRamLoop
+    Local LowRamNext
+    Local RamFound
+
     mov ax,flat_sel
     mov ds,ax
     jmp LowRamNext
@@ -589,8 +594,7 @@ HighRamLoop:
     jmp HighRamLoop
     
 RamFound:
-    ret
-AllocatePage    Endp
+    ENDM
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -609,7 +613,7 @@ rdos_str DB 'RDOS operating system ', 0
 
 start:
     xor esi,esi
-    call AllocatePage
+    AllocatePage
     mov edx,esi
     mov edi,esi
     xor esi,esi
@@ -629,7 +633,7 @@ start:
     mov byte ptr [ebx+5],92h
     mov word ptr [ebx+6],0
 ;    
-    call AllocatePage
+    AllocatePage
     mov ax,gdt_sel
     mov ds,ax
     mov bx,system_data_sel
@@ -637,6 +641,10 @@ start:
     mov [bx+2],esi
     mov byte ptr [bx+5],92h
     mov word ptr [bx+6],0
+;
+    mov ax,gdt_sel
+    mov ss,ax
+    mov esp,1000h
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -654,10 +662,6 @@ start:
     call GetMemCount
     mov ds:multiboot_mmap_len,cx
     mov ds:multiboot_mmap_addr,120000h
-;
-    mov ax,gdt_sel
-    mov ss,ax
-    mov sp,1000h
 
 ;
 ; test
