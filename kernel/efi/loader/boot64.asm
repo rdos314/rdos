@@ -204,6 +204,7 @@ GetLfb  Endp
 ;                   EDX         Y
 ;
 ;   RETURNS:        EDI         LFB linear
+;                   ECX         Line size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -221,6 +222,7 @@ GetLfbPos  Proc near
     pop eax
     shl eax,2
     add edi,eax
+    mov ecx,cs:param.lfb_line_size
 ;
     pop edx
     pop eax    

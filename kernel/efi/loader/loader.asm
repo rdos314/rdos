@@ -55,12 +55,6 @@ _TEXT segment byte public use16 'CODE'
     .386p
 
 crc_tab         DW 256 DUP(?)
-
-text_row        DW ?
-text_col        DW ?
-scan_size       DD ?
-fore_col        DD ?
-back_col        DD ?
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -341,18 +335,24 @@ fFF db 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 0
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteChar       Proc near
+    push ds
     pushad
 ;    
+    mov dx,system_data_sel
+    mov ds,dx
     push ax
-    mov ax,cs:text_row
+    mov ax,ds:efi_text_row
     mov cx,19
     mul cx
     add ax,4
     movzx eax,ax
-    movzx edx,cs:text_col
+    movzx edx,ds:efi_text_col
     shl edx,3
     xchg eax,edx
+    push ecx
     call GetLfbPos
+    mov ds:efi_scan_size,ecx
+    pop ecx
     pop ax
 ;
     mov ah,19
@@ -373,12 +373,12 @@ wcLoop:
     jz wcBack
 
 wcFore:
-    mov edx,dword ptr cs:fore_col
+    mov edx,dword ptr ds:efi_fore_col
     mov es:[edi],edx
     jmp wcNext
 
 wcBack:
-    mov edx,dword ptr cs:back_col
+    mov edx,dword ptr ds:efi_back_col
     mov es:[edi],edx
 
 wcNext:
@@ -389,13 +389,14 @@ wcNext:
 ;
     pop edi
     pop cx
-    add edi,cs:scan_size
+    add edi,ds:efi_scan_size
     inc bx
 ;
     loop wcRowLoop    
-    inc ds:text_col
+    inc ds:efi_text_col
 ;
     popad        
+    pop ds
     ret
 WriteChar       Endp
 
@@ -713,11 +714,22 @@ SignError       DB 'Rdos Signature Not Found',0
 SizeError       DB 'To Large boot image',0
 CrcError        DB 'CRC error', 0
 
+InitText        DB 'Get Adapter', 0
+
 GetAdapter  Proc near
     push ds
     push esi
     mov ax,flat_sel
     mov ds,ax
+
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET InitText
+    call WriteStr
+
+stoppl:
+    jmp stoppl
+        
 
 GetAdapterNextDriver:
     mov eax,[esi]
@@ -819,6 +831,200 @@ get_adapters_loop:
 get_adapters_done:
     ret
 GetAllAdapters  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           boot_idt
+;
+;   DESCRIPTION:    Default IDT
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BootIdtEntry        MACRO Offs
+    dw OFFSET Offs
+    dw device_code_sel
+    dw 8E00h
+    dw 0
+                    ENDM
+
+BootExceptionOnePar     MACRO Entry
+    push bp
+    mov bp,sp
+    sti
+    push eax
+    push ebx
+    push ds
+    mov al,Entry
+    ShutDownPreTask
+                ENDM
+
+BootExceptionNoPar      MACRO Entry
+    push dword ptr 0
+    push bp
+    mov bp,sp
+    sti
+    push eax
+    push ebx
+    push ds
+    mov al,Entry
+    ShutDownPreTask
+                ENDM
+
+Boot0:
+    BootExceptionNoPar 0
+
+Boot1:
+    BootExceptionNoPar 1
+
+Boot2:
+    BootExceptionNoPar 2
+
+Boot3:
+    BootExceptionNoPar 3
+
+Boot4:
+    BootExceptionNoPar 4
+
+Boot5:
+    BootExceptionNoPar 5
+
+Boot6:
+    BootExceptionNoPar 6
+
+Boot7:
+    BootExceptionNoPar 7
+
+Boot8:
+    BootExceptionNoPar 8
+
+Boot9:
+    BootExceptionNoPar 9
+
+BootA:
+    BootExceptionNoPar 0Ah
+
+BootB:
+    BootExceptionOnePar 0Bh
+
+BootC:
+    BootExceptionOnePar 0Ch
+
+BootD:
+    BootExceptionOnePar 0Dh
+
+BootE:
+    BootExceptionNoPar 0Eh
+
+BootF:
+    BootExceptionNoPar 0Fh
+
+boot_idt:
+    BootIdtEntry Boot0
+    BootIdtEntry Boot1
+    BootIdtEntry Boot2
+    BootIdtEntry Boot3
+    BootIdtEntry Boot4
+    BootIdtEntry Boot5
+    BootIdtEntry Boot6
+    BootIdtEntry Boot7
+    BootIdtEntry Boot8
+    BootIdtEntry Boot9
+    BootIdtEntry BootA
+    BootIdtEntry BootB
+    BootIdtEntry BootC
+    BootIdtEntry BootD
+    BootIdtEntry BootE
+    BootIdtEntry BootF
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           StartShutdownDevice
+;
+;   DESCRIPTION:    Starts shutdown-device
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartShutDownDevice     Proc near
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov cx,ds:rom_modules
+    mov bx,OFFSET rom_adapters
+    or cx,cx
+    jz StartShutDeviceEnd
+    
+StartShutAdapterLoop:
+    push bx
+    push cx
+    mov esi,[bx].adapter_base
+
+StartShutDeviceLoop:
+    cmp es:[esi].typ,RdosShutDown
+    je StartShutDeviceDo
+;
+    cmp es:[esi].typ,RdosEnd
+    je StartShutNextAdapter
+;
+    add esi,es:[esi].len
+    jmp StartShutDeviceLoop
+
+StartShutNextAdapter:
+    pop cx
+    pop bx
+    add bx,SIZE adapter_typ
+    loop StartShutAdapterLoop
+;    
+    jmp StartShutDeviceEnd
+
+StartShutDeviceDo:
+    pop cx
+    pop bx
+;
+    push ds
+    push es
+    pushad
+    push cs
+    push OFFSET StartShutDeviceInitied
+    mov ax,flat_sel
+    mov ds,ax
+    mov bx,shutdown_code_sel
+    push bx
+    mov ecx,[esi].len
+    add esi,SIZE rdos_header
+    push word ptr [esi].init_ip
+    add esi,SIZE simple_device_header
+    mov ax,gdt_sel
+    mov ds,ax
+    dec cx
+    mov [bx],cx
+    mov [bx+2],esi
+    mov ah,9Ah
+    xchg ah,[bx+5]
+    xor al,al
+    mov [bx+6],ax
+    retf
+
+StartShutDeviceInitied:
+    mov ax,gdt_sel
+    mov ds,ax
+    mov bx,idt_sel
+    mov eax,OFFSET boot_idt + IMAGE_BASE
+    mov [bx+2],eax
+    mov ax,10h*8-1
+    mov [bx],ax
+    lidt fword ptr [bx]
+;
+    popad
+    pop es
+    pop ds
+
+StartShutDeviceEnd:     
+    ret
+StartShutDownDevice     Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -836,12 +1042,6 @@ GetAllAdapters  Endp
 rdos_str DB 'RDOS operating system ', 0
 
 start:
-    mov ds:scan_size,eax
-    mov ds:text_row,0
-    mov ds:text_col,0
-    mov ds:fore_col,0FFFFFFh
-    mov ds:back_col,0
-;    
     CreateCrc
     xor esi,esi
     AllocatePage
@@ -880,6 +1080,26 @@ start:
     mov ax,system_data_sel
     mov ds,ax
     mov ds:alloc_base,esi
+    mov ds:efi_text_row,0
+    mov ds:efi_text_col,0
+    mov ds:efi_fore_col,0FFFFFFh
+    mov ds:efi_back_col,0
+;
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET rdos_str
+    call WriteStr
+
+
+istt:
+    jmp istt
+    
+
+
+
+
+;    
+
 ;
     mov ds:ram1_size,09E000h
     mov ds:ram2_base,100000h
@@ -893,63 +1113,14 @@ start:
     call GetMemCount
     mov ds:multiboot_mmap_len,cx
     mov ds:multiboot_mmap_addr,120000h
-    int 3
     call GetAllAdapters
-
+    call StartShutDownDevice
+    
 ;
-; test
-;
-;    
-    mov si,OFFSET rdos_str
-    call WriteStr
-;
-    mov eax,12345678h
-    call WriteHexDword
-;
-    mov ds:text_row,1
-    mov ds:text_col,0
-    mov ebx,MEM_BASE
-    call GetMemCount
-
-mLoop:
-    or cx,cx
-    jz stopl
-;
-    mov eax,es:[ebx].mmap_base + 4
-    call WriteHexDword
-    mov al,'_'
-    call WriteChar
-    mov eax,es:[ebx].mmap_base
-    call WriteHexDword
-;
-    mov al,'-'
-    call WriteChar
-;
-    mov eax,es:[ebx].mmap_base
-    mov edx,es:[ebx].mmap_base + 4
-    add eax,es:[ebx].mmap_size
-    adc edx,es:[ebx].mmap_size + 4
-    sub eax,1
-    sbb edx,0
-;
-    push eax
-    mov eax,edx
-    call WriteHexDword
-    mov al,'_'
-    call WriteChar
-    pop eax
-    call WriteHexDword
-;
-    add ebx,es:[ebx].mmap_len
-    add ebx,4
-    inc ds:text_row
-    mov ds:text_col,0
-;
-    dec cx
-    jmp mLoop
-       
-stopl:
-    jmp stopl
+    mov ax,idt_sel
+    mov ds,ax
+    mov ax,1234h
+    mov ds,ax
 
 
 _TEXT  Ends
