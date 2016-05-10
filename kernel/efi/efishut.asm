@@ -823,6 +823,7 @@ dword_reg_tab2:
     DB 'EBP='
     DW OFFSET p_rbp
     DB 0
+
 word_reg_tab:
     DB 'CS='
     DW OFFSET p_cs
@@ -992,6 +993,7 @@ abort_clear_loop:
     mov es,ax
     mov di,OFFSET dword_reg_tab2
     call WriteDwordReg    
+    inc ds:efi_text_col
     call WriteEflags
 ;    
     inc ds:efi_text_row
