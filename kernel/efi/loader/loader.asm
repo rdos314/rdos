@@ -714,22 +714,11 @@ SignError       DB 'Rdos Signature Not Found',0
 SizeError       DB 'To Large boot image',0
 CrcError        DB 'CRC error', 0
 
-InitText        DB 'Get Adapter', 0
-
 GetAdapter  Proc near
     push ds
     push esi
     mov ax,flat_sel
     mov ds,ax
-
-    mov ax,cs
-    mov ds,ax
-    mov si,OFFSET InitText
-    call WriteStr
-
-stoppl:
-    jmp stoppl
-        
 
 GetAdapterNextDriver:
     mov eax,[esi]
@@ -1039,7 +1028,7 @@ StartShutDownDevice     Endp
 
     public start
 
-rdos_str DB 'RDOS operating system ', 0
+DebugText   DB 'Here', 0
 
 start:
     CreateCrc
@@ -1085,22 +1074,6 @@ start:
     mov ds:efi_fore_col,0FFFFFFh
     mov ds:efi_back_col,0
 ;
-    mov ax,cs
-    mov ds,ax
-    mov si,OFFSET rdos_str
-    call WriteStr
-
-
-istt:
-    jmp istt
-    
-
-
-
-
-;    
-
-;
     mov ds:ram1_size,09E000h
     mov ds:ram2_base,100000h
     mov ds:ram2_size,0
@@ -1114,6 +1087,15 @@ istt:
     mov ds:multiboot_mmap_len,cx
     mov ds:multiboot_mmap_addr,120000h
     call GetAllAdapters
+
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET DebugText
+    call WriteStr
+
+stopll:
+    jmp stopll
+    
     call StartShutDownDevice
     
 ;
