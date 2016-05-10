@@ -152,6 +152,7 @@ init:
 ;   DESCRIPTION:    Get LFB base
 ;
 ;   RETURNS:        EDI         LFB linear
+;                   ECX         Line size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -159,44 +160,9 @@ init:
 
 GetLfb  Proc near
     mov edi,cs:param.lfb_base
+    mov ecx,cs:param.lfb_line_size
     ret
 GetLfb  Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;   NAME:           GetLfbPos
-;
-;   DESCRIPTION:    Get LFB position
-;
-;   PARAMETERS:     EAX         X
-;                   EDX         Y
-;
-;   RETURNS:        EDI         LFB linear
-;                   ECX         Line size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public GetLfbPos
-
-GetLfbPos  Proc near
-    push eax
-    push edx
-;    
-    push eax
-    mov eax,cs:param.lfb_line_size
-    mul edx
-    mov edi,cs:param.lfb_base
-    add edi,eax
-    pop eax
-    shl eax,2
-    add edi,eax
-    mov ecx,cs:param.lfb_line_size
-;
-    pop edx
-    pop eax    
-    ret
-GetLfbPos  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

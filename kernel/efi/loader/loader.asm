@@ -49,7 +49,6 @@ mmap_struc  ENDS
 _TEXT segment byte public use16 'CODE'
 
     extern GetLfb:near
-    extern GetLfbPos:near
     extern GetMemCount:near
 
     .386p
@@ -326,6 +325,38 @@ fFF db 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 0
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           GetLfbPos
+;
+;   DESCRIPTION:    Get LFB position
+;
+;   PARAMETERS:     EAX         X
+;                   EDX         Y
+;
+;   RETURNS:        EDI         LFB linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetLfbPos  Proc near
+    push eax
+    push edx
+;    
+    push eax
+    mov eax,ds:efi_scan_size
+    mul edx
+    mov edi,ds:efi_lfb
+    add edi,eax
+    pop eax
+    shl eax,2
+    add edi,eax
+;
+    pop edx
+    pop eax    
+    ret
+GetLfbPos  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           WriteChar
 ;
 ;   DESCRIPTION:    Write a single character
@@ -349,10 +380,7 @@ WriteChar       Proc near
     movzx edx,ds:efi_text_col
     shl edx,3
     xchg eax,edx
-    push ecx
     call GetLfbPos
-    mov ds:efi_scan_size,ecx
-    pop ecx
     pop ax
 ;
     mov ah,19
@@ -1086,6 +1114,11 @@ start:
     call GetMemCount
     mov ds:multiboot_mmap_len,cx
     mov ds:multiboot_mmap_addr,120000h
+;
+    call GetLfb
+    mov ds:efi_lfb,edi
+    mov ds:efi_scan_size,ecx
+;        
     call GetAllAdapters
 
     mov ax,cs
