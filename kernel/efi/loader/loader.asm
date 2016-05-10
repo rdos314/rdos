@@ -641,7 +641,26 @@ start:
     mov ax,system_data_sel
     mov ds,ax
     mov ds:alloc_base,esi
-    int 3
+;
+    mov ds:ram1_size,09E000h
+    mov ds:ram2_base,100000h
+    mov ds:ram2_size,0
+;    
+    mov ds:rom1_base,IMAGE_BASE
+    mov ds:rom1_size,0
+    mov ds:rom2_size,0
+    mov ds:rom_shadow,0
+;
+    call GetMemCount
+    mov ds:multiboot_mmap_len,cx
+    mov ds:multiboot_mmap_addr,120000h
+;
+    mov ax,gdt_sel
+    mov ss,ax
+    mov sp,1000h
+
+;
+; test
 ;
     mov ds:scan_size,eax
     mov ds:text_row,0
