@@ -32,7 +32,6 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE ..\os\system.def
-INCLUDE efi.inc
 
     .386p
 

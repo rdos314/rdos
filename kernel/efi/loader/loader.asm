@@ -1180,18 +1180,8 @@ start:
     mov ds:efi_flags,ebx
 ;
     call GetAcpiTablePtr
-    push eax
-    mov eax,edx
-    call WriteHexDword
-    mov al,' '
-    call WriteChar
-    pop eax
-    call WriteHexDword
-
-stopll:
-    jmp stopll        
-
-
+    mov ds:efi_acpi,eax
+    mov ds:efi_acpi+4,edx
 ;        
     call GetAllAdapters
     call StartShutDownDevice

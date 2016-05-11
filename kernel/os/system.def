@@ -193,7 +193,7 @@ efi_text_row        DW ?
 efi_text_col        DW ?
 efi_fore_col        DD ?
 efi_back_col        DD ?
-efi_acpi            DD ?
+efi_acpi            DD ?,?
 
 
 system_size                     DB ?
