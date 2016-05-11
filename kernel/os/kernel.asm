@@ -584,7 +584,7 @@ init:
     mov ax,flat_sel
     mov ds,ax
     xor eax,eax
-    mov cx,200h
+    mov cx,100h
     xor bx,bx
 
 init_vm_vect_loop:

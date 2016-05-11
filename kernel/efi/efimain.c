@@ -5,7 +5,7 @@
 #include <stdarg.h>
 
 #define RDOS_LOADER 0x110000
-#define RDOS_MEM  0x120000
+#define RDOS_MEM  0x400
 #define RDOS_BASE 0x121000
 
 EFI_SYSTEM_TABLE         *ST;
