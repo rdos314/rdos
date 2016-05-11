@@ -41,6 +41,8 @@ void *Interface;
 EFI_HANDLE *FsArr;
 EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Info;
 EFI_STATUS Status;
+EFI_CONFIGURATION_TABLE* ConfigTableArr;
+void *AcpiTable = 0;
 
 char nbuf[32];
 char str[256];
@@ -88,6 +90,7 @@ struct LoaderParam
     unsigned int LfbLineSize;
     unsigned int LfbFlags;
     unsigned int MemEntries;
+    EFI_PHYSICAL_ADDRESS AcpiTable;
 };
 
 struct MemMapEntry
@@ -1448,9 +1451,39 @@ static int ConvertMemoryMap()
     return 0;
 }
 
+int CompareGUIDs( EFI_GUID left, EFI_GUID right )
+{
+    return left.Data1 == right.Data1 &&
+           left.Data2 == right.Data2 &&
+           left.Data3 == right.Data3 &&
+           left.Data4[0] == right.Data4[0] &&
+           left.Data4[1] == right.Data4[1] &&
+           left.Data4[2] == right.Data4[2] &&
+           left.Data4[3] == right.Data4[3] &&
+           left.Data4[4] == right.Data4[4] &&
+           left.Data4[5] == right.Data4[5] &&
+           left.Data4[6] == right.Data4[6] &&
+           left.Data4[7] == right.Data4[7];
+}
+
+
+static void GetAcpiTable()
+{
+    int i;
+    unsigned int ConfigTableCount = ST->NumberOfTableEntries;
+    ConfigTableArr = ST->ConfigurationTable;
+    EFI_GUID AcpiTableGuid = ACPI_20_TABLE_GUID;
+
+    AcpiTable = 0;
+
+    for (i = 0; i < ConfigTableCount; i++)
+        if (CompareGUIDs(ConfigTableArr[i].VendorGuid, AcpiTableGuid))
+            AcpiTable = ConfigTableArr[i].VendorTable;
+ 
+}                        
+
 static void StartLoader()
 {
- 
     StartLoaderProc = (void *)LoaderEntry;
     LoaderData = (struct LoaderParam *)LoaderParamPos;
 
@@ -1462,6 +1495,7 @@ static void StartLoader()
     else
         LoaderData->LfbLineSize = 4 * Width;
     LoaderData->LfbFlags = 0;
+    LoaderData->AcpiTable = (long long)AcpiTable;
 
     switch (PixelFormat)
     {
@@ -1519,6 +1553,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
         {
             if (LoadBootLoader())
             {
+                GetAcpiTable();
+
                 if (BS->AllocatePages(AllocateAddress, EfiBootServicesData, RdosMemPages, &RdosMemBase) == EFI_SUCCESS)
                 {
                     if (ConvertMemoryMap())
