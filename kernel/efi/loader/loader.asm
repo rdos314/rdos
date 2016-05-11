@@ -50,6 +50,7 @@ _TEXT segment byte public use16 'CODE'
 
     extern GetLfb:near
     extern GetMemCount:near
+    extern GetAcpiTablePtr:near
 
     .386p
 
@@ -1177,6 +1178,20 @@ start:
     mov ds:efi_width,ax
     mov ds:efi_height,dx
     mov ds:efi_flags,ebx
+;
+    call GetAcpiTablePtr
+    push eax
+    mov eax,edx
+    call WriteHexDword
+    mov al,' '
+    call WriteChar
+    pop eax
+    call WriteHexDword
+
+stopll:
+    jmp stopll        
+
+
 ;        
     call GetAllAdapters
     call StartShutDownDevice

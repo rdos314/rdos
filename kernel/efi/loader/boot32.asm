@@ -33,6 +33,7 @@ lfb_height      DD ?
 lfb_line_size   DD ?
 lfb_flags       DD ?
 mem_entries     DD ?
+acpi_table      DD ?,?
 
 param_struc     ENDS
 
@@ -187,6 +188,25 @@ GetMemCount  Proc near
     mov ecx,cs:param.mem_entries
     ret
 GetMemCount  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           GetAcpiTablePtr
+;
+;   DESCRIPTION:    Get ACPI table
+;
+;   RETURNS:        EDX:EAX		ACPI table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetAcpiTablePtr
+
+GetAcpiTablePtr  Proc near
+    mov edx,cs:param.acpi_table+4
+    mov eax,cs:param.acpi_table
+    ret
+GetAcpiTablePtr  Endp
 
     extern start:near
 
