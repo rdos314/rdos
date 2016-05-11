@@ -98,6 +98,20 @@ char *TRam::GetData()
     return FData;
 }
 
+/*##################  TRam::Clear  ###############
+*   Purpose....: Clear memory                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TRam::Clear()
+{
+    int i;
+
+    for (i = 0; i < FSize; i++)
+        *(FData + i) = 0;
+}
+
 /*##################  TRam::Load  ###############
 *   Purpose....: Load file                                                         #
 *   In params..: *                                                          #

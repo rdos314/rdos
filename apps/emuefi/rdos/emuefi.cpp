@@ -76,7 +76,8 @@ TCpu Cpu;
 
 TSignalDevice RemoteSignal;
 
-int VideoChange[25];
+int RemoteHandle;
+char GlobalReply[0x100];
 
 char MyFocus;
 char DispFocus;
@@ -104,22 +105,6 @@ int StartRemote()
     return FALSE;
 }
 
-/*##################  TextChange  ###############
-*   Purpose....: Text change notification                                   #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void TextChange(TVideo *Video, int Row)
-{
-    if (!VideoChange[Row])
-    {
-        VideoChange[Row] = TRUE;    
-        RemoteSignal.Signal();
-    }    
-}
-
 /*##################  GetRemoteIpc  ###############
 *   Purpose....: Get remote IPC                                   #
 *   In params..: *                                                          #
@@ -145,14 +130,10 @@ void RemoteThread(void *Param)
 {
     int row;
     int size;
-    int RemoteHandle = GetRemoteIpc();
     char *msg = new char[0x1000];
     char *reply = new char[0x1000];
     struct TBaseReq *BaseReq = (struct TBaseReq *)msg;
-    struct TVideoReq *VideoReq = (struct TVideoReq *)msg;
-    
-    for (row = 0; row < 25; row++)
-        VideoChange[row] = FALSE;
+    RemoteHandle = GetRemoteIpc();
 
     if (!RemoteHandle)
     {
@@ -172,23 +153,9 @@ void RemoteThread(void *Param)
     if (size == 1)
         DispFocus = reply[0];
 
-    Video.OnTextChange = TextChange;
-
     for (;;)
     {
         RemoteSignal.WaitTimeout(100);
-
-        for (row = 0; row < 25; row++)
-        {
-            if (VideoChange[row])
-            {
-                VideoChange[row] = FALSE;
-                VideoReq->MsgType = DISP_MSG_VIDEO;
-                VideoReq->Row = row;
-                memcpy(VideoReq->Data, Video.GetRow(row), 2 * 80);
-                RdosSendMailslot(RemoteHandle, msg, sizeof(struct TVideoReq), reply, 0x1000); 
-            }                
-        }
 
         if (Keyb.IsEnabled())
         {
@@ -252,6 +219,24 @@ void ExtClk(TCpu *Cpu)
     Pit.Counter[2]->ExtClk();
 }
 
+/*##################  VideoDwordChange  ###############
+*   Purpose....: Video data changed                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void VideoDwordChange(TBusFunction *BusFunction, unsigned long Offset, long Val)
+{
+    struct TVgaReq VgaReq;
+
+    VgaReq.MsgType = DISP_MSG_VGA;
+    VgaReq.y = Offset / (640 * 4);
+    VgaReq.x = (Offset - VgaReq.y * 640 * 4) / 4;
+    VgaReq.val = Val;
+    RdosSendMailslot(RemoteHandle, &VgaReq, sizeof(struct TVgaReq), GlobalReply, 0x100); 
+}
+
 /*##################  Start  ###############
 *   Purpose....: Start emulator                                             #
 *   In params..: *                                                          #
@@ -269,11 +254,10 @@ void Start()
     struct UefiParam *UefiParam;
     char *ptr;
 
-//    TFile BiosFile("bios.bin");
-//    Bios.LoadBottom(&BiosFile);
-//    TFlash Video(&Isa, 0xC0000, 0x10000);
-//    TFile VideoFile("video.bin");
-//    Video.LoadBottom(&VideoFile);
+    TRam Video(&Isa, 0x800000, 0x200000);
+    Video.Clear();
+    Video.OnDwordChange = VideoDwordChange;
+
     TFile LoaderFile("boot32.bin");
     HighRam.Load(0x110000 - HIGH_BASE, &LoaderFile);
     TFile RdosFile("rdos.bin");
@@ -283,7 +267,7 @@ void Start()
     ptr += 0x110000 - HIGH_BASE;
 
     UefiParam = (struct UefiParam *)ptr;
-    UefiParam->LfbBase = 0x6F0000;
+    UefiParam->LfbBase = 0x800000;
     UefiParam->Width = 640;
     UefiParam->Height = 480;
     UefiParam->LineSize = 4 * 640;

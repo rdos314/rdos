@@ -39,6 +39,7 @@ public:
 
     virtual int GetSize();
 
+    void Clear();
     void Load(unsigned long Offset, TFile *File);
     char *GetData();
     unsigned long long GetBase();

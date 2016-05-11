@@ -63,6 +63,11 @@ public:
     virtual void OutWord(int Num, int Offset, short int val);
     virtual void OutDword(int Num, int Offset, long val);
 
+    void (*OnByteChange)(TBusFunction *BusFunction, unsigned long Offset, char NewVal);
+    void (*OnWordChange)(TBusFunction *BusFunction, unsigned long Offset, short int NewVal);
+    void (*OnDwordChange)(TBusFunction *BusFunction, unsigned long Offset, long NewVal);
+    void (*OnQwordChange)(TBusFunction *BusFunction, unsigned long Offset, long long NewVal);
+
 protected:
     void DefineIo(int Num, int Base, int Size, char *Data);
     void UndefineIo(int Num);

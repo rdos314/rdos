@@ -47,7 +47,12 @@ TBusFunction::TBusFunction(TBus *Bus)
         FMemArr[i] = 0;
     }
 
-        FBus = Bus;
+    FBus = Bus;
+
+    OnByteChange = 0;
+    OnWordChange = 0;
+    OnDwordChange = 0;
+    OnQwordChange = 0;
 }
 
 /*##################  TBusFunction::ReadMemoryByte  ###############
@@ -137,10 +142,24 @@ void TBusFunction::WriteMemoryByte(int Num, unsigned long Offset, char Value)
 {
     TBusAreaData *area;
 
-    area = FMemArr[Num];
-    if (area)
-        if (area->Data && Offset >= 0 && Offset < area->Size)
-            *(area->Data + Offset) = Value;
+    if (OnByteChange)
+    {
+        area = FMemArr[Num];
+        if (area)
+            if (area->Data && Offset >= 0 && Offset < area->Size)
+                if (*(area->Data + Offset) != Value)
+                {
+                    *(area->Data + Offset) = Value;
+                    (*OnByteChange)(this, Offset, Value);
+                }
+    }
+    else
+    {
+        area = FMemArr[Num];
+        if (area)
+            if (area->Data && Offset >= 0 && Offset < area->Size)
+                *(area->Data + Offset) = Value;
+    }
 }
 
 /*##################  TBusFunction::WriteMemoryWord  ###############
@@ -154,10 +173,24 @@ void TBusFunction::WriteMemoryWord(int Num, unsigned long Offset, short int Valu
 {
     TBusAreaData *area;
 
-    area = FMemArr[Num];
-    if (area)
-        if (area->Data && Offset >= 0 && Offset < area->Size)
-            *(short int *)(area->Data + Offset) = Value;
+    if (OnWordChange)
+    {
+        area = FMemArr[Num];
+        if (area)
+            if (area->Data && Offset >= 0 && Offset < area->Size)
+                if (*(short int *)(area->Data + Offset) != Value)
+                {
+                    *(short int *)(area->Data + Offset) = Value;
+                    (*OnWordChange)(this, Offset, Value);
+                }
+    }
+    else
+    {
+        area = FMemArr[Num];
+        if (area)
+            if (area->Data && Offset >= 0 && Offset < area->Size)
+                *(short int *)(area->Data + Offset) = Value;
+    }
 }
 
 /*##################  TBusFunction::WriteMemoryDword  ###############
@@ -171,10 +204,24 @@ void TBusFunction::WriteMemoryDword(int Num, unsigned long Offset, long Value)
 {
     TBusAreaData *area;
 
-    area = FMemArr[Num];
-    if (area)
-        if (area->Data && Offset >= 0 && Offset < area->Size)
-            *(long *)(area->Data + Offset) = Value;
+    if (OnDwordChange)
+    {
+        area = FMemArr[Num];
+        if (area)
+            if (area->Data && Offset >= 0 && Offset < area->Size)
+                if (*(long *)(area->Data + Offset) != Value)
+                {
+                    *(long *)(area->Data + Offset) = Value;
+                    (*OnDwordChange)(this, Offset, Value);
+                }
+    }
+    else
+    {
+        area = FMemArr[Num];
+        if (area)
+            if (area->Data && Offset >= 0 && Offset < area->Size)
+                *(long *)(area->Data + Offset) = Value;
+    }
 }
 
 /*##################  TBusFunction::WriteMemoryQword  ###############
@@ -188,10 +235,24 @@ void TBusFunction::WriteMemoryQword(int Num, unsigned long Offset, long long Val
 {
     TBusAreaData *area;
 
-    area = FMemArr[Num];
-    if (area)
-        if (area->Data && Offset >= 0 && Offset < area->Size)
-            *(long long *)(area->Data + Offset) = Value;
+    if (OnQwordChange)
+    {
+        area = FMemArr[Num];
+        if (area)
+            if (area->Data && Offset >= 0 && Offset < area->Size)
+                if (*(long long *)(area->Data + Offset) != Value)
+                {
+                    *(long long *)(area->Data + Offset) = Value;
+                    (*OnQwordChange)(this, Offset, Value);
+                }
+    }
+    else
+    {
+        area = FMemArr[Num];
+        if (area)
+            if (area->Data && Offset >= 0 && Offset < area->Size)
+                *(long long *)(area->Data + Offset) = Value;
+    }
 }
 
 /*##################  TBusFunction::InByte  ###############

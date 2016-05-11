@@ -31,6 +31,7 @@
 #define DISP_MSG_FOCUS  1
 #define DISP_MSG_VIDEO  2
 #define DISP_MSG_KEY    3
+#define DISP_MSG_VGA    4
 
 struct TBaseReq
 {
@@ -42,6 +43,14 @@ struct TVideoReq
     int MsgType;
     int Row;
     short int Data[80];
+};
+
+struct TVgaReq
+{
+    int MsgType;
+    int x;
+    int y;
+    int val;
 };
 
 #endif
