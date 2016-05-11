@@ -582,11 +582,19 @@ setup_global_paging Endp
 
 init:
     int 3
-    mov ax,1234h
-    mov ds,ax
-    
     mov ax,flat_sel
     mov ds,ax
+    xor eax,eax
+    mov cx,200h
+    xor bx,bx
+
+init_vm_vect_loop:
+    or eax,ds:[bx]
+    add bx,4
+    loop init_vm_vect_loop
+;
+    or eax,eax
+    jz init_no_bda
 ;
     mov ebx,40Eh
     mov bx,[bx]
@@ -595,6 +603,7 @@ init:
 ;
     mov ax,system_data_sel
     mov ds,ax
+    mov ds:efi_acpi,0
 ;
     cmp ebx,80000h
     jb init_no_bda
@@ -604,7 +613,7 @@ init:
     jbe init_no_bda
 ;    
     mov ds:ram1_size,ebx
-
+    
 init_no_bda:   
     mov ds:cpu_type,3
     mov ds:cpu_vendor,0
