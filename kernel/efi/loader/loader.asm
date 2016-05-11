@@ -1162,6 +1162,7 @@ GetBootDevice   Endp
     public start
 
 NoBootText DB 'No kernel to boot up',0
+NoMemory DB 'No memory map', 0
 
 start:
     GetMemBase
@@ -1213,7 +1214,7 @@ start:
 ;
     mov ds:ram1_size,0A0000h
     mov ds:ram2_base,100000h
-    mov ds:ram2_size,021000h
+    mov ds:ram2_size,0
 ;    
     mov ds:rom1_base,RDOS_BASE
     mov ds:rom1_size,0
@@ -1221,7 +1222,27 @@ start:
     mov ds:rom_shadow,0
 ;
     call GetMemCount
-    mov ds:multiboot_mmap_len,cx
+    mov ax,flat_sel
+    mov es,ax
+    xor edx,edx
+    mov ebx,MEM_BASE
+    or cx,cx
+    jnz bootMemOk
+;
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET NoMemory
+    call WriteStr
+    jmp DoStop
+
+bootMemOk:
+    add edx,es:[ebx].mmap_len
+    add edx,4
+    add ebx,es:[ebx].mmap_len
+    add ebx,4
+    loop bootMemOk
+;
+    mov ds:multiboot_mmap_len,dx
     mov ds:multiboot_mmap_addr,120000h
 ;
     call GetLfb

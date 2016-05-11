@@ -800,7 +800,6 @@ prot_init:
 ;
     call init_pre_tasking
     call init_boot_system
-    int 3
     call start_paging
     call init_paging_trap
     call init_physical
