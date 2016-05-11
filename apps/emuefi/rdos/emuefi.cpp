@@ -296,8 +296,8 @@ void Start()
 
     UefiMemMap++;
     UefiMemMap->Len = 0x14;
-    UefiMemMap->Base = 0x1000;
-    UefiMemMap->Size = 0x80000;
+    UefiMemMap->Base = 0x004000;
+    UefiMemMap->Size = 0x7FC000;
     UefiMemMap->Type = 1;
 
     UefiMemMap++;

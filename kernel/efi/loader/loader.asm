@@ -713,7 +713,7 @@ no_xor7:
 ;
 ;   DESCRIPTION:    Get memory base from memmap info
 ;
-;   PARAMETERS:     ECX	Number of memory entries
+;   PARAMETERS:     ECX Number of memory entries
 ;
 ;   RETURNS:        ESI Allocation base
 ;
@@ -722,10 +722,12 @@ no_xor7:
 GetMemBase      MACRO
     mov ax,flat_sel
     mov ds,ax
+    xor esi,esi
     mov ebx,MEM_BASE
-    mov esi,0FFFFFFFFh
     or cx,cx
     jz gmbDone
+;
+    mov esi,0FFFFFFFFh
 
 gmbLoop:
     mov eax,ds:[ebx].mmap_base+4
@@ -741,6 +743,12 @@ gmbNext:
     add ebx,ds:[ebx].mmap_len
     add ebx,4
     loop gmbLoop
+
+gmbOk:
+    or esi,esi
+    jz gmbDone
+;
+    sub esi,1000h
 
 gmbDone:
     ENDM
@@ -1147,7 +1155,7 @@ GetBootDevice   Endp
 ;
 ;   DESCRIPTION:    Start boot
 ;
-;   PARAMETERS:     ECX		Memory entries
+;   PARAMETERS:     ECX         Memory entries
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1203,9 +1211,9 @@ start:
     mov ds:efi_fore_col,0FFFFFFh
     mov ds:efi_back_col,0
 ;
-    mov ds:ram1_size,09E000h
+    mov ds:ram1_size,0A0000h
     mov ds:ram2_base,100000h
-    mov ds:ram2_size,0
+    mov ds:ram2_size,021000h
 ;    
     mov ds:rom1_base,RDOS_BASE
     mov ds:rom1_size,0

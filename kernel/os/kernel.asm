@@ -581,7 +581,6 @@ setup_global_paging Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init:
-    int 3
     mov ax,flat_sel
     mov ds,ax
     xor eax,eax
@@ -616,6 +615,8 @@ init_vm_vect_loop:
     mov ds:ram1_size,ebx
     
 init_no_bda:   
+    mov ax,system_data_sel
+    mov ds,ax
     mov ds:cpu_type,3
     mov ds:cpu_vendor,0
     mov ds:cpu_feature_flags,0
@@ -799,6 +800,7 @@ prot_init:
 ;
     call init_pre_tasking
     call init_boot_system
+    int 3
     call start_paging
     call init_paging_trap
     call init_physical
