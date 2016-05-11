@@ -33,7 +33,7 @@ INCLUDE \rdos\kernel\os\system.def
 INCLUDE \rdos\kernel\os\system.inc
 
 IMAGE_BASE = 110000h
-MEM_BASE = 120000h
+MEM_BASE = 400h
 RDOS_BASE = 121000h
 
 mmap_struc  STRUC
@@ -1275,7 +1275,7 @@ DoBoot:
     mov es,ax
     xor di,di
     xor eax,eax
-    mov cx,400h
+    mov cx,100h
     rep stosd
 ;
     push word ptr kernel_code

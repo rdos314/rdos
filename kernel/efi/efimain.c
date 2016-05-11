@@ -113,8 +113,6 @@ unsigned int MapKey;
 unsigned int MemDescrSize;
 unsigned int MemDescrVersion;
 
-EFI_PHYSICAL_ADDRESS RdosMemBase = RDOS_MEM;
-unsigned int RdosMemPages = 1;
 unsigned int MemMapCount;
 struct MemMapEntry *MemMapArr;    
 
@@ -1392,6 +1390,7 @@ static int ConvertMemoryMap()
     unsigned long long Base;
     unsigned long long Size;
     int has_entry = 0;
+    EFI_PHYSICAL_ADDRESS RdosMemBase = RDOS_MEM;
 
     MemMapCount = 0;
     MemMapArr = (struct MemMapEntry *)RdosMemBase;    
@@ -1555,20 +1554,15 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
             {
                 GetAcpiTable();
 
-                if (BS->AllocatePages(AllocateAddress, EfiBootServicesData, RdosMemPages, &RdosMemBase) == EFI_SUCCESS)
+                if (ConvertMemoryMap())
                 {
-                    if (ConvertMemoryMap())
-                    {
-                        if (BS->ExitBootServices(ImageHandle, MapKey) == EFI_SUCCESS)
-                            StartLoader();
-                        else
-                            printf("Exit boot services failed\n\r");
-                    }
+                    if (BS->ExitBootServices(ImageHandle, MapKey) == EFI_SUCCESS)
+                        StartLoader();
                     else
-                        printf("Get memory map failed\n\r");
+                        printf("Exit boot services failed\n\r");
                 }
                 else
-                    printf("Allocate memory map failed\n\r");
+                    printf("Get memory map failed\n\r");
 
                 BS->FreePages(RdosLoaderBase, RdosLoaderPages);
             }

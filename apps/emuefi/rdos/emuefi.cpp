@@ -285,8 +285,8 @@ void Start()
     UefiParam->MemEntries = 3;
     UefiParam->AcpiTable = 0x800000;
 
-    ptr = HighRam.GetData();
-    ptr += 0x120000 - HIGH_BASE;
+    ptr = LowRam.GetData();
+    ptr += 0x400;
 
     UefiMemMap = (struct MemMap *)ptr;
     UefiMemMap->Len = 0x14;
