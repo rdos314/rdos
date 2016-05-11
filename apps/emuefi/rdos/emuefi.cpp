@@ -51,6 +51,15 @@ struct UefiParam
     int LineSize;
     int Flags;
     int MemEntries;
+    long long AcpiTable;
+};
+
+struct MemMap
+{
+    int Len;
+    long long Base;
+    long long Size;
+    int Type;
 };
 
 void OpenScreen(const char *FileName);
@@ -252,6 +261,7 @@ void Start()
     TFlash Bios(&Isa, 0xFFFF0000, 0x10000);
     TFlash BiosShadow(&Isa, 0xF0000, 0x10000, Bios.GetData());
     struct UefiParam *UefiParam;
+    struct MemMap *UefiMemMap;
     char *ptr;
 
     TRam Video(&Isa, 0x800000, 0x200000);
@@ -272,7 +282,29 @@ void Start()
     UefiParam->Height = 480;
     UefiParam->LineSize = 4 * 640;
     UefiParam->Flags = 0;
-    UefiParam->MemEntries = 0;
+    UefiParam->MemEntries = 3;
+    UefiParam->AcpiTable = 0x800000;
+
+    ptr = HighRam.GetData();
+    ptr += 0x120000 - HIGH_BASE;
+
+    UefiMemMap = (struct MemMap *)ptr;
+    UefiMemMap->Len = 0x14;
+    UefiMemMap->Base = 0x100000;
+    UefiMemMap->Size = 0x021000;
+    UefiMemMap->Type = 1;
+
+    UefiMemMap++;
+    UefiMemMap->Len = 0x14;
+    UefiMemMap->Base = 0x1000;
+    UefiMemMap->Size = 0x80000;
+    UefiMemMap->Type = 1;
+
+    UefiMemMap++;
+    UefiMemMap->Len = 0x14;
+    UefiMemMap->Base = 0x100000000;
+    UefiMemMap->Size =  0x100000;
+    UefiMemMap->Type = 1;
 
     int sel;
     int offset;

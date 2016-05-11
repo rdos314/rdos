@@ -125,6 +125,7 @@ init32:
 
 init:
     mov ax,20h
+    mov ds,ax
     mov es,ax
     mov fs,ax
     mov gs,ax
@@ -139,10 +140,7 @@ init:
     xor cl,cl
     mov ch,al
     mov [ebx+6],cx
-;
-    mov ax,8
-    mov ds,ax
-    mov eax,cs:param.lfb_line_size
+    mov ecx,cs:param.mem_entries
     jmp start
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

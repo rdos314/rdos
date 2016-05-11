@@ -604,6 +604,7 @@ init_vm_vect_loop:
     mov ax,system_data_sel
     mov ds,ax
     mov ds:efi_acpi,0
+    mov ds:efi_acpi+4,0
 ;
     cmp ebx,80000h
     jb init_no_bda
@@ -706,6 +707,8 @@ init_cpu_done:
     mov ds,ax
     mov ax,gdt_sel
     mov es,ax
+    mov ax,system_data_sel
+    mov fs,ax
 ;
     mov cx,800h - 70h
     mov di,70h
@@ -717,11 +720,16 @@ init_cpu_done:
     xor al,al
     rep stosb
 ;    
+    mov eax,fs:efi_acpi
+    or eax,fs:efi_acpi+4
+    jnz init_cpu_text_mode_ok
+;    
     mov edx,0B8000h
     mov bx,dosb800
     mov ecx,1000h
     call local_create_data_sel16
-;
+
+init_cpu_text_mode_ok:
     call AllocateRam
     mov bx,idt_sel
     mov word ptr es:[bx],7FFh

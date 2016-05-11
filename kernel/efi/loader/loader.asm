@@ -705,6 +705,46 @@ no_xor7:
     jnz create_crc_loop
     ENDM
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           GetMemBase
+;
+;   DESCRIPTION:    Get memory base from memmap info
+;
+;   PARAMETERS:     ECX	Number of memory entries
+;
+;   RETURNS:        ESI Allocation base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMemBase      MACRO
+    mov ax,flat_sel
+    mov ds,ax
+    mov ebx,MEM_BASE
+    mov esi,0FFFFFFFFh
+    or cx,cx
+    jz gmbDone
+
+gmbLoop:
+    mov eax,ds:[ebx].mmap_base+4
+    or eax,eax
+    jnz gmbNext
+;
+    cmp esi,ds:[ebx].mmap_base
+    jb gmbNext
+;
+    mov esi,ds:[ebx].mmap_base
+
+gmbNext:
+    add ebx,ds:[ebx].mmap_len
+    add ebx,4
+    loop gmbLoop
+
+gmbDone:
+    ENDM
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1107,7 +1147,7 @@ GetBootDevice   Endp
 ;
 ;   DESCRIPTION:    Start boot
 ;
-;   PARAMETERS:     EAX         Scan size
+;   PARAMETERS:     ECX		Memory entries
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1116,8 +1156,12 @@ GetBootDevice   Endp
 NoBootText DB 'No kernel to boot up',0
 
 start:
+    GetMemBase
+    mov ebp,esi
+;
     CreateCrc
-    xor esi,esi
+;
+    mov esi,ebp
     AllocatePage
     mov edx,esi
     mov edi,esi
