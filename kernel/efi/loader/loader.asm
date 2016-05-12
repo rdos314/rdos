@@ -847,6 +847,12 @@ GetAdapterCrcDone:
     cmp ax,[esi].crc
     je GetAdapterCrcOk
 ;
+    mov eax,esi
+    call WriteHexDword
+;
+    mov ah,' '
+    call WriteChar    
+;    
     mov ax,cs
     mov ds,ax
     mov si,OFFSET CrcError

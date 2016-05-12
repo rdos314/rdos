@@ -1325,7 +1325,7 @@ static int LoadBootLoader()
                 if (FileHandle->Read(FileHandle, 0x10000, RdosLoaderBase) == EFI_SUCCESS)
                 {
                     ok = 1;
-                    ST->ConOut->ClearScreen(ST->ConOut);
+//*                    ST->ConOut->ClearScreen(ST->ConOut); */
                 }
                 else
                 {
