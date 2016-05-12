@@ -54,6 +54,7 @@ code    SEGMENT byte public use16 'CODE'
         assume cs:code
 
     extrn float_to_string:near
+    extrn move_cursor:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1503,7 +1504,7 @@ WriteStatus     Endp
 WriteCpu32    PROC near
     xor dx,dx
     xor cx,cx
-    SetCursorPosition
+    call move_cursor
     call WriteCoproc
     call Delimiter
     call WriteCpuReg32
@@ -1516,7 +1517,7 @@ WriteCpu32    PROC near
     call WriteData32
     xor dx,dx
     xor cx,cx
-    SetCursorPosition
+    call move_cursor
     ret
 WriteCpu32    ENDP
 
@@ -1532,7 +1533,7 @@ WriteCpu32    ENDP
 WriteCpu64_32    PROC near
     xor dx,dx
     xor cx,cx
-    SetCursorPosition
+    call move_cursor
     mov cx,5*80
     call Blank
 ;    
@@ -1547,7 +1548,7 @@ WriteCpu64_32    PROC near
     call WriteData64_32
     xor dx,dx
     xor cx,cx
-    SetCursorPosition
+    call move_cursor
     ret
 WriteCpu64_32    ENDP
 
@@ -1563,7 +1564,7 @@ WriteCpu64_32    ENDP
 WriteCpu64_64    PROC near
     xor dx,dx
     xor cx,cx
-    SetCursorPosition
+    call move_cursor
     mov cx,5*80
     call Blank
 ;    
@@ -1578,7 +1579,7 @@ WriteCpu64_64    PROC near
     call WriteData64
     xor dx,dx
     xor cx,cx
-    SetCursorPosition
+    call move_cursor
     ret
 WriteCpu64_64    ENDP
 
@@ -1776,7 +1777,7 @@ handle_key_end:
     GetMousePosition
     shr cx,3
     shr dx,3
-    SetCursorPosition
+    call move_cursor
     ret
 HandleKeyboard  Endp
 

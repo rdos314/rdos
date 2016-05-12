@@ -70,6 +70,25 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           move_cursor
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS      CX              Column number (x)
+;	                    DX              Row number (y)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public move_cursor
+    
+move_cursor Proc near
+    SetCursorPosition
+    ret
+move_cursor Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ShowChar
 ;
 ;           DESCRIPTION:    

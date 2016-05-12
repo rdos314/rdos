@@ -53,6 +53,8 @@ data    ENDS
 
 code    SEGMENT byte public 'CODE'
 
+    extrn move_cursor:near
+
     extrn dis_ass_one:near
     extrn float_to_string:near
 
@@ -1822,7 +1824,7 @@ WriteStatus     Endp
 WriteCpu32    PROC near
     xor dx,dx
     xor cx,cx
-    SetCursorPosition
+    call move_cursor
     call WriteCoproc
     call Delimiter
     call WriteCpuReg32
@@ -1835,7 +1837,7 @@ WriteCpu32    PROC near
     call WriteData32
     xor dx,dx
     xor cx,cx
-    SetCursorPosition
+    call move_cursor
     ret
 WriteCpu32    ENDP
 
@@ -1851,7 +1853,7 @@ WriteCpu32    ENDP
 WriteCpu64    PROC near
     xor dx,dx
     xor cx,cx
-    SetCursorPosition
+    call move_cursor
     mov cx,5*80
     call Blank
 ;    
@@ -1866,7 +1868,7 @@ WriteCpu64    PROC near
     call WriteData64
     xor dx,dx
     xor cx,cx
-    SetCursorPosition
+    call move_cursor
     ret
 WriteCpu64    ENDP
 

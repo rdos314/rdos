@@ -337,6 +337,34 @@ fFF db 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 0
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           move_cursor
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS      CX              Column number (x)
+;                           DX              Row number (y)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public move_cursor
+    
+move_cursor Proc near
+    push ds
+    push ax
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:efi_text_row,cx
+    mov ds:efi_text_col,dx    
+;
+    pop ax
+    pop ds
+    ret
+move_cursor Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ShowChar
 ;
 ;           DESCRIPTION:    
@@ -411,8 +439,16 @@ wcNext:
     inc bx
 ;
     loop wcRowLoop    
-    inc ds:efi_text_col
 ;
+    inc ds:efi_text_col
+    mov ax,ds:efi_text_col
+    cmp ax,80
+    jne wcDone
+;
+    mov ds:efi_text_col,0
+    inc ds:efi_text_row    
+
+wcDone:
     popad        
     pop es
     pop ds
@@ -535,22 +571,20 @@ NewLine Proc near
     push ax
     push dx
 ;
-    int 3
     mov ax,system_data_sel
     mov ds,ax
 
 nlRetry:    
-    mov dx,ds:efi_text_col
-    cmp dx,80
-    je nlAdvance
-;
     mov al,' '
     call ShowChar
-    jmp nlRetry    
-
-nlAdvance:
-    mov ds:efi_text_col,0
-    inc ds:efi_text_row
+;
+    mov dx,ds:efi_text_col
+    or dx,dx
+    jnz nlRetry
+;
+    pop dx
+    pop ax
+    pop ds
     ret
 NewLine Endp
 
