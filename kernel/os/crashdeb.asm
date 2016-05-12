@@ -2399,8 +2399,11 @@ long_nmi_ok:
     pop es
     pop ds    
 ;
-    mov ax,5
-    call DelayMs
+    mov ecx,10000h
+
+loop_wait:
+    sub ecx,1
+    jnz loop_wait
 ;
     xor ax,ax
 

@@ -729,6 +729,7 @@ EmRetFarN       endp
         public EmInt
 
 EmInt3  Proc near
+        or [ebp].em_debug,DEBUG_BREAK
         mov al,3
         call IntFar
         ret
