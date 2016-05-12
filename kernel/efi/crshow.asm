@@ -432,7 +432,23 @@ ShowChar Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ShowSizeString Proc near
-    int 3
+    push ax
+    push cx
+    push di
+;
+    or cx,cx
+    jz sssDone
+
+sssLoop:
+    mov al,es:[di]
+    call ShowChar
+    inc di
+    loop sssLoop    
+
+sssDone:
+    pop di
+    pop cx
+    pop ax    
     ret
 ShowSizeString Endp
 
@@ -450,8 +466,6 @@ ShowSizeString Endp
 ShowAsciiz Proc near
     push ax
     push di
-;    
-    int 3
 
 seaLoop:
     mov al,es:[di]
@@ -498,6 +512,9 @@ abort_clear_loop:
     pop cx
     loop abort_clear_loop
 ;
+    mov ds:efi_text_col,0
+    mov ds:efi_text_row,0
+;
     popad
     pop es
     pop ds    
@@ -514,7 +531,26 @@ Clear Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NewLine Proc near
+    push ds
+    push ax
+    push dx
+;
     int 3
+    mov ax,system_data_sel
+    mov ds,ax
+
+nlRetry:    
+    mov dx,ds:efi_text_col
+    cmp dx,80
+    je nlAdvance
+;
+    mov al,' '
+    call ShowChar
+    jmp nlRetry    
+
+nlAdvance:
+    mov ds:efi_text_col,0
+    inc ds:efi_text_row
     ret
 NewLine Endp
 
