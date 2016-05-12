@@ -569,6 +569,48 @@ setup_global_paging_done:
     ret
 setup_global_paging Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           move_efi_lfb
+;
+;           DESCRIPTION:    Move EFI lfb
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+move_efi_lfb Proc near
+    mov ax,system_data_sel
+    mov ds,ax
+;    
+    mov edx,ds:efi_acpi
+    or edx,ds:efi_acpi+4
+    jz move_efi_lfb_done
+;    
+    mov edx,ds:efi_scan_size
+    movzx eax,ds:efi_height
+    mul edx
+    shl eax,2
+    AllocateBigLinear
+;
+    mov eax,ds:efi_lfb
+    xor ebx,ebx
+    mov al,67h
+    mov ds:efi_lfb,edx
+
+move_efi_loop:
+    SetPageEntry
+    add edx,1000h
+    add eax,1000h
+    loop move_efi_loop
+
+move_efi_lfb_done:
+    ret
+move_efi_lfb    ENDP
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -827,6 +869,7 @@ prot_init:
     call init_page_table
     call init_paging_gates
     call init_physical_gates
+    call move_efi_lfb        
     call init_mem_sels
     call init_tsc
     call init_thread

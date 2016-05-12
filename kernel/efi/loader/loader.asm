@@ -812,6 +812,7 @@ GetAdapterSignOk:
 GetAdapterSizeOk:    
     xor ax,ax
     xor edi,edi
+    xor ebx,ebx
 ;
     push ecx
     push esi
@@ -821,7 +822,7 @@ GetAdapterSizeOk:
     jz GetAdapterCrcDone
 
 GetAdapterCrcLoop:
-    movzx ebx,byte ptr ds:[esi]
+    mov bl,ds:[esi]
     add edi,ebx
     xor bl,ah
     shl ax,8
