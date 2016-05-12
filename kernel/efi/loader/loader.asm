@@ -893,6 +893,7 @@ get_adapters_loop:
     mov [bx].adapter_base,esi
     mov [bx].adapter_size,ecx
     mov [bx].adapter_crc,0
+    mov ds:rom1_size,ecx
 
 get_adapters_done:
     ret
@@ -1243,7 +1244,7 @@ bootMemOk:
     loop bootMemOk
 ;
     mov ds:multiboot_mmap_len,dx
-    mov ds:multiboot_mmap_addr,120000h
+    mov ds:multiboot_mmap_addr,MEM_BASE
 ;
     call GetLfb
     mov ds:efi_lfb,edi

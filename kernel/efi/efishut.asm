@@ -549,7 +549,7 @@ wsLoop:
     jmp wsNext
     
 wsNotCr:
-    cmp dl,10
+    cmp al,10
     jne wsNotLf
 ;
     inc ds:efi_text_row 
@@ -599,7 +599,6 @@ WriteDwordReg PROC near
     call WriteHexDword
 ;    
     add di,2
-    inc dl
     mov al,es:[di]
     or al,al
     jz WriteDwordRegDone
@@ -633,7 +632,6 @@ WriteWordReg  PROC near
     call WriteHexWord
 ;    
     add di,2
-    inc dl
     mov al,es:[di]
     or al,al
     jz WriteWordRegDone
@@ -1030,19 +1028,6 @@ abort_task_block:
     jmp abort_task_block    
 
 abort_task_do:    
-    mov ax,gdt_sel
-    mov ds,ax
-    mov bx,dosB800
-    mov edx,[bx+2]
-    and edx,0FFFFFFh
-    mov eax,edx
-    or al,7
-    xor ebx,ebx
-    SetPageEntry
-;
-    mov ecx,cr3
-    mov cr3,ecx
-;   
     mov ax,system_data_sel
     mov ds,ax 
     mov ax,flat_sel

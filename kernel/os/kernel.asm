@@ -809,6 +809,12 @@ prot_init:
     call init_os_protseg
     call init_usergate
     call init_user_protseg
+
+    int 3
+    mov ax,1234h
+    mov ds,ax
+    
+    
 ;        
     mov esi,OFFSET get_version
     mov edi,OFFSET get_version_name
