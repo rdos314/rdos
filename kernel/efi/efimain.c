@@ -1266,6 +1266,7 @@ static int LoadRdosBinary()
     unsigned int FileSize = MenuArr[SelectedRow].FileSize;
     RdosImagePages = FileSize / 0x1000 + 1;
     int ok = 0;
+    int i;
 
     printf("Booting: <");
     ST->ConOut->OutputString(ST->ConOut, MenuArr[SelectedRow].FileName);
@@ -1279,13 +1280,15 @@ static int LoadRdosBinary()
         {
             if (BS->AllocatePages(AllocateAddress, EfiRuntimeServicesData, RdosImagePages, &RdosImageBase) == EFI_SUCCESS)
             {
-                if (FileHandle->Read(FileHandle, FileSize, RdosImageBase) == EFI_SUCCESS)
-                    ok = 1;
-                else
+                FileHandle->SetPosition(FileHandle, 0);
+                
+                for (i = 0; i < RdosImagePages; i++)
                 {
-                    BS->FreePages(RdosImageBase, RdosImagePages);
-                    printf("Failed to read RDOS image\n\r");
+                    FileHandle->Read(FileHandle, 0x1000, RdosImageBase);
+                    RdosImageBase += 0x1000;
                 }
+
+                ok = 1;
             }
             else
                 printf("Failed to allocate fixed memory for RDOS boot\n\r");

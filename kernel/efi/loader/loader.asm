@@ -756,26 +756,6 @@ gmbDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           CalcCrc
-;
-;   DESCRIPTION:    Calculate CRC for a byte
-;
-;   PARAMETERS:     AX      CRC
-;                   DS:ESI  Data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CalcCrc MACRO
-    mov bl,ds:[esi]
-    xor bl,ah
-    shl ax,8
-    xor ax,cs:[2*ebx].crc_tab
-    inc esi
-    ENDM
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;   NAME:           GetAdapter
 ;
 ;   DESCRIPTION:
@@ -789,7 +769,11 @@ CalcCrc MACRO
 
 SignError       DB 'Rdos Signature Not Found',0
 SizeError       DB 'To Large boot image',0
-CrcError        DB 'CRC error', 0
+CrcBase         DB 'CRC error at ', 0
+CrcSize         DB ' Size: ', 0
+GotCrc          DB ' Got: ', 0
+ExpCrc          DB ' Exp: ', 0
+SumStr          DB ' Sum: ', 0
 
 GetAdapter  Proc near
     push ds
@@ -827,17 +811,22 @@ GetAdapterSignOk:
 
 GetAdapterSizeOk:    
     xor ax,ax
+    xor edi,edi
+;
     push ecx
     push esi
     mov ecx,edx
     add esi,SIZE rdos_header
     sub ecx,SIZE rdos_header
     jz GetAdapterCrcDone
-;
-    xor ebx,ebx
 
 GetAdapterCrcLoop:
-    CalcCrc
+    movzx ebx,byte ptr ds:[esi]
+    add edi,ebx
+    xor bl,ah
+    shl ax,8
+    xor ax,cs:[2*ebx].crc_tab
+    inc esi
     sub ecx,1
     jnz GetAdapterCrcLoop
 
@@ -847,18 +836,62 @@ GetAdapterCrcDone:
     cmp ax,[esi].crc
     je GetAdapterCrcOk
 ;
-    mov eax,esi
-    call WriteHexDword
-;
-    mov ah,' '
-    call WriteChar    
-;    
+    push edi
+    push esi
+    push ax
+    push ecx
+    push esi
+    push ds
     mov ax,cs
     mov ds,ax
-    mov si,OFFSET CrcError
+    mov si,OFFSET CrcBase
     call WriteStr
+    pop ds
+;
+    pop eax
+    call WriteHexDword
+;
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET CrcSize
+    call WriteStr
+    pop ds
+;
+    pop eax
+    call WriteHexDword
+;
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET GotCrc
+    call WriteStr
+    pop ds
+;
+    pop ax
+    call WriteHexWord
+;
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET ExpCrc
+    call WriteStr
+    pop ds
+    pop esi
+    mov ax,[esi].crc
+    call WriteHexWord
+;
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET SumStr
+    call WriteStr
+    pop ds
+;
+    pop eax
+    call WriteHexDword    
     stc
-    jmp GetAdapterDone    
+    jmp GetAdapterDone
 
 GetAdapterCrcOk:    
     add esi,edx
@@ -1214,7 +1247,7 @@ start:
     mov ax,system_data_sel
     mov ds,ax
     mov ds:alloc_base,esi
-    mov ds:efi_text_row,0
+    mov ds:efi_text_row,1
     mov ds:efi_text_col,0
     mov ds:efi_fore_col,0FFFFFFh
     mov ds:efi_back_col,0
@@ -1277,6 +1310,11 @@ DoStop:
     jmp DoStop
 
 DoBoot:
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:efi_text_row,0
+    mov ds:efi_text_col,0
+;    
     mov ax,flat_sel
     mov ds,ax
     mov es,ax
