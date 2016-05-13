@@ -29,12 +29,12 @@
 
 GateSize = 16
 
-INCLUDE ..\os.def
-INCLUDE ..\os.inc
-INCLUDE ..\driver.def
-INCLUDE ..\os\port.def
-INCLUDE ..\os\system.def
-INCLUDE ..\os\system.inc
+INCLUDE ..\..\os.def
+INCLUDE ..\..\os.inc
+INCLUDE ..\..\driver.def
+INCLUDE ..\..\os\port.def
+INCLUDE ..\..\os\system.def
+INCLUDE ..\..\os\system.inc
 
 IMAGE_BASE = 121000h
 
