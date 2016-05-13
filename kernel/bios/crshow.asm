@@ -30,12 +30,12 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
-INCLUDE system.def
-INCLUDE system.inc
-INCLUDE proc.inc
+INCLUDE ..\os\system.def
+INCLUDE ..\os\system.inc
+INCLUDE ..\os\proc.inc
 INCLUDE ..\pcdev\key.inc
 INCLUDE ..\pcdev\apic.inc
-INCLUDE protseg.def
+INCLUDE ..\os\protseg.def
 
 data    SEGMENT byte public 'DATA'
 
@@ -75,7 +75,7 @@ code    SEGMENT byte public use16 'CODE'
 ;           DESCRIPTION:    
 ;
 ;           PARAMETERS      CX              Column number (x)
-;	                    DX              Row number (y)
+;                           DX              Row number (y)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

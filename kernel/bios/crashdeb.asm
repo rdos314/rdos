@@ -30,11 +30,11 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
-INCLUDE system.def
-INCLUDE system.inc
+INCLUDE ..\os\system.def
+INCLUDE ..\os\system.inc
 INCLUDE ..\pcdev\key.inc
-INCLUDE port.def
-INCLUDE proc.inc
+INCLUDE ..\os\port.def
+INCLUDE ..\os\proc.inc
 
 IA32_EFER       = 0C0000080h
 
@@ -2218,9 +2218,9 @@ handle_func:
     xor ebx,ebx
     mov eax,0B8007h
     SetPageEntry
-	pop edx
-	pop ebx
-	pop eax
+        pop edx
+        pop ebx
+        pop eax
 ;
     call HideMarker
     call DoFunc
@@ -2291,10 +2291,10 @@ ShowHere    Proc near
     xor ebx,ebx
     mov eax,0B8007h
     SetPageEntry
-	pop edx
-	pop ebx
-	pop eax
-;	
+        pop edx
+        pop ebx
+        pop eax
+;       
     push es
     push fs
     push di
