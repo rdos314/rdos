@@ -555,27 +555,31 @@ GetAdapterSignOk:
     jmp GetAdapterCorrupt
 GetAdapterSizeOk:
     xor ax,ax
-;    xor ebx,ebx
+
 ;    
+    push ebx
     push ecx
     push esi
     mov ecx,edx
     add esi,SIZE rdos_header
     sub ecx,SIZE rdos_header
     jz GetAdapterCrcDone
+;
+    xor ebx,ebx
+
 GetAdapterCrcLoop:
-    call CalcCrc
-;    mov bl,ds:[esi]
-;    xor bl,ah
-;    shl ax,8
-;    xor ax,cs:[2*ebx].crc_tab
-;    inc esi
+    mov bl,ds:[esi]
+    xor bl,ah
+    shl ax,8
+    xor ax,cs:[2*ebx].crc_tab
+    inc esi
     sub ecx,1
     jnz GetAdapterCrcLoop
 
 GetAdapterCrcDone:
     pop esi
     pop ecx
+    pop ebx
     cmp ax,[esi].crc
     je GetAdapterCrcOk
     jmp GetAdapterCorrupt
