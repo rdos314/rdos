@@ -8,10 +8,6 @@ echo "Building Audio Device"
 ide2make -p kernel/audiodev/audiodev 1>nul
 wmake -f kernel/audiodev/audiodev.mk -h -e 1>nul
 
-echo "Building BOOT"
-ide2make -p kernel/boot/boot 1>nul
-wmake -f kernel/boot/boot.mk -h -e 1>nul
-
 echo "Building DosEmu"
 ide2make -p kernel/dosemu/dosemu 1>nul
 wmake -f kernel/dosemu/dosemu.mk -h -e 1>nul
@@ -51,6 +47,10 @@ wmake -f kernel/ssl/ssl.mk -h -e 1>nul
 echo "Building BIOS device"
 ide2make -p kernel/bios/bios 1>nul
 wmake -f kernel/bios/bios.mk -h -e 1>nul
+
+echo "Building BIOS loaders"
+ide2make -p kernel/bios/loader/loader 1>nul
+wmake -f kernel/bios/loader/loader.mk -h -e 1>nul
 
 echo "Building EFI device"
 ide2make -p kernel/efi/efi 1>nul
