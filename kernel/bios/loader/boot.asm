@@ -302,6 +302,86 @@ KernelLowError  DB 'Low Kernel Overwrite',0
 KernelMidError  DB 'Mid Kernel Overwrite',0
 KernelHighError DB 'High Kernel Overwrite',0
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           CreateCrcTab
+;
+;   DESCRIPTION:    Creates CRC table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+crc_tab         DW 256 DUP(?)
+
+CreateCrcTab    Proc near
+    pusha
+    mov ax,1021h
+;
+    xor cl,cl
+    mov bx,OFFSET crc_tab
+    
+create_crc_loop:   
+    xor dx,dx
+    xor dh,cl
+    shl dx,1
+    jnc no_xor0
+;
+    xor dx,ax
+
+no_xor0:
+    shl dx,1
+    jnc no_xor1
+;
+    xor dx,ax 
+
+no_xor1:       
+    shl dx,1
+    jnc no_xor2
+;
+    xor dx,ax 
+
+no_xor2:       
+    shl dx,1
+    jnc no_xor3
+;
+    xor dx,ax 
+
+no_xor3:       
+    shl dx,1
+    jnc no_xor4
+;
+    xor dx,ax 
+
+no_xor4:       
+    shl dx,1
+    jnc no_xor5
+;
+    xor dx,ax 
+
+no_xor5:       
+    shl dx,1
+    jnc no_xor6
+;
+    xor dx,ax 
+
+no_xor6:       
+    shl dx,1
+    jnc no_xor7
+;
+    xor dx,ax 
+
+no_xor7:      
+    mov cs:[bx],dx
+    add bx,2
+    inc cx
+    or cl,cl
+    jnz create_crc_loop
+;
+    popa
+    ret
+CreateCrcTab    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -378,37 +458,37 @@ CalcCrc Proc near
 ;
     mov cx,1021h
     shl ax,1
-    jnc no_xor0
+    jnc no_cxor0
     xor ax,cx
-no_xor0:
+no_cxor0:
     shl ax,1
-    jnc no_xor1
+    jnc no_cxor1
     xor ax,cx
-no_xor1:
+no_cxor1:
     shl ax,1
-    jnc no_xor2
+    jnc no_cxor2
     xor ax,cx
-no_xor2:
+no_cxor2:
     shl ax,1
-    jnc no_xor3
+    jnc no_cxor3
     xor ax,cx
-no_xor3:
+no_cxor3:
     shl ax,1
-    jnc no_xor4
+    jnc no_cxor4
     xor ax,cx
-no_xor4:
+no_cxor4:
     shl ax,1
-    jnc no_xor5
+    jnc no_cxor5
     xor ax,cx
-no_xor5:
+no_cxor5:
     shl ax,1
-    jnc no_xor6
+    jnc no_cxor6
     xor ax,cx
-no_xor6:
+no_cxor6:
     shl ax,1
-    jnc no_xor7
+    jnc no_cxor7
     xor ax,cx
-no_xor7:
+no_cxor7:
     pop cx
     ret
 CalcCrc Endp
@@ -475,6 +555,8 @@ GetAdapterSignOk:
     jmp GetAdapterCorrupt
 GetAdapterSizeOk:
     xor ax,ax
+;    xor ebx,ebx
+;    
     push ecx
     push esi
     mov ecx,edx
@@ -483,8 +565,14 @@ GetAdapterSizeOk:
     jz GetAdapterCrcDone
 GetAdapterCrcLoop:
     call CalcCrc
+;    mov bl,ds:[esi]
+;    xor bl,ah
+;    shl ax,8
+;    xor ax,cs:[2*ebx].crc_tab
+;    inc esi
     sub ecx,1
     jnz GetAdapterCrcLoop
+
 GetAdapterCrcDone:
     pop esi
     pop ecx
@@ -501,37 +589,6 @@ GetAdapterDone:
     pop ds
     ret
 GetAdapter  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AdapterCrc
-;
-;           DESCRIPTION:
-;
-;           PARAMETERS:     ESI     Adapter base
-;               ECX     Size of adapter
-;
-;           RETURNS:        AX          Adapter CRC
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AdapterCrc  Proc near
-    push ds
-    mov ax,flat_sel
-    mov ds,ax
-    xor ax,ax
-    push ecx
-    push esi
-AdapterCrcLoop:
-    call CalcCrc
-    sub ecx,1
-    jnz AdapterCrcLoop
-    pop esi
-    pop ecx
-    pop ds
-    ret
-AdapterCrc  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -593,16 +650,11 @@ GetAllAdapters  Proc near
     add edi,esi
     mov ds:rom_modules,0
     mov bx,OFFSET rom_adapters
-get_adapters_loop:
     call GetAdapter
     jc get_adapters_done
-    call AdapterCrc
+;
     call AddAdapter
-    add esi,ecx
-    dec esi
-    and si,0F000h
-    add esi,1000h
-    jmp get_adapters_loop
+
 get_adapters_done:
     ret
 GetAllAdapters  Endp
@@ -863,6 +915,8 @@ IF INT1_MASK NE -1
     mov al,0FFh
     out INT1_MASK,al
 ENDIF
+    call CreateCrcTab
+;
     mov ax,cs
     mov ds,ax
 ;
