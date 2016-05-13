@@ -1,6 +1,5 @@
 copy rdos.cfg files
 copy ..\..\kernel\os\kernel.exe files
-copy ..\..\kernel\os\sysenter.rdv files
 copy ..\..\kernel\os\longmode.bin files
 copy ..\..\kernel\os\sched.rdv files
 copy ..\..\kernel\os\task.rdv files
@@ -11,7 +10,6 @@ copy ..\..\kernel\os\fs.rdv files
 copy ..\..\kernel\os\inifile.rdv files
 copy ..\..\kernel\os\drive.rdv files
 copy ..\..\kernel\os\fat.rdv files
-copy ..\..\kernel\os\pcbios.rdv files
 copy ..\..\kernel\os\exec.rdv files
 copy ..\..\kernel\os\pe.rdv files
 copy ..\..\kernel\os\guidev.rdv files
@@ -23,13 +21,15 @@ copy ..\..\kernel\os\net.rdv files
 copy ..\..\kernel\os\ip.rdv files
 copy ..\..\kernel\os\ipc.rdv files
 copy ..\..\kernel\os\lon.rdv files
-copy ..\..\kernel\os\kdebug.rdv files
 copy ..\..\kernel\os\tlist.rdv files
 copy ..\..\kernel\os\wd.rdv files
+copy ..\..\kernel\bios\pcbios.rdv files
+copy ..\..\kernel\bios\kdebug.rdv files
+copy ..\..\kernel\bios\pcshut.exe files
+copy ..\..\kernel\bios\vga.rdv files
 copy ..\..\kernel\dosemu\emulate.rdv files
 copy ..\..\kernel\dosemu\dos.rdv files
 copy ..\..\kernel\dosemu\dpmi.rdv files
-copy ..\..\kernel\pcdev\pcshut.exe files
 copy ..\..\kernel\pcdev\pic.rdv files
 copy ..\..\kernel\pcdev\apic.rdv files
 copy ..\..\kernel\pcdev\rtc.rdv files
@@ -43,7 +43,6 @@ copy ..\..\kernel\pcdev\ide.rdv files
 copy ..\..\kernel\pcdev\floppy.rdv files
 copy ..\..\kernel\pcdev\ahci.rdv files
 copy ..\..\kernel\pcdev\sdcard.rdv files
-copy ..\..\kernel\pcdev\vga.rdv files
 copy ..\..\kernel\pcdev\stdcom.rdv files
 copy ..\..\kernel\pcdev\can.rdv files
 copy ..\..\kernel\usbdev\usb.rdv files
