@@ -48,6 +48,10 @@ echo "Building SSL Device"
 ide2make -p kernel/ssl/ssl 1>nul
 wmake -f kernel/ssl/ssl.mk -h -e 1>nul
 
+echo "Building BIOS device"
+ide2make -p kernel/bios/bios 1>nul
+wmake -f kernel/bios/bios.mk -h -e 1>nul
+
 echo "Building EFI device"
 ide2make -p kernel/efi/efi 1>nul
 wmake -f kernel/efi/efi.mk -h -e 1>nul
