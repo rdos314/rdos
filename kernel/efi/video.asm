@@ -1805,20 +1805,6 @@ extract_alpha_bitmap       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             
 lost_focus_hook PROC far
-    push ds
-    push ax
-    mov ax,video_focus_sel
-    mov ds,ax
-    mov ax,ds:v_handle
-    or ax,ax
-    pop ax
-    jz lost_focus_hook_switched
-;
-    mov ds,ds:v_handle
-    call fword ptr ds:v_switch_from_proc
-
-lost_focus_hook_switched:
-    pop ds
     ret
 lost_focus_hook Endp
 
@@ -1835,20 +1821,6 @@ lost_focus_hook Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             
 got_focus_hook  PROC far
-    push ds
-    push ax
-    mov ax,video_focus_sel
-    mov ds,ax
-    mov ax,ds:v_handle
-    or ax,ax
-    pop ax
-    jz got_focus_hook_switched
-;
-    mov ds,ds:v_handle
-    call fword ptr ds:v_switch_to_proc
-
-got_focus_hook_switched:
-    pop ds
     ret
 got_focus_hook  Endp
 
@@ -1892,21 +1864,6 @@ init_thread     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_process    Proc far
-    push ds
-    push bx
-;
-    mov bx,video_local_sel
-    mov ds,bx
-    mov bx,ds:v_handle
-    or bx,bx
-    jz free_process_done
-;
-    mov ds,bx
-    call fword ptr ds:v_destruct_proc
-
-free_process_done:
-    pop bx
-    pop ds
     ret
 free_process    Endp
 

@@ -25,69 +25,12 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-VIDEO_ENTRIES   = 29h
+VIDEO_ENTRIES   = 1Ch
 
 STYLE_HOLLOW                    EQU 0
 STYLE_FILLED                    EQU 1
 
 video_api_struc STRUC
-
-v_destruct_proc                 DD ?,?
-
-v_switch_to_proc            DD ?,?
-
-v_switch_from_proc              DD ?,?
-
-; IN  BL                Blank fore color
-; IN  BH                Blank back color
-; IN  CX                Upper Column
-; IN  DX                Upper Row
-; IN  SI                Lower Column
-; IN  DI                Lower Row
-v_clear_proc                    DD ?,?
-
-; IN  CX                Column
-; IN  DX                Row
-v_set_cursor_position_proc      DD ?,?
-
-; IN  AL                Char
-; IN  BL                Fore color
-; IN  BH                Back color
-; IN  CX                Column
-; IN  DX                Row
-v_write_char_proc               DD ?,?
-
-; IN  CX                Column
-; IN  DX                Row
-; OUT AL                Char
-; OUT BL                Fore color
-; OUT BH                Back color
-v_read_char_proc        DD ?,?
-
-; IN  AX                Number of lines
-; IN  BL                Blank fore color
-; IN  BH                Blank back color
-; IN  CX                Upper Column
-; IN  DX                Upper Row
-; IN  SI                Lower Column
-; IN  DI                Lower Row
-v_scroll_up_proc                        DD ?,?
-
-; IN  AX                Number of lines
-; IN  BL                Blank fore color
-; IN  BH                Blank back color
-; IN  CX                Upper Column
-; IN  DX                Upper Row
-; IN  SI                Lower Column
-; IN  DI                Lower Row
-v_scroll_down_proc                  DD ?,?
-
-; IN  CX                Number of palette entries
-; IN  ES:EDI    Palette
-v_define_palette_proc           DD ?,?
-
-; IN  AL                Palette index
-v_set_palette_color_proc        DD ?,?
 
 ; IN  AX                Red
 ; IN  BX                Green

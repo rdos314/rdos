@@ -3273,232 +3273,7 @@ get_alpha       Proc far
 get_alpha       Endp
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           Attr_to_color
-;
-;           DESCRIPTION:    Convert attribute to color
-; 
-;           PARAMETER:          AL          VGA color
-;
-;           RETURNS:        EAX         Color
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AttribColorTab:
-act00   DD 00000000h
-act01   DD 00990000h
-act02   DD 00009900h
-act03   DD 00CC6600h
-act04   DD 00000099h
-act05   DD 00990099h
-act06   DD 00009999h
-act07   DD 00CCCCCCh
-act08   DD 00666666h
-act09   DD 00FF6666h
-act0A   DD 0066FF66h
-act0B   DD 00FFFF66h
-act0C   DD 006666FFh
-act0D   DD 00FF66FFh
-act0E   DD 0066FFFFh
-act0F   DD 00FFFFFFh
-
-attr_to_color   Proc near
-    push ebx
-    mov bl,al
-    and ebx,0Fh
-    shl ebx,2
-    mov eax,dword ptr cs:[ebx].AttribColorTab    
-    pop ebx
-    ret
-attr_to_color   Endp
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           Clear
-;
-;           DESCRIPTION:    Clear an area on screen
-; 
-;           PARAMETER:          BL          Fore color
-;                           DH          Back color
-;                           CX          Upper column
-;                           DX          Upper row
-;                           SI          Lower column
-;                           DI          Lower row
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-clear   Proc far
-    clc
-    ret
-clear   Endp
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           SetCursorPos
-;
-;           DESCRIPTION:    Set cursor position
-; 
-;           PARAMETER:          CX          Column
-;                           DX          Row
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_cursor_pos  Proc far
-    clc
-    ret
-set_cursor_pos  Endp
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           WriteChar
-;
-;           DESCRIPTION:    Write a character
-; 
-;           PARAMETER:          AL          Character
-;                           BL          Fore color
-;                           BH          Back color
-;                           CX          Column
-;                           DX          Row
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-write_char      Proc far
-    push es
-    pushad
-    push ds:v_font
-    push ds:v_color
-    push ds:v_lgop
-;
-    mov ds:v_lgop, LGOP_NONE
-    xor ah,ah
-    push ax
-;
-    mov ax,cx
-    mul ds:v_pixels_per_col
-    mov cx,ax
-;
-    mov ax,dx
-    mul ds:v_pixels_per_row
-    mov dx,ax
-;
-    mov al,ds:v_style
-    push ax
-;
-    mov ds:v_style,STYLE_FILLED
-    mov al,bh
-    call attr_to_color
-    mov ds:v_color,eax
-;
-    mov si,ds:v_pixels_per_col
-    mov di,ds:v_pixels_per_row
-    call fword ptr ds:v_draw_rect_proc
-;
-    pop ax
-    mov ds:v_style,al
-;
-    mov al,bl
-    call attr_to_color
-    mov ds:v_color,eax
-    mov ax,ds:v_text_font
-    mov ds:v_font,ax
-    mov ax,ss
-    mov es,ax
-    mov edi,esp
-    call fword ptr ds:v_draw_string_proc
-;       
-    add esp,2
-    pop ds:v_lgop
-    pop ds:v_color
-    pop ds:v_font
-    popad
-    pop es
-    ret
-write_char      Endp
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ReadChar
-;
-;           DESCRIPTION:    Read a character
-; 
-;           PARAMETER:          CX          Column
-;                           DX          Row
-;
-;           RETURNS:        AL          Character
-;                           BL          Fore color
-;                           BH          Back color
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_char       Proc far
-    clc
-    ret
-read_char       Endp
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ScrollUp
-;
-;           DESCRIPTION:    Scroll screen area up
-; 
-;           PARAMETER:          AX          Number of lines
-;                           BL          Blank for color
-;                           BH          Blank back color
-;                           CX          Upper column
-;                           DX          Upper row
-;                           SI          Lower column
-;                           DI          Lower row
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-scroll_up       Proc far
-    clc
-    ret
-scroll_up       Endp
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ScrollDown
-;
-;           DESCRIPTION:    Scroll screen area down
-; 
-;           PARAMETER:          AX          Number of lines
-;                           BL          Blank for color
-;                           BH          Blank back color
-;                           CX          Upper column
-;                           DX          Upper row
-;                           SI          Lower column
-;                           DI          Lower row
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-scroll_down     Proc far
-    clc
-    ret
-scroll_down     Endp
-
 errorp  Proc far
-    stc
     ret
 errorp  Endp
 
@@ -3509,44 +3284,32 @@ BitmapTab32:
 mt00 DD OFFSET errorp,              SEG code
 mt01 DD OFFSET errorp,              SEG code
 mt02 DD OFFSET errorp,              SEG code
-mt03 DD OFFSET clear,               SEG code
-mt04 DD OFFSET set_cursor_pos,      SEG code
-mt05 DD OFFSET write_char,              SEG code
-mt06 DD OFFSET read_char,               SEG code
-mt07 DD OFFSET scroll_up,               SEG code
-mt08 DD OFFSET scroll_down,             SEG code
-mt09 DD OFFSET errorp,              SEG code
-mt0A DD OFFSET errorp,              SEG code
-mt0B DD OFFSET errorp,              SEG code
-mt0C DD OFFSET errorp,              SEG code
-mt0D DD OFFSET errorp,              SEG code
-mt0E DD OFFSET errorp,              SEG code
-mt0F DD OFFSET translate_color,     SEG code
-mt10 DD OFFSET set_base,            SEG code
-mt11 DD OFFSET slab,                SEG code
-mt12 DD OFFSET copy,                SEG code
-mt13 DD OFFSET mask_set,        SEG code
-mt14 DD OFFSET mask_copy,               SEG code
-mt15 DD OFFSET get_line,            SEG code
-mt16 DD OFFSET get_pixel,               SEG code
-mt17 DD OFFSET set_pixel,               SEG code
-mt18 DD OFFSET get_native,              SEG code
-mt19 DD OFFSET get_native,              SEG code
-mt1A DD OFFSET set_native,              SEG code
-mt1B DD OFFSET set_native,              SEG code
-mt1C DD OFFSET draw_mask_line,      SEG code
-mt1D DD OFFSET set_sprite,              SEG code
-mt1E DD OFFSET draw_sprite_line,    SEG code
-mt1F DD OFFSET draw_string,             SEG code
-mt20 DD OFFSET draw_line,               SEG code
-mt21 DD OFFSET draw_rect,               SEG code
-mt22 DD OFFSET draw_ellipse,        SEG code
-mt23 DD OFFSET anti_alias_set,      SEG code
-mt24 DD OFFSET phys_update,         SEG code
-mt25 DD OFFSET check_alpha,         SEG code
-mt26 DD OFFSET get_alpha,           SEG code
-mt27 DD OFFSET get_rgba,              SEG code
-mt28 DD OFFSET set_rgba,              SEG code
+mt03 DD OFFSET translate_color,     SEG code
+mt04 DD OFFSET set_base,            SEG code
+mt05 DD OFFSET slab,                SEG code
+mt06 DD OFFSET copy,                SEG code
+mt07 DD OFFSET mask_set,        SEG code
+mt08 DD OFFSET mask_copy,               SEG code
+mt09 DD OFFSET get_line,            SEG code
+mt0A DD OFFSET get_pixel,               SEG code
+mt0B DD OFFSET set_pixel,               SEG code
+mt0C DD OFFSET get_native,              SEG code
+mt0D DD OFFSET get_native,              SEG code
+mt0E DD OFFSET set_native,              SEG code
+mt0F DD OFFSET set_native,              SEG code
+mt10 DD OFFSET draw_mask_line,      SEG code
+mt11 DD OFFSET set_sprite,              SEG code
+mt12 DD OFFSET draw_sprite_line,    SEG code
+mt13 DD OFFSET draw_string,             SEG code
+mt14 DD OFFSET draw_line,               SEG code
+mt15 DD OFFSET draw_rect,               SEG code
+mt16 DD OFFSET draw_ellipse,        SEG code
+mt17 DD OFFSET anti_alias_set,      SEG code
+mt18 DD OFFSET phys_update,         SEG code
+mt19 DD OFFSET check_alpha,         SEG code
+mt1A DD OFFSET get_alpha,           SEG code
+mt1B DD OFFSET get_rgba,              SEG code
+mt1C DD OFFSET set_rgba,              SEG code
 
 code    ENDS
 
