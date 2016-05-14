@@ -1287,7 +1287,8 @@ bootMemOk:
     mov ds:multiboot_mmap_addr,MEM_BASE
 ;
     call GetLfb
-    mov ds:efi_lfb,edi
+    mov ds:efi_lfb,esi
+    mov ds:efi_lfb+4,edi
     mov ds:efi_scan_size,ecx
     mov ds:efi_width,ax
     mov ds:efi_height,dx

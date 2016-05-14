@@ -596,7 +596,7 @@ move_efi_lfb Proc near
     AllocateBigLinear
 ;
     mov eax,ds:efi_lfb
-    xor ebx,ebx
+    mov ebx,ds:efi_lfb+4
     mov al,67h
     mov ds:efi_lfb,edx
 

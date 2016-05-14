@@ -181,7 +181,7 @@ init:
 ;
 ;   DESCRIPTION:    Get LFB base
 ;
-;   RETURNS:        EDI         LFB linear
+;   RETURNS:        EDI:ESI     LFB linear
 ;                   ECX         Line size
 ;                   EAX         Width
 ;                   EDX         Height
@@ -192,7 +192,8 @@ init:
     public GetLfb
 
 GetLfb  Proc near
-    mov edi,cs:param.lfb_base
+    mov esi,cs:param.lfb_base
+    mov edi,cs:param.lfb_base+4
     mov ecx,cs:param.lfb_line_size
     mov eax,cs:param.lfb_width
     mov edx,cs:param.lfb_height
