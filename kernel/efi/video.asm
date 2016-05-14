@@ -61,19 +61,6 @@ CallVideo       MACRO   call_proc
     pop ds
                 ENDM
 
-video_focus_seg STRUC
-
-v_handle        DW ?
-
-video_focus_seg ENDS
-
-
-data    SEGMENT byte public 'DATA'
-
-v_list          DW ?
-
-data    ENDS
-
     .386p
 
 code    SEGMENT byte public 'CODE'
@@ -186,6 +173,7 @@ invert_mouse    ENDP
 set_cursor_pos_name     DB 'Set Cursor Position',0
 
 set_cursor_position     PROC far
+    int 3
     ret
 set_cursor_position     ENDP
 
@@ -205,6 +193,7 @@ set_cursor_position     ENDP
 get_cursor_pos_name     DB 'Get Cursor Position',0
 
 get_cursor_position     PROC far
+    int 3
     ret
 get_cursor_position     ENDP
 
@@ -223,6 +212,7 @@ get_cursor_position     ENDP
 set_forecolor_name      DB 'Set Fore Color',0
 
 set_forecolor   PROC far
+    int 3
     ret
 set_forecolor   ENDP
 
@@ -241,6 +231,7 @@ set_forecolor   ENDP
 set_backcolor_name      DB 'Set Back Color',0
 
 set_backcolor   PROC far
+    int 3
     ret
 set_backcolor   ENDP
 
@@ -261,6 +252,7 @@ set_backcolor   ENDP
 get_char_attrib_name    DB 'Get Character & Attribute',0
 
 get_char_attrib PROC far
+    int 3
     ret
 get_char_attrib ENDP
 
@@ -279,6 +271,7 @@ get_char_attrib ENDP
 write_char_name DB 'Write Char',0
 
 write_char      PROC far
+    int 3
     ret
 write_char      ENDP
 
@@ -297,10 +290,12 @@ write_char      ENDP
 write_asciiz_name       DB 'Write Asciiz String',0
 
 write_asciiz16  PROC far
+    int 3
     ret
 write_asciiz16  ENDP
 
 write_asciiz32  PROC far
+    int 3
     ret
 write_asciiz32  ENDP
 
@@ -319,6 +314,7 @@ write_asciiz32  ENDP
 write_dos_string_name   DB 'Write Dos String',0
 
 write_dos_string    PROC far
+    int 3
     ret
 write_dos_string    ENDP
 
@@ -338,10 +334,12 @@ write_dos_string    ENDP
 write_size_string_name  DB 'Write Size String',0
 
 write_size_string16     PROC far
+    int 3
     ret
 write_size_string16     ENDP
 
 write_size_string32     PROC far
+    int 3
     ret
 write_size_string32     ENDP
 
@@ -363,10 +361,12 @@ write_size_string32     ENDP
 write_attr_string_name  DB 'Write Attribute String',0
 
 write_attr_string16     PROC far
+    int 3
     ret
 write_attr_string16     ENDP
 
 write_attr_string32     PROC far
+    int 3
     ret
 write_attr_string32     ENDP
     
@@ -1855,41 +1855,6 @@ init_thread     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           Free_process
-;
-;           DESCRIPTION:    free process
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_process    Proc far
-    ret
-free_process    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           init_focus
-;
-;           DESCRIPTION:    Init focus
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-            
-init_focus      PROC far
-    mov ax,video_local_sel
-    mov ds,ax
-    mov ds:v_handle,0
-    ret
-init_focus      Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           INIT
 ;
 ;           DESCRIPTION:    Init driver
@@ -1901,27 +1866,12 @@ init_focus      Endp
     public init_video
             
 init_video      PROC near
-    mov bx,SEG data
-    mov es,bx
-    mov es:v_list,0
-;
-    mov eax,SIZE video_focus_seg
-    mov bx,video_local_sel
-    mov dx,video_focus_sel
-    AllocateFixedFocusMem
-;
     mov ax,cs
     mov ds,ax
     mov es,ax
 ;
     mov edi,OFFSET init_thread
     HookCreateThread
-;
-    mov edi,OFFSET init_thread
-    HookTerminateProcess
-;
-    mov edi,OFFSET init_focus
-    HookEnableFocus
 ;
     mov edi,OFFSET lost_focus_hook
     HookLostFocus
