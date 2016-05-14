@@ -26,14 +26,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 INCLUDE ..\driver.def
-INCLUDE protseg.def
+INCLUDE ..\os\protseg.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\video.inc
-INCLUDE system.def
-INCLUDE system.inc
+INCLUDE ..\os\system.def
+INCLUDE ..\os\system.inc
 INCLUDE ipcgui.inc
 
 .386p

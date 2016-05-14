@@ -25,15 +25,15 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-INCLUDE protseg.def
+INCLUDE ..\os\protseg.def
 INCLUDE ..\driver.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
-INCLUDE system.inc
+INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\video.inc
-INCLUDE system.def
+INCLUDE ..\os\system.def
 
 proc_data   STRUC
 

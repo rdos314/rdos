@@ -25,12 +25,12 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-INCLUDE protseg.def
+INCLUDE ..\os\protseg.def
 INCLUDE ..\os.def
 INCLUDE ..\user.def
 INCLUDE ..\os.inc
 INCLUDE ..\user.inc
-INCLUDE system.def
+INCLUDE ..\os\system.def
 INCLUDE ipcgui.inc
 
     .386p
