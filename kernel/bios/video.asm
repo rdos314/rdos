@@ -35,7 +35,7 @@ INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\handle.inc
 INCLUDE bitmap.inc
-INCLUDE ..\video.inc
+INCLUDE video.inc
 INCLUDE ..\apicheck.inc
 
 video_mode_entry    STRUC

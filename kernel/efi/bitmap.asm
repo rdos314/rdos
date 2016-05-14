@@ -35,7 +35,7 @@ INCLUDE ..\driver.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\handle.inc
 INCLUDE bitmap.inc
-INCLUDE ..\video.inc
+INCLUDE video.inc
 INCLUDE ..\apicheck.inc
 
 code    SEGMENT byte public 'CODE'

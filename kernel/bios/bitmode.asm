@@ -30,7 +30,7 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
-INCLUDE ..\video.inc
+INCLUDE video.inc
 
         .386p
 

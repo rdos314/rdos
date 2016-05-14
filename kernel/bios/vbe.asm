@@ -30,7 +30,7 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
-INCLUDE ..\video.inc
+INCLUDE video.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\os\system.def
 INCLUDE ..\os\protseg.def

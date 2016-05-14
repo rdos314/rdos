@@ -30,37 +30,37 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
-INCLUDE ..\video.inc
+INCLUDE video.inc
 
 data    SEGMENT byte public 'DATA'
 
-v_curr_object		DW ?
+v_curr_object           DW ?
 
 data    ENDS
 
-	extrn init_text_mode:near
-	extrn init_bit_mode:near
-	extrn init_vbe:near
+        extrn init_text_mode:near
+        extrn init_bit_mode:near
+        extrn init_vbe:near
 
-	.386p
+        .386p
 
-code	SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use16 'CODE'
 
-	assume cs:code
+        assume cs:code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			ClearVideoObj
+;               NAME:                   ClearVideoObj
 ;
-;		DESCRIPTION:	Clear current video object
+;               DESCRIPTION:    Clear current video object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public ClearVideoObj
-    			
-ClearVideoObj	PROC near
+                        
+ClearVideoObj   PROC near
     push ds
     push bx
 ;    
@@ -68,26 +68,26 @@ ClearVideoObj	PROC near
     mov ds,bx
     mov ds:v_curr_object,0
 ;    
-	pop bx
-	pop ds
-	ret
-ClearVideoObj	Endp
+        pop bx
+        pop ds
+        ret
+ClearVideoObj   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			SetVideoObj
+;               NAME:                   SetVideoObj
 ;
-;		DESCRIPTION:	Set current video object
+;               DESCRIPTION:    Set current video object
 ;
-;		PARAMETERS:		AX      Video obj
+;               PARAMETERS:             AX      Video obj
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public SetVideoObj
-    			
-SetVideoObj	PROC near
+                        
+SetVideoObj     PROC near
     push ds
     push bx
 ;    
@@ -95,84 +95,84 @@ SetVideoObj	PROC near
     mov ds,bx
     mov ds:v_curr_object,ax
 ;    
-	pop bx
-	pop ds
-	ret
-SetVideoObj	Endp
+        pop bx
+        pop ds
+        ret
+SetVideoObj     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			GetVideoObj
+;               NAME:                   GetVideoObj
 ;
-;		DESCRIPTION:	Get current video object
+;               DESCRIPTION:    Get current video object
 ;
-;		RETURNS:		AX      Video obj
+;               RETURNS:                AX      Video obj
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public GetVideoObj
-    			
-GetVideoObj	PROC near
+                        
+GetVideoObj     PROC near
     push ds
 ;    
     mov ax,SEG data
     mov ds,ax
     mov ax,ds:v_curr_object
 ;    
-	pop ds
-	ret
-GetVideoObj	Endp
+        pop ds
+        ret
+GetVideoObj     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			init_focus
+;               NAME:                   init_focus
 ;
-;		DESCRIPTION:	Init focus
+;               DESCRIPTION:    Init focus
 ;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			
-init_focus	PROC far
-	push ax
-	mov ax,3
-	SetVideoMode
-	pop ax
-	retf32
-init_focus	Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			INIT
-;
-;		DESCRIPTION:	Init device
-;
-;		PARAMETERS:		
+;               PARAMETERS:             
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			
-init	PROC far
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-;
-	mov edi,OFFSET init_focus
-	HookEnableFocus
-;
-	call init_text_mode
-	call init_bit_mode
-	call init_vbe
-	clc
-	ret
-init	ENDP
+                        
+init_focus      PROC far
+        push ax
+        mov ax,3
+        SetVideoMode
+        pop ax
+        retf32
+init_focus      Endp
 
-code	ENDS
 
-	END init
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:                   INIT
+;
+;               DESCRIPTION:    Init device
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                        
+init    PROC far
+        mov ax,cs
+        mov ds,ax
+        mov es,ax
+;
+        mov edi,OFFSET init_focus
+        HookEnableFocus
+;
+        call init_text_mode
+        call init_bit_mode
+        call init_vbe
+        clc
+        ret
+init    ENDP
+
+code    ENDS
+
+        END init
 
