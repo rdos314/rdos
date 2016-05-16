@@ -334,7 +334,7 @@ void Start()
     UefiParam->LineSize = 4 * 640;
     UefiParam->Flags = 0;
     UefiParam->MemEntries = 3;
-    UefiParam->AcpiTable = ACPI_BASE;
+    UefiParam->AcpiTable = ACPI_BASE + 0x120;
 
     ptr = LowRam.GetData();
     ptr += 0x400;
@@ -358,6 +358,7 @@ void Start()
     UefiMemMap->Type = 1;
 
     ptr = RamAcpi.GetData();
+    ptr += 0x120;
     AcpiRsdp = (struct AcpiRsdp *)ptr;
 
     strcpy(AcpiRsdp->Sign, "RSD PTR ");
@@ -377,6 +378,7 @@ void Start()
         sum += ptr[i];
     AcpiRsdp->CheckSum = -sum;
 
+    ptr = RamAcpi.GetData();
     ptr += 0x400;
     AcpiXsdt = (struct AcpiXsdt *)ptr;
 

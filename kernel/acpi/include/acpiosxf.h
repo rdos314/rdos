@@ -175,6 +175,8 @@ ACPI_PHYSICAL_ADDRESS
 AcpiOsGetRootPointer (
     void);
 
+int AcpiOsIsEfi(void);
+
 ACPI_STATUS
 AcpiOsPredefinedOverride (
     const ACPI_PREDEFINED_NAMES *InitVal,

@@ -164,7 +164,7 @@ AcpiOsGetRootPointer_ Proc near
     SetPageEntry
 ;        
     call CheckRsdp
-    jnc os_get_rsdp_done
+    jnc os_get_rsdp_ok
 
 os_get_not_efi:    
     xor ebx,ebx
@@ -246,6 +246,36 @@ os_get_rsdp_done:
     pop ds
     ret
 AcpiOsGetRootPointer_ Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AcpiOsIsEfi
+;
+;       DESCRIPTION:    Check for EFI boot
+;
+;       RETURNS:        EAX          1 = EFI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AcpiOsIsEfi_
+    
+AcpiOsIsEfi_ Proc near
+    push ds
+;
+    mov ax,system_data_sel
+    mov ds,ax
+;
+    mov eax,es:efi_acpi
+    or eax,es:efi_acpi+4
+    jz os_is_efi_done
+;
+    mov eax,1
+
+os_is_efi_done:
+    pop ds
+    ret
+AcpiOsIsEfi_  Endp    
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

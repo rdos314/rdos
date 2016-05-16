@@ -153,6 +153,11 @@ AcpiEnable (
         return_ACPI_STATUS (AE_NO_ACPI_TABLES);
     }
 
+    if (AcpiOsIsEfi())
+    {
+        return_ACPI_STATUS (AE_OK);
+    }
+
     /* Check current mode */
 
     if (AcpiHwGetMode() == ACPI_SYS_MODE_ACPI)
