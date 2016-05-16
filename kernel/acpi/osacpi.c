@@ -146,7 +146,7 @@ void *AcpiOsMapMemory(ACPI_PHYSICAL_ADDRESS PhysicalAddress, ACPI_SIZE Length)
     long ads;
 
     offset = PhysicalAddress & 0xFFF;
-    PhysicalAddress &= 0xFFFFF000;
+    PhysicalAddress &= 0xFFFFFFFFFFFFF000;
 
     size = Length + offset;
     if (size & 0xFFF)
@@ -606,12 +606,12 @@ UINT64 AcpiOsGetTimer()
 ACPI_STATUS AcpiOsReadMemory(ACPI_PHYSICAL_ADDRESS Address, UINT32 *Value, UINT32 Width)
 {
     ACPI_CPU_FLAGS flags;
-    long page;
+    long long page;
     long offset;
     void *ptr;
     long res = 0;
 
-    page = Address & 0xFFFFF000;
+    page = Address & 0xFFFFFFFFFFFFF000;
     offset = Address & 0xFFF;
 
     flags = RdosRequestSpinlock(&MapLock);
@@ -650,11 +650,11 @@ ACPI_STATUS AcpiOsReadMemory(ACPI_PHYSICAL_ADDRESS Address, UINT32 *Value, UINT3
 ACPI_STATUS AcpiOsWriteMemory(ACPI_PHYSICAL_ADDRESS Address, UINT32 Value, UINT32 Width)
 {
     ACPI_CPU_FLAGS flags;
-    long page;
+    long long page;
     long offset;
     void *ptr;
 
-    page = Address & 0xFFFFF000;
+    page = Address & 0xFFFFFFFFFFFFF000;
     offset = Address & 0xFFF;
 
     flags = RdosRequestSpinlock(&MapLock);

@@ -57,8 +57,8 @@ _TEXT    SEGMENT byte public 'CODE'
 ;
 ;       PARAMETERS:     DS:SI       Base address to check
 ;
-;       RETURNS:    NC      OK
-;               EAX     Physical address
+;       RETURNS:        NC      OK
+;                       EBX:EAX Physical address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -91,7 +91,22 @@ check_rsdp_loop:
     or al,al
     jnz check_rsdp_fail
 ;
+    mov al,[si+15]
+    cmp al,2
+    jb check_get32
+;
+    mov ax,[si+20]
+    cmp ax,32
+    jb check_get32
+;
+    mov eax,[si+24]
+    mov ebx,[si+28]       
+    clc
+    jmp check_rsdp_done
+
+check_get32:    
     mov eax,[si+16]
+    xor ebx,ebx
     clc
     jmp check_rsdp_done
 
@@ -109,7 +124,7 @@ CheckRsdp   Endp
 ;
 ;       DESCRIPTION:    Get the RSDP
 ;
-;       RETURNS:        EAX     Physical address or 0
+;       RETURNS:        EDX:EAX     Physical address or 0
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -120,11 +135,13 @@ AcpiOsGetRootPointer_ Proc near
     push es
     push ebx
     push ecx
-    push edx
     push esi
     push edi
     push bp
 ;
+    mov ax,system_data_sel
+    mov es,ax
+;    
     mov eax,1000h
     AllocateBigLinear
     AllocateGdt
@@ -133,7 +150,23 @@ AcpiOsGetRootPointer_ Proc near
     mov ecx,1000h
     CreateDataSelector16
     mov ds,bx    
+;
+    mov eax,es:efi_acpi
+    or eax,es:efi_acpi+4
+    jz os_get_not_efi
 ;    
+    mov eax,es:efi_acpi
+    mov ebx,es:efi_acpi+4
+    mov si,ax
+    and si,00FFFh
+    and ax,0F000h
+    mov al,7h
+    SetPageEntry
+;        
+    call CheckRsdp
+    jnc os_get_rsdp_done
+
+os_get_not_efi:    
     xor ebx,ebx
     mov eax,7h
     SetPageEntry
@@ -199,6 +232,7 @@ os_get_rsdp_done:
     mov ecx,1000h
     FreeLinear
     pop eax
+    mov edx,ebx
 ;
     pop bx    
     FreeGdt    
@@ -206,7 +240,6 @@ os_get_rsdp_done:
     pop bp
     pop edi
     pop esi
-    pop edx
     pop ecx
     pop ebx
     pop es
@@ -221,30 +254,48 @@ AcpiOsGetRootPointer_ Endp
 ;
 ;           DESCRIPTION:    Get the RSDP
 ;
-;       RETURNS:    NC      OK
-;               EAX     Physical address
+;       RETURNS:            NC      OK
+;                           EBX:EAX     Physical address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetRsdp Proc near
     push ds
     push es
-    push ebx
     push ecx
     push edx
     push esi
     push edi
     push bp
 ;
+    mov ax,system_data_sel
+    mov es,ax
+;    
     mov eax,1000h
     AllocateBigLinear
     AllocateGdt
     push bx
 ;    
     mov ecx,1000h
-    CreateDataSelector16
+    CreateDataSelector16        
     mov ds,bx    
 ;
+    mov eax,es:efi_acpi
+    or eax,es:efi_acpi+4
+    jz get_rsdp_not_efi
+;    
+    mov eax,es:efi_acpi
+    mov ebx,es:efi_acpi+4
+    mov si,ax
+    and si,00FFFh
+    and ax,0F000h
+    mov al,7h
+    SetPageEntry
+;        
+    call CheckRsdp
+    jnc get_rsdp_ok
+    
+get_rsdp_not_efi:
     xor ebx,ebx
     mov eax,7h
     SetPageEntry
@@ -300,7 +351,7 @@ get_rsdp_bios_page:
 get_rsdp_ok:
     clc
 
-get_rsdp_done:  
+get_rsdp_done: 
     push eax
     pushf
     xor eax,eax
@@ -311,17 +362,19 @@ get_rsdp_done:
     popf
     pop eax
 ;
+    mov edx,ebx
     pop bx
     pushf
     FreeGdt    
     popf
 ;    
+    mov ebx,edx
+;
     pop bp
     pop edi
     pop esi
     pop edx
     pop ecx
-    pop ebx
     pop es
     pop ds
     ret
@@ -335,10 +388,10 @@ GetRsdp Endp
 ;
 ;           DESCRIPTION:    Get a table
 ;
-;       PARAMETERS:     EAX     Physical address
+;       PARAMETERS:         EBX:EAX     Physical address
 ;
-;       RETURNS:    NC      OK
-;               ES      Table
+;       RETURNS:            NC      OK
+;                           ES      Table
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -347,21 +400,19 @@ GetTable Proc near
     pushad
 ;   
     mov ebp,eax 
+    mov edi,ebx
     mov eax,1000h
     AllocateBigLinear
     mov eax,ebp
-    movzx ebx,ax
-    and bx,0FFFh
+    movzx esi,ax
+    and si,0FFFh
 ;
-    push ebx
-    xor ebx,ebx    
     and ax,0F000h
     or al,7    
     SetPageEntry
-    pop ebx
 ;    
     push edx
-    add edx,ebx
+    add edx,esi
     AllocateGdt    
     mov ecx,1000h
     CreateDataSelector16
@@ -392,7 +443,6 @@ GetTable Proc near
     mov eax,ecx
     sub eax,SIZE acpi_header
     mov es:act_size,ax
-    mov di,SIZE acpi_table
 ;    
     movzx eax,bp
     and ax,0FFFh
@@ -424,7 +474,7 @@ GetTable Proc near
     push ebx
     push edx
 ;
-    xor ebx,ebx    
+    mov ebx,edi
     and ax,0F000h
     or al,7    
 
@@ -433,10 +483,11 @@ get_table_set_phys:
     add eax,1000h
     add edx,1000h
     loop get_table_set_phys
-    
+;
     pop edx
     pop ebx
 ;    
+    mov di,SIZE acpi_table
     mov si,SIZE acpi_header
     mov ecx,ds:acpi_size
     sub ecx,SIZE acpi_header
@@ -470,6 +521,7 @@ get_table_check:
 
 get_table_pop_fail:
     pop ecx
+    FreeMem
     jmp get_table_fail
 
 get_table_free:
@@ -502,9 +554,10 @@ get_table_free_phys:
     mov eax,es:act_sign
     or eax,eax
     jnz get_table_ok    
+;
+    FreeMem
 
 get_table_fail:
-    FreeMem
     stc
     jmp get_table_done
 
@@ -1001,6 +1054,14 @@ InitAcpiTables_    Proc near
 ;
     mov ax,es
     mov ds,ax
+    mov eax,es:act_sign
+    cmp eax,'TDSX'
+    je acpi_get64
+;
+    cmp eax,'TDSR'
+    jne acpi_fail
+
+acpi_get32:    
     mov cx,ds:act_size
     shr cx,1
 ;    
@@ -1017,20 +1078,58 @@ InitAcpiTables_    Proc near
     mov si,SIZE acpi_table
     mov di,OFFSET acpi_table_arr
 
-acpi_load_loop:
-    lods dword ptr [si]
+acpi_load_loop32:
+    mov eax,[si]
+    xor ebx,ebx
+    add si,4
     push es
     call GetTable
     mov ax,es
     pop es
-    jnc acpi_load_save
+    jnc acpi_load_save32
 ;    
     xor ax,ax
 
-acpi_load_save:
+acpi_load_save32:
     stos word ptr es:[di]
-    loop acpi_load_loop
+    loop acpi_load_loop32
+;
+    jmp acpi_setup_gates
+
+acpi_get64:
+    mov cx,ds:act_size
+    shr cx,2
 ;    
+    mov ax,OFFSET acpi_table_arr
+    add ax,cx
+    movzx eax,ax
+    mov bx,acpi_data_sel
+    AllocateFixedSystemMem
+    mov es,bx
+;
+    shr cx,1
+    mov es:acpi_table_count,cx
+;
+    mov si,SIZE acpi_table
+    mov di,OFFSET acpi_table_arr
+
+acpi_load_loop64:
+    mov eax,[si]
+    mov ebx,[si+4]
+    add si,8
+    push es
+    call GetTable
+    mov ax,es
+    pop es
+    jnc acpi_load_save64
+;    
+    xor ax,ax
+
+acpi_load_save64:
+    stos word ptr es:[di]
+    loop acpi_load_loop64
+    
+acpi_setup_gates:    
     mov ax,cs
     mov ds,ax
     mov es,ax

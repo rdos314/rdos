@@ -62,10 +62,54 @@ struct MemMap
     int Type;
 };
 
+struct AcpiRsdp
+{
+    char Sign[8];
+    char CheckSum;
+    char OemId[6];
+    char Revision;
+    unsigned int RsdtAddress;
+    int Len;
+    long long XsdtAddress;
+    char extchksum;
+    char Resv[3];
+};
+
+struct AcpiDt
+{
+    char Sign[4];
+    int Len;
+    char Revision;
+    char CheckSum;
+    char OemId[6];
+    long long OemTableId;
+    int OemRev;
+    int CreatorId;
+    int CreatorRev;
+};
+
+struct AcpiXsdt
+{
+    char Sign[4];
+    int Len;
+    char Revision;
+    char CheckSum;
+    char OemId[6];
+    long long OemTableId;
+    int OemRev;
+    int CreatorId;
+    int CreatorRev;
+    long long EntryArr[2];
+};
+
+
+
 void OpenScreen(const char *FileName);
 void CloseScreen();
 
 #define HIGH_BASE    0x100000
+#define ACPI_BASE    0x120000000
+#define TABLE_BASE   0x200000000
 
 #define STACK_SIZE  0x4000
 
@@ -81,6 +125,8 @@ TKeyb Keyb(&Isa, 0x60, &Pic0, 1);
 TRam LowRam(&Isa, 0, 0xA0000);
 TRam HighRam(&Isa, HIGH_BASE,  0x700000);
 TRam Ram64(&Isa, 0x100000000, 0x100000);
+TRam RamAcpi(&Isa, ACPI_BASE, 0x10000);
+TRam RamTable(&Isa, TABLE_BASE, 0x10000);
 TCpu Cpu;
 
 TSignalDevice RemoteSignal;
@@ -262,7 +308,12 @@ void Start()
     TFlash BiosShadow(&Isa, 0xF0000, 0x10000, Bios.GetData());
     struct UefiParam *UefiParam;
     struct MemMap *UefiMemMap;
+    struct AcpiRsdp *AcpiRsdp;
+    struct AcpiXsdt *AcpiXsdt;
+    struct AcpiDt *AcpiDt;
     char *ptr;
+    int i;
+    char sum;
 
     TRam Video(&Isa, 0x800000, 0x200000);
     Video.Clear();
@@ -283,7 +334,7 @@ void Start()
     UefiParam->LineSize = 4 * 640;
     UefiParam->Flags = 0;
     UefiParam->MemEntries = 3;
-    UefiParam->AcpiTable = 0x800000;
+    UefiParam->AcpiTable = ACPI_BASE;
 
     ptr = LowRam.GetData();
     ptr += 0x400;
@@ -305,6 +356,99 @@ void Start()
     UefiMemMap->Base = 0x100000000;
     UefiMemMap->Size =  0x100000;
     UefiMemMap->Type = 1;
+
+    ptr = RamAcpi.GetData();
+    AcpiRsdp = (struct AcpiRsdp *)ptr;
+
+    strcpy(AcpiRsdp->Sign, "RSD PTR ");
+    AcpiRsdp->OemId[0] = 0;
+    AcpiRsdp->OemId[1] = 0;
+    AcpiRsdp->OemId[2] = 0;
+    AcpiRsdp->OemId[3] = 0;
+    AcpiRsdp->OemId[4] = 0;
+    AcpiRsdp->OemId[5] = 0;
+    AcpiRsdp->Revision = 2;
+    AcpiRsdp->RsdtAddress = 0;
+    AcpiRsdp->XsdtAddress = ACPI_BASE + 0x400;
+    AcpiRsdp->Len = sizeof(struct AcpiRsdp);
+
+    sum = 0;
+    for (i = 0; i < 20; i++)
+        sum += ptr[i];
+    AcpiRsdp->CheckSum = -sum;
+
+    ptr += 0x400;
+    AcpiXsdt = (struct AcpiXsdt *)ptr;
+
+    strcpy(AcpiXsdt->Sign, "XSDT");
+    AcpiXsdt->Len = sizeof(struct AcpiXsdt);
+    AcpiXsdt->Revision = 1;
+    AcpiXsdt->CheckSum = 0;
+    AcpiXsdt->OemId[0] = 0;
+    AcpiXsdt->OemId[1] = 0;
+    AcpiXsdt->OemId[2] = 0;
+    AcpiXsdt->OemId[3] = 0;
+    AcpiXsdt->OemId[4] = 0;
+    AcpiXsdt->OemId[5] = 0;
+    AcpiXsdt->OemTableId = 1;
+    AcpiXsdt->OemRev = 1;
+    AcpiXsdt->CreatorId = 1;
+    AcpiXsdt->CreatorRev = 1;
+    AcpiXsdt->EntryArr[0] = TABLE_BASE + 0xC00;
+    AcpiXsdt->EntryArr[1] = TABLE_BASE + 0x1400;
+
+    sum = 0;
+    for (i = 0; i < AcpiXsdt->Len; i++)
+        sum += ptr[i];
+    AcpiXsdt->CheckSum = -sum;
+
+    ptr = RamTable.GetData() + 0xC00;
+    AcpiDt = (struct AcpiDt *)ptr;
+
+    strcpy(AcpiDt->Sign, "XYZ0");
+    AcpiDt->Len = sizeof(struct AcpiDt) + 1;
+    AcpiDt->Revision = 1;
+    AcpiDt->CheckSum = 0;
+    AcpiDt->OemId[0] = 0;
+    AcpiDt->OemId[1] = 0;
+    AcpiDt->OemId[2] = 0;
+    AcpiDt->OemId[3] = 0;
+    AcpiDt->OemId[4] = 0;
+    AcpiDt->OemId[5] = 0;
+    AcpiDt->OemTableId = 1;
+    AcpiDt->OemRev = 1;
+    AcpiDt->CreatorId = 1;
+    AcpiDt->CreatorRev = 1;
+
+    sum = 0;
+    for (i = 0; i < AcpiDt->Len; i++)
+        sum += ptr[i];
+    AcpiDt->CheckSum = -sum;
+
+
+    ptr = RamTable.GetData() + 0x1400;
+    AcpiDt = (struct AcpiDt *)ptr;
+
+    strcpy(AcpiDt->Sign, "XYZ1");
+    AcpiDt->Len = sizeof(struct AcpiDt) + 1;
+    AcpiDt->Revision = 1;
+    AcpiDt->CheckSum = 0;
+    AcpiDt->OemId[0] = 0;
+    AcpiDt->OemId[1] = 0;
+    AcpiDt->OemId[2] = 0;
+    AcpiDt->OemId[3] = 0;
+    AcpiDt->OemId[4] = 0;
+    AcpiDt->OemId[5] = 0;
+    AcpiDt->OemTableId = 1;
+    AcpiDt->OemRev = 1;
+    AcpiDt->CreatorId = 1;
+    AcpiDt->CreatorRev = 1;
+
+    sum = 0;
+    for (i = 0; i < AcpiDt->Len; i++)
+        sum += ptr[i];
+    AcpiDt->CheckSum = -sum;
+
 
     int sel;
     int offset;

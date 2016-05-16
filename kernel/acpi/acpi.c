@@ -295,7 +295,7 @@ struct TProcessorEntry *ProcessorArr[MAX_PROCESSOR_COUNT];
 ACPI_GENERIC_ADDRESS *PowerControl = 0;
 ACPI_GENERIC_ADDRESS *PowerStatus = 0;
 
-int PowerStateCount;
+int PowerStateCount = 0;
 struct TProcessorState *PowerStateArr[MAX_PROCESSOR_PSTATES];
 
 ACPI_GENERIC_ADDRESS *ThrottlingControl = 0;
@@ -553,20 +553,23 @@ void InitAmdK8()
 
     PowerState = 0;
 
-    for (i = 0; i < PowerStateCount; i++)
-        if (StateId == PowerStateArr[i]->Status)
-            PowerState = i;
+    if (PowerStateCount)
+    {
+        for (i = 0; i < PowerStateCount; i++)
+            if (StateId == PowerStateArr[i]->Status)
+                PowerState = i;
 
-    Irt = 12 << (((PowerStateArr[PowerState]->Control) >> 30) & 0x3);
-    Rvo = ((PowerStateArr[PowerState]->Control) >> 28) & 0x3;
-    Pll = (((PowerStateArr[PowerState]->Control) >> 20) & 0x7F) * 200;
-    Pll = Pll << 32;
-    Mvs = 1 << (((PowerStateArr[PowerState]->Control) >> 18) & 0x3);
-    Vst = (((PowerStateArr[PowerState]->Control) >> 11) & 0x7F) * 24;
-    CurrVid = ((PowerStateArr[PowerState]->Control) >> 6) & 0x1F;
-    CurrFid = (PowerStateArr[PowerState]->Control) & 0x3F;
-    ReqVid = CurrVid;
-    ReqFid = CurrFid;
+        Irt = 12 << (((PowerStateArr[PowerState]->Control) >> 30) & 0x3);
+        Rvo = ((PowerStateArr[PowerState]->Control) >> 28) & 0x3;
+        Pll = (((PowerStateArr[PowerState]->Control) >> 20) & 0x7F) * 200;
+        Pll = Pll << 32;
+        Mvs = 1 << (((PowerStateArr[PowerState]->Control) >> 18) & 0x3);
+        Vst = (((PowerStateArr[PowerState]->Control) >> 11) & 0x7F) * 24;
+        CurrVid = ((PowerStateArr[PowerState]->Control) >> 6) & 0x1F;
+        CurrFid = (PowerStateArr[PowerState]->Control) & 0x3F;
+        ReqVid = CurrVid;
+        ReqFid = CurrFid;
+    }
 }
     
 /*##########################################################################
@@ -688,7 +691,8 @@ void InitAmdK10()
 #pragma aux ImplUpdatePStateAmdK10 "*" rdosdev parm routine
 void __far ImplUpdatePStateAmdK10()
 {
-    WriteMsr(AMD10_PERF_CTL, PowerState);
+    if (PowerStateCount)
+        WriteMsr(AMD10_PERF_CTL, PowerState);
 }
     
 /*##########################################################################
@@ -701,16 +705,19 @@ void UpdateAmdK10(int diff)
     long long VidState;
     int NewState = PowerState + diff;
 
-    if (NewState < 0)
-        NewState = 0;
+    if (PowerStateCount)
+    {
+        if (NewState < 0)
+            NewState = 0;
 
-    if (NewState >= PowerStateCount)
-        NewState = PowerStateCount - 1;
+        if (NewState >= PowerStateCount)
+            NewState = PowerStateCount - 1;
 
-    if (PowerState != NewState)
-        PowerState = NewState;
+        if (PowerState != NewState)
+            PowerState = NewState;
 
-    ReqPStateUpdate(RdosGetActiveCores());
+        ReqPStateUpdate(RdosGetActiveCores());
+    }
 }
     
 /*##########################################################################

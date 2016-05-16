@@ -273,7 +273,7 @@ typedef int                             INT32;
 typedef INT32                           ACPI_NATIVE_INT;
 typedef UINT32                          ACPI_SIZE;
 typedef UINT32                          ACPI_IO_ADDRESS;
-typedef UINT32                          ACPI_PHYSICAL_ADDRESS;
+typedef UINT64                          ACPI_PHYSICAL_ADDRESS;
 
 #define ACPI_MAX_PTR                    ACPI_UINT32_MAX
 #define ACPI_SIZE_MAX                   ACPI_UINT32_MAX
