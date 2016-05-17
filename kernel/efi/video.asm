@@ -131,7 +131,6 @@ CreateFixedEfiConsole  PROC near
     mov es:c_scan_size,eax
     mov es:c_usage,1
 ;
-    int 3
     mov eax,00070120h
     mov edi,OFFSET c_text_data
     movzx ecx,es:c_text_entries
@@ -2753,7 +2752,7 @@ init_video      PROC near
     HookCreateThread
 ;
     mov edi,OFFSET init_process
-    HookTerminateProcess
+    HookCreateProcess
 ;
     mov edi,OFFSET free_process
     HookTerminateProcess
