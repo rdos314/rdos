@@ -67,7 +67,8 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extrn CreateConsole:near
-
+    extrn DisableConsoleFocus:near
+    extrn EnableConsoleFocus:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -556,12 +557,16 @@ set_focus       PROC far
     mov ax,ds:[bx].focus_thread
     or ax,ax
     jz set_focus_done
+;
+    call DisableConsoleFocus
     mov bx,ax
     cmp ds:focus_switched,0
     jz set_focus_no_lost
+;    
     push bx
     call trap_lost_focus
     pop bx
+    
 set_focus_no_lost:
     mov ds:focus_switched,1
     mov ds:focus_current_thread,bx
@@ -592,6 +597,9 @@ set_focus_loop:
 ;
     mov bx,SEG data
     mov ds,bx
+    mov bx,ds:focus_current_thread
+    call EnableConsoleFocus
+;    
     call trap_got_focus
 
 set_focus_done:

@@ -253,6 +253,7 @@ v_sprite_show_y     DW ?
 video_api_struc ENDS
 
 CONSOLE_FLAG_RGB      =  1
+CONSOLE_FLAG_ACTIVE   = 2
 
 console_text_struc  STRUC
 

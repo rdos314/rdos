@@ -68,6 +68,12 @@ vp_sel        DW ?
 video_process_seg ENDS
 
 
+data    SEGMENT byte public 'DATA'
+
+focus_console   DW ?
+
+data    ENDS
+
     .386p
 
 code    SEGMENT byte public 'CODE'
@@ -158,7 +164,6 @@ CreateConsole  PROC near
     push ax
 ;    
     GetThread
-    int 3
     mov ds,ax
     mov ds,ds:p_app_sel
     call CreateFixedEfiConsole
@@ -185,6 +190,78 @@ DeleteConsole  PROC near
     FreeMem
     ret
 DeleteConsole   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           DisableConsoleFocus
+;
+;   DESCRIPTION:    Disable console focus
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public DisableConsoleFocus
+
+DisableConsoleFocus Proc near
+    push ds
+    push es
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    xor ax,ax
+    xchg ax,ds:focus_console
+    or ax,ax
+    jz dcfDone
+;
+    mov ds,ax
+    lock and ds:c_flags,NOT CONSOLE_FLAG_ACTIVE
+        
+dcfDone:
+    pop ax
+    pop es
+    pop ds    
+    ret
+DisableConsoleFocus Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           EnableConsoleFocus
+;
+;   DESCRIPTION:    Enable console focus
+;
+;   PARAMETERS:     BX      Focus thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public EnableConsoleFocus
+
+EnableConsoleFocus Proc near
+    push ds
+    push es
+    push ax
+    push bx
+;    
+    mov es,bx
+    mov es,es:p_app_sel
+    mov bx,es:app_console
+    or bx,bx
+    jz ecfDone
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov es,bx
+    lock or es:c_flags,CONSOLE_FLAG_ACTIVE
+    mov ds:focus_console,bx
+        
+ecfDone:
+    pop bx
+    pop ax
+    pop es
+    pop ds    
+    ret
+EnableConsoleFocus Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2613,38 +2690,6 @@ extract_alpha_bitmap       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           lost_focus_hook
-;
-;           DESCRIPTION:    Lost focus hook
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-            
-lost_focus_hook PROC far
-    ret
-lost_focus_hook Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           got_focus_hook
-;
-;           DESCRIPTION:    Got focus hook
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-            
-got_focus_hook  PROC far
-    ret
-got_focus_hook  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           INIT_THREAD
 ;
 ;           DESCRIPTION:    init thread
@@ -2685,7 +2730,6 @@ init_process     PROC far
     push ax
 ;
     GetThread
-    int 3
     mov ds,ax
     mov ds,ds:p_app_sel
     mov ds:app_console,0
@@ -2711,7 +2755,6 @@ free_process     PROC far
     push ax
 ;
     GetThread
-    int 3
     mov es,ax
     mov es,es:p_app_sel
     mov ax,es:app_console
@@ -2744,6 +2787,10 @@ free_process     ENDP
     public init_video
             
 init_video      PROC near
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:focus_console,0
+;    
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -2756,12 +2803,6 @@ init_video      PROC near
 ;
     mov edi,OFFSET free_process
     HookTerminateProcess
-;
-    mov edi,OFFSET lost_focus_hook
-    HookLostFocus
-;
-    mov edi,OFFSET got_focus_hook
-    HookGotFocus
 ;
     mov esi,OFFSET invert_mouse
     mov edi,OFFSET invert_mouse_name
