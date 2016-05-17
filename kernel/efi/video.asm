@@ -353,46 +353,6 @@ invert_mouse    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           UpdatePos
-;
-;           DESCRIPTION:    Update cursor position
-;
-;           PARAMETERS:     DS    Thread sel
-;                           AL    Char
-;                           BL    Fore color
-;                           BH    Back color
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdatePos       Proc near
-    cmp ds:p_col,-1
-    jne update_not_row_wrap
-;
-    mov ds:p_col,79
-
-update_not_row_wrap:
-    cmp ds:p_col,79
-    jbe update_video_same_row
-;
-    mov ds:p_col,0
-    inc ds:p_row
-
-update_video_same_row:
-    cmp ds:p_row,25
-    jc update_video_end
-;
-    dec ds:p_row
-;
-; scroll up!
-;
-
-update_video_end:
-    ret
-UpdatePos       ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;   NAME:           Font8x19
 ;
 ;   DESCRIPTION:    8x19 font
@@ -660,9 +620,9 @@ fFF db 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 0
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           WriteCh
+;           NAME:           WriteDisplay
 ;
-;           DESCRIPTION:    Write normal char
+;           DESCRIPTION:    Write char to display
 ;
 ;           PARAMETERS:     DS    Thread sel
 ;                           AL    Char
@@ -689,7 +649,7 @@ act0D   DD 00FF66FFh
 act0E   DD 0066FFFFh
 act0F   DD 00FFFFFFh
 
-WriteCh     PROC near
+WriteDisplay     PROC near
     push es
     push fs
     pushad
@@ -734,35 +694,35 @@ WriteCh     PROC near
 ;
     mov ecx,19
 
-wcRowLoop:    
+wdRowLoop:    
     push ecx
     push edi
     mov ecx,8
     mov al,cs:[ebx]
 
-wcLoop:
+wdLoop:
     test al,80h
-    jz wcBack
+    jz wdBack
 
-wcFore:
+wdFore:
     mov es:[edi],ebp
-    jmp wcNext
+    jmp wdNext
 
-wcBack:
+wdBack:
     mov es:[edi],esi
 
-wcNext:
+wdNext:
     add edi,4
     shl al,1
 ;
-    loop wcLoop    
+    loop wdLoop    
 ;
     pop edi
     pop ecx
     add edi,fs:efi_scan_size
     inc ebx
 ;
-    loop wcRowLoop    
+    loop wdRowLoop    
 ;    
     inc ds:p_col
 ;
@@ -770,7 +730,125 @@ wcNext:
     pop fs
     pop es
     ret
-WriteCh     ENDP
+WriteDisplay     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           WriteConsoleChar
+;
+;           DESCRIPTION:    Write char to buffer
+;
+;           PARAMETERS:     FS    Console
+;                           AL    Char
+;                           CX    Col
+;                           DX    Row
+;                           BL    Fore color
+;                           BH    Back color
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteConsoleChar     PROC near
+    push edi
+;    
+    push ax
+    push dx
+    mov ax,fs:c_cols
+    mul dx
+    add ax,cx
+    movzx edi,ax
+    shl edi,2
+    add edi,OFFSET c_text_data
+    mov ax,bx
+    shl eax,16
+    pop dx
+    pop ax
+;
+    mov ah,1
+    mov fs:[edi],eax
+;
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz wccDone
+;
+    push ds
+    push bx
+    pop bx
+    pop ds
+
+wccDone:
+    pop edi    
+    ret
+WriteConsoleChar    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           WriteConsole
+;
+;           DESCRIPTION:    Write char to buffer
+;
+;           PARAMETERS:     DS    Thread sel
+;                           FS    Console
+;                           AL    Char
+;                           BL    Fore color
+;                           BH    Back color
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteConsole     PROC near
+    call WriteDisplay  ; test only
+;
+    push cx
+    push dx
+;
+    mov cx,ds:p_col
+    mov dx,ds:p_row
+    call WriteConsoleChar
+;
+    pop dx
+    pop cx    
+    ret
+WriteConsole    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           UpdatePos
+;
+;           DESCRIPTION:    Update cursor position
+;
+;           PARAMETERS:     DS    Thread sel
+;                           AL    Char
+;                           BL    Fore color
+;                           BH    Back color
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePos       Proc near
+    cmp ds:p_col,-1
+    jne update_not_row_wrap
+;
+    mov ds:p_col,79
+
+update_not_row_wrap:
+    cmp ds:p_col,79
+    jbe update_video_same_row
+;
+    mov ds:p_col,0
+    inc ds:p_row
+
+update_video_same_row:
+    cmp ds:p_row,25
+    jc update_video_end
+;
+    dec ds:p_row
+;
+; scroll up!
+;
+
+update_video_end:
+    ret
+UpdatePos       ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -780,6 +858,7 @@ WriteCh     ENDP
 ;           DESCRIPTION:    Write NUL char
 ;
 ;           PARAMETERS:     DS    Thread sel
+;                           FS    Console sel
 ;                           AL    Char
 ;                           BL    Fore color
 ;                           BH    Back color
@@ -789,7 +868,7 @@ WriteCh     ENDP
 WriteSkip       PROC near
     push ax
     mov al,' '
-    call WriteCh
+    call WriteConsole
     pop ax
     ret
 WriteSkip       ENDP
@@ -802,6 +881,7 @@ WriteSkip       ENDP
 ;           DESCRIPTION:    Write TAB char
 ;
 ;           PARAMETERS:     DS    Thread sel
+;                           FS    Console
 ;                           AL    Char
 ;                           BL    Fore color
 ;                           BH    Back color
@@ -813,7 +893,7 @@ WriteTab    PROC near
     mov al,' '
 
 write_tab_more:
-    call WriteCh
+    call WriteConsole
     test ds:p_col,3
     jnz write_tab_more
 ;
@@ -889,6 +969,7 @@ WriteCr ENDP
 ;           DESCRIPTION:    Write one character to screen
 ;
 ;           PARAMETERS:     DS    Thread sel
+;                           FS    Console
 ;                           AL    Char
 ;                           BL    Fore color
 ;                           BH    Back color
@@ -897,21 +978,21 @@ WriteCr ENDP
 
 write_tab:
 wct00   DD OFFSET WriteSkip
-wct01   DD OFFSET WriteCh
-wct02   DD OFFSET WriteCh
-wct03   DD OFFSET WriteCh
-wct04   DD OFFSET WriteCh
-wct05   DD OFFSET WriteCh
-wct06   DD OFFSET WriteCh
-wct07   DD OFFSET WriteCh
+wct01   DD OFFSET WriteConsole
+wct02   DD OFFSET WriteConsole
+wct03   DD OFFSET WriteConsole
+wct04   DD OFFSET WriteConsole
+wct05   DD OFFSET WriteConsole
+wct06   DD OFFSET WriteConsole
+wct07   DD OFFSET WriteConsole
 wct08   DD OFFSET WriteDel
 wct09   DD OFFSET WriteTab
 wct0A   DD OFFSET WriteLf
-wct0B   DD OFFSET WriteCh
-wct0C   DD OFFSET WriteCh
-wct0D   DD OFFSET WriteCr
-wct0E   DD OFFSET WriteCh
-wct0F   DD OFFSET WriteCh
+wct0B   DD OFFSET WriteConsole
+wct0C   DD OFFSET WriteConsole
+wct0D   DD OFFSET WriteConsole
+wct0E   DD OFFSET WriteConsole
+wct0F   DD OFFSET WriteConsole
 
 WriteOne    PROC near
     push esi
@@ -1073,14 +1154,21 @@ write_char      ENDP
 write_asciiz_name       DB 'Write Asciiz String',0
 
 write_asciiz16  PROC far
-    int 3
     push ds
+    push fs
     push ax
     push bx
     push di
 ;
     GetThread
+    int 3
     mov ds,ax
+    mov fs,ds:p_app_sel
+    mov ax,fs:app_console
+    or ax,ax
+    jz write_asciiz_done16
+;
+    mov fs,ax    
     mov bl,ds:p_forecolor
     mov bh,ds:p_backcolor
     HideMouse
@@ -1100,19 +1188,27 @@ write_asciiz_done16:
     pop di
     pop bx
     pop ax
+    pop fs
     pop ds
     ret
 write_asciiz16  ENDP
 
 write_asciiz32  PROC far
-    int 3
     push ds
+    push fs
     push ax
     push bx
     push edi
 ;
     GetThread
+    int 3
     mov ds,ax
+    mov fs,ds:p_app_sel
+    mov ax,fs:app_console
+    or ax,ax
+    jz write_asciiz_done32
+;
+    mov fs,ax    
     mov bl,ds:p_forecolor
     mov bh,ds:p_backcolor
     HideMouse
@@ -1132,6 +1228,7 @@ write_asciiz_done32:
     pop edi
     pop bx
     pop ax
+    pop fs
     pop ds
     ret
 write_asciiz32  ENDP
@@ -1172,6 +1269,7 @@ write_size_string_name  DB 'Write Size String',0
 
 write_size_string16     PROC far
     push ds
+    push gs
     push ax
     push bx
     push cx
@@ -1182,7 +1280,14 @@ write_size_string16     PROC far
     jz write_size_string_done16
 ;
     GetThread
+    int 3
     mov ds,ax
+    mov fs,ds:p_app_sel
+    mov ax,fs:app_console
+    or ax,ax
+    jz write_size_string_done16
+;
+    mov fs,ax    
     mov bl,ds:p_forecolor
     mov bh,ds:p_backcolor
 
@@ -1200,12 +1305,14 @@ write_size_string_done16:
     pop cx
     pop bx
     pop ax
+    pop fs
     pop ds
     ret
 write_size_string16     ENDP
 
 write_size_string32     PROC far
     push ds
+    push fs
     push ax
     push bx
     push ecx
@@ -1216,7 +1323,14 @@ write_size_string32     PROC far
     jz write_size_string_done32
 ;
     GetThread
+    int 3
     mov ds,ax
+    mov fs,ds:p_app_sel
+    mov ax,fs:app_console
+    or ax,ax
+    jz write_size_string_done32
+;
+    mov fs,ax    
     mov bl,ds:p_forecolor
     mov bh,ds:p_backcolor
 
