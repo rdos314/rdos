@@ -251,3 +251,35 @@ v_sprite_show_x     DW ?
 v_sprite_show_y     DW ?
 
 video_api_struc ENDS
+
+CONSOLE_FLAG_RGB      =  1
+
+console_text_struc  STRUC
+
+ct_char     DB ?
+ct_dirty    DB ?
+ct_fore_col DB ?
+ct_back_col DB ?
+
+console_text_struc  ENDS
+
+console_struc   STRUC
+
+c_lfb           DD ?
+c_width         DW ?
+c_height        DW ?
+c_scan_size     DD ?
+c_flags         DD ?
+c_font          DW ?
+c_font_height   DW ?
+c_font_width    DW ?
+c_rows          DW ?
+c_cols          DW ?
+
+c_usage         DW ?
+
+c_text_entries  DW ?
+
+c_text_data     DB ?
+
+console_struc   ENDS

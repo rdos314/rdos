@@ -61,6 +61,13 @@ CallVideo       MACRO   call_proc
     pop ds
                 ENDM
 
+video_process_seg STRUC
+
+vp_sel        DW ?
+
+video_process_seg ENDS
+
+
     .386p
 
 code    SEGMENT byte public 'CODE'
@@ -70,6 +77,115 @@ code    SEGMENT byte public 'CODE'
     extrn init_bitmap:near
     extrn init_sprite:near
     
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           CreateFixedEfiConsole
+;
+;   DESCRIPTION:    Create a new EFI console with fixed font
+;
+;   RETURNS:        ES      Console sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateFixedEfiConsole  PROC near
+    push ds
+    pushad
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    movzx eax,ds:efi_width
+    shr eax,3
+    mov esi,eax
+;
+    movzx eax,ds:efi_height
+    mov ecx,19
+    xor edx,edx
+    div ecx
+    mov edi,eax
+;   
+    mul esi
+    mov ebp,eax
+    shl eax,2
+    add eax,OFFSET c_text_data
+    AllocateBigLinear
+    AllocateGdt
+    mov ecx,eax
+    CreateDataSelector32
+    mov es,bx
+    mov es:c_text_entries,bp
+    mov es:c_rows,di
+    mov es:c_cols,si
+    mov es:c_font,0
+    mov es:c_font_width,8
+    mov es:c_font_height,19
+;    
+    mov eax,ds:efi_lfb
+    mov es:c_lfb,eax
+    mov ax,ds:efi_width
+    mov es:c_width,ax
+    mov ax,ds:efi_height
+    mov es:c_height,ax
+    mov eax,ds:efi_scan_size
+    mov es:c_scan_size,eax
+    mov es:c_usage,1
+;
+    int 3
+    mov eax,00070120h
+    mov edi,OFFSET c_text_data
+    movzx ecx,es:c_text_entries
+    rep stosd
+;    
+    popad    
+    pop ds
+    ret
+CreateFixedEfiConsole    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           CreateConsole
+;
+;   DESCRIPTION:    Create a new console
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateConsole
+    
+CreateConsole  PROC near
+    push ds
+    push es
+    push ax
+;    
+    GetThread
+    int 3
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    call CreateFixedEfiConsole
+    mov ds:app_console,es
+;
+    pop ax
+    pop es
+    pop ds
+    ret
+CreateConsole   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           DeleteConsole
+;
+;   DESCRIPTION:    Delete console
+;
+;   PARAMETERS:     ES      Console sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteConsole  PROC near
+    FreeMem
+    ret
+DeleteConsole   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2557,6 +2673,67 @@ init_thread     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           init_process
+;
+;           DESCRIPTION:    init process
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            
+init_process     PROC far
+    push ds
+    push ax
+;
+    GetThread
+    int 3
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds:app_console,0
+;
+    pop ax
+    pop ds
+    ret
+init_process     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           free_process
+;
+;           DESCRIPTION:    free process
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            
+free_process     PROC far
+    push es
+    push ax
+;
+    GetThread
+    int 3
+    mov es,ax
+    mov es,es:p_app_sel
+    mov ax,es:app_console
+    or ax,ax
+    jz fp_done
+;
+    mov es,ax
+    sub es:c_usage,1
+    jnz fp_done
+;    
+    call DeleteConsole
+    
+fp_done:
+    pop ax
+    pop es
+    ret
+free_process     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           INIT
 ;
 ;           DESCRIPTION:    Init driver
@@ -2574,6 +2751,12 @@ init_video      PROC near
 ;
     mov edi,OFFSET init_thread
     HookCreateThread
+;
+    mov edi,OFFSET init_process
+    HookTerminateProcess
+;
+    mov edi,OFFSET free_process
+    HookTerminateProcess
 ;
     mov edi,OFFSET lost_focus_hook
     HookLostFocus
