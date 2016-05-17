@@ -723,8 +723,6 @@ wdNext:
     inc ebx
 ;
     loop wdRowLoop    
-;    
-    inc ds:p_col
 ;
     popad        
     pop fs
@@ -796,14 +794,13 @@ WriteConsoleChar    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteConsole     PROC near
-    call WriteDisplay  ; test only
-;
     push cx
     push dx
 ;
     mov cx,ds:p_col
     mov dx,ds:p_row
-    call WriteConsoleChar
+    call WriteConsoleChar    
+    inc ds:p_col
 ;
     pop dx
     pop cx    
@@ -818,6 +815,7 @@ WriteConsole    Endp
 ;           DESCRIPTION:    Update cursor position
 ;
 ;           PARAMETERS:     DS    Thread sel
+;                           FS    Console sel
 ;                           AL    Char
 ;                           BL    Fore color
 ;                           BH    Back color
@@ -825,20 +823,24 @@ WriteConsole    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdatePos       Proc near
+    push ax
+;    
+    mov ax,fs:c_cols
     cmp ds:p_col,-1
     jne update_not_row_wrap
 ;
-    mov ds:p_col,79
+    mov ds:p_col,ax
 
 update_not_row_wrap:
-    cmp ds:p_col,79
+    cmp ds:p_col,ax
     jbe update_video_same_row
 ;
     mov ds:p_col,0
     inc ds:p_row
 
 update_video_same_row:
-    cmp ds:p_row,25
+    mov ax,fs:c_rows
+    cmp ds:p_row,ax
     jc update_video_end
 ;
     dec ds:p_row
