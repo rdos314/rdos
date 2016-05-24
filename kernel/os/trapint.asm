@@ -1358,7 +1358,7 @@ segment_not_present_name DB 'Segment Not Present',0
 
 segment_not_present     PROC far
     stc
-    ret
+    retf32
 segment_not_present     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

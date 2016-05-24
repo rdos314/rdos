@@ -87,272 +87,6 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;   NAME:           CreateFixedEfiConsole
-;
-;   DESCRIPTION:    Create a new EFI console with fixed font
-;
-;   RETURNS:        ES      Console sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateFixedEfiConsole  PROC near
-    push ds
-    pushad
-;    
-    mov ax,system_data_sel
-    mov ds,ax
-    movzx eax,ds:efi_width
-    shr eax,3
-    mov esi,eax
-;
-    movzx eax,ds:efi_height
-    mov ecx,19
-    xor edx,edx
-    div ecx
-    mov edi,eax
-;   
-    mul esi
-    mov ebp,eax
-    shl eax,2
-    add eax,OFFSET c_text_data
-    AllocateBigLinear
-    AllocateGdt
-    mov ecx,eax
-    CreateDataSelector32
-    mov es,bx
-    mov es:c_text_entries,bp
-    mov es:c_rows,di
-    mov es:c_cols,si
-    mov es:c_font,0
-    mov es:c_font_width,8
-    mov es:c_font_height,19
-;    
-    mov eax,ds:efi_lfb
-    mov es:c_lfb,eax
-    mov ax,ds:efi_width
-    mov es:c_width,ax
-    mov ax,ds:efi_height
-    mov es:c_height,ax
-    mov eax,ds:efi_scan_size
-    mov es:c_scan_size,eax
-    mov es:c_usage,1
-;
-    mov eax,00070120h
-    mov edi,OFFSET c_text_data
-    movzx ecx,es:c_text_entries
-    rep stosd
-;    
-    popad    
-    pop ds
-    ret
-CreateFixedEfiConsole    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;   NAME:           CreateConsole
-;
-;   DESCRIPTION:    Create a new console
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public CreateConsole
-    
-CreateConsole  PROC near
-    push ds
-    push es
-    push ax
-;    
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    call CreateFixedEfiConsole
-    mov ds:app_console,es
-;
-    pop ax
-    pop es
-    pop ds
-    ret
-CreateConsole   Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;   NAME:           DeleteConsole
-;
-;   DESCRIPTION:    Delete console
-;
-;   PARAMETERS:     ES      Console sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DeleteConsole  PROC near
-    FreeMem
-    ret
-DeleteConsole   Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;   NAME:           DisableConsoleFocus
-;
-;   DESCRIPTION:    Disable console focus
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public DisableConsoleFocus
-
-DisableConsoleFocus Proc near
-    push ds
-    push es
-    push ax
-;    
-    mov ax,SEG data
-    mov ds,ax
-    xor ax,ax
-    xchg ax,ds:focus_console
-    or ax,ax
-    jz dcfDone
-;
-    mov ds,ax
-    lock and ds:c_flags,NOT CONSOLE_FLAG_ACTIVE
-        
-dcfDone:
-    pop ax
-    pop es
-    pop ds    
-    ret
-DisableConsoleFocus Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;   NAME:           EnableConsoleFocus
-;
-;   DESCRIPTION:    Enable console focus
-;
-;   PARAMETERS:     BX      Focus thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public EnableConsoleFocus
-
-EnableConsoleFocus Proc near
-    push ds
-    push es
-    push ax
-    push bx
-;    
-    mov es,bx
-    mov es,es:p_app_sel
-    mov bx,es:app_console
-    or bx,bx
-    jz ecfDone
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov es,bx
-    lock or es:c_flags,CONSOLE_FLAG_ACTIVE
-    mov ds:focus_console,bx
-        
-ecfDone:
-    pop bx
-    pop ax
-    pop es
-    pop ds    
-    ret
-EnableConsoleFocus Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           QueryVideoMode
-;
-;           DESCRIPTION:    Query video mode
-;
-;           PARAMETERS:     AX      mode # or 0    
-;
-;           RETURNS:        AX          bits / pixel
-;                           CX          x-resolution
-;                           DX          y-resolution
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-query_video_mode_name     DB 'Query Video Mode',0
-
-query_video_mode  PROC far
-    ret
-query_video_mode    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetVideoMode
-;
-;           DESCRIPTION:    Get video mode
-;
-;           PARAMETERS:         AX          bits / pixel
-;                           CX          x-resolution
-;                           DX          y-resolution
-;
-;       RETURNS:    AX      mode # or 0
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_video_mode_name     DB 'Get Video Mode',0
-
-get_video_mode  PROC far
-    ret
-get_video_mode  Endp
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           SetVideoMode
-;
-;           DESCRIPTION:    Set video mode
-;
-;           PARAMETERS:         AX          Mode
-;
-;           RETURNS:        AX          bits / pixel
-;                           BX          bitmap handle
-;                           CX          x-resolution
-;                           DX          y-resolution
-;                           SI          line size
-;                           ES:EDI  user buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_video_mode_name     DB 'Set Video Mode',0
-
-set_video_mode  PROC far
-    ret
-set_video_mode  ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           InvertMouse
-;
-;           DESCRIPTION:    Invert colors for mouse-pointer
-;
-;           PARAMETERS:     CX          COL (x)
-;                           DX          ROW (y)
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-invert_mouse_name       DB 'InvertMouse',0
-
-invert_mouse    PROC far
-    ret
-invert_mouse    ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;   NAME:           Font8x19
 ;
 ;   DESCRIPTION:    8x19 font
@@ -616,77 +350,81 @@ fFC db 000h, 000h, 0D8h, 06Ch, 06Ch, 06Ch, 06Ch, 06Ch, 06Ch, 000h, 000h, 000h, 0
 fFD db 000h, 000h, 038h, 06Ch, 00Ch, 018h, 030h, 064h, 07Ch, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
 fFE db 000h, 000h, 000h, 000h, 000h, 07Ch, 07Ch, 07Ch, 07Ch, 07Ch, 07Ch, 07Ch, 07Ch, 07Ch, 000h, 000h, 000h, 000h, 000h
 fFF db 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
+
+AttribBgrTab:
+abt00   DD 00000000h
+abt01   DD 00990000h
+abt02   DD 00009900h
+abt03   DD 00CC6600h
+abt04   DD 00000099h
+abt05   DD 00990099h
+abt06   DD 00009999h
+abt07   DD 00CCCCCCh
+abt08   DD 00666666h
+abt09   DD 00FF6666h
+abt0A   DD 0066FF66h
+abt0B   DD 00FFFF66h
+abt0C   DD 006666FFh
+abt0D   DD 00FF66FFh
+abt0E   DD 0066FFFFh
+abt0F   DD 00FFFFFFh
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           WriteDisplay
+;   NAME:           UpdateDisplayBgr32
 ;
-;           DESCRIPTION:    Write char to display
+;   DESCRIPTION:    Update display
 ;
-;           PARAMETERS:     DS    Thread sel
-;                           AL    Char
-;                           BL    Fore color
-;                           BH    Back color
+;   PARAMETERS:     DS       Console
+;                   ES:EDI   LFB
+;                   ECX      Row size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AttribColorTab:
-act00   DD 00000000h
-act01   DD 00990000h
-act02   DD 00009900h
-act03   DD 00CC6600h
-act04   DD 00000099h
-act05   DD 00990099h
-act06   DD 00009999h
-act07   DD 00CCCCCCh
-act08   DD 00666666h
-act09   DD 00FF6666h
-act0A   DD 0066FF66h
-act0B   DD 00FFFF66h
-act0C   DD 006666FFh
-act0D   DD 00FF66FFh
-act0E   DD 0066FFFFh
-act0F   DD 00FFFFFFh
 
-WriteDisplay     PROC near
-    push es
-    push fs
-    pushad
-;    
-    movzx esi,bl
-    and esi,0Fh
-    shl esi,2
-    mov ebp,dword ptr cs:[esi].AttribColorTab    ; fore color
-;    
-    movzx esi,bh
-    and esi,0Fh
-    shl esi,2
-    mov esi,dword ptr cs:[esi].AttribColorTab    ; back color
+disp_fore_color EQU -4
+disp_back_color EQU -8
+disp_row_size   EQU -12
+
+UpdateDisplayBgr32     PROC near
+    push ebp
+    mov ebp,esp
+    sub esp,12
 ;
-    mov dx,flat_sel
-    mov es,dx
-    mov dx,system_data_sel
-    mov fs,dx
-;    
-    push ax
-    mov ax,ds:p_row
-    mov cx,19
-    mul cx
-    add ax,4
-    movzx eax,ax
-;    
-    mov edx,fs:efi_scan_size
-    mul edx
-    mov edi,fs:efi_lfb
-    add edi,eax
-;    
-    movzx eax,ds:p_col
-    shl eax,5
-    add edi,eax
+    mov [ebp].disp_row_size,ecx
 ;
-    pop ax
+    movzx ecx,ds:c_rows
+    mov esi,OFFSET c_text_data
+
+udb32RowLoop:
+    push ecx
+    push edi
+;    
+    movzx ecx,ds:c_cols    
+
+udb32ColLoop:        
+    xor al,al
+    xchg al,ds:[esi].ct_dirty
+    or al,al
+    jz udb32NextChar
 ;
+    push ecx
+    push edi
+;    
+    mov bl,ds:[esi].ct_fore_col       
+    and ebx,0Fh
+    shl ebx,2
+    mov eax,dword ptr cs:[ebx].AttribBgrTab
+    mov [ebp].disp_fore_color,eax
+;
+    mov bl,ds:[esi].ct_back_col
+    and ebx,0Fh
+    shl ebx,2
+    mov eax,dword ptr cs:[ebx].AttribBgrTab
+    mov [ebp].disp_back_color,eax
+;
+    mov al,ds:[esi].ct_char
     mov ah,19
     mul ah
     movzx ebx,ax
@@ -694,41 +432,361 @@ WriteDisplay     PROC near
 ;
     mov ecx,19
 
-wdRowLoop:    
+udb32LineLoop:    
     push ecx
     push edi
     mov ecx,8
     mov al,cs:[ebx]
 
-wdLoop:
+udb32BitLoop:
     test al,80h
-    jz wdBack
+    jz udb32Back
 
-wdFore:
-    mov es:[edi],ebp
-    jmp wdNext
+udb32Fore:
+    mov eax,[ebp].disp_fore_color
+    mov es:[edi],eax
+    jmp udb32Next
 
-wdBack:
-    mov es:[edi],esi
+udb32Back:
+    mov eax,[ebp].disp_back_color
+    mov es:[edi],eax
 
-wdNext:
+udb32Next:
     add edi,4
     shl al,1
 ;
-    loop wdLoop    
+    loop udb32BitLoop    
 ;
     pop edi
     pop ecx
-    add edi,fs:efi_scan_size
+    add edi,[ebp].disp_row_size
     inc ebx
 ;
-    loop wdRowLoop    
+    loop udb32LineLoop    
 ;
-    popad        
-    pop fs
-    pop es
+    pop edi
+    pop ecx
+
+udb32NextChar:
+    add esi,4
+    add edi,8 * 4
+    loop udb32ColLoop    
+;
+    pop edi
+    pop ecx
+;
+    mov eax,[ebp].disp_row_size
+    mov edx,19
+    mul edx
+    add edi,eax
+    sub ecx,1
+    jnz udb32RowLoop   
+;
+    add esp,12
+    pop ebp     
     ret
-WriteDisplay     ENDP
+UpdateDisplayBgr32     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           UpdateThread
+;
+;   DESCRIPTION:    Update thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+update_thread_name  DB 'Video Sync', 0
+
+update_thread:
+
+utLoop:    
+    int 3
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,ds:efi_lfb
+    mov ecx,ds:efi_scan_size
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:focus_console
+    or ax,ax
+    jz utNext
+;
+    mov ds,ax    
+    call UpdateDisplayBgr32
+
+utNext:
+    mov ax,20
+    WaitMilliSec
+    jmp utLoop 
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           CreateFixedEfiConsole
+;
+;   DESCRIPTION:    Create a new EFI console with fixed font
+;
+;   RETURNS:        ES      Console sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateFixedEfiConsole  PROC near
+    push ds
+    pushad
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    movzx eax,ds:efi_width
+    shr eax,3
+    mov esi,eax
+;
+    movzx eax,ds:efi_height
+    mov ecx,19
+    xor edx,edx
+    div ecx
+    mov edi,eax
+;   
+    mul esi
+    mov ebp,eax
+    shl eax,2
+    add eax,OFFSET c_text_data
+    AllocateBigLinear
+    AllocateGdt
+    mov ecx,eax
+    CreateDataSelector32
+    mov es,bx
+    mov es:c_text_entries,bp
+    mov es:c_rows,di
+    mov es:c_cols,si
+    mov es:c_font,0
+    mov es:c_font_width,8
+    mov es:c_font_height,19
+;    
+    mov eax,ds:efi_lfb
+    mov es:c_lfb,eax
+    mov ax,ds:efi_width
+    mov es:c_width,ax
+    mov ax,ds:efi_height
+    mov es:c_height,ax
+    mov eax,ds:efi_scan_size
+    mov es:c_scan_size,eax
+    mov es:c_usage,1
+;
+    mov eax,00070120h
+    mov edi,OFFSET c_text_data
+    movzx ecx,es:c_text_entries
+    rep stosd
+;    
+    popad    
+    pop ds
+    ret
+CreateFixedEfiConsole    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           CreateConsole
+;
+;   DESCRIPTION:    Create a new console
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateConsole
+    
+CreateConsole  PROC near
+    push ds
+    push es
+    push ax
+;    
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    call CreateFixedEfiConsole
+    mov ds:app_console,es
+;
+    pop ax
+    pop es
+    pop ds
+    ret
+CreateConsole   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           DeleteConsole
+;
+;   DESCRIPTION:    Delete console
+;
+;   PARAMETERS:     ES      Console sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteConsole  PROC near
+    FreeMem
+    ret
+DeleteConsole   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           DisableConsoleFocus
+;
+;   DESCRIPTION:    Disable console focus
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public DisableConsoleFocus
+
+DisableConsoleFocus Proc near
+    push ds
+    push es
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    xor ax,ax
+    xchg ax,ds:focus_console
+    or ax,ax
+    jz dcfDone
+;
+    mov ds,ax
+    lock and ds:c_flags,NOT CONSOLE_FLAG_ACTIVE
+        
+dcfDone:
+    pop ax
+    pop es
+    pop ds    
+    ret
+DisableConsoleFocus Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           EnableConsoleFocus
+;
+;   DESCRIPTION:    Enable console focus
+;
+;   PARAMETERS:     BX      Focus thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public EnableConsoleFocus
+
+EnableConsoleFocus Proc near
+    push ds
+    push es
+    push ax
+    push bx
+;    
+    mov es,bx
+    mov es,es:p_app_sel
+    mov bx,es:app_console
+    or bx,bx
+    jz ecfDone
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov es,bx
+    lock or es:c_flags,CONSOLE_FLAG_ACTIVE
+    mov ds:focus_console,bx
+        
+ecfDone:
+    pop bx
+    pop ax
+    pop es
+    pop ds    
+    ret
+EnableConsoleFocus Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           QueryVideoMode
+;
+;           DESCRIPTION:    Query video mode
+;
+;           PARAMETERS:     AX      mode # or 0    
+;
+;           RETURNS:        AX          bits / pixel
+;                           CX          x-resolution
+;                           DX          y-resolution
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+query_video_mode_name     DB 'Query Video Mode',0
+
+query_video_mode  PROC far
+    ret
+query_video_mode    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetVideoMode
+;
+;           DESCRIPTION:    Get video mode
+;
+;           PARAMETERS:         AX          bits / pixel
+;                           CX          x-resolution
+;                           DX          y-resolution
+;
+;       RETURNS:    AX      mode # or 0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_video_mode_name     DB 'Get Video Mode',0
+
+get_video_mode  PROC far
+    ret
+get_video_mode  Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetVideoMode
+;
+;           DESCRIPTION:    Set video mode
+;
+;           PARAMETERS:         AX          Mode
+;
+;           RETURNS:        AX          bits / pixel
+;                           BX          bitmap handle
+;                           CX          x-resolution
+;                           DX          y-resolution
+;                           SI          line size
+;                           ES:EDI  user buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_video_mode_name     DB 'Set Video Mode',0
+
+set_video_mode  PROC far
+    ret
+set_video_mode  ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           InvertMouse
+;
+;           DESCRIPTION:    Invert colors for mouse-pointer
+;
+;           PARAMETERS:     CX          COL (x)
+;                           DX          ROW (y)
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+invert_mouse_name       DB 'InvertMouse',0
+
+invert_mouse    PROC far
+    ret
+invert_mouse    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2890,6 +2948,39 @@ fp_done:
 free_process     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           init_tasking
+;
+;           DESCRIPTION:    init tasking
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+init_tasking      Proc far
+    push ds
+    push es
+    pusha
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET update_thread_name
+    mov si,OFFSET update_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+;       
+    popa
+    pop es
+    pop ds
+    retf32
+init_tasking      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           INIT
@@ -2919,6 +3010,9 @@ init_video      PROC near
 ;
     mov edi,OFFSET free_process
     HookTerminateProcess
+;
+    mov edi,OFFSET init_tasking
+    HookInitTasking
 ;
     mov esi,OFFSET invert_mouse
     mov edi,OFFSET invert_mouse_name
