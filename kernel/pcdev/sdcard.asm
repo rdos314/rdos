@@ -87,6 +87,7 @@ sd_ok               DB ?
 sd_pci_bus          DB ?
 sd_pci_device       DB ?
 sd_pci_function     DB ?
+sd_has_int          DW ?
 
 sd_disc_nr          DB ?
 sd_disc_sel         DW ?
@@ -167,9 +168,24 @@ siNoError:
     and word ptr es:REG_INT_STATUS_ENABLE, NOT 100h    
     mov es:REG_INT_STATUS,al
     or word ptr es:REG_INT_STATUS_ENABLE, 100h
-;
+;    
     mov bx,ds:sd_serv_thread
+    or bx,bx
+    jz sdiSignal
+;    
+    mov al,ds:sd_ok
+    or al,al
+    jz sdiSignal
+;
+    GetSystemTime
+    and al,1Fh
+    jz sdiDone
+
+sdiSignal:    
+    mov ds:sd_has_int,1
     Signal    
+
+sdiDone:    
     retf32
 SdInt  Endp
 
@@ -767,19 +783,39 @@ WaitForCompletion   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForTransferComplete   Proc near
+    push eax
+    push edx
+    push esi
+    push edi
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov esi,eax
+    mov edi,edx
 
 wftcWait:
-    WaitForSignal
+    WaitForSignalWithTimeout
     test ds:sd_pend_error,1FFh
     stc
     jnz wftcDone
 ;    
+    GetSystemTime
+    sub eax,esi
+    sbb edx,edi
+    cmc
+    jc wftcDone
+;
     test ds:sd_pend_int,2
     jz wftcWait
 ;
     clc
 
 wftcDone:    
+    pop edi
+    pop esi
+    pop edx
+    pop eax
     ret
 WaitForTransferComplete   Endp
 
@@ -1665,67 +1701,6 @@ ReadPioSector    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WritePioSector
-;
-;           DESCRIPTION:    Write sectors using PIO method
-;
-;           PARAMETERS:     FS      SD io space
-;                           EDX     Sector #
-;                           ECX     Sector count
-;                           ES:EDI  Buffer
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WritePioSector    Proc near
-    push eax
-    push ecx
-    push edi
-;    
-    mov fs:REG_BLOCK_COUNT,cx
-    mov ds:sd_pend_int,0
-    mov ds:sd_pend_error,0
-    ClearSignal
-    mov dword ptr fs:REG_ARG,edx
-    mov word ptr fs:REG_TRANS_MODE,26h
-    mov word ptr fs:REG_CMD,193Ah
-
-wpsSectorLoop:    
-    test word ptr fs:REG_STATE,400h
-    jnz wpsDo
-;    
-    WaitForSignal
-    test ds:sd_pend_error,1FFh
-    jz wpsSectorLoop
-;    
-    stc   
-    jmp wpsDone
-
-wpsDo:
-    mov ds:sd_pend_int,0
-    push ecx
-    mov ecx,128
-
-wpsLoop: 
-    mov eax,es:[edi]
-    mov fs:REG_BUF,eax
-    add edi,4
-    loop wpsLoop        
-;
-    pop ecx
-    loop wpsSectorLoop    
-;
-    call WaitForTransferComplete
-
-wpsDone:
-    pop edi
-    pop ecx
-    pop eax
-    ret
-WritePioSector    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           InitDevice
 ;
 ;           DESCRIPTION:    Init device from RESET state
@@ -1735,6 +1710,7 @@ WritePioSector    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitDevice    Proc near
+    mov ds:sd_ok,0
     mov fs,ds:sd_reg_sel
     mov eax,fs:REG_CAP
     mov ds:sd_cap,eax
@@ -1875,6 +1851,7 @@ idNoHs:
 ;    
     mov ax,100
     WaitMilliSec
+    mov ds:sd_ok,1
     clc
     jmp idDone
 
@@ -1884,6 +1861,96 @@ idFailed:
 idDone:
     ret
 InitDevice  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ResetDev
+;
+;           DESCRIPTION:    Reset device
+;
+;           PARAMETERS:     DS      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_super_thread_name   DB 'SD Reset Super', 0
+
+reset_super_thread:
+    mov ds,bx
+    mov cx,15 * 20
+
+rtLoop:
+    mov al,ds:sd_ok
+    or al,al
+    jnz rtDone
+;
+    mov ax,50
+    WaitMilliSec
+    loop rtLoop
+;
+    CrashGate
+
+rtDone:
+    TerminateThread
+     
+ResetDev    Proc near
+    push es
+    push fs
+    pushad
+;    
+    mov fs,ds:sd_reg_sel
+    mov byte ptr fs:REG_RESET,1
+;
+    mov cx,100
+
+rdResetLoop:    
+    mov ax,100
+    WaitMilliSec
+;   
+    mov al,fs:REG_RESET
+    and al,1
+    clc
+    jz rdResetOk
+;
+    sub cx,1
+    jnz rdResetLoop
+;
+    CrashGate
+
+rdResetOk:        
+    mov ds:sd_ok,0
+;    
+    push ds
+    push es
+;    
+    mov bx,ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET reset_super_thread_name
+    mov esi,OFFSET reset_super_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+;
+    pop es    
+    pop ds
+;
+    call InitDevice
+    mov al,ds:sd_ok
+    or al,al
+    jnz rdDone
+
+rdFail:
+    CrashGate        
+
+rdDone:
+    popad
+    pop fs
+    pop es
+    ret
+ResetDev    Endp
+
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1944,7 +2011,8 @@ rdDoTrans:
 ;    
     push ebp
     push esi
-;    
+
+rdDoRetry:
     mov edi,es:[esi]
     mov edx,es:[edi].dh_unit
     movzx eax,ds:sd_sectors_per_unit
@@ -1952,59 +2020,52 @@ rdDoTrans:
     movzx ebx,es:[edi].dh_sector
     add eax,ebx
     mov edx,eax
-;    
+;       
     mov fs:REG_BLOCK_COUNT,bp
     mov ds:sd_pend_int,0
     mov ds:sd_pend_error,0
+    mov ds:sd_has_int,0
+;
     ClearSignal
     mov dword ptr fs:REG_ARG,edx
     mov word ptr fs:REG_TRANS_MODE,36h
     mov word ptr fs:REG_CMD,123Ah
 
 rdSectorLoop:    
+    mov cx,2    
+
+rdSectorRetry:
     push eax
     push edx
-    push esi
-    push edi
 ;
     GetSystemTime
-    mov edi,edx
-    mov esi,eax
-    add esi,1193 * 1000 * 10
-    adc edi,0
-
-rdSectorRetry:        
-    test word ptr fs:REG_STATE,800h
-    jnz rdReadBuf
-;    
-    GetSystemTime
-    sub eax,esi
-    sbb edx,edi
-    jc rdSectorNotTimeout
-;
-    mov eax,fs:REG_STATE
-    CrashGate 
-
-rdSectorNotTimeout:       
-    GetSystemTime
-    add eax,1193 * 200
+    add eax,1193 * 1000
     adc edx,0
     WaitForSignalWithTimeout
-    test ds:sd_pend_error,1FFh
-    jz rdSectorRetry
-;   
-    pop edi
-    pop esi
+;
+    xor ax,ax
+    xchg ax,ds:sd_has_int
+    or ax,ax
+    jz rdReset
+;
+    test word ptr fs:REG_STATE,800h
+    jnz rdReadBuf
+;
     pop edx
     pop eax
 ;
-    pop esi
-    pop ebp 
-    jmp rdFail
+    sub cx,1
+    jnz rdSectorRetry
+
+rdReset:
+;    int 3
+    call ResetDev
+;
+    pop edx
+    pop eax
+    jmp rdDoRetry
 
 rdReadBuf:
-    pop edi
-    pop esi
     pop edx
     pop eax
 ;   
@@ -2024,27 +2085,6 @@ rdBufLoop:
 ;
     pop esi
     pop ebp 
-    jmp rdOk
-    
-rdFail:
-    mov ax,ds:sd_pend_error
-    CrashGate
-    pop ecx
-
-rdFailLoop:    
-    mov edi,es:[esi]
-    mov eax,es:[edi].dh_data
-    mov es:[eax].dh_state,STATE_BAD
-    mov bx,ds:sd_disc_sel
-    DiscRequestCompleted
-    add esi,4
-    sub ecx,1
-    sub ebp,1
-    jnz rdFailLoop
-;    
-    jmp rdNext
-
-rdOk:
     pop ecx
 
 rdOkLoop:
@@ -2124,7 +2164,8 @@ wrDoTrans:
 ;    
     push ebp
     push esi
-;    
+
+wrDoRetry:
     mov edi,es:[esi]
     mov edx,es:[edi].dh_unit
     movzx eax,ds:sd_sectors_per_unit
@@ -2142,49 +2183,39 @@ wrDoTrans:
     mov word ptr fs:REG_CMD,193Ah
 
 wrSectorLoop:    
+    mov cx,2    
+
+wrSectorRetry:
     push eax
     push edx
-    push esi
-    push edi
 ;
     GetSystemTime
-    mov edi,edx
-    mov esi,eax
-    add esi,1193 * 1000 * 10
-    adc edi,0
-
-wrSectorRetry:        
-    test word ptr fs:REG_STATE,400h
-    jnz wrWriteBuf
-;    
-    GetSystemTime
-    sub eax,esi
-    sbb edx,edi
-    jc wrSectorNotTimeout
-;
-    mov eax,fs:REG_STATE
-    CrashGate 
-
-wrSectorNotTimeout:       
-    GetSystemTime
-    add eax,1193 * 200
+    add eax,1193 * 1000
     adc edx,0
     WaitForSignalWithTimeout
-    test ds:sd_pend_error,1FFh
-    jz wrSectorRetry
-;   
-    pop edi
-    pop esi
+;
+    mov ax,ds:sd_has_int
+    or ax,ax
+    jz wrReset
+;
+    test word ptr fs:REG_STATE,400h
+    jnz wrWriteBuf
+;
     pop edx
     pop eax
-;   
-    pop esi
-    pop ebp 
-    jmp wrFail
+;
+    sub cx,1
+    jnz wrSectorRetry
+
+wrReset:
+;    int 3
+    call ResetDev
+;
+    pop edx
+    pop eax
+    jmp wrDoRetry
 
 wrWriteBuf:
-    pop edi
-    pop esi
     pop edx
     pop eax
 ;   
@@ -2207,27 +2238,6 @@ wrBufLoop:
     pop ebp 
 ;
     call WaitForTransferComplete
-    jmp wrOk
-    
-wrFail:
-    mov ax,ds:sd_pend_error
-    CrashGate
-    pop ecx
-
-wrFailLoop:    
-    mov edi,es:[esi]
-    mov eax,es:[edi].dh_data
-    mov es:[eax].dh_state,STATE_BAD
-    mov bx,ds:sd_disc_sel
-    DiscRequestCompleted
-    add esi,4
-    sub ecx,1
-    sub ebp,1
-    jnz wrFailLoop
-;    
-    jmp wrNext
-
-wrOk:
     pop ecx
 
 wrOkLoop:
