@@ -12,7 +12,6 @@ copy ..\..\kernel\os\drive.rdv files
 copy ..\..\kernel\os\fat.rdv files
 copy ..\..\kernel\os\exec.rdv files
 copy ..\..\kernel\os\pe.rdv files
-copy ..\..\kernel\os\guidev.rdv files
 copy ..\..\kernel\os\audio.rdv files
 copy ..\..\kernel\os\com.rdv files
 copy ..\..\kernel\os\carddev.rdv files
@@ -23,6 +22,7 @@ copy ..\..\kernel\os\ipc.rdv files
 copy ..\..\kernel\os\lon.rdv files
 copy ..\..\kernel\os\tlist.rdv files
 copy ..\..\kernel\os\wd.rdv files
+copy ..\..\kernel\bios\guidev.rdv files
 copy ..\..\kernel\bios\pcbios.rdv files
 copy ..\..\kernel\bios\kdebug.rdv files
 copy ..\..\kernel\bios\pcshut.exe files
@@ -61,7 +61,6 @@ copy ..\..\kernel\audiodev\cs5536a.rdv files
 copy ..\..\kernel\audiodev\hda.rdv files
 copy ..\..\kernel\netdev\rtl8139.rdv files
 copy ..\..\kernel\netdev\rtl8169.rdv files
-copy ..\..\kernel\tibbodev\tibbo.rdv files
 copy \fuelpos\src\rdosdev\power.rdv files
 copy \fuelpos\src\rdosdev\nopower.rdv files
 copy \fuelpos\src\rdosdev\preem.rdv files

@@ -170,16 +170,16 @@ siNoError:
     or word ptr es:REG_INT_STATUS_ENABLE, 100h
 ;    
     mov bx,ds:sd_serv_thread
-    or bx,bx
-    jz sdiSignal
+;    or bx,bx
+;    jz sdiSignal
 ;    
-    mov al,ds:sd_ok
-    or al,al
-    jz sdiSignal
+;    mov al,ds:sd_ok
+;    or al,al
+;    jz sdiSignal
 ;
-    GetSystemTime
-    and al,1Fh
-    jz sdiDone
+;    GetSystemTime
+;    and ax,1FFh
+;    jz sdiDone
 
 sdiSignal:    
     mov ds:sd_has_int,1
