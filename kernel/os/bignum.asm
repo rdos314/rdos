@@ -301,6 +301,101 @@ DoAdd     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           DoSub
+;
+;           DESCRIPTION:    Do a sub
+;
+;           PARAMETERS:     ES:ESI      Source data to subtract
+;                           ES:EDI      Dest data and result
+;                           CX          Buffer count
+;
+;           RETURNS:        CY          overflow
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoSub     PROC near
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    or cx,cx
+    clc
+    jz dsDone
+;
+    pushf    
+
+dsLoop:
+    popf
+    mov eax,es:[esi]
+    sbb es:[edi],eax
+    pushf
+;
+    add esi,4
+    add edi,4
+    sub cx,1
+    jnz dsLoop        
+;
+    popf    
+    
+dsDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    ret
+DoSub     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DoNeg
+;
+;           DESCRIPTION:    Do a not
+;
+;           PARAMETERS:     ES:EDI      Dest data
+;                           CX          Buffer count
+;
+;           RETURNS:        CY          overflow
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoNeg     PROC near
+    push eax
+    push ecx
+    push edi
+;
+    or cx,cx
+    clc
+    jz dnDone
+;
+    stc
+    pushf    
+
+dnLoop:
+    mov eax,es:[edi]
+    not eax
+    popf
+    adc eax,0
+    mov es:[edi],eax
+    pushf
+;
+    add edi,4    
+    sub cx,1
+    jnz dnLoop        
+;
+    popf    
+    
+dnDone:
+    pop edi
+    pop ecx
+    pop eax
+    ret
+DoNeg     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           CreateBigNum
 ;
 ;           DESCRIPTION:    Create big number
@@ -572,6 +667,68 @@ anAddSign:
     jmp anDone
 
 anSub:
+    mov cx,ds:[esi].bn_count
+    cmp cx,ds:[edi].bn_count
+    ja anSubUse2
+
+anSubUse1:
+    push esi
+    push edi
+;    
+    mov cx,ds:[esi].bn_count
+    mov dx,ds:[edi].bn_count
+    mov esi,ds:[esi].bn_data
+    call CopyBuf
+;    
+    mov esi,ds:[edi].bn_data
+    mov edi,ds:[ebx].bn_data
+    mov cx,ds:[ebx].bn_count
+    call DoSub
+;
+    pop edi
+    pop esi    
+    jnc anSubFixup1
+;
+    push edi
+    mov edi,ds:[ebx].bn_data
+    mov cx,ds:[ebx].bn_count
+    call DoNeg
+    pop edi
+;
+    mov ax,ds:[edi].bn_flags
+    mov dx,ds:[esi].bn_flags
+    and dx,NOT BN_FLAG_NEGATIVE
+    or ax,dx
+    mov ds:[ebx].bn_flags,ax
+    jmp anSubFixup
+
+anSubFixup1:
+    mov ax,ds:[esi].bn_flags
+    mov dx,ds:[edi].bn_flags
+    and dx,NOT BN_FLAG_NEGATIVE
+    or ax,dx
+    mov ds:[ebx].bn_flags,ax
+    jmp anSubFixup
+
+anSubUse2:  
+    push esi
+    push edi
+;      
+    xchg esi,edi
+    mov cx,ds:[esi].bn_count
+    mov dx,ds:[edi].bn_count
+    mov esi,ds:[esi].bn_data
+    call CopyBuf
+;    
+    mov esi,ds:[edi].bn_data
+    mov edi,ds:[ebx].bn_data
+    mov cx,ds:[ebx].bn_count
+    call DoSub
+;
+    pop edi
+    pop esi
+
+anSubFixup:
      
 
 anDone:        
