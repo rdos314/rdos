@@ -761,6 +761,7 @@
 
 #define usergate_create_bignum 0x00000251
 #define usergate_delete_bignum 0x00000252
+#define usergate_load_bignum64 0x00000253
 
 
 
@@ -1528,6 +1529,7 @@
 
 #define CallGate_create_bignum 0x67 0x9a 81 2 0 0 3 0
 #define CallGate_delete_bignum 0x67 0x9a 82 2 0 0 3 0
+#define CallGate_load_bignum64 0x67 0x9a 83 2 0 0 3 0
 
 #else
 
@@ -2293,5 +2295,6 @@
 
 #define CallGate_create_bignum 0x3e 0x67 0x9a 81 2 0 0 3 0
 #define CallGate_delete_bignum 0x3e 0x67 0x9a 82 2 0 0 3 0
+#define CallGate_load_bignum64 0x3e 0x67 0x9a 83 2 0 0 3 0
 
 #endif

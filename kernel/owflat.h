@@ -3329,3 +3329,7 @@
 #pragma aux RdosDeleteBigNum = \
     CallGate_delete_bignum  \
     parm [ebx];
+
+#pragma aux RdosLoadBigNum64 = \
+    CallGate_load_bignum64  \
+    parm [ebx] [edx eax];

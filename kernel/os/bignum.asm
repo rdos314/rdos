@@ -62,6 +62,52 @@ code    SEGMENT byte public use32 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           RecreateBuf
+;
+;           DESCRIPTION:    Recreate buffer
+;
+;           PARAMETERS:     DS:EBX      Handle data
+;                           CX          New buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RecreateBuf     PROC near
+    cmp cx,ds:[ebx].bn_size
+    je rbDone
+;
+    push eax
+    push ecx
+    push edx
+;    
+    mov ax,ds:[ebx].bn_size
+    or ax,ax
+    jz rbCreate
+;
+    mov edx,ds:[ebx].bn_data
+    FreeLinear
+
+rbCreate:
+    mov ds:[ebx].bn_size,cx
+;    
+    or cx,cx
+    jz rbCreated
+;    
+    movzx eax,cx
+    AllocateSmallLinear
+    mov ds:[ebx].bn_data,edx
+
+rbCreated:
+    pop edx
+    pop ecx
+    pop eax
+
+rbDone:    
+    ret
+RecreateBuf ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           CreateBigNum
 ;
 ;           DESCRIPTION:    Create big number
@@ -139,6 +185,89 @@ delete_bignum     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           LoadBigNum
+;
+;           DESCRIPTION:    Load big num
+;
+;           PARAMETERS:     BX          Big num handle
+;                           EDX:EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_bignum64_name    DB 'Load 64-bit Big Number',0
+
+load_bignum64     PROC far
+    push ds
+    push es
+    push ebx
+    push ecx
+    push edi
+;
+    push ax
+    mov ax,flat_sel
+    mov es,ax    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    pop ax
+    jc lbn64Done
+;
+    test edx,80000000h
+    jz lbn64Pos
+
+lbn64Neg:
+    not eax
+    not edx
+    add eax,1
+    adc edx,0
+    mov ds:[ebx].bn_flags,BN_FLAG_NEGATIVE
+    jmp lbn64SignOk
+
+lbn64Pos:    
+    mov ds:[ebx].bn_flags,0
+
+lbn64SignOk:
+    or edx,edx
+    jz lbn64Small
+
+lbn64Big:
+    mov cx,8
+    call RecreateBuf
+;
+    mov edi,ds:[ebx].bn_data
+    stosd
+    mov eax,edx
+    stosd
+    clc   
+    jmp lbn64Done
+
+lbn64Small:
+    or eax,eax
+    jz ln64Zero
+;    
+    mov cx,4
+    call RecreateBuf
+;
+    mov edi,ds:[ebx].bn_data
+    stosd
+    clc   
+    jmp lbn64Done
+
+ln64Zero:
+    xor cx,cx
+    call RecreateBuf
+
+lbn64Done: 
+    pop edi
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    ret
+load_bignum64     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           delete_handle
 ;
 ;           DESCRIPTION:    Delete syslog handle
@@ -204,6 +333,12 @@ init    PROC far
     mov edi,OFFSET delete_bignum_name
     xor dx,dx
     mov ax,delete_bignum_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET load_bignum64
+    mov edi,OFFSET load_bignum64_name
+    xor dx,dx
+    mov ax,load_bignum64_nr
     RegisterBimodalUserGate
 ;
     ret

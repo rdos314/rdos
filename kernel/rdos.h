@@ -821,6 +821,7 @@ int RDOSAPI RdosHasTouch();
 
 int RDOSAPI RdosCreateBigNum();
 void RDOSAPI RdosDeleteBigNum(int handle);
+void RDOSAPI RdosLoadBigNum64(int handle, long long Value);
 
 #ifdef __cplusplus
 }

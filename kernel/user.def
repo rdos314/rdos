@@ -761,5 +761,6 @@ get_usb_com_par_nr              = 592
 
 create_bignum_nr                = 593
 delete_bignum_nr                = 594
+load_bignum64_nr                = 595
 
 usergate_entries			    = 600

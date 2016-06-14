@@ -78,6 +78,10 @@ void main()
     int handle;
 
     handle = RdosCreateBigNum();
+    RdosLoadBigNum64(handle, -1);
+    RdosLoadBigNum64(handle, 0);
+    RdosLoadBigNum64(handle, 0x12345678);
+    RdosLoadBigNum64(handle, 0x1234567812345678);
     RdosDeleteBigNum(handle);
 
 //    RdosWaitMilli(2000);
