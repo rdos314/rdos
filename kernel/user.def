@@ -759,4 +759,7 @@ get_crash_core_info_nr          = 590
 get_std_com_par_nr              = 591
 get_usb_com_par_nr              = 592
 
+create_bignum_nr                = 593
+delete_bignum_nr                = 594
+
 usergate_entries			    = 600

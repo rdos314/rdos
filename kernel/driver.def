@@ -491,6 +491,9 @@ xhci_event_ring_sel EQU 0BC8h
 ssl_code_sel        EQU 0BD0h
 ssl_data_sel        EQU 0BD8h
 
+bignum_code_sel     EQU 0BE0h
+bignum_data_sel     EQU 0BE8h
+
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h
 

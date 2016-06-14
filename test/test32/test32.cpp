@@ -75,8 +75,10 @@ void main()
     int PortCount;
     int ModuleId;
 
-//    while (!RdosGetCanModuleInfo(1, &PortCount, &ModuleId))
-//        RdosWaitMilli(250);
+    int handle;
+
+    handle = RdosCreateBigNum();
+    RdosDeleteBigNum(handle);
 
 //    RdosWaitMilli(2000);
 //    RdosSoftReset();

@@ -819,6 +819,9 @@ void RDOSAPI RdosPlayFmNote(int Handle, long double Freq, int PeakLeftVolume, in
 
 int RDOSAPI RdosHasTouch();
 
+int RDOSAPI RdosCreateBigNum();
+void RDOSAPI RdosDeleteBigNum(int handle);
+
 #ifdef __cplusplus
 }
 #endif

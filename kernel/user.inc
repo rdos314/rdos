@@ -3779,3 +3779,16 @@ ProgramCanModule      MACRO
 WaitForCanModuleProgramming      MACRO
 	UserGate wait_for_can_module_progamming_nr
 						ENDM
+
+
+;;;;;;;;;;; Big numbers ;;;;;;;;;;
+
+; OUT BX            Bignum handle
+CreateBigNum	MACRO
+	UserGate create_bignum_nr
+	        ENDM
+
+; IN  BX            Bignum handle
+DeleteBigNum	MACRO
+	UserGate delete_bignum_nr
+	        ENDM

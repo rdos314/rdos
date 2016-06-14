@@ -3320,3 +3320,12 @@
     CallGate_has_touch \
     CarryToBool \
     value [eax];
+
+#pragma aux RdosCreateBigNum = \
+    CallGate_create_bignum  \
+    ValidateHandle \
+    value [ebx];
+
+#pragma aux RdosDeleteBigNum = \
+    CallGate_delete_bignum  \
+    parm [ebx];

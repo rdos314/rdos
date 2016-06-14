@@ -759,6 +759,9 @@
 #define usergate_get_std_com_par 0x0000024F
 #define usergate_get_usb_com_par 0x00000250
 
+#define usergate_create_bignum 0x00000251
+#define usergate_delete_bignum 0x00000252
+
 
 
 #ifdef __FLAT__
@@ -1523,6 +1526,9 @@
 #define CallGate_get_std_com_par 0x67 0x9a 79 2 0 0 3 0
 #define CallGate_get_usb_com_par 0x67 0x9a 80 2 0 0 3 0
 
+#define CallGate_create_bignum 0x67 0x9a 81 2 0 0 3 0
+#define CallGate_delete_bignum 0x67 0x9a 82 2 0 0 3 0
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2284,5 +2290,8 @@
 
 #define CallGate_get_std_com_par 0x3e 0x67 0x9a 79 2 0 0 3 0
 #define CallGate_get_usb_com_par 0x3e 0x67 0x9a 80 2 0 0 3 0
+
+#define CallGate_create_bignum 0x3e 0x67 0x9a 81 2 0 0 3 0
+#define CallGate_delete_bignum 0x3e 0x67 0x9a 82 2 0 0 3 0
 
 #endif
