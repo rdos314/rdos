@@ -78,18 +78,22 @@ void main()
     int handle1;
     int handle2;
     int handle3;
+    int handle4;
 
     handle1 = RdosCreateBigNum();
-    RdosLoadBigNum64(handle1, 1234);
+    RdosLoadBigNum64(handle1, 0x55667788);
 
     handle2 = RdosCreateBigNum();
-    RdosLoadBigNum64(handle2, 0x123456789);
+    RdosLoadBigNum64(handle2, 0x778899AA);
 
     handle3 = RdosAddBigNum(handle1, handle2);
+    handle4 = RdosAddBigNum(handle2, handle3);
+
 
     RdosDeleteBigNum(handle1);
     RdosDeleteBigNum(handle2);
     RdosDeleteBigNum(handle3);
+    RdosDeleteBigNum(handle4);
 
 //    RdosWaitMilli(2000);
 //    RdosSoftReset();

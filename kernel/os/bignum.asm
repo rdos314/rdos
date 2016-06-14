@@ -184,6 +184,75 @@ CopyBuf ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           GrowBuf
+;
+;           DESCRIPTION:    Grow buffer
+;
+;           PARAMETERS:     DS:EBX      Handle data
+;                           CX          Additional count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GrowBuf     PROC near
+    pushad
+;    
+    mov esi,ds:[ebx].bn_data
+    mov ax,ds:[ebx].bn_count
+    or ax,ax
+    jnz gbSrcOk
+;
+    xor esi,esi
+
+gbSrcOk:    
+    push esi
+    add cx,ds:[ebx].bn_count
+    movzx eax,cx
+    shl eax,2
+    AllocateSmallLinear
+    mov edi,edx
+    mov ds:[ebx].bn_data,edx
+;
+    mov dx,ds:[ebx].bn_count
+    mov ds:[ebx].bn_count,cx
+;
+    or dx,dx
+    jz gbCopyOk
+
+gbCopyLoop:
+    mov eax,es:[esi]
+    mov es:[edi],eax
+    add esi,4
+    add edi,4
+    sub cx,1
+    sub dx,1        
+    jnz gbCopyLoop
+;
+    or cx,cx
+    jz gbDone
+
+gbCopyOk:
+    xor eax,eax    
+
+gbZeroLoop:    
+    mov es:[edi],eax
+    add edi,4
+    sub cx,1
+    jnz gbZeroLoop
+;    
+    pop edx
+    or edx,edx
+    jz gbDone
+;    
+    FreeLinear
+
+gbDone:        
+    popad
+    ret
+GrowBuf ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           DoAdd
 ;
 ;           DESCRIPTION:    Do an add
@@ -437,11 +506,20 @@ add_bignum     PROC far
     mov ds:[ebx].bn_flags,0
     mov [ebx].hh_sign,BIGNUM_HANDLE
 ;
+    mov ax,ds:[esi].bn_flags
+    xor ax,ds:[edi].bn_flags
+    test ax,BN_FLAG_NEGATIVE
+    jnz anSub
+
+anAdd:
     mov cx,ds:[esi].bn_count
     cmp cx,ds:[edi].bn_count
-    ja anUse2
+    ja anAddUse2
 
-anUse1:
+anAddUse1:
+    push esi
+    push edi
+;    
     mov cx,ds:[esi].bn_count
     mov dx,ds:[edi].bn_count
     mov esi,ds:[esi].bn_data
@@ -451,9 +529,15 @@ anUse1:
     mov edi,ds:[ebx].bn_data
     mov cx,ds:[ebx].bn_count
     call DoAdd
-    jmp anDone
+;
+    pop edi
+    pop esi    
+    jmp anFixupAdd
 
-anUse2:    
+anAddUse2:  
+    push esi
+    push edi
+;      
     xchg esi,edi
     mov cx,ds:[esi].bn_count
     mov dx,ds:[edi].bn_count
@@ -464,6 +548,31 @@ anUse2:
     mov edi,ds:[ebx].bn_data
     mov cx,ds:[ebx].bn_count
     call DoAdd
+;
+    pop edi
+    pop esi
+
+anFixupAdd:
+    jnc anAddSign
+;
+    mov cx,1
+    call GrowBuf
+;
+    movzx edx,ds:[ebx].bn_count
+    dec edx
+    shl edx,2
+    add edx,ds:[ebx].bn_data
+    mov eax,1
+    mov es:[edx],eax
+
+anAddSign:    
+    mov ax,ds:[esi].bn_flags
+    or ax,ds:[edi].bn_flags
+    mov ds:[ebx].bn_flags,ax
+    jmp anDone
+
+anSub:
+     
 
 anDone:        
     mov bx,[ebx].hh_handle
