@@ -727,6 +727,27 @@ anSubUse2:
 ;
     pop edi
     pop esi
+    jnc anSubFixup2
+;
+    push edi
+    mov edi,ds:[ebx].bn_data
+    mov cx,ds:[ebx].bn_count
+    call DoNeg
+    pop edi
+;
+    mov ax,ds:[esi].bn_flags
+    mov dx,ds:[edi].bn_flags
+    and dx,NOT BN_FLAG_NEGATIVE
+    or ax,dx
+    mov ds:[ebx].bn_flags,ax
+    jmp anSubFixup
+
+anSubFixup2:
+    mov ax,ds:[edi].bn_flags
+    mov dx,ds:[esi].bn_flags
+    and dx,NOT BN_FLAG_NEGATIVE
+    or ax,dx
+    mov ds:[ebx].bn_flags,ax
 
 anSubFixup:
      
