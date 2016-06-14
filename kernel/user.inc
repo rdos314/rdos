@@ -3792,3 +3792,10 @@ CreateBigNum	MACRO
 DeleteBigNum	MACRO
 	UserGate delete_bignum_nr
 	        ENDM
+
+; IN  BX            Bignum handle 1
+; IN  AX            Bignum handle 2
+; OUT BX            Result bignum handle
+AddBigNum	MACRO
+	UserGate add_bignum_nr
+	        ENDM

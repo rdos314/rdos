@@ -42,7 +42,7 @@ bignum_handle_seg          STRUC
 bn_base         handle_header <>
 
 bn_data         DD ?
-bn_size         DW ?
+bn_count        DW ?
 bn_flags        DW ?
 
 bignum_handle_seg          ENDS
@@ -67,19 +67,19 @@ code    SEGMENT byte public use32 'CODE'
 ;           DESCRIPTION:    Recreate buffer
 ;
 ;           PARAMETERS:     DS:EBX      Handle data
-;                           CX          New buffer size
+;                           CX          New entry count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RecreateBuf     PROC near
-    cmp cx,ds:[ebx].bn_size
+    cmp cx,ds:[ebx].bn_count
     je rbDone
 ;
     push eax
     push ecx
     push edx
 ;    
-    mov ax,ds:[ebx].bn_size
+    mov ax,ds:[ebx].bn_count
     or ax,ax
     jz rbCreate
 ;
@@ -87,12 +87,13 @@ RecreateBuf     PROC near
     FreeLinear
 
 rbCreate:
-    mov ds:[ebx].bn_size,cx
+    mov ds:[ebx].bn_count,cx
 ;    
     or cx,cx
     jz rbCreated
 ;    
     movzx eax,cx
+    shl eax,2
     AllocateSmallLinear
     mov ds:[ebx].bn_data,edx
 
@@ -104,6 +105,129 @@ rbCreated:
 rbDone:    
     ret
 RecreateBuf ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CopyBuf
+;
+;           DESCRIPTION:    Copy buffer
+;
+;           PARAMETERS:     DS:EBX      Handle data
+;                           DX          Buffer count
+;                           ES:ESI      Data
+;                           CX          Data count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyBuf     PROC near
+    pushad
+;    
+    cmp dx,ds:[ebx].bn_count
+    je cbCopy
+;    
+    mov ax,ds:[ebx].bn_count
+    or ax,ax
+    jz cbCreate
+;
+    push edx
+    mov edx,ds:[ebx].bn_data
+    FreeLinear
+    pop edx
+
+cbCreate:
+    mov ds:[ebx].bn_count,dx
+;    
+    or dx,dx
+    jz cbCopy
+;    
+    push edx
+    movzx eax,dx
+    shl eax,2
+    AllocateSmallLinear
+    mov ds:[ebx].bn_data,edx
+    pop edx
+
+cbCopy:
+    or dx,dx
+    jz cbDone
+;
+    mov edi,ds:[ebx].bn_data
+    or cx,cx
+    jz cbZeroFill
+
+cbCopyLoop:
+    mov eax,es:[esi]    
+    mov es:[edi],eax
+    add esi,4
+    add edi,4
+    sub dx,1
+    jz cbDone
+;
+    sub cx,1
+    jnz cbCopyLoop
+
+cbZeroFill:
+    xor eax,eax
+
+cbZeroFillLoop:    
+    mov es:[edi],eax
+    add edi,4
+    sub dx,1
+    jnz cbZeroFillLoop
+
+cbDone:
+    popad        
+    ret
+CopyBuf ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DoAdd
+;
+;           DESCRIPTION:    Do an add
+;
+;           PARAMETERS:     ES:ESI      Source data
+;                           ES:EDI      Dest data
+;                           CX          Buffer count
+;
+;           RETURNS:        CY          overflow
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoAdd     PROC near
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    or cx,cx
+    clc
+    jz daDone
+;
+    pushf    
+
+daLoop:
+    popf
+    mov eax,es:[esi]
+    adc es:[edi],eax
+    pushf
+;
+    add esi,4
+    add edi,4
+    sub cx,1
+    jnz daLoop        
+;
+    popf    
+    
+daDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    ret
+DoAdd     ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -126,7 +250,7 @@ create_bignum     PROC far
 ;
     mov cx,SIZE bignum_handle_seg
     AllocateHandle
-    mov ds:[ebx].bn_size,0
+    mov ds:[ebx].bn_count,0
     mov ds:[ebx].bn_data,0
     mov ds:[ebx].bn_flags,0
     mov [ebx].hh_sign,BIGNUM_HANDLE
@@ -163,7 +287,7 @@ delete_bignum     PROC far
     DerefHandle
     jc cbnDone
 ;
-    movzx ecx,ds:[ebx].bn_size
+    movzx ecx,ds:[ebx].bn_count
     or ecx,ecx
     jz cbnFree
 ;
@@ -230,7 +354,7 @@ lbn64SignOk:
     jz lbn64Small
 
 lbn64Big:
-    mov cx,8
+    mov cx,2
     call RecreateBuf
 ;
     mov edi,ds:[ebx].bn_data
@@ -244,7 +368,7 @@ lbn64Small:
     or eax,eax
     jz ln64Zero
 ;    
-    mov cx,4
+    mov cx,1
     call RecreateBuf
 ;
     mov edi,ds:[ebx].bn_data
@@ -268,6 +392,96 @@ load_bignum64     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           AddBigNum
+;
+;           DESCRIPTION:    Add big num
+;
+;           PARAMETERS:     BX          Big num handle 1
+;                           AX          Big num handle 2
+;
+;           RETURNS:        BX          Result big num handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_bignum_name    DB 'Add Big Number',0
+
+add_bignum     PROC far
+    push ds
+    push es
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    push ax
+    mov ax,flat_sel
+    mov es,ax    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    pop ax
+    jc anDone
+;
+    mov esi,ebx
+    mov bx,ax
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc anDone
+;
+    mov edi,ebx
+;    
+    mov cx,SIZE bignum_handle_seg
+    AllocateHandle
+    mov ds:[ebx].bn_count,0
+    mov ds:[ebx].bn_data,0
+    mov ds:[ebx].bn_flags,0
+    mov [ebx].hh_sign,BIGNUM_HANDLE
+;
+    mov cx,ds:[esi].bn_count
+    cmp cx,ds:[edi].bn_count
+    ja anUse2
+
+anUse1:
+    mov cx,ds:[esi].bn_count
+    mov dx,ds:[edi].bn_count
+    mov esi,ds:[esi].bn_data
+    call CopyBuf
+;    
+    mov esi,ds:[edi].bn_data
+    mov edi,ds:[ebx].bn_data
+    mov cx,ds:[ebx].bn_count
+    call DoAdd
+    jmp anDone
+
+anUse2:    
+    xchg esi,edi
+    mov cx,ds:[esi].bn_count
+    mov dx,ds:[edi].bn_count
+    mov esi,ds:[esi].bn_data
+    call CopyBuf
+;    
+    mov esi,ds:[edi].bn_data
+    mov edi,ds:[ebx].bn_data
+    mov cx,ds:[ebx].bn_count
+    call DoAdd
+
+anDone:        
+    mov bx,[ebx].hh_handle
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    ret    
+add_bignum     ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           delete_handle
 ;
 ;           DESCRIPTION:    Delete syslog handle
@@ -286,7 +500,7 @@ delete_handle     PROC far
     DerefHandle
     jc dbnDone
 ;
-    movzx ecx,ds:[ebx].bn_size
+    movzx ecx,ds:[ebx].bn_count
     or ecx,ecx
     jz dbnFree
 ;
@@ -339,6 +553,12 @@ init    PROC far
     mov edi,OFFSET load_bignum64_name
     xor dx,dx
     mov ax,load_bignum64_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET add_bignum
+    mov edi,OFFSET add_bignum_name
+    xor dx,dx
+    mov ax,add_bignum_nr
     RegisterBimodalUserGate
 ;
     ret

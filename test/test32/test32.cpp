@@ -75,14 +75,21 @@ void main()
     int PortCount;
     int ModuleId;
 
-    int handle;
+    int handle1;
+    int handle2;
+    int handle3;
 
-    handle = RdosCreateBigNum();
-    RdosLoadBigNum64(handle, -1);
-    RdosLoadBigNum64(handle, 0);
-    RdosLoadBigNum64(handle, 0x12345678);
-    RdosLoadBigNum64(handle, 0x1234567812345678);
-    RdosDeleteBigNum(handle);
+    handle1 = RdosCreateBigNum();
+    RdosLoadBigNum64(handle1, 1234);
+
+    handle2 = RdosCreateBigNum();
+    RdosLoadBigNum64(handle2, 0x123456789);
+
+    handle3 = RdosAddBigNum(handle1, handle2);
+
+    RdosDeleteBigNum(handle1);
+    RdosDeleteBigNum(handle2);
+    RdosDeleteBigNum(handle3);
 
 //    RdosWaitMilli(2000);
 //    RdosSoftReset();

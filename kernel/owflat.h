@@ -3333,3 +3333,8 @@
 #pragma aux RdosLoadBigNum64 = \
     CallGate_load_bignum64  \
     parm [ebx] [edx eax];
+
+#pragma aux RdosAddBigNum = \
+    CallGate_add_bignum  \
+    parm [ebx] [eax] \
+    value [ebx];
