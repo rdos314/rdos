@@ -92,7 +92,7 @@ void main()
 
     handle3 = RdosMulBigNum(handle1, handle2);
     handle4 = RdosMulBigNum(handle3, handle2);
-    handle5 = RdosMulBigNum(handle4, handle2);
+    handle5 = RdosMulBigNum(handle4, handle3);
 
     RdosDeleteBigNum(handle1);
     RdosDeleteBigNum(handle2);

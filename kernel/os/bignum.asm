@@ -311,6 +311,7 @@ obCheckDone:
     shl eax,2
     AllocateSmallLinear
     mov edi,edx
+    mov ds:[ebx].bn_data,edx
 
 obCopyLoop:
     mov eax,es:[esi]
@@ -475,6 +476,85 @@ dnDone:
     pop eax
     ret
 DoNeg     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DoMul
+;
+;           DESCRIPTION:    Do a mul
+;
+;           PARAMETERS:     SS:EBP      Mul params
+;                           ES          Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoMul     PROC near
+    pushad
+;
+    mov ecx,[ebp].mul_out_count
+    or ecx,ecx
+    jz dmDone
+;    
+    xor eax,eax
+    mov edi,[ebp].mul_out_data    
+
+dmInitResLoop:
+    mov es:[edi],eax
+    add edi,4
+    loop dmInitResLoop
+;
+    mov eax,[ebp].mul_in_count1
+    or eax,eax
+    jz dmDone
+;    
+    mov eax,[ebp].mul_in_count2
+    or eax,eax
+    jz dmDone
+;
+    xor ebx,ebx
+    xor ecx,ecx
+    mov esi,[ebp].mul_in_data1
+    mov edi,[ebp].mul_in_data2
+
+dmLoop:
+    mov eax,es:[esi]
+    mul es:[edi]
+;
+    push ebx    
+    add ebx,ecx
+    shl ebx,2
+    add ebx,[ebp].mul_out_data
+    add es:[ebx],eax
+    adc es:[ebx+4],edx
+    jnc dmNext
+;    
+    mov eax,1
+    add ebx,4
+
+dmCy:
+    add ebx,4
+    add es:[ebx],eax
+    jc dmCy
+
+dmNext:
+    add esi,4
+    pop ebx
+    inc ebx
+    cmp ebx,[ebp].mul_in_count1
+    jne dmLoop
+;
+    mov esi,[ebp].mul_in_data1
+    add edi,4
+    xor ebx,ebx
+    inc ecx            
+    cmp ecx,[ebp].mul_in_count2
+    jne dmLoop
+    
+dmDone:
+    popad
+    ret
+DoMul     ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -923,9 +1003,21 @@ mul_bignum     PROC far
     mov cx,ax
     call RecreateBuf
 ;
+    mov ax,ds:[esi].bn_flags
+    or ax,ds:[edi].bn_flags
+    and ax,NOT BN_FLAG_NEGATIVE
+    mov ds:[ebx].bn_flags,ax
+;
+    mov ax,ds:[esi].bn_flags
+    xor ax,ds:[edi].bn_flags
+    and ax,BN_FLAG_NEGATIVE
+    or ds:[ebx].bn_flags,ax
+;    
     mov eax,ds:[ebx].bn_data
     mov [ebp].mul_out_data,eax
 ;    
+    call DoMul
+    call OptBuf
     mov bx,[ebx].hh_handle
 ;
     pop edi
