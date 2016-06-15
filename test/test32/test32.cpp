@@ -90,9 +90,9 @@ void main()
     val = -val;
     RdosLoadBigNum64(handle2, val);
 
-    handle3 = RdosAddBigNum(handle1, handle2);
-    handle4 = RdosAddBigNum(handle3, handle2);
-    handle5 = RdosAddBigNum(handle4, handle2);
+    handle3 = RdosMulBigNum(handle1, handle2);
+    handle4 = RdosMulBigNum(handle3, handle2);
+    handle5 = RdosMulBigNum(handle4, handle2);
 
     RdosDeleteBigNum(handle1);
     RdosDeleteBigNum(handle2);

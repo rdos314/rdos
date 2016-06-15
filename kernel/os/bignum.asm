@@ -47,6 +47,17 @@ bn_flags        DW ?
 
 bignum_handle_seg          ENDS
 
+mul_struc       STRUC
+
+mul_in_count1    DD ?
+mul_in_data1     DD ?
+mul_in_count2    DD ?
+mul_in_data2     DD ?
+mul_out_count    DD ?
+mul_out_data     DD ?
+
+mul_struc       ENDS
+
 .386p
 
 data    SEGMENT byte public 'DATA'
@@ -249,6 +260,78 @@ gbDone:
     popad
     ret
 GrowBuf ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           OptBuf
+;
+;           DESCRIPTION:    Possibly shrink buffer
+;
+;           PARAMETERS:     DS:EBX      Handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OptBuf     PROC near
+    pushad
+;    
+    mov esi,ds:[ebx].bn_data
+    mov cx,ds:[ebx].bn_count
+    or cx,cx
+    jz obDone
+;
+    movzx eax,cx
+    dec eax
+    shl eax,2
+    add esi,eax
+    xor dx,dx
+
+obCheckLoop:
+    mov eax,es:[esi]
+    or eax,eax
+    jnz obCheckDone
+;
+    sub esi,4
+    inc dx
+    sub cx,1    
+    jnz obCheckLoop
+
+obCheckDone:
+    or dx,dx
+    jz obDone
+;
+    mov cx,ds:[ebx].bn_count
+    sub cx,dx
+    mov ds:[ebx].bn_count,cx
+    jz obZero
+;
+    mov esi,ds:[ebx].bn_data
+    push esi
+    movzx eax,cx
+    shl eax,2
+    AllocateSmallLinear
+    mov edi,edx
+
+obCopyLoop:
+    mov eax,es:[esi]
+    mov es:[edi],eax
+    add esi,4
+    add edi,4
+    sub cx,1
+    jnz obCopyLoop    
+;
+    pop edx
+    FreeLinear
+    jmp obDone
+
+obZero:        
+    mov edx,ds:[ebx].bn_data
+    FreeLinear
+
+obDone:    
+    popad
+    ret
+OptBuf ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -700,7 +783,9 @@ anSubUse1:
     and dx,NOT BN_FLAG_NEGATIVE
     or ax,dx
     mov ds:[ebx].bn_flags,ax
-    jmp anSubFixup
+;
+    call OptBuf
+    jmp anDone
 
 anSubFixup1:
     mov ax,ds:[esi].bn_flags
@@ -708,7 +793,9 @@ anSubFixup1:
     and dx,NOT BN_FLAG_NEGATIVE
     or ax,dx
     mov ds:[ebx].bn_flags,ax
-    jmp anSubFixup
+;    
+    call OptBuf
+    jmp anDone
 
 anSubUse2:  
     push esi
@@ -740,7 +827,9 @@ anSubUse2:
     and dx,NOT BN_FLAG_NEGATIVE
     or ax,dx
     mov ds:[ebx].bn_flags,ax
-    jmp anSubFixup
+;    
+    call OptBuf
+    jmp anDone
 
 anSubFixup2:
     mov ax,ds:[edi].bn_flags
@@ -748,9 +837,8 @@ anSubFixup2:
     and dx,NOT BN_FLAG_NEGATIVE
     or ax,dx
     mov ds:[ebx].bn_flags,ax
-
-anSubFixup:
-     
+;    
+    call OptBuf
 
 anDone:        
     mov bx,[ebx].hh_handle
@@ -765,6 +853,93 @@ anDone:
     ret    
 add_bignum     ENDP
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           MulBigNum
+;
+;           DESCRIPTION:    Multiply big num
+;
+;           PARAMETERS:     BX          Big num handle 1
+;                           AX          Big num handle 2
+;
+;           RETURNS:        BX          Result big num handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mul_bignum_name    DB 'Mul Big Number',0
+
+mul_bignum     PROC far
+    push ebp
+    sub esp,SIZE mul_struc
+    mov ebp,esp
+;    
+    push ds
+    push es
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    push ax
+    mov ax,flat_sel
+    mov es,ax    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    pop ax
+    jc anDone
+;
+    push ax
+    mov esi,ebx
+    movzx eax,ds:[ebx].bn_count
+    mov [ebp].mul_in_count1,eax
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].mul_in_data1,eax
+    pop bx
+;
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc anDone
+;
+    mov edi,ebx
+    movzx eax,ds:[ebx].bn_count
+    mov [ebp].mul_in_count2,eax
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].mul_in_data2,eax
+;    
+    mov cx,SIZE bignum_handle_seg
+    AllocateHandle
+    mov ds:[ebx].bn_count,0
+    mov ds:[ebx].bn_data,0
+    mov ds:[ebx].bn_flags,0
+    mov [ebx].hh_sign,BIGNUM_HANDLE
+;
+    mov eax,[ebp].mul_in_count1
+    add eax,[ebp].mul_in_count2
+    mov [ebp].mul_out_count,eax
+;
+    mov cx,ax
+    call RecreateBuf
+;
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].mul_out_data,eax
+;    
+    mov bx,[ebx].hh_handle
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+;
+    add esp,SIZE mul_struc
+    pop ebp
+    ret
+mul_bignum  ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -846,6 +1021,12 @@ init    PROC far
     mov edi,OFFSET add_bignum_name
     xor dx,dx
     mov ax,add_bignum_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET mul_bignum
+    mov edi,OFFSET mul_bignum_name
+    xor dx,dx
+    mov ax,mul_bignum_nr
     RegisterBimodalUserGate
 ;
     ret

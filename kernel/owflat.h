@@ -3338,3 +3338,8 @@
     CallGate_add_bignum  \
     parm [ebx] [eax] \
     value [ebx];
+
+#pragma aux RdosMulBigNum = \
+    CallGate_mul_bignum  \
+    parm [ebx] [eax] \
+    value [ebx];
