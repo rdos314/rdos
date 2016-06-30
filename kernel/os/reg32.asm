@@ -1080,7 +1080,7 @@ abFixSizeOk:
     shl bx,3
     add bx,OFFSET p_dr0
     mov es:[bx],edx
-    mov es:[bx+4],0
+    mov word ptr es:[bx+4],0
 ;
     cmp cl,7
     jbe abSizeOk
