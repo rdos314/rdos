@@ -58,6 +58,19 @@ mul_out_data     DD ?
 
 mul_struc       ENDS
 
+div_struc       STRUC
+
+div_temp_num_count   DD ?
+div_temp_num_data    DD ?
+div_divisor_count    DD ?
+div_divisor_data     DD ?
+div_quot_count       DD ?
+div_quot_data        DD ?
+div_mod_count        DD ?
+div_mod_data         DD ?
+
+div_struc       ENDS
+
 .386p
 
 data    SEGMENT byte public 'DATA'
@@ -559,6 +572,26 @@ DoMul     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           DoDiv
+;
+;           DESCRIPTION:    Do a div
+;
+;           PARAMETERS:     SS:EBP      Div params
+;                           ES          Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoDiv     PROC near
+    pushad
+;
+;
+    popad
+    ret
+DoDiv   ENDP    
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           CreateBigNum
 ;
 ;           DESCRIPTION:    Create big number
@@ -747,13 +780,13 @@ add_bignum     PROC far
     mov ax,BIGNUM_HANDLE
     DerefHandle
     pop ax
-    jc anDone
+    jc anFail
 ;
     mov esi,ebx
     mov bx,ax
     mov ax,BIGNUM_HANDLE
     DerefHandle
-    jc anDone
+    jc anFail
 ;
     mov edi,ebx
 ;    
@@ -920,9 +953,16 @@ anSubFixup2:
 ;    
     call OptBuf
 
-anDone:        
+anDone:    
     mov bx,[ebx].hh_handle
-;
+    clc
+    jmp anEnd
+
+anFail:
+    xor bx,bx 
+    stc   
+
+anEnd:        
     pop edi
     pop esi
     pop edx
@@ -969,7 +1009,7 @@ mul_bignum     PROC far
     mov ax,BIGNUM_HANDLE
     DerefHandle
     pop ax
-    jc anDone
+    jc mnFail
 ;
     push ax
     mov esi,ebx
@@ -981,7 +1021,7 @@ mul_bignum     PROC far
 ;
     mov ax,BIGNUM_HANDLE
     DerefHandle
-    jc anDone
+    jc mnFail
 ;
     mov edi,ebx
     movzx eax,ds:[ebx].bn_count
@@ -1019,7 +1059,14 @@ mul_bignum     PROC far
     call DoMul
     call OptBuf
     mov bx,[ebx].hh_handle
-;
+    clc
+    jmp mnDone
+
+mnFail:
+    xor bx,bx  
+    stc  
+
+mnDone:
     pop edi
     pop esi
     pop edx
@@ -1032,6 +1079,124 @@ mul_bignum     PROC far
     pop ebp
     ret
 mul_bignum  ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DivBigNum
+;
+;           DESCRIPTION:    Divide big num
+;
+;           PARAMETERS:     BX          Nominator num handle
+;                           AX          Divisor num handle
+;
+;           RETURNS:        BX          Result big num handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+div_bignum_name    DB 'Div Big Number',0
+
+div_bignum     PROC far
+    push ebp
+    sub esp,SIZE div_struc
+    mov ebp,esp
+;    
+    push ds
+    push es
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    push ax
+    mov ax,flat_sel
+    mov es,ax    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    pop ax
+    jc dnFail
+;
+    push ax
+    movzx eax,ds:[ebx].bn_count
+    mov [ebp].div_temp_num_count,eax    
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].div_temp_num_data,eax
+    pop bx
+;
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc dnFail
+;
+    movzx eax,ds:[ebx].bn_count
+    mov [ebp].div_divisor_count,eax    
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].div_divisor_data,eax
+;    
+    mov esi,[ebp].div_temp_num_data
+    mov eax,[ebp].div_temp_num_count
+    mov ecx,eax
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].div_temp_num_data,edx
+    mov edi,edx
+
+dnCopyNomLoop:
+    mov eax,es:[esi]
+    mov es:[edi],eax
+    add esi,4
+    add edi,4
+    loop dnCopyNomLoop    
+;    
+    mov cx,SIZE bignum_handle_seg
+    AllocateHandle
+    mov ds:[ebx].bn_count,0
+    mov ds:[ebx].bn_data,0
+    mov ds:[ebx].bn_flags,0
+    mov [ebx].hh_sign,BIGNUM_HANDLE
+;
+    mov eax,[ebp].div_temp_num_count
+    mov [ebp].div_quot_count,eax
+;
+    mov cx,ax
+    call RecreateBuf
+    mov esi,ebx
+;    
+    mov cx,SIZE bignum_handle_seg
+    AllocateHandle
+    mov ds:[ebx].bn_count,0
+    mov ds:[ebx].bn_data,0
+    mov ds:[ebx].bn_flags,0
+    mov [ebx].hh_sign,BIGNUM_HANDLE
+;
+    mov eax,[ebp].div_divisor_count
+    mov [ebp].div_mod_count,eax
+;
+    mov cx,ax
+    call RecreateBuf
+    mov edi,ebx
+;    
+    call DoDiv
+    clc
+    jmp dnLeave
+
+dnFail:
+    xor bx,bx  
+    stc  
+
+dnLeave:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+;
+    add esp,SIZE div_struc
+    pop ebp
+    ret
+div_bignum  ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1119,6 +1284,12 @@ init    PROC far
     mov edi,OFFSET mul_bignum_name
     xor dx,dx
     mov ax,mul_bignum_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET div_bignum
+    mov edi,OFFSET div_bignum_name
+    xor dx,dx
+    mov ax,div_bignum_nr
     RegisterBimodalUserGate
 ;
     ret

@@ -1511,6 +1511,16 @@
     parm [eax] [edi] \
     value [eax];
 
+#pragma aux RdosSetThreadAction = \
+    CallGate_set_thread_action  \
+    parm [edi]
+
+#pragma aux RdosGetThreadAction = \
+    CallGate_get_thread_action  \
+    CarryToBool \
+    parm [eax] [edi] \
+    value [eax];
+
 #pragma aux RdosSuspendThread = \
     CallGate_suspend_thread  \
     CarryToBool \
@@ -3341,5 +3351,10 @@
 
 #pragma aux RdosMulBigNum = \
     CallGate_mul_bignum  \
+    parm [ebx] [eax] \
+    value [ebx];
+
+#pragma aux RdosDivBigNum = \
+    CallGate_div_bignum  \
     parm [ebx] [eax] \
     value [ebx];

@@ -764,5 +764,9 @@ delete_bignum_nr                = 594
 load_bignum64_nr                = 595
 add_bignum_nr                   = 596
 mul_bignum_nr                   = 597
+div_bignum_nr                   = 598
 
-usergate_entries			    = 600
+get_thread_action_nr            = 599
+set_thread_action_nr            = 600
+
+usergate_entries			    = 625

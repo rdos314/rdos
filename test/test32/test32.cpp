@@ -82,23 +82,25 @@ void main()
     int handle4;
     int handle5;
 
+    strcpy(str, "test");
+
+    RdosSetThreadAction(str);
+    if (RdosGetThreadAction(1, str))
+        printf(str);
+
     handle1 = RdosCreateBigNum();
     RdosLoadBigNum64(handle1,  4500000000);
 
     handle2 = RdosCreateBigNum();
-    val = 4000000000;
+    val = 4000;
     val = -val;
     RdosLoadBigNum64(handle2, val);
 
-    handle3 = RdosMulBigNum(handle1, handle2);
-    handle4 = RdosMulBigNum(handle3, handle2);
-    handle5 = RdosMulBigNum(handle4, handle3);
+    handle3 = RdosDivBigNum(handle1, handle2);
 
     RdosDeleteBigNum(handle1);
     RdosDeleteBigNum(handle2);
     RdosDeleteBigNum(handle3);
-    RdosDeleteBigNum(handle4);
-    RdosDeleteBigNum(handle5);
 
 //    RdosWaitMilli(2000);
 //    RdosSoftReset();

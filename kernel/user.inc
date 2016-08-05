@@ -1196,10 +1196,21 @@ DebugNext       MACRO
 	UserGate debug_next_nr
 						ENDM
 
+; IN  ES:(E)DI   	Action buffer
+SetThreadAction     MACRO
+	UserGate set_thread_action_nr
+						ENDM
+
 ; IN  ES:(E)DI   	State buffer
 ; IN  AX           	Thread #
 GetThreadState     MACRO
 	UserGate get_thread_state_nr
+						ENDM
+
+; IN  ES:(E)DI   	Action buffer
+; IN  AX           	Thread #
+GetThreadAction     MACRO
+	UserGate get_thread_action_nr
 						ENDM
 
 ; IN  AX            Thread ID
@@ -3805,4 +3816,11 @@ AddBigNum	MACRO
 ; OUT BX            Result bignum handle
 MulBigNum	MACRO
 	UserGate mul_bignum_nr
+	        ENDM
+
+; IN  BX            Bignum handle 1
+; IN  AX            Bignum handle 2
+; OUT BX            Result bignum handle
+DivBigNum	MACRO
+	UserGate div_bignum_nr
 	        ENDM

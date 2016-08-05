@@ -452,6 +452,9 @@ int RDOSAPI RdosGetFaultThreadTss(int ThreadNr, Tss *tss);
 int RDOSAPI RdosHasCrashInfo();
 int RDOSAPI RdosGetCrashCoreInfo(int Core, char *CrashBuf);
 
+void RDOSAPI RdosSetThreadAction(const char *ActionStr);
+int RDOSAPI RdosGetThreadAction(int ThreadNr, char *ActionStr);
+
 int RDOSAPI RdosGetThreadState(int ThreadNr, ThreadState *State);
 int RDOSAPI RdosSuspendThread(int Thread);
 int RDOSAPI RdosSuspendAndSignalThread(int Thread);
@@ -824,6 +827,7 @@ void RDOSAPI RdosDeleteBigNum(int handle);
 void RDOSAPI RdosLoadBigNum64(int handle, long long Value);
 int RDOSAPI RdosAddBigNum(int handle1, int handle2);
 int RDOSAPI RdosMulBigNum(int handle1, int handle2);
+int RDOSAPI RdosDivBigNum(int handle1, int handle2);
 
 #ifdef __cplusplus
 }

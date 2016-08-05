@@ -764,6 +764,10 @@
 #define usergate_load_bignum64 0x00000253
 #define usergate_add_bignum 0x00000254
 #define usergate_mul_bignum 0x00000255
+#define usergate_div_bignum 0x00000256
+
+#define usergate_get_thread_action 0x00000257
+#define usergate_set_thread_action 0x00000258
 
 
 
@@ -1534,6 +1538,10 @@
 #define CallGate_load_bignum64 0x67 0x9a 83 2 0 0 3 0
 #define CallGate_add_bignum 0x67 0x9a 84 2 0 0 3 0
 #define CallGate_mul_bignum 0x67 0x9a 85 2 0 0 3 0
+#define CallGate_div_bignum 0x67 0x9a 86 2 0 0 3 0
+
+#define CallGate_get_thread_action 0x67 0x9a 87 2 0 0 3 0
+#define CallGate_set_thread_action 0x67 0x9a 88 2 0 0 3 0
 
 #else
 
@@ -2302,5 +2310,9 @@
 #define CallGate_load_bignum64 0x3e 0x67 0x9a 83 2 0 0 3 0
 #define CallGate_add_bignum 0x3e 0x67 0x9a 84 2 0 0 3 0
 #define CallGate_mul_bignum 0x3e 0x67 0x9a 85 2 0 0 3 0
+#define CallGate_div_bignum 0x3e 0x67 0x9a 86 2 0 0 3 0
+
+#define CallGate_get_thread_action 0x3e 0x67 0x9a 87 2 0 0 3 0
+#define CallGate_set_thread_action 0x3e 0x67 0x9a 88 2 0 0 3 0
 
 #endif
