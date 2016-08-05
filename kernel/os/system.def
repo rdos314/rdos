@@ -427,6 +427,7 @@ p_debug_proc        DD ?
 p_debug_event       DW ?
 
 p_list_name         DB 32 DUP(?)
+p_action_text       DB 32 DUP(?)
     
 thread_name                 DB 32 DUP(?)
 

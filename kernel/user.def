@@ -766,7 +766,7 @@ add_bignum_nr                   = 596
 mul_bignum_nr                   = 597
 div_bignum_nr                   = 598
 
-get_thread_action_nr            = 599
+get_thread_action_state_nr      = 599
 set_thread_action_nr            = 600
 
 usergate_entries			    = 625

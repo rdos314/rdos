@@ -1207,10 +1207,10 @@ GetThreadState     MACRO
 	UserGate get_thread_state_nr
 						ENDM
 
-; IN  ES:(E)DI   	Action buffer
+; IN  ES:(E)DI   	Action state buffer
 ; IN  AX           	Thread #
-GetThreadAction     MACRO
-	UserGate get_thread_action_nr
+GetThreadActionState     MACRO
+	UserGate get_thread_action_state_nr
 						ENDM
 
 ; IN  AX            Thread ID

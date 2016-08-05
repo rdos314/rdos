@@ -1515,8 +1515,8 @@
     CallGate_set_thread_action  \
     parm [edi]
 
-#pragma aux RdosGetThreadAction = \
-    CallGate_get_thread_action  \
+#pragma aux RdosGetThreadActionState = \
+    CallGate_get_thread_action_state  \
     CarryToBool \
     parm [eax] [edi] \
     value [eax];

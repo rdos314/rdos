@@ -62,6 +62,18 @@ typedef struct ThreadState
      short int Sel;
 } ThreadState;
 
+typedef struct ThreadActionState
+{
+     short int ID;
+     char Name[32];
+     unsigned long MsbTime;
+     unsigned long LsbTime;
+     char List[32];
+     char Action[32];
+     long Offset;
+     short int Sel;
+} ThreadActionState;
+
 typedef struct Tss
 {
     long cr3;
@@ -453,9 +465,9 @@ int RDOSAPI RdosHasCrashInfo();
 int RDOSAPI RdosGetCrashCoreInfo(int Core, char *CrashBuf);
 
 void RDOSAPI RdosSetThreadAction(const char *ActionStr);
-int RDOSAPI RdosGetThreadAction(int ThreadNr, char *ActionStr);
 
 int RDOSAPI RdosGetThreadState(int ThreadNr, ThreadState *State);
+int RDOSAPI RdosGetThreadActionState(int ThreadNr, ThreadActionState *State);
 int RDOSAPI RdosSuspendThread(int Thread);
 int RDOSAPI RdosSuspendAndSignalThread(int Thread);
 void RDOSAPI RdosMoveToCore(int Core);
