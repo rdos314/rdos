@@ -6287,6 +6287,36 @@ cleanup_futex32 Proc far
     call cleanup_futex
     retf32
 cleanup_futex32 Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           set_thread_action
+;
+;           DESCRIPTION:    Set thread action text
+;
+;           PARAMS:         ES:(E)DI    Action buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_thread_action_name    DB 'Set Thread Action',0
+
+set_thread_action   Proc near
+    ret
+set_thread_action   Endp
+
+set_thread_action16 Proc far
+    push edi
+    movzx edi,di
+    call set_thread_action
+    pop edi
+    retf32
+set_thread_action16 Endp
+
+set_thread_action32 Proc far
+    call set_thread_action
+    retf32
+set_thread_action32 Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -7990,6 +8020,7 @@ init_default_regs    PROC near
 ;
     mov ds:p_fault_vector,-1
     mov ds:p_fault_code,0
+    mov ds:p_action_text,0
     ret
 init_default_regs    ENDP
 
@@ -8890,6 +8921,7 @@ init_first_tss  PROC near
 ;
     mov ds:p_fault_vector,-1
     mov ds:p_fault_code,0
+    mov ds:p_action_text,0
 ;
     mov ds:p_cr3,edx
     mov dword ptr ds:p_rax,edx
@@ -9728,6 +9760,13 @@ timer_free_list_create:
     mov edi,OFFSET cleanup_futex_name
     mov dx,virt_es_in
     mov ax,cleanup_futex_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET set_thread_action16
+    mov esi,OFFSET set_thread_action32
+    mov edi,OFFSET set_thread_action_name
+    mov dx,virt_es_in
+    mov ax,set_thread_action_nr
     RegisterUserGate
 ;
     mov si,OFFSET has_crash_info

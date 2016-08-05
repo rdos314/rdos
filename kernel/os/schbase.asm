@@ -306,6 +306,95 @@ get_thread_state32      Proc far
     ret
 get_thread_state32      Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetThreadActionState
+;
+;           DESCRIPTION:    Get action state of a thread
+;
+;           PARAMETERS:     ES:(E)DI        BUFFER TO PUT STATE IN
+;                           AX                  THREAD #
+;                           NC                  THREAD EXISTS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_thread_action_state_name DB 'Get Thread Action State',0
+
+get_thread_action_state    Proc near
+    push ds
+    pushad
+;    
+    movzx eax,ax
+    call IdToHandle
+    or eax,eax
+    stc
+    jz get_action_state_done
+;    
+    mov ds,ax
+    mov ax,ds:p_id
+    mov es:[edi].ast_id,ax
+    mov esi,OFFSET thread_name
+    mov ecx,32
+    push edi
+    add edi,OFFSET ast_name
+    rep movs byte ptr es:[edi],ds:[esi]
+    pop edi
+;    
+    mov esi,OFFSET p_action_text
+    mov ecx,32
+    push edi
+    add edi,OFFSET ast_action
+    rep movs byte ptr es:[edi],ds:[esi]
+    pop edi
+;       
+    mov eax,ds:p_msb_tics
+    mov es:[edi].ast_time,eax
+    mov eax,ds:p_lsb_tics
+    mov es:[edi].ast_time+4,eax
+;
+    push edi
+    add edi,OFFSET ast_list
+    mov bx,ds
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov esi,OFFSET state_arr
+    
+get_action_state_loop:
+    call fword ptr [esi]
+    jnc get_action_state_found
+;
+    add esi,8
+    jmp get_action_state_loop
+
+get_action_state_found:
+    pop edi
+;
+    mov es:[edi].ast_sel,cx
+    mov es:[edi].ast_offs,edx
+    clc
+
+get_action_state_done:
+    popad
+    pop ds
+    ret
+get_thread_action_state    Endp
+
+get_thread_action_state16      Proc far
+    push edi
+    movzx edi,di
+    call get_thread_action_state
+    pop edi
+    ret
+get_thread_action_state16      Endp
+
+get_thread_action_state32      Proc far
+    call get_thread_action_state
+    ret
+get_thread_action_state32      Endp
+
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -566,6 +655,13 @@ init_state_hooks:
     mov edi,OFFSET get_thread_state_name
     mov dx,virt_es_in
     mov ax,get_thread_state_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET get_thread_action_state16
+    mov esi,OFFSET get_thread_action_state32
+    mov edi,OFFSET get_thread_action_state_name
+    mov dx,virt_es_in
+    mov ax,get_thread_action_state_nr
     RegisterUserGate
 ;
     mov esi,OFFSET suspend_thread

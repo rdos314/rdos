@@ -35,4 +35,15 @@ st_offs 	DD ?
 st_sel		DW ?
 state_struc	ENDS
 
+
+action_state_struc	STRUC
+ast_id		DW ?
+ast_name	DB 32 DUP(?)
+ast_time	DD ?,?
+ast_list	DB 32 DUP(?)
+ast_action  DB 32 DUP(?)
+ast_offs 	DD ?
+ast_sel		DW ?
+action_state_struc	ENDS
+
 	
