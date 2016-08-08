@@ -772,6 +772,16 @@
     parm [eax] [es edi] \
     value [eax];
 
+#pragma aux RdosSetThreadAction = \
+    CallGate_set_thread_action  \
+    parm [es edi]
+
+#pragma aux RdosGetThreadActionState = \
+    CallGate_get_thread_action_state  \
+    CarryToBool \
+    parm [eax] [es edi] \
+    value [eax];
+
 #pragma aux RdosSuspendThread = \
     CallGate_suspend_thread  \
     CarryToBool \

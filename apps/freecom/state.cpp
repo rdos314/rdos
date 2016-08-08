@@ -138,38 +138,38 @@ void TStateCommand::InitOptions()
 #   Returns....: *
 #
 ##########################################################################*/
-void TStateCommand::WriteOne(ThreadState *State)
+void TStateCommand::WriteOne(ThreadActionState *State)
 {
     char str[40];
     int len;
-        int day;
-        int hour;
-        int min;
-        int sec;
-        int milli;
-        int micro;
-        int started;
+    int day;
+    int hour;
+    int min;
+    int sec;
+    int milli;
+    int micro;
+    int started;
     int i;
 
-        sprintf(str, "%04hX ", State->ID);
-        Write(str);
+    sprintf(str, "%04hX ", State->ID);
+    Write(str);
 
-        memcpy(str, State->Name, 20);
-        str[20] = 0;
-        len = strlen(str);
+    memcpy(str, State->Name, 20);
+    str[20] = 0;
+    len = strlen(str);
 
-        for (i = len; i < 20; i++)
+    for (i = len; i < 20; i++)
         str[i] = ' ';
 
-        Write(str);
+    Write(str);
 
-        day = State->MsbTime / 24;
-        hour = State->MsbTime % 24;
-        RdosDecodeLsbTics(State->LsbTime, &min, &sec, &milli, &micro);
+    day = State->MsbTime / 24;
+    hour = State->MsbTime % 24;
+    RdosDecodeLsbTics(State->LsbTime, &min, &sec, &milli, &micro);
 
-        started = FALSE;
-        if (day)
-        {
+    started = FALSE;
+    if (day)
+    {
         sprintf(str, "%3d ", day);
         Write(str);
         started = TRUE;
@@ -180,63 +180,93 @@ void TStateCommand::WriteOne(ThreadState *State)
     if (hour || started)
     {
         if (started)
-                                sprintf(str, "%02d.", hour);
-                  else
-                                sprintf(str, "%2d.", hour);
-                  Write(str);
-                  started = TRUE;
-         }
-         else
-                  Write("   ");
+            sprintf(str, "%02d.", hour);
+        else
+            sprintf(str, "%2d.", hour);
+        Write(str);
+        started = TRUE;
+    }
+    else
+        Write("   ");
 
-         if (min || started)
-         {
-                  if (started)
-                                sprintf(str, "%02d.", min);
-                  else
-                                sprintf(str, "%2d.", min);
-                  Write(str);
-                  started = TRUE;
-         }
-         else
-                  Write("   ");
+        if (min || started)
+        {
+            if (started)
+                sprintf(str, "%02d.", min);
+            else
+                sprintf(str, "%2d.", min);
+            Write(str);
+            started = TRUE;
+        }
+        else
+            Write("   ");
 
-         if (sec || started)
-         {
-                  if (started)
-                                sprintf(str, "%02d,", sec);
-                  else
-                                sprintf(str, "%2d,", sec);
-                  Write(str);
-                  started = TRUE;
-         }
-         else
-                  Write("   ");
+    if (sec || started)
+    {
+        if (started)
+            sprintf(str, "%02d,", sec);
+        else
+            sprintf(str, "%2d,", sec);
+        Write(str);
+        started = TRUE;
+    }
+    else
+        Write("   ");
 
-         if (milli || started)
-         {
-                  if (started)
-                                sprintf(str, "%03d ", milli);
-                  else
-                                sprintf(str, "%3d ", milli);
-                  Write(str);
-                  started = TRUE;
-         }
-         else
-                  Write("    ");
+    if (milli || started)
+    {
+        if (started)
+            sprintf(str, "%03d ", milli);
+        else
+            sprintf(str, "%3d ", milli);
+        Write(str);
+        started = TRUE;
+    }
+    else
+        Write("    ");
 
-         if (started)
-                  sprintf(str, "%03d ", micro);
-         else
-                  sprintf(str, "%3d ", micro);
-         Write(str);
+    if (started)
+        sprintf(str, "%03d ", micro);
+    else
+        sprintf(str, "%3d ", micro);
+    Write(str);
 
+    if (State->Action[0])
+    {
+        for (len = 0; len < 20 && State->Action[len]; len++)
+            str[len] = State->Action[len];
+
+        str[len] = ' ';
+        len++;
+
+        str[len] = '(';
+        len++;
+
+        i = 0;
+        while (len < 20 + 12 && State->List[i])
+        {
+            str[len] = State->List[i];
+            len++;
+            i++;
+        }
+
+        str[len] = ')';
+        len++;
+    
+        for (i = len; i < 20 + 13; i++)
+            str[i] = ' ';
+
+        str[20+13] = 0;
+        Write(str);
+    }
+    else
+    {
         memcpy(str, State->List, 20);
         str[20] = 0;
         len = strlen(str);
 
         for (i = len; i < 20; i++)
-                  str[i] = ' ';
+            str[i] = ' ';
 
         Write(str);
 
@@ -250,9 +280,9 @@ void TStateCommand::WriteOne(ThreadState *State)
         }
         else
             Write("             ");
+    }
 
-        Write("\r\n");
-
+    Write("\r\n");
 }
 
 /*##########################################################################
@@ -269,7 +299,7 @@ void TStateCommand::WriteOne(ThreadState *State)
 int TStateCommand::Execute(char *param)
 {
     int i;
-    ThreadState state;
+    ThreadActionState state;
     short int ID;
     TArg *arg;
 
@@ -284,7 +314,7 @@ int TStateCommand::Execute(char *param)
         if (FArgCount == 0)
         {
         for (i = 0; i < 256; i++)
-                if (RdosGetThreadState(i, &state))
+                if (RdosGetThreadActionState(i, &state))
                     WriteOne(&state);
                         
         return 0;
@@ -299,7 +329,7 @@ int TStateCommand::Execute(char *param)
             {           
                 for (i = 0; i < 256; i++)
                 {
-                        if (RdosGetThreadState(i, &state))
+                        if (RdosGetThreadActionState(i, &state))
                         {
                             if (state.ID == ID)
                             {

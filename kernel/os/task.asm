@@ -2268,6 +2268,9 @@ start_processor_null_threads    Endp
 
 null_base   DB 'Null'
 
+action_hlt  DB 'Halt', 0
+action_run  DB 'Run', 0
+
 null_thread0:
     mov ax,core_data_sel
     mov fs,ax
@@ -2352,7 +2355,15 @@ null_hlt:
     CrashGate
 
 null_nest_ok:      
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET action_hlt
+    SetThreadAction
+;
     hlt
+;    
+    mov edi,OFFSET action_run
+    SetThreadAction
     jmp null_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6302,6 +6313,33 @@ cleanup_futex32 Endp
 set_thread_action_name    DB 'Set Thread Action',0
 
 set_thread_action   Proc near
+    push ds
+    push eax
+    push ecx
+    push esi
+    push edi
+;    
+    mov esi,OFFSET p_action_text
+    mov ecx,32
+    GetThread
+    mov ds,ax
+
+staLoop:
+    mov al,es:[edi]
+    mov ds:[esi],al
+    or al,al
+    jz staDone
+;
+    inc esi
+    inc edi
+    loop staLoop    
+
+staDone:  
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop ds      
     ret
 set_thread_action   Endp
 

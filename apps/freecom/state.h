@@ -50,7 +50,7 @@ protected:
     void InitOptions();
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 
-	void WriteOne(ThreadState *state);
+	void WriteOne(ThreadActionState *state);
 
     int FOptR;
     int FOptS;

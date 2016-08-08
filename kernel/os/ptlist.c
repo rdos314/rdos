@@ -73,7 +73,7 @@ void WriteEmpty(int Row)
 #   Returns....: *
 #
 ##########################################################################*/
-void WriteOne(int Row, ThreadState *State)
+void WriteOne(int Row, ThreadActionState *State)
 {
     char str[40];
     int len;
@@ -182,25 +182,56 @@ void WriteOne(int Row, ThreadState *State)
         sprintf(str, "%3d ", micro);
     RdosWriteString(str);
 
-    memcpy(str, State->List, 20);
-    str[20] = 0;
-    len = strlen(str);
-
-    for (i = len; i < 20; i++)
-        str[i] = ' ';
-
-    RdosWriteString(str);
-
-    if (State->Sel)
+    if (State->Action[0])
     {
-        sprintf(str, "%04hX:", State->Sel);
-        RdosWriteString(str);
+        for (len = 0; len < 20 && State->Action[len]; len++)
+            str[len] = State->Action[len];
 
-        sprintf(str, "%08lX", State->Offset);
+        str[len] = ' ';
+        len++;
+
+        str[len] = '(';
+        len++;
+
+        i = 0;
+        while (len < 20 + 12 && State->List[i])
+        {
+            str[len] = State->List[i];
+            len++;
+            i++;
+        }
+
+        str[len] = ')';
+        len++;
+    
+        for (i = len; i < 20 + 13; i++)
+            str[i] = ' ';
+
+        str[20+13] = 0;
         RdosWriteString(str);
     }
     else
-        RdosWriteString("             ");
+    {
+        memcpy(str, State->List, 20);
+        str[20] = 0;
+        len = strlen(str);
+
+        for (i = len; i < 20; i++)
+            str[i] = ' ';
+
+        RdosWriteString(str);
+
+        if (State->Sel)
+        {
+            sprintf(str, "%04hX:", State->Sel);
+            RdosWriteString(str);
+
+            sprintf(str, "%08lX", State->Offset);
+            RdosWriteString(str);
+        }
+        else
+            RdosWriteString("             ");
+    }
 }
     
 /*##########################################################################
@@ -212,7 +243,7 @@ void WriteOne(int Row, ThreadState *State)
 void ProcessHandler()
 {
     int i;
-    ThreadState state;
+    ThreadActionState state;
     int row;
     int absrow;
     int lastrow;
@@ -229,7 +260,7 @@ void ProcessHandler()
         row = 0;
         for (i = 0; i < 256; i++)
         {
-            if (RdosGetThreadState(i, &state))
+            if (RdosGetThreadActionState(i, &state))
             {            
                 absrow = row - StartRow;
                 if (absrow < 25 && absrow >= 0)
