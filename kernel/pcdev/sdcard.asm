@@ -1966,7 +1966,18 @@ ResetDev    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+action_read_reset DB 'Read Reset', 0
+action_read_start DB 'Read', 0
+
 read_drive      Proc near
+    push es
+    push edi
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET action_read_start
+    SetThreadAction
+    pop edi
+    pop es
 
 rdLoop:    
     push ecx
@@ -2058,7 +2069,15 @@ rdSectorRetry:
     jnz rdSectorRetry
 
 rdReset:
-;    int 3
+    push es
+    push edi
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET action_read_reset
+    SetThreadAction
+    pop edi
+    pop es
+;
     call ResetDev
 ;
     pop edx
@@ -2119,7 +2138,18 @@ read_drive      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+action_write_start DB 'Write', 0
+action_write_reset DB 'Write Reset', 0
+
 write_drive     Proc near
+    push es
+    push edi
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET action_write_start
+    SetThreadAction
+    pop edi
+    pop es
 
 wrLoop:    
     push ecx
@@ -2208,7 +2238,15 @@ wrSectorRetry:
     jnz wrSectorRetry
 
 wrReset:
-;    int 3
+    push es
+    push edi
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET action_write_reset
+    SetThreadAction
+    pop edi
+    pop es
+;
     call ResetDev
 ;
     pop edx
@@ -2315,6 +2353,8 @@ perform_one     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+action_idle DB 'Idle', 0
+
 discbuf_thread:
     AddThreadInt
     mov ax,fs
@@ -2325,6 +2365,15 @@ discbuf_thread:
     mov bx,ds:sd_disc_sel
 
 discbuf_thread_loop:
+    push es
+    push edi
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET action_idle
+    SetThreadAction
+    pop edi
+    pop es
+;
     WaitForDiscRequest    
     call perform_one
     jmp discbuf_thread_loop

@@ -3138,6 +3138,9 @@ InstallGpt2    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+action_read DB 'Read', 0
+action_write DB 'Write', 0
+
 perform_one     Proc near
 
 perform_one_loop:
@@ -3158,6 +3161,15 @@ perform_one_loop:
     jne perform_one_done
 
 perform_one_write:
+    push es
+    push edi
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET action_write
+    SetThreadAction
+    pop edi
+    pop es
+;    
     call AllocateSlot
     jnc perform_write_has_slot
 ;
@@ -3222,6 +3234,15 @@ perform_write_queue_loop:
     jmp perform_one_loop
 
 perform_one_read:
+    push es
+    push edi
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET action_read
+    SetThreadAction
+    pop edi
+    pop es
+;    
     call AllocateSlot
     jnc perform_read_has_slot
 ;
@@ -3301,6 +3322,8 @@ perform_one     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+action_wait DB 'Idle', 0
+
 req_discbuf_thread:
     AddThreadInt
     mov ax,flat_sel
@@ -3314,6 +3337,15 @@ req_discbuf_thread:
     SetDiscUse32
 
 req_discbuf_loop:
+    push es
+    push edi
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET action_wait
+    SetThreadAction
+    pop edi
+    pop es
+;
     WaitForDiscRequest
     call perform_one
     jmp req_discbuf_loop
