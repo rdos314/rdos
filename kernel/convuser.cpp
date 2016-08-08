@@ -108,7 +108,7 @@ int main()
                     if (GateName[Size - 3] == '_')
                         GateName[Size - 3] = 0;
 
-                    sprintf(Macro, "#define CallGate_%s 0x67 0x9a %d %d %d %d 3 0\r\n",
+                    sprintf(Macro, "#define CallGate_%s 0x55 0x67 0x9a %d %d %d %d 3 0 0x5d\r\n",
                             GateName,
                             GateId & 0xFF,
                             (GateId >> 8) & 0xFF,

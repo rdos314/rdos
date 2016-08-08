@@ -324,6 +324,7 @@ get_thread_action_state_name DB 'Get Thread Action State',0
 
 get_thread_action_state    Proc near
     push ds
+    push fs
     pushad
 ;    
     movzx eax,ax
@@ -372,12 +373,48 @@ get_action_state_loop:
 get_action_state_found:
     pop edi
 ;
-    mov es:[edi].ast_sel,cx
-    mov es:[edi].ast_offs,edx
+    mov es:[edi].ast_pos.sep_sel,cx
+    mov es:[edi].ast_pos.sep_offs,edx
+    mov es:[edi].ast_count,0
+;
+    mov ds,ebx
+    test word ptr ds:p_rflags+2,2
+    jnz get_action_user_done
+;
+    mov ax,ds:p_cs
+    test ax,7
+    jnz get_action_user_done
+;
+    mov ax,ds:p_ss
+    mov fs,ax
+    mov ecx,dword ptr ds:p_rsp
+    cmp ecx,stack0_size
+    jae get_action_user_done
+;
+    mov ecx,stack0_size
+    mov eax,fs:[ecx-4]
+    cmp eax,flat_data_sel    
+    jne get_action_user_done
+;    
+    mov eax,fs:[ecx-12]
+    cmp eax,flat_code_sel
+    jne get_action_user_done
+;
+    mov edx,edi
+    add edx,OFFSET ast_user
+    mov eax,fs:[ecx-12]
+    mov es:[edx].sep_sel,ax
+    mov eax,fs:[ecx-16]
+    mov es:[edx].sep_offs,eax
+    add edx,SIZE state_ep
+    inc es:[edi].ast_count
+    
+get_action_user_done:    
     clc
 
 get_action_state_done:
     popad
+    pop fs
     pop ds
     ret
 get_thread_action_state    Endp

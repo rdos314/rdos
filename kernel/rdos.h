@@ -51,6 +51,12 @@
 #define AUDIO_WIDGET_TYPE_POWER       6
 #define AUDIO_WIDGET_TYPE_BEEP        7
 
+typedef struct ThreadEntryPoint
+{
+    long Offset;
+    short int Sel;
+} ThreadEntryPoint;
+
 typedef struct ThreadState
 {
      short int ID;
@@ -70,8 +76,9 @@ typedef struct ThreadActionState
      unsigned long LsbTime;
      char List[32];
      char Action[32];
-     long Offset;
-     short int Sel;
+     struct ThreadEntryPoint Pos;
+     short int UserCount;
+     struct ThreadEntryPoint UserCall[64];
 } ThreadActionState;
 
 typedef struct Tss

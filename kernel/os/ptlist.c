@@ -221,16 +221,27 @@ void WriteOne(int Row, ThreadActionState *State)
 
         RdosWriteString(str);
 
-        if (State->Sel)
+        if (State->Pos.Sel)
         {
-            sprintf(str, "%04hX:", State->Sel);
+            sprintf(str, "%04hX:", State->Pos.Sel);
             RdosWriteString(str);
 
-            sprintf(str, "%08lX", State->Offset);
+            sprintf(str, "%08lX", State->Pos.Offset);
             RdosWriteString(str);
         }
         else
-            RdosWriteString("             ");
+        {
+            if (State->UserCount)
+            {
+                sprintf(str, "%04hX:", State->UserCall[0].Sel);
+                RdosWriteString(str);
+
+                sprintf(str, "%08lX", State->UserCall[0].Offset);
+                RdosWriteString(str);
+            }
+            else
+                RdosWriteString("             ");
+        }
     }
 }
     
