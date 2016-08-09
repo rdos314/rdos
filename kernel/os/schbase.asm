@@ -306,6 +306,106 @@ get_thread_state32      Proc far
     ret
 get_thread_state32      Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           ReadFlatAppDword
+;
+;   DESCRIPTION:    Read flat app dword
+;
+;   PARAMETERS:     DS  Thread
+;                   ESI Offset
+;
+;   RETURNS:        NC
+;                       EAX Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadFlatAppDword    Proc near
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    add esi,3
+    xor ecx,ecx
+    mov edx,flat_data_sel
+    mov bx,ds
+    ReadThreadSelector
+    jc rfadDone
+;
+    dec esi
+    mov cl,al
+    ReadThreadSelector
+    jc rfadDone
+;
+    shl ecx,8
+    mov cl,al
+;
+    dec esi
+    mov cl,al
+    ReadThreadSelector
+    jc rfadDone
+;
+    shl ecx,8
+    mov cl,al
+;
+    dec esi
+    mov cl,al
+    ReadThreadSelector
+    jc rfadDone
+;
+    shl ecx,8
+    mov cl,al
+    mov eax,ecx
+    clc
+
+rfadDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+ReadFlatAppDword    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           ProbeFlatAppCode
+;
+;   DESCRIPTION:    Proble flat app code
+;
+;   PARAMETERS:     DS  Thread
+;                   ESI Offset
+;
+;   RETURNS:        NC   OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProbeFlatAppCode    Proc near
+    push eax
+    push ebx
+    push edx
+;
+    mov edx,flat_data_sel
+    mov bx,ds
+    ReadThreadSelector
+    jc pfacDone
+;    
+    GetThreadSelectorPage
+    jc pfacDone
+;
+    test al,2
+    jz pfacDone
+;
+    stc
+
+pfacDone:
+    pop edx
+    pop ebx
+    pop eax
+    ret
+ProbeFlatAppCode    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -408,8 +508,66 @@ get_action_state_found:
     mov es:[edx].sep_offs,eax
     add edx,SIZE state_ep
     inc es:[edi].ast_count
+;
+    mov esi,fs:[ecx-8]
+    call ReadFlatAppDword
+    jc get_action_user_done
+
+get_action_user_loop:
+    mov esi,eax
+    push esi
+    add esi,24
+    call ReadFlatAppDword
+    pop esi
+    jc get_action_user_done
+;
+    push esi
+    mov esi,eax
+    call ProbeFlatAppCode
+    pop esi
+    jnc get_action_user_save
+;    
+    push esi
+    add esi,20
+    call ReadFlatAppDword
+    pop esi
+    jc get_action_user_done
+;
+    push esi
+    mov esi,eax
+    call ProbeFlatAppCode
+    pop esi
+    jnc get_action_user_save
+;
+    xor eax,eax
     
+get_action_user_save:    
+    mov es:[edx].sep_sel,flat_code_sel
+    mov es:[edx].sep_offs,eax
+    add edx,SIZE state_ep
+    mov ax,es:[edi].ast_count
+    inc ax
+    mov es:[edi].ast_count,ax
+    cmp ax,64
+    jae get_action_user_done
+;
+    call ReadFlatAppDword
+    or eax,eax
+    jnz get_action_user_loop
+        
 get_action_user_done:    
+    mov ax,es:[edi].ast_count
+    cmp ax,2
+    jb get_action_user_ok
+;
+    sub edx,SIZE state_ep
+    mov eax,es:[edx].sep_offs
+    or eax,eax
+    jnz get_action_user_ok
+;
+    dec es:[edi].ast_count        
+
+get_action_user_ok:    
     clc
 
 get_action_state_done:

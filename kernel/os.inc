@@ -713,6 +713,14 @@ GetThreadPageDir   MACRO
     OsGate get_thread_page_dir_nr
                     ENDM
 
+;       DX:ESI      Address to validate
+;       BX          Thread
+;       NC          Valid
+;       EAX         Page attributes
+GetThreadSelectorPage      MACRO
+    OsGate get_thread_selector_page_nr
+                    ENDM
+
 ;       DX:ESI  ADDRESS TO READ
 ;       BX          TRèD
 ;       NC          VALID

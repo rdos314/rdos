@@ -231,7 +231,7 @@ void WriteOne(int Row, ThreadActionState *State)
         }
         else
         {
-            if (State->UserCount)
+            if (State->UserCount > 1)
             {
                 sprintf(str, "%04hX:", State->UserCall[0].Sel);
                 RdosWriteString(str);

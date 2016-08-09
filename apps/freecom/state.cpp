@@ -279,17 +279,15 @@ void TStateCommand::WriteOne(ThreadActionState *State)
             Write(str);
         }
         else
-        {
-            if (State->UserCount)
-            {
-                sprintf(str, "%04hX:", State->UserCall[0].Sel);
-                Write(str);
+            Write("             ");
 
-                sprintf(str, "%08lX", State->UserCall[0].Offset);
-                Write(str);
-            }
-            else
-                Write("             ");
+        for (i = 0; i < State->UserCount; i++)
+        {
+            sprintf(str, " %04hX:", State->UserCall[i].Sel);
+            Write(str);
+
+            sprintf(str, "%08lX", State->UserCall[i].Offset);
+            Write(str);
         }
     }
 

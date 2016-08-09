@@ -358,6 +358,12 @@ init_mem    PROC near
     mov ax,allocate_fixed_program_mem_nr
     RegisterOsGate
 ;
+    mov si,OFFSET get_thread_selector_page
+    mov di,OFFSET get_thread_selector_page_name
+    xor cl,cl
+    mov ax,get_thread_selector_page_nr
+    RegisterOsGate
+;
     mov si,OFFSET read_thread_selector
     mov di,OFFSET read_thread_selector_name
     xor cl,cl
@@ -3651,6 +3657,66 @@ get_thread_linear_done:
     ret
 get_thread_linear       ENDP
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;    NAME:           GET_THREAD_SELECTOR_PAGE
+;
+;    DESCRIPTION:    Get paging settings for thread
+;
+;    PARAMETERS:     DX:ESI      Selector:offset in thread
+;                    BX              Thread
+;
+;    RETURNS:        NC          Valid
+;                                EAX          Page entry
+;                    CY          Invalid
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_thread_selector_page_name       DB 'Get Thread Selector Page',0
+
+get_thread_selector_page    PROC far
+    push es
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push bp
+;
+    mov bp,bx
+    mov ax,flat_sel
+    mov es,ax
+
+get_thread_selector_page_retry:
+    call validate_thread_selector
+    jc get_thread_selector_page_done
+;
+    xor cx,cx
+    movzx esi,dx
+    and dx,0F000h
+    and si,0FFFh
+    GetThreadPageEntry
+;
+    test al,1
+    jnz get_thread_selector_page_ok
+;    
+    stc
+    xor eax,eax
+    jmp get_thread_selector_page_done
+
+get_thread_selector_page_ok:
+    clc
+    
+get_thread_selector_page_done:
+    pop bp
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    retf32
+get_thread_selector_page    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
