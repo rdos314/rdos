@@ -1603,6 +1603,7 @@ List running threads
 STATE [/S] [/F] [thread-ID]
   /S              Suspend thread
   /F              Force thread out of signal-wait and suspend
+  /U              Show user mode call stack
 .
 
 :TEXT_CMDHELP_MOVE

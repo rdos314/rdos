@@ -100,11 +100,15 @@ int TStateCommand::OptScan(const char *optstr, int ch, int bool, const char *str
 {
         switch(ch)
         {
-                case 'S':
+            case 'S':
                         return OptScanBool(optstr, bool, strarg, &FOptS);
 
             case 'F':
                         return OptScanBool(optstr, bool, strarg, &FOptF);
+
+            case 'U':
+                        return OptScanBool(optstr, bool, strarg, &FOptU);
+
         }
         OptError(optstr);
         return E_Useage;
@@ -125,6 +129,7 @@ void TStateCommand::InitOptions()
 {
     FOptS = FALSE;
     FOptF = FALSE;
+    FOptU = FALSE;
 }
 
 /*##########################################################################
@@ -281,13 +286,16 @@ void TStateCommand::WriteOne(ThreadActionState *State)
         else
             Write("             ");
 
-        for (i = 0; i < State->UserCount; i++)
+        if (FOptU)
         {
-            sprintf(str, " %04hX:", State->UserCall[i].Sel);
-            Write(str);
+            for (i = 0; i < State->UserCount; i++)
+            {
+                sprintf(str, " %04hX:", State->UserCall[i].Sel);
+                Write(str);
 
-            sprintf(str, "%08lX", State->UserCall[i].Offset);
-            Write(str);
+                sprintf(str, "%08lX", State->UserCall[i].Offset);
+                Write(str);
+            }
         }
     }
 

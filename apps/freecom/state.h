@@ -52,9 +52,9 @@ protected:
 
 	void WriteOne(ThreadActionState *state);
 
-    int FOptR;
     int FOptS;
     int FOptF;
+    int FOptU;
 };
 
 #endif
