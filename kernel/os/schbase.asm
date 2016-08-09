@@ -474,7 +474,8 @@ get_action_state_found:
     pop edi
 ;
     mov es:[edi].ast_pos.sep_sel,cx
-    mov es:[edi].ast_pos.sep_offs,edx
+    mov dword ptr es:[edi].ast_pos.sep_offs,edx
+    mov dword ptr es:[edi].ast_pos.sep_offs+4,0
     mov es:[edi].ast_count,0
 ;
     mov ds,ebx
@@ -505,7 +506,8 @@ get_action_state_found:
     mov eax,fs:[ecx-12]
     mov es:[edx].sep_sel,ax
     mov eax,fs:[ecx-16]
-    mov es:[edx].sep_offs,eax
+    mov dword ptr es:[edx].sep_offs,eax
+    mov dword ptr es:[edx].sep_offs+4,0
     add edx,SIZE state_ep
     inc es:[edi].ast_count
 ;
@@ -543,7 +545,8 @@ get_action_user_loop:
     
 get_action_user_save:    
     mov es:[edx].sep_sel,flat_code_sel
-    mov es:[edx].sep_offs,eax
+    mov dword ptr es:[edx].sep_offs,eax
+    mov dword ptr es:[edx].sep_offs+4,0
     add edx,SIZE state_ep
     mov ax,es:[edi].ast_count
     inc ax
@@ -561,8 +564,8 @@ get_action_user_done:
     jb get_action_user_ok
 ;
     sub edx,SIZE state_ep
-    mov eax,es:[edx].sep_offs
-    or eax,eax
+    mov eax,dword ptr es:[edx].sep_offs
+    or eax,dword ptr es:[edx].sep_offs+4
     jnz get_action_user_ok
 ;
     dec es:[edi].ast_count        

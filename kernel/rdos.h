@@ -53,7 +53,7 @@
 
 typedef struct ThreadEntryPoint
 {
-    long Offset;
+    long long Offset;
     short int Sel;
 } ThreadEntryPoint;
 

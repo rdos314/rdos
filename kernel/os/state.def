@@ -26,7 +26,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 state_ep    STRUC
-sep_offs    DD ?
+sep_offs    DQ ?
 sep_sel     DW ?
 state_ep    ENDS
 
