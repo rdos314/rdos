@@ -32,13 +32,14 @@ INCLUDE ..\..\kernel\user.inc
 INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\os\system.def
 INCLUDE ..\..\kernel\os\state.def
+INCLUDE ..\..\kernel\os\protseg.def
 
 FAULT_SIGN  EQU 0AC92BE63h
 
 fault_sector_seg STRUC
 
 fss_sign        DD ?
-fss_state       state_struc <>
+fss_state       action_state_struc <>
 fss_tss         DD ?
 
 fault_sector_seg ENDS
@@ -112,6 +113,107 @@ start_watchdog   Proc far
 start_watchdog   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           ReadFlatAppDword
+;
+;   DESCRIPTION:    Read flat app dword
+;
+;   PARAMETERS:     DS  Thread
+;                   ESI Offset
+;
+;   RETURNS:        NC
+;                       EAX Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadFlatAppDword    Proc near
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    add esi,3
+    xor ecx,ecx
+    mov edx,flat_data_sel
+    mov bx,ds
+    ReadThreadSelector
+    jc rfadDone
+;
+    dec esi
+    mov cl,al
+    ReadThreadSelector
+    jc rfadDone
+;
+    shl ecx,8
+    mov cl,al
+;
+    dec esi
+    mov cl,al
+    ReadThreadSelector
+    jc rfadDone
+;
+    shl ecx,8
+    mov cl,al
+;
+    dec esi
+    mov cl,al
+    ReadThreadSelector
+    jc rfadDone
+;
+    shl ecx,8
+    mov cl,al
+    mov eax,ecx
+    clc
+
+rfadDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+ReadFlatAppDword    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           ProbeFlatAppCode
+;
+;   DESCRIPTION:    Proble flat app code
+;
+;   PARAMETERS:     DS  Thread
+;                   ESI Offset
+;
+;   RETURNS:        NC   OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProbeFlatAppCode    Proc near
+    push eax
+    push ebx
+    push edx
+;
+    mov edx,flat_data_sel
+    mov bx,ds
+    ReadThreadSelector
+    jc pfacDone
+;    
+    GetThreadSelectorPage
+    jc pfacDone
+;
+    test al,2
+    jz pfacDone
+;
+    stc
+
+pfacDone:
+    pop edx
+    pop ebx
+    pop eax
+    ret
+ProbeFlatAppCode    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           KickWatchdog
@@ -154,33 +256,149 @@ kw_save_loop:
 ;
     mov es:fss_sign,FAULT_SIGN
     mov ax,ds:p_id
-    mov es:fss_state.st_id,ax
+    mov es:fss_state.ast_id,ax
 ;
     push cx
     mov si,OFFSET thread_name
     mov cx,32
-    mov di,OFFSET fss_state.st_name
+    mov di,OFFSET fss_state.ast_name
     rep movsb
 ;
     mov cx,32
-    mov di,OFFSET fss_state.st_list
+    mov di,OFFSET fss_state.ast_list
     mov al,' '
     rep stosb   
     pop cx
+;    
+    push cx
+    mov si,OFFSET p_action_text
+    mov cx,32
+    mov di,OFFSET ast_action
+    rep movsb
+    pop cx
 ;       
     mov eax,ds:p_msb_tics
-    mov es:fss_state.st_time,eax
+    mov es:fss_state.ast_time,eax
     mov eax,ds:p_lsb_tics
-    mov es:fss_state.st_time+4,eax
+    mov es:fss_state.ast_time+4,eax
 ;
-    mov es:fss_state.st_offs,0
-    mov es:fss_state.st_sel,0
+    mov dword ptr es:fss_state.ast_pos.sep_offs,0
+    mov dword ptr es:fss_state.ast_pos.sep_offs+4,0
+    mov es:fss_state.ast_pos.sep_sel,0
+    mov es:fss_state.ast_count,0
+;
+    push fs
+    push ecx
+    push edx
+;        
+    test word ptr ds:p_rflags+2,2
+    jnz kw_user_done
+;
+    mov ax,ds:p_cs
+    test ax,7
+    jnz kw_user_done
+;
+    mov ax,ds:p_ss
+    mov fs,ax
+    mov ecx,dword ptr ds:p_rsp
+    cmp ecx,stack0_size
+    jae kw_user_done
+;
+    mov ecx,stack0_size
+    mov eax,fs:[ecx-4]
+    cmp eax,flat_data_sel    
+    jne kw_user_done
+;    
+    mov eax,fs:[ecx-12]
+    cmp eax,flat_code_sel
+    jne kw_user_done
+;
+    mov edx,OFFSET fss_state.ast_user
+    mov eax,fs:[ecx-12]
+    mov es:[edx].sep_sel,ax
+    mov eax,fs:[ecx-16]
+    mov dword ptr es:[edx].sep_offs,eax
+    mov dword ptr es:[edx].sep_offs+4,0
+    add edx,SIZE state_ep
+    inc es:fss_state.ast_count
+;
+    mov esi,fs:[ecx-8]
+    call ReadFlatAppDword
+    jc kw_user_done
+
+kw_user_loop:
+    mov esi,eax
+    push esi
+    add esi,24
+    call ReadFlatAppDword
+    pop esi
+    jc kw_user_done
+;
+    push esi
+    mov esi,eax
+    call ProbeFlatAppCode
+    pop esi
+    jnc kw_user_save
+;    
+    push esi
+    add esi,20
+    call ReadFlatAppDword
+    pop esi
+    jc kw_user_done
+;
+    push esi
+    mov esi,eax
+    call ProbeFlatAppCode
+    pop esi
+    jnc kw_user_save
+;
+    xor eax,eax
+    
+kw_user_save:    
+    mov es:[edx].sep_sel,flat_code_sel
+    mov dword ptr es:[edx].sep_offs,eax
+    mov dword ptr es:[edx].sep_offs+4,0
+    add edx,SIZE state_ep
+    mov ax,es:fss_state.ast_count
+    inc ax
+    mov es:fss_state.ast_count,ax
+    cmp ax,64
+    jae kw_user_done
+;
+    call ReadFlatAppDword
+    or eax,eax
+    jnz kw_user_loop
+        
+kw_user_done:    
+    mov ax,es:fss_state.ast_count
+    cmp ax,2
+    jb kw_user_ok
+;
+    sub edx,SIZE state_ep
+    mov eax,dword ptr es:[edx].sep_offs
+    or eax,dword ptr es:[edx].sep_offs+4
+    jnz kw_user_ok
+;
+    dec es:fss_state.ast_count        
+
+kw_user_ok:    
+    pop edx
+    pop ecx
+    pop fs
 ;
     push cx
     mov al,fs:fault_disc
     mov cx,512
     xor di,di       
     WriteShortDisc
+    inc edx
+;    
+    mov al,fs:fault_disc
+    mov cx,512
+    mov di,200h
+    WriteShortDisc
+    inc edx
+;    
     pop cx
 ;
     DebugNext    
@@ -188,8 +406,7 @@ kw_save_loop:
     cmp ax,bp
     je kw_done
 ;
-    inc edx
-    sub ecx,1
+    sub ecx,2
     jnz kw_save_loop    
 ;
     jmp kw_done    
@@ -388,10 +605,19 @@ get_fault_thread_state  PROC near
 ;
     mov edx,ds:fault_start_sector
     add edx,eax
+    add edx,eax
+;    
     mov al,ds:fault_disc
     mov cx,512
     xor di,di
     ReadShortDisc
+;    
+    mov al,ds:fault_disc
+    mov cx,512
+    mov di,200h
+    inc edx
+    ReadShortDisc
+;    
     mov eax,es:fss_sign
     cmp eax,FAULT_SIGN
     jne gfsFail
@@ -402,7 +628,7 @@ get_fault_thread_state  PROC near
     mov ax,fs
     mov es,ax
     mov edi,ebp
-    mov ecx,SIZE state_struc
+    mov ecx,SIZE action_state_struc
     rep movs byte ptr es:[edi],ds:[esi]
     clc
     jmp gfsEnd    
@@ -468,10 +694,19 @@ get_fault_thread_tss    PROC near
 ;
     mov edx,ds:fault_start_sector
     add edx,eax
+    add edx,eax
+;    
     mov al,ds:fault_disc
     mov cx,512
     xor di,di
     ReadShortDisc
+;    
+    inc edx
+    mov al,ds:fault_disc
+    mov cx,512
+    mov di,200h
+    ReadShortDisc
+;    
     mov eax,es:fss_sign
     cmp eax,FAULT_SIGN
     jne gftFail
@@ -529,7 +764,7 @@ init    Proc far
     mov es:wd_tics,0
     mov es:fault_sectors,0
 ;
-    mov eax,512
+    mov eax,1024
     mov bx,fault_sector_sel
     AllocateFixedSystemMem
 ;

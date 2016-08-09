@@ -465,7 +465,7 @@ long long RDOSAPI RdosReadLongDir(int Handle, int EntryNr, int MaxNameSize, char
 
 void RDOSAPI RdosDefineFaultSave(int DiscNr, long StartSector, long Sectors);
 void RDOSAPI RdosClearFaultSave();
-int RDOSAPI RdosGetFaultThreadState(int ThreadNr, ThreadState *State);
+int RDOSAPI RdosGetFaultThreadState(int ThreadNr, ThreadActionState *State);
 int RDOSAPI RdosGetFaultThreadTss(int ThreadNr, Tss *tss);
 
 int RDOSAPI RdosHasCrashInfo();
