@@ -295,6 +295,14 @@ kw_save_loop:
     jnz kw_user_done
 ;
     mov ax,ds:p_cs
+    cmp ax,flat_code_sel
+    jne kw_not_app
+;   
+    mov edx,OFFSET fss_state.ast_user
+    mov eax,dword ptr ds:p_rbp    
+    jmp kw_user_loop
+
+kw_not_app:    
     test ax,7
     jnz kw_user_done
 ;

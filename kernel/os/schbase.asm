@@ -483,6 +483,15 @@ get_action_state_found:
     jnz get_action_user_done
 ;
     mov ax,ds:p_cs
+    cmp ax,flat_code_sel
+    jne get_action_not_app
+;   
+    mov edx,edi
+    add edx,OFFSET ast_user
+    mov eax,dword ptr ds:p_rbp    
+    jmp get_action_user_loop
+
+get_action_not_app:    
     test ax,7
     jnz get_action_user_done
 ;
