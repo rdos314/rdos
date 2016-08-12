@@ -68,6 +68,8 @@ div_quot_count       DD ?
 div_quot_data        DD ?
 div_mod_count        DD ?
 div_mod_data         DD ?
+div_temp_quot_count  DD ?
+div_temp_quot_data   DD ?
 
 div_struc       ENDS
 
@@ -350,6 +352,58 @@ OptBuf ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           GetBits
+;
+;           DESCRIPTION:    Get bit count in operand
+;
+;           PARAMETERS:     ES:ESI      Data
+;                           CX          Buffer count
+;
+;           RETURNS:        ECX         Bits
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetBits     PROC near
+    push eax
+    push esi
+;    
+    movzx ecx,cx
+    or cx,cx
+    jz gbitsDone
+;
+    shl ecx,2
+    add esi,ecx
+    dec esi
+    shl ecx,3
+
+gbitsLoop:
+    mov al,es:[esi]
+    or al,al
+    jnz gbitsBitLoop
+;
+    sub ecx,8
+    jz gbitsDone
+;
+    dec esi
+    jmp gbitsLoop
+
+gbitsBitLoop:
+    test al,80h
+    jnz gbitsDone
+;
+    dec ecx
+    shl al,1
+    jmp gbitsBitLoop    
+        
+gbitsDone:    
+    pop esi
+    pop eax
+    ret
+GetBits     Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           DoAdd
 ;
 ;           DESCRIPTION:    Do an add
@@ -584,6 +638,14 @@ DoMul     ENDP
 DoDiv     PROC near
     pushad
 ;
+    mov esi,[ebp].div_temp_num_data
+    mov ecx,[ebp].div_temp_num_count
+    call GetBits
+;
+    mov esi,[ebp].div_divisor_data
+    mov ecx,[ebp].div_divisor_count
+    call GetBits
+    
 ;
     popad
     ret
@@ -1160,7 +1222,23 @@ dnCopyNomLoop:
 ;
     mov cx,ax
     call RecreateBuf
-    mov esi,ebx
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].div_quot_data,eax
+;    
+    mov cx,SIZE bignum_handle_seg
+    AllocateHandle
+    mov ds:[ebx].bn_count,0
+    mov ds:[ebx].bn_data,0
+    mov ds:[ebx].bn_flags,0
+    mov [ebx].hh_sign,BIGNUM_HANDLE
+;
+    mov eax,[ebp].div_temp_num_count
+    mov [ebp].div_temp_quot_count,eax
+;
+    mov cx,ax
+    call RecreateBuf
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].div_temp_quot_data,eax
 ;    
     mov cx,SIZE bignum_handle_seg
     AllocateHandle
@@ -1174,7 +1252,8 @@ dnCopyNomLoop:
 ;
     mov cx,ax
     call RecreateBuf
-    mov edi,ebx
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].div_mod_data,eax
 ;    
     call DoDiv
     clc

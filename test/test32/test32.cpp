@@ -70,7 +70,6 @@ void main()
 {
     char str[80];
     int i;
-    struct ThreadActionState state;
     TParam *param;
 
     int PortCount;
@@ -82,12 +81,6 @@ void main()
     int handle3;
     int handle4;
     int handle5;
-
-    strcpy(str, "test");
-
-    RdosSetThreadAction(str);
-    if (RdosGetThreadActionState(1, &state))
-        printf(str);
 
     handle1 = RdosCreateBigNum();
     RdosLoadBigNum64(handle1,  4500000000);
