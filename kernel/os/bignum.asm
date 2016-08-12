@@ -404,6 +404,83 @@ GetBits     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           CopyShifted
+;
+;           DESCRIPTION:    Make a shifted copy
+;
+;           PARAMETERS:     ES:ESI      Source data
+;                           CX          Source buffer count
+;                           ES:EDI      Dest data
+;                           DX          Dest buffer count
+;                           EBX         Shift count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyShifted     PROC near
+    pushad
+;    
+    mov eax,ebx
+    shr eax,5
+
+csZeroLoop:    
+    or ax,ax
+    jz csShiftIn
+;
+    mov dword ptr es:[edi],0
+    add edi,4
+    sub dx,1
+    jz csDone
+;
+    sub ebx,32
+    sub ax,1
+    jnz csZeroLoop
+
+csShiftIn:
+    xor eax,eax
+
+csShiftLoop:    
+    push cx
+    mov cl,bl
+    mov ebp,es:[esi]
+    shl ebp,cl
+    pop cx
+    or eax,ebp
+    mov es:[edi],eax
+;        
+    push cx
+    mov cl,32
+    sub cl,bl
+    mov eax,es:[esi]
+    shr eax,cl
+    pop cx
+;
+    add esi,4
+    add edi,4
+    sub dx,1
+    jz csDone
+;
+    sub cx,1
+    jnz csShiftLoop    
+;
+    mov es:[edi],eax
+    xor eax,eax
+
+csEndLoop:
+    add edi,4
+    sub dx,1
+    jz csDone
+;
+    mov es:[edi],eax        
+    jmp csEndLoop        
+
+csDone:   
+    popad
+    ret
+CopyShifted     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           DoAdd
 ;
 ;           DESCRIPTION:    Do an add
@@ -642,10 +719,18 @@ DoDiv     PROC near
     mov ecx,[ebp].div_temp_num_count
     call GetBits
 ;
+    push ecx
     mov esi,[ebp].div_divisor_data
     mov ecx,[ebp].div_divisor_count
     call GetBits
-    
+    pop ebx
+    sub ebx,ecx
+;
+    mov esi,[ebp].div_divisor_data
+    mov ecx,[ebp].div_divisor_count
+    mov edi,[ebp].div_temp_quot_data
+    mov edx,[ebp].div_temp_quot_count
+    call CopyShifted
 ;
     popad
     ret
