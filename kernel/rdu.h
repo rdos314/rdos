@@ -769,6 +769,8 @@
 #define usergate_get_thread_action_state 0x00000257
 #define usergate_set_thread_action 0x00000258
 
+#define usergate_get_bignum_size10 0x00000259
+
 
 
 #ifdef __FLAT__
@@ -1543,6 +1545,8 @@
 #define CallGate_get_thread_action_state 0x55 0x67 0x9a 87 2 0 0 3 0 0x5d
 #define CallGate_set_thread_action 0x55 0x67 0x9a 88 2 0 0 3 0 0x5d
 
+#define CallGate_get_bignum_size10 0x55 0x67 0x9a 89 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2314,5 +2318,7 @@
 
 #define CallGate_get_thread_action_state 0x3e 0x67 0x9a 87 2 0 0 3 0
 #define CallGate_set_thread_action 0x3e 0x67 0x9a 88 2 0 0 3 0
+
+#define CallGate_get_bignum_size10 0x3e 0x67 0x9a 89 2 0 0 3 0
 
 #endif

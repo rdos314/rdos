@@ -1500,6 +1500,63 @@ div_bignum  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           GetBigNumSize10
+;
+;           DESCRIPTION:    Get big num size in base 10
+;
+;                           AX          Divisor num handle
+;
+;           RETURNS:        ECX         Buffer size for base 10
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_bignum_size10_name    DB 'Get Big Number Size10',0
+
+text_invalid DB 'Invalid', 0
+text_infinite DB 'Infinite', 0
+
+get_bignum_size10     PROC far
+    push ebp
+    sub esp,SIZE div_struc
+    mov ebp,esp
+;    
+    push ds
+    push es
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    push ax
+    mov ax,flat_sel
+    mov es,ax    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    pop ax
+    jc gbs10Fail
+;    
+
+gbs10Fail:
+    mov ecx,7
+
+gbs10Leave:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+;
+    add esp,SIZE div_struc
+    pop ebp
+    ret
+get_bignum_size10  ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           delete_handle
 ;
 ;           DESCRIPTION:    Delete syslog handle
@@ -1589,6 +1646,12 @@ init    PROC far
     mov edi,OFFSET div_bignum_name
     xor dx,dx
     mov ax,div_bignum_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_bignum_size10
+    mov edi,OFFSET get_bignum_size10_name
+    xor dx,dx
+    mov ax,get_bignum_size10_nr
     RegisterBimodalUserGate
 ;
     ret

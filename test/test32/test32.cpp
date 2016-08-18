@@ -75,6 +75,7 @@ void main()
     int PortCount;
     int ModuleId;
 
+    int size;
     long long val;
     int handle1;
     int handle2;
@@ -89,6 +90,8 @@ void main()
     val = 4000;
     val = -val;
     RdosLoadBigNum64(handle2, val);
+
+    size = RdosGetBigNumSize10(handle1);
 
     handle3 = RdosDivBigNum(handle1, handle2);
 

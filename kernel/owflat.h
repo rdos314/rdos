@@ -3358,3 +3358,8 @@
     CallGate_div_bignum  \
     parm [ebx] [eax] \
     value [ebx];
+
+#pragma aux RdosGetBigNumSize10 = \
+    CallGate_get_bignum_size10  \
+    parm [ebx] \
+    value [ecx];

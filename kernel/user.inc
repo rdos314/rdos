@@ -3824,3 +3824,9 @@ MulBigNum	MACRO
 DivBigNum	MACRO
 	UserGate div_bignum_nr
 	        ENDM
+
+; IN  BX            Bignum handle 1
+; OUT ECX           Bytes required for base 10 buffer
+GetBigNumSize10	MACRO
+	UserGate get_bignum_size10_nr
+	        ENDM
