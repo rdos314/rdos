@@ -36,6 +36,7 @@ INCLUDE ..\handle.inc
 INCLUDE ..\wait.inc
 
 BN_FLAG_NEGATIVE = 1
+BN_FLAG_INFINITE = 2
 
 bignum_handle_seg          STRUC
 
@@ -435,6 +436,9 @@ csShiftIn:
     xor eax,eax
 
 csShiftLoop:    
+    or bl,bl
+    jz csShiftZero
+;    
     push cx
     mov cl,bl
     mov ebp,es:[esi]
@@ -449,7 +453,14 @@ csShiftLoop:
     mov eax,es:[esi]
     shr eax,cl
     pop cx
-;
+    jmp csShiftNext
+
+csShiftZero:
+    mov eax,es:[esi]
+    mov es:[edi],eax
+    xor eax,eax
+    
+csShiftNext:
     add esi,4
     add edi,4
     sub dx,1
@@ -1362,6 +1373,14 @@ div_bignum     PROC far
     mov [ebp].div_divisor_count,eax    
     mov eax,ds:[ebx].bn_data
     mov [ebp].div_divisor_data,eax
+;
+    push esi
+    mov esi,[ebp].div_divisor_data
+    mov ecx,[ebp].div_divisor_count
+    call GetBits
+    pop esi
+    or ecx,ecx
+    jz dnInfinite
 ;    
     push esi
     push edi
@@ -1409,7 +1428,6 @@ dnCopyDone:
     AllocateHandle
     mov ds:[ebx].bn_count,0
     mov ds:[ebx].bn_data,0
-    mov ds:[ebx].bn_flags,0
     mov [ebx].hh_sign,BIGNUM_HANDLE
 ;
     mov ax,ds:[esi].bn_flags
@@ -1436,6 +1454,28 @@ dnCopyDone:
     mov edx,[ebp].div_mod_data
     FreeLinear
 ;
+    mov bx,[ebx].hh_handle
+    clc
+    jmp dnLeave
+
+dnInfinite:    
+    mov cx,SIZE bignum_handle_seg
+    AllocateHandle
+    mov ds:[ebx].bn_count,0
+    mov ds:[ebx].bn_data,0
+    mov [ebx].hh_sign,BIGNUM_HANDLE
+;
+    mov ax,ds:[esi].bn_flags
+    or ax,ds:[edi].bn_flags
+    and ax,NOT BN_FLAG_NEGATIVE
+    mov ds:[ebx].bn_flags,ax
+;
+    mov ax,ds:[esi].bn_flags
+    xor ax,ds:[edi].bn_flags
+    and ax,BN_FLAG_NEGATIVE
+    or ax,BN_FLAG_INFINITE
+    or ds:[ebx].bn_flags,ax
+    mov bx,[ebx].hh_handle
     clc
     jmp dnLeave
 
