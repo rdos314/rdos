@@ -60,8 +60,6 @@ mul_struc       ENDS
 
 div_struc       STRUC
 
-div_temp_num_count   DD ?
-div_temp_num_data    DD ?
 div_divisor_count    DD ?
 div_divisor_data     DD ?
 div_quot_count       DD ?
@@ -771,8 +769,8 @@ DoDiv     PROC near
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
-    mov esi,[ebp].div_temp_num_data
-    mov ecx,[ebp].div_temp_num_count
+    mov esi,[ebp].div_mod_data
+    mov ecx,[ebp].div_mod_count
     call GetBits
 ;
     push ecx
@@ -787,12 +785,12 @@ divLoop:
     mov esi,[ebp].div_divisor_data
     mov ecx,[ebp].div_divisor_count
     mov edi,[ebp].div_temp_quot_data
-    mov edx,[ebp].div_temp_num_count
+    mov edx,[ebp].div_mod_count
     call CopyShifted
 ;
     mov esi,[ebp].div_temp_quot_data
-    mov edi,[ebp].div_temp_num_data
-    mov ecx,[ebp].div_temp_num_count
+    mov edi,[ebp].div_mod_data
+    mov ecx,[ebp].div_mod_count
     call DoCompare
     jz divEqual
     jc divNext
@@ -803,7 +801,7 @@ divLoop:
     call DoSub
     jnz divNext
 ;    
-    sub dword ptr [ebp].div_temp_num_count,1
+    sub dword ptr [ebp].div_mod_count,1
     jz divDone
     
 divNext:
@@ -1351,9 +1349,9 @@ div_bignum     PROC far
 ;
     push ax
     movzx eax,ds:[ebx].bn_count
-    mov [ebp].div_temp_num_count,eax    
+    mov [ebp].div_mod_count,eax    
     mov eax,ds:[ebx].bn_data
-    mov [ebp].div_temp_num_data,eax
+    mov [ebp].div_mod_data,eax
     pop bx
 ;
     mov ax,BIGNUM_HANDLE
@@ -1365,12 +1363,12 @@ div_bignum     PROC far
     mov eax,ds:[ebx].bn_data
     mov [ebp].div_divisor_data,eax
 ;    
-    mov esi,[ebp].div_temp_num_data
-    mov eax,[ebp].div_temp_num_count
+    mov esi,[ebp].div_mod_data
+    mov eax,[ebp].div_mod_count
     mov ecx,eax
     shl eax,2
     AllocateSmallLinear
-    mov [ebp].div_temp_num_data,edx
+    mov [ebp].div_mod_data,edx
     mov edi,edx
 
 dnCopyNomLoop:
@@ -1387,7 +1385,7 @@ dnCopyNomLoop:
     mov ds:[ebx].bn_flags,0
     mov [ebx].hh_sign,BIGNUM_HANDLE
 ;
-    mov eax,[ebp].div_temp_num_count
+    mov eax,[ebp].div_mod_count
     mov [ebp].div_quot_count,eax
 ;
     mov cx,ax
@@ -1402,7 +1400,7 @@ dnCopyNomLoop:
     mov ds:[ebx].bn_flags,0
     mov [ebx].hh_sign,BIGNUM_HANDLE
 ;
-    mov eax,[ebp].div_temp_num_count
+    mov eax,[ebp].div_mod_count
     mov [ebp].div_temp_quot_count,eax
 ;
     mov cx,ax
