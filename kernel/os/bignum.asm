@@ -481,6 +481,56 @@ CopyShifted     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           DoCompare
+;
+;           DESCRIPTION:    Compare numbers
+;
+;           PARAMETERS:     ES:ESI      Source data to subtract
+;                           ES:EDI      Dest data
+;                           CX          Buffer count
+;
+;           RETURNS:        CY          Source larger
+;                           NC          Dest larger
+;                           ZR          Equal
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoCompare     PROC near
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz compDone
+;
+    movzx eax,cx
+    dec eax
+    shl eax,2
+    add esi,eax
+    add edi,eax
+    
+compLoop:
+    mov eax,es:[edi]
+    sub eax,es:[esi]
+    jnz compDone
+;
+    sub esi,4
+    sub edi,4
+    sub cx,1
+    jnz compLoop    
+
+compDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    ret
+DoCompare     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           DoAdd
 ;
 ;           DESCRIPTION:    Do an add
@@ -538,6 +588,7 @@ DoAdd     ENDP
 ;                           CX          Buffer count
 ;
 ;           RETURNS:        CY          overflow
+;                           ZR          highest dword zero
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -715,6 +766,11 @@ DoMul     ENDP
 DoDiv     PROC near
     pushad
 ;
+    mov ecx,[ebp].div_quot_count
+    mov edi,[ebp].div_quot_data
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
     mov esi,[ebp].div_temp_num_data
     mov ecx,[ebp].div_temp_num_count
     call GetBits
@@ -725,13 +781,43 @@ DoDiv     PROC near
     call GetBits
     pop ebx
     sub ebx,ecx
-;
+    jc divDone
+
+divLoop:
     mov esi,[ebp].div_divisor_data
     mov ecx,[ebp].div_divisor_count
     mov edi,[ebp].div_temp_quot_data
-    mov edx,[ebp].div_temp_quot_count
+    mov edx,[ebp].div_temp_num_count
     call CopyShifted
 ;
+    mov esi,[ebp].div_temp_quot_data
+    mov edi,[ebp].div_temp_num_data
+    mov ecx,[ebp].div_temp_num_count
+    call DoCompare
+    jz divEqual
+    jc divNext
+;
+    mov edx,[ebp].div_quot_data
+    bts es:[edx],ebx
+;
+    call DoSub
+    jnz divNext
+;    
+    sub dword ptr [ebp].div_temp_num_count,1
+    jz divDone
+    
+divNext:
+    sub ebx,1
+    jnc divLoop
+    jmp divDone 
+       
+divEqual:
+    call DoSub
+;
+    mov edi,[ebp].div_quot_data
+    bts es:[edi],ebx
+
+divDone:
     popad
     ret
 DoDiv   ENDP    
