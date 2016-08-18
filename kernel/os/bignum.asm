@@ -812,10 +812,9 @@ divNext:
     jmp divDone 
        
 divEqual:
+    mov edx,[ebp].div_quot_data
+    bts es:[edx],ebx
     call DoSub
-;
-    mov edi,[ebp].div_quot_data
-    bts es:[edi],ebx
 
 divDone:
     popad
@@ -1410,21 +1409,6 @@ dnCopyNomLoop:
     call RecreateBuf
     mov eax,ds:[ebx].bn_data
     mov [ebp].div_temp_quot_data,eax
-;    
-    mov cx,SIZE bignum_handle_seg
-    AllocateHandle
-    mov ds:[ebx].bn_count,0
-    mov ds:[ebx].bn_data,0
-    mov ds:[ebx].bn_flags,0
-    mov [ebx].hh_sign,BIGNUM_HANDLE
-;
-    mov eax,[ebp].div_divisor_count
-    mov [ebp].div_mod_count,eax
-;
-    mov cx,ax
-    call RecreateBuf
-    mov eax,ds:[ebx].bn_data
-    mov [ebp].div_mod_data,eax
 ;    
     call DoDiv
     clc
