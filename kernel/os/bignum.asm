@@ -61,12 +61,10 @@ mul_struc       ENDS
 div_struc       STRUC
 
 div_divisor_count    DD ?
-div_divisor_data     DD ?
 div_quot_count       DD ?
+div_divisor_data     DD ?
 div_quot_data        DD ?
-div_mod_count        DD ?
 div_mod_data         DD ?
-div_temp_quot_count  DD ?
 div_temp_quot_data   DD ?
 
 div_struc       ENDS
@@ -770,7 +768,7 @@ DoDiv     PROC near
     rep stos dword ptr es:[edi]
 ;
     mov esi,[ebp].div_mod_data
-    mov ecx,[ebp].div_mod_count
+    mov ecx,[ebp].div_quot_count
     call GetBits
 ;
     push ecx
@@ -785,12 +783,12 @@ divLoop:
     mov esi,[ebp].div_divisor_data
     mov ecx,[ebp].div_divisor_count
     mov edi,[ebp].div_temp_quot_data
-    mov edx,[ebp].div_mod_count
+    mov edx,[ebp].div_quot_count
     call CopyShifted
 ;
     mov esi,[ebp].div_temp_quot_data
     mov edi,[ebp].div_mod_data
-    mov ecx,[ebp].div_mod_count
+    mov ecx,[ebp].div_quot_count
     call DoCompare
     jz divEqual
     jc divNext
@@ -801,7 +799,7 @@ divLoop:
     call DoSub
     jnz divNext
 ;    
-    sub dword ptr [ebp].div_mod_count,1
+    sub dword ptr [ebp].div_quot_count,1
     jz divDone
     
 divNext:
@@ -1347,9 +1345,10 @@ div_bignum     PROC far
     pop ax
     jc dnFail
 ;
+    mov esi,ebx
     push ax
     movzx eax,ds:[ebx].bn_count
-    mov [ebp].div_mod_count,eax    
+    mov [ebp].div_quot_count,eax    
     mov eax,ds:[ebx].bn_data
     mov [ebp].div_mod_data,eax
     pop bx
@@ -1358,13 +1357,17 @@ div_bignum     PROC far
     DerefHandle
     jc dnFail
 ;
+    mov edi,ebx
     movzx eax,ds:[ebx].bn_count
     mov [ebp].div_divisor_count,eax    
     mov eax,ds:[ebx].bn_data
     mov [ebp].div_divisor_data,eax
 ;    
+    push esi
+    push edi
+;
     mov esi,[ebp].div_mod_data
-    mov eax,[ebp].div_mod_count
+    mov eax,[ebp].div_quot_count
     mov ecx,eax
     shl eax,2
     AllocateSmallLinear
@@ -1377,6 +1380,9 @@ dnCopyNomLoop:
     add esi,4
     add edi,4
     loop dnCopyNomLoop    
+;
+    pop edi
+    pop esi    
 ;    
     mov cx,SIZE bignum_handle_seg
     AllocateHandle
@@ -1385,30 +1391,35 @@ dnCopyNomLoop:
     mov ds:[ebx].bn_flags,0
     mov [ebx].hh_sign,BIGNUM_HANDLE
 ;
-    mov eax,[ebp].div_mod_count
-    mov [ebp].div_quot_count,eax
-;
-    mov cx,ax
-    call RecreateBuf
-    mov eax,ds:[ebx].bn_data
-    mov [ebp].div_quot_data,eax
-;    
-    mov cx,SIZE bignum_handle_seg
-    AllocateHandle
-    mov ds:[ebx].bn_count,0
-    mov ds:[ebx].bn_data,0
-    mov ds:[ebx].bn_flags,0
-    mov [ebx].hh_sign,BIGNUM_HANDLE
-;
-    mov eax,[ebp].div_mod_count
-    mov [ebp].div_temp_quot_count,eax
-;
-    mov cx,ax
+    mov ecx,[ebp].div_quot_count
     call RecreateBuf
     mov eax,ds:[ebx].bn_data
     mov [ebp].div_temp_quot_data,eax
 ;    
+    mov cx,SIZE bignum_handle_seg
+    AllocateHandle
+    mov ds:[ebx].bn_count,0
+    mov ds:[ebx].bn_data,0
+    mov ds:[ebx].bn_flags,0
+    mov [ebx].hh_sign,BIGNUM_HANDLE
+;
+    mov ax,ds:[esi].bn_flags
+    or ax,ds:[edi].bn_flags
+    and ax,NOT BN_FLAG_NEGATIVE
+    mov ds:[ebx].bn_flags,ax
+;
+    mov ax,ds:[esi].bn_flags
+    xor ax,ds:[edi].bn_flags
+    and ax,BN_FLAG_NEGATIVE
+    or ds:[ebx].bn_flags,ax
+;
+    mov ecx,[ebp].div_quot_count
+    call RecreateBuf
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].div_quot_data,eax
+;    
     call DoDiv
+    call OptBuf    
     clc
     jmp dnLeave
 
