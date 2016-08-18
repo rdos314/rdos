@@ -1366,8 +1366,23 @@ div_bignum     PROC far
     push esi
     push edi
 ;
-    mov esi,[ebp].div_mod_data
     mov eax,[ebp].div_quot_count
+    or eax,eax
+    jnz dnNotZero
+;
+    inc eax
+    mov [ebp].div_quot_count,eax    
+    mov ecx,eax
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].div_mod_data,edx
+    mov edi,edx
+    xor eax,eax
+    stos dword ptr es:[edi]
+    jmp dnCopyDone
+    
+dnNotZero:
+    mov esi,[ebp].div_mod_data
     mov ecx,eax
     shl eax,2
     AllocateSmallLinear
@@ -1380,21 +1395,15 @@ dnCopyNomLoop:
     add esi,4
     add edi,4
     loop dnCopyNomLoop    
-;
+
+dnCopyDone:
     pop edi
     pop esi    
-;    
-    mov cx,SIZE bignum_handle_seg
-    AllocateHandle
-    mov ds:[ebx].bn_count,0
-    mov ds:[ebx].bn_data,0
-    mov ds:[ebx].bn_flags,0
-    mov [ebx].hh_sign,BIGNUM_HANDLE
 ;
-    mov ecx,[ebp].div_quot_count
-    call RecreateBuf
-    mov eax,ds:[ebx].bn_data
-    mov [ebp].div_temp_quot_data,eax
+    mov eax,[ebp].div_quot_count
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].div_temp_quot_data,edx
 ;    
     mov cx,SIZE bignum_handle_seg
     AllocateHandle
@@ -1420,6 +1429,13 @@ dnCopyNomLoop:
 ;    
     call DoDiv
     call OptBuf    
+;
+    mov edx,[ebp].div_temp_quot_data
+    FreeLinear
+;    
+    mov edx,[ebp].div_mod_data
+    FreeLinear
+;
     clc
     jmp dnLeave
 
