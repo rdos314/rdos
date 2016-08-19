@@ -770,6 +770,7 @@
 #define usergate_set_thread_action 0x00000258
 
 #define usergate_get_bignum_size10 0x00000259
+#define usergate_get_bignum_str10 0x0000025A
 
 
 
@@ -1546,6 +1547,7 @@
 #define CallGate_set_thread_action 0x55 0x67 0x9a 88 2 0 0 3 0 0x5d
 
 #define CallGate_get_bignum_size10 0x55 0x67 0x9a 89 2 0 0 3 0 0x5d
+#define CallGate_get_bignum_str10 0x55 0x67 0x9a 90 2 0 0 3 0 0x5d
 
 #else
 
@@ -2320,5 +2322,6 @@
 #define CallGate_set_thread_action 0x3e 0x67 0x9a 88 2 0 0 3 0
 
 #define CallGate_get_bignum_size10 0x3e 0x67 0x9a 89 2 0 0 3 0
+#define CallGate_get_bignum_str10 0x3e 0x67 0x9a 90 2 0 0 3 0
 
 #endif

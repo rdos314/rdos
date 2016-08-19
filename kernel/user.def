@@ -770,5 +770,6 @@ get_thread_action_state_nr      = 599
 set_thread_action_nr            = 600
 
 get_bignum_size10_nr            = 601
+get_bignum_str10_nr             = 602
 
 usergate_entries			    = 625

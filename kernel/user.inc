@@ -3830,3 +3830,10 @@ DivBigNum	MACRO
 GetBigNumSize10	MACRO
 	UserGate get_bignum_size10_nr
 	        ENDM
+
+; IN  BX            Bignum handle 1
+; IN  (E)CX         Buffer size
+; IN  ES:(E)DI      Buffer
+GetBigNumString10	MACRO
+	UserGate get_bignum_str10_nr
+	        ENDM
