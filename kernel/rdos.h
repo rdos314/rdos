@@ -849,6 +849,8 @@ int RDOSAPI RdosMulBigNum(int handle1, int handle2);
 int RDOSAPI RdosDivBigNum(int handle1, int handle2);
 int RDOSAPI RdosGetBigNumSize10(int handle);
 void RDOSAPI RdosGetBigNumString10(int handle, char *buf, int bufsize);
+int RDOSAPI RdosGetBigNumSize16(int handle);
+void RDOSAPI RdosGetBigNumString16(int handle, char *buf, int bufsize);
 
 #ifdef __cplusplus
 }

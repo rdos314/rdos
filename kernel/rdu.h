@@ -772,6 +772,9 @@
 #define usergate_get_bignum_size10 0x00000259
 #define usergate_get_bignum_str10 0x0000025A
 
+#define usergate_get_bignum_size16 0x0000025B
+#define usergate_get_bignum_str16 0x0000025C
+
 
 
 #ifdef __FLAT__
@@ -1549,6 +1552,9 @@
 #define CallGate_get_bignum_size10 0x55 0x67 0x9a 89 2 0 0 3 0 0x5d
 #define CallGate_get_bignum_str10 0x55 0x67 0x9a 90 2 0 0 3 0 0x5d
 
+#define CallGate_get_bignum_size16 0x55 0x67 0x9a 91 2 0 0 3 0 0x5d
+#define CallGate_get_bignum_str16 0x55 0x67 0x9a 92 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2323,5 +2329,8 @@
 
 #define CallGate_get_bignum_size10 0x3e 0x67 0x9a 89 2 0 0 3 0
 #define CallGate_get_bignum_str10 0x3e 0x67 0x9a 90 2 0 0 3 0
+
+#define CallGate_get_bignum_size16 0x3e 0x67 0x9a 91 2 0 0 3 0
+#define CallGate_get_bignum_str16 0x3e 0x67 0x9a 92 2 0 0 3 0
 
 #endif

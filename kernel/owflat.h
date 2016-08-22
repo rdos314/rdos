@@ -3367,3 +3367,12 @@
 #pragma aux RdosGetBigNumString10 = \
     CallGate_get_bignum_str10  \
     parm [ebx] [edi] [ecx];
+
+#pragma aux RdosGetBigNumSize16 = \
+    CallGate_get_bignum_size16  \
+    parm [ebx] \
+    value [ecx];
+
+#pragma aux RdosGetBigNumString16 = \
+    CallGate_get_bignum_str16  \
+    parm [ebx] [edi] [ecx];

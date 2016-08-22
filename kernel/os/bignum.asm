@@ -1902,6 +1902,288 @@ get_bignum_buf10_16   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           GetBigNumSize16
+;
+;           DESCRIPTION:    Get big num size in base 16
+;
+;           PARAMETERS:     BX          Num handle
+;
+;           RETURNS:        ECX         Buffer size for base 16
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_bignum_size16_name    DB 'Get Big Number Size16',0
+
+get_bignum_size16     PROC far
+    push ds
+    push es
+    push eax
+    push ebx
+    push edx
+;
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc gbs16Fail
+;    
+    mov ax,ds:[ebx].bn_flags
+    test ax,BN_FLAG_INFINITE
+    jnz gbs16Infinite
+;
+    movzx ecx,ds:[ebx].bn_count
+    or ecx,ecx
+    jz gbs16AddSign
+;
+    mov esi,ds:[ebx].bn_data
+    call GetBits
+    dec ecx
+    shr ecx,2
+    inc ecx
+    jmp gbs16AddSign
+            
+gbs16Fail:
+    mov ecx,7
+    jmp gbs16Leave
+
+gbs16Infinite:
+    mov ecx,8
+
+gbs16AddSign:
+    test ds:[ebx].bn_flags,BN_FLAG_NEGATIVE
+    jz gbs16Leave
+;
+    inc ecx
+    
+gbs16Leave:
+    inc ecx
+;    
+    pop edx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+get_bignum_size16  ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetBigNumStr16
+;
+;           DESCRIPTION:    Get big num str in base 16
+;
+;           PARAMETERS:     BX          Num handle
+;                           ES:EDI      Buffer
+;                           ECX         Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_bignum_buf16_name    DB 'Get Big Number String base-16',0
+
+ToHex   Proc near
+    and al,0Fh
+    cmp al,10
+    jb thLow
+;
+    sub al,10
+    add al,'A'        
+    ret
+
+thLow:
+    add al,'0'
+    ret    
+ToHex   Endp
+
+get_bignum_buf16     PROC near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    cmp ecx,2
+    jb gbb16Leave
+;    
+    mov ax,es
+    mov fs,ax
+    add edi,ecx
+    dec edi
+    xor al,al
+    mov fs:[edi],al
+    dec edi
+    dec ecx
+;    
+    mov ax,flat_sel
+    mov es,ax    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc gbb16Fail
+;    
+    mov ax,ds:[ebx].bn_flags
+    test ax,BN_FLAG_INFINITE
+    jnz gbb16Infinite
+;
+    movzx edx,ds:[ebx].bn_count
+    or edx,edx
+    jz gbb16AddSign
+
+    mov esi,ds:[ebx].bn_data
+
+gbb16Loop:
+    mov eax,es:[esi]
+    call ToHex
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz gbb16Leave
+;    
+    mov eax,es:[esi]
+    shr eax,4
+    call ToHex
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz gbb16Leave
+;
+    mov eax,es:[esi]
+    shr eax,8
+    call ToHex
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz gbb16Leave
+;    
+    mov eax,es:[esi]
+    shr eax,12
+    call ToHex
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz gbb16Leave
+;
+    mov eax,es:[esi]
+    shr eax,16
+    call ToHex
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz gbb16Leave
+;    
+    mov eax,es:[esi]
+    shr eax,20
+    call ToHex
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz gbb16Leave
+;
+    mov eax,es:[esi]
+    shr eax,24
+    call ToHex
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz gbb16Leave
+;    
+    mov eax,es:[esi]
+    shr eax,28
+    call ToHex
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz gbb16Leave
+;    
+    add esi,4
+    sub edx,1
+    jnz gbb16Loop
+;
+    jmp gbb16AddSign
+                
+gbb16Fail:
+    mov esi,OFFSET text_invalid
+    jmp gbb16WriteText
+
+gbb16Zero:
+    mov al,'0'
+    mov fs:[edi],al
+    dec edi
+    sub ecx,1
+    jz gbb16Leave
+    jmp gbb16Fill
+
+gbb16Infinite: 
+    mov esi,OFFSET text_infinite
+
+gbb16WriteText:    
+    sub edi,ecx
+    inc edi
+    inc ecx
+
+gbb16WriteLoop:    
+    mov al,cs:[esi]
+    or al,al
+    jz gbb16AddNull
+;    
+    mov fs:[edi],al
+    inc edi
+    inc esi
+    sub ecx,1
+    jnz gbb16WriteLoop
+;
+    dec edi
+
+gbb16AddNull:    
+    xor al,al
+    mov fs:[edi],al
+    jmp gbb16Leave    
+
+gbb16AddSign:
+    test ds:[ebx].bn_flags,BN_FLAG_NEGATIVE
+    jz gbb16Fill
+;
+    mov al,'-'
+    mov fs:[edi],al
+    dec edi
+    sub ecx,1
+    jz gbb16Leave
+
+gbb16Fill:
+    mov al,'0'
+    mov fs:[edi],al
+    dec edi
+    sub ecx,1
+    jnz gbb16Fill
+    
+gbb16Leave:
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+get_bignum_buf16  ENDP
+
+get_bignum_buf16_32   Proc far
+    call get_bignum_buf16
+    ret
+get_bignum_buf16_32   Endp
+
+get_bignum_buf16_16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call get_bignum_buf16
+;       
+    pop edi
+    pop ecx
+    ret
+get_bignum_buf16_16   Endp    
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           delete_handle
 ;
 ;           DESCRIPTION:    Delete syslog handle
@@ -2004,6 +2286,19 @@ init    PROC far
     mov edi,OFFSET get_bignum_buf10_name
     mov dx,virt_es_in
     mov ax,get_bignum_str10_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET get_bignum_size16
+    mov edi,OFFSET get_bignum_size16_name
+    xor dx,dx
+    mov ax,get_bignum_size16_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_bignum_buf16_16
+    mov esi,OFFSET get_bignum_buf16_32
+    mov edi,OFFSET get_bignum_buf16_name
+    mov dx,virt_es_in
+    mov ax,get_bignum_str16_nr
     RegisterUserGate
 ;
     ret
