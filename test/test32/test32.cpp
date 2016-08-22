@@ -89,15 +89,24 @@ void main()
     handle2 = RdosCreateBigNum();
     val = 4000;
     val = -val;
-//    RdosLoadBigNum64(handle2, val);
+    RdosLoadBigNum64(handle2, val);
 
-    handle3 = RdosDivBigNum(handle1, handle2);
+    handle3 = RdosMulBigNum(handle1, handle1);
+
+    size = RdosGetBigNumSize10(handle3);
+    RdosGetBigNumString10(handle3, str, size);
+
+    handle4 = RdosDivBigNum(handle3, handle1);
 
     size = RdosGetBigNumSize10(handle2);
     RdosGetBigNumString10(handle2, str, size);
 
     size = RdosGetBigNumSize10(handle3);
     RdosGetBigNumString10(handle3, str, size);
+
+    size = RdosGetBigNumSize10(handle4);
+    RdosGetBigNumString10(handle4, str, size);
+
 
     RdosDeleteBigNum(handle1);
     RdosDeleteBigNum(handle2);

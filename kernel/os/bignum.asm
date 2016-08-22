@@ -63,6 +63,7 @@ div_struc       STRUC
 
 div_divisor_count    DD ?
 div_quot_count       DD ?
+div_temp_count       DD ?
 div_divisor_data     DD ?
 div_quot_data        DD ?
 div_mod_data         DD ?
@@ -777,12 +778,13 @@ DoDiv     PROC near
     pushad
 ;
     mov ecx,[ebp].div_quot_count
+    mov [ebp].div_temp_count,ecx
     mov edi,[ebp].div_quot_data
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
     mov esi,[ebp].div_mod_data
-    mov ecx,[ebp].div_quot_count
+    mov ecx,[ebp].div_temp_count
     call GetBits
 ;
     push ecx
@@ -797,12 +799,12 @@ divLoop:
     mov esi,[ebp].div_divisor_data
     mov ecx,[ebp].div_divisor_count
     mov edi,[ebp].div_temp_quot_data
-    mov edx,[ebp].div_quot_count
+    mov edx,[ebp].div_temp_count
     call CopyShifted
 ;
     mov esi,[ebp].div_temp_quot_data
     mov edi,[ebp].div_mod_data
-    mov ecx,[ebp].div_quot_count
+    mov ecx,[ebp].div_temp_count
     call DoCompare
     jz divEqual
     jc divNext
@@ -813,8 +815,19 @@ divLoop:
     call DoSub
     jnz divNext
 ;    
-    sub dword ptr [ebp].div_quot_count,1
-    jz divDone
+    sub dword ptr [ebp].div_temp_count,1
+    mov esi,[ebp].div_mod_data
+    mov ecx,[ebp].div_temp_count
+    call GetBits
+;
+    push ecx
+    mov esi,[ebp].div_divisor_data
+    mov ecx,[ebp].div_divisor_count
+    call GetBits
+    pop ebx
+    sub ebx,ecx
+    jnc divLoop
+    jmp divDone
     
 divNext:
     sub ebx,1
