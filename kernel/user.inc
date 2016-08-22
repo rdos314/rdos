@@ -3837,3 +3837,9 @@ GetBigNumSize10	MACRO
 GetBigNumString10	MACRO
 	UserGate get_bignum_str10_nr
 	        ENDM
+
+; IN  CX            Number of bits
+; OUT BX            Bignum handle
+CreateRandomBigNum	MACRO
+	UserGate create_random_bignum_nr
+	        ENDM

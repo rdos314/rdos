@@ -3376,3 +3376,9 @@
 #pragma aux RdosGetBigNumString16 = \
     CallGate_get_bignum_str16  \
     parm [ebx] [edi] [ecx];
+
+#pragma aux RdosCreateRandomBigNum = \
+    CallGate_create_random_bignum  \
+    ValidateHandle \
+    parm [ecx] \
+    value [ebx];

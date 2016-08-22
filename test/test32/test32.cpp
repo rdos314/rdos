@@ -68,7 +68,7 @@ static void TestThread(void *ptr)
 
 void main()
 {
-    char str[80];
+    char *str;
     int i;
     TParam *param;
 
@@ -83,20 +83,32 @@ void main()
     int handle4;
     int handle5;
 
+    str = new char[65536];
+
+    handle2 = RdosCreateRandomBigNum(5);
+
+    for (i = 1; i < 200; i++)
+    {
+        handle1 = RdosCreateRandomBigNum(i);
+        handle3 = RdosMulBigNum(handle1, handle2);
+        size = RdosGetBigNumSize16(handle3);
+        RdosGetBigNumString16(handle3, str, size);
+        printf("%i: ", i);
+        printf(str);
+        printf("\r\n");
+        
+        RdosDeleteBigNum(handle1);
+        RdosDeleteBigNum(handle2);
+        handle2 = handle3;
+    }
+
     handle1 = RdosCreateBigNum();
     RdosLoadBigNum64(handle1,  4500000000);
 
-    handle2 = RdosCreateBigNum();
-    val = 4000;
-    val = -val;
-    RdosLoadBigNum64(handle2, val);
 
     handle3 = RdosMulBigNum(handle1, handle1);
     handle4 = RdosMulBigNum(handle3, handle3);
     handle5 = RdosDivBigNum(handle4, handle3);
-
-    size = RdosGetBigNumSize10(handle2);
-    RdosGetBigNumString10(handle2, str, size);
 
     size = RdosGetBigNumSize10(handle3);
     RdosGetBigNumString10(handle3, str, size);

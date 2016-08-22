@@ -2184,6 +2184,89 @@ get_bignum_buf16_16   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           CreateRandomBigNum
+;
+;           DESCRIPTION:    Create random big number
+;
+;           PARAMETERS:     CX          Number of bits
+;
+;           RETURNS:        BX          Big number handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_random_bignum_name    DB 'Create Random Big Number',0
+
+create_random_bignum     PROC far
+    push ds
+    push es
+    push eax
+    push cx
+;
+    mov ax,flat_sel
+    mov es,ax
+;    
+    push cx
+    mov cx,SIZE bignum_handle_seg
+    AllocateHandle
+    mov ds:[ebx].bn_count,0
+    mov ds:[ebx].bn_data,0
+    mov ds:[ebx].bn_flags,0
+    mov [ebx].hh_sign,BIGNUM_HANDLE
+    pop cx
+    movzx ecx,cx
+    or ecx,ecx
+    jz crbDone
+;
+    mov edx,ecx
+    dec ecx
+    shr ecx,5
+    inc ecx
+    call RecreateBuf
+;    
+    mov edi,ds:[ebx].bn_data
+
+crbLoop:    
+    GetRandom
+    sub ecx,1
+    jz crbPartial
+
+crbFull:
+    mov es:[edi],eax
+    add edi,4
+    sub edx,32
+    jmp crbLoop
+
+crbPartial:
+    and dl,1Fh
+    jz crbAll
+;
+    stc
+    rcr eax,1
+    mov cl,32
+    sub cl,dl
+    shr eax,cl
+    mov es:[edi],eax
+    jmp crbDone
+
+crbAll:
+    stc
+    rcr eax,1
+    mov es:[edi],eax
+
+crbDone:    
+    mov bx,[ebx].hh_handle
+    clc
+;
+    pop cx
+    pop eax
+    pop es
+    pop ds
+    ret
+create_random_bignum     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           delete_handle
 ;
 ;           DESCRIPTION:    Delete syslog handle
@@ -2300,6 +2383,12 @@ init    PROC far
     mov dx,virt_es_in
     mov ax,get_bignum_str16_nr
     RegisterUserGate
+;
+    mov esi,OFFSET create_random_bignum
+    mov edi,OFFSET create_random_bignum_name
+    xor dx,dx
+    mov ax,create_random_bignum_nr
+    RegisterBimodalUserGate
 ;
     ret
 init    ENDP
