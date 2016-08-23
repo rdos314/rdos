@@ -91,8 +91,8 @@ void main()
     {
         handle1 = RdosCreateRandomBigNum(i);
         handle3 = RdosMulBigNum(handle1, handle2);
-        size = RdosGetBigNumSize16(handle3);
-        RdosGetBigNumString16(handle3, str, size);
+        size = RdosGetBigNumSize10(handle3);
+        RdosGetBigNumString10(handle3, str, size);
         printf("%i: ", i);
         printf(str);
         printf("\r\n");
