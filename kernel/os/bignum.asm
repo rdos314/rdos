@@ -74,6 +74,23 @@ div_size             DD ?
 
 div_struc       ENDS
 
+pow_mod_struc       STRUC
+
+pow_mod_div          div_struc <>
+
+pow_mod_base_count   DD ?
+pow_mod_base_data    DD ?
+pow_mod_exp_count    DD ?
+pow_mod_exp_data     DD ?
+pow_mod_mod_count    DD ?
+pow_mod_mod_data     DD ?
+pow_mod_res_count    DD ?
+pow_mod_res_data     DD ?
+
+pow_mod_bits         DD ?
+
+pow_mod_struc       ENDS
+
 .386p
 
 data    SEGMENT byte public 'DATA'
@@ -1516,6 +1533,108 @@ div_bignum  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           PowModBigNum
+;
+;           DESCRIPTION:    Power modulo big num (base ^ exp % mod)
+;
+;           PARAMETERS:     BX          Base
+;                           AX          Exp
+;                           DX          Mod
+;
+;           RETURNS:        BX          Result big num handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+pow_mod_bignum_name    DB 'Power Modulo Big Number',0
+
+pow_mod_bignum     PROC far
+    push ebp
+    sub esp,SIZE pow_mod_struc
+    mov ebp,esp
+;    
+    push ds
+    push es
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    push ax
+    mov ax,flat_sel
+    mov es,ax    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    pop ax
+    jc pmFail
+;
+    push ax
+    movzx eax,ds:[ebx].bn_count
+    mov [ebp].pow_mod_base_count,eax    
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].pow_mod_base_data,eax
+    pop bx
+;
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    pop ax
+    jc pmFail
+;
+    movzx eax,ds:[ebx].bn_count
+    mov [ebp].pow_mod_exp_count,eax    
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].pow_mod_exp_data,eax
+;
+    mov bx,dx
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    pop ax
+    jc pmFail
+;
+    movzx eax,ds:[ebx].bn_count
+    mov [ebp].pow_mod_mod_count,eax    
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].pow_mod_mod_data,eax        
+;
+    mov cx,SIZE bignum_handle_seg
+    AllocateHandle
+    mov ds:[ebx].bn_count,0
+    mov ds:[ebx].bn_data,0
+    mov ds:[ebx].bn_flags,0
+    mov [ebx].hh_sign,BIGNUM_HANDLE
+;
+    mov ecx,[ebp].pow_mod_mod_count
+    mov [ebp].pow_mod_res_count,ecx
+    call RecreateBuf
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].pow_mod_res_data,eax
+;
+    mov esi,[ebp].pow_mod_exp_data
+    mov ecx,[ebp].pow_mod_exp_count
+    call GetBits
+    mov [ebp].pow_mod_bits,ecx
+
+pmFail:
+    xor bx,bx  
+    stc  
+
+pmLeave:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+;
+    add esp,SIZE pow_mod_struc
+    pop ebp
+    ret
+pow_mod_bignum  ENDP
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           GetBigNumSize10
 ;
 ;           DESCRIPTION:    Get big num size in base 10
@@ -2356,6 +2475,12 @@ init    PROC far
     mov edi,OFFSET div_bignum_name
     xor dx,dx
     mov ax,div_bignum_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET pow_mod_bignum
+    mov edi,OFFSET pow_mod_bignum_name
+    xor dx,dx
+    mov ax,pow_mod_bignum_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_bignum_size10

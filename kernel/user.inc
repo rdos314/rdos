@@ -3825,6 +3825,14 @@ DivBigNum	MACRO
 	UserGate div_bignum_nr
 	        ENDM
 
+; IN  BX            Base handle
+; IN  AX            Exp handle
+; IN  DX            Mod handle
+; OUT BX            Result bignum handle
+PowModBigNum	MACRO
+	UserGate pow_mod_bignum_nr
+	        ENDM
+
 ; IN  BX            Bignum handle 1
 ; OUT ECX           Bytes required for base 10 buffer
 GetBigNumSize10	MACRO

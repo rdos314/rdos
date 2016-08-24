@@ -777,6 +777,8 @@
 
 #define usergate_create_random_bignum 0x0000025D
 
+#define usergate_pow_mod_bignum 0x0000025E
+
 
 
 #ifdef __FLAT__
@@ -1559,6 +1561,8 @@
 
 #define CallGate_create_random_bignum 0x55 0x67 0x9a 93 2 0 0 3 0 0x5d
 
+#define CallGate_pow_mod_bignum 0x55 0x67 0x9a 94 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2338,5 +2342,7 @@
 #define CallGate_get_bignum_str16 0x3e 0x67 0x9a 92 2 0 0 3 0
 
 #define CallGate_create_random_bignum 0x3e 0x67 0x9a 93 2 0 0 3 0
+
+#define CallGate_pow_mod_bignum 0x3e 0x67 0x9a 94 2 0 0 3 0
 
 #endif

@@ -85,6 +85,20 @@ void main()
 
     str = new char[65536];
 
+    handle1 = RdosCreateBigNum();
+    RdosLoadBigNum64(handle1,  45);
+
+    handle2 = RdosCreateBigNum();
+    RdosLoadBigNum64(handle2,  89);
+
+    handle3 = RdosCreateBigNum();
+    RdosLoadBigNum64(handle3,  55);
+
+    handle4 = RdosPowModBigNum(handle1, handle2, handle3);
+
+    size = RdosGetBigNumSize10(handle4);
+    RdosGetBigNumString10(handle4, str, size);
+
     handle2 = RdosCreateRandomBigNum(5);
 
     for (i = 1; i < 200; i++)
