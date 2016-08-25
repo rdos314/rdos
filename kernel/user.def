@@ -778,5 +778,6 @@ get_bignum_str16_nr             = 604
 create_random_bignum_nr         = 605
 
 pow_mod_bignum_nr               = 606
+mod_bignum_nr                   = 607
 
 usergate_entries			    = 625

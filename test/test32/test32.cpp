@@ -85,16 +85,64 @@ void main()
 
     str = new char[65536];
 
-    handle1 = RdosCreateBigNum();
-    RdosLoadBigNum64(handle1,  45);
+    handle1 = RdosCreateRandomBigNum(40);
 
-    handle2 = RdosCreateBigNum();
-    RdosLoadBigNum64(handle2,  89);
+    handle2 = RdosCreateRandomBigNum(70);
 
-    handle3 = RdosCreateBigNum();
-    RdosLoadBigNum64(handle3,  55);
+    handle3 = RdosCreateRandomBigNum(16);
+
+    size = RdosGetBigNumSize10(handle1);
+    RdosGetBigNumString10(handle1, str, size);
+    printf("Base: ");
+    printf(str);
+    printf("\r\n");
+
+    size = RdosGetBigNumSize10(handle2);
+    RdosGetBigNumString10(handle2, str, size);
+    printf("Exp: ");
+    printf(str);
+    printf("\r\n");
+
+    size = RdosGetBigNumSize10(handle3);
+    RdosGetBigNumString10(handle3, str, size);
+    printf("Mod: ");
+    printf(str);
+    printf("\r\n");
+
+    handle4 = RdosModBigNum(handle1, handle3);
+
+    size = RdosGetBigNumSize10(handle4);
+    RdosGetBigNumString10(handle4, str, size);
+    printf("Res: ");
+    printf(str);
+    printf("\r\n");
 
     handle4 = RdosPowModBigNum(handle1, handle2, handle3);
+
+    size = RdosGetBigNumSize10(handle1);
+    RdosGetBigNumString10(handle1, str, size);
+    printf("Base: ");
+    printf(str);
+    printf("\r\n");
+
+    size = RdosGetBigNumSize10(handle2);
+    RdosGetBigNumString10(handle2, str, size);
+    printf("Exp: ");
+    printf(str);
+    printf("\r\n");
+
+    size = RdosGetBigNumSize10(handle3);
+    RdosGetBigNumString10(handle3, str, size);
+    printf("Mod: ");
+    printf(str);
+    printf("\r\n");
+
+    size = RdosGetBigNumSize10(handle4);
+    RdosGetBigNumString10(handle4, str, size);
+    printf("Res: ");
+    printf(str);
+    printf("\r\n");
+
 
     size = RdosGetBigNumSize10(handle4);
     RdosGetBigNumString10(handle4, str, size);

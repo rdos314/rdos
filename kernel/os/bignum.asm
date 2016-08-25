@@ -82,10 +82,9 @@ pow_mod_base_count   DD ?
 pow_mod_base_data    DD ?
 pow_mod_exp_count    DD ?
 pow_mod_exp_data     DD ?
-pow_mod_mod_count    DD ?
-pow_mod_mod_data     DD ?
 pow_mod_res_count    DD ?
 pow_mod_res_data     DD ?
+pow_mod_temp_data    DD ?
 
 pow_mod_bits         DD ?
 
@@ -1533,6 +1532,183 @@ div_bignum  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           ModBigNum
+;
+;           DESCRIPTION:    Modulo big num
+;
+;           PARAMETERS:     BX          Nominator num handle
+;                           AX          Divisor num handle
+;
+;           RETURNS:        BX          Result big num handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mod_bignum_name    DB 'Mod Big Number',0
+
+mod_bignum     PROC far
+    push ebp
+    sub esp,SIZE div_struc
+    mov ebp,esp
+;    
+    push ds
+    push es
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    push ax
+    mov ax,flat_sel
+    mov es,ax    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    pop ax
+    jc mbnFail
+;
+    mov esi,ebx
+    push ax
+    movzx eax,ds:[ebx].bn_count
+    mov [ebp].div_quot_count,eax    
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].div_mod_data,eax
+    pop bx
+;
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc mbnFail
+;
+    mov edi,ebx
+    movzx eax,ds:[ebx].bn_count
+    mov [ebp].div_divisor_count,eax    
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].div_divisor_data,eax
+;
+    push esi
+    mov esi,[ebp].div_divisor_data
+    mov ecx,[ebp].div_divisor_count
+    call GetBits
+    pop esi
+    or ecx,ecx
+    jz mbnInfinite
+;    
+    mov cx,SIZE bignum_handle_seg
+    AllocateHandle
+    mov ds:[ebx].bn_count,0
+    mov ds:[ebx].bn_data,0
+    mov [ebx].hh_sign,BIGNUM_HANDLE
+;    
+    push esi
+    push edi
+;
+    mov eax,[ebp].div_quot_count
+    or eax,eax
+    jnz mbnNotZero
+;
+    mov ecx,1
+    mov [ebp].div_quot_count,ecx    
+    call RecreateBuf
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].div_mod_data,eax
+    mov edi,eax
+    xor eax,eax
+    stos dword ptr es:[edi]
+    jmp mbnCopyDone
+    
+mbnNotZero:
+    mov ecx,[ebp].div_quot_count
+    mov esi,[ebp].div_mod_data
+    call RecreateBuf
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].div_mod_data,eax
+    mov edi,eax
+
+mbnCopyNomLoop:
+    mov eax,es:[esi]
+    mov es:[edi],eax
+    add esi,4
+    add edi,4
+    loop mbnCopyNomLoop    
+
+mbnCopyDone:
+    pop edi
+    pop esi    
+;
+    mov eax,[ebp].div_quot_count
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].div_temp_quot_data,edx
+;
+    mov eax,[ebp].div_quot_count
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].div_quot_data,edx
+;
+    mov ax,ds:[esi].bn_flags
+    or ax,ds:[edi].bn_flags
+    and ax,NOT BN_FLAG_NEGATIVE
+    mov ds:[ebx].bn_flags,ax
+;
+    mov ax,ds:[esi].bn_flags
+    xor ax,ds:[edi].bn_flags
+    and ax,BN_FLAG_NEGATIVE
+    or ds:[ebx].bn_flags,ax
+;    
+    call DoDiv
+    call OptBuf    
+;
+    mov edx,[ebp].div_temp_quot_data
+    FreeLinear
+;    
+    mov edx,[ebp].div_quot_data
+    FreeLinear
+;
+    mov bx,[ebx].hh_handle
+    clc
+    jmp mbnLeave
+
+mbnInfinite:    
+    mov cx,SIZE bignum_handle_seg
+    AllocateHandle
+    mov ds:[ebx].bn_count,0
+    mov ds:[ebx].bn_data,0
+    mov [ebx].hh_sign,BIGNUM_HANDLE
+;
+    mov ax,ds:[esi].bn_flags
+    or ax,ds:[edi].bn_flags
+    and ax,NOT BN_FLAG_NEGATIVE
+    mov ds:[ebx].bn_flags,ax
+;
+    mov ax,ds:[esi].bn_flags
+    xor ax,ds:[edi].bn_flags
+    and ax,BN_FLAG_NEGATIVE
+    or ax,BN_FLAG_INFINITE
+    or ds:[ebx].bn_flags,ax
+    mov bx,[ebx].hh_handle
+    clc
+    jmp mbnLeave
+
+mbnFail:
+    xor bx,bx  
+    stc  
+
+mbnLeave:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+;
+    add esp,SIZE div_struc
+    pop ebp
+    ret
+mod_bignum  ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           PowModBigNum
 ;
 ;           DESCRIPTION:    Power modulo big num (base ^ exp % mod)
@@ -1571,13 +1747,14 @@ pow_mod_bignum     PROC far
     push ax
     movzx eax,ds:[ebx].bn_count
     mov [ebp].pow_mod_base_count,eax    
+    mov [ebp].div_quot_count,eax
     mov eax,ds:[ebx].bn_data
     mov [ebp].pow_mod_base_data,eax
+;
     pop bx
 ;
     mov ax,BIGNUM_HANDLE
     DerefHandle
-    pop ax
     jc pmFail
 ;
     movzx eax,ds:[ebx].bn_count
@@ -1588,13 +1765,48 @@ pow_mod_bignum     PROC far
     mov bx,dx
     mov ax,BIGNUM_HANDLE
     DerefHandle
-    pop ax
     jc pmFail
 ;
     movzx eax,ds:[ebx].bn_count
-    mov [ebp].pow_mod_mod_count,eax    
+    mov [ebp].div_divisor_count,eax    
     mov eax,ds:[ebx].bn_data
-    mov [ebp].pow_mod_mod_data,eax        
+    mov [ebp].div_divisor_data,eax        
+;
+    mov esi,[ebp].pow_mod_base_data
+    mov eax,[ebp].pow_mod_base_count
+    mov ecx,eax
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].div_mod_data,edx
+    mov edi,edx
+
+pmCopyBaseLoop:
+    mov eax,es:[esi]
+    mov es:[edi],eax
+    add esi,4
+    add edi,4
+    loop pmCopyBaseLoop    
+;
+    mov eax,[ebp].pow_mod_base_count
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].div_temp_quot_data,edx
+;
+    mov eax,[ebp].pow_mod_base_count
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].div_quot_data,edx
+;
+    call DoDiv
+;
+    mov eax,[ebp].div_divisor_count
+    mov ecx,eax
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].pow_mod_temp_data,edx
+    mov edi,edx
+    mov esi,[ebp].div_mod_data
+    rep movs dword ptr es:[edi],es:[esi]
 ;
     mov cx,SIZE bignum_handle_seg
     AllocateHandle
@@ -1603,7 +1815,7 @@ pow_mod_bignum     PROC far
     mov ds:[ebx].bn_flags,0
     mov [ebx].hh_sign,BIGNUM_HANDLE
 ;
-    mov ecx,[ebp].pow_mod_mod_count
+    mov ecx,[ebp].div_divisor_count
     mov [ebp].pow_mod_res_count,ecx
     call RecreateBuf
     mov eax,ds:[ebx].bn_data
@@ -1613,6 +1825,15 @@ pow_mod_bignum     PROC far
     mov ecx,[ebp].pow_mod_exp_count
     call GetBits
     mov [ebp].pow_mod_bits,ecx
+;
+    mov ecx,[ebp].div_divisor_count
+    mov edi,[ebp].pow_mod_res_data
+    mov esi,[ebp].div_mod_data
+    rep movs dword ptr es:[edi],es:[esi]
+;    
+    call OptBuf    
+    mov bx,[ebx].hh_handle
+    jmp pmLeave
 
 pmFail:
     xor bx,bx  
@@ -2475,6 +2696,12 @@ init    PROC far
     mov edi,OFFSET div_bignum_name
     xor dx,dx
     mov ax,div_bignum_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET mod_bignum
+    mov edi,OFFSET mod_bignum_name
+    xor dx,dx
+    mov ax,mod_bignum_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET pow_mod_bignum

@@ -3359,6 +3359,11 @@
     parm [ebx] [eax] \
     value [ebx];
 
+#pragma aux RdosModBigNum = \
+    CallGate_mod_bignum  \
+    parm [ebx] [eax] \
+    value [ebx];
+
 #pragma aux RdosPowModBigNum = \
     CallGate_pow_mod_bignum  \
     parm [ebx] [eax] [edx] \

@@ -3825,6 +3825,13 @@ DivBigNum	MACRO
 	UserGate div_bignum_nr
 	        ENDM
 
+; IN  BX            Bignum handle 1
+; IN  AX            Bignum handle 2
+; OUT BX            Result bignum handle
+ModBigNum	MACRO
+	UserGate mod_bignum_nr
+	        ENDM
+
 ; IN  BX            Base handle
 ; IN  AX            Exp handle
 ; IN  DX            Mod handle
