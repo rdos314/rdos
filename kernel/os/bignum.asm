@@ -126,8 +126,11 @@ RecreateBuf     PROC near
     or ax,ax
     jz rbCreate
 ;
+    push ecx
+    movzx ecx,ax
     mov edx,ds:[ebx].bn_data
     FreeLinear
+    pop ecx
 
 rbCreate:
     mov ds:[ebx].bn_count,cx
@@ -173,10 +176,13 @@ CopyBuf     PROC near
     or ax,ax
     jz cbCreate
 ;
+    push ecx
     push edx
+    movzx ecx,ax
     mov edx,ds:[ebx].bn_data
     FreeLinear
     pop edx
+    pop ecx
 
 cbCreate:
     mov ds:[ebx].bn_count,dx
@@ -286,6 +292,7 @@ gbZeroLoop:
     or edx,edx
     jz gbDone
 ;    
+    xor ecx,ecx
     FreeLinear
 
 gbDone:        
@@ -354,10 +361,12 @@ obCopyLoop:
     jnz obCopyLoop    
 ;
     pop edx
+    xor ecx,ecx
     FreeLinear
     jmp obDone
 
 obZero:        
+    xor ecx,ecx
     mov edx,ds:[ebx].bn_data
     FreeLinear
 
@@ -1710,9 +1719,11 @@ dnCopyDone:
     call DoDiv
     call OptBuf    
 ;
+    mov ecx,[ebp].div_quot_count
     mov edx,[ebp].div_temp_quot_data
     FreeLinear
 ;    
+    mov ecx,[ebp].div_quot_count
     mov edx,[ebp].div_mod_data
     FreeLinear
 ;
@@ -1887,9 +1898,11 @@ mbnCopyDone:
     call DoDiv
     call OptBuf    
 ;
+    mov ecx,[ebp].div_quot_count
     mov edx,[ebp].div_temp_quot_data
     FreeLinear
 ;    
+    mov ecx,[ebp].div_quot_count
     mov edx,[ebp].div_quot_data
     FreeLinear
 ;
@@ -2062,16 +2075,18 @@ pmCopyInitBase:
     mov eax,ds:[ebx].bn_data
     mov [ebp].pow_mod_res_data,eax
 ;
+    mov edi,eax
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    mov eax,1
+    mov edi,[ebp].pow_mod_res_data
+    mov es:[edi],eax
+;
     mov esi,[ebp].pow_mod_exp_data
     mov ecx,[ebp].pow_mod_exp_count
     call GetBits
     mov [ebp].pow_mod_bits,ecx
 ;
-    mov ecx,[ebp].div_divisor_count
-    mov edi,[ebp].pow_mod_res_data
-    mov esi,[ebp].pow_mod_temp_data
-    rep movs dword ptr es:[edi],es:[esi]
-;    
     call OptBuf    
     mov bx,[ebx].hh_handle
     jmp pmLeave
@@ -2205,17 +2220,29 @@ gbs10Retry:
 gbs10Ok:
     mov ecx,edx
 ;    
+    push ecx
+    mov ecx,[ebp].div_quot_count
     mov edx,[ebp].div_temp_quot_data
     FreeLinear
+    pop ecx
 ;    
+    push ecx
+    mov ecx,[ebp].div_quot_count
     mov edx,[ebp].div_quot_data
     FreeLinear
+    pop ecx
 ;    
+    push ecx
+    mov ecx,[ebp].div_divisor_count
     mov edx,[ebp].div_divisor_data
     FreeLinear
+    pop ecx
 ;    
+    push ecx
+    mov ecx,[ebp].div_quot_count
     mov edx,[ebp].div_mod_data
     FreeLinear
+    pop ecx
     jmp gbs10AddSign
             
 gbs10Fail:
@@ -2375,15 +2402,19 @@ gbb10Retry:
     jmp gbb10Retry
 
 gbb10Ok:
+    mov ecx,[ebp].div_quot_count
     mov edx,[ebp].div_temp_quot_data
     FreeLinear
 ;    
+    mov ecx,[ebp].div_quot_count
     mov edx,[ebp].div_quot_data
     FreeLinear
 ;    
+    mov ecx,[ebp].div_divisor_count
     mov edx,[ebp].div_divisor_data
     FreeLinear
 ;    
+    mov ecx,[ebp].div_quot_count
     mov edx,[ebp].div_mod_data
     FreeLinear
     jmp gbb10AddSign
