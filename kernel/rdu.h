@@ -779,6 +779,7 @@
 
 #define usergate_pow_mod_bignum 0x0000025E
 #define usergate_mod_bignum 0x0000025F
+#define usergate_sub_bignum 0x00000260
 
 
 
@@ -1564,6 +1565,7 @@
 
 #define CallGate_pow_mod_bignum 0x55 0x67 0x9a 94 2 0 0 3 0 0x5d
 #define CallGate_mod_bignum 0x55 0x67 0x9a 95 2 0 0 3 0 0x5d
+#define CallGate_sub_bignum 0x55 0x67 0x9a 96 2 0 0 3 0 0x5d
 
 #else
 
@@ -2347,5 +2349,6 @@
 
 #define CallGate_pow_mod_bignum 0x3e 0x67 0x9a 94 2 0 0 3 0
 #define CallGate_mod_bignum 0x3e 0x67 0x9a 95 2 0 0 3 0
+#define CallGate_sub_bignum 0x3e 0x67 0x9a 96 2 0 0 3 0
 
 #endif

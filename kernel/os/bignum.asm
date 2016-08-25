@@ -1248,6 +1248,236 @@ add_bignum     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           SubBigNum
+;
+;           DESCRIPTION:    Sub big num
+;
+;           PARAMETERS:     BX          Big num handle 1
+;                           AX          Big num handle 2
+;
+;           RETURNS:        BX          Result big num handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sub_bignum_name    DB 'Sub Big Number',0
+
+sub_bignum     PROC far
+    push ds
+    push es
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    push ax
+    mov ax,flat_sel
+    mov es,ax    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    pop ax
+    jc sbnFail
+;
+    mov esi,ebx
+    mov bx,ax
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc sbnFail
+;
+    mov edi,ebx
+;    
+    mov cx,SIZE bignum_handle_seg
+    AllocateHandle
+    mov ds:[ebx].bn_count,0
+    mov ds:[ebx].bn_data,0
+    mov ds:[ebx].bn_flags,0
+    mov [ebx].hh_sign,BIGNUM_HANDLE
+;
+    mov ax,ds:[esi].bn_flags
+    xor ax,ds:[edi].bn_flags
+    test ax,BN_FLAG_NEGATIVE
+    jz sbnSub
+
+sbnAdd:
+    mov cx,ds:[esi].bn_count
+    cmp cx,ds:[edi].bn_count
+    ja sbnAddUse2
+
+sbnAddUse1:
+    push esi
+    push edi
+;    
+    mov cx,ds:[esi].bn_count
+    mov dx,ds:[edi].bn_count
+    mov esi,ds:[esi].bn_data
+    call CopyBuf
+;    
+    mov esi,ds:[edi].bn_data
+    mov edi,ds:[ebx].bn_data
+    mov cx,ds:[ebx].bn_count
+    call DoAdd
+;
+    pop edi
+    pop esi    
+    jmp sbnFixupAdd
+
+sbnAddUse2:  
+    push esi
+    push edi
+;      
+    xchg esi,edi
+    mov cx,ds:[esi].bn_count
+    mov dx,ds:[edi].bn_count
+    mov esi,ds:[esi].bn_data
+    call CopyBuf
+;    
+    mov esi,ds:[edi].bn_data
+    mov edi,ds:[ebx].bn_data
+    mov cx,ds:[ebx].bn_count
+    call DoAdd
+;
+    pop edi
+    pop esi
+
+sbnFixupAdd:
+    jnc anAddSign
+;
+    mov cx,1
+    call GrowBuf
+;
+    movzx edx,ds:[ebx].bn_count
+    dec edx
+    shl edx,2
+    add edx,ds:[ebx].bn_data
+    mov eax,1
+    mov es:[edx],eax
+
+sbnAddSign:    
+    mov ax,ds:[esi].bn_flags
+    or ax,ds:[edi].bn_flags
+    xor ax,BN_FLAG_NEGATIVE
+    mov ds:[ebx].bn_flags,ax
+    jmp sbnDone
+
+sbnSub:
+    mov cx,ds:[esi].bn_count
+    cmp cx,ds:[edi].bn_count
+    ja sbnSubUse2
+
+sbnSubUse1:
+    push esi
+    push edi
+;    
+    mov cx,ds:[esi].bn_count
+    mov dx,ds:[edi].bn_count
+    mov esi,ds:[esi].bn_data
+    call CopyBuf
+;    
+    mov esi,ds:[edi].bn_data
+    mov edi,ds:[ebx].bn_data
+    mov cx,ds:[ebx].bn_count
+    call DoSub
+;
+    pop edi
+    pop esi    
+    jnc sbnSubFixup1
+;
+    push edi
+    mov edi,ds:[ebx].bn_data
+    mov cx,ds:[ebx].bn_count
+    call DoNeg
+    pop edi
+;
+    mov ax,ds:[edi].bn_flags
+    xor ax,BN_FLAG_NEGATIVE
+    mov dx,ds:[esi].bn_flags
+    and dx,NOT BN_FLAG_NEGATIVE
+    or ax,dx
+    mov ds:[ebx].bn_flags,ax
+;
+    call OptBuf
+    jmp sbnDone
+
+sbnSubFixup1:
+    mov ax,ds:[esi].bn_flags
+    mov dx,ds:[edi].bn_flags
+    xor dx,BN_FLAG_NEGATIVE
+    and dx,NOT BN_FLAG_NEGATIVE
+    or ax,dx
+    mov ds:[ebx].bn_flags,ax
+;    
+    call OptBuf
+    jmp sbnDone
+
+sbnSubUse2:  
+    push esi
+    push edi
+;      
+    xchg esi,edi
+    mov cx,ds:[esi].bn_count
+    mov dx,ds:[edi].bn_count
+    mov esi,ds:[esi].bn_data
+    call CopyBuf
+;    
+    mov esi,ds:[edi].bn_data
+    mov edi,ds:[ebx].bn_data
+    mov cx,ds:[ebx].bn_count
+    call DoSub
+;
+    pop edi
+    pop esi
+    jnc sbnSubFixup2
+;
+    push edi
+    mov edi,ds:[ebx].bn_data
+    mov cx,ds:[ebx].bn_count
+    call DoNeg
+    pop edi
+;
+    mov ax,ds:[esi].bn_flags
+    mov dx,ds:[edi].bn_flags
+    xor dx,BN_FLAG_NEGATIVE
+    and dx,NOT BN_FLAG_NEGATIVE
+    or ax,dx
+    mov ds:[ebx].bn_flags,ax
+;    
+    call OptBuf
+    jmp sbnDone
+
+sbnSubFixup2:
+    mov ax,ds:[edi].bn_flags
+    xor ax,BN_FLAG_NEGATIVE
+    mov dx,ds:[esi].bn_flags
+    and dx,NOT BN_FLAG_NEGATIVE
+    or ax,dx
+    mov ds:[ebx].bn_flags,ax
+;    
+    call OptBuf
+
+sbnDone:    
+    mov bx,[ebx].hh_handle
+    clc
+    jmp sbnEnd
+
+sbnFail:
+    xor bx,bx 
+    stc   
+
+sbnEnd:        
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    ret    
+sub_bignum     ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           MulBigNum
 ;
 ;           DESCRIPTION:    Multiply big num
@@ -1805,6 +2035,17 @@ pmCopyBaseLoop:
     AllocateSmallLinear
     mov [ebp].pow_mod_temp_data,edx
     mov edi,edx
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    mov ecx,[ebp].pow_mod_base_count
+    cmp ecx,[ebp].div_divisor_count
+    jbe pmCopyInitBase
+;
+    mov ecx,[ebp].div_divisor_count
+
+pmCopyInitBase:    
+    mov edi,edx    
     mov esi,[ebp].div_mod_data
     rep movs dword ptr es:[edi],es:[esi]
 ;
@@ -1828,7 +2069,7 @@ pmCopyBaseLoop:
 ;
     mov ecx,[ebp].div_divisor_count
     mov edi,[ebp].pow_mod_res_data
-    mov esi,[ebp].div_mod_data
+    mov esi,[ebp].pow_mod_temp_data
     rep movs dword ptr es:[edi],es:[esi]
 ;    
     call OptBuf    
@@ -2684,6 +2925,12 @@ init    PROC far
     mov edi,OFFSET add_bignum_name
     xor dx,dx
     mov ax,add_bignum_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET sub_bignum
+    mov edi,OFFSET sub_bignum_name
+    xor dx,dx
+    mov ax,sub_bignum_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET mul_bignum

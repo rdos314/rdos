@@ -845,6 +845,7 @@ int RDOSAPI RdosCreateBigNum();
 void RDOSAPI RdosDeleteBigNum(int handle);
 void RDOSAPI RdosLoadBigNum64(int handle, long long Value);
 int RDOSAPI RdosAddBigNum(int handle1, int handle2);
+int RDOSAPI RdosSubBigNum(int handle1, int handle2);
 int RDOSAPI RdosMulBigNum(int handle1, int handle2);
 int RDOSAPI RdosDivBigNum(int handle1, int handle2);
 int RDOSAPI RdosModBigNum(int handle1, int handle2);

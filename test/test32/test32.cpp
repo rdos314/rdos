@@ -82,70 +82,96 @@ void main()
     int handle3;
     int handle4;
     int handle5;
+    int handle6;
+    int handle7;
+    int handle8;
 
     str = new char[65536];
 
-    handle1 = RdosCreateRandomBigNum(40);
+    for (;;)
+    {
 
-    handle2 = RdosCreateRandomBigNum(70);
+        handle1 = RdosCreateRandomBigNum(2 + RdosGetRandom(128));
 
-    handle3 = RdosCreateRandomBigNum(16);
+        handle2 = RdosCreateRandomBigNum(2 + RdosGetRandom(128));
 
-    size = RdosGetBigNumSize10(handle1);
-    RdosGetBigNumString10(handle1, str, size);
-    printf("Base: ");
-    printf(str);
-    printf("\r\n");
+        handle3 = RdosCreateRandomBigNum(2 + RdosGetRandom(128));
 
-    size = RdosGetBigNumSize10(handle2);
-    RdosGetBigNumString10(handle2, str, size);
-    printf("Exp: ");
-    printf(str);
-    printf("\r\n");
+        size = RdosGetBigNumSize10(handle1);
+        RdosGetBigNumString10(handle1, str, size);
+        printf("Base: ");
+        printf(str);
+        printf("\r\n");
 
-    size = RdosGetBigNumSize10(handle3);
-    RdosGetBigNumString10(handle3, str, size);
-    printf("Mod: ");
-    printf(str);
-    printf("\r\n");
+        size = RdosGetBigNumSize10(handle2);
+        RdosGetBigNumString10(handle2, str, size);
+        printf("Exp: ");
+        printf(str);
+        printf("\r\n");
 
-    handle4 = RdosModBigNum(handle1, handle3);
+        size = RdosGetBigNumSize10(handle3);
+        RdosGetBigNumString10(handle3, str, size);
+        printf("Mod: ");
+        printf(str);
+        printf("\r\n");
 
-    size = RdosGetBigNumSize10(handle4);
-    RdosGetBigNumString10(handle4, str, size);
-    printf("Res: ");
-    printf(str);
-    printf("\r\n");
+//        handle4 = RdosModBigNum(handle1, handle3);
+        handle4 = RdosPowModBigNum(handle1, handle2, handle3);
 
-    handle4 = RdosPowModBigNum(handle1, handle2, handle3);
+        size = RdosGetBigNumSize10(handle4);
+        RdosGetBigNumString10(handle4, str, size);
+        printf("Res: ");
+        printf(str);
+        printf("\r\n");
 
-    size = RdosGetBigNumSize10(handle1);
-    RdosGetBigNumString10(handle1, str, size);
-    printf("Base: ");
-    printf(str);
-    printf("\r\n");
+        handle5 = RdosDivBigNum(handle1, handle3);
 
-    size = RdosGetBigNumSize10(handle2);
-    RdosGetBigNumString10(handle2, str, size);
-    printf("Exp: ");
-    printf(str);
-    printf("\r\n");
+        size = RdosGetBigNumSize10(handle5);
+        RdosGetBigNumString10(handle5, str, size);
+        printf("Quot: ");
+        printf(str);
+        printf("\r\n");
 
-    size = RdosGetBigNumSize10(handle3);
-    RdosGetBigNumString10(handle3, str, size);
-    printf("Mod: ");
-    printf(str);
-    printf("\r\n");
+        handle6 = RdosMulBigNum(handle3, handle5);    
 
-    size = RdosGetBigNumSize10(handle4);
-    RdosGetBigNumString10(handle4, str, size);
-    printf("Res: ");
-    printf(str);
-    printf("\r\n");
+        size = RdosGetBigNumSize10(handle6);
+        RdosGetBigNumString10(handle6, str, size);
+        printf("Mult: ");
+        printf(str);
+        printf("\r\n");
 
+        handle7 = RdosSubBigNum(handle1, handle6);
 
-    size = RdosGetBigNumSize10(handle4);
-    RdosGetBigNumString10(handle4, str, size);
+        size = RdosGetBigNumSize10(handle7);
+        RdosGetBigNumString10(handle7, str, size);
+        printf("Diff: ");
+        printf(str);
+        printf("\r\n");
+
+        handle8 = RdosSubBigNum(handle7, handle4);
+
+        size = RdosGetBigNumSize10(handle8);
+        if (size <= 2)
+            printf("OK\r\n");
+        else
+        {
+            RdosGetBigNumString10(handle8, str, size);
+            printf("Error: ");
+            printf(str);
+            printf("\r\n");
+        }
+
+        RdosDeleteBigNum(handle1);
+        RdosDeleteBigNum(handle2);
+        RdosDeleteBigNum(handle3);
+        RdosDeleteBigNum(handle4);
+        RdosDeleteBigNum(handle5);
+        RdosDeleteBigNum(handle6);
+        RdosDeleteBigNum(handle7);
+        RdosDeleteBigNum(handle8);
+
+    }
+
 
     handle2 = RdosCreateRandomBigNum(5);
 
