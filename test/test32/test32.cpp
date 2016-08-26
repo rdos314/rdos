@@ -86,12 +86,21 @@ void main()
     int handle7;
     int handle8;
 
+    int handlet1;
+    int handlet2;
+    int handlet3;
+
     str = new char[65536];
 
     for (;;)
     {
         handle1 = RdosCreateRandomBigNum(2 + RdosGetRandom(128));
-        handle2 = RdosCreateRandomBigNum(2 + RdosGetRandom(128));
+
+        val = RdosGetRandom(100000);
+        handle2 = RdosCreateBigNum();
+        RdosLoadBigNum64(handle2,  val);
+
+//        handle2 = RdosCreateRandomBigNum(2 + RdosGetRandom(128));
         handle3 = RdosCreateRandomBigNum(2 + RdosGetRandom(128));
 
         size = RdosGetBigNumSize10(handle1);
@@ -120,15 +129,27 @@ void main()
         printf(str);
         printf("\r\n");
 
-        handle5 = RdosModBigNum(handle1, handle3);
+        handlet1 = RdosCreateBigNum();
+        RdosLoadBigNum64(handlet1,  1);
 
-        size = RdosGetBigNumSize10(handle5);
-        RdosGetBigNumString10(handle5, str, size);
-        printf("Mod1: ");
+        for (i = 0; i < val; i++)
+        {
+            handlet2 = RdosMulBigNum(handlet1, handle1);
+            handlet3 = RdosModBigNum(handlet2, handle3);
+
+            RdosDeleteBigNum(handlet1);
+            RdosDeleteBigNum(handlet2);
+
+            handlet1 = handlet3;
+        }
+
+        size = RdosGetBigNumSize10(handlet1);
+        RdosGetBigNumString10(handlet1, str, size);
+        printf("Modx: ");
         printf(str);
         printf("\r\n");
 
-        handle6 = RdosSubBigNum(handle4, handle5);
+        handle6 = RdosSubBigNum(handle4, handlet1);
 
         size = RdosGetBigNumSize10(handle6);
         if (size == 2)
@@ -139,14 +160,16 @@ void main()
             printf("Diff: ");
             printf(str);
             printf("\r\n");
+            return;
         }
 
         RdosDeleteBigNum(handle1);
         RdosDeleteBigNum(handle2);
         RdosDeleteBigNum(handle3);
         RdosDeleteBigNum(handle4);
-        RdosDeleteBigNum(handle5);
         RdosDeleteBigNum(handle6);
+
+        RdosDeleteBigNum(handlet1);
 
     }
 

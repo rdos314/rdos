@@ -2132,9 +2132,18 @@ pmBufInitOk:
     mov esi,[ebp].pow_mod_exp_data
     mov ecx,[ebp].pow_mod_exp_count
     call GetBits
-    mov [ebp].pow_mod_bits,ecx
-;
+    xor edx,edx
+    or ecx,ecx
+    jz pmCalcDone
 
+pmCalcLoop:
+    push ecx
+    push edx
+;
+    mov esi,[ebp].pow_mod_exp_data
+    bt es:[esi],edx
+    jnc pmCalcNext
+;    
     mov esi,[ebp].pow_mod_res_data
     mov edi,[ebp].pow_mod_temp_data
     mov edx,[ebp].div_mod_data
@@ -2160,7 +2169,7 @@ pmBufInitOk:
     mov edi,[ebp].pow_mod_res_data
     rep movs dword ptr es:[edi],es:[esi]
 
-
+pmCalcNext:
     mov esi,[ebp].pow_mod_temp_data
     mov edi,[ebp].div_mod_data
     mov ecx,[ebp].div_divisor_count
@@ -2184,8 +2193,14 @@ pmBufInitOk:
     mov esi,[ebp].div_mod_data
     mov edi,[ebp].pow_mod_temp_data
     rep movs dword ptr es:[edi],es:[esi]
-
 ;
+    pop edx
+    pop ecx
+    inc edx
+    sub ecx,1
+    jnz pmCalcLoop   
+
+pmCalcDone:
     mov ecx,[ebp].div_divisor_count
     shl ecx,3
     mov edx,[ebp].div_temp_quot_data
