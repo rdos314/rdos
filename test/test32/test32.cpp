@@ -90,11 +90,8 @@ void main()
 
     for (;;)
     {
-
         handle1 = RdosCreateRandomBigNum(2 + RdosGetRandom(128));
-
         handle2 = RdosCreateRandomBigNum(2 + RdosGetRandom(128));
-
         handle3 = RdosCreateRandomBigNum(2 + RdosGetRandom(128));
 
         size = RdosGetBigNumSize10(handle1);
@@ -115,8 +112,6 @@ void main()
         printf(str);
         printf("\r\n");
 
-
-//        handle4 = RdosModBigNum(handle1, handle3);
         handle4 = RdosPowModBigNum(handle1, handle2, handle3);
 
         size = RdosGetBigNumSize10(handle4);
@@ -125,11 +120,33 @@ void main()
         printf(str);
         printf("\r\n");
 
+        handle5 = RdosModBigNum(handle1, handle3);
+
+        size = RdosGetBigNumSize10(handle5);
+        RdosGetBigNumString10(handle5, str, size);
+        printf("Mod1: ");
+        printf(str);
+        printf("\r\n");
+
+        handle6 = RdosSubBigNum(handle4, handle5);
+
+        size = RdosGetBigNumSize10(handle6);
+        if (size == 2)
+            printf("OK\r\n");
+        else
+        {
+            RdosGetBigNumString10(handle6, str, size);
+            printf("Diff: ");
+            printf(str);
+            printf("\r\n");
+        }
 
         RdosDeleteBigNum(handle1);
         RdosDeleteBigNum(handle2);
         RdosDeleteBigNum(handle3);
         RdosDeleteBigNum(handle4);
+        RdosDeleteBigNum(handle5);
+        RdosDeleteBigNum(handle6);
 
     }
 

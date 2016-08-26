@@ -2050,6 +2050,10 @@ pmCopyBaseLoop:
     call DoDiv
 ;
     mov eax,[ebp].div_divisor_count
+    add eax,eax
+    mov [ebp].div_quot_count,eax
+;    
+    mov eax,[ebp].div_divisor_count
     mov ecx,eax
     shl eax,2
     AllocateSmallLinear
@@ -2069,8 +2073,9 @@ pmCopyInitBase:
     mov esi,[ebp].div_mod_data
     rep movs dword ptr es:[edi],es:[esi]
 ;
-    mov eax,[ebp].pow_mod_base_count
-    cmp eax,[ebp].div_divisor_count
+    mov eax,[ebp].div_divisor_count
+    add eax,eax
+    cmp eax,[ebp].pow_mod_base_count
     je pmBufInitOk
 ;
     mov ecx,[ebp].pow_mod_base_count
@@ -2078,8 +2083,8 @@ pmCopyInitBase:
     mov edx,[ebp].div_temp_quot_data
     FreeLinear
 ;    
-1    mov eax,[ebp].div_divisor_count
-    shl eax,2
+    mov eax,[ebp].div_divisor_count
+    shl eax,3
     AllocateSmallLinear
     mov [ebp].div_temp_quot_data,edx
 ;
@@ -2087,14 +2092,11 @@ pmCopyInitBase:
     shl ecx,2
     mov edx,[ebp].div_quot_data
     FreeLinear
-
-    mov eax,[ebp].div_divisor_count
-    shl eax,2
-    AllocateSmallLinear
-    mov [ebp].div_quot_data,edx
 ;
     mov eax,[ebp].div_divisor_count
-    mov [ebp].pow_mod_base_count,eax 
+    shl eax,3
+    AllocateSmallLinear
+    mov [ebp].div_quot_data,edx
 
 pmBufInitOk:
     mov cx,SIZE bignum_handle_seg
@@ -2117,10 +2119,94 @@ pmBufInitOk:
     mov edi,[ebp].pow_mod_res_data
     mov es:[edi],eax
 ;
+    mov eax,[ebp].pow_mod_base_count
+    shl eax,2
+    mov edx,[ebp].div_mod_data
+    FreeLinear
+;
+    mov eax,[ebp].div_divisor_count
+    shl eax,3
+    AllocateSmallLinear
+    mov [ebp].div_mod_data,edx
+;
     mov esi,[ebp].pow_mod_exp_data
     mov ecx,[ebp].pow_mod_exp_count
     call GetBits
     mov [ebp].pow_mod_bits,ecx
+;
+
+    mov esi,[ebp].pow_mod_res_data
+    mov edi,[ebp].pow_mod_temp_data
+    mov edx,[ebp].div_mod_data
+    mov ecx,[ebp].div_divisor_count
+    push ebp
+    sub esp,SIZE mul_struc
+    mov ebp,esp
+    mov [ebp].mul_in_count1,ecx
+    mov [ebp].mul_in_data1,esi
+    mov [ebp].mul_in_count2,ecx
+    mov [ebp].mul_in_data2,edi
+    add ecx,ecx
+    mov [ebp].mul_out_count,ecx
+    mov [ebp].mul_out_data,edx
+    call DoMul
+    add esp,SIZE mul_struc
+    pop ebp
+;    
+    call DoDiv
+;
+    mov ecx,[ebp].div_divisor_count
+    mov esi,[ebp].div_mod_data
+    mov edi,[ebp].pow_mod_res_data
+    rep movs dword ptr es:[edi],es:[esi]
+
+
+    mov esi,[ebp].pow_mod_temp_data
+    mov edi,[ebp].div_mod_data
+    mov ecx,[ebp].div_divisor_count
+    push ebp
+    sub esp,SIZE mul_struc
+    mov ebp,esp
+    mov [ebp].mul_in_count1,ecx
+    mov [ebp].mul_in_data1,esi
+    mov [ebp].mul_in_count2,ecx
+    mov [ebp].mul_in_data2,esi
+    add ecx,ecx
+    mov [ebp].mul_out_count,ecx
+    mov [ebp].mul_out_data,edi
+    call DoMul
+    add esp,SIZE mul_struc
+    pop ebp
+;    
+    call DoDiv
+;
+    mov ecx,[ebp].div_divisor_count
+    mov esi,[ebp].div_mod_data
+    mov edi,[ebp].pow_mod_temp_data
+    rep movs dword ptr es:[edi],es:[esi]
+
+;
+    mov ecx,[ebp].div_divisor_count
+    shl ecx,3
+    mov edx,[ebp].div_temp_quot_data
+    FreeLinear
+;
+    mov ecx,[ebp].div_divisor_count
+    shl ecx,3
+    mov edx,[ebp].div_quot_data
+    FreeLinear
+;
+    mov ecx,[ebp].div_divisor_count
+    shl ecx,3
+    mov edx,[ebp].pow_mod_temp_data
+    FreeLinear
+;
+    mov ecx,[ebp].div_divisor_count
+    shl ecx,3
+    mov edx,[ebp].div_mod_data
+    FreeLinear
+
+
 ;
     call OptBuf    
     mov bx,[ebx].hh_handle
@@ -2426,7 +2512,7 @@ gbb10Retry:
     dec edi
     mov [ebp].div_offset,edi
     sub [ebp].div_size,1
-    jz gbb10Leave
+    jz gbb10Ok
 ;
     mov ecx,[ebp].div_quot_count
     mov esi,[ebp].div_quot_data
@@ -2460,6 +2546,11 @@ gbb10Ok:
     shl ecx,2
     mov edx,[ebp].div_mod_data
     FreeLinear
+;
+    mov eax,[ebp].div_size
+    or eax,eax
+    jz gbb10Leave
+;    
     jmp gbb10AddSign
             
 gbb10Fail:
