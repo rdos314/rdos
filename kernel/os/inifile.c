@@ -31,8 +31,6 @@
 #include "rdos.h"
 #include "rdosdev.h"
 
-extern void InitGates();
-
 #define FALSE   0
 #define TRUE    !FALSE
 
@@ -58,6 +56,9 @@ struct TIniSection
 
 struct TIni
 {
+    int PrevNext;
+    struct TKernelSection AsmSection;
+
     int Modified;
     int Users;
     int BaseSize;
@@ -68,8 +69,6 @@ struct TIni
     int MaxSectionCount;
     int MaxVarCount;
     struct TIniSection *FSectionList;
-    struct TKernelSection Section;
-    struct TIni *FNextIni;
     char Drive;
     char Access;
     int FileSel;
@@ -84,11 +83,34 @@ struct TIniHandle
     char *SectionName;
 };
 
+extern void InitGates();
+
+extern void Lock();
+
+extern void Unlock();
+
+extern void LockIni(struct TIni *Ini);
+#pragma aux LockIni parm routine [dx eax]
+
+extern void UnlockIni(struct TIni *Ini);
+#pragma aux UnlockIni parm routine [dx eax]
+
+extern void InsertIni(struct TIni *Ini);
+#pragma aux InsertIni parm routine [dx eax]
+
+extern void RemoveIni(struct TIni *Ini);
+#pragma aux RemoveIni parm routine [dx eax]
+
+extern struct TIni *GetFirstIni();
+#pragma aux GetFirstIni value [dx eax]
+
+extern struct TIni *GetNextIni(struct TIni *Ini);
+#pragma aux GetNextIni parm routine [dx eax] value [dx eax]
+
+
 static int OldSel;
 static int SysIniRead = FALSE;
 static char SysIniName[256];
-struct TKernelSection IniSection;
-struct TIni *IniList = 0;
 
 /*##########################################################################
 #
@@ -658,32 +680,6 @@ char *AddString(struct TIni *Ini, char *str)
 
 /*##########################################################################
 #
-#   Name       : FindIniSel
-#
-#   Purpose....: Find ini sel
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-struct TIni *FindIniSel(int FileSel)
-{
-    struct TIni *Ini = IniList;
-
-    while (Ini)
-    {
-        if (Ini->FileSel == FileSel)
-            break;
-
-        Ini = Ini->FNextIni;
-    }
-
-    return Ini;
-}
-
-/*##########################################################################
-#
 #   Name       : FindIniName
 #
 #   Purpose....: Find ini by filename
@@ -695,14 +691,16 @@ struct TIni *FindIniSel(int FileSel)
 ##########################################################################*/
 struct TIni *FindIniName(const char *FileName)
 {
-    struct TIni *Ini = IniList;
+    struct TIni *Ini;
+
+    Ini = GetFirstIni();
 
     while (Ini)
     {
         if (strcmp(Ini->Name, FileName) == 0)
             break;
 
-        Ini = Ini->FNextIni;
+        Ini = GetNextIni(Ini);
     }
 
     return Ini;
@@ -735,12 +733,9 @@ struct TIni *CreateIniSel(char *FileName)
     if (FileHandle)
         RdosGetFileInfo(FileHandle, &Access, &Drive, &FileSel);
 
-    RdosEnterKernelSection(&IniSection);
+    Lock();
 
-    if (FileSel)
-        Ini = FindIniSel(FileSel);
-    else
-        Ini = FindIniName(FileName);
+    Ini = FindIniName(FileName);
 
     if (Ini)
     {
@@ -788,17 +783,15 @@ struct TIni *CreateIniSel(char *FileName)
         Ini->MaxBufSize = FileSize + 1;
         Ini->MaxSectionCount = 0;
         Ini->MaxVarCount = 0;
-        RdosInitKernelSection(&Ini->Section);
 
         ParseIni(Ini);
 
-        Ini->FNextIni = IniList;
-        IniList = Ini;
+        InsertIni(Ini);
     }
 
     Ini->Users++;
 
-    RdosLeaveKernelSection(&IniSection);
+    Unlock();
 
     return Ini;
 }
@@ -830,7 +823,7 @@ void WriteIni(struct TIni *Ini)
     {
         RdosSetFileSize(handle, 0);
 
-        RdosEnterKernelSection(&Ini->Section);
+        LockIni(Ini);
 
         sect = Ini->FSectionList;
 
@@ -859,7 +852,7 @@ void WriteIni(struct TIni *Ini)
             RdosWriteFile(handle, str, strlen(str));
         }
 
-        RdosLeaveKernelSection(&Ini->Section);
+        UnlockIni(Ini);
 
         RdosCloseFile(handle);
     }        
@@ -936,32 +929,18 @@ void DeleteHandle(int Handle)
             RdosFreeMem(sel);
         }
 
-        RdosEnterKernelSection(&IniSection);
-
         Ini = IniHandle->Ini;
-
-        if (Ini->Modified)
-            WriteIni(Ini);
 
         RdosFreeHandle((struct THandleHeader *)IniHandle);
 
+        Lock();
+
         if (Ini->Users == 1)
         {
-            prev = 0;
-            curr = IniList;
-            while (curr && curr != Ini)
-            {
-                prev = curr;
-                curr = curr->FNextIni;
-            }
-
-            if (curr)
-            {
-                if (prev)
-                    prev->FNextIni = curr->FNextIni;
-                else
-                    IniList = curr->FNextIni;
-            }
+            RemoveIni(Ini);
+            
+            if (Ini->Modified)
+                WriteIni(Ini);
 
             if (Ini->FileSel)
                 RdosUnlockFile(Ini->FileSel);
@@ -972,7 +951,7 @@ void DeleteHandle(int Handle)
         else
             Ini->Users--;
 
-        RdosLeaveKernelSection(&IniSection);
+        Unlock();
     }
 }
 
@@ -1049,8 +1028,8 @@ int RemoveIniSection(int Handle, char *SectionName)
     if (IniHandle)
     {
         Ini = IniHandle->Ini;
-        
-        RdosEnterKernelSection(&Ini->Section);
+
+        LockIni(Ini);
 
         sect = Ini->FSectionList;
 
@@ -1083,7 +1062,9 @@ int RemoveIniSection(int Handle, char *SectionName)
             Ini->Modified = TRUE;
             
         }
-        RdosLeaveKernelSection(&Ini->Section);
+
+        UnlockIni(Ini);
+
     }    
     return found;
 }
@@ -1112,8 +1093,8 @@ int ReadIniVar(int Handle, char *VarName, char *Buf, int MaxSize)
     if (IniHandle && IniHandle->SectionName && MaxSize)
     {
         Ini = IniHandle->Ini;
-        
-        RdosEnterKernelSection(&Ini->Section);
+
+        LockIni(Ini);
 
         sect = Ini->FSectionList;
 
@@ -1159,7 +1140,9 @@ int ReadIniVar(int Handle, char *VarName, char *Buf, int MaxSize)
             strncpy(Buf, var->Val, size);
             Buf[size] = 0;
         }
-        RdosLeaveKernelSection(&Ini->Section);
+
+        UnlockIni(Ini);
+
     }    
     return found;
 }
@@ -1191,7 +1174,8 @@ int WriteIniVar(int Handle, char *VarName, char *Buf)
     {
         Ini = IniHandle->Ini;
         
-        RdosEnterKernelSection(&Ini->Section);
+        LockIni(Ini);
+
         name = AddString(Ini, VarName);
         val = AddString(Ini, Buf);
 
@@ -1234,8 +1218,8 @@ int WriteIniVar(int Handle, char *VarName, char *Buf)
             AddVar(Ini, sect, name, val);
 
         Ini->Modified = TRUE;
-        
-        RdosLeaveKernelSection(&Ini->Section);
+
+        UnlockIni(Ini);
 
         return TRUE;
     }    
@@ -1266,8 +1250,8 @@ int DeleteIniVar(int Handle, char *VarName)
     if (IniHandle && IniHandle->SectionName)
     {
         Ini = IniHandle->Ini;
-        
-        RdosEnterKernelSection(&Ini->Section);
+
+        LockIni(Ini);
 
         sect = Ini->FSectionList;
 
@@ -1313,7 +1297,8 @@ int DeleteIniVar(int Handle, char *VarName)
         if (found)
             Ini->Modified = TRUE;
             
-        RdosLeaveKernelSection(&Ini->Section);
+        UnlockIni(Ini);
+
     }    
     return found;
 }
@@ -1566,8 +1551,8 @@ void __far ImplGotoFirstVar(int handle)
     if (IniHandle && IniHandle->SectionName)
     {
         Ini = IniHandle->Ini;
-        
-        RdosEnterKernelSection(&Ini->Section);
+
+        LockIni(Ini);
 
         sect = Ini->FSectionList;
 
@@ -1596,8 +1581,8 @@ void __far ImplGotoFirstVar(int handle)
             if (!var)
                 found = FALSE;
         }
-        
-        RdosLeaveKernelSection(&Ini->Section);
+
+        UnlockIni(Ini);
 
     }    
 
@@ -1630,8 +1615,8 @@ void __far ImplGotoNextVar(int handle)
     if (IniHandle && IniHandle->SectionName)
     {
         Ini = IniHandle->Ini;
-        
-        RdosEnterKernelSection(&Ini->Section);
+
+        LockIni(Ini);
 
         sect = Ini->FSectionList;
 
@@ -1663,8 +1648,8 @@ void __far ImplGotoNextVar(int handle)
             if (!var)
                 found = FALSE;
         }
-        
-        RdosLeaveKernelSection(&Ini->Section);
+
+        UnlockIni(Ini);
 
     }    
 
@@ -1698,7 +1683,7 @@ int GetCurrVar(int Handle, char *VarName, int MaxSize)
     {
         Ini = IniHandle->Ini;
         
-        RdosEnterKernelSection(&Ini->Section);
+        LockIni(Ini);
 
         sect = Ini->FSectionList;
 
@@ -1725,8 +1710,8 @@ int GetCurrVar(int Handle, char *VarName, int MaxSize)
             else
                 found = FALSE;
         }
-        
-        RdosLeaveKernelSection(&Ini->Section);
+                
+        UnlockIni(Ini);
 
     }    
 
@@ -1798,20 +1783,18 @@ void __far SyncThread(void *param)
     {
         RdosWaitMilli(1000);
 
-        RdosEnterKernelSection(&IniSection);
+        Lock();
 
-        Ini = IniList;
+        Ini = GetFirstIni();
         while (Ini)
         {
             if (Ini->Modified)
-            {
-                RdosEnterKernelSection(&Ini->Section);
                 WriteIni(Ini);
-                RdosLeaveKernelSection(&Ini->Section);
-            }
-            Ini = Ini->FNextIni;
+
+            Ini = GetNextIni(Ini);
         }
-        RdosLeaveKernelSection(&IniSection);
+
+        Unlock();
     }
 }
 
@@ -1847,8 +1830,6 @@ int main()
 {
     OldSel = RdosAllocateGdt();
     
-    RdosInitKernelSection(&IniSection);
-
     InitGates();
 
     RdosRegisterBimodalUserGate(usergate_open_sys_ini, (__rdos_gate_callback *)&ImplOpenSysIni, "Open Sys Ini");

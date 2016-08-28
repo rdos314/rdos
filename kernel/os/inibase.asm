@@ -35,9 +35,301 @@ INCLUDE ..\..\kernel\os\proc.inc
 
     .386p
 
+ini_sel STRUC
+
+ini_prev    DW ?
+ini_next    DW ?
+ini_sect    section_typ <>
+
+ini_sel ENDS
+
+
+data    SEGMENT byte public 'DATA'
+
+ini_section     section_typ <>
+ini_list        DW ?
+
+data    ENDS
+
+
 _TEXT    SEGMENT byte public 'CODE'
 
     assume cs:_TEXT
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Lock
+;
+;           DESCRIPTION:    Lock section
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public Lock_
+
+Lock_    Proc near
+    push ds
+    push eax
+;
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:ini_section    
+;
+    pop eax
+    pop ds
+    ret
+Lock_   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Unock
+;
+;           DESCRIPTION:    Unock section
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public Unlock_
+
+Unlock_    Proc near
+    push ds
+    push eax
+;
+    mov eax,SEG data
+    mov ds,eax
+    LeaveSection ds:ini_section    
+;
+    pop eax
+    pop ds
+    ret
+Unlock_   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockIni
+;
+;           DESCRIPTION:    Lock ini file
+;
+;           PARAMETERS:     DX:EAX      Ini
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LockIni_
+
+LockIni_    Proc near
+    push ds
+    mov ds,edx
+    EnterSection ds:ini_sect
+    pop ds
+    ret
+LockIni_   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockIni
+;
+;           DESCRIPTION:    Unlock ini file
+;
+;           PARAMETERS:     DX:EAX      Ini
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public UnlockIni_
+
+UnlockIni_    Proc near
+    push ds
+    mov ds,edx
+    LeaveSection ds:ini_sect
+    pop ds
+    ret
+UnlockIni_   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetFirstIni
+;
+;           DESCRIPTION:    Get first ini file
+;
+;           PARAMETERS:     
+;
+;           RETURNS:        DX:EAX    Ini
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetFirstIni_
+
+GetFirstIni_    Proc near
+    push ds
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov dx,ds:ini_list
+    xor eax,eax
+;
+    pop ds
+    ret
+GetFirstIni_   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetNextIni
+;
+;           DESCRIPTION:    Get next ini file
+;
+;           PARAMETERS:     DX:EAX    Ini in
+;
+;           RETURNS:        DX:EAX    next Ini
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetNextIni_
+
+GetNextIni_    Proc near
+    push ds
+    push es
+;
+    mov eax,SEG data
+    mov ds,eax
+;
+    mov es,dx
+    mov dx,es:ini_next
+    cmp dx,ds:ini_list
+    jne gniDone
+;
+    xor dx,dx 
+
+gniDone:       
+    xor eax,eax
+;
+    pop es
+    pop ds
+    ret
+GetNextIni_   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           InsertIni
+;
+;           DESCRIPTION:    Insert ini object into list
+;
+;           PARAMETERS:     DX:EAX      Ini
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+   public InsertIni_
+   
+InsertIni_ Proc near
+    push ds
+    push es
+    push eax
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov es,dx
+    InitSection es:ini_sect
+;    
+    push edi
+    mov di,ds:ini_list
+    or di,di
+    je iiEmpty
+;    
+    push ds
+    push esi
+    mov ds,di
+    mov si,ds:ini_prev
+    mov ds:ini_prev,es
+    mov ds,si
+    mov ds:ini_next,es
+    mov es:ini_next,di
+    mov es:ini_prev,si
+    pop esi
+    pop ds
+    pop edi
+    jmp iiDone
+    
+iiEmpty:
+    mov es:ini_next,es
+    mov es:ini_prev,es
+    pop edi
+    mov ds:ini_list,es
+
+iiDone:
+    pop eax
+    pop es
+    pop ds
+    ret
+InsertIni_ Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           RemoveIni
+;
+;           DESCRIPTION:    Remove ini object from list
+;
+;           PARAMETERS:     DX:EAX      Ini object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+   public RemoveIni_
+
+RemoveIni_ Proc near
+    push ds
+    push es
+    push eax
+;
+    mov eax,SEG data
+    mov ds,eax
+;
+    mov ax,ds:ini_list
+    or ax,ax
+    jz riDone
+
+riLoop:
+    cmp ax,dx
+    je riRemove
+;
+    mov es,ax
+    mov ax,es:ini_next
+    cmp ax,ds:ini_list
+    jne riLoop
+    jmp riDone
+
+riRemove:
+    push esi
+    mov es,dx
+    push edi
+    push ds
+    mov di,es:ini_next
+    cmp di,ds:ini_list
+    mov ds:ini_list,di
+    mov si,es:ini_prev
+    mov ds,di
+    mov ds:ini_prev,si
+    mov ds,si
+    mov ds:ini_next,di
+    pop ds
+    pop edi
+    pop esi
+    jne riDone
+;    
+    mov ds:ini_list,0
+    
+riDone:
+    pop eax
+    pop es
+    pop ds
+    ret
+RemoveIni_ Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -268,6 +560,11 @@ InitGates_    Proc near
     push ds
     push es
     pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    InitSection ds:ini_section
+    mov ds:ini_list,0
 ;    
     mov ax,cs
     mov ds,ax
