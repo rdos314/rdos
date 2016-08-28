@@ -830,6 +830,8 @@ void WriteIni(struct TIni *Ini)
     {
         RdosSetFileSize(handle, 0);
 
+        RdosEnterKernelSection(&Ini->Section);
+
         sect = Ini->FSectionList;
 
         while (sect)
@@ -856,6 +858,8 @@ void WriteIni(struct TIni *Ini)
             strcpy(str, "\r\n");
             RdosWriteFile(handle, str, strlen(str));
         }
+
+        RdosLeaveKernelSection(&Ini->Section);
 
         RdosCloseFile(handle);
     }        
