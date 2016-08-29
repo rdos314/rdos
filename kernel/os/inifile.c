@@ -56,12 +56,8 @@ struct TIniSection
 
 struct TIni
 {
-    int PrevNext;
-    struct TKernelSection AsmSection;
-
     int Modified;
     int Users;
-    int BaseSize;
     int BufSize;
     int SectionCount;
     int VarCount;
@@ -72,7 +68,8 @@ struct TIni
     char Drive;
     char Access;
     int FileSel;
-    char *Data;
+    int DataSel;
+    char *DataBuf;
     char Name[1];
 };
 
@@ -101,6 +98,12 @@ extern void InsertIni(struct TIni *Ini);
 extern void RemoveIni(struct TIni *Ini);
 #pragma aux RemoveIni parm routine [dx eax]
 
+extern struct TIni *CreateIni(int Size);
+#pragma aux CreateIni parm routine [ecx] value [dx eax]
+
+extern void DeleteIni(struct TIni *Ini);
+#pragma aux DeleteIni parm routine [dx eax]
+
 extern struct TIni *GetFirstIni();
 #pragma aux GetFirstIni value [dx eax]
 
@@ -125,120 +128,129 @@ static char SysIniName[256];
 ##########################################################################*/
 void GrowIni(struct TIni *Ini, int BufSize, int SectionCount, int VarCount)
 {
-    long OldBase;
-    long NewBase;
-    long limit;
-    int OldSize;
-    int NewSize;
     int i;
     int j;
     int offset;
     long Pos;
-    int SrcBaseSize;
-    int DestBaseSize;
     long SrcVarPos;
     long DestVarPos;
-    struct TIni *SrcIni;
-    struct TIni *DestIni;
     struct TIniSection *SrcSect;
     struct TIniSection *DestSect;
     struct TIniSection *sect;
     struct TIniVar *var;
     struct TIniVar *SrcVar;
     struct TIniVar *DestVar;
-    int sel = RdosPointerToSelector(Ini);
 
-    SrcBaseSize = Ini->BaseSize + Ini->MaxBufSize;
+    long NewBase;
+    int NewSize;
+    long OldBase;
+    int OldSize;
+    int oldsel;
+    int newsel;
+    char *SrcBuf;
+    char *DestBuf;
 
-    RdosGetSelectorBaseSize(sel, &OldBase, &limit);
+    OldSize = Ini->MaxBufSize;
+    OldSize += Ini->MaxSectionCount * sizeof(struct TIniSection);
+    OldSize += Ini->MaxVarCount * sizeof(struct TIniVar);
 
-    OldSize = limit + 1;
-
-    DestBaseSize = Ini->BaseSize + BufSize;
-
-    NewSize = DestBaseSize + SectionCount * sizeof(struct TIniSection);
+    NewSize = BufSize;    
+    NewSize += SectionCount * sizeof(struct TIniSection);
     NewSize += VarCount * sizeof(struct TIniVar);
 
+    oldsel = Ini->DataSel;
+
     NewBase = RdosAllocateSmallGlobalLinear(NewSize);
+    newsel = RdosAllocateGdt();
+    RdosCreateDataSelector32(newsel, NewBase, NewSize);    
 
-    RdosCreateDataSelector32(sel, NewBase, NewSize);    
-    RdosCreateDataSelector32(OldSel, OldBase, OldSize);    
-    RdosReloadSelector(sel);
+    RdosGetSelectorBaseSize(oldsel, &OldBase, &OldSize);
+ 
+    SrcBuf = (char *)RdosSelectorToPointer(oldsel);
+    DestBuf = (char *)RdosLinearToPointer(NewBase);
 
-    SrcIni = (struct TIni*)RdosSelectorToPointer(OldSel);
-    DestIni = (struct TIni*)RdosSelectorToPointer(sel);
+    memcpy(DestBuf, SrcBuf, OldSize);
 
-    memcpy(DestIni, SrcIni, SrcBaseSize);
+    SrcVarPos = Ini->MaxBufSize + Ini->MaxSectionCount * sizeof(struct TIniSection);
+    DestVarPos = BufSize + SectionCount * sizeof(struct TIniSection);
 
-    DestIni->MaxBufSize = BufSize;
-    DestIni->MaxSectionCount = SectionCount;
-    DestIni->MaxVarCount = VarCount;
-
-    SrcVarPos = SrcBaseSize + SrcIni->MaxSectionCount * sizeof(struct TIniSection);
-    DestVarPos = DestBaseSize + SectionCount * sizeof(struct TIniSection);
-
-    if (SrcIni->FSectionList)
+    if (Ini->FSectionList)
     {
-        offset = RdosPointerToOffset(SrcIni->FSectionList);
-        sect = (struct TIniSection*)RdosSelectorOffsetToPointer(OldSel, offset);            
+        offset = RdosPointerToOffset(Ini->FSectionList);
+        sect = (struct TIniSection*)RdosSelectorOffsetToPointer(oldsel, offset);            
         j = sect->Index;
 
-        Pos = DestBaseSize + j * sizeof(struct TIniSection); 
-        sect = (struct TIniSection*)RdosSelectorOffsetToPointer(sel, Pos);
-        DestIni->FSectionList = sect;
+        Pos = BufSize + j * sizeof(struct TIniSection); 
+        sect = (struct TIniSection*)RdosSelectorOffsetToPointer(newsel, Pos);
+        Ini->FSectionList = sect;
     }            
 
-    for (i = 0; i < SrcIni->SectionCount; i++)
+    for (i = 0; i < Ini->SectionCount; i++)
     {
-        Pos = SrcBaseSize + i * sizeof(struct TIniSection); 
-        SrcSect = (struct TIniSection*)RdosSelectorOffsetToPointer(OldSel, Pos);
+        Pos = Ini->MaxBufSize + i * sizeof(struct TIniSection); 
+        SrcSect = (struct TIniSection*)RdosSelectorOffsetToPointer(oldsel, Pos);
 
-        Pos = DestBaseSize + i * sizeof(struct TIniSection); 
-        DestSect = (struct TIniSection*)RdosSelectorOffsetToPointer(sel, Pos);
+        Pos = BufSize + i * sizeof(struct TIniSection); 
+        DestSect = (struct TIniSection*)RdosSelectorOffsetToPointer(newsel, Pos);
         *DestSect = *SrcSect;
+
+        offset = RdosPointerToOffset(SrcSect->Name);
+        DestSect->Name = (char *)RdosSelectorOffsetToPointer(newsel, offset);
 
         if (SrcSect->FNextSection)
         {
             offset = RdosPointerToOffset(SrcSect->FNextSection);
-            sect = (struct TIniSection*)RdosSelectorOffsetToPointer(OldSel, offset);            
+            sect = (struct TIniSection*)RdosSelectorOffsetToPointer(oldsel, offset);            
             j = sect->Index;
 
-            Pos = DestBaseSize + j * sizeof(struct TIniSection); 
-            sect = (struct TIniSection*)RdosSelectorOffsetToPointer(sel, Pos);
+            Pos = BufSize + j * sizeof(struct TIniSection); 
+            sect = (struct TIniSection*)RdosSelectorOffsetToPointer(newsel, Pos);
             DestSect->FNextSection = sect;
         }            
 
         if (SrcSect->FVarList)
         {
             offset = RdosPointerToOffset(SrcSect->FVarList);
-            var = (struct TIniVar*)RdosSelectorOffsetToPointer(OldSel, offset);            
+            var = (struct TIniVar*)RdosSelectorOffsetToPointer(oldsel, offset);            
             j = var->Index;
 
             Pos = j * sizeof(struct TIniVar); 
-            var = (struct TIniVar*)RdosSelectorOffsetToPointer(sel, DestVarPos + Pos);
+            var = (struct TIniVar*)RdosSelectorOffsetToPointer(newsel, DestVarPos + Pos);
             DestSect->FVarList = var;
         }            
     }
     
-    for (i = 0; i < SrcIni->VarCount; i++)
+    for (i = 0; i < Ini->VarCount; i++)
     {
         Pos = i * sizeof(struct TIniVar); 
-        SrcVar = (struct TIniVar*)RdosSelectorOffsetToPointer(OldSel, SrcVarPos + Pos);
-        DestVar = (struct TIniVar*)RdosSelectorOffsetToPointer(sel, DestVarPos + Pos);
+        SrcVar = (struct TIniVar*)RdosSelectorOffsetToPointer(oldsel, SrcVarPos + Pos);
+        DestVar = (struct TIniVar*)RdosSelectorOffsetToPointer(newsel, DestVarPos + Pos);
         *DestVar = *SrcVar;
+
+        offset = RdosPointerToOffset(SrcVar->Name);
+        DestVar->Name = (char *)RdosSelectorOffsetToPointer(newsel, offset);
+
+        offset = RdosPointerToOffset(SrcVar->Val);
+        DestVar->Val = (char *)RdosSelectorOffsetToPointer(newsel, offset);
 
         if (SrcVar->FNextVar)
         {
             offset = RdosPointerToOffset(SrcVar->FNextVar);
-            var = (struct TIniVar*)RdosSelectorOffsetToPointer(OldSel, offset);
+            var = (struct TIniVar*)RdosSelectorOffsetToPointer(oldsel, offset);
             j = var->Index;
 
             Pos = j * sizeof(struct TIniVar); 
-            var = (struct TIniVar*)RdosSelectorOffsetToPointer(sel, DestVarPos + Pos);
+            var = (struct TIniVar*)RdosSelectorOffsetToPointer(newsel, DestVarPos + Pos);
             DestVar->FNextVar = var;
         }            
     }
-    RdosFreeLinear(OldBase, OldSize);
+
+    Ini->DataSel = newsel;
+    Ini->DataBuf = (char *)RdosSelectorOffsetToPointer(newsel, 0);
+    Ini->MaxBufSize = BufSize;
+    Ini->MaxSectionCount = SectionCount;
+    Ini->MaxVarCount = VarCount;
+    RdosFreeMem(oldsel);
 }
 
 /*##########################################################################
@@ -313,19 +325,27 @@ char *Trim(char *str)
 void AddVar(struct TIni *Ini, struct TIniSection *IniSect, char *name, char *val)
 {
     int pos;
-    char *base;
     struct TIniVar *IniVar;
     struct TIniVar *var;
+    int offset;
 
     if (Ini->VarCount == Ini->MaxVarCount)
         GrowIni(Ini, Ini->MaxBufSize, Ini->MaxSectionCount, 3 * (Ini->VarCount + 1) / 2); 
 
-    pos = Ini->BaseSize + Ini->MaxBufSize;
+    offset = RdosPointerToOffset(name);
+    name = (char *)RdosSelectorOffsetToPointer(Ini->DataSel, offset);
+
+    offset = RdosPointerToOffset(val);
+    val = (char *)RdosSelectorOffsetToPointer(Ini->DataSel, offset);
+
+    offset = RdosPointerToOffset(IniSect);
+    IniSect = (struct TIniSection *)RdosSelectorOffsetToPointer(Ini->DataSel, offset);
+
+    pos = Ini->MaxBufSize;
     pos += Ini->MaxSectionCount * sizeof(struct TIniSection);
     pos += Ini->VarCount * sizeof(struct TIniVar);
-    base = (char *)Ini;
     
-    IniVar = (struct TIniVar *)(base + pos);
+    IniVar = (struct TIniVar *)(Ini->DataBuf + pos);
     IniVar->Index = Ini->VarCount;
     IniVar->Deleted = FALSE;
     IniVar->Name = name;
@@ -349,263 +369,6 @@ void AddVar(struct TIni *Ini, struct TIniSection *IniSect, char *name, char *val
 
 /*##########################################################################
 #
-#   Name       : FindStartOfLine
-#
-#   Purpose....: Find start of line
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-char *FindStartOfLine(char *ptr)
-{
-    while (*ptr && *ptr != 0xd && *ptr != 0xa)
-        ptr++;
-
-    while (*ptr == 0xd || *ptr == 0xa)
-        ptr++;
-
-    if (*ptr)
-        return ptr;
-    else
-        return 0;    
-}
-
-/*##########################################################################
-#
-#   Name       : DecodeLine
-#
-#   Purpose....: Decode a single line
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void DecodeLine(struct TIni *Ini, struct TIniSection *IniSect, char *ptr)
-{
-    char *name = ptr;
-
-    while (*ptr && *ptr != '=')
-        ptr++;
-
-    if (*ptr == '=')
-    {
-        *ptr = 0;
-        ptr++;
-
-        name = Trim(name);
-        ptr = Trim(ptr);
-
-        AddVar(Ini, IniSect, name, ptr);
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : ParseSection
-#
-#   Purpose....: Parse ini section
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void ParseSection(struct TIni *Ini, struct TIniSection *IniSect, char *ptr)
-{
-    char *prev_line = 0;
-    char *curr_line = 0;
-
-    while (ptr)
-    {
-        curr_line = FindStartOfLine(ptr);
-
-        if (curr_line)
-        {
-            curr_line--;
-            *curr_line = 0;
-            curr_line++;
-
-            if (prev_line)
-                DecodeLine(Ini, IniSect, prev_line);
-
-            prev_line = curr_line;
-            ptr = curr_line;
-        }
-        else
-        {
-            if (prev_line)
-                DecodeLine(Ini, IniSect, prev_line);
-
-            ptr = 0;
-        }
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : FindSection
-#
-#   Purpose....: Find first section in string
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-char *FindSection(char *ptr)
-{
-    while (*ptr)
-    {
-        while (*ptr == 0xd || *ptr == 0xa)
-            ptr++;
-            
-        if (*ptr == '[')
-            return ptr;
-        else
-        {
-            while (*ptr && *ptr != 0xd && *ptr != 0xa)
-                ptr++;
-        }
-    }
-    return 0;
-}
-
-/*##########################################################################
-#
-#   Name       : AddSection
-#
-#   Purpose....: Add a single section
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-struct TIniSection *AddSection(struct TIni *Ini, char *name, char *ptr)
-{
-    int pos;
-    char *base;
-    struct TIniSection *IniSect;
-    struct TIniSection *sect;
-
-    if (Ini->SectionCount == Ini->MaxSectionCount)
-        GrowIni(Ini, Ini->MaxBufSize, 3 * (Ini->SectionCount + 1) / 2, Ini->MaxVarCount); 
-
-    pos = Ini->BaseSize + Ini->MaxBufSize;
-    pos += Ini->SectionCount * sizeof(struct TIniSection);
-    base = (char *)Ini;
-    
-    IniSect = (struct TIniSection *)(base + pos);
-
-    IniSect->Index = Ini->SectionCount;
-    IniSect->Deleted = FALSE;
-    IniSect->FVarList = 0;
-    IniSect->FCurrVar = 0;
-    IniSect->FNextSection = 0;
-    IniSect->Name = name;
-
-    if (Ini->FSectionList)
-    {
-        sect = Ini->FSectionList;
-
-        while (sect->FNextSection)
-            sect = sect->FNextSection;
-
-        sect->FNextSection = IniSect;
-    }
-    else
-        Ini->FSectionList = IniSect;    
-   
-    Ini->SectionCount++;
-
-    if (ptr)
-        ParseSection(Ini, IniSect, ptr);
-
-    return IniSect;
-}    
-
-/*##########################################################################
-#
-#   Name       : DecodeSection
-#
-#   Purpose....: Decode a single section
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void DecodeSection(struct TIni *Ini, char *ptr)
-{
-    char *name = ptr;
-    
-    while (*ptr)
-    {
-        if (*ptr == 0 || *ptr == 0xd || *ptr == 0xa)
-            break;
-
-        if (*ptr == ']')
-            break;
-
-        ptr++;
-    }
-
-    if (*ptr == ']')
-    {
-        *ptr = 0;
-        ptr++;
-
-        AddSection(Ini, name, ptr);
-    }    
-}
-
-/*##########################################################################
-#
-#   Name       : ParseIni
-#
-#   Purpose....: Parse ini file into components
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void ParseIni(struct TIni *Ini)
-{
-    char *prev_sec = 0;
-    char *curr_sec = 0;
-    char *ptr = Ini->Data;
-
-    while (ptr)
-    {
-        curr_sec = FindSection(ptr);
-
-        if (curr_sec)
-        {
-            *curr_sec = 0;
-            curr_sec++;
-
-            if (prev_sec)
-                DecodeSection(Ini, prev_sec);
-
-            prev_sec = curr_sec;
-            ptr = curr_sec;
-        }
-        else
-        {
-            if (prev_sec)
-                DecodeSection(Ini, prev_sec);
-
-            ptr = 0;
-        }
-    }
-}
-
-/*##########################################################################
-#
 #   Name       : FindString
 #
 #   Purpose....: Find string in data region
@@ -618,7 +381,7 @@ void ParseIni(struct TIni *Ini)
 char *FindString(struct TIni *Ini, char *str)
 {
     int size = Ini->BufSize;
-    char *ptr = Ini->Data;
+    char *ptr = Ini->DataBuf;
     int len;
 
     size--;
@@ -670,13 +433,282 @@ char *AddString(struct TIni *Ini, char *str)
             GrowIni(Ini, GrowSize, Ini->MaxSectionCount, Ini->MaxVarCount); 
         }
 
-        DestStr = (char *)Ini;
-        DestStr += Ini->BaseSize + Ini->BufSize;
+        DestStr = Ini->DataBuf;
+        DestStr += Ini->BufSize;
         strcpy(DestStr, str);
         Ini->BufSize += StrSize;
     }
     return DestStr;    
 }    
+
+/*##########################################################################
+#
+#   Name       : FindStartOfLine
+#
+#   Purpose....: Find start of line
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *FindStartOfLine(char *ptr)
+{
+    while (*ptr && *ptr != 0xd && *ptr != 0xa)
+        ptr++;
+
+    while (*ptr == 0xd || *ptr == 0xa)
+        ptr++;
+
+    if (*ptr)
+        return ptr;
+    else
+        return 0;    
+}
+
+/*##########################################################################
+#
+#   Name       : DecodeLine
+#
+#   Purpose....: Decode a single line
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void DecodeLine(struct TIni *Ini, int SectionIndex, char *ptr)
+{
+    char *name = ptr;
+    int offset;
+    struct TIniSection *IniSect;
+
+    while (*ptr && *ptr != '=')
+        ptr++;
+
+    if (*ptr == '=')
+    {
+        *ptr = 0;
+        ptr++;
+
+        name = Trim(name);
+        ptr = Trim(ptr);
+
+        name = AddString(Ini, name);
+        ptr = AddString(Ini, ptr);
+
+        offset = Ini->MaxBufSize + SectionIndex * sizeof(struct TIniSection); 
+        IniSect = (struct TIniSection*)RdosSelectorOffsetToPointer(Ini->DataSel, offset);
+
+        AddVar(Ini, IniSect, name, ptr);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : ParseSection
+#
+#   Purpose....: Parse ini section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ParseSection(struct TIni *Ini, int SectionIndex, char *ptr)
+{
+    char *prev_line = 0;
+    char *curr_line = 0;
+
+    while (ptr)
+    {
+        curr_line = FindStartOfLine(ptr);
+
+        if (curr_line)
+        {
+            curr_line--;
+            *curr_line = 0;
+            curr_line++;
+
+            if (prev_line)
+                DecodeLine(Ini, SectionIndex, prev_line);
+
+            prev_line = curr_line;
+            ptr = curr_line;
+        }
+        else
+        {
+            if (prev_line)
+                DecodeLine(Ini, SectionIndex, prev_line);
+
+            ptr = 0;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : FindSection
+#
+#   Purpose....: Find first section in string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *FindSection(char *ptr)
+{
+    while (*ptr)
+    {
+        while (*ptr == 0xd || *ptr == 0xa)
+            ptr++;
+            
+        if (*ptr == '[')
+            return ptr;
+        else
+        {
+            while (*ptr && *ptr != 0xd && *ptr != 0xa)
+                ptr++;
+        }
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : AddSection
+#
+#   Purpose....: Add a single section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct TIniSection *AddSection(struct TIni *Ini, char *name, char *ptr)
+{
+    int pos;
+    struct TIniSection *IniSect;
+    struct TIniSection *sect;
+    int offset;
+
+    if (Ini->SectionCount == Ini->MaxSectionCount)
+    {
+        GrowIni(Ini, Ini->MaxBufSize, 3 * (Ini->SectionCount + 1) / 2, Ini->MaxVarCount); 
+
+        offset = RdosPointerToOffset(name);
+        name = (char *)RdosSelectorOffsetToPointer(Ini->DataSel, offset);
+    }
+
+    pos = Ini->MaxBufSize;
+    pos += Ini->SectionCount * sizeof(struct TIniSection);
+    
+    IniSect = (struct TIniSection *)(Ini->DataBuf + pos);
+
+    IniSect->Index = Ini->SectionCount;
+    IniSect->Deleted = FALSE;
+    IniSect->FVarList = 0;
+    IniSect->FCurrVar = 0;
+    IniSect->FNextSection = 0;
+    IniSect->Name = name;
+
+    if (Ini->FSectionList)
+    {
+        sect = Ini->FSectionList;
+
+        while (sect->FNextSection)
+            sect = sect->FNextSection;
+
+        sect->FNextSection = IniSect;
+    }
+    else
+        Ini->FSectionList = IniSect;    
+   
+    Ini->SectionCount++;
+
+    if (ptr)
+        ParseSection(Ini, IniSect->Index, ptr);
+
+    return IniSect;
+}    
+
+/*##########################################################################
+#
+#   Name       : DecodeSection
+#
+#   Purpose....: Decode a single section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void DecodeSection(struct TIni *Ini, char *ptr)
+{
+    char *name = ptr;
+    
+    while (*ptr)
+    {
+        if (*ptr == 0 || *ptr == 0xd || *ptr == 0xa)
+            break;
+
+        if (*ptr == ']')
+            break;
+
+        ptr++;
+    }
+
+    if (*ptr == ']')
+    {
+        *ptr = 0;
+        ptr++;
+
+        name = AddString(Ini, name);
+        AddSection(Ini, name, ptr);
+    }    
+}
+
+/*##########################################################################
+#
+#   Name       : ParseIni
+#
+#   Purpose....: Parse ini file into components
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ParseIni(struct TIni *Ini, char *ptr)
+{
+    char *prev_sec = 0;
+    char *curr_sec = 0;
+
+    while (ptr)
+    {
+        curr_sec = FindSection(ptr);
+
+        if (curr_sec)
+        {
+            *curr_sec = 0;
+            curr_sec++;
+
+            if (prev_sec)
+                DecodeSection(Ini, prev_sec);
+
+            prev_sec = curr_sec;
+            ptr = curr_sec;
+        }
+        else
+        {
+            if (prev_sec)
+                DecodeSection(Ini, prev_sec);
+
+            ptr = 0;
+        }
+    }
+}
 
 /*##########################################################################
 #
@@ -720,14 +752,15 @@ struct TIni *FindIniName(const char *FileName)
 struct TIni *CreateIniSel(char *FileName)
 {
     struct TIni *Ini = 0;
-    int sel;
+    char *buf;
     int NameSize;
-    int BaseSize = 0;
     long FileSize = 0;
     int Size;
     char Access;
     char Drive;
     int FileSel = 0;
+    int BaseSize = 0;
+    int sel;
     int FileHandle = RdosOpenFile(FileName, 0);
 
     if (FileHandle)
@@ -748,19 +781,33 @@ struct TIni *CreateIniSel(char *FileName)
             FileSize = RdosGetFileSize(FileHandle);
 
         NameSize = strlen(FileName) + 1;
-        BaseSize = NameSize + sizeof(struct TIni) - 1;
+        Size = NameSize + sizeof(struct TIni);
 
-        Size = FileSize + BaseSize + 1;
-    
-        sel = RdosAllocateSmallGlobalSelector(Size);
-        Ini = (struct TIni*)RdosSelectorToPointer(sel);
+        Ini = CreateIni(Size);
         strcpy(Ini->Name, FileName);
+
+        Ini->DataSel = RdosAllocateSmallGlobalSelector(1);
+        Ini->DataBuf = (char *)RdosSelectorOffsetToPointer(Ini->DataSel, 0);
+
+        Ini->Users = 0;
+        Ini->Modified = FALSE;
+        Ini->FSectionList = 0;
+        Ini->BufSize = 1;
+        Ini->SectionCount = 0;
+        Ini->VarCount = 0;
+        Ini->MaxBufSize = 1;
+        Ini->MaxSectionCount = 0;
+        Ini->MaxVarCount = 0;
     
-        Ini->Data = &Ini->Name[NameSize];
         if (FileSize)
-            RdosReadFile(FileHandle, Ini->Data, FileSize);
-        
-        Ini->Data[FileSize] = 0;
+        {
+            buf = RdosAllocateSmallGlobalMem(FileSize + 1);
+            RdosReadFile(FileHandle, buf, FileSize);
+            buf[FileSize] = 0;
+            ParseIni(Ini, buf);
+            sel = RdosPointerToSelector(buf);
+            RdosFreeMem(sel);
+        }
 
         if (FileSel)
         {
@@ -772,19 +819,6 @@ struct TIni *CreateIniSel(char *FileName)
         }
         else
             Ini->FileSel = 0;
-
-        Ini->Users = 0;
-        Ini->Modified = FALSE;
-        Ini->FSectionList = 0;
-        Ini->BaseSize = BaseSize;
-        Ini->BufSize = FileSize + 1;
-        Ini->SectionCount = 0;
-        Ini->VarCount = 0;
-        Ini->MaxBufSize = FileSize + 1;
-        Ini->MaxSectionCount = 0;
-        Ini->MaxVarCount = 0;
-
-        ParseIni(Ini);
 
         InsertIni(Ini);
     }
@@ -944,9 +978,10 @@ void DeleteHandle(int Handle)
 
             if (Ini->FileSel)
                 RdosUnlockFile(Ini->FileSel);
-                            
-            sel = RdosPointerToSelector(Ini);
-            RdosFreeMem(sel);        
+
+            RdosFreeMem(Ini->DataSel);
+
+            DeleteIni(Ini);
         }
         else
             Ini->Users--;

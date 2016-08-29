@@ -153,6 +153,54 @@ UnlockIni_   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CreateIni
+;
+;           DESCRIPTION:    Create ini file
+;
+;           PARAMETERS:     ECX       Extra size
+;
+;           RETURNS:        DX:EAX    Ini
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateIni_
+
+CreateIni_    Proc near
+    push es
+    mov eax,ecx
+    add eax,SIZE ini_sel
+    AllocateSmallGlobalMem
+    InitSection es:ini_sect
+    mov edx,es
+    mov eax,SIZE ini_sel
+    pop es
+    ret
+CreateIni_   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DeleteIni
+;
+;           DESCRIPTION:    Delete ini file
+;
+;           PARAMETERS:     DX:EAX    Ini
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public DeleteIni_
+
+DeleteIni_    Proc near
+    push es
+    mov es,edx
+    FreeMem
+    pop es
+    ret
+DeleteIni_   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetFirstIni
 ;
 ;           DESCRIPTION:    Get first ini file
@@ -172,7 +220,12 @@ GetFirstIni_    Proc near
     mov ds,eax
     mov dx,ds:ini_list
     xor eax,eax
+    or dx,dx
+    jz gfiDone
 ;
+    mov eax,SIZE ini_sel    
+
+gfiDone:
     pop ds
     ret
 GetFirstIni_   ENDP
@@ -202,13 +255,16 @@ GetNextIni_    Proc near
     mov es,dx
     mov dx,es:ini_next
     cmp dx,ds:ini_list
-    jne gniDone
+    jne gniOk
 ;
     xor dx,dx 
+    xor eax,eax
+    jmp gniDone
+
+gniOk:    
+    mov eax,SIZE ini_sel    
 
 gniDone:       
-    xor eax,eax
-;
     pop es
     pop ds
     ret
@@ -235,7 +291,6 @@ InsertIni_ Proc near
     mov eax,SEG data
     mov ds,eax
     mov es,dx
-    InitSection es:ini_sect
 ;    
     push edi
     mov di,ds:ini_list
