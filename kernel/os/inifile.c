@@ -801,9 +801,10 @@ struct TIni *CreateIniSel(char *FileName)
     
         if (FileSize)
         {
-            buf = RdosAllocateSmallGlobalMem(FileSize + 1);
+            buf = RdosAllocateSmallGlobalMem(FileSize + 2);
             RdosReadFile(FileHandle, buf, FileSize);
             buf[FileSize] = 0;
+            buf[FileSize + 1] = 0;
             ParseIni(Ini, buf);
             sel = RdosPointerToSelector(buf);
             RdosFreeMem(sel);
@@ -968,13 +969,13 @@ void DeleteHandle(int Handle)
         RdosFreeHandle((struct THandleHeader *)IniHandle);
 
         Lock();
+            
+        if (Ini->Modified)
+            WriteIni(Ini);
 
         if (Ini->Users == 1)
         {
             RemoveIni(Ini);
-            
-            if (Ini->Modified)
-                WriteIni(Ini);
 
             if (Ini->FileSel)
                 RdosUnlockFile(Ini->FileSel);
