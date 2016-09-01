@@ -365,7 +365,8 @@ riRemove:
     push edi
     push ds
     mov di,es:ini_next
-    cmp di,ds:ini_list
+    mov ds:ini_list,di
+    cmp di,dx
     mov ds:ini_list,di
     mov si,es:ini_prev
     mov ds,di
