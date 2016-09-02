@@ -18,7 +18,7 @@ extern "C" void WriterThread1(void *Data)
 
     for (;;)
     {
-        RdosWaitMilli(RdosGetRandom(30));
+        RdosWaitMilli(RdosGetRandom(20));
         handle = RdosOpenIni("z:\\test1.ini");
         RdosGotoIniSection(handle, "TEST");
         if (!RdosReadIni(handle, var, valstr, 40))
@@ -49,7 +49,7 @@ extern "C" void WriterThread2(void *Data)
 
     for (;;)
     {
-        RdosWaitMilli(RdosGetRandom(30));
+        RdosWaitMilli(RdosGetRandom(20));
         handle = RdosOpenIni("z:\\test2.ini");
         RdosGotoIniSection(handle, "TEST");
         if (!RdosReadIni(handle, var, valstr, 40))
@@ -80,7 +80,7 @@ extern "C" void WriterThread3(void *Data)
 
     for (;;)
     {
-        RdosWaitMilli(RdosGetRandom(30));
+        RdosWaitMilli(RdosGetRandom(20));
         handle = RdosOpenIni("z:\\test3.ini");
         RdosGotoIniSection(handle, "TEST");
         if (!RdosReadIni(handle, var, valstr, 40))
@@ -112,7 +112,7 @@ extern "C" void WriterThread4(void *Data)
 
     for (;;)
     {
-        RdosWaitMilli(RdosGetRandom(30));
+        RdosWaitMilli(RdosGetRandom(20));
         handle = RdosOpenIni("z:\\test4.ini");
         RdosGotoIniSection(handle, "TEST");
         if (!RdosReadIni(handle, var, valstr, 40))
@@ -158,7 +158,7 @@ void main()
         sprintf(name, "Write #%d", i);
         RdosCreateThread(WriterThread1, name, str, 0x2000);
     }
-    
+
     for (i = 0; i < 10; i++)
     {
         sprintf(str, "%d", i);

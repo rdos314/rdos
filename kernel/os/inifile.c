@@ -848,6 +848,8 @@ void WriteIni(struct TIni *Ini)
     struct TIniSection *sect;
     struct TIniVar *var;
     char str[100];
+
+    LockIni(Ini);
     
     if (Ini->FileSel)
         handle = RdosDuplFileInfo(Ini->Access, Ini->Drive, Ini->FileSel);
@@ -857,8 +859,6 @@ void WriteIni(struct TIni *Ini)
     if (handle)
     {
         RdosSetFileSize(handle, 0);
-
-        LockIni(Ini);
 
         sect = Ini->FSectionList;
 
@@ -887,11 +887,12 @@ void WriteIni(struct TIni *Ini)
             RdosWriteFile(handle, str, strlen(str));
         }
 
-        UnlockIni(Ini);
-
         RdosCloseFile(handle);
+
     }        
     Ini->Modified = FALSE;
+
+    UnlockIni(Ini);
 }
 
 /*##########################################################################
