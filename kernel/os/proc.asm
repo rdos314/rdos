@@ -337,6 +337,7 @@ trap_init_tasking_loop:
     pop cx
     pop bx
     pop ds
+;
     add bx,8
     dec cl
     jnz trap_init_tasking_loop
