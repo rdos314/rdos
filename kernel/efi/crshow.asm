@@ -458,6 +458,76 @@ ShowChar Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           InvertChar
+;
+;           DESCRIPTION:    CX  Col
+;                           DX  Row
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public InvertChar
+    
+InvertChar Proc near
+    push ds
+    push es
+    pushad
+;   
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+; 
+    push cx
+    mov ax,dx
+    mov cx,19
+    mul cx
+    add ax,4
+    movzx eax,ax
+    pop dx
+    movzx edx,dx
+    shl edx,3
+    xchg eax,edx
+;
+    push eax
+    mov eax,ds:efi_scan_size
+    mul edx
+    mov edi,ds:efi_lfb
+    add edi,eax
+    pop eax
+    shl eax,2
+    add edi,eax
+    pop ax
+;
+    mov cx,19
+
+icRowLoop:    
+    push cx
+    push edi
+    mov cx,8
+
+icLoop:
+    mov eax,es:[edi]
+    not eax
+    mov es:[edi],eax
+    add edi,4
+    loop icLoop    
+;
+    pop edi
+    pop cx
+    add edi,ds:efi_scan_size
+;
+    loop icRowLoop    
+;
+    popad        
+    pop es
+    pop ds
+    ret
+InvertChar Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ShowSizeString
 ;
 ;           DESCRIPTION:    

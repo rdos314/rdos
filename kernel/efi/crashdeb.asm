@@ -78,6 +78,8 @@ code    SEGMENT byte public use16 'CODE'
     extrn LocalOsGate:near
     extrn LocalUserGate:near
 
+    extrn InvertChar:near
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -89,31 +91,19 @@ code    SEGMENT byte public use16 'CODE'
 
 ShowMarker Proc near
     push ds
-    push es
     push ax
+    push cx
     push dx
-    push di
 ;
-    mov di,__B800
-    mov es,di
-;    
-    mov di,SEG data
-    mov ds,di
+    mov ax,SEG data    
+    mov ds,ax
+    mov dx,ds:curr_row
+    mov cx,ds:curr_col
+    call InvertChar
 ;
-    mov ax,ds:curr_row
-    mov dx,80
-    mul dx
-    add ax,ds:curr_col
-    add ax,ax
-    mov di,ax
-    inc di
-    mov al,70h
-    stosb
-;
-    pop di
     pop dx
+    pop cx
     pop ax
-    pop es
     pop ds    
     ret
 ShowMarker Endp
@@ -129,31 +119,19 @@ ShowMarker Endp
 
 HideMarker Proc near
     push ds
-    push es
     push ax
+    push cx
     push dx
-    push di
 ;
-    mov di,__B800
-    mov es,di
-;    
-    mov di,SEG data
-    mov ds,di
+    mov ax,SEG data    
+    mov ds,ax
+    mov dx,ds:curr_row
+    mov cx,ds:curr_col
+    call InvertChar
 ;
-    mov ax,ds:curr_row
-    mov dx,80
-    mul dx
-    add ax,ds:curr_col
-    add ax,ax
-    mov di,ax
-    inc di
-    mov al,7
-    stosb
-;
-    pop di
     pop dx
+    pop cx
     pop ax
-    pop es
     pop ds    
     ret
 HideMarker Endp
@@ -1729,8 +1707,6 @@ SaveCore Endp
 crash_nmi_name  DB 'Crash NMI', 0
 
 crash_nmi:
-    mov ax,739h
-    call ShowHere
     jmp crash_nmi
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1865,18 +1841,6 @@ handle_mode_ok:
     pop dx
 
 handle_func:
-    push eax
-    push ebx
-    push edx
-    mov edx,0B8000h
-    xor ebx,ebx
-    mov eax,0B8007h
-    SetPageEntry
-        pop edx
-        pop ebx
-        pop eax
-;
-    call HideMarker
     call DoFunc
     call ShowCrashCore
     call ShowMarker
@@ -1925,48 +1889,6 @@ right_arrow:
     inc ds:curr_col
     call ShowMarker
     jmp handle_loop
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ShowHere
-;
-;           DESCRIPTION:    Show here
-;
-;           PARAMETERS:     AX      Atrib + char
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ShowHere    Proc near
-    push eax
-    push ebx
-    push edx
-    mov edx,0B8000h
-    xor ebx,ebx
-    mov eax,0B8007h
-    SetPageEntry
-        pop edx
-        pop ebx
-        pop eax
-;       
-    push es
-    push fs
-    push di
-;    
-    mov di,__B800
-    mov es,di
-;
-    GetCore
-    mov di,fs:ps_id
-    add di,80 * 23    
-    add di,di
-    stosw
-;    
-    pop di
-    pop fs
-    pop es
-    ret
-ShowHere    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
