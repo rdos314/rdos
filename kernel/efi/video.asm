@@ -1178,7 +1178,30 @@ get_char_attrib ENDP
 write_char_name DB 'Write Char',0
 
 write_char      PROC far
-    int 3
+    push ds
+    push fs
+    push bx
+;
+    push ax
+    GetThread
+    mov ds,ax
+    mov fs,ds:p_app_sel
+    mov ax,fs:app_console
+    mov fs,ax    
+    or ax,ax
+    pop ax
+    jz write_char_done
+;
+    mov bl,ds:p_forecolor
+    mov bh,ds:p_backcolor
+    HideMouse
+    call WriteOne
+    ShowMouse
+
+write_char_done:
+    pop bx
+    pop fs
+    pop ds
     ret
 write_char      ENDP
 
@@ -1204,7 +1227,6 @@ write_asciiz16  PROC far
     push di
 ;
     GetThread
-    int 3
     mov ds,ax
     mov fs,ds:p_app_sel
     mov ax,fs:app_console
@@ -1244,7 +1266,6 @@ write_asciiz32  PROC far
     push edi
 ;
     GetThread
-    int 3
     mov ds,ax
     mov fs,ds:p_app_sel
     mov ax,fs:app_console
