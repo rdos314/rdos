@@ -372,59 +372,55 @@ abt0F   DD 00FFFFFFh
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;   NAME:           UpdateDisplayBgr32
+;           NAME:           WriteCh
 ;
-;   DESCRIPTION:    Update display
+;           DESCRIPTION:    Write normal char
 ;
-;   PARAMETERS:     DS       Console
-;                   ES:EDI   LFB
-;                   ECX      Row size
+;           PARAMETERS:     DS    Thread sel
+;                           AL    Char
+;                           BL    Fore color
+;                           BH    Back color
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-disp_fore_color EQU -4
-disp_back_color EQU -8
-disp_row_size   EQU -12
-
-UpdateDisplayBgr32     PROC near
-    push ebp
-    mov ebp,esp
-    sub esp,12
-;
-    mov [ebp].disp_row_size,ecx
-;
-    movzx ecx,ds:c_rows
-    mov esi,OFFSET c_text_data
-
-udb32RowLoop:
-    push ecx
-    push edi
+WriteCh     PROC near
+    push es
+    push fs
+    pushad
 ;    
-    movzx ecx,ds:c_cols    
-
-udb32ColLoop:        
-    xor al,al
-    xchg al,ds:[esi].ct_dirty
-    or al,al
-    jz udb32NextChar
-;
-    push ecx
-    push edi
+    movzx esi,bl
+    and esi,0Fh
+    shl esi,2
+    mov ebp,dword ptr cs:[esi].AttribBgrTab    ; fore color
 ;    
-    mov bl,ds:[esi].ct_fore_col       
-    and ebx,0Fh
-    shl ebx,2
-    mov eax,dword ptr cs:[ebx].AttribBgrTab
-    mov [ebp].disp_fore_color,eax
+    movzx esi,bh
+    and esi,0Fh
+    shl esi,2
+    mov esi,dword ptr cs:[esi].AttribBgrTab    ; back color
 ;
-    mov bl,ds:[esi].ct_back_col
-    and ebx,0Fh
-    shl ebx,2
-    mov eax,dword ptr cs:[ebx].AttribBgrTab
-    mov [ebp].disp_back_color,eax
+    mov dx,flat_sel
+    mov es,dx
+    mov dx,system_data_sel
+    mov fs,dx
+;    
+    push ax
+    mov ax,ds:p_row
+    mov cx,19
+    mul cx
+    add ax,4
+    movzx eax,ax
+;    
+    mov edx,fs:efi_scan_size
+    mul edx
+    mov edi,fs:efi_lfb
+    add edi,eax
+;    
+    movzx eax,ds:p_col
+    shl eax,5
+    add edi,eax
 ;
-    mov al,ds:[esi].ct_char
+    pop ax
+;
     mov ah,19
     mul ah
     movzx ebx,ax
@@ -432,60 +428,43 @@ udb32ColLoop:
 ;
     mov ecx,19
 
-udb32LineLoop:    
+wcRowLoop:    
     push ecx
     push edi
     mov ecx,8
     mov al,cs:[ebx]
 
-udb32BitLoop:
+wcLoop:
     test al,80h
-    jz udb32Back
+    jz wcBack
 
-udb32Fore:
-    mov eax,[ebp].disp_fore_color
-    mov es:[edi],eax
-    jmp udb32Next
+wcFore:
+    mov es:[edi],ebp
+    jmp wcNext
 
-udb32Back:
-    mov eax,[ebp].disp_back_color
-    mov es:[edi],eax
+wcBack:
+    mov es:[edi],esi
 
-udb32Next:
+wcNext:
     add edi,4
     shl al,1
 ;
-    loop udb32BitLoop    
+    loop wcLoop    
 ;
     pop edi
     pop ecx
-    add edi,[ebp].disp_row_size
+    add edi,fs:efi_scan_size
     inc ebx
 ;
-    loop udb32LineLoop    
+    loop wcRowLoop    
+;    
+    inc ds:p_col
 ;
-    pop edi
-    pop ecx
-
-udb32NextChar:
-    add esi,4
-    add edi,8 * 4
-    loop udb32ColLoop    
-;
-    pop edi
-    pop ecx
-;
-    mov eax,[ebp].disp_row_size
-    mov edx,19
-    mul edx
-    add edi,eax
-    sub ecx,1
-    jnz udb32RowLoop   
-;
-    add esp,12
-    pop ebp     
+    popad        
+    pop fs
+    pop es
     ret
-UpdateDisplayBgr32     ENDP
+WriteCh     ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -515,7 +494,7 @@ utLoop:
     jz utNext
 ;
     mov ds,ax    
-    call UpdateDisplayBgr32
+;    call UpdateDisplayBgr32
 
 utNext:
     mov ax,20
@@ -560,6 +539,7 @@ CreateFixedEfiConsole  PROC near
     CreateDataSelector32
     mov es,bx
     mov es:c_text_entries,bp
+;
     mov es:c_rows,di
     mov es:c_cols,si
     mov es:c_font,0
@@ -787,7 +767,7 @@ invert_mouse_name       DB 'InvertMouse',0
 invert_mouse    PROC far
     ret
 invert_mouse    ENDP
-    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -803,7 +783,7 @@ invert_mouse    ENDP
 ;                           BH    Back color
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+    
 WriteConsoleChar     PROC near
     push edi
 ;    
@@ -884,6 +864,7 @@ UpdatePos       Proc near
     push ax
 ;    
     mov ax,fs:c_cols
+    dec ax
     cmp ds:p_col,-1
     jne update_not_row_wrap
 ;
@@ -898,6 +879,7 @@ update_not_row_wrap:
 
 update_video_same_row:
     mov ax,fs:c_rows
+    dec ax
     cmp ds:p_row,ax
     jc update_video_end
 ;
@@ -907,6 +889,7 @@ update_video_same_row:
 ;
 
 update_video_end:
+    pop ax
     ret
 UpdatePos       ENDP
     
@@ -928,7 +911,7 @@ UpdatePos       ENDP
 WriteSkip       PROC near
     push ax
     mov al,' '
-    call WriteConsole
+    call WriteCh
     pop ax
     ret
 WriteSkip       ENDP
@@ -953,7 +936,7 @@ WriteTab    PROC near
     mov al,' '
 
 write_tab_more:
-    call WriteConsole
+    call WriteCh
     test ds:p_col,3
     jnz write_tab_more
 ;
@@ -1038,21 +1021,21 @@ WriteCr ENDP
 
 write_tab:
 wct00   DD OFFSET WriteSkip
-wct01   DD OFFSET WriteConsole
-wct02   DD OFFSET WriteConsole
-wct03   DD OFFSET WriteConsole
-wct04   DD OFFSET WriteConsole
-wct05   DD OFFSET WriteConsole
-wct06   DD OFFSET WriteConsole
-wct07   DD OFFSET WriteConsole
+wct01   DD OFFSET WriteCh
+wct02   DD OFFSET WriteCh
+wct03   DD OFFSET WriteCh
+wct04   DD OFFSET WriteCh
+wct05   DD OFFSET WriteCh
+wct06   DD OFFSET WriteCh
+wct07   DD OFFSET WriteCh
 wct08   DD OFFSET WriteDel
 wct09   DD OFFSET WriteTab
 wct0A   DD OFFSET WriteLf
-wct0B   DD OFFSET WriteConsole
-wct0C   DD OFFSET WriteConsole
-wct0D   DD OFFSET WriteConsole
-wct0E   DD OFFSET WriteConsole
-wct0F   DD OFFSET WriteConsole
+wct0B   DD OFFSET WriteCh
+wct0C   DD OFFSET WriteCh
+wct0D   DD OFFSET WriteCr
+wct0E   DD OFFSET WriteCh
+wct0F   DD OFFSET WriteCh
 
 WriteOne    PROC near
     push esi
@@ -1329,7 +1312,7 @@ write_size_string_name  DB 'Write Size String',0
 
 write_size_string16     PROC far
     push ds
-    push gs
+    push fs
     push ax
     push bx
     push cx
@@ -1340,7 +1323,6 @@ write_size_string16     PROC far
     jz write_size_string_done16
 ;
     GetThread
-    int 3
     mov ds,ax
     mov fs,ds:p_app_sel
     mov ax,fs:app_console
@@ -1383,7 +1365,6 @@ write_size_string32     PROC far
     jz write_size_string_done32
 ;
     GetThread
-    int 3
     mov ds,ax
     mov fs,ds:p_app_sel
     mov ax,fs:app_console
@@ -1408,6 +1389,7 @@ write_size_string_done32:
     pop ecx
     pop bx
     pop ax
+    pop fs
     pop ds
     ret
 write_size_string32     ENDP
@@ -2948,7 +2930,7 @@ fp_done:
 free_process     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
+;       
 ;
 ;           NAME:           init_tasking
 ;
@@ -2968,8 +2950,8 @@ init_tasking      Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov di,OFFSET update_thread_name
-    mov si,OFFSET update_thread
+    mov edi,OFFSET update_thread_name
+    mov esi,OFFSET update_thread
     mov ax,2
     mov cx,stack0_size
     CreateThread
@@ -2977,7 +2959,7 @@ init_tasking      Proc far
     popa
     pop es
     pop ds
-    retf32
+    ret
 init_tasking      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
