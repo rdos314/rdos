@@ -1268,30 +1268,18 @@ static int LoadRdosBinary()
     int ok = 0;
     int i;
 
-    printf("New test\r\n");
-
     printf("Booting: <");
     ST->ConOut->OutputString(ST->ConOut, MenuArr[SelectedRow].FileName);
     printf(">, %d bytes\n\r", FileSize);
 
     Fs = MenuArr[SelectedRow].Volume;
 
-    printf("About to open volume\n\r");
-
     if (Fs->OpenVolume(Fs, &Root) == EFI_SUCCESS)
     {
-        printf("Volume open\n\r");  
-
         if (Root->Open(Root, &FileHandle, MenuArr[SelectedRow].FileName, EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY | EFI_FILE_HIDDEN | EFI_FILE_SYSTEM) == EFI_SUCCESS)
         {
-            printf("Root open\n\r");
-
-
             if (BS->AllocatePages(AllocateAddress, EfiRuntimeServicesData, RdosImagePages, &RdosImageBase) == EFI_SUCCESS)
             {
-                printf("Mem ok\n\r");
-
-
                 FileHandle->SetPosition(FileHandle, 0);
                 
                 for (i = 0; i < RdosImagePages; i++)
@@ -1299,8 +1287,6 @@ static int LoadRdosBinary()
                     FileHandle->Read(FileHandle, 0x1000, RdosImageBase);
                     RdosImageBase += 0x1000;
                 }
-
-                printf("Loaded ok\n\r");
 
                 ok = 1;
             }
@@ -1569,16 +1555,10 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
         HandleMenu();
         ST->ConOut->ClearScreen(ST->ConOut);
 
-        printf("Load rdos.bin\n\r");
-
         if (LoadRdosBinary())
         {
-            printf("Load bootloader\n\r");
-
             if (LoadBootLoader())
             {
-                printf("Get ACPI\n\r");
-
                 GetAcpiTable();
 
                 if (ConvertMemoryMap())

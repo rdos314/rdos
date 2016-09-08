@@ -1202,8 +1202,11 @@ GetBootDevice   Endp
 
     public start
 
-NoBootText DB 'No kernel to boot up',0
-NoMemory DB 'No memory map', 0
+
+BootingText  DB '            Booting', 0
+StartingText DB ', Starting', 0
+NoBootText   DB 'No kernel to boot up', 0
+NoMemory     DB 'No memory map       ', 0
 
 start:
     GetMemBase
@@ -1262,6 +1265,14 @@ start:
     mov ds:rom2_size,0
     mov ds:rom_shadow,0
 ;
+    call GetLfb
+    mov ds:efi_lfb,esi
+    mov ds:efi_lfb+4,edi
+    mov ds:efi_scan_size,ecx
+    mov ds:efi_width,ax
+    mov ds:efi_height,dx
+    mov ds:efi_flags,ebx
+;
     call GetMemCount
     mov ax,flat_sel
     mov es,ax
@@ -1286,13 +1297,14 @@ bootMemOk:
     mov ds:multiboot_mmap_len,dx
     mov ds:multiboot_mmap_addr,MEM_BASE
 ;
-    call GetLfb
-    mov ds:efi_lfb,esi
-    mov ds:efi_lfb+4,edi
-    mov ds:efi_scan_size,ecx
-    mov ds:efi_width,ax
-    mov ds:efi_height,dx
-    mov ds:efi_flags,ebx
+    push ds    
+    pushad
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET BootingText
+    call WriteStr
+    popad
+    pop ds
 ;
     call GetAcpiTablePtr
     mov ds:efi_acpi,eax
@@ -1312,6 +1324,15 @@ DoStop:
     jmp DoStop
 
 DoBoot:
+    push ds    
+    pushad
+    mov ax,cs
+    mov ds,ax
+    mov si,OFFSET StartingText
+    call WriteStr
+    popad
+    pop ds
+;
     mov ax,system_data_sel
     mov ds,ax
     mov ds:efi_text_row,0
