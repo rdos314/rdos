@@ -1280,13 +1280,16 @@ static int LoadRdosBinary()
         {
             if (BS->AllocatePages(AllocateAddress, EfiRuntimeServicesData, RdosImagePages, &RdosImageBase) == EFI_SUCCESS)
             {
+                printf("Image base: %08lX\n\r", RdosImageBase);
+
                 FileHandle->SetPosition(FileHandle, 0);
+                FileHandle->Read(FileHandle, RdosImagePages, RdosImageBase);
                 
-                for (i = 0; i < RdosImagePages; i++)
-                {
-                    FileHandle->Read(FileHandle, 0x1000, RdosImageBase);
-                    RdosImageBase += 0x1000;
-                }
+//                for (i = 0; i < RdosImagePages; i++)
+//                {
+//                    FileHandle->Read(FileHandle, 0x1000, RdosImageBase);
+//                    RdosImageBase += 0x1000;
+//                }
 
                 ok = 1;
             }
@@ -1329,10 +1332,14 @@ static int LoadBootLoader()
         {
             if (BS->AllocatePages(AllocateAddress, EfiBootServicesData, RdosLoaderPages, &RdosLoaderBase) == EFI_SUCCESS)
             {
-                if (FileHandle->Read(FileHandle, 0x10000, RdosLoaderBase) == EFI_SUCCESS)
+                printf("Loader base: %08lX\n\r", RdosLoaderBase);
+
+                if (FileHandle->Read(FileHandle, RdosLoaderPages, RdosLoaderBase) == EFI_SUCCESS)
                 {
                     ok = 1;
-//*                    ST->ConOut->ClearScreen(ST->ConOut); */
+
+                    short int us = *(short int *)RdosLoaderBase;
+                    printf("Loader start: %04hX\n\r", us);
                 }
                 else
                 {
