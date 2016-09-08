@@ -1283,7 +1283,7 @@ static int LoadRdosBinary()
                 printf("Image base: %08lX\n\r", RdosImageBase);
 
                 FileHandle->SetPosition(FileHandle, 0);
-                FileHandle->Read(FileHandle, RdosImagePages, RdosImageBase);
+                FileHandle->Read(FileHandle, &FileSize, RdosImageBase);
                 
 //                for (i = 0; i < RdosImagePages; i++)
 //                {
@@ -1312,6 +1312,7 @@ static int LoadRdosBinary()
 static int LoadBootLoader()
 {
     int ok = 0;
+    int size = RdosLoaderPages * 0x1000;
 
     if (sizeof(void *) == 4)
         strcpy(str, "efi\\rdos\\boot32.bin");
@@ -1334,7 +1335,7 @@ static int LoadBootLoader()
             {
                 printf("Loader base: %08lX\n\r", RdosLoaderBase);
 
-                if (FileHandle->Read(FileHandle, RdosLoaderPages, RdosLoaderBase) == EFI_SUCCESS)
+                if (FileHandle->Read(FileHandle, &size, RdosLoaderBase) == EFI_SUCCESS)
                 {
                     ok = 1;
 
