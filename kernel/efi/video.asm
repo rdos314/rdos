@@ -386,8 +386,10 @@ abt0F   DD 00FFFFFFh
 
 WriteConsole     PROC near
     push es
-    push fs
     pushad
+;
+    mov dx,flat_sel
+    mov es,dx
 ;
     push ax
     mov dx,ds:p_row
@@ -415,11 +417,6 @@ WriteConsole     PROC near
     and esi,0Fh
     shl esi,2
     mov esi,dword ptr cs:[esi].AttribBgrTab    ; back color
-;
-    mov dx,flat_sel
-    mov es,dx
-    mov dx,system_data_sel
-    mov fs,dx
 ;    
     push ax
     mov ax,ds:p_row
@@ -428,9 +425,9 @@ WriteConsole     PROC near
     add ax,4
     movzx eax,ax
 ;    
-    mov edx,fs:efi_scan_size
+    mov edx,fs:c_scan_size
     mul edx
-    mov edi,fs:efi_lfb
+    mov edi,fs:c_lfb
     add edi,eax
 ;    
     movzx eax,ds:p_col
@@ -471,7 +468,7 @@ wcNext:
 ;
     pop edi
     pop ecx
-    add edi,fs:efi_scan_size
+    add edi,fs:c_scan_size
     inc ebx
 ;
     loop wcRowLoop    
@@ -480,7 +477,6 @@ wcDone:
     inc ds:p_col
 ;
     popad        
-    pop fs
     pop es
     ret
 WriteConsole    Endp
