@@ -372,11 +372,12 @@ abt0F   DD 00FFFFFFh
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           WriteConsole
+;           NAME:           WritePhysical
 ;
-;           DESCRIPTION:    Write char to buffer
+;           DESCRIPTION:    Write char to physical display
 ;
 ;           PARAMETERS:     DS    Thread sel
+;                           ES    Flat sel
 ;                           FS    Console
 ;                           AL    Char
 ;                           BL    Fore color
@@ -384,29 +385,8 @@ abt0F   DD 00FFFFFFh
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteConsole     PROC near
-    push es
+WritePhysical     PROC near
     pushad
-;
-    mov dx,flat_sel
-    mov es,dx
-;
-    push ax
-    mov dx,ds:p_row
-    mov ax,fs:c_cols
-    mul dx
-    add ax,ds:p_col
-    movzx edi,ax
-    shl edi,2
-    add edi,OFFSET c_text_data
-    mov ax,bx
-    shl eax,16
-    pop ax
-    mov ah,1
-    mov fs:[edi],eax
-;
-    test fs:c_flags,CONSOLE_FLAG_ACTIVE
-;    jz wcDone
 ;    
     movzx esi,bl
     and esi,0Fh
@@ -443,40 +423,93 @@ WriteConsole     PROC near
 ;
     mov ecx,19
 
-wcRowLoop:    
+wpRowLoop:    
     push ecx
     push edi
     mov ecx,8
     mov al,cs:[ebx]
 
-wcLoop:
+wpLoop:
     test al,80h
-    jz wcBack
+    jz wpBack
 
-wcFore:
+wpFore:
     mov es:[edi],ebp
-    jmp wcNext
+    jmp wpNext
 
-wcBack:
+wpBack:
     mov es:[edi],esi
 
-wcNext:
+wpNext:
     add edi,4
     shl al,1
 ;
-    loop wcLoop    
+    loop wpLoop    
 ;
     pop edi
     pop ecx
     add edi,fs:c_scan_size
     inc ebx
 ;
-    loop wcRowLoop    
+    loop wpRowLoop    
+
+wpDone:    
+    popad        
+    ret
+WritePhysical    Endp
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           WriteConsole
+;
+;           DESCRIPTION:    Write char to buffer
+;
+;           PARAMETERS:     DS    Thread sel
+;                           FS    Console
+;                           AL    Char
+;                           BL    Fore color
+;                           BH    Back color
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteConsole     PROC near
+    push es
+;
+    push eax
+    push edx
+    push edi
+;    
+    push ax
+    mov dx,ds:p_row
+    mov ax,fs:c_cols
+    mul dx
+    add ax,ds:p_col
+    movzx edi,ax
+    shl edi,2
+    add edi,OFFSET c_text_data
+    mov ax,bx
+    shl eax,16
+    pop ax
+    mov ah,1
+    mov fs:[edi],eax
+;    
+    pop edi
+    pop edx
+    pop eax
+;
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+;    jz wcDone
+;   
+    push ax
+    mov ax,flat_sel
+    mov es,ax
+    pop ax
+;    
+    call WritePhysical 
 
 wcDone:    
     inc ds:p_col
-;
-    popad        
     pop es
     ret
 WriteConsole    Endp
