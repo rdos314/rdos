@@ -310,6 +310,32 @@ fFF db 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 0
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           GetLfb
+;
+;   DESCRIPTION:    Get LFB base
+;
+;   PARAMETERS:     DS   System data sel
+;
+;   RETURNS:        EDI  LFB
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetLfb  Proc near
+    mov edi,cr0
+    test edi,80000000h
+    jz glfbPhys
+;
+    mov edi,boot_efi_linear
+    ret
+
+glfbPhys:
+    mov edi,ds:efi_lfb
+    ret
+GetLfb  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           LocalWriteChar
 ;
 ;   DESCRIPTION:    Write a single character
@@ -341,7 +367,7 @@ LocalWriteChar       Proc near
     push eax
     mov eax,ds:efi_scan_size
     mul edx
-    mov edi,ds:efi_lfb
+    call GetLfb
     add edi,eax
     pop eax
     shl eax,2
@@ -950,7 +976,7 @@ abort_fatal_write:
     mov ax,flat_sel
     mov es,ax
 ;
-    mov edi,ds:efi_lfb
+    call GetLfb
     mov cx,ds:efi_height
 
 abort_clear_loop:
@@ -1033,7 +1059,7 @@ abort_task_do:
     mov ax,flat_sel
     mov es,ax
 ;
-    mov edi,ds:efi_lfb
+    call GetLfb
     mov cx,ds:efi_height
 
 abort_clear_lfb_loop:

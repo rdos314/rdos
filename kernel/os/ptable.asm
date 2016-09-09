@@ -4705,6 +4705,103 @@ map_flat_user32   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           map_user32
+;
+;           DESCRIPTION:    Map a page, user access, 32-bit version
+;
+;           PARAMETERS:     EDX             Linear base address
+;                           ECX             Number of bytes to map
+;                           EAX             Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_user32   Proc near
+    push ds
+    pushad
+;
+    or ecx,ecx
+    jz map_user_done32
+;
+    mov ebp,eax
+    sub ebp,edx
+
+map_user_more32:
+    mov bx,sys_dir_sel
+    mov ds,bx
+    mov ebx,edx
+    shr ebx,22
+    shl bx,2
+    mov edi,[bx]
+    or edi,edi
+    jnz map_user_do32
+;
+    call AllocateRam
+    mov edi,esi
+    or si,7
+    mov [bx],esi
+;
+    mov ax,flat_sel
+    mov ds,ax
+    push cx
+    mov cx,400h
+    xor eax,eax
+
+map_user_init_loop32:
+    mov [edi],eax
+    add edi,4
+    loop map_user_init_loop32
+;    
+    sub edi,1000h
+    pop cx
+
+map_user_do32:
+    mov ax,flat_sel
+    mov ds,ax
+    mov ebx,edx
+    shr ebx,12
+    and ebx,3FFh
+    mov eax,400h
+    shr ecx,12
+    sub eax,ebx
+    sub ecx,eax
+    jnc map_user_start32
+;
+    add ecx,eax
+    mov eax,ecx
+    xor ecx,ecx
+
+map_user_start32:
+    shl bx,2
+    shl ecx,12
+    push ecx
+    mov cx,ax
+    and dx,0F000h
+    or dx,807h
+    and di,0F000h
+    or di,bx
+
+map_user_loop32:
+    mov eax,edx
+    add eax,ebp
+    mov [edi],eax
+    add edi,4
+    add edx,1000h
+    loop map_user_loop32
+;    
+    pop ecx
+    or ecx,ecx
+    jnz map_user_more32
+
+map_user_done32:
+    popad
+    pop ds
+    ret
+map_user32   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           create_paging32
 ;
 ;           DESCRIPTION:    Create initial paging for system process, 32-bit version
@@ -4765,8 +4862,9 @@ create_paging_efi32:
     mul edx
     shl eax,2
     mov ecx,eax
-    mov edx,es:efi_lfb
-    call map_flat_user32
+    mov eax,es:efi_lfb
+    mov edx,boot_efi_linear
+    call map_user32
     
 create_paging_done32:
     ret
@@ -5209,6 +5307,103 @@ map_flat_user64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           map_user64
+;
+;           DESCRIPTION:    Map a page in user-space
+;
+;           PARAMETERS:     EDX             Linear base address
+;                           ECX             Number of bytes to map
+;                           EAX             Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_user64    Proc near
+    push ds
+    pushad
+;
+    or ecx,ecx
+    jz map_user_done64
+;    
+    mov ebp,eax
+    sub ebp,edx
+
+map_user_more64:
+    mov bx,sys_dir_sel
+    mov ds,bx
+    mov ebx,edx
+    shr ebx,21
+    shl bx,3
+    mov edi,[bx]
+    or edi,edi
+    jnz map_user_do64
+;
+    call AllocateRam
+    mov edi,esi
+    or si,7
+    mov [bx],esi
+;
+    mov ax,flat_sel
+    mov ds,ax
+    push cx
+    mov cx,400h
+    xor eax,eax
+
+map_user_init_loop64:
+    mov [edi],eax
+    add edi,4
+    loop map_user_init_loop64
+;
+    sub edi,1000h
+    pop cx
+
+map_user_do64:
+    mov ax,flat_sel
+    mov ds,ax
+    mov ebx,edx
+    shr ebx,12
+    and ebx,1FFh
+    mov eax,200h
+    shr ecx,12
+    sub eax,ebx
+    sub ecx,eax
+    jnc map_user_start64
+;
+    add ecx,eax
+    mov eax,ecx
+    xor ecx,ecx
+
+map_user_start64:
+    shl bx,3
+    shl ecx,12
+    push ecx
+    mov cx,ax
+    and dx,0F000h
+    or dx,807h
+    and di,0F000h
+    or di,bx
+
+map_user_loop64:
+    mov eax,edx
+    add eax,ebp
+    mov [edi],eax
+    mov dword ptr [edi+4],0
+    add edi,8
+    add edx,1000h
+    loop map_user_loop64
+    pop ecx
+    or ecx,ecx
+    jnz map_user_more64
+
+map_user_done64:
+    popad
+    pop ds
+    ret
+map_user64    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           create_paging64
 ;
 ;           DESCRIPTION:    Create initial paging for system process, 64-bit version
@@ -5271,8 +5466,9 @@ create_paging_efi64:
     mul edx
     shl eax,2
     mov ecx,eax
-    mov edx,es:efi_lfb
-    call map_flat_user64
+    mov eax,es:efi_lfb
+    mov edx,boot_efi_linear
+    call map_user64
     
 create_paging_done64:
     ret
@@ -5640,7 +5836,7 @@ start_paging:
     mov ds:long_base,0
     mov ds:long_size,0
     mov ds:has_phys64,0
-;
+;    
     mov eax,ds:cpu_feature_flags
     test al,40h
     jz start_paging32
