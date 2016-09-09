@@ -116,6 +116,18 @@ prot_init:
     db 0Fh     ; wrmsr
     db 30h
 ;
+    db 0Fh     ; mov rax,cr4
+    db 20h
+    db 0E0h
+;
+    db 83h     ; and eax,NOT 20h
+    db 0E0h
+    db 0DFh
+;
+    db 0Fh     ; mov cr4,rax
+    db 22h
+    db 0E0h
+;
     db 0B8h    ; mov eax,20h
     dd 20h
 ;
