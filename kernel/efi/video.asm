@@ -403,7 +403,7 @@ WriteConsole     PROC near
     mov ah,1
     mov fs:[edi],eax
 ;
-;    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
 ;    jz wcDone
 ;    
     movzx esi,bl
@@ -1013,7 +1013,16 @@ WriteOne    ENDP
 set_cursor_pos_name     DB 'Set Cursor Position',0
 
 set_cursor_position     PROC far
-    int 3
+    push ds
+    push ax
+;
+    GetThread
+    mov ds,ax
+    mov ds:p_row,dx
+    mov ds:p_col,cx
+;
+    pop ax
+    pop ds
     ret
 set_cursor_position     ENDP
 
