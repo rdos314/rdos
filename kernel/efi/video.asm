@@ -466,6 +466,7 @@ WritePhysical    Endp
 ;           DESCRIPTION:    Write char to buffer
 ;
 ;           PARAMETERS:     DS    Thread sel
+;                           ES    Flat sel
 ;                           FS    Console
 ;                           AL    Char
 ;                           BL    Fore color
@@ -474,8 +475,6 @@ WritePhysical    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteConsole     PROC near
-    push es
-;
     push eax
     push edx
     push edi
@@ -500,17 +499,11 @@ WriteConsole     PROC near
 ;
     test fs:c_flags,CONSOLE_FLAG_ACTIVE
 ;    jz wcDone
-;   
-    push ax
-    mov ax,flat_sel
-    mov es,ax
-    pop ax
 ;    
     call WritePhysical 
 
 wcDone:    
     inc ds:p_col
-    pop es
     ret
 WriteConsole    Endp
     
@@ -872,6 +865,7 @@ UpdatePos       ENDP
 ;           DESCRIPTION:    Write NUL char
 ;
 ;           PARAMETERS:     DS    Thread sel
+;                           ES    Flat sel
 ;                           FS    Console sel
 ;                           AL    Char
 ;                           BL    Fore color
@@ -895,6 +889,7 @@ WriteSkip       ENDP
 ;           DESCRIPTION:    Write TAB char
 ;
 ;           PARAMETERS:     DS    Thread sel
+;                           ES    Flat sel
 ;                           FS    Console
 ;                           AL    Char
 ;                           BL    Fore color
@@ -983,6 +978,7 @@ WriteCr ENDP
 ;           DESCRIPTION:    Write one character to screen
 ;
 ;           PARAMETERS:     DS    Thread sel
+;                           ES    Flat sel
 ;                           FS    Console
 ;                           AL    Char
 ;                           BL    Fore color
@@ -1159,10 +1155,13 @@ write_char_name DB 'Write Char',0
 
 write_char      PROC far
     push ds
+    push es
     push fs
     push bx
 ;
     push ax
+    mov ax,flat_sel
+    mov es,ax
     GetThread
     mov ds,ax
     mov fs,ds:p_app_sel
@@ -1181,6 +1180,7 @@ write_char      PROC far
 write_char_done:
     pop bx
     pop fs
+    pop es
     pop ds
     ret
 write_char      ENDP
@@ -1201,11 +1201,14 @@ write_asciiz_name       DB 'Write Asciiz String',0
 
 write_asciiz16  PROC far
     push ds
+    push es
     push fs
     push ax
     push bx
     push di
 ;
+    mov ax,flat_sel
+    mov es,ax
     GetThread
     mov ds,ax
     mov fs,ds:p_app_sel
@@ -1234,17 +1237,21 @@ write_asciiz_done16:
     pop bx
     pop ax
     pop fs
+    pop es
     pop ds
     ret
 write_asciiz16  ENDP
 
 write_asciiz32  PROC far
     push ds
+    push es
     push fs
     push ax
     push bx
     push edi
 ;
+    mov ax,flat_sel
+    mov es,ax
     GetThread
     mov ds,ax
     mov fs,ds:p_app_sel
@@ -1273,6 +1280,7 @@ write_asciiz_done32:
     pop bx
     pop ax
     pop fs
+    pop es
     pop ds
     ret
 write_asciiz32  ENDP
@@ -1313,6 +1321,7 @@ write_size_string_name  DB 'Write Size String',0
 
 write_size_string16     PROC far
     push ds
+    push es
     push fs
     push ax
     push bx
@@ -1323,6 +1332,8 @@ write_size_string16     PROC far
     or cx,cx
     jz write_size_string_done16
 ;
+    mov ax,flat_sel
+    mov es,ax
     GetThread
     mov ds,ax
     mov fs,ds:p_app_sel
@@ -1349,12 +1360,14 @@ write_size_string_done16:
     pop bx
     pop ax
     pop fs
+    pop es
     pop ds
     ret
 write_size_string16     ENDP
 
 write_size_string32     PROC far
     push ds
+    push es
     push fs
     push ax
     push bx
@@ -1365,6 +1378,8 @@ write_size_string32     PROC far
     or ecx,ecx
     jz write_size_string_done32
 ;
+    mov ax,flat_sel
+    mov es,ax
     GetThread
     mov ds,ax
     mov fs,ds:p_app_sel
@@ -1391,6 +1406,7 @@ write_size_string_done32:
     pop bx
     pop ax
     pop fs
+    pop es
     pop ds
     ret
 write_size_string32     ENDP
