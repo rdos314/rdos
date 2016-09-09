@@ -1383,6 +1383,9 @@ static void DumpMem()
 {
     int i;
 
+    printf("ACPI: %08lX\n\r", AcpiTable);
+    printf("LFB: %08lX\n\r", LfbBase);
+
     for (i = 0; i < MemMapCount; i++)
         ShowMem(MemMapArr[i].Base, MemMapArr[i].Size);
 }
@@ -1415,6 +1418,8 @@ static int ConvertMemoryMap()
         ptr = (char *)MemMap;
         count = MemMapSize / MemDescrSize;
 
+        AddMem(0, 0x90000);
+
         for (i = 0; i < count; i++)
         {
             memptr = (EFI_MEMORY_DESCRIPTOR *)ptr;
@@ -1432,7 +1437,8 @@ static int ConvertMemoryMap()
                             Size += memptr->NumberOfPages << 12;
                         else
                         {
-                            AddMem(Base, Size);
+                            if (Base >= 0x90000)
+                                AddMem(Base, Size);
                             Base = memptr->PhysicalStart;
                             Size = memptr->NumberOfPages << 12;
                         }
@@ -1448,7 +1454,8 @@ static int ConvertMemoryMap()
                 default:
                     if (has_entry)
                     {
-                        AddMem(Base, Size);
+                        if (Base >= 0x90000)
+                            AddMem(Base, Size);
                         has_entry = 0;
                     }
                     break;
@@ -1458,7 +1465,9 @@ static int ConvertMemoryMap()
 
         if (has_entry)
             AddMem(Base, Size);
+
 //        DumpMem();
+
         return 1;
     }
                         
