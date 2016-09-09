@@ -368,25 +368,43 @@ abt0C   DD 006666FFh
 abt0D   DD 00FF66FFh
 abt0E   DD 0066FFFFh
 abt0F   DD 00FFFFFFh
-    
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           WriteCh
+;           NAME:           WriteConsole
 ;
-;           DESCRIPTION:    Write normal char
+;           DESCRIPTION:    Write char to buffer
 ;
 ;           PARAMETERS:     DS    Thread sel
+;                           FS    Console
 ;                           AL    Char
 ;                           BL    Fore color
 ;                           BH    Back color
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteCh     PROC near
+WriteConsole     PROC near
     push es
     push fs
     pushad
+;
+    push ax
+    mov dx,ds:p_row
+    mov ax,fs:c_cols
+    mul dx
+    add ax,ds:p_col
+    movzx edi,ax
+    shl edi,2
+    add edi,OFFSET c_text_data
+    mov ax,bx
+    shl eax,16
+    pop ax
+    mov ah,1
+    mov fs:[edi],eax
+;
+;    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+;    jz wcDone
 ;    
     movzx esi,bl
     and esi,0Fh
@@ -457,14 +475,15 @@ wcNext:
     inc ebx
 ;
     loop wcRowLoop    
-;    
+
+wcDone:    
     inc ds:p_col
 ;
     popad        
     pop fs
     pop es
     ret
-WriteCh     ENDP
+WriteConsole    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -771,83 +790,6 @@ invert_mouse    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           WriteConsoleChar
-;
-;           DESCRIPTION:    Write char to buffer
-;
-;           PARAMETERS:     FS    Console
-;                           AL    Char
-;                           CX    Col
-;                           DX    Row
-;                           BL    Fore color
-;                           BH    Back color
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-WriteConsoleChar     PROC near
-    push edi
-;    
-    push ax
-    push dx
-    mov ax,fs:c_cols
-    mul dx
-    add ax,cx
-    movzx edi,ax
-    shl edi,2
-    add edi,OFFSET c_text_data
-    mov ax,bx
-    shl eax,16
-    pop dx
-    pop ax
-;
-    mov ah,1
-    mov fs:[edi],eax
-;
-    test fs:c_flags,CONSOLE_FLAG_ACTIVE
-    jz wccDone
-;
-    push ds
-    push bx
-    pop bx
-    pop ds
-
-wccDone:
-    pop edi    
-    ret
-WriteConsoleChar    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           WriteConsole
-;
-;           DESCRIPTION:    Write char to buffer
-;
-;           PARAMETERS:     DS    Thread sel
-;                           FS    Console
-;                           AL    Char
-;                           BL    Fore color
-;                           BH    Back color
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteConsole     PROC near
-    push cx
-    push dx
-;
-    mov cx,ds:p_col
-    mov dx,ds:p_row
-    call WriteConsoleChar    
-    inc ds:p_col
-;
-    pop dx
-    pop cx    
-    ret
-WriteConsole    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           UpdatePos
 ;
 ;           DESCRIPTION:    Update cursor position
@@ -911,7 +853,7 @@ UpdatePos       ENDP
 WriteSkip       PROC near
     push ax
     mov al,' '
-    call WriteCh
+    call WriteConsole
     pop ax
     ret
 WriteSkip       ENDP
@@ -936,7 +878,7 @@ WriteTab    PROC near
     mov al,' '
 
 write_tab_more:
-    call WriteCh
+    call WriteConsole
     test ds:p_col,3
     jnz write_tab_more
 ;
@@ -1021,21 +963,21 @@ WriteCr ENDP
 
 write_tab:
 wct00   DD OFFSET WriteSkip
-wct01   DD OFFSET WriteCh
-wct02   DD OFFSET WriteCh
-wct03   DD OFFSET WriteCh
-wct04   DD OFFSET WriteCh
-wct05   DD OFFSET WriteCh
-wct06   DD OFFSET WriteCh
-wct07   DD OFFSET WriteCh
+wct01   DD OFFSET WriteConsole
+wct02   DD OFFSET WriteConsole
+wct03   DD OFFSET WriteConsole
+wct04   DD OFFSET WriteConsole
+wct05   DD OFFSET WriteConsole
+wct06   DD OFFSET WriteConsole
+wct07   DD OFFSET WriteConsole
 wct08   DD OFFSET WriteDel
 wct09   DD OFFSET WriteTab
 wct0A   DD OFFSET WriteLf
-wct0B   DD OFFSET WriteCh
-wct0C   DD OFFSET WriteCh
+wct0B   DD OFFSET WriteConsole
+wct0C   DD OFFSET WriteConsole
 wct0D   DD OFFSET WriteCr
-wct0E   DD OFFSET WriteCh
-wct0F   DD OFFSET WriteCh
+wct0E   DD OFFSET WriteConsole
+wct0F   DD OFFSET WriteConsole
 
 WriteOne    PROC near
     push esi
