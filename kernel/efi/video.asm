@@ -464,6 +464,75 @@ WritePhysical    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           RedrawRow
+;
+;           DESCRIPTION:    Redraw row to physical display
+;
+;           PARAMETERS:     ES    Flat sel
+;                           FS    Console
+;                           DX    Row
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RedrawRow     PROC near
+    pushad
+;
+    push dx
+    mov ax,fs:c_cols
+    mul dx
+    movzx edi,ax
+    shl edi,2
+    add edi,OFFSET c_text_data
+    pop dx
+;
+    xor cx,cx
+
+rrLoop:
+    mov al,fs:[edi].ct_char
+    mov bl,fs:[edi].ct_fore_col
+    mov bh,fs:[edi].ct_back_col    
+    mov fs:[edi].ct_dirty,0
+    call WritePhysical
+;
+    add edi,4    
+    inc cx
+    cmp cx,fs:c_cols
+    jc rrLoop
+;            
+    popad
+    ret
+RedrawRow     ENDP
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           RedrawConsole
+;
+;           DESCRIPTION:    Redraw console to physical display
+;
+;           PARAMETERS:     ES    Flat sel
+;                           FS    Console
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RedrawConsole     PROC near
+    push dx
+;
+    xor dx,dx
+
+rcLoop:
+    call RedrawRow
+    inc dx
+    cmp dx,fs:c_rows
+    jc rcLoop
+;
+    pop dx
+    ret
+RedrawConsole     ENDP
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           WriteConsole
 ;
 ;           DESCRIPTION:    Write char to buffer
@@ -723,6 +792,13 @@ EnableConsoleFocus Proc near
     mov es,bx
     lock or es:c_flags,CONSOLE_FLAG_ACTIVE
     mov ds:focus_console,bx
+;
+    push fs
+    mov ax,flat_sel
+    mov es,ax
+    mov fs,bx
+    call RedrawConsole    
+    pop fs
         
 ecfDone:
     pop bx
