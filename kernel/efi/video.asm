@@ -1300,6 +1300,7 @@ set_forecolor   PROC far
     push ax
     push bx
 ;
+    mov bl,al
     GetThread
     mov ds,ax    
     mov ds:p_forecolor,bl
@@ -1329,6 +1330,7 @@ set_backcolor   PROC far
     push ax
     push bx
 ;
+    mov bl,al
     GetThread
     mov ds,ax    
     mov ds:p_backcolor,bl
