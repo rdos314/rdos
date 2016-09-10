@@ -498,7 +498,7 @@ WriteConsole     PROC near
     pop eax
 ;
     test fs:c_flags,CONSOLE_FLAG_ACTIVE
-;    jz wcDone
+    jz wcDone
 ;    
     call WritePhysical 
 
