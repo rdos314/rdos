@@ -1553,6 +1553,18 @@
     parm [fs esi] [es edi] \
     modify [ecx edx];
 
+#pragma aux RdosClearText = \
+    CallGate_clear_text;
+
+#pragma aux RdosGetTextSize = \
+    CallGate_get_text_size \
+    "movzx ecx,cx" \
+    "mov fs:[esi],ecx" \
+    "movzx edx,dx" \
+    "mov es:[edi],edx" \
+    parm [es edi] [fs esi] \
+    modify [ecx edx];
+
 #pragma aux RdosGetCursorPosition = \
     CallGate_get_cursor_position \
     "movzx ecx,cx" \

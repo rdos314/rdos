@@ -36,6 +36,8 @@
 
 extern void InitTasking();
 
+int MaxRows = 25;
+int MaxCols = 80;
 int CurrRow = 0;
 int StartRow = 0;
 int Suspend = FALSE;
@@ -110,7 +112,7 @@ void WriteOne(int Row, ThreadActionState *State)
     len = strlen(str);
 
     for (i = len; i < 20; i++)
-    str[i] = ' ';
+        str[i] = ' ';
 
     RdosWriteString(str);
 
@@ -262,6 +264,8 @@ void ProcessHandler()
     char key[4];
     int val;
 
+    RdosGetTextSize(&MaxRows, &MaxCols);
+
     RdosAddWaitForKeyboard(WaitHandle, 1);
 
     Suspend = FALSE;
@@ -274,7 +278,7 @@ void ProcessHandler()
             if (RdosGetThreadActionState(i, &state))
             {            
                 absrow = row - StartRow;
-                if (absrow < 25 && absrow >= 0)
+                if (absrow < MaxRows && absrow >= 0)
                 {
                     lastrow = absrow;
                     WriteOne(absrow, &state);
@@ -285,7 +289,7 @@ void ProcessHandler()
 
         Suspend = FALSE;
 
-        for (i = lastrow + 1; i < 25; i++)
+        for (i = lastrow + 1; i < MaxRows; i++)
             WriteEmpty(i);
 
         RdosWaitTimeout(WaitHandle, 100);
@@ -317,10 +321,10 @@ void ProcessHandler()
                     break;
             }
                
-            if (CurrRow < 15)
+            if (CurrRow < MaxRows - 10)
                 StartRow = 0;
             else
-                StartRow = CurrRow - 15;
+                StartRow = CurrRow - MaxRows + 10;
         }
     }
 }

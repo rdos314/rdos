@@ -2623,6 +2623,16 @@ WaitForCard       MACRO
 
 ;;;;;;;;;; SCREEN, TEXT MODE ;;;;;;;;;;
 
+ClearText    MACRO
+	UserGate clear_text_nr
+						ENDM
+
+;	OUT CX              Columns
+;	OUT DX              Rows
+GetTextSize    MACRO
+	UserGate get_text_size_nr
+						ENDM
+
 ;	IN  CX              Column number (x)
 ;	IN  DX              Row number (y)
 SetCursorPosition    MACRO

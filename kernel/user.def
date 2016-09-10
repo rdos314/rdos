@@ -781,4 +781,7 @@ pow_mod_bignum_nr               = 606
 mod_bignum_nr                   = 607
 sub_bignum_nr                   = 608
 
+clear_text_nr                   = 609
+get_text_size_nr                = 610
+
 usergate_entries			    = 625

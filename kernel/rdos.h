@@ -655,6 +655,8 @@ void RDOSAPI RdosGetRightButtonPressPosition(int *x, int *y);
 void RDOSAPI RdosGetLeftButtonReleasePosition(int *x, int *y);
 void RDOSAPI RdosGetRightButtonReleasePosition(int *x, int *y);
 
+void RDOSAPI RdosClearText();
+void RDOSAPI RdosGetTextSize(int *Rows, int *Cols);
 void RDOSAPI RdosGetCursorPosition(int *Row, int *Col);
 void RDOSAPI RdosSetCursorPosition(int Row, int Col);
 void RDOSAPI RdosWriteChar(char ch);
