@@ -97,15 +97,11 @@ TClsCommand::TClsCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TClsCommand::Execute(char *param)
 {
-    int i;
 
 	if (LeadOptions(&param, 0) != E_None)
 		return 1;
-    
-    RdosSetCursorPosition(24, 0);
-    for (i = 0; i < 25; i++)
-        RdosWriteString("\r\n");
-    RdosSetCursorPosition(0, 0);
+
+    RdosClearText();    
     
 	return 0;
 }

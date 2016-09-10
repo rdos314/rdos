@@ -436,6 +436,63 @@ invert_mouse    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           GetTextSize
+;
+;           DESCRIPTION:    Get rows and cols
+;
+;           RETURNS:        CX          Cols
+;                           DX          Rows
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_text_size_name     DB 'Get Text Size',0
+
+get_text_size     PROC far
+    mov cx,80
+    mov dx,25
+    ret
+get_text_size     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ClearText
+;
+;           DESCRIPTION:    Clear text screen
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_text_name     DB 'Clear Text',0
+
+clear_text     PROC far
+    push ds
+    pusha
+;    
+    HideMouse
+;    
+    mov bl,7
+    mov bh,0
+    xor cx,cx
+    xor dx,dx
+    mov si,79
+    mov di,24
+    CallVideo v_clear_proc
+;
+    CallVideo v_set_cursor_position_proc
+    GetThread
+    mov ds,ax
+    mov ds:p_row,dx
+    mov ds:p_col,cx
+    ShowMouse
+;
+    popa   
+    pop ds    
+    ret
+clear_text     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           SetCursorPosition
 ;
 ;           DESCRIPTION:    Set cursor position
@@ -3759,6 +3816,18 @@ init_video      PROC near
     mov edi,OFFSET set_video_mode_name
     xor dx,dx
     mov ax,set_video_mode_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_text_size
+    mov edi,OFFSET get_text_size_name
+    xor dx,dx
+    mov ax,get_text_size_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET clear_text
+    mov edi,OFFSET clear_text_name
+    xor dx,dx
+    mov ax,clear_text_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET set_cursor_position

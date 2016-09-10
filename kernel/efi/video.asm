@@ -1300,6 +1300,9 @@ ctLoop:
     inc dx
     cmp dx,fs:c_rows
     jc ctLoop
+;
+    mov ds:p_row,0
+    mov ds:p_col,0    
 
 ctDone:
     pop dx
