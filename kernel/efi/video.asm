@@ -1296,7 +1296,17 @@ get_cursor_position     ENDP
 set_forecolor_name      DB 'Set Fore Color',0
 
 set_forecolor   PROC far
-    int 3
+    push ds
+    push ax
+    push bx
+;
+    GetThread
+    mov ds,ax    
+    mov ds:p_forecolor,bl
+;
+    pop bx
+    pop ax
+    pop ds
     ret
 set_forecolor   ENDP
 
@@ -1315,10 +1325,19 @@ set_forecolor   ENDP
 set_backcolor_name      DB 'Set Back Color',0
 
 set_backcolor   PROC far
-    int 3
+    push ds
+    push ax
+    push bx
+;
+    GetThread
+    mov ds,ax    
+    mov ds:p_backcolor,bl
+;
+    pop bx
+    pop ax
+    pop ds
     ret
 set_backcolor   ENDP
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1404,10 +1423,13 @@ write_asciiz16  PROC far
     push ds
     push es
     push fs
+    push gs
     push ax
     push bx
     push di
 ;
+    mov ax,es
+    mov gs,ax
     mov ax,flat_sel
     mov es,ax
     GetThread
@@ -1423,7 +1445,7 @@ write_asciiz16  PROC far
     HideMouse
 
 write_asciiz_loop16:
-    mov al,es:[di]
+    mov al,gs:[di]
     inc edi
     or al,al
     jz write_asciiz_done16
@@ -1437,6 +1459,7 @@ write_asciiz_done16:
     pop di
     pop bx
     pop ax
+    pop gs
     pop fs
     pop es
     pop ds
@@ -1447,10 +1470,13 @@ write_asciiz32  PROC far
     push ds
     push es
     push fs
+    push gs
     push ax
     push bx
     push edi
 ;
+    mov ax,es
+    mov gs,ax
     mov ax,flat_sel
     mov es,ax
     GetThread
@@ -1466,7 +1492,7 @@ write_asciiz32  PROC far
     HideMouse
 
 write_asciiz_loop32:
-    mov al,es:[edi]
+    mov al,gs:[edi]
     inc edi
     or al,al
     jz write_asciiz_done32
@@ -1480,6 +1506,7 @@ write_asciiz_done32:
     pop edi
     pop bx
     pop ax
+    pop gs
     pop fs
     pop es
     pop ds
@@ -1524,6 +1551,7 @@ write_size_string16     PROC far
     push ds
     push es
     push fs
+    push gs
     push ax
     push bx
     push cx
@@ -1533,6 +1561,8 @@ write_size_string16     PROC far
     or cx,cx
     jz write_size_string_done16
 ;
+    mov ax,es
+    mov gs,ax
     mov ax,flat_sel
     mov es,ax
     GetThread
@@ -1547,7 +1577,7 @@ write_size_string16     PROC far
     mov bh,ds:p_backcolor
 
 write_size_string_loop16:
-    mov al,es:[di]
+    mov al,gs:[di]
     inc di
     call WriteOne
     sub cx,1
@@ -1560,6 +1590,7 @@ write_size_string_done16:
     pop cx
     pop bx
     pop ax
+    pop gs
     pop fs
     pop es
     pop ds
@@ -1570,6 +1601,7 @@ write_size_string32     PROC far
     push ds
     push es
     push fs
+    push gs
     push ax
     push bx
     push ecx
@@ -1579,6 +1611,8 @@ write_size_string32     PROC far
     or ecx,ecx
     jz write_size_string_done32
 ;
+    mov ax,es
+    mov gs,ax
     mov ax,flat_sel
     mov es,ax
     GetThread
@@ -1593,7 +1627,7 @@ write_size_string32     PROC far
     mov bh,ds:p_backcolor
 
 write_size_string_loop32:
-    mov al,es:[edi]
+    mov al,gs:[edi]
     inc edi
     call WriteOne
     sub ecx,1
@@ -1606,6 +1640,7 @@ write_size_string_done32:
     pop ecx
     pop bx
     pop ax
+    pop gs
     pop fs
     pop es
     pop ds
