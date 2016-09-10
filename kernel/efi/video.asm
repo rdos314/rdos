@@ -533,6 +533,113 @@ RedrawConsole     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           CopyRow
+;
+;           DESCRIPTION:    Copy a row, potentially redrawing the display
+;
+;           PARAMETERS:     ES    Flat sel
+;                           FS    Console
+;                           SI    Source row
+;                           DI    Dest row
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyRow     PROC near
+    pushad
+;
+    push di
+    mov ax,fs:c_cols
+    mul si
+    movzx esi,ax
+    shl esi,2
+    add esi,OFFSET c_text_data
+;
+    mov ax,fs:c_cols
+    mul di
+    movzx edi,ax
+    shl edi,2
+    add edi,OFFSET c_text_data
+;
+    pop dx
+    xor cx,cx
+
+cpyLoop:
+    mov al,fs:[esi].ct_char
+    mov bl,fs:[esi].ct_fore_col
+    mov bh,fs:[esi].ct_back_col    
+;
+    mov fs:[edi].ct_char,al
+    mov fs:[edi].ct_fore_col,bl
+    mov fs:[edi].ct_back_col,bh
+;
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz cpyNext
+;
+    call WritePhysical
+
+cpyNext:
+    add esi,4
+    add edi,4    
+    inc cx
+    cmp cx,fs:c_cols
+    jc cpyLoop
+;            
+    popad
+    ret
+CopyRow     ENDP
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ClearRow
+;
+;           DESCRIPTION:    Clear a row, potentially redrawing the display
+;
+;           PARAMETERS:     ES    Flat sel
+;                           FS    Console
+;                           DX    Row
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearRow     PROC near
+    pushad
+;
+    push dx
+    mov ax,fs:c_cols
+    mul dx
+    movzx edi,ax
+    shl edi,2
+    add edi,OFFSET c_text_data
+    pop dx
+;
+    xor cx,cx
+    mov al,' '
+    mov bl,7
+    mov bh,0
+
+clrLoop:
+    mov fs:[edi].ct_char,al
+    mov fs:[edi].ct_fore_col,bl
+    mov fs:[edi].ct_back_col,bh
+;
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz clrNext
+;
+    call WritePhysical
+
+clrNext:
+    add edi,4    
+    inc cx
+    cmp cx,fs:c_cols
+    jc clrLoop
+;            
+    popad
+    ret
+ClearRow     ENDP
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           WriteConsole
 ;
 ;           DESCRIPTION:    Write char to buffer
@@ -928,14 +1035,23 @@ update_not_row_wrap:
 
 update_video_same_row:
     mov ax,fs:c_rows
-    dec ax
     cmp ds:p_row,ax
     jc update_video_end
 ;
     dec ds:p_row
+    mov si,1
+    mov di,0
+
+upScrollLoop:
+    call CopyRow
 ;
-; scroll up!
+    inc si
+    inc di
+    cmp si,fs:c_rows
+    jc upScrollLoop 
 ;
+    mov dx,di
+    call ClearRow
 
 update_video_end:
     pop ax
