@@ -376,12 +376,13 @@ abt0F   DD 00FFFFFFh
 ;
 ;           DESCRIPTION:    Write char to physical display
 ;
-;           PARAMETERS:     DS    Thread sel
-;                           ES    Flat sel
+;           PARAMETERS:     ES    Flat sel
 ;                           FS    Console
 ;                           AL    Char
 ;                           BL    Fore color
 ;                           BH    Back color
+;                           CX    Col
+;                           DX    Row
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -399,7 +400,8 @@ WritePhysical     PROC near
     mov esi,dword ptr cs:[esi].AttribBgrTab    ; back color
 ;    
     push ax
-    mov ax,ds:p_row
+    push cx
+    mov ax,dx
     mov cx,19
     mul cx
     add ax,4
@@ -409,8 +411,9 @@ WritePhysical     PROC near
     mul edx
     mov edi,fs:c_lfb
     add edi,eax
+    pop cx
 ;    
-    movzx eax,ds:p_col
+    movzx eax,cx
     shl eax,5
     add edi,eax
 ;
@@ -500,7 +503,13 @@ WriteConsole     PROC near
     test fs:c_flags,CONSOLE_FLAG_ACTIVE
     jz wcDone
 ;    
+    push cx
+    push dx
+    mov cx,ds:p_col
+    mov dx,ds:p_row
     call WritePhysical 
+    pop dx
+    pop cx
 
 wcDone:    
     inc ds:p_col
