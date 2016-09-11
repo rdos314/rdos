@@ -116,31 +116,6 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Delimiter
-;
-;           DESCRIPTION:    
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Delimiter       Proc near
-    push ax
-    push cx
-    mov cx,60
-    mov al,'-'
-write_delim_loop:
-    WriteChar
-    loop write_delim_loop
-    pop cx
-;
-    mov cx,20
-    call Blank    
-    pop ax
-    ret
-Delimiter       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           NewLine
 ;
 ;           DESCRIPTION:    
@@ -179,6 +154,33 @@ blank_loop:
     pop ax
     ret
 Blank   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Delimiter
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Delimiter       Proc near
+    push ax
+    push cx
+    mov cx,60
+    mov al,'-'
+write_delim_loop:
+    WriteChar
+    loop write_delim_loop
+    pop cx
+;
+    mov cx,19
+    call Blank    
+;
+    call NewLine    
+    pop ax
+    ret
+Delimiter       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1822,9 +1824,7 @@ WriteStatus     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteCpu32    PROC near
-    xor dx,dx
-    xor cx,cx
-    call move_cursor
+    ClearText
     call WriteCoproc
     call Delimiter
     call WriteCpuReg32
@@ -1851,9 +1851,7 @@ WriteCpu32    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteCpu64    PROC near
-    xor dx,dx
-    xor cx,cx
-    call move_cursor
+    ClearText
     mov cx,5*80
     call Blank
 ;    
