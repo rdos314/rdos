@@ -999,6 +999,46 @@ set_video_mode  ENDP
 invert_mouse_name       DB 'InvertMouse',0
 
 invert_mouse    PROC far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov es,ax
+    GetThread
+    mov ds,ax
+    mov fs,ds:p_app_sel
+    mov ax,fs:app_console
+    mov fs,ax    
+    or ax,ax
+    jz imDone
+;
+    push dx
+    mov ax,fs:c_cols
+    mul dx
+    add ax,cx
+    movzx edi,ax
+    shl edi,2
+    add edi,OFFSET c_text_data
+    mov al,fs:[edi].ct_fore_col
+    xchg al,fs:[edi].ct_back_col
+    mov fs:[edi].ct_fore_col,al
+    pop dx
+;
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz imDone
+;    
+    mov al,fs:[edi].ct_char
+    mov bl,fs:[edi].ct_fore_col
+    mov bh,fs:[edi].ct_back_col    
+    call WritePhysical 
+
+imDone:
+    popad
+    pop fs
+    pop es
+    pop ds
     ret
 invert_mouse    ENDP
 
