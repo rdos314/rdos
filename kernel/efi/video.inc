@@ -276,6 +276,8 @@ c_font_height   DW ?
 c_font_width    DW ?
 c_rows          DW ?
 c_cols          DW ?
+c_curr_row      DW ?
+c_curr_col      DW ?
 
 c_usage         DW ?
 
