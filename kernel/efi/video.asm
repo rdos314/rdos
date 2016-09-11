@@ -1039,6 +1039,10 @@ update_video_same_row:
     cmp ds:p_row,ax
     jc update_video_end
 ;
+    push dx
+    push si
+    push di
+;    
     dec ds:p_row
     mov si,1
     mov di,0
@@ -1053,6 +1057,10 @@ upScrollLoop:
 ;
     mov dx,di
     call ClearRow
+;
+    pop di
+    pop si
+    pop dx    
 
 update_video_end:
     pop ax
