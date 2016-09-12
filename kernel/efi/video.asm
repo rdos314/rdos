@@ -72,6 +72,9 @@ data    SEGMENT byte public 'DATA'
 
 focus_console   DW ?
 
+disp_x          DW ?
+disp_y          DW ?
+
 data    ENDS
 
     .386p
@@ -83,6 +86,94 @@ code    SEGMENT byte public 'CODE'
     extrn init_bitmap:near
     extrn init_sprite:near
     
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetValue
+;
+;       Purpose:        Get value from environment
+;
+;       Parameters:     ES:EDI   Name
+;
+;       Returns:        NC          Found
+;                       EAX         Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+GetValue    Proc near
+    push ds
+    push bx
+    push ecx
+    push esi
+;
+    LockSysEnv
+    mov ds,bx
+    xor esi,esi
+    
+find_val:
+    push edi
+
+find_val_loop:
+    cmpsb
+    jnz find_val_next
+;       
+    mov al,es:[edi]
+    or al,al
+    jnz find_val_loop
+    mov al,[esi]
+    cmp al,'='
+    je find_val_found
+
+find_val_next:
+    pop edi
+
+find_val_next_bp:
+    lodsb
+    or al,al
+    jnz find_val_next_bp
+;
+    mov al,[esi]
+    or al,al
+    jne find_val
+;
+    xor eax,eax
+    stc
+    jmp find_val_done
+
+find_val_found:
+    pop edi
+    inc esi  
+    xor eax,eax
+
+find_val_digit:
+    mov bl,[esi]
+    inc esi
+    sub bl,'0'
+    jc find_val_save
+;
+    cmp bl,10
+    jnc find_val_save
+;       
+    mov ecx,10
+    mul ecx
+    movzx ebx,bl
+    add eax,ebx
+    jmp find_val_digit
+
+find_val_save:
+    clc
+
+find_val_done:
+    pushf
+    UnlockSysEnv
+    popf
+;
+    pop esi
+    pop ecx
+    pop bx
+    pop ds
+    ret
+GetValue    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -709,6 +800,17 @@ utLoop:
     int 3
     mov ax,system_data_sel
     mov ds,ax
+    mov ax,ds:efi_width
+    mov dx,ds:efi_height
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:disp_x
+    mov dx,ds:disp_y
+
+
+    mov ax,system_data_sel
+    mov ds,ax
     mov ax,flat_sel
     mov es,ax
     mov edi,ds:efi_lfb
@@ -754,7 +856,27 @@ CreateFixedEfiConsole  PROC near
     xor edx,edx
     div ecx
     mov edi,eax
-;   
+;
+    mov ax,SEG data
+    mov ds,ax
+    movzx eax,ds:disp_x
+    or eax,eax
+    jz cfXOk
+;
+    shr eax,3
+    mov esi,eax
+
+cfXOk:
+    movzx eax,ds:disp_y
+    or eax,eax
+    jz cfYOk
+;
+    mov ecx,19
+    xor edx,edx
+    div ecx
+    mov edi,eax
+    
+cfYOk:
     mul esi
     mov ebp,eax
     shl eax,2
@@ -766,6 +888,8 @@ CreateFixedEfiConsole  PROC near
     mov es,bx
     mov es:c_text_entries,bp
 ;
+    mov ax,system_data_sel
+    mov ds,ax
     mov es:c_flags,0
     mov es:c_rows,di
     mov es:c_cols,si
@@ -3366,11 +3490,24 @@ init_tasking      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public init_video
+
+disp_x_text DB 'DISP.X', 0
+disp_y_text DB 'DISP.Y', 0
             
 init_video      PROC near
     mov ax,SEG data
     mov ds,ax
     mov ds:focus_console,0
+;    
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET disp_x_text
+    call GetValue
+    mov ds:disp_x,ax
+;
+    mov edi,OFFSET disp_y_text
+    call GetValue    
+    mov ds:disp_y,ax
 ;    
     mov ax,cs
     mov ds,ax
