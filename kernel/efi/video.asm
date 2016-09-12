@@ -859,18 +859,20 @@ CreateFixedEfiConsole  PROC near
 ;
     mov ax,SEG data
     mov ds,ax
-    movzx eax,ds:disp_x
-    or eax,eax
+    movzx ebx,ds:disp_x
+    or ebx,ebx
     jz cfXOk
 ;
+    mov eax,ebx
     shr eax,3
     mov esi,eax
 
 cfXOk:
-    movzx eax,ds:disp_y
-    or eax,eax
+    movzx ebx,ds:disp_y
+    or ebx,ebx
     jz cfYOk
 ;
+    mov eax,ebx
     mov ecx,19
     xor edx,edx
     div ecx
