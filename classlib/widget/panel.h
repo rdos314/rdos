@@ -236,6 +236,10 @@ protected:
     TVerPanelScrollControl *FVerScroll;
 
     int FRedrawBack;
+    
+    int FBackR;
+    int FBackG;
+    int FBackB;
 
 	char FKey;
 
@@ -246,10 +250,6 @@ private:
     int FLowerWidth;
     int FLeftWidth;
     int FRightWidth;
-    
-    int FBackR;
-    int FBackG;
-    int FBackB;
 
     int FBorderR;
     int FBorderG;

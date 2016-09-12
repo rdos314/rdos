@@ -820,7 +820,7 @@ void TCheckControl::ReformatText()
     if (xsize == 0 || ysize == 0)
         return;
 
-    xsize -= 2 * FStartX;
+    xsize -= 2 * FStartX + ysize;
     xsize -= xdiff;
 
     if (xsize <= 0 || ysize <= 0)
@@ -1093,6 +1093,8 @@ void TCheckControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     int xoffs, yoffs;
     int xdiff, ydiff;
     int redraw;
+    int r;
+    int xc, yc;
 
     if (IsTransparent())
     {
@@ -1129,6 +1131,24 @@ void TCheckControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
                         xmin, ymin,
                         xmax, ymax);
 
+        r = FFontHeight / 2;
+        xc = xmin + r;
+        yc = ymin + (ymax - ymin) / 2;
+
+        dev->SetDrawColor(FDrawR, FDrawG, FDrawB);
+        dev->DrawEllipse(xc, yc, r, r);        
+
+        r = 4 * r / 5;
+        dev->SetDrawColor(FBackR, FBackG, FBackB);
+        dev->DrawEllipse(xc, yc, r, r);        
+
+        if (FChecked)
+        {
+            r = 4 * r / 5;
+            dev->SetDrawColor(FDrawR, FDrawG, FDrawB);
+            dev->DrawEllipse(xc, yc, r, r);        
+        }
+
         if (FOrgText)
         {
 
@@ -1148,7 +1168,7 @@ void TCheckControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
                 {
                     FFont->GetStringMetrics(FTextRow[row], &xsize, &ysize);
     
-                    xstart = xmin + FStartX;
+                    xstart = xmin + FStartX + FFontHeight;
         
                     dev->SetFont(FFont);
                     dev->SetDrawColor(FDrawR, FDrawG, FDrawB);
