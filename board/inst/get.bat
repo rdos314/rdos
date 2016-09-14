@@ -27,6 +27,9 @@ copy ..\..\kernel\bios\pcbios.rdv files
 copy ..\..\kernel\bios\kdebug.rdv files
 copy ..\..\kernel\bios\pcshut.exe files
 copy ..\..\kernel\bios\vga.rdv files
+copy ..\..\kernel\efi\efigui.rdv files
+copy ..\..\kernel\efi\efidebug.rdv files
+copy ..\..\kernel\efi\efishut.exe files
 copy ..\..\kernel\dosemu\emulate.rdv files
 copy ..\..\kernel\dosemu\dos.rdv files
 copy ..\..\kernel\dosemu\dpmi.rdv files

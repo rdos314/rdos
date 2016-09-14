@@ -820,7 +820,7 @@ void TCheckControl::ReformatText()
     if (xsize == 0 || ysize == 0)
         return;
 
-    xsize -= 2 * FStartX + ysize;
+    xsize -= 2 * FStartX + ysize * 4 / 3;
     xsize -= xdiff;
 
     if (xsize <= 0 || ysize <= 0)
@@ -1124,6 +1124,9 @@ void TCheckControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     
     if (redraw)
     {
+        xsize = xmax - xmin;
+        ysize = ymax - ymin;
+        
         dev->SetLgopNone();
         dev->SetFilledStyle();
 
@@ -1133,7 +1136,7 @@ void TCheckControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 
         r = FFontHeight / 2;
         xc = xmin + r;
-        yc = ymin + (ymax - ymin) / 2;
+        yc = ymin + ysize / 2;
 
         dev->SetDrawColor(FDrawR, FDrawG, FDrawB);
         dev->DrawEllipse(xc, yc, r, r);        
@@ -1168,7 +1171,7 @@ void TCheckControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
                 {
                     FFont->GetStringMetrics(FTextRow[row], &xsize, &ysize);
     
-                    xstart = xmin + FStartX + FFontHeight;
+                    xstart = xmin + FStartX + (ymax - ymin) * 4 / 3;
         
                     dev->SetFont(FFont);
                     dev->SetDrawColor(FDrawR, FDrawG, FDrawB);
