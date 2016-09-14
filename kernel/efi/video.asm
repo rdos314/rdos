@@ -897,6 +897,8 @@ cfYOk:
     mov es:c_rows,di
     mov es:c_cols,si
     mov es:c_font,0
+    mov es:c_video_handle,0
+    mov es:c_video_sel,0
     mov es:c_font_width,8
     mov es:c_font_height,19
 ;    
@@ -1082,8 +1084,7 @@ query_video_mode    Endp
 get_video_mode_name     DB 'Get Video Mode',0
 
 get_video_mode  PROC far
-    xor ax,ax
-    clc
+    mov ax,1
     ret
 get_video_mode  Endp
 
@@ -1094,6 +1095,8 @@ get_video_mode  Endp
 ;           NAME:           SetVideoMode
 ;
 ;           DESCRIPTION:    Set video mode
+;
+;           PARAMETERS:     AX          Mode (3 = text, 1 = video)
 ;
 ;           RETURNS:        AX          bits / pixel
 ;                           BX          bitmap handle
@@ -1108,8 +1111,44 @@ set_video_mode_name     DB 'Set Video Mode',0
 
 set_video_mode  PROC far
     push ds
+    push fs
+;
+    push ax
+    GetThread
+    mov ds,ax
+    mov fs,ds:p_app_sel
+    mov ax,fs:app_console
+    mov fs,ax    
+    or ax,ax
+    pop ax
+    jz svmDone
 ;    
+    cmp ax,1
+    je svmVideo
+
+svmText:
+    mov bx,fs:c_video_handle
+    or bx,bx
+    jz svmDone
+;
+    mov fs:c_video_sel,0    
+    mov fs:c_video_handle,0
+    CloseBitmap
+    jmp svmDone
+    
+svmVideo:
+    mov bx,fs:c_video_handle
+    or bx,bx
+    jz svmCreate
+;
+    mov fs:c_video_sel,0    
+    mov fs:c_video_handle,0
+    CloseBitmap
+
+svmCreate:    
     call CreateVideoBitmap
+    mov fs:c_video_sel,es
+;
     movzx ax,es:v_bpp
     mov cx,es:v_width
     mov dx,es:v_height
@@ -1123,7 +1162,10 @@ set_video_mode  PROC far
     mov bx,flat_data_sel
     mov es,bx
     pop bx
-;
+    mov fs:c_video_handle,bx
+    
+svmDone:
+    pop fs
     pop ds    
     ret
 set_video_mode  ENDP
