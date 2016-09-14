@@ -3564,35 +3564,32 @@ errorp  Endp
     public BitmapTab24
 
 BitmapTab24:
-mt00 DD OFFSET errorp,              SEG code
-mt01 DD OFFSET errorp,              SEG code
-mt02 DD OFFSET errorp,              SEG code
-mt03 DD OFFSET translate_color,     SEG code
-mt04 DD OFFSET set_base,            SEG code
-mt05 DD OFFSET slab,                SEG code
-mt06 DD OFFSET copy,                SEG code
-mt07 DD OFFSET mask_set,        SEG code
-mt08 DD OFFSET mask_copy,               SEG code
-mt09 DD OFFSET get_line,            SEG code
-mt0A DD OFFSET get_pixel,               SEG code
-mt0B DD OFFSET set_pixel,               SEG code
-mt0C DD OFFSET get_native,              SEG code
-mt0D DD OFFSET get_rgb,             SEG code
-mt0E DD OFFSET set_native,              SEG code
-mt0F DD OFFSET set_rgb,             SEG code
-mt10 DD OFFSET draw_mask_line,      SEG code
-mt11 DD OFFSET set_sprite,              SEG code
-mt12 DD OFFSET draw_sprite_line,    SEG code
-mt13 DD OFFSET draw_string,             SEG code
-mt14 DD OFFSET draw_line,               SEG code
-mt15 DD OFFSET draw_rect,               SEG code
-mt16 DD OFFSET draw_ellipse,        SEG code
-mt17 DD OFFSET anti_alias_set,      SEG code
-mt18 DD OFFSET phys_update,         SEG code
-mt19 DD OFFSET errorp,              SEG code
-mt1A DD OFFSET errorp,              SEG code
-mt1B DD OFFSET get_alpha,           SEG code
-mt1C DD OFFSET set_alpha,           SEG code
+mt00 DD OFFSET translate_color,     SEG code
+mt01 DD OFFSET set_base,            SEG code
+mt02 DD OFFSET slab,                SEG code
+mt03 DD OFFSET copy,                SEG code
+mt04 DD OFFSET mask_set,        SEG code
+mt05 DD OFFSET mask_copy,               SEG code
+mt06 DD OFFSET get_line,            SEG code
+mt07 DD OFFSET get_pixel,               SEG code
+mt08 DD OFFSET set_pixel,               SEG code
+mt09 DD OFFSET get_native,              SEG code
+mt0A DD OFFSET get_rgb,             SEG code
+mt0B DD OFFSET set_native,              SEG code
+mt0C DD OFFSET set_rgb,             SEG code
+mt0D DD OFFSET draw_mask_line,      SEG code
+mt0E DD OFFSET set_sprite,              SEG code
+mt0F DD OFFSET draw_sprite_line,    SEG code
+mt10 DD OFFSET draw_string,             SEG code
+mt11 DD OFFSET draw_line,               SEG code
+mt12 DD OFFSET draw_rect,               SEG code
+mt13 DD OFFSET draw_ellipse,        SEG code
+mt14 DD OFFSET anti_alias_set,      SEG code
+mt15 DD OFFSET phys_update,         SEG code
+mt16 DD OFFSET errorp,              SEG code
+mt17 DD OFFSET errorp,              SEG code
+mt18 DD OFFSET get_alpha,           SEG code
+mt19 DD OFFSET set_alpha,           SEG code
 
 code    ENDS
 

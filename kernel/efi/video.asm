@@ -85,6 +85,7 @@ code    SEGMENT byte public 'CODE'
 
     extrn init_bitmap:near
     extrn init_sprite:near
+    extrn CreateVideoBitmap:near
     
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1081,6 +1082,8 @@ query_video_mode    Endp
 get_video_mode_name     DB 'Get Video Mode',0
 
 get_video_mode  PROC far
+    xor ax,ax
+    clc
     ret
 get_video_mode  Endp
 
@@ -1091,8 +1094,6 @@ get_video_mode  Endp
 ;           NAME:           SetVideoMode
 ;
 ;           DESCRIPTION:    Set video mode
-;
-;           PARAMETERS:         AX          Mode
 ;
 ;           RETURNS:        AX          bits / pixel
 ;                           BX          bitmap handle
@@ -1106,6 +1107,24 @@ get_video_mode  Endp
 set_video_mode_name     DB 'Set Video Mode',0
 
 set_video_mode  PROC far
+    push ds
+;    
+    call CreateVideoBitmap
+    movzx ax,es:v_bpp
+    mov cx,es:v_width
+    mov dx,es:v_height
+    mov si,es:v_row_size
+    mov edi,es:v_app_base
+;
+    push bx
+    mov bx,system_data_sel
+    mov ds,bx
+    sub edi,ds:flat_base
+    mov bx,flat_data_sel
+    mov es,bx
+    pop bx
+;
+    pop ds    
     ret
 set_video_mode  ENDP
 

@@ -25,36 +25,16 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-VIDEO_ENTRIES   = 1Ch
+VIDEO_ENTRIES   = 1Ah
 
 STYLE_HOLLOW                    EQU 0
 STYLE_FILLED                    EQU 1
 
 video_api_struc STRUC
 
-; IN  AX                Red
-; IN  BX                Green
-; IN  DX                Blue
-v_set_rgb_color_proc            DD ?,?
-
-v_clear_mask_proc                       DD ?,?
-
-; IN  CX                x position
-; IN  DX                y position
-; IN  FS:ESI    bitmap info
-; IN  ES:EDI    bitmap
-v_add_mask_proc                     DD ?,?
-
-; IN  AX        Font handle
-v_set_font_proc                         DD ?,?
-
 ; IN  EAX                       RGB color
 ; OUT EAX           internal color
 v_translate_color_proc      DD ?,?
-
-;
-; device-dependent functions
-;
 
 ; IN  EAX                       Internal color
 ; IN  EDI               Position

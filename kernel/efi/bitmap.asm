@@ -54,207 +54,6 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           InitVideoBitmap
-;
-;           DESCRIPTION:    Init video bitmap
-;
-;           PARAMETERS:         AL          Bits per pixel
-;                           CX          Width
-;                           DX          Height
-;                           ES          Video / bitmap selector
-;
-;           RETURNS:        BX          Bitmap handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_video_bitmap_name  DB 'Init Video Bitmap', 0
-
-init_video_bitmap       Proc far
-    push ds
-    push ecx
-    push esi
-    push edi
-;
-    push si
-    mov si,es
-    mov ds,si
-    InitSection ds:v_section
-    InitSection ds:v_sprite_section
-    pop si
-;    
-    mov es:v_usage_count,1
-    mov es:v_color,0
-    mov es:v_lgop,1
-    mov es:v_font,0
-    mov es:v_style,0
-    mov es:v_phys_base,0
-    mov es:v_has_focus,0
-    mov es:v_bpp,al
-    cmp al,1
-    jne init_video_no_pad
-;
-    dec cx
-    and cx,0FFF8h
-    add cx,8
-
-init_video_no_pad:
-    mov es:v_width,cx
-    mov es:v_height,dx
-    mov es:v_sprite_count,0
-    mov es:v_sprite_size,0
-    mov es:v_sprite_sel,0
-    mov es:v_x_min,0
-    mov es:v_y_min,0
-    mov si,cx
-    dec si
-    mov es:v_x_max,si
-    mov si,dx
-    dec si
-    mov es:v_y_max,si
-;
-    push ax
-    push cx
-    push dx
-;
-    mov ax,1
-    OpenFont
-    jnc init_video_font_found
-;
-    mov es:v_text_font,0
-    mov es:v_pixels_per_row,0
-    mov es:v_pixels_per_col,0
-    jmp init_video_font_done
-
-init_video_font_found:
-    mov es:v_text_font,bx
-    mov al,'M'
-    push es
-    push edi
-;    GetCharMask
-    mov cx,8
-    mov dx,12
-;
-    pop edi
-    pop es
-    mov es:v_pixels_per_row,dx
-    mov es:v_pixels_per_col,cx
-;
-    mov ax,es:v_width
-    xor dx,dx
-    div es:v_pixels_per_col
-    mov es:v_col_count,ax
-;
-    mov ax,es:v_height
-    xor dx,dx
-    div es:v_pixels_per_row
-    mov es:v_row_count,ax
-;
-    movzx eax,es:v_row_count
-    movzx edx,es:v_col_count
-    mul edx
-    add eax,eax
-;
-    push es
-    AllocateSmallGlobalMem
-    xor edi,edi
-    mov ecx,eax
-    shr ecx,1
-    mov ax,720h
-    rep stos word ptr es:[edi]
-    mov ax,es
-    pop es
-    mov es:v_text,ax
-
-init_video_font_done:
-    pop dx
-    pop cx
-    pop ax
-;
-    mov si,cs
-    mov ds,si
-;
-    cmp al,1
-    je init_video1
-;
-    cmp al,8
-    je init_video8
-;
-    cmp al,16
-    je init_video16
-;
-    cmp al,24
-    je init_video24
-;
-    cmp al,32
-    je init_video32
-;
-    jmp init_video_done
-
-init_video1:
-    mov es:v_color,1
-    mov esi,OFFSET BitmapTab1
-    jmp init_video_copy
-    
-init_video8:
-    mov esi,OFFSET BitmapTab8
-    jmp init_video_copy
-    
-init_video16:
-    mov esi,OFFSET BitmapTab16
-    jmp init_video_copy
-
-init_video24:
-    mov esi,OFFSET BitmapTab24
-    jmp init_video_copy
-
-init_video32:
-    mov esi,OFFSET BitmapTab32
-    jmp init_video_copy
-
-init_video_copy:
-    mov ecx,2 * VIDEO_ENTRIES
-    xor edi,edi
-    rep movsd
-;
-    movzx edi,es:v_sprite_lines
-    movzx ecx,dx
-    mov eax,-1
-    rep stosd
-    mov es:v_sprite_max_pos,di
-
-init_video_done:
-    mov cx,SIZE bitmap_struc
-    AllocateHandle
-    mov ds:[ebx].bm_sel,es
-    mov ds:[ebx].bm_flag,BM_FLAG_VIDEO
-    mov ds:[ebx].hh_sign,BITMAP_HANDLE
-    mov eax,es:v_color
-    mov ds:[ebx].bm_color,eax
-    mov ds:[ebx].bm_lgop,1
-    mov ds:[ebx].bm_font,0
-    mov ds:[ebx].bm_style,0
-    mov ds:[ebx].bm_x_min,0
-    mov ds:[ebx].bm_y_min,0
-    mov ax,es:v_width
-    dec ax
-    mov ds:[ebx].bm_x_max,ax
-    mov ax,es:v_height
-    dec ax
-    mov ds:[ebx].bm_y_max,ax
-    mov bx,[ebx].hh_handle
-    mov es:v_bitmap,bx
-;
-    pop edi
-    pop esi
-    pop ecx
-    pop ds
-    ret
-init_video_bitmap       Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           CreateBitmap
 ;
 ;           DESCRIPTION:    Create bitmap
@@ -453,6 +252,194 @@ cr_bitmap_end:
     pop ds
     ret
 create_bitmap   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CreateVideoBitmap
+;
+;           DESCRIPTION:    Create video bitmap
+;
+;           RETURNS:        BX          Bitmap handle
+;                           ES          Video object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateVideoBitmap
+    
+CreateVideoBitmap   Proc near
+    push ds
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov ax,system_data_sel
+    mov ax,system_data_sel
+    mov ds,ax
+    mov cx,ds:efi_width
+    mov dx,ds:efi_height
+    mov ax,32
+    mov ebp,ds:efi_scan_size
+;    
+    push eax
+    mov ax,dx
+    shl ax,2    
+    add ax,SIZE video_api_struc
+    movzx eax,ax
+    AllocateSmallKernelMem
+    pop eax
+;
+    push si
+    mov si,es
+    mov ds,si
+    InitSection ds:v_section
+    InitSection ds:v_sprite_section
+    pop si
+;    
+    mov es:v_usage_count,1
+    mov es:v_color,0
+    mov es:v_alpha,0
+    mov es:v_lgop,1
+    mov es:v_font,0
+    mov es:v_text_font,0
+    mov es:v_style,0
+    mov es:v_phys_base,0
+    mov es:v_has_focus,0
+    mov es:v_bpp,al
+    cmp al,1
+    jne cvbNoPad
+;
+    dec cx
+    and cx,0FFF8h
+    add cx,8
+
+cvbNoPad:
+    mov es:v_width,cx
+    mov es:v_height,dx
+    mov es:v_sprite_count,0
+    mov es:v_sprite_size,0
+    mov es:v_sprite_sel,0
+    mov es:v_x_min,0
+    mov es:v_y_min,0
+    mov es:v_text,0
+    mov es:v_row_size,bp
+    mov si,cx
+    dec si
+    mov es:v_x_max,si
+    mov si,dx
+    dec si
+    mov es:v_y_max,si
+;
+    mov si,cs
+    mov ds,si
+;
+    cmp al,1
+    je cvbBitmap1
+;
+    cmp al,8
+    je cvbBitmap8
+;
+    cmp al,16
+    je cvbBitmap16
+;
+    cmp al,24
+    je cvbBitmap24
+;
+    cmp al,32
+    je cvbBitmap32
+;
+    FreeMem
+    stc
+    jmp cvbBitmapEnd
+
+cvbBitmap1:
+    mov es:v_color,1
+    mov esi,OFFSET BitmapTab1
+    jmp cvbBitmapCopy
+
+cvbBitmap8:
+    mov esi,OFFSET BitmapTab8
+    jmp cvbBitmapCopy
+
+cvbBitmap16:
+    mov esi,OFFSET BitmapTab16
+    jmp cvbBitmapCopy
+
+cvbBitmap24:
+    mov esi,OFFSET BitmapTab24
+    jmp cvbBitmapCopy
+
+cvbBitmap32:
+    mov esi,OFFSET BitmapTab32
+    jmp cvbBitmapCopy
+
+cvbBitmapCopy:
+    mov ecx,2 * VIDEO_ENTRIES
+    xor edi,edi
+    rep movsd
+;
+    mov edi,SIZE video_api_struc
+    mov es:v_sprite_lines,di
+    movzx ecx,es:v_height
+    mov eax,-1
+    rep stosd
+    mov es:v_sprite_max_pos,di
+;
+    movzx eax,es:v_row_size
+    movzx edx,es:v_height
+    mul edx
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    mov es:v_app_size,eax
+    AllocateLocalLinear
+    mov es:v_app_base,edx
+;
+    push es
+    mov ecx,eax
+    shr ecx,2
+    mov edi,edx
+    mov ax,flat_sel
+    mov es,ax
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    pop es
+;
+    mov cx,SIZE bitmap_struc
+    AllocateHandle
+    mov ds:[ebx].bm_sel,es
+    mov ds:[ebx].bm_flag,BM_FLAG_BITMAP
+    mov ds:[ebx].hh_sign,BITMAP_HANDLE
+    mov eax,es:v_color
+    mov ds:[ebx].bm_color,eax
+    mov ds:[ebx].bm_lgop,1
+    mov ds:[ebx].bm_font,0
+    mov ds:[ebx].bm_style,0
+    mov ds:[ebx].bm_x_min,0
+    mov ds:[ebx].bm_y_min,0
+    mov ax,es:v_width
+    dec ax
+    mov ds:[ebx].bm_x_max,ax
+    mov ax,es:v_height
+    dec ax
+    mov ds:[ebx].bm_y_max,ax
+    mov bx,[ebx].hh_handle
+    mov es:v_bitmap,bx
+    clc
+
+cvbBitmapEnd:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+CreateVideoBitmap   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -981,12 +968,6 @@ init_bitmap     PROC near
     mov ax,BITMAP_HANDLE
     mov edi,OFFSET delete_handle
     RegisterHandle
-;
-    mov esi,OFFSET init_video_bitmap
-    mov edi,OFFSET init_video_bitmap_name
-    xor cl,cl
-    mov ax,init_video_bitmap_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET create_bitmap
     mov edi,OFFSET create_bitmap_name
