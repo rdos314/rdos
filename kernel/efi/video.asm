@@ -625,6 +625,35 @@ RedrawConsole     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           RedrawVideo
+;
+;           DESCRIPTION:    Redraw video to physical display
+;
+;           PARAMETERS:     DS    Video sel
+;                           ES    Flat sel
+;                           FS    Console
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RedrawVideo     PROC near
+    pushad
+;    
+    mov esi,ds:v_app_base
+    mov edi,fs:c_lfb
+    mov eax,fs:c_scan_size
+    movzx edx,fs:c_height
+    mul edx
+    mov ecx,eax
+    shr ecx,2
+    rep movs dword ptr es:[edi],es:[esi]
+;
+    popad    
+    ret
+RedrawVideo     ENDP
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           CopyRow
 ;
 ;           DESCRIPTION:    Copy a row, potentially redrawing the display
@@ -1021,6 +1050,7 @@ DisableConsoleFocus Endp
 EnableConsoleFocus Proc near
     push ds
     push es
+    push fs
     push ax
     push bx
 ;    
@@ -1040,20 +1070,25 @@ EnableConsoleFocus Proc near
     or ax,ax
     jz ecfRedraw
 ;
+    mov ds,ax
+    mov ds:v_has_focus,1
+;
+    mov ax,flat_sel
     mov es,ax
-    mov es:v_has_focus,1
+    mov fs,bx
+    call RedrawVideo
+    jmp ecfDone
 
 ecfRedraw:
-    push fs
     mov ax,flat_sel
     mov es,ax
     mov fs,bx
     call RedrawConsole    
-    pop fs
         
 ecfDone:
     pop bx
     pop ax
+    pop fs
     pop es
     pop ds    
     ret
@@ -1162,8 +1197,13 @@ svmVideo:
 svmCreate:    
     call CreateVideoBitmap
     mov fs:c_video_sel,es
-    mov es:v_has_focus,1
 ;
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz svmFocusOk
+;    
+    mov es:v_has_focus,1
+
+svmFocusOk:   
     movzx ax,es:v_bpp
     mov cx,es:v_width
     mov dx,es:v_height

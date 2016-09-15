@@ -395,7 +395,7 @@ cvbBitmapCopy:
     and ax,0F000h
     add eax,1000h
     mov es:v_app_size,eax
-    AllocateLocalLinear
+    AllocateBigLinear
     mov es:v_app_base,edx
 ;
     push es
