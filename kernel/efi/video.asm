@@ -1217,7 +1217,8 @@ svmFocusOk:
     mov bx,flat_data_sel
     mov es,bx
     pop bx
-    mov fs:c_video_handle,bx
+    mov fs:c_video_handle,bx    
+    SetMouseLimit
     
 svmDone:
     pop fs
