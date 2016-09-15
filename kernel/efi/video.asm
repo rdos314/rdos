@@ -991,6 +991,12 @@ DisableConsoleFocus Proc near
 ;
     mov ds,ax
     lock and ds:c_flags,NOT CONSOLE_FLAG_ACTIVE
+    mov ax,ds:c_video_sel
+    or ax,ax
+    jz dcfDone
+;
+    mov ds,ax
+    mov ds:v_has_focus,0    
         
 dcfDone:
     pop ax
@@ -1030,6 +1036,14 @@ EnableConsoleFocus Proc near
     lock or es:c_flags,CONSOLE_FLAG_ACTIVE
     mov ds:focus_console,bx
 ;
+    mov ax,es:c_video_sel
+    or ax,ax
+    jz ecfRedraw
+;
+    mov es,ax
+    mov es:v_has_focus,1
+
+ecfRedraw:
     push fs
     mov ax,flat_sel
     mov es,ax
@@ -1148,6 +1162,7 @@ svmVideo:
 svmCreate:    
     call CreateVideoBitmap
     mov fs:c_video_sel,es
+    mov es:v_has_focus,1
 ;
     movzx ax,es:v_bpp
     mov cx,es:v_width

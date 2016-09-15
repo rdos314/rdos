@@ -277,19 +277,19 @@ CreateVideoBitmap   Proc near
     push ebp
 ;
     mov ax,system_data_sel
-    mov ax,system_data_sel
     mov ds,ax
     mov cx,ds:efi_width
     mov dx,ds:efi_height
     mov ax,32
     mov ebp,ds:efi_scan_size
+    mov edi,ds:efi_lfb
 ;    
     push eax
     mov ax,dx
     shl ax,2    
     add ax,SIZE video_api_struc
     movzx eax,ax
-    AllocateSmallKernelMem
+    AllocateSmallGlobalMem
     pop eax
 ;
     push si
@@ -306,7 +306,7 @@ CreateVideoBitmap   Proc near
     mov es:v_font,0
     mov es:v_text_font,0
     mov es:v_style,0
-    mov es:v_phys_base,0
+    mov es:v_phys_base,edi
     mov es:v_has_focus,0
     mov es:v_bpp,al
     cmp al,1
