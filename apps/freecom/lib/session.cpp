@@ -69,6 +69,7 @@
 #include "mount.h"
 #include "reboot.h"
 #include "capture.h"
+#include "com.h"
 #include "can.h"
 #include "lon.h"
 #include "usb.h"
@@ -115,6 +116,7 @@ static TCommandFactory *crash;
 static TCommandFactory *newsess;
 static TCommandFactory *can;
 static TCommandFactory *capture;
+static TCommandFactory *com;
 static TCommandFactory *cpy;
 static TCommandFactory *date;
 static TCommandFactory *debug;
@@ -275,6 +277,7 @@ TSession::TSession(const char *ipc)
             crash = 0;
             
         cpy = new TCopyFactory;
+        com = new TComFactory;
         newsess = new TNewSessionFactory;
         cls = new TClsFactory;
         chdir = new TChdirFactory;
@@ -409,6 +412,7 @@ TSession::~TSession()
         delete del;
         delete date;
         delete cpy;
+        delete com;
         delete newsess;
         delete cls;
         delete chdir;

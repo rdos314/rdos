@@ -1230,6 +1230,24 @@ set_video_mode  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           IsEfi
+;
+;           DESCRIPTION:    Check for EFI booted system
+;
+;           RETURNS:        NC      EFI system
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_efi_name       DB 'Is EFI',0
+
+is_efi  PROC far
+    clc
+    ret
+is_efi  ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           InvertMouse
 ;
 ;           DESCRIPTION:    Invert colors for mouse-pointer
@@ -3643,6 +3661,12 @@ init_video      PROC near
 ;
     mov edi,OFFSET init_tasking
     HookInitTasking
+;
+    mov esi,OFFSET is_efi
+    mov edi,OFFSET is_efi_name
+    xor cl,cl
+    mov ax,is_efi_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET invert_mouse
     mov edi,OFFSET invert_mouse_name

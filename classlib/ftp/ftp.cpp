@@ -1809,16 +1809,20 @@ void TFtp::HandleDataSocket()
 {
     char buf[512];
     int count;
+    int tries = 0;
 
     FDirData = 0;
     FDirCount = 0;
 
     if (FWriteFile)
     {
-        while (FWriteFile && !FStorSent)
+        while (FWriteFile && !FStorSent && tries < 1000)
+        {
             RdosWaitMilli(150);
+            tries++;
+        }
 
-        if (FWriteFile)
+        if (FWriteFile && FStorSent)
         {            
             FFile->SetPos(0);
             count = FFile->Read(buf, 512);

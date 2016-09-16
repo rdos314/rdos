@@ -1718,6 +1718,12 @@ Shows system resources
 INFO
 .
 
+:TEXT_CMDHELP_COM
+Show com ports
+
+COM
+.
+
 :TEXT_INFO_PHYS_HEADER
 Physical memory map:
 .
