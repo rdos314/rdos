@@ -421,150 +421,6 @@ FreeExec   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           load_program16/32
-;
-;           DESCRIPTION:    Load executable file
-;
-;           PARAMETERS:     DS:(E)SI    Filename
-;                           ES:(E)DI    Command line
-;               GS:(E)BX    Options
-;
-;       RETURN VALUE:   
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-load_exe_name   DB 'Load Exe',0
-
-load_program    Proc near
-    pop ax
-;       
-    push word ptr 0
-    push cs
-    push word ptr 0
-    push ax
-;       
-    call SetupExec
-    call CreateExecProg
-    call CreateExecParam
-    call CreateExecOptions
-;       
-    SaveContext
-    xor eax,eax
-    push eax
-    push eax
-    push eax
-    push eax
-    push eax
-    push eax
-    push eax
-;
-    mov ax,fs
-    mov gs,ax
-    xor ax,ax
-    mov fs,ax
-;
-    OpenApp
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
-    mov es:app_context,bx
-;
-    xor si,si
-    mov ds,gs:e_name
-    mov di,OFFSET app_exe_name
-
-epCopyExeLoop:
-    lodsb
-    stosb
-    or al,al
-    jne epCopyExeLoop
-;
-    mov es,gs:e_name
-    xor di,di
-    OpenFile
-    jc load_fail
-;
-    xor esi,esi
-    xor edi,edi
-    mov ds,gs:e_name
-    mov es,gs:e_cmd
-    call load_exe_file
-    jc load_close_fail
-;
-    call SetupExecOptions
-    call FreeExec
-    test byte ptr [bp+2].load_eflags,2
-    jnz load_prog_vm
-;
-    mov ds,[bp].load_ds
-    mov es,[bp].load_es
-    mov fs,[bp].load_fs
-    mov gs,[bp].load_gs
-
-load_prog_vm:
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    iretd
-
-load_close_fail:
-    CloseFile
-
-load_fail:
-    call FreeExec
-    CloseApp
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov bx,ds:app_context
-    RestoreContext
-    push ds
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_exit_code
-    pop ds
-    stc
-    retf32
-load_program    Endp
-    
-load_program16 Proc far
-    push fs
-    push ebx
-    push esi
-    push edi
-;
-    movzx ebx,bx
-    movzx esi,si
-    movzx edi,di    
-    call load_program
-;
-    pop edi
-    pop esi
-    pop ebx
-    pop fs
-    retf32
-load_program16  Endp
-    
-load_program32 Proc far
-    push fs
-    push bx
-;
-    call load_program
-;
-    pop bx
-    pop fs
-    retf32
-load_program32  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           dos_ext_exec
 ;
 ;           DESCRIPTION:    DOS extender load
@@ -1823,6 +1679,673 @@ spawn_program32 Proc far
     call spawn_program
     retf32
 spawn_program32 Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupEfiLoad
+;
+;           DESCRIPTION:    Setup EFI load
+;
+;       RETURNS:            GS      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupEfiLoad Proc near    
+    push ds
+    push eax
+    push bx
+; 
+    push es
+    mov eax,SIZE efi_load_struc
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov gs,ax
+    pop es
+;  
+    mov gs:el_name,0
+    mov gs:el_cmd,0
+    mov gs:el_curr_dir,0
+    mov gs:el_env,0
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_loader_name
+    mov gs:el_loader_name,eax
+    mov ax,ds:app_console
+    mov gs:el_console,ax
+;
+    pop bx
+    pop eax
+    pop ds
+    ret
+SetupEfiLoad  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateEfiProg
+;
+;           DESCRIPTION:    Make global copy of program name
+;
+;           PARAMETERS:     DS:ESI      Filename
+;                           GS          Efi load sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateEfiProg Proc near
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    mov edi,esi
+    xor ecx,ecx
+
+cepLoop:
+    lods byte ptr [esi]
+    or al,al
+    jz cepSizeOk
+;
+    inc ecx
+    jmp cepLoop
+
+cepSizeOk:
+    mov esi,edi
+    inc ecx 
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    mov gs:el_name,es
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]     
+;    
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateEfiProg Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateEfiParam
+;
+;           DESCRIPTION:    Make global copy of parameters
+;
+;           PARAMETERS:     ES:EDI      Param struc
+;                           GS          Efi load sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateEfiParam Proc near
+    push ds
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    xor ecx,ecx
+    mov esi,edi
+
+ceparLoop:
+    lods byte ptr es:[esi]
+    or al,al
+    jz ceparSizeOk
+;
+    inc ecx
+    jmp ceparLoop
+
+ceparSizeOk:
+    mov esi,edi
+    inc ecx 
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]     
+
+ceparDone:    
+    mov gs:el_cmd,es
+;       
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    ret
+CreateEfiParam Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateEfiStartDir
+;
+;           DESCRIPTION:    Make global copy of start dir
+;
+;           PARAMETERS:     GS      Efi load sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateEfiStartDir Proc near
+    push ds
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    mov eax,256
+    AllocateSmallGlobalMem
+    xor edi,edi
+    GetCurDrive
+    mov ah,al
+    add al,'A'
+    stos byte ptr es:[edi]
+;
+    mov al,':'
+    stos byte ptr es:[edi]
+;
+    mov al,'\'
+    stos byte ptr es:[edi]
+;
+    mov al,ah
+    GetCurDir
+    mov gs:el_curr_dir,es
+;       
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    ret
+CreateEfiStartDir Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateEfiEnv
+;
+;           DESCRIPTION:    Make global copy of environment variables
+;
+;           PARAMETERS:     GS          Efi load sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateEfiEnv Proc near
+    push ds
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    OpenProcEnv
+    GetEnvSize
+    movzx eax,ax
+    AllocateSmallGlobalMem
+    xor di,di
+    GetEnvData
+    CloseEnv
+    mov gs:el_env,es
+;       
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    ret
+CreateEfiEnv Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupEfiDir
+;
+;           DESCRIPTION:    Setup efi directory
+;
+;           PARAMETERS:     GS      Efi load sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupEfiDir Proc near
+    push es
+    push ax
+    push di
+;
+    mov es,gs:el_curr_dir
+    xor di,di
+    mov ax,es:[di]
+    cmp ah,':'
+    jne sedDirOk
+;
+    sub al,'A'
+    jc sedDirOk
+;
+    cmp al,26
+    jc sedSetDrive
+;
+    sub al,20h
+    jc sedDirOk
+;
+    cmp al,26
+    jnc sedDirOk
+
+sedSetDrive:
+    SetCurDrive
+    add di,2
+    SetCurDir
+    
+sedDirOk:
+    pop di
+    pop ax
+    pop es
+    ret
+SetupEfiDir   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupEfiEnv
+;
+;           DESCRIPTION:    Setup efi load environment
+;
+;           PARAMETERS:     GS      Efi load sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupEfiEnv Proc near
+    push es
+    push bx
+    push di
+;
+    mov es,gs:el_env
+    xor di,di
+;
+    OpenProcEnv
+    SetEnvData
+    CloseEnv
+;
+    pop di
+    pop bx
+    pop es
+    ret
+SetupEfiEnv   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           EfiStartup
+;
+;           DESCRIPTION:    Efi startup stub
+;
+;           PARAMETERS:     BX      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+efi_startup:
+    sti
+    mov gs,bx
+    mov ax,SEG data
+    mov ds,ax
+    SaveContext
+    xor eax,eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+;
+    push es
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    mov es:app_context,bx
+;
+    xor si,si
+    mov ds,gs:s_name    
+    mov di,OFFSET app_exe_name
+
+lepCopyExeLoop:
+    lodsb
+    stosb
+    or al,al
+    jne lepCopyExeLoop
+;
+    pop ds
+    xor bx,bx
+;       
+    GetThread
+    mov gs:el_thread,ax
+;
+    call SetupEfiDir
+    call SetupEfiEnv
+;       
+    xor di,di
+    mov es,gs:el_name
+    xor cx,cx
+    OpenFile
+    jc lepFail
+;
+    xor esi,esi
+    xor edi,edi
+    mov ds,gs:el_name
+    mov es,gs:el_cmd
+;
+    call load_exe_file
+    jc lepCloseFail
+;
+    mov gs:el_ret_code,0
+    GetThread
+    mov ds,ax
+    mov ax,ds:p_app_sel
+    mov gs:el_app,ax
+    mov ds,ax
+    mov ax,gs:el_console
+    mov ds:app_console,ax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_process_sel
+    mov ax,ds:ms_pd_sel
+    mov gs:el_proc_sel,ax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_spawn_proc
+    or eax,ds:app_spawn_proc+4
+    jz lepNotifyDone
+;
+    call fword ptr ds:app_spawn_proc
+
+lepNotifyDone:
+;    call FreeSpawn
+;
+    test byte ptr [bp+2].load_eflags,2
+    jnz lepVm16
+;
+    mov ds,[bp].load_ds
+    mov es,[bp].load_es
+    mov fs,[bp].load_fs
+    mov gs,[bp].load_gs
+
+lepVm16:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+lepCloseFail:
+    CloseFile
+
+lepFail:
+    mov gs:el_ret_code,-1
+    mov ax,gs
+    mov ds,ax
+;
+    mov ax,10
+    WaitMilliSec
+;
+;    call FreeSpawn
+    UnloadExe
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DoEfiLoad
+;
+;           DESCRIPTION:    Do efi load
+;
+;           PARAMETERS:     GS      Efi load sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoEfiLoad Proc near       
+    push ds
+    push es
+    push ax
+    push bx
+    push ecx
+    push si
+    push di
+;    
+    mov es,gs:el_name
+    xor edi,edi
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET efi_startup
+    mov bx,gs
+    mov ax,2
+    mov ecx,stack0_size
+    CreateProcess
+;
+    pop di
+    pop si
+    pop ecx
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    ret
+DoEfiLoad Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           load_program16/32
+;
+;           DESCRIPTION:    Load executable file
+;
+;           PARAMETERS:     DS:(E)SI    Filename
+;                           ES:(E)DI    Command line
+;               GS:(E)BX    Options
+;
+;       RETURN VALUE:   
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_exe_name   DB 'Load Exe',0
+
+load_program    Proc near
+    pop ax
+;       
+    push word ptr 0
+    push cs
+    push word ptr 0
+    push ax
+;       
+    call SetupExec
+    call CreateExecProg
+    call CreateExecParam
+    call CreateExecOptions
+;       
+    SaveContext
+    xor eax,eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+;
+    mov ax,fs
+    mov gs,ax
+    xor ax,ax
+    mov fs,ax
+;
+    OpenApp
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    mov es:app_context,bx
+;
+    xor si,si
+    mov ds,gs:e_name
+    mov di,OFFSET app_exe_name
+
+epCopyExeLoop:
+    lodsb
+    stosb
+    or al,al
+    jne epCopyExeLoop
+;
+    mov es,gs:e_name
+    xor di,di
+    OpenFile
+    jc load_fail
+;
+    xor esi,esi
+    xor edi,edi
+    mov ds,gs:e_name
+    mov es,gs:e_cmd
+    call load_exe_file
+    jc load_close_fail
+;
+    call SetupExecOptions
+    call FreeExec
+    test byte ptr [bp+2].load_eflags,2
+    jnz load_prog_vm
+;
+    mov ds,[bp].load_ds
+    mov es,[bp].load_es
+    mov fs,[bp].load_fs
+    mov gs,[bp].load_gs
+
+load_prog_vm:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+load_close_fail:
+    CloseFile
+
+load_fail:
+    call FreeExec
+    CloseApp
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov bx,ds:app_context
+    RestoreContext
+    push ds
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ax,ds:app_exit_code
+    pop ds
+    stc
+    retf32
+load_program    Endp
+
+load_efi_program   Proc near
+    push gs
+    push bx
+    push cx
+;
+    UserGateForce32 is_64_bit_exe_nr
+    jc lepProt
+;
+    call SetupEfiLoad
+    call CreateEfiProg
+    call CreateEfiParam
+    call CreateEfiStartDir
+    call CreateEfiEnv
+    int 3
+;    call DoEfiLoad64    
+    jmp lepWait
+    
+lepProt:
+    call SetupEfiLoad
+    call CreateEfiProg
+    call CreateEfiParam
+    call CreateEfiStartDir
+    call CreateEfiEnv
+    call DoEfiLoad
+    int 3
+
+lepWait:    
+;    call WaitForSpawn
+;
+    mov cx,gs:s_ret_code
+    or cx,cx
+    jnz lepLeave
+;    
+;    call GetSpawnThread
+;    call CreateSpawnHandle
+;    mov dx,bx
+
+lepLeave:
+
+lepDone:
+    pop cx
+    pop bx
+    pop gs
+    ret
+load_efi_program   Endp
+    
+load_program16 Proc far
+    push fs
+    push ebx
+    push esi
+    push edi
+;
+    IsEfi
+    jnc lp16_efi
+;    
+    movzx ebx,bx
+    movzx esi,si
+    movzx edi,di    
+    call load_program
+    jmp lp16_done
+
+lp16_efi:
+    call load_efi_program
+
+lp16_done:
+    pop edi
+    pop esi
+    pop ebx
+    pop fs
+    retf32
+load_program16  Endp
+    
+load_program32 Proc far
+    push fs
+    push bx
+;
+    IsEfi
+    jnc lp32_efi
+    call load_program
+    jmp lp32_done
+
+lp32_efi:
+    call load_efi_program
+
+lp32_done:
+    pop bx
+    pop fs
+    retf32
+load_program32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
