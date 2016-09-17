@@ -496,7 +496,6 @@ WritePhysical     PROC near
     mov ax,dx
     mov cx,19
     mul cx
-    add ax,4
     movzx eax,ax
 ;    
     mov edx,fs:c_scan_size
@@ -816,6 +815,66 @@ WriteConsole    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           ToggleMarker
+;
+;           DESCRIPTION:    Invert marker
+;
+;           PARAMETERS:     ES          Flat sel
+;                           FS          Console
+;                           CX          COL (x)
+;                           DX          ROW (y)
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ToggleMarker    PROC near
+    pushad
+;    
+    push cx
+    mov ax,dx
+    inc ax
+    mov cx,19
+    mul cx
+    sub ax,2
+    movzx eax,ax
+;    
+    mov edx,fs:c_scan_size
+    mul edx
+    mov edi,fs:c_lfb
+    add edi,eax
+    pop cx
+;    
+    movzx eax,cx
+    shl eax,5
+    add edi,eax
+;
+    mov ecx,8
+    push edi
+
+tmToggle1:
+    mov eax,es:[edi]
+    not eax
+    mov es:[edi],eax
+    add edi,4
+    loop tmToggle1
+;
+    pop edi
+    mov ecx,8
+    add edi,fs:c_scan_size        
+
+tmToggle2:
+    mov eax,es:[edi]
+    not eax
+    mov es:[edi],eax
+    add edi,4
+    loop tmToggle2
+;
+    popad
+    ret
+ToggleMarker    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;   NAME:           UpdateThread
 ;
 ;   DESCRIPTION:    Update thread
@@ -827,38 +886,52 @@ update_thread_name  DB 'Video Sync', 0
 update_thread:
 
 utLoop:    
-    int 3
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ax,ds:efi_width
-    mov dx,ds:efi_height
-;
     mov ax,SEG data
-    mov ds,ax
-    mov ax,ds:disp_x
-    mov dx,ds:disp_y
-
-
-    mov ax,system_data_sel
     mov ds,ax
     mov ax,flat_sel
     mov es,ax
-    mov edi,ds:efi_lfb
-    mov ecx,ds:efi_scan_size
-    mov ax,SEG data
-    mov ds,ax
     mov ax,ds:focus_console
     or ax,ax
     jz utNext
+;    
+    mov fs,ax
+    mov cx,fs:c_curr_col
+    mov dx,fs:c_curr_row
+    cmp cx,fs:c_prev_col
+    jnz utSave
 ;
-    mov ds,ax    
-;    call UpdateDisplayBgr32
+    cmp dx,fs:c_prev_row
+    jnz utSave
+
+utUpdate:    
+    call ToggleMarker
+    jmp utNext
+
+utSave:
+    xchg cx,fs:c_prev_col
+    xchg dx,fs:c_prev_row
+;
+    push dx
+    mov ax,fs:c_cols
+    mul dx
+    mov di,ax
+    pop dx
+;
+    add di,cx
+    movzx edi,di
+    shl edi,2
+    add edi,OFFSET c_text_data
+;
+    mov al,fs:[edi].ct_char
+    mov bl,fs:[edi].ct_fore_col
+    mov bh,fs:[edi].ct_back_col    
+    mov fs:[edi].ct_dirty,0
+    call WritePhysical
 
 utNext:
-    mov ax,20
+    mov ax,200
     WaitMilliSec
-    jmp utLoop 
-
+    jmp utLoop
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -925,6 +998,10 @@ cfYOk:
     mov es:c_flags,0
     mov es:c_rows,di
     mov es:c_cols,si
+    mov es:c_curr_row,0
+    mov es:c_curr_col,0
+    mov es:c_prev_row,0
+    mov es:c_prev_col,0
     mov es:c_font,0
     mov es:c_video_handle,0
     mov es:c_video_sel,0
@@ -1364,6 +1441,10 @@ upScrollLoop:
     pop dx    
 
 update_video_end:
+    mov ax,ds:p_row
+    mov fs:c_curr_row,ax
+    mov ax,ds:p_col
+    mov fs:c_curr_col,ax
     pop ax
     ret
 UpdatePos       ENDP
@@ -1450,6 +1531,7 @@ WriteDel    ENDP
 ;           DESCRIPTION:    Write LF char
 ;
 ;           PARAMETERS:     DS    Thread sel
+;                           FS    Console
 ;                           AL    Char
 ;                           BL    Fore color
 ;                           BH    Back color
@@ -1470,6 +1552,7 @@ WriteLf ENDP
 ;           DESCRIPTION:    Write CR char
 ;
 ;           PARAMETERS:     DS    Thread sel
+;                           FS    Console
 ;                           AL    Char
 ;                           BL    Fore color
 ;                           BH    Back color
@@ -1638,6 +1721,7 @@ set_cursor_pos_name     DB 'Set Cursor Position',0
 
 set_cursor_position     PROC far
     push ds
+    push fs
     push ax
 ;
     GetThread
@@ -1645,7 +1729,18 @@ set_cursor_position     PROC far
     mov ds:p_row,dx
     mov ds:p_col,cx
 ;
+    mov fs,ds:p_app_sel
+    mov ax,fs:app_console
+    mov fs,ax    
+    or ax,ax
+    jz scpDone
+;
+    mov fs:c_curr_row,dx
+    mov fs:c_curr_col,cx
+
+scpDone:
     pop ax
+    pop fs
     pop ds
     ret
 set_cursor_position     ENDP

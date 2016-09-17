@@ -2,9 +2,9 @@
 /* This program was written originally by Raimund Spaeth.
    I have made the following modifications:
 
-	  - printd disabled
-	  - setting of ANSI colors with original <ESC> sequences
-	  - no special file "mbedit.mac" for WIN_32 required
+          - printd disabled
+          - setting of ANSI colors with original <ESC> sequences
+          - no special file "mbedit.mac" for WIN_32 required
 
    M. Braun
 */
@@ -187,8 +187,9 @@ static char ansi_buf[40];
 
 void get_screen_lin_col (int *lines, int *columns)
 {
-	*lines = 25;
+    *lines = 25;
     *columns = 80;
+    RdosGetTextSize(lines, columns);
 }
 
 //----------------------------------------------------------------------------
@@ -209,11 +210,11 @@ void process_ansi_buf()
 {
     int                          x, y, n;
     char                         c, c2;
-	 char                         clear_buf[BUF_256];  /* @@ [SCREEN_COLS + 2]; */
-	int							 hl, fg, bg;
-	int						 fgc, bgc;
+         char                         clear_buf[BUF_256];  /* @@ [SCREEN_COLS + 2]; */
+        int                                                      hl, fg, bg;
+        int                                              fgc, bgc;
 
-	if(strcmp(ansi_buf, "\033[?25h") == 0)   /* Cursor On */
+        if(strcmp(ansi_buf, "\033[?25h") == 0)   /* Cursor On */
         return;
 
     if(strcmp(ansi_buf, "\033[?25l") == 0)   /* Cursor Off */
@@ -235,10 +236,10 @@ void process_ansi_buf()
     {   
         RdosGetCursorPosition(&CurrRow, &CurrCol);
                                                          /* Cursor Position +/- 1 */
-		switch(c)
+                switch(c)
         {
             case 'A':   /* Up */
-			    if (CurrRow)
+                            if (CurrRow)
                     CurrRow--;
                 break;
 
@@ -257,11 +258,11 @@ void process_ansi_buf()
                     CurrCol--;
                 break;
 
-            default:	/* printd("Hoppla, Cursor +-1 mit ubekannter Richtung!\r\n", c); */
+            default:    /* printd("Hoppla, Cursor +-1 mit ubekannter Richtung!\r\n", c); */
                  break;
         }
 
-		RdosSetCursorPosition(CurrRow, CurrCol);
+                RdosSetCursorPosition(CurrRow, CurrCol);
 
         return;
     }
@@ -277,120 +278,120 @@ void process_ansi_buf()
         if (n)
         {
             if (CurrRow == ROWS - 1)
-	    	    clear_buf[n - 1] = 0;
-		    else
-		        clear_buf[n] = 0;
+                    clear_buf[n - 1] = 0;
+                    else
+                        clear_buf[n] = 0;
 
-    	    RdosWriteString(clear_buf);
+            RdosWriteString(clear_buf);
         }
-		return;
-	 }
+                return;
+         }
 
 
-	 if(strcmp(ansi_buf, "\033[2K") == 0)   /* Clear Line */
-	 {
+         if(strcmp(ansi_buf, "\033[2K") == 0)   /* Clear Line */
+         {
         for(n = 0; n < COLUMNS; ++n)
-		    clear_buf[n] = ' ';
+                    clear_buf[n] = ' ';
 
         RdosGetCursorPosition(&CurrRow, &CurrCol);
 
-		if (CurrRow == ROWS - 1)
-		    clear_buf[n - 1] = 0;
-		else
-		    clear_buf[n] = 0;
+                if (CurrRow == ROWS - 1)
+                    clear_buf[n - 1] = 0;
+                else
+                    clear_buf[n] = 0;
 
         CurrCol = 0;
-		RdosSetCursorPosition(CurrRow, CurrCol);
-		RdosWriteString(clear_buf);
+                RdosSetCursorPosition(CurrRow, CurrCol);
+                RdosWriteString(clear_buf);
 
-		return;
-	 }
+                return;
+         }
 
-	 if(strcmp(ansi_buf, "\033[2J") == 0)     /* Clear Screen */
-	 {
+         if(strcmp(ansi_buf, "\033[2J") == 0)     /* Clear Screen */
+         {
         for (n = 0; n < COLUMNS; n++)
-			clear_buf[n] = ' ';
+                        clear_buf[n] = ' ';
 
-		clear_buf[n] = 0;
+                clear_buf[n] = 0;
 
-		for (n = 0; n < ROWS; n++)
-		{
-			RdosSetCursorPosition(n, 0);
-			
-			if (n == ROWS - 1)
-			    clear_buf[COLUMNS - 1] = 0;
-			     
-			RdosWriteString(clear_buf);
-		}
+                for (n = 0; n < ROWS; n++)
+                {
+                        RdosSetCursorPosition(n, 0);
+                        
+                        if (n == ROWS - 1)
+                            clear_buf[COLUMNS - 1] = 0;
+                             
+                        RdosWriteString(clear_buf);
+                }
 
-		return;
-	 }
-
-
-	 if((n = sscanf(ansi_buf, "\x1B[%d;3%d;4%d%c%c", &hl, &fg, &bg, &c, &c2)) == 4 && c == 'm')
-	 {
-		fgc = fg_colors[fg];
-		bgc = bg_colors[bg];
-
-		switch (hl)
-		{
-		case 0:		/* normal */
-		case 1:		/* highlighted */
-		case 4:		/* underlined */
-		case 5:		/* blinking */
-		default:
-			break;
-
-		case 7:		/* invers */
-			fgc = (fg_colors[8] - fgc);
-			bgc = (bg_colors[8] - bgc);
-			break;
-
-		case 8:		/* hidden */
-			fgc = bgc;		/* ostfriesische Nationalflagge */
-			break;
-		}  /* switch hl */
-
-		RdosSetForeColor(fgc);
-		RdosSetBackColor(bgc);
-		return;
-	}
+                return;
+         }
 
 
-	 if ((n = sscanf(ansi_buf, "\x1B[%d%c%c", &y, &c, &c2)) == 2 && c == 'm')
-	 {                                        /* Attribute setzen */
-		  switch (y)
-		  {
-				/* Normal Video */
-				case 0:
-					 RdosSetBackColor(0);
-					 RdosSetForeColor(7);
-					 break;
+         if((n = sscanf(ansi_buf, "\x1B[%d;3%d;4%d%c%c", &hl, &fg, &bg, &c, &c2)) == 4 && c == 'm')
+         {
+                fgc = fg_colors[fg];
+                bgc = bg_colors[bg];
 
-				/* Reverse Video */
-				case 7:
-					 RdosSetBackColor(7);
-					 RdosSetForeColor(0);
-					 break;
+                switch (hl)
+                {
+                case 0:         /* normal */
+                case 1:         /* highlighted */
+                case 4:         /* underlined */
+                case 5:         /* blinking */
+                default:
+                        break;
 
-				default:
-					 break;
-		  }
+                case 7:         /* invers */
+                        fgc = (fg_colors[8] - fgc);
+                        bgc = (bg_colors[8] - bgc);
+                        break;
 
-		  return;
-	 }
+                case 8:         /* hidden */
+                        fgc = bgc;              /* ostfriesische Nationalflagge */
+                        break;
+                }  /* switch hl */
 
-
-	 if((n = sscanf(ansi_buf, "\033[%d;%dH%c", &y, &x, &c)) == 2)
-	 {                                        /* Cursor Position setzen */
-		  CurrCol = (x - 1);
-		  CurrRow = (y - 1);
-		  RdosSetCursorPosition(CurrRow, CurrCol);
-		  return;
-	 }
+                RdosSetForeColor(fgc);
+                RdosSetBackColor(bgc);
+                return;
+        }
 
 
-	 /* printd("Hoppla, Es gibt noch eine unbekannte <ESC> Sequenz!\r\n"); */
+         if ((n = sscanf(ansi_buf, "\x1B[%d%c%c", &y, &c, &c2)) == 2 && c == 'm')
+         {                                        /* Attribute setzen */
+                  switch (y)
+                  {
+                                /* Normal Video */
+                                case 0:
+                                         RdosSetBackColor(0);
+                                         RdosSetForeColor(7);
+                                         break;
+
+                                /* Reverse Video */
+                                case 7:
+                                         RdosSetBackColor(7);
+                                         RdosSetForeColor(0);
+                                         break;
+
+                                default:
+                                         break;
+                  }
+
+                  return;
+         }
+
+
+         if((n = sscanf(ansi_buf, "\033[%d;%dH%c", &y, &x, &c)) == 2)
+         {                                        /* Cursor Position setzen */
+                  CurrCol = (x - 1);
+                  CurrRow = (y - 1);
+                  RdosSetCursorPosition(CurrRow, CurrCol);
+                  return;
+         }
+
+
+         /* printd("Hoppla, Es gibt noch eine unbekannte <ESC> Sequenz!\r\n"); */
 }
 
 /*---------------------------------------------------------------------------- */
@@ -399,60 +400,60 @@ void process_ansi_buf()
 
 int ansi_putchar(int c)
 {
-	 char   s[2];
+         char   s[2];
 
-	 if(ansi_buf[0] == 0 && c != 0x1B)
-	 {
-		  console_putchar(c);
-		  return c;
-	 }
+         if(ansi_buf[0] == 0 && c != 0x1B)
+         {
+                  console_putchar(c);
+                  return c;
+         }
 
-	 if(ansi_buf[0] == 0)
-	 {
-		  ansi_buf[0] = (char) c;
-		  ansi_buf[1] = 0;
-		  return c;
-	 }
+         if(ansi_buf[0] == 0)
+         {
+                  ansi_buf[0] = (char) c;
+                  ansi_buf[1] = 0;
+                  return c;
+         }
 
-	 if(strlen(ansi_buf) + 2 < sizeof(ansi_buf))
-	 {
-		  s[0] = (char) c;
-		  s[1] = 0;
-		  strcat(ansi_buf, s);
+         if(strlen(ansi_buf) + 2 < sizeof(ansi_buf))
+         {
+                  s[0] = (char) c;
+                  s[1] = 0;
+                  strcat(ansi_buf, s);
 
-		  /* Ende einer <ESC> Sequenz erkennen */
-		  /* Für den hier erwarteten Subset! */
+                  /* Ende einer <ESC> Sequenz erkennen */
+                  /* Für den hier erwarteten Subset! */
 
-		  if((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
-			  (ansi_buf[1] == '(' && ansi_buf[2]))
-		  {
-				process_ansi_buf();
-				ansi_buf[0] = 0;
-		  }
-	 }
-	 else
-		  ansi_buf[0] = 0;
+                  if((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+                          (ansi_buf[1] == '(' && ansi_buf[2]))
+                  {
+                                process_ansi_buf();
+                                ansi_buf[0] = 0;
+                  }
+         }
+         else
+                  ansi_buf[0] = 0;
 
-	 return c;
+         return c;
 }
 
 /*---------------------------------------------------------------------------- */
 
 int ansi_printf(char *fmt, ...)
 {
-	 char      buffer[2000];
-	 va_list   args;
-	 int       i, len;
+         char      buffer[2000];
+         va_list   args;
+         int       i, len;
 
-	 va_start(args, fmt);
-	 len = vsprintf(buffer, fmt, args);
+         va_start(args, fmt);
+         len = vsprintf(buffer, fmt, args);
 
-	 for(i = 0; buffer[i]; ++i)
-		  (void) ansi_putchar(buffer[i]);   /* Alles muß durch's Nadelöhr! */
+         for(i = 0; buffer[i]; ++i)
+                  (void) ansi_putchar(buffer[i]);   /* Alles muß durch's Nadelöhr! */
 
-	 va_end(args);
+         va_end(args);
 
-	 return len;
+         return len;
 }
 
 /*---------------------------------------------------------------------------- */

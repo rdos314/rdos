@@ -69,7 +69,7 @@
 #include "mount.h"
 #include "reboot.h"
 #include "capture.h"
-#include "com.h"
+//#include "com.h"
 #include "can.h"
 #include "lon.h"
 #include "usb.h"
@@ -277,7 +277,7 @@ TSession::TSession(const char *ipc)
             crash = 0;
             
         cpy = new TCopyFactory;
-        com = new TComFactory;
+//        com = new TComFactory;
         newsess = new TNewSessionFactory;
         cls = new TClsFactory;
         chdir = new TChdirFactory;
