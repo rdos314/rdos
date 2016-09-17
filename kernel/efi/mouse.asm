@@ -811,6 +811,43 @@ reset   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           IsMarkerVisible
+;
+;           DESCRIPTION:    Check for visible marker
+;
+;           RETURNS:        NC   Visible    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public IsMarkerVisible
+    
+IsMarkerVisible     PROC near
+    push ds
+    push ax
+;
+    mov ax,mouse_focus_sel
+    mov ds,ax
+    mov ax,ds:m_cursor_flag
+    or ax,ax
+    jz imvHidden
+
+imvShown:
+    clc
+    jmp imvDone
+
+imvHidden:
+    stc
+
+imvDone:
+    pop ax
+    pop ds
+    ret
+IsMarkerVisible     ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           show_mouse
 ;
 ;           DESCRIPTION:    show mouse

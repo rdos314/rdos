@@ -86,6 +86,7 @@ code    SEGMENT byte public 'CODE'
     extrn init_bitmap:near
     extrn init_sprite:near
     extrn CreateVideoBitmap:near
+    extrn IsMarkerVisible:near
     
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -904,6 +905,9 @@ utLoop:
     jnz utSave
 
 utUpdate:    
+    call IsMarkerVisible
+    jnc utNext
+;    
     call ToggleMarker
     jmp utNext
 
