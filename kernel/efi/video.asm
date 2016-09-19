@@ -905,6 +905,10 @@ utLoop:
     jnz utSave
 
 utUpdate:    
+    mov ax,fs:c_video_sel
+    or ax,ax
+    jnz utNext
+;    
     call IsMarkerVisible
     jnc utNext
 ;    
