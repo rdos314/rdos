@@ -34,6 +34,7 @@ class TShareObjectData
 {
 friend class TShareObject;
 friend class TString;
+public:
     int FRefs;
     int FDataSize;
     int FAllocSize;

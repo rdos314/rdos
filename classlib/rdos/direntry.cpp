@@ -221,6 +221,7 @@ TDirEntry::TDirEntry(const TPathName &PathName, const TString &EntryName, const 
 TDirEntry::TDirEntry()
 {
     OnCreate = CreateDirEntry;
+    FEntry = 0;
 }
 
 /*##########################################################################
@@ -254,6 +255,14 @@ TDirEntry::TDirEntry(const TDirEntry &src)
 ##########################################################################*/
 TDirEntry::~TDirEntry()
 {
+    if (FEntry && FData)
+    {
+        if (FData->FRefs == 1)
+        {
+            delete FEntry;
+            FData = 0;
+        }
+    }
 }
 
 /*##########################################################################
