@@ -805,18 +805,6 @@ init_focus      PROC near
     xor cl,cl
     mov ax,get_thread_focus_key_nr
     RegisterOsGate
-;
-    mov esi,OFFSET allocate_focus_linear
-    mov edi,OFFSET allocate_focus_linear_name
-    xor cl,cl
-    mov ax,allocate_focus_linear_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_fixed_focus_mem
-    mov edi,OFFSET allocate_fixed_focus_mem_name
-    xor cl,cl
-    mov ax,allocate_fixed_focus_mem_nr
-    RegisterOsGate
     ret
 init_focus      ENDP
 
