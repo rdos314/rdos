@@ -279,6 +279,51 @@ c_key_buffer_end      DW ?
 
 c_key_avail_obj       DW ?
 
+c_m_cursor_flag       DW ?
+
+c_m_horiz_pos         DW ?
+c_m_vert_pos          DW ?
+
+c_m_horiz_motion      DW ?
+c_m_vert_motion       DW ?
+
+c_m_horiz_mickey      DW ?
+c_m_vert_mickey       DW ?
+
+c_m_horiz_min         DW ?
+c_m_horiz_max         DW ?
+c_m_vert_min          DW ?
+c_m_vert_max          DW ?
+
+c_m_horiz_limit       DW ?
+c_m_vert_limit        DW ?
+
+c_m_botton_status     DW ?
+
+c_m_horiz_press0      DW ?
+c_m_vert_press0       DW ?
+c_m_count_press0      DW ?
+
+c_m_horiz_press1      DW ?
+c_m_vert_press1       DW ?
+c_m_count_press1      DW ?
+
+c_m_horiz_rel0        DW ?
+c_m_vert_rel0         DW ?
+c_m_count_rel0        DW ?
+
+c_m_horiz_rel1        DW ?
+c_m_vert_rel1         DW ?
+c_m_count_rel1        DW ?
+
+c_m_notify_thread     DW ?
+
+c_m_marker_x          DW ?
+c_m_marker_y          DW ?
+
+c_m_avail_obj         DW ?
+c_m_counter           DD ?
+
 c_text_entries        DW ?
 
 c_text_data           DB ?

@@ -33,6 +33,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\system.inc
 INCLUDE ..\wait.inc
+INCLUDE video.inc
 
 mouse_wait_header       STRUC
 
@@ -40,61 +41,6 @@ mw_obj          wait_obj_header <>
 mw_counter          DD ?
 
 mouse_wait_header       ENDS
-
-mouse_seg       STRUC
-
-m_cursor_flag   DW ?
-
-m_cursor_type   DW ?
-m_cursor_mask   DW ?
-m_screen_mask   DW ?
-
-m_horiz_pos         DW ?
-m_vert_pos          DW ?
-
-m_horiz_motion  DW ?
-m_vert_motion   DW ?
-
-m_horiz_mickey  DW ?
-m_vert_mickey   DW ?
-
-m_horiz_min         DW ?
-m_horiz_max         DW ?
-m_vert_min          DW ?
-m_vert_max          DW ?
-
-m_horiz_limit   DW ?
-m_vert_limit    DW ?
-
-m_botton_status DW ?
-
-m_horiz_press0  DW ?
-m_vert_press0   DW ?
-m_count_press0  DW ?
-
-m_horiz_press1  DW ?
-m_vert_press1   DW ?
-m_count_press1  DW ?
-
-m_horiz_rel0    DW ?
-m_vert_rel0         DW ?
-m_count_rel0    DW ?
-
-m_horiz_rel1    DW ?
-m_vert_rel1         DW ?
-m_count_rel1    DW ?
-
-m_notify_thread DW ?
-m_notify_sel    DW ?
-m_notify_offs   DD ?
-
-m_marker_x      DW ?
-m_marker_y      DW ?
-
-m_avail_obj         DW ?
-m_counter           DD ?
-
-mouse_seg       ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -117,6 +63,9 @@ data    ENDS
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
+
+    extrn GetLocalConsole:near
+    extrn GetFocusConsole:near
 
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -371,15 +320,15 @@ hide_marker     PROC near
     push cx
     push dx
 ;
-    mov ax,ds:m_cursor_flag
+    mov ax,ds:c_m_cursor_flag
     or ax,ax
     jz hide_marker_done
 ;
     test ah,80h
     jnz hide_marker_done
 ;
-    mov cx,ds:m_marker_x
-    mov dx,ds:m_marker_y
+    mov cx,ds:c_m_marker_x
+    mov dx,ds:c_m_marker_y
     InvertMouse
 
 hide_marker_done:
@@ -410,25 +359,25 @@ show_marker     PROC near
     push cx
     push dx
 ;
-    mov ax,ds:m_cursor_flag
+    mov ax,ds:c_m_cursor_flag
     or ax,ax
     jz show_marker_done
 ;
     test ah,80h
     jnz show_marker_done
 ;
-    mov ax,ds:m_horiz_pos
+    mov ax,ds:c_m_horiz_pos
     xor dx,dx
-    div ds:m_horiz_mickey
+    div ds:c_m_horiz_mickey
     mov cx,ax
 ;
-    mov ax,ds:m_vert_pos
+    mov ax,ds:c_m_vert_pos
     xor dx,dx
-    div ds:m_vert_mickey
+    div ds:c_m_vert_mickey
     mov dx,ax
 ;
-    mov ds:m_marker_x,cx
-    mov ds:m_marker_y,dx
+    mov ds:c_m_marker_x,cx
+    mov ds:c_m_marker_y,dx
     InvertMouse
 
 show_marker_done:
@@ -457,14 +406,11 @@ set_mouse_limit_name    DB 'Set Mouse Limit',0
 
 set_mouse_limit PROC far
     push ds
-    push ax
 ;       
-    mov ax,mouse_local_sel
-    mov ds,ax
-    mov ds:m_horiz_limit,cx
-    mov ds:m_vert_limit,dx
+    call GetLocalConsole
+    mov ds:c_m_horiz_limit,cx
+    mov ds:c_m_vert_limit,dx
 ;       
-    pop ax
     pop ds
     ret
 set_mouse_limit ENDP
@@ -496,10 +442,9 @@ update_mouse    PROC far
     neg dx
     add ds:md_dy,dx
     mov bx,ds:md_mouse_thread
-    mov ax,mouse_focus_sel
-    mov ds,ax
-    inc ds:m_counter
-    mov ax,ds:m_notify_thread
+    call GetFocusConsole
+    inc ds:c_m_counter
+    mov ax,ds:c_m_notify_thread
     or ax,ax
     jz mouse_int_signal
 ;
@@ -508,13 +453,13 @@ update_mouse    PROC far
 mouse_int_signal:
     Signal
 ;
-    mov bx,ds:m_avail_obj
+    mov bx,ds:c_m_avail_obj
     or bx,bx
     jz update_mouse_done
 ;
     mov es,bx
     SignalWait
-    mov ds:m_avail_obj,0
+    mov ds:c_m_avail_obj,0
 
 update_mouse_done:
     pop bx
@@ -555,10 +500,9 @@ set_mouse       PROC far
     mov ds:md_y,ax
 ;       
     mov bx,ds:md_mouse_thread
-    mov ax,mouse_focus_sel
-    mov ds,ax
-    inc ds:m_counter
-    mov ax,ds:m_notify_thread
+    call GetFocusConsole
+    inc ds:c_m_counter
+    mov ax,ds:c_m_notify_thread
     or ax,ax
     jz set_mouse_int_signal
 ;
@@ -567,7 +511,7 @@ set_mouse       PROC far
 set_mouse_int_signal:
     Signal
 ;
-    mov bx,ds:m_avail_obj
+    mov bx,ds:c_m_avail_obj
     or bx,bx
     jz set_mouse_done
 ;
@@ -576,7 +520,7 @@ set_mouse_int_signal:
 ;    
     mov es,bx
     SignalWait
-    mov ds:m_avail_obj,0
+    mov ds:c_m_avail_obj,0
 
 set_mouse_done:
     pop bx
@@ -598,16 +542,16 @@ set_mouse       ENDP
     
 check_horiz_position    PROC near
     push ax
-    mov ax,ds:m_horiz_pos
-    cmp ax,ds:m_horiz_min
+    mov ax,ds:c_m_horiz_pos
+    cmp ax,ds:c_m_horiz_min
     jge set_horiz_min_ok
-    mov ax,ds:m_horiz_min
+    mov ax,ds:c_m_horiz_min
 set_horiz_min_ok:
-    cmp ax,ds:m_horiz_max
+    cmp ax,ds:c_m_horiz_max
     jle set_horiz_max_ok
-    mov ax,ds:m_horiz_max
+    mov ax,ds:c_m_horiz_max
 set_horiz_max_ok:
-    mov ds:m_horiz_pos,ax
+    mov ds:c_m_horiz_pos,ax
     pop ax
     ret
 check_horiz_position    ENDP
@@ -626,16 +570,16 @@ check_horiz_position    ENDP
 
 check_vert_position     PROC near
     push ax
-    mov ax,ds:m_vert_pos
-    cmp ax,ds:m_vert_min
+    mov ax,ds:c_m_vert_pos
+    cmp ax,ds:c_m_vert_min
     jge set_vert_min_ok
-    mov ax,ds:m_vert_min
+    mov ax,ds:c_m_vert_min
 set_vert_min_ok:
-    cmp ax,ds:m_vert_max
+    cmp ax,ds:c_m_vert_max
     jle set_vert_max_ok
-    mov ax,ds:m_vert_max
+    mov ax,ds:c_m_vert_max
 set_vert_max_ok:
-    mov ds:m_vert_pos,ax
+    mov ds:c_m_vert_pos,ax
     pop ax
     ret
 check_vert_position     ENDP
@@ -659,9 +603,9 @@ refresh_mouse   Proc near
     je update_abs_horiz_done
 ;
     shl cx,1
-    mov ax,ds:m_horiz_limit
+    mov ax,ds:c_m_horiz_limit
     mul cx
-    mov ds:m_horiz_pos,dx
+    mov ds:c_m_horiz_pos,dx
     
 update_abs_horiz_done:
     mov cx,0FFFFh
@@ -670,35 +614,35 @@ update_abs_horiz_done:
     je update_abs_vert_done
 ;
     shl cx,1
-    mov ax,ds:m_vert_limit
+    mov ax,ds:c_m_vert_limit
     mul cx
-    mov ds:m_vert_pos,dx
+    mov ds:c_m_vert_pos,dx
 
 update_abs_vert_done:
     mov ax,es:md_buttons
-    mov dx,ds:m_botton_status
+    mov dx,ds:c_m_botton_status
     mov dh,al
     xor dl,al
     jz mouse_buttons_done
 ;
-    mov ds:m_botton_status,ax
+    mov ds:c_m_botton_status,ax
     test dl,1
     jz mouse_button1_handled
 ;
     test dh,1
     jz mouse_button1_released
 mouse_button1_pressed:
-    mov ax,ds:m_horiz_pos
-    mov ds:m_horiz_press0,ax
-    mov ax,ds:m_vert_pos
-    mov ds:m_vert_press0,ax
+    mov ax,ds:c_m_horiz_pos
+    mov ds:c_m_horiz_press0,ax
+    mov ax,ds:c_m_vert_pos
+    mov ds:c_m_vert_press0,ax
     jmp mouse_button1_handled
 
 mouse_button1_released: 
-    mov ax,ds:m_horiz_pos
-    mov ds:m_horiz_rel0,ax
-    mov ax,ds:m_vert_pos
-    mov ds:m_vert_rel0,ax
+    mov ax,ds:c_m_horiz_pos
+    mov ds:c_m_horiz_rel0,ax
+    mov ax,ds:c_m_vert_pos
+    mov ds:c_m_vert_rel0,ax
 
 mouse_button1_handled:
     test dl,2
@@ -708,17 +652,17 @@ mouse_button1_handled:
     jz mouse_button2_released
 
 mouse_button2_pressed:
-    mov ax,ds:m_horiz_pos
-    mov ds:m_horiz_press1,ax
-    mov ax,ds:m_vert_pos
-    mov ds:m_vert_press1,ax
+    mov ax,ds:c_m_horiz_pos
+    mov ds:c_m_horiz_press1,ax
+    mov ax,ds:c_m_vert_pos
+    mov ds:c_m_vert_press1,ax
     jmp mouse_buttons_done
 
 mouse_button2_released: 
-    mov ax,ds:m_horiz_pos
-    mov ds:m_horiz_rel1,ax
-    mov ax,ds:m_vert_pos
-    mov ds:m_vert_rel1,ax
+    mov ax,ds:c_m_horiz_pos
+    mov ds:c_m_horiz_rel1,ax
+    mov ax,ds:c_m_vert_pos
+    mov ds:c_m_vert_rel1,ax
 
 mouse_buttons_done:
     xor cx,cx
@@ -726,8 +670,8 @@ mouse_buttons_done:
     or cx,cx
     jz update_rel_horiz_done
 ;
-    add ds:m_horiz_motion,cx
-    add ds:m_horiz_pos,cx
+    add ds:c_m_horiz_motion,cx
+    add ds:c_m_horiz_pos,cx
     call check_horiz_position
     
 update_rel_horiz_done:
@@ -736,8 +680,8 @@ update_rel_horiz_done:
     or dx,dx
     jz update_rel_vert_done
 ;
-    add ds:m_vert_motion,dx
-    add ds:m_vert_pos,dx
+    add ds:c_m_vert_motion,dx
+    add ds:c_m_vert_pos,dx
     call check_vert_position
 
 update_rel_vert_done:
@@ -752,59 +696,51 @@ refresh_mouse   Endp
 ;
 ;           DESCRIPTION:    reset mouse params
 ;
-;           PARAMETERS:
+;           PARAMETERS:      DS         Console
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reset   PROC near
-    push ds
     push ax
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
     xor ax,ax
-    mov ds:m_notify_thread,ax
-    mov ds:m_cursor_flag,ax
-    mov ds:m_horiz_pos,ax
-    mov ds:m_vert_pos,ax
-    mov ds:m_marker_x,ax
-    mov ds:m_marker_y,ax
-    mov ds:m_botton_status,ax
-    mov ds:m_horiz_motion,ax
-    mov ds:m_vert_motion,ax
+    mov ds:c_m_notify_thread,ax
+    mov ds:c_m_cursor_flag,ax
+    mov ds:c_m_horiz_pos,ax
+    mov ds:c_m_vert_pos,ax
+    mov ds:c_m_marker_x,ax
+    mov ds:c_m_marker_y,ax
+    mov ds:c_m_botton_status,ax
+    mov ds:c_m_horiz_motion,ax
+    mov ds:c_m_vert_motion,ax
 ;
-    mov ds:m_horiz_mickey,8
-    mov ds:m_vert_mickey,8
+    mov ds:c_m_horiz_mickey,8
+    mov ds:c_m_vert_mickey,8
 ;
-    mov ds:m_horiz_min,ax
-    mov ds:m_horiz_max,639
-    mov ds:m_horiz_limit,640
-    mov ds:m_vert_min,ax
-    mov ds:m_vert_max,199
-    mov ds:m_vert_limit,480
+    mov ds:c_m_horiz_min,ax
+    mov ds:c_m_horiz_max,639
+    mov ds:c_m_horiz_limit,640
+    mov ds:c_m_vert_min,ax
+    mov ds:c_m_vert_max,199
+    mov ds:c_m_vert_limit,480
 ;
-    mov ds:m_horiz_press0,ax
-    mov ds:m_vert_press0,ax
-    mov ds:m_count_press0,ax
+    mov ds:c_m_horiz_press0,ax
+    mov ds:c_m_vert_press0,ax
+    mov ds:c_m_count_press0,ax
 ;
-    mov ds:m_horiz_press1,ax
-    mov ds:m_vert_press1,ax
-    mov ds:m_count_press1,ax
+    mov ds:c_m_horiz_press1,ax
+    mov ds:c_m_vert_press1,ax
+    mov ds:c_m_count_press1,ax
 ;
-    mov ds:m_horiz_rel0,ax
-    mov ds:m_vert_rel0,ax
-    mov ds:m_count_rel0,ax
+    mov ds:c_m_horiz_rel0,ax
+    mov ds:c_m_vert_rel0,ax
+    mov ds:c_m_count_rel0,ax
 ;
-    mov ds:m_horiz_rel1,ax
-    mov ds:m_vert_rel1,ax
-    mov ds:m_count_rel1,ax
-;
-    mov ds:m_cursor_type,ax
-    mov ds:m_screen_mask,0FFFFh
-    mov ds:m_cursor_mask,077FFh
+    mov ds:c_m_horiz_rel1,ax
+    mov ds:c_m_vert_rel1,ax
+    mov ds:c_m_count_rel1,ax
 ;
     pop ax
-    pop ds
     ret
 reset   Endp
 
@@ -825,9 +761,8 @@ IsMarkerVisible     PROC near
     push ds
     push ax
 ;
-    mov ax,mouse_focus_sel
-    mov ds,ax
-    mov ax,ds:m_cursor_flag
+    call GetFocusConsole
+    mov ax,ds:c_m_cursor_flag
     or ax,ax
     jz imvHidden
 
@@ -862,10 +797,9 @@ show_mouse      PROC far
     push ds
     push ax
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
+    call GetLocalConsole
     call hide_marker
-    inc ds:m_cursor_flag
+    inc ds:c_m_cursor_flag
     call show_marker
 ;
     pop ax
@@ -891,10 +825,9 @@ hide_mouse      PROC far
     push ds
     push ax
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
+    call GetLocalConsole
     call hide_marker
-    dec ds:m_cursor_flag
+    dec ds:c_m_cursor_flag
     call show_marker
 ;
     pop ax
@@ -919,14 +852,11 @@ get_mouse_position_name DB 'Get Mouse Position',0
 
 get_mouse_position      PROC far
     push ds
-    push ax
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
-    mov cx,ds:m_horiz_pos
-    mov dx,ds:m_vert_pos    
+    call GetLocalConsole
+    mov cx,ds:c_m_horiz_pos
+    mov dx,ds:c_m_vert_pos    
 ;
-    pop ax
     pop ds
     ret
 get_mouse_position      ENDP
@@ -950,11 +880,10 @@ set_mouse_position      PROC far
     push ds
     push ax
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
+    call GetLocalConsole
     call hide_marker
-    mov ds:m_horiz_pos,cx
-    mov ds:m_vert_pos,dx
+    mov ds:c_m_horiz_pos,cx
+    mov ds:c_m_vert_pos,dx
     call check_horiz_position
     call check_vert_position
     call show_marker
@@ -982,9 +911,8 @@ get_left_button PROC far
     push ds
     push ax
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
-    mov ax,ds:m_botton_status
+    call GetLocalConsole
+    mov ax,ds:c_m_botton_status
     rcr al,1
     cmc
 ;
@@ -1011,9 +939,8 @@ get_right_button    PROC far
     push ds
     push ax
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
-    mov ax,ds:m_botton_status
+    call GetLocalConsole
+    mov ax,ds:c_m_botton_status
     rcr al,2
     cmc
 ;
@@ -1041,10 +968,9 @@ get_left_button_press_position  PROC far
     push ds
     push ax
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
-    mov cx,ds:m_horiz_press0
-    mov dx,ds:m_vert_press0
+    call GetLocalConsole
+    mov cx,ds:c_m_horiz_press0
+    mov dx,ds:c_m_vert_press0
 ;
     pop ax
     pop ds
@@ -1070,10 +996,9 @@ get_right_button_press_position PROC far
     push ds
     push ax
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
-    mov cx,ds:m_horiz_press1
-    mov dx,ds:m_vert_press1
+    call GetLocalConsole
+    mov cx,ds:c_m_horiz_press1
+    mov dx,ds:c_m_vert_press1
 ;
     pop ax
     pop ds
@@ -1099,10 +1024,9 @@ get_left_button_release_position    PROC far
     push ds
     push ax
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
-    mov cx,ds:m_horiz_rel0
-    mov dx,ds:m_vert_rel0
+    call GetLocalConsole
+    mov cx,ds:c_m_horiz_rel0
+    mov dx,ds:c_m_vert_rel0
 ;
     pop ax
     pop ds
@@ -1128,10 +1052,9 @@ get_right_button_release_position       PROC far
     push ds
     push ax
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
-    mov cx,ds:m_horiz_rel1
-    mov dx,ds:m_vert_rel1
+    call GetLocalConsole
+    mov cx,ds:c_m_horiz_rel1
+    mov dx,ds:c_m_vert_rel1
 ;
     pop ax
     pop ds
@@ -1158,13 +1081,12 @@ set_mouse_window_name   DB 'Set Mouse Window',0
 set_mouse_window    PROC far
     push ds
 ;
-    push mouse_local_sel
-    pop ds
+    call GetLocalConsole
     call hide_marker
-    mov ds:m_horiz_min,ax
-    mov ds:m_horiz_max,cx
-    mov ds:m_vert_min,bx
-    mov ds:m_vert_max,dx
+    mov ds:c_m_horiz_min,ax
+    mov ds:c_m_horiz_max,cx
+    mov ds:c_m_vert_min,bx
+    mov ds:c_m_vert_max,dx
 ;
     call check_horiz_position
     call check_vert_position
@@ -1191,14 +1113,11 @@ set_mouse_mickey_name   DB 'Set Mouse Mickey',0
 
 set_mouse_mickey    PROC far
     push ds
-    push ax
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
-    mov ds:m_horiz_mickey,cx
-    mov ds:m_vert_mickey,dx
+    call GetLocalConsole
+    mov ds:c_m_horiz_mickey,cx
+    mov ds:c_m_vert_mickey,dx
 ;
-    pop ax
     pop ds
     ret
 set_mouse_mickey    ENDP
@@ -1220,14 +1139,13 @@ start_wait_for_mouse    PROC far
     push ax
     push bx
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
-    mov ds:m_avail_obj,es
-    mov eax,ds:m_counter
+    call GetLocalConsole
+    mov ds:c_m_avail_obj,es
+    mov eax,ds:c_m_counter
     cmp eax,es:mw_counter
     je start_wait_for_done
 ;
-    mov ds:m_avail_obj,0
+    mov ds:c_m_avail_obj,0
     SignalWait
 
 start_wait_for_done:
@@ -1250,13 +1168,10 @@ start_wait_for_mouse Endp
 
 stop_wait_for_mouse     PROC far
     push ds
-    push ax
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
-    mov ds:m_avail_obj,0
+    call GetLocalConsole
+    mov ds:c_m_avail_obj,0
 ;
-    pop ax
     pop ds
     ret
 stop_wait_for_mouse Endp
@@ -1277,9 +1192,8 @@ clear_mouse     PROC far
     push ds
     push eax
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
-    mov eax,ds:m_counter
+    call GetLocalConsole
+    mov eax,ds:c_m_counter
     mov es:mw_counter,eax
 ;
     pop eax
@@ -1304,9 +1218,8 @@ is_mouse_idle   PROC far
     push ax
     push bx
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
-    mov eax,ds:m_counter
+    call GetLocalConsole
+    mov eax,ds:c_m_counter
     cmp eax,es:mw_counter
     clc
     je is_idle_done
@@ -1353,9 +1266,8 @@ add_wait_for_mouse      PROC far
     AddWait
     jc add_wait_done
 ;
-    mov ax,mouse_local_sel
-    mov ds,ax
-    mov eax,ds:m_counter
+    call GetLocalConsole
+    mov eax,ds:c_m_counter
     mov es:mw_counter,eax
 
 add_wait_done:
@@ -1365,145 +1277,6 @@ add_wait_done:
     pop ds
     ret
 add_wait_for_mouse      ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           Mouse callback thread
-;
-;           DESCRIPTION:    Implements the mouse hooks
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_thread_name    DB 'Mouse Hook',0
-
-hook_thread     Proc far
-    mov ax,mouse_local_sel
-    mov ds,ax
-    GetThread
-    mov ds:m_notify_thread,ax
-
-hook_thread_loop:
-    mov bx,mouse_local_sel
-    mov ds,bx
-    mov ax,SEG data
-    mov es,ax
-;
-    WaitForSignal
-    GetThread
-    cmp ax,ds:m_notify_thread
-    jne hook_thread_end     
-;
-    call hide_marker
-    call refresh_mouse
-    call show_marker
-;
-    mov ax,ds:m_botton_status
-    mov cx,ds:m_horiz_pos
-    mov dx,ds:m_vert_pos
-    push ds:m_notify_offs
-    CallPm32
-    jmp hook_thread_loop
-
-hook_thread_end:
-    ret
-hook_thread     Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           HookMouse
-;
-;           DESCRIPTION:    Create a mouse callback
-;
-;           PARAMETERS:         ES:(E)DI    Callback
-;                               AX          Mouse buttons
-;                               CX          x
-;                               DX          y
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_mouse_name DB 'Hook Mouse',0
-
-hook_mouse      PROC near
-    push ds
-    push es
-    push ax
-    push bx
-    push si
-    push di
-;
-    mov bx,mouse_local_sel
-    mov ds,bx
-    mov ax,ds:m_notify_thread
-    or ax,ax
-    jz hook_mouse_do
-    UnhookMouse
-
-hook_mouse_do:
-    mov ds:m_notify_sel,es
-    mov ds:m_notify_offs,edi
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov si,OFFSET hook_thread
-    mov di,OFFSET hook_thread_name
-    mov cx,stack0_size
-    mov ax,4
-    CreateThread
-;
-    pop di
-    pop si
-    pop bx
-    pop ax
-    pop es
-    pop ds
-    ret
-hook_mouse      ENDP
-
-hook_mouse16    Proc far
-    push edi
-    movzx edi,di
-    call hook_mouse
-    pop edi
-    ret
-hook_mouse16    Endp
-
-hook_mouse32    Proc far
-    call hook_mouse
-    ret
-hook_mouse32    Endp    
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           UnhookMouse
-;
-;           DESCRIPTION:    Delete a mouse callback
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-unhook_mouse_name       DB 'Unhook Mouse',0
-
-unhook_mouse    PROC far
-    push ds
-    push bx
-;
-    mov bx,mouse_local_sel
-    mov ds,bx
-    xor bx,bx
-    xchg bx,ds:m_notify_thread
-    Signal
-;
-    pop bx
-    pop ds
-    ret
-unhook_mouse    ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1531,12 +1304,13 @@ mouse_init_ok:
     GetThread
     mov es:md_mouse_thread,ax
 mouse_thread_loop:
-    mov bx,mouse_focus_sel
-    mov ds,bx
     mov ax,SEG data
     mov es,ax
 ;
     WaitForSignal
+    call GetFocusConsole
+    jc mouse_thread_loop
+;
 ;       call hide_marker
     call refresh_mouse
 ;       call show_marker
@@ -1548,22 +1322,30 @@ mouse_thread    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           INIT_FOCUS
+;           NAME:           InitMouseConsole
 ;
 ;           DESCRIPTION:    focus init of mouse
 ;
-;           PARAMETERS:         
+;           PARAMETERS:     ES          Console
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_focus      PROC far
-    call reset
-    mov ax,mouse_local_sel
+    public InitMouseConsole
+
+InitMouseConsole     PROC near
+    push ds
+    push ax
+;    
+    mov ax,es
     mov ds,ax
-    mov ds:m_counter,0
-    mov ds:m_avail_obj,0
+    call reset
+    mov ds:c_m_counter,0
+    mov ds:c_m_avail_obj,0
+;
+    pop ax
+    pop ds    
     ret
-init_focus      ENDP
+InitMouseConsole     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1661,17 +1443,9 @@ init_mouse_thread       ENDP
     public init_mouse
 
 init_mouse      PROC near
-    mov bx,mouse_local_sel
-    mov dx,mouse_focus_sel
-    mov eax,SIZE mouse_seg
-    AllocateFixedFocusMem
-;
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov edi,OFFSET init_focus
-    HookEnableFocus
 ;
     mov edi,OFFSET init_mouse_thread
     HookInitTasking
@@ -1770,19 +1544,6 @@ init_mouse      PROC near
     mov edi,OFFSET get_right_button_release_position_name
     xor dx,dx
     mov ax,get_right_button_release_position_nr
-    RegisterBimodalUserGate
-;
-    mov ebx,OFFSET hook_mouse16
-    mov esi,OFFSET hook_mouse32
-    mov edi,OFFSET hook_mouse_name
-    xor dx,dx
-    mov ax,hook_mouse_nr
-    RegisterUserGate
-;
-    mov esi,OFFSET unhook_mouse
-    mov edi,OFFSET unhook_mouse_name
-    xor dx,dx
-    mov ax,unhook_mouse_nr
     RegisterBimodalUserGate
     ret
 init_mouse      ENDP

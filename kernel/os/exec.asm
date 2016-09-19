@@ -2371,7 +2371,6 @@ unload_exe      Proc far
     mov ds:pd_exit_code,ax
 ;
     push ax
-    UnhookMouse
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel

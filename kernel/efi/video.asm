@@ -88,6 +88,7 @@ code    SEGMENT byte public 'CODE'
     extrn CreateVideoBitmap:near
     extrn IsMarkerVisible:near
     extrn InitKeyboardConsole:near
+    extrn InitMouseConsole:near
     
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1033,6 +1034,7 @@ cfYOk:
     rep stosd
 ;
     call InitKeyboardConsole    
+    call InitMouseConsole    
 ;    
     popad    
     pop ds
