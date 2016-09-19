@@ -1497,14 +1497,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     OsGate_hook_enable_focus \
     parm [es edi];
 
-#pragma aux RdosHookGotFocus = \
-    OsGate_hook_got_focus \
-    parm [es edi];
-
-#pragma aux RdosHookLostFocus = \
-    OsGate_hook_lost_focus \
-    parm [es edi];
-
 #pragma aux RdosHookState = \
     OsGate_hook_state \
     parm [es edi];
@@ -1626,17 +1618,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     OsGate_get_thread_focus_key \
     parm [ebx] \
     value [al];
-
-#pragma aux RdosAllocateFocusLinear = \
-    OsGate_allocate_focus_linear \
-    parm [eax] \
-    value [edx];
-
-#pragma aux RdosAllocateFixedFocusMem = \
-    "push es" \
-    OsGate_allocate_fixed_focus_mem \
-    "pop es" \
-    parm [eax] [ebx] [edx];
 
 #pragma aux RdosRegisterNetClass = \
     "push ds" \

@@ -2411,16 +2411,6 @@ HookEnableFocus MACRO
     OsGate hook_enable_focus_nr
                     ENDM
 
-;       ES:EDI       Address to callback
-HookLostFocus   MACRO
-    OsGate hook_lost_focus_nr
-                    ENDM
-
-;       ES:EDI       Address to callback
-HookGotFocus    MACRO
-    OsGate hook_got_focus_nr
-                    ENDM
-
 ;       AX          Focus thread
 GetFocusThread  MACRO
     OsGate get_focus_thread_nr

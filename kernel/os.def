@@ -188,8 +188,6 @@ open_app_nr					= 180
 close_app_nr				= 181
 
 hook_enable_focus_nr		= 182
-hook_lost_focus_nr			= 183
-hook_got_focus_nr			= 184
 get_focus_thread_nr			= 185
 get_thread_focus_key_nr		= 186
 

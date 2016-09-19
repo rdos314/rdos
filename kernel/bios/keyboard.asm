@@ -95,6 +95,7 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extrn AllocateFixedFocusMem:near
+    extrn HookGotFocus:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1334,7 +1335,7 @@ init_keyboard   PROC near
     HookEnableFocus
 ;
     mov edi,OFFSET got_focus
-    HookGotFocus
+    call HookGotFocus
 ;
     mov edi,OFFSET get_vm_key
     mov al,9

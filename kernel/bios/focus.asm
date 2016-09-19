@@ -467,9 +467,9 @@ hook_enable_focus       ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-hook_lost_focus_name    DB 'Hook Lost Focus',0
+    public HookLostFocus
 
-hook_lost_focus PROC far
+HookLostFocus PROC near
     push ds
     push ax
     push bx
@@ -488,7 +488,7 @@ hook_lost_focus PROC far
     pop ax
     pop ds
     ret
-hook_lost_focus ENDP
+HookLostFocus ENDP
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -502,9 +502,9 @@ hook_lost_focus ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-hook_got_focus_name     DB 'Hook Got Focus',0
+    public HookGotFocus
 
-hook_got_focus  PROC far
+HookGotFocus  PROC near
     push ds
     push ax
     push bx
@@ -523,7 +523,7 @@ hook_got_focus  PROC far
     pop ax
     pop ds
     ret
-hook_got_focus  ENDP
+HookGotFocus  ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -767,18 +767,6 @@ init_focus      PROC near
     mov edi,OFFSET hook_enable_focus_name
     xor cl,cl
     mov ax,hook_enable_focus_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET hook_lost_focus
-    mov edi,OFFSET hook_lost_focus_name
-    xor cl,cl
-    mov ax,hook_lost_focus_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET hook_got_focus
-    mov edi,OFFSET hook_got_focus_name
-    xor cl,cl
-    mov ax,hook_got_focus_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_focus_thread

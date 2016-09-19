@@ -88,6 +88,8 @@ code    SEGMENT byte public 'CODE'
     extrn write_pcfont:near
 
     extrn AllocateFixedFocusMem:near
+    extrn HookLostFocus:near
+    extrn HookGotFocus:near
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3784,10 +3786,10 @@ init_video      PROC near
     HookEnableFocus
 ;
     mov edi,OFFSET lost_focus_hook
-    HookLostFocus
+    call HookLostFocus
 ;
     mov edi,OFFSET got_focus_hook
-    HookGotFocus
+    call HookGotFocus
 ;
     mov esi,OFFSET register_video_mode
     mov edi,OFFSET register_video_mode_name
