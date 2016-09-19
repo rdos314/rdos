@@ -154,9 +154,7 @@ get_thread_focus_key    ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-allocate_focus_linear_name      DB 'Allocate Focus Linear',0
-
-allocate_focus_linear   PROC far
+AllocateFocusLinear   PROC near
     push ds
     mov dx,SEG data
     mov ds,dx
@@ -164,7 +162,7 @@ allocate_focus_linear   PROC far
     add ds:focus_alloc_rel,eax
     pop ds
     ret
-allocate_focus_linear   ENDP
+AllocateFocusLinear   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -182,9 +180,9 @@ allocate_focus_linear   ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-allocate_fixed_focus_mem_name   DB 'Allocate Fixed Focus Mem',0
+    public AllocateFixedFocusMem
 
-allocate_fixed_focus_mem    PROC far
+AllocateFixedFocusMem    PROC near
     push ds
     push eax
     push ecx
@@ -192,7 +190,7 @@ allocate_fixed_focus_mem    PROC far
 ;
     push bx
     push dx
-    AllocateFocusLinear
+    call AllocateFocusLinear
     mov ecx,eax
     push edx
     add edx,io_local_linear
@@ -210,7 +208,7 @@ allocate_fixed_focus_mem    PROC far
     pop eax
     pop ds
     ret
-allocate_fixed_focus_mem    ENDP
+AllocateFixedFocusMem    ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -793,18 +791,6 @@ init_focus      PROC near
     mov edi,OFFSET get_thread_focus_key_name
     xor cl,cl
     mov ax,get_thread_focus_key_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_focus_linear
-    mov edi,OFFSET allocate_focus_linear_name
-    xor cl,cl
-    mov ax,allocate_focus_linear_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_fixed_focus_mem
-    mov edi,OFFSET allocate_fixed_focus_mem_name
-    xor cl,cl
-    mov ax,allocate_fixed_focus_mem_nr
     RegisterOsGate
     ret
 init_focus      ENDP

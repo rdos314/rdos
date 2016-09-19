@@ -118,6 +118,7 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
+    extrn AllocateFixedFocusMem:near
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1864,7 +1865,7 @@ init_mouse      PROC near
     mov bx,mouse_local_sel
     mov dx,mouse_focus_sel
     mov eax,SIZE mouse_seg
-    AllocateFixedFocusMem
+    call AllocateFixedFocusMem
 ;
     mov ax,cs
     mov ds,ax

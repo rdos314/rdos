@@ -2432,20 +2432,6 @@ GetThreadFocusKey     MACRO
     OsGate get_thread_focus_key_nr
                         ENDM
 
-; IN    EAX         Number of bytes
-; OUT   EDX         Base address
-AllocateFocusLinear     MACRO
-    OsGate allocate_focus_linear_nr
-                    ENDM
-
-; IN    EAX         Number of bytes
-; IN    BX          Local selector
-; IN    DX          Focus selector
-; OUT   ES          Local selector
-AllocateFixedFocusMem   MACRO
-     OsGate allocate_fixed_focus_mem_nr
-                    ENDM
-
 ;;;;;;;;;; Network ;;;;;;;;;;;;;
 
 ;       AL          Class id

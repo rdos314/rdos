@@ -87,6 +87,7 @@ code    SEGMENT byte public 'CODE'
     extrn read_pcfont:near
     extrn write_pcfont:near
 
+    extrn AllocateFixedFocusMem:near
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3767,7 +3768,7 @@ init_video      PROC near
     mov eax,SIZE video_focus_seg
     mov bx,video_local_sel
     mov dx,video_focus_sel
-    AllocateFixedFocusMem
+    call AllocateFixedFocusMem
 ;
     mov ax,cs
     mov ds,ax

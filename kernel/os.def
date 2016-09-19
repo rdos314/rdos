@@ -192,8 +192,6 @@ hook_lost_focus_nr			= 183
 hook_got_focus_nr			= 184
 get_focus_thread_nr			= 185
 get_thread_focus_key_nr		= 186
-allocate_focus_linear_nr	= 187
-allocate_fixed_focus_mem_nr	= 188
 
 bios_pci_int_nr				= 189
 read_pci_byte_nr			= 190

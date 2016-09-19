@@ -94,6 +94,7 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
+    extrn AllocateFixedFocusMem:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1354,7 +1355,7 @@ init_keyboard   PROC near
     mov bx,key_local_sel
     mov dx,key_focus_sel
     mov eax,SIZE key_proc_seg
-    AllocateFixedFocusMem
+    call AllocateFixedFocusMem
 ;
     mov ax,cs
     mov ds,ax
