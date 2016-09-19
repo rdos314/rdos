@@ -47,10 +47,6 @@ kb_state    DW ?
 
 key_buf_struc   ENDS
 
-key_proc_seg    STRUC
-
-key_proc_seg    ENDS
-
 data    SEGMENT byte public 'DATA'
 
 shift_states    DW ?
