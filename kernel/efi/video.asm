@@ -50,17 +50,6 @@ mode_resv           DB ?
 
 video_mode_entry    ENDS
 
-CallVideo       MACRO   call_proc
-    push ds
-    push ax
-    mov ax,video_local_sel
-    mov ds,ax
-    pop ax
-    mov ds,ds:v_handle
-    call fword ptr ds:&call_proc
-    pop ds
-                ENDM
-
 video_process_seg STRUC
 
 vp_sel        DW ?

@@ -562,26 +562,6 @@ get_focus   ENDP
     public init_focus
     
 init_focus      PROC near
-    mov bx,video_mem_focus_sel
-    mov edx,video_mem_focus_linear
-    mov ecx,100000h
-    CreateDataSelector16
-;
-    mov bx,video_mem_local_sel
-    mov edx,video_mem_local_linear
-    mov ecx,100000h
-    CreateDataSelector16
-;
-    mov bx,video_focus_sel
-    mov edx,video_focus_linear
-    mov ecx,20000h
-    CreateDataSelector16
-;
-    mov bx,video_local_sel
-    mov edx,video_local_linear
-    mov ecx,20000h
-    CreateDataSelector16
-;
     mov bx,SEG data
     mov es,bx
     mov ds,bx
