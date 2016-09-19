@@ -51,8 +51,6 @@ focus_switched          DB ?
 focus_alloc_rel         DD ?
 
 enable_focus_hooks      DB ?
-lost_focus_hooks        DB ?
-got_focus_hooks         DB ?
 
 enable_focus_arr        DD 2*16 DUP(?)
 lost_focus_arr          DD 2*16 DUP(?)
@@ -360,71 +358,6 @@ trap_enable_focus_loop:
 trap_enable_focus_done:
     ret
 trap_enable_focus       ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TRAP_LOST_FOCUS
-;
-;           DESCRIPTION:    Run hooks for LostFocus (before the switch)
-;
-;           PARAMETERS:         
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-trap_lost_focus PROC near
-    mov cl,ds:lost_focus_hooks
-    or cl,cl
-    je trap_lost_focus_done
-    mov bx,OFFSET lost_focus_arr
-trap_lost_focus_loop:
-    push ds
-    push bx
-    push cx
-    call fword ptr [bx]
-    pop cx
-    pop bx
-    pop ds
-    add bx,8
-    dec cl
-    jnz trap_lost_focus_loop
-trap_lost_focus_done:
-    ret
-trap_lost_focus ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TRAP_GOT_FOCUS
-;
-;           DESCRIPTION:    Run hooks for GotFocus (after the switch)
-;
-;           PARAMETERS:         
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-trap_got_focus  PROC near
-    mov cl,ds:got_focus_hooks
-    or cl,cl
-    je trap_got_focus_done
-    mov bx,OFFSET got_focus_arr
-trap_got_focus_loop:
-    push ds
-    push bx
-    push cx
-    call fword ptr [bx]
-    pop cx
-    pop bx
-    pop ds
-    add bx,8
-    dec cl
-    jnz trap_got_focus_loop
-trap_got_focus_done:
-    ret
-trap_got_focus  ENDP
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -460,75 +393,6 @@ hook_enable_focus       PROC far
     ret
 hook_enable_focus       ENDP
 
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           HOOK_LOST_FOCUS
-;
-;           DESCRIPTION:    Add hook for LostFocus
-;
-;           PARAMETERS:     ES:EDI       CALLBACK ADDRESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_lost_focus_name    DB 'Hook Lost Focus',0
-
-hook_lost_focus PROC far
-    push ds
-    push ax
-    push bx
-    mov ax,SEG data
-    mov ds,ax
-    mov al,ds:lost_focus_hooks
-    mov bl,al
-    xor bh,bh
-    shl bx,3
-    add bx,OFFSET lost_focus_arr
-    mov [bx],edi
-    mov [bx+4],es
-    inc al
-    mov ds:lost_focus_hooks,al
-    pop bx
-    pop ax
-    pop ds
-    ret
-hook_lost_focus ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           HOOK_GOT_FOCUS
-;
-;           DESCRIPTION:    Add hook for GotFocus
-;
-;           PARAMETERS:     ES:EDI       CALLBACK ADDRESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_got_focus_name     DB 'Hook Got Focus',0
-
-hook_got_focus  PROC far
-    push ds
-    push ax
-    push bx
-    mov ax,SEG data
-    mov ds,ax
-    mov al,ds:got_focus_hooks
-    mov bl,al
-    xor bh,bh
-    shl bx,3
-    add bx,OFFSET got_focus_arr
-    mov [bx],edi
-    mov [bx+4],es
-    inc al
-    mov ds:got_focus_hooks,al
-    pop bx
-    pop ax
-    pop ds
-    ret
-hook_got_focus  ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -560,12 +424,6 @@ set_focus       PROC far
 ;
     call DisableConsoleFocus
     mov bx,ax
-    cmp ds:focus_switched,0
-    jz set_focus_no_lost
-;    
-    push bx
-    call trap_lost_focus
-    pop bx
     
 set_focus_no_lost:
     mov ds:focus_switched,1
@@ -599,8 +457,6 @@ set_focus_loop:
     mov ds,bx
     mov bx,ds:focus_current_thread
     call EnableConsoleFocus
-;    
-    call trap_got_focus
 
 set_focus_done:
     LeaveSection ds:focus_section
@@ -733,8 +589,6 @@ init_focus      PROC near
     mov ecx,256
     xor ax,ax
     rep stosw
-    mov ds:lost_focus_hooks,0
-    mov ds:got_focus_hooks,0
     mov ds:enable_focus_hooks,0
     mov ds:focus_switched,0
     mov ds:focus_alloc_rel,0
@@ -780,18 +634,6 @@ init_focus      PROC near
     mov edi,OFFSET hook_enable_focus_name
     xor cl,cl
     mov ax,hook_enable_focus_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET hook_lost_focus
-    mov edi,OFFSET hook_lost_focus_name
-    xor cl,cl
-    mov ax,hook_lost_focus_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET hook_got_focus
-    mov edi,OFFSET hook_got_focus_name
-    xor cl,cl
-    mov ax,hook_got_focus_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_focus_thread
