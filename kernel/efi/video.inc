@@ -246,28 +246,41 @@ console_text_struc  ENDS
 
 console_struc   STRUC
 
-c_lfb           DD ?
-c_width         DW ?
-c_height        DW ?
-c_scan_size     DD ?
-c_flags         DD ?
-c_font          DW ?
-c_font_height   DW ?
-c_font_width    DW ?
-c_rows          DW ?
-c_cols          DW ?
-c_curr_row      DW ?
-c_curr_col      DW ?
-c_prev_row      DW ?
-c_prev_col      DW ?
+c_lfb                 DD ?
+c_width               DW ?
+c_height              DW ?
+c_scan_size           DD ?
+c_flags               DD ?
+c_font                DW ?
+c_font_height         DW ?
+c_font_width          DW ?
+c_rows                DW ?
+c_cols                DW ?
+c_curr_row            DW ?
+c_curr_col            DW ?
+c_prev_row            DW ?
+c_prev_col            DW ?
 
-c_usage         DW ?
+c_usage               DW ?
 
-c_video_handle  DW ?
-c_video_sel     DW ?
+c_video_handle        DW ?
+c_video_sel           DW ?
 
-c_text_entries  DW ?
+c_key_proc_wait       DW ?
+c_extend_key          DB ?
 
-c_text_data     DB ?
+c_key_spinlock        spinlock_typ <>
+c_key_section         section_typ <>
+
+c_key_buffer_head     DW ?
+c_key_buffer_tail     DW ?
+c_key_buffer_start    DW 3 * 256 DUP(?)
+c_key_buffer_end      DW ?
+
+c_key_avail_obj       DW ?
+
+c_text_entries        DW ?
+
+c_text_data           DB ?
 
 console_struc   ENDS

@@ -36,6 +36,7 @@ INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\wait.inc
 INCLUDE ..\apicheck.inc
+INCLUDE video.inc
 
 key_buf_struc   STRUC
 
@@ -47,27 +48,6 @@ kb_state    DW ?
 key_buf_struc   ENDS
 
 key_proc_seg    STRUC
-
-key_proc_wait       DW ?
-extend_key          DB ?
-
-key_spinlock        spinlock_typ <>
-key_section         section_typ <>
-
-key_buffer_head     DW ?
-key_buffer_tail     DW ?
-key_buffer_start    DW 3 * 256 DUP(?)
-key_buffer_end      DW ?
-
-key_emul_thread     DW ?
-key_int_seg             DW ?
-key_int_offs        DW ?
-
-key_notify_thread       DW ?
-key_notify_sel      DW ?
-key_notify_offs     DD ?
-
-key_avail_obj       DW ?
 
 key_proc_seg    ENDS
 
@@ -94,6 +74,8 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
+    extrn GetLocalConsole:near
+    extrn GetFocusConsole:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -102,7 +84,7 @@ code    SEGMENT byte public 'CODE'
 ;
 ;           DESCRIPTION:    Remove non-standard keys from buffer head
 ;
-;       PARAMETERS:     DS      key local sel
+;       PARAMETERS:     DS      console
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -110,10 +92,10 @@ remove_non_key Proc near
     push ax
     push bx
 ;    
-    mov bx,ds:key_buffer_head
+    mov bx,ds:c_key_buffer_head
 
 remove_nk_loop:
-    cmp bx,ds:key_buffer_tail
+    cmp bx,ds:c_key_buffer_tail
     je remove_nk_done
 ;    
     mov al,[bx].kb_scan_code
@@ -126,14 +108,14 @@ remove_nk_loop:
 
 remove_nk_do:
     add bx,SIZE key_buf_struc
-    cmp bx,OFFSET key_buffer_end
+    cmp bx,OFFSET c_key_buffer_end
     jne remove_nk_loop
 ;
-    mov bx,OFFSET key_buffer_start
+    mov bx,OFFSET c_key_buffer_start
     jmp remove_nk_loop
 
 remove_nk_done:
-    mov ds:key_buffer_head,bx
+    mov ds:c_key_buffer_head,bx
 ;
     pop bx
     pop ax    
@@ -169,22 +151,18 @@ keyboard_thread_loop:
 ;
     cmp ah,-1
     je keyboard_thread_loop
-;
-    mov bl,es:has_focus
-    or bl,bl
-    jz keyboard_thread_loop
 ;    
-    mov bx,key_focus_sel
-    mov ds,bx
+    call GetFocusConsole
+    jc keyboard_thread_loop
 ;
-    EnterSection ds:key_section
-    mov bx,ds:key_buffer_tail
+    EnterSection ds:c_key_section
+    mov bx,ds:c_key_buffer_tail
     mov si,bx
     add bx,SIZE key_buf_struc
-    cmp bx,OFFSET key_buffer_end
+    cmp bx,OFFSET c_key_buffer_end
     jne keyboard_thread_no_circ
 ;       
-    mov bx,OFFSET key_buffer_start
+    mov bx,OFFSET c_key_buffer_start
 
 keyboard_thread_no_circ:
     mov ax,es:key_code
@@ -197,10 +175,10 @@ keyboard_thread_no_circ:
     mov ax,es:shift_states
     mov ds:[si].kb_state,ax
 ;       
-    mov ds:key_buffer_tail,bx
-    LeaveSection ds:key_section
+    mov ds:c_key_buffer_tail,bx
+    LeaveSection ds:c_key_section
 ;
-    mov bx,ds:key_avail_obj
+    mov bx,ds:c_key_avail_obj
     or bx,bx
     jz keyboard_wake
 ;
@@ -208,7 +186,7 @@ keyboard_thread_no_circ:
     SignalWait
 
 keyboard_wake:
-    mov si,OFFSET key_proc_wait
+    mov si,OFFSET c_key_proc_wait
     mov ax,[si]
     or ax,ax
     jz keyboard_thread_loop
@@ -269,13 +247,14 @@ poll_keyboard_serial    PROC far
     push ds
     push ax
     sti
-    mov ax,key_local_sel
-    mov ds,ax
-    mov al,ds:extend_key
+    call GetLocalConsole
+    mov al,ds:c_extend_key
     or al,al
     clc
     jnz poll_key_serial_end
+;
     PollKeyboard
+
 poll_key_serial_end:
     pop ax
     pop ds
@@ -299,18 +278,21 @@ read_keyboard_serial    PROC far
     push ds
     push bx
     sti
-    mov bx,key_local_sel
-    mov ds,bx
-    mov al,ds:extend_key
+    call GetLocalConsole
+    mov al,ds:c_extend_key
     or al,al
     jz key_serial_wait
-    mov ds:extend_key,0
+;
+    mov ds:c_extend_key,0
     jmp key_serial_end
+
 key_serial_wait:
     ReadKeyboard
     or al,al
     jnz key_serial_end
-    mov ds:extend_key,ah
+;    
+    mov ds:c_extend_key,ah
+
 key_serial_end:
     pop bx
     pop ds
@@ -332,52 +314,30 @@ read_keyboard_serial    ENDP
 poll_keyboard_name      DB 'Poll Keyboard',0
 
 poll_keyboard   PROC far
-    ApiSaveEax
-    ApiSaveEbx
-    ApiSaveEcx
-    ApiSaveEdx
-    ApiSaveEsi
-    ApiSaveEdi
-    
     push ds
     push bx
     sti
-    mov bx,key_local_sel
-    mov ds,bx
+    call GetLocalConsole
 ;
-    EnterSection ds:key_section
+    EnterSection ds:c_key_section
     call remove_non_key
 ;
-    mov bx,ds:key_buffer_head
-    cmp bx,ds:key_buffer_tail
+    mov bx,ds:c_key_buffer_head
+    cmp bx,ds:c_key_buffer_tail
     je poll_key_empty
     
 poll_key_avail:
-    LeaveSection ds:key_section
+    LeaveSection ds:c_key_section
     clc
     pop bx
     pop ds
-
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEdx
-    ApiCheckEcx
-    ApiCheckEbx
-    ApiCheckEax
     ret
     
 poll_key_empty:
-    LeaveSection ds:key_section
+    LeaveSection ds:c_key_section
     stc
     pop bx
     pop ds
-
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEdx
-    ApiCheckEcx
-    ApiCheckEbx
-    ApiCheckEax
     ret
 poll_keyboard   ENDP
     
@@ -394,23 +354,20 @@ poll_keyboard   ENDP
 
 start_wait_for_keyboard PROC far
     push ds
-    push ax
     push bx
 ;
-    mov ax,key_local_sel
-    mov ds,ax
-    mov ds:key_avail_obj,es
+    call GetLocalConsole
+    mov ds:c_key_avail_obj,es
 ;
-    mov bx,ds:key_buffer_head
-    cmp bx,ds:key_buffer_tail
+    mov bx,ds:c_key_buffer_head
+    cmp bx,ds:c_key_buffer_tail
     je start_wait_for_done
 ;
-    mov ds:key_avail_obj,0
+    mov ds:c_key_avail_obj,0
     SignalWait
 
 start_wait_for_done:
     pop bx
-    pop ax
     pop ds
     ret
 start_wait_for_keyboard Endp
@@ -428,13 +385,10 @@ start_wait_for_keyboard Endp
 
 stop_wait_for_keyboard  PROC far
     push ds
-    push ax
 ;
-    mov ax,key_local_sel
-    mov ds,ax
-    mov ds:key_avail_obj,0
+    call GetLocalConsole
+    mov ds:c_key_avail_obj,0
 ;
-    pop ax
     pop ds
     ret
 stop_wait_for_keyboard Endp
@@ -452,14 +406,11 @@ stop_wait_for_keyboard Endp
 
 is_keyboard_idle    PROC far
     push ds
-    push ax
     push bx
 ;
-    mov ax,key_local_sel
-    mov ds,ax
-;
-    mov bx,ds:key_buffer_head
-    cmp bx,ds:key_buffer_tail
+    call GetLocalConsole
+    mov bx,ds:c_key_buffer_head
+    cmp bx,ds:c_key_buffer_tail
     clc
     je check_idle_done
 ;
@@ -467,7 +418,6 @@ is_keyboard_idle    PROC far
 
 check_idle_done:
     pop bx
-    pop ax
     pop ds
     ret
 is_keyboard_idle Endp
@@ -538,27 +488,21 @@ add_wait_for_keyboard   ENDP
 read_keyboard_name      DB 'Read Keyboard',0
 
 read_keyboard   PROC far
-    ApiSaveEcx
-    ApiSaveEdx
-    ApiSaveEsi
-    ApiSaveEdi
-    
     push ds
     push bx
     sti
-    mov bx,key_local_sel    
-    mov ds,bx
+    call GetLocalConsole
 
 read_key_wait:
-    EnterSection ds:key_section
+    EnterSection ds:c_key_section
     call remove_non_key
-    mov bx,ds:key_buffer_head
-    cmp bx,ds:key_buffer_tail
+    mov bx,ds:c_key_buffer_head
+    cmp bx,ds:c_key_buffer_tail
     jne read_key_get
 ;
-    LeaveSection ds:key_section
+    LeaveSection ds:c_key_section
     push di
-    mov di,OFFSET key_proc_wait
+    mov di,OFFSET c_key_proc_wait
     Sleep
     pop di
     jmp read_key_wait
@@ -566,22 +510,17 @@ read_key_wait:
 read_key_get:
     mov ax,[bx]
     add bx,SIZE key_buf_struc
-    cmp bx,OFFSET key_buffer_end
+    cmp bx,OFFSET c_key_buffer_end
     jne read_key_no_circ_buff
 ;
-    mov bx,OFFSET key_buffer_start
+    mov bx,OFFSET c_key_buffer_start
 
 read_key_no_circ_buff:
-    mov ds:key_buffer_head,bx
-    LeaveSection ds:key_section
+    mov ds:c_key_buffer_head,bx
+    LeaveSection ds:c_key_section
 ;
     pop bx
     pop ds
-
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEdx
-    ApiCheckEcx
     ret
 read_keyboard   ENDP
     
@@ -602,22 +541,16 @@ read_keyboard   ENDP
 peek_key_event_name     DB 'Peek Key Event',0
 
 peek_key_event  PROC far
-    ApiSaveEbx
-    ApiSaveEsi
-    ApiSaveEdi
-    
     push ds
     push bx
     sti
-    mov bx,key_local_sel
-    mov ds,bx
-;
-    EnterSection ds:key_section
-    mov bx,ds:key_buffer_head
-    cmp bx,ds:key_buffer_tail
+    call GetLocalConsole
+    EnterSection ds:c_key_section
+    mov bx,ds:c_key_buffer_head
+    cmp bx,ds:c_key_buffer_tail
     jne peek_key_event_get
 ;
-    LeaveSection ds:key_section
+    LeaveSection ds:c_key_section
     stc
     jmp peek_key_event_done
     
@@ -626,16 +559,12 @@ peek_key_event_get:
     mov cx,[bx].kb_state
     mov dl,[bx].kb_vk_code
     mov dh,[bx].kb_scan_code
-    LeaveSection ds:key_section
+    LeaveSection ds:c_key_section
     clc
 
 peek_key_event_done:
     pop bx
     pop ds
-
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEbx
     ret
 peek_key_event  ENDP
     
@@ -656,22 +585,16 @@ peek_key_event  ENDP
 read_key_event_name     DB 'Read Key Event',0
 
 read_key_event  PROC far
-    ApiSaveEbx
-    ApiSaveEsi
-    ApiSaveEdi
-    
     push ds
     push bx
     sti
-    mov bx,key_local_sel
-    mov ds,bx
-;
-    EnterSection ds:key_section
-    mov bx,ds:key_buffer_head
-    cmp bx,ds:key_buffer_tail
+    call GetLocalConsole
+    EnterSection ds:c_key_section
+    mov bx,ds:c_key_buffer_head
+    cmp bx,ds:c_key_buffer_tail
     jne read_key_event_get
 ;
-    LeaveSection ds:key_section
+    LeaveSection ds:c_key_section
     stc
     jmp read_key_event_done
     
@@ -682,23 +605,19 @@ read_key_event_get:
     mov dh,[bx].kb_scan_code
 ;
     add bx,SIZE key_buf_struc
-    cmp bx,OFFSET key_buffer_end
+    cmp bx,OFFSET c_key_buffer_end
     jne read_key_event_no_circ
 ;
-    mov bx,OFFSET key_buffer_start
+    mov bx,OFFSET c_key_buffer_start
 
 read_key_event_no_circ:
-    mov ds:key_buffer_head,bx
-    LeaveSection ds:key_section
+    mov ds:c_key_buffer_head,bx
+    LeaveSection ds:c_key_section
     clc
 
 read_key_event_done:
     pop bx
     pop ds
-
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEbx
     ret
 read_key_event  ENDP
     
@@ -716,28 +635,15 @@ read_key_event  ENDP
 flush_keyboard_name     DB 'Flush Keyboard',0
 
 flush_keyboard  PROC far
-    ApiSaveEax
-    ApiSaveEcx
-    ApiSaveEdx
-    ApiSaveEsi
-    ApiSaveEdi
-    
     push ds
     push bx
-    mov bx,key_local_sel
-    mov ds,bx
-    EnterSection ds:key_section
-    mov bx,ds:key_buffer_head
-    mov ds:key_buffer_tail,bx
-    LeaveSection ds:key_section
+    call GetLocalConsole
+    EnterSection ds:c_key_section
+    mov bx,ds:c_key_buffer_head
+    mov ds:c_key_buffer_tail,bx
+    LeaveSection ds:c_key_section
     pop bx
     pop ds
-
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEdx
-    ApiCheckEcx
-    ApiCheckEax
     ret
 flush_keyboard  ENDP
     
@@ -792,61 +698,6 @@ set_keyboard_state      PROC far
     pop ds
     ret
 set_keyboard_state      ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           CHECK_LIST
-;
-;           DESCRIPTION:    Check if thread is in a keyboard list
-;
-;           PARAMETERS:         BX      Thread selector
-;               ES:EDI      Buffer
-;
-;       RETURNS:        NC          processed
-;               CX:EDX      List
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Key_state DB 'Keyboard',0
-
-check_list      Proc far
-    push fs
-    push ax
-    push si
-;    
-    mov fs,bx
-    mov cx,fs:p_sleep_sel
-    mov edx,fs:p_sleep_offset
-    cmp ax,key_local_sel
-    jne check_not_local
-;
-    mov si,OFFSET Key_state
-
-check_copy:
-    mov al,cs:[si]
-    or al,al
-    jz check_copy_done
-;
-    inc si
-    stos byte ptr es:[edi]
-    jmp check_copy
-
-check_copy_done:
-    xor al,al
-    stos byte ptr es:[edi]
-    clc
-    jmp check_done
-    
-check_not_local:
-    stc
-
-check_done:
-    pop si
-    pop ax
-    pop fs
-    ret
-check_list      Endp
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -854,47 +705,24 @@ check_list      Endp
 ;
 ;           NAME:           init_local_sel
 ;
-;           DESCRIPTION:    Init local selector
+;           DESCRIPTION:    Init keyboard console
+;
+;           PARAMETERS:     ES          Console
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public InitKeyboardConsole
 
-init_local_sel  PROC far
-    mov ax,key_local_sel
-    mov ds,ax
-    InitSection ds:key_section
-    InitSpinlock ds:key_spinlock
-    mov ax,OFFSET key_buffer_start
-    mov ds:key_buffer_head,ax
-    mov ds:key_buffer_tail,ax
-    mov ds:key_proc_wait,0
-    mov ds:key_avail_obj,0
-    mov ds:key_emul_thread,0
-    mov ds:key_int_seg,0E000h
-    mov ds:key_int_offs,9*4
+InitKeyboardConsole  PROC near
+    InitSection es:c_key_section
+    InitSpinlock es:c_key_spinlock
+    mov ax,OFFSET c_key_buffer_start
+    mov es:c_key_buffer_head,ax
+    mov es:c_key_buffer_tail,ax
+    mov es:c_key_proc_wait,0
+    mov es:c_key_avail_obj,0
     ret
-init_local_sel  ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           got_focus
-;
-;           DESCRIPTION:    Got focus hook
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-got_focus  PROC far
-    push ds
-    push ax
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:has_focus,1
-    pop ax
-    pop ds
-    ret
-got_focus  ENDP
-
+InitKeyboardConsole  ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -943,23 +771,9 @@ init_keyboard   PROC near
     mov edi,OFFSET init_keyb_thread
     HookInitTasking
 ;
-    mov edi,OFFSET init_local_sel
-    HookEnableFocus
-;
-    mov edi,OFFSET got_focus
-    HookGotFocus
-;
-    mov bx,key_local_sel
-    mov dx,key_focus_sel
-    mov eax,SIZE key_proc_seg
-    AllocateFixedFocusMem
-;
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov edi,OFFSET check_list
-    HookState
 ;
     mov esi,OFFSET add_wait_for_keyboard
     mov edi,OFFSET add_wait_for_keyboard_name
@@ -1032,7 +846,6 @@ init_keyboard   PROC near
     xor ax,ax
     mov ds:shift_states,ax
     mov ds:keyboard_thread,ax
-    mov ds:has_focus,0
     ret
 init_keyboard   ENDP
 

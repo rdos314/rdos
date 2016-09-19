@@ -87,6 +87,7 @@ code    SEGMENT byte public 'CODE'
     extrn init_sprite:near
     extrn CreateVideoBitmap:near
     extrn IsMarkerVisible:near
+    extrn InitKeyboardConsole:near
     
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1030,6 +1031,8 @@ cfYOk:
     mov edi,OFFSET c_text_data
     movzx ecx,es:c_text_entries
     rep stosd
+;
+    call InitKeyboardConsole    
 ;    
     popad    
     pop ds
@@ -1178,6 +1181,69 @@ ecfDone:
     pop ds    
     ret
 EnableConsoleFocus Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetLocalConsole
+;
+;           DESCRIPTION:    Get local console
+;
+;           RETURNS:        DS          Console
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetLocalConsole
+
+GetLocalConsole     PROC near
+    push ax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ax,ds:app_console
+    mov ds,ax
+    or ax,ax
+    clc
+    jnz glcDone
+;
+    stc 
+
+glcDone: 
+    pop ax
+    ret
+GetLocalConsole     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetFocusConsole
+;
+;           DESCRIPTION:    Get focus console
+;
+;           RETURNS:        DS          Console
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetFocusConsole
+
+GetFocusConsole     PROC near
+    push ax
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:focus_console
+    mov ds,ax
+    or ax,ax
+    clc
+    jnz gfcDone
+;
+    stc 
+
+gfcDone: 
+    pop ax
+    ret
+GetFocusConsole     ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
