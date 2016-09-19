@@ -647,8 +647,6 @@ void RdosHookOpenApp(__rdos_hook_callback *callb_proc);
 void RdosHookCloseApp(__rdos_hook_callback *callb_proc);
 
 void RdosHookEnableFocus(__rdos_hook_callback *callb_proc);
-void RdosHookLostFocus(__rdos_hook_callback *callb_proc);
-void RdosHookGotFocus(__rdos_hook_callback *callb_proc);
 
 void RdosHookState(__rdos_hook_state_callback *callb_proc);
 
@@ -673,8 +671,6 @@ void RdosUnlockProcEnv();
 
 int RdosGetFocusThread();
 char RdosGetThreadFocusKey(int thread);
-long RdosAllocateFocusLinear(int size);
-void RdosAllocateFixedFocusMem(int size, int local_sel, int focus_sel);
 
 void RdosRegisterNetClass(char class_id, int ads_size, void *broadcast_ads);
 int RdosRegisterNetProtocol(int ads_size, short int packet_type, void *my_ads, __rdos_net_prot_callback *packet_callb);
