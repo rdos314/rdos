@@ -541,6 +541,11 @@ open_app    PROC far
 ;
     mov eax,SIZE app_seg
     AllocateSmallGlobalMem
+    xor di,di
+    mov cx,SIZE app_seg
+    xor al,al
+    rep stos byte ptr es:[di]
+;    
     mov bx,es
     mov ax,ds:p_app_sel
     mov es:app_next,ax

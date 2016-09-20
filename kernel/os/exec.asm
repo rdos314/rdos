@@ -1760,6 +1760,13 @@ cepSizeOk:
     mov gs:el_name,es
     xor edi,edi
     rep movs byte ptr es:[edi],ds:[esi]     
+;
+    GetThread
+    mov gs:el_wake_thread,ax
+;
+    GetCursorPosition
+    mov gs:el_row,dx
+    mov gs:el_col,cx        
 ;    
     pop edi
     pop esi
@@ -1981,6 +1988,44 @@ SetupEfiEnv   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           FreeEfi
+;
+;           DESCRIPTION:    Free efi environment
+;
+;           PARAMETERS:     GS      Efi sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeEfi Proc near
+    push es
+    push ax
+;
+    mov es,gs:el_name
+    FreeMem
+;
+    mov es,gs:el_cmd
+    FreeMem
+;
+    mov es,gs:el_curr_dir
+    FreeMem
+;
+    mov es,gs:el_env
+    FreeMem    
+;
+    mov ax,gs
+    mov es,ax
+    xor ax,ax
+    mov gs,ax
+    FreeMem
+;
+    pop ax
+    pop es    
+    ret
+FreeEfi   Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           EfiStartup
 ;
 ;           DESCRIPTION:    Efi startup stub
@@ -2009,6 +2054,7 @@ efi_startup:
     mov es,ax
     mov es,es:p_app_sel
     mov es:app_context,bx
+    mov es:app_efi_ret,OFFSET lepRet
 ;
     xor si,si
     mov ds,gs:s_name    
@@ -2028,6 +2074,10 @@ lepCopyExeLoop:
 ;
     call SetupEfiDir
     call SetupEfiEnv
+;
+    mov cx,gs:el_col
+    mov dx,gs:el_row
+    SetCursorPosition
 ;       
     xor di,di
     mov es,gs:el_name
@@ -2039,9 +2089,8 @@ lepCopyExeLoop:
     xor edi,edi
     mov ds,gs:el_name
     mov es,gs:el_cmd
-;
     call load_exe_file
-    jc lepCloseFail
+    jc lepFail
 ;
     mov gs:el_ret_code,0
     GetThread
@@ -2051,24 +2100,6 @@ lepCopyExeLoop:
     mov ds,ax
     mov ax,gs:el_console
     mov ds:app_console,ax
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_process_sel
-    mov ax,ds:ms_pd_sel
-    mov gs:el_proc_sel,ax
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov eax,ds:app_spawn_proc
-    or eax,ds:app_spawn_proc+4
-    jz lepNotifyDone
-;
-    call fword ptr ds:app_spawn_proc
-
-lepNotifyDone:
-;    call FreeSpawn
 ;
     test byte ptr [bp+2].load_eflags,2
     jnz lepVm16
@@ -2088,19 +2119,35 @@ lepVm16:
     pop eax
     iretd
 
-lepCloseFail:
-    CloseFile
-
 lepFail:
-    mov gs:el_ret_code,-1
-    mov ax,gs
-    mov ds,ax
-;
-    mov ax,10
-    WaitMilliSec
-;
-;    call FreeSpawn
+    mov ax,-1
     UnloadExe
+
+lepRet:
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds:app_console,0
+    mov bx,ds:app_context
+    pop ax
+    mov ds:app_exit_code,ax
+    RestoreContext
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ax,ds:app_exit_code    
+    mov gs:el_ret_code,ax
+;
+    GetCursorPosition
+    mov gs:el_col,cx
+    mov gs:el_row,dx
+;    
+    mov gs:el_console,0
+    mov bx,gs:el_wake_thread
+    Signal    
+    TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2261,6 +2308,7 @@ load_efi_program   Proc near
     push gs
     push bx
     push cx
+    push dx
 ;
     UserGateForce32 is_64_bit_exe_nr
     jc lepProt
@@ -2281,22 +2329,21 @@ lepProt:
     call CreateEfiStartDir
     call CreateEfiEnv
     call DoEfiLoad
-    int 3
 
 lepWait:    
-;    call WaitForSpawn
+    WaitForSignal
+    mov ax,gs:el_console
+    or ax,ax
+    jnz lepWait
 ;
-    mov cx,gs:s_ret_code
-    or cx,cx
-    jnz lepLeave
-;    
-;    call GetSpawnThread
-;    call CreateSpawnHandle
-;    mov dx,bx
-
-lepLeave:
+    mov ax,gs:el_ret_code
+    mov cx,gs:el_col
+    mov dx,gs:el_row
+    SetCursorPosition
+    call FreeEfi
 
 lepDone:
+    pop dx
     pop cx
     pop bx
     pop gs
@@ -2374,6 +2421,14 @@ unload_exe      Proc far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
+    mov ax,ds:app_efi_ret
+    or ax,ax
+    jz unload_close
+;
+    pop ax
+    jmp ds:app_efi_ret    
+
+unload_close:    
     push ds:app_context
     CloseApp
     pop bx
