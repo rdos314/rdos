@@ -35,10 +35,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE key.inc
 
-
-COM_BASE = 3F8h
-COM_IRQ = 4
-COM_BAUD_DIV = 1
+COM_PORT = 1
 
 
 	.386p
@@ -956,12 +953,11 @@ keyboard_pr:
     push bp
     mov bp,sp
     sub sp,4
-    mov dx,COM_BASE
-    mov al,COM_IRQ
+    mov al,COM_NR
     mov ah,8
     mov bl,1
     mov bh,'N'
-    mov cx,COM_BAUD_DIV
+    mov ecx,COM_BAUD
     mov si,100h
     mov di,100h
     OpenCom
