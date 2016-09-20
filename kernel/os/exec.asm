@@ -459,6 +459,7 @@ dos_ext_exec16:
     mov es,ax
     mov es,es:p_app_sel
     mov es:app_context,bx
+    mov es:app_efi_ret,0
 ;
     push si
     mov di,OFFSET app_exe_name
@@ -1391,6 +1392,7 @@ spawn_startup:
     mov es,ax
     mov es,es:p_app_sel
     mov es:app_context,bx
+    mov es:app_efi_ret,0
 ;
     mov ax,3Bh
     EnableFocus
@@ -2239,6 +2241,7 @@ load_program    Proc near
     mov es,ax
     mov es,es:p_app_sel
     mov es:app_context,bx
+    mov es:app_efi_ret,0
 ;
     xor si,si
     mov ds,gs:e_name
