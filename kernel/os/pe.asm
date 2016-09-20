@@ -5632,6 +5632,10 @@ unload_no_tls:
     FreeLinear
     FreeMem
 ;
+    mov ax,fs
+    or ax,ax
+    jz close_app_done
+;    
     mov edx,fs:pvStackUserBottom
     add edx,ebp
     mov ecx,fs:pvStackUserSize
