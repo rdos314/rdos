@@ -1846,7 +1846,9 @@ debug_process:
     mov dx,8
     SetMouseMickey
 ;       
-;   ShowMouse
+    ShowMouse
+
+    
 state_start:
     mov ax,100
     WaitMilliSec
@@ -1888,6 +1890,8 @@ debug_init:
 state_loop:
     call HandleKeyboard
     call HandleMouse
+    GetMousePosition
+    SetMousePosition
     jmp state_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
