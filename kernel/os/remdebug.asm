@@ -75,8 +75,10 @@ write_delim_loop:
     loop write_delim_loop
     pop cx
 ;
-    mov cx,20
+    mov cx,19
     call Blank    
+;
+    call NewLine    
     pop ax
     ret
 Delimiter       Endp
@@ -1502,9 +1504,7 @@ WriteStatus     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteCpu32    PROC near
-    xor dx,dx
-    xor cx,cx
-    call move_cursor
+    ClearText
     call WriteCoproc
     call Delimiter
     call WriteCpuReg32
@@ -1531,9 +1531,7 @@ WriteCpu32    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteCpu64_32    PROC near
-    xor dx,dx
-    xor cx,cx
-    call move_cursor
+    ClearText
     mov cx,5*80
     call Blank
 ;    
@@ -1562,9 +1560,7 @@ WriteCpu64_32    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteCpu64_64    PROC near
-    xor dx,dx
-    xor cx,cx
-    call move_cursor
+    ClearText
     mov cx,5*80
     call Blank
 ;    
