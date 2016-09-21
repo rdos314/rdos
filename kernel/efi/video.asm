@@ -938,7 +938,7 @@ utLoop:
 ;    
     mov fs,ax
     test fs:c_flags,CONSOLE_FLAG_TEXT_BUFFER
-    jz utBufferOk
+    jz utMarker
 ;
     xor dx,dx
     lock and fs:c_flags,NOT CONSOLE_FLAG_NEW_WRITES
@@ -950,11 +950,11 @@ utRedrawLoop:
     jc utRedrawLoop
 ;
     test fs:c_flags,CONSOLE_FLAG_NEW_WRITES
-    jnz utBufferOk
+    jnz utNext
 ;
     lock and fs:c_flags,NOT CONSOLE_FLAG_TEXT_BUFFER
-
-utBufferOk:    
+    
+utMarker:    
     mov cx,fs:c_curr_col
     mov dx,fs:c_curr_row
     cmp cx,fs:c_prev_col
