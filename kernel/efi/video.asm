@@ -60,6 +60,7 @@ video_process_seg ENDS
 data    SEGMENT byte public 'DATA'
 
 focus_console   DW ?
+update_thread   DW ?
 
 disp_x          DW ?
 disp_y          DW ?
@@ -647,7 +648,7 @@ RedrawVideo     ENDP
 ;
 ;           NAME:           CopyRow
 ;
-;           DESCRIPTION:    Copy a row, potentially redrawing the display
+;           DESCRIPTION:    Copy a row
 ;
 ;           PARAMETERS:     ES    Flat sel
 ;                           FS    Console
@@ -683,13 +684,8 @@ cpyLoop:
     mov fs:[edi].ct_char,al
     mov fs:[edi].ct_fore_col,bl
     mov fs:[edi].ct_back_col,bh
+    mov fs:[edi].ct_dirty,1
 ;
-    test fs:c_flags,CONSOLE_FLAG_ACTIVE
-    jz cpyNext
-;
-    call WritePhysical
-
-cpyNext:
     add esi,4
     add edi,4    
     inc cx
@@ -699,13 +695,13 @@ cpyNext:
     popad
     ret
 CopyRow     ENDP
-            
+           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           ClearRow
 ;
-;           DESCRIPTION:    Clear a row, potentially redrawing the display
+;           DESCRIPTION:    Clear a row
 ;
 ;           PARAMETERS:     ES    Flat sel
 ;                           FS    Console
@@ -733,13 +729,8 @@ clrLoop:
     mov fs:[edi].ct_char,al
     mov fs:[edi].ct_fore_col,bl
     mov fs:[edi].ct_back_col,bh
+    mov fs:[edi].ct_dirty,1
 ;
-    test fs:c_flags,CONSOLE_FLAG_ACTIVE
-    jz clrNext
-;
-    call WritePhysical
-
-clrNext:
     add edi,4    
     inc cx
     cmp cx,fs:c_cols
@@ -766,9 +757,9 @@ ClearRow     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteConsole     PROC near
+    push edi
     push eax
     push edx
-    push edi
 ;    
     push ax
     mov dx,ds:p_row
@@ -783,24 +774,32 @@ WriteConsole     PROC near
     pop ax
     mov ah,1
     mov fs:[edi],eax
-;    
-    pop edi
+;
     pop edx
     pop eax
 ;
     test fs:c_flags,CONSOLE_FLAG_ACTIVE
     jz wcDone
 ;    
+    lock or fs:c_flags,CONSOLE_FLAG_NEW_WRITES
+    test fs:c_flags,CONSOLE_FLAG_TEXT_BUFFER
+    jnz wcDone
+;
     push cx
     push dx
+;    
+    mov fs:[edi].ct_dirty,0
     mov cx,ds:p_col
     mov dx,ds:p_row
-    call WritePhysical 
+    call WritePhysical
+;    
     pop dx
     pop cx
 
 wcDone:    
     inc ds:p_col
+;
+    pop edi
     ret
 WriteConsole    Endp
     
@@ -863,6 +862,54 @@ tmToggle2:
     popad
     ret
 ToggleMarker    ENDP
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           UpdateRow
+;
+;           DESCRIPTION:    Update row to physical display
+;
+;           PARAMETERS:     ES    Flat sel
+;                           FS    Console
+;                           DX    Row
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateRow     PROC near
+    pushad
+;
+    push dx
+    mov ax,fs:c_cols
+    mul dx
+    movzx edi,ax
+    shl edi,2
+    add edi,OFFSET c_text_data
+    pop dx
+;
+    xor cx,cx
+
+urLoop:
+    test fs:[edi].ct_dirty,1
+    jz urNext
+;
+    lock or fs:c_flags,CONSOLE_FLAG_NEW_WRITES    
+;
+    mov al,fs:[edi].ct_char
+    mov bl,fs:[edi].ct_fore_col
+    mov bh,fs:[edi].ct_back_col    
+    mov fs:[edi].ct_dirty,0
+    call WritePhysical
+
+urNext:
+    add edi,4    
+    inc cx
+    cmp cx,fs:c_cols
+    jc urLoop
+;            
+    popad
+    ret
+UpdateRow     ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -875,11 +922,14 @@ ToggleMarker    ENDP
 
 update_thread_name  DB 'Video Sync', 0
 
-update_thread:
+update_thread_pr:
 
 utLoop:    
     mov ax,SEG data
     mov ds,ax
+    GetThread
+    mov ds:update_thread,ax
+;    
     mov ax,flat_sel
     mov es,ax
     mov ax,ds:focus_console
@@ -887,6 +937,24 @@ utLoop:
     jz utNext
 ;    
     mov fs,ax
+    test fs:c_flags,CONSOLE_FLAG_TEXT_BUFFER
+    jz utBufferOk
+;
+    xor dx,dx
+    lock and fs:c_flags,NOT CONSOLE_FLAG_NEW_WRITES
+
+utRedrawLoop:
+    call UpdateRow
+    inc dx
+    cmp dx,fs:c_rows
+    jc utRedrawLoop
+;
+    test fs:c_flags,CONSOLE_FLAG_NEW_WRITES
+    jnz utBufferOk
+;
+    lock and fs:c_flags,NOT CONSOLE_FLAG_TEXT_BUFFER
+
+utBufferOk:    
     mov cx,fs:c_curr_col
     mov dx,fs:c_curr_row
     cmp cx,fs:c_prev_col
@@ -928,8 +996,10 @@ utSave:
     call WritePhysical
 
 utNext:
-    mov ax,200
-    WaitMilliSec
+    GetSystemTime
+    add eax,1193 * 200
+    adc edx,0
+    WaitForSignalWithTimeout
     jmp utLoop
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1098,7 +1168,7 @@ DisableConsoleFocus Proc near
     jz dcfDone
 ;
     mov ds,ax
-    lock and ds:c_flags,NOT CONSOLE_FLAG_ACTIVE
+    lock and ds:c_flags,NOT (CONSOLE_FLAG_ACTIVE OR CONSOLE_FLAG_TEXT_BUFFER OR CONSOLE_FLAG_NEW_WRITES)
     mov ax,ds:c_video_sel
     or ax,ax
     jz dcfDone
@@ -1501,6 +1571,21 @@ upScrollLoop:
     mov dx,di
     call ClearRow
 ;
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz upScrollDone
+
+    lock or fs:c_flags,CONSOLE_FLAG_TEXT_BUFFER OR CONSOLE_FLAG_NEW_WRITES
+;
+    push ds
+    push bx
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:update_thread
+    Signal
+    pop bx
+    pop ds
+
+upScrollDone:
     pop di
     pop si
     pop dx    
@@ -1738,6 +1823,7 @@ clear_text     PROC far
     push es
     push fs
     push ax
+    push bx
     push dx
 ;
     GetThread
@@ -1760,9 +1846,19 @@ ctLoop:
 ;
     mov ds:p_row,0
     mov ds:p_col,0    
+;
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz ctDone
+;
+    lock or fs:c_flags,CONSOLE_FLAG_TEXT_BUFFER OR CONSOLE_FLAG_NEW_WRITES
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:update_thread
+    Signal
 
 ctDone:
     pop dx
+    pop bx
     pop ax
     pop fs
     pop es
@@ -3764,7 +3860,7 @@ init_tasking      Proc far
     mov ds,ax
     mov es,ax
     mov edi,OFFSET update_thread_name
-    mov esi,OFFSET update_thread
+    mov esi,OFFSET update_thread_pr
     mov ax,2
     mov cx,stack0_size
     CreateThread
