@@ -154,46 +154,46 @@ void update_mouse(void)
 
  if (RdosGetLeftButton())
  {
-	if (!left_pressed)
-	{
-	  EvFlags |= EV_LEFT_PRESS;
-	  left_pressed = 1;
-	  RdosGetLeftButtonPressPosition(&x, &y);
-	}
+        if (!left_pressed)
+        {
+          EvFlags |= EV_LEFT_PRESS;
+          left_pressed = 1;
+          RdosGetLeftButtonPressPosition(&x, &y);
+        }
  }
  else
  {
-	if (left_pressed)
-	{
-	  EvFlags |= EV_LEFT_REL;
-	  left_pressed = 0;
-	  RdosGetLeftButtonReleasePosition(&x, &y);
-	}
+        if (left_pressed)
+        {
+          EvFlags |= EV_LEFT_REL;
+          left_pressed = 0;
+          RdosGetLeftButtonReleasePosition(&x, &y);
+        }
  }
 
  if (RdosGetRightButton())
  {
-	if (!right_pressed)
-	{
-	  EvFlags |= EV_LEFT_PRESS;
-	  right_pressed = 1;
-	  RdosGetRightButtonPressPosition(&x, &y);
-	}
+        if (!right_pressed)
+        {
+          EvFlags |= EV_LEFT_PRESS;
+          right_pressed = 1;
+          RdosGetRightButtonPressPosition(&x, &y);
+        }
  }
  else
  {
-	if (right_pressed)
-	{
-	  EvFlags |= EV_LEFT_REL;
-	  right_pressed = 0;
-	  RdosGetRightButtonReleasePosition(&x, &y);
-	}
+        if (right_pressed)
+        {
+          EvFlags |= EV_LEFT_REL;
+          right_pressed = 0;
+          RdosGetRightButtonReleasePosition(&x, &y);
+        }
  }
 
  if (!EvFlags)
  {
-	EvFlags = EV_MOU_MOVE;
-	RdosGetMousePosition(&x, &y);
+        EvFlags = EV_MOU_MOVE;
+        RdosGetMousePosition(&x, &y);
  }
 
  mouevent &= ~1;                                  /* Bit 0 ausblenden */
@@ -216,8 +216,8 @@ void update_mouse(void)
 
 
  if ((mourow != oldrow) ||   /* ignore minor movements */
-	  (moucol != oldcol) ||   /* in the pixel position. */
-	  (EvFlags & LBITS)  ||   /* handle every button event. */
+          (moucol != oldcol) ||   /* in the pixel position. */
+          (EvFlags & LBITS)  ||   /* handle every button event. */
      (EvFlags & RBITS))
     event_count++;
 
@@ -237,9 +237,9 @@ int mouse_event (void)
 int mouse_event_handler_c (int repeat)
 {
    static int old_col, phase;
-	static unsigned long time_start, time_act;
-	static unsigned long msec10_start, msec10_act;
-	unsigned long msb;
+        static unsigned long time_start, time_act;
+        static unsigned long msec10_start, msec10_act;
+        unsigned long msb;
 
 #define TIME_DELAY 11930    /* 10 msec */
 
@@ -403,10 +403,10 @@ int mouse_event_handler_c (int repeat)
    /* scroll screen up/down */
       if (delta_line == 0)
       {
-			if (mourow == (char) MIN_ROW)
-				perform_key_up (1);
+                        if (mourow == (char) MIN_ROW)
+                                perform_key_up (1);
 
-			if (mourow == (char) MAX_ROW)
+                        if (mourow == (char) MAX_ROW)
             perform_key_down (1);
    
          update_entire_window (fc->top_left);
@@ -421,7 +421,7 @@ int mouse_event_handler_c (int repeat)
    /* scroll screen left/right */
       if ((char) old_col == moucol)
       {
-			if (moucol >= (char) (COLUMNS-1))
+                        if (moucol >= (char) (COLUMNS-1))
             fc->left_col++;
    
          if (moucol <= 0)
@@ -460,7 +460,7 @@ void MouShowMouse( void )
  if (mouse_on_off_status == 0)
  {
     mouse_on_off_status++;
-    RdosShowMouse();
+//    RdosShowMouse();
  }
 }
 
@@ -480,7 +480,7 @@ void MouHideMouse( void )
  if (mouse_on_off_status == 1)
  {
     mouse_on_off_status--;
-    RdosHideMouse();
+//    RdosHideMouse();
  }
 }
 
@@ -577,7 +577,7 @@ void MouSetMoveArea( char x1, char y1, char x2, char y2, int window_flag )
 
 void MouEnd( void )
 {
-    RdosHideMouse();
+//    RdosHideMouse();
 }
 
 /***********************************************************************
@@ -588,7 +588,7 @@ int MouStartup (int columns, int rows)
 {
     RdosSetMouseWindow(0, 0, 8 * columns, 8 * rows); 
     RdosSetMouseMickey(8, 8);
-	RdosSetMousePosition(columns / 2, rows / 2);
+        RdosSetMousePosition(columns / 2, rows / 2);
     mavail = TRUE;                        /* Maus ist installiert */
     return 0;
 }
