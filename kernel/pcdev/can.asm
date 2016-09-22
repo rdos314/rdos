@@ -936,7 +936,7 @@ ctResetDone:
 ctRecRetry:
     mov si,OFFSET can_rec_arr
     mov bx,1
-    mov cx,11h
+    mov cx,20h
     mov edx,1
 
 ctRecLoop:

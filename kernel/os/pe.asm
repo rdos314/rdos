@@ -5568,6 +5568,7 @@ open_app    Proc far
     mov ds,ax
     mov ds,ds:p_app_sel
     mov ds:app_mem_blocks,0
+    mov ds:app_mod_sel,0
     pop ds
     ret
 open_app    Endp

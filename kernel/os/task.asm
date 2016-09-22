@@ -2104,6 +2104,12 @@ DeleteThread    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DeleteProcess    Proc near
+    mov ax,es:p_app_sel
+    push es
+    mov es,ax
+    FreeMem
+    pop es
+;
     mov ax,es:p_process_sel
     push es
     mov es,ax

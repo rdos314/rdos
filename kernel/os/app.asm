@@ -101,8 +101,17 @@ init_app    PROC near
     xor esi,esi
     xor edi,edi
 ;
-    mov di,OFFSET init_process
-    HookCreateProcess
+    mov si,OFFSET init_app_process
+    mov di,OFFSET init_app_process_name
+    xor cl,cl
+    mov ax,init_app_process_nr
+    RegisterOsGate
+;
+    mov si,OFFSET exit_app_process
+    mov di,OFFSET exit_app_process_name
+    xor cl,cl
+    mov ax,exit_app_process_nr
+    RegisterOsGate
 ;
     mov si,OFFSET open_app
     mov di,OFFSET open_app_name
@@ -499,13 +508,15 @@ run_open_hooks  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           init_process
+;           NAME:           init_app_process
 ;
 ;           DESCRIPTION:    Init per-process data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_process    PROC far
+init_app_process_name   DB 'Init App Process',0
+
+init_app_process    PROC far
     IsLongThread
     jnc ipDone
 ;    
@@ -516,7 +527,74 @@ init_process    PROC far
 
 ipDone:
     retf32
-init_process    ENDP
+init_app_process    ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           exit_app_process
+;
+;           DESCRIPTION:    Exit per-process data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+exit_app_process_name   DB 'Exit App Process',0
+
+exit_app_process    PROC near
+    IsLongThread
+    jnc epDone
+
+epRetryApp:    
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ax,ds:app_next
+    or ax,ax
+    jz epCleanRootApp
+;
+    CloseApp
+    jmp epRetryApp
+
+epCleanRootApp:    
+    mov eax,ds:app_close_proc
+    or eax,ds:app_close_proc+4
+    jz epCloseHandled
+;
+    call fword ptr ds:app_close_proc
+
+epCloseHandled:
+    mov ax,app_data_sel
+    mov ds,ax
+    mov cl,ds:close_app_hooks
+    or cl,cl
+    je epTrapCloseDone
+;
+    mov bx,OFFSET close_app_arr
+
+epTrapCloseLoop:
+    push ds
+    push bx
+    push cx
+    call fword ptr [bx]
+    pop cx
+    pop bx
+    pop ds
+    add bx,8
+    dec cl
+    jnz epTrapCloseLoop
+
+epTrapCloseDone:
+    xor ax,ax
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
+    call destroy_ldt
+
+epDone:
+    retf32
+exit_app_process    ENDP
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

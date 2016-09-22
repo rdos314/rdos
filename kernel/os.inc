@@ -2159,6 +2159,14 @@ HookLoadExe     MACRO
     OsGate hook_load_exe_nr
                     ENDM
 
+InitAppProcess MACRO
+    OsGate init_app_process_nr
+                    ENDM
+
+ExitAppProcess MACRO
+    OsGate exit_app_process_nr
+                    ENDM
+
 OpenApp MACRO
     OsGate open_app_nr
                     ENDM

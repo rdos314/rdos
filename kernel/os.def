@@ -692,4 +692,7 @@ get_thread_selector_page_nr = 569
 
 is_efi_nr                   = 570
 
+init_app_process_nr         = 571
+exit_app_process_nr         = 572
+
 osgate_entries				= 580
