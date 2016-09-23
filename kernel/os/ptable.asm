@@ -489,6 +489,7 @@ local_init_process32     Endp
 local_create_process32       PROC near
     push ds
     push es
+    push fs
     mov eax,3000h
     AllocateGlobalMem
     mov ax,sys_dir_sel
@@ -536,6 +537,7 @@ local_create_process32       PROC near
 ;
     mov dx,es
     mov fs,dx
+    pop fs
     pop es
     pop ds
     mov es:p_cr3,eax
@@ -2038,6 +2040,7 @@ local_init_process64     Endp
 local_create_process64       PROC near
     push ds
     push es
+    push fs
 ;    
     mov eax,7000h
     AllocateGlobalMem
@@ -2123,6 +2126,7 @@ create_process_loop64:
 ;
     mov dx,es
     mov fs,dx
+    pop fs
     pop es
     pop ds
     mov es:p_cr3,eax

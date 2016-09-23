@@ -9021,7 +9021,7 @@ init_first_process      Proc near
     mov ds,ax
     call init_first_tss
     NotifyCreateProcess
-    mov ds:p_es,fs
+    mov ds:p_es,0
     GetCore
     mov fs:ps_null_thread,es
     mov es:p_signal_spinlock,0
