@@ -535,10 +535,13 @@ local_create_process32       PROC near
     shr ebx,20
     mov es:[bx+di],eax
 ;
-    mov bx,es
+    xor ebx,ebx
+    mov [edx],ebx
+    mov [edx+4],ebx
+    mov [edx+8],ebx    
+    FreeMem
+;    
     pop es
-    FreeGdt
-;
     pop ds
     mov es:p_cr3,eax
     ret
