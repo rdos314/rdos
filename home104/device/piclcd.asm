@@ -34,7 +34,6 @@ INCLUDE ..\..\kernel\user.def
 INCLUDE ..\..\kernel\os.def
 INCLUDE ..\..\kernel\user.inc
 INCLUDE ..\..\kernel\os.inc
-INCLUDE ..\..\kernel\video.inc
 
 IO_BASE = 3A0h
 
