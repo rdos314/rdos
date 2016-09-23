@@ -2410,7 +2410,7 @@ load_program32  Endp
 
 unload_exe_name DB 'Unload Exe',0
     
-unload_exe      Proc far
+unload_exe:
     push ax
     GetThread
     mov ds,ax
@@ -2432,39 +2432,6 @@ unload_exe      Proc far
     jmp ds:app_efi_ret    
 
 unload_close:    
-    push ds:app_context
-    CloseApp
-    pop bx
-    GetThread
-    mov ds,ax
-    mov ax,ds:p_app_sel
-    verr ax
-    jnz unload_terminate
-;
-    mov ds,ax 
-    pop ax
-    or bx,bx
-    jz unload_exe
-;
-    xor ah,ah
-    sldt dx
-    or dx,dx
-    jz unload_terminate
-;
-    mov ds:app_exit_code,ax
-;
-    RestoreContext
-    push ds
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_exit_code
-    pop ds
-    clc
-    retf32
-unload_exe      Endp
-
-unload_terminate:
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

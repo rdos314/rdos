@@ -686,7 +686,18 @@ local_free_process32     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_delete_process32     Proc near
-    int 3
+    push eax
+    mov ax,flat_sel
+    mov es,ax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+    xor ebx,ebx
+    mov al,3
+    SetPageEntry    
+;
+    mov ecx,1000h
+    FreeLinear        
     ret
 local_delete_process32  Endp
 
@@ -2423,6 +2434,50 @@ local_free_process64     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           FreeDirPae
+;
+;           DESCRIPTION:    Free page dir, PAE version
+;
+;           PARAMETERS:     EBX:EAX     Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeDirPae     Proc near
+    push edx
+    push esi
+;    
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+    SetPageEntry   
+;
+    mov ecx,512
+    mov esi,edx
+
+fdpaeLoop:
+    mov eax,es:[esi]
+    mov ebx,es:[esi+4]
+    test al,1
+    jz fdpaeNext
+;
+    FreePhysical
+
+fdpaeNext:
+    add esi,8    
+    loop fdpaeLoop
+;    
+    mov ecx,1000h
+    FreeLinear
+;
+    pop esi
+    pop edx
+    ret
+FreeDirPae      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_delete_process64
 ;
 ;           DESCRIPTION:    Delete process paging
@@ -2432,7 +2487,38 @@ local_free_process64     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_delete_process64     Proc near
-    int 3
+    push eax
+    mov ax,flat_sel
+    mov es,ax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+    xor ebx,ebx
+    mov al,3
+    SetPageEntry    
+;
+    mov esi,edx
+    mov eax,es:[esi]
+    mov ebx,es:[esi+4]
+    call FreeDirPae
+;
+    add esi,8
+    mov eax,es:[esi]
+    mov ebx,es:[esi+4]
+    FreePhysical
+;
+    add esi,8
+    mov eax,es:[esi]
+    mov ebx,es:[esi+4]
+    FreePhysical
+;
+    add esi,8
+    mov eax,es:[esi]
+    mov ebx,es:[esi+4]
+    FreePhysical
+;
+    mov ecx,1000h
+    FreeLinear        
     ret
 local_delete_process64     Endp
 
