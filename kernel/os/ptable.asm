@@ -498,12 +498,12 @@ local_create_process32       PROC near
     push ds
     push es
 ;    
-    mov eax,3000h
+    mov eax,2000h
     AllocateGlobalMem
     mov ax,sys_dir_sel
     mov ds,ax
     xor ax,ax
-    mov di,1000h
+    xor di,di
     mov ecx,system_mem_start
     shr ecx,22
     rep stosd
@@ -533,11 +533,11 @@ local_create_process32       PROC near
 ;
     mov ax,sys_page_sel
     mov ds,ax
-    mov eax,[edx+8]
-    mov di,1000h
+    mov eax,[edx+4]
+    xor di,di
     mov es:[di],eax
 ;
-    mov eax,[edx+4]
+    mov eax,[edx]
     mov al,7
     mov ebx,process_page_linear
     shr ebx,20
@@ -546,7 +546,6 @@ local_create_process32       PROC near
     xor ebx,ebx
     mov [edx],ebx
     mov [edx+4],ebx
-    mov [edx+8],ebx    
     FreeMem
 ;    
     pop es
