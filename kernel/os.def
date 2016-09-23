@@ -695,4 +695,6 @@ is_efi_nr                   = 570
 init_app_process_nr         = 571
 exit_app_process_nr         = 572
 
+notify_delete_process_nr    = 573
+
 osgate_entries				= 580

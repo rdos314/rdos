@@ -209,6 +209,12 @@ init_page_table     PROC near
     mov ax,notify_create_long_process_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET notify_delete_process
+    mov edi,OFFSET notify_delete_process_name
+    xor cl,cl
+    mov ax,notify_delete_process_nr
+    RegisterOsGate
+;
     mov esi,OFFSET get_page_entry
     mov edi,OFFSET get_page_entry_name
     xor cl,cl
@@ -3951,6 +3957,25 @@ notify_create_long_process       Proc far
     call cs:create_long_process_proc
     retf32
 notify_create_long_process       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NotifyDeleteProcess
+;
+;           DESCRIPTION:    Notify delete process
+;
+;           PARAMETERS:     ES          Thread
+;                           EAX         CR3
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_delete_process_name  DB 'Notify Delete Process',0
+
+notify_delete_process       Proc far
+    int 3
+    retf32
+notify_delete_process       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -2116,10 +2116,6 @@ DeleteProcess    Proc near
     FreeMem
     pop es
 ;
-    mov eax,es:p_cr3
-    xor ebx,ebx
-    FreePhysical
-;
     push es
     mov es,es:p_kernel_ss
     FreeMem
@@ -2127,6 +2123,9 @@ DeleteProcess    Proc near
 ;
     mov bx,es:p_tss_sel
     FreeGdt
+;
+    mov eax,es:p_cr3
+    NotifyDeleteProcess
 ;    
     FreeMem
     ret

@@ -550,6 +550,10 @@ NotifyCreateLongProcess MACRO
     OsGate notify_create_long_process_nr
                     ENDM
 
+NotifyDeleteProcess MACRO
+    OsGate notify_delete_process_nr
+                    ENDM
+
 NotifyInitTasking MACRO
     OsGate notify_init_tasking_nr
                     ENDM
