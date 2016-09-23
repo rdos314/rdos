@@ -2078,26 +2078,24 @@ local_create_process64       PROC near
     push ds
     push es
 ;    
-    mov eax,7000h
+    mov eax,6000h
     AllocateGlobalMem
 ;   
     mov bx,es
     GetSelectorBaseSize
-    add edx,1000h
 ;
     AllocatePhysical32
     or al,3
     SetPageEntry
-    sub edx,1000h
 ;    
-    mov di,1000h
+    xor di,di
     mov cx,400h
     xor eax,eax
     rep stosd
 ;     
     mov ax,sys_dir_sel
     mov ds,ax
-    mov di,2000h
+    mov di,1000h
     mov ecx,system_mem_start
     shr ecx,20
     xor eax,eax
@@ -2122,18 +2120,18 @@ local_create_process64       PROC near
 ;
     mov ax,sys_page_sel
     mov ds,ax
-    mov di,2000h
-    mov eax,[edx+30h]
+    mov di,1000h
+    mov eax,[edx+28h]
     mov es:[di],eax
-    mov eax,[edx+34h]
+    mov eax,[edx+2Ch]
     mov es:[di+4],eax
 ;
     mov cx,4
-    mov esi,10h
+    mov esi,8
     mov ebx,process_page_linear
     shr ebx,18
     add bx,di
-    mov di,1000h
+    xor di,di
 
 create_process_loop64:    
     mov eax,[edx+esi]
@@ -2157,7 +2155,7 @@ create_process_loop64:
 ;    
     loop create_process_loop64
 ;
-    mov eax,[edx+8]        
+    mov eax,[edx]        
     xor al,al
 ;
     xor ebx,ebx
@@ -2178,9 +2176,6 @@ create_process_loop64:
 ;
     mov [edx+28h],ebx
     mov [edx+2Ch],ebx
-;
-    mov [edx+30h],ebx
-    mov [edx+34h],ebx    
     FreeMem
 ;
     pop es
