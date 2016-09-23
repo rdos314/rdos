@@ -3838,6 +3838,7 @@ fp_done:
     ret
 free_process     ENDP
 
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -3864,7 +3865,7 @@ init_tasking      Proc far
     mov ax,2
     mov cx,stack0_size
     CreateThread
-;       
+;
     popa
     pop es
     pop ds
