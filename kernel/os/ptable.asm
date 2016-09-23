@@ -2126,10 +2126,30 @@ create_process_loop64:
     mov eax,[edx+8]        
     xor al,al
 ;
-    mov bx,es
-    pop es
-    FreeGdt
+    xor ebx,ebx
+    mov [edx],ebx
+    mov [edx+4],ebx
 ;    
+    mov [edx+8],ebx
+    mov [edx+0Ch],ebx
+;    
+    mov [edx+10h],ebx
+    mov [edx+14h],ebx
+;
+    mov [edx+18h],ebx
+    mov [edx+1Ch],ebx
+;
+    mov [edx+20h],ebx
+    mov [edx+24h],ebx
+;
+    mov [edx+28h],ebx
+    mov [edx+2Ch],ebx
+;
+    mov [edx+30h],ebx
+    mov [edx+34h],ebx    
+    FreeMem
+;
+    pop es
     pop ds
     mov es:p_cr3,eax
     ret
