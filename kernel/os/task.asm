@@ -2125,9 +2125,8 @@ DeleteProcess    Proc near
     FreeGdt
 ;
     mov eax,es:p_cr3
-    NotifyDeleteProcess
-;    
     FreeMem
+    NotifyDeleteProcess    
     ret
 DeleteProcess   Endp
     

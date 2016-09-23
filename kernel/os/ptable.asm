@@ -107,6 +107,7 @@ init_process_proc               DW OFFSET local_init_process32
 create_process_proc             DW OFFSET local_create_process32
 create_long_process_proc        DW OFFSET local_create_long_process32
 free_process_proc               DW OFFSET local_free_process32
+delete_process_proc             DW OFFSET local_delete_process32
 get_page_entry_proc             DW OFFSET local_get_page_entry32
 set_page_entry_proc             DW OFFSET local_set_page_entry32
 get_sys_page_entry_proc         DW OFFSET local_get_sys_page_entry32
@@ -141,6 +142,7 @@ init_process_p64                DW OFFSET local_init_process64
 create_process_p64              DW OFFSET local_create_process64
 create_long_process_p64         DW OFFSET local_create_long_process64
 free_process_p64                DW OFFSET local_free_process64
+delete_process_p64              DW OFFSET local_delete_process64
 get_page_entry_p64              DW OFFSET local_get_page_entry64
 set_page_entry_p64              DW OFFSET local_set_page_entry64
 get_sys_page_entry_p64          DW OFFSET local_get_sys_page_entry64
@@ -672,6 +674,21 @@ fpGlobalNext32:
     ret
 local_free_process32     Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_delete_process32
+;
+;           DESCRIPTION:    Delete process paging
+;
+;           PARAMETERS:     EAX     CR3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_delete_process32     Proc near
+    int 3
+    ret
+local_delete_process32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2406,6 +2423,22 @@ local_free_process64     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_delete_process64
+;
+;           DESCRIPTION:    Delete process paging
+;
+;           PARAMETERS:     EAX     CR3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_delete_process64     Proc near
+    int 3
+    ret
+local_delete_process64     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_get_page_entry64
 ;
 ;           DESCRIPTION:    Get physical page for linear address
@@ -3965,15 +3998,14 @@ notify_create_long_process       Endp
 ;
 ;           DESCRIPTION:    Notify delete process
 ;
-;           PARAMETERS:     ES          Thread
-;                           EAX         CR3
+;           PARAMETERS:     EAX         CR3
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_delete_process_name  DB 'Notify Delete Process',0
 
 notify_delete_process       Proc far
-    int 3
+    call cs:delete_process_proc
     retf32
 notify_delete_process       Endp
 
