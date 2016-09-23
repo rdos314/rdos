@@ -691,33 +691,41 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
 
         codec->WidgetArr[node] = (struct TWidget *)widget;
 
-        switch (widget->Connectivity)
+        if (widget->Connectivity == 0)
         {
-            case 0:
-                if (widget->PinCap & 0x10)
-                {
-                    if (OutputCount < MAX_OUTPUTS)
+            switch (widget->Device)
+            {
+                case 0:
+                case 1:
+                case 2:
+                    if (widget->PinCap & 0x10)
                     {
-                        OutputArr[OutputCount] = widget;
-                        OutputCount++;
+                        if (OutputCount < MAX_OUTPUTS)
+                        {
+                            OutputArr[OutputCount] = widget;
+                            OutputCount++;
+                        }
                     }
-                }
-
-                if (widget->PinCap & 0x20)
-                {
-                    if (InputCount < MAX_OUTPUTS)
+                    break;
+                    
+                case 8:
+                case 10:
+                    if (widget->PinCap & 0x20)
                     {
-                        InputArr[InputCount] = widget;
-                        InputCount++;
+                        if (InputCount < MAX_OUTPUTS)
+                        {
+                            InputArr[InputCount] = widget;
+                            InputCount++;
+                        }
                     }
-                }
-                break;
-
-            case 2:
-                if (widget->Device == 1)
-                    FixedSpeaker = widget;
-                break;
+                    break;
+            }
         }
+        else
+        {
+            if (widget->Connectivity == 2 && widget->Device == 1)
+               FixedSpeaker = widget;
+        }            
     }
 }
 
@@ -2630,6 +2638,12 @@ struct TPinComplex *DetermineActiveOutput()
             found = TRUE;
     }
 
+    if (!found && OutputCount > 0)
+    {
+        widget = OutputArr[0];
+        found = TRUE;
+    }
+    
     if (found)
         return widget;
     else
