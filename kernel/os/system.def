@@ -250,7 +250,7 @@ app_leave_section_proc      DD ?,?
 
 app_exit_code                       DW ?
 app_fork_id                 DW ?
-app_efi_ret                 DW ?
+app_unload_proc             DW ?
 
 app_handle                  DW ?
 app_mod_sel                 DW ?

@@ -459,7 +459,7 @@ dos_ext_exec16:
     mov es,ax
     mov es,es:p_app_sel
     mov es:app_context,bx
-    mov es:app_efi_ret,0
+    mov es:app_unload_proc,OFFSET unload_dos_ext
 ;
     push si
     mov di,OFFSET app_exe_name
@@ -518,6 +518,21 @@ dos_ext_fail16:
     mov ax,ds:app_exit_code
     pop ds
     stc
+    retf32
+
+unload_dos_ext:
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov bx,ds:app_context
+    RestoreContext
+    push ds
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ax,ds:app_exit_code
+    pop ds
+    clc
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1392,7 +1407,7 @@ spawn_startup:
     mov es,ax
     mov es,es:p_app_sel
     mov es:app_context,bx
-    mov es:app_efi_ret,0
+    mov es:app_unload_proc,OFFSET spUnload
 ;
     mov ax,3Bh
     EnableFocus
@@ -1505,6 +1520,9 @@ spFail:
 ;
     call FreeSpawn
     UnloadExe
+
+spUnload:
+    TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2056,7 +2074,7 @@ efi_startup:
     mov es,ax
     mov es,es:p_app_sel
     mov es:app_context,bx
-    mov es:app_efi_ret,OFFSET lepRet
+    mov es:app_unload_proc,OFFSET lepRet
 ;
     xor si,si
     mov ds,gs:s_name    
@@ -2241,7 +2259,7 @@ load_program    Proc near
     mov es,ax
     mov es,es:p_app_sel
     mov es:app_context,bx
-    mov es:app_efi_ret,0
+    mov es:app_unload_proc,OFFSET epUnload
 ;
     xor si,si
     mov ds,gs:e_name
@@ -2290,7 +2308,9 @@ load_close_fail:
 
 load_fail:
     call FreeExec
+    push ds:app_context
     CloseApp
+    pop bx
 ;
     GetThread
     mov ds,ax
@@ -2304,6 +2324,28 @@ load_fail:
     mov ax,ds:app_exit_code
     pop ds
     stc
+    retf32
+
+epUnload:
+    push ds:app_context
+    CloseApp
+    pop bx
+;    
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    pop ax
+    mov ds:app_exit_code,ax
+;
+    RestoreContext
+    push ds
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ax,ds:app_exit_code
+    pop ds
+    clc
     retf32
 load_program    Endp
 
@@ -2423,16 +2465,9 @@ unload_exe:
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_efi_ret
-    or ax,ax
-    jz unload_close
-;
     pop ax
-    jmp ds:app_efi_ret    
-
-unload_close:    
-    TerminateThread
+    mov ds,ds:p_app_sel
+    jmp ds:app_unload_proc    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
