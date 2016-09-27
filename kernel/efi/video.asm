@@ -89,6 +89,7 @@ code    SEGMENT byte public 'CODE'
 console_mode_start:
 write_physical_proc     DD ?
 create_console_proc     DD ?
+toggle_marker_proc      DD ?
 
 console_mode_end:
         
@@ -752,6 +753,84 @@ CreateConsoleBios  PROC near
     pop ds
     ret
 CreateConsoleBios    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ToggleMarkerEfi
+;
+;           DESCRIPTION:    Invert marker, EFI version
+;
+;           PARAMETERS:     ES          Flat sel
+;                           FS          Console
+;                           CX          COL (x)
+;                           DX          ROW (y)
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ToggleMarkerEfi    PROC near
+    pushad
+;    
+    push cx
+    mov ax,dx
+    inc ax
+    mov cx,19
+    mul cx
+    sub ax,2
+    movzx eax,ax
+;    
+    mov edx,fs:c_scan_size
+    mul edx
+    mov edi,fs:c_lfb
+    add edi,eax
+    pop cx
+;    
+    movzx eax,cx
+    shl eax,5
+    add edi,eax
+;
+    mov ecx,8
+    push edi
+
+tmeToggle1:
+    mov eax,es:[edi]
+    not eax
+    mov es:[edi],eax
+    add edi,4
+    loop tmeToggle1
+;
+    pop edi
+    mov ecx,8
+    add edi,fs:c_scan_size        
+
+tmeToggle2:
+    mov eax,es:[edi]
+    not eax
+    mov es:[edi],eax
+    add edi,4
+    loop tmeToggle2
+;
+    popad
+    ret
+ToggleMarkerEfi    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ToggleMarkerBios
+;
+;           DESCRIPTION:    Invert marker, BIOS version
+;
+;           PARAMETERS:     ES          Flat sel
+;                           FS          Console
+;                           CX          COL (x)
+;                           DX          ROW (y)
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ToggleMarkerBios    PROC near
+    ret
+ToggleMarkerBios    ENDP
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1180,66 +1259,6 @@ wcDone:
     pop edi
     ret
 WriteConsole    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ToggleMarker
-;
-;           DESCRIPTION:    Invert marker
-;
-;           PARAMETERS:     ES          Flat sel
-;                           FS          Console
-;                           CX          COL (x)
-;                           DX          ROW (y)
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ToggleMarker    PROC near
-    pushad
-;    
-    push cx
-    mov ax,dx
-    inc ax
-    mov cx,19
-    mul cx
-    sub ax,2
-    movzx eax,ax
-;    
-    mov edx,fs:c_scan_size
-    mul edx
-    mov edi,fs:c_lfb
-    add edi,eax
-    pop cx
-;    
-    movzx eax,cx
-    shl eax,5
-    add edi,eax
-;
-    mov ecx,8
-    push edi
-
-tmToggle1:
-    mov eax,es:[edi]
-    not eax
-    mov es:[edi],eax
-    add edi,4
-    loop tmToggle1
-;
-    pop edi
-    mov ecx,8
-    add edi,fs:c_scan_size        
-
-tmToggle2:
-    mov eax,es:[edi]
-    not eax
-    mov es:[edi],eax
-    add edi,4
-    loop tmToggle2
-;
-    popad
-    ret
-ToggleMarker    ENDP
 
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1350,7 +1369,7 @@ utUpdate:
     call IsMarkerVisible
     jnc utNext
 ;    
-    call ToggleMarker
+    call cs:toggle_marker_proc
     jmp utNext
 
 utSave:
@@ -4151,6 +4170,7 @@ free_process     ENDP
 console_mode_bios_start:
 cmt00  DD OFFSET WritePhysicalBios
 cmt01  DD OFFSET CreateConsoleBios
+cmt02  DD OFFSET ToggleMarkerBios
 
 SetupBiosConsole    PROC near
     mov bx,cs
@@ -4183,6 +4203,7 @@ SetupBiosConsole    Endp
 console_mode_efi_start:
 cme00  DD OFFSET WritePhysicalEfi
 cme01  DD OFFSET CreateConsoleEfi
+cme02  DD OFFSET ToggleMarkerEfi
 
 SetupEfiConsole    PROC near
     mov bx,cs
