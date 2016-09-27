@@ -103,10 +103,8 @@ init    PROC far
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov di,OFFSET init_tasking
+    mov edi,OFFSET init_tasking
     HookInitTasking
-;
-;
     clc
     ret
 init    ENDP
