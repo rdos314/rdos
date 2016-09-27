@@ -88,6 +88,7 @@ code    SEGMENT byte public 'CODE'
 
 console_mode_start:
 write_physical_proc     DD ?
+create_console_proc     DD ?
 
 console_mode_end:
         
@@ -597,6 +598,160 @@ WritePhysicalBios     PROC near
     pop es            
     ret
 WritePhysicalBios    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           CreateConsoleEfi
+;
+;   DESCRIPTION:    Create a new EFI console with fixed font
+;
+;   RETURNS:        ES      Console sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateConsoleEfi  PROC near
+    push ds
+    pushad
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    movzx eax,ds:efi_width
+    shr eax,3
+    mov esi,eax
+;
+    movzx eax,ds:efi_height
+    mov ecx,19
+    xor edx,edx
+    div ecx
+    mov edi,eax
+;
+    mov ax,SEG data
+    mov ds,ax
+    movzx ebx,ds:disp_x
+    or ebx,ebx
+    jz cfeXOk
+;
+    mov eax,ebx
+    shr eax,3
+    mov esi,eax
+
+cfeXOk:
+    movzx ebx,ds:disp_y
+    or ebx,ebx
+    jz cfeYOk
+;
+    mov eax,ebx
+    mov ecx,19
+    xor edx,edx
+    div ecx
+    mov edi,eax
+    
+cfeYOk:
+    mul esi
+    mov ebp,eax
+    shl eax,2
+    add eax,OFFSET c_text_data
+    AllocateBigLinear
+    AllocateGdt
+    mov ecx,eax
+    CreateDataSelector32
+    mov es,bx
+    mov es:c_text_entries,bp
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov es:c_flags,0
+    mov es:c_rows,di
+    mov es:c_cols,si
+    mov es:c_curr_row,0
+    mov es:c_curr_col,0
+    mov es:c_prev_row,0
+    mov es:c_prev_col,0
+    mov es:c_font,0
+    mov es:c_video_handle,0
+    mov es:c_video_sel,0
+    mov es:c_font_width,8
+    mov es:c_font_height,19
+;    
+    mov eax,ds:efi_lfb
+    mov es:c_lfb,eax
+    mov ax,ds:efi_width
+    mov es:c_width,ax
+    mov ax,ds:efi_height
+    mov es:c_height,ax
+    mov eax,ds:efi_scan_size
+    mov es:c_scan_size,eax
+    mov es:c_usage,1
+;
+    mov eax,00070120h
+    mov edi,OFFSET c_text_data
+    movzx ecx,es:c_text_entries
+    rep stosd
+;
+    call InitKeyboardConsole    
+    call InitMouseConsole    
+;    
+    popad    
+    pop ds
+    ret
+CreateConsoleEfi    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           CreateConsoleBios
+;
+;   DESCRIPTION:    Create a new BIOS console with fixed font
+;
+;   RETURNS:        ES      Console sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateConsoleBios  PROC near
+    push ds
+    pushad
+;    
+    mov eax,25 * 80
+    mov ebp,eax
+    shl eax,2
+    add eax,OFFSET c_text_data
+    AllocateBigLinear
+    AllocateGdt
+    mov ecx,eax
+    CreateDataSelector32
+    mov es,bx
+    mov es:c_text_entries,bp
+;
+    mov es:c_flags,0
+    mov es:c_rows,di
+    mov es:c_cols,si
+    mov es:c_curr_row,0
+    mov es:c_curr_col,0
+    mov es:c_prev_row,0
+    mov es:c_prev_col,0
+    mov es:c_font,0
+    mov es:c_video_handle,0
+    mov es:c_video_sel,0
+    mov es:c_font_width,8
+    mov es:c_font_height,19
+;    
+    mov es:c_width,80
+    mov es:c_height,25
+    mov es:c_usage,1
+;
+    mov eax,00070120h
+    mov edi,OFFSET c_text_data
+    movzx ecx,es:c_text_entries
+    rep stosd
+;
+    call InitKeyboardConsole    
+    call InitMouseConsole    
+;    
+    popad    
+    pop ds
+    ret
+CreateConsoleBios    Endp
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1229,104 +1384,6 @@ utNext:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;   NAME:           CreateFixedEfiConsole
-;
-;   DESCRIPTION:    Create a new EFI console with fixed font
-;
-;   RETURNS:        ES      Console sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateFixedEfiConsole  PROC near
-    push ds
-    pushad
-;    
-    mov ax,system_data_sel
-    mov ds,ax
-    movzx eax,ds:efi_width
-    shr eax,3
-    mov esi,eax
-;
-    movzx eax,ds:efi_height
-    mov ecx,19
-    xor edx,edx
-    div ecx
-    mov edi,eax
-;
-    mov ax,SEG data
-    mov ds,ax
-    movzx ebx,ds:disp_x
-    or ebx,ebx
-    jz cfXOk
-;
-    mov eax,ebx
-    shr eax,3
-    mov esi,eax
-
-cfXOk:
-    movzx ebx,ds:disp_y
-    or ebx,ebx
-    jz cfYOk
-;
-    mov eax,ebx
-    mov ecx,19
-    xor edx,edx
-    div ecx
-    mov edi,eax
-    
-cfYOk:
-    mul esi
-    mov ebp,eax
-    shl eax,2
-    add eax,OFFSET c_text_data
-    AllocateBigLinear
-    AllocateGdt
-    mov ecx,eax
-    CreateDataSelector32
-    mov es,bx
-    mov es:c_text_entries,bp
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov es:c_flags,0
-    mov es:c_rows,di
-    mov es:c_cols,si
-    mov es:c_curr_row,0
-    mov es:c_curr_col,0
-    mov es:c_prev_row,0
-    mov es:c_prev_col,0
-    mov es:c_font,0
-    mov es:c_video_handle,0
-    mov es:c_video_sel,0
-    mov es:c_font_width,8
-    mov es:c_font_height,19
-;    
-    mov eax,ds:efi_lfb
-    mov es:c_lfb,eax
-    mov ax,ds:efi_width
-    mov es:c_width,ax
-    mov ax,ds:efi_height
-    mov es:c_height,ax
-    mov eax,ds:efi_scan_size
-    mov es:c_scan_size,eax
-    mov es:c_usage,1
-;
-    mov eax,00070120h
-    mov edi,OFFSET c_text_data
-    movzx ecx,es:c_text_entries
-    rep stosd
-;
-    call InitKeyboardConsole    
-    call InitMouseConsole    
-;    
-    popad    
-    pop ds
-    ret
-CreateFixedEfiConsole    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;   NAME:           CreateConsole
 ;
 ;   DESCRIPTION:    Create a new console
@@ -1343,7 +1400,7 @@ CreateConsole  PROC near
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    call CreateFixedEfiConsole
+    call cs:create_console_proc
     mov ds:app_console,es
 ;
     pop ax
@@ -4092,7 +4149,8 @@ free_process     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 console_mode_bios_start:
-cmtWritePhysical  DD OFFSET WritePhysicalBios
+cmt00  DD OFFSET WritePhysicalBios
+cmt01  DD OFFSET CreateConsoleBios
 
 SetupBiosConsole    PROC near
     mov bx,cs
@@ -4123,7 +4181,8 @@ SetupBiosConsole    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 console_mode_efi_start:
-cmeWritePhysical  DD OFFSET WritePhysicalEfi
+cme00  DD OFFSET WritePhysicalEfi
+cme01  DD OFFSET CreateConsoleEfi
 
 SetupEfiConsole    PROC near
     mov bx,cs
