@@ -90,6 +90,7 @@ console_mode_start:
 write_physical_proc     DD ?
 create_console_proc     DD ?
 toggle_marker_proc      DD ?
+update_cursor_proc      DD ?
 
 console_mode_end:
         
@@ -829,6 +830,67 @@ ToggleMarkerEfi    ENDP
 ToggleMarkerBios    PROC near
     ret
 ToggleMarkerBios    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           UpdateCursorPosEfi
+;
+;           DESCRIPTION:    Update cursor position, EFI version
+;
+;           PARAMETERS:     ES          Flat sel
+;                           FS          Console
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateCursorPosEfi    PROC near
+    ret
+UpdateCursorPosEfi    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           UpdateCursorPosBios
+;
+;           DESCRIPTION:    Update cursor position, BIOS version
+;
+;           PARAMETERS:     ES          Flat sel
+;                           FS          Console
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateCursorPosBios    PROC near
+    pusha
+;
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz ucpbDone
+;
+    mov ax,80
+    mul fs:c_curr_row
+    add ax,fs:c_curr_col
+    mov bx,ax
+;
+    mov dx,3D4h
+;
+    mov al,0Eh
+    out dx,al
+;
+    inc dx
+    mov al,bh
+    out dx,al
+;
+    dec dx
+    mov al,0Fh
+    out dx,al
+;
+    inc dx
+    mov al,bl
+    out dx,al
+
+ucpbDone:
+    popa 
+    ret
+UpdateCursorPosBios        Endp   
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1531,6 +1593,7 @@ ecfRedraw:
     mov es,ax
     mov fs,bx
     call RedrawConsole    
+    call cs:update_cursor_proc
         
 ecfDone:
     pop bx
@@ -1909,6 +1972,7 @@ update_video_end:
     mov fs:c_curr_row,ax
     mov ax,ds:p_col
     mov fs:c_curr_col,ax
+    call cs:update_cursor_proc
     pop ax
     ret
 UpdatePos       ENDP
@@ -2216,6 +2280,7 @@ set_cursor_position     PROC far
 ;
     mov fs:c_curr_row,dx
     mov fs:c_curr_col,cx
+    call cs:update_cursor_proc
 
 scpDone:
     pop ax
@@ -4169,6 +4234,7 @@ console_mode_bios_start:
 cmt00  DD OFFSET WritePhysicalBios
 cmt01  DD OFFSET CreateConsoleBios
 cmt02  DD OFFSET ToggleMarkerBios
+cmt03  DD OFFSET UpdateCursorPosBios
 
 SetupBiosConsole    PROC near
     mov bx,cs
@@ -4202,6 +4268,7 @@ console_mode_efi_start:
 cme00  DD OFFSET WritePhysicalEfi
 cme01  DD OFFSET CreateConsoleEfi
 cme02  DD OFFSET ToggleMarkerEfi
+cme03  DD OFFSET UpdateCursorPosEfi
 
 SetupEfiConsole    PROC near
     mov bx,cs
