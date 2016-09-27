@@ -579,13 +579,11 @@ WritePhysicalBios     PROC near
     pusha
 ;
     push ax
-    push dx
     mov ax,dosB800
     mov es,ax    
     mov ax,80
-    mul cx
-    pop dx
-    add ax,dx
+    mul dx
+    add ax,cx
     mov di,ax
     add di,di
     pop ax    
@@ -593,7 +591,7 @@ WritePhysicalBios     PROC near
     mov ah,bh
     shl ah,4
     or ah,bl
-    mov es:[edi],ax
+    mov es:[di],ax
 ;
     popa
     pop es            
@@ -725,8 +723,8 @@ CreateConsoleBios  PROC near
     mov es:c_text_entries,bp
 ;
     mov es:c_flags,0
-    mov es:c_rows,di
-    mov es:c_cols,si
+    mov es:c_rows,25
+    mov es:c_cols,80
     mov es:c_curr_row,0
     mov es:c_curr_col,0
     mov es:c_prev_row,0
@@ -734,11 +732,11 @@ CreateConsoleBios  PROC near
     mov es:c_font,0
     mov es:c_video_handle,0
     mov es:c_video_sel,0
-    mov es:c_font_width,8
-    mov es:c_font_height,19
+    mov es:c_font_width,0
+    mov es:c_font_height,0
 ;    
-    mov es:c_width,80
-    mov es:c_height,25
+    mov es:c_width,0
+    mov es:c_height,0
     mov es:c_usage,1
 ;
     mov eax,00070120h
@@ -4544,8 +4542,20 @@ init_video      PROC near
     mov ax,write_dos_string_nr
     RegisterOsGate
 ;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:efi_acpi
+    or eax,ds:efi_acpi+4
+    jz init_bios
+
+init_efi:        
     call SetupEfiConsole
-;    
+    jmp init_done
+
+init_bios:
+    call SetupBiosConsole
+
+init_done:
     call init_bitmap
     call init_sprite
     ret
