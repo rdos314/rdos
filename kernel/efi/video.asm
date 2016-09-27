@@ -4288,23 +4288,6 @@ SetupEfiConsole    PROC near
     rep movs dword ptr es:[edi],es:[esi]
     ret
 SetupEfiConsole    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           test_thread
-;
-;           DESCRIPTION:    test thread
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_thread_name        DB 'Test Thread', 0
-            
-test_thread_pr:
-    int 3
-    call SetupBiosConsole
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4329,15 +4312,6 @@ init_tasking      Proc far
     mov es,ax
     mov edi,OFFSET update_thread_name
     mov esi,OFFSET update_thread_pr
-    mov ax,2
-    mov cx,stack0_size
-    CreateThread
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET test_thread_name
-    mov esi,OFFSET test_thread_pr
     mov ax,2
     mov cx,stack0_size
     CreateThread
@@ -4391,9 +4365,6 @@ init_video      PROC near
 ;
     mov edi,OFFSET free_process
     HookTerminateProcess
-;
-    mov edi,OFFSET init_tasking
-    HookInitTasking
 ;
     mov esi,OFFSET is_efi
     mov edi,OFFSET is_efi_name
@@ -4616,6 +4587,12 @@ init_video      PROC near
     jz init_bios
 
 init_efi:        
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET init_tasking
+    HookInitTasking
+;    
     call SetupEfiConsole
     jmp init_done
 
