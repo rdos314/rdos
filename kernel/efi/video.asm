@@ -548,6 +548,101 @@ WritePhysical    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           WriteBitmap
+;
+;           DESCRIPTION:    Write char to video bitmap
+;
+;           PARAMETERS:     ES    Flat sel
+;                           FS    Console
+;                           AL    Char
+;                           BL    Fore color
+;                           BH    Back color
+;                           CX    Col
+;                           DX    Row
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteBitmap     PROC near
+    push gs
+    pushad
+;    
+    movzx esi,bl
+    and esi,0Fh
+    shl esi,2
+    mov ebp,dword ptr cs:[esi].AttribBgrTab    ; fore color
+;    
+    movzx esi,bh
+    and esi,0Fh
+    shl esi,2
+    mov esi,dword ptr cs:[esi].AttribBgrTab    ; back color
+;    
+    push ax
+    push cx
+    mov ax,fs:c_video_sel
+    mov gs,ax
+    mov ax,dx
+    mov cx,19
+    mul cx
+    movzx eax,ax
+;    
+    mov edx,fs:c_scan_size
+    mul edx
+    mov edi,gs:v_app_base    
+    add edi,eax
+    pop cx
+;    
+    movzx eax,cx
+    shl eax,5
+    add edi,eax
+;
+    pop ax
+;
+    mov ah,19
+    mul ah
+    movzx ebx,ax
+    add ebx,OFFSET font8x19
+;
+    mov ecx,19
+
+wbRowLoop:    
+    push ecx
+    push edi
+    mov ecx,8
+    mov al,cs:[ebx]
+
+wbLoop:
+    test al,80h
+    jz wbBack
+
+wbFore:
+    mov es:[edi],ebp
+    jmp wbNext
+
+wbBack:
+    mov es:[edi],esi
+
+wbNext:
+    add edi,4
+    shl al,1
+;
+    loop wbLoop    
+;
+    pop edi
+    pop ecx
+    add edi,fs:c_scan_size
+    inc ebx
+;
+    loop wbRowLoop    
+
+wbDone:    
+    popad        
+    pop gs
+    ret
+WriteBitmap    Endp
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           RedrawRow
 ;
 ;           DESCRIPTION:    Redraw row to physical display
@@ -743,6 +838,50 @@ ClearRow     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           ScrollBitmap
+;
+;           DESCRIPTION:    Scroll bitmap one row
+;
+;           PARAMETERS:     ES    Flat sel
+;                           FS    Console
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ScrollBitmap     PROC near
+    push ds
+    pushad
+;
+    mov ax,fs:c_video_sel
+    mov ds,ax
+;
+    mov edi,ds:v_app_base
+    mov eax,fs:c_scan_size
+    mov edx,19
+    mul edx
+    mov esi,edi
+    add esi,eax
+;
+    push eax
+    movzx edx,fs:c_rows
+    dec edx
+    mul edx
+    mov ecx,eax
+    shr ecx,2
+    rep movs dword ptr es:[edi],es:[esi]
+    pop ecx
+;    
+    shr ecx,2
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    popad
+    pop ds
+    ret
+ScrollBitmap     ENDP
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           WriteConsole
 ;
 ;           DESCRIPTION:    Write char to buffer
@@ -775,9 +914,40 @@ WriteConsole     PROC near
     mov ah,1
     mov fs:[edi],eax
 ;
+    mov ax,fs:c_video_sel
+    or ax,ax
     pop edx
     pop eax
+    jz wcText
+
+wcBitmap:
+    push cx
+    push dx
+;    
+    mov fs:[edi].ct_dirty,0
+    mov cx,ds:p_col
+    mov dx,ds:p_row
+    call WriteBitmap
 ;
+    pop dx
+    pop cx
+;    
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz wcDone
+;
+    push cx
+    push dx
+;    
+    mov fs:[edi].ct_dirty,0
+    mov cx,ds:p_col
+    mov dx,ds:p_row
+    call WritePhysical
+;
+    pop dx
+    pop cx
+    jmp wcDone
+
+wcText:
     test fs:c_flags,CONSOLE_FLAG_ACTIVE
     jz wcDone
 ;    
@@ -1571,9 +1741,25 @@ upScrollLoop:
     mov dx,di
     call ClearRow
 ;
+    mov ax,fs:c_video_sel
+    or ax,ax
+    jz upText
+
+upBitmap:
+    call ScrollBitmap
     test fs:c_flags,CONSOLE_FLAG_ACTIVE
     jz upScrollDone
+;
+    push ds
+    mov ds,fs:c_video_sel
+    call RedrawVideo    
+    pop ds
+    jmp upScrollDone
 
+upText:
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz upScrollDone
+;
     lock or fs:c_flags,CONSOLE_FLAG_TEXT_BUFFER OR CONSOLE_FLAG_NEW_WRITES
 ;
     push ds
@@ -1850,6 +2036,10 @@ ctLoop:
     test fs:c_flags,CONSOLE_FLAG_ACTIVE
     jz ctDone
 ;
+    mov bx,fs:c_video_sel
+    or bx,bx
+    jnz ctDone
+;     
     lock or fs:c_flags,CONSOLE_FLAG_TEXT_BUFFER OR CONSOLE_FLAG_NEW_WRITES
     mov bx,SEG data
     mov ds,bx
