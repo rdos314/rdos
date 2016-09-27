@@ -79,7 +79,17 @@ code    SEGMENT byte public 'CODE'
     extrn IsMarkerVisible:near
     extrn InitKeyboardConsole:near
     extrn InitMouseConsole:near
-    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;  console_mode_table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+console_mode_start:
+write_physical_proc     DD ?
+
+console_mode_end:
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -457,9 +467,9 @@ abt0F   DD 00FFFFFFh
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           WritePhysical
+;           NAME:           WritePhysicalEfi
 ;
-;           DESCRIPTION:    Write char to physical display
+;           DESCRIPTION:    Write char to physical display, EFI version
 ;
 ;           PARAMETERS:     ES    Flat sel
 ;                           FS    Console
@@ -471,7 +481,7 @@ abt0F   DD 00FFFFFFh
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WritePhysical     PROC near
+WritePhysicalEfi     PROC near
     pushad
 ;    
     movzx esi,bl
@@ -510,40 +520,83 @@ WritePhysical     PROC near
 ;
     mov ecx,19
 
-wpRowLoop:    
+wpeRowLoop:    
     push ecx
     push edi
     mov ecx,8
     mov al,cs:[ebx]
 
-wpLoop:
+wpeLoop:
     test al,80h
-    jz wpBack
+    jz wpeBack
 
-wpFore:
+wpeFore:
     mov es:[edi],ebp
-    jmp wpNext
+    jmp wpeNext
 
-wpBack:
+wpeBack:
     mov es:[edi],esi
 
-wpNext:
+wpeNext:
     add edi,4
     shl al,1
 ;
-    loop wpLoop    
+    loop wpeLoop    
 ;
     pop edi
     pop ecx
     add edi,fs:c_scan_size
     inc ebx
 ;
-    loop wpRowLoop    
+    loop wpeRowLoop    
 
-wpDone:    
+wpeDone:    
     popad        
     ret
-WritePhysical    Endp
+WritePhysicalEfi    Endp
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           WritePhysicalBios
+;
+;           DESCRIPTION:    Write char to physical display, BIOS version
+;
+;           PARAMETERS:     ES    Flat sel
+;                           FS    Console
+;                           AL    Char
+;                           BL    Fore color
+;                           BH    Back color
+;                           CX    Col
+;                           DX    Row
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WritePhysicalBios     PROC near
+    push es
+    pusha
+;
+    push ax
+    push dx
+    mov ax,dosB800
+    mov es,ax    
+    mov ax,80
+    mul cx
+    pop dx
+    add ax,dx
+    mov di,ax
+    add di,di
+    pop ax    
+;
+    mov ah,bh
+    shl ah,4
+    or ah,bl
+    mov es:[edi],ax
+;
+    popa
+    pop es            
+    ret
+WritePhysicalBios    Endp
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -671,7 +724,7 @@ rrLoop:
     mov bl,fs:[edi].ct_fore_col
     mov bh,fs:[edi].ct_back_col    
     mov fs:[edi].ct_dirty,0
-    call WritePhysical
+    call cs:write_physical_proc
 ;
     add edi,4    
     inc cx
@@ -941,7 +994,7 @@ wcBitmap:
     mov fs:[edi].ct_dirty,0
     mov cx,ds:p_col
     mov dx,ds:p_row
-    call WritePhysical
+    call cs:write_physical_proc
 ;
     pop dx
     pop cx
@@ -961,7 +1014,7 @@ wcText:
     mov fs:[edi].ct_dirty,0
     mov cx,ds:p_col
     mov dx,ds:p_row
-    call WritePhysical
+    call cs:write_physical_proc
 ;    
     pop dx
     pop cx
@@ -1032,6 +1085,7 @@ tmToggle2:
     popad
     ret
 ToggleMarker    ENDP
+
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1069,7 +1123,7 @@ urLoop:
     mov bl,fs:[edi].ct_fore_col
     mov bh,fs:[edi].ct_back_col    
     mov fs:[edi].ct_dirty,0
-    call WritePhysical
+    call cs:write_physical_proc
 
 urNext:
     add edi,4    
@@ -1163,7 +1217,7 @@ utSave:
     mov bl,fs:[edi].ct_fore_col
     mov bh,fs:[edi].ct_back_col    
     mov fs:[edi].ct_dirty,0
-    call WritePhysical
+    call cs:write_physical_proc
 
 utNext:
     GetSystemTime
@@ -1675,7 +1729,7 @@ invert_mouse    PROC far
     mov al,fs:[edi].ct_char
     mov bl,fs:[edi].ct_fore_col
     mov bh,fs:[edi].ct_back_col    
-    call WritePhysical 
+    call cs:write_physical_proc
 
 imDone:
     popad
@@ -4027,7 +4081,85 @@ fp_done:
     pop es
     ret
 free_process     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetupBiosConsole
+;
+;           DESCRIPTION:    Setup BIOS console
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+console_mode_bios_start:
+cmtWritePhysical  DD OFFSET WritePhysicalBios
+
+SetupBiosConsole    PROC near
+    mov bx,cs
+    GetSelectorBaseSize
+;
+    mov esi,edx
+    add esi,OFFSET console_mode_bios_start
+;    
+    mov edi,edx
+    add edi,OFFSET console_mode_start
+;
+    mov ecx,OFFSET console_mode_end - OFFSET console_mode_start
+    shr ecx,2
+;
+    mov ax,flat_sel
+    mov es,ax
+    rep movs dword ptr es:[edi],es:[esi]
+    ret
+SetupBiosConsole    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetupEfiConsole
+;
+;           DESCRIPTION:    Setup EFI console
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+console_mode_efi_start:
+cmeWritePhysical  DD OFFSET WritePhysicalEfi
+
+SetupEfiConsole    PROC near
+    mov bx,cs
+    GetSelectorBaseSize
+;
+    mov esi,edx
+    add esi,OFFSET console_mode_efi_start
+;    
+    mov edi,edx
+    add edi,OFFSET console_mode_start
+;
+    mov ecx,OFFSET console_mode_end - OFFSET console_mode_start
+    shr ecx,2
+;
+    mov ax,flat_sel
+    mov es,ax
+    rep movs dword ptr es:[edi],es:[esi]
+    ret
+SetupEfiConsole    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           test_thread
+;
+;           DESCRIPTION:    test thread
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_thread_name        DB 'Test Thread', 0
+            
+test_thread_pr:
+    int 3
+    call SetupBiosConsole
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4052,6 +4184,15 @@ init_tasking      Proc far
     mov es,ax
     mov edi,OFFSET update_thread_name
     mov esi,OFFSET update_thread_pr
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET test_thread_name
+    mov esi,OFFSET test_thread_pr
     mov ax,2
     mov cx,stack0_size
     CreateThread
@@ -4323,6 +4464,8 @@ init_video      PROC near
     mov ax,write_dos_string_nr
     RegisterOsGate
 ;
+    call SetupEfiConsole
+;    
     call init_bitmap
     call init_sprite
     ret
