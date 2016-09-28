@@ -477,7 +477,8 @@ abt0F   DD 00FFFFFFh
 ;
 ;           DESCRIPTION:    Write char to physical display, EFI version
 ;
-;           PARAMETERS:     ES    Flat sel
+;           PARAMETERS:     DS    Video sel
+;                           ES    Flat sel
 ;                           FS    Console
 ;                           AL    Char
 ;                           BL    Fore color
@@ -568,7 +569,8 @@ WritePhysicalEfi    Endp
 ;
 ;           DESCRIPTION:    Write char to physical display, BIOS version
 ;
-;           PARAMETERS:     ES    Flat sel
+;           PARAMETERS:     DS    Video sel
+;                           ES    Flat sel
 ;                           FS    Console
 ;                           AL    Char
 ;                           BL    Fore color
@@ -1014,7 +1016,8 @@ WriteBitmap    Endp
 ;
 ;           DESCRIPTION:    Redraw row to physical display
 ;
-;           PARAMETERS:     ES    Flat sel
+;           PARAMETERS:     DS    Video sel
+;                           ES    Flat sel
 ;                           FS    Console
 ;                           DX    Row
 ;
@@ -1056,7 +1059,8 @@ RedrawRow     ENDP
 ;
 ;           DESCRIPTION:    Redraw console to physical display
 ;
-;           PARAMETERS:     ES    Flat sel
+;           PARAMETERS:     DS    Video sel
+;                           ES    Flat sel
 ;                           FS    Console
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1305,10 +1309,13 @@ wcBitmap:
     push cx
     push dx
 ;    
+    push ds
     mov fs:[edi].ct_dirty,0
     mov cx,ds:p_col
     mov dx,ds:p_row
+    mov ds,fs:c_video_sel
     call cs:write_physical_proc
+    pop ds
 ;
     pop dx
     pop cx
@@ -1325,10 +1332,13 @@ wcText:
     push cx
     push dx
 ;    
+    push ds
     mov fs:[edi].ct_dirty,0
     mov cx,ds:p_col
     mov dx,ds:p_row
+    mov ds,fs:c_video_sel
     call cs:write_physical_proc
+    pop ds
 ;    
     pop dx
     pop cx
@@ -1348,7 +1358,8 @@ WriteConsole    Endp
 ;
 ;           DESCRIPTION:    Update row to physical display
 ;
-;           PARAMETERS:     ES    Flat sel
+;           PARAMETERS:     DS    Video sel
+;                           ES    Flat sel
 ;                           FS    Console
 ;                           DX    Row
 ;
@@ -1415,6 +1426,7 @@ utLoop:
     jz utNext
 ;    
     mov fs,ax
+    mov ds,fs:c_video_sel
     test fs:c_flags,CONSOLE_FLAG_TEXT_BUFFER
     jz utMarker
 ;
@@ -1592,27 +1604,24 @@ EnableConsoleFocus Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    mov es,bx
-    lock or es:c_flags,CONSOLE_FLAG_ACTIVE
+    mov fs,bx
+    lock or fs:c_flags,CONSOLE_FLAG_ACTIVE
     mov ds:focus_console,bx
 ;
-    test es:c_flags,CONSOLE_FLAG_BITMAP
+    test fs:c_flags,CONSOLE_FLAG_BITMAP
     jz ecfRedraw
 ;
-    mov ax,es:c_video_sel
-    mov ds,ax
+    mov ds,fs:c_video_sel
     mov ds:v_has_focus,1
-;
     mov ax,flat_sel
     mov es,ax
-    mov fs,bx
     call RedrawVideo
     jmp ecfDone
 
 ecfRedraw:
     mov ax,flat_sel
     mov es,ax
-    mov fs,bx
+    mov ds,fs:c_video_sel
     call RedrawConsole    
     call cs:update_cursor_proc
         
@@ -1855,6 +1864,7 @@ invert_mouse    PROC far
     or ax,ax
     jz imDone
 ;
+    mov ds,fs:c_video_sel
     push dx
     mov ax,fs:c_cols
     mul dx
