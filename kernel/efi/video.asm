@@ -76,6 +76,7 @@ code    SEGMENT byte public 'CODE'
     extrn init_bitmap:near
     extrn init_sprite:near
     extrn CreateVideoBitmap:near
+    extrn CreateTextBitmap:near
     extrn AllocateVideoBuffer:near
     extrn FreeVideoBuffer:near
     extrn IsMarkerVisible:near
@@ -733,8 +734,6 @@ CreateConsoleBios  PROC near
     mov es:c_text_entries,bp
 ;
     mov es:c_flags,0
-    mov es:c_rows,25
-    mov es:c_cols,80
     mov es:c_curr_row,0
     mov es:c_curr_col,0
     mov es:c_prev_row,0
@@ -748,6 +747,18 @@ CreateConsoleBios  PROC near
     mov es:c_width,0
     mov es:c_height,0
     mov es:c_usage,1
+;
+    mov cx,80
+    mov es:c_cols,cx
+    mov dx,25
+    mov es:c_rows,dx
+    mov edi,0B8000h    
+    push es
+    call CreateTextBitmap
+    mov ax,es
+    pop es
+    mov es:c_video_sel,ax
+    mov es:c_video_handle,0
 ;
     mov eax,00070120h
     mov edi,OFFSET c_text_data

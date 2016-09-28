@@ -49,6 +49,7 @@ code    SEGMENT byte public 'CODE'
     extrn BitmapTab16:near
     extrn BitmapTab24:near
     extrn BitmapTab32:near
+    extrn TextModeTab:near
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -419,6 +420,87 @@ cvbBitmapEnd:
     pop ds
     ret
 CreateVideoBitmap   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CreateTextBitmap
+;
+;           DESCRIPTION:    Create text-mode bitmap
+;
+;           PARAMETERS:     CX          Width
+;                           DX          Height
+;                           EDI         Buffer
+;
+;           RETURNS:        BX          Bitmap handle
+;                           ES          Video object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateTextBitmap
+    
+CreateTextBitmap   Proc near
+    push ds
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;    
+    mov eax,SIZE video_api_struc
+    AllocateSmallGlobalMem
+    mov si,es
+    mov ds,si
+    InitSection ds:v_section
+    InitSection ds:v_sprite_section
+;    
+    mov es:v_usage_count,1
+    mov es:v_color,0
+    mov es:v_alpha,0
+    mov es:v_lgop,1
+    mov es:v_font,0
+    mov es:v_text_font,0
+    mov es:v_style,0
+    mov es:v_phys_base,edi
+    mov es:v_has_focus,0
+    mov es:v_bpp,0
+;    
+    mov es:v_width,cx
+    mov es:v_height,dx
+    mov es:v_sprite_count,0
+    mov es:v_sprite_size,0
+    mov es:v_sprite_sel,0
+    mov es:v_x_min,0
+    mov es:v_y_min,0
+    mov es:v_text,0
+    mov es:v_row_size,0
+    mov es:v_x_max,0
+    mov es:v_y_max,0
+;
+    mov si,cs
+    mov ds,si
+;
+    mov es:v_color,0
+    mov ecx,2 * VIDEO_ENTRIES
+    mov esi,OFFSET TextModeTab
+    xor edi,edi
+    rep movsd
+;
+    mov es:v_sprite_max_pos,0
+    mov es:v_app_base,0
+    xor bx,bx
+    clc
+;    
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+CreateTextBitmap   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
