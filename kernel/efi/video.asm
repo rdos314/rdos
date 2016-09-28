@@ -76,6 +76,8 @@ code    SEGMENT byte public 'CODE'
     extrn init_bitmap:near
     extrn init_sprite:near
     extrn CreateVideoBitmap:near
+    extrn AllocateVideoBuffer:near
+    extrn FreeVideoBuffer:near
     extrn IsMarkerVisible:near
     extrn InitKeyboardConsole:near
     extrn InitMouseConsole:near
@@ -674,15 +676,22 @@ cfeYOk:
     mov es:c_font_width,8
     mov es:c_font_height,19
 ;    
-    mov eax,ds:efi_lfb
-    mov es:c_lfb,eax
-    mov ax,ds:efi_width
-    mov es:c_width,ax
-    mov ax,ds:efi_height
-    mov es:c_height,ax
-    mov eax,ds:efi_scan_size
-    mov es:c_scan_size,eax
+    push es
+    mov al,32
+    mov edi,ds:efi_lfb
+    mov es:c_lfb,edi
+    mov cx,ds:efi_width
+    mov es:c_width,cx
+    mov dx,ds:efi_height
+    mov es:c_height,dx
+    mov ebp,ds:efi_scan_size
+    mov es:c_scan_size,ebp
     mov es:c_usage,1
+    call CreateVideoBitmap
+    mov ax,es
+    pop es
+    mov es:c_video_sel,ax
+    mov es:c_video_handle,bx    
 ;
     mov eax,00070120h
     mov edi,OFFSET c_text_data
@@ -1751,30 +1760,14 @@ set_video_mode  PROC far
 
 svmText:
     lock and fs:c_flags,NOT CONSOLE_FLAG_BITMAP
-;
-    mov bx,fs:c_video_handle
-    or bx,bx
-    jz svmDone
-;    
-    mov fs:c_video_sel,0    
-    mov fs:c_video_handle,0
-    CloseBitmap
+    mov es,fs:c_video_sel
+    call FreeVideoBuffer    
     jmp svmDone
     
 svmVideo:
     lock or fs:c_flags,CONSOLE_FLAG_BITMAP
-;
-    mov bx,fs:c_video_handle
-    or bx,bx
-    jz svmCreate
-;
-    mov fs:c_video_sel,0    
-    mov fs:c_video_handle,0
-    CloseBitmap
-
-svmCreate:    
-    call CreateVideoBitmap
-    mov fs:c_video_sel,es
+    mov es,fs:c_video_sel
+    call AllocateVideoBuffer
 ;
     test fs:c_flags,CONSOLE_FLAG_ACTIVE
     jz svmFocusOk
@@ -1788,14 +1781,12 @@ svmFocusOk:
     mov si,es:v_row_size
     mov edi,es:v_app_base
 ;
-    push bx
     mov bx,system_data_sel
     mov ds,bx
     sub edi,ds:flat_base
     mov bx,flat_data_sel
     mov es,bx
-    pop bx
-    mov fs:c_video_handle,bx    
+    mov bx,fs:c_video_handle
     SetMouseLimit
     
 svmDone:

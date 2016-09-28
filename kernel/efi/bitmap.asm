@@ -260,6 +260,12 @@ create_bitmap   Endp
 ;
 ;           DESCRIPTION:    Create video bitmap
 ;
+;           PARAMETERS:     AL          Bits per pixel
+;                           CX          Width
+;                           DX          Height
+;                           EBP         Line size
+;                           EDI         LFB
+;
 ;           RETURNS:        BX          Bitmap handle
 ;                           ES          Video object
 ;
@@ -275,14 +281,6 @@ CreateVideoBitmap   Proc near
     push esi
     push edi
     push ebp
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov cx,ds:efi_width
-    mov dx,ds:efi_height
-    mov ax,32
-    mov ebp,ds:efi_scan_size
-    mov edi,ds:efi_lfb
 ;    
     push eax
     mov ax,dx
@@ -387,26 +385,7 @@ cvbBitmapCopy:
     mov eax,-1
     rep stosd
     mov es:v_sprite_max_pos,di
-;
-    movzx eax,es:v_row_size
-    movzx edx,es:v_height
-    mul edx
-    dec eax
-    and ax,0F000h
-    add eax,1000h
-    mov es:v_app_size,eax
-    AllocateBigLinear
-    mov es:v_app_base,edx
-;
-    push es
-    mov ecx,eax
-    shr ecx,2
-    mov edi,edx
-    mov ax,flat_sel
-    mov es,ax
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-    pop es
+    mov es:v_app_base,0
 ;
     mov cx,SIZE bitmap_struc
     AllocateHandle
@@ -440,6 +419,72 @@ cvbBitmapEnd:
     pop ds
     ret
 CreateVideoBitmap   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AllocateVideoBuffer
+;
+;           DESCRIPTION:    Allocate video buffer
+;
+;           PARAMETERS:     ES          Video object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AllocateVideoBuffer
+    
+AllocateVideoBuffer   Proc near
+    push es
+    pushad
+;    
+    movzx eax,es:v_row_size
+    movzx edx,es:v_height
+    mul edx
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    mov es:v_app_size,eax
+    AllocateBigLinear
+    mov es:v_app_base,edx
+;
+    mov ecx,eax
+    shr ecx,2
+    mov edi,edx
+    mov ax,flat_sel
+    mov es,ax
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    popad
+    pop es
+    ret
+AllocateVideoBuffer Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FreeVideoBuffer
+;
+;           DESCRIPTION:    Free video buffer
+;
+;           PARAMETERS:     ES          Video object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public FreeVideoBuffer
+    
+FreeVideoBuffer   Proc near
+    push es
+    pushad
+;    
+    mov ecx,es:v_app_size
+    mov edx,es:v_app_base
+    FreeLinear
+;
+    popad
+    pop es
+    ret
+FreeVideoBuffer Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
