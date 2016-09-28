@@ -79,6 +79,7 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
 
+    extern font8x19:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3271,7 +3272,116 @@ get_alpha       Proc far
     pop ds
     ret
 get_alpha       Endp
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           write_text_char
+;
+;           DESCRIPTION:    Write text char
+;
+;           PARAMETERS:     DS    Video sel
+;                           ES    Flat sel
+;                           AL    Char
+;                           BL    Fore color
+;                           BH    Back color
+;                           CX    Col
+;                           DX    Row
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+AttribBgrTab:
+abt00   DD 00000000h
+abt01   DD 00990000h
+abt02   DD 00009900h
+abt03   DD 00CC6600h
+abt04   DD 00000099h
+abt05   DD 00990099h
+abt06   DD 00009999h
+abt07   DD 00CCCCCCh
+abt08   DD 00666666h
+abt09   DD 00FF6666h
+abt0A   DD 0066FF66h
+abt0B   DD 00FFFF66h
+abt0C   DD 006666FFh
+abt0D   DD 00FF66FFh
+abt0E   DD 0066FFFFh
+abt0F   DD 00FFFFFFh
+
+write_text_char     PROC far
+    pushad
+;    
+    movzx esi,bl
+    and esi,0Fh
+    shl esi,2
+    mov ebp,dword ptr cs:[esi].AttribBgrTab    ; fore color
+;    
+    movzx esi,bh
+    and esi,0Fh
+    shl esi,2
+    mov esi,dword ptr cs:[esi].AttribBgrTab    ; back color
+;    
+    push ax
+    push cx
+    mov ax,dx
+    mov cx,19
+    mul cx
+    movzx eax,ax
+;    
+    movzx edx,ds:v_row_size
+    mul edx
+    mov edi,ds:v_phys_base
+    add edi,eax
+    pop cx
+;    
+    movzx eax,cx
+    shl eax,5
+    add edi,eax
+;
+    pop ax
+;
+    mov ah,19
+    mul ah
+    movzx ebx,ax
+    add ebx,OFFSET font8x19
+;
+    mov ecx,19
+
+wtcRowLoop:    
+    push ecx
+    push edi
+    mov ecx,8
+    mov al,cs:[ebx]
+
+wtcLoop:
+    test al,80h
+    jz wtcBack
+
+wtcFore:
+    mov es:[edi],ebp
+    jmp wtcNext
+
+wtcBack:
+    mov es:[edi],esi
+
+wtcNext:
+    add edi,4
+    shl al,1
+;
+    loop wtcLoop    
+;
+    pop edi
+    pop ecx
+    movzx eax,ds:v_row_size
+    add edi,eax
+    inc ebx
+;
+    loop wtcRowLoop    
+
+wtcDone:    
+    popad        
+    ret
+write_text_char    Endp
 
 errorp  Proc far
     ret
@@ -3307,6 +3417,7 @@ mt16 DD OFFSET check_alpha,         SEG code
 mt17 DD OFFSET get_alpha,           SEG code
 mt18 DD OFFSET get_rgba,              SEG code
 mt19 DD OFFSET set_rgba,              SEG code
+mt1A DD OFFSET write_text_char,     SEG code
 
 code    ENDS
 
