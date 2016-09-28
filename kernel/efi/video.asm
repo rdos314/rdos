@@ -1261,10 +1261,10 @@ WriteConsole     PROC near
     mov ah,1
     mov fs:[edi],eax
 ;
-    mov ax,fs:c_video_sel
-    or ax,ax
     pop edx
     pop eax
+;    
+    test fs:c_flags,CONSOLE_FLAG_BITMAP
     jz wcText
 
 wcBitmap:
@@ -1422,8 +1422,7 @@ utMarker:
     jnz utSave
 
 utUpdate:    
-    mov ax,fs:c_video_sel
-    or ax,ax
+    test fs:c_flags,CONSOLE_FLAG_BITMAP
     jnz utNext
 ;    
     call IsMarkerVisible
@@ -1529,10 +1528,12 @@ DisableConsoleFocus Proc near
 ;
     mov ds,ax
     lock and ds:c_flags,NOT (CONSOLE_FLAG_ACTIVE OR CONSOLE_FLAG_TEXT_BUFFER OR CONSOLE_FLAG_NEW_WRITES)
-    mov ax,ds:c_video_sel
-    or ax,ax
+
+;    
+    test ds:c_flags,CONSOLE_FLAG_BITMAP
     jz dcfDone
 ;
+    mov ax,ds:c_video_sel
     mov ds,ax
     mov ds:v_has_focus,0    
         
@@ -1575,10 +1576,10 @@ EnableConsoleFocus Proc near
     lock or es:c_flags,CONSOLE_FLAG_ACTIVE
     mov ds:focus_console,bx
 ;
-    mov ax,es:c_video_sel
-    or ax,ax
+    test es:c_flags,CONSOLE_FLAG_BITMAP
     jz ecfRedraw
 ;
+    mov ax,es:c_video_sel
     mov ds,ax
     mov ds:v_has_focus,1
 ;
@@ -1749,16 +1750,20 @@ set_video_mode  PROC far
     je svmVideo
 
 svmText:
+    lock and fs:c_flags,NOT CONSOLE_FLAG_BITMAP
+;
     mov bx,fs:c_video_handle
     or bx,bx
     jz svmDone
-;
+;    
     mov fs:c_video_sel,0    
     mov fs:c_video_handle,0
     CloseBitmap
     jmp svmDone
     
 svmVideo:
+    lock or fs:c_flags,CONSOLE_FLAG_BITMAP
+;
     mov bx,fs:c_video_handle
     or bx,bx
     jz svmCreate
@@ -1932,8 +1937,7 @@ upScrollLoop:
     mov dx,di
     call ClearRow
 ;
-    mov ax,fs:c_video_sel
-    or ax,ax
+    test fs:c_flags,CONSOLE_FLAG_BITMAP
     jz upText
 
 upBitmap:
@@ -2228,8 +2232,7 @@ ctLoop:
     test fs:c_flags,CONSOLE_FLAG_ACTIVE
     jz ctDone
 ;
-    mov bx,fs:c_video_sel
-    or bx,bx
+    test fs:c_flags,CONSOLE_FLAG_BITMAP
     jnz ctDone
 ;     
     lock or fs:c_flags,CONSOLE_FLAG_TEXT_BUFFER OR CONSOLE_FLAG_NEW_WRITES
