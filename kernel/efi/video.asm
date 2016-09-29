@@ -90,7 +90,6 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 console_mode_start:
-write_physical_proc     DD ?
 create_console_proc     DD ?
 toggle_marker_proc      DD ?
 update_cursor_proc      DD ?
@@ -471,71 +470,6 @@ abt0C   DD 006666FFh
 abt0D   DD 00FF66FFh
 abt0E   DD 0066FFFFh
 abt0F   DD 00FFFFFFh
-            
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           WritePhysicalEfi
-;
-;           DESCRIPTION:    Write char to physical display, EFI version
-;
-;           PARAMETERS:     DS    Video sel
-;                           ES    Flat sel
-;                           FS    Console
-;                           AL    Char
-;                           BL    Fore color
-;                           BH    Back color
-;                           CX    Col
-;                           DX    Row
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WritePhysicalEfi     PROC near
-    call fword ptr ds:v_write_text_proc
-    ret
-WritePhysicalEfi    Endp
-            
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           WritePhysicalBios
-;
-;           DESCRIPTION:    Write char to physical display, BIOS version
-;
-;           PARAMETERS:     DS    Video sel
-;                           ES    Flat sel
-;                           FS    Console
-;                           AL    Char
-;                           BL    Fore color
-;                           BH    Back color
-;                           CX    Col
-;                           DX    Row
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WritePhysicalBios     PROC near
-    push es
-    pusha
-;
-    push ax
-    mov ax,dosB800
-    mov es,ax    
-    mov ax,80
-    mul dx
-    add ax,cx
-    mov di,ax
-    add di,di
-    pop ax    
-;
-    mov ah,bh
-    shl ah,4
-    or ah,bl
-    mov es:[di],ax
-;
-    popa
-    pop es            
-    ret
-WritePhysicalBios    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -974,7 +908,7 @@ rrLoop:
     mov bl,fs:[edi].ct_fore_col
     mov bh,fs:[edi].ct_back_col    
     mov fs:[edi].ct_dirty,0
-    call cs:write_physical_proc
+    call fword ptr ds:v_write_text_proc
 ;
     add edi,4    
     inc cx
@@ -1247,7 +1181,7 @@ wcBitmap:
     mov cx,ds:p_col
     mov dx,ds:p_row
     mov ds,fs:c_video_sel
-    call cs:write_physical_proc
+    call fword ptr ds:v_write_text_proc
     pop ds
 ;
     pop dx
@@ -1270,7 +1204,7 @@ wcText:
     mov cx,ds:p_col
     mov dx,ds:p_row
     mov ds,fs:c_video_sel
-    call cs:write_physical_proc
+    call fword ptr ds:v_write_text_proc
     pop ds
 ;    
     pop dx
@@ -1321,7 +1255,7 @@ urLoop:
     mov bl,fs:[edi].ct_fore_col
     mov bh,fs:[edi].ct_back_col    
     mov fs:[edi].ct_dirty,0
-    call cs:write_physical_proc
+    call fword ptr ds:v_write_text_proc
 
 urNext:
     add edi,4    
@@ -1415,7 +1349,7 @@ utSave:
     mov bl,fs:[edi].ct_fore_col
     mov bh,fs:[edi].ct_back_col    
     mov fs:[edi].ct_dirty,0
-    call cs:write_physical_proc
+    call fword ptr ds:v_write_text_proc
 
 utNext:
     GetSystemTime
@@ -1816,7 +1750,7 @@ invert_mouse    PROC far
     mov al,fs:[edi].ct_char
     mov bl,fs:[edi].ct_fore_col
     mov bh,fs:[edi].ct_back_col    
-    call cs:write_physical_proc
+    call fword ptr ds:v_write_text_proc
 
 imDone:
     popad
@@ -4179,7 +4113,6 @@ free_process     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 console_mode_bios_start:
-cmt00  DD OFFSET WritePhysicalBios
 cmt01  DD OFFSET CreateConsoleBios
 cmt02  DD OFFSET ToggleMarkerBios
 cmt03  DD OFFSET UpdateCursorPosBios
@@ -4213,7 +4146,6 @@ SetupBiosConsole    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 console_mode_efi_start:
-cme00  DD OFFSET WritePhysicalEfi
 cme01  DD OFFSET CreateConsoleEfi
 cme02  DD OFFSET ToggleMarkerEfi
 cme03  DD OFFSET UpdateCursorPosEfi

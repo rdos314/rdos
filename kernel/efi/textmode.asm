@@ -39,7 +39,48 @@ INCLUDE video.inc
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           write_text_char
+;
+;           DESCRIPTION:    Write text char
+;
+;           PARAMETERS:     DS    Video sel
+;                           AL    Char
+;                           BL    Fore color
+;                           BH    Back color
+;                           CX    Col
+;                           DX    Row
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+write_text_char     PROC far
+    push es
+    push ax
+    push di
+;
+    push ax
+    mov ax,dosB800
+    mov es,ax    
+    mov ax,80
+    mul dx
+    add ax,cx
+    mov di,ax
+    add di,di
+    pop ax    
+;
+    mov ah,bh
+    shl ah,4
+    or ah,bl
+    mov es:[di],ax
+;
+    pop di
+    pop ax
+    pop es            
+    ret
+write_text_char Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -81,7 +122,7 @@ mt16 DD OFFSET errorp,             SEG code
 mt17 DD OFFSET errorp,             SEG code
 mt18 DD OFFSET errorp,             SEG code
 mt19 DD OFFSET errorp,             SEG code
-mt1A DD OFFSET errorp,             SEG code
+mt1A DD OFFSET write_text_char,    SEG code
 
 code    ENDS
 
