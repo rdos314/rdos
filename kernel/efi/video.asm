@@ -491,76 +491,7 @@ abt0F   DD 00FFFFFFh
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WritePhysicalEfi     PROC near
-    pushad
-;    
-    movzx esi,bl
-    and esi,0Fh
-    shl esi,2
-    mov ebp,dword ptr cs:[esi].AttribBgrTab    ; fore color
-;    
-    movzx esi,bh
-    and esi,0Fh
-    shl esi,2
-    mov esi,dword ptr cs:[esi].AttribBgrTab    ; back color
-;    
-    push ax
-    push cx
-    mov ax,dx
-    mov cx,19
-    mul cx
-    movzx eax,ax
-;    
-    mov edx,fs:c_scan_size
-    mul edx
-    mov edi,fs:c_lfb
-    add edi,eax
-    pop cx
-;    
-    movzx eax,cx
-    shl eax,5
-    add edi,eax
-;
-    pop ax
-;
-    mov ah,19
-    mul ah
-    movzx ebx,ax
-    add ebx,OFFSET font8x19
-;
-    mov ecx,19
-
-wpeRowLoop:    
-    push ecx
-    push edi
-    mov ecx,8
-    mov al,cs:[ebx]
-
-wpeLoop:
-    test al,80h
-    jz wpeBack
-
-wpeFore:
-    mov es:[edi],ebp
-    jmp wpeNext
-
-wpeBack:
-    mov es:[edi],esi
-
-wpeNext:
-    add edi,4
-    shl al,1
-;
-    loop wpeLoop    
-;
-    pop edi
-    pop ecx
-    add edi,fs:c_scan_size
-    inc ebx
-;
-    loop wpeRowLoop    
-
-wpeDone:    
-    popad        
+    call fword ptr ds:v_write_text_proc
     ret
 WritePhysicalEfi    Endp
             
