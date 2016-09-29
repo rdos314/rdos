@@ -3281,7 +3281,6 @@ get_alpha       Endp
 ;           DESCRIPTION:    Write text char
 ;
 ;           PARAMETERS:     DS    Video sel
-;                           ES    Flat sel
 ;                           AL    Char
 ;                           BL    Fore color
 ;                           BH    Back color
@@ -3309,7 +3308,11 @@ abt0E   DD 0066FFFFh
 abt0F   DD 00FFFFFFh
 
 write_text_char     PROC far
+    push es
     pushad
+;    
+    mov si,flat_sel
+    mov es,si
 ;    
     movzx esi,bl
     and esi,0Fh
@@ -3380,6 +3383,7 @@ wtcNext:
 
 wtcDone:    
     popad        
+    pop es
     ret
 write_text_char    Endp
 

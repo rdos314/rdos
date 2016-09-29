@@ -25,7 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-VIDEO_ENTRIES   = 1Ah
+VIDEO_ENTRIES   = 1Bh
 
 STYLE_HOLLOW                    EQU 0
 STYLE_FILLED                    EQU 1
@@ -183,6 +183,13 @@ v_get_rgba_row_proc            DD ?,?
 ; IN  DX                        y
 ; IN  EDI               Position
 v_set_rgba_row_proc            DD ?,?
+
+; IN  AL                Char
+; IN  BL                Fore color
+; IN  BH                Back color
+; IN  CX                Col
+; IN  DX                Row
+v_write_text_proc            DD ?,?
 
 v_section           section_typ <>
 v_sprite_section    section_typ <>

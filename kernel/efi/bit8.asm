@@ -3240,6 +3240,7 @@ mt16 DD OFFSET errorp,              SEG code
 mt17 DD OFFSET errorp,              SEG code
 mt18 DD OFFSET get_alpha,           SEG code
 mt19 DD OFFSET set_alpha,           SEG code
+mt1A DD OFFSET errorp,              SEG code
 
 code    ENDS
 
