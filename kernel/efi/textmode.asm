@@ -59,6 +59,7 @@ code    SEGMENT byte public 'CODE'
 write_text_char     PROC far
     push es
     push ax
+    push dx
     push di
 ;
     push ax
@@ -77,6 +78,7 @@ write_text_char     PROC far
     mov es:[di],ax
 ;
     pop di
+    pop dx
     pop ax
     pop es            
     ret

@@ -4236,6 +4236,9 @@ init_video      PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;    
+    mov edi,OFFSET init_tasking
+    HookInitTasking
 ;
     mov edi,OFFSET init_thread
     HookCreateThread
@@ -4467,12 +4470,6 @@ init_video      PROC near
     jz init_bios
 
 init_efi:        
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET init_tasking
-    HookInitTasking
-;    
     call SetupEfiConsole
     jmp init_done
 
