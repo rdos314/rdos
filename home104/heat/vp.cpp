@@ -486,15 +486,17 @@ void TVp::CalcLinearRegression(int Size)
     FCurrMean = sum / Size;
 
     sum = 0;
+    sd = 0;
     for (i = 0; i < Size; i++)
     {
         j = (i + FHistoryCount - Size) % MAX_LEVEL_HISTORY;
         val = i - xmean;
         sum += (FHistory[j] - FCurrMean) * val;
+        sd += FHistory[j] - FCurrMean;
     }
 
     xydiff = sum;        
-    sd = xydiff / Size;
+    sd = sd / Size;
 
     FCurrFlow = xydiff / xdiff2;
 
@@ -512,7 +514,7 @@ void TVp::CalcLinearRegression(int Size)
 
     FCurrSd2 = sum  / (Size - 2.0);
 
-    if (sd < 0.5)
+    if (sd < 0.1)
         FCurrSl2 = 0;
 
     if (FCurrSl2)

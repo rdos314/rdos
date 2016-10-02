@@ -71,6 +71,86 @@ TFroniusInverter::~TFroniusInverter()
 
 /*##########################################################################
 #
+#   Name       : TFroniusInverter::IsOnline
+#
+#   Purpose....: Is online?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFroniusInverter::IsOnline()
+{
+    return FOnline;
+}
+
+/*##########################################################################
+#
+#   Name       : TFroniusInverter::GetCurrentPower
+#
+#   Purpose....: Get current power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TFroniusInverter::GetCurrentPower()
+{
+    return FCurrP;
+}
+
+/*##########################################################################
+#
+#   Name       : TFroniusInverter::GetDayEnergy
+#
+#   Purpose....: Get day energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TFroniusInverter::GetDayEnergy()
+{
+    return FDayE;
+}
+
+/*##########################################################################
+#
+#   Name       : TFroniusInverter::GetYearEnergy
+#
+#   Purpose....: Get year energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TFroniusInverter::GetYearEnergy()
+{
+    return FYearE;
+}
+
+/*##########################################################################
+#
+#   Name       : TFroniusInverter::GetTotalEnergy
+#
+#   Purpose....: Get total energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TFroniusInverter::GetTotalEnergy()
+{
+    return FTotalE;
+}
+
+/*##########################################################################
+#
 #   Name       : TFroniusInverter::GetPowerFact
 #
 #   Purpose....: Get power factor
@@ -522,6 +602,7 @@ void TFroniusInverter::Execute()
             RdosWaitMilli(15000);
         }        
 
+        FOnline = false;
         delete FSocket;
     }    
 }

@@ -33,6 +33,7 @@
 #include <time.h>
 #include <math.h>
 
+#include "frinv.h"
 #include "rad.h"
 #include "datetime.h"
 #include "circ.h"
@@ -51,6 +52,9 @@
 
 #define WIDTH 240
 #define HEIGHT 15
+
+#define  INVERTER_IP 0x3401A8C0
+#define InvIp "192.168.1.52"
 
 TControlThread *control;
 TSection FGuiSection;
@@ -137,6 +141,7 @@ int main()
     TCirc *Circ;
     TVp *Vp;
     TPower *Power;
+    TFroniusInverter *SolarInv;
 //    TClimate *Climate;
     int i;
     int id;
@@ -183,6 +188,12 @@ int main()
     TLabelFactory AltLabelFactory;
     TLabelFactory AziLabelFactory;
     TLabelFactory PhLabelFactory;
+
+    TLabelFactory SolarCommentFactory;
+    TLabelFactory SolarValueFactory;
+    TLabelFactory SolarUnitFactory;
+
+    TTableControl *SolarTable;
     
     RdosWaitMilli(2500);
 
@@ -262,6 +273,8 @@ int main()
     Vp = new TVp(control);
     Store->Add(Vp);
 
+    SolarInv = new TFroniusInverter(InvIp, INVERTER_IP);
+
 //    Climate = new TClimate(control);
 //    Store->Add(Climate);
 
@@ -328,6 +341,43 @@ int main()
     Table->SetText(5, 0, "Jupiter");
     Table->SetText(6, 0, "Saturnus");
     Table->Show();
+
+    SolarCommentFactory.SetSpace(4, 4);
+    SolarCommentFactory.SetFont(20);
+    SolarCommentFactory.SetBackTransparent();
+    SolarCommentFactory.SetDrawColor(0, 0, 0);
+    SolarCommentFactory.AlignLeft();
+    
+    SolarValueFactory.SetSpace(4, 4);
+    SolarValueFactory.SetFont(20);
+    SolarValueFactory.SetBackColor(100, 100, 100);
+    SolarValueFactory.SetDrawColor(0, 0, 0);
+    SolarValueFactory.AlignRight();
+
+    SolarUnitFactory.SetSpace(4, 4);
+    SolarUnitFactory.SetFont(20);
+    SolarUnitFactory.SetBackTransparent();
+    SolarUnitFactory.SetDrawColor(0, 0, 0);
+    SolarUnitFactory.AlignLeft();
+
+    SolarTable = new TTableControl(control, 850, 50, 400, 150);
+    SolarTable->SetBackColor(0, 20, 50);
+    SolarTable->SetRowSpacing(5);
+    SolarTable->SetColSpacing(8);
+    SolarTable->SetSpacingColor(0, 20, 50);
+    SolarTable->AddLabelColumn(&SolarCommentFactory, 120);
+    SolarTable->AddLabelColumn(&SolarValueFactory, 100);
+    SolarTable->AddLabelColumn(&SolarUnitFactory, 75);
+
+    SolarTable->AddRow(24, 45);
+    SolarTable->AddRow(24, 45);
+
+    SolarTable->SetText(0, 0, "Effekt");
+    SolarTable->SetText(0, 2, "kW");
+
+    SolarTable->SetText(1, 0, "Idag");
+    SolarTable->SetText(1, 2, "kWh");
+    SolarTable->Show();
 
     UnlockGUI();
 
@@ -423,6 +473,17 @@ int main()
 
         sprintf(str, "%d%", ph);
         Table->SetText(6, 3, str);
+
+        if (SolarInv->IsOnline())
+        {
+            val = SolarInv->GetCurrentPower();
+            sprintf(str, "%7.3Lf", val);
+            SolarTable->SetText(0, 1, str);
+
+            val = SolarInv->GetDayEnergy();
+            sprintf(str, "%7.3Lf", val);
+            SolarTable->SetText(1, 1, str);
+        }
 
         str[0] = 0;
 

@@ -37,7 +37,7 @@ public:
     TFroniusInverter(char *IpStr, long IP);
     virtual ~TFroniusInverter();
 
-    int IsOnline();
+    bool IsOnline();
 
     long double GetCurrentPower();
     long double GetDayEnergy();
