@@ -465,6 +465,7 @@ void TVp::CalcLinearRegression(int Size)
     long double sum;
     long double xydiff;
     long double val;
+    long double sd;
 
         xmean = Size / 2;
 
@@ -493,6 +494,7 @@ void TVp::CalcLinearRegression(int Size)
     }
 
     xydiff = sum;        
+    sd = xydiff / Size;
 
     FCurrFlow = xydiff / xdiff2;
 
@@ -509,6 +511,9 @@ void TVp::CalcLinearRegression(int Size)
     }
 
     FCurrSd2 = sum  / (Size - 2.0);
+
+    if (sd < 0.5)
+        FCurrSl2 = 0;
 
     if (FCurrSl2)
         FCurrTurbulence = 100.0 * FCurrSd2 / FCurrSl2;
@@ -585,9 +590,13 @@ void TVp::UpdateHistory(long double val)
         
             if (FCurrSlope > 0.1)
                 UpdateVp(1);
-
-            if (FCurrSlope < -0.1)
-                UpdateVp(-1);
+            else
+            {
+                if (FCurrSlope < -0.1)
+                    UpdateVp(-1);
+                else
+                    UpdateVp(0);
+            }
         }
         else
         {

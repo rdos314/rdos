@@ -173,6 +173,7 @@ int main()
     long double altitude;
     long double azimuth;
     long double phase;
+    long double solalt;
     int ph;
     TDateTime currtime;
     TLabelControl *Label;
@@ -337,6 +338,8 @@ int main()
         solar.SetTime(currtime, 1);
         solar.GetSunPosition(&altitude, &azimuth);
 
+        solalt = altitude;
+
         sprintf(str, "%5.2Lf", altitude);
         Table->SetText(0, 1, str);
 
@@ -458,7 +461,7 @@ int main()
 
 
 //        ambient = (int)(10.0 * Climate->GetOutdoorTemperature());
-        ambient = 200;
+        ambient = 100;
 
         summer = FALSE;
 
@@ -521,7 +524,8 @@ int main()
              }
         }
 
-        circmax = 0;
+        if (solalt < 10.0)
+            circmax = 0;        
 
         if (count)
             Circ->SetMaxMotor(circmax);
