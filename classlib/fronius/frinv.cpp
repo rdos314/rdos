@@ -41,7 +41,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFroniusInverter::TFroniusInverter(char *IpStr)
+TFroniusInverter::TFroniusInverter(char *IpStr, long IP)
 {
     FCurrFact = 1.0;
     FDayFact = 0.001;
@@ -49,7 +49,7 @@ TFroniusInverter::TFroniusInverter(char *IpStr)
     FTotalFact = 0.001;
     FOnline = false;
     strcpy(FIpStr, IpStr);
-    FIP = 0;
+    FIP = IP;
 
     Start("Fronius inverter", 0x8000);
 }

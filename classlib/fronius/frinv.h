@@ -34,7 +34,7 @@
 class TFroniusInverter : public TThread
 {
 public:
-    TFroniusInverter(char *IpStr);
+    TFroniusInverter(char *IpStr, long IP);
     virtual ~TFroniusInverter();
 
     int IsOnline();
