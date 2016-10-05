@@ -3400,7 +3400,7 @@ write_text_char    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-toggle_marker    PROC near
+toggle_marker    PROC far
     push es
     pushad
 ;    
