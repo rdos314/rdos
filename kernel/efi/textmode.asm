@@ -100,6 +100,52 @@ write_text_char Endp
 toggle_marker    PROC far
    ret
 toggle_marker   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           update_cursor_pos
+;
+;           DESCRIPTION:    Update cursor position
+;
+;           PARAMETERS:     DS          Video sel
+;                           CX          COL (x)
+;                           DX          ROW (y)
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+update_cursor_pos    PROC far
+    pusha
+;
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz ucpbDone
+;
+    mov ax,80
+    mul dx
+    add ax,cx
+    mov bx,ax
+;
+    mov dx,3D4h
+;
+    mov al,0Eh
+    out dx,al
+;
+    inc dx
+    mov al,bh
+    out dx,al
+;
+    dec dx
+    mov al,0Fh
+    out dx,al
+;
+    inc dx
+    mov al,bl
+    out dx,al
+
+ucpbDone:
+    popa 
+    ret
+update_cursor_pos        Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -143,6 +189,7 @@ mt18 DD OFFSET errorp,             SEG code
 mt19 DD OFFSET errorp,             SEG code
 mt1A DD OFFSET write_text_char,    SEG code
 mt1B DD OFFSET toggle_marker,      SEG code
+mt1C DD OFFSET update_cursor_pos,  SEG code
 
 code    ENDS
 

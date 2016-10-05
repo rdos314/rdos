@@ -3401,7 +3401,11 @@ write_text_char    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 toggle_marker    PROC near
+    push es
     pushad
+;    
+    mov ax,flat_sel
+    mov es,ax
 ;    
     push cx
     mov ax,dx
@@ -3444,8 +3448,26 @@ tmToggle2:
     loop tmToggle2
 ;
     popad
+    pop es
     ret
 toggle_marker    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           update_cursor_pos
+;
+;           DESCRIPTION:    Update cursor position
+;
+;           PARAMETERS:     DS          Video sel
+;                           CX          COL (x)
+;                           DX          ROW (y)
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+update_cursor_pos    PROC far
+    ret
+update_cursor_pos       Endp
 
 errorp  Proc far
     ret
@@ -3483,6 +3505,7 @@ mt18 DD OFFSET get_rgba,            SEG code
 mt19 DD OFFSET set_rgba,            SEG code
 mt1A DD OFFSET write_text_char,     SEG code
 mt1B DD OFFSET toggle_marker,       SEG code
+mt1C DD OFFSET update_cursor_pos,   SEG code
 
 code    ENDS
 

@@ -91,7 +91,6 @@ code    SEGMENT byte public 'CODE'
 
 console_mode_start:
 create_console_proc     DD ?
-update_cursor_proc      DD ?
 
 console_mode_end:
         
@@ -640,67 +639,6 @@ CreateConsoleBios  PROC near
     pop ds
     ret
 CreateConsoleBios    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           UpdateCursorPosEfi
-;
-;           DESCRIPTION:    Update cursor position, EFI version
-;
-;           PARAMETERS:     ES          Flat sel
-;                           FS          Console
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateCursorPosEfi    PROC near
-    ret
-UpdateCursorPosEfi    ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           UpdateCursorPosBios
-;
-;           DESCRIPTION:    Update cursor position, BIOS version
-;
-;           PARAMETERS:     ES          Flat sel
-;                           FS          Console
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateCursorPosBios    PROC near
-    pusha
-;
-    test fs:c_flags,CONSOLE_FLAG_ACTIVE
-    jz ucpbDone
-;
-    mov ax,80
-    mul fs:c_curr_row
-    add ax,fs:c_curr_col
-    mov bx,ax
-;
-    mov dx,3D4h
-;
-    mov al,0Eh
-    out dx,al
-;
-    inc dx
-    mov al,bh
-    out dx,al
-;
-    dec dx
-    mov al,0Fh
-    out dx,al
-;
-    inc dx
-    mov al,bl
-    out dx,al
-
-ucpbDone:
-    popa 
-    ret
-UpdateCursorPosBios        Endp   
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1411,7 +1349,17 @@ ecfRedraw:
     mov es,ax
     mov ds,fs:c_video_sel
     call RedrawConsole    
-    call cs:update_cursor_proc
+;
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz ecfDone
+
+    push cx
+    push dx
+    mov dx,fs:c_curr_row
+    mov cx,fs:c_curr_col
+    call fword ptr ds:v_update_cursor_pos_proc
+    pop dx
+    pop cx
         
 ecfDone:
     pop bx
@@ -1702,21 +1650,21 @@ UpdatePos       Proc near
     mov ax,fs:c_cols
     dec ax
     cmp ds:p_col,-1
-    jne update_not_row_wrap
+    jne upNotRowWrap
 ;
     mov ds:p_col,ax
 
-update_not_row_wrap:
+upNotRowWrap:
     cmp ds:p_col,ax
-    jbe update_video_same_row
+    jbe upSameRow
 ;
     mov ds:p_col,0
     inc ds:p_row
 
-update_video_same_row:
+upSameRow:
     mov ax,fs:c_rows
     cmp ds:p_row,ax
-    jc update_video_end
+    jc upUpdate
 ;
     push dx
     push si
@@ -1771,12 +1719,30 @@ upScrollDone:
     pop si
     pop dx    
 
-update_video_end:
+upUpdate:
     mov ax,ds:p_row
     mov fs:c_curr_row,ax
     mov ax,ds:p_col
     mov fs:c_curr_col,ax
-    call cs:update_cursor_proc
+;
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz upDone
+
+;    
+    push ds    
+    push cx
+    push dx
+;
+    mov dx,fs:c_curr_row
+    mov cx,fs:c_curr_col
+    mov ds,fs:c_video_sel
+    call fword ptr ds:v_update_cursor_pos_proc
+;
+    pop dx
+    pop cx
+    pop ds
+
+upDone:
     pop ax
     ret
 UpdatePos       ENDP
@@ -2083,7 +2049,12 @@ set_cursor_position     PROC far
 ;
     mov fs:c_curr_row,dx
     mov fs:c_curr_col,cx
-    call cs:update_cursor_proc
+
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz scpDone
+;
+    mov ds,fs:c_video_sel
+    call fword ptr ds:v_update_cursor_pos_proc
 
 scpDone:
     pop ax
@@ -4035,7 +4006,6 @@ free_process     ENDP
 
 console_mode_bios_start:
 cmt01  DD OFFSET CreateConsoleBios
-cmt02  DD OFFSET UpdateCursorPosBios
 
 SetupBiosConsole    PROC near
     mov bx,cs
@@ -4067,7 +4037,6 @@ SetupBiosConsole    Endp
 
 console_mode_efi_start:
 cme01  DD OFFSET CreateConsoleEfi
-cme02  DD OFFSET UpdateCursorPosEfi
 
 SetupEfiConsole    PROC near
     mov bx,cs
