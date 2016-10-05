@@ -697,4 +697,6 @@ exit_app_process_nr         = 572
 
 notify_delete_process_nr    = 573
 
+add_video_mode_nr           = 574
+
 osgate_entries				= 580

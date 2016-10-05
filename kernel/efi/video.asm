@@ -1555,6 +1555,29 @@ set_video_mode  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           AddVideoMode
+;
+;           DESCRIPTION:    Add video mode
+;
+;           PARAMETERS:     AX      bits / pixel
+;                           BX      Mode nr
+;                           CX      x-resolution
+;                           DX      y-resolution
+;                           SI      line size
+;                           EDI     LFB
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_video_mode_name       DB 'Add Video Mode',0
+
+add_video_mode  PROC far
+    int 3
+    ret
+add_video_mode  ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           IsEfi
 ;
 ;           DESCRIPTION:    Check for EFI booted system
@@ -4147,6 +4170,12 @@ init_video      PROC near
     mov edi,OFFSET invert_mouse_name
     xor cl,cl
     mov ax,invert_mouse_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET add_video_mode
+    mov edi,OFFSET add_video_mode_name
+    xor cl,cl
+    mov ax,add_video_mode_nr
     RegisterOsGate
 ;
     mov esi,OFFSET query_video_mode

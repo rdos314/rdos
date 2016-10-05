@@ -3152,6 +3152,16 @@ GetUtf8Bitmap     MACRO
     OsGate get_utf8_bitmap_nr
                     ENDM
 
+;  IN  AX      bits / pixel
+;  IN  BX      Mode nr
+;  IN  CX      x-resolution
+;  IN  DX      y-resolution
+;  IN  SI      line size
+;  IN  EDI     LFB
+AddVideoMode       MACRO
+    OsGate add_video_mode_nr
+                    ENDM
+
 ;  IN  AX      Mode nr
 ;  IN  BL      bits / pixel
 ;  IN  CX      x-resolution
