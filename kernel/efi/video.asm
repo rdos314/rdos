@@ -91,7 +91,6 @@ code    SEGMENT byte public 'CODE'
 
 console_mode_start:
 create_console_proc     DD ?
-toggle_marker_proc      DD ?
 update_cursor_proc      DD ?
 
 console_mode_end:
@@ -641,84 +640,6 @@ CreateConsoleBios  PROC near
     pop ds
     ret
 CreateConsoleBios    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ToggleMarkerEfi
-;
-;           DESCRIPTION:    Invert marker, EFI version
-;
-;           PARAMETERS:     ES          Flat sel
-;                           FS          Console
-;                           CX          COL (x)
-;                           DX          ROW (y)
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ToggleMarkerEfi    PROC near
-    pushad
-;    
-    push cx
-    mov ax,dx
-    inc ax
-    mov cx,19
-    mul cx
-    sub ax,2
-    movzx eax,ax
-;    
-    mov edx,fs:c_scan_size
-    mul edx
-    mov edi,fs:c_lfb
-    add edi,eax
-    pop cx
-;    
-    movzx eax,cx
-    shl eax,5
-    add edi,eax
-;
-    mov ecx,8
-    push edi
-
-tmeToggle1:
-    mov eax,es:[edi]
-    not eax
-    mov es:[edi],eax
-    add edi,4
-    loop tmeToggle1
-;
-    pop edi
-    mov ecx,8
-    add edi,fs:c_scan_size        
-
-tmeToggle2:
-    mov eax,es:[edi]
-    not eax
-    mov es:[edi],eax
-    add edi,4
-    loop tmeToggle2
-;
-    popad
-    ret
-ToggleMarkerEfi    ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ToggleMarkerBios
-;
-;           DESCRIPTION:    Invert marker, BIOS version
-;
-;           PARAMETERS:     ES          Flat sel
-;                           FS          Console
-;                           CX          COL (x)
-;                           DX          ROW (y)
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ToggleMarkerBios    PROC near
-    ret
-ToggleMarkerBios    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1327,7 +1248,7 @@ utUpdate:
     call IsMarkerVisible
     jnc utNext
 ;    
-    call cs:toggle_marker_proc
+    call fword ptr ds:v_toggle_marker_proc
     jmp utNext
 
 utSave:
@@ -4114,8 +4035,7 @@ free_process     ENDP
 
 console_mode_bios_start:
 cmt01  DD OFFSET CreateConsoleBios
-cmt02  DD OFFSET ToggleMarkerBios
-cmt03  DD OFFSET UpdateCursorPosBios
+cmt02  DD OFFSET UpdateCursorPosBios
 
 SetupBiosConsole    PROC near
     mov bx,cs
@@ -4147,8 +4067,7 @@ SetupBiosConsole    Endp
 
 console_mode_efi_start:
 cme01  DD OFFSET CreateConsoleEfi
-cme02  DD OFFSET ToggleMarkerEfi
-cme03  DD OFFSET UpdateCursorPosEfi
+cme02  DD OFFSET UpdateCursorPosEfi
 
 SetupEfiConsole    PROC near
     mov bx,cs

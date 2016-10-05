@@ -3386,6 +3386,66 @@ wtcDone:
     pop es
     ret
 write_text_char    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           toggle_marer
+;
+;           DESCRIPTION:    Invert marker
+;
+;           PARAMETERS:     DS          Video sel
+;                           CX          COL (x)
+;                           DX          ROW (y)
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+toggle_marker    PROC near
+    pushad
+;    
+    push cx
+    mov ax,dx
+    inc ax
+    mov cx,19
+    mul cx
+    sub ax,2
+    movzx eax,ax
+;    
+    movzx edx,ds:v_row_size
+    mul edx
+    mov edi,ds:v_phys_base
+    add edi,eax
+    pop cx
+;    
+    movzx eax,cx
+    shl eax,5
+    add edi,eax
+;
+    mov ecx,8
+    push edi
+
+tmToggle1:
+    mov eax,es:[edi]
+    not eax
+    mov es:[edi],eax
+    add edi,4
+    loop tmToggle1
+;
+    pop edi
+    mov ecx,8
+    movzx eax,ds:v_row_size        
+    add edi,eax
+
+tmToggle2:
+    mov eax,es:[edi]
+    not eax
+    mov es:[edi],eax
+    add edi,4
+    loop tmToggle2
+;
+    popad
+    ret
+toggle_marker    ENDP
 
 errorp  Proc far
     ret
@@ -3419,9 +3479,10 @@ mt14 DD OFFSET anti_alias_set,      SEG code
 mt15 DD OFFSET phys_update,         SEG code
 mt16 DD OFFSET check_alpha,         SEG code
 mt17 DD OFFSET get_alpha,           SEG code
-mt18 DD OFFSET get_rgba,              SEG code
-mt19 DD OFFSET set_rgba,              SEG code
+mt18 DD OFFSET get_rgba,            SEG code
+mt19 DD OFFSET set_rgba,            SEG code
 mt1A DD OFFSET write_text_char,     SEG code
+mt1B DD OFFSET toggle_marker,       SEG code
 
 code    ENDS
 

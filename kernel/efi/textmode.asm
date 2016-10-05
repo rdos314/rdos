@@ -83,6 +83,23 @@ write_text_char     PROC far
     pop es            
     ret
 write_text_char Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           toggle_marer
+;
+;           DESCRIPTION:    Invert marker
+;
+;           PARAMETERS:     DS          Video sel
+;                           CX          COL (x)
+;                           DX          ROW (y)
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+toggle_marker    PROC far
+   ret
+toggle_marker   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -125,6 +142,7 @@ mt17 DD OFFSET errorp,             SEG code
 mt18 DD OFFSET errorp,             SEG code
 mt19 DD OFFSET errorp,             SEG code
 mt1A DD OFFSET write_text_char,    SEG code
+mt1B DD OFFSET toggle_marker,      SEG code
 
 code    ENDS
 

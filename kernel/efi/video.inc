@@ -25,7 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-VIDEO_ENTRIES   = 1Bh
+VIDEO_ENTRIES   = 1Ch
 
 STYLE_HOLLOW                    EQU 0
 STYLE_FILLED                    EQU 1
@@ -190,6 +190,10 @@ v_set_rgba_row_proc            DD ?,?
 ; IN  CX                Col
 ; IN  DX                Row
 v_write_text_proc            DD ?,?
+
+; IN  CX                Col
+; IN  DX                Row
+v_toggle_marker_proc            DD ?,?
 
 v_section           section_typ <>
 v_sprite_section    section_typ <>
