@@ -68,6 +68,26 @@ static void TestThread(void *ptr)
 
 void main()
 {
+    int Handle;
+
+    Handle = RdosOpenSysIni();
+    RdosCloseIni(Handle);
+
+    Handle = RdosOpenIni("c:/id.ini");
+    RdosCloseIni(Handle);
+
+    RdosSetCurDrive('c' - 'a');
+    Handle = RdosOpenIni("config.ini");
+    RdosCloseIni(Handle);
+
+    RdosSetCurDrive('d' - 'a');
+    Handle = RdosOpenIni("/r1/comp.ini");
+    RdosCloseIni(Handle);
+
+    RdosSetCurDir("d:/r1");
+    Handle = RdosOpenIni("comp.ini");
+    RdosCloseIni(Handle);
+
     char *str;
     int i;
     TParam *param;

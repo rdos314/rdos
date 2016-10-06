@@ -65,9 +65,6 @@ struct TIni
     int MaxSectionCount;
     int MaxVarCount;
     struct TIniSection *FSectionList;
-    char Drive;
-    char Access;
-    int FileSel;
     int DataSel;
     char *DataBuf;
     char Name[1];
@@ -756,35 +753,49 @@ struct TIni *CreateIniSel(char *FileName)
     int NameSize;
     long FileSize = 0;
     int Size;
-    char Access;
-    char Drive;
-    int FileSel = 0;
     int BaseSize = 0;
     int sel;
-    int FileHandle = RdosOpenFile(FileName, 0);
+    int DriveNr;
+    char Path[260];
+    int FileHandle;
 
-    if (FileHandle)
-        RdosGetFileInfo(FileHandle, &Access, &Drive, &FileSel);
+    if (FileName[1] == ':')
+        strcpy(Path, FileName);
+    else
+    {
+        DriveNr = RdosGetCurDrive();
+        Path[0] = (char)DriveNr + 'A';
+        Path[1] = ':';
+
+        if (FileName[0] == '\\' || FileName[0] == '/')
+            strcpy(&Path[2], FileName);
+        else
+        {
+            Path[2] = '/';
+            RdosGetCurDir(DriveNr, &Path[3]);
+            if (Path[3] != 0)
+                strcat(Path, "/");
+            strcat(Path, FileName);
+        }
+    }
 
     Lock();
 
-    Ini = FindIniName(FileName);
+    Ini = FindIniName(Path);
 
-    if (Ini)
+    if (!Ini)
     {
+
+        FileHandle = RdosOpenFile(Path, 0);
+
         if (FileHandle)
-            RdosCloseFile(FileHandle);
-    }
-    else
-    {
-        if (FileSel)
             FileSize = RdosGetFileSize(FileHandle);
 
-        NameSize = strlen(FileName) + 1;
+        NameSize = strlen(Path) + 1;
         Size = NameSize + sizeof(struct TIni);
 
         Ini = CreateIni(Size);
-        strcpy(Ini->Name, FileName);
+        strcpy(Ini->Name, Path);
 
         Ini->DataSel = RdosAllocateSmallGlobalSelector(1);
         Ini->DataBuf = (char *)RdosSelectorOffsetToPointer(Ini->DataSel, 0);
@@ -810,16 +821,8 @@ struct TIni *CreateIniSel(char *FileName)
             RdosFreeMem(sel);
         }
 
-        if (FileSel)
-        {
-            Ini->Access = Access;
-            Ini->Drive = Drive;
-            Ini->FileSel = FileSel;
-            RdosLockFile(Ini->FileSel);
+        if (FileHandle)
             RdosCloseFile(FileHandle);    
-        }
-        else
-            Ini->FileSel = 0;
 
         InsertIni(Ini);
     }
@@ -850,16 +853,15 @@ void WriteIni(struct TIni *Ini)
     char str[100];
 
     LockIni(Ini);
-    
-    if (Ini->FileSel)
-        handle = RdosDuplFileInfo(Ini->Access, Ini->Drive, Ini->FileSel);
+
+    handle = RdosOpenFile(Ini->Name, 0);
+    if (handle)
+        RdosSetFileSize(handle, 0);
     else
         handle = RdosCreateFile(Ini->Name, 0);
 
     if (handle)
     {
-        RdosSetFileSize(handle, 0);
-
         sect = Ini->FSectionList;
 
         while (sect)
@@ -977,12 +979,7 @@ void DeleteHandle(int Handle)
         if (Ini->Users == 1)
         {
             RemoveIni(Ini);
-
-            if (Ini->FileSel)
-                RdosUnlockFile(Ini->FileSel);
-
             RdosFreeMem(Ini->DataSel);
-
             DeleteIni(Ini);
         }
         else
