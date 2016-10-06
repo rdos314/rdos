@@ -587,8 +587,13 @@ move_efi_lfb Proc near
 ;    
     mov edx,ds:efi_acpi
     or edx,ds:efi_acpi+4
-    jz move_efi_lfb_done
-;    
+    jnz move_efi_lfb_do
+;
+    mov ds:efi_lfb,0
+    mov ds:efi_lfb+4,0
+    jmp move_efi_lfb_done        
+
+move_efi_lfb_do:        
     mov edx,ds:efi_scan_size
     movzx eax,ds:efi_height
     mul edx

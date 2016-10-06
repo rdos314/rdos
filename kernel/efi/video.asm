@@ -38,32 +38,29 @@ INCLUDE bitmap.inc
 INCLUDE video.inc
 INCLUDE ..\apicheck.inc
 
-video_mode_entry    STRUC
+video_mode_struc       STRUC
 
-mode_link           DW ?
-mode_nr             DW ?
-mode_create         DD ?,?
-mode_x_resol        DW ?
-mode_y_resol        DW ?
-mode_bpp            DB ?
-mode_resv           DB ?
+vm_next             DW ?
 
-video_mode_entry    ENDS
+vm_mode_nr          DW ?
+vm_bits             DW ?
+vm_x_size           DW ?
+vm_y_size           DW ?
+vm_line_size        DW ?
+vm_lfb              DD ?
 
-video_process_seg STRUC
-
-vp_sel        DW ?
-
-video_process_seg ENDS
-
+video_mode_struc       ENDS
 
 data    SEGMENT byte public 'DATA'
 
 focus_console   DW ?
 update_thread   DW ?
 
+disp_fixed      DW ?
 disp_x          DW ?
 disp_y          DW ?
+
+video_mode_list DW ?
 
 data    ENDS
 
@@ -1572,6 +1569,70 @@ add_video_mode_name       DB 'Add Video Mode',0
 
 add_video_mode  PROC far
     int 3
+    push ds
+    push es
+    push bp
+;
+    mov bp,SEG data
+    mov ds,bp
+    mov bp,ds:disp_fixed
+    or bp,bp
+    jnz avFixed
+
+avAdd:
+    push eax
+    mov eax,SIZE video_mode_struc
+    AllocateSmallGlobalMem
+    pop eax
+;
+    mov es:vm_bits,ax
+    mov es:vm_mode_nr,bx
+    mov es:vm_x_size,cx
+    mov es:vm_y_size,dx
+    mov es:vm_line_size,si
+    mov es:vm_lfb,edi
+;    
+    push ax
+    mov ax,ds:video_mode_list
+    mov es:vm_next,ax
+    mov ds:video_mode_list,es
+    pop ax
+    jmp avDone
+
+avFixed:
+    cmp ax,32
+    jne avDone
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    cmp bp,1
+    je avHighest
+
+avPart:
+    cmp bp,cx
+    je avSet
+
+avHighest:
+    mov eax,ds:efi_lfb
+    or eax,ds:efi_lfb+4
+    jz avSet
+
+avCmp:
+    cmp cx,ds:efi_width
+    jc avDone
+
+avSet:
+    mov ds:efi_lfb,edi
+    mov ds:efi_lfb+4,0
+    mov ds:efi_width,cx
+    mov ds:efi_height,dx
+    movzx esi,si
+    mov ds:efi_scan_size,esi
+
+avDone:
+    pop bp
+    pop es
+    pop ds    
     ret
 add_video_mode  ENDP
     
@@ -4128,11 +4189,13 @@ init_tasking      Endp
 
 disp_x_text DB 'DISP.X', 0
 disp_y_text DB 'DISP.Y', 0
+disp_fixed_text  DB 'DISP.FIXED', 0
             
 init_video      PROC near
     mov ax,SEG data
     mov ds,ax
     mov ds:focus_console,0
+    mov ds:video_mode_list,0
 ;    
     mov ax,cs
     mov es,ax
@@ -4143,6 +4206,10 @@ init_video      PROC near
     mov edi,OFFSET disp_y_text
     call GetValue    
     mov ds:disp_y,ax
+;
+    mov edi,OFFSET disp_fixed_text
+    call GetValue    
+    mov ds:disp_fixed,ax
 ;    
     mov ax,cs
     mov ds,ax
