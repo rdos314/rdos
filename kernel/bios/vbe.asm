@@ -550,7 +550,7 @@ AddResolution   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           AddVideoMode
+;           NAME:           LocalAddVideoMode
 ;
 ;           DESCRIPTION:    Add a video mode
 ;
@@ -598,7 +598,7 @@ add_v86:
     jmp add_video_done
         ENDM
 
-AddVideoMode    Proc near
+LocalAddVideoMode    Proc near
     push es
     push fs
 ;
@@ -651,7 +651,7 @@ add_video_done:
     pop fs
     pop es
     ret
-AddVideoMode    Endp
+LocalAddVideoMode    Endp
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -680,7 +680,7 @@ DecodeVideoMode Proc near
     clc
     jne decode_video_mode_done
 ;
-    call AddVideoMode
+    call LocalAddVideoMode
     clc
 
 decode_video_mode_done:
