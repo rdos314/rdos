@@ -1093,6 +1093,7 @@ vbe_thread:
     mov ax,SEG data
     mov ds,ax
     call ds:v_init_proc
+    EndGetVideoModes
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1143,6 +1144,7 @@ init    PROC far
     mov es,ax
     mov edi,OFFSET init_vbe_thread
     HookInitPci
+    BeginGetVideoModes
     clc
     ret
 init    ENDP

@@ -3152,6 +3152,14 @@ GetUtf8Bitmap     MACRO
     OsGate get_utf8_bitmap_nr
                     ENDM
 
+BeginGetVideoModes       MACRO
+    OsGate begin_get_video_modes_nr
+                    ENDM
+
+EndGetVideoModes       MACRO
+    OsGate end_get_video_modes_nr
+                    ENDM
+
 ;  IN  AX      bits / pixel
 ;  IN  BX      Mode nr
 ;  IN  CX      x-resolution

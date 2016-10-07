@@ -38,6 +38,8 @@ INCLUDE bitmap.inc
 INCLUDE video.inc
 INCLUDE ..\apicheck.inc
 
+FLAG_GET_MODES   = 1
+
 video_mode_struc       STRUC
 
 vm_next             DW ?
@@ -59,6 +61,8 @@ update_thread   DW ?
 disp_fixed      DW ?
 disp_x          DW ?
 disp_y          DW ?
+
+flags           DW ?
 
 video_mode_list DW ?
 
@@ -1552,6 +1556,28 @@ set_video_mode  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           BeginGetVideoModes
+;
+;           DESCRIPTION:    Begin to get video modes
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+begin_get_video_modes_name       DB 'Begin Get Video Modes',0
+
+begin_get_video_modes  PROC far
+    push ds
+    push ax
+    mov ax,SEG data
+    mov ds,ax
+    lock or ds:flags,FLAG_GET_MODES
+    pop ax
+    pop ds
+    ret
+begin_get_video_modes  ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           AddVideoMode
 ;
 ;           DESCRIPTION:    Add video mode
@@ -1568,7 +1594,6 @@ set_video_mode  ENDP
 add_video_mode_name       DB 'Add Video Mode',0
 
 add_video_mode  PROC far
-    int 3
     push ds
     push es
     push bp
@@ -1603,6 +1628,7 @@ avFixed:
     cmp ax,32
     jne avDone
 ;    
+    int 3
     mov ax,system_data_sel
     mov ds,ax
     cmp bp,1
@@ -1611,6 +1637,14 @@ avFixed:
 avPart:
     cmp bp,cx
     je avSet
+;
+    mov eax,ds:efi_lfb
+    or eax,ds:efi_lfb+4
+    jz avSet
+;    
+    cmp bp,ds:efi_width
+    je avDone
+    jmp avCmp
 
 avHighest:
     mov eax,ds:efi_lfb
@@ -1635,6 +1669,30 @@ avDone:
     pop ds    
     ret
 add_video_mode  ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           EndGetVideoModes
+;
+;           DESCRIPTION:    End to get video modes
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+end_get_video_modes_name       DB 'End Get Video Modes',0
+
+end_get_video_modes  PROC far
+    int 3
+    push ds
+    push ax
+    mov ax,SEG data
+    mov ds,ax
+    lock and ds:flags,NOT FLAG_GET_MODES
+    pop ax
+    pop ds
+    ret
+end_get_video_modes  ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4196,6 +4254,7 @@ init_video      PROC near
     mov ds,ax
     mov ds:focus_console,0
     mov ds:video_mode_list,0
+    mov ds:flags,0
 ;    
     mov ax,cs
     mov es,ax
@@ -4237,6 +4296,18 @@ init_video      PROC near
     mov edi,OFFSET invert_mouse_name
     xor cl,cl
     mov ax,invert_mouse_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET begin_get_video_modes
+    mov edi,OFFSET begin_get_video_modes_name
+    xor cl,cl
+    mov ax,begin_get_video_modes_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET end_get_video_modes
+    mov edi,OFFSET end_get_video_modes_name
+    xor cl,cl
+    mov ax,end_get_video_modes_nr
     RegisterOsGate
 ;
     mov esi,OFFSET add_video_mode
