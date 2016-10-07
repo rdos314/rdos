@@ -83,17 +83,6 @@ code    SEGMENT byte public 'CODE'
     extrn IsMarkerVisible:near
     extrn InitKeyboardConsole:near
     extrn InitMouseConsole:near
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;  console_mode_table
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-console_mode_start:
-create_console_proc     DD ?
-
-console_mode_end:
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1234,10 +1223,36 @@ CreateConsole  PROC near
     push es
     push ax
 ;    
+    mov ax,SEG data
+    mov ds,ax
+
+ccRetry:
+    mov ax,ds:flags
+    test ax,FLAG_GET_MODES
+    jz ccDo
+;
+    mov ax,100
+    WaitMilliSec
+    jmp ccRetry
+    
+ccDo:    
+    mov ax,system_data_sel
+    mov ds,ax    
+    mov eax,ds:efi_lfb
+    or eax,eax
+    jz ccText
+
+ccVideo:
+    call CreateConsoleEfi
+    jmp ccDone
+
+ccText:
+    call CreateConsoleBios
+
+ccDone:
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    call cs:create_console_proc
     mov ds:app_console,es
 ;
     pop ax
@@ -1628,7 +1643,6 @@ avFixed:
     cmp ax,32
     jne avDone
 ;    
-    int 3
     mov ax,system_data_sel
     mov ds,ax
     cmp bp,1
@@ -1683,13 +1697,39 @@ add_video_mode  ENDP
 end_get_video_modes_name       DB 'End Get Video Modes',0
 
 end_get_video_modes  PROC far
-    int 3
     push ds
-    push ax
+    push es
+    pushad
+;    
     mov ax,SEG data
     mov ds,ax
+    mov ax,ds:disp_fixed
+    or ax,ax
+    jz egvDone
+;   
+    mov ax,system_data_sel
+    mov es,ax
+    mov edx,es:efi_scan_size
+    movzx eax,es:efi_height
+    mul edx
+    shl eax,2
+    AllocateBigLinear
+;
+    mov eax,es:efi_lfb
+    mov ebx,es:efi_lfb+4
+    mov al,67h
+    mov es:efi_lfb,edx
+
+egvMoveLoop:
+    SetPageEntry
+    add edx,1000h
+    add eax,1000h
+    loop egvMoveLoop
+
+egvDone:    
     lock and ds:flags,NOT FLAG_GET_MODES
-    pop ax
+    popad
+    pop es
     pop ds
     ret
 end_get_video_modes  ENDP
@@ -4140,68 +4180,6 @@ free_process     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           SetupBiosConsole
-;
-;           DESCRIPTION:    Setup BIOS console
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-console_mode_bios_start:
-cmt01  DD OFFSET CreateConsoleBios
-
-SetupBiosConsole    PROC near
-    mov bx,cs
-    GetSelectorBaseSize
-;
-    mov esi,edx
-    add esi,OFFSET console_mode_bios_start
-;    
-    mov edi,edx
-    add edi,OFFSET console_mode_start
-;
-    mov ecx,OFFSET console_mode_end - OFFSET console_mode_start
-    shr ecx,2
-;
-    mov ax,flat_sel
-    mov es,ax
-    rep movs dword ptr es:[edi],es:[esi]
-    ret
-SetupBiosConsole    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           SetupEfiConsole
-;
-;           DESCRIPTION:    Setup EFI console
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-console_mode_efi_start:
-cme01  DD OFFSET CreateConsoleEfi
-
-SetupEfiConsole    PROC near
-    mov bx,cs
-    GetSelectorBaseSize
-;
-    mov esi,edx
-    add esi,OFFSET console_mode_efi_start
-;    
-    mov edi,edx
-    add edi,OFFSET console_mode_start
-;
-    mov ecx,OFFSET console_mode_end - OFFSET console_mode_start
-    shr ecx,2
-;
-    mov ax,flat_sel
-    mov es,ax
-    rep movs dword ptr es:[edi],es:[esi]
-    ret
-SetupEfiConsole    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           init_tasking
 ;
 ;           DESCRIPTION:    init tasking
@@ -4518,20 +4496,6 @@ init_video      PROC near
     mov ax,write_dos_string_nr
     RegisterOsGate
 ;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov eax,ds:efi_acpi
-    or eax,ds:efi_acpi+4
-    jz init_bios
-
-init_efi:        
-    call SetupEfiConsole
-    jmp init_done
-
-init_bios:
-    call SetupBiosConsole
-
-init_done:
     call init_bitmap
     call init_sprite
     ret
