@@ -3170,6 +3170,11 @@ AddVideoMode       MACRO
     OsGate add_video_mode_nr
                     ENDM
 
+;  IN  BX      Mode nr
+SwitchVideoMode       MACRO
+    OsGate switch_video_mode_nr
+                    ENDM
+
 ;  IN  AX      Mode nr
 ;  IN  BL      bits / pixel
 ;  IN  CX      x-resolution

@@ -517,6 +517,39 @@ vbe_thread:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           SwitchVideoMode
+;
+;           DESCRIPTION:    Switch video mode
+;
+;           PARAMETERS:     BX  New video mode
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+switch_video_mode_name DB 'Switch Video Mode',0
+
+switch_video_mode       Proc far
+    push ds
+    push es
+    pushad
+;    
+    xor ax,ax
+    mov ds,ax
+    mov es,ax
+    or bx,4000h
+    or bx,8000h
+    mov ax,4F02h
+    push 10h
+    V86BiosInt
+;
+    popad
+    pop es
+    pop ds
+    retf32
+switch_video_mode       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           init_vbe_thread
 ;
 ;           DESCRIPTION:    Create initial VBE thread
@@ -560,8 +593,16 @@ init    PROC far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;    
     mov edi,OFFSET init_vbe_thread
     HookInitPci
+;
+    mov esi,OFFSET switch_video_mode
+    mov edi,OFFSET switch_video_mode_name
+    xor cl,cl
+    mov ax,switch_video_mode_nr
+    RegisterOsGate
+;    
     BeginGetVideoModes
     clc
     ret

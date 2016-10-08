@@ -62,6 +62,8 @@ disp_fixed      DW ?
 disp_x          DW ?
 disp_y          DW ?
 
+fixed_mode      DW ?
+
 flags           DW ?
 
 video_mode_list DW ?
@@ -1231,9 +1233,9 @@ ccRetry:
     test ax,FLAG_GET_MODES
     jz ccDo
 ;
-;    mov ax,100
-;    WaitMilliSec
-;    jmp ccRetry
+    mov ax,100
+    WaitMilliSec
+    jmp ccRetry
     
 ccDo:    
     mov ax,system_data_sel
@@ -1609,7 +1611,6 @@ begin_get_video_modes  ENDP
 add_video_mode_name       DB 'Add Video Mode',0
 
 add_video_mode  PROC far
-    int 3
     push ds
     push es
     push bp
@@ -1677,6 +1678,10 @@ avSet:
     mov ds:efi_height,dx
     movzx esi,si
     mov ds:efi_scan_size,esi
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:fixed_mode,bx
 
 avDone:
     pop bp
@@ -1726,6 +1731,9 @@ egvMoveLoop:
     add edx,1000h
     add eax,1000h
     loop egvMoveLoop
+;
+    mov bx,ds:fixed_mode
+    SwitchVideoMode 
 
 egvDone:    
     lock and ds:flags,NOT FLAG_GET_MODES
