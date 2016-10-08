@@ -126,81 +126,6 @@ DecodeVideoMode Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           GetVideoModesPm
-;
-;           DESCRIPTION:    Get all video modes, protected mode version
-;
-;           PARAMETERS:         ES          Info selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetVideoModesPm Proc near
-    push ds
-    push es
-    push fs
-    pusha
-;
-    mov ax,SEG data
-    mov ds,ax
-    lfs si,es:vesa_modes
-    mov eax,1000h
-    AllocateGlobalMem
-    xor di,di
-
-get_video_modes_pm_loop:
-    mov cx,fs:[si]
-    add si,2
-    cmp cx,-1
-    je get_video_modes_pm_done
-;
-    mov ax,ds:v_pm16_stack
-    mov bp,ss
-    shl ebp,16
-    mov bp,sp
-    mov ss,ax
-    mov sp,1024
-    push ebp
-    mov ax,4F01h
-    call ds:v_pm16_entry
-    pop ebp
-    cmp ax,4Fh
-    mov ax,bp
-    pushf
-    shr ebp,16
-    popf
-    mov ss,ax
-    mov sp,bp
-    jne get_video_modes_pm_loop
-;
-    mov ax,1
-    call DecodeVideoMode
-    jnc get_video_modes_pm_loop
-;
-    mov ax,4F01h
-    push 10h
-    V86BiosInt
-    cmp ax,4Fh
-    jne get_video_modes_pm_loop
-;
-    xor ax,ax
-    call DecodeVideoMode
-;
-    jmp get_video_modes_pm_loop
-
-get_video_modes_pm_done:
-;       FreeMem
-;
-    popa
-    pop fs
-    pop es
-    pop ds
-    ret
-GetVideoModesPm Endp
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           GetVideoModesV86
 ;
 ;           DESCRIPTION:    Get all video modes, V86 mode version
@@ -588,47 +513,11 @@ SetupPmEntry    Proc near
     push ds
     push es
     pushad
-;
-    mov bx,__C000
-    mov ds,bx
-    mov eax,10000h
-    AllocateGlobalMem
-    xor si,si
-    xor di,di
-    mov cx,4000h
-    rep movsd
-;
-    mov eax,dword ptr cs:pm_id
-    xor si,si
-    mov cx,8000h
-;
-    push es
-    mov eax,600h
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,180h
-    xor eax,eax
-    rep stosd
-    mov bx,es
-    pop es
-;
-    mov es:[si].pmi_bios_data,bx
-    mov es:[si].pmi_A000,__A000
-    mov es:[si].pmi_B000,__B000
-    mov es:[si].pmi_B800,__B800
-    mov es:[si].pmi_C000,es
-    mov es:[si].pmi_mode,1
-    mov bx,es
-    GetSelectorBaseSize
-    AllocateGdt
-    CreateCodeSelector16
-
-SetupVm:
+;    
     mov ax,SEG data
     mov ds,ax
     mov ds:v_init_proc,OFFSET InitV86
-
-SetupPmDone:
+;
     popad
     pop es
     pop ds
