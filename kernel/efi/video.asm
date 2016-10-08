@@ -1231,9 +1231,9 @@ ccRetry:
     test ax,FLAG_GET_MODES
     jz ccDo
 ;
-    mov ax,100
-    WaitMilliSec
-    jmp ccRetry
+;    mov ax,100
+;    WaitMilliSec
+;    jmp ccRetry
     
 ccDo:    
     mov ax,system_data_sel
@@ -1609,6 +1609,7 @@ begin_get_video_modes  ENDP
 add_video_mode_name       DB 'Add Video Mode',0
 
 add_video_mode  PROC far
+    int 3
     push ds
     push es
     push bp
