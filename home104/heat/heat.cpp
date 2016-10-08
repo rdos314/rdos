@@ -373,7 +373,7 @@ int main()
     SolarTable->AddRow(24, 45);
 
     SolarTable->SetText(0, 0, "Effekt");
-    SolarTable->SetText(0, 2, "kW");
+    SolarTable->SetText(0, 2, "W");
 
     SolarTable->SetText(1, 0, "Idag");
     SolarTable->SetText(1, 2, "kWh");
@@ -389,6 +389,8 @@ int main()
         solar.GetSunPosition(&altitude, &azimuth);
 
         solalt = altitude;
+
+        Vp->SetSolarAlt(solalt);
 
         sprintf(str, "%5.2Lf", altitude);
         Table->SetText(0, 1, str);
@@ -477,7 +479,8 @@ int main()
         if (SolarInv->IsOnline())
         {
             val = SolarInv->GetCurrentPower();
-            sprintf(str, "%7.3Lf", val);
+            ival = (int)val;
+            sprintf(str, "%d", ival);
             SolarTable->SetText(0, 1, str);
 
             val = SolarInv->GetDayEnergy();
@@ -584,9 +587,6 @@ int main()
                 RadArr[i]->SetAmbient(ambient);
              }
         }
-
-        if (solalt < 10.0)
-            circmax = 0;        
 
         if (count)
             Circ->SetMaxMotor(circmax);

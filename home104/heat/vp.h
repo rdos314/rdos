@@ -53,6 +53,8 @@ public:
         int HasValidHeatP();
         long double GetHeatP();
 
+        void SetSolarAlt(long double val);
+        void SetSolarPower(long double val);
         void SetTempError(int temp);
         void SetAmbient(int ref, int ambient);
         void SetCirc(int circ, long double speed);
@@ -68,6 +70,9 @@ protected:
          int TempCount;
          long double AmbientSum;
          int AmbientCount;
+
+    long double FSolarAlt;
+    long double FSolarPower;
          
     int FVpOn;
     int FPrevOn;
