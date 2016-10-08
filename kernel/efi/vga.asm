@@ -495,34 +495,6 @@ init_v86_check_done:
     pop ds
     ret
 InitV86 Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           SetupPmEntry
-;
-;           DESCRIPTION:    Setup Pm entry point
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-pm_id   DB 'PMID'
-
-SetupPmEntry    Proc near
-    push ds
-    push es
-    pushad
-;    
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:v_init_proc,OFFSET InitV86
-;
-    popad
-    pop es
-    pop ds
-    ret
-SetupPmEntry    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -538,10 +510,7 @@ SetupPmEntry    Endp
 vbe_thread_name DB 'VBE',0
 
 vbe_thread:
-    call SetupPmEntry
-    mov ax,SEG data
-    mov ds,ax
-    call ds:v_init_proc
+    call InitV86
     EndGetVideoModes
     TerminateThread
 
