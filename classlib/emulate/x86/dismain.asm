@@ -1528,7 +1528,7 @@ op_short        PROC near
         mov edx,-1
 
 not_op_back:
-        add esi,2
+        inc esi
         add eax,esi
         sub eax,OFFSET op_in_code
         inc eax
