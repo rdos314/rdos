@@ -1495,7 +1495,7 @@ op_short        PROC near
         mov edx,-1
 
 not_op_back:
-        add esi,2
+        inc esi
         add eax,esi
         push ebx
         lea ebx,ds:[ebp].code_cache        
@@ -3287,7 +3287,7 @@ not_put_dwptr:
         jne not_seg_reg
 seg_reg_ov:
         mov ds:[ebp].data_sel,ebx
-        mov ecx,override
+        mov ecx,ds:[ebp].override
         or ecx,ecx
         jz not_seg_reg
         cmp ecx,0FFFFFFFFh
@@ -3315,7 +3315,7 @@ wr_op_sep_empt:
 wr_op_sep_null:
         jmp wr_op_next
 wr_op_end:
-        mov eax,override
+        mov eax,ds:[ebp].override
         or eax,eax
         je wr_ov_klar
         cmp eax,0FFFFFFFFh

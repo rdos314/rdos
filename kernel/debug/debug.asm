@@ -70,12 +70,23 @@ debug_process:
     mov ds,ax
     mov es,ax
     mov ebp,OFFSET cpu
-    mov dl,1
-    lea edi,ds:[ebp].code_cache
     mov esi,OFFSET debug_process
+
+dis_next:    
+    mov ds:[ebp].reg_eip,esi
+    mov ds:[ebp].reg_eip+4,0
+;
+    lea edi,ds:[ebp].code_cache
+    push esi
     mov ecx,32
     rep movs es:[edi],cs:[esi]
+    pop esi
+;    
+    mov dl,1
     call DisAsmCode
+    add esi,eax
+    lea ebx,[ebp].opcode_text
+    jmp dis_next
 
 marker_loop:
     mov ax,250
