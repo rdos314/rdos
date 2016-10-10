@@ -80,9 +80,6 @@ op_code_size            DD ?    ;ceci represente la somme de :
 ;                                        l'interprétation de la synthaxe)
 ;
 
-        public op_in_code
-        public op_code_size     
-
 add_mne MACRO com_txt, sep
         mov eax,OFFSET com_txt
         sub eax,OFFSET mne_tab
@@ -120,7 +117,7 @@ no_adr  ENDP
         public bx_adr
 
 bx_adr  PROC near
-        movzx eax,word ptr ds:reg_ebx
+        movzx eax,word ptr ds:[ebp].reg_ebx
         xor ebx,ebx
         ret
 bx_adr  ENDP
@@ -137,7 +134,7 @@ bx_adr  ENDP
         public bp_adr
 
 bp_adr  PROC near
-        movzx eax,word ptr ds:reg_ebp
+        movzx eax,word ptr ds:[ebp].reg_ebp
         xor ebx,ebx
         ret
 bp_adr  ENDP
@@ -154,7 +151,7 @@ bp_adr  ENDP
         public si_adr
 
 si_adr  PROC near
-        movzx eax,word ptr ds:reg_esi
+        movzx eax,word ptr ds:[ebp].reg_esi
         xor ebx,ebx
         ret
 si_adr  ENDP
@@ -171,7 +168,7 @@ si_adr  ENDP
         public di_adr
 
 di_adr  PROC near
-        movzx eax,word ptr ds:reg_edi
+        movzx eax,word ptr ds:[ebp].reg_edi
         xor ebx,ebx
         ret
 di_adr  ENDP
@@ -188,7 +185,7 @@ di_adr  ENDP
         public eax_adr
 
 eax_adr PROC near
-        mov eax,ds:reg_eax
+        mov eax,ds:[ebp].reg_eax
         xor ebx,ebx
         ret
 eax_adr ENDP
@@ -205,7 +202,7 @@ eax_adr ENDP
         public ebx_adr
 
 ebx_adr PROC near
-        mov eax,ds:reg_ebx
+        mov eax,ds:[ebp].reg_ebx
         xor ebx,ebx
         ret
 ebx_adr ENDP
@@ -222,7 +219,7 @@ ebx_adr ENDP
         public ecx_adr
 
 ecx_adr PROC near
-        mov eax,ds:reg_ecx
+        mov eax,ds:[ebp].reg_ecx
         xor ebx,ebx
         ret
 ecx_adr ENDP
@@ -239,7 +236,7 @@ ecx_adr ENDP
         public edx_adr
 
 edx_adr PROC near
-        mov eax,ds:reg_edx
+        mov eax,ds:[ebp].reg_edx
         xor ebx,ebx
         ret
 edx_adr ENDP
@@ -256,7 +253,7 @@ edx_adr ENDP
         public esi_adr
 
 esi_adr PROC near
-        mov eax,ds:reg_esi
+        mov eax,ds:[ebp].reg_esi
         xor ebx,ebx
         ret
 esi_adr ENDP
@@ -273,7 +270,7 @@ esi_adr ENDP
         public edi_adr
 
 edi_adr PROC near
-        mov eax,ds:reg_edi
+        mov eax,ds:[ebp].reg_edi
         xor ebx,ebx
         ret
 edi_adr ENDP
@@ -290,7 +287,7 @@ edi_adr ENDP
         public ebp_adr
 
 ebp_adr PROC near
-        mov eax,ds:reg_ebp
+        mov eax,ds:[ebp].reg_ebp
         xor ebx,ebx
         ret
 ebp_adr ENDP
@@ -307,7 +304,7 @@ ebp_adr ENDP
         public esp_adr
 
 esp_adr PROC near
-        mov eax,ds:reg_esp
+        mov eax,ds:[ebp].reg_esp
         xor ebx,ebx
         ret
 esp_adr ENDP
@@ -324,9 +321,10 @@ esp_adr ENDP
         public eip_adr
 
 eip_adr PROC near
-        mov eax,ds:reg_eip
+        mov eax,ds:[ebp].reg_eip
         add eax,esi
-        sub eax,OFFSET op_in_code
+        lea ebx,ds:[ebp].code_cache        
+        sub eax,ebx
         add eax,5
         xor ebx,ebx
         ret
@@ -344,8 +342,8 @@ eip_adr ENDP
         public rax_adr
 
 rax_adr PROC near
-        mov eax,ds:reg_eax
-        mov ebx,ds:reg_eax+4
+        mov eax,ds:[ebp].reg_eax
+        mov ebx,ds:[ebp].reg_eax+4
         ret
 rax_adr ENDP
 
@@ -362,8 +360,8 @@ rax_adr ENDP
         public rbx_adr
 
 rbx_adr PROC near
-        mov eax,ds:reg_ebx
-        mov ebx,ds:reg_ebx+4
+        mov eax,ds:[ebp].reg_ebx
+        mov ebx,ds:[ebp].reg_ebx+4
         ret
 rbx_adr ENDP
         
@@ -379,8 +377,8 @@ rbx_adr ENDP
         public rcx_adr
 
 rcx_adr PROC near
-        mov eax,ds:reg_ecx
-        mov ebx,ds:reg_ecx+4
+        mov eax,ds:[ebp].reg_ecx
+        mov ebx,ds:[ebp].reg_ecx+4
         ret
 rcx_adr ENDP
 
@@ -397,8 +395,8 @@ rcx_adr ENDP
         public rdx_adr
 
 rdx_adr PROC near
-        mov eax,ds:reg_edx
-        mov ebx,ds:reg_edx+4
+        mov eax,ds:[ebp].reg_edx
+        mov ebx,ds:[ebp].reg_edx+4
         ret
 rdx_adr ENDP
         
@@ -414,8 +412,8 @@ rdx_adr ENDP
         public rsi_adr
 
 rsi_adr PROC near
-        mov eax,ds:reg_esi
-        mov ebx,ds:reg_esi+4
+        mov eax,ds:[ebp].reg_esi
+        mov ebx,ds:[ebp].reg_esi+4
         ret
 rsi_adr ENDP
         
@@ -431,8 +429,8 @@ rsi_adr ENDP
         public rdi_adr
 
 rdi_adr PROC near
-        mov eax,ds:reg_edi
-        mov ebx,ds:reg_edi+4
+        mov eax,ds:[ebp].reg_edi
+        mov ebx,ds:[ebp].reg_edi+4
         ret
 rdi_adr ENDP
 
@@ -449,8 +447,8 @@ rdi_adr ENDP
         public rbp_adr
 
 rbp_adr PROC near
-        mov eax,ds:reg_ebp
-        mov ebx,ds:reg_ebp+4
+        mov eax,ds:[ebp].reg_ebp
+        mov ebx,ds:[ebp].reg_ebp+4
         ret
 rbp_adr ENDP
 
@@ -467,8 +465,8 @@ rbp_adr ENDP
         public rsp_adr
 
 rsp_adr PROC near
-        mov eax,ds:reg_esp
-        mov ebx,ds:reg_esp+4
+        mov eax,ds:[ebp].reg_esp
+        mov ebx,ds:[ebp].reg_esp+4
         ret
 rsp_adr ENDP
 
@@ -485,11 +483,12 @@ rsp_adr ENDP
         public rip_adr
 
 rip_adr PROC near
-        mov eax,ds:reg_eip
+        mov eax,ds:[ebp].reg_eip
         add eax,esi
-        sub eax,OFFSET op_in_code
+        lea ebx,ds:[ebp].code_cache        
+        sub eax,ebx
         add eax,5
-        mov ebx,ds:reg_eip+4
+        mov ebx,ds:[ebp].reg_eip+4
         ret
 rip_adr ENDP
 
@@ -506,8 +505,8 @@ rip_adr ENDP
         public r8_adr
 
 r8_adr PROC near
-        mov eax,ds:reg_r8
-        mov ebx,ds:reg_r8+4
+        mov eax,ds:[ebp].reg_r8
+        mov ebx,ds:[ebp].reg_r8+4
         ret
 r8_adr ENDP
 
@@ -524,8 +523,8 @@ r8_adr ENDP
         public r9_adr
 
 r9_adr PROC near
-        mov eax,ds:reg_r9
-        mov ebx,ds:reg_r9+4
+        mov eax,ds:[ebp].reg_r9
+        mov ebx,ds:[ebp].reg_r9+4
         ret
 r9_adr ENDP
 
@@ -542,8 +541,8 @@ r9_adr ENDP
         public r10_adr
 
 r10_adr PROC near
-        mov eax,ds:reg_r10
-        mov ebx,ds:reg_r10+4
+        mov eax,ds:[ebp].reg_r10
+        mov ebx,ds:[ebp].reg_r10+4
         ret
 r10_adr ENDP
 
@@ -560,8 +559,8 @@ r10_adr ENDP
         public r11_adr
 
 r11_adr PROC near
-        mov eax,ds:reg_r11
-        mov ebx,ds:reg_r11+4
+        mov eax,ds:[ebp].reg_r11
+        mov ebx,ds:[ebp].reg_r11+4
         ret
 r11_adr ENDP
 
@@ -578,8 +577,8 @@ r11_adr ENDP
         public r12_adr
 
 r12_adr PROC near
-        mov eax,ds:reg_r12
-        mov ebx,ds:reg_r12+4
+        mov eax,ds:[ebp].reg_r12
+        mov ebx,ds:[ebp].reg_r12+4
         ret
 r12_adr ENDP
 
@@ -596,8 +595,8 @@ r12_adr ENDP
         public r13_adr
 
 r13_adr PROC near
-        mov eax,ds:reg_r13
-        mov ebx,ds:reg_r13+4
+        mov eax,ds:[ebp].reg_r13
+        mov ebx,ds:[ebp].reg_r13+4
         ret
 r13_adr ENDP
 
@@ -614,8 +613,8 @@ r13_adr ENDP
         public r14_adr
 
 r14_adr PROC near
-        mov eax,ds:reg_r14
-        mov ebx,ds:reg_r14+4
+        mov eax,ds:[ebp].reg_r14
+        mov ebx,ds:[ebp].reg_r14+4
         ret
 r14_adr ENDP
 
@@ -632,8 +631,8 @@ r14_adr ENDP
         public r15_adr
 
 r15_adr PROC near
-        mov eax,ds:reg_r15
-        mov ebx,ds:reg_r15+4
+        mov eax,ds:[ebp].reg_r15
+        mov ebx,ds:[ebp].reg_r15+4
         ret
 r15_adr ENDP
 
@@ -651,7 +650,7 @@ r15_adr ENDP
         public r8d_adr
 
 r8d_adr PROC near
-        mov eax,ds:reg_r8
+        mov eax,ds:[ebp].reg_r8
         ret
 r8d_adr ENDP
 
@@ -668,7 +667,7 @@ r8d_adr ENDP
         public r9d_adr
 
 r9d_adr PROC near
-        mov eax,ds:reg_r9
+        mov eax,ds:[ebp].reg_r9
         ret
 r9d_adr ENDP
 
@@ -685,7 +684,7 @@ r9d_adr ENDP
         public r10d_adr
 
 r10d_adr PROC near
-        mov eax,ds:reg_r10
+        mov eax,ds:[ebp].reg_r10
         ret
 r10d_adr ENDP
 
@@ -702,7 +701,7 @@ r10d_adr ENDP
         public r11d_adr
 
 r11d_adr PROC near
-        mov eax,ds:reg_r11
+        mov eax,ds:[ebp].reg_r11
         ret
 r11d_adr ENDP
 
@@ -719,7 +718,7 @@ r11d_adr ENDP
         public r12d_adr
 
 r12d_adr PROC near
-        mov eax,ds:reg_r12
+        mov eax,ds:[ebp].reg_r12
         ret
 r12d_adr ENDP
 
@@ -736,7 +735,7 @@ r12d_adr ENDP
         public r13d_adr
 
 r13d_adr PROC near
-        mov eax,ds:reg_r13
+        mov eax,ds:[ebp].reg_r13
         ret
 r13d_adr ENDP
 
@@ -753,7 +752,7 @@ r13d_adr ENDP
         public r14d_adr
 
 r14d_adr PROC near
-        mov eax,ds:reg_r14
+        mov eax,ds:[ebp].reg_r14
         ret
 r14d_adr ENDP
 
@@ -770,7 +769,7 @@ r14d_adr ENDP
         public r15d_adr
 
 r15d_adr PROC near
-        mov eax,ds:reg_r15
+        mov eax,ds:[ebp].reg_r15
         ret
 r15d_adr ENDP
 
@@ -943,37 +942,37 @@ add_hex_qword   ENDP
 
 calc_ads_offset PROC near
         push eax
-        test ds:em_flags,a32
+        test ds:[ebp].em_flags,a32
         jnz c_a_ad32
 
 c_a_ad16:
         mov ebx,OFFSET adr_16a_tab
         cmp eax,18h
         jae calc_out_o_r
-        mov ds:data_valid,1
+        mov ds:[ebp].data_valid,1
         shl eax,3
         add ebx,eax
         push ebx
         call dword ptr cs:[ebx]
         pop ebx
-        add ds:data_offset,eax
+        add ds:[ebp].data_offset,eax
         call dword ptr cs:[ebx+4]
-        add ds:data_offset,eax
-        mov word ptr ds:data_offset+2,0
+        add ds:[ebp].data_offset,eax
+        mov word ptr ds:[ebp].data_offset+2,0
         jmp calc_out_o_r
 c_a_ad32:
         mov ebx,OFFSET adr_32a_tab
         cmp eax,18h
         jae calc_out_o_r
-        mov ds:data_valid,1
+        mov ds:[ebp].data_valid,1
         shl eax,3
         add ebx,eax
         push ebx
         call dword ptr cs:[ebx]
         pop ebx
-        add ds:data_offset,eax
+        add ds:[ebp].data_offset,eax
         call dword ptr cs:[ebx+4]
-        add ds:data_offset,eax
+        add ds:[ebp].data_offset,eax
 calc_out_o_r:
         pop eax
         ret
@@ -1004,17 +1003,17 @@ lc_a_ad64_32:
         cmp ax,30h
         jae lcalc_out_o_r
 ;
-        mov ds:data_valid,1
+        mov ds:[ebp].data_valid,1
         shl eax,3
         add ebx,eax
         push ebx        
         call dword ptr cs:[ebx]
-        add ds:data_offset,eax
-        adc ds:data_offset+4,ebx
+        add ds:[ebp].data_offset,eax
+        adc ds:[ebp].data_offset+4,ebx
         pop ebx
         call dword ptr cs:[ebx+4]
-        add ds:data_offset,eax
-        adc ds:data_offset+4,ebx
+        add ds:[ebp].data_offset,eax
+        adc ds:[ebp].data_offset+4,ebx
         jmp lcalc_out_o_r
 
 lc_a_ad64_64:
@@ -1022,17 +1021,17 @@ lc_a_ad64_64:
         cmp ax,30h
         jae lcalc_out_o_r
 ;
-        mov ds:data_valid,1
+        mov ds:[ebp].data_valid,1
         shl eax,3
         add ebx,eax
         push ebx
         call dword ptr cs:[ebx]
-        add ds:data_offset,eax
-        adc ds:data_offset+4,ebx
+        add ds:[ebp].data_offset,eax
+        adc ds:[ebp].data_offset+4,ebx
         pop ebx
         call dword ptr cs:[ebx+4]
-        add ds:data_offset,eax
-        adc ds:data_offset+4,ebx
+        add ds:[ebp].data_offset,eax
+        adc ds:[ebp].data_offset+4,ebx
         
 lcalc_out_o_r:
         pop eax
@@ -1054,26 +1053,26 @@ long_calc_ads_offset    Endp
         extrn long_mod_rm_tab:near
 
 decode_mem_mode PROC near
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz decode_mem64
 ;        
-        mov bx,ds:em_flags
+        mov bx,ds:[ebp].em_flags
         and bx,a32
         mov bh,bl
         add bl,bl
         add bl,bh
-        mov al,ds:data_mode
+        mov al,ds:[ebp].data_mode
         or al,al
         je data_8_sel
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jz data_8_sel
         inc al
 data_8_sel:
-        mov ds:edata_mode,al
+        mov ds:[ebp].edata_mode,al
         add bl,al
         movzx ebx,bl
         mov eax,dword ptr cs:[4*ebx].mod_rm_tab
-        mov ds:op_syntax,eax
+        mov ds:[ebp].op_syntax,eax
         inc esi
         mov al,[esi]
         mov ah,al
@@ -1081,7 +1080,7 @@ data_8_sel:
         and ah,0C0h
         cmp ah,0C0h
         jne dec_mem_no_ignore
-        mov ds:ignore_ptr,1
+        mov ds:[ebp].ignore_ptr,1
 dec_mem_no_ignore:
         shr ah,3
         or al,ah
@@ -1092,7 +1091,7 @@ dec_mem_no_ignore:
 
 decode_mem64:
         xor bl,bl
-        test ds:op_rex,8
+        test ds:[ebp].op_rex,8
         jz decode_mem64_op_ok
 ;
         mov bl,1
@@ -1101,28 +1100,28 @@ decode_mem64_op_ok:
         mov bh,bl
         add bl,bl
         add bl,bh
-        mov al,ds:data_mode
+        mov al,ds:[ebp].data_mode
         or al,al
         je dec64_data_8_sel
 ;        
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jz dec64_data_8_sel
 ;
         inc al
 
 dec64_data_8_sel:
-        mov ds:edata_mode,al
+        mov ds:[ebp].edata_mode,al
 ;
         add bl,al
         movzx ebx,bl
         mov eax,dword ptr cs:[4*ebx].long_mod_rm_tab
-        mov ds:op_syntax,eax
+        mov ds:[ebp].op_syntax,eax
 ;        
         inc esi
         mov al,[esi]
         mov ah,al
         and al,7
-        test ds:op_rex,1
+        test ds:[ebp].op_rex,1
         jz dec64_op_reg_ok
 ;
         or ax,8        
@@ -1132,7 +1131,7 @@ dec64_op_reg_ok:
         cmp ah,0C0h
         jne dec64_mem_no_ignore
 ;        
-        mov ds:ignore_ptr,1
+        mov ds:[ebp].ignore_ptr,1
 
 dec64_mem_no_ignore:
         shr ah,2
@@ -1157,23 +1156,23 @@ decode_mem_mode ENDP
         extrn st_txt:near
 
 decode_math_mem PROC near
-        mov bx,ds:em_flags
+        mov bx,ds:[ebp].em_flags
         and bx,a32
         mov bh,bl
         add bl,bl
         add bl,bh
-        mov al,ds:data_mode
+        mov al,ds:[ebp].data_mode
         or al,al
         je mdata_8_sel
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jz mdata_8_sel
         inc al
 mdata_8_sel:
-        mov ds:edata_mode,al
+        mov ds:[ebp].edata_mode,al
         add bl,al
         movzx ebx,bl
         mov eax,dword ptr cs:[4*ebx].mod_rm_tab
-        mov ds:op_syntax,eax
+        mov ds:[ebp].op_syntax,eax
         inc esi
         mov al,[esi]
         mov ah,al
@@ -1217,35 +1216,35 @@ decode_math_mem ENDP
         extrn long_reg_tab:near
 
 decode_reg      PROC near
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz decode_reg64
 ;        
-        mov bl,ds:data_mode
+        mov bl,ds:[ebp].data_mode
         or bl,bl
         je rdata_8_sel
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jz rdata_8_sel
         inc bl
 rdata_8_sel:
         movzx ebx,bl
         mov ecx,dword ptr cs:[4*ebx].reg_tab
-        mov ds:op_syntax,ecx
+        mov ds:[ebp].op_syntax,ecx
         and eax,38h
         shr eax,3
-        mov ds:ignore_ptr,1
+        mov ds:[ebp].ignore_ptr,1
         call decode_opcode
         ret
 
 decode_reg64:
         mov bl,3
-        test ds:op_rex,8
+        test ds:[ebp].op_rex,8
         jnz rdata_64_8_sel
 ;
-        mov bl,ds:data_mode
+        mov bl,ds:[ebp].data_mode
         or bl,bl
         je rdata_64_8_sel
 ;
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jz rdata_64_8_sel
 ;
         inc bl        
@@ -1253,16 +1252,16 @@ decode_reg64:
 rdata_64_8_sel:
         movzx ebx,bl
         mov ecx,dword ptr cs:[4*ebx].long_reg_tab
-        mov ds:op_syntax,ecx
+        mov ds:[ebp].op_syntax,ecx
         and eax,38h
         shr eax,3
-        test ds:op_rex,4
+        test ds:[ebp].op_rex,4
         jz rdata_64_do
 ;
         or ax,8        
 
 rdata_64_do:        
-        mov ds:ignore_ptr,1
+        mov ds:[ebp].ignore_ptr,1
         call decode_opcode
         ret
 decode_reg      ENDP
@@ -1307,10 +1306,10 @@ add_komma_to_mem        ENDP
 override_rex     PROC near
         mov al,[esi]
         and al,0Fh
-        mov ds:op_rex,al
+        mov ds:[ebp].op_rex,al
 ;
-        mov ebx,ds:root_tab
-        mov ds:op_syntax,ebx
+        mov ebx,ds:[ebp].root_tab
+        mov ds:[ebp].op_syntax,ebx
         inc esi
         mov al,[esi]
         movzx eax,al
@@ -1321,8 +1320,8 @@ override_rex     ENDP
         public override_noseg
 
 override_noseg     PROC near
-        mov ebx,ds:root_tab
-        mov ds:op_syntax,ebx
+        mov ebx,ds:[ebp].root_tab
+        mov ds:[ebp].op_syntax,ebx
         inc esi
         mov al,[esi]
         movzx eax,al
@@ -1336,9 +1335,9 @@ override_noseg     ENDP
 
 override_cs     PROC near
         mov eax,OFFSET cs_txt
-        mov ds:override,eax
-        mov ebx,ds:root_tab
-        mov ds:op_syntax,ebx
+        mov ds:[ebp].override,eax
+        mov ebx,ds:[ebp].root_tab
+        mov ds:[ebp].op_syntax,ebx
         inc esi
         mov al,[esi]
         movzx eax,al
@@ -1351,9 +1350,9 @@ override_cs     ENDP
 
 override_ds     PROC near
         mov eax,OFFSET ds_txt
-        mov ds:override,eax
-        mov ebx,ds:root_tab
-        mov ds:op_syntax,ebx
+        mov ds:[ebp].override,eax
+        mov ebx,ds:[ebp].root_tab
+        mov ds:[ebp].op_syntax,ebx
         inc esi
         mov al,[esi]
         movzx eax,al
@@ -1366,9 +1365,9 @@ override_ds     ENDP
 
 override_ss     PROC near
         mov eax,OFFSET ss_txt
-        mov ds:override,eax
-        mov ebx,ds:root_tab
-        mov ds:op_syntax,ebx
+        mov ds:[ebp].override,eax
+        mov ebx,ds:[ebp].root_tab
+        mov ds:[ebp].op_syntax,ebx
         inc esi
         mov al,[esi]
         movzx eax,al
@@ -1381,9 +1380,9 @@ override_ss     ENDP
 
 override_es     PROC near
         mov eax,OFFSET es_txt
-        mov ds:override,eax
-        mov ebx,ds:root_tab
-        mov ds:op_syntax,ebx
+        mov ds:[ebp].override,eax
+        mov ebx,ds:[ebp].root_tab
+        mov ds:[ebp].op_syntax,ebx
         inc esi
         mov al,[esi]
         movzx eax,al
@@ -1396,9 +1395,9 @@ override_es     ENDP
 
 override_fs     PROC near
         mov eax,OFFSET fs_txt
-        mov ds:override,eax
-        mov ebx,ds:root_tab
-        mov ds:op_syntax,ebx
+        mov ds:[ebp].override,eax
+        mov ebx,ds:[ebp].root_tab
+        mov ds:[ebp].op_syntax,ebx
         inc esi
         mov al,[esi]
         movzx eax,al
@@ -1411,9 +1410,9 @@ override_fs     ENDP
 
 override_gs     PROC near
         mov eax,OFFSET gs_txt
-        mov ds:override,eax
-        mov ebx,ds:root_tab
-        mov ds:op_syntax,ebx
+        mov ds:[ebp].override,eax
+        mov ebx,ds:[ebp].root_tab
+        mov ds:[ebp].op_syntax,ebx
         inc esi
         mov al,[esi]
         movzx eax,al
@@ -1433,11 +1432,11 @@ op_byte ENDP
         public op_word
 
 op_word PROC near
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_w64
 
 op_wp:
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jz op_w16
 op_w32:
         mov eax,[esi+1]
@@ -1451,7 +1450,7 @@ op_w16:
         ret
 
 op_w64:
-        test ds:op_rex,8
+        test ds:[ebp].op_rex,8
         jz op_wp        
 
 opw64_64:
@@ -1465,19 +1464,19 @@ op_word ENDP
         public op_word_mem
 
 op_word_mem     PROC near
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jz op_wm16
 op_wm32:
         mov eax,[esi+1]
-        mov ds:data_valid,1
-        mov ds:data_offset,eax
+        mov ds:[ebp].data_valid,1
+        mov ds:[ebp].data_offset,eax
         call add_hex_dword
         add esi,4
         ret
 op_wm16:        
         movzx eax,word ptr [esi+1]
-        mov ds:data_valid,1
-        mov ds:data_offset,eax
+        mov ds:[ebp].data_valid,1
+        mov ds:[ebp].data_offset,eax
         call add_hex_word
         add esi,2
         ret
@@ -1498,17 +1497,20 @@ op_short        PROC near
 not_op_back:
         add esi,2
         add eax,esi
-        sub eax,OFFSET op_in_code
+        push ebx
+        lea ebx,ds:[ebp].code_cache        
+        sub eax,ebx
+        pop ebx
         inc eax
 ;        
         adc edx,0
-        add eax,ds:reg_eip
-        adc edx,ds:reg_eip+4
+        add eax,ds:[ebp].reg_eip
+        adc edx,ds:[ebp].reg_eip+4
 ;        
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_sw64
 ;
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jz op_sw16
 
 op_sw32:                
@@ -1527,24 +1529,30 @@ op_short        ENDP
         public op_near
 
 op_near PROC near
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jz op_near16
 op_near32:
         mov eax,[esi+1]
         add esi,4
         add eax,esi
-        sub eax,OFFSET op_in_code
+        push ebx
+        lea ebx,ds:[ebp].code_cache        
+        sub eax,ebx
+        pop ebx
         inc eax
-        add eax,ds:reg_eip
+        add eax,ds:[ebp].reg_eip
         call add_hex_dword
         ret
 op_near16:      
         mov ax,[esi+1]
         add esi,2
         add eax,esi
-        sub eax,OFFSET op_in_code
+        push ebx
+        lea ebx,ds:[ebp].code_cache        
+        sub eax,ebx
+        pop ebx
         inc eax
-        add ax,word ptr ds:reg_eip
+        add ax,word ptr ds:[ebp].reg_eip
         call add_hex_word
         ret
 op_near ENDP
@@ -1552,24 +1560,30 @@ op_near ENDP
         public op_near2
 
 op_near2        PROC near
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jz op_near16_2
 op_near32_2:
         mov eax,[esi+2]
         add esi,5
         add eax,esi
-        sub eax,OFFSET op_in_code
+        push ebx
+        lea ebx,ds:[ebp].code_cache        
+        sub eax,ebx
+        pop ebx
         inc eax
-        add eax,ds:reg_eip
+        add eax,ds:[ebp].reg_eip
         call add_hex_dword
         ret
 op_near16_2:    
         mov ax,[esi+2]
         add esi,3
         add eax,esi
-        sub eax,OFFSET op_in_code
+        push ebx
+        lea ebx,ds:[ebp].code_cache        
+        sub eax,ebx
+        pop ebx
         inc eax
-        add ax,word ptr ds:reg_eip
+        add ax,word ptr ds:[ebp].reg_eip
         call add_hex_word
         ret
 op_near2        ENDP
@@ -1577,7 +1591,7 @@ op_near2        ENDP
         public op_far
 
 op_far  PROC near
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jz op_far16
 op_far32:
         mov ax,[esi+5]
@@ -1621,9 +1635,9 @@ op_enter        ENDP
         public op_address_size
 
 op_address_size PROC near
-        mov ebx,ds:root_tab
-        mov ds:op_syntax,ebx
-        xor ds:em_flags,a32
+        mov ebx,ds:[ebp].root_tab
+        mov ds:[ebp].op_syntax,ebx
+        xor ds:[ebp].em_flags,a32
         inc esi
         mov al,[esi]
         movzx eax,al
@@ -1634,9 +1648,9 @@ op_address_size ENDP
         public op_data_size
 
 op_data_size    PROC near
-        mov ebx,ds:root_tab
-        mov ds:op_syntax,ebx
-        xor ds:em_flags,d32
+        mov ebx,ds:[ebp].root_tab
+        mov ds:[ebp].op_syntax,ebx
+        xor ds:[ebp].em_flags,d32
         inc esi
         mov al,[esi]
         movzx eax,al
@@ -1647,8 +1661,8 @@ op_data_size    ENDP
         public op_wait
 
 op_wait PROC near
-        mov ebx,ds:root_tab
-        mov ds:op_syntax,ebx
+        mov ebx,ds:[ebp].root_tab
+        mov ds:[ebp].op_syntax,ebx
         inc esi
         mov al,[esi]
         movzx eax,al
@@ -1659,8 +1673,8 @@ op_wait ENDP
         public op_rep
 
 op_rep  PROC near
-        mov ebx,ds:root_tab
-        mov ds:op_syntax,ebx
+        mov ebx,ds:[ebp].root_tab
+        mov ds:[ebp].op_syntax,ebx
         inc esi
         mov al,[esi]
         movzx eax,al
@@ -1676,16 +1690,16 @@ op_rep  ENDP
         public op_string2b
 
 op_string2b     PROC near
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_stringb64
 ;        
-        test ds:em_flags,a32
+        test ds:[ebp].em_flags,a32
         jz op_stringb16
 
 op_stringb32:
         mov eax,6
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov ds:[ebp].data_sel,OFFSET ds_txt
         add_mne b_txt, blank_sep
         add_mne es_txt, kolon_par_sep
         add_mne edi_txt, par_komma_sep
@@ -1696,7 +1710,7 @@ op_stringb32:
 op_stringb16:
         mov eax,4
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov ds:[ebp].data_sel,OFFSET ds_txt
         add_mne b_txt, blank_sep
         add_mne es_txt, kolon_par_sep
         add_mne di_txt, par_komma_sep
@@ -1707,7 +1721,7 @@ op_stringb16:
 op_stringb64:
         mov eax,6
         call long_calc_ads_offset
-        mov ds:data_sel,OFFSET noseg_txt
+        mov ds:[ebp].data_sel,OFFSET noseg_txt
         add_mne b_txt, blank_sep
         add_mne noseg_txt, lhak_sep
         add_mne rdi_txt, par_komma_sep
@@ -1719,19 +1733,19 @@ op_string2b     ENDP
         public op_string2w
 
 op_string2w     PROC near
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jnz op_string2d
 ;
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_string2w64
 ;        
-        test ds:em_flags,a32
+        test ds:[ebp].em_flags,a32
         jz op_string2w16
 
 op_string2w32:
         mov eax,6
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov ds:[ebp].data_sel,OFFSET ds_txt
         add_mne w_txt, blank_sep
         add_mne es_txt, kolon_par_sep
         add_mne edi_txt, par_komma_sep
@@ -1742,7 +1756,7 @@ op_string2w32:
 op_string2w16:
         mov eax,4
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov ds:[ebp].data_sel,OFFSET ds_txt
         add_mne w_txt, blank_sep
         add_mne es_txt, kolon_par_sep
         add_mne di_txt, par_komma_sep
@@ -1753,7 +1767,7 @@ op_string2w16:
 op_string2w64:
         mov eax,6
         call long_calc_ads_offset
-        mov ds:data_sel,OFFSET noseg_txt
+        mov ds:[ebp].data_sel,OFFSET noseg_txt
         add_mne w_txt, blank_sep
         add_mne noseg_txt, lhak_sep
         add_mne rdi_txt, par_komma_sep
@@ -1762,16 +1776,16 @@ op_string2w64:
         ret
 
 op_string2d:
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_string2d64
 ;
-        test ds:em_flags,a32
+        test ds:[ebp].em_flags,a32
         jz op_string2d16
 
 op_string2d32:
         mov eax,6
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov ds:[ebp].data_sel,OFFSET ds_txt
         add_mne d_txt, blank_sep
         add_mne es_txt, kolon_par_sep
         add_mne edi_txt, par_komma_sep
@@ -1782,7 +1796,7 @@ op_string2d32:
 op_string2d16:
         mov eax,4
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov ds:[ebp].data_sel,OFFSET ds_txt
         add_mne d_txt, blank_sep
         add_mne es_txt, kolon_par_sep
         add_mne di_txt, par_komma_sep
@@ -1793,7 +1807,7 @@ op_string2d16:
 op_string2d64:
         mov eax,6
         call long_calc_ads_offset
-        mov ds:data_sel,OFFSET noseg_txt
+        mov ds:[ebp].data_sel,OFFSET noseg_txt
         add_mne d_txt, blank_sep
         add_mne noseg_txt, rhak_sep
         add_mne rdi_txt, par_komma_sep
@@ -1805,7 +1819,7 @@ op_string2w     ENDP
         public op_lodsb
 
 op_lodsb     PROC near
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_lodsb64
 ;
         test al,1
@@ -1814,7 +1828,7 @@ op_lodsb     PROC near
 op_lodsb32:
         mov eax,6
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov ds:[ebp].data_sel,OFFSET ds_txt
         add_mne b_txt, blank_sep
         add_mne ds_txt, kolon_par_sep
         add_mne esi_txt, rhak_sep
@@ -1823,7 +1837,7 @@ op_lodsb32:
 op_lodsb16:
         mov eax,4
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov ds:[ebp].data_sel,OFFSET ds_txt
         add_mne b_txt, blank_sep
         add_mne ds_txt, kolon_par_sep
         add_mne si_txt, rhak_sep
@@ -1832,7 +1846,7 @@ op_lodsb16:
 op_lodsb64:
         mov eax,6
         call long_calc_ads_offset
-        mov ds:data_sel,OFFSET noseg_txt
+        mov ds:[ebp].data_sel,OFFSET noseg_txt
         add_mne b_txt, blank_sep
         add_mne noseg_txt, lhak_sep
         add_mne rsi_txt, rhak_sep
@@ -1842,10 +1856,10 @@ op_lodsb     ENDP
         public op_lodsw
 
 op_lodsw     PROC near
-        test ds:em_flags,a32
+        test ds:[ebp].em_flags,a32
         jnz op_lodsd
 ;
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_lodsw64
 ;        
         test al,1
@@ -1854,7 +1868,7 @@ op_lodsw     PROC near
 op_lodsw32:
         mov eax,6
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov ds:[ebp].data_sel,OFFSET ds_txt
         add_mne w_txt, blank_sep
         add_mne ds_txt, kolon_par_sep
         add_mne esi_txt, rhak_sep
@@ -1863,7 +1877,7 @@ op_lodsw32:
 op_lodsw16:
         mov eax,4
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov ds:[ebp].data_sel,OFFSET ds_txt
         add_mne w_txt, blank_sep
         add_mne ds_txt, kolon_par_sep
         add_mne si_txt, rhak_sep
@@ -1872,14 +1886,14 @@ op_lodsw16:
 op_lodsw64:
         mov eax,6
         call long_calc_ads_offset
-        mov ds:data_sel,OFFSET noseg_txt
+        mov ds:[ebp].data_sel,OFFSET noseg_txt
         add_mne w_txt, blank_sep
         add_mne noseg_txt, rhak_sep
         add_mne rsi_txt, rhak_sep
         ret
 
 op_lodsd:
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_lodsd64
 ;
         test al,1
@@ -1888,7 +1902,7 @@ op_lodsd:
 op_lodsd32:
         mov eax,6
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov ds:[ebp].data_sel,OFFSET ds_txt
         add_mne d_txt, blank_sep
         add_mne ds_txt, kolon_par_sep
         add_mne esi_txt, rhak_sep
@@ -1897,19 +1911,19 @@ op_lodsd32:
 op_lodsd16:
         mov eax,6
         call calc_ads_offset
-        mov ds:data_sel,OFFSET ds_txt
+        mov ds:[ebp].data_sel,OFFSET ds_txt
         add_mne d_txt, blank_sep
         add_mne ds_txt, kolon_par_sep
         add_mne si_txt, rhak_sep
         ret     
 
 op_lodsd64:
-        test ds:op_rex,8
+        test ds:[ebp].op_rex,8
         jnz op_lodsq64
 ;        
         mov eax,6
         call long_calc_ads_offset
-        mov ds:data_sel,OFFSET noseg_txt
+        mov ds:[ebp].data_sel,OFFSET noseg_txt
         add_mne d_txt, blank_sep
         add_mne noseg_txt, lhak_sep
         add_mne rsi_txt, rhak_sep
@@ -1918,7 +1932,7 @@ op_lodsd64:
 op_lodsq64:        
         mov eax,6
         call long_calc_ads_offset
-        mov ds:data_sel,OFFSET noseg_txt
+        mov ds:[ebp].data_sel,OFFSET noseg_txt
         add_mne q_txt, blank_sep
         add_mne noseg_txt, lhak_sep
         add_mne rsi_txt, rhak_sep
@@ -1928,16 +1942,16 @@ op_lodsw     ENDP
         public op_string1b
 
 op_string1b     PROC near
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_string1b64
 ;        
-        test ds:em_flags,a32
+        test ds:[ebp].em_flags,a32
         jz op_string1b16
 
 op_string1b32:
         mov eax,7
         call calc_ads_offset
-        mov ds:data_sel,OFFSET es_txt
+        mov ds:[ebp].data_sel,OFFSET es_txt
         add_mne b_txt, blank_sep
         add_mne es_txt, kolon_par_sep
         add_mne edi_txt, rhak_sep
@@ -1946,7 +1960,7 @@ op_string1b32:
 op_string1b16:
         mov eax,5
         call calc_ads_offset
-        mov ds:data_sel,OFFSET es_txt
+        mov ds:[ebp].data_sel,OFFSET es_txt
         add_mne b_txt, blank_sep
         add_mne es_txt, kolon_par_sep
         add_mne di_txt, rhak_sep
@@ -1955,7 +1969,7 @@ op_string1b16:
 op_string1b64:
         mov eax,7
         call long_calc_ads_offset
-        mov ds:data_sel,OFFSET noseg_txt
+        mov ds:[ebp].data_sel,OFFSET noseg_txt
         add_mne b_txt, blank_sep
         add_mne noseg_txt,lhak_sep
         add_mne rdi_txt, rhak_sep
@@ -1965,19 +1979,19 @@ op_string1b     ENDP
         public op_string1w
 
 op_string1w     PROC near
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jnz op_string1d
 ;
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_string1w64
 ;        
-        test ds:em_flags,a32
+        test ds:[ebp].em_flags,a32
         jz op_string1w16
 
 op_string1w32:
         mov eax,7
         call calc_ads_offset
-        mov ds:data_sel,OFFSET es_txt
+        mov ds:[ebp].data_sel,OFFSET es_txt
         add_mne w_txt, blank_sep
         add_mne es_txt, kolon_par_sep
         add_mne edi_txt, rhak_sep
@@ -1986,7 +2000,7 @@ op_string1w32:
 op_string1w16:
         mov eax,5
         call calc_ads_offset
-        mov ds:data_sel,OFFSET es_txt
+        mov ds:[ebp].data_sel,OFFSET es_txt
         add_mne w_txt, blank_sep
         add_mne es_txt, kolon_par_sep
         add_mne di_txt, rhak_sep
@@ -1995,23 +2009,23 @@ op_string1w16:
 op_string1w64:
         mov eax,7
         call long_calc_ads_offset
-        mov ds:data_sel,OFFSET noseg_txt
+        mov ds:[ebp].data_sel,OFFSET noseg_txt
         add_mne w_txt, blank_sep
         add_mne noseg_txt, lhak_sep
         add_mne rdi_txt, rhak_sep
         ret
         
 op_string1d:
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_string1d64
 ;
-        test ds:em_flags,a32
+        test ds:[ebp].em_flags,a32
         jz op_string1d16
 
 op_string1d32:
         mov eax,7
         call calc_ads_offset
-        mov ds:data_sel,OFFSET es_txt
+        mov ds:[ebp].data_sel,OFFSET es_txt
         add_mne d_txt, blank_sep
         add_mne es_txt, kolon_par_sep
         add_mne edi_txt, rhak_sep
@@ -2020,7 +2034,7 @@ op_string1d32:
 op_string1d16:
         mov eax,5
         call calc_ads_offset
-        mov ds:data_sel,OFFSET es_txt
+        mov ds:[ebp].data_sel,OFFSET es_txt
         add_mne d_txt, blank_sep
         add_mne es_txt, kolon_par_sep
         add_mne di_txt, rhak_sep
@@ -2029,7 +2043,7 @@ op_string1d16:
 op_string1d64:
         mov eax,7
         call long_calc_ads_offset
-        mov ds:data_sel,OFFSET noseg_txt
+        mov ds:[ebp].data_sel,OFFSET noseg_txt
         add_mne d_txt, blank_sep
         add_mne noseg_txt, lhak_sep
         add_mne rdi_txt, rhak_sep
@@ -2044,7 +2058,7 @@ op_string1w     ENDP
         public op_add_opsize
 
 op_add_opsize   PROC near
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jz op_add16
 op_add32:
         add_mne txt_32, blank_sep
@@ -2067,7 +2081,7 @@ op_word16       ENDP
         public op_math_reg
 
 op_math_reg     PROC near
-        mov ds:data_mode,data_16
+        mov ds:[ebp].data_mode,data_16
         call decode_math_mem
         ret
 op_math_reg     ENDP
@@ -2075,7 +2089,7 @@ op_math_reg     ENDP
         public opmr_mem8
 
 opmr_mem8       PROC near
-        mov ds:data_mode,data_8
+        mov ds:[ebp].data_mode,data_8
         call decode_mem_mode
         ret
 opmr_mem8       ENDP
@@ -2083,7 +2097,7 @@ opmr_mem8       ENDP
         public opmr_mem16
 
 opmr_mem16      PROC near
-        mov ds:data_mode,data_16
+        mov ds:[ebp].data_mode,data_16
         call decode_mem_mode
         ret
 opmr_mem16      ENDP
@@ -2091,7 +2105,7 @@ opmr_mem16      ENDP
         public opmr_mem2
 
 opmr_mem2       PROC near
-        mov ds:data_mode,data_8
+        mov ds:[ebp].data_mode,data_8
         inc esi
         call decode_mem_mode
         ret
@@ -2100,10 +2114,10 @@ opmr_mem2       ENDP
         public opmr_mem3
 
 opmr_mem3       PROC near
-        mov ds:data_mode,data_8
+        mov ds:[ebp].data_mode,data_8
         inc esi
         call decode_mem_mode
-        mov ds:edata_mode,data_48
+        mov ds:[ebp].edata_mode,data_48
         ret
 opmr_mem3       ENDP
 
@@ -2118,7 +2132,7 @@ op_mem_byte3    ENDP
         public opmr_mem_im8
 
 opmr_mem_im8    PROC near
-        mov ds:data_mode,data_8
+        mov ds:[ebp].data_mode,data_8
         call decode_mem_mode
         call add_komma_to_mem
         mov al,[esi+1]
@@ -2130,10 +2144,10 @@ opmr_mem_im8    ENDP
         public opmr_mem_im16
 
 opmr_mem_im16   PROC near
-        mov ds:data_mode,data_16
+        mov ds:[ebp].data_mode,data_16
         call decode_mem_mode
         call add_komma_to_mem
-        mov al,ds:edata_mode
+        mov al,ds:[ebp].edata_mode
         cmp al,data_32
         jne not_opmr32
         mov eax,[esi+1]
@@ -2150,10 +2164,10 @@ opmr_mem_im16   ENDP
         public opmr_mem_extend_im16
 
 opmr_mem_extend_im16    PROC near
-        mov ds:data_mode,data_16
+        mov ds:[ebp].data_mode,data_16
         call decode_mem_mode
         call add_komma_to_mem
-        mov al,ds:edata_mode
+        mov al,ds:[ebp].edata_mode
         cmp al,data_32
         jne not_eopmr32
         movzx eax,byte ptr [esi+1]
@@ -2170,7 +2184,7 @@ opmr_mem_extend_im16    ENDP
         public op_reg_mem_byte
 
 op_reg_mem_byte PROC near
-        mov ds:data_mode,data_8
+        mov ds:[ebp].data_mode,data_8
         mov al,[esi+1]
         call decode_reg
         mov eax,[edi-4]
@@ -2192,7 +2206,7 @@ op_reg_mem_byte2        ENDP
         public op_reg_mem_word
 
 op_reg_mem_word PROC near
-        mov ds:data_mode,data_16
+        mov ds:[ebp].data_mode,data_16
         mov al,[esi+1]
         call decode_reg
         mov eax,[edi-4]
@@ -2222,7 +2236,7 @@ op_reg_mem2_word        ENDP
         public op_mem_reg_byte
 
 op_mem_reg_byte PROC near
-        mov ds:data_mode,data_8
+        mov ds:[ebp].data_mode,data_8
         mov al,[esi+1]
         push ax
         call decode_mem_mode
@@ -2235,7 +2249,7 @@ op_mem_reg_byte ENDP
         public op_mem_reg_word
 
 op_mem_reg_word PROC near
-        mov ds:data_mode,data_16
+        mov ds:[ebp].data_mode,data_16
         mov al,[esi+1]
         push ax
         call decode_mem_mode
@@ -2257,7 +2271,7 @@ op_mem_reg2     ENDP
 
 mem_im8 PROC near
         movsx eax,byte ptr [esi+1]
-        add ds:data_offset,eax
+        add ds:[ebp].data_offset,eax
         test al,80h
         je mem_im8_pos
         neg eax
@@ -2285,7 +2299,7 @@ mem_im8 ENDP
 
 mem_im16        PROC near
         movsx eax,word ptr [esi+1]
-        add ds:data_offset,eax
+        add ds:[ebp].data_offset,eax
         test ax,8000h
         je mem_im16_pos
         neg eax
@@ -2313,7 +2327,7 @@ mem_im16        ENDP
 
 mem_im32        PROC near
         mov eax,[esi+1]
-        add ds:data_offset,eax
+        add ds:[ebp].data_offset,eax
         test eax,80000000h
         jz mem_im32_pos
         neg eax
@@ -2369,7 +2383,7 @@ add_sib_ads     PROC near
         shl eax,3
         mov ebx,eax
         call dword ptr cs:[ebx].adr_sib_tab
-        add ds:data_offset,eax
+        add ds:[ebp].data_offset,eax
         mov al,[esi]
         and al,38h
         shr al,3
@@ -2381,7 +2395,7 @@ add_sib_ads     PROC near
         and cl,0C0h
         shr cl,6
         shl eax,cl
-        add ds:data_offset,eax
+        add ds:[ebp].data_offset,eax
         ret
 add_sib_ads     ENDP
 
@@ -2411,7 +2425,7 @@ sib_n   DD OFFSET sib_d_none
 
 mem_sib PROC near
         mov eax,OFFSET mem_sib0_tab
-        mov ds:op_syntax,eax
+        mov ds:[ebp].op_syntax,eax
         mov ax,[esi]
 ; al = mod
 ; ah = sib-byte
@@ -2423,13 +2437,13 @@ mem_sib PROC near
         inc esi
         call decode_opcode
         mov eax,OFFSET sib_index_tab
-        mov ds:op_syntax,eax
+        mov ds:[ebp].op_syntax,eax
         mov al,[esi]
         and eax,38h
         shr eax,3
         call decode_opcode      
         mov eax,OFFSET sib_scale_tab
-        mov ds:op_syntax,eax
+        mov ds:[ebp].op_syntax,eax
         mov al,[esi]
         and eax,0C0h
         shr eax,6
@@ -2455,7 +2469,7 @@ long_add_sib_ads     PROC near
         shr ah,2
         or al,ah
 ;
-        test ds:op_rex,1
+        test ds:[ebp].op_rex,1
         jz long_sib0_ads_ok
 ;
         or ax,8        
@@ -2465,14 +2479,14 @@ long_sib0_ads_ok:
         shl ax,3
         mov ebx,eax
         call dword ptr cs:[ebx].long_adr_sib_tab
-        add ds:data_offset,eax
-        adc ds:data_offset+4,ebx
+        add ds:[ebp].data_offset,eax
+        adc ds:[ebp].data_offset+4,ebx
 ;
         mov al,[esi]
         and al,38h
         shr al,3
 ;
-        test ds:op_rex,2
+        test ds:[ebp].op_rex,2
         jz long_sibi_ads_ok
 ;
         or ax,8        
@@ -2486,8 +2500,8 @@ long_sibi_ads_ok:
         and cl,0C0h
         shr cl,6
         shl eax,cl
-        add ds:data_offset,eax
-        adc ds:data_offset+4,ebx
+        add ds:[ebp].data_offset,eax
+        adc ds:[ebp].data_offset+4,ebx
         ret
 long_add_sib_ads     ENDP
 
@@ -2497,7 +2511,7 @@ long_add_sib_ads     ENDP
 
 long_mem_sib PROC near
         mov eax,OFFSET long_mem_sib0_tab
-        mov ds:op_syntax,eax
+        mov ds:[ebp].op_syntax,eax
         mov ax,[esi]
 ; al = mod
 ; ah = sib-byte
@@ -2506,7 +2520,7 @@ long_mem_sib PROC near
         shr al,2
         or al,ah
 ;
-        test ds:op_rex,1
+        test ds:[ebp].op_rex,1
         jz long_sib0_ok
 ;
         or ax,8        
@@ -2517,12 +2531,12 @@ long_sib0_ok:
         call decode_opcode
 ;
         mov eax,OFFSET long_sib_index_tab
-        mov ds:op_syntax,eax
+        mov ds:[ebp].op_syntax,eax
         mov al,[esi]
         and eax,38h
         shr eax,3
 ;
-        test ds:op_rex,2
+        test ds:[ebp].op_rex,2
         jz long_sibi_ok
 ;
         or ax,8        
@@ -2530,7 +2544,7 @@ long_sib0_ok:
 long_sibi_ok:               
         call decode_opcode      
         mov eax,OFFSET sib_scale_tab
-        mov ds:op_syntax,eax
+        mov ds:[ebp].op_syntax,eax
         mov al,[esi]
         and eax,0C0h
         shr eax,6
@@ -2614,7 +2628,7 @@ error_next      PROC near
 error_next      ENDP
 
 null_next       PROC near
-        call dword ptr ds:op_syntax
+        call dword ptr ds:[ebp].op_syntax
         ret
 null_next       ENDP
 
@@ -2710,11 +2724,11 @@ mem_op_next             ENDP
         extrn r15_txt:near
 
 ax_next PROC near
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_r08
 
 op_axp:                
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jnz op_eax
 op_ax:
         mov eax,OFFSET ax_txt
@@ -2732,10 +2746,10 @@ op_eax:
         ret
 
 op_r08:
-        test ds:op_rex,1
+        test ds:[ebp].op_rex,1
         jnz op_r8
 ;        
-        test ds:op_rex,8
+        test ds:[ebp].op_rex,8
         jz op_axp
         
 op_rax:
@@ -2756,11 +2770,11 @@ op_r8:
 ax_next ENDP
 
 bx_next PROC near
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_r19
 
 op_bxp:        
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jnz op_ebx
 op_bx:
         mov eax,OFFSET bx_txt
@@ -2778,10 +2792,10 @@ op_ebx:
         ret
 
 op_r19:
-        test ds:op_rex,1
+        test ds:[ebp].op_rex,1
         jnz op_r9
 ;        
-        test ds:op_rex,8
+        test ds:[ebp].op_rex,8
         jz op_bxp
         
 op_rbx:
@@ -2802,11 +2816,11 @@ op_r9:
 bx_next ENDP
 
 cx_next PROC near
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_r210
 
 op_cxp:        
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jnz op_ecx
 op_cx:
         mov eax,OFFSET cx_txt
@@ -2824,10 +2838,10 @@ op_ecx:
         ret
 
 op_r210:
-        test ds:op_rex,1
+        test ds:[ebp].op_rex,1
         jnz op_r10
 ;        
-        test ds:op_rex,8
+        test ds:[ebp].op_rex,8
         jz op_cxp
         
 op_rcx:
@@ -2848,11 +2862,11 @@ op_r10:
 cx_next ENDP
 
 dx_next PROC near
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_r311
 
 op_dxp:        
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jnz op_edx
 op_dx:
         mov eax,OFFSET dx_txt
@@ -2870,10 +2884,10 @@ op_edx:
         ret
 
 op_r311:
-        test ds:op_rex,1
+        test ds:[ebp].op_rex,1
         jnz op_r11
 ;
-        test ds:op_rex,8
+        test ds:[ebp].op_rex,8
         jz op_dxp        
         
 op_rdx:
@@ -2894,11 +2908,11 @@ op_r11:
 dx_next ENDP
 
 sp_next PROC near
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_r412
 
 op_spp:        
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jnz op_esp
 op_sp:
         mov eax,OFFSET sp_txt
@@ -2916,10 +2930,10 @@ op_esp:
         ret
 
 op_r412:
-        test ds:op_rex,1
+        test ds:[ebp].op_rex,1
         jnz op_r12
 ;
-        test ds:op_rex,8
+        test ds:[ebp].op_rex,8
         jz op_spp        
 
 op_rsp:
@@ -2940,11 +2954,11 @@ op_r12:
 sp_next ENDP
 
 bp_next PROC near
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_r513
 
 op_bpp:        
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jnz op_ebp
 op_bp:
         mov eax,OFFSET bp_txt
@@ -2962,10 +2976,10 @@ op_ebp:
         ret
 
 op_r513:
-        test ds:op_rex,1
+        test ds:[ebp].op_rex,1
         jnz op_r13
 ;
-        test ds:op_rex,8
+        test ds:[ebp].op_rex,8
         jz op_bpp        
         
 op_rbp:
@@ -2986,11 +3000,11 @@ op_r13:
 bp_next ENDP
 
 si_next PROC near
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_r614
 
 op_sip:        
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jnz op_esi
 op_si:
         mov eax,OFFSET si_txt
@@ -3008,10 +3022,10 @@ op_esi:
         ret
 
 op_r614:
-        test ds:op_rex,1
+        test ds:[ebp].op_rex,1
         jnz op_r14
 ;
-        test ds:op_rex,8
+        test ds:[ebp].op_rex,8
         jz op_sip        
         
 op_rsi:
@@ -3032,11 +3046,11 @@ op_r14:
 si_next ENDP
 
 di_next PROC near
-        test ds:em_flags,l64
+        test ds:[ebp].em_flags,l64
         jnz op_r715
 
 op_dip:        
-        test ds:em_flags,d32
+        test ds:[ebp].em_flags,d32
         jnz op_edi
 op_di:
         mov eax,OFFSET di_txt
@@ -3054,10 +3068,10 @@ op_edi:
         ret
 
 op_r715:
-        test ds:op_rex,1
+        test ds:[ebp].op_rex,1
         jnz op_r15
 ;
-        test ds:op_rex,8
+        test ds:[ebp].op_rex,8
         jz op_dip
 
 op_rdi:
@@ -3175,7 +3189,7 @@ decode_opcode   PROC near
         add ebx,ebx
         add ebx,op_syntax
         mov eax,cs:[ebx]
-        mov ds:op_syntax,eax
+        mov ds:[ebp].op_syntax,eax
         add ebx,4
         mov eax,cs:[ebx]
         mov [edi],eax
@@ -3218,7 +3232,7 @@ move_mne_loop:
 move_mne_not_end:
         cmp al,' '
         jne move_mne_ok
-        mov ah,ds:ignore_ptr
+        mov ah,ds:[ebp].ignore_ptr
         or ah,ah
         je move_mne_ok
         mov ah,cs:[ebx]
@@ -3252,7 +3266,7 @@ move_mne_to_buf ENDP
 
 put_opcode_in_text      PROC near
         mov esi,OFFSET op_codes
-        lea edi,ds:opcode_text
+        lea edi,ds:[ebp].opcode_text
 wr_op_next:
         mov eax,[esi]
         cmp eax,0FFFFFFFFh
@@ -3262,7 +3276,7 @@ wr_op_next:
         add ebx,OFFSET mne_tab
         cmp ebx,OFFSET word_ptr_txt
         jne not_put_dwptr
-        mov al,ds:edata_mode
+        mov al,ds:[ebp].edata_mode
         cmp al,data_32
         jne not_put_dwptr
         mov ebx,OFFSET dword_ptr_txt
@@ -3272,15 +3286,15 @@ not_put_dwptr:
         cmp ebx,OFFSET ss_txt
         jne not_seg_reg
 seg_reg_ov:
-        mov ds:data_sel,ebx
+        mov ds:[ebp].data_sel,ebx
         mov ecx,override
         or ecx,ecx
         jz not_seg_reg
         cmp ecx,0FFFFFFFFh
         jz not_seg_reg
         mov ebx,ecx
-        mov ds:override,0FFFFFFFFh
-        mov ds:data_sel,ebx
+        mov ds:[ebp].override,0FFFFFFFFh
+        mov ds:[ebp].data_sel,ebx
 not_seg_reg:
         call move_mne_to_buf
         add esi,4
@@ -3336,43 +3350,43 @@ put_opcode_in_text      ENDP
 
 
 decode_data_sel PROC near
-        mov eax,ds:data_sel
+        mov eax,ds:[ebp].data_sel
         cmp eax,OFFSET ds_txt
         jnz not_ds_ads
-        movzx eax,ds:reg_ds.d_selector
-        mov ds:data_sel,eax
+        movzx eax,ds:[ebp].reg_ds.d_selector
+        mov ds:[ebp].data_sel,eax
         ret
-not_ds_ads:
+not_ds_ads:[ebp].
         cmp eax,OFFSET ss_txt
         jnz not_ss_ads
-        movzx eax,ds:reg_ss.d_selector
-        mov ds:data_sel,eax
+        movzx eax,ds:[ebp].reg_ss.d_selector
+        mov ds:[ebp].data_sel,eax
         ret
-not_ss_ads:
+not_ss_ads:[ebp].
         cmp eax,OFFSET cs_txt
         jnz not_cs_ads
-        movzx eax,ds:reg_cs.d_selector
-        mov ds:data_sel,eax
+        movzx eax,ds:[ebp].reg_cs.d_selector
+        mov ds:[ebp].data_sel,eax
         ret
-not_cs_ads:
+not_cs_ads:[ebp].
         cmp eax,OFFSET es_txt
         jnz not_es_ads
-        movzx eax,ds:reg_es.d_selector
-        mov ds:data_sel,eax
+        movzx eax,ds:[ebp].reg_es.d_selector
+        mov ds:[ebp].data_sel,eax
         ret
-not_es_ads:
+not_es_ads:[ebp].
         cmp eax,OFFSET fs_txt
         jnz not_fs_ads
-        movzx eax,ds:reg_fs.d_selector
-        mov ds:data_sel,eax
+        movzx eax,ds:[ebp].reg_fs.d_selector
+        mov ds:[ebp].data_sel,eax
         ret
-not_fs_ads:
+not_fs_ads:[ebp].
         cmp eax,OFFSET gs_txt
         jnz not_gs_ads
-        movzx eax,ds:reg_gs.d_selector
-        mov ds:data_sel,eax
+        movzx eax,ds:[ebp].reg_gs.d_selector
+        mov ds:[ebp].data_sel,eax
         ret
-not_gs_ads:
+not_gs_ads:[ebp].
         ret
 decode_data_sel ENDP
 
@@ -3383,8 +3397,8 @@ decode_data_sel ENDP
 ;
 ;               DESCRIPTION:    Disassemble code cache entry
 ;
-;               PARAMETERS:     CPU
-;                               Code size (0 = 16, 1 = 32, 2 = 64)
+;               PARAMETERS:     DS:EBP    Cpu
+;                               EDX       Code size (0 = 16, 1 = 32, 2 = 64)
 ;
 ;               RETURNS:        Instruction size
 ;
@@ -3393,40 +3407,29 @@ decode_data_sel ENDP
         public _DisAsmCodeCache
 
 _DisAsmCodeCache     PROC near
-        push ebp
-        mov ebp,esp
         push ebx
         push ecx
         push edx
         push esi
         push edi
 ;
-        mov edx,[ebp+12]
-        mov ebp,[ebp+8]        
-;
-        lea esi,ds:code_cache
-        mov ecx,10h
-        mov edi,OFFSET op_in_code
-        rep movsb
-;
-        mov ebx,OFFSET main_tab
-        mov esi,OFFSET op_in_code
+        lea esi,ds:[ebp].code_cache
         mov al,[esi]
         movzx eax,al
         mov edi,OFFSET op_codes
-        mov ds:em_flags,0
+        mov ds:[ebp].em_flags,0
         or dl,dl
         jz dis_ass_code_ok
 ;        
         cmp dl,1
         jne dis_ass_code64
 ;        
-        mov ds:em_flags,a32 OR d32
+        mov ds:[ebp].em_flags,a32 OR d32
         jmp dis_ass_code_ok
 
 dis_ass_code64:
-        mov ds:op_rex,0
-        mov ds:em_flags,l64 OR d32
+        mov ds:[ebp].op_rex,0
+        mov ds:[ebp].em_flags,l64 OR d32
         mov ebx,OFFSET long_main_tab
         mov al,[esi]
         cmp al,50h
@@ -3435,18 +3438,18 @@ dis_ass_code64:
         cmp al,60h
         jae dis_ass_code_ok
 ;
-        mov ds:op_rex,8
+        mov ds:[ebp].op_rex,8
                 
 dis_ass_code_ok:
-        mov ds:op_syntax,ebx
-        mov ds:root_tab,ebx
+        mov ds:[ebp].op_syntax,ebx
+        mov ds:[ebp].root_tab,ebx
 ;
-        mov ds:ignore_ptr,0
-        mov ds:override,0
-        mov ds:data_sel,0
-        mov ds:data_offset,0
-        mov ds:data_offset+4,0
-        mov ds:data_valid,0
+        mov ds:[ebp].ignore_ptr,0
+        mov ds:[ebp].override,0
+        mov ds:[ebp].data_sel,0
+        mov ds:[ebp].data_offset,0
+        mov ds:[ebp].data_offset+4,0
+        mov ds:[ebp].data_valid,0
 ;
 ; esi = opcode
 ; edi = resultat
@@ -3458,7 +3461,8 @@ dis_ass_code_ok:
         call put_opcode_in_text
         call decode_data_sel
         pop ecx
-        sub ecx,OFFSET op_in_code
+        lea eax,ds:[ebp].code_cache        
+        sub ecx,eax
         inc ecx
         mov eax,ecx
 ;        
@@ -3467,8 +3471,7 @@ dis_ass_code_ok:
         pop edx
         pop ecx
         pop ebx
-        pop ebp
-        ret 8
+        ret
 _DisAsmCodeCache     ENDP
 
 code ENDS
