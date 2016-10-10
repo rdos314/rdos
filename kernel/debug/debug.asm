@@ -32,11 +32,20 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\system.def
+INCLUDE dis.inc
 
 .386p
 .387
 
+data    SEGMENT byte public 'DATA'
+
+cpu cpu_struc <>
+
+data    ENDS
+
 code    SEGMENT byte use32 public 'CODE'
+
+    extrn DisAsmCode:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -56,6 +65,17 @@ debug_process:
     mov ax,41h
     EnableFocus
     int 3
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ax
+    mov ebp,OFFSET cpu
+    mov dl,1
+    lea edi,ds:[ebp].code_cache
+    mov esi,OFFSET debug_process
+    mov ecx,32
+    rep movs es:[edi],cs:[esi]
+    call DisAsmCode
 
 marker_loop:
     mov ax,250

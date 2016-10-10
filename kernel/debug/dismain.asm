@@ -3187,7 +3187,7 @@ decode_opcode   PROC near
         add ebx,eax
         add ebx,ebx
         add ebx,ebx
-        add ebx,op_syntax
+        add ebx,ds:[ebp].op_syntax
         mov eax,cs:[ebx]
         mov ds:[ebp].op_syntax,eax
         add ebx,4
@@ -3393,20 +3393,20 @@ decode_data_sel ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           DisAsmCodeCache
+;               NAME:           DisAsmCode
 ;
-;               DESCRIPTION:    Disassemble code cache entry
+;               DESCRIPTION:    Disassemble code
 ;
 ;               PARAMETERS:     DS:EBP    Cpu
-;                               EDX       Code size (0 = 16, 1 = 32, 2 = 64)
+;                               DL        Code size (0 = 16, 1 = 32, 2 = 64)
 ;
 ;               RETURNS:        Instruction size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-        public _DisAsmCodeCache
+        public DisAsmCode
 
-_DisAsmCodeCache     PROC near
+DisAsmCode     PROC near
         push ebx
         push ecx
         push edx
@@ -3414,6 +3414,7 @@ _DisAsmCodeCache     PROC near
         push edi
 ;
         lea esi,ds:[ebp].code_cache
+        mov ebx,OFFSET main_tab
         mov al,[esi]
         movzx eax,al
         mov edi,OFFSET op_codes
@@ -3472,7 +3473,7 @@ dis_ass_code_ok:
         pop ecx
         pop ebx
         ret
-_DisAsmCodeCache     ENDP
+DisAsmCode     ENDP
 
 code ENDS
 
