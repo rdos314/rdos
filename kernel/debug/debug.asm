@@ -53,6 +53,333 @@ code    SEGMENT byte use32 public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddNewLine
+;
+;           DESCRIPTION:    ES:EDI  Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddNewLine Proc near
+    push eax
+;    
+    mov al,13
+    stosb
+;    
+    mov al,10
+    stosb
+;
+    pop ax
+    ret
+AddNewLine Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddBlank
+;
+;           DESCRIPTION:    Add blanks
+;
+;           PARAMETERS:     ES:EDI       Buffer
+;                           ECX          Number of blanks to write
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddBlanks   Proc near
+    push eax
+    push ecx
+;
+    mov al,' '
+    rep stosb
+;
+    pop ecx
+    pop eax
+    ret
+AddBlanks   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddDelimiter
+;
+;           DESCRIPTION:    Add delimiter
+;  
+;           PARAMETERS:     ES:EDI       Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddDelimiter       Proc near
+    push eax
+    push ecx
+;    
+    mov ecx,60
+    mov al,'-'
+    rep stosb
+;
+    mov ecx,19
+    call AddBlanks
+;
+    call AddNewLine    
+; 
+    pop ecx   
+    pop eax
+    ret
+AddDelimiter       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ToHex
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     AL          Number
+;
+;           RETURNS:        AX          Result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ToHex      PROC near
+
+hex_conv_low:
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;    
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+ToHex      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddHexByte
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     ES:EDI       Buffer
+;                           AL          Byte to write
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddHexByte    PROC near
+    push eax
+;    
+    mov ah,al
+    and al,0F0h
+    rol al,4
+    cmp al,0Ah
+    jb add_byte_low1
+;    
+    add al,7
+
+add_byte_low1:
+    add al,'0'
+    stosb
+;
+    mov al,ah
+    and al,0Fh
+    cmp al,0Ah
+    jb add_byte_high1
+;
+    add al,7
+
+add_byte_high1:
+    add al,'0'
+    stosb
+;
+    pop eax
+    ret
+AddHexByte    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddHexWord
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     ES:EDI       Buffer
+;                           AX           Word to write
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddHexWord    PROC near
+    xchg al,ah
+    call AddHexByte
+    xchg al,ah
+    call AddHexByte
+    ret
+AddHexWord    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddHexDword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     ES:EDI      Buffer
+;                           EAX         Dword to write
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddHexDword   PROC near
+    rol eax,8
+    call AddHexByte
+    rol eax,8
+    call AddHexByte
+    rol eax,8
+    call AddHexByte
+    rol eax,8
+    call AddHexByte
+    ret
+AddHexDword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddHexQword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     ES:EDI      Buffer
+;                           EDX:EAX     Dword to write
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddHexQword   PROC near
+    push eax
+;    
+    push eax
+    mov eax,edx
+    rol eax,8
+    call AddHexByte
+    rol eax,8
+    call AddHexByte
+    rol eax,8
+    call AddHexByte
+    rol eax,8
+    call AddHexByte
+;
+    mov al,'_'
+    stosb
+;
+    pop eax
+;    
+    rol eax,8
+    call AddHexByte
+    rol eax,8
+    call AddHexByte
+    rol eax,8
+    call AddHexByte
+    rol eax,8
+    call AddHexByte
+;
+    pop eax    
+    ret
+AddHexQword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddHexPtr16
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     ES:EDI      Buffer
+;                           DX          Segment
+;                           BX          Offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddHexPtr16   PROC near
+    push ax
+    mov ax,dx
+    call AddHexWord
+;    
+    mov al,':'
+    stosb
+;
+    mov ax,bx
+    call AddHexWord
+    pop ax
+    ret
+AddHexPtr16   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddHexPtr32
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     ES:EDI      Buffer
+;                           DX          Segment
+;                           EBX         Offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddHexPtr32   PROC near
+    push eax
+    mov ax,dx
+    call AddHexWord
+;    
+    mov al,':'
+    stosb
+;
+    mov eax,ebx
+    call AddHexDword
+    pop eax
+    ret
+AddHexPtr32   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddHexPtr64
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DX          High offset
+;                           EBX         Offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddHexPtr64   PROC near
+    push eax
+;    
+    mov ax,dx
+    call AddHexWord
+;
+    mov al,'_'
+    stosb
+;    
+    mov eax,ebx
+    call AddHexDword
+;
+    pop eax
+    ret
+AddHexPtr64   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Read_mem
 ;
 ;           DESCRIPTION:    Read memory in process
@@ -195,11 +522,7 @@ dis_next:
 marker_loop:
     mov ax,250
     WaitMilliSec
-    jmp marker_loop
-
-    HookInitTasking
-    jmp marker_loop
-    
+    jmp marker_loop    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
