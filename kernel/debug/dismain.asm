@@ -28,6 +28,10 @@
 .386
 
 include dis.inc
+include ..\os\gate.def
+include ..\driver.def
+include ..\os.def
+include ..\user.def
 
 code    SEGMENT byte use32 public 'CODE'
 
@@ -3390,6 +3394,452 @@ not_gs_ads:[ebp].
         ret
 decode_data_sel ENDP
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       GetIllegalOsGate
+;
+;       DESCRIPTION:    Get illegal OS gate name
+;
+;       PARAMETERS:     ES:EDI       Name buffer
+;                       ECX          Buffer size
+;                       BX           Gate #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+GetIllegalOsGate    PROC near
+    push ds
+    push fs
+;    
+    mov ax,osgate_sel
+    mov ds,ax
+    mov fs,[bx].os_gate_name_sel
+    mov esi,[bx].os_gate_name_offset
+
+illegal_out_os_loop:
+    mov al,fs:[esi]
+    or al,al
+    je illegal_out_os_ok
+;
+    stosb
+    inc esi
+    loop illegal_out_os_loop
+
+illegal_out_os_ok:
+    xor al,al
+    stosb
+;    
+    pop fs
+    pop ds
+    ret
+GetIllegalOsGate    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetIllegalUserGate
+;
+;       DESCRIPTION:    Get illegal user gate name
+;
+;       PARAMETERS:     ES:EDI       Name buffer
+;                       ECX          Buffer size
+;                       BX           Gate #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+GetIllegalUserGate      PROC near
+    push ds
+    push fs
+;    
+    mov ax,usergate_sel
+    mov ds,ax
+    mov fs,[bx].user_gate_name_sel
+    mov esi,[bx].user_gate_name_offset
+    
+illegal_out_user_loop:
+    mov al,fs:[esi]
+    or al,al
+    je illegal_out_user_ok
+;
+    stosb
+    inc esi
+    loop illegal_out_user_loop
+
+illegal_out_user_ok:
+    xor al,al
+    stosb
+;
+    pop fs
+    pop ds
+    ret
+GetIllegalUserGate      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       GetOsCall
+;
+;       DESCRIPTION:    Get OS call gate name
+;
+;       PARAMETERS:     ES:EDI       Name buffer
+;                       ECX          Buffer size
+;                       DX:EBX       Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+GetOsCall       PROC near
+    push ds
+    push fs
+    push esi
+;
+    push ecx
+    mov ax,osgate_sel
+    mov ds,ax
+    xor si,si
+    mov ecx,osgate_entries
+
+get_oscall_scan_loop:
+    cmp dx,ds:[si].os_gate_sel
+    jne get_oscall_scan_next
+;
+    cmp ebx,ds:[si].os_gate_offset
+    je get_oscall_found
+
+get_oscall_scan_next:
+    add si,8
+    loop get_oscall_scan_loop
+;
+    pop ecx
+    jmp get_oscall_error
+
+get_oscall_found:
+    pop ecx
+    mov fs,[si].os_gate_name_sel
+    mov esi,[si].os_gate_name_offset
+
+get_oscall_out_loop:
+    mov al,fs:[esi]
+    or al,al
+    je get_oscall_out_ok
+;
+    stosb
+    inc esi
+    loop get_oscall_out_loop
+
+get_oscall_out_ok:
+    xor al,al
+    stosb
+    clc
+    jmp get_oscall_end
+
+get_oscall_error:
+    stc
+
+get_oscall_end:
+    pop esi
+    pop fs
+    pop ds
+    ret
+GetOsCall       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       GetUserCall
+;
+;       DESCRIPTION:    Get user gate name
+;
+;       PARAMETERS:     ES:EDI       Name buffer
+;                       ECX          Buffer size
+;                       DX:EBX       Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+GetUserCall     PROC near
+    push ds
+    push fs
+    push esi
+;
+    push ecx
+    mov ax,usergate_sel
+    mov ds,ax
+    xor si,si
+    mov ecx,usergate_entries
+
+get_usercall_scan_loop:
+    cmp dx,ds:[si].user_gate_entry_sel16
+    jne get_usercall_not_entry16
+;
+    cmp ebx,ds:[si].user_gate_entry_offset16
+    je get_usercall_found
+
+get_usercall_not_entry16:
+    cmp dx,ds:[si].user_gate_entry_sel32
+    jne get_usercall_not_entry32
+;
+    cmp ebx,ds:[si].user_gate_entry_offset32
+    je get_usercall_found
+
+get_usercall_not_entry32:
+    cmp dx,ds:[si].user_gate_sel16
+    je get_usercall_found
+;
+    cmp dx,ds:[si].user_gate_sel32
+    je get_usercall_found
+;
+    add esi,1 SHL USER_GATE_SHIFT
+    loop get_usercall_scan_loop
+;
+    pop ecx
+    jmp short get_usercall_error
+
+get_usercall_found:
+    pop ecx
+    mov fs,[si].user_gate_name_sel
+    mov esi,[si].user_gate_name_offset
+
+get_usercall_out_loop:
+    mov al,fs:[esi]
+    or al,al
+    je get_usercall_out_ok
+;
+    stosb
+    inc esi
+    loop get_usercall_out_loop
+
+get_usercall_out_ok:
+    xor al,al
+    stosb
+    clc
+    jmp get_usercall_end
+
+get_usercall_error:
+    stc
+
+get_usercall_end:
+    pop esi
+    pop fs
+    pop ds
+    ret
+GetUserCall     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           CheckGate
+;
+;               DESCRIPTION:    Check for call gate
+;
+;               PARAMETERS:     DS:EBP    Cpu
+;                               ESI       Instruction data
+;
+;               RETURNS:        EAX       Instruction size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckGate   Proc near
+    push ebx
+    push ecx
+    push edx
+    push edi
+;    
+    push esi
+;    
+    test word ptr ds:[ebp].reg_eflags+2,2
+    jnz check_fail
+;
+    test ds:[ebp].reg_cs.d_access,ACCESS_64
+    jnz check_fail
+;
+    xor edx,edx
+    test ds:[ebp].reg_cs.d_access,ACCESS_32
+    jz check_size_ok
+;    
+    mov dl,1
+
+check_size_ok:
+
+remove_ov_loop:
+    mov al,[esi]
+    cmp al,66h
+    je remove_ads16
+;
+    cmp al,3Eh
+    je remove_ov_one
+;
+    cmp al,90h
+    je remove_ov_one
+;
+    cmp al,67h
+    jne remove_ov_done
+
+remove_ov_one:    
+    inc dh
+    inc esi
+    jmp remove_ov_loop
+
+remove_ads16:
+    inc dh
+    inc esi
+    xor dl,1
+    jmp remove_ov_loop
+
+remove_ov_done:
+    mov al,[esi]
+    cmp al,9Ah
+    jne not_call_far
+;
+    test dl,1
+    jz write_call_far16
+;
+    mov dx,[esi+5]
+    cmp dx,2
+    je oscall
+;        
+    cmp dx,3
+    je usercall_32
+;
+    cmp dx,1
+    jne not_call32
+
+usercall_32:
+    mov eax,[esi+1]
+    cmp eax,usergate_entries
+    jnc check_fail
+;
+    add esi,6
+    shl eax,5
+    mov ebx,eax
+    lea edi,[ebp].opcode_text
+    mov ecx,40
+    call GetIllegalUserGate
+    clc
+    jmp check_done
+
+oscall:
+    mov eax,[esi+1]
+    cmp eax,osgate_entries
+    jnc check_fail
+;
+    add esi,6
+    shl eax,4
+    mov ebx,eax
+    lea edi,[ebp].opcode_text
+    mov ecx,40
+    call GetIllegalOsGate
+    clc
+    jmp check_done
+    
+not_call32:
+    mov ebx,[esi+1]
+    mov dx,[esi+5]
+    add esi,7    
+    lea edi,[ebp].opcode_text
+    mov ecx,40
+    call GetOsCall
+    jnc check_done
+
+not_call32_user:
+    sub esi,7
+    mov ebx,[esi+1]
+    mov dx,[esi+5]
+    add esi,7
+    lea edi,[ebp].opcode_text
+    mov ecx,40
+    call GetUserCall
+    jmp check_done
+
+write_call_far16:
+    movzx ebx,word ptr [esi+1]
+    mov dx,[esi+3]
+    add esi,5
+    lea edi,[ebp].opcode_text
+    mov ecx,40
+    call GetOsCall
+    jnc check_done
+
+call_far16_user:
+    sub esi,5
+    movzx ebx,word ptr [esi+1]
+    mov dx,[esi+3]
+    add esi,5
+    lea edi,[ebp].opcode_text
+    mov ecx,40
+    call GetUserCall
+    jmp check_done
+
+not_call_far:
+    cmp al,0E8h
+    jne check_fail
+;
+    test dl,1
+    jz write_call_near16
+;
+    inc esi
+    inc dh    
+    movzx ebx,dh
+    add ebx,[esi]
+    add ebx,ds:[ebp].reg_eip
+    add ebx,4
+;
+    add esi,4
+    push ebx
+    mov dx,ds:[ebp].reg_cs.d_selector
+    lea edi,[ebp].opcode_text
+    mov ecx,40
+    call GetOsCall
+    pop ebx
+    jnc check_done
+;
+    mov dx,ds:[ebp].reg_cs.d_selector
+    lea edi,[ebp].opcode_text
+    mov ecx,40
+    call GetUserCall
+    jmp check_done
+    
+write_call_near16:
+    inc esi
+    inc dh
+    movzx ebx,dh
+    add bx,[esi]
+    add bx,word ptr ds:[ebp].reg_eip
+    add bx,2
+    add esi,4
+;    
+    push ebx
+    mov dx,ds:[ebp].reg_cs.d_selector
+    lea edi,[ebp].opcode_text
+    mov ecx,40
+    call GetOsCall
+    pop ebx
+    jnc check_done
+;
+    mov dx,ds:[ebp].reg_cs.d_selector
+    lea edi,[ebp].opcode_text
+    mov ecx,40
+    call GetUserCall
+
+check_done:    
+    mov eax,esi
+    pop esi
+    pushf
+    sub eax,esi
+    popf
+    jmp check_ret
+
+check_fail:
+    stc
+    pop esi
+
+check_ret:
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+CheckGate  Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3476,6 +3926,9 @@ dacLongRead:
     mov ds:[ebp].op_rex,8
 
 dacStart:                
+    call CheckGate
+    jnc dacMove
+;    
     mov al,[esi]
     movzx eax,al
     lea edi,[ebp].op_codes
@@ -3504,7 +3957,8 @@ dacStart:
     sub ecx,eax
     inc ecx
     mov eax,ecx
-;        
+
+dacMove:        
     pop edi
     pop ecx
 ;
