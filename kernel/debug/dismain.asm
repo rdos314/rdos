@@ -3672,9 +3672,6 @@ remove_ov_loop:
     cmp al,3Eh
     je remove_ov_one
 ;
-    cmp al,90h
-    je remove_ov_one
-;
     cmp al,67h
     jne remove_ov_done
 
