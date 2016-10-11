@@ -3411,6 +3411,7 @@ decode_data_sel ENDP
 GetIllegalOsGate    PROC near
     push ds
     push fs
+    push esi
 ;    
     mov ax,osgate_sel
     mov ds,ax
@@ -3430,6 +3431,7 @@ illegal_out_os_ok:
     xor al,al
     stosb
 ;    
+    pop esi
     pop fs
     pop ds
     ret
@@ -3451,6 +3453,7 @@ GetIllegalOsGate    ENDP
 GetIllegalUserGate      PROC near
     push ds
     push fs
+    push esi
 ;    
     mov ax,usergate_sel
     mov ds,ax
@@ -3470,6 +3473,7 @@ illegal_out_user_ok:
     xor al,al
     stosb
 ;
+    pop esi
     pop fs
     pop ds
     ret
@@ -3507,7 +3511,7 @@ get_oscall_scan_loop:
     je get_oscall_found
 
 get_oscall_scan_next:
-    add si,8
+    add si,1 SHL OS_GATE_SHIFT
     loop get_oscall_scan_loop
 ;
     pop ecx
@@ -3588,7 +3592,7 @@ get_usercall_not_entry32:
     cmp dx,ds:[si].user_gate_sel32
     je get_usercall_found
 ;
-    add esi,1 SHL USER_GATE_SHIFT
+    add si,1 SHL USER_GATE_SHIFT
     loop get_usercall_scan_loop
 ;
     pop ecx
@@ -3709,7 +3713,7 @@ usercall_32:
     jnc check_fail
 ;
     add esi,6
-    shl eax,5
+    shl eax,USER_GATE_SHIFT
     mov ebx,eax
     lea edi,[ebp].opcode_text
     mov ecx,40
@@ -3723,7 +3727,7 @@ oscall:
     jnc check_fail
 ;
     add esi,6
-    shl eax,4
+    shl eax,OS_GATE_SHIFT
     mov ebx,eax
     lea edi,[ebp].opcode_text
     mov ecx,40

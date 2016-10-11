@@ -25,6 +25,8 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+OS_GATE_SHIFT = 4
+
 ;
 ; this structure cannot be more than 16 bytes long!
 ;
