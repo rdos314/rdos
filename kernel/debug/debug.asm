@@ -197,6 +197,10 @@ marker_loop:
     WaitMilliSec
     jmp marker_loop
 
+    HookInitTasking
+    jmp marker_loop
+    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;

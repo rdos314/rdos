@@ -3712,7 +3712,7 @@ usercall_32:
     cmp eax,usergate_entries
     jnc check_fail
 ;
-    add esi,6
+    add esi,7
     shl eax,USER_GATE_SHIFT
     mov ebx,eax
     lea edi,[ebp].opcode_text
@@ -3726,7 +3726,7 @@ oscall:
     cmp eax,osgate_entries
     jnc check_fail
 ;
-    add esi,6
+    add esi,7
     shl eax,OS_GATE_SHIFT
     mov ebx,eax
     lea edi,[ebp].opcode_text
