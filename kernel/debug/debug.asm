@@ -380,6 +380,119 @@ AddHexPtr64   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddCodeAsciiz
+;
+;           DESCRIPTION:    Add asciiz string from code
+;
+;           PARAMETERS:     ES:EDI      Buffer
+;                           CS:ESI      String to add
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddCodeAsciiz   PROC near
+
+acaLoop:
+    lods cs:[esi]
+    or al,al
+    jz acaDone
+;
+    stosb
+    jmp acaLoop    
+
+acaDone:
+    ret
+AddCodeAsciiz   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddEflags
+;
+;           DESCRIPTION:    Add flags
+;
+;           PARAMETERS:     ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+eflags_tab:
+;
+;           reset       set
+et_cf   DB 'NC ',       'CY '
+et_1    DB 0,0,0,       0,0,0
+et_pf   DB 'PO ',       'PE '
+et_3    DB 0,0,0,       0,0,0
+et_af   DB 'NA ',       'AC '
+et_5    DB 0,0,0,       0,0,0
+et_zf   DB 'NZ ',       'ZR '
+et_sf   DB 'PL ',       'NG '
+et_tf   DB 0,0,0,       0,0,0
+et_if   DB 'DI ',       'EI '
+et_df   DB 'UP ',       'DN '
+et_of   DB 'NV ',       'OV '
+et_12   DB 0,0,0,       0,0,0
+et_13   DB 0,0,0,       0,0,0
+et_14   DB 'PR ' ,      'NT '
+et_15   DB 0,0,0,       0,0,0
+et_16   DB 0,0,0,       0,0,0
+et_vm   DB 'PM ',       'VM '
+
+iopl_text       DB ' IOPL=',0
+
+AddEflags     PROC near
+    push eax
+    push ecx
+    push edx
+    push esi
+;    
+    mov eax,ds:[ebp].reg_eflags
+    mov esi,OFFSET eflags_tab
+    mov ecx,18
+    
+eflags_loop:
+    push esi
+;    
+    mov dl,cs:[esi]
+    or dl,dl
+    je eflags_next
+;
+    test al,1
+    jz eflags_write_one
+;    
+    add esi,3
+
+eflags_write_one:
+    push ecx
+    mov ecx,3
+    rep movs es:[edi],cs:[esi]
+    pop ecx
+    
+eflags_next:
+    pop esi
+;
+    shr eax,1
+    add esi,6
+;
+    loop eflags_loop
+;
+    mov esi,OFFSET iopl_text
+    call AddCodeAsciiz
+;    
+    mov ax,word ptr ds:[ebp].reg_eflags
+    shr ax,12
+    and ax,3
+    add ax,'0'
+    stosb
+;
+    pop esi
+    pop edx
+    pop ecx
+    pop eax    
+    ret
+AddEflags     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Read_mem
 ;
 ;           DESCRIPTION:    Read memory in process
@@ -516,8 +629,11 @@ disdo:
 
 dis_next:    
     call DisAsmCode
-    add ds:[ebp].reg_eip,eax
-    jmp dis_next
+;
+    pushfd
+    pop eax
+    mov ds:[ebp].reg_eflags,eax
+    call AddEflags    
 
 marker_loop:
     mov ax,250
