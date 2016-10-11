@@ -168,6 +168,10 @@ ignore_ptr      DB ?
 op_rex          DB ?
 root_tab        DD ?
 
+cpu_thread      DW ?
+cpu_read_mem    DD ?
+cpu_write_mem   DD ?
+
 org_eip			DD ?,?
 org_esp			DD ?,?
 org_stack		DD ?

@@ -39,6 +39,8 @@ INCLUDE dis.inc
 
 data    SEGMENT byte public 'DATA'
 
+buf    DB 4096 DUP(?)
+
 cpu cpu_struc <>
 
 data    ENDS
@@ -46,6 +48,89 @@ data    ENDS
 code    SEGMENT byte use32 public 'CODE'
 
     extrn DisAsmCode:near
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Read_mem
+;
+;           DESCRIPTION:    Read memory in process
+;
+;           PARAMETERS:     DX:ESI      Sel:offset
+;                           DS:EBP      Cpu
+;
+;           RETURNS:        NC  AL  Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_mem    Proc near
+    push bx
+;
+    mov bx,ds:[ebp].cpu_thread        
+    test word ptr ds:[ebp].reg_eflags+2,2
+    jz rdmProt
+
+rdmV86:
+    ReadThreadSegment
+    jmp rdmDone
+    
+rdmProt:
+    test ds:[ebp].reg_cs.d_access,ACCESS_64
+    jnz rdm64
+
+rdm32:    
+    ReadThreadSelector
+    jmp rdmDone
+
+rdm64:
+    ReadThread64
+
+rdmDone:
+    pop bx
+    ret
+read_mem    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Write_mem
+;
+;           DESCRIPTION:    Write memory in process
+;
+;           PARAMETERS:     DX:ESI      Sel:offset
+;                           BX          Thread
+;                           DS:EBP      Cpu
+;                           AL          Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_mem    Proc near
+    push bx
+;
+    mov bx,ds:[ebp].cpu_thread        
+    test word ptr ds:[ebp].reg_eflags+2,2
+    jz wrmProt
+
+wrmV86:
+    WriteThreadSegment
+    jmp wrmDone
+    
+wrmProt:
+    test ds:[ebp].reg_cs.d_access,ACCESS_64
+    jnz wrm64
+    
+wrm32:    
+    WriteThreadSelector
+    jmp wrmDone
+
+wrm64:
+    WriteThread64
+
+wrmDone:
+    pop bx
+    ret
+write_mem    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -70,22 +155,41 @@ debug_process:
     mov ds,ax
     mov es,ax
     mov ebp,OFFSET cpu
-    mov esi,OFFSET debug_process
+;
+    GetThread
+    mov ds:[ebp].cpu_thread,ax
+    mov ds:[ebp].cpu_read_mem,OFFSET read_mem
+    mov ds:[ebp].cpu_write_mem,OFFSET write_mem
+;    
+    mov bx,cs
+    mov ds:[ebp].reg_eip,OFFSET debug_process
+    mov ds:[ebp].reg_eip+4,0
+    mov ds:[ebp].reg_cs.d_selector,bx
+    GetSelectorBitness
+    cmp al,16
+    je dis16
+;
+    cmp al,32
+    je dis32
+
+dis64:
+    mov ds:[ebp].reg_cs.d_access,ACCESS_READ OR ACCESS_64
+    jmp disdo
+
+dis32:
+    mov ds:[ebp].reg_cs.d_access,ACCESS_READ OR ACCESS_32
+    jmp disdo
+
+dis16:
+    mov ds:[ebp].reg_cs.d_access,ACCESS_READ
+
+disdo:    
+    mov edi,OFFSET buf
+    mov ecx,40
 
 dis_next:    
-    mov ds:[ebp].reg_eip,esi
-    mov ds:[ebp].reg_eip+4,0
-;
-    lea edi,ds:[ebp].code_cache
-    push esi
-    mov ecx,32
-    rep movs es:[edi],cs:[esi]
-    pop esi
-;    
-    mov dl,1
     call DisAsmCode
-    add esi,eax
-    lea ebx,[ebp].opcode_text
+    add ds:[ebp].reg_eip,eax
     jmp dis_next
 
 marker_loop:

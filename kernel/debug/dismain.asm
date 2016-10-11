@@ -3265,7 +3265,7 @@ move_mne_to_buf ENDP
         extrn dword_ptr_txt:near
 
 put_opcode_in_text      PROC near
-        mov esi,OFFSET op_codes
+        lea esi,ds:[ebp].op_codes
         lea edi,ds:[ebp].opcode_text
 wr_op_next:
         mov eax,[esi]
@@ -3398,81 +3398,144 @@ decode_data_sel ENDP
 ;               DESCRIPTION:    Disassemble code
 ;
 ;               PARAMETERS:     DS:EBP    Cpu
-;                               DL        Code size (0 = 16, 1 = 32, 2 = 64)
+;                               ES:EDI    Decoded instruction buffer
+;                               ECX       Buffer size
 ;
-;               RETURNS:        Instruction size
+;               RETURNS:        EAX       Instruction size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
         public DisAsmCode
 
 DisAsmCode     PROC near
-        push ebx
-        push ecx
-        push edx
-        push esi
-        push edi
+    push ebx
+    push edx
+    push esi
+;    
+    push ecx
+    push edi
 ;
-        lea esi,ds:[ebp].code_cache
-        mov ebx,OFFSET main_tab
-        mov al,[esi]
-        movzx eax,al
-        mov edi,OFFSET op_codes
-        mov ds:[ebp].em_flags,0
-        or dl,dl
-        jz dis_ass_code_ok
-;        
-        cmp dl,1
-        jne dis_ass_code64
-;        
-        mov ds:[ebp].em_flags,a32 OR d32
-        jmp dis_ass_code_ok
+    test ds:[ebp].reg_cs.d_access,ACCESS_64
+    jnz dac64
+;
+    test ds:[ebp].reg_cs.d_access,ACCESS_32
+    jnz dac32
 
-dis_ass_code64:
-        mov ds:[ebp].op_rex,0
-        mov ds:[ebp].em_flags,l64 OR d32
-        mov ebx,OFFSET long_main_tab
-        mov al,[esi]
-        cmp al,50h
-        jb dis_ass_code_ok
+dac16:    
+    mov dx,ds:[ebp].reg_cs.d_selector
+    movzx esi,word ptr ds:[ebp].reg_eip
+    mov ds:[ebp].em_flags,0
+    jmp dacProt
+
+dac32: 
+    mov dx,ds:[ebp].reg_cs.d_selector
+    mov esi,ds:[ebp].reg_eip
+    mov ds:[ebp].em_flags,a32 OR d32
+
+dacProt:
+    mov ecx,32
+    lea ebx,ds:[ebp].code_cache
+
+dacProtRead:
+    call ds:[ebp].cpu_read_mem
+    mov ds:[ebx],al
+    inc esi
+    inc ebx
+    loop dacProtRead
+;       
+    mov ebx,OFFSET main_tab
+    lea esi,ds:[ebp].code_cache
+    jmp dacStart
+
+dac64:
+    mov ds:[ebp].op_rex,0
+    mov ds:[ebp].em_flags,l64 OR d32
 ;
-        cmp al,60h
-        jae dis_ass_code_ok
+    mov edx,ds:[ebp].reg_eip+4
+    mov esi,ds:[ebp].reg_eip
+    mov ecx,32
+    lea ebx,ds:[ebp].code_cache
+
+dacLongRead:
+    call ds:[ebp].cpu_read_mem
+    mov ds:[ebx],al
+    inc esi
+    inc ebx
+    loop dacLongRead
 ;
-        mov ds:[ebp].op_rex,8
-                
-dis_ass_code_ok:
-        mov ds:[ebp].op_syntax,ebx
-        mov ds:[ebp].root_tab,ebx
+    mov ebx,OFFSET long_main_tab
+    lea esi,ds:[ebp].code_cache
 ;
-        mov ds:[ebp].ignore_ptr,0
-        mov ds:[ebp].override,0
-        mov ds:[ebp].data_sel,0
-        mov ds:[ebp].data_offset,0
-        mov ds:[ebp].data_offset+4,0
-        mov ds:[ebp].data_valid,0
+    mov al,[esi]
+    cmp al,50h
+    jb dacStart
+;
+    cmp al,60h
+    jae dacStart
+;
+    mov ds:[ebp].op_rex,8
+
+dacStart:                
+    mov al,[esi]
+    movzx eax,al
+    lea edi,[ebp].op_codes
+;
+    mov ds:[ebp].op_syntax,ebx
+    mov ds:[ebp].root_tab,ebx
+;
+    mov ds:[ebp].ignore_ptr,0
+    mov ds:[ebp].override,0
+    mov ds:[ebp].data_sel,0
+    mov ds:[ebp].data_offset,0
+    mov ds:[ebp].data_offset+4,0
+    mov ds:[ebp].data_valid,0
 ;
 ; esi = opcode
-; edi = resultat
-; eax = index i tabell
+; edi = result
+; eax = index in table
 ;
-        call decode_opcode
-        push esi
-        mov dword ptr [edi],0FFFFFFFFh
-        call put_opcode_in_text
-        call decode_data_sel
-        pop ecx
-        lea eax,ds:[ebp].code_cache        
-        sub ecx,eax
-        inc ecx
-        mov eax,ecx
+    call decode_opcode
+    push esi
+    mov dword ptr [edi],0FFFFFFFFh
+    call put_opcode_in_text
+    call decode_data_sel
+    pop ecx
+    lea eax,ds:[ebp].code_cache        
+    sub ecx,eax
+    inc ecx
+    mov eax,ecx
 ;        
-        pop edi
-        pop esi
-        pop edx
-        pop ecx
-        pop ebx
-        ret
+    pop edi
+    pop ecx
+;
+    push eax
+    push ecx
+    push edi
+;    
+    lea esi,[ebp].opcode_text
+
+dacMoveLoop:
+    lodsb
+    or al,al
+    jz dacPad
+;
+    stosb
+    loop dacMoveLoop
+    jmp dacDone
+
+dacPad:
+    mov al,' '
+    rep stosb
+
+dacDone:
+    pop edi
+    pop ecx    
+    pop eax
+;
+    pop esi
+    pop edx
+    pop ebx
+    ret
 DisAsmCode     ENDP
 
 code ENDS
