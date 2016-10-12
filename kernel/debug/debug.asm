@@ -1223,23 +1223,23 @@ float_split     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:			FLOAT_CALC_POS
+;       NAME:                   FLOAT_CALC_POS
 ;
-;       DESCRIPTION:	
+;       DESCRIPTION:    
 ;
-;	PARAMETERS:		AX		EXPONENT
-;				CL		STRING SIZE
-;				DL		NUMBER OF DECIMALS
+;       PARAMETERS:             AX              EXPONENT
+;                               CL              STRING SIZE
+;                               DL              NUMBER OF DECIMALS
 ;
-;	RETURNS:		CH		NUMBER OF LEADING BLANKS
-;				DH		POSITION OF DECIMAL  "."
-;				BL		MANTISSA POSITION
-;				NC		OK
-;			        CY		CANNOT DISPLAY NUMBER ON FORM
-;						
+;       RETURNS:                CH              NUMBER OF LEADING BLANKS
+;                               DH              POSITION OF DECIMAL  "."
+;                               BL              MANTISSA POSITION
+;                               NC              OK
+;                               CY              CANNOT DISPLAY NUMBER ON FORM
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-float_calc_pos	PROC near
+float_calc_pos  PROC near
     push ax
     mov bl,al
     neg bl
@@ -1286,31 +1286,31 @@ float_calc_dot:
     clc
     pop ax
     ret
-float_calc_pos	ENDP
+float_calc_pos  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:			FLOAT_INIT_STRING
+;       NAME:                   FLOAT_INIT_STRING
 ;
-;       DESCRIPTION:	
+;       DESCRIPTION:    
 ;
-;       PARAMETERS:		ES:EDI	STRING
-;				AX	EXPONENT
-;				CL	STRING SIZE
-;				DL	NUMBER OF DECIMALS
-;			        NC	POSITIVE NUMBER
-;				CY	NEGATIVE NUMBER
+;       PARAMETERS:             ES:EDI  STRING
+;                               AX      EXPONENT
+;                               CL      STRING SIZE
+;                               DL      NUMBER OF DECIMALS
+;                               NC      POSITIVE NUMBER
+;                               CY      NEGATIVE NUMBER
 ;
-;	RETURN:			ES:EDX	OFFSET TO "."
-;				ES:EDI	ADDRESS WHERE TO START WRITING MANTISSA
-;			        ES:ESI	LAST CHAR IN STRING
-;				NC	OK
-;				CY	FEL, TO BIG NUMBER
-;						
+;       RETURN:                 ES:EDX  OFFSET TO "."
+;                               ES:EDI  ADDRESS WHERE TO START WRITING MANTISSA
+;                               ES:ESI  LAST CHAR IN STRING
+;                               NC      OK
+;                               CY      FEL, TO BIG NUMBER
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-float_init_string	PROC near
+float_init_string       PROC near
     push ecx
     push ebx
     push eax
@@ -1349,7 +1349,7 @@ float_istr_noinc:
     push ecx
     movzx ecx,ch
     mov al,' '
-    rep stosb	
+    rep stosb   
     pop ecx
     
 float_istr_nodot:
@@ -1395,27 +1395,27 @@ float_istr_end:
     pop ebx
     pop ecx
     ret
-float_init_string	ENDP
+float_init_string       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:		FLOAT_STRING
+;       NAME:           FLOAT_STRING
 ;
-;       DESCRIPTION:	WRITE 10-EXPONENT OCH MANTISSA TO STRING
+;       DESCRIPTION:    WRITE 10-EXPONENT OCH MANTISSA TO STRING
 ;
-;       PARAMETERS:	ST(0)		MANTISSA 0.1-1.0
-;			AX		EXPONENT
-;			ES:EDI		STRING
-;			CH		LEADING BLANKS
-;		        DH		POSITION OF "."
-;		        ES:ESI		LAST CHAR IN STRING
+;       PARAMETERS:     ST(0)           MANTISSA 0.1-1.0
+;                       AX              EXPONENT
+;                       ES:EDI          STRING
+;                       CH              LEADING BLANKS
+;                       DH              POSITION OF "."
+;                       ES:ESI          LAST CHAR IN STRING
 ;
 ;       RETURNS:        ES:EDI          Next pos
-;						
+;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-float_string	PROC near
+float_string    PROC near
     mov ecx,20
     inc esi
     fld1
@@ -1464,7 +1464,7 @@ float_string_save0:
 
 float_string_end:
     ret
-float_string	ENDP
+float_string    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1980,6 +1980,48 @@ qword_reg_tab6:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddProtCpuReg
+;
+;           DESCRIPTION:    Add protected mode registers
+;
+;           PARAMETERS:     ES:EDI              Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddProtCpuReg     Proc near
+    mov esi,OFFSET dword_reg_tab1
+    call AddDwordRegs    
+    mov ecx,16
+    call AddBlanks
+    call AddNewLine
+;
+    mov esi,OFFSET dword_reg_tab2
+    call AddDwordRegs
+    mov ecx,16
+    call AddBlanks
+    call AddNewLine
+;
+    mov esi,OFFSET dword_reg_tab3
+    call AddDwordRegs
+;
+    mov esi,OFFSET word_reg_tab1
+    call AddWordRegs
+    mov ecx,40
+    call AddBlanks
+    call AddNewLine
+;
+    mov esi,OFFSET word_reg_tab2
+    call AddWordRegs
+    call AddNewLine
+;
+    call AddEflags
+    call AddNewLine
+    ret
+AddProtCpuReg     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Read_mem
 ;
 ;           DESCRIPTION:    Read memory in process
@@ -2177,7 +2219,7 @@ dis_next:
     pop ds
 ;
     mov edi,OFFSET buf
-    call AddCoproc
+    call AddProtCpuReg
 ;
     xor al,al
     stosb 
