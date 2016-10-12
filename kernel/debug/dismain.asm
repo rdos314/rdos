@@ -3965,7 +3965,6 @@ dacMove:
 ;
     push eax
     push ecx
-    push edi
 ;    
     lea esi,[ebp].opcode_text
 
@@ -3983,7 +3982,6 @@ dacPad:
     rep stosb
 
 dacDone:
-    pop edi
     pop ecx    
     pop eax
 ;

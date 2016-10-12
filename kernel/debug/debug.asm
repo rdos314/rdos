@@ -2069,6 +2069,104 @@ AddLongCpuReg     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddStatus
+;
+;           DESCRIPTION:    Add status line
+;
+;           PARAMETERS:     ES:EDI              Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddStatus     Proc near
+    call AddExceptionCode
+;    
+    mov al,' '
+    stosb
+;    
+    call AddFault
+    call AddNewLine
+    ret
+AddStatus     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddInstr
+;
+;           DESCRIPTION:    Add instruction
+;
+;           PARAMETERS:     ES:EDI              Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddInstr    Proc near
+    mov ecx,40
+    call DisAsmCode
+    ret
+AddInstr    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetProtCpu
+;
+;           DESCRIPTION:    Get prot CPU info
+;
+;           PARAMETERS:     ES:EDI              Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetProtCpu    PROC near
+    call AddCoproc
+    call AddDelimiter
+    call AddProtCpuReg
+    call AddDelimiter
+    call AddFreeMem
+    call AddStatus
+    call AddInstr
+    call AddThreadInfo
+    call AddDelimiter
+    call AddProtData
+    ret
+GetProtCpu    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetLongCpu
+;
+;           DESCRIPTION:    Get long CPU info
+;
+;           PARAMETERS:     ES:EDI              Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetLongCpu    PROC near
+    mov ecx,5
+
+glcPadLoop:
+    push ecx
+    mov ecx,70
+    call AddBlanks
+    call AddNewLine
+    pop ecx
+    loop glcPadLoop
+;    
+    call AddDelimiter
+    call AddLongCpuReg
+    call AddDelimiter
+    call AddFreeMem
+    call AddStatus
+    call AddInstr
+    call AddThreadInfo
+    call AddDelimiter
+    call AddLongData
+    ret
+GetLongCpu    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Read_mem
 ;
 ;           DESCRIPTION:    Read memory in process
@@ -2200,12 +2298,6 @@ dis16:
     mov ds:[ebp].reg_cs.d_access,ACCESS_READ
 
 disdo:    
-    mov edi,OFFSET buf
-    mov ecx,40
-
-dis_next:    
-    call DisAsmCode
-;
     pushfd
     pop eax
     mov ds:[ebp].reg_eflags,eax
@@ -2266,7 +2358,7 @@ dis_next:
     pop ds
 ;
     mov edi,OFFSET buf
-    call AddLongCpuReg
+    call GetLongCpu
 ;
     xor al,al
     stosb 
