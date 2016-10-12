@@ -168,6 +168,7 @@ ignore_ptr      DB ?
 op_rex          DB ?
 root_tab        DD ?
 
+cpu_tss         DW ?
 cpu_exc_code    DB ?
 cpu_fault       DD ?
 cpu_thread      DW ?
@@ -189,11 +190,11 @@ em_sreg			DB ?
 em_pl			DB ?
 em_transfer		DB ?
 em_params		DB ?
-em_ist          DB ?
-em_rex          DB ?
-em_modrm        DB ?
-em_extra_bytes  DB ?
-em_errorcode	DW ?
+em_ist                  DB ?
+em_rex                  DB ?
+em_modrm                DB ?
+em_extra_bytes          DB ?
+em_errorcode	        DW ?
 
 dis_sel			DW ?
 

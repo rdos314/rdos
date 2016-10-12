@@ -2167,6 +2167,31 @@ GetLongCpu    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetCpu
+;
+;           DESCRIPTION:    Get CPU info
+;
+;           PARAMETERS:     ES:EDI              Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetCpu  Proc near
+    mov ax,ds:[ebp].cpu_tss
+    or ax,ax
+    jz gcLong
+
+gcProt:
+    call GetProtCpu
+    ret
+
+gcLong:
+    call GetLongCpu
+    ret
+GetCpu  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Read_mem
 ;
 ;           DESCRIPTION:    Read memory in process
@@ -2344,6 +2369,9 @@ disdo:
     mov es,ax
     GetThread
     mov ds,ax
+;    
+    mov ax,ds:p_tss_sel
+    mov es:[ebp].cpu_tss,ax
 ;
     mov ax,ds:p_math_tag
     mov es:[ebp].math_tag,ax
@@ -2358,7 +2386,7 @@ disdo:
     pop ds
 ;
     mov edi,OFFSET buf
-    call GetLongCpu
+    call GetCpu
 ;
     xor al,al
     stosb 
