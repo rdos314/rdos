@@ -390,6 +390,7 @@ AddHexPtr64   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddCodeAsciiz   PROC near
+    push ax
 
 acaLoop:
     lods cs:[esi]
@@ -400,6 +401,7 @@ acaLoop:
     jmp acaLoop    
 
 acaDone:
+    pop ax
     ret
 AddCodeAsciiz   ENDP
 
@@ -713,6 +715,69 @@ AddLongDataRow    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddFault
+;
+;           DESCRIPTION:    ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ft_intr DB 'Interrupt fault   ',0
+ft_inst DB 'Instruction fault ',0
+
+ft_idt  DB 'idt ',0
+ft_ldt  DB 'ldt ',0
+ft_gdt  DB 'gdt ',0
+
+AddFault      PROC near
+    test word ptr ds:[ebp].reg_eflags+2,2
+    jnz afEnd
+;    
+    mov eax,ds:[ebp].cpu_fault
+    cmp ax,3
+    je afEnd
+;    
+    mov esi,OFFSET ft_inst
+    or ax,ax
+    jz adEnd
+;
+    test ax,1
+    jz afNotInt
+;    
+    mov esi,OFFSET ft_intr
+
+afNotInt:
+    call AddCodeAsciiz
+    test ax,2
+    jz afNotIdt
+;    
+    mov esi,OFFSET ft_idt
+    jmp afReason
+
+afNotIdt:
+    mov esi,OFFSET ft_gdt
+    test ax,4
+    jz afReason
+;    
+    mov esi,OFFSET ft_ldt
+
+afReason:
+    call AddCodeAsciiz
+;    
+    and ax,0FFF8h
+    call AddHexWord
+    jmp afDone
+
+afEnd:
+    mov ecx,30
+    call AddBlanks
+
+afDone:    
+    ret
+AddFault      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           word reg tab
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1008,14 +1073,8 @@ dis_next:
     mov ds:[ebp].reg_ebp,ebp
 ;
     mov edi,OFFSET buf
-    mov esi,OFFSET dis_next
-    mov dx,cs
-    call AddProtDataRow
-;
-    mov edi,OFFSET buf
-    mov esi,0C8000000h
-    mov dx,flat_sel
-    call AddLongDataRow
+    mov ds:[ebp].cpu_fault,0EEFh
+    call AddFault    
 
 marker_loop:
     mov ax,250
