@@ -1078,7 +1078,7 @@ AddLongData       ENDP
 ;
 ;           PARAMETERS:     CS:ESI      Register name
 ;                           AX          Tag value
-;                           EBX         Register data
+;                           EBX         Register data index
 ;                           ES:EDI      Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1088,6 +1088,10 @@ nan     DB 'NAN                               ',0
 empty   DB 'Empty                             ',0
 
 AddMathOne      PROC near       
+    push eax
+    push ebx
+    push esi
+;    
     call AddCodeAsciiz
 ;
     mov cl,al
@@ -1115,13 +1119,20 @@ AddMathZero:
     call AddCodeAsciiz
     jmp AddMathDone
 
-AddMathNorm:    
-    fld tbyte ptr ds:[ebp+ebx]
+AddMathNorm:
+    and ebx,7
+    mov eax,10
+    mul ebx
+    fld tbyte ptr ds:[ebp+eax].math_st0
 
 AddMathDone:
     mov ecx,35
     call AddBlanks
     call AddNewLine
+;
+    pop esi
+    pop ebx    
+    pop eax
     ret
 AddMathOne      ENDP
 
@@ -1145,45 +1156,62 @@ math7   DB 'ST(7)=  ',0
 
 AddCoproc     Proc near
     finit
-    mov ax,ds:[ebp].math_tag
-;    
+    mov dx,ds:[ebp].math_tag
+    mov ax,ds:[ebp].math_status
+    shr ax,3
+    mov cl,ah
+    and cl,7
+    add cl,cl
+    ror dx,cl
+    mov ebx,cr0
+    test bx,4
+    jz acReal
+;
+    movzx ebx,cl
+    jmp acDo
+
+acReal:
+    xor ebx,ebx
+
+acDo:    
+    mov ax,dx
+;
     mov esi,OFFSET math0
-    mov ebx,OFFSET math_st0
     call AddMathOne
 ;    
     ror ax,2
+    inc ebx
     mov esi,OFFSET math1
-    mov ebx,OFFSET math_st1
     call AddMathOne
 ;    
     ror ax,2
+    inc ebx
     mov esi,OFFSET math2
-    mov ebx,OFFSET math_st2
     call AddMathOne
 ;    
     ror ax,2
+    inc ebx
     mov esi,OFFSET math3
-    mov ebx,OFFSET math_st3
     call AddMathOne
 ;    
     ror ax,2
+    inc ebx
     mov esi,OFFSET math4
-    mov ebx,OFFSET math_st4
     call AddMathOne
 ;    
     ror ax,2
+    inc ebx
     mov esi,OFFSET math5
-    mov ebx,OFFSET math_st5
     call AddMathOne
 ;    
     ror ax,2
+    inc ebx
     mov esi,OFFSET math6
-    mov ebx,OFFSET math_st6
     call AddMathOne
 ;    
     ror ax,2
+    inc ebx
     mov esi,OFFSET math7
-    mov ebx,OFFSET math_st7
     call AddMathOne
 ;    
     ret
@@ -1488,7 +1516,28 @@ dis_next:
 ;
     mov ds:[ebp].cpu_fault,0EEFh
     mov ds:[ebp].cpu_exc_code,3
+;
+    finit
+    fldpi
 ;    
+    push ds
+    mov ax,ds
+    mov es,ax
+    GetThread
+    mov ds,ax
+;
+    mov ax,ds:p_math_tag
+    mov es:[ebp].math_tag,ax
+;
+    mov ax,ds:p_math_status
+    mov es:[ebp].math_status,ax
+;    
+    mov esi,OFFSET p_math_st0
+    lea edi,[ebp].math_st0
+    mov ecx,20
+    rep movsd
+    pop ds
+;
     mov edi,OFFSET buf
     call AddCoproc
 ;
