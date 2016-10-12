@@ -1072,6 +1072,126 @@ AddLongData       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddMathOne
+;
+;           DESCRIPTION:    Add math register
+;
+;           PARAMETERS:     CS:ESI      Register name
+;                           AX          Tag value
+;                           EBX         Register data
+;                           ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+zero    DB 'Zero                              ',0
+nan     DB 'NAN                               ',0
+empty   DB 'Empty                             ',0
+
+AddMathOne      PROC near       
+    call AddCodeAsciiz
+;
+    mov cl,al
+    and cl,3
+    jz AddMathNorm
+;
+    cmp cl,1
+    je AddMathZero
+;
+    cmp cl,2
+    je AddMathNan
+
+AddMathEmpty:
+    mov esi,OFFSET Empty
+    call AddCodeAsciiz
+    jmp AddMathDone
+
+AddMathNan:
+    mov esi,OFFSET nan
+    call AddCodeAsciiz
+    jmp AddMathDone
+
+AddMathZero:
+    mov esi,OFFSET zero
+    call AddCodeAsciiz
+    jmp AddMathDone
+
+AddMathNorm:    
+    fld tbyte ptr ds:[ebp+ebx]
+
+AddMathDone:
+    mov ecx,35
+    call AddBlanks
+    call AddNewLine
+    ret
+AddMathOne      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddCoproc
+;
+;           DESCRIPTION:    Add co-processor state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+math0   DB 'ST(0)=  ',0
+math1   DB 'ST(1)=  ',0
+math2   DB 'ST(2)=  ',0
+math3   DB 'ST(3)=  ',0
+math4   DB 'ST(4)=  ',0
+math5   DB 'ST(5)=  ',0
+math6   DB 'ST(6)=  ',0
+math7   DB 'ST(7)=  ',0
+
+AddCoproc     Proc near
+    finit
+    mov ax,ds:[ebp].math_tag
+;    
+    mov esi,OFFSET math0
+    mov ebx,OFFSET math_st0
+    call AddMathOne
+;    
+    ror ax,2
+    mov esi,OFFSET math1
+    mov ebx,OFFSET math_st1
+    call AddMathOne
+;    
+    ror ax,2
+    mov esi,OFFSET math2
+    mov ebx,OFFSET math_st2
+    call AddMathOne
+;    
+    ror ax,2
+    mov esi,OFFSET math3
+    mov ebx,OFFSET math_st3
+    call AddMathOne
+;    
+    ror ax,2
+    mov esi,OFFSET math4
+    mov ebx,OFFSET math_st4
+    call AddMathOne
+;    
+    ror ax,2
+    mov esi,OFFSET math5
+    mov ebx,OFFSET math_st5
+    call AddMathOne
+;    
+    ror ax,2
+    mov esi,OFFSET math6
+    mov ebx,OFFSET math_st6
+    call AddMathOne
+;    
+    ror ax,2
+    mov esi,OFFSET math7
+    mov ebx,OFFSET math_st7
+    call AddMathOne
+;    
+    ret
+AddCoproc     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           word reg tab
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1370,7 +1490,13 @@ dis_next:
     mov ds:[ebp].cpu_exc_code,3
 ;    
     mov edi,OFFSET buf
-    call AddLongData
+    call AddCoproc
+;
+    xor al,al
+    stosb 
+;
+    mov edi,OFFSET buf
+    WriteAsciiz   
 
 marker_loop:
     mov ax,250
