@@ -911,6 +911,71 @@ AddFreeMem    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddProtData
+;
+;           DESCRIPTION:    Add protected mode data
+;
+;           PARAMETERS:     ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddProtData       PROC near
+    mov al,ds:[ebp].data_valid
+    or al,al
+    jz apdNoPtr
+;
+    mov esi,ds:[ebp].data_offset
+    mov edx,ds:[ebp].data_sel
+    call AddProtDataRow
+    jmp apdPtrOk
+
+apdNoPtr:
+    mov ecx,79
+    call AddBlanks
+
+apdPtrOk:
+    call AddNewLine
+;
+    mov dx,ds:[ebp].reg_cs.d_selector
+    mov esi,ds:[ebp].reg_eip
+    call AddProtDataRow
+    call AddNewLine
+;
+    mov dx,ds:[ebp].reg_ss.d_selector
+    mov esi,ds:[ebp].reg_esp
+    call AddProtDataRow
+    call AddNewLine
+;
+    mov dx,ds:[ebp].reg_es.d_selector
+    xor esi,esi
+    call AddProtDataRow
+    call AddNewLine
+;
+    xor ecx,ecx
+    xchg ecx,ds:[ebp].reg_eflags
+    push ecx
+    push fs
+;
+    mov fs,ds:[ebp].cpu_thread
+    mov dx,fs:p_pm_deb_sel
+    mov esi,fs:p_pm_deb_offs
+    call AddProtDataRow
+    call AddNewLine
+;
+    mov ds:[ebp].reg_eflags,20000h
+    mov dx,fs:p_vm_deb_sel
+    mov esi,fs:p_vm_deb_offs
+    call AddProtDataRow
+;
+    pop fs
+    pop ecx
+    mov ds:[ebp].reg_eflags,ecx
+    ret
+AddProtData       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           word reg tab
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1142,7 +1207,7 @@ debug_process:
     mov ds:[ebp].cpu_write_mem,OFFSET write_mem
 ;    
     mov bx,cs
-    mov ds:[ebp].reg_eip,OFFSET debug_process
+    mov ds:[ebp].reg_eip,OFFSET dis64
     mov ds:[ebp].reg_eip+4,0
     mov ds:[ebp].reg_cs.d_selector,bx
     GetSelectorBitness
@@ -1209,7 +1274,7 @@ dis_next:
     mov ds:[ebp].cpu_exc_code,3
 ;    
     mov edi,OFFSET buf
-    call AddFreeMem
+    call AddProtData
 
 marker_loop:
     mov ax,250
