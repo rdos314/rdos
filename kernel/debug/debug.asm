@@ -68,7 +68,7 @@ AddNewLine Proc near
     mov al,10
     stosb
 ;
-    pop ax
+    pop eax
     ret
 AddNewLine Endp
 
@@ -834,6 +834,38 @@ AddExceptionCode    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddThreadInfo
+;
+;           DESCRIPTION:    Add thread info
+;
+;           PARAMETERS:     ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddThreadInfo     Proc near
+    push ds
+;    
+    mov ds,ds:[ebp].cpu_thread
+    mov ax,ds:p_id
+    call AddHexWord
+;    
+    mov al,' '
+    stosb
+    stosb
+;    
+    mov esi,OFFSET thread_name
+    mov ecx,30
+    rep movsb
+;
+    call AddNewLine
+;
+    pop ds    
+    ret
+AddThreadInfo     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           word reg tab
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1132,7 +1164,7 @@ dis_next:
     mov ds:[ebp].cpu_exc_code,3
 ;    
     mov edi,OFFSET buf
-    call AddExceptionCode
+    call AddThreadInfo
 
 marker_loop:
     mov ax,250
