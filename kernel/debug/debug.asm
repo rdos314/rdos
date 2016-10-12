@@ -652,6 +652,67 @@ AddProtDataRow    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddLongDataRow
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DX:ESI      Offset
+;                           DS:EBP      Cpu
+;                           ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddLongDataRow    PROC near
+    mov ebx,esi
+    call AddHexPtr64
+;
+    mov ecx,16
+    push esi
+
+aldhLoop:
+    mov al,' '
+    stosb
+;    
+    call ds:[ebp].cpu_read_mem    
+    jc aldhInv
+;
+    call AddHexByte
+    jmp aldhNext
+
+aldhInv:
+    stosb
+    stosb
+
+aldhNext:
+    inc esi
+    loop aldhLoop
+;
+    pop esi
+;
+    mov al,' '
+    stosb
+;    
+    mov ecx,16
+    
+aldaLoop:
+    call ds:[ebp].cpu_read_mem    
+    cmp al,20h
+    jnc aldaDo
+;
+    mov al,' '
+
+aldaDo:
+    stosb
+    inc esi
+    loop aldaLoop
+
+aldaEnd:
+    ret
+AddLongDataRow    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           word reg tab
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -950,6 +1011,11 @@ dis_next:
     mov esi,OFFSET dis_next
     mov dx,cs
     call AddProtDataRow
+;
+    mov edi,OFFSET buf
+    mov esi,0C8000000h
+    mov dx,flat_sel
+    call AddLongDataRow
 
 marker_loop:
     mov ax,250
