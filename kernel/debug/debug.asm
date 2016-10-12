@@ -559,6 +559,39 @@ AddDwordRegs  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddQwordRegs
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     CS:ESI       Table
+;                           ES:EDI       Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddQwordRegs  PROC near
+
+aqLoop:
+    mov al,cs:[esi]
+    or al,al
+    je aqEnd
+;
+    mov ecx,5
+    rep movs byte ptr es:[edi],cs:[esi]
+;    
+    movzx ebx,cs:[esi]
+    mov eax,ds:[ebp+ebx]
+    mov edx,ds:[ebp+ebx+4]
+    call AddHexQword
+    add esi,2
+    jmp aqLoop
+    
+aqEnd:
+    ret
+AddQwordRegs  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           word reg tab
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -617,6 +650,65 @@ dword_reg_tab2:
 dword_reg_tab3:
     DB ' EPC='
     DW OFFSET reg_eip
+    DB 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           qword reg tab
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+qword_reg_tab1:
+    DB ' RAX='
+    DW OFFSET reg_eax
+    DB ' RBX='
+    DW OFFSET reg_ebx
+    DB ' RCX='
+    DW OFFSET reg_ecx
+    DB 0
+
+qword_reg_tab2:
+    DB ' RDX='
+    DW OFFSET reg_edx
+    DB ' RSI='
+    DW OFFSET reg_esi
+    DB ' RDI='
+    DW OFFSET reg_edi
+    DB 0
+
+qword_reg_tab3:
+    DB '  R8='
+    DW OFFSET reg_r8
+    DB '  R9='
+    DW OFFSET reg_r9
+    DB ' R10='
+    DW OFFSET reg_r10
+    DB 0
+
+qword_reg_tab4:
+    DB ' R11='
+    DW OFFSET reg_r11
+    DB ' R12='
+    DW OFFSET reg_r12
+    DB ' R13='
+    DW OFFSET reg_r13
+    DB 0
+
+qword_reg_tab5:
+    DB ' R14='
+    DW OFFSET reg_r14
+    DB ' R15='
+    DW OFFSET reg_r15
+    DB 0
+
+qword_reg_tab6:
+    DB ' RIP='
+    DW OFFSET reg_eip
+    DB ' RSP='
+    DW OFFSET reg_esp
+    DB ' RBP='
+    DW OFFSET reg_ebp
     DB 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -812,6 +904,30 @@ dis_next:
     mov edi,OFFSET buf
     mov esi,OFFSET dword_reg_tab3
     call AddDwordRegs
+;
+    mov edi,OFFSET buf
+    mov esi,OFFSET qword_reg_tab1
+    call AddQwordRegs
+;
+    mov edi,OFFSET buf
+    mov esi,OFFSET qword_reg_tab2
+    call AddQwordRegs
+;
+    mov edi,OFFSET buf
+    mov esi,OFFSET qword_reg_tab3
+    call AddQwordRegs
+;
+    mov edi,OFFSET buf
+    mov esi,OFFSET qword_reg_tab4
+    call AddQwordRegs
+;
+    mov edi,OFFSET buf
+    mov esi,OFFSET qword_reg_tab5
+    call AddQwordRegs
+;
+    mov edi,OFFSET buf
+    mov esi,OFFSET qword_reg_tab6
+    call AddQwordRegs
 
 marker_loop:
     mov ax,250
