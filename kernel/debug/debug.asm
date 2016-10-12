@@ -866,6 +866,51 @@ AddThreadInfo     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddFreeMem
+;
+;           DESCRIPTION:    Add free memory
+;
+;           PARAMETERS:     ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+phys_mem_comment        DB 'Physical ',0
+global_mem_comment      DB '   Global ',0
+local_mem_comment       DB '   Local ',0
+
+AddFreeMem    PROC near
+    mov esi,OFFSET phys_mem_comment
+    call AddCodeAsciiz
+;    
+    GetFreePhysical
+    call AddHexQword
+;
+    mov esi,OFFSET global_mem_comment
+    call AddCodeAsciiz
+;    
+    UsedBigLinear
+    push edx
+    push eax
+    UsedSmallLinear
+    pop edx
+    add eax,edx
+    pop edx
+    call AddHexDword
+;
+    mov esi,OFFSET local_mem_comment
+    call AddCodeAsciiz
+;    
+    mov bx,ds:[ebp].cpu_thread
+    UsedLocalLinearThread
+    call AddHexDword
+;    
+    call AddNewLine
+    ret
+AddFreeMem    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           word reg tab
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1164,7 +1209,7 @@ dis_next:
     mov ds:[ebp].cpu_exc_code,3
 ;    
     mov edi,OFFSET buf
-    call AddThreadInfo
+    call AddFreeMem
 
 marker_loop:
     mov ax,250
