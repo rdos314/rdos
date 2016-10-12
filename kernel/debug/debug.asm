@@ -2274,6 +2274,182 @@ write_mem    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetDebugThreadData
+;
+;           DESCRIPTION:    Get debug thread data
+;
+;           PARAMETERS:     AX          Debugged thread
+;                           DS:EBP      Cpu
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDebugThreadData      Proc near
+    push ds
+    push es
+    pushad
+;
+    mov dx,ds
+    mov es,dx    
+    mov ds,ax
+;    
+    mov es:[ebp].cpu_thread,ax
+;    
+    mov bx,ds:p_cs
+    mov es:[ebp].reg_cs.d_selector,bx
+    GetSelectorBitness
+    cmp al,16
+    je dis16
+;
+    cmp al,32
+    je dis32
+
+dis64:
+    mov es:[ebp].reg_cs.d_access,ACCESS_READ OR ACCESS_64
+    jmp disdo
+
+dis32:
+    mov es:[ebp].reg_cs.d_access,ACCESS_READ OR ACCESS_32
+    jmp disdo
+
+dis16:
+    mov es:[ebp].reg_cs.d_access,ACCESS_READ
+
+disdo:    
+    mov eax,dword ptr ds:p_rflags
+    mov es:[ebp].reg_eflags,eax
+;
+    mov ax,ds:p_ldt
+    mov es:[ebp].reg_ldt.d_selector,ax
+;
+    mov ax,ds:p_ss
+    mov es:[ebp].reg_ss.d_selector,ax
+;
+    mov ax,ds:p_ds
+    mov es:[ebp].reg_ds.d_selector,ax
+;
+    mov ax,ds:p_es
+    mov es:[ebp].reg_es.d_selector,ax
+;
+    mov ax,ds:p_fs
+    mov es:[ebp].reg_fs.d_selector,ax
+;
+    mov ax,ds:p_gs
+    mov es:[ebp].reg_gs.d_selector,ax
+;
+    mov eax,dword ptr ds:p_rax
+    mov es:[ebp].reg_eax,eax
+    mov eax,dword ptr ds:p_rax+4
+    mov es:[ebp].reg_eax+4,eax
+;
+    mov eax,dword ptr ds:p_rbx
+    mov es:[ebp].reg_ebx,eax
+    mov eax,dword ptr ds:p_rbx+4
+    mov es:[ebp].reg_ebx+4,eax
+;
+    mov eax,dword ptr ds:p_rcx
+    mov es:[ebp].reg_ecx,eax
+    mov eax,dword ptr ds:p_rcx+4
+    mov es:[ebp].reg_ecx+4,eax
+;
+    mov eax,dword ptr ds:p_rdx
+    mov es:[ebp].reg_edx,eax
+    mov eax,dword ptr ds:p_rdx+4
+    mov es:[ebp].reg_edx+4,eax
+;
+    mov eax,dword ptr ds:p_rsi
+    mov es:[ebp].reg_esi,eax
+    mov eax,dword ptr ds:p_rsi+4
+    mov es:[ebp].reg_esi+4,eax
+;
+    mov eax,dword ptr ds:p_rdi
+    mov es:[ebp].reg_edi,eax
+    mov eax,dword ptr ds:p_rdi+4
+    mov es:[ebp].reg_edi+4,eax
+;
+    mov eax,dword ptr ds:p_rbp
+    mov es:[ebp].reg_ebp,eax
+    mov eax,dword ptr ds:p_rbp+4
+    mov es:[ebp].reg_ebp+4,eax
+;
+    mov eax,dword ptr ds:p_rsp
+    mov es:[ebp].reg_esp,eax
+    mov eax,dword ptr ds:p_rsp+4
+    mov es:[ebp].reg_esp+4,eax
+;
+    mov eax,dword ptr ds:p_rip
+    mov es:[ebp].reg_eip,eax
+    mov eax,dword ptr ds:p_rip+4
+    mov es:[ebp].reg_eip+4,eax
+;
+    mov eax,dword ptr ds:p_r8
+    mov es:[ebp].reg_r8,eax
+    mov eax,dword ptr ds:p_r8+4
+    mov es:[ebp].reg_r8+4,eax
+;
+    mov eax,dword ptr ds:p_r9
+    mov es:[ebp].reg_r9,eax
+    mov eax,dword ptr ds:p_r9+4
+    mov es:[ebp].reg_r9+4,eax
+;
+    mov eax,dword ptr ds:p_r10
+    mov es:[ebp].reg_r10,eax
+    mov eax,dword ptr ds:p_r10+4
+    mov es:[ebp].reg_r10+4,eax
+;
+    mov eax,dword ptr ds:p_r11
+    mov es:[ebp].reg_r11,eax
+    mov eax,dword ptr ds:p_r11+4
+    mov es:[ebp].reg_r11+4,eax
+;
+    mov eax,dword ptr ds:p_r12
+    mov es:[ebp].reg_r12,eax
+    mov eax,dword ptr ds:p_r12+4
+    mov es:[ebp].reg_r12+4,eax
+;
+    mov eax,dword ptr ds:p_r13
+    mov es:[ebp].reg_r13,eax
+    mov eax,dword ptr ds:p_r13+4
+    mov es:[ebp].reg_r13+4,eax
+;
+    mov eax,dword ptr ds:p_r14
+    mov es:[ebp].reg_r14,eax
+    mov eax,dword ptr ds:p_r14+4
+    mov es:[ebp].reg_r14+4,eax
+;
+    mov eax,dword ptr ds:p_r15
+    mov es:[ebp].reg_r15,eax
+    mov eax,dword ptr ds:p_r15+4
+    mov es:[ebp].reg_r15+4,eax
+;
+    mov al,ds:p_fault_vector
+    mov es:[ebp].cpu_exc_code,al
+;
+    mov eax,ds:p_fault_code
+    mov es:[ebp].cpu_fault,eax
+;    
+    mov ax,ds:p_tss_sel
+    mov es:[ebp].cpu_tss,ax
+;
+    mov ax,ds:p_math_tag
+    mov es:[ebp].math_tag,ax
+;
+    mov ax,ds:p_math_status
+    mov es:[ebp].math_status,ax
+;    
+    mov esi,OFFSET p_math_st0
+    lea edi,[ebp].math_st0
+    mov ecx,20
+    rep movsd
+;
+    popad
+    pop es
+    pop ds
+    ret
+GetDebugThreadData      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Debug process
 ;
 ;           DESCRIPTION:    Debug process
@@ -2294,96 +2470,14 @@ debug_process:
     mov ds,ax
     mov es,ax
     mov ebp,OFFSET cpu
-;
-    GetThread
-    mov ds:[ebp].cpu_thread,ax
-    mov ds:[ebp].cpu_read_mem,OFFSET read_mem
-    mov ds:[ebp].cpu_write_mem,OFFSET write_mem
-;    
-    mov bx,cs
-    mov ds:[ebp].reg_eip,OFFSET dis64
-    mov ds:[ebp].reg_eip+4,0
-    mov ds:[ebp].reg_cs.d_selector,bx
-    GetSelectorBitness
-    cmp al,16
-    je dis16
-;
-    cmp al,32
-    je dis32
-
-dis64:
-    mov ds:[ebp].reg_cs.d_access,ACCESS_READ OR ACCESS_64
-    jmp disdo
-
-dis32:
-    mov ds:[ebp].reg_cs.d_access,ACCESS_READ OR ACCESS_32
-    jmp disdo
-
-dis16:
-    mov ds:[ebp].reg_cs.d_access,ACCESS_READ
-
-disdo:    
-    pushfd
-    pop eax
-    mov ds:[ebp].reg_eflags,eax
-;
-    sldt ax
-    mov ds:[ebp].reg_ldt.d_selector,ax
-;
-    mov ax,cs
-    mov ds:[ebp].reg_cs.d_selector,ax
-;
-    mov ax,ss
-    mov ds:[ebp].reg_ss.d_selector,ax
-;
-    mov ax,ds
-    mov ds:[ebp].reg_ds.d_selector,ax
-;
-    mov ax,es
-    mov ds:[ebp].reg_es.d_selector,ax
-;
-    mov ax,fs
-    mov ds:[ebp].reg_fs.d_selector,ax
-;
-    mov ax,gs
-    mov ds:[ebp].reg_gs.d_selector,ax
-;
-    mov ds:[ebp].reg_eax,eax
-    mov ds:[ebp].reg_ebx,ebx
-    mov ds:[ebp].reg_ecx,ecx
-    mov ds:[ebp].reg_edx,edx
-;
-    mov ds:[ebp].reg_esi,esi
-    mov ds:[ebp].reg_edi,edi
-    mov ds:[ebp].reg_esp,esp
-    mov ds:[ebp].reg_ebp,ebp
-;
-    mov ds:[ebp].cpu_fault,0EEFh
-    mov ds:[ebp].cpu_exc_code,3
+    mov es:[ebp].cpu_read_mem,OFFSET read_mem
+    mov es:[ebp].cpu_write_mem,OFFSET write_mem
 ;
     finit
     fld tbyte ptr cs:val
-;    
-    push ds
-    mov ax,ds
-    mov es,ax
+;
     GetThread
-    mov ds,ax
-;    
-    mov ax,ds:p_tss_sel
-    mov es:[ebp].cpu_tss,ax
-;
-    mov ax,ds:p_math_tag
-    mov es:[ebp].math_tag,ax
-;
-    mov ax,ds:p_math_status
-    mov es:[ebp].math_status,ax
-;    
-    mov esi,OFFSET p_math_st0
-    lea edi,[ebp].math_st0
-    mov ecx,20
-    rep movsd
-    pop ds
+    call GetDebugThreadData
 ;
     mov edi,OFFSET buf
     call GetCpu
