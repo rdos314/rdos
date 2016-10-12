@@ -592,6 +592,66 @@ AddQwordRegs  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddProtDataRow
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DX:ESI      Sel:offset
+;                           DS:EBP      Cpu
+;                           ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddProtDataRow    PROC near
+    mov ebx,esi
+    call AddHexPtr32
+;    
+    mov ecx,16
+    push esi
+
+apdhLoop:
+    mov al,' '
+    stosb
+;
+    call ds:[ebp].cpu_read_mem    
+    jc apdhInv
+;
+    call AddHexByte
+    jmp apdhNext
+
+apdhInv:
+    stosb
+    stosb
+
+apdhNext:
+    inc esi
+    loop apdhLoop
+;
+    pop esi
+    mov al,' '
+    stosb
+;
+    mov ecx,16
+
+apdaLoop:
+    call ds:[ebp].cpu_read_mem    
+    cmp al,20h
+    jnc apdaDo
+;    
+    mov al,' '
+
+apdaDo:
+    stosb
+    inc esi
+    loop apdaLoop
+    
+apdEnd:
+    ret
+AddProtDataRow    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           word reg tab
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -854,14 +914,9 @@ dis_next:
     pushfd
     pop eax
     mov ds:[ebp].reg_eflags,eax
-    call AddEflags    
 ;
     sldt ax
     mov ds:[ebp].reg_ldt.d_selector,ax
-;    
-    mov edi,OFFSET buf
-    mov esi,word_reg_tab1
-    call AddWordRegs
 ;
     mov ax,cs
     mov ds:[ebp].reg_cs.d_selector,ax
@@ -880,54 +935,21 @@ dis_next:
 ;
     mov ax,gs
     mov ds:[ebp].reg_gs.d_selector,ax
-;    
-    mov edi,OFFSET buf
-    mov esi,OFFSET word_reg_tab2
-    call AddWordRegs
 ;
     mov ds:[ebp].reg_eax,eax
     mov ds:[ebp].reg_ebx,ebx
     mov ds:[ebp].reg_ecx,ecx
     mov ds:[ebp].reg_edx,edx
-    mov edi,OFFSET buf
-    mov esi,OFFSET dword_reg_tab1
-    call AddDwordRegs
 ;
     mov ds:[ebp].reg_esi,esi
     mov ds:[ebp].reg_edi,edi
     mov ds:[ebp].reg_esp,esp
     mov ds:[ebp].reg_ebp,ebp
-    mov edi,OFFSET buf
-    mov esi,OFFSET dword_reg_tab2
-    call AddDwordRegs
 ;
     mov edi,OFFSET buf
-    mov esi,OFFSET dword_reg_tab3
-    call AddDwordRegs
-;
-    mov edi,OFFSET buf
-    mov esi,OFFSET qword_reg_tab1
-    call AddQwordRegs
-;
-    mov edi,OFFSET buf
-    mov esi,OFFSET qword_reg_tab2
-    call AddQwordRegs
-;
-    mov edi,OFFSET buf
-    mov esi,OFFSET qword_reg_tab3
-    call AddQwordRegs
-;
-    mov edi,OFFSET buf
-    mov esi,OFFSET qword_reg_tab4
-    call AddQwordRegs
-;
-    mov edi,OFFSET buf
-    mov esi,OFFSET qword_reg_tab5
-    call AddQwordRegs
-;
-    mov edi,OFFSET buf
-    mov esi,OFFSET qword_reg_tab6
-    call AddQwordRegs
+    mov esi,OFFSET dis_next
+    mov dx,cs
+    call AddProtDataRow
 
 marker_loop:
     mov ax,250
