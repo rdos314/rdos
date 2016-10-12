@@ -976,6 +976,102 @@ AddProtData       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddLongData
+;
+;           DESCRIPTION:    Add long-mode data
+;
+;           PARAMETERS:     ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddLongData       PROC near
+    mov bx,ds:[ebp].reg_cs.d_selector
+    IsLongCodeSelector
+    jc wd64_32
+
+wd64_64:    
+    mov al,ds:[ebp].data_valid
+    or al,al
+    jz data_no_good64_64
+;
+    mov esi,ds:[ebp].data_offset
+    mov edx,ds:[ebp].data_offset+4
+    call AddLongDataRow
+    jmp data_next64_64
+
+data_no_good64_64:
+    mov ecx,79
+    call AddBlanks
+
+data_next64_64:
+    call AddNewLine
+;
+    mov esi,ds:[ebp].reg_eip
+    mov edx,ds:[ebp].reg_eip+4
+    call AddLongDataRow
+    call AddNewLine
+;
+    mov esi,ds:[ebp].reg_esp
+    mov edx,ds:[ebp].reg_esp+4
+    call AddLongDataRow
+    call AddNewLine
+;
+    mov esi,ds:[ebp].reg_edi
+    mov edx,ds:[ebp].reg_edi+4
+    call AddLongDataRow
+    call AddNewLine
+    jmp wd64_data
+
+wd64_32:
+    mov al,ds:[ebp].data_valid
+    or al,al
+    jz data_no_good64_32
+;       
+    mov esi,ds:[ebp].data_offset
+    mov edx,ds:[ebp].data_sel
+    call AddProtDataRow
+    jmp data_next64_32
+
+data_no_good64_32:
+    mov ecx,79
+    call AddBlanks
+
+data_next64_32:
+    call AddNewLine
+;
+    mov dx,ds:[ebp].reg_cs.d_selector
+    mov esi,ds:[ebp].reg_eip
+    call AddProtDataRow
+    call AddNewLine
+;
+    mov dx,ds:[ebp].reg_ss.d_selector
+    mov esi,ds:[ebp].reg_esp
+    call AddProtDataRow
+    call AddNewLine
+;
+    mov dx,ds:[ebp].reg_es.d_selector
+    xor esi,esi
+    call AddProtDataRow
+    call AddNewLine
+
+wd64_data:    
+    push fs
+    mov fs,ds:[ebp].cpu_thread
+    mov dx,fs:p_pm_deb_sel
+    mov esi,fs:p_pm_deb_offs
+    call AddProtDataRow
+    call AddNewLine
+;
+    mov dx,fs:p_vm_deb_sel
+    mov esi,fs:p_vm_deb_offs
+    call AddLongDataRow
+    pop fs
+    ret
+AddLongData       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           word reg tab
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1274,7 +1370,7 @@ dis_next:
     mov ds:[ebp].cpu_exc_code,3
 ;    
     mov edi,OFFSET buf
-    call AddProtData
+    call AddLongData
 
 marker_loop:
     mov ax,250
