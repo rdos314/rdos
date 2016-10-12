@@ -20,7 +20,7 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; KDEBUG.ASM
+; DEBUG.ASM
 ; Kernel part kernel debugger
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -717,7 +717,9 @@ AddLongDataRow    ENDP
 ;
 ;           NAME:           AddFault
 ;
-;           DESCRIPTION:    ES:EDI      Buffer
+;           DESCRIPTION:    Add fault reason
+;
+;           PARAMETERS:     ES:EDI      Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -774,6 +776,60 @@ afEnd:
 afDone:    
     ret
 AddFault      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddExceptionCode
+;
+;           DESCRIPTION:    Add exception code
+;
+;           PARAMETERS:     ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+error_code_tab:
+ke00    DB 'Divide error            '
+ke01    DB 'Single step             '
+ke02    DB 'NMI                     '
+ke03    DB 'Breakpoint              '
+ke04    DB 'Overflow                '
+ke05    DB 'Array bounds error      '
+ke06    DB 'Invalid OP-code         '
+ke07    DB '80387 not present       '
+ke08    DB 'Double fault            '
+ke09    DB '80387 overrun           '
+ke0A    DB 'Invalid TSS             '
+ke0B    DB 'Segment not present     '
+ke0C    DB 'Stack fault             '
+ke0D    DB 'Protection fault        '
+ke0E    DB 'Page fault              '
+ke0F    DB '                        '
+ke10    DB '80387 error             '
+ke11    DB 'Cannot emulate          '
+ke12    DB 'Cannot emulate 80387    '
+ke13    DB 'Now in real mode        '
+ke14    DB '----------------------- '
+ke15    DB 'Illegal int request     '
+ke16    DB 'Undefined method        '
+ke17    DB 'Invalid handle          '
+ke18    DB 'Invalid selector        '
+
+AddExceptionCode    Proc near
+    movzx edx,ds:[ebp].cpu_exc_code
+    mov ebx,edx
+    add ebx,ebx
+    add ebx,ebx
+    add ebx,ebx
+    mov ecx,ebx
+    add ecx,ecx
+    add ebx,ecx
+    mov esi,OFFSET error_code_tab
+    add esi,ebx
+    mov ecx,24
+    rep movs byte ptr es:[edi],cs:[esi]
+    ret
+AddExceptionCode    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1072,9 +1128,11 @@ dis_next:
     mov ds:[ebp].reg_esp,esp
     mov ds:[ebp].reg_ebp,ebp
 ;
-    mov edi,OFFSET buf
     mov ds:[ebp].cpu_fault,0EEFh
-    call AddFault    
+    mov ds:[ebp].cpu_exc_code,3
+;    
+    mov edi,OFFSET buf
+    call AddExceptionCode
 
 marker_loop:
     mov ax,250
