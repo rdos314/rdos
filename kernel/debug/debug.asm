@@ -493,6 +493,135 @@ AddEflags     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddWordRegs
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     CS:ESI      Table
+;                           ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddWordRegs   PROC near
+
+awLoop:
+    mov al,cs:[esi]
+    or al,al
+    je awEnd
+;    
+    mov ecx,4
+    rep movs es:[edi],cs:[esi]
+;
+    movzx ebx,word ptr cs:[esi]
+    mov ax,ds:[ebp+ebx]
+    call AddHexWord
+           
+awCont:
+    add esi,2
+    jmp awLoop
+    
+awEnd:
+    ret
+AddWordRegs   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddDwordRegs
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     CS:ESI       Table
+;                           ES:EDI       Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddDwordRegs  PROC near
+
+adLoop:
+    mov al,cs:[esi]
+    or al,al
+    je adEnd
+;    
+    mov ecx,5
+    rep movs byte ptr es:[edi],cs:[esi]
+;
+    movzx ebx,word ptr cs:[esi]
+    mov eax,ds:[ebp+ebx]
+    call AddHexDword
+    add esi,2
+    jmp adLoop
+    
+adEnd:
+    ret
+AddDwordRegs  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           word reg tab
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+word_reg_tab1:
+    DB ' TR='
+    DW OFFSET cpu_thread
+    DB ' DT='
+    DW OFFSET reg_ldt.d_selector
+    DB 0
+
+word_reg_tab2:
+    DB ' CS='
+    DW OFFSET reg_cs.d_selector
+    DB ' DS='
+    DW OFFSET reg_ds.d_selector
+    DB ' ES='
+    DW OFFSET reg_es.d_selector
+    DB ' FS='
+    DW OFFSET reg_fs.d_selector
+    DB ' GS='
+    DW OFFSET reg_gs.d_selector
+    DB ' SS='
+    DW OFFSET reg_ss.d_selector
+    DB 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           dword reg tab
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dword_reg_tab1:
+    DB ' EAX='
+    DW OFFSET reg_eax
+    DB ' EBX='
+    DW OFFSET reg_ebx
+    DB ' ECX='
+    DW OFFSET reg_ecx
+    DB ' EDX='
+    DW OFFSET reg_edx
+    DB 0
+
+dword_reg_tab2:
+    DB ' ESI='
+    DW OFFSET reg_esi
+    DB ' EDI='
+    DW OFFSET reg_edi
+    DB ' ESP='
+    DW OFFSET reg_esp
+    DB ' EBP='
+    DW OFFSET reg_ebp
+    DB 0
+
+dword_reg_tab3:
+    DB ' EPC='
+    DW OFFSET reg_eip
+    DB 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Read_mem
 ;
 ;           DESCRIPTION:    Read memory in process
@@ -634,6 +763,55 @@ dis_next:
     pop eax
     mov ds:[ebp].reg_eflags,eax
     call AddEflags    
+;
+    sldt ax
+    mov ds:[ebp].reg_ldt.d_selector,ax
+;    
+    mov edi,OFFSET buf
+    mov esi,word_reg_tab1
+    call AddWordRegs
+;
+    mov ax,cs
+    mov ds:[ebp].reg_cs.d_selector,ax
+;
+    mov ax,ss
+    mov ds:[ebp].reg_ss.d_selector,ax
+;
+    mov ax,ds
+    mov ds:[ebp].reg_ds.d_selector,ax
+;
+    mov ax,es
+    mov ds:[ebp].reg_es.d_selector,ax
+;
+    mov ax,fs
+    mov ds:[ebp].reg_fs.d_selector,ax
+;
+    mov ax,gs
+    mov ds:[ebp].reg_gs.d_selector,ax
+;    
+    mov edi,OFFSET buf
+    mov esi,OFFSET word_reg_tab2
+    call AddWordRegs
+;
+    mov ds:[ebp].reg_eax,eax
+    mov ds:[ebp].reg_ebx,ebx
+    mov ds:[ebp].reg_ecx,ecx
+    mov ds:[ebp].reg_edx,edx
+    mov edi,OFFSET buf
+    mov esi,OFFSET dword_reg_tab1
+    call AddDwordRegs
+;
+    mov ds:[ebp].reg_esi,esi
+    mov ds:[ebp].reg_edi,edi
+    mov ds:[ebp].reg_esp,esp
+    mov ds:[ebp].reg_ebp,ebp
+    mov edi,OFFSET buf
+    mov esi,OFFSET dword_reg_tab2
+    call AddDwordRegs
+;
+    mov edi,OFFSET buf
+    mov esi,OFFSET dword_reg_tab3
+    call AddDwordRegs
 
 marker_loop:
     mov ax,250
