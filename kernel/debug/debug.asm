@@ -1072,6 +1072,246 @@ AddLongData       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;         NAME:			float_normal
+;
+;        DESCRIPTION:	        Normal float
+;
+;        PARAMETERS:		ST(0)		NUMBER TO CONVERT
+;				CL		SIZE OF STRING
+;				DL		NUMBER OF DECIMALS
+;				ES:EDI		STRING
+;                               CF              Sign
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+overflow_txt	DB 'TOO BIG NUMBER'
+
+float_normal	PROC near
+    pushf
+;    call float_split
+;    call float_init_string
+    jc float_error_decode
+;
+    popf
+;    call float_string
+    ret
+    
+float_error_decode:
+    popf
+    mov esi,OFFSET overflow_txt
+    mov ecx,14
+    rep movs byte ptr es:[edi],cs:[esi]
+    ret
+float_normal	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;         NAME:			float_unsupported
+;
+;        DESCRIPTION:	        Unsupported float
+;
+;        PARAMETERS:		ST(0)		NUMBER TO CONVERT
+;				CL		SIZE OF STRING
+;				DL		NUMBER OF DECIMALS
+;				ES:EDI		STRING
+;                               CF              Sign
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unsupported_txt	DB 'UNSUPPORTED'
+
+float_unsuported	PROC near
+    mov esi,OFFSET unsupported_txt
+    mov ecx,11
+    rep movs byte ptr es:[edi],cs:[esi]
+    ret
+float_unsuported	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;         NAME:			float_nan
+;
+;        DESCRIPTION:	        NAN float
+;
+;        PARAMETERS:		ST(0)		NUMBER TO CONVERT
+;				CL		SIZE OF STRING
+;				DL		NUMBER OF DECIMALS
+;				ES:EDI		STRING
+;                               CF              Sign
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+nan_txt			DB 'NAN'
+
+float_nan	PROC near
+    mov esi,OFFSET nan_txt
+    mov ecx,3
+    rep movs byte ptr es:[edi],cs:[esi]
+    ret
+float_nan	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;         NAME:			float_infinity
+;
+;        DESCRIPTION:	        Infinite float
+;
+;        PARAMETERS:		ST(0)		NUMBER TO CONVERT
+;				CL		SIZE OF STRING
+;				DL		NUMBER OF DECIMALS
+;				ES:EDI		STRING
+;                               CF              Sign
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+infinity_txt	DB 'INFINITY'
+
+float_infinity	PROC near
+    mov esi,OFFSET infinity_txt
+    mov ecx,8
+    rep movs byte ptr es:[edi],cs:[esi]
+    ret
+float_infinity	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;         NAME:			float_zero
+;
+;        DESCRIPTION:	        Zero float
+;
+;        PARAMETERS:		ST(0)		NUMBER TO CONVERT
+;				CL		SIZE OF STRING
+;				DL		NUMBER OF DECIMALS
+;				ES:EDI		STRING
+;                               CF              Sign
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+float_zero	PROC near
+    mov al,'0'
+    stosb
+    ret
+float_zero	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;         NAME:			float_empty
+;
+;        DESCRIPTION:	        Empty float
+;
+;        PARAMETERS:		ST(0)		NUMBER TO CONVERT
+;				CL		SIZE OF STRING
+;				DL		NUMBER OF DECIMALS
+;				ES:EDI		STRING
+;                               CF              Sign
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+empty_txt		DB 'EMPTY'
+
+float_empty	PROC near
+    mov esi,OFFSET empty_txt
+    mov ecx,5
+    rep movs byte ptr es:[edi],cs:[esi]
+    ret
+float_empty	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;         NAME:			float_denormal
+;
+;        DESCRIPTION:	        Denormal float
+;
+;        PARAMETERS:		ST(0)		NUMBER TO CONVERT
+;				CL		SIZE OF STRING
+;				DL		NUMBER OF DECIMALS
+;				ES:EDI		STRING
+;                               CF              Sign
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+denormal_txt	DB 'DENORMAL'
+
+float_denormal	PROC near
+    mov esi,OFFSET denormal_txt
+    mov ecx,8
+    rep movs byte ptr es:[edi],cs:[esi]
+    ret
+float_denormal	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;         NAME:			FloadToString
+;
+;        DESCRIPTION:	
+;
+;        PARAMETERS:		ST(0)		NUMBER TO CONVERT
+;				CL		SIZE OF STRING
+;				DL		NUMBER OF DECIMALS
+;				ES:EDI		STRING
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+float_type_tab:
+ftt0 DD OFFSET float_unsuported
+ftt1 DD OFFSET float_nan
+ftt2 DD OFFSET float_unsuported
+ftt3 DD OFFSET float_nan
+ftt4 DD OFFSET float_normal
+ftt5 DD OFFSET float_infinity
+ftt6 DD OFFSET float_normal
+ftt7 DD OFFSET float_infinity
+ftt8 DD OFFSET float_zero
+ftt9 DD OFFSET float_empty
+fttA DD OFFSET float_zero
+fttB DD OFFSET float_empty
+fttC DD OFFSET float_denormal
+fttD DD OFFSET float_unsuported
+fttE DD OFFSET float_denormal
+fttF DD OFFSET float_unsuported
+
+FloatToString	PROC near
+    pushad
+;	
+    fxam
+    fstsw ax
+    test ah,2
+    clc
+    jz ftsSignOk
+;    
+    fchs
+    stc
+
+ftsSignOk:
+    pushf
+    mov bl,ah
+    and bl,7
+    and ah,40h
+    jz ftsC3Zero
+;    
+    or bl,8
+
+ftsC3Zero:
+    movzx ebx,bl
+    shl ebx,2
+    popf
+    call dword ptr cs:[ebx].float_type_tab
+    xor al,al
+    stosb
+    popad
+    ret
+FloatToString	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AddMathOne
 ;
 ;           DESCRIPTION:    Add math register
@@ -1124,6 +1364,10 @@ AddMathNorm:
     mov eax,10
     mul ebx
     fld tbyte ptr ds:[ebp+eax].math_st0
+;    
+    mov cl,35
+    mov dl,18
+    call FloatToString
 
 AddMathDone:
     mov ecx,35
