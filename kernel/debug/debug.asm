@@ -2022,6 +2022,53 @@ AddProtCpuReg     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddLongCpuReg
+;
+;           DESCRIPTION:    Add long mode CPU regs
+;
+;           PARAMETERS:     ES:EDI              Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddLongCpuReg     Proc near
+    mov esi,OFFSET qword_reg_tab1
+    call AddQwordRegs
+    call AddNewLine
+;
+    mov esi,OFFSET qword_reg_tab2
+    call AddQwordRegs
+    call AddNewLine
+;
+    mov esi,OFFSET qword_reg_tab3
+    call AddQwordRegs
+    call AddNewLine
+;
+    mov esi,OFFSET qword_reg_tab4
+    call AddQwordRegs
+    call AddNewLine
+;
+    mov esi,OFFSET qword_reg_tab5
+    call AddQwordRegs
+    mov ecx,20
+    call AddBlanks
+    call AddNewLine
+;
+    mov esi,OFFSET qword_reg_tab6
+    call AddQwordRegs
+    call AddNewLine
+;
+    mov esi,OFFSET word_reg_tab2
+    call AddWordRegs
+    call AddNewLine
+;
+    call AddEflags
+    call AddNewLine
+    ret
+AddLongCpuReg     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Read_mem
 ;
 ;           DESCRIPTION:    Read memory in process
@@ -2219,7 +2266,7 @@ dis_next:
     pop ds
 ;
     mov edi,OFFSET buf
-    call AddProtCpuReg
+    call AddLongCpuReg
 ;
     xor al,al
     stosb 
