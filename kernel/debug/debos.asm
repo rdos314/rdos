@@ -20,7 +20,7 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; DEBUGOS.ASM
+; DEBOS.ASM
 ; OS-based kernel debugger
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -103,7 +103,7 @@ AddEflags     PROC near
     push edx
     push esi
 ;    
-    mov eax,ds:[ebp].reg_eflags
+    mov eax,dword ptr gs:p_rflags
     mov esi,OFFSET eflags_tab
     mov ecx,18
     
@@ -136,7 +136,7 @@ eflags_next:
     mov esi,OFFSET iopl_text
     call AddCodeAsciiz
 ;    
-    mov ax,word ptr ds:[ebp].reg_eflags
+    mov ax,word ptr gs:p_rflags
     shr ax,12
     and ax,3
     add ax,'0'
@@ -172,7 +172,16 @@ awLoop:
     rep movs es:[edi],cs:[esi]
 ;
     movzx ebx,word ptr cs:[esi]
-    mov ax,ds:[ebp+ebx]
+    or ebx,ebx
+    jz awThread
+;    
+    mov ax,gs:[ebx]
+    jmp awWrite
+
+awThread:
+    mov ax,gs
+
+awWrite:
     call AddHexWord
            
 awCont:
@@ -206,7 +215,7 @@ adLoop:
     rep movs byte ptr es:[edi],cs:[esi]
 ;
     movzx ebx,word ptr cs:[esi]
-    mov eax,ds:[ebp+ebx]
+    mov eax,gs:[ebx]
     call AddHexDword
     add esi,2
     jmp adLoop
@@ -238,8 +247,8 @@ aqLoop:
     rep movs byte ptr es:[edi],cs:[esi]
 ;    
     movzx ebx,cs:[esi]
-    mov eax,ds:[ebp+ebx]
-    mov edx,ds:[ebp+ebx+4]
+    mov eax,gs:[ebx]
+    mov edx,gs:[ebx+4]
     call AddHexQword
     add esi,2
     jmp aqLoop
@@ -721,24 +730,24 @@ AddCoproc     Endp
 
 word_reg_tab1:
     DB ' TR='
-    DW OFFSET cpu_thread
+    DW 0
     DB ' DT='
-    DW OFFSET reg_ldt.d_selector
+    DW OFFSET p_ldt
     DB 0
 
 word_reg_tab2:
     DB ' CS='
-    DW OFFSET reg_cs.d_selector
+    DW OFFSET p_cs
     DB ' DS='
-    DW OFFSET reg_ds.d_selector
+    DW OFFSET p_ds
     DB ' ES='
-    DW OFFSET reg_es.d_selector
+    DW OFFSET p_es
     DB ' FS='
-    DW OFFSET reg_fs.d_selector
+    DW OFFSET p_fs
     DB ' GS='
-    DW OFFSET reg_gs.d_selector
+    DW OFFSET p_gs
     DB ' SS='
-    DW OFFSET reg_ss.d_selector
+    DW OFFSET p_ss
     DB 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -750,29 +759,29 @@ word_reg_tab2:
 
 dword_reg_tab1:
     DB ' EAX='
-    DW OFFSET reg_eax
+    DW OFFSET p_rax
     DB ' EBX='
-    DW OFFSET reg_ebx
+    DW OFFSET p_rbx
     DB ' ECX='
-    DW OFFSET reg_ecx
+    DW OFFSET p_rcx
     DB ' EDX='
-    DW OFFSET reg_edx
+    DW OFFSET p_rdx
     DB 0
 
 dword_reg_tab2:
     DB ' ESI='
-    DW OFFSET reg_esi
+    DW OFFSET p_rsi
     DB ' EDI='
-    DW OFFSET reg_edi
+    DW OFFSET p_rdi
     DB ' ESP='
-    DW OFFSET reg_esp
+    DW OFFSET p_rsp
     DB ' EBP='
-    DW OFFSET reg_ebp
+    DW OFFSET p_rbp
     DB 0
 
 dword_reg_tab3:
     DB ' EPC='
-    DW OFFSET reg_eip
+    DW OFFSET p_rip
     DB 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -784,54 +793,54 @@ dword_reg_tab3:
 
 qword_reg_tab1:
     DB ' RAX='
-    DW OFFSET reg_eax
+    DW OFFSET p_rax
     DB ' RBX='
-    DW OFFSET reg_ebx
+    DW OFFSET p_rbx
     DB ' RCX='
-    DW OFFSET reg_ecx
+    DW OFFSET p_rcx
     DB 0
 
 qword_reg_tab2:
     DB ' RDX='
-    DW OFFSET reg_edx
+    DW OFFSET p_rdx
     DB ' RSI='
-    DW OFFSET reg_esi
+    DW OFFSET p_rsi
     DB ' RDI='
-    DW OFFSET reg_edi
+    DW OFFSET p_rdi
     DB 0
 
 qword_reg_tab3:
     DB '  R8='
-    DW OFFSET reg_r8
+    DW OFFSET p_r8
     DB '  R9='
-    DW OFFSET reg_r9
+    DW OFFSET p_r9
     DB ' R10='
-    DW OFFSET reg_r10
+    DW OFFSET p_r10
     DB 0
 
 qword_reg_tab4:
     DB ' R11='
-    DW OFFSET reg_r11
+    DW OFFSET p_r11
     DB ' R12='
-    DW OFFSET reg_r12
+    DW OFFSET p_r12
     DB ' R13='
-    DW OFFSET reg_r13
+    DW OFFSET p_r13
     DB 0
 
 qword_reg_tab5:
     DB ' R14='
-    DW OFFSET reg_r14
+    DW OFFSET p_r14
     DB ' R15='
-    DW OFFSET reg_r15
+    DW OFFSET p_r15
     DB 0
 
 qword_reg_tab6:
     DB ' RIP='
-    DW OFFSET reg_eip
+    DW OFFSET p_rip
     DB ' RSP='
-    DW OFFSET reg_esp
+    DW OFFSET p_rsp
     DB ' RBP='
-    DW OFFSET reg_ebp
+    DW OFFSET p_rbp
     DB 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
