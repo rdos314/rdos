@@ -586,11 +586,11 @@ HandleMouse     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-debug_name          DB 'New Debug',0
+debug_name          DB 'Debug',0
 
 debug_process:
     sti
-    mov ax,41h
+    mov ax,42h
     EnableFocus
 ;
     mov ax,250

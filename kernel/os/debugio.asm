@@ -3586,9 +3586,14 @@ init_local      PROC near
     mov ax,cs
     mov es,ax
 ;
+    mov bx,0EE0h
+    verr bx
+    jz init_local_done
+;    
     mov edi,OFFSET init_debug_process
     HookInitTasking
-;
+
+init_local_done:
     mov bx,SEG data
     mov es,bx
     mov es:mouse_pos,0
