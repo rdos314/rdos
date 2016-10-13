@@ -2196,7 +2196,7 @@ change_pm_offs_error:
 change_pm_offs  ENDP
 
 change_vm_sel   PROC near
-    mov edx,20000h
+    xor edx,edx
     xchg edx,ds:[ebp].reg_eflags
     push edx
 ;    
@@ -2224,7 +2224,7 @@ change_vm_sel_error:
 change_vm_sel   ENDP
 
 change_vm_offs  PROC near
-    mov edx,20000h
+    xor edx,edx
     xchg edx,ds:[ebp].reg_eflags
     push edx
 ;    
