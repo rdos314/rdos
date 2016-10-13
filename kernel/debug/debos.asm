@@ -2144,9 +2144,9 @@ change_ss       PROC near
 change_ss       ENDP
 
 change_pm_sel   PROC near
-    xor ecx,ecx
-    xchg ecx,ds:[ebp].reg_eflags
-    push ecx
+    xor edx,edx
+    xchg edx,ds:[ebp].reg_eflags
+    push edx
 ;    
     mov dx,gs
     and cl,3
@@ -2165,15 +2165,15 @@ change_pm_sel_ret:
     inc ds:sw_col
 
 change_pm_sel_error:
-    pop ecx
-    mov ds:[ebp].reg_eflags,ecx
+    pop edx
+    mov ds:[ebp].reg_eflags,edx
     ret
 change_pm_sel   ENDP
 
 change_pm_offs  PROC near
-    xor ecx,ecx
-    xchg ecx,ds:[ebp].reg_eflags
-    push ecx
+    xor edx,edx
+    xchg edx,ds:[ebp].reg_eflags
+    push edx
 ;
     mov dx,gs
     mov esi,OFFSET p_pm_deb_offs
@@ -2190,15 +2190,15 @@ change_pm_offs_ret:
     inc ds:sw_col
 
 change_pm_offs_error:
-    pop ecx
-    mov ds:[ebp].reg_eflags,ecx
+    pop edx
+    mov ds:[ebp].reg_eflags,edx
     ret
 change_pm_offs  ENDP
 
 change_vm_sel   PROC near
-    mov ecx,20000h
-    xchg ecx,ds:[ebp].reg_eflags
-    push ecx
+    mov edx,20000h
+    xchg edx,ds:[ebp].reg_eflags
+    push edx
 ;    
     mov dx,gs
     and cl,3
@@ -2218,15 +2218,15 @@ change_vm_sel_ret:
     inc ds:sw_col
     
 change_vm_sel_error:
-    pop ecx
-    mov ds:[ebp].reg_eflags,ecx
+    pop edx
+    mov ds:[ebp].reg_eflags,edx
     ret
 change_vm_sel   ENDP
 
 change_vm_offs  PROC near
-    mov ecx,20000h
-    xchg ecx,ds:[ebp].reg_eflags
-    push ecx
+    mov edx,20000h
+    xchg edx,ds:[ebp].reg_eflags
+    push edx
 ;    
     mov dx,gs
     mov esi,OFFSET p_vm_deb_offs
@@ -2245,8 +2245,8 @@ change_vm_offs_ret:
     inc ds:sw_col
     
 change_vm_offs_error:
-    pop ecx
-    mov ds:[ebp].reg_eflags,ecx
+    pop edx
+    mov ds:[ebp].reg_eflags,edx
     ret
 change_vm_offs  ENDP
 
@@ -2415,30 +2415,30 @@ mem_es  PROC near
 mem_es  ENDP
 
 mem_pm  PROC near
-    xor ecx,ecx
-    xchg ecx,ds:[ebp].reg_eflags
-    push ecx
+    xor edx,edx
+    xchg edx,ds:[ebp].reg_eflags
+    push edx
 ;    
     mov dx,gs:p_pm_deb_sel
     mov esi,gs:p_pm_deb_offs
     call mem_do
 ;
-    pop ecx    
-    mov ds:[ebp].reg_eflags,ecx
+    pop edx    
+    mov ds:[ebp].reg_eflags,edx
     ret
 mem_pm  ENDP
 
 mem_vm  PROC near
-    mov ecx,20000h
-    xchg ecx,ds:[ebp].reg_eflags
-    push ecx
+    mov edx,20000h
+    xchg edx,ds:[ebp].reg_eflags
+    push edx
 ;    
     mov dx,gs:p_vm_deb_sel
     mov esi,gs:p_vm_deb_offs
     call mem_do
 ;    
-    pop ecx    
-    mov ds:[ebp].reg_eflags,ecx
+    pop edx    
+    mov ds:[ebp].reg_eflags,edx
     ret
 mem_vm  ENDP
 
