@@ -41,8 +41,6 @@ data    SEGMENT byte public 'DATA'
 
 buf    DB 4096 DUP(?)
 
-cpu cpu_struc <>
-
 data    ENDS
 
 code    SEGMENT byte use32 public 'CODE'
@@ -71,7 +69,6 @@ debug_process:
     mov ax,SEG data
     mov ds,ax
     mov es,ax
-    mov ebp,OFFSET cpu
 ;
     finit
     fld tbyte ptr cs:val
@@ -79,9 +76,6 @@ debug_process:
     GetThread
     mov edi,OFFSET buf
     call GetCpu
-;
-    xor al,al
-    stosb 
 ;
     mov edi,OFFSET buf
     WriteAsciiz   

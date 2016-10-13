@@ -37,6 +37,12 @@ INCLUDE dis.inc
 .386p
 .387
 
+data    SEGMENT byte public 'DATA'
+
+cpu cpu_struc <>
+
+data    ENDS
+
 code    SEGMENT byte use32 public 'CODE'
 
     extrn DisAsmCode:near
@@ -1291,6 +1297,11 @@ GetDebugThreadData      Endp
     public GetCpu
     
 GetCpu  Proc near
+    push gs
+    pushad
+;
+    mov gs,ax
+    mov ebp,OFFSET cpu
     call GetDebugThreadData
 ;    
     mov ax,ds:[ebp].cpu_tss
@@ -1299,10 +1310,17 @@ GetCpu  Proc near
 
 gcProt:
     call GetProtCpu
-    ret
+    jmp gcDone
 
 gcLong:
     call GetLongCpu
+
+gcDone:
+    xor al,al
+    stosb 
+;
+    popad
+    pop gs    
     ret
 GetCpu  Endp
     
