@@ -35,10 +35,10 @@ INCLUDE ..\os\system.def
 INCLUDE dis.inc
 
 debug_row       EQU 0
-debug_col       EQU 2
-debug_ant       EQU 4
-debug_call      EQU 6
-debug_size      EQU 8
+debug_col       EQU 4
+debug_ant       EQU 8
+debug_call      EQU 12
+debug_size      EQU 16
 
 .386p
 .387
@@ -48,6 +48,7 @@ data    SEGMENT byte public 'DATA'
 cpu cpu_struc <>
 
 intr_dl     DB ?
+intr_ax     DW ?
 
 data    ENDS
 
@@ -1310,6 +1311,208 @@ GetCpu  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           interact_inc
+;
+;           DESCRIPTION:    Interact increment
+;
+;           PARAMETERS:     GS          Thread
+;                           DX:ESI      Adress to data
+;                           CL          Number of digits
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+interact_incr   PROC near
+    push eax
+    push bx
+    push esi
+    xor eax,eax
+    clc
+    rcr cl,1
+    mov al,cl
+    pushf
+    add esi,eax
+    mov bx,gs
+    test word ptr ds:[ebp].reg_eflags+2,2
+    jz interact_inc_read_prot
+
+interact_inc_read_virt:
+    ReadThreadSegment
+    jmp interact_inc_read_done
+
+interact_inc_read_prot:
+    ReadThreadSelector
+
+interact_inc_read_done:
+    popf
+    jnc inc_low
+
+inc_hi:
+    add al,10h
+    jmp inc_j
+
+inc_low:
+    mov ah,al
+    inc al
+    and al,0Fh
+    and ah,0F0h
+    or al,ah
+
+inc_j:
+    test word ptr ds:[ebp].reg_eflags+2,2
+    jz interact_inc_write_prot
+
+interact_inc_write_virt:
+    WriteThreadSegment
+    jmp interact_inc_write_done
+
+interact_inc_write_prot:
+    WriteThreadSelector
+
+interact_inc_write_done:
+    pop esi
+    pop bx
+    pop eax
+    ret
+interact_incr   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           interact_dec
+;
+;           DESCRIPTION:    Interact decrement
+;
+;           PARAMETERS:     GS          Thread
+;                           DX:ESI      Adress to data
+;                           CL          Number of digits
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+interact_decr   PROC near
+    push eax
+    push bx
+    push esi
+    xor eax,eax
+    clc
+    rcr cl,1
+    mov al,cl
+    pushf
+    add esi,eax
+    mov bx,gs
+    test word ptr ds:[ebp].reg_eflags+2,2
+    jz interact_dec_read_prot
+
+interact_dec_read_virt:
+    ReadThreadSegment
+    jmp interact_dec_read_done
+
+interact_dec_read_prot:
+    ReadThreadSelector
+
+interact_dec_read_done:
+    popf
+    jnc dec_low
+
+dec_hi:
+    sub al,10h
+    jmp dec_j
+
+dec_low:
+    mov ah,al
+    dec al
+    and al,0Fh
+    and ah,0F0h
+    or al,ah
+    
+dec_j:
+    test word ptr ds:[ebp].reg_eflags+2,2
+    jz interact_dec_write_prot
+
+interact_dec_write_virt:
+    WriteThreadSegment
+    jmp interact_dec_write_done
+
+interact_dec_write_prot:
+    WriteThreadSelector
+
+interact_dec_write_done:
+    pop esi
+    pop bx
+    pop eax
+    ret
+interact_decr   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           interact_set_value
+;
+;           DESCRIPTION:    Interact set new value
+;
+;           PARAMETERS:     GS          Thread
+;                           DX:ESI      Adress to data
+;                           CL          Digit #
+;                           CH              Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+interact_set_value     PROC near
+    push eax
+    push bx
+    push esi
+    xor eax,eax
+    clc
+    rcr cl,1
+    mov al,cl
+    pushf
+    add esi,eax
+    mov bx,gs
+    test word ptr ds:[ebp].reg_eflags+2,2
+    jz interact_set_read_prot
+
+interact_set_read_virt:
+    ReadThreadSegment
+    jmp interact_set_read_done
+
+interact_set_read_prot:
+    ReadThreadSelector
+
+interact_set_read_done:
+    popf
+    jnc set_low
+
+set_hi:
+    and al,0Fh
+    mov ah,ch
+    shl ah,4
+    or al,ah
+    jmp set_j
+
+set_low:
+    and al,0F0h
+    or al,ch
+
+set_j:
+    test word ptr ds:[ebp].reg_eflags+2,2
+    jz interact_set_write_prot
+
+interact_set_write_virt:
+    WriteThreadSegment
+    jmp interact_set_write_done
+
+interact_set_write_prot:
+    WriteThreadSelector
+
+interact_set_write_done:
+    pop esi
+    pop bx
+    pop eax
+    ret
+interact_set_value      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           incdec16
 ;
 ;       DESCRIPTION:    INC / DEC
@@ -2240,6 +2443,131 @@ mem_vm  PROC near
     mov ds:[ebp].reg_eflags,ecx
     ret
 mem_vm  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           debug_call_do32
+;
+;           DESCRIPTION:    Perform a function
+;
+;           PARAMETERS:     GS              Thread
+;                           EDI             Offset to debug-function
+;                           CH              Digit / param
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+debug_table32:
+;
+;           rad     kolumn  antal   action
+;
+meax32 DD 9,          1,          3,          OFFSET incdec_eax
+deax32 DD 9,          5,          8,          OFFSET change_eax
+mebx32 DD 9,          14,         3,          OFFSET incdec_ebx
+debx32 DD 9,          18,         8,          OFFSET change_ebx
+mecx32 DD 9,          27,         3,          OFFSET incdec_ecx
+decx32 DD 9,          31,         8,          OFFSET change_ecx
+medx32 DD 9,          40,         3,          OFFSET incdec_edx
+dedx32 DD 9,          44,         8,          OFFSET change_edx
+mesi32 DD 10,         1,          3,          OFFSET incdec_esi
+desi32 DD 10,         5,          8,          OFFSET change_esi
+medi32 DD 10,         14,         3,          OFFSET incdec_edi
+dedi32 DD 10,         18,         8,          OFFSET change_edi
+mesp32 DD 10,         27,         3,          OFFSET incdec_esp
+desp32 DD 10,         31,         8,          OFFSET change_esp
+mebp32 DD 10,         40,         3,          OFFSET incdec_ebp
+debp32 DD 10,         44,         8,          OFFSET change_ebp
+mepc32 DD 11,         1,          3,          OFFSET incdec_epc
+depc32 DD 11,         5,          8,          OFFSET change_epc
+mcs32  DD 12,         1,          2,          OFFSET incdec_cs
+dcs32  DD 12,         4,          4,          OFFSET change_cs
+mds32  DD 12,         9,          2,          OFFSET incdec_ds
+dds32  DD 12,         12,         4,          OFFSET change_ds
+mes32  DD 12,         17,         2,          OFFSET incdec_es
+des32  DD 12,         20,         4,          OFFSET change_es
+mfs32  DD 12,         25,         2,          OFFSET incdec_fs
+dfs32  DD 12,         28,         4,          OFFSET change_fs
+mgs32  DD 12,         33,         2,          OFFSET incdec_gs
+dgs32  DD 12,         36,         4,          OFFSET change_gs
+mss32  DD 12,         41,         2,          OFFSET incdec_ss
+dss32  DD 12,         44,         4,          OFFSET change_ss
+dcy32  DD 13,         0,          2,          OFFSET toggle_cy
+dpa32  DD 13,         3,          2,          OFFSET toggle_pa
+dac32  DD 13,         6,          2,          OFFSET toggle_ac
+dzr32  DD 13,         9,          2,          OFFSET toggle_zr
+dplc32 DD 13,         12,         2,          OFFSET toggle_pl
+disf32 DD 13,         15,         2,          OFFSET toggle_im
+ddir32 DD 13,         18,         2,          OFFSET toggle_dir
+dov32  DD 13,         21,         2,          OFFSET toggle_ov
+dnt32  DD 13,         24,         2,          OFFSET toggle_nt
+mdad32 DD 19,         14,         47,         OFFSET mem_ads
+mdcs32 DD 20,         14,         47,         OFFSET mem_cs
+mdss32 DD 21,         14,         47,         OFFSET mem_ss
+mdes32 DD 22,         14,         47,         OFFSET mem_es
+pms32  DD 23,         0,          4,          OFFSET change_pm_sel
+pmo32  DD 23,         5,          8,          OFFSET change_pm_offs
+pdat32 DD 23,         14,         47,         OFFSET mem_pm
+vms32  DD 24,         0,          4,          OFFSET change_vm_sel
+vmo32  DD 24,         5,          8,          OFFSET change_vm_offs
+vdat32 DD 24,         14,         47,         OFFSET mem_vm
+dend32 DD 0FFFFFFFFh, 0FFFFFFFFh
+
+debug_call_do32   PROC near
+    mov ebx,OFFSET debug_table32
+    movzx ax,ds:intr_dl
+
+d_c_loop32:
+    mov cl,cs:[ebx+debug_row]
+    cmp cl,0FFh
+    je d_c_end32
+;    
+    cmp cl,ah
+    jne not_this_entry32
+;    
+    mov cl,al
+    sub cl,cs:[ebx+debug_col]
+    cmp cl,cs:[ebx+debug_ant]
+    jnc not_this_entry32
+;
+    xor cl,7
+    and cl,7
+    mov ax,ds:intr_ax
+    jmp dword ptr cs:[ebx+debug_call]
+    
+not_this_entry32:
+    add ebx,debug_size
+    jmp d_c_loop32
+
+d_c_end32:
+    ret
+debug_call_do32   ENDP
+
+inc_sw32  PROC near
+    pusha
+    mov edi,OFFSET interact_incr
+    call debug_call_do32
+    popa
+    ret
+inc_sw32  ENDP
+
+dec_sw32  PROC near
+    pusha
+    mov edi,OFFSET interact_decr
+    call debug_call_do32
+    popa
+    ret
+dec_sw32  ENDP
+
+;
+; ch = siffra
+;
+set_base_sw32     PROC near
+    pusha
+    mov di,OFFSET interact_set
+    call debug_call_do32
+    popa
+    ret
+set_base_sw32     ENDP
     
 code    ENDS
 
