@@ -612,7 +612,7 @@ AddMathNorm:
     and ebx,7
     mov eax,10
     mul ebx
-    fld tbyte ptr ds:[ebp+eax].math_st0
+    fld tbyte ptr gs:[eax].p_math_st0
 ;    
     mov cl,35
     mov dl,18
@@ -649,8 +649,8 @@ math7   DB 'ST(7)=  ',0
 
 AddCoproc     Proc near
     finit
-    mov dx,ds:[ebp].math_tag
-    mov ax,ds:[ebp].math_status
+    mov dx,gs:p_math_tag
+    mov ax,gs:p_math_status
     shr ax,3
     mov cl,ah
     and cl,7
@@ -1108,26 +1108,23 @@ write_mem    Endp
 ;
 ;           DESCRIPTION:    Get debug thread data
 ;
-;           PARAMETERS:     AX          Debugged thread
+;           PARAMETERS:     GS          Debugged thread
 ;                           DS:EBP      Cpu
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetDebugThreadData      Proc near
-    push ds
     push es
     pushad
-;
-    mov dx,ds
-    mov es,dx    
-    mov ds,ax
+;    
+    mov ax,ds
+    mov es,ax
 ;    
     mov es:[ebp].cpu_read_mem,OFFSET read_mem
     mov es:[ebp].cpu_write_mem,OFFSET write_mem
+    mov es:[ebp].cpu_thread,gs
 ;    
-    mov es:[ebp].cpu_thread,ax
-;    
-    mov bx,ds:p_cs
+    mov bx,gs:p_cs
     mov es:[ebp].reg_cs.d_selector,bx
     GetSelectorBitness
     cmp al,16
@@ -1148,129 +1145,115 @@ dis16:
     mov es:[ebp].reg_cs.d_access,ACCESS_READ
 
 disdo:    
-    mov eax,dword ptr ds:p_rflags
+    mov eax,dword ptr gs:p_rflags
     mov es:[ebp].reg_eflags,eax
 ;
-    mov ax,ds:p_ldt
+    mov ax,gs:p_ldt
     mov es:[ebp].reg_ldt.d_selector,ax
 ;
-    mov ax,ds:p_ss
+    mov ax,gs:p_ss
     mov es:[ebp].reg_ss.d_selector,ax
 ;
-    mov ax,ds:p_ds
+    mov ax,gs:p_ds
     mov es:[ebp].reg_ds.d_selector,ax
 ;
-    mov ax,ds:p_es
+    mov ax,gs:p_es
     mov es:[ebp].reg_es.d_selector,ax
 ;
-    mov ax,ds:p_fs
+    mov ax,gs:p_fs
     mov es:[ebp].reg_fs.d_selector,ax
 ;
-    mov ax,ds:p_gs
+    mov ax,gs:p_gs
     mov es:[ebp].reg_gs.d_selector,ax
 ;
-    mov eax,dword ptr ds:p_rax
+    mov eax,dword ptr gs:p_rax
     mov es:[ebp].reg_eax,eax
-    mov eax,dword ptr ds:p_rax+4
+    mov eax,dword ptr gs:p_rax+4
     mov es:[ebp].reg_eax+4,eax
 ;
-    mov eax,dword ptr ds:p_rbx
+    mov eax,dword ptr gs:p_rbx
     mov es:[ebp].reg_ebx,eax
-    mov eax,dword ptr ds:p_rbx+4
+    mov eax,dword ptr gs:p_rbx+4
     mov es:[ebp].reg_ebx+4,eax
 ;
-    mov eax,dword ptr ds:p_rcx
+    mov eax,dword ptr gs:p_rcx
     mov es:[ebp].reg_ecx,eax
-    mov eax,dword ptr ds:p_rcx+4
+    mov eax,dword ptr gs:p_rcx+4
     mov es:[ebp].reg_ecx+4,eax
 ;
-    mov eax,dword ptr ds:p_rdx
+    mov eax,dword ptr gs:p_rdx
     mov es:[ebp].reg_edx,eax
-    mov eax,dword ptr ds:p_rdx+4
+    mov eax,dword ptr gs:p_rdx+4
     mov es:[ebp].reg_edx+4,eax
 ;
-    mov eax,dword ptr ds:p_rsi
+    mov eax,dword ptr gs:p_rsi
     mov es:[ebp].reg_esi,eax
-    mov eax,dword ptr ds:p_rsi+4
+    mov eax,dword ptr gs:p_rsi+4
     mov es:[ebp].reg_esi+4,eax
 ;
-    mov eax,dword ptr ds:p_rdi
+    mov eax,dword ptr gs:p_rdi
     mov es:[ebp].reg_edi,eax
-    mov eax,dword ptr ds:p_rdi+4
+    mov eax,dword ptr gs:p_rdi+4
     mov es:[ebp].reg_edi+4,eax
 ;
-    mov eax,dword ptr ds:p_rbp
+    mov eax,dword ptr gs:p_rbp
     mov es:[ebp].reg_ebp,eax
-    mov eax,dword ptr ds:p_rbp+4
+    mov eax,dword ptr gs:p_rbp+4
     mov es:[ebp].reg_ebp+4,eax
 ;
-    mov eax,dword ptr ds:p_rsp
+    mov eax,dword ptr gs:p_rsp
     mov es:[ebp].reg_esp,eax
-    mov eax,dword ptr ds:p_rsp+4
+    mov eax,dword ptr gs:p_rsp+4
     mov es:[ebp].reg_esp+4,eax
 ;
-    mov eax,dword ptr ds:p_rip
+    mov eax,dword ptr gs:p_rip
     mov es:[ebp].reg_eip,eax
-    mov eax,dword ptr ds:p_rip+4
+    mov eax,dword ptr gs:p_rip+4
     mov es:[ebp].reg_eip+4,eax
 ;
-    mov eax,dword ptr ds:p_r8
+    mov eax,dword ptr gs:p_r8
     mov es:[ebp].reg_r8,eax
-    mov eax,dword ptr ds:p_r8+4
+    mov eax,dword ptr gs:p_r8+4
     mov es:[ebp].reg_r8+4,eax
 ;
-    mov eax,dword ptr ds:p_r9
+    mov eax,dword ptr gs:p_r9
     mov es:[ebp].reg_r9,eax
-    mov eax,dword ptr ds:p_r9+4
+    mov eax,dword ptr gs:p_r9+4
     mov es:[ebp].reg_r9+4,eax
 ;
-    mov eax,dword ptr ds:p_r10
+    mov eax,dword ptr gs:p_r10
     mov es:[ebp].reg_r10,eax
-    mov eax,dword ptr ds:p_r10+4
+    mov eax,dword ptr gs:p_r10+4
     mov es:[ebp].reg_r10+4,eax
 ;
-    mov eax,dword ptr ds:p_r11
+    mov eax,dword ptr gs:p_r11
     mov es:[ebp].reg_r11,eax
-    mov eax,dword ptr ds:p_r11+4
+    mov eax,dword ptr gs:p_r11+4
     mov es:[ebp].reg_r11+4,eax
 ;
-    mov eax,dword ptr ds:p_r12
+    mov eax,dword ptr gs:p_r12
     mov es:[ebp].reg_r12,eax
-    mov eax,dword ptr ds:p_r12+4
+    mov eax,dword ptr gs:p_r12+4
     mov es:[ebp].reg_r12+4,eax
 ;
-    mov eax,dword ptr ds:p_r13
+    mov eax,dword ptr gs:p_r13
     mov es:[ebp].reg_r13,eax
-    mov eax,dword ptr ds:p_r13+4
+    mov eax,dword ptr gs:p_r13+4
     mov es:[ebp].reg_r13+4,eax
 ;
-    mov eax,dword ptr ds:p_r14
+    mov eax,dword ptr gs:p_r14
     mov es:[ebp].reg_r14,eax
-    mov eax,dword ptr ds:p_r14+4
+    mov eax,dword ptr gs:p_r14+4
     mov es:[ebp].reg_r14+4,eax
 ;
-    mov eax,dword ptr ds:p_r15
+    mov eax,dword ptr gs:p_r15
     mov es:[ebp].reg_r15,eax
-    mov eax,dword ptr ds:p_r15+4
+    mov eax,dword ptr gs:p_r15+4
     mov es:[ebp].reg_r15+4,eax
-;    
-    mov ax,ds:p_tss_sel
-    mov es:[ebp].cpu_tss,ax
 ;
-    mov ax,ds:p_math_tag
-    mov es:[ebp].math_tag,ax
-;
-    mov ax,ds:p_math_status
-    mov es:[ebp].math_status,ax
-;    
-    mov esi,OFFSET p_math_st0
-    lea edi,[ebp].math_st0
-    mov ecx,20
-    rep movsd
 ;
     popad
     pop es
-    pop ds
     ret
 GetDebugThreadData      Endp
 
@@ -1296,7 +1279,7 @@ GetCpu  Proc near
     mov ebp,OFFSET cpu
     call GetDebugThreadData
 ;    
-    mov ax,ds:[ebp].cpu_tss
+    mov ax,gs:p_tss_sel
     or ax,ax
     jz gcLong
 

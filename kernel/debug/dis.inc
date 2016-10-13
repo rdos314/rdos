@@ -168,7 +168,6 @@ ignore_ptr      DB ?
 op_rex          DB ?
 root_tab        DD ?
 
-cpu_tss         DW ?
 cpu_thread      DW ?
 cpu_read_mem    DD ?
 cpu_write_mem   DD ?
