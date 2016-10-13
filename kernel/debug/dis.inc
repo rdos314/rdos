@@ -169,8 +169,6 @@ op_rex          DB ?
 root_tab        DD ?
 
 cpu_tss         DW ?
-cpu_exc_code    DB ?
-cpu_fault       DD ?
 cpu_thread      DW ?
 cpu_read_mem    DD ?
 cpu_write_mem   DD ?

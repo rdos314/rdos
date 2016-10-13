@@ -276,10 +276,10 @@ ft_ldt  DB 'ldt ',0
 ft_gdt  DB 'gdt ',0
 
 AddFault      PROC near
-    test word ptr ds:[ebp].reg_eflags+2,2
+    test word ptr gs:p_rflags+2,2
     jnz afEnd
 ;    
-    mov eax,ds:[ebp].cpu_fault
+    mov eax,gs:p_fault_code
     cmp ax,3
     je afEnd
 ;    
@@ -361,7 +361,7 @@ ke17    DB 'Invalid handle          '
 ke18    DB 'Invalid selector        '
 
 AddExceptionCode    Proc near
-    movzx edx,ds:[ebp].cpu_exc_code
+    movzx edx,gs:p_fault_vector
     mov ebx,edx
     add ebx,ebx
     add ebx,ebx
@@ -1264,12 +1264,6 @@ disdo:
     mov es:[ebp].reg_r15,eax
     mov eax,dword ptr ds:p_r15+4
     mov es:[ebp].reg_r15+4,eax
-;
-    mov al,ds:p_fault_vector
-    mov es:[ebp].cpu_exc_code,al
-;
-    mov eax,ds:p_fault_code
-    mov es:[ebp].cpu_fault,eax
 ;    
     mov ax,ds:p_tss_sel
     mov es:[ebp].cpu_tss,ax
