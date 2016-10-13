@@ -34,12 +34,20 @@ INCLUDE ..\os.inc
 INCLUDE ..\os\system.def
 INCLUDE dis.inc
 
+debug_row       EQU 0
+debug_col       EQU 2
+debug_ant       EQU 4
+debug_call      EQU 6
+debug_size      EQU 8
+
 .386p
 .387
 
 data    SEGMENT byte public 'DATA'
 
 cpu cpu_struc <>
+
+intr_dl     DB ?
 
 data    ENDS
 
@@ -1298,6 +1306,549 @@ gcDone:
     pop gs    
     ret
 GetCpu  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Change_xxx
+;
+;           DESCRIPTION:    Change field callbacks
+;
+;           PARAMETERS:     GS          Thread
+;                           EDI         Change procedure
+;                           CL          Digit #
+;                           CH          Value
+;
+;           RETURNS:        DX:ESI      Address to data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+change_eax      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rax
+    push edi
+    ret
+change_eax      ENDP
+
+change_ebx      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rbx
+    push edi
+    ret
+change_ebx      ENDP
+
+change_ecx      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rcx
+    push edi
+    ret
+change_ecx      ENDP
+
+change_edx      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rdx
+    push edi
+    ret
+change_edx      ENDP
+
+change_esi      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rsi
+    push edi
+    ret
+change_esi      ENDP
+
+change_edi      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rdi
+    push edi
+    ret
+change_edi      ENDP
+
+change_esp      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rsp
+    push edi
+    ret
+change_esp      ENDP
+
+change_ebp      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rbp
+    push edi
+    ret
+change_ebp      ENDP
+
+change_epc      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rip
+    push edi
+    ret
+change_epc      ENDP
+
+change_raxl      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rax
+    push edi
+    ret
+change_raxl      ENDP
+
+change_raxh      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rax + 4
+    push edi
+    ret
+change_raxh      ENDP
+
+change_rbxl      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rbx
+    push edi
+    ret
+change_rbxl      ENDP
+
+change_rbxh      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rbx + 4
+    push edi
+    ret
+change_rbxh      ENDP
+
+change_rcxl      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rcx
+    push edi
+    ret
+change_rcxl      ENDP
+
+change_rcxh      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rcx + 4
+    push edi
+    ret
+change_rcxh      ENDP
+
+change_rdxl      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rdx
+    push edi
+    ret
+change_rdxl      ENDP
+
+change_rdxh      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rdx + 4
+    push edi
+    ret
+change_rdxh      ENDP
+
+change_rsil      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rsi
+    push edi
+    ret
+change_rsil      ENDP
+
+change_rsih      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rsi + 4
+    push edi
+    ret
+change_rsih      ENDP
+
+change_rdil      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rdi
+    push edi
+    ret
+change_rdil      ENDP
+
+change_rdih      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rdi + 4
+    push edi
+    ret
+change_rdih      ENDP
+
+change_r8l      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_r8
+    push edi
+    ret
+change_r8l      ENDP
+
+change_r8h      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_r8 + 4
+    push edi
+    ret
+change_r8h      ENDP
+
+change_r9l      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_r9
+    push edi
+    ret
+change_r9l      ENDP
+
+change_r9h      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_r9 + 4
+    push edi
+    ret
+change_r9h      ENDP
+
+change_r10l      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_r10
+    push edi
+    ret
+change_r10l      ENDP
+
+change_r10h      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_r10 + 4
+    push edi
+    ret
+change_r10h      ENDP
+
+change_r11l      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_r11
+    push edi
+    ret
+change_r11l      ENDP
+
+change_r11h      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_r11 + 4
+    push edi
+    ret
+change_r11h      ENDP
+
+change_r12l      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_r12
+    push edi
+    ret
+change_r12l      ENDP
+
+change_r12h      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_r12 + 4
+    push edi
+    ret
+change_r12h      ENDP
+
+change_r13l      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_r13
+    push edi
+    ret
+change_r13l      ENDP
+
+change_r13h      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_r13 + 4
+    push edi
+    ret
+change_r13h      ENDP
+
+change_r14l      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_r14
+    push edi
+    ret
+change_r14l      ENDP
+
+change_r14h      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_r14 + 4
+    push edi
+    ret
+change_r14h      ENDP
+
+change_r15l      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_r15
+    push edi
+    ret
+change_r15l      ENDP
+
+change_r15h      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_r15 + 4
+    push edi
+    ret
+change_r15h      ENDP
+
+change_ripl      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rip
+    push edi
+    ret
+change_ripl      ENDP
+
+change_riph      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rip + 4
+    push edi
+    ret
+change_riph      ENDP
+
+change_rspl      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rsp
+    push edi
+    ret
+change_rspl      ENDP
+
+change_rsph      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rsp + 4
+    push edi
+    ret
+change_rsph      ENDP
+
+change_rbpl      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rbp
+    push edi
+    ret
+change_rbpl      ENDP
+
+change_rbph      PROC near
+    mov edx,gs
+    mov esi,OFFSET p_rbp + 4
+    push edi
+    ret
+change_rbph      ENDP
+
+change_cs       PROC near
+    and cl,3
+    mov edx,gs
+    mov esi,OFFSET p_cs
+    push edi
+    ret
+change_cs       ENDP
+
+change_ds       PROC near
+    and cl,3
+    mov edx,gs
+    mov esi,OFFSET p_ds
+    push edi
+    ret
+change_ds       ENDP
+
+change_es       PROC near
+    and cl,3
+    mov edx,gs
+    mov esi,OFFSET p_es
+    push edi
+    ret
+change_es       ENDP
+
+change_fs       PROC near
+    and cl,3
+    mov edx,gs
+    mov esi,OFFSET p_fs
+    push edi
+    ret
+change_fs       ENDP
+
+change_gs       PROC near
+    and cl,3
+    mov edx,gs
+    mov esi,OFFSET p_gs
+    push edi
+    ret
+change_gs       ENDP
+
+change_ss       PROC near
+    and cl,3
+    mov edx,gs
+    mov esi,OFFSET p_ss
+    push edi
+    ret
+change_ss       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Toggle_xxx
+;
+;           DESCRIPTION:    Toggle flag field callbacks
+;
+;           PARAMETERS:     GS          Thread
+;                           EDI         Change procedure
+;                           CL          Digit #
+;                           CH          Value
+;
+;           RETURNS:        DX:ESI      Address to data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+toggle_cy       PROC near
+    mov ebx,OFFSET p_rflags
+    xor word ptr gs:[ebx],1
+    ret
+toggle_cy       ENDP
+
+toggle_pa       PROC near
+    mov ebx,OFFSET p_rflags
+    xor word ptr gs:[ebx],4
+    ret
+toggle_pa       ENDP
+
+toggle_ac       PROC near
+    mov ebx,OFFSET p_rflags
+    xor word ptr gs:[ebx],10h
+    ret
+toggle_ac       ENDP
+
+toggle_zr       PROC near
+    mov ebx,OFFSET p_rflags
+    xor word ptr gs:[ebx],40h
+    ret
+toggle_zr       ENDP
+
+toggle_pl       PROC near
+    mov ebx,OFFSET p_rflags
+    xor word ptr gs:[ebx],80h
+    ret
+toggle_pl       ENDP
+
+toggle_im       PROC near
+    mov ebx,OFFSET p_rflags
+    xor word ptr gs:[ebx],200h
+    ret
+toggle_im       ENDP
+
+toggle_dir      PROC near
+    mov ebx,OFFSET p_rflags
+    xor word ptr gs:[ebx],400h
+    ret
+toggle_dir      ENDP
+
+toggle_ov       PROC near
+    mov ebx,OFFSET p_rflags
+    xor word ptr gs:[ebx],800h
+    ret
+toggle_ov       ENDP
+
+toggle_nt       PROC near
+    mov ebx,OFFSET p_rflags
+    xor word ptr gs:[ebx],4000h
+    ret
+toggle_nt       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           interact_set
+;
+;           DESCRIPTION:    Interact set new value
+;
+;           PARAMETERS:     GS          Thread
+;                           DX:ESI      Adress to data
+;                           CL          Digit #
+;                           CH          Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+interact_set    PROC near
+;    call interact_set_value
+    inc ds:intr_dl
+    ret
+interact_set    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           mem_xx
+;
+;           DESCRIPTION:    Memory operations
+;
+;           PARAMETERS:     GS          Thread
+;                           DX:ESI      Adress to data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_do  PROC near
+    mov cl,ds:intr_dl
+    sub cl,cs:[ebx+debug_col]
+    mov bx,gs
+
+mem_do_next:
+    cmp cl,3
+    jc mem_do_alloc
+;    
+    sub cl,3
+    inc esi
+    jmp mem_do_next
+
+mem_do_alloc:
+    cmp cl,2
+    je mem_do_end
+;
+    xor cl,1
+    push cx
+;    
+    push OFFSET mem_do_free
+    push edi
+    ret
+
+mem_do_free:
+    pop cx
+    or cl,cl
+    jnz mem_do_end
+;    
+    inc ds:intr_dl
+
+mem_do_end:     
+    ret
+mem_do  ENDP
+
+mem_ads PROC near
+    ret
+mem_ads ENDP
+
+mem_cs  PROC near
+    mov dx,gs:p_cs
+    mov esi,OFFSET p_rip
+    mov esi,gs:[esi]
+    call mem_do
+    ret
+mem_cs  ENDP
+
+mem_ss  PROC near
+    mov dx,gs:p_ss
+    mov esi,OFFSET p_rsp
+    mov esi,gs:[esi]
+    call mem_do
+    ret
+mem_ss  ENDP
+
+mem_es  PROC near
+    mov dx,gs:p_es
+    xor esi,esi
+    call mem_do
+    ret
+mem_es  ENDP
+
+mem_pm  PROC near
+    xor ecx,ecx
+    xchg ecx,ds:[ebp].reg_eflags
+    push ecx
+;    
+    mov dx,gs:p_pm_deb_sel
+    mov esi,gs:p_pm_deb_offs
+    call mem_do
+;
+    pop ecx    
+    mov ds:[ebp].reg_eflags,ecx
+    ret
+mem_pm  ENDP
     
 code    ENDS
 
