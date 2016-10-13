@@ -388,10 +388,7 @@ AddExceptionCode    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddThreadInfo     Proc near
-    push ds
-;    
-    mov ds,ds:[ebp].cpu_thread
-    mov ax,ds:p_id
+    mov ax,gs:p_id
     call AddHexWord
 ;    
     mov al,' '
@@ -400,11 +397,9 @@ AddThreadInfo     Proc near
 ;    
     mov esi,OFFSET thread_name
     mov ecx,30
-    rep movsb
+    rep movs byte ptr es:[edi],gs:[esi]
 ;
     call AddNewLine
-;
-    pop ds    
     ret
 AddThreadInfo     Endp
 
@@ -436,17 +431,17 @@ apdNoPtr:
 apdPtrOk:
     call AddNewLine
 ;
-    mov dx,ds:[ebp].reg_cs.d_selector
-    mov esi,ds:[ebp].reg_eip
+    mov dx,gs:p_cs
+    mov esi,dword ptr gs:p_rip
     call AddProtDataRow
     call AddNewLine
 ;
-    mov dx,ds:[ebp].reg_ss.d_selector
-    mov esi,ds:[ebp].reg_esp
+    mov dx,gs:p_ss
+    mov esi,dword ptr gs:p_rsp
     call AddProtDataRow
     call AddNewLine
 ;
-    mov dx,ds:[ebp].reg_es.d_selector
+    mov dx,gs:p_es
     xor esi,esi
     call AddProtDataRow
     call AddNewLine
@@ -454,20 +449,17 @@ apdPtrOk:
     xor ecx,ecx
     xchg ecx,ds:[ebp].reg_eflags
     push ecx
-    push fs
 ;
-    mov fs,ds:[ebp].cpu_thread
-    mov dx,fs:p_pm_deb_sel
-    mov esi,fs:p_pm_deb_offs
+    mov dx,gs:p_pm_deb_sel
+    mov esi,gs:p_pm_deb_offs
     call AddProtDataRow
     call AddNewLine
 ;
     mov ds:[ebp].reg_eflags,20000h
-    mov dx,fs:p_vm_deb_sel
-    mov esi,fs:p_vm_deb_offs
+    mov dx,gs:p_vm_deb_sel
+    mov esi,gs:p_vm_deb_offs
     call AddProtDataRow
 ;
-    pop fs
     pop ecx
     mov ds:[ebp].reg_eflags,ecx
     ret
