@@ -3606,8 +3606,8 @@ init    PROC far
     mov ax,request_msi_handler_nr
     RegisterOsGate
 ;
-    mov si,OFFSET set_system_time
-    mov di,OFFSET set_system_time_name
+    mov esi,OFFSET set_system_time
+    mov edi,OFFSET set_system_time_name
     xor cl,cl
     mov ax,set_system_time_nr
     RegisterOsGate
@@ -3630,14 +3630,14 @@ init    PROC far
     mov ax,long_timer_handler_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_pit_time
-    mov di,OFFSET get_pit_time_name
+    mov esi,OFFSET get_pit_time
+    mov edi,OFFSET get_pit_time_name
     xor dx,dx
     mov ax,get_system_time_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET has_local_timer
-    mov di,OFFSET has_local_timer_name
+    mov esi,OFFSET has_local_timer
+    mov edi,OFFSET has_local_timer_name
     xor dx,dx
     mov ax,has_global_timer_nr
     RegisterBimodalUserGate
@@ -3760,8 +3760,8 @@ init_hpet_timer_ok:
     mov ax,long_hpet_handler_nr
     RegisterOsGate
 ;
-    mov si,OFFSET has_global_timer
-    mov di,OFFSET has_global_timer_name
+    mov esi,OFFSET has_global_timer
+    mov edi,OFFSET has_global_timer_name
     xor dx,dx
     mov ax,has_global_timer_nr
     RegisterBimodalUserGate

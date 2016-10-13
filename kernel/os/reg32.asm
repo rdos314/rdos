@@ -1878,83 +1878,83 @@ init_reg32       PROC near
     mov ds,ax
     mov es,ax
 ;
-    mov si,OFFSET debug_exception
-    mov di,OFFSET debug_exception_name
+    mov esi,OFFSET debug_exception
+    mov edi,OFFSET debug_exception_name
     xor cl,cl
     mov ax,debug_exception_nr
     RegisterOsGate
 ;
-    mov si,OFFSET locked_debug_exception
-    mov di,OFFSET locked_debug_exception_name
+    mov esi,OFFSET locked_debug_exception
+    mov edi,OFFSET locked_debug_exception_name
     xor cl,cl
     mov ax,locked_debug_exception_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_debug_thread_sel
-    mov di,OFFSET get_debug_thread_sel_name
+    mov esi,OFFSET get_debug_thread_sel
+    mov edi,OFFSET get_debug_thread_sel_name
     xor cl,cl
     mov ax,get_debug_thread_sel_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_debug_thread
-    mov di,OFFSET get_debug_thread_name
+    mov esi,OFFSET get_debug_thread
+    mov edi,OFFSET get_debug_thread_name
     xor dx,dx
     mov ax,get_debug_thread_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET debug_trace
-    mov di,OFFSET debug_trace_name
+    mov esi,OFFSET debug_trace
+    mov edi,OFFSET debug_trace_name
     xor dx,dx
     mov ax,debug_trace_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET debug_pace
-    mov di,OFFSET debug_pace_name
+    mov esi,OFFSET debug_pace
+    mov edi,OFFSET debug_pace_name
     xor dx,dx
     mov ax,debug_pace_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET debug_go
-    mov di,OFFSET debug_go_name
+    mov esi,OFFSET debug_go
+    mov edi,OFFSET debug_go_name
     xor dx,dx
     mov ax,debug_go_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET debug_run
-    mov di,OFFSET debug_run_name
+    mov esi,OFFSET debug_run
+    mov edi,OFFSET debug_run_name
     xor dx,dx
     mov ax,debug_run_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET debug_next
-    mov di,OFFSET debug_next_name
+    mov esi,OFFSET debug_next
+    mov edi,OFFSET debug_next_name
     xor dx,dx
     mov ax,debug_next_nr
     RegisterBimodalUserGate
 ;
-    mov bx,OFFSET set_code_break16
-    mov si,OFFSET set_code_break32
+    mov ebx,OFFSET set_code_break16
+    mov esi,OFFSET set_code_break32
     mov edi,OFFSET set_code_break_name
     mov dx,virt_es_in
     mov ax,set_code_break_nr
     RegisterUserGate
 ;
-    mov bx,OFFSET set_read_data_break16
-    mov si,OFFSET set_read_data_break32
-    mov di,OFFSET set_read_data_break_name
+    mov ebx,OFFSET set_read_data_break16
+    mov esi,OFFSET set_read_data_break32
+    mov edi,OFFSET set_read_data_break_name
     mov dx,virt_es_in
     mov ax,set_read_data_break_nr
     RegisterUserGate
 ;
-    mov bx,OFFSET set_write_data_break16
-    mov si,OFFSET set_write_data_break32
-    mov di,OFFSET set_write_data_break_name
+    mov ebx,OFFSET set_write_data_break16
+    mov esi,OFFSET set_write_data_break32
+    mov edi,OFFSET set_write_data_break_name
     mov dx,virt_es_in
     mov ax,set_write_data_break_nr
     RegisterUserGate
 ;
-    mov si,OFFSET clear_break
-    mov di,OFFSET clear_break_name
+    mov esi,OFFSET clear_break
+    mov edi,OFFSET clear_break_name
     xor dx,dx
     mov ax,clear_break_nr
     RegisterBimodalUserGate

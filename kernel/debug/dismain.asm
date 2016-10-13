@@ -3500,18 +3500,18 @@ GetOsCall       PROC near
     push ecx
     mov ax,osgate_sel
     mov ds,ax
-    xor si,si
+    xor esi,esi
     mov ecx,osgate_entries
 
 get_oscall_scan_loop:
-    cmp dx,ds:[si].os_gate_sel
+    cmp dx,ds:[esi].os_gate_sel
     jne get_oscall_scan_next
 ;
-    cmp ebx,ds:[si].os_gate_offset
+    cmp ebx,ds:[esi].os_gate_offset
     je get_oscall_found
 
 get_oscall_scan_next:
-    add si,1 SHL OS_GATE_SHIFT
+    add esi,1 SHL OS_GATE_SHIFT
     loop get_oscall_scan_loop
 ;
     pop ecx
@@ -3519,8 +3519,8 @@ get_oscall_scan_next:
 
 get_oscall_found:
     pop ecx
-    mov fs,[si].os_gate_name_sel
-    mov esi,[si].os_gate_name_offset
+    mov fs,[esi].os_gate_name_sel
+    mov esi,[esi].os_gate_name_offset
 
 get_oscall_out_loop:
     mov al,fs:[esi]
@@ -3568,31 +3568,31 @@ GetUserCall     PROC near
     push ecx
     mov ax,usergate_sel
     mov ds,ax
-    xor si,si
+    xor esi,esi
     mov ecx,usergate_entries
 
 get_usercall_scan_loop:
-    cmp dx,ds:[si].user_gate_entry_sel16
+    cmp dx,ds:[esi].user_gate_entry_sel16
     jne get_usercall_not_entry16
 ;
-    cmp ebx,ds:[si].user_gate_entry_offset16
+    cmp ebx,ds:[esi].user_gate_entry_offset16
     je get_usercall_found
 
 get_usercall_not_entry16:
-    cmp dx,ds:[si].user_gate_entry_sel32
+    cmp dx,ds:[esi].user_gate_entry_sel32
     jne get_usercall_not_entry32
 ;
-    cmp ebx,ds:[si].user_gate_entry_offset32
+    cmp ebx,ds:[esi].user_gate_entry_offset32
     je get_usercall_found
 
 get_usercall_not_entry32:
-    cmp dx,ds:[si].user_gate_sel16
+    cmp dx,ds:[esi].user_gate_sel16
     je get_usercall_found
 ;
-    cmp dx,ds:[si].user_gate_sel32
+    cmp dx,ds:[esi].user_gate_sel32
     je get_usercall_found
 ;
-    add si,1 SHL USER_GATE_SHIFT
+    add esi,1 SHL USER_GATE_SHIFT
     loop get_usercall_scan_loop
 ;
     pop ecx
@@ -3600,8 +3600,8 @@ get_usercall_not_entry32:
 
 get_usercall_found:
     pop ecx
-    mov fs,[si].user_gate_name_sel
-    mov esi,[si].user_gate_name_offset
+    mov fs,[esi].user_gate_name_sel
+    mov esi,[esi].user_gate_name_offset
 
 get_usercall_out_loop:
     mov al,fs:[esi]

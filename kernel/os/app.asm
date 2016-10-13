@@ -101,222 +101,222 @@ init_app    PROC near
     xor esi,esi
     xor edi,edi
 ;
-    mov si,OFFSET init_app_process
-    mov di,OFFSET init_app_process_name
+    mov esi,OFFSET init_app_process
+    mov edi,OFFSET init_app_process_name
     xor cl,cl
     mov ax,init_app_process_nr
     RegisterOsGate
 ;
-    mov si,OFFSET exit_app_process
-    mov di,OFFSET exit_app_process_name
+    mov esi,OFFSET exit_app_process
+    mov edi,OFFSET exit_app_process_name
     xor cl,cl
     mov ax,exit_app_process_nr
     RegisterOsGate
 ;
-    mov si,OFFSET open_app
-    mov di,OFFSET open_app_name
+    mov esi,OFFSET open_app
+    mov edi,OFFSET open_app_name
     xor cl,cl
     mov ax,open_app_nr
     RegisterOsGate
 ;
-    mov si,OFFSET close_app
-    mov di,OFFSET close_app_name
+    mov esi,OFFSET close_app
+    mov edi,OFFSET close_app_name
     xor cl,cl
     mov ax,close_app_nr
     RegisterOsGate
 ;
-    mov si,OFFSET clone_app
-    mov di,OFFSET clone_app_name
+    mov esi,OFFSET clone_app
+    mov edi,OFFSET clone_app_name
     xor cl,cl
     mov ax,clone_app_nr
     RegisterOsGate
 ;
-    mov si,OFFSET hook_open_app
-    mov di,OFFSET hook_open_app_name
+    mov esi,OFFSET hook_open_app
+    mov edi,OFFSET hook_open_app_name
     xor cl,cl
     mov ax,hook_open_app_nr
     RegisterOsGate
 ;
-    mov si,OFFSET hook_close_app
-    mov di,OFFSET hook_close_app_name
+    mov esi,OFFSET hook_close_app
+    mov edi,OFFSET hook_close_app_name
     xor cl,cl
     mov ax,hook_close_app_nr
     RegisterOsGate
 ;
-    mov si,OFFSET set_module
-    mov di,OFFSET set_module_name
+    mov esi,OFFSET set_module
+    mov edi,OFFSET set_module_name
     xor cl,cl
     mov ax,set_module_nr
     RegisterOsGate
 ;
-    mov si,OFFSET reset_module
-    mov di,OFFSET reset_module_name
+    mov esi,OFFSET reset_module
+    mov edi,OFFSET reset_module_name
     xor cl,cl
     mov ax,reset_module_nr
     RegisterOsGate
 ;
-    mov si,OFFSET create_module
-    mov di,OFFSET create_module_name
+    mov esi,OFFSET create_module
+    mov edi,OFFSET create_module_name
     xor cl,cl
     mov ax,create_module_nr
     RegisterOsGate
 ;
-    mov si,OFFSET free_module
-    mov di,OFFSET free_module_name
+    mov esi,OFFSET free_module
+    mov edi,OFFSET free_module_name
     xor cl,cl
     mov ax,free_module_nr
     RegisterOsGate
 ;
-    mov si,OFFSET deref_module_handle
-    mov di,OFFSET deref_module_handle_name
+    mov esi,OFFSET deref_module_handle
+    mov edi,OFFSET deref_module_handle_name
     xor cl,cl
     mov ax,deref_module_handle_nr
     RegisterOsGate
 ;
-    mov si,OFFSET alias_module_handle
-    mov di,OFFSET alias_module_handle_name
+    mov esi,OFFSET alias_module_handle
+    mov edi,OFFSET alias_module_handle_name
     xor cl,cl
     mov ax,alias_module_handle_nr
     RegisterOsGate
 ;
-    mov si,OFFSET set_options
-    mov di,OFFSET set_options_name
+    mov esi,OFFSET set_options
+    mov edi,OFFSET set_options_name
     xor cl,cl
     mov ax,set_options_nr
     RegisterOsGate
 ;
-    mov si,OFFSET app_patch
-    mov di,OFFSET app_patch_name
+    mov esi,OFFSET app_patch
+    mov edi,OFFSET app_patch_name
     xor cl,cl
     mov ax,app_patch_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_exe_name
-    mov di,OFFSET get_exe_name_name
+    mov esi,OFFSET get_exe_name
+    mov edi,OFFSET get_exe_name_name
     mov dx,virt_es_in
     mov ax,get_exe_name_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET get_cmd_line
-    mov di,OFFSET get_cmd_line_name
+    mov esi,OFFSET get_cmd_line
+    mov edi,OFFSET get_cmd_line_name
     mov dx,virt_es_in
     mov ax,get_cmd_line_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET get_env
-    mov di,OFFSET get_env_name
+    mov esi,OFFSET get_env
+    mov edi,OFFSET get_env_name
     mov dx,virt_es_in
     mov ax,get_env_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET get_options
-    mov di,OFFSET get_options_name
+    mov esi,OFFSET get_options
+    mov edi,OFFSET get_options_name
     mov dx,virt_es_in
     mov ax,get_options_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET allocate_app_mem
-    mov di,OFFSET allocate_app_mem_name
+    mov esi,OFFSET allocate_app_mem
+    mov edi,OFFSET allocate_app_mem_name
     mov dx,virt_es_out
     mov ax,allocate_app_mem_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET free_app_mem
-    mov di,OFFSET free_app_mem_name
+    mov esi,OFFSET free_app_mem
+    mov edi,OFFSET free_app_mem_name
     mov dx,virt_es_in
     mov ax,free_app_mem_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET allocate_debug_app_mem
-    mov di,OFFSET allocate_debug_app_mem_name
+    mov esi,OFFSET allocate_debug_app_mem
+    mov edi,OFFSET allocate_debug_app_mem_name
     mov dx,virt_es_out
     mov ax,allocate_debug_app_mem_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET free_debug_app_mem
-    mov di,OFFSET free_debug_app_mem_name
+    mov esi,OFFSET free_debug_app_mem
+    mov edi,OFFSET free_debug_app_mem_name
     mov dx,virt_es_in
     mov ax,free_debug_app_mem_nr
     RegisterBimodalUserGate
 ;
-    mov bx,OFFSET load_dll16
-    mov si,OFFSET load_dll32
-    mov di,OFFSET load_dll_name
+    mov ebx,OFFSET load_dll16
+    mov esi,OFFSET load_dll32
+    mov edi,OFFSET load_dll_name
     mov dx,virt_es_in
     mov ax,load_dll_nr
     RegisterUserGate
 ;
-    mov si,OFFSET free_dll
-    mov di,OFFSET free_dll_name
+    mov esi,OFFSET free_dll
+    mov edi,OFFSET free_dll_name
     xor dx,dx
     mov ax,free_dll_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET get_current_dll
-    mov di,OFFSET get_current_dll_name
+    mov esi,OFFSET get_current_dll
+    mov edi,OFFSET get_current_dll_name
     xor dx,dx
     mov ax,get_current_dll_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET dupl_module_file_handle
-    mov di,OFFSET dupl_module_file_handle_name
+    mov esi,OFFSET dupl_module_file_handle
+    mov edi,OFFSET dupl_module_file_handle_name
     xor dx,dx
     mov ax,dupl_module_file_handle_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET get_module_focus_key
-    mov di,OFFSET get_module_focus_key_name
+    mov esi,OFFSET get_module_focus_key
+    mov edi,OFFSET get_module_focus_key_name
     xor dx,dx
     mov ax,get_module_focus_key_nr
     RegisterBimodalUserGate
 ;
-    mov bx,OFFSET get_module_proc16
-    mov si,OFFSET get_module_proc32
-    mov di,OFFSET get_module_proc_name
+    mov ebx,OFFSET get_module_proc16
+    mov esi,OFFSET get_module_proc32
+    mov edi,OFFSET get_module_proc_name
     mov dx,virt_ds_out OR virt_es_in
     mov ax,get_module_proc_nr
     RegisterUserGate
 ;
-    mov si,OFFSET get_module_resource
-    mov di,OFFSET get_module_resource_name
+    mov esi,OFFSET get_module_resource
+    mov edi,OFFSET get_module_resource_name
     xor dx,dx
     mov ax,get_module_resource_nr
     RegisterBimodalUserGate
 ;
-    mov bx,OFFSET get_module_name16
-    mov si,OFFSET get_module_name32
-    mov di,OFFSET get_module_name_name
+    mov ebx,OFFSET get_module_name16
+    mov esi,OFFSET get_module_name32
+    mov edi,OFFSET get_module_name_name
     mov dx,virt_es_in
     mov ax,get_module_name_nr
     RegisterUserGate
 ;
-    mov si,OFFSET add_wait_for_debug_event
-    mov di,OFFSET add_wait_for_debug_event_name
+    mov esi,OFFSET add_wait_for_debug_event
+    mov edi,OFFSET add_wait_for_debug_event_name
     xor dx,dx
     mov ax,add_wait_for_debug_event_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET get_debug_event
-    mov di,OFFSET get_debug_event_name
+    mov esi,OFFSET get_debug_event
+    mov edi,OFFSET get_debug_event_name
     xor dx,dx
     mov ax,get_debug_event_nr
     RegisterBimodalUserGate
 ;
-    mov bx,OFFSET get_debug_event_data16
-    mov si,OFFSET get_debug_event_data32
-    mov di,OFFSET get_debug_event_data_name
+    mov ebx,OFFSET get_debug_event_data16
+    mov esi,OFFSET get_debug_event_data32
+    mov edi,OFFSET get_debug_event_data_name
     mov dx,virt_es_in
     mov ax,get_debug_event_data_nr
     RegisterUserGate
 ;
-    mov si,OFFSET clear_debug_event
-    mov di,OFFSET clear_debug_event_name
+    mov esi,OFFSET clear_debug_event
+    mov edi,OFFSET clear_debug_event_name
     xor dx,dx
     mov ax,clear_debug_event_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET continue_debug_event
-    mov di,OFFSET continue_debug_event_name
+    mov esi,OFFSET continue_debug_event
+    mov edi,OFFSET continue_debug_event_name
     xor dx,dx
     mov ax,continue_debug_event_nr
     RegisterBimodalUserGate

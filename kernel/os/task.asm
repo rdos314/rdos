@@ -4820,14 +4820,14 @@ init_first_thread:
     mov ds,ax
     mov es,ax
 ;
-    mov si,OFFSET start_global_timer
-    mov di,OFFSET start_global_timer_name
+    mov esi,OFFSET start_global_timer
+    mov edi,OFFSET start_global_timer_name
     xor cl,cl
     mov ax,start_timer_nr
     RegisterOsGate
 ;
-    mov si,OFFSET stop_global_timer
-    mov di,OFFSET stop_global_timer_name
+    mov esi,OFFSET stop_global_timer
+    mov edi,OFFSET stop_global_timer_name
     xor cl,cl
     mov ax,stop_timer_nr
     RegisterOsGate
@@ -4844,14 +4844,14 @@ preempt_timer_combined:
     mov ds,ax
     mov es,ax
 ;
-    mov si,OFFSET start_core_timer
-    mov di,OFFSET start_core_timer_name
+    mov esi,OFFSET start_core_timer
+    mov edi,OFFSET start_core_timer_name
     xor cl,cl
     mov ax,start_timer_nr
     RegisterOsGate
 ;
-    mov si,OFFSET stop_core_timer
-    mov di,OFFSET stop_core_timer_name
+    mov esi,OFFSET stop_core_timer
+    mov edi,OFFSET stop_core_timer_name
     xor cl,cl
     mov ax,stop_timer_nr
     RegisterOsGate
@@ -9368,56 +9368,56 @@ timer_free_list_create:
     xor esi,esi
     xor edi,edi
 ;
-    mov si,OFFSET start_tasking
-    mov di,OFFSET start_tasking_name
+    mov esi,OFFSET start_tasking
+    mov edi,OFFSET start_tasking_name
     xor cl,cl
     mov ax,start_tasking_nr
     RegisterOsGate
 ;
-    mov si,OFFSET create_core
-    mov di,OFFSET create_core_name
+    mov esi,OFFSET create_core
+    mov edi,OFFSET create_core_name
     xor cl,cl
     mov ax,create_core_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_core
-    mov di,OFFSET get_core_name
+    mov esi,OFFSET get_core
+    mov edi,OFFSET get_core_name
     xor cl,cl
     mov ax,get_core_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_core_count
-    mov di,OFFSET get_core_count_name
+    mov esi,OFFSET get_core_count
+    mov edi,OFFSET get_core_count_name
     xor cl,cl
     mov ax,get_core_count_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_core_num
-    mov di,OFFSET get_core_num_name
+    mov esi,OFFSET get_core_num
+    mov edi,OFFSET get_core_num_name
     xor cl,cl
     mov ax,get_core_num_nr
     RegisterOsGate
 ;
-    mov si,OFFSET run_ap_core
-    mov di,OFFSET run_ap_core_name
+    mov esi,OFFSET run_ap_core
+    mov edi,OFFSET run_ap_core_name
     xor cl,cl
     mov ax,run_ap_core_nr
     RegisterOsGate
 ;
-    mov si,OFFSET use_own_preempt_timer
-    mov di,OFFSET use_own_preempt_timer_name
+    mov esi,OFFSET use_own_preempt_timer
+    mov edi,OFFSET use_own_preempt_timer_name
     xor cl,cl
     mov ax,use_own_preempt_timer_nr
     RegisterOsGate
 ;
-    mov si,OFFSET preempt_expired
-    mov di,OFFSET preempt_expired_name
+    mov esi,OFFSET preempt_expired
+    mov edi,OFFSET preempt_expired_name
     xor cl,cl
     mov ax,preempt_expired_nr
     RegisterOsGate
 ;
-    mov si,OFFSET timer_expired
-    mov di,OFFSET timer_expired_name
+    mov esi,OFFSET timer_expired
+    mov edi,OFFSET timer_expired_name
     xor cl,cl
     mov ax,timer_expired_nr
     RegisterOsGate
@@ -9428,291 +9428,291 @@ timer_free_list_create:
     mov ax,flush_tlb_nr
     RegisterOsGate
 ;
-    mov si,OFFSET irq_schedule
-    mov di,OFFSET irq_schedule_name
+    mov esi,OFFSET irq_schedule
+    mov edi,OFFSET irq_schedule_name
     xor cl,cl
     mov ax,irq_schedule_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_scheduler_lock_counter
-    mov di,OFFSET get_scheduler_lock_counter_name
+    mov esi,OFFSET get_scheduler_lock_counter
+    mov edi,OFFSET get_scheduler_lock_counter_name
     xor cl,cl
     mov ax,get_scheduler_lock_counter_nr
     RegisterOsGate
 ;
-    mov si,OFFSET try_lock_task
-    mov di,OFFSET try_lock_task_name
+    mov esi,OFFSET try_lock_task
+    mov edi,OFFSET try_lock_task_name
     xor cl,cl
     mov ax,try_lock_task_nr
     RegisterOsGate
 ;
-    mov si,OFFSET lock_task
-    mov di,OFFSET lock_task_name
+    mov esi,OFFSET lock_task
+    mov edi,OFFSET lock_task_name
     xor cl,cl
     mov ax,lock_task_nr
     RegisterOsGate
 ;
-    mov si,OFFSET unlock_task
-    mov di,OFFSET unlock_task_name
+    mov esi,OFFSET unlock_task
+    mov edi,OFFSET unlock_task_name
     xor cl,cl
     mov ax,unlock_task_nr
     RegisterOsGate
 ;
-    mov si,OFFSET set_futex_id
-    mov di,OFFSET set_futex_id_name
+    mov esi,OFFSET set_futex_id
+    mov edi,OFFSET set_futex_id_name
     xor cl,cl
     mov ax,set_futex_id_nr
     RegisterOsGate
 ;
-    mov si,OFFSET enter_long_int
-    mov di,OFFSET enter_long_int_name
+    mov esi,OFFSET enter_long_int
+    mov edi,OFFSET enter_long_int_name
     xor cl,cl
     mov ax,enter_long_int_nr
     RegisterOsGate
 ;
-    mov si,OFFSET leave_long_int
-    mov di,OFFSET leave_long_int_name
+    mov esi,OFFSET leave_long_int
+    mov edi,OFFSET leave_long_int_name
     xor cl,cl
     mov ax,leave_long_int_nr
     RegisterOsGate
 ;
-    mov si,OFFSET set_thread_core
-    mov di,OFFSET set_thread_core_name
+    mov esi,OFFSET set_thread_core
+    mov edi,OFFSET set_thread_core_name
     xor cl,cl
     mov ax,set_thread_core_nr
     RegisterOsGate
 ;
-    mov si,OFFSET add_thread_int
-    mov di,OFFSET add_thread_int_name
+    mov esi,OFFSET add_thread_int
+    mov edi,OFFSET add_thread_int_name
     xor cl,cl
     mov ax,add_thread_int_nr
     RegisterOsGate
 ;
-    mov si,OFFSET debug_block
-    mov di,OFFSET debug_block_name
+    mov esi,OFFSET debug_block
+    mov edi,OFFSET debug_block_name
     xor cl,cl
     mov ax,debug_block_nr
     RegisterOsGate
 ;
-    mov si,OFFSET wake_thread
-    mov di,OFFSET wake_thread_name
+    mov esi,OFFSET wake_thread
+    mov edi,OFFSET wake_thread_name
     xor cl,cl
     mov ax,wake_thread_nr
     RegisterOsGate
 ;
-    mov si,OFFSET sleep_thread
-    mov di,OFFSET sleep_thread_name
+    mov esi,OFFSET sleep_thread
+    mov edi,OFFSET sleep_thread_name
     xor cl,cl
     mov ax,sleep_thread_nr
     RegisterOsGate
 ;
-    mov si,OFFSET clear_signal
-    mov di,OFFSET clear_signal_name
+    mov esi,OFFSET clear_signal
+    mov edi,OFFSET clear_signal_name
     xor cl,cl
     mov ax,clear_signal_nr
     RegisterOsGate
 ;
-    mov si,OFFSET signal_thread
-    mov di,OFFSET signal_thread_name
+    mov esi,OFFSET signal_thread
+    mov edi,OFFSET signal_thread_name
     xor cl,cl
     mov ax,signal_nr
     RegisterOsGate
 ;
-    mov si,OFFSET wait_for_signal
-    mov di,OFFSET wait_for_signal_name
+    mov esi,OFFSET wait_for_signal
+    mov edi,OFFSET wait_for_signal_name
     xor cl,cl
     mov ax,wait_for_signal_nr
     RegisterOsGate
 ;
-    mov si,OFFSET wait_for_signal_timeout
-    mov di,OFFSET wait_for_signal_timeout_name
+    mov esi,OFFSET wait_for_signal_timeout
+    mov edi,OFFSET wait_for_signal_timeout_name
     xor cl,cl
     mov ax,wait_for_signal_timeout_nr
     RegisterOsGate
 ;
-    mov si,OFFSET create_proc_handle
-    mov di,OFFSET create_proc_handle_name
+    mov esi,OFFSET create_proc_handle
+    mov edi,OFFSET create_proc_handle_name
     xor cl,cl
     mov ax,create_proc_handle_nr
     RegisterOsGate
 ;
-    mov si,OFFSET deref_proc_handle
-    mov di,OFFSET deref_proc_handle_name
+    mov esi,OFFSET deref_proc_handle
+    mov edi,OFFSET deref_proc_handle_name
     xor cl,cl
     mov ax,deref_proc_handle_nr
     RegisterOsGate
 ;
-    mov si,OFFSET fpu_exception
-    mov di,OFFSET fpu_exception_name
+    mov esi,OFFSET fpu_exception
+    mov edi,OFFSET fpu_exception_name
     xor cl,cl
     mov ax,fpu_exception_nr
     RegisterOsGate
 ;
-    mov si,OFFSET do_flush_tlb
-    mov di,OFFSET do_flush_tlb_name
+    mov esi,OFFSET do_flush_tlb
+    mov edi,OFFSET do_flush_tlb_name
     xor cl,cl
     mov ax,do_flush_tlb_nr
     RegisterOsGate
 ;
-    mov si,OFFSET add_log
-    mov di,OFFSET add_log_name
+    mov esi,OFFSET add_log
+    mov edi,OFFSET add_log_name
     xor cl,cl
     mov ax,add_scheduler_log_nr
     RegisterOsGate
 ;
-    mov si,OFFSET soft_reset
-    mov di,OFFSET soft_reset_name
+    mov esi,OFFSET soft_reset
+    mov edi,OFFSET soft_reset_name
     xor dx,dx
     mov ax,fault_reset_nr
     RegisterOsGate
 ;
-    mov si,OFFSET free_proc_handle
-    mov di,OFFSET free_proc_handle_name
+    mov esi,OFFSET free_proc_handle
+    mov edi,OFFSET free_proc_handle_name
     xor dx,dx
     mov ax,free_proc_handle_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET get_proc_exit_code
-    mov di,OFFSET get_proc_exit_code_name
+    mov esi,OFFSET get_proc_exit_code
+    mov edi,OFFSET get_proc_exit_code_name
     xor dx,dx
     mov ax,get_proc_exit_code_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET add_wait_for_proc_end
-    mov di,OFFSET add_wait_for_proc_end_name
+    mov esi,OFFSET add_wait_for_proc_end
+    mov edi,OFFSET add_wait_for_proc_end_name
     xor dx,dx
     mov ax,add_wait_for_proc_end_nr
     RegisterBimodalUserGate
 ;
-    mov bx,OFFSET create_thread16
-    mov si,OFFSET create_thread32
-    mov di,OFFSET create_thread_name
+    mov ebx,OFFSET create_thread16
+    mov esi,OFFSET create_thread32
+    mov edi,OFFSET create_thread_name
     mov dx,virt_es_in
     mov ax,create_thread_nr
     RegisterUserGate
 ;
-    mov si,OFFSET terminate_thread
-    mov di,OFFSET terminate_thread_name
+    mov esi,OFFSET terminate_thread
+    mov edi,OFFSET terminate_thread_name
     xor dx,dx
     mov ax,terminate_thread_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET create_process
-    mov di,OFFSET create_process_name
+    mov esi,OFFSET create_process
+    mov edi,OFFSET create_process_name
     xor cl,cl
     mov ax,create_process_nr
     RegisterOsGate
 ;
-    mov si,OFFSET soft_reset
-    mov di,OFFSET soft_reset_name
+    mov esi,OFFSET soft_reset
+    mov edi,OFFSET soft_reset_name
     xor dx,dx
     mov ax,soft_reset_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET hard_reset
-    mov di,OFFSET hard_reset_name
+    mov esi,OFFSET hard_reset
+    mov edi,OFFSET hard_reset_name
     xor dx,dx
     mov ax,hard_reset_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET power_failure
-    mov di,OFFSET power_failure_name
+    mov esi,OFFSET power_failure
+    mov edi,OFFSET power_failure_name
     xor dx,dx
     mov ax,power_failure_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET get_thread_pr
-    mov di,OFFSET get_thread_name
+    mov esi,OFFSET get_thread_pr
+    mov edi,OFFSET get_thread_name
     xor dx,dx
     mov ax,get_thread_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET get_core_id
-    mov di,OFFSET get_core_id_name
+    mov esi,OFFSET get_core_id
+    mov edi,OFFSET get_core_id_name
     xor dx,dx
     mov ax,get_core_id_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET get_cpu_time
-    mov di,OFFSET get_cpu_time_name
+    mov esi,OFFSET get_cpu_time
+    mov edi,OFFSET get_cpu_time_name
     xor dx,dx
     mov ax,get_cpu_time_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET wait_milli_sec
-    mov di,OFFSET wait_milli_name
+    mov esi,OFFSET wait_milli_sec
+    mov edi,OFFSET wait_milli_name
     xor dx,dx
     mov ax,wait_milli_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET wait_micro_sec
-    mov di,OFFSET wait_micro_name
+    mov esi,OFFSET wait_micro_sec
+    mov edi,OFFSET wait_micro_name
     xor dx,dx
     mov ax,wait_micro_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET wait_until
-    mov di,OFFSET wait_until_name
+    mov esi,OFFSET wait_until
+    mov edi,OFFSET wait_until_name
     xor dx,dx
     mov ax,wait_until_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET notify_time_drift
-    mov di,OFFSET notify_time_drift_name
+    mov esi,OFFSET notify_time_drift
+    mov edi,OFFSET notify_time_drift_name
     xor cl,cl
     mov ax,notify_time_drift_nr
     RegisterOsGate
 ;
-    mov si,OFFSET get_time
-    mov di,OFFSET get_time_name
+    mov esi,OFFSET get_time
+    mov edi,OFFSET get_time_name
     xor dx,dx
     mov ax,get_time_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET time_to_system_time
-    mov di,OFFSET time_to_system_time_name
+    mov esi,OFFSET time_to_system_time
+    mov edi,OFFSET time_to_system_time_name
     xor dx,dx
     mov ax,time_to_system_time_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET system_time_to_time
-    mov di,OFFSET system_time_to_time_name
+    mov esi,OFFSET system_time_to_time
+    mov edi,OFFSET system_time_to_time_name
     xor dx,dx
     mov ax,system_time_to_time_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET get_core_load
-    mov di,OFFSET get_core_load_name
+    mov esi,OFFSET get_core_load
+    mov edi,OFFSET get_core_load_name
     xor dx,dx
     mov ax,get_core_load_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET get_core_duty
-    mov di,OFFSET get_core_duty_name
+    mov esi,OFFSET get_core_duty
+    mov edi,OFFSET get_core_duty_name
     xor dx,dx
     mov ax,get_core_duty_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET debug_exc_break
-    mov di,OFFSET debug_exc_break_name
+    mov esi,OFFSET debug_exc_break
+    mov edi,OFFSET debug_exc_break_name
     xor cl,cl
     mov ax,debug_exc_break_nr
     RegisterOsGate
 ;
-    mov si,OFFSET enter_section
-    mov di,OFFSET enter_section_name
+    mov esi,OFFSET enter_section
+    mov edi,OFFSET enter_section_name
     xor cl,cl
     mov ax,enter_section_nr
     RegisterOsGate
 ;
-    mov si,OFFSET leave_section
-    mov di,OFFSET leave_section_name
+    mov esi,OFFSET leave_section
+    mov edi,OFFSET leave_section_name
     xor cl,cl
     mov ax,leave_section_nr
     RegisterOsGate
 ;
-    mov si,OFFSET cond_enter_section
-    mov di,OFFSET cond_enter_section_name
+    mov esi,OFFSET cond_enter_section
+    mov edi,OFFSET cond_enter_section_name
     xor cl,cl
     mov ax,cond_enter_section_nr
     RegisterOsGate
@@ -9723,44 +9723,44 @@ timer_free_list_create:
     mov ax,is_long_thread_nr
     RegisterOsGate
 ;
-    mov si,OFFSET create_user_section
-    mov di,OFFSET create_user_section_name
+    mov esi,OFFSET create_user_section
+    mov edi,OFFSET create_user_section_name
     xor dx,dx
     mov ax,create_user_section_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET create_named_user_section
-    mov di,OFFSET create_named_user_section_name
+    mov esi,OFFSET create_named_user_section
+    mov edi,OFFSET create_named_user_section_name
     xor dx,dx
     mov ax,create_named_user_section_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET create_blocked_user_section
-    mov di,OFFSET create_blocked_user_section_name
+    mov esi,OFFSET create_blocked_user_section
+    mov edi,OFFSET create_blocked_user_section_name
     xor dx,dx
     mov ax,create_blocked_user_section_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET delete_user_section
-    mov di,OFFSET delete_user_section_name
+    mov esi,OFFSET delete_user_section
+    mov edi,OFFSET delete_user_section_name
     xor dx,dx
     mov ax,delete_user_section_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET enter_user_section
-    mov di,OFFSET enter_user_section_name
+    mov esi,OFFSET enter_user_section
+    mov edi,OFFSET enter_user_section_name
     xor dx,dx
     mov ax,enter_user_section_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET leave_user_section
-    mov di,OFFSET leave_user_section_name
+    mov esi,OFFSET leave_user_section
+    mov edi,OFFSET leave_user_section_name
     xor dx,dx
     mov ax,leave_user_section_nr
     RegisterBimodalUserGate
 ;
-    mov si,OFFSET update_time
-    mov di,OFFSET update_time_name
+    mov esi,OFFSET update_time
+    mov edi,OFFSET update_time_name
     xor cl,cl
     mov ax,update_time_nr
     RegisterBimodalUserGate
@@ -9800,8 +9800,8 @@ timer_free_list_create:
     mov ax,set_thread_action_nr
     RegisterUserGate
 ;
-    mov si,OFFSET has_crash_info
-    mov di,OFFSET has_crash_info_name
+    mov esi,OFFSET has_crash_info
+    mov edi,OFFSET has_crash_info_name
     xor cl,cl
     mov ax,has_crash_info_nr
     RegisterBimodalUserGate

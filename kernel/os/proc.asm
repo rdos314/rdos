@@ -957,110 +957,110 @@ init_thread     PROC near
     xor esi,esi
     xor edi,edi
 ;
-    mov si,OFFSET hook_create_thread
-    mov di,OFFSET hook_create_thread_name
+    mov esi,OFFSET hook_create_thread
+    mov edi,OFFSET hook_create_thread_name
     xor cl,cl
     mov ax,hook_create_thread_nr
     RegisterOsGate
 ;
-    mov si,OFFSET hook_terminate_thread
-    mov di,OFFSET hook_terminate_thread_name
+    mov esi,OFFSET hook_terminate_thread
+    mov edi,OFFSET hook_terminate_thread_name
     xor cl,cl
     mov ax,hook_terminate_thread_nr
     RegisterOsGate
 ;
-    mov si,OFFSET hook_create_process
-    mov di,OFFSET hook_create_process_name
+    mov esi,OFFSET hook_create_process
+    mov edi,OFFSET hook_create_process_name
     xor cl,cl
     mov ax,hook_create_process_nr
     RegisterOsGate
 ;
-    mov si,OFFSET hook_terminate_process
-    mov di,OFFSET hook_terminate_process_name
+    mov esi,OFFSET hook_terminate_process
+    mov edi,OFFSET hook_terminate_process_name
     xor cl,cl
     mov ax,hook_terminate_process_nr
     RegisterOsGate
 ;
-    mov si,OFFSET hook_start_program
-    mov di,OFFSET hook_start_program_name
+    mov esi,OFFSET hook_start_program
+    mov edi,OFFSET hook_start_program_name
     xor cl,cl
     mov ax,hook_start_program_nr
     RegisterOsGate
 ;
-    mov si,OFFSET hook_end_program
-    mov di,OFFSET hook_end_program_name
+    mov esi,OFFSET hook_end_program
+    mov edi,OFFSET hook_end_program_name
     xor cl,cl
     mov ax,hook_end_program_nr
     RegisterOsGate
 ;
-    mov si,OFFSET hook_init_tasking
-    mov di,OFFSET hook_init_tasking_name
+    mov esi,OFFSET hook_init_tasking
+    mov edi,OFFSET hook_init_tasking_name
     xor cl,cl
     mov ax,hook_init_tasking_nr
     RegisterOsGate
 ;
-    mov si,OFFSET notify_thread_created
-    mov di,OFFSET notify_thread_created_name
+    mov esi,OFFSET notify_thread_created
+    mov edi,OFFSET notify_thread_created_name
     xor cl,cl
     mov ax,notify_thread_created_nr
     RegisterOsGate
 ;
-    mov si,OFFSET notify_thread_exit
-    mov di,OFFSET notify_thread_exit_name
+    mov esi,OFFSET notify_thread_exit
+    mov edi,OFFSET notify_thread_exit_name
     xor cl,cl
     mov ax,notify_thread_exit_nr
     RegisterOsGate
 ;
-    mov si,OFFSET notify_process_created
-    mov di,OFFSET notify_process_created_name
+    mov esi,OFFSET notify_process_created
+    mov edi,OFFSET notify_process_created_name
     xor cl,cl
     mov ax,notify_process_created_nr
     RegisterOsGate
 ;
-    mov si,OFFSET notify_process_exit
-    mov di,OFFSET notify_process_exit_name
+    mov esi,OFFSET notify_process_exit
+    mov edi,OFFSET notify_process_exit_name
     xor cl,cl
     mov ax,notify_process_exit_nr
     RegisterOsGate
 ;
-    mov si,OFFSET notify_start_program
-    mov di,OFFSET notify_start_program_name
+    mov esi,OFFSET notify_start_program
+    mov edi,OFFSET notify_start_program_name
     xor cl,cl
     mov ax,notify_start_program_nr
     RegisterOsGate
 ;
-    mov si,OFFSET notify_end_program
-    mov di,OFFSET notify_end_program_name
+    mov esi,OFFSET notify_end_program
+    mov edi,OFFSET notify_end_program_name
     xor cl,cl
     mov ax,notify_end_program_nr
     RegisterOsGate
 ;
-    mov si,OFFSET notify_init_tasking
-    mov di,OFFSET notify_init_tasking_name
+    mov esi,OFFSET notify_init_tasking
+    mov edi,OFFSET notify_init_tasking_name
     xor cl,cl
     mov ax,notify_init_tasking_nr
     RegisterOsGate
 ;
-    mov si,OFFSET sim_sti
-    mov di,OFFSET sim_sti_name
+    mov esi,OFFSET sim_sti
+    mov edi,OFFSET sim_sti_name
     xor cl,cl
     mov ax,sim_sti_nr
     RegisterOsGate
 ;
-    mov si,OFFSET sim_cli
-    mov di,OFFSET sim_cli_name
+    mov esi,OFFSET sim_cli
+    mov edi,OFFSET sim_cli_name
     xor cl,cl
     mov ax,sim_cli_nr
     RegisterOsGate
 ;
-    mov si,OFFSET sim_set_flags
-    mov di,OFFSET sim_set_flags_name
+    mov esi,OFFSET sim_set_flags
+    mov edi,OFFSET sim_set_flags_name
     xor cl,cl
     mov ax,sim_set_flags_nr
     RegisterOsGate
 ;
-    mov si,OFFSET sim_get_flags
-    mov di,OFFSET sim_get_flags_name
+    mov esi,OFFSET sim_get_flags
+    mov edi,OFFSET sim_get_flags_name
     xor cl,cl
     mov ax,sim_get_flags_nr
     RegisterOsGate

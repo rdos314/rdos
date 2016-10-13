@@ -1200,8 +1200,8 @@ acpi_setup_gates:
     mov ax,get_acpi_device_mem_nr
     RegisterBimodalUserGate
 ;
-    mov bx,OFFSET get_cpu_version16
-    mov si,OFFSET get_cpu_version32
+    mov ebx,OFFSET get_cpu_version16
+    mov esi,OFFSET get_cpu_version32
     mov edi,OFFSET get_cpu_version_name
     mov dx,virt_es_in
     mov ax,get_cpu_version_nr

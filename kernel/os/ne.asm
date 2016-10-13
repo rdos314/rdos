@@ -1944,7 +1944,7 @@ init	PROC far
 	mov ds,ax
 	mov es,ax
 ;
-	mov di,OFFSET delete_handle
+	mov edi,OFFSET delete_handle
 	mov ax,DLL_HANDLE16
 	RegisterHandle
 ;
@@ -1957,8 +1957,8 @@ init	PROC far
 	mov edi,OFFSET close_app
 	HookCloseApp
 ;
-	mov si,OFFSET demand_load
-	mov di,OFFSET demand_load_name
+	mov esi,OFFSET demand_load
+	mov edi,OFFSET demand_load_name
 	xor cl,cl
 	mov ax,segment_not_present_nr
 	RegisterOsGate
