@@ -1310,6 +1310,276 @@ GetCpu  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           incdec16
+;
+;       DESCRIPTION:    INC / DEC
+;
+;       PARAMETERS:     GS      Thread
+;                       DX:ESI  Address to data
+;                       AL      operation ('+' och '-')
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+incdec16  PROC near
+    mov fs,dx
+    cmp al,'+'
+    jne not_inc_reg16
+;
+    inc word ptr fs:[esi]
+    ret
+    
+not_inc_reg16:
+    cmp al,'-'
+    jne not_dec_reg16
+;
+    dec word ptr fs:[esi]
+    ret
+
+not_dec_reg16:
+    ret
+incdec16  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           incdec32
+;
+;       DESCRIPTION:    INC / DEC
+;
+;       PARAMETERS:     GS      Thread
+;                       DX:ESI  Address to data
+;                       AL      operation ('+' och '-')
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+incdec32  PROC near
+    mov fs,dx
+    cmp al,'+'
+    jne not_inc_reg32
+;
+    inc dword ptr fs:[esi]
+    ret
+
+not_inc_reg32:
+    cmp al,'-'
+    jne not_dec_reg32
+;
+    dec dword ptr fs:[esi]
+    ret
+
+not_dec_reg32:
+    ret
+incdec32  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           incdec64
+;
+;       DESCRIPTION:    INC / DEC
+;
+;       PARAMETERS:     GS      Thread
+;                       DX:ESI  Address to data
+;                       AL      operation ('+' och '-')
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+incdec64  PROC near
+    mov fs,dx
+    cmp al,'+'
+    jne not_inc_reg64
+;
+    add dword ptr fs:[esi],1
+    adc dword ptr fs:[esi+4],0
+    ret
+
+not_inc_reg64:
+    cmp al,'-'
+    jne not_dec_reg64
+;
+    sub dword ptr fs:[esi],1
+    sbb dword ptr fs:[esi+4],0
+    ret
+
+not_dec_reg64:
+    ret
+incdec64  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           incdec_xx
+;
+;       DESCRIPTION:    INC / DEC reg
+;
+;       PARAMETERS:     GS      Thread
+;                       AL      Operation ('+' och '-')
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+incdec_eax:
+    mov edx,gs
+    mov esi,OFFSET p_rax
+    jmp incdec32
+
+incdec_ebx:
+    mov edx,gs
+    mov esi,OFFSET p_rbx
+    jmp incdec32
+
+incdec_ecx:
+    mov edx,gs
+    mov esi,OFFSET p_rcx
+    jmp incdec32
+
+incdec_edx:
+    mov edx,gs
+    mov esi,OFFSET p_rdx
+    jmp incdec32
+
+incdec_esi:
+    mov edx,gs
+    mov esi,OFFSET p_rsi
+    jmp incdec32
+
+incdec_edi:
+    mov edx,gs
+    mov esi,OFFSET p_rdi
+    jmp incdec32
+
+incdec_esp:
+    mov edx,gs
+    mov esi,OFFSET p_rsp
+    jmp incdec32
+
+incdec_ebp:
+    mov edx,gs
+    mov esi,OFFSET p_rbp
+    jmp incdec32
+
+incdec_epc:
+    mov edx,gs
+    mov esi,OFFSET p_rip
+    jmp incdec32
+
+incdec_rip:
+    mov edx,gs
+    mov esi,OFFSET p_rip
+    jmp incdec64
+
+incdec_rax:
+    mov edx,gs
+    mov esi,OFFSET p_rax
+    jmp incdec64
+
+incdec_rbx:
+    mov edx,gs
+    mov esi,OFFSET p_rbx
+    jmp incdec64
+
+incdec_rcx:
+    mov edx,gs
+    mov esi,OFFSET p_rcx
+    jmp incdec64
+
+incdec_rdx:
+    mov edx,gs
+    mov esi,OFFSET p_rdx
+    jmp incdec64
+
+incdec_rsi:
+    mov edx,gs
+    mov esi,OFFSET p_rsi
+    jmp incdec64
+
+incdec_rdi:
+    mov edx,gs
+    mov esi,OFFSET p_rdi
+    jmp incdec64
+
+incdec_r8:
+    mov edx,gs
+    mov esi,OFFSET p_r8
+    jmp incdec64
+
+incdec_r9:
+    mov edx,gs
+    mov esi,OFFSET p_r9
+    jmp incdec64
+
+incdec_r10:
+    mov edx,gs
+    mov esi,OFFSET p_r10
+    jmp incdec64
+
+incdec_r11:
+    mov edx,gs
+    mov esi,OFFSET p_r11
+    jmp incdec64
+
+incdec_r12:
+    mov edx,gs
+    mov esi,OFFSET p_r12
+    jmp incdec64
+
+incdec_r13:
+    mov edx,gs
+    mov esi,OFFSET p_r13
+    jmp incdec64
+
+incdec_r14:
+    mov edx,gs
+    mov esi,OFFSET p_r14
+    jmp incdec64
+
+incdec_r15:
+    mov edx,gs
+    mov esi,OFFSET p_r15
+    jmp incdec64
+
+incdec_rbp:
+    mov edx,gs
+    mov esi,OFFSET p_rbp
+    jmp incdec64
+
+incdec_rsp:
+    mov edx,gs
+    mov esi,OFFSET p_rsp
+    jmp incdec64
+
+incdec_cs:
+    mov edx,gs
+    mov esi,OFFSET p_cs
+    jmp incdec16
+
+incdec_ds:
+    mov edx,gs
+    mov esi,OFFSET p_ds
+    jmp incdec16
+
+incdec_es:
+    mov edx,gs
+    mov esi,OFFSET p_es
+    jmp incdec16
+
+incdec_fs:
+    mov edx,gs
+    mov esi,OFFSET p_fs
+    jmp incdec16
+
+incdec_gs:
+    mov edx,gs
+    mov esi,OFFSET p_gs
+    jmp incdec16
+
+incdec_ss:
+    mov edx,gs
+    mov esi,OFFSET p_ss
+    jmp incdec16
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Change_xxx
 ;
 ;           DESCRIPTION:    Change field callbacks
