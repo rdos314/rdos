@@ -477,7 +477,7 @@ AddProtData       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddLongData       PROC near
-    mov bx,ds:[ebp].reg_cs.d_selector
+    mov bx,gs:p_cs
     IsLongCodeSelector
     jc wd64_32
 
@@ -498,18 +498,18 @@ data_no_good64_64:
 data_next64_64:
     call AddNewLine
 ;
-    mov esi,ds:[ebp].reg_eip
-    mov edx,ds:[ebp].reg_eip+4
+    mov esi,dword ptr gs:p_rip
+    mov edx,dword ptr gs:p_rip+4
     call AddLongDataRow
     call AddNewLine
 ;
-    mov esi,ds:[ebp].reg_esp
-    mov edx,ds:[ebp].reg_esp+4
+    mov esi,dword ptr gs:p_rsp
+    mov edx,dword ptr gs:p_rsp+4
     call AddLongDataRow
     call AddNewLine
 ;
-    mov esi,ds:[ebp].reg_edi
-    mov edx,ds:[ebp].reg_edi+4
+    mov esi,dword ptr gs:p_rdi
+    mov edx,dword ptr gs:p_rdi+4
     call AddLongDataRow
     call AddNewLine
     jmp wd64_data
@@ -531,33 +531,30 @@ data_no_good64_32:
 data_next64_32:
     call AddNewLine
 ;
-    mov dx,ds:[ebp].reg_cs.d_selector
-    mov esi,ds:[ebp].reg_eip
+    mov dx,gs:p_cs
+    mov esi,dword ptr gs:p_rip
     call AddProtDataRow
     call AddNewLine
 ;
-    mov dx,ds:[ebp].reg_ss.d_selector
-    mov esi,ds:[ebp].reg_esp
+    mov dx,gs:p_ss
+    mov esi,dword ptr gs:p_rsp
     call AddProtDataRow
     call AddNewLine
 ;
-    mov dx,ds:[ebp].reg_es.d_selector
+    mov dx,gs:p_es
     xor esi,esi
     call AddProtDataRow
     call AddNewLine
 
 wd64_data:    
-    push fs
-    mov fs,ds:[ebp].cpu_thread
-    mov dx,fs:p_pm_deb_sel
-    mov esi,fs:p_pm_deb_offs
+    mov dx,gs:p_pm_deb_sel
+    mov esi,gs:p_pm_deb_offs
     call AddProtDataRow
     call AddNewLine
 ;
-    mov dx,fs:p_vm_deb_sel
-    mov esi,fs:p_vm_deb_offs
+    mov dx,gs:p_vm_deb_sel
+    mov esi,gs:p_vm_deb_offs
     call AddLongDataRow
-    pop fs
     ret
 AddLongData       ENDP
 
