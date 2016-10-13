@@ -1672,6 +1672,113 @@ change_ss       PROC near
     ret
 change_ss       ENDP
 
+change_pm_sel   PROC near
+    xor ecx,ecx
+    xchg ecx,ds:[ebp].reg_eflags
+    push ecx
+;    
+    mov dx,gs
+    and cl,3
+    mov esi,OFFSET p_pm_deb_sel
+    push cx
+;    
+    push OFFSET change_pm_sel_ret
+    push edi
+    ret
+    
+change_pm_sel_ret:
+    pop cx
+    or cl,cl
+    jnz change_pm_sel_error
+;
+    inc ds:intr_dl
+
+change_pm_sel_error:
+    pop ecx
+    mov ds:[ebp].reg_eflags,ecx
+    ret
+change_pm_sel   ENDP
+
+change_pm_offs  PROC near
+    xor ecx,ecx
+    xchg ecx,ds:[ebp].reg_eflags
+    push ecx
+;
+    mov dx,gs
+    mov esi,OFFSET p_pm_deb_offs
+    push cx
+    push OFFSET change_pm_offs_ret
+    push edi
+    ret
+    
+change_pm_offs_ret:
+    pop cx
+    or cl,cl
+    jnz change_pm_offs_error
+;    
+    inc ds:intr_dl
+
+change_pm_offs_error:
+    pop ecx
+    mov ds:[ebp].reg_eflags,ecx
+    ret
+change_pm_offs  ENDP
+
+change_vm_sel   PROC near
+    mov ecx,20000h
+    xchg ecx,ds:[ebp].reg_eflags
+    push ecx
+;    
+    mov dx,gs
+    and cl,3
+    mov esi,OFFSET p_vm_deb_sel
+    push cx
+;    
+    push OFFSET change_vm_sel_ret
+    push edi
+    ret
+    
+change_vm_sel_ret:
+    pop cx
+;    
+    or cl,cl
+    jnz change_vm_sel_error
+;    
+    inc ds:intr_dl
+    
+change_vm_sel_error:
+    pop ecx
+    mov ds:[ebp].reg_eflags,ecx
+    ret
+change_vm_sel   ENDP
+
+change_vm_offs  PROC near
+    mov ecx,20000h
+    xchg ecx,ds:[ebp].reg_eflags
+    push ecx
+;    
+    mov dx,gs
+    mov esi,OFFSET p_vm_deb_offs
+    push cx
+;    
+    push OFFSET change_vm_offs_ret
+    push edi
+    ret
+    
+change_vm_offs_ret:
+    pop cx
+;    
+    or cl,cl
+    jnz change_vm_offs_error
+;    
+    inc ds:intr_dl
+    
+change_vm_offs_error:
+    pop ecx
+    mov ds:[ebp].reg_eflags,ecx
+    ret
+change_vm_offs  ENDP
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1849,6 +1956,20 @@ mem_pm  PROC near
     mov ds:[ebp].reg_eflags,ecx
     ret
 mem_pm  ENDP
+
+mem_vm  PROC near
+    mov ecx,20000h
+    xchg ecx,ds:[ebp].reg_eflags
+    push ecx
+;    
+    mov dx,gs:p_vm_deb_sel
+    mov esi,gs:p_vm_deb_offs
+    call mem_do
+;    
+    pop ecx    
+    mov ds:[ebp].reg_eflags,ecx
+    ret
+mem_vm  ENDP
     
 code    ENDS
 
