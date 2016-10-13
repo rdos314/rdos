@@ -46,6 +46,534 @@ data    ENDS
 code    SEGMENT byte use32 public 'CODE'
 
     extrn GetCpu:near
+    extrn set_os_pos:near
+    extrn get_os_pos:near
+    extrn set0_sw:near
+    extrn set1_sw:near
+    extrn set2_sw:near
+    extrn set3_sw:near
+    extrn set4_sw:near
+    extrn set5_sw:near
+    extrn set6_sw:near
+    extrn set7_sw:near
+    extrn set8_sw:near
+    extrn set9_sw:near
+    extrn setA_sw:near
+    extrn setB_sw:near
+    extrn setC_sw:near
+    extrn setD_sw:near
+    extrn setE_sw:near
+    extrn setF_sw:near
+    extrn inc_sw:near
+    extrn dec_sw:near
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;   sw functions
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+go_sw   PROC near
+    DebugGo
+    ret
+go_sw   ENDP
+
+trace_sw    PROC near
+    DebugTrace
+    ret
+trace_sw    ENDP
+
+pace_sw PROC near
+    DebugPace
+    ret
+pace_sw ENDP
+
+reg_sw  PROC near
+    push es
+    push edi
+;
+    mov ax,SEG data
+    mov es,ax
+    mov edi,OFFSET buf
+    call GetCpu
+;
+    ClearText
+    mov edi,OFFSET buf
+    WriteAsciiz
+    xor dx,dx
+    xor cx,cx
+    SetCursorPosition
+;
+    pop edi
+    pop es
+    ret
+reg_sw  ENDP
+
+next_sw PROC near
+    DebugNext
+    ret
+next_sw ENDP
+
+error_sw    PROC near
+    ret
+error_sw    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           debug_call_pr
+;
+;           DESCRIPTION:    Main debug entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    
+virt_sw_func_tab:
+vs_00   DD OFFSET error_sw
+vs_01   DD OFFSET error_sw
+vs_02   DD OFFSET error_sw
+vs_03   DD OFFSET error_sw
+vs_04   DD OFFSET error_sw
+vs_05   DD OFFSET error_sw
+vs_06   DD OFFSET error_sw
+vs_07   DD OFFSET error_sw
+vs_08   DD OFFSET error_sw
+vs_09   DD OFFSET error_sw
+vs_0A   DD OFFSET error_sw
+vs_0B   DD OFFSET error_sw
+vs_0C   DD OFFSET error_sw
+vs_0D   DD OFFSET error_sw
+vs_0E   DD OFFSET error_sw
+vs_0F   DD OFFSET error_sw
+vs_10   DD OFFSET error_sw
+vs_11   DD OFFSET error_sw
+vs_12   DD OFFSET error_sw
+vs_13   DD OFFSET error_sw
+vs_14   DD OFFSET error_sw
+vs_15   DD OFFSET error_sw
+vs_16   DD OFFSET error_sw
+vs_17   DD OFFSET error_sw
+vs_18   DD OFFSET error_sw
+vs_19   DD OFFSET error_sw
+vs_1A   DD OFFSET error_sw
+vs_1B   DD OFFSET error_sw
+vs_1C   DD OFFSET error_sw
+vs_1D   DD OFFSET error_sw
+vs_1E   DD OFFSET error_sw
+vs_1F   DD OFFSET error_sw
+vs_20   DD OFFSET error_sw
+vs_21   DD OFFSET error_sw
+vs_22   DD OFFSET error_sw
+vs_23   DD OFFSET error_sw
+vs_24   DD OFFSET error_sw
+vs_25   DD OFFSET error_sw
+vs_26   DD OFFSET error_sw
+vs_27   DD OFFSET error_sw
+vs_28   DD OFFSET error_sw
+vs_29   DD OFFSET error_sw
+vs_2A   DD OFFSET error_sw
+vs_2B   DD OFFSET inc_sw
+vs_2C   DD OFFSET error_sw
+vs_2D   DD OFFSET dec_sw
+vs_2E   DD OFFSET error_sw
+vs_2F   DD OFFSET error_sw
+vs_30   DD OFFSET set0_sw
+vs_31   DD OFFSET set1_sw
+vs_32   DD OFFSET set2_sw
+vs_33   DD OFFSET set3_sw
+vs_34   DD OFFSET set4_sw
+vs_35   DD OFFSET set5_sw
+vs_36   DD OFFSET set6_sw
+vs_37   DD OFFSET set7_sw
+vs_38   DD OFFSET set8_sw
+vs_39   DD OFFSET set9_sw
+vs_3A   DD OFFSET error_sw
+vs_3B   DD OFFSET error_sw
+vs_3C   DD OFFSET error_sw
+vs_3D   DD OFFSET error_sw
+vs_3E   DD OFFSET error_sw
+vs_3F   DD OFFSET error_sw
+vs_40   DD OFFSET error_sw
+vs_41   DD OFFSET setA_sw
+vs_42   DD OFFSET setB_sw
+vs_43   DD OFFSET setC_sw
+vs_44   DD OFFSET setD_sw
+vs_45   DD OFFSET setE_sw
+vs_46   DD OFFSET setF_sw
+vs_47   DD OFFSET go_sw
+vs_48   DD OFFSET error_sw
+vs_49   DD OFFSET error_sw
+vs_4A   DD OFFSET error_sw
+vs_4B   DD OFFSET error_sw
+vs_4C   DD OFFSET error_sw
+vs_4D   DD OFFSET error_sw
+vs_4E   DD OFFSET next_sw
+vs_4F   DD OFFSET error_sw
+vs_50   DD OFFSET pace_sw
+vs_51   DD OFFSET error_sw
+vs_52   DD OFFSET reg_sw
+vs_53   DD OFFSET error_sw
+vs_54   DD OFFSET trace_sw
+vs_55   DD OFFSET error_sw
+vs_56   DD OFFSET error_sw
+vs_57   DD OFFSET error_sw
+vs_58   DD OFFSET error_sw
+vs_59   DD OFFSET error_sw
+vs_5A   DD OFFSET error_sw
+vs_5B   DD OFFSET error_sw
+vs_5C   DD OFFSET error_sw
+vs_5D   DD OFFSET error_sw
+vs_5E   DD OFFSET error_sw
+vs_5F   DD OFFSET error_sw
+vs_60   DD OFFSET error_sw
+vs_61   DD OFFSET setA_sw
+vs_62   DD OFFSET setB_sw
+vs_63   DD OFFSET setC_sw
+vs_64   DD OFFSET setD_sw
+vs_65   DD OFFSET setE_sw
+vs_66   DD OFFSET setF_sw
+vs_67   DD OFFSET go_sw
+vs_68   DD OFFSET error_sw
+vs_69   DD OFFSET error_sw
+vs_6A   DD OFFSET error_sw
+vs_6B   DD OFFSET error_sw
+vs_6C   DD OFFSET error_sw
+vs_6D   DD OFFSET error_sw
+vs_6E   DD OFFSET next_sw
+vs_6F   DD OFFSET error_sw
+vs_70   DD OFFSET pace_sw
+vs_71   DD OFFSET error_sw
+vs_72   DD OFFSET reg_sw
+vs_73   DD OFFSET error_sw
+vs_74   DD OFFSET trace_sw
+vs_75   DD OFFSET error_sw
+vs_76   DD OFFSET error_sw
+vs_77   DD OFFSET error_sw
+vs_78   DD OFFSET error_sw
+vs_79   DD OFFSET error_sw
+vs_7A   DD OFFSET error_sw
+vs_7B   DD OFFSET error_sw
+vs_7C   DD OFFSET error_sw
+vs_7D   DD OFFSET error_sw
+vs_7E   DD OFFSET error_sw
+vs_7F   DD OFFSET error_sw
+vs_80   DD OFFSET error_sw
+vs_81   DD OFFSET error_sw
+vs_82   DD OFFSET error_sw
+vs_83   DD OFFSET error_sw
+vs_84   DD OFFSET error_sw
+vs_85   DD OFFSET error_sw
+vs_86   DD OFFSET error_sw
+vs_87   DD OFFSET error_sw
+vs_88   DD OFFSET error_sw
+vs_89   DD OFFSET error_sw
+vs_8A   DD OFFSET error_sw
+vs_8B   DD OFFSET error_sw
+vs_8C   DD OFFSET error_sw
+vs_8D   DD OFFSET error_sw
+vs_8E   DD OFFSET error_sw
+vs_8F   DD OFFSET error_sw
+vs_90   DD OFFSET error_sw
+vs_91   DD OFFSET error_sw
+vs_92   DD OFFSET error_sw
+vs_93   DD OFFSET error_sw
+vs_94   DD OFFSET error_sw
+vs_95   DD OFFSET error_sw
+vs_96   DD OFFSET error_sw
+vs_97   DD OFFSET error_sw
+vs_98   DD OFFSET error_sw
+vs_99   DD OFFSET error_sw
+vs_9A   DD OFFSET error_sw
+vs_9B   DD OFFSET error_sw
+vs_9C   DD OFFSET error_sw
+vs_9D   DD OFFSET error_sw
+vs_9E   DD OFFSET error_sw
+vs_9F   DD OFFSET error_sw
+vs_A0   DD OFFSET error_sw
+vs_A1   DD OFFSET error_sw
+vs_A2   DD OFFSET error_sw
+vs_A3   DD OFFSET error_sw
+vs_A4   DD OFFSET error_sw
+vs_A5   DD OFFSET error_sw
+vs_A6   DD OFFSET error_sw
+vs_A7   DD OFFSET error_sw
+vs_A8   DD OFFSET error_sw
+vs_A9   DD OFFSET error_sw
+vs_AA   DD OFFSET error_sw
+vs_AB   DD OFFSET error_sw
+vs_AC   DD OFFSET error_sw
+vs_AD   DD OFFSET error_sw
+vs_AE   DD OFFSET error_sw
+vs_AF   DD OFFSET error_sw
+vs_B0   DD OFFSET error_sw
+vs_B1   DD OFFSET error_sw
+vs_B2   DD OFFSET error_sw
+vs_B3   DD OFFSET error_sw
+vs_B4   DD OFFSET error_sw
+vs_B5   DD OFFSET error_sw
+vs_B6   DD OFFSET error_sw
+vs_B7   DD OFFSET error_sw
+vs_B8   DD OFFSET error_sw
+vs_B9   DD OFFSET error_sw
+vs_BA   DD OFFSET error_sw
+vs_BB   DD OFFSET error_sw
+vs_BC   DD OFFSET error_sw
+vs_BD   DD OFFSET error_sw
+vs_BE   DD OFFSET error_sw
+vs_BF   DD OFFSET error_sw
+vs_C0   DD OFFSET error_sw
+vs_C1   DD OFFSET error_sw
+vs_C2   DD OFFSET error_sw
+vs_C3   DD OFFSET error_sw
+vs_C4   DD OFFSET error_sw
+vs_C5   DD OFFSET error_sw
+vs_C6   DD OFFSET error_sw
+vs_C7   DD OFFSET error_sw
+vs_C8   DD OFFSET error_sw
+vs_C9   DD OFFSET error_sw
+vs_CA   DD OFFSET error_sw
+vs_CB   DD OFFSET error_sw
+vs_CC   DD OFFSET error_sw
+vs_CD   DD OFFSET error_sw
+vs_CE   DD OFFSET error_sw
+vs_CF   DD OFFSET error_sw
+vs_D0   DD OFFSET error_sw
+vs_D1   DD OFFSET error_sw
+vs_D2   DD OFFSET error_sw
+vs_D3   DD OFFSET error_sw
+vs_D4   DD OFFSET error_sw
+vs_D5   DD OFFSET error_sw
+vs_D6   DD OFFSET error_sw
+vs_D7   DD OFFSET error_sw
+vs_D8   DD OFFSET error_sw
+vs_D9   DD OFFSET error_sw
+vs_DA   DD OFFSET error_sw
+vs_DB   DD OFFSET error_sw
+vs_DC   DD OFFSET error_sw
+vs_DD   DD OFFSET error_sw
+vs_DE   DD OFFSET error_sw
+vs_DF   DD OFFSET error_sw
+vs_E0   DD OFFSET error_sw
+vs_E1   DD OFFSET error_sw
+vs_E2   DD OFFSET error_sw
+vs_E3   DD OFFSET error_sw
+vs_E4   DD OFFSET error_sw
+vs_E5   DD OFFSET error_sw
+vs_E6   DD OFFSET error_sw
+vs_E7   DD OFFSET error_sw
+vs_E8   DD OFFSET error_sw
+vs_E9   DD OFFSET error_sw
+vs_EA   DD OFFSET error_sw
+vs_EB   DD OFFSET error_sw
+vs_EC   DD OFFSET error_sw
+vs_ED   DD OFFSET error_sw
+vs_EE   DD OFFSET error_sw
+vs_EF   DD OFFSET error_sw
+vs_F0   DD OFFSET error_sw
+vs_F1   DD OFFSET error_sw
+vs_F2   DD OFFSET error_sw
+vs_F3   DD OFFSET error_sw
+vs_F4   DD OFFSET error_sw
+vs_F5   DD OFFSET error_sw
+vs_F6   DD OFFSET error_sw
+vs_F7   DD OFFSET error_sw
+vs_F8   DD OFFSET error_sw
+vs_F9   DD OFFSET error_sw
+vs_FA   DD OFFSET error_sw
+vs_FB   DD OFFSET error_sw
+vs_FC   DD OFFSET error_sw
+vs_FD   DD OFFSET error_sw
+vs_FE   DD OFFSET error_sw
+vs_FF   DD OFFSET error_sw
+
+debug_call_pr   PROC near
+    push ebx
+;
+    call set_os_pos
+;
+    cmp al,'r'
+    jz wait_regs
+    cmp al,'R'
+    jnz no_wait_debug
+
+wait_regs:
+    push eax
+    mov ax,10
+    WaitMilliSec
+    pop eax
+
+no_wait_debug:
+    cmp al,'n'
+    je debug_do
+;
+    cmp al,'N'
+    je debug_do
+;
+    push ax
+    GetDebugThreadSel
+    mov gs,ax
+    or ax,ax
+    pop ax
+    jz debug_end
+
+debug_do:
+    movzx ebx,al
+    shl ebx,2
+    call dword ptr cs:[ebx].virt_sw_func_tab
+
+debug_end:
+    xor bx,bx
+    mov es,bx
+    mov fs,bx
+    mov gs,bx
+;
+    call get_os_pos
+;    
+    pop ebx
+    ret
+debug_call_pr   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DoFunc
+;
+;           DESCRIPTION:    Do function
+;
+;           PARAMETERS:     CX          X
+;                           DX          Y
+;                           AL          CHAR
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoFunc  PROC near
+    HideMouse
+    shr cx,3
+    shr dx,3
+    mov dh,dl
+    mov dl,cl
+    call debug_call_pr
+    mov al,'r'
+    call debug_call_pr
+    movzx cx,dl
+    movzx dx,dh
+    shl cx,3
+    shl dx,3
+    SetMousePosition
+    ShowMouse
+    ret
+DoFunc  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HandleKeyboard
+;
+;           DESCRIPTION:    Keyboard
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleKeyboard  Proc near
+    mov eax,25
+    WaitMilliSec
+;
+    PollKeyboard
+    jc handle_key_end
+;
+    ReadKeyboard
+    or al,al
+    jz handle_key_special
+;
+    call DoFunc
+    jmp handle_key_end
+
+handle_key_special:  
+    cmp ah,72
+    jnz no_up_arrow
+
+up_arrow:
+    GetMousePosition
+    sub dx,8
+    SetMousePosition
+    jmp handle_key_end
+
+no_up_arrow:
+    cmp ah,80
+    jnz no_down_arrow
+
+down_arrow:
+    GetMousePosition
+    add dx,8
+    SetMousePosition
+    jmp handle_key_end
+
+no_down_arrow:
+    cmp ah,75
+    jnz no_left_arrow
+
+left_arrow:
+    GetMousePosition
+    sub cx,8
+    SetMousePosition
+    jmp handle_key_end
+
+no_left_arrow:
+    cmp ah,77
+    jnz handle_key_end
+
+right_arrow:
+    GetMousePosition
+    add cx,8
+    SetMousePosition
+
+handle_key_end:
+    ret
+HandleKeyboard  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HandleMouse
+;
+;           DESCRIPTION:    Mouse handler
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleMouse     Proc near
+    GetLeftButton
+    jc handle_not_left
+
+left_button:
+    GetLeftButtonPressPosition
+    mov al,'+'
+    call DoFunc
+
+left_rel_loop:
+    call HandleKeyboard
+    GetLeftButton
+    jnc left_rel_loop
+
+handle_not_left:
+    GetRightButton
+    jc handle_mouse_done
+
+right_button:
+    GetRightButtonPressPosition
+    mov al,'-'
+    call DoFunc
+
+right_rel_loop:
+    call HandleKeyboard
+    GetRightButton
+    jnc right_rel_loop
+
+handle_mouse_done:
+    ret
+HandleMouse     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -64,28 +592,30 @@ debug_process:
     sti
     mov ax,41h
     EnableFocus
-    int 3
 ;
-    mov ax,SEG data
-    mov ds,ax
-    mov es,ax
-;
-    finit
-    fld tbyte ptr cs:val
-;
-    GetThread
-    mov edi,OFFSET buf
-    call GetCpu
-;
-    mov edi,OFFSET buf
-    WriteAsciiz   
-
-marker_loop:
     mov ax,250
     WaitMilliSec
-    jmp marker_loop    
+;   
+    mov ax,SEG data
+    mov ds,ax
+;     
+    xor ax,ax
+    xor bx,bx
+    mov cx,639
+    mov dx,199
+    SetMouseWindow
+    mov cx,8
+    mov dx,8
+    SetMouseMickey
+;       
+    ShowMouse
 
-val  DT 156.56
+marker_loop:
+    call HandleKeyboard
+    call HandleMouse
+    GetMousePosition
+    SetMousePosition
+    jmp marker_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

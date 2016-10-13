@@ -47,9 +47,9 @@ data    SEGMENT byte public 'DATA'
 
 cpu cpu_struc <>
 
-intr_dl     DB ?
-intr_dh     DB ?
-intr_ax     DW ?
+sw_func_code     DW ?
+sw_col           DB ?
+sw_row           DB ?
 
 data    ENDS
 
@@ -1274,7 +1274,7 @@ GetDebugThreadData      Endp
 ;
 ;           DESCRIPTION:    Get CPU info
 ;
-;           PARAMETERS:     AX                  Debug thread
+;           PARAMETERS:     GS                  Debug thread
 ;                           ES:EDI              Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1282,10 +1282,8 @@ GetDebugThreadData      Endp
     public GetCpu
     
 GetCpu  Proc near
-    push gs
     pushad
 ;
-    mov gs,ax
     mov ebp,OFFSET cpu
     call GetDebugThreadData
 ;    
@@ -1305,7 +1303,6 @@ gcDone:
     stosb 
 ;
     popad
-    pop gs    
     ret
 GetCpu  Endp
 
@@ -2165,7 +2162,7 @@ change_pm_sel_ret:
     or cl,cl
     jnz change_pm_sel_error
 ;
-    inc ds:intr_dl
+    inc ds:sw_col
 
 change_pm_sel_error:
     pop ecx
@@ -2190,7 +2187,7 @@ change_pm_offs_ret:
     or cl,cl
     jnz change_pm_offs_error
 ;    
-    inc ds:intr_dl
+    inc ds:sw_col
 
 change_pm_offs_error:
     pop ecx
@@ -2218,7 +2215,7 @@ change_vm_sel_ret:
     or cl,cl
     jnz change_vm_sel_error
 ;    
-    inc ds:intr_dl
+    inc ds:sw_col
     
 change_vm_sel_error:
     pop ecx
@@ -2245,7 +2242,7 @@ change_vm_offs_ret:
     or cl,cl
     jnz change_vm_offs_error
 ;    
-    inc ds:intr_dl
+    inc ds:sw_col
     
 change_vm_offs_error:
     pop ecx
@@ -2338,8 +2335,8 @@ toggle_nt       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 interact_set    PROC near
-;    call interact_set_value
-    inc ds:intr_dl
+    call interact_set_value
+    inc ds:sw_col
     ret
 interact_set    ENDP
 
@@ -2356,7 +2353,7 @@ interact_set    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mem_do  PROC near
-    mov cl,ds:intr_dl
+    mov cl,ds:sw_col
     sub cl,cs:[ebx+debug_col]
     mov bx,gs
 
@@ -2384,7 +2381,7 @@ mem_do_free:
     or cl,cl
     jnz mem_do_end
 ;    
-    inc ds:intr_dl
+    inc ds:sw_col
 
 mem_do_end:     
     ret
@@ -2515,8 +2512,8 @@ dend32 DD 0FFFFFFFFh, 0FFFFFFFFh
 
 debug_call_do32   PROC near
     mov ebx,OFFSET debug_table32
-    mov al,ds:intr_dl
-    mov ah,ds:intr_dh
+    mov al,ds:sw_col
+    mov ah,ds:sw_row
 
 d_c_loop32:
     mov cl,cs:[ebx+debug_row]
@@ -2533,7 +2530,7 @@ d_c_loop32:
 ;
     xor cl,7
     and cl,7
-    mov ax,ds:intr_ax
+    mov ax,ds:sw_func_code
     jmp dword ptr cs:[ebx+debug_call]
     
 not_this_entry32:
@@ -2674,8 +2671,8 @@ dend64 DW 0FFFFh, 0FFFFh
 
 debug_call_do64   PROC near
     mov ebx,OFFSET debug_table64
-    mov al,ds:intr_dl
-    mov ah,ds:intr_dh
+    mov al,ds:sw_col
+    mov ah,ds:sw_row
 
 d_c_loop64:
     mov cl,cs:[ebx+debug_row]
@@ -2692,7 +2689,7 @@ d_c_loop64:
 ;
     xor cl,7
     and cl,7
-    mov ax,ds:intr_ax
+    mov ax,ds:sw_func_code
     jmp dword ptr cs:[ebx+debug_call]
     
 not_this_entry64:
@@ -2895,6 +2892,54 @@ setF_sw:
     or ax,ax
     jz set_base_sw64
     jmp set_base_sw32
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           set_os_pos
+;
+;           DESCRIPTION:    Set os pos
+;
+;           PARAMETERS:     DS      Data 
+;                           AX      Function #
+;                           DL      Col
+;                           DH      Row
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public set_os_pos
+
+set_os_pos    Proc near
+    mov ds:sw_func_code,ax
+    mov ds:sw_row,dh
+    mov ds:sw_col,dl
+    ret
+set_os_pos    Endp
+    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           get_os_pos
+;
+;           DESCRIPTION:    Get os pos
+;
+;           PARAMETERS:     DS      Data
+; 
+;           RETURNS:        AX      Function #
+;                           DL      Col
+;                           DH      Row
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public get_os_pos
+
+get_os_pos    Proc near
+    mov ax,ds:sw_func_code
+    mov dl,ds:sw_col
+    mov dh,ds:sw_row
+    ret
+get_os_pos    Endp   
     
 code    ENDS
 
