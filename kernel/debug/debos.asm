@@ -2729,6 +2729,172 @@ set_base_sw64     PROC near
     popad
     ret
 set_base_sw64     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;   Interact functions
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public inc_sw
+
+inc_sw:
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz inc_sw64
+    jmp inc_sw32
+
+    public dec_sw
+
+dec_sw:
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz dec_sw64
+    jmp dec_sw32
+
+    public set0_sw
+
+set0_sw:
+    mov ch,0
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
+
+    public set1_sw
+
+set1_sw:
+    mov ch,1
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
+
+    public set2_sw
+
+set2_sw:
+    mov ch,2
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
+
+    public set3_sw
+
+set3_sw:
+    mov ch,3
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
+
+    public set4_sw
+
+set4_sw:
+    mov ch,4
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
+
+    public set5_sw
+
+set5_sw:
+    mov ch,5
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
+
+    public set6_sw
+
+set6_sw:
+    mov ch,6
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
+
+    public set7_sw
+
+set7_sw:
+    mov ch,7
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
+
+    public set8_sw
+
+set8_sw:
+    mov ch,8
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
+
+    public set9_sw
+
+set9_sw:
+    mov ch,9
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
+
+    public setA_sw
+
+setA_sw:
+    mov ch,0Ah
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
+
+    public setB_sw
+
+setB_sw:
+    mov ch,0Bh
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
+
+    public setC_sw
+
+setC_sw:
+    mov ch,0Ch
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
+
+    public setD_sw
+
+setD_sw:
+    mov ch,0Dh
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
+
+    public setE_sw
+
+setE_sw:
+    mov ch,0Eh
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
+
+    public setF_sw
+
+setF_sw:
+    mov ch,0Fh
+    mov ax,gs:p_tss_sel
+    or ax,ax
+    jz set_base_sw64
+    jmp set_base_sw32
     
 code    ENDS
 
