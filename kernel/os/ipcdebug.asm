@@ -2630,8 +2630,15 @@ init_system     ENDP
 init_ipc_debug  PROC near
     mov ax,cs
     mov es,ax
+;
+    mov bx,0EE0h
+    verr bx
+    jz init_ipc_done
+;    
     mov edi,OFFSET init_system
     HookInitTasking
+
+init_ipc_done:    
     ret
 init_ipc_debug    ENDP
 

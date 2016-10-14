@@ -40,6 +40,7 @@ INCLUDE dis.inc
 code    SEGMENT byte use32 public 'CODE'
 
     extrn init_local_debug:near
+    extrn init_ipc_debug:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -56,6 +57,7 @@ init_debug_process      PROC far
     pushad
 ;    
     call init_local_debug
+    call init_ipc_debug
 ;    
     popad
     pop es

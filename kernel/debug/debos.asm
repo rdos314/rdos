@@ -1123,6 +1123,8 @@ write_mem    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public GetDebugThreadData
+
 GetDebugThreadData      Proc near
     push es
     pushad
@@ -1318,6 +1320,8 @@ GetCpu  Endp
 ;                           CL          Number of digits
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public interact_incr
     
 interact_incr   PROC near
     push eax
@@ -1385,6 +1389,8 @@ interact_incr   ENDP
 ;                           CL          Number of digits
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public interact_decr
     
 interact_decr   PROC near
     push eax
@@ -1453,6 +1459,8 @@ interact_decr   ENDP
 ;                           CH              Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public interact_set_value
 
 interact_set_value     PROC near
     push eax
@@ -1617,161 +1625,225 @@ incdec64  ENDP
 ;                       AL      Operation ('+' och '-')
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
+
+    public incdec_eax
+        
 incdec_eax:
     mov edx,gs
     mov esi,OFFSET p_rax
     jmp incdec32
+
+    public incdec_ebx
 
 incdec_ebx:
     mov edx,gs
     mov esi,OFFSET p_rbx
     jmp incdec32
 
+    public incdec_ecx
+
 incdec_ecx:
     mov edx,gs
     mov esi,OFFSET p_rcx
     jmp incdec32
+
+    public incdec_edx
 
 incdec_edx:
     mov edx,gs
     mov esi,OFFSET p_rdx
     jmp incdec32
 
+    public incdec_esi
+
 incdec_esi:
     mov edx,gs
     mov esi,OFFSET p_rsi
     jmp incdec32
+
+    public incdec_edi
 
 incdec_edi:
     mov edx,gs
     mov esi,OFFSET p_rdi
     jmp incdec32
 
+    public incdec_esp
+
 incdec_esp:
     mov edx,gs
     mov esi,OFFSET p_rsp
     jmp incdec32
+
+    public incdec_ebp
 
 incdec_ebp:
     mov edx,gs
     mov esi,OFFSET p_rbp
     jmp incdec32
 
+    public incdec_epc
+
 incdec_epc:
     mov edx,gs
     mov esi,OFFSET p_rip
     jmp incdec32
+
+    public incdec_rip
 
 incdec_rip:
     mov edx,gs
     mov esi,OFFSET p_rip
     jmp incdec64
 
+    public incdec_rax
+
 incdec_rax:
     mov edx,gs
     mov esi,OFFSET p_rax
     jmp incdec64
+
+    public incdec_rbx
 
 incdec_rbx:
     mov edx,gs
     mov esi,OFFSET p_rbx
     jmp incdec64
 
+    public incdec_rcx
+
 incdec_rcx:
     mov edx,gs
     mov esi,OFFSET p_rcx
     jmp incdec64
+
+    public incdec_rdx
 
 incdec_rdx:
     mov edx,gs
     mov esi,OFFSET p_rdx
     jmp incdec64
 
+    public incdec_rsi
+
 incdec_rsi:
     mov edx,gs
     mov esi,OFFSET p_rsi
     jmp incdec64
+
+    public incdec_rdi
 
 incdec_rdi:
     mov edx,gs
     mov esi,OFFSET p_rdi
     jmp incdec64
 
+    public incdec_r8
+
 incdec_r8:
     mov edx,gs
     mov esi,OFFSET p_r8
     jmp incdec64
+
+    public incdec_r9
 
 incdec_r9:
     mov edx,gs
     mov esi,OFFSET p_r9
     jmp incdec64
 
+    public incdec_r10
+
 incdec_r10:
     mov edx,gs
     mov esi,OFFSET p_r10
     jmp incdec64
+
+    public incdec_r11
 
 incdec_r11:
     mov edx,gs
     mov esi,OFFSET p_r11
     jmp incdec64
 
+    public incdec_r12
+
 incdec_r12:
     mov edx,gs
     mov esi,OFFSET p_r12
     jmp incdec64
+
+    public incdec_r13
 
 incdec_r13:
     mov edx,gs
     mov esi,OFFSET p_r13
     jmp incdec64
 
+    public incdec_r14
+
 incdec_r14:
     mov edx,gs
     mov esi,OFFSET p_r14
     jmp incdec64
+
+    public incdec_r15
 
 incdec_r15:
     mov edx,gs
     mov esi,OFFSET p_r15
     jmp incdec64
 
+    public incdec_rbp
+
 incdec_rbp:
     mov edx,gs
     mov esi,OFFSET p_rbp
     jmp incdec64
+
+    public incdec_rsp
 
 incdec_rsp:
     mov edx,gs
     mov esi,OFFSET p_rsp
     jmp incdec64
 
+    public incdec_cs
+
 incdec_cs:
     mov edx,gs
     mov esi,OFFSET p_cs
     jmp incdec16
+
+    public incdec_ds
 
 incdec_ds:
     mov edx,gs
     mov esi,OFFSET p_ds
     jmp incdec16
 
+    public incdec_es
+
 incdec_es:
     mov edx,gs
     mov esi,OFFSET p_es
     jmp incdec16
+
+    public incdec_fs
 
 incdec_fs:
     mov edx,gs
     mov esi,OFFSET p_fs
     jmp incdec16
 
+    public incdec_gs
+
 incdec_gs:
     mov edx,gs
     mov esi,OFFSET p_gs
     jmp incdec16
+
+    public incdec_ss
 
 incdec_ss:
     mov edx,gs
@@ -1794,12 +1866,16 @@ incdec_ss:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public change_eax
+    
 change_eax      PROC near
     mov edx,gs
     mov esi,OFFSET p_rax
     push edi
     ret
 change_eax      ENDP
+
+    public change_ebx
 
 change_ebx      PROC near
     mov edx,gs
@@ -1808,12 +1884,16 @@ change_ebx      PROC near
     ret
 change_ebx      ENDP
 
+    public change_ecx
+
 change_ecx      PROC near
     mov edx,gs
     mov esi,OFFSET p_rcx
     push edi
     ret
 change_ecx      ENDP
+
+    public change_edx
 
 change_edx      PROC near
     mov edx,gs
@@ -1822,12 +1902,16 @@ change_edx      PROC near
     ret
 change_edx      ENDP
 
+    public change_esi
+
 change_esi      PROC near
     mov edx,gs
     mov esi,OFFSET p_rsi
     push edi
     ret
 change_esi      ENDP
+
+    public change_edi
 
 change_edi      PROC near
     mov edx,gs
@@ -1836,12 +1920,16 @@ change_edi      PROC near
     ret
 change_edi      ENDP
 
+    public change_esp
+
 change_esp      PROC near
     mov edx,gs
     mov esi,OFFSET p_rsp
     push edi
     ret
 change_esp      ENDP
+
+    public change_ebp
 
 change_ebp      PROC near
     mov edx,gs
@@ -1850,12 +1938,16 @@ change_ebp      PROC near
     ret
 change_ebp      ENDP
 
+    public change_epc
+
 change_epc      PROC near
     mov edx,gs
     mov esi,OFFSET p_rip
     push edi
     ret
 change_epc      ENDP
+
+    public change_raxl
 
 change_raxl      PROC near
     mov edx,gs
@@ -1864,12 +1956,16 @@ change_raxl      PROC near
     ret
 change_raxl      ENDP
 
+    public change_raxh
+
 change_raxh      PROC near
     mov edx,gs
     mov esi,OFFSET p_rax + 4
     push edi
     ret
 change_raxh      ENDP
+
+    public change_rbxl
 
 change_rbxl      PROC near
     mov edx,gs
@@ -1878,12 +1974,16 @@ change_rbxl      PROC near
     ret
 change_rbxl      ENDP
 
+    public change_rbxh
+
 change_rbxh      PROC near
     mov edx,gs
     mov esi,OFFSET p_rbx + 4
     push edi
     ret
 change_rbxh      ENDP
+
+    public change_rcxl
 
 change_rcxl      PROC near
     mov edx,gs
@@ -1892,12 +1992,16 @@ change_rcxl      PROC near
     ret
 change_rcxl      ENDP
 
+    public change_rcxh
+
 change_rcxh      PROC near
     mov edx,gs
     mov esi,OFFSET p_rcx + 4
     push edi
     ret
 change_rcxh      ENDP
+
+    public change_rdxl
 
 change_rdxl      PROC near
     mov edx,gs
@@ -1906,12 +2010,16 @@ change_rdxl      PROC near
     ret
 change_rdxl      ENDP
 
+    public change_rdxh
+
 change_rdxh      PROC near
     mov edx,gs
     mov esi,OFFSET p_rdx + 4
     push edi
     ret
 change_rdxh      ENDP
+
+    public change_rsil
 
 change_rsil      PROC near
     mov edx,gs
@@ -1920,12 +2028,16 @@ change_rsil      PROC near
     ret
 change_rsil      ENDP
 
+    public change_rsih
+
 change_rsih      PROC near
     mov edx,gs
     mov esi,OFFSET p_rsi + 4
     push edi
     ret
 change_rsih      ENDP
+
+    public change_rdil
 
 change_rdil      PROC near
     mov edx,gs
@@ -1934,12 +2046,16 @@ change_rdil      PROC near
     ret
 change_rdil      ENDP
 
+    public change_rdih
+
 change_rdih      PROC near
     mov edx,gs
     mov esi,OFFSET p_rdi + 4
     push edi
     ret
 change_rdih      ENDP
+
+    public change_r8l
 
 change_r8l      PROC near
     mov edx,gs
@@ -1948,12 +2064,16 @@ change_r8l      PROC near
     ret
 change_r8l      ENDP
 
+    public change_r8h
+
 change_r8h      PROC near
     mov edx,gs
     mov esi,OFFSET p_r8 + 4
     push edi
     ret
 change_r8h      ENDP
+
+    public change_r9l
 
 change_r9l      PROC near
     mov edx,gs
@@ -1962,12 +2082,16 @@ change_r9l      PROC near
     ret
 change_r9l      ENDP
 
+    public change_r9h
+
 change_r9h      PROC near
     mov edx,gs
     mov esi,OFFSET p_r9 + 4
     push edi
     ret
 change_r9h      ENDP
+
+    public change_r10l
 
 change_r10l      PROC near
     mov edx,gs
@@ -1976,12 +2100,16 @@ change_r10l      PROC near
     ret
 change_r10l      ENDP
 
+    public change_r10h
+
 change_r10h      PROC near
     mov edx,gs
     mov esi,OFFSET p_r10 + 4
     push edi
     ret
 change_r10h      ENDP
+
+    public change_r11l
 
 change_r11l      PROC near
     mov edx,gs
@@ -1990,12 +2118,16 @@ change_r11l      PROC near
     ret
 change_r11l      ENDP
 
+    public change_r11h
+
 change_r11h      PROC near
     mov edx,gs
     mov esi,OFFSET p_r11 + 4
     push edi
     ret
 change_r11h      ENDP
+
+    public change_r12l
 
 change_r12l      PROC near
     mov edx,gs
@@ -2004,12 +2136,16 @@ change_r12l      PROC near
     ret
 change_r12l      ENDP
 
+    public change_r12h
+
 change_r12h      PROC near
     mov edx,gs
     mov esi,OFFSET p_r12 + 4
     push edi
     ret
 change_r12h      ENDP
+
+    public change_r13l
 
 change_r13l      PROC near
     mov edx,gs
@@ -2018,12 +2154,16 @@ change_r13l      PROC near
     ret
 change_r13l      ENDP
 
+    public change_r13h
+
 change_r13h      PROC near
     mov edx,gs
     mov esi,OFFSET p_r13 + 4
     push edi
     ret
 change_r13h      ENDP
+
+    public change_r14l
 
 change_r14l      PROC near
     mov edx,gs
@@ -2032,12 +2172,16 @@ change_r14l      PROC near
     ret
 change_r14l      ENDP
 
+    public change_r14h
+
 change_r14h      PROC near
     mov edx,gs
     mov esi,OFFSET p_r14 + 4
     push edi
     ret
 change_r14h      ENDP
+
+    public change_r15l
 
 change_r15l      PROC near
     mov edx,gs
@@ -2046,12 +2190,16 @@ change_r15l      PROC near
     ret
 change_r15l      ENDP
 
+    public change_r15h
+
 change_r15h      PROC near
     mov edx,gs
     mov esi,OFFSET p_r15 + 4
     push edi
     ret
 change_r15h      ENDP
+
+    public change_ripl
 
 change_ripl      PROC near
     mov edx,gs
@@ -2060,12 +2208,16 @@ change_ripl      PROC near
     ret
 change_ripl      ENDP
 
+    public change_riph
+
 change_riph      PROC near
     mov edx,gs
     mov esi,OFFSET p_rip + 4
     push edi
     ret
 change_riph      ENDP
+
+    public change_rspl
 
 change_rspl      PROC near
     mov edx,gs
@@ -2074,12 +2226,16 @@ change_rspl      PROC near
     ret
 change_rspl      ENDP
 
+    public change_rsph
+
 change_rsph      PROC near
     mov edx,gs
     mov esi,OFFSET p_rsp + 4
     push edi
     ret
 change_rsph      ENDP
+
+    public change_rbpl
 
 change_rbpl      PROC near
     mov edx,gs
@@ -2088,12 +2244,16 @@ change_rbpl      PROC near
     ret
 change_rbpl      ENDP
 
+    public change_rbph
+
 change_rbph      PROC near
     mov edx,gs
     mov esi,OFFSET p_rbp + 4
     push edi
     ret
 change_rbph      ENDP
+
+    public change_cs
 
 change_cs       PROC near
     and cl,3
@@ -2103,6 +2263,8 @@ change_cs       PROC near
     ret
 change_cs       ENDP
 
+    public change_ds
+
 change_ds       PROC near
     and cl,3
     mov edx,gs
@@ -2110,6 +2272,8 @@ change_ds       PROC near
     push edi
     ret
 change_ds       ENDP
+
+    public change_es
 
 change_es       PROC near
     and cl,3
@@ -2119,6 +2283,8 @@ change_es       PROC near
     ret
 change_es       ENDP
 
+    public change_fs
+
 change_fs       PROC near
     and cl,3
     mov edx,gs
@@ -2126,6 +2292,8 @@ change_fs       PROC near
     push edi
     ret
 change_fs       ENDP
+
+    public change_gs
 
 change_gs       PROC near
     and cl,3
@@ -2135,6 +2303,8 @@ change_gs       PROC near
     ret
 change_gs       ENDP
 
+    public change_ss
+
 change_ss       PROC near
     and cl,3
     mov edx,gs
@@ -2143,6 +2313,8 @@ change_ss       PROC near
     ret
 change_ss       ENDP
 
+    public change_pm_sel
+   
 change_pm_sel   PROC near
     xor edx,edx
     xchg edx,ds:[ebp].reg_eflags
@@ -2170,6 +2342,8 @@ change_pm_sel_error:
     ret
 change_pm_sel   ENDP
 
+    public change_pm_offs
+
 change_pm_offs  PROC near
     xor edx,edx
     xchg edx,ds:[ebp].reg_eflags
@@ -2194,6 +2368,8 @@ change_pm_offs_error:
     mov ds:[ebp].reg_eflags,edx
     ret
 change_pm_offs  ENDP
+
+    public change_vm_sel
 
 change_vm_sel   PROC near
     xor edx,edx
@@ -2222,6 +2398,8 @@ change_vm_sel_error:
     mov ds:[ebp].reg_eflags,edx
     ret
 change_vm_sel   ENDP
+
+    public change_vm_offs
 
 change_vm_offs  PROC near
     xor edx,edx
@@ -2266,11 +2444,15 @@ change_vm_offs  ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public toggle_cy
+
 toggle_cy       PROC near
     mov ebx,OFFSET p_rflags
     xor word ptr gs:[ebx],1
     ret
 toggle_cy       ENDP
+
+    public toggle_pa
 
 toggle_pa       PROC near
     mov ebx,OFFSET p_rflags
@@ -2278,11 +2460,15 @@ toggle_pa       PROC near
     ret
 toggle_pa       ENDP
 
+    public toggle_ac
+
 toggle_ac       PROC near
     mov ebx,OFFSET p_rflags
     xor word ptr gs:[ebx],10h
     ret
 toggle_ac       ENDP
+
+    public toggle_zr
 
 toggle_zr       PROC near
     mov ebx,OFFSET p_rflags
@@ -2290,11 +2476,15 @@ toggle_zr       PROC near
     ret
 toggle_zr       ENDP
 
+    public toggle_pl
+
 toggle_pl       PROC near
     mov ebx,OFFSET p_rflags
     xor word ptr gs:[ebx],80h
     ret
 toggle_pl       ENDP
+
+    public toggle_im
 
 toggle_im       PROC near
     mov ebx,OFFSET p_rflags
@@ -2302,17 +2492,23 @@ toggle_im       PROC near
     ret
 toggle_im       ENDP
 
+    public toggle_dir
+
 toggle_dir      PROC near
     mov ebx,OFFSET p_rflags
     xor word ptr gs:[ebx],400h
     ret
 toggle_dir      ENDP
 
+    public toggle_ov
+
 toggle_ov       PROC near
     mov ebx,OFFSET p_rflags
     xor word ptr gs:[ebx],800h
     ret
 toggle_ov       ENDP
+
+    public toggle_nt
 
 toggle_nt       PROC near
     mov ebx,OFFSET p_rflags
@@ -2333,6 +2529,8 @@ toggle_nt       ENDP
 ;                           CH          Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public interact_set
 
 interact_set    PROC near
     call interact_set_value
@@ -2387,10 +2585,14 @@ mem_do_end:
     ret
 mem_do  ENDP
 
+    public mem_ads
+
 mem_ads PROC near
     ret
 mem_ads ENDP
 
+    public mem_cs
+    
 mem_cs  PROC near
     mov dx,gs:p_cs
     mov esi,OFFSET p_rip
@@ -2398,6 +2600,8 @@ mem_cs  PROC near
     call mem_do
     ret
 mem_cs  ENDP
+
+    public mem_ss
 
 mem_ss  PROC near
     mov dx,gs:p_ss
@@ -2407,12 +2611,16 @@ mem_ss  PROC near
     ret
 mem_ss  ENDP
 
+    public mem_es
+
 mem_es  PROC near
     mov dx,gs:p_es
     xor esi,esi
     call mem_do
     ret
 mem_es  ENDP
+
+    public mem_pm
 
 mem_pm  PROC near
     xor edx,edx
@@ -2427,6 +2635,8 @@ mem_pm  PROC near
     mov ds:[ebp].reg_eflags,edx
     ret
 mem_pm  ENDP
+
+    public mem_vm
 
 mem_vm  PROC near
     mov edx,20000h
