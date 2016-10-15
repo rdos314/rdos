@@ -80,7 +80,7 @@ code    SEGMENT byte public use32 'CODE'
 ;           DESCRIPTION:    
 ;
 ;           PARAMETERS:     DS:EBP      Registers
-;                           EDX:EAX     Linear address
+;                           EDI:EBX     Linear address
 ;
 ;           RETURNS:        NC
 ;                               AL      Value
@@ -91,9 +91,10 @@ ReadLinearByte   PROC near
     push ds
     push ebx
 ;    
-    mov ebx,flat_sel
-    mov ds,ebx
-    mov al,ds:[eax]
+    mov ax,flat_sel
+    mov ds,ax
+    mov al,ds:[ebx]
+    clc
 ;
     pop ebx
     pop ds
@@ -108,20 +109,20 @@ ReadLinearByte   Endp
 ;           DESCRIPTION:    
 ;
 ;           PARAMETERS:     DS:EBP      Registers
-;                           EDX:EAX     Linear address
-;                           CL          Value
+;                           EDI:EBX     Linear address
+;                           AL          Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteLinearByte   PROC near
     push ds
-    push ebx
+    push edx
 ;    
-    mov ebx,flat_sel
-    mov ds,ebx
-    mov ds:[eax],cl
+    mov dx,flat_sel
+    mov ds,dx
+    mov ds:[ebx],al
 ;
-    pop ebx
+    pop edx
     pop ds
     ret
 WriteLinearByte   Endp
@@ -134,7 +135,7 @@ WriteLinearByte   Endp
 ;           DESCRIPTION:    
 ;
 ;           PARAMETERS:     DS:EBP      Registers
-;                           EDX:EAX     Linear address
+;                           EDI:EBX     Linear address
 ;
 ;           RETURNS:        NC
 ;                               AX      Value
@@ -142,24 +143,23 @@ WriteLinearByte   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadLinearWord   PROC near
+    push ebx
     push esi
 ;
-    push eax
     call ReadLinearByte
     movzx si,al
-    pop eax
     jc rlwDone
 ;
-    push eax
-    inc eax
+    inc ebx
     call ReadLinearByte
     shl ax,8
     and ax,0FF00h
     or si,ax
-    pop eax
+    clc
 
 rlwDone: 
     pop esi   
+    pop ebx
     ret
 ReadLinearWord   Endp
 
@@ -171,7 +171,7 @@ ReadLinearWord   Endp
 ;           DESCRIPTION:    
 ;
 ;           PARAMETERS:     DS:EBP      Registers
-;                           EDX:EAX     Linear address
+;                           EDI:EBX     Linear address
 ;
 ;           RETURNS:        NC
 ;                               EAX     Value
@@ -179,51 +179,43 @@ ReadLinearWord   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadLinearDword   PROC near
+    push ebx
     push esi
 ;
-    push eax
     call ReadLinearByte
     movzx esi,al
-    pop eax
     jc rldDone
 ;
-    push eax
-    inc eax
+    inc ebx
     call ReadLinearByte
-    pushf
+    jc rldDone
+;
     shl ax,8
     and eax,0FF00h
     or esi,eax
-    popf
-    pop eax
-    jc rldDone
 ;
-    push eax
-    add eax,2
+    inc ebx
     call ReadLinearByte
-    pushf
+    jc rldDone
+;    
     shl eax,16
     and eax,0FF0000h
     or esi,eax
-    popf
-    pop eax
+;
+    inc ebx
+    call ReadLinearByte
     jc rldDone
 ;
-    push eax
-    add eax,3
-    call ReadLinearByte
-    pushf
     shl eax,24
     and eax,0FF000000h
     or esi,eax
-    popf
-    pop eax
-    jc rldDone
 ;
     mov eax,esi    
+    clc
 
 rlddone: 
     pop esi   
+    pop ebx
     ret
 ReadLinearDword   Endp
 
@@ -235,7 +227,7 @@ ReadLinearDword   Endp
 ;           DESCRIPTION:    
 ;
 ;           PARAMETERS:     DS:EBP      Registers
-;                           EDX:EAX     Linear address
+;                           EDI:EBX     Linear address
 ;
 ;           RETURNS:        NC
 ;                             EDX:EAX  Value
@@ -243,25 +235,18 @@ ReadLinearDword   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadLinearQword   PROC near
-    push esi
-;    
-    push eax
     call ReadLinearDword
-    mov esi,eax
-    pop eax
     jc rlqDone    
 ;
-    push eax
-    add eax,4
-    call ReadLinearDword
     mov edx,eax
-    pop eax
+    add ebx,4
+    call ReadLinearDword
     jc rlqDone
 ;
-    mov eax,esi
+    xchg eax,edx
+    clc
 
 rlqDone:
-    pop esi   
     ret
 ReadLinearQword   Endp
 
@@ -299,13 +284,11 @@ GetSelectorBaseSizeType   PROC near
 get_info_ldt:
     mov ecx,ds:[ebp].reg_ldt.d_limit
     mov eax,ds:[ebp].reg_ldt.d_base
-    xor edx,edx
     jmp get_info_do
 
 get_info_gdt:
     mov ecx,ds:[ebp].reg_gdt.d_limit
     mov eax,ds:[ebp].reg_gdt.d_base
-    xor edx,edx
 
 get_info_do:
     and bx,0FFF8h
@@ -313,7 +296,8 @@ get_info_do:
     jc get_info_done
 ;
     movzx ebx,bx
-    add eax,ebx
+    add ebx,eax
+    xor edi,edi
     call ReadLinearQword
 ;
     test dh,80h
@@ -1877,16 +1861,16 @@ WriteDataRow    Proc near
 ;    
     push edx
     call GetSelectorBaseSizeType
-    mov eax,edx    
+    mov ebx,edx    
     pop edx
 ;
     pushf
-    add eax,edx
+    add ebx,edx
     popf
 ;    
     mov esi,ecx
 ;
-    push eax
+    push ebx
     push esi
 ;    
     mov ecx,16    
@@ -1899,10 +1883,9 @@ wrDataLoop:
     cmp esi,eax
     jc wrDataInv 
 ;    
-    push eax
     push edx
 ;
-    xor edx,edx
+    xor edi,edi
     call ReadLinearByte
     jc wrDataUndef
 ;    
@@ -1916,7 +1899,6 @@ wrDataUndef:
 
 wrDataPop:
     pop edx
-    pop eax
     clc
     jmp wrDataNext
 
@@ -1928,12 +1910,12 @@ wrDataInv:
 
 wrDataNext:
     pushf
-    add eax,1
+    add ebx,1
     loop wrDataLoop
 ;
     popf    
     pop esi
-    pop eax
+    pop ebx
 ;    
     mov ecx,16    
     pushf
@@ -1942,13 +1924,12 @@ wrCharLoop:
     popf
     jc wrCharInv
 ;    
-    cmp esi,eax
+    cmp esi,ebx
     jc wrCharInv 
 ;    
-    push eax
     push edx
 ;
-    xor edx,edx
+    xor edi,edi
     call ReadLinearByte
     jc wrCharUndef
 ;    
@@ -1961,7 +1942,6 @@ wrCharUndef:
 
 wrCharPop:
     pop edx
-    pop eax
     clc
     jmp wrCharNext
 
@@ -1972,7 +1952,7 @@ wrCharInv:
 
 wrCharNext:
     pushf
-    add eax,1
+    add ebx,1
     loop wrCharLoop
 ;
     popf    
@@ -2213,6 +2193,7 @@ read_mem    Proc near
     push ebx
     push ecx
     push edx
+    push edi
 ;
     mov bx,dx
     call GetSelectorBaseSizeType
@@ -2222,11 +2203,12 @@ read_mem    Proc near
     jc rmDone
 ;
     add edx,esi
-    mov eax,edx
-    xor edx,edx
+    mov ebx,edx
+    xor edi,edi
     call ReadLinearByte    
 
 rmDone:
+    pop edi
     pop edx
     pop ecx
     pop ebx
@@ -2252,6 +2234,7 @@ write_mem    Proc near
     push ebx
     push ecx
     push edx
+    push edi
 ;
     push ax
     mov bx,dx
@@ -2262,9 +2245,9 @@ write_mem    Proc near
     jc wmPop
 ;
     add edx,esi
-    mov eax,edx
-    xor edx,edx
-    pop cx
+    mov ebx,edx
+    xor edi,edi
+    pop ax
     call WriteLinearByte    
     jmp wmDone
 
@@ -2272,6 +2255,7 @@ wmPop:
     pop ax
 
 wmDone:
+    pop edi
     pop edx
     pop ecx
     pop ebx
