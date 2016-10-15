@@ -2297,6 +2297,12 @@ csSizeOk:
     jz csDataSel
 
 csCodeSel:
+    test ah,20h
+    jz csLongOK
+;
+    or dx,ACCESS_64
+
+csLongOk:
     test al,2
     jz csSaveAccess
 ;
@@ -2336,14 +2342,40 @@ ConvertSelector      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetDebugCoreData      Proc near
-    push es
     pushad
 ;    
-    mov ax,ds
-    mov es,ax
+    mov ds:[ebp].cpu_read_mem,OFFSET read_mem
+    mov ds:[ebp].cpu_write_mem,OFFSET write_mem
 ;    
-    mov es:[ebp].cpu_read_mem,OFFSET read_mem
-    mov es:[ebp].cpu_write_mem,OFFSET write_mem
+    mov eax,cr0
+    mov ds:[ebp].reg_cr0,eax
+;
+    mov eax,cr2
+    mov ds:[ebp].reg_cr2,eax
+;
+    mov eax,cr3
+    mov ds:[ebp].reg_cr3,eax
+;
+    mov eax,cr4
+    mov ds:[ebp].reg_cr4,eax
+;
+    mov eax,dr0
+    mov ds:[ebp].reg_dr0,eax               
+;
+    mov eax,dr1
+    mov ds:[ebp].reg_dr1,eax               
+;
+    mov eax,dr2
+    mov ds:[ebp].reg_dr2,eax               
+;
+    mov eax,dr6
+    mov ds:[ebp].reg_dr6,eax               
+;
+    mov eax,dr7
+    mov ds:[ebp].reg_dr7,eax               
+;
+    mov eax,dr0
+    mov ds:[ebp].reg_dr0,eax               
 ;
     sgdt fword ptr ds:temp_size
     movzx eax,ds:temp_size
@@ -2368,8 +2400,23 @@ GetDebugCoreData      Proc near
     mov ds:[ebp].reg_ldt.d_base,edx
 
 gdcLdtDone:    
+    mov ds:[ebp].reg_tr.d_limit,0
+    mov ds:[ebp].reg_tr.d_base,0
+    str bx
+    mov ds:[ebp].reg_tr.d_selector,bx
+    call GetSelectorBaseSizeType
+    jc gdcTrDone
+;
+    mov ds:[ebp].reg_tr.d_limit,ecx
+    mov ds:[ebp].reg_tr.d_base,edx
+
+gdcTrDone:    
     mov bx,cs
     lea esi,[ebp].reg_cs
+    call ConvertSelector
+;
+    mov bx,ss
+    lea esi,[ebp].reg_ss
     call ConvertSelector
 ;
     mov bx,ds
@@ -2388,12 +2435,11 @@ gdcLdtDone:
     lea esi,[ebp].reg_gs
     call ConvertSelector
 ;
-    xor bx,bx
+    mov bx,flat_sel
     lea esi,[ebp].reg_usel
     call ConvertSelector
 ;
     popad
-    pop es
     ret
 GetDebugCoreData      Endp
 
