@@ -40,6 +40,23 @@ INCLUDE dis.inc
 
 data    SEGMENT byte public 'DATA'
 
+cpu1 cpu_struc <>
+cpu2 cpu_struc <>
+cpu3 cpu_struc <>
+cpu4 cpu_struc <>
+cpu5 cpu_struc <>
+cpu6 cpu_struc <>
+cpu7 cpu_struc <>
+cpu8 cpu_struc <>
+cpu9 cpu_struc <>
+cpu10 cpu_struc <>
+cpu11 cpu_struc <>
+cpu12 cpu_struc <>
+cpu13 cpu_struc <>
+cpu14 cpu_struc <>
+cpu15 cpu_struc <>
+cpu16 cpu_struc <>
+
 view_type       DB ?
 
 curr_pos        DW ?
@@ -79,6 +96,32 @@ ReadLinearByte   PROC near
     pop ds
     ret
 ReadLinearByte   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteLinearByte
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDX:EAX     Linear address
+;                           CL          Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteLinearByte   PROC near
+    push ds
+    push ebx
+;    
+    mov ebx,flat_sel
+    mov ds,ebx
+    mov ds:[eax],cl
+;
+    pop ebx
+    pop ds
+    ret
+WriteLinearByte   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2147,6 +2190,118 @@ WriteCpuReg64     Proc near
     pop es
     ret
 WriteCpuReg64     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Read_mem
+;
+;           DESCRIPTION:    Read memory in process
+;
+;           PARAMETERS:     DX:ESI      Sel:offset
+;                           DS:EBP      Cpu
+;                           GS          Core sel
+;
+;           RETURNS:        NC  AL  Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_mem    Proc near
+    push ebx
+    push ecx
+    push edx
+;
+    mov bx,dx
+    call GetSelectorBaseSizeType
+    jc rmDone
+;
+    cmp ecx,esi 
+    jc rmDone
+;
+    add edx,esi
+    mov eax,edx
+    xor edx,edx
+    call ReadLinearByte    
+
+rmDone:
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+read_mem    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Write_mem
+;
+;           DESCRIPTION:    Write memory in process
+;
+;           PARAMETERS:     DX:ESI      Sel:offset
+;                           GS          Thread
+;                           DS:EBP      Cpu
+;                           AL          Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_mem    Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    push ax
+    mov bx,dx
+    call GetSelectorBaseSizeType
+    jc wmPop
+;
+    cmp ecx,esi 
+    jc wmPop
+;
+    add edx,esi
+    mov eax,edx
+    xor edx,edx
+    pop cx
+    call WriteLinearByte    
+    jmp wmDone
+
+wmPop:
+    pop ax
+
+wmDone:
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+write_mem    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetDebugCoreData
+;
+;           DESCRIPTION:    Get debug core data
+;
+;           PARAMETERS:     DS:EBP      Cpu data
+;                           GS          Core sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDebugCoreData      Proc near
+    push es
+    pushad
+;    
+    mov ax,ds
+    mov es,ax
+;    
+    mov es:[ebp].cpu_read_mem,OFFSET read_mem
+    mov es:[ebp].cpu_write_mem,OFFSET write_mem
+;
+    popad
+    pop es
+    ret
+GetDebugCoreData      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
