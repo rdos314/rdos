@@ -57,6 +57,9 @@ cpu14 cpu_struc <>
 cpu15 cpu_struc <>
 cpu16 cpu_struc <>
 
+temp_size     DW ?
+temp_base     DD ?
+
 view_type       DB ?
 
 curr_pos        DW ?
@@ -210,7 +213,7 @@ ReadLinearDword   PROC near
     add eax,3
     call ReadLinearByte
     pushf
-    shl eax,245
+    shl eax,24
     and eax,0FF000000h
     or esi,eax
     popf
@@ -306,8 +309,8 @@ get_info_gdt:
 
 get_info_do:
     and bx,0FFF8h
-    cmp ebx,ecx
-    ja get_info_fail
+    cmp ecx,ebx
+    jc get_info_done
 ;
     movzx ebx,bx
     add eax,ebx
@@ -2298,10 +2301,48 @@ GetDebugCoreData      Proc near
     mov es:[ebp].cpu_read_mem,OFFSET read_mem
     mov es:[ebp].cpu_write_mem,OFFSET write_mem
 ;
+    sgdt fword ptr ds:temp_size
+    movzx eax,ds:temp_size
+    mov ds:[ebp].reg_gdt.d_limit,eax
+    mov eax,ds:temp_base
+    mov ds:[ebp].reg_gdt.d_base,eax
+;
+    sidt fword ptr ds:temp_size
+    movzx eax,ds:temp_size
+    mov ds:[ebp].reg_idt.d_limit,eax
+    mov eax,ds:temp_base
+    mov ds:[ebp].reg_idt.d_base,eax
+;
+    sldt bx
+    call GetSelectorBaseSizeType
+;
     popad
     pop es
     ret
 GetDebugCoreData      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           test_pr
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_name  DB 'Crash Thread', 0
+
+test_pr:
+    int 3
+    mov ax,SEG data
+    mov ds,ax
+    mov ebp,OFFSET cpu1
+    GetCore
+;
+    mov ax,fs
+    mov gs,ax
+    call GetDebugCoreData
+        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2312,9 +2353,9 @@ GetDebugCoreData      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public InitCrashShow
+    public init_crash
 
-InitCrashShow    Proc near
+init_crash    Proc near
     push ds
     pushad
 ;
@@ -2322,11 +2363,20 @@ InitCrashShow    Proc near
     mov ds,ax
     mov ds:curr_pos,0
     mov ds:view_type,'R'
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET test_pr
+    mov edi,OFFSET test_name
+    mov ecx,stack0_size
+    mov ax,26
+    CreateThread
 ;        
     popad
     pop ds
     ret
-InitCrashShow    Endp
+init_crash    Endp
 
 code    ENDS
 
