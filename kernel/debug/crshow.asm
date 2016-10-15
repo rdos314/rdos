@@ -2360,6 +2360,7 @@ GetDebugCoreData      Proc near
     mov ds:[ebp].reg_ldt.d_limit,0
     mov ds:[ebp].reg_ldt.d_base,0
     sldt bx
+    mov ds:[ebp].reg_ldt.d_selector,bx
     call GetSelectorBaseSizeType
     jc gdcLdtDone
 ;
@@ -2367,8 +2368,28 @@ GetDebugCoreData      Proc near
     mov ds:[ebp].reg_ldt.d_base,edx
 
 gdcLdtDone:    
+    mov bx,cs
+    lea esi,[ebp].reg_cs
+    call ConvertSelector
+;
     mov bx,ds
     lea esi,[ebp].reg_ds
+    call ConvertSelector
+;
+    mov bx,es
+    lea esi,[ebp].reg_es
+    call ConvertSelector
+;
+    mov bx,fs
+    lea esi,[ebp].reg_fs
+    call ConvertSelector
+;
+    mov bx,gs
+    lea esi,[ebp].reg_gs
+    call ConvertSelector
+;
+    xor bx,bx
+    lea esi,[ebp].reg_usel
     call ConvertSelector
 ;
     popad
