@@ -141,6 +141,9 @@ reg_ds			descriptor_struc <>
 reg_fs			descriptor_struc <>
 reg_gs			descriptor_struc <>
 
+reg_id          DW ?
+curr_thread     DW ?
+
 math_op			DB ?,?
 math_prev_op	DB ?,?
 math_control	DW ?
