@@ -2297,9 +2297,16 @@ GetDebugCoreData      Proc near
     mov eax,ds:temp_base
     mov ds:[ebp].reg_idt.d_base,eax
 ;
+    mov ds:[ebp].reg_ldt.d_limit,0
+    mov ds:[ebp].reg_ldt.d_base,0
     sldt bx
     call GetSelectorBaseSizeType
+    jc gdcLdtDone
 ;
+    mov ds:[ebp].reg_ldt.d_limit,ecx
+    mov ds:[ebp].reg_ldt.d_base,edx
+
+gdcLdtDone:    
     popad
     pop es
     ret
