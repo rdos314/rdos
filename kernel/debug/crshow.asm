@@ -60,6 +60,8 @@ cpu16 cpu_struc <>
 temp_size     DW ?
 temp_base     DD ?
 
+map_linear   DD ?
+
 view_type       DB ?
 
 curr_pos        DW ?
@@ -2458,6 +2460,10 @@ test_pr:
     int 3
     mov ax,SEG data
     mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov edx,ds:map_linear
+;    
     mov ebp,OFFSET cpu1
     GetCore
 ;
@@ -2486,6 +2492,13 @@ init_crash    Proc near
     mov ds:curr_pos,0
     mov ds:view_type,'R'
 ;
+    mov eax,1000h
+    AllocateBigLinear
+    mov ds:map_linear,edx    
+    xor ebx,ebx
+    mov eax,67h
+    SetPageEntry
+;
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -2493,7 +2506,7 @@ init_crash    Proc near
     mov edi,OFFSET test_name
     mov ecx,stack0_size
     mov ax,26
-    CreateThread
+    CreateProcess
 ;        
     popad
     pop ds
