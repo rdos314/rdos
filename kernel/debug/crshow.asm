@@ -1066,35 +1066,40 @@ WriteThread Endp
 
 table_reg_tab:
     DB ' GDT='
-    DW OFFSET cs_gdtr
+    DD OFFSET reg_gdt
     DB ' IDT='
-    DW OFFSET cs_idtr
+    DD OFFSET reg_idt
     DB 0
 
 WriteTable   PROC near
-    mov di,OFFSET table_reg_tab
+    mov esi,OFFSET table_reg_tab
 
 table_write_loop:
-    mov al,es:[di]
+    mov al,cs:[esi]
     or al,al
     je table_write_end
 ;
-    mov cx,5
-    call ShowSizeString
-    add di,5
-    mov bx,es:[di]
-    mov eax,gs:[bx+2]
+    mov ecx,5
+    call ShowCodeSizeString
+;
+    add esi,5
+    mov ebx,cs:[esi]
+    mov eax,ds:[ebx+ebp].d_base   
     call WriteHexDword
+;    
     mov al,' '
     call ShowChar
+;
     mov al,'('
     call ShowChar
-    mov ax,gs:[bx]
+;
+    mov eax,ds:[ebx+ebp].d_limit
     call WriteHexWord       
+;
     mov al,')'
     call ShowChar
 ;    
-    add di,2
+    add esi,4
     jmp table_write_loop
 
 table_write_end:
@@ -1108,45 +1113,45 @@ WriteTable   ENDP
 ;
 ;           DESCRIPTION:    
 ;
-;           PARAMETERS:         ES:DI       Offset to table
+;           PARAMETERS:     CS:ESI       Table
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 sel_reg_tr:
     DB ' TR='
-    DW OFFSET cs_tr
+    DD OFFSET reg_tr
 
 sel_reg_ldt:
     DB ' DT='
-    DW OFFSET cs_ldt
+    DD OFFSET reg_ldt
 
 sel_reg_cs:
     DB ' CS='
-    DW OFFSET cs_cs
+    DD OFFSET reg_cs
 
 sel_reg_ds:
     DB ' DS='
-    DW OFFSET cs_ds
+    DD OFFSET reg_ds
 
 sel_reg_es:    
     DB ' ES='
-    DW OFFSET cs_es
+    DD OFFSET reg_es
 
 sel_reg_fs:    
     DB ' FS='
-    DW OFFSET cs_fs
+    DD OFFSET reg_fs
 
 sel_reg_gs:
     DB ' GS='
-    DW OFFSET cs_gs
+    DD OFFSET reg_gs
 
 sel_reg_ss:    
     DB ' SS='
-    DW OFFSET cs_ss
+    DD OFFSET reg_ss
 
 sel_reg_us:    
     DB ' US='
-    DW OFFSET cs_usel
+    DD OFFSET reg_user
 
 sel_type_tab:
 st00 DB 'Invalid         '
@@ -1183,13 +1188,13 @@ st1E DB 'Code/read conf  '
 st1F DB 'Code/read conf  ' 
 
 WriteSelReg   PROC near
-    mov cx,4
-    call ShowSizeString
+    mov ecx,4
+    call ShowCodeSizeString
 ;
-    add di,4
-    mov bx,es:[di]
-    mov bx,gs:[bx]
+    add esi,4
+    mov ebx,cs:[esi]
 ;    
+    movzx ebx,ds:[ebx+ebp].d_selector
     mov ax,bx
     call WriteHexWord
     mov al,' '
@@ -1203,36 +1208,21 @@ WriteSelReg   PROC near
     jz write_sel_gdt
 
 write_sel_ldt:
-    jmp write_sel_done      ; doesn't work yet
-
-    mov si,gs:cs_ldt
-    or si,si
-    jz write_sel_done
-;
-    test si,4
-    jnz write_sel_done
-;
-    push bx
-    mov bx,cx
-    call LocalGetSelectorBaseSize
-    pop bx        
-    jc write_sel_done
-;
-    dec ecx    
+    mov ecx,ds:[ebp].reg_ldt.d_limit
+    mov edx,ds:[ebp].reg_ldt.d_base
     jmp write_sel_do
 
 write_sel_gdt:
-    movzx ecx,word ptr gs:cs_gdtr
-    mov edx,dword ptr gs:cs_gdtr+2
+    mov ecx,ds:[ebp].reg_gdt.d_limit
+    mov edx,ds:[ebp].reg_gdt.d_base
 
 write_sel_do:
     and bx,0FFF8h
-    cmp bx,cx
+    cmp ebx,ecx
     ja write_sel_done
 ;
     mov ax,flat_sel
     mov ds,ax
-    movzx ebx,bx
     add ebx,edx
 ;
     mov al,[ebx+5]
@@ -1272,15 +1262,13 @@ write_sel_small:
     mov al,' '
     call ShowChar
 ;
-    push di
     mov al,[ebx+5]
     and al,1Fh
-    movzx di,al
-    shl di,4
-    add di,OFFSET sel_type_tab
-    mov cx,16
-    call ShowSizeString
-    pop di
+    movzx esi,al
+    shl esi,4
+    add esi,OFFSET sel_type_tab
+    mov ecx,16
+    call ShowCodeSizeString
 
 write_sel_done:
     ret

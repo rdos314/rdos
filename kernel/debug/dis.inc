@@ -130,16 +130,17 @@ reg_r12         DD ?,?
 reg_r13         DD ?,?
 reg_r14         DD ?,?
 reg_r15         DD ?,?
-reg_gdt		    descriptor_struc <>
-reg_idt		    descriptor_struc <>
-reg_tr			descriptor_struc <>
-reg_ldt			descriptor_struc <>
-reg_es			descriptor_struc <>
-reg_cs			descriptor_struc <>
-reg_ss			descriptor_struc <>
-reg_ds			descriptor_struc <>
-reg_fs			descriptor_struc <>
-reg_gs			descriptor_struc <>
+reg_gdt		descriptor_struc <>
+reg_idt		descriptor_struc <>
+reg_tr		descriptor_struc <>
+reg_ldt		descriptor_struc <>
+reg_es		descriptor_struc <>
+reg_cs		descriptor_struc <>
+reg_ss		descriptor_struc <>
+reg_ds		descriptor_struc <>
+reg_fs		descriptor_struc <>
+reg_gs		descriptor_struc <>
+reg_user	descriptor_struc <>
 
 reg_id          DW ?
 curr_thread     DW ?
