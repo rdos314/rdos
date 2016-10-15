@@ -2266,6 +2266,66 @@ write_mem    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ConvertSelector
+;
+;           DESCRIPTION:    Convert selector to descriptor
+;
+;           PARAMETERS:     DS:EBP      Cpu
+;                           DS:ESI      Descriptor
+;                           BX          Selector 
+;                           
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConvertSelector      Proc near
+    mov ds:[esi].d_selector,bx
+;
+    call GetSelectorBaseSizeType
+    jc csFail
+;
+    mov ds:[esi].d_limit,ecx
+    mov ds:[esi].d_base,edx
+;
+    xor dx,dx
+    test ah,40h
+    jz csSizeOk
+;
+    or dx,ACCESS_32    
+
+csSizeOk:
+    test al,8
+    jz csDataSel
+
+csCodeSel:
+    test al,2
+    jz csSaveAccess
+;
+    or dx,ACCESS_READ
+    jmp csSaveAccess
+
+csDataSel:    
+    or dx,ACCESS_READ
+    test al,2
+    jz csSaveAccess
+;
+    or dx,ACCESS_WRITE    
+
+csSaveAccess:
+    mov ds:[esi].d_access,dx
+    jmp csDone
+
+csFail:
+    mov ds:[esi].d_limit,0
+    mov ds:[esi].d_base,0
+    mov ds:[esi].d_access,0
+
+csDone:        
+    ret
+ConvertSelector      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetDebugCoreData
 ;
 ;           DESCRIPTION:    Get debug core data
@@ -2307,6 +2367,10 @@ GetDebugCoreData      Proc near
     mov ds:[ebp].reg_ldt.d_base,edx
 
 gdcLdtDone:    
+    mov bx,ds
+    lea esi,[ebp].reg_ds
+    call ConvertSelector
+;
     popad
     pop es
     ret
