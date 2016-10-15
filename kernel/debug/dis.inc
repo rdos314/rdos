@@ -130,6 +130,7 @@ reg_r12         DD ?,?
 reg_r13         DD ?,?
 reg_r14         DD ?,?
 reg_r15         DD ?,?
+reg_uoffs       DD ?,?
 reg_gdt		descriptor_struc <>
 reg_idt		descriptor_struc <>
 reg_tr		descriptor_struc <>
@@ -140,7 +141,7 @@ reg_ss		descriptor_struc <>
 reg_ds		descriptor_struc <>
 reg_fs		descriptor_struc <>
 reg_gs		descriptor_struc <>
-reg_user	descriptor_struc <>
+reg_usel    	descriptor_struc <>
 
 math_op			DB ?,?
 math_prev_op	DB ?,?

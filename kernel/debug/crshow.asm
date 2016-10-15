@@ -52,7 +52,293 @@ code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
 
-    extrn ToHex:near
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadLinearByte
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDX:EAX     Linear address
+;
+;           RETURNS:        NC
+;                               AL      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadLinearByte   PROC near
+    push ds
+    push ebx
+;    
+    mov ebx,flat_sel
+    mov ds,ebx
+    mov al,ds:[eax]
+;
+    pop ebx
+    pop ds
+    ret
+ReadLinearByte   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadLinearWord
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDX:EAX     Linear address
+;
+;           RETURNS:        NC
+;                               AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadLinearWord   PROC near
+    push esi
+;
+    push eax
+    call ReadLinearByte
+    movzx si,al
+    pop eax
+    jc rlwDone
+;
+    push eax
+    inc eax
+    call ReadLinearByte
+    shl ax,8
+    and ax,0FF00h
+    or si,ax
+    pop eax
+
+rlwDone: 
+    pop esi   
+    ret
+ReadLinearWord   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadLinearDword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDX:EAX     Linear address
+;
+;           RETURNS:        NC
+;                               EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadLinearDword   PROC near
+    push esi
+;
+    push eax
+    call ReadLinearByte
+    movzx esi,al
+    pop eax
+    jc rldDone
+;
+    push eax
+    inc eax
+    call ReadLinearByte
+    pushf
+    shl ax,8
+    and eax,0FF00h
+    or esi,eax
+    popf
+    pop eax
+    jc rldDone
+;
+    push eax
+    add eax,2
+    call ReadLinearByte
+    pushf
+    shl eax,16
+    and eax,0FF0000h
+    or esi,eax
+    popf
+    pop eax
+    jc rldDone
+;
+    push eax
+    add eax,3
+    call ReadLinearByte
+    pushf
+    shl eax,245
+    and eax,0FF000000h
+    or esi,eax
+    popf
+    pop eax
+    jc rldDone
+;
+    mov eax,esi    
+
+rlddone: 
+    pop esi   
+    ret
+ReadLinearDword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadLinearQword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDX:EAX     Linear address
+;
+;           RETURNS:        NC
+;                             EDX:EAX  Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadLinearQword   PROC near
+    push esi
+;    
+    push eax
+    call ReadLinearDword
+    mov esi,eax
+    pop eax
+    jc rlqDone    
+;
+    push eax
+    add eax,4
+    call ReadLinearDword
+    mov edx,eax
+    pop eax
+    jc rlqDone
+;
+    mov eax,esi
+
+rlqDone:
+    pop esi   
+    ret
+ReadLinearQword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetSelectorBaseSizeType
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           BX          Selector
+;
+;           RETURNS:        NC
+;                               EDX     Base
+;                               ECX     Size
+;                               AL      Type (+5)
+;                               AH      Big (+6)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetSelectorBaseSizeType   PROC near
+    push ebx
+    push esi
+    push edi
+;
+    movzx ebx,bx
+    and bx,NOT 3
+    or bx,bx
+    jz get_info_fail
+;
+    test bx,4
+    jz get_info_gdt
+
+get_info_ldt:
+    mov ecx,ds:[ebp].reg_ldt.d_limit
+    mov eax,ds:[ebp].reg_ldt.d_base
+    xor edx,edx
+    jmp get_info_do
+
+get_info_gdt:
+    mov ecx,ds:[ebp].reg_gdt.d_limit
+    mov eax,ds:[ebp].reg_gdt.d_base
+    xor edx,edx
+
+get_info_do:
+    and bx,0FFF8h
+    cmp ebx,ecx
+    ja get_info_fail
+;
+    movzx ebx,bx
+    add eax,ebx
+    call ReadLinearQword
+;
+    test dh,80h
+    jz get_info_fail
+;
+    mov ecx,edx
+    and ecx,0F0000h
+    mov cx,ax
+    test edx,800000h
+    jz get_info_small
+;
+    shl ecx,12
+    or cx,0FFFh
+
+get_info_small:
+    mov ebx,edx
+    shr ebx,8
+;    
+    shr eax,16
+    and eax,0FFFFh
+;
+    rol edx,8
+    xchg dl,dh
+    shl edx,16
+    or edx,eax
+    mov ax,bx
+    clc
+    jmp get_info_done
+
+get_info_fail:
+    stc
+
+get_info_done:
+    pop edi
+    pop esi
+    pop ebx
+    ret
+GetSelectorBaseSizeType   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetBitness
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           BX          Selector
+;
+;           RETURNS:        NC
+;                               DL      Bitness (0 = 16, 1 = 32)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetBitness   PROC near
+    push eax
+    push ecx
+;    
+    call GetSelectorBaseSizeType
+    jc get_bitness_done
+;
+    mov dl,ah
+    shr dl,6
+    and dl,1
+    clc
+
+get_bitness_done:
+    pop ecx
+    pop eax
+    ret
+GetBitness   ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -999,7 +1285,8 @@ WriteEflags     ENDP
 ;
 ;           DESCRIPTION:    Write core ID
 ;
-;           PARAMETERS:     DS:EBP      Core sel
+;           PARAMETERS:     DS:EBP      Registers
+;                           GS          Core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1009,7 +1296,7 @@ WriteCore   PROC near
     mov esi,OFFSET proc_tab
     call ShowCodeAsciiz
 ;
-    mov ax,ds:[ebp].reg_id
+    mov ax,gs:ps_id
     call WriteHexWord
 ;    
     mov al,' '
@@ -1024,7 +1311,8 @@ WriteCore   ENDP
 ;
 ;           DESCRIPTION:    Write current thread
 ;
-;           PARAMETERS:     DS:EBP      Core sel
+;           PARAMETERS:     DS:EBP      Registers
+;                           GS          Core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1034,7 +1322,7 @@ WriteThread   PROC near
     push ds
     push esi
 ;    
-    mov ax,ds:[ebp].curr_thread
+    mov ax,gs:ps_curr_thread
     or ax,ax
     jz wtNoThread
 ;
@@ -1157,7 +1445,7 @@ sel_reg_ss:
 
 sel_reg_us:    
     DB ' US='
-    DD OFFSET reg_user
+    DD OFFSET reg_usel
 
 sel_type_tab:
 st00 DB 'Invalid         '
@@ -1210,48 +1498,8 @@ WriteSelReg   PROC near
     or bx,bx
     jz write_sel_done
 ;
-    test bx,4
-    jz write_sel_gdt
-
-write_sel_ldt:
-    mov ecx,ds:[ebp].reg_ldt.d_limit
-    mov edx,ds:[ebp].reg_ldt.d_base
-    jmp write_sel_do
-
-write_sel_gdt:
-    mov ecx,ds:[ebp].reg_gdt.d_limit
-    mov edx,ds:[ebp].reg_gdt.d_base
-
-write_sel_do:
-    and bx,0FFF8h
-    cmp ebx,ecx
-    ja write_sel_done
-;
-    mov ax,flat_sel
-    mov ds,ax
-    add ebx,edx
-;
-    mov al,[ebx+5]
-    test al,80h
-    jz write_sel_done
-;
-    xor ecx,ecx
-    mov cl,[ebx+6]
-    and cl,0Fh
-    shl ecx,16
-    mov cx,[ebx]
-    test byte ptr [ebx+6],80h
-    jz write_sel_small
-;
-    shl ecx,12
-    or cx,0FFFh
-
-write_sel_small:
-    mov edx,[ebx+2]
-    rol edx,8
-    mov dl,[ebx+7]
-    ror edx,8
-;
+    call GetSelectorBaseSizeType
+    mov bl,al
     mov eax,edx
     call WriteHexDword
 ;
@@ -1268,9 +1516,8 @@ write_sel_small:
     mov al,' '
     call ShowChar
 ;
-    mov al,[ebx+5]
-    and al,1Fh
-    movzx esi,al
+    movzx esi,bl
+    and si,01Fh
     shl esi,4
     add esi,OFFSET sel_type_tab
     mov ecx,16
@@ -1519,7 +1766,8 @@ WriteFault    Endp
 ;
 ;           DESCRIPTION:    Write processor flag registers
 ;
-;           PARAMETERS:     GS      Core sel
+;           PARAMETERS:     DS:EBP      Registers
+;                           GS          Core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1531,10 +1779,9 @@ flag_timer      DB 'Timer ',0
 WriteProcFlags     PROC near
     push fs
 ;    
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET nest_text
-    call ShowAsciiz
+    mov esi,OFFSET nest_text
+    call ShowCodeAsciiz
+;    
     mov ax,gs:ps_nesting
     call WriteHexWord
 ;
@@ -1544,15 +1791,15 @@ WriteProcFlags     PROC near
     test gs:ps_flags,PS_FLAG_PREEMPT
     jz wpfNoPreempt
 ;
-    mov di, OFFSET flag_preempt
-    call ShowAsciiz
+    mov esi, OFFSET flag_preempt
+    call ShowCodeAsciiz
 
 wpfNoPreempt:    
     test gs:ps_flags,PS_FLAG_PRIO_CHANGE
     jz wpfNoPrio
 ;
-    mov di, OFFSET flag_prio
-    call ShowAsciiz
+    mov esi, OFFSET flag_prio
+    call ShowCodeAsciiz
 
 wpfNoPrio:
     pop fs
@@ -1562,278 +1809,12 @@ WriteProcFlags     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetBaseSize
-;
-;           DESCRIPTION:    
-;
-;           PARAMETERS:     GS          Core regs
-;                           BX:EDX      Address
-;
-;           RETURNS:        NC
-;                               EDX     Base
-;                               ECX     Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetBaseSize   PROC near
-    push eax
-    push ebx
-    push esi
-    push edi
-;
-    mov edi,edx 
-;       
-    and bx,NOT 3
-    or bx,bx
-    jz get_info_fail
-;
-    test bx,4
-    jz get_info_gdt
-
-get_info_ldt:
-    mov si,gs:cs_ldt
-    or si,si
-    jz get_info_fail
-;
-    test si,4
-    jnz get_info_fail
-;
-    push bx
-    mov bx,si
-    call LocalGetSelectorBaseSize
-    pop bx        
-    jc get_info_fail
-;
-    dec ecx    
-    jmp get_info_do
-
-get_info_gdt:
-    movzx ecx,word ptr gs:cs_gdtr
-    mov edx,dword ptr gs:cs_gdtr+2
-
-get_info_do:
-    and bx,0FFF8h
-    cmp bx,cx
-    ja get_info_fail
-;
-    mov ax,flat_sel
-    mov ds,ax
-    movzx ebx,bx
-    add ebx,edx
-;
-    mov al,[ebx+5]
-    test al,80h
-    jz get_info_fail
-;
-    xor ecx,ecx
-    mov cl,[ebx+6]
-    and cl,0Fh
-    shl ecx,16
-    mov cx,[ebx]
-    test byte ptr [ebx+6],80h
-    jz get_info_small
-;
-    shl ecx,12
-    or cx,0FFFh
-
-get_info_small:
-    mov edx,[ebx+2]
-    rol edx,8
-    mov dl,[ebx+7]
-    ror edx,8
-;
-    sub ecx,edi
-    jc get_info_fail
-;
-    add edx,edi
-    clc
-    jmp get_info_done
-
-get_info_fail:
-    stc
-
-get_info_done:
-    pop edi
-    pop esi
-    pop ebx
-    pop eax
-    ret
-GetBaseSize   ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetBitness
-;
-;           DESCRIPTION:    
-;
-;           PARAMETERS:     GS          Core regs
-;                           BX          Selector
-;
-;           RETURNS:        NC
-;                               DL      Bitness (0 = 16, 1 = 32)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetBitness   PROC near
-    push ds
-    push eax
-    push ebx
-    push ecx
-    push esi
-    push edi
-;
-    and bx,NOT 3
-    or bx,bx
-    jz get_bitness_fail
-;
-    test bx,4
-    jz get_bitness_gdt
-
-get_bitness_ldt:
-    mov si,gs:cs_ldt
-    or si,si
-    jz get_bitness_fail
-;
-    test si,4
-    jnz get_bitness_fail
-;
-    push bx
-    mov bx,si
-    call LocalGetSelectorBaseSize
-    pop bx        
-    jc get_bitness_fail
-;
-    dec ecx    
-    jmp get_bitness_do
-
-get_bitness_gdt:
-    movzx ecx,word ptr gs:cs_gdtr
-    mov edx,dword ptr gs:cs_gdtr+2
-
-get_bitness_do:
-    and bx,0FFF8h
-    cmp bx,cx
-    ja get_bitness_fail
-;
-    mov ax,flat_sel
-    mov ds,ax
-    movzx ebx,bx
-    add ebx,edx
-;
-    mov dl,ds:[ebx+6]
-    shr dl,6
-    and dl,1
-    clc
-    jmp get_bitness_done
-    
-get_bitness_fail:
-    stc
-
-get_bitness_done:
-    pop edi
-    pop esi
-    pop ecx
-    pop ebx
-    pop eax
-    pop ds
-    ret
-GetBitness   ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           ReadData
-;
-;       DESCRIPTION:    Read data item
-;
-;       PARAMETERS:     GS              Core regs
-;                       EDX             Linear address
-;
-;       RETURNS:        NC
-;                           AL  Data
-;                                               
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadData        Proc near
-    push ds
-    push ebx
-;
-    mov ebx,gs:cs_cr3
-    mov cr3,ebx
-;
-    mov ebx,cr4
-    test bx,20h
-    jnz rd64
-
-rd32:    
-    mov bx,process_dir_sel
-    mov ds,bx
-    mov ebx,edx
-    shr ebx,20
-    and bl,0FCh
-    mov eax,[bx]
-    test al,1
-    stc
-    jz rdDone
-;
-    mov bx,process_page_sel
-    mov ds,bx
-    mov ebx,edx
-    shr ebx,10
-    and bl,0FCh
-    mov eax,[ebx]
-    test al,1
-    stc
-    jz rdDone
-;
-    mov bx,flat_sel
-    mov ds,bx
-    mov al,[edx]
-    clc
-    jmp rdDone
-
-rd64:    
-    mov bx,process_dir_sel
-    mov ds,bx
-    mov ebx,edx
-    shr ebx,18
-    and bl,0F8h
-    mov eax,[bx]
-    test al,1
-    stc
-    jz rdDone
-;
-    mov bx,process_page_sel
-    mov ds,bx
-    mov ebx,edx
-    shr ebx,9
-    and bl,0F8h
-    mov eax,[ebx]
-    test al,1
-    stc
-    jz rdDone
-;
-    mov bx,flat_sel
-    mov ds,bx
-    mov al,[edx]
-    clc
-    jmp rdDone
-
-rdDone:
-    pop ebx
-    pop ds
-    ret        
-ReadData        Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           WriteDataRow
 ;
 ;       DESCRIPTION:    Write a data row
 ;
-;       PARAMETERS:     GS          Core regs
+;       PARAMETERS:     DS:EBP      Cpu registers
+;                       GS          Core regs
 ;                       BX:EDX      Address
 ;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1847,394 +1828,110 @@ WriteDataRow    Proc near
     call WriteHexDword
     mov al,' '
     call ShowChar
-;
-    push bx
+;    
     push edx
-;    
-    mov bp,16
-    call GetBaseSize
-    jc wdrDataInv
-
-wdrDataLoop:
-    call ReadData
-    jc wdrDataUndef
-;
-    call WriteHexByte
-    jmp wdrDataNext
-
-wdrDataUndef:
-    mov al,'%'
-    call ShowChar
-    call ShowChar
-
-wdrDataNext:
-    mov al,' '
-    call ShowChar
-;
-    sub bp,1
-    jz wdrChar
-;
-    add edx,1
-    sub ecx,1
-    jnc wdrDataLoop            
-
-wdrDataInv:
-    mov al,'!'
-    call ShowChar
-    call ShowChar
-    mov al,' '
-    call ShowChar
-;
-    sub bp,1
-    jnz wdrDataInv
-
-wdrChar:  
+    call GetSelectorBaseSizeType
+    mov eax,edx    
     pop edx
-    pop bx
-;    
-    mov bp,16
-    call GetBaseSize
-    jc wdrCharInv
-
-wdrCharLoop:
-    call ReadData
-    jnc wdrCharDo
 ;
+    pushf
+    add eax,edx
+    popf
+;    
+    mov esi,ecx
+;
+    push eax
+    push esi
+;    
+    mov ecx,16    
+    pushf
+
+wrDataLoop:
+    popf
+    jc wrDataInv
+;    
+    cmp esi,eax
+    jc wrDataInv 
+;    
+    push eax
+    push edx
+;
+    xor edx,edx
+    call ReadLinearByte
+    jc wrDataUndef
+;    
+    call WriteHexByte
+    jmp wrDataPop
+
+wrDataUndef:
     mov al,'%'
-
-wdrCharDo:    
     call ShowChar
-;
-    add edx,1
-    sub ecx,1
-    jc wdrCharInv
-;    
-    sub bp,1
-    jnz wdrCharLoop            
-    jmp wdrDone
+    call ShowChar
 
-wdrCharInv:
+wrDataPop:
+    pop edx
+    pop eax
+    clc
+    jmp wrDataNext
+
+wrDataInv:
     mov al,'!'
     call ShowChar
-;
-    sub bp,1
-    jnz wdrCharInv
-
-wdrDone:  
-    ret
-WriteDataRow    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           GetMne
-;
-;       DESCRIPTION:    Get instruction text
-;
-;       PARAMETERS:     GS          Core regs
-;                                               
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-GetMne  PROC near
-    push si
-    push di
-;    
-    mov ax,SEG data
-    mov ds,ax
-    xor dh,dh
-;
-    mov bx,gs:cs_cs
-    call GetBitness
-    jc get_mne_done
-;   
-    mov di,OFFSET op_in_text
-    call GetOpBuf
-;
-    mov bp,si
-
-remove_ov_loop:
-    mov al,[si]
-    cmp al,66h
-    je remove_ads16
-;
-    cmp al,67h
-    jne remove_ov_done
-;    
-    inc dh
-    inc si
-    jmp remove_ov_loop
-
-remove_ads16:
-    inc dh
-    inc si
-    xor dl,1
-    jmp remove_ov_loop
-
-remove_ov_done:
-    mov al,[si]
-    cmp al,9Ah
-    jne not_call_far
-;
-    test dl,1
-    jz write_call_far16
-;
-    mov dx,[si+5]
-    cmp dx,2
-    je oscall
-;        
-    cmp dx,3
-    je usercall_32
-;
-    cmp dx,1
-    jne not_call32
-
-usercall_32:
-    mov eax,[si+1]
-    cmp eax,usergate_entries
-    jnc write_special_fail
-;
-    shl eax,5
-    mov ebx,eax
-    mov ax,SEG data
-    mov es,ax
-    mov di,OFFSET op_in_text
-    mov cx,40
-    call GetIllegalUserGate
-    mov ds:op_size,bx
-    clc
-    jmp write_special_end
-
-oscall:
-    mov eax,[si+1]
-    cmp eax,osgate_entries
-    jnc write_special_fail
-;
-    shl eax,4
-    mov ebx,eax
-    mov ax,SEG data
-    mov es,ax
-    mov di,OFFSET op_in_text
-    mov cx,40
-    call GetIllegalOsGate
-    mov ds:op_size,bx
-    clc
-    jmp write_special_end
-    
-not_call32:
-    mov bx,[si+1]
-    mov dx,[si+5]
-    mov ax,SEG data
-    mov es,ax
-    mov di,OFFSET op_in_text
-    mov cx,40
-    call GetOsCall
-    mov ds:op_size,bx
-    jnc write_special_end
-;
-    mov bx,[si+1]
-    mov dx,[si+5]
-    mov ax,SEG data
-    mov es,ax
-    mov di,OFFSET op_in_text
-    mov cx,40
-    call GetUserCall
-    mov ds:op_size,bx
-    jmp write_special_end
-
-write_call_far16:
-    mov bx,[si+1]
-    mov dx,[si+3]
-    mov ax,SEG data
-    mov es,ax
-    mov di,OFFSET op_in_text
-    mov cx,40
-    call GetOsCall
-    mov ds:op_size,bx
-    jnc write_special_end
-;
-    mov bx,[si+1]
-    mov dx,[si+3]
-    mov ax,SEG data
-    mov es,ax
-    mov di,OFFSET op_in_text
-    mov cx,40
-    call GetUserCall
-    mov ds:op_size,bx
-    jmp write_special_end
-
-not_call_far:
-    cmp al,0E8h
-    jne write_special_fail
-;
-    test dl,1
-    jz write_call_near16
-;
-    inc si
-    inc dh    
-    movzx ebx,dh
-    add ebx,[si]
-    add ebx,dword ptr gs:cs_rip
-    add ebx,4
-;
-    push ebx
-    mov dx,gs:cs_cs
-    mov ax,SEG data
-    mov es,ax
-    mov di,OFFSET op_in_text
-    mov cx,40
-    call GetOsCall
-    mov ds:op_size,bx
-    pop ebx
-    jnc write_special_end
-;
-    mov dx,gs:cs_cs
-    mov ax,SEG data
-    mov es,ax
-    mov di,OFFSET op_in_text
-    mov cx,40
-    call GetUserCall
-    mov ds:op_size,bx
-    jmp write_special_end
-    
-write_call_near16:
-    inc si
-    inc dh
-    movzx bx,dh
-    add bx,[si]
-    add bx,word ptr gs:cs_rip
-    add bx,2
-    push bx
-    mov dx,gs:cs_cs
-    mov ax,SEG data
-    mov es,ax
-    mov di,OFFSET op_in_text
-    mov cx,40
-    call GetOsCall
-    mov ds:op_size,bx
-    pop bx
-    jnc write_special_end
-;
-    mov dx,gs:cs_cs
-    mov ax,SEG data
-    mov es,ax
-    mov di,OFFSET op_in_text
-    mov cx,40
-    call GetUserCall
-    mov ds:op_size,bx
-    jmp write_special_end
-
-write_special_fail:
+    call ShowChar
     stc
 
-write_special_end:
-        
-get_mne_done:
-    pop di
-    pop si
-    ret
-GetMne  ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+wrDataNext:
+    pushf
+    add eax,1
+    loop wrDataLoop
 ;
-;
-;       NAME:           GetInstr
-;
-;       DESCRIPTION:    Fill instruction buffer
-;
-;       PARAMETERS:     GS          Core regs
-;                                               
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadInstr    Proc near
-    mov dx,word ptr gs:cs_rip+4
-    mov ebx,dword ptr gs:cs_rip
-    call SetIpAds
+    popf    
+    pop esi
+    pop eax
 ;    
-    mov dx,gs:p_cs
-    call GetOpBuf
-;
-    mov bx,gs:cs_cs
-    mov edx,dword ptr gs:cs_rip
+    mov ecx,16    
+    pushf
+
+wrCharLoop:
+    popf
+    jc wrCharInv
 ;    
-    call GetBaseSize
-    jc read_instr_done
+    cmp esi,eax
+    jc wrCharInv 
 ;    
-    add ecx,1
-    jc read_instr_full
+    push eax
+    push edx
 ;
-    cmp ecx,16
-    jb read_instr_loop
-
-read_instr_full:
-    mov ax,SEG data
-    mov ds,ax
+    xor edx,edx
+    call ReadLinearByte
+    jc wrCharUndef
 ;    
-    mov cx,16
-
-read_instr_loop:
-    call ReadData
-    mov [si],al    
-    inc edx
-    inc si
-    loop read_instr_loop
-    clc
-
-read_instr_done:
-    ret
-ReadInstr    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WriteInstr
-;
-;       DESCRIPTION:    Write instruction
-;
-;       PARAMETERS:     GS          Core regs
-;                                               
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteInstr  Proc near
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov al,' '
     call ShowChar
-;
-    call ReadInstr
-    jc write_instr_done
-;
-    call GetMne    
-    jnc write_instr_do
-;    
-    mov bx,gs:cs_cs
-    call GetBitness
-    jc write_instr_done
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov di,OFFSET op_in_text    
-    call dis_ass_one
-;
-    mov ds:op_size,80
+    jmp wrCharPop
 
-write_instr_do:
-    mov ax,SEG data
-    mov es,ax
-    mov cx,40
-    mov di,OFFSET op_in_text
-    call ShowSizeString
+wrCharUndef:
+    mov al,'%'
+    call ShowChar
 
-write_instr_done:
-    popad
-    pop fs
-    pop es
-    pop ds 
-    ret   
-WriteInstr  Endp
+wrCharPop:
+    pop edx
+    pop eax
+    clc
+    jmp wrCharNext
+
+wrCharInv:
+    mov al,'!'
+    call ShowChar
+    stc
+
+wrCharNext:
+    pushf
+    add eax,1
+    loop wrCharLoop
+;
+    popf    
+    ret
+WriteDataRow    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2246,74 +1943,70 @@ WriteInstr  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteCpuReg32     Proc near
-    push es
-    mov ax,cs
-    mov es,ax
-;
     call WriteCore
     call WriteThread
     call NewLine    
 ;
     call WriteTable
-    mov di,OFFSET dword_irq_tab
+    mov esi,OFFSET dword_irq_tab
     call WriteDwordRegs
     call NewLine    
 ;
-    mov di,OFFSET dword_cr_reg_tab
+    mov esi,OFFSET dword_cr_reg_tab
     call WriteDwordRegs
     call NewLine
 ;
-    mov di,OFFSET dword_dr_reg_tab
+    mov esi,OFFSET dword_dr_reg_tab
     call WriteDwordRegs
     call NewLine
 ;
-    mov di,OFFSET dword_reg_tab1
+    mov esi,OFFSET dword_reg_tab1
     call WriteDwordRegs
     call NewLine
 ;
-    mov di,OFFSET dword_reg_tab2
+    mov esi,OFFSET dword_reg_tab2
     call WriteDwordRegs
     call NewLine
 ;
-    mov di,OFFSET dword_reg_tab3
+    mov esi,OFFSET dword_reg_tab3
     call WriteDwordRegs
     call WriteFault
-    call WriteInstr
+;    call WriteInstr
     call NewLine
 ;
-    mov di,OFFSET sel_reg_tr
+    mov esi,OFFSET sel_reg_tr
     call WriteSelReg
     call NewLine
 ;
-    mov di,OFFSET sel_reg_ldt
+    mov esi,OFFSET sel_reg_ldt
     call WriteSelReg
     call NewLine
 ;
-    mov di,OFFSET sel_reg_cs
+    mov esi,OFFSET sel_reg_cs
     call WriteSelReg
     call NewLine
 ;
-    mov di,OFFSET sel_reg_ds
+    mov esi,OFFSET sel_reg_ds
     call WriteSelReg
     call NewLine
 ;
-    mov di,OFFSET sel_reg_es
+    mov esi,OFFSET sel_reg_es
     call WriteSelReg
     call NewLine
 ;
-    mov di,OFFSET sel_reg_fs
+    mov esi,OFFSET sel_reg_fs
     call WriteSelReg
     call NewLine
 ;
-    mov di,OFFSET sel_reg_gs
+    mov esi,OFFSET sel_reg_gs
     call WriteSelReg
     call NewLine
 ;
-    mov di,OFFSET sel_reg_ss
+    mov esi,OFFSET sel_reg_ss
     call WriteSelReg
     call NewLine
 ;
-    mov di,OFFSET sel_reg_us
+    mov esi,OFFSET sel_reg_us
     call WriteSelReg
     call NewLine
 ;
@@ -2325,21 +2018,20 @@ WriteCpuReg32     Proc near
 ;
     call Delimiter
 ;    
-    mov bx,gs:cs_ss
-    movzx edx,word ptr gs:cs_rsp
+    mov bx,ds:[ebp].reg_ss.d_selector
+    mov edx,ds:[ebp].reg_esp
     call WriteDataRow
     call NewLine    
 ;    
-    mov bx,gs:cs_cs
-    movzx edx,word ptr gs:cs_rip
+    mov bx,ds:[ebp].reg_cs.d_selector
+    mov edx,ds:[ebp].reg_eip
     call WriteDataRow
     call NewLine    
 ;    
-    mov bx,gs:cs_usel
-    mov edx,gs:cs_uoffs
+    mov bx,ds:[ebp].reg_usel.d_selector
+    mov edx,ds:[ebp].reg_uoffs
     call WriteDataRow
     call NewLine    
-    pop es
     ret
 WriteCpuReg32     Endp
 
@@ -2353,84 +2045,80 @@ WriteCpuReg32     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteCpuReg64     Proc near
-    push es
-    mov ax,cs
-    mov es,ax
-;
     call WriteCore
     call WriteThread
     call NewLine    
 ;
     call WriteTable
-    mov di,OFFSET dword_irq_tab
+    mov esi,OFFSET dword_irq_tab
     call WriteDwordRegs
     call NewLine    
 ;
-    mov di,OFFSET dword_cr_reg_tab
+    mov esi,OFFSET dword_cr_reg_tab
     call WriteDwordRegs
     call NewLine
 ;
-    mov di,OFFSET qword_reg_tab1
+    mov esi,OFFSET qword_reg_tab1
     call WriteQwordRegs
     call NewLine
 ;
-    mov di,OFFSET qword_reg_tab2
+    mov esi,OFFSET qword_reg_tab2
     call WriteQwordRegs
     call NewLine
 ;
-    mov di,OFFSET qword_reg_tab3
+    mov esi,OFFSET qword_reg_tab3
     call WriteQwordRegs
     call NewLine
 ;
-    mov di,OFFSET qword_reg_tab4
+    mov esi,OFFSET qword_reg_tab4
     call WriteQwordRegs
     call NewLine
 ;
-    mov di,OFFSET qword_reg_tab5
+    mov esi,OFFSET qword_reg_tab5
     call WriteQwordRegs
     call NewLine
 ;
-    mov di,OFFSET qword_reg_tab6
+    mov esi,OFFSET qword_reg_tab6
     call WriteQwordRegs
     call NewLine
 ;
     call WriteFault
-    call WriteInstr
+;    call WriteInstr
     call NewLine
 ;
-    mov di,OFFSET sel_reg_tr
+    mov esi,OFFSET sel_reg_tr
     call WriteSelReg
     call NewLine
 ;
-    mov di,OFFSET sel_reg_ldt
+    mov esi,OFFSET sel_reg_ldt
     call WriteSelReg
     call NewLine
 ;
-    mov di,OFFSET sel_reg_cs
+    mov esi,OFFSET sel_reg_cs
     call WriteSelReg
     call NewLine
 ;
-    mov di,OFFSET sel_reg_ds
+    mov esi,OFFSET sel_reg_ds
     call WriteSelReg
     call NewLine
 ;
-    mov di,OFFSET sel_reg_es
+    mov esi,OFFSET sel_reg_es
     call WriteSelReg
     call NewLine
 ;
-    mov di,OFFSET sel_reg_fs
+    mov esi,OFFSET sel_reg_fs
     call WriteSelReg
     call NewLine
 ;
-    mov di,OFFSET sel_reg_gs
+    mov esi,OFFSET sel_reg_gs
     call WriteSelReg
     call NewLine
 ;
-    mov di,OFFSET sel_reg_ss
+    mov esi,OFFSET sel_reg_ss
     call WriteSelReg
     call NewLine
 ;
-    mov di,OFFSET sel_reg_us
+    mov esi,OFFSET sel_reg_us
     call WriteSelReg
     call NewLine
 ;
@@ -2442,244 +2130,23 @@ WriteCpuReg64     Proc near
 ;
     call Delimiter
 ;    
-    mov bx,gs:cs_ss
-    movzx edx,word ptr gs:cs_rsp
+    mov bx,ds:[ebp].reg_ss
+    mov edx,ds:[ebp].reg_esp
     call WriteDataRow
     call NewLine    
 ;    
-    mov bx,gs:cs_cs
-    movzx edx,word ptr gs:cs_rip
+    mov bx,ds:[ebp].reg_cs
+    mov edx,ds:[ebp].reg_eip
     call WriteDataRow
     call NewLine    
 ;    
-    mov bx,gs:cs_usel
-    mov edx,gs:cs_uoffs
+    mov bx,ds:[ebp].reg_usel
+    mov edx,ds:[ebp].reg_uoffs
     call WriteDataRow
     call NewLine    
     pop es
     ret
 WriteCpuReg64     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           WriteOneThread
-;
-;           DESCRIPTION:    
-;
-;           PARAMETERS:     ES      Thread
-;                           AX      Prio
-;                           DI      State offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteOneThread   PROC near
-    push es
-    push ax
-    push ebx
-    push cx
-    push dx
-    push di
-;    
-    call WriteHexWord
-;
-    mov al,':'
-    call ShowChar
-;
-    mov al,' '
-    call ShowChar
-;            
-    mov di,OFFSET thread_name
-    mov cx,32
-    call ShowSizeString
-;
-    mov al,' '
-    call ShowChar
-;    
-    mov dx,es:p_cs
-    mov ebx,dword ptr es:p_rip
-    call WriteHexPtr32
-;
-    pop di
-;
-    mov ax,cs
-    mov es,ax
-    call ShowAsciiz
-    call NewLine
-;    
-    pop dx
-    pop cx
-    pop ebx
-    pop ax
-    pop es
-    ret
-WriteOneThread Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           WriteCoreThreads
-;
-;           DESCRIPTION:    Write all threads active on core
-;
-;           PARAMETERS:     GS      Core
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-null_thread_name        DB ' Null',0
-curr_thread_name        DB ' Curr',0
-ready_thread_name       DB ' Rdy ',0
-wake_thread_name        DB ' Wake',0
-
-WriteCoreThreads   PROC near
-    push es
-    mov ax,cs
-    mov es,ax
-;
-    call WriteCore
-    call WriteThread
-    call NewLine    
-;
-    mov ax,gs:ps_null_thread
-    mov es,ax
-    xor ax,ax
-    mov di,OFFSET null_thread_name
-    call WriteOneThread
-;
-    mov si,OFFSET ps_ptab
-    mov cx,256
-    xor ax,ax
-
-wctLoop:
-    mov bx,gs:[si]
-    or bx,bx
-    jz wctNext
-;
-    mov es,bx
-    mov di,OFFSET ready_thread_name
-    call WriteOneThread
-
-wctListLoop:    
-    mov dx,es:p_next
-    cmp bx,dx
-    je wctNext
-;
-    mov es,dx
-    mov di,OFFSET ready_thread_name
-    call WriteOneThread
-    jmp wctListLoop    
-
-wctNext:
-    inc ax
-    add si,2
-    loop wctLoop
-;
-    mov bx,gs:ps_wakeup_list
-    or bx,bx
-    jz wcwDone
-;
-    mov es,bx
-    mov ax,es:p_prio
-    shr ax,1
-    mov di,OFFSET wake_thread_name
-    call WriteOneThread
-
-wcwListLoop:    
-    mov dx,es:p_next
-    cmp bx,dx
-    je wcwDone
-;
-    mov es,dx
-    mov ax,es:p_prio
-    shr ax,1
-    mov di,OFFSET wake_thread_name
-    call WriteOneThread
-    jmp wcwListLoop    
-
-wcwDone:
-    mov ax,gs:ps_curr_thread
-    or ax,ax
-    jz wctDone
-;  
-    cmp ax,gs:ps_null_thread
-    je wctDone
-;      
-    mov es,ax
-    mov ax,es:p_prio
-    shr ax,1
-    mov di,OFFSET curr_thread_name
-    call WriteOneThread
-
-wctDone:
-    pop es
-    ret
-WriteCoreThreads    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetViewType
-;
-;           DESCRIPTION:    
-;
-;           PARAMETERS:     AL      View type
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public SetViewType
-    
-SetViewType    Proc near
-    push ds
-    push bx
-    mov bx,SEG data
-    mov ds,bx
-    mov ds:view_type,al
-    pop bx
-    pop ds
-    ret
-SetViewType Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ShowCrashCore
-;
-;           DESCRIPTION:    
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public ShowCrashCore
-    
-ShowCrashCore    Proc near
-    push ds
-    mov ax,SEG data
-    mov ds,ax
-    call Clear
-;
-
-sccCore:    
-    mov al,ds:view_type
-    cmp al,'R'
-    je sccRegs
-;
-    call WriteCoreThreads
-    jmp sccDone
-        
-sccRegs:        
-    test gs:ps_flags,PS_FLAG_LONG_MODE
-    jz scc32
-
-scc64:
-    call WriteCpuReg64
-    jmp sccDone
-
-scc32:    
-    call WriteCpuReg32
-
-sccDone:
-    pop ds
-    ret
-ShowCrashCore    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
