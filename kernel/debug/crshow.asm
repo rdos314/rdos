@@ -999,6 +999,8 @@ WriteEflags     ENDP
 ;
 ;           DESCRIPTION:    Write core ID
 ;
+;           PARAMETERS:     DS:EBP      Core sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 proc_tab    DB 'Processor=',0    
@@ -1020,7 +1022,9 @@ WriteCore   ENDP
 ;
 ;           NAME:           WriteThread
 ;
-;           DESCRIPTION:    
+;           DESCRIPTION:    Write current thread
+;
+;           PARAMETERS:     DS:EBP      Core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1061,6 +1065,8 @@ WriteThread Endp
 ;           NAME:           WriteTable
 ;
 ;           DESCRIPTION:    Write IDT and GDT
+;
+;           PARAMETERS:     DS:EBP      Core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1279,79 +1285,82 @@ WriteSelReg   ENDP
 ;
 ;           NAME:           WriteDwordRegs
 ;
-;           DESCRIPTION:    
+;           DESCRIPTION:    Write 32-bit registers
 ;
-;           PARAMETERS:         ES:DI       Offset to table
+;           PARAMETERS:     CS:ESI       Table
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 dword_irq_tab:
     DB ' IRQ='
-    DW OFFSET cs_irq
+    DD OFFSET curr_irq
     DW 0
 
 dword_cr_reg_tab:
     DB ' CR0='
-    DW OFFSET cs_cr0
+    DD OFFSET reg_cr0
     DB ' CR2='
-    DW OFFSET cs_cr2
+    DD OFFSET reg_cr2
     DB ' CR3='
-    DW OFFSET cs_cr3
+    DD OFFSET reg_cr3
     DB ' CR4='
-    DW OFFSET cs_cr4
+    DD OFFSET reg_cr4
     DB 0
 
 dword_dr_reg_tab:
     DB ' DR0='
-    DW OFFSET cs_dr0
+    DD OFFSET reg_dr0
     DB ' DR1='
-    DW OFFSET cs_dr1
+    DD OFFSET reg_dr1
     DB ' DR2='
-    DW OFFSET cs_dr2
+    DD OFFSET reg_dr2
     DB ' DR3='
-    DW OFFSET cs_dr3
+    DD OFFSET reg_dr3
     DB 0
 
 dword_reg_tab1:
     DB ' EAX='
-    DW OFFSET cs_rax
+    DD OFFSET reg_eax
     DB ' EBX='
-    DW OFFSET cs_rbx
+    DD OFFSET reg_ebx
     DB ' ECX='
-    DW OFFSET cs_rcx
+    DD OFFSET reg_ecx
     DB ' EDX='
-    DW OFFSET cs_rdx
+    DD OFFSET reg_edx
     DB 0
 
 dword_reg_tab2:
     DB ' ESI='
-    DW OFFSET cs_rsi
+    DD OFFSET reg_esi
     DB ' EDI='
-    DW OFFSET cs_rdi
+    DD OFFSET reg_edi
     DB ' ESP='
-    DW OFFSET cs_rsp
+    DD OFFSET reg_esp
     DB ' EBP='
-    DW OFFSET cs_rbp
+    DD OFFSET reg_ebp
     DB 0
 
 dword_reg_tab3:
     DB ' EPC='
-    DW OFFSET cs_rip
+    DD OFFSET reg_eip
     DB 0
 
 WriteDwordRegs  PROC near
+
 dword_write_loop:
-    mov al,es:[di]
+    mov al,cs:[esi]
     or al,al
     je dword_write_end
-    mov cx,5
-    call ShowSizeString
-    add di,5
-    mov bx,es:[di]
-    mov eax,gs:[bx]
+;
+    mov ecx,5
+    call ShowCodeSizeString
+    add esi,5
+    mov ebx,cs:[esi]
+    mov eax,ds:[ebx+ebp]
     call WriteHexDword
-    add di,2
+    add esi,4
     jmp dword_write_loop
+
 dword_write_end:
     ret
 WriteDwordRegs  ENDP
@@ -1361,78 +1370,81 @@ WriteDwordRegs  ENDP
 ;
 ;           NAME:           WriteQwordRegs
 ;
-;           DESCRIPTION:    
+;           DESCRIPTION:    Write 64-bit register
 ;
-;           PARAMETERS:     ES:DI       Offset to table
+;           PARAMETERS:     CS:ESI       Table
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 qword_reg_tab1:
     DB ' RAX='
-    DW OFFSET cs_rax
+    DD OFFSET reg_eax
     DB ' RBX='
-    DW OFFSET cs_rbx
+    DD OFFSET reg_ebx
     DB ' RCX='
-    DW OFFSET cs_rcx
+    DD OFFSET reg_ecx
     DB 0
 
 qword_reg_tab2:
     DB ' RDX='
-    DW OFFSET cs_rdx
+    DD OFFSET reg_edx
     DB ' RSI='
-    DW OFFSET cs_rsi
+    DD OFFSET reg_esi
     DB ' RDI='
-    DW OFFSET cs_rdi
+    DD OFFSET reg_edi
     DB 0
 
 qword_reg_tab3:
     DB '  R8='
-    DW OFFSET cs_r8
+    DD OFFSET reg_r8
     DB '  R9='
-    DW OFFSET cs_r9
+    DD OFFSET reg_r9
     DB ' R10='
-    DW OFFSET cs_r10
+    DD OFFSET reg_r10
     DB 0
 
 qword_reg_tab4:
     DB ' R11='
-    DW OFFSET cs_r11
+    DD OFFSET reg_r11
     DB ' R12='
-    DW OFFSET cs_r12
+    DD OFFSET reg_r12
     DB ' R13='
-    DW OFFSET cs_r13
+    DD OFFSET reg_r13
     DB 0
 
 qword_reg_tab5:
     DB ' R14='
-    DW OFFSET cs_r14
+    DD OFFSET reg_r14
     DB ' R15='
-    DW OFFSET cs_r15
+    DD OFFSET reg_r15
     DB 0
 
 qword_reg_tab6:
     DB ' RIP='
-    DW OFFSET cs_rip
+    DD OFFSET reg_eip
     DB ' RSP='
-    DW OFFSET cs_rsp
+    DD OFFSET reg_esp
     DB ' RBP='
-    DW OFFSET cs_rbp
+    DD OFFSET reg_ebp
     DB 0
 
 WriteQwordRegs  PROC near
+
 qword_write_loop:
-    mov al,es:[di]
+    mov al,cs:[esi]
     or al,al
     je qword_write_end
-    mov cx,5
-    call ShowSizeString
-    add di,5
-    mov bx,es:[di]
-    mov eax,gs:[bx]
-    mov edx,gs:[bx+4]
+;
+    mov ecx,5
+    call ShowCodeSizeString
+    add esi,5
+    mov ebx,cs:[esi]
+    mov eax,ds:[ebx+ebp]
+    mov edx,ds:[ebx+ebp+4]
     call WriteHexQword
-    add di,2
+    add esi,4
     jmp qword_write_loop
+
 qword_write_end:
     ret
 WriteQwordRegs  ENDP
@@ -1479,26 +1491,24 @@ WriteFault    Proc near
     mov al,' '
     call ShowChar
 ;    
-    mov edx,gs:cs_fault
-    cmp dx,1Ah
+    movzx edx,ds:[ebp].fault_vect
+    cmp dl,1Ah
     jbe wfDo
 ;
-    mov dx,14h    
+    mov dl,14h    
 
 wfDo:
-    mov bx,dx
-    add bx,bx
-    add bx,bx
-    add bx,bx
-    mov cx,bx
-    add cx,cx
-    add bx,cx
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET error_code_tab
-    add di,bx
-    mov cx,24
-    call ShowSizeString
+    mov ebx,edx
+    add ebx,ebx
+    add ebx,ebx
+    add ebx,ebx
+    mov ecx,ebx
+    add ecx,ecx
+    add ebx,ecx
+    mov esi,OFFSET error_code_tab
+    add esi,ebx
+    mov ecx,24
+    call ShowCodeSizeString
     ret
 WriteFault    Endp
 

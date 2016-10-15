@@ -1038,6 +1038,7 @@ GetLongCpu    ENDP
 ;
 ;           PARAMETERS:     DX:ESI      Sel:offset
 ;                           DS:EBP      Cpu
+;                           GS          Thread
 ;
 ;           RETURNS:        NC  AL  Value
 ;
@@ -1046,7 +1047,7 @@ GetLongCpu    ENDP
 read_mem    Proc near
     push bx
 ;
-    mov bx,ds:[ebp].cpu_thread        
+    mov bx,gs
     test word ptr ds:[ebp].reg_eflags+2,2
     jz rdmProt
 
@@ -1078,7 +1079,7 @@ read_mem    Endp
 ;           DESCRIPTION:    Write memory in process
 ;
 ;           PARAMETERS:     DX:ESI      Sel:offset
-;                           BX          Thread
+;                           GS          Thread
 ;                           DS:EBP      Cpu
 ;                           AL          Value
 ;
@@ -1087,7 +1088,7 @@ read_mem    Endp
 write_mem    Proc near
     push bx
 ;
-    mov bx,ds:[ebp].cpu_thread        
+    mov bx,gs
     test word ptr ds:[ebp].reg_eflags+2,2
     jz wrmProt
 
@@ -1134,7 +1135,6 @@ GetDebugThreadData      Proc near
 ;    
     mov es:[ebp].cpu_read_mem,OFFSET read_mem
     mov es:[ebp].cpu_write_mem,OFFSET write_mem
-    mov es:[ebp].cpu_thread,gs
 ;    
     mov bx,gs:p_cs
     mov es:[ebp].reg_cs.d_selector,bx

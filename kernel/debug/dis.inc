@@ -142,9 +142,6 @@ reg_fs		descriptor_struc <>
 reg_gs		descriptor_struc <>
 reg_user	descriptor_struc <>
 
-reg_id          DW ?
-curr_thread     DW ?
-
 math_op			DB ?,?
 math_prev_op	DB ?,?
 math_control	DW ?
@@ -172,7 +169,10 @@ ignore_ptr      DB ?
 op_rex          DB ?
 root_tab        DD ?
 
-cpu_thread      DW ?
+core_sel        DW ?
+curr_irq        DD ?
+fault_vect      DB ?
+
 cpu_read_mem    DD ?
 cpu_write_mem   DD ?
 

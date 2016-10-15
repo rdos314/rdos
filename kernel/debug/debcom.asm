@@ -548,7 +548,8 @@ AddLongDataRow    ENDP
 ;
 ;           DESCRIPTION:    Add free memory
 ;
-;           PARAMETERS:     ES:EDI      Buffer
+;           PARAMETERS:     GS          Thread
+;                           ES:EDI      Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -580,7 +581,7 @@ AddFreeMem    PROC near
     mov esi,OFFSET local_mem_comment
     call AddCodeAsciiz
 ;    
-    mov bx,ds:[ebp].cpu_thread
+    mov bx,gs
     UsedLocalLinearThread
     call AddHexDword
 ;    
