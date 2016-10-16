@@ -53,8 +53,8 @@
 #define WIDTH 240
 #define HEIGHT 15
 
-#define  INVERTER_IP 0x3401A8C0
-#define InvIp "192.168.1.52"
+#define  INVERTER_IP 0x3301A8C0
+#define InvIp "192.168.1.51"
 
 TControlThread *control;
 TSection FGuiSection;
