@@ -612,6 +612,8 @@ move_efi_loop:
     loop move_efi_loop
 
 move_efi_lfb_done:
+    mov ds:efi_fore_col,0FFFFFFh
+    mov ds:efi_back_col,0
     ret
 move_efi_lfb    ENDP
 
