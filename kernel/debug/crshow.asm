@@ -132,6 +132,74 @@ MapPhysical       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           MapLinear
+;
+;           DESCRIPTION:    Map linear address
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;
+;           RETURNS:        NC
+;                               ES:EBX  Mapping
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapLinear       Proc near
+    push eax
+    push edx
+    push esi
+;    
+    mov edx,ebx
+    mov es,ds:map_sel
+    mov eax,ds:[ebp].reg_cr3
+    xor ebx,ebx
+    call MapPhysical
+;
+    test ds:[ebp].reg_cr4,20h
+    jnz mlPae
+
+mlProt:
+    mov esi,edx
+    shr esi,20
+    and si,0FFFCh
+    mov eax,es:[esi]
+    test al,1
+    jz mlFail
+;
+    xor ebx,ebx
+    call MapPhysical
+;
+    mov esi,edx
+    shr esi,10
+    and esi,0FFCh
+    mov eax,es:[esi]
+    test al,1
+    jz mlFail
+;
+    xor ebx,ebx
+    call MapPhysical
+;    
+    mov ebx,edx
+    and ebx,0FFFh    
+    clc
+    jmp mlDone
+
+mlPae:
+
+mlFail:
+    stc
+
+mlDone: 
+    pop esi
+    pop edx
+    pop eax
+    ret
+MapLinear       Endp           
+            
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ReadLinearByte
 ;
 ;           DESCRIPTION:    
@@ -2515,11 +2583,6 @@ test_pr:
     int 3
     mov ax,SEG data
     mov ds,ax
-;
-    xor ebx,ebx
-    mov eax,0C0000h    
-    call MapPhysical
-    mov es,ds:map_sel
 ;    
     mov ebp,OFFSET cpu1
     GetCore
@@ -2527,6 +2590,14 @@ test_pr:
     mov ax,fs
     mov gs,ax
     call GetDebugCoreData
+;
+    mov bx,cs
+    call GetSelectorBaseSizeType
+    mov ebx,edx
+    add ebx,OFFSET test_pr
+    xor edi,edi
+    call MapLinear
+
         
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
