@@ -61,6 +61,7 @@ temp_size     DW ?
 temp_base     DD ?
 
 map_linear   DD ?
+map_sel      DW ?
 
 view_type       DB ?
 
@@ -73,6 +74,60 @@ data    ENDS
 code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MapPhysical
+;
+;           DESCRIPTION:    Map physical address
+;
+;           PARAMETERS:     EBX:EAX     physical address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapPhysical       Proc near
+    push ds
+    push eax
+    push ecx
+    push edx
+;
+    mov al,67h
+    and ah,0F0h
+;
+    mov cx,SEG data
+    mov ds,cx
+    mov edx,ds:map_linear
+;    
+    mov cx,process_page_sel
+    mov ds,cx
+;
+    mov ecx,cr4
+    test cl,20h
+    jnz mpPae
+
+mpProt:    
+    shr edx,10
+    and dl,0FCh
+    mov [edx],eax
+    jmp mpDone
+
+mpPae:
+    shr edx,9
+    and dl,0F8h
+    mov [edx],eax
+    mov [edx+4],ebx
+
+mpDone:
+    mov ecx,cr3
+    mov cr3,ecx
+;    
+    pop edx    
+    pop ecx
+    pop eax
+    pop ds
+    ret
+MapPhysical       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2460,9 +2515,11 @@ test_pr:
     int 3
     mov ax,SEG data
     mov ds,ax
-    mov ax,flat_sel
-    mov es,ax
-    mov edx,ds:map_linear
+;
+    xor ebx,ebx
+    mov eax,0C0000h    
+    call MapPhysical
+    mov es,ds:map_sel
 ;    
     mov ebp,OFFSET cpu1
     GetCore
@@ -2498,6 +2555,11 @@ init_crash    Proc near
     xor ebx,ebx
     mov eax,67h
     SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov ds:map_sel,bx    
 ;
     mov ax,cs
     mov ds,ax
