@@ -1499,6 +1499,17 @@ WriteCore   PROC near
 ;
     mov ax,gs:ps_id
     call WriteHexWord
+;
+    mov al,' '
+    call ShowChar
+    mov al,'('
+    call ShowChar
+;
+    mov ax,gs
+    call WriteHexWord
+;
+    mov al,')'
+    call ShowChar
 ;    
     mov al,' '
     call ShowChar
@@ -2211,7 +2222,6 @@ WriteCpuReg32     Proc near
     mov esi,OFFSET dword_reg_tab3
     call WriteDwordRegs
     call WriteFault
-    call WriteInstr
     call NewLine
 ;
     mov esi,OFFSET sel_reg_tr
@@ -2255,9 +2265,28 @@ WriteCpuReg32     Proc near
 ;
     call WriteProcFlags
     call NewLine
+;    
+    call WriteInstr
+    call NewLine
 ;
     call Delimiter
-;    
+;
+    mov al,ds:[ebp].data_valid
+    or al,al
+    jz wc32NoPtr
+;
+    mov ebx,ds:[ebp].data_sel
+    mov edx,ds:[ebp].data_offset
+    call WriteDataRow
+    jmp wc32PtrOk
+
+wc32NoPtr:
+    mov ecx,79
+    call Blank
+    
+wc32PtrOk:    
+    call NewLine    
+;
     mov bx,ds:[ebp].reg_ss.d_selector
     mov edx,ds:[ebp].reg_esp
     call WriteDataRow
