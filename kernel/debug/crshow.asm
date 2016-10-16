@@ -2646,9 +2646,24 @@ gdcTrDone:
     lea esi,[ebp].reg_usel
     call ConvertSelector
 ;
+    mov ds:[ebp].reg_eax,eax
+    mov ds:[ebp].reg_ebx,ebx
+    mov ds:[ebp].reg_ecx,ecx
+    mov ds:[ebp].reg_edx,edx
+    mov ds:[ebp].reg_esi,esi
+    mov ds:[ebp].reg_edi,edi
+    mov ds:[ebp].reg_ebp,ebp
+    mov ds:[ebp].reg_esp,esp
+    mov ds:[ebp].reg_eip,OFFSET deb_code
+;    
     popad
     ret
 GetDebugCoreData      Endp
+
+deb_val DB 11
+
+deb_code:
+    mov al,cs:deb_val
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
