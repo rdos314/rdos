@@ -2775,9 +2775,6 @@ SaveBasics      Proc near
     mov eax,cr2
     mov ds:[ebp].reg_cr2,eax
 ;
-    mov eax,cr3
-    mov ds:[ebp].reg_cr3,eax
-;
     mov eax,cr4
     mov ds:[ebp].reg_cr4,eax
 ;
@@ -2810,29 +2807,7 @@ SaveBasics      Proc near
     mov ds:[ebp].reg_idt.d_limit,eax
     mov eax,ds:temp_base
     mov ds:[ebp].reg_idt.d_base,eax
-;
-    mov ds:[ebp].reg_ldt.d_limit,0
-    mov ds:[ebp].reg_ldt.d_base,0
-    sldt bx
-    mov ds:[ebp].reg_ldt.d_selector,bx
-    call GetSelectorBaseSizeType
-    jc sbLdtDone
-;
-    mov ds:[ebp].reg_ldt.d_limit,ecx
-    mov ds:[ebp].reg_ldt.d_base,edx
-
-sbLdtDone:    
-    mov ds:[ebp].reg_tr.d_limit,0
-    mov ds:[ebp].reg_tr.d_base,0
-    str bx
-    mov ds:[ebp].reg_tr.d_selector,bx
-    call GetSelectorBaseSizeType
-    jc sbTrDone
-;
-    mov ds:[ebp].reg_tr.d_limit,ecx
-    mov ds:[ebp].reg_tr.d_base,edx
-
-sbTrDone:    
+;    
     mov bx,flat_sel
     lea esi,[ebp].reg_usel
     call ConvertSelector
@@ -2851,7 +2826,6 @@ SaveBasics      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 crash_gate_int:
-    int 3
     push eax
     push ebx
     push ecx
@@ -2865,9 +2839,35 @@ crash_gate_int:
     push gs
 ;
     call GetCoreCpu
+;
+    mov eax,cr3
+    mov ds:[ebp].reg_cr3,eax
+;    
     call SaveBasics
     mov ds:[ebp].fault_vect,1Ah
 ;
+    mov ds:[ebp].reg_ldt.d_limit,0
+    mov ds:[ebp].reg_ldt.d_base,0
+    sldt bx
+    mov ds:[ebp].reg_ldt.d_selector,bx
+    call GetSelectorBaseSizeType
+    jc cgLdtDone
+;
+    mov ds:[ebp].reg_ldt.d_limit,ecx
+    mov ds:[ebp].reg_ldt.d_base,edx
+
+cgLdtDone:    
+    mov ds:[ebp].reg_tr.d_limit,0
+    mov ds:[ebp].reg_tr.d_base,0
+    str bx
+    mov ds:[ebp].reg_tr.d_selector,bx
+    call GetSelectorBaseSizeType
+    jc cgTrDone
+;
+    mov ds:[ebp].reg_tr.d_limit,ecx
+    mov ds:[ebp].reg_tr.d_base,edx
+
+cgTrDone:    
     pop ebx
     lea esi,[ebp].reg_gs
     call ConvertSelector
@@ -2921,6 +2921,130 @@ crash_gate_int:
 ;            
     mov ds:[ebp].reg_esp,esp
 ;          
+;    ExecuteCrashHandler
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CrashTss
+;
+;           DESCRIPTION:    Crash with a TSS
+;
+;           PARAMETERS:     DS      Readable TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+crash_tss_name    DB 'Crash Tss', 0
+    
+crash_tss:
+    mov ax,double_tss_data_sel
+    mov ds,ax
+    mov bx,word ptr ds:tss32_back_link
+    push bx
+;
+    mov ax,gdt_sel
+    mov ds,ax
+    and bx,0FFF8h
+    xor ecx,ecx
+    mov cl,[bx+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,[bx]
+    inc ecx
+    mov edx,[bx+2]
+    rol edx,8
+    mov dl,[bx+7]
+    ror edx,8
+;       
+    AllocateGdt
+    CreateDataSelector16
+    mov es,bx
+;    
+    call GetCoreCpu
+;
+    mov eax,es:tss32_cr3
+    mov ds:[ebp].reg_cr3,eax
+;    
+    call SaveBasics
+    mov ds:[ebp].fault_vect,8
+;
+    mov ds:[ebp].reg_ldt.d_limit,0
+    mov ds:[ebp].reg_ldt.d_base,0
+    mov bx,es:tss32_ldt
+
+    mov ds:[ebp].reg_ldt.d_selector,bx
+    call GetSelectorBaseSizeType
+    jc ctLdtDone
+;
+    mov ds:[ebp].reg_ldt.d_limit,ecx
+    mov ds:[ebp].reg_ldt.d_base,edx
+
+ctLdtDone:    
+    mov ds:[ebp].reg_tr.d_limit,0
+    mov ds:[ebp].reg_tr.d_base,0
+;    
+    pop bx
+    mov ds:[ebp].reg_tr.d_selector,bx
+    call GetSelectorBaseSizeType
+    jc ctTrDone
+;
+    mov ds:[ebp].reg_tr.d_limit,ecx
+    mov ds:[ebp].reg_tr.d_base,edx
+
+ctTrDone:    
+    mov eax,es:tss32_eax
+    mov ds:[ebp].reg_eax,eax
+;    
+    mov eax,es:tss32_ecx
+    mov ds:[ebp].reg_ecx,eax
+;
+    mov eax,es:tss32_edx
+    mov ds:[ebp].reg_edx,eax
+;
+    mov eax,es:tss32_ebx
+    mov ds:[ebp].reg_ebx,eax
+;
+    mov eax,es:tss32_esp    
+    mov ds:[ebp].reg_esp,eax
+;
+    mov eax,es:tss32_ebp    
+    mov ds:[ebp].reg_ebp,eax
+;
+    mov eax,es:tss32_eip    
+    mov ds:[ebp].reg_eip,eax
+;    
+    mov eax,es:tss32_esi
+    mov ds:[ebp].reg_esi,eax
+;
+    mov eax,es:tss32_edi    
+    mov ds:[ebp].reg_edi,eax
+;    
+    mov bx,es:tss32_es
+    lea esi,[ebp].reg_es
+    call ConvertSelector
+;
+    mov bx,es:tss32_cs    
+    lea esi,[ebp].reg_cs
+    call ConvertSelector
+     
+    mov bx,es:tss32_ss
+    lea esi,[ebp].reg_ss
+    call ConvertSelector
+;
+    mov bx,es:tss32_ds    
+    lea esi,[ebp].reg_ds
+    call ConvertSelector
+;
+    mov bx,es:tss32_fs    
+    lea esi,[ebp].reg_fs
+    call ConvertSelector
+;
+    mov bx,es:tss32_gs    
+    lea esi,[ebp].reg_gs
+    call ConvertSelector
+;
+    mov eax,es:tss32_eflags
+    mov ds:[ebp].reg_eflags,eax
 ;    ExecuteCrashHandler
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
