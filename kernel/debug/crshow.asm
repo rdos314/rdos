@@ -1450,7 +1450,10 @@ eflags_loop:
     add esi,3
 
 eflags_write_one:
+    push ecx
+    mov ecx,3
     call ShowCodeSizeString
+    pop ecx
     
 eflags_next:
     pop esi
@@ -2655,6 +2658,9 @@ gdcTrDone:
     mov ds:[ebp].reg_ebp,ebp
     mov ds:[ebp].reg_esp,esp
     mov ds:[ebp].reg_eip,OFFSET deb_code
+    pushfd
+    pop eax
+    mov ds:[ebp].reg_eflags,eax
 ;    
     popad
     ret
