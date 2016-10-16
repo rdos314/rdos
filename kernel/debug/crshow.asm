@@ -2721,6 +2721,7 @@ test_pr:
     EnableFocus
 ;
     int 3
+    InitVideo
     mov ax,SEG data
     mov ds,ax
 ;    

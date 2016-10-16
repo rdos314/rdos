@@ -1759,6 +1759,10 @@ ThreadToSel     MACRO
 
 ;;;;;;;;;;; Crash handler ;;;;;;;;;;;;;;;;
 
+InitVideo       MACRO
+    OsGate init_video_nr
+                    ENDM
+
 ; OUT FS       Processor core
 ; OUT NC       First invocation
 EnterCrashDebug       MACRO

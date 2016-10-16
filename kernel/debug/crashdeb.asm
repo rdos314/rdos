@@ -64,7 +64,7 @@ StopSys Macro
     ShutDownTask
         Endm
 
-code    SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
 
@@ -74,9 +74,6 @@ code    SEGMENT byte public use16 'CODE'
     extrn InitCrashShow:near
     extrn SetViewType:near
     extrn ShowCrashCore:near
-
-    extrn LocalOsGate:near
-    extrn LocalUserGate:near
 
     extrn InvertChar:near
 
@@ -423,7 +420,7 @@ InitVideo Proc near
     pop es
     pop ds
     ret
-InitVideo   End
+InitVideo   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

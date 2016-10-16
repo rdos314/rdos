@@ -702,4 +702,6 @@ begin_get_video_modes_nr    = 575
 end_get_video_modes_nr      = 576
 switch_video_mode_nr        = 577
 
+init_video_nr               = 578
+
 osgate_entries				= 580
