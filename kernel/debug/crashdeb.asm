@@ -77,6 +77,9 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn LocalOsGate:near
     extrn LocalUserGate:near
+
+    extrn InvertChar:near
+
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -420,7 +423,7 @@ InitVideo Proc near
     pop es
     pop ds
     ret
-InitVideo   Endp
+InitVideo   End
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -430,6 +433,8 @@ InitVideo   Endp
 ;           DESCRIPTION:    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Text:
 
 ShowMarker Proc near
     push ds
@@ -462,6 +467,27 @@ ShowMarker Proc near
     ret
 ShowMarker Endp
 
+LFB
+
+ShowMarker Proc near
+    push ds
+    push ax
+    push cx
+    push dx
+;
+    mov ax,SEG data    
+    mov ds,ax
+    mov dx,ds:curr_row
+    mov cx,ds:curr_col
+    call InvertChar
+;
+    pop dx
+    pop cx
+    pop ax
+    pop ds    
+    ret
+ShowMarker Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -470,6 +496,8 @@ ShowMarker Endp
 ;           DESCRIPTION:    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Text:
 
 HideMarker Proc near
     push ds
@@ -498,6 +526,27 @@ HideMarker Proc near
     pop dx
     pop ax
     pop es
+    pop ds    
+    ret
+HideMarker Endp
+
+LFB:
+
+HideMarker Proc near
+    push ds
+    push ax
+    push cx
+    push dx
+;
+    mov ax,SEG data    
+    mov ds,ax
+    mov dx,ds:curr_row
+    mov cx,ds:curr_col
+    call InvertChar
+;
+    pop dx
+    pop cx
+    pop ax
     pop ds    
     ret
 HideMarker Endp
@@ -2102,12 +2151,18 @@ execute_crash_handler:
     SoftReset
 
 execute_crash_do:
+
+Text:
+
     call SetupBiosPic
     call SetupBiosPit
     call InitVideo
+
+
     call InitCrashShow
     call InitCrashKeyboard
-;
+    
+execute_com:
     mov ax,system_data_sel
     mov ds,ax
     mov ds:shut_spinlock,0
@@ -2211,6 +2266,9 @@ handle_mode_ok:
     pop dx
 
 handle_func:
+
+Text:
+
     push eax
     push ebx
     push edx
@@ -2218,11 +2276,13 @@ handle_func:
     xor ebx,ebx
     mov eax,0B8007h
     SetPageEntry
-        pop edx
-        pop ebx
-        pop eax
+    pop edx
+    pop ebx
+    pop eax
 ;
     call HideMarker
+
+
     call DoFunc
     call ShowCrashCore
     call ShowMarker
@@ -2282,6 +2342,8 @@ right_arrow:
 ;           PARAMETERS:     AX      Atrib + char
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Text:
 
 ShowHere    Proc near
     push eax
