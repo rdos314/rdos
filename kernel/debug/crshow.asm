@@ -247,16 +247,18 @@ MapLinear       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadLinearByte   PROC near
-    push ds
+    push es
     push ebx
 ;    
-    mov ax,flat_sel
-    mov ds,ax
-    mov al,ds:[ebx]
+    call MapLinear
+    jc rlbDone
+;    
+    mov al,es:[ebx]
     clc
-;
+    
+rlbDone:
     pop ebx
-    pop ds
+    pop es
     ret
 ReadLinearByte   Endp
 
@@ -274,15 +276,18 @@ ReadLinearByte   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteLinearByte   PROC near
-    push ds
-    push edx
+    push es
+    push ebx
 ;    
-    mov dx,flat_sel
-    mov ds,dx
-    mov ds:[ebx],al
-;
-    pop edx
-    pop ds
+    call MapLinear
+    jc wlbDone
+;    
+    mov es:[ebx],al
+    clc
+
+wlbDone:
+    pop ebx
+    pop es
     ret
 WriteLinearByte   Endp
 
@@ -2624,14 +2629,6 @@ test_pr:
     mov ax,fs
     mov gs,ax
     call GetDebugCoreData
-;
-    mov bx,cs
-    call GetSelectorBaseSizeType
-    mov ebx,edx
-    add ebx,OFFSET test_pr
-    xor edi,edi
-    call MapLinear
-
         
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
