@@ -2619,6 +2619,10 @@ GetDebugCoreData      Endp
 test_name  DB 'Crash Thread', 0
 
 test_pr:
+    sti
+    mov ax,41h
+    EnableFocus
+;
     int 3
     mov ax,SEG data
     mov ds,ax
@@ -2629,7 +2633,9 @@ test_pr:
     mov ax,fs
     mov gs,ax
     call GetDebugCoreData
-        
+;        
+    call WriteCpuReg32
+    int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

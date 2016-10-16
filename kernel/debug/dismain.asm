@@ -3643,12 +3643,16 @@ GetUserCall     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckGate   Proc near
+    push es
     push ebx
     push ecx
     push edx
     push edi
 ;    
     push esi
+;    
+    mov ax,ds
+    mov es,ax
 ;    
     test word ptr ds:[ebp].reg_eflags+2,2
     jnz check_fail
@@ -3838,6 +3842,7 @@ check_ret:
     pop edx
     pop ecx
     pop ebx
+    pop es
     ret
 CheckGate  Endp
 
