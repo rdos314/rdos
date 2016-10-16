@@ -2706,6 +2706,8 @@ GetDebugCoreData      Endp
 ;
 ;           DESCRIPTION:    Get CPU structure associated with this core
 ;
+;           PARAMETERS:     FS  Core
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 core_tab:
@@ -2727,11 +2729,9 @@ ct0E  DD OFFSET cpu15
 ct0F  DD OFFSET cpu16
 
 GetCoreCpu      Proc near
-    push fs
     push eax
     push ebx
 ;   
-    GetCore
     movzx ebx,fs:ps_id
     cmp ebx,16
     jae gccFail
@@ -2748,7 +2748,6 @@ gccFail:
 gccDone:
     pop ebx
     pop eax
-    pop fs
     ret
 GetCoreCpu    Endp
 
@@ -2815,6 +2814,153 @@ SaveBasics      Proc near
     popad    
     ret
 SaveBasics      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NmiInt
+;
+;           DESCRIPTION:    Crash from NMI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+nmi_int:
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    push ds
+    push es
+    push fs
+    push gs
+;
+    cli
+    GetCore
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz nmi_ret
+;
+    or fs:ps_flags,PS_FLAG_NMI    
+    call GetCoreCpu
+;
+    mov eax,cr3
+    mov ds:[ebp].reg_cr3,eax
+;    
+    call SaveBasics
+    mov ds:[ebp].fault_vect,19h
+;
+    mov ds:[ebp].reg_ldt.d_limit,0
+    mov ds:[ebp].reg_ldt.d_base,0
+    sldt bx
+    mov ds:[ebp].reg_ldt.d_selector,bx
+    call GetSelectorBaseSizeType
+    jc cnLdtDone
+;
+    mov ds:[ebp].reg_ldt.d_limit,ecx
+    mov ds:[ebp].reg_ldt.d_base,edx
+
+cnLdtDone:    
+    mov ds:[ebp].reg_tr.d_limit,0
+    mov ds:[ebp].reg_tr.d_base,0
+    str bx
+    mov ds:[ebp].reg_tr.d_selector,bx
+    call GetSelectorBaseSizeType
+    jc cnTrDone
+;
+    mov ds:[ebp].reg_tr.d_limit,ecx
+    mov ds:[ebp].reg_tr.d_base,edx
+
+cnTrDone:    
+    pop ebx
+    lea esi,[ebp].reg_gs
+    call ConvertSelector
+;
+    pop ebx
+    lea esi,[ebp].reg_fs
+    call ConvertSelector
+;
+    pop ebx
+    lea esi,[ebp].reg_es
+    call ConvertSelector
+;
+    pop ebx
+    lea esi,[ebp].reg_ds
+    call ConvertSelector
+;
+    pop eax
+    mov ds:[ebp].reg_ebp,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_edi,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_esi,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_edx,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_ecx,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_ebx,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_eax,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_eip,eax
+;
+    pop ebx
+    lea esi,[ebp].reg_cs
+    call ConvertSelector
+;
+    pop eax
+    mov ds:[ebp].reg_eflags,eax
+;    
+    mov bx,ss
+    lea esi,[ebp].reg_ss
+    call ConvertSelector
+;            
+    mov ds:[ebp].reg_esp,esp
+;          
+;    ExecuteCrashHandler
+
+nmi_ret:    
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupCrash
+;
+;           DESCRIPTION:    Setup crash environment
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupCrash      Proc near
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov al,2
+    xor bl,bl
+    mov esi,OFFSET nmi_int
+    SetupIntGate
+    ret
+SetupCrash      Endp
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2838,6 +2984,8 @@ crash_gate_int:
     push fs
     push gs
 ;
+    GetCore
+    or fs:ps_flags,PS_FLAG_NMI        
     call GetCoreCpu
 ;
     mov eax,cr3
@@ -2960,6 +3108,8 @@ crash_tss:
     CreateDataSelector16
     mov es,bx
 ;    
+    GetCore
+    or fs:ps_flags,PS_FLAG_NMI        
     call GetCoreCpu
 ;
     mov eax,es:tss32_cr3
