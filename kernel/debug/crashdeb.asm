@@ -2699,10 +2699,229 @@ gdcTrDone:
     ret
 GetDebugCoreData      Endp
 
-deb_val DB 11
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetCoreCpu
+;
+;           DESCRIPTION:    Get CPU structure associated with this core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-deb_code:
-    mov al,cs:deb_val
+core_tab:
+ct00  DD OFFSET cpu1
+ct01  DD OFFSET cpu2
+ct02  DD OFFSET cpu3
+ct03  DD OFFSET cpu4
+ct04  DD OFFSET cpu5
+ct05  DD OFFSET cpu6
+ct06  DD OFFSET cpu7
+ct07  DD OFFSET cpu8
+ct08  DD OFFSET cpu9
+ct09  DD OFFSET cpu10
+ct0A  DD OFFSET cpu11
+ct0B  DD OFFSET cpu12
+ct0C  DD OFFSET cpu13
+ct0D  DD OFFSET cpu14
+ct0E  DD OFFSET cpu15
+ct0F  DD OFFSET cpu16
+
+GetCoreCpu      Proc near
+    push fs
+    push eax
+    push ebx
+;   
+    GetCore
+    movzx ebx,fs:ps_id
+    cmp ebx,16
+    jae gccFail
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ebp,dword ptr cs:[4 * ebx].core_tab
+    jmp gccDone
+
+gccFail:
+    hlt
+    jmp gccFail
+
+gccDone:
+    pop ebx
+    pop eax
+    pop fs
+    ret
+GetCoreCpu    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SaveBasics
+;
+;           DESCRIPTION:    Save basic information
+;
+;           PARAMETERS:     DS:EBP      Cpu data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SaveBasics      Proc near
+    pushad
+;    
+    mov ds:[ebp].cpu_read_mem,OFFSET read_mem
+    mov ds:[ebp].cpu_write_mem,OFFSET write_mem
+;    
+    mov eax,cr0
+    mov ds:[ebp].reg_cr0,eax
+;
+    mov eax,cr2
+    mov ds:[ebp].reg_cr2,eax
+;
+    mov eax,cr3
+    mov ds:[ebp].reg_cr3,eax
+;
+    mov eax,cr4
+    mov ds:[ebp].reg_cr4,eax
+;
+    mov eax,dr0
+    mov ds:[ebp].reg_dr0,eax               
+;
+    mov eax,dr1
+    mov ds:[ebp].reg_dr1,eax               
+;
+    mov eax,dr2
+    mov ds:[ebp].reg_dr2,eax               
+;
+    mov eax,dr6
+    mov ds:[ebp].reg_dr6,eax               
+;
+    mov eax,dr7
+    mov ds:[ebp].reg_dr7,eax               
+;
+    mov eax,dr0
+    mov ds:[ebp].reg_dr0,eax               
+;
+    sgdt fword ptr ds:temp_size
+    movzx eax,ds:temp_size
+    mov ds:[ebp].reg_gdt.d_limit,eax
+    mov eax,ds:temp_base
+    mov ds:[ebp].reg_gdt.d_base,eax
+;
+    sidt fword ptr ds:temp_size
+    movzx eax,ds:temp_size
+    mov ds:[ebp].reg_idt.d_limit,eax
+    mov eax,ds:temp_base
+    mov ds:[ebp].reg_idt.d_base,eax
+;
+    mov ds:[ebp].reg_ldt.d_limit,0
+    mov ds:[ebp].reg_ldt.d_base,0
+    sldt bx
+    mov ds:[ebp].reg_ldt.d_selector,bx
+    call GetSelectorBaseSizeType
+    jc sbLdtDone
+;
+    mov ds:[ebp].reg_ldt.d_limit,ecx
+    mov ds:[ebp].reg_ldt.d_base,edx
+
+sbLdtDone:    
+    mov ds:[ebp].reg_tr.d_limit,0
+    mov ds:[ebp].reg_tr.d_base,0
+    str bx
+    mov ds:[ebp].reg_tr.d_selector,bx
+    call GetSelectorBaseSizeType
+    jc sbTrDone
+;
+    mov ds:[ebp].reg_tr.d_limit,ecx
+    mov ds:[ebp].reg_tr.d_base,edx
+
+sbTrDone:    
+    mov bx,flat_sel
+    lea esi,[ebp].reg_usel
+    call ConvertSelector
+;
+    popad    
+    ret
+SaveBasics      Endp
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CrashGateInt
+;
+;           DESCRIPTION:    Crash with a gate (from interrupt)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+crash_gate_int:
+    int 3
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    push ds
+    push es
+    push fs
+    push gs
+;
+    call GetCoreCpu
+    call SaveBasics
+    mov ds:[ebp].fault_vect,1Ah
+;
+    pop ebx
+    lea esi,[ebp].reg_gs
+    call ConvertSelector
+;
+    pop ebx
+    lea esi,[ebp].reg_fs
+    call ConvertSelector
+;
+    pop ebx
+    lea esi,[ebp].reg_es
+    call ConvertSelector
+;
+    pop ebx
+    lea esi,[ebp].reg_ds
+    call ConvertSelector
+;
+    pop eax
+    mov ds:[ebp].reg_ebp,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_edi,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_esi,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_edx,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_ecx,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_ebx,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_eax,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_eip,eax
+;
+    pop ebx
+    lea esi,[ebp].reg_cs
+    call ConvertSelector
+;
+    pop eax
+    mov ds:[ebp].reg_eflags,eax
+;    
+    mov bx,ss
+    lea esi,[ebp].reg_ss
+    call ConvertSelector
+;            
+    mov ds:[ebp].reg_esp,esp
+;          
+;    ExecuteCrashHandler
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2715,13 +2934,18 @@ deb_code:
 
 test_name  DB 'Crash Thread', 0
 
+deb_val DB 11
+
+deb_code:
+    mov al,cs:deb_val
+
 test_pr:
     sti
     mov ax,41h
     EnableFocus
 ;
     int 3
-    InitVideo
+    int 85h
     mov ax,SEG data
     mov ds,ax
 ;    
@@ -2775,6 +2999,11 @@ init_crash    Proc near
     mov ecx,stack0_size
     mov ax,26
     CreateProcess
+;
+    xor bl,bl
+    mov al,85h
+    mov esi,OFFSET crash_gate_int
+    SetupIntGate
 ;        
     popad
     pop ds
