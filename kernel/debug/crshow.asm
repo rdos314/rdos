@@ -2033,13 +2033,12 @@ WriteDataRow    Proc near
     push edx
     call GetSelectorBaseSizeType
     mov ebx,edx    
+    mov esi,ecx
     pop edx
 ;
     pushf
     add ebx,edx
     popf
-;    
-    mov esi,ecx
 ;
     push ebx
     push esi
@@ -2051,7 +2050,7 @@ wrDataLoop:
     popf
     jc wrDataInv
 ;    
-    cmp esi,eax
+    cmp esi,edx
     jc wrDataInv 
 ;    
     push edx
@@ -2081,7 +2080,11 @@ wrDataInv:
 
 wrDataNext:
     pushf
-    add ebx,1
+    mov al,' '
+    call ShowChar
+;   
+    inc ebx
+    inc edx     
     loop wrDataLoop
 ;
     popf    
@@ -2095,7 +2098,7 @@ wrCharLoop:
     popf
     jc wrCharInv
 ;    
-    cmp esi,ebx
+    cmp esi,edx
     jc wrCharInv 
 ;    
     push edx
@@ -2123,7 +2126,8 @@ wrCharInv:
 
 wrCharNext:
     pushf
-    add ebx,1
+    inc ebx
+    inc edx
     loop wrCharLoop
 ;
     popf    
