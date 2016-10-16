@@ -67,6 +67,8 @@ view_type       DB ?
 
 curr_pos        DW ?
 
+buf          DB 50 DUP (?)
+
 data    ENDS
 
     .386p
@@ -74,6 +76,8 @@ data    ENDS
 code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
+    
+    extrn DisAsmCode:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2126,6 +2130,45 @@ WriteDataRow    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           WriteInstr
+;
+;       DESCRIPTION:    Write instruction
+;
+;       PARAMETERS:     DS:EBP      Cpu registers
+;                       GS          Core regs
+;                                               
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteInstr  Proc near
+    push es
+    push ecx
+    push esi
+    push edi
+;    
+    mov ax,ds
+    mov es,ax
+    mov ecx,40
+    mov edi,OFFSET buf
+    call DisAsmCode
+;
+    mov esi,OFFSET buf    
+    mov ecx,40
+
+wiLoop:
+    lodsb
+    call ShowChar
+    loop wiLoop
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+    ret
+WriteInstr      Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           WriteCpuReg32
 ;
 ;           DESCRIPTION:    
@@ -2161,7 +2204,7 @@ WriteCpuReg32     Proc near
     mov esi,OFFSET dword_reg_tab3
     call WriteDwordRegs
     call WriteFault
-;    call WriteInstr
+    call WriteInstr
     call NewLine
 ;
     mov esi,OFFSET sel_reg_tr
@@ -2273,7 +2316,7 @@ WriteCpuReg64     Proc near
     call NewLine
 ;
     call WriteFault
-;    call WriteInstr
+    call WriteInstr
     call NewLine
 ;
     mov esi,OFFSET sel_reg_tr
