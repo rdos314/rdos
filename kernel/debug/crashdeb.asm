@@ -62,6 +62,7 @@ temp_base     DD ?
 
 map_linear   DD ?
 map_sel      DW ?
+map_spinlock DW ?
 
 view_type       DB ?
 
@@ -78,6 +79,58 @@ code    SEGMENT byte public use32 'CODE'
     assume cs:code
     
     extrn DisAsmCode:near
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AcquireMapSpinlock
+;
+;           DESCRIPTION:    Acquire map spinlock
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AcquireMapSpinlock      Proc near
+    push ds
+    push ax
+;
+    mov ax,SEG data
+    mov ds,ax
+
+amsRetry:    
+    mov ax,1
+    xchg ax,ds:map_spinlock    
+    or ax,ax
+    jz amsDone
+;
+    jmp amsRetry
+
+amsDone:
+    pop ax
+    pop ds
+    ret
+AcquireMapSpinlock  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReleaseMapSpinlock
+;
+;           DESCRIPTION:    Release map spinlock
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReleaseMapSpinlock      Proc near
+    push ds
+    push ax
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:map_spinlock,0
+;
+    pop ax
+    pop ds
+    ret
+ReleaseMapSpinlock      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2194,6 +2247,7 @@ WriteInstr      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteCpuReg32     Proc near
+    call AcquireMapSpinlock
     call WriteCore
     call WriteThread
     call NewLine    
@@ -2301,6 +2355,7 @@ wc32PtrOk:
     mov edx,ds:[ebp].reg_uoffs
     call WriteDataRow
     call NewLine    
+    call ReleaseMapSpinlock
     ret
 WriteCpuReg32     Endp
 
@@ -2314,6 +2369,7 @@ WriteCpuReg32     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteCpuReg64     Proc near
+    call AcquireMapSpinlock
     call WriteCore
     call WriteThread
     call NewLine    
@@ -2413,7 +2469,7 @@ WriteCpuReg64     Proc near
     mov edx,ds:[ebp].reg_uoffs
     call WriteDataRow
     call NewLine    
-    pop es
+    call ReleaseMapSpinlock
     ret
 WriteCpuReg64     Endp
 
@@ -2575,133 +2631,6 @@ ConvertSelector      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetDebugCoreData
-;
-;           DESCRIPTION:    Get debug core data
-;
-;           PARAMETERS:     DS:EBP      Cpu data
-;                           GS          Core sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetDebugCoreData      Proc near
-    pushad
-;    
-    mov ds:[ebp].cpu_read_mem,OFFSET read_mem
-    mov ds:[ebp].cpu_write_mem,OFFSET write_mem
-;    
-    mov eax,cr0
-    mov ds:[ebp].reg_cr0,eax
-;
-    mov eax,cr2
-    mov ds:[ebp].reg_cr2,eax
-;
-    mov eax,cr3
-    mov ds:[ebp].reg_cr3,eax
-;
-    mov eax,cr4
-    mov ds:[ebp].reg_cr4,eax
-;
-    mov eax,dr0
-    mov ds:[ebp].reg_dr0,eax               
-;
-    mov eax,dr1
-    mov ds:[ebp].reg_dr1,eax               
-;
-    mov eax,dr2
-    mov ds:[ebp].reg_dr2,eax               
-;
-    mov eax,dr6
-    mov ds:[ebp].reg_dr6,eax               
-;
-    mov eax,dr7
-    mov ds:[ebp].reg_dr7,eax               
-;
-    mov eax,dr0
-    mov ds:[ebp].reg_dr0,eax               
-;
-    sgdt fword ptr ds:temp_size
-    movzx eax,ds:temp_size
-    mov ds:[ebp].reg_gdt.d_limit,eax
-    mov eax,ds:temp_base
-    mov ds:[ebp].reg_gdt.d_base,eax
-;
-    sidt fword ptr ds:temp_size
-    movzx eax,ds:temp_size
-    mov ds:[ebp].reg_idt.d_limit,eax
-    mov eax,ds:temp_base
-    mov ds:[ebp].reg_idt.d_base,eax
-;
-    mov ds:[ebp].reg_ldt.d_limit,0
-    mov ds:[ebp].reg_ldt.d_base,0
-    sldt bx
-    mov ds:[ebp].reg_ldt.d_selector,bx
-    call GetSelectorBaseSizeType
-    jc gdcLdtDone
-;
-    mov ds:[ebp].reg_ldt.d_limit,ecx
-    mov ds:[ebp].reg_ldt.d_base,edx
-
-gdcLdtDone:    
-    mov ds:[ebp].reg_tr.d_limit,0
-    mov ds:[ebp].reg_tr.d_base,0
-    str bx
-    mov ds:[ebp].reg_tr.d_selector,bx
-    call GetSelectorBaseSizeType
-    jc gdcTrDone
-;
-    mov ds:[ebp].reg_tr.d_limit,ecx
-    mov ds:[ebp].reg_tr.d_base,edx
-
-gdcTrDone:    
-    mov bx,cs
-    lea esi,[ebp].reg_cs
-    call ConvertSelector
-;
-    mov bx,ss
-    lea esi,[ebp].reg_ss
-    call ConvertSelector
-;
-    mov bx,ds
-    lea esi,[ebp].reg_ds
-    call ConvertSelector
-;
-    mov bx,es
-    lea esi,[ebp].reg_es
-    call ConvertSelector
-;
-    mov bx,fs
-    lea esi,[ebp].reg_fs
-    call ConvertSelector
-;
-    mov bx,gs
-    lea esi,[ebp].reg_gs
-    call ConvertSelector
-;
-    mov bx,flat_sel
-    lea esi,[ebp].reg_usel
-    call ConvertSelector
-;
-    mov ds:[ebp].reg_eax,eax
-    mov ds:[ebp].reg_ebx,ebx
-    mov ds:[ebp].reg_ecx,ecx
-    mov ds:[ebp].reg_edx,edx
-    mov ds:[ebp].reg_esi,esi
-    mov ds:[ebp].reg_edi,edi
-    mov ds:[ebp].reg_ebp,ebp
-    mov ds:[ebp].reg_esp,esp
-    mov ds:[ebp].reg_eip,OFFSET deb_code
-    pushfd
-    pop eax
-    mov ds:[ebp].reg_eflags,eax
-;    
-    popad
-    ret
-GetDebugCoreData      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetCoreCpu
 ;
 ;           DESCRIPTION:    Get CPU structure associated with this core
@@ -2825,6 +2754,7 @@ SaveBasics      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 nmi_int:
+    cli
     push eax
     push ebx
     push ecx
@@ -2845,6 +2775,7 @@ nmi_int:
     or fs:ps_flags,PS_FLAG_NMI    
     call GetCoreCpu
 ;
+    call AcquireMapSpinlock
     mov eax,cr3
     mov ds:[ebp].reg_cr3,eax
 ;    
@@ -2925,8 +2856,14 @@ cnTrDone:
     call ConvertSelector
 ;            
     mov ds:[ebp].reg_esp,esp
+    call ReleaseMapSpinlock
 ;          
-;    ExecuteCrashHandler
+    mov ax,fs
+    mov gs,ax
+    call WriteCpuReg32
+
+nmiloop:
+    jmp nmiloop    
 
 nmi_ret:    
     pop gs
@@ -2972,6 +2909,7 @@ SetupCrash      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 crash_gate_int:
+    cli
     push eax
     push ebx
     push ecx
@@ -2988,6 +2926,7 @@ crash_gate_int:
     or fs:ps_flags,PS_FLAG_NMI        
     call GetCoreCpu
 ;
+    call AcquireMapSpinlock
     mov eax,cr3
     mov ds:[ebp].reg_cr3,eax
 ;    
@@ -3068,8 +3007,14 @@ cgTrDone:
     call ConvertSelector
 ;            
     mov ds:[ebp].reg_esp,esp
+    call ReleaseMapSpinlock
 ;          
-;    ExecuteCrashHandler
+    mov ax,fs
+    mov gs,ax
+    call WriteCpuReg32
+
+gtloop:
+    jmp gtloop    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3085,6 +3030,7 @@ cgTrDone:
 crash_tss_name    DB 'Crash Tss', 0
     
 crash_tss:
+    cli
     mov ax,double_tss_data_sel
     mov ds,ax
     mov bx,word ptr ds:tss32_back_link
@@ -3112,7 +3058,8 @@ crash_tss:
     or fs:ps_flags,PS_FLAG_NMI        
     call GetCoreCpu
 ;
-    mov eax,es:tss32_cr3
+    call AcquireMapSpinlock
+    mov eax,cr3
     mov ds:[ebp].reg_cr3,eax
 ;    
     call SaveBasics
@@ -3195,7 +3142,14 @@ ctTrDone:
 ;
     mov eax,es:tss32_eflags
     mov ds:[ebp].reg_eflags,eax
-;    ExecuteCrashHandler
+    call ReleaseMapSpinlock
+;    
+    mov ax,fs
+    mov gs,ax
+    call WriteCpuReg32
+
+cllloop:
+    jmp cllloop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3219,39 +3173,56 @@ test_pr:
     EnableFocus
 ;
     int 3
-    int 85h
-    mov ax,SEG data
-    mov ds,ax
-;    
-    mov ebp,OFFSET cpu1
-    GetCore
-;
-    mov ax,fs
-    mov gs,ax
-    call GetDebugCoreData
-;        
-    call WriteCpuReg32
+    mov esp,0
+    push eax
     int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InitCrashShow
+;           NAME:           init_crash_tasking
 ;
 ;           DESCRIPTION:    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public init_crash
+    public init_crash_tasking
 
-init_crash    Proc near
+init_crash_tasking    Proc near
     push ds
     pushad
 ;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET test_pr
+    mov edi,OFFSET test_name
+    mov ecx,stack0_size
+    mov ax,26
+    CreateProcess
+;        
+    popad
+    pop ds
+    ret
+init_crash_tasking    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:          init_crash_driver
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public init_crash_driver
+
+init_crash_driver    Proc near
     mov ax,SEG data
     mov ds,ax
     mov ds:curr_pos,0
     mov ds:view_type,'R'
+    mov ds:map_spinlock,0
 ;
     mov eax,1000h
     AllocateBigLinear
@@ -3268,21 +3239,19 @@ init_crash    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov esi,OFFSET test_pr
-    mov edi,OFFSET test_name
-    mov ecx,stack0_size
-    mov ax,26
-    CreateProcess
 ;
     xor bl,bl
-    mov al,85h
+    mov al,84h
     mov esi,OFFSET crash_gate_int
     SetupIntGate
-;        
-    popad
-    pop ds
+;    
+    mov esi,OFFSET crash_tss
+    mov edi,OFFSET crash_tss_name
+    xor cl,cl
+    mov ax,crash_tss_nr
+    RegisterOsGate
     ret
-init_crash    Endp
+init_crash_driver       Endp
 
 code    ENDS
 

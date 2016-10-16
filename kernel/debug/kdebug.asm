@@ -20,7 +20,7 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; DEBUG.ASM
+; KDEBUG.ASM
 ; Kernel part kernel debugger
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -41,7 +41,8 @@ code    SEGMENT byte use32 public 'CODE'
 
     extrn init_local_debug:near
     extrn init_ipc_debug:near
-    extrn init_crash:near
+    extrn init_crash_driver:near
+    extrn init_crash_tasking:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -59,7 +60,7 @@ init_debug_process      PROC far
 ;    
     call init_local_debug
     call init_ipc_debug
-    call init_crash
+    call init_crash_tasking
 ;    
     popad
     pop es
@@ -77,6 +78,8 @@ init_debug_process      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    Proc far
+    call init_crash_driver
+;    
     mov eax,cs
     mov ds,eax
     mov es,eax  
