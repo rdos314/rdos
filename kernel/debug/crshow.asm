@@ -185,6 +185,40 @@ mlProt:
     jmp mlDone
 
 mlPae:
+    mov esi,edx
+    shr esi,27
+    and si,0FFF8h
+    mov eax,es:[esi]
+    test al,1
+    jz mlFail
+;
+    mov ebx,es:[esi+4]
+    call MapPhysical
+;
+    mov esi,edx
+    shr esi,18
+    and esi,0FF8h
+    mov eax,es:[esi]
+    test al,1
+    jz mlFail
+;
+    mov ebx,es:[esi+4]
+    call MapPhysical
+;
+    mov esi,edx
+    shr esi,9
+    and esi,0FF8h
+    mov eax,es:[esi]
+    test al,1
+    jz mlFail
+;
+    mov ebx,es:[esi+4]
+    call MapPhysical
+;    
+    mov ebx,edx
+    and ebx,0FFFh    
+    clc
+    jmp mlDone
 
 mlFail:
     stc
