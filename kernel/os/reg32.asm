@@ -193,7 +193,7 @@ debug_exception:
 
 debug_fault:
     movzx eax,al
-    CrashFault
+    CrashGate
    
 debug_normal:       
     push ax

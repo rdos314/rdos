@@ -1781,11 +1781,6 @@ CrashGate       MACRO
     int 84h
                     ENDM
 
-;   SS:EBP       Fault stack
-CrashFault      MACRO
-    OsGate crash_fault_nr
-                    ENDM
-
 ;   DS      TSS alias
 CrashTss    MACRO
     OsGate crash_tss_nr
