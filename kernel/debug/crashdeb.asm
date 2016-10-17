@@ -2631,11 +2631,12 @@ ConvertSelector      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetCoreCpu
+;           NAME:           StartCoreDump
 ;
-;           DESCRIPTION:    Get CPU structure associated with this core
+;           DESCRIPTION:    Start core dump
 ;
-;           PARAMETERS:     FS  Core
+;           RETURNS:        FS          Core
+;                           DS:EBP      Cpu registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2657,28 +2658,31 @@ ct0D  DD OFFSET cpu14
 ct0E  DD OFFSET cpu15
 ct0F  DD OFFSET cpu16
 
-GetCoreCpu      Proc near
+start_core_dump_name    DB 'Start Core Dump', 0
+    
+start_core_dump Proc far
     push eax
     push ebx
 ;   
+    GetCore
     movzx ebx,fs:ps_id
     cmp ebx,16
-    jae gccFail
+    jae scdFail
 ;
     mov ax,SEG data
     mov ds,ax
     mov ebp,dword ptr cs:[4 * ebx].core_tab
-    jmp gccDone
+    jmp scdDone
 
-gccFail:
+scdFail:
     hlt
-    jmp gccFail
+    jmp scdFail
 
-gccDone:
+scdDone:
     pop ebx
     pop eax
     ret
-GetCoreCpu    Endp
+start_core_dump Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2768,12 +2772,11 @@ nmi_int:
     push gs
 ;
     cli
-    GetCore
+    StartCoreDump
     test fs:ps_flags,PS_FLAG_NMI
     jnz nmi_ret
 ;
     or fs:ps_flags,PS_FLAG_NMI    
-    call GetCoreCpu
 ;
     call AcquireMapSpinlock
     mov eax,cr3
@@ -2922,9 +2925,8 @@ crash_gate_int:
     push fs
     push gs
 ;
-    GetCore
+    StartCoreDump
     or fs:ps_flags,PS_FLAG_NMI        
-    call GetCoreCpu
 ;
     call AcquireMapSpinlock
     mov eax,cr3
@@ -3054,9 +3056,8 @@ crash_tss:
     CreateDataSelector16
     mov es,bx
 ;    
-    GetCore
+    StartCoreDump
     or fs:ps_flags,PS_FLAG_NMI        
-    call GetCoreCpu
 ;
     call AcquireMapSpinlock
     mov eax,cr3
@@ -3244,6 +3245,12 @@ init_crash_driver    Proc near
     mov al,84h
     mov esi,OFFSET crash_gate_int
     SetupIntGate
+;    
+    mov esi,OFFSET start_core_dump
+    mov edi,OFFSET start_core_dump_name
+    xor cl,cl
+    mov ax,start_core_dump_nr
+    RegisterOsGate
 ;    
     mov esi,OFFSET crash_tss
     mov edi,OFFSET crash_tss_name
