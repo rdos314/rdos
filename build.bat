@@ -25,8 +25,8 @@ ide2make -p kernel/os/os 1>nul
 wmake -f kernel/os/os.mk -h -e 1>nul
 
 echo "Building Debug"
-ide2make -p kernel/debug/debug 1>nul
-wmake -f kernel/debug/debug.mk -h -e 1>nul
+ide2make -p kernel/debug/kdebug 1>nul
+wmake -f kernel/debug/kdebug.mk -h -e 1>nul
 
 echo "Building PC Device"
 ide2make -p kernel/pcdev/pcdev 1>nul
