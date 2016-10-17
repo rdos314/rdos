@@ -1763,6 +1763,11 @@ InitVideo       MACRO
     OsGate init_video_nr
                     ENDM
 
+;  OUT DS:EBP   Address of core-dump
+StartCoreDump       MACRO
+    OsGate start_core_dump_nr
+                    ENDM
+
 ; OUT FS       Processor core
 ; OUT NC       First invocation
 EnterCrashDebug       MACRO
