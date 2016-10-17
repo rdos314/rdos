@@ -32,7 +32,6 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\system.def
-INCLUDE dis.inc
 
 .386p
 .387

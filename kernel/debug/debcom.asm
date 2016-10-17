@@ -32,7 +32,7 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\system.def
-INCLUDE dis.inc
+INCLUDE kdebug.inc
 
 .386p
 .387

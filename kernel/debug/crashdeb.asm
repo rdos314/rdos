@@ -36,7 +36,7 @@ INCLUDE ..\os\proc.inc
 INCLUDE ..\pcdev\key.inc
 INCLUDE ..\pcdev\apic.inc
 INCLUDE ..\os\protseg.def
-INCLUDE dis.inc
+INCLUDE kdebug.inc
 
 data    SEGMENT byte public 'DATA'
 

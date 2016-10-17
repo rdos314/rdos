@@ -27,7 +27,7 @@
 
 .386
 
-include dis.inc
+include kdebug.inc
 include ..\os\gate.def
 include ..\driver.def
 include ..\os.def
