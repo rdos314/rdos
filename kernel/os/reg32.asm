@@ -71,48 +71,6 @@ crash_gate_int:
 ;
     StartCoreDump
     jc cgiFail
-;    
-    mov eax,cr0
-    mov ds:[ebp].reg_cr0,eax
-;
-    mov eax,cr2
-    mov ds:[ebp].reg_cr2,eax
-;
-    mov eax,cr3
-    mov ds:[ebp].reg_cr3,eax
-;
-    mov eax,cr4
-    mov ds:[ebp].reg_cr4,eax
-;
-    mov eax,dr0
-    mov ds:[ebp].reg_dr0,eax               
-;
-    mov eax,dr1
-    mov ds:[ebp].reg_dr1,eax               
-;
-    mov eax,dr2
-    mov ds:[ebp].reg_dr2,eax               
-;
-    mov eax,dr6
-    mov ds:[ebp].reg_dr6,eax               
-;
-    mov eax,dr7
-    mov ds:[ebp].reg_dr7,eax               
-;
-    mov eax,dr0
-    mov ds:[ebp].reg_dr0,eax               
-;
-    sgdt fword ptr ds:[ebp].temp_size
-    movzx eax,ds:[ebp].temp_size
-    mov ds:[ebp].reg_gdt.d_limit,eax
-    mov eax,ds:[ebp].temp_base
-    mov ds:[ebp].reg_gdt.d_base,eax
-;
-    sidt fword ptr ds:[ebp].temp_size
-    movzx eax,ds:[ebp].temp_size
-    mov ds:[ebp].reg_idt.d_limit,eax
-    mov eax,ds:[ebp].temp_base
-    mov ds:[ebp].reg_idt.d_base,eax
 ;
     mov ds:[ebp].fault_vect,1Ah
 ;
@@ -214,48 +172,6 @@ crash_tss:
     StartCoreDump
     jc ctFail
 ;    
-    mov eax,cr0
-    mov ds:[ebp].reg_cr0,eax
-;
-    mov eax,cr2
-    mov ds:[ebp].reg_cr2,eax
-;
-    mov eax,cr3
-    mov ds:[ebp].reg_cr3,eax
-;
-    mov eax,cr4
-    mov ds:[ebp].reg_cr4,eax
-;
-    mov eax,dr0
-    mov ds:[ebp].reg_dr0,eax               
-;
-    mov eax,dr1
-    mov ds:[ebp].reg_dr1,eax               
-;
-    mov eax,dr2
-    mov ds:[ebp].reg_dr2,eax               
-;
-    mov eax,dr6
-    mov ds:[ebp].reg_dr6,eax               
-;
-    mov eax,dr7
-    mov ds:[ebp].reg_dr7,eax               
-;
-    mov eax,dr0
-    mov ds:[ebp].reg_dr0,eax               
-;
-    sgdt fword ptr ds:[ebp].temp_size
-    movzx eax,ds:[ebp].temp_size
-    mov ds:[ebp].reg_gdt.d_limit,eax
-    mov eax,ds:[ebp].temp_base
-    mov ds:[ebp].reg_gdt.d_base,eax
-;
-    sidt fword ptr ds:[ebp].temp_size
-    movzx eax,ds:[ebp].temp_size
-    mov ds:[ebp].reg_idt.d_limit,eax
-    mov eax,ds:[ebp].temp_base
-    mov ds:[ebp].reg_idt.d_base,eax
-;    
     mov ds:[ebp].fault_vect,8
 ;
     sldt bx
@@ -342,48 +258,6 @@ nmi_int:
     cli
     StartCoreDump
     jc nmi_ret
-;    
-    mov eax,cr0
-    mov ds:[ebp].reg_cr0,eax
-;
-    mov eax,cr2
-    mov ds:[ebp].reg_cr2,eax
-;
-    mov eax,cr3
-    mov ds:[ebp].reg_cr3,eax
-;
-    mov eax,cr4
-    mov ds:[ebp].reg_cr4,eax
-;
-    mov eax,dr0
-    mov ds:[ebp].reg_dr0,eax               
-;
-    mov eax,dr1
-    mov ds:[ebp].reg_dr1,eax               
-;
-    mov eax,dr2
-    mov ds:[ebp].reg_dr2,eax               
-;
-    mov eax,dr6
-    mov ds:[ebp].reg_dr6,eax               
-;
-    mov eax,dr7
-    mov ds:[ebp].reg_dr7,eax               
-;
-    mov eax,dr0
-    mov ds:[ebp].reg_dr0,eax               
-;
-    sgdt fword ptr ds:[ebp].temp_size
-    movzx eax,ds:[ebp].temp_size
-    mov ds:[ebp].reg_gdt.d_limit,eax
-    mov eax,ds:[ebp].temp_base
-    mov ds:[ebp].reg_gdt.d_base,eax
-;
-    sidt fword ptr ds:[ebp].temp_size
-    movzx eax,ds:[ebp].temp_size
-    mov ds:[ebp].reg_idt.d_limit,eax
-    mov eax,ds:[ebp].temp_base
-    mov ds:[ebp].reg_idt.d_base,eax
 ;
     mov ds:[ebp].fault_vect,19h
 ;

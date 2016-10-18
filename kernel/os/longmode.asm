@@ -4585,109 +4585,83 @@ crash_nmi_int:
     push rsi
     push rdi
     push rbp
+;   
+    mov ax,ds
+    push rax
 ;    
-    mov ax,long_kernel_data_sel
-    mov ss,ax
+    StartCoreDump
+    jc nmi_ret
 ;
-    push fs
-    GetCore
-;
-    mov bx,fs
+    mov bx,ds
     GetSelectorBaseSize
-    pop fs
-;
-    test [edx].ps_flags,PS_FLAG_NMI
-    jnz nmi_ret
+    add edx,ebp
 ;
     mov [edx].cs_fault,19h
-    lock or [edx].ps_flags,PS_FLAG_LONG_MODE OR PS_FLAG_NMI    
-    pop rax
-    mov [edx].cs_rbp,rax
-;    
-    pop rax
-    mov [edx].cs_rdi,rax
-;    
-    pop rax
-    mov [edx].cs_rsi,rax
-;    
-    pop rax
-    mov [edx].cs_rdx,rax
-;    
-    pop rax
-    mov [edx].cs_rcx,rax
-;    
-    pop rax
-    mov [edx].cs_rbx,rax
-;    
-    pop rax
-    mov [edx].cs_rax,rax
-;    
-    pop rax
-    mov [edx].cs_rip,rax
 ;
     pop rax
-    mov [edx].cs_cs,ax
+    mov [edx].reg_ds.d_selector,ax
+;    
+    pop rax
+    mov qword ptr [edx].reg_ebp,rax
+;    
+    pop rax
+    mov qword ptr [edx].reg_edi,rax
+;    
+    pop rax
+    mov qword ptr [edx].reg_esi,rax
+;    
+    pop rax
+    mov qword ptr [edx].reg_edx,rax
+;    
+    pop rax
+    mov qword ptr [edx].reg_ecx,rax
+;    
+    pop rax
+    mov qword ptr [edx].reg_ebx,rax
+;    
+    pop rax
+    mov qword ptr [edx].reg_eax,rax
 ;
     pop rax
-    mov [edx].cs_rflags,rax
+    mov [edx].reg_cs.d_selector,ax
+;    
+    pop rax
+    mov qword ptr [edx].reg_eip,rax
 ;
     pop rax
-    mov [edx].cs_rsp,rax
+    mov qword ptr [edx].reg_eflags,rax
 ;
     pop rax
-    mov [edx].cs_ss,ax
+    mov qword ptr [edx].reg_esp,rax
+;
+    pop rax
+    mov [edx].reg_ss.d_selector,ax
+;    
+    mov [edx].reg_es.d_selector,es
+    mov [edx].reg_fs.d_selector,fs
+    mov [edx].reg_gs.d_selector,gs
 ;            
-    mov [edx].cs_r8,r8
-    mov [edx].cs_r9,r9
-    mov [edx].cs_r10,r10
-    mov [edx].cs_r11,r11
-    mov [edx].cs_r12,r12
-    mov [edx].cs_r13,r13
-    mov [edx].cs_r14,r14
-    mov [edx].cs_r15,r15
-    mov [edx].cs_es,es
-    mov [edx].cs_ds,ds
-    mov [edx].cs_fs,fs
-    mov [edx].cs_gs,gs
-;
-    mov rax,cr0
-    mov [edx].cs_cr0,eax
-;
-    mov rax,cr2
-    mov [edx].cs_cr2,eax
-;
-    mov rax,cr3
-    mov [edx].cs_cr3,eax
-;
-    mov rax,cr4
-    mov [edx].cs_cr4,eax
-;
-    mov rax,dr0
-    mov [edx].cs_dr0,eax
-;
-    mov rax,dr1
-    mov [edx].cs_dr1,eax
-;
-    mov rax,dr2
-    mov [edx].cs_dr2,eax
-;
-    mov rax,dr3
-    mov [edx].cs_dr3,eax
-;
-    mov rax,dr7
-    mov [edx].cs_dr7,eax
+    mov qword ptr [edx].reg_r8,r8
+    mov qword ptr [edx].reg_r9,r9
+    mov qword ptr [edx].reg_r10,r10
+    mov qword ptr [edx].reg_r11,r11
+    mov qword ptr [edx].reg_r12,r12
+    mov qword ptr [edx].reg_r13,r13
+    mov qword ptr [edx].reg_r14,r14
+    mov qword ptr [edx].reg_r15,r15
 ;
     sldt eax
-    mov [edx].cs_ldt,ax
+    mov [edx].reg_ldt.d_selector,ax
 ;
     str eax
-    mov [edx].cs_tr,ax
+    mov [edx].reg_tr.d_selector,ax
 ;
-    sgdt [edx].cs_gdtr
-    sidt [edx].cs_idtr            
-    CrashNmi
+    NotifyCoreDump
 
 nmi_ret:
+    pop rax
+    mov ds,ax
+;    
     pop rbp
     pop rdi
     pop rsi

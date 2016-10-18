@@ -2764,6 +2764,48 @@ notify_core_dump:
 ;    
     mov ds:[ebp].cpu_read_mem,OFFSET read_mem
     mov ds:[ebp].cpu_write_mem,OFFSET write_mem
+;
+    mov eax,cr0
+    mov ds:[ebp].reg_cr0,eax
+;
+    mov eax,cr2
+    mov ds:[ebp].reg_cr2,eax
+;
+    mov eax,cr3
+    mov ds:[ebp].reg_cr3,eax
+;
+    mov eax,cr4
+    mov ds:[ebp].reg_cr4,eax
+;
+    mov eax,dr0
+    mov ds:[ebp].reg_dr0,eax               
+;
+    mov eax,dr1
+    mov ds:[ebp].reg_dr1,eax               
+;
+    mov eax,dr2
+    mov ds:[ebp].reg_dr2,eax               
+;
+    mov eax,dr6
+    mov ds:[ebp].reg_dr6,eax               
+;
+    mov eax,dr7
+    mov ds:[ebp].reg_dr7,eax               
+;
+    mov eax,dr0
+    mov ds:[ebp].reg_dr0,eax               
+;
+    sgdt fword ptr ds:[ebp].temp_size
+    movzx eax,ds:[ebp].temp_size
+    mov ds:[ebp].reg_gdt.d_limit,eax
+    mov eax,ds:[ebp].temp_base
+    mov ds:[ebp].reg_gdt.d_base,eax
+;
+    sidt fword ptr ds:[ebp].temp_size
+    movzx eax,ds:[ebp].temp_size
+    mov ds:[ebp].reg_idt.d_limit,eax
+    mov eax,ds:[ebp].temp_base
+    mov ds:[ebp].reg_idt.d_base,eax
 ;    
     mov ds:[ebp].reg_ldt.d_limit,0
     mov ds:[ebp].reg_ldt.d_base,0
