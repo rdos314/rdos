@@ -2690,7 +2690,8 @@ UpdateSelector      Endp
 ;           DESCRIPTION:    Start core dump
 ;
 ;           RETURNS:        FS          Core
-;                           DS:EBP      Cpu registers
+;                           NC
+;                               DS:EBP  Cpu registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2719,6 +2720,11 @@ start_core_dump Proc far
     push ebx
 ;   
     GetCore
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz scdFail
+;
+    or fs:ps_flags,PS_FLAG_NMI    
+;
     movzx ebx,fs:ps_id
     cmp ebx,16
     jae scdFail
@@ -2726,11 +2732,11 @@ start_core_dump Proc far
     mov ax,SEG data
     mov ds,ax
     mov ebp,dword ptr cs:[4 * ebx].core_tab
+    clc
     jmp scdDone
 
 scdFail:
-    hlt
-    jmp scdFail
+    stc
 
 scdDone:
     pop ebx

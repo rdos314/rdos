@@ -70,7 +70,7 @@ crash_gate_int:
     push gs
 ;
     StartCoreDump
-    or fs:ps_flags,PS_FLAG_NMI        
+    jc cgiFail
 ;    
     mov eax,cr0
     mov ds:[ebp].reg_cr0,eax
@@ -170,6 +170,9 @@ crash_gate_int:
     mov ds:[ebp].reg_esp,esp
     NotifyCoreDump
 
+cgiFail:
+    jmp cgiFail
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -209,7 +212,7 @@ crash_tss:
     mov es,bx
 ;    
     StartCoreDump
-    or fs:ps_flags,PS_FLAG_NMI        
+    jc ctFail
 ;    
     mov eax,cr0
     mov ds:[ebp].reg_cr0,eax
@@ -310,6 +313,9 @@ crash_tss:
     mov ds:[ebp].reg_eflags,eax
     NotifyCoreDump
 
+ctFail:
+    jmp ctFail
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -335,10 +341,7 @@ nmi_int:
 ;
     cli
     StartCoreDump
-    test fs:ps_flags,PS_FLAG_NMI
-    jnz nmi_ret
-;
-    or fs:ps_flags,PS_FLAG_NMI    
+    jc nmi_ret
 ;    
     mov eax,cr0
     mov ds:[ebp].reg_cr0,eax
