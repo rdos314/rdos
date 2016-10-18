@@ -1962,14 +1962,6 @@ enter_first:
     mov esi,OFFSET nmi_int
     SetupIntGate
 ;
-    mov ax,setup_long_crash_nmi_nr
-    IsValidOsGate
-    jc long_nmi_ok    
-;
-    mov al,2
-    SetupLongCrashNmi
-
-long_nmi_ok:
     pop esi
     pop bx
     pop es

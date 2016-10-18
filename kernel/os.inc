@@ -1767,6 +1767,11 @@ SetupNmiCoreDump       MACRO
     OsGate setup_nmi_core_dump_nr
                     ENDM
 
+; IN  AL        IRQ #
+SetupLongNmiCoreDump   MACRO
+    OsGate setup_long_nmi_core_dump_nr
+                    ENDM
+
 ;  OUT DS:EBP   Address of core-dump
 StartCoreDump       MACRO
     OsGate start_core_dump_nr
@@ -2105,11 +2110,6 @@ SetupLongHpetInt   MACRO
 ; IN  AL        IRQ #
 SetupLongCrashGate   MACRO
     OsGate setup_long_crash_gate_nr
-                    ENDM
-
-; IN  AL        IRQ #
-SetupLongCrashNmi   MACRO
-    OsGate setup_long_crash_nmi_nr
                     ENDM
 
 ;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;

@@ -36,6 +36,7 @@ include protseg.def
 include gate.def
 include system.def
 include elf.def
+include ..\debug\kdebug.inc
 
 PAGE_TABLE_LINEAR   equ 0FFFFFF8000000000h
 DIR_TABLE_LINEAR    equ 0FFFFFFFFC0000000h
@@ -426,24 +427,29 @@ setup_long_crash_gate Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           SetupLongCrashNmi
+;   NAME:           SetupLongNmiCoreDump
 ;
-;   DESCRIPTION:    Setup long-mode crash NMI handler
-;
-;   PARAMETERS:     AL      Interrupt #
-;                   BL      DPL
+;   DESCRIPTION:    Setup long-mode core dump NMI handler
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-setup_long_crash_nmi_name   DB 'Setup Long Crash Nmi', 0
+setup_long_nmi_core_dump_name   DB 'Setup Long Core Dump Nmi', 0
     
-setup_long_crash_nmi  proc far
+setup_long_nmi_core_dump  proc far
+    push eax
+    push ebx
     push esi
+;    
+    mov al,2
+    xor bl,bl
     mov esi,OFFSET crash_nmi_int
     SetupLongIntGate
+;
     pop esi
+    pop ebx
+    pop eax
     ret
-setup_long_crash_nmi Endp
+setup_long_nmi_core_dump Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1597,10 +1603,10 @@ init    proc far
     mov ax,setup_long_crash_gate_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET setup_long_crash_nmi
-    mov edi,OFFSET setup_long_crash_nmi_name
+    mov esi,OFFSET setup_long_nmi_core_dump
+    mov edi,OFFSET setup_long_nmi_core_dump_name
     xor cl,cl
-    mov ax,setup_long_crash_nmi_nr
+    mov ax,setup_long_nmi_core_dump_nr
     RegisterOsGate
 ;
     mov esi,OFFSET switch_to_long_mode
