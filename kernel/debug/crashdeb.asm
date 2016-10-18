@@ -57,9 +57,6 @@ cpu14 cpu_struc <>
 cpu15 cpu_struc <>
 cpu16 cpu_struc <>
 
-temp_size     DW ?
-temp_base     DD ?
-
 map_linear   DD ?
 map_sel      DW ?
 map_spinlock DW ?
@@ -1550,7 +1547,7 @@ WriteCore   PROC near
     mov esi,OFFSET proc_tab
     call ShowCodeAsciiz
 ;
-    mov ax,gs:ps_id
+    mov ax,fs:ps_id
     call WriteHexWord
 ;
     mov al,' '
@@ -1587,7 +1584,7 @@ WriteThread   PROC near
     push ds
     push esi
 ;    
-    mov ax,gs:ps_curr_thread
+    mov ax,fs:ps_curr_thread
     or ax,ax
     jz wtNoThread
 ;
@@ -2032,7 +2029,7 @@ WriteFault    Endp
 ;           DESCRIPTION:    Write processor flag registers
 ;
 ;           PARAMETERS:     DS:EBP      Registers
-;                           GS          Core sel
+;                           FS          Core sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2047,20 +2044,20 @@ WriteProcFlags     PROC near
     mov esi,OFFSET nest_text
     call ShowCodeAsciiz
 ;    
-    mov ax,gs:ps_nesting
+    mov ax,fs:ps_nesting
     call WriteHexWord
 ;
     mov al,' '
     call ShowChar
 ;
-    test gs:ps_flags,PS_FLAG_PREEMPT
+    test fs:ps_flags,PS_FLAG_PREEMPT
     jz wpfNoPreempt
 ;
     mov esi, OFFSET flag_preempt
     call ShowCodeAsciiz
 
 wpfNoPreempt:    
-    test gs:ps_flags,PS_FLAG_PRIO_CHANGE
+    test fs:ps_flags,PS_FLAG_PRIO_CHANGE
     jz wpfNoPrio
 ;
     mov esi, OFFSET flag_prio
@@ -2079,7 +2076,7 @@ WriteProcFlags     ENDP
 ;       DESCRIPTION:    Write a data row
 ;
 ;       PARAMETERS:     DS:EBP      Cpu registers
-;                       GS          Core regs
+;                       FS          Core regs
 ;                       BX:EDX      Address
 ;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2206,7 +2203,7 @@ WriteDataRow    Endp
 ;       DESCRIPTION:    Write instruction
 ;
 ;       PARAMETERS:     DS:EBP      Cpu registers
-;                       GS          Core regs
+;                       FS          Core regs
 ;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2482,7 +2479,6 @@ WriteCpuReg64     Endp
 ;
 ;           PARAMETERS:     DX:ESI      Sel:offset
 ;                           DS:EBP      Cpu
-;                           GS          Core sel
 ;
 ;           RETURNS:        NC  AL  Value
 ;
@@ -2522,7 +2518,6 @@ read_mem    Endp
 ;           DESCRIPTION:    Write memory in process
 ;
 ;           PARAMETERS:     DX:ESI      Sel:offset
-;                           GS          Thread
 ;                           DS:EBP      Cpu
 ;                           AL          Value
 ;
@@ -2565,68 +2560,127 @@ write_mem    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ConvertSelector
+;           NAME:           SaveBasics
 ;
-;           DESCRIPTION:    Convert selector to descriptor
+;           DESCRIPTION:    Save basic information
 ;
-;           PARAMETERS:     DS:EBP      Cpu
-;                           DS:ESI      Descriptor
-;                           BX          Selector 
-;                           
+;           PARAMETERS:     DS:EBP      Cpu data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ConvertSelector      Proc near
-    mov ds:[esi].d_selector,bx
+SaveBasics      Proc near
+    pushad
+;    
+    mov ds:[ebp].cpu_read_mem,OFFSET read_mem
+    mov ds:[ebp].cpu_write_mem,OFFSET write_mem
+;    
+    mov eax,cr0
+    mov ds:[ebp].reg_cr0,eax
+;
+    mov eax,cr2
+    mov ds:[ebp].reg_cr2,eax
+;
+    mov eax,cr4
+    mov ds:[ebp].reg_cr4,eax
+;
+    mov eax,dr0
+    mov ds:[ebp].reg_dr0,eax               
+;
+    mov eax,dr1
+    mov ds:[ebp].reg_dr1,eax               
+;
+    mov eax,dr2
+    mov ds:[ebp].reg_dr2,eax               
+;
+    mov eax,dr6
+    mov ds:[ebp].reg_dr6,eax               
+;
+    mov eax,dr7
+    mov ds:[ebp].reg_dr7,eax               
+;
+    mov eax,dr0
+    mov ds:[ebp].reg_dr0,eax               
+;
+    sgdt fword ptr ds:temp_size
+    movzx eax,ds:temp_size
+    mov ds:[ebp].reg_gdt.d_limit,eax
+    mov eax,ds:temp_base
+    mov ds:[ebp].reg_gdt.d_base,eax
+;
+    sidt fword ptr ds:temp_size
+    movzx eax,ds:temp_size
+    mov ds:[ebp].reg_idt.d_limit,eax
+    mov eax,ds:temp_base
+    mov ds:[ebp].reg_idt.d_base,eax
+;    
+;
+    popad    
+    ret
+SaveBasics      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UpdateSelector
+;
+;           DESCRIPTION:    Update selector to descriptor
+;
+;           PARAMETERS:     DS:EBP      Cpu
+;                           DS:ESI      Descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateSelector      Proc near
+    mov bx,ds:[esi].d_selector
 ;
     call GetSelectorBaseSizeType
-    jc csFail
+    jc usFail
 ;
     mov ds:[esi].d_limit,ecx
     mov ds:[esi].d_base,edx
 ;
     xor dx,dx
     test ah,40h
-    jz csSizeOk
+    jz usSizeOk
 ;
     or dx,ACCESS_32    
 
-csSizeOk:
+usSizeOk:
     test al,8
-    jz csDataSel
+    jz usDataSel
 
-csCodeSel:
+usCodeSel:
     test ah,20h
-    jz csLongOK
+    jz usLongOK
 ;
     or dx,ACCESS_64
 
-csLongOk:
+usLongOk:
     test al,2
-    jz csSaveAccess
+    jz usSaveAccess
 ;
     or dx,ACCESS_READ
-    jmp csSaveAccess
+    jmp usSaveAccess
 
-csDataSel:    
+usDataSel:    
     or dx,ACCESS_READ
     test al,2
-    jz csSaveAccess
+    jz usSaveAccess
 ;
     or dx,ACCESS_WRITE    
 
-csSaveAccess:
+usSaveAccess:
     mov ds:[esi].d_access,dx
-    jmp csDone
+    jmp usDone
 
-csFail:
+usFail:
     mov ds:[esi].d_limit,0
     mov ds:[esi].d_base,0
     mov ds:[esi].d_access,0
 
-csDone:        
+usDone:        
     ret
-ConvertSelector      Endp
+UpdateSelector      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2687,466 +2741,67 @@ start_core_dump Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SaveBasics
+;           NAME:           NotifyCoreDump
 ;
-;           DESCRIPTION:    Save basic information
+;           DESCRIPTION:    Notify core dump
 ;
-;           PARAMETERS:     DS:EBP      Cpu data
+;           PARAMETERS:     DS:EBP      Cpu registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SaveBasics      Proc near
-    pushad
+notify_core_dump_name    DB 'Notify Core Dump', 0
+    
+notify_core_dump:
+    call AcquireMapSpinlock
 ;    
     mov ds:[ebp].cpu_read_mem,OFFSET read_mem
     mov ds:[ebp].cpu_write_mem,OFFSET write_mem
 ;    
-    mov eax,cr0
-    mov ds:[ebp].reg_cr0,eax
-;
-    mov eax,cr2
-    mov ds:[ebp].reg_cr2,eax
-;
-    mov eax,cr4
-    mov ds:[ebp].reg_cr4,eax
-;
-    mov eax,dr0
-    mov ds:[ebp].reg_dr0,eax               
-;
-    mov eax,dr1
-    mov ds:[ebp].reg_dr1,eax               
-;
-    mov eax,dr2
-    mov ds:[ebp].reg_dr2,eax               
-;
-    mov eax,dr6
-    mov ds:[ebp].reg_dr6,eax               
-;
-    mov eax,dr7
-    mov ds:[ebp].reg_dr7,eax               
-;
-    mov eax,dr0
-    mov ds:[ebp].reg_dr0,eax               
-;
-    sgdt fword ptr ds:temp_size
-    movzx eax,ds:temp_size
-    mov ds:[ebp].reg_gdt.d_limit,eax
-    mov eax,ds:temp_base
-    mov ds:[ebp].reg_gdt.d_base,eax
-;
-    sidt fword ptr ds:temp_size
-    movzx eax,ds:temp_size
-    mov ds:[ebp].reg_idt.d_limit,eax
-    mov eax,ds:temp_base
-    mov ds:[ebp].reg_idt.d_base,eax
-;    
-    mov bx,flat_sel
-    lea esi,[ebp].reg_usel
-    call ConvertSelector
-;
-    popad    
-    ret
-SaveBasics      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           NmiInt
-;
-;           DESCRIPTION:    Crash from NMI
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-nmi_int:
-    cli
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
-    push ds
-    push es
-    push fs
-    push gs
-;
-    cli
-    StartCoreDump
-    test fs:ps_flags,PS_FLAG_NMI
-    jnz nmi_ret
-;
-    or fs:ps_flags,PS_FLAG_NMI    
-;
-    call AcquireMapSpinlock
-    mov eax,cr3
-    mov ds:[ebp].reg_cr3,eax
-;    
-    call SaveBasics
-    mov ds:[ebp].fault_vect,19h
-;
     mov ds:[ebp].reg_ldt.d_limit,0
     mov ds:[ebp].reg_ldt.d_base,0
-    sldt bx
-    mov ds:[ebp].reg_ldt.d_selector,bx
+    mov bx,ds:[ebp].reg_ldt.d_selector
+;
     call GetSelectorBaseSizeType
-    jc cnLdtDone
+    jc ncdLdtDone
 ;
     mov ds:[ebp].reg_ldt.d_limit,ecx
     mov ds:[ebp].reg_ldt.d_base,edx
 
-cnLdtDone:    
+ncdLdtDone:    
     mov ds:[ebp].reg_tr.d_limit,0
     mov ds:[ebp].reg_tr.d_base,0
-    str bx
-    mov ds:[ebp].reg_tr.d_selector,bx
+    mov bx,ds:[ebp].reg_tr.d_selector
     call GetSelectorBaseSizeType
-    jc cnTrDone
+    jc ncdTrDone
 ;
     mov ds:[ebp].reg_tr.d_limit,ecx
     mov ds:[ebp].reg_tr.d_base,edx
 
-cnTrDone:    
-    pop ebx
-    lea esi,[ebp].reg_gs
-    call ConvertSelector
-;
-    pop ebx
-    lea esi,[ebp].reg_fs
-    call ConvertSelector
-;
-    pop ebx
+ncdTrDone:    
     lea esi,[ebp].reg_es
-    call ConvertSelector
+    call UpdateSelector
 ;
-    pop ebx
-    lea esi,[ebp].reg_ds
-    call ConvertSelector
-;
-    pop eax
-    mov ds:[ebp].reg_ebp,eax
-;    
-    pop eax
-    mov ds:[ebp].reg_edi,eax
-;    
-    pop eax
-    mov ds:[ebp].reg_esi,eax
-;    
-    pop eax
-    mov ds:[ebp].reg_edx,eax
-;    
-    pop eax
-    mov ds:[ebp].reg_ecx,eax
-;    
-    pop eax
-    mov ds:[ebp].reg_ebx,eax
-;    
-    pop eax
-    mov ds:[ebp].reg_eax,eax
-;    
-    pop eax
-    mov ds:[ebp].reg_eip,eax
-;
-    pop ebx
     lea esi,[ebp].reg_cs
-    call ConvertSelector
-;
-    pop eax
-    mov ds:[ebp].reg_eflags,eax
-;    
-    mov bx,ss
-    lea esi,[ebp].reg_ss
-    call ConvertSelector
-;            
-    mov ds:[ebp].reg_esp,esp
-    call ReleaseMapSpinlock
-;          
-    mov ax,fs
-    mov gs,ax
-    call WriteCpuReg32
-
-nmiloop:
-    jmp nmiloop    
-
-nmi_ret:    
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    iretd
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupCrash
-;
-;           DESCRIPTION:    Setup crash environment
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupCrash      Proc near
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov al,2
-    xor bl,bl
-    mov esi,OFFSET nmi_int
-    SetupIntGate
-    ret
-SetupCrash      Endp
-            
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CrashGateInt
-;
-;           DESCRIPTION:    Crash with a gate (from interrupt)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-crash_gate_int:
-    cli
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
-    push ds
-    push es
-    push fs
-    push gs
-;
-    StartCoreDump
-    or fs:ps_flags,PS_FLAG_NMI        
-;
-    call AcquireMapSpinlock
-    mov eax,cr3
-    mov ds:[ebp].reg_cr3,eax
-;    
-    call SaveBasics
-    mov ds:[ebp].fault_vect,1Ah
-;
-    mov ds:[ebp].reg_ldt.d_limit,0
-    mov ds:[ebp].reg_ldt.d_base,0
-    sldt bx
-    mov ds:[ebp].reg_ldt.d_selector,bx
-    call GetSelectorBaseSizeType
-    jc cgLdtDone
-;
-    mov ds:[ebp].reg_ldt.d_limit,ecx
-    mov ds:[ebp].reg_ldt.d_base,edx
-
-cgLdtDone:    
-    mov ds:[ebp].reg_tr.d_limit,0
-    mov ds:[ebp].reg_tr.d_base,0
-    str bx
-    mov ds:[ebp].reg_tr.d_selector,bx
-    call GetSelectorBaseSizeType
-    jc cgTrDone
-;
-    mov ds:[ebp].reg_tr.d_limit,ecx
-    mov ds:[ebp].reg_tr.d_base,edx
-
-cgTrDone:    
-    pop ebx
-    lea esi,[ebp].reg_gs
-    call ConvertSelector
-;
-    pop ebx
-    lea esi,[ebp].reg_fs
-    call ConvertSelector
-;
-    pop ebx
-    lea esi,[ebp].reg_es
-    call ConvertSelector
-;
-    pop ebx
-    lea esi,[ebp].reg_ds
-    call ConvertSelector
-;
-    pop eax
-    mov ds:[ebp].reg_ebp,eax
-;    
-    pop eax
-    mov ds:[ebp].reg_edi,eax
-;    
-    pop eax
-    mov ds:[ebp].reg_esi,eax
-;    
-    pop eax
-    mov ds:[ebp].reg_edx,eax
-;    
-    pop eax
-    mov ds:[ebp].reg_ecx,eax
-;    
-    pop eax
-    mov ds:[ebp].reg_ebx,eax
-;    
-    pop eax
-    mov ds:[ebp].reg_eax,eax
-;    
-    pop eax
-    mov ds:[ebp].reg_eip,eax
-;
-    pop ebx
-    lea esi,[ebp].reg_cs
-    call ConvertSelector
-;
-    pop eax
-    mov ds:[ebp].reg_eflags,eax
-;    
-    mov bx,ss
-    lea esi,[ebp].reg_ss
-    call ConvertSelector
-;            
-    mov ds:[ebp].reg_esp,esp
-    call ReleaseMapSpinlock
-;          
-    mov ax,fs
-    mov gs,ax
-    call WriteCpuReg32
-
-gtloop:
-    jmp gtloop    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CrashTss
-;
-;           DESCRIPTION:    Crash with a TSS
-;
-;           PARAMETERS:     DS      Readable TSS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-crash_tss_name    DB 'Crash Tss', 0
-    
-crash_tss:
-    cli
-    mov ax,double_tss_data_sel
-    mov ds,ax
-    mov bx,word ptr ds:tss32_back_link
-    push bx
-;
-    mov ax,gdt_sel
-    mov ds,ax
-    and bx,0FFF8h
-    xor ecx,ecx
-    mov cl,[bx+6]
-    and cl,0Fh
-    shl ecx,16
-    mov cx,[bx]
-    inc ecx
-    mov edx,[bx+2]
-    rol edx,8
-    mov dl,[bx+7]
-    ror edx,8
-;       
-    AllocateGdt
-    CreateDataSelector16
-    mov es,bx
-;    
-    StartCoreDump
-    or fs:ps_flags,PS_FLAG_NMI        
-;
-    call AcquireMapSpinlock
-    mov eax,cr3
-    mov ds:[ebp].reg_cr3,eax
-;    
-    call SaveBasics
-    mov ds:[ebp].fault_vect,8
-;
-    mov ds:[ebp].reg_ldt.d_limit,0
-    mov ds:[ebp].reg_ldt.d_base,0
-    mov bx,es:tss32_ldt
-
-    mov ds:[ebp].reg_ldt.d_selector,bx
-    call GetSelectorBaseSizeType
-    jc ctLdtDone
-;
-    mov ds:[ebp].reg_ldt.d_limit,ecx
-    mov ds:[ebp].reg_ldt.d_base,edx
-
-ctLdtDone:    
-    mov ds:[ebp].reg_tr.d_limit,0
-    mov ds:[ebp].reg_tr.d_base,0
-;    
-    pop bx
-    mov ds:[ebp].reg_tr.d_selector,bx
-    call GetSelectorBaseSizeType
-    jc ctTrDone
-;
-    mov ds:[ebp].reg_tr.d_limit,ecx
-    mov ds:[ebp].reg_tr.d_base,edx
-
-ctTrDone:    
-    mov eax,es:tss32_eax
-    mov ds:[ebp].reg_eax,eax
-;    
-    mov eax,es:tss32_ecx
-    mov ds:[ebp].reg_ecx,eax
-;
-    mov eax,es:tss32_edx
-    mov ds:[ebp].reg_edx,eax
-;
-    mov eax,es:tss32_ebx
-    mov ds:[ebp].reg_ebx,eax
-;
-    mov eax,es:tss32_esp    
-    mov ds:[ebp].reg_esp,eax
-;
-    mov eax,es:tss32_ebp    
-    mov ds:[ebp].reg_ebp,eax
-;
-    mov eax,es:tss32_eip    
-    mov ds:[ebp].reg_eip,eax
-;    
-    mov eax,es:tss32_esi
-    mov ds:[ebp].reg_esi,eax
-;
-    mov eax,es:tss32_edi    
-    mov ds:[ebp].reg_edi,eax
-;    
-    mov bx,es:tss32_es
-    lea esi,[ebp].reg_es
-    call ConvertSelector
-;
-    mov bx,es:tss32_cs    
-    lea esi,[ebp].reg_cs
-    call ConvertSelector
+    call UpdateSelector
      
-    mov bx,es:tss32_ss
     lea esi,[ebp].reg_ss
-    call ConvertSelector
+    call UpdateSelector
 ;
-    mov bx,es:tss32_ds    
     lea esi,[ebp].reg_ds
-    call ConvertSelector
+    call UpdateSelector
 ;
-    mov bx,es:tss32_fs    
     lea esi,[ebp].reg_fs
-    call ConvertSelector
+    call UpdateSelector
 ;
-    mov bx,es:tss32_gs    
     lea esi,[ebp].reg_gs
-    call ConvertSelector
+    call UpdateSelector
 ;
-    mov eax,es:tss32_eflags
-    mov ds:[ebp].reg_eflags,eax
+    mov ds:[ebp].reg_usel.d_selector,flat_sel
+    lea esi,[ebp].reg_usel
+    call UpdateSelector
+;
     call ReleaseMapSpinlock
 ;    
-    mov ax,fs
-    mov gs,ax
     call WriteCpuReg32
 
 cllloop:
@@ -3174,6 +2829,7 @@ test_pr:
     EnableFocus
 ;
     int 3
+    CrashGate
     mov esp,0
     push eax
     int 3
@@ -3240,11 +2896,6 @@ init_crash_driver    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    xor bl,bl
-    mov al,84h
-    mov esi,OFFSET crash_gate_int
-    SetupIntGate
 ;    
     mov esi,OFFSET start_core_dump
     mov edi,OFFSET start_core_dump_name
@@ -3252,10 +2903,10 @@ init_crash_driver    Proc near
     mov ax,start_core_dump_nr
     RegisterOsGate
 ;    
-    mov esi,OFFSET crash_tss
-    mov edi,OFFSET crash_tss_name
+    mov esi,OFFSET notify_core_dump
+    mov edi,OFFSET notify_core_dump_name
     xor cl,cl
-    mov ax,crash_tss_nr
+    mov ax,notify_core_dump_nr
     RegisterOsGate
     ret
 init_crash_driver       Endp

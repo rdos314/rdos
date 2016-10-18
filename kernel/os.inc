@@ -1763,9 +1763,18 @@ InitVideo       MACRO
     OsGate init_video_nr
                     ENDM
 
+SetupNmiCoreDump       MACRO
+    OsGate setup_nmi_core_dump_nr
+                    ENDM
+
 ;  OUT DS:EBP   Address of core-dump
 StartCoreDump       MACRO
     OsGate start_core_dump_nr
+                    ENDM
+
+;  IN  DS:EBP   Address of core-dump
+NotifyCoreDump       MACRO
+    OsGate notify_core_dump_nr
                     ENDM
 
 ; OUT FS       Processor core

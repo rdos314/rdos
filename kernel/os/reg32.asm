@@ -35,6 +35,7 @@ INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE system.inc
 INCLUDE proc.inc
+include ..\debug\kdebug.inc
 
 IFDEF __WASM__
     .686p
@@ -44,6 +45,442 @@ ELSE
 ENDIF
 
 code    SEGMENT byte use16 public 'CODE'
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CrashGateInt
+;
+;           DESCRIPTION:    Crash with a gate (from interrupt)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+crash_gate_int:
+    cli
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    push ds
+    push es
+    push fs
+    push gs
+;
+    StartCoreDump
+    or fs:ps_flags,PS_FLAG_NMI        
+;    
+    mov eax,cr0
+    mov ds:[ebp].reg_cr0,eax
+;
+    mov eax,cr2
+    mov ds:[ebp].reg_cr2,eax
+;
+    mov eax,cr3
+    mov ds:[ebp].reg_cr3,eax
+;
+    mov eax,cr4
+    mov ds:[ebp].reg_cr4,eax
+;
+    mov eax,dr0
+    mov ds:[ebp].reg_dr0,eax               
+;
+    mov eax,dr1
+    mov ds:[ebp].reg_dr1,eax               
+;
+    mov eax,dr2
+    mov ds:[ebp].reg_dr2,eax               
+;
+    mov eax,dr6
+    mov ds:[ebp].reg_dr6,eax               
+;
+    mov eax,dr7
+    mov ds:[ebp].reg_dr7,eax               
+;
+    mov eax,dr0
+    mov ds:[ebp].reg_dr0,eax               
+;
+    sgdt fword ptr ds:[ebp].temp_size
+    movzx eax,ds:[ebp].temp_size
+    mov ds:[ebp].reg_gdt.d_limit,eax
+    mov eax,ds:[ebp].temp_base
+    mov ds:[ebp].reg_gdt.d_base,eax
+;
+    sidt fword ptr ds:[ebp].temp_size
+    movzx eax,ds:[ebp].temp_size
+    mov ds:[ebp].reg_idt.d_limit,eax
+    mov eax,ds:[ebp].temp_base
+    mov ds:[ebp].reg_idt.d_base,eax
+;
+    mov ds:[ebp].fault_vect,1Ah
+;
+    sldt bx
+    mov ds:[ebp].reg_ldt.d_selector,bx
+;    
+    str bx
+    mov ds:[ebp].reg_tr.d_selector,bx
+;
+    pop bx
+    mov ds:[ebp].reg_gs.d_selector,bx
+;
+    pop bx
+    mov ds:[ebp].reg_fs.d_selector,bx
+;
+    pop bx
+    mov ds:[ebp].reg_es.d_selector,bx
+;
+    pop bx
+    mov ds:[ebp].reg_ds.d_selector,bx
+;
+    pop eax
+    mov ds:[ebp].reg_ebp,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_edi,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_esi,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_edx,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_ecx,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_ebx,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_eax,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_eip,eax
+;
+    pop ebx
+    mov ds:[ebp].reg_cs.d_selector,bx
+;
+    pop eax
+    mov ds:[ebp].reg_eflags,eax
+;    
+    mov bx,ss
+    mov ds:[ebp].reg_ss.d_selector,bx
+;            
+    mov ds:[ebp].reg_esp,esp
+    NotifyCoreDump
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CrashTss
+;
+;           DESCRIPTION:    Crash with a TSS
+;
+;           PARAMETERS:     DS      Readable TSS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+crash_tss_name    DB 'Crash Tss', 0
+    
+crash_tss:
+    cli
+    mov ax,double_tss_data_sel
+    mov ds,ax
+    mov bx,word ptr ds:tss32_back_link
+    push bx
+;
+    mov ax,gdt_sel
+    mov ds,ax
+    and bx,0FFF8h
+    xor ecx,ecx
+    mov cl,[bx+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,[bx]
+    inc ecx
+    mov edx,[bx+2]
+    rol edx,8
+    mov dl,[bx+7]
+    ror edx,8
+;       
+    AllocateGdt
+    CreateDataSelector16
+    mov es,bx
+;    
+    StartCoreDump
+    or fs:ps_flags,PS_FLAG_NMI        
+;    
+    mov eax,cr0
+    mov ds:[ebp].reg_cr0,eax
+;
+    mov eax,cr2
+    mov ds:[ebp].reg_cr2,eax
+;
+    mov eax,cr3
+    mov ds:[ebp].reg_cr3,eax
+;
+    mov eax,cr4
+    mov ds:[ebp].reg_cr4,eax
+;
+    mov eax,dr0
+    mov ds:[ebp].reg_dr0,eax               
+;
+    mov eax,dr1
+    mov ds:[ebp].reg_dr1,eax               
+;
+    mov eax,dr2
+    mov ds:[ebp].reg_dr2,eax               
+;
+    mov eax,dr6
+    mov ds:[ebp].reg_dr6,eax               
+;
+    mov eax,dr7
+    mov ds:[ebp].reg_dr7,eax               
+;
+    mov eax,dr0
+    mov ds:[ebp].reg_dr0,eax               
+;
+    sgdt fword ptr ds:[ebp].temp_size
+    movzx eax,ds:[ebp].temp_size
+    mov ds:[ebp].reg_gdt.d_limit,eax
+    mov eax,ds:[ebp].temp_base
+    mov ds:[ebp].reg_gdt.d_base,eax
+;
+    sidt fword ptr ds:[ebp].temp_size
+    movzx eax,ds:[ebp].temp_size
+    mov ds:[ebp].reg_idt.d_limit,eax
+    mov eax,ds:[ebp].temp_base
+    mov ds:[ebp].reg_idt.d_base,eax
+;    
+    mov ds:[ebp].fault_vect,8
+;
+    sldt bx
+    mov ds:[ebp].reg_ldt.d_selector,bx
+;    
+    str bx
+    mov ds:[ebp].reg_tr.d_selector,bx
+;
+    mov eax,es:tss32_eax
+    mov ds:[ebp].reg_eax,eax
+;    
+    mov eax,es:tss32_ecx
+    mov ds:[ebp].reg_ecx,eax
+;
+    mov eax,es:tss32_edx
+    mov ds:[ebp].reg_edx,eax
+;
+    mov eax,es:tss32_ebx
+    mov ds:[ebp].reg_ebx,eax
+;
+    mov eax,es:tss32_esp    
+    mov ds:[ebp].reg_esp,eax
+;
+    mov eax,es:tss32_ebp    
+    mov ds:[ebp].reg_ebp,eax
+;
+    mov eax,es:tss32_eip    
+    mov ds:[ebp].reg_eip,eax
+;    
+    mov eax,es:tss32_esi
+    mov ds:[ebp].reg_esi,eax
+;
+    mov eax,es:tss32_edi    
+    mov ds:[ebp].reg_edi,eax
+;    
+    mov bx,es:tss32_es
+    mov ds:[ebp].reg_es.d_selector,bx
+;
+    mov bx,es:tss32_cs    
+    mov ds:[ebp].reg_cs.d_selector,bx
+     
+    mov bx,es:tss32_ss
+    mov ds:[ebp].reg_ss.d_selector,bx
+;
+    mov bx,es:tss32_ds    
+    mov ds:[ebp].reg_ds.d_selector,bx
+;
+    mov bx,es:tss32_fs    
+    mov ds:[ebp].reg_fs.d_selector,bx
+;
+    mov bx,es:tss32_gs    
+    mov ds:[ebp].reg_gs.d_selector,bx
+;
+    mov eax,es:tss32_eflags
+    mov ds:[ebp].reg_eflags,eax
+    NotifyCoreDump
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NmiInt
+;
+;           DESCRIPTION:    Crash from NMI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+nmi_int:
+    cli
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    push ds
+    push es
+    push fs
+    push gs
+;
+    cli
+    StartCoreDump
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz nmi_ret
+;
+    or fs:ps_flags,PS_FLAG_NMI    
+;    
+    mov eax,cr0
+    mov ds:[ebp].reg_cr0,eax
+;
+    mov eax,cr2
+    mov ds:[ebp].reg_cr2,eax
+;
+    mov eax,cr3
+    mov ds:[ebp].reg_cr3,eax
+;
+    mov eax,cr4
+    mov ds:[ebp].reg_cr4,eax
+;
+    mov eax,dr0
+    mov ds:[ebp].reg_dr0,eax               
+;
+    mov eax,dr1
+    mov ds:[ebp].reg_dr1,eax               
+;
+    mov eax,dr2
+    mov ds:[ebp].reg_dr2,eax               
+;
+    mov eax,dr6
+    mov ds:[ebp].reg_dr6,eax               
+;
+    mov eax,dr7
+    mov ds:[ebp].reg_dr7,eax               
+;
+    mov eax,dr0
+    mov ds:[ebp].reg_dr0,eax               
+;
+    sgdt fword ptr ds:[ebp].temp_size
+    movzx eax,ds:[ebp].temp_size
+    mov ds:[ebp].reg_gdt.d_limit,eax
+    mov eax,ds:[ebp].temp_base
+    mov ds:[ebp].reg_gdt.d_base,eax
+;
+    sidt fword ptr ds:[ebp].temp_size
+    movzx eax,ds:[ebp].temp_size
+    mov ds:[ebp].reg_idt.d_limit,eax
+    mov eax,ds:[ebp].temp_base
+    mov ds:[ebp].reg_idt.d_base,eax
+;
+    mov ds:[ebp].fault_vect,19h
+;
+    sldt bx
+    mov ds:[ebp].reg_ldt.d_selector,bx
+;    
+    str bx
+    mov ds:[ebp].reg_tr.d_selector,bx
+;
+    pop bx
+    mov ds:[ebp].reg_gs.d_selector,bx
+;
+    pop bx
+    mov ds:[ebp].reg_fs.d_selector,bx
+;
+    pop bx
+    mov ds:[ebp].reg_es.d_selector,bx
+;
+    pop bx
+    mov ds:[ebp].reg_ds.d_selector,bx
+;
+    pop eax
+    mov ds:[ebp].reg_ebp,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_edi,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_esi,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_edx,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_ecx,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_ebx,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_eax,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_eip,eax
+;
+    pop ebx
+    mov ds:[ebp].reg_cs.d_selector,bx
+;
+    pop eax
+    mov ds:[ebp].reg_eflags,eax
+;    
+    mov bx,ss
+    mov ds:[ebp].reg_ss.d_selector,bx
+;            
+    mov ds:[ebp].reg_esp,esp
+    NotifyCoreDump
+
+nmi_ret:    
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupNmiCoreDump
+;
+;           DESCRIPTION:    Setup NMI core dump
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_nmi_core_dump_name    DB 'Setup NMI Core Dump', 0
+
+setup_nmi_core_dump Proc far
+    push ds
+    push es
+    pushad
+;    
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov al,2
+    xor bl,bl
+    mov esi,OFFSET nmi_int
+    SetupIntGate
+;
+    popad
+    pop es
+    pop ds    
+    retf32
+setup_nmi_core_dump Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1877,6 +2314,29 @@ init_reg32       PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    xor bl,bl
+    mov al,84h
+    mov esi,OFFSET crash_gate_int
+    SetupIntGate
+;    
+    mov esi,OFFSET crash_tss
+    mov edi,OFFSET crash_tss_name
+    xor cl,cl
+    mov ax,crash_tss_nr
+    RegisterOsGate
+;    
+    mov esi,OFFSET setup_nmi_core_dump
+    mov edi,OFFSET setup_nmi_core_dump_name
+    xor cl,cl
+    mov ax,setup_nmi_core_dump_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET debug_exception
+    mov edi,OFFSET debug_exception_name
+    xor cl,cl
+    mov ax,debug_exception_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET debug_exception
     mov edi,OFFSET debug_exception_name

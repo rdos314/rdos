@@ -181,6 +181,9 @@ org_eip			DD ?,?
 org_esp			DD ?,?
 org_stack		DD ?
 
+temp_size       DW ?
+temp_base       DD ?
+
 code_start      DD ?,?
 code_cache      DB 32 DUP(?)
 
