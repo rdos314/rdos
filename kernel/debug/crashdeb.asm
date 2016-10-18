@@ -2689,8 +2689,7 @@ UpdateSelector      Endp
 ;
 ;           DESCRIPTION:    Start core dump
 ;
-;           RETURNS:        FS          Core
-;                           NC
+;           RETURNS:        NC
 ;                               DS:EBP  Cpu registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2716,6 +2715,7 @@ ct0F  DD OFFSET cpu16
 start_core_dump_name    DB 'Start Core Dump', 0
     
 start_core_dump Proc far
+    push fs
     push eax
     push ebx
 ;   
@@ -2741,6 +2741,7 @@ scdFail:
 scdDone:
     pop ebx
     pop eax
+    pop fs
     ret
 start_core_dump Endp
 
@@ -2758,6 +2759,7 @@ start_core_dump Endp
 notify_core_dump_name    DB 'Notify Core Dump', 0
     
 notify_core_dump:
+    GetCore
     call AcquireMapSpinlock
 ;    
     mov ds:[ebp].cpu_read_mem,OFFSET read_mem
