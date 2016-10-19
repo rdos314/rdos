@@ -41,6 +41,9 @@ data    SEGMENT byte public 'DATA'
 
 mon_data_sel    DW ?
 
+mon_gdt_size    DW ?
+mon_gdt_base    DD ?
+
 data    ENDS
 
     .386p
@@ -2831,6 +2834,29 @@ init_monitor    Proc near
     mov ds:mon_data_sel,bx
     ret
 init_monitor       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:          set_monitor_gdt
+;
+;           DESCRIPTION:   Set monitor gdt
+;
+;           PARAMETERS:    EDX          GDT base
+;                          CX           GDT size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public set_monitor_gdt
+
+set_monitor_gdt    Proc near
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:mon_gdt_base,edx
+    dec cx
+    mov ds:mon_gdt_size,cx
+    ret
+set_monitor_gdt   Endp
 
 code    ENDS
 

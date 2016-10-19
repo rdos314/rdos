@@ -56,6 +56,7 @@ code    SEGMENT byte public use32 'CODE'
     assume cs:code
     
     extrn init_monitor:near
+    extrn set_monitor_gdt:near
     extrn start_monitor:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -346,6 +347,7 @@ create_gdt     Proc near
     mov es:[edx+edi],eax
     mov eax,ds:[esi+4]
     mov es:[edx+edi+4],eax
+    mov ecx,1000h
     ret
 create_gdt      Endp
 
@@ -372,6 +374,7 @@ test_pr:
 ;
     int 3    
     call create_gdt
+    call set_monitor_gdt
 ;    
     CrashGate
     mov esp,0
