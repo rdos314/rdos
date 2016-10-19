@@ -213,6 +213,16 @@ data_valid		DB ?
 
 cpu_struc	ENDS
 
+mon_code_sel            = 8h
+mon_gdt_sel             = 10h
+mon_data_sel            = 18h
+mon_flat_sel            = 20h
+mon_system_data_sel     = 28h
+mon_shutdown_code_sel	= 38h
+mon_shutdown_gate_sel   = 40h
+mon_process_page_sel    = 48h
+mon_text_sel            = 0D0h
+
 mon_core_struc     STRUC
 
 mc_core_linear  DD ?
