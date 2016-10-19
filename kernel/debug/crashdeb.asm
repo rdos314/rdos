@@ -61,18 +61,6 @@ code    SEGMENT byte public use32 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           StartupMonitor
-;
-;           DESCRIPTION:    Startup monitor
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartupMonitor:
-    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           StartCoreDump
 ;
 ;           DESCRIPTION:    Start core dump
@@ -290,6 +278,80 @@ setup_crash     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           create_gdt
+;
+;           DESCRIPTION:    Create new GDT
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_gdt     Proc near
+    mov eax,1000h
+    AllocateBigLinear
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stosd
+    int 3
+;
+    mov ax,gdt_sel
+    mov ds,ax
+;
+    mov esi,cs
+    mov edi,mon_code_sel
+    mov eax,ds:[esi]
+    mov es:[edx+edi],eax
+    mov eax,ds:[esi+4]
+    mov es:[edx+edi+4],eax
+;
+    mov esi,flat_sel
+    mov edi,mon_flat_sel
+    mov eax,ds:[esi]
+    mov es:[edx+edi],eax
+    mov eax,ds:[esi+4]
+    mov es:[edx+edi+4],eax
+;
+    mov esi,system_data_sel
+    mov edi,mon_system_data_sel
+    mov eax,ds:[esi]
+    mov es:[edx+edi],eax
+    mov eax,ds:[esi+4]
+    mov es:[edx+edi+4],eax
+;
+    mov esi,shutdown_code_sel
+    mov edi,mon_shutdown_code_sel
+    mov eax,ds:[esi]
+    mov es:[edx+edi],eax
+    mov eax,ds:[esi+4]
+    mov es:[edx+edi+4],eax
+;
+    mov esi,shutdown_pretask_gate
+    mov edi,mon_shutdown_gate_sel
+    mov eax,ds:[esi]
+    mov es:[edx+edi],eax
+    mov eax,ds:[esi+4]
+    mov es:[edx+edi+4],eax
+;
+    mov esi,process_page_sel
+    mov edi,mon_process_page_sel
+    mov eax,ds:[esi]
+    mov es:[edx+edi],eax
+    mov eax,ds:[esi+4]
+    mov es:[edx+edi+4],eax
+;
+    mov esi,dosB800
+    mov edi,mon_text_sel
+    mov eax,ds:[esi]
+    mov es:[edx+edi],eax
+    mov eax,ds:[esi+4]
+    mov es:[edx+edi+4],eax
+    ret
+create_gdt      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           test_pr
 ;
 ;           DESCRIPTION:    
@@ -309,6 +371,7 @@ test_pr:
     EnableFocus
 ;
     int 3    
+    call create_gdt
 ;    
     CrashGate
     mov esp,0
