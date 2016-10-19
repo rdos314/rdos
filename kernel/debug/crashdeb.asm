@@ -294,7 +294,6 @@ create_gdt     Proc near
     mov ecx,400h
     xor eax,eax
     rep stosd
-    int 3
 ;
     mov ax,gdt_sel
     mov ds,ax
@@ -373,8 +372,6 @@ test_pr:
     EnableFocus
 ;
     int 3    
-    call create_gdt
-    call set_monitor_gdt
 ;    
     CrashGate
     mov esp,0
@@ -397,6 +394,8 @@ init_crash_tasking    Proc near
     pushad
 ;
     call setup_crash
+    call create_gdt
+    call set_monitor_gdt
 ;    
     mov ax,cs
     mov ds,ax

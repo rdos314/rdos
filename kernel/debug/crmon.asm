@@ -2772,17 +2772,17 @@ SetupFaultHandlers      PROC near
     push ds
     pushad
 ;
-    mov ax,cs
+    mov ax,mon_code_sel
     mov ds,ax
     mov edi,OFFSET crash_int_tab
 
 init_fault_next:
-    mov ax,[edi]
+    mov ax,cs:[edi]
     cmp ax,0FFFFh
     jz init_fault_done
 ;
     xor bl,bl
-    mov esi,dword ptr [edi+4]
+    mov esi,dword ptr cs:[edi+4]
     SetupIntGate
     add edi,8
     jmp init_fault_next
@@ -2808,8 +2808,18 @@ SetupFaultHandlers      ENDP
 
 start_monitor:
     call SetupFaultHandlers
-    call SetupDescriptors
+;
+    mov ax,SEG data
+    mov ds,ax
+    lgdt fword ptr ds:mon_gdt_size
+;
+    db 0EAh
+    dd OFFSET mon_priv
+    dw mon_code_sel
+
+mon_priv:
     int 3
+    call SetupDescriptors
     call WriteCpuReg32
 
 sloop:
