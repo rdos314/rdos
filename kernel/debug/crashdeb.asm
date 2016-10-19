@@ -76,7 +76,7 @@ code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
     
-    extrn DisAsmCode:near
+    extrn init_monitor:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -269,6 +269,48 @@ notify_core_dump:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           setup_crash
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_crash     Proc near
+    GetCoreCount
+    movzx ecx,cx
+    mov eax,ecx
+    add eax,eax
+    mov edi,OFFSET mon_core_regs
+    add eax,edi
+    AllocateSmallGlobalMem
+    mov es:mon_core_count,cx
+    xor si,si
+
+scCoreLoop:    
+    mov word ptr es:[edi],0    
+    mov ax,si
+    GetCoreNumber
+    jc scCoreNext
+;
+    mov es:[edi],fs
+
+scCoreNext:
+    add edi,2
+    inc si
+    loop scCoreLoop
+;    
+    mov eax,1000h
+    AllocateBigLinear
+    mov es:mon_map_linear,edx
+;    
+    mov bx,es
+    call init_monitor
+    ret
+setup_crash     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           test_pr
 ;
 ;           DESCRIPTION:    
@@ -288,25 +330,8 @@ test_pr:
     EnableFocus
 ;
     int 3
-
-    xor ax,ax
-
-tNmiLoop:    
-    GetCoreNumber
-    jc tNmiDone
-;
-    test fs:ps_flags,PS_FLAG_NMI
-    jnz tNmiNext
-;        
-;    SendNmi
-        
-tNmiNext:
-    inc ax
-    jmp tNmiLoop
-
-tNmiDone:
-
-    SetupLongNmiCoreDump
+    call setup_crash
+;    
     CrashGate
     mov esp,0
     push eax
@@ -327,6 +352,8 @@ init_crash_tasking    Proc near
     push ds
     pushad
 ;
+;    call setup_crash
+;    
     mov ax,cs
     mov ds,ax
     mov es,ax

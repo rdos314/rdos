@@ -2538,7 +2538,7 @@ SetupDescriptors        Endp
 ;
 ;           DESCRIPTION:   Init monitor
 ;
-;           PARAMETERS:     EDX         Map linear
+;           PARAMETERS:    BX       Monitor selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2547,6 +2547,7 @@ SetupDescriptors        Endp
 init_monitor    Proc near
     mov ax,SEG data
     mov ds,ax
+    mov ds:mon_data_sel,bx
     ret
 init_monitor       Endp
 

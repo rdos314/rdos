@@ -219,5 +219,8 @@ monitor_data_sel        STRUCT
 mon_map_linear      DD ?
 mon_buf             DB 50 DUP (?)
 
+mon_core_count      DW ?
+mon_core_regs       DW ?
+
 monitor_data_sel        ENDS
 
