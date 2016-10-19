@@ -2560,63 +2560,53 @@ write_mem    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SaveBasics
+;           NAME:           StartupMonitor
 ;
-;           DESCRIPTION:    Save basic information
-;
-;           PARAMETERS:     DS:EBP      Cpu data
-;
+;           DESCRIPTION:    Startup monitor
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SaveBasics      Proc near
-    pushad
-;    
-    mov ds:[ebp].cpu_read_mem,OFFSET read_mem
-    mov ds:[ebp].cpu_write_mem,OFFSET write_mem
-;    
-    mov eax,cr0
-    mov ds:[ebp].reg_cr0,eax
+StartupMonitor:
+    mov ax,system_data_sel
+    mov ds,ax
+
+smSpin:
+    mov ax,1
+    xchg ax,ds:shut_spinlock
+    or ax,ax
+    jz smEnter
 ;
-    mov eax,cr2
-    mov ds:[ebp].reg_cr2,eax
+    jmp smSpin
+
+smEnter:
+    DisableAllIrq
+    SetupNmiCoreDump
+    SetupLongNmiCoreDump
 ;
-    mov eax,cr4
-    mov ds:[ebp].reg_cr4,eax
+    xor ax,ax
+
+smNmiLoop:    
+    GetCoreNumber
+    jc smNmiDone
 ;
-    mov eax,dr0
-    mov ds:[ebp].reg_dr0,eax               
-;
-    mov eax,dr1
-    mov ds:[ebp].reg_dr1,eax               
-;
-    mov eax,dr2
-    mov ds:[ebp].reg_dr2,eax               
-;
-    mov eax,dr6
-    mov ds:[ebp].reg_dr6,eax               
-;
-    mov eax,dr7
-    mov ds:[ebp].reg_dr7,eax               
-;
-    mov eax,dr0
-    mov ds:[ebp].reg_dr0,eax               
-;
-    sgdt fword ptr ds:temp_size
-    movzx eax,ds:temp_size
-    mov ds:[ebp].reg_gdt.d_limit,eax
-    mov eax,ds:temp_base
-    mov ds:[ebp].reg_gdt.d_base,eax
-;
-    sidt fword ptr ds:temp_size
-    movzx eax,ds:temp_size
-    mov ds:[ebp].reg_idt.d_limit,eax
-    mov eax,ds:temp_base
-    mov ds:[ebp].reg_idt.d_base,eax
-;    
-;
-    popad    
-    ret
-SaveBasics      Endp
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz smNmiNext
+;        
+    SendNmi
+        
+smNmiNext:
+    inc ax
+    jmp smNmiLoop
+
+smNmiDone:
+;    call SetupFaultHandlers
+    mov ax,SEG data
+    mov ds,ax
+    GetCore
+    call WriteCpuReg32
+
+smLoop:
+    jmp smLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2851,11 +2841,7 @@ ncdTrDone:
     call UpdateSelector
 ;
     call ReleaseMapSpinlock
-;    
-    call WriteCpuReg32
-
-cllloop:
-    jmp cllloop
+    jmp StartupMonitor
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2879,6 +2865,25 @@ test_pr:
     EnableFocus
 ;
     int 3
+
+    xor ax,ax
+
+tNmiLoop:    
+    GetCoreNumber
+    jc tNmiDone
+;
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz tNmiNext
+;        
+;    SendNmi
+        
+tNmiNext:
+    inc ax
+    jmp tNmiLoop
+
+tNmiDone:
+
+    SetupLongNmiCoreDump
     CrashGate
     mov esp,0
     push eax
