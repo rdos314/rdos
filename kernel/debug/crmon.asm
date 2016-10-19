@@ -2806,6 +2806,7 @@ SetupFaultHandlers      ENDP
 start_monitor:
     call SetupFaultHandlers
     call SetupDescriptors
+    int 3
     call WriteCpuReg32
 
 sloop:
