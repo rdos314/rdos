@@ -64,12 +64,6 @@ map_spinlock DW ?
 
 mon_sel      DW ?
 
-view_type       DB ?
-
-curr_pos        DW ?
-
-buf          DB 50 DUP (?)
-
 data    ENDS
 
     .386p
@@ -345,7 +339,12 @@ test_pr:
     EnableFocus
 ;
     int 3    
-    call setup_crash
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ds:mon_sel
+    mov cx,es:mon_core_count
+;    
+;    call setup_crash
 ;    
     CrashGate
     mov esp,0
@@ -367,7 +366,7 @@ init_crash_tasking    Proc near
     push ds
     pushad
 ;
-;    call setup_crash
+    call setup_crash
 ;    
     mov ax,cs
     mov ds,ax
@@ -397,9 +396,8 @@ init_crash_tasking    Endp
 init_crash_driver    Proc near
     mov ax,SEG data
     mov ds,ax
-    mov ds:curr_pos,0
-    mov ds:view_type,'R'
     mov ds:map_spinlock,0
+    mov ds:mon_sel,0
 ;
     mov eax,1000h
     AllocateBigLinear
