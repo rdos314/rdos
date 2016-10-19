@@ -2994,7 +2994,10 @@ smNmiLoop:
     test fs:ps_flags,PS_FLAG_NMI
     jnz smNmiNext
 ;        
-    SendNmi
+    push ax
+    mov al,2
+    SendInt
+    pop ax
         
 smNmiNext:
     inc ax
@@ -3004,7 +3007,6 @@ smNmiDone:
     GetCore
 ;    
     call SetupFaultHandlers
-    int 3
     mov ax,SEG data
     mov ds,ax
     call WriteCpuReg32
