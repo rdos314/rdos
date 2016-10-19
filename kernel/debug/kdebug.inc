@@ -184,6 +184,9 @@ org_stack		DD ?
 temp_size       DW ?
 temp_base       DD ?
 
+debug_core_id         DW ?
+debug_core_sel        DW ?
+
 code_start      DD ?,?
 code_cache      DB 32 DUP(?)
 
@@ -209,3 +212,12 @@ data_sel		DD ?
 data_valid		DB ?
 
 cpu_struc	ENDS
+
+
+monitor_data_sel        STRUCT
+
+mon_map_linear      DD ?
+mon_buf             DB 50 DUP (?)
+
+monitor_data_sel        ENDS
+
