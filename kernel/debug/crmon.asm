@@ -28,12 +28,14 @@
 INCLUDE ..\os.def
 INCLUDE ..\os.inc
 INCLUDE ..\os\system.def
+INCLUDE ..\os\system.inc
 INCLUDE kdebug.inc
 
 flat_sel = 20h
 system_data_sel = 28h
 dosB800 = 0D0h
 process_page_sel    = 2C8h
+shutdown_pretask_gate = 68h
  
 data    SEGMENT byte public 'DATA'
 
@@ -2536,6 +2538,261 @@ SetupDescriptors        Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupFaultHandlers
+;
+;           DESCRIPTION:    Crash debugger fault handlers
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cint0:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,0
+    push ax
+    mov ax,ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
+    ShutDownPreTask
+
+cint3:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,3
+    push ax
+    mov ax,ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
+    ShutDownPreTask
+
+cint4:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,4
+    push ax
+    mov ax,ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
+    ShutDownPreTask
+
+cint5:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,5
+    push ax
+    mov ax,ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
+    ShutDownPreTask
+
+cint6:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,6
+    push ax
+    mov ax,ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
+    ShutDownPreTask
+
+cint7:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,7
+    push ax
+    mov ax,ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
+    ShutDownPreTask
+
+cint8:
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,8
+    push ax
+    mov ax,ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
+    ShutDownPreTask
+
+cint9:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,9
+    push ax
+    mov ax,ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
+    ShutDownPreTask
+
+cint10:
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    push ds
+    mov ax,10
+    push ax
+    mov ax,ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
+    ShutDownPreTask
+
+cint11:
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,11
+    push ax
+    mov ax,ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
+    ShutDownPreTask
+
+cint12:
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,12
+    push ax
+    mov ax,ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
+    ShutDownPreTask
+
+
+cint13:
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,13
+    push ax
+    mov ax,ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
+    ShutDownPreTask
+
+cint16:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,16
+    push ax
+    mov ax,ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
+    ShutDownPreTask
+
+hwint:
+    iretd
+
+crash_int_tab:
+;
+;               int #       Entry          
+;
+ci0     DD      0,          OFFSET cint0
+ci3     DD      3,          OFFSET cint3
+ci4     DD      4,          OFFSET cint4
+ci5     DD      5,          OFFSET cint5
+ci6     DD      6,          OFFSET cint6
+ci7     DD      7,          OFFSET cint7
+ci8     DD      8,          OFFSET cint8
+ci9     DD      9,          OFFSET cint9
+ci10    DD      10,         OFFSET cint10
+ci11    DD      11,         OFFSET cint11
+ci12    DD      12,         OFFSET cint12
+ci13    DD      13,         OFFSET cint13
+ci16    DD      16,         OFFSET cint16
+ci40    DD      40h,        OFFSET hwint
+ci80    DD      80h,        OFFSET hwint
+ci81    DD      81h,        OFFSET hwint
+ci82    DD      82h,        OFFSET hwint
+ci83    DD      83h,        OFFSET hwint
+ci_end  DD      0FFFFFFFFh
+
+SetupFaultHandlers      PROC near
+    push ds
+    pushad
+;
+    mov ax,cs
+    mov ds,ax
+    mov edi,OFFSET crash_int_tab
+
+init_fault_next:
+    mov ax,[edi]
+    cmp ax,0FFFFh
+    jz init_fault_done
+;
+    xor bl,bl
+    mov esi,dword ptr [edi+4]
+    SetupIntGate
+    add edi,8
+    jmp init_fault_next
+
+init_fault_done:
+    popad
+    pop ds
+    ret
+SetupFaultHandlers      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           start_monitor
 ;
 ;           DESCRIPTION:    Start monitor
@@ -2547,6 +2804,7 @@ SetupDescriptors        Endp
     public start_monitor
 
 start_monitor:
+    call SetupFaultHandlers
     call SetupDescriptors
     call WriteCpuReg32
 
