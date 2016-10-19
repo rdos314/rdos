@@ -213,14 +213,20 @@ data_valid		DB ?
 
 cpu_struc	ENDS
 
+mon_core_struc     STRUC
 
-monitor_data_sel        STRUCT
+mc_core_linear  DD ?
+mc_regs_linear   DD ?
+
+mon_core_struc     ENDS
+
+monitor_data_sel        STRUC
 
 mon_map_linear      DD ?
 mon_buf             DB 50 DUP (?)
 
 mon_core_count      DW ?
-mon_core_regs       DW ?
+mon_core_regs       DB ?
 
 monitor_data_sel        ENDS
 

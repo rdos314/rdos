@@ -62,6 +62,8 @@ map_linear   DD ?
 map_sel      DW ?
 map_spinlock DW ?
 
+mon_sel      DW ?
+
 view_type       DB ?
 
 curr_pos        DW ?
@@ -279,7 +281,7 @@ setup_crash     Proc near
     GetCoreCount
     movzx ecx,cx
     mov eax,ecx
-    add eax,eax
+    shl eax,3
     mov edi,OFFSET mon_core_regs
     add eax,edi
     AllocateSmallGlobalMem
@@ -287,22 +289,35 @@ setup_crash     Proc near
     xor si,si
 
 scCoreLoop:    
-    mov word ptr es:[edi],0    
+    push ecx
+    mov es:[edi].mc_core_linear,0    
+    mov es:[edi].mc_regs_linear,0    
     mov ax,si
     GetCoreNumber
     jc scCoreNext
 ;
-    mov es:[edi],fs
+    mov bx,fs
+    GetSelectorBaseSize
+    mov es:[edi].mc_core_linear,edx
+;
+    mov eax,SIZE cpu_struc
+    AllocateSmallLinear    
+    mov es:[edi].mc_regs_linear,edx
 
 scCoreNext:
-    add edi,2
+    pop ecx
+    add edi,8
     inc si
     loop scCoreLoop
 ;    
     mov eax,1000h
     AllocateBigLinear
     mov es:mon_map_linear,edx
-;    
+;   
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:mon_sel,es
+;     
     mov bx,es
     call init_monitor
     ret
@@ -329,7 +344,7 @@ test_pr:
     mov ax,41h
     EnableFocus
 ;
-    int 3
+    int 3    
     call setup_crash
 ;    
     CrashGate
