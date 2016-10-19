@@ -127,8 +127,8 @@ MapLinear       Proc near
 ;    
     mov ax,SEG data
     mov es,ax
-    mov es,ds:mon_data_sel    
-    mov edi,ds:mon_map_linear
+    mov es,es:mon_data_sel    
+    mov edi,es:mon_map_linear
 ;
     mov ax,flat_sel
     mov es,ax    
@@ -166,6 +166,7 @@ mlProt:
 ;    
     mov ebx,edx
     and ebx,0FFFh    
+    add ebx,edi
     clc
     jmp mlDone
 
@@ -205,6 +206,7 @@ mlPae:
 ;    
     mov ebx,edx
     and ebx,0FFFh    
+    add ebx,edi
     clc
     jmp mlDone
 
@@ -2486,7 +2488,7 @@ UpdateSelector      Endp
 ;           PARAMETERS:     DS:EBP      Cpu
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+    
 SetupDescriptors Proc near
     mov bx,ds:[ebp].reg_ldt.d_selector
     call GetSelectorBaseSizeType
@@ -2530,6 +2532,26 @@ sdTrOk:
     call UpdateSelector
     ret
 SetupDescriptors        Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           start_monitor
+;
+;           DESCRIPTION:    Start monitor
+;
+;           PARAMETERS:     DS:EBP      Cpu
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public start_monitor
+
+start_monitor:
+    call SetupDescriptors
+    call WriteCpuReg32
+
+sloop:
+    jmp sloop    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

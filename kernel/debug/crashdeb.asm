@@ -56,6 +56,7 @@ code    SEGMENT byte public use32 'CODE'
     assume cs:code
     
     extrn init_monitor:near
+    extrn start_monitor:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -67,51 +68,6 @@ code    SEGMENT byte public use32 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartupMonitor:
-    mov ax,system_data_sel
-    mov ds,ax
-
-smSpin:
-    mov ax,1
-    xchg ax,ds:shut_spinlock
-    or ax,ax
-    jz smEnter
-;
-    jmp smWait
-
-smEnter:
-    DisableAllIrq
-    SetupNmiCoreDump
-    SetupLongNmiCoreDump
-;
-    xor ax,ax
-
-smNmiLoop:    
-    GetCoreNumber
-    jc smNmiDone
-;
-    test fs:ps_flags,PS_FLAG_NMI
-    jnz smNmiNext
-;        
-    push ax
-    mov al,2
-    SendInt
-    pop ax
-        
-smNmiNext:
-    inc ax
-    jmp smNmiLoop
-
-smNmiDone:
-    GetCore
-;    
-    mov ax,SEG data
-    mov ds,ax
-
-smLoop:
-    jmp smLoop
-
-smWait:
-    jmp smWait
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -133,7 +89,6 @@ start_core_dump Proc far
     push eax
     push ebx
 ;   
-    int 3
     GetCore
     test fs:ps_flags,PS_FLAG_NMI
     jnz scdFail
@@ -236,7 +191,46 @@ notify_core_dump:
 ;    
     mov ds:[ebp].reg_tr.d_limit,0
     mov ds:[ebp].reg_tr.d_base,0
-    jmp StartupMonitor
+;    
+    mov ax,system_data_sel
+    mov es,ax
+
+smSpin:
+    mov ax,1
+    xchg ax,es:shut_spinlock
+    or ax,ax
+    jz smEnter
+;
+    jmp smWait
+
+smEnter:
+    DisableAllIrq
+    SetupNmiCoreDump
+    SetupLongNmiCoreDump
+;
+    xor ax,ax
+
+smNmiLoop:    
+    GetCoreNumber
+    jc smNmiDone
+;
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz smNmiNext
+;        
+    push ax
+    mov al,2
+    SendInt
+    pop ax
+        
+smNmiNext:
+    inc ax
+    jmp smNmiLoop
+
+smNmiDone:
+    jmp start_monitor
+
+smWait:
+    jmp smWait
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
