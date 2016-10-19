@@ -36,6 +36,7 @@ INCLUDE ..\os\proc.inc
 INCLUDE ..\pcdev\key.inc
 INCLUDE ..\pcdev\apic.inc
 INCLUDE ..\os\protseg.def
+INCLUDE ..\os\gate.def
 INCLUDE kdebug.inc
 
 data    SEGMENT byte public 'DATA'
@@ -1555,7 +1556,7 @@ WriteCore   PROC near
     mov al,'('
     call ShowChar
 ;
-    mov ax,gs
+    mov ax,fs
     call WriteHexWord
 ;
     mov al,')'
@@ -2560,6 +2561,152 @@ write_mem    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           LocalGetSelectorBaseSize
+;
+;       DESCRIPTION:    Get selector base + size
+;
+;       PARAMETERS:     BX          Selector
+;
+;       RETURNS:        EDX         Base
+;                       ECX         Limit
+;                                               
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalGetSelectorBaseSize  PROC near
+    push ds
+    push ax
+    push ebx
+;
+    movzx ebx,bx
+    test bx,4
+    jz get_selector_gdt
+
+get_selector_ldt:
+    mov ax,gs:cs_ldt
+    or ax,ax
+    jz get_selector_error
+;
+    push bx
+    mov bx,ax
+    call LocalGetSelectorBaseSize
+    pop bx
+    sub ecx,7
+    cmp ebx,ecx
+    ja get_selector_error
+;    
+    mov ebx,edx
+    mov ax,flat_sel
+    mov ds,ax
+    jmp get_selector_check
+
+get_selector_gdt:
+    mov ax,gdt_sel
+    mov ds,ax
+    and bx,0FFF8h
+    jz get_selector_error
+
+get_selector_check:
+    mov al,[ebx+5]
+    test al,80h
+    jz get_selector_error
+;
+    test al,10h
+    jz get_selector_error
+;
+    xor ecx,ecx
+    mov cl,[ebx+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,[ebx]
+    test byte ptr [ebx+6],80h
+    jz get_selector_small
+;
+    shl ecx,12
+    or cx,0FFFh
+
+get_selector_small:
+    inc ecx
+    mov edx,[ebx+2]
+    rol edx,8
+    mov dl,[ebx+7]
+    ror edx,8
+;
+    test al,4
+    jz get_selector_dir_ok
+;
+    neg ecx
+    sub edx,ecx
+
+get_selector_dir_ok:    
+    clc
+    jmp get_selector_done
+
+get_selector_error:
+    stc
+
+get_selector_done:
+    pop ebx
+    pop ax
+    pop ds
+    ret
+LocalGetSelectorBaseSize  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LocalOsGate
+;
+;       DESCRIPTION:    Translate an os gate
+;
+;       PARAMETERS:     DS:EBX          Fault address
+;                                               
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalOsGate:
+    push es
+    push ecx
+    push edx
+    push edi
+;    
+    mov edi,ds:[ebx+3]
+    shl edi,4
+    mov ax,osgate_sel
+    mov es,ax
+;
+    push ebx
+    mov bx,ds
+    call LocalGetSelectorBaseSize
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov eax,es:[edi].os_gate_offset
+    xchg eax,ds:[ebx+3]
+;
+    mov ax,es:[edi].os_gate_sel
+    xchg ax,ds:[ebx+7]
+;    
+    mov al,90h
+    xchg al,ds:[ebx]
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop es
+;
+    pop eax
+    mov ds,ax
+    pop ebx
+    pop eax
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
+    add esp,4
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SetupFaultHandlers
 ;
 ;           DESCRIPTION:    Crash debugger fault handlers
@@ -2575,6 +2722,21 @@ cint0:
     push eax
     push ebx
     mov ax,0
+    push ax
+    mov ax,ds
+    push ax
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ds:shut_spinlock,0
+    ShutDownPreTask
+
+cint3:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,3
     push ax
     mov ax,ds
     push ax
@@ -2715,6 +2877,7 @@ cint12:
     mov ds:shut_spinlock,0
     ShutDownPreTask
 
+
 cint13:
     push ebp
     mov ebp,esp
@@ -2752,6 +2915,7 @@ crash_int_tab:
 ;               int #       Entry          
 ;
 ci0     DD      0,          OFFSET cint0
+ci3     DD      3,          OFFSET cint3
 ci4     DD      4,          OFFSET cint4
 ci5     DD      5,          OFFSET cint5
 ci6     DD      6,          OFFSET cint6
@@ -2814,7 +2978,7 @@ smSpin:
     or ax,ax
     jz smEnter
 ;
-    jmp smSpin
+    jmp smWait
 
 smEnter:
     DisableAllIrq
@@ -2830,7 +2994,7 @@ smNmiLoop:
     test fs:ps_flags,PS_FLAG_NMI
     jnz smNmiNext
 ;        
-;    SendNmi
+    SendNmi
         
 smNmiNext:
     inc ax
@@ -2840,12 +3004,17 @@ smNmiDone:
     GetCore
 ;    
     call SetupFaultHandlers
+    int 3
     mov ax,SEG data
     mov ds,ax
     call WriteCpuReg32
 
 smLoop:
     jmp smLoop
+
+smWait:
+    jmp smWait
+    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
