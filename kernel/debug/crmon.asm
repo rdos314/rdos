@@ -2838,6 +2838,43 @@ init_monitor       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CreateDataSel
+;
+;           DESCRIPTION:    Create 16-bit data selector
+;
+;           PARAMETERS:     BX              DESCRIPTOR
+;                           EDX             BASE
+;                           ECX             LIMIT
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDataSel       PROC near
+    mov ax,SEG data
+    mov ds,ax
+    mov esi,ds:mon_gdt_base
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov al,bl
+    and ebx,0FFF8h
+    dec ecx
+    add ebx,esi
+;
+    mov [ebx],cx
+    mov [ebx+2],edx
+    shl al,5
+    or al,92h
+    xchg al,[ebx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    mov [ebx+6],cx
+    ret
+CreateDataSel       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:          set_monitor_gdt
 ;
 ;           DESCRIPTION:   Set monitor gdt
@@ -2855,6 +2892,12 @@ set_monitor_gdt    Proc near
     mov ds:mon_gdt_base,edx
     dec cx
     mov ds:mon_gdt_size,cx
+;
+    mov bx,mon_gdt_sel
+    inc cx
+    call CreateDataSel
+;
+    mov bx,mon_data_sel
     ret
 set_monitor_gdt   Endp
 
