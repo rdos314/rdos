@@ -2415,6 +2415,125 @@ write_mem    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           UpdateSelector
+;
+;           DESCRIPTION:    Update selector to descriptor
+;
+;           PARAMETERS:     DS:EBP      Cpu
+;                           DS:ESI      Descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateSelector      Proc near
+    mov bx,ds:[esi].d_selector
+;
+    call GetSelectorBaseSizeType
+    jc usFail
+;
+    mov ds:[esi].d_limit,ecx
+    mov ds:[esi].d_base,edx
+;
+    xor dx,dx
+    test ah,40h
+    jz usSizeOk
+;
+    or dx,ACCESS_32    
+
+usSizeOk:
+    test al,8
+    jz usDataSel
+
+usCodeSel:
+    test ah,20h
+    jz usLongOK
+;
+    or dx,ACCESS_64
+
+usLongOk:
+    test al,2
+    jz usSaveAccess
+;
+    or dx,ACCESS_READ
+    jmp usSaveAccess
+
+usDataSel:    
+    or dx,ACCESS_READ
+    test al,2
+    jz usSaveAccess
+;
+    or dx,ACCESS_WRITE    
+
+usSaveAccess:
+    mov ds:[esi].d_access,dx
+    jmp usDone
+
+usFail:
+    mov ds:[esi].d_limit,0
+    mov ds:[esi].d_base,0
+    mov ds:[esi].d_access,0
+
+usDone:        
+    ret
+UpdateSelector      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupDescriptors
+;
+;           DESCRIPTION:    Setup selector descriptors
+;
+;           PARAMETERS:     DS:EBP      Cpu
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupDescriptors Proc near
+    mov bx,ds:[ebp].reg_ldt.d_selector
+    call GetSelectorBaseSizeType
+    jc sdLdtOk
+;
+    mov ds:[ebp].reg_ldt.d_limit,ecx
+    mov ds:[ebp].reg_ldt.d_base,edx
+
+sdLdtOk:
+    mov bx,ds:[ebp].reg_tr.d_selector
+    call GetSelectorBaseSizeType
+    jc sdTrOk
+;
+    mov ds:[ebp].reg_tr.d_limit,ecx
+    mov ds:[ebp].reg_tr.d_base,edx
+
+sdTrOk:
+    mov ds:[ebp].cpu_read_mem,OFFSET read_mem
+    mov ds:[ebp].cpu_write_mem,OFFSET write_mem
+;    
+    lea esi,[ebp].reg_es
+    call UpdateSelector
+;
+    lea esi,[ebp].reg_cs
+    call UpdateSelector
+     
+    lea esi,[ebp].reg_ss
+    call UpdateSelector
+;
+    lea esi,[ebp].reg_ds
+    call UpdateSelector
+;
+    lea esi,[ebp].reg_fs
+    call UpdateSelector
+;
+    lea esi,[ebp].reg_gs
+    call UpdateSelector
+;
+    mov ds:[ebp].reg_usel.d_selector,flat_sel
+    lea esi,[ebp].reg_usel
+    call UpdateSelector
+    ret
+SetupDescriptors        Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:          init_monitor
 ;
 ;           DESCRIPTION:   Init monitor
