@@ -41,23 +41,6 @@ INCLUDE kdebug.inc
 
 data    SEGMENT byte public 'DATA'
 
-cpu1 cpu_struc <>
-cpu2 cpu_struc <>
-cpu3 cpu_struc <>
-cpu4 cpu_struc <>
-cpu5 cpu_struc <>
-cpu6 cpu_struc <>
-cpu7 cpu_struc <>
-cpu8 cpu_struc <>
-cpu9 cpu_struc <>
-cpu10 cpu_struc <>
-cpu11 cpu_struc <>
-cpu12 cpu_struc <>
-cpu13 cpu_struc <>
-cpu14 cpu_struc <>
-cpu15 cpu_struc <>
-cpu16 cpu_struc <>
-
 map_linear   DD ?
 map_sel      DW ?
 map_spinlock DW ?
@@ -143,24 +126,6 @@ smWait:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-core_tab:
-ct00  DD OFFSET cpu1
-ct01  DD OFFSET cpu2
-ct02  DD OFFSET cpu3
-ct03  DD OFFSET cpu4
-ct04  DD OFFSET cpu5
-ct05  DD OFFSET cpu6
-ct06  DD OFFSET cpu7
-ct07  DD OFFSET cpu8
-ct08  DD OFFSET cpu9
-ct09  DD OFFSET cpu10
-ct0A  DD OFFSET cpu11
-ct0B  DD OFFSET cpu12
-ct0C  DD OFFSET cpu13
-ct0D  DD OFFSET cpu14
-ct0E  DD OFFSET cpu15
-ct0F  DD OFFSET cpu16
-
 start_core_dump_name    DB 'Start Core Dump', 0
     
 start_core_dump Proc far
@@ -168,19 +133,30 @@ start_core_dump Proc far
     push eax
     push ebx
 ;   
+    int 3
     GetCore
     test fs:ps_flags,PS_FLAG_NMI
     jnz scdFail
 ;
     or fs:ps_flags,PS_FLAG_NMI    
 ;
-    movzx ebx,fs:ps_id
-    cmp ebx,16
-    jae scdFail
-;
     mov ax,SEG data
     mov ds,ax
-    mov ebp,dword ptr cs:[4 * ebx].core_tab
+    mov ax,ds:mon_sel
+    or ax,ax
+    jz scdFail
+;
+    mov ds,ax
+    mov bx,fs:ps_id
+    cmp bx,ds:mon_core_count
+    jae scdFail
+;
+    movzx ebx,bx
+    shl ebx,3
+    add ebx,OFFSET mon_core_regs
+    mov ebp,ds:[ebx].mc_regs_linear
+    mov ax,flat_sel
+    mov ds,ax
     clc
     jmp scdDone
 
@@ -295,7 +271,7 @@ scCoreLoop:
     mov es:[edi].mc_core_linear,edx
 ;
     mov eax,SIZE cpu_struc
-    AllocateSmallLinear    
+    AllocateBigLinear    
     mov es:[edi].mc_regs_linear,edx
 
 scCoreNext:
@@ -339,12 +315,6 @@ test_pr:
     EnableFocus
 ;
     int 3    
-    mov ax,SEG data
-    mov ds,ax
-    mov es,ds:mon_sel
-    mov cx,es:mon_core_count
-;    
-;    call setup_crash
 ;    
     CrashGate
     mov esp,0
