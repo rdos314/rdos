@@ -1942,6 +1942,46 @@ WriteFault    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           WriteErrorReason
+;
+;   DESCRIPTION:    Write error reason
+;
+;   PARAMETERS:     DS:EBP      Regs
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ft_idt  DB 'Idt '
+ft_ldt  DB 'Ldt '
+ft_gdt  DB 'Gdt '
+
+WriteErrorReason     PROC near
+    mov eax,ds:[ebp].fault_error
+    test ax,2
+    jz werNotIdt
+;    
+    mov esi,OFFSET ft_idt
+    jmp werDo
+    
+werNotIdt:
+    mov esi,OFFSET ft_gdt
+    test ax,4
+    jz werDo
+;    
+    mov esi,OFFSET ft_ldt
+
+werDo:
+    mov ecx,4
+    call ShowCodeSizeString
+;
+    mov eax,ds:[ebp].fault_error
+    and ax,0FFF8h
+    call WriteHexWord    
+    ret
+WriteErrorReason     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           WriteDataRow
 ;
 ;       DESCRIPTION:    Write a data row
@@ -2544,7 +2584,6 @@ sdTrOk:
     ret
 SetupDescriptors        Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2605,6 +2644,8 @@ DumpFault:
     xor ebp,ebp    
 ;    
     call WriteFault
+    call WriteErrorReason
+    call NewLine
 
 fdLoop:
     jmp fdLoop
