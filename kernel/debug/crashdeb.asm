@@ -207,6 +207,25 @@ smEnter:
 ;
     xor ax,ax
 
+smIntLoop:    
+    GetCoreNumber
+    jc smIntDone
+;
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz smIntNext
+;        
+    push ax
+    mov al,2
+    SendInt
+    pop ax
+        
+smIntNext:
+    inc ax
+    jmp smIntLoop
+
+smIntDone:
+    xor ax,ax
+
 smNmiLoop:    
     GetCoreNumber
     jc smNmiDone
@@ -214,10 +233,7 @@ smNmiLoop:
     test fs:ps_flags,PS_FLAG_NMI
     jnz smNmiNext
 ;        
-    push ax
-    mov al,2
-    SendInt
-    pop ax
+    SendNmi
         
 smNmiNext:
     inc ax
