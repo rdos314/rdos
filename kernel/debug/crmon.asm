@@ -1775,6 +1775,22 @@ dword_reg_tab3:
     DD OFFSET reg_eip
     DB 0
 
+fault_reg_tab1:
+    DB ' EAX='
+    DD OFFSET reg_eax
+    DB ' EBX='
+    DD OFFSET reg_ebx
+    DB ' ECX='
+    DD OFFSET reg_ecx
+    DB ' EDX='
+    DD OFFSET reg_edx
+    DB ' ESI='
+    DD OFFSET reg_esi
+    DB ' EDI='
+    DD OFFSET reg_edi
+    DB 0
+    
+
 WriteDwordRegs  PROC near
 
 dword_write_loop:
@@ -1918,6 +1934,9 @@ ke19    DB 'NMI                     '
 ke1A    DB 'Crash Gate              '
 
 WriteFault    Proc near
+    mov al,' '
+    call ShowChar
+;
     movzx edx,ds:[ebp].fault_vect
     cmp dl,1Ah
     jbe wfDo
@@ -2182,10 +2201,6 @@ WriteCpuReg32     Proc near
 ;
     mov esi,OFFSET dword_reg_tab3
     call WriteDwordRegs
-;    
-    mov al,' '
-    call ShowChar
-;    
     call WriteFault
     call NewLine
 ;
@@ -2313,9 +2328,6 @@ WriteCpuReg64     Proc near
     call WriteQwordRegs
     call NewLine
 ;    
-    mov al,' '
-    call ShowChar
-;
     call WriteFault
     call WriteInstr
     call NewLine
@@ -2645,6 +2657,10 @@ DumpFault:
 ;    
     call WriteFault
     call WriteErrorReason
+    call NewLine
+;
+    mov esi,OFFSET fault_reg_tab1
+    call WriteDwordRegs
     call NewLine
 
 fdLoop:
