@@ -46,6 +46,7 @@ map_sel      DW ?
 map_spinlock DW ?
 
 mon_linear   DD ?
+mon_cr3      DD ?
 
 data    ENDS
 
@@ -195,6 +196,11 @@ smSpin:
     jmp smWait
 
 smEnter:
+    mov ax,SEG data
+    mov ds,ax
+    mov eax,ds:mon_cr3
+    mov cr3,eax
+;    
     DisableAllIrq
     SetupNmiCoreDump
     SetupLongNmiCoreDump
@@ -390,7 +396,7 @@ create_idt     Proc near
     mov ecx,400h
     xor eax,eax
     rep stosd
-    mov ecx,1000h
+    mov ecx,800h
     ret
 create_idt  Endp    
 
@@ -473,6 +479,8 @@ init_crash_driver    Proc near
     mov ds,ax
     mov ds:map_spinlock,0
     mov ds:mon_linear,0
+    mov eax,cr3
+    mov ds:mon_cr3,eax
 ;
     mov eax,1000h
     AllocateBigLinear
