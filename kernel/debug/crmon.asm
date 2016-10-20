@@ -44,6 +44,8 @@ mon_data_sel    DW ?
 mon_gdt_size    DW ?
 mon_gdt_base    DD ?
 
+mon_data_base   DD ?
+
 data    ENDS
 
     .386p
@@ -2591,6 +2593,9 @@ DumpFault:
     mov es:reg_ebp,ebp
     sldt ax
     mov es:reg_ldt.d_selector,ax       
+;
+    mov ax,1234h
+    mov ds,ax    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2628,6 +2633,7 @@ cint3:
     push ax
     mov ax,ds
     push ax
+    jmp DumpFault
     mov ax,system_data_sel
     mov ds,ax
     mov ds:shut_spinlock,0
@@ -2893,26 +2899,6 @@ sloop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:          init_monitor
-;
-;           DESCRIPTION:   Init monitor
-;
-;           PARAMETERS:    BX       Monitor selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public init_monitor
-
-init_monitor    Proc near
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:mon_data_sel,bx
-    ret
-init_monitor       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           CreateDataSel
 ;
 ;           DESCRIPTION:    Create 16-bit data selector
@@ -2950,6 +2936,26 @@ CreateDataSel       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:          set_monitor_data
+;
+;           DESCRIPTION:   Set monitor data
+;
+;           PARAMETERS:    EDX      Linear address of mon_data_sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public set_monitor_data
+
+set_monitor_data    Proc near
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:mon_data_base,edx
+    ret
+set_monitor_data       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:          set_monitor_gdt
 ;
 ;           DESCRIPTION:   Set monitor gdt
@@ -2972,7 +2978,12 @@ set_monitor_gdt    Proc near
     inc cx
     call CreateDataSel
 ;
+    mov ax,SEG data
+    mov ds,ax
     mov bx,mon_data_sel
+    mov edx,ds:mon_data_base
+    mov ecx,SIZE monitor_data_sel
+    call CreateDataSel    
     ret
 set_monitor_gdt   Endp
 

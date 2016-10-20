@@ -55,7 +55,7 @@ code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
     
-    extrn init_monitor:near
+    extrn set_monitor_data:near
     extrn set_monitor_gdt:near
     extrn start_monitor:near
 
@@ -272,7 +272,8 @@ scCoreNext:
     mov ds:mon_sel,es
 ;     
     mov bx,es
-    call init_monitor
+    GetSelectorBaseSize
+    call set_monitor_data
     ret
 setup_crash     Endp
 
