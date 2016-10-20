@@ -45,7 +45,7 @@ map_linear   DD ?
 map_sel      DW ?
 map_spinlock DW ?
 
-mon_sel      DW ?
+mon_linear   DD ?
 
 data    ENDS
 
@@ -77,6 +77,7 @@ start_core_dump Proc far
     push fs
     push eax
     push ebx
+    push edx
 ;   
     GetCore
     test fs:ps_flags,PS_FLAG_NMI
@@ -86,21 +87,20 @@ start_core_dump Proc far
 ;
     mov ax,SEG data
     mov ds,ax
-    mov ax,ds:mon_sel
-    or ax,ax
+    mov edx,ds:mon_linear
+    or edx,edx
     jz scdFail
 ;
+    mov ax,flat_sel
     mov ds,ax
     mov bx,fs:ps_id
-    cmp bx,ds:mon_core_count
+    cmp bx,ds:[edx].mon_core_count
     jae scdFail
 ;
     movzx ebx,bx
     shl ebx,3
     add ebx,OFFSET mon_core_regs
-    mov ebp,ds:[ebx].mc_regs_linear
-    mov ax,flat_sel
-    mov ds,ax
+    mov ebp,ds:[ebx+edx].mc_regs_linear
     clc
     jmp scdDone
 
@@ -108,6 +108,7 @@ scdFail:
     stc
 
 scdDone:
+    pop edx
     pop ebx
     pop eax
     pop fs
@@ -206,10 +207,10 @@ smNmiLoop:
     test fs:ps_flags,PS_FLAG_NMI
     jnz smNmiNext
 ;        
-    push ax
-    mov al,2
-    SendInt
-    pop ax
+;    push ax
+;    mov al,2
+;    SendInt
+;    pop ax
         
 smNmiNext:
     inc ax
@@ -231,15 +232,25 @@ smWait:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 setup_crash     Proc near
+    mov ax,flat_sel
+    mov es,ax    
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov ecx,400h
+    xor eax,eax
+    mov edi,edx
+    rep stosd
+;
     GetCoreCount
     movzx ecx,cx
-    mov eax,ecx
-    shl eax,3
-    mov edi,OFFSET mon_core_regs
-    add eax,edi
-    AllocateSmallGlobalMem
-    mov es:mon_core_count,cx
+    mov es:[edx].mon_core_count,cx
     xor si,si
+;
+    push edx
+    mov edi,OFFSET mon_core_regs
+    add edi,edx
 
 scCoreLoop:    
     push ecx
@@ -255,6 +266,14 @@ scCoreLoop:
 ;
     mov eax,SIZE cpu_struc
     AllocateBigLinear    
+;
+    push edi
+    mov ecx,400h
+    xor eax,eax
+    mov edi,edx
+    rep stosd
+    pop edi
+;
     mov es:[edi].mc_regs_linear,edx
 
 scCoreNext:
@@ -263,16 +282,17 @@ scCoreNext:
     inc si
     loop scCoreLoop
 ;    
+    pop edi
     mov eax,1000h
     AllocateBigLinear
-    mov es:mon_map_linear,edx
+    mov es:[edi].mon_map_linear,edx
 ;   
     mov ax,SEG data
     mov ds,ax
-    mov ds:mon_sel,es
+    mov ds:mon_linear,edi
 ;     
-    mov bx,es
-    GetSelectorBaseSize
+    mov edx,edi
+    mov ecx,1000h
     call set_monitor_data
     ret
 setup_crash     Endp
@@ -427,7 +447,7 @@ init_crash_driver    Proc near
     mov ax,SEG data
     mov ds,ax
     mov ds:map_spinlock,0
-    mov ds:mon_sel,0
+    mov ds:mon_linear,0
 ;
     mov eax,1000h
     AllocateBigLinear

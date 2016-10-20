@@ -30,21 +30,14 @@ INCLUDE ..\os.inc
 INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 INCLUDE kdebug.inc
-
-flat_sel = 20h
-mon_system_data_sel = 28h
-dosB800 = 0D0h
-process_page_sel    = 2C8h
-shutdown_pretask_gate = 68h
  
 data    SEGMENT byte public 'DATA'
-
-mon_data_sel    DW ?
 
 mon_gdt_size    DW ?
 mon_gdt_base    DD ?
 
 mon_data_base   DD ?
+mon_data_size   DD ?
 
 data    ENDS
 
@@ -76,12 +69,11 @@ MapPhysical       Proc near
     mov al,67h
     and ah,0F0h
 ;
-    mov cx,SEG data
+    mov cx,mon_data_sel
     mov ds,cx
-    mov ds,ds:mon_data_sel    
     mov edx,ds:mon_map_linear
 ;    
-    mov cx,process_page_sel
+    mov cx,mon_process_page_sel
     mov ds,cx
 ;
     mov ecx,cr4
@@ -132,12 +124,11 @@ MapLinear       Proc near
     push esi
     push edi
 ;    
-    mov ax,SEG data
+    mov ax,mon_data_sel
     mov es,ax
-    mov es,es:mon_data_sel    
     mov edi,es:mon_map_linear
 ;
-    mov ax,flat_sel
+    mov ax,mon_flat_sel
     mov es,ax    
 ;
     mov edx,ebx
@@ -192,7 +183,7 @@ mlPae:
     mov esi,edx
     shr esi,18
     and esi,0FF8h
-    and esi,edi
+    add esi,edi
     mov eax,es:[esi]
     test al,1
     jz mlFail
@@ -878,7 +869,7 @@ ShowChar Proc near
 
 scText:
     push eax
-    mov ax,dosB800
+    mov ax,mon_text_sel
     mov es,ax
 ;
     mov ax,ds:efi_text_row
@@ -886,7 +877,7 @@ scText:
     mul cx
     add ax,ds:efi_text_col
     add ax,ax
-    mov di,ax
+    movzx edi,ax
     pop eax
     mov ah,7
     stosw
@@ -894,7 +885,7 @@ scText:
 
 scLfb:
     push eax
-    mov ax,flat_sel
+    mov ax,mon_flat_sel
     mov es,ax
 ; 
     mov ax,ds:efi_text_row
@@ -993,7 +984,7 @@ InvertChar Proc near
     jz icDone
 
 icLfb:
-    mov ax,flat_sel
+    mov ax,mon_flat_sel
     mov es,ax
 ; 
     push cx
@@ -1065,7 +1056,7 @@ Clear Proc near
 
 cText:
     xor edi,edi
-    mov ax,dosB800
+    mov ax,mon_text_sel
     mov es,ax
     mov ax,0720h
     mov ecx,80 * 24
@@ -1073,7 +1064,7 @@ cText:
     jmp cUpdate
 
 cLfb:
-    mov ax,flat_sel
+    mov ax,mon_flat_sel
     mov es,ax
 ;
     mov edi,ds:efi_lfb
@@ -2195,15 +2186,14 @@ WriteInstr  Proc near
     push esi
     push edi
 ;    
-    mov ax,SEG data
+    mov ax,mon_data_sel
     mov es,ax
-    mov es,es:mon_data_sel
 ;
     mov ecx,40
-    mov edi,OFFSET mon_buf
+    xor edi,edi
     call DisAsmCode
 ;
-    mov esi,OFFSET mon_buf    
+    xor esi,esi
     mov ecx,40
 
 wiLoop:
@@ -2607,6 +2597,9 @@ UpdateSelector      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 SetupDescriptors Proc near
+    mov ds:[ebp].cpu_read_mem,OFFSET read_mem
+    mov ds:[ebp].cpu_write_mem,OFFSET write_mem
+;    
     mov bx,ds:[ebp].reg_ldt.d_selector
     call GetSelectorBaseSizeType
     jc sdLdtOk
@@ -2623,9 +2616,6 @@ sdLdtOk:
     mov ds:[ebp].reg_tr.d_base,edx
 
 sdTrOk:
-    mov ds:[ebp].cpu_read_mem,OFFSET read_mem
-    mov ds:[ebp].cpu_write_mem,OFFSET write_mem
-;    
     lea esi,[ebp].reg_es
     call UpdateSelector
 ;
@@ -2644,7 +2634,7 @@ sdTrOk:
     lea esi,[ebp].reg_gs
     call UpdateSelector
 ;
-    mov ds:[ebp].reg_usel.d_selector,flat_sel
+    mov ds:[ebp].reg_usel.d_selector,20h
     lea esi,[ebp].reg_usel
     call UpdateSelector
     ret
@@ -2899,6 +2889,17 @@ cint13:
     push ax
     jmp DumpFault
 
+cint14:
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,14
+    push ax
+    mov ax,ds
+    push ax
+    jmp DumpFault
+
 cint16:
     push dword ptr 0
     push ebp
@@ -2932,6 +2933,7 @@ ci10    DD      10,         OFFSET cint10
 ci11    DD      11,         OFFSET cint11
 ci12    DD      12,         OFFSET cint12
 ci13    DD      13,         OFFSET cint13
+ci14    DD      14,         OFFSET cint14
 ci16    DD      16,         OFFSET cint16
 ci40    DD      40h,        OFFSET hwint
 ci80    DD      80h,        OFFSET hwint
@@ -3002,8 +3004,6 @@ mon_priv:
     mov fs,ax
     mov gs,ax
 ;
-    mov ax,1234h
-    mov ds,ax    
     call SetupDescriptors
     call WriteCpuReg32
 
@@ -3027,7 +3027,7 @@ CreateDataSel       PROC near
     mov ax,SEG data
     mov ds,ax
     mov esi,ds:mon_gdt_base
-    mov ax,flat_sel
+    mov ax,mon_flat_sel
     mov ds,ax
 ;
     mov al,bl
@@ -3055,6 +3055,7 @@ CreateDataSel       ENDP
 ;           DESCRIPTION:   Set monitor data
 ;
 ;           PARAMETERS:    EDX      Linear address of mon_data_sel
+;                          ECX      Size of mon_data_sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3064,6 +3065,7 @@ set_monitor_data    Proc near
     mov ax,SEG data
     mov ds,ax
     mov ds:mon_data_base,edx
+    mov ds:mon_data_size,ecx
     ret
 set_monitor_data       Endp
 
@@ -3096,7 +3098,7 @@ set_monitor_gdt    Proc near
     mov ds,ax
     mov bx,mon_data_sel
     mov edx,ds:mon_data_base
-    mov ecx,SIZE monitor_data_sel
+    mov ecx,ds:mon_data_size
     call CreateDataSel    
     ret
 set_monitor_gdt   Endp

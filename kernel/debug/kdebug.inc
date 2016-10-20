@@ -212,6 +212,8 @@ data_offset		DD ?,?
 data_sel		DD ?
 data_valid		DB ?
 
+pad             DB ?
+
 cpu_struc	ENDS
 
 mon_code_sel            = 8h
@@ -236,7 +238,6 @@ monitor_data_sel        STRUC
 mon_fault_regs      cpu_struc <>
 
 mon_map_linear      DD ?
-mon_buf             DB 50 DUP (?)
 
 mon_core_count      DW ?
 mon_core_regs       DB ?
