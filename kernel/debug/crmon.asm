@@ -1713,6 +1713,52 @@ WriteSelReg   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WriteWordRegs
+;
+;           DESCRIPTION:    Write 16-bit registers
+;
+;           PARAMETERS:     CS:ESI       Table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fault_reg_tab:
+    DB ' CS='
+    DD OFFSET reg_cs.d_selector
+    DB ' SS='
+    DD OFFSET reg_ss.d_selector
+    DB ' DS='
+    DD OFFSET reg_ds.d_selector
+    DB ' ES='
+    DD OFFSET reg_es.d_selector
+    DB ' FS='
+    DD OFFSET reg_fs.d_selector
+    DB ' GS='
+    DD OFFSET reg_gs.d_selector
+    DB 0
+
+WriteWordRegs  PROC near
+
+word_write_loop:
+    mov al,cs:[esi]
+    or al,al
+    je word_write_end
+;
+    mov ecx,4
+    call ShowCodeSizeString
+    add esi,4
+    mov ebx,cs:[esi]
+    mov ax,ds:[ebx+ebp]
+    call WriteHexWord
+    add esi,4
+    jmp word_write_loop
+
+word_write_end:
+    ret
+WriteWordRegs  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           WriteDwordRegs
 ;
 ;           DESCRIPTION:    Write 32-bit registers
@@ -2659,6 +2705,11 @@ DumpFault:
 ;
     call Clear
 ;    
+    mov ax,mon_system_data_sel
+    mov ds,ax
+    mov ds:efi_text_row,20
+    mov ds:efi_text_col,0
+;    
     mov ax,mon_data_sel
     mov ds,ax
     xor ebp,ebp    
@@ -2678,7 +2729,10 @@ DumpFault:
     call ShowChar
     call WriteEflags    
     call NewLine
-
+;
+    mov esi,OFFSET fault_reg_tab
+    call WriteWordRegs
+    
 fdLoop:
     jmp fdLoop
 
