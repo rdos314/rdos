@@ -1790,6 +1790,14 @@ fault_reg_tab1:
     DD OFFSET reg_edi
     DB 0
     
+fault_reg_tab2:
+    DB ' EPC='
+    DD OFFSET reg_eip
+    DB ' ESP='
+    DD OFFSET reg_esp
+    DB ' EBP='
+    DD OFFSET reg_ebp
+    DB 0
 
 WriteDwordRegs  PROC near
 
@@ -2660,6 +2668,10 @@ DumpFault:
     call NewLine
 ;
     mov esi,OFFSET fault_reg_tab1
+    call WriteDwordRegs
+    call NewLine
+;
+    mov esi,OFFSET fault_reg_tab2
     call WriteDwordRegs
     call NewLine
 
