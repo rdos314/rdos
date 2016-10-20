@@ -2673,6 +2673,10 @@ DumpFault:
 ;
     mov esi,OFFSET fault_reg_tab2
     call WriteDwordRegs
+;
+    mov al,' '
+    call ShowChar
+    call WriteEflags    
     call NewLine
 
 fdLoop:
