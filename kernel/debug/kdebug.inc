@@ -173,6 +173,7 @@ root_tab        DD ?
 core_sel        DW ?
 curr_irq        DD ?
 fault_vect      DB ?
+fault_error     DD ?
 
 cpu_read_mem    DD ?
 cpu_write_mem   DD ?
@@ -231,6 +232,8 @@ mc_regs_linear   DD ?
 mon_core_struc     ENDS
 
 monitor_data_sel        STRUC
+
+mon_fault_regs      cpu_struc <>
 
 mon_map_linear      DD ?
 mon_buf             DB 50 DUP (?)

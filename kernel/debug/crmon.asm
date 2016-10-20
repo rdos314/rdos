@@ -2538,6 +2538,60 @@ sdTrOk:
     ret
 SetupDescriptors        Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DumpFault
+;
+;           DESCRIPTION:    Dump fault
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DumpFault:
+    push es
+;
+    mov ax,mon_data_sel
+    mov es,ax
+;    
+    mov al,byte ptr [ebp].trap_exc_nr
+    mov es:fault_vect,al
+;
+    mov eax,[ebp].trap_err
+    mov es:fault_error,eax
+;
+    mov eax,[ebp].trap_eip
+    mov es:reg_eip,eax
+;
+    mov eax,[ebp].trap_eflags
+    mov es:reg_eflags,eax
+    mov eax,[ebp].trap_eax
+    mov es:reg_eax,eax
+    mov es:reg_ecx,ecx
+    mov es:reg_edx,edx
+    mov eax,[ebp].trap_ebx
+    mov es:reg_ebx,eax
+    mov eax,ebp
+    add eax,20
+    mov es:reg_esp,eax
+    mov es:reg_esi,esi
+    mov es:reg_edi,edi
+    mov ax,[ebp].trap_cs
+    mov es:reg_cs.d_selector,ax
+    mov es:reg_ss.d_selector,ss
+    mov ax,[ebp].trap_pds
+    mov es:reg_ds.d_selector,ax
+    pop ax
+    mov es:reg_es.d_selector,ax
+    mov es:reg_fs.d_selector,fs
+    mov es:reg_gs.d_selector,gs
+    mov ebp,[ebp].trap_ebp
+    mov es:reg_ebp,ebp
+    sldt ax
+    mov es:reg_ldt.d_selector,ax       
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
