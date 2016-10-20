@@ -2757,10 +2757,19 @@ cint0:
     push ax
     mov ax,ds
     push ax
-    mov ax,mon_system_data_sel
-    mov ds,ax
-    mov ds:shut_spinlock,0
-    ShutDownPreTask
+    jmp DumpFault
+
+cint1:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,1
+    push ax
+    mov ax,ds
+    push ax
+    jmp DumpFault
 
 cint3:
     push dword ptr 0
@@ -2773,10 +2782,6 @@ cint3:
     mov ax,ds
     push ax
     jmp DumpFault
-    mov ax,mon_system_data_sel
-    mov ds,ax
-    mov ds:shut_spinlock,0
-    ShutDownPreTask
 
 cint4:
     push dword ptr 0
@@ -2788,10 +2793,7 @@ cint4:
     push ax
     mov ax,ds
     push ax
-    mov ax,mon_system_data_sel
-    mov ds,ax
-    mov ds:shut_spinlock,0
-    ShutDownPreTask
+    jmp DumpFault
 
 cint5:
     push dword ptr 0
@@ -2803,10 +2805,7 @@ cint5:
     push ax
     mov ax,ds
     push ax
-    mov ax,mon_system_data_sel
-    mov ds,ax
-    mov ds:shut_spinlock,0
-    ShutDownPreTask
+    jmp DumpFault
 
 cint6:
     push dword ptr 0
@@ -2818,10 +2817,7 @@ cint6:
     push ax
     mov ax,ds
     push ax
-    mov ax,mon_system_data_sel
-    mov ds,ax
-    mov ds:shut_spinlock,0
-    ShutDownPreTask
+    jmp DumpFault
 
 cint7:
     push dword ptr 0
@@ -2833,10 +2829,7 @@ cint7:
     push ax
     mov ax,ds
     push ax
-    mov ax,mon_system_data_sel
-    mov ds,ax
-    mov ds:shut_spinlock,0
-    ShutDownPreTask
+    jmp DumpFault
 
 cint8:
     push ebp
@@ -2847,10 +2840,7 @@ cint8:
     push ax
     mov ax,ds
     push ax
-    mov ax,mon_system_data_sel
-    mov ds,ax
-    mov ds:shut_spinlock,0
-    ShutDownPreTask
+    jmp DumpFault
 
 cint9:
     push dword ptr 0
@@ -2862,10 +2852,7 @@ cint9:
     push ax
     mov ax,ds
     push ax
-    mov ax,mon_system_data_sel
-    mov ds,ax
-    mov ds:shut_spinlock,0
-    ShutDownPreTask
+    jmp DumpFault
 
 cint10:
     push ebp
@@ -2877,10 +2864,7 @@ cint10:
     push ax
     mov ax,ds
     push ax
-    mov ax,mon_system_data_sel
-    mov ds,ax
-    mov ds:shut_spinlock,0
-    ShutDownPreTask
+    jmp DumpFault
 
 cint11:
     push ebp
@@ -2891,10 +2875,7 @@ cint11:
     push ax
     mov ax,ds
     push ax
-    mov ax,mon_system_data_sel
-    mov ds,ax
-    mov ds:shut_spinlock,0
-    ShutDownPreTask
+    jmp DumpFault
 
 cint12:
     push ebp
@@ -2905,11 +2886,7 @@ cint12:
     push ax
     mov ax,ds
     push ax
-    mov ax,mon_system_data_sel
-    mov ds,ax
-    mov ds:shut_spinlock,0
-    ShutDownPreTask
-
+    jmp DumpFault
 
 cint13:
     push ebp
@@ -2920,10 +2897,7 @@ cint13:
     push ax
     mov ax,ds
     push ax
-    mov ax,mon_system_data_sel
-    mov ds,ax
-    mov ds:shut_spinlock,0
-    ShutDownPreTask
+    jmp DumpFault
 
 cint16:
     push dword ptr 0
@@ -2935,10 +2909,7 @@ cint16:
     push ax
     mov ax,ds
     push ax
-    mov ax,mon_system_data_sel
-    mov ds,ax
-    mov ds:shut_spinlock,0
-    ShutDownPreTask
+    jmp DumpFault
 
 hwint:
     iretd
@@ -2948,6 +2919,8 @@ crash_int_tab:
 ;               int #       Entry          
 ;
 ci0     DD      0,          OFFSET cint0
+ci1     DD      1,          OFFSET cint1
+ci2     DD      2,          OFFSET hwint
 ci3     DD      3,          OFFSET cint3
 ci4     DD      4,          OFFSET cint4
 ci5     DD      5,          OFFSET cint5
@@ -3028,7 +3001,9 @@ mon_priv:
     xor ax,ax
     mov fs,ax
     mov gs,ax
-    int 3
+;
+    mov ax,1234h
+    mov ds,ax    
     call SetupDescriptors
     call WriteCpuReg32
 
