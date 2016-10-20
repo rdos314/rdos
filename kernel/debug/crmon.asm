@@ -32,7 +32,7 @@ INCLUDE ..\os\system.inc
 INCLUDE kdebug.inc
 
 flat_sel = 20h
-system_data_sel = 28h
+mon_system_data_sel = 28h
 dosB800 = 0D0h
 process_page_sel    = 2C8h
 shutdown_pretask_gate = 68h
@@ -816,7 +816,7 @@ move_cursor Proc near
     push eax
     push edx
 ;
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
     mov ds:efi_text_row,cx
     mov ds:efi_text_col,dx    
@@ -869,7 +869,7 @@ ShowChar Proc near
     pushad
 ;   
     push eax
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
     mov eax,ds:efi_lfb
     or eax,ds:efi_lfb+4
@@ -986,7 +986,7 @@ InvertChar Proc near
     push es
     pushad
 ;   
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
     mov eax,ds:efi_lfb
     or eax,ds:efi_lfb+4
@@ -1057,7 +1057,7 @@ Clear Proc near
     push es
     pushad
 ;    
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax 
     mov eax,ds:efi_lfb
     or eax,ds:efi_lfb+4
@@ -1111,7 +1111,7 @@ NewLine Proc near
     push ax
     push dx
 ;
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
 
 nlRetry:    
@@ -1918,9 +1918,6 @@ ke19    DB 'NMI                     '
 ke1A    DB 'Crash Gate              '
 
 WriteFault    Proc near
-    mov al,' '
-    call ShowChar
-;    
     movzx edx,ds:[ebp].fault_vect
     cmp dl,1Ah
     jbe wfDo
@@ -2145,6 +2142,10 @@ WriteCpuReg32     Proc near
 ;
     mov esi,OFFSET dword_reg_tab3
     call WriteDwordRegs
+;    
+    mov al,' '
+    call ShowChar
+;    
     call WriteFault
     call NewLine
 ;
@@ -2271,6 +2272,9 @@ WriteCpuReg64     Proc near
     mov esi,OFFSET qword_reg_tab6
     call WriteQwordRegs
     call NewLine
+;    
+    mov al,' '
+    call ShowChar
 ;
     call WriteFault
     call WriteInstr
@@ -2594,8 +2598,16 @@ DumpFault:
     sldt ax
     mov es:reg_ldt.d_selector,ax       
 ;
-    mov ax,1234h
-    mov ds,ax    
+    call Clear
+;    
+    mov ax,mon_data_sel
+    mov ds,ax
+    xor ebp,ebp    
+;    
+    call WriteFault
+
+fdLoop:
+    jmp fdLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2618,7 +2630,7 @@ cint0:
     push ax
     mov ax,ds
     push ax
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
     mov ds:shut_spinlock,0
     ShutDownPreTask
@@ -2634,7 +2646,7 @@ cint3:
     mov ax,ds
     push ax
     jmp DumpFault
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
     mov ds:shut_spinlock,0
     ShutDownPreTask
@@ -2649,7 +2661,7 @@ cint4:
     push ax
     mov ax,ds
     push ax
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
     mov ds:shut_spinlock,0
     ShutDownPreTask
@@ -2664,7 +2676,7 @@ cint5:
     push ax
     mov ax,ds
     push ax
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
     mov ds:shut_spinlock,0
     ShutDownPreTask
@@ -2679,7 +2691,7 @@ cint6:
     push ax
     mov ax,ds
     push ax
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
     mov ds:shut_spinlock,0
     ShutDownPreTask
@@ -2694,7 +2706,7 @@ cint7:
     push ax
     mov ax,ds
     push ax
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
     mov ds:shut_spinlock,0
     ShutDownPreTask
@@ -2708,7 +2720,7 @@ cint8:
     push ax
     mov ax,ds
     push ax
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
     mov ds:shut_spinlock,0
     ShutDownPreTask
@@ -2723,7 +2735,7 @@ cint9:
     push ax
     mov ax,ds
     push ax
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
     mov ds:shut_spinlock,0
     ShutDownPreTask
@@ -2738,7 +2750,7 @@ cint10:
     push ax
     mov ax,ds
     push ax
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
     mov ds:shut_spinlock,0
     ShutDownPreTask
@@ -2752,7 +2764,7 @@ cint11:
     push ax
     mov ax,ds
     push ax
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
     mov ds:shut_spinlock,0
     ShutDownPreTask
@@ -2766,7 +2778,7 @@ cint12:
     push ax
     mov ax,ds
     push ax
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
     mov ds:shut_spinlock,0
     ShutDownPreTask
@@ -2781,7 +2793,7 @@ cint13:
     push ax
     mov ax,ds
     push ax
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
     mov ds:shut_spinlock,0
     ShutDownPreTask
@@ -2796,7 +2808,7 @@ cint16:
     push ax
     mov ax,ds
     push ax
-    mov ax,system_data_sel
+    mov ax,mon_system_data_sel
     mov ds,ax
     mov ds:shut_spinlock,0
     ShutDownPreTask
