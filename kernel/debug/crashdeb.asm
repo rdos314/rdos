@@ -57,6 +57,7 @@ code    SEGMENT byte public use32 'CODE'
     
     extrn set_monitor_data:near
     extrn set_monitor_gdt:near
+    extrn set_monitor_idt:near
     extrn start_monitor:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -207,10 +208,10 @@ smNmiLoop:
     test fs:ps_flags,PS_FLAG_NMI
     jnz smNmiNext
 ;        
-;    push ax
-;    mov al,2
-;    SendInt
-;    pop ax
+    push ax
+    mov al,2
+    SendInt
+    pop ax
         
 smNmiNext:
     inc ax
@@ -374,6 +375,28 @@ create_gdt      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           create_idt
+;
+;           DESCRIPTION:    Create new IDT
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_idt     Proc near
+    mov eax,1000h
+    AllocateBigLinear
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stosd
+    mov ecx,1000h
+    ret
+create_idt  Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           test_pr
 ;
 ;           DESCRIPTION:    
@@ -417,6 +440,8 @@ init_crash_tasking    Proc near
     call setup_crash
     call create_gdt
     call set_monitor_gdt
+    call create_idt
+    call set_monitor_idt    
 ;    
     mov ax,cs
     mov ds,ax
