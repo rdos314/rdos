@@ -2818,6 +2818,17 @@ start_monitor:
     dw mon_code_sel
 
 mon_priv:
+    mov ax,mon_gdt_sel
+    mov ss,ax
+    mov esp,1000h
+;
+    mov ax,mon_flat_sel
+    mov ds,ax
+    mov es,ax
+;        
+    xor ax,ax
+    mov fs,ax
+    mov gs,ax
     int 3
     call SetupDescriptors
     call WriteCpuReg32
