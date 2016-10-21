@@ -61,6 +61,442 @@ code    SEGMENT byte public use32 'CODE'
     extrn set_monitor_idt:near
     extrn start_monitor:near
 
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddCrashThread
+;
+;       DESCRIPTION:    Add crash thread
+;
+;       PARAMETERS:     FS      Core selector
+;                       BX      Thread
+;                       GS:EDI  Info buffer
+;                       AX      State
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddCrashThread   Proc near
+    push es
+    pushad
+;    
+    mov cx,gs:[edi].cls_threads
+    cmp cx,MAX_LOG_THREADS
+    jae actDone
+;
+    inc gs:[edi].cls_threads
+    push ax
+    mov ax,SIZE core_log_thread_struc
+    mul cx
+    add ax,OFFSET cls_thread_arr
+    movzx eax,ax
+    add edi,eax
+    pop ax
+;
+    mov gs:[edi].clt_sel,bx
+    mov gs:[edi].clt_state,ax
+    mov es,bx
+    mov ax,es:p_prio
+    shr ax,1
+    mov gs:[edi].clt_prio,ax
+    mov ax,es:p_core
+    mov gs:[edi].clt_core,ax
+    mov ax,es:p_wanted_core
+    mov gs:[edi].clt_wanted_core,ax
+;
+    mov ecx,8
+    mov esi,OFFSET thread_name
+    add edi,OFFSET clt_name
+
+actLoop:
+    mov eax,es:[esi]
+    mov gs:[edi],eax
+    add esi,4
+    add edi,4
+    loop actLoop    
+
+actDone:
+    popad
+    pop es
+    ret
+AddCrashThread Endp
+
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddCrashThreadList
+;
+;       DESCRIPTION:    Add crash thread list
+;
+;       PARAMETERS:     FS      Core selector
+;                       SI      Thread list
+;                       GS:EDI  Info buffer
+;                       AX      State
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddCrashThreadList   Proc near
+    push es
+    push bx
+    push dx
+;    
+    mov bx,fs:[si]
+    or bx,bx
+    jz actlDone
+;
+    mov dx,bx
+
+actlMore:    
+    call AddCrashThread  
+    mov es,bx
+    mov bx,es:p_next
+    cmp bx,dx
+    jne actlMore  
+
+actlDone:
+    pop dx
+    pop bx
+    pop es
+    ret
+AddCrashThreadList Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddCrashSeg
+;
+;       DESCRIPTION:    Add crash segment
+;
+;       PARAMETERS:     FS      Core selector
+;                       BX      Selector
+;                       GS:EDI  Info buffer
+;                       EAX     Selector offset
+;                       DS:EBP  Register state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddCrashSeg   Proc near
+    push es
+    pushad
+;    
+    add edi,eax
+    mov ds:[edi].clss_sel,bx
+    mov ds:[edi].clss_flags,0
+;    
+    and bx,NOT 3
+    or bx,bx
+    jz acsDone
+;
+    test bx,4
+    jz acsGdt
+
+acsLdt:
+    mov ecx,ds:[ebp].reg_ldt.d_limit
+    mov edx,ds:[ebp].reg_ldt.d_base
+    jmp acsDo
+
+acsGdt:
+    mov ecx,ds:[ebp].reg_gdt.d_limit
+    mov edx,ds:[ebp].reg_gdt.d_base
+
+acsDo:
+    and bx,0FFF8h
+    cmp bx,cx
+    ja acsDone
+;
+    mov ax,flat_sel
+    mov es,ax
+    movzx ebx,bx
+    add ebx,edx
+;
+    mov al,es:[ebx+5]
+    movzx ax,al
+    mov gs:[edi].clss_flags,ax
+;
+    test al,80h
+    jz acsDone
+;
+    xor ecx,ecx
+    mov cl,es:[ebx+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,es:[ebx]
+    test byte ptr es:[ebx+6],80h
+    jz acsSmall
+;
+    shl ecx,12
+    or cx,0FFFh
+
+acsSmall:
+    mov edx,es:[ebx+2]
+    rol edx,8
+    mov dl,es:[ebx+7]
+    ror edx,8
+;
+    mov gs:[edi].clss_base,edx
+    mov gs:[edi].clss_size,ecx
+
+acsDone:
+    popad
+    pop es
+    ret
+AddCrashSeg Endp
+    
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddToCrashLog
+;
+;       DESCRIPTION:    Add dumped data to crash log
+;
+;       PARAMETERS:     FS      Core selector
+;                       DS:EBP  Registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddToCrashLog   Proc near
+    push es
+    push gs
+;
+    mov si,fs:ps_dump_offset
+    or si,si
+    jz aclDone
+;
+    mov ax,core_image_sel
+    mov gs,ax
+    mov edi,gs:[si]
+    mov ax,flat_sel
+    mov gs,ax
+;
+    mov gs:[edi].cls_threads,0
+    mov ax,fs
+    mov gs:[edi].cls_core,ax
+
+
+    mov eax,ds:[ebp].curr_irq
+    mov gs:[edi].cls_irq,eax
+;
+    movzx eax,ds:[ebp].fault_vect
+    mov gs:[edi].cls_fault,eax
+;    
+    mov eax,ds:[ebp].reg_cr0
+    mov gs:[edi].cls_cr0,eax
+;    
+    mov eax,ds:[ebp].reg_cr2
+    mov gs:[edi].cls_cr2,eax
+;
+    mov eax,ds:[ebp].reg_cr3
+    mov gs:[edi].cls_cr3,eax
+;
+    mov eax,ds:[ebp].reg_cr4
+    mov gs:[edi].cls_cr4,eax
+;
+    mov eax,ds:[ebp].reg_dr0
+    mov gs:[edi].cls_dr0,eax
+;
+    mov eax,ds:[ebp].reg_dr1
+    mov gs:[edi].cls_dr1,eax
+;
+    mov eax,ds:[ebp].reg_dr2
+    mov gs:[edi].cls_dr2,eax
+;
+    mov eax,ds:[ebp].reg_dr3
+    mov gs:[edi].cls_dr3,eax
+;
+    mov eax,ds:[ebp].reg_dr7
+    mov gs:[edi].cls_dr7,eax
+;
+    mov eax,ds:[ebp].reg_eip
+    mov dword ptr gs:[edi].cls_rip,eax
+;
+    mov eax,ds:[ebp].reg_eflags
+    mov dword ptr gs:[edi].cls_rflags,eax
+;
+    mov eax,ds:[ebp].reg_eax
+    mov dword ptr gs:[edi].cls_rax,eax
+;
+    mov eax,ds:[ebp].reg_ecx
+    mov dword ptr gs:[edi].cls_rcx,eax
+;
+    mov eax,ds:[ebp].reg_edx
+    mov dword ptr gs:[edi].cls_rdx,eax
+;
+    mov eax,ds:[ebp].reg_ebx
+    mov dword ptr gs:[edi].cls_rbx,eax
+;
+    mov eax,ds:[ebp].reg_esp
+    mov dword ptr gs:[edi].cls_rsp,eax
+;
+    mov eax,ds:[ebp].reg_ebp
+    mov dword ptr gs:[edi].cls_rbp,eax
+;
+    mov eax,ds:[ebp].reg_esi
+    mov dword ptr gs:[edi].cls_rsi,eax
+;
+    mov eax,ds:[ebp].reg_edi
+    mov dword ptr gs:[edi].cls_rdi,eax
+;
+    mov ax,fs:ps_nesting
+    mov gs:[edi].cls_nesting,ax
+;
+    mov bx,ds:[ebp].reg_es.d_selector
+    mov eax,OFFSET cls_es
+    call AddCrashSeg
+;
+    mov bx,ds:[ebp].reg_cs.d_selector
+    mov eax,OFFSET cls_cs
+    call AddCrashSeg
+;
+    mov bx,ds:[ebp].reg_ss.d_selector
+    mov eax,OFFSET cls_ss
+    call AddCrashSeg
+;
+    mov bx,ds:[ebp].reg_ds.d_selector
+    mov eax,OFFSET cls_ds
+    call AddCrashSeg
+;
+    mov bx,ds:[ebp].reg_fs.d_selector
+    mov eax,OFFSET cls_fs
+    call AddCrashSeg
+;
+    mov bx,ds:[ebp].reg_gs.d_selector
+    mov eax,OFFSET cls_gs
+    call AddCrashSeg
+;
+    mov bx,ds:[ebp].reg_ldt.d_selector
+    mov eax,OFFSET cls_ldt
+    call AddCrashSeg
+;
+    mov bx,ds:[ebp].reg_tr.d_selector
+    mov eax,OFFSET cls_tr
+    call AddCrashSeg
+;
+    mov ecx,ds:[ebp].reg_gdt.d_limit
+    mov gs:[edi].cls_gdtr.clss_size,ecx
+;
+    mov edx,ds:[ebp].reg_gdt.d_base
+    mov gs:[edi].cls_gdtr.clss_base,edx
+;
+    mov ecx,ds:[ebp].reg_idt.d_limit
+    mov gs:[edi].cls_idtr.clss_size,ecx
+;
+    mov edx,ds:[ebp].reg_idt.d_base
+    mov gs:[edi].cls_idtr.clss_base,edx
+;
+    mov bx,fs:ps_curr_thread
+    or bx,bx
+    jz aclNoCurr
+;
+    mov ax,LOG_CORE_THREAD_RUNNING
+    call AddCrashThread
+        
+aclNoCurr:
+    mov ax,LOG_CORE_THREAD_WAKEUP
+    mov si,OFFSET ps_wakeup_list
+    call AddCrashThreadList
+;
+    mov ax,LOG_CORE_THREAD_READY
+    mov cx,256
+    mov si,OFFSET ps_ptab
+
+aclReadyLoop:
+    call AddCrashThreadList
+    add si,2
+    loop aclReadyLoop
+;
+    mov ecx,gs:[edi].cls_ss.clss_size
+    cmp ecx,0FFFh
+    jne aclStackDone
+;    
+    push ds
+    push es
+    push esi
+    push edi
+;    
+    mov ax,gs
+    mov es,ax
+    mov ds,ds:[ebp].reg_ss.d_selector
+    xor esi,esi
+    mov ecx,400h
+    add edi,CORE_IMAGE_STACK_OFFSET
+    rep movs dword ptr es:[edi],ds:[esi]
+;
+    pop edi
+    pop esi
+    pop es
+    pop ds
+    
+aclStackDone:
+    mov cx,fs:ps_log_count
+    cmp cx,PROC_LOG_ENTRIES    
+    jb aclLogFew
+
+aclLogMany:
+    mov fs:ps_log_count,PROC_LOG_ENTRIES
+    jmp aclLogProcess
+
+aclLogFew:
+    mov fs:ps_log_entry,0    
+
+aclLogProcess:
+    mov cx,fs:ps_log_count
+    or cx,cx
+    jz aclLogDone
+;
+    cmp cx,PROC_LOG_ENTRIES
+    jbe aclLogSizeOk
+;
+    mov cx,200h
+
+aclLogSizeOk:    
+    push ds
+    push es
+    push esi
+    push edi
+;
+    mov ax,gs
+    mov es,ax
+    mov ds,fs:ps_log_sel
+    mov bx,fs:ps_log_entry
+    add edi,CORE_IMAGE_LOG_OFFSET
+
+aclLogLoop:    
+    movzx esi,bx
+    shl esi,4
+    push ecx
+    mov ecx,4
+    rep movs dword ptr es:[edi],ds:[esi]
+    pop ecx
+;
+    inc bx
+    cmp bx,PROC_LOG_ENTRIES
+    jne aclLogNext
+;
+    xor bx,bx
+
+aclLogNext:
+    loop aclLogLoop
+;
+    pop edi
+    pop esi
+    pop es
+    pop ds        
+
+aclLogDone:    
+    mov gs:[edi].cls_sign,LOG_CORE_SIGN
+;
+    mov bx,core_save_sel
+    mov ds,bx
+    mov ds:sc_sign,SAVE_CORE_SIGN
+        
+aclDone:        
+    pop gs
+    pop es
+    ret
+AddToCrashLog   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -116,6 +552,31 @@ scdDone:
     pop fs
     ret
 start_core_dump Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           DelayMs
+;
+;               DESCRIPTION:    Delay that does not use multitasking functions
+;
+;       PARAMETERS:     AX      Delay in ms
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DelayMs Proc near
+
+dmMain:
+    mov ecx,10000h
+
+dmLoop:
+    loop dmLoop
+;
+    sub ax,1
+    jnz dmMain
+    ret
+DelayMs Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -184,6 +645,7 @@ notify_core_dump:
     mov ds:[ebp].reg_tr.d_limit,0
     mov ds:[ebp].reg_tr.d_base,0
     mov ds:[ebp].reg_efer,0
+    call AddToCrashLog
 ;    
     mov ax,system_data_sel
     mov es,ax
@@ -197,6 +659,19 @@ smSpin:
     jmp smWait
 
 smEnter:
+    mov ax,wd_code_sel
+    verr ax
+    jnz smCont
+;
+    mov ax,5
+    call DelayMs
+    FaultReset
+;    
+    mov ax,500
+    call DelayMs
+    SoftReset
+
+smCont:
     mov ax,SEG data
     mov ds,ax
 ;
@@ -484,7 +959,7 @@ init_crash_tasking    Proc near
     mov edi,OFFSET test_name
     mov ecx,stack0_size
     mov ax,26
-    CreateProcess
+;    CreateProcess
 ;        
     popad
     pop ds
