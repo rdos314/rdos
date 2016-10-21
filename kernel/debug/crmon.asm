@@ -123,23 +123,25 @@ MapPhysical       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MapLinear       Proc near
+    push fs
     push eax
     push edx
     push esi
-    push edi
-;    
-    mov ax,mon_data_sel
-    mov es,ax
-    mov edi,es:mon_map_linear
 ;
     mov ax,mon_flat_sel
     mov es,ax    
+;    
+    mov ax,mon_data_sel
+    mov fs,ax
 ;
     mov edx,ebx
     mov eax,ds:[ebp].reg_cr3
     xor ebx,ebx
     call MapPhysical
 ;
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz mlLong
+;    
     test ds:[ebp].reg_cr4,20h
     jnz mlPae
 
@@ -147,7 +149,7 @@ mlProt:
     mov esi,edx
     shr esi,20
     and si,0FFFCh
-    add esi,edi
+    add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
     jz mlFail
@@ -158,7 +160,7 @@ mlProt:
     mov esi,edx
     shr esi,10
     and esi,0FFCh
-    add esi,edi
+    add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
     jz mlFail
@@ -168,7 +170,7 @@ mlProt:
 ;    
     mov ebx,edx
     and ebx,0FFFh    
-    add ebx,edi
+    add ebx,fs:mon_map_linear
     clc
     jmp mlDone
 
@@ -176,7 +178,7 @@ mlPae:
     mov esi,edx
     shr esi,27
     and si,0FFF8h
-    add esi,edi
+    add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
     jz mlFail
@@ -187,7 +189,7 @@ mlPae:
     mov esi,edx
     shr esi,18
     and esi,0FF8h
-    add esi,edi
+    add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
     jz mlFail
@@ -198,7 +200,7 @@ mlPae:
     mov esi,edx
     shr esi,9
     and esi,0FF8h
-    add esi,edi
+    add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
     jz mlFail
@@ -208,7 +210,61 @@ mlPae:
 ;    
     mov ebx,edx
     and ebx,0FFFh    
-    add ebx,edi
+    add ebx,fs:mon_map_linear
+    clc
+    jmp mlDone
+
+mlLong:
+    mov esi,edi
+    shr esi,4
+    and si,0FFF8h
+    add esi,fs:mon_map_linear
+    mov eax,es:[esi]
+    test al,1
+    jz mlFail
+;
+    mov ebx,es:[esi+4]
+    call MapPhysical
+;    
+    mov esi,edx
+    shr esi,27
+    mov eax,edi
+    shl eax,5
+    or si,ax
+    and si,0FFF8h
+    add esi,fs:mon_map_linear
+    mov eax,es:[esi]
+    test al,1
+    jz mlFail
+;
+    mov ebx,es:[esi+4]
+    call MapPhysical
+;
+    mov esi,edx
+    shr esi,18
+    and esi,0FF8h
+    add esi,fs:mon_map_linear
+    mov eax,es:[esi]
+    test al,1
+    jz mlFail
+;
+    mov ebx,es:[esi+4]
+    call MapPhysical
+;
+    mov esi,edx
+    shr esi,9
+    and esi,0FF8h
+    add esi,fs:mon_map_linear
+    mov eax,es:[esi]
+    test al,1
+    jz mlFail
+;
+    mov ebx,es:[esi+4]
+    call MapPhysical
+;    
+    mov ebx,edx
+    and ebx,0FFFh    
+    add ebx,fs:mon_map_linear
     clc
     jmp mlDone
 
@@ -216,10 +272,10 @@ mlFail:
     stc
 
 mlDone: 
-    pop edi
     pop esi
     pop edx
     pop eax
+    pop fs
     ret
 MapLinear       Endp           
             
@@ -2215,9 +2271,11 @@ WriteInstr      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WriteCpuReg32
+;       NAME:           WriteCpuReg32
 ;
-;           DESCRIPTION:    
+;       DESCRIPTION:    
+;
+;       PARAMETERS:     DS:EBP      Cpu registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2332,9 +2390,11 @@ WriteCpuReg32     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WriteCpuReg64
+;       NAME:           WriteCpuReg64
 ;
-;           DESCRIPTION:    
+;       DESCRIPTION:    
+;
+;       PARAMETERS:     DS:EBP      Cpu registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2438,6 +2498,24 @@ WriteCpuReg64     Proc near
     ret
 WriteCpuReg64     Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteCpuReg
+;
+;       DESCRIPTION:    Write CPU registers
+;
+;       PARAMETERS:     DS:EBP      Cpu registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+WriteCpuReg     Proc near
+    test ds:[ebp].reg_cs.d_access,ACCESS_64
+    jnz WriteCpuReg64
+    jmp WriteCpuReg32
+WriteCpuReg Endp
+   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2681,7 +2759,7 @@ mon_priv:
     mov gs,ax
 ;
     call SetupDescriptors
-    call WriteCpuReg32
+    call WriteCpuReg
 
 sloop:
     jmp sloop    

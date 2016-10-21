@@ -141,7 +141,9 @@ reg_ss		descriptor_struc <>
 reg_ds		descriptor_struc <>
 reg_fs		descriptor_struc <>
 reg_gs		descriptor_struc <>
-reg_usel    	descriptor_struc <>
+reg_usel    descriptor_struc <>
+
+reg_efer        DD ?,?
 
 math_op			DB ?,?
 math_prev_op	DB ?,?

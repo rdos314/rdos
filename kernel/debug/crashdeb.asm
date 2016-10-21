@@ -183,6 +183,7 @@ notify_core_dump:
 ;    
     mov ds:[ebp].reg_tr.d_limit,0
     mov ds:[ebp].reg_tr.d_base,0
+    mov ds:[ebp].reg_efer,0
 ;    
     mov ax,system_data_sel
     mov es,ax
@@ -198,9 +199,20 @@ smSpin:
 smEnter:
     mov ax,SEG data
     mov ds,ax
+;
+    test fs:ps_flags,PS_FLAG_LONG_MODE
+    jz smProtMode
+;
+    mov ds:[ebp].reg_efer,EFER_LME
+    mov eax,ds:mon_cr3
+    SwitchToProtectedMode
+    jmp smModeOk
+
+smProtMode:
     mov eax,ds:mon_cr3
     mov cr3,eax
-;    
+
+smModeOk:    
     DisableAllIrq
     SetupNmiCoreDump
     SetupLongNmiCoreDump
