@@ -1099,6 +1099,122 @@ InvertChar Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ShowMarker
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ShowMarker Proc near
+    push ds
+    push es
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    mov ax,mon_system_data_sel
+    mov ds,ax
+    mov eax,ds:efi_lfb
+    or eax,ds:efi_lfb+4
+    jnz smLfb
+
+smText:
+    mov ax,mon_text_sel
+    mov es,ax
+;    
+    mov ax,mon_data_sel
+    mov ds,ax
+;
+    mov ax,ds:mon_curr_row
+    mov dx,80
+    mul dx
+    add ax,ds:mon_curr_col
+    add ax,ax
+    movzx edi,ax
+    inc edi
+    mov al,70h
+    stosb
+    jmp smDone
+
+smLfb:
+    mov ax,mon_data_sel
+    mov ds,ax
+    mov dx,ds:mon_curr_row
+    mov cx,ds:mon_curr_col
+    call InvertChar
+
+smDone:
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    pop ds    
+    ret
+ShowMarker Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HideMarker
+;
+;           DESCRIPTION:    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HideMarker Proc near
+    push ds
+    push es
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    mov ax,mon_system_data_sel
+    mov ds,ax
+    mov eax,ds:efi_lfb
+    or eax,ds:efi_lfb+4
+    jnz hmLfb
+
+hmText:
+    mov ax,mon_text_sel
+    mov es,ax
+;    
+    mov ax,mon_data_sel
+    mov ds,ax
+;
+    mov ax,ds:mon_curr_row
+    mov dx,80
+    mul dx
+    add ax,ds:mon_curr_col
+    add ax,ax
+    movzx edi,ax
+    inc edi
+    mov al,7
+    stosb
+    jmp hmDone
+
+hmLfb:
+    mov ax,mon_data_sel
+    mov ds,ax
+    mov dx,ds:mon_curr_row
+    mov cx,ds:mon_curr_col
+    call InvertChar
+
+hmDone:
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    pop ds    
+    ret
+HideMarker Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Clear
 ;
 ;           DESCRIPTION:    Clear screen
@@ -2727,6 +2843,89 @@ SetupDescriptors        Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           handle_monitor
+;
+;           DESCRIPTION:    Handle monitor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handle_monitor:
+    call InitCrashKeyboard
+    call SetupDescriptors
+    call WriteCpuReg
+;
+    mov ax,mon_data_sel
+    mov ds,ax
+    mov ds:mon_curr_row,0
+    mov ds:mon_curr_col,0
+;
+    call ShowMarker
+
+handle_loop:
+    call GetCrashKey
+    jc handle_next
+;    
+    test ah,80h
+    jnz handle_next
+;    
+    cmp al,25h
+    je left_arrow
+;
+    cmp al,27h
+    je right_arrow
+;        
+    cmp al,26h
+    je up_arrow
+;
+    cmp al,28h
+    je down_arrow
+
+handle_next:        
+    jmp handle_loop
+
+up_arrow:
+    mov dx,ds:mon_curr_row
+    or dx,dx
+    jz handle_loop
+;    
+    call HideMarker
+    dec ds:mon_curr_row
+    call ShowMarker
+    jmp handle_loop
+
+down_arrow:
+    mov dx,ds:mon_curr_row
+    cmp dx,24
+    je handle_loop
+;
+    call HideMarker
+    inc ds:mon_curr_row
+    call ShowMarker
+    jmp handle_loop
+
+left_arrow:
+    mov dx,ds:mon_curr_col
+    or dx,dx
+    jz handle_loop
+;
+    call HideMarker
+    dec ds:mon_curr_col
+    call ShowMarker
+    jmp handle_loop    
+
+right_arrow:
+    mov dx,ds:mon_curr_col
+    cmp dx,79
+    je handle_loop
+;
+    call HideMarker
+    inc ds:mon_curr_col
+    call ShowMarker
+    jmp handle_loop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           start_monitor
 ;
 ;           DESCRIPTION:    Start monitor
@@ -2759,17 +2958,7 @@ mon_priv:
     xor ax,ax
     mov fs,ax
     mov gs,ax
-;
-    call InitCrashKeyboard
-    call SetupDescriptors
-    call WriteCpuReg
-
-sloop:
-    call GetCrashKey
-    jc sLoop
-;
-    call ShowChar    
-    jmp sloop    
+    jmp handle_monitor
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

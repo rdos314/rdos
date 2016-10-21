@@ -249,5 +249,8 @@ mon_key_code        DW ?
 mon_c_vk_code       DB ?
 mon_scan_code       DB ?
 
+mon_curr_row        DW ?
+mon_curr_col        DW ?
+
 monitor_data_sel        ENDS
 
