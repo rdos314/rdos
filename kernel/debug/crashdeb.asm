@@ -521,7 +521,7 @@ start_core_dump Proc far
     test fs:ps_flags,PS_FLAG_NMI
     jnz scdFail
 ;
-    or fs:ps_flags,PS_FLAG_NMI    
+    lock or fs:ps_flags,PS_FLAG_NMI    
 ;
     mov ax,SEG data
     mov ds,ax
@@ -645,6 +645,7 @@ notify_core_dump:
     mov ds:[ebp].reg_tr.d_limit,0
     mov ds:[ebp].reg_tr.d_base,0
     mov ds:[ebp].reg_efer,0
+    lock or fs:ps_flags,PS_FLAG_SAVED
     call AddToCrashLog
 ;    
     mov ax,system_data_sel
@@ -655,7 +656,8 @@ smSpin:
     xchg ax,es:shut_spinlock
     or ax,ax
     jz smEnter
-;
+
+smWait:
     jmp smWait
 
 smEnter:
@@ -727,10 +729,33 @@ smNmiNext:
     jmp smNmiLoop
 
 smNmiDone:
-    jmp start_monitor
+    mov ecx,100000h
 
-smWait:
-    jmp smWait
+smWaitLoop:    
+    xor dx,dx
+    xor ax,ax
+
+smWaitCoreLoop:
+    GetCoreNumber
+    jc smWaitValidate
+;
+    test fs:ps_flags,PS_FLAG_SAVED
+    jnz smWaitCoreNext
+;        
+    inc dx
+        
+smWaitCoreNext:
+    inc ax
+    jmp smWaitCoreLoop
+
+smWaitValidate:
+    or dx,dx
+    jz smWaitDone   
+;
+    loop smWaitLoop    
+
+smWaitDone:
+    jmp start_monitor
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
