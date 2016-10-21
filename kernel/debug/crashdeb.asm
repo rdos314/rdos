@@ -645,8 +645,8 @@ notify_core_dump:
     mov ds:[ebp].reg_tr.d_limit,0
     mov ds:[ebp].reg_tr.d_base,0
     mov ds:[ebp].reg_efer,0
-    lock or fs:ps_flags,PS_FLAG_SAVED
     call AddToCrashLog
+    lock or fs:ps_flags,PS_FLAG_SAVED
 ;    
     mov ax,system_data_sel
     mov es,ax
@@ -661,19 +661,6 @@ smWait:
     jmp smWait
 
 smEnter:
-    mov ax,wd_code_sel
-    verr ax
-    jnz smCont
-;
-    mov ax,5
-    call DelayMs
-    FaultReset
-;    
-    mov ax,500
-    call DelayMs
-    SoftReset
-
-smCont:
     mov ax,SEG data
     mov ds,ax
 ;
@@ -755,6 +742,21 @@ smWaitValidate:
     loop smWaitLoop    
 
 smWaitDone:
+    mov ax,wd_code_sel
+    verr ax
+    jnz smMonitor
+;
+    FaultReset
+;    
+    mov ecx,100000h
+
+smWaitReset:
+    loop smWaitReset
+;    
+    SoftReset
+    jmp smWaitReset
+
+smMonitor:
     jmp start_monitor
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
