@@ -2766,6 +2766,9 @@ mon_priv:
 
 sloop:
     call GetCrashKey
+    jc sLoop
+;
+    call ShowChar    
     jmp sloop    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
