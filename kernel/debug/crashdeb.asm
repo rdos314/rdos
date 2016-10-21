@@ -500,6 +500,85 @@ AddToCrashLog   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupBiosPic
+;
+;           DESCRIPTION:    Setup PIC to operate in BIOS-compatible mode
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupBiosPic    Proc near
+    mov al,11h
+    out 20h,al
+    jmp short $+2
+;
+    mov al,8
+    out 21h,al
+    jmp short $+2
+;
+    mov al,04h
+    out 21h,al
+    jmp short $+2
+;
+    mov al,0C1h
+    out 20h,AL
+    jmp short $+2
+;
+    mov al,1
+    out 21h,al
+    jmp short $+2
+;
+    mov al,11h
+    out 0A0h,al
+    jmp short $+2
+;
+    mov al,70h
+    out 0A1h,al
+    jmp short $+2
+;
+    mov al,2
+    out 0A1h,al
+    jmp short $+2
+;
+    mov al,1
+    out 0A1h,al
+    jmp short $+2
+;
+    mov al,-1
+    out 21h,al
+;
+    mov al,-1
+    out 0A1h,al
+    jmp short $+2
+    ret
+SetupBiosPic    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupBiosPit
+;
+;           DESCRIPTION:    Setup PIT to operate in BIOS-compatible mode
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupBiosPit    Proc near
+    mov al,30h
+    out 43h,al
+    jmp short $+2
+;
+    mov al,-1
+    out 40h,al
+    jmp short $+2
+;
+    mov al,-1
+    out 40h,al
+    jmp short $+2    
+    ret
+SetupBiosPit    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           StartCoreDump
 ;
 ;           DESCRIPTION:    Start core dump
@@ -662,7 +741,7 @@ smWait:
 
 smEnter:
     mov ax,SEG data
-    mov ds,ax
+    mov gs,ax
 ;
     test fs:ps_flags,PS_FLAG_LONG_MODE
     jz smProtMode
@@ -673,7 +752,7 @@ smEnter:
     jmp smModeOk
 
 smProtMode:
-    mov eax,ds:mon_cr3
+    mov eax,gs:mon_cr3
     mov cr3,eax
 
 smModeOk:    
@@ -757,6 +836,15 @@ smWaitReset:
     jmp smWaitReset
 
 smMonitor:
+    mov eax,es:efi_lfb
+    or eax,es:efi_lfb+4
+    jnz smVideoOk
+;
+    call SetupBiosPic
+    call SetupBiosPit
+    InitVideo
+        
+smVideoOk:    
     jmp start_monitor
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
