@@ -52,6 +52,8 @@ code    SEGMENT byte public use32 'CODE'
     assume cs:code
     
     extrn DisAsmCode:near
+    extrn InitCrashKeyboard:near
+    extrn GetCrashKey:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2758,10 +2760,12 @@ mon_priv:
     mov fs,ax
     mov gs,ax
 ;
+    call InitCrashKeyboard
     call SetupDescriptors
     call WriteCpuReg
 
 sloop:
+    call GetCrashKey
     jmp sloop    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

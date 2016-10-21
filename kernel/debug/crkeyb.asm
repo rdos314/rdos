@@ -1065,7 +1065,7 @@ proc_scan_get_vk:
 ;
     movzx edi,byte ptr cs:[ebx].key_type
     shl edi,2
-    call word ptr cs:[edi].key_type_tab
+    call dword ptr cs:[edi].key_type_tab
     jc proc_scan_done
 ;
     call SaveKeyboardCode
@@ -1188,7 +1188,7 @@ crash_key_numpad_mark_handled:
 crash_key_numpad_handled:
     movzx ebx,al
     shl ebx,2
-    call word ptr cs:[ebx].handle_scan_code_tab
+    call dword ptr cs:[ebx].handle_scan_code_tab
     jc crash_key_done
 ;
     call DecodeScanCode
