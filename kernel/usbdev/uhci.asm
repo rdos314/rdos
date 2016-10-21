@@ -25,6 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+INCLUDE ..\os\system.def
 INCLUDE ..\driver.def
 INCLUDE ..\os.def
 INCLUDE ..\os.inc
@@ -2714,7 +2715,7 @@ atNotify:
     and ah,1
     mov al,bl
 ;
-	push ax
+        push ax
     push di
     mov eax,SIZE usb_function_struc
     AllocateSmallGlobalMem
@@ -2723,7 +2724,7 @@ atNotify:
     xor al,al
     rep stosb
     pop di
-	pop ax
+        pop ax
 ;
     mov es:usbf_speed,ah
     mov es:usbf_port,al

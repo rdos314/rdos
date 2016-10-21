@@ -25,15 +25,9 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-INCLUDE ..\user.def
-INCLUDE ..\os.def
-INCLUDE ..\user.inc
-INCLUDE ..\os.inc
-INCLUDE ..\driver.def
 INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
-INCLUDE ..\pcdev\key.inc
-INCLUDE ..\pcdev\apic.inc
+INCLUDE kdebug.inc
 
 ;
 ; status
@@ -42,16 +36,41 @@ status_key_req      EQU 1
 status_key_ack      EQU 4
 status_mode_change  EQU 8
 
-data    SEGMENT byte public 'DATA'
+;
+; shift codes
+;
 
-status      DB ?
-command     DB ?
-shift_states    DW ?
-key_code    DW ?
-c_vk_code     DB ?
-scan_code       DB ?
+ext_numpad_handled      EQU 800h
+ext_numpad_active       EQU 400h
+num_active                      EQU 200h
+caps_active                     EQU 100h
+print_pressed           EQU 20h
+scroll_pressed          EQU 10h
+pause_pressed           EQU 8
+ctrl_pressed            EQU 4
+alt_pressed                     EQU 2
+shift_pressed           EQU 1
 
-data    ENDS
+NO_KEY      = 0
+SIMPLE_KEY  = 1
+CAPS_KEY    = 2
+STATE_KEY   = 3
+NUM_KEY     = 4
+DEL_KEY     = 5
+FUNC_KEY    = 6
+ESC_KEY     = 7
+
+
+; offset in scan-code table
+;
+normal_code             EQU 0
+shift_code              EQU 1
+alt_code                EQU 2
+ctrl_code               EQU 3
+ext_code                EQU 4
+vk_code         EQU 5
+vk_num_code     EQU 6
+key_type                EQU 7
 
     .386p
 
@@ -83,23 +102,8 @@ wait_gate2:
     mov al,0FEh
     out 60h,al
 ;
-    mov ax,idt_sel
-    mov ds,ax
-;    
-    mov bx,13 * 8
     xor eax,eax
-    mov [bx],eax
-    mov [bx+4],eax
-;
-    mov bx,8 * 8
-    mov [bx],eax
-    mov [bx+4],eax
-;
-    mov ax,-1
-    mov ds,ax
-
-reset_wait:
-    jmp reset_wait
+    mov cr3,eax
     
     ret
 LocalCpuReset   ENDP
@@ -122,12 +126,12 @@ SaveKeyboardCode    PROC near
     push ax
     push bx
 ;
-    mov bx,SEG data
+    mov bx,mon_data_sel
     mov ds,bx
 ;
-    mov ds:key_code,ax
-    mov ds:c_vk_code,dl
-    mov ds:scan_code,dh
+    mov ds:mon_key_code,ax
+    mov ds:mon_c_vk_code,dl
+    mov ds:mon_scan_code,dh
 ;
     pop bx
     pop ax
@@ -163,7 +167,7 @@ normal_scan  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 shift_press_scan    PROC near
-    or ds:shift_states,shift_pressed
+    or ds:mon_shift_states,shift_pressed
     clc
     ret
 shift_press_scan    ENDP
@@ -180,7 +184,7 @@ shift_press_scan    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 shift_rel_scan  PROC near
-    and ds:shift_states,NOT shift_pressed
+    and ds:mon_shift_states,NOT shift_pressed
     clc
     ret
 shift_rel_scan  ENDP
@@ -197,7 +201,7 @@ shift_rel_scan  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 alt_press_scan  PROC near
-    or ds:shift_states,alt_pressed
+    or ds:mon_shift_states,alt_pressed
     clc
     ret
 alt_press_scan  ENDP
@@ -214,7 +218,7 @@ alt_press_scan  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 alt_rel_scan    PROC near
-    and ds:shift_states,NOT alt_pressed
+    and ds:mon_shift_states,NOT alt_pressed
     clc
     ret
 alt_rel_scan    ENDP
@@ -231,7 +235,7 @@ alt_rel_scan    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ctrl_press_scan PROC near
-    or ds:shift_states,ctrl_pressed
+    or ds:mon_shift_states,ctrl_pressed
     clc
     ret
 ctrl_press_scan ENDP
@@ -248,7 +252,7 @@ ctrl_press_scan ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ctrl_rel_scan   PROC near
-    and ds:shift_states,NOT ctrl_pressed
+    and ds:mon_shift_states,NOT ctrl_pressed
     clc
     ret
 ctrl_rel_scan   ENDP
@@ -265,8 +269,8 @@ ctrl_rel_scan   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 caps_press_scan PROC near
-    xor ds:shift_states,caps_active
-    or ds:status,status_mode_change
+    xor ds:mon_shift_states,caps_active
+    or ds:mon_key_status,status_mode_change
     clc
     ret
 caps_press_scan ENDP
@@ -283,8 +287,8 @@ caps_press_scan ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 num_press_scan  PROC near
-    xor ds:shift_states,num_active
-    or ds:status,status_mode_change
+    xor ds:mon_shift_states,num_active
+    or ds:mon_key_status,status_mode_change
     clc
     ret
 num_press_scan  ENDP
@@ -301,7 +305,7 @@ num_press_scan  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 print_press_scan    PROC near
-    or ds:shift_states,print_pressed
+    or ds:mon_shift_states,print_pressed
     clc
     ret
 print_press_scan    ENDP
@@ -318,7 +322,7 @@ print_press_scan    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 print_rel_scan  PROC near
-    and ds:shift_states,NOT print_pressed
+    and ds:mon_shift_states,NOT print_pressed
     clc
     ret
 print_rel_scan  ENDP
@@ -335,7 +339,7 @@ print_rel_scan  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 scroll_press_scan       PROC near
-    or ds:shift_states,scroll_pressed
+    or ds:mon_shift_states,scroll_pressed
     clc
     ret
 scroll_press_scan       ENDP
@@ -352,7 +356,7 @@ scroll_press_scan       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 scroll_rel_scan PROC near
-    and ds:shift_states,NOT scroll_pressed
+    and ds:mon_shift_states,NOT scroll_pressed
     clc
     ret
 scroll_rel_scan ENDP
@@ -369,7 +373,7 @@ scroll_rel_scan ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 pause_break_press_scan  PROC near
-    or ds:shift_states,pause_pressed
+    or ds:mon_shift_states,pause_pressed
     clc
     ret
 pause_break_press_scan  ENDP
@@ -386,7 +390,7 @@ pause_break_press_scan  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 pause_break_rel_scan    PROC near
-    and ds:shift_states,NOT pause_pressed
+    and ds:mon_shift_states,NOT pause_pressed
     clc
     ret
 pause_break_rel_scan    ENDP
@@ -733,7 +737,7 @@ state_scan      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 del_scan    PROC near
-    mov cx,ds:shift_states
+    mov cx,ds:mon_shift_states
     and cx,alt_pressed OR ctrl_pressed
     cmp cx,alt_pressed OR ctrl_pressed
     jne num_scan
@@ -807,7 +811,7 @@ handle_scan Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 simple_scan     PROC near
-    mov cx,ds:shift_states
+    mov cx,ds:mon_shift_states
     call handle_scan
     ret
 simple_scan     ENDP
@@ -824,7 +828,7 @@ simple_scan     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 caps_scan       PROC near
-    mov cx,ds:shift_states
+    mov cx,ds:mon_shift_states
     and cx,107h
     xor cl,ch
     and cx,7
@@ -844,7 +848,7 @@ caps_scan       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 num_scan    PROC near
-    mov cx,ds:shift_states
+    mov cx,ds:mon_shift_states
     and cx,205h
     shr ch,1
     xor cl,ch
@@ -879,7 +883,7 @@ num_scan    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 f_key_scan      PROC near
-    mov cx,ds:shift_states
+    mov cx,ds:mon_shift_states
     call handle_scan
     xor ah,ah
     ret
@@ -1050,7 +1054,7 @@ DecodeScanCode   Proc near
     add ebx,OFFSET scan_tab_sw
 ;
     xor edi,edi
-    mov cx,ds:shift_states
+    mov cx,ds:mon_shift_states
     test cx,ext_numpad_active
     jz proc_scan_get_vk
 ;
@@ -1089,13 +1093,13 @@ DecodeScanCode    ENDP
 InitCrashKeyboard Proc near
     push ds
 ;
-    mov ax,SEG data
+    mov ax,mon_data_sel
     mov ds,ax
-    mov ds:status,0
-    mov ds:shift_states,0
-    mov ds:key_code,0
-    mov ds:c_vk_code,0
-    mov ds:scan_code,0
+    mov ds:mon_key_status,0
+    mov ds:mon_shift_states,0
+    mov ds:mon_key_code,0
+    mov ds:mon_c_vk_code,0
+    mov ds:mon_scan_code,0
 ;
     pop ds
     ret
@@ -1115,7 +1119,7 @@ UpdateKeyboard  Proc near
     push ax
     push bx
     push cx
-    mov ax,SEG data
+    mov ax,mon_data_sel
     mov ds,ax
     
 crash_key_loop:
@@ -1127,23 +1131,23 @@ crash_key_loop:
     or al,al
     je crash_key_loop
 ;
-    test ds:status,status_key_req
+    test ds:mon_key_status,status_key_req
     jz crash_key_not_resend
 ;
     cmp al,0FAh
     jnz crash_key_not_ack
 ;
-    mov al,ds:status
+    mov al,ds:mon_key_status
     or al,status_key_ack
     and al,NOT status_key_req
-    mov ds:status,al
+    mov ds:mon_key_status,al
     jmp crash_key_loop
 
 crash_key_not_ack:
     cmp al,0FEh
     jnz crash_key_not_resend
 ;
-    mov al,ds:command
+    mov al,ds:mon_key_command
     out 60h,al
     jmp crash_key_loop
 
@@ -1155,16 +1159,16 @@ crash_key_not_resend:
     jnz crash_key_not_numpad
 ;
     push ax
-    mov ax,ds:shift_states
+    mov ax,ds:mon_shift_states
     or ax,ext_numpad_active
     and ax, NOT ext_numpad_handled
-    mov ds:shift_states,ax
+    mov ds:mon_shift_states,ax
     pop ax
     jmp crash_key_loop       
 
 crash_key_not_numpad:
     push ax
-    mov ax,ds:shift_states
+    mov ax,ds:mon_shift_states
     mov cx,ax
     pop ax
     test cx,ext_numpad_active
@@ -1174,12 +1178,12 @@ crash_key_not_numpad:
     jz crash_key_numpad_mark_handled
 ;
     and cx, NOT ext_numpad_active
-    mov ds:shift_states,cx
+    mov ds:mon_shift_states,cx
     jmp crash_key_numpad_handled
 
 crash_key_numpad_mark_handled:
     or cx, ext_numpad_handled
-    mov ds:shift_states,cx
+    mov ds:mon_shift_states,cx
 
 crash_key_numpad_handled:
     movzx ebx,al
@@ -1209,7 +1213,7 @@ UpdateKeyboard  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendCommand     proc near
-    mov ds:command,al
+    mov ds:mon_key_command,al
 
 send_check_ready:
     in al,64h
@@ -1219,18 +1223,18 @@ send_check_ready:
     jmp send_check_ready
 
 send_command_do:
-    mov al,ds:status
+    mov al,ds:mon_key_status
     or al,status_key_req
     and al,NOT status_key_ack
-    mov ds:status,al
+    mov ds:mon_key_status,al
 ;
-    mov al,ds:command
+    mov al,ds:mon_key_command
     out 60h,al
 
 send_command_wait:
     call UpdateKeyboard
 ;    
-    test ds:status, status_key_ack
+    test ds:mon_key_status, status_key_ack
     jz send_command_wait
     ret
 SendCommand     Endp
@@ -1247,17 +1251,17 @@ SendCommand     Endp
 UpdateMode      PROC near
     push ds
 ;
-    mov ax,SEG data
+    mov ax,mon_data_sel
     mov ds,ax
 ;    
-    test ds:status,status_mode_change
+    test ds:mon_key_status,status_mode_change
     jz umDone
 ;    
-    and ds:status,NOT status_mode_change
+    and ds:mon_key_status,NOT status_mode_change
     mov al,0EDh
     call SendCommand
 ;
-    mov dx,ds:shift_states
+    mov dx,ds:mon_shift_states
     xor al,al
     test dx,num_active
     jz num_off
@@ -1292,19 +1296,19 @@ UpdateMode      ENDP
 GetCrashKey      PROC near
     push ds
 ;    
-    mov ax,SEG data
+    mov ax,mon_data_sel
     mov ds,ax
     call UpdateKeyboard
     call UpdateMode
 ;
-    mov ah,ds:scan_code
+    mov ah,ds:mon_scan_code
     or ah,ah
     stc
     jz get_key_done
 ;
-    mov ds:scan_code,0
+    mov ds:mon_scan_code,0
     xor al,al
-    xchg al,ds:c_vk_code
+    xchg al,ds:mon_c_vk_code
     clc
         
 get_key_done:

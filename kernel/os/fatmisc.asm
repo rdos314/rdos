@@ -25,6 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+INCLUDE system.def
 INCLUDE ..\driver.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
@@ -33,219 +34,219 @@ INCLUDE ..\os.inc
 INCLUDE ..\fs.inc
 INCLUDE fat.inc
 
-boot_struc	STRUC
+boot_struc      STRUC
 
-boot_jmp					DB ?,?,?
-boot_name					DB 8 DUP(?)
-boot_bytes_per_sector		DW ?
-boot_sectors_per_cluster	DB ?
-boot_resv_sectors			DW ?
-boot_fats					DB ?
-boot_root_dirs				DW ?
-boot_sectors16				DW ?
-boot_media					DB ?
-boot_fat_sectors16			DW ?
-boot_sectors_per_cyl		DW ?
-boot_heads					DW ?
-boot_hidden_sectors			DD ?
-boot_sectors				DD ?
-boot_fat_sectors			DD ?
-boot_ext_flags				DW ?
-boot_fs_version				DW ?
-boot_root_cluster			DD ?
-boot_info_sector			DW ?
-boot_backup_sector			DW ?
+boot_jmp                                        DB ?,?,?
+boot_name                                       DB 8 DUP(?)
+boot_bytes_per_sector           DW ?
+boot_sectors_per_cluster        DB ?
+boot_resv_sectors                       DW ?
+boot_fats                                       DB ?
+boot_root_dirs                          DW ?
+boot_sectors16                          DW ?
+boot_media                                      DB ?
+boot_fat_sectors16                      DW ?
+boot_sectors_per_cyl            DW ?
+boot_heads                                      DW ?
+boot_hidden_sectors                     DD ?
+boot_sectors                            DD ?
+boot_fat_sectors                        DD ?
+boot_ext_flags                          DW ?
+boot_fs_version                         DW ?
+boot_root_cluster                       DD ?
+boot_info_sector                        DW ?
+boot_backup_sector                      DW ?
 
-boot_struc		ENDS
+boot_struc              ENDS
 
-fat_dir_struc	STRUC
+fat_dir_struc   STRUC
 
-fat_base		DB 8 DUP(?)
-fat_ext			DB 3 DUP(?)
-fat_attrib		DB ?
-fat_case		DB ?
-fat_cr_time_ms	DB ?
-fat_cr_time		DW ?
-fat_cr_date		DW ?
-fat_acc_date	DW ?
-fat_cluster_hi	DW ?
-fat_time		DW ?
-fat_date		DW ?
-fat_cluster		DW ?
-fat_file_size	DD ?
+fat_base                DB 8 DUP(?)
+fat_ext                 DB 3 DUP(?)
+fat_attrib              DB ?
+fat_case                DB ?
+fat_cr_time_ms  DB ?
+fat_cr_time             DW ?
+fat_cr_date             DW ?
+fat_acc_date    DW ?
+fat_cluster_hi  DW ?
+fat_time                DW ?
+fat_date                DW ?
+fat_cluster             DW ?
+fat_file_size   DD ?
 
-fat_dir_struc	ENDS
+fat_dir_struc   ENDS
 
-	.386p
+        .386p
 
-code	SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use16 'CODE'
 
     extrn get_free_clusters:near
 
-	assume cs:code
+        assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LOCK_SECTOR
+;               NAME:                   LOCK_SECTOR
 ;
-;		DESCRIPTION:	Lock a sector
+;               DESCRIPTION:    Lock a sector
 ;
-;		PARAMETERS:		AL			Drive #
-;						EDX			Sector to first FAT
+;               PARAMETERS:             AL                      Drive #
+;                                               EDX                     Sector to first FAT
 ;
-;		RETURNS:		EBX			Sector handle
-;						ESI			Linear address
-;						NC			OK
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public lock_sector
-
-lock_sector	PROC near
-	LockSector
-	ret
-lock_sector	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GET_PARAM12/16
-;
-;		DESCRIPTION:	Read drive parameters from boot-record
-;
-;		RETRUNS:		DS			Drive data
-;						ES			FLAT_SEL
+;               RETURNS:                EBX                     Sector handle
+;                                               ESI                     Linear address
+;                                               NC                      OK
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public get_param12
-	public get_param16
+        public lock_sector
 
-get_param12	Proc near
+lock_sector     PROC near
+        LockSector
+        ret
+lock_sector     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:                   GET_PARAM12/16
+;
+;               DESCRIPTION:    Read drive parameters from boot-record
+;
+;               RETRUNS:                DS                      Drive data
+;                                               ES                      FLAT_SEL
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public get_param12
+        public get_param16
+
+get_param12     Proc near
 get_param16:
-	push ax
-	push ebx
-	push ecx
-	push edx
-	push esi
+        push ax
+        push ebx
+        push ecx
+        push edx
+        push esi
 ;
-	InitSection ds:cluster_section
-	mov ds:drive_root_handle,0
-	mov ds:drive_nr,al
-	mov ds:file_list_ptr,0
-	mov ds:file_free_ptr,0
-	xor edx,edx
-	LockSector
-	mov cl,es:[esi].boot_sectors_per_cluster
-	mov ch,0
+        InitSection ds:cluster_section
+        mov ds:drive_root_handle,0
+        mov ds:drive_nr,al
+        mov ds:file_list_ptr,0
+        mov ds:file_free_ptr,0
+        xor edx,edx
+        LockSector
+        mov cl,es:[esi].boot_sectors_per_cluster
+        mov ch,0
 get_param1216_shift_loop:
-	rcr cl,1	
-	jc get_param1216_shift_ok
-	inc ch
-	jmp get_param1216_shift_loop
+        rcr cl,1        
+        jc get_param1216_shift_ok
+        inc ch
+        jmp get_param1216_shift_loop
 
 get_param1216_shift_ok:
-	mov ds:fat_cluster_shift,ch
-	mov cx,es:[esi].boot_root_dirs
-	mov ds:root_entries,cx
-	movzx edx,es:[esi].boot_resv_sectors
-	mov ds:fat1_sector,edx
-	movzx ecx,es:[esi].boot_fat_sectors16
-	add edx,ecx
-	mov ds:fat2_sector,edx
-	add edx,ecx
-	mov ds:root_sector,edx
-	movzx ecx,ds:root_entries
-	shr ecx,4
-	add edx,ecx
-	mov ds:start_sector,edx
-	movzx edx,es:[esi].boot_sectors16
-	or edx,edx
-	jnz get_param1216_total_ok
+        mov ds:fat_cluster_shift,ch
+        mov cx,es:[esi].boot_root_dirs
+        mov ds:root_entries,cx
+        movzx edx,es:[esi].boot_resv_sectors
+        mov ds:fat1_sector,edx
+        movzx ecx,es:[esi].boot_fat_sectors16
+        add edx,ecx
+        mov ds:fat2_sector,edx
+        add edx,ecx
+        mov ds:root_sector,edx
+        movzx ecx,ds:root_entries
+        shr ecx,4
+        add edx,ecx
+        mov ds:start_sector,edx
+        movzx edx,es:[esi].boot_sectors16
+        or edx,edx
+        jnz get_param1216_total_ok
 ;
-	mov edx,es:[esi].boot_sectors
+        mov edx,es:[esi].boot_sectors
 
 get_param1216_total_ok:
-	sub edx,ds:start_sector
-	mov cl,ds:fat_cluster_shift
-	shr edx,cl
-	add edx,2
-	mov ds:clusters,edx
+        sub edx,ds:start_sector
+        mov cl,ds:fat_cluster_shift
+        shr edx,cl
+        add edx,2
+        mov ds:clusters,edx
     mov ds:info_sector,0
-	UnlockSector
+        UnlockSector
 ;
     mov al,ds:drive_nr
-    call get_free_clusters	
-	mov ds:free_clusters,edx
-;	
+    call get_free_clusters      
+        mov ds:free_clusters,edx
+;       
 
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
-	pop ax
-	ret
-get_param12	Endp
+        pop esi
+        pop edx
+        pop ecx
+        pop ebx
+        pop ax
+        ret
+get_param12     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GET_PARAM32
+;               NAME:                   GET_PARAM32
 ;
-;		DESCRIPTION:	Read drive parameters from boot-record
+;               DESCRIPTION:    Read drive parameters from boot-record
 ;
-;		RETRUNS:		DS			Drive data
-;						ES			FLAT_SEL
+;               RETRUNS:                DS                      Drive data
+;                                               ES                      FLAT_SEL
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public get_param32
+        public get_param32
 
-get_param32	Proc near
-	push ax
-	push ebx
-	push ecx
-	push edx
-	push esi
+get_param32     Proc near
+        push ax
+        push ebx
+        push ecx
+        push edx
+        push esi
 ;
-	InitSection ds:cluster_section
-	mov ds:drive_root_handle,0
-	mov ds:drive_nr,al
-	mov ds:file_list_ptr,0
-	mov ds:file_free_ptr,0
-	xor edx,edx
-	LockSector
-	mov cl,es:[esi].boot_sectors_per_cluster
-	mov ch,0
+        InitSection ds:cluster_section
+        mov ds:drive_root_handle,0
+        mov ds:drive_nr,al
+        mov ds:file_list_ptr,0
+        mov ds:file_free_ptr,0
+        xor edx,edx
+        LockSector
+        mov cl,es:[esi].boot_sectors_per_cluster
+        mov ch,0
 get_param32_shift_loop:
-	rcr cl,1	
-	jc get_param32_shift_ok
-	inc ch
-	jmp get_param32_shift_loop
+        rcr cl,1        
+        jc get_param32_shift_ok
+        inc ch
+        jmp get_param32_shift_loop
 
 get_param32_shift_ok:
-	mov ds:fat_cluster_shift,ch
-	mov ds:root_entries,0
-	movzx edx,es:[esi].boot_resv_sectors
-	mov ds:fat1_sector,edx
-	mov ecx,es:[esi].boot_fat_sectors
-	add edx,ecx
-	mov ds:fat2_sector,edx
-	add edx,ecx
-	mov ds:start_sector,edx
-	mov edx,es:[esi].boot_root_cluster
-	sub edx,2
-	mov cl,ds:fat_cluster_shift
-	shl edx,cl
-	add edx,ds:start_sector
-	mov ds:root_sector,edx
-	mov edx,es:[esi].boot_sectors
-	sub edx,ds:start_sector
-	mov cl,ds:fat_cluster_shift
-	shr edx,cl
-	add edx,2
-	mov ds:clusters,edx
+        mov ds:fat_cluster_shift,ch
+        mov ds:root_entries,0
+        movzx edx,es:[esi].boot_resv_sectors
+        mov ds:fat1_sector,edx
+        mov ecx,es:[esi].boot_fat_sectors
+        add edx,ecx
+        mov ds:fat2_sector,edx
+        add edx,ecx
+        mov ds:start_sector,edx
+        mov edx,es:[esi].boot_root_cluster
+        sub edx,2
+        mov cl,ds:fat_cluster_shift
+        shl edx,cl
+        add edx,ds:start_sector
+        mov ds:root_sector,edx
+        mov edx,es:[esi].boot_sectors
+        sub edx,ds:start_sector
+        mov cl,ds:fat_cluster_shift
+        shr edx,cl
+        add edx,2
+        mov ds:clusters,edx
     movzx edx,es:[esi].boot_info_sector
     cmp dx,-1
     jne get_param32_info_ok
@@ -253,18 +254,18 @@ get_param32_shift_ok:
     xor edx,edx    
 
 get_param32_info_ok:
-    mov ds:info_sector,edx	
-	UnlockSector
+    mov ds:info_sector,edx      
+        UnlockSector
 ;   
     mov edx,ds:info_sector
     or edx,edx
     jz get_param32_count_clusters
 ;
-	mov al,ds:drive_nr
-	LockSector
-	mov eax,es:[esi].fi_ext_sign
-	cmp eax,41615252h  ; AaRR
-	jne get_param32_info_fail
+        mov al,ds:drive_nr
+        LockSector
+        mov eax,es:[esi].fi_ext_sign
+        cmp eax,41615252h  ; AaRR
+        jne get_param32_info_fail
 ;
     mov eax,es:[esi].fi_info_sign
     cmp eax,61417272h  ; aArr
@@ -276,18 +277,18 @@ get_param32_info_ok:
 ;
     mov eax,es:[esi].fi_free_clusters
     mov ds:free_clusters,eax  
-	UnlockSector
+        UnlockSector
     jmp get_param32_done
     jmp get_param32_count_clusters      ; for updating info-sector
 
 get_param32_info_fail:
     mov ds:info_sector,0
-	UnlockSector
+        UnlockSector
         
 get_param32_count_clusters:    
     mov al,ds:drive_nr
-    call get_free_clusters	
-	mov ds:free_clusters,edx
+    call get_free_clusters      
+        mov ds:free_clusters,edx
 ;
     mov edx,ds:info_sector
     or edx,edx
@@ -299,32 +300,32 @@ get_param32_count_clusters:
     mov es:[esi].fi_free_clusters,edx
     ModifySector
     UnlockSector
-    	
-get_param32_done:	
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
-	pop ax
-	ret
-get_param32	Endp
+        
+get_param32_done:       
+        pop esi
+        pop edx
+        pop ecx
+        pop ebx
+        pop ax
+        ret
+get_param32     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Format12
+;               NAME:                   Format12
 ;
-;		DESCRIPTION:	Format FAT12 filesystem
+;               DESCRIPTION:    Format FAT12 filesystem
 ;
-;		PARAMETERS:		AL			Drive
-;						ES:DI		FS name
-;						ECX			Number of sectors
+;               PARAMETERS:             AL                      Drive
+;                                               ES:DI           FS name
+;                                               ECX                     Number of sectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public format12
     
-format12	PROC far
+format12        PROC far
     push ds
     push es
     pushad
@@ -332,8 +333,8 @@ format12	PROC far
     mov bp,ax
     mov dx,flat_sel
     mov es,dx
-	xor edx,edx
-	LockSector
+        xor edx,edx
+        LockSector
 ;
     mov al,1
 
@@ -350,7 +351,7 @@ format_cluster_ok12:
 ;    
     movzx eax,al
     mul ecx
-	mov es:[esi].boot_sectors16,ax
+        mov es:[esi].boot_sectors16,ax
 ;
     dec ecx
     shr ecx,9
@@ -362,14 +363,14 @@ format_cluster_ok12:
 ;
     mov es:[esi].boot_fats,2
     mov es:[esi].boot_root_dirs,100h
-	mov es:[esi].boot_fs_version,0
-	mov es:[esi].boot_root_cluster,2
-;	
+        mov es:[esi].boot_fs_version,0
+        mov es:[esi].boot_root_cluster,2
+;       
     mov cx,es:[esi].boot_fat_sectors16
     movzx edx,es:[esi].boot_resv_sectors
 ;    
-	ModifySector
-	UnlockSector
+        ModifySector
+        UnlockSector
 ;
     push cx
     mov ax,bp
@@ -457,39 +458,39 @@ format_root_dir_loop12:
     loop format_root_dir_loop12    
 ;
     mov ax,bp
-	mov eax,SIZE drive_data_seg
-	AllocateSmallGlobalMem
-	mov ax,es
-	mov ds,ax
-	mov ax,flat_sel
-	mov es,ax
-	mov ax,bp
-	mov ds:fat_type,fat12
+        mov eax,SIZE drive_data_seg
+        AllocateSmallGlobalMem
+        mov ax,es
+        mov ds,ax
+        mov ax,flat_sel
+        mov es,ax
+        mov ax,bp
+        mov ds:fat_type,fat12
     call get_param12
 ;
     clc    
     popad
     pop es
     pop ds
-	retf32
-format12	Endp
+        retf32
+format12        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Format16
+;               NAME:                   Format16
 ;
-;		DESCRIPTION:	Format FAT16 filesystem
+;               DESCRIPTION:    Format FAT16 filesystem
 ;
-;		PARAMETERS:		AL			Drive
-;						ES:DI		FS name
-;						ECX			Number of sectors
+;               PARAMETERS:             AL                      Drive
+;                                               ES:DI           FS name
+;                                               ECX                     Number of sectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public format16
     
-format16	PROC far
+format16        PROC far
     push ds
     push es
     pushad
@@ -497,8 +498,8 @@ format16	PROC far
     mov bp,ax
     mov dx,flat_sel
     mov es,dx
-	xor edx,edx
-	LockSector
+        xor edx,edx
+        LockSector
 ;
     mov al,1
 
@@ -515,8 +516,8 @@ format_cluster_ok16:
 ;    
     movzx eax,al
     mul ecx
-	mov es:[esi].boot_sectors,eax
-	mov es:[esi].boot_sectors16,0
+        mov es:[esi].boot_sectors,eax
+        mov es:[esi].boot_sectors16,0
 ;
     dec ecx
     shr ecx,8
@@ -529,14 +530,14 @@ format_cluster_ok16:
 ;
     mov es:[esi].boot_fats,2
     mov es:[esi].boot_root_dirs,100h
-	mov es:[esi].boot_fs_version,0
-	mov es:[esi].boot_root_cluster,2
-;	
+        mov es:[esi].boot_fs_version,0
+        mov es:[esi].boot_root_cluster,2
+;       
     mov cx,es:[esi].boot_fat_sectors16
     movzx edx,es:[esi].boot_resv_sectors
 ;    
-	ModifySector
-	UnlockSector
+        ModifySector
+        UnlockSector
 ;
     push cx
     mov ax,bp
@@ -624,39 +625,39 @@ format_root_dir_loop16:
     loop format_root_dir_loop16    
 ;
     mov ax,bp
-	mov eax,SIZE drive_data_seg
-	AllocateSmallGlobalMem
-	mov ax,es
-	mov ds,ax
-	mov ax,flat_sel
-	mov es,ax
-	mov ax,bp
-	mov ds:fat_type,fat16
+        mov eax,SIZE drive_data_seg
+        AllocateSmallGlobalMem
+        mov ax,es
+        mov ds,ax
+        mov ax,flat_sel
+        mov es,ax
+        mov ax,bp
+        mov ds:fat_type,fat16
     call get_param16
 ;
     clc    
     popad
     pop es
     pop ds
-	retf32
-format16	Endp
+        retf32
+format16        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Format32
+;               NAME:                   Format32
 ;
-;		DESCRIPTION:	Format FAT32 filesystem
+;               DESCRIPTION:    Format FAT32 filesystem
 ;
-;		PARAMETERS:		AL			Drive
-;						ES:DI		FS name
-;						ECX			Number of sectors
+;               PARAMETERS:             AL                      Drive
+;                                               ES:DI           FS name
+;                                               ECX                     Number of sectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public format32
     
-format32	PROC far
+format32        PROC far
     push ds
     push es
     pushad
@@ -664,9 +665,9 @@ format32	PROC far
     mov bp,ax
     mov dx,flat_sel
     mov es,dx
-	xor edx,edx
-	LockSector
-;	
+        xor edx,edx
+        LockSector
+;       
     mov al,1
 
 format_cluster_loop32:
@@ -682,8 +683,8 @@ format_cluster_ok32:
 ;    
     movzx eax,al
     mul ecx
-	mov es:[esi].boot_sectors,eax
-	mov es:[esi].boot_sectors16,0
+        mov es:[esi].boot_sectors,eax
+        mov es:[esi].boot_sectors16,0
 ;
     dec ecx
     shr ecx,7
@@ -699,20 +700,20 @@ format_cluster_ok32:
     mov es:[esi].boot_sectors16,0
     mov es:[esi].boot_fats,2
     mov es:[esi].boot_root_dirs,0
-	mov es:[esi].boot_fs_version,0
-	mov es:[esi].boot_root_cluster,2
-	mov es:[esi].boot_info_sector,1
-	mov es:[esi].boot_backup_sector,6
-	push ebx
-	push esi
+        mov es:[esi].boot_fs_version,0
+        mov es:[esi].boot_root_cluster,2
+        mov es:[esi].boot_info_sector,1
+        mov es:[esi].boot_backup_sector,6
+        push ebx
+        push esi
 ;
     push ecx
     push esi
     mov ax,bp
-	mov edx,6
-	LockSector
-	mov edi,esi
-	pop esi	
+        mov edx,6
+        LockSector
+        mov edi,esi
+        pop esi 
     mov ecx,80h
     rep movs dword ptr es:[edi],es:[esi]
     pop ecx
@@ -721,9 +722,9 @@ format_cluster_ok32:
 ;
     pop esi
     pop ebx
-	ModifySector
-	UnlockSector
-;	
+        ModifySector
+        UnlockSector
+;       
     push ecx
 ;
     push ecx
@@ -828,24 +829,24 @@ format_root_dir_loop32:
     loop format_root_dir_loop32
 ;
     mov ax,bp
-	mov eax,SIZE drive_data_seg
-	AllocateSmallGlobalMem
-	mov ax,es
-	mov ds,ax
-	mov ax,flat_sel
-	mov es,ax
-	mov ax,bp
-	mov ds:fat_type,fat32
+        mov eax,SIZE drive_data_seg
+        AllocateSmallGlobalMem
+        mov ax,es
+        mov ds,ax
+        mov ax,flat_sel
+        mov es,ax
+        mov ax,bp
+        mov ds:fat_type,fat32
     call get_param32
 ;
     clc    
     popad
     pop es
     pop ds
-	retf32
-format32	Endp
+        retf32
+format32        Endp
 
-code	ENDS
+code    ENDS
 
-	END
+        END
 

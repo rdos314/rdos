@@ -25,6 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+INCLUDE ..\os\system.def
 include ..\os.def
 include ..\os.inc
 include ..\user.def

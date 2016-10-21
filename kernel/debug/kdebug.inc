@@ -214,8 +214,6 @@ data_offset		DD ?,?
 data_sel		DD ?
 data_valid		DB ?
 
-pad             DB ?
-
 cpu_struc	ENDS
 
 mon_code_sel            = 8h
@@ -243,6 +241,13 @@ mon_map_linear      DD ?
 
 mon_core_count      DW ?
 mon_core_regs       DB ?
+
+mon_key_status      DB ?
+mon_key_command     DB ?
+mon_shift_states    DW ?
+mon_key_code        DW ?
+mon_c_vk_code       DB ?
+mon_scan_code       DB ?
 
 monitor_data_sel        ENDS
 

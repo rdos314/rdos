@@ -26,6 +26,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 INCLUDE protseg.def
+INCLUDE system.def
 INCLUDE ..\driver.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
@@ -33,84 +34,83 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE int.def
 INCLUDE exec.def
-INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ip.inc
-INCLUDE	ipc.inc
+INCLUDE ipc.inc
 
-code	SEGMENT byte public 'CODE'
+code    SEGMENT byte public 'CODE'
 
 .386p
-	
-	assume cs:code
+        
+        assume cs:code
 
-	extrn SelectorToLinear:near
+        extrn SelectorToLinear:near
 
-	
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
-;		NAME:			ReplyLocal
+;               NAME:                   ReplyLocal
 ;
-;		DESCRIPTION:	Reply
+;               DESCRIPTION:    Reply
 ;
-;		PARAMETERS:		DS			Mailslot
-;						ES:EDI		Message buffer
-;						ECX			Message size
+;               PARAMETERS:             DS                      Mailslot
+;                                               ES:EDI          Message buffer
+;                                               ECX                     Message size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public ReplyLocal 
+        public ReplyLocal 
 
-ReplyLocal	Proc near
-	push ds
-	push es
-	push ax
-	push bx
-	push ecx
-	push esi
-	push edi
+ReplyLocal      Proc near
+        push ds
+        push es
+        push ax
+        push bx
+        push ecx
+        push esi
+        push edi
 ;
-	cmp ecx,ds:m_send_max_size
-	jbe do_reply_inrange
+        cmp ecx,ds:m_send_max_size
+        jbe do_reply_inrange
 ;
-	mov ecx,ds:m_send_max_size
+        mov ecx,ds:m_send_max_size
 
 do_reply_inrange:
-	mov ds:m_send_size,ecx
-	push ds
-	mov ax,es
-	mov es,ds:m_send_glob_sel
-	mov ds,ax
-	mov esi,edi	
-	xor edi,edi
-	rep movs byte ptr es:[edi],ds:[esi]
-	xor ax,ax
-	mov es,ax
-	pop ds
+        mov ds:m_send_size,ecx
+        push ds
+        mov ax,es
+        mov es,ds:m_send_glob_sel
+        mov ds,ax
+        mov esi,edi     
+        xor edi,edi
+        rep movs byte ptr es:[edi],ds:[esi]
+        xor ax,ax
+        mov es,ax
+        pop ds
 ;
-	mov bx,ds:m_send_glob_sel
-	FreeGdt
+        mov bx,ds:m_send_glob_sel
+        FreeGdt
 ;
-	xor bx,bx
-	xchg bx,ds:m_send_thread
-	mov es,bx
-	mov eax,ds:m_send_size
+        xor bx,bx
+        xchg bx,ds:m_send_thread
+        mov es,bx
+        mov eax,ds:m_send_size
 ;
-	mov es:p_data,eax
-	xor ax,ax
-	mov es,ax
-	Signal
+        mov es:p_data,eax
+        xor ax,ax
+        mov es,ax
+        Signal
 ;
-	pop edi
-	pop esi
-	pop ecx
-	pop bx
-	pop ax
-	pop es
-	pop ds
-	ret
-ReplyLocal	Endp
+        pop edi
+        pop esi
+        pop ecx
+        pop bx
+        pop ax
+        pop es
+        pop ds
+        ret
+ReplyLocal      Endp
 
 code    ENDS
 

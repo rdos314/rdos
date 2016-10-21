@@ -25,6 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+INCLUDE system.def
 INCLUDE ..\driver.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
@@ -33,36 +34,36 @@ INCLUDE ..\os.inc
 INCLUDE ..\fs.inc
 INCLUDE fat.inc
 
-	.386p
+        .386p
 
-code	SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use16 'CODE'
 
     extrn allocate_cluster_no_verify:near
     extrn bad_cluster:near
 
-	assume cs:code
+        assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ALLOCATE_CLUSTER
+;               NAME:                   ALLOCATE_CLUSTER
 ;
-;		DESCRIPTION:	Allocate & verify cluster
+;               DESCRIPTION:    Allocate & verify cluster
 ;
-;		PARAMETERS:		AL			Drive #
+;               PARAMETERS:             AL                      Drive #
 ;
-;		RETURNS:		EDX			Cluster #
+;               RETURNS:                EDX                     Cluster #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public allocate_cluster
+        public allocate_cluster
 
-allocate_cluster	PROC near
+allocate_cluster        PROC near
 
 acRetry:
-	call allocate_cluster_no_verify
-;	jc acDone       ; remore to deactivate test
-	jmp acDone      ; remove to activiate test
+        call allocate_cluster_no_verify
+;       jc acDone       ; remore to deactivate test
+        jmp acDone      ; remove to activiate test
 ;
     push eax
     push ebx
@@ -73,13 +74,13 @@ acRetry:
     push ebp
 ;    
     push ax
-	sub edx,2
-	mov eax,1
-	mov cl,ds:fat_cluster_shift
-	shl edx,cl
-	shl eax,cl
-	mov ecx,eax
-	add edx,ds:start_sector
+        sub edx,2
+        mov eax,1
+        mov cl,ds:fat_cluster_shift
+        shl edx,cl
+        shl eax,cl
+        mov ecx,eax
+        add edx,ds:start_sector
 ;
     push edx
     mov eax,ecx
@@ -89,7 +90,7 @@ acRetry:
     pop edx
     pop ax
 ;        
-    push ecx	
+    push ecx    
 
 acVeriWrite:
     LockSector
@@ -158,11 +159,11 @@ acVeriDone:
     call bad_cluster
     jmp acRetry    
        
-acDone:	
-	ret
-allocate_cluster	Endp
+acDone: 
+        ret
+allocate_cluster        Endp
 
-code	ENDS
+code    ENDS
 
-	END
+        END
 

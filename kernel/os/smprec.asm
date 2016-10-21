@@ -26,13 +26,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 INCLUDE protseg.def
+INCLUDE system.def
 INCLUDE ..\driver.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE exec.def
-INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ip.inc
 INCLUDE ipc.inc

@@ -25,6 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+INCLUDE ..\os\system.def
 INCLUDE ..\driver.def
 INCLUDE ..\os.def
 INCLUDE ..\os.inc

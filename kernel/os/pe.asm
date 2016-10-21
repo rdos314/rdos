@@ -26,6 +26,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 INCLUDE protseg.def
+INCLUDE system.def
 INCLUDE ..\driver.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
@@ -34,7 +35,6 @@ INCLUDE ..\os.inc
 INCLUDE int.def
 INCLUDE exec.def
 INCLUDE pe.def
-INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\debevent.inc
 
