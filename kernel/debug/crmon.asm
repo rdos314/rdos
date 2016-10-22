@@ -2951,9 +2951,16 @@ inc_reg_byte    Proc near
     ret
 inc_reg_byte  Endp
 
-inc_sreg_byte:
-    and ds:[ebp].debug_flags,NOT DEBUG_FLAG_DESCR
-    jmp inc_reg_byte
+inc_sreg_byte  Proc near
+    push esi
+    add esi,d_selector
+    call inc_reg_byte
+    pop esi
+;
+    add esi,ebp
+    call UpdateSelector
+    ret
+inc_sreg_byte  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2991,9 +2998,16 @@ dec_reg_byte    Proc near
     ret
 dec_reg_byte  Endp
 
-dec_sreg_byte:
-    and ds:[ebp].debug_flags,NOT DEBUG_FLAG_DESCR
-    jmp dec_reg_byte
+dec_sreg_byte  Proc near
+    push esi
+    add esi,d_selector
+    call dec_reg_byte
+    pop esi
+;
+    add esi,ebp
+    call UpdateSelector
+    ret
+dec_sreg_byte  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3103,9 +3117,16 @@ set_reg_byte    Proc near
     ret
 set_reg_byte  Endp
 
-set_sreg_byte:
-    and ds:[ebp].debug_flags,NOT DEBUG_FLAG_DESCR
-    jmp set_reg_byte
+set_sreg_byte  Proc near
+    push esi
+    add esi,d_selector
+    call set_reg_byte
+    pop esi
+;
+    add esi,ebp
+    call UpdateSelector
+    ret
+set_sreg_byte  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3120,35 +3141,35 @@ set_sreg_byte:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 exec_table32:
-meax32  exec_s <4,  1,  3, OFFSET reg_eax,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-deax32  exec_s <4,  5,  8, OFFSET reg_eax,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-mebx32  exec_s <4,  14, 3, OFFSET reg_ebx,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-debx32  exec_s <4,  18, 8, OFFSET reg_ebx,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-mecx32  exec_s <4,  27, 3, OFFSET reg_ecx,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-decx32  exec_s <4,  31, 8, OFFSET reg_ecx,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-medx32  exec_s <4,  40, 3, OFFSET reg_edx,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-dedx32  exec_s <4,  44, 8, OFFSET reg_edx,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-mesi32  exec_s <5,  1,  3, OFFSET reg_esi,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-desi32  exec_s <5,  5,  8, OFFSET reg_esi,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-medi32  exec_s <5,  14, 3, OFFSET reg_edi,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-dedi32  exec_s <5,  18, 8, OFFSET reg_edi,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-mesp32  exec_s <5,  27, 3, OFFSET reg_esp,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-desp32  exec_s <5,  31, 8, OFFSET reg_esp,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-mebp32  exec_s <5,  40, 3, OFFSET reg_ebp,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-debp32  exec_s <5,  44, 8, OFFSET reg_ebp,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
-meip32  exec_s <6,  1,  3, OFFSET reg_eip,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-deip32  exec_s <6,  5,  8, OFFSET reg_eip,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_sreg_byte>
-dtr32   exec_s <7,  4,  4, OFFSET reg_tr.d_selector,               OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
-dldt32  exec_s <8,  4,  4, OFFSET reg_ldt.d_selector,              OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
-dcs32   exec_s <9,  4,  4, OFFSET reg_cs.d_selector,               OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
-dds32   exec_s <10, 4,  4, OFFSET reg_ds.d_selector,               OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
-des32   exec_s <11, 4,  4, OFFSET reg_es.d_selector,               OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
-dfs32   exec_s <12, 4,  4, OFFSET reg_fs.d_selector,               OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
-dgs32   exec_s <13, 4,  4, OFFSET reg_gs.d_selector,               OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
-dss32   exec_s <14, 4,  4, OFFSET reg_ss.d_selector,               OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
-dus32   exec_s <15, 4,  4, OFFSET reg_usel.d_selector,             OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
-duss32  exec_s <21, 0,  4, OFFSET reg_usel.d_selector,             OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
-duso32  exec_s <21, 5,  8, OFFSET reg_uoffs,                       OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+meax32  exec_s <4,  1,  3, OFFSET reg_eax,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+deax32  exec_s <4,  5,  8, OFFSET reg_eax,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mebx32  exec_s <4,  14, 3, OFFSET reg_ebx,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+debx32  exec_s <4,  18, 8, OFFSET reg_ebx,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mecx32  exec_s <4,  27, 3, OFFSET reg_ecx,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+decx32  exec_s <4,  31, 8, OFFSET reg_ecx,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+medx32  exec_s <4,  40, 3, OFFSET reg_edx,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+dedx32  exec_s <4,  44, 8, OFFSET reg_edx,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mesi32  exec_s <5,  1,  3, OFFSET reg_esi,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+desi32  exec_s <5,  5,  8, OFFSET reg_esi,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+medi32  exec_s <5,  14, 3, OFFSET reg_edi,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+dedi32  exec_s <5,  18, 8, OFFSET reg_edi,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mesp32  exec_s <5,  27, 3, OFFSET reg_esp,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+desp32  exec_s <5,  31, 8, OFFSET reg_esp,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mebp32  exec_s <5,  40, 3, OFFSET reg_ebp,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+debp32  exec_s <5,  44, 8, OFFSET reg_ebp,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+meip32  exec_s <6,  1,  3, OFFSET reg_eip,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+deip32  exec_s <6,  5,  8, OFFSET reg_eip,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_sreg_byte>
+dtr32   exec_s <7,  4,  4, OFFSET reg_tr,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dldt32  exec_s <8,  4,  4, OFFSET reg_ldt,      OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dcs32   exec_s <9,  4,  4, OFFSET reg_cs,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dds32   exec_s <10, 4,  4, OFFSET reg_ds,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+des32   exec_s <11, 4,  4, OFFSET reg_es,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dfs32   exec_s <12, 4,  4, OFFSET reg_fs,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dgs32   exec_s <13, 4,  4, OFFSET reg_gs,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dss32   exec_s <14, 4,  4, OFFSET reg_ss,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dus32   exec_s <15, 4,  4, OFFSET reg_usel,     OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+duss32  exec_s <22, 0,  4, OFFSET reg_usel,     OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+duso32  exec_s <22, 5,  8, OFFSET reg_uoffs,    OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
 dend32 DW     0FFFFh, 0FFFFh
 
 Func32  PROC near
@@ -3256,17 +3277,17 @@ set_base_sw32   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 exec_table64:
-dtr64   exec_s <10,  4,  4, OFFSET reg_tr.d_selector,   OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
-dldt64  exec_s <11,  4,  4, OFFSET reg_ldt.d_selector,  OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
-dcs64   exec_s <12,  4,  4, OFFSET reg_cs.d_selector,   OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
-dds64   exec_s <13, 4,  4,  OFFSET reg_ds.d_selector,   OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
-des64   exec_s <14, 4,  4,  OFFSET reg_es.d_selector,   OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
-dfs64   exec_s <15, 4,  4,  OFFSET reg_fs.d_selector,   OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
-dgs64   exec_s <16, 4,  4,  OFFSET reg_gs.d_selector,   OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
-dss64   exec_s <17, 4,  4,  OFFSET reg_ss.d_selector,   OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
-dus64   exec_s <18, 4,  4,  OFFSET reg_usel.d_selector, OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
-duss64  exec_s <24, 0,  4,  OFFSET reg_usel.d_selector, OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
-duso64  exec_s <24, 5,  8,  OFFSET reg_uoffs,           OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+dtr64   exec_s <10,  4,  4, OFFSET reg_tr,       OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+dldt64  exec_s <11,  4,  4, OFFSET reg_ldt,      OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+dcs64   exec_s <12,  4,  4, OFFSET reg_cs,       OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+dds64   exec_s <13, 4,  4,  OFFSET reg_ds,       OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+des64   exec_s <14, 4,  4,  OFFSET reg_es,       OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+dfs64   exec_s <15, 4,  4,  OFFSET reg_fs,       OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+dgs64   exec_s <16, 4,  4,  OFFSET reg_gs,       OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+dss64   exec_s <17, 4,  4,  OFFSET reg_ss,       OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+dus64   exec_s <18, 4,  4,  OFFSET reg_usel,     OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+duss64  exec_s <24, 0,  4,  OFFSET reg_usel,     OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+duso64  exec_s <24, 5,  8,  OFFSET reg_uoffs,    OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
 dend64 DW     0FFFFh, 0FFFFh
 
 Func64  PROC near
@@ -3636,9 +3657,9 @@ vs_67   DD OFFSET go_sw
 vs_68   DD OFFSET error_sw
 vs_69   DD OFFSET error_sw
 vs_6A   DD OFFSET error_sw
-vs_6B   DD OFFSET error_sw
+vs_6B   DD OFFSET inc_sw
 vs_6C   DD OFFSET error_sw
-vs_6D   DD OFFSET error_sw
+vs_6D   DD OFFSET dec_sw
 vs_6E   DD OFFSET next_sw
 vs_6F   DD OFFSET error_sw
 vs_70   DD OFFSET pace_sw
