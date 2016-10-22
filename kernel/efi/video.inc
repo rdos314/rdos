@@ -281,6 +281,7 @@ c_prev_col            DW ?
 
 c_usage               DW ?
 
+c_video_mode          DW ?
 c_video_handle        DW ?
 c_video_sel           DW ?
 

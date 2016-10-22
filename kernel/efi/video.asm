@@ -534,6 +534,7 @@ cfeYOk:
     mov es:c_font,0
     mov es:c_video_handle,0
     mov es:c_video_sel,0
+    mov es:c_video_mode,0
     mov es:c_font_width,8
     mov es:c_font_height,19
 ;    
@@ -581,7 +582,7 @@ CreateConsoleEfi    Endp
 CreateConsoleBios  PROC near
     push ds
     pushad
-;    
+;
     mov eax,25 * 80
     mov ebp,eax
     shl eax,2
@@ -619,6 +620,7 @@ CreateConsoleBios  PROC near
     pop es
     mov es:c_video_sel,ax
     mov es:c_video_handle,0
+    mov es:c_video_mode,3
 ;
     mov eax,00070120h
     mov edi,OFFSET c_text_data
@@ -1516,6 +1518,17 @@ FindMode    Endp
 query_video_mode_name     DB 'Query Video Mode',0
 
 query_video_mode  PROC far
+    push es
+;    
+    call FindMode
+    jc qvmDone
+;    
+    movzx ax,es:vm_bits
+    mov cx,es:vm_y_size
+    mov dx,es:vm_x_size
+
+qvmDone:
+    pop es
     ret
 query_video_mode    Endp
     
@@ -1651,7 +1664,6 @@ get_video_mode  Endp
 set_video_mode_name     DB 'Set Video Mode',0
 
 set_video_mode  PROC far
-    int 3
     push ds
     push fs
 ;
@@ -1665,27 +1677,113 @@ set_video_mode  PROC far
     pop ax
     jz svmDone
 ;    
+    cmp ax,fs:c_video_mode
+    je svmDone
+;    
+    mov bx,fs:c_video_handle
+    or bx,bx
+    jz svmFreeText
+
+svmFreeLfb:
+    mov es,fs:c_video_sel
+    call FreeVideoBuffer
+;    
+    xor ax,ax
+    mov es,ax
+    CloseBitmap
+    jmp svmFreeOk
+
+svmFreeText:
+    mov es,fs:c_video_sel
+    FreeMem
+
+svmFreeOk:    
+    mov fs:c_video_sel,0
+    mov fs:c_video_handle,0
+;    
     cmp ax,3
     jne svmVideo
 
 svmText:
     lock and fs:c_flags,NOT CONSOLE_FLAG_BITMAP
-    mov es,fs:c_video_sel
-    call FreeVideoBuffer    
+;    
+    mov cx,fs:c_cols
+    mov dx,fs:c_rows
+    mov edi,0B8000h    
+    call CreateTextBitmap
+    mov fs:c_video_sel,es
+    mov fs:c_video_handle,0
+    mov fs:c_video_mode,3
+;
+    xor ax,ax
+    xor cx,cx
+    xor dx,dx
+    xor si,si
+    xor edi,edi
+;    
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz svmDone
+;    
+    mov es:v_has_focus,1
+    mov bx,fs:c_video_mode
+    SwitchVideoMode
     jmp svmDone
     
 svmVideo:
     call FindMode
     jc svmText
 ;    
-    lock or fs:c_flags,CONSOLE_FLAG_BITMAP
+    mov fs:c_video_mode,ax
+;
+    movzx edx,es:vm_line_size
+    movzx eax,es:vm_y_size
+    mul edx
+    AllocateBigLinear
+    mov edi,edx
+;
+    mov eax,es:vm_lfb
+    xor ebx,ebx
+    mov al,67h
+
+svmPageLoop:
+    SetPageEntry
+    add edx,1000h
+    add eax,1000h
+    loop svmPageLoop
+;    
+    mov fs:c_lfb,edi    
+    mov al,es:vm_bits
+    mov cx,es:vm_x_size
+    mov fs:c_width,cx
+    mov dx,es:vm_y_size
+    mov fs:c_height,dx
+    movzx ebp,es:vm_line_size
+    mov fs:c_scan_size,ebp
+    mov fs:c_usage,1
+    call CreateVideoBitmap
     call AllocateVideoBuffer
     mov fs:c_video_sel,es
-;
+    mov fs:c_video_handle,bx
+    lock or fs:c_flags,CONSOLE_FLAG_BITMAP
+
+svmSetMode:
     test fs:c_flags,CONSOLE_FLAG_ACTIVE
     jz svmFocusOk
 ;    
     mov es:v_has_focus,1
+    mov bx,fs:c_video_mode
+    SwitchVideoMode
+;
+    mov ecx,es:v_app_size
+    shr ecx,2
+    mov edi,es:v_phys_base
+;
+    push es    
+    mov ax,flat_sel
+    mov es,ax
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    pop es
 
 svmFocusOk:   
     movzx ax,es:v_bpp
@@ -1857,7 +1955,6 @@ end_get_video_modes  PROC far
     mov edx,es:efi_scan_size
     movzx eax,es:efi_height
     mul edx
-    shl eax,2
     AllocateBigLinear
 ;
     mov eax,es:efi_lfb
