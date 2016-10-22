@@ -45,7 +45,8 @@ video_mode_struc       STRUC
 vm_next             DW ?
 
 vm_mode_nr          DW ?
-vm_bits             DW ?
+vm_bits             DB ?
+vm_resv             DB ?
 vm_x_size           DW ?
 vm_y_size           DW ?
 vm_line_size        DW ?
@@ -1454,6 +1455,52 @@ GetFocusConsole     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           FindMode
+;
+;           DESCRIPTION:    Find a video mode
+;
+;           PARAMETERS:     AX      mode #
+;
+;           RETURNS:        ES      Video sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindMode  PROC near
+    push ds
+    push bx
+;    
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:video_mode_list
+
+fmLoop:
+    or bx,bx
+    jz fmFail
+;
+    mov es,bx
+;
+    cmp ax,es:vm_mode_nr
+    je fmOk
+;
+    mov bx,es:vm_next
+    jmp fmLoop
+
+fmOk:
+    clc
+    jmp fmDone
+
+fmFail:
+    stc
+
+fmDone:
+    pop bx
+    pop ds
+    ret
+FindMode    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           QueryVideoMode
 ;
 ;           DESCRIPTION:    Query video mode
@@ -1489,11 +1536,99 @@ query_video_mode    Endp
 
 get_video_mode_name     DB 'Get Video Mode',0
 
-get_video_mode  PROC far
-    mov ax,1
+get_video_mode  Proc far
+    push ds
+    push es
+    push bx
+    push si
+    push di
+;
+    mov si,cx
+    add si,dx
+    xor di,di
+    xor ah,ah
+;
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:video_mode_list
+
+get_video_loop:
+    or bx,bx
+    jz get_video_done
+;
+    mov es,bx
+;
+    mov bl,es:vm_bits
+    or bl,bl
+    jz get_video_next
+;
+    push ax
+    mov ax,cx
+    sub ax,es:vm_x_size
+    jnc get_video_x_ok
+;
+    neg ax
+
+get_video_x_ok:
+    mov bx,ax
+;
+    mov ax,dx
+    sub ax,es:vm_y_size
+    jnc get_video_y_ok
+;
+    neg ax 
+
+get_video_y_ok:
+    add bx,ax
+    pop ax
+;
+    cmp bx,si
+    ja get_video_next
+    jne get_video_select
+;
+    cmp al,ah
+    je get_video_next
+    jb get_video_want_smaller
+
+get_video_want_larger:
+    cmp ah,es:vm_bits
+    jc get_video_select
+    jmp get_video_next
+
+get_video_want_smaller:
+    cmp ah,es:vm_bits
+    jc get_video_next
+;
+    cmp al,es:vm_bits
+    jbe get_video_select
+    jmp get_video_next
+
+get_video_select:
+    mov ah,es:vm_bits
+    mov si,bx
+    mov di,es
+
+get_video_next:
+    mov bx,es:vm_next
+    or bx,bx
+    jnz get_video_loop
+
+get_video_done:
+    xor ax,ax
+    or di,di
+    jz get_video_leave
+;
+    mov es,di
+    mov ax,es:vm_mode_nr
+
+get_video_leave:
+    pop di
+    pop si
+    pop bx
+    pop es    
+    pop ds
     ret
 get_video_mode  Endp
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1516,6 +1651,7 @@ get_video_mode  Endp
 set_video_mode_name     DB 'Set Video Mode',0
 
 set_video_mode  PROC far
+    int 3
     push ds
     push fs
 ;
@@ -1529,8 +1665,8 @@ set_video_mode  PROC far
     pop ax
     jz svmDone
 ;    
-    cmp ax,1
-    je svmVideo
+    cmp ax,3
+    jne svmVideo
 
 svmText:
     lock and fs:c_flags,NOT CONSOLE_FLAG_BITMAP
@@ -1539,9 +1675,12 @@ svmText:
     jmp svmDone
     
 svmVideo:
+    call FindMode
+    jc svmText
+;    
     lock or fs:c_flags,CONSOLE_FLAG_BITMAP
-    mov es,fs:c_video_sel
     call AllocateVideoBuffer
+    mov fs:c_video_sel,es
 ;
     test fs:c_flags,CONSOLE_FLAG_ACTIVE
     jz svmFocusOk
@@ -1627,7 +1766,7 @@ avAdd:
     AllocateSmallGlobalMem
     pop eax
 ;
-    mov es:vm_bits,ax
+    mov es:vm_bits,al
     mov es:vm_mode_nr,bx
     mov es:vm_x_size,cx
     mov es:vm_y_size,dx
