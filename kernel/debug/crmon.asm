@@ -2715,18 +2715,18 @@ write_mem    Endp
 ;           DESCRIPTION:    Update selector to descriptor
 ;
 ;           PARAMETERS:     DS:EBP      Cpu
-;                           DS:ESI      Descriptor
+;                           ESI         Descriptor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateSelector      Proc near
-    mov bx,ds:[esi].d_selector
+    mov bx,ds:[ebp+esi].d_selector
 ;
     call GetSelectorBaseSizeType
     jc usFail
 ;
-    mov ds:[esi].d_limit,ecx
-    mov ds:[esi].d_base,edx
+    mov ds:[ebp+esi].d_limit,ecx
+    mov ds:[ebp+esi].d_base,edx
 ;
     xor dx,dx
     test ah,40h
@@ -2759,13 +2759,13 @@ usDataSel:
     or dx,ACCESS_WRITE    
 
 usSaveAccess:
-    mov ds:[esi].d_access,dx
+    mov ds:[ebp+esi].d_access,dx
     jmp usDone
 
 usFail:
-    mov ds:[esi].d_limit,0
-    mov ds:[esi].d_base,0
-    mov ds:[esi].d_access,0
+    mov ds:[ebp+esi].d_limit,0
+    mov ds:[ebp+esi].d_base,0
+    mov ds:[ebp+esi].d_access,0
 
 usDone:        
     ret
@@ -2804,26 +2804,26 @@ sdLdtOk:
     mov ds:[ebp].reg_tr.d_base,edx
 
 sdTrOk:
-    lea esi,[ebp].reg_es
+    mov esi,OFFSET reg_es
     call UpdateSelector
 ;
-    lea esi,[ebp].reg_cs
+    mov esi,OFFSET reg_cs
     call UpdateSelector
      
-    lea esi,[ebp].reg_ss
+    mov esi,OFFSET reg_ss
     call UpdateSelector
 ;
-    lea esi,[ebp].reg_ds
+    mov esi,OFFSET reg_ds
     call UpdateSelector
 ;
-    lea esi,[ebp].reg_fs
+    mov esi,OFFSET reg_fs
     call UpdateSelector
 ;
-    lea esi,[ebp].reg_gs
+    mov esi,OFFSET reg_gs
     call UpdateSelector
 ;
     mov ds:[ebp].reg_usel.d_selector,20h
-    lea esi,[ebp].reg_usel
+    mov esi,OFFSET reg_usel
     call UpdateSelector
 ;
     popad    
@@ -2951,7 +2951,6 @@ inc_sreg_byte  Proc near
     call inc_reg_byte
     pop esi
 ;
-    add esi,ebp
     call UpdateSelector
     ret
 inc_sreg_byte  Endp
@@ -2998,7 +2997,6 @@ dec_sreg_byte  Proc near
     call dec_reg_byte
     pop esi
 ;
-    add esi,ebp
     call UpdateSelector
     ret
 dec_sreg_byte  Endp
@@ -3117,7 +3115,6 @@ set_sreg_byte  Proc near
     call set_reg_byte
     pop esi
 ;
-    add esi,ebp
     call UpdateSelector
     ret
 set_sreg_byte  Endp
