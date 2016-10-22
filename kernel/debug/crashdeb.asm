@@ -1154,7 +1154,7 @@ init_crash_tasking    Proc near
     mov edi,OFFSET test_name
     mov ecx,stack0_size
     mov ax,26
-;    CreateProcess
+    CreateProcess
 ;        
     popad
     pop ds

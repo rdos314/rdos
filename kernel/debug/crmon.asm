@@ -28,6 +28,7 @@
 INCLUDE ..\os.def
 INCLUDE ..\os.inc
 INCLUDE ..\os\system.def
+INCLUDE ..\os\proc.inc
 INCLUDE kdebug.inc
 
 flat_sel = 20h
@@ -381,7 +382,7 @@ ReadLinearWord   PROC near
     call ReadLinearByte
     shl ax,8
     and ax,0FF00h
-    or si,ax
+    or ax,si
     clc
 
 rlwDone: 
@@ -563,6 +564,49 @@ get_info_done:
     pop ebx
     ret
 GetSelectorBaseSizeType   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadWord
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           DX:EBX      Address
+;
+;           RETURNS:        NC
+;                               AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadWord   PROC near
+    push ebx
+    push ecx
+    push edx
+    push edi
+;    
+    push ebx
+    mov bx,dx
+    call GetSelectorBaseSizeType
+    pop ebx
+    jc rwDone
+;
+    add ecx,2
+    cmp ecx,ebx
+    jc rwDone
+;
+    add ebx,edx 
+    xor edi,edi
+    call ReadLinearWord   
+
+rwDone:    
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+ReadWord   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1418,6 +1462,61 @@ ShowCodeSizeString Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ShowPtrSizeString
+;
+;           DESCRIPTION:    Show string in memory
+;
+;           PARAMETERS:     DX:EBX       Address
+;                           ECX          Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ShowPtrSizeString Proc near
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    push ebx
+    push ecx
+    mov bx,dx
+    call GetSelectorBaseSizeType
+    mov esi,ecx
+    pop ecx
+    pop ebx
+    jc spsDone
+;
+    inc esi
+
+spsLoop:    
+    cmp esi,ebx
+    jc spsDone
+;
+    push ebx
+    add ebx,edx 
+    xor edi,edi
+    call ReadLinearByte
+    pop ebx
+    jc spsDone
+;
+    call ShowChar
+;
+    inc ebx    
+    loop spsLoop    
+    
+spsDone:    
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+ShowPtrSizeString Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           WriteHexByte
 ;
 ;           DESCRIPTION:    
@@ -1708,6 +1807,46 @@ WriteCore   PROC near
     call ShowChar
     ret
 WriteCore   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteThread
+;
+;           DESCRIPTION:    Write current thread
+;
+;           PARAMETERS:     DS:EBP      Core regs
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NoName DB 'No thread                       ', 0
+
+WriteThread   PROC near
+    mov ax,ds:[ebp].reg_tr.d_selector
+    or ax,ax
+    jz wtNoThread
+;    
+    mov dx,ds:[ebp].debug_core_sel
+    mov ebx,OFFSET ps_curr_thread
+    call ReadWord
+    jc wtNoThread
+;    
+    or ax,ax
+    jz wtNoThread
+;    
+    mov dx,ax
+    mov ebx,OFFSET thread_name
+    mov ecx,32
+    call ShowPtrSizeString
+    jmp wtDone
+
+wtNoThread:
+    mov esi,OFFSET NoName
+    call ShowCodeAsciiz
+
+wtDone:
+    ret
+WriteThread Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2408,7 +2547,7 @@ WriteInstr      Endp
 
 WriteCpuReg32     Proc near
     call WriteCore
-;    call WriteThread
+    call WriteThread
     call NewLine    
 ;
     call WriteTable
@@ -2527,7 +2666,7 @@ WriteCpuReg32     Endp
 
 WriteCpuReg64     Proc near
     call WriteCore
-;    call WriteThread
+    call WriteThread
     call NewLine    
 ;
     call WriteTable
@@ -2739,7 +2878,9 @@ UpdateSelector      Proc near
     cmp esi,OFFSET reg_ldt
     je usLdt        
 ;
-    xor dx,dx
+    mov dx,bx
+    and dx,3
+;
     test al,10h
     jz usSaveAccess
 ;    
