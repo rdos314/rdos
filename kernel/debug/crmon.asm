@@ -2613,24 +2613,6 @@ WriteCpuReg64     Proc near
     call NewLine    
     ret
 WriteCpuReg64     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           WriteCpuReg
-;
-;       DESCRIPTION:    Write CPU registers
-;
-;       PARAMETERS:     DS:EBP      Cpu registers
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-WriteCpuReg     Proc near
-    test ds:[ebp].reg_cs.d_access,ACCESS_64
-    jnz WriteCpuReg64
-    jmp WriteCpuReg32
-WriteCpuReg Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2795,6 +2777,8 @@ UpdateSelector      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 SetupDescriptors Proc near
+    pushad
+;    
     mov ds:[ebp].cpu_read_mem,OFFSET read_mem
     mov ds:[ebp].cpu_write_mem,OFFSET write_mem
 ;    
@@ -2835,8 +2819,56 @@ sdTrOk:
     mov ds:[ebp].reg_usel.d_selector,20h
     lea esi,[ebp].reg_usel
     call UpdateSelector
+;
+    popad    
     ret
 SetupDescriptors        Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteCpuReg
+;
+;       DESCRIPTION:    Write CPU registers
+;
+;       PARAMETERS:     BX      Core #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+WriteCpuReg     Proc near
+    push ds
+;    
+    mov ax,mon_data_sel
+    mov ds,ax
+    movzx ebx,bx
+    shl ebx,3
+    add ebx,OFFSET mon_core_regs
+    mov ebp,ds:[ebx].mc_regs_linear
+    mov ax,mon_flat_sel
+    mov ds,ax
+;    
+    test ds:[ebp].debug_flags,DEBUG_FLAG_DESCR
+    jnz wcSelOk
+;    
+    call SetupDescriptors
+    or ds:[ebp].debug_flags,DEBUG_FLAG_DESCR
+
+wcSelOk:
+    test ds:[ebp].reg_cs.d_access,ACCESS_64
+    jnz wc64
+
+wc32:
+    call WriteCpuReg32
+    jmp wcDone
+
+wc64:
+    call WriteCpuReg64
+
+wcDone:
+    pop ds
+    ret            
+WriteCpuReg Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2849,14 +2881,15 @@ SetupDescriptors        Endp
 
 handle_monitor:
     call InitCrashKeyboard
-    call SetupDescriptors
-    call WriteCpuReg
 ;
+    mov bx,ds:[ebp].debug_core_id
     mov ax,mon_data_sel
     mov ds,ax
     mov ds:mon_curr_row,0
     mov ds:mon_curr_col,0
+    mov ds:mon_curr_core,bx
 ;
+    call WriteCpuReg
     call ShowMarker
 
 handle_loop:

@@ -73,6 +73,9 @@ TRANSFER_FLAGS	EQU 8
 TRANSFER_SWITCH	EQU 10h
 TRANSFER_CODE	EQU 20h
 
+DEBUG_FLAG_VALID  = 1
+DEBUG_FLAG_DESCR  = 2
+
 a32				EQU 1
 d32				EQU 2
 rep_z			EQU 4
@@ -189,6 +192,7 @@ temp_base       DD ?
 
 debug_core_id         DW ?
 debug_core_sel        DW ?
+debug_flags           DW ?
 
 code_start      DD ?,?
 code_cache      DB 32 DUP(?)
@@ -241,15 +245,16 @@ mon_map_linear      DD ?
 
 mon_core_count      DW ?
 
+mon_curr_core       DW ?
+mon_curr_row        DW ?
+mon_curr_col        DW ?
+
 mon_key_status      DB ?
 mon_key_command     DB ?
 mon_shift_states    DW ?
 mon_key_code        DW ?
 mon_c_vk_code       DB ?
 mon_scan_code       DB ?
-
-mon_curr_row        DW ?
-mon_curr_col        DW ?
 
 ; should be last!
 

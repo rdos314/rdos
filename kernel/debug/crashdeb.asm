@@ -837,6 +837,7 @@ notify_core_dump:
     mov ds:[ebp].reg_tr.d_limit,0
     mov ds:[ebp].reg_tr.d_base,0
     mov ds:[ebp].reg_efer,0
+    lock or ds:[ebp].debug_flags,DEBUG_FLAG_VALID
     call AddToCrashLog
     lock or fs:ps_flags,PS_FLAG_SAVED
 ;    
