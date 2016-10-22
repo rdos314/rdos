@@ -631,31 +631,115 @@ scdDone:
     pop fs
     ret
 start_core_dump Endp
-   
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
 ;
-;               NAME:           DelayMs
 ;
-;               DESCRIPTION:    Delay that does not use multitasking functions
+;           NAME:           SendIntToAll
 ;
-;       PARAMETERS:     AX      Delay in ms
+;           DESCRIPTION:    Send int 2 to all
+;
+;           PARAMETERS:     DS:EBP      Cpu registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DelayMs Proc near
+SendIntToAll       Proc near
+    xor ax,ax
 
-dmMain:
-    mov ecx,10000h
-
-dmLoop:
-    loop dmLoop
+sitLoop:    
+    GetCoreNumber
+    jc sitDone
 ;
-    sub ax,1
-    jnz dmMain
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz sitNext
+;        
+    push ax
+    mov al,2
+    SendInt
+    pop ax
+        
+sitNext:
+    inc ax
+    jmp sitLoop
+
+sitDone:
     ret
-DelayMs Endp
+SendIntToAll    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SendNmiToAll
+;
+;           DESCRIPTION:    Send NMI to all
+;
+;           PARAMETERS:     DS:EBP      Cpu registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendNmiToAll       Proc near
+    xor ax,ax
+
+sntLoop:    
+    GetCoreNumber
+    jc sntDone
+;
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz sntNext
+;        
+    SendNmi
+        
+sntNext:
+    inc ax
+    jmp sntLoop
+
+sntDone:
+    ret
+SendNmiToAll    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WaitSaved
+;
+;           DESCRIPTION:    Wait for saved states
+;
+;           PARAMETERS:     DS:EBP      Cpu registers
+;                           ECX         Attempts
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitSaved       Proc near
+
+wsLoop:    
+    xor dx,dx
+    xor ax,ax
+
+wsCoreLoop:
+    GetCoreNumber
+    jc wsValidate
+;
+    test fs:ps_flags,PS_FLAG_SAVED
+    jnz wsCoreNext
+;        
+    inc dx
+        
+wsCoreNext:
+    inc ax
+    jmp wsCoreLoop
+
+wsValidate:
+    or dx,dx
+    clc
+    jz wsDone   
+;
+    loop wsLoop    
+;
+    stc
+
+wsDone:
+    ret
+WaitSaved       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -737,6 +821,7 @@ smSpin:
     jz smEnter
 
 smWait:
+    hlt
     jmp smWait
 
 smEnter:
@@ -760,67 +845,21 @@ smModeOk:
     SetupNmiCoreDump
     SetupLongNmiCoreDump
 ;
-    xor ax,ax
-
-smIntLoop:    
-    GetCoreNumber
-    jc smIntDone
+    call SendNmiToAll
+    mov ecx,1000h
+    call WaitSaved
+    jnc smSavedOk
+;    
+    call SendIntToAll
+    mov ecx,1000h
+    call WaitSaved
+    jnc smSavedOk
 ;
-    test fs:ps_flags,PS_FLAG_NMI
-    jnz smIntNext
-;        
-    push ax
-    mov al,2
-    SendInt
-    pop ax
-        
-smIntNext:
-    inc ax
-    jmp smIntLoop
-
-smIntDone:
-    xor ax,ax
-
-smNmiLoop:    
-    GetCoreNumber
-    jc smNmiDone
-;
-    test fs:ps_flags,PS_FLAG_NMI
-    jnz smNmiNext
-;        
-    SendNmi
-        
-smNmiNext:
-    inc ax
-    jmp smNmiLoop
-
-smNmiDone:
+    call SendNmiToAll
     mov ecx,100000h
+    call WaitSaved
 
-smWaitLoop:    
-    xor dx,dx
-    xor ax,ax
-
-smWaitCoreLoop:
-    GetCoreNumber
-    jc smWaitValidate
-;
-    test fs:ps_flags,PS_FLAG_SAVED
-    jnz smWaitCoreNext
-;        
-    inc dx
-        
-smWaitCoreNext:
-    inc ax
-    jmp smWaitCoreLoop
-
-smWaitValidate:
-    or dx,dx
-    jz smWaitDone   
-;
-    loop smWaitLoop    
-
-smWaitDone:
+smSavedOk:
     mov ax,wd_code_sel
     verr ax
     jnz smMonitor

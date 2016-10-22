@@ -1120,6 +1120,7 @@ abort_fatal_do:
     call WriteWordReg
     
 halt_sys:
+    hlt
     jmp halt_sys
     
 abort_task:
@@ -1275,6 +1276,7 @@ not_empty_r:
     jmp remove_next_waiting
 
 abort_system:
+    hlt
     jmp abort_system
 
 

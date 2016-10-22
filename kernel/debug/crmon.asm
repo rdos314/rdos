@@ -2958,6 +2958,7 @@ mon_priv:
     xor ax,ax
     mov fs,ax
     mov gs,ax
+    int 3
     jmp handle_monitor
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3184,6 +3185,7 @@ DumpFault:
     call WriteWordRegs
     
 fdLoop:
+    hlt
     jmp fdLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
