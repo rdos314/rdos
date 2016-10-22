@@ -568,6 +568,49 @@ GetSelectorBaseSizeType   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ReadByte
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           DX:EBX      Address
+;
+;           RETURNS:        NC
+;                               AL      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadByte   PROC near
+    push ebx
+    push ecx
+    push edx
+    push edi
+;    
+    push ebx
+    mov bx,dx
+    call GetSelectorBaseSizeType
+    pop ebx
+    jc rbDone
+;
+    inc ecx
+    cmp ecx,ebx
+    jc rbDone
+;
+    add ebx,edx 
+    xor edi,edi
+    call ReadLinearByte
+
+rbDone:    
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+ReadByte   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ReadWord
 ;
 ;           DESCRIPTION:    
@@ -607,6 +650,49 @@ rwDone:
     pop ebx
     ret
 ReadWord   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadDword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           DX:EBX      Address
+;
+;           RETURNS:        NC
+;                               EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadDword   PROC near
+    push ebx
+    push ecx
+    push edx
+    push edi
+;    
+    push ebx
+    mov bx,dx
+    call GetSelectorBaseSizeType
+    pop ebx
+    jc rdDone
+;
+    add ecx,4
+    cmp ecx,ebx
+    jc rdDone
+;
+    add ebx,edx 
+    xor edi,edi
+    call ReadLinearDword
+
+rdDone:    
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+ReadDword   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
