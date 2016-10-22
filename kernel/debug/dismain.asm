@@ -3932,9 +3932,14 @@ dacLongRead:
     mov ds:[ebp].op_rex,8
 
 dacStart:                
+    mov ax,os_gate_sel
+    verr ax
+    jnz dacDis
+;
     call CheckGate
     jnc dacMove
-;    
+
+dacDis:    
     mov al,[esi]
     movzx eax,al
     lea edi,[ebp].op_codes

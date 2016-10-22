@@ -2838,7 +2838,13 @@ SetupDescriptors        Endp
 
 WriteCpuReg     Proc near
     push ds
+    pushad
 ;    
+    mov ax,mon_system_data_sel
+    mov ds,ax
+    mov ds:efi_text_row,0
+    mov ds:efi_text_col,0
+;
     mov ax,mon_data_sel
     mov ds,ax
     movzx ebx,bx
@@ -2866,6 +2872,7 @@ wc64:
     call WriteCpuReg64
 
 wcDone:
+    popad
     pop ds
     ret            
 WriteCpuReg Endp
@@ -2910,6 +2917,9 @@ handle_loop:
 ;
     cmp al,28h
     je down_arrow
+;    
+    cmp al,'N'
+    je next_core
 
 handle_next:        
     jmp handle_loop
@@ -2953,6 +2963,22 @@ right_arrow:
     inc ds:mon_curr_col
     call ShowMarker
     jmp handle_loop
+
+next_core:
+    mov bx,ds:mon_curr_core
+    inc bx
+    cmp bx,ds:mon_core_count
+    jb next_core_show
+;
+    xor bx,bx
+
+next_core_show:
+    mov ds:mon_curr_core,bx
+;
+    call HideMarker
+    call WriteCpuReg
+    call ShowMarker
+    jmp handle_loop    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
