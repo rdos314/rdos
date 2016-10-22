@@ -953,7 +953,6 @@ scLfb:
     mov ax,ds:efi_text_row
     mov cx,19
     mul cx
-    add ax,4
     movzx eax,ax
     movzx edx,ds:efi_text_col
     shl edx,3
@@ -1053,7 +1052,6 @@ icLfb:
     mov ax,dx
     mov cx,19
     mul cx
-    add ax,4
     movzx eax,ax
     pop dx
     movzx edx,dx
