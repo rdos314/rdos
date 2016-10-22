@@ -1827,8 +1827,7 @@ WriteSelReg   PROC near
     mov al,' '
     call ShowChar
 ;    
-    mov ax,ds:[ebx+ebp].d_access
-    or ax,ax
+    test ds:[ebx+ebp].d_access,ACCESS_VALID
     jz write_sel_done
 ;
     mov eax,ds:[ebx+ebp].d_base
@@ -1838,7 +1837,7 @@ WriteSelReg   PROC near
     call ShowChar
     mov al,'('
     call ShowChar
-;
+;    
     mov eax,ds:[ebx+ebp].d_limit
     call WriteHexDword
 ;
@@ -1846,6 +1845,9 @@ WriteSelReg   PROC near
     call ShowChar    
     mov al,' '
     call ShowChar
+;
+    cmp ebx,OFFSET reg_ldt
+    je write_sel_done
 ;
     test ds:[ebx+ebp].d_access,ACCESS_64
     jnz write_sel64
@@ -1868,6 +1870,9 @@ write_sel64:
     call ShowCodeAsciiz
 
 write_sel_access:
+    cmp ebx,OFFSET reg_tr
+    je write_sel_done
+;
     test ds:[ebx+ebp].d_access,ACCESS_WRITE
     jnz write_sel_write
 ;
@@ -2728,7 +2733,17 @@ UpdateSelector      Proc near
     mov ds:[ebp+esi].d_limit,ecx
     mov ds:[ebp+esi].d_base,edx
 ;
+    cmp esi,OFFSET reg_tr
+    je usTr
+;
+    cmp esi,OFFSET reg_ldt
+    je usLdt        
+;
     xor dx,dx
+    test al,10h
+    jz usSaveAccess
+;    
+    mov dx,ACCESS_VALID
     test ah,40h
     jz usSizeOk
 ;
@@ -2752,6 +2767,12 @@ usLongOk:
     jmp usSaveAccess
 
 usDataSel:    
+    test al,4
+    jz usDataDirOk
+;
+    or dx,ACCESS_DIR    
+
+usDataDirOk:    
     or dx,ACCESS_READ
     test al,2
     jz usSaveAccess
@@ -2761,6 +2782,36 @@ usDataSel:
 usSaveAccess:
     mov ds:[ebp+esi].d_access,dx
     jmp usDone
+
+usTr:
+    and al,1Fh
+    cmp al,1
+    je usTrSave16
+;
+    cmp al,3
+    je usTrSave16
+;        
+    cmp al,9
+    je usTrSave32
+;
+    cmp al,0Bh
+    jne usFail
+
+usTrSave32:
+    mov dx,ACCESS_VALID OR ACCESS_32
+    jmp usSaveAccess
+
+usTrSave16:    
+    mov dx,ACCESS_VALID
+    jmp usSaveAccess
+
+usLdt:
+    and al,1Fh
+    cmp al,2
+    jne usFail
+;
+    mov dx,ACCESS_VALID
+    jmp usSaveAccess
 
 usFail:
     mov ds:[ebp+esi].d_limit,0
@@ -2788,22 +2839,12 @@ SetupDescriptors Proc near
     mov ds:[ebp].cpu_read_mem,OFFSET read_mem
     mov ds:[ebp].cpu_write_mem,OFFSET write_mem
 ;    
-    mov bx,ds:[ebp].reg_ldt.d_selector
-    call GetSelectorBaseSizeType
-    jc sdLdtOk
+    mov esi,OFFSET reg_ldt
+    call UpdateSelector
+;    
+    mov esi,OFFSET reg_tr
+    call UpdateSelector
 ;
-    mov ds:[ebp].reg_ldt.d_limit,ecx
-    mov ds:[ebp].reg_ldt.d_base,edx
-
-sdLdtOk:
-    mov bx,ds:[ebp].reg_tr.d_selector
-    call GetSelectorBaseSizeType
-    jc sdTrOk
-;
-    mov ds:[ebp].reg_tr.d_limit,ecx
-    mov ds:[ebp].reg_tr.d_base,edx
-
-sdTrOk:
     mov esi,OFFSET reg_es
     call UpdateSelector
 ;
