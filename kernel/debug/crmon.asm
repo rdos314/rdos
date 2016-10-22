@@ -2881,16 +2881,72 @@ WriteCpuReg Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-inc_sw:
-dec_sw:
 go_sw:
 trace_sw:
 pace_sw:
 reg_sw:
 
+interact_set:
+interact_incr:
+interact_decr:
+
 error_sw Proc near
     ret
 error_sw Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Func32
+;
+;           DESCRIPTION:    Function on 32-bit regs
+;
+;           PARAMETERS:     DS:EBP              Registers
+;                           EDI                 Function ptr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Func32  PROC near
+    ret
+Func32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           inc_sw32
+;
+;           DESCRIPTION:    32-bit inc
+;
+;           PARAMETERS:     DS:EBP              Registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+inc_sw32  PROC near
+    pushad
+    mov edi,OFFSET interact_incr
+    call Func32
+    popad
+    ret
+inc_sw32  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           dec_sw32
+;
+;           DESCRIPTION:    32-bit dec
+;
+;           PARAMETERS:     DS:EBP              Registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dec_sw32  PROC near
+    pushad
+    mov edi,OFFSET interact_decr
+    call Func32
+    popad
+    ret
+dec_sw32  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2905,8 +2961,66 @@ error_sw Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_base_sw32   Proc near
+    pushad
+    mov edi,OFFSET interact_set
+    call Func32
+    popad
     ret
 set_base_sw32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Func64
+;
+;           DESCRIPTION:    Function on 64-bit regs
+;
+;           PARAMETERS:     DS:EBP              Registers
+;                           EDI                 Function ptr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Func64  PROC near
+    ret
+Func64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           inc_sw64
+;
+;           DESCRIPTION:    64-bit inc
+;
+;           PARAMETERS:     DS:EBP              Registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+inc_sw64  PROC near
+    pushad
+    mov edi,OFFSET interact_incr
+    call Func64
+    popad
+    ret
+inc_sw64  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           dec_sw64
+;
+;           DESCRIPTION:    64-bit dec
+;
+;           PARAMETERS:     DS:EBP              Registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dec_sw64  PROC near
+    pushad
+    mov edi,OFFSET interact_decr
+    call Func64
+    popad
+    ret
+dec_sw64  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2921,6 +3035,10 @@ set_base_sw32   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_base_sw64   Proc near
+    pushad
+    mov edi,OFFSET interact_set
+    call Func64
+    popad
     ret
 set_base_sw64   Endp
 
@@ -2934,6 +3052,16 @@ set_base_sw64   Endp
 ;           PARAMETERS:     DS:EBP              Registers
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+inc_sw:
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz inc_sw64
+    jmp inc_sw32
+
+dec_sw:
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz dec_sw64
+    jmp dec_sw32
 
 set0_sw:
     mov ch,0
