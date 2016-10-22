@@ -635,6 +635,35 @@ start_core_dump Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SendStopAndWait
+;
+;           DESCRIPTION:    Send NMI to single core and wait
+;
+;           PARAMETERS:     DS:EBP      Cpu registers
+;                           FS          Core sel
+;                           ECX         Check count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendStopAndWait       Proc near
+    test fs:ps_flags,PS_FLAG_NMI
+    jnz swCheck
+;        
+    SendNmi
+        
+swCheck:
+    test fs:ps_flags,PS_FLAG_SAVED
+    jnz swDone
+;
+    loop swCheck
+
+swDone:        
+    ret
+SendStopAndWait    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SendIntToAll
 ;
 ;           DESCRIPTION:    Send int 2 to all
@@ -845,7 +874,18 @@ smModeOk:
     SetupNmiCoreDump
     SetupLongNmiCoreDump
 ;
-    call SendNmiToAll
+    xor ax,ax
+
+smStopLoop:    
+    GetCoreNumber
+    jc smStopDone
+;
+    mov ecx,1000000h
+    call SendStopAndWait
+    inc ax
+    jmp smStopLoop
+
+smStopDone:
     mov ecx,1000h
     call WaitSaved
     jnc smSavedOk
