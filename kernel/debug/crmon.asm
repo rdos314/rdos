@@ -31,6 +31,18 @@ INCLUDE ..\os\system.def
 INCLUDE kdebug.inc
 
 flat_sel = 20h
+
+exec_s  STRUC
+
+exec_row         DW ?
+exec_col         DW ?
+exec_size        DW ?
+exec_reg         DD ?
+exec_inc_proc    DD ?
+exec_dec_proc    DD ?
+exec_set_proc    DD ?
+
+exec_s  ENDS
  
 data    SEGMENT byte public 'DATA'
 
@@ -2886,13 +2898,214 @@ trace_sw:
 pace_sw:
 reg_sw:
 
-interact_set:
-interact_incr:
-interact_decr:
-
 error_sw Proc near
     ret
 error_sw Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ignore
+;
+;           DESCRIPTION:    Ignore
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ignore  Proc near
+    ret
+ignore  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           inc_reg_byte
+;
+;           DESCRIPTION:    Perform inc on byte in core reg
+;
+;           PARAMETERS:     DS:EBP  Core registers
+;                           ESI     Register offset
+;                           EBX     Table entry
+;                           CX      Digit #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+inc_reg_byte    Proc near
+    mov ax,cs:[ebx].exec_size
+    sub ax,cx
+    dec ax
+    mov cl,al
+    shl cl,2
+    mov edx,0Fh
+    shl edx,cl
+;    
+    mov eax,ds:[ebp+esi]
+    and eax,edx
+    shr eax,cl
+    inc al
+    and al,0Fh
+    shl eax,cl
+    not edx
+    and edx,ds:[ebp+esi]
+    or eax,edx
+    mov ds:[ebp+esi],eax
+    ret
+inc_reg_byte  Endp
+
+inc_sreg_byte:
+    and ds:[ebp].debug_flags,NOT DEBUG_FLAG_DESCR
+    jmp inc_reg_byte
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           dec_reg_byte
+;
+;           DESCRIPTION:    Perform dec on byte in core reg
+;
+;           PARAMETERS:     DS:EBP  Core registers
+;                           ESI     Register offset
+;                           EBX     Table entry
+;                           CX      Digit #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dec_reg_byte    Proc near
+    mov ax,cs:[ebx].exec_size
+    sub ax,cx
+    dec ax
+    mov cl,al
+    shl cl,2
+    mov edx,0Fh
+    shl edx,cl
+;    
+    mov eax,ds:[ebp+esi]
+    and eax,edx
+    shr eax,cl
+    dec al
+    and al,0Fh
+    shl eax,cl
+    not edx
+    and edx,ds:[ebp+esi]
+    or eax,edx
+    mov ds:[ebp+esi],eax
+    ret
+dec_reg_byte  Endp
+
+dec_sreg_byte:
+    and ds:[ebp].debug_flags,NOT DEBUG_FLAG_DESCR
+    jmp dec_reg_byte
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           inc_reg4
+;
+;           DESCRIPTION:    Perform dword inc on core reg
+;
+;           PARAMETERS:     DS:EBP  Core registers
+;                           ESI     Register offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+inc_reg4    Proc near
+    inc dword ptr ds:[ebp+esi]
+    ret
+inc_reg4  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           dec_reg4
+;
+;           DESCRIPTION:    Perform dword dec on core reg
+;
+;           PARAMETERS:     DS:EBP  Core registers
+;                           ESI     Register offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dec_reg4    Proc near
+    dec dword ptr ds:[ebp+esi]
+    ret
+dec_reg4  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           inc_reg8
+;
+;           DESCRIPTION:    Perform qword inc on core reg
+;
+;           PARAMETERS:     DS:EBP  Core registers
+;                           ESI     Register offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+inc_reg8    Proc near
+    add dword ptr ds:[ebp+esi],1
+    adc dword ptr ds:[ebp+esi+4],0
+    ret
+inc_reg8  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           dec_reg8
+;
+;           DESCRIPTION:    Perform qword dec on core reg
+;
+;           PARAMETERS:     DS:EBP  Core registers
+;                           ESI     Register offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dec_reg8    Proc near
+    sub dword ptr ds:[ebp+esi],1
+    sbb dword ptr ds:[ebp+esi+4],0
+    ret
+dec_reg8  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           set_reg_byte
+;
+;           DESCRIPTION:    Perform set on core reg
+;
+;           PARAMETERS:     DS:EBP  Core regs
+;                           ESI     Register offset
+;                           EBX     Table entry
+;                           AL      Value to set
+;                           CX      Digit number
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_reg_byte    Proc near
+    mov dx,cs:[ebx].exec_size
+    sub dx,cx
+    dec dx
+    mov cl,dl
+    shl cl,2
+    mov edx,0Fh
+    shl edx,cl
+    not edx
+    and edx,ds:[ebp+esi]
+    movzx eax,al
+    shl eax,cl
+    or eax,edx
+    mov ds:[ebp+esi],eax
+;
+    push ds
+    mov ax,mon_data_sel
+    mov ds,ax
+    inc ds:mon_curr_col
+    pop ds
+    ret
+set_reg_byte  Endp
+
+set_sreg_byte:
+    and ds:[ebp].debug_flags,NOT DEBUG_FLAG_DESCR
+    jmp set_reg_byte
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2905,8 +3118,70 @@ error_sw Endp
 ;                           EDI                 Function ptr
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+exec_table32:
+meax32  exec_s <4,  1,  3, OFFSET reg_eax,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+deax32  exec_s <4,  5,  8, OFFSET reg_eax,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mebx32  exec_s <4,  14, 3, OFFSET reg_ebx,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+debx32  exec_s <4,  18, 8, OFFSET reg_ebx,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mecx32  exec_s <4,  27, 3, OFFSET reg_ecx,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+decx32  exec_s <4,  31, 8, OFFSET reg_ecx,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+medx32  exec_s <4,  40, 3, OFFSET reg_edx,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+dedx32  exec_s <4,  44, 8, OFFSET reg_edx,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mesi32  exec_s <5,  1,  3, OFFSET reg_esi,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+desi32  exec_s <5,  5,  8, OFFSET reg_esi,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+medi32  exec_s <5,  14, 3, OFFSET reg_edi,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+dedi32  exec_s <5,  18, 8, OFFSET reg_edi,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mesp32  exec_s <5,  27, 3, OFFSET reg_esp,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+desp32  exec_s <5,  31, 8, OFFSET reg_esp,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+mebp32  exec_s <5,  40, 3, OFFSET reg_ebp,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+debp32  exec_s <5,  44, 8, OFFSET reg_ebp,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+meip32  exec_s <6,  1,  3, OFFSET reg_eip,                         OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
+deip32  exec_s <6,  5,  8, OFFSET reg_eip,                         OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_sreg_byte>
+dtr32   exec_s <7,  4,  4, OFFSET reg_tr.d_selector,               OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dldt32  exec_s <8,  4,  4, OFFSET reg_ldt.d_selector,              OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dcs32   exec_s <9,  4,  4, OFFSET reg_cs.d_selector,               OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dds32   exec_s <10, 4,  4, OFFSET reg_ds.d_selector,               OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+des32   exec_s <11, 4,  4, OFFSET reg_es.d_selector,               OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dfs32   exec_s <12, 4,  4, OFFSET reg_fs.d_selector,               OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dgs32   exec_s <13, 4,  4, OFFSET reg_gs.d_selector,               OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dss32   exec_s <14, 4,  4, OFFSET reg_ss.d_selector,               OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+dus32   exec_s <15, 4,  4, OFFSET reg_usel.d_selector,             OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+duss32  exec_s <21, 0,  4, OFFSET reg_usel.d_selector,             OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
+duso32  exec_s <21, 5,  8, OFFSET reg_uoffs,                       OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
+dend32 DW     0FFFFh, 0FFFFh
 
 Func32  PROC near
+    push es
+    mov bx,mon_data_sel
+    mov es,bx
+    mov ebx,OFFSET exec_table32
+
+f32Loop:
+    mov cx,cs:[ebx].exec_row
+    cmp cx,0FFFFh
+    je f32Done
+;    
+    cmp cx,es:mon_curr_row
+    jne f32Next
+;
+    mov cx,es:mon_curr_col
+    sub cx,cs:[ebx].exec_col
+    jc f32Next
+;    
+    cmp cx,cs:[ebx].exec_size
+    jnc f32Next
+;    
+    mov esi,cs:[ebx].exec_reg
+    call dword ptr cs:[ebx+edi]
+    jmp f32Done
+    
+f32Next:
+    add ebx,SIZE exec_s
+    jmp f32Loop
+    
+f32Done:
+    pop es
     ret
 Func32  Endp
 
@@ -2923,7 +3198,7 @@ Func32  Endp
 
 inc_sw32  PROC near
     pushad
-    mov edi,OFFSET interact_incr
+    mov edi,exec_inc_proc
     call Func32
     popad
     ret
@@ -2942,7 +3217,7 @@ inc_sw32  ENDP
 
 dec_sw32  PROC near
     pushad
-    mov edi,OFFSET interact_decr
+    mov edi,exec_dec_proc
     call Func32
     popad
     ret
@@ -2962,7 +3237,7 @@ dec_sw32  ENDP
 
 set_base_sw32   Proc near
     pushad
-    mov edi,OFFSET interact_set
+    mov edi,exec_set_proc
     call Func32
     popad
     ret
@@ -2979,8 +3254,52 @@ set_base_sw32   Endp
 ;                           EDI                 Function ptr
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+exec_table64:
+dtr64   exec_s <10,  4,  4, OFFSET reg_tr.d_selector,   OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+dldt64  exec_s <11,  4,  4, OFFSET reg_ldt.d_selector,  OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+dcs64   exec_s <12,  4,  4, OFFSET reg_cs.d_selector,   OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+dds64   exec_s <13, 4,  4,  OFFSET reg_ds.d_selector,   OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+des64   exec_s <14, 4,  4,  OFFSET reg_es.d_selector,   OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+dfs64   exec_s <15, 4,  4,  OFFSET reg_fs.d_selector,   OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+dgs64   exec_s <16, 4,  4,  OFFSET reg_gs.d_selector,   OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+dss64   exec_s <17, 4,  4,  OFFSET reg_ss.d_selector,   OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+dus64   exec_s <18, 4,  4,  OFFSET reg_usel.d_selector, OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+duss64  exec_s <24, 0,  4,  OFFSET reg_usel.d_selector, OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+duso64  exec_s <24, 5,  8,  OFFSET reg_uoffs,           OFFSET inc_sreg_byte,   OFFSET dec_sreg_byte,    OFFSET set_sreg_byte>
+dend64 DW     0FFFFh, 0FFFFh
 
 Func64  PROC near
+    push es
+    mov bx,mon_data_sel
+    mov es,bx
+    mov ebx,OFFSET exec_table64
+
+f64Loop:
+    mov cx,cs:[ebx].exec_row
+    cmp cx,0FFFFh
+    je f64Done
+;    
+    cmp cx,es:mon_curr_row
+    jne f64Next
+;
+    mov cx,es:mon_curr_col
+    sub cx,cs:[ebx].exec_col
+    jc f64Next
+;    
+    cmp cx,cs:[ebx].exec_size
+    jnc f64Next
+;    
+    mov esi,cs:[ebx].exec_reg
+    call dword ptr cs:[ebx+edi]
+    jmp f64Done
+    
+f64Next:
+    add ebx,SIZE exec_s
+    jmp f64Loop
+    
+f64Done:
+    pop es
     ret
 Func64  Endp
 
@@ -2997,7 +3316,7 @@ Func64  Endp
 
 inc_sw64  PROC near
     pushad
-    mov edi,OFFSET interact_incr
+    mov edi,exec_inc_proc
     call Func64
     popad
     ret
@@ -3016,7 +3335,7 @@ inc_sw64  ENDP
 
 dec_sw64  PROC near
     pushad
-    mov edi,OFFSET interact_decr
+    mov edi,exec_dec_proc
     call Func64
     popad
     ret
@@ -3036,7 +3355,7 @@ dec_sw64  ENDP
 
 set_base_sw64   Proc near
     pushad
-    mov edi,OFFSET interact_set
+    mov edi,exec_set_proc
     call Func64
     popad
     ret
@@ -3064,97 +3383,97 @@ dec_sw:
     jmp dec_sw32
 
 set0_sw:
-    mov ch,0
+    mov al,0
     test ds:[ebp].reg_efer,EFER_LME
     jnz set_base_sw64
     jmp set_base_sw32
 
 set1_sw:
-    mov ch,1
+    mov al,1
     test ds:[ebp].reg_efer,EFER_LME
     jnz set_base_sw64
     jmp set_base_sw32
 
 set2_sw:
-    mov ch,2
+    mov al,2
     test ds:[ebp].reg_efer,EFER_LME
     jnz set_base_sw64
     jmp set_base_sw32
 
 set3_sw:
-    mov ch,3
+    mov al,3
     test ds:[ebp].reg_efer,EFER_LME
     jnz set_base_sw64
     jmp set_base_sw32
 
 set4_sw:
-    mov ch,4
+    mov al,4
     test ds:[ebp].reg_efer,EFER_LME
     jnz set_base_sw64
     jmp set_base_sw32
 
 set5_sw:
-    mov ch,5
+    mov al,5
     test ds:[ebp].reg_efer,EFER_LME
     jnz set_base_sw64
     jmp set_base_sw32
 
 set6_sw:
-    mov ch,6
+    mov al,6
     test ds:[ebp].reg_efer,EFER_LME
     jnz set_base_sw64
     jmp set_base_sw32
 
 set7_sw:
-    mov ch,7
+    mov al,7
     test ds:[ebp].reg_efer,EFER_LME
     jnz set_base_sw64
     jmp set_base_sw32
 
 set8_sw:
-    mov ch,8
+    mov al,8
     test ds:[ebp].reg_efer,EFER_LME
     jnz set_base_sw64
     jmp set_base_sw32
 
 set9_sw:
-    mov ch,9
+    mov al,9
     test ds:[ebp].reg_efer,EFER_LME
     jnz set_base_sw64
     jmp set_base_sw32
 
 setA_sw:
-    mov ch,0Ah
+    mov al,0Ah
     test ds:[ebp].reg_efer,EFER_LME
     jnz set_base_sw64
     jmp set_base_sw32
 
 setB_sw:
-    mov ch,0Bh
+    mov al,0Bh
     test ds:[ebp].reg_efer,EFER_LME
     jnz set_base_sw64
     jmp set_base_sw32
 
 setC_sw:
-    mov ch,0Ch
+    mov al,0Ch
     test ds:[ebp].reg_efer,EFER_LME
     jnz set_base_sw64
     jmp set_base_sw32
 
 setD_sw:
-    mov ch,0Dh
+    mov al,0Dh
     test ds:[ebp].reg_efer,EFER_LME
     jnz set_base_sw64
     jmp set_base_sw32
 
 setE_sw:
-    mov ch,0Eh
+    mov al,0Eh
     test ds:[ebp].reg_efer,EFER_LME
     jnz set_base_sw64
     jmp set_base_sw32
 
 setF_sw:
-    mov ch,0Fh
+    mov al,0Fh
     test ds:[ebp].reg_efer,EFER_LME
     jnz set_base_sw64
     jmp set_base_sw32
