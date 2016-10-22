@@ -2883,22 +2883,6 @@ WriteCpuReg Endp
 
 inc_sw:
 dec_sw:
-set0_sw:
-set1_sw:
-set2_sw:
-set3_sw:
-set4_sw:
-set5_sw:
-set6_sw:
-set7_sw:
-set8_sw:
-set9_sw:
-setA_sw:
-setB_sw:
-setC_sw:
-setD_sw:
-setE_sw:
-setF_sw:
 go_sw:
 trace_sw:
 pace_sw:
@@ -2907,6 +2891,145 @@ reg_sw:
 error_sw Proc near
     ret
 error_sw Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           set_base_sw32
+;
+;           DESCRIPTION:    32-bit set
+;
+;           PARAMETERS:     DS:EBP              Registers
+;                           CH                  Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_base_sw32   Proc near
+    ret
+set_base_sw32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           set_base_sw64
+;
+;           DESCRIPTION:    64-bit set
+;
+;           PARAMETERS:     DS:EBP              Registers
+;                           CH                  Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_base_sw64   Proc near
+    ret
+set_base_sw64   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           setx_sw
+;
+;           DESCRIPTION:    Set x switch
+;
+;           PARAMETERS:     DS:EBP              Registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set0_sw:
+    mov ch,0
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz set_base_sw64
+    jmp set_base_sw32
+
+set1_sw:
+    mov ch,1
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz set_base_sw64
+    jmp set_base_sw32
+
+set2_sw:
+    mov ch,2
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz set_base_sw64
+    jmp set_base_sw32
+
+set3_sw:
+    mov ch,3
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz set_base_sw64
+    jmp set_base_sw32
+
+set4_sw:
+    mov ch,4
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz set_base_sw64
+    jmp set_base_sw32
+
+set5_sw:
+    mov ch,5
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz set_base_sw64
+    jmp set_base_sw32
+
+set6_sw:
+    mov ch,6
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz set_base_sw64
+    jmp set_base_sw32
+
+set7_sw:
+    mov ch,7
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz set_base_sw64
+    jmp set_base_sw32
+
+set8_sw:
+    mov ch,8
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz set_base_sw64
+    jmp set_base_sw32
+
+set9_sw:
+    mov ch,9
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz set_base_sw64
+    jmp set_base_sw32
+
+setA_sw:
+    mov ch,0Ah
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz set_base_sw64
+    jmp set_base_sw32
+
+setB_sw:
+    mov ch,0Bh
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz set_base_sw64
+    jmp set_base_sw32
+
+setC_sw:
+    mov ch,0Ch
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz set_base_sw64
+    jmp set_base_sw32
+
+setD_sw:
+    mov ch,0Dh
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz set_base_sw64
+    jmp set_base_sw32
+
+setE_sw:
+    mov ch,0Eh
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz set_base_sw64
+    jmp set_base_sw32
+
+setF_sw:
+    mov ch,0Fh
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz set_base_sw64
+    jmp set_base_sw32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
