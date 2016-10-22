@@ -1809,39 +1809,11 @@ sel_reg_us:
     DB ' US='
     DD OFFSET reg_usel
 
-sel_type_tab:
-st00 DB 'Invalid         '
-st01 DB 'TSS 16, avail   '
-st02 DB 'LDT             '
-st03 DB 'TSS 16, busy    '
-st04 DB 'Call gate 16    '
-st05 DB 'Task gate       '
-st06 DB 'Int gate 16     '
-st07 DB 'Trap gate 16    '
-st08 DB 'Invalid         '
-st09 DB 'TSS 32, avail   '
-st0A DB 'Invalid         '
-st0B DB 'TSS 32, busy    '
-st0C DB 'Call gate 32    '
-st0D DB 'Invalid         '
-st0E DB 'Int gate 32     '
-st0F DB 'Trap gate 32    '
-st10 DB 'Read, up        '
-st11 DB 'Read, up        '
-st12 DB 'Read/write, up  '
-st13 DB 'Read/write, up  '
-st14 DB 'Read, down      '
-st15 DB 'Read, down      '
-st16 DB 'Read/write, down'
-st17 DB 'Read/write, down'
-st18 DB 'Code            '
-st19 DB 'Code            '
-st1A DB 'Code/read       '
-st1B DB 'Code/read       '
-st1C DB 'Code conf       '
-st1D DB 'Code conf       '
-st1E DB 'Code/read conf  ' 
-st1F DB 'Code/read conf  ' 
+ws_read  DB 'Read', 0
+ws_write DB 'Write', 0
+ws_16    DB '16-bit ', 0
+ws_32    DB '32-bit ', 0
+ws_64    DB '64-bit ', 0
 
 WriteSelReg   PROC near
     mov ecx,4
@@ -1850,19 +1822,16 @@ WriteSelReg   PROC near
     add esi,4
     mov ebx,cs:[esi]
 ;    
-    movzx ebx,ds:[ebx+ebp].d_selector
-    mov ax,bx
+    mov ax,ds:[ebx+ebp].d_selector
     call WriteHexWord
     mov al,' '
     call ShowChar
 ;    
-    and bx,NOT 3
-    or bx,bx
+    mov ax,ds:[ebx+ebp].d_access
+    or ax,ax
     jz write_sel_done
 ;
-    call GetSelectorBaseSizeType
-    mov bl,al
-    mov eax,edx
+    mov eax,ds:[ebx+ebp].d_base
     call WriteHexDword
 ;
     mov al,' '
@@ -1870,7 +1839,7 @@ WriteSelReg   PROC near
     mov al,'('
     call ShowChar
 ;
-    mov eax,ecx
+    mov eax,ds:[ebx+ebp].d_limit
     call WriteHexDword
 ;
     mov al,')'
@@ -1878,12 +1847,37 @@ WriteSelReg   PROC near
     mov al,' '
     call ShowChar
 ;
-    movzx esi,bl
-    and si,01Fh
-    shl esi,4
-    add esi,OFFSET sel_type_tab
-    mov ecx,16
-    call ShowCodeSizeString
+    test ds:[ebx+ebp].d_access,ACCESS_64
+    jnz write_sel64
+;
+    test ds:[ebx+ebp].d_access,ACCESS_32
+    jnz write_sel32
+
+write_sel16:
+    mov esi,OFFSET ws_16
+    call ShowCodeAsciiz
+    jmp write_sel_access
+
+write_sel32:    
+    mov esi,OFFSET ws_32
+    call ShowCodeAsciiz
+    jmp write_sel_access
+
+write_sel64:
+    mov esi,OFFSET ws_64
+    call ShowCodeAsciiz
+
+write_sel_access:
+    test ds:[ebx+ebp].d_access,ACCESS_WRITE
+    jnz write_sel_write
+;
+    mov esi,OFFSET ws_read
+    call ShowCodeAsciiz
+    jmp write_sel_done
+
+write_sel_write:    
+    mov esi,OFFSET ws_write
+    call ShowCodeAsciiz
 
 write_sel_done:
     ret
