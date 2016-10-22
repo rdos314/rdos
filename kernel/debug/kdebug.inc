@@ -240,7 +240,6 @@ mon_fault_regs      cpu_struc <>
 mon_map_linear      DD ?
 
 mon_core_count      DW ?
-mon_core_regs       DB ?
 
 mon_key_status      DB ?
 mon_key_command     DB ?
@@ -251,6 +250,10 @@ mon_scan_code       DB ?
 
 mon_curr_row        DW ?
 mon_curr_col        DW ?
+
+; should be last!
+
+mon_core_regs       DB ?
 
 monitor_data_sel        ENDS
 
