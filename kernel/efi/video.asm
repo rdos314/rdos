@@ -1569,6 +1569,16 @@ get_video_mode  Proc far
     push si
     push di
 ;
+    mov bx,system_data_sel
+    mov ds,bx    
+    mov ebx,ds:efi_lfb
+    or ebx,ebx
+    jz get_video_bios
+;
+    mov ax,1
+    jmp get_video_leave
+
+get_video_bios:
     mov si,cx
     add si,dx
     xor di,di
@@ -1689,7 +1699,16 @@ set_video_mode  PROC far
     or ax,ax
     pop ax
     jz svmDone
-;    
+;
+    cmp ax,1
+    je svmFixedVideo
+;
+    mov bx,system_data_sel
+    mov ds,bx    
+    mov ebx,ds:efi_lfb
+    or ebx,ebx
+    jnz svmFixedText
+;
     cmp ax,fs:c_video_mode
     je svmDone
 ;    
@@ -1805,6 +1824,23 @@ svmSetMode:
     xor eax,eax
     rep stos dword ptr es:[edi]
     pop es
+    jmp svmFocusOk
+
+svmFixedText:
+    lock and fs:c_flags,NOT CONSOLE_FLAG_BITMAP
+    mov es,fs:c_video_sel
+    call FreeVideoBuffer
+    jmp svmDone
+    
+svmFixedVideo:
+    lock or fs:c_flags,CONSOLE_FLAG_BITMAP
+    mov es,fs:c_video_sel
+    call AllocateVideoBuffer
+;
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz svmFocusOk
+;    
+    mov es:v_has_focus,1
 
 svmFocusOk:   
     movzx ax,es:v_bpp
