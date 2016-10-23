@@ -630,7 +630,6 @@ int RDOSAPI RdosReceiveMailslot(void *Msg);
 void RDOSAPI RdosReplyMailslot(const void *Msg, int Size);
 
 void RDOSAPI RdosSetFocus(char FocusKey);
-char RDOSAPI RdosGetFocus();
 
 int RDOSAPI RdosSetKeyMap(const char *MapName);
 void RDOSAPI RdosGetKeyMap(char *MapName);

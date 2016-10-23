@@ -2290,9 +2290,6 @@
     CallGate_set_focus  \
     parm [al];
 
-#pragma aux RdosGetFocus = \
-    CallGate_get_focus  \
-
 #pragma aux RdosSetKeyMap = \
     CallGate_set_key_layout \
     CarryToBool \
