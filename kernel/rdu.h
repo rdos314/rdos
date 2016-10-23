@@ -352,8 +352,6 @@
 #define usergate_allocate_fixed_drive 0x00000133
 #define usergate_allocate_dynamic_drive 0x00000134
 
-#define usergate_get_focus 0x00000135
-
 #define usergate_add_wait_for_tcp_listen 0x00000136
 #define usergate_create_tcp_listen 0x00000137
 #define usergate_get_tcp_listen 0x00000138
@@ -1141,8 +1139,6 @@
 #define CallGate_allocate_fixed_drive 0x67 0x9a 51 1 0 0 3 0
 #define CallGate_allocate_dynamic_drive 0x67 0x9a 52 1 0 0 3 0
 
-#define CallGate_get_focus 0x67 0x9a 53 1 0 0 3 0
-
 #define CallGate_add_wait_for_tcp_listen 0x67 0x9a 54 1 0 0 3 0
 #define CallGate_create_tcp_listen 0x67 0x9a 55 1 0 0 3 0
 #define CallGate_get_tcp_listen 0x67 0x9a 56 1 0 0 3 0
@@ -1927,8 +1923,6 @@
 #define CallGate_allocate_static_drive 0x3e 0x67 0x9a 50 1 0 0 3 0
 #define CallGate_allocate_fixed_drive 0x3e 0x67 0x9a 51 1 0 0 3 0
 #define CallGate_allocate_dynamic_drive 0x3e 0x67 0x9a 52 1 0 0 3 0
-
-#define CallGate_get_focus 0x3e 0x67 0x9a 53 1 0 0 3 0
 
 #define CallGate_add_wait_for_tcp_listen 0x3e 0x67 0x9a 54 1 0 0 3 0
 #define CallGate_create_tcp_listen 0x3e 0x67 0x9a 55 1 0 0 3 0
