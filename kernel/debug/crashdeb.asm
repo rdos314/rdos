@@ -1101,34 +1101,6 @@ create_idt  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           test_pr
-;
-;           DESCRIPTION:    
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_name  DB 'Crash Thread', 0
-
-deb_val DB 11
-
-deb_code:
-    mov al,cs:deb_val
-
-test_pr:
-    sti
-    mov ax,41h
-    EnableFocus
-;
-    int 3    
-;    
-    CrashGate
-    mov esp,0
-    push eax
-    int 3
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           init_crash_tasking
 ;
 ;           DESCRIPTION:    
@@ -1146,15 +1118,6 @@ init_crash_tasking    Proc near
     call set_monitor_gdt
     call create_idt
     call set_monitor_idt    
-;    
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET test_pr
-    mov edi,OFFSET test_name
-    mov ecx,stack0_size
-    mov ax,26
-    CreateProcess
 ;        
     popad
     pop ds
