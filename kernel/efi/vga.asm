@@ -532,6 +532,10 @@ switch_video_mode       Proc far
     push es
     pushad
 ;    
+    cmp bx,3
+    je switch_text_mode
+
+switch_lfb_mode:
     xor ax,ax
     mov ds,ax
     mov es,ax
@@ -540,7 +544,17 @@ switch_video_mode       Proc far
     mov ax,4F02h
     push 10h
     V86BiosInt
-;
+    jmp switch_mode_done
+
+switch_text_mode:
+    xor ax,ax
+    mov ds,ax
+    mov es,ax
+    mov ax,3
+    push 10h
+    V86BiosInt
+
+switch_mode_done:
     popad
     pop es
     pop ds

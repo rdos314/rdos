@@ -58,6 +58,7 @@ data    SEGMENT byte public 'DATA'
 
 focus_console   DW ?
 update_thread   DW ?
+curr_video_mode DW ?
 
 disp_fixed      DW ?
 disp_x          DW ?
@@ -1352,6 +1353,18 @@ EnableConsoleFocus Proc near
     mov ax,SEG data
     mov ds,ax
     mov fs,bx
+;
+    mov ax,fs:c_video_mode
+    cmp ax,ds:curr_video_mode
+    je ecfModeOk
+;
+    mov ds:curr_video_mode,ax
+    push bx
+    mov bx,ax
+    SwitchVideoMode
+    pop bx
+
+ecfModeOk:
     lock or fs:c_flags,CONSOLE_FLAG_ACTIVE
     mov ds:focus_console,bx
 ;
@@ -1723,10 +1736,14 @@ svmText:
 ;    
     test fs:c_flags,CONSOLE_FLAG_ACTIVE
     jz svmDone
-;    
+;
     mov es:v_has_focus,1
     mov bx,fs:c_video_mode
     SwitchVideoMode
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:curr_video_mode,bx
     jmp svmDone
     
 svmVideo:
@@ -1773,6 +1790,10 @@ svmSetMode:
     mov es:v_has_focus,1
     mov bx,fs:c_video_mode
     SwitchVideoMode
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:curr_video_mode,bx
 ;
     mov ecx,es:v_app_size
     shr ecx,2
@@ -4478,6 +4499,7 @@ init_video      PROC near
     mov ds:focus_console,0
     mov ds:video_mode_list,0
     mov ds:flags,0
+    mov ds:curr_video_mode,0
 ;    
     mov ax,cs
     mov es,ax
