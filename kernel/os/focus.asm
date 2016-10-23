@@ -34,12 +34,6 @@ INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 
-focus_process_seg   STRUC
-
-fp_key          DB ?
-
-focus_process_seg   ENDS
-
 data    SEGMENT byte public 'DATA'
 
 focus_thread            DW 256 DUP(?)
@@ -180,78 +174,6 @@ free_thread_next:
 free_thread_done:
     ret
 free_thread     Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           INIT_FOCUS_PROCESS
-;
-;           DESCRIPTION:    Init per-process data
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_focus_process      Proc far
-    push ds
-    push eax
-    push ebx
-    push cx
-    push edx
-;
-    mov ax,focus_process_sel
-    mov ds,ax
-    mov ds:fp_key,0
-;       
-    mov edx,io_local_linear
-    mov cx,400h
-    xor eax,eax
-    xor ebx,ebx
-    
-init_local_loop:
-    SetPageEntry
-    add edx,1000h
-    sub cx,1
-    jnz init_local_loop    
-;
-    pop edx
-    pop cx
-    pop ebx
-    pop eax
-    pop ds
-    ret
-init_focus_process      Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           FREE_FOCUS_PROCESS
-;
-;           DESCRIPTION:    Free per-process data
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_focus_process      Proc far
-    push eax
-    push ebx
-    push cx
-    push edx
-;
-    mov edx,io_local_linear
-    mov cx,400h
-    mov eax,2
-    FreePageEntries
-;
-    pop edx
-    pop cx
-    pop ebx
-    pop eax
-    ret
-free_focus_process      Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -442,39 +364,11 @@ enable_focus_done:
 ;
     mov ax,bx
     shr ax,1
-;       
-    mov bx,focus_process_sel
-    mov ds,bx
-    mov ds:fp_key,al
-;
     pop bx
     pop es
     pop ds
     ret
 enable_focus    ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GET_FOCUS
-;
-;           DESCRIPTION:    Get input focus key
-;
-;           RETURN:         AL      KEY NUMBER
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_focus_name  DB 'Get Focus',0
-
-get_focus       PROC far
-    push ds
-    mov ax,focus_process_sel
-    mov ds,ax
-    mov al,ds:fp_key
-    pop ds
-    ret
-get_focus   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -502,20 +396,10 @@ init_focus      PROC near
     mov ds:focus_alloc_rel,0
     mov ds:focus_current_thread,0
     InitSection ds:focus_section
-;       
-    mov bx,focus_process_sel
-    mov eax,SIZE focus_process_seg
-    AllocateFixedProcessMem
 ;
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov edi,OFFSET init_focus_process
-    HookCreateProcess
-;
-    mov edi,OFFSET free_focus_process
-    HookTerminateProcess
 ;
     mov edi,OFFSET free_thread
     HookTerminateThread
@@ -524,12 +408,6 @@ init_focus      PROC near
     mov edi,OFFSET set_focus_name
     xor dx,dx
     mov ax,set_focus_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_focus
-    mov edi,OFFSET get_focus_name
-    xor dx,dx
-    mov ax,get_focus_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET enable_focus

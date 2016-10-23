@@ -208,15 +208,6 @@ pcbios_proc_sel     EQU 498h
 pcbios_code_sel		EQU 4A0h
 pcbios_data_sel		EQU 4A8h
 
-key_focus_sel		EQU 4B0h
-key_local_sel		EQU 4B8h
-
-video_state_focus_sel	EQU 4C0h
-video_state_local_sel	EQU 4C8h
-
-mouse_local_sel		EQU 4D0h
-mouse_focus_sel		EQU 4D8h
-
 dosemu_code_sel     EQU 4E0h
 dosemu_data_sel     EQU 4E8h
 
@@ -285,16 +276,8 @@ net_code_sel		EQU 670h
 net_data_sel		EQU 678h
 net_mem_sel			EQU 680h
 
-focus_process_sel   EQU 688h
-
 pnp_code_sel        EQU 690h
 pnp_data_sel        EQU 698h
-
-video_mem_focus_sel	EQU 6A0h
-video_mem_local_sel	EQU 6A8h
-
-video_x_focus_sel	EQU 6B0h
-video_x_local_sel	EQU 6B8h
 
 rs485_code_sel		EQU 6C0h
 rs485_data_sel		EQU 6C8h
@@ -350,10 +333,6 @@ lon_data_sel        EQU 838h
 
 v86_bios_ds_sel		EQU 840h
 v86_bios_es_sel		EQU 848h
-
-video_proc_sel		EQU 860h
-video_local_sel		EQU 870h
-video_focus_sel		EQU 878h
 
 piclcd_code_sel     EQU 880h
 piclcd_data_sel     EQU 888h
