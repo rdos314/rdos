@@ -1766,12 +1766,6 @@ CrashGate       MACRO
     int 84h
                     ENDM
 
-;   DS      TSS alias
-CrashTss    MACRO
-    OsGate crash_tss_nr
-                    ENDM
-
-
 ;;;;;;;;;;; Debugger ;;;;;;;;;;;;;;;;
 
 ;   FS      Core

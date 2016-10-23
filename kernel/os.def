@@ -440,8 +440,6 @@ send_nmi_nr                 = 386
 
 add_printer_nr              = 387
 
-crash_tss_nr                = 389
-
 read_pnp_byte_nr            = 393
 write_pnp_byte_nr           = 394
 

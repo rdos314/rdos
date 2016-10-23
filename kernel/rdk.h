@@ -440,8 +440,6 @@
 
 #define osgate_add_printer 387
 
-#define osgate_crash_tss 389
-
 #define osgate_read_pnp_byte 393
 #define osgate_write_pnp_byte 394
 
@@ -1146,8 +1144,6 @@
 #define OsGate_send_nmi 0x3E 0x67 0x9a 130 1 0 0 2 0
 
 #define OsGate_add_printer 0x3E 0x67 0x9a 131 1 0 0 2 0
-
-#define OsGate_crash_tss 0x3E 0x67 0x9a 133 1 0 0 2 0
 
 #define OsGate_read_pnp_byte 0x3E 0x67 0x9a 137 1 0 0 2 0
 #define OsGate_write_pnp_byte 0x3E 0x67 0x9a 138 1 0 0 2 0

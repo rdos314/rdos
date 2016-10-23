@@ -134,107 +134,6 @@ cgiFail:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CrashTss
-;
-;           DESCRIPTION:    Crash with a TSS
-;
-;           PARAMETERS:     DS      Readable TSS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-crash_tss_name    DB 'Crash Tss', 0
-    
-crash_tss:
-    cli
-    mov ax,double_tss_data_sel
-    mov ds,ax
-    mov bx,word ptr ds:tss32_back_link
-    push bx
-;
-    mov ax,gdt_sel
-    mov ds,ax
-    and bx,0FFF8h
-    xor ecx,ecx
-    mov cl,[bx+6]
-    and cl,0Fh
-    shl ecx,16
-    mov cx,[bx]
-    inc ecx
-    mov edx,[bx+2]
-    rol edx,8
-    mov dl,[bx+7]
-    ror edx,8
-;       
-    AllocateGdt
-    CreateDataSelector16
-    mov es,bx
-;    
-    StartCoreDump
-    jc ctFail
-;    
-    mov ds:[ebp].fault_vect,8
-;
-    sldt bx
-    mov ds:[ebp].reg_ldt.d_selector,bx
-;    
-    str bx
-    mov ds:[ebp].reg_tr.d_selector,bx
-;
-    mov eax,es:tss32_eax
-    mov ds:[ebp].reg_eax,eax
-;    
-    mov eax,es:tss32_ecx
-    mov ds:[ebp].reg_ecx,eax
-;
-    mov eax,es:tss32_edx
-    mov ds:[ebp].reg_edx,eax
-;
-    mov eax,es:tss32_ebx
-    mov ds:[ebp].reg_ebx,eax
-;
-    mov eax,es:tss32_esp    
-    mov ds:[ebp].reg_esp,eax
-;
-    mov eax,es:tss32_ebp    
-    mov ds:[ebp].reg_ebp,eax
-;
-    mov eax,es:tss32_eip    
-    mov ds:[ebp].reg_eip,eax
-;    
-    mov eax,es:tss32_esi
-    mov ds:[ebp].reg_esi,eax
-;
-    mov eax,es:tss32_edi    
-    mov ds:[ebp].reg_edi,eax
-;    
-    mov bx,es:tss32_es
-    mov ds:[ebp].reg_es.d_selector,bx
-;
-    mov bx,es:tss32_cs    
-    mov ds:[ebp].reg_cs.d_selector,bx
-     
-    mov bx,es:tss32_ss
-    mov ds:[ebp].reg_ss.d_selector,bx
-;
-    mov bx,es:tss32_ds    
-    mov ds:[ebp].reg_ds.d_selector,bx
-;
-    mov bx,es:tss32_fs    
-    mov ds:[ebp].reg_fs.d_selector,bx
-;
-    mov bx,es:tss32_gs    
-    mov ds:[ebp].reg_gs.d_selector,bx
-;
-    mov eax,es:tss32_eflags
-    mov ds:[ebp].reg_eflags,eax
-    NotifyCoreDump
-
-ctFail:
-    jmp ctFail
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           NmiInt
 ;
 ;           DESCRIPTION:    Crash from NMI
@@ -384,7 +283,92 @@ double_fault:
     jc double_fault_lock_ok
 
 double_crash:
-    CrashTss
+    cli
+    mov ax,double_tss_data_sel
+    mov ds,ax
+    mov bx,word ptr ds:tss32_back_link
+    push bx
+;
+    mov ax,gdt_sel
+    mov ds,ax
+    and bx,0FFF8h
+    xor ecx,ecx
+    mov cl,[bx+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,[bx]
+    inc ecx
+    mov edx,[bx+2]
+    rol edx,8
+    mov dl,[bx+7]
+    ror edx,8
+;       
+    AllocateGdt
+    CreateDataSelector16
+    mov es,bx
+;    
+    StartCoreDump
+    jc ctFail
+;    
+    mov ds:[ebp].fault_vect,8
+;
+    sldt bx
+    mov ds:[ebp].reg_ldt.d_selector,bx
+;    
+    str bx
+    mov ds:[ebp].reg_tr.d_selector,bx
+;
+    mov eax,es:tss32_eax
+    mov ds:[ebp].reg_eax,eax
+;    
+    mov eax,es:tss32_ecx
+    mov ds:[ebp].reg_ecx,eax
+;
+    mov eax,es:tss32_edx
+    mov ds:[ebp].reg_edx,eax
+;
+    mov eax,es:tss32_ebx
+    mov ds:[ebp].reg_ebx,eax
+;
+    mov eax,es:tss32_esp    
+    mov ds:[ebp].reg_esp,eax
+;
+    mov eax,es:tss32_ebp    
+    mov ds:[ebp].reg_ebp,eax
+;
+    mov eax,es:tss32_eip    
+    mov ds:[ebp].reg_eip,eax
+;    
+    mov eax,es:tss32_esi
+    mov ds:[ebp].reg_esi,eax
+;
+    mov eax,es:tss32_edi    
+    mov ds:[ebp].reg_edi,eax
+;    
+    mov bx,es:tss32_es
+    mov ds:[ebp].reg_es.d_selector,bx
+;
+    mov bx,es:tss32_cs    
+    mov ds:[ebp].reg_cs.d_selector,bx
+     
+    mov bx,es:tss32_ss
+    mov ds:[ebp].reg_ss.d_selector,bx
+;
+    mov bx,es:tss32_ds    
+    mov ds:[ebp].reg_ds.d_selector,bx
+;
+    mov bx,es:tss32_fs    
+    mov ds:[ebp].reg_fs.d_selector,bx
+;
+    mov bx,es:tss32_gs    
+    mov ds:[ebp].reg_gs.d_selector,bx
+;
+    mov eax,es:tss32_eflags
+    mov ds:[ebp].reg_eflags,eax
+    NotifyCoreDump
+
+ctFail:
+    jmp ctFail
     
 double_fault_lock_ok:    
     mov ax,fs:ps_curr_thread
@@ -2196,12 +2180,6 @@ init_reg32       PROC near
     mov al,84h
     mov esi,OFFSET crash_gate_int
     SetupIntGate
-;    
-    mov esi,OFFSET crash_tss
-    mov edi,OFFSET crash_tss_name
-    xor cl,cl
-    mov ax,crash_tss_nr
-    RegisterOsGate
 ;    
     mov esi,OFFSET setup_nmi_core_dump
     mov edi,OFFSET setup_nmi_core_dump_name
