@@ -88,9 +88,6 @@ process_dir_fault       Proc near
 ;
     cmp edi,fixed_process_linear
     je process_dir_fault_local
-;
-    cmp edi,io_local_linear
-    je process_dir_fault_local
 
 process_dir_fault_move:
     call cs:get_sys_page_dir_proc    
@@ -347,17 +344,11 @@ page_fault      Proc near
     cmp eax,kernel_linear
     jnc page_fault_global
 ;
-    cmp eax,io_focus_linear
-    jc page_fault_global_page
-;
-    cmp eax,io_focus_linear
-    je page_fault_user
-;
     cmp eax,fixed_process_linear
     je page_fault_user
 ;
-    cmp eax,io_local_linear
-    je page_fault_user
+    cmp eax,phys_bitmap_linear
+    jc page_fault_global_page
     jmp page_fault_system
 
 page_fault_sys_page:

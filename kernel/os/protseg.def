@@ -88,12 +88,6 @@ global_page_size		EQU 034000000h
 
 fixed_process_linear    EQU 0FC000000h
 
-io_focus_linear			EQU 0FC400000h
-video_mem_focus_linear	EQU 0FC600000h
-
-io_local_linear			EQU 0FC800000h
-video_mem_local_linear	EQU 0FCA00000h
-
 phys_bitmap_linear      EQU 0FD000000h
 
 alias_linear			EQU 0FD800000h

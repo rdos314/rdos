@@ -1560,37 +1560,9 @@ load_prot_switch_ok:
     ltr bx
 
 load_not_flush:
-    mov edx,io_focus_linear
-    GetSysPageDir
-;    
-    mov esi,eax
-    mov edi,ebx
-;
-    mov edx,io_focus_linear
-    GetPageDir
-;    
-    cmp esi,eax
-    jne load_reload_cr3
-;
-    cmp edi,ebx
-    jne load_reload_cr3    
-;
     mov eax,cr3
     cmp eax,es:p_cr3
     je load_cr3_ok
-
-load_reload_cr3:    
-    GetPageDirAttrib
-    xor edi,edi
-
-load_reload_cr3_loop:
-    mov edx,io_focus_linear
-    add edx,edi
-    GetSysPageDir
-    SetPageDir
-;    
-    add edi,esi
-    loop load_reload_cr3_loop
 ;
     mov eax,es:p_cr3
     mov cr3,eax

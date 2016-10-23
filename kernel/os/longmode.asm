@@ -3267,9 +3267,6 @@ process_fault_dir   Proc near
     cmp eax,long_process_linear
     je process_fault_dir_local
 ;
-    cmp eax,io_local_linear
-    je process_fault_dir_local
-;
     cmp eax,fixed_process_linear
     je process_fault_dir_local
 
@@ -3340,9 +3337,6 @@ page_fault_dir_not_long:
     je page_fault_dir_local
 ;
     cmp eax,long_process_linear
-    je page_fault_dir_local
-;
-    cmp eax,io_local_linear
     je page_fault_dir_local
 ;
     cmp eax,fixed_process_linear
@@ -3651,12 +3645,6 @@ page_fault32:
     jnc page_fault_global
 ;
     cmp eax,fixed_process_linear
-    je page_fault_user
-;
-    cmp eax,io_focus_linear
-    je page_fault_user
-;
-    cmp eax,io_local_linear
     je page_fault_user
 ;
     jmp page_fault_system

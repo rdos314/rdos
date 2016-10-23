@@ -280,29 +280,6 @@ set_focus_no_lost:
     mov ds:focus_current_thread,bx
     mov bp,bx
 ;
-    GetPageDirAttrib
-    xor edi,edi
-
-set_focus_loop:
-    push cx
-    xor cx,cx
-    mov edx,io_local_linear
-    add edx,edi
-    GetThreadPageDir
-    pop cx
-;  
-    mov edx,io_focus_linear
-    add edx,edi
-    SetPageDir  
-;
-    mov edx,io_focus_linear
-    add edx,edi
-    SetSysPageDir
-;    
-    add edi,esi
-    sub cx,1
-    jnz set_focus_loop
-;
     mov bx,SEG data
     mov ds,bx
     mov bx,ds:focus_current_thread
