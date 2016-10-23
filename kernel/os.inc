@@ -1762,20 +1762,6 @@ NotifyCoreDump       MACRO
     OsGate notify_core_dump_nr
                     ENDM
 
-; OUT FS       Processor core
-; OUT NC       First invocation
-EnterCrashDebug       MACRO
-    OsGate enter_crash_debug_nr
-                    ENDM
-
-ExecuteCrashHandler       MACRO
-    OsGate execute_crash_handler_nr
-                    ENDM
-
-CrashNmi       MACRO
-    OsGate crash_nmi_nr
-                    ENDM
-
 CrashGate       MACRO
     int 84h
                     ENDM

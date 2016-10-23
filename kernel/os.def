@@ -554,9 +554,6 @@ setup_long_hpet_int_nr      = 477
 
 setup_long_crash_gate_nr    = 479
 
-enter_crash_debug_nr        = 480
-execute_crash_handler_nr    = 481
-crash_nmi_nr                = 482
 setup_long_nmi_core_dump_nr = 483
 
 debug_block_nr              = 484

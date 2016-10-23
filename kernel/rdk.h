@@ -188,12 +188,8 @@
 #define osgate_close_app 181
 
 #define osgate_hook_enable_focus 182
-#define osgate_hook_lost_focus 183
-#define osgate_hook_got_focus 184
 #define osgate_get_focus_thread 185
 #define osgate_get_thread_focus_key 186
-#define osgate_allocate_focus_linear 187
-#define osgate_allocate_fixed_focus_mem 188
 
 #define osgate_bios_pci_int 189
 #define osgate_read_pci_byte 190
@@ -445,7 +441,6 @@
 #define osgate_add_printer 387
 
 #define osgate_crash_tss 389
-#define osgate_crash_fault 390
 
 #define osgate_read_pnp_byte 393
 #define osgate_write_pnp_byte 394
@@ -559,10 +554,7 @@
 
 #define osgate_setup_long_crash_gate 479
 
-#define osgate_enter_crash_debug 480
-#define osgate_execute_crash_handler 481
-#define osgate_crash_nmi 482
-#define osgate_setup_long_crash_nmi 483
+#define osgate_setup_long_nmi_core_dump 483
 
 #define osgate_debug_block 484
 
@@ -689,6 +681,27 @@
 #define osgate_use_own_preempt_timer 566
 
 #define osgate_fault_reset 567
+
+#define osgate_disc_request_retry 568
+
+#define osgate_get_thread_selector_page 569
+
+#define osgate_is_efi 570
+
+#define osgate_init_app_process 571
+#define osgate_exit_app_process 572
+
+#define osgate_notify_delete_process 573
+
+#define osgate_add_video_mode 574
+#define osgate_begin_get_video_modes 575
+#define osgate_end_get_video_modes 576
+#define osgate_switch_video_mode 577
+
+#define osgate_init_video 578
+#define osgate_start_core_dump 579
+#define osgate_notify_core_dump 580
+#define osgate_setup_nmi_core_dump 581
 
 
 
@@ -882,12 +895,8 @@
 #define OsGate_close_app 0x3E 0x67 0x9a 181 0 0 0 2 0
 
 #define OsGate_hook_enable_focus 0x3E 0x67 0x9a 182 0 0 0 2 0
-#define OsGate_hook_lost_focus 0x3E 0x67 0x9a 183 0 0 0 2 0
-#define OsGate_hook_got_focus 0x3E 0x67 0x9a 184 0 0 0 2 0
 #define OsGate_get_focus_thread 0x3E 0x67 0x9a 185 0 0 0 2 0
 #define OsGate_get_thread_focus_key 0x3E 0x67 0x9a 186 0 0 0 2 0
-#define OsGate_allocate_focus_linear 0x3E 0x67 0x9a 187 0 0 0 2 0
-#define OsGate_allocate_fixed_focus_mem 0x3E 0x67 0x9a 188 0 0 0 2 0
 
 #define OsGate_bios_pci_int 0x3E 0x67 0x9a 189 0 0 0 2 0
 #define OsGate_read_pci_byte 0x3E 0x67 0x9a 190 0 0 0 2 0
@@ -1139,7 +1148,6 @@
 #define OsGate_add_printer 0x3E 0x67 0x9a 131 1 0 0 2 0
 
 #define OsGate_crash_tss 0x3E 0x67 0x9a 133 1 0 0 2 0
-#define OsGate_crash_fault 0x3E 0x67 0x9a 134 1 0 0 2 0
 
 #define OsGate_read_pnp_byte 0x3E 0x67 0x9a 137 1 0 0 2 0
 #define OsGate_write_pnp_byte 0x3E 0x67 0x9a 138 1 0 0 2 0
@@ -1253,10 +1261,7 @@
 
 #define OsGate_setup_long_crash_gate 0x3E 0x67 0x9a 223 1 0 0 2 0
 
-#define OsGate_enter_crash_debug 0x3E 0x67 0x9a 224 1 0 0 2 0
-#define OsGate_execute_crash_handler 0x3E 0x67 0x9a 225 1 0 0 2 0
-#define OsGate_crash_nmi 0x3E 0x67 0x9a 226 1 0 0 2 0
-#define OsGate_setup_long_crash_nmi 0x3E 0x67 0x9a 227 1 0 0 2 0
+#define OsGate_setup_long_nmi_core_dump 0x3E 0x67 0x9a 227 1 0 0 2 0
 
 #define OsGate_debug_block 0x3E 0x67 0x9a 228 1 0 0 2 0
 
@@ -1383,4 +1388,25 @@
 #define OsGate_use_own_preempt_timer 0x3E 0x67 0x9a 54 2 0 0 2 0
 
 #define OsGate_fault_reset 0x3E 0x67 0x9a 55 2 0 0 2 0
+
+#define OsGate_disc_request_retry 0x3E 0x67 0x9a 56 2 0 0 2 0
+
+#define OsGate_get_thread_selector_page 0x3E 0x67 0x9a 57 2 0 0 2 0
+
+#define OsGate_is_efi 0x3E 0x67 0x9a 58 2 0 0 2 0
+
+#define OsGate_init_app_process 0x3E 0x67 0x9a 59 2 0 0 2 0
+#define OsGate_exit_app_process 0x3E 0x67 0x9a 60 2 0 0 2 0
+
+#define OsGate_notify_delete_process 0x3E 0x67 0x9a 61 2 0 0 2 0
+
+#define OsGate_add_video_mode 0x3E 0x67 0x9a 62 2 0 0 2 0
+#define OsGate_begin_get_video_modes 0x3E 0x67 0x9a 63 2 0 0 2 0
+#define OsGate_end_get_video_modes 0x3E 0x67 0x9a 64 2 0 0 2 0
+#define OsGate_switch_video_mode 0x3E 0x67 0x9a 65 2 0 0 2 0
+
+#define OsGate_init_video 0x3E 0x67 0x9a 66 2 0 0 2 0
+#define OsGate_start_core_dump 0x3E 0x67 0x9a 67 2 0 0 2 0
+#define OsGate_notify_core_dump 0x3E 0x67 0x9a 68 2 0 0 2 0
+#define OsGate_setup_nmi_core_dump 0x3E 0x67 0x9a 69 2 0 0 2 0
 
