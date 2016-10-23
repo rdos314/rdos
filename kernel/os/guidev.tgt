@@ -25,7 +25,7 @@ MCommand
 6
 MItem
 10
-efigui.rdv
+guidev.rdv
 7
 WString
 5
@@ -239,8 +239,8 @@ WVList
 0
 56
 MItem
-10
-efigui.asm
+9
+focus.asm
 57
 WString
 6
@@ -257,8 +257,8 @@ WVList
 0
 60
 MItem
-9
-focus.asm
+10
+guidev.asm
 61
 WString
 6

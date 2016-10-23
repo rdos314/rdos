@@ -56,10 +56,6 @@ echo "Building BIOS loaders"
 ide2make -p kernel/bios/loader/loader 1>nul
 wmake -f kernel/bios/loader/loader.mk -h -e 1>nul
 
-echo "Building EFI device"
-ide2make -p kernel/efi/efi 1>nul
-wmake -f kernel/efi/efi.mk -h -e 1>nul
-
 echo "Building EFI 32-bit loader"
 ide2make -p kernel/efi/loader/boot32 1>nul
 wmake -f kernel/efi/loader/boot32.mk -h -e 1>nul
