@@ -92,7 +92,7 @@ s_switch			DB ?
 
 spawn_struc	ENDS
 
-efi_load_struc	STRUC
+exec_load_struc	STRUC
 
 el_name				DW ?
 el_cmd				DW ?
@@ -107,15 +107,7 @@ el_wake_thread                  DW ?
 el_row                          DW ?
 el_col                          DW ?
 
-efi_load_struc	ENDS
-
-exec_struc	STRUC
-
-e_name				DW ?
-e_cmd				DW ?
-e_opt               DW ?
-
-exec_struc	ENDS
+exec_load_struc	ENDS
 
 fork_struc	STRUC
 

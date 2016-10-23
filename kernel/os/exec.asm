@@ -151,276 +151,6 @@ load_exe_file   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupExec
-;
-;           DESCRIPTION:    Setup exec
-;
-;       RETURNS:    FS      Exec sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupExec Proc near     
-    push ds
-    push es
-    push eax
-; 
-    mov eax,SIZE exec_struc
-    AllocateSmallGlobalMem
-    mov ax,es
-    mov fs,ax
-;  
-    mov fs:e_name,0
-    mov fs:e_cmd,0
-    mov fs:e_opt,0
-;
-    pop eax
-    pop es
-    pop ds
-    ret
-SetupExec  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateExecProg
-;
-;           DESCRIPTION:    Make global copy of program name
-;
-;           PARAMETERS:     DS:ESI      Filename
-;               FS      Exec sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateExecProg Proc near
-    push es
-    push eax
-    push ecx
-    push esi
-    push edi
-;
-    mov edi,esi
-    xor ecx,ecx
-
-ceprLoop:
-    lods byte ptr [esi]
-    or al,al
-    jz ceprSizeOk
-;
-    inc ecx
-    jmp ceprLoop
-
-ceprSizeOk:
-    mov esi,edi
-    inc ecx 
-    mov eax,ecx
-    AllocateSmallGlobalMem
-    mov fs:e_name,es
-    xor edi,edi
-    rep movs byte ptr es:[edi],ds:[esi]     
-;    
-    pop edi
-    pop esi
-    pop ecx
-    pop eax
-    pop es
-    ret
-CreateExecProg Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateExecParam
-;
-;           DESCRIPTION:    Make global copy of parameters
-;
-;           PARAMETERS:     ES:EDI      Cmd line
-;               FS      Exec sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateExecParam Proc near
-    push ds
-    push es
-    push eax
-    push ecx
-    push esi
-    push edi
-;
-    mov ax,es
-    mov ds,ax
-    mov esi,edi
-    xor ecx,ecx
-
-cepaLoop:
-    lods byte ptr [esi]
-    or al,al
-    jz cepaSizeOk
-;
-    inc ecx
-    jmp cepaLoop
-
-cepaSizeOk:
-    mov esi,edi
-    inc ecx 
-    mov eax,ecx
-    AllocateSmallGlobalMem
-    xor edi,edi
-    rep movs byte ptr es:[edi],ds:[esi]     
-    jmp cepaDone
-
-cepaNoParam:
-    mov eax,1
-    AllocateSmallGlobalMem
-    xor edi,edi
-    xor al,al
-    stos byte ptr es:[edi]
-
-cepaDone:    
-    mov fs:e_cmd,es
-;       
-    pop edi
-    pop esi
-    pop ecx
-    pop eax
-    pop es
-    pop ds
-    ret
-CreateExecParam Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateExecOptions
-;
-;           DESCRIPTION:    Make global copy of options
-;
-;           PARAMETERS:     GS:EBX      Param struc
-;               FS      Exec sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateExecOptions Proc near
-    push ds
-    push es
-    push eax
-    push ecx
-    push esi
-    push edi
-;   
-    mov ax,gs
-    mov ds,ax
-    mov esi,ebx
-    mov edi,esi
-    xor ecx,ecx
-
-ceoLoop:
-    inc ecx
-    lods byte ptr [esi]
-    or al,al
-    jnz ceoLoop
-;
-    inc ecx
-    lods byte ptr [esi]
-    or al,al
-    jnz ceoLoop
-
-ceoSizeOk:
-    mov esi,edi
-    mov eax,ecx
-    AllocateSmallGlobalMem
-    xor edi,edi
-    push ecx
-    rep movs byte ptr es:[edi],ds:[esi]     
-    pop ecx
-    jmp ceoDone
-
-ceoNoOpt:
-    xor ax,ax
-    mov es,ax
-    xor ecx,ecx
-
-ceoDone:    
-    mov fs:e_opt,es
-    pop edi
-    pop esi
-    pop ecx
-    pop eax
-    pop es
-    pop ds
-    ret
-CreateExecOptions Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupExecOptions
-;
-;           DESCRIPTION:    Setup exec options
-;
-;           PARAMETERS:     GS      Spawn sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupExecOptions Proc near
-    push es
-    push ax
-;
-    mov ax,gs:e_opt
-    or ax,ax
-    jz seoDone
-;
-    mov es,ax
-    SetOptions
-
-seoDone:    
-    pop ax
-    pop es
-    ret
-SetupExecOptions   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FreeExec
-;
-;           DESCRIPTION:    Free exec environment
-;
-;           PARAMETERS:     GS      Exec sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeExec Proc near
-    push ax
-;    
-    xor ax,ax
-    mov ds,ax
-    mov es,gs:e_name
-    FreeMem
-;
-    mov es,gs:e_cmd
-    FreeMem
-;
-    mov ax,gs:e_opt
-    or ax,ax
-    jz feOptOk
-;    
-    mov es,ax
-    FreeMem
-
-feOptOk:
-    mov ax,gs
-    mov es,ax
-    xor ax,ax
-    mov gs,ax
-    FreeMem
-;
-    pop ax
-    ret
-FreeExec   Endp 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           dos_ext_exec
 ;
 ;           DESCRIPTION:    DOS extender load
@@ -1703,21 +1433,21 @@ spawn_program32 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupEfiLoad
+;           NAME:           SetupExecLoad
 ;
-;           DESCRIPTION:    Setup EFI load
+;           DESCRIPTION:    Setup exec load
 ;
 ;       RETURNS:            GS      Spawn sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupEfiLoad Proc near    
+SetupExecLoad Proc near    
     push ds
     push eax
     push bx
 ; 
     push es
-    mov eax,SIZE efi_load_struc
+    mov eax,SIZE exec_load_struc
     AllocateSmallGlobalMem
     mov ax,es
     mov gs,ax
@@ -1740,21 +1470,21 @@ SetupEfiLoad Proc near
     pop eax
     pop ds
     ret
-SetupEfiLoad  Endp
+SetupExecLoad  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateEfiProg
+;           NAME:           CreateExecProg
 ;
 ;           DESCRIPTION:    Make global copy of program name
 ;
 ;           PARAMETERS:     DS:ESI      Filename
-;                           GS          Efi load sel
+;                           GS          Exec load sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateEfiProg Proc near
+CreateExecProg Proc near
     push es
     push eax
     push ecx
@@ -1794,21 +1524,21 @@ cepSizeOk:
     pop eax
     pop es
     ret
-CreateEfiProg Endp
+CreateExecProg Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateEfiParam
+;           NAME:           CreateExecParam
 ;
 ;           DESCRIPTION:    Make global copy of parameters
 ;
 ;           PARAMETERS:     ES:EDI      Param struc
-;                           GS          Efi load sel
+;                           GS          Exec load sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateEfiParam Proc near
+CreateExecParam Proc near
     push ds
     push es
     push eax
@@ -1845,20 +1575,20 @@ ceparDone:
     pop es
     pop ds
     ret
-CreateEfiParam Endp
+CreateExecParam Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateEfiStartDir
+;           NAME:           CreateExecStartDir
 ;
 ;           DESCRIPTION:    Make global copy of start dir
 ;
-;           PARAMETERS:     GS      Efi load sel
+;           PARAMETERS:     GS      Exec load sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateEfiStartDir Proc near
+CreateExecStartDir Proc near
     push ds
     push es
     push eax
@@ -1891,20 +1621,20 @@ CreateEfiStartDir Proc near
     pop es
     pop ds
     ret
-CreateEfiStartDir Endp
+CreateExecStartDir Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateEfiEnv
+;           NAME:           CreateExecEnv
 ;
 ;           DESCRIPTION:    Make global copy of environment variables
 ;
-;           PARAMETERS:     GS          Efi load sel
+;           PARAMETERS:     GS          Exec load sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateEfiEnv Proc near
+CreateExecEnv Proc near
     push ds
     push es
     push eax
@@ -1928,20 +1658,20 @@ CreateEfiEnv Proc near
     pop es
     pop ds
     ret
-CreateEfiEnv Endp
+CreateExecEnv Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupEfiDir
+;           NAME:           SetupExecDir
 ;
-;           DESCRIPTION:    Setup efi directory
+;           DESCRIPTION:    Setup exec directory
 ;
-;           PARAMETERS:     GS      Efi load sel
+;           PARAMETERS:     GS      Exec load sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupEfiDir Proc near
+SetupExecDir Proc near
     push es
     push ax
     push di
@@ -1974,20 +1704,20 @@ sedDirOk:
     pop ax
     pop es
     ret
-SetupEfiDir   Endp
+SetupExecDir   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupEfiEnv
+;           NAME:           SetupExecEnv
 ;
-;           DESCRIPTION:    Setup efi load environment
+;           DESCRIPTION:    Setup exec load environment
 ;
-;           PARAMETERS:     GS      Efi load sel
+;           PARAMETERS:     GS      Exec load sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupEfiEnv Proc near
+SetupExecEnv Proc near
     push es
     push bx
     push di
@@ -2003,20 +1733,20 @@ SetupEfiEnv Proc near
     pop bx
     pop es
     ret
-SetupEfiEnv   Endp
+SetupExecEnv   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FreeEfi
+;           NAME:           FreeExec
 ;
-;           DESCRIPTION:    Free efi environment
+;           DESCRIPTION:    Free exec environment
 ;
-;           PARAMETERS:     GS      Efi sel
+;           PARAMETERS:     GS      Exec sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeEfi Proc near
+FreeExec Proc near
     push es
     push ax
 ;
@@ -2041,20 +1771,20 @@ FreeEfi Proc near
     pop ax
     pop es    
     ret
-FreeEfi   Endp    
+FreeExec   Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           EfiStartup
+;           NAME:           ExecStartup
 ;
-;           DESCRIPTION:    Efi startup stub
+;           DESCRIPTION:    Exec startup stub
 ;
 ;           PARAMETERS:     BX      Spawn sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-efi_startup:
+exec_startup:
     sti
     mov gs,bx
     mov ax,SEG data
@@ -2092,8 +1822,8 @@ lepCopyExeLoop:
     GetThread
     mov gs:el_thread,ax
 ;
-    call SetupEfiDir
-    call SetupEfiEnv
+    call SetupExecDir
+    call SetupExecEnv
 ;
     mov cx,gs:el_col
     mov dx,gs:el_row
@@ -2172,15 +1902,15 @@ lepRet:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DoEfiLoad
+;           NAME:           DoExecLoad
 ;
-;           DESCRIPTION:    Do efi load
+;           DESCRIPTION:    Do exec load
 ;
-;           PARAMETERS:     GS      Efi load sel
+;           PARAMETERS:     GS      Exec load sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DoEfiLoad Proc near       
+DoExecLoad Proc near       
     push ds
     push es
     push ax
@@ -2193,7 +1923,7 @@ DoEfiLoad Proc near
     xor edi,edi
     mov ax,cs
     mov ds,ax
-    mov esi,OFFSET efi_startup
+    mov esi,OFFSET exec_startup
     mov bx,gs
     mov ax,2
     mov ecx,stack0_size
@@ -2207,7 +1937,7 @@ DoEfiLoad Proc near
     pop es
     pop ds
     ret
-DoEfiLoad Endp    
+DoExecLoad Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2226,130 +1956,7 @@ DoEfiLoad Endp
 
 load_exe_name   DB 'Load Exe',0
 
-load_program    Proc near
-    pop ax
-;       
-    push word ptr 0
-    push cs
-    push word ptr 0
-    push ax
-;       
-    call SetupExec
-    call CreateExecProg
-    call CreateExecParam
-    call CreateExecOptions
-;       
-    SaveContext
-    xor eax,eax
-    push eax
-    push eax
-    push eax
-    push eax
-    push eax
-    push eax
-    push eax
-;
-    mov ax,fs
-    mov gs,ax
-    xor ax,ax
-    mov fs,ax
-;
-    OpenApp
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
-    mov es:app_context,bx
-    mov es:app_unload_proc,OFFSET epUnload
-;
-    xor si,si
-    mov ds,gs:e_name
-    mov di,OFFSET app_exe_name
-
-epCopyExeLoop:
-    lodsb
-    stosb
-    or al,al
-    jne epCopyExeLoop
-;
-    mov es,gs:e_name
-    xor di,di
-    OpenFile
-    jc load_fail
-;
-    xor esi,esi
-    xor edi,edi
-    mov ds,gs:e_name
-    mov es,gs:e_cmd
-    call load_exe_file
-    jc load_close_fail
-;
-    call SetupExecOptions
-    call FreeExec
-    test byte ptr [bp+2].load_eflags,2
-    jnz load_prog_vm
-;
-    mov ds,[bp].load_ds
-    mov es,[bp].load_es
-    mov fs,[bp].load_fs
-    mov gs,[bp].load_gs
-
-load_prog_vm:
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    iretd
-
-load_close_fail:
-    CloseFile
-
-load_fail:
-    call FreeExec
-    push ds:app_context
-    CloseApp
-    pop bx
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov bx,ds:app_context
-    RestoreContext
-    push ds
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_exit_code
-    pop ds
-    stc
-    retf32
-
-epUnload:
-    push ds:app_context
-    CloseApp
-    pop bx
-;    
-    push ax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    pop ax
-    mov ds:app_exit_code,ax
-;
-    RestoreContext
-    push ds
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_exit_code
-    pop ds
-    clc
-    retf32
-load_program    Endp
-
-load_efi_program   Proc near
+load_program   Proc near
     push gs
     push bx
     push cx
@@ -2358,22 +1965,22 @@ load_efi_program   Proc near
     UserGateForce32 is_64_bit_exe_nr
     jc lepProt
 ;
-    call SetupEfiLoad
-    call CreateEfiProg
-    call CreateEfiParam
-    call CreateEfiStartDir
-    call CreateEfiEnv
+    call SetupExecLoad
+    call CreateExecProg
+    call CreateExecParam
+    call CreateExecStartDir
+    call CreateExecEnv
     int 3
-;    call DoEfiLoad64    
+;    call DoExecLoad64    
     jmp lepWait
     
 lepProt:
-    call SetupEfiLoad
-    call CreateEfiProg
-    call CreateEfiParam
-    call CreateEfiStartDir
-    call CreateEfiEnv
-    call DoEfiLoad
+    call SetupExecLoad
+    call CreateExecProg
+    call CreateExecParam
+    call CreateExecStartDir
+    call CreateExecEnv
+    call DoExecLoad
 
 lepWait:    
     WaitForSignal
@@ -2385,7 +1992,7 @@ lepWait:
     mov cx,gs:el_col
     mov dx,gs:el_row
     SetCursorPosition
-    call FreeEfi
+    call FreeExec
 
 lepDone:
     pop dx
@@ -2393,49 +2000,26 @@ lepDone:
     pop bx
     pop gs
     ret
-load_efi_program   Endp
+load_program   Endp
     
 load_program16 Proc far
-    push fs
     push ebx
     push esi
     push edi
 ;
-    IsEfi
-    jnc lp16_efi
-;    
-    movzx ebx,bx
     movzx esi,si
-    movzx edi,di    
+    movzx edi,di
+    movzx ebx,bx
     call load_program
-    jmp lp16_done
-
-lp16_efi:
-    call load_efi_program
-
-lp16_done:
+;
     pop edi
     pop esi
     pop ebx
-    pop fs
     retf32
 load_program16  Endp
     
 load_program32 Proc far
-    push fs
-    push bx
-;
-    IsEfi
-    jnc lp32_efi
     call load_program
-    jmp lp32_done
-
-lp32_efi:
-    call load_efi_program
-
-lp32_done:
-    pop bx
-    pop fs
     retf32
 load_program32  Endp
 
