@@ -22,13 +22,11 @@ copy ..\..\kernel\os\ipc.rdv files
 copy ..\..\kernel\os\lon.rdv files
 copy ..\..\kernel\os\tlist.rdv files
 copy ..\..\kernel\os\wd.rdv files
-copy ..\..\kernel\bios\guidev.rdv files
+copy ..\..\kernel\os\guidev.rdv files
 copy ..\..\kernel\bios\pcbios.rdv files
 copy ..\..\kernel\debug\kdebug.rdv files
-copy ..\..\kernel\bios\pcshut.exe files
+copy ..\..\kernel\pcdev\pcshut.exe files
 copy ..\..\kernel\bios\vga.rdv files
-copy ..\..\kernel\efi\efigui.rdv files
-copy ..\..\kernel\efi\efishut.exe files
 copy ..\..\kernel\dosemu\emulate.rdv files
 copy ..\..\kernel\dosemu\dos.rdv files
 copy ..\..\kernel\dosemu\dpmi.rdv files
