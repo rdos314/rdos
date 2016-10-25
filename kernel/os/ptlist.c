@@ -34,7 +34,7 @@
 #define FALSE   0
 #define TRUE    !FALSE
 
-extern void InitTasking();
+extern void __far InitTasking();
 
 int MaxRows = 25;
 int MaxCols = 80;

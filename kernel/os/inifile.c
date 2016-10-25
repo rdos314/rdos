@@ -141,7 +141,7 @@ void GrowIni(struct TIni *Ini, int BufSize, int SectionCount, int VarCount)
     long NewBase;
     int NewSize;
     long OldBase;
-    int OldSize;
+    long OldSize;
     int oldsel;
     int newsel;
     char *SrcBuf;

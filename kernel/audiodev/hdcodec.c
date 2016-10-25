@@ -25,9 +25,11 @@
 #
 ########################################################################*/
 
+#include <stdio.h>
+#include <string.h>
+
 #include "rdos.h"
 #include "rdosdev.h"
-#include "string.h"
 
 extern void InitHda();
 extern void InitPciHda();
@@ -2961,7 +2963,7 @@ void __far ImplSetAudioOutputVolume(int l, int r)
 #   Returns....: *
 #
 ##########################################################################*/
-void AssignOutput(struct TWiget *widget)
+void AssignOutput(struct TWidget *widget)
 {
     CreateOutputVolumeControls(widget);
     UpdateOutputVolume();
@@ -2979,7 +2981,7 @@ void AssignOutput(struct TWiget *widget)
 #   Returns....: *
 #
 ##########################################################################*/
-void DeassignOutput(struct TWiget *widget)
+void DeassignOutput(struct TWidget *widget)
 {
     FreeOutputVolumeControls();
     DeactivateOutput(widget);
