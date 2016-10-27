@@ -2111,12 +2111,19 @@ RunDll  Proc near
     or eax,eax
     jz rdDone
 ;       
+    mov ebx,fs:pvStackUserBottom
+    push ebx
+    mov fs:pvStackUserBottom,0
+;
     add eax,edi
     push eax
     movzx eax,es:lib_init_param
     movzx ebx,es:mod_handle
     mov edx,1
     CallPM32
+;
+    pop ebx    
+    mov fs:pvStackUserBottom,ebx
 
 rdDone:
     popad
