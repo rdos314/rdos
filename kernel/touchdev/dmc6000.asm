@@ -575,34 +575,12 @@ has_touch  Endp
 
 init_touch_name DB 'Init Touch', 0
 
-touch_name1     DB 'PenMount COM1',0
-touch_name2     DB 'PenMount COM2',0
 touch_name3     DB 'PenMount COM3',0
 touch_name4     DB 'PenMount COM4',0
 
 init_touch      Proc far
         push ds
         push es
-;
-    mov bx,0
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov di,OFFSET touch_name1
-        mov si,OFFSET touch_thread
-        mov ax,4
-        mov cx,stack0_size
-        CreateThread
-;
-    mov bx,1
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        mov di,OFFSET touch_name2
-        mov si,OFFSET touch_thread
-        mov ax,4
-        mov cx,stack0_size
-        CreateThread
 ;
     mov bx,2
         mov ax,cs

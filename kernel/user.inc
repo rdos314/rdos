@@ -2258,7 +2258,7 @@ GetMaxComPort       MACRO
 
 ;	IN  AL		Port #
 ;   NC          Available
-IsComAvaiable       MACRO
+IsComAvailable       MACRO
 	UserGate is_com_available_nr
 						ENDM
 
