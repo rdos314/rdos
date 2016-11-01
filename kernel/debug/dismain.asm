@@ -3932,7 +3932,7 @@ dacLongRead:
     mov ds:[ebp].op_rex,8
 
 dacStart:                
-    mov ax,os_gate_sel
+    mov ax,osgate_sel
     verr ax
     jnz dacDis
 ;
