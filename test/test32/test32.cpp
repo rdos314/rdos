@@ -4,6 +4,7 @@
 #include <string.h>
 #include "serial.h"
 #include "section.h"
+#include "tempnu.h"
 
 #include <math.h>
 
@@ -66,92 +67,10 @@ static void TestThread(void *ptr)
     }
 }
 
-static void *AllocMem(void *caller, size_t size)
-{
-    void *p;
-
-    p = malloc(size);
-    return p;
-}
-
-static void FreeMem(void *caller, void *p)
-{
-    if(p != NULL)
-        free(p);
-}
-
-void *operator new(size_t size)
-{
-    void *p;
-    void *caller;
-
-    __asm
-    {
-        mov eax,[ebp+0x18]
-        mov caller,eax
-    }
-
-    if( size == 0 )
-        ++size;
-
-    return AllocMem(caller, size);
-}
-
-void *operator new[](size_t size)
-{
-    void *p;
-    void *caller;
-
-    __asm
-    {
-        mov eax,[ebp+0x18]
-        mov caller,eax
-    }
-
-    if( size == 0 )
-        ++size;
-
-    return AllocMem(caller, size);
-}
-
-void operator delete(void *p)
-{
-    void *caller;
-
-    __asm
-    {
-        mov eax,[ebp+0x18]
-        mov caller,eax
-    }
-
-    FreeMem(caller, p);
-}
-
-void operator delete[](void *p)
-{
-    void *caller;
-
-    __asm
-    {
-        mov eax,[ebp+0x18]
-        mov caller,eax
-    }
-
-    FreeMem(caller, p);
-}
-
-
 void main()
 {
-    int *valp;
-    char *ptr;
-
-    valp = new int;
-    delete valp;
-
-    ptr = new char[512];
-    delete ptr;
-
+    TTemperatureNu tempnu("norra_faladen");
+    
     int Handle;
 
     Handle = RdosOpenSysIni();
