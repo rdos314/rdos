@@ -3417,7 +3417,7 @@ desp32  exec_s <5,  31, 8, OFFSET reg_esp,      OFFSET inc_reg_byte,   OFFSET de
 mebp32  exec_s <5,  40, 3, OFFSET reg_ebp,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
 debp32  exec_s <5,  44, 8, OFFSET reg_ebp,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
 meip32  exec_s <6,  1,  3, OFFSET reg_eip,      OFFSET inc_reg4,       OFFSET dec_reg4,        OFFSET ignore>
-deip32  exec_s <6,  5,  8, OFFSET reg_eip,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_sreg_byte>
+deip32  exec_s <6,  5,  8, OFFSET reg_eip,      OFFSET inc_reg_byte,   OFFSET dec_reg_byte,    OFFSET set_reg_byte>
 dtr32   exec_s <7,  4,  4, OFFSET reg_tr,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
 dldt32  exec_s <8,  4,  4, OFFSET reg_ldt,      OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>
 dcs32   exec_s <9,  4,  4, OFFSET reg_cs,       OFFSET inc_sreg_byte,  OFFSET dec_sreg_byte,   OFFSET set_sreg_byte>

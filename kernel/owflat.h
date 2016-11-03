@@ -26,7 +26,8 @@
 #define ValidateDisc 0x73 2 0xB0 0xFF 0xF 0xBE 0xC0
 
 #pragma aux RdosTestGate = \
-    CallGate_test_gate;
+    CallGate_test_gate \
+    parm [edi];
 
 #pragma aux RdosLoad32 = \
     CallGate_load_device32  \

@@ -4,7 +4,6 @@
 #include <string.h>
 #include "serial.h"
 #include "section.h"
-#include "tempnu.h"
 
 #include <math.h>
 
@@ -67,10 +66,11 @@ static void TestThread(void *ptr)
     }
 }
 
+
 void main()
 {
-    TTemperatureNu tempnu("norra_faladen");
-    
+    RdosTestGate("12345");
+
     int Handle;
 
     Handle = RdosOpenSysIni();

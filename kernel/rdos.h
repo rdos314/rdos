@@ -207,7 +207,7 @@ typedef struct _EXCEPTION_POINTERS {
 extern "C" {
 #endif
 
-void RDOSAPI RdosTestGate();
+void RDOSAPI RdosTestGate(char *par);
 
 void RDOSAPI RdosLoad32();
 
