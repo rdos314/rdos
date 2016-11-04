@@ -5,7 +5,7 @@ VpeMain
 1
 WRect
 1232
-28
+0
 8320
 9216
 2
@@ -30,8 +30,8 @@ VComponent
 WRect
 0
 0
-5669
-4266
+5664
+4257
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 10
 kdebug.tgt
 0
-3
+9
 7

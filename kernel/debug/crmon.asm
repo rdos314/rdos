@@ -68,6 +68,9 @@ code    SEGMENT byte public use32 'CODE'
     extrn InitCrashKeyboard:near
     extrn GetCrashKey:near
 
+PageFault:
+    int 3
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -298,7 +301,7 @@ MapLinear       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReadLinearByte
+;           NAME:           CondReadLinearByte
 ;
 ;           DESCRIPTION:    
 ;
@@ -310,21 +313,80 @@ MapLinear       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+CondReadLinearByte   PROC near
+    push es
+    push ebx
+;    
+    call MapLinear
+    jc crlbDone
+;    
+    mov al,es:[ebx]
+    clc
+    
+crlbDone:
+    pop ebx
+    pop es
+    ret
+CondReadLinearByte   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadLinearByte
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;
+;           RETURNS:        AL      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ReadLinearByte
+
 ReadLinearByte   PROC near
     push es
     push ebx
 ;    
     call MapLinear
-    jc rlbDone
+    jc PageFault
 ;    
     mov al,es:[ebx]
-    clc
-    
-rlbDone:
+;
     pop ebx
     pop es
     ret
 ReadLinearByte   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CondWriteLinearByte
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;                           AL          Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CondWriteLinearByte   PROC near
+    push es
+    push ebx
+;    
+    call MapLinear
+    jc cwlbDone
+;    
+    mov es:[ebx],al
+    clc
+
+cwlbDone:
+    pop ebx
+    pop es
+    ret
+CondWriteLinearByte   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -339,17 +401,17 @@ ReadLinearByte   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public WriteLinearByte
+
 WriteLinearByte   PROC near
     push es
     push ebx
 ;    
     call MapLinear
-    jc wlbDone
+    jc PageFault
 ;    
     mov es:[ebx],al
-    clc
-
-wlbDone:
+;
     pop ebx
     pop es
     ret
@@ -358,7 +420,7 @@ WriteLinearByte   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReadLinearWord
+;           NAME:           CondReadLinearWord
 ;
 ;           DESCRIPTION:    
 ;
@@ -370,22 +432,59 @@ WriteLinearByte   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadLinearWord   PROC near
+CondReadLinearWord   PROC near
     push ebx
     push esi
 ;
-    call ReadLinearByte
+    call CondReadLinearByte
     movzx si,al
-    jc rlwDone
+    jc crlwDone
 ;
     inc ebx
-    call ReadLinearByte
+    call CondReadLinearByte
+    jc crlwDone
+;
     shl ax,8
     and ax,0FF00h
     or ax,si
     clc
 
-rlwDone: 
+crlwDone: 
+    pop esi   
+    pop ebx
+    ret
+CondReadLinearWord   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadLinearWord
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;
+;           RETURNS:        AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ReadLinearWord
+
+ReadLinearWord   PROC near
+    push ebx
+    push esi
+;
+    call ReadLinearByte
+;
+    movzx si,al
+    inc ebx
+    call ReadLinearByte
+;
+    shl ax,8
+    and ax,0FF00h
+    or ax,si
+;
     pop esi   
     pop ebx
     ret
@@ -394,7 +493,69 @@ ReadLinearWord   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReadLinearDword
+;           NAME:           CondWriteLinearWord
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;                           AX          Value
+;
+;           RETURNS:        NC
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CondWriteLinearWord   PROC near
+    push eax
+    push ebx
+;
+    call CondWriteLinearByte
+    jc cwlwDone
+;
+    mov al,ah
+    inc ebx
+    call CondWriteLinearByte
+
+cwlwDone: 
+    pop ebx
+    pop eax
+    ret
+CondWriteLinearWord   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteLinearWord
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;                           AX          Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public WriteLinearWord
+
+WriteLinearWord   PROC near
+    push eax
+    push ebx
+;
+    call WriteLinearByte
+;
+    mov al,ah
+    inc ebx
+    call WriteLinearByte
+;
+    pop ebx
+    pop eax
+    ret
+WriteLinearWord   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CondReadLinearDword
 ;
 ;           DESCRIPTION:    
 ;
@@ -406,33 +567,33 @@ ReadLinearWord   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadLinearDword   PROC near
+CondReadLinearDword   PROC near
     push ebx
     push esi
 ;
-    call ReadLinearByte
+    call CondReadLinearByte
     movzx esi,al
-    jc rldDone
+    jc crldDone
 ;
     inc ebx
-    call ReadLinearByte
-    jc rldDone
+    call CondReadLinearByte
+    jc crldDone
 ;
     shl ax,8
     and eax,0FF00h
     or esi,eax
 ;
     inc ebx
-    call ReadLinearByte
-    jc rldDone
+    call CondReadLinearByte
+    jc crldDone
 ;    
     shl eax,16
     and eax,0FF0000h
     or esi,eax
 ;
     inc ebx
-    call ReadLinearByte
-    jc rldDone
+    call CondReadLinearByte
+    jc crldDone
 ;
     shl eax,24
     and eax,0FF000000h
@@ -441,7 +602,57 @@ ReadLinearDword   PROC near
     mov eax,esi    
     clc
 
-rlddone: 
+crlddone: 
+    pop esi   
+    pop ebx
+    ret
+CondReadLinearDword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadLinearDword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;
+;           RETURNS:            EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ReadLinearDword
+
+ReadLinearDword   PROC near
+    push ebx
+    push esi
+;
+    call ReadLinearByte
+    movzx esi,al
+;
+    inc ebx
+    call ReadLinearByte
+;
+    shl ax,8
+    and eax,0FF00h
+    or esi,eax
+;
+    inc ebx
+    call ReadLinearByte
+;    
+    shl eax,16
+    and eax,0FF0000h
+    or esi,eax
+;
+    inc ebx
+    call ReadLinearByte
+;
+    shl eax,24
+    and eax,0FF000000h
+    or esi,eax
+    mov eax,esi    
+;
     pop esi   
     pop ebx
     ret
@@ -450,7 +661,214 @@ ReadLinearDword   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReadLinearQword
+;           NAME:           CondWriteLinearDword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;                           EAX         Value
+;
+;           RETURNS:        NC
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CondWriteLinearDword   PROC near
+    push eax
+    push ebx
+    push esi
+;
+    call CondWriteLinearByte
+    jc cwldDone
+;
+    inc ebx
+    shr eax,8
+    call CondWriteLinearByte
+    jc cwldDone
+;
+    inc ebx
+    shr eax,8
+    call CondWriteLinearByte
+    jc cwldDone
+;    
+    inc ebx
+    shr eax,8
+    call CondWriteLinearByte
+
+cwlddone: 
+    pop esi   
+    pop ebx
+    pop eax
+    ret
+CondWriteLinearDword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteLinearDword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;                           EAX         Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteLinearDword   PROC near
+    push eax
+    push ebx
+    push esi
+;
+    call WriteLinearByte
+;
+    inc ebx
+    shr eax,8
+    call WriteLinearByte
+;
+    inc ebx
+    shr eax,8
+    call WriteLinearByte
+;    
+    inc ebx
+    shr eax,8
+    call WriteLinearByte
+;
+    pop esi   
+    pop ebx
+    pop eax
+    ret
+WriteLinearDword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CondReadLinearFword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;
+;           RETURNS:        NC
+;                             DX:EAX  Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CondReadLinearFword   PROC near
+    push ebx
+;
+    call CondReadLinearDword
+    jc crlfDone    
+;
+    mov edx,eax
+    add ebx,4
+    call CondReadLinearWord
+    jc crlfDone
+;
+    xchg eax,edx
+    clc
+
+crlfDone:
+    pop ebx
+    ret
+CondReadLinearFword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadLinearFword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;
+;           RETURNS:          DX:EAX  Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ReadLinearFword
+
+ReadLinearFword   PROC near
+    push ebx
+;
+    call ReadLinearDword
+;
+    mov edx,eax
+    add ebx,4
+    call ReadLinearWord
+;
+    xchg eax,edx
+;
+    pop ebx
+    ret
+ReadLinearFword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CondWriteLinearFword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;                           DX:EAX      Value
+;
+;           RETURNS:        NC
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CondWriteLinearFword   PROC near
+    push eax
+    push ebx
+;
+    call CondWriteLinearDword
+    jc cwlfDone    
+;
+    mov ax,dx
+    add ebx,4
+    call CondWriteLinearWord
+
+cwlfDone:
+    pop ebx
+    pop eax
+    ret
+CondWriteLinearFword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteLinearFword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;                           DX:EAX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteLinearFword   PROC near
+    push eax
+    push ebx
+;
+    call WriteLinearDword
+;
+    mov ax,dx
+    add ebx,4
+    call WriteLinearWord
+;
+    pop ebx
+    pop eax
+    ret
+WriteLinearFword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CondReadLinearQword
 ;
 ;           DESCRIPTION:    
 ;
@@ -462,21 +880,265 @@ ReadLinearDword   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadLinearQword   PROC near
-    call ReadLinearDword
-    jc rlqDone    
+CondReadLinearQword   PROC near
+    call CondReadLinearDword
+    jc crlqDone    
 ;
     mov edx,eax
     add ebx,4
-    call ReadLinearDword
-    jc rlqDone
+    call CondReadLinearDword
+    jc crlqDone
 ;
     xchg eax,edx
     clc
 
-rlqDone:
+crlqDone:
+    ret
+CondReadLinearQword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadLinearQword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;
+;           RETURNS:        EDX:EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ReadLinearQword
+
+ReadLinearQword   PROC near
+    push ebx
+;
+    call ReadLinearDword
+;
+    mov edx,eax
+    add ebx,4
+    call ReadLinearDword
+;
+    xchg eax,edx
+;
+    pop ebx
     ret
 ReadLinearQword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CondWriteLinearQword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;                           EDX:EAX     Value
+;
+;           RETURNS:        NC
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CondWriteLinearQword   PROC near
+    push eax
+    push ebx
+;
+    call CondWriteLinearDword
+    jc cwlqDone    
+;
+    mov eax,edx
+    add ebx,4
+    call CondWriteLinearDword
+
+cwlqDone:
+    pop ebx
+    pop eax
+    ret
+CondWriteLinearQword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteLinearQword
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;                           EDX:EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public WriteLinearQword
+
+WriteLinearQword   PROC near
+    push eax
+    push ebx
+;
+    call WriteLinearDword
+;
+    mov eax,edx
+    add ebx,4
+    call WriteLinearDword
+;
+    pop ebx
+    pop eax
+    ret
+WriteLinearQword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CondReadLinearTByte
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;
+;           RETURNS:        NC
+;                             CX:EDX:EAX  Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CondReadLinearTByte   PROC near
+    push ebx
+    push esi
+;
+    call CondReadLinearDword
+    jc crltDone    
+;
+    mov esi,eax
+    add ebx,4
+    call CondReadLinearDword
+    jc crltDone
+;
+    mov edx,eax
+    add ebx,4
+    call CondReadLinearWord
+    jc crltDone
+;
+    mov cx,ax
+    mov eax,esi
+    clc
+
+crltDone:
+    pop esi
+    pop ebx
+    ret
+CondReadLinearTByte   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadLinearTByte
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;
+;           RETURNS:        CX:EDX:EAX  Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ReadLinearTByte
+
+ReadLinearTByte   PROC near
+    push ebx
+    push esi
+;
+    call ReadLinearDword
+;
+    mov esi,eax
+    add ebx,4
+    call ReadLinearDword
+;
+    mov edx,eax
+    add ebx,4
+    call ReadLinearWord
+;
+    mov cx,ax
+    mov eax,esi
+;
+    pop esi
+    pop ebx
+    ret
+ReadLinearTByte   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CondWriteLinearTByte
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;                           CX:EDX:EAX  Value
+;
+;           RETURNS:        NC
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CondWriteLinearTByte   PROC near
+    push ebx
+    push esi
+;
+    call CondWriteLinearDword
+    jc cwltDone    
+;
+    add ebx,4
+    mov eax,edx
+    call CondWriteLinearDword
+    jc cwltDone
+;
+    mov ax,cx
+    add ebx,4
+    call CondWriteLinearWord
+
+cwltDone:
+    pop esi
+    pop ebx
+    ret
+CondWriteLinearTByte   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteLinearTByte
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;                           CX:EDX:EAX  Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public WriteLinearTByte
+
+WriteLinearTByte   PROC near
+    push ebx
+    push esi
+;
+    call WriteLinearDword
+;
+    add ebx,4
+    mov eax,edx
+    call WriteLinearDword
+;
+    mov ax,cx
+    add ebx,4
+    call WriteLinearWord
+;
+    pop esi
+    pop ebx
+    ret
+WriteLinearTByte   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -526,7 +1188,7 @@ get_info_do:
     movzx ebx,bx
     add ebx,eax
     xor edi,edi
-    call ReadLinearQword
+    call CondReadLinearQword
 ;
     test dh,80h
     jz get_info_fail
@@ -598,7 +1260,7 @@ ReadByte   PROC near
 ;
     add ebx,edx 
     xor edi,edi
-    call ReadLinearByte
+    call CondReadLinearByte
 
 rbDone:    
     pop edi
@@ -641,7 +1303,7 @@ ReadWord   PROC near
 ;
     add ebx,edx 
     xor edi,edi
-    call ReadLinearWord   
+    call CondReadLinearWord   
 
 rwDone:    
     pop edi
@@ -684,7 +1346,7 @@ ReadDword   PROC near
 ;
     add ebx,edx 
     xor edi,edi
-    call ReadLinearDword
+    call CondReadLinearDword
 
 rdDone:    
     pop edi
@@ -1582,7 +2244,7 @@ spsLoop:
     push ebx
     add ebx,edx 
     xor edi,edi
-    call ReadLinearByte
+    call CondReadLinearByte
     pop ebx
     jc spsDone
 ;
@@ -2503,7 +3165,7 @@ wrDataLoop:
     push edx
 ;
     xor edi,edi
-    call ReadLinearByte
+    call CondReadLinearByte
     jc wrDataUndef
 ;    
     call WriteHexByte
@@ -2551,7 +3213,7 @@ wrCharLoop:
     push edx
 ;
     xor edi,edi
-    call ReadLinearByte
+    call CondReadLinearByte
     jc wrCharUndef
 ;    
     call ShowChar
@@ -2880,7 +3542,7 @@ read_mem    Proc near
     add edx,esi
     mov ebx,edx
     xor edi,edi
-    call ReadLinearByte    
+    call CondReadLinearByte    
 
 rmDone:
     pop edi
@@ -2922,7 +3584,7 @@ write_mem    Proc near
     mov ebx,edx
     xor edi,edi
     pop ax
-    call WriteLinearByte    
+    call CondWriteLinearByte    
     jmp wmDone
 
 wmPop:
