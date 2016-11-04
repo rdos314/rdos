@@ -715,6 +715,8 @@ CondWriteLinearDword   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public WriteLinearDword
+
 WriteLinearDword   PROC near
     push eax
     push ebx
@@ -849,6 +851,8 @@ CondWriteLinearFword   Endp
 ;                           DX:EAX      Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public WriteLinearFword
 
 WriteLinearFword   PROC near
     push eax

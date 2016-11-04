@@ -20,21 +20,51 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; EMPAGE.INC
-; External declarations for paging emulation
+; EMCOM.INC
+; External declarations for common emulations
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	extrn ReadLinearByte:near
-	extrn ReadLinearWord:near
-	extrn ReadLinearDword:near
-	extrn ReadLinearFword:near
-	extrn ReadLinearQword:near
-	extrn ReadLinearTByte:near
+	extrn ReadByte:near
+	extrn ReadWord:near
+	extrn ReadDword:near
+	extrn ReadFword:near
+	extrn ReadQword:near
+	extrn ReadTbyte:near
 
-	extrn WriteLinearByte:near
-	extrn WriteLinearWord:near
-	extrn WriteLinearDword:near
-	extrn WriteLinearFword:near
-	extrn WriteLinearQword:near
-	extrn WriteLinearTByte:near
+	extrn WriteByte:near
+	extrn WriteWord:near
+	extrn WriteDword:near
+	extrn WriteFword:near
+	extrn WriteQword:near
+	extrn WriteTbyte:near
+
+	extrn PushWord:near
+	extrn PushDword:near
+	extrn PushLong:near
+
+	extrn PopWord:near
+	extrn PopDword:near
+	extrn PopLong:near
+
+	extrn AddToStack:near
+	extrn SubFromStack:near
+
+	extrn ReadCodeByte:near
+	extrn ReadCodeWord:near
+	extrn ReadCodeDword:near
+	extrn ReadCodeFword:near
+
+	extrn ReadLongCodeByte:near
+	extrn ReadLongCodeWord:near
+	extrn ReadLongCodeDword:near
+	extrn ReadLongCodeQword:near
+
+	extrn InByte:near
+	extrn InWord:near
+	extrn InDword:near
+
+	extrn OutByte:near
+	extrn OutWord:near
+	extrn OutDword:near
+
