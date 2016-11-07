@@ -27,14 +27,12 @@
 
 include kdebug.inc
 include empage.inc
+include emseg.inc
 
 .386p
 .387
 
 code    SEGMENT byte use32 public 'CODE'
-
-AccessFault:
-    int 3
 
 CheckBitmap Proc near
     int 3

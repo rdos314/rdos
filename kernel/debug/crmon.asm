@@ -30,6 +30,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\os\system.def
 INCLUDE ..\os\proc.inc
 INCLUDE kdebug.inc
+INCLUDE emseg.inc
 
 flat_sel = 20h
 
@@ -67,9 +68,6 @@ code    SEGMENT byte public use32 'CODE'
     extrn DisAsmCode:near
     extrn InitCrashKeyboard:near
     extrn GetCrashKey:near
-
-PageFault:
-    int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5289,7 +5287,7 @@ cint16:
     push ax
     jmp DumpFault
 
-hwint:
+chwint:
     iretd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5310,7 +5308,7 @@ crash_int_tab:
 ;
 ci0     DD      0,          OFFSET cint0
 ci1     DD      1,          OFFSET cint1
-ci2     DD      2,          OFFSET hwint
+ci2     DD      2,          OFFSET chwint
 ci3     DD      3,          OFFSET cint3
 ci4     DD      4,          OFFSET cint4
 ci5     DD      5,          OFFSET cint5
@@ -5324,11 +5322,11 @@ ci12    DD      12,         OFFSET cint12
 ci13    DD      13,         OFFSET cint13
 ci14    DD      14,         OFFSET cint14
 ci16    DD      16,         OFFSET cint16
-ci40    DD      40h,        OFFSET hwint
-ci80    DD      80h,        OFFSET hwint
-ci81    DD      81h,        OFFSET hwint
-ci82    DD      82h,        OFFSET hwint
-ci83    DD      83h,        OFFSET hwint
+ci40    DD      40h,        OFFSET chwint
+ci80    DD      80h,        OFFSET chwint
+ci81    DD      81h,        OFFSET chwint
+ci82    DD      82h,        OFFSET chwint
+ci83    DD      83h,        OFFSET chwint
 ci_end  DD      0FFFFFFFFh
 
     public set_monitor_idt
