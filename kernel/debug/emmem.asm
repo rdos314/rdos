@@ -25,9 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-.386
-.model flat
-
 include kdebug.inc
 include emcom.inc
 include emseg.inc
