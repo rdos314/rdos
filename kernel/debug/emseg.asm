@@ -3172,6 +3172,138 @@ ValidateTssCsReadOk:
         mov ds:[ebp].reg_cs.d_access,ax
         ret
 ValidateTssCs   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           CondLoadDescriptor
+;
+;               DESCRIPTION:    Load descriptor if privilege allows, no faults
+;
+;               PARAMETERS:     DS:EBP          CPU
+;                               BX              SELECTOR TO LOAD
+;
+;               RETURNS:        NC              VALID
+;                                   EDX:EAX     DESCRIPTOR
+;                               CY              INVALID
+;                                   BX          ERROR CODE FOR GPF (SELECTOR)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CondLoadDescriptor      Proc near
+        test bx,0FFFCh
+        jnz cond_load_descr_not_null
+        stc
+        ret
+
+cond_load_descr_not_null:
+        test bl,4
+        jz cond_load_descr_gdt
+
+cond_load_descr_ldt:
+        test ds:[ebp].reg_ldt.d_access,ACCESS_READ
+        mov edi,OFFSET reg_ldt
+        stc
+        jnz cond_load_descr_do
+        ret
+
+cond_load_descr_gdt:
+        mov edi,OFFSET reg_gdt
+
+cond_load_descr_do:
+        mov ds:[ebp].em_pl,0
+        movzx ecx,bx
+        or cl,7
+        dec ecx
+        sub ecx,ds:[ebp+edi].d_limit
+        jbe cond_load_descr_limit_ok
+        stc
+        ret
+
+cond_load_descr_limit_ok:
+        movzx ecx,bx
+        and cl,0F8h
+        add ecx,ds:[ebp+edi].d_base
+        push ebx
+        push edi
+        mov ebx,ecx
+        xor edi,edi
+        call ReadLinearQword
+        pop edi
+        pop ebx
+        test dh,80h
+        jnz cond_load_descr_present
+        stc
+        ret
+
+cond_load_descr_present:
+        test dh,1
+        jnz cond_load_descr_accessed
+        or dh,1
+        push ebx
+        push edi
+        mov ebx,ecx
+        xor edi,edi
+        call WriteLinearQword
+        pop edi
+        pop ebx
+
+cond_load_descr_accessed:
+        clc
+        ret
+CondLoadDescriptor      Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           ValidateSegment
+;
+;               DESCRIPTION:    Validate a selector
+;
+;               PARAMETERS:     DS:EBP          CPU
+;                               AX              SEGMENT REGISTER TO VALIDATE
+;
+;               RETURNS:        NC              VALID
+;                                  EDX:EAX      DESCRIPTOR
+;                               CY              INVALID
+;                                  BX           ERROR CODE
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public ValidateSegment
+
+ValidateSegment Proc near
+        mov bx,ax
+        call CondLoadDescriptor
+        jnc ValidateSegmentDescrOk
+        ret
+
+ValidateSegmentDescrOk:
+        mov cl,byte ptr ds:[ebp].reg_cs.d_access
+        mov ch,bl
+        and cx,303h
+        cmp ch,cl
+        jc ValidateSegmentEplOk
+        mov cl,ch
+ValidateSegmentEplOk:
+        mov ch,dh
+        shr ch,5
+        and ch,3
+        cmp cl,ch
+        jbe ValidateSegmentDplOk
+        stc
+        ret
+
+ValidateSegmentDplOk:
+        test dh,10h
+        jz ValidateSegmentNotAccessible
+        clc
+        ret
+
+ValidateSegmentNotAccessible:
+        stc     
+        ret
+ValidateSegment Endp
 
 code    ENDS
 

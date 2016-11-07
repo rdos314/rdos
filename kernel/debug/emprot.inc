@@ -20,39 +20,35 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; EMSEG.INC
-; External declarations for segment register and fault emulations
+; EMPROT.INC
+; External declarations for protected instruction emulations
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	extrn ValidateSegment:near
+	extrn EmMoveRegCr:near
+	extrn EmMoveCrReg:near
+	extrn EmMoveRegDr:near
+	extrn EmMoveDrReg:near
 
-	extrn LoadTr:near
-	extrn LoadLdt:near
-	extrn JmpFar:near
-	extrn CallFar16:near
-	extrn CallFar32:near
-	extrn RetFar16:near
-	extrn RetFar32:near
-	extrn IntFar:near
-	extrn HwInt:near
-	extrn IretFar16:near
-	extrn IretFar32:near
-	extrn IretTss:near
-	extrn LoadSegment:near
+	extrn EmArplRegMem:near
+	extrn EmLarRegMem:near
+	extrn EmLslRegMem:near
+	extrn EmVerrMem:near
+	extrn EmVerwMem:near
 
-	extrn TrapFault:near
-	extrn OpcodeFault:near
-	extrn EmulateError:near
-	extrn DivFault:near
-	extrn SegmentFault:near
-	extrn StackFault:near
-	extrn ProtectionFault:near
-	extrn PageFault:near
-	extrn LoadFault:near
-	extrn AccessFault:near
-	extrn PrivilegeFault:near
-	extrn FpFault:near
+	extrn EmLmswMem:near
+	extrn EmSmswMem:near
+	extrn EmInvlpg:near
 
-        extrn ValidateTssLdt:near
-        extrn ValidateTssCs:near
+	extrn EmLgdtMem:near
+	extrn EmLidtMem:near
+	extrn EmSgdtMem:near
+	extrn EmSidtMem:near
+
+	extrn EmLldtMem:near
+	extrn EmLtrMem:near
+	extrn EmSldtMem:near
+	extrn EmStrMem:near
+
+	extrn EmClts:near
+
