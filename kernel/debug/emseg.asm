@@ -28,46 +28,17 @@
 include kdebug.inc
 include emcom.inc
 include empage.inc
+include emtss.inc
 
 .386p
 .387
 
 code    SEGMENT byte use32 public 'CODE'
 
-LoadTss Proc near
-    int 3
-    ret
-LoadTss Endp
-
-SaveTss Proc near
-    int 3
-    ret
-SaveTss Endp
-
-GetStack       Proc near
-    int 3
-    ret
-GetStack       Endp
-
 NotifyTaskSwitch Proc near
     int 3
     ret
 NotifyTaskSwitch Endp
-
-ValidateTss Proc near
-    int 3
-    ret
-ValidateTss Endp
-
-GetBacklink Proc near
-    int 3
-    ret
-GetBacklink Endp
-
-SetBacklink Proc near
-    int 3
-    ret
-SetBacklink Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3137,6 +3108,93 @@ IretTssDo:
         call RetTss
         ret
 IretTss Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           ValidateTssLdt
+;
+;               DESCRIPTION:    Validate LDT loaded from TSS, and load base & limit
+;
+;               PARAMETERS:     DS:EBP          CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public ValidateTssLdt
+
+ValidateTssLdt  Proc near
+        mov ds:[ebp].em_pl,0
+        mov bx,[ebp].reg_ldt.d_selector
+        or bx,bx
+        jz ValidateTssLdtDone
+;
+        test bx,4
+        jnz InvalidTssFault
+        LoadDescriptor InvalidTssFault
+        and dl,1Fh
+        cmp dl,2
+        jne InvalidTssFault
+;
+        mov ds:[ebp].reg_ldt.d_base,eax
+        mov ds:[ebp].reg_ldt.d_limit,ecx   
+        mov ds:[ebp].reg_ldt.d_access,ACCESS_READ
+ValidateTssLdtDone:
+        ret
+ValidateTssLdt  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           ValidateTssCs
+;
+;               DESCRIPTION:    Validate CS loaded from TSS, and load descriptor
+;
+;               PARAMETERS:     DS:EBP          CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        public ValidateTssCs
+
+ValidateTssCs   Proc near
+        mov ds:[ebp].em_pl,0
+        mov bx,ds:[ebp].reg_cs.d_selector
+        LoadDescriptor InvalidTssFault
+        test dl,10h
+        jz InvalidTssFault
+;
+        push cx
+        mov cl,dl
+        and cl,18h
+        cmp cl,18h
+        jne InvalidTssFault
+;
+        mov cl,dl
+        shr cl,5
+        mov ch,byte ptr ds:[ebp].reg_cs.d_selector
+        and cx,0303h
+        cmp cl,ch
+        pop cx
+        jne InvalidTssFault
+;
+        mov ds:[ebp].reg_cs.d_base,eax
+        mov ds:[ebp].reg_cs.d_limit,ecx
+;
+        mov ax,ds:[ebp].reg_cs.d_selector
+        and ax,3
+        test dh,40h
+        jz ValidateTssCsSizeOk
+        or ax,ACCESS_32
+
+ValidateTssCsSizeOk:
+        test dl,2
+        jz ValidateTssCsReadOk
+        or ax,ACCESS_READ
+
+ValidateTssCsReadOk:
+        mov ds:[ebp].reg_cs.d_access,ax
+        ret
+ValidateTssCs   Endp
 
 code    ENDS
 

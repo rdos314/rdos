@@ -20,37 +20,17 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; EMSEG.INC
-; External declarations for segment register and fault emulations
+; EMTSS.INC
+; External declarations for TSS emulations
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	extrn LoadTr:near
-	extrn LoadLdt:near
-	extrn JmpFar:near
-	extrn CallFar16:near
-	extrn CallFar32:near
-	extrn RetFar16:near
-	extrn RetFar32:near
-	extrn IntFar:near
-	extrn HwInt:near
-	extrn IretFar16:near
-	extrn IretFar32:near
-	extrn IretTss:near
-	extrn LoadSegment:near
+	extrn SaveTss:near
+	extrn LoadTss:near
+	extrn ValidateTss:near
 
-	extrn TrapFault:near
-	extrn OpcodeFault:near
-	extrn EmulateError:near
-	extrn DivFault:near
-	extrn SegmentFault:near
-	extrn StackFault:near
-	extrn ProtectionFault:near
-	extrn PageFault:near
-	extrn LoadFault:near
-	extrn AccessFault:near
-	extrn PrivilegeFault:near
-	extrn FpFault:near
+	extrn GetStack:near
+	extrn GetBacklink:near
+	extrn SetBacklink:near
 
-        extrn ValidateTssLdt:near
-        extrn ValidateTssCs:near
+	extrn CheckBitmap:near

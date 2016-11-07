@@ -28,15 +28,12 @@
 include kdebug.inc
 include empage.inc
 include emseg.inc
+include emtss.inc
 
 .386p
 .387
 
 code    SEGMENT byte use32 public 'CODE'
-
-CheckBitmap Proc near
-    int 3
-CheckBitmap  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
