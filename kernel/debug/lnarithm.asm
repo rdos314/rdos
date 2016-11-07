@@ -25,19 +25,18 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-.486
-.model flat
+include kdebug.inc
+include emcom.inc
+include lnmem.inc
+include emmem.inc
+include emseg.inc
+include empage.inc
 
-;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
-include \rdos\classlib\emulate\x86\emulate.inc
-include \rdos\classlib\emulate\x86\emcom.inc
-include \rdos\classlib\emulate\x86\lnmem.inc
-include \rdos\classlib\emulate\x86\emmem.inc
-include \rdos\classlib\emulate\x86\emseg.inc
-include \rdos\classlib\emulate\x86\empage.inc
+.486p
+.387
 
-.code
+code    SEGMENT byte use32 public 'CODE'
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -46,7 +45,7 @@ include \rdos\classlib\emulate\x86\empage.inc
 ;
 ;               DESCRIPTION:    Emulate (d)word ptr mem, reg
 ;
-;               PARAMETERS:     SS:EBP  CPU
+;               PARAMETERS:     DS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -55,50 +54,50 @@ WordRegMem      Macro op1, op2
     public Long&op1&WordRegMem
 
 Long&op1&WordRegMem        Proc near
-    test [ebp].em_rex,8
+    test ds:[ebp].em_rex,8
     jnz Long&op1&QwordRegMem
 ;
-    test byte ptr [ebp].em_flags,d32
+    test byte ptr ds:[ebp].em_flags,d32
     jnz Long&op1&DwordRegMem
 ;
     call ReadLongCodeByte
-    mov [ebp].em_modrm,al
+    mov ds:[ebp].em_modrm,al
     call LoadLongWordMemReg
     push ax
     call LoadLongWordReg
     pop bx
     mov cx,ax
 ;    
-    mov ah,byte ptr [ebp].reg_eflags
+    mov ah,byte ptr ds:[ebp].reg_eflags
     sahf
     &op1 cx,bx
     lahf
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     mov ax,cx
     call SaveLongWordReg
     ret
 
 Long&op1&DwordRegMem:
     call ReadLongCodeByte
-    mov [ebp].em_modrm,al
+    mov ds:[ebp].em_modrm,al
     call LoadLongDwordMemReg
     push eax
     call LoadLongDwordReg
     pop ebx
     mov ecx,eax
 ;    
-    mov ah,byte ptr [ebp].reg_eflags
+    mov ah,byte ptr ds:[ebp].reg_eflags
     sahf
     &op1 ecx,ebx
     lahf
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     mov eax,ecx
     call SaveLongDwordReg
     ret
 
 Long&op1&QwordRegMem:
     call ReadLongCodeByte
-    mov [ebp].em_modrm,al
+    mov ds:[ebp].em_modrm,al
     call LoadLongQwordMemReg
     push edx
     push eax
@@ -110,14 +109,14 @@ Long&op1&QwordRegMem:
 ; edi:ebx = memory operand
 ; edx:ecx = register operand
 ;
-    mov ah,byte ptr [ebp].reg_eflags
+    mov ah,byte ptr ds:[ebp].reg_eflags
     sahf
     &op1 ecx,ebx
     jz Long&op1&RegMemPossibleZero
 ;
     &op2 edx,edi
     lahf
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     and ah,NOT 40h
     jmp Long&op1&RegMemSave
 
@@ -126,7 +125,7 @@ Long&op1&RegMemPossibleZero:
     lahf
 
 Long&op1&RegMemSave:
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
 ;    
     mov eax,ecx
     call SaveLongQwordReg
@@ -142,7 +141,7 @@ Long&op1&WordRegMem        Endp
 ;
 ;               DESCRIPTION:    Emulate (d)word mem, immediate with sign-extend
 ;
-;               PARAMETERS:     SS:EBP  CPU
+;               PARAMETERS:     DS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -151,13 +150,13 @@ WordImsxMem     Macro op1, op2
     public Long&op1&WordImsxMem
 
 Long&op1&WordImsxMem       Proc near
-    mov [ebp].em_modrm,al
-    mov [ebp].em_extra_bytes,1
+    mov ds:[ebp].em_modrm,al
+    mov ds:[ebp].em_extra_bytes,1
 ;
-    test [ebp].em_rex,8
+    test ds:[ebp].em_rex,8
     jnz Long&op1&QwordImsxMem
 ;
-    test byte ptr [ebp].em_flags,d32
+    test byte ptr ds:[ebp].em_flags,d32
     jnz Long&op1&DwordImsxMem
 ;
     call GetLongMemRegAds
@@ -170,11 +169,11 @@ Long&op1&WordImsxMem       Proc near
     pop bx
     mov cx,ax
 ;    
-    mov ah,byte ptr [ebp].reg_eflags
+    mov ah,byte ptr ds:[ebp].reg_eflags
     sahf
     &op1 cx,bx
     lahf
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     mov ax,cx
     call WriteLinearWord
     ret
@@ -187,11 +186,11 @@ Long&op1&WordImsxReg:
     pop bx
     mov cx,ax
 ;    
-    mov ah,byte ptr [ebp].reg_eflags
+    mov ah,byte ptr ds:[ebp].reg_eflags
     sahf
     &op1 cx,bx
     lahf
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     mov ax,cx
     call SaveLongWordMemReg
     ret
@@ -207,11 +206,11 @@ Long&op1&DwordImsxMem:
     pop ebx
     mov ecx,eax
 ;    
-    mov ah,byte ptr [ebp].reg_eflags
+    mov ah,byte ptr ds:[ebp].reg_eflags
     sahf
     &op1 ecx,ebx
     lahf
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     mov eax,ecx
     call WriteLinearDword
     ret
@@ -224,11 +223,11 @@ Long&op1&DwordImsxReg:
     pop ebx
     mov ecx,eax
 ;    
-    mov ah,byte ptr [ebp].reg_eflags
+    mov ah,byte ptr ds:[ebp].reg_eflags
     sahf
     &op1 ecx,ebx
     lahf
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     mov eax,ecx
     call SaveLongDwordMemReg
     ret
@@ -252,14 +251,14 @@ Long&op1&QwordImsxMem:
 ; edi:ebx = memory operand
 ; edx:ecx = register operand
 ;
-    mov ah,byte ptr [ebp].reg_eflags
+    mov ah,byte ptr ds:[ebp].reg_eflags
     sahf
     &op1 ecx,ebx
     jz Long&op1&QwordImsxMemPossibleZero
 ;
     &op2 edx,edi
     lahf
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     and ah,NOT 40h
     jmp Long&op1&QwordImsxMemSave
 
@@ -268,7 +267,7 @@ Long&op1&QwordImsxMemPossibleZero:
     lahf
 
 Long&op1&QwordImsxMemSave:
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     mov eax,ecx
     call WriteLinearQword
     ret
@@ -289,14 +288,14 @@ Long&op1&QwordImsxReg:
 ; edi:ebx = memory operand
 ; edx:ecx = register operand
 ;
-    mov ah,byte ptr [ebp].reg_eflags
+    mov ah,byte ptr ds:[ebp].reg_eflags
     sahf
     &op1 ecx,ebx
     jz Long&op1&QwordImsxRegPossibleZero
 ;
     &op2 edx,edi
     lahf
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     and ah,NOT 40h
     jmp Long&op1&QwordImsxRegSave
 
@@ -305,7 +304,7 @@ Long&op1&QwordImsxRegPossibleZero:
     lahf
 
 Long&op1&QwordImsxRegSave:
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     mov eax,ecx
     call SaveLongQwordMemReg
     ret
@@ -343,53 +342,53 @@ Long&op1&WordImsxMem        Endp
 ;
 ;               DESCRIPTION:    Emulate check (d)word reg, mem
 ;
-;               PARAMETERS:     SS:EBP  CPU
+;               PARAMETERS:     DS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
         public LongCmpWordRegMem
 
 LongCmpWordRegMem        Proc near
-    test [ebp].em_rex,8
+    test ds:[ebp].em_rex,8
     jnz LongCmpQwordRegMem
 ;
-    test byte ptr [ebp].em_flags,d32
+    test byte ptr ds:[ebp].em_flags,d32
     jnz LongCmpDwordRegMem
 ;
     call ReadLongCodeByte
-    mov [ebp].em_modrm,al
+    mov ds:[ebp].em_modrm,al
     call LoadLongWordMemReg
     push ax
     call LoadLongWordReg
     pop bx
     mov cx,ax
 ;    
-    mov ah,byte ptr [ebp].reg_eflags
+    mov ah,byte ptr ds:[ebp].reg_eflags
     sahf
     cmp cx,bx
     lahf
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     ret
 
 LongCmpDwordRegMem:
     call ReadLongCodeByte
-    mov [ebp].em_modrm,al
+    mov ds:[ebp].em_modrm,al
     call LoadLongDwordMemReg
     push eax
     call LoadLongDwordReg
     pop ebx
     mov ecx,eax
 ;    
-    mov ah,byte ptr [ebp].reg_eflags
+    mov ah,byte ptr ds:[ebp].reg_eflags
     sahf
     cmp ecx,ebx
     lahf
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     ret
 
 LongCmpQwordRegMem:
     call ReadLongCodeByte
-    mov [ebp].em_modrm,al
+    mov ds:[ebp].em_modrm,al
     call LoadLongQwordMemReg
     push edx
     push eax
@@ -401,14 +400,14 @@ LongCmpQwordRegMem:
 ; edi:ebx = memory operand
 ; edx:ecx = register operand
 ;
-    mov ah,byte ptr [ebp].reg_eflags
+    mov ah,byte ptr ds:[ebp].reg_eflags
     sahf
     sub ecx,ebx
     jz LongCmpRegMemPossibleZero
 ;
     sbb edx,edi
     lahf
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     and ah,NOT 40h
     jmp LongCmpRegMemSave
 
@@ -417,7 +416,7 @@ LongCmpRegMemPossibleZero:
     lahf
 
 LongCmpRegMemSave:
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     ret
 LongCmpWordRegMem        Endp
 
@@ -428,7 +427,7 @@ LongCmpWordRegMem        Endp
 ;
 ;               DESCRIPTION:    Emulate cmp byte mem, immediate
 ;
-;               PARAMETERS:     SS:EBP  CPU
+;               PARAMETERS:     DS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -436,12 +435,12 @@ LongCmpWordRegMem        Endp
 
 LongCmpByteImAcc Proc near
     call ReadLongCodeByte
-    mov bl,byte ptr [ebp].reg_eax
-    mov ah,byte ptr [ebp].reg_eflags
+    mov bl,byte ptr ds:[ebp].reg_eax
+    mov ah,byte ptr ds:[ebp].reg_eflags
     sahf
     cmp bl,al
     lahf
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     ret
 LongCmpByteImAcc Endp
 
@@ -452,19 +451,19 @@ LongCmpByteImAcc Endp
 ;
 ;               DESCRIPTION:    Emulate (d)word mem, immediate with sign-extend
 ;
-;               PARAMETERS:     SS:EBP  CPU
+;               PARAMETERS:     DS:EBP  CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public LongCmpWordImsxMem
 
 LongCmpWordImsxMem       Proc near
-    mov [ebp].em_modrm,al
+    mov ds:[ebp].em_modrm,al
 ;
-    test [ebp].em_rex,8
+    test ds:[ebp].em_rex,8
     jnz LongCmpQwordImsxMem
 ;
-    test byte ptr [ebp].em_flags,d32
+    test byte ptr ds:[ebp].em_flags,d32
     jnz LongCmpDwordImsxMem
 ;
     call ReadLongCodeByte
@@ -474,11 +473,11 @@ LongCmpWordImsxMem       Proc near
     pop bx
     mov cx,ax
 ;    
-    mov ah,byte ptr [ebp].reg_eflags
+    mov ah,byte ptr ds:[ebp].reg_eflags
     sahf
     cmp cx,bx
     lahf
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     ret
 
 LongCmpDwordImsxMem:
@@ -489,11 +488,11 @@ LongCmpDwordImsxMem:
     pop ebx
     mov ecx,eax
 ;    
-    mov ah,byte ptr [ebp].reg_eflags
+    mov ah,byte ptr ds:[ebp].reg_eflags
     sahf
     cmp ecx,ebx
     lahf
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     ret
 
 LongCmpQwordImsxMem:
@@ -514,14 +513,14 @@ LongCmpQwordImsxMem:
 ; edi:ebx = memory operand
 ; edx:ecx = register operand
 ;
-    mov ah,byte ptr [ebp].reg_eflags
+    mov ah,byte ptr ds:[ebp].reg_eflags
     sahf
     sub ecx,ebx
     jz LongCmpImsxMemPossibleZero
 ;
     sbb edx,edi
     lahf
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     and ah,NOT 40h
     jmp LongCmpImsxMemSave
 
@@ -530,7 +529,7 @@ LongCmpImsxMemPossibleZero:
     lahf
 
 LongCmpImsxMemSave:
-    mov byte ptr [ebp].reg_eflags,ah
+    mov byte ptr ds:[ebp].reg_eflags,ah
     ret
 LongCmpWordImsxMem        Endp
         
@@ -546,18 +545,19 @@ LongCmpWordImsxMem        Endp
      public LongLgdtMem
 
 LongLgdtMem       Proc near
-    test byte ptr [ebp].reg_cs.d_access, ACCESS_RPL
+    test byte ptr ds:[ebp].reg_cs.d_access, ACCESS_RPL
     jnz PrivilegeFault
 ;
-    mov [ebp].em_modrm,al
+    mov ds:[ebp].em_modrm,al
     call LoadLongFwordMem
-    mov word ptr [ebp].reg_gdt.d_limit,ax
+    mov word ptr ds:[ebp].reg_gdt.d_limit,ax
     ror edx,16
     ror eax,16
     mov dx,ax
-    mov [ebp].reg_gdt.d_base,edx
+    mov ds:[ebp].reg_gdt.d_base,edx
     ret
 LongLgdtMem       Endp
 
+code	ENDS
 
         END
