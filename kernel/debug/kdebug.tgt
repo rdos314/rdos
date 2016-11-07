@@ -85,10 +85,10 @@ WString
 RDEVLINK
 22
 WString
-10
-?????Quiet
+21
+?????Verbose map file
 1
-0
+1
 23
 MCState
 24
@@ -97,8 +97,8 @@ WString
 RDEVLINK
 25
 WString
-24
-?????Produce symbol file
+10
+?????Quiet
 1
 0
 26
