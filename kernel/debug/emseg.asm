@@ -35,11 +35,6 @@ include emtss.inc
 
 code    SEGMENT byte use32 public 'CODE'
 
-NotifyTaskSwitch Proc near
-    int 3
-    ret
-NotifyTaskSwitch Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1725,12 +1720,6 @@ JmpTssSizeOk:
         pop edi
 ;
         pop bx                  ;we have the two tasks visible here
-;
-    movzx eax,ds:[ebp].reg_tr.d_selector
-    push eax                           ;task2
-    movzx eax,bx
-    push eax                           ;task1
-        call NotifyTaskSwitch
 ;       
         LoadDescriptor ProtectionFault
         jc ProtectionFault
@@ -1803,12 +1792,6 @@ CallTssSizeOk:
         pop edi
 ;
         pop bx                  ;we have the two tasks visible here
-;
-    movzx eax,ds:[ebp].reg_tr.d_selector
-    push eax                           ;task2
-    movzx eax,bx
-    push eax                           ;task1
-        call NotifyTaskSwitch
 ;       
         LoadDescriptor ProtectionFault
         jc ProtectionFault
@@ -1879,12 +1862,6 @@ RetTssSizeOk:
         pop edi
 ;
         pop bx                  ;we have the two tasks visible here
-;
-    movzx eax,ds:[ebp].reg_tr.d_selector
-    push eax                           ;task2
-    movzx eax,bx
-    push eax                           ;task1
-        call NotifyTaskSwitch
 ;       
         LoadDescriptor ProtectionFault
         jc ProtectionFault
