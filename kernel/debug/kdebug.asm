@@ -45,6 +45,75 @@ code    SEGMENT byte use32 public 'CODE'
     extrn init_crash_tasking:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           install_adapter
+;
+;           DESCRIPTION:    install devices in adapter
+;
+;           PARAMETERS:     edx         base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+install_adapter Proc near
+    push ds
+    push ax
+    push bx
+    push edx
+    mov ax,flat_sel
+    mov ds,ax
+
+install_adapter_loop:
+    mov ax,[edx].typ
+    cmp ax,RdosDevice32
+    jne install_adapter_next
+;       
+    push edx
+    add edx,SIZE rdos_header
+    mov dx,[edx].dev32_code_sel
+    cmp dx,kdebug_code_sel
+    pop edx
+    je install_adapter_next
+;    
+    int 3
+
+install_adapter_next:
+    add edx,[edx].len
+    jmp install_adapter_loop
+
+install_adapter_done:
+    pop edx
+    pop bx
+    pop ax
+    pop ds
+    ret
+install_adapter Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           init_test
+;
+;           DESCRIPTION:    Init test
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_test_name  DB 'Init Test', 0
+
+init_test:
+    int 3
+    mov ax,system_data_sel
+    mov ds,ax
+    mov cx,ds:rom_modules
+    mov bx,OFFSET rom_adapters
+
+init_device_loop:
+    mov edx,[bx].adapter_base
+    call install_adapter
+    add bx,SIZE adapter_typ
+    loop init_device_loop   
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           init_debug_process
@@ -61,6 +130,15 @@ init_debug_process      PROC far
     call init_local_debug
     call init_ipc_debug
     call init_crash_tasking
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET init_test
+    mov edi,OFFSET init_test_name
+    mov eax,4
+    mov ecx,stack0_size
+    CreateThread
 ;    
     popad
     pop es

@@ -52,12 +52,15 @@ core_data_sel       EQU 40h
 double_tss_sel      EQU 48h
 double_tss_data_sel EQU 50h
 
+kdebug_code_sel		EQU 58h
+kdebug_data_sel		EQU 60h
+
+shutdown_pretask_gate	EQU 68h
+
 ;
 ; used in kernel and device-drivers only
 ;
 
-shutdown_pretask_gate	EQU 68h
-;
 process_sel			EQU 70h
 core_save_sel       EQU 78h
 core_image_sel      EQU 80h
@@ -198,9 +201,6 @@ keymap_data_sel     EQU 468h
 
 dos_process_sel		EQU 470h
 dos_vm_sel			EQU 47Bh
-
-kdebug_code_sel		EQU 480h
-kdebug_data_sel		EQU 488h
 
 ac97_code_sel       EQU 490h
 pcbios_proc_sel     EQU 498h
