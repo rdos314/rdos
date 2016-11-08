@@ -68,6 +68,7 @@ code    SEGMENT byte public use32 'CODE'
     extrn DisAsmCode:near
     extrn InitCrashKeyboard:near
     extrn GetCrashKey:near
+    extrn Emulate:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3820,13 +3821,28 @@ WriteCpuReg Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 go_sw:
-trace_sw:
 pace_sw:
 reg_sw:
 
 error_sw Proc near
     ret
 error_sw Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           trace_sw
+;
+;           DESCRIPTION:    Trace sw
+;
+;           PARAMETERS:     DS:EBP              Registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trace_sw  Proc near
+    call Emulate
+    ret
+trace_sw  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
