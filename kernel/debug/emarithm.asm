@@ -275,7 +275,7 @@ Em&op&WordMemRegReg:
         and bh,7
         movzx esi,bh
         mov esi,dword ptr cs:[4*esi].WordRegTab
-        mov ax,[ebp+esi]
+        mov ax,ds:[ebp+esi]
         pop bx
         push esi
         push ax
@@ -2489,7 +2489,7 @@ EmBsf32 Proc near
         sahf
         bsf ebx,edx
         lahf
-        mov byte ptr [ebp].reg_eflags,ah
+        mov byte ptr ds:[ebp].reg_eflags,ah
         mov eax,ebx
         pop bx
         call SaveDwordReg

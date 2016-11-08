@@ -2111,7 +2111,7 @@ CallFar16       Proc near
         test byte ptr ds:[ebp].reg_eflags+2,2
         jnz CallFarReal16
 ;
-        mov [ebp].em_pl,0
+        mov ds:[ebp].em_pl,0
         LoadDescriptor ProtectionFault
         jc CallFarGate16
         test dl,10h
@@ -3102,7 +3102,7 @@ IretTss Endp
 
 ValidateTssLdt  Proc near
         mov ds:[ebp].em_pl,0
-        mov bx,[ebp].reg_ldt.d_selector
+        mov bx,ds:[ebp].reg_ldt.d_selector
         or bx,bx
         jz ValidateTssLdtDone
 ;

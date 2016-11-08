@@ -1448,7 +1448,7 @@ LoadByteReg     Proc near
         and bl,0Eh
         movzx esi,bl
         mov esi,dword ptr cs:[2*esi].ByteRegTab
-        mov al,[ebp+esi]
+        mov al,ds:[ebp+esi]
         ret
 LoadByteReg     Endp
 

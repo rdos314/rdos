@@ -539,7 +539,7 @@ LongMoveR10dIm:
 LongMoveR10qIm:
     call ReadLongCodeQword
     mov ds:[ebp].reg_r10,eax
-    mov [ebp].reg_r10+4,edx
+    mov ds:[ebp].reg_r10+4,edx
     ret
 LongMoveDxIm  Endp
 

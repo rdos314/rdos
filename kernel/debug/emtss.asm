@@ -343,17 +343,17 @@ LoadTss16       Proc near
         add ebx,2
         call ReadLinearWord
         mov ds:[ebp].reg_es.d_selector,ax
-        mov [ebp].reg_es.d_access,0
+        mov ds:[ebp].reg_es.d_access,0
 ;
         add ebx,2
         call ReadLinearWord
         mov ds:[ebp].reg_cs.d_selector,ax
-        mov [ebp].reg_cs.d_access,0
+        mov ds:[ebp].reg_cs.d_access,0
 ;
         add ebx,2
         call ReadLinearWord
         mov ds:[ebp].reg_ss.d_selector,ax
-        mov [ebp].reg_ss.d_access,0
+        mov ds:[ebp].reg_ss.d_access,0
 ;
         add ebx,2
         call ReadLinearWord
