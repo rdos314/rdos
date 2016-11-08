@@ -33,12 +33,251 @@ INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE ..\os\system.def
 
+pmode_struc  STRUC
+
+pm_cs   DW 1
+pm_ss   DW 2
+pm_sp   DW 3
+pm_cr0  DD 4
+pm_cr3  DD 5
+pm_cr4  DD 6
+pm_gdtr DB 6 DUP(0)
+pm_idtr DB 6 DUP(0)
+
+pmode_struc  ENDS
+
     .386p
 
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
+;
+; this table should be first!!
+;
+
+filler  DD ?
+
+shiv   DW OFFSET init_video
+
+;
+; switch struc
+;
+
+pm_data   pmode_struc <>
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           ProtEnterMode
+;
+;               DESCRIPTION:    Protected mode entry code for video switching
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+prot_enter_start:
+    mov ax,flat_sel
+    mov ds,ax
+    mov ebx,OFFSET pm_data
+    add ebx,edx
+    mov eax,cr0
+    mov ds:[ebx].pm_cr0,eax
+    mov eax,cr3
+    mov ds:[ebx].pm_cr3,eax
+    mov eax,cr4
+    mov ds:[ebx].pm_cr4,eax
+;    
+    mov ds:[ebx].pm_ss,ss
+    mov ds:[ebx].pm_sp,sp
+    mov ds:[ebx].pm_cs,cs
+    sgdt fword ptr ds:[ebx].pm_gdtr
+    sidt fword ptr ds:[ebx].pm_idtr
+;    
+    mov eax,cr0
+    and eax,7FFFFFFFh
+    mov cr0,eax
+;
+    mov ebx,OFFSET gdt0
+    add ebx,edx
+    db 66h
+    lgdt fword ptr ds:[ebx]
+;
+    mov ebx,idt20
+    add ebx,edx
+    db 66h
+    lidt fword ptr ds:[ebx]
+;
+    mov ax,8
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
+    mov ss,ax
+    mov ax,0F00h
+    mov sp,ax
+;
+    mov eax,cr0
+    and eax,NOT 1
+    mov cr0,eax
+;
+    db 0EAh         ; jmp to real-mode selector
+    dw OFFSET real_start
+real_seg dw 0
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           RealMode
+;
+;               DESCRIPTION:    Real mode code for video switching
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+real_start:
+    mov ax,0A0h
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
+    mov ss,ax
+    mov sp,500h
+;        
+    mov ax,3
+;    int 10h
+    cli
+;
+    mov al,-1
+    out 21h,al
+    jmp short $+2
+;
+    xor ax,ax
+    mov ds,ax
+    mov bx,0F00h
+    lgdt fword ptr ds:[bx]    
+;
+    mov eax,cr0
+    or eax,1
+    mov cr0,eax
+;    
+    db 0EAh         ; jmp to protected mode
+    dw 0
+    dw 18h
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           ProtExitMode
+;
+;               DESCRIPTION:    Protected mode exit code for video switching
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+prot_exit_start:
+    mov bx,0F80h
+    mov eax,ds:[bx].pm_cr3
+    mov cr3,eax
+    mov eax,ds:[bx].pm_cr4
+    mov cr4,eax
+    mov eax,ds:[bx].pm_cr0
+    mov cr0,eax
+;    
+    db 66h
+    lgdt fword ptr ds:[bx].pm_gdtr
+    db 66h
+    lidt fword ptr ds:[bx].pm_idtr
+;
+    mov ax,flat_sel
+    mov ds,ax
+;
+    xor ax,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
+;    
+    mov ss,ds:[bx].pm_ss
+    mov sp,ds:[bx].pm_sp
+    retf
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           Tables
+;
+;               DESCRIPTION:    GDT for real-mode switching
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+table_start:
+
+gdt0:
+    dw 20h-1        ; real mode GDT
+    dd 00000000h
+    dw 0
+gdt8:               ; 16-bit data selector for real mode
+    dw 0FFFFh
+    dd 92000000h
+    dw 0
+gdt10:              ; 16-bit code selector for real mode
+    dw 0FFFFh
+    dd 9A000000h
+    dw 0
+gdt18:              ; code selector for protected mode
+    dw 0FFFFh
+    dd 9A000000h
+    dw 0
+idt20:              ; real mode IDT
+    dw 3FFh
+    dd 00000000h
+    dw 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitVideo
+;
+;           DESCRIPTION:    Init video adapter
+;
+;           PARAMETERS:     EDX         Linear base of code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_video Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov edi,OFFSET Gdt0 + 2
+    mov eax,edx
+    add eax,OFFSET Gdt0
+    mov dword ptr ds:[edx+edi],eax
+;   
+    mov edi,OFFSET gdt10  + 2
+    or dword ptr ds:[edx+edi],edx
+;
+    mov edi,OFFSET gdt18 + 2
+    or dword ptr ds:[edx+edi],edx
+;        
+    mov edi,OFFSET real_seg
+    mov eax,edx
+    shr eax,4
+    mov ds:[edx+edi],ax
+;    
+    db 9Ah
+    dw OFFSET prot_enter_start
+    dw shutdown_code_sel
+;
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    retf32
+init_video   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1279,6 +1518,273 @@ abort_system:
     hlt
     jmp abort_system
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateDataSelector
+;
+;           DESCRIPTION:    Create 32-bit data selector
+;
+;           PARAMETERS:     BX              DESCRIPTOR
+;                           EDX             BASE
+;                           ECX             LIMIT
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDataSelector       PROC near
+    push ds
+    push ax
+    push bx
+    push ecx
+;
+    mov ax,gdt_sel
+    mov ds,ax
+;
+    mov al,bl
+    and bx,0FFF8h
+    dec ecx
+    cmp ecx,100000h
+    jae create_data32_big
+;
+    mov [bx],cx
+    mov [bx+2],edx
+    shl al,5
+    or al,92h
+    xchg al,[bx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,40h
+    mov [bx+6],cx
+    jmp create_data32_done
+
+create_data32_big:
+    shr ecx,12
+    mov [bx],cx
+    mov [bx+2],edx
+    shl al,5
+    or al,92h
+    xchg al,[bx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,0C0h
+    mov [bx+6],cx
+
+create_data32_done:
+    pop ecx
+    pop bx
+    pop ax
+    pop ds
+    ret
+CreateDataSelector       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateCodeSelector
+;
+;           DESCRIPTION:    Create 32-bit code selector
+;
+;           PARAMETERS:     BX              DESCRIPTOR
+;                           EDX             BASE
+;                           ECX             LIMIT
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateCodeSelector       PROC near
+    push ds
+    push ax
+    push bx
+    push ecx
+;
+    mov ax,gdt_sel
+    mov ds,ax
+;
+    mov al,bl
+    and bx,0FFF8h
+    dec ecx
+    cmp ecx,100000h
+    jae create_code32_big
+;
+    mov [bx],cx
+    mov [bx+2],edx
+    shl al,5
+    or al,9Ah
+    xchg al,[bx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,40h
+    mov [bx+6],cx
+    jmp create_code32_done
+
+create_code32_big:
+    shr ecx,12
+    mov [bx],cx
+    mov [bx+2],edx
+    shl al,5
+    or al,9Ah
+    xchg al,[bx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,0C0h
+    mov [bx+6],cx
+
+create_code32_done:
+    pop ecx
+    pop bx
+    pop ax
+    pop ds
+    ret
+CreateCodeSelector       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartDebug
+;
+;           DESCRIPTION:    Start debug device
+;
+;           PARAMETERS:     edx         base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartDebug Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov ecx,[edx].len
+    sub ecx,SIZE rdos_header
+    add edx,SIZE rdos_header
+    mov esi,edx
+    mov ebx,[esi].dev32_size
+    mov edi,esi
+    add edi,SIZE device32_header
+
+sdParamLoop:
+    mov al,[edi]
+    inc edi
+    or al,al
+    jnz sdParamLoop
+;       
+    mov ecx,[esi].dev32_code_size
+    add edx,ebx
+    mov bx,[esi].dev32_code_sel
+    mov bp,bx
+    call CreateCodeSelector
+;
+    xor bx,bx
+    add edx,ecx
+    mov ecx,[esi].dev32_data_size
+    or ecx,ecx
+    jz sdDataSelOk
+;
+    mov bx,[esi].dev32_data_sel
+    call CreateDataSelector
+
+sdDataSelOk:
+    mov ax,ds
+    mov es,ax
+    mov eax,[esi].dev32_init_ip
+    mov ds,bx
+    mov ebx,cs
+    push ebx
+    mov ebx,OFFSET sdRet
+    push ebx
+    push ebp
+    push eax
+    retf32
+
+sdRet:
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+StartDebug   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SearchDebugAdapter
+;
+;           DESCRIPTION:    Search for debug adapter
+;
+;           PARAMETERS:     edx         base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SearchDebugAdapter Proc near
+    push ds
+    push ax
+    push bx
+    push edx
+    mov ax,flat_sel
+    mov ds,ax
+
+sdaLoop:
+    mov ax,[edx].typ
+    cmp ax,RdosDevice32
+    jne sdaNext
+;       
+    push edx
+    add edx,SIZE rdos_header
+    mov dx,[edx].dev32_code_sel
+    cmp dx,kdebug_code_sel
+    pop edx
+    jne sdaNext
+;    
+    call StartDebug
+
+sdaNext:
+    cmp ax,RdosEnd
+    je sdaDone
+;    
+    add edx,[edx].len
+    jmp sdaLoop
+
+sdaDone:
+    pop edx
+    pop bx
+    pop ax
+    pop ds
+    ret
+SearchDebugAdapter Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SearchDebug
+;
+;           DESCRIPTION:    Search for debug
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SearchDebug     Proc near
+    push ds
+    pushad
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    mov cx,ds:rom_modules
+    mov bx,OFFSET rom_adapters
+
+sdAdapterLoop:
+    mov edx,[bx].adapter_base
+    call SearchDebugAdapter
+    add bx,SIZE adapter_typ
+    loop sdAdapterLoop   
+;
+    popad
+    pop ds
+    ret
+SearchDebug     Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1312,6 +1818,8 @@ init    Proc far
     mov ds:[bx+2],cs
     mov word ptr ds:[bx+4],8400h
     mov word ptr ds:[bx+6],0
+;
+    call SearchDebug    
     ret
 init    Endp
 

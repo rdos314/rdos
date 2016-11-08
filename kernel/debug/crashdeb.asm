@@ -47,6 +47,8 @@ map_spinlock DW ?
 mon_linear   DD ?
 mon_cr3      DD ?
 
+switch_linear DD ?
+
 data    ENDS
 
     .386p
@@ -60,7 +62,182 @@ code    SEGMENT byte public use32 'CODE'
     extrn set_monitor_idt:near
     extrn start_monitor:near
 
-   
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AllocateRam
+;
+;           DESCRIPTION:    get free ram during startup
+;
+;           RETURNS:        NC      ESI         address to use
+;                           CY              no more free ram
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateRam     Proc near
+    push ds
+    push es
+    push eax
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov ax,system_data_sel
+    mov es,ax
+    mov esi,es:alloc_base
+    jmp LowRamNext
+
+LowRamLoop:
+    mov eax,AllocMemSign
+    mov [esi],eax
+    cmp eax,[esi]
+    je RamFound
+
+LowRamNext:
+    add esi,1000h
+    cmp esi,9F000h
+    jc LowRamLoop
+;
+    mov esi,100000h
+HighRamLoop:
+    mov eax,AllocMemSign
+    mov [esi],eax
+    cmp eax,[esi]
+    je RamFound
+
+    add esi,1000h
+    jmp HighRamLoop
+
+RamFound:
+    mov es:alloc_base,esi
+    pop eax
+    pop es
+    pop ds
+    ret
+AllocateRam     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetSelectorBase
+;
+;           DESCRIPTION:    Get selector base 
+;
+;           PARAMETERS:     BX              Selector
+;
+;           RETURNS:        EDX             Base
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetSelectorBase  PROC near
+    push ds
+    push ax
+    push bx
+;    
+    mov ax,gdt_sel
+    mov ds,ax
+;
+    and bx,0FFF8h
+    jz gsbError
+;
+    mov al,[bx+5]
+    test al,80h
+    jz gsbError
+;
+    test al,10h
+    jz gsbError
+;    
+    mov edx,[bx+2]
+    rol edx,8
+    mov dl,[bx+7]
+    ror edx,8
+    clc
+    jmp gsbDone
+
+gsbError:
+    stc
+
+gsbDone:
+    pop bx
+    pop ax
+    pop ds
+    ret
+GetSelectorBase  Endp
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           init_crash_boot
+;
+;       DESCRIPTION:    Boot time initialization
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public init_crash_boot
+    
+init_crash_boot   Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    call AllocateRam
+    mov ds:switch_linear,esi    
+    mov edi,esi
+;
+    mov bx,shutdown_code_sel
+    call GetSelectorBase
+    mov esi,edx
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+    mov ecx,400h
+    rep movs dword ptr es:[edi],ds:[esi]    
+;
+    popad
+    pop es
+    pop ds    
+    ret
+init_crash_boot   Endp
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           check_boot
+;
+;       DESCRIPTION:    Check boot time init
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public check_boot
+    
+check_boot   Proc near
+    mov ax,SEG data
+    mov ds,ax
+    mov edx,ds:switch_linear
+    mov eax,edx
+    mov al,67h
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov ebx,shutdown_code_sel
+    mov ecx,0FFFh
+    CreateCodeSelector16
+    CrashGate
+;    
+    push ebx
+    mov ds,bx
+    xor bx,bx
+    movzx eax,word ptr ds:[bx].sh_init_video
+    push eax
+    retf
+        
+    
+    ret
+check_boot      Endp
+  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;

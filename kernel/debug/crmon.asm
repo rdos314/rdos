@@ -151,6 +151,21 @@ MapLinear       Proc near
     mov ax,mon_data_sel
     mov fs,ax
 ;
+    test dword ptr ds:[ebp].reg_cr0, CR0_PG
+    jnz mlPaged
+;
+    mov edx,ebx
+    mov eax,ebx
+    xor ebx,ebx    
+    call MapPhysical
+;    
+    mov ebx,edx
+    and ebx,0FFFh    
+    add ebx,fs:mon_map_linear
+    clc
+    jmp mlDone
+    
+mlPaged:
     mov edx,ebx
     mov eax,ds:[ebp].reg_cr3
     xor ebx,ebx
@@ -278,7 +293,6 @@ mlLong:
 ;
     mov ebx,es:[esi+4]
     call MapPhysical
-;    
     mov ebx,edx
     and ebx,0FFFh    
     add ebx,fs:mon_map_linear

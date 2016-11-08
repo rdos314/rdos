@@ -637,7 +637,7 @@ TransferReal    Proc near
         movzx ebx,bx
         shl ebx,4
         mov ds:[ebp].reg_cs.d_base,ebx
-        mov ds:[ebp].reg_cs.d_access,ACCESS_READ OR ACCESS_WRITE
+        mov ds:[ebp].reg_cs.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_VALID
         ret
 TransferReal    Endp
 
@@ -663,6 +663,7 @@ TransferProt    Proc near
         mov ax,bx
         mov ds:[ebp].reg_cs.d_selector,ax
         and ax,3
+        or ax,ACCESS_VALID
         test dh,20h
         jz TransferProtNorm
 ;
@@ -729,6 +730,7 @@ LoadStackSelector       Proc near
         mov ds:[ebp].reg_ss.d_selector,bx
 ;
         and bx,3
+        or bx,ACCESS_VALID
         test dh,40h
         jz LoadStackSizeOk
 ;
@@ -790,6 +792,7 @@ SwitchStackSelector     Proc near
         mov ds:[ebp].reg_ss.d_selector,bx
 ;
         and bx,3
+        or bx,ACCESS_VALID
         test dh,40h
         jz SwitchStackSizeOk
 ;
@@ -845,6 +848,8 @@ LoadNotNull:
         mov ds:[ebp+esi].d_selector,bx
 ;
         and bx,3
+        or bx,ACCESS_VALID
+;
         test dh,40h
         jz LoadSelectorSizeOk
 ;
@@ -1041,7 +1046,7 @@ TransferHigherVm:
         shl eax,4
         mov ds:[ebp].reg_gs.d_base,eax
         mov ds:[ebp].reg_gs.d_limit,0FFFFh
-        mov ds:[ebp].reg_gs.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
+        mov ds:[ebp].reg_gs.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL OR ACCESS_VALID
 ;       
         pop ax
         mov ds:[ebp].reg_fs.d_selector,ax
@@ -1049,7 +1054,7 @@ TransferHigherVm:
         shl eax,4
         mov ds:[ebp].reg_fs.d_base,eax
         mov ds:[ebp].reg_fs.d_limit,0FFFFh
-        mov ds:[ebp].reg_fs.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
+        mov ds:[ebp].reg_fs.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL OR ACCESS_VALID
 ;       
         pop ax
         mov ds:[ebp].reg_ds.d_selector,ax
@@ -1057,7 +1062,7 @@ TransferHigherVm:
         shl eax,4
         mov ds:[ebp].reg_ds.d_base,eax
         mov ds:[ebp].reg_ds.d_limit,0FFFFh
-        mov ds:[ebp].reg_ds.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
+        mov ds:[ebp].reg_ds.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL OR ACCESS_VALID
 ;       
         pop ax
         mov ds:[ebp].reg_es.d_selector,ax
@@ -1065,7 +1070,7 @@ TransferHigherVm:
         shl eax,4
         mov ds:[ebp].reg_es.d_base,eax
         mov ds:[ebp].reg_es.d_limit,0FFFFh
-        mov ds:[ebp].reg_es.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
+        mov ds:[ebp].reg_es.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL OR ACCESS_VALID
 ;       
         pop ax
         mov ds:[ebp].reg_ss.d_selector,ax
@@ -1073,7 +1078,7 @@ TransferHigherVm:
         shl eax,4
         mov ds:[ebp].reg_ss.d_base,eax
         mov ds:[ebp].reg_ss.d_limit,0FFFFh
-        mov ds:[ebp].reg_ss.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
+        mov ds:[ebp].reg_ss.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL OR ACCESS_VALID
 ;
         pop eax
         mov ds:[ebp].reg_esp,eax
@@ -1088,7 +1093,7 @@ TransferHigherVm:
         shl eax,4
         mov ds:[ebp].reg_cs.d_base,eax
         mov ds:[ebp].reg_cs.d_limit,0FFFFh
-        mov ds:[ebp].reg_cs.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL
+        mov ds:[ebp].reg_cs.d_access,ACCESS_READ OR ACCESS_WRITE OR ACCESS_RPL OR ACCESS_VALID
 ;
         pop eax
         mov ds:[ebp].reg_eip,eax
@@ -1919,7 +1924,7 @@ LoadLdtNonzero:
         mov ds:[ebp].reg_ldt.d_selector,bx
         mov ds:[ebp].reg_ldt.d_base,eax
         mov ds:[ebp].reg_ldt.d_limit,ecx   
-        mov ds:[ebp].reg_ldt.d_access,ACCESS_READ
+        mov ds:[ebp].reg_ldt.d_access,ACCESS_READ OR ACCESS_VALID
         ret
 LoadLdt Endp
         
@@ -1965,7 +1970,7 @@ LoadTr16:
         mov ds:[ebp].reg_tr.d_selector,bx
         mov ds:[ebp].reg_tr.d_base,eax
         mov ds:[ebp].reg_tr.d_limit,ecx    
-        mov ds:[ebp].reg_tr.d_access,ACCESS_READ
+        mov ds:[ebp].reg_tr.d_access,ACCESS_READ OR ACCESS_VALID
 ;
         mov ebx,edi
         add ebx,5

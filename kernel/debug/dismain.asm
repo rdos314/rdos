@@ -3871,19 +3871,44 @@ DisAsmCode     PROC near
     push ecx
     push edi
 ;
+    mov ax,cs
+    cmp ax,SEG code
+    je dacNorm
+
     test ds:[ebp].reg_cs.d_access,ACCESS_64
     jnz dac64
 ;
     test ds:[ebp].reg_cs.d_access,ACCESS_32
-    jnz dac32
+    jnz dacc32
 
-dac16:    
+dacc16:    
+    movzx esi,word ptr ds:[ebp].reg_eip
+    add esi,ds:[ebp].reg_cs.d_base
+    mov dx,20h
+    mov ds:[ebp].em_flags,0
+    jmp dacProt
+
+dacc32: 
+    mov esi,ds:[ebp].reg_eip
+    add esi,ds:[ebp].reg_cs.d_base
+    mov dx,20h
+    mov ds:[ebp].em_flags,a32 OR d32
+    jmp dacProt
+
+dacNorm:
+    test ds:[ebp].reg_cs.d_access,ACCESS_64
+    jnz dac64
+;
+    test ds:[ebp].reg_cs.d_access,ACCESS_32
+    jnz dacn32
+
+dacn16:    
     mov dx,ds:[ebp].reg_cs.d_selector
     movzx esi,word ptr ds:[ebp].reg_eip
     mov ds:[ebp].em_flags,0
     jmp dacProt
 
-dac32: 
+dacn32: 
     mov dx,ds:[ebp].reg_cs.d_selector
     mov esi,ds:[ebp].reg_eip
     mov ds:[ebp].em_flags,a32 OR d32

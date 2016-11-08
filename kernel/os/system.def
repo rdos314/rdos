@@ -670,3 +670,8 @@ cls_threads     DW ?
 cls_thread_arr  DB MAX_LOG_THREADS * SIZE core_log_thread_struc DUP(?)
 
 core_log_struc  ENDS
+
+shut_header     STRUC
+sh_filler       DD ?
+sh_init_video   DW ?
+shut_header     ENDS
