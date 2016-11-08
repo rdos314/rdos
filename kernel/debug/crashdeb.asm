@@ -42,7 +42,6 @@ INCLUDE kdebug.inc
 data    SEGMENT byte public 'DATA'
 
 map_linear   DD ?
-map_sel      DW ?
 map_spinlock DW ?
 
 mon_linear   DD ?
@@ -1149,11 +1148,6 @@ init_crash_driver    Proc near
     xor ebx,ebx
     mov eax,67h
     SetPageEntry
-;
-    AllocateGdt
-    mov ecx,1000h
-    CreateDataSelector16
-    mov ds:map_sel,bx    
 ;
     mov ax,cs
     mov ds,ax

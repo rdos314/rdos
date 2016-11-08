@@ -4,6 +4,7 @@
 #include <string.h>
 #include "serial.h"
 #include "section.h"
+#include "file.h"
 
 #include <math.h>
 
@@ -20,6 +21,109 @@ struct TSect
 };
 
 TSect *SectionArr[4];
+
+#define FALSE 0
+#define TRUE !FALSE
+
+char FStrip[100];
+int FStripSize;
+char RefStrip[100];
+
+const int ParityTable[32] =
+                {
+                    FALSE,  // 0000 0000 =  0, 0 set bits - odd is false
+                    TRUE,   // 0000 0001 =  1, 1 set bits - odd is true
+                    TRUE,   // 0000 0010 =  2, 1 set bits - odd is true 
+                    FALSE,  // 0000 0011 =  3, 2 set bits - odd is false
+                    TRUE,   // 0000 0100 =  4, 1 set bits - odd is true 
+                    FALSE,  // 0000 0101 =  5, 2 set bits - odd is false 
+                    FALSE,  // 0000 0110 =  6, 2 set bits - odd is false 
+                    TRUE,   // 0000 0111 =  7, 3 set bits - odd is true
+                    TRUE,   // 0000 1000 =  8, 1 set bits - odd is true 
+                    FALSE,  // 0000 1001 =  9, 2 set bits - odd is false 
+                    FALSE,  // 0000 1010 = 10, 2 set bits - odd is false
+                    TRUE,   // 0000 1011 = 11, 3 set bits - odd is true
+                    FALSE,  // 0000 1100 = 12, 2 set bits - odd is false
+                    TRUE,   // 0000 1101 = 13, 3 set bits - odd is true
+                    TRUE,   // 0000 1110 = 14, 3 set bits - odd is true
+                    FALSE,  // 0000 1111 = 15, 4 set bits - odd is false
+                    TRUE,   // 0001 0000 = 16, 1 set bits - odd is true
+                    FALSE,  // 0001 0001 = 17, 2 set bits - odd is false
+                    FALSE,  // 0001 0010 = 18, 2 set bits - odd is false
+                    TRUE,   // 0001 0011 = 19, 3 set bits - odd is true
+                    FALSE,  // 0001 0100 = 20, 2 set bits - odd is false
+                    TRUE,   // 0001 0101 = 21, 3 set bits - odd is true
+                    TRUE,   // 0001 0110 = 22, 3 set bits - odd is true
+                    FALSE,  // 0001 0111 = 23, 4 set bits - odd is false
+                    FALSE,  // 0001 1000 = 24, 2 set bits - odd is false
+                    TRUE,   // 0001 1001 = 25, 3 set bits - odd is true
+                    TRUE,   // 0001 1010 = 26, 3 set bits - odd is true
+                    FALSE,  // 0001 1011 = 27, 4 set bits - odd is false
+                    TRUE,   // 0001 1100 = 28, 3 set bits - odd is true 
+                    FALSE,  // 0001 1101 = 29, 4 set bits - odd is false 
+                    FALSE,  // 0001 1110 = 30, 4 set bits - odd is false 
+                    TRUE    // 0001 1111 = 31, 5 set bits - odd is true
+                };
+
+void NotifyGoodCard(const char *buf)
+{
+    int i;
+    char ch;
+    char strip[41];
+
+    buf++;
+    for (i = 0; i < FStripSize - 3; i++)
+    {
+        ch = *buf & 0xF;
+        if (ch <= 9)
+            strip[i] = ch + '0';
+        else
+            strip[i] = ch + 'A' - 10;
+        buf++;
+    }
+    strip[i] = 0;
+
+    if (strcmp(strip, RefStrip))
+    {
+        printf("Strip differs. In: <");
+        printf(RefStrip);
+        printf(">, Out: <");
+        printf(strip);
+        printf(">\r\n");
+    }
+}
+
+int CheckLrc()
+{
+    int i;
+    char value;
+    char *buf = FStrip;
+
+    value = 0;
+    for (i = 0; i < FStripSize - 1; i++)
+    {
+        value ^= *buf & 0xF;
+        buf++;
+    }
+
+    return value == (*buf & 0xF);
+}
+
+int CheckParity()
+{
+    int i;
+    char *buf = FStrip;
+
+    for (i = 0; i < FStripSize; i++)
+    {
+        if (!ParityTable[*buf])
+            return FALSE;
+        buf++;
+    }
+
+    return TRUE;
+}
+
 
 static void TestThread(void *ptr)
 {
@@ -69,7 +173,52 @@ static void TestThread(void *ptr)
 
 void main()
 {
-    RdosTestGate("12345");
+    int i;
+    int size;
+    char *str;
+
+    str = new char[65536];
+
+    TFile File("d:\\test\\912684.txt");
+
+    size = File.Read(str, 65535);
+    str[size] = 0;
+
+    FStripSize = RdosTestGate(str);
+    while (FStripSize)
+    {
+        memcpy(FStrip, str, FStripSize);
+        FStrip[FStripSize] = 0;
+
+        if (CheckParity() && CheckLrc())
+            NotifyGoodCard(FStrip);
+        else
+            printf("Wrong parity or CRC\r\n");
+
+        str[0] = 0;
+        FStripSize = RdosTestGate(str);
+    }
+
+    for (;;)
+    {
+        size = 1 + RdosGetRandom(36);
+        for (i = 0; i < size; i++)
+            FStrip[i] = '0' + RdosGetRandom(10);
+        FStrip[size] = 0;
+        strcpy(RefStrip, FStrip);
+ 
+        FStripSize = RdosTestGate(FStrip);
+        if (FStripSize == size + 3)
+        {
+            if (CheckParity() && CheckLrc())
+                NotifyGoodCard(FStrip);
+            else
+                printf("Wrong parity or CRC\r\n");
+        }
+        else
+            printf("Wrong size\r\n");
+    }
+
 
     int Handle;
 
@@ -91,14 +240,13 @@ void main()
     Handle = RdosOpenIni("comp.ini");
     RdosCloseIni(Handle);
 
-    char *str;
-    int i;
+//    int i;
     TParam *param;
 
     int PortCount;
     int ModuleId;
 
-    int size;
+//    int size;
     long long val;
     int handle1;
     int handle2;
@@ -112,8 +260,6 @@ void main()
     int handlet1;
     int handlet2;
     int handlet3;
-
-    str = new char[65536];
 
     for (;;)
     {

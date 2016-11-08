@@ -27,7 +27,8 @@
 
 #pragma aux RdosTestGate = \
     CallGate_test_gate \
-    parm [edi];
+    parm [edi] \
+    value [eax];
 
 #pragma aux RdosLoad32 = \
     CallGate_load_device32  \
