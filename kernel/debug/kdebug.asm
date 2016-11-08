@@ -45,6 +45,197 @@ code    SEGMENT byte use32 public 'CODE'
     extrn init_crash_tasking:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateDataSelector
+;
+;           DESCRIPTION:    Create 32-bit data selector
+;
+;           PARAMETERS:     BX              DESCRIPTOR
+;                           EDX             BASE
+;                           ECX             LIMIT
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDataSelector       PROC near
+    push ds
+    push ax
+    push bx
+    push ecx
+;
+    mov ax,gdt_sel
+    mov ds,ax
+;
+    mov al,bl
+    and bx,0FFF8h
+    dec ecx
+    cmp ecx,100000h
+    jae create_data32_big
+;
+    mov [bx],cx
+    mov [bx+2],edx
+    shl al,5
+    or al,92h
+    xchg al,[bx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,40h
+    mov [bx+6],cx
+    jmp create_data32_done
+
+create_data32_big:
+    shr ecx,12
+    mov [bx],cx
+    mov [bx+2],edx
+    shl al,5
+    or al,92h
+    xchg al,[bx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,0C0h
+    mov [bx+6],cx
+
+create_data32_done:
+    pop ecx
+    pop bx
+    pop ax
+    pop ds
+    ret
+CreateDataSelector       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateCodeSelector
+;
+;           DESCRIPTION:    Create 32-bit code selector
+;
+;           PARAMETERS:     BX              DESCRIPTOR
+;                           EDX             BASE
+;                           ECX             LIMIT
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateCodeSelector       PROC near
+    push ds
+    push ax
+    push bx
+    push ecx
+;
+    mov ax,gdt_sel
+    mov ds,ax
+;
+    mov al,bl
+    and bx,0FFF8h
+    dec ecx
+    cmp ecx,100000h
+    jae create_code32_big
+;
+    mov [bx],cx
+    mov [bx+2],edx
+    shl al,5
+    or al,9Ah
+    xchg al,[bx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,40h
+    mov [bx+6],cx
+    jmp create_code32_done
+
+create_code32_big:
+    shr ecx,12
+    mov [bx],cx
+    mov [bx+2],edx
+    shl al,5
+    or al,9Ah
+    xchg al,[bx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,0C0h
+    mov [bx+6],cx
+
+create_code32_done:
+    pop ecx
+    pop bx
+    pop ax
+    pop ds
+    ret
+CreateCodeSelector       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           install_debug
+;
+;           DESCRIPTION:    install 32-bit debug device
+;
+;           PARAMETERS:     edx         base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+install_debug Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov ecx,[edx].len
+    sub ecx,SIZE rdos_header
+    add edx,SIZE rdos_header
+    mov esi,edx
+    mov ebx,[esi].dev32_size
+    mov edi,esi
+    add edi,SIZE device32_header
+
+install_device32_param_loop:
+    mov al,[edi]
+    inc edi
+    or al,al
+    jnz install_device32_param_loop
+;       
+    mov ecx,[esi].dev32_code_size
+    add edx,ebx
+    mov bx,[esi].dev32_code_sel
+    mov bp,bx
+    call CreateCodeSelector
+;
+    xor bx,bx
+    add edx,ecx
+    mov ecx,[esi].dev32_data_size
+    or ecx,ecx
+    jz install_device32_sel_ok
+;
+    mov bx,[esi].dev32_data_sel
+    call CreateDataSelector
+
+install_device32_sel_ok:
+    mov ax,ds
+    mov es,ax
+    mov eax,[esi].dev32_init_ip
+    mov ds,bx
+    mov ebx,cs
+    push ebx
+    mov ebx,OFFSET install_device32_end
+    push ebx
+    push ebp
+    push eax
+    retf
+
+install_device32_end:
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+install_debug   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           install_adapter
@@ -73,11 +264,14 @@ install_adapter_loop:
     mov dx,[edx].dev32_code_sel
     cmp dx,kdebug_code_sel
     pop edx
-    je install_adapter_next
+    jne install_adapter_next
 ;    
-    int 3
+    call install_debug
 
 install_adapter_next:
+    cmp ax,RdosEnd
+    je install_adapter_done
+;    
     add edx,[edx].len
     jmp install_adapter_loop
 
@@ -156,6 +350,16 @@ init_debug_process      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    Proc far
+    push ebp
+    movzx ebp,sp
+    mov ax,[ebp+8]
+    cmp ax,30h
+    je init_boot
+;
+    int 3
+    jmp init_done
+
+init_boot:    
     call init_crash_driver
 ;    
     mov eax,cs
@@ -163,7 +367,10 @@ init    Proc far
     mov es,eax  
     mov edi,OFFSET init_debug_process
     HookInitTasking
+
+init_done:
     clc
+    pop ebp
     ret
 init    Endp
     
