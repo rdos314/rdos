@@ -107,6 +107,11 @@ prot_enter_start:
     db 66h
     lidt fword ptr ds:[ebx]
 ;
+    db 0EAh
+    dw OFFSET real_enter
+    dw 10h
+
+real_enter:
     mov ax,8
     mov ds,ax
     mov es,ax
@@ -123,15 +128,6 @@ prot_enter_start:
     db 0EAh         ; jmp to real-mode selector
     dw OFFSET real_start
 real_seg dw 0
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:           RealMode
-;
-;               DESCRIPTION:    Real mode code for video switching
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 real_start:
     mov ax,0A0h
@@ -152,39 +148,28 @@ real_start:
 ;
     xor ax,ax
     mov ds,ax
-    mov bx,0F00h
-    lgdt fword ptr ds:[bx]    
+    mov ebx,OFFSET pm_data
+    add ebx,edx
+;    
+    mov eax,ds:[ebx].pm_cr3
+    mov cr3,eax
+;    
+    db 66h
+    lgdt fword ptr ds:[ebx].pm_gdtr
+    db 66h
+    lidt fword ptr ds:[ebx].pm_idtr
 ;
     mov eax,cr0
-    or eax,1
+    or eax,80000001h
     mov cr0,eax
 ;    
-    db 0EAh         ; jmp to protected mode
-    dw 0
-    dw 18h
+    db 0EAh
+    dw OFFSET prot_reenter
+    dw shutdown_code_sel
     
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:           ProtExitMode
-;
-;               DESCRIPTION:    Protected mode exit code for video switching
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-prot_exit_start:
-    mov bx,0F80h
-    mov eax,ds:[bx].pm_cr3
-    mov cr3,eax
-    mov eax,ds:[bx].pm_cr4
-    mov cr4,eax
-    mov eax,ds:[bx].pm_cr0
+prot_reenter:
+    mov eax,ds:[ebx].pm_cr0
     mov cr0,eax
-;    
-    db 66h
-    lgdt fword ptr ds:[bx].pm_gdtr
-    db 66h
-    lidt fword ptr ds:[bx].pm_idtr
 ;
     mov ax,flat_sel
     mov ds,ax
@@ -194,8 +179,8 @@ prot_exit_start:
     mov fs,ax
     mov gs,ax
 ;    
-    mov ss,ds:[bx].pm_ss
-    mov sp,ds:[bx].pm_sp
+    mov ss,ds:[ebx].pm_ss
+    mov sp,ds:[ebx].pm_sp
     retf
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

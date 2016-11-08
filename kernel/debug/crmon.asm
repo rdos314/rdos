@@ -3549,6 +3549,13 @@ read_mem    Proc near
     push edx
     push edi
 ;
+    or dx,dx
+    jnz rmProt
+;
+    mov edx,esi
+    jmp rmDo
+
+rmProt:    
     mov bx,dx
     call GetSelectorBaseSizeType
     jc rmDone
@@ -3557,6 +3564,8 @@ read_mem    Proc near
     jc rmDone
 ;
     add edx,esi
+
+rmDo:    
     mov ebx,edx
     xor edi,edi
     call CondReadLinearByte    

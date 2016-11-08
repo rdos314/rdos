@@ -3884,14 +3884,14 @@ DisAsmCode     PROC near
 dacc16:    
     movzx esi,word ptr ds:[ebp].reg_eip
     add esi,ds:[ebp].reg_cs.d_base
-    mov dx,20h
+    xor dx,dx
     mov ds:[ebp].em_flags,0
     jmp dacProt
 
 dacc32: 
     mov esi,ds:[ebp].reg_eip
     add esi,ds:[ebp].reg_cs.d_base
-    mov dx,20h
+    xor dx,dx
     mov ds:[ebp].em_flags,a32 OR d32
     jmp dacProt
 
