@@ -5617,7 +5617,7 @@ InitMonitorGdt    Proc near
 ;
     mov bx,mon_process_page_sel 
     mov esi,edi
-    mov ecx,8
+    mov ecx,1000h
     call CreateDataSel32    
 ;
     mov bx,mon_text_sel
@@ -5631,53 +5631,6 @@ InitMonitorGdt  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           NewMapPhysical
-;
-;           DESCRIPTION:    Map physical address
-;
-;           PARAMETERS:     EBX:EAX     physical address
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NewMapPhysical       Proc near
-    push ds
-    push eax
-    push ecx
-    push edx
-;
-    mov al,67h
-    and ah,0F0h
-;    
-    mov cx,mon_process_page_sel
-    mov ds,cx
-    xor edx,edx
-;
-    mov ecx,cr4
-    test cl,20h
-    jnz nmpPae
-
-nmpProt:    
-    mov [edx],eax
-    jmp nmpDone
-
-nmpPae:
-    mov [edx],eax
-    mov [edx+4],ebx
-
-nmpDone:
-    mov ecx,cr3
-    mov cr3,ecx
-;    
-    pop edx    
-    pop ecx
-    pop eax
-    pop ds
-    ret
-NewMapPhysical       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:          StartMonitor
 ;
 ;           DESCRIPTION:   Start monitor
@@ -5687,15 +5640,17 @@ NewMapPhysical       Endp
     public StartMonitor
 
 StartMonitor:
-    mov ax,mon_system_data_sel
+    mov ax,mon_data_sel
     mov ds,ax
+    mov edx,ds:mon_map_linear
+;
     xor ebx,ebx
     mov eax,0B8000h
-    call NewMapPhysical
+    call MapPhysical
 ;    
     mov ebx,eax
     and ebx,0FFFh    
-    add ebx,1FF000h
+    add ebx,edx
     mov ax,mon_flat_sel
     mov ds,ax
     mov eax,ds:[ebx]    

@@ -534,6 +534,7 @@ InitMonData Proc near
     push esi
     mov edx,esi
     mov es:[edx].mon_core_count,1
+    mov es:[edx].mon_map_linear,map_page_linear
     mov edi,OFFSET mon_core_regs
     add edi,edx
 ;
@@ -546,7 +547,7 @@ InitMonData Proc near
     mov bx,mon_data_sel
     mov edx,ds:switch_gdt
     pop esi
-    mov ecx,SIZE cpu_struc
+    mov ecx,1000h
     call CreateDataSel32        
 ;
     popad
@@ -640,8 +641,6 @@ icbPae:
     add esi,code_page_linear
     mov ecx,ds:switch_size
     mov edi,ds:switch_low
-    mov eax,map_page_linear SHR 9
-    add edi,eax
     call InitMonitorGdt
     jmp icbDone
 
@@ -657,8 +656,6 @@ icbProt:
     add esi,code_page_linear
     mov ecx,ds:switch_size
     mov edi,ds:switch_low
-    mov eax,map_page_linear SHR 10
-    add edi,eax
     call InitMonitorGdt
 
 icbDone:
