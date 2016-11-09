@@ -48,6 +48,85 @@ pm_data   pmode_switch_struc <>
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupBiosPic
+;
+;           DESCRIPTION:    Setup PIC to operate in BIOS-compatible mode
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupBiosPic    Proc near
+    mov al,11h
+    out 20h,al
+    jmp short $+2
+;
+    mov al,8
+    out 21h,al
+    jmp short $+2
+;
+    mov al,04h
+    out 21h,al
+    jmp short $+2
+;
+    mov al,0C1h
+    out 20h,AL
+    jmp short $+2
+;
+    mov al,1
+    out 21h,al
+    jmp short $+2
+;
+    mov al,11h
+    out 0A0h,al
+    jmp short $+2
+;
+    mov al,70h
+    out 0A1h,al
+    jmp short $+2
+;
+    mov al,2
+    out 0A1h,al
+    jmp short $+2
+;
+    mov al,1
+    out 0A1h,al
+    jmp short $+2
+;
+    mov al,-1
+    out 21h,al
+;
+    mov al,-1
+    out 0A1h,al
+    jmp short $+2
+    ret
+SetupBiosPic    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupBiosPit
+;
+;           DESCRIPTION:    Setup PIT to operate in BIOS-compatible mode
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupBiosPit    Proc near
+    mov al,30h
+    out 43h,al
+    jmp short $+2
+;
+    mov al,-1
+    out 40h,al
+    jmp short $+2
+;
+    mov al,-1
+    out 40h,al
+    jmp short $+2    
+    ret
+SetupBiosPit    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Switch monitor
 ;
 ;           DESCRIPTION:    Switch to monitor
@@ -148,13 +227,14 @@ real_start:
     test ax,PM_FLAG_VIDEO
     jz real_video_done
 ;    
+    call SetupBiosPic
+    call SetupBiosPit
     mov ax,3
-;    int 10h
+    int 10h
     cli
 ;
     mov al,-1
     out 21h,al
-    jmp short $+2
 
 real_video_done:
     mov bx,cs:pm_flags
