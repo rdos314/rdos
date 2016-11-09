@@ -50,6 +50,8 @@ mon_cr3      DD ?
 switch_proc   DD ?
 switch_linear DD ?
 switch_flags  DW ?
+switch_base   DD ?
+switch_size   DD ?
 switch_cr3    DD ?
 switch_low    DD ?
 pae_low       DD ?
@@ -132,6 +134,7 @@ AllocateRam     Endp
 ;           PARAMETERS:     BX              Selector
 ;
 ;           RETURNS:        EDX             Base
+;                           ECX             Size
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -152,6 +155,20 @@ GetSelectorBase  PROC near
 ;
     test al,10h
     jz gsbError
+;    
+    xor ecx,ecx
+    mov cl,[bx+6]
+    and cl,0Fh
+    shl ecx,16
+    mov cx,[bx]
+    test byte ptr [bx+6],80h
+    jz gsbSmall
+;
+    shl ecx,12
+    or cx,0FFFh
+
+gsbSmall:
+    inc ecx
 ;    
     mov edx,[bx+2]
     rol edx,8
@@ -399,6 +416,11 @@ init_crash_boot   Proc near
 ;
     mov ax,SEG data
     mov ds,ax
+;
+    mov bx,cs
+    call GetSelectorBase
+    mov ds:switch_base,edx
+    mov ds:switch_size,ecx
 ;    
     call AllocateRam
     call ZeroPage
@@ -451,6 +473,9 @@ init_crash_boot   Endp
 check_boot   Proc near
     mov ax,SEG data
     mov ds,ax
+    mov edx,ds:switch_base
+    mov ecx,ds:switch_size
+;    
     mov ax,ds:switch_flags
 ;
     mov edx,ds:switch_cr3
