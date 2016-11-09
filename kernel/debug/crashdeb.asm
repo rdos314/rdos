@@ -57,6 +57,8 @@ switch_size   DD ?
 switch_cr3    DD ?
 switch_low    DD ?
 pae_low       DD ?
+switch_gdt    DD ?
+switch_idt    DD ?
 
 data    ENDS
 
@@ -525,6 +527,12 @@ init_crash_boot   Proc near
     call GetSelectorBase
     mov ds:switch_base,edx
     mov ds:switch_size,ecx
+;
+    call AllocateRam
+    call ZeroPage
+    mov ds:switch_gdt,esi
+    add esi,800h
+    mov ds:switch_idt,esi
 ;    
     call AllocateRam
     call ZeroPage
@@ -577,6 +585,12 @@ check_boot   Proc near
     mov ecx,ds:switch_size
 ;    
     mov ax,ds:switch_flags
+;
+    mov edx,ds:switch_gdt
+    mov eax,edx
+    mov al,67h
+    xor ebx,ebx
+    SetPageEntry
 ;
     mov edx,ds:switch_cr3
     mov eax,edx
