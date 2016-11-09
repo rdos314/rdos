@@ -326,6 +326,43 @@ mlPaeCrashLoop:
     pop ds        
     ret
 MapLowPae    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MapProt
+;
+;           DESCRIPTION:    Map protected mode paging structure
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapProt  PROC near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov ebx,ds:switch_cr3
+    mov eax,ds:switch_low
+    mov al,67h
+    mov es:[ebx],eax
+;    
+    mov eax,ds:switch_cr3
+    mov ebx,process_page_linear
+    shr ebx,20
+    add ebx,eax
+    mov al,67h
+    mov es:[ebx],eax
+;    
+    popad
+    pop es
+    pop ds
+    ret
+MapProt Endp
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -530,7 +567,7 @@ check_boot   Proc near
     SetPageEntry
 ;
     int 3
-    call MapLowPae
+    call MapProt
 
 
     mov ebx,shutdown_code_sel
