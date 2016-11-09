@@ -1200,8 +1200,8 @@ init_crash_boot   Endp
     
 check_boot:
     int 3   
+    cli
     call SetupSwitch
-    CrashGate
     call InitBootInts
     int 3
   
