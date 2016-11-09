@@ -197,6 +197,43 @@ GetSelectorBase  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           MoveSel
+;
+;           DESCRIPTION:    Move selector
+;
+;           PARAMETERS:     SI      Source sel
+;                           DI      Dest sel
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MoveSel  PROC near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax  
+    movzx edi,di
+    add edi,ds:switch_gdt
+;    
+    mov ax,gdt_sel
+    mov ds,ax
+    movzx esi,si
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov ecx,2
+    rep movsd    
+;    
+    popad
+    pop es
+    pop ds
+    ret
+MoveSel Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ZeroPage
 ;
 ;           DESCRIPTION:    Zero a page
@@ -548,6 +585,10 @@ init_crash_boot   Proc near
     mov ecx,ds:switch_size
     mov edi,alias_page_linear
     call InitMonitorGdt
+;
+    mov si,system_data_sel
+    mov di,mon_system_data_sel
+    call MoveSel
 ;    
     call AllocateRam
     call ZeroPage
@@ -629,6 +670,7 @@ check_boot   Proc near
     SetPageEntry
 ;
     int 3
+;   
     mov ebx,shutdown_code_sel
     mov ecx,0FFFh
     CreateCodeSelector16

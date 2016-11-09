@@ -5633,6 +5633,8 @@ InitMonitorGdt  Endp
     public StartMonitor
 
 StartMonitor:
+    mov ax,mon_system_data_sel
+    mov ds,ax
     int 3
 
 code    ENDS
