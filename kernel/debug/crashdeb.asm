@@ -76,6 +76,7 @@ code    SEGMENT byte public use32 'CODE'
 
     extrn InitMonitorIdt:near
     extrn InitMonitorGdt:near
+    extrn StartMonitor:near
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -628,13 +629,40 @@ check_boot   Proc near
     SetPageEntry
 ;
     int 3
-    call MapProt
-
-
     mov ebx,shutdown_code_sel
     mov ecx,0FFFh
     CreateCodeSelector16
     CrashGate
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov ax,ds:switch_flags
+    mov es:[edx].pm_flags,ax
+;
+    mov ax,mon_code_sel
+    mov es:[edx].pm_cs,ax
+    mov eax,OFFSET StartMonitor
+    mov es:[edx].pm_eip,eax
+;
+    mov ax,mon_flat_sel
+    mov es:[edx].pm_ss,ax
+    mov eax,1000h
+    mov es:[edx].pm_esp,eax
+;    
+    mov eax,ds:switch_cr3
+    mov es:[edx].pm_cr3,eax
+;
+    mov ax,800h-1
+    mov word ptr es:[edx].pm_gdtr,ax
+    mov eax,ds:switch_gdt
+    mov dword ptr es:[edx+2].pm_gdtr,eax
+;
+    mov ax,800h-1
+    mov word ptr es:[edx].pm_idtr,ax
+    mov eax,ds:switch_idt
+    mov dword ptr es:[edx+2].pm_idtr,eax
 ;    
     push ebx
     mov ds,bx

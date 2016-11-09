@@ -677,13 +677,11 @@ PM_FLAG_VIDEO   = 2
 pmode_switch_struc  STRUC
 
 pm_flags    DW 0
-
 pm_cs       DW 0
+pm_eip      DD 0
 pm_ss       DW 0
-pm_sp       DW 0
-pm_cr0      DD 0
+pm_esp      DD 0
 pm_cr3      DD 0
-pm_cr4      DD 0
 pm_gdtr     DB 6 DUP(0)
 pm_idtr     DB 6 DUP(0)
 

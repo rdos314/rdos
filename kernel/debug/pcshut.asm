@@ -57,20 +57,6 @@ pm_data   pmode_switch_struc <>
 prot_enter_start:
     mov ax,flat_sel
     mov ds,ax
-    mov ebx,OFFSET pm_data
-    add ebx,edx
-    mov eax,cr0
-    mov ds:[ebx].pm_cr0,eax
-    mov eax,cr3
-    mov ds:[ebx].pm_cr3,eax
-    mov eax,cr4
-    mov ds:[ebx].pm_cr4,eax
-;    
-    mov ds:[ebx].pm_ss,ss
-    mov ds:[ebx].pm_sp,sp
-    mov ds:[ebx].pm_cs,cs
-    sgdt fword ptr ds:[ebx].pm_gdtr
-    sidt fword ptr ds:[ebx].pm_idtr
 ;    
     mov eax,cr0
     and eax,7FFFFFFFh
@@ -118,7 +104,7 @@ real_start:
     mov sp,500h
 ;        
     mov ax,3
-    int 10h
+;    int 10h
     cli
 ;
     mov al,-1
@@ -142,25 +128,15 @@ real_start:
     or eax,80000001h
     mov cr0,eax
 ;    
-    db 0EAh
-    dw OFFSET prot_reenter
-    dw shutdown_code_sel
-    
-prot_reenter:
-    mov eax,ds:[ebx].pm_cr0
-    mov cr0,eax
-;
-    mov ax,flat_sel
-    mov ds,ax
-;
-    xor ax,ax
-    mov es,ax
-    mov fs,ax
-    mov gs,ax
+    mov ax,ds:[ebx].pm_ss
+    mov ss,ax
+    mov esp,ds:[ebx].pm_esp
 ;    
-    mov ss,ds:[ebx].pm_ss
-    mov sp,ds:[ebx].pm_sp
-    retf
+    movzx eax,ds:[ebx].pm_cs
+    push eax
+    mov eax,ds:[ebx].pm_eip
+    push eax
+    retf32
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -205,13 +181,7 @@ idt20:              ; real mode IDT
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-switch_monitor Proc far
-    push ds
-    push es
-    push fs
-    push gs
-    pushad
-;
+switch_monitor:
     mov ax,flat_sel
     mov ds,ax
 ;
@@ -231,17 +201,9 @@ switch_monitor Proc far
     shr eax,4
     mov ds:[edx+edi],ax
 ;    
-    db 9Ah
+    db 0EAh
     dw OFFSET prot_enter_start
     dw shutdown_code_sel
-;
-    popad
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    retf32
-switch_monitor   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

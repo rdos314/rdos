@@ -5621,6 +5621,20 @@ InitMonitorGdt    Proc near
     ret
 InitMonitorGdt  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:          StartMonitor
+;
+;           DESCRIPTION:   Start monitor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public StartMonitor
+
+StartMonitor:
+    int 3
+
 code    ENDS
 
     END
