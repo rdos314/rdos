@@ -51,6 +51,7 @@ switch_proc   DD ?
 switch_linear DD ?
 switch_flags  DW ?
 switch_cr3    DD ?
+switch_low    DD ?
 pae_low       DD ?
 pae_high      DD ?
 
@@ -311,6 +312,11 @@ init_crash_boot   Proc near
     call AllocateRam
     call ZeroPage
     mov ds:switch_cr3,esi
+;
+    call AllocateRam
+    call ZeroPage
+    mov ds:switch_low,esi
+;    
     mov ds:pae_low,0
     mov ds:pae_high,0
 ;
@@ -354,6 +360,12 @@ check_boot   Proc near
     mov ax,ds:switch_flags
 ;
     mov edx,ds:switch_cr3
+    mov eax,edx
+    mov al,67h
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov edx,ds:switch_low
     mov eax,edx
     mov al,67h
     xor ebx,ebx
