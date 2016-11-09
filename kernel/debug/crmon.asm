@@ -5640,20 +5640,6 @@ InitMonitorGdt  Endp
     public StartMonitor
 
 StartMonitor:
-    mov ax,mon_data_sel
-    mov ds,ax
-    mov edx,ds:mon_map_linear
-;
-    xor ebx,ebx
-    mov eax,0B8000h
-    call MapPhysical
-;    
-    mov ebx,eax
-    and ebx,0FFFh    
-    add ebx,edx
-    mov ax,mon_flat_sel
-    mov ds,ax
-    mov eax,ds:[ebx]    
     int 3
 
 code    ENDS
