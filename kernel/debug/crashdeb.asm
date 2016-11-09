@@ -396,13 +396,6 @@ MapProt  PROC near
     mov al,67h
     mov es:[ebx],eax
 ;    
-    mov eax,ds:switch_cr3
-    mov ebx,alias_page_linear
-    shr ebx,20
-    add ebx,eax
-    mov al,67h
-    mov es:[ebx],eax
-;    
     popad
     pop es
     pop ds
@@ -440,14 +433,6 @@ MapPae  PROC near
     mov al,67h
     mov es:[ebx],eax
     mov es:[ebx+4],edx
-;    
-    mov ebx,alias_page_linear
-    shr ebx,18
-    add ebx,ds:pae_low
-    mov eax,ds:switch_cr3
-    mov al,67h
-    mov es:[ebx],eax
-    mov es:[ebx+4],edx    
 ;
     popad
     pop es
@@ -624,14 +609,6 @@ init_crash_boot   Proc near
     mov edx,ds:switch_idt
     call InitMonitorIdt
 ;
-    mov edx,ds:switch_gdt
-    mov esi,ds:switch_base
-    and esi,0FFFh
-    add esi,code_page_linear
-    mov ecx,ds:switch_size
-    mov edi,alias_page_linear
-    call InitMonitorGdt
-;
     mov si,system_data_sel
     mov di,mon_system_data_sel
     call MoveSel
@@ -656,6 +633,15 @@ icbPae:
     mov ds:switch_low,esi
     call MapLowPae
     call MapPae
+;
+    mov edx,ds:switch_gdt
+    mov esi,ds:switch_base
+    and esi,0FFFh
+    add esi,code_page_linear
+    mov ecx,ds:switch_size
+    mov edi,ds:switch_low
+    add edi,0FF8h
+    call InitMonitorGdt
     jmp icbDone
 
 icbProt:
@@ -663,6 +649,15 @@ icbProt:
     mov ds:switch_low,esi
     call MapLowProt
     call MapProt
+;
+    mov edx,ds:switch_gdt
+    mov esi,ds:switch_base
+    and esi,0FFFh
+    add esi,code_page_linear
+    mov ecx,ds:switch_size
+    mov edi,ds:switch_low
+    add edi,07FCh
+    call InitMonitorGdt
 
 icbDone:
     popad
