@@ -671,7 +671,20 @@ cls_thread_arr  DB MAX_LOG_THREADS * SIZE core_log_thread_struc DUP(?)
 
 core_log_struc  ENDS
 
-shut_header     STRUC
-sh_filler       DD ?
-sh_init_video   DW ?
-shut_header     ENDS
+PM_FLAG_PAE     = 1
+PM_FLAG_VIDEO   = 2
+
+pmode_switch_struc  STRUC
+
+pm_flags    DW 0
+
+pm_cs       DW 0
+pm_ss       DW 0
+pm_sp       DW 0
+pm_cr0      DD 0
+pm_cr3      DD 0
+pm_cr4      DD 0
+pm_gdtr     DB 6 DUP(0)
+pm_idtr     DB 6 DUP(0)
+
+pmode_switch_struc  ENDS

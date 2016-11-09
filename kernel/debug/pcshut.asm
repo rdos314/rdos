@@ -33,19 +33,6 @@ INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE ..\os\system.def
 
-pmode_struc  STRUC
-
-pm_cs   DW 1
-pm_ss   DW 2
-pm_sp   DW 3
-pm_cr0  DD 4
-pm_cr3  DD 5
-pm_cr4  DD 6
-pm_gdtr DB 6 DUP(0)
-pm_idtr DB 6 DUP(0)
-
-pmode_struc  ENDS
-
     .386p
 
 code    SEGMENT byte public use16 'CODE'
@@ -53,18 +40,10 @@ code    SEGMENT byte public use16 'CODE'
     assume cs:code
 
 ;
-; this table should be first!!
+; switch struc. Should be first.
 ;
 
-filler  DD ?
-
-shiv   DW OFFSET init_video
-
-;
-; switch struc
-;
-
-pm_data   pmode_struc <>
+pm_data   pmode_switch_struc <>
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -139,7 +118,7 @@ real_start:
     mov sp,500h
 ;        
     mov ax,3
-;    int 10h
+    int 10h
     cli
 ;
     mov al,-1
@@ -218,15 +197,15 @@ idt20:              ; real mode IDT
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InitVideo
+;           NAME:           Switch monitor
 ;
-;           DESCRIPTION:    Init video adapter
+;           DESCRIPTION:    Switch to monitor
 ;
 ;           PARAMETERS:     EDX         Linear base of code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_video Proc far
+switch_monitor Proc far
     push ds
     push es
     push fs
@@ -262,7 +241,7 @@ init_video Proc far
     pop es
     pop ds
     retf32
-init_video   Endp
+switch_monitor   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1673,6 +1652,7 @@ sdParamLoop:
     call CreateDataSelector
 
 sdDataSelOk:
+    mov edi,OFFSET switch_monitor
     mov ax,ds
     mov es,ax
     mov eax,[esi].dev32_init_ip

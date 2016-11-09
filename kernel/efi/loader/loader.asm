@@ -1272,6 +1272,13 @@ start:
     mov ds:efi_width,ax
     mov ds:efi_height,dx
     mov ds:efi_flags,ebx
+;    
+    mov ax,flat_sel
+    mov es,ax
+    xor di,di
+    xor eax,eax
+    mov cx,100h
+    rep stosd
 ;
     call GetMemCount
     mov ax,flat_sel
@@ -1341,10 +1348,6 @@ DoBoot:
     mov ax,flat_sel
     mov ds,ax
     mov es,ax
-    xor di,di
-    xor eax,eax
-    mov cx,100h
-    rep stosd
 ;
     push word ptr kernel_code
     mov ecx,[esi].len

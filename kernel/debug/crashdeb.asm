@@ -47,11 +47,16 @@ map_spinlock DW ?
 mon_linear   DD ?
 mon_cr3      DD ?
 
+switch_proc   DD ?
 switch_linear DD ?
+switch_flags  DW ?
+switch_cr3    DD ?
+pae_low       DD ?
+pae_high      DD ?
 
 data    ENDS
 
-    .386p
+    .686p
 
 code    SEGMENT byte public use32 'CODE'
 
@@ -167,9 +172,81 @@ GetSelectorBase  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           DetectFlags
+;
+;       DESCRIPTION:    Detect PAE and video flags
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DetectFlags Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:switch_flags,0
+;
+    pushfd
+    pop eax
+    mov ecx,eax
+    xor eax,40000h
+    push eax
+    popfd
+    pushfd
+    pop eax
+    xor eax,ecx
+    jz dfProt
+;
+    mov eax,ecx
+    xor eax,200000h
+    push eax
+    popfd
+    pushfd
+    pop eax
+    xor eax,ecx
+    je dfProt
+;
+    mov eax,1
+    cpuid
+    test edx,40h
+    jz dfProt
+
+dfPae:    
+    or ds:switch_flags,PM_FLAG_PAE
+
+dfProt:
+    mov ax,flat_sel
+    mov es,ax
+    xor eax,eax
+    mov ecx,100h
+    xor bx,bx
+
+dfVectLoop:
+    or eax,es:[bx]
+    add bx,4
+    loop dfVectLoop
+;
+    or eax,eax
+    jz dfVideoOk
+;
+    or ds:switch_flags,PM_FLAG_VIDEO
+
+dfVideoOk:    
+    popad
+    pop es
+    pop ds
+    ret
+DetectFlags Endp
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           init_crash_boot
 ;
 ;       DESCRIPTION:    Boot time initialization
+;
+;       PARAMETERS:     EDI     Offset to switch procedure
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -182,6 +259,9 @@ init_crash_boot   Proc near
 ;
     mov ax,SEG data
     mov ds,ax
+    mov ds:switch_proc,edi
+    call DetectFlags
+;    
     call AllocateRam
     mov ds:switch_linear,esi    
     mov edi,esi
@@ -196,6 +276,29 @@ init_crash_boot   Proc near
     mov ecx,400h
     rep movs dword ptr es:[edi],ds:[esi]    
 ;
+    mov ax,SEG data
+    mov ds,ax
+;    
+    call AllocateRam
+    mov ds:switch_cr3,esi
+    mov ds:pae_low,0
+    mov ds:pae_high,0
+;
+    mov ax,ds:switch_flags
+    test ax,PM_FLAG_PAE
+    jz icbProt
+
+icbPae:
+    call AllocateRam
+    mov ds:pae_low,esi
+;    
+    call AllocateRam
+    mov ds:pae_high,esi
+    jmp icbDone
+
+icbProt:
+
+icbDone:
     popad
     pop es
     pop ds    
@@ -216,7 +319,28 @@ init_crash_boot   Endp
 check_boot   Proc near
     mov ax,SEG data
     mov ds,ax
+    mov ax,ds:switch_flags
+;
+    mov edx,ds:switch_cr3
+    mov eax,edx
+    mov al,67h
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov edx,ds:pae_low
+    mov eax,edx
+    mov al,67h
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov edx,ds:pae_high
+    mov eax,edx
+    mov al,67h
+    xor ebx,ebx
+    SetPageEntry
+;
     mov edx,ds:switch_linear
+    mov edi,ds:switch_proc
     mov eax,edx
     mov al,67h
     xor ebx,ebx
@@ -230,8 +354,7 @@ check_boot   Proc near
     push ebx
     mov ds,bx
     xor bx,bx
-    movzx eax,word ptr ds:[bx].sh_init_video
-    push eax
+    push edi
     retf
         
     

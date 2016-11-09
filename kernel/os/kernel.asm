@@ -137,6 +137,7 @@ ZeroRam Proc near
 ;
     xor eax,eax
     mov esi,es:alloc_base
+    add esi,1000h
 
 ZeroRamLoop1:
     mov [esi],eax
@@ -189,6 +190,7 @@ MarkupRam       Proc near
     mov es,ax
 ;
     mov esi,es:alloc_base
+    add esi,1000h
 
 MarkupRamLoop1:
     mov eax,[esi]
