@@ -221,13 +221,13 @@ ZeroPage    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           UnityMapProt
+;           NAME:           MapLowProt
 ;
-;           DESCRIPTION:    Unity map, protect mode paging
+;           DESCRIPTION:    Map low 2MB, protect mode paging
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnityMapProt  PROC near
+MapLowProt  PROC near
     push ds
     push es
     pushad
@@ -235,6 +235,7 @@ UnityMapProt  PROC near
     mov ax,SEG data
     mov ds,ax
     mov ebx,ds:switch_low
+    mov esi,ds:switch_base
 ;    
     mov ax,flat_sel
     mov ds,ax
@@ -243,58 +244,22 @@ UnityMapProt  PROC near
     mov ecx,100h
     mov eax,67h
 
-umProtLoop:
+mlProtUnityLoop:
     mov ds:[ebx],eax
     add ebx,4
     add eax,1000h
-    loop umProtLoop
-;
-    mov edi,ebx
-    mov ecx,300h
-    xor eax,eax
-    rep stosd        
-;
-    popad
-    pop es
-    pop ds        
-    ret
-UnityMapProt    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnityMapPae
-;
-;           DESCRIPTION:    Unity map, PAE paging
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnityMapPae  PROC near
-    push ds
-    push es
-    pushad
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov ebx,ds:switch_low
-;    
-    mov ax,flat_sel
-    mov ds,ax
-    mov es,ax
+    loop mlProtUnityLoop
 ;
     mov ecx,100h
-    mov eax,67h
-    xor edx,edx
+    mov eax,esi
+    and ax,0F000h
+    mov al,67h
 
-umPaeLoop:
+mlProtCrashLoop:
     mov ds:[ebx],eax
     add ebx,4
-;
-    mov ds:[ebx],edx
-    add ebx,4
-;
     add eax,1000h
-    loop umPaeLoop
+    loop mlProtCrashLoop
 ;
     mov edi,ebx
     mov ecx,200h
@@ -305,7 +270,62 @@ umPaeLoop:
     pop es
     pop ds        
     ret
-UnityMapPae    Endp
+MapLowProt    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MapLowPae
+;
+;           DESCRIPTION:    Map low 2MB, PAE paging
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapLowPae  PROC near
+    push ds
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ebx,ds:switch_low
+    mov esi,ds:switch_base
+;    
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov ecx,100h
+    mov eax,67h
+    xor edx,edx
+
+mlPaeUnityLoop:
+    mov ds:[ebx],eax
+    add ebx,4
+;
+    mov ds:[ebx],edx
+    add ebx,4
+;
+    add eax,1000h
+    loop mlPaeUnityLoop
+;
+    mov ecx,100h
+    mov eax,esi
+    and ax,0F000h
+    mov al,67h
+
+mlPaeCrashLoop:
+    mov ds:[ebx],eax
+    add ebx,4
+;
+    mov ds:[ebx],edx
+    add ebx,4
+;    
+    add eax,1000h
+    loop mlPaeCrashLoop
+;
+    popad
+    pop ds        
+    ret
+MapLowPae    Endp
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -444,13 +464,13 @@ icbPae:
 ;
     call AllocateRam
     mov ds:switch_low,esi
-    call UnityMapPae
+    call MapLowPae
     jmp icbDone
 
 icbProt:
     call AllocateRam
     mov ds:switch_low,esi
-    call UnityMapProt
+    call MapLowProt
 
 icbDone:
     popad
@@ -509,7 +529,8 @@ check_boot   Proc near
     xor ebx,ebx
     SetPageEntry
 ;
-    call UnityMapProt
+    int 3
+    call MapLowPae
 
 
     mov ebx,shutdown_code_sel
