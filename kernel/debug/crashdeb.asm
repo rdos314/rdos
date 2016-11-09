@@ -562,6 +562,424 @@ InitMonData Proc near
     pop ds
     ret
 InitMonData Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateIntGate
+;
+;           DESCRIPTION:    Create int gate selector
+;
+;           PARAMETERS:     AL          INT #
+;                           BL          DPL
+;                           DS:ESI      ENTRY POINT
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIntGate     PROC near
+    push es
+    push ax
+    push bx
+    push dx
+;
+    mov dx,idt_sel
+    mov es,dx
+;
+    mov ah,bl
+    movzx bx,al
+    shl bx,3
+    xor al,al
+    shl ah,5
+    or ah,8Eh
+    mov es:[bx+4],ax
+    mov es:[bx],esi
+    mov ax,ds
+    xchg ax,es:[bx+2]
+    mov es:[bx+6],ax
+;
+    pop dx
+    pop bx
+    pop ax
+    pop es
+    ret
+CreateIntGate     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateCallGate
+;
+;           DESCRIPTION:    Create 32-bit call gate selector
+;
+;           PARAMETERS:     BX          DESCRIPTOR
+;                           DS:ESI      ENTRY POINT
+;                           CL          32-BIT WORDS TO MOVE
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateCallGate  PROC near
+    push es
+    push ax
+    push bx
+;
+    mov ax,gdt_sel
+    mov es,ax
+;
+    mov ah,bl
+    and bx,0FFF8h
+    mov al,cl
+    and al,0Fh
+    shl ah,5
+    or ah,8Ch
+    mov es:[bx+4],ax
+    mov es:[bx],esi
+    mov ax,ds
+    xchg ax,es:[bx+2]
+    mov es:[bx+6],ax
+;
+    pop bx
+    pop ax
+    pop es
+    ret
+CreateCallGate  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           PRETASKING_GATE0, PRETASKING_GATE4
+;
+;           DESCRIPTION:    Pretasking gates
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+pretask0:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,0
+    push ax
+    push ds
+    ShutDownPreTask
+
+pretask1:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,1
+    push ax
+    push ds
+    ShutDownPreTask
+
+pretask2:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,2
+    push ax
+    push ds
+    ShutDownPreTask
+
+pretask3:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,3
+    push ax
+    push ds
+    ShutDownPreTask
+
+pretask4:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,4
+    push ax
+    push ds
+    ShutDownPreTask
+
+pretask5:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,5
+    push ax
+    push ds
+    ShutDownPreTask
+
+pretask6:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,6
+    push ax
+    push ds
+    ShutDownPreTask
+
+pretask7:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,7
+    push ax
+    push ds
+    ShutDownPreTask
+
+pretask8:
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,8
+    push ax
+    push ds
+    ShutDownPreTask
+
+pretask9:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,9
+    push ax
+    push ds
+    ShutDownPreTask
+
+pretask10:
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,10
+    push ax
+    push ds
+    ShutDownPreTask
+
+pretask11:
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,11
+    push ax
+    push ds
+    ShutDownPreTask
+
+pretask12:
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,12
+    push ax
+    push ds
+    ShutDownPreTask
+
+pretask13:
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,13
+    push ax
+    push ds
+;    
+    test byte ptr [ebp+2].trap_eflags,2
+    jnz pretask_gpf_default
+;
+    mov ds,[ebp].trap_cs
+    mov ebx,[ebp].trap_eip
+    mov al,[ebx]
+;
+    cmp al,0CDh
+    jne pretask_gpf_not_int
+;
+    mov al,[ebx+1]
+    cmp al,66h
+    je pretask_gpf_reexec
+;
+    cmp al,67h
+    je pretask_gpf_reexec
+;
+    cmp al,9Ah
+    je pretask_gpf_reexec
+;
+    jmp pretask_gpf_default
+        
+pretask_gpf_not_int:
+    cmp al,3Eh
+    je pretask_gpf_32
+;
+    cmp al,67h
+    jne pretask_gpf_default
+
+pretask_gpf_16:
+    mov al,[ebx+2]
+    cmp al,9Ah
+    jne pretask_gpf_default
+;
+    mov ax,[ebx+7]
+    or ax,ax
+    jz pretask_gpf_default
+;
+    cmp ax,3
+    ja pretask_gpf_default
+
+pretask_kernel_gate16:
+    push ecx
+    push edx
+;    
+    push ebx
+    mov bx,ds
+    call GetSelectorBase
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov al,0CDh
+    xchg al,ds:[ebx]
+    pop edx
+    pop ecx
+    jmp pretask_gpf_reexec
+
+pretask_gpf_32:
+    mov al,[ebx+1]
+    cmp al,67h
+    jne pretask_gpf_default
+;
+    mov ax,[ebx+7]
+    cmp ax,3
+    ja pretask_gpf_default
+
+pretask_kernel_gate32:
+    push ecx
+    push edx
+;    
+    push ebx
+    mov bx,ds
+    call GetSelectorBase
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov al,0CDh
+    xchg al,ds:[ebx]
+    pop edx
+    pop ecx
+    jmp pretask_gpf_reexec
+
+pretask_gpf_default:
+    ShutDownPreTask
+
+pretask_gpf_reexec:
+    pop eax
+    mov ds,ax
+    pop ebx
+    pop eax
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
+    add sp,4
+    iretd
+
+prepaging14:
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,14
+    push ax
+    push ds
+    ShutDownPreTask
+
+pretask16:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    push eax
+    push ebx
+    mov ax,16
+    push ax
+    push ds
+    ShutDownPreTask
+
+;
+; tabell offsets
+;
+ig_nr       EQU 0
+ig_entry    EQU 4
+ig_sel      EQU 8
+ig_dpl      EQU 12
+
+
+pretask_int_tab:
+;
+;               int #   Entry                   Selector        Dpl
+;
+pg0     DD      0,          OFFSET pretask0,        kdebug_code_sel,    0
+pg1     DD      1,          OFFSET pretask1,        kdebug_code_sel,    0
+pg2     DD      2,          OFFSET pretask2,        kdebug_code_sel,    0
+pg3     DD      3,          OFFSET pretask3,        kdebug_code_sel,    0
+pg4     DD      4,          OFFSET pretask4,        kdebug_code_sel,    0
+pg5     DD      5,          OFFSET pretask5,        kdebug_code_sel,    0
+pg6     DD      6,          OFFSET pretask6,        kdebug_code_sel,    0
+pg7     DD      7,          OFFSET pretask7,        kdebug_code_sel,    0
+pg8     DD      8,          OFFSET pretask8,        kdebug_code_sel,    0
+pg9     DD      9,          OFFSET pretask9,        kdebug_code_sel,    0
+pg10    DD      10,         OFFSET pretask10,       kdebug_code_sel,    0
+pg11    DD      11,         OFFSET pretask11,       kdebug_code_sel,    0
+pg12    DD      12,         OFFSET pretask12,       kdebug_code_sel,    0
+pg13    DD      13,         OFFSET pretask13,       kdebug_code_sel,    0
+pg14    DD      14,         OFFSET prepaging14,     kdebug_code_sel,    0
+pg16    DD      16,         OFFSET pretask16,       kdebug_code_sel,    0
+pg7_end DD      0FFFFFFFFh
+
+InitBootInts      PROC near
+    mov edi,OFFSET pretask_int_tab
+
+ibiLoop:
+    mov eax,cs:[edi]
+    cmp ax,0FFFFFFFFh
+    jz ibiDone
+;
+    mov ax,cs:[edi].ig_sel
+    mov ds,ax
+    mov al,cs:[edi].ig_nr
+    mov bl,cs:[edi].ig_dpl
+    mov esi,cs:[edi].ig_entry
+    call CreateIntGate
+    add edi,16
+    jmp ibiLoop
+
+ibiDone:
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET abort_pretask
+    xor cl,cl
+    mov bx,shutdown_pretask_gate
+    call CreateCallGate
+    ret
+InitBootInts      ENDP
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -695,6 +1113,20 @@ check_boot   Proc near
     SetPageEntry
 ;
     int 3   
+    CrashGate
+    call InitBootInts
+    int 3
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           abort_pretask
+;
+;       DESCRIPTION:    Abort pretask
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+abort_pretask:
     mov ebx,shutdown_code_sel
     mov ecx,0FFFh
     CreateCodeSelector16
