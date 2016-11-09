@@ -39,8 +39,8 @@ INCLUDE ..\os\protseg.def
 INCLUDE ..\os\gate.def
 INCLUDE kdebug.inc
 
-alias_page_linear = 400000h
 code_page_linear  = 100000h
+map_page_linear =   1FF000h
 
 data    SEGMENT byte public 'DATA'
 
@@ -640,7 +640,8 @@ icbPae:
     add esi,code_page_linear
     mov ecx,ds:switch_size
     mov edi,ds:switch_low
-    add edi,0FF8h
+    mov eax,map_page_linear SHR 9
+    add edi,eax
     call InitMonitorGdt
     jmp icbDone
 
@@ -656,7 +657,8 @@ icbProt:
     add esi,code_page_linear
     mov ecx,ds:switch_size
     mov edi,ds:switch_low
-    add edi,07FCh
+    mov eax,map_page_linear SHR 10
+    add edi,eax
     call InitMonitorGdt
 
 icbDone:
