@@ -39,6 +39,8 @@ INCLUDE ..\os\protseg.def
 INCLUDE ..\os\gate.def
 INCLUDE kdebug.inc
 
+alias_page_linear = 400000h
+
 data    SEGMENT byte public 'DATA'
 
 map_linear   DD ?
@@ -55,7 +57,6 @@ switch_size   DD ?
 switch_cr3    DD ?
 switch_low    DD ?
 pae_low       DD ?
-pae_high      DD ?
 
 data    ENDS
 
@@ -352,7 +353,7 @@ MapProt  PROC near
     mov es:[ebx],eax
 ;    
     mov eax,ds:switch_cr3
-    mov ebx,process_page_linear
+    mov ebx,alias_page_linear
     shr ebx,20
     add ebx,eax
     mov al,67h
@@ -363,6 +364,52 @@ MapProt  PROC near
     pop ds
     ret
 MapProt Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MapPae
+;
+;           DESCRIPTION:    Map PAE paging structure
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapPae  PROC near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov ebx,ds:switch_cr3
+    mov eax,ds:pae_low
+    mov al,67h
+    xor edx,edx
+    mov es:[ebx],eax
+    mov es:[ebx+4],edx
+;
+    mov ebx,ds:pae_low
+    mov eax,ds:switch_low
+    mov al,67h
+    mov es:[ebx],eax
+    mov es:[ebx+4],edx
+;    
+    mov ebx,alias_page_linear
+    shr ebx,18
+    add ebx,ds:pae_low
+    mov eax,ds:switch_cr3
+    mov al,67h
+    mov es:[ebx],eax
+    mov es:[ebx+4],edx    
+;
+    popad
+    pop es
+    pop ds
+    ret
+MapPae Endp
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -481,10 +528,8 @@ init_crash_boot   Proc near
 ;    
     call AllocateRam
     call ZeroPage
-    mov ds:switch_cr3,esi
-;    
+    mov ds:switch_cr3,esi    
     mov ds:pae_low,0
-    mov ds:pae_high,0
 ;
     mov ax,ds:switch_flags
     test ax,PM_FLAG_PAE
@@ -494,20 +539,18 @@ icbPae:
     call AllocateRam
     call ZeroPage
     mov ds:pae_low,esi
-;    
-    call AllocateRam
-    call ZeroPage
-    mov ds:pae_high,esi
 ;
     call AllocateRam
     mov ds:switch_low,esi
     call MapLowPae
+    call MapPae
     jmp icbDone
 
 icbProt:
     call AllocateRam
     mov ds:switch_low,esi
     call MapLowProt
+    call MapProt
 
 icbDone:
     popad
@@ -548,12 +591,6 @@ check_boot   Proc near
     SetPageEntry
 ;
     mov edx,ds:pae_low
-    mov eax,edx
-    mov al,67h
-    xor ebx,ebx
-    SetPageEntry
-;
-    mov edx,ds:pae_high
     mov eax,edx
     mov al,67h
     xor ebx,ebx
