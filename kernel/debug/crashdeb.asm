@@ -287,7 +287,7 @@ MapLowProt  PROC near
     mov es,ax
 ;
     mov ecx,100h
-    mov eax,7
+    mov eax,3
 
 mlProtUnityLoop:
     mov ds:[ebx],eax
@@ -298,7 +298,7 @@ mlProtUnityLoop:
     mov ecx,100h
     mov eax,esi
     and ax,0F000h
-    mov al,7
+    mov al,3
 
 mlProtCrashLoop:
     mov ds:[ebx],eax
@@ -339,7 +339,7 @@ MapLowPae  PROC near
     mov ds,ax
 ;
     mov ecx,100h
-    mov eax,7
+    mov eax,3
     xor edx,edx
 
 mlPaeUnityLoop:
@@ -355,7 +355,7 @@ mlPaeUnityLoop:
     mov ecx,100h
     mov eax,esi
     and ax,0F000h
-    mov al,7
+    mov al,3
 
 mlPaeCrashLoop:
     mov ds:[ebx],eax
@@ -393,7 +393,7 @@ MapProt  PROC near
 ;
     mov ebx,ds:switch_cr3
     mov eax,ds:switch_low
-    mov al,7
+    mov al,3
     mov es:[ebx],eax
 ;    
     popad
@@ -423,14 +423,14 @@ MapPae  PROC near
 ;
     mov ebx,ds:switch_cr3
     mov eax,ds:pae_low
-    mov al,7
+    mov al,3
     xor edx,edx
     mov es:[ebx],eax
     mov es:[ebx+4],edx
 ;
     mov ebx,ds:pae_low
     mov eax,ds:switch_low
-    mov al,7
+    mov al,3
     mov es:[ebx],eax
     mov es:[ebx+4],edx
 ;
@@ -1013,7 +1013,7 @@ SetupSwitch     Proc near
     mov ds,ax    
     mov eax,ds:switch_linear
     mov edx,eax
-    mov al,7
+    mov al,3
     xor ebx,ebx
     SetPageEntry
 ;    
@@ -1058,6 +1058,7 @@ SwitchToMonitor:
     mov es:[edx].pm_esp,eax
 ;    
     mov eax,ds:switch_cr3
+    mov al,7
     mov es:[edx].pm_cr3,eax
 ;
     mov ax,800h-1
@@ -2302,7 +2303,7 @@ init_crash_driver    Proc near
     AllocateBigLinear
     mov ds:map_linear,edx    
     xor ebx,ebx
-    mov eax,7
+    mov eax,3
     SetPageEntry
 ;
     mov ax,cs
