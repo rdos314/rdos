@@ -40,6 +40,7 @@ INCLUDE ..\os\gate.def
 INCLUDE kdebug.inc
 
 alias_page_linear = 400000h
+code_page_linear  = 100000h
 
 data    SEGMENT byte public 'DATA'
 
@@ -74,6 +75,7 @@ code    SEGMENT byte public use32 'CODE'
     extrn start_monitor:near
 
     extrn InitMonitorIdt:near
+    extrn InitMonitorGdt:near
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -537,6 +539,14 @@ init_crash_boot   Proc near
 ;    
     mov edx,ds:switch_idt
     call InitMonitorIdt
+;
+    mov edx,ds:switch_gdt
+    mov esi,ds:switch_base
+    and esi,0FFFh
+    add esi,code_page_linear
+    mov ecx,ds:switch_size
+    mov edi,alias_page_linear
+    call InitMonitorGdt
 ;    
     call AllocateRam
     call ZeroPage
@@ -585,19 +595,12 @@ init_crash_boot   Endp
 check_boot   Proc near
     mov ax,SEG data
     mov ds,ax
-    mov edx,ds:switch_base
-    mov ecx,ds:switch_size
-;    
-    mov ax,ds:switch_flags
 ;
     mov edx,ds:switch_gdt
     mov eax,edx
     mov al,67h
     xor ebx,ebx
     SetPageEntry
-;
-    mov edx,ds:switch_idt
-    call InitMonitorIdt
 ;
     mov edx,ds:switch_cr3
     mov eax,edx

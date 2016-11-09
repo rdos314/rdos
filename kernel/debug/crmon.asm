@@ -5440,7 +5440,6 @@ SetupInt     ENDP
 ;           DESCRIPTION:   Init monitor IDT
 ;
 ;           PARAMETERS:    EDX          IDT base
-;                          CX           IDT size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5463,6 +5462,164 @@ imiLoop:
 imiDone:
     ret
 InitMonitorIdt   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateDataSel32
+;
+;           DESCRIPTION:    Create 32-bit data selector
+;
+;           PARAMETERS:     BX              Descriptor
+;                           EDX             Gdt linear
+;                           ESI             Base
+;                           ECX             Limit
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDataSel32       PROC near
+    push ds
+    push ax
+    push ebx
+    push ecx
+;
+    mov ax,flat_sel
+    mov ds,ax
+;        
+    movzx ebx,bx
+    add ebx,edx
+    dec ecx
+    cmp ecx,100000h
+    jae cdsBig
+;
+    mov [ebx],cx
+    mov [ebx+2],esi
+    mov al,92h
+    xchg al,[ebx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,40h
+    mov [ebx+6],cx
+    jmp cdsDone
+
+cdsBig:
+    shr ecx,12
+    mov [ebx],cx
+    mov [ebx+2],esi
+    mov al,92h
+    xchg al,[ebx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,0C0h
+    mov [ebx+6],cx
+
+cdsDone:
+    pop ecx
+    pop ebx
+    pop ax
+    pop ds
+    ret
+CreateDataSel32       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateCodeSel32
+;
+;           DESCRIPTION:    Create 32-bit code selector
+;
+;           PARAMETERS:     BX              Descriptor
+;                           EDX             Gdt linear
+;                           ESI             Base
+;                           ECX             Limit
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateCodeSel32       PROC near
+    push ds
+    push ax
+    push ebx
+    push ecx
+;
+    mov ax,flat_sel
+    mov ds,ax
+;        
+    movzx ebx,bx
+    add ebx,edx
+    dec ecx
+    cmp ecx,100000h
+    jae ccsBig
+;
+    mov [ebx],cx
+    mov [ebx+2],esi
+    mov al,9Ah
+    xchg al,[ebx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,40h
+    mov [ebx+6],cx
+    jmp ccsDone
+
+ccsBig:
+    shr ecx,12
+    mov [ebx],cx
+    mov [ebx+2],esi
+    mov al,9Ah
+    xchg al,[ebx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,0C0h
+    mov [ebx+6],cx
+
+ccsDone:
+    pop ecx
+    pop ebx
+    pop ax
+    pop ds
+    ret
+CreateCodeSel32       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:          InitMonitorGdt
+;
+;           DESCRIPTION:   Init monitor GDT
+;
+;           PARAMETERS:    EDX          GDT base
+;                          ECX          Code size
+;                          ESI          Code base
+;                          EDI          Process linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public InitMonitorGdt
+
+InitMonitorGdt    Proc near
+    mov bx,mon_code_sel
+    call CreateCodeSel32    
+;
+    mov bx,mon_gdt_sel
+    mov esi,edx
+    mov ecx,800h
+    call CreateDataSel32
+;
+    mov bx,mon_flat_sel
+    xor esi,esi
+    xor ecx,ecx
+    call CreateDataSel32        
+;
+    mov bx,mon_process_page_sel 
+    mov esi,edi
+    mov ecx,1000h
+    call CreateDataSel32    
+;
+    ret
+InitMonitorGdt  Endp
 
 code    ENDS
 
