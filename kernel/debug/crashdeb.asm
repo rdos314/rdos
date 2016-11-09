@@ -73,6 +73,7 @@ code    SEGMENT byte public use32 'CODE'
     extrn set_monitor_idt:near
     extrn start_monitor:near
 
+    extrn InitMonitorIdt:near
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -534,6 +535,9 @@ init_crash_boot   Proc near
     add esi,800h
     mov ds:switch_idt,esi
 ;    
+    mov edx,ds:switch_idt
+    call InitMonitorIdt
+;    
     call AllocateRam
     call ZeroPage
     mov ds:switch_cr3,esi    
@@ -591,6 +595,9 @@ check_boot   Proc near
     mov al,67h
     xor ebx,ebx
     SetPageEntry
+;
+    mov edx,ds:switch_idt
+    call InitMonitorIdt
 ;
     mov edx,ds:switch_cr3
     mov eax,edx

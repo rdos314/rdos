@@ -5394,6 +5394,76 @@ smiDone:
     ret
 set_monitor_idt   Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupInt
+;
+;           DESCRIPTION:    Create int gate selector
+;
+;           PARAMETERS:     AL              Int #
+;                           ESI             Entry point
+;                           EDX             IDT base
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupInt     PROC near
+    push ds
+    push eax
+    push ebx
+;   
+    movzx ebx,al
+    shl ebx,3
+    add ebx,edx
+;
+    mov ax,flat_sel
+    mov ds,ax    
+;    
+    mov ax,8E00h
+    mov ds:[ebx+4],ax
+    mov ds:[ebx],esi
+    mov ax,mon_code_sel
+    xchg ax,ds:[ebx+2]
+    mov ds:[ebx+6],ax
+;
+    pop ebx
+    pop eax
+    pop ds
+    ret
+SetupInt     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:          InitMonitorIdt
+;
+;           DESCRIPTION:   Init monitor IDT
+;
+;           PARAMETERS:    EDX          IDT base
+;                          CX           IDT size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public InitMonitorIdt
+
+InitMonitorIdt    Proc near
+    mov edi,OFFSET crash_int_tab
+
+imiLoop:
+    mov ax,cs:[edi]
+    cmp ax,0FFFFh
+    jz imiDone
+;
+    xor bl,bl
+    mov esi,dword ptr cs:[edi+4]
+    call SetupInt
+    add edi,8
+    jmp imiLoop
+
+imiDone:
+    ret
+InitMonitorIdt   Endp
+
 code    ENDS
 
     END
