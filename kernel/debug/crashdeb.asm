@@ -287,7 +287,7 @@ MapLowProt  PROC near
     mov es,ax
 ;
     mov ecx,100h
-    mov eax,67h
+    mov eax,7
 
 mlProtUnityLoop:
     mov ds:[ebx],eax
@@ -298,7 +298,7 @@ mlProtUnityLoop:
     mov ecx,100h
     mov eax,esi
     and ax,0F000h
-    mov al,67h
+    mov al,7
 
 mlProtCrashLoop:
     mov ds:[ebx],eax
@@ -339,7 +339,7 @@ MapLowPae  PROC near
     mov ds,ax
 ;
     mov ecx,100h
-    mov eax,67h
+    mov eax,7
     xor edx,edx
 
 mlPaeUnityLoop:
@@ -355,7 +355,7 @@ mlPaeUnityLoop:
     mov ecx,100h
     mov eax,esi
     and ax,0F000h
-    mov al,67h
+    mov al,7
 
 mlPaeCrashLoop:
     mov ds:[ebx],eax
@@ -393,7 +393,7 @@ MapProt  PROC near
 ;
     mov ebx,ds:switch_cr3
     mov eax,ds:switch_low
-    mov al,67h
+    mov al,7
     mov es:[ebx],eax
 ;    
     popad
@@ -423,14 +423,14 @@ MapPae  PROC near
 ;
     mov ebx,ds:switch_cr3
     mov eax,ds:pae_low
-    mov al,67h
+    mov al,7
     xor edx,edx
     mov es:[ebx],eax
     mov es:[ebx+4],edx
 ;
     mov ebx,ds:pae_low
     mov eax,ds:switch_low
-    mov al,67h
+    mov al,7
     mov es:[ebx],eax
     mov es:[ebx+4],edx
 ;
@@ -484,7 +484,7 @@ DetectFlags Proc near
     jz dfProt
 
 dfPae:    
-    or ds:switch_flags,PM_FLAG_PAE
+;    or ds:switch_flags,PM_FLAG_PAE
 
 dfProt:
     mov ax,flat_sel
@@ -502,6 +502,13 @@ dfVectLoop:
     jz dfVideoOk
 ;
     or ds:switch_flags,PM_FLAG_VIDEO
+    mov ax,system_data_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:efi_acpi,eax
+    mov ds:efi_acpi+4,eax
+    mov ds:efi_lfb,eax
+    mov ds:efi_lfb+4,eax
 
 dfVideoOk:    
     popad
@@ -680,34 +687,10 @@ check_boot   Proc near
     mov ax,SEG data
     mov ds,ax
 ;
-    mov edx,ds:switch_gdt
-    mov eax,edx
-    mov al,67h
-    xor ebx,ebx
-    SetPageEntry
-;
-    mov edx,ds:switch_cr3
-    mov eax,edx
-    mov al,67h
-    xor ebx,ebx
-    SetPageEntry
-;
-    mov edx,ds:switch_low
-    mov eax,edx
-    mov al,67h
-    xor ebx,ebx
-    SetPageEntry
-;
-    mov edx,ds:pae_low
-    mov eax,edx
-    mov al,67h
-    xor ebx,ebx
-    SetPageEntry
-;
     mov edx,ds:switch_linear
     mov edi,ds:switch_proc
     mov eax,edx
-    mov al,67h
+    mov al,7
     xor ebx,ebx
     SetPageEntry
 ;
@@ -715,7 +698,6 @@ check_boot   Proc near
     mov ebx,shutdown_code_sel
     mov ecx,0FFFh
     CreateCodeSelector16
-    CrashGate
 ;
     mov ax,SEG data
     mov ds,ax
@@ -1842,7 +1824,7 @@ init_crash_driver    Proc near
     AllocateBigLinear
     mov ds:map_linear,edx    
     xor ebx,ebx
-    mov eax,67h
+    mov eax,7
     SetPageEntry
 ;
     mov ax,cs

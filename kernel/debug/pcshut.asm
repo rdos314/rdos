@@ -78,6 +78,7 @@ idt20:              ; real mode IDT
     dw 0
 
 switch_monitor:
+    cli
     mov ax,flat_sel
     mov ds,ax
 ;
@@ -127,7 +128,7 @@ real_enter:
     mov sp,ax
 ;
     mov eax,cr0
-    and eax,NOT 1
+    and al,NOT 1
     mov cr0,eax
 ;
     db 0EAh         ; jmp to real-mode selector
@@ -176,12 +177,16 @@ real_pae_done:
     lidt fword ptr cs:pm_idtr
 ;
     mov eax,cr0
-    or eax,80000001h
+    or al,1
     mov cr0,eax
 ;    
     mov ax,cs:pm_ss
     mov ss,ax
     mov esp,cs:pm_esp
+;    
+    mov eax,cr0
+    or eax,80000000h
+    mov cr0,eax
 ;    
     movzx eax,cs:pm_cs
     push eax
