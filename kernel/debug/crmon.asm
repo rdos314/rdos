@@ -5618,6 +5618,11 @@ InitMonitorGdt    Proc near
     mov ecx,1000h
     call CreateDataSel32    
 ;
+    mov bx,mon_text_sel
+    mov esi,0B8000h
+    mov ecx,800h
+    call CreateDataSel32    
+;
     ret
 InitMonitorGdt  Endp
 

@@ -44,110 +44,17 @@ code    SEGMENT byte public use16 'CODE'
 ;
 
 pm_data   pmode_switch_struc <>
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:           ProtEnterMode
-;
-;               DESCRIPTION:    Protected mode entry code for video switching
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-prot_enter_start:
-    mov ax,flat_sel
-    mov ds,ax
-;    
-    mov eax,cr0
-    and eax,7FFFFFFFh
-    mov cr0,eax
-;
-    mov ebx,OFFSET gdt0
-    add ebx,edx
-    db 66h
-    lgdt fword ptr ds:[ebx]
-;
-    mov ebx,idt20
-    add ebx,edx
-    db 66h
-    lidt fword ptr ds:[ebx]
-;
-    db 0EAh
-    dw OFFSET real_enter
-    dw 10h
 
-real_enter:
-    mov ax,8
-    mov ds,ax
-    mov es,ax
-    mov fs,ax
-    mov gs,ax
-    mov ss,ax
-    mov ax,0F00h
-    mov sp,ax
-;
-    mov eax,cr0
-    and eax,NOT 1
-    mov cr0,eax
-;
-    db 0EAh         ; jmp to real-mode selector
-    dw OFFSET real_start
-real_seg dw 0
-    
-real_start:
-    mov ax,0A0h
-    mov ds,ax
-    mov es,ax
-    mov fs,ax
-    mov gs,ax
-    mov ss,ax
-    mov sp,500h
-;        
-    mov ax,3
-;    int 10h
-    cli
-;
-    mov al,-1
-    out 21h,al
-    jmp short $+2
-;
-    xor ax,ax
-    mov ds,ax
-    mov ebx,OFFSET pm_data
-    add ebx,edx
-;    
-    mov eax,ds:[ebx].pm_cr3
-    mov cr3,eax
-;    
-    db 66h
-    lgdt fword ptr ds:[ebx].pm_gdtr
-    db 66h
-    lidt fword ptr ds:[ebx].pm_idtr
-;
-    mov eax,cr0
-    or eax,80000001h
-    mov cr0,eax
-;    
-    mov ax,ds:[ebx].pm_ss
-    mov ss,ax
-    mov esp,ds:[ebx].pm_esp
-;    
-    movzx eax,ds:[ebx].pm_cs
-    push eax
-    mov eax,ds:[ebx].pm_eip
-    push eax
-    retf32
-    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
 ;
-;               NAME:           Tables
 ;
-;               DESCRIPTION:    GDT for real-mode switching
+;           NAME:           Switch monitor
+;
+;           DESCRIPTION:    Switch to monitor
+;
+;           PARAMETERS:     EDX         Linear base of code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-table_start:
 
 gdt0:
     dw 20h-1        ; real mode GDT
@@ -169,17 +76,6 @@ idt20:              ; real mode IDT
     dw 3FFh
     dd 00000000h
     dw 0
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Switch monitor
-;
-;           DESCRIPTION:    Switch to monitor
-;
-;           PARAMETERS:     EDX         Linear base of code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 switch_monitor:
     mov ax,flat_sel
@@ -204,6 +100,94 @@ switch_monitor:
     db 0EAh
     dw OFFSET prot_enter_start
     dw shutdown_code_sel
+    
+prot_enter_start:
+    mov eax,cr0
+    and eax,7FFFFFFFh
+    mov cr0,eax
+;
+    db 66h
+    lgdt fword ptr cs:gdt0
+;
+    db 66h
+    lidt fword ptr cs:idt20
+;
+    db 0EAh
+    dw OFFSET real_enter
+    dw 10h
+
+real_enter:
+    mov ax,8
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
+    mov ss,ax
+    mov ax,1000h
+    mov sp,ax
+;
+    mov eax,cr0
+    and eax,NOT 1
+    mov cr0,eax
+;
+    db 0EAh         ; jmp to real-mode selector
+    dw OFFSET real_start
+real_seg dw 0
+    
+real_start:
+    xor ax,ax
+    mov ds,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
+    mov ss,ax
+    mov sp,1000h
+;   
+    mov ax,cs:pm_flags
+    test ax,PM_FLAG_VIDEO
+    jz real_video_done
+;    
+    mov ax,3
+;    int 10h
+    cli
+;
+    mov al,-1
+    out 21h,al
+    jmp short $+2
+
+real_video_done:
+    mov bx,cs:pm_flags
+    mov eax,cr4
+    and al,NOT 20h
+    test bx,PM_FLAG_PAE
+    jz real_pae_done
+;
+    or al,20h
+
+real_pae_done:
+    mov cr4,eax
+;
+    mov eax,cs:pm_cr3
+    mov cr3,eax
+;    
+    db 66h
+    lgdt fword ptr cs:pm_gdtr
+    db 66h
+    lidt fword ptr cs:pm_idtr
+;
+    mov eax,cr0
+    or eax,80000001h
+    mov cr0,eax
+;    
+    mov ax,cs:pm_ss
+    mov ss,ax
+    mov esp,cs:pm_esp
+;    
+    movzx eax,cs:pm_cs
+    push eax
+    mov eax,cs:pm_eip
+    push eax
+    retf32
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
