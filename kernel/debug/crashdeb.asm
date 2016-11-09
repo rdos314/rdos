@@ -77,6 +77,7 @@ code    SEGMENT byte public use32 'CODE'
     extrn InitMonitorIdt:near
     extrn InitMonitorGdt:near
     extrn StartMonitor:near
+    extrn CreateDataSel32:near
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -527,6 +528,51 @@ DetectFlags Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           InitMonData
+;
+;       DESCRIPTION:    Init monitor data selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitMonData Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax    
+    mov ax,flat_sel
+    mov es,ax
+;    
+    call AllocateRam
+    call ZeroPage
+    push esi
+    mov edx,esi
+    mov es:[edx].mon_core_count,1
+    mov edi,OFFSET mon_core_regs
+    add edi,edx
+;
+    call AllocateRam
+    call ZeroPage
+    mov eax,esi
+    mov es:[edi].mc_core_linear,0    
+    mov es:[edi].mc_regs_linear,eax
+;
+    mov bx,mon_data_sel
+    mov edx,ds:switch_gdt
+    pop esi
+    mov ecx,SIZE cpu_struc
+    call CreateDataSel32        
+;
+    popad
+    pop es
+    pop ds
+    ret
+InitMonData Endp
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           init_crash_boot
 ;
 ;       DESCRIPTION:    Boot time initialization
@@ -589,6 +635,8 @@ init_crash_boot   Proc near
     mov si,system_data_sel
     mov di,mon_system_data_sel
     call MoveSel
+;
+    call InitMonData
 ;    
     call AllocateRam
     call ZeroPage
@@ -669,8 +717,7 @@ check_boot   Proc near
     xor ebx,ebx
     SetPageEntry
 ;
-    int 3
-;   
+    int 3   
     mov ebx,shutdown_code_sel
     mov ecx,0FFFh
     CreateCodeSelector16

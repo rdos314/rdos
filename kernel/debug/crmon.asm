@@ -5477,6 +5477,8 @@ InitMonitorIdt   Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public CreateDataSel32
+
 CreateDataSel32       PROC near
     push ds
     push ax
