@@ -563,7 +563,6 @@ InitMonData Proc near
     ret
 InitMonData Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -980,6 +979,87 @@ ibiDone:
     call CreateCallGate
     ret
 InitBootInts      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupSwitch
+;
+;           DESCRIPTION:    Setup switch code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupSwitch     Proc near
+    push ds
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax    
+    mov eax,ds:switch_linear
+    mov edx,eax
+    mov al,7
+    xor ebx,ebx
+    SetPageEntry
+;    
+    mov edx,ds:switch_linear
+    mov ebx,shutdown_code_sel
+    mov ecx,0FFFh
+    CreateCodeSelector16
+;
+    popad
+    pop ds
+    ret
+SetupSwitch     Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SwitchToMonitor
+;
+;           DESCRIPTION:    Switch to monitor
+;
+;           PARAMETERS:     EBP         CPU offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SwitchToMonitor:
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov edx,ds:switch_linear
+    mov ax,ds:switch_flags
+    mov es:[edx].pm_flags,ax
+;
+    mov ax,mon_code_sel
+    mov es:[edx].pm_cs,ax
+    mov eax,OFFSET StartMonitor
+    mov es:[edx].pm_eip,eax
+;
+    mov ax,mon_flat_sel
+    mov es:[edx].pm_ss,ax
+    mov eax,1000h
+    mov es:[edx].pm_esp,eax
+;    
+    mov eax,ds:switch_cr3
+    mov es:[edx].pm_cr3,eax
+;
+    mov ax,800h-1
+    mov word ptr es:[edx].pm_gdtr,ax
+    mov eax,ds:switch_gdt
+    mov dword ptr es:[edx+2].pm_gdtr,eax
+;
+    mov ax,800h-1
+    mov word ptr es:[edx].pm_idtr,ax
+    mov eax,ds:switch_idt
+    mov dword ptr es:[edx+2].pm_idtr,eax
+;    
+    mov edi,ds:switch_proc
+    push ebx
+    mov ds,bx
+    xor bx,bx
+    push edi
+    retf
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1101,18 +1181,9 @@ init_crash_boot   Endp
 
     public check_boot
     
-check_boot   Proc near
-    mov ax,SEG data
-    mov ds,ax
-;
-    mov edx,ds:switch_linear
-    mov edi,ds:switch_proc
-    mov eax,edx
-    mov al,7
-    xor ebx,ebx
-    SetPageEntry
-;
+check_boot:
     int 3   
+    call SetupSwitch
     CrashGate
     call InitBootInts
     int 3
@@ -1127,49 +1198,7 @@ check_boot   Proc near
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 abort_pretask:
-    mov ebx,shutdown_code_sel
-    mov ecx,0FFFh
-    CreateCodeSelector16
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,flat_sel
-    mov es,ax
-    mov ax,ds:switch_flags
-    mov es:[edx].pm_flags,ax
-;
-    mov ax,mon_code_sel
-    mov es:[edx].pm_cs,ax
-    mov eax,OFFSET StartMonitor
-    mov es:[edx].pm_eip,eax
-;
-    mov ax,mon_flat_sel
-    mov es:[edx].pm_ss,ax
-    mov eax,1000h
-    mov es:[edx].pm_esp,eax
-;    
-    mov eax,ds:switch_cr3
-    mov es:[edx].pm_cr3,eax
-;
-    mov ax,800h-1
-    mov word ptr es:[edx].pm_gdtr,ax
-    mov eax,ds:switch_gdt
-    mov dword ptr es:[edx+2].pm_gdtr,eax
-;
-    mov ax,800h-1
-    mov word ptr es:[edx].pm_idtr,ax
-    mov eax,ds:switch_idt
-    mov dword ptr es:[edx+2].pm_idtr,eax
-;    
-    push ebx
-    mov ds,bx
-    xor bx,bx
-    push edi
-    retf
-        
-    
-    ret
-check_boot      Endp
+    jmp SwitchToMonitor
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
