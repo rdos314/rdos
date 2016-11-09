@@ -168,6 +168,35 @@ gsbDone:
     pop ds
     ret
 GetSelectorBase  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ZeroPage
+;
+;           DESCRIPTION:    Zero a page
+;
+;           PARAMETERS:     ESI             Page
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ZeroPage  PROC near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov edi,esi
+    mov ecx,400h
+    xor eax,eax
+    rep stosd
+;
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+ZeroPage    Endp
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -280,6 +309,7 @@ init_crash_boot   Proc near
     mov ds,ax
 ;    
     call AllocateRam
+    call ZeroPage
     mov ds:switch_cr3,esi
     mov ds:pae_low,0
     mov ds:pae_high,0
@@ -290,9 +320,11 @@ init_crash_boot   Proc near
 
 icbPae:
     call AllocateRam
+    call ZeroPage
     mov ds:pae_low,esi
 ;    
     call AllocateRam
+    call ZeroPage
     mov ds:pae_high,esi
     jmp icbDone
 
