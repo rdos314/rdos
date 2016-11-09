@@ -187,6 +187,8 @@ ZeroPage  PROC near
     push ecx
     push edi
 ;
+    mov ax,flat_sel
+    mov es,ax
     mov edi,esi
     mov ecx,400h
     xor eax,eax
@@ -198,6 +200,95 @@ ZeroPage  PROC near
     pop es
     ret
 ZeroPage    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnityMapProt
+;
+;           DESCRIPTION:    Unity map, protect mode paging
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnityMapProt  PROC near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ebx,ds:switch_low
+;    
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+;
+    mov ecx,100h
+    mov eax,67h
+
+umProtLoop:
+    mov ds:[ebx],eax
+    add ebx,4
+    add eax,1000h
+    loop umProtLoop
+;
+    mov edi,ebx
+    mov ecx,300h
+    xor eax,eax
+    rep stosd        
+;
+    popad
+    pop es
+    pop ds        
+    ret
+UnityMapProt    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnityMapPae
+;
+;           DESCRIPTION:    Unity map, PAE paging
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnityMapPae  PROC near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ebx,ds:switch_low
+;    
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+;
+    mov ecx,100h
+    mov eax,67h
+    xor edx,edx
+
+umPaeLoop:
+    mov ds:[ebx],eax
+    add ebx,4
+;
+    mov ds:[ebx],edx
+    add ebx,4
+;
+    add eax,1000h
+    loop umPaeLoop
+;
+    mov edi,ebx
+    mov ecx,200h
+    xor eax,eax
+    rep stosd        
+;
+    popad
+    pop es
+    pop ds        
+    ret
+UnityMapPae    Endp
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -312,10 +403,6 @@ init_crash_boot   Proc near
     call AllocateRam
     call ZeroPage
     mov ds:switch_cr3,esi
-;
-    call AllocateRam
-    call ZeroPage
-    mov ds:switch_low,esi
 ;    
     mov ds:pae_low,0
     mov ds:pae_high,0
@@ -332,9 +419,16 @@ icbPae:
     call AllocateRam
     call ZeroPage
     mov ds:pae_high,esi
+;
+    call AllocateRam
+    mov ds:switch_low,esi
+    call UnityMapPae
     jmp icbDone
 
 icbProt:
+    call AllocateRam
+    mov ds:switch_low,esi
+    call UnityMapProt
 
 icbDone:
     popad
@@ -390,6 +484,9 @@ check_boot   Proc near
     xor ebx,ebx
     SetPageEntry
 ;
+    call UnityMapProt
+
+
     mov ebx,shutdown_code_sel
     mov ecx,0FFFh
     CreateCodeSelector16
