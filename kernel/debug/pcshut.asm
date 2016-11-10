@@ -186,10 +186,7 @@ prot_enter_start:
     and eax,7FFFFFFFh
     mov cr0,eax
 ;
-    db 66h
     lgdt fword ptr cs:gdt0
-;
-    db 66h
     lidt fword ptr cs:idt20
 ;
     db 0EAh

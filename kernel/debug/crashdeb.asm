@@ -50,6 +50,9 @@ map_spinlock DW ?
 mon_linear   DD ?
 mon_cr3      DD ?
 
+idt_temp_size DW ?
+idt_temp_base DD ?
+
 switch_proc   DD ?
 switch_linear DD ?
 switch_flags  DW ?
@@ -79,6 +82,206 @@ code    SEGMENT byte public use32 'CODE'
     extrn InitMonitorGdt:near
     extrn StartMonitor:near
     extrn CreateDataSel32:near
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateIntGate
+;
+;           DESCRIPTION:    Create int gate selector
+;
+;           PARAMETERS:     AL          INT #
+;                           BL          DPL
+;                           DS:ESI      ENTRY POINT
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIntGate     PROC near
+    push es
+    push ax
+    push bx
+    push dx
+;
+    mov dx,idt_sel
+    mov es,dx
+;
+    mov ah,bl
+    movzx bx,al
+    shl bx,3
+    xor al,al
+    shl ah,5
+    or ah,8Eh
+    mov es:[bx+4],ax
+    mov es:[bx],esi
+    mov ax,ds
+    xchg ax,es:[bx+2]
+    mov es:[bx+6],ax
+;
+    pop dx
+    pop bx
+    pop ax
+    pop es
+    ret
+CreateIntGate     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateCallGate
+;
+;           DESCRIPTION:    Create 32-bit call gate selector
+;
+;           PARAMETERS:     BX          DESCRIPTOR
+;                           DS:ESI      ENTRY POINT
+;                           CL          32-BIT WORDS TO MOVE
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateCallGate  PROC near
+    push es
+    push ax
+    push bx
+;
+    mov ax,gdt_sel
+    mov es,ax
+;
+    mov ah,bl
+    and bx,0FFF8h
+    mov al,cl
+    and al,0Fh
+    shl ah,5
+    or ah,8Ch
+    mov es:[bx+4],ax
+    mov es:[bx],esi
+    mov ax,ds
+    xchg ax,es:[bx+2]
+    mov es:[bx+6],ax
+;
+    pop bx
+    pop ax
+    pop es
+    ret
+CreateCallGate  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateDataSel16
+;
+;           DESCRIPTION:    Create 16-bit data selector
+;
+;           PARAMETERS:     BX              DESCRIPTOR
+;                           EDX             BASE
+;                           ECX             LIMIT
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDataSel16       PROC near
+    push ds
+    push ax
+    push bx
+    push ecx
+;
+    mov ax,gdt_sel
+    mov ds,ax
+;
+    mov al,bl
+    and bx,0FFF8h
+    dec ecx
+    cmp ecx,100000h
+    jae cdsBig
+;
+    mov [bx],cx
+    mov [bx+2],edx
+    shl al,5
+    or al,92h
+    xchg al,[bx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    mov [bx+6],cx
+    jmp cdsDone
+
+cdsBig:
+    shr ecx,12
+    mov [bx],cx
+    mov [bx+2],edx
+    shl al,5
+    or al,92h
+    xchg al,[bx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,80h
+    mov [bx+6],cx
+
+cdsDone:
+    pop ecx
+    pop bx
+    pop ax
+    pop ds
+    ret
+CreateDataSel16       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateCodeSel16
+;
+;           DESCRIPTION:    Create 16-bit code selector
+;
+;           PARAMETERS:     BX              DESCRIPTOR
+;                           EDX             BASE
+;                           ECX             LIMIT
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateCodeSel16       PROC near
+    push ds
+    push ax
+    push bx
+    push ecx
+;    
+    mov ax,gdt_sel
+    mov ds,ax
+;
+    mov al,bl
+    and bx,0FFF8h
+    dec ecx
+    cmp ecx,100000h
+    jae ccsBig
+;
+    mov [bx],cx
+    mov [bx+2],edx
+    shl al,5
+    or al,9Ah
+    xchg al,[bx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    mov [bx+6],cx
+    jmp ccsDone
+
+ccsBig:
+    shr ecx,12
+    mov [bx],cx
+    mov [bx+2],edx
+    shl al,5
+    or al,9Ah
+    xchg al,[bx+5]
+    shr ecx,16
+    and cx,0Fh
+    or ch,al
+    or cl,80h
+    mov [bx+6],cx
+
+ccsDone:
+    pop ecx
+    pop bx
+    pop ax
+    pop ds
+    ret
+CreateCodeSel16       ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -568,86 +771,6 @@ InitMonData Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateIntGate
-;
-;           DESCRIPTION:    Create int gate selector
-;
-;           PARAMETERS:     AL          INT #
-;                           BL          DPL
-;                           DS:ESI      ENTRY POINT
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateIntGate     PROC near
-    push es
-    push ax
-    push bx
-    push dx
-;
-    mov dx,idt_sel
-    mov es,dx
-;
-    mov ah,bl
-    movzx bx,al
-    shl bx,3
-    xor al,al
-    shl ah,5
-    or ah,8Eh
-    mov es:[bx+4],ax
-    mov es:[bx],esi
-    mov ax,ds
-    xchg ax,es:[bx+2]
-    mov es:[bx+6],ax
-;
-    pop dx
-    pop bx
-    pop ax
-    pop es
-    ret
-CreateIntGate     ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateCallGate
-;
-;           DESCRIPTION:    Create 32-bit call gate selector
-;
-;           PARAMETERS:     BX          DESCRIPTOR
-;                           DS:ESI      ENTRY POINT
-;                           CL          32-BIT WORDS TO MOVE
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateCallGate  PROC near
-    push es
-    push ax
-    push bx
-;
-    mov ax,gdt_sel
-    mov es,ax
-;
-    mov ah,bl
-    and bx,0FFF8h
-    mov al,cl
-    and al,0Fh
-    shl ah,5
-    or ah,8Ch
-    mov es:[bx+4],ax
-    mov es:[bx],esi
-    mov ax,ds
-    xchg ax,es:[bx+2]
-    mov es:[bx+6],ax
-;
-    pop bx
-    pop ax
-    pop es
-    ret
-CreateCallGate  ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           PRETASKING_GATE0, PRETASKING_GATE4
 ;
 ;           DESCRIPTION:    Pretasking gates
@@ -873,7 +996,19 @@ pg14    DD      14,         OFFSET prepaging14,     kdebug_code_sel,    0
 pg16    DD      16,         OFFSET pretask16,       kdebug_code_sel,    0
 pg7_end DD      0FFFFFFFFh
 
+;           PARAMETERS:     BX              DESCRIPTOR
+;                           EDX             BASE
+;                           ECX             LIMIT
+
+
 InitBootInts      PROC near
+    mov ax,SEG data
+    mov ds,ax
+    mov edx,ds:data_linear
+    mov bx,idt_sel
+    mov ecx,200h
+    call CreateDataSel16
+;
     mov edi,OFFSET pretask_int_tab
 
 ibiLoop:
@@ -897,110 +1032,16 @@ ibiDone:
     xor cl,cl
     mov bx,shutdown_pretask_gate
     call CreateCallGate
-    ret
-InitBootInts      ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;
-;           NAME:           SetupSwitch
-;
-;           DESCRIPTION:    Setup switch code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupSwitch     Proc near
-    push ds
-    push es
-    pushad
-;
-    mov ax,SEG data
-    mov ds,ax    
-    mov ax,flat_sel
-    mov es,ax
-;    
-    mov eax,ds:switch_linear
-    mov edx,eax
-    mov al,3
-    xor ebx,ebx
-    SetPageEntry
-;
-    mov edx,ds:data_linear
-    mov eax,edx
-    mov al,3
-    xor ebx,ebx
-    SetPageEntry
-;
-    mov edx,ds:data_linear
-    add edx,OFFSET mon_core_regs
-    mov edx,es:[edx].mc_regs_linear
-    mov eax,edx
-    mov al,3
-    xor ebx,ebx
-    SetPageEntry
-;    
-    mov edx,ds:switch_linear
-    mov ebx,shutdown_code_sel
-    mov ecx,1000h
-    CreateCodeSelector16
-;
-    popad
-    pop es
-    pop ds
-    ret
-SetupSwitch     Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SwitchToMonitor
-;
-;           DESCRIPTION:    Switch to monitor
-;
-;           PARAMETERS:     EBP         CPU offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SwitchToMonitor:
     mov ax,SEG data
     mov ds,ax
-    mov ax,flat_sel
-    mov es,ax
-    mov edx,ds:switch_linear
-    mov ax,ds:switch_flags
-    mov es:[edx].pm_flags,ax
-;
-    mov ax,mon_code_sel
-    mov es:[edx].pm_cs,ax
-    mov eax,OFFSET StartMonitor
-    mov es:[edx].pm_eip,eax
-;
-    mov ax,mon_flat_sel
-    mov es:[edx].pm_ss,ax
-    mov eax,1000h
-    mov es:[edx].pm_esp,eax
-;    
-    mov eax,ds:switch_cr3
-    mov al,7
-    mov es:[edx].pm_cr3,eax
-;
-    mov ax,800h-1
-    mov word ptr es:[edx].pm_gdtr,ax
-    mov eax,ds:switch_gdt
-    mov dword ptr es:[edx+2].pm_gdtr,eax
-;
-    mov ax,800h-1
-    mov word ptr es:[edx].pm_idtr,ax
-    mov eax,ds:switch_idt
-    mov dword ptr es:[edx+2].pm_idtr,eax
-;    
-    mov ebx,shutdown_code_sel
-    mov edi,ds:switch_proc
-    push ebx
-    mov ds,bx
-    xor bx,bx
-    push edi
-    retf
+    mov edx,ds:data_linear
+    mov ds:idt_temp_size,7FFh
+    mov ds:idt_temp_base,edx
+    db 66h
+    lidt fword ptr ds:idt_temp_size
+    ret
+InitBootInts      ENDP
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1105,35 +1146,122 @@ icbProt:
     call InitMonitorGdt
 
 icbDone:
+    call InitBootInts
+;    
+    mov edx,ds:switch_linear
+    mov ebx,shutdown_code_sel
+    mov ecx,1000h
+    call CreateCodeSel16
+;    
+    int 3
+;    
     popad
     pop es
     pop ds    
     ret
 init_crash_boot   Endp
-  
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
 ;
-;       NAME:           check_boot
 ;
-;       DESCRIPTION:    Check boot time init
+;           NAME:           SetupSwitch
+;
+;           DESCRIPTION:    Setup switch code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public check_boot
-    
-check_boot:
-    int 3   
+SetupSwitch     Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax    
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov eax,ds:switch_linear
+    mov edx,eax
+    mov al,3
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov edx,ds:data_linear
+    mov eax,edx
+    mov al,3
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov edx,ds:data_linear
+    add edx,OFFSET mon_core_regs
+    mov edx,es:[edx].mc_regs_linear
+    mov eax,edx
+    mov al,3
+    xor ebx,ebx
+    SetPageEntry
+;    
+    mov edx,ds:switch_linear
+    mov ebx,shutdown_code_sel
+    mov ecx,1000h
+    CreateCodeSelector16
+;
+    popad
+    pop es
+    pop ds
+    ret
+SetupSwitch     Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SwitchToMonitor
+;
+;           DESCRIPTION:    Switch to monitor
+;
+;           PARAMETERS:     EBP         CPU offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SwitchToMonitor:
     mov ax,SEG data
     mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov edx,ds:switch_linear
     mov ax,ds:switch_flags
-    and ax,NOT PM_FLAG_VIDEO
-    mov ds:switch_flags,ax
+    mov es:[edx].pm_flags,ax
+;
+    mov ax,mon_code_sel
+    mov es:[edx].pm_cs,ax
+    mov eax,OFFSET StartMonitor
+    mov es:[edx].pm_eip,eax
+;
+    mov ax,mon_flat_sel
+    mov es:[edx].pm_ss,ax
+    mov eax,1000h
+    mov es:[edx].pm_esp,eax
 ;    
-    cli
-    call SetupSwitch
-    call InitBootInts
-    int 3
+    mov eax,ds:switch_cr3
+    mov al,7
+    mov es:[edx].pm_cr3,eax
+;
+    mov ax,800h-1
+    mov word ptr es:[edx].pm_gdtr,ax
+    mov eax,ds:switch_gdt
+    mov dword ptr es:[edx+2].pm_gdtr,eax
+;
+    mov ax,800h-1
+    mov word ptr es:[edx].pm_idtr,ax
+    mov eax,ds:switch_idt
+    mov dword ptr es:[edx+2].pm_idtr,eax
+;    
+    mov ebx,shutdown_code_sel
+    mov edi,ds:switch_proc
+    push ebx
+    mov ds,bx
+    xor bx,bx
+    push edi
+    retf
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1264,6 +1392,30 @@ apStackOk:
     mov ds:[ebp].reg_tr.d_base,0
     mov ds:[ebp].reg_efer,0
     jmp SwitchToMonitor
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           check_boot
+;
+;       DESCRIPTION:    Check boot time init
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public check_boot
+    
+check_boot:
+    int 3   
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:switch_flags
+    and ax,NOT PM_FLAG_VIDEO
+    mov ds:switch_flags,ax
+;    
+    cli
+    call SetupSwitch
+    call InitBootInts
+    int 3
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
