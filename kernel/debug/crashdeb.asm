@@ -60,6 +60,7 @@ switch_low    DD ?
 pae_low       DD ?
 switch_gdt    DD ?
 switch_idt    DD ?
+data_linear   DD ?
 
 data    ENDS
 
@@ -538,6 +539,7 @@ InitMonData Proc near
 ;    
     call AllocateRam
     call ZeroPage
+    mov ds:data_linear,esi
     push esi
     mov edx,esi
     mov es:[edx].mon_core_count,1
@@ -815,6 +817,7 @@ pretask13:
     push ax
     mov ax,ds
     push ax
+    ShutDownPreTask
 
 prepaging14:
     push ebp
@@ -908,12 +911,30 @@ InitBootInts      ENDP
 
 SetupSwitch     Proc near
     push ds
+    push es
     pushad
 ;
     mov ax,SEG data
     mov ds,ax    
+    mov ax,flat_sel
+    mov es,ax
+;    
     mov eax,ds:switch_linear
     mov edx,eax
+    mov al,3
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov edx,ds:data_linear
+    mov eax,edx
+    mov al,3
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov edx,ds:data_linear
+    add edx,OFFSET mon_core_regs
+    mov edx,es:[edx].mc_regs_linear
+    mov eax,edx
     mov al,3
     xor ebx,ebx
     SetPageEntry
@@ -924,6 +945,7 @@ SetupSwitch     Proc near
     CreateCodeSelector16
 ;
     popad
+    pop es
     pop ds
     ret
 SetupSwitch     Endp    
@@ -1102,6 +1124,12 @@ init_crash_boot   Endp
     
 check_boot:
     int 3   
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:switch_flags
+    and ax,NOT PM_FLAG_VIDEO
+    mov ds:switch_flags,ax
+;    
     cli
     call SetupSwitch
     call InitBootInts
@@ -1117,6 +1145,124 @@ check_boot:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 abort_pretask:
+    mov ax,SEG data
+    mov ds,ax
+    mov ebp,ds:data_linear
+    add ebp,OFFSET mon_core_regs
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov ebp,ds:[ebp].mc_regs_linear
+;
+    add esp,8
+    pop ax
+    mov ds:[ebp].reg_ds.d_selector,ax
+;
+    pop ax    
+    mov ds:[ebp].fault_vect,al
+;
+    pop ebx
+    mov ds:[ebp].reg_ebx,ebx
+;
+    pop eax
+    mov ds:[ebp].reg_eax,eax
+;
+    pop eax
+    mov ds:[ebp].reg_ebp,eax
+;
+    pop eax
+    mov ds:[ebp].fault_error,eax
+;    
+    pop eax
+    mov ds:[ebp].reg_eip,eax
+;
+    pop ebx
+    mov ds:[ebp].reg_cs.d_selector,bx
+;
+    pop eax
+    mov ds:[ebp].reg_eflags,eax
+;
+    test bx,3
+    jz apKernelStack
+;
+    pop eax
+    mov ds:[ebp].reg_esp,eax
+;
+    pop ebx
+    mov ds:[ebp].reg_ss.d_selector,bx
+    jmp apStackOk
+
+apKernelStack:
+    mov ds:[ebp].reg_ss.d_selector,ss            
+    mov ds:[ebp].reg_esp,esp
+
+apStackOk:
+    sldt bx
+    mov ds:[ebp].reg_ldt.d_selector,bx
+;    
+    str bx
+    mov ds:[ebp].reg_tr.d_selector,bx
+;
+    mov ds:[ebp].reg_gs.d_selector,gs
+    mov ds:[ebp].reg_fs.d_selector,fs
+    mov ds:[ebp].reg_es.d_selector,es
+;    
+    mov ds:[ebp].reg_edi,edi
+    mov ds:[ebp].reg_esi,esi
+    mov ds:[ebp].reg_edx,edx
+    mov ds:[ebp].reg_ecx,ecx
+;
+    mov ds:[ebp].debug_core_sel,0
+    mov ds:[ebp].debug_core_id,0
+;
+    mov eax,cr0
+    mov ds:[ebp].reg_cr0,eax
+;
+    mov eax,cr2
+    mov ds:[ebp].reg_cr2,eax
+;
+    mov eax,cr3
+    mov ds:[ebp].reg_cr3,eax
+;
+    mov eax,cr4
+    mov ds:[ebp].reg_cr4,eax
+;
+    mov eax,dr0
+    mov ds:[ebp].reg_dr0,eax               
+;
+    mov eax,dr1
+    mov ds:[ebp].reg_dr1,eax               
+;
+    mov eax,dr2
+    mov ds:[ebp].reg_dr2,eax               
+;
+    mov eax,dr6
+    mov ds:[ebp].reg_dr6,eax               
+;
+    mov eax,dr7
+    mov ds:[ebp].reg_dr7,eax               
+;
+    mov eax,dr0
+    mov ds:[ebp].reg_dr0,eax               
+;
+    sgdt fword ptr ds:[ebp].temp_size
+    movzx eax,ds:[ebp].temp_size
+    mov ds:[ebp].reg_gdt.d_limit,eax
+    mov eax,ds:[ebp].temp_base
+    mov ds:[ebp].reg_gdt.d_base,eax
+;
+    sidt fword ptr ds:[ebp].temp_size
+    movzx eax,ds:[ebp].temp_size
+    mov ds:[ebp].reg_idt.d_limit,eax
+    mov eax,ds:[ebp].temp_base
+    mov ds:[ebp].reg_idt.d_base,eax
+;    
+    mov ds:[ebp].reg_ldt.d_limit,0
+    mov ds:[ebp].reg_ldt.d_base,0
+;    
+    mov ds:[ebp].reg_tr.d_limit,0
+    mov ds:[ebp].reg_tr.d_base,0
+    mov ds:[ebp].reg_efer,0
     jmp SwitchToMonitor
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

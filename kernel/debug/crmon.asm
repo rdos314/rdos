@@ -5640,7 +5640,18 @@ InitMonitorGdt  Endp
     public StartMonitor
 
 StartMonitor:
-    int 3
+    mov ax,mon_gdt_sel
+    mov ss,ax
+    mov esp,800h
+;
+    mov ax,mon_flat_sel
+    mov ds,ax
+    mov es,ax
+;        
+    xor ax,ax
+    mov fs,ax
+    mov gs,ax
+    jmp handle_monitor
 
 code    ENDS
 
