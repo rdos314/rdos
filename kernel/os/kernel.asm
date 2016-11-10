@@ -793,6 +793,7 @@ init_cpu_text_mode_ok:
     mov es:[bx+6],ax
 ;
     call init_pretask_traps
+    int 3
 ;
     call AllocateRam
     mov edx,esi

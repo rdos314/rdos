@@ -2162,6 +2162,7 @@ pretask0:
     mov ax,0
     push ax
     push ds
+    mov ax,-1
     ShutDownPreTask
 
 pretask1:
@@ -2173,6 +2174,7 @@ pretask1:
     mov ax,1
     push ax
     push ds
+    mov ax,-1
     ShutDownPreTask
 
 pretask2:
@@ -2184,6 +2186,7 @@ pretask2:
     mov ax,2
     push ax
     push ds
+    mov ax,-1
     ShutDownPreTask
 
 pretask3:
@@ -2195,6 +2198,7 @@ pretask3:
     mov ax,3
     push ax
     push ds
+    mov ax,-1
     ShutDownPreTask
 
 pretask4:
@@ -2206,6 +2210,7 @@ pretask4:
     mov ax,4
     push ax
     push ds
+    mov ax,-1
     ShutDownPreTask
 
 pretask5:
@@ -2217,6 +2222,7 @@ pretask5:
     mov ax,5
     push ax
     push ds
+    mov ax,-1
     ShutDownPreTask
 
 pretask6:
@@ -2228,6 +2234,7 @@ pretask6:
     mov ax,6
     push ax
     push ds
+    mov ax,-1
     ShutDownPreTask
 
 pretask7:
@@ -2239,6 +2246,7 @@ pretask7:
     mov ax,7
     push ax
     push ds
+    mov ax,-1
     ShutDownPreTask
 
 pretask8:
@@ -2249,6 +2257,7 @@ pretask8:
     mov ax,8
     push ax
     push ds
+    mov ax,-1
     ShutDownPreTask
 
 pretask9:
@@ -2260,6 +2269,7 @@ pretask9:
     mov ax,9
     push ax
     push ds
+    mov ax,-1
     ShutDownPreTask
 
 pretask10:
@@ -2270,6 +2280,7 @@ pretask10:
     mov ax,10
     push ax
     push ds
+    mov ax,-1
     ShutDownPreTask
 
 pretask11:
@@ -2280,6 +2291,7 @@ pretask11:
     mov ax,11
     push ax
     push ds
+    mov ax,-1
     ShutDownPreTask
 
 pretask12:
@@ -2290,6 +2302,7 @@ pretask12:
     mov ax,12
     push ax
     push ds
+    mov ax,-1
     ShutDownPreTask
 
 pretask13:
@@ -2388,6 +2401,7 @@ pretask_kernel_gate32:
     jmp pretask_gpf_reexec
 
 pretask_gpf_default:
+    mov ax,-1
     ShutDownPreTask
 
 pretask_gpf_reexec:
@@ -2408,6 +2422,7 @@ prepaging14:
     mov ax,14
     push ax
     push ds
+    mov ax,-1
     ShutDownPreTask
 
 pretask16:
@@ -2419,6 +2434,7 @@ pretask16:
     mov ax,16
     push ax
     push ds
+    mov ax,-1
     ShutDownPreTask
 
 pretask_int_tab:

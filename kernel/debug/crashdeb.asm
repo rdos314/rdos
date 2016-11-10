@@ -767,281 +767,6 @@ InitMonData Proc near
     pop ds
     ret
 InitMonData Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           PRETASKING_GATE0, PRETASKING_GATE4
-;
-;           DESCRIPTION:    Pretasking gates
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-pretask0:
-    push dword ptr 0
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,0
-    push ax
-    mov ax,ds
-    push ax
-    ShutDownPreTask
-
-pretask1:
-    push dword ptr 0
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,1
-    push ax
-    mov ax,ds
-    push ax
-    ShutDownPreTask
-
-pretask2:
-    push dword ptr 0
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,2
-    push ax
-    mov ax,ds
-    push ax
-    ShutDownPreTask
-
-pretask3:
-    push dword ptr 0
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,3
-    push ax
-    mov ax,ds
-    push ax
-    ShutDownPreTask
-
-pretask4:
-    push dword ptr 0
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,4
-    push ax
-    mov ax,ds
-    push ax
-    ShutDownPreTask
-
-pretask5:
-    push dword ptr 0
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,5
-    push ax
-    mov ax,ds
-    push ax
-    ShutDownPreTask
-
-pretask6:
-    push dword ptr 0
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,6
-    push ax
-    mov ax,ds
-    push ax
-    ShutDownPreTask
-
-pretask7:
-    push dword ptr 0
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,7
-    push ax
-    mov ax,ds
-    push ax
-    ShutDownPreTask
-
-pretask8:
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,8
-    push ax
-    mov ax,ds
-    push ax
-    ShutDownPreTask
-
-pretask9:
-    push dword ptr 0
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,9
-    push ax
-    mov ax,ds
-    push ax
-    ShutDownPreTask
-
-pretask10:
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,10
-    push ax
-    mov ax,ds
-    push ax
-    ShutDownPreTask
-
-pretask11:
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,11
-    push ax
-    mov ax,ds
-    push ax
-    ShutDownPreTask
-
-pretask12:
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,12
-    push ax
-    mov ax,ds
-    push ax
-    ShutDownPreTask
-
-pretask13:
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,13
-    push ax
-    mov ax,ds
-    push ax
-    ShutDownPreTask
-
-prepaging14:
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,14
-    push ax
-    mov ax,ds
-    push ax
-    ShutDownPreTask
-
-pretask16:
-    push dword ptr 0
-    push ebp
-    mov ebp,esp
-    push eax
-    push ebx
-    mov ax,16
-    push ax
-    mov ax,ds
-    push ax
-    ShutDownPreTask
-
-;
-; tabell offsets
-;
-ig_nr       EQU 0
-ig_entry    EQU 4
-ig_sel      EQU 8
-ig_dpl      EQU 12
-
-
-pretask_int_tab:
-;
-;               int #   Entry                   Selector        Dpl
-;
-pg0     DD      0,          OFFSET pretask0,        kdebug_code_sel,    0
-pg1     DD      1,          OFFSET pretask1,        kdebug_code_sel,    0
-pg2     DD      2,          OFFSET pretask2,        kdebug_code_sel,    0
-pg3     DD      3,          OFFSET pretask3,        kdebug_code_sel,    0
-pg4     DD      4,          OFFSET pretask4,        kdebug_code_sel,    0
-pg5     DD      5,          OFFSET pretask5,        kdebug_code_sel,    0
-pg6     DD      6,          OFFSET pretask6,        kdebug_code_sel,    0
-pg7     DD      7,          OFFSET pretask7,        kdebug_code_sel,    0
-pg8     DD      8,          OFFSET pretask8,        kdebug_code_sel,    0
-pg9     DD      9,          OFFSET pretask9,        kdebug_code_sel,    0
-pg10    DD      10,         OFFSET pretask10,       kdebug_code_sel,    0
-pg11    DD      11,         OFFSET pretask11,       kdebug_code_sel,    0
-pg12    DD      12,         OFFSET pretask12,       kdebug_code_sel,    0
-pg13    DD      13,         OFFSET pretask13,       kdebug_code_sel,    0
-pg14    DD      14,         OFFSET prepaging14,     kdebug_code_sel,    0
-pg16    DD      16,         OFFSET pretask16,       kdebug_code_sel,    0
-pg7_end DD      0FFFFFFFFh
-
-;           PARAMETERS:     BX              DESCRIPTOR
-;                           EDX             BASE
-;                           ECX             LIMIT
-
-
-InitBootInts      PROC near
-    mov ax,SEG data
-    mov ds,ax
-    mov edx,ds:data_linear
-    mov bx,idt_sel
-    mov ecx,200h
-    call CreateDataSel16
-;
-    mov edi,OFFSET pretask_int_tab
-
-ibiLoop:
-    mov eax,cs:[edi]
-    cmp ax,0FFFFFFFFh
-    jz ibiDone
-;
-    mov ax,cs:[edi].ig_sel
-    mov ds,ax
-    mov al,cs:[edi].ig_nr
-    mov bl,cs:[edi].ig_dpl
-    mov esi,cs:[edi].ig_entry
-    call CreateIntGate
-    add edi,16
-    jmp ibiLoop
-
-ibiDone:
-    mov ax,cs
-    mov ds,ax
-    mov esi,OFFSET abort_pretask
-    xor cl,cl
-    mov bx,shutdown_pretask_gate
-    call CreateCallGate
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov edx,ds:data_linear
-    mov ds:idt_temp_size,7FFh
-    mov ds:idt_temp_base,edx
-    db 66h
-    lidt fword ptr ds:idt_temp_size
-    ret
-InitBootInts      ENDP
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1146,14 +871,19 @@ icbProt:
     call InitMonitorGdt
 
 icbDone:
-    call InitBootInts
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET abort_pretask
+    xor cl,cl
+    mov bx,shutdown_pretask_gate
+    call CreateCallGate
 ;    
+    mov ax,SEG data
+    mov ds,ax
     mov edx,ds:switch_linear
     mov ebx,shutdown_code_sel
     mov ecx,1000h
     call CreateCodeSel16
-;    
-    int 3
 ;    
     popad
     pop es
@@ -1273,6 +1003,12 @@ SwitchToMonitor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 abort_pretask:
+    mov ebx,ebp
+    cmp ax,-1
+    je kernel_pretask
+;    
+    push ax
+;    
     mov ax,SEG data
     mov ds,ax
     mov ebp,ds:data_linear
@@ -1282,22 +1018,52 @@ abort_pretask:
     mov ds,ax
     mov ebp,ds:[ebp].mc_regs_linear
 ;
+    pop ax
+    mov ds:[ebp].fault_vect,al
+;
     add esp,8
+;
     pop ax
     mov ds:[ebp].reg_ds.d_selector,ax
 ;
-    pop ax    
+    pop eax
+    mov ds:[ebp].reg_ebx,eax
+;
+    pop eax
+    mov ds:[ebp].reg_eax,eax
+;
+    pop bx
+    mov ds:[ebp].reg_ebp,ebx
+    jmp common_pretask
+
+kernel_pretask:
+    add esp,8
+;    
+    mov ax,SEG data
+    mov ds,ax
+    mov ebp,ds:data_linear
+    add ebp,OFFSET mon_core_regs
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov ebp,ds:[ebp].mc_regs_linear
+;
+    pop ax
+    mov ds:[ebp].reg_ds.d_selector,ax
+;
+    pop ax
     mov ds:[ebp].fault_vect,al
 ;
-    pop ebx
-    mov ds:[ebp].reg_ebx,ebx
+    pop eax
+    mov ds:[ebp].reg_ebx,eax
 ;
     pop eax
     mov ds:[ebp].reg_eax,eax
 ;
     pop eax
     mov ds:[ebp].reg_ebp,eax
-;
+
+common_pretask:
     pop eax
     mov ds:[ebp].fault_error,eax
 ;    
@@ -1414,7 +1180,6 @@ check_boot:
 ;    
     cli
     call SetupSwitch
-    call InitBootInts
     int 3
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
