@@ -5651,6 +5651,9 @@ StartMonitor:
     xor ax,ax
     mov fs,ax
     mov gs,ax
+;
+    mov edx,0C0000000h
+    mov ds:[edx],edx
     jmp handle_monitor
 
 code    ENDS

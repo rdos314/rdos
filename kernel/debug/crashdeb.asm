@@ -40,7 +40,8 @@ INCLUDE ..\os\gate.def
 INCLUDE kdebug.inc
 
 code_page_linear  = 100000h
-map_page_linear =   1FF000h
+map_page_linear   = 1FF000h
+lfb_page_linear   = 0C0000000h
 
 data    SEGMENT byte public 'DATA'
 
@@ -579,6 +580,108 @@ MapLowPae    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           MapLfbPae
+;
+;           DESCRIPTION:    Map LFB, PAE paging
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapLfbPae  PROC near
+    push ds
+    push es
+    pushad
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:efi_acpi
+    or eax,ds:efi_acpi+4
+    jz mePaeDone
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+;    
+    call AllocateRam
+    call ZeroPage
+;
+    mov edi,esi
+    mov eax,esi
+    xor ebx,ebx
+    mov al,1
+    mov esi,ds:switch_cr3
+    mov es:[esi+24],eax
+    mov es:[esi+28],ebx
+;    
+    mov ax,system_data_sel
+    mov ds,ax
+    movzx eax,ds:efi_height
+    mov edx,ds:efi_scan_size
+    mul edx
+    dec eax
+    shr eax,12
+    inc eax
+    mov ecx,eax
+    or ecx,ecx
+    jz mePaeDone
+;    
+    call AllocateRam
+    call ZeroPage
+;
+    mov eax,esi
+    xor ebx,ebx
+    mov al,3
+    mov es:[edi],eax
+    add edi,4
+    mov es:[edi],ebx
+    add edi,4
+;
+    mov eax,ds:efi_lfb
+    mov edx,ds:efi_lfb+4
+    or al,3
+        
+mePaeLoop:    
+    mov es:[esi],eax
+    add esi,4
+;
+    mov es:[esi],edx
+    add esi,4
+;
+    test si,0FFFh
+    jnz mePaeNext
+;
+    push eax
+    push edx
+;        
+    call AllocateRam
+    call ZeroPage
+;
+    mov eax,esi
+    xor ebx,ebx
+    mov al,3
+    mov es:[edi],eax
+    add edi,4
+    mov es:[edi],ebx
+    add edi,4
+;
+    pop edx
+    pop eax
+
+mePaeNext:
+    add eax,1000h
+    adc edx,0
+    loop mePaeLoop
+
+mePaeDone:
+    popad
+    pop es
+    pop ds        
+    ret
+MapLfbPae    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           MapProt
 ;
 ;           DESCRIPTION:    Map protected mode paging structure
@@ -846,6 +949,7 @@ icbPae:
     mov ds:switch_low,esi
     call MapLowPae
     call MapPae
+    call MapLfbPae
 ;
     mov edx,ds:switch_gdt
     mov esi,ds:switch_base
@@ -1003,6 +1107,16 @@ SwitchToMonitor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 abort_pretask:
+    mov bx,system_data_sel
+    mov ds,bx
+    mov ebx,ds:efi_acpi
+    or ebx,ds:efi_acpi+4
+    jz apLfbDone
+;
+    mov ds:efi_lfb,lfb_page_linear    
+    mov ds:efi_lfb+4,0
+    
+apLfbDone:
     mov ebx,ebp
     cmp ax,-1
     je kernel_pretask
