@@ -423,7 +423,7 @@ MapPae  PROC near
 ;
     mov ebx,ds:switch_cr3
     mov eax,ds:pae_low
-    mov al,3
+    mov al,1
     xor edx,edx
     mov es:[ebx],eax
     mov es:[ebx+4],edx
@@ -484,7 +484,7 @@ DetectFlags Proc near
     jz dfProt
 
 dfPae:    
-;    or ds:switch_flags,PM_FLAG_PAE
+    or ds:switch_flags,PM_FLAG_PAE
 
 dfProt:
     mov ax,flat_sel
@@ -815,105 +815,6 @@ pretask13:
     push ax
     mov ax,ds
     push ax
-;    
-    test byte ptr [ebp+2].trap_eflags,2
-    jnz pretask_gpf_default
-;
-    mov ds,[ebp].trap_cs
-    mov ebx,[ebp].trap_eip
-    mov al,[ebx]
-;
-    cmp al,0CDh
-    jne pretask_gpf_not_int
-;
-    mov al,[ebx+1]
-    cmp al,66h
-    je pretask_gpf_reexec
-;
-    cmp al,67h
-    je pretask_gpf_reexec
-;
-    cmp al,9Ah
-    je pretask_gpf_reexec
-;
-    jmp pretask_gpf_default
-        
-pretask_gpf_not_int:
-    cmp al,3Eh
-    je pretask_gpf_32
-;
-    cmp al,67h
-    jne pretask_gpf_default
-
-pretask_gpf_16:
-    mov al,[ebx+2]
-    cmp al,9Ah
-    jne pretask_gpf_default
-;
-    mov ax,[ebx+7]
-    or ax,ax
-    jz pretask_gpf_default
-;
-    cmp ax,3
-    ja pretask_gpf_default
-
-pretask_kernel_gate16:
-    push ecx
-    push edx
-;    
-    push ebx
-    mov bx,ds
-    call GetSelectorBase
-    pop ebx
-    add ebx,edx
-    mov ax,flat_sel
-    mov ds,ax
-;
-    mov al,0CDh
-    xchg al,ds:[ebx]
-    pop edx
-    pop ecx
-    jmp pretask_gpf_reexec
-
-pretask_gpf_32:
-    mov al,[ebx+1]
-    cmp al,67h
-    jne pretask_gpf_default
-;
-    mov ax,[ebx+7]
-    cmp ax,3
-    ja pretask_gpf_default
-
-pretask_kernel_gate32:
-    push ecx
-    push edx
-;    
-    push ebx
-    mov bx,ds
-    call GetSelectorBase
-    pop ebx
-    add ebx,edx
-    mov ax,flat_sel
-    mov ds,ax
-;
-    mov al,0CDh
-    xchg al,ds:[ebx]
-    pop edx
-    pop ecx
-    jmp pretask_gpf_reexec
-
-pretask_gpf_default:
-    ShutDownPreTask
-
-pretask_gpf_reexec:
-    pop eax
-    mov ds,ax
-    pop ebx
-    pop eax
-    and byte ptr [ebp+2].trap_eflags, NOT 1
-    pop ebp
-    add sp,4
-    iretd
 
 prepaging14:
     push ebp
