@@ -615,6 +615,39 @@ MapLfbPae  PROC near
 ;    
     mov ax,system_data_sel
     mov ds,ax
+    mov eax,ds:efi_lfb
+    test eax,1FFFFFh
+    jnz mePaeSmallPages
+
+mePaeBigPages:
+    movzx eax,ds:efi_height
+    mov edx,ds:efi_scan_size
+    mul edx
+    dec eax
+    shr eax,21
+    inc eax
+    mov ecx,eax
+    or ecx,ecx
+    jz mePaeDone
+;
+    mov eax,ds:efi_lfb
+    mov edx,ds:efi_lfb+4
+    or al,83h
+
+mePaeBigLoop:    
+    mov es:[edi],eax
+    add edi,4
+;
+    mov es:[edi],edx
+    add edi,4
+;
+    add eax,200000h    
+    adc edx,0
+    loop mePaeBigLoop
+;
+    jmp mePaeDone
+    
+mePaeSmallPages:    
     movzx eax,ds:efi_height
     mov edx,ds:efi_scan_size
     mul edx

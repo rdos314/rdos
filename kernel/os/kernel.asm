@@ -632,7 +632,6 @@ move_efi_lfb    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init:
-    int 3
     mov ax,flat_sel
     mov ds,ax
     xor eax,eax

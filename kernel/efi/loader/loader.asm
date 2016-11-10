@@ -1319,7 +1319,6 @@ bootMemOk:
 ;        
     call GetAllAdapters
     call StartShutDownDevice
-    int 3
     call GetBootDevice
     jnc DoBoot
 ;
