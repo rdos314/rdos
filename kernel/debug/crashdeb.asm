@@ -525,6 +525,88 @@ MapLowProt    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           MapLfbProt
+;
+;           DESCRIPTION:    Map LFB, protected mode paging
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapLfbProt  PROC near
+    push ds
+    push es
+    pushad
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    mov eax,ds:efi_acpi
+    or eax,ds:efi_acpi+4
+    jz meProtDone
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov edi,ds:switch_cr3
+    add edi,0C00h
+;
+    mov ax,system_data_sel
+    mov ds,ax
+;    
+    movzx eax,ds:efi_height
+    mov edx,ds:efi_scan_size
+    mul edx
+    dec eax
+    shr eax,12
+    inc eax
+    mov ecx,eax
+    or ecx,ecx
+    jz meProtDone
+;    
+    call AllocateRam
+    call ZeroPage
+;
+    mov eax,esi
+    mov al,3
+    mov es:[edi],eax
+    add edi,4
+;
+    mov eax,ds:efi_lfb
+    or al,3
+        
+meProtLoop:    
+    mov es:[esi],eax
+    add esi,4
+;
+    test si,0FFFh
+    jnz meProtNext
+;
+    push eax
+;        
+    call AllocateRam
+    call ZeroPage
+;
+    mov eax,esi
+    mov al,3
+    mov es:[edi],eax
+    add edi,4
+;
+    pop eax
+
+meProtNext:
+    add eax,1000h
+    loop meProtLoop
+
+meProtDone:
+    popad
+    pop es
+    pop ds        
+    ret
+MapLfbProt    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           MapLowPae
 ;
 ;           DESCRIPTION:    Map low 2MB, PAE paging
@@ -998,6 +1080,7 @@ icbProt:
     mov ds:switch_low,esi
     call MapLowProt
     call MapProt
+    call MapLfbProt
 ;
     mov edx,ds:switch_gdt
     mov esi,ds:switch_base
