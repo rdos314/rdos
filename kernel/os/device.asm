@@ -72,33 +72,6 @@ move_kernel_done:
     ret
 move_kernel_code    Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           move_shutdown_code
-;
-;           DESCRIPTION:    Move shutdown code high
-;
-;           PARAMETERS:         EDX         NEW BASE ADDRESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-move_shutdown_code      Proc near
-    push bx
-    push edx
-    mov bx,shutdown_code_sel
-    mov es:[bx+2],edx
-    mov byte ptr es:[bx+5],9Ah
-    shr edx,16
-    xor dl,dl
-    mov es:[bx+6],dx
-    pop edx
-    pop bx
-    ret
-move_shutdown_code      Endp
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -129,13 +102,6 @@ move_adapters   PROC near
     mov al,es:[bx+7]
     ror eax,8
     mov esi,eax
-;
-    mov bx,shutdown_code_sel
-    mov eax,es:[bx+2]
-    rol eax,8
-    mov al,es:[bx+7]
-    ror eax,8
-    mov edi,eax
 ;
     mov cx,fs:rom_modules
     mov bx,OFFSET rom_adapters
@@ -220,29 +186,11 @@ move_page_done:
     jnc move_not_current_adapter
 ;
     push edx
-;       mov cx,word ptr fs:[bx].adapter_base
-;       and cx,0FFFh
-;       or dx,cx
     add edx,eax
     call move_kernel_code
     pop edx
+
 move_not_current_adapter:
-    mov eax,edi
-    sub eax,fs:[bx].adapter_base
-    jc move_not_shutdown_adapter
-    cmp eax,fs:[bx].adapter_size
-    jnc move_not_shutdown_adapter
-    push edx
-;       mov cx,word ptr fs:[bx].adapter_base
-;       and cx,0FFFh
-;       or dx,cx
-    add edx,eax
-    call move_shutdown_code
-    pop edx
-move_not_shutdown_adapter:
-;       mov ax,word ptr fs:[bx].adapter_base
-;       and ax,0FFFh
-;       or dx,ax
     mov fs:[bx].adapter_base,edx
     add bx,SIZE adapter_typ
     pop cx
