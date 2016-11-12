@@ -1513,24 +1513,6 @@ apStackOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           check_boot
-;
-;       DESCRIPTION:    Check boot time init
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public check_boot
-    
-check_boot:
-    int 3   
-    mov ax,SEG data
-    mov ds,ax
-    CrashGate
-
-  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           AddCrashThread
 ;
 ;       DESCRIPTION:    Add crash thread
@@ -1962,85 +1944,6 @@ aclDone:
     pop es
     ret
 AddToCrashLog   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupBiosPic
-;
-;           DESCRIPTION:    Setup PIC to operate in BIOS-compatible mode
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupBiosPic    Proc near
-    mov al,11h
-    out 20h,al
-    jmp short $+2
-;
-    mov al,8
-    out 21h,al
-    jmp short $+2
-;
-    mov al,04h
-    out 21h,al
-    jmp short $+2
-;
-    mov al,0C1h
-    out 20h,AL
-    jmp short $+2
-;
-    mov al,1
-    out 21h,al
-    jmp short $+2
-;
-    mov al,11h
-    out 0A0h,al
-    jmp short $+2
-;
-    mov al,70h
-    out 0A1h,al
-    jmp short $+2
-;
-    mov al,2
-    out 0A1h,al
-    jmp short $+2
-;
-    mov al,1
-    out 0A1h,al
-    jmp short $+2
-;
-    mov al,-1
-    out 21h,al
-;
-    mov al,-1
-    out 0A1h,al
-    jmp short $+2
-    ret
-SetupBiosPic    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupBiosPit
-;
-;           DESCRIPTION:    Setup PIT to operate in BIOS-compatible mode
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupBiosPit    Proc near
-    mov al,30h
-    out 43h,al
-    jmp short $+2
-;
-    mov al,-1
-    out 40h,al
-    jmp short $+2
-;
-    mov al,-1
-    out 40h,al
-    jmp short $+2    
-    ret
-SetupBiosPit    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -43,22 +43,6 @@ code    SEGMENT byte use32 public 'CODE'
     extrn init_ipc_debug:near
     extrn init_crash_boot:near
     extrn init_crash_driver:near
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           init_test
-;
-;           DESCRIPTION:    Init test
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_test_name  DB 'Init Test', 0
-
-    extrn check_boot:near
-    
-init_test:
-    call check_boot
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -76,15 +60,6 @@ init_debug_process      PROC far
 ;    
     call init_local_debug
     call init_ipc_debug
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET init_test
-    mov edi,OFFSET init_test_name
-    mov eax,4
-    mov ecx,stack0_size
-    CreateThread
 ;    
     popad
     pop es
