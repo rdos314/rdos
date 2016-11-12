@@ -139,7 +139,7 @@ void TTemperatureNu::Execute()
     {
         FSocket = new TTcpSocket(FIp, 80, 10000, 0x2000);
         FSocket->WaitForConnection(10000);
-        while (FSocket->IsOpen())
+        if (FSocket->IsOpen())
         {
             strcpy(FBuf, "Get /tnu_1.12.php?p=");
             strcat(FBuf, FStation);

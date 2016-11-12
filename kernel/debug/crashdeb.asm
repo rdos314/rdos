@@ -45,27 +45,28 @@ lfb_page_linear   = 0C0000000h
 
 data    SEGMENT byte public 'DATA'
 
-map_linear   DD ?
-map_spinlock DW ?
+map_linear        DD ?
+map_spinlock      DW ?
 
-mon_linear   DD ?
-mon_cr3      DD ?
+mon_linear        DD ?
+mon_cr3           DD ?
 
-idt_temp_size DW ?
-idt_temp_base DD ?
+idt_temp_size     DW ?
+idt_temp_base     DD ?
 
-mon_alloc_base DD ?
-switch_proc   DD ?
-switch_linear DD ?
-switch_flags  DW ?
-switch_base   DD ?
-switch_size   DD ?
-switch_cr3    DD ?
-switch_low    DD ?
-pae_low       DD ?
-switch_gdt    DD ?
-switch_idt    DD ?
-data_linear   DD ?
+mon_alloc_base    DD ?
+page_low_linear   DD ?
+switch_proc       DD ?
+switch_linear     DD ?
+switch_flags      DW ?
+switch_base       DD ?
+switch_size       DD ?
+switch_cr3        DD ?
+switch_low        DD ?
+pae_low           DD ?
+switch_gdt        DD ?
+switch_idt        DD ?
+data_linear       DD ?
 
 data    ENDS
 
@@ -1117,6 +1118,102 @@ icbDone:
     pop ds    
     ret
 init_crash_boot   Endp
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AliasBootPage
+;
+;       DESCRIPTION:    Alias boot page
+;
+;       PARAMETERS:     EAX     Physical address
+;
+;       RETURNS:        EDX     Aliased address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AliasBootPage Proc near
+    push ebx
+;    
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;    
+    xor ebx,ebx
+    mov al,3
+    SetPageEntry
+;
+    pop ebx    
+    ret
+AliasBootPage Endp
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateDualPage
+;
+;       DESCRIPTION:    Alias page for monitor and system
+;
+;       RETURNS:        EAX     Monitor address
+;                       EDX     System address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateDualPage Proc near
+    push ds
+    push es
+    push ebx
+    push esi
+    push edi
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov esi,edx
+    call ZeroPage
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov esi,ds:mon_alloc_base
+    add esi,1000h
+    mov ds:mon_alloc_base,esi
+;    
+    mov edi,ds:page_low_linear
+    mov ax,ds:switch_flags
+    test ax,PM_FLAG_PAE
+    jz adpProt
+
+adpPae:
+    mov eax,esi
+    shr eax,9
+    add edi,eax
+    GetPageEntry
+;
+    mov es:[edi],eax
+    mov es:[edi+4],ebx
+    jmp adpDone
+
+adpProt:
+    mov eax,esi
+    shr eax,10
+    add edi,eax
+    GetPageEntry
+;
+    mov es:[edi],eax    
+
+adpDone:
+    mov eax,esi
+;
+    pop edi
+    pop esi    
+    pop ebx    
+    pop es
+    pop ds
+    ret
+AllocateDualPage Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1368,8 +1465,12 @@ check_boot:
     int 3   
     mov ax,SEG data
     mov ds,ax
-    mov esi,ds:mon_alloc_base
-;    
+    mov eax,ds:switch_low
+    call AliasBootPage    
+    mov ds:page_low_linear,edx
+;
+    call AllocateDualPage    
+
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
