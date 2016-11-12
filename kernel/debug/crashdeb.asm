@@ -54,6 +54,7 @@ mon_cr3      DD ?
 idt_temp_size DW ?
 idt_temp_base DD ?
 
+mon_alloc_base DD ?
 switch_proc   DD ?
 switch_linear DD ?
 switch_flags  DW ?
@@ -331,6 +332,11 @@ HighRamLoop:
 
 RamFound:
     mov es:alloc_base,esi
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:mon_alloc_base,esi
+;        
     pop eax
     pop es
     pop ds
@@ -1362,9 +1368,7 @@ check_boot:
     int 3   
     mov ax,SEG data
     mov ds,ax
-    mov ax,ds:switch_flags
-    and ax,NOT PM_FLAG_VIDEO
-    mov ds:switch_flags,ax
+    mov esi,ds:mon_alloc_base
 ;    
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
