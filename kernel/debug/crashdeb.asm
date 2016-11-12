@@ -2404,6 +2404,22 @@ smMonitor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           StartSmpCoreDump
+;
+;           DESCRIPTION:    Start SMP core dump
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_smp_core_dump_name    DB 'Start Smp Core Dump', 0
+    
+start_smp_core_dump     Proc far
+    call UpdateMonData
+    ret
+start_smp_core_dump     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init_crash_tasking
 ;
 ;           DESCRIPTION:    
@@ -2413,7 +2429,6 @@ smMonitor:
     public init_crash_tasking
 
 init_crash_tasking    Proc near
-    call UpdateMonData
     ret
 init_crash_tasking    Endp
 
@@ -2445,6 +2460,12 @@ init_crash_driver    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;    
+    mov esi,OFFSET start_smp_core_dump
+    mov edi,OFFSET start_smp_core_dump_name
+    xor cl,cl
+    mov ax,start_smp_core_dump_nr
+    RegisterOsGate
 ;    
     mov esi,OFFSET start_core_dump
     mov edi,OFFSET start_core_dump_name

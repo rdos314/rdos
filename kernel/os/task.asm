@@ -8973,6 +8973,7 @@ init_first_tss  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 init_first_process      Proc near
+    StartSmpCoreDump
     mov ax,0002h
     push ax
     popf    

@@ -1751,6 +1751,9 @@ SetupNmiCoreDump       MACRO
 SetupLongNmiCoreDump   MACRO
     OsGate setup_long_nmi_core_dump_nr
                     ENDM
+StartSmpCoreDump       MACRO
+    OsGate start_smp_core_dump_nr
+                    ENDM
 
 ;  OUT DS:EBP   Address of core-dump
 StartCoreDump       MACRO
