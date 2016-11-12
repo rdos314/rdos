@@ -969,6 +969,7 @@ InitMonData Proc near
     call AllocateRam
     call ZeroPage
     mov ds:mon_data_linear,esi
+    mov ds:sys_data_linear,0
     push esi
     mov edx,esi
     mov es:[edx].mon_core_count,1
@@ -1534,6 +1535,7 @@ check_boot:
     int 3   
     mov ax,SEG data
     mov ds,ax
+    CrashGate
 
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2078,7 +2080,7 @@ start_core_dump Proc far
 ;
     mov ax,SEG data
     mov ds,ax
-    mov edx,ds:mon_linear
+    mov edx,ds:sys_data_linear
     or edx,edx
     jz scdFail
 ;
@@ -2390,16 +2392,24 @@ smWaitReset:
     jmp smWaitReset
 
 smMonitor:
-    mov eax,es:efi_lfb
-    or eax,es:efi_lfb+4
-    jnz smVideoOk
-;
-    call SetupBiosPic
-    call SetupBiosPit
-    InitVideo
-        
-smVideoOk:    
-    jmp start_monitor
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov edx,ds:switch_linear
+    mov eax,edx
+    xor ebx,ebx
+    mov al,3
+    SetPageEntry
+;    
+    mov edx,ds:sys_data_linear    
+    mov ax,flat_sel
+    mov ds,ax
+    mov bx,ds:[ebp].debug_core_id
+    movzx ebx,bx
+    shl ebx,3
+    add ebx,OFFSET mon_core_regs
+    mov ebp,ds:[ebx+edx].mc_mon_linear
+    jmp SwitchToMonitor
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
