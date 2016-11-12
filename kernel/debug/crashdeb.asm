@@ -46,13 +46,8 @@ lfb_page_linear   = 0C0000000h
 data    SEGMENT byte public 'DATA'
 
 map_linear        DD ?
-map_spinlock      DW ?
-
 mon_linear        DD ?
 mon_cr3           DD ?
-
-idt_temp_size     DW ?
-idt_temp_base     DD ?
 
 mon_alloc_base    DD ?
 page_low_linear   DD ?
@@ -2436,7 +2431,6 @@ init_crash_tasking    Endp
 init_crash_driver    Proc near
     mov ax,SEG data
     mov ds,ax
-    mov ds:map_spinlock,0
     mov ds:mon_linear,0
     mov eax,cr3
     mov ds:mon_cr3,eax
