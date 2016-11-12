@@ -33,7 +33,9 @@ INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE ..\os\system.def
 
-    .386p
+IA32_EFER       = 0C0000080h
+
+    .686p
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -186,6 +188,16 @@ prot_enter_start:
     and eax,7FFFFFFFh
     mov cr0,eax
 ;
+    mov ax,cs:pm_flags
+    test ax,PM_FLAG_EFER
+    jz prot_efer_ok
+;
+    mov ecx,IA32_EFER
+    rdmsr
+    and eax,0FFFFFEFFh   
+    wrmsr
+
+prot_efer_ok:
     lgdt fword ptr cs:gdt0
     lidt fword ptr cs:idt20
 ;

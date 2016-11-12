@@ -673,6 +673,7 @@ core_log_struc  ENDS
 
 PM_FLAG_PAE     = 1
 PM_FLAG_VIDEO   = 2
+PM_FLAG_EFER    = 4
 
 pmode_switch_struc  STRUC
 
