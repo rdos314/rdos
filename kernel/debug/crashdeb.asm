@@ -1006,6 +1006,7 @@ init_crash_boot   Proc near
 ;
     mov ax,SEG data
     mov ds,ax
+    mov ds:mon_cr3,0
     mov ds:switch_proc,edi
     call DetectFlags
 ;    
@@ -1271,6 +1272,13 @@ kernel_pretask:
 ;    
     mov ax,SEG data
     mov ds,ax
+    mov eax,ds:mon_cr3
+    or eax,eax
+    jz kernel_pretask_cr3_done
+;
+    mov cr3,eax
+
+kernel_pretask_cr3_done:    
     mov ebp,ds:data_linear
     add ebp,OFFSET mon_core_regs
 ;
@@ -2515,6 +2523,7 @@ init_crash_driver    Proc near
     xor cl,cl
     mov ax,notify_core_dump_nr
     RegisterOsGate
+    int 3
     ret
 init_crash_driver       Endp
 
