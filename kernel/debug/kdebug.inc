@@ -233,8 +233,8 @@ mon_text_sel            = 0D0h
 
 mon_core_struc     STRUC
 
-mc_core_linear  DD ?
-mc_regs_linear   DD ?
+mc_sys_linear          DD ?
+mc_mon_linear          DD ?
 
 mon_core_struc     ENDS
 

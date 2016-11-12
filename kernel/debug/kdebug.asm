@@ -59,7 +59,6 @@ init_test_name  DB 'Init Test', 0
     extrn check_boot:near
     
 init_test:
-    int 3
     call check_boot
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

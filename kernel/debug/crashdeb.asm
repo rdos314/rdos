@@ -971,8 +971,8 @@ InitMonData Proc near
     call AllocateRam
     call ZeroPage
     mov eax,esi
-    mov es:[edi].mc_core_linear,0    
-    mov es:[edi].mc_regs_linear,eax
+    mov es:[edi].mc_mon_linear,eax
+    mov es:[edi].mc_sys_linear,eax
 ;
     mov bx,mon_data_sel
     mov edx,ds:switch_gdt
@@ -1115,56 +1115,6 @@ init_crash_boot   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupSwitch
-;
-;           DESCRIPTION:    Setup switch code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupSwitch     Proc near
-    push ds
-    push es
-    pushad
-;
-    mov ax,SEG data
-    mov ds,ax    
-    mov ax,flat_sel
-    mov es,ax
-;    
-    mov eax,ds:switch_linear
-    mov edx,eax
-    mov al,3
-    xor ebx,ebx
-    SetPageEntry
-;
-    mov edx,ds:data_linear
-    mov eax,edx
-    mov al,3
-    xor ebx,ebx
-    SetPageEntry
-;
-    mov edx,ds:data_linear
-    add edx,OFFSET mon_core_regs
-    mov edx,es:[edx].mc_regs_linear
-    mov eax,edx
-    mov al,3
-    xor ebx,ebx
-    SetPageEntry
-;    
-    mov edx,ds:switch_linear
-    mov ebx,shutdown_code_sel
-    mov ecx,1000h
-    CreateCodeSelector16
-;
-    popad
-    pop es
-    pop ds
-    ret
-SetupSwitch     Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           SwitchToMonitor
 ;
 ;           DESCRIPTION:    Switch to monitor
@@ -1247,7 +1197,7 @@ apLfbDone:
 ;
     mov ax,flat_sel
     mov ds,ax
-    mov ebp,ds:[ebp].mc_regs_linear
+    mov ebp,ds:[ebp].mc_sys_linear
 ;
     pop ax
     mov ds:[ebp].fault_vect,al
@@ -1284,7 +1234,7 @@ kernel_pretask_cr3_done:
 ;
     mov ax,flat_sel
     mov ds,ax
-    mov ebp,ds:[ebp].mc_regs_linear
+    mov ebp,ds:[ebp].mc_sys_linear
 ;
     pop ax
     mov ds:[ebp].reg_ds.d_selector,ax
@@ -1416,9 +1366,6 @@ check_boot:
     and ax,NOT PM_FLAG_VIDEO
     mov ds:switch_flags,ax
 ;    
-    cli
-    call SetupSwitch
-    int 3
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1975,7 +1922,7 @@ start_core_dump Proc far
     movzx ebx,bx
     shl ebx,3
     add ebx,OFFSET mon_core_regs
-    mov ebp,ds:[ebx+edx].mc_regs_linear
+    mov ebp,ds:[ebx+edx].mc_sys_linear
     clc
     jmp scdDone
 
@@ -2317,15 +2264,11 @@ setup_crash     Proc near
 
 scCoreLoop:    
     push ecx
-    mov es:[edi].mc_core_linear,0    
-    mov es:[edi].mc_regs_linear,0    
+    mov es:[edi].mc_mon_linear,0    
+    mov es:[edi].mc_sys_linear,0    
     mov ax,si
     GetCoreNumber
     jc scCoreNext
-;
-    mov bx,fs
-    GetSelectorBaseSize
-    mov es:[edi].mc_core_linear,edx
 ;
     mov eax,SIZE cpu_struc
     AllocateBigLinear    
@@ -2337,7 +2280,8 @@ scCoreLoop:
     rep stosd
     pop edi
 ;
-    mov es:[edi].mc_regs_linear,edx
+    mov es:[edi].mc_sys_linear,edx
+    mov es:[edi].mc_mon_linear,edx
 
 scCoreNext:
     pop ecx
@@ -2523,7 +2467,6 @@ init_crash_driver    Proc near
     xor cl,cl
     mov ax,notify_core_dump_nr
     RegisterOsGate
-    int 3
     ret
 init_crash_driver       Endp
 

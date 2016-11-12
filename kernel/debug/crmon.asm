@@ -4493,7 +4493,7 @@ next_core_show:
     movzx ebx,bx
     shl ebx,3
     add ebx,OFFSET mon_core_regs
-    mov ebp,ds:[ebx].mc_regs_linear
+    mov ebp,ds:[ebx].mc_mon_linear
 ;
     pop bx
     pop ds
@@ -4778,7 +4778,7 @@ DoFunc   PROC near
     movzx ebx,ds:mon_curr_core
     shl ebx,3
     add ebx,OFFSET mon_core_regs
-    mov ebp,ds:[ebx].mc_regs_linear
+    mov ebp,ds:[ebx].mc_mon_linear
     mov bx,mon_flat_sel
     mov ds,bx
 ;
