@@ -76,11 +76,6 @@ data    ENDS
 code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
-    
-    extrn set_monitor_data:near
-    extrn set_monitor_gdt:near
-    extrn set_monitor_idt:near
-    extrn start_monitor:near
 
     extrn InitMonitorIdt:near
     extrn InitMonitorGdt:near
@@ -2414,174 +2409,6 @@ smMonitor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           setup_crash
-;
-;           DESCRIPTION:    
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-setup_crash     Proc near
-    mov ax,flat_sel
-    mov es,ax    
-;
-    mov eax,1000h
-    AllocateBigLinear
-;
-    mov ecx,400h
-    xor eax,eax
-    mov edi,edx
-    rep stosd
-;
-    GetCoreCount
-    movzx ecx,cx
-    mov es:[edx].mon_core_count,cx
-    xor si,si
-;
-    push edx
-    mov edi,OFFSET mon_core_regs
-    add edi,edx
-
-scCoreLoop:    
-    push ecx
-    mov es:[edi].mc_mon_linear,0    
-    mov es:[edi].mc_sys_linear,0    
-    mov ax,si
-    GetCoreNumber
-    jc scCoreNext
-;
-    mov eax,SIZE cpu_struc
-    AllocateBigLinear    
-;
-    push edi
-    mov ecx,400h
-    xor eax,eax
-    mov edi,edx
-    rep stosd
-    pop edi
-;
-    mov es:[edi].mc_sys_linear,edx
-    mov es:[edi].mc_mon_linear,edx
-
-scCoreNext:
-    pop ecx
-    add edi,8
-    inc si
-    loop scCoreLoop
-;    
-    pop edi
-    mov eax,1000h
-    AllocateBigLinear
-    mov es:[edi].mon_map_linear,edx
-;   
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:mon_linear,edi
-;     
-    mov edx,edi
-    mov ecx,1000h
-    call set_monitor_data
-    ret
-setup_crash     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           create_gdt
-;
-;           DESCRIPTION:    Create new GDT
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_gdt     Proc near
-    mov eax,1000h
-    AllocateBigLinear
-    mov ax,flat_sel
-    mov es,ax
-    mov edi,edx
-    mov ecx,400h
-    xor eax,eax
-    rep stosd
-;
-    mov ax,gdt_sel
-    mov ds,ax
-;
-    mov esi,cs
-    mov edi,mon_code_sel
-    mov eax,ds:[esi]
-    mov es:[edx+edi],eax
-    mov eax,ds:[esi+4]
-    mov es:[edx+edi+4],eax
-;
-    mov esi,flat_sel
-    mov edi,mon_flat_sel
-    mov eax,ds:[esi]
-    mov es:[edx+edi],eax
-    mov eax,ds:[esi+4]
-    mov es:[edx+edi+4],eax
-;
-    mov esi,system_data_sel
-    mov edi,mon_system_data_sel
-    mov eax,ds:[esi]
-    mov es:[edx+edi],eax
-    mov eax,ds:[esi+4]
-    mov es:[edx+edi+4],eax
-;
-    mov esi,shutdown_code_sel
-    mov edi,mon_shutdown_code_sel
-    mov eax,ds:[esi]
-    mov es:[edx+edi],eax
-    mov eax,ds:[esi+4]
-    mov es:[edx+edi+4],eax
-;
-    mov esi,shutdown_pretask_gate
-    mov edi,mon_shutdown_gate_sel
-    mov eax,ds:[esi]
-    mov es:[edx+edi],eax
-    mov eax,ds:[esi+4]
-    mov es:[edx+edi+4],eax
-;
-    mov esi,process_page_sel
-    mov edi,mon_process_page_sel
-    mov eax,ds:[esi]
-    mov es:[edx+edi],eax
-    mov eax,ds:[esi+4]
-    mov es:[edx+edi+4],eax
-;
-    mov esi,dosB800
-    mov edi,mon_text_sel
-    mov eax,ds:[esi]
-    mov es:[edx+edi],eax
-    mov eax,ds:[esi+4]
-    mov es:[edx+edi+4],eax
-    mov ecx,1000h
-    ret
-create_gdt      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           create_idt
-;
-;           DESCRIPTION:    Create new IDT
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_idt     Proc near
-    mov eax,1000h
-    AllocateBigLinear
-    mov ax,flat_sel
-    mov es,ax
-    mov edi,edx
-    mov ecx,400h
-    xor eax,eax
-    rep stosd
-    mov ecx,800h
-    ret
-create_idt  Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           init_crash_tasking
 ;
 ;           DESCRIPTION:    
@@ -2592,18 +2419,6 @@ create_idt  Endp
 
 init_crash_tasking    Proc near
     call UpdateMonData
-;    
-    push ds
-    pushad
-;
-    call setup_crash
-    call create_gdt
-    call set_monitor_gdt
-    call create_idt
-    call set_monitor_idt    
-;        
-    popad
-    pop ds
     ret
 init_crash_tasking    Endp
 

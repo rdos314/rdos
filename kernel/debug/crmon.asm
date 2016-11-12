@@ -45,19 +45,6 @@ exec_dec_proc    DD ?
 exec_set_proc    DD ?
 
 exec_s  ENDS
- 
-data    SEGMENT byte public 'DATA'
-
-mon_gdt_size    DW ?
-mon_gdt_base    DD ?
-
-mon_idt_size    DW ?
-mon_idt_base    DD ?
-
-mon_data_base   DD ?
-mon_data_size   DD ?
-
-data    ENDS
 
     .386p
 
@@ -4883,183 +4870,6 @@ right_arrow:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           start_monitor
-;
-;           DESCRIPTION:    Start monitor
-;
-;           PARAMETERS:     DS:EBP      Cpu
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public start_monitor
-
-start_monitor:
-    mov ax,SEG data
-    mov ds,ax
-    lidt fword ptr ds:mon_idt_size
-    lgdt fword ptr ds:mon_gdt_size
-;
-    db 0EAh
-    dd OFFSET mon_priv
-    dw mon_code_sel
-
-mon_priv:
-    mov ax,mon_gdt_sel
-    mov ss,ax
-    mov esp,1000h
-;
-    mov ax,mon_flat_sel
-    mov ds,ax
-    mov es,ax
-;        
-    xor ax,ax
-    mov fs,ax
-    mov gs,ax
-    jmp handle_monitor
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateDataSel
-;
-;           DESCRIPTION:    Create 16-bit data selector
-;
-;           PARAMETERS:     BX              DESCRIPTOR
-;                           EDX             BASE
-;                           ECX             LIMIT
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateDataSel       PROC near
-    mov ax,SEG data
-    mov ds,ax
-    mov esi,ds:mon_gdt_base
-    mov ax,mon_flat_sel
-    mov ds,ax
-;
-    mov al,bl
-    and ebx,0FFF8h
-    dec ecx
-    add ebx,esi
-;
-    mov [ebx],cx
-    mov [ebx+2],edx
-    shl al,5
-    or al,92h
-    xchg al,[ebx+5]
-    shr ecx,16
-    and cx,0Fh
-    or ch,al
-    mov [ebx+6],cx
-    ret
-CreateDataSel       ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:          set_monitor_data
-;
-;           DESCRIPTION:   Set monitor data
-;
-;           PARAMETERS:    EDX      Linear address of mon_data_sel
-;                          ECX      Size of mon_data_sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public set_monitor_data
-
-set_monitor_data    Proc near
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:mon_data_base,edx
-    mov ds:mon_data_size,ecx
-    ret
-set_monitor_data       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:          set_monitor_gdt
-;
-;           DESCRIPTION:   Set monitor gdt
-;
-;           PARAMETERS:    EDX          GDT base
-;                          CX           GDT size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public set_monitor_gdt
-
-set_monitor_gdt    Proc near
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:mon_gdt_base,edx
-    dec cx
-    mov ds:mon_gdt_size,cx
-;
-    mov bx,mon_gdt_sel
-    inc cx
-    call CreateDataSel
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov bx,mon_data_sel
-    mov edx,ds:mon_data_base
-    mov ecx,ds:mon_data_size
-    call CreateDataSel    
-    ret
-set_monitor_gdt   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupIntEntry
-;
-;           DESCRIPTION:    Create int gate selector
-;
-;           PARAMETERS:     AL              INT #
-;                           BL              DPL
-;                           ESI             ENTRY POINT
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupIntEntry     PROC near
-    push es
-    push eax
-    push ebx
-    push edx
-;
-    mov dx,SEG data
-    mov es,dx
-    mov edx,es:mon_idt_base
-;
-    mov ah,bl
-    movzx ebx,al
-    shl ebx,3
-    add ebx,edx
-    xor al,al
-    shl ah,5
-    or ah,8Eh
-;
-    mov dx,flat_sel
-    mov es,dx    
-;    
-    mov es:[ebx+4],ax
-    mov es:[ebx],esi
-    mov ax,mon_code_sel
-    xchg ax,es:[ebx+2]
-    mov es:[ebx+6],ax
-;
-    pop edx
-    pop ebx
-    pop eax
-    pop es
-    ret
-SetupIntEntry     ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           DumpFault
 ;
 ;           DESCRIPTION:    Dump fault
@@ -5332,71 +5142,6 @@ chwint:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:          set_monitor_idt
-;
-;           DESCRIPTION:   Set monitor idt
-;
-;           PARAMETERS:    EDX          IDT base
-;                          CX           IDT size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-crash_int_tab:
-;
-;               int #       Entry          
-;
-ci0     DD      0,          OFFSET cint0
-ci1     DD      1,          OFFSET cint1
-ci2     DD      2,          OFFSET chwint
-ci3     DD      3,          OFFSET cint3
-ci4     DD      4,          OFFSET cint4
-ci5     DD      5,          OFFSET cint5
-ci6     DD      6,          OFFSET cint6
-ci7     DD      7,          OFFSET cint7
-ci8     DD      8,          OFFSET cint8
-ci9     DD      9,          OFFSET cint9
-ci10    DD      10,         OFFSET cint10
-ci11    DD      11,         OFFSET cint11
-ci12    DD      12,         OFFSET cint12
-ci13    DD      13,         OFFSET cint13
-ci14    DD      14,         OFFSET cint14
-ci16    DD      16,         OFFSET cint16
-ci40    DD      40h,        OFFSET chwint
-ci80    DD      80h,        OFFSET chwint
-ci81    DD      81h,        OFFSET chwint
-ci82    DD      82h,        OFFSET chwint
-ci83    DD      83h,        OFFSET chwint
-ci_end  DD      0FFFFFFFFh
-
-    public set_monitor_idt
-
-set_monitor_idt    Proc near
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:mon_idt_base,edx
-    dec cx
-    mov ds:mon_idt_size,cx
-;
-    mov edi,OFFSET crash_int_tab
-
-smiLoop:
-    mov ax,cs:[edi]
-    cmp ax,0FFFFh
-    jz smiDone
-;
-    xor bl,bl
-    mov esi,dword ptr cs:[edi+4]
-    call SetupIntEntry
-    add edi,8
-    jmp smiLoop
-
-smiDone:
-    ret
-set_monitor_idt   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           SetupInt
 ;
 ;           DESCRIPTION:    Create int gate selector
@@ -5442,6 +5187,33 @@ SetupInt     ENDP
 ;           PARAMETERS:    EDX          IDT base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+crash_int_tab:
+;
+;               int #       Entry          
+;
+ci0     DD      0,          OFFSET cint0
+ci1     DD      1,          OFFSET cint1
+ci2     DD      2,          OFFSET chwint
+ci3     DD      3,          OFFSET cint3
+ci4     DD      4,          OFFSET cint4
+ci5     DD      5,          OFFSET cint5
+ci6     DD      6,          OFFSET cint6
+ci7     DD      7,          OFFSET cint7
+ci8     DD      8,          OFFSET cint8
+ci9     DD      9,          OFFSET cint9
+ci10    DD      10,         OFFSET cint10
+ci11    DD      11,         OFFSET cint11
+ci12    DD      12,         OFFSET cint12
+ci13    DD      13,         OFFSET cint13
+ci14    DD      14,         OFFSET cint14
+ci16    DD      16,         OFFSET cint16
+ci40    DD      40h,        OFFSET chwint
+ci80    DD      80h,        OFFSET chwint
+ci81    DD      81h,        OFFSET chwint
+ci82    DD      82h,        OFFSET chwint
+ci83    DD      83h,        OFFSET chwint
+ci_end  DD      0FFFFFFFFh
 
     public InitMonitorIdt
 
