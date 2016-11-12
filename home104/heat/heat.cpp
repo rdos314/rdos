@@ -34,6 +34,7 @@
 #include <math.h>
 
 #include "frinv.h"
+#include "tempnu.h"
 #include "rad.h"
 #include "datetime.h"
 #include "circ.h"
@@ -142,6 +143,7 @@ int main()
     TVp *Vp;
     TPower *Power;
     TFroniusInverter *SolarInv;
+    TTemperatureNu *TempNu;
 //    TClimate *Climate;
     int i;
     int id;
@@ -274,6 +276,7 @@ int main()
     Store->Add(Vp);
 
     SolarInv = new TFroniusInverter(InvIp, INVERTER_IP);
+    TempNu = new TTemperatureNu("norra_faladen");
 
 //    Climate = new TClimate(control);
 //    Store->Add(Climate);
@@ -371,12 +374,16 @@ int main()
 
     SolarTable->AddRow(24, 45);
     SolarTable->AddRow(24, 45);
+    SolarTable->AddRow(24, 45);
 
     SolarTable->SetText(0, 0, "Effekt");
     SolarTable->SetText(0, 2, "W");
 
     SolarTable->SetText(1, 0, "Idag");
     SolarTable->SetText(1, 2, "kWh");
+
+    SolarTable->SetText(2, 0, "Temperature");
+    SolarTable->SetText(2, 2, "°C");
     SolarTable->Show();
 
     UnlockGUI();
@@ -488,6 +495,17 @@ int main()
             SolarTable->SetText(1, 1, str);
         }
 
+        if (TempNu->IsOnline())
+        {
+            val = TempNu->GetTemperature();
+            sprintf(str, "%5.1Lf", val);
+            SolarTable->SetText(2, 1, str);
+
+            ambient = (int)(10.0 * val);
+        }
+        else
+            ambient = 50;
+
         str[0] = 0;
 
         if (RdosReadSerialLines(1, &diostat))
@@ -522,10 +540,6 @@ int main()
             strcpy(str, "------");
 
         Label->SetText(str);
-
-
-//        ambient = (int)(10.0 * Climate->GetOutdoorTemperature());
-        ambient = 50;
 
         summer = FALSE;
 
