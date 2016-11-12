@@ -66,7 +66,8 @@ switch_low        DD ?
 pae_low           DD ?
 switch_gdt        DD ?
 switch_idt        DD ?
-data_linear       DD ?
+mon_data_linear   DD ?
+sys_data_linear   DD ?
 
 data    ENDS
 
@@ -967,7 +968,7 @@ InitMonData Proc near
 ;    
     call AllocateRam
     call ZeroPage
-    mov ds:data_linear,esi
+    mov ds:mon_data_linear,esi
     push esi
     mov edx,esi
     mov es:[edx].mon_core_count,1
@@ -1214,6 +1215,74 @@ adpDone:
     pop ds
     ret
 AllocateDualPage Endp
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UpdateMonData
+;
+;       DESCRIPTION:    Update monitor data selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateMonData Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax    
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov eax,ds:switch_low
+    call AliasBootPage    
+    mov ds:page_low_linear,edx
+;    
+    mov eax,ds:mon_data_linear
+    call AliasBootPage
+    mov ds:sys_data_linear,edx
+    mov esi,edx
+;     
+    mov edi,OFFSET mon_core_regs
+    add edi,edx
+    mov eax,es:[edi].mc_mon_linear
+    call AliasBootPage
+    mov es:[edi].mc_sys_linear,edx
+;
+    GetCoreCount
+    movzx ecx,cx
+    mov es:[esi].mon_core_count,cx
+    sub ecx,1
+    jz umdDone
+;    
+    mov si,1
+    add edi,8
+
+umdCoreLoop:    
+    push ecx
+    mov es:[edi].mc_mon_linear,0    
+    mov es:[edi].mc_sys_linear,0    
+    mov ax,si
+    GetCoreNumber
+    jc umdCoreNext
+;
+    call AllocateDualPage
+    mov es:[edi].mc_mon_linear,eax
+    mov es:[edi].mc_sys_linear,edx
+
+umdCoreNext:
+    pop ecx
+    add edi,8
+    inc si
+    loop umdCoreLoop
+
+umdDone:
+    popad
+    pop es
+    pop ds
+    ret
+UpdateMonData Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1295,7 +1364,7 @@ apLfbDone:
 ;    
     mov ax,SEG data
     mov ds,ax
-    mov ebp,ds:data_linear
+    mov ebp,ds:mon_data_linear
     add ebp,OFFSET mon_core_regs
 ;
     mov ax,flat_sel
@@ -1332,7 +1401,7 @@ kernel_pretask:
     mov cr3,eax
 
 kernel_pretask_cr3_done:    
-    mov ebp,ds:data_linear
+    mov ebp,ds:mon_data_linear
     add ebp,OFFSET mon_core_regs
 ;
     mov ax,flat_sel
@@ -1465,11 +1534,6 @@ check_boot:
     int 3   
     mov ax,SEG data
     mov ds,ax
-    mov eax,ds:switch_low
-    call AliasBootPage    
-    mov ds:page_low_linear,edx
-;
-    call AllocateDualPage    
 
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2517,6 +2581,8 @@ create_idt  Endp
     public init_crash_tasking
 
 init_crash_tasking    Proc near
+    call UpdateMonData
+;    
     push ds
     pushad
 ;
