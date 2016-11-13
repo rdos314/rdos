@@ -45,7 +45,6 @@ INCLUDE ..\os.inc
     extrn init_io:near
     extrn init_app:near
     extrn init_ldt:near
-    extrn init_video_module:near
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -73,7 +72,6 @@ init    PROC far
     call init_time
     call init_env
     call init_wait
-    call init_video_module
     clc
         ret
 init    ENDP

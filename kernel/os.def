@@ -696,10 +696,9 @@ begin_get_video_modes_nr    = 575
 end_get_video_modes_nr      = 576
 switch_video_mode_nr        = 577
 
-init_video_nr               = 578
+start_smp_core_dump_nr      = 578
 start_core_dump_nr          = 579
 notify_core_dump_nr         = 580
 setup_nmi_core_dump_nr      = 581
-start_smp_core_dump_nr      = 582
 
 osgate_entries				= 600

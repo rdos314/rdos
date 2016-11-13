@@ -1739,10 +1739,6 @@ ThreadToSel     MACRO
 
 ;;;;;;;;;;; Crash handler ;;;;;;;;;;;;;;;;
 
-InitVideo       MACRO
-    OsGate init_video_nr
-                    ENDM
-
 SetupNmiCoreDump       MACRO
     OsGate setup_nmi_core_dump_nr
                     ENDM
