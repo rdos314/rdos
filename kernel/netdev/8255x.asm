@@ -35,6 +35,7 @@ INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\pcdev\pci.inc
 INCLUDE ..\os\net.inc
+INCLUDE ..\irq.inc
 
 RX_ENTRIES   EQU 20h
 RX_BUF_SIZE  EQU 800h
@@ -211,6 +212,8 @@ cb_link     DD ?
 cb  ENDS
 
 data    STRUC
+
+irq_base        irq_header <>
 
 MemBase         DD ?
 FlashBase       DD ?

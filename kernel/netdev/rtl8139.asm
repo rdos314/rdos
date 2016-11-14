@@ -33,6 +33,7 @@ INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\pcdev\pci.inc
 INCLUDE ..\os\net.inc
+INCLUDE ..\irq.inc
 
 ; debug EQU 1
 
@@ -138,6 +139,8 @@ RX_BUF_LEN_IDX  = 3 ;   0 = 8k, 1 = 16k, 2 = 32k, 3 = 64k
 TX_BUF_SIZE         = 2048
  
 data    STRUC
+
+irq_base            irq_header <>
 
 IoBase              DW ?
 Handle              DW ?

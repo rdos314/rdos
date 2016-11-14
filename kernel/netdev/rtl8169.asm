@@ -33,6 +33,7 @@ INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\pcdev\pci.inc
 INCLUDE ..\os\net.inc
+INCLUDE ..\irq.inc
 
 RX_DESCR_COUNT = 256
 TX_DESCR_COUNT = 128
@@ -165,6 +166,8 @@ tx_high_ads DD ?
 tx_descr    ENDS
  
 data    STRUC
+
+irq_base            irq_header <>
 
 IoBase              DW ?
 IoCfg               DW ?
