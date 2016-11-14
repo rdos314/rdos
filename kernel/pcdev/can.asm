@@ -34,6 +34,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
 INCLUDE pci.inc
+INCLUDE ..\irq.inc
 
 MAX_GEN_HOOK_COUNT  = 16
 
@@ -114,6 +115,8 @@ ih_param    DW ?
 id_hook_struc   ENDS
 
 data    SEGMENT byte public 'DATA'
+
+irq_base                irq_header <>
 
 can_sel                 DW ?
 

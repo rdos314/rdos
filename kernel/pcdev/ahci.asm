@@ -33,6 +33,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
+INCLUDE ..\irq.inc
 INCLUDE pci.inc
 
 MAX_AHCI_DEVICES    = 16
@@ -354,6 +355,8 @@ ahci_command_list_struc  ENDS
 ;
 
 ahci_device_struc   STRUC
+
+irq_base            irq_header <>
 
 ad_hba_sel          DW ?
 ad_port_arr         DW 32 DUP(?)

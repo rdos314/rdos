@@ -34,12 +34,15 @@ INCLUDE ..\os.inc
 INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
+INCLUDE ..\irq.inc
 
 rtc_init    EQU 0
 rtc_sync    EQU 1
 rtc_ready       EQU 2
 
 data    SEGMENT byte public 'DATA'
+
+irq_base        irq_header <>
 
 cmos_tics_base  DD ?,?
 

@@ -34,6 +34,7 @@ include ..\driver.def
 include ..\pcdev\pci.inc
 include ..\os\com.inc
 include ..\os\protseg.def
+include ..\irq.inc
 
 MAX_PORTS       = 16
 MAX_IRQS    = 16
@@ -123,11 +124,21 @@ ox_bar_header   ENDS
 
 mem_share_struc  STRUC
 
+ms_irq              irq_header <>
+
 ms_count            DW ?
 ms_dev_sel          DW ?
 ms_com_dev_arr      DW 16 DUP(?)
 
 mem_share_struc  ENDS
+
+io_share_struc  STRUC
+
+is_base             irq_header <>
+
+is_dev_sel          DW ?
+
+io_share_struc  ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -478,6 +489,8 @@ ist_rx   DW OFFSET io_rec
 ist_li   DW OFFSET io_line_err
 
 io_com_int Proc far
+    mov ds,ds:is_dev_sel
+;
     mov ax,ds:iopds_handle
     or ax,ax
     jz io_com_int_inactive
@@ -2792,6 +2805,15 @@ riLoop:
     mov ds,dx
     mov al,ds:iopds_irq
     mov ah,18h
+    push es
+    push eax
+    mov eax,SIZE io_share_struc
+    AllocateSmallGlobalMem
+    mov es:is_dev_sel,ds
+    mov ax,es
+    mov ds,ax
+    pop eax
+    pop es
     RequestIrqHandler
     pop ds
 

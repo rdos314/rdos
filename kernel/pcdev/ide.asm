@@ -34,6 +34,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
 INCLUDE pci.inc
+INCLUDE ..\irq.inc
 
 LBA_MODE        = 1
 LBA_48          = 2
@@ -73,6 +74,8 @@ disc_model          DB 40 DUP(?)
 drive_data      ENDS
 
 ide_data    STRUC
+
+irq_base        irq_header <>
 
 IdeThread       DW ?
 IdeIoBase       DW ?

@@ -34,6 +34,7 @@ INCLUDE ..\os.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\irq.inc
 INCLUDE key.inc
 
 
@@ -58,6 +59,8 @@ status_key_req      EQU 1
 status_key_ack      EQU 4
 
 data    SEGMENT byte public 'DATA'
+
+irq_base            irq_header <>
 
 hw_spinlock         spinlock_typ <>
 

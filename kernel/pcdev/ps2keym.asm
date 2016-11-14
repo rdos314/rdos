@@ -34,6 +34,7 @@ INCLUDE ..\os.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\irq.inc
 INCLUDE key.inc
 
 
@@ -61,9 +62,10 @@ status_mouse_ack    EQU 8
 
 data    SEGMENT byte public 'DATA'
 
-hw_spinlock         spinlock_typ <>
+irq_base        irq_header <>
+hw_spinlock     spinlock_typ <>
 
-mode_thread         DW ?
+mode_thread     DW ?
 mouse_thread    DW ?
 command         DB ?
 status          DB ?

@@ -33,6 +33,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
+INCLUDE ..\irq.inc
 
 boot_struc      STRUC
 
@@ -76,6 +77,8 @@ Spec1           EQU 0DFh
 Spec2           EQU 2
 
 data    SEGMENT byte public 'DATA'
+
+irq_base        irq_header <>
 
 FloppyThread    DW ?
 

@@ -33,6 +33,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
 INCLUDE pci.inc
+INCLUDE ..\irq.inc
 
 MAX_SD_DEVICES      = 32
 MAX_NAME_SIZE       = 24
@@ -78,6 +79,8 @@ part_sectors        DD ?
 part_struc      ENDS
 
 sd_device_struc STRUC
+
+irq_base            irq_header <>
 
 sd_reg_sel          DW ?
 sd_serv_thread      DW ?
