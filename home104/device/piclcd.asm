@@ -29,6 +29,7 @@
 
 GateSize = 16
 
+INCLUDE ..\..\kernel\os\system.def
 INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\user.def
 INCLUDE ..\..\kernel\os.def

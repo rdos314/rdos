@@ -32,6 +32,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\pcdev\pci.inc
+INCLUDE ..\irq.inc
 
 REQ_RESET   = 1
 
@@ -128,6 +129,8 @@ stream_data ENDS
 
 
 hda_seg STRUC
+
+irq_base        irq_header <>
 
 HdaSel          DW 0
 HdaLinear       DD 0
