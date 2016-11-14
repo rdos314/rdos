@@ -1796,7 +1796,10 @@ start_hpet_timer    Proc far
     test ax,8000h
     jnz start_hpet_msi
 ;        
+    push ds
     push es
+    mov bx,es
+    mov ds,bx
     mov al,2
     mov ah,12
     mov bx,cs
@@ -1804,6 +1807,7 @@ start_hpet_timer    Proc far
     mov edi,OFFSET hpet_ioapic_int
     RequestIrqHandler
     pop es
+    pop ds
 ;
     mov eax,es:hpet_config
     or al,3
@@ -2356,7 +2360,6 @@ hpet_ds_ok:
 
 hpet_ioapic_int Proc far
     lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
-    mov ds,ds:hpet_sel
     mov edx,ds:hpet_int_status
     mov ds:hpet_int_status,edx  
     retf32
