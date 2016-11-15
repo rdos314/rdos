@@ -167,10 +167,16 @@ ioapic_num      DB ?
 
 ioapic_core_irq_struc   ENDS
 
-        
-data    SEGMENT byte public 'DATA'
+hpet_irq_struc	STRUC
 
 irq_base            irq_header <>
+
+irq_hpet_sel        DW ?
+
+hpet_irq_struc	ENDS
+
+        
+data    SEGMENT byte public 'DATA'
 
 mp_processor_sign   DD ?
 
@@ -1799,14 +1805,26 @@ start_hpet_timer    Proc far
     test ax,8000h
     jnz start_hpet_msi
 ;        
+    push ds
     push es
+;
+    mov bx,es
+    mov eax,SIZE hpet_irq_struc
+    AllocateSmallGlobalMem
+    mov es:irq_hpet_sel,bx
+;
+    mov bx,es
+    mov ds,bx
+;
     mov al,2
     mov ah,12
     mov bx,cs
     mov es,bx
     mov edi,OFFSET hpet_ioapic_int
     RequestIrqHandler
+;
     pop es
+    pop ds
 ;
     mov eax,es:hpet_config
     or al,3
@@ -2359,9 +2377,10 @@ hpet_ds_ok:
 
 hpet_ioapic_int Proc far
     lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
-    mov ds,ds:hpet_sel
-    mov edx,ds:hpet_int_status
-    mov ds:hpet_int_status,edx  
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+    mov es,ds:irq_hpet_sel
+    mov edx,es:hpet_int_status
+    mov es:hpet_int_status,edx  
     retf32
 hpet_ioapic_int Endp
 
