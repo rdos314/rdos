@@ -335,6 +335,7 @@ ciReadLoop:
     or ax,ax
     jz ciWriteLoop    
 ;
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov cx,16
     mov bx,1
     mov dx,1
@@ -366,6 +367,7 @@ ciWriteLoop:
     jz ciReg
 
 ciStatus:
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov eax,es:CAN_STAT
     test ax,20h
     jnz ciSignal    
@@ -375,6 +377,7 @@ ciReg:
     or eax,eax
     jz ciDone
 ;    
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov ebx,eax
     cmp ebx,10h
     jbe ciReadLoop
