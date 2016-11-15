@@ -475,6 +475,7 @@ niLoop:
     test bx,RxUnderrun
     jz niNotUnderrun
 ;
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov dx,ds:IoBase
     add dx,MediaReg
     in al,dx
@@ -488,6 +489,7 @@ niNotUnderrun:
     test bx,RxOK OR RxErr OR RxUnderrun OR RxOverflow OR RxFIFOOver
     jz niNotRx
 ;
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov bx,ds:Handle
     or bx,bx
     jz niNotRx
@@ -499,6 +501,7 @@ niNotRx:
     test bx,TxOK OR TxErr
     jz niNotTx
 ;
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov bx,ds:TxThread
     or bx,bx
     jz niNotTx
