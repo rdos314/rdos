@@ -33,6 +33,7 @@ INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\pcdev\pci.inc
+INCLUDE ..\irq.inc
 INCLUDE usb.inc
 INCLUDE usbdev.inc
 INCLUDE hub.inc
@@ -78,6 +79,14 @@ ehc_cnt         DD ?
 ehc_qh          DD ?
 
 count_struc ENDS
+
+ehci_irq_struc  STRUC
+
+irq_base            irq_header <>
+
+irq_func_sel        DW ?
+
+ehci_irq_struc	ENDS
 
 ehci_func_sel   STRUC
 
@@ -351,6 +360,10 @@ UpdatePipeList  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EhciInt Proc far    
+    push ds
+    mov ax,ds
+    mov gs,ax
+;
     mov es,ds:ehc_reg_sel
 
 eiLoop:    
@@ -362,12 +375,14 @@ eiLoop:
     test al,1
     jz eiNotPipe
 ;    
+    or gs:irq_flags,IRQ_FLAG_ACTIVITY
     call UpdatePipeList
 
 eiNotPipe:
     and al,NOT 1
     jz eiLoop
 ;
+    or gs:irq_flags,IRQ_FLAG_ACTIVITY
     push ds
     mov ax,SEG data
     mov ds,ax
@@ -378,6 +393,7 @@ eiNotPipe:
     jmp eiLoop
 
 eiDone:
+    pop ds
     retf32
 EhciInt  Endp
 
@@ -3673,6 +3689,14 @@ ifLegacyDone:
     WritePciDword
         
 ifLegacyOff:
+    push ds
+;
+    mov eax,SIZE ehci_irq_struc
+    AllocateSmallGlobalMem
+    mov es:ehci_func_sel,ds
+    mov ax,es
+    mov ds,ax
+;
     GetPciMsi
     jc ifIrq
 ;
@@ -3700,6 +3724,8 @@ ifIrq:
     RequestIrqHandler
 
 ifIntDone:    
+    pop ds
+;
     mov fs,ds:ehc_reg_sel
     mov fs:HcSegmentSelector,0
 ;
