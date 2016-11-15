@@ -1130,6 +1130,7 @@ keyb_int_loop:
     jmp keyb_int_done
 
 keyb_int_get_cmd:
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     test al,20h
     jz keyb_int_keyboard
 
