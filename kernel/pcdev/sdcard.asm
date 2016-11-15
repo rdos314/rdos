@@ -155,6 +155,7 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SdInt  Proc far
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov es,ds:sd_reg_sel
     mov ax,es:REG_INT_STATUS
     lock or ds:sd_pend_int,al

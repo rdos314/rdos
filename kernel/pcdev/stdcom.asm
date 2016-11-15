@@ -489,6 +489,9 @@ ist_rx   DW OFFSET io_rec
 ist_li   DW OFFSET io_line_err
 
 io_com_int Proc far
+    push ds
+    mov ax,ds
+    mov gs,ax
     mov ds,ds:is_dev_sel
 ;
     mov ax,ds:iopds_handle
@@ -504,6 +507,7 @@ io_com_int_loop:
     test al,1
     jnz io_com_int_done
 ;   
+    or gs:irq_flags,IRQ_FLAG_ACTIVITY
     mov bl,al
     xor bh,bh
     and bx,6
@@ -517,6 +521,7 @@ io_com_int_inactive:
     test al,1
     jnz io_com_int_done
 ;   
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov dx,ds:iopds_base
     add dx,6
     in al,dx
@@ -540,6 +545,7 @@ io_com_int_inactive:
     Signal
 
 io_com_int_done:   
+    pop ds
     retf32
 io_com_int Endp
 
