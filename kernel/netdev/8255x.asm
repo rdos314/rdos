@@ -1075,6 +1075,7 @@ niLoop:
     test al,ACK_FRAME_RX
     jz niNotRx
 ;
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov bx,ds:Handle
     or bx,bx
     jz niNotRx
@@ -1088,6 +1089,7 @@ niNotRx:
     or al,al
     jz niDone
 ;    
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov bx,ds:WaitThread
     or bx,bx
     jz niLoop

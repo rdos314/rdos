@@ -116,6 +116,11 @@ aiLoop:
     mov dx,ds:IoBase
     add dx,ACC_IRQ_STATUS
     in ax,dx
+    test ax,3FCh
+    jz aiDone
+;
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+;
     test ax,4
     jz aiNot0
 ;    
@@ -212,6 +217,8 @@ aiNot6:
     pop ax
 
 aiNot7:
+
+aiDone:
     retf32
 AudioInt    Endp
 

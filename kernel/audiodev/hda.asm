@@ -316,6 +316,8 @@ hdiLoop:
     test eax,80000000h
     jz hdiDone
 ;
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+;
     test eax,40000000h
     jz hdiStream
 ;

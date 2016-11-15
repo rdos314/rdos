@@ -103,6 +103,8 @@ aiLoop:
     and ax,777h
     jz aiDone
 ;
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+;
     test ax,111h
     jz aiNot0
 ;
