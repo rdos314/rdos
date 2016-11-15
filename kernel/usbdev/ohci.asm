@@ -33,6 +33,7 @@ INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\pcdev\pci.inc
+INCLUDE ..\irq.inc
 INCLUDE usbdev.inc
 
 MAX_USB_DEVICES = 16
@@ -127,6 +128,13 @@ osp_setup_linear    DD ?
 osp_flags       DB ?
 
 ohci_pipe   ENDS
+
+ohci_irq_struc	STRUC
+
+irq_base	irq_header <>
+irq_func_sel    DW ?
+
+ohci_irq_struc	ENDS
 
 ohci_func_sel   STRUC
 
@@ -242,11 +250,18 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OhciInt Proc far
+    push ds
+;
+    mov ax,ds
+    mov gs,ax
+;
+    mov ds,ds:irq_func_sel
     mov es,ds:ohc_reg_sel
     mov eax,es:HcInterruptStatus
     test eax,2
     jz oiQueueDone
 ;
+    or gs:irq_flags,IRQ_FLAG_ACTIVITY
     call UpdateQueue
 
 oiQueueDone:
@@ -254,6 +269,7 @@ oiQueueDone:
     mov es:HcInterruptStatus,eax
     or ds:ohc_int_status,eax
 ;
+    pop ds
     retf32
 OhciInt  Endp
 
@@ -3289,11 +3305,22 @@ ot1C DD OFFSET SetMaxLen,       SEG code
 InitFunction    Proc near
     push es
     push fs
+    push gs
     pushad
 ;
     mov bh,ds:ohc_usb_bus
     mov bl,ds:ohc_usb_dev
     mov ch,ds:ohc_usb_func
+;
+    mov ax,ds
+    mov gs,ax
+;
+    mov eax,SIZE ohci_irq_struc
+    AllocateSmallGlobalMem
+    mov es:irq_func_sel,ds
+    mov ax,es
+    mov ds,ax
+;
     GetPciMsi
     jc ifIrq
 ;
@@ -3313,11 +3340,11 @@ InitFunction    Proc near
     jmp ifIntDone
 
 ifIrq:
-    mov ds:ohc_irq,0
+    mov gs:ohc_irq,0
     GetPciIrqNr
     jc ifIrqFail
 ;    
-    mov ds:ohc_irq,al
+    mov gs:ohc_irq,al
     mov ah,14h
     mov di,cs
     mov es,di
@@ -3325,6 +3352,8 @@ ifIrq:
     RequestIrqHandler
 
 ifIntDone:
+    mov ax,gs
+    mov ds,ax
     mov es,ds:ohc_reg_sel
     mov eax,80000002h
     mov es:HcInterruptEnable,eax    
@@ -3333,7 +3362,7 @@ ifIntDone:
 ifIrqFail:
     mov ax,SEG data
     mov es,ax
-    mov ds:UseTimer,1
+    mov gs:UseTimer,1
 
 ifIrqDone: 
     mov ax,flat_sel
@@ -3413,6 +3442,7 @@ ifPowerLoop:
 
 ifPowerDone:
     popad
+    pop gs
     pop es
     pop ds
     ret

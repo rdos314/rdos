@@ -33,6 +33,7 @@ INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\pcdev\pci.inc
+INCLUDE ..\irq.inc
 INCLUDE usb.inc
 INCLUDE usbdev.inc
 
@@ -60,6 +61,13 @@ int_2_qh        DB 2 * 32 DUP(?)
 int_1_qh        DB 1 * 32 DUP(?)
 
 int_struc   ENDS
+
+uhci_irq_struc	STRUC
+
+irq_base         irq_header <>
+irq_func_sel     DW ?
+
+uhci_irq_struc	ENDS
 
 uhci_func_sel    STRUC
 
@@ -321,6 +329,13 @@ port_timer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UhciInt Proc far    
+    push ds
+;
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+    mov ax,ds
+    mov gs,ax
+    mov ds,ds:irq_func_sel
+;
     mov dx,ds:uhc_io_base
     add dx,UsbStatusReg
 ;
@@ -336,6 +351,7 @@ UhciInt Proc far
 uiNonFatal:
     call UpdatePipeList
 ;    
+    pop ds
     retf32
 UhciInt  Endp
 
@@ -3138,12 +3154,20 @@ InitFunction    Proc near
     WritePciWord   
     
 ifNotLegacy:    
+    push ds
+    mov eax,SIZE uhci_irq_struc
+    AllocateSmallGlobalMem
+    mov es:irq_func_sel,es
+    mov ax,es
+    mov ds,ax
+;
     GetPciIrqNr
     mov ah,14h
     mov di,cs
     mov es,di
     mov edi,OFFSET UhciInt
     RequestIrqHandler
+    pop ds
 ;
     mov si,OFFSET uhci_tab
     xor di,di
@@ -3231,6 +3255,7 @@ ifTabLoop:
 ;    call UpdatePort    
 ;
     popad
+    pop ds
     ret
 InitFunction    Endp
 
