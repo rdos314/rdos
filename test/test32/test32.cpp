@@ -8,405 +8,355 @@
 
 #include <math.h>
 
-struct TParam
-{
-    int ID;
-};
-
-struct TSect
-{
-    TSection *Section;
-    int Owner;
-    int Active;
-};
-
-TSect *SectionArr[4];
-
 #define FALSE 0
 #define TRUE !FALSE
 
-char FStrip[100];
-int FStripSize;
-char RefStrip[100];
+#define MAX_SAVED_SPOTS 15
+#define MAX_USED_SPOTS  10
 
-const int ParityTable[32] =
-                {
-                    FALSE,  // 0000 0000 =  0, 0 set bits - odd is false
-                    TRUE,   // 0000 0001 =  1, 1 set bits - odd is true
-                    TRUE,   // 0000 0010 =  2, 1 set bits - odd is true 
-                    FALSE,  // 0000 0011 =  3, 2 set bits - odd is false
-                    TRUE,   // 0000 0100 =  4, 1 set bits - odd is true 
-                    FALSE,  // 0000 0101 =  5, 2 set bits - odd is false 
-                    FALSE,  // 0000 0110 =  6, 2 set bits - odd is false 
-                    TRUE,   // 0000 0111 =  7, 3 set bits - odd is true
-                    TRUE,   // 0000 1000 =  8, 1 set bits - odd is true 
-                    FALSE,  // 0000 1001 =  9, 2 set bits - odd is false 
-                    FALSE,  // 0000 1010 = 10, 2 set bits - odd is false
-                    TRUE,   // 0000 1011 = 11, 3 set bits - odd is true
-                    FALSE,  // 0000 1100 = 12, 2 set bits - odd is false
-                    TRUE,   // 0000 1101 = 13, 3 set bits - odd is true
-                    TRUE,   // 0000 1110 = 14, 3 set bits - odd is true
-                    FALSE,  // 0000 1111 = 15, 4 set bits - odd is false
-                    TRUE,   // 0001 0000 = 16, 1 set bits - odd is true
-                    FALSE,  // 0001 0001 = 17, 2 set bits - odd is false
-                    FALSE,  // 0001 0010 = 18, 2 set bits - odd is false
-                    TRUE,   // 0001 0011 = 19, 3 set bits - odd is true
-                    FALSE,  // 0001 0100 = 20, 2 set bits - odd is false
-                    TRUE,   // 0001 0101 = 21, 3 set bits - odd is true
-                    TRUE,   // 0001 0110 = 22, 3 set bits - odd is true
-                    FALSE,  // 0001 0111 = 23, 4 set bits - odd is false
-                    FALSE,  // 0001 1000 = 24, 2 set bits - odd is false
-                    TRUE,   // 0001 1001 = 25, 3 set bits - odd is true
-                    TRUE,   // 0001 1010 = 26, 3 set bits - odd is true
-                    FALSE,  // 0001 1011 = 27, 4 set bits - odd is false
-                    TRUE,   // 0001 1100 = 28, 3 set bits - odd is true 
-                    FALSE,  // 0001 1101 = 29, 4 set bits - odd is false 
-                    FALSE,  // 0001 1110 = 30, 4 set bits - odd is false 
-                    TRUE    // 0001 1111 = 31, 5 set bits - odd is true
-                };
+struct TDataValue
+{
+    int ID;
+    long Value;
+};
 
-void NotifyGoodCard(const char *buf)
+struct TDataPath
+{
+    int Size;
+    int IndArr[MAX_SAVED_SPOTS];
+};
+
+int FCurrID = 0;
+int FBestPath;
+
+int FCount;
+struct TDataValue FArr[MAX_SAVED_SPOTS];
+
+/*################## Add  ###############
+*   Purpose....: Add volume value                                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                      #
+*##########################################################################*/
+void Add(long Value)
 {
     int i;
-    char ch;
-    char strip[41];
 
-    buf++;
-    for (i = 0; i < FStripSize - 3; i++)
-    {
-        ch = *buf & 0xF;
-        if (ch <= 9)
-            strip[i] = ch + '0';
-        else
-            strip[i] = ch + 'A' - 10;
-        buf++;
-    }
-    strip[i] = 0;
+    FCurrID++;
 
-    if (strcmp(strip, RefStrip))
+    if (FCount)
+        if (Value == FArr[FCount - 1].Value)
+            return;
+    
+    if (FCount == MAX_SAVED_SPOTS)
     {
-        printf("Strip differs. In: <");
-        printf(RefStrip);
-        printf(">, Out: <");
-        printf(strip);
-        printf(">\r\n");
+        for (i = 1; i < MAX_SAVED_SPOTS; i++)
+            FArr[i-1] = FArr[i];
+
+        FCount--;
     }
+
+    FArr[FCount].Value = Value;
+    FArr[FCount].ID = FCurrID;
+    FCount++;
 }
 
-int CheckLrc()
+/*##################  CountSpotPath  ###############
+*   Purpose....: Count entries for spot path                                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                      #
+*##########################################################################*/
+void CountSpotPath(struct TDataPath *Path, int DataCount, struct TDataValue DataArr[MAX_SAVED_SPOTS])
 {
-    int i;
-    char value;
-    char *buf = FStrip;
+    long val;
+    int DataPos;
+    int Index = Path->Size - 1;
 
-    value = 0;
-    for (i = 0; i < FStripSize - 1; i++)
+    DataPos = Path->IndArr[Index];
+    val = DataArr[DataPos].Value;
+    DataPos++;
+
+    while (DataPos < DataCount)
     {
-        value ^= *buf & 0xF;
-        buf++;
-    }
-
-    return value == (*buf & 0xF);
-}
-
-int CheckParity()
-{
-    int i;
-    char *buf = FStrip;
-
-    for (i = 0; i < FStripSize; i++)
-    {
-        if (!ParityTable[*buf])
-            return FALSE;
-        buf++;
-    }
-
-    return TRUE;
-}
-
-
-static void TestThread(void *ptr)
-{
-    int i;
-    TParam *param = (TParam *)ptr;
-    int count;
-    TSect *sect;
-    int sectnr = 0;
-    int left = 0;
-
-    for (;;)
-    {
-        if (left)
+        if (DataArr[DataPos].Value > val)
         {
-            left--;
-            if (sectnr == 3)
-                sectnr = 0;
-            else
-                sectnr++;
+            Index++;
+            Path->IndArr[Index] = DataPos;
+            val = DataArr[DataPos].Value;
         }
-        else
+        DataPos++;
+    }
+
+    Path->Size = Index + 1;
+}
+
+/*##################  WalkSpotPath  ###############
+*   Purpose....: Try to setup next path entry                               #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                      #
+*##########################################################################*/
+int WalkSpotPath(struct TDataPath *Path, int DataCount, struct TDataValue DataArr[MAX_SAVED_SPOTS])
+{
+    long val;
+    int DataPos;
+    int Index = Path->Size - 1;
+    int found = FALSE;
+
+    DataPos = Path->IndArr[Index-1];
+    val = DataArr[DataPos].Value;
+
+    DataPos = Path->IndArr[Index];
+    DataPos++;
+
+    while (DataPos < DataCount)
+    {
+        if (DataArr[DataPos].Value > val)
         {
-            sectnr = RdosGetRandom(4);
-            left = RdosGetRandom(50000);
-            count = RdosGetRandom(300);
+            Path->IndArr[Index] = DataPos;
+            found = TRUE;
+            break;
         }
-        
-        sect = SectionArr[sectnr];
+        DataPos++;
+    }
 
-        sect->Section->Enter();
-        sect->Active++;
-        sect->Owner = param->ID;
-        for (i = 0; i < count; i++)
-            if (sect->Active != 1)
-                printf("Active wrong: %d\r\n", sect->Active);        
+    return found;
+}
 
-        if (sect->Owner != param->ID)
-            printf("Section failed\r\n");        
+/*################## ExtractSpotPath  ###############
+*   Purpose....: Extract spot path                                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                      #
+*##########################################################################*/
+void ExtractSpotPath(struct TDataPath *Path, struct TDataValue SpotArr[MAX_USED_SPOTS], struct TDataValue DataArr[MAX_SAVED_SPOTS])
+{
+    int Index = Path->Size;
+    int i;
+    int start = 0;
+    int count = Index;
+    int ind;
 
-        sect->Active--;
-        sect->Section->Leave();    
-
-        RdosWaitMicro(25);
+    if (count > MAX_USED_SPOTS)
+    {
+        start = count - MAX_USED_SPOTS;
+        count = MAX_USED_SPOTS;
+    }
+    
+    for (i = 0; i < count; i++)
+    {
+        ind = Path->IndArr[i + start];
+        SpotArr[i].Value = DataArr[ind].Value;
+        SpotArr[i].ID = DataArr[ind].ID;
     }
 }
 
+/*##################  HandleSpotPath  ###############
+*   Purpose....: Handle spot path                                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                      #
+*##########################################################################*/
+void HandleSpotPath(struct TDataPath *Path, struct TDataValue SpotArr[MAX_USED_SPOTS], int DataCount, struct TDataValue DataArr[MAX_SAVED_SPOTS])
+{
+    int i;
+    int ok;
+    int size;
+ 
+    size = Path->Size;
+
+    ok = WalkSpotPath(Path, DataCount, DataArr);
+    while (ok)
+    {
+        CountSpotPath(Path, DataCount, DataArr);
+        if (Path->Size >= FBestPath)
+        {
+            FBestPath = Path->Size;
+            ExtractSpotPath(Path, SpotArr, DataArr);
+        }
+
+        for (i = Path->Size; i > size; i--)
+        {
+            Path->Size = i;
+            HandleSpotPath(Path, SpotArr, DataCount, DataArr);
+        }
+
+        Path->Size = size;
+        ok = WalkSpotPath(Path, DataCount, DataArr);
+    }
+}
+
+/*################## GetOptimalSpotPath  ###############
+*   Purpose....: Get longest spot path                                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                      #
+*##########################################################################*/
+int GetOptimalSpotPath(struct TDataValue SpotArr[MAX_USED_SPOTS], int DataCount, struct TDataValue DataArr[MAX_SAVED_SPOTS])
+{
+    int StartPos = 0;
+    int ind;
+    int wind;
+    int ok;
+    int i;
+    struct TDataPath path;
+
+    FBestPath = 0;
+
+    if (DataCount == 0)
+        return 0;
+
+    for (StartPos = 0; StartPos < DataCount; StartPos++)
+    {
+        path.Size = 1;
+        path.IndArr[0] = StartPos;
+
+        CountSpotPath(&path, DataCount, DataArr);
+        if (path.Size >= FBestPath)
+        {
+            FBestPath = path.Size;
+            ExtractSpotPath(&path, SpotArr, DataArr);
+        }
+
+        for (i = path.Size; i > 1; i--)
+        {
+            path.Size = i;
+            HandleSpotPath(&path, SpotArr, DataCount, DataArr);
+        }
+    }
+
+    if (FBestPath <= MAX_USED_SPOTS)
+        return FBestPath;
+    else
+        return MAX_USED_SPOTS;
+}
+
+/*################## GetSpotFlow  ###############
+*   Purpose....: Get spot check flow                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                      #
+*##########################################################################*/
+void GetSpotFlow(int SpotCount, struct TDataValue SpotArr[MAX_USED_SPOTS], long FlowArr[MAX_USED_SPOTS])
+{
+    int i;
+    int diff;
+    long temp;
+
+    for (i = 1; i < SpotCount; i++)
+    {
+        diff = SpotArr[i].ID - SpotArr[i-1].ID;
+        temp = SpotArr[i].Value;
+        temp -= SpotArr[i-1].Value;
+        temp = temp / diff;
+        FlowArr[i-1] = temp;
+    }
+}
+
+/*################## GetSpotFlowAverage  ###############
+*   Purpose....: Get spot check average flow                                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                      #
+*##########################################################################*/
+long GetSpotFlowAverage(int FlowCount, long FlowArr[MAX_USED_SPOTS])
+{
+    int i;
+    long sum = 0;
+
+    for (i = 0; i < FlowCount; i++)
+        sum += FlowArr[i];
+
+    return sum / FlowCount;
+}
+
+/*################## GetSpotFlowSd2  ###############
+*   Purpose....: Get spot check flow squared standard deviation             #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                      #
+*##########################################################################*/
+long long GetSpotFlowSd2(long Average, int FlowCount, long FlowArr[MAX_USED_SPOTS])
+{
+    int i;
+    long long sum = 0;
+    long val;
+
+    for (i = 0; i < FlowCount; i++)
+    {
+        val = FlowArr[i] - Average;
+        sum += (long long)val * (long long)val;
+    }
+
+    return sum / (long long)(FlowCount - 1);
+}
+
+/*################## GetSqrt  ###############
+*   Purpose....: Get square root                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                      #
+*##########################################################################*/
+long GetSqrt(long long Value)
+{
+    int i;
+    int digits;
+    long long temp;
+    long long base;
+    long long diff;
+
+    for (i = 0; i < 31; i++)
+    {
+        temp = (long long)1 << (2 * i);
+        if (temp > Value)
+            break;
+    }
+
+    digits = i - 1;
+    base = (long long)1 << digits;
+
+    for (i = digits - 1; i >= 0; i--)
+    {
+        diff = (long long)1 << i;
+        temp = base + diff;
+        if (temp * temp < Value)
+            base += diff;        
+    }
+
+    return base;
+}
 
 void main()
 {
-    int i;
-    int size;
-    char *str;
+    int count;
+    struct TDataValue SpotArr[MAX_USED_SPOTS];
+    long FlowArr[MAX_USED_SPOTS];
+    long avg;
+    long long sd2;
+    long tavg;
+    long long tsd2;
+    long sd;
+    long tsd;
 
-    str = new char[65536];
+    Add(20);
+    Add(40);
+    Add(140);
+    Add(60);
+    Add(80);
+    Add(180);
 
-    TFile File("d:\\test\\912684.txt");
+    count = GetOptimalSpotPath(SpotArr, FCount, FArr);
 
-    size = File.Read(str, 65535);
-    str[size] = 0;
-
-    FStripSize = RdosTestGate(str);
-    while (FStripSize)
+    if (count > 3)
     {
-        memcpy(FStrip, str, FStripSize);
-        FStrip[FStripSize] = 0;
+        GetSpotFlow(count, SpotArr, FlowArr);
+        tavg = GetSpotFlowAverage(count - 1, FlowArr);
+        tsd2 = GetSpotFlowSd2(tavg, count - 1, FlowArr);
+        avg = GetSpotFlowAverage(count - 2, FlowArr);
+        sd2 = GetSpotFlowSd2(avg, count - 2, FlowArr);
 
-        if (CheckParity() && CheckLrc())
-            NotifyGoodCard(FStrip);
-        else
-            printf("Wrong parity or CRC\r\n");
-
-        str[0] = 0;
-        FStripSize = RdosTestGate(str);
+        tsd = GetSqrt(tsd2);
+        sd = GetSqrt(sd2);
     }
-
-    for (;;)
-    {
-        size = 1 + RdosGetRandom(36);
-        for (i = 0; i < size; i++)
-            FStrip[i] = '0' + RdosGetRandom(10);
-        FStrip[size] = 0;
-        strcpy(RefStrip, FStrip);
- 
-        FStripSize = RdosTestGate(FStrip);
-        if (FStripSize == size + 3)
-        {
-            if (CheckParity() && CheckLrc())
-                NotifyGoodCard(FStrip);
-            else
-                printf("Wrong parity or CRC\r\n");
-        }
-        else
-            printf("Wrong size\r\n");
-    }
-
-
-    int Handle;
-
-    Handle = RdosOpenSysIni();
-    RdosCloseIni(Handle);
-
-    Handle = RdosOpenIni("c:/id.ini");
-    RdosCloseIni(Handle);
-
-    RdosSetCurDrive('c' - 'a');
-    Handle = RdosOpenIni("config.ini");
-    RdosCloseIni(Handle);
-
-    RdosSetCurDrive('d' - 'a');
-    Handle = RdosOpenIni("/r1/comp.ini");
-    RdosCloseIni(Handle);
-
-    RdosSetCurDir("d:/r1");
-    Handle = RdosOpenIni("comp.ini");
-    RdosCloseIni(Handle);
-
-//    int i;
-    TParam *param;
-
-    int PortCount;
-    int ModuleId;
-
-//    int size;
-    long long val;
-    int handle1;
-    int handle2;
-    int handle3;
-    int handle4;
-    int handle5;
-    int handle6;
-    int handle7;
-    int handle8;
-
-    int handlet1;
-    int handlet2;
-    int handlet3;
-
-    for (;;)
-    {
-        handle1 = RdosCreateRandomBigNum(2 + RdosGetRandom(128));
-
-        val = RdosGetRandom(100);
-        handle2 = RdosCreateBigNum();
-        RdosLoadBigNum64(handle2,  val);
-
-//        handle2 = RdosCreateRandomBigNum(2 + RdosGetRandom(128));
-        handle3 = RdosCreateRandomBigNum(2 + RdosGetRandom(128));
-
-        size = RdosGetBigNumSize10(handle1);
-        RdosGetBigNumString10(handle1, str, size);
-        printf("Base: ");
-        printf(str);
-        printf("\r\n");
-
-        size = RdosGetBigNumSize10(handle2);
-        RdosGetBigNumString10(handle2, str, size);
-        printf("Exp: ");
-        printf(str);
-        printf("\r\n");
-
-        size = RdosGetBigNumSize10(handle3);
-        RdosGetBigNumString10(handle3, str, size);
-        printf("Mod: ");
-        printf(str);
-        printf("\r\n");
-
-        handle4 = RdosPowModBigNum(handle1, handle2, handle3);
-
-        size = RdosGetBigNumSize10(handle4);
-        RdosGetBigNumString10(handle4, str, size);
-        printf("Res: ");
-        printf(str);
-        printf("\r\n");
-
-        handlet1 = RdosCreateBigNum();
-        RdosLoadBigNum64(handlet1,  1);
-
-        for (i = 0; i < val; i++)
-        {
-            handlet2 = RdosMulBigNum(handlet1, handle1);
-            handlet3 = RdosModBigNum(handlet2, handle3);
-
-            RdosDeleteBigNum(handlet1);
-            RdosDeleteBigNum(handlet2);
-
-            handlet1 = handlet3;
-        }
-
-        handle6 = RdosSubBigNum(handle4, handlet1);
-
-        size = RdosGetBigNumSize10(handle6);
-        if (size == 2)
-            printf("OK\r\n");
-        else
-        {
-            size = RdosGetBigNumSize10(handlet1);
-            RdosGetBigNumString10(handlet1, str, size);
-            printf("Modx: ");
-            printf(str);
-            printf("\r\n");
-
-            size = RdosGetBigNumSize10(handle6);
-            RdosGetBigNumString10(handle6, str, size);
-            printf("Diff: ");
-            printf(str);
-            printf("\r\n");
-            return;
-        }
-
-        RdosDeleteBigNum(handle1);
-        RdosDeleteBigNum(handle2);
-        RdosDeleteBigNum(handle3);
-        RdosDeleteBigNum(handle4);
-        RdosDeleteBigNum(handle6);
-
-        RdosDeleteBigNum(handlet1);
-
-    }
-
-
-    handle2 = RdosCreateRandomBigNum(5);
-
-    for (i = 1; i < 200; i++)
-    {
-        handle1 = RdosCreateRandomBigNum(i);
-        handle3 = RdosMulBigNum(handle1, handle2);
-        size = RdosGetBigNumSize10(handle3);
-        RdosGetBigNumString10(handle3, str, size);
-        printf("%i: ", i);
-        printf(str);
-        printf("\r\n");
-        
-        RdosDeleteBigNum(handle1);
-        RdosDeleteBigNum(handle2);
-        handle2 = handle3;
-    }
-
-    handle1 = RdosCreateBigNum();
-    RdosLoadBigNum64(handle1,  4500000000);
-
-
-    handle3 = RdosMulBigNum(handle1, handle1);
-    handle4 = RdosMulBigNum(handle3, handle3);
-    handle5 = RdosDivBigNum(handle4, handle3);
-
-    size = RdosGetBigNumSize10(handle3);
-    RdosGetBigNumString10(handle3, str, size);
-
-    size = RdosGetBigNumSize10(handle4);
-    RdosGetBigNumString10(handle4, str, size);
-
-    size = RdosGetBigNumSize10(handle5);
-    RdosGetBigNumString10(handle5, str, size);
-
-    size = RdosGetBigNumSize16(handle4);
-    RdosGetBigNumString16(handle4, str, size);
-
-    RdosDeleteBigNum(handle1);
-    RdosDeleteBigNum(handle2);
-    RdosDeleteBigNum(handle3);
-
-//    RdosWaitMilli(2000);
-//    RdosSoftReset();
-
-//    RdosTestGate();
-
-    for (i = 0; i < 4; i++)
-    {
-        sprintf(str, "Section #%d", i);
-        SectionArr[i] = new TSect;
-        SectionArr[i]->Section = new TSection(str);
-        SectionArr[i]->Owner = 0;
-        SectionArr[i]->Active = 0;
-    }
-
-    for (i = 0; i < 24; i++)
-    {
-        param = new TParam;
-        param->ID = i;
-        sprintf(str, "Test #%d", i);
-        RdosCreateThread(TestThread, str, param, 0x4000);
-   }
-
-   for (;;)
-       RdosWaitMilli(200);
 }

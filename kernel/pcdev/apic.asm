@@ -553,6 +553,7 @@ IsaIrqEntry:
     push ds
     push es
     push fs
+    push gs
 ;
     EnterSmpInt
     sti
@@ -574,6 +575,15 @@ IsaIrqExit:
     xor eax,eax
     mov ds:APIC_EOI,eax
     LeaveSmpInt
+;
+    pop ax
+    verr ax
+    jz IrqExitGs
+;    
+    xor ax,ax
+
+IrqExitGs:
+    mov gs,ax
 ;
     pop ax
     verr ax
@@ -1004,6 +1014,7 @@ MsiEntry:
     push ds
     push es
     push fs
+    push gs
 ;
     EnterSmpInt
     mov ax,apic_mem_sel
@@ -1020,6 +1031,15 @@ MsiEntry:
     pop es
     pop fs
     LeaveSmpInt
+;
+    pop ax
+    verr ax
+    jz MsiExitGs
+;    
+    xor ax,ax
+
+MsiExitGs:
+    mov gs,ax
 ;
     pop ax
     verr ax
