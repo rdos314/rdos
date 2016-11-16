@@ -475,7 +475,6 @@ niLoop:
     test bx,RxUnderrun
     jz niNotUnderrun
 ;
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov dx,ds:IoBase
     add dx,MediaReg
     in al,dx

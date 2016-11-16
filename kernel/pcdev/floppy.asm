@@ -145,7 +145,6 @@ floppy_int      Proc far
     or al,al
     jnz floppy_int_done
     inc al
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov ds:IntFlag,al
     mov bx,ds:FloppyThread
     Signal

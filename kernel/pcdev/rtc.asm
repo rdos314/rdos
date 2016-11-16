@@ -90,7 +90,6 @@ rtc_int Proc far
     test al,40h
     jz rtc_int_done
 ;    
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov eax,ds:last_time
     or eax,ds:last_time+4
     jz rtc_int_first

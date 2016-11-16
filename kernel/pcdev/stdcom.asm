@@ -521,7 +521,7 @@ io_com_int_inactive:
     test al,1
     jnz io_com_int_done
 ;   
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+    or gs:irq_flags,IRQ_FLAG_ACTIVITY
     mov dx,ds:iopds_base
     add dx,6
     in al,dx
@@ -940,6 +940,8 @@ msBusyLoop:
     pop ds
     add bx,2
     loop msBusyLoop
+;
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     jmp msRetry
 
 msDone:
@@ -3008,6 +3010,7 @@ mem_init_irq:
     jc mem_init_pci_done
 ;
     push eax
+    mov bx,es
     mov eax,SIZE mem_share_struc
     AllocateSmallGlobalMem
     pop eax

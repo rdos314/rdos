@@ -495,13 +495,14 @@ IrqPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AhciInt  Proc far
-    mov fs,ds:ad_hba_sel
+    mov gs,ds:ad_hba_sel
 
 aiRetry:    
-    mov eax,fs:hba_is
-    and eax,fs:hba_pi
+    mov eax,gs:hba_is
+    and eax,gs:hba_pi
     jz aiDone
 ;
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov si,OFFSET ad_port_arr
     mov edx,1
 
@@ -521,7 +522,7 @@ aiHandlePort:
     pop eax
     pop es
     pop ds
-    mov fs:hba_is,edx
+    mov gs:hba_is,edx
 
 aiHandleNext:
     or eax,eax

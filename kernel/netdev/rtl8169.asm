@@ -2296,7 +2296,6 @@ niNotOv:
     test ax,IR_ROK OR IR_SER
     jz niNotRx
 ;    
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov bx,ds:Handle
     or bx,bx
     jz niNotRx
@@ -2308,7 +2307,6 @@ niNotRx:
     test ax,IR_LinkChg
     jz niDone
 ;
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov bx,ds:SuperThread
     Signal
         

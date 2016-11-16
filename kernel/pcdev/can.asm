@@ -367,10 +367,11 @@ ciWriteLoop:
     jz ciReg
 
 ciStatus:
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov eax,es:CAN_STAT
     test ax,20h
     jnz ciSignal    
+;
+    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     jmp ciWriteLoop
     
 ciReg:

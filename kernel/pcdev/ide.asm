@@ -121,7 +121,6 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ide_int Proc far
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov ds:IntFlag,1
     mov bx,ds:IdeThread
     Signal
@@ -144,7 +143,6 @@ ide_pci_int Proc far
     or dx,dx
     jz ide_pci_int_base_ok
 ;
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     add dx,7
     in al,dx
 

@@ -2397,7 +2397,6 @@ hpet_ds_ok:
 
 hpet_ioapic_int Proc far
     lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov es,ds:irq_hpet_sel
     mov edx,es:hpet_int_status
     mov es:hpet_int_status,edx  
