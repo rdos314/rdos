@@ -3255,7 +3255,6 @@ ifTabLoop:
 ;    call UpdatePort    
 ;
     popad
-    pop ds
     ret
 InitFunction    Endp
 
