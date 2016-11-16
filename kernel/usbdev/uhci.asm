@@ -3157,7 +3157,7 @@ ifNotLegacy:
     push ds
     mov eax,SIZE uhci_irq_struc
     AllocateSmallGlobalMem
-    mov es:irq_func_sel,es
+    mov es:irq_func_sel,ds
     mov ax,es
     mov ds,ax
 ;

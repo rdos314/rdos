@@ -91,6 +91,7 @@ IrqEntry1:
     push ds
     push es
     push fs
+    push gs
 ;
     xor ax,ax
     mov ds,ax
@@ -114,6 +115,15 @@ IrqExit1:
     add al,60h
     out INT0_CONTROL,al
     LeaveInt
+;
+    pop ax
+    verr ax
+    jz IrqExitGs1
+;    
+    xor ax,ax
+
+IrqExitGs1:
+    mov gs,ax
 ;
     pop ax
     verr ax
@@ -171,6 +181,7 @@ IrqEntry2:
     push ds
     push es
     push fs
+    push gs
 ;
     xor ax,ax
     mov ds,ax
@@ -198,6 +209,15 @@ IrqExit2:
     add al,60h
     out INT1_CONTROL,al
     LeaveInt
+;
+    pop ax
+    verr ax
+    jz IrqExitGs2
+;    
+    xor ax,ax
+
+IrqExitGs2:
+    mov gs,ax
 ;
     pop ax
     verr ax

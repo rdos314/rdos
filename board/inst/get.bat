@@ -25,7 +25,7 @@ copy ..\..\kernel\os\wd.rdv files
 copy ..\..\kernel\os\guidev.rdv files
 copy ..\..\kernel\bios\pcbios.rdv files
 copy ..\..\kernel\debug\kdebug.rdv files
-copy ..\..\kernel\pcdev\pcshut.exe files
+copy ..\..\kernel\debug\pcshut.exe files
 copy ..\..\kernel\bios\vga.rdv files
 copy ..\..\kernel\dosemu\emulate.rdv files
 copy ..\..\kernel\dosemu\dos.rdv files
