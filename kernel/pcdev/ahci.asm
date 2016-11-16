@@ -276,6 +276,8 @@ PORT_FLAG_TIMER     =   8h
 
 ahci_port_struc     STRUC
 
+ap_irq_base         irq_header <>
+
 ap_linear           DD ?
 ap_physical         DD ?
 ap_pages            DW ?
@@ -356,7 +358,7 @@ ahci_command_list_struc  ENDS
 
 ahci_device_struc   STRUC
 
-irq_base            irq_header <>
+ad_irq_base         irq_header <>
 
 ad_hba_sel          DW ?
 ad_port_arr         DW 32 DUP(?)
