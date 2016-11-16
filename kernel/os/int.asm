@@ -847,7 +847,7 @@ restore_context ENDP
     public pm_exception_handler
 
 pm_exception_handler:
-    movzx ax,byte ptr [ebp+2].trap_exc_nr
+    movzx ax,byte ptr [ebp].trap_exc_nr
     DebugException
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

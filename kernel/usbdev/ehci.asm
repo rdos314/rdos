@@ -86,7 +86,7 @@ irq_base            irq_header <>
 
 irq_func_sel        DW ?
 
-ehci_irq_struc	ENDS
+ehci_irq_struc  ENDS
 
 ehci_func_sel   STRUC
 
@@ -364,6 +364,7 @@ EhciInt Proc far
     mov ax,ds
     mov gs,ax
 ;
+    mov ds,ds:irq_func_sel
     mov es,ds:ehc_reg_sel
 
 eiLoop:    
@@ -3693,7 +3694,7 @@ ifLegacyOff:
 ;
     mov eax,SIZE ehci_irq_struc
     AllocateSmallGlobalMem
-    mov es:ehci_func_sel,ds
+    mov es:irq_func_sel,ds
     mov ax,es
     mov ds,ax
 ;

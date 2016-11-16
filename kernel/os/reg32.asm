@@ -490,8 +490,72 @@ debug_exception:
     jc debug_normal
 
 debug_fault:
-    movzx eax,al
-    CrashGate
+    mov ebx,ebp
+    StartCoreDump
+    jc debug_dump_fail
+;    
+    mov ds:[ebp].fault_vect,al
+;
+    mov ax,ss:[ebx].trap_pds
+    mov ds:[ebp].reg_ds.d_selector,ax
+;
+    mov eax,ss:[ebx].trap_ebx
+    mov ds:[ebp].reg_ebx,eax
+;
+    mov eax,ss:[ebx].trap_eax
+    mov ds:[ebp].reg_eax,eax
+;
+    mov eax,ss:[ebx].trap_ebp
+    mov ds:[ebp].reg_ebp,eax
+;
+    mov eax,ss:[ebx].trap_err
+    mov ds:[ebp].fault_error,eax     
+;
+    mov eax,ss:[ebx].trap_eflags
+    mov ds:[ebp].reg_eflags,eax
+;
+    mov eax,ss:[ebx].trap_eip
+    mov ds:[ebp].reg_eip,eax
+;
+    mov ax,ss:[ebx].trap_cs
+    mov ds:[ebp].reg_cs.d_selector,ax
+;
+    test ax,3
+    jz debug_fault_kernel
+;
+    mov eax,ss:[ebx].trap_esp
+    mov ds:[ebp].reg_esp,eax
+;
+    mov ax,ss:[ebx].trap_ss
+    mov ds:[ebp].reg_ss.d_selector,ax
+    jmp debug_fault_stack_ok
+
+debug_fault_kernel:
+    lea eax,[ebx].trap_esp
+    mov ds:[ebp].reg_esp,eax
+;
+    mov ax,ss
+    mov ds:[ebp].reg_ss.d_selector,ax
+
+debug_fault_stack_ok: 
+    sldt bx
+    mov ds:[ebp].reg_ldt.d_selector,bx
+;    
+    str bx
+    mov ds:[ebp].reg_tr.d_selector,bx
+;    
+    mov ds:[ebp].reg_ecx,ecx
+    mov ds:[ebp].reg_edx,edx
+    mov ds:[ebp].reg_esi,esi
+    mov ds:[ebp].reg_edi,edi
+;    
+    mov ds:[ebp].reg_es.d_selector,es
+    mov ds:[ebp].reg_fs.d_selector,fs
+    mov ds:[ebp].reg_gs.d_selector,gs
+    NotifyCoreDump
+
+debug_dump_fail:
+    jmp debug_dump_fail
    
 debug_normal:       
     push ax
