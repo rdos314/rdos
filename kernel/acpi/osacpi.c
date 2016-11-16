@@ -844,7 +844,7 @@ ACPI_STATUS AcpiOsInstallInterruptHandler(UINT32 Level, ACPI_OSD_HANDLER Handler
                 
     sel = RdosPointerToSelector(req);        
 
-    RdosRequestIrqHandler(Level, 0x10, &IrqStub, sel);
+//    RdosRequestIrqHandler(Level, 0x10, &IrqStub, sel);
     return AE_OK;
 }
     

@@ -2688,7 +2688,6 @@ rtDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 XhciInt Proc far    
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     push ds
     mov ds,ds:irq_func_sel
     mov bx,ds:xhc_event_thread

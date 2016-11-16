@@ -331,7 +331,6 @@ port_timer  Endp
 UhciInt Proc far    
     push ds
 ;
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
     mov ax,ds
     mov gs,ax
     mov ds,ds:irq_func_sel

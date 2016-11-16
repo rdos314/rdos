@@ -373,17 +373,16 @@ eiLoop:
     mov es:HcStatus,eax
     jz eiDone
 ;
+    or gs:irq_flags,IRQ_FLAG_ACTIVITY
     test al,1
     jz eiNotPipe
 ;    
-    or gs:irq_flags,IRQ_FLAG_ACTIVITY
     call UpdatePipeList
 
 eiNotPipe:
     and al,NOT 1
     jz eiLoop
 ;
-    or gs:irq_flags,IRQ_FLAG_ACTIVITY
     push ds
     mov ax,SEG data
     mov ds,ax

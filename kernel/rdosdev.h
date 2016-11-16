@@ -653,7 +653,7 @@ void RdosHookState(__rdos_hook_state_callback *callb_proc);
 void RdosSendEoi(int irq);
 int RdosIsIrqFree(int irq);
 
-void RdosRequestIrqHandler(int irq, int prio, __rdos_irq_callback *irq_proc, int ds_sel);
+void RdosRequestIrqHandler(int irq, int prio, __rdos_irq_callback *irq_proc);
 void RdosForceLevelIrq(int irq);
 
 void RdosSetupIrqDetect();
@@ -1511,11 +1511,18 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
 
 #pragma aux RdosRequestIrqHandler = \
     "push ds" \
-    "mov ds,ebx" \
+    "push es" \
+    "push eax" \
+    "mov eax,16" \
+    OsGate_allocate_small_global_mem  \
+    "mov eax,es" \
+    "mov ds,eax" \
+    "pop eax" \
+    "pop es" \
     "mov ah,dl" \
     OsGate_request_irq_handler \
     "pop ds" \
-    parm [eax] [edx] [es edi] [ebx];
+    parm [eax] [edx] [es edi];
 
 #pragma aux RdosSetupIrqDetect = \
     OsGate_setup_irq_detect;
