@@ -36,6 +36,7 @@ INCLUDE ..\os\int.def
 INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
+INCLUDE ..\irq.inc
 
 data    SEGMENT byte public 'DATA'
 
@@ -101,25 +102,30 @@ IrqEntry1:
     EnterInt
     sti
 ;       
-    mov ds,cs:irq_handler_data
-    call fword ptr cs:irq_handler_ads
+    mov ax,cs:irq_handler_data
+    mov ds,ax
+    or ax,ax
+    jz IsaIrqNoData1
 ;
+    mov ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
+    mov ds:irq_flags,ax
+        
+    call fword ptr cs:irq_handler_ads
+
+    mov ax,ds:irq_flags
+    cmp ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
+    je IsaIrqChain1
+;
+    CrashGate
+
+IsaIrqNoData1:
+    call fword ptr cs:irq_handler_ads
+   
+IsaIrqChain1:
     mov bx,OFFSET IrqEnd1 - OFFSET IrqStart1
     jmp cs:irq_chain
 
 IrqExit1:
-
-
-    mov ax,fs
-    cmp ax,fs:ps_sel
-    je IrqFsOk1
-;
-    CrashGate
-
-IrqFsOk1:
-    
-    
-
     cli    
     mov al,cs:irq_nr
     add al,60h
@@ -203,21 +209,31 @@ IrqEntry2:
 ;       
     mov ds,cs:irq_handler_data
     call fword ptr cs:irq_handler_ads
+;       
+    mov ax,cs:irq_handler_data
+    mov ds,ax
+    or ax,ax
+    jz IsaIrqNoData2
 ;
+    mov ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
+    mov ds:irq_flags,ax
+        
+    call fword ptr cs:irq_handler_ads
+
+    mov ax,ds:irq_flags
+    cmp ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
+    je IsaIrqChain2
+;
+    CrashGate
+
+IsaIrqNoData2:
+    call fword ptr cs:irq_handler_ads
+   
+IsaIrqChain2:
     mov bx,OFFSET IrqEnd2 - OFFSET IrqStart2
     jmp cs:irq_chain
 
 IrqExit2:
-
-    mov ax,fs
-    cmp ax,fs:ps_sel
-    je IrqFsOk2
-;
-    CrashGate
-
-IrqFsOk2:
-
-
     cli    
     mov al,62h
     out INT0_CONTROL,al
@@ -310,7 +326,20 @@ irch_handler      irq_chain_struc <>
 IrqChainEntry:
     push bx
     mov ds,cs:[bx].irch_handler_data
+
+    mov ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
+    mov ds:irq_flags,ax
+
     call fword ptr cs:[bx].irch_handler_ads
+
+    mov ax,ds:irq_flags
+    cmp ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
+    je IrqChainDone
+;
+    CrashGate
+
+IrqChainDone:
+
     pop bx
 ;
     mov si,bx
