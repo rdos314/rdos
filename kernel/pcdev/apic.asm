@@ -559,26 +559,32 @@ IsaIrqEntry:
     sti
     push es
 ;       
-    mov ds,cs:isa_irq_handler_data
-    call fword ptr cs:isa_irq_handler_ads
+    mov ax,cs:isa_irq_handler_data
+    mov ds,ax
+    or ax,ax
+    jz IsaIrqNoData
 ;
+    mov ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
+    mov ds:irq_flags,ax
+
+    call fword ptr cs:isa_irq_handler_ads
+
+    mov ax,ds:irq_flags
+    cmp ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
+    je IsaIrqChain
+;
+    CrashGate
+
+IsaIrqNoData:
+    call fword ptr cs:isa_irq_handler_ads
+   
+IsaIrqChain:
     mov bx,OFFSET IsaIrqEnd - OFFSET IsaIrqStart
     jmp cs:isa_irq_chain
 
 IsaIrqExit:
     pop es
     cli    
-
-
-    mov ax,fs
-    cmp ax,fs:ps_sel
-    je IsaIrqFsOk
-;
-    CrashGate
-
-IsaIrqFsOk:
-    
-    
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
@@ -686,7 +692,21 @@ isa_irch_handler      isa_irq_chain_struc <>
 IsaIrqChainEntry:
     push bx
     mov ds,cs:[bx].isa_irch_handler_data
+
+    mov ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
+    mov ds:irq_flags,ax
+
     call fword ptr cs:[bx].isa_irch_handler_ads
+
+    mov ax,ds:irq_flags
+    cmp ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
+    je IsaChainFlagOk
+;
+    CrashGate
+
+IsaChainFlagOk:
+
+
     pop bx
 ;
     mov si,bx
@@ -1027,22 +1047,12 @@ MsiEntry:
 ;
     EnterSmpInt
     sti
+;    
     push es
-;       
     mov ds,cs:msi_handler_data
     call fword ptr cs:msi_handler_ads
-;
     pop es
-;
-
-
-    mov ax,fs
-    cmp ax,fs:ps_sel
-    je MsiFsOk
-;
-    CrashGate
-
-MsiFsOk:
+;    
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
