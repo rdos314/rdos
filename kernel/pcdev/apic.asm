@@ -1026,10 +1026,6 @@ MsiEntry:
     push gs
 ;
     EnterSmpInt
-    mov ax,apic_mem_sel
-    mov ds,ax
-    xor eax,eax
-    mov ds:APIC_EOI,eax
     sti
     push es
 ;       
@@ -1037,7 +1033,6 @@ MsiEntry:
     call fword ptr cs:msi_handler_ads
 ;
     pop es
-    LeaveSmpInt
 ;
 
 
@@ -1048,8 +1043,12 @@ MsiEntry:
     CrashGate
 
 MsiFsOk:
-    
-
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax    
+    LeaveSmpInt
+;
     pop ax
     verr ax
     jz MsiExitGs
