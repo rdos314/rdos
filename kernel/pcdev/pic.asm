@@ -100,7 +100,6 @@ IrqEntry1:
 ;
     EnterInt
     sti
-    push fs
 ;       
     mov ds,cs:irq_handler_data
     call fword ptr cs:irq_handler_ads
@@ -109,7 +108,18 @@ IrqEntry1:
     jmp cs:irq_chain
 
 IrqExit1:
-    pop fs
+
+
+    mov ax,fs
+    cmp ax,fs:ps_sel
+    je IrqFsOk1
+;
+    CrashGate
+
+IrqFsOk1:
+    
+    
+
     cli    
     mov al,cs:irq_nr
     add al,60h
@@ -190,7 +200,6 @@ IrqEntry2:
 ;
     EnterInt
     sti
-    push fs
 ;       
     mov ds,cs:irq_handler_data
     call fword ptr cs:irq_handler_ads
@@ -199,7 +208,16 @@ IrqEntry2:
     jmp cs:irq_chain
 
 IrqExit2:
-    pop fs
+
+    mov ax,fs
+    cmp ax,fs:ps_sel
+    je IrqFsOk2
+;
+    CrashGate
+
+IrqFsOk2:
+
+
     cli    
     mov al,62h
     out INT0_CONTROL,al
