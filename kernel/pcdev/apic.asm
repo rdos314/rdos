@@ -167,13 +167,13 @@ ioapic_num      DB ?
 
 ioapic_core_irq_struc   ENDS
 
-hpet_irq_struc	STRUC
+hpet_irq_struc  STRUC
 
 irq_base            irq_header <>
 
 irq_hpet_sel        DW ?
 
-hpet_irq_struc	ENDS
+hpet_irq_struc  ENDS
 
         
 data    SEGMENT byte public 'DATA'
@@ -557,7 +557,6 @@ IsaIrqEntry:
 ;
     EnterSmpInt
     sti
-    push fs
     push es
 ;       
     mov ds,cs:isa_irq_handler_data
@@ -568,8 +567,18 @@ IsaIrqEntry:
 
 IsaIrqExit:
     pop es
-    pop fs
     cli    
+
+
+    mov ax,fs
+    cmp ax,fs:ps_sel
+    je IsaIrqFsOk
+;
+    CrashGate
+
+IsaIrqFsOk:
+    
+    
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
@@ -1022,16 +1031,25 @@ MsiEntry:
     xor eax,eax
     mov ds:APIC_EOI,eax
     sti
-    push fs
     push es
 ;       
     mov ds,cs:msi_handler_data
     call fword ptr cs:msi_handler_ads
 ;
     pop es
-    pop fs
     LeaveSmpInt
 ;
+
+
+    mov ax,fs
+    cmp ax,fs:ps_sel
+    je MsiFsOk
+;
+    CrashGate
+
+MsiFsOk:
+    
+
     pop ax
     verr ax
     jz MsiExitGs
