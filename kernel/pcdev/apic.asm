@@ -546,7 +546,7 @@ IsaIrqEntry:
     push es
     push fs
 ;
-    EnterSmpInt
+    EnterInt
 ;       
     mov ax,word ptr fs:ps_curr_irq_nr
     or ax,ax
@@ -577,7 +577,6 @@ IsaIrqPrevOk:
     inc fs:[bx].ps_irq_count_arr
 
 IsaIrqRetry:    
-    push es
     mov ds,cs:isa_irq_handler_data
     call fword ptr cs:isa_irq_handler_ads
 ;
@@ -585,7 +584,6 @@ IsaIrqRetry:
     jmp cs:isa_irq_chain
 
 IsaIrqExit:
-    pop es
     cli    
 ;
     mov ax,word ptr fs:ps_curr_irq_nr
@@ -621,7 +619,7 @@ IsaIrqExitNestingOk:
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-    LeaveSmpInt
+    LeaveInt
 ;
     pop ax
     verr ax
@@ -1055,7 +1053,7 @@ MsiEntry:
     push es
     push fs
 ;
-    EnterSmpInt
+    EnterInt
 ;       
     mov ax,word ptr fs:ps_curr_irq_nr
     or ax,ax
@@ -1083,10 +1081,8 @@ MsiPrevOk:
     shl bx,2
     inc fs:[bx].ps_irq_count_arr
 ;    
-    push es
     mov ds,cs:msi_handler_data
     call fword ptr cs:msi_handler_ads
-    pop es
     cli
     mov word ptr fs:ps_curr_irq_nr,0
 ;    
@@ -1105,7 +1101,7 @@ MsiExitNestingOk:
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax    
-    LeaveSmpInt
+    LeaveInt
 ;
     pop ax
     verr ax
@@ -2248,13 +2244,13 @@ has_local_timer    Endp
 long_timer_handler_name    DB 'Long Timer Handler', 0
 
 long_timer_handler      Proc far
-    EnterSmpInt    
+    EnterInt    
     lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-    LeaveSmpInt
+    LeaveInt
     retf32
 long_timer_handler      Endp
 
@@ -2276,13 +2272,13 @@ long_hpet_handler      Proc far
     mov edx,ds:hpet_int_status
     mov ds:hpet_int_status,edx
 ;    
-    EnterSmpInt    
+    EnterInt    
     lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-    LeaveSmpInt
+    LeaveInt
     retf32
 long_hpet_handler       Endp
 
@@ -2345,13 +2341,13 @@ timer_int:
     push es
     push fs
 ;
-    EnterSmpInt    
+    EnterInt    
     lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-    LeaveSmpInt
+    LeaveInt
 ;
     pop ax
     verr ax
@@ -2406,13 +2402,13 @@ hpet_int:
     mov edx,ds:hpet_int_status
     mov ds:hpet_int_status,edx
 ;    
-    EnterSmpInt    
+    EnterInt    
     lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-    LeaveSmpInt
+    LeaveInt
 ;    
     pop ax
     verr ax
@@ -2480,13 +2476,13 @@ preempt_int:
     push es
     push fs
 ;
-    EnterSmpInt    
+    EnterInt    
     lock or fs:ps_flags,PS_FLAG_PREEMPT
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-    LeaveSmpInt
+    LeaveInt
 ;
     pop ax
     verr ax
@@ -2533,12 +2529,12 @@ force_schedule_int:
     push es
     push fs
 ;
-    EnterSmpInt
+    EnterInt
     mov ax,apic_mem_sel
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
-    LeaveSmpInt
+    LeaveInt
 ;
     pop ax
     verr ax
