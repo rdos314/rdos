@@ -2253,6 +2253,7 @@ null_thread0:
     mov es:p_sleep_sel,fs
     mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
+    mov word ptr fs:ps_curr_irq_nr,0
     mov es:p_core,fs
     lock or fs:ps_flags,PS_FLAG_ACTIVE
 ;
@@ -2983,6 +2984,19 @@ core_timer_list_create:
     mov es:ps_log_count,0
     mov es:ps_log_sel,0
     mov es:ps_log_entry,0
+;
+    mov cx,256
+    mov bx,OFFSET ps_irq_count_arr
+    xor eax,eax
+
+irq_count_init:
+    mov es:[bx],eax
+    add bx,4
+    loop irq_count_init
+;
+    mov es:ps_curr_irq_nr,0
+    mov es:ps_curr_irq_count,0
+    mov es:ps_nested_irq_count,0    
 ;
     call create_long_tss
     mov es:ps_long_tr,bx

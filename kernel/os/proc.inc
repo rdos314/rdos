@@ -72,79 +72,90 @@ pt32_linear_arr DD 32 DUP(?)
 
 proc_tlb32_struc        ENDS
 
+MAX_IRQ_NESTING     = 256
+
 processor_seg   STRUC
 
-ps_ptab             DW 256 DUP(?)
-ps_prio_act         DW ?
+ps_ptab                 DW 256 DUP(?)
+ps_prio_act             DW ?
 
-ps_wakeup_list      DW ?
+ps_wakeup_list          DW ?
 
-ps_id               DW ?
+ps_id                   DW ?
 
-ps_sel              DW ?
+ps_sel                  DW ?
 
-ps_sched_count      DW ?
-ps_log_count        DW ?
-ps_log_sel          DW ?
-ps_log_entry        DW ?
+ps_sched_count          DW ?
+ps_log_count            DW ?
+ps_log_sel              DW ?
+ps_log_entry            DW ?
 
-ps_stack_offset     DD ?
-ps_stack_sel        DW ?
-ps_flags            DD ?
+ps_stack_offset         DD ?
+ps_stack_sel            DW ?
+ps_flags                DD ?
 
-ps_nesting          DW ?
-ps_curr_thread      DW ?
-ps_last_thread      DW ?
-ps_null_thread      DW ?
-ps_math_thread      DW ?
+ps_nesting              DW ?
+ps_curr_thread          DW ?
+ps_last_thread          DW ?
+ps_null_thread          DW ?
+ps_math_thread          DW ?
 
-ps_gdt_base         DD ?
-ps_gdt_size         DW ?
+ps_gdt_base             DD ?
+ps_gdt_size             DW ?
 
-ps_apic             DD ?
-ps_acpi             DB ?
+ps_apic                 DD ?
+ps_acpi                 DB ?
 
-ps_dump_offset      DW ?
+ps_dump_offset          DW ?
 
-ps_preempt_lsb      DD ?
-ps_preempt_msb      DD ?
+ps_preempt_lsb          DD ?
+ps_preempt_msb          DD ?
 
-ps_last_lsb         DD ?
+ps_last_lsb             DD ?
 
 ; TSC timer support
 
-ps_system_time      DD ?,?
-ps_tsc_guard        DD ?
-ps_last_tsc         DD ?
+ps_system_time          DD ?,?
+ps_tsc_guard            DD ?
+ps_last_tsc             DD ?
 
-ps_clock_tics       DW ?  ; not used
+ps_clock_tics           DW ?  ; not used
 
-ps_lsb_tics         DD ?
-ps_msb_tics         DD ?
+ps_lsb_tics             DD ?
+ps_msb_tics             DD ?
 
-ps_wakeup_spinlock  DW ?
+ps_wakeup_spinlock      DW ?
 
-ps_linear           DD ?
-ps_syscall_esp      DD ?
-ps_syscall_eip      DD ?
-ps_tls_linear       DD ?,?
+ps_linear               DD ?
+ps_syscall_esp          DD ?
+ps_syscall_eip          DD ?
+ps_tls_linear           DD ?,?
 
-ps_long_tr          DW ?
-ps_long_ldt         DW ?
-ps_tr_linear        DD ?
+ps_long_tr              DW ?
+ps_long_ldt             DW ?
+ps_tr_linear            DD ?
 
-ps_cr3              DD ?
-ps_tlb              proc_tlb32_struc <>
-ps_work_tlb         proc_tlb32_struc <>
+ps_curr_irq_nr          DB ?   ; should be before irq_count!!
+ps_curr_irq_count       DB ?
 
-ps_timer_spinlock   DW ?
+ps_nested_irq_count     DW ?
+ps_nested_irq_stack     DW MAX_IRQ_NESTING DUP(?)
+
+ps_irq_count_arr        DD 256 DUP(?)
+
+ps_cr3                  DD ?
+ps_tlb                  proc_tlb32_struc <>
+ps_work_tlb             proc_tlb32_struc <>
+
+ps_timer_spinlock       DW ?
 ps_timer_head           DW ?
 ps_timer_free           DW ?
-ps_timer_entries    DB 256 * SIZE timer_struc DUP(?)
+ps_timer_entries        DB 256 * SIZE timer_struc DUP(?)
 
 processor_seg   ENDS
 
 ; FS        Core selector
 NotifyIrqActivity   Macro
+    inc fs:ps_curr_irq_count
     Endm
     
