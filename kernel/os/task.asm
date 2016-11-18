@@ -2960,11 +2960,6 @@ ptab_init:
     mov eax,cr3
     and ax,0F000h
     mov es:ps_cr3,eax
-;    
-    mov es:cs_usel,flat_sel
-    mov es:cs_uoffs,0
-    mov es:cs_fault,-1
-    mov es:cs_irq,0
 ;
     mov es:ps_timer_spinlock,0
     mov bx,OFFSET ps_timer_entries

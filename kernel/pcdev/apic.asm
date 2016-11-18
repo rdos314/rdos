@@ -540,6 +540,7 @@ isa_irq_handler_ads     DD ?,?
 isa_irq_handler_data    DW ?
 isa_irq_type            DW ?
 isa_irq_chain           DW ?
+isa_irq_nr              DB ?
 isa_irq_detect_nr       DB ?
 
 isa_irq_handler_struc   ENDS
@@ -722,7 +723,7 @@ IsaIrqChainEnd:
 ;
 ;       DESCRIPTION:    Create new ISA IRQ context
 ;
-;       PARAMETERS:     AL           IRQ # (for detect)
+;       PARAMETERS:     AL           IRQ #
 ;
 ;       RETURNS:        DS:ESI       Address of entry-point
 ;
@@ -757,6 +758,7 @@ CreateIsaIrq   Proc near
     mov word ptr es:[edx].isa_irq_handler_ads+4,bx
     mov es:[edx].isa_irq_handler_data,0
     pop ax
+    mov es:[edx].isa_irq_nr,al
     mov es:[edx].isa_irq_detect_nr,al
     mov es:[edx].isa_irq_type,IRQ_TYPE_ISA
 ;
@@ -1031,6 +1033,7 @@ msi_handler_struc   STRUC
 msi_linear          DD ?
 msi_handler_ads     DD ?,?
 msi_handler_data    DW ?
+msi_irq_nr          DB ?
 
 msi_handler_struc   ENDS
 
@@ -1110,6 +1113,8 @@ MsiEnd:
 ;
 ;       DESCRIPTION:    Create new MSI context
 ;
+;       PARAMETERS:     AL          IRQ #
+;
 ;       RETURNS:        DS:ESI       Address of entry-point
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1121,6 +1126,8 @@ CreateMsi   Proc near
     push ecx
     push edx
     push edi
+;
+    push ax
 ;
     mov eax,OFFSET MsiEnd - OFFSET MsiStart
     AllocateSmallLinear
@@ -1135,11 +1142,13 @@ CreateMsi   Proc near
     mov esi,OFFSET MsiStart
     mov edi,edx
     rep movs byte ptr es:[edi],ds:[esi]
+    pop ax
 ;
     mov es:[edx].msi_linear,edx
     mov dword ptr es:[edx].msi_handler_ads,OFFSET MsiDefault - OFFSET MsiStart
     mov word ptr es:[edx].msi_handler_ads+4,bx
     mov es:[edx].msi_handler_data,0
+    mov es:[edx].msi_irq_nr,al
 ;
     mov ds,bx
     mov esi,OFFSET MsiEntry - OFFSET MsiStart

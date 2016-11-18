@@ -4163,7 +4163,7 @@ double_fault:
     GetSelectorBaseSize
     add edx,ebp
 ;
-    mov [edx].cs_fault,8
+    mov [edx].fault_vect,8
 ;
     pop rax
     mov [edx].reg_ds.d_selector,ax
@@ -4259,7 +4259,7 @@ crash_gate_int:
     GetSelectorBaseSize
     add edx,ebp
 ;
-    mov [edx].cs_fault,1Ah
+    mov [edx].fault_vect,1Ah
 ;
     pop rax
     mov [edx].reg_ds.d_selector,ax
@@ -4354,7 +4354,7 @@ crash_nmi_int:
     GetSelectorBaseSize
     add edx,ebp
 ;
-    mov [edx].cs_fault,19h
+    mov [edx].fault_vect,19h
 ;
     pop rax
     mov [edx].reg_ds.d_selector,ax
