@@ -429,8 +429,6 @@ p_ref_count                 DW ?
 p_core              DW ?
 p_wanted_core       DW ?
 p_int_count         DW ?
-p_nest_count        DW ?
-p_nest_unwind       DW ?
 
 p_int_locked_stack      DW ? 
 p_int_prot16_stack      DW ?

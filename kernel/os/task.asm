@@ -2253,8 +2253,6 @@ null_thread:
     mov es:p_core,fs
     mov es:p_wanted_core,0
     mov es:p_int_count,0
-    mov es:p_nest_count,0
-    mov es:p_nest_unwind,0
 ;
     push OFFSET null_loop_start
     call SaveCurrentThread
@@ -2287,11 +2285,6 @@ null_hlt:
     mov ax,fs:ps_nesting
     cmp ax,-1
     je null_nest_ok
-;
-    mov ax,fs:ps_curr_thread
-    mov es,ax
-    mov cx,es:p_nest_count
-    mov dx,es:p_nest_unwind
 ;    
     CrashGate
 
@@ -3843,40 +3836,18 @@ unlock_task     Endp
 ;
 ;   DESCRIPTION:    Enter long mode int
 ;
-;   RETURNS:        EAX      Locked core selector (high) and thread (low)
+;   RETURNS:        AX      Locked core selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 enter_long_int_name  DB 'Enter Long Int',0
 
 enter_long_int   Proc far
-    cli
     mov ax,core_data_sel
     mov ds,ax
-    lock add ds:ps_nesting,1
+    mov ds,ds:ps_sel
+    add ds:ps_nesting,1
     mov ax,ds:ps_sel
-    mov fs,ax
-    shl eax,16
-;
-    mov ax,fs:ps_curr_thread
-    mov es,ax
-    or ax,ax
-    jz eliDone
-;    
-    inc es:p_nest_count
-    mov ax,es:p_nest_count
-    cmp ax,10
-    jb eliDone
-;
-    mov ax,es:p_nest_unwind
-    or ax,ax
-    jnz eliDone
-;    
-    lock add fs:ps_nesting,1
-    mov es:p_nest_unwind,1
-        
-eliDone:
-    mov ax,es
     retf32
 enter_long_int  Endp
 
@@ -3887,27 +3858,29 @@ enter_long_int  Endp
 ;
 ;   DESCRIPTION:    Leave long mode int
 ;
-;   PARAMETERS:     EAX      Locked core selector (high) and thread (low)
+;   PARAMETERS:     AX      Locked core selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 leave_long_int_name  DB 'Leave Long Int',0
 
 leave_long_int   Proc far
-    mov es,ax
-    shr eax,16
-    mov fs,ax
+    mov ds,ax
     
-lliRetry:    
-    cli    
-    lock sub fs:ps_nesting,1
-    jnc lliStillLocked
+lliRetry:
+    cli
+    lock sub ds:ps_nesting,1
+    jnc lliDone
 ;
     test fs:ps_flags,PS_FLAG_TIMER_EXPIRED
     jz lliTimerOk
 ;
     lock add fs:ps_nesting,1
     jc lliHandleTimer
+;
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz lliHandleTimer
 ;
     CrashGate
 
@@ -3919,7 +3892,7 @@ lliHandleTimer:
     jmp lliRetry
     
 lliTimerOk:    
-    mov ax,es
+    mov ax,fs:ps_curr_thread
     or ax,ax
     jz lliDone
 ;
@@ -3929,6 +3902,10 @@ lliTimerOk:
 ;
     lock add fs:ps_nesting,1
     jc lliFlush
+;
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz lliFlush
 ;
     CrashGate
 
@@ -3943,47 +3920,23 @@ lliTlbDone:
 ;    
     mov ax,fs:ps_wakeup_list
     or ax,ax
-    jz lliDecNest
+    jz lliDone
 
 lliSwap:
     lock add fs:ps_nesting,1
     jc lliSched
 ;
+    mov ax,fs:ps_nesting
+    or ax,ax
+    jz lliSched
+;
     CrashGate    
 
 lliSched:
     sti
-    push OFFSET lliSwapDone
+    push OFFSET lliDone
     call SaveLockedThread
     jmp ContinueCurrentThread
-
-lliSwapDone:
-    cli
-    mov ax,core_data_sel
-    mov fs,ax
-    mov fs,fs:ps_sel
-    mov es,fs:ps_curr_thread
-    mov ax,fs:ps_nesting
-    cmp ax,-1
-    je lliDecNest
-        
-lliStillLocked:
-    mov ax,es
-    or ax,ax
-    jz lliDone
-;
-    mov ax,es:p_nest_count
-    cmp ax,1
-    jne lliDecNest
-
-lliLast:
-    xor ax,ax
-    xchg ax,es:p_nest_unwind
-    or ax,ax
-    jnz lliRetry
-
-lliDecNest:
-    dec es:p_nest_count
 
 lliDone:
     retf32
@@ -7536,8 +7489,6 @@ init_thread_block       PROC near
     mov es:p_signal_spinlock,0
     mov es:p_wanted_core,0
     mov es:p_int_count,0
-    mov es:p_nest_count,0
-    mov es:p_nest_unwind,0
     mov ax,ds:p_app_sel
     mov es:p_app_sel,ax
     mov ax,ds:p_ldt_sel
@@ -8818,8 +8769,6 @@ create_first_thread       PROC near
     mov es:p_signal_spinlock,0
     mov es:p_wanted_core,0
     mov es:p_int_count,0
-    mov es:p_nest_count,0
-    mov es:p_nest_unwind,0
     mov es:p_signal,0
     mov es:p_parent_switch,0
     mov es:p_wait_list,0
@@ -8975,8 +8924,6 @@ init_first_process      Proc near
     mov es:p_signal_spinlock,0
     mov es:p_wanted_core,0
     mov es:p_int_count,0
-    mov es:p_nest_count,0
-    mov es:p_nest_unwind,0
     mov es:p_core,fs
     mov es:p_sleep_sel,0
     ret
