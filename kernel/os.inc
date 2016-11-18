@@ -1002,11 +1002,6 @@ StopTimer       MACRO
 ;;;;;;;;;;; Processor ;;;;;;;;;;;;;;;;
 
 
-;  OUT  NC     EFI
-IsEfi    MACRO
-    OsGate is_efi_nr
-                        ENDM
-
 FaultReset    MACRO
     OsGate fault_reset_nr
                         ENDM
