@@ -2996,6 +2996,7 @@ irq_count_init:
 ;
     mov es:ps_curr_irq_nr,0
     mov es:ps_curr_irq_count,0
+    mov es:ps_curr_irq_retries,0
     mov es:ps_nested_irq_count,0    
 ;
     call create_long_tss

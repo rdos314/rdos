@@ -547,30 +547,38 @@ IsaIrqEntry:
     push fs
 ;
     EnterSmpInt
-    push es
 ;       
+    int 3
     mov ax,word ptr fs:ps_curr_irq_nr
     or ax,ax
     jz IsaIrqPrevOk
 ;    
-    mov dx,fs:ps_nested_irq_count
-    mov bx,dx
-    inc dx
-    cmp dx,MAX_IRQ_NESTING
+    mov ax,fs:ps_nested_irq_count
+    mov bx,ax
+    inc ax
+    cmp ax,MAX_IRQ_NESTING
     jne IsaIrqAddStack
 ;
     int 3
 
 IsaIrqAddStack:
-    mov fs:ps_nested_irq_count,dx
-    add bx,bx
-    mov fs:[bx].ps_nested_irq_stack,ax
+    mov fs:ps_nested_irq_count,ax
+;
+    shl bx,2
+    mov eax,dword ptr fs:ps_curr_irq_nr
+    mov fs:[bx].ps_nested_irq_stack,eax
 
 IsaIrqPrevOk: 
-    movzx ax,cs:isa_irq_nr
-    mov word ptr fs:ps_curr_irq_nr,ax
-;    
+    movzx bx,cs:isa_irq_nr
+    mov word ptr fs:ps_curr_irq_nr,bx
+    mov fs:ps_curr_irq_retries,0
+;
     sti
+    shl bx,2
+    inc fs:[bx].ps_irq_count_arr
+
+IsaIrqRetry:    
+    push es
     mov ds,cs:isa_irq_handler_data
     call fword ptr cs:isa_irq_handler_ads
 ;
@@ -581,26 +589,33 @@ IsaIrqExit:
     pop es
     cli    
 ;
-    xor ax,ax
-    xchg ax,word ptr fs:ps_curr_irq_nr
+    mov ax,word ptr fs:ps_curr_irq_nr
     or ah,ah
     jz IsaIrqExitCountOk
 ;
-    movzx bx,al
-    shl bx,2
-    movzx eax,ah
-    add fs:[bx].ps_irq_count_arr,eax    
-
+    mov fs:ps_curr_irq_count,0
+    mov al,fs:ps_curr_irq_retries
+    inc al
+    mov fs:ps_curr_irq_retries,al
+;    
+    sti
+    cmp al,100
+    jne IsaIrqRetry
+;
+    int 3    
+    jmp IsaIrqRetry
+    
 IsaIrqExitCountOk: 
+    mov word ptr fs:ps_curr_irq_nr,0
     mov bx,fs:ps_nested_irq_count
     or bx,bx
     jz IsaIrqExitNestingOk
 ;
     dec bx
     mov fs:ps_nested_irq_count,bx
-    shl bx,1
-    mov ax,fs:[bx].ps_nested_irq_stack
-    mov word ptr fs:ps_curr_irq_nr,ax
+    shl bx,2
+    mov eax,fs:[bx].ps_nested_irq_stack
+    mov dword ptr fs:ps_curr_irq_nr,eax
     
 IsaIrqExitNestingOk:
     mov ax,apic_mem_sel
@@ -1042,55 +1057,50 @@ MsiEntry:
     push fs
 ;
     EnterSmpInt
+    int 3
 ;       
     mov ax,word ptr fs:ps_curr_irq_nr
     or ax,ax
     jz MsiPrevOk
 ;    
-    mov dx,fs:ps_nested_irq_count
-    mov bx,dx
-    inc dx
-    cmp dx,MAX_IRQ_NESTING
+    mov ax,fs:ps_nested_irq_count
+    mov bx,ax
+    inc ax
+    cmp ax,MAX_IRQ_NESTING
     jne MsiAddStack
 ;
     int 3
 
 MsiAddStack:
-    mov fs:ps_nested_irq_count,dx
-    add bx,bx
-    mov fs:[bx].ps_nested_irq_stack,ax
+    mov fs:ps_nested_irq_count,ax
+    shl bx,2
+    mov eax,dword ptr fs:ps_curr_irq_nr
+    mov fs:[bx].ps_nested_irq_stack,eax
 
 MsiPrevOk: 
-    movzx ax,cs:msi_irq_nr
-    mov word ptr fs:ps_curr_irq_nr,ax
+    movzx bx,cs:msi_irq_nr
+    mov word ptr fs:ps_curr_irq_nr,bx
 ;    
     sti
+    shl bx,2
+    inc fs:[bx].ps_irq_count_arr
+;    
     push es
     mov ds,cs:msi_handler_data
     call fword ptr cs:msi_handler_ads
     pop es
     cli
-;
-    xor ax,ax
-    xchg ax,word ptr fs:ps_curr_irq_nr
-    or ah,ah
-    jz MsiExitCountOk
-;
-    movzx bx,al
-    shl bx,2
-    movzx eax,ah
-    add fs:[bx].ps_irq_count_arr,eax    
-
-MsiExitCountOk: 
+    mov word ptr fs:ps_curr_irq_nr,0
+;    
     mov bx,fs:ps_nested_irq_count
     or bx,bx
     jz MsiExitNestingOk
 ;
     dec bx
     mov fs:ps_nested_irq_count,bx
-    shl bx,1
-    mov ax,fs:[bx].ps_nested_irq_stack
-    mov word ptr fs:ps_curr_irq_nr,ax
+    shl bx,2
+    mov eax,fs:[bx].ps_nested_irq_stack
+    mov dword ptr fs:ps_curr_irq_nr,eax
     
 MsiExitNestingOk:
     mov ax,apic_mem_sel

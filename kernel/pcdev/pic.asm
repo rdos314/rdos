@@ -98,8 +98,36 @@ IrqEntry1:
     mov fs,ax
 ;
     EnterInt
-    sti
 ;       
+    mov ax,word ptr fs:ps_curr_irq_nr
+    or ax,ax
+    jz IrqPrevOk1
+;    
+    mov ax,fs:ps_nested_irq_count
+    mov bx,ax
+    inc ax
+    cmp ax,MAX_IRQ_NESTING
+    jne IrqAddStack1
+;
+    int 3
+
+IrqAddStack1:
+    mov fs:ps_nested_irq_count,ax
+;
+    shl bx,2
+    mov eax,dword ptr fs:ps_curr_irq_nr
+    mov fs:[bx].ps_nested_irq_stack,eax
+
+IrqPrevOk1: 
+    movzx bx,cs:irq_nr
+    mov word ptr fs:ps_curr_irq_nr,bx
+    mov fs:ps_curr_irq_retries,0
+;
+    sti
+    shl bx,2
+    inc fs:[bx].ps_irq_count_arr
+
+IrqRetry1:    
     mov ds,cs:irq_handler_data
     call fword ptr cs:irq_handler_ads
 ;
@@ -108,6 +136,36 @@ IrqEntry1:
 
 IrqExit1:
     cli    
+;
+    mov ax,word ptr fs:ps_curr_irq_nr
+    or ah,ah
+    jz IrqExitCountOk1
+;
+    mov fs:ps_curr_irq_count,0
+    mov al,fs:ps_curr_irq_retries
+    inc al
+    mov fs:ps_curr_irq_retries,al
+;    
+    sti
+    cmp al,100
+    jne IrqRetry1
+;
+    int 3    
+    jmp IrqRetry1
+    
+IrqExitCountOk1: 
+    mov word ptr fs:ps_curr_irq_nr,0
+    mov bx,fs:ps_nested_irq_count
+    or bx,bx
+    jz IrqExitNestingOk1
+;
+    dec bx
+    mov fs:ps_nested_irq_count,bx
+    shl bx,2
+    mov eax,fs:[bx].ps_nested_irq_stack
+    mov dword ptr fs:ps_curr_irq_nr,eax
+    
+IrqExitNestingOk1:
     mov al,cs:irq_nr
     add al,60h
     out INT0_CONTROL,al
@@ -176,8 +234,36 @@ IrqEntry2:
     mov fs,ax
 ;
     EnterInt
-    sti
 ;       
+    mov ax,word ptr fs:ps_curr_irq_nr
+    or ax,ax
+    jz IrqPrevOk2
+;    
+    mov ax,fs:ps_nested_irq_count
+    mov bx,ax
+    inc ax
+    cmp ax,MAX_IRQ_NESTING
+    jne IrqAddStack2
+;
+    int 3
+
+IrqAddStack2:
+    mov fs:ps_nested_irq_count,ax
+;
+    shl bx,2
+    mov eax,dword ptr fs:ps_curr_irq_nr
+    mov fs:[bx].ps_nested_irq_stack,eax
+
+IrqPrevOk2: 
+    movzx bx,cs:irq_nr
+    mov word ptr fs:ps_curr_irq_nr,bx
+    mov fs:ps_curr_irq_retries,0
+;
+    sti
+    shl bx,2
+    inc fs:[bx].ps_irq_count_arr
+
+IrqRetry2:    
     mov ds,cs:irq_handler_data
     call fword ptr cs:irq_handler_ads
 ;       
@@ -186,6 +272,36 @@ IrqEntry2:
 
 IrqExit2:
     cli    
+;
+    mov ax,word ptr fs:ps_curr_irq_nr
+    or ah,ah
+    jz IrqExitCountOk2
+;
+    mov fs:ps_curr_irq_count,0
+    mov al,fs:ps_curr_irq_retries
+    inc al
+    mov fs:ps_curr_irq_retries,al
+;    
+    sti
+    cmp al,100
+    jne IrqRetry2
+;
+    int 3    
+    jmp IrqRetry2
+    
+IrqExitCountOk2: 
+    mov word ptr fs:ps_curr_irq_nr,0
+    mov bx,fs:ps_nested_irq_count
+    or bx,bx
+    jz IrqExitNestingOk2
+;
+    dec bx
+    mov fs:ps_nested_irq_count,bx
+    shl bx,2
+    mov eax,fs:[bx].ps_nested_irq_stack
+    mov dword ptr fs:ps_curr_irq_nr,eax
+    
+IrqExitNestingOk2:
     mov al,62h
     out INT0_CONTROL,al
     jmp short $+2

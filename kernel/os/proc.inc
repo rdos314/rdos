@@ -135,11 +135,15 @@ ps_long_tr              DW ?
 ps_long_ldt             DW ?
 ps_tr_linear            DD ?
 
-ps_curr_irq_nr          DB ?   ; should be before irq_count!!
+; these four bytes must be in this order!!
+
+ps_curr_irq_nr          DB ?
 ps_curr_irq_count       DB ?
+ps_curr_irq_retries     DB ?
+ps_curr_irq_spare       DB ?
 
 ps_nested_irq_count     DW ?
-ps_nested_irq_stack     DW MAX_IRQ_NESTING DUP(?)
+ps_nested_irq_stack     DD MAX_IRQ_NESTING DUP(?)
 
 ps_irq_count_arr        DD 256 DUP(?)
 
