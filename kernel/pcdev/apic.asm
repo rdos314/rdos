@@ -548,7 +548,6 @@ IsaIrqEntry:
 ;
     EnterSmpInt
 ;       
-    int 3
     mov ax,word ptr fs:ps_curr_irq_nr
     or ax,ax
     jz IsaIrqPrevOk
@@ -1057,7 +1056,6 @@ MsiEntry:
     push fs
 ;
     EnterSmpInt
-    int 3
 ;       
     mov ax,word ptr fs:ps_curr_irq_nr
     or ax,ax

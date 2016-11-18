@@ -72,7 +72,7 @@ pt32_linear_arr DD 32 DUP(?)
 
 proc_tlb32_struc        ENDS
 
-MAX_IRQ_NESTING     = 256
+MAX_IRQ_NESTING     = 64
 
 processor_seg   STRUC
 
