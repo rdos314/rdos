@@ -1430,13 +1430,6 @@ GetSchedulerLockCounter    MACRO
     OsGate get_scheduler_lock_counter_nr
                         ENDM
 
-;   IN  AX      Type
-;   IN  BX      Proc
-;   IN  EDX     Data
-AddSchedulerLog    MACRO
-    OsGate add_scheduler_log_nr
-                        ENDM
-
 EnterInt    MACRO
     cli
     mov ax,core_data_sel

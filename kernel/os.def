@@ -665,8 +665,6 @@ update_freq_nr              = 558
 
 add_thread_int_nr           = 559
 
-add_scheduler_log_nr        = 560
-
 do_flush_tlb_nr             = 561
 
 get_sel_bitness_nr          = 562

@@ -207,77 +207,6 @@ core_arr                    DW MAX_CORES DUP(0)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AddLog
-;
-;       DESCRIPTION:    Add log entry
-;
-;       PARAMETERS:     AX      Type
-;                       BX      Proc
-;                       EDX     Data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_log_name  DB 'Add Schedule Log',0
-
-add_log       Proc far
-    push es
-    push fs
-    push si
-;
-    mov si,core_data_sel
-    mov fs,si
-    mov fs,fs:ps_sel
-;    
-    mov si,fs:ps_log_sel
-    or si,si
-    jnz alDo
-;
-    push eax
-    mov eax,PROC_LOG_ENTRIES SHL 4
-    AllocateGlobalMem
-    mov fs:ps_log_sel,es
-    mov fs:ps_log_entry,0
-    mov fs:ps_log_count,0
-    mov si,es
-    pop eax
-
-alDo:
-    mov es,si
-    mov si,fs:ps_log_entry
-    shl si,4
-    mov es:[si].pls_type,ax
-    mov es:[si].pls_data,edx
-    mov es:[si].pls_proc,bx    
-    GetSystemTime
-    mov es:[si].pls_time,eax
-    mov es:[si].pls_time+4,edx
-;
-    shr si,4
-    inc si
-    cmp si,PROC_LOG_ENTRIES    
-    jb alSavePos
-;
-    xor si,si
-
-alSavePos:
-    mov fs:ps_log_entry,si
-    mov si,fs:ps_log_count
-    cmp si,PROC_LOG_ENTRIES
-    je alDone
-; 
-    inc si   
-    mov fs:ps_log_count,si
-
-alDone:
-    pop si
-    pop fs
-    pop es
-    retf32
-add_log    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           LockTimerGlobal
 ;
 ;       DESCRIPTION:    Lock timer struc, global version
@@ -1485,15 +1414,6 @@ load_thread_wakeup_done:
     cmp dx,ax
     jz load_reload_loop
 ;    
-;    push fs
-;    mov fs,ax
-;    movzx edx,fs:ps_id
-;    pop fs
-;    mov ax,1
-;    mov bx,es
-;    AddSchedulerLog
-
-load_reload_wakeup:
     call cs:insert_wakeup_proc
     jmp load_thread_loop
 
@@ -1690,15 +1610,39 @@ load_kernel:
     mov edi,dword ptr ds:p_rdi
 ;
     mov ax,ds:p_es
+    verr ax
+    jz load_kernel_es
+;
+    xor ax,ax
+    
+load_kernel_es:
     mov es,ax
 ;       
     mov ax,ds:p_fs
+    verr ax
+    jz load_kernel_fs
+;
+    xor ax,ax
+    
+load_kernel_fs:
     mov fs,ax
 ;       
     mov ax,ds:p_gs
+    verr ax
+    jz load_kernel_gs
+;
+    xor ax,ax
+    
+load_kernel_gs:
     mov gs,ax
 ;       
     mov ax,ds:p_ds
+    verr ax
+    jz load_kernel_ds
+;
+    xor ax,ax
+    
+load_kernel_ds:
     push ax
     mov eax,dword ptr ds:p_rax
     pop ds
@@ -1726,15 +1670,39 @@ load_pm_app:
     mov edi,dword ptr ds:p_rdi
 ;
     mov ax,ds:p_es
+    verr ax
+    jz load_pm_app_es
+;
+    xor ax,ax
+    
+load_pm_app_es:
     mov es,ax
 ;       
     mov ax,ds:p_fs
+    verr ax
+    jz load_pm_app_fs
+;
+    xor ax,ax
+    
+load_pm_app_fs:
     mov fs,ax
 ;       
     mov ax,ds:p_gs
+    verr ax
+    jz load_pm_app_gs
+;
+    xor ax,ax
+    
+load_pm_app_gs:
     mov gs,ax
 ;       
     mov ax,ds:p_ds
+    verr ax
+    jz load_pm_app_ds
+;
+    xor ax,ax
+    
+load_pm_app_ds:
     push ax
     mov eax,dword ptr ds:p_rax
     pop ds
@@ -2253,7 +2221,6 @@ null_thread0:
     mov es:p_sleep_sel,fs
     mov es:p_sleep_offset,0
     mov fs:ps_null_thread,ax
-    mov word ptr fs:ps_curr_irq_nr,0
     mov es:p_core,fs
     lock or fs:ps_flags,PS_FLAG_ACTIVE
 ;
@@ -9535,12 +9502,6 @@ timer_free_list_create:
     mov edi,OFFSET do_flush_tlb_name
     xor cl,cl
     mov ax,do_flush_tlb_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET add_log
-    mov edi,OFFSET add_log_name
-    xor cl,cl
-    mov ax,add_scheduler_log_nr
     RegisterOsGate
 ;
     mov esi,OFFSET soft_reset
