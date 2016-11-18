@@ -31,8 +31,8 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\protseg.def
+INCLUDE ..\os\proc.inc
 INCLUDE ..\pcdev\pci.inc
-INCLUDE ..\irq.inc
 
 ACC_GPIO_STATUS = 0
 ACC_GPIO_CONTROL = 4
@@ -74,8 +74,6 @@ AcFlags     DB ?
 audio_channel_struc ENDS
 
 data    SEGMENT byte public 'DATA'
-
-irq_base  irq_header <>
 
 IoBase      DW ?
 
@@ -119,7 +117,7 @@ aiLoop:
     test ax,3FCh
     jz aiDone
 ;
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+    NotifyIrqActivity
 ;
     test ax,4
     jz aiNot0

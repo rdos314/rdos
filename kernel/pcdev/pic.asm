@@ -36,7 +36,6 @@ INCLUDE ..\os\int.def
 INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
-INCLUDE ..\irq.inc
 
 data    SEGMENT byte public 'DATA'
 
@@ -92,7 +91,6 @@ IrqEntry1:
     push ds
     push es
     push fs
-    push gs
 ;
     xor ax,ax
     mov ds,ax
@@ -102,26 +100,9 @@ IrqEntry1:
     EnterInt
     sti
 ;       
-    mov ax,cs:irq_handler_data
-    mov ds,ax
-    or ax,ax
-    jz IsaIrqNoData1
-;
-    mov ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
-    mov ds:irq_flags,ax
-        
+    mov ds,cs:irq_handler_data
     call fword ptr cs:irq_handler_ads
-
-    mov ax,ds:irq_flags
-    cmp ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
-    je IsaIrqChain1
 ;
-    CrashGate
-
-IsaIrqNoData1:
-    call fword ptr cs:irq_handler_ads
-   
-IsaIrqChain1:
     mov bx,OFFSET IrqEnd1 - OFFSET IrqStart1
     jmp cs:irq_chain
 
@@ -131,15 +112,6 @@ IrqExit1:
     add al,60h
     out INT0_CONTROL,al
     LeaveInt
-;
-    pop ax
-    verr ax
-    jz IrqExitGs1
-;    
-    xor ax,ax
-
-IrqExitGs1:
-    mov gs,ax
 ;
     pop ax
     verr ax
@@ -197,7 +169,6 @@ IrqEntry2:
     push ds
     push es
     push fs
-    push gs
 ;
     xor ax,ax
     mov ds,ax
@@ -210,26 +181,6 @@ IrqEntry2:
     mov ds,cs:irq_handler_data
     call fword ptr cs:irq_handler_ads
 ;       
-    mov ax,cs:irq_handler_data
-    mov ds,ax
-    or ax,ax
-    jz IsaIrqNoData2
-;
-    mov ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
-    mov ds:irq_flags,ax
-        
-    call fword ptr cs:irq_handler_ads
-
-    mov ax,ds:irq_flags
-    cmp ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
-    je IsaIrqChain2
-;
-    CrashGate
-
-IsaIrqNoData2:
-    call fword ptr cs:irq_handler_ads
-   
-IsaIrqChain2:
     mov bx,OFFSET IrqEnd2 - OFFSET IrqStart2
     jmp cs:irq_chain
 
@@ -243,15 +194,6 @@ IrqExit2:
     add al,60h
     out INT1_CONTROL,al
     LeaveInt
-;
-    pop ax
-    verr ax
-    jz IrqExitGs2
-;    
-    xor ax,ax
-
-IrqExitGs2:
-    mov gs,ax
 ;
     pop ax
     verr ax
@@ -326,20 +268,7 @@ irch_handler      irq_chain_struc <>
 IrqChainEntry:
     push bx
     mov ds,cs:[bx].irch_handler_data
-
-    mov ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
-    mov ds:irq_flags,ax
-
     call fword ptr cs:[bx].irch_handler_ads
-
-    mov ax,ds:irq_flags
-    cmp ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
-    je IrqChainDone
-;
-    CrashGate
-
-IrqChainDone:
-
     pop bx
 ;
     mov si,bx

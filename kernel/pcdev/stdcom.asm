@@ -34,7 +34,7 @@ include ..\driver.def
 include ..\pcdev\pci.inc
 include ..\os\com.inc
 include ..\os\protseg.def
-include ..\irq.inc
+include ..\os\proc.inc
 
 MAX_PORTS       = 16
 MAX_IRQS    = 16
@@ -124,21 +124,11 @@ ox_bar_header   ENDS
 
 mem_share_struc  STRUC
 
-ms_irq              irq_header <>
-
 ms_count            DW ?
 ms_dev_sel          DW ?
 ms_com_dev_arr      DW 16 DUP(?)
 
 mem_share_struc  ENDS
-
-io_share_struc  STRUC
-
-is_base             irq_header <>
-
-is_dev_sel          DW ?
-
-io_share_struc  ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -489,11 +479,6 @@ ist_rx   DW OFFSET io_rec
 ist_li   DW OFFSET io_line_err
 
 io_com_int Proc far
-    push ds
-    mov ax,ds
-    mov gs,ax
-    mov ds,ds:is_dev_sel
-;
     mov ax,ds:iopds_handle
     or ax,ax
     jz io_com_int_inactive
@@ -507,7 +492,7 @@ io_com_int_loop:
     test al,1
     jnz io_com_int_done
 ;   
-    or gs:irq_flags,IRQ_FLAG_ACTIVITY
+    NotifyIrqActivity
     mov bl,al
     xor bh,bh
     and bx,6
@@ -521,7 +506,7 @@ io_com_int_inactive:
     test al,1
     jnz io_com_int_done
 ;   
-    or gs:irq_flags,IRQ_FLAG_ACTIVITY
+    NotifyIrqActivity
     mov dx,ds:iopds_base
     add dx,6
     in al,dx
@@ -545,7 +530,6 @@ io_com_int_inactive:
     Signal
 
 io_com_int_done:   
-    pop ds
     retf32
 io_com_int Endp
 
@@ -941,7 +925,7 @@ msBusyLoop:
     add bx,2
     loop msBusyLoop
 ;
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+    NotifyIrqActivity
     jmp msRetry
 
 msDone:
@@ -2813,15 +2797,6 @@ riLoop:
     mov ds,dx
     mov al,ds:iopds_irq
     mov ah,18h
-    push es
-    push eax
-    mov eax,SIZE io_share_struc
-    AllocateSmallGlobalMem
-    mov es:is_dev_sel,ds
-    mov ax,es
-    mov ds,ax
-    pop eax
-    pop es
     RequestIrqHandler
     pop ds
 
@@ -3010,7 +2985,6 @@ mem_init_irq:
     jc mem_init_pci_done
 ;
     push eax
-    mov bx,es
     mov eax,SIZE mem_share_struc
     AllocateSmallGlobalMem
     pop eax

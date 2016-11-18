@@ -34,7 +34,6 @@ INCLUDE apic.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\proc.inc
 INCLUDE ..\acpi\acpi.inc
-INCLUDE ..\irq.inc
 
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
@@ -167,15 +166,7 @@ ioapic_num      DB ?
 
 ioapic_core_irq_struc   ENDS
 
-hpet_irq_struc  STRUC
 
-irq_base            irq_header <>
-
-irq_hpet_sel        DW ?
-
-hpet_irq_struc  ENDS
-
-        
 data    SEGMENT byte public 'DATA'
 
 mp_processor_sign   DD ?
@@ -554,32 +545,14 @@ IsaIrqEntry:
     push ds
     push es
     push fs
-    push gs
 ;
     EnterSmpInt
     sti
     push es
 ;       
-    mov ax,cs:isa_irq_handler_data
-    mov ds,ax
-    or ax,ax
-    jz IsaIrqNoData
-;
-    mov ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
-    mov ds:irq_flags,ax
-
+    mov ds,cs:isa_irq_handler_data
     call fword ptr cs:isa_irq_handler_ads
-
-    mov ax,ds:irq_flags
-    cmp ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
-    je IsaIrqChain
 ;
-    CrashGate
-
-IsaIrqNoData:
-    call fword ptr cs:isa_irq_handler_ads
-   
-IsaIrqChain:
     mov bx,OFFSET IsaIrqEnd - OFFSET IsaIrqStart
     jmp cs:isa_irq_chain
 
@@ -591,15 +564,6 @@ IsaIrqExit:
     xor eax,eax
     mov ds:APIC_EOI,eax
     LeaveSmpInt
-;
-    pop ax
-    verr ax
-    jz IrqExitGs
-;    
-    xor ax,ax
-
-IrqExitGs:
-    mov gs,ax
 ;
     pop ax
     verr ax
@@ -693,21 +657,7 @@ isa_irch_handler      isa_irq_chain_struc <>
 IsaIrqChainEntry:
     push bx
     mov ds,cs:[bx].isa_irch_handler_data
-
-    mov ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
-    mov ds:irq_flags,ax
-
     call fword ptr cs:[bx].isa_irch_handler_ads
-
-    mov ax,ds:irq_flags
-    cmp ax,IRQ_FLAG_ENABLED OR IRQ_FLAG_ACTIVITY
-    je IsaChainFlagOk
-;
-    CrashGate
-
-IsaChainFlagOk:
-
-
     pop bx
 ;
     mov si,bx
@@ -1046,7 +996,6 @@ MsiEntry:
     push ds
     push es
     push fs
-    push gs
 ;
     EnterSmpInt
     sti
@@ -1061,15 +1010,6 @@ MsiEntry:
     xor eax,eax
     mov ds:APIC_EOI,eax    
     LeaveSmpInt
-;
-    pop ax
-    verr ax
-    jz MsiExitGs
-;    
-    xor ax,ax
-
-MsiExitGs:
-    mov gs,ax
 ;
     pop ax
     verr ax
@@ -1861,26 +1801,14 @@ start_hpet_timer    Proc far
     test ax,8000h
     jnz start_hpet_msi
 ;        
-    push ds
     push es
-;
-    mov bx,es
-    mov eax,SIZE hpet_irq_struc
-    AllocateSmallGlobalMem
-    mov es:irq_hpet_sel,bx
-;
-    mov bx,es
-    mov ds,bx
-;
     mov al,2
     mov ah,12
     mov bx,cs
     mov es,bx
     mov edi,OFFSET hpet_ioapic_int
     RequestIrqHandler
-;
     pop es
-    pop ds
 ;
     mov eax,es:hpet_config
     or al,3
@@ -2433,9 +2361,9 @@ hpet_ds_ok:
 
 hpet_ioapic_int Proc far
     lock or fs:ps_flags,PS_FLAG_TIMER_EXPIRED
-    mov es,ds:irq_hpet_sel
-    mov edx,es:hpet_int_status
-    mov es:hpet_int_status,edx  
+    mov ds,ds:hpet_sel
+    mov edx,ds:hpet_int_status
+    mov ds:hpet_int_status,edx  
     retf32
 hpet_ioapic_int Endp
 

@@ -143,3 +143,8 @@ ps_timer_free           DW ?
 ps_timer_entries    DB 256 * SIZE timer_struc DUP(?)
 
 processor_seg   ENDS
+
+; FS        Core selector
+NotifyIrqActivity   Macro
+    Endm
+    

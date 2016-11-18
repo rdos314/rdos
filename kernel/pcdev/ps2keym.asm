@@ -32,9 +32,9 @@ INCLUDE ..\os\port.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\os\system.inc
+INCLUDE ..\os\proc.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
-INCLUDE ..\irq.inc
 INCLUDE key.inc
 
 
@@ -62,7 +62,6 @@ status_mouse_ack    EQU 8
 
 data    SEGMENT byte public 'DATA'
 
-irq_base        irq_header <>
 hw_spinlock     spinlock_typ <>
 
 mode_thread     DW ?
@@ -1130,7 +1129,7 @@ keyb_int_loop:
     jmp keyb_int_done
 
 keyb_int_get_cmd:
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+    NotifyIrqActivity
     test al,20h
     jz keyb_int_keyboard
 

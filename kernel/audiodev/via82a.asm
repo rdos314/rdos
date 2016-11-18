@@ -31,8 +31,8 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\protseg.def
+INCLUDE ..\os\proc.inc
 INCLUDE ..\pcdev\pci.inc
-INCLUDE ..\irq.inc
 
 VIA_PCM_STATUS          = 0
 VIA_PCM_CONTROL         = 1
@@ -63,8 +63,6 @@ AcIrqStatus     DB ?
 audio_channel_struc ENDS
 
 data    SEGMENT byte public 'DATA'
-
-irq_base    irq_header <>
 
 IoBase      DW ?
 
@@ -103,8 +101,7 @@ aiLoop:
     and ax,777h
     jz aiDone
 ;
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
-;
+    NotifyIrqActivity
     test ax,111h
     jz aiNot0
 ;

@@ -32,8 +32,8 @@ INCLUDE ..\os.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\pcdev\pci.inc
+INCLUDE ..\os\proc.inc
 INCLUDE ..\os\net.inc
-INCLUDE ..\irq.inc
 
 ; debug EQU 1
 
@@ -139,8 +139,6 @@ RX_BUF_LEN_IDX  = 3 ;   0 = 8k, 1 = 16k, 2 = 32k, 3 = 64k
 TX_BUF_SIZE         = 2048
  
 data    STRUC
-
-irq_base            irq_header <>
 
 IoBase              DW ?
 Handle              DW ?
@@ -488,7 +486,7 @@ niNotUnderrun:
     test bx,RxOK OR RxErr OR RxUnderrun OR RxOverflow OR RxFIFOOver
     jz niNotRx
 ;
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+    NotifyIrqActivity
     mov bx,ds:Handle
     or bx,bx
     jz niNotRx
@@ -500,7 +498,7 @@ niNotRx:
     test bx,TxOK OR TxErr
     jz niNotTx
 ;
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+    NotifyIrqActivity
     mov bx,ds:TxThread
     or bx,bx
     jz niNotTx

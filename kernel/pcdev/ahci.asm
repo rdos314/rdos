@@ -33,7 +33,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
-INCLUDE ..\irq.inc
+INCLUDE ..\os\proc.inc
 INCLUDE pci.inc
 
 MAX_AHCI_DEVICES    = 16
@@ -276,8 +276,6 @@ PORT_FLAG_TIMER     =   8h
 
 ahci_port_struc     STRUC
 
-ap_irq_base         irq_header <>
-
 ap_linear           DD ?
 ap_physical         DD ?
 ap_pages            DW ?
@@ -357,8 +355,6 @@ ahci_command_list_struc  ENDS
 ;
 
 ahci_device_struc   STRUC
-
-ad_irq_base         irq_header <>
 
 ad_hba_sel          DW ?
 ad_port_arr         DW 32 DUP(?)
@@ -497,6 +493,7 @@ IrqPort Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AhciInt  Proc far
+    push gs
     mov gs,ds:ad_hba_sel
 
 aiRetry:    
@@ -504,7 +501,7 @@ aiRetry:
     and eax,gs:hba_pi
     jz aiDone
 ;
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+    NotifyIrqActivity
     mov si,OFFSET ad_port_arr
     mov edx,1
 
@@ -535,6 +532,7 @@ aiHandleNext:
     jmp aiHandlePort        
 
 aiDone:        
+    pop gs
     retf32
 AhciInt  Endp
 

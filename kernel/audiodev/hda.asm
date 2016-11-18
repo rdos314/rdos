@@ -31,8 +31,8 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\protseg.def
+INCLUDE ..\os\proc.inc
 INCLUDE ..\pcdev\pci.inc
-INCLUDE ..\irq.inc
 
 REQ_RESET   = 1
 
@@ -129,8 +129,6 @@ stream_data ENDS
 
 
 hda_seg STRUC
-
-irq_base        irq_header <>
 
 HdaSel          DW 0
 HdaLinear       DD 0
@@ -316,7 +314,7 @@ hdiLoop:
     test eax,80000000h
     jz hdiDone
 ;
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+    NotifyIrqActivity
 ;
     test eax,40000000h
     jz hdiStream

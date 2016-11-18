@@ -33,8 +33,8 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
+INCLUDE ..\os\proc.inc
 INCLUDE pci.inc
-INCLUDE ..\irq.inc
 
 MAX_GEN_HOOK_COUNT  = 16
 
@@ -115,8 +115,6 @@ ih_param    DW ?
 id_hook_struc   ENDS
 
 data    SEGMENT byte public 'DATA'
-
-irq_base                irq_header <>
 
 can_sel                 DW ?
 
@@ -335,7 +333,7 @@ ciReadLoop:
     or ax,ax
     jz ciWriteLoop    
 ;
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+    NotifyIrqActivity
     mov cx,16
     mov bx,1
     mov dx,1
@@ -371,14 +369,14 @@ ciStatus:
     test ax,20h
     jnz ciSignal    
 ;
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+    NotifyIrqActivity
     jmp ciWriteLoop
     
 ciReg:
     or eax,eax
     jz ciDone
 ;    
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+    NotifyIrqActivity
     mov ebx,eax
     cmp ebx,10h
     jbe ciReadLoop

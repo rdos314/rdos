@@ -34,8 +34,8 @@ INCLUDE ..\os.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\pcdev\pci.inc
+INCLUDE ..\os\proc.inc
 INCLUDE ..\os\net.inc
-INCLUDE ..\irq.inc
 
 RX_ENTRIES   EQU 20h
 RX_BUF_SIZE  EQU 800h
@@ -212,8 +212,6 @@ cb_link     DD ?
 cb  ENDS
 
 data    STRUC
-
-irq_base        irq_header <>
 
 MemBase         DD ?
 FlashBase       DD ?
@@ -1075,7 +1073,7 @@ niLoop:
     test al,ACK_FRAME_RX
     jz niNotRx
 ;
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+    NotifyIrqActivity
     mov bx,ds:Handle
     or bx,bx
     jz niNotRx
@@ -1089,7 +1087,7 @@ niNotRx:
     or al,al
     jz niDone
 ;    
-    or ds:irq_flags,IRQ_FLAG_ACTIVITY
+    NotifyIrqActivity
     mov bx,ds:WaitThread
     or bx,bx
     jz niLoop

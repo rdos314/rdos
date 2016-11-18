@@ -33,7 +33,6 @@ INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\pcdev\pci.inc
-INCLUDE ..\irq.inc
 INCLUDE usb.inc
 INCLUDE usbdev.inc
 
@@ -176,13 +175,6 @@ pss_link    DD ?
 pss_lpm     DD ?
 
 port_stat_struc ENDS
-
-xhci_irq_struc	STRUC
-
-irq_base            irq_header <>
-irq_func_sel        DW ?
-
-xhci_irq_struc	ENDS
 
 xhci_func_sel   STRUC
 
@@ -2688,11 +2680,8 @@ rtDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 XhciInt Proc far    
-    push ds
-    mov ds,ds:irq_func_sel
     mov bx,ds:xhc_event_thread
     Signal
-    pop ds
     retf32
 XhciInt Endp
 
@@ -3456,13 +3445,6 @@ ifWaitReset:
     jmp ifWaitReset
 
 ifWaitReseted:        
-    push es
-;
-    mov di,es
-    mov eax,SIZE xhci_irq_struc
-    AllocateSmallGlobalMem
-    mov es:irq_func_sel,di    
-;
     GetPciMsi
     jc ifIrq
 ;
@@ -3476,17 +3458,19 @@ ifWaitReseted:
     SetupPciMsi
 ;    
     push ds
+    push es
     mov di,es
     mov ds,di
     mov di,cs
     mov es,di
     mov edi,OFFSET XhciInt
     RequestMsiHandler
+    pop es
     pop ds
     jmp ifIntDone
 
 ifIrq:
-    push ds
+    push es
     GetPciIrqNr
     mov ah,14h
     mov di,es
@@ -3495,11 +3479,9 @@ ifIrq:
     mov es,di
     mov edi,OFFSET XhciInt
     RequestIrqHandler
-    pop ds
+    pop es
 
 ifIntDone:    
-    pop es
-;
     movzx eax,es:xhc_slot_count
     mov ds:orsConfig,eax
 ;
