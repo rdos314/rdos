@@ -1904,6 +1904,75 @@ SaveLockedThread   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SaveIrqThread
+;
+;       DESCRIPTION:    Save state of current thread when lock is already taken in IRQ
+;                       Will return with interrupts disable to forece the stack to unwind.
+;
+;       PARAMETERS:     Stack, return IP
+;                       FS      Core selector
+;
+;       RETURNS:        SS:SP       Processor stack
+;                       ES, GS      Clear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SaveIrqThread    Proc near       
+    push fs
+    push ds
+    push eax
+    push edx
+;
+    mov ax,fs:ps_curr_thread
+    mov ds,ax
+    GetSystemTime
+    sub eax,fs:ps_last_lsb
+    add ds:p_lsb_tics,eax
+    adc ds:p_msb_tics,0
+    add fs:ps_lsb_tics,eax
+    adc fs:ps_msb_tics,0
+;
+    pushfd
+    pop eax
+    and ax,NOT 200h
+    mov dword ptr ds:p_rflags,eax
+    mov dword ptr ds:p_rcx,ecx
+    mov dword ptr ds:p_rbx,ebx
+    mov dword ptr ds:p_rbp,ebp
+    mov dword ptr ds:p_rsi,esi
+    mov dword ptr ds:p_rdi,edi
+    mov ds:p_es,es
+    mov ds:p_cs,cs
+    mov ds:p_ss,ss
+    mov ds:p_gs,gs
+;
+    pop dword ptr ds:p_rdx
+    pop eax
+    mov dword ptr ds:p_rax,eax
+;
+    pop ds:p_ds
+    pop ds:p_fs
+    pop bp
+    pop dx
+    movzx edx,dx
+    mov dword ptr ds:p_rip,edx
+    mov dword ptr ds:p_rsp,esp
+;
+    lss esp,fword ptr fs:ps_stack_offset        
+    call cs:fpu_save_proc
+    mov edx,dword ptr ds:p_rdx
+    push bp
+;
+    xor bp,bp
+    mov ds,bp
+    mov es,bp
+    mov gs,bp    
+    ret
+SaveIrqThread   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SkipCurrentThread
 ;
 ;           DESCRIPTION:    Skip current thread (no save of registers)
@@ -3747,7 +3816,7 @@ irq_schedule_name  DB 'IRQ Schedule',0
 
 irq_schedule    Proc far    
     push OFFSET irqsDone
-    call SaveLockedThread
+    call SaveIrqThread
     jmp ContinueCurrentThread
 
 irqsDone:

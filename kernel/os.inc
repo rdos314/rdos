@@ -1442,6 +1442,7 @@ LeaveInt    MACRO
     local tucDone
     local tucSwap
     local tucTlbDone
+    local tucLeave
 
 tucRetry:    
     cli    
@@ -1509,9 +1510,12 @@ tucSwap:
 tucSched:
     sti
     OsGate irq_schedule_nr
+    jmp tucLeave
 
 tucDone:
     sti
+
+tucLeave:
                         ENDM
 
 
