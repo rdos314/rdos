@@ -46,6 +46,9 @@ extern void InitOsAcpi();
 extern int UseAcpiReset();
 #pragma aux UseAcpiReset value [eax]
 
+extern int GetTermalLimit();
+#pragma aux GetTermalLimit value [eax]
+
 extern void ReqPStateUpdate(int Count);
 #pragma aux ReqPStateUpdate parm routine [ecx]
 
@@ -60,6 +63,9 @@ extern int GetCpuInfo();
 
 extern int GetIntelTermOffset();
 #pragma aux GetIntelTermOffset value [eax]
+
+extern int GetAmdTemp();
+#pragma aux GetAmdTemp value [eax]
 
 #define MAX_DEVICE_COUNT        1024
 #define MAX_PCI_ROOT_COUNT      8
@@ -1604,15 +1610,19 @@ int __far ImplGetCpuTemperature()
 
             if (val)
             {
-                val = 10 * (115 - val);
+                val = 10 * (GetTermalLimit() - val);
                 RdosSetSuccess();
             }
             else
                 RdosSetFailure();
         }
         else
-            RdosSetFailure();
-        
+        {
+            if (strstr(CpuVendor, "AMD"))
+                val = GetAmdTemp();
+            else        
+                RdosSetFailure();
+        }        
     }        
     return val;
 }

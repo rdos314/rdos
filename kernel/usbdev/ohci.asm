@@ -2534,6 +2534,9 @@ UpdateQueue   Proc near
     mov fs,ds:ohc_map_sel
 
 update_reverse_loop:
+    test al,3
+    jnz update_queue_done
+;    
     mov bx,ax
     and ax,0F000h
     and bx,0FFFh
@@ -2545,7 +2548,16 @@ update_reverse_loop:
     pop ebx
 ;    
     mov edx,fs:[bx].otd_my_va
+    or edx,edx
+    jnz update_valid
 ;
+    mov eax,fs:[bx].otd_next_td
+    or eax,eax
+    jnz update_reverse_loop
+;
+    jmp update_queue_done    
+
+update_valid:
     mov ax,es:[edx].otd_pipe_sel
     or ax,ax
     jz update_insert_reclaim
@@ -3364,6 +3376,10 @@ ifTabLoop:
 ;    
     mov ax,25
     WaitMilliSec    
+;
+    mov bx,ohc_hca_base + OFFSET hcca_done_head
+    xor eax,eax
+    mov ds:[bx],eax
 ;    
     call CreateInterrupt
 ;    

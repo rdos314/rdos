@@ -46,7 +46,94 @@ acpi_data_seg ENDS
 _TEXT    SEGMENT byte public 'CODE'
 
     assume cs:_TEXT
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetValue
+;
+;       Purpose:        Get value from environment
+;
+;       Parameters:     ES:EDI      Name
+;
+;       Returns:        NC          Found
+;                       AX          Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+GetValue    Proc near
+    push ds
+    push ebx
+    push ecx
+    push esi
+;
+    LockSysEnv
+    mov ds,bx
+    xor esi,esi
+    
+find_val:
+    push edi
 
+find_val_loop:
+    cmpsb
+    jnz find_val_next
+;       
+    mov al,es:[edi]
+    or al,al
+    jnz find_val_loop
+    mov al,[esi]
+    cmp al,'='
+    je find_val_found
+
+find_val_next:
+    pop edi
+
+find_val_next_bp:
+    lodsb
+    or al,al
+    jnz find_val_next_bp
+;
+    mov al,[esi]
+    or al,al
+    jne find_val
+;
+    xor ax,ax
+    stc
+    jmp find_val_done
+
+find_val_found:
+    pop edi
+    inc esi  
+    xor ax,ax
+
+find_val_digit:
+    mov bl,[esi]
+    inc esi
+    sub bl,'0'
+    jc find_val_save
+;
+    cmp bl,10
+    jnc find_val_save
+;       
+    mov cx,10
+    mul cx
+    add al,bl
+    adc ah,0
+    jmp find_val_digit
+
+find_val_save:
+    clc
+
+find_val_done:
+    pushf
+    UnlockSysEnv
+    popf
+;
+    pop esi
+    pop ecx
+    pop ebx
+    pop ds
+    ret
+GetValue    Endp
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -927,6 +1014,41 @@ GetIntelTermOffset_    Proc near
     pop ecx
     ret
 GetIntelTermOffset_ Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetAndTemp
+;
+;       DESCRIPTION:    Get AMD CPU temperature
+;
+;       RETURNS:        EAX     Temperature in 1/10th of degrees celsius
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetAmdTemp_
+    
+GetAmdTemp_    Proc near
+    push ebx
+    push ecx
+    push edx
+;    
+    xor bh,bh
+    mov bl,24
+    mov ch,3
+    mov cl,0A4h
+    ReadPciDword
+    shr eax,21    
+    mov edx,10
+    mul edx
+    shr eax,3
+    clc
+;
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+GetAmdTemp_ Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1230,84 +1352,59 @@ reset_name             DB 'ACPI.RESET',0
     public UseAcpiReset_
 
 UseAcpiReset_    Proc near
-    push ds
     push es
-    push ebx
-    push ecx
-    push edx
-    push esi
     push edi
 ;
     mov eax,cs
     mov es,eax
     mov edi,OFFSET reset_name
-;    
-    LockSysEnv
-    mov ds,ebx
-    xor esi,esi
-    
-find_val:
-    push edi
-
-find_val_loop:
-    cmpsb
-    jnz find_val_next
-;       
-    mov al,es:[edi]
-    or al,al
-    jnz find_val_loop
+    call GetValue
+    jnc uarOk
 ;
-    mov al,[esi]
-    cmp al,'='
-    je find_val_found
+    mov ax,1
 
-find_val_next:
-    pop edi
-
-find_val_next_bp:
-    lodsb
-    or al,al
-    jnz find_val_next_bp
-;
-    mov al,[esi]
-    or al,al
-    jne find_val
-;
-    mov eax,1
-    jmp find_val_done
-
-find_val_found:
-    pop edi
-    inc esi  
-    xor eax,eax
-
-find_val_digit:
-    mov bl,[esi]
-    inc esi
-    sub bl,'0'
-    jc find_val_done
-;
-    cmp bl,10
-    jnc find_val_done
-;       
-    mov ecx,10
-    mul ecx
-    movzx ebx,bl
-    add eax,ebx
-    jmp find_val_digit
-
-find_val_done:
-    UnlockSysEnv
+uarOk:
+    movzx eax,ax
 ;
     pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
     pop es    
-    pop ds
     ret
 UseAcpiReset_     Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetTermalLimit
+;
+;       DESCRIPTION:    Get termal limit
+;
+;       RETURNS:        EAX     Termal limit in degrees
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetTermalLimit_
+
+TermalLimit DB 'TERMAL.LIMIT', 0
+    
+GetTermalLimit_ Proc near
+    push es
+    push edi
+;
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET TermalLimit
+    call GetValue
+    jnc gtlOk
+;
+    mov ax,115
+
+gtlOk:
+    movzx eax,ax
+;
+    pop edi
+    pop es
+    ret
+GetTermalLimit_ Endp       
 
 _TEXT    ENDS
 
