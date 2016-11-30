@@ -85,6 +85,7 @@ ehci_func_sel   STRUC
 usb_dev_base        usb_dev_struc <>
 
 ehc_reg_sel         DW ?
+ehc_thread          DW ?
 
 ehc_bus             DB ?
 ehc_device          DB ?
@@ -257,90 +258,6 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           UpdatePipeList
-;
-;           DESCRIPTION:    Update pipe list
-;
-;       PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdatePipeList  Proc near
-    push ax
-
-uplLoop:
-    RequestSpinlock ds:ehc_spinlock
-    mov ax,ds:ehc_pipe_list
-    or ax,ax
-    jz uplDone
-;
-    push es
-    push fs
-    push ebx
-    push edx
-    push di
-;
-    mov di,ax
-    mov fs,ax
-;
-    mov ax,flat_sel
-    mov es,ax
-
-uplElemLoop:
-    test fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
-    jz uplNext
-;
-    mov edx,fs:esp_qh
-    or edx,edx
-    jz uplNext
-;    
-    mov eax,es:[edx].qh_current_qtd
-    or eax,eax
-    jz uplNext
-;
-    mov al,es:[edx].qh_status
-    test al,80h
-    jnz uplNext
-;    
-    mov eax,es:[edx].qh_next_qtd
-    test al,1
-    jz uplNext
-;
-    xor bx,bx
-    xchg bx,fs:esp_signal
-    or bx,bx
-    jz uplNext
-;
-    ReleaseSpinlock ds:ehc_spinlock    
-    Signal
-    pop di
-    pop edx
-    pop ebx
-    pop fs
-    pop es    
-    jmp uplLoop
-
-uplNext:    
-    mov ax,fs:esp_next
-    mov fs,ax
-    cmp ax,di
-    jne uplElemLoop
-;
-    pop di
-    pop edx
-    pop ebx
-    pop fs
-    pop es    
-
-uplDone:    
-    ReleaseSpinlock ds:ehc_spinlock
-    pop ax
-    ret
-UpdatePipeList  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           EhciInt
 ;
 ;           DESCRIPTION:    EHCI interrupt
@@ -364,7 +281,8 @@ eiLoop:
     test al,1
     jz eiNotPipe
 ;    
-    call UpdatePipeList
+    mov bx,ds:ehc_thread
+    Signal
 
 eiNotPipe:
     and al,NOT 1
@@ -429,7 +347,8 @@ etLoop:
     pop ds
 
 etcPipe:    
-    call UpdatePipeList
+    mov bx,ds:ehc_thread
+    Signal
 
 etcNext:
     pop si
@@ -3548,6 +3467,90 @@ ciLoop:
     pop ds    
     ret
 CreateInterrupt Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UpdatePipeList
+;
+;           DESCRIPTION:    Update pipe list
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePipeList  Proc near
+    push ax
+
+uplLoop:
+    RequestSpinlock ds:ehc_spinlock
+    mov ax,ds:ehc_pipe_list
+    or ax,ax
+    jz uplDone
+;
+    push es
+    push fs
+    push ebx
+    push edx
+    push di
+;
+    mov di,ax
+    mov fs,ax
+;
+    mov ax,flat_sel
+    mov es,ax
+
+uplElemLoop:
+    test fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
+    jz uplNext
+;
+    mov edx,fs:esp_qh
+    or edx,edx
+    jz uplNext
+;    
+    mov eax,es:[edx].qh_current_qtd
+    or eax,eax
+    jz uplNext
+;
+    mov al,es:[edx].qh_status
+    test al,80h
+    jnz uplNext
+;    
+    mov eax,es:[edx].qh_next_qtd
+    test al,1
+    jz uplNext
+;
+    xor bx,bx
+    xchg bx,fs:esp_signal
+    or bx,bx
+    jz uplNext
+;
+    ReleaseSpinlock ds:ehc_spinlock    
+    Signal
+    pop di
+    pop edx
+    pop ebx
+    pop fs
+    pop es    
+    jmp uplLoop
+
+uplNext:    
+    mov ax,fs:esp_next
+    mov fs,ax
+    cmp ax,di
+    jne uplElemLoop
+;
+    pop di
+    pop edx
+    pop ebx
+    pop fs
+    pop es    
+
+uplDone:    
+    ReleaseSpinlock ds:ehc_spinlock
+    pop ax
+    ret
+UpdatePipeList  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3561,7 +3564,14 @@ CreateInterrupt Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ehci_function_handler:
-    int 3
+    mov ds,bx
+    GetThread
+    mov ds:ehc_thread,ax
+
+efhLoop:
+    WaitForSignal
+    call UpdatePipeList
+    jmp efhLoop
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
