@@ -273,10 +273,16 @@ EhciInt Proc far
 
 eiLoop:    
     mov eax,es:HcStatus
-    and al,0Fh
+    and al,7
     mov es:HcStatus,eax
     jz eiDone
+;    
+    test al,6
+    jz eiSignal
 ;
+    mov ds:ehc_update,1
+
+eiSignal:        
     NotifyIrqActivity    
     mov bx,ds:ehc_thread
     Signal
@@ -322,11 +328,18 @@ etLoop:
     mov eax,es:HcStatus
     and al,7
     mov es:HcStatus,eax
-;    
+    jz etNext
+;
+    test al,6
+    jz etSignal
+;
+    mov ds:ehc_update,1
+
+etSignal:        
     mov bx,ds:ehc_thread
     Signal
 
-etcNext:
+etNext:
     pop si
     pop cx
     pop ds
@@ -338,10 +351,6 @@ etDone:
     pop eax   
     pop edx
 ;    
-    mov cl,ds:IntOk
-    or cl,cl
-    jnz etEnd
-;    
     GetSystemTime
     add eax,1193
     adc edx,0
@@ -350,8 +359,6 @@ etDone:
     mov bx,cs
     mov edi,OFFSET ehci_timer
     StartTimer
-
-etEnd:    
     retf32
 ehci_timer  Endp
 
@@ -3031,7 +3038,6 @@ UpdatePort   Proc near
     movzx edi,cl
     add edi,edi
 ;    
-;    
     mov ax,1
     shl ax,cl
     test ax,ds:ehc_reset
@@ -3845,7 +3851,7 @@ ifPowerOk:
     jmp ifPortLoop    
 
 ifPortDone:
-    mov eax,0Fh
+    mov eax,7
     mov fs:HcInterruptEnable,eax
 ;    
     call CreateInterrupt
