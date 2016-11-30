@@ -143,6 +143,7 @@ ohc_control_linear  DD ?
 ohc_bulk_linear     DD ?
 ohc_pipe_list       DW ?
 ohc_reclaim_list    DD ?
+ohc_thread          DW ?
 
 ohc_spinlock        spinlock_typ <>
 ohc_enum_section    section_typ <>
@@ -2529,6 +2530,9 @@ UpdateQueue   Proc near
     or eax,eax
     jz update_queue_done
 ;
+    mov bx,ds:ohc_thread
+    Signal
+;
     mov dx,flat_sel
     mov es,dx
     mov fs,ds:ohc_map_sel
@@ -3257,6 +3261,115 @@ bhDone:
     pop fs
     ret
 BiosHandoff    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           OHCI function handler
+;
+;           DESCRIPTION:    OHCI function thread
+;
+;       PARAMETERS:         BX      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ohci_function_handler:
+    mov ds,bx
+    GetThread
+    mov ds:ohc_thread,ax
+;
+    WaitForSignal    
+    int 3
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StartFunctionThread
+;
+;           DESCRIPTION:    Start OHCI function thread
+;
+;       PARAMETERS:         DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+func_name    DB 'OHCI ', 0
+
+StartFunctionThread Proc near
+    push es            
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor di,di
+    mov si,OFFSET func_name
+
+sftCopyLoop:
+    mov al,cs:[si]
+    inc si
+    or al,al
+    jz sftCopyDone
+;
+    stosb
+    jmp sftCopyLoop
+
+sftCopyDone:
+    mov ax,ds:usb_controller_id
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;            
+    mov bx,ds
+    xor di,di
+    mov dx,cs
+    mov ds,dx
+    mov si,OFFSET ohci_function_handler
+    mov ax,5
+    mov cx,stack0_size
+    CreateThread
+;
+    FreeMem
+    pop es
+    ret
+StartFunctionThread Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3301,6 +3414,7 @@ ot1B DD 0,                      0
 ot1C DD OFFSET SetMaxLen,       SEG code
 
 InitFunction    Proc near
+    push ds
     push es
     push fs
     pushad
@@ -3431,6 +3545,7 @@ ifPowerLoop:
 
 ifPowerDone:
     popad
+    pop fs
     pop es
     pop ds
     ret
@@ -3660,6 +3775,7 @@ otInitLoop:
 ;    
     mov ds,ds:[si]
     call InitFunction
+    call StartFunctionThread
 ;
     pop si
     pop cx    
