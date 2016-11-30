@@ -2957,7 +2957,6 @@ ohci_timer  Proc far
 ;    
     mov ax,SEG data
     mov ds,ax
-    mov bx,ds:OhciThread
 ;
     mov cx,ds:OhciFuncCount
     or cx,cx
@@ -2982,11 +2981,6 @@ otQueueDone:
     mov es,ds:ohc_reg_sel
     mov es:HcInterruptStatus,eax
     or ds:ohc_int_status,eax
-;
-    and eax,52h
-    jz otNext
-;    
-    Signal
 
 otNext:
     pop si
