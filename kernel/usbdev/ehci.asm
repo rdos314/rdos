@@ -236,7 +236,7 @@ EhciSection     section_typ <>
 WaitSection     section_typ <>
 WaitThreadArr   DW 3 DUP(?)
 Started         DB ?
-IntOk           DB ?
+UseTimer        DB ?
 
 EhciFuncCount   DW ?
 EhciFuncArr     DW MAX_USB_DEVICES DUP(?)
@@ -3787,11 +3787,19 @@ ifLegacyOff:
 
 ifIrq:
     GetPciIrqNr
+    jc ifIrqFail
+;    
     mov ah,14h
     mov di,cs
     mov es,di
     mov edi,OFFSET EhciInt
     RequestIrqHandler
+    jmp ifIntDone
+
+ifIrqFail:
+    mov ax,SEG data
+    mov es,ax
+    mov ds:UseTimer,1
 
 ifIntDone:    
     mov fs,ds:ehc_reg_sel
@@ -4120,9 +4128,9 @@ etInitLoop:
     mov ax,150
     WaitMilliSec
 ;
-    mov al,ds:IntOk
+    mov al,ds:UseTimer
     or al,al
-    jnz ehci_thread_loop
+    jz ehci_thread_end
 ;
     GetSystemTime
     add eax,11930
@@ -4133,7 +4141,7 @@ etInitLoop:
     mov edi,OFFSET ehci_timer
     StartTimer
     
-ehci_thread_loop:
+ehci_thread_end:
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4261,7 +4269,7 @@ Init    Proc far
     mov ds:WaitThreadArr+2,0
     mov ds:WaitThreadArr+4,0
     mov ds:Started,0
-    mov ds:IntOk,0
+    mov ds:UseTimer,0
 ;
     mov ax,cs
     mov ds,ax
