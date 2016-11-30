@@ -86,6 +86,7 @@ usb_dev_base        usb_dev_struc <>
 
 ehc_reg_sel         DW ?
 ehc_thread          DW ?
+ehc_update          DW ?
 
 ehc_bus             DB ?
 ehc_device          DB ?
@@ -231,7 +232,6 @@ data    SEGMENT byte public 'DATA'
 
 EhciList128     DD ?
 EhciSection     section_typ <>
-EhciThread      DW ?
 
 WaitSection     section_typ <>
 WaitThreadArr   DW 3 DUP(?)
@@ -277,24 +277,9 @@ eiLoop:
     mov es:HcStatus,eax
     jz eiDone
 ;
-    NotifyIrqActivity
-    test al,1
-    jz eiNotPipe
-;    
+    NotifyIrqActivity    
     mov bx,ds:ehc_thread
     Signal
-
-eiNotPipe:
-    and al,NOT 1
-    jz eiLoop
-;
-    push ds
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:IntOk,1
-    mov bx,ds:EhciThread
-    Signal
-    pop ds
     jmp eiLoop
 
 eiDone:
@@ -337,16 +322,7 @@ etLoop:
     mov eax,es:HcStatus
     and al,7
     mov es:HcStatus,eax
-    jz etcPipe
 ;    
-    push ds
-    mov ax,SEG data
-    mov ds,ax
-    mov bx,ds:EhciThread
-    Signal
-    pop ds
-
-etcPipe:    
     mov bx,ds:ehc_thread
     Signal
 
@@ -3241,7 +3217,7 @@ UpdatePort   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           UpdateAllPorts
+;           NAME:           UpdateUsb
 ;
 ;           DESCRIPTION:    Update all root-hub port status
 ;
@@ -3249,7 +3225,7 @@ UpdatePort   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateAllPorts   Proc near
+UpdateUsb  Proc near
     push cx
 ;    
     xor cl,cl
@@ -3272,51 +3248,7 @@ uaPortLoop:
 uaPortDone:
     pop cx
     ret
-UpdateAllPorts  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UpdateUsb
-;
-;           DESCRIPTION:    Update USB status
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateUsb  Proc near
-    mov ax,SEG data
-    mov ds,ax
-    mov cx,ds:EhciFuncCount
-    or cx,cx
-    jz uuDone
-;
-    mov si,OFFSET EhciFuncArr
-
-uuLoop:    
-    push ds
-    push cx
-    push si
-;    
-    mov ds,ds:[si]
-    mov es,ds:ehc_reg_sel
-;
-    call UpdateAllPorts
-
-uuNext:    
-    pop si
-    pop cx
-    pop ds
-;
-    add si,2
-    loop uuLoop    
-    
-uuDone:    
-    ret
-UpdateUsb   Endp
+UpdateUsb  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3551,6 +3483,34 @@ uplDone:
     pop ax
     ret
 UpdatePipeList  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           hub_timer
+;
+;           DESCRIPTION:    Hub timer
+;
+;           PARAMETERS:     ECX         Ehci function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hub_timer  Proc far
+    mov ds,cx
+    mov ds:ehc_update,1
+    mov bx,ds:ehc_thread
+    Signal
+;
+    add eax,1193 * 250
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET hub_timer
+    mov bx,ds:ehc_thread
+    mov cx,ds
+    StartTimer
+    retf32
+hub_timer       Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3567,9 +3527,30 @@ ehci_function_handler:
     mov ds,bx
     GetThread
     mov ds:ehc_thread,ax
+    mov ds:ehc_update,0
+    call UpdateUsb
+;    
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET hub_timer
+    mov bx,ds:ehc_thread
+    mov cx,ds
+    StartTimer
 
 efhLoop:
     WaitForSignal
+;
+    xor ax,ax
+    xchg ax,ds:ehc_update
+    or ax,ax
+    jz efhPipe
+;    
+    call UpdateUsb
+
+efhPipe:       
     call UpdatePipeList
     jmp efhLoop
         
@@ -4103,8 +4084,6 @@ ehci_thread:
     AddThreadInt
     mov ax,SEG data
     mov ds,ax
-    GetThread
-    mov ds:EhciThread,ax
 ;    
     WaitForOhci
     WaitForUhci
@@ -4158,13 +4137,7 @@ etInitLoop:
     StartTimer
     
 ehci_thread_loop:
-    GetSystemTime
-    add eax,1193 * 250
-    adc edx,0
-    WaitForSignalWithTimeout
-;
-    call UpdateUsb
-    jmp ehci_thread_loop
+    TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -3142,6 +3142,7 @@ ohci_function_handler:
     mov ds,bx
     GetThread
     mov ds:ohc_thread,ax
+    mov ds:ohc_update,0
     call UpdateUsb
 ;    
     GetSystemTime
@@ -3164,7 +3165,7 @@ ofhLoop:
 ;    
     call UpdateUsb
 
- ofhPipe:       
+ofhPipe:       
     call UpdatePipeList
     jmp ofhLoop
         
