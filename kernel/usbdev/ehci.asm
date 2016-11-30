@@ -3548,6 +3548,109 @@ ciLoop:
     pop ds    
     ret
 CreateInterrupt Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           EHCI function handler
+;
+;   DESCRIPTION:    EHCI function thread
+;
+;   PARAMETERS:     BX      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ehci_function_handler:
+    int 3
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StartFunctionThread
+;
+;           DESCRIPTION:    Start EHCI function thread
+;
+;       PARAMETERS:         DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+func_name    DB 'EHCI ', 0
+
+StartFunctionThread Proc near
+    push es            
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor di,di
+    mov si,OFFSET func_name
+
+sftCopyLoop:
+    mov al,cs:[si]
+    inc si
+    or al,al
+    jz sftCopyDone
+;
+    stosb
+    jmp sftCopyLoop
+
+sftCopyDone:
+    mov ax,ds:usb_controller_id
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;            
+    mov bx,ds
+    xor di,di
+    mov dx,cs
+    mov ds,dx
+    mov si,OFFSET ehci_function_handler
+    mov ax,5
+    mov cx,stack0_size
+    CreateThread
+;
+    FreeMem
+    pop es
+    ret
+StartFunctionThread Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3598,6 +3701,7 @@ et1C DD OFFSET SetMaxLen,       SEG code
 ;               AL      Capability
 
 InitFunction    Proc near
+    push ds
     push es
     push fs
     pushad
@@ -3768,6 +3872,7 @@ ifDone:
     popad
     pop fs
     pop es
+    pop ds
     ret
 InitFunction    Endp
 
@@ -4000,10 +4105,15 @@ ehci_thread:
 etInitLoop:
     ClearSignal
     push ds
+    push cx
     push si
+;    
     mov ds,ds:[si]
     call InitFunction
+    call StartFunctionThread
+;
     pop si
+    pop cx
     pop ds
     add si,2
     loop etInitLoop
