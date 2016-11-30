@@ -108,7 +108,7 @@ ehc_reset           DW ?
 ehc_pipe_list       DW ?
 ehc_async_head_va   DD ?
 
-ehc_spinlock        spinlock_typ <>
+ehc_pipe_section    section_typ <>
 ehc_hub_section     section_typ <>
 
 ehc_hub_port_arr    DD 256 DUP(?)
@@ -462,7 +462,7 @@ FreeBlock128     ENDP
 
 InsertPipe  Proc near
     push di
-    RequestSpinlock ds:ehc_spinlock
+    EnterSection ds:ehc_pipe_section
     mov di,ds:ehc_pipe_list
     or di,di
     je ipEmpty
@@ -488,7 +488,7 @@ ipEmpty:
     mov ds:ehc_pipe_list,fs
 
 ipDone:
-    ReleaseSpinlock ds:ehc_spinlock
+    LeaveSection ds:ehc_pipe_section
     ret
 InsertPipe  Endp
 
@@ -509,7 +509,7 @@ RemovePipe  Proc near
     push si
     push di
 ;       
-    RequestSpinlock ds:ehc_spinlock
+    EnterSection ds:ehc_pipe_section
     push ds
     mov si,fs:esp_prev
     mov di,fs:esp_next
@@ -533,7 +533,7 @@ rpEmpty:
     mov ds:ehc_pipe_list,0    
 
 rpDone:
-    ReleaseSpinlock ds:ehc_spinlock
+    LeaveSection ds:ehc_pipe_section
     pop di
     pop si
     ret
@@ -3413,9 +3413,7 @@ CreateInterrupt Endp
 
 UpdatePipeList  Proc near
     push ax
-
-uplLoop:
-    RequestSpinlock ds:ehc_spinlock
+    EnterSection ds:ehc_pipe_section
     mov ax,ds:ehc_pipe_list
     or ax,ax
     jz uplDone
@@ -3457,14 +3455,7 @@ uplElemLoop:
     or bx,bx
     jz uplNext
 ;
-    ReleaseSpinlock ds:ehc_spinlock    
     Signal
-    pop di
-    pop edx
-    pop ebx
-    pop fs
-    pop es    
-    jmp uplLoop
 
 uplNext:    
     mov ax,fs:esp_next
@@ -3479,7 +3470,7 @@ uplNext:
     pop es    
 
 uplDone:    
-    ReleaseSpinlock ds:ehc_spinlock
+    LeaveSection ds:ehc_pipe_section
     pop ax
     ret
 UpdatePipeList  Endp
@@ -3933,7 +3924,7 @@ AddFunction  Proc near
     mov ds:ehc_pipe_list,0
     mov ds:ehc_reset,0
     mov ds:ehc_async_head_va,0
-    InitSpinlock ds:ehc_spinlock
+    InitSection ds:ehc_pipe_section
 ;    InitSection ds:ehc_enum_section
     InitSection ds:ehc_hub_section
 ;
