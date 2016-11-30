@@ -141,6 +141,7 @@ ohc_control_linear  DD ?
 ohc_bulk_linear     DD ?
 ohc_pipe_list       DW ?
 ohc_thread          DW ?
+ohc_update          DW ?
 
 ohc_pipe_section    section_typ <>
 ohc_enum_section    section_typ <>
@@ -202,7 +203,6 @@ OhciUsedBlocks  DD ?
 OhciCloseCount  DD ?
 OhciList32      DD ?
 OhciSection     section_typ <>
-OhciThread      DW ?
 
 WaitSection     section_typ <>
 WaitThreadArr   DW 3 DUP(?)
@@ -2897,27 +2897,15 @@ UpdatePort   Endp
 ;
 ;           DESCRIPTION:    Update USB status
 ;
-;       PARAMETERS:     
+;       PARAMETERS:         DS          Function
 ;
 ;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateUsb  Proc near
-    mov ax,SEG data
-    mov ds,ax
-    mov cx,ds:OhciFuncCount
-    or cx,cx
-    jz uuDone
-;    
-    mov si,OFFSET OhciFuncArr
-
-uuLoop:    
-    push ds
     push cx
     push si
-;    
-    mov ds,ds:[si]
 ;    
     xor cx,cx
 
@@ -2929,12 +2917,6 @@ uuPortLoop:
 ;
     pop si
     pop cx
-    pop ds
-;
-    add si,2
-    loop uuLoop    
-    
-uuDone:    
     ret
 UpdateUsb   Endp
 
@@ -3120,6 +3102,34 @@ UpdatePipeList  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           hub_timer
+;
+;           DESCRIPTION:    Hub timer
+;
+;           PARAMETERS:     ECX         Ohci function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hub_timer  Proc far
+    mov ds,cx
+    mov ds:ohc_update,1
+    mov bx,ds:ohc_thread
+    Signal
+;
+    add eax,1193 * 250
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET hub_timer
+    mov bx,ds:ohc_thread
+    mov cx,ds
+    StartTimer
+    retf32
+hub_timer       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OHCI function handler
 ;
 ;           DESCRIPTION:    OHCI function thread
@@ -3132,12 +3142,31 @@ ohci_function_handler:
     mov ds,bx
     GetThread
     mov ds:ohc_thread,ax
+    call UpdateUsb
+;    
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET hub_timer
+    mov bx,ds:ohc_thread
+    mov cx,ds
+    StartTimer
 
 ofhLoop:
-    WaitForSignal    
+    WaitForSignal
+;
+    xor ax,ax
+    xchg ax,ds:ohc_update
+    or ax,ax
+    jz ofhPipe
+;    
+    call UpdateUsb
+
+ ofhPipe:       
     call UpdatePipeList
     jmp ofhLoop
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3585,8 +3614,6 @@ ohci_name       DB 'OHCI',0
 ohci_thread:
     mov ax,SEG data
     mov ds,ax
-    GetThread
-    mov ds:OhciThread,ax
     mov ds:UseTimer,0
 ;    
     mov si,OFFSET OhciFuncArr
@@ -3654,15 +3681,7 @@ otInitLoop:
     StartTimer
 
 otTimerStarted:       
-    call UpdateUsb
-
-ohci_thread_loop:
-    GetSystemTime
-    add eax,1193 * 250
-    adc edx,0
-    WaitForSignalWithTimeout
-    call UpdateUsb
-    jmp ohci_thread_loop
+    TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
