@@ -101,11 +101,11 @@ otd_be      DD ?
 
 ;driver part
 
-otd_my_va       DD ?
+otd_phys        DD ?
 otd_next_va     DD ?
 otd_buffer_va   DD ?
 otd_buffer_size DW ?
-otd_pipe_sel    DW ?
+otd_spare       DW ?
 
 ohc_td_struc    ENDS
 
@@ -118,9 +118,7 @@ osp_pipe_base       usb_pipe_struc <>
 osp_ed          DD ?
 osp_prev        DW ?
 osp_next        DW ?
-osp_data_list       DD ?
 osp_signal      DW ?
-osp_sync_linear     DD ?
 osp_intr_list       DW ?
 osp_intr_count      DW ?
 osp_data_size       DW ?
@@ -142,10 +140,9 @@ ohc_phys        DD ?
 ohc_control_linear  DD ?
 ohc_bulk_linear     DD ?
 ohc_pipe_list       DW ?
-ohc_reclaim_list    DD ?
 ohc_thread          DW ?
 
-ohc_spinlock        spinlock_typ <>
+ohc_pipe_section    section_typ <>
 ohc_enum_section    section_typ <>
 
 ohc_root_ports      DW ?
@@ -376,7 +373,7 @@ FreeBlock32     ENDP
 
 InsertPipe  Proc near
     push di
-    RequestSpinlock ds:ohc_spinlock
+    EnterSection ds:ohc_pipe_section
 ;
     mov di,ds:ohc_pipe_list
     or di,di
@@ -403,10 +400,9 @@ ipEmpty:
     mov ds:ohc_pipe_list,fs
 
 ipDone:
-    mov fs:osp_data_list,0
     mov fs:osp_signal,0
     mov fs:osp_flags,0
-    ReleaseSpinlock ds:ohc_spinlock
+    LeaveSection ds:ohc_pipe_section
     ret
 InsertPipe  Endp
 
@@ -427,7 +423,7 @@ RemovePipe  Proc near
     push si
     push di
 ;       
-    RequestSpinlock ds:ohc_spinlock
+    EnterSection ds:ohc_pipe_section
     push ds
     mov si,fs:osp_prev
     mov di,fs:osp_next
@@ -451,7 +447,7 @@ rpEmpty:
     mov ds:ohc_pipe_list,0    
 
 rpDone:
-    ReleaseSpinlock ds:ohc_spinlock
+    LeaveSection ds:ohc_pipe_section
     pop di
     pop si
     ret
@@ -495,6 +491,7 @@ InitEd  ENDP
 ;       PARAMETERS:     ES      Flat sel
 ;               FS      Pipe sel
 ;               EDX     TD
+;               EAX     Physical address of TD
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -504,9 +501,8 @@ InitTd  PROC near
     mov es:[edx].otd_cbp,0
     mov es:[edx].otd_next_td,0
     mov es:[edx].otd_be,0
-    mov es:[edx].otd_my_va,edx
+    mov es:[edx].otd_phys,eax
     mov es:[edx].otd_next_va,0
-    mov es:[edx].otd_pipe_sel,fs
     ret
 InitTd  ENDP
 
@@ -558,17 +554,16 @@ AllocateEd  ENDP
 ;           DESCRIPTION:    Allocate & initialize transfer descriptor
 ;
 ;       PARAMETERS:     ES      Flat sel
-;               FS      Pipe sel
+;                       FS      Pipe sel
 ;
-;           RETURNS:        EDX         Linear address of TD
-;               EAX     Physical address of TD
+;           RETURNS:    EDX     Linear address of TD
+;                       EAX     Physical address of TD
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateTd      PROC near
     push cx
     call AllocateBlock32
-    call InitTd
 ;
     push ebx
     GetPageEntry
@@ -584,83 +579,12 @@ at32:
     mov cx,dx
     and cx,0FFFh
     or ax,cx
+    call InitTd
+;    
     pop cx
     ret
 AllocateTd  ENDP
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateSyncBlock
-;
-;           DESCRIPTION:    Allocate sync block
-;
-;       PARAMETERS:     FS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateSyncBlock    Proc near
-    push eax
-    push ebx
-    push ecx
-    push edx
-;    
-    mov eax,1000h
-    AllocateBigLinear
-    AllocatePhysical32
-    mov al,13h
-    SetPageEntry
-    mov fs:osp_sync_linear,edx
-;    
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax    
-    ret
-CreateSyncBlock Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SyncHead
-;
-;           DESCRIPTION:    Sync head ptr in pipe
-;
-;       PARAMETERS:     DS      Function sel
-;               ES      Flat sel
-;               FS      Pipe sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SyncHead    Proc near
-    push eax
-    push ebx
-    push edx
-;    
-    mov ebx,fs:osp_ed
-    mov eax,es:[ebx].oes_headp
-    mov edx,fs:osp_sync_linear
-    movzx ebx,ax
-    and bx,0FF0h
-    and ax,0F000h
-;
-    push ebx
-    xor ebx,ebx
-    or ax,813h
-    SetPageEntry
-    pop ebx
-;    
-    mov edx,es:[ebx+edx].otd_my_va
-    mov ebx,fs:osp_ed
-    mov es:[ebx].oes_head_va,edx
-;    
-    pop edx
-    pop ebx
-    pop eax
-    ret
-SyncHead    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1325,7 +1249,6 @@ CreateControl   Proc far
     mov es,dx
     call AddControlEd
     mov fs:osp_ed,edx
-    call CreateSyncBlock
     call InsertPipe
 ;
     popad
@@ -1367,7 +1290,6 @@ CreateBulk   Proc far
     mov es,dx
     call AddBulkEd
     mov fs:osp_ed,edx
-    call CreateSyncBlock
     call InsertPipe
 ;
     popad
@@ -1413,8 +1335,6 @@ CreateIntr   Proc far
     mov fs:osp_ed,edx
     mov fs:osp_intr_count,si
     mov fs:osp_intr_list,di
-;
-    call CreateSyncBlock
     call InsertPipe
 ;
     popad
@@ -1916,19 +1836,24 @@ LocalEndTransfer   Proc near
     mov fs:osp_data_size,0     
     and fs:osp_flags, NOT OSP_FLAG_TRANSFER_PENDING
     and fs:osp_flags, NOT OSP_FLAG_TRANSFER_OK
-;    
-    mov edx,fs:osp_data_list
-    or edx,edx
-    jz etDone
 ;
     mov ax,flat_sel
     mov es,ax
-;    
     xor bp,bp
-    xor edx,edx
-    xchg edx,fs:osp_data_list
 
 etLoop:
+    mov eax,fs:osp_ed
+    mov edx,es:[eax].oes_head_va
+    or edx,edx
+    jz etOk
+;    
+    mov ebx,es:[edx].otd_phys
+    cmp ebx,es:[eax].oes_headp
+    je etOk
+;
+    cmp ebx,es:[eax].oes_tailp
+    je etOk
+;
     mov ax,es:[edx].otd_flags
     and ax,18h
     cmp ax,10h
@@ -1953,12 +1878,24 @@ etSizeOk:
     add bp,cx
 
 etNext:
-    mov edi,es:[edx].otd_next_va
+    mov edi,es:[edx].otd_next_va        
     call FreeBlock32
-    mov edx,edi
-    or edx,edx
-    jnz etLoop
 ;
+    mov ebx,edi
+    mov eax,es:[edi].otd_phys
+    and ax,0FFFh
+    and bx,0FFFh
+    cmp ax,bx
+    je etValid
+;
+    int 3
+
+etValid:
+    mov edx,fs:osp_ed
+    mov es:[edx].oes_head_va,edi
+    jmp etLoop
+
+etOk:
     mov fs:osp_data_size,bp
     or fs:osp_flags, OSP_FLAG_TRANSFER_OK
 
@@ -2187,7 +2124,6 @@ cpFreeEdList:
 
 cpFreeTd:
     call LocalEndTransfer
-    call SyncHead    
     mov edx,es:[edx].oes_head_va
 
 cpTdListLoop:
@@ -2212,14 +2148,6 @@ dpDone:
     FreeLinear
 
 rpSetupDone:   
-    mov edx,fs:osp_sync_linear
-    xor ebx,ebx
-    xor eax,eax
-    SetPageEntry
-;    
-    mov ecx,1000h
-    FreeLinear
-;
     mov ax,2
     WaitMilliSec
 ;
@@ -2515,13 +2443,8 @@ SetMaxLen   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateQueue   Proc near
-    push es
-    push fs
-    push gs
     push eax
     push bx
-    push ecx
-    push edx
 ;    
     xor eax,eax
     mov bx,ohc_hca_base + OFFSET hcca_done_head
@@ -2532,139 +2455,12 @@ UpdateQueue   Proc near
 ;
     mov bx,ds:ohc_thread
     Signal
-;
-    mov dx,flat_sel
-    mov es,dx
-    mov fs,ds:ohc_map_sel
-
-update_reverse_loop:
-    test al,3
-    jnz update_queue_done
-;    
-    mov bx,ax
-    and ax,0F000h
-    and bx,0FFFh
-    or ax,813h
-    mov edx,ds:ohc_map_linear
-    push ebx
-    xor ebx,ebx
-    SetPageEntry
-    pop ebx
-;    
-    mov edx,fs:[bx].otd_my_va
-    or edx,edx
-    jnz update_valid
-;
-    mov eax,fs:[bx].otd_next_td
-    or eax,eax
-    jnz update_reverse_loop
-;
-    jmp update_queue_done    
-
-update_valid:
-    mov ax,es:[edx].otd_pipe_sel
-    or ax,ax
-    jz update_insert_reclaim
-
-update_insert_pipe:
-    mov gs,ax
-    test gs:osp_flags, OSP_FLAG_TRANSFER_PENDING
-    jz update_insert_reclaim
-;    
-    mov ecx,gs:osp_data_list
-    mov es:[edx].otd_next_va,ecx
-    mov gs:osp_data_list,edx
-;
-    xor bx,bx
-    xchg bx,gs:osp_signal
-    Signal    
-    jmp update_reverse_next
-
-update_insert_reclaim:
-    mov ecx,ds:ohc_reclaim_list
-    mov es:[edx].otd_next_va,ecx
-    mov ds:ohc_reclaim_list,edx
-
-update_reverse_next:
-    mov eax,es:[edx].otd_next_td
-    or eax,eax
-    jnz update_reverse_loop
 
 update_queue_done:
-    pop edx
-    pop ecx
     pop bx
     pop eax
-    pop gs
-    pop fs
-    pop es
     ret
 UpdateQueue   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           UpdateReclaim
-;
-;   DESCRIPTION:    Update reclaim
-;
-;   PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateReclaim   Proc near
-    mov eax,ds:ohc_reclaim_list
-    or eax,eax
-    jz upNoReclaim
-;
-    push es
-    push gs
-    push bx
-    push ecx
-    push edx
-    mov ax,flat_sel
-    mov es,ax
-;    
-    RequestSpinlock ds:ohc_spinlock
-    mov edx,ds:ohc_reclaim_list
-    mov ecx,es:[edx].otd_next_va
-    mov ds:ohc_reclaim_list,ecx
-    ReleaseSpinlock ds:ohc_spinlock
-;    
-    mov ax,es:[edx].otd_pipe_sel
-    or ax,ax
-    jz upReclaimOk
-;
-    push ax
-    mov ax,5
-    WaitMilliSec
-    pop ax
-;
-    IsValidUsbPipeSel
-    jc upReclaimOk
-;    
-    mov gs,ax
-    test gs:osp_flags, OSP_FLAG_TRANSFER_PENDING
-    jz upReclaimOk
-;    
-    mov ecx,gs:osp_data_list
-    mov es:[edx].otd_next_va,ecx
-    mov gs:osp_data_list,edx
-;
-    xor bx,bx
-    xchg bx,gs:osp_signal
-    Signal    
-
-upReclaimOk:
-    pop edx
-    pop ecx
-    pop bx
-    pop gs
-    pop es
-
-upNoReclaim:    
-    ret
-UpdateReclaim   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3122,7 +2918,6 @@ uuLoop:
     push si
 ;    
     mov ds,ds:[si]
-    call UpdateReclaim
 ;    
     xor cx,cx
 
@@ -3261,6 +3056,94 @@ bhDone:
     pop fs
     ret
 BiosHandoff    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UpdatePipeList
+;
+;       DESCRIPTION:    Update pipe list
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePipeList  Proc near
+    push ax
+
+    EnterSection ds:ohc_pipe_section
+    mov ax,ds:ohc_pipe_list
+    or ax,ax
+    jz uplDone
+;
+    push es
+    push fs
+    push ebx
+    push edx
+    push di
+;
+    mov di,ax
+    mov fs,ax
+;
+    mov ax,flat_sel
+    mov es,ax
+
+uplElemLoop:
+    test fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
+    jz uplNext
+;
+    mov edx,fs:osp_ed
+    mov eax,es:[edx].oes_head_va
+    or eax,eax
+    jz uplNext
+;    
+    mov ebx,es:[eax].otd_phys
+    cmp ebx,es:[edx].oes_headp
+    je uplNext
+;
+    xor bx,bx
+    xchg bx,fs:osp_signal
+    Signal
+
+uplNext:    
+    mov ax,fs:osp_next
+    mov fs,ax
+    cmp ax,di
+    jne uplElemLoop
+;
+    pop di
+    pop edx
+    pop ebx
+    pop fs
+    pop es    
+
+uplDone:    
+    LeaveSection ds:ohc_pipe_section
+    pop ax
+    ret
+UpdatePipeList  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           OHCI function handler
+;
+;           DESCRIPTION:    OHCI function thread
+;
+;       PARAMETERS:         BX      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ohci_function_handler:
+    mov ds,bx
+    GetThread
+    mov ds:ohc_thread,ax
+
+ofhLoop:
+    WaitForSignal    
+    call UpdatePipeList
+    jmp ofhLoop
+
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3299,26 +3182,6 @@ ok_high1:
     add ah,30h
     ret
 HexToAscii      ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           OHCI function handler
-;
-;           DESCRIPTION:    OHCI function thread
-;
-;       PARAMETERS:         BX      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ohci_function_handler:
-    mov ds,bx
-    GetThread
-    mov ds:ohc_thread,ax
-;
-    WaitForSignal    
-    int 3
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3608,10 +3471,9 @@ AddFunction  Proc near
     mov cx,400h
     rep stosd
 ;
-    InitSpinlock ds:ohc_spinlock
+    InitSection ds:ohc_pipe_section
     InitSection ds:ohc_enum_section
     mov ds:ohc_pipe_list,0
-    mov ds:ohc_reclaim_list,0
     mov ds:ohc_reset,0
     mov ds:ohc_reg_sel,bp
     mov ds:ohc_int_status,0
