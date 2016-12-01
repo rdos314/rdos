@@ -2578,17 +2578,16 @@ atDone:
 ;
 ;   DESCRIPTION:    Detach thread
 ;
-;   PARAMETERS:     FS      Function selector
-;                   BL      Port # (0..OHCI ports)
+;   PARAMETERS:     BX      Function selector
+;                   DL      Port # (0..OHCI ports)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-detach_thread_name  DB 'OHCI Detach', 0
+detach_thread_name  DB 'OHCI Detach ', 0
 
 detach_thread:
-    mov cl,bl
-    mov ax,fs
-    mov ds,ax
+    mov cl,dl
+    mov ds,bx
     mov es,ds:ohc_reg_sel
 ;    
     movzx si,cl
@@ -2612,17 +2611,16 @@ detach_thread:
 ;
 ;   DESCRIPTION:    Reset thread
 ;
-;   PARAMETERS:     FS      Function selector
-;                   BL      Port # (0..OHCI ports)
+;   PARAMETERS:     BX      Function selector
+;                   DL      Port # (0..OHCI ports)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_thread_name  DB 'OHCI Reset', 0
+reset_thread_name  DB 'OHCI Reset ', 0
 
 reset_thread:
-    mov cl,bl
-    mov ax,fs
-    mov ds,ax
+    mov cl,dl
+    mov ds,bx
     mov es,ds:ohc_reg_sel
 ;    
     movzx si,cl
@@ -2755,19 +2753,12 @@ UpdatePort   Proc near
     shl di,1
     mov ds:[di].usb_timeout_arr,eax
     mov ds:[di].usb_timeout_arr+4,edx
-;    
-    mov bx,ds
-    mov fs,bx
-    mov bx,cx
 ;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET reset_thread_name
-    mov esi,OFFSET reset_thread
+    mov dx,cx
+    mov si,OFFSET reset_thread
+    mov di,OFFSET reset_thread_name
     mov ax,2
-    mov cx,stack0_size
-    CreateThread
+    call StartThread
     jmp upDone
     
 upNoReset:
@@ -2819,18 +2810,12 @@ upDetach:
     mov ds:[di].usb_timeout_arr,eax
     mov ds:[di].usb_timeout_arr+4,edx
 ;    
-    mov bx,ds
-    mov fs,bx
-    mov bx,cx
 ;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET detach_thread_name
-    mov esi,OFFSET detach_thread
+    mov dx,cx
+    mov si,OFFSET detach_thread
+    mov di,OFFSET detach_thread_name
     mov ax,2
-    mov cx,stack0_size
-    CreateThread
+    call StartThread
     jmp upDone
 
 upCheckTimeout:
