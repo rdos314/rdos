@@ -1823,12 +1823,7 @@ WasTransferOk   Endp
 
 LocalEndTransfer   Proc near
     push es
-    push eax
-    push cx
-    push edx
-    push esi
-    push edi
-    push bp
+    pushad
 ;    
     test fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
     jz etDone
@@ -1904,12 +1899,7 @@ etReset:
     or es:[edx].oes_fa_en,4000h
 
 etDone:
-    pop bp
-    pop edi
-    pop esi
-    pop edx
-    pop cx
-    pop eax
+    popad
     pop es
     ret
 LocalEndTransfer   Endp
