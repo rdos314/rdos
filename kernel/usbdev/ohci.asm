@@ -3210,6 +3210,62 @@ HexToAscii      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           StartThread
+;
+;       DESCRIPTION:    Start thread
+;
+;       PARAMETERS:     DS      Function sel (passed as bx)
+;                       DX      Passed through
+;                       AX      Prio
+;                       SI      Entry
+;                       DI      Name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartThread Proc near
+    push es            
+    push ax
+    push si
+;
+    mov si,di
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor di,di
+
+sfCopyLoop:
+    mov al,cs:[si]
+    inc si
+    or al,al
+    jz sfCopyDone
+;
+    stosb
+    jmp sfCopyLoop
+
+sfCopyDone:
+    mov ax,ds:usb_controller_id
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;   
+    pop si         
+    mov bx,ds
+    xor di,di
+    mov ax,cs
+    mov ds,ax
+    pop ax
+    mov cx,stack0_size
+    CreateThread
+;
+    FreeMem
+    pop es
+    ret
+StartThread Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           StartFunctionThread
 ;
 ;           DESCRIPTION:    Start OHCI function thread
@@ -3221,40 +3277,10 @@ HexToAscii      ENDP
 func_name    DB 'OHCI ', 0
 
 StartFunctionThread Proc near
-    push es            
-    mov eax,100h
-    AllocateSmallGlobalMem
-    xor di,di
-    mov si,OFFSET func_name
-
-sftCopyLoop:
-    mov al,cs:[si]
-    inc si
-    or al,al
-    jz sftCopyDone
-;
-    stosb
-    jmp sftCopyLoop
-
-sftCopyDone:
-    mov ax,ds:usb_controller_id
-    call HexToAscii
-    stosw
-;
-    xor al,al
-    stosb
-;            
-    mov bx,ds
-    xor di,di
-    mov dx,cs
-    mov ds,dx
     mov si,OFFSET ohci_function_handler
+    mov di,OFFSET func_name
     mov ax,5
-    mov cx,stack0_size
-    CreateThread
-;
-    FreeMem
-    pop es
+    call StartThread
     ret
 StartFunctionThread Endp
 
