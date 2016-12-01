@@ -72,6 +72,8 @@ uhc_hw_sel       DW ?
 uhc_int_phys     DD ?
 uhc_int_linear   DD ?
 uhc_int_sel      DW ?
+uhc_thread       DW ?
+uhc_update       DW ?
 
 uhc_status       DW ?
 
@@ -285,10 +287,13 @@ timer_func_loop:
     test al,20h
     jz tNonFatal
 ;
-    SoftReset
+    int 3
 
 tNonFatal:
-    call UpdatePipeList
+    push bx
+    mov bx,ds:uhc_thread
+    Signal
+    pop bx
 ;
     pop ds
     add bx,2
@@ -331,11 +336,11 @@ UhciInt Proc far
     test al,20h
     jz uiNonFatal
 ;
-    SoftReset
+    int 3
 
 uiNonFatal:
-    call UpdatePipeList
-;    
+    mov bx,ds:uhc_thread
+    Signal    
     retf32
 UhciInt  Endp
 
@@ -3082,6 +3087,142 @@ BiosHandoff    Proc near
     popad
     ret
 BiosHandoff Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           UHCI function handler
+;
+;   DESCRIPTION:    UHCI function thread
+;
+;   PARAMETERS:     BX      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uhci_function_handler:
+    mov ds,bx
+    GetThread
+    mov ds:uhc_thread,ax
+
+ufhLoop:
+    WaitForSignal
+    call UpdatePipeList
+    jmp ufhLoop
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartThread
+;
+;       DESCRIPTION:    Start thread
+;
+;       PARAMETERS:     DS      Function sel (passed as bx)
+;                       DX      Passed through
+;                       AX      Prio
+;                       SI      Entry
+;                       DI      Name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartThread Proc near
+    push es            
+    push ax
+    push si
+;
+    mov si,di
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor di,di
+
+sfCopyLoop:
+    mov al,cs:[si]
+    inc si
+    or al,al
+    jz sfCopyDone
+;
+    stosb
+    jmp sfCopyLoop
+
+sfCopyDone:
+    mov ax,ds:usb_controller_id
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;   
+    pop si         
+    mov bx,ds
+    xor di,di
+    mov ax,cs
+    mov ds,ax
+    pop ax
+    mov cx,stack0_size
+    CreateThread
+;
+    FreeMem
+    pop es
+    ret
+StartThread Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StartFunctionThread
+;
+;           DESCRIPTION:    Start EHCI function thread
+;
+;       PARAMETERS:         DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+func_name    DB 'UHCI ', 0
+
+StartFunctionThread Proc near
+    mov si,OFFSET uhci_function_handler
+    mov di,OFFSET func_name
+    mov ax,5
+    call StartThread
+    ret
+StartFunctionThread Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3126,6 +3267,9 @@ ut1B DD 0,                      0
 ut1C DD OFFSET SetMaxLen,       SEG code
 
 InitFunction    Proc near
+    push ds
+    push es
+    push fs
     pushad
 ;
     mov bx,ds:uhc_pci_bus_dev
@@ -3231,6 +3375,9 @@ ifTabLoop:
 ;    call UpdatePort    
 ;
     popad
+    pop fs
+    pop es
+    pop ds
     ret
 InitFunction    Endp
 
@@ -3444,8 +3591,13 @@ utHandoffLoop:
 
 uhci_func_loop:
     push ds
+    push bx
+    push cx
     mov ds,[bx]
     call InitFunction
+    call StartFunctionThread
+    pop cx
+    pop bx
     pop ds
     add bx,2
     loop uhci_func_loop
