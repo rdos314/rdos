@@ -290,11 +290,15 @@ timer_func_loop:
     int 3
 
 tNonFatal:
+    test al,1
+    jz tSignalOk
+;    
     push bx
     mov bx,ds:uhc_thread
     Signal
     pop bx
-;
+
+tSignalOk:
     pop ds
     add bx,2
     loop timer_func_loop
