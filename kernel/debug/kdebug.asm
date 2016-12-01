@@ -41,6 +41,7 @@ code    SEGMENT byte use32 public 'CODE'
 
     extrn init_local_debug:near
     extrn init_ipc_debug:near
+    extrn init_remote:near
     extrn init_crash_boot:near
     extrn init_crash_driver:near
     
@@ -60,6 +61,7 @@ init_debug_process      PROC far
 ;    
     call init_local_debug
     call init_ipc_debug
+    call init_remote
 ;    
     popad
     pop es
