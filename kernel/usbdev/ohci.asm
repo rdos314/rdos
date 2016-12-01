@@ -2469,17 +2469,16 @@ UpdateQueue   Endp
 ;
 ;   DESCRIPTION:    Attach thread
 ;
-;   PARAMETERS:     FS      Function selector
-;                   BL      Port # (0..OHCI ports)
+;   PARAMETERS:     BX      Function selector
+;                   DL      Port # (0..OHCI ports)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-attach_thread_name  DB 'OHCI Attach', 0
+attach_thread_name  DB 'OHCI Attach ', 0
 
 attach_thread:
-    mov cl,bl
-    mov ax,fs
-    mov ds,ax
+    mov ds,bx
+    mov cl,dl
     mov es,ds:ohc_reg_sel
 ;    
     movzx si,cl
@@ -2795,18 +2794,11 @@ upAttach:
     mov ds:[di].usb_timeout_arr,eax
     mov ds:[di].usb_timeout_arr+4,edx
 ;    
-    mov bx,ds
-    mov fs,bx
-    mov bx,cx
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET attach_thread_name
-    mov esi,OFFSET attach_thread
+    mov dx,cx
+    mov si,OFFSET attach_thread
+    mov di,OFFSET attach_thread_name
     mov ax,2
-    mov cx,stack0_size
-    CreateThread
+    call StartThread
     jmp upDone
 
 upDetach:
