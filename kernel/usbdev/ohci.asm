@@ -243,13 +243,21 @@ ENDIF
 OhciInt Proc far
     mov es,ds:ohc_reg_sel
     mov eax,es:HcInterruptStatus
-    test eax,2
+    test al,2
     jz oiQueueDone
 ;
     NotifyIrqActivity
     call UpdateQueue
 
 oiQueueDone:
+    test al,20h
+    jz oiHubDone
+;
+    mov ds:ohc_update,1
+    mov bx,ds:ohc_thread
+    Signal
+
+oiHubDone:        
     mov es,ds:ohc_reg_sel
     mov es:HcInterruptStatus,eax
     or ds:ohc_int_status,eax
@@ -2921,12 +2929,20 @@ otLoop:
     mov ds,ds:[si]
     mov es,ds:ohc_reg_sel
     mov eax,es:HcInterruptStatus
-    test eax,2
+    test al,2
     jz otQueueDone
 ;
     call UpdateQueue
 
 otQueueDone:
+    test al,20h
+    jz otHubDone
+;
+    mov ds:ohc_update,1
+    mov bx,ds:ohc_thread
+    Signal
+
+otHubDone:        
     mov es,ds:ohc_reg_sel
     mov es:HcInterruptStatus,eax
     or ds:ohc_int_status,eax
