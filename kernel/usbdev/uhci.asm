@@ -32,6 +32,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\os\protseg.def
+INCLUDE ..\os\proc.inc
 INCLUDE ..\pcdev\pci.inc
 INCLUDE usb.inc
 INCLUDE usbdev.inc
@@ -74,6 +75,7 @@ uhc_int_linear   DD ?
 uhc_int_sel      DW ?
 uhc_thread       DW ?
 uhc_update       DW ?
+uhc_int_mask     DW ?
 
 uhc_status       DW ?
 
@@ -158,6 +160,7 @@ UhciThread      DW ?
 WaitSection     section_typ <>
 WaitThreadArr   DW 3 DUP(?)
 Started         DB ?
+UseTimer        DB ?
 
 UhciCount       DW ?
 UhciFunc        DW 16 DUP (?)
@@ -273,6 +276,9 @@ timer_func_loop:
     add dx,UsbStatusReg
 ;
     in ax,dx    
+    or ds:uhc_status,ax
+    out dx,ax
+;
     test al,20h
     jz tNonFatal
 ;
@@ -319,6 +325,7 @@ port_timer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UhciInt Proc far    
+    int 3
     mov dx,ds:uhc_io_base
     add dx,UsbStatusReg
 ;
@@ -332,8 +339,14 @@ UhciInt Proc far
     int 3
 
 uiNonFatal:
+    test al,1
+    jz uiDone
+;
+    NotifyIrqActivity    
     mov bx,ds:uhc_thread
     Signal    
+
+uiDone:    
     retf32
 UhciInt  Endp
 
@@ -3275,13 +3288,26 @@ InitFunction    Proc near
     WritePciWord   
     
 ifNotLegacy:    
+    jmp ifIrqFail
+    
     GetPciIrqNr
+    jc ifIrqFail
+;    
+    mov ds:uhc_int_mask,0Fh
     mov ah,14h
     mov di,cs
     mov es,di
     mov edi,OFFSET UhciInt
     RequestIrqHandler
-;
+    jmp ifIntDone
+
+ifIrqFail:
+    mov ax,SEG data
+    mov es,ax
+    mov es:UseTimer,1
+    mov ds:uhc_int_mask,0
+
+ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
     mov cx,2*1Dh
@@ -3319,8 +3345,7 @@ ifTabLoop:
 ;
     mov dx,ds:uhc_io_base
     add dx,UsbIntReg
-;    mov ax,0Fh
-    xor ax,ax
+    mov ax,ds:uhc_int_mask
     out dx,ax
 ;
     mov dx,ds:uhc_io_base
@@ -3546,6 +3571,7 @@ uhci_thread:
     mov ds,ax
     GetThread
     mov ds:UhciThread,ax
+    mov ds:UseTimer,0
 ;    
     mov si,OFFSET UhciFunc
     mov cx,ds:UhciCount 
@@ -3594,6 +3620,10 @@ uhci_func_loop:
     pop ds
     add bx,2
     loop uhci_func_loop
+;
+    mov al,ds:UseTimer
+    or al,al
+    jz uhci_handle_loop
 ;    
     GetSystemTime
     add eax,11930

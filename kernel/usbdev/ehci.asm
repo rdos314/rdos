@@ -3807,7 +3807,7 @@ ifIrq:
 ifIrqFail:
     mov ax,SEG data
     mov es,ax
-    mov ds:UseTimer,1
+    mov es:UseTimer,1
 
 ifIntDone:    
     mov fs,ds:ehc_reg_sel

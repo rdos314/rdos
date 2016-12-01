@@ -3341,7 +3341,7 @@ ifIntDone:
 ifIrqFail:
     mov ax,SEG data
     mov es,ax
-    mov ds:UseTimer,1
+    mov es:UseTimer,1
 
 ifIrqDone: 
     mov ax,flat_sel
