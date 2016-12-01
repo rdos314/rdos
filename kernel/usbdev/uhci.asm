@@ -3093,6 +3093,34 @@ BiosHandoff    Proc near
     popad
     ret
 BiosHandoff Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           hub_timer
+;
+;           DESCRIPTION:    Hub timer
+;
+;           PARAMETERS:     ECX         Ehci function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hub_timer  Proc far
+    mov ds,cx
+    mov ds:uhc_update,1
+    mov bx,ds:uhc_thread
+    Signal
+;
+    add eax,1193 * 250
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET hub_timer
+    mov bx,ds:uhc_thread
+    mov cx,ds
+    StartTimer
+    retf32
+hub_timer       Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3109,9 +3137,30 @@ uhci_function_handler:
     mov ds,bx
     GetThread
     mov ds:uhc_thread,ax
+    mov ds:uhc_update,0
+    call PollFunction
+;    
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET hub_timer
+    mov bx,ds:uhc_thread
+    mov cx,ds
+    StartTimer
 
 ufhLoop:
     WaitForSignal
+;
+    xor ax,ax
+    xchg ax,ds:uhc_update
+    or ax,ax
+    jz ufhPipe
+;    
+    call PollFunction
+
+ufhPipe:       
     call UpdatePipeList
     jmp ufhLoop
         
@@ -3635,23 +3684,7 @@ uhci_func_loop:
     StartTimer
 
 uhci_handle_loop:
-    GetSystemTime
-    add eax,1193 * 250
-    adc edx,0
-    WaitForSignalWithTimeout
-;    
-    mov cx,ds:UhciCount 
-    mov bx,OFFSET UhciFunc
-
-uhci_poll_loop:
-    push ds
-    mov ds,[bx]
-    call PollFunction
-    pop ds
-    add bx,2
-    loop uhci_poll_loop
-;
-    jmp uhci_handle_loop    
+    TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
