@@ -82,7 +82,7 @@ uhc_period_td    DD ?
 uhc_io_base      DW ?
 
 uhc_pipe_list    DW ?
-uhc_spinlock     spinlock_typ <>
+uhc_pipe_section section_typ <>
 uhc_section      section_typ <>
 
 uhc_reset        DW ?
@@ -189,9 +189,8 @@ ENDIF
 
 UpdatePipeList  Proc near
     push ax
-
-uplLoop:
-    RequestSpinlock ds:uhc_spinlock
+;    
+    EnterSection ds:uhc_pipe_section
     mov ax,ds:uhc_pipe_list
     or ax,ax
     jz uplDone
@@ -222,17 +221,7 @@ uplElemLoop:
 ;    
     xor bx,bx
     xchg bx,fs:usp_signal
-    or bx,bx
-    jz uplNext
-;
-    ReleaseSpinlock ds:uhc_spinlock    
     Signal
-    pop di
-    pop dx
-    pop ebx
-    pop fs
-    pop es    
-    jmp uplLoop
 
 uplNext:    
     mov ax,fs:usp_next
@@ -247,7 +236,7 @@ uplNext:
     pop es    
 
 uplDone:    
-    ReleaseSpinlock ds:uhc_spinlock
+    LeaveSection ds:uhc_pipe_section
     pop ax
     ret
 UpdatePipeList  Endp
@@ -459,7 +448,7 @@ FreeBlock32     ENDP
 
 InsertPipe  Proc near
     push di
-    RequestSpinlock ds:uhc_spinlock
+    EnterSection ds:uhc_pipe_section
     mov di,ds:uhc_pipe_list
     or di,di
     je ipEmpty
@@ -485,7 +474,7 @@ ipEmpty:
     mov ds:uhc_pipe_list,fs
 
 ipDone:
-    ReleaseSpinlock ds:uhc_spinlock
+    LeaveSection ds:uhc_pipe_section
     mov fs:usp_signal,0
     ret
 InsertPipe  Endp
@@ -507,7 +496,7 @@ RemovePipe  Proc near
     push si
     push di
 ;       
-    RequestSpinlock ds:uhc_spinlock
+    EnterSection ds:uhc_pipe_section
     push ds
     mov si,fs:usp_prev
     mov di,fs:usp_next
@@ -531,7 +520,7 @@ rpEmpty:
     mov ds:uhc_pipe_list,0    
 
 rpDone:
-    ReleaseSpinlock ds:uhc_spinlock
+    LeaveSection ds:uhc_pipe_section
     pop di
     pop si
     ret
@@ -3418,9 +3407,9 @@ AddFunction  Proc near
     mov ds:uhc_pci_bus_dev,bx
     mov ds:uhc_pci_func,ch
     mov ds:uhc_pipe_list,0
-    InitSpinlock ds:uhc_spinlock
+    InitSection ds:uhc_pipe_section
     mov ds:uhc_reset,0
-InitSection ds:uhc_section
+    InitSection ds:uhc_section
 ;    
     mov eax,1000h
     AllocateBigLinear
