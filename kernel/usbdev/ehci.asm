@@ -2904,7 +2904,7 @@ atDone:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-detach_thread_name  DB 'EHCI Detach', 0
+detach_thread_name  DB 'EHCI Detach ', 0
 
 detach_thread:
     mov cl,dl
@@ -2942,7 +2942,7 @@ detach_thread:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_thread_name  DB 'EHCI Reset', 0
+reset_thread_name  DB 'EHCI Reset ', 0
 
 reset_thread:
     mov cl,dl
@@ -3066,17 +3066,11 @@ UpdatePort   Proc near
     mov ds:[4*edi].usb_timeout_arr,eax
     mov ds:[4*edi].usb_timeout_arr+4,edx
 ;    
-    mov bx,ds
     mov dx,cx
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET reset_thread_name
-    mov esi,OFFSET reset_thread
+    mov si,OFFSET reset_thread
+    mov di,OFFSET reset_thread_name
     mov ax,2
-    mov cx,stack0_size
-    CreateThread
+    call StartThread
     jmp upDone
     
 upNoReset:
@@ -3128,17 +3122,11 @@ upDetach:
     mov ds:[4*edi].usb_timeout_arr,eax
     mov ds:[4*edi].usb_timeout_arr+4,edx
 ;    
-    mov bx,ds
     mov dx,cx
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET detach_thread_name
-    mov esi,OFFSET detach_thread
+    mov si,OFFSET detach_thread
+    mov di,OFFSET detach_thread_name
     mov ax,2
-    mov cx,stack0_size
-    CreateThread
+    call StartThread
     jmp upDone
 
 upCheckTimeout:
