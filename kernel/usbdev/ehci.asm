@@ -2743,7 +2743,7 @@ SetMaxLen   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-attach_thread_name  DB 'EHCI Attach', 0
+attach_thread_name  DB 'EHCI Attach ', 0
 
 attach_thread:
     mov cl,dl
@@ -3104,17 +3104,11 @@ upAttach:
     mov ds:[4*edi].usb_timeout_arr,eax
     mov ds:[4*edi].usb_timeout_arr+4,edx
 ;    
-    mov bx,ds
     mov dx,cx
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET attach_thread_name
-    mov esi,OFFSET attach_thread
+    mov si,OFFSET attach_thread
+    mov di,OFFSET attach_thread_name
     mov ax,2
-    mov cx,stack0_size
-    CreateThread
+    call StartThread
     jmp upDone
 
 upDetach:
@@ -3592,6 +3586,62 @@ HexToAscii      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           StartThread
+;
+;       DESCRIPTION:    Start thread
+;
+;       PARAMETERS:     DS      Function sel (passed as bx)
+;                       DX      Passed through
+;                       AX      Prio
+;                       SI      Entry
+;                       DI      Name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartThread Proc near
+    push es            
+    push ax
+    push si
+;
+    mov si,di
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor di,di
+
+sfCopyLoop:
+    mov al,cs:[si]
+    inc si
+    or al,al
+    jz sfCopyDone
+;
+    stosb
+    jmp sfCopyLoop
+
+sfCopyDone:
+    mov ax,ds:usb_controller_id
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;   
+    pop si         
+    mov bx,ds
+    xor di,di
+    mov ax,cs
+    mov ds,ax
+    pop ax
+    mov cx,stack0_size
+    CreateThread
+;
+    FreeMem
+    pop es
+    ret
+StartThread Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           StartFunctionThread
 ;
 ;           DESCRIPTION:    Start EHCI function thread
@@ -3603,40 +3653,10 @@ HexToAscii      ENDP
 func_name    DB 'EHCI ', 0
 
 StartFunctionThread Proc near
-    push es            
-    mov eax,100h
-    AllocateSmallGlobalMem
-    xor di,di
-    mov si,OFFSET func_name
-
-sftCopyLoop:
-    mov al,cs:[si]
-    inc si
-    or al,al
-    jz sftCopyDone
-;
-    stosb
-    jmp sftCopyLoop
-
-sftCopyDone:
-    mov ax,ds:usb_controller_id
-    call HexToAscii
-    stosw
-;
-    xor al,al
-    stosb
-;            
-    mov bx,ds
-    xor di,di
-    mov dx,cs
-    mov ds,dx
     mov si,OFFSET ehci_function_handler
+    mov di,OFFSET func_name
     mov ax,5
-    mov cx,stack0_size
-    CreateThread
-;
-    FreeMem
-    pop es
+    call StartThread
     ret
 StartFunctionThread Endp
 
