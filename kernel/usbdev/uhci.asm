@@ -82,7 +82,7 @@ uhc_period_td    DD ?
 uhc_io_base      DW ?
 
 uhc_pipe_list    DW ?
-uhc_pipe_section section_typ <>
+uhc_spinlock     spinlock_typ <>
 uhc_section      section_typ <>
 
 uhc_reset        DW ?
@@ -188,8 +188,9 @@ ENDIF
 
 UpdatePipeList  Proc near
     push ax
-;    
-    EnterSection ds:uhc_pipe_section
+
+uplLoop:
+    RequestSpinlock ds:uhc_spinlock
     mov ax,ds:uhc_pipe_list
     or ax,ax
     jz uplDone
@@ -220,7 +221,17 @@ uplElemLoop:
 ;    
     xor bx,bx
     xchg bx,fs:usp_signal
+    or bx,bx
+    jz uplNext
+;
+    ReleaseSpinlock ds:uhc_spinlock    
     Signal
+    pop di
+    pop dx
+    pop ebx
+    pop fs
+    pop es    
+    jmp uplLoop
 
 uplNext:    
     mov ax,fs:usp_next
@@ -235,7 +246,7 @@ uplNext:
     pop es    
 
 uplDone:    
-    LeaveSection ds:uhc_pipe_section
+    ReleaseSpinlock ds:uhc_spinlock
     pop ax
     ret
 UpdatePipeList  Endp
@@ -281,15 +292,8 @@ timer_func_loop:
     int 3
 
 tNonFatal:
-    test al,1
-    jz tSignalOk
-;    
-    push bx
-    mov bx,ds:uhc_thread
-    Signal
-    pop bx
-
-tSignalOk:
+    call UpdatePipeList
+;
     pop ds
     add bx,2
     loop timer_func_loop
@@ -417,7 +421,7 @@ FreeBlock32     ENDP
 
 InsertPipe  Proc near
     push di
-    EnterSection ds:uhc_pipe_section
+    RequestSpinlock ds:uhc_spinlock
     mov di,ds:uhc_pipe_list
     or di,di
     je ipEmpty
@@ -443,7 +447,7 @@ ipEmpty:
     mov ds:uhc_pipe_list,fs
 
 ipDone:
-    LeaveSection ds:uhc_pipe_section
+    ReleaseSpinlock ds:uhc_spinlock
     mov fs:usp_signal,0
     ret
 InsertPipe  Endp
@@ -465,7 +469,7 @@ RemovePipe  Proc near
     push si
     push di
 ;       
-    EnterSection ds:uhc_pipe_section
+    RequestSpinlock ds:uhc_spinlock
     push ds
     mov si,fs:usp_prev
     mov di,fs:usp_next
@@ -489,7 +493,7 @@ rpEmpty:
     mov ds:uhc_pipe_list,0    
 
 rpDone:
-    LeaveSection ds:uhc_pipe_section
+    ReleaseSpinlock ds:uhc_spinlock
     pop di
     pop si
     ret
@@ -3371,7 +3375,7 @@ AddFunction  Proc near
     mov ds:uhc_pci_bus_dev,bx
     mov ds:uhc_pci_func,ch
     mov ds:uhc_pipe_list,0
-    InitSection ds:uhc_pipe_section
+    InitSpinlock ds:uhc_spinlock
     mov ds:uhc_reset,0
     InitSection ds:uhc_section
 ;    
@@ -3551,7 +3555,6 @@ uhci_func_loop:
     push cx
     mov ds,[bx]
     call InitFunction
-    call StartFunctionThread
     pop cx
     pop bx
     pop ds
