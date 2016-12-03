@@ -392,9 +392,6 @@ void cdecl main()
 
         RdosWaitMilli(250);
 
-/*        RdosSetWriteDataBreak(0, 1, &vbe, 4);
-        RdosClearBreak(0, 1); */
-
         Keyboard = new TKeyboardDevice;
         Keyboard->OnKeyPress = KeyPress;
         Keyboard->OnKeyRelease = KeyRelease;
@@ -406,14 +403,6 @@ void cdecl main()
         Mouse->OnRightUp = RightUp;
         Mouse->OnRightDown = RightDown;
 
-//        for (i = 0x10; i < 0x200; i++)
-//        {
-//            if (RdosQueryVideoMode(i, &bits, &x, &y))
-//                printf("Mode: %04hX, %dx%d, %d-bits\r\n", i, x, y, bits);
-//        }
-//
-//        RdosWaitMilli(7500);
-                
 
         vbe = new TVideoGraphicDevice(24, 1366, 768);
 //      vbe = new TVideoGraphicDevice(24, 1280, 800);

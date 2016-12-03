@@ -207,7 +207,8 @@ int main()
     NtpIp = RdosNameToIp("ntp.lth.se");
     RdosSyncTime(NtpIp);
 
-    vbe = new TVideoGraphicDevice(32, 1280, 768);
+    vbe = new TVideoGraphicDevice(32, 1280, 1024);
+//    vbe = new TVideoGraphicDevice(32, 1280, 768);
     control = new TDisplayControlThread("Control", vbe);
     vbe->SetFont(&Font);
 
@@ -218,7 +219,7 @@ int main()
 
     vbe->SetDrawColor(0, 20, 50);
     vbe->SetFilledStyle();
-    vbe->DrawRect(0, 0, 1279, 767);
+    vbe->DrawRect(0, 0, vbe->GetWidth(), vbe->GetHeight());
 
     RadControl = new TRadControl(control, 5, 500, 785, 30 * 7);
 
