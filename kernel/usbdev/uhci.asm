@@ -3372,6 +3372,7 @@ InitPciAdapter  Endp
 uhci_name       DB 'UHCI',0
 
 uhci_thread:
+    AddThreadInt
     mov ax,SEG data
     mov ds,ax
     GetThread
