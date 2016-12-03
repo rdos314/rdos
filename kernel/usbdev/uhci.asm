@@ -74,8 +74,6 @@ uhc_int_phys     DD ?
 uhc_int_linear   DD ?
 uhc_int_sel      DW ?
 uhc_thread       DW ?
-uhc_update       DW ?
-uhc_int_mask     DW ?
 
 uhc_status       DW ?
 
@@ -155,12 +153,10 @@ UhciUsedBlocks  DD ?
 UhciCloseCount  DD ?
 UhciList32      DD ?
 UhciSection     section_typ <>
-UhciThread      DW ?
 
 WaitSection     section_typ <>
 WaitThreadArr   DW 3 DUP(?)
 Started         DB ?
-UseTimer        DB ?
 
 UhciCount       DW ?
 UhciFunc        DW 16 DUP (?)
@@ -310,46 +306,6 @@ tSignalOk:
     StartTimer
     retf32
 port_timer  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UhciInt
-;
-;           DESCRIPTION:    UHCI interrupt
-;
-;       PARAMETERS:     DS      Function selector
-;
-;           RETURNS:        
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UhciInt Proc far    
-    int 3
-    mov dx,ds:uhc_io_base
-    add dx,UsbStatusReg
-;
-    in ax,dx    
-    or ds:uhc_status,ax
-    out dx,ax
-;
-    test al,20h
-    jz uiNonFatal
-;
-    int 3
-
-uiNonFatal:
-    test al,1
-    jz uiDone
-;
-    NotifyIrqActivity    
-    mov bx,ds:uhc_thread
-    Signal    
-
-uiDone:    
-    retf32
-UhciInt  Endp
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3094,33 +3050,6 @@ BiosHandoff    Proc near
     ret
 BiosHandoff Endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           hub_timer
-;
-;           DESCRIPTION:    Hub timer
-;
-;           PARAMETERS:     ECX         Ehci function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hub_timer  Proc far
-    mov ds,cx
-    mov ds:uhc_update,1
-    mov bx,ds:uhc_thread
-    Signal
-;
-    add eax,1193 * 250
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET hub_timer
-    mov bx,ds:uhc_thread
-    mov cx,ds
-    StartTimer
-    retf32
-hub_timer       Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3137,30 +3066,9 @@ uhci_function_handler:
     mov ds,bx
     GetThread
     mov ds:uhc_thread,ax
-    mov ds:uhc_update,0
-    call PollFunction
-;    
-    GetSystemTime
-    add eax,1193 * 250
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET hub_timer
-    mov bx,ds:uhc_thread
-    mov cx,ds
-    StartTimer
 
 ufhLoop:
     WaitForSignal
-;
-    xor ax,ax
-    xchg ax,ds:uhc_update
-    or ax,ax
-    jz ufhPipe
-;    
-    call PollFunction
-
-ufhPipe:       
     call UpdatePipeList
     jmp ufhLoop
         
@@ -3337,24 +3245,6 @@ InitFunction    Proc near
     WritePciWord   
     
 ifNotLegacy:    
-    jmp ifIrqFail
-    
-    GetPciIrqNr
-    jc ifIrqFail
-;    
-    mov ds:uhc_int_mask,0Fh
-    mov ah,14h
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET UhciInt
-    RequestIrqHandler
-    jmp ifIntDone
-
-ifIrqFail:
-    mov ax,SEG data
-    mov es,ax
-    mov es:UseTimer,1
-    mov ds:uhc_int_mask,0
 
 ifIntDone:
     mov si,OFFSET uhci_tab
@@ -3394,7 +3284,7 @@ ifTabLoop:
 ;
     mov dx,ds:uhc_io_base
     add dx,UsbIntReg
-    mov ax,ds:uhc_int_mask
+    xor ax,ax
     out dx,ax
 ;
     mov dx,ds:uhc_io_base
@@ -3619,8 +3509,6 @@ uhci_thread:
     mov ax,SEG data
     mov ds,ax
     GetThread
-    mov ds:UhciThread,ax
-    mov ds:UseTimer,0
 ;    
     mov si,OFFSET UhciFunc
     mov cx,ds:UhciCount 
@@ -3669,10 +3557,6 @@ uhci_func_loop:
     pop ds
     add bx,2
     loop uhci_func_loop
-;
-    mov al,ds:UseTimer
-    or al,al
-    jz uhci_handle_loop
 ;    
     GetSystemTime
     add eax,11930
@@ -3684,7 +3568,21 @@ uhci_func_loop:
     StartTimer
 
 uhci_handle_loop:
-    TerminateThread
+    mov ax,250
+    WaitMilliSec
+;    
+    mov cx,ds:UhciCount 
+    mov bx,OFFSET UhciFunc
+
+uhci_poll_loop:
+    push ds
+    mov ds,[bx]
+    call PollFunction
+    pop ds
+    add bx,2
+    loop uhci_poll_loop
+;
+    jmp uhci_handle_loop    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
