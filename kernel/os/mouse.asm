@@ -1304,6 +1304,7 @@ mouse_init_ok:
     mov es,ax
     GetThread
     mov es:md_mouse_thread,ax
+
 mouse_thread_loop:
     mov ax,SEG data
     mov es,ax

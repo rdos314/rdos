@@ -1037,7 +1037,7 @@ init_enable_prefix:
 
 init_mouse_revoke:
     mov ax,0FFh
-    call SendCommand
+    call SendMouseCommand
 
 init_mouse_done:
     pop di
