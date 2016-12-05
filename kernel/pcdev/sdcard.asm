@@ -32,6 +32,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
+INCLUDE ..\os\proc.inc
 INCLUDE pci.inc
 
 MAX_SD_DEVICES      = 32
@@ -160,28 +161,25 @@ SdInt  Proc far
     test ah,80h
     jz siNoError
 ;
+    push ax
     mov ax,es:REG_INT_ERROR_STATUS
     lock or ds:sd_pend_error,ax
     mov es:REG_INT_ERROR_STATUS,ax
+    pop ax
     
 siNoError:    
     and word ptr es:REG_INT_STATUS_ENABLE, NOT 100h    
     mov es:REG_INT_STATUS,al
     or word ptr es:REG_INT_STATUS_ENABLE, 100h
+    or al,al
+    jz sdiDone
+;
+    NotifyIrqActivity
+;    and word ptr es:REG_INT_STATUS_ENABLE, NOT 100h    
+;    mov es:REG_INT_STATUS,al
+;    or word ptr es:REG_INT_STATUS_ENABLE, 100h
 ;    
     mov bx,ds:sd_serv_thread
-;    or bx,bx
-;    jz sdiSignal
-;    
-;    mov al,ds:sd_ok
-;    or al,al
-;    jz sdiSignal
-;
-;    GetSystemTime
-;    and ax,1FFh
-;    jz sdiDone
-
-sdiSignal:    
     mov ds:sd_has_int,1
     Signal    
 
