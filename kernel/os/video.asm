@@ -2942,13 +2942,79 @@ write_size_string32     ENDP
 
 write_attr_string_name  DB 'Write Attribute String',0
 
+write_attr_string       Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ebx
+    push ecx
+    push edi
+;
+    push ax
+    mov ax,es
+    mov gs,ax
+    mov ax,flat_sel
+    mov es,ax
+    GetThread
+    mov ds,ax
+    mov fs,ds:p_app_sel
+    mov ax,fs:app_console
+    mov fs,ax    
+    pop ax
+;
+    push ds:p_row
+    push ds:p_col
+;    
+    mov ds:p_row,dx
+    mov ds:p_col,ax
+    HideMouse
+    or ecx,ecx
+    jz write_attr_show
+
+write_attr_loop:
+    mov al,gs:[edi]
+    mov bl,gs:[edi+1]
+    mov bh,bl
+    and bl,0Fh
+    shr bh,4
+    call WriteConsole        
+    add edi,2
+    loop write_attr_loop
+
+write_attr_show:    
+    pop ds:p_col
+    pop ds:p_row
+    ShowMouse
+
+write_attr_done:
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+write_attr_string       Endp
+
 write_attr_string16     PROC far
-    int 3
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call write_attr_string
+;
+    pop edi
+    pop ecx        
     ret
 write_attr_string16     ENDP
 
 write_attr_string32     PROC far
-    int 3
+    call write_attr_string
     ret
 write_attr_string32     ENDP
     
