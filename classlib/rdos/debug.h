@@ -44,29 +44,29 @@ struct TCreateProcessEvent
     int Handle;
     int Process;
     int Thread;
-	 unsigned int ImageBase;
-	 unsigned int ImageSize;
-	 unsigned int ObjectRva;
-	 unsigned int FsLinear;
-	 unsigned int StartEip;
-	 unsigned short StartCs;
+    unsigned int ImageBase;
+    unsigned int ImageSize;
+    unsigned int ObjectRva;
+    unsigned int FsLinear;
+    unsigned int StartEip;
+    unsigned short StartCs;
 };
 
 struct TCreateThreadEvent
 {
-	 int Thread;
-	 unsigned int FsLinear;
-	 unsigned int StartEip;
-	 unsigned short StartCs;
+    int Thread;
+    unsigned int FsLinear;
+    unsigned int StartEip;
+    unsigned short StartCs;
 };
 
 struct TLoadDllEvent
 {
-	 int FileHandle;
-	 int Handle;
-	 unsigned int ImageBase;
-	 unsigned int ImageSize;
-	 unsigned int ObjectRva;
+    int FileHandle;
+    int Handle;
+    unsigned int ImageBase;
+    unsigned int ImageSize;
+    unsigned int ObjectRva;
 };
 
 struct TExceptionEvent
@@ -85,10 +85,10 @@ struct TKernelExceptionEvent
 class TDebugBreak
 {
 public:
-	TDebugBreak(int Sel, long Offset, int Hw);
+    TDebugBreak(int Sel, long Offset, int Hw);
 
-	int Sel;
-	long Offset;
+    int Sel;
+    long Offset;
     char Instr;
 
     int UseHw;
@@ -100,11 +100,11 @@ public:
 class TDebugWatch
 {
 public:
-	TDebugWatch(int Sel, long Offset, int Size);
+    TDebugWatch(int Sel, long Offset, int Size);
 
-	int Sel;
-	long Offset;
-	int Size;
+    int Sel;
+    long Offset;
+    int Size;
 
     TDebugWatch *Next;
 };
@@ -124,7 +124,6 @@ public:
     int WriteMem(int Sel, long Offset, char *Buf, int Size);
     void WriteRegs();
 
-    void ClearBreak(TDebugBreak *Break);
     void ActivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList);
     void DeactivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList);
 
@@ -186,9 +185,9 @@ protected:
     void RecalcBreak();
 
     int FDebug;
-	int FHasBreak;
-	int FHasTrace;
-	int FHasException;
+    int FHasBreak;
+    int FHasTrace;
+    int FHasException;
     int FWasTrace;        
 };
 
@@ -206,11 +205,11 @@ public:
     int FileHandle;
     int Handle;
     unsigned int ImageBase;
-	unsigned int ImageSize;
-	unsigned int ObjectRva;
-	unsigned short int CodeSel;
-	unsigned short int DataSel;
-	unsigned int DataSize;
+    unsigned int ImageSize;
+    unsigned int ObjectRva;
+    unsigned short int CodeSel;
+    unsigned short int DataSel;
+    unsigned int DataSize;
 
     int FNew;
 
@@ -221,10 +220,10 @@ public:
 class TDebug : public TWaitDevice
 {
 public:
-	TDebug(const char *Program, const char *Param, const char *StartDir, const char *LogFile);
-	~TDebug();
+    TDebug(const char *Program, const char *Param, const char *StartDir, const char *LogFile);
+    ~TDebug();
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
+    virtual void DeviceName(char *Name, int MaxLen) const;
 
     TDebugThread *GetMainThread();
     TDebugModule *GetMainModule();
@@ -242,78 +241,82 @@ public:
     TDebugModule *LockModule(int Handle);
     void UnlockModule();
 
-	void AddBreak(int Sel, long Offset, int Hw);
-	void ClearBreak(int Sel, long Offset);
-	int IsBreak(int Sel, long Offset);
+    void AddBreak(int Sel, long Offset, int Hw);
+    void ClearBreak(int Sel, long Offset);
+    int IsBreak(int Sel, long Offset);
 
-	void AddWatch(int Sel, long Offset, int Size);
-	void ClearWatch(int Sel, long Offset, int Size);
-	int IsWatch(int Sel, long Offset);
+    void AddWatch(int Sel, long Offset, int Size);
+    void ClearWatch(int Sel, long Offset, int Size);
+    int IsWatch(int Sel, long Offset);
 
     void WaitForLoad(int timeout);
-	void Go();
-	void Trace();
+    void Go();
+    void Trace();
 
     int AsyncGo(int Timeout);
     int AsyncTrace(int Timeout);
     int AsyncPoll(int Timeout);
     void ExitAsync();
 
-	int HasThreadChange();
+    int HasThreadChange();
     void ClearThreadChange();
 
-	int HasModuleChange();
-	void ClearModuleChange();
+    int HasModuleChange();
+    void ClearModuleChange();
 
-	int IsTerminated();
+    int IsTerminated();
 
-	int HasConfigChange();
-	void ClearConfigChange();
+    int HasConfigChange();
+    void ClearConfigChange();
 
-	int GetMemoryModel();
+    int GetMemoryModel();
 
     void LogMsg(const char *Msg);
 
 protected:
-	virtual void SignalNewData();
-	virtual void Add(TWait *Wait);
-	virtual void Execute();
+    virtual void SignalNewData();
+    virtual void Add(TWait *Wait);
+    virtual void Execute();
 
-	void InsertThread(TDebugThread *thread);
+    void InsertThread(TDebugThread *thread);
 
     TDebugModule *FindModule(int Cs);
-	void InsertModule(TDebugModule *module);
+    void InsertModule(TDebugModule *module);
 
-	int HasModule(const char *Name);
-	void UpdateModules();
+    int HasModule(const char *Name);
+    void UpdateModules();
 
-	void RemoveThread(int thread);
-	void RemoveModule(int handle);
+    void RemoveThread(int thread);
+    void RemoveModule(int handle);
 
-	void DoGo();
-	void DoTrace();
+    void DoGo();
+    void DoTrace();
+
+    void AddBreak(TDebugBreak *b);
+    void RemoveBreak(TDebugBreak *b);
 
     void HandleCreateProcess(TCreateProcessEvent *event);
     void HandleTerminateProcess(int exitcode);
     void HandleCreateThread(TCreateThreadEvent *event);
     void HandleTerminateThread(int thread);
-	void HandleException(TExceptionEvent *event, int thread);
-	void HandleKernelException(TKernelExceptionEvent *event, int thread);
+    void HandleException(TExceptionEvent *event, int thread);
+    void HandleKernelException(TKernelExceptionEvent *event, int thread);
     void HandleLoadDll(TLoadDllEvent *event);
     void HandleFreeDll(int handle);
 
     TString FProgram;
     TString FParam;
-	TString FStartDir;
-	int FHandle;
+    TString FStartDir;
+    int FHandle;
 
-	TSection FSection;
+    TSection FSection;
 
     TDebugThread *CurrentThread;
-	TDebugThread *ThreadList;
-	TDebugModule *ModuleList;
+    TDebugThread *ThreadList;
+    TDebugModule *ModuleList;
 
-    TDebugBreak *BreakList;
+    TDebugBreak *HwBreakList;
+    TDebugBreak *SwBreakList;
     TDebugWatch *WatchList;
 
     TSignalDevice UserSignal;

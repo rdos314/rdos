@@ -445,11 +445,6 @@ void TWdAsyncService::ReqAsyncAddBreak()
     int Sel = GetWord();
     int Local = GetByte();
     int Hw;
-
-    if (Local)
-        printf("Add local async break: %04hX:%08lX\r\n", Sel, Offset);
-    else
-        printf("Add global async break: %04hX:%08lX\r\n", Sel, Offset);
         
     if (Local)
         Hw = TRUE;
@@ -481,8 +476,6 @@ void TWdAsyncService::ReqAsyncRemoveBreak()
     TDebug *debug = GetDebug();
     long Offset = GetDword();
     int Sel = GetWord();
-
-    printf("Remove async break: %04hX:%08lX\r\n", Sel, Offset);
 
     if (debug)
         debug->ClearBreak(Sel, Offset);

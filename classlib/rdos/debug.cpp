@@ -338,27 +338,6 @@ void TDebugThread::SetupTrace()
 
 /*##########################################################################
 #
-#   Name       : TDebugThread::ClearBreak
-#
-#   Purpose....: Clear breakpoint
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDebugThread::ClearBreak(TDebugBreak *Break)
-{
-    if ((Break->Sel & 0x3) == 0x3)
-    {
-        if (Break->IsActive)
-            RdosWriteThreadMem(ThreadID, Break->Sel, Break->Offset, &Break->Instr, 1);
-        Break->IsActive = FALSE;
-    }
-}
-
-/*##########################################################################
-#
 #   Name       : TDebugThread::ActivateBreaks
 #
 #   Purpose....: Activate breakpoints
@@ -368,12 +347,21 @@ void TDebugThread::ClearBreak(TDebugBreak *Break)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDebugThread::ActivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList)
+void TDebugThread::ActivateBreaks(TDebugBreak *HwBreakList, TDebugWatch *WatchList)
 {
-    TDebugBreak *b = BreakList;
+    TDebugBreak *b = HwBreakList;
     TDebugWatch *w = WatchList;
-    char brinstr = 0xCC;
     int bnum = 0;
+
+    while (b)
+    {
+        if (bnum < 4)
+        {
+            RdosSetCodeBreak(ThreadID, bnum, b->Sel, b->Offset);
+            bnum++;
+        }
+        b = b->Next;
+    }
 
     while (w)
     {
@@ -385,29 +373,6 @@ void TDebugThread::ActivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList
         w = w->Next;
     }
 
-
-    while (b)
-    {
-        if ((b->Sel & 0x3) == 0x3)
-        {
-            if (!b->IsActive)
-            {
-                RdosReadThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
-                RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &brinstr, 1);
-            }
-            b->IsActive = TRUE;
-        }
-        else
-        {
-            if (bnum < 4)
-            {
-                RdosSetCodeBreak(ThreadID, bnum, b->Sel, b->Offset);
-                bnum++;
-            }
-        }
-
-        b = b->Next;
-    }
 }
 
 /*##########################################################################
@@ -421,42 +386,30 @@ void TDebugThread::ActivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList
 #   Returns....: *
 #
 ##########################################################################*/
-void TDebugThread::DeactivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList)
+void TDebugThread::DeactivateBreaks(TDebugBreak *HwBreakList, TDebugWatch *WatchList)
 {
-    TDebugBreak *b = BreakList;
+    TDebugBreak *b = HwBreakList;
     TDebugWatch *w = WatchList;
     int bnum = 0;
 
-    if (!FWasTrace)
+    while (b)
     {
-        while (w)
+        if (bnum < 4)
         {
-            if (bnum < 4)
-            {
-                RdosClearBreak(ThreadID, bnum);
-                bnum++;
-            }
-            w = w->Next;
+            RdosClearBreak(ThreadID, bnum);
+            bnum++;
         }
+        b = b->Next;
+    }
 
-        while (b)
+    while (w)
+    {
+        if (bnum < 4)
         {
-            if ((b->Sel & 0x3) == 0x3)
-            {
-                if (b->IsActive)
-                    RdosWriteThreadMem(ThreadID, b->Sel, b->Offset, &b->Instr, 1);
-                b->IsActive = FALSE;
-            }
-            else
-            {
-                if (bnum < 4)
-                {
-                    RdosClearBreak(ThreadID, bnum);
-                    bnum++;
-                }
-            }
-            b = b->Next;
+            RdosClearBreak(ThreadID, bnum);
+            bnum++;
         }
+        w = w->Next;
     }
 }
 
@@ -1031,7 +984,8 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir, con
     ModuleList = 0;
     CurrentThread = 0;
     NewThread = 0;
-    BreakList = 0;
+    HwBreakList = 0;
+    SwBreakList = 0;
     WatchList = 0;
 
     FThreadChanged = FALSE;
@@ -1550,7 +1504,7 @@ void TDebug::SetCurrentThread(int ThreadID)
     FSection.Enter();
 
     if (CurrentThread)
-        CurrentThread->DeactivateBreaks(BreakList, WatchList);
+        CurrentThread->DeactivateBreaks(HwBreakList, WatchList);
         
     t = ThreadList;
     while (t && t->ThreadID != ThreadID)
@@ -1822,6 +1776,62 @@ void TDebug::UpdateModules()
 
 /*##########################################################################
 #
+#   Name       : TDebug::AddBreak
+#
+#   Purpose....: Add a soft breakpoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::AddBreak(TDebugBreak *b)
+{
+    char brinstr = 0xCC;
+    char str[256];
+
+    sprintf(str, "Add break: %04hX:%08lX", b->Sel, b->Offset);
+    LogMsg(str);
+
+    if (ThreadList)
+    {
+        if (!b->IsActive)
+        {
+            RdosReadThreadMem(ThreadList->ThreadID, b->Sel, b->Offset, &b->Instr, 1);
+            RdosWriteThreadMem(ThreadList->ThreadID, b->Sel, b->Offset, &brinstr, 1);
+        }
+        b->IsActive = TRUE;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::RemoveBreak
+#
+#   Purpose....: Remove a soft breakpoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::RemoveBreak(TDebugBreak *b)
+{
+    char str[256];
+
+    sprintf(str, "Remove break: %04hX:%08lX", b->Sel, b->Offset);
+    LogMsg(str);
+
+    if (ThreadList)
+    {
+        if (b->IsActive)
+            RdosWriteThreadMem(ThreadList->ThreadID, b->Sel, b->Offset, &b->Instr, 1);
+        b->IsActive = FALSE;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::IsBreak
 #
 #   Purpose....: Check for breakpoint
@@ -1838,7 +1848,17 @@ int TDebug::IsBreak(int Sel, long Offset)
     
     FSection.Enter();
 
-    b = BreakList;
+    b = HwBreakList;
+
+    while (b && !ok)
+    {
+        if (b->Sel == Sel && b->Offset == Offset)
+            ok = TRUE;
+        else
+            b = b->Next;
+    }
+
+    b = SwBreakList;
 
     while (b && !ok)
     {
@@ -1905,14 +1925,27 @@ void TDebug::AddBreak(int Sel, long Offset, int Hw)
 
     char str[128];
 
-    sprintf(str, "Break: %04hX:%08lX", Sel, Offset);
-    LogMsg(str);
+    if (Hw)
+    {
+        sprintf(str, "Local break: %04hX:%08lX", Sel, Offset);
+        LogMsg(str);
+    }
+    else
+    {
+        AddBreak(newbr);
+        sprintf(str, "Global break: %04hX:%08lX", Sel, Offset);
+        LogMsg(str);
+    }
     
     FSection.Enter();
 
     newbr->Next = 0;
 
-    b = BreakList;
+    if (Hw)
+        b = HwBreakList;
+    else
+        b = SwBreakList;
+
     if (b)
     {
         while (b->Next)
@@ -1926,7 +1959,12 @@ void TDebug::AddBreak(int Sel, long Offset, int Hw)
             b->Next = newbr;            
     }
     else
-        BreakList = newbr;
+    {
+        if (Hw)
+            HwBreakList = newbr;
+        else
+            SwBreakList = newbr;
+    }
 
     FSection.Leave();
 }
@@ -1950,21 +1988,13 @@ void TDebug::ClearBreak(int Sel, long Offset)
     
     FSection.Enter();
 
-    b = BreakList;
+    b = HwBreakList;
 
     if (b)
     {
         if (b->Offset == Offset && b->Sel == Sel)
         {
-            BreakList = b->Next;
-
-            if (b->IsActive)
-            {
-                mthread = GetMainThread();
-                if (mthread)
-                    mthread->ClearBreak(b);
-            }
-            
+            HwBreakList = b->Next;
             delete b;
         }
         else
@@ -1976,15 +2006,34 @@ void TDebug::ClearBreak(int Sel, long Offset)
                 if (delbr->Offset == Offset && delbr->Sel == Sel)
                 {
                     b->Next = delbr->Next;
+                    delete delbr;
+                }
+                else
+                    b = b->Next;                    
+            }
+        }
+    }
 
+    b = SwBreakList;
 
-                    if (delbr->IsActive)
-                    {
-                        mthread = GetMainThread();
-                        if (mthread)
-                            mthread->ClearBreak(delbr);
-                    }
-
+    if (b)
+    {
+        if (b->Offset == Offset && b->Sel == Sel)
+        {
+            SwBreakList = b->Next;
+            RemoveBreak(b);
+            delete b;
+        }
+        else
+        {
+            while (b->Next)
+            {
+                delbr = b->Next;
+                
+                if (delbr->Offset == Offset && delbr->Sel == Sel)
+                {
+                    b->Next = delbr->Next;
+                    RemoveBreak(b);
                     delete delbr;
                 }
                 else
@@ -2140,14 +2189,14 @@ void TDebug::DoGo()
     if ((CurrentThread->Cs & 0x3) == 0x3)
     {
         CurrentThread->SetupGo();
-        CurrentThread->ActivateBreaks(BreakList, WatchList);
+        CurrentThread->ActivateBreaks(HwBreakList, WatchList);
         RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
     }
     else
     {
         while (RdosGetDebugThread() != CurrentThread->ThreadID)
             RdosDebugNext();
-        CurrentThread->ActivateBreaks(BreakList, WatchList);
+        CurrentThread->ActivateBreaks(HwBreakList, WatchList);
         RdosDebugRun();
     }
 }
@@ -2201,19 +2250,9 @@ void TDebug::Trace()
             
         CurrentThread->ReadMem(Sel, Offset, Instr, 2);
 
-        if (Instr[0] == 0xF && Instr[1] == 0xB)
-        {
-            Offset += 7;
-            AddBreak(Sel, Offset, TRUE);
-            Go();
-            ClearBreak(Sel, Offset);
-        }
-        else
-        {
-            UserSignal.Clear();
-            DoTrace();
-            UserSignal.WaitForever();
-        }
+        UserSignal.Clear();
+        DoTrace();
+        UserSignal.WaitForever();
     }
 }
 
@@ -2275,29 +2314,15 @@ int TDebug::AsyncTrace(int Timeout)
             
         CurrentThread->ReadMem(FAsyncSel, FAsyncOffset, Instr, 2);
 
-        if (Instr[0] == 0xF && Instr[1] == 0xB)
-        {
-            FAsyncOffset += 7;
-            AddBreak(FAsyncSel, FAsyncOffset, TRUE);
-            ok = AsyncGo(Timeout);
-            if (ok)
-                ClearBreak(FAsyncSel, FAsyncOffset);
-            else
-                FAsyncBreak = TRUE;
-            return ok;
-        }
+        UserSignal.Clear();
+        DoTrace();    
+
+        wait = UserSignal.WaitTimeout(Timeout);
+
+        if (wait)
+            return TRUE;
         else
-        {
-            UserSignal.Clear();
-            DoTrace();    
-
-            wait = UserSignal.WaitTimeout(Timeout);
-
-            if (wait)
-                return TRUE;
-            else
-                return FALSE;
-        }
+            return FALSE;
     }
     return TRUE;
 }
@@ -2596,7 +2621,6 @@ void TDebug::SignalNewData()
             sprintf(str, "Create thread, ID: %d", cte.Thread);
             LogMsg(str);
             HandleCreateThread(&cte);
-            FThreadChanged = TRUE;
             break;
 
         case EVENT_CREATE_PROCESS:
@@ -2611,13 +2635,11 @@ void TDebug::SignalNewData()
             FThreadChanged = TRUE;
             if (CurrentThread)
             {
-                CurrentThread->DeactivateBreaks(BreakList, WatchList);
+                CurrentThread->DeactivateBreaks(HwBreakList, WatchList);
                 if (CurrentThread->ThreadID == thread)
                     CurrentThread = 0;
             }
             CurrentThread = ThreadList;
-            if (CurrentThread)
-                CurrentThread->ActivateBreaks(BreakList, WatchList);
             break;
 
         case EVENT_TERMINATE_PROCESS:
@@ -2672,7 +2694,7 @@ void TDebug::SignalNewData()
 
         if (CurrentThread)
         {
-            CurrentThread->DeactivateBreaks(BreakList, WatchList);
+            CurrentThread->DeactivateBreaks(HwBreakList, WatchList);
 
             if (thread != CurrentThread->ThreadID)
             {
