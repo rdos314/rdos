@@ -34,16 +34,16 @@ class TWdAsyncFactory : public TWdSupplFactory
 {
 public:
     TWdAsyncFactory(TWdSocketServerFactory *factory);
-	virtual ~TWdAsyncFactory();
-	
-	virtual TWdSupplService *Create(TWdSocketServer *server);
+        virtual ~TWdAsyncFactory();
+        
+        virtual TWdSupplService *Create(TWdSocketServer *server);
 };
 
 class TWdAsyncService : public TWdSupplService
 {
 public:
     TWdAsyncService(TWdSocketServer *server);
-	virtual ~TWdAsyncService();
+        virtual ~TWdAsyncService();
 
     virtual void NotifyMsg();
 
@@ -52,6 +52,8 @@ protected:
     void ReqAsyncStep();
     void ReqAsyncPoll();
     void ReqAsyncStop();
+    void ReqAsyncAddBreak();
+    void ReqAsyncRemoveBreak();
     void ReqError();
 
 };

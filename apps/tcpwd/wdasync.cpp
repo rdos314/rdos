@@ -429,6 +429,67 @@ void TWdAsyncService::ReqAsyncStop()
 
 /*##########################################################################
 #
+#   Name       : TWdAsyncService::ReqAsyncAddBreak
+#
+#   Purpose....: Req add breakpoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdAsyncService::ReqAsyncAddBreak()
+{
+    TDebug *debug = GetDebug();
+    long Offset = GetDword();
+    int Sel = GetWord();
+    int Local = GetByte();
+    int Hw;
+
+    if (Local)
+        printf("Add local async break: %04hX:%08lX\r\n", Sel, Offset);
+    else
+        printf("Add global async break: %04hX:%08lX\r\n", Sel, Offset);
+        
+    if (Local)
+        Hw = TRUE;
+    else
+    {
+        if ((Sel & 3) == 0)
+            Hw = TRUE;
+        else
+            Hw = FALSE;
+    }
+
+    if (debug)
+        debug->AddBreak(Sel, Offset, Hw);
+}
+
+/*##########################################################################
+#
+#   Name       : TWdAsyncService::ReqAsyncRemoveBreak
+#
+#   Purpose....: Req remove breakpoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdAsyncService::ReqAsyncRemoveBreak()
+{
+    TDebug *debug = GetDebug();
+    long Offset = GetDword();
+    int Sel = GetWord();
+
+    printf("Remove async break: %04hX:%08lX\r\n", Sel, Offset);
+
+    if (debug)
+        debug->ClearBreak(Sel, Offset);
+}
+
+/*##########################################################################
+#
 #   Name       : TWdAsyncService::ReqError
 #
 #   Purpose....: Req error
@@ -476,6 +537,14 @@ void TWdAsyncService::NotifyMsg()
 
         case 3:
             ReqAsyncStop();
+            break;
+
+        case 4:
+            ReqAsyncAddBreak();
+            break;
+
+        case 5:
+            ReqAsyncRemoveBreak();
             break;
 
         default:
