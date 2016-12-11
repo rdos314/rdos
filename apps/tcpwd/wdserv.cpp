@@ -294,6 +294,8 @@ TWdSocketServer::TWdSocketServer(TWdSocketServerFactory *fact, const char *Name,
          FFactory = fact;
          FSupplList = 0;
          FDebug = 0;
+         FIs19 = FALSE;
+         FIs20 = FALSE;
 }
 
 /*##########################################################################
@@ -1866,16 +1868,16 @@ void TWdSocketServer::ReqMachineData()
 
 /*##########################################################################
 #
-#   Name       : TWdSocketServer::NotifyMsg
+#   Name       : TWdSocketServer::NotifyMsg19
 #
-#   Purpose....: Notify message
+#   Purpose....: Notify 1.9 version message
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TWdSocketServer::NotifyMsg()
+void TWdSocketServer::NotifyMsg19()
 {
     unsigned char ch;
 
@@ -1888,7 +1890,7 @@ void TWdSocketServer::NotifyMsg()
             break;
 
         case 1:
-                                ReqDisconnect();
+            ReqDisconnect();
             break;
 
         case 2:
@@ -1897,7 +1899,7 @@ void TWdSocketServer::NotifyMsg()
 
         case 3:
             ReqResume();
-                                break;
+            break;
 
         case 4:
             ReqGetSupplService();
@@ -1923,7 +1925,7 @@ void TWdSocketServer::NotifyMsg()
             ReqChecksumMem();
             break;
 
-                  case 10:
+        case 10:
             ReqReadMem();
             break;
 
@@ -1932,7 +1934,7 @@ void TWdSocketServer::NotifyMsg()
             break;
 
         case 12:
-                                ReqReadIo();
+            ReqReadIo();
             break;
 
         case 13:
@@ -1967,7 +1969,7 @@ void TWdSocketServer::NotifyMsg()
             ReqProgLoad();
             break;
 
-                  case 21:
+        case 21:
             ReqProgKill();
             break;
 
@@ -1993,60 +1995,287 @@ void TWdSocketServer::NotifyMsg()
 
         case 27:
             ReqSetUserScreen();
-                                break;
+            break;
 
         case 28:
             ReqSetDebugScreen();
             break;
 
-                  case 29:
-                                ReqReadUserKeyboard();
-                                break;
+        case 29:
+            ReqReadUserKeyboard();
+            break;
 
-                  case 30:
-                                ReqGetLibName();
-                                break;
+        case 30:
+            ReqGetLibName();
+            break;
 
-                  case 31:
-                                ReqGetErrText();
-                                break;
+        case 31:
+            ReqGetErrText();
+            break;
 
-                  case 32:
-                                ReqGetMsgText();
-                                break;
+        case 32:
+            ReqGetMsgText();
+            break;
 
-                  case 33:
-                                ReqRedirStdin();
-                                break;
+        case 33:
+            ReqRedirStdin();
+            break;
 
-                  case 34:
-                                ReqRedirStdout();
-                                break;
+        case 34:
+            ReqRedirStdout();
+            break;
 
-                  case 35:
-                                ReqSplitCmd();
-                                break;
+        case 35:
+            ReqSplitCmd();
+            break;
 
-                  case 36:
-                                ReqReadReg();
-                                break;
+        case 36:
+            ReqReadReg();
+            break;
 
-                  case 37:
-                                ReqWriteReg();
-                                break;
+        case 37:
+            ReqWriteReg();
+            break;
 
-                  case 38:
-                                ReqMachineData();
-                                break;
+        case 38:
+            ReqMachineData();
+            break;
 
-                  default:
-                                ReqError();
+        default:
+            ReqError();
             break;
     }    
 
     if (ch & 0x80)
         FSuppressAnswer = TRUE;
 }
+
+/*##########################################################################
+#
+#   Name       : TWdSocketServer::NotifyMsg20
+#
+#   Purpose....: Notify version 2.0 message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSocketServer::NotifyMsg20()
+{
+    unsigned char ch;
+
+    ch = (unsigned char)GetByte();
+
+    switch (ch & 0x7F)
+    {
+        case 0:
+            ReqConnect();
+            break;
+
+        case 1:
+            ReqDisconnect();
+            break;
+
+        case 2:
+            ReqSuspend();
+            break;
+
+        case 3:
+            ReqResume();
+            break;
+
+        case 4:
+            ReqGetSupplService();
+            break;
+
+        case 5:
+            ReqPerformSupplService();
+            break;
+
+        case 6:
+            ReqGetSysConfig();
+            break;
+
+        case 7:
+            ReqMapAddr();
+            break;
+
+        case 8:
+            ReqChecksumMem();
+            break;
+
+        case 9:
+            ReqReadMem();
+            break;
+
+        case 10:
+            ReqWriteMem();
+            break;
+
+        case 11:
+            ReqReadIo();
+            break;
+
+        case 12:
+            ReqWriteIo();
+            break;
+
+        case 13:
+            ReqProgGo();
+            break;
+
+        case 14:
+            ReqProgStep();
+            break;
+
+        case 15:
+            ReqProgLoad();
+            break;
+
+        case 16:
+            ReqProgKill();
+            break;
+
+        case 17:
+            ReqSetWatch();
+            break;
+
+        case 18:
+            ReqClearWatch();
+            break;
+
+        case 19:
+            ReqSetBreak();
+            break;
+
+        case 20:
+            ReqClearBreak();
+            break;
+
+        case 21:
+            ReqGetNextAlias();
+            break;
+
+        case 22:
+            ReqSetUserScreen();
+            break;
+
+        case 23:
+            ReqSetDebugScreen();
+            break;
+
+        case 24:
+            ReqReadUserKeyboard();
+            break;
+
+        case 25:
+            ReqGetLibName();
+            break;
+
+        case 26:
+            ReqGetErrText();
+            break;
+
+        case 27:
+            ReqGetMsgText();
+            break;
+
+        case 28:
+            ReqRedirStdin();
+            break;
+
+        case 29:
+            ReqRedirStdout();
+            break;
+
+        case 30:
+            ReqSplitCmd();
+            break;
+
+        case 31:
+            ReqReadReg();
+            break;
+
+        case 32:
+            ReqWriteReg();
+            break;
+
+        case 33:
+            ReqMachineData();
+            break;
+
+        default:
+            ReqError();
+            break;
+    }    
+
+    if (ch & 0x80)
+        FSuppressAnswer = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TWdSocketServer::NotifyMsg
+#
+#   Purpose....: Notify message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWdSocketServer::NotifyMsg()
+{
+    if (FIs19)
+    {
+        NotifyMsg19();
+        return;
+    }
+
+    if (FIs20)
+    {
+        NotifyMsg20();
+        return;
+    }
+
+    unsigned char ch;
+
+    ch = (unsigned char)GetByte();
+
+    switch (ch & 0x7F)
+    {
+        case 0:
+            ReqConnect();
+            break;
+
+        case 1:
+            ReqDisconnect();
+            break;
+
+        case 6:
+            ReqGetSysConfig();
+            break;
+
+        case 33:
+            ReqMachineData();
+            FIs20 = TRUE;
+            break;
+
+        case 38:
+            ReqMachineData();
+            FIs19 = TRUE;
+            break;
+
+        default:
+            ReqError();
+            break;
+    }    
+
+    if (ch & 0x80)
+        FSuppressAnswer = TRUE;
+}
+        
 
 /*##########################################################################
 #

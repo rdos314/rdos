@@ -110,6 +110,8 @@ protected:
          void ReqWriteReg();
     void ReqMachineData();
     
+    void NotifyMsg19();
+    void NotifyMsg20();
     void NotifyMsg();
 
         virtual void HandleSocket();
@@ -123,6 +125,8 @@ protected:
     char *FOutPtr;
 
     int FSuppressAnswer;
+    int FIs19;
+    int FIs20;
 
     TWdSocketServerFactory *FFactory;
     TWdSupplService *FSupplList;
