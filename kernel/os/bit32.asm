@@ -3292,20 +3292,20 @@ get_alpha       Endp
 
 AttribBgrTab:
 abt00   DD 00000000h
-abt01   DD 00990000h
+abt01   DD 00000099h
 abt02   DD 00009900h
-abt03   DD 00CC6600h
-abt04   DD 00000099h
+abt03   DD 000066CCh
+abt04   DD 00990000h
 abt05   DD 00990099h
-abt06   DD 00009999h
+abt06   DD 00999900h
 abt07   DD 00CCCCCCh
 abt08   DD 00666666h
-abt09   DD 00FF6666h
+abt09   DD 006666FFh
 abt0A   DD 0066FF66h
-abt0B   DD 00FFFF66h
-abt0C   DD 006666FFh
+abt0B   DD 0066FFFFh
+abt0C   DD 00FF6666h
 abt0D   DD 00FF66FFh
-abt0E   DD 0066FFFFh
+abt0E   DD 00FFFF66h
 abt0F   DD 00FFFFFFh
 
 write_text_char     PROC far

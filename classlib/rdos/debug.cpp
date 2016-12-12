@@ -2637,9 +2637,8 @@ void TDebug::SignalNewData()
             {
                 CurrentThread->DeactivateBreaks(HwBreakList, WatchList);
                 if (CurrentThread->ThreadID == thread)
-                    CurrentThread = 0;
+                    CurrentThread = ThreadList;
             }
-            CurrentThread = ThreadList;
             break;
 
         case EVENT_TERMINATE_PROCESS:
