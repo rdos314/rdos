@@ -270,25 +270,31 @@ int TDebugThread::WriteMem(int Sel, long Offset, char *Buf, int Size)
 ##########################################################################*/
 void TDebugThread::SetupGo(TDebugBreak *bp)
 {
+    int update = FALSE;
     Tss tss;
 
     FDebug = FALSE;
     
     FWasTrace = FALSE;
 
+    RdosGetThreadTss(ThreadID, &tss);
+
     if (bp)
     {
         FTempBreak = bp;
         RdosSetCodeBreak(ThreadID, 0, bp->Sel, bp->Offset);
+        tss.eflags |= 0x10000;
+        update = TRUE;
     }
-
-    RdosGetThreadTss(ThreadID, &tss);
 
     if ((tss.eflags & 0x100) != 0)
     {
         tss.eflags &= ~0x100;
-        RdosSetThreadTss(ThreadID, &tss);
+        update = TRUE;
     }
+
+    if (update)
+        RdosSetThreadTss(ThreadID, &tss);
 }
 
 /*##########################################################################
@@ -304,25 +310,31 @@ void TDebugThread::SetupGo(TDebugBreak *bp)
 ##########################################################################*/
 void TDebugThread::SetupTrace(TDebugBreak *bp)
 {
+    int update = FALSE;
     Tss tss;
     unsigned char ch = 0;
 
     FWasTrace = TRUE;
     FDebug = FALSE;
 
+    RdosGetThreadTss(ThreadID, &tss);
+
     if (bp)
     {
         FTempBreak = bp;
         RdosSetCodeBreak(ThreadID, 0, bp->Sel, bp->Offset);
+        tss.eflags |= 0x10000;
+        update = TRUE;
     }
-
-    RdosGetThreadTss(ThreadID, &tss);
 
     if ((tss.eflags & 0x100) == 0)
     {
         tss.eflags |= 0x100;
-        RdosSetThreadTss(ThreadID, &tss);
+        update = TRUE;
     }
+
+    if (update)
+        RdosSetThreadTss(ThreadID, &tss);
 }
 
 /*##########################################################################
@@ -2195,7 +2207,7 @@ TDebugBreak *TDebug::PrepareToRun()
     bp = GetSwBreak(tss.cs, tss.eip);
     if (bp)
     {
-        RdosWriteThreadMem(CurrentThread->ThreadID, tss.cs, tss.eip, (char *)bp->Instr, 1);
+        RdosWriteThreadMem(CurrentThread->ThreadID, tss.cs, tss.eip, (char *)&bp->Instr, 1);
         bp->IsActive = FALSE;
     }
     else
