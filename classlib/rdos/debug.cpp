@@ -62,6 +62,7 @@ TDebugThread::TDebugThread(TCreateProcessEvent *event)
     Cs = event->StartCs;
 
     FDebug = FALSE;
+    FTempBreak = 0;
 
     ReadState();
 }
@@ -90,6 +91,7 @@ TDebugThread::TDebugThread(TCreateThreadEvent *event)
     FHasBreak = FALSE;
     FHasTrace = FALSE;
     FHasException = FALSE;
+    FTempBreak = 0;
 
     ReadState();
 }
@@ -266,34 +268,27 @@ int TDebugThread::WriteMem(int Sel, long Offset, char *Buf, int Size)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDebugThread::SetupGo()
+void TDebugThread::SetupGo(TDebugBreak *bp)
 {
-    int update = FALSE;
     Tss tss;
-    unsigned char ch = 0;
 
     FDebug = FALSE;
     
     FWasTrace = FALSE;
 
-    RdosGetThreadTss(ThreadID, &tss);
-    RdosReadThreadMem(ThreadID, tss.cs, tss.eip, (char *)&ch, 1);
-
-    if (ch == 0xCC)
+    if (bp)
     {
-        tss.eip++;
-        update = TRUE;
+        FTempBreak = bp;
+        RdosSetCodeBreak(ThreadID, 0, bp->Sel, bp->Offset);
     }
+
+    RdosGetThreadTss(ThreadID, &tss);
 
     if ((tss.eflags & 0x100) != 0)
     {
         tss.eflags &= ~0x100;
-        update = TRUE;
-    }
-
-    if (update)
         RdosSetThreadTss(ThreadID, &tss);
-
+    }
 }
 
 /*##########################################################################
@@ -307,33 +302,27 @@ void TDebugThread::SetupGo()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDebugThread::SetupTrace()
+void TDebugThread::SetupTrace(TDebugBreak *bp)
 {
-    int update = FALSE;
     Tss tss;
     unsigned char ch = 0;
 
     FWasTrace = TRUE;
     FDebug = FALSE;
 
-    RdosGetThreadTss(ThreadID, &tss);
-
-    RdosReadThreadMem(ThreadID, tss.cs, tss.eip, (char *)&ch, 1);
-
-    if (ch == 0xCC)
+    if (bp)
     {
-        tss.eip++;
-        update = TRUE;
+        FTempBreak = bp;
+        RdosSetCodeBreak(ThreadID, 0, bp->Sel, bp->Offset);
     }
+
+    RdosGetThreadTss(ThreadID, &tss);
 
     if ((tss.eflags & 0x100) == 0)
     {
         tss.eflags |= 0x100;
-        update = TRUE;
-    }
-
-    if (update)
         RdosSetThreadTss(ThreadID, &tss);
+    }
 }
 
 /*##########################################################################
@@ -351,7 +340,12 @@ void TDebugThread::ActivateBreaks(TDebugBreak *HwBreakList, TDebugWatch *WatchLi
 {
     TDebugBreak *b = HwBreakList;
     TDebugWatch *w = WatchList;
-    int bnum = 0;
+    int bnum;
+
+    if (FTempBreak)
+        bnum = 1;
+    else
+        bnum = 0;
 
     while (b)
     {
@@ -386,11 +380,19 @@ void TDebugThread::ActivateBreaks(TDebugBreak *HwBreakList, TDebugWatch *WatchLi
 #   Returns....: *
 #
 ##########################################################################*/
-void TDebugThread::DeactivateBreaks(TDebugBreak *HwBreakList, TDebugWatch *WatchList)
+TDebugBreak *TDebugThread::DeactivateBreaks(TDebugBreak *HwBreakList, TDebugWatch *WatchList)
 {
     TDebugBreak *b = HwBreakList;
     TDebugWatch *w = WatchList;
-    int bnum = 0;
+    int bnum;
+
+    if (FTempBreak)
+    {
+        RdosClearBreak(ThreadID, 0);
+        bnum = 1;
+    }
+    else
+        bnum = 0;
 
     while (b)
     {
@@ -411,6 +413,10 @@ void TDebugThread::DeactivateBreaks(TDebugBreak *HwBreakList, TDebugWatch *Watch
         }
         w = w->Next;
     }
+
+    b = FTempBreak;
+    FTempBreak = 0;
+    return b;
 }
 
 /*##########################################################################
@@ -1504,7 +1510,7 @@ void TDebug::SetCurrentThread(int ThreadID)
     FSection.Enter();
 
     if (CurrentThread)
-        CurrentThread->DeactivateBreaks(HwBreakList, WatchList);
+        Deactivate(CurrentThread, HwBreakList);
         
     t = ThreadList;
     while (t && t->ThreadID != ThreadID)
@@ -1832,16 +1838,16 @@ void TDebug::RemoveBreak(TDebugBreak *b)
 
 /*##########################################################################
 #
-#   Name       : TDebug::IsBreak
+#   Name       : TDebug::GetHwBreak
 #
-#   Purpose....: Check for breakpoint
+#   Purpose....: Get hardware breakpoint
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TDebug::IsBreak(int Sel, long Offset)
+TDebugBreak *TDebug::GetHwBreak(int Sel, long Offset)
 {
     TDebugBreak *b;
     int ok = FALSE;
@@ -1853,24 +1859,53 @@ int TDebug::IsBreak(int Sel, long Offset)
     while (b && !ok)
     {
         if (b->Sel == Sel && b->Offset == Offset)
+        {
             ok = TRUE;
-        else
-            b = b->Next;
-    }
-
-    b = SwBreakList;
-
-    while (b && !ok)
-    {
-        if (b->Sel == Sel && b->Offset == Offset)
-            ok = TRUE;
+            break;
+        }
         else
             b = b->Next;
     }
 
     FSection.Leave();
 
-    return ok;
+    return b;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::IsSwBreak
+#
+#   Purpose....: Check for software breakpoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugBreak *TDebug::GetSwBreak(int Sel, long Offset)
+{
+    TDebugBreak *b;
+    int ok = FALSE;
+    
+    FSection.Enter();
+
+    b = SwBreakList;
+
+    while (b && !ok)
+    {
+        if (b->Sel == Sel && b->Offset == Offset)
+        {
+            ok = TRUE;
+            break;
+        }
+        else
+            b = b->Next;
+    }
+
+    FSection.Leave();
+
+    return b;
 }
 
 /*##########################################################################
@@ -2137,6 +2172,70 @@ void TDebug::ClearWatch(int Sel, long Offset, int Size)
     FSection.Leave();
 }
 
+
+/*##########################################################################
+#
+#   Name       : TDebug::PrepareRun
+#
+#   Purpose....: Prepare to run
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugBreak *TDebug::PrepareToRun()
+{
+    Tss tss;
+    TDebugBreak *bp;
+    unsigned char ch = 0;
+
+    RdosGetThreadTss(CurrentThread->ThreadID, &tss);
+
+    bp = GetSwBreak(tss.cs, tss.eip);
+    if (bp)
+    {
+        RdosWriteThreadMem(CurrentThread->ThreadID, tss.cs, tss.eip, (char *)bp->Instr, 1);
+        bp->IsActive = FALSE;
+    }
+    else
+    {
+        RdosReadThreadMem(CurrentThread->ThreadID, tss.cs, tss.eip, (char *)&ch, 1);
+
+        if (ch == 0xCC)
+        {
+            tss.eip++;
+            RdosSetThreadTss(CurrentThread->ThreadID, &tss);
+        }
+    }
+    return bp;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::Deactivate
+#
+#   Purpose....: Deactive after running
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::Deactivate(TDebugThread *Thread, TDebugBreak *hw)
+{
+    TDebugBreak *bp;
+    unsigned char ch = 0xCC;
+
+    bp = Thread->DeactivateBreaks(hw, WatchList);
+    if (bp)
+    {
+        if (!bp->IsActive)
+            RdosWriteThreadMem(Thread->ThreadID, bp->Sel, bp->Offset, (char *)&ch, 1);
+        bp->IsActive = TRUE;
+    }
+}
+
 /*##########################################################################
 #
 #   Name       : TDebug::DoTrace
@@ -2150,9 +2249,12 @@ void TDebug::ClearWatch(int Sel, long Offset, int Size)
 ##########################################################################*/
 void TDebug::DoTrace()
 {
+    TDebugBreak *bp;
+
     if ((CurrentThread->Cs & 0x3) == 0x3)
     {
-        CurrentThread->SetupTrace();
+        bp = PrepareToRun();
+        CurrentThread->SetupTrace(bp);
         RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
     }
     else
@@ -2176,6 +2278,7 @@ void TDebug::DoTrace()
 ##########################################################################*/
 void TDebug::DoGo()
 {
+    TDebugBreak *bp;
     TDebugThread *thread = ThreadList;
 
     while (thread)
@@ -2188,7 +2291,8 @@ void TDebug::DoGo()
 
     if ((CurrentThread->Cs & 0x3) == 0x3)
     {
-        CurrentThread->SetupGo();
+        bp = PrepareToRun();
+        CurrentThread->SetupGo(bp);
         CurrentThread->ActivateBreaks(HwBreakList, WatchList);
         RdosContinueDebugEvent(FHandle, CurrentThread->ThreadID);
     }
@@ -2635,7 +2739,7 @@ void TDebug::SignalNewData()
             FThreadChanged = TRUE;
             if (CurrentThread)
             {
-                CurrentThread->DeactivateBreaks(HwBreakList, WatchList);
+                Deactivate(CurrentThread, HwBreakList);
                 if (CurrentThread->ThreadID == thread)
                     CurrentThread = ThreadList;
             }
@@ -2687,14 +2791,13 @@ void TDebug::SignalNewData()
         while (t)
         {
             if (t != CurrentThread)
-                t->DeactivateBreaks(0, WatchList);
+                Deactivate(t, 0);
             t = t->Next;
         }
 
         if (CurrentThread)
         {
-            CurrentThread->DeactivateBreaks(HwBreakList, WatchList);
-
+            Deactivate(CurrentThread, HwBreakList);
             if (thread != CurrentThread->ThreadID)
             {
                 newt = LockThread(thread);

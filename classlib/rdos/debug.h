@@ -125,10 +125,10 @@ public:
     void WriteRegs();
 
     void ActivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList);
-    void DeactivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList);
+    TDebugBreak *DeactivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList);
 
-    void SetupGo();
-    void SetupTrace();
+    void SetupGo(TDebugBreak *bp);
+    void SetupTrace(TDebugBreak *bp);
     int WasTrace();
 
     int HasBreakOccurred();
@@ -184,6 +184,7 @@ protected:
     void ReadState();
     void RecalcBreak();
 
+    TDebugBreak *FTempBreak;
     int FDebug;
     int FHasBreak;
     int FHasTrace;
@@ -243,7 +244,8 @@ public:
 
     void AddBreak(int Sel, long Offset, int Hw);
     void ClearBreak(int Sel, long Offset);
-    int IsBreak(int Sel, long Offset);
+    TDebugBreak *GetHwBreak(int Sel, long Offset);
+    TDebugBreak *GetSwBreak(int Sel, long Offset);
 
     void AddWatch(int Sel, long Offset, int Size);
     void ClearWatch(int Sel, long Offset, int Size);
@@ -291,9 +293,12 @@ protected:
 
     void DoGo();
     void DoTrace();
+    TDebugBreak *PrepareToRun();
 
     void AddBreak(TDebugBreak *b);
     void RemoveBreak(TDebugBreak *b);
+
+    void Deactivate(TDebugThread *Thread, TDebugBreak *HwList);
 
     void HandleCreateProcess(TCreateProcessEvent *event);
     void HandleTerminateProcess(int exitcode);
