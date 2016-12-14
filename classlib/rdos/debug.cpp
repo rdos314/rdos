@@ -1073,7 +1073,7 @@ int TDebug::ReadMem(int Sel, long Offset, char *Buf, int Size)
 {
     TDebugBreak *b;
     TDebugThread *Thread;
-    int ok;
+    int len;
     long diff;
  
     Thread = CurrentThread;
@@ -1081,11 +1081,11 @@ int TDebug::ReadMem(int Sel, long Offset, char *Buf, int Size)
         Thread = ThreadList;
 
     if (Thread)
-        ok = RdosReadThreadMem(Thread->ThreadID, Sel, Offset, Buf, Size);
+        len = RdosReadThreadMem(Thread->ThreadID, Sel, Offset, Buf, Size);
     else
-        ok = FALSE;
+        len = 0;
 
-    if (ok && SwBreakList)
+    if (len && SwBreakList)
     {
         FSection.Enter();
 
@@ -1097,7 +1097,7 @@ int TDebug::ReadMem(int Sel, long Offset, char *Buf, int Size)
             {
                 diff = b->Offset - Offset;
 
-                if (diff >= 0 && diff < Size)
+                if (diff >= 0 && diff < len)
                     Buf[diff] = b->Instr;
            }
             b = b->Next;
@@ -1105,7 +1105,7 @@ int TDebug::ReadMem(int Sel, long Offset, char *Buf, int Size)
         FSection.Leave();
     }    
 
-    return ok;
+    return len;
 }
 
 /*##########################################################################
@@ -1155,7 +1155,7 @@ int TDebug::WriteMem(int Sel, long Offset, char *Buf, int Size)
         return RdosWriteThreadMem(Thread->ThreadID, Sel, Offset, Buf, Size);
     }
     
-    return FALSE;
+    return 0;
 }
 
 /*##########################################################################
