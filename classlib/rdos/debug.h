@@ -109,19 +109,19 @@ public:
     TDebugWatch *Next;
 };
 
+class TDebug;
+
 class TDebugThread
 {
 public:
-    TDebugThread(TCreateProcessEvent *event);
-    TDebugThread(TCreateThreadEvent *event);
+    TDebugThread(TDebug *deb, TCreateProcessEvent *event);
+    TDebugThread(TDebug *deb, TCreateThreadEvent *event);
     ~TDebugThread();
 
     void SetException(TExceptionEvent *event);
     void SetException(TKernelExceptionEvent *event);
     int IsDebug();
 
-    int ReadMem(int Sel, long Offset, char *Buf, int Size);
-    int WriteMem(int Sel, long Offset, char *Buf, int Size);
     void WriteRegs();
 
     void ActivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList);
@@ -184,6 +184,7 @@ protected:
     void ReadState();
     void RecalcBreak();
 
+    TDebug *FDebDev;
     TDebugBreak *FTempBreak;
     int FDebug;
     int FHasBreak;
@@ -250,6 +251,9 @@ public:
     void AddWatch(int Sel, long Offset, int Size);
     void ClearWatch(int Sel, long Offset, int Size);
     int IsWatch(int Sel, long Offset);
+
+    int ReadMem(int Sel, long Offset, char *Buf, int Size);
+    int WriteMem(int Sel, long Offset, char *Buf, int Size);
 
     void WaitForLoad(int timeout);
     void Go();

@@ -1042,11 +1042,11 @@ void TWdSocketServer::ReqChecksumMem()
 ##########################################################################*/
 void TWdSocketServer::ReqReadMem()
 {
-        int Size;
-        long Offset;
-        short int Sel;
-        int Count = 0;
-        char *Data;
+    int Size;
+    long Offset;
+    short int Sel;
+    int Count = 0;
+    char *Data;
 
     Offset = GetDword();
     Sel = GetWord();
@@ -1054,8 +1054,7 @@ void TWdSocketServer::ReqReadMem()
 
     Data = new char[Size];
     
-        if (FCurrentThread)
-                Count = FCurrentThread->ReadMem(Sel, Offset, Data, Size);
+    Count = FDebug->ReadMem(Sel, Offset, Data, Size);
 
     if (Count)
         PutData(Data, Count);
@@ -1077,21 +1076,16 @@ void TWdSocketServer::ReqReadMem()
 void TWdSocketServer::ReqWriteMem()
 {
     int Size;
-        char *Data;
-        long Offset;
-        short int Sel;
+    char *Data;
+    long Offset;
+    short int Sel;
 
-        Offset = GetDword();
-        Sel = GetWord();
-        Data = (char *)GetData(&Size);
+    Offset = GetDword();
+    Sel = GetWord();
+    Data = (char *)GetData(&Size);
 
     if (Size > 0)
-    {
-        if (FCurrentThread)
-                Size = FCurrentThread->WriteMem(Sel, Offset, Data, Size);
-            else
-                Size = 0;
-    }
+        Size = FDebug->WriteMem(Sel, Offset, Data, Size);
     else
         Size = 0;
 
