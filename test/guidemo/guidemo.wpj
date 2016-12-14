@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
-496
-136
+1232
+0
 8144
-9198
+9197
 2
 MProject
 3
@@ -30,8 +30,8 @@ VComponent
 WRect
 0
 0
-5669
-4283
+5664
+4276
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 11
 guidemo.tgt
 0
-0
+4
 7

@@ -125,7 +125,7 @@ public:
     void WriteRegs();
 
     void ActivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList);
-    TDebugBreak *DeactivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList);
+    TDebugBreak *DeactivateBreaks();
 
     void SetupGo(TDebugBreak *bp);
     void SetupTrace(TDebugBreak *bp);
@@ -302,7 +302,7 @@ protected:
     void AddBreak(TDebugBreak *b);
     void RemoveBreak(TDebugBreak *b);
 
-    void Deactivate(TDebugThread *Thread, TDebugBreak *HwList);
+    void Deactivate(TDebugThread *Thread);
 
     void HandleCreateProcess(TCreateProcessEvent *event);
     void HandleTerminateProcess(int exitcode);

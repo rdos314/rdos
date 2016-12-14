@@ -326,6 +326,7 @@ void TDebugThread::ActivateBreaks(TDebugBreak *HwBreakList, TDebugWatch *WatchLi
 
     if (FTempBreak)
     {
+        RdosSetCodeBreak(ThreadID, 0, FTempBreak->Sel, FTempBreak->Offset);
         FDebDev->LogMsg("Activate with temp break");
         bnum = 1;
     }
@@ -365,40 +366,13 @@ void TDebugThread::ActivateBreaks(TDebugBreak *HwBreakList, TDebugWatch *WatchLi
 #   Returns....: *
 #
 ##########################################################################*/
-TDebugBreak *TDebugThread::DeactivateBreaks(TDebugBreak *HwBreakList, TDebugWatch *WatchList)
+TDebugBreak *TDebugThread::DeactivateBreaks()
 {
-    TDebugBreak *b = HwBreakList;
-    TDebugWatch *w = WatchList;
     int bnum;
+    TDebugBreak *b;
 
-    if (FTempBreak)
-    {
-        FDebDev->LogMsg("Deactivate with temp break");
-        RdosClearBreak(ThreadID, 0);
-        bnum = 1;
-    }
-    else
-        bnum = 0;
-
-    while (b)
-    {
-        if (bnum < 4)
-        {
-            RdosClearBreak(ThreadID, bnum);
-            bnum++;
-        }
-        b = b->Next;
-    }
-
-    while (w)
-    {
-        if (bnum < 4)
-        {
-            RdosClearBreak(ThreadID, bnum);
-            bnum++;
-        }
-        w = w->Next;
-    }
+    for (bnum = 0; bnum < 4; bnum++)    
+        RdosClearBreak(ThreadID, bnum);
 
     b = FTempBreak;
     FTempBreak = 0;
@@ -1101,7 +1075,7 @@ int TDebug::ReadMem(int Sel, long Offset, char *Buf, int Size)
     TDebugThread *Thread;
     int ok;
     long diff;
-
+ 
     Thread = CurrentThread;
     if (!Thread)
         Thread = ThreadList;
@@ -1121,10 +1095,11 @@ int TDebug::ReadMem(int Sel, long Offset, char *Buf, int Size)
         {
             if (b->Sel == Sel && b->IsActive)
             {
-                diff = Offset - b->Offset;
+                diff = b->Offset - Offset;
+
                 if (diff >= 0 && diff < Size)
                     Buf[diff] = b->Instr;
-            }
+           }
             b = b->Next;
         }
         FSection.Leave();
@@ -1166,7 +1141,7 @@ int TDebug::WriteMem(int Sel, long Offset, char *Buf, int Size)
             {
                 if (b->Sel == Sel && b->IsActive)
                 {
-                    diff = Offset - b->Offset;
+                    diff = b->Offset - Offset;
                     if (diff >= 0 && diff < Size)
                     {
                         b->Instr = Buf[diff];
@@ -1595,7 +1570,7 @@ void TDebug::SetCurrentThread(int ThreadID)
     FSection.Enter();
 
     if (CurrentThread)
-        Deactivate(CurrentThread, HwBreakList);
+        Deactivate(CurrentThread);
         
     t = ThreadList;
     while (t && t->ThreadID != ThreadID)
@@ -2320,7 +2295,7 @@ TDebugBreak *TDebug::PrepareToRun()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDebug::Deactivate(TDebugThread *Thread, TDebugBreak *hw)
+void TDebug::Deactivate(TDebugThread *Thread)
 {
     TDebugBreak *bp;
     unsigned char ch = 0xCC;
@@ -2328,7 +2303,7 @@ void TDebug::Deactivate(TDebugThread *Thread, TDebugBreak *hw)
     char str[128];
 
 
-    bp = Thread->DeactivateBreaks(hw, WatchList);
+    bp = Thread->DeactivateBreaks();
     if (bp)
     {
         if (!bp->IsActive)
@@ -2833,7 +2808,7 @@ void TDebug::SignalNewData()
             FThreadChanged = TRUE;
             if (CurrentThread)
             {
-                Deactivate(CurrentThread, HwBreakList);
+                Deactivate(CurrentThread);
                 if (CurrentThread->ThreadID == thread)
                     CurrentThread = ThreadList;
             }
@@ -2885,13 +2860,13 @@ void TDebug::SignalNewData()
         while (t)
         {
             if (t != CurrentThread)
-                Deactivate(t, 0);
+                Deactivate(t);
             t = t->Next;
         }
 
         if (CurrentThread)
         {
-            Deactivate(CurrentThread, HwBreakList);
+            Deactivate(CurrentThread);
             if (thread != CurrentThread->ThreadID)
             {
                 newt = LockThread(thread);
