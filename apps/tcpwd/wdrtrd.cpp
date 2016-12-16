@@ -408,10 +408,7 @@ void TWdRunThreadService::ReqPoll()
         }
 
         if (Debug->HasModuleChange())
-        {
-            Debug->ClearModuleChange();
             CondFlags |= COND_LIBRARIES;
-        }
     }
     PutWord(CondFlags);
 }

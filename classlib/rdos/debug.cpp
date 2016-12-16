@@ -955,7 +955,6 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir, con
     WatchList = 0;
 
     FThreadChanged = FALSE;
-    FModuleChanged = FALSE;
     FHandle = 0;
 
     FMemoryModel = DEBUG_MEMORY_MODEL_FLAT;
@@ -1421,23 +1420,27 @@ void TDebug::ClearThreadChange()
 ##########################################################################*/
 int TDebug::HasModuleChange()
 {
-    return FModuleChanged;
-}
+    TDebugModule *m;
+    TDebugModule *rm = 0;
+    int change = FALSE;
 
-/*##########################################################################
-#
-#   Name       : TDebug::ClearModuleChange
-#
-#   Purpose....: Clear module change event
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDebug::ClearModuleChange()
-{
-    FModuleChanged = FALSE;
+    FSection.Enter();
+
+    m = ModuleList;
+    while (m)
+    {
+        if (m->FNew)
+            change = TRUE;
+
+        m = m->Next;            
+    }
+
+    FSection.Leave();
+
+    if (rm)
+        change = TRUE;
+
+    return change;
 }
 
 /*##########################################################################
@@ -1830,10 +1833,7 @@ void TDebug::UpdateModules()
         {
             m = new TDebugModule(CurrentThread->Cs);
             if (m->Handle)
-            {
                 InsertModule(m);
-                FModuleChanged = TRUE;
-            }
             else
                 delete m;
         }
@@ -2602,7 +2602,6 @@ void TDebug::HandleTerminateProcess(int exitcode)
     CurrentThread = 0;
     NewThread = 0;
     FThreadChanged = TRUE;
-    FModuleChanged = TRUE;
 
     FSection.Leave();
 }
@@ -2827,14 +2826,12 @@ void TDebug::SignalNewData()
             LogMsg("Load DLL");
             RdosGetDebugEventData(FHandle, &lde);
             HandleLoadDll(&lde);
-            FModuleChanged = TRUE;
             break;
 
         case EVENT_FREE_DLL:
             LogMsg("Free DLL");
             RdosGetDebugEventData(FHandle, &handle);
             HandleFreeDll(handle);
-            FModuleChanged = TRUE;
             break;
 
         case EVENT_KERNEL:

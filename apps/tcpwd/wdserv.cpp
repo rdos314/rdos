@@ -1218,10 +1218,7 @@ void TWdSocketServer::ReqProgGo()
                 }
 
                 if (FDebug->HasModuleChange())
-                {
-                        FDebug->ClearModuleChange();
                         CondFlags |= COND_LIBRARIES;
-                }
 
         if (FCurrentThread)
                 {
@@ -1288,10 +1285,7 @@ void TWdSocketServer::ReqProgStep()
                 }
 
                 if (FDebug->HasModuleChange())
-                {
-                        FDebug->ClearModuleChange();
                         CondFlags |= COND_LIBRARIES;
-                }
 
                 if (FCurrentThread)
                 {
@@ -1602,12 +1596,12 @@ void TWdSocketServer::ReqGetLibName()
 
     if (FDebug)
     {
-                Handle = FDebug->GetNextModule(Handle);
+        Handle = FDebug->GetNextModule(Handle);
 
         if (Handle)
         {
             Module = FDebug->LockModule(Handle);
-                        if (Module)
+            if (Module)
             {
                 PutDword(Handle);
                 PutString(Module->ModuleName.GetData());
@@ -1616,8 +1610,8 @@ void TWdSocketServer::ReqGetLibName()
                 Handle = 0;
 
             FDebug->UnlockModule();
-                }
         }
+    }
     else
         Handle = 0;
 

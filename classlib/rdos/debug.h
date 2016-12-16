@@ -268,7 +268,6 @@ public:
     void ClearThreadChange();
 
     int HasModuleChange();
-    void ClearModuleChange();
 
     int IsTerminated();
 
@@ -332,7 +331,6 @@ protected:
 
     TDebugThread *NewThread;
     int FThreadChanged;
-    int FModuleChanged;
 
     int FWaitLoad;
 
