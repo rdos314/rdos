@@ -49,8 +49,7 @@ struct TCreateProcessEvent
     unsigned int ObjectRva;
     unsigned int FsLinear;
     unsigned int StartEip;
-    unsigned short StartCs;
-};
+    unsigned short StartCs;};
 
 struct TCreateThreadEvent
 {
@@ -126,6 +125,7 @@ public:
 
     void ActivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList);
     TDebugBreak *DeactivateBreaks();
+    TDebugBreak *ClearTempBreak();
 
     void SetupGo(TDebugBreak *bp);
     void SetupTrace(TDebugBreak *bp);
@@ -233,7 +233,6 @@ public:
     int GetNextThread(int ThreadID);
     int GetNextModule(int Module);
     
-    TDebugThread *GetNewThread();
     TDebugThread *GetCurrentThread();
     void SetCurrentThread(int ThreadID);
 
@@ -294,14 +293,15 @@ protected:
     void RemoveThread(int thread);
     void RemoveModule(int handle);
 
+    int PickNewThread();
+    void FixupAfterTimeout();
+    
     void DoGo();
     void DoTrace();
     TDebugBreak *PrepareToRun();
 
     void AddBreak(TDebugBreak *b);
     void RemoveBreak(TDebugBreak *b);
-
-    void Deactivate(TDebugThread *Thread);
 
     void HandleCreateProcess(TCreateProcessEvent *event);
     void HandleTerminateProcess(int exitcode);
@@ -329,7 +329,6 @@ protected:
 
     TSignalDevice UserSignal;
 
-    TDebugThread *NewThread;
     int FThreadChanged;
 
     int FWaitLoad;

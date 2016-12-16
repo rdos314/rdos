@@ -155,18 +155,14 @@ void TWdAsyncService::ReqAsyncGo()
 
         if (ok)
         {
+            SetCurrentThread(debug->GetCurrentThread());
+            
             if (debug->IsTerminated())
                 CondFlags |= COND_TERMINATE;
 
             if (debug->HasThreadChange())
             {
                 CondFlags |= COND_THREAD;
-                curr = debug->GetNewThread();
-                if (curr)
-                {
-                    debug->SetCurrentThread(curr->ThreadID);
-                    SetCurrentThread(curr);
-                }
                 debug->ClearThreadChange();
             }
 
@@ -242,18 +238,14 @@ void TWdAsyncService::ReqAsyncStep()
 
         if (ok)
         {
+            SetCurrentThread(debug->GetCurrentThread());
+            
             if (debug->IsTerminated())
                 CondFlags |= COND_TERMINATE;
 
             if (debug->HasThreadChange())
             {
                 CondFlags |= COND_THREAD;
-                curr = debug->GetNewThread();
-                if (curr)
-                {
-                    debug->SetCurrentThread(curr->ThreadID);
-                    SetCurrentThread(curr);
-                }
                 debug->ClearThreadChange();
             }
 
@@ -329,18 +321,14 @@ void TWdAsyncService::ReqAsyncPoll()
 
         if (ok)
         {
+            SetCurrentThread(debug->GetCurrentThread());
+            
             if (debug->IsTerminated())
                 CondFlags |= COND_TERMINATE;
 
             if (debug->HasThreadChange())
             {
                 CondFlags |= COND_THREAD;
-                curr = debug->GetNewThread();
-                if (curr)
-                {
-                    debug->SetCurrentThread(curr->ThreadID);
-                    SetCurrentThread(curr);
-                }
                 debug->ClearThreadChange();
             }
 

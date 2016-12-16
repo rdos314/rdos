@@ -357,6 +357,24 @@ void TDebugThread::ActivateBreaks(TDebugBreak *HwBreakList, TDebugWatch *WatchLi
 
 /*##########################################################################
 #
+#   Name       : TDebugThread::ClearTempBreak
+#
+#   Purpose....: Clear temporary breakpoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDebugBreak *TDebugThread::ClearTempBreak()
+{
+    TDebugBreak *b = FTempBreak;
+    FTempBreak = 0;
+    return b;
+}
+
+/*##########################################################################
+#
 #   Name       : TDebugThread::DeactivateBreaks
 #
 #   Purpose....: Deactivate breakpoints
@@ -949,7 +967,6 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir, con
     ThreadList = 0;
     ModuleList = 0;
     CurrentThread = 0;
-    NewThread = 0;
     HwBreakList = 0;
     SwBreakList = 0;
     WatchList = 0;
@@ -1387,7 +1404,7 @@ void TDebug::WaitForLoad(int timeout)
 ##########################################################################*/
 int TDebug::HasThreadChange()
 {
-    return FThreadChanged || NewThread;
+    return FThreadChanged;
 }
 
 /*##########################################################################
@@ -1404,7 +1421,6 @@ int TDebug::HasThreadChange()
 void TDebug::ClearThreadChange()
 {
     FThreadChanged = FALSE;
-    NewThread = 0;
 }
 
 /*##########################################################################
@@ -1541,22 +1557,6 @@ TDebugThread *TDebug::GetCurrentThread()
 
 /*##########################################################################
 #
-#   Name       : TDebug::GetNewThread
-#
-#   Purpose....: Get new thread
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TDebugThread *TDebug::GetNewThread()
-{
-    return NewThread;
-}
-
-/*##########################################################################
-#
 #   Name       : TDebug::SetCurrentThread
 #
 #   Purpose....: Set current thread
@@ -1571,9 +1571,6 @@ void TDebug::SetCurrentThread(int ThreadID)
     TDebugThread *t;
 
     FSection.Enter();
-
-    if (CurrentThread)
-        Deactivate(CurrentThread);
         
     t = ThreadList;
     while (t && t->ThreadID != ThreadID)
@@ -2286,39 +2283,6 @@ TDebugBreak *TDebug::PrepareToRun()
 
 /*##########################################################################
 #
-#   Name       : TDebug::Deactivate
-#
-#   Purpose....: Deactive after running
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDebug::Deactivate(TDebugThread *Thread)
-{
-    TDebugBreak *bp;
-    unsigned char ch = 0xCC;
-
-    char str[128];
-
-
-    bp = Thread->DeactivateBreaks();
-    if (bp)
-    {
-        if (!bp->IsActive)
-        {
-            sprintf(str, "Reinserted breakpoint: %04hX:%08lX", bp->Sel, bp->Offset);
-            LogMsg(str);
-
-            RdosWriteThreadMem(Thread->ThreadID, bp->Sel, bp->Offset, (char *)&ch, 1);
-        }
-        bp->IsActive = TRUE;
-    }
-}
-
-/*##########################################################################
-#
 #   Name       : TDebug::DoTrace
 #
 #   Purpose....: Do a trace operation
@@ -2361,14 +2325,6 @@ void TDebug::DoGo()
 {
     TDebugBreak *bp;
     TDebugThread *thread = ThreadList;
-
-    while (thread)
-    {
-        if (thread != CurrentThread)
-            thread->ActivateBreaks(0, WatchList);
-
-        thread = thread->Next;
-    }
 
     if ((CurrentThread->Cs & 0x3) == 0x3)
     {
@@ -2434,6 +2390,77 @@ void TDebug::Trace()
 
 /*##########################################################################
 #
+#   Name       : TDebug::PickNewThread
+#
+#   Purpose....: Pick new thread after current thread not returning
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebug::PickNewThread()
+{
+    TDebugThread *Thread;
+
+    FSection.Enter();
+
+    Thread = ThreadList;
+    
+    while (Thread)
+    {
+        if (Thread->IsDebug())
+            break;
+        Thread = Thread->Next;
+    }
+
+    if (Thread)
+        CurrentThread = Thread;
+        
+    FSection.Leave();
+
+    if (Thread)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::FixupAfterTimeout
+#
+#   Purpose....: Fixup after timeout
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::FixupAfterTimeout()
+{
+    char str[80];
+    TDebugBreak *Bp;
+    unsigned char ch = 0xCC;
+
+    if (CurrentThread)
+    {
+        Bp = CurrentThread->ClearTempBreak();
+        if (Bp)
+        {
+            if (!Bp->IsActive)
+            {
+                sprintf(str, "Fixup breakpoint: %04hX:%08lX", Bp->Sel, Bp->Offset);
+                LogMsg(str);
+
+                RdosWriteThreadMem(CurrentThread->ThreadID, Bp->Sel, Bp->Offset, (char *)&ch, 1);
+            }
+            Bp->IsActive = TRUE;
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::AsyncGo
 #
 #   Purpose....: Continue active thread, with timeout
@@ -2455,11 +2482,12 @@ int TDebug::AsyncGo(int Timeout)
         DoGo();
 
         wait = UserSignal.WaitTimeout(Timeout);
+        FixupAfterTimeout();
 
         if (wait)
             return TRUE;
         else
-            return FALSE;
+            return PickNewThread();
     }
     return TRUE;
 }
@@ -2491,11 +2519,12 @@ int TDebug::AsyncTrace(int Timeout)
         DoTrace();    
 
         wait = UserSignal.WaitTimeout(Timeout);
+        FixupAfterTimeout();
 
         if (wait)
             return TRUE;
         else
-            return FALSE;
+            return PickNewThread();
     }
     return TRUE;
 }
@@ -2527,7 +2556,7 @@ int TDebug::AsyncPoll(int Timeout)
         return TRUE;
     }
     else
-        return FALSE;
+        return PickNewThread();
 }
 
 /*##########################################################################
@@ -2600,7 +2629,6 @@ void TDebug::HandleTerminateProcess(int exitcode)
     }
 
     CurrentThread = 0;
-    NewThread = 0;
     FThreadChanged = TRUE;
 
     FSection.Leave();
@@ -2763,7 +2791,7 @@ void TDebug::HandleKernelException(TKernelExceptionEvent *event, int thread)
 ##########################################################################*/
 void TDebug::SignalNewData()
 {
-    int thread;
+    int ThreadId;
     char debtype;
     TCreateProcessEvent cpe;
     TCreateThreadEvent cte;
@@ -2772,20 +2800,21 @@ void TDebug::SignalNewData()
     TKernelExceptionEvent kev;
     int ExitCode;
     int handle;
-    TDebugThread *newt;
-    TDebugThread *t;
-    char str[40];
+    TDebugThread *Thread;
+    TDebugBreak *Bp;
+    unsigned char ch = 0xCC;
+    char str[100];
 
     RdosWaitMilli(5);
 
-    debtype = RdosGetDebugEvent(FHandle, &thread);
+    debtype = RdosGetDebugEvent(FHandle, &ThreadId);
 
     switch (debtype)
     {
         case EVENT_EXCEPTION:
             LogMsg("Exception");
             RdosGetDebugEventData(FHandle, &ee);
-            HandleException(&ee, thread);
+            HandleException(&ee, ThreadId);
             break;
 
         case EVENT_CREATE_THREAD:
@@ -2804,14 +2833,11 @@ void TDebug::SignalNewData()
 
         case EVENT_TERMINATE_THREAD:
             LogMsg("Terminate thread");
-            HandleTerminateThread(thread);
+            HandleTerminateThread(ThreadId);
             FThreadChanged = TRUE;
             if (CurrentThread)
-            {
-                Deactivate(CurrentThread);
-                if (CurrentThread->ThreadID == thread)
-                    CurrentThread = ThreadList;
-            }
+                if (CurrentThread->ThreadID == ThreadId)
+                    CurrentThread = 0;
             break;
 
         case EVENT_TERMINATE_PROCESS:
@@ -2837,7 +2863,7 @@ void TDebug::SignalNewData()
         case EVENT_KERNEL:
             LogMsg("Kernel exception");
             RdosGetDebugEventData(FHandle, &kev);
-            HandleKernelException(&kev, thread);
+            HandleKernelException(&kev, ThreadId);
             break;                    
 
         case 0:
@@ -2851,34 +2877,42 @@ void TDebug::SignalNewData()
 
     RdosClearDebugEvent(FHandle);
 
-    if (debtype == EVENT_EXCEPTION || debtype == EVENT_KERNEL)
+    switch (debtype)
     {
-        t = ThreadList;
-
-        while (t)
-        {
-            if (t != CurrentThread)
-                Deactivate(t);
-            t = t->Next;
-        }
-
-        if (CurrentThread)
-        {
-            Deactivate(CurrentThread);
-            if (thread != CurrentThread->ThreadID)
+        case EVENT_EXCEPTION:
+        case EVENT_KERNEL:
+            Thread = ThreadList;
+            while (Thread)
             {
-                newt = LockThread(thread);
-                if (newt)
-                    NewThread = newt;
-                UnlockThread();
+                if (Thread->ThreadID == ThreadId)
+                    break;
+                Thread = Thread->Next;
             }
-            UpdateModules();
-        }
+            
+            if (Thread)
+            {
+                Bp = Thread->DeactivateBreaks();
+                if (Bp)
+                {
+                    if (!Bp->IsActive)
+                    {
+                        sprintf(str, "Reinserted breakpoint: %04hX:%08lX", Bp->Sel, Bp->Offset);
+                        LogMsg(str);
 
-        UserSignal.Signal();
+                        RdosWriteThreadMem(Thread->ThreadID, Bp->Sel, Bp->Offset, (char *)&ch, 1);
+                    }
+                    Bp->IsActive = TRUE;
+                }
+            }
+
+            UpdateModules();
+            UserSignal.Signal();
+            break;
+
+        default:
+            RdosContinueDebugEvent(FHandle, ThreadId);
+            break;
     }
-    else
-        RdosContinueDebugEvent(FHandle, thread);
 }
 
 /*##########################################################################

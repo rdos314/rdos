@@ -398,12 +398,6 @@ void TWdRunThreadService::ReqPoll()
         if (Debug->HasThreadChange())
         {
             CondFlags |= COND_THREAD;
-            curr = Debug->GetNewThread();
-            if (curr)
-            {
-                Debug->SetCurrentThread(curr->ThreadID);
-                SetCurrentThread(curr);
-            }
             Debug->ClearThreadChange();
         }
 
