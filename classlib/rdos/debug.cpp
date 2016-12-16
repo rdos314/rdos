@@ -2793,6 +2793,7 @@ void TDebug::SignalNewData()
             RdosGetDebugEventData(FHandle, &cte);
             sprintf(str, "Create thread, ID: %d", cte.Thread);
             LogMsg(str);
+            FThreadChanged = TRUE;
             HandleCreateThread(&cte);
             break;
 
