@@ -124,8 +124,6 @@ public:
     void WriteRegs();
 
     void ActivateBreaks(TDebugBreak *BreakList, TDebugWatch *WatchList);
-    TDebugBreak *DeactivateBreaks();
-    TDebugBreak *ClearTempBreak();
 
     void SetupGo(TDebugBreak *bp);
     void SetupTrace(TDebugBreak *bp);
@@ -185,7 +183,7 @@ protected:
     void RecalcBreak();
 
     TDebug *FDebDev;
-    TDebugBreak *FTempBreak;
+    int FHasTempBp;
     int FDebug;
     int FHasBreak;
     int FHasTrace;
@@ -294,11 +292,13 @@ protected:
     void RemoveModule(int handle);
 
     int PickNewThread();
-    void FixupAfterTimeout();
+    void FixupAfterTimeout(TDebugBreak *b);
     
-    void DoGo();
-    void DoTrace();
+    TDebugBreak *DoGo();
+    TDebugBreak *DoTrace();
     TDebugBreak *PrepareToRun();
+
+    void LogBreaks();
 
     void AddBreak(TDebugBreak *b);
     void RemoveBreak(TDebugBreak *b);
@@ -336,10 +336,6 @@ protected:
     int FConfigChange;
     int FMemoryModel;
     
-    int FAsyncBreak;
-    int FAsyncSel;
-    long FAsyncOffset;
-
     TFile FLogFile;
 };
 
