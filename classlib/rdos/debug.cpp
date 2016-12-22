@@ -2460,6 +2460,9 @@ void TDebug::FixupAfterTimeout(TDebugBreak *Bp)
             RdosWriteThreadMem(Thread->ThreadID, Bp->Sel, Bp->Offset, (char *)&ch, 1);
         Bp->IsActive = TRUE;
     }
+
+    if (Thread && !Thread->IsDebug())
+        PickNewThread();
 }
 
 /*##########################################################################
