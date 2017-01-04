@@ -129,66 +129,14 @@ register_handle ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           CheckSizeList
-;
-;           DESCRIPTION:    Check mem size list consistence
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-check_size_list Proc near
-    push ds
-    pusha
-;    
-    mov si,handle_mem_sel
-    mov ds,si
-    xor si,si
-    mov bx,[si].hs_next
-
-check_size_loop:
-    cmp bx,si
-    ja check_size_gt
-;
-    int 3 
-
-check_size_gt:
-    cmp bx,0FFF8h
-    je check_size_done
-;
-    mov si,bx
-    mov bx,[si].hs_next    
-    jmp check_size_loop
-
-check_size_done:
-    popa
-    pop ds
-    ret
-check_size_list Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           CheckHandleMem
-;
-;           DESCRIPTION:    Check handle mem consistency
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-check_handle_mem    Proc near
-    call check_size_list
-    ret
-check_handle_mem    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           allocate_handle_mem
 ;
 ;           DESCRIPTION:    Allocate memory for handle
 ;
-;           PARAMETERS:     AX          Total size of memory block
+;           PARAMETERS:     AX       Total size of memory block
+;                           ES       Handle mem sel
 ;
-;           RETURNS:        DS:EBX   Address to memory block
+;           RETURNS:        ES:EBX   Address to memory block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -198,23 +146,19 @@ allocate_handle_mem     Proc near
     push si
     push di
 ;
-    call check_handle_mem
-    
     add ax,8
-    mov si,handle_mem_sel
-    mov ds,si
     xor si,si
     xor bx,bx
-    mov si,[si].hf_next
+    mov si,es:[si].hf_next
 
 allocate_mem_loop:
-    mov cx,[si].hs_next
+    mov cx,es:[si].hs_next
     sub cx,si
     cmp cx,ax
     jnc allocate_mem_found
 ;
     mov bx,si
-    mov si,[si].hf_next
+    mov si,es:[si].hf_next
     jmp allocate_mem_loop
 
 allocate_mem_found:
@@ -225,60 +169,59 @@ allocate_mem_found:
     mov bx,ax
     add bx,si
 ;       
-    mov di,[si].hs_next
-    mov [bx].hs_next,di
-    mov [bx].hs_prev,si
-    mov [si].hs_next,bx
-    mov [di].hs_prev,bx
+    mov di,es:[si].hs_next
+    mov es:[bx].hs_next,di
+    mov es:[bx].hs_prev,si
+    mov es:[si].hs_next,bx
+    mov es:[di].hs_prev,bx
 ;
-    mov di,[si].hf_next
-    mov [bx].hf_next,di
-    mov [si].hf_next,bx
+    mov di,es:[si].hf_next
+    mov es:[bx].hf_next,di
+    mov es:[si].hf_next,bx
     or di,di
     jz allocate_mem_last_free
 ;
-    mov [di].hf_prev,bx
+    mov es:[di].hf_prev,bx
 
 allocate_mem_last_free:
-    mov di,[si].hf_prev
-    mov [bx].hf_prev,di
+    mov di,es:[si].hf_prev
+    mov es:[bx].hf_prev,di
     or di,di
     jz allocate_mem_fixup
 ;
-    mov [di].hf_next,bx
+    mov es:[di].hf_next,bx
     jmp allocate_mem_fixup
 
 allocate_mem_no_split:
-    mov di,[si].hf_prev
-    mov bx,[si].hf_next
-    mov [di].hf_next,bx
-    mov [bx].hf_prev,di
+    mov di,es:[si].hf_prev
+    mov bx,es:[si].hf_next
+    mov es:[di].hf_next,bx
+    mov es:[bx].hf_prev,di
 
 allocate_mem_fixup:
     xor di,di
-    mov bx,[di].hf_next
+    mov bx,es:[di].hf_next
     cmp bx,si
     jnz allocate_mem_final
 ;
-    mov bx,[si].hf_next
-    mov [di].hf_next,bx
+    mov bx,es:[si].hf_next
+    mov es:[di].hf_next,bx
 
 allocate_mem_final:
     xor di,di
-    mov bx,[di].hs_prev
-    mov cx,[si].hs_next
+    mov bx,es:[di].hs_prev
+    mov cx,es:[si].hs_next
     cmp bx,cx
     jnc allocate_mem_no_biggest_block
 ;
-    mov [di].hs_prev,cx
+    mov es:[di].hs_prev,cx
 
 allocate_mem_no_biggest_block:  
     dec di
-    mov [si].hf_prev,di
-    mov [si].hf_next,di
+    mov es:[si].hf_prev,di
+    mov es:[si].hf_next,di
 ;
     lea bx,[si+8]
-    call check_handle_mem   
 ;
     pop di
     pop si
@@ -295,12 +238,11 @@ allocate_handle_mem     Endp
 ;
 ;           DESCRIPTION:    Free memory for handle
 ;
-;           PARAMETERS:     DS:EBX       Offset to memory block
+;           PARAMETERS:     ES:EBX       Offset to memory block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_handle_mem PROC near
-    call check_handle_mem   
     push ax
     push bx
     push si
@@ -308,34 +250,34 @@ free_handle_mem PROC near
 ;
     mov si,bx
     sub si,8
-    mov di,[si].hs_prev
+    mov di,es:[si].hs_prev
     or di,di
     jz free_handle_no_merge_down
 ;
-    mov di,[di].hf_next
+    mov di,es:[di].hf_next
     inc di
     or di,di
     jz free_handle_no_merge_down
 ;
     mov di,si
-    mov si,[di].hs_prev
-    mov bx,[di].hs_next
-    mov [si].hs_next,bx
-    mov [bx].hs_prev,si
+    mov si,es:[di].hs_prev
+    mov bx,es:[di].hs_next
+    mov es:[si].hs_next,bx
+    mov es:[bx].hs_prev,si
     jmp free_handle_test_up
 
 free_handle_no_merge_down:
     xor di,di
-    mov [si].hf_prev,di
-    mov bx,[di].hf_next
-    mov [si].hf_next,bx
-    mov [di].hf_next,si
-    mov [bx].hf_prev,si
+    mov es:[si].hf_prev,di
+    mov bx,es:[di].hf_next
+    mov es:[si].hf_next,bx
+    mov es:[di].hf_next,si
+    mov es:[bx].hf_prev,si
 
 free_handle_test_up:
-    mov ax,[si].hs_next
+    mov ax,es:[si].hs_next
     mov di,ax
-    mov di,[di].hf_prev
+    mov di,es:[di].hf_prev
     inc di
     or di,di
     jz free_handle_no_merge_up
@@ -344,54 +286,53 @@ free_handle_test_up:
     je free_handle_no_merge_up
 ;
     push si
-    mov si,[si].hs_next
-    mov di,[si].hf_prev
-    mov bx,[si].hf_next
+    mov si,es:[si].hs_next
+    mov di,es:[si].hf_prev
+    mov bx,es:[si].hf_next
     or di,di
     jz fm1_handle_bypass
 ;
-    mov [di].hf_next,bx
+    mov es:[di].hf_next,bx
 
 fm1_handle_bypass:
     or bx,bx
     jz fm2_handle_bypass
 ;
-    mov [bx].hf_prev,di
+    mov es:[bx].hf_prev,di
 
 fm2_handle_bypass:
     xor di,di
-    mov bx,[di].hf_next
+    mov bx,es:[di].hf_next
     cmp bx,si
     jne fm3_handle_bypass
 ;
-    mov bx,[bx].hf_next
-    mov [di].hf_next,bx
+    mov bx,es:[bx].hf_next
+    mov es:[di].hf_next,bx
 
 fm3_handle_bypass:
     pop si
-    mov bx,[si].hs_next
-    mov bx,[bx].hs_next
-    mov [bx].hs_prev,si
-    mov [si].hs_next,bx
+    mov bx,es:[si].hs_next
+    mov bx,es:[bx].hs_next
+    mov es:[bx].hs_prev,si
+    mov es:[si].hs_next,bx
 
 free_handle_no_merge_up:
     xor di,di
-    mov bx,[di].hs_prev
-    mov di,[si].hs_next
+    mov bx,es:[di].hs_prev
+    mov di,es:[si].hs_next
     cmp di,bx
     jc free_handle_not_limit_page
 ;
     mov di,bx
     add di,1000h
     xor bx,bx
-    mov [bx].hs_prev,si
+    mov es:[bx].hs_prev,si
 
 free_handle_not_limit_page:
     pop di
     pop si
     pop bx
     pop ax
-    call check_handle_mem   
     ret
 free_handle_mem ENDP
 
@@ -413,18 +354,22 @@ free_handle_mem ENDP
 allocate_handle_name    DB 'Allocate Handle',0
 
 allocate_handle PROC far
+    push es
     push ax
     push si
 ;
-    mov si,handle_sel
-    mov ds,si
+    push ax
+    GetThread
+    mov ds,ax    
+    mov ds,ds:p_app_sel
+    mov es,ds:app_handle_mem_sel
+    mov ds,ds:app_handle_sel
+    pop ax
+;
     EnterSection ds:handle_section
     mov ax,cx
     call allocate_handle_mem
-    mov [bx].hh_sign,0
-;
-    mov ax,handle_sel
-    mov ds,ax
+    mov es:[bx].hh_sign,0
 
 alloc_retry:
     mov si,ds:handle_list
@@ -436,7 +381,7 @@ alloc_retry:
 ;       
     LeaveSection ds:handle_section
 ;       
-    mov ax,handle_mem_sel
+    mov ax,es
     mov ds,ax
 ;
     sub si,OFFSET handle_arr
@@ -446,6 +391,7 @@ alloc_retry:
 ;
     pop si
     pop ax
+    pop es
     retf32
 allocate_handle ENDP
 
@@ -467,19 +413,20 @@ free_handle     PROC far
     push ax
     push si
     push ds
+    push es
 ;
-    mov ax,handle_sel
-    mov ds,ax
+    GetThread
+    mov ds,ax    
+    mov ds,ds:p_app_sel
+    mov es,ds:app_handle_mem_sel
+    mov ds,ds:app_handle_sel
+;
     EnterSection ds:handle_section
-    mov ax,handle_mem_sel
-    mov ds,ax
-    mov si,[bx].hh_handle
+    mov si,es:[bx].hh_handle
+    mov es:[bx].hh_sign,0
+    mov es:[bx].hh_handle,0
     call free_handle_mem
-    mov [bx].hh_sign,0
-    mov [bx].hh_handle,0
 ;
-    mov ax,handle_sel
-    mov ds,ax
     shl si,1
     add si,OFFSET handle_arr
     mov ax,ds:handle_list
@@ -488,6 +435,7 @@ free_handle     PROC far
     LeaveSection ds:handle_section
     xor bx,bx
 ;
+    pop es
     pop ds
     pop si
     pop ax
@@ -509,50 +457,6 @@ free_handle     ENDP
 clone_handle_mem_name   DB 'Clone Handle Mem',0
 
 clone_handle_mem    PROC far
-    push ds
-    push gs
-    push eax
-    push si
-    push di
-;
-    mov eax,SIZE clone_seg
-    AllocateSmallGlobalMem
-    mov ax,es
-    mov gs,ax
-;
-    mov eax,10000h
-    AllocateGlobalMem
-    mov gs:c_mem_sel,es
-;    
-    mov ax,handle_sel
-    mov ds,ax
-    EnterSection ds:handle_section
-;
-    mov ax,handle_mem_sel
-    mov ds,ax
-    xor si,si
-    xor di,di
-    mov cx,4000h
-    rep movsd
-;
-    mov ax,gs
-    mov es,ax
-    mov ax,handle_sel
-    mov ds,ax
-    mov ax,ds:handle_list
-    mov es:c_list,ax
-    mov si,OFFSET handle_arr
-    mov di,OFFSET c_arr
-    mov cx,MAX_HANDLES
-    rep movsw
-;    
-    LeaveSection ds:handle_section
-;
-    pop di
-    pop si
-    pop eax
-    pop gs
-    pop ds
     retf32
 clone_handle_mem    ENDP
 
@@ -575,19 +479,27 @@ clone_handle_mem    ENDP
 deref_handle_name       DB 'Deref Handle',0
 
 deref_handle    PROC far
+    push es
     push dx
     push si
 ;
     cmp bx,MAX_HANDLES
     jae deref_fail
 ;
-    mov dx,handle_sel
-    mov ds,dx
+    push ax
+    GetThread
+    mov ds,ax    
+    mov ds,ds:p_app_sel
+    mov es,ds:app_handle_mem_sel
+    mov ds,ds:app_handle_sel
+    pop ax
+;
     mov si,bx
     EnterSection ds:handle_section
     mov bx,word ptr [bx+si].handle_arr
     LeaveSection ds:handle_section
-    mov dx,handle_mem_sel
+;
+    mov dx,es
     mov ds,dx
     cmp ax,[bx].hh_sign
     jne deref_fail
@@ -605,6 +517,7 @@ deref_fail:
 deref_done:     
     pop si
     pop dx
+    pop es
     retf32
 deref_handle    ENDP
 
@@ -625,23 +538,15 @@ init_program    PROC far
     push es
     pushad
 ;
-    mov ax,handle_mem_sel
-    mov ds,ax
-    xor bx,bx
-    mov dx,8
-    mov [bx].hf_next,dx
-    mov [bx].hs_next,dx
-    mov [bx].hs_prev,dx
-    mov bx,dx
-    mov dx,0FFF8h
-    mov [bx].hf_prev,0
-    mov [bx].hf_next,0
-    mov [bx].hs_prev,0
-    mov [bx].hs_next,dx
+    GetThread
+    mov ds,ax    
+    mov ds,ds:p_app_sel
+;    
+    mov eax,SIZE handle_seg
+    AllocateSmallGlobalMem
+    mov ds:app_handle_sel,es
 ;
-    mov ax,handle_sel
-    mov ds,ax
-    InitSection ds:handle_section
+    InitSection es:handle_section
 ;
     mov cx,MAX_HANDLES
     mov di,2 * MAX_HANDLES + OFFSET handle_arr
@@ -649,11 +554,27 @@ init_program    PROC far
 
 init_handle_loop:
     sub di,2
-    mov [di],ax
+    mov es:[di],ax
     mov ax,di
     loop init_handle_loop
 ;
-    mov ds:handle_list,di
+    mov es:handle_list,di
+;
+    mov eax,10000h
+    AllocateGlobalMem
+    mov ds:app_handle_mem_sel,es    
+;    
+    xor bx,bx
+    mov dx,8
+    mov es:[bx].hf_next,dx
+    mov es:[bx].hs_next,dx
+    mov es:[bx].hs_prev,dx
+    mov bx,dx
+    mov dx,0FFF8h
+    mov es:[bx].hf_prev,0
+    mov es:[bx].hf_next,0
+    mov es:[bx].hs_prev,0
+    mov es:[bx].hs_next,dx
 ;
     popad
     pop es
@@ -716,8 +637,10 @@ get_free_handles    Proc far
     push ds
     push si
 ;
-    mov si,handle_sel
-    mov ds,si
+    GetThread
+    mov ds,ax    
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_handle_sel
     EnterSection ds:handle_section
 ;
     xor ax,ax       
@@ -755,34 +678,35 @@ get_free_handle_mem_name    DB 'Get Free Handle Mem', 0
 
 get_free_handle_mem     Proc far
     push ds
+    push es
     push si
 ;
-    mov si,handle_sel
-    mov ds,si
+    GetThread
+    mov ds,ax    
+    mov ds,ds:p_app_sel
+    mov es,ds:app_handle_mem_sel
+    mov ds,ds:app_handle_sel
     EnterSection ds:handle_section
 ;
     xor eax,eax
-    mov si,handle_mem_sel
-    mov ds,si
 ;
     xor si,si
-    mov si,[si].hf_next
+    mov si,es:[si].hf_next
 
 get_free_mem_loop:
-    mov cx,[si].hs_next
+    mov cx,es:[si].hs_next
     sub cx,si
     movzx ecx,cx
     add eax,ecx
 ;
-    mov si,[si].hf_next
+    mov si,es:[si].hf_next
     or si,si
     jnz get_free_mem_loop
 ;
-    mov si,handle_sel
-    mov ds,si
     LeaveSection ds:handle_section
 ;
     pop si
+    pop es
     pop ds
     retf32
 get_free_handle_mem     Endp
@@ -862,10 +786,12 @@ free_handle_process     PROC near
     push es
     pushad
 ;
-    mov ax,handle_sel
-    mov ds,ax
-    mov ax,handle_mem_sel
-    mov es,ax
+    GetThread
+    mov ds,ax    
+    mov ds,ds:p_app_sel
+    mov es,ds:app_handle_mem_sel
+    mov ds,ds:app_handle_sel
+;
     xor bx,bx
     mov di,OFFSET handle_arr
     mov cx,MAX_HANDLES
@@ -875,15 +801,19 @@ free_handle_loop:
     cmp bx,es:[si].hh_handle
     jne free_handle_next
 ;
-    call verify_mem_list
-    jc free_handle_next
-;
     call delete_handle
 
 free_handle_next:
     inc bx
     add di,2
     loop free_handle_loop
+;
+    FreeMem
+    mov ax,ds
+    mov es,ax
+    xor ax,ax
+    mov ds,ax
+    FreeMem
 ;
     popad
     pop es
@@ -912,15 +842,6 @@ init_handle     PROC near
     mov bx,handle_data_sel
     AllocateFixedSystemMem
     mov es:hd_list,0
-;
-    mov eax,SIZE handle_seg
-    mov bx,handle_sel
-    AllocateFixedProgramMem
-;
-    mov edx,handle_linear
-    mov ecx,10000h
-    mov bx,handle_mem_sel
-    CreateDataSelector16
 ;
     mov ax,cs
     mov ds,ax

@@ -157,8 +157,6 @@ app_data_sel		EQU 278h
 __A000				EQU 283h
 __C000				EQU 28Bh
 
-handle_sel			EQU 290h
-handle_mem_sel		EQU 298h
 handle_data_sel		EQU 2A0h
 long_mem_sel        EQU 2A8h        
 

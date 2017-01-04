@@ -1178,10 +1178,12 @@ map_fault       Proc far
     push edx
     push esi
 ;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_handle_mem_sel
     mov ax,fs_process_sel
     mov es,ax
-    mov ax,handle_mem_sel
-    mov ds,ax
     mov ebx,es:memmap_list
     or ebx,ebx
     jz map_fault_fail
