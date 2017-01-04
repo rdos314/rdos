@@ -2066,6 +2066,12 @@ DerefProcHandle MACRO
     OsGate deref_proc_handle_nr
                     ENDM
 
+; OUT DS    Handle sel
+; OUT ES    Handle mem sel
+CreateAppHandle MACRO
+    OsGate create_app_handle_nr
+                    ENDM
+
 ;;;;;;;;;;;;; Dos ;;;;;;;;;;;;;;;;;;;
 
 ;       EAX     Bytes

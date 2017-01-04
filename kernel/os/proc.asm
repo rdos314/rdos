@@ -159,6 +159,7 @@ trap_start_program     PROC near
     push si
 ;
     call init_program_mem
+    CreateAppHandle
 ;    
     mov ax,proc_data_sel
     mov ds,ax

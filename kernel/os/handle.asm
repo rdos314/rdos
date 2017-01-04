@@ -533,7 +533,9 @@ deref_handle    ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_program    PROC far
+create_app_handle_name  DB 'Create App Handle', 0
+
+create_app_handle    PROC far
     push ds
     push es
     pushad
@@ -580,7 +582,7 @@ init_handle_loop:
     pop es
     pop ds
     retf32
-init_program    Endp
+create_app_handle    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -847,8 +849,11 @@ init_handle     PROC near
     mov ds,ax
     mov es,ax
 ;
-    mov edi,OFFSET init_program
-    HookStartProgram
+    mov esi,OFFSET create_app_handle
+    mov edi,OFFSET create_app_handle_name
+    xor cl,cl
+    mov ax,create_app_handle_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET register_handle
     mov edi,OFFSET register_handle_name
