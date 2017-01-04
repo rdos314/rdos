@@ -159,13 +159,6 @@ trap_start_program     PROC near
     push si
 ;
     call init_program_mem
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel    
-    CreateAppHandle
-    mov ds:app_handle_sel,ax
-    mov ds:app_handle_mem_sel,dx    
 ;    
     mov ax,proc_data_sel
     mov ds,ax
@@ -351,6 +344,14 @@ trap_init_tasking_loop:
     dec cl
     jnz trap_init_tasking_loop
 trap_init_tasking_done:
+    push dx
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    CreateAppHandle
+    mov ds:app_handle_sel,ax
+    mov ds:app_handle_mem_sel,dx
+    pop dx
     pop cx
     ret
 trap_init_tasking       ENDP

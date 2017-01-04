@@ -310,6 +310,11 @@ load_process_default_drive:
     GetThread
     mov es,ax
     mov es,es:p_app_sel
+;
+    CreateAppHandle
+    mov es:app_handle_sel,ax
+    mov es:app_handle_mem_sel,dx    
+;
     mov ax,3Bh
     EnableFocus
     SetFocus
@@ -1139,6 +1144,10 @@ spawn_startup:
     mov es:app_context,bx
     mov es:app_unload_proc,OFFSET spUnload
 ;
+    CreateAppHandle
+    mov es:app_handle_sel,ax
+    mov es:app_handle_mem_sel,dx    
+;
     mov ax,3Bh
     EnableFocus
     SetFocus
@@ -1805,6 +1814,10 @@ exec_startup:
     mov es,es:p_app_sel
     mov es:app_context,bx
     mov es:app_unload_proc,OFFSET lepRet
+;
+    CreateAppHandle
+    mov es:app_handle_sel,ax
+    mov es:app_handle_mem_sel,dx    
 ;
     xor si,si
     mov ds,gs:s_name    
