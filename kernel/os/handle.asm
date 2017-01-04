@@ -529,24 +529,22 @@ deref_handle    ENDP
 ;
 ;           DESCRIPTION:    Init per-program data
 ;
-;           PARAMETERS:         
+;           RETURNS:        AX          Handle sel
+;                           DX          Handle mem sel    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_app_handle_name  DB 'Create App Handle', 0
 
 create_app_handle    PROC far
-    push ds
     push es
-    pushad
-;
-    GetThread
-    mov ds,ax    
-    mov ds,ds:p_app_sel
+    push bx
+    push cx
+    push si
+    push di
 ;    
     mov eax,SIZE handle_seg
     AllocateSmallGlobalMem
-    mov ds:app_handle_sel,es
 ;
     InitSection es:handle_section
 ;
@@ -561,10 +559,10 @@ init_handle_loop:
     loop init_handle_loop
 ;
     mov es:handle_list,di
+    push es
 ;
     mov eax,10000h
     AllocateGlobalMem
-    mov ds:app_handle_mem_sel,es    
 ;    
     xor bx,bx
     mov dx,8
@@ -578,9 +576,14 @@ init_handle_loop:
     mov es:[bx].hs_prev,0
     mov es:[bx].hs_next,dx
 ;
-    popad
+    mov dx,es
+    pop ax    
+;
+    pop di
+    pop si
+    pop cx
+    pop bx
     pop es
-    pop ds
     retf32
 create_app_handle    Endp
 
