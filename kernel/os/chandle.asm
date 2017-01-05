@@ -57,8 +57,10 @@ he_io_mode       DW ?
 he_ref_count     DW ?
 he_close_proc    DW ?
 he_dup_proc      DW ?
+he_read_proc     DW ?
+he_write_proc    DW ?
 
-he_space         DW ?,?,?
+he_space         DW ?
 
 handle_entry_struc    ENDS
 
@@ -78,6 +80,126 @@ handle_struc    ENDS
 code    SEGMENT byte public use16 'CODE'
     
     assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Close std in
+;
+;           DESCRIPTION:    Close std in
+;
+;           PARAMETERS:     ES:BX               Handle entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseStdIn     Proc near
+    ret
+CloseStdIn     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Dup std in
+;
+;           DESCRIPTION:    Dup std in
+;
+;           PARAMETERS:     ES:BX               Handle entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DupStdIn     Proc near
+    ret
+DupStdIn     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Read std in
+;
+;           DESCRIPTION:    Read std in
+;
+;           PARAMETERS:     ES:BX               Handle entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadStdIn     Proc near
+    ret
+ReadStdIn     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Write std in
+;
+;           DESCRIPTION:    Write std in
+;
+;           PARAMETERS:     ES:BX               Handle entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteStdIn     Proc near
+    ret
+WriteStdIn     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Close std out
+;
+;           DESCRIPTION:    Close std out
+;
+;           PARAMETERS:     ES:BX               Handle entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseStdOut     Proc near
+    ret
+CloseStdOut     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Dup std out
+;
+;           DESCRIPTION:    Dup std out
+;
+;           PARAMETERS:     ES:BX               Handle entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DupStdOut     Proc near
+    ret
+DupStdOut     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Read std out
+;
+;           DESCRIPTION:    Read std out
+;
+;           PARAMETERS:     ES:BX               Handle entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadStdOut     Proc near
+    ret
+ReadStdOut     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Write std out
+;
+;           DESCRIPTION:    Write std out
+;
+;           PARAMETERS:     ES:BX               Handle entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteStdOut     Proc near
+    ret
+WriteStdOut     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -148,6 +270,40 @@ create_c_handle Endp
 setup_std_c_handles_name  DB 'Setup Std C Handles', 0
 
 setup_std_c_handles    PROC far
+    push ds
+    push es
+    pusha
+;    
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+    mov es,ds:h_sel
+    xor di,di
+    mov es:[di].he_rdos_handle,0
+    mov es:[di].he_io_mode,IO_READ OR IO_ISTTY
+    mov es:[di].he_ref_count,1
+    mov es:[di].he_close_proc,OFFSET CloseStdIn
+    mov es:[di].he_dup_proc,OFFSET DupStdIn
+    mov es:[di].he_read_proc,OFFSET ReadStdIn
+    mov es:[di].he_write_proc,OFFSET WriteStdIn
+;
+    mov di,10h    
+    mov es:[di].he_rdos_handle,0
+    mov es:[di].he_io_mode,IO_WRITE OR IO_ISTTY
+    mov es:[di].he_ref_count,1
+    mov es:[di].he_close_proc,OFFSET CloseStdOut
+    mov es:[di].he_dup_proc,OFFSET DupStdOut
+    mov es:[di].he_read_proc,OFFSET ReadStdOut
+    mov es:[di].he_write_proc,OFFSET WriteStdOut
+;
+    mov ds:h_bitmap,3    
+    mov ds:h_arr,1
+    mov ds:h_arr+2,2
+;
+    popa
+    pop es
+    pop ds
     retf32
 setup_std_c_handles    ENDP
 
