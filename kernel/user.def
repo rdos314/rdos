@@ -782,4 +782,6 @@ sub_bignum_nr                   = 608
 clear_text_nr                   = 609
 get_text_size_nr                = 610
 
+setup_std_handle_nr             = 611
+
 usergate_entries			    = 625

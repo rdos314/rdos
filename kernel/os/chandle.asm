@@ -139,6 +139,21 @@ create_c_handle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           Setup std C handlers
+;
+;           DESCRIPTION:    Setup std C handlers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_std_c_handles_name  DB 'Setup Std C Handles', 0
+
+setup_std_c_handles    PROC far
+    retf32
+setup_std_c_handles    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init_chandle
 ;
 ;           DESCRIPTION:    Init C handle module
@@ -161,6 +176,12 @@ init_chandle     PROC near
     xor cl,cl
     mov ax,create_c_handle_nr
     RegisterOsGate
+;
+    mov esi,OFFSET setup_std_c_handles
+    mov edi,OFFSET setup_std_c_handles_name
+    xor dx,dx
+    mov ax,setup_std_handle_nr
+    RegisterBimodalUserGate
 ;
     popad
     pop es

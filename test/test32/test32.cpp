@@ -329,7 +329,7 @@ long GetSqrt(long long Value)
 
 void main()
 {
-     RdosInitHandle();
+     RdosSetupStdHandle();
 
 
     int count;
