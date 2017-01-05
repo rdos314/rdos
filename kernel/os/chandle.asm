@@ -1,6 +1,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; RDOS operating system
-; Copyright (C) 1988-2000, Leif Ekblad
+; Copyright (C) 1988-2017, Leif Ekblad
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
@@ -20,64 +20,49 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; UTIL.ASM
-; Various utilities
+; CHANDLE.ASM
+; C-library handle compatibility layer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 INCLUDE protseg.def
-INCLUDE ..\driver.def
+INCLUDE system.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
-INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\driver.def
 
-        .386p
-
-    extrn init_cpu_gates:near
-    extrn init_random:near
-    extrn init_crc:near
-    extrn init_time:near
-    extrn init_env:near
-    extrn init_wait:near
-    extrn init_swap:near
-    extrn init_io:near
-    extrn init_app:near
-    extrn init_ldt:near
-    extrn init_chandle:near
+    .386p
 
 code    SEGMENT byte public use16 'CODE'
+    
+    assume cs:code
 
-        assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
 ;
-;               NAME:                   INIT
 ;
-;               DESCRIPTION:    Init driver
+;           NAME:           init_chandle
 ;
-;               PARAMETERS:             
+;           DESCRIPTION:    Init C handle module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init    PROC far
-    call init_ldt
-    call init_app
-    call init_chandle
-    call init_io
-    call init_swap
-    call init_cpu_gates
-    call init_random
-    call init_crc
-    call init_time
-    call init_env
-    call init_wait
-    clc
-        ret
-init    ENDP
+    public init_chandle
+
+init_chandle     PROC near
+    push ds
+    push es
+    pushad
+;
+;
+    popad
+    pop es
+    pop ds
+    ret
+init_chandle     ENDP
 
 code    ENDS
 
-        END init
+    END
