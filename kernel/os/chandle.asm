@@ -33,12 +33,108 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 
+;
+; iomode constants
+;
+
+IO_READ         = 1
+IO_WRITE        = 2
+IO_EOF          = 10h
+IO_BINARY       = 40h
+IO_APPEND       = 80h
+IO_FBF          = 100h
+IO_LBF          = 200h
+IO_NBF          = 400h
+IO_ISTTY        = 1000h
+
+HANDLE_ENTRY_SIZE     = 16
+MAX_HANDLES           = 256
+
+handle_entry_struc    STRUC
+
+he_rdos_handle   DW ?
+he_io_mode       DW ?
+he_ref_count     DW ?
+he_close_proc    DW ?
+he_dup_proc      DW ?
+
+he_space         DW ?,?,?
+
+handle_entry_struc    ENDS
+
+handle_struc    STRUC
+
+h_section       section_typ <>
+
+h_sel           DW ?
+h_bitmap        DD ?,?
+
+h_arr           DW MAX_HANDLES DUP(?)
+
+handle_struc    ENDS
+
     .386p
 
 code    SEGMENT byte public use16 'CODE'
     
     assume cs:code
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Create C handle
+;
+;           DESCRIPTION:    Create std-C handle selector
+;
+;           RETURNS:        AX          C handle sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_c_handle_name  DB 'Create C Handle', 0
+
+create_c_handle    PROC far
+    push ds
+    push es
+    push bx
+    push cx
+    push dx
+    push si
+    push di
+;    
+    mov eax,SIZE handle_struc
+    AllocateSmallGlobalMem
+;
+    mov di,OFFSET h_arr
+    xor ax,ax
+    mov cx,MAX_HANDLES
+    rep stosw
+;    
+    mov ax,es
+    mov ds,ax
+;    
+    InitSection ds:h_section
+    mov ds:h_bitmap,0
+    mov ds:h_bitmap+4,0
+;
+    mov eax,1000h
+    AllocateGlobalMem
+    xor di,di
+    xor ax,ax
+    mov cx,800h
+    rep stosw
+    mov ds:h_sel,es
+;    
+    mov ax,ds
+;
+    pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx    
+    pop es
+    pop ds
+    retf32
+create_c_handle Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -56,6 +152,15 @@ init_chandle     PROC near
     push es
     pushad
 ;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    mov esi,OFFSET create_c_handle
+    mov edi,OFFSET create_c_handle_name
+    xor cl,cl
+    mov ax,create_c_handle_nr
+    RegisterOsGate
 ;
     popad
     pop es

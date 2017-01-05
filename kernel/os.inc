@@ -2072,6 +2072,11 @@ CreateAppHandle MACRO
     OsGate create_app_handle_nr
                     ENDM
 
+; OUT AX    C handle sel
+CreateCHandle MACRO
+    OsGate create_c_handle_nr
+                    ENDM
+
 ;;;;;;;;;;;;; Dos ;;;;;;;;;;;;;;;;;;;
 
 ;       EAX     Bytes

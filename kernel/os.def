@@ -698,5 +698,6 @@ notify_core_dump_nr         = 580
 setup_nmi_core_dump_nr      = 581
 
 create_app_handle_nr        = 582
+create_c_handle_nr          = 583
 
 osgate_entries				= 600

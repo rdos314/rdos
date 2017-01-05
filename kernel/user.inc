@@ -1091,6 +1091,12 @@ SetEnvData	MACRO
 	UserGate set_env_data_nr
 	        ENDM
 
+;;;;;;;;;;;; C Handles ;;;;;;;;;;;;;;;;
+
+InitCHandle	MACRO
+	UserGate init_chandle_nr
+					ENDM
+
 ;;;;;;;;;;;;;; INI FILE HANDLING ;;;;;;;;;;;
 
 ; OUT BX            Ini handle

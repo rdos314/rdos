@@ -304,6 +304,7 @@ app_parent_ldt                  DW ?
 
 app_handle_sel                  DW ?
 app_handle_mem_sel              DW ?
+app_c_handle_sel                DW ?
 
 app_context                             DW ?
 app_bitness                             DB ?

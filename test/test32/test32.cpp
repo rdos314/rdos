@@ -329,6 +329,9 @@ long GetSqrt(long long Value)
 
 void main()
 {
+     RdosInitHandle();
+
+
     int count;
     struct TDataValue SpotArr[MAX_USED_SPOTS];
     long FlowArr[MAX_USED_SPOTS];
