@@ -219,6 +219,74 @@ WriteStdOut     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           close_file
+;
+;           DESCRIPTION:    Close file
+;
+;           PARAMETERS:     FS:BX               Handle entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_file     Proc near
+    ret
+close_file     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           dup_file
+;
+;           DESCRIPTION:    Dup file
+;
+;           PARAMETERS:     FS:BX               Handle entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dup_file     Proc near
+    ret
+dup_file     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           read_file
+;
+;           DESCRIPTION:    Read file
+;
+;           PARAMETERS:     FS:BX               Handle entry
+;                           ES:EDI              Buffer
+;                           ECX                 Size
+;
+;           RETURNS:        EAX                 Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_file     Proc near
+    ret
+read_file     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           write_file
+;
+;           DESCRIPTION:    Write file
+;
+;           PARAMETERS:     FS:BX               Handle entry
+;                           ES:EDI              Buffer
+;                           ECX                 Size
+;
+;           RETURNS:        EAX                 Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_file     Proc near
+    ret
+write_file     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Create C handle
 ;
 ;           DESCRIPTION:    Create std-C handle selector
@@ -407,6 +475,52 @@ ohHandle:
     mov ds,ds:app_c_handle_sel
     mov es,ds:h_sel
     call allocate_handle
+    jnc ohHandleOk
+;
+    CloseFile
+    jmp ohFail    
+
+ohHandleOk:
+    mov es:[di].he_rdos_handle,bx
+    mov es:[di].he_ref_count,1
+    mov es:[di].he_close_proc,OFFSET close_file
+    mov es:[di].he_dup_proc,OFFSET dup_file
+    mov es:[di].he_read_proc,OFFSET read_file
+    mov es:[di].he_write_proc,OFFSET write_file
+;
+    mov al,cl
+    and al,3
+    cmp al,O_RDWR
+    je ohRdWr
+;
+    cmp al,O_RDONLY
+    je ohRdOnly
+;
+    cmp al,O_WRONLY
+    je ohWrOnly
+;
+    xor ax,ax
+    jmp ohAccessOk
+
+ohRdWr:
+    mov ax,IO_READ OR IO_WRITE
+    jmp ohAccessOk
+
+ohRdOnly:
+    mov ax,IO_READ
+    jmp ohAccessOk
+
+ohWrOnly:
+    mov ax,IO_WRITE
+
+ohAccessOk:
+    test cx,O_APPEND
+    jz ohAppendOk
+;
+    or ax,IO_APPEND 
+
+ohAppendOk:
+    mov es:[di].he_io_mode,ax
 
 ohFail:
     pop es
