@@ -411,6 +411,59 @@ ahDone:
     pop eax
     ret
 allocate_handle  Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           allocate_entry
+;
+;           DESCRIPTION:    Allocate C entry
+;
+;           PARAMETERS:     DS          Handle sel
+;                           ES          Handle data sel
+;                           DI          Handle data
+;
+;           RETURNS:        BX          Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_entry     Proc near
+    push ax
+    push cx
+;    
+    mov cx,MAX_HANDLES
+    mov bx,OFFSET h_arr
+    EnterSection ds:h_section
+
+aeLoop:    
+    mov ax,ds:[bx]
+    or ax,ax
+    jz aeFound
+;
+    add bx,2
+    loop aeLoop
+;
+    LeaveSection ds:h_section
+    stc
+    jmp aeDone
+
+aeFound:    
+    mov ax,di
+    shr ax,4
+    inc ax
+    mov ds:[bx],ax
+    LeaveSection ds:h_section
+;
+    sub bx,OFFSET h_arr
+    shr bx,1
+    inc bx
+    clc
+
+aeDone:   
+    pop cx 
+    pop ax
+    ret
+allocate_entry  Endp   
         
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -432,6 +485,7 @@ open_handle_name  DB 'Open C Handle', 0
 open_handle     Proc near
     push ds
     push es
+    push di
 ;    
     test cx,O_CREAT
     jz ohOpen
@@ -447,7 +501,8 @@ ohExcl:
     jc ohCreate
 ;    
     CloseFile
-    jmp ohFail
+    stc
+    jmp ohDone
 
 ohCreate:
     push cx
@@ -478,7 +533,8 @@ ohHandle:
     jnc ohHandleOk
 ;
     CloseFile
-    jmp ohFail    
+    stc
+    jmp ohDone
 
 ohHandleOk:
     mov es:[di].he_rdos_handle,bx
@@ -521,8 +577,13 @@ ohAccessOk:
 
 ohAppendOk:
     mov es:[di].he_io_mode,ax
+    call allocate_entry
+    jnc ohDone
+;
+    int 3    
 
-ohFail:
+ohDone:
+    pop di
     pop es
     pop ds
     ret
