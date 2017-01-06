@@ -782,7 +782,7 @@
 #define usergate_clear_text 0x00000261
 #define usergate_get_text_size 0x00000262
 
-#define usergate_setup_std_handle 0x00000263
+#define usergate_open_handle 0x00000263
 
 
 
@@ -1571,7 +1571,7 @@
 #define CallGate_clear_text 0x55 0x67 0x9a 97 2 0 0 3 0 0x5d
 #define CallGate_get_text_size 0x55 0x67 0x9a 98 2 0 0 3 0 0x5d
 
-#define CallGate_setup_std_handle 0x55 0x67 0x9a 99 2 0 0 3 0 0x5d
+#define CallGate_open_handle 0x55 0x67 0x9a 99 2 0 0 3 0 0x5d
 
 #else
 
@@ -2358,6 +2358,6 @@
 #define CallGate_clear_text 0x3e 0x67 0x9a 97 2 0 0 3 0
 #define CallGate_get_text_size 0x3e 0x67 0x9a 98 2 0 0 3 0
 
-#define CallGate_setup_std_handle 0x3e 0x67 0x9a 99 2 0 0 3 0
+#define CallGate_open_handle 0x3e 0x67 0x9a 99 2 0 0 3 0
 
 #endif

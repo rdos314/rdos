@@ -1093,8 +1093,11 @@ SetEnvData	MACRO
 
 ;;;;;;;;;;;; C Handles ;;;;;;;;;;;;;;;;
 
-InitCHandle	MACRO
-	UserGate init_chandle_nr
+; IN  ES:(E)DI      Name
+; IN  CX            Mode
+; OUT BX            C handle
+OpenHandle	MACRO
+	UserGate open_handle_nr
 					ENDM
 
 ;;;;;;;;;;;;;; INI FILE HANDLING ;;;;;;;;;;;

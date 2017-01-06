@@ -47,6 +47,21 @@ IO_LBF          = 200h
 IO_NBF          = 400h
 IO_ISTTY        = 1000h
 
+;
+; open constants
+;
+
+O_RDONLY        = 0
+O_WRONLY        = 1
+O_RDWR          = 2
+O_APPEND        = 10h
+O_CREAT         = 20h
+O_TRUNC         = 40h
+O_NOINHERIT     = 80h
+O_TEXT          = 100h
+O_BINARY        = 200h
+O_EXCL          = 400h
+
 HANDLE_ENTRY_SIZE     = 16
 MAX_HANDLES           = 256
 
@@ -227,58 +242,27 @@ create_c_handle    PROC far
     AllocateSmallGlobalMem
 ;
     mov di,OFFSET h_arr
+    mov ax,1
+    stosw
+;
+    mov ax,2
+    stosw
+;    
     xor ax,ax
-    mov cx,MAX_HANDLES
+    mov cx,MAX_HANDLES - 2
     rep stosw
 ;    
     mov ax,es
     mov ds,ax
 ;    
     InitSection ds:h_section
-    mov ds:h_bitmap,0
+    mov ds:h_bitmap,3    
     mov ds:h_bitmap+4,0
 ;
     mov eax,1000h
     AllocateGlobalMem
-    xor di,di
-    xor ax,ax
-    mov cx,800h
-    rep stosw
     mov ds:h_sel,es
-;    
-    mov ax,ds
 ;
-    pop di
-    pop si
-    pop dx
-    pop cx
-    pop bx    
-    pop es
-    pop ds
-    retf32
-create_c_handle Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Setup std C handlers
-;
-;           DESCRIPTION:    Setup std C handlers
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-setup_std_c_handles_name  DB 'Setup Std C Handles', 0
-
-setup_std_c_handles    PROC far
-    push ds
-    push es
-    pusha
-;    
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
-    mov es,ds:h_sel
     xor di,di
     mov es:[di].he_rdos_handle,0
     mov es:[di].he_io_mode,IO_READ OR IO_ISTTY
@@ -297,15 +281,102 @@ setup_std_c_handles    PROC far
     mov es:[di].he_read_proc,OFFSET ReadStdOut
     mov es:[di].he_write_proc,OFFSET WriteStdOut
 ;
-    mov ds:h_bitmap,3    
-    mov ds:h_arr,1
-    mov ds:h_arr+2,2
+    mov di,20h    
+    xor ax,ax
+    mov cx,7F0h
+    rep stosw
+;    
+    mov ax,ds
 ;
-    popa
+    pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx    
     pop es
     pop ds
     retf32
-setup_std_c_handles    ENDP
+create_c_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           OpenHandle
+;
+;           DESCRIPTION:    Open C handle
+;
+;           PARAMETERS:     ES:(E)DI    Name
+;                           CX          Mode
+;
+;           RETURNS:        BX          Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_handle_name  DB 'Open C Handle', 0
+
+open_handle     Proc near
+    push ds
+    push es
+;    
+    test cx,O_CREAT
+    jz ohOpen
+;
+    test cx,O_EXCL
+    jz ohCreate
+
+ohExcl:
+    push cx
+    xor cl,cl
+    UserGateForce32 open_file_nr
+    pop cx
+    jc ohCreate
+;    
+    CloseFile
+    jmp ohFail
+
+ohCreate:
+    push cx
+    xor cx,cx
+    UserGateForce32 create_file_nr
+    pop cx
+    jc ohFail
+;
+    jmp ohHandle
+
+ohOpen:
+    push cx
+    xor cl,cl
+    UserGateForce32 open_file_nr
+    pop cx
+    jc ohFail
+
+ohHandle:
+
+
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+    mov es,ds:h_sel
+
+ohFail:
+    pop es
+    pop ds
+    ret
+open_handle     Endp
+
+open_handle16    PROC far
+    push edi
+    movzx edi,di
+    call open_handle
+    pop edi
+    retf32
+open_handle16    ENDP
+
+open_handle32    PROC far
+    call open_handle
+    retf32
+open_handle32    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -333,11 +404,12 @@ init_chandle     PROC near
     mov ax,create_c_handle_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET setup_std_c_handles
-    mov edi,OFFSET setup_std_c_handles_name
-    xor dx,dx
-    mov ax,setup_std_handle_nr
-    RegisterBimodalUserGate
+    mov ebx,OFFSET open_handle16
+    mov esi,OFFSET open_handle32
+    mov edi,OFFSET open_handle_name
+    mov dx,virt_es_in
+    mov ax,open_handle_nr
+    RegisterUserGate
 ;
     popad
     pop es

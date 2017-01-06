@@ -1233,8 +1233,11 @@
     parm [eax] [edi] \
     value [eax];
 
-#pragma aux RdosSetupStdHandle = \
-    CallGate_setup_std_handle
+#pragma aux RdosOpenHandle = \
+    CallGate_open_handle  \
+    ValidateHandle  \
+    parm [edi] [ecx] \
+    value [ebx];
 
 #pragma aux RdosOpenFile = \
     CallGate_open_file  \

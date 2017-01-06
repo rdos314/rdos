@@ -1,4 +1,5 @@
 #include <rdos.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -329,7 +330,9 @@ long GetSqrt(long long Value)
 
 void main()
 {
-     RdosSetupStdHandle();
+    int handle;
+    
+    handle = RdosOpenHandle("fil.txt", O_CREAT | O_EXCL);
 
 
     int count;
