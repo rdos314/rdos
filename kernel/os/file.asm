@@ -1640,6 +1640,41 @@ dupl_file_info  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           FileToHandle
+;
+;           DESCRIPTION:    Convert file to C handle
+;
+;           PARAMETERS:     BX              FILE HANDLE
+;
+;           RETURNS:        AX              FILE SYSTEM HANDLE
+;                           CL              DRIVE
+;                           NC              SUCCESS
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+file_to_c_handle_name      DB 'File To C Handle',0
+
+file_to_c_handle   PROC far
+    push ds
+    push ebx
+    mov ax,FILE_HANDLE
+    DerefHandle
+    jc file_to_c_handle_done
+;
+    mov ax,[ebx].file_handle_sel
+    mov cl,[ebx].file_handle_drive
+    FreeHandle
+    clc
+
+file_to_c_handle_done:
+    pop ebx
+    pop ds
+    retf32
+file_to_c_handle   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           LockFile
 ;
 ;           DESCRIPTION:    Lock file using file-info
@@ -2906,6 +2941,12 @@ init_file       PROC near
     mov edi,OFFSET unlock_file_name
     xor cl,cl
     mov ax,unlock_file_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET file_to_c_handle
+    mov edi,OFFSET file_to_c_handle_name
+    xor cl,cl
+    mov ax,file_to_c_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET close_file

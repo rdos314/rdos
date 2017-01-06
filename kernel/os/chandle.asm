@@ -67,15 +67,15 @@ MAX_HANDLES           = 256
 
 handle_entry_struc    STRUC
 
-he_rdos_handle   DW ?
+he_file_sel      DW ?
+he_file_drive    DB ?
+he_resv          DB ?
 he_io_mode       DW ?
 he_ref_count     DW ?
 he_close_proc    DW ?
 he_dup_proc      DW ?
 he_read_proc     DW ?
 he_write_proc    DW ?
-
-he_space         DW ?
 
 handle_entry_struc    ENDS
 
@@ -332,7 +332,7 @@ create_c_handle    PROC far
     mov ds:h_sel,es
 ;
     xor di,di
-    mov es:[di].he_rdos_handle,0
+    mov es:[di].he_file_sel,0
     mov es:[di].he_io_mode,IO_READ OR IO_ISTTY
     mov es:[di].he_ref_count,1
     mov es:[di].he_close_proc,OFFSET CloseStdIn
@@ -341,7 +341,7 @@ create_c_handle    PROC far
     mov es:[di].he_write_proc,OFFSET WriteStdIn
 ;
     mov di,10h    
-    mov es:[di].he_rdos_handle,0
+    mov es:[di].he_file_sel,0
     mov es:[di].he_io_mode,IO_WRITE OR IO_ISTTY
     mov es:[di].he_ref_count,1
     mov es:[di].he_close_proc,OFFSET CloseStdOut
@@ -537,7 +537,12 @@ ohHandle:
     jmp ohDone
 
 ohHandleOk:
-    mov es:[di].he_rdos_handle,bx
+    push cx
+    FileToCHandle
+    mov es:[di].he_file_sel,ax
+    mov es:[di].he_file_drive,cl
+    pop cx
+;    
     mov es:[di].he_ref_count,1
     mov es:[di].he_close_proc,OFFSET close_file
     mov es:[di].he_dup_proc,OFFSET dup_file

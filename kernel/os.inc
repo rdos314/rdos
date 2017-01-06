@@ -2077,6 +2077,13 @@ CreateCHandle MACRO
     OsGate create_c_handle_nr
                     ENDM
 
+; IN  BX    File handle
+; OUT AX    File sel
+; OUT CL    File drive
+FileToCHandle MACRO
+    OsGate file_to_c_handle_nr
+                    ENDM
+
 ;;;;;;;;;;;;; Dos ;;;;;;;;;;;;;;;;;;;
 
 ;       EAX     Bytes
