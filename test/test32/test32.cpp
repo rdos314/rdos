@@ -332,7 +332,7 @@ void main()
 {
     int handle;
     
-    handle = RdosOpenHandle("fil.txt", O_CREAT | O_EXCL);
+    handle = RdosOpenHandle("fil.txt", O_CREAT | O_RDONLY);
 
 
     int count;

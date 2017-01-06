@@ -301,6 +301,53 @@ create_c_handle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           allocate_handle
+;
+;           DESCRIPTION:    Allocate C handle
+;
+;           PARAMETERS:     DS          Handle sel
+;                           ES          Handle data sel
+;
+;           RETURNS:        DI          Handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_handle     Proc near
+    push eax
+    push ecx
+
+ahRetry:    
+    mov eax,ds:h_bitmap
+    not eax
+    bsf ecx,eax
+    jnz ahOk
+;
+    mov eax,ds:h_bitmap
+    not eax
+    bsf ecx,eax
+    stc
+    jz ahDone
+;    
+    add ecx,32
+
+ahOk:
+    bts ds:h_bitmap,ecx
+    jc ahRetry
+;    
+    mov di,cx
+    shl di,4
+    clc
+
+ahDone: 
+    pop ecx
+    pop eax
+    ret
+allocate_handle  Endp   
+        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open C handle
@@ -339,7 +386,7 @@ ohCreate:
     xor cx,cx
     UserGateForce32 create_file_nr
     pop cx
-    jc ohFail
+    jc ohDev
 ;
     jmp ohHandle
 
@@ -348,16 +395,18 @@ ohOpen:
     xor cl,cl
     UserGateForce32 open_file_nr
     pop cx
-    jc ohFail
+    jnc ohHandle
+
+ohDev:
+    int 3
 
 ohHandle:
-
-
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
     mov ds,ds:app_c_handle_sel
     mov es,ds:h_sel
+    call allocate_handle
 
 ohFail:
     pop es
