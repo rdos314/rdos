@@ -365,6 +365,29 @@ open_handle32    ENDP
 
 close_handle_name  DB 'Close C Handle', 0
 
+close_dummy	Proc near
+    ret
+close_dummy	Endp
+
+close_file	Proc near
+    mov bx,ax
+    CloseCFile
+    ret
+close_file	Endp
+
+close_tab:
+ct00  DW OFFSET close_dummy
+ct01  DW OFFSET close_file
+ct02  DW OFFSET close_dummy
+ct03  DW OFFSET close_dummy
+ct04  DW OFFSET close_dummy
+ct05  DW OFFSET close_dummy
+ct06  DW OFFSET close_dummy
+ct07  DW OFFSET close_dummy
+ct08  DW OFFSET close_dummy
+ct09  DW OFFSET close_dummy
+
+
 close_handle     Proc near
     push ds
     push ax
@@ -409,7 +432,16 @@ close_handle     Proc near
     sub ds:[bx].he_ref_count,1
     jnz chDone
 ;
+    xor ax,ax
+    xchg ax,ds:[bx].he_sel
+    mov bx,ds:[bx].he_type
     btc ds:hd_bitmap,ecx
+;
+    cmp bx,10
+    jae chDone
+;
+    shl bx,1
+    call word ptr cs:[bx].close_tab
 
 chDone:
     xor bx,bx

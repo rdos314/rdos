@@ -1757,6 +1757,39 @@ close_file_done:
     ApiCheckEax
     retf32
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           close_c_file
+;
+;           DESCRIPTION:    Close C file
+;
+;           PARAMETERS:     BX              File selector
+;                           NC              Success
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_c_file_name DB 'Close C File',0
+
+close_c_file    Proc far
+    push ds
+;
+    or bx,bx
+    stc
+    jz ccfDone
+;
+    mov ds,bx
+    sub ds:file_usage,1
+    jnz ccfDone
+;
+    call FreeFileSel
+
+ccfDone:
+    pop ds
+    retf32
+close_c_file    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2907,6 +2940,12 @@ init_file       PROC near
     mov edi,OFFSET unlock_file_name
     xor cl,cl
     mov ax,unlock_file_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET close_c_file
+    mov edi,OFFSET close_c_file_name
+    xor cl,cl
+    mov ax,close_c_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET close_file
