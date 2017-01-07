@@ -1007,6 +1007,190 @@ d2hDone:
     pop ds    
     retf32
 dup2_handle    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetHandleSize
+;
+;           DESCRIPTION:    Get C handle size
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EAX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_handle_size_name  DB 'Get C Handle Size', 0
+
+get_size_dummy      Proc near
+    xor eax,eax
+    clc
+    ret
+get_size_dummy      Endp
+
+get_size_file       Proc near
+    clc
+    ret
+get_size_file       Endp
+
+get_size_tab:
+gst00  DW OFFSET get_size_dummy
+gst01  DW OFFSET get_size_file
+gst02  DW OFFSET get_size_dummy
+gst03  DW OFFSET get_size_dummy
+gst04  DW OFFSET get_size_dummy
+gst05  DW OFFSET get_size_dummy
+gst06  DW OFFSET get_size_dummy
+gst07  DW OFFSET get_size_dummy
+gst08  DW OFFSET get_size_dummy
+gst09  DW OFFSET get_size_dummy
+
+get_handle_size     Proc far
+    push ds
+    push bx
+    push bp
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae ghsFail
+;   
+    or bx,bx
+    jz ghsFail
+;
+    dec bx
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae ghsFail
+;    
+    or ax,ax
+    jz ghsFail
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].get_size_tab
+    jmp ghsDone
+
+ghsFail:
+    stc
+
+ghsDone:
+    pop bp
+    pop bx
+    pop ds    
+    retf32
+get_handle_size     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetHandleSize
+;
+;           DESCRIPTION:    Set C handle size
+;
+;           PARAMETERS:     BX          Handle
+;                           EAX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_handle_size_name  DB 'Set C Handle Size', 0
+
+set_size_dummy      Proc near
+    clc
+    ret
+set_size_dummy      Endp
+
+set_size_file       Proc near
+    clc
+    ret
+set_size_file       Endp
+
+set_size_tab:
+sst00  DW OFFSET set_size_dummy
+sst01  DW OFFSET set_size_file
+sst02  DW OFFSET set_size_dummy
+sst03  DW OFFSET set_size_dummy
+sst04  DW OFFSET set_size_dummy
+sst05  DW OFFSET set_size_dummy
+sst06  DW OFFSET set_size_dummy
+sst07  DW OFFSET set_size_dummy
+sst08  DW OFFSET set_size_dummy
+sst09  DW OFFSET set_size_dummy
+
+set_handle_size     Proc far
+    push ds
+    push bx
+    push edx
+    push bp
+;
+    mov edx,eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae shsFail
+;   
+    or bx,bx
+    jz shsFail
+;
+    dec bx
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae shsFail
+;    
+    or ax,ax
+    jz shsFail
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov eax,edx
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].set_size_tab
+    jmp shsDone
+
+shsFail:
+    stc
+
+shsDone:
+    pop bp
+    pop edx
+    pop bx
+    pop ds    
+    retf32
+set_handle_size     Endp        
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1105,6 +1289,18 @@ init_chandle     PROC near
     mov edi,OFFSET dup2_handle_name
     xor cl,cl
     mov ax,dup2_handle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_handle_size
+    mov edi,OFFSET get_handle_size_name
+    xor cl,cl
+    mov ax,get_handle_size_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_handle_size
+    mov edi,OFFSET set_handle_size_name
+    xor cl,cl
+    mov ax,set_handle_size_nr
     RegisterBimodalUserGate
 ;
     popad
