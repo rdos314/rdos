@@ -437,6 +437,7 @@ unsigned int RDOSAPI RdosGetHandleMode(int Handle);
 void RDOSAPI RdosSetHandleMode(int Handle, unsigned int Mode);
 long RDOSAPI RdosGetHandlePos(int Handle);
 void RDOSAPI RdosSetHandlePos(int Handle, long Size);
+int RDOSAPI RdosEofHandle(int Handle);
 
 int RDOSAPI RdosOpenFile(const char *FileName, char Access);
 int RDOSAPI RdosCreateFile(const char *FileName, int Attrib);

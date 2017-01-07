@@ -337,13 +337,20 @@ void main()
     char buf[32];
     int size;
     int pos;
+    int val;
     
     handle1 = RdosOpenHandle("fil.txt", O_RDONLY);
+
+    val = RdosEofHandle(1);
+    val = RdosEofHandle(2);
+    val = RdosEofHandle(handle1);
 
     handle3 = RdosDupHandle(handle1);
 
     memset(buf, 0, 32);
     RdosReadHandle(handle3, buf, 32);
+    val = RdosEofHandle(handle3);
+        
     handle4 = RdosDup2Handle(handle3, 2);
 
     size = RdosGetHandleSize(handle4);

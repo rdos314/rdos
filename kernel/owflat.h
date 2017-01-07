@@ -1297,6 +1297,11 @@
     CallGate_set_handle_pos  \
     parm [ebx] [eax];
 
+#pragma aux RdosEofHandle = \
+    CallGate_eof_handle  \
+    parm [ebx]  \
+    value [eax];
+
 #pragma aux RdosOpenFile = \
     CallGate_open_file  \
     ValidateHandle  \
