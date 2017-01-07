@@ -1517,6 +1517,96 @@ ehDone:
     pop ds    
     retf32
 eof_handle     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IsHandleDevice
+;
+;           DESCRIPTION:    Check if C handle is device
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        NC		Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_handle_device_name  DB 'Is C Handle Device', 0
+
+not_device      Proc near
+    stc
+    ret
+not_device      Endp
+
+is_device      Proc near
+    clc
+    ret
+is_device      Endp
+
+dev_tab:
+idt00  DW OFFSET not_device
+idt01  DW OFFSET not_device
+idt02  DW OFFSET is_device
+idt03  DW OFFSET is_device
+idt04  DW OFFSET not_device
+idt05  DW OFFSET not_device
+idt06  DW OFFSET not_device
+idt07  DW OFFSET not_device
+idt08  DW OFFSET not_device
+idt09  DW OFFSET not_device
+
+is_handle_device     Proc far
+    push ds
+    push bx
+    push bp
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae ihdFail
+;   
+    or bx,bx
+    jz ihdFail
+;
+    dec bx
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae ihdFail
+;    
+    or ax,ax
+    jz ihdFail
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].dev_tab
+    jmp ihdDone
+
+ihdFail:
+    stc
+
+ihdDone:
+    pop bp
+    pop bx
+    pop ds    
+    retf32
+is_handle_device     Endp        
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1657,6 +1747,12 @@ init_chandle     PROC near
     mov edi,OFFSET eof_handle_name
     xor cl,cl
     mov ax,eof_handle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_handle_device
+    mov edi,OFFSET is_handle_device_name
+    xor cl,cl
+    mov ax,is_handle_device_nr
     RegisterBimodalUserGate
 ;
     popad
