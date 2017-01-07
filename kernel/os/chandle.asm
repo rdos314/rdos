@@ -887,7 +887,10 @@ dup2_handle_name  DB 'Dup2 C Handle', 0
 
 dup2_handle     Proc near
     push ds
+    push es
     push ax
+    push ecx
+    push edx
     push si
     push di
 ;
@@ -910,6 +913,73 @@ dup2_handle     Proc near
     mov ax,ds:[si].hp_handle
     or ax,ax
     jz d2hFail
+;
+    cmp di,MAX_HANDLES
+    jae d2hFail
+;   
+    or di,di
+    jz d2hFail
+;
+    push ax
+    push bx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov es,ax
+    inc es:[bx].he_ref_count
+    pop bx
+    pop ax
+;
+    dec di
+    shl di,3
+    add di,OFFSET h_arr
+    EnterSection ds:h_section
+    mov dx,ds:[si].hp_access
+    mov ds:[di].hp_access,dx
+    mov edx,ds:[si].hp_pos
+    mov ds:[di].hp_pos,edx
+    xchg ax,ds:[di].hp_handle
+    LeaveSection ds:h_section
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae d2hOk
+;    
+    or ax,ax
+    jz d2hOk
+;
+    dec ax
+    movzx ecx,ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+    EnterSection ds:hd_section
+;
+    sub ds:[bx].he_ref_count,1
+    jnz d2hOkLeave
+;
+    xor ax,ax
+    xchg ax,ds:[bx].he_sel
+    mov bx,ds:[bx].he_type
+    btc ds:hd_bitmap,ecx
+;
+    cmp bx,10
+    jae d2hOkLeave
+;
+    shl bx,1
+    call word ptr cs:[bx].close_tab
+
+d2hOkLeave:
+    LeaveSection ds:hd_section
+
+d2hOk:
+    clc
+    jmp d2hDone
 
 d2hFail:
     stc
@@ -917,7 +987,10 @@ d2hFail:
 d2hDone:
     pop di
     pop si
+    pop edx
+    pop ecx
     pop ax
+    pop es
     pop ds    
     retf32
 dup2_handle    Endp
