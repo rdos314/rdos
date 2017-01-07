@@ -336,6 +336,7 @@ void main()
     int len;
     char buf[32];
     int size;
+    int pos;
     
     handle1 = RdosOpenHandle("fil.txt", O_RDONLY);
 
@@ -349,8 +350,11 @@ void main()
     RdosSetHandleSize(handle4, size - 1);
 
     mode = RdosGetHandleMode(handle4);
-    mode |= _APPEND | _WRITE;
+    mode |= _WRITE;
     RdosSetHandleMode(handle4, mode);
+
+    pos = RdosGetHandlePos(handle4);
+    RdosSetHandlePos(handle4, pos - 6);
     
     strcpy(buf, "Testing");
     len = strlen(buf);

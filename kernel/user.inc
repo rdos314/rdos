@@ -1162,6 +1162,20 @@ SetHandleMode     MACRO
 						ENDM
 
 
+; IN	BX 	Handle
+; OUT	EAX 	Position
+GetHandlePos     MACRO
+	UserGate get_handle_pos_nr
+						ENDM
+
+
+; IN	BX	Handle
+; IN	EAX	Position
+SetHandlePos     MACRO
+	UserGate set_handle_pos_nr
+						ENDM
+
+
 ;;;;;;;;;;;;;; INI FILE HANDLING ;;;;;;;;;;;
 
 ; OUT BX            Ini handle
