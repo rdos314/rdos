@@ -1399,6 +1399,124 @@ shpDone:
     pop ds    
     retf32
 set_handle_pos     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           EofHandle
+;
+;           DESCRIPTION:    Eof for C handle
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EAX         Eof status (-1 = error, 0 = not eof, 1 = eof)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+eof_handle_name  DB 'Eof C Handle', 0
+
+eof_dummy      Proc near
+    mov eax,-1
+    ret
+eof_dummy      Endp
+
+eof_stdin      Proc near
+    PollKeyboard
+    jc eof_stdin_ok
+;
+    xor eax,eax
+    ret
+
+eof_stdin_ok:
+    mov eax,1
+    ret
+eof_stdin      Endp
+
+eof_stdout      Proc near
+    mov eax,1
+    ret
+eof_stdout      Endp
+
+eof_file       Proc near
+    GetCFileSize
+    cmp eax,edx
+    je eof_file_ok
+;
+    xor eax,eax
+    ret
+
+eof_file_ok:
+    mov eax,1
+    ret
+eof_file       Endp
+
+eof_tab:
+et00  DW OFFSET eof_dummy
+et01  DW OFFSET eof_file
+et02  DW OFFSET eof_stdin
+et03  DW OFFSET eof_stdout
+et04  DW OFFSET eof_dummy
+et05  DW OFFSET eof_dummy
+et06  DW OFFSET eof_dummy
+et07  DW OFFSET eof_dummy
+et08  DW OFFSET eof_dummy
+et09  DW OFFSET eof_dummy
+
+eof_handle     Proc far
+    push ds
+    push bx
+    push edx
+    push bp
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae ehFail
+;   
+    or bx,bx
+    jz ehFail
+;
+    dec bx
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov ax,ds:[bx].hp_handle
+    mov edx,ds:[bx].hp_pos
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae ehFail
+;    
+    or ax,ax
+    jz ehFail
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].eof_tab
+    jmp ehDone
+
+ehFail:
+    mov eax,-1
+
+ehDone:
+    pop bp
+    pop edx
+    pop bx
+    pop ds    
+    retf32
+eof_handle     Endp        
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1533,6 +1651,12 @@ init_chandle     PROC near
     mov edi,OFFSET set_handle_pos_name
     xor cl,cl
     mov ax,set_handle_pos_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET eof_handle
+    mov edi,OFFSET eof_handle_name
+    xor cl,cl
+    mov ax,eof_handle_nr
     RegisterBimodalUserGate
 ;
     popad
