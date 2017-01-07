@@ -1308,6 +1308,17 @@
     parm [ebx] \
     value [eax];
 
+#pragma aux RdosGetHandleTime = \
+    CallGate_get_handle_time  \
+    "mov [esi],edx" \
+    "mov [edi],eax" \
+    parm [ebx] [esi] [edi]  \
+    modify [eax edx];
+
+#pragma aux RdosSetHandleTime = \
+    CallGate_set_handle_time  \
+    parm [ebx] [edx] [eax];
+
 #pragma aux RdosOpenFile = \
     CallGate_open_file  \
     ValidateHandle  \

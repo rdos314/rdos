@@ -439,6 +439,8 @@ long RDOSAPI RdosGetHandlePos(int Handle);
 void RDOSAPI RdosSetHandlePos(int Handle, long Size);
 int RDOSAPI RdosEofHandle(int Handle);
 int RDOSAPI RdosIsHandleDevice(int Handle);
+void RDOSAPI RdosGetHandleTime(int Handle, unsigned long *MsbTime, unsigned long *LsbTime);
+void RDOSAPI RdosSetHandleTime(int Handle, unsigned long MsbTime, unsigned long LsbTime);
 
 int RDOSAPI RdosOpenFile(const char *FileName, char Access);
 int RDOSAPI RdosCreateFile(const char *FileName, int Attrib);

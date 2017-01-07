@@ -338,12 +338,11 @@ void main()
     int size;
     int pos;
     int val;
+    unsigned long lsb, msb;
     
     handle1 = RdosOpenHandle("fil.txt", O_RDONLY);
 
-    val = RdosIsHandleDevice(1);
-    val = RdosIsHandleDevice(2);
-    val = RdosIsHandleDevice(handle1);
+    RdosGetHandleTime(handle1, &msb, &lsb);
 
     handle3 = RdosDupHandle(handle1);
 

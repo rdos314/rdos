@@ -1188,6 +1188,18 @@ IsHandleDevice       MACRO
 	UserGate is_handle_device_nr
 						ENDM
 
+; IN	BX 	        Handle
+; OUT	EDX:EAX 	Time
+GetHandleTime     MACRO
+	UserGate get_handle_time_nr
+						ENDM
+
+; IN	BX		Handle
+; IN	EDX:EAX		Time
+SetHandleTime      MACRO
+	UserGate set_handle_time_nr
+						ENDM
+
 ;;;;;;;;;;;;;; INI FILE HANDLING ;;;;;;;;;;;
 
 ; OUT BX            Ini handle

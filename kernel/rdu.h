@@ -796,6 +796,8 @@
 #define usergate_set_handle_pos 0x0000026E
 #define usergate_eof_handle 0x0000026F
 #define usergate_is_handle_device 0x00000270
+#define usergate_get_handle_time 0x00000271
+#define usergate_set_handle_time 0x00000271
 
 
 
@@ -1598,6 +1600,8 @@
 #define CallGate_set_handle_pos 0x55 0x67 0x9a 110 2 0 0 3 0 0x5d
 #define CallGate_eof_handle 0x55 0x67 0x9a 111 2 0 0 3 0 0x5d
 #define CallGate_is_handle_device 0x55 0x67 0x9a 112 2 0 0 3 0 0x5d
+#define CallGate_get_handle_time 0x55 0x67 0x9a 113 2 0 0 3 0 0x5d
+#define CallGate_set_handle_time 0x55 0x67 0x9a 113 2 0 0 3 0 0x5d
 
 #else
 
@@ -2398,5 +2402,7 @@
 #define CallGate_set_handle_pos 0x3e 0x67 0x9a 110 2 0 0 3 0
 #define CallGate_eof_handle 0x3e 0x67 0x9a 111 2 0 0 3 0
 #define CallGate_is_handle_device 0x3e 0x67 0x9a 112 2 0 0 3 0
+#define CallGate_get_handle_time 0x3e 0x67 0x9a 113 2 0 0 3 0
+#define CallGate_set_handle_time 0x3e 0x67 0x9a 113 2 0 0 3 0
 
 #endif
