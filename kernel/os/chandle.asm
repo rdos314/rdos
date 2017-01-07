@@ -131,7 +131,7 @@ create_c_handle Endp
 ;           DESCRIPTION:    Allocate C handle
 ;
 ;           PARAMETERS:     AX          Handle type
-;                           BX          Sel
+;                           DX          Sel
 ;
 ;           RETURNS:        BX          Entry handle
 ;
@@ -140,25 +140,25 @@ create_c_handle Endp
 allocate_c_handle_name  DB 'Allocate C Handle', 0
 
 allocate_c_handle     Proc far
-    push es
+    push ds
     push eax
     push ecx
     push edx
     push edi
 ;
     push eax
-    push ebx
+    push edx
 ;
     mov ax,chandle_data_sel
-    mov es,ax
-
-achRetry:    
+    mov ds,ax
+    EnterSection ds:hd_section
+;
     mov cx,SYS_BITMAP_COUNT  
     xor edi,edi
     mov bx,OFFSET hd_bitmap
 
 achLoop:
-    mov eax,es:[bx]
+    mov eax,ds:[bx]
     not eax
     bsf edx,eax
     jnz achOk
@@ -169,26 +169,25 @@ achLoop:
     loop achLoop
 ;
     stc
-    pop ebx
+    pop edx
     pop eax
-    jmp achDone    
+    jmp achLeave
 
 achOk:
     add edx,edi
-    bts es:hd_bitmap,edx
-    jc achRetry
+    bts ds:hd_bitmap,edx
 ;    
     mov ax,SIZE handle_entry_struc
     mul dx
     mov di,ax
     add di,OFFSET hd_data
 ;
-    pop ebx
+    pop edx
     pop eax
 ;
-    mov es:[di].he_type,ax
-    mov es:[di].he_sel,bx
-    mov es:[di].he_ref_count,1
+    mov ds:[di].he_type,ax
+    mov ds:[di].he_sel,dx
+    mov ds:[di].he_ref_count,1
 ;
     mov ax,di
     sub ax,OFFSET hd_data
@@ -200,14 +199,131 @@ achOk:
     inc bx
     clc
 
-achDone: 
+achLeave:
+    LeaveSection ds:hd_section
+; 
     pop edi
     pop edx
     pop ecx
     pop eax
-    pop es
+    pop ds
     retf32
 allocate_c_handle  Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ref_c_handle
+;
+;           DESCRIPTION:    Allocate C handle
+;
+;           PARAMETERS:     AX          Handle type
+;                           BX		Entry handle
+;                           DX          Sel
+;
+;           RETURNS:        BX          Entry handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ref_c_handle_name  DB 'Ref C Handle', 0
+
+ref_c_handle     Proc far
+    push ds
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    push ax
+    push dx
+;
+    mov ax,chandle_data_sel
+    mov ds,ax
+    EnterSection ds:hd_section
+;
+    mov dx,bx
+    dec dx
+    mov ax,SIZE handle_entry_struc
+    mul dx
+    mov di,ax
+    add di,OFFSET hd_data
+;
+    pop dx
+    pop ax
+;
+    movzx edx,dx
+    bt ds:hd_bitmap,edx
+    jnc rchRecreate
+;
+    cmp ax,ds:[di].he_type
+    jne rchRecreate
+;
+    cmp dx,ds:[di].he_sel
+    jne rchRecreate
+;
+    add ds:[di].he_ref_count,1
+    jmp rchLeave
+
+rchRecreate:
+    push eax
+    push edx
+;
+    mov cx,SYS_BITMAP_COUNT  
+    xor edi,edi
+    mov bx,OFFSET hd_bitmap
+
+rchLoop:
+    mov eax,ds:[bx]
+    not eax
+    bsf edx,eax
+    jnz rchOk
+;
+    add bx,4
+    add edi,32
+;
+    loop rchLoop
+;
+    stc
+    pop edx
+    pop eax
+    jmp rchLeave
+
+rchOk:
+    add edx,edi
+    bts ds:hd_bitmap,edx
+;    
+    mov ax,SIZE handle_entry_struc
+    mul dx
+    mov di,ax
+    add di,OFFSET hd_data
+;
+    pop edx
+    pop eax
+;
+    mov ds:[di].he_type,ax
+    mov ds:[di].he_sel,dx
+    mov ds:[di].he_ref_count,1
+;
+    mov ax,di
+    sub ax,OFFSET hd_data
+    xor dx,dx
+    mov cx,SIZE handle_entry_struc
+    div cx
+;
+    mov bx,ax
+    inc bx
+    clc
+
+rchLeave: 
+    LeaveSection ds:hd_section
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    retf32
+ref_c_handle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -429,8 +545,10 @@ close_handle     Proc near
     add bx,OFFSET hd_data
     mov ax,chandle_data_sel
     mov ds,ax
+    EnterSection ds:hd_section
+;
     sub ds:[bx].he_ref_count,1
-    jnz chDone
+    jnz chLeave
 ;
     xor ax,ax
     xchg ax,ds:[bx].he_sel
@@ -438,10 +556,13 @@ close_handle     Proc near
     btc ds:hd_bitmap,ecx
 ;
     cmp bx,10
-    jae chDone
+    jae chLeave
 ;
     shl bx,1
     call word ptr cs:[bx].close_tab
+
+chLeave:
+    LeaveSection ds:hd_section
 
 chDone:
     xor bx,bx
@@ -478,6 +599,7 @@ init_chandle     PROC near
     xor al,al
     rep stosb
 ;
+    InitSection es:hd_section
     mov es:hd_bitmap,3
 ;
     mov di,OFFSET hd_data
@@ -504,6 +626,12 @@ init_chandle     PROC near
     mov edi,OFFSET allocate_c_handle_name
     xor cl,cl
     mov ax,allocate_c_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET ref_c_handle
+    mov edi,OFFSET ref_c_handle_name
+    xor cl,cl
+    mov ax,ref_c_handle_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET open_handle16

@@ -2253,18 +2253,25 @@ ocfHandle:
 ;
     mov bx,es:file_c_handle
     or bx,bx
-    jnz ocfOk
+    jnz ocfREf
 ;
-    mov bx,es
+    mov dx,es
     mov ax,C_HANDLE_FILE
     AllocateCHandle
     jnc ocfSaveHandle
-;
+
+ocfRevert:
     sub es:file_usage,1
     jnz ocfFailed
 ;
     call FreeFileSel
     jmp ocfFailed
+
+ocfRef:
+    mov dx,es
+    mov ax,C_HANDLE_FILE
+    RefCHandle
+    jc ocfRevert
 
 ocfSaveHandle:
     mov es:file_c_handle,bx

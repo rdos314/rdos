@@ -703,5 +703,6 @@ create_c_handle_nr          = 583
 allocate_c_handle_nr        = 584
 open_c_file_nr              = 585
 close_c_file_nr             = 586
+ref_c_handle_nr             = 587
 
 osgate_entries				= 600

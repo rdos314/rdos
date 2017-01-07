@@ -75,6 +75,8 @@ handle_entry_struc    ENDS
 
 handle_data_struc       STRUC
 
+hd_section       section_typ <>
+
 hd_bitmap        DD SYS_BITMAP_COUNT DUP(?)
 hd_data          DB SYS_HANDLE_COUNT * SIZE handle_entry_struc DUP(?)
 

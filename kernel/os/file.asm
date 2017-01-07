@@ -1780,6 +1780,7 @@ close_c_file    Proc far
     jz ccfDone
 ;
     mov ds,bx
+    mov ds:file_c_handle,0
     sub ds:file_usage,1
     jnz ccfDone
 ;

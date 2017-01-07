@@ -2078,11 +2078,18 @@ CreateCHandle MACRO
                     ENDM
 
 ; IN  AX        Entry type
-; IN  BX        Selector
-; IN  CX        Mode
+; IN  DX        Selector
 ; OUT BX        Entry handle
 AllocateCHandle MACRO
     OsGate allocate_c_handle_nr
+                    ENDM
+
+; IN  AX        Entry type
+; IN  BX        Entry handle
+; IN  DX        Selector
+; OUT BX        Entry handle
+RefCHandle MACRO
+    OsGate ref_c_handle_nr
                     ENDM
 
 ; IN  ES:EDI    Filename
