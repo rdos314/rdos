@@ -333,6 +333,8 @@ void main()
     int handle;
     
     handle = RdosOpenHandle("fil.txt", O_CREAT | O_RDONLY);
+    if (handle)
+        RdosCloseHandle(handle);
 
 
     int count;

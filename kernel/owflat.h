@@ -1239,6 +1239,10 @@
     parm [edi] [ecx] \
     value [ebx];
 
+#pragma aux RdosCloseHandle = \
+    CallGate_close_handle  \
+    parm [ebx];
+
 #pragma aux RdosOpenFile = \
     CallGate_open_file  \
     ValidateHandle  \

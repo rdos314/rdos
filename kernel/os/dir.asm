@@ -2195,6 +2195,7 @@ open_c_file    Proc far
     push es
     push fs
     push ax
+    push cx
     push edx
 ;
     mov bx,flat_sel
@@ -2284,6 +2285,7 @@ ocfFailed:
 
 ocfDone:
     pop edx
+    pop cx
     pop ax
     pop fs
     pop es

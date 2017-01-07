@@ -293,10 +293,7 @@ open_handle_name  DB 'Open C Handle', 0
 
 open_handle     Proc near
     push ds
-    push es
     push ax
-    push cx
-    push edi
 ;    
     OpenCFile
     jc ohDone
@@ -312,10 +309,7 @@ open_handle     Proc near
     int 3    
 
 ohDone:
-    pop edi
-    pop cx
     pop ax
-    pop es
     pop ds
     ret
 open_handle     Endp
@@ -332,6 +326,51 @@ open_handle32    PROC far
     call open_handle
     retf32
 open_handle32    ENDP
+        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CloseHandle
+;
+;           DESCRIPTION:    Close C handle
+;
+;           PARAMETERS:     BX          Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_handle_name  DB 'Close C Handle', 0
+
+close_handle     Proc near
+    push ds
+    push ax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae chDone
+;   
+    or bx,bx
+    jz chDone
+;
+    dec bx
+    shl bx,1 
+    add bx,OFFSET h_arr
+    EnterSection ds:h_section
+    xor ax,ax
+    xchg ax,ds:[bx]
+    LeaveSection ds:h_section
+
+chDone:
+    xor bx,bx
+;
+    pop ax
+    pop ds    
+    retf32
+close_handle    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -392,6 +431,12 @@ init_chandle     PROC near
     mov dx,virt_es_in
     mov ax,open_handle_nr
     RegisterUserGate
+;
+    mov esi,OFFSET close_handle
+    mov edi,OFFSET close_handle_name
+    xor cl,cl
+    mov ax,close_handle_nr
+    RegisterBimodalUserGate
 ;
     popad
     pop es

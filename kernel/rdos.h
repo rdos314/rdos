@@ -426,6 +426,7 @@ int RDOSAPI RdosProgramCanModule(int Module, const char *ProgramName);
 int RDOSAPI RdosWaitForCanModuleProgramming(int Module, int *ErrorCode, int *Position);
 
 int RDOSAPI RdosOpenHandle(const char *Name, int Mode);
+void RDOSAPI RdosCloseHandle(int Handle);
 
 int RDOSAPI RdosOpenFile(const char *FileName, char Access);
 int RDOSAPI RdosCreateFile(const char *FileName, int Attrib);

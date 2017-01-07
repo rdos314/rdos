@@ -1100,6 +1100,11 @@ OpenHandle	MACRO
 	UserGate open_handle_nr
 					ENDM
 
+; IN  BX            C handle
+CloseHandle	MACRO
+	UserGate close_handle_nr
+					ENDM
+
 ;;;;;;;;;;;;;; INI FILE HANDLING ;;;;;;;;;;;
 
 ; OUT BX            Ini handle
