@@ -2035,6 +2035,39 @@ get_file_size_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           get_c_file_size
+;
+;           DESCRIPTION:    Get C file size
+;
+;           PARAMETERS:     BX              File selector
+;                   
+;           RETURNS:        EAX             Size
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_c_file_size_name      DB 'Get C File Size',0
+
+get_c_file_size	Proc far
+    push ds
+;
+    or bx,bx
+    stc
+    jz gcfsDone
+;
+    mov ds,bx
+    EnterReadSection ds:file_size_section
+    mov eax,ds:file_size
+    LeaveReadSection ds:file_size_section
+    clc
+
+gcfsDone:
+    pop ds
+    retf32
+get_c_file_size	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SET_FILE_SIZE
 ;
 ;           DESCRIPTION:    Set file size
@@ -2086,6 +2119,43 @@ set_file_size_done:
     ApiCheckEcx
     ApiCheckEax
     retf32
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           set_c_file_size
+;
+;           DESCRIPTION:    Set C file size
+;
+;           PARAMETERS:     BX              File selector
+;                           EAX             New size
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_c_file_size_name      DB 'Set C File Size',0
+
+set_c_file_size	Proc far
+    push ds
+    push eax
+    push edx
+;
+    or bx,bx
+    stc
+    jz scfsDone
+;
+    mov edx,eax
+    mov ds,bx
+    mov al,ds:file_drive
+    EnterWriteSection ds:file_size_section
+    CallFileSystem fs_set_file_size_proc
+    LeaveWriteSection ds:file_size_section
+
+scfsDone:
+    pop edx
+    pop eax
+    pop ds
+    retf32
+set_c_file_size	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3032,6 +3102,18 @@ init_file       PROC near
     mov edi,OFFSET write_c_file_name
     xor cl,cl
     mov ax,write_c_file_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_c_file_size
+    mov edi,OFFSET get_c_file_size_name
+    xor cl,cl
+    mov ax,get_c_file_size_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET set_c_file_size
+    mov edi,OFFSET set_c_file_size_name
+    xor cl,cl
+    mov ax,set_c_file_size_nr
     RegisterOsGate
 ;
     mov esi,OFFSET close_file

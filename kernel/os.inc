@@ -2124,6 +2124,18 @@ WriteCFile MACRO
     OsGate write_c_file_nr
                     ENDM
 
+; IN  BX        File selector
+; OUT EAX       File size
+GetCFileSize MACRO
+    OsGate get_c_file_size_nr
+                    ENDM
+
+; IN  BX        File selector
+; IN  EAX       File size
+SetCFileSize MACRO
+    OsGate set_c_file_size_nr
+                    ENDM
+
 ;;;;;;;;;;;;; Dos ;;;;;;;;;;;;;;;;;;;
 
 ;       EAX     Bytes

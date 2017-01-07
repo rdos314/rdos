@@ -706,5 +706,7 @@ close_c_file_nr             = 586
 ref_c_handle_nr             = 587
 read_c_file_nr              = 588
 write_c_file_nr             = 589
+get_c_file_size_nr          = 590
+set_c_file_size_nr          = 591
 
 osgate_entries				= 600

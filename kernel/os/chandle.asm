@@ -1030,7 +1030,7 @@ get_size_dummy      Proc near
 get_size_dummy      Endp
 
 get_size_file       Proc near
-    clc
+    GetCFileSize
     ret
 get_size_file       Endp
 
@@ -1119,7 +1119,7 @@ set_size_dummy      Proc near
 set_size_dummy      Endp
 
 set_size_file       Proc near
-    clc
+    SetCFileSize
     ret
 set_size_file       Endp
 
