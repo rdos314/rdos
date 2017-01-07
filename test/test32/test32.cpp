@@ -330,11 +330,14 @@ long GetSqrt(long long Value)
 
 void main()
 {
-    int handle;
+    int handle1, handle2;
     
-    handle = RdosOpenHandle("fil.txt", O_CREAT | O_RDONLY);
-    if (handle)
-        RdosCloseHandle(handle);
+    handle1 = RdosOpenHandle("fil.txt", O_CREAT | O_RDONLY);
+    handle2 = RdosOpenHandle("fil.txt", O_WRONLY);
+    if (handle2)
+        RdosCloseHandle(handle2);
+    if (handle1)
+        RdosCloseHandle(handle1);
 
 
     int count;

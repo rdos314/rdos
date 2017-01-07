@@ -221,25 +221,26 @@ allocate_c_handle  Endp
 ;                           BX		Entry handle
 ;                           DX          Sel
 ;
-;           RETURNS:        BX          Entry handle
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ref_c_handle_name  DB 'Ref C Handle', 0
 
 ref_c_handle     Proc far
     push ds
-    push eax
-    push ecx
-    push edx
-    push edi
+    push di
 ;
-    push ax
-    push dx
-;
-    mov ax,chandle_data_sel
-    mov ds,ax
+    mov di,chandle_data_sel
+    mov ds,di
     EnterSection ds:hd_section
+;
+    cmp bx,SYS_BITMAP_COUNT
+    jae rchLeaveFail
+;
+    or bx,bx
+    jz rchLeaveFail
+;
+    push eax
+    push dx
 ;
     mov dx,bx
     dec dx
@@ -248,79 +249,31 @@ ref_c_handle     Proc far
     mov di,ax
     add di,OFFSET hd_data
 ;
-    pop dx
-    pop ax
+    movzx eax,bx
+    dec eax
+    bt ds:hd_bitmap,eax
 ;
-    movzx edx,dx
-    bt ds:hd_bitmap,edx
-    jnc rchRecreate
+    pop dx
+    pop eax
+    jnc rchLeaveFail
 ;
     cmp ax,ds:[di].he_type
-    jne rchRecreate
+    jne rchLeaveFail
 ;
     cmp dx,ds:[di].he_sel
-    jne rchRecreate
+    jne rchLeaveFail
 ;
     add ds:[di].he_ref_count,1
-    jmp rchLeave
-
-rchRecreate:
-    push eax
-    push edx
-;
-    mov cx,SYS_BITMAP_COUNT  
-    xor edi,edi
-    mov bx,OFFSET hd_bitmap
-
-rchLoop:
-    mov eax,ds:[bx]
-    not eax
-    bsf edx,eax
-    jnz rchOk
-;
-    add bx,4
-    add edi,32
-;
-    loop rchLoop
-;
-    stc
-    pop edx
-    pop eax
-    jmp rchLeave
-
-rchOk:
-    add edx,edi
-    bts ds:hd_bitmap,edx
-;    
-    mov ax,SIZE handle_entry_struc
-    mul dx
-    mov di,ax
-    add di,OFFSET hd_data
-;
-    pop edx
-    pop eax
-;
-    mov ds:[di].he_type,ax
-    mov ds:[di].he_sel,dx
-    mov ds:[di].he_ref_count,1
-;
-    mov ax,di
-    sub ax,OFFSET hd_data
-    xor dx,dx
-    mov cx,SIZE handle_entry_struc
-    div cx
-;
-    mov bx,ax
-    inc bx
     clc
+    jmp rchLeave
+
+rchLeaveFail:
+    stc
 
 rchLeave: 
     LeaveSection ds:hd_section
 ;
-    pop edi
-    pop edx
-    pop ecx
-    pop eax
+    pop di
     pop ds
     retf32
 ref_c_handle  Endp   
