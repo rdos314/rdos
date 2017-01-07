@@ -1134,6 +1134,20 @@ Dup2Handle       MACRO
 	UserGate dup2_handle_nr
 						ENDM
 
+; IN	BX 	Handle
+; OUT	EAX 	Filesize
+GetHandleSize     MACRO
+	UserGate get_handle_size_nr
+						ENDM
+
+
+; IN	BX	Handle
+; IN	EAX	Filesize
+SetHandleSize     MACRO
+	UserGate set_handle_size_nr
+						ENDM
+
+
 ;;;;;;;;;;;;;; INI FILE HANDLING ;;;;;;;;;;;
 
 ; OUT BX            Ini handle

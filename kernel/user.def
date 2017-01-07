@@ -788,5 +788,7 @@ read_handle_nr                  = 613
 write_handle_nr                 = 614
 dup_handle_nr                   = 615
 dup2_handle_nr                  = 616
+get_handle_size_nr              = 617
+set_handle_size_nr              = 618
 
 usergate_entries			    = 625

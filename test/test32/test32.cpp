@@ -334,18 +334,23 @@ void main()
     int handle3, handle4;
     int len;
     char buf[32];
+    int size;
     
     handle1 = RdosOpenHandle("fil.txt", O_RDWR);
 
     handle3 = RdosDupHandle(handle1);
-    handle4 = RdosDup2Handle(handle1, 2);
 
+    memset(buf, 0, 32);
+    RdosReadHandle(handle3, buf, 32);
+    handle4 = RdosDup2Handle(handle3, 2);
+
+    size = RdosGetHandleSize(handle4);
+    RdosSetHandleSize(handle4, size - 1);
+    
     strcpy(buf, "Testing");
     len = strlen(buf);
     RdosWriteHandle(handle4, buf, len);
 
-    memset(buf, 0, 32);
-    RdosReadHandle(handle3, buf, 32);
     
     if (handle2)
         RdosCloseHandle(handle2);
