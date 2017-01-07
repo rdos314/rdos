@@ -29,7 +29,9 @@
 ; handle types
 ;
 
-C_HANDLE_FILE   = 1
+C_HANDLE_FILE     = 1
+C_HANDLE_STDIN    = 2
+C_HANDLE_STDOUT   = 3
 
 ;
 ; iomode constants
@@ -67,7 +69,6 @@ handle_entry_struc    STRUC
 
 he_type          DW ?
 he_sel           DW ?
-he_io_mode       DW ?
 he_ref_count     DW ?
 
 handle_entry_struc    ENDS

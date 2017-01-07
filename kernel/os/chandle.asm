@@ -36,11 +36,19 @@ INCLUDE chandle.inc
 
 MAX_HANDLES           = 256
 
+handle_proc_struc       STRUC
+
+hp_handle       DW ?
+hp_access       DW ?
+hp_pos          DD ?
+
+handle_proc_struc       ENDS
+
 handle_struc    STRUC
 
 h_section       section_typ <>
 
-h_arr           DW MAX_HANDLES DUP(?)
+h_arr           DB MAX_HANDLES * size handle_proc_struc DUP(?)
 
 handle_struc    ENDS
 
@@ -75,20 +83,32 @@ create_c_handle    PROC far
 ;    
     mov eax,SIZE handle_struc
     AllocateSmallGlobalMem
-;
-    mov di,OFFSET h_arr
-    mov ax,1
-    stosw
-;
-    mov ax,2
-    stosw
-;    
-    xor ax,ax
-    mov cx,MAX_HANDLES - 2
-    rep stosw
-;    
     mov ax,es
     mov ds,ax
+;    
+    mov di,OFFSET h_arr
+    mov ds:[di].hp_handle,1
+    mov ds:[di].hp_access,IO_READ OR IO_ISTTY
+    mov ds:[di].hp_pos,0
+;
+    add di,SIZE handle_proc_struc
+    mov ds:[di].hp_handle,2
+    mov ds:[di].hp_access,IO_WRITE OR IO_ISTTY
+    mov ds:[di].hp_pos,0
+;
+    add di,SIZE handle_proc_struc
+    mov ds:[di].hp_handle,2
+    mov ds:[di].hp_access,IO_WRITE OR IO_ISTTY
+    mov ds:[di].hp_pos,0
+;    
+    mov cx,MAX_HANDLES - 3
+
+cchLoop:
+    add di,SIZE handle_proc_struc
+    mov ds:[di].hp_handle,0
+    mov ds:[di].hp_access,0
+    mov ds:[di].hp_pos,0
+    loop cchLoop
 ;    
     InitSection ds:h_section
     mov ax,ds
@@ -112,7 +132,6 @@ create_c_handle Endp
 ;
 ;           PARAMETERS:     AX          Handle type
 ;                           BX          Sel
-;                           CX          Mode
 ;
 ;           RETURNS:        BX          Entry handle
 ;
@@ -123,12 +142,12 @@ allocate_c_handle_name  DB 'Allocate C Handle', 0
 allocate_c_handle     Proc far
     push es
     push eax
+    push ecx
     push edx
     push edi
 ;
     push eax
     push ebx
-    push ecx
 ;
     mov ax,chandle_data_sel
     mov es,ax
@@ -150,7 +169,6 @@ achLoop:
     loop achLoop
 ;
     stc
-    pop ecx
     pop ebx
     pop eax
     jmp achDone    
@@ -165,47 +183,12 @@ achOk:
     mov di,ax
     add di,OFFSET hd_data
 ;
-    pop ecx
     pop ebx
     pop eax
 ;
     mov es:[di].he_type,ax
     mov es:[di].he_sel,bx
     mov es:[di].he_ref_count,1
-;
-    mov al,cl
-    and al,3
-    cmp al,O_RDWR
-    je achRdWr
-;
-    cmp al,O_RDONLY
-    je achRdOnly
-;
-    cmp al,O_WRONLY
-    je achWrOnly
-;
-    xor ax,ax
-    jmp achAccessOk
-
-achRdWr:
-    mov ax,IO_READ OR IO_WRITE
-    jmp achAccessOk
-
-achRdOnly:
-    mov ax,IO_READ
-    jmp achAccessOk
-
-achWrOnly:
-    mov ax,IO_WRITE
-
-achAccessOk:
-    test cx,O_APPEND
-    jz achAppendOk
-;
-    or ax,IO_APPEND 
-
-achAppendOk:
-    mov es:[di].he_io_mode,ax
 ;
     mov ax,di
     sub ax,OFFSET hd_data
@@ -220,6 +203,7 @@ achAppendOk:
 achDone: 
     pop edi
     pop edx
+    pop ecx
     pop eax
     pop es
     retf32
@@ -228,51 +212,55 @@ allocate_c_handle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           allocate_entry
+;           NAME:           allocate_proc_handle
 ;
-;           DESCRIPTION:    Allocate C entry
+;           DESCRIPTION:    Allocate process handle
 ;
 ;           PARAMETERS:     DS          C handle sel
-;                           AX          Handle data #
+;                           AX          C Handle
+;                           CX          Mode
 ;
 ;           RETURNS:        BX          Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-allocate_entry     Proc near
-    push cx
+allocate_proc_handle     Proc near
     push dx
 ;    
+    push cx
     mov cx,MAX_HANDLES
     mov bx,OFFSET h_arr
     EnterSection ds:h_section
 
-aeLoop:    
-    mov dx,ds:[bx]
+aphLoop:    
+    mov dx,ds:[bx].hp_handle
     or dx,dx
-    jz aeFound
+    jz aphFound
 ;
-    add bx,2
-    loop aeLoop
+    add bx,SIZE handle_proc_struc
+    loop aphLoop
 ;
+    pop cx
     LeaveSection ds:h_section
     stc
-    jmp aeDone
+    jmp aphDone
 
-aeFound:    
-    mov ds:[bx],ax
+aphFound:    
+    pop cx
+    mov ds:[bx].hp_handle,ax
+    mov ds:[bx].hp_access,cx
+    mov ds:[bx].hp_pos,0
     LeaveSection ds:h_section
 ;
     sub bx,OFFSET h_arr
-    shr bx,1
+    shr bx,3
     inc bx
     clc
 
-aeDone:   
+aphDone:   
     pop dx
-    pop cx 
     ret
-allocate_entry  Endp   
+allocate_proc_handle  Endp   
         
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -294,6 +282,7 @@ open_handle_name  DB 'Open C Handle', 0
 open_handle     Proc near
     push ds
     push ax
+    push cx
 ;    
     OpenCFile
     jc ohDone
@@ -302,13 +291,48 @@ open_handle     Proc near
     mov ds,ax
     mov ds,ds:p_app_sel
     mov ds,ds:app_c_handle_sel
+;
+    mov al,cl
+    and al,3
+    cmp al,O_RDWR
+    je ohRdWr
+;
+    cmp al,O_RDONLY
+    je ohRdOnly
+;
+    cmp al,O_WRONLY
+    je ohWrOnly
+;
+    xor ax,ax
+    jmp ohAccessOk
+
+ohRdWr:
+    mov ax,IO_READ OR IO_WRITE
+    jmp ohAccessOk
+
+ohRdOnly:
+    mov ax,IO_READ
+    jmp ohAccessOk
+
+ohWrOnly:
+    mov ax,IO_WRITE
+
+ohAccessOk:
+    test cx,O_APPEND
+    jz ohAppendOk
+;
+    or ax,IO_APPEND 
+
+ohAppendOk:
+    mov cx,ax
     mov ax,bx
-    call allocate_entry
+    call allocate_proc_handle
     jnc ohDone
 ;
     int 3    
 
 ohDone:
+    pop cx
     pop ax
     pop ds
     ret
@@ -359,11 +383,13 @@ close_handle     Proc near
     jz chDone
 ;
     dec bx
-    shl bx,1 
+    shl bx,3
     add bx,OFFSET h_arr
     EnterSection ds:h_section
     xor ax,ax
-    xchg ax,ds:[bx]
+    xchg ax,ds:[bx].hp_handle
+    mov ds:[bx].hp_access,0
+    mov ds:[bx].hp_pos,0
     LeaveSection ds:h_section
 ;
     cmp ax,SYS_HANDLE_COUNT
@@ -423,13 +449,13 @@ init_chandle     PROC near
     mov es:hd_bitmap,3
 ;
     mov di,OFFSET hd_data
+    mov es:[di].he_type,C_HANDLE_STDIN
     mov es:[di].he_sel,0
-    mov es:[di].he_io_mode,IO_READ OR IO_ISTTY
     mov es:[di].he_ref_count,1
 ;
     add di,SIZE handle_entry_struc
+    mov es:[di].he_type,C_HANDLE_STDOUT
     mov es:[di].he_sel,0
-    mov es:[di].he_io_mode,IO_WRITE OR IO_ISTTY
     mov es:[di].he_ref_count,1
 ;
     mov ax,cs
