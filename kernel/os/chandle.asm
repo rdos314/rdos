@@ -523,6 +523,13 @@ ohHandle:
     jmp ohDone
 
 ohHandleOk:
+    test cx,O_TRUNC
+    jz ohTruncOk
+;
+    xor eax,eax
+    SetFileSize
+
+ohTruncOk:
     push cx
     FileToCHandle
     mov es:[di].he_file_sel,ax
