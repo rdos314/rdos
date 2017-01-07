@@ -545,7 +545,86 @@ close_handle    Endp
 
 read_handle_name  DB 'Read C Handle', 0
 
+read_dummy	Proc near
+    stc
+    ret
+read_dummy	Endp
+
+read_file	Proc near
+    ret
+read_file	Endp
+
+read_tab:
+rt00  DW OFFSET read_dummy
+rt01  DW OFFSET read_file
+rt02  DW OFFSET read_dummy
+rt03  DW OFFSET read_dummy
+rt04  DW OFFSET read_dummy
+rt05  DW OFFSET read_dummy
+rt06  DW OFFSET read_dummy
+rt07  DW OFFSET read_dummy
+rt08  DW OFFSET read_dummy
+rt09  DW OFFSET read_dummy
+
 read_handle     Proc near
+    push ds
+    push bx
+    push dx
+    push si
+    push bp
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae rhFail
+;   
+    or bx,bx
+    jz rhFail
+;
+    dec bx
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov si,ds:[bx].hp_access
+    test si,IO_READ
+    jz rhFail
+;
+    mov edx,ds:[bx].hp_pos
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae rhFail
+;    
+    or ax,ax
+    jz rhFail
+;
+    push dx
+    dec ax
+    movzx ecx,ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].read_tab
+
+rhFail:
+    stc
+
+rhDone:
+    pop bp
+    pop si
+    pop dx
+    pop bx
+    pop ds    
     ret
 read_handle	Endp
 
@@ -585,7 +664,86 @@ read_handle32    ENDP
 
 write_handle_name  DB 'Write C Handle', 0
 
+write_dummy	Proc near
+    stc
+    ret
+write_dummy	Endp
+
+write_file	Proc near
+    ret
+write_file	Endp
+
+write_tab:
+wt00  DW OFFSET write_dummy
+wt01  DW OFFSET write_file
+wt02  DW OFFSET write_dummy
+wt03  DW OFFSET write_dummy
+wt04  DW OFFSET write_dummy
+wt05  DW OFFSET write_dummy
+wt06  DW OFFSET write_dummy
+wt07  DW OFFSET write_dummy
+wt08  DW OFFSET write_dummy
+wt09  DW OFFSET write_dummy
+
 write_handle     Proc near
+    push ds
+    push bx
+    push dx
+    push si
+    push bp
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae whFail
+;   
+    or bx,bx
+    jz whFail
+;
+    dec bx
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov si,ds:[bx].hp_access
+    test si,IO_WRITE
+    jz whFail
+;
+    mov edx,ds:[bx].hp_pos
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae whFail
+;    
+    or ax,ax
+    jz whFail
+;
+    push dx
+    dec ax
+    movzx ecx,ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].write_tab
+
+whFail:
+    stc
+
+whDone:
+    pop bp
+    pop si
+    pop dx
+    pop bx
+    pop ds    
     ret
 write_handle	Endp
 
