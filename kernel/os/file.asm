@@ -1344,6 +1344,43 @@ read_file       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           read_c_file
+;
+;           DESCRIPTION:    Reads from C file
+;
+;           PARAMETERS:     BX              File selector
+;                           ECX             Size
+;                           EDX             Position
+;                           ES:EDI      Data buffer
+;
+;           RETURNS:        EAX             Bytes read
+;                           EDX             Update position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_c_file_name	DB 'Read C File', 0
+
+read_c_file       Proc far
+    push ds
+    push bx
+;
+    mov ds,bx
+    mov al,ds:file_drive
+    call read_file
+    jc rcfDone
+;
+    add edx,eax
+
+rcfDone:
+    pop bx
+    pop ds
+    retf32
+read_c_file	Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           write file
 ;
 ;           DESCRIPTION:    Write to a file
@@ -1561,6 +1598,42 @@ write_file_done:
     ret
 write_file      Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           write_c_file
+;
+;           DESCRIPTION:    Writes to C file
+;
+;           PARAMETERS:     BX              File selector
+;                           ECX             Size
+;                           EDX             Position
+;                           ES:EDI          Data buffer
+;
+;           RETURNS:        EAX             Bytes read
+;                           EDX             Update position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_c_file_name	DB 'Write C File', 0
+
+write_c_file       Proc far
+    push ds
+    push bx
+;
+    mov ds,bx
+    mov al,ds:file_drive
+    call write_file
+    jc wcfDone
+;
+    add edx,eax
+
+wcfDone:
+    pop bx
+    pop ds
+    retf32
+write_c_file	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2947,6 +3020,18 @@ init_file       PROC near
     mov edi,OFFSET close_c_file_name
     xor cl,cl
     mov ax,close_c_file_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET read_c_file
+    mov edi,OFFSET read_c_file_name
+    xor cl,cl
+    mov ax,read_c_file_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET write_c_file
+    mov edi,OFFSET write_c_file_name
+    xor cl,cl
+    mov ax,write_c_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET close_file

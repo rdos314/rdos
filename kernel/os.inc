@@ -2104,6 +2104,26 @@ CloseCFile MACRO
     OsGate close_c_file_nr
                     ENDM
 
+; IN  BX        File selector
+; IN  EDX       Position
+; IN  ES:EDI    Buffer
+; IN  ECX       Size
+; OUT EAX       Read size
+; OUT EDX       New position
+ReadCFile MACRO
+    OsGate read_c_file_nr
+                    ENDM
+
+; IN  BX        File selector
+; IN  EDX       Position
+; IN  ES:EDI    Buffer
+; IN  ECX       Size
+; OUT EAX       Written size
+; OUT EDX       New position
+WriteCFile MACRO
+    OsGate write_c_file_nr
+                    ENDM
+
 ;;;;;;;;;;;;; Dos ;;;;;;;;;;;;;;;;;;;
 
 ;       EAX     Bytes

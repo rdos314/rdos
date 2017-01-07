@@ -551,6 +551,7 @@ read_dummy	Proc near
 read_dummy	Endp
 
 read_file	Proc near
+    ReadCFile
     ret
 read_file	Endp
 
@@ -568,10 +569,10 @@ rt09  DW OFFSET read_dummy
 
 read_handle     Proc near
     push ds
-    push bx
-    push dx
-    push si
-    push bp
+    push ebx
+    push edx
+    push esi
+    push ebp
 ;
     GetThread
     mov ds,ax
@@ -600,9 +601,11 @@ read_handle     Proc near
     or ax,ax
     jz rhFail
 ;
+    push ds
+    push bx
+;
     push dx
     dec ax
-    movzx ecx,ax
     mov dx,SIZE handle_entry_struc
     mul dx
     pop dx
@@ -615,15 +618,23 @@ read_handle     Proc near
     mov bx,ds:[bx].he_sel
     shl bp,1
     call word ptr cs:[bp].read_tab
+;
+    pop bx
+    pop ds
+    jc rhFail
+;
+    mov ds:[bx].hp_pos,edx
+    clc
+    jmp rhDone
 
 rhFail:
     stc
 
 rhDone:
-    pop bp
-    pop si
-    pop dx
-    pop bx
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
     pop ds    
     ret
 read_handle	Endp
@@ -670,6 +681,7 @@ write_dummy	Proc near
 write_dummy	Endp
 
 write_file	Proc near
+    WriteCFile
     ret
 write_file	Endp
 
@@ -687,10 +699,10 @@ wt09  DW OFFSET write_dummy
 
 write_handle     Proc near
     push ds
-    push bx
-    push dx
-    push si
-    push bp
+    push ebx
+    push edx
+    push esi
+    push ebp
 ;
     GetThread
     mov ds,ax
@@ -719,9 +731,11 @@ write_handle     Proc near
     or ax,ax
     jz whFail
 ;
+    push ds
+    push bx
+;
     push dx
     dec ax
-    movzx ecx,ax
     mov dx,SIZE handle_entry_struc
     mul dx
     pop dx
@@ -734,15 +748,23 @@ write_handle     Proc near
     mov bx,ds:[bx].he_sel
     shl bp,1
     call word ptr cs:[bp].write_tab
+;
+    pop bx
+    pop ds
+    jc whFail
+;
+    mov ds:[bx].hp_pos,edx
+    clc
+    jmp whDone
 
 whFail:
     stc
 
 whDone:
-    pop bp
-    pop si
-    pop dx
-    pop bx
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
     pop ds    
     ret
 write_handle	Endp
