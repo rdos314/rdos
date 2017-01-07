@@ -786,6 +786,109 @@ write_handle32    PROC far
     call write_handle
     retf32
 write_handle32    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DupHandle
+;
+;           DESCRIPTION:    Dup C handle
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        BX          New handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dup_handle_name  DB 'Dup C Handle', 0
+
+dup_handle     Proc near
+    push ds
+    push ax
+    push dx
+    push si
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae dhFail
+;   
+    or bx,bx
+    jz dhFail
+;
+    mov si,bx
+    dec si
+    shl si,3
+    add si,OFFSET h_arr
+    mov ax,ds:[si].hp_handle
+    or ax,ax
+    jz dhFail
+
+dhFail:
+    stc
+
+dhDone:
+    pop si
+    pop dx
+    pop ax
+    pop ds    
+    retf32
+dup_handle    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Dup2Handle
+;
+;           DESCRIPTION:    Dup2 C handle
+;
+;           PARAMETERS:     BX          Src handle
+;                           AX          Dest handle
+;
+;           RETURNS:        BX          New handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dup2_handle_name  DB 'Dup2 C Handle', 0
+
+dup2_handle     Proc near
+    push ds
+    push ax
+    push dx
+    push si
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae d2hFail
+;   
+    or bx,bx
+    jz d2hFail
+;
+    mov si,bx
+    dec si
+    shl si,3
+    add si,OFFSET h_arr
+    mov ax,ds:[si].hp_handle
+    or ax,ax
+    jz d2hFail
+
+d2hFail:
+    stc
+
+d2hDone:
+    pop si
+    pop dx
+    pop ax
+    pop ds    
+    retf32
+dup2_handle    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -873,6 +976,18 @@ init_chandle     PROC near
     mov dx,virt_es_in
     mov ax,write_handle_nr
     RegisterUserGate
+;
+    mov esi,OFFSET dup_handle
+    mov edi,OFFSET dup_handle_name
+    xor cl,cl
+    mov ax,dup_handle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET dup2_handle
+    mov edi,OFFSET dup2_handle_name
+    xor cl,cl
+    mov ax,dup2_handle_nr
+    RegisterBimodalUserGate
 ;
     popad
     pop es
