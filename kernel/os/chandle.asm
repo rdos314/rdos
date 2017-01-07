@@ -1205,6 +1205,100 @@ shsDone:
     pop ds    
     retf32
 set_handle_size     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetHandleMode
+;
+;           DESCRIPTION:    Get C handle mode
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EAX         Mode
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_handle_mode_name  DB 'Get C Handle Mode', 0
+
+get_handle_mode     Proc far
+    push ds
+    push bx
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae ghmFail
+;   
+    or bx,bx
+    jz ghmFail
+;
+    dec bx
+    shl bx,3
+    add bx,OFFSET h_arr
+    movzx eax,ds:[bx].hp_access
+    clc
+    jmp ghmDone
+
+ghmFail:
+    stc
+
+ghmDone:
+    pop bx
+    pop ds    
+    retf32
+get_handle_mode     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetHandleMode
+;
+;           DESCRIPTION:    Set C handle mode
+;
+;           PARAMETERS:     BX          Handle
+;                           EAX         Mode
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_handle_mode_name  DB 'Set C Handle Mode', 0
+
+set_handle_mode     Proc far
+    push ds
+    push bx
+    push dx
+;
+    mov dx,ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae shmFail
+;   
+    or bx,bx
+    jz shmFail
+;
+    dec bx
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov ds:[bx].hp_access,dx
+    clc
+    jmp shmDone
+
+shmFail:
+    stc
+
+shmDone:
+    pop dx
+    pop bx
+    pop ds    
+    retf32
+set_handle_mode     Endp        
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1315,6 +1409,18 @@ init_chandle     PROC near
     mov edi,OFFSET set_handle_size_name
     xor cl,cl
     mov ax,set_handle_size_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_handle_mode
+    mov edi,OFFSET get_handle_mode_name
+    xor cl,cl
+    mov ax,get_handle_mode_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_handle_mode
+    mov edi,OFFSET set_handle_mode_name
+    xor cl,cl
+    mov ax,set_handle_mode_nr
     RegisterBimodalUserGate
 ;
     popad
