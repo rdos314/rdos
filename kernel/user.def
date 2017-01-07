@@ -790,5 +790,7 @@ dup_handle_nr                   = 615
 dup2_handle_nr                  = 616
 get_handle_size_nr              = 617
 set_handle_size_nr              = 618
+get_handle_mode_nr              = 619
+set_handle_mode_nr              = 620
 
 usergate_entries			    = 625

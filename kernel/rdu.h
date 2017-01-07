@@ -790,6 +790,8 @@
 #define usergate_dup2_handle 0x00000268
 #define usergate_get_handle_size 0x00000269
 #define usergate_set_handle_size 0x0000026A
+#define usergate_get_handle_mode 0x0000026B
+#define usergate_set_handle_mode 0x0000026C
 
 
 
@@ -1586,6 +1588,8 @@
 #define CallGate_dup2_handle 0x55 0x67 0x9a 104 2 0 0 3 0 0x5d
 #define CallGate_get_handle_size 0x55 0x67 0x9a 105 2 0 0 3 0 0x5d
 #define CallGate_set_handle_size 0x55 0x67 0x9a 106 2 0 0 3 0 0x5d
+#define CallGate_get_handle_mode 0x55 0x67 0x9a 107 2 0 0 3 0 0x5d
+#define CallGate_set_handle_mode 0x55 0x67 0x9a 108 2 0 0 3 0 0x5d
 
 #else
 
@@ -2380,5 +2384,7 @@
 #define CallGate_dup2_handle 0x3e 0x67 0x9a 104 2 0 0 3 0
 #define CallGate_get_handle_size 0x3e 0x67 0x9a 105 2 0 0 3 0
 #define CallGate_set_handle_size 0x3e 0x67 0x9a 106 2 0 0 3 0
+#define CallGate_get_handle_mode 0x3e 0x67 0x9a 107 2 0 0 3 0
+#define CallGate_set_handle_mode 0x3e 0x67 0x9a 108 2 0 0 3 0
 
 #endif

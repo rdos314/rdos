@@ -332,11 +332,12 @@ void main()
 {
     int handle1, handle2;
     int handle3, handle4;
+    unsigned int mode;
     int len;
     char buf[32];
     int size;
     
-    handle1 = RdosOpenHandle("fil.txt", O_RDWR | O_APPEND);
+    handle1 = RdosOpenHandle("fil.txt", O_RDONLY);
 
     handle3 = RdosDupHandle(handle1);
 
@@ -346,6 +347,10 @@ void main()
 
     size = RdosGetHandleSize(handle4);
     RdosSetHandleSize(handle4, size - 1);
+
+    mode = RdosGetHandleMode(handle4);
+    mode |= _APPEND | _WRITE;
+    RdosSetHandleMode(handle4, mode);
     
     strcpy(buf, "Testing");
     len = strlen(buf);

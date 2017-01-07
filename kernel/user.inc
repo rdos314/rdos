@@ -1148,6 +1148,20 @@ SetHandleSize     MACRO
 						ENDM
 
 
+; IN	BX 	Handle
+; OUT	EAX 	Mode
+GetHandleMode     MACRO
+	UserGate get_handle_mode_nr
+						ENDM
+
+
+; IN	BX	Handle
+; IN	EAX	Mode
+SetHandleMode     MACRO
+	UserGate set_handle_mode_nr
+						ENDM
+
+
 ;;;;;;;;;;;;;; INI FILE HANDLING ;;;;;;;;;;;
 
 ; OUT BX            Ini handle
