@@ -1151,6 +1151,7 @@ sst09  DW OFFSET set_size_dummy
 
 set_handle_size     Proc far
     push ds
+    push ax
     push bx
     push edx
     push bp
@@ -1202,6 +1203,7 @@ shsDone:
     pop bp
     pop edx
     pop bx
+    pop ax
     pop ds    
     retf32
 set_handle_size     Endp        
@@ -1268,6 +1270,7 @@ set_handle_mode_name  DB 'Set C Handle Mode', 0
 
 set_handle_mode     Proc far
     push ds
+    push ax
     push bx
     push dx
 ;
@@ -1296,9 +1299,106 @@ shmFail:
 shmDone:
     pop dx
     pop bx
+    pop ax
     pop ds    
     retf32
 set_handle_mode     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetHandlePos
+;
+;           DESCRIPTION:    Get C handle pos
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EAX         Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_handle_pos_name  DB 'Get C Handle Pos', 0
+
+get_handle_pos     Proc far
+    push ds
+    push bx
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae ghpFail
+;   
+    or bx,bx
+    jz ghpFail
+;
+    dec bx
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov eax,ds:[bx].hp_pos
+    clc
+    jmp ghpDone
+
+ghpFail:
+    stc
+
+ghpDone:
+    pop bx
+    pop ds    
+    retf32
+get_handle_pos     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetHandlePos
+;
+;           DESCRIPTION:    Set C handle pos
+;
+;           PARAMETERS:     BX          Handle
+;                           EAX         Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_handle_pos_name  DB 'Set C Handle Pos', 0
+
+set_handle_pos     Proc far
+    push ds
+    push ax
+    push bx
+    push edx
+;
+    mov edx,eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae shpFail
+;   
+    or bx,bx
+    jz shpFail
+;
+    dec bx
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov ds:[bx].hp_pos,edx
+    clc
+    jmp shpDone
+
+shpFail:
+    stc
+
+shpDone:
+    pop edx
+    pop bx
+    pop ax
+    pop ds    
+    retf32
+set_handle_pos     Endp        
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1421,6 +1521,18 @@ init_chandle     PROC near
     mov edi,OFFSET set_handle_mode_name
     xor cl,cl
     mov ax,set_handle_mode_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_handle_pos
+    mov edi,OFFSET get_handle_pos_name
+    xor cl,cl
+    mov ax,get_handle_pos_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_handle_pos
+    mov edi,OFFSET set_handle_pos_name
+    xor cl,cl
+    mov ax,set_handle_pos_nr
     RegisterBimodalUserGate
 ;
     popad
