@@ -62,7 +62,9 @@ O_TEXT          = 100h
 O_BINARY        = 200h
 O_EXCL          = 400h
 
-HANDLE_ENTRY_SIZE     = 16
+SYS_HANDLE_COUNT      = 1024
+SYS_BITMAP_COUNT      = SYS_HANDLE_COUNT SHR 5
+
 MAX_HANDLES           = 256
 
 handle_entry_struc    STRUC
@@ -83,12 +85,17 @@ handle_struc    STRUC
 
 h_section       section_typ <>
 
-h_sel           DW ?
-h_bitmap        DD ?,?
-
 h_arr           DW MAX_HANDLES DUP(?)
 
 handle_struc    ENDS
+
+handle_data_struc       STRUC
+
+hd_bitmap        DD SYS_BITMAP_COUNT DUP(?)
+hd_data          DB SYS_HANDLE_COUNT * SIZE handle_entry_struc DUP(?)
+
+handle_data_struc       ENDS
+
 
     .386p
 
@@ -324,36 +331,6 @@ create_c_handle    PROC far
     mov ds,ax
 ;    
     InitSection ds:h_section
-    mov ds:h_bitmap,3    
-    mov ds:h_bitmap+4,0
-;
-    mov eax,1000h
-    AllocateGlobalMem
-    mov ds:h_sel,es
-;
-    xor di,di
-    mov es:[di].he_file_sel,0
-    mov es:[di].he_io_mode,IO_READ OR IO_ISTTY
-    mov es:[di].he_ref_count,1
-    mov es:[di].he_close_proc,OFFSET CloseStdIn
-    mov es:[di].he_dup_proc,OFFSET DupStdIn
-    mov es:[di].he_read_proc,OFFSET ReadStdIn
-    mov es:[di].he_write_proc,OFFSET WriteStdIn
-;
-    mov di,10h    
-    mov es:[di].he_file_sel,0
-    mov es:[di].he_io_mode,IO_WRITE OR IO_ISTTY
-    mov es:[di].he_ref_count,1
-    mov es:[di].he_close_proc,OFFSET CloseStdOut
-    mov es:[di].he_dup_proc,OFFSET DupStdOut
-    mov es:[di].he_read_proc,OFFSET ReadStdOut
-    mov es:[di].he_write_proc,OFFSET WriteStdOut
-;
-    mov di,20h    
-    xor ax,ax
-    mov cx,7F0h
-    rep stosw
-;    
     mov ax,ds
 ;
     pop di
@@ -369,48 +346,60 @@ create_c_handle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           allocate_handle
+;           NAME:           allocate_sys_handle
 ;
 ;           DESCRIPTION:    Allocate C handle
 ;
-;           PARAMETERS:     DS          Handle sel
-;                           ES          Handle data sel
-;
-;           RETURNS:        DI          Handle data
+;           RETURNS:        ES:DI          Handle data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-allocate_handle     Proc near
+allocate_sys_handle     Proc near
     push eax
+    push ebx
     push ecx
-
-ahRetry:    
-    mov eax,ds:h_bitmap
-    not eax
-    bsf ecx,eax
-    jnz ahOk
+    push edx
 ;
-    mov eax,ds:h_bitmap
-    not eax
-    bsf ecx,eax
-    stc
-    jz ahDone
-;    
-    add ecx,32
+    mov ax,chandle_data_sel
+    mov es,ax
 
-ahOk:
-    bts ds:h_bitmap,ecx
-    jc ahRetry
+ashRetry:    
+    mov cx,SYS_BITMAP_COUNT  
+    xor edi,edi
+    mov bx,OFFSET hd_bitmap
+
+ashLoop:
+    mov eax,es:[bx]
+    not eax
+    bsf edx,eax
+    jnz ashOk
+;
+    add bx,4
+    add edi,32
+;
+    loop ashLoop
+;
+    stc
+    jmp ashDone    
+
+ashOk:
+    add edx,edi
+    bts es:hd_bitmap,edx
+    jc ashRetry
 ;    
-    mov di,cx
-    shl di,4
+    mov ax,SIZE handle_entry_struc
+    mul dx
+    mov di,ax
+    add di,OFFSET hd_data
     clc
 
-ahDone: 
+ashDone: 
+    pop edx
     pop ecx
+    pop ebx
     pop eax
     ret
-allocate_handle  Endp   
+allocate_sys_handle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -419,25 +408,24 @@ allocate_handle  Endp
 ;
 ;           DESCRIPTION:    Allocate C entry
 ;
-;           PARAMETERS:     DS          Handle sel
-;                           ES          Handle data sel
-;                           DI          Handle data
+;           PARAMETERS:     DS          C handle sel
+;                           AX          Handle data #
 ;
 ;           RETURNS:        BX          Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 allocate_entry     Proc near
-    push ax
     push cx
+    push dx
 ;    
     mov cx,MAX_HANDLES
     mov bx,OFFSET h_arr
     EnterSection ds:h_section
 
 aeLoop:    
-    mov ax,ds:[bx]
-    or ax,ax
+    mov dx,ds:[bx]
+    or dx,dx
     jz aeFound
 ;
     add bx,2
@@ -448,9 +436,6 @@ aeLoop:
     jmp aeDone
 
 aeFound:    
-    mov ax,di
-    shr ax,4
-    inc ax
     mov ds:[bx],ax
     LeaveSection ds:h_section
 ;
@@ -460,8 +445,8 @@ aeFound:
     clc
 
 aeDone:   
+    pop dx
     pop cx 
-    pop ax
     ret
 allocate_entry  Endp   
         
@@ -485,7 +470,9 @@ open_handle_name  DB 'Open C Handle', 0
 open_handle     Proc near
     push ds
     push es
-    push di
+    push ax
+    push cx
+    push edi
 ;    
     test cx,O_CREAT
     jz ohOpen
@@ -528,8 +515,7 @@ ohHandle:
     mov ds,ax
     mov ds,ds:p_app_sel
     mov ds,ds:app_c_handle_sel
-    mov es,ds:h_sel
-    call allocate_handle
+    call allocate_sys_handle
     jnc ohHandleOk
 ;
     CloseFile
@@ -582,13 +568,22 @@ ohAccessOk:
 
 ohAppendOk:
     mov es:[di].he_io_mode,ax
+;
+    mov ax,di
+    sub ax,OFFSET hd_data
+    xor dx,dx
+    mov cx,SIZE handle_entry_struc
+    div cx
+    inc ax
     call allocate_entry
     jnc ohDone
 ;
     int 3    
 
 ohDone:
-    pop di
+    pop edi
+    pop cx
+    pop ax
     pop es
     pop ds
     ret
@@ -622,6 +617,35 @@ init_chandle     PROC near
     push ds
     push es
     pushad
+;
+    mov eax,SIZE handle_data_struc
+    mov bx,chandle_data_sel
+    AllocateFixedSystemMem
+;
+    xor di,di
+    mov cx,SIZE handle_data_struc
+    xor al,al
+    rep stosb
+;
+    mov es:hd_bitmap,3
+;
+    mov di,OFFSET hd_data
+    mov es:[di].he_file_sel,0
+    mov es:[di].he_io_mode,IO_READ OR IO_ISTTY
+    mov es:[di].he_ref_count,1
+    mov es:[di].he_close_proc,OFFSET CloseStdIn
+    mov es:[di].he_dup_proc,OFFSET DupStdIn
+    mov es:[di].he_read_proc,OFFSET ReadStdIn
+    mov es:[di].he_write_proc,OFFSET WriteStdIn
+;
+    add di,SIZE handle_entry_struc
+    mov es:[di].he_file_sel,0
+    mov es:[di].he_io_mode,IO_WRITE OR IO_ISTTY
+    mov es:[di].he_ref_count,1
+    mov es:[di].he_close_proc,OFFSET CloseStdOut
+    mov es:[di].he_dup_proc,OFFSET DupStdOut
+    mov es:[di].he_read_proc,OFFSET ReadStdOut
+    mov es:[di].he_write_proc,OFFSET WriteStdOut
 ;
     mov ax,cs
     mov ds,ax
