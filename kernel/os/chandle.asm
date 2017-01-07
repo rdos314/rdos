@@ -288,6 +288,7 @@ ref_c_handle  Endp
 ;           PARAMETERS:     DS          C handle sel
 ;                           AX          C Handle
 ;                           CX          Mode
+;                           EDX         Position
 ;
 ;           RETURNS:        BX          Handle
 ;
@@ -318,7 +319,7 @@ aphFound:
     pop cx
     mov ds:[bx].hp_handle,ax
     mov ds:[bx].hp_access,cx
-    mov ds:[bx].hp_pos,0
+    mov ds:[bx].hp_pos,edx
     LeaveSection ds:h_section
 ;
     sub bx,OFFSET h_arr
@@ -352,6 +353,7 @@ open_handle     Proc near
     push ds
     push ax
     push cx
+    push edx
 ;    
     OpenCFile
     jc ohDone
@@ -395,12 +397,14 @@ ohAccessOk:
 ohAppendOk:
     mov cx,ax
     mov ax,bx
+    xor edx,edx
     call allocate_proc_handle
     jnc ohDone
 ;
     int 3    
 
 ohDone:
+    pop edx
     pop cx
     pop ax
     pop ds
@@ -804,9 +808,11 @@ dup_handle_name  DB 'Dup C Handle', 0
 
 dup_handle     Proc near
     push ds
+    push es
     push ax
     push dx
     push si
+    push di
 ;
     GetThread
     mov ds,ax
@@ -824,16 +830,41 @@ dup_handle     Proc near
     shl si,3
     add si,OFFSET h_arr
     mov ax,ds:[si].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae dhFail
+;    
     or ax,ax
     jz dhFail
+;
+    push ax
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    mov di,ax
+    add di,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov es,ax
+    pop ax
+;
+    mov cx,ds:[si].hp_access
+    mov edx,ds:[si].hp_pos
+    call allocate_proc_handle
+    jc dhFail
+;
+    inc es:[di].he_ref_count
+    clc
+    jmp dhDone
 
 dhFail:
     stc
 
 dhDone:
+    pop di
     pop si
     pop dx
     pop ax
+    pop es
     pop ds    
     retf32
 dup_handle    Endp
@@ -857,9 +888,10 @@ dup2_handle_name  DB 'Dup2 C Handle', 0
 dup2_handle     Proc near
     push ds
     push ax
-    push dx
     push si
+    push di
 ;
+    mov di,ax
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
@@ -883,8 +915,8 @@ d2hFail:
     stc
 
 d2hDone:
+    pop di
     pop si
-    pop dx
     pop ax
     pop ds    
     retf32
