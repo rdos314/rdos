@@ -757,6 +757,20 @@ write_handle     Proc near
     mov ax,chandle_data_sel
     mov ds,ax
 ;
+    test si,IO_APPEND
+    jz whPosOk
+;
+    push bx
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].get_size_tab
+    pop bx
+    jc whPosOk
+;
+    mov edx,eax
+
+whPosOk:
     mov bp,ds:[bx].he_type
     mov bx,ds:[bx].he_sel
     shl bp,1

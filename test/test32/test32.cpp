@@ -336,7 +336,7 @@ void main()
     char buf[32];
     int size;
     
-    handle1 = RdosOpenHandle("fil.txt", O_RDWR);
+    handle1 = RdosOpenHandle("fil.txt", O_RDWR | O_APPEND);
 
     handle3 = RdosDupHandle(handle1);
 
