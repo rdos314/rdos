@@ -344,6 +344,8 @@ close_handle_name  DB 'Close C Handle', 0
 close_handle     Proc near
     push ds
     push ax
+    push ecx
+    push dx
 ;
     GetThread
     mov ds,ax
@@ -363,10 +365,31 @@ close_handle     Proc near
     xor ax,ax
     xchg ax,ds:[bx]
     LeaveSection ds:h_section
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae chDone
+;    
+    or ax,ax
+    jz chDone
+;
+    dec ax
+    movzx ecx,ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+    sub ds:[bx].he_ref_count,1
+    jnz chDone
+;
+    btc ds:hd_bitmap,ecx
 
 chDone:
     xor bx,bx
 ;
+    pop dx
+    pop ecx
     pop ax
     pop ds    
     retf32
