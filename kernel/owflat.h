@@ -1255,6 +1255,18 @@
     parm [ebx] [edi] [ecx]  \
     value [eax];
 
+#pragma aux RdosDupHandle = \
+    CallGate_dup_handle  \
+    ValidateHandle  \
+    parm [ebx]  \
+    value [ebx];
+
+#pragma aux RdosDup2Handle = \
+    CallGate_dup2_handle  \
+    ValidateHandle  \
+    parm [ebx] [eax]  \
+    value [ebx];
+
 #pragma aux RdosOpenFile = \
     CallGate_open_file  \
     ValidateHandle  \

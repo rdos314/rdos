@@ -429,6 +429,8 @@ int RDOSAPI RdosOpenHandle(const char *Name, int Mode);
 void RDOSAPI RdosCloseHandle(int Handle);
 int RDOSAPI RdosReadHandle(int Handle, void *Buf, int Size);
 int RDOSAPI RdosWriteHandle(int Handle, const void *Buf, int Size);
+int RDOSAPI RdosDupHandle(int Handle);
+int RDOSAPI RdosDup2Handle(int Src, int Dest);
 
 int RDOSAPI RdosOpenFile(const char *FileName, char Access);
 int RDOSAPI RdosCreateFile(const char *FileName, int Attrib);

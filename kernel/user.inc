@@ -1121,6 +1121,19 @@ WriteHandle       MACRO
 	UserGate write_handle_nr
 						ENDM
 
+; IN  BX    	Handle
+; OUT BX        New handle
+DupHandle       MACRO
+	UserGate dup_handle_nr
+						ENDM
+
+; IN  BX    	Src handle
+; IN  AX        Dest handle
+; OUT BX        New handle
+Dup2Handle       MACRO
+	UserGate dup2_handle_nr
+						ENDM
+
 ;;;;;;;;;;;;;; INI FILE HANDLING ;;;;;;;;;;;
 
 ; OUT BX            Ini handle

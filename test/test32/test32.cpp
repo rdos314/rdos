@@ -331,18 +331,21 @@ long GetSqrt(long long Value)
 void main()
 {
     int handle1, handle2;
+    int handle3, handle4;
     int len;
     char buf[32];
     
-    handle1 = RdosOpenHandle("fil.txt", O_CREAT | O_RDONLY);
-    handle2 = RdosOpenHandle("fil.txt", O_WRONLY);
+    handle1 = RdosOpenHandle("fil.txt", O_RDWR);
+
+    handle3 = RdosDupHandle(handle1);
+    handle4 = RdosDup2Handle(handle1, 2);
 
     strcpy(buf, "Testing");
     len = strlen(buf);
-    RdosWriteHandle(handle2, buf, len);
+    RdosWriteHandle(handle4, buf, len);
 
-    memset(buf, 32, 0);
-    RdosReadHandle(handle1, buf, 32);
+    memset(buf, 0, 32);
+    RdosReadHandle(handle3, buf, 32);
     
     if (handle2)
         RdosCloseHandle(handle2);
