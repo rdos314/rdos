@@ -26,6 +26,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;
+; handle types
+;
+
+C_HANDLE_FILE   = 1
+
+;
 ; iomode constants
 ;
 
@@ -59,15 +65,10 @@ SYS_BITMAP_COUNT      = SYS_HANDLE_COUNT SHR 5
 
 handle_entry_struc    STRUC
 
-he_file_sel      DW ?
-he_file_drive    DB ?
-he_resv          DB ?
+he_type          DW ?
+he_sel           DW ?
 he_io_mode       DW ?
 he_ref_count     DW ?
-he_close_proc    DW ?
-he_dup_proc      DW ?
-he_read_proc     DW ?
-he_write_proc    DW ?
 
 handle_entry_struc    ENDS
 

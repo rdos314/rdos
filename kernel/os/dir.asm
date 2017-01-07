@@ -37,6 +37,7 @@ INCLUDE ..\fs.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
 INCLUDE gate.def
+INCLUDE chandle.inc
 
 dir_handle_seg  STRUC
 
@@ -2172,6 +2173,123 @@ create_file_done:
     ret
 CreateFileBase  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           open_c_file
+;
+;           DESCRIPTION:    Open C file
+;
+;           PARAMETERS:     ES:EDI      Filename
+;                           CX          Mode
+;                           
+;           RETURNS:        BX          File handle entry
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_c_file_name  DB 'Open C File',0
+
+open_c_file    Proc far
+    push ds
+    push es
+    push fs
+    push ax
+    push edx
+;
+    mov bx,flat_sel
+    mov fs,bx
+;
+    push edi
+    call ParseDir
+    jc ocfPopFailed
+;
+    EnterWriteSection ds:ds_access_section
+    dec ds:ds_usage
+    call ParseFile
+    jnc ocfExists
+;
+    test cx,O_CREAT
+    jz ocfLeaveFailed
+;
+    call ParseName
+    jc ocfLeaveFailed
+;
+    push cx
+    xor cl,cl
+    mov al,ds:ds_drive
+    mov bx,ds
+    CallFileSystem fs_create_file_proc
+    call SetupFileSel
+    pop cx
+;
+    LeaveWriteSection ds:ds_access_section
+    pop edi
+    jmp ocfHandle
+
+ocfExists:
+    test cx,O_EXCL
+    jnz ocfLeaveFailed
+;
+    pop edi
+    call SetupFileSel
+;
+    test cx,O_CREAT OR O_TRUNC
+    jz ocfOpen
+;
+    push edx
+    xor edx,edx
+    CallFileSystem fs_set_file_size_proc
+    pop edx
+
+ocfOpen:
+    LeaveWriteSection ds:ds_access_section
+
+ocfHandle:
+    mov es,bx
+    inc es:file_usage
+    call ParseEnd
+;
+    mov bx,es:file_c_handle
+    or bx,bx
+    jnz ocfOk
+;
+    mov bx,es
+    mov ax,C_HANDLE_FILE
+    AllocateCHandle
+    jnc ocfSaveHandle
+;
+    sub es:file_usage,1
+    jnz ocfFailed
+;
+    call FreeFileSel
+    jmp ocfFailed
+
+ocfSaveHandle:
+    mov es:file_c_handle,bx
+
+ocfOk:
+    clc
+    jmp ocfDone
+
+ocfLeaveFailed:
+    LeaveWriteSection ds:ds_access_section
+    call ParseEnd
+
+ocfPopFailed:
+    pop edi
+
+ocfFailed:
+    stc
+
+ocfDone:
+    pop edx
+    pop ax
+    pop fs
+    pop es
+    pop ds
+    retf32
+open_c_file   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2706,7 +2824,6 @@ create_file16   PROC far
     retf32
 create_file16   ENDP
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3012,6 +3129,12 @@ init_dir    PROC near
     mov edi,OFFSET insert_file_entry_name
     xor cl,cl
     mov ax,insert_file_entry_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET open_c_file
+    mov edi,OFFSET open_c_file_name
+    xor cl,cl
+    mov ax,open_c_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_drive_info

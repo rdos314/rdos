@@ -2077,11 +2077,19 @@ CreateCHandle MACRO
     OsGate create_c_handle_nr
                     ENDM
 
-; IN  BX    File handle
-; OUT AX    File sel
-; OUT CL    File drive
-FileToCHandle MACRO
-    OsGate file_to_c_handle_nr
+; IN  AX        Entry type
+; IN  BX        Selector
+; IN  CX        Mode
+; OUT BX        Entry handle
+AllocateCHandle MACRO
+    OsGate allocate_c_handle_nr
+                    ENDM
+
+; IN  ES:EDI    Filename
+; IN  CX        Mode
+; OUT BX        Entry handle
+OpenCFile MACRO
+    OsGate open_c_file_nr
                     ENDM
 
 ;;;;;;;;;;;;; Dos ;;;;;;;;;;;;;;;;;;;

@@ -86,17 +86,18 @@ file_list_struc	ENDS
 
 file_data_struc	STRUC
 
-file_prev		    DW ?
-file_next			DW ?
+file_prev		DW ?
+file_next		DW ?
 file_size_section	read_write_section_typ <>
 file_list_section	section_typ <>
 file_dir_entry		DD ?
-file_usage			DW ?
-file_drive			DB ?
-file_attrib			DB ?
+file_usage		DW ?
+file_drive	        DB ?
+file_attrib	        DB ?
+file_c_handle           DW ?
 file_cache_entry	DD ?
 file_cache_ads		DD ?
-file_size			DD ?
+file_size		DD ?
 file_dir_shift		DB ?
 file_entry_shift	DB ?
 file_block_size		DD ?

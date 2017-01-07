@@ -54,194 +54,6 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Close std in
-;
-;           DESCRIPTION:    Close std in
-;
-;           PARAMETERS:     ES:BX               Handle entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseStdIn     Proc near
-    ret
-CloseStdIn     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Dup std in
-;
-;           DESCRIPTION:    Dup std in
-;
-;           PARAMETERS:     ES:BX               Handle entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DupStdIn     Proc near
-    ret
-DupStdIn     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Read std in
-;
-;           DESCRIPTION:    Read std in
-;
-;           PARAMETERS:     ES:BX               Handle entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadStdIn     Proc near
-    ret
-ReadStdIn     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Write std in
-;
-;           DESCRIPTION:    Write std in
-;
-;           PARAMETERS:     ES:BX               Handle entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteStdIn     Proc near
-    ret
-WriteStdIn     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Close std out
-;
-;           DESCRIPTION:    Close std out
-;
-;           PARAMETERS:     ES:BX               Handle entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseStdOut     Proc near
-    ret
-CloseStdOut     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Dup std out
-;
-;           DESCRIPTION:    Dup std out
-;
-;           PARAMETERS:     ES:BX               Handle entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DupStdOut     Proc near
-    ret
-DupStdOut     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Read std out
-;
-;           DESCRIPTION:    Read std out
-;
-;           PARAMETERS:     ES:BX               Handle entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadStdOut     Proc near
-    ret
-ReadStdOut     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Write std out
-;
-;           DESCRIPTION:    Write std out
-;
-;           PARAMETERS:     ES:BX               Handle entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteStdOut     Proc near
-    ret
-WriteStdOut     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           close_file
-;
-;           DESCRIPTION:    Close file
-;
-;           PARAMETERS:     FS:BX               Handle entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_file     Proc near
-    ret
-close_file     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           dup_file
-;
-;           DESCRIPTION:    Dup file
-;
-;           PARAMETERS:     FS:BX               Handle entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dup_file     Proc near
-    ret
-dup_file     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           read_file
-;
-;           DESCRIPTION:    Read file
-;
-;           PARAMETERS:     FS:BX               Handle entry
-;                           ES:EDI              Buffer
-;                           ECX                 Size
-;
-;           RETURNS:        EAX                 Count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_file     Proc near
-    ret
-read_file     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           write_file
-;
-;           DESCRIPTION:    Write file
-;
-;           PARAMETERS:     FS:BX               Handle entry
-;                           ES:EDI              Buffer
-;                           ECX                 Size
-;
-;           RETURNS:        EAX                 Count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-write_file     Proc near
-    ret
-write_file     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           Create C handle
 ;
 ;           DESCRIPTION:    Create std-C handle selector
@@ -294,60 +106,124 @@ create_c_handle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           allocate_sys_handle
+;           NAME:           allocate_c_handle
 ;
 ;           DESCRIPTION:    Allocate C handle
 ;
-;           RETURNS:        ES:DI          Handle data
+;           PARAMETERS:     AX          Handle type
+;                           BX          Sel
+;                           CX          Mode
+;
+;           RETURNS:        BX          Entry handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-allocate_sys_handle     Proc near
+allocate_c_handle_name  DB 'Allocate C Handle', 0
+
+allocate_c_handle     Proc far
+    push es
+    push eax
+    push edx
+    push edi
+;
     push eax
     push ebx
     push ecx
-    push edx
 ;
     mov ax,chandle_data_sel
     mov es,ax
 
-ashRetry:    
+achRetry:    
     mov cx,SYS_BITMAP_COUNT  
     xor edi,edi
     mov bx,OFFSET hd_bitmap
 
-ashLoop:
+achLoop:
     mov eax,es:[bx]
     not eax
     bsf edx,eax
-    jnz ashOk
+    jnz achOk
 ;
     add bx,4
     add edi,32
 ;
-    loop ashLoop
+    loop achLoop
 ;
     stc
-    jmp ashDone    
+    pop ecx
+    pop ebx
+    pop eax
+    jmp achDone    
 
-ashOk:
+achOk:
     add edx,edi
     bts es:hd_bitmap,edx
-    jc ashRetry
+    jc achRetry
 ;    
     mov ax,SIZE handle_entry_struc
     mul dx
     mov di,ax
     add di,OFFSET hd_data
-    clc
-
-ashDone: 
-    pop edx
+;
     pop ecx
     pop ebx
     pop eax
-    ret
-allocate_sys_handle  Endp   
+;
+    mov es:[di].he_type,ax
+    mov es:[di].he_sel,bx
+    mov es:[di].he_ref_count,1
+;
+    mov al,cl
+    and al,3
+    cmp al,O_RDWR
+    je achRdWr
+;
+    cmp al,O_RDONLY
+    je achRdOnly
+;
+    cmp al,O_WRONLY
+    je achWrOnly
+;
+    xor ax,ax
+    jmp achAccessOk
+
+achRdWr:
+    mov ax,IO_READ OR IO_WRITE
+    jmp achAccessOk
+
+achRdOnly:
+    mov ax,IO_READ
+    jmp achAccessOk
+
+achWrOnly:
+    mov ax,IO_WRITE
+
+achAccessOk:
+    test cx,O_APPEND
+    jz achAppendOk
+;
+    or ax,IO_APPEND 
+
+achAppendOk:
+    mov es:[di].he_io_mode,ax
+;
+    mov ax,di
+    sub ax,OFFSET hd_data
+    xor dx,dx
+    mov cx,SIZE handle_entry_struc
+    div cx
+;
+    mov bx,ax
+    inc bx
+    clc
+
+achDone: 
+    pop edi
+    pop edx
+    pop eax
+    pop es
+    retf32
+allocate_c_handle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -422,114 +298,14 @@ open_handle     Proc near
     push cx
     push edi
 ;    
-    test cx,O_CREAT
-    jz ohOpen
+    OpenCFile
+    jc ohDone
 ;
-    test cx,O_EXCL
-    jz ohCreate
-
-ohExcl:
-    push cx
-    xor cl,cl
-    UserGateForce32 open_file_nr
-    pop cx
-    jc ohCreate
-;    
-    CloseFile
-    stc
-    jmp ohDone
-
-ohCreate:
-    push cx
-    xor cx,cx
-    UserGateForce32 create_file_nr
-    pop cx
-    jc ohDev
-;
-    jmp ohHandle
-
-ohOpen:
-    push cx
-    xor cl,cl
-    UserGateForce32 open_file_nr
-    pop cx
-    jnc ohHandle
-
-ohDev:
-    int 3
-
-ohHandle:
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
     mov ds,ds:app_c_handle_sel
-    call allocate_sys_handle
-    jnc ohHandleOk
-;
-    CloseFile
-    stc
-    jmp ohDone
-
-ohHandleOk:
-    test cx,O_TRUNC
-    jz ohTruncOk
-;
-    xor eax,eax
-    SetFileSize
-
-ohTruncOk:
-    push cx
-    FileToCHandle
-    mov es:[di].he_file_sel,ax
-    mov es:[di].he_file_drive,cl
-    pop cx
-;    
-    mov es:[di].he_ref_count,1
-    mov es:[di].he_close_proc,OFFSET close_file
-    mov es:[di].he_dup_proc,OFFSET dup_file
-    mov es:[di].he_read_proc,OFFSET read_file
-    mov es:[di].he_write_proc,OFFSET write_file
-;
-    mov al,cl
-    and al,3
-    cmp al,O_RDWR
-    je ohRdWr
-;
-    cmp al,O_RDONLY
-    je ohRdOnly
-;
-    cmp al,O_WRONLY
-    je ohWrOnly
-;
-    xor ax,ax
-    jmp ohAccessOk
-
-ohRdWr:
-    mov ax,IO_READ OR IO_WRITE
-    jmp ohAccessOk
-
-ohRdOnly:
-    mov ax,IO_READ
-    jmp ohAccessOk
-
-ohWrOnly:
-    mov ax,IO_WRITE
-
-ohAccessOk:
-    test cx,O_APPEND
-    jz ohAppendOk
-;
-    or ax,IO_APPEND 
-
-ohAppendOk:
-    mov es:[di].he_io_mode,ax
-;
-    mov ax,di
-    sub ax,OFFSET hd_data
-    xor dx,dx
-    mov cx,SIZE handle_entry_struc
-    div cx
-    inc ax
+    mov ax,bx
     call allocate_entry
     jnc ohDone
 ;
@@ -585,22 +361,14 @@ init_chandle     PROC near
     mov es:hd_bitmap,3
 ;
     mov di,OFFSET hd_data
-    mov es:[di].he_file_sel,0
+    mov es:[di].he_sel,0
     mov es:[di].he_io_mode,IO_READ OR IO_ISTTY
     mov es:[di].he_ref_count,1
-    mov es:[di].he_close_proc,OFFSET CloseStdIn
-    mov es:[di].he_dup_proc,OFFSET DupStdIn
-    mov es:[di].he_read_proc,OFFSET ReadStdIn
-    mov es:[di].he_write_proc,OFFSET WriteStdIn
 ;
     add di,SIZE handle_entry_struc
-    mov es:[di].he_file_sel,0
+    mov es:[di].he_sel,0
     mov es:[di].he_io_mode,IO_WRITE OR IO_ISTTY
     mov es:[di].he_ref_count,1
-    mov es:[di].he_close_proc,OFFSET CloseStdOut
-    mov es:[di].he_dup_proc,OFFSET DupStdOut
-    mov es:[di].he_read_proc,OFFSET ReadStdOut
-    mov es:[di].he_write_proc,OFFSET WriteStdOut
 ;
     mov ax,cs
     mov ds,ax
@@ -610,6 +378,12 @@ init_chandle     PROC near
     mov edi,OFFSET create_c_handle_name
     xor cl,cl
     mov ax,create_c_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_c_handle
+    mov edi,OFFSET allocate_c_handle_name
+    xor cl,cl
+    mov ax,allocate_c_handle_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET open_handle16
