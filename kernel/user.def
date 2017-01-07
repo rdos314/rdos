@@ -795,5 +795,6 @@ set_handle_mode_nr              = 620
 get_handle_pos_nr               = 621
 set_handle_pos_nr               = 622
 eof_handle_nr                   = 623
+is_handle_device_nr             = 624
 
 usergate_entries			    = 650

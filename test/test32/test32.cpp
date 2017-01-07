@@ -341,9 +341,9 @@ void main()
     
     handle1 = RdosOpenHandle("fil.txt", O_RDONLY);
 
-    val = RdosEofHandle(1);
-    val = RdosEofHandle(2);
-    val = RdosEofHandle(handle1);
+    val = RdosIsHandleDevice(1);
+    val = RdosIsHandleDevice(2);
+    val = RdosIsHandleDevice(handle1);
 
     handle3 = RdosDupHandle(handle1);
 

@@ -1302,6 +1302,12 @@
     parm [ebx]  \
     value [eax];
 
+#pragma aux RdosIsHandleDevice = \
+    CallGate_is_handle_device  \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
 #pragma aux RdosOpenFile = \
     CallGate_open_file  \
     ValidateHandle  \

@@ -1177,9 +1177,15 @@ SetHandlePos     MACRO
 
 
 ; IN  BX    	Handle
-; OUT EAX        Eof status
+; OUT EAX       Eof status
 EofHandle       MACRO
 	UserGate eof_handle_nr
+						ENDM
+
+; IN  BX    	Handle
+; OUT NC        Device
+IsHandleDevice       MACRO
+	UserGate is_handle_device_nr
 						ENDM
 
 ;;;;;;;;;;;;;; INI FILE HANDLING ;;;;;;;;;;;
