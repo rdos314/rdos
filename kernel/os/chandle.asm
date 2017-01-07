@@ -81,6 +81,15 @@ create_c_handle    PROC far
     push si
     push di
 ;    
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov di,OFFSET hd_data
+    inc ds:[di].he_ref_count
+;
+    add di,SIZE handle_entry_struc
+    inc ds:[di].he_ref_count
+;
     mov eax,SIZE handle_struc
     AllocateSmallGlobalMem
     mov ax,es
@@ -218,7 +227,7 @@ allocate_c_handle  Endp
 ;           DESCRIPTION:    Allocate C handle
 ;
 ;           PARAMETERS:     AX          Handle type
-;                           BX		Entry handle
+;                           BX          Entry handle
 ;                           DX          Sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -438,15 +447,15 @@ open_handle32    ENDP
 
 close_handle_name  DB 'Close C Handle', 0
 
-close_dummy	Proc near
+close_dummy     Proc near
     ret
-close_dummy	Endp
+close_dummy     Endp
 
-close_file	Proc near
+close_file      Proc near
     mov bx,ax
     CloseCFile
     ret
-close_file	Endp
+close_file      Endp
 
 close_tab:
 ct00  DW OFFSET close_dummy
@@ -539,25 +548,25 @@ close_handle    Endp
 ;
 ;           DESCRIPTION:    Read C handle
 ;
-;           PARAMETERS:     BX		Handle
+;           PARAMETERS:     BX          Handle
 ;                           ES:(E)DI    Buffer
 ;                           (E)CX       Size
 ;
-;           RETURNS:        EAX		Read count
+;           RETURNS:        EAX         Read count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 read_handle_name  DB 'Read C Handle', 0
 
-read_dummy	Proc near
+read_dummy      Proc near
     stc
     ret
-read_dummy	Endp
+read_dummy      Endp
 
-read_file	Proc near
+read_file       Proc near
     ReadCFile
     ret
-read_file	Endp
+read_file       Endp
 
 read_tab:
 rt00  DW OFFSET read_dummy
@@ -641,9 +650,9 @@ rhDone:
     pop ebx
     pop ds    
     ret
-read_handle	Endp
+read_handle     Endp
 
-read_handle16	Proc far
+read_handle16   Proc far
     push ecx
     push edi
 ;
@@ -669,25 +678,25 @@ read_handle32    ENDP
 ;
 ;           DESCRIPTION:    Write C handle
 ;
-;           PARAMETERS:     BX		Handle
+;           PARAMETERS:     BX          Handle
 ;                           ES:(E)DI    Buffer
 ;                           (E)CX       Size
 ;
-;           RETURNS:        EAX		Written count
+;           RETURNS:        EAX         Written count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_handle_name  DB 'Write C Handle', 0
 
-write_dummy	Proc near
+write_dummy     Proc near
     stc
     ret
-write_dummy	Endp
+write_dummy     Endp
 
-write_file	Proc near
+write_file      Proc near
     WriteCFile
     ret
-write_file	Endp
+write_file      Endp
 
 write_tab:
 wt00  DW OFFSET write_dummy
@@ -771,9 +780,9 @@ whDone:
     pop ebx
     pop ds    
     ret
-write_handle	Endp
+write_handle    Endp
 
-write_handle16	Proc far
+write_handle16  Proc far
     push ecx
     push edi
 ;
@@ -893,6 +902,7 @@ dup2_handle     Proc near
     push edx
     push si
     push di
+    push bp
 ;
     mov di,ax
     GetThread
@@ -933,6 +943,7 @@ dup2_handle     Proc near
     pop bx
     pop ax
 ;
+    mov bp,di
     dec di
     shl di,3
     add di,OFFSET h_arr
@@ -978,6 +989,7 @@ d2hOkLeave:
     LeaveSection ds:hd_section
 
 d2hOk:
+    mov bx,bp
     clc
     jmp d2hDone
 
@@ -985,6 +997,7 @@ d2hFail:
     stc
 
 d2hDone:
+    pop bp
     pop di
     pop si
     pop edx
