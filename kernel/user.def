@@ -797,6 +797,6 @@ set_handle_pos_nr               = 622
 eof_handle_nr                   = 623
 is_handle_device_nr             = 624
 get_handle_time_nr              = 625
-set_handle_time_nr              = 625
+set_handle_time_nr              = 626
 
 usergate_entries			    = 650

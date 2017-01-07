@@ -1211,6 +1211,194 @@ set_handle_size     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetHandleTime
+;
+;           DESCRIPTION:    Get C handle time
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EDX:EAX     Time
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_handle_time_name  DB 'Get C Handle Time', 0
+
+get_time_dummy      Proc near
+    stc
+    ret
+get_time_dummy      Endp
+
+get_time_file       Proc near
+    GetTime
+    clc
+    ret
+get_time_file       Endp
+
+get_time_tab:
+gtt00  DW OFFSET get_time_dummy
+gtt01  DW OFFSET get_time_file
+gtt02  DW OFFSET get_time_dummy
+gtt03  DW OFFSET get_time_dummy
+gtt04  DW OFFSET get_time_dummy
+gtt05  DW OFFSET get_time_dummy
+gtt06  DW OFFSET get_time_dummy
+gtt07  DW OFFSET get_time_dummy
+gtt08  DW OFFSET get_time_dummy
+gtt09  DW OFFSET get_time_dummy
+
+get_handle_time     Proc far
+    push ds
+    push bx
+    push bp
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae ghtFail
+;   
+    or bx,bx
+    jz ghtFail
+;
+    dec bx
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae ghtFail
+;    
+    or ax,ax
+    jz ghtFail
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].get_time_tab
+    jmp ghtDone
+
+ghtFail:
+    stc
+
+ghtDone:
+    pop bp
+    pop bx
+    pop ds    
+    retf32
+get_handle_time     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetHandleTime
+;
+;           DESCRIPTION:    Set C handle time
+;
+;           PARAMETERS:     BX          Handle
+;                           EDX:EAX	Time
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_handle_time_name  DB 'Set C Handle Time', 0
+
+set_time_dummy      Proc near
+    clc
+    ret
+set_time_dummy      Endp
+
+set_time_file       Proc near
+    clc
+    ret
+set_time_file       Endp
+
+set_time_tab:
+stt00  DW OFFSET set_time_dummy
+stt01  DW OFFSET set_time_file
+stt02  DW OFFSET set_time_dummy
+stt03  DW OFFSET set_time_dummy
+stt04  DW OFFSET set_time_dummy
+stt05  DW OFFSET set_time_dummy
+stt06  DW OFFSET set_time_dummy
+stt07  DW OFFSET set_time_dummy
+stt08  DW OFFSET set_time_dummy
+stt09  DW OFFSET set_time_dummy
+
+set_handle_time     Proc far
+    push ds
+    push ax
+    push bx
+    push edx
+    push esi
+    push bp
+;
+    mov esi,eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae shtFail
+;   
+    or bx,bx
+    jz shtFail
+;
+    dec bx
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae shtFail
+;    
+    or ax,ax
+    jz shtFail
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov eax,esi
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].set_time_tab
+    jmp shtDone
+
+shtFail:
+    stc
+
+shtDone:
+    pop bp
+    pop esi
+    pop edx
+    pop bx
+    pop ax
+    pop ds    
+    retf32
+set_handle_time     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetHandleMode
 ;
 ;           DESCRIPTION:    Get C handle mode
@@ -1753,6 +1941,18 @@ init_chandle     PROC near
     mov edi,OFFSET is_handle_device_name
     xor cl,cl
     mov ax,is_handle_device_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_handle_time
+    mov edi,OFFSET get_handle_time_name
+    xor cl,cl
+    mov ax,get_handle_time_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_handle_time
+    mov edi,OFFSET set_handle_time_name
+    xor cl,cl
+    mov ax,set_handle_time_nr
     RegisterBimodalUserGate
 ;
     popad

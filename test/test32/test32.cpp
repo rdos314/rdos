@@ -343,6 +343,7 @@ void main()
     handle1 = RdosOpenHandle("fil.txt", O_RDONLY);
 
     RdosGetHandleTime(handle1, &msb, &lsb);
+    RdosSetHandleTime(handle1, msb, lsb);
 
     handle3 = RdosDupHandle(handle1);
 
