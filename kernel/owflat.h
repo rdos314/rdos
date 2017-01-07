@@ -1242,6 +1242,18 @@
 #pragma aux RdosCloseHandle = \
     CallGate_close_handle  \
     parm [ebx];
+    
+#pragma aux RdosReadHandle = \
+    CallGate_read_handle  \
+    ValidateEax \
+    parm [ebx] [edi] [ecx]  \
+    value [eax];
+
+#pragma aux RdosWriteHandle = \
+    CallGate_write_handle  \
+    ValidateEax \
+    parm [ebx] [edi] [ecx]  \
+    value [eax];
 
 #pragma aux RdosOpenFile = \
     CallGate_open_file  \

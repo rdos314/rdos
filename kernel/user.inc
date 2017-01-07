@@ -1105,6 +1105,22 @@ CloseHandle	MACRO
 	UserGate close_handle_nr
 					ENDM
 
+; IN  BX      	Handle
+; IN  ES:(E)DI	Buffer
+; IN  (E)CX	Number of bytes to read
+; OUT (E)AX 	Number of bytes read
+ReadHandle        MACRO
+	UserGate read_handle_nr
+					ENDM
+
+; IN  BX    	Handle
+; IN  ES:(E)DI 	Buffer
+; IN  (E)CX	Number of bytes to write
+; OUT (E)AX 	Number of bytes written
+WriteHandle       MACRO
+	UserGate write_handle_nr
+						ENDM
+
 ;;;;;;;;;;;;;; INI FILE HANDLING ;;;;;;;;;;;
 
 ; OUT BX            Ini handle

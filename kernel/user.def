@@ -784,5 +784,7 @@ get_text_size_nr                = 610
 
 open_handle_nr                  = 611
 close_handle_nr                 = 612
+read_handle_nr                  = 613
+write_handle_nr                 = 614
 
 usergate_entries			    = 625
