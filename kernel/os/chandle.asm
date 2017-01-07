@@ -32,54 +32,9 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
-
-;
-; iomode constants
-;
-
-IO_READ         = 1
-IO_WRITE        = 2
-IO_EOF          = 10h
-IO_BINARY       = 40h
-IO_APPEND       = 80h
-IO_FBF          = 100h
-IO_LBF          = 200h
-IO_NBF          = 400h
-IO_ISTTY        = 1000h
-
-;
-; open constants
-;
-
-O_RDONLY        = 0
-O_WRONLY        = 1
-O_RDWR          = 2
-O_APPEND        = 10h
-O_CREAT         = 20h
-O_TRUNC         = 40h
-O_NOINHERIT     = 80h
-O_TEXT          = 100h
-O_BINARY        = 200h
-O_EXCL          = 400h
-
-SYS_HANDLE_COUNT      = 1024
-SYS_BITMAP_COUNT      = SYS_HANDLE_COUNT SHR 5
+INCLUDE chandle.inc
 
 MAX_HANDLES           = 256
-
-handle_entry_struc    STRUC
-
-he_file_sel      DW ?
-he_file_drive    DB ?
-he_resv          DB ?
-he_io_mode       DW ?
-he_ref_count     DW ?
-he_close_proc    DW ?
-he_dup_proc      DW ?
-he_read_proc     DW ?
-he_write_proc    DW ?
-
-handle_entry_struc    ENDS
 
 handle_struc    STRUC
 
@@ -88,13 +43,6 @@ h_section       section_typ <>
 h_arr           DW MAX_HANDLES DUP(?)
 
 handle_struc    ENDS
-
-handle_data_struc       STRUC
-
-hd_bitmap        DD SYS_BITMAP_COUNT DUP(?)
-hd_data          DB SYS_HANDLE_COUNT * SIZE handle_entry_struc DUP(?)
-
-handle_data_struc       ENDS
 
 
     .386p
