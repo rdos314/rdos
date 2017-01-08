@@ -339,6 +339,13 @@ void main()
     int pos;
     int val;
     unsigned long lsb, msb;
+
+    for (;;)
+    {
+        size = RdosReadLine(buf, 32);
+        buf[size] = 0;
+        printf(buf);
+    }
     
     handle1 = RdosOpenHandle("fil.txt", O_RDONLY);
 

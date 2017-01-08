@@ -28,6 +28,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <unistd.h>
 #include "file.h"
 
 #define FALSE 0
@@ -125,6 +126,15 @@ void main()
     char buf[MAX_IN_ROW];
     int size;
     long pos = 0;
+
+    char str[100];
+    int i;
+
+    printf( "Enter a value :");
+    scanf("%s %d", str, &i);
+
+    printf( "\nYou entered: %s %d ", str, i);
+    
     TFile infile("2016.csv");
     char *ptr;
 
