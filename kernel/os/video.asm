@@ -4444,646 +4444,6 @@ extract_alpha_bitmap       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
-;       DESCRIPTION:    Console input functions
-;
-;       PARAMETERS:     ES:EDI         Buffer end
-;                       ES:ESI         Current buffer pos
-;                       ECX            Remaining characters
-;                       EDX            Total buffer size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-con_io_tab:
-    mov al,' '
-    jmp con_io_normal
-
-con_io_normal   PROC near
-    or ecx,ecx
-    jz con_io_full
-;
-    cmp esi,edi
-    jne con_io_insert
-;
-    WriteChar
-    stosb
-    dec ecx
-    mov esi,edi
-
-con_io_full:
-    clc
-    ret
-
-con_io_insert:
-    push ecx
-    push esi
-    push edx
-;
-    GetCursorPosition
-    push ecx
-;
-    mov ecx,edi
-    sub ecx,esi
-
-con_io_move_loop:
-    WriteChar
-    xchg al,es:[esi]
-    inc esi
-    loop con_io_move_loop
-;
-    WriteChar
-    mov es:[esi],al
-;
-    pop ecx
-    SetCursorPosition
-;
-    pop edx
-    pop esi
-    pop ecx
-;
-    mov al,es:[esi]
-    WriteChar
-    mov eax,edi
-    sub eax,esi
-    sub eax,ecx
-    jnc con_io_overflow
-;
-    inc esi
-    inc edi
-    dec ecx 
-    clc
-    ret
-
-con_io_overflow:
-    inc esi
-    dec ecx
-;
-    push ecx
-    push esi
-    push edx
-;
-    GetCursorPosition
-
-con_io_overflow_loop:
-    cmp esi,edi
-    je con_io_overflow_done
-;
-    mov al,es:[esi]
-    WriteChar
-    inc esi
-    jmp con_io_overflow_loop
-
-con_io_overflow_done:
-    mov al,' '
-    WriteChar
-    SetCursorPosition
-;
-    pop edx
-    pop esi
-    pop ecx
-    clc
-    ret
-con_io_normal   ENDP
-
-con_io_del          PROC near
-    cmp ecx,edx
-    je con_io_del_empty
-;
-    cmp esi,edi
-    jne con_io_del_move
-;
-    dec edi
-    dec esi
-    inc ecx
-;
-    push ecx
-    push edx
-;
-    GetCursorPosition
-    sub cx,1
-    jnc con_io_del_do
-;
-    push edx
-    GetTextSize
-    pop edx
-    dec cx
-;
-    sub dx,1
-    jnc con_io_del_do
-;
-    xor cx,cx
-    xor dx,dx
-
-con_io_del_do:
-    SetCursorPosition
-    mov al,' '
-    WriteChar
-    SetCursorPosition
-;
-    pop edx
-    pop ecx
-
-con_io_del_empty:
-    clc
-    ret
-
-con_io_del_move:
-    dec esi
-    dec edi
-    inc ecx
-;
-    push ecx
-    push esi
-    push edx
-;
-    GetCursorPosition
-    sub cx,1
-    jnc con_io_del_do_move
-;
-    push edx
-    GetTextSize
-    dec cx
-    pop edx
-;
-    sub dx,1
-    jnc con_io_del_do_move
-;
-    xor cx,cx
-    xor dx,dx
-
-con_io_del_do_move:
-    SetCursorPosition
-    push ecx
-;
-    mov ecx,edi
-    sub ecx,esi
-
-con_io_del_loop:
-    mov al,es:[esi+1]
-    mov es:[esi],al
-    WriteChar
-    inc esi
-    loop con_io_del_loop
-;
-    mov al,' '
-    WriteChar
-;
-    pop ecx
-    SetCursorPosition
-;
-    pop edx
-    pop esi
-    pop ecx
-    clc
-    ret
-con_io_del          ENDP
-
-con_io_cr           PROC near
-    cmp ecx,2
-    jc con_io_cr_full
-;
-    mov al,0Dh
-    mov es:[esi],al
-    dec ecx
-    inc esi
-    inc edi
-    WriteChar
-;
-    mov al,0Ah
-    mov es:[esi],al
-    dec ecx
-    inc esi
-    inc edi
-    WriteChar
-    stc
-    ret
-
-con_io_cr_full:
-    clc
-    ret
-con_io_cr           ENDP
-
-con_io_clear_buf    PROC near
-
-con_clear_home_loop:
-    cmp ecx,edx
-    je con_clear_home_done
-;
-    push ecx
-    push edx
-;
-    GetCursorPosition
-    sub cx,1
-    jnc con_clear_home_do
-;
-    push edx
-    GetTextSize
-    pop edx
-    dec cx
-;
-    sub dx,1
-    jnc con_clear_home_do
-;
-    xor cx,cx
-    xor dx,dx
-
-con_clear_home_do:
-    SetCursorPosition
-;
-    pop edx
-    pop ecx
-;
-    dec esi
-    inc ecx
-    jmp con_clear_home_loop
-
-con_clear_home_done:
-    push ecx
-    push edx
-;
-    GetCursorPosition
-    push ecx    
-;
-    mov ecx,edi
-    sub ecx,esi
-    mov al,' '
-    or ecx,ecx
-    jz con_clear_done
-
-con_clear_loop:
-    WriteChar
-    loop con_clear_loop
-
-con_clear_done:
-    pop ecx
-    SetCursorPosition
-;
-    pop edx
-    pop ecx
-;
-    mov edi,esi
-    clc
-    ret
-con_io_clear_buf    ENDP
-
-con_io_skip     PROC near
-    clc
-    ret
-con_io_skip     ENDP
-
-con_left_arrow  PROC near
-    cmp edx,ecx
-    je con_left_fail
-;
-    inc ecx
-    dec esi
-;
-    push ecx
-    push edx
-;
-    GetCursorPosition
-    sub cx,1
-    jnc con_left_arrow_do
-;
-    push edx
-    GetTextSize
-    pop edx
-    dec cx
-;
-    sub dx,1
-    jnc con_left_arrow_do
-;
-    xor cx,cx
-    xor dx,dx
-
-con_left_arrow_do:
-    SetCursorPosition
-;
-    pop edx
-    pop ecx
-
-con_left_fail:
-    clc
-    ret
-con_left_arrow  ENDP
-
-con_right_arrow PROC near
-    cmp edi,esi
-    je con_right_fail
-;
-    mov al,es:[esi]
-    cmp edi,esi
-    jne con_right_write
-;
-    mov al,' '
-
-con_right_write:
-    WriteChar
-    dec ecx
-    inc esi
-
-con_right_fail:
-    clc
-    ret
-con_right_arrow ENDP
-
-con_home_key    PROC near
-
-con_home_loop:
-    cmp ecx,edx
-    je con_home_done
-;
-    push ecx
-    push edx
-;
-    GetCursorPosition
-    sub cx,1
-    jnc con_home_do
-;
-    push edx
-    GetTextSize
-    pop edx
-    dec cx
-    sub dx,1
-    jnc con_home_do
-;
-    xor cx,cx
-    xor dx,dx
-
-con_home_do:
-    SetCursorPosition    
-;
-    pop edx
-    pop ecx
-;
-    dec esi
-    inc ecx
-    jmp con_home_loop
-
-con_home_done:
-    clc
-    ret
-con_home_key    ENDP
-
-con_end_key     PROC near
-
-con_end_loop:
-    cmp esi,edi
-    je con_end_done
-;
-    mov al,es:[esi]
-    WriteChar
-    inc esi
-    dec ecx
-    jmp con_end_loop
-
-con_end_done:
-    clc
-    ret
-con_end_key     ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ReadCConsole
-;
-;           DESCRIPTION:    Read from console
-;
-;           PARAMETERS:     ES:EDI        BUFFER
-;                           ECX           MAX NUMBER OF CHARS
-;                           
-;           RETURNS:        EAX           NUMBER OF READ CHARS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_c_console_name   DB 'Read C Console',0
-
-con_ext_key_buf_tab:
-dek00   DD OFFSET con_io_skip
-dek01   DD OFFSET con_io_skip
-dek02   DD OFFSET con_io_skip
-dek03   DD OFFSET con_io_skip
-dek04   DD OFFSET con_io_skip
-dek05   DD OFFSET con_io_skip
-dek06   DD OFFSET con_io_skip
-dek07   DD OFFSET con_io_skip
-dek08   DD OFFSET con_io_skip
-dek09   DD OFFSET con_io_skip
-dek0A   DD OFFSET con_io_skip
-dek0B   DD OFFSET con_io_skip
-dek0C   DD OFFSET con_io_skip
-dek0D   DD OFFSET con_io_skip
-dek0E   DD OFFSET con_io_skip
-dek0F   DD OFFSET con_io_skip
-dek10   DD OFFSET con_io_skip
-dek11   DD OFFSET con_io_skip
-dek12   DD OFFSET con_io_skip
-dek13   DD OFFSET con_io_skip
-dek14   DD OFFSET con_io_skip
-dek15   DD OFFSET con_io_skip
-dek16   DD OFFSET con_io_skip
-dek17   DD OFFSET con_io_skip
-dek18   DD OFFSET con_io_skip
-dek19   DD OFFSET con_io_skip
-dek1A   DD OFFSET con_io_skip
-dek1B   DD OFFSET con_io_skip
-dek1C   DD OFFSET con_io_skip
-dek1D   DD OFFSET con_io_skip
-dek1E   DD OFFSET con_io_skip
-dek1F   DD OFFSET con_io_skip
-dek20   DD OFFSET con_io_skip
-dek21   DD OFFSET con_io_skip
-dek22   DD OFFSET con_io_skip
-dek23   DD OFFSET con_io_skip
-dek24   DD OFFSET con_io_skip
-dek25   DD OFFSET con_io_skip
-dek26   DD OFFSET con_io_skip
-dek27   DD OFFSET con_io_skip
-dek28   DD OFFSET con_io_skip
-dek29   DD OFFSET con_io_skip
-dek2A   DD OFFSET con_io_skip
-dek2B   DD OFFSET con_io_skip
-dek2C   DD OFFSET con_io_skip
-dek2D   DD OFFSET con_io_skip
-dek2E   DD OFFSET con_io_skip
-dek2F   DD OFFSET con_io_skip
-dek30   DD OFFSET con_io_skip
-dek31   DD OFFSET con_io_skip
-dek32   DD OFFSET con_io_skip
-dek33   DD OFFSET con_io_skip
-dek34   DD OFFSET con_io_skip
-dek35   DD OFFSET con_io_skip
-dek36   DD OFFSET con_io_skip
-dek37   DD OFFSET con_io_skip
-dek38   DD OFFSET con_io_skip
-dek39   DD OFFSET con_io_skip
-dek3A   DD OFFSET con_io_skip
-dek3B   DD OFFSET con_io_skip
-dek3C   DD OFFSET con_io_skip
-dek3D   DD OFFSET con_io_skip
-dek3E   DD OFFSET con_io_skip
-dek3F   DD OFFSET con_io_skip
-dek40   DD OFFSET con_io_skip
-dek41   DD OFFSET con_io_skip
-dek42   DD OFFSET con_io_skip
-dek43   DD OFFSET con_io_skip
-dek44   DD OFFSET con_io_skip
-dek45   DD OFFSET con_io_skip
-dek46   DD OFFSET con_io_skip
-dek47   DD OFFSET con_home_key
-dek48   DD OFFSET con_io_skip
-dek49   DD OFFSET con_io_skip
-dek4A   DD OFFSET con_io_skip
-dek4B   DD OFFSET con_left_arrow
-dek4C   DD OFFSET con_io_skip
-dek4D   DD OFFSET con_right_arrow
-dek4E   DD OFFSET con_io_skip
-dek4F   DD OFFSET con_end_key
-dek50   DD OFFSET con_io_skip
-dek51   DD OFFSET con_io_skip
-dek52   DD OFFSET con_io_skip
-dek53   DD OFFSET con_io_clear_buf
-dek54   DD OFFSET con_io_skip
-dek55   DD OFFSET con_io_skip
-dek56   DD OFFSET con_io_skip
-dek57   DD OFFSET con_io_skip
-dek58   DD OFFSET con_io_skip
-dek59   DD OFFSET con_io_skip
-dek5A   DD OFFSET con_io_skip
-dek5B   DD OFFSET con_io_skip
-dek5C   DD OFFSET con_io_skip
-dek5D   DD OFFSET con_io_skip
-dek5E   DD OFFSET con_io_skip
-dek5F   DD OFFSET con_io_skip
-dek60   DD OFFSET con_io_skip
-dek61   DD OFFSET con_io_skip
-dek62   DD OFFSET con_io_skip
-dek63   DD OFFSET con_io_skip
-dek64   DD OFFSET con_io_skip
-dek65   DD OFFSET con_io_skip
-dek66   DD OFFSET con_io_skip
-dek67   DD OFFSET con_io_skip
-dek68   DD OFFSET con_io_skip
-dek69   DD OFFSET con_io_skip
-dek6A   DD OFFSET con_io_skip
-dek6B   DD OFFSET con_io_skip
-dek6C   DD OFFSET con_io_skip
-dek6D   DD OFFSET con_io_skip
-dek6E   DD OFFSET con_io_skip
-dek6F   DD OFFSET con_io_skip
-dek70   DD OFFSET con_io_skip
-dek71   DD OFFSET con_io_skip
-dek72   DD OFFSET con_io_skip
-dek73   DD OFFSET con_io_skip
-dek74   DD OFFSET con_io_skip
-dek75   DD OFFSET con_io_skip
-dek76   DD OFFSET con_io_skip
-dek77   DD OFFSET con_io_skip
-dek78   DD OFFSET con_io_skip
-dek79   DD OFFSET con_io_skip
-dek7A   DD OFFSET con_io_skip
-dek7B   DD OFFSET con_io_skip
-dek7C   DD OFFSET con_io_skip
-dek7D   DD OFFSET con_io_skip
-dek7E   DD OFFSET con_io_skip
-dek7F   DD OFFSET con_io_skip
-dek80   DD OFFSET con_io_skip
-dek81   DD OFFSET con_io_skip
-dek82   DD OFFSET con_io_skip
-dek83   DD OFFSET con_io_skip
-dek84   DD OFFSET con_io_skip
-
-con_io_extend   PROC near
-    movzx ebx,ah
-    shl ebx,2
-    call cs:dword ptr [ebx].con_ext_key_buf_tab
-    ret
-con_io_extend   ENDP
-
-con_key_buf_tab:
-ckb0    DD OFFSET con_io_extend
-ckb1    DD OFFSET con_io_normal
-ckb2    DD OFFSET con_io_normal
-ckb3    DD OFFSET con_io_normal
-ckb4    DD OFFSET con_io_normal
-ckb5    DD OFFSET con_io_normal
-ckb6    DD OFFSET con_io_normal
-ckb7    DD OFFSET con_io_normal
-ckb8    DD OFFSET con_io_del
-ckb9    DD OFFSET con_io_tab
-ckbA    DD OFFSET con_io_normal
-ckbB    DD OFFSET con_io_normal
-ckbC    DD OFFSET con_io_normal
-ckbD    DD OFFSET con_io_cr
-ckbE    DD OFFSET con_io_normal
-ckbF    DD OFFSET con_io_normal
-ckb10   DD OFFSET con_io_normal
-ckb11   DD OFFSET con_io_normal
-ckb12   DD OFFSET con_io_normal
-ckb13   DD OFFSET con_io_normal
-ckb14   DD OFFSET con_io_normal
-ckb15   DD OFFSET con_io_normal
-ckb16   DD OFFSET con_io_normal
-ckb17   DD OFFSET con_io_normal
-ckb18   DD OFFSET con_io_normal
-ckb19   DD OFFSET con_io_normal
-ckb1A   DD OFFSET con_io_normal
-ckb1B   DD OFFSET con_io_clear_buf
-ckb1C   DD OFFSET con_io_normal
-ckb1D   DD OFFSET con_io_normal
-ckb1E   DD OFFSET con_io_normal
-ckb1F   DD OFFSET con_io_normal
-ckbend  DD OFFSET con_io_normal
-
-read_c_console  PROC far
-    push ds
-    push ebx
-    push ecx
-    push edx
-    push esi
-;
-    push edi
-    mov edx,ecx
-    mov esi,edi
-;
-    mov ax,SEG data
-    mov ds,ax
-
-con_io_loop:
-    PollKeyboard
-    jnc con_io_get
-;
-    mov ax,25
-    WaitMilliSec
-    jmp con_io_loop
-
-con_io_get:
-    ReadKeyboard
-    movzx ebx,al
-    cmp ebx,20h
-    jc con_io_in_tab
-;
-    mov ebx,20h
-
-con_io_in_tab:
-    shl ebx,2
-    call cs:dword ptr [ebx].con_key_buf_tab
-    jnc con_io_loop
-;
-    pop edi
-    mov eax,esi
-    sub eax,edi
-    clc
-;
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop ds
-    ret
-read_c_console  ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
 ;
 ;       DESCRIPTION:    Console output functions
 ;
@@ -5186,6 +4546,10 @@ updUpdate:
     pop ds
 
 updDone:
+    mov ax,fs:c_curr_row
+    mov ds:p_row,ax
+    mov ax,fs:c_curr_col
+    mov ds:p_row,ax
     pop ax
     ret
 UpdateConPos       ENDP
@@ -5405,6 +4769,670 @@ write_c_done:
     pop ds
     ret
 write_c_console     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;       DESCRIPTION:    Console input functions
+;
+;       PARAMETERS:     ES:EDI         Buffer end
+;                       ES:ESI         Current buffer pos
+;                       ECX            Remaining characters
+;                       EDX            Total buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+con_write	Proc near
+    push es
+    push bx
+;
+    mov bx,flat_sel
+    mov es,bx
+    mov bl,7
+    mov bh,0
+    call WriteConOne
+;
+    pop bx
+    pop es
+    ret
+con_write	Endp
+    
+con_io_tab:
+    mov al,' '
+    jmp con_io_normal
+
+con_io_normal   PROC near
+    or ecx,ecx
+    jz con_io_full
+;
+    cmp esi,edi
+    jne con_io_insert
+;
+    call con_write
+    stosb
+    dec ecx
+    mov esi,edi
+
+con_io_full:
+    clc
+    ret
+
+con_io_insert:
+    push ecx
+    push esi
+    push edx
+;
+    mov cx,fs:c_curr_col
+    mov dx,fs:c_curr_row
+    push ecx
+;
+    mov ecx,edi
+    sub ecx,esi
+
+con_io_move_loop:
+    call con_write
+    xchg al,es:[esi]
+    inc esi
+    loop con_io_move_loop
+;
+    call con_write
+    mov es:[esi],al
+;
+    pop ecx
+    SetCursorPosition
+;
+    pop edx
+    pop esi
+    pop ecx
+;
+    mov al,es:[esi]
+    call con_write
+    mov eax,edi
+    sub eax,esi
+    sub eax,ecx
+    jnc con_io_overflow
+;
+    inc esi
+    inc edi
+    dec ecx 
+    clc
+    ret
+
+con_io_overflow:
+    inc esi
+    dec ecx
+;
+    push ecx
+    push esi
+    push edx
+;
+    mov cx,fs:c_curr_col
+    mov dx,fs:c_curr_row
+
+con_io_overflow_loop:
+    cmp esi,edi
+    je con_io_overflow_done
+;
+    mov al,es:[esi]
+    call con_write
+    inc esi
+    jmp con_io_overflow_loop
+
+con_io_overflow_done:
+    mov al,' '
+    call con_write
+    SetCursorPosition
+;
+    pop edx
+    pop esi
+    pop ecx
+    clc
+    ret
+con_io_normal   ENDP
+
+con_io_del          PROC near
+    cmp ecx,edx
+    je con_io_del_empty
+;
+    cmp esi,edi
+    jne con_io_del_move
+;
+    dec edi
+    dec esi
+    inc ecx
+;
+    push ecx
+    push edx
+;
+    mov cx,fs:c_curr_col
+    mov dx,fs:c_curr_row
+    sub cx,1
+    jnc con_io_del_do
+;
+    mov cx,fs:c_cols
+    dec cx
+;
+    sub dx,1
+    jnc con_io_del_do
+;
+    xor cx,cx
+    xor dx,dx
+
+con_io_del_do:
+    SetCursorPosition
+    mov al,' '
+    call con_write
+    SetCursorPosition
+;
+    pop edx
+    pop ecx
+
+con_io_del_empty:
+    clc
+    ret
+
+con_io_del_move:
+    dec esi
+    dec edi
+    inc ecx
+;
+    push ecx
+    push esi
+    push edx
+;
+    mov cx,fs:c_curr_col
+    mov dx,fs:c_curr_row
+    sub cx,1
+    jnc con_io_del_do_move
+;
+    mov cx,fs:c_cols
+    dec cx
+;
+    sub dx,1
+    jnc con_io_del_do_move
+;
+    xor cx,cx
+    xor dx,dx
+
+con_io_del_do_move:
+    SetCursorPosition
+    push ecx
+;
+    mov ecx,edi
+    sub ecx,esi
+
+con_io_del_loop:
+    mov al,es:[esi+1]
+    mov es:[esi],al
+    call con_write
+    inc esi
+    loop con_io_del_loop
+;
+    mov al,' '
+    call con_write
+;
+    pop ecx
+    SetCursorPosition
+;
+    pop edx
+    pop esi
+    pop ecx
+    clc
+    ret
+con_io_del          ENDP
+
+con_io_cr           PROC near
+    cmp ecx,2
+    jc con_io_cr_full
+;
+    mov al,0Dh
+    mov es:[esi],al
+    dec ecx
+    inc esi
+    inc edi
+;
+    mov al,0Ah
+    mov es:[esi],al
+    dec ecx
+    inc esi
+    inc edi
+;
+    mov fs:c_curr_col,0
+    inc fs:c_curr_row
+    call UpdateConPos    
+    stc
+    ret
+
+con_io_cr_full:
+    clc
+    ret
+con_io_cr           ENDP
+
+con_io_clear_buf    PROC near
+
+con_clear_home_loop:
+    cmp ecx,edx
+    je con_clear_home_done
+;
+    push ecx
+    push edx
+;
+    mov cx,fs:c_curr_col
+    mov dx,fs:c_curr_row
+    sub cx,1
+    jnc con_clear_home_do
+;
+    mov cx,fs:c_cols
+    dec cx
+;
+    sub dx,1
+    jnc con_clear_home_do
+;
+    xor cx,cx
+    xor dx,dx
+
+con_clear_home_do:
+    SetCursorPosition
+;
+    pop edx
+    pop ecx
+;
+    dec esi
+    inc ecx
+    jmp con_clear_home_loop
+
+con_clear_home_done:
+    push ecx
+    push edx
+;
+    mov cx,fs:c_curr_col
+    mov dx,fs:c_curr_row
+    push ecx    
+;
+    mov ecx,edi
+    sub ecx,esi
+    mov al,' '
+    or ecx,ecx
+    jz con_clear_done
+
+con_clear_loop:
+    call con_write
+    loop con_clear_loop
+
+con_clear_done:
+    pop ecx
+    SetCursorPosition
+;
+    pop edx
+    pop ecx
+;
+    mov edi,esi
+    clc
+    ret
+con_io_clear_buf    ENDP
+
+con_io_skip     PROC near
+    clc
+    ret
+con_io_skip     ENDP
+
+con_left_arrow  PROC near
+    cmp edx,ecx
+    je con_left_fail
+;
+    inc ecx
+    dec esi
+;
+    push ecx
+    push edx
+;
+    mov cx,fs:c_curr_col
+    mov dx,fs:c_curr_row
+    sub cx,1
+    jnc con_left_arrow_do
+;
+    mov cx,fs:c_cols
+    dec cx
+;
+    sub dx,1
+    jnc con_left_arrow_do
+;
+    xor cx,cx
+    xor dx,dx
+
+con_left_arrow_do:
+    SetCursorPosition
+;
+    pop edx
+    pop ecx
+
+con_left_fail:
+    clc
+    ret
+con_left_arrow  ENDP
+
+con_right_arrow PROC near
+    cmp edi,esi
+    je con_right_fail
+;
+    mov al,es:[esi]
+    cmp edi,esi
+    jne con_right_write
+;
+    mov al,' '
+
+con_right_write:
+    call con_write
+    dec ecx
+    inc esi
+
+con_right_fail:
+    clc
+    ret
+con_right_arrow ENDP
+
+con_home_key    PROC near
+
+con_home_loop:
+    cmp ecx,edx
+    je con_home_done
+;
+    push ecx
+    push edx
+;
+    mov cx,fs:c_curr_col
+    mov dx,fs:c_curr_row
+    sub cx,1
+    jnc con_home_do
+;
+    mov cx,fs:c_cols
+    dec cx
+    sub dx,1
+    jnc con_home_do
+;
+    xor cx,cx
+    xor dx,dx
+
+con_home_do:
+    SetCursorPosition    
+;
+    pop edx
+    pop ecx
+;
+    dec esi
+    inc ecx
+    jmp con_home_loop
+
+con_home_done:
+    clc
+    ret
+con_home_key    ENDP
+
+con_end_key     PROC near
+
+con_end_loop:
+    cmp esi,edi
+    je con_end_done
+;
+    mov al,es:[esi]
+    call con_write
+    inc esi
+    dec ecx
+    jmp con_end_loop
+
+con_end_done:
+    clc
+    ret
+con_end_key     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ReadCConsole
+;
+;           DESCRIPTION:    Read from console
+;
+;           PARAMETERS:     ES:EDI        BUFFER
+;                           ECX           MAX NUMBER OF CHARS
+;                           
+;           RETURNS:        EAX           NUMBER OF READ CHARS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_c_console_name   DB 'Read C Console',0
+
+con_ext_key_buf_tab:
+dek00   DD OFFSET con_io_skip
+dek01   DD OFFSET con_io_skip
+dek02   DD OFFSET con_io_skip
+dek03   DD OFFSET con_io_skip
+dek04   DD OFFSET con_io_skip
+dek05   DD OFFSET con_io_skip
+dek06   DD OFFSET con_io_skip
+dek07   DD OFFSET con_io_skip
+dek08   DD OFFSET con_io_skip
+dek09   DD OFFSET con_io_skip
+dek0A   DD OFFSET con_io_skip
+dek0B   DD OFFSET con_io_skip
+dek0C   DD OFFSET con_io_skip
+dek0D   DD OFFSET con_io_skip
+dek0E   DD OFFSET con_io_skip
+dek0F   DD OFFSET con_io_skip
+dek10   DD OFFSET con_io_skip
+dek11   DD OFFSET con_io_skip
+dek12   DD OFFSET con_io_skip
+dek13   DD OFFSET con_io_skip
+dek14   DD OFFSET con_io_skip
+dek15   DD OFFSET con_io_skip
+dek16   DD OFFSET con_io_skip
+dek17   DD OFFSET con_io_skip
+dek18   DD OFFSET con_io_skip
+dek19   DD OFFSET con_io_skip
+dek1A   DD OFFSET con_io_skip
+dek1B   DD OFFSET con_io_skip
+dek1C   DD OFFSET con_io_skip
+dek1D   DD OFFSET con_io_skip
+dek1E   DD OFFSET con_io_skip
+dek1F   DD OFFSET con_io_skip
+dek20   DD OFFSET con_io_skip
+dek21   DD OFFSET con_io_skip
+dek22   DD OFFSET con_io_skip
+dek23   DD OFFSET con_io_skip
+dek24   DD OFFSET con_io_skip
+dek25   DD OFFSET con_io_skip
+dek26   DD OFFSET con_io_skip
+dek27   DD OFFSET con_io_skip
+dek28   DD OFFSET con_io_skip
+dek29   DD OFFSET con_io_skip
+dek2A   DD OFFSET con_io_skip
+dek2B   DD OFFSET con_io_skip
+dek2C   DD OFFSET con_io_skip
+dek2D   DD OFFSET con_io_skip
+dek2E   DD OFFSET con_io_skip
+dek2F   DD OFFSET con_io_skip
+dek30   DD OFFSET con_io_skip
+dek31   DD OFFSET con_io_skip
+dek32   DD OFFSET con_io_skip
+dek33   DD OFFSET con_io_skip
+dek34   DD OFFSET con_io_skip
+dek35   DD OFFSET con_io_skip
+dek36   DD OFFSET con_io_skip
+dek37   DD OFFSET con_io_skip
+dek38   DD OFFSET con_io_skip
+dek39   DD OFFSET con_io_skip
+dek3A   DD OFFSET con_io_skip
+dek3B   DD OFFSET con_io_skip
+dek3C   DD OFFSET con_io_skip
+dek3D   DD OFFSET con_io_skip
+dek3E   DD OFFSET con_io_skip
+dek3F   DD OFFSET con_io_skip
+dek40   DD OFFSET con_io_skip
+dek41   DD OFFSET con_io_skip
+dek42   DD OFFSET con_io_skip
+dek43   DD OFFSET con_io_skip
+dek44   DD OFFSET con_io_skip
+dek45   DD OFFSET con_io_skip
+dek46   DD OFFSET con_io_skip
+dek47   DD OFFSET con_home_key
+dek48   DD OFFSET con_io_skip
+dek49   DD OFFSET con_io_skip
+dek4A   DD OFFSET con_io_skip
+dek4B   DD OFFSET con_left_arrow
+dek4C   DD OFFSET con_io_skip
+dek4D   DD OFFSET con_right_arrow
+dek4E   DD OFFSET con_io_skip
+dek4F   DD OFFSET con_end_key
+dek50   DD OFFSET con_io_skip
+dek51   DD OFFSET con_io_skip
+dek52   DD OFFSET con_io_skip
+dek53   DD OFFSET con_io_clear_buf
+dek54   DD OFFSET con_io_skip
+dek55   DD OFFSET con_io_skip
+dek56   DD OFFSET con_io_skip
+dek57   DD OFFSET con_io_skip
+dek58   DD OFFSET con_io_skip
+dek59   DD OFFSET con_io_skip
+dek5A   DD OFFSET con_io_skip
+dek5B   DD OFFSET con_io_skip
+dek5C   DD OFFSET con_io_skip
+dek5D   DD OFFSET con_io_skip
+dek5E   DD OFFSET con_io_skip
+dek5F   DD OFFSET con_io_skip
+dek60   DD OFFSET con_io_skip
+dek61   DD OFFSET con_io_skip
+dek62   DD OFFSET con_io_skip
+dek63   DD OFFSET con_io_skip
+dek64   DD OFFSET con_io_skip
+dek65   DD OFFSET con_io_skip
+dek66   DD OFFSET con_io_skip
+dek67   DD OFFSET con_io_skip
+dek68   DD OFFSET con_io_skip
+dek69   DD OFFSET con_io_skip
+dek6A   DD OFFSET con_io_skip
+dek6B   DD OFFSET con_io_skip
+dek6C   DD OFFSET con_io_skip
+dek6D   DD OFFSET con_io_skip
+dek6E   DD OFFSET con_io_skip
+dek6F   DD OFFSET con_io_skip
+dek70   DD OFFSET con_io_skip
+dek71   DD OFFSET con_io_skip
+dek72   DD OFFSET con_io_skip
+dek73   DD OFFSET con_io_skip
+dek74   DD OFFSET con_io_skip
+dek75   DD OFFSET con_io_skip
+dek76   DD OFFSET con_io_skip
+dek77   DD OFFSET con_io_skip
+dek78   DD OFFSET con_io_skip
+dek79   DD OFFSET con_io_skip
+dek7A   DD OFFSET con_io_skip
+dek7B   DD OFFSET con_io_skip
+dek7C   DD OFFSET con_io_skip
+dek7D   DD OFFSET con_io_skip
+dek7E   DD OFFSET con_io_skip
+dek7F   DD OFFSET con_io_skip
+dek80   DD OFFSET con_io_skip
+dek81   DD OFFSET con_io_skip
+dek82   DD OFFSET con_io_skip
+dek83   DD OFFSET con_io_skip
+dek84   DD OFFSET con_io_skip
+
+con_io_extend   PROC near
+    movzx ebx,ah
+    shl ebx,2
+    call cs:dword ptr [ebx].con_ext_key_buf_tab
+    ret
+con_io_extend   ENDP
+
+con_key_buf_tab:
+ckb0    DD OFFSET con_io_extend
+ckb1    DD OFFSET con_io_normal
+ckb2    DD OFFSET con_io_normal
+ckb3    DD OFFSET con_io_normal
+ckb4    DD OFFSET con_io_normal
+ckb5    DD OFFSET con_io_normal
+ckb6    DD OFFSET con_io_normal
+ckb7    DD OFFSET con_io_normal
+ckb8    DD OFFSET con_io_del
+ckb9    DD OFFSET con_io_tab
+ckbA    DD OFFSET con_io_normal
+ckbB    DD OFFSET con_io_normal
+ckbC    DD OFFSET con_io_normal
+ckbD    DD OFFSET con_io_cr
+ckbE    DD OFFSET con_io_normal
+ckbF    DD OFFSET con_io_normal
+ckb10   DD OFFSET con_io_normal
+ckb11   DD OFFSET con_io_normal
+ckb12   DD OFFSET con_io_normal
+ckb13   DD OFFSET con_io_normal
+ckb14   DD OFFSET con_io_normal
+ckb15   DD OFFSET con_io_normal
+ckb16   DD OFFSET con_io_normal
+ckb17   DD OFFSET con_io_normal
+ckb18   DD OFFSET con_io_normal
+ckb19   DD OFFSET con_io_normal
+ckb1A   DD OFFSET con_io_normal
+ckb1B   DD OFFSET con_io_clear_buf
+ckb1C   DD OFFSET con_io_normal
+ckb1D   DD OFFSET con_io_normal
+ckb1E   DD OFFSET con_io_normal
+ckb1F   DD OFFSET con_io_normal
+ckbend  DD OFFSET con_io_normal
+
+read_c_console  PROC far
+    push ds
+    push fs
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    push edi
+    mov edx,ecx
+    mov esi,edi
+;
+    GetThread
+    mov ds,ax
+    mov fs,ds:p_app_sel
+    mov ax,fs:app_console
+    or ax,ax
+    jz con_io_done
+;
+    mov fs,ax    
+
+con_io_loop:
+    PollKeyboard
+    jnc con_io_get
+;
+    mov ax,25
+    WaitMilliSec
+    jmp con_io_loop
+
+con_io_get:
+    ReadKeyboard
+    movzx ebx,al
+    cmp ebx,20h
+    jc con_io_in_tab
+;
+    mov ebx,20h
+
+con_io_in_tab:
+    shl ebx,2
+    call cs:dword ptr [ebx].con_key_buf_tab
+    jnc con_io_loop
+;
+    pop edi
+    mov eax,esi
+    sub eax,edi
+    clc
+
+con_io_done:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop fs
+    pop ds
+    ret
+read_c_console  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

@@ -3,9 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "serial.h"
 #include "section.h"
 #include "file.h"
+#include "rdos.h"
 
 #include <math.h>
 
@@ -341,41 +343,39 @@ void main()
     int res;
     unsigned long lsb, msb;
 
-    size = RdosReadHandle(0, buf, 30);
-    RdosWriteHandle(1, buf, size);
+    size = read(0, buf, 30);
+    write(1, buf, size);
+
+    char str[100];
+    int i;
+
+    printf( "Enter a value :");
+    scanf("%s %d", str, &i);
+
+    printf( "\nYou entered: %s %d ", str, i);
     
-    handle1 = RdosOpenHandle("fil.txt", O_RDONLY);
+    handle1 = open("fil.txt", O_RDWR);
 
-    res = RdosGetHandleTime(handle1, &msb, &lsb);
-    res = RdosSetHandleTime(handle1, msb, lsb);
-
-    handle3 = RdosDupHandle(handle1);
+    handle3 = dup(handle1);
 
     memset(buf, 0, 32);
-    size = RdosReadHandle(handle3, buf, 32);
-    val = RdosEofHandle(handle3);
+    size = read(handle3, buf, 32);
+    val = eof(handle3);
         
-    handle4 = RdosDup2Handle(handle3, 2);
+    handle4 = dup2(handle3, 2);
 
-    size = RdosGetHandleSize(handle4);
-    res = RdosSetHandleSize(handle4, size - 1);
-
-    mode = RdosGetHandleMode(handle4);
-    mode |= _WRITE;
-    res = RdosSetHandleMode(handle4, mode);
-
-    pos = RdosGetHandlePos(handle4);
-    res = RdosSetHandlePos(handle4, pos - 6);
+    size = filelength(handle4);
+    res = chsize(handle4, size - 1);
     
     strcpy(buf, "Testing");
     len = strlen(buf);
-    res = RdosWriteHandle(handle4, buf, len);
+    res = write(handle4, buf, len);
 
     
     if (handle2)
-        res = RdosCloseHandle(handle2);
+        res = close(handle2);
     if (handle1)
-        res = RdosCloseHandle(handle1);
+        res = close(handle1);
 
 
     int count;
