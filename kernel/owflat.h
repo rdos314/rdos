@@ -1235,67 +1235,63 @@
 
 #pragma aux RdosOpenHandle = \
     CallGate_open_handle  \
-    ValidateHandle  \
     parm [edi] [ecx] \
     value [ebx];
 
 #pragma aux RdosCloseHandle = \
     CallGate_close_handle  \
-    parm [ebx];
+    parm [ebx] \
+    value [ebx];
     
 #pragma aux RdosReadHandle = \
     CallGate_read_handle  \
-    ValidateEax \
     parm [ebx] [edi] [ecx]  \
     value [eax];
 
 #pragma aux RdosWriteHandle = \
     CallGate_write_handle  \
-    ValidateEax \
     parm [ebx] [edi] [ecx]  \
     value [eax];
 
 #pragma aux RdosDupHandle = \
     CallGate_dup_handle  \
-    ValidateHandle  \
     parm [ebx]  \
     value [ebx];
 
 #pragma aux RdosDup2Handle = \
     CallGate_dup2_handle  \
-    ValidateHandle  \
     parm [ebx] [eax]  \
     value [ebx];
 
 #pragma aux RdosGetHandleSize = \
     CallGate_get_handle_size  \
-    ValidateEax \
     parm [ebx]  \
     value [eax];
 
 #pragma aux RdosSetHandleSize = \
     CallGate_set_handle_size  \
-    parm [ebx] [eax];
+    parm [ebx] [eax] \
+    value [eax];
 
 #pragma aux RdosGetHandleMode = \
     CallGate_get_handle_mode  \
-    ValidateEax \
     parm [ebx]  \
     value [eax];
 
 #pragma aux RdosSetHandleMode = \
     CallGate_set_handle_mode  \
-    parm [ebx] [eax];
+    parm [ebx] [eax] \
+    value [eax];
 
 #pragma aux RdosGetHandlePos = \
     CallGate_get_handle_pos  \
-    ValidateEax \
     parm [ebx]  \
     value [eax];
 
 #pragma aux RdosSetHandlePos = \
     CallGate_set_handle_pos  \
-    parm [ebx] [eax];
+    parm [ebx] [eax] \
+    value [eax];
 
 #pragma aux RdosEofHandle = \
     CallGate_eof_handle  \
@@ -1312,12 +1308,15 @@
     CallGate_get_handle_time  \
     "mov [esi],edx" \
     "mov [edi],eax" \
+    "and eax,edx" \
     parm [ebx] [esi] [edi]  \
-    modify [eax edx];
+    modify [edx] \
+    value [eax];
 
 #pragma aux RdosSetHandleTime = \
     CallGate_set_handle_time  \
-    parm [ebx] [edx] [eax];
+    parm [ebx] [edx] [eax] \
+    value [eax];
 
 #pragma aux RdosOpenFile = \
     CallGate_open_file  \

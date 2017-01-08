@@ -332,47 +332,48 @@ void main()
 {
     int handle1, handle2;
     int handle3, handle4;
-    unsigned int mode;
+    int mode;
     int len;
     char buf[32];
     int size;
     int pos;
     int val;
+    int res;
     unsigned long lsb, msb;
 
     
     handle1 = RdosOpenHandle("fil.txt", O_RDONLY);
 
-    RdosGetHandleTime(handle1, &msb, &lsb);
-    RdosSetHandleTime(handle1, msb, lsb);
+    res = RdosGetHandleTime(handle1, &msb, &lsb);
+    res = RdosSetHandleTime(handle1, msb, lsb);
 
     handle3 = RdosDupHandle(handle1);
 
     memset(buf, 0, 32);
-    RdosReadHandle(handle3, buf, 32);
+    size = RdosReadHandle(handle3, buf, 32);
     val = RdosEofHandle(handle3);
         
     handle4 = RdosDup2Handle(handle3, 2);
 
     size = RdosGetHandleSize(handle4);
-    RdosSetHandleSize(handle4, size - 1);
+    res = RdosSetHandleSize(handle4, size - 1);
 
     mode = RdosGetHandleMode(handle4);
     mode |= _WRITE;
-    RdosSetHandleMode(handle4, mode);
+    res = RdosSetHandleMode(handle4, mode);
 
     pos = RdosGetHandlePos(handle4);
-    RdosSetHandlePos(handle4, pos - 6);
+    res = RdosSetHandlePos(handle4, pos - 6);
     
     strcpy(buf, "Testing");
     len = strlen(buf);
-    RdosWriteHandle(handle4, buf, len);
+    res = RdosWriteHandle(handle4, buf, len);
 
     
     if (handle2)
-        RdosCloseHandle(handle2);
+        res = RdosCloseHandle(handle2);
     if (handle1)
-        RdosCloseHandle(handle1);
+        res = RdosCloseHandle(handle1);
 
 
     int count;

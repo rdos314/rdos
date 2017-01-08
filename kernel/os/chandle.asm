@@ -334,6 +334,7 @@ aphFound:
     sub bx,OFFSET h_arr
     shr bx,3
     clc
+    movzx ebx,bx
 
 aphDone:   
     pop dx
@@ -351,7 +352,7 @@ allocate_proc_handle  Endp
 ;           PARAMETERS:     ES:(E)DI    Name
 ;                           CX          Mode
 ;
-;           RETURNS:        BX          Handle
+;           RETURNS:        EBX         Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -364,7 +365,7 @@ open_handle     Proc near
     push edx
 ;    
     OpenCFile
-    jc ohDone
+    jc ohFail
 ;
     GetThread
     mov ds,ax
@@ -409,7 +410,36 @@ ohAppendOk:
     call allocate_proc_handle
     jnc ohDone
 ;
-    int 3    
+    dec ax
+    movzx ecx,ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+    EnterSection ds:hd_section
+;
+    sub ds:[bx].he_ref_count,1
+    jnz ohLeaveFail
+;
+    xor ax,ax
+    xchg ax,ds:[bx].he_sel
+    mov bx,ds:[bx].he_type
+    btc ds:hd_bitmap,ecx
+;
+    cmp bx,10
+    jae ohLeaveFail
+;
+    shl bx,1
+    call word ptr cs:[bx].close_tab
+
+ohLeaveFail:
+    LeaveSection ds:hd_section
+
+ohFail:
+    mov ebx,-1
+    jmp ohDone
 
 ohDone:
     pop edx
@@ -441,6 +471,8 @@ open_handle32    ENDP
 ;           DESCRIPTION:    Close C handle
 ;
 ;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EBX         Result
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -481,7 +513,7 @@ close_handle     Proc near
     mov ds,ds:app_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
-    jae chDone
+    jae chFail
 ;
     shl bx,3
     add bx,OFFSET h_arr
@@ -493,10 +525,10 @@ close_handle     Proc near
     LeaveSection ds:h_section
 ;
     cmp ax,SYS_HANDLE_COUNT
-    jae chDone
+    jae chFail
 ;    
     or ax,ax
-    jz chDone
+    jz chFail
 ;
     dec ax
     movzx ecx,ax
@@ -524,10 +556,13 @@ close_handle     Proc near
 
 chLeave:
     LeaveSection ds:hd_section
+    xor ebx,ebx
+    jmp chDone
+
+chFail:
+    mov ebx,-1
 
 chDone:
-    xor bx,bx
-;
     pop dx
     pop ecx
     pop ax
@@ -628,11 +663,10 @@ read_handle     Proc near
     jc rhFail
 ;
     mov ds:[bx].hp_pos,edx
-    clc
     jmp rhDone
 
 rhFail:
-    stc
+    mov eax,-1
 
 rhDone:
     pop ebp
@@ -768,11 +802,10 @@ whPosOk:
     jc whFail
 ;
     mov ds:[bx].hp_pos,edx
-    clc
     jmp whDone
 
 whFail:
-    stc
+    mov eax,-1
 
 whDone:
     pop ebp
@@ -810,7 +843,7 @@ write_handle32    ENDP
 ;
 ;           PARAMETERS:     BX          Handle
 ;
-;           RETURNS:        BX          New handle
+;           RETURNS:        EBX         New handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -860,11 +893,10 @@ dup_handle     Proc near
     jc dhFail
 ;
     inc es:[di].he_ref_count
-    clc
     jmp dhDone
 
 dhFail:
-    stc
+    mov ebx,-1
 
 dhDone:
     pop di
@@ -887,7 +919,7 @@ dup_handle    Endp
 ;           PARAMETERS:     BX          Src handle
 ;                           AX          Dest handle
 ;
-;           RETURNS:        BX          New handle
+;           RETURNS:        EBX         New handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -980,12 +1012,11 @@ d2hOkLeave:
     LeaveSection ds:hd_section
 
 d2hOk:
-    mov bx,bp
-    clc
+    movzx ebx,bp
     jmp d2hDone
 
 d2hFail:
-    stc
+    mov ebx,-1
 
 d2hDone:
     pop bp
@@ -1074,10 +1105,10 @@ get_handle_size     Proc far
     mov bx,ds:[bx].he_sel
     shl bp,1
     call word ptr cs:[bp].get_size_tab
-    jmp ghsDone
+    jnc ghsDone  
 
 ghsFail:
-    stc
+    mov eax,-1
 
 ghsDone:
     pop bp
@@ -1095,6 +1126,8 @@ get_handle_size     Endp
 ;
 ;           PARAMETERS:     BX          Handle
 ;                           EAX         Size
+;
+;           RETURNS:        EAX		Result
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1124,7 +1157,6 @@ sst09  DW OFFSET set_size_dummy
 
 set_handle_size     Proc far
     push ds
-    push ax
     push bx
     push edx
     push bp
@@ -1163,16 +1195,15 @@ set_handle_size     Proc far
     mov bx,ds:[bx].he_sel
     shl bp,1
     call word ptr cs:[bp].set_size_tab
-    jmp shsDone
+    jnc shsDone
 
 shsFail:
-    stc
+    mov eax,-1
 
 shsDone:
     pop bp
     pop edx
     pop bx
-    pop ax
     pop ds    
     retf32
 set_handle_size     Endp        
@@ -1251,10 +1282,11 @@ get_handle_time     Proc far
     mov bx,ds:[bx].he_sel
     shl bp,1
     call word ptr cs:[bp].get_time_tab
-    jmp ghtDone
+    jnc ghtDone
 
 ghtFail:
-    stc
+    mov eax,-1
+    mov edx,-1
 
 ghtDone:
     pop bp
@@ -1272,6 +1304,8 @@ get_handle_time     Endp
 ;
 ;           PARAMETERS:     BX          Handle
 ;                           EDX:EAX	Time
+;
+;           RETURNS:        EAX		Result
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1301,7 +1335,6 @@ stt09  DW OFFSET set_time_dummy
 
 set_handle_time     Proc far
     push ds
-    push ax
     push bx
     push edx
     push esi
@@ -1341,17 +1374,17 @@ set_handle_time     Proc far
     mov bx,ds:[bx].he_sel
     shl bp,1
     call word ptr cs:[bp].set_time_tab
-    jmp shtDone
+    mov eax,0
+    jnc shtDone
 
 shtFail:
-    stc
+    mov eax,-1
 
 shtDone:
     pop bp
     pop esi
     pop edx
     pop bx
-    pop ax
     pop ds    
     retf32
 set_handle_time     Endp        
@@ -1386,11 +1419,10 @@ get_handle_mode     Proc far
     shl bx,3
     add bx,OFFSET h_arr
     movzx eax,ds:[bx].hp_access
-    clc
     jmp ghmDone
 
 ghmFail:
-    stc
+    mov eax,-1
 
 ghmDone:
     pop bx
@@ -1408,13 +1440,14 @@ get_handle_mode     Endp
 ;           PARAMETERS:     BX          Handle
 ;                           EAX         Mode
 ;
+;           RETURNS:        EAX		Result
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_handle_mode_name  DB 'Set C Handle Mode', 0
 
 set_handle_mode     Proc far
     push ds
-    push ax
     push bx
     push dx
 ;
@@ -1430,16 +1463,15 @@ set_handle_mode     Proc far
     shl bx,3
     add bx,OFFSET h_arr
     mov ds:[bx].hp_access,dx
-    clc
+    xor eax,eax
     jmp shmDone
 
 shmFail:
-    stc
+    mov eax,-1
 
 shmDone:
     pop dx
     pop bx
-    pop ax
     pop ds    
     retf32
 set_handle_mode     Endp        
@@ -1474,11 +1506,10 @@ get_handle_pos     Proc far
     shl bx,3
     add bx,OFFSET h_arr
     mov eax,ds:[bx].hp_pos
-    clc
     jmp ghpDone
 
 ghpFail:
-    stc
+    mov eax,-1
 
 ghpDone:
     pop bx
@@ -1496,13 +1527,14 @@ get_handle_pos     Endp
 ;           PARAMETERS:     BX          Handle
 ;                           EAX         Position
 ;
+;           RETURNS:        EAX		Result
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_handle_pos_name  DB 'Set C Handle Pos', 0
 
 set_handle_pos     Proc far
     push ds
-    push ax
     push bx
     push edx
 ;
@@ -1518,16 +1550,15 @@ set_handle_pos     Proc far
     shl bx,3
     add bx,OFFSET h_arr
     mov ds:[bx].hp_pos,edx
-    clc
+    mov eax,edx
     jmp shpDone
 
 shpFail:
-    stc
+    mov eax,-1
 
 shpDone:
     pop edx
     pop bx
-    pop ax
     pop ds    
     retf32
 set_handle_pos     Endp        

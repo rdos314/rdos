@@ -1095,12 +1095,13 @@ SetEnvData	MACRO
 
 ; IN  ES:(E)DI      Name
 ; IN  CX            Mode
-; OUT BX            C handle
+; OUT EBX           C handle
 OpenHandle	MACRO
 	UserGate open_handle_nr
 					ENDM
 
 ; IN  BX            C handle
+; OUT EBX           Result
 CloseHandle	MACRO
 	UserGate close_handle_nr
 					ENDM
@@ -1122,14 +1123,14 @@ WriteHandle       MACRO
 						ENDM
 
 ; IN  BX    	Handle
-; OUT BX        New handle
+; OUT EBX       New handle
 DupHandle       MACRO
 	UserGate dup_handle_nr
 						ENDM
 
 ; IN  BX    	Src handle
 ; IN  AX        Dest handle
-; OUT BX        New handle
+; OUT EBX       New handle
 Dup2Handle       MACRO
 	UserGate dup2_handle_nr
 						ENDM
@@ -1143,6 +1144,7 @@ GetHandleSize     MACRO
 
 ; IN	BX	Handle
 ; IN	EAX	Filesize
+; OUT   EAX     Result
 SetHandleSize     MACRO
 	UserGate set_handle_size_nr
 						ENDM
@@ -1157,6 +1159,7 @@ GetHandleMode     MACRO
 
 ; IN	BX	Handle
 ; IN	EAX	Mode
+; OUT   EAX     Result
 SetHandleMode     MACRO
 	UserGate set_handle_mode_nr
 						ENDM
@@ -1171,6 +1174,7 @@ GetHandlePos     MACRO
 
 ; IN	BX	Handle
 ; IN	EAX	Position
+; OUT   EAX     Result
 SetHandlePos     MACRO
 	UserGate set_handle_pos_nr
 						ENDM
@@ -1196,6 +1200,7 @@ GetHandleTime     MACRO
 
 ; IN	BX		Handle
 ; IN	EDX:EAX		Time
+; OUT   EAX             Result
 SetHandleTime      MACRO
 	UserGate set_handle_time_nr
 						ENDM

@@ -426,21 +426,21 @@ int RDOSAPI RdosProgramCanModule(int Module, const char *ProgramName);
 int RDOSAPI RdosWaitForCanModuleProgramming(int Module, int *ErrorCode, int *Position);
 
 int RDOSAPI RdosOpenHandle(const char *Name, int Mode);
-void RDOSAPI RdosCloseHandle(int Handle);
+int RDOSAPI RdosCloseHandle(int Handle);
 int RDOSAPI RdosReadHandle(int Handle, void *Buf, int Size);
 int RDOSAPI RdosWriteHandle(int Handle, const void *Buf, int Size);
 int RDOSAPI RdosDupHandle(int Handle);
 int RDOSAPI RdosDup2Handle(int Src, int Dest);
 long RDOSAPI RdosGetHandleSize(int Handle);
-void RDOSAPI RdosSetHandleSize(int Handle, long Size);
-unsigned int RDOSAPI RdosGetHandleMode(int Handle);
-void RDOSAPI RdosSetHandleMode(int Handle, unsigned int Mode);
+int RDOSAPI RdosSetHandleSize(int Handle, long Size);
+int RDOSAPI RdosGetHandleMode(int Handle);
+int RDOSAPI RdosSetHandleMode(int Handle, int Mode);
 long RDOSAPI RdosGetHandlePos(int Handle);
-void RDOSAPI RdosSetHandlePos(int Handle, long Size);
+int RDOSAPI RdosSetHandlePos(int Handle, long Size);
 int RDOSAPI RdosEofHandle(int Handle);
 int RDOSAPI RdosIsHandleDevice(int Handle);
-void RDOSAPI RdosGetHandleTime(int Handle, unsigned long *MsbTime, unsigned long *LsbTime);
-void RDOSAPI RdosSetHandleTime(int Handle, unsigned long MsbTime, unsigned long LsbTime);
+int RDOSAPI RdosGetHandleTime(int Handle, unsigned long *MsbTime, unsigned long *LsbTime);
+int RDOSAPI RdosSetHandleTime(int Handle, unsigned long MsbTime, unsigned long LsbTime);
 
 int RDOSAPI RdosOpenFile(const char *FileName, char Access);
 int RDOSAPI RdosCreateFile(const char *FileName, int Attrib);
