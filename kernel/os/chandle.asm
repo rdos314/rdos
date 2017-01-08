@@ -595,6 +595,7 @@ read_dummy      Endp
 
 read_stdin       Proc near
     ReadCConsole
+    clc
     ret
 read_stdin       Endp
 
@@ -723,8 +724,14 @@ write_dummy     Proc near
     ret
 write_dummy     Endp
 
+write_stdout      Proc near
+    WriteCConsole
+    ret
+write_stdout      Endp
+
 write_file      Proc near
     WriteCFile
+    clc
     ret
 write_file      Endp
 
@@ -732,7 +739,7 @@ write_tab:
 wt00  DW OFFSET write_dummy
 wt01  DW OFFSET write_file
 wt02  DW OFFSET write_dummy
-wt03  DW OFFSET write_dummy
+wt03  DW OFFSET write_stdout
 wt04  DW OFFSET write_dummy
 wt05  DW OFFSET write_dummy
 wt06  DW OFFSET write_dummy

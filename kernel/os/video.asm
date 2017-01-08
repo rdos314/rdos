@@ -4444,7 +4444,7 @@ extract_alpha_bitmap       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
-;       DESCRIPTION:    Console functions
+;       DESCRIPTION:    Console input functions
 ;
 ;       PARAMETERS:     ES:EDI         Buffer end
 ;                       ES:ESI         Current buffer pos
@@ -5085,6 +5085,330 @@ read_c_console  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       DESCRIPTION:    Console output functions
+;
+;       PARAMETERS:     ES    Flat sel
+;                       FS    Console sel
+;                       AL    Char
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateConPos      Proc near
+    push ax
+;    
+    mov ax,fs:c_cols
+    dec ax
+    cmp fs:c_curr_col,-1
+    jne updNotRowWrap
+;
+    mov fs:c_curr_col,ax
+
+updNotRowWrap:
+    cmp fs:c_curr_col,ax
+    jbe updSameRow
+;
+    mov fs:c_curr_col,0
+    inc fs:c_curr_row
+
+updSameRow:
+    mov ax,fs:c_rows
+    cmp fs:c_curr_row,ax
+    jc updUpdate
+;
+    push dx
+    push si
+    push di
+;    
+    dec fs:c_curr_row
+    mov si,1
+    mov di,0
+
+updScrollLoop:
+    call CopyRow
+;
+    inc si
+    inc di
+    cmp si,fs:c_rows
+    jc updScrollLoop 
+;
+    mov dx,di
+    call ClearRow
+;
+    test fs:c_flags,CONSOLE_FLAG_BITMAP
+    jz updText
+
+updBitmap:
+    call ScrollBitmap
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz updScrollDone
+;
+    push ds
+    mov ds,fs:c_video_sel
+    call RedrawVideo    
+    pop ds
+    jmp updScrollDone
+
+updText:
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz updScrollDone
+;
+    lock or fs:c_flags,CONSOLE_FLAG_TEXT_BUFFER OR CONSOLE_FLAG_NEW_WRITES
+;
+    push ds
+    push bx
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:update_thread
+    Signal
+    pop bx
+    pop ds
+
+updScrollDone:
+    pop di
+    pop si
+    pop dx    
+
+updUpdate:
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz updDone
+;    
+    push ds    
+    push cx
+    push dx
+;
+    mov dx,fs:c_curr_row
+    mov cx,fs:c_curr_col
+    mov ds,fs:c_video_sel
+    call fword ptr ds:v_update_cursor_pos_proc
+;
+    pop dx
+    pop cx
+    pop ds
+
+updDone:
+    pop ax
+    ret
+UpdateConPos       ENDP
+
+WriteConOne     PROC near
+    push edi
+    push eax
+    push edx
+;    
+    push ax
+    mov dx,fs:c_curr_row
+    mov ax,fs:c_cols
+    mul dx
+    add ax,fs:c_curr_col
+    movzx edi,ax
+    shl edi,2
+    add edi,OFFSET c_text_data
+    mov ax,bx
+    shl eax,16
+    pop ax
+    mov ah,1
+    mov fs:[edi],eax
+;
+    pop edx
+    pop eax
+;    
+    test fs:c_flags,CONSOLE_FLAG_BITMAP
+    jz wctText
+
+wctBitmap:
+    push cx
+    push dx
+;    
+    mov fs:[edi].ct_dirty,0
+    mov cx,fs:c_curr_col
+    mov dx,fs:c_curr_row
+    call WriteBitmap
+;
+    pop dx
+    pop cx
+;    
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz wctDone
+;
+    push cx
+    push dx
+;    
+    push ds
+    mov fs:[edi].ct_dirty,0
+    mov cx,fs:c_curr_col
+    mov dx,fs:c_curr_row
+    mov ds,fs:c_video_sel
+    call fword ptr ds:v_write_text_proc
+    pop ds
+;
+    pop dx
+    pop cx
+    jmp wctDone
+
+wctText:
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz wctDone
+;    
+    lock or fs:c_flags,CONSOLE_FLAG_NEW_WRITES
+    test fs:c_flags,CONSOLE_FLAG_TEXT_BUFFER
+    jnz wctDone
+;
+    push cx
+    push dx
+;    
+    push ds
+    mov fs:[edi].ct_dirty,0
+    mov cx,fs:c_curr_col
+    mov dx,fs:c_curr_row
+    mov ds,fs:c_video_sel
+    call fword ptr ds:v_write_text_proc
+    pop ds
+;    
+    pop dx
+    pop cx
+
+wctDone:    
+    inc fs:c_curr_col
+;
+    pop edi
+    ret
+WriteConOne    Endp
+
+WriteConSkip       PROC near
+    push ax
+    mov al,' '
+    call WriteConOne
+    pop ax
+    ret
+WriteConSkip       ENDP
+
+WriteConTab    PROC near
+    push ax
+    mov al,' '
+
+write_con_tab_more:
+    call WriteConOne
+    test fs:c_curr_col,3
+    jnz write_con_tab_more
+;
+    pop ax
+    ret
+WriteConTab    ENDP
+
+WriteConDel    PROC near
+    dec fs:c_curr_col
+    ret
+WriteConDel    ENDP
+
+WriteConLf PROC near
+    inc fs:c_curr_row
+    ret
+WriteConLf ENDP
+
+WriteConCr PROC near
+    mov fs:c_curr_col,0
+    ret
+WriteConCr ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           WriteCConsole
+;
+;           DESCRIPTION:    Write to C console
+;
+;           PARAMETERS:     ES:EDI        Buffer
+;                           ECX           Byte to write
+;                           
+;           RETURNS:        EAX           Number of written bytes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_c_console_name  DB 'Write C Console',0
+
+write_con_tab:
+wcct00   DD OFFSET WriteConSkip
+wcct01   DD OFFSET WriteConOne
+wcct02   DD OFFSET WriteConOne
+wcct03   DD OFFSET WriteConOne
+wcct04   DD OFFSET WriteConOne
+wcct05   DD OFFSET WriteConOne
+wcct06   DD OFFSET WriteConOne
+wcct07   DD OFFSET WriteConOne
+wcct08   DD OFFSET WriteConDel
+wcct09   DD OFFSET WriteConTab
+wcct0A   DD OFFSET WriteConLf
+wcct0B   DD OFFSET WriteConOne
+wcct0C   DD OFFSET WriteConOne
+wcct0D   DD OFFSET WriteConCr
+wcct0E   DD OFFSET WriteConOne
+wcct0F   DD OFFSET WriteConOne
+
+write_c_console     PROC far
+    push ds
+    push es
+    push fs
+    push gs
+    push bx
+    push ecx
+    push esi
+    push edi
+;    
+    HideMouse
+    or ecx,ecx
+    jz write_c_done
+;
+    mov ax,es
+    mov gs,ax
+    mov ax,flat_sel
+    mov es,ax
+    GetThread
+    mov ds,ax
+    mov fs,ds:p_app_sel
+    mov ax,fs:app_console
+    or ax,ax
+    jz write_c_done
+;
+    mov fs,ax    
+    mov bl,7
+    mov bh,0
+
+write_c_loop:
+    mov al,gs:[edi]
+    inc edi
+    movzx esi,al
+    cmp esi,0Fh
+    jc write_c_doit
+;
+    mov esi,0Fh
+
+write_c_doit:
+    shl esi,2
+    call dword ptr cs:[esi].write_con_tab
+    call UpdateConPos
+
+write_c_next:
+    loop write_c_loop
+
+write_c_done:
+    ShowMouse
+;       
+    pop edi
+    pop esi
+    pop ecx
+    pop bx
+    mov eax,ecx
+;
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+write_c_console     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           INIT_THREAD
 ;
 ;           DESCRIPTION:    init thread
@@ -5284,6 +5608,12 @@ init_video      PROC near
     mov edi,OFFSET read_c_console_name
     xor cl,cl
     mov ax,read_c_console_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET write_c_console
+    mov edi,OFFSET write_c_console_name
+    xor cl,cl
+    mov ax,write_c_console_nr
     RegisterOsGate
 ;
     mov esi,OFFSET query_video_mode

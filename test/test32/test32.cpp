@@ -342,8 +342,7 @@ void main()
     unsigned long lsb, msb;
 
     size = RdosReadHandle(0, buf, 30);
-    buf[size] = 0;
-    printf(buf);
+    RdosWriteHandle(1, buf, size);
     
     handle1 = RdosOpenHandle("fil.txt", O_RDONLY);
 

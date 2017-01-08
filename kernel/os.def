@@ -711,5 +711,6 @@ set_c_file_size_nr          = 591
 get_c_file_time_nr          = 592
 set_c_file_time_nr          = 593
 read_c_console_nr           = 594
+write_c_console_nr          = 595
 
 osgate_entries				= 600
