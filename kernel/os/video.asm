@@ -4706,11 +4706,14 @@ con_clear_home_done:
     mov ecx,edi
     sub ecx,esi
     mov al,' '
+    or ecx,ecx
+    jz con_clear_done
 
 con_clear_loop:
     WriteChar
     loop con_clear_loop
-;
+
+con_clear_done:
     pop ecx
     SetCursorPosition
 ;
