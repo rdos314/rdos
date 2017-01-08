@@ -593,6 +593,11 @@ read_dummy      Proc near
     ret
 read_dummy      Endp
 
+read_stdin       Proc near
+    ReadCConsole
+    ret
+read_stdin       Endp
+
 read_file       Proc near
     ReadCFile
     ret
@@ -601,7 +606,7 @@ read_file       Endp
 read_tab:
 rt00  DW OFFSET read_dummy
 rt01  DW OFFSET read_file
-rt02  DW OFFSET read_dummy
+rt02  DW OFFSET read_stdin
 rt03  DW OFFSET read_dummy
 rt04  DW OFFSET read_dummy
 rt05  DW OFFSET read_dummy
@@ -1046,8 +1051,7 @@ dup2_handle    Endp
 get_handle_size_name  DB 'Get C Handle Size', 0
 
 get_size_dummy      Proc near
-    xor eax,eax
-    clc
+    stc
     ret
 get_size_dummy      Endp
 
@@ -1134,7 +1138,7 @@ get_handle_size     Endp
 set_handle_size_name  DB 'Set C Handle Size', 0
 
 set_size_dummy      Proc near
-    clc
+    stc
     ret
 set_size_dummy      Endp
 
@@ -1312,7 +1316,7 @@ get_handle_time     Endp
 set_handle_time_name  DB 'Set C Handle Time', 0
 
 set_time_dummy      Proc near
-    clc
+    stc
     ret
 set_time_dummy      Endp
 
