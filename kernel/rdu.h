@@ -148,7 +148,6 @@
 #define usergate_set_file_time 0x00000085
 #define usergate_read_file 0x00000086
 #define usergate_write_file 0x00000087
-#define usergate_read_con 0x00000088
 
 #define usergate_create_mapping 0x00000089
 #define usergate_create_named_mapping 0x0000008A
@@ -952,7 +951,6 @@
 #define CallGate_set_file_time 0x55 0x67 0x9a 133 0 0 0 3 0 0x5d
 #define CallGate_read_file 0x55 0x67 0x9a 134 0 0 0 3 0 0x5d
 #define CallGate_write_file 0x55 0x67 0x9a 135 0 0 0 3 0 0x5d
-#define CallGate_read_con 0x55 0x67 0x9a 136 0 0 0 3 0 0x5d
 
 #define CallGate_create_mapping 0x55 0x67 0x9a 137 0 0 0 3 0 0x5d
 #define CallGate_create_named_mapping 0x55 0x67 0x9a 138 0 0 0 3 0 0x5d
@@ -1754,7 +1752,6 @@
 #define CallGate_set_file_time 0x3e 0x67 0x9a 133 0 0 0 3 0
 #define CallGate_read_file 0x3e 0x67 0x9a 134 0 0 0 3 0
 #define CallGate_write_file 0x3e 0x67 0x9a 135 0 0 0 3 0
-#define CallGate_read_con 0x3e 0x67 0x9a 136 0 0 0 3 0
 
 #define CallGate_create_mapping 0x3e 0x67 0x9a 137 0 0 0 3 0
 #define CallGate_create_named_mapping 0x3e 0x67 0x9a 138 0 0 0 3 0

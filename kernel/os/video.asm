@@ -4841,6 +4841,22 @@ con_end_done:
     ret
 con_end_key     ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ReadCConsole
+;
+;           DESCRIPTION:    Read from console
+;
+;           PARAMETERS:     ES:EDI        BUFFER
+;                           ECX           MAX NUMBER OF CHARS
+;                           
+;           RETURNS:        EAX           NUMBER OF READ CHARS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_c_console_name   DB 'Read C Console',0
+
 con_ext_key_buf_tab:
 dek00   DD OFFSET con_io_skip
 dek01   DD OFFSET con_io_skip
@@ -5018,7 +5034,7 @@ ckb1E   DD OFFSET con_io_normal
 ckb1F   DD OFFSET con_io_normal
 ckbend  DD OFFSET con_io_normal
 
-con_io  PROC near
+read_c_console  PROC far
     push ds
     push ebx
     push ecx
@@ -5064,45 +5080,7 @@ con_io_in_tab:
     pop ebx
     pop ds
     ret
-con_io  ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ReadConsole
-;
-;           DESCRIPTION:    Read from console
-;
-;           PARAMETERS:     ES:(E)DI        BUFFER
-;                           (E)CX           MAX NUMBER OF CHARS
-;                           
-;           RETURNS:        (E)AX           NUMBER OF READ CHARS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_con_name   DB 'Read Console',0
-
-read_con16      PROC far
-    push ecx
-    push eax
-    push edi
-;
-    movzx ecx,cx
-    movzx edi,di
-    call con_io
-;
-    pop edi
-    mov ecx,eax
-    pop eax
-    mov ax,cx
-    pop ecx 
-    ret
-read_con16      ENDP
-
-read_con32      PROC far
-    call con_io
-    ret
-read_con32      ENDP
+read_c_console  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5300,6 +5278,12 @@ init_video      PROC near
     mov edi,OFFSET add_video_mode_name
     xor cl,cl
     mov ax,add_video_mode_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET read_c_console
+    mov edi,OFFSET read_c_console_name
+    xor cl,cl
+    mov ax,read_c_console_nr
     RegisterOsGate
 ;
     mov esi,OFFSET query_video_mode
@@ -5503,13 +5487,6 @@ init_video      PROC near
     xor cl,cl
     mov ax,write_dos_string_nr
     RegisterOsGate
-;
-    mov ebx,OFFSET read_con16
-    mov esi,OFFSET read_con32
-    mov edi,OFFSET read_con_name
-    mov dx,virt_es_in
-    mov ax,read_con_nr
-    RegisterUserGate
 ;
     call init_bitmap
     call init_sprite

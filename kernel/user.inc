@@ -2128,13 +2128,6 @@ WriteFile       MACRO
 	UserGate write_file_nr
 						ENDM
 
-;   IN  (E)CX       Number of chars
-;   IN  ES:(E)DI    Buffer
-;   OUT (E)AX       Number of chars read
-ReadConsole     MACRO
-	UserGate read_con_nr
-						ENDM
-
 ;;;;;;;;;;; MEMORY MAPPING ;;;;;;;;;;
 
 ;	IN EAX			Size of mapping object

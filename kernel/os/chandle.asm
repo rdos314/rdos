@@ -333,7 +333,6 @@ aphFound:
 ;
     sub bx,OFFSET h_arr
     shr bx,3
-    inc bx
     clc
 
 aphDone:   
@@ -483,11 +482,7 @@ close_handle     Proc near
 ;    
     cmp bx,MAX_HANDLES
     jae chDone
-;   
-    or bx,bx
-    jz chDone
 ;
-    dec bx
     shl bx,3
     add bx,OFFSET h_arr
     EnterSection ds:h_section
@@ -595,10 +590,6 @@ read_handle     Proc near
     cmp bx,MAX_HANDLES
     jae rhFail
 ;   
-    or bx,bx
-    jz rhFail
-;
-    dec bx
     shl bx,3
     add bx,OFFSET h_arr
     mov si,ds:[bx].hp_access
@@ -725,10 +716,6 @@ write_handle     Proc near
     cmp bx,MAX_HANDLES
     jae whFail
 ;   
-    or bx,bx
-    jz whFail
-;
-    dec bx
     shl bx,3
     add bx,OFFSET h_arr
     mov si,ds:[bx].hp_access
@@ -846,11 +833,7 @@ dup_handle     Proc near
     cmp bx,MAX_HANDLES
     jae dhFail
 ;   
-    or bx,bx
-    jz dhFail
-;
     mov si,bx
-    dec si
     shl si,3
     add si,OFFSET h_arr
     mov ax,ds:[si].hp_handle
@@ -929,11 +912,7 @@ dup2_handle     Proc near
     cmp bx,MAX_HANDLES
     jae d2hFail
 ;   
-    or bx,bx
-    jz d2hFail
-;
     mov si,bx
-    dec si
     shl si,3
     add si,OFFSET h_arr
     mov ax,ds:[si].hp_handle
@@ -943,9 +922,6 @@ dup2_handle     Proc near
     cmp di,MAX_HANDLES
     jae d2hFail
 ;   
-    or di,di
-    jz d2hFail
-;
     push ax
     push bx
     dec ax
@@ -960,7 +936,6 @@ dup2_handle     Proc near
     pop ax
 ;
     mov bp,di
-    dec di
     shl di,3
     add di,OFFSET h_arr
     EnterSection ds:h_section
@@ -1075,10 +1050,6 @@ get_handle_size     Proc far
     cmp bx,MAX_HANDLES
     jae ghsFail
 ;   
-    or bx,bx
-    jz ghsFail
-;
-    dec bx
     shl bx,3
     add bx,OFFSET h_arr
     mov ax,ds:[bx].hp_handle
@@ -1167,10 +1138,6 @@ set_handle_size     Proc far
     cmp bx,MAX_HANDLES
     jae shsFail
 ;   
-    or bx,bx
-    jz shsFail
-;
-    dec bx
     shl bx,3
     add bx,OFFSET h_arr
     mov ax,ds:[bx].hp_handle
@@ -1260,10 +1227,6 @@ get_handle_time     Proc far
     cmp bx,MAX_HANDLES
     jae ghtFail
 ;   
-    or bx,bx
-    jz ghtFail
-;
-    dec bx
     shl bx,3
     add bx,OFFSET h_arr
     mov ax,ds:[bx].hp_handle
@@ -1353,10 +1316,6 @@ set_handle_time     Proc far
     cmp bx,MAX_HANDLES
     jae shtFail
 ;   
-    or bx,bx
-    jz shtFail
-;
-    dec bx
     shl bx,3
     add bx,OFFSET h_arr
     mov ax,ds:[bx].hp_handle
@@ -1424,10 +1383,6 @@ get_handle_mode     Proc far
     cmp bx,MAX_HANDLES
     jae ghmFail
 ;   
-    or bx,bx
-    jz ghmFail
-;
-    dec bx
     shl bx,3
     add bx,OFFSET h_arr
     movzx eax,ds:[bx].hp_access
@@ -1472,10 +1427,6 @@ set_handle_mode     Proc far
     cmp bx,MAX_HANDLES
     jae shmFail
 ;   
-    or bx,bx
-    jz shmFail
-;
-    dec bx
     shl bx,3
     add bx,OFFSET h_arr
     mov ds:[bx].hp_access,dx
@@ -1520,10 +1471,6 @@ get_handle_pos     Proc far
     cmp bx,MAX_HANDLES
     jae ghpFail
 ;   
-    or bx,bx
-    jz ghpFail
-;
-    dec bx
     shl bx,3
     add bx,OFFSET h_arr
     mov eax,ds:[bx].hp_pos
@@ -1568,10 +1515,6 @@ set_handle_pos     Proc far
     cmp bx,MAX_HANDLES
     jae shpFail
 ;   
-    or bx,bx
-    jz shpFail
-;
-    dec bx
     shl bx,3
     add bx,OFFSET h_arr
     mov ds:[bx].hp_pos,edx
@@ -1665,10 +1608,6 @@ eof_handle     Proc far
     cmp bx,MAX_HANDLES
     jae ehFail
 ;   
-    or bx,bx
-    jz ehFail
-;
-    dec bx
     shl bx,3
     add bx,OFFSET h_arr
     mov ax,ds:[bx].hp_handle
@@ -1757,10 +1696,6 @@ is_handle_device     Proc far
     cmp bx,MAX_HANDLES
     jae ihdFail
 ;   
-    or bx,bx
-    jz ihdFail
-;
-    dec bx
     shl bx,3
     add bx,OFFSET h_arr
     mov ax,ds:[bx].hp_handle

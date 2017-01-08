@@ -679,7 +679,6 @@ void RDOSAPI RdosWriteChar(char ch);
 void RDOSAPI RdosWriteSizeString(const char *Buf, int Size);
 void RDOSAPI RdosWriteAttributeString(int Row, int Col, const short int *Buf, int Size);
 void RDOSAPI RdosWriteString(const char *Buf);
-int RDOSAPI RdosReadLine(char *Buf, int MaxSize);
 
 int RDOSAPI RdosPing(long Node, long Timeout);
 

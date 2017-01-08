@@ -148,7 +148,6 @@ get_file_time_nr			= 132
 set_file_time_nr			= 133
 read_file_nr				= 134
 write_file_nr				= 135
-read_con_nr					= 136
 
 create_mapping_nr			= 137
 create_named_mapping_nr		= 138

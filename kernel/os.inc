@@ -2148,6 +2148,13 @@ SetCFileTime MACRO
     OsGate set_c_file_time_nr
                     ENDM
 
+; IN  ES:EDI    Buffer
+; IN  ECX       Size
+; OUT EAX       Read size
+ReadCConsole MACRO
+    OsGate read_c_console_nr
+                    ENDM
+
 ;;;;;;;;;;;;; Dos ;;;;;;;;;;;;;;;;;;;
 
 ;       EAX     Bytes
