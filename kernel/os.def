@@ -708,5 +708,7 @@ read_c_file_nr              = 588
 write_c_file_nr             = 589
 get_c_file_size_nr          = 590
 set_c_file_size_nr          = 591
+get_c_file_time_nr          = 592
+set_c_file_time_nr          = 593
 
 osgate_entries				= 600

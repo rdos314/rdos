@@ -1358,7 +1358,7 @@ read_file       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-read_c_file_name	DB 'Read C File', 0
+read_c_file_name        DB 'Read C File', 0
 
 read_c_file       Proc far
     push ds
@@ -1375,7 +1375,7 @@ rcfDone:
     pop bx
     pop ds
     retf32
-read_c_file	Endp
+read_c_file     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1616,7 +1616,7 @@ write_file      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-write_c_file_name	DB 'Write C File', 0
+write_c_file_name       DB 'Write C File', 0
 
 write_c_file       Proc far
     push ds
@@ -1633,7 +1633,7 @@ wcfDone:
     pop bx
     pop ds
     retf32
-write_c_file	Endp
+write_c_file    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2047,7 +2047,7 @@ get_file_size_done:
 
 get_c_file_size_name      DB 'Get C File Size',0
 
-get_c_file_size	Proc far
+get_c_file_size Proc far
     push ds
 ;
     or bx,bx
@@ -2063,7 +2063,7 @@ get_c_file_size	Proc far
 gcfsDone:
     pop ds
     retf32
-get_c_file_size	Endp
+get_c_file_size Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2134,7 +2134,7 @@ set_file_size_done:
 
 set_c_file_size_name      DB 'Set C File Size',0
 
-set_c_file_size	Proc far
+set_c_file_size Proc far
     push ds
     push eax
     push edx
@@ -2155,7 +2155,7 @@ scfsDone:
     pop eax
     pop ds
     retf32
-set_c_file_size	Endp
+set_c_file_size Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2307,6 +2307,43 @@ get_file_time_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           get_c_file_time
+;
+;           DESCRIPTION:    Get C file time & date
+;
+;           PARAMETERS:     BX          File sel
+;               
+;           RETURNS:        EDX:EAX     File time
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_c_file_time_name      DB 'Get C File Time',0
+
+get_c_file_time Proc far
+    push ds
+    push es
+;
+    or bx,bx
+    stc
+    jz gftDone
+;
+    mov ds,bx
+    mov dx,flat_sel
+    mov es,dx
+    mov edx,ds:file_dir_entry
+    mov eax,es:[edx].de_time
+    mov edx,es:[edx].de_time+4
+    clc
+
+gftDone:
+    pop es
+    pop ds
+    retf32
+get_c_file_time Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SET_FILE_TIME
 ;
 ;           DESCRIPTION:    Set file time & date
@@ -2371,6 +2408,59 @@ set_file_time_done:
     ApiCheckEcx
     ApiCheckEax
     retf32
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           set_c_file_time
+;
+;           DESCRIPTION:    Set C file time & date
+;
+;           PARAMETERS:     BX          File selector
+;                           EDX:EAX     New time & date
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_c_file_time_name      DB 'Set C File Time',0
+
+set_c_file_time Proc far
+    push ds
+    push es
+    push fs
+    push ax
+    push ebx
+    push ecx
+    push edx
+    push edi
+;
+    mov cx,flat_sel
+    mov es,cx
+    mov ecx,eax
+;
+    or bx,bx
+    stc
+    jz sftDone
+;
+    mov fs,bx
+    mov al,fs:file_drive
+    mov edi,fs:file_dir_entry
+    mov es:[edi].de_time,ecx
+    mov es:[edi].de_time+4,edx
+    mov edx,edi
+    CallFileSystem fs_update_file_proc
+    clc
+
+sftDone:
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop ax
+    pop fs
+    pop es
+    pop ds
+    retf32
+set_c_file_time Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3114,6 +3204,18 @@ init_file       PROC near
     mov edi,OFFSET set_c_file_size_name
     xor cl,cl
     mov ax,set_c_file_size_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_c_file_time
+    mov edi,OFFSET get_c_file_time_name
+    xor cl,cl
+    mov ax,get_c_file_time_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET set_c_file_time
+    mov edi,OFFSET set_c_file_time_name
+    xor cl,cl
+    mov ax,set_c_file_time_nr
     RegisterOsGate
 ;
     mov esi,OFFSET close_file

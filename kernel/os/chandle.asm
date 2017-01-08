@@ -833,7 +833,8 @@ dup_handle     Proc near
     push ds
     push es
     push ax
-    push dx
+    push cx
+    push edx
     push si
     push di
 ;
@@ -885,7 +886,8 @@ dhFail:
 dhDone:
     pop di
     pop si
-    pop dx
+    pop edx
+    pop cx
     pop ax
     pop es
     pop ds    
@@ -1229,8 +1231,7 @@ get_time_dummy      Proc near
 get_time_dummy      Endp
 
 get_time_file       Proc near
-    GetTime
-    clc
+    GetCFileTime
     ret
 get_time_file       Endp
 
@@ -1319,7 +1320,7 @@ set_time_dummy      Proc near
 set_time_dummy      Endp
 
 set_time_file       Proc near
-    clc
+    SetCFileTime
     ret
 set_time_file       Endp
 

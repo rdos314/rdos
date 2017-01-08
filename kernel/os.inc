@@ -2136,6 +2136,18 @@ SetCFileSize MACRO
     OsGate set_c_file_size_nr
                     ENDM
 
+; IN  BX            File selector
+; OUT EDX:EAX       File time
+GetCFileTime MACRO
+    OsGate get_c_file_time_nr
+                    ENDM
+
+; IN  BX            File selector
+; IN  EDX:EAX       File time
+SetCFileTime MACRO
+    OsGate set_c_file_time_nr
+                    ENDM
+
 ;;;;;;;;;;;;; Dos ;;;;;;;;;;;;;;;;;;;
 
 ;       EAX     Bytes
