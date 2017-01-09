@@ -77,5 +77,5 @@ void __far InitTasking()
 int main()
 {
     RdosHookInitTasking(&InitTasking);
-    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
+//    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
 }

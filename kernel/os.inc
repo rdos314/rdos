@@ -2099,6 +2099,13 @@ OpenCFile MACRO
     OsGate open_c_file_nr
                     ENDM
 
+; IN  ES:EDI    Filename
+; IN  CX        Mode
+; OUT BX        File selector
+OpenKernelFile MACRO
+    OsGate open_kernel_file_nr
+                    ENDM
+
 ; IN  BX     File selector
 CloseCFile MACRO
     OsGate close_c_file_nr

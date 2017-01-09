@@ -2306,6 +2306,108 @@ open_c_file   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           open_kernel_file
+;
+;           DESCRIPTION:    Open kernel C file
+;
+;           PARAMETERS:     ES:EDI      Filename
+;                           CX          Mode
+;                           
+;           RETURNS:        BX          File sel
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_kernel_file_name  DB 'Open Kernel C File',0
+
+open_kernel_file    Proc far
+    push ds
+    push es
+    push fs
+    push ax
+    push cx
+    push edx
+;
+    mov bx,flat_sel
+    mov fs,bx
+;
+    push edi
+    call ParseDir
+    jc okfPopFailed
+;
+    EnterWriteSection ds:ds_access_section
+    dec ds:ds_usage
+    call ParseFile
+    jnc okfExists
+;
+    test cx,O_CREAT
+    jz okfLeaveFailed
+;
+    call ParseName
+    jc okfLeaveFailed
+;
+    push cx
+    xor cl,cl
+    mov al,ds:ds_drive
+    mov bx,ds
+    CallFileSystem fs_create_file_proc
+    call SetupFileSel
+    pop cx
+;
+    LeaveWriteSection ds:ds_access_section
+    pop edi
+    jmp okfHandle
+
+okfExists:
+    test cx,O_EXCL
+    jnz okfLeaveFailed
+;
+    pop edi
+    call SetupFileSel
+;
+    test cx,O_CREAT OR O_TRUNC
+    jz okfOpen
+;
+    push edx
+    xor edx,edx
+    CallFileSystem fs_set_file_size_proc
+    pop edx
+
+okfOpen:
+    LeaveWriteSection ds:ds_access_section
+
+okfHandle:
+    mov es,bx
+    inc es:file_usage
+    call ParseEnd
+;
+    mov ebx,es
+    clc
+    jmp okfDone
+
+okfLeaveFailed:
+    LeaveWriteSection ds:ds_access_section
+    call ParseEnd
+
+okfPopFailed:
+    pop edi
+
+okfFailed:
+    stc
+
+okfDone:
+    pop edx
+    pop cx
+    pop ax
+    pop fs
+    pop es
+    pop ds
+    retf32
+open_kernel_file   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GET_DRIVE_INFO
 ;
 ;           DESCRIPTION:    Get drive info
@@ -3147,6 +3249,12 @@ init_dir    PROC near
     mov edi,OFFSET open_c_file_name
     xor cl,cl
     mov ax,open_c_file_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET open_kernel_file
+    mov edi,OFFSET open_kernel_file_name
+    xor cl,cl
+    mov ax,open_kernel_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_drive_info
