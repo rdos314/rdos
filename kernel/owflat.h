@@ -1727,7 +1727,6 @@
 #pragma aux RdosFork = \
     CallGate_fork  \
     "movsx eax,ax"  \
-    parm [esi] [edi] \
     value [eax];
 
 #pragma aux RdosUnloadExe = \

@@ -343,6 +343,8 @@ void main()
     int res;
     unsigned long lsb, msb;
 
+    val = RdosFork();
+
     size = read(0, buf, 30);
     write(1, buf, size);
 

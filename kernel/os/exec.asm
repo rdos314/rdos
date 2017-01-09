@@ -2078,221 +2078,9 @@ unload_exe:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateForkName
-;
-;           DESCRIPTION:    Make global copy of fork name
-;
-;           PARAMETERS:     DS:ESI      Filename
-;               GS      Fork sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateForkName Proc near
-    push es
-    push eax
-    push ecx
-    push esi
-    push edi
-;
-    mov edi,esi
-    xor ecx,ecx
-
-cfnLoop:
-    lods byte ptr [esi]
-    or al,al
-    jz cfnSizeOk
-;
-    inc ecx
-    jmp cfnLoop
-
-cfnSizeOk:
-    mov esi,edi
-    inc ecx 
-    mov eax,ecx
-    AllocateSmallGlobalMem
-    mov gs:f_name,es
-    xor edi,edi
-    rep movs byte ptr es:[edi],ds:[esi]     
-;
-    pop edi
-    pop esi
-    pop ecx
-    pop eax
-    pop es
-    ret
-CreateForkName Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateForkOptions
-;
-;           DESCRIPTION:    Make global copy of options
-;
-;           PARAMETERS:     ES:EDI      Options
-;               GS      Fork sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateForkOptions Proc near
-    push ds
-    push es
-    push eax
-    push ecx
-    push esi
-    push edi
-;
-    mov ax,es
-    mov ds,ax
-    mov esi,edi
-    xor ecx,ecx
-
-cfoLoop:
-    inc ecx
-    lods byte ptr [esi]
-    or al,al
-    jnz cfoLoop
-;
-    inc ecx
-    lods byte ptr [esi]
-    or al,al
-    jnz cfoLoop
-
-cfoSizeOk:
-    mov esi,edi
-    mov eax,ecx
-    AllocateSmallGlobalMem
-    xor edi,edi
-    rep movs byte ptr es:[edi],ds:[esi]     
-    mov gs:f_opt,es
-;       
-    pop edi
-    pop esi
-    pop ecx
-    pop eax
-    pop es
-    pop ds
-    ret
-CreateForkOptions Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateForkExeName
-;
-;           DESCRIPTION:    Make global copy of fork exe name
-;
-;           PARAMETERS:     GS      Fork sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateForkExeName Proc near
-    push ds
-    push es
-    push eax
-    push ecx
-    push esi
-    push edi
-;
-    xor edi,edi
-    GetExeName
-    mov esi,edi
-    mov ax,es
-    mov ds,ax
-    xor ecx,ecx
-
-cfenLoop:
-    lods byte ptr [esi]
-    or al,al
-    jz cfenSizeOk
-;
-    inc ecx
-    jmp cfenLoop
-
-cfenSizeOk:
-    mov esi,edi
-    inc ecx 
-    mov eax,ecx
-    AllocateSmallGlobalMem
-    mov gs:f_exe_name,es
-    xor edi,edi
-    rep movs byte ptr es:[edi],ds:[esi]     
-;
-    pop edi
-    pop esi
-    pop ecx
-    pop eax
-    pop es
-    pop ds
-    ret
-CreateForkExeName Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FreeFork
-;
-;           DESCRIPTION:    Free fork environment
-;
-;           PARAMETERS:     GS      Fork sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeFork Proc near
-    mov es,gs:f_name
-    FreeMem
-;
-    mov ax,gs:f_opt
-    mov es,ax
-    FreeMem
-;
-    mov ax,gs
-    mov es,ax
-    xor ax,ax
-    mov gs,ax
-    FreeMem
-    ret
-FreeFork   Endp 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupFork
-;
-;           DESCRIPTION:    Setup fork
-;
-;       RETURNS:    GS      Fork sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupFork Proc near     
-    push ds
-    push eax
-; 
-    push es
-    mov eax,SIZE fork_struc
-    AllocateSmallGlobalMem
-    mov ax,es
-    mov gs,ax
-    pop es
-;  
-    mov gs:f_name,0
-    mov gs:f_opt,0
-;
-    pop eax
-    pop ds
-    ret
-SetupFork  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           Fork_pr
 ;
-;           DESCRIPTION:    Fork
-;
-;       PARAMETERS:     DS:(E)SI    Process name
-;               ES:(E)DI    Options
+;           DESCRIPTION:    Fork process
 ;
 ;           RETURNS:        AX          Process handle (parent) or 0
 ;
@@ -2300,47 +2088,9 @@ SetupFork  Endp
 
 fork_name DB 'Fork',0
 
-fork_pr    Proc near
-    push es
-    push gs
-;
-    int 3
-    call SetupFork
-    call CreateForkName
-    call CreateForkOptions
-    call CreateForkExeName
-;    
-    CloneHandleMem
-    mov gs:f_handle,es
-;
-    CloneApp
-    mov gs:f_app,es
-;
-    call FreeFork
-;    
-    mov ax,-1
-    pop gs
-    pop es
-    ret
+fork_pr    Proc far
+    retf32
 fork_pr    Endp
-    
-fork16  Proc far
-    push esi
-    push edi
-;
-    movzx esi,si
-    movzx edi,di
-    call fork_pr
-;
-    pop edi
-    pop esi    
-    retf32
-fork16  Endp
-    
-fork32  Proc far
-    call fork_pr
-    retf32
-fork32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2575,18 +2325,17 @@ init    PROC far
     mov ax,unload_exe_nr
     RegisterBimodalUserGate
 ;
+    mov esi,OFFSET fork_pr
+    mov edi,OFFSET fork_name
+    xor dx,dx
+    mov ax,fork_nr
+    RegisterBimodalUserGate
+;
     mov ebx,OFFSET spawn_program16
     mov esi,OFFSET spawn_program32
     mov edi,OFFSET spawn_exe_name
     mov dx,virt_es_in OR virt_ds_in
     mov ax,spawn_exe_nr
-    RegisterUserGate
-;
-    mov ebx,OFFSET fork16
-    mov esi,OFFSET fork32
-    mov edi,OFFSET fork_name
-    mov dx,virt_es_in OR virt_ds_in
-    mov ax,fork_nr
     RegisterUserGate
 ;
     mov esi,OFFSET get_exit_code

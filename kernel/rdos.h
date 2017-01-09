@@ -527,7 +527,7 @@ int RDOSAPI RdosIs64BitExe(const char *prog);
 int RDOSAPI RdosExec(const char *prog, const char *param, const char *options);
 int RDOSAPI RdosSpawn(const char *prog, const char *param, const char *startdir, const char *env, const char *options, int *thread);
 int RDOSAPI RdosSpawnDebug(const char *prog, const char *param, const char *startdir, const char *env, const char *options, int *thread);
-int RDOSAPI RdosFork(const char *name, const char *options);
+int RDOSAPI RdosFork();
 void RDOSAPI RdosUnloadExe(int ExitCode);
 void RDOSAPI RdosFreeProcessHandle(int handle);
 int RDOSAPI RdosGetProcessExitCode(int handle);

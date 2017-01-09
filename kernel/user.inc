@@ -893,8 +893,6 @@ SpawnExe	MACRO
 	UserGate spawn_exe_nr
 					ENDM
 
-; IN  DS:(E)SI	New process name
-; IN  ES:(E)DI	Options
 ; OUT AX		Process handle (parent) or 0 (child)
 Fork	MACRO
 	UserGate fork_nr
