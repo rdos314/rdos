@@ -529,6 +529,8 @@ cfeYOk:
     mov es:c_flags,0
     mov es:c_rows,di
     mov es:c_cols,si
+    mov es:c_con_row,0
+    mov es:c_con_col,0
     mov es:c_curr_row,0
     mov es:c_curr_col,0
     mov es:c_prev_row,0
@@ -597,6 +599,8 @@ CreateConsoleBios  PROC near
     mov es:c_text_entries,bp
 ;
     mov es:c_flags,0
+    mov es:c_con_row,0
+    mov es:c_con_col,0
     mov es:c_curr_row,0
     mov es:c_curr_col,0
     mov es:c_prev_row,0
@@ -4458,28 +4462,28 @@ UpdateConPos      Proc near
 ;    
     mov ax,fs:c_cols
     dec ax
-    cmp fs:c_curr_col,-1
+    cmp fs:c_con_col,-1
     jne updNotRowWrap
 ;
-    mov fs:c_curr_col,ax
+    mov fs:c_con_col,ax
 
 updNotRowWrap:
-    cmp fs:c_curr_col,ax
+    cmp fs:c_con_col,ax
     jbe updSameRow
 ;
-    mov fs:c_curr_col,0
-    inc fs:c_curr_row
+    mov fs:c_con_col,0
+    inc fs:c_con_row
 
 updSameRow:
     mov ax,fs:c_rows
-    cmp fs:c_curr_row,ax
+    cmp fs:c_con_row,ax
     jc updUpdate
 ;
     push dx
     push si
     push di
 ;    
-    dec fs:c_curr_row
+    dec fs:c_con_row
     mov si,1
     mov di,0
 
@@ -4536,8 +4540,8 @@ updUpdate:
     push cx
     push dx
 ;
-    mov dx,fs:c_curr_row
-    mov cx,fs:c_curr_col
+    mov dx,fs:c_con_row
+    mov cx,fs:c_con_col
     mov ds,fs:c_video_sel
     call fword ptr ds:v_update_cursor_pos_proc
 ;
@@ -4546,10 +4550,10 @@ updUpdate:
     pop ds
 
 updDone:
-    mov ax,fs:c_curr_row
-    mov ds:p_row,ax
-    mov ax,fs:c_curr_col
-    mov ds:p_row,ax
+    mov ax,fs:c_con_row
+    mov fs:c_curr_row,ax
+    mov ax,fs:c_con_col
+    mov fs:c_curr_col,ax
     pop ax
     ret
 UpdateConPos       ENDP
@@ -4560,10 +4564,10 @@ WriteConOne     PROC near
     push edx
 ;    
     push ax
-    mov dx,fs:c_curr_row
+    mov dx,fs:c_con_row
     mov ax,fs:c_cols
     mul dx
-    add ax,fs:c_curr_col
+    add ax,fs:c_con_col
     movzx edi,ax
     shl edi,2
     add edi,OFFSET c_text_data
@@ -4584,8 +4588,8 @@ wctBitmap:
     push dx
 ;    
     mov fs:[edi].ct_dirty,0
-    mov cx,fs:c_curr_col
-    mov dx,fs:c_curr_row
+    mov cx,fs:c_con_col
+    mov dx,fs:c_con_row
     call WriteBitmap
 ;
     pop dx
@@ -4599,8 +4603,8 @@ wctBitmap:
 ;    
     push ds
     mov fs:[edi].ct_dirty,0
-    mov cx,fs:c_curr_col
-    mov dx,fs:c_curr_row
+    mov cx,fs:c_con_col
+    mov dx,fs:c_con_row
     mov ds,fs:c_video_sel
     call fword ptr ds:v_write_text_proc
     pop ds
@@ -4622,8 +4626,8 @@ wctText:
 ;    
     push ds
     mov fs:[edi].ct_dirty,0
-    mov cx,fs:c_curr_col
-    mov dx,fs:c_curr_row
+    mov cx,fs:c_con_col
+    mov dx,fs:c_con_row
     mov ds,fs:c_video_sel
     call fword ptr ds:v_write_text_proc
     pop ds
@@ -4632,8 +4636,7 @@ wctText:
     pop cx
 
 wctDone:    
-    inc fs:c_curr_col
-;
+    inc fs:c_con_col
     pop edi
     ret
 WriteConOne    Endp
@@ -4652,7 +4655,7 @@ WriteConTab    PROC near
 
 write_con_tab_more:
     call WriteConOne
-    test fs:c_curr_col,3
+    test fs:c_con_col,3
     jnz write_con_tab_more
 ;
     pop ax
@@ -4660,17 +4663,17 @@ write_con_tab_more:
 WriteConTab    ENDP
 
 WriteConDel    PROC near
-    dec fs:c_curr_col
+    dec fs:c_con_col
     ret
 WriteConDel    ENDP
 
 WriteConLf PROC near
-    inc fs:c_curr_row
+    inc fs:c_con_row
     ret
 WriteConLf ENDP
 
 WriteConCr PROC near
-    mov fs:c_curr_col,0
+    mov fs:c_con_col,0
     ret
 WriteConCr ENDP
     
@@ -4780,6 +4783,7 @@ write_c_console     ENDP
 ;                       EDX            Total buffer size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
 
 con_write	Proc near
     push es
@@ -4821,8 +4825,8 @@ con_io_insert:
     push esi
     push edx
 ;
-    mov cx,fs:c_curr_col
-    mov dx,fs:c_curr_row
+    mov cx,fs:c_con_col
+    mov dx,fs:c_con_row
     push ecx
 ;
     mov ecx,edi
@@ -4838,7 +4842,8 @@ con_io_move_loop:
     mov es:[esi],al
 ;
     pop ecx
-    SetCursorPosition
+    mov fs:c_con_row,dx
+    mov fs:c_con_col,cx
 ;
     pop edx
     pop esi
@@ -4865,8 +4870,8 @@ con_io_overflow:
     push esi
     push edx
 ;
-    mov cx,fs:c_curr_col
-    mov dx,fs:c_curr_row
+    mov cx,fs:c_con_col
+    mov dx,fs:c_con_row
 
 con_io_overflow_loop:
     cmp esi,edi
@@ -4880,7 +4885,8 @@ con_io_overflow_loop:
 con_io_overflow_done:
     mov al,' '
     call con_write
-    SetCursorPosition
+    mov fs:c_con_row,dx
+    mov fs:c_con_col,cx
 ;
     pop edx
     pop esi
@@ -4903,8 +4909,8 @@ con_io_del          PROC near
     push ecx
     push edx
 ;
-    mov cx,fs:c_curr_col
-    mov dx,fs:c_curr_row
+    mov cx,fs:c_con_col
+    mov dx,fs:c_con_row
     sub cx,1
     jnc con_io_del_do
 ;
@@ -4918,10 +4924,12 @@ con_io_del          PROC near
     xor dx,dx
 
 con_io_del_do:
-    SetCursorPosition
+    mov fs:c_con_row,dx
+    mov fs:c_con_col,cx
     mov al,' '
     call con_write
-    SetCursorPosition
+    mov fs:c_con_row,dx
+    mov fs:c_con_col,cx
 ;
     pop edx
     pop ecx
@@ -4939,8 +4947,8 @@ con_io_del_move:
     push esi
     push edx
 ;
-    mov cx,fs:c_curr_col
-    mov dx,fs:c_curr_row
+    mov cx,fs:c_con_col
+    mov dx,fs:c_con_row
     sub cx,1
     jnc con_io_del_do_move
 ;
@@ -4954,7 +4962,8 @@ con_io_del_move:
     xor dx,dx
 
 con_io_del_do_move:
-    SetCursorPosition
+    mov fs:c_con_row,dx
+    mov fs:c_con_col,cx
     push ecx
 ;
     mov ecx,edi
@@ -4971,7 +4980,8 @@ con_io_del_loop:
     call con_write
 ;
     pop ecx
-    SetCursorPosition
+    mov fs:c_con_row,dx
+    mov fs:c_con_col,cx
 ;
     pop edx
     pop esi
@@ -4996,8 +5006,8 @@ con_io_cr           PROC near
     inc esi
     inc edi
 ;
-    mov fs:c_curr_col,0
-    inc fs:c_curr_row
+    mov fs:c_con_col,0
+    inc fs:c_con_row
     call UpdateConPos    
     stc
     ret
@@ -5016,8 +5026,8 @@ con_clear_home_loop:
     push ecx
     push edx
 ;
-    mov cx,fs:c_curr_col
-    mov dx,fs:c_curr_row
+    mov cx,fs:c_con_col
+    mov dx,fs:c_con_row
     sub cx,1
     jnc con_clear_home_do
 ;
@@ -5031,7 +5041,8 @@ con_clear_home_loop:
     xor dx,dx
 
 con_clear_home_do:
-    SetCursorPosition
+    mov fs:c_con_row,dx
+    mov fs:c_con_col,cx
 ;
     pop edx
     pop ecx
@@ -5044,8 +5055,8 @@ con_clear_home_done:
     push ecx
     push edx
 ;
-    mov cx,fs:c_curr_col
-    mov dx,fs:c_curr_row
+    mov cx,fs:c_con_col
+    mov dx,fs:c_con_row
     push ecx    
 ;
     mov ecx,edi
@@ -5060,7 +5071,8 @@ con_clear_loop:
 
 con_clear_done:
     pop ecx
-    SetCursorPosition
+    mov fs:c_con_row,dx
+    mov fs:c_con_col,cx
 ;
     pop edx
     pop ecx
@@ -5085,8 +5097,8 @@ con_left_arrow  PROC near
     push ecx
     push edx
 ;
-    mov cx,fs:c_curr_col
-    mov dx,fs:c_curr_row
+    mov cx,fs:c_con_col
+    mov dx,fs:c_con_row
     sub cx,1
     jnc con_left_arrow_do
 ;
@@ -5100,7 +5112,8 @@ con_left_arrow  PROC near
     xor dx,dx
 
 con_left_arrow_do:
-    SetCursorPosition
+    mov fs:c_con_row,dx
+    mov fs:c_con_col,cx
 ;
     pop edx
     pop ecx
@@ -5139,8 +5152,8 @@ con_home_loop:
     push ecx
     push edx
 ;
-    mov cx,fs:c_curr_col
-    mov dx,fs:c_curr_row
+    mov cx,fs:c_con_col
+    mov dx,fs:c_con_row
     sub cx,1
     jnc con_home_do
 ;
@@ -5153,7 +5166,8 @@ con_home_loop:
     xor dx,dx
 
 con_home_do:
-    SetCursorPosition    
+    mov fs:c_con_row,dx
+    mov fs:c_con_col,cx
 ;
     pop edx
     pop ecx
@@ -5399,6 +5413,7 @@ read_c_console  PROC far
     mov fs,ax    
 
 con_io_loop:
+    call UpdateConPos
     PollKeyboard
     jnc con_io_get
 ;
