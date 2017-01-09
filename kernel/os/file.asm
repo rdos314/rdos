@@ -1623,6 +1623,53 @@ write_c_file       Proc far
     push bx
 ;
     mov ds,bx
+    cmp edx,ds:file_size
+    jbe wcfDo
+;
+    push es
+    push edi
+    push ecx
+    push edx
+;
+    mov eax,1000h
+    AllocateGlobalMem
+;
+    xor di,di
+    mov cx,400h
+    xor eax,eax
+    rep stosd
+    xor edi,edi
+;
+    mov ecx,edx
+    sub ecx,ds:file_size
+    mov edx,ds:file_size
+
+wcfFillLoop:
+    push ecx
+;
+    cmp ecx,1000h
+    jbe wcfFillDo
+;
+    mov ecx,1000h
+
+wcfFillDo:
+    mov al,ds:file_drive
+    call write_file
+    mov eax,ecx
+;
+    pop ecx
+    add edx,eax
+    sub ecx,eax
+    jnz wcfFillLoop
+;       
+    FreeMem
+;
+    pop edx
+    pop ecx
+    pop edi
+    pop es
+
+wcfDo:
     mov al,ds:file_drive
     call write_file
     jc wcfDone

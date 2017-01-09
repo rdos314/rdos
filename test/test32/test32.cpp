@@ -366,6 +366,8 @@ void main()
 
     size = filelength(handle4);
     res = chsize(handle4, size - 1);
+
+    RdosSetHandlePos(handle4, 100);
     
     strcpy(buf, "Testing");
     len = strlen(buf);
