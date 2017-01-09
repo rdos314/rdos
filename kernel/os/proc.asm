@@ -661,8 +661,8 @@ notify_process_created       ENDP
 notify_process_exit_name  DB 'Notify Process Exit',0
 
 notify_process_exit       PROC far
-    call free_handle_process
     call trap_terminate_process
+    call free_handle_process
     retf32
 notify_process_exit       ENDP
     

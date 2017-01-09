@@ -88,7 +88,7 @@ create_c_handle    PROC far
     inc ds:[di].he_ref_count
 ;
     add di,SIZE handle_entry_struc
-    inc ds:[di].he_ref_count
+    add ds:[di].he_ref_count,2
 ;
     mov eax,SIZE handle_struc
     AllocateSmallGlobalMem
@@ -1773,7 +1773,89 @@ ihdDone:
     pop ds    
     retf32
 is_handle_device     Endp        
-        
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           close_app
+;
+;           DESCRIPTION:    Close app
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_app       Proc far
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_c_handle_sel
+;    
+    mov cx,MAX_HANDLES
+    xor bx,bx
+
+caLoop:
+    push bx
+    push cx
+;
+    shl bx,3
+    add bx,OFFSET h_arr
+    EnterSection ds:h_section
+    xor ax,ax
+    xchg ax,ds:[bx].hp_handle
+    mov ds:[bx].hp_access,0
+    mov ds:[bx].hp_pos,0
+    LeaveSection ds:h_section
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae caNext
+;    
+    or ax,ax
+    jz caNext
+;
+    push ds
+    dec ax
+    movzx ecx,ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+    EnterSection ds:hd_section
+;
+    sub ds:[bx].he_ref_count,1
+    jnz caLeave
+;
+    xor ax,ax
+    xchg ax,ds:[bx].he_sel
+    mov bx,ds:[bx].he_type
+    btc ds:hd_bitmap,ecx
+;
+    cmp bx,10
+    jae caLeave
+;
+    shl bx,1
+    call word ptr cs:[bx].close_tab
+
+caLeave:
+    LeaveSection ds:hd_section
+    pop ds
+
+caNext:
+    pop cx
+    pop bx
+;
+    inc bx
+    sub cx,1
+    jnz caLoop
+;
+    mov ax,ds
+    mov es,ax
+    xor ax,ax
+    mov ds,ax
+    FreeMem
+    retf32
+close_app	Endp
+       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1810,11 +1892,14 @@ init_chandle     PROC near
     add di,SIZE handle_entry_struc
     mov es:[di].he_type,C_HANDLE_STDOUT
     mov es:[di].he_sel,0
-    mov es:[di].he_ref_count,1
+    mov es:[di].he_ref_count,2
 ;
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov edi,OFFSET close_app
+    HookCloseApp
 ;
     mov esi,OFFSET create_c_handle
     mov edi,OFFSET create_c_handle_name
