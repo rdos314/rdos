@@ -391,9 +391,6 @@ deref_proc_handle_nr        = 352
 notify_time_drift_nr        = 353
 set_options_nr              = 354
 
-clone_handle_mem_nr         = 355
-clone_app_nr                = 356
-
 get_apic_id_nr              = 357
 
 debug_exception_nr          = 360

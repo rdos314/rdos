@@ -66,15 +66,6 @@ hd_list     DW ?
 
 handle_data_seg ENDS
 
-clone_seg   STRUC
-
-c_list      DW ?
-c_arr       DW MAX_HANDLES DUP (?)
-
-c_mem_sel   DW ?
-
-clone_seg   ENDS
-
 code    SEGMENT byte public 'CODE'
 
 .386p
@@ -441,25 +432,6 @@ free_handle     PROC far
     pop ax
     retf32
 free_handle     ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           CloneHandleMem
-;
-;           DESCRIPTION:    Clone handle mem for fork
-;
-;
-;           RETURNS:        ES      Clone sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-clone_handle_mem_name   DB 'Clone Handle Mem',0
-
-clone_handle_mem    PROC far
-    retf32
-clone_handle_mem    ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -880,12 +852,6 @@ init_handle     PROC near
     mov edi,OFFSET deref_handle_name
     xor cl,cl
     mov ax,deref_handle_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET clone_handle_mem
-    mov edi,OFFSET clone_handle_mem_name
-    xor cl,cl
-    mov ax,clone_handle_mem_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_free_handles

@@ -1962,12 +1962,6 @@ DerefHandle     MACRO
     OsGate deref_handle_nr
                     ENDM
 
-; OUT DS    Cloned handle sel
-; OUT ES    Cloned handle mem sel
-CloneHandleMem  MACRO
-    OsGate clone_handle_mem_nr
-                    ENDM
-
 ;;;;;;;;;;;;;; Application / process  ;;;;;;;;;;;;;;;;;;
 
 ;       ES:EDI       ADDRESS TO CALLBACK
@@ -1999,11 +1993,6 @@ OpenApp MACRO
 
 CloseApp    MACRO
     OsGate close_app_nr
-                    ENDM
-
-;    ES     Clone selector
-CloneApp    MACRO
-    OsGate clone_app_nr
                     ENDM
 
 ;  DS:ESI       Program name

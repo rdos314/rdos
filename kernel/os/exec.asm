@@ -2078,23 +2078,6 @@ unload_exe:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Fork_pr
-;
-;           DESCRIPTION:    Fork process
-;
-;           RETURNS:        AX          Process handle (parent) or 0
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-fork_name DB 'Fork',0
-
-fork_pr    Proc far
-    retf32
-fork_pr    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetExitCode
 ;
 ;           DESCRIPTION:    Get exit code
@@ -2323,12 +2306,6 @@ init    PROC far
     mov edi,OFFSET unload_exe_name
     xor dx,dx
     mov ax,unload_exe_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET fork_pr
-    mov edi,OFFSET fork_name
-    xor dx,dx
-    mov ax,fork_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET spawn_program16

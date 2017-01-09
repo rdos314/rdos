@@ -1404,8 +1404,8 @@ InsertApp       Proc near
     mov ds:app_free_thread_proc+4,cs
     mov ds:app_spawn_proc,OFFSET spawn_proc
     mov ds:app_spawn_proc+4,cs
-    mov ds:app_clone_proc,OFFSET clone_proc
-    mov ds:app_clone_proc+4,cs
+    mov ds:app_fork_proc,OFFSET fork_proc
+    mov ds:app_fork_proc+4,cs
     mov ds:app_close_proc,OFFSET close_proc
     mov ds:app_close_proc+4,cs
     mov ds:app_load_dll_proc,OFFSET load_dll
@@ -4062,33 +4062,15 @@ spawn_proc      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           clone_proc
+;           NAME:           fork_proc
 ;
-;           DESCRIPTION:    Request to clone environment
-;
-;       RETURNS:    ES      Clone selector
+;           DESCRIPTION:    Fork
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-clone_proc      Proc far
-    push ds
-    pushad
-;    
-    mov eax,SIZE pe_clone_seg
-    AllocateSmallGlobalMem
-    mov es:pcs_entries,0
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_mod_sel
-    mov ax,ds:lib_file_handle
-    mov es:pcs_file_handle,ax
-;
-    popad
-    pop ds    
+fork_proc      Proc far
     ret
-clone_proc  Endp
+fork_proc  Endp
 
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

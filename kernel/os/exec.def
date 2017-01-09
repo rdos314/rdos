@@ -25,99 +25,89 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-dev_name		EQU 8
-dev_param		EQU 90h
-dev_next		EQU 0E0h
-dev_type		EQU 0E4h
-dev_ip			EQU 0FAh
+dev_name                EQU 8
+dev_param               EQU 90h
+dev_next                EQU 0E0h
+dev_type                EQU 0E4h
+dev_ip                  EQU 0FAh
 
-load_gs		EQU 32
-load_fs		EQU 28
-load_ds		EQU 24
-load_es		EQU 20
-load_ss		EQU 16
-load_esp	EQU 12
-load_eflags	EQU 8
-load_cs		EQU 4
-load_eip	EQU 0
-load_eax	EQU -4
-load_ebx	EQU -8
-load_ecx	EQU -12
-load_edx	EQU -16
-load_esi	EQU -20
-load_edi	EQU -24
-load_ebp	EQU -28
+load_gs         EQU 32
+load_fs         EQU 28
+load_ds         EQU 24
+load_es         EQU 20
+load_ss         EQU 16
+load_esp        EQU 12
+load_eflags     EQU 8
+load_cs         EQU 4
+load_eip        EQU 0
+load_eax        EQU -4
+load_ebx        EQU -8
+load_ecx        EQU -12
+load_edx        EQU -16
+load_esi        EQU -20
+load_edi        EQU -24
+load_ebp        EQU -28
 
-exec_block	STRUC
-exec_enviro	DW ?
-exec_line	DD ?
-exec_fcb1	DD ?
-exec_fcb2	DD ?
-exec_block	ENDS
+exec_block      STRUC
+exec_enviro     DW ?
+exec_line       DD ?
+exec_fcb1       DD ?
+exec_fcb2       DD ?
+exec_block      ENDS
 
-exeh_seg	STRUC
-exeh_signature		DW ?
-exeh_size_lsb		DW ?
-exeh_size_msb		DW ?
-exeh_reloc_ant		DW ?
-exeh_size_header	DW ?
-exeh_minalloc		DW ?
-exeh_maxalloc		DW ?
-exeh_ss				DW ?
-exeh_sp				DW ?
-exeh_checksum		DW ?
-exeh_ip				DW ?
-exeh_cs				DW ?
-exeh_reloc_offs		DW ?
-exeh_ov_nr			DW ?
-exeh_seg	ENDS
+exeh_seg        STRUC
+exeh_signature          DW ?
+exeh_size_lsb           DW ?
+exeh_size_msb           DW ?
+exeh_reloc_ant          DW ?
+exeh_size_header        DW ?
+exeh_minalloc           DW ?
+exeh_maxalloc           DW ?
+exeh_ss                         DW ?
+exeh_sp                         DW ?
+exeh_checksum           DW ?
+exeh_ip                         DW ?
+exeh_cs                         DW ?
+exeh_reloc_offs         DW ?
+exeh_ov_nr                      DW ?
+exeh_seg        ENDS
 
 
-spawn_struc	STRUC
+spawn_struc     STRUC
 
-s_name				DW ?
-s_cmd				DW ?
-s_curr_dir			DW ?
+s_name                          DW ?
+s_cmd                           DW ?
+s_curr_dir                      DW ?
 s_env               DW ?
 s_opt               DW ?
 s_opt_size          DW ?
-s_loader_name		DD ?
-s_param				DW ?
-s_thread			DW ?
-s_app				DW ?
-s_ret_code			DW ?
+s_loader_name           DD ?
+s_param                         DW ?
+s_thread                        DW ?
+s_app                           DW ?
+s_ret_code                      DW ?
 s_proc_sel          DW ?
-s_sect1				section_typ <>
-s_switch			DB ?
+s_sect1                         section_typ <>
+s_switch                        DB ?
 
-spawn_struc	ENDS
+spawn_struc     ENDS
 
-exec_load_struc	STRUC
+exec_load_struc STRUC
 
-el_name				DW ?
-el_cmd				DW ?
-el_curr_dir			DW ?
+el_name                         DW ?
+el_cmd                          DW ?
+el_curr_dir                     DW ?
 el_env                          DW ?
-el_loader_name		        DD ?
-el_thread			DW ?
+el_loader_name                  DD ?
+el_thread                       DW ?
 el_console                      DW ?
-el_app				DW ?
-el_ret_code			DW ?
+el_app                          DW ?
+el_ret_code                     DW ?
 el_wake_thread                  DW ?
 el_row                          DW ?
 el_col                          DW ?
 
-exec_load_struc	ENDS
-
-fork_struc	STRUC
-
-f_name				DW ?
-f_opt               DW ?
-f_handle            DW ?
-f_exe_name          DW ?
-f_app               DW ?
-
-fork_struc	ENDS
+exec_load_struc ENDS
 
 spawn_param_struc   STRUC
 

@@ -125,12 +125,6 @@ init_app    PROC near
     mov ax,close_app_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET clone_app
-    mov edi,OFFSET clone_app_name
-    xor cl,cl
-    mov ax,clone_app_nr
-    RegisterOsGate
-;
     mov esi,OFFSET hook_open_app
     mov edi,OFFSET hook_open_app_name
     xor cl,cl
@@ -213,6 +207,12 @@ init_app    PROC near
     mov edi,OFFSET get_options_name
     mov dx,virt_es_in
     mov ax,get_options_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET fork_pr
+    mov edi,OFFSET fork_name
+    xor dx,dx
+    mov ax,fork_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET allocate_app_mem
@@ -450,8 +450,8 @@ run_open_hooks  Proc near
     mov ds:app_free_thread_proc+4,0
     mov ds:app_spawn_proc,0
     mov ds:app_spawn_proc+4,0
-    mov ds:app_clone_proc,0
-    mov ds:app_clone_proc+4,0
+    mov ds:app_fork_proc,0
+    mov ds:app_fork_proc+4,0
     mov ds:app_close_proc,0
     mov ds:app_close_proc+4,0
     mov ds:app_load_dll_proc,0
@@ -1156,6 +1156,37 @@ get_options     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           Fork
+;
+;           DESCRIPTION:    Fork process
+;
+;           RETURNS:        AX = 0 for child
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fork_name   DB 'Fork',0
+
+fork_pr    PROC far
+    push ds
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_fork_proc
+    or eax,ds:app_fork_proc+4
+    mov eax,-1
+    jz fork_done
+;
+    call fword ptr ds:app_fork_proc
+
+fork_done:
+    pop ds
+    retf32
+fork_pr    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           AllocateAppMem
 ;
 ;           DESCRIPTION:    Allocate application memory
@@ -1323,40 +1354,6 @@ free_debug_mem_done:
     pop ds
     retf32
 free_debug_app_mem      ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           CloneApp
-;
-;           DESCRIPTION:    Clone running application (fork)
-;
-;       RETURNS:    ES      Clone page arr
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-clone_app_name  DB 'Clone App',0
-
-clone_app       PROC far
-    push ds
-    push eax
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov eax,ds:app_clone_proc
-    or eax,ds:app_clone_proc+4
-    stc
-    jz caDone
-;
-    call fword ptr ds:app_clone_proc
-
-caDone:
-    pop eax
-    pop ds
-    retf32
-clone_app       ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
