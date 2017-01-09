@@ -1009,7 +1009,7 @@ void TDebug::LogMsg(const char *Msg)
 
     str += "\r\n";
 
-    RdosWriteString(str.GetData());
+    printf(str.GetData());
 
     if (FLogFile.IsOpen())
     {
