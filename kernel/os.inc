@@ -1586,6 +1586,11 @@ ThreadToSel     MACRO
     OsGate thread_to_sel_nr
             ENDM
 
+; OUT  AX       0 = child
+ForkProcess    MACRO
+    OsGate fork_process_nr
+                        ENDM
+
 ;;;;;;;;;;; Crash handler ;;;;;;;;;;;;;;;;
 
 SetupNmiCoreDump       MACRO

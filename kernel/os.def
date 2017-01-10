@@ -711,4 +711,6 @@ read_c_console_nr           = 594
 write_c_console_nr          = 595
 open_kernel_file_nr         = 596
 
+fork_process_nr             = 597
+
 osgate_entries                          = 600

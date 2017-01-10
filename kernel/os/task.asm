@@ -8628,6 +8628,215 @@ create_mod_tss_done:
     retf32
 create_process  ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           INIT_FORK_REGS
+;
+;           DESCRIPTION:    Setup fork register state
+;
+;           PARAMETERS:     DS         Thread block
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_fork_regs    PROC near
+    mov edx,cr3
+    mov es:p_cr3,edx
+;
+    mov dword ptr ds:p_rip,OFFSET fork_start
+;
+    xor edx,edx
+    mov dword ptr ds:p_rax,edx
+    mov dword ptr ds:p_rcx,edx
+    mov dword ptr ds:p_rdx,edx
+    mov dword ptr ds:p_rbx,edx
+    mov dword ptr ds:p_rbp,edx
+    mov dword ptr ds:p_rsi,edx
+    mov dword ptr ds:p_rdi,edx
+    mov dword ptr ds:p_rip+4,edx
+    mov dword ptr ds:p_rsp+4,edx
+    mov dword ptr ds:p_rflags+4,edx
+    mov dword ptr ds:p_rax+4,edx
+    mov dword ptr ds:p_rcx+4,edx
+    mov dword ptr ds:p_rdx+4,edx
+    mov dword ptr ds:p_rbx+4,edx
+    mov dword ptr ds:p_rbp+4,edx
+    mov dword ptr ds:p_rsi+4,edx
+    mov dword ptr ds:p_rdi+4,edx
+;    
+    mov dword ptr ds:p_r8,edx
+    mov dword ptr ds:p_r8+4,edx
+;    
+    mov dword ptr ds:p_r9,edx
+    mov dword ptr ds:p_r9+4,edx
+;    
+    mov dword ptr ds:p_r10,edx
+    mov dword ptr ds:p_r10+4,edx
+;    
+    mov dword ptr ds:p_r11,edx
+    mov dword ptr ds:p_r11+4,edx
+;    
+    mov dword ptr ds:p_r12,edx
+    mov dword ptr ds:p_r12+4,edx
+;    
+    mov dword ptr ds:p_r13,edx
+    mov dword ptr ds:p_r13+4,edx
+;    
+    mov dword ptr ds:p_r14,edx
+    mov dword ptr ds:p_r14+4,edx
+;    
+    mov dword ptr ds:p_r15,edx
+    mov dword ptr ds:p_r15+4,edx
+;    
+    mov ds:p_cs,cs
+;
+; dr0 - dr7
+;
+    xor edx,edx
+    mov dword ptr ds:p_dr0,edx
+    mov dword ptr ds:p_dr0+4,edx
+    mov dword ptr ds:p_dr1,edx
+    mov dword ptr ds:p_dr1+4,edx
+    mov dword ptr ds:p_dr2,edx
+    mov dword ptr ds:p_dr2+4,edx
+    mov dword ptr ds:p_dr3,edx
+    mov dword ptr ds:p_dr3+4,edx
+    mov dword ptr ds:p_dr7,edx
+    mov dword ptr ds:p_dr7+4,edx
+;
+; 387 status
+;
+    mov ds:p_math_control,37Fh
+    mov ds:p_math_status,0
+    mov ds:p_math_tag,0FFFFh
+    mov ds:p_math_eip,0
+    mov ds:p_math_cs,0
+    mov ds:p_math_data_offs,0
+    mov ds:p_math_data_sel,0
+;
+; thread control
+;
+    mov ds:p_fault_vector,-1
+    mov ds:p_fault_code,0
+    mov ds:p_action_text,0
+    ret
+init_fork_regs    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           INIT_FORK_THREAD
+;
+;           DESCRIPTION:    Init fork thread
+;
+;           PARAMETERS:     ES          Thread
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_fork_thread    PROC near
+    push ds
+;
+    GetThread
+    mov ds,ax
+    mov si,OFFSET thread_name
+    mov di,OFFSET thread_name
+    mov cx,30
+    rep movsb
+;
+    dec di
+
+init_fork_space_loop:
+    mov al,es:[di]
+    cmp al,' '
+    jne init_fork_space_ok
+;
+    dec di
+    jmp init_fork_space_loop
+
+init_fork_space_ok:
+    inc di
+    mov cx,di
+    sub cx,OFFSET thread_name
+    cmp cx,28
+    jb init_fork_add
+;
+    mov cx,28
+
+init_fork_add:
+    mov di,OFFSET thread_name
+    add di,cx
+    mov al,'@'
+    stosb
+    mov al,'0'
+    stosb
+;
+    pop ds
+    ret
+init_fork_thread    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FORK_PROCESS
+;
+;           DESCRIPTION:    Fork process
+;
+;           RETURNS:        AX = 0, child process
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fork_process_name     DB 'Fork Process',0
+
+fork_start:
+    int 3
+
+fork_process  PROC far
+    push ds
+    push es
+    push fs
+    push gs
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;    
+    GetThread
+    mov fs,ax
+;    
+    call allocate_thread_block
+;    
+    mov dx,fs:p_prio
+    shr dx,1
+    call init_thread_block
+;    
+    mov eax,fs:p_debug_proc
+    mov es:p_debug_proc,eax
+    call init_process_block
+;    
+    mov ax,es
+    mov ds,ax
+;    
+    call create_tss32
+    call init_fork_regs
+    NotifyCreateProcess
+    call init_fork_thread
+    call wake_new
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop gs
+    pop fs
+    pop es 
+    pop ds   
+    retf32
+fork_process  ENDP
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -9561,6 +9770,12 @@ timer_free_list_create:
     mov edi,OFFSET create_process_name
     xor cl,cl
     mov ax,create_process_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET fork_process
+    mov edi,OFFSET fork_process_name
+    xor cl,cl
+    mov ax,fork_process_nr
     RegisterOsGate
 ;
     mov esi,OFFSET soft_reset

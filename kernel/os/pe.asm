@@ -4069,6 +4069,7 @@ spawn_proc      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fork_proc      Proc far
+    ForkProcess
     ret
 fork_proc  Endp
 
