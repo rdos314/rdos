@@ -4070,6 +4070,12 @@ spawn_proc      Endp
 
 fork_proc      Proc far
     ForkProcess
+    or ax,ax
+    jnz fork_end
+;
+    int 3
+
+fork_end:
     ret
 fork_proc  Endp
 

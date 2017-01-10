@@ -8777,6 +8777,43 @@ init_fork_thread    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           INIT_FORK_STACK
+;
+;           DESCRIPTION:    Init fork stack
+;
+;           PARAMETERS:     ES          Thread
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_fork_stack	Proc near
+    mov ax,ds:p_kernel_ss
+    mov ds:p_ss,ax
+    movzx eax,sp
+    add ax,2
+    mov dword ptr ds:p_rsp,eax
+;
+    push ds
+    push es
+;
+    mov es,ds:p_kernel_ss
+    mov ax,ss
+    mov ds,ax
+    mov si,sp
+    mov di,sp
+    mov cx,stack0_size
+    sub cx,sp
+    shr cx,1
+    rep movsw 
+;
+    pop es
+    pop ds
+;
+    ret
+init_fork_stack	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           FORK_PROCESS
 ;
 ;           DESCRIPTION:    Fork process
@@ -8786,9 +8823,6 @@ init_fork_thread    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fork_process_name     DB 'Fork Process',0
-
-fork_start:
-    int 3
 
 fork_process  PROC far
     push ds
@@ -8822,8 +8856,11 @@ fork_process  PROC far
     call init_fork_regs
     NotifyCreateProcess
     call init_fork_thread
+    call init_fork_stack
     call wake_new
-;
+    mov ax,es
+
+fork_start:
     pop ebp
     pop edi
     pop esi
