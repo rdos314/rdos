@@ -1963,11 +1963,62 @@ local_get_thread_page_dir32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_clone32  Proc near
-    mov bx,process_dir_sel
-    mov ds,bx
-    mov bx,(clone_page_linear SHR 20) AND 0FFFh
+    push ds
+    push es
+    pushad
+;
     mov al,3
-    mov [bx],eax
+    mov bx,process_dir_sel   
+    mov ds,bx
+    mov bx,(clone_page_linear SHR 20)
+    mov ds:[bx],eax
+;
+    mov ax,clone_dir_sel
+    mov ds,ax
+    mov ax,process_page_sel
+    mov es,ax
+;
+    mov ecx,process_page_linear SHR 22
+    xor ebx,ebx
+    xor esi,esi
+
+lcDirLoop32:
+    mov eax,ds:[ebx]
+    test al,1
+    jz lcDirNext32
+;
+    push ds
+    push ecx
+    push esi
+;
+    mov ax,clone_page_sel
+    mov ds,ax
+;
+    mov ecx,400h
+
+lcPageLoop32:
+    mov eax,ds:[esi]
+    test al,1
+    jz lcPageSave32
+
+lcPageSave32:
+    mov es:[esi],eax
+;
+    add esi,4
+    loop lcPageLoop32
+;
+    pop esi
+    pop ecx
+    pop ds
+
+lcDirNext32:
+    add ebx,4
+    add esi,1000h
+    loop lcDirLoop32
+;
+    popad
+    pop es
+    pop ds
     ret
 local_clone32  Endp
 
@@ -4052,6 +4103,7 @@ local_clone64  Proc near
     mov es,si
     mov si,(clone_page_linear SHR 18)
     mov ds:[si],eax
+    mov dword ptr ds:[si+4],0
 ;
     mov eax,es:[18h]
     mov ebx,es:[1Ch]
