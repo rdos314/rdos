@@ -4041,6 +4041,10 @@ local_get_thread_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_clone64  Proc near
+    push ds
+    push es
+    pushad
+;
     mov al,3
     mov si,process_dir_sel   
     mov ds,si
@@ -4119,7 +4123,9 @@ lcDirNext64:
     add esi,1000h
     loop lcDirLoop64
 ;
-    int 3
+    popad
+    pop es
+    pop ds
     ret
 local_clone64  Endp
 
