@@ -2000,6 +2000,12 @@ lcPageLoop32:
     mov eax,ds:[esi]
     test al,1
     jz lcPageSave32
+;
+    test al,2
+    jz lcPageSave32
+;
+    and al,NOT 2
+    or ax,400h
 
 lcPageSave32:
     mov es:[esi],eax
@@ -4157,6 +4163,12 @@ lcPageLoop64:
     mov ebx,ds:[esi+4]
     test al,1
     jz lcPageSave64
+;
+    test al,2
+    jz lcPageSave64
+;
+    and al,NOT 2
+    or ax,400h
 
 lcPageSave64:
     mov es:[esi],eax
