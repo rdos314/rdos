@@ -31,6 +31,7 @@
 #include "bitdev.h"
 #include "panel.h"
 #include "str.h"
+#include "ini.h"
 
 #define MAX_LABEL_ROWS    256
 
@@ -50,6 +51,7 @@ public:
     TLabelFactory();
     ~TLabelFactory();
 
+    virtual void Set(TIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetFont(int id, int height);
@@ -68,15 +70,15 @@ public:
     void AlignBottom();
     void AlignBottomRight();
 
-	TLabelControl *Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
-	TLabelControl *Create(TControl *control, int xstart, int ystart, int xsize, int ysize);
+        TLabelControl *Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+        TLabelControl *Create(TControl *control, int xstart, int ystart, int xsize, int ysize);
 
-	virtual TPanelControl *CreatePanel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
-	virtual TPanelControl *CreatePanel(TControl *control, int xstart, int ystart, int xsize, int ysize);
+        virtual TPanelControl *CreatePanel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+        virtual TPanelControl *CreatePanel(TControl *control, int xstart, int ystart, int xsize, int ysize);
 
-	virtual TLabelControl *CreateLabel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
-	virtual TLabelControl *CreateLabel(TControl *control, int xstart, int ystart, int xsize, int ysize);
-		
+        virtual TLabelControl *CreateLabel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+        virtual TLabelControl *CreateLabel(TControl *control, int xstart, int ystart, int xsize, int ysize);
+                
 protected:
     void Init();
     void SetDefault(TLabelControl *label, int xstart, int ystart, int xsize, int ysize);
@@ -107,6 +109,7 @@ public:
 
     static int IsLabelControl(TControl *control);
 
+    virtual void Set(TIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void ForceSingle();
@@ -143,7 +146,7 @@ public:
     
 protected:
     virtual void NotifyResize();
-  	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height); 	
+        virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);     
 
     TSection FSection;
 

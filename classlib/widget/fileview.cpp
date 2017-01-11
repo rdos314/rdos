@@ -28,7 +28,6 @@
 #include <string.h>
 
 #include "fileview.h"
-#include "ini.h"
 
 #define FALSE   0
 #define TRUE    !FALSE
@@ -100,15 +99,14 @@ void TFileViewFactory::Init()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFileViewFactory::Set(const char *IniName, const char *IniSection)
+void TFileViewFactory::Set(TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
     int size;
 
-    Ini.GotoSection(IniSection);
+    Ini->GotoSection(IniSection);
 
-    if (Ini.ReadVar("Font.Size", str, 255))
+    if (Ini->ReadVar("Font.Size", str, 255))
     {    
         size = atoi(str);
 
@@ -116,23 +114,40 @@ void TFileViewFactory::Set(const char *IniName, const char *IniSection)
             SetFont(size);
     }
             
-    if (Ini.ReadVar("DrawColor.R", str, 255))
+    if (Ini->ReadVar("DrawColor.R", str, 255))
         FDrawR = atoi(str);
     
-    if (Ini.ReadVar("DrawColor.G", str, 255))
+    if (Ini->ReadVar("DrawColor.G", str, 255))
         FDrawG = atoi(str);
 
-    if (Ini.ReadVar("DrawColor.B", str, 255))
+    if (Ini->ReadVar("DrawColor.B", str, 255))
         FDrawB = atoi(str);
 
 
-    if (Ini.ReadVar("Space.X", str, 255))
+    if (Ini->ReadVar("Space.X", str, 255))
         FStartX = atoi(str);
     
-    if (Ini.ReadVar("Space.Y", str, 255))
+    if (Ini->ReadVar("Space.Y", str, 255))
         FStartY = atoi(str);
 
-    TPanelFactory::Set(IniName, IniSection);
+    TPanelFactory::Set(Ini, IniSection);
+}
+    
+/*##########################################################################
+#
+#   Name       : TFileViewFactory::Set
+#
+#   Purpose....: Load settings from ini-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewFactory::Set(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    Set(&Ini, IniSection);
 }
 
 /*##########################################################################
@@ -230,7 +245,7 @@ TFileViewControl *TFileViewFactory::Create(TControlThread *dev, int xstart, int 
 
     SetDefault(fileview, xstart, ystart, xsize, ysize);
 
-	return fileview;
+        return fileview;
 }
 
 /*##########################################################################
@@ -491,15 +506,14 @@ void TFileViewControl::NotifyResize()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFileViewControl::Set(const char *IniName, const char *IniSection)
+void TFileViewControl::Set(TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
     int size;
 
-    Ini.GotoSection(IniSection);
+    Ini->GotoSection(IniSection);
 
-    if (Ini.ReadVar("Font.Size", str, 255))
+    if (Ini->ReadVar("Font.Size", str, 255))
     {    
         size = atoi(str);
 
@@ -507,24 +521,41 @@ void TFileViewControl::Set(const char *IniName, const char *IniSection)
             SetFont(size);
     }
 
-    if (Ini.ReadVar("DrawColor.R", str, 255))
+    if (Ini->ReadVar("DrawColor.R", str, 255))
         FDrawR = atoi(str);
     
-    if (Ini.ReadVar("DrawColor.G", str, 255))
+    if (Ini->ReadVar("DrawColor.G", str, 255))
         FDrawG = atoi(str);
 
-    if (Ini.ReadVar("DrawColor.B", str, 255))
+    if (Ini->ReadVar("DrawColor.B", str, 255))
         FDrawB = atoi(str);
 
 
-    if (Ini.ReadVar("Space.X", str, 255))
+    if (Ini->ReadVar("Space.X", str, 255))
         FStartX = atoi(str);
     
-    if (Ini.ReadVar("Space.Y", str, 255))
+    if (Ini->ReadVar("Space.Y", str, 255))
         FStartY = atoi(str);
 
-    TPanelControl::Set(IniName, IniSection);
+    TPanelControl::Set(Ini, IniSection);
     NotifyResize();
+}
+    
+/*##########################################################################
+#
+#   Name       : TFileViewControl::Set
+#
+#   Purpose....: Load settings from ini-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileViewControl::Set(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    Set(&Ini, IniSection);
 }
 
 /*##########################################################################
@@ -624,8 +655,8 @@ void TFileViewControl::Load(int pos)
     int dsize;
     int done;
     int src;
-	int dest;
-	char ch;
+        int dest;
+        char ch;
     int size;
 
     if (FFile)
@@ -659,7 +690,7 @@ void TFileViewControl::Load(int pos)
                 {
                     case 0xa:
                     case ' ':
-	    			case 0x9:
+                                case 0x9:
                         dsize--;
                         break;
 
@@ -752,7 +783,7 @@ void TFileViewControl::Load(const char *FileName)
 
     FFile = new TFile(FileName);
 
-	 Load(0);
+         Load(0);
 }
 
 /*##########################################################################
@@ -817,7 +848,7 @@ void TFileViewControl::UpdateList()
     int xstart, ystart;
     int xsize, ysize;
     int xdiff, ydiff;
-	int xcontr, ycontr;
+        int xcontr, ycontr;
     int maxwidth = 0;
     long double pos;
 
@@ -860,39 +891,39 @@ void TFileViewControl::UpdateList()
     if (size > FRows)
     {
         EnableVerScroll();
-		xcontr -= FVerScroll->GetWidth();
+                xcontr -= FVerScroll->GetWidth();
 
-		pos = (long double)FRows / (long double)size;
-		FVerScroll->SetScrollWidth(pos);
+                pos = (long double)FRows / (long double)size;
+                FVerScroll->SetScrollWidth(pos);
 
-		UpdateVerPos();
+                UpdateVerPos();
     }
 
-	FMaxWidth = 0;
+        FMaxWidth = 0;
 
-	if (maxwidth > xcontr)
+        if (maxwidth > xcontr)
     {
-		 EnableHorScroll();
-		ycontr -= FHorScroll->GetWidth();
+                 EnableHorScroll();
+                ycontr -= FHorScroll->GetWidth();
 
-		pos = (long double)xcontr / (long double)maxwidth;
-		FHorScroll->SetScrollWidth(pos);
-		FMaxWidth = maxwidth;
-		FControlWidth = xcontr;
-		FRows = ycontr / FRowHeight;
+                pos = (long double)xcontr / (long double)maxwidth;
+                FHorScroll->SetScrollWidth(pos);
+                FMaxWidth = maxwidth;
+                FControlWidth = xcontr;
+                FRows = ycontr / FRowHeight;
 
-		UpdateHorPos();
-	 }
-	 else
-	    DisableHorScroll();
+                UpdateHorPos();
+         }
+         else
+            DisableHorScroll();
 
-	 if (size > FRows)
-	 {
-	    EnableVerScroll();
-		pos = (long double)FRows / (long double)size;
-		FVerScroll->SetScrollWidth(pos);
+         if (size > FRows)
+         {
+            EnableVerScroll();
+                pos = (long double)FRows / (long double)size;
+                FVerScroll->SetScrollWidth(pos);
 
-		UpdateVerPos();
+                UpdateVerPos();
     }    
     else
         DisableVerScroll();    
@@ -938,9 +969,9 @@ void TFileViewControl::UpdateVerPos()
 ##########################################################################*/
 void TFileViewControl::UpdateHorPos()
 {
-	long double pos;
+        long double pos;
 
-	if (FMaxWidth > FControlWidth)
+        if (FMaxWidth > FControlWidth)
     {
         pos = (long double)FStartCol / (long double)(FMaxWidth - FControlWidth);
         FHorScroll->SetScrollPos(pos);        
@@ -991,8 +1022,8 @@ void TFileViewControl::SetVerPos(int pos)
 ##########################################################################*/
 void TFileViewControl::SetHorPos(int pos)
 {
-	 if (pos > FMaxWidth - FControlWidth)
-		  pos = FMaxWidth - FControlWidth;
+         if (pos > FMaxWidth - FControlWidth)
+                  pos = FMaxWidth - FControlWidth;
     
     if (pos < 0)
         pos = 0;
@@ -1184,10 +1215,10 @@ int TFileViewControl::AdjustHor()
 ##########################################################################*/
 void TFileViewControl::ScrollRight()
 {
-	 int xsize;
+         int xsize;
 
-	 xsize = AdjustHor();
-	 SetHorPos(FStartCol + xsize);
+         xsize = AdjustHor();
+         SetHorPos(FStartCol + xsize);
 }
 
 /*##########################################################################
@@ -1203,10 +1234,10 @@ void TFileViewControl::ScrollRight()
 ##########################################################################*/
 void TFileViewControl::ScrollLeft()
 {
-	 int xsize;
+         int xsize;
 
-	 xsize = AdjustHor();
-	 SetHorPos(FStartCol - xsize);
+         xsize = AdjustHor();
+         SetHorPos(FStartCol - xsize);
 }
 
 /*##########################################################################
@@ -1254,9 +1285,9 @@ void TFileViewControl::PageLeft()
 ##########################################################################*/
 void TFileViewControl::HorMove(long double pos)
 {
-	int val;
+        int val;
 
-	if (FMaxWidth > FControlWidth)
+        if (FMaxWidth > FControlWidth)
     {
         val = (int)(pos * (long double)(FMaxWidth - FControlWidth));
         SetHorPos(val);        
@@ -1386,7 +1417,7 @@ void TFileViewControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width,
 
     xmin += xoffs;
     ymin += yoffs;
-	width -= xdiff;
+        width -= xdiff;
     height -= ydiff;
 
     xmax = xmin + width - 1;
@@ -1416,11 +1447,11 @@ void TFileViewControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width,
             curr = FStartRow + row;
 
             str = FList[curr];            
-				SetBackColor(dev);
-				dev->DrawRect(xmin, ystart, xmax, ystart + FRowHeight - 1);
+                                SetBackColor(dev);
+                                dev->DrawRect(xmin, ystart, xmax, ystart + FRowHeight - 1);
 
             dev->SetDrawColor(FDrawR, FDrawG, FDrawB);
-			dev->DrawString(xstart - FStartCol, ystart, str.GetData());
+                        dev->DrawString(xstart - FStartCol, ystart, str.GetData());
 
             ystart += FRowHeight;
         }

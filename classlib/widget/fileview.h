@@ -33,6 +33,7 @@
 #include "str.h"
 #include "file.h"
 #include "strarr.h"
+#include "ini.h"
 
 class TFileViewControl;
 
@@ -42,6 +43,7 @@ public:
     TFileViewFactory();
     ~TFileViewFactory();
 
+    virtual void Set(TIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetFont(int height);
@@ -49,15 +51,15 @@ public:
     
     void SetDrawColor(int r, int g, int b);
 
-	TFileViewControl *Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
-	TFileViewControl *Create(TControl *control, int xstart, int ystart, int xsize, int ysize);
+        TFileViewControl *Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+        TFileViewControl *Create(TControl *control, int xstart, int ystart, int xsize, int ysize);
 
-	virtual TPanelControl *CreatePanel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
-	virtual TPanelControl *CreatePanel(TControl *control, int xstart, int ystart, int xsize, int ysize);
+        virtual TPanelControl *CreatePanel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+        virtual TPanelControl *CreatePanel(TControl *control, int xstart, int ystart, int xsize, int ysize);
 
-	virtual TFileViewControl *CreateFileView(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
-	virtual TFileViewControl *CreateFileView(TControl *control, int xstart, int ystart, int xsize, int ysize);
-		
+        virtual TFileViewControl *CreateFileView(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+        virtual TFileViewControl *CreateFileView(TControl *control, int xstart, int ystart, int xsize, int ysize);
+                
 protected:
     void Init();
     void SetDefault(TFileViewControl *fileview, int xstart, int ystart, int xsize, int ysize);
@@ -83,6 +85,7 @@ public:
 
     static int IsFileViewControl(TControl *control);
 
+    virtual void Set(TIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetFont(int height);
@@ -115,11 +118,11 @@ protected:
     void SetHorPos(int pos);
     void Load(int pos);
     
-	virtual int OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
-	virtual int OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+        virtual int OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+        virtual int OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 
-    virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height); 	
-    virtual void NotifyResize(); 	
+    virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);         
+    virtual void NotifyResize();        
 
     void UpdateList();
     void UpdateVerPos();
