@@ -4042,15 +4042,41 @@ local_get_thread_page_dir64    Endp
 
 local_clone64  Proc near
     mov al,3
-    mov bx,process_dir_sel   
-    mov ds,bx
-    mov bx,(clone_page_linear SHR 18)
-    mov ds:[bx],eax
+    mov si,process_dir_sel   
+    mov ds,si
+    mov si,clone_dir_sel
+    mov es,si
+    mov si,(clone_page_linear SHR 18)
+    mov ds:[si],eax
+;
+    mov eax,es:[18h]
+    mov ebx,es:[1Ch]
+    mov ds:[si+18h],eax
+    mov ds:[si+1Ch],ebx
+;
+    mov eax,es:[10h]
+    mov ebx,es:[14h]
+    mov ds:[si+10h],eax
+    mov ds:[si+14h],ebx
+;
+    mov eax,es:[08h]
+    mov ebx,es:[0Ch]
+    mov ds:[si+08h],eax
+    mov ds:[si+0Ch],ebx
+;
+    mov eax,es:[0]
+    mov ebx,es:[4]
+    mov ds:[si],eax
+    mov ds:[si+4],ebx
+;
+    mov eax,cr3
+    mov cr3,eax
 ;
     mov ax,clone_dir_sel
     mov ds,ax
-    mov ax,clone_page_sel
+    mov ax,process_page_sel
     mov es,ax
+;
     mov ecx,process_page_linear SHR 21
     xor ebx,ebx
     xor esi,esi
@@ -4060,7 +4086,33 @@ lcDirLoop64:
     test al,1
     jz lcDirNext64
 ;
-    int 3
+    push ds
+    push ebx
+    push ecx
+    push esi
+;
+    mov ax,clone_page_sel
+    mov ds,ax
+;
+    mov ecx,200h
+
+lcPageLoop64:
+    mov eax,ds:[esi]
+    mov ebx,ds:[esi+4]
+    test al,1
+    jz lcPageSave64
+
+lcPageSave64:
+    mov es:[esi],eax
+    mov es:[esi+4],ebx
+;
+    add esi,8
+    loop lcPageLoop64
+;
+    pop esi
+    pop ecx
+    pop ebx
+    pop ds
 
 lcDirNext64:
     add ebx,8
