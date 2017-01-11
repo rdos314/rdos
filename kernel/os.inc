@@ -1591,6 +1591,11 @@ ForkProcess    MACRO
     OsGate fork_process_nr
                         ENDM
 
+; IN  EAX       CR3 to clone from
+CloneProcess    MACRO
+    OsGate clone_process_nr
+                        ENDM
+
 ;;;;;;;;;;; Crash handler ;;;;;;;;;;;;;;;;
 
 SetupNmiCoreDump       MACRO

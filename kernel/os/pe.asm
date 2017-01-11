@@ -4069,13 +4069,23 @@ spawn_proc      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fork_proc      Proc far
+    mov eax,cr3
+    push eax
+;
     ForkProcess
     or ax,ax
-    jnz fork_end
-;
-    int 3
+    jz fork_child
 
-fork_end:
+fork_parent:
+    pop eax
+    jmp fork_done
+
+fork_child:
+    int 3
+    pop eax
+    CloneProcess
+
+fork_done:    
     ret
 fork_proc  Endp
 

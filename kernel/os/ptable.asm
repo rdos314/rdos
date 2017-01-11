@@ -135,6 +135,7 @@ unhook_page_proc                DW OFFSET local_unhook_page32
 get_thread_page_entry_proc      DW OFFSET local_get_thread_page_entry32
 set_thread_page_entry_proc      DW OFFSET local_set_thread_page_entry32
 get_thread_page_dir_proc        DW OFFSET local_get_thread_page_dir32
+clone_proc                      DW OFFSET local_clone32
 uses_pae_proc                   DW OFFSET local_uses_pae32
 
 p64_start:
@@ -170,6 +171,7 @@ unhook_page_p64                 DW OFFSET local_unhook_page64
 get_thread_page_entry_p64       DW OFFSET local_get_thread_page_entry64
 set_thread_page_entry_p64       DW OFFSET local_set_thread_page_entry64
 get_thread_page_dir_p64         DW OFFSET local_get_thread_page_dir64
+clone_p64                       DW OFFSET local_clone64
 uses_pae_p64                    DW OFFSET local_uses_pae64
 p64_end:
 
@@ -359,6 +361,12 @@ init_page_table     PROC near
     mov edi,OFFSET get_thread_page_dir_name
     xor cl,cl
     mov ax,get_thread_page_dir_nr
+    RegisterOsGate
+;    
+    mov esi,OFFSET clone_process
+    mov edi,OFFSET clone_process_name
+    xor cl,cl
+    mov ax,clone_process_nr
     RegisterOsGate
 ;
     mov esi,OFFSET has_physical64
@@ -1942,6 +1950,21 @@ local_get_thread_page_dir32    Proc near
     pop ds    
     ret
 local_get_thread_page_dir32    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_clone32
+;
+;           DESCRIPTION:    Clone process, 32-bit version
+;
+;           PARAMETERS:     EAX         CR3 to clone from
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_clone32  Proc near
+    ret
+local_clone32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4004,6 +4027,22 @@ local_get_thread_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_clone64
+;
+;           DESCRIPTION:    Clone process, 64-bit version
+;
+;           PARAMETERS:     EAX         Source cr3
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_clone64  Proc near
+    clc
+    ret
+local_clone64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_uses_pae64
 ;
 ;           DESCRIPTION:    Check for PAE paging, 64-bit version
@@ -4566,6 +4605,24 @@ get_thread_page_dir    Proc far
     call cs:get_thread_page_dir_proc
     retf32
 get_thread_page_dir    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Clone
+;
+;           DESCRIPTION:    Clone 
+;
+;           PARAMETERS:     EAX         Source CR3 to clone from
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clone_process_name   DB 'Clone Process',0
+
+clone_process    Proc far
+    call cs:clone_proc
+    retf32
+clone_process    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
