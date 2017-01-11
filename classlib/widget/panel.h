@@ -32,6 +32,7 @@
 #include "scroll.h"
 #include "bitdev.h"
 #include "str.h"
+#include "ini.h"
 
 class TPanelControl;
 
@@ -44,11 +45,11 @@ public:
     TPanelScrollFactory(int width);
     virtual ~TPanelScrollFactory();
 
-	TVerPanelScrollControl *CreateVer(TPanelControl *panel);
-	THorPanelScrollControl *CreateHor(TPanelControl *panel);
+        TVerPanelScrollControl *CreateVer(TPanelControl *panel);
+        THorPanelScrollControl *CreateHor(TPanelControl *panel);
 
-	int FScrollWidth;
-};	
+        int FScrollWidth;
+};      
 
 class TVerPanelScrollControl : public TVerScrollControl
 {
@@ -60,13 +61,13 @@ public:
     int GetWidth();
 
 protected:
-	virtual void OnScrollUp();
-	virtual void OnScrollDown();
-	virtual void OnScrollPageUp();
-	virtual void OnScrollPageDown();
-	virtual void OnMove(long double relpos);
+        virtual void OnScrollUp();
+        virtual void OnScrollDown();
+        virtual void OnScrollPageUp();
+        virtual void OnScrollPageDown();
+        virtual void OnMove(long double relpos);
 
-    TPanelControl *FPanel;	
+    TPanelControl *FPanel;      
     int FCreateWidth;
 };
 
@@ -80,13 +81,13 @@ public:
     int GetWidth();
 
 protected:
-	virtual void OnScrollLeft();
-	virtual void OnScrollRight();
-	virtual void OnScrollPageLeft();
-	virtual void OnScrollPageRight();
-	virtual void OnMove(long double relpos);
+        virtual void OnScrollLeft();
+        virtual void OnScrollRight();
+        virtual void OnScrollPageLeft();
+        virtual void OnScrollPageRight();
+        virtual void OnMove(long double relpos);
 
-    TPanelControl *FPanel;	
+    TPanelControl *FPanel;      
     int FCreateWidth;
 };
 
@@ -98,6 +99,7 @@ public:
 
     void DefineScroll(TPanelScrollFactory *fact);
 
+    virtual void Set(TIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart);
@@ -168,10 +170,12 @@ public:
 
     static int IsPanel(TControl *control);
 
+    virtual void Set(TIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void DefineScroll(TPanelScrollFactory *fact);
     void DefineScroll(int width);
+    void DefineScroll(TIniFile *Ini, const char *IniSection);
     void DefineScroll(const char *IniName, const char *IniSection);
 
     void EnableVerScroll();
@@ -225,7 +229,7 @@ protected:
 
     virtual void ChildChange();
 
-	virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
+        virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
     virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 
     void UpdateScroll();
@@ -241,7 +245,7 @@ protected:
     int FBackG;
     int FBackB;
 
-	char FKey;
+        char FKey;
 
 private:
     void Init(int border);

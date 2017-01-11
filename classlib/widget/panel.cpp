@@ -28,7 +28,6 @@
 #include <string.h>
 
 #include "panel.h"
-#include "ini.h"
 
 #define FALSE   0
 #define TRUE    !FALSE
@@ -469,76 +468,75 @@ void TPanelFactory::DefineScroll(TPanelScrollFactory *fact)
 #   Returns....: *
 #
 ##########################################################################*/
-void TPanelFactory::Set(const char *IniName, const char *IniSection)
+void TPanelFactory::Set(TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
     int HasWidth;
 
-    Ini.GotoSection(IniSection);
+    Ini->GotoSection(IniSection);
 
-    if (Ini.ReadVar("BackColor.R", str, 255))
+    if (Ini->ReadVar("BackColor.R", str, 255))
     {
         FBackR = atoi(str);
         FBackTrans = FALSE;
     }
     
-    if (Ini.ReadVar("BackColor.G", str, 255))
+    if (Ini->ReadVar("BackColor.G", str, 255))
     {
         FBackG = atoi(str);
         FBackTrans = FALSE;
     }
 
-    if (Ini.ReadVar("BackColor.B", str, 255))
+    if (Ini->ReadVar("BackColor.B", str, 255))
     {
         FBackB = atoi(str);
         FBackTrans = FALSE;
     }
     
-    if (Ini.ReadVar("Transparent", str, 255))
+    if (Ini->ReadVar("Transparent", str, 255))
         FBackTrans = TRUE;
 
-    if (Ini.ReadVar("BorderColor.R", str, 255))
+    if (Ini->ReadVar("BorderColor.R", str, 255))
         FBorderR = atoi(str);
     
-    if (Ini.ReadVar("BorderColor.G", str, 255))
+    if (Ini->ReadVar("BorderColor.G", str, 255))
         FBorderG = atoi(str);
 
-    if (Ini.ReadVar("BorderColor.B", str, 255))
+    if (Ini->ReadVar("BorderColor.B", str, 255))
         FBorderB = atoi(str);
 
 
-    if (Ini.ReadVar("DisabledColor.R", str, 255))
+    if (Ini->ReadVar("DisabledColor.R", str, 255))
     {
         FDisabledR = atoi(str);
         FDisabledColorUsed = TRUE;
     }
     
-    if (Ini.ReadVar("DisabledColor.G", str, 255))
+    if (Ini->ReadVar("DisabledColor.G", str, 255))
     {
         FDisabledG = atoi(str);
         FDisabledColorUsed = TRUE;
     }
 
-    if (Ini.ReadVar("DisabledColor.B", str, 255))
+    if (Ini->ReadVar("DisabledColor.B", str, 255))
     {
         FDisabledB = atoi(str);
         FDisabledColorUsed = TRUE;
     }
 
-    HasWidth = Ini.ReadVar("Width", str, 255);
+    HasWidth = Ini->ReadVar("Width", str, 255);
 
     if (!HasWidth)
-        HasWidth = Ini.ReadVar("UpperWidth", str, 255);
+        HasWidth = Ini->ReadVar("UpperWidth", str, 255);
 
     if (!HasWidth)
-        HasWidth = Ini.ReadVar("LowerWidth", str, 255);
+        HasWidth = Ini->ReadVar("LowerWidth", str, 255);
 
     if (!HasWidth)
-        HasWidth = Ini.ReadVar("LeftWidth", str, 255);
+        HasWidth = Ini->ReadVar("LeftWidth", str, 255);
 
     if (!HasWidth)
-        HasWidth = Ini.ReadVar("RightWidth", str, 255);
+        HasWidth = Ini->ReadVar("RightWidth", str, 255);
 
     if (HasWidth)
     {
@@ -547,21 +545,38 @@ void TPanelFactory::Set(const char *IniName, const char *IniSection)
         FLeftWidth = 0;
         FRightWidth = 0;
     
-        if (Ini.ReadVar("Width", str, 255))
+        if (Ini->ReadVar("Width", str, 255))
             FLowerWidth = FUpperWidth = FLeftWidth = FRightWidth = atoi(str);
             
-        if (Ini.ReadVar("UpperWidth", str, 255))
+        if (Ini->ReadVar("UpperWidth", str, 255))
             FUpperWidth = atoi(str);
     
-        if (Ini.ReadVar("LowerWidth", str, 255))
+        if (Ini->ReadVar("LowerWidth", str, 255))
             FLowerWidth = atoi(str);
     
-        if (Ini.ReadVar("LeftWidth", str, 255))
+        if (Ini->ReadVar("LeftWidth", str, 255))
             FLeftWidth = atoi(str);
         
-        if (Ini.ReadVar("RightWidth", str, 255))
+        if (Ini->ReadVar("RightWidth", str, 255))
             FRightWidth = atoi(str);
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelFactory::Set
+#
+#   Purpose....: Set control settings from Ini-file section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelFactory::Set(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    Set(&Ini, IniSection);
 }
 
 /*##########################################################################
@@ -1157,26 +1172,42 @@ void TPanelControl::DefineScroll(int width)
 #   Returns....: *
 #
 ##########################################################################*/
-void TPanelControl::DefineScroll(const char *IniName, const char *IniSection)
+void TPanelControl::DefineScroll(TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
     int width = 16;
 
-    Ini.GotoSection(IniSection);
+    Ini->GotoSection(IniSection);
 
-    if (Ini.ReadVar("Width", str, 255))
+    if (Ini->ReadVar("Width", str, 255))
         width = atoi(str);
 
     if (!FVerScroll)
         FVerScroll = new TVerPanelScrollControl(this, width);
 
-    FVerScroll->Set(IniName, IniSection);
+    FVerScroll->Set(Ini, IniSection);
 
     if (!FHorScroll)       
         FHorScroll = new THorPanelScrollControl(this, width);
 
-    FHorScroll->Set(IniName, IniSection);
+    FHorScroll->Set(Ini, IniSection);
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::DefineScroll
+#
+#   Purpose....: Define scroll controls
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::DefineScroll(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    DefineScroll(&Ini, IniSection);
 }
 
 /*##########################################################################
@@ -1292,64 +1323,63 @@ void TPanelControl::DisableHorScroll()
 #   Returns....: *
 #
 ##########################################################################*/
-void TPanelControl::Set(const char *IniName, const char *IniSection)
+void TPanelControl::Set(TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
     int val;
     int HasWidth;
 
-    Ini.GotoSection(IniSection);
+    Ini->GotoSection(IniSection);
 
-    if (Ini.ReadVar("BackColor.R", str, 255))
+    if (Ini->ReadVar("BackColor.R", str, 255))
         FBackR = atoi(str);
     
-    if (Ini.ReadVar("BackColor.G", str, 255))
+    if (Ini->ReadVar("BackColor.G", str, 255))
         FBackG = atoi(str);
 
-    if (Ini.ReadVar("BackColor.B", str, 255))
+    if (Ini->ReadVar("BackColor.B", str, 255))
         FBackB = atoi(str);
 
-    if (Ini.ReadVar("BorderColor.R", str, 255))
+    if (Ini->ReadVar("BorderColor.R", str, 255))
         FBorderR = atoi(str);
     
-    if (Ini.ReadVar("BorderColor.G", str, 255))
+    if (Ini->ReadVar("BorderColor.G", str, 255))
         FBorderG = atoi(str);
 
-    if (Ini.ReadVar("BorderColor.B", str, 255))
+    if (Ini->ReadVar("BorderColor.B", str, 255))
         FBorderB = atoi(str);
 
-    if (Ini.ReadVar("DisabledColor.R", str, 255))
+    if (Ini->ReadVar("DisabledColor.R", str, 255))
     {
         FDisabledR = atoi(str);
         FDisabledColorUsed = TRUE;
     }
     
-    if (Ini.ReadVar("DisabledColor.G", str, 255))
+    if (Ini->ReadVar("DisabledColor.G", str, 255))
     {
         FDisabledG = atoi(str);
         FDisabledColorUsed = TRUE;
     }
 
-    if (Ini.ReadVar("DisabledColor.B", str, 255))
+    if (Ini->ReadVar("DisabledColor.B", str, 255))
     {
         FDisabledB = atoi(str);
         FDisabledColorUsed = TRUE;
     }
 
-    HasWidth = Ini.ReadVar("Width", str, 255);
+    HasWidth = Ini->ReadVar("Width", str, 255);
 
     if (!HasWidth)
-        HasWidth = Ini.ReadVar("UpperWidth", str, 255);
+        HasWidth = Ini->ReadVar("UpperWidth", str, 255);
 
     if (!HasWidth)
-        HasWidth = Ini.ReadVar("LowerWidth", str, 255);
+        HasWidth = Ini->ReadVar("LowerWidth", str, 255);
 
     if (!HasWidth)
-        HasWidth = Ini.ReadVar("LeftWidth", str, 255);
+        HasWidth = Ini->ReadVar("LeftWidth", str, 255);
 
     if (!HasWidth)
-        HasWidth = Ini.ReadVar("RightWidth", str, 255);
+        HasWidth = Ini->ReadVar("RightWidth", str, 255);
 
     if (HasWidth)
     {
@@ -1359,22 +1389,22 @@ void TPanelControl::Set(const char *IniName, const char *IniSection)
         FRightWidth = 0;
     }
     
-    if (Ini.ReadVar("Width", str, 255))
+    if (Ini->ReadVar("Width", str, 255))
         FLowerWidth = FUpperWidth = FLeftWidth = FRightWidth = atoi(str);
             
-    if (Ini.ReadVar("UpperWidth", str, 255))
+    if (Ini->ReadVar("UpperWidth", str, 255))
         FUpperWidth = atoi(str);
     
-    if (Ini.ReadVar("LowerWidth", str, 255))
+    if (Ini->ReadVar("LowerWidth", str, 255))
         FLowerWidth = atoi(str);
     
-    if (Ini.ReadVar("LeftWidth", str, 255))
+    if (Ini->ReadVar("LeftWidth", str, 255))
         FLeftWidth = atoi(str);
         
-    if (Ini.ReadVar("RightWidth", str, 255))
+    if (Ini->ReadVar("RightWidth", str, 255))
         FRightWidth = atoi(str);
 
-    if (Ini.ReadVar("Scroll.Hor", str, 255))
+    if (Ini->ReadVar("Scroll.Hor", str, 255))
     {
         if (!strcmp(str, "Top"))
             FHorUp = TRUE;
@@ -1383,7 +1413,7 @@ void TPanelControl::Set(const char *IniName, const char *IniSection)
             FHorUp = FALSE;
     }
 
-    if (Ini.ReadVar("Scroll.Ver", str, 255))
+    if (Ini->ReadVar("Scroll.Ver", str, 255))
     {
         if (!strcmp(str, "Left"))
             FVerLeft = TRUE;
@@ -1392,8 +1422,25 @@ void TPanelControl::Set(const char *IniName, const char *IniSection)
             FVerLeft = FALSE;
     }
 
-    TControl::Set(IniName, IniSection);
+    TControl::Set(Ini, IniSection);
     FRedrawBack = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TPanelControl::Set
+#
+#   Purpose....: Set control settings from Ini-file section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::Set(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    Set(&Ini, IniSection);
 }
 
 /*##########################################################################

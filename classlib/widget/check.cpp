@@ -28,7 +28,6 @@
 #include <string.h>
 
 #include "check.h"
-#include "ini.h"
 
 #define FALSE   0
 #define TRUE    !FALSE
@@ -102,16 +101,15 @@ void TCheckFactory::Init()
 #   Returns....: *
 #
 ##########################################################################*/
-void TCheckFactory::Set(const char *IniName, const char *IniSection)
+void TCheckFactory::Set(TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
     int size;
     int id;
 
-    Ini.GotoSection(IniSection);
+    Ini->GotoSection(IniSection);
 
-    if (Ini.ReadVar("Font.Id", str, 255))
+    if (Ini->ReadVar("Font.Id", str, 255))
     {    
         id = atoi(str);
 
@@ -119,7 +117,7 @@ void TCheckFactory::Set(const char *IniName, const char *IniSection)
             SetFont(id, FFontHeight);
     }
 
-    if (Ini.ReadVar("Font.Size", str, 255))
+    if (Ini->ReadVar("Font.Size", str, 255))
     {    
         size = atoi(str);
 
@@ -127,23 +125,40 @@ void TCheckFactory::Set(const char *IniName, const char *IniSection)
             SetFont(FFontId, size);
     }
 
-    if (Ini.ReadVar("DrawColor.R", str, 255))
+    if (Ini->ReadVar("DrawColor.R", str, 255))
         FDrawR = atoi(str);
     
-    if (Ini.ReadVar("DrawColor.G", str, 255))
+    if (Ini->ReadVar("DrawColor.G", str, 255))
         FDrawG = atoi(str);
 
-    if (Ini.ReadVar("DrawColor.B", str, 255))
+    if (Ini->ReadVar("DrawColor.B", str, 255))
         FDrawB = atoi(str);
 
 
-    if (Ini.ReadVar("Space.X", str, 255))
+    if (Ini->ReadVar("Space.X", str, 255))
         FStartX = atoi(str);
     
-    if (Ini.ReadVar("Space.Y", str, 255))
+    if (Ini->ReadVar("Space.Y", str, 255))
         FStartY = atoi(str);
 
-    TPanelFactory::Set(IniName, IniSection);
+    TPanelFactory::Set(Ini, IniSection);
+}
+    
+/*##########################################################################
+#
+#   Name       : TCheckFactory::Set
+#
+#   Purpose....: Load settings from ini-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCheckFactory::Set(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    Set(&Ini, IniSection);
 }
 
 /*##########################################################################
@@ -522,16 +537,15 @@ int TCheckControl::IsCheckControl(TControl *control)
 #   Returns....: *
 #
 ##########################################################################*/
-void TCheckControl::Set(const char *IniName, const char *IniSection)
+void TCheckControl::Set(TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
     int size;
     int id;
 
-    Ini.GotoSection(IniSection);
+    Ini->GotoSection(IniSection);
 
-    if (Ini.ReadVar("Font.Id", str, 255))
+    if (Ini->ReadVar("Font.Id", str, 255))
     {    
         id = atoi(str);
 
@@ -539,7 +553,7 @@ void TCheckControl::Set(const char *IniName, const char *IniSection)
             SetFont(id, FFontHeight);
     }
 
-    if (Ini.ReadVar("Font.Size", str, 255))
+    if (Ini->ReadVar("Font.Size", str, 255))
     {    
         size = atoi(str);
 
@@ -547,29 +561,45 @@ void TCheckControl::Set(const char *IniName, const char *IniSection)
             SetFont(FFontId, size);
     }
 
-    if (Ini.ReadVar("DrawColor.R", str, 255))
+    if (Ini->ReadVar("DrawColor.R", str, 255))
         FDrawR = atoi(str);
     
-    if (Ini.ReadVar("DrawColor.G", str, 255))
+    if (Ini->ReadVar("DrawColor.G", str, 255))
         FDrawG = atoi(str);
 
-    if (Ini.ReadVar("DrawColor.B", str, 255))
+    if (Ini->ReadVar("DrawColor.B", str, 255))
         FDrawB = atoi(str);
 
 
-    if (Ini.ReadVar("Space.X", str, 255))
+    if (Ini->ReadVar("Space.X", str, 255))
         FStartX = atoi(str);
     
-    if (Ini.ReadVar("Space.Y", str, 255))
+    if (Ini->ReadVar("Space.Y", str, 255))
         FStartY = atoi(str);
 
 
-    if (Ini.ReadVar("Text", str, 255))
+    if (Ini->ReadVar("Text", str, 255))
         SetText(str);
 
-    TPanelControl::Set(IniName, IniSection);
+    TPanelControl::Set(Ini, IniSection);
 }
-
+    
+/*##########################################################################
+#
+#   Name       : TCheckControl::Set
+#
+#   Purpose....: Load settings from ini-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCheckControl::Set(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    Set(&Ini, IniSection);
+}
 
 /*##########################################################################
 #

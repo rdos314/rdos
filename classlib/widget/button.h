@@ -31,6 +31,7 @@
 #include "bitdev.h"
 #include "control.h"
 #include "str.h"
+#include "ini.h"
 
 class TButtonControl;
 
@@ -38,8 +39,8 @@ class TButtonFactoryParam
 {
 public:
     TButtonFactoryParam();
-	TButtonFactoryParam(const TButtonFactoryParam &source);
-	TButtonFactoryParam &operator=(const TButtonFactoryParam &l);
+        TButtonFactoryParam(const TButtonFactoryParam &source);
+        TButtonFactoryParam &operator=(const TButtonFactoryParam &l);
     ~TButtonFactoryParam();
 
     void Delete();
@@ -83,6 +84,7 @@ public:
     TButtonFactory();
     ~TButtonFactory();
 
+    virtual void Set(TIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void DefineUp(TBitmapGraphicDevice *bitmap, int x, int y);
@@ -128,12 +130,12 @@ public:
     void SetDownDarkBorderColor(int r, int g, int b);
     void SetDisabledDarkBorderColor(int r, int g, int b);
 
-	TButtonControl *Create(TControlThread *dev, const char *text, char ch, int xstart, int ystart);
-	TButtonControl *Create(TControl *control, const char *text, char ch, int xstart, int ystart);
+        TButtonControl *Create(TControlThread *dev, const char *text, char ch, int xstart, int ystart);
+        TButtonControl *Create(TControl *control, const char *text, char ch, int xstart, int ystart);
 
-	TButtonControl *Create(TControlThread *dev, const char *text, char ch, const char *IniName, const char *IniSection);
-	TButtonControl *Create(TControl *control, const char *text, char ch, const char *IniName, const char *IniSection);
-	
+        TButtonControl *Create(TControlThread *dev, const char *text, char ch, const char *IniName, const char *IniSection);
+        TButtonControl *Create(TControl *control, const char *text, char ch, const char *IniName, const char *IniSection);
+        
 protected:
     void SetParam(TButtonControl *button);
 
@@ -183,6 +185,7 @@ public:
     void DefineDisabled(TBitmapGraphicDevice *bitmap, int x, int y);
     void DefineDisabled(TBitmapGraphicDevice *bitmap);
 
+    virtual void Set(TIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetUpShift(int x, int y);
@@ -242,11 +245,11 @@ protected:
 
     virtual void NotifyResize();
 
-	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
-	virtual int OnLeftUp(int x, int y, int ButtonState, int KeyState);
-	virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
-	virtual int OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
-	virtual int OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+        virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
+        virtual int OnLeftUp(int x, int y, int ButtonState, int KeyState);
+        virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
+        virtual int OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+        virtual int OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 
 private:
     void Init(char ch);
@@ -267,7 +270,7 @@ private:
     TString FText;
     TString FLowerText;
     TString FUpperText;
-	char FKey;
+        char FKey;
     int FPressed;
     int FKeepDown;
     int FActive;

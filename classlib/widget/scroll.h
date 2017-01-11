@@ -32,6 +32,7 @@
 #include "control.h"
 #include "str.h"
 #include "datetime.h"
+#include "ini.h"
 
 class TScrollControl;
 class TVerScrollControl;
@@ -78,6 +79,7 @@ public:
     TScrollFactory();
     virtual ~TScrollFactory();
 
+    virtual void Set(TIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetWidth(int width);
@@ -114,18 +116,18 @@ public:
     void SetDownDarkBorderColor(int r, int g, int b);
     void SetDisabledDarkBorderColor(int r, int g, int b);
 
-	TVerScrollControl *CreateVer(TControlThread *dev, int xstart, int ystart, int len);
-	TVerScrollControl *CreateVer(TControl *control, int xstart, int ystart, int len);
+        TVerScrollControl *CreateVer(TControlThread *dev, int xstart, int ystart, int len);
+        TVerScrollControl *CreateVer(TControl *control, int xstart, int ystart, int len);
 
-	THorScrollControl *CreateHor(TControlThread *dev, int xstart, int ystart, int len);
-	THorScrollControl *CreateHor(TControl *control, int xstart, int ystart, int len);
+        THorScrollControl *CreateHor(TControlThread *dev, int xstart, int ystart, int len);
+        THorScrollControl *CreateHor(TControl *control, int xstart, int ystart, int len);
 
-	TVerScrollControl *CreateVer(TControlThread *dev, const char *IniName, const char *IniSection);
-	TVerScrollControl *CreateVer(TControl *control, const char *IniName, const char *IniSection);
+        TVerScrollControl *CreateVer(TControlThread *dev, const char *IniName, const char *IniSection);
+        TVerScrollControl *CreateVer(TControl *control, const char *IniName, const char *IniSection);
 
-	THorScrollControl *CreateHor(TControlThread *dev, const char *IniName, const char *IniSection);
-	THorScrollControl *CreateHor(TControl *control, const char *IniName, const char *IniSection);
-	
+        THorScrollControl *CreateHor(TControlThread *dev, const char *IniName, const char *IniSection);
+        THorScrollControl *CreateHor(TControl *control, const char *IniName, const char *IniSection);
+        
 protected:
     void SetParam(TScrollControl *scroll);
 
@@ -154,6 +156,7 @@ public:
     void SetScrollPos(long double relpos);
     long double GetScrollPos();
 
+    virtual void Set(TIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetUpShift(int x, int y);
@@ -223,11 +226,11 @@ public:
     virtual ~TVerScrollControl();
 
 protected:
-	virtual void OnScrollUp();
-	virtual void OnScrollDown();
-	virtual void OnScrollPageUp();
-	virtual void OnScrollPageDown();
-	virtual void OnMove(long double relpos);
+        virtual void OnScrollUp();
+        virtual void OnScrollDown();
+        virtual void OnScrollPageUp();
+        virtual void OnScrollPageDown();
+        virtual void OnMove(long double relpos);
 
     virtual void NotifyResize();
 
@@ -252,10 +255,10 @@ protected:
     void PaintScrollButton(TGraphicDevice *dev, int xstart, int ystart, int xsize, int ysize, int state);
     void PaintScrollButton(TGraphicDevice *dev, int xstart, int ystart);
     
-  	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height); 	
-	virtual int OnMouseMove(int x, int y, int ButtonState, int KeyState);
-	virtual int OnLeftUp(int x, int y, int ButtonState, int KeyState);
-	virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
+        virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);     
+        virtual int OnMouseMove(int x, int y, int ButtonState, int KeyState);
+        virtual int OnLeftUp(int x, int y, int ButtonState, int KeyState);
+        virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
 
     int FWidth;
     int FSize;
@@ -279,18 +282,18 @@ private:
 class THorScrollControl : public TScrollControl
 {
 public:
-	THorScrollControl(TControlThread *dev, int xstart, int ystart, int width, int len);
-	THorScrollControl(TControl *control, int xstart, int ystart, int width, int len);
-	THorScrollControl(TControlThread *dev);
-	THorScrollControl(TControl *control);
-	virtual ~THorScrollControl();
+        THorScrollControl(TControlThread *dev, int xstart, int ystart, int width, int len);
+        THorScrollControl(TControl *control, int xstart, int ystart, int width, int len);
+        THorScrollControl(TControlThread *dev);
+        THorScrollControl(TControl *control);
+        virtual ~THorScrollControl();
 
 protected:
-	virtual void OnScrollLeft();
-	virtual void OnScrollRight();
-	virtual void OnScrollPageLeft();
-	virtual void OnScrollPageRight();
-	virtual void OnMove(long double relpos);
+        virtual void OnScrollLeft();
+        virtual void OnScrollRight();
+        virtual void OnScrollPageLeft();
+        virtual void OnScrollPageRight();
+        virtual void OnMove(long double relpos);
 
     virtual void NotifyResize();
 
@@ -315,10 +318,10 @@ protected:
     void PaintScrollButton(TGraphicDevice *dev, int xstart, int ystart, int xsize, int ysize, int state);
     void PaintScrollButton(TGraphicDevice *dev, int xstart, int ystart);
     
-	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
-	virtual int OnMouseMove(int x, int y, int ButtonState, int KeyState);
-	virtual int OnLeftUp(int x, int y, int ButtonState, int KeyState);
-	virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
+        virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
+        virtual int OnMouseMove(int x, int y, int ButtonState, int KeyState);
+        virtual int OnLeftUp(int x, int y, int ButtonState, int KeyState);
+        virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
 
     int FWidth;
     int FSize;

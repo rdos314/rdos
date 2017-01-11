@@ -31,6 +31,7 @@
 #include "bitdev.h"
 #include "panel.h"
 #include "str.h"
+#include "ini.h"
 
 #define MAX_CHECK_ROWS    256
 
@@ -42,6 +43,7 @@ public:
     TCheckFactory();
     ~TCheckFactory();
 
+    virtual void Set(TIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetFont(int id, int height);
@@ -86,6 +88,7 @@ public:
 
     static int IsCheckControl(TControl *control);
 
+    virtual void Set(TIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
     
     void SetFont(int height);

@@ -28,7 +28,6 @@
 #include <string.h>
 
 #include "scroll.h"
-#include "ini.h"
 
 #define FALSE   0
 #define TRUE    !FALSE
@@ -37,8 +36,8 @@
 #define STATE_DOWN      2
 #define STATE_DISABLED  3
 
-#define START_TIMEOUT	450
-#define REPEAT_TIMEOUT	50
+#define START_TIMEOUT   450
+#define REPEAT_TIMEOUT  50
 
 /*##########################################################################
 #
@@ -107,17 +106,17 @@ TScrollFactory::TScrollFactory()
 
     FDisabled.BorderWidth = 0;
     
-	 FDisabled.ButtonR = 128;
-	 FDisabled.ButtonG = 128;
-	 FDisabled.ButtonB = 128;
+         FDisabled.ButtonR = 128;
+         FDisabled.ButtonG = 128;
+         FDisabled.ButtonB = 128;
 
-	 FDisabled.ShadowR = 128;
-	 FDisabled.ShadowG = 128;
-	 FDisabled.ShadowB = 128;
+         FDisabled.ShadowR = 128;
+         FDisabled.ShadowG = 128;
+         FDisabled.ShadowB = 128;
 
-	 FDisabled.DrawR = 150;
-	 FDisabled.DrawG = 150;
-	 FDisabled.DrawB = 150;
+         FDisabled.DrawR = 150;
+         FDisabled.DrawG = 150;
+         FDisabled.DrawB = 150;
 }
 
 /*##########################################################################
@@ -146,228 +145,244 @@ TScrollFactory::~TScrollFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-void TScrollFactory::Set(const char *IniName, const char *IniSection)
+void TScrollFactory::Set(TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
 
-    Ini.GotoSection(IniSection);
+    Ini->GotoSection(IniSection);
 
 
-    if (Ini.ReadVar("Width", str, 255))
+    if (Ini->ReadVar("Width", str, 255))
         FWidth = atoi(str);
 
 
-    if (Ini.ReadVar("Up.Shift.X", str, 255))
+    if (Ini->ReadVar("Up.Shift.X", str, 255))
         FUp.ShiftX = atoi(str);
 
-    if (Ini.ReadVar("Up.Shift.Y", str, 255))
+    if (Ini->ReadVar("Up.Shift.Y", str, 255))
         FUp.ShiftY = atoi(str);
 
 
-    if (Ini.ReadVar("Down.Shift.X", str, 255))
+    if (Ini->ReadVar("Down.Shift.X", str, 255))
         FDown.ShiftX = atoi(str);
 
-    if (Ini.ReadVar("Down.Shift.Y", str, 255))
+    if (Ini->ReadVar("Down.Shift.Y", str, 255))
         FDown.ShiftY = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.Shift.X", str, 255))
+    if (Ini->ReadVar("Disabled.Shift.X", str, 255))
         FDisabled.ShiftX = atoi(str);
 
-    if (Ini.ReadVar("Disabled.Shift.Y", str, 255))
+    if (Ini->ReadVar("Disabled.Shift.Y", str, 255))
         FDisabled.ShiftY = atoi(str);
 
 
-    if (Ini.ReadVar("Up.BorderWidth", str, 255))
+    if (Ini->ReadVar("Up.BorderWidth", str, 255))
         FUp.BorderWidth = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderWidth", str, 255))
+    if (Ini->ReadVar("Down.BorderWidth", str, 255))
         FDown.BorderWidth = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderWidth", str, 255))
+    if (Ini->ReadVar("Disabled.BorderWidth", str, 255))
         FDisabled.BorderWidth = atoi(str);
 
 
-    if (Ini.ReadVar("Up.BackColor.R", str, 255))
+    if (Ini->ReadVar("Up.BackColor.R", str, 255))
         FUp.BackR = atoi(str);
 
-    if (Ini.ReadVar("Up.BackColor.G", str, 255))
+    if (Ini->ReadVar("Up.BackColor.G", str, 255))
         FUp.BackG = atoi(str);
 
-    if (Ini.ReadVar("Up.BackColor.B", str, 255))
+    if (Ini->ReadVar("Up.BackColor.B", str, 255))
         FUp.BackB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.BackColor.R", str, 255))
+    if (Ini->ReadVar("Down.BackColor.R", str, 255))
         FDown.BackR = atoi(str);
 
-    if (Ini.ReadVar("Down.BackColor.G", str, 255))
+    if (Ini->ReadVar("Down.BackColor.G", str, 255))
         FDown.BackG = atoi(str);
 
-    if (Ini.ReadVar("Down.BackColor.B", str, 255))
+    if (Ini->ReadVar("Down.BackColor.B", str, 255))
         FDown.BackB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.BackColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.BackColor.R", str, 255))
         FDisabled.BackR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BackColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.BackColor.G", str, 255))
         FDisabled.BackG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BackColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.BackColor.B", str, 255))
         FDisabled.BackB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.DrawColor.R", str, 255))
+    if (Ini->ReadVar("Up.DrawColor.R", str, 255))
         FUp.DrawR = atoi(str);
 
-    if (Ini.ReadVar("Up.DrawColor.G", str, 255))
+    if (Ini->ReadVar("Up.DrawColor.G", str, 255))
         FUp.DrawG = atoi(str);
 
-    if (Ini.ReadVar("Up.DrawColor.B", str, 255))
+    if (Ini->ReadVar("Up.DrawColor.B", str, 255))
         FUp.DrawB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.DrawColor.R", str, 255))
+    if (Ini->ReadVar("Down.DrawColor.R", str, 255))
         FDown.DrawR = atoi(str);
 
-    if (Ini.ReadVar("Down.DrawColor.G", str, 255))
+    if (Ini->ReadVar("Down.DrawColor.G", str, 255))
         FDown.DrawG = atoi(str);
 
-    if (Ini.ReadVar("Down.DrawColor.B", str, 255))
+    if (Ini->ReadVar("Down.DrawColor.B", str, 255))
         FDown.DrawB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.DrawColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.DrawColor.R", str, 255))
         FDisabled.DrawR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.DrawColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.DrawColor.G", str, 255))
         FDisabled.DrawG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.DrawColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.DrawColor.B", str, 255))
         FDisabled.DrawB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.ShadowColor.R", str, 255))
+    if (Ini->ReadVar("Up.ShadowColor.R", str, 255))
         FUp.ShadowR = atoi(str);
 
-    if (Ini.ReadVar("Up.ShadowColor.G", str, 255))
+    if (Ini->ReadVar("Up.ShadowColor.G", str, 255))
         FUp.ShadowG = atoi(str);
 
-    if (Ini.ReadVar("Up.ShadowColor.B", str, 255))
+    if (Ini->ReadVar("Up.ShadowColor.B", str, 255))
         FUp.ShadowB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.ShadowColor.R", str, 255))
+    if (Ini->ReadVar("Down.ShadowColor.R", str, 255))
         FDown.ShadowR = atoi(str);
 
-    if (Ini.ReadVar("Down.ShadowColor.G", str, 255))
+    if (Ini->ReadVar("Down.ShadowColor.G", str, 255))
         FDown.ShadowG = atoi(str);
 
-    if (Ini.ReadVar("Down.ShadowColor.B", str, 255))
+    if (Ini->ReadVar("Down.ShadowColor.B", str, 255))
         FDown.ShadowB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.ShadowColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.ShadowColor.R", str, 255))
         FDisabled.ShadowR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.ShadowColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.ShadowColor.G", str, 255))
         FDisabled.ShadowG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.ShadowColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.ShadowColor.B", str, 255))
         FDisabled.ShadowB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.ButtonColor.R", str, 255))
+    if (Ini->ReadVar("Up.ButtonColor.R", str, 255))
         FUp.ButtonR = atoi(str);
 
-    if (Ini.ReadVar("Up.ButtonColor.G", str, 255))
+    if (Ini->ReadVar("Up.ButtonColor.G", str, 255))
         FUp.ButtonG = atoi(str);
 
-    if (Ini.ReadVar("Up.ButtonColor.B", str, 255))
+    if (Ini->ReadVar("Up.ButtonColor.B", str, 255))
         FUp.ButtonB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.ButtonColor.R", str, 255))
+    if (Ini->ReadVar("Down.ButtonColor.R", str, 255))
         FDown.ButtonR = atoi(str);
 
-    if (Ini.ReadVar("Down.ButtonColor.G", str, 255))
+    if (Ini->ReadVar("Down.ButtonColor.G", str, 255))
         FDown.ButtonG = atoi(str);
 
-    if (Ini.ReadVar("Down.ButtonColor.B", str, 255))
+    if (Ini->ReadVar("Down.ButtonColor.B", str, 255))
         FDown.ButtonB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.ButtonColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.ButtonColor.R", str, 255))
         FDisabled.ButtonR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.ButtonColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.ButtonColor.G", str, 255))
         FDisabled.ButtonG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.ButtonColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.ButtonColor.B", str, 255))
         FDisabled.ButtonB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.BorderLightColor.R", str, 255))
+    if (Ini->ReadVar("Up.BorderLightColor.R", str, 255))
         FUp.BorderLightR = atoi(str);
 
-    if (Ini.ReadVar("Up.BorderLightColor.G", str, 255))
+    if (Ini->ReadVar("Up.BorderLightColor.G", str, 255))
         FUp.BorderLightG = atoi(str);
 
-    if (Ini.ReadVar("Up.BorderLightColor.B", str, 255))
+    if (Ini->ReadVar("Up.BorderLightColor.B", str, 255))
         FUp.BorderLightB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.BorderLightColor.R", str, 255))
+    if (Ini->ReadVar("Down.BorderLightColor.R", str, 255))
         FDown.BorderLightR = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderLightColor.G", str, 255))
+    if (Ini->ReadVar("Down.BorderLightColor.G", str, 255))
         FDown.BorderLightG = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderLightColor.B", str, 255))
+    if (Ini->ReadVar("Down.BorderLightColor.B", str, 255))
         FDown.BorderLightB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.BorderLightColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.BorderLightColor.R", str, 255))
         FDisabled.BorderLightR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderLightColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.BorderLightColor.G", str, 255))
         FDisabled.BorderLightG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderLightColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.BorderLightColor.B", str, 255))
         FDisabled.BorderLightB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.BorderDarkColor.R", str, 255))
+    if (Ini->ReadVar("Up.BorderDarkColor.R", str, 255))
         FUp.BorderDarkR = atoi(str);
 
-    if (Ini.ReadVar("Up.BorderDarkColor.G", str, 255))
+    if (Ini->ReadVar("Up.BorderDarkColor.G", str, 255))
         FUp.BorderDarkG = atoi(str);
 
-    if (Ini.ReadVar("Up.BorderDarkColor.B", str, 255))
+    if (Ini->ReadVar("Up.BorderDarkColor.B", str, 255))
         FUp.BorderDarkB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.BorderDarkColor.R", str, 255))
+    if (Ini->ReadVar("Down.BorderDarkColor.R", str, 255))
         FDown.BorderDarkR = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderDarkColor.G", str, 255))
+    if (Ini->ReadVar("Down.BorderDarkColor.G", str, 255))
         FDown.BorderDarkG = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderDarkColor.B", str, 255))
+    if (Ini->ReadVar("Down.BorderDarkColor.B", str, 255))
         FDown.BorderDarkB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.BorderDarkColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.BorderDarkColor.R", str, 255))
         FDisabled.BorderDarkR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderDarkColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.BorderDarkColor.G", str, 255))
         FDisabled.BorderDarkG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderDarkColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.BorderDarkColor.B", str, 255))
         FDisabled.BorderDarkB = atoi(str);
 
+}
+
+/*##########################################################################
+#
+#   Name       : TScrollFactory::Set
+#
+#   Purpose....: Set control settings from Ini-file section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TScrollFactory::Set(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    Set(&Ini, IniSection);
 }
 
 /*##########################################################################
@@ -786,9 +801,9 @@ void TScrollFactory::SetUpDarkBorderColor(int r, int g, int b)
 ##########################################################################*/
 void TScrollFactory::SetDownDarkBorderColor(int r, int g, int b)
 {
-	 FDown.BorderDarkR = r;
-	 FDown.BorderDarkG = g;
-	 FDown.BorderDarkB = b;
+         FDown.BorderDarkR = r;
+         FDown.BorderDarkG = g;
+         FDown.BorderDarkB = b;
 }
 
 /*##########################################################################
@@ -804,9 +819,9 @@ void TScrollFactory::SetDownDarkBorderColor(int r, int g, int b)
 ##########################################################################*/
 void TScrollFactory::SetDisabledDarkBorderColor(int r, int g, int b)
 {
-	 FDisabled.BorderDarkR = r;
-	 FDisabled.BorderDarkG = g;
-	 FDisabled.BorderDarkB = b;
+         FDisabled.BorderDarkR = r;
+         FDisabled.BorderDarkG = g;
+         FDisabled.BorderDarkB = b;
 }
 
 /*##########################################################################
@@ -822,9 +837,9 @@ void TScrollFactory::SetDisabledDarkBorderColor(int r, int g, int b)
 ##########################################################################*/
 void TScrollFactory::SetParam(TScrollControl *scroll)
 {
-	scroll->FUp = FUp;
-	scroll->FDown = FDown;
-	scroll->FDisabled = FDisabled;
+        scroll->FUp = FUp;
+        scroll->FDown = FDown;
+        scroll->FDisabled = FDisabled;
 }
 
 /*##########################################################################
@@ -840,13 +855,13 @@ void TScrollFactory::SetParam(TScrollControl *scroll)
 ##########################################################################*/
 TVerScrollControl *TScrollFactory::CreateVer(TControlThread *dev, int xstart, int ystart, int len)
 {
-	TVerScrollControl *scroll;
+        TVerScrollControl *scroll;
 
-	scroll = new TVerScrollControl(dev, xstart, ystart, FWidth, len);
+        scroll = new TVerScrollControl(dev, xstart, ystart, FWidth, len);
 
-	SetParam(scroll);
+        SetParam(scroll);
 
-	return scroll;
+        return scroll;
 }
 
 
@@ -863,13 +878,13 @@ TVerScrollControl *TScrollFactory::CreateVer(TControlThread *dev, int xstart, in
 ##########################################################################*/
 TVerScrollControl *TScrollFactory::CreateVer(TControl *control, int xstart, int ystart, int len)
 {
-	TVerScrollControl *scroll;
+        TVerScrollControl *scroll;
 
-	scroll = new TVerScrollControl(control, xstart, ystart, FWidth, len);
+        scroll = new TVerScrollControl(control, xstart, ystart, FWidth, len);
 
-	SetParam(scroll);
+        SetParam(scroll);
 
-	return scroll;
+        return scroll;
 }
 
 
@@ -886,13 +901,13 @@ TVerScrollControl *TScrollFactory::CreateVer(TControl *control, int xstart, int 
 ##########################################################################*/
 THorScrollControl *TScrollFactory::CreateHor(TControlThread *dev, int xstart, int ystart, int len)
 {
-	THorScrollControl *scroll;
+        THorScrollControl *scroll;
 
-	scroll = new THorScrollControl(dev, xstart, ystart, FWidth, len);
+        scroll = new THorScrollControl(dev, xstart, ystart, FWidth, len);
 
-	SetParam(scroll);
+        SetParam(scroll);
 
-	return scroll;
+        return scroll;
 }
 
 /*##########################################################################
@@ -908,11 +923,11 @@ THorScrollControl *TScrollFactory::CreateHor(TControlThread *dev, int xstart, in
 ##########################################################################*/
 THorScrollControl *TScrollFactory::CreateHor(TControl *control, int xstart, int ystart, int len)
 {
-	THorScrollControl *scroll;
+        THorScrollControl *scroll;
 
-	scroll = new THorScrollControl(control, xstart, ystart, FWidth, len);
+        scroll = new THorScrollControl(control, xstart, ystart, FWidth, len);
 
-	SetParam(scroll);
+        SetParam(scroll);
 
     return scroll;
 }
@@ -954,7 +969,7 @@ TVerScrollControl *TScrollFactory::CreateVer(TControlThread *dev, const char *In
 
     scroll = new TVerScrollControl(dev, x, y, FWidth, len);
 
-	SetParam(scroll);
+        SetParam(scroll);
 
     return scroll;
 }
@@ -996,7 +1011,7 @@ TVerScrollControl *TScrollFactory::CreateVer(TControl *control, const char *IniN
 
     scroll = new TVerScrollControl(control, x, y, FWidth, len);
 
-	SetParam(scroll);
+        SetParam(scroll);
 
     return scroll;
 }
@@ -1038,7 +1053,7 @@ THorScrollControl *TScrollFactory::CreateHor(TControlThread *dev, const char *In
 
     scroll = new THorScrollControl(dev, x, y, FWidth, len);
 
-	SetParam(scroll);
+        SetParam(scroll);
 
     return scroll;
 }
@@ -1080,7 +1095,7 @@ THorScrollControl *TScrollFactory::CreateHor(TControl *control, const char *IniN
 
     scroll = new THorScrollControl(control, x, y, FWidth, len);
 
-	SetParam(scroll);
+        SetParam(scroll);
 
     return scroll;
 }
@@ -1156,17 +1171,17 @@ void TScrollControl::Init()
 
     FDisabled.BorderWidth = 0;
     
-	FDisabled.ButtonR = 128;
-	FDisabled.ButtonG = 128;
-	FDisabled.ButtonB = 128;
+        FDisabled.ButtonR = 128;
+        FDisabled.ButtonG = 128;
+        FDisabled.ButtonB = 128;
 
-	FDisabled.ShadowR = 128;
-	FDisabled.ShadowG = 128;
-	FDisabled.ShadowB = 128;
+        FDisabled.ShadowR = 128;
+        FDisabled.ShadowG = 128;
+        FDisabled.ShadowB = 128;
 
-	FDisabled.DrawR = 150;
-	FDisabled.DrawG = 150;
-	FDisabled.DrawB = 150;
+        FDisabled.DrawR = 150;
+        FDisabled.DrawG = 150;
+        FDisabled.DrawB = 150;
 
     FScrollSize = 0;
     FMinScrollButton = 0;
@@ -1375,224 +1390,240 @@ long double TScrollControl::GetScrollPos()
 #   Returns....: *
 #
 ##########################################################################*/
-void TScrollControl::Set(const char *IniName, const char *IniSection)
+void TScrollControl::Set(TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
 
-	 Ini.GotoSection(IniSection);
+         Ini->GotoSection(IniSection);
 
-    if (Ini.ReadVar("Up.Shift.X", str, 255))
+    if (Ini->ReadVar("Up.Shift.X", str, 255))
         FUp.ShiftX = atoi(str);
 
-    if (Ini.ReadVar("Up.Shift.Y", str, 255))
+    if (Ini->ReadVar("Up.Shift.Y", str, 255))
         FUp.ShiftY = atoi(str);
 
 
-    if (Ini.ReadVar("Down.Shift.X", str, 255))
+    if (Ini->ReadVar("Down.Shift.X", str, 255))
         FDown.ShiftX = atoi(str);
 
-    if (Ini.ReadVar("Down.Shift.Y", str, 255))
+    if (Ini->ReadVar("Down.Shift.Y", str, 255))
         FDown.ShiftY = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.Shift.X", str, 255))
+    if (Ini->ReadVar("Disabled.Shift.X", str, 255))
         FDisabled.ShiftX = atoi(str);
 
-    if (Ini.ReadVar("Disabled.Shift.Y", str, 255))
+    if (Ini->ReadVar("Disabled.Shift.Y", str, 255))
         FDisabled.ShiftY = atoi(str);
 
 
-    if (Ini.ReadVar("Up.BorderWidth", str, 255))
+    if (Ini->ReadVar("Up.BorderWidth", str, 255))
         FUp.BorderWidth = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderWidth", str, 255))
+    if (Ini->ReadVar("Down.BorderWidth", str, 255))
         FDown.BorderWidth = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderWidth", str, 255))
+    if (Ini->ReadVar("Disabled.BorderWidth", str, 255))
         FDisabled.BorderWidth = atoi(str);
 
 
-    if (Ini.ReadVar("Up.BackColor.R", str, 255))
+    if (Ini->ReadVar("Up.BackColor.R", str, 255))
         FUp.BackR = atoi(str);
 
-    if (Ini.ReadVar("Up.BackColor.G", str, 255))
+    if (Ini->ReadVar("Up.BackColor.G", str, 255))
         FUp.BackG = atoi(str);
 
-    if (Ini.ReadVar("Up.BackColor.B", str, 255))
+    if (Ini->ReadVar("Up.BackColor.B", str, 255))
         FUp.BackB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.BackColor.R", str, 255))
+    if (Ini->ReadVar("Down.BackColor.R", str, 255))
         FDown.BackR = atoi(str);
 
-    if (Ini.ReadVar("Down.BackColor.G", str, 255))
+    if (Ini->ReadVar("Down.BackColor.G", str, 255))
         FDown.BackG = atoi(str);
 
-    if (Ini.ReadVar("Down.BackColor.B", str, 255))
+    if (Ini->ReadVar("Down.BackColor.B", str, 255))
         FDown.BackB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.BackColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.BackColor.R", str, 255))
         FDisabled.BackR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BackColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.BackColor.G", str, 255))
         FDisabled.BackG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BackColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.BackColor.B", str, 255))
         FDisabled.BackB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.DrawColor.R", str, 255))
+    if (Ini->ReadVar("Up.DrawColor.R", str, 255))
         FUp.DrawR = atoi(str);
 
-    if (Ini.ReadVar("Up.DrawColor.G", str, 255))
+    if (Ini->ReadVar("Up.DrawColor.G", str, 255))
         FUp.DrawG = atoi(str);
 
-    if (Ini.ReadVar("Up.DraeColor.B", str, 255))
+    if (Ini->ReadVar("Up.DraeColor.B", str, 255))
         FUp.DrawB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.DrawColor.R", str, 255))
+    if (Ini->ReadVar("Down.DrawColor.R", str, 255))
         FDown.DrawR = atoi(str);
 
-    if (Ini.ReadVar("Down.DrawColor.G", str, 255))
+    if (Ini->ReadVar("Down.DrawColor.G", str, 255))
         FDown.DrawG = atoi(str);
 
-    if (Ini.ReadVar("Down.DrawColor.B", str, 255))
+    if (Ini->ReadVar("Down.DrawColor.B", str, 255))
         FDown.DrawB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.DrawColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.DrawColor.R", str, 255))
         FDisabled.DrawR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.DrawColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.DrawColor.G", str, 255))
         FDisabled.DrawG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.DrawColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.DrawColor.B", str, 255))
         FDisabled.DrawB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.ShadowColor.R", str, 255))
+    if (Ini->ReadVar("Up.ShadowColor.R", str, 255))
         FUp.ShadowR = atoi(str);
 
-    if (Ini.ReadVar("Up.ShadowColor.G", str, 255))
+    if (Ini->ReadVar("Up.ShadowColor.G", str, 255))
         FUp.ShadowG = atoi(str);
 
-    if (Ini.ReadVar("Up.ShadowColor.B", str, 255))
+    if (Ini->ReadVar("Up.ShadowColor.B", str, 255))
         FUp.ShadowB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.ShadowColor.R", str, 255))
+    if (Ini->ReadVar("Down.ShadowColor.R", str, 255))
         FDown.ShadowR = atoi(str);
 
-    if (Ini.ReadVar("Down.ShadowColor.G", str, 255))
+    if (Ini->ReadVar("Down.ShadowColor.G", str, 255))
         FDown.ShadowG = atoi(str);
 
-    if (Ini.ReadVar("Down.ShadowColor.B", str, 255))
+    if (Ini->ReadVar("Down.ShadowColor.B", str, 255))
         FDown.ShadowB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.ShadowColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.ShadowColor.R", str, 255))
         FDisabled.ShadowR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.ShadowColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.ShadowColor.G", str, 255))
         FDisabled.ShadowG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.ShadowColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.ShadowColor.B", str, 255))
         FDisabled.ShadowB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.ButtonColor.R", str, 255))
+    if (Ini->ReadVar("Up.ButtonColor.R", str, 255))
         FUp.ButtonR = atoi(str);
 
-    if (Ini.ReadVar("Up.ButtonColor.G", str, 255))
+    if (Ini->ReadVar("Up.ButtonColor.G", str, 255))
         FUp.ButtonG = atoi(str);
 
-    if (Ini.ReadVar("Up.ButtonColor.B", str, 255))
+    if (Ini->ReadVar("Up.ButtonColor.B", str, 255))
         FUp.ButtonB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.ButtonColor.R", str, 255))
+    if (Ini->ReadVar("Down.ButtonColor.R", str, 255))
         FDown.ButtonR = atoi(str);
 
-    if (Ini.ReadVar("Down.ButtonColor.G", str, 255))
+    if (Ini->ReadVar("Down.ButtonColor.G", str, 255))
         FDown.ButtonG = atoi(str);
 
-    if (Ini.ReadVar("Down.ButtonColor.B", str, 255))
+    if (Ini->ReadVar("Down.ButtonColor.B", str, 255))
         FDown.ButtonB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.ButtonColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.ButtonColor.R", str, 255))
         FDisabled.ButtonR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.ButtonColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.ButtonColor.G", str, 255))
         FDisabled.ButtonG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.ButtonColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.ButtonColor.B", str, 255))
         FDisabled.ButtonB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.BorderLightColor.R", str, 255))
+    if (Ini->ReadVar("Up.BorderLightColor.R", str, 255))
         FUp.BorderLightR = atoi(str);
 
-    if (Ini.ReadVar("Up.BorderLightColor.G", str, 255))
+    if (Ini->ReadVar("Up.BorderLightColor.G", str, 255))
         FUp.BorderLightG = atoi(str);
 
-    if (Ini.ReadVar("Up.BorderLightColor.B", str, 255))
+    if (Ini->ReadVar("Up.BorderLightColor.B", str, 255))
         FUp.BorderLightB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.BorderLightColor.R", str, 255))
+    if (Ini->ReadVar("Down.BorderLightColor.R", str, 255))
         FDown.BorderLightR = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderLightColor.G", str, 255))
+    if (Ini->ReadVar("Down.BorderLightColor.G", str, 255))
         FDown.BorderLightG = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderLightColor.B", str, 255))
+    if (Ini->ReadVar("Down.BorderLightColor.B", str, 255))
         FDown.BorderLightB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.BorderLightColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.BorderLightColor.R", str, 255))
         FDisabled.BorderLightR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderLightColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.BorderLightColor.G", str, 255))
         FDisabled.BorderLightG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderLightColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.BorderLightColor.B", str, 255))
         FDisabled.BorderLightB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.BorderDarkColor.R", str, 255))
+    if (Ini->ReadVar("Up.BorderDarkColor.R", str, 255))
         FUp.BorderDarkR = atoi(str);
 
-    if (Ini.ReadVar("Up.BorderDarkColor.G", str, 255))
+    if (Ini->ReadVar("Up.BorderDarkColor.G", str, 255))
         FUp.BorderDarkG = atoi(str);
 
-    if (Ini.ReadVar("Up.BorderDarkColor.B", str, 255))
+    if (Ini->ReadVar("Up.BorderDarkColor.B", str, 255))
         FUp.BorderDarkB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.BorderDarkColor.R", str, 255))
+    if (Ini->ReadVar("Down.BorderDarkColor.R", str, 255))
         FDown.BorderDarkR = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderDarkColor.G", str, 255))
+    if (Ini->ReadVar("Down.BorderDarkColor.G", str, 255))
         FDown.BorderDarkG = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderDarkColor.B", str, 255))
+    if (Ini->ReadVar("Down.BorderDarkColor.B", str, 255))
         FDown.BorderDarkB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.BorderDarkColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.BorderDarkColor.R", str, 255))
         FDisabled.BorderDarkR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderDarkColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.BorderDarkColor.G", str, 255))
         FDisabled.BorderDarkG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderDarkColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.BorderDarkColor.B", str, 255))
         FDisabled.BorderDarkB = atoi(str);
 
-    TControl::Set(IniName, IniSection);
+    TControl::Set(Ini, IniSection);
+}
+
+/*##########################################################################
+#
+#   Name       : TScrollControl::Set
+#
+#   Purpose....: Set control settings from Ini-file section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TScrollControl::Set(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    Set(&Ini, IniSection);
 }
 
 /*##########################################################################
@@ -2077,14 +2108,14 @@ void TScrollControl::PaintButton(TGraphicDevice *dev, int xstart, int ystart, in
             if (FUp.BorderWidth < size)
             {
                 dev->SetDrawColor(FUp.BorderLightR, FUp.BorderLightG, FUp.BorderLightB);
-			    for (i = 0; i < FUp.BorderWidth; i++)
-			    {
+                            for (i = 0; i < FUp.BorderWidth; i++)
+                            {
                     dev->DrawLine(xstart + i, ystart + i, xstart + i, ystart + ysize - i - 1);
                     dev->DrawLine(xstart + i, ystart + i, xstart + xsize - i - 1, ystart + i);
                 }
 
                 dev->SetDrawColor(FUp.BorderDarkR, FUp.BorderDarkG, FUp.BorderDarkB);
-				for (i = 0; i < FUp.BorderWidth; i++)
+                                for (i = 0; i < FUp.BorderWidth; i++)
                 {
                     dev->DrawLine(xstart + xsize - i - 1, ystart + i, xstart + xsize - i - 1, ystart + ysize - i - 1);
                     dev->DrawLine(xstart + i, ystart + ysize - i - 1, xstart + xsize - i - 1, ystart + ysize - i - 1);
@@ -2100,8 +2131,8 @@ void TScrollControl::PaintButton(TGraphicDevice *dev, int xstart, int ystart, in
             if (FDown.BorderWidth < size)
             {
                 dev->SetDrawColor(FDown.BorderDarkR, FDown.BorderDarkG, FDown.BorderDarkB);
-			    for (i = 0; i < FDown.BorderWidth; i++)
-			    {
+                            for (i = 0; i < FDown.BorderWidth; i++)
+                            {
                     dev->DrawLine(xstart + i, ystart + i, xstart + i, ystart + ysize - i - 1);
                     dev->DrawLine(xstart + i, ystart + i, xstart + xsize - i - 1, ystart + i);
                 }
@@ -2116,14 +2147,14 @@ void TScrollControl::PaintButton(TGraphicDevice *dev, int xstart, int ystart, in
             if (FDisabled.BorderWidth < size)
             {
                 dev->SetDrawColor(FDisabled.BorderLightR, FDisabled.BorderLightG, FDisabled.BorderLightB);
-			    for (i = 0; i < FDisabled.BorderWidth; i++)
-			    {
+                            for (i = 0; i < FDisabled.BorderWidth; i++)
+                            {
                     dev->DrawLine(xstart + i, ystart + i, xstart + i, ystart + ysize - i - 1);
                     dev->DrawLine(xstart + i, ystart + i, xstart + xsize - i - 1, ystart + i);
                 }
 
                 dev->SetDrawColor(FDisabled.BorderDarkR, FDisabled.BorderDarkG, FDisabled.BorderDarkB);
-				for (i = 0; i < FDisabled.BorderWidth; i++)
+                                for (i = 0; i < FDisabled.BorderWidth; i++)
                 {
                     dev->DrawLine(xstart + xsize - i - 1, ystart + i, xstart + xsize - i - 1, ystart + ysize - i - 1);
                     dev->DrawLine(xstart + i, ystart + ysize - i - 1, xstart + xsize - i - 1, ystart + ysize - i - 1);
@@ -2285,19 +2316,19 @@ void TVerScrollControl::DrawUpArrow(TGraphicDevice *dev, int xstart, int ystart,
 
         ymid = ysize / 2 - 2 * w / 3;
          
-		dev->DrawLine(xstart + xmid, ystart + ymid, xstart + xmid - w, ystart + ymid + w);
+                dev->DrawLine(xstart + xmid, ystart + ymid, xstart + xmid - w, ystart + ymid + w);
         dev->DrawLine(xstart + xmid, ystart + ymid, xstart + xmid + w, ystart + ymid + w);
 
-		for (i = 0; i < width; i++)
-		{
-    		dev->DrawLine(xstart + xmid, ystart + ymid + i, xstart + xmid - w, ystart + ymid + w + i);
+                for (i = 0; i < width; i++)
+                {
+                dev->DrawLine(xstart + xmid, ystart + ymid + i, xstart + xmid - w, ystart + ymid + w + i);
             dev->DrawLine(xstart + xmid, ystart + ymid + i, xstart + xmid + w, ystart + ymid + w + i);
 
-    		dev->DrawLine(xstart + xmid, ystart + ymid - i, xstart + xmid - w, ystart + ymid + w - i);
+                dev->DrawLine(xstart + xmid, ystart + ymid - i, xstart + xmid - w, ystart + ymid + w - i);
             dev->DrawLine(xstart + xmid, ystart + ymid - i, xstart + xmid + w, ystart + ymid + w - i);
-		  }
+                  }
 
-	 }
+         }
 }
 
 /*##########################################################################
@@ -2335,18 +2366,18 @@ void TVerScrollControl::DrawDownArrow(TGraphicDevice *dev, int xstart, int ystar
 
         ymid = ysize / 2 - 2 * w / 3;
          
-		dev->DrawLine(xstart + xmid, ystart + ysize - 1 - ymid, xstart + xmid - w, ystart + ysize - 1 - ymid - w);
+                dev->DrawLine(xstart + xmid, ystart + ysize - 1 - ymid, xstart + xmid - w, ystart + ysize - 1 - ymid - w);
         dev->DrawLine(xstart + xmid, ystart + ysize - 1 - ymid, xstart + xmid + w, ystart + ysize - 1 - ymid - w);
 
-		for (i = 0; i < width; i++)
-		{
-    		dev->DrawLine(xstart + xmid, ystart + ysize - 1 - ymid + i, xstart + xmid - w, ystart + ysize - 1 - ymid - w + i);
+                for (i = 0; i < width; i++)
+                {
+                dev->DrawLine(xstart + xmid, ystart + ysize - 1 - ymid + i, xstart + xmid - w, ystart + ysize - 1 - ymid - w + i);
             dev->DrawLine(xstart + xmid, ystart + ysize - 1 - ymid + i, xstart + xmid + w, ystart + ysize - 1 - ymid - w + i);
 
-    		dev->DrawLine(xstart + xmid, ystart + ysize - 1 - ymid - i, xstart + xmid - w, ystart + ysize - 1 - ymid - w - i);
+                dev->DrawLine(xstart + xmid, ystart + ysize - 1 - ymid - i, xstart + xmid - w, ystart + ysize - 1 - ymid - w - i);
             dev->DrawLine(xstart + xmid, ystart + ysize - 1 - ymid - i, xstart + xmid + w, ystart + ysize - 1 - ymid - w - i);
-		 }
-	 }
+                 }
+         }
 }
 
 /*##########################################################################
@@ -2633,14 +2664,14 @@ void TVerScrollControl::PaintScrollButton(TGraphicDevice *dev, int xstart, int y
     switch (state)
     {
         case STATE_UP:
-		    DrawAliasedScrollLines(dev, FUp, xstart, ystart, xsize, ysize);
-			break;
+                    DrawAliasedScrollLines(dev, FUp, xstart, ystart, xsize, ysize);
+                        break;
 
-		case STATE_DOWN:
-			DrawAliasedScrollLines(dev, FDown, xstart, ystart, xsize, ysize);
-			break;
+                case STATE_DOWN:
+                        DrawAliasedScrollLines(dev, FDown, xstart, ystart, xsize, ysize);
+                        break;
 
-		case STATE_DISABLED:
+                case STATE_DISABLED:
             DrawAliasedScrollLines(dev, FDisabled, xstart, ystart, xsize, ysize);
             break;
     }
@@ -2683,23 +2714,23 @@ void TVerScrollControl::PaintScrollButton(TGraphicDevice *dev, int xstart, int y
 ##########################################################################*/
 void TVerScrollControl::PaintScrollArea(TGraphicDevice *dev, int xstart, int ystart, int xsize, int ysize, int state)
 {
-	 switch (state)
-	 {
-		case STATE_UP:
-			dev->SetDrawColor(FUp.BackR, FUp.BackG, FUp.BackB);
-			 break;
+         switch (state)
+         {
+                case STATE_UP:
+                        dev->SetDrawColor(FUp.BackR, FUp.BackG, FUp.BackB);
+                         break;
 
-		case STATE_DOWN:
-			dev->SetDrawColor(FDown.BackR, FDown.BackG, FDown.BackB);
-			break;
+                case STATE_DOWN:
+                        dev->SetDrawColor(FDown.BackR, FDown.BackG, FDown.BackB);
+                        break;
 
-		case STATE_DISABLED:
-			dev->SetDrawColor(FDisabled.BackR, FDisabled.BackG, FDisabled.BackB);
-			break;
-	 }
-	 
-	 dev->SetFilledStyle();
-	 dev->DrawRect(xstart, ystart, xstart + xsize - 1, ystart + ysize - 1);
+                case STATE_DISABLED:
+                        dev->SetDrawColor(FDisabled.BackR, FDisabled.BackG, FDisabled.BackB);
+                        break;
+         }
+         
+         dev->SetFilledStyle();
+         dev->DrawRect(xstart, ystart, xstart + xsize - 1, ystart + ysize - 1);
 }
 
 /*##########################################################################
@@ -2747,7 +2778,7 @@ void TVerScrollControl::PaintDownScrollArea(TGraphicDevice *dev, int xstart, int
             PaintScrollArea(dev, xstart, ystart, FWidth, size, STATE_UP);
     }
     else
-		  PaintScrollArea(dev, xstart, ystart, FWidth, size, STATE_DISABLED);
+                  PaintScrollArea(dev, xstart, ystart, FWidth, size, STATE_DISABLED);
 }
 
 /*##########################################################################
@@ -3078,30 +3109,30 @@ void TVerScrollControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width
 
     TControl::Paint(dev, xmin, ymin, width, height);
 
-	if (IsVisible())
-	{
+        if (IsVisible())
+        {
         SetClipRect(    dev,
                         xmin, ymin,
-            			xmax, ymax);
+                                xmax, ymax);
 
 /*        if (FRedrawButtons) */
         {
             FRedrawButtons = FALSE;
             
-    	    PaintUpButton(dev, xmin, ymin);
-	        PaintDownButton(dev, xmin, ymin + FSize - FButtonSize);
-	    }
-	    
-	    PaintUpScrollArea(dev, xmin, ymin + FButtonSize, FScrollPos);
-	    PaintDownScrollArea(dev, xmin, ymin + FButtonSize + FScrollPos + FCurrScrollButton, FScrollSize - FCurrScrollButton - FScrollPos);
-	    PaintScrollButton(dev, xmin, ymin + FButtonSize + FScrollPos);
+            PaintUpButton(dev, xmin, ymin);
+                PaintDownButton(dev, xmin, ymin + FSize - FButtonSize);
+            }
+            
+            PaintUpScrollArea(dev, xmin, ymin + FButtonSize, FScrollPos);
+            PaintDownScrollArea(dev, xmin, ymin + FButtonSize + FScrollPos + FCurrScrollButton, FScrollSize - FCurrScrollButton - FScrollPos);
+            PaintScrollButton(dev, xmin, ymin + FButtonSize + FScrollPos);
 
         if (FUpPressed || FDownPressed || FUpScrollPressed || FDownScrollPressed)
         {
-    	    if (FRepeatTime.HasExpired())
-	        {
+            if (FRepeatTime.HasExpired())
+                {
                 FRepeatTime = TDateTime();
-	            FRepeatTime.AddMilli(REPEAT_TIMEOUT);
+                    FRepeatTime.AddMilli(REPEAT_TIMEOUT);
 
                 if (FUpPressed)
                     OnScrollUp();
@@ -3115,11 +3146,11 @@ void TVerScrollControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width
                 if (FDownScrollPressed)
                     OnScrollPageDown();
 
-	        }
+                }
 
             Redraw(REPEAT_TIMEOUT);
-	    }
-	}
+            }
+        }
 }
     
 /*##########################################################################
@@ -3275,19 +3306,19 @@ void THorScrollControl::DrawLeftArrow(TGraphicDevice *dev, int xstart, int ystar
 
         xmid = xsize / 2 - 2 * w / 3;
          
-		dev->DrawLine(xstart + xmid, ystart + ymid, xstart + xmid + w, ystart + ymid - w);
+                dev->DrawLine(xstart + xmid, ystart + ymid, xstart + xmid + w, ystart + ymid - w);
         dev->DrawLine(xstart + xmid, ystart + ymid, xstart + xmid + w, ystart + ymid + w);
 
-		for (i = 0; i < width; i++)
-		{
-    		dev->DrawLine(xstart + xmid + i, ystart + ymid, xstart + xmid + w + i, ystart + ymid - w);
+                for (i = 0; i < width; i++)
+                {
+                dev->DrawLine(xstart + xmid + i, ystart + ymid, xstart + xmid + w + i, ystart + ymid - w);
             dev->DrawLine(xstart + xmid + i, ystart + ymid, xstart + xmid + w + i, ystart + ymid + w);
 
-    		dev->DrawLine(xstart + xmid - i, ystart + ymid, xstart + xmid + w - i, ystart + ymid - w);
+                dev->DrawLine(xstart + xmid - i, ystart + ymid, xstart + xmid + w - i, ystart + ymid - w);
             dev->DrawLine(xstart + xmid - i, ystart + ymid, xstart + xmid + w - i, ystart + ymid + w);
-		  }
+                  }
 
-	 }
+         }
 }
 
 /*##########################################################################
@@ -3325,18 +3356,18 @@ void THorScrollControl::DrawRightArrow(TGraphicDevice *dev, int xstart, int ysta
 
         xmid = xsize / 2 - 2 * w / 3;
          
-		dev->DrawLine(xstart + xsize - 1 - xmid, ystart + ymid, xstart + xsize - 1 - xmid - w, ystart + ymid - w);
+                dev->DrawLine(xstart + xsize - 1 - xmid, ystart + ymid, xstart + xsize - 1 - xmid - w, ystart + ymid - w);
         dev->DrawLine(xstart + xsize - 1 - xmid, ystart + ymid, xstart + xsize - 1 - xmid - w, ystart + ymid + w);
 
-		for (i = 0; i < width; i++)
-		{
-    		dev->DrawLine(xstart + xsize - 1 - xmid + i, ystart + ymid, xstart + xsize - 1 - xmid - w + i, ystart + ymid - w);
+                for (i = 0; i < width; i++)
+                {
+                dev->DrawLine(xstart + xsize - 1 - xmid + i, ystart + ymid, xstart + xsize - 1 - xmid - w + i, ystart + ymid - w);
             dev->DrawLine(xstart + xsize - 1 - xmid + i, ystart + ymid, xstart + xsize - 1 - xmid - w + i, ystart + ymid + w);
 
-    		dev->DrawLine(xstart + xsize - 1 - xmid - i, ystart + ymid, xstart + xsize - 1 - xmid - w - i, ystart + ymid - w);
+                dev->DrawLine(xstart + xsize - 1 - xmid - i, ystart + ymid, xstart + xsize - 1 - xmid - w - i, ystart + ymid - w);
             dev->DrawLine(xstart + xsize - 1 - xmid - i, ystart + ymid, xstart + xsize - 1 - xmid - w - i, ystart + ymid + w);
-		 }
-	 }
+                 }
+         }
 }
 
 /*##########################################################################
@@ -3352,27 +3383,27 @@ void THorScrollControl::DrawRightArrow(TGraphicDevice *dev, int xstart, int ysta
 ##########################################################################*/
 void THorScrollControl::DrawAliasedLeftArrow(TGraphicDevice *dev, TScrollParam &Param, int xstart, int ystart, int xsize, int ysize)
 {
-	 xstart += Param.BorderWidth;
-	 ystart += Param.BorderWidth;
-	 xsize -= 2 * Param.BorderWidth;
-	 ysize -= 2 * Param.BorderWidth;
+         xstart += Param.BorderWidth;
+         ystart += Param.BorderWidth;
+         xsize -= 2 * Param.BorderWidth;
+         ysize -= 2 * Param.BorderWidth;
 
-	 xstart += Param.ShiftX;
-	 ystart += Param.ShiftY;
+         xstart += Param.ShiftX;
+         ystart += Param.ShiftY;
 
-	 dev->SetDrawColor(Param.ShadowR, Param.ShadowG, Param.ShadowB);
-	 DrawLeftArrow(dev, xstart, ystart, xsize, ysize);
-	 DrawLeftArrow(dev, xstart + 1, ystart, xsize, ysize);
-	 DrawLeftArrow(dev, xstart - 1, ystart, xsize, ysize);
-	 DrawLeftArrow(dev, xstart, ystart + 1, xsize, ysize);
-	 DrawLeftArrow(dev, xstart, ystart - 1, xsize, ysize);
-	 DrawLeftArrow(dev, xstart + 1, ystart + 1, xsize, ysize);
-	 DrawLeftArrow(dev, xstart - 1, ystart - 1, xsize, ysize);
-	 DrawLeftArrow(dev, xstart - 1, ystart + 1, xsize, ysize);
-	 DrawLeftArrow(dev, xstart + 1, ystart - 1, xsize, ysize);
+         dev->SetDrawColor(Param.ShadowR, Param.ShadowG, Param.ShadowB);
+         DrawLeftArrow(dev, xstart, ystart, xsize, ysize);
+         DrawLeftArrow(dev, xstart + 1, ystart, xsize, ysize);
+         DrawLeftArrow(dev, xstart - 1, ystart, xsize, ysize);
+         DrawLeftArrow(dev, xstart, ystart + 1, xsize, ysize);
+         DrawLeftArrow(dev, xstart, ystart - 1, xsize, ysize);
+         DrawLeftArrow(dev, xstart + 1, ystart + 1, xsize, ysize);
+         DrawLeftArrow(dev, xstart - 1, ystart - 1, xsize, ysize);
+         DrawLeftArrow(dev, xstart - 1, ystart + 1, xsize, ysize);
+         DrawLeftArrow(dev, xstart + 1, ystart - 1, xsize, ysize);
 
-	 dev->SetDrawColor(Param.DrawR, Param.DrawG, Param.DrawB);
-	 DrawLeftArrow(dev, xstart, ystart, xsize, ysize);
+         dev->SetDrawColor(Param.DrawR, Param.DrawG, Param.DrawB);
+         DrawLeftArrow(dev, xstart, ystart, xsize, ysize);
 }
 
 /*##########################################################################
@@ -3429,15 +3460,15 @@ void THorScrollControl::PaintLeftButton(TGraphicDevice *dev, int xstart, int yst
     switch (state)
     {
         case STATE_UP:
-				DrawAliasedLeftArrow(dev, FUp, xstart, ystart, xsize, ysize);
-				break;
+                                DrawAliasedLeftArrow(dev, FUp, xstart, ystart, xsize, ysize);
+                                break;
 
-		  case STATE_DOWN:
-				DrawAliasedLeftArrow(dev, FDown, xstart, ystart, xsize, ysize);
-				break;
+                  case STATE_DOWN:
+                                DrawAliasedLeftArrow(dev, FDown, xstart, ystart, xsize, ysize);
+                                break;
 
-		  case STATE_DISABLED:
-				DrawAliasedLeftArrow(dev, FDisabled, xstart, ystart, xsize, ysize);
+                  case STATE_DISABLED:
+                                DrawAliasedLeftArrow(dev, FDisabled, xstart, ystart, xsize, ysize);
             break;
     }
 }
@@ -3460,14 +3491,14 @@ void THorScrollControl::PaintRightButton(TGraphicDevice *dev, int xstart, int ys
     switch (state)
     {
         case STATE_UP:
-				DrawAliasedRightArrow(dev, FUp, xstart, ystart, xsize, ysize);
-				break;
+                                DrawAliasedRightArrow(dev, FUp, xstart, ystart, xsize, ysize);
+                                break;
 
-		  case STATE_DOWN:
-				DrawAliasedRightArrow(dev, FDown, xstart, ystart, xsize, ysize);
-				break;
+                  case STATE_DOWN:
+                                DrawAliasedRightArrow(dev, FDown, xstart, ystart, xsize, ysize);
+                                break;
 
-		  case STATE_DISABLED:
+                  case STATE_DISABLED:
             DrawAliasedRightArrow(dev, FDisabled, xstart, ystart, xsize, ysize);
             break;
     }
@@ -3558,7 +3589,7 @@ void THorScrollControl::DrawAliasedScrollLines(TGraphicDevice *dev, TScrollParam
     int i;
     int start;
 
-	 linewidth = FUp.BorderWidth;
+         linewidth = FUp.BorderWidth;
     if (linewidth <= 0)
         linewidth = 1;
 
@@ -3623,14 +3654,14 @@ void THorScrollControl::PaintScrollButton(TGraphicDevice *dev, int xstart, int y
     switch (state)
     {
         case STATE_UP:
-		    DrawAliasedScrollLines(dev, FUp, xstart, ystart, xsize, ysize);
-			break;
+                    DrawAliasedScrollLines(dev, FUp, xstart, ystart, xsize, ysize);
+                        break;
 
-		case STATE_DOWN:
-			DrawAliasedScrollLines(dev, FDown, xstart, ystart, xsize, ysize);
-			break;
+                case STATE_DOWN:
+                        DrawAliasedScrollLines(dev, FDown, xstart, ystart, xsize, ysize);
+                        break;
 
-		case STATE_DISABLED:
+                case STATE_DISABLED:
             DrawAliasedScrollLines(dev, FDisabled, xstart, ystart, xsize, ysize);
             break;
     }
@@ -3673,23 +3704,23 @@ void THorScrollControl::PaintScrollButton(TGraphicDevice *dev, int xstart, int y
 ##########################################################################*/
 void THorScrollControl::PaintScrollArea(TGraphicDevice *dev, int xstart, int ystart, int xsize, int ysize, int state)
 {
-	 switch (state)
-	 {
-		case STATE_UP:
-			dev->SetDrawColor(FUp.BackR, FUp.BackG, FUp.BackB);
-			 break;
+         switch (state)
+         {
+                case STATE_UP:
+                        dev->SetDrawColor(FUp.BackR, FUp.BackG, FUp.BackB);
+                         break;
 
-		case STATE_DOWN:
-			dev->SetDrawColor(FDown.BackR, FDown.BackG, FDown.BackB);
-			break;
+                case STATE_DOWN:
+                        dev->SetDrawColor(FDown.BackR, FDown.BackG, FDown.BackB);
+                        break;
 
-		case STATE_DISABLED:
-			dev->SetDrawColor(FDisabled.BackR, FDisabled.BackG, FDisabled.BackB);
-			break;
-	 }
-	 
-	 dev->SetFilledStyle();
-	 dev->DrawRect(xstart, ystart, xstart + xsize - 1, ystart + ysize - 1);
+                case STATE_DISABLED:
+                        dev->SetDrawColor(FDisabled.BackR, FDisabled.BackG, FDisabled.BackB);
+                        break;
+         }
+         
+         dev->SetFilledStyle();
+         dev->DrawRect(xstart, ystart, xstart + xsize - 1, ystart + ysize - 1);
 }
 
 /*##########################################################################
@@ -4065,30 +4096,30 @@ void THorScrollControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width
 
     TControl::Paint(dev, xmin, ymin, width, height);
 
-	if (IsVisible())
-	{
+        if (IsVisible())
+        {
         SetClipRect(    dev,
                         xmin, ymin,
-            			xmax, ymax);
+                                xmax, ymax);
 
 /*        if (FRedrawButtons) */
         {
             FRedrawButtons = FALSE;
 
-    	    PaintLeftButton(dev, xmin, ymin);
-    	    PaintRightButton(dev, xmin + FSize - FButtonSize, ymin);
-    	}
-    	
-	    PaintLeftScrollArea(dev, xmin + FButtonSize, ymin, FScrollPos);
-	    PaintRightScrollArea(dev, xmin + FButtonSize + FScrollPos + FCurrScrollButton, ymin, FScrollSize - FCurrScrollButton - FScrollPos);
-	    PaintScrollButton(dev, xmin + FButtonSize + FScrollPos, ymin);
+            PaintLeftButton(dev, xmin, ymin);
+            PaintRightButton(dev, xmin + FSize - FButtonSize, ymin);
+        }
+        
+            PaintLeftScrollArea(dev, xmin + FButtonSize, ymin, FScrollPos);
+            PaintRightScrollArea(dev, xmin + FButtonSize + FScrollPos + FCurrScrollButton, ymin, FScrollSize - FCurrScrollButton - FScrollPos);
+            PaintScrollButton(dev, xmin + FButtonSize + FScrollPos, ymin);
 
         if (FLeftPressed || FRightPressed || FLeftScrollPressed || FRightScrollPressed)
         {
-    	    if (FRepeatTime.HasExpired())
-	        {
+            if (FRepeatTime.HasExpired())
+                {
                 FRepeatTime = TDateTime();
-	            FRepeatTime.AddMilli(REPEAT_TIMEOUT);
+                    FRepeatTime.AddMilli(REPEAT_TIMEOUT);
 
                 if (FLeftPressed)
                     OnScrollLeft();
@@ -4101,9 +4132,9 @@ void THorScrollControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width
 
                 if (FRightScrollPressed)
                     OnScrollPageRight();
-	        }
+                }
 
             Redraw(REPEAT_TIMEOUT);
-	    }
-	}
+            }
+        }
 }

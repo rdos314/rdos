@@ -28,7 +28,6 @@
 #include <string.h>
 
 #include "button.h"
-#include "ini.h"
 
 #define FALSE   0
 #define TRUE    !FALSE
@@ -388,20 +387,18 @@ TButtonFactory::~TButtonFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonFactory::Set(const char *IniName, const char *IniSection)
+void TButtonFactory::Set(TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
     int size;
 
-    Ini.GotoSection(IniSection);
+    Ini->GotoSection(IniSection);
 
-
-    if (Ini.ReadVar("Width", str, 255))
+    if (Ini->ReadVar("Width", str, 255))
         FWidth = atoi(str);
 
 
-    if (Ini.ReadVar("Font.Size", str, 255))
+    if (Ini->ReadVar("Font.Size", str, 255))
     {
         size = atoi(str);
 
@@ -415,186 +412,203 @@ void TButtonFactory::Set(const char *IniName, const char *IniSection)
     }
 
 
-    if (Ini.ReadVar("Up.Shift.X", str, 255))
+    if (Ini->ReadVar("Up.Shift.X", str, 255))
         FUp.ShiftX = atoi(str);
 
-    if (Ini.ReadVar("Up.Shift.Y", str, 255))
+    if (Ini->ReadVar("Up.Shift.Y", str, 255))
         FUp.ShiftY = atoi(str);
 
 
-    if (Ini.ReadVar("Down.Shift.X", str, 255))
+    if (Ini->ReadVar("Down.Shift.X", str, 255))
         FDown.ShiftX = atoi(str);
 
-    if (Ini.ReadVar("Down.Shift.Y", str, 255))
+    if (Ini->ReadVar("Down.Shift.Y", str, 255))
         FDown.ShiftY = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.Shift.X", str, 255))
+    if (Ini->ReadVar("Disabled.Shift.X", str, 255))
         FDisabled.ShiftX = atoi(str);
 
-    if (Ini.ReadVar("Disabled.Shift.Y", str, 255))
+    if (Ini->ReadVar("Disabled.Shift.Y", str, 255))
         FDisabled.ShiftY = atoi(str);
 
 
-    if (Ini.ReadVar("Up.BorderWidth", str, 255))
+    if (Ini->ReadVar("Up.BorderWidth", str, 255))
         FUp.BorderWidth = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderWidth", str, 255))
+    if (Ini->ReadVar("Down.BorderWidth", str, 255))
         FDown.BorderWidth = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderWidth", str, 255))
+    if (Ini->ReadVar("Disabled.BorderWidth", str, 255))
         FDisabled.BorderWidth = atoi(str);
 
 
-    if (Ini.ReadVar("Up.DrawColor.R", str, 255))
+    if (Ini->ReadVar("Up.DrawColor.R", str, 255))
         FUp.DrawR = atoi(str);
 
-    if (Ini.ReadVar("Up.DrawColor.G", str, 255))
+    if (Ini->ReadVar("Up.DrawColor.G", str, 255))
         FUp.DrawG = atoi(str);
 
-    if (Ini.ReadVar("Up.DrawColor.B", str, 255))
+    if (Ini->ReadVar("Up.DrawColor.B", str, 255))
         FUp.DrawB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.DrawColor.R", str, 255))
+    if (Ini->ReadVar("Down.DrawColor.R", str, 255))
         FDown.DrawR = atoi(str);
 
-    if (Ini.ReadVar("Down.DrawColor.G", str, 255))
+    if (Ini->ReadVar("Down.DrawColor.G", str, 255))
         FDown.DrawG = atoi(str);
 
-    if (Ini.ReadVar("Down.DrawColor.B", str, 255))
+    if (Ini->ReadVar("Down.DrawColor.B", str, 255))
         FDown.DrawB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.DrawColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.DrawColor.R", str, 255))
         FDisabled.DrawR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.DrawColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.DrawColor.G", str, 255))
         FDisabled.DrawG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.DrawColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.DrawColor.B", str, 255))
         FDisabled.DrawB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.ShadowColor.R", str, 255))
+    if (Ini->ReadVar("Up.ShadowColor.R", str, 255))
         FUp.ShadowR = atoi(str);
 
-    if (Ini.ReadVar("Up.ShadowColor.G", str, 255))
+    if (Ini->ReadVar("Up.ShadowColor.G", str, 255))
         FUp.ShadowG = atoi(str);
 
-    if (Ini.ReadVar("Up.ShadowColor.B", str, 255))
+    if (Ini->ReadVar("Up.ShadowColor.B", str, 255))
         FUp.ShadowB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.ShadowColor.R", str, 255))
+    if (Ini->ReadVar("Down.ShadowColor.R", str, 255))
         FDown.ShadowR = atoi(str);
 
-    if (Ini.ReadVar("Down.ShadowColor.G", str, 255))
+    if (Ini->ReadVar("Down.ShadowColor.G", str, 255))
         FDown.ShadowG = atoi(str);
 
-    if (Ini.ReadVar("Down.ShadowColor.B", str, 255))
+    if (Ini->ReadVar("Down.ShadowColor.B", str, 255))
         FDown.ShadowB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.ShadowColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.ShadowColor.R", str, 255))
         FDisabled.ShadowR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.ShadowColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.ShadowColor.G", str, 255))
         FDisabled.ShadowG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.ShadowColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.ShadowColor.B", str, 255))
         FDisabled.ShadowB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.ButtonColor.R", str, 255))
+    if (Ini->ReadVar("Up.ButtonColor.R", str, 255))
         FUp.ButtonR = atoi(str);
 
-    if (Ini.ReadVar("Up.ButtonColor.G", str, 255))
+    if (Ini->ReadVar("Up.ButtonColor.G", str, 255))
         FUp.ButtonG = atoi(str);
 
-    if (Ini.ReadVar("Up.ButtonColor.B", str, 255))
+    if (Ini->ReadVar("Up.ButtonColor.B", str, 255))
         FUp.ButtonB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.ButtonColor.R", str, 255))
+    if (Ini->ReadVar("Down.ButtonColor.R", str, 255))
         FDown.ButtonR = atoi(str);
 
-    if (Ini.ReadVar("Down.ButtonColor.G", str, 255))
+    if (Ini->ReadVar("Down.ButtonColor.G", str, 255))
         FDown.ButtonG = atoi(str);
 
-    if (Ini.ReadVar("Down.ButtonColor.B", str, 255))
+    if (Ini->ReadVar("Down.ButtonColor.B", str, 255))
         FDown.ButtonB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.ButtonColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.ButtonColor.R", str, 255))
         FDisabled.ButtonR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.ButtonColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.ButtonColor.G", str, 255))
         FDisabled.ButtonG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.ButtonColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.ButtonColor.B", str, 255))
         FDisabled.ButtonB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.BorderLightColor.R", str, 255))
+    if (Ini->ReadVar("Up.BorderLightColor.R", str, 255))
         FUp.BorderLightR = atoi(str);
 
-    if (Ini.ReadVar("Up.BorderLightColor.G", str, 255))
+    if (Ini->ReadVar("Up.BorderLightColor.G", str, 255))
         FUp.BorderLightG = atoi(str);
 
-    if (Ini.ReadVar("Up.BorderLightColor.B", str, 255))
+    if (Ini->ReadVar("Up.BorderLightColor.B", str, 255))
         FUp.BorderLightB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.BorderLightColor.R", str, 255))
+    if (Ini->ReadVar("Down.BorderLightColor.R", str, 255))
         FDown.BorderLightR = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderLightColor.G", str, 255))
+    if (Ini->ReadVar("Down.BorderLightColor.G", str, 255))
         FDown.BorderLightG = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderLightColor.B", str, 255))
+    if (Ini->ReadVar("Down.BorderLightColor.B", str, 255))
         FDown.BorderLightB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.BorderLightColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.BorderLightColor.R", str, 255))
         FDisabled.BorderLightR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderLightColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.BorderLightColor.G", str, 255))
         FDisabled.BorderLightG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderLightColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.BorderLightColor.B", str, 255))
         FDisabled.BorderLightB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.BorderDarkColor.R", str, 255))
+    if (Ini->ReadVar("Up.BorderDarkColor.R", str, 255))
         FUp.BorderDarkR = atoi(str);
 
-    if (Ini.ReadVar("Up.BorderDarkColor.G", str, 255))
+    if (Ini->ReadVar("Up.BorderDarkColor.G", str, 255))
         FUp.BorderDarkG = atoi(str);
 
-    if (Ini.ReadVar("Up.BorderDarkColor.B", str, 255))
+    if (Ini->ReadVar("Up.BorderDarkColor.B", str, 255))
         FUp.BorderDarkB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.BorderDarkColor.R", str, 255))
+    if (Ini->ReadVar("Down.BorderDarkColor.R", str, 255))
         FDown.BorderDarkR = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderDarkColor.G", str, 255))
+    if (Ini->ReadVar("Down.BorderDarkColor.G", str, 255))
         FDown.BorderDarkG = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderDarkColor.B", str, 255))
+    if (Ini->ReadVar("Down.BorderDarkColor.B", str, 255))
         FDown.BorderDarkB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.BorderDarkColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.BorderDarkColor.R", str, 255))
         FDisabled.BorderDarkR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderDarkColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.BorderDarkColor.G", str, 255))
         FDisabled.BorderDarkG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderDarkColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.BorderDarkColor.B", str, 255))
         FDisabled.BorderDarkB = atoi(str);
 
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonFactory::Set
+#
+#   Purpose....: Set control settings from Ini-file section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonFactory::Set(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    Set(&Ini, IniSection);
 }
 
 /*##########################################################################
@@ -1765,16 +1779,15 @@ void TButtonControl::SetKey(char key)
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonControl::Set(const char *IniName, const char *IniSection)
+void TButtonControl::Set(TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
     int size;
 
-    Ini.GotoSection(IniSection);
+    Ini->GotoSection(IniSection);
 
 
-    if (Ini.ReadVar("Font.Size", str, 255))
+    if (Ini->ReadVar("Font.Size", str, 255))
     {
         size = atoi(str);
 
@@ -1787,7 +1800,7 @@ void TButtonControl::Set(const char *IniName, const char *IniSection)
         }
     }
 
-    if (Ini.ReadVar("LowerFont.Size", str, 255))
+    if (Ini->ReadVar("LowerFont.Size", str, 255))
     {
         size = atoi(str);
 
@@ -1800,7 +1813,7 @@ void TButtonControl::Set(const char *IniName, const char *IniSection)
         }
     }
 
-    if (Ini.ReadVar("UpperFont.Size", str, 255))
+    if (Ini->ReadVar("UpperFont.Size", str, 255))
     {
         size = atoi(str);
 
@@ -1814,199 +1827,216 @@ void TButtonControl::Set(const char *IniName, const char *IniSection)
     }
 
 
-    if (Ini.ReadVar("Key", str, 255))
+    if (Ini->ReadVar("Key", str, 255))
         FKey = DecodeKey(str);
 
-    if (Ini.ReadVar("Up.Shift.X", str, 255))
+    if (Ini->ReadVar("Up.Shift.X", str, 255))
         FUp.ShiftX = atoi(str);
 
-    if (Ini.ReadVar("Up.Shift.Y", str, 255))
+    if (Ini->ReadVar("Up.Shift.Y", str, 255))
         FUp.ShiftY = atoi(str);
 
 
-    if (Ini.ReadVar("Down.Shift.X", str, 255))
+    if (Ini->ReadVar("Down.Shift.X", str, 255))
         FDown.ShiftX = atoi(str);
 
-    if (Ini.ReadVar("Down.Shift.Y", str, 255))
+    if (Ini->ReadVar("Down.Shift.Y", str, 255))
         FDown.ShiftY = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.Shift.X", str, 255))
+    if (Ini->ReadVar("Disabled.Shift.X", str, 255))
         FDisabled.ShiftX = atoi(str);
 
-    if (Ini.ReadVar("Disabled.Shift.Y", str, 255))
+    if (Ini->ReadVar("Disabled.Shift.Y", str, 255))
         FDisabled.ShiftY = atoi(str);
 
 
-    if (Ini.ReadVar("Up.BorderWidth", str, 255))
+    if (Ini->ReadVar("Up.BorderWidth", str, 255))
         FUp.BorderWidth = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderWidth", str, 255))
+    if (Ini->ReadVar("Down.BorderWidth", str, 255))
         FDown.BorderWidth = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderWidth", str, 255))
+    if (Ini->ReadVar("Disabled.BorderWidth", str, 255))
         FDisabled.BorderWidth = atoi(str);
 
 
-    if (Ini.ReadVar("Up.DrawColor.R", str, 255))
+    if (Ini->ReadVar("Up.DrawColor.R", str, 255))
         FUp.DrawR = atoi(str);
 
-    if (Ini.ReadVar("Up.DrawColor.G", str, 255))
+    if (Ini->ReadVar("Up.DrawColor.G", str, 255))
         FUp.DrawG = atoi(str);
 
-    if (Ini.ReadVar("Up.DrawColor.B", str, 255))
+    if (Ini->ReadVar("Up.DrawColor.B", str, 255))
         FUp.DrawB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.DrawColor.R", str, 255))
+    if (Ini->ReadVar("Down.DrawColor.R", str, 255))
         FDown.DrawR = atoi(str);
 
-    if (Ini.ReadVar("Down.DrawColor.G", str, 255))
+    if (Ini->ReadVar("Down.DrawColor.G", str, 255))
         FDown.DrawG = atoi(str);
 
-    if (Ini.ReadVar("Down.DrawColor.B", str, 255))
+    if (Ini->ReadVar("Down.DrawColor.B", str, 255))
         FDown.DrawB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.DrawColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.DrawColor.R", str, 255))
         FDisabled.DrawR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.DrawColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.DrawColor.G", str, 255))
         FDisabled.DrawG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.DrawColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.DrawColor.B", str, 255))
         FDisabled.DrawB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.ShadowColor.R", str, 255))
+    if (Ini->ReadVar("Up.ShadowColor.R", str, 255))
         FUp.ShadowR = atoi(str);
 
-    if (Ini.ReadVar("Up.ShadowColor.G", str, 255))
+    if (Ini->ReadVar("Up.ShadowColor.G", str, 255))
         FUp.ShadowG = atoi(str);
 
-    if (Ini.ReadVar("Up.ShadowColor.B", str, 255))
+    if (Ini->ReadVar("Up.ShadowColor.B", str, 255))
         FUp.ShadowB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.ShadowColor.R", str, 255))
+    if (Ini->ReadVar("Down.ShadowColor.R", str, 255))
         FDown.ShadowR = atoi(str);
 
-    if (Ini.ReadVar("Down.ShadowColor.G", str, 255))
+    if (Ini->ReadVar("Down.ShadowColor.G", str, 255))
         FDown.ShadowG = atoi(str);
 
-    if (Ini.ReadVar("Down.ShadowColor.B", str, 255))
+    if (Ini->ReadVar("Down.ShadowColor.B", str, 255))
         FDown.ShadowB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.ShadowColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.ShadowColor.R", str, 255))
         FDisabled.ShadowR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.ShadowColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.ShadowColor.G", str, 255))
         FDisabled.ShadowG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.ShadowColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.ShadowColor.B", str, 255))
         FDisabled.ShadowB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.ButtonColor.R", str, 255))
+    if (Ini->ReadVar("Up.ButtonColor.R", str, 255))
         FUp.ButtonR = atoi(str);
 
-    if (Ini.ReadVar("Up.ButtonColor.G", str, 255))
+    if (Ini->ReadVar("Up.ButtonColor.G", str, 255))
         FUp.ButtonG = atoi(str);
 
-    if (Ini.ReadVar("Up.ButtonColor.B", str, 255))
+    if (Ini->ReadVar("Up.ButtonColor.B", str, 255))
         FUp.ButtonB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.ButtonColor.R", str, 255))
+    if (Ini->ReadVar("Down.ButtonColor.R", str, 255))
         FDown.ButtonR = atoi(str);
 
-    if (Ini.ReadVar("Down.ButtonColor.G", str, 255))
+    if (Ini->ReadVar("Down.ButtonColor.G", str, 255))
         FDown.ButtonG = atoi(str);
 
-    if (Ini.ReadVar("Down.ButtonColor.B", str, 255))
+    if (Ini->ReadVar("Down.ButtonColor.B", str, 255))
         FDown.ButtonB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.ButtonColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.ButtonColor.R", str, 255))
         FDisabled.ButtonR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.ButtonColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.ButtonColor.G", str, 255))
         FDisabled.ButtonG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.ButtonColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.ButtonColor.B", str, 255))
         FDisabled.ButtonB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.BorderLightColor.R", str, 255))
+    if (Ini->ReadVar("Up.BorderLightColor.R", str, 255))
         FUp.BorderLightR = atoi(str);
 
-    if (Ini.ReadVar("Up.BorderLightColor.G", str, 255))
+    if (Ini->ReadVar("Up.BorderLightColor.G", str, 255))
         FUp.BorderLightG = atoi(str);
 
-    if (Ini.ReadVar("Up.BorderLightColor.B", str, 255))
+    if (Ini->ReadVar("Up.BorderLightColor.B", str, 255))
         FUp.BorderLightB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.BorderLightColor.R", str, 255))
+    if (Ini->ReadVar("Down.BorderLightColor.R", str, 255))
         FDown.BorderLightR = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderLightColor.G", str, 255))
+    if (Ini->ReadVar("Down.BorderLightColor.G", str, 255))
         FDown.BorderLightG = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderLightColor.B", str, 255))
+    if (Ini->ReadVar("Down.BorderLightColor.B", str, 255))
         FDown.BorderLightB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.BorderLightColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.BorderLightColor.R", str, 255))
         FDisabled.BorderLightR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderLightColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.BorderLightColor.G", str, 255))
         FDisabled.BorderLightG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderLightColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.BorderLightColor.B", str, 255))
         FDisabled.BorderLightB = atoi(str);
 
 
-    if (Ini.ReadVar("Up.BorderDarkColor.R", str, 255))
+    if (Ini->ReadVar("Up.BorderDarkColor.R", str, 255))
         FUp.BorderDarkR = atoi(str);
 
-    if (Ini.ReadVar("Up.BorderDarkColor.G", str, 255))
+    if (Ini->ReadVar("Up.BorderDarkColor.G", str, 255))
         FUp.BorderDarkG = atoi(str);
 
-    if (Ini.ReadVar("Up.BorderDarkColor.B", str, 255))
+    if (Ini->ReadVar("Up.BorderDarkColor.B", str, 255))
         FUp.BorderDarkB = atoi(str);
 
 
-    if (Ini.ReadVar("Down.BorderDarkColor.R", str, 255))
+    if (Ini->ReadVar("Down.BorderDarkColor.R", str, 255))
         FDown.BorderDarkR = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderDarkColor.G", str, 255))
+    if (Ini->ReadVar("Down.BorderDarkColor.G", str, 255))
         FDown.BorderDarkG = atoi(str);
 
-    if (Ini.ReadVar("Down.BorderDarkColor.B", str, 255))
+    if (Ini->ReadVar("Down.BorderDarkColor.B", str, 255))
         FDown.BorderDarkB = atoi(str);
 
 
-    if (Ini.ReadVar("Disabled.BorderDarkColor.R", str, 255))
+    if (Ini->ReadVar("Disabled.BorderDarkColor.R", str, 255))
         FDisabled.BorderDarkR = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderDarkColor.G", str, 255))
+    if (Ini->ReadVar("Disabled.BorderDarkColor.G", str, 255))
         FDisabled.BorderDarkG = atoi(str);
 
-    if (Ini.ReadVar("Disabled.BorderDarkColor.B", str, 255))
+    if (Ini->ReadVar("Disabled.BorderDarkColor.B", str, 255))
         FDisabled.BorderDarkB = atoi(str);
 
-    if (Ini.ReadVar("Text", str, 255))
+    if (Ini->ReadVar("Text", str, 255))
         SetText(str);
 
-    if (Ini.ReadVar("UpperText", str, 255))
+    if (Ini->ReadVar("UpperText", str, 255))
         SetUpperText(str);
 
-    if (Ini.ReadVar("LowerText", str, 255))
+    if (Ini->ReadVar("LowerText", str, 255))
         SetLowerText(str);
 
-    TControl::Set(IniName, IniSection);
+    TControl::Set(Ini, IniSection);
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::Set
+#
+#   Purpose....: Set control settings from Ini-file section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::Set(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    Set(&Ini, IniSection);
 }
 
 /*##########################################################################

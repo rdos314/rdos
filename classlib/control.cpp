@@ -799,9 +799,8 @@ int TControl::IsTransparent()
 #   Returns....: *
 #
 ##########################################################################*/
-void TControl::Set(const char *IniName, const char *IniSection)
+void TControl::Set(TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
     int StartX, StartY;
     int SizeX, SizeY;
@@ -816,9 +815,9 @@ void TControl::Set(const char *IniName, const char *IniSection)
     SizeChanged = FALSE;
     PosChanged = FALSE;
 
-    Ini.GotoSection(IniSection);
+    Ini->GotoSection(IniSection);
 
-    if (Ini.ReadVar("Transparent", str, 255))
+    if (Ini->ReadVar("Transparent", str, 255))
     {
         if (atoi(str))
             SetTransparent();
@@ -826,25 +825,25 @@ void TControl::Set(const char *IniName, const char *IniSection)
             ClearTransparent();
     }
 
-    if (Ini.ReadVar("Start.X", str, 255))
+    if (Ini->ReadVar("Start.X", str, 255))
     {
         StartX = atoi(str);
         PosChanged = TRUE;
     }
 
-    if (Ini.ReadVar("Start.Y", str, 255))
+    if (Ini->ReadVar("Start.Y", str, 255))
     {
         StartY = atoi(str);
         PosChanged = TRUE;
     }
 
-    if (Ini.ReadVar("Size.X", str, 255))
+    if (Ini->ReadVar("Size.X", str, 255))
     {
         SizeX = atoi(str);
         SizeChanged = TRUE;
     }
 
-    if (Ini.ReadVar("Size.Y", str, 255))
+    if (Ini->ReadVar("Size.Y", str, 255))
     {
         SizeY = atoi(str);
         SizeChanged = TRUE;
@@ -857,7 +856,7 @@ void TControl::Set(const char *IniName, const char *IniSection)
     if (PosChanged)
         Move(StartX, StartY);
 
-    if (Ini.ReadVar("Visible", str, 255))
+    if (Ini->ReadVar("Visible", str, 255))
     {
         if (atoi(str))
             Show();
@@ -865,13 +864,30 @@ void TControl::Set(const char *IniName, const char *IniSection)
             Hide();
     }
 
-    if (Ini.ReadVar("Enabled", str, 255))
+    if (Ini->ReadVar("Enabled", str, 255))
     {
         if (atoi(str))
             Enable();
         else
             Disable();
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::Set
+#
+#   Purpose....: Set control parameters from ini-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::Set(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    Set(&Ini, IniSection);
 }
 
 /*##########################################################################

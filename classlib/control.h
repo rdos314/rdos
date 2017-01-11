@@ -35,6 +35,7 @@
 #include "sigdev.h"
 #include "sprite.h"
 #include "str.h"
+#include "ini.h"
 
 class TControlThread;
 
@@ -50,6 +51,7 @@ public:
     virtual ~TControl();    
 
     virtual void Set(const char *IniName, const char *IniSection);
+    virtual void Set(TIniFile *Ini, const char *IniSection);
 
     int GetBpp();
     TSprite *SetMouseMarker(TGraphicDevice *MouseBitmap, TGraphicDevice *MouseMask, int HotX, int HotY);
