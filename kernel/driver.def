@@ -33,15 +33,15 @@
 ;
 ; do not change order for this, used in boot loader
 ;
-idt_sel				EQU 8
-gdt_sel				EQU 10h
-device_code_sel		EQU 18h
-flat_sel			EQU 20h
+idt_sel                         EQU 8
+gdt_sel                         EQU 10h
+device_code_sel         EQU 18h
+flat_sel                        EQU 20h
 
-system_data_sel		EQU 28h
-kernel_code			EQU 30h
+system_data_sel         EQU 28h
+kernel_code                     EQU 30h
 ;
-shutdown_code_sel	EQU 38h
+shutdown_code_sel       EQU 38h
 
 ;
 ; processor core selector
@@ -52,129 +52,132 @@ core_data_sel       EQU 40h
 double_tss_sel      EQU 48h
 double_tss_data_sel EQU 50h
 
-kdebug_code_sel		EQU 58h
-kdebug_data_sel		EQU 60h
+kdebug_code_sel         EQU 58h
+kdebug_data_sel         EQU 60h
 
-shutdown_pretask_gate	EQU 68h
+shutdown_pretask_gate   EQU 68h
 
 ;
 ; used in kernel and device-drivers only
 ;
 
-process_sel			EQU 70h
+process_sel                     EQU 70h
 core_save_sel       EQU 78h
 core_image_sel      EQU 80h
-temp_sel			EQU 88h
+temp_sel                        EQU 88h
 ;
 tss_data_sel        EQU 90h
-shutdown_task_gate	EQU 98h
+shutdown_task_gate      EQU 98h
 phys_bit_sel        EQU 0A0h
 ;
 acpi_data_sel       EQU 0A8h
 ;
-mem_sel				EQU 0B0h
-small_mem_sel		EQU 0B8h
-local_mem_sel		EQU 0C0h
-local_linear_sel	EQU 0C8h
+mem_sel                         EQU 0B0h
+small_mem_sel           EQU 0B8h
+local_mem_sel           EQU 0C0h
+local_linear_sel        EQU 0C8h
 ;
-dosb800				EQU 0D0h
-bios_data			EQU 0D8h
-proc_data_sel		EQU 0E0h
+dosb800                         EQU 0D0h
+bios_data                       EQU 0D8h
+proc_data_sel           EQU 0E0h
 swap_data_sel       EQU 0E8h
 ;
-task_code_sel		EQU 0F0h
-task_data_sel		EQU 0F8h
+task_code_sel           EQU 0F0h
+task_data_sel           EQU 0F8h
 ;
-event_def_sel		EQU 100h
-event_list_sel		EQU 108h
+event_def_sel           EQU 100h
+event_list_sel          EQU 108h
 ;
-hook_in_sel			EQU 110h
-hook_out_sel		EQU 118h
+hook_in_sel                     EQU 110h
+hook_out_sel            EQU 118h
 ;
-osgate_sel			EQU 120h
-usergate_sel		EQU 128h
+osgate_sel                      EQU 120h
+usergate_sel            EQU 128h
 ;
-raw_switch_sel16	EQU 130h
+raw_switch_sel16        EQU 130h
 ;
-virt_thread_sel		EQU 138h
+virt_thread_sel         EQU 138h
 ;
 random_proc_sel     EQU 140h
 ;
-term_code_sel		EQU 14Bh
-state_data_sel		EQU 150h
-io_bitmap_sel		EQU 158h
+term_code_sel           EQU 14Bh
+state_data_sel          EQU 150h
+io_bitmap_sel           EQU 158h
 ;
 multicore_code_sel  EQU 160h
 multicore_data_sel  EQU 168h
 ;
-kernel_tss			EQU 178h
-virt_tss			EQU 180h
-kernel_stack		EQU 188h
+kernel_tss                      EQU 178h
+virt_tss                        EQU 180h
+kernel_stack            EQU 188h
 ;
 env_proc_sel        EQU 190h
 ;
 long_kernel_code_sel    EQU 1A0h
 long_kernel_data_sel    EQU 1A8h
 ;
-flat_code_sel		EQU 1B3h
-flat_data_sel		EQU 1BBh
+flat_code_sel           EQU 1B3h
+flat_data_sel           EQU 1BBh
 ;
-virt_idt_sel		EQU 1C0h
+virt_idt_sel            EQU 1C0h
 ;
 fault_sector_sel    EQU 1C8h
 ;
 std_dev_process_sel EQU 1D0h
 ;
-kernel32_code		EQU 1D8h
-int_data_sel		EQU 1E0h
-def_exception_sel	EQU 1E8h
+kernel32_code           EQU 1D8h
+int_data_sel            EQU 1E0h
+def_exception_sel       EQU 1E8h
 ;
-vm_linear_sel		EQU 1F0h
-vm_int_sel			EQU 1F8h
+vm_linear_sel           EQU 1F0h
+vm_int_sel                      EQU 1F8h
 
 long_user_data_sel  EQU 203h
 long_user_code_sel  EQU 20Bh
 ;
-callb_exc16_sel		EQU 213h
-callb_exc32_sel		EQU 21Bh
-callb_int16_sel		EQU 223h
-callb_int32_sel		EQU 22Bh
-callb_vm16_sel		EQU 233h
-callb_vm32_sel		EQU 23Bh
+callb_exc16_sel         EQU 213h
+callb_exc32_sel         EQU 21Bh
+callb_int16_sel         EQU 223h
+callb_int32_sel         EQU 22Bh
+callb_vm16_sel          EQU 233h
+callb_vm32_sel          EQU 23Bh
 ;
-irq_data_sel		EQU 240h
+irq_data_sel            EQU 240h
 
 long_ldt_sel        EQU 248h
 
-__0000				EQU 253h
-__0040				EQU 25Bh
-__B000				EQU 263h
-__B800				EQU 26Bh
-__F000				EQU 273h
+__0000                          EQU 253h
+__0040                          EQU 25Bh
+__B000                          EQU 263h
+__B800                          EQU 26Bh
+__F000                          EQU 273h
 
-app_data_sel		EQU 278h
+app_data_sel            EQU 278h
 
-__A000				EQU 283h
-__C000				EQU 28Bh
+__A000                          EQU 283h
+__C000                          EQU 28Bh
 
 chandle_data_sel    EQU 290h
-handle_data_sel	    EQU 2A0h
+handle_data_sel     EQU 2A0h
 long_mem_sel        EQU 2A8h        
 
-sys_dir_sel			EQU 2B0h
-sys_page_sel		EQU 2B8h
-process_dir_sel		EQU 2C0h
-process_page_sel	EQU 2C8h
+sys_dir_sel                     EQU 2B0h
+sys_page_sel            EQU 2B8h
+process_dir_sel         EQU 2C0h
+process_page_sel        EQU 2C8h
 
 sched_code_sel      EQU 2D0h
 sched_data_sel      EQU 2D8h
+
+clone_dir_sel       EQU 2E0h
+clone_page_sel      EQU 2E8h
 
 ;
 ; GDT selectors device-driver selectors
 ;
 ;
 exec_code_sel       EQU 3F0h
-exec_data_sel		EQU 3F8h
+exec_data_sel           EQU 3F8h
 
 guidev_code_sel     EQU 400h
 guidev_data_sel     EQU 408h
@@ -182,162 +185,162 @@ guidev_data_sel     EQU 408h
 audio_code_sel      EQU 410h
 audio_data_sel      EQU 418h
 
-fat_code_sel		EQU 420h
-rdfs_code_sel		EQU 428h
+fat_code_sel            EQU 420h
+rdfs_code_sel           EQU 428h
 
 pcfont_data_sel     EQU 430h
-mon_video_data_sel	EQU 438h
+mon_video_data_sel      EQU 438h
 
-mail_code_sel		EQU 440h
+mail_code_sel           EQU 440h
 
 real_text_sel       EQU 448h
 
-mon_video_code_sel	EQU 450h
-video_pos_sel		EQU 458h
+mon_video_code_sel      EQU 450h
+video_pos_sel           EQU 458h
 
 keymap_code_sel     EQU 460h
 keymap_data_sel     EQU 468h
 
-dos_process_sel		EQU 470h
-dos_vm_sel			EQU 47Bh
+dos_process_sel         EQU 470h
+dos_vm_sel                      EQU 47Bh
 
 ac97_code_sel       EQU 490h
 pcbios_proc_sel     EQU 498h
 
-pcbios_code_sel		EQU 4A0h
-pcbios_data_sel		EQU 4A8h
+pcbios_code_sel         EQU 4A0h
+pcbios_data_sel         EQU 4A8h
 
 dosemu_code_sel     EQU 4E0h
 dosemu_data_sel     EQU 4E8h
 
-pci_code_sel		EQU 4F0h
-pci_data_sel		EQU 4F8h
+pci_code_sel            EQU 4F0h
+pci_data_sel            EQU 4F8h
 
-dpmi_data_sel		EQU 500h
-raw_switch_sel		EQU 50Bh
+dpmi_data_sel           EQU 500h
+raw_switch_sel          EQU 50Bh
 
-dpmi_code16_sel		EQU 510h
-dpmi_code32_sel		EQU 518h
+dpmi_code16_sel         EQU 510h
+dpmi_code32_sel         EQU 518h
 
-state_save_sel		EQU 523h
+state_save_sel          EQU 523h
 
-discbuf_code_sel	EQU 530h
+discbuf_code_sel        EQU 530h
 
-emulator_code_sel	EQU 540h
-emulator_data_sel	EQU 548h
+emulator_code_sel       EQU 540h
+emulator_data_sel       EQU 548h
 
-sernet_code_sel		EQU 550h
-sernet_data_sel		EQU 558h
+sernet_code_sel         EQU 550h
+sernet_data_sel         EQU 558h
 
-ip_code_sel			EQU 560h
-ip_data_sel			EQU 568h
+ip_code_sel                     EQU 560h
+ip_data_sel                     EQU 568h
 
 env_code_sel        EQU 570h
 
-socket_code_sel		EQU 580h
-socket_data_sel		EQU 588h
+socket_code_sel         EQU 580h
+socket_data_sel         EQU 588h
 
 smp_deb_code_sel    EQU 590h
 smp_deb_data_sel    EQU 598h
 
-ems_process_sel		EQU 5A0h
+ems_process_sel         EQU 5A0h
 
-fs_code_sel			EQU 5B0h
-fs_data_sel			EQU 5B8h
+fs_code_sel                     EQU 5B0h
+fs_data_sel                     EQU 5B8h
 fs_sys_data_sel     EQU 5C0h
-fs_process_sel		EQU 5C8h
+fs_process_sel          EQU 5C8h
 
 rem_debug_code_sel  EQU 5D0h
 rem_debug_data_sel  EQU 5D8h
 
-debug_code_sel		EQU 5F0h
-test_sel			EQU 5F8h
+debug_code_sel          EQU 5F0h
+test_sel                        EQU 5F8h
 
-disc_drive_sel		EQU 608h
+disc_drive_sel          EQU 608h
 
-mail_local_sel		EQU 610h
-mail_global_sel		EQU 618h
+mail_local_sel          EQU 610h
+mail_global_sel         EQU 618h
 
-mousedev_code_sel	EQU 620h
-mousedev_data_sel	EQU 628h
+mousedev_code_sel       EQU 620h
+mousedev_data_sel       EQU 628h
 
-disc_code_sel		EQU 630h
-disc_data_sel		EQU 638h
+disc_code_sel           EQU 630h
+disc_data_sel           EQU 638h
 
-elf_code_sel		EQU 640h
+elf_code_sel            EQU 640h
 
-debug_tss_sel		EQU 650h
+debug_tss_sel           EQU 650h
 
-cd_code_sel			EQU 660h
-cd_data_sel			EQU 668h
+cd_code_sel                     EQU 660h
+cd_data_sel                     EQU 668h
 
-net_code_sel		EQU 670h
-net_data_sel		EQU 678h
-net_mem_sel			EQU 680h
+net_code_sel            EQU 670h
+net_data_sel            EQU 678h
+net_mem_sel                     EQU 680h
 
 pnp_code_sel        EQU 690h
 pnp_data_sel        EQU 698h
 
-rs485_code_sel		EQU 6C0h
-rs485_data_sel		EQU 6C8h
-rs485_task_sel		EQU 6D0h
+rs485_code_sel          EQU 6C0h
+rs485_data_sel          EQU 6C8h
+rs485_task_sel          EQU 6D0h
 
-serial_code_sel		EQU 6E0h
-serial_data_sel		EQU 6E8h
+serial_code_sel         EQU 6E0h
+serial_data_sel         EQU 6E8h
 
-rtc_code_sel		EQU 6F0h
-rtc_data_sel		EQU 6F8h
+rtc_code_sel            EQU 6F0h
+rtc_data_sel            EQU 6F8h
 
-state_code_sel		EQU 700h
+state_code_sel          EQU 700h
 
-font_code_sel		EQU 710h
-font_data_sel		EQU 718h
+font_code_sel           EQU 710h
+font_data_sel           EQU 718h
 
-floppy_code_sel		EQU 720h
-floppy_data_sel		EQU 728h
+floppy_code_sel         EQU 720h
+floppy_data_sel         EQU 728h
 
-printer_code_sel	EQU 730h
+printer_code_sel        EQU 730h
 printer_data_sel    EQU 738h
 
-xms_local_sel		EQU 740h
+xms_local_sel           EQU 740h
 
-com_code_sel		EQU 750h
+com_code_sel            EQU 750h
 com_data_sel        EQU 758h
 
 ramdrive_process_sel EQU 780h
-flashfs_code_sel	EQU 788h
+flashfs_code_sel        EQU 788h
 
-ne_code_sel			EQU 790h
-pe_code_sel			EQU 7A0h
+ne_code_sel                     EQU 790h
+pe_code_sel                     EQU 7A0h
 
-ether_code_sel		EQU 7B0h
-ether_data_sel		EQU 7B8h
-ether_mem_sel		EQU 7C0h
+ether_code_sel          EQU 7B0h
+ether_data_sel          EQU 7B8h
+ether_mem_sel           EQU 7C0h
 
-ppp_code_sel		EQU 7D0h
-ppp_data_sel		EQU 7D8h
+ppp_code_sel            EQU 7D0h
+ppp_data_sel            EQU 7D8h
 
-ide_code_sel		EQU 7F0h
+ide_code_sel            EQU 7F0h
 ide_data_sel        EQU 7F8h
-ide_data_sel1		EQU 800h
-ide_data_sel2		EQU 808h
+ide_data_sel1           EQU 800h
+ide_data_sel2           EQU 808h
 
-ipc_code_sel		EQU 810h
-ipc_data_sel		EQU 818h
+ipc_code_sel            EQU 810h
+ipc_data_sel            EQU 818h
 
-ether_data2_sel		EQU 820h
+ether_data2_sel         EQU 820h
 
 lon_code_sel        EQU 830h
 lon_data_sel        EQU 838h
 
-v86_bios_ds_sel		EQU 840h
-v86_bios_es_sel		EQU 848h
+v86_bios_ds_sel         EQU 840h
+v86_bios_es_sel         EQU 848h
 
 piclcd_code_sel     EQU 880h
 piclcd_data_sel     EQU 888h
 
-vga_code_sel	    EQU 8A0h
-vga_data_sel	    EQU 8A8h
+vga_code_sel        EQU 8A0h
+vga_data_sel        EQU 8A8h
 
 power_code_sel      EQU 8C0h
 power_data_sel      EQU 8C8h
@@ -345,20 +348,20 @@ power_data_sel      EQU 8C8h
 pckey_code_sel      EQU 8D0h
 pckey_data_sel      EQU 8D8h
 
-anio_code_sel		EQU 8F0h
+anio_code_sel           EQU 8F0h
 flash_disc_sel      EQU 8F8h
 
 ser_key_code_sel    EQU 900h
 ser_key_data_sel    EQU 908h
 
-dcf_code_sel		EQU 910h
-dcf_data_sel		EQU 918h
+dcf_code_sel            EQU 910h
+dcf_data_sel            EQU 918h
 
-digio_code_sel		EQU 920h
-digio_data_sel		EQU 928h
+digio_code_sel          EQU 920h
+digio_data_sel          EQU 928h
 
-flash_disc_code_sel	EQU 940h
-flash_disc_data_sel	EQU 948h
+flash_disc_code_sel     EQU 940h
+flash_disc_data_sel     EQU 948h
 
 bsp_code_sel        EQU 960h
 bsp_data_sel        EQU 968h
@@ -475,11 +478,11 @@ bignum_data_sel     EQU 0BE8h
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h
 
-video_page0_sel		EQU 0F00h
-video_page1_sel		EQU 0F08h
-video_page2_sel		EQU 0F10h
-video_page3_sel		EQU 0F18h
-video_page4_sel		EQU 0F20h
-video_page5_sel		EQU 0F28h
-video_page6_sel		EQU 0F30h
-video_page7_sel		EQU 0F38h
+video_page0_sel         EQU 0F00h
+video_page1_sel         EQU 0F08h
+video_page2_sel         EQU 0F10h
+video_page3_sel         EQU 0F18h
+video_page4_sel         EQU 0F20h
+video_page5_sel         EQU 0F28h
+video_page6_sel         EQU 0F30h
+video_page7_sel         EQU 0F38h

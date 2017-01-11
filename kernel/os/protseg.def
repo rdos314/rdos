@@ -25,14 +25,14 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-idt_size			EQU 800h
-ldt_size			EQU 200h
+idt_size                        EQU 800h
+ldt_size                        EQU 200h
 
-k_data_size			EQU 2000h
-l_stack_size		EQU 2000h
-thread_data_size	EQU 0FFFFh
+k_data_size                     EQU 2000h
+l_stack_size            EQU 2000h
+thread_data_size        EQU 0FFFFh
 
-stack0_size			EQU 1000h
+stack0_size                     EQU 1000h
 
 ;
 ; physical address space
@@ -44,31 +44,31 @@ core_save_phys      EQU 00011EC00h
 ; linear address space
 ;
 
-video_local_linear		EQU 0000A0000h
-ems_linear				EQU 0000D0000h
-fixed_vm_linear			EQU 0000E0000h
-vm_linear				EQU 0000E1000h
+video_local_linear              EQU 0000A0000h
+ems_linear                              EQU 0000D0000h
+fixed_vm_linear                 EQU 0000E0000h
+vm_linear                               EQU 0000E1000h
 
 long_map_linear         EQU 000110000h
 long_idt_linear         EQU 00011F000h
 long_map_size           EQU 000010000h
 
-local_byte_linear		EQU 000120000h
-local_page_linear		EQU 000300000h
+local_byte_linear               EQU 000120000h
+local_page_linear               EQU 000300000h
 
 boot_efi_linear         EQU 040000000h
 
 long_buf_linear         EQU 040000000h
 long_buf_size           EQU 07F000000h
 
-flat_size				EQU 0BE000000h
+flat_size                               EQU 0BE000000h
 
-system_mem_start		EQU 0BE000000h
+system_mem_start                EQU 0BE000000h
 
 long_section_alias      EQU 0BEE00000h
 
-handle_linear			EQU 0BF000000h
-fixed_program_linear	EQU 0BF010000h
+handle_linear                   EQU 0BF000000h
+fixed_program_linear    EQU 0BF010000h
 long_process_linear     EQU 0BF400000h
 
 long_alloc_section      EQU 0BF7EFFE8h
@@ -76,34 +76,35 @@ long_alloc_base         EQU 0BF7EFFF0h
 long_ldt_spinlock       EQU 0BF7EFFF8h
 long_ldt_linear         EQU 0BF7F0000h
 
-process_page_linear		EQU 0BF800000h
+process_page_linear             EQU 0BF800000h
 
-sys_page_linear			EQU 0C0000000h
+sys_page_linear                 EQU 0C0000000h
+clone_page_linear               EQU 0C0800000h
 
-global_byte_linear		EQU 0C0800000h
-global_byte_size		EQU 007800000h
+global_byte_linear              EQU 0C1000000h
+global_byte_size                EQU 007000000h
 
-global_page_linear		EQU 0C8000000h
-global_page_size		EQU 034000000h
+global_page_linear              EQU 0C8000000h
+global_page_size                EQU 034000000h
 
 fixed_process_linear    EQU 0FC000000h
 
 phys_bitmap_linear      EQU 0FD000000h
 
-alias_linear			EQU 0FD800000h
+alias_linear                    EQU 0FD800000h
 
-video_focus_linear		EQU 0FE000000h
+video_focus_linear              EQU 0FE000000h
 
-page0_linear			EQU 0FE022000h
+page0_linear                    EQU 0FE022000h
 gdt_core_linear         EQU 0FE023000h
-gdt_linear				EQU 0FE024FB8h      ; this address must be aligned to core_data_sel
-system_linear			EQU 0FE035000h
-system_linear_size		EQU 000F8B000h
+gdt_linear                              EQU 0FE024FB8h      ; this address must be aligned to core_data_sel
+system_linear                   EQU 0FE035000h
+system_linear_size              EQU 000F8B000h
 
 osgate_linear           EQU 0FEFC0000h
 usergate_linear         EQU 0FEFD0000h
 
-kernel_linear			EQU 0FF000000h
+kernel_linear                   EQU 0FF000000h
 
 long_code_linear        EQU 018000000000h
 long_code_size          EQU 007FC0000000h

@@ -1963,6 +1963,11 @@ local_get_thread_page_dir32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_clone32  Proc near
+    mov bx,process_dir_sel
+    mov ds,bx
+    mov bx,(clone_page_linear SHR 20) AND 0FFFh
+    mov al,3
+    mov [bx],eax
     ret
 local_clone32  Endp
 
@@ -4036,7 +4041,33 @@ local_get_thread_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_clone64  Proc near
-    clc
+    mov al,3
+    mov bx,process_dir_sel   
+    mov ds,bx
+    mov bx,(clone_page_linear SHR 18)
+    mov ds:[bx],eax
+;
+    mov ax,clone_dir_sel
+    mov ds,ax
+    mov ax,clone_page_sel
+    mov es,ax
+    mov ecx,process_page_linear SHR 21
+    xor ebx,ebx
+    xor esi,esi
+
+lcDirLoop64:
+    mov eax,ds:[ebx]
+    test al,1
+    jz lcDirNext64
+;
+    int 3
+
+lcDirNext64:
+    add ebx,8
+    add esi,1000h
+    loop lcDirLoop64
+;
+    int 3
     ret
 local_clone64  Endp
 
@@ -5231,6 +5262,18 @@ start_paging_global_done32:
     mov ecx,800000h
     mov edx,phys_bitmap_linear
     call local_create_data_sel16
+;
+    mov bx,clone_dir_sel
+    mov ecx,1000h
+    mov edx,clone_page_linear
+    shr edx,10
+    add edx,process_page_linear
+    call local_create_data_sel16
+;
+    mov bx,clone_page_sel
+    mov edx,clone_page_linear
+    mov ecx,400000h
+    call local_create_data_sel16
     ret
 start_paging32    Endp
 
@@ -5881,6 +5924,18 @@ start_paging_global_done64:
     mov bx,phys_bit_sel
     mov ecx,800000h
     mov edx,phys_bitmap_linear
+    call local_create_data_sel16
+;
+    mov bx,clone_dir_sel
+    mov ecx,4000h
+    mov edx,clone_page_linear
+    shr edx,9
+    add edx,process_page_linear
+    call local_create_data_sel16
+;
+    mov bx,clone_page_sel
+    mov edx,clone_page_linear
+    mov ecx,800000h
     call local_create_data_sel16
     ret
 start_paging64    Endp
