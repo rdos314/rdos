@@ -31,6 +31,7 @@
 #include "bitdev.h"
 #include "panel.h"
 #include "strarr.h"
+#include "ini.h"
 
 class TListControl;
 
@@ -40,6 +41,7 @@ public:
     TListFactory();
     ~TListFactory();
 
+    virtual void Set(TIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetFont(int height);
@@ -49,15 +51,15 @@ public:
     void SetSelectedDrawColor(int r, int g, int b);
     void SetSelectedBackColor(int r, int g, int b);
 
-	TListControl *Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
-	TListControl *Create(TControl *control, int xstart, int ystart, int xsize, int ysize);
+        TListControl *Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+        TListControl *Create(TControl *control, int xstart, int ystart, int xsize, int ysize);
 
-	virtual TPanelControl *CreatePanel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
-	virtual TPanelControl *CreatePanel(TControl *control, int xstart, int ystart, int xsize, int ysize);
+        virtual TPanelControl *CreatePanel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+        virtual TPanelControl *CreatePanel(TControl *control, int xstart, int ystart, int xsize, int ysize);
 
-	virtual TListControl *CreateList(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
-	virtual TListControl *CreateList(TControl *control, int xstart, int ystart, int xsize, int ysize);
-		
+        virtual TListControl *CreateList(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
+        virtual TListControl *CreateList(TControl *control, int xstart, int ystart, int xsize, int ysize);
+                
 protected:
     void Init();
     void SetDefault(TListControl *fileview, int xstart, int ystart, int xsize, int ysize);
@@ -91,6 +93,7 @@ public:
 
     static int IsListControl(TControl *control);
 
+    virtual void Set(TIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetFont(int height);
@@ -139,13 +142,13 @@ protected:
     virtual void PageUp();
     virtual void VerMove(long double pos);
 
-	virtual int OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
-	virtual int OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
-	virtual int OnLeftUp(int x, int y, int ButtonState, int KeyState);
-	virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
+        virtual int OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+        virtual int OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+        virtual int OnLeftUp(int x, int y, int ButtonState, int KeyState);
+        virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
 
-    virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height); 	
-    virtual void NotifyResize(); 	
+    virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);         
+    virtual void NotifyResize();        
 
     void RedrawTrans();
     void UpdateList();

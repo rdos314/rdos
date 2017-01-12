@@ -28,7 +28,6 @@
 #include <string.h>
 
 #include "listbox.h"
-#include "ini.h"
 
 #define FALSE   0
 #define TRUE    !FALSE
@@ -108,15 +107,14 @@ void TListFactory::Init()
 #   Returns....: *
 #
 ##########################################################################*/
-void TListFactory::Set(const char *IniName, const char *IniSection)
+void TListFactory::Set(TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
     int size;
 
-    Ini.GotoSection(IniSection);
+    Ini->GotoSection(IniSection);
 
-    if (Ini.ReadVar("Font.Size", str, 255))
+    if (Ini->ReadVar("Font.Size", str, 255))
     {    
         size = atoi(str);
 
@@ -124,43 +122,60 @@ void TListFactory::Set(const char *IniName, const char *IniSection)
             SetFont(size);
     }
             
-    if (Ini.ReadVar("DrawColor.R", str, 255))
+    if (Ini->ReadVar("DrawColor.R", str, 255))
         FDrawR = atoi(str);
     
-    if (Ini.ReadVar("DrawColor.G", str, 255))
+    if (Ini->ReadVar("DrawColor.G", str, 255))
         FDrawG = atoi(str);
 
-    if (Ini.ReadVar("DrawColor.B", str, 255))
+    if (Ini->ReadVar("DrawColor.B", str, 255))
         FDrawB = atoi(str);
 
             
-    if (Ini.ReadVar("SelectedDrawColor.R", str, 255))
+    if (Ini->ReadVar("SelectedDrawColor.R", str, 255))
         FSelectedDrawR = atoi(str);
     
-    if (Ini.ReadVar("SelectedDrawColor.G", str, 255))
+    if (Ini->ReadVar("SelectedDrawColor.G", str, 255))
         FSelectedDrawG = atoi(str);
 
-    if (Ini.ReadVar("SelectedDrawColor.B", str, 255))
+    if (Ini->ReadVar("SelectedDrawColor.B", str, 255))
         FSelectedDrawB = atoi(str);
 
             
-    if (Ini.ReadVar("SelectedBackColor.R", str, 255))
+    if (Ini->ReadVar("SelectedBackColor.R", str, 255))
         FSelectedBackR = atoi(str);
     
-    if (Ini.ReadVar("SelectedBackColor.G", str, 255))
+    if (Ini->ReadVar("SelectedBackColor.G", str, 255))
         FSelectedBackG = atoi(str);
 
-    if (Ini.ReadVar("SelectedBackColor.B", str, 255))
+    if (Ini->ReadVar("SelectedBackColor.B", str, 255))
         FSelectedBackB = atoi(str);
 
 
-    if (Ini.ReadVar("Space.X", str, 255))
+    if (Ini->ReadVar("Space.X", str, 255))
         FStartX = atoi(str);
     
-    if (Ini.ReadVar("Space.Y", str, 255))
+    if (Ini->ReadVar("Space.Y", str, 255))
         FStartY = atoi(str);
 
-    TPanelFactory::Set(IniName, IniSection);
+    TPanelFactory::Set(Ini, IniSection);
+}
+    
+/*##########################################################################
+#
+#   Name       : TListFactory::Set
+#
+#   Purpose....: Load settings from ini-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TListFactory::Set(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    Set(&Ini, IniSection);
 }
 
 /*##########################################################################
@@ -296,7 +311,7 @@ TListControl *TListFactory::Create(TControlThread *dev, int xstart, int ystart, 
 
     SetDefault(list, xstart, ystart, xsize, ysize);
 
-	return list;
+        return list;
 }
 
 /*##########################################################################
@@ -582,15 +597,14 @@ void TListControl::NotifyResize()
 #   Returns....: *
 #
 ##########################################################################*/
-void TListControl::Set(const char *IniName, const char *IniSection)
+void TListControl::Set(TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
     int size;
 
-    Ini.GotoSection(IniSection);
+    Ini->GotoSection(IniSection);
 
-    if (Ini.ReadVar("Font.Size", str, 255))
+    if (Ini->ReadVar("Font.Size", str, 255))
     {    
         size = atoi(str);
 
@@ -598,44 +612,61 @@ void TListControl::Set(const char *IniName, const char *IniSection)
             SetFont(size);
     }
 
-    if (Ini.ReadVar("DrawColor.R", str, 255))
+    if (Ini->ReadVar("DrawColor.R", str, 255))
         FDrawR = atoi(str);
     
-    if (Ini.ReadVar("DrawColor.G", str, 255))
+    if (Ini->ReadVar("DrawColor.G", str, 255))
         FDrawG = atoi(str);
 
-    if (Ini.ReadVar("DrawColor.B", str, 255))
+    if (Ini->ReadVar("DrawColor.B", str, 255))
         FDrawB = atoi(str);
 
             
-    if (Ini.ReadVar("SelectedDrawColor.R", str, 255))
+    if (Ini->ReadVar("SelectedDrawColor.R", str, 255))
         FSelectedDrawR = atoi(str);
     
-    if (Ini.ReadVar("SelectedDrawColor.G", str, 255))
+    if (Ini->ReadVar("SelectedDrawColor.G", str, 255))
         FSelectedDrawG = atoi(str);
 
-    if (Ini.ReadVar("SelectedDrawColor.B", str, 255))
+    if (Ini->ReadVar("SelectedDrawColor.B", str, 255))
         FSelectedDrawB = atoi(str);
 
             
-    if (Ini.ReadVar("SelectedBackColor.R", str, 255))
+    if (Ini->ReadVar("SelectedBackColor.R", str, 255))
         FSelectedBackR = atoi(str);
     
-    if (Ini.ReadVar("SelectedBackColor.G", str, 255))
+    if (Ini->ReadVar("SelectedBackColor.G", str, 255))
         FSelectedBackG = atoi(str);
 
-    if (Ini.ReadVar("SelectedBackColor.B", str, 255))
+    if (Ini->ReadVar("SelectedBackColor.B", str, 255))
         FSelectedBackB = atoi(str);
 
 
-    if (Ini.ReadVar("Space.X", str, 255))
+    if (Ini->ReadVar("Space.X", str, 255))
         FStartX = atoi(str);
     
-    if (Ini.ReadVar("Space.Y", str, 255))
+    if (Ini->ReadVar("Space.Y", str, 255))
         FStartY = atoi(str);
 
-    TPanelControl::Set(IniName, IniSection);
+    TPanelControl::Set(Ini, IniSection);
     NotifyResize();
+}
+    
+/*##########################################################################
+#
+#   Name       : TListControl::Set
+#
+#   Purpose....: Load settings from ini-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TListControl::Set(const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    Set(&Ini, IniSection);
 }
 
 /*##########################################################################
@@ -1350,7 +1381,7 @@ int TListControl::OnLeftDown(int x, int y, int ButtonState, int KeyState)
 {
     int xstart, ystart;
     int xoffs, yoffs;
-	 int xdiff, ydiff;
+         int xdiff, ydiff;
     int row;
         
     if (FFont && IsInsidePanel(x, y))
@@ -1456,8 +1487,8 @@ int TListControl::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int Sc
             return TRUE;
 
         default:
-				return TControl::OnKeyReleased(ExtKey, KeyState, VirtualKey, ScanCode);
-	 }
+                                return TControl::OnKeyReleased(ExtKey, KeyState, VirtualKey, ScanCode);
+         }
 }
 
 /*##########################################################################
@@ -1488,7 +1519,7 @@ void TListControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int
 
     xmin += xoffs;
     ymin += yoffs;
-	width -= xdiff;
+        width -= xdiff;
     height -= ydiff;
 
     xmax = xmin + width - 1;
@@ -1517,17 +1548,17 @@ void TListControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int
         {
             curr = FStartRow + row;
 
-			if (curr == FSelected)
-			{
-				dev->SetDrawColor(FSelectedBackR, FSelectedBackG, FSelectedBackB);
+                        if (curr == FSelected)
+                        {
+                                dev->SetDrawColor(FSelectedBackR, FSelectedBackG, FSelectedBackB);
                 dev->DrawRect(xmin, ystart, xmax, ystart + FRowHeight - 1);
-				dev->SetDrawColor(FSelectedDrawR, FSelectedDrawG, FSelectedDrawB);
-            }                 				
-			else
-			    dev->SetDrawColor(FDrawR, FDrawG, FDrawB);
+                                dev->SetDrawColor(FSelectedDrawR, FSelectedDrawG, FSelectedDrawB);
+            }                                           
+                        else
+                            dev->SetDrawColor(FDrawR, FDrawG, FDrawB);
 
             str = FList[curr];            
-			dev->DrawString(xstart, ystart, str.GetData());
+                        dev->DrawString(xstart, ystart, str.GetData());
 
             ystart += FRowHeight;
         }
