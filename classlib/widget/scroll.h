@@ -122,6 +122,12 @@ public:
         THorScrollControl *CreateHor(TControlThread *dev, int xstart, int ystart, int len);
         THorScrollControl *CreateHor(TControl *control, int xstart, int ystart, int len);
 
+        TVerScrollControl *CreateVer(TControlThread *dev, TIniFile *Ini, const char *IniSection);
+        TVerScrollControl *CreateVer(TControl *control, TIniFile *Ini, const char *IniSection);
+
+        THorScrollControl *CreateHor(TControlThread *dev, TIniFile *Ini, const char *IniSection);
+        THorScrollControl *CreateHor(TControl *control, TIniFile *Ini, const char *IniSection);
+
         TVerScrollControl *CreateVer(TControlThread *dev, const char *IniName, const char *IniSection);
         TVerScrollControl *CreateVer(TControl *control, const char *IniName, const char *IniSection);
 

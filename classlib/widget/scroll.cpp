@@ -943,35 +943,174 @@ THorScrollControl *TScrollFactory::CreateHor(TControl *control, int xstart, int 
 #   Returns....: *
 #
 ##########################################################################*/
-TVerScrollControl *TScrollFactory::CreateVer(TControlThread *dev, const char *IniName, const char *IniSection)
+TVerScrollControl *TScrollFactory::CreateVer(TControlThread *dev, TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
     TVerScrollControl *scroll;
     int x = 0;
     int y = 0;
     int len = 0;
 
-    Ini.GotoSection(IniSection);
+    Ini->GotoSection(IniSection);
 
-    if (Ini.ReadVar("Width", str, 255))
+    if (Ini->ReadVar("Width", str, 255))
         FWidth = atoi(str);
 
-    if (Ini.ReadVar("Len", str, 255))
+    if (Ini->ReadVar("Len", str, 255))
         len = atoi(str);
 
 
-    if (Ini.ReadVar("Start.X", str, 255))
+    if (Ini->ReadVar("Start.X", str, 255))
         x = atoi(str);
 
-    if (Ini.ReadVar("Start.Y", str, 255))
+    if (Ini->ReadVar("Start.Y", str, 255))
         y = atoi(str);
 
     scroll = new TVerScrollControl(dev, x, y, FWidth, len);
 
-        SetParam(scroll);
+    SetParam(scroll);
 
     return scroll;
+}
+
+/*##########################################################################
+#
+#   Name       : TScrollFactory::CreateVer
+#
+#   Purpose....: Create vertical scroll control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TVerScrollControl *TScrollFactory::CreateVer(TControl *control, TIniFile *Ini, const char *IniSection)
+{
+    char str[256];
+    TVerScrollControl *scroll;
+    int x = 0;
+    int y = 0;
+    int len = 0;
+
+    Ini->GotoSection(IniSection);
+
+    if (Ini->ReadVar("Width", str, 255))
+        FWidth = atoi(str);
+
+    if (Ini->ReadVar("Len", str, 255))
+        len = atoi(str);
+
+
+    if (Ini->ReadVar("Start.X", str, 255))
+        x = atoi(str);
+
+    if (Ini->ReadVar("Start.Y", str, 255))
+        y = atoi(str);
+
+    scroll = new TVerScrollControl(control, x, y, FWidth, len);
+
+    SetParam(scroll);
+
+    return scroll;
+}
+
+/*##########################################################################
+#
+#   Name       : TScrollFactory::CreateHor
+#
+#   Purpose....: Create horisontal scroll control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THorScrollControl *TScrollFactory::CreateHor(TControlThread *dev, TIniFile *Ini, const char *IniSection)
+{
+    char str[256];
+    THorScrollControl *scroll;
+    int x = 0;
+    int y = 0;
+    int len = 0;
+
+    Ini->GotoSection(IniSection);
+
+    if (Ini->ReadVar("Width", str, 255))
+        FWidth = atoi(str);
+
+    if (Ini->ReadVar("Len", str, 255))
+        len = atoi(str);
+
+
+    if (Ini->ReadVar("Start.X", str, 255))
+        x = atoi(str);
+
+    if (Ini->ReadVar("Start.Y", str, 255))
+        y = atoi(str);
+
+    scroll = new THorScrollControl(dev, x, y, FWidth, len);
+
+    SetParam(scroll);
+
+    return scroll;
+}
+
+/*##########################################################################
+#
+#   Name       : TScrollFactory::CreateHor
+#
+#   Purpose....: Create horisontal scroll control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THorScrollControl *TScrollFactory::CreateHor(TControl *control, TIniFile *Ini, const char *IniSection)
+{
+    char str[256];
+    THorScrollControl *scroll;
+    int x = 0;
+    int y = 0;
+    int len = 0;
+
+    Ini->GotoSection(IniSection);
+
+    if (Ini->ReadVar("Width", str, 255))
+        FWidth = atoi(str);
+
+    if (Ini->ReadVar("Len", str, 255))
+        len = atoi(str);
+
+
+    if (Ini->ReadVar("Start.X", str, 255))
+        x = atoi(str);
+
+    if (Ini->ReadVar("Start.Y", str, 255))
+        y = atoi(str);
+
+    scroll = new THorScrollControl(control, x, y, FWidth, len);
+
+    SetParam(scroll);
+
+    return scroll;
+}
+
+/*##########################################################################
+#
+#   Name       : TScrollFactory::CreateVer
+#
+#   Purpose....: Create vertical scroll control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TVerScrollControl *TScrollFactory::CreateVer(TControlThread *dev, const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    return CreateVer(dev, &Ini, IniSection);
 }
 
 /*##########################################################################
@@ -988,32 +1127,7 @@ TVerScrollControl *TScrollFactory::CreateVer(TControlThread *dev, const char *In
 TVerScrollControl *TScrollFactory::CreateVer(TControl *control, const char *IniName, const char *IniSection)
 {
     TIniFile Ini(IniName);
-    char str[256];
-    TVerScrollControl *scroll;
-    int x = 0;
-    int y = 0;
-    int len = 0;
-
-    Ini.GotoSection(IniSection);
-
-    if (Ini.ReadVar("Width", str, 255))
-        FWidth = atoi(str);
-
-    if (Ini.ReadVar("Len", str, 255))
-        len = atoi(str);
-
-
-    if (Ini.ReadVar("Start.X", str, 255))
-        x = atoi(str);
-
-    if (Ini.ReadVar("Start.Y", str, 255))
-        y = atoi(str);
-
-    scroll = new TVerScrollControl(control, x, y, FWidth, len);
-
-        SetParam(scroll);
-
-    return scroll;
+    return CreateVer(control, &Ini, IniSection);
 }
 
 /*##########################################################################
@@ -1030,32 +1144,7 @@ TVerScrollControl *TScrollFactory::CreateVer(TControl *control, const char *IniN
 THorScrollControl *TScrollFactory::CreateHor(TControlThread *dev, const char *IniName, const char *IniSection)
 {
     TIniFile Ini(IniName);
-    char str[256];
-    THorScrollControl *scroll;
-    int x = 0;
-    int y = 0;
-    int len = 0;
-
-    Ini.GotoSection(IniSection);
-
-    if (Ini.ReadVar("Width", str, 255))
-        FWidth = atoi(str);
-
-    if (Ini.ReadVar("Len", str, 255))
-        len = atoi(str);
-
-
-    if (Ini.ReadVar("Start.X", str, 255))
-        x = atoi(str);
-
-    if (Ini.ReadVar("Start.Y", str, 255))
-        y = atoi(str);
-
-    scroll = new THorScrollControl(dev, x, y, FWidth, len);
-
-        SetParam(scroll);
-
-    return scroll;
+    return CreateHor(dev, &Ini, IniSection);
 }
 
 /*##########################################################################
@@ -1072,32 +1161,7 @@ THorScrollControl *TScrollFactory::CreateHor(TControlThread *dev, const char *In
 THorScrollControl *TScrollFactory::CreateHor(TControl *control, const char *IniName, const char *IniSection)
 {
     TIniFile Ini(IniName);
-    char str[256];
-    THorScrollControl *scroll;
-    int x = 0;
-    int y = 0;
-    int len = 0;
-
-    Ini.GotoSection(IniSection);
-
-    if (Ini.ReadVar("Width", str, 255))
-        FWidth = atoi(str);
-
-    if (Ini.ReadVar("Len", str, 255))
-        len = atoi(str);
-
-
-    if (Ini.ReadVar("Start.X", str, 255))
-        x = atoi(str);
-
-    if (Ini.ReadVar("Start.Y", str, 255))
-        y = atoi(str);
-
-    scroll = new THorScrollControl(control, x, y, FWidth, len);
-
-        SetParam(scroll);
-
-    return scroll;
+    return CreateHor(control, &Ini, IniSection);
 }
 
 /*##########################################################################
