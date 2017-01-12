@@ -356,29 +356,45 @@ void TImageControl::SetLoader(TLoaderThread *loader)
 #   Returns....: *
 #
 ##########################################################################*/
+void TImageControl::Set(TIniFile *Ini, const char *IniSection)
+{
+    char str[256];
+
+    Ini->GotoSection(IniSection);
+
+    if (Ini->ReadVar("Key", str, 255))
+        FKey = DecodeKey(str);
+
+    if (Ini->ReadVar("BackColor.R", str, 255))
+        FBackR = atoi(str);
+    
+    if (Ini->ReadVar("BackColor.G", str, 255))
+                FBackG = atoi(str);
+
+    if (Ini->ReadVar("BackColor.B", str, 255))
+        FBackB = atoi(str);
+
+    if (Ini->ReadVar("Picture", str, 255))
+        LoadImage(str);
+    
+    TControl::Set(Ini, IniSection);
+}
+
+/*##########################################################################
+#
+#   Name       : TImageControl::Set
+#
+#   Purpose....: Set control settings from Ini-file section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
 void TImageControl::Set(const char *IniName, const char *IniSection)
 {
     TIniFile Ini(IniName);
-    char str[256];
-
-    Ini.GotoSection(IniSection);
-
-    if (Ini.ReadVar("Key", str, 255))
-        FKey = DecodeKey(str);
-
-    if (Ini.ReadVar("BackColor.R", str, 255))
-        FBackR = atoi(str);
-    
-    if (Ini.ReadVar("BackColor.G", str, 255))
-                FBackG = atoi(str);
-
-    if (Ini.ReadVar("BackColor.B", str, 255))
-        FBackB = atoi(str);
-
-    if (Ini.ReadVar("Picture", str, 255))
-        LoadImage(str);
-    
-    TControl::Set(IniName, IniSection);
+    Set(&Ini, IniSection);
 }
 
 /*##########################################################################

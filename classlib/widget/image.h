@@ -43,6 +43,7 @@ public:
 
     static int IsImageControl(TControl *control);
 
+    virtual void Set(TIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void LoadImage(const char *FileName);
