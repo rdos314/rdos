@@ -1224,9 +1224,8 @@ TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char
 #   Returns....: *
 #
 ##########################################################################*/
-TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, char ch, const char *IniName, const char *IniSection)
+TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, char ch, TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
     int size;
     TButtonControl *button;
@@ -1235,10 +1234,10 @@ TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, ch
     int width = FWidth;
     int height = FHeight;
 
-    Ini.GotoSection(IniSection);
+    Ini->GotoSection(IniSection);
 
 
-    if (Ini.ReadVar("Font.Size", str, 255))
+    if (Ini->ReadVar("Font.Size", str, 255))
     {
         size = atoi(str);
 
@@ -1251,30 +1250,30 @@ TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, ch
         }
     }
 
-    if (Ini.ReadVar("Start.X", str, 255))
+    if (Ini->ReadVar("Start.X", str, 255))
         x = atoi(str);
 
-    if (Ini.ReadVar("Start.Y", str, 255))
+    if (Ini->ReadVar("Start.Y", str, 255))
         y = atoi(str);
 
-    if (Ini.ReadVar("Size.X", str, 255))
+    if (Ini->ReadVar("Size.X", str, 255))
         width = atoi(str);
 
-    if (Ini.ReadVar("Size.Y", str, 255))
+    if (Ini->ReadVar("Size.Y", str, 255))
         height = atoi(str);
 
     button = new TButtonControl(dev, FFont, text, ch, x, y, width, height);
 
     SetParam(button);
 
-    if (Ini.ReadVar("LowerFont.Size", str, 255))
+    if (Ini->ReadVar("LowerFont.Size", str, 255))
     {
         size = atoi(str);
         if (size)
             button->SetLowerFont(size);
     }
 
-    if (Ini.ReadVar("UpperFont.Size", str, 255))
+    if (Ini->ReadVar("UpperFont.Size", str, 255))
     {
         size = atoi(str);
         if (size)
@@ -1295,9 +1294,8 @@ TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, ch
 #   Returns....: *
 #
 ##########################################################################*/
-TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char ch, const char *IniName, const char *IniSection)
+TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char ch, TIniFile *Ini, const char *IniSection)
 {
-    TIniFile Ini(IniName);
     char str[256];
     int size;
     TButtonControl *button;
@@ -1306,9 +1304,9 @@ TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char
     int width = FWidth;
     int height = FHeight;
 
-    Ini.GotoSection(IniSection);
+    Ini->GotoSection(IniSection);
 
-    if (Ini.ReadVar("Font.Size", str, 255))
+    if (Ini->ReadVar("Font.Size", str, 255))
     {
         size = atoi(str);
 
@@ -1321,30 +1319,30 @@ TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char
         }
     }
 
-    if (Ini.ReadVar("Start.X", str, 255))
+    if (Ini->ReadVar("Start.X", str, 255))
         x = atoi(str);
 
-    if (Ini.ReadVar("Start.Y", str, 255))
+    if (Ini->ReadVar("Start.Y", str, 255))
         y = atoi(str);
 
-    if (Ini.ReadVar("Size.X", str, 255))
+    if (Ini->ReadVar("Size.X", str, 255))
         width = atoi(str);
 
-    if (Ini.ReadVar("Size.Y", str, 255))
+    if (Ini->ReadVar("Size.Y", str, 255))
         height = atoi(str);
 
     button = new TButtonControl(control, FFont, text, ch, x, y, width, height);
 
     SetParam(button);
 
-    if (Ini.ReadVar("LowerFont.Size", str, 255))
+    if (Ini->ReadVar("LowerFont.Size", str, 255))
     {
         size = atoi(str);
         if (size)
             button->SetLowerFont(size);
     }
 
-    if (Ini.ReadVar("UpperFont.Size", str, 255))
+    if (Ini->ReadVar("UpperFont.Size", str, 255))
     {
         size = atoi(str);
         if (size)
@@ -1352,6 +1350,40 @@ TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char
     }
 
     return button;
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonFactory::Create
+#
+#   Purpose....: Create button control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, char ch, const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    return Create(dev, text, ch, &Ini, IniSection);
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonFactory::Create
+#
+#   Purpose....: Create button control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char ch, const char *IniName, const char *IniSection)
+{
+    TIniFile Ini(IniName);
+    return Create(control, text, ch, &Ini, IniSection);
 }
 
 /*##########################################################################

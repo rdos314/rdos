@@ -133,6 +133,9 @@ public:
         TButtonControl *Create(TControlThread *dev, const char *text, char ch, int xstart, int ystart);
         TButtonControl *Create(TControl *control, const char *text, char ch, int xstart, int ystart);
 
+        TButtonControl *Create(TControlThread *dev, const char *text, char ch, TIniFile *Ini, const char *IniSection);
+        TButtonControl *Create(TControl *control, const char *text, char ch, TIniFile *Ini, const char *IniSection);
+
         TButtonControl *Create(TControlThread *dev, const char *text, char ch, const char *IniName, const char *IniSection);
         TButtonControl *Create(TControl *control, const char *text, char ch, const char *IniName, const char *IniSection);
         
