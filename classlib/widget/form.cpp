@@ -30,7 +30,6 @@
 
 #include "rdos.h"
 #include "form.h"
-#include "ini.h"
 
 #define FALSE   0
 #define TRUE    !FALSE
@@ -866,12 +865,12 @@ void TFormControl::OnCreateImage(const char *name, TImageControl *image)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadPanel(const char *IniName, const char *Name)
+void TFormControl::LoadPanel(TIniFile *Ini, const char *Name)
 {
     TPanelControl *panel;
 
     panel = new TPanelControl(this);
-    panel->Set(IniName, Name);
+    panel->Set(Ini, Name);
     OnCreatePanel(Name, panel); 
 
     Add(Name, panel, FORM_TYPE_PANEL);
@@ -888,12 +887,12 @@ void TFormControl::LoadPanel(const char *IniName, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadLabel(const char *IniName, const char *Name)
+void TFormControl::LoadLabel(TIniFile *Ini, const char *Name)
 {
     TLabelControl *label;
 
     label = new TLabelControl(this);
-    label->Set(IniName, Name);
+    label->Set(Ini, Name);
     OnCreateLabel(Name, label);    
 
     Add(Name, label, FORM_TYPE_LABEL);
@@ -910,12 +909,12 @@ void TFormControl::LoadLabel(const char *IniName, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadButton(const char *IniName, const char *Name)
+void TFormControl::LoadButton(TIniFile *Ini, const char *Name)
 {
     TButtonControl *button;
 
     button = new TButtonControl(this);
-    button->Set(IniName, Name);
+    button->Set(Ini, Name);
     OnCreateButton(Name, button); 
 
     Add(Name, button, FORM_TYPE_BUTTON);
@@ -933,12 +932,12 @@ void TFormControl::LoadButton(const char *IniName, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadFileView(const char *IniName, const char *Name)
+void TFormControl::LoadFileView(TIniFile *Ini, const char *Name)
 {
     TFileViewControl *fileview;
 
     fileview = new TFileViewControl(this);
-    fileview->Set(IniName, Name);
+    fileview->Set(Ini, Name);
     OnCreatePanel(Name, fileview); 
     OnCreateFileView(Name, fileview); 
 
@@ -956,12 +955,12 @@ void TFormControl::LoadFileView(const char *IniName, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadList(const char *IniName, const char *Name)
+void TFormControl::LoadList(TIniFile *Ini, const char *Name)
 {
     TListControl *list;
 
-        list = new TListControl(this);
-    list->Set(IniName, Name);
+    list = new TListControl(this);
+    list->Set(Ini, Name);
     OnCreatePanel(Name, list); 
     OnCreateList(Name, list); 
 
@@ -979,15 +978,15 @@ void TFormControl::LoadList(const char *IniName, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadVerScroll(const char *IniName, const char *Name)
+void TFormControl::LoadVerScroll(TIniFile *Ini, const char *Name)
 {
     TVerScrollControl *scroll;
 
     scroll = new TVerScrollControl(this);
-    scroll->Set(IniName, Name);
-        OnCreateVerScroll(Name, scroll);
+    scroll->Set(Ini, Name);
+    OnCreateVerScroll(Name, scroll);
 
-        Add(Name, scroll, FORM_TYPE_VER_SCROLL);
+    Add(Name, scroll, FORM_TYPE_VER_SCROLL);
 }
 
 /*##########################################################################
@@ -1001,15 +1000,15 @@ void TFormControl::LoadVerScroll(const char *IniName, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadHorScroll(const char *IniName, const char *Name)
+void TFormControl::LoadHorScroll(TIniFile *Ini, const char *Name)
 {
-        THorScrollControl *scroll;
+    THorScrollControl *scroll;
 
-        scroll = new THorScrollControl(this);
-        scroll->Set(IniName, Name);
+    scroll = new THorScrollControl(this);
+    scroll->Set(Ini, Name);
     OnCreateHorScroll(Name, scroll); 
 
-        Add(Name, scroll, FORM_TYPE_HOR_SCROLL);
+    Add(Name, scroll, FORM_TYPE_HOR_SCROLL);
 }
 
 /*##########################################################################
@@ -1023,15 +1022,15 @@ void TFormControl::LoadHorScroll(const char *IniName, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadImage(const char *IniName, const char *Name)
+void TFormControl::LoadImage(TIniFile *Ini, const char *Name)
 {
-        TImageControl *image;
+    TImageControl *image;
 
-        image = new TImageControl(this);
-        image->Set(IniName, Name);
+    image = new TImageControl(this);
+    image->Set(Ini, Name);
     OnCreateImage(Name, image); 
 
-        Add(Name, image, FORM_TYPE_IMAGE);
+    Add(Name, image, FORM_TYPE_IMAGE);
 }
 
 /*##########################################################################
@@ -1045,15 +1044,14 @@ void TFormControl::LoadImage(const char *IniName, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadControl(const char *IniName, const char *Name)
+void TFormControl::LoadControl(TIniFile *Ini, const char *Name)
 {
-    TIniFile Ini(IniName);
     char str[256];
     int use = TRUE;
 
-    Ini.GotoSection(Name);
+    Ini->GotoSection(Name);
 
-    if (Ini.ReadVar("Touch", str, 255))
+    if (Ini->ReadVar("Touch", str, 255))
     {
         if (FUseTouch)
         {
@@ -1069,33 +1067,72 @@ void TFormControl::LoadControl(const char *IniName, const char *Name)
 
     if (use)
     {            
-        if (Ini.ReadVar("Type", str, 255))
+        if (Ini->ReadVar("Type", str, 255))
         {
             if (!strcmp(str, "Label"))
-                LoadLabel(IniName, Name);
+                LoadLabel(Ini, Name);
 
             if (!strcmp(str, "Button"))
-                LoadButton(IniName, Name);
+                LoadButton(Ini, Name);
 
             if (!strcmp(str, "FileView"))
-                LoadFileView(IniName, Name);
+                LoadFileView(Ini, Name);
 
             if (!strcmp(str, "List"))
-                LoadList(IniName, Name);
+                LoadList(Ini, Name);
 
             if (!strcmp(str, "VerScroll"))
-                LoadVerScroll(IniName, Name);
+                LoadVerScroll(Ini, Name);
 
             if (!strcmp(str, "HorScroll"))
-                LoadHorScroll(IniName, Name);
+                LoadHorScroll(Ini, Name);
     
             if (!strcmp(str, "Image"))
-                LoadImage(IniName, Name);
+                LoadImage(Ini, Name);
 
             if (!strcmp(str, "Panel"))
-                LoadPanel(IniName, Name);
+                LoadPanel(Ini, Name);
         }
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TFormControl::LoadControls
+#
+#   Purpose....: Load controls
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFormControl::LoadControls(TIniFile *Ini)
+{
+    char varstr[40];
+    char str[256];
+    int i;
+    int done;
+
+    TPanelControl::Set(Ini, "Load");
+
+    i = 1;
+    done = FALSE;
+    
+    while (!done)
+    {
+        Ini->GotoSection("Load");
+
+        sprintf(varstr, "Control%d", i);
+    
+        if (Ini->ReadVar(varstr, str, 255))
+        {
+            LoadControl(Ini, str);
+            i++;
+        }
+        else
+            done = TRUE;
+    }    
 }
 
 /*##########################################################################
@@ -1112,30 +1149,7 @@ void TFormControl::LoadControl(const char *IniName, const char *Name)
 void TFormControl::LoadControls(const char *IniName)
 {
     TIniFile Ini(IniName);
-    char varstr[40];
-    char str[256];
-    int i;
-    int done;
-
-    TPanelControl::Set(IniName, "Load");
-
-    Ini.GotoSection("Load");
-
-    i = 1;
-    done = FALSE;
-    
-    while (!done)
-    {
-        sprintf(varstr, "Control%d", i);
-    
-        if (Ini.ReadVar(varstr, str, 255))
-        {
-            LoadControl(IniName, str);
-            i++;
-        }
-        else
-            done = TRUE;
-    }    
+    LoadControls(&Ini);
 }
 
 /*##########################################################################
