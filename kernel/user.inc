@@ -1222,7 +1222,7 @@ CloseIni	MACRO
 	        ENDM
 
 ; IN  BX            In handle
-; OUT AX            Out handle
+; OUT BX            Out handle
 DupIni	MACRO
 	UserGate dup_ini_nr
 	        ENDM

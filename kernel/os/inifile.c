@@ -1487,7 +1487,7 @@ int __far ImplOpenIni32(char *FileName)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux ImplDupIni "*" rdosdev parm routine [ebx] value [eax]
+#pragma aux ImplDupIni "*" rdosdev parm routine [ebx] value [ebx]
 int __far ImplDupIni(int InHandle)
 {
     int OutHandle;

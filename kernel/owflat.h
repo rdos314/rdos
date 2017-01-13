@@ -2993,9 +2993,9 @@
 
 #pragma aux RdosDupIni = \
     CallGate_dup_ini \
-    CarryToBool \
+    ValidateHandle \
     parm [ebx] \
-    value [eax];
+    value [ebx];
 
 #pragma aux RdosGotoIniSection = \
     CallGate_goto_ini_section \

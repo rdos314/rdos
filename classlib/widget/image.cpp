@@ -408,7 +408,57 @@ void TImageControl::Set(const char *IniName, const char *IniSection)
 #   Returns....: *
 #
 ##########################################################################*/
-void TImageControl::SetLoadIni(const char *IniName, const char *IniSection)
+void TImageControl::SetLoadIni(const char *Name, TIniFile *Ini, const char *IniSection)
+{
+    int i;
+
+    FImageName = TString(Name) + ":" + TString(IniSection);
+
+    if (FLoadIni)
+        delete FLoadIni;
+
+    FLoadIni = 0;
+
+    Protect();
+
+    for (i = 0; i < MAX_IMAGE_COUNT; i++)
+    {
+        if (FImgArr[i])
+        {
+            delete FImgArr[i];
+            FImgArr[i] = 0;
+        }
+        FDelayArr[i] = 1000;
+    }
+
+    Unprotect();
+
+    FIndex = MAX_IMAGE_COUNT;
+
+    if (Ini)
+    {
+        FLoadIni = new TIniFile(*Ini);
+        FLoadSection = IniSection;
+
+        if (FLoader)
+            Load(1);
+        else
+            Load(MAX_IMAGE_COUNT);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TImageControl::SetOldLoadIni
+#
+#   Purpose....: Set information about background loading
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TImageControl::SetOldLoadIni(const char *IniName, const char *IniSection)
 {
     int i;
     int fh;
@@ -424,17 +474,17 @@ void TImageControl::SetLoadIni(const char *IniName, const char *IniSection)
 
     for (i = 0; i < MAX_IMAGE_COUNT; i++)
     {
-                if (FImgArr[i])
-                {
+        if (FImgArr[i])
+        {
             delete FImgArr[i];
             FImgArr[i] = 0;
         }
-                FDelayArr[i] = 1000;
+        FDelayArr[i] = 1000;
     }
 
     Unprotect();
 
-        FIndex = MAX_IMAGE_COUNT;
+    FIndex = MAX_IMAGE_COUNT;
 
     fh = RdosOpenFile(IniName, 0);
     if (fh)
@@ -446,8 +496,8 @@ void TImageControl::SetLoadIni(const char *IniName, const char *IniSection)
 
         if (FLoader)
             Load(1);
-            else
-                Load(MAX_IMAGE_COUNT);
+        else
+            Load(MAX_IMAGE_COUNT);
     }
 }
             
