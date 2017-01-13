@@ -449,7 +449,7 @@ void TImageControl::SetLoadIni(const char *Name, TIniFile *Ini, const char *IniS
 
 /*##########################################################################
 #
-#   Name       : TImageControl::SetOldLoadIni
+#   Name       : TImageControl::SetLoadIni
 #
 #   Purpose....: Set information about background loading
 #
@@ -458,7 +458,7 @@ void TImageControl::SetLoadIni(const char *Name, TIniFile *Ini, const char *IniS
 #   Returns....: *
 #
 ##########################################################################*/
-void TImageControl::SetOldLoadIni(const char *IniName, const char *IniSection)
+void TImageControl::SetLoadIni(const char *IniName, const char *IniSection)
 {
     int i;
     int fh;

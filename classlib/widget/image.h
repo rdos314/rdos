@@ -54,7 +54,7 @@ public:
 
     void SetLoader(TLoaderThread *Loader);
     void SetLoadIni(const char *Name, TIniFile *Ini, const char *IniSection);
-    void SetOldLoadIni(const char *IniName, const char *IniSection);
+    void SetLoadIni(const char *IniName, const char *IniSection);
 
     void SetBackColor(int r, int g, int b);
     void RestartSequence();
