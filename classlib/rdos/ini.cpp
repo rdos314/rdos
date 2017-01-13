@@ -45,7 +45,7 @@
 ##########################################################################*/
 TIniFile::TIniFile()
 {
-	FHandle = RdosOpenSysIni();
+        FHandle = RdosOpenSysIni();
 }
 
 /*##########################################################################
@@ -61,7 +61,23 @@ TIniFile::TIniFile()
 ##########################################################################*/
 TIniFile::TIniFile(const char *IniName)
 {
-	FHandle = RdosOpenIni(IniName);
+        FHandle = RdosOpenIni(IniName);
+}
+
+/*##########################################################################
+#
+#   Name       : TIniFile::TIniFile
+#
+#   Purpose....: Copy constructor for TIniFile
+#
+#   In params..: infile to duplicate handle on
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TIniFile::TIniFile(const TIniFile &ini)
+{
+    FHandle = RdosDupIni(ini.FHandle);
 }
 
 /*##########################################################################
@@ -77,8 +93,8 @@ TIniFile::TIniFile(const char *IniName)
 ##########################################################################*/
 TIniFile::~TIniFile()
 {
-	if (FHandle)
-		RdosCloseIni(FHandle);
+        if (FHandle)
+                RdosCloseIni(FHandle);
 }
 
 /*##########################################################################

@@ -768,6 +768,7 @@ void RDOSAPI RdosSetEnvData(int handle, const char *buf);
 int RDOSAPI RdosOpenSysIni();
 int RDOSAPI RdosOpenIni(const char *filename);
 void RDOSAPI RdosCloseIni(int handle);
+int RDOSAPI RdosDupIni(int handle);
 int RDOSAPI RdosGotoIniSection(int handle, const char *name);
 int RDOSAPI RdosRemoveIniSection(int handle, const char *name);
 int RDOSAPI RdosReadIni(int handle, const char *var, char *str, int maxsize);

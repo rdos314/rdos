@@ -2991,6 +2991,12 @@
     CallGate_close_ini \
     parm [ebx];
 
+#pragma aux RdosDupIni = \
+    CallGate_dup_ini \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
 #pragma aux RdosGotoIniSection = \
     CallGate_goto_ini_section \
     CarryToBool \

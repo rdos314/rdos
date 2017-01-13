@@ -391,9 +391,6 @@
 #define osgate_notify_time_drift 353
 #define osgate_set_options 354
 
-#define osgate_clone_handle_mem 355
-#define osgate_clone_app 356
-
 #define osgate_get_apic_id 357
 
 #define osgate_debug_exception 360
@@ -713,6 +710,9 @@
 #define osgate_read_c_console 594
 #define osgate_write_c_console 595
 #define osgate_open_kernel_file 596
+
+#define osgate_fork_process 597
+#define osgate_clone_process 598
 
 
 
@@ -1109,9 +1109,6 @@
 #define OsGate_notify_time_drift 0x3E 0x67 0x9a 97 1 0 0 2 0
 #define OsGate_set_options 0x3E 0x67 0x9a 98 1 0 0 2 0
 
-#define OsGate_clone_handle_mem 0x3E 0x67 0x9a 99 1 0 0 2 0
-#define OsGate_clone_app 0x3E 0x67 0x9a 100 1 0 0 2 0
-
 #define OsGate_get_apic_id 0x3E 0x67 0x9a 101 1 0 0 2 0
 
 #define OsGate_debug_exception 0x3E 0x67 0x9a 104 1 0 0 2 0
@@ -1431,4 +1428,7 @@
 #define OsGate_read_c_console 0x3E 0x67 0x9a 82 2 0 0 2 0
 #define OsGate_write_c_console 0x3E 0x67 0x9a 83 2 0 0 2 0
 #define OsGate_open_kernel_file 0x3E 0x67 0x9a 84 2 0 0 2 0
+
+#define OsGate_fork_process 0x3E 0x67 0x9a 85 2 0 0 2 0
+#define OsGate_clone_process 0x3E 0x67 0x9a 86 2 0 0 2 0
 

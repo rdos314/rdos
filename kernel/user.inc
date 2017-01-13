@@ -1221,6 +1221,12 @@ CloseIni	MACRO
 	UserGate close_ini_nr
 	        ENDM
 
+; IN  BX            In handle
+; OUT AX            Out handle
+DupIni	MACRO
+	UserGate dup_ini_nr
+	        ENDM
+
 ; IN  BX            Ini handle
 ; IN  ES:(E)DI      Section name
 GotoIniSection	MACRO

@@ -798,4 +798,6 @@ is_handle_device_nr             = 624
 get_handle_time_nr              = 625
 set_handle_time_nr              = 626
 
+dup_ini_nr                      = 627
+
 usergate_entries			    = 650

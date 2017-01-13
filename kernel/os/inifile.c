@@ -942,6 +942,38 @@ int OpenIni(char *FileName)
 
 /*##########################################################################
 #
+#   Name       : DupIni
+#
+#   Purpose....: Duplicate ini
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int DupIni(int Handle)
+{
+    struct TIniHandle *IniHandle = (struct TIniHandle *)RdosDerefHandle(INI_HANDLE, Handle);
+    struct TIni *Ini;
+
+    if (IniHandle)
+    {
+        Ini = IniHandle->Ini;
+
+        Lock();
+        Ini->Users++;
+        Unlock();
+
+        IniHandle = CreateHandle(Ini);
+  
+        return IniHandle->Header.handle;
+    }
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : DeleteHandle
 #
 #   Purpose....: Delete handle
@@ -1446,6 +1478,32 @@ int __far ImplOpenIni32(char *FileName)
 
 /*##########################################################################
 #
+#   Name       : ImplDupIni
+#
+#   Purpose....: Duplicate ini handle
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplDupIni "*" rdosdev parm routine [ebx] value [eax]
+int __far ImplDupIni(int InHandle)
+{
+    int OutHandle;
+
+    OutHandle = DupIni(InHandle);
+
+    if (OutHandle)    
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    return OutHandle;
+}
+
+/*##########################################################################
+#
 #   Name       : ImplCloseIni
 #
 #   Purpose....: Open close ini
@@ -1868,6 +1926,7 @@ int main()
 
     RdosRegisterBimodalUserGate(usergate_open_sys_ini, (__rdos_gate_callback *)&ImplOpenSysIni, "Open Sys Ini");
     RdosRegisterSegUserGate(usergate_open_ini, GATE_ES_IN, (__rdos_gate_callback *)&ImplOpenIni16, (__rdos_gate_callback *)&ImplOpenIni32, "Open Ini");
+    RdosRegisterBimodalUserGate(usergate_dup_ini, (__rdos_gate_callback *)&ImplDupIni, "Dup Ini");
     RdosRegisterBimodalUserGate(usergate_close_ini, (__rdos_gate_callback *)&ImplCloseIni, "Close Ini");
     RdosRegisterSegUserGate(usergate_goto_ini_section, GATE_ES_IN, (__rdos_gate_callback *)&ImplGotoIniSection16, (__rdos_gate_callback *)&ImplGotoIniSection32, "Goto Ini Section");
     RdosRegisterSegUserGate(usergate_remove_ini_section, GATE_ES_IN, (__rdos_gate_callback *)&ImplRemoveIniSection16, (__rdos_gate_callback *)&ImplRemoveIniSection32, "Remove Ini Section");

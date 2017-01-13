@@ -33,6 +33,7 @@ class TIniFile
 public:
     TIniFile();
     TIniFile(const char *IniName);
+    TIniFile(const TIniFile &ini);
     ~TIniFile();
 
     int GotoSection(const char *name);
@@ -47,7 +48,7 @@ public:
     int GetCurrVar(char *var, int maxsize);
     
 protected:
-	int FHandle;
+        int FHandle;
 };
 
 #endif
