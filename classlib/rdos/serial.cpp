@@ -97,8 +97,8 @@ int TSerialCommand::Run()
         return stat;
 }
 
-/*##################  TSerialCommand::Clear ###########################
-*   Purpose....: Clear buffers in serial device                                     #
+/*##################  TSerialCommand::DumpEvents ###########################
+*   Purpose....: C                                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -107,6 +107,34 @@ int TSerialCommand::Run()
 void TSerialCommand::Clear()
 {
         FSerial->Clear();
+}
+
+/*##########################################################################
+#
+#   Name       : TSerialCommand::DefineEventDebug
+#
+#   Purpose....: Define event debug
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TSerialCommand::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount, int InChannel, int OutChannel)
+{
+    return FSerial->DefineEventDebug(LogPath, DumpFiles, EntryCount, InChannel, OutChannel);
+}
+
+/*##################  TSerialCommand::DumpEvents ###########################
+*   Purpose....: Dump events                                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSerialCommand::DumpEvents()
+{
+    return FSerial->DumpEvents();
 }
 
 /*##################  TSerialCommand::ResetDtr #######################

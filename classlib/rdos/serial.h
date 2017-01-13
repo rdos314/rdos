@@ -145,6 +145,8 @@ public:
     TSerialCommand(TSerialDevice *serial);
     virtual ~TSerialCommand();
     int Run();
+    int DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount, int InChannel, int OutChannel);
+    int DumpEvents();
 
 protected:
     void Block();
