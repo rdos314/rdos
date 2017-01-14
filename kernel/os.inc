@@ -1989,12 +1989,16 @@ HookLoadExe     MACRO
     OsGate hook_load_exe_nr
                     ENDM
 
-InitAppProcess MACRO
-    OsGate init_app_process_nr
+InitSystemApp MACRO
+    OsGate init_system_app_nr
                     ENDM
 
-ExitAppProcess MACRO
-    OsGate exit_app_process_nr
+InitProcessApp MACRO
+    OsGate init_process_app_nr
+                    ENDM
+
+ExitProcessApp MACRO
+    OsGate exit_process_app_nr
                     ENDM
 
 OpenApp MACRO

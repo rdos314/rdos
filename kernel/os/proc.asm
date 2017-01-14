@@ -204,7 +204,7 @@ trap_create_process     PROC near
     push si
 ;    
     call init_process_mem
-    InitAppProcess
+    InitProcessApp
 ;
     mov ax,proc_data_sel
     mov ds,ax
@@ -267,7 +267,7 @@ trap_end_program_loop:
     jnz trap_end_program_loop
 
 trap_end_program_done:
-    ExitAppProcess
+    ExitProcessApp
     pop cx
     ret
 trap_end_program  ENDP
@@ -323,6 +323,7 @@ trap_terminate_process  ENDP
     
 trap_init_tasking       PROC near
     InitTrapGates
+    InitSystemApp
     call trap_create_process
     push cx
     mov ax,proc_data_sel

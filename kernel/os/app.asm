@@ -101,16 +101,22 @@ init_app    PROC near
     xor esi,esi
     xor edi,edi
 ;
-    mov esi,OFFSET init_app_process
-    mov edi,OFFSET init_app_process_name
+    mov esi,OFFSET init_system_app
+    mov edi,OFFSET init_system_app_name
     xor cl,cl
-    mov ax,init_app_process_nr
+    mov ax,init_system_app_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET exit_app_process
-    mov edi,OFFSET exit_app_process_name
+    mov esi,OFFSET init_process_app
+    mov edi,OFFSET init_process_app_name
     xor cl,cl
-    mov ax,exit_app_process_nr
+    mov ax,init_process_app_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET exit_process_app
+    mov edi,OFFSET exit_process_app_name
+    xor cl,cl
+    mov ax,exit_process_app_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_app
@@ -508,40 +514,50 @@ run_open_hooks  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           init_app_process
+;           NAME:           init_system_app
+;
+;           DESCRIPTION:    Init system app
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_system_app_name   DB 'Init System App',0
+
+init_system_app    PROC far
+    mov al,16
+    SetBitness
+    call run_open_hooks
+    retf32
+init_system_app    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           init_process_app
 ;
 ;           DESCRIPTION:    Init per-process data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_app_process_name   DB 'Init App Process',0
+init_process_app_name   DB 'Init App Process',0
 
-init_app_process    PROC far
-    IsLongThread
-    jnc ipDone
-;    
+init_process_app    PROC far
     call create_ldt
-    mov al,16
-    SetBitness
-    call run_open_hooks
-
-ipDone:
     retf32
-init_app_process    ENDP
+init_process_app    ENDP
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           exit_app_process
+;           NAME:           exit_process_app
 ;
 ;           DESCRIPTION:    Exit per-process data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-exit_app_process_name   DB 'Exit App Process',0
+exit_process_app_name   DB 'Exit Process App',0
 
-exit_app_process    PROC near
+exit_process_app    PROC near
     IsLongThread
     jnc epDone
 
@@ -594,7 +610,7 @@ epTrapCloseDone:
 
 epDone:
     retf32
-exit_app_process    ENDP
+exit_process_app    ENDP
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
