@@ -8642,11 +8642,11 @@ create_process  ENDP
 init_fork_regs    PROC near
     mov edx,cr3
     mov es:p_cr3,edx
+    mov dword ptr ds:p_rax,edx
 ;
     mov dword ptr ds:p_rip,OFFSET fork_start
 ;
     xor edx,edx
-    mov dword ptr ds:p_rax,edx
     mov dword ptr ds:p_rcx,edx
     mov dword ptr ds:p_rdx,edx
     mov dword ptr ds:p_rbx,edx
@@ -8824,6 +8824,11 @@ init_fork_stack	Endp
 
 fork_process_name     DB 'Fork Process',0
 
+fork_start:
+    NotifyProcessForked
+    xor eax,eax
+    jmp fork_done
+
 fork_process  PROC far
     push ds
     push es
@@ -8860,7 +8865,7 @@ fork_process  PROC far
     call wake_new
     mov ax,es
 
-fork_start:
+fork_done:
     pop ebp
     pop edi
     pop esi

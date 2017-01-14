@@ -66,6 +66,7 @@ code    SEGMENT byte public use16 'CODE'
     extrn free_process_proc:word
     extrn free_handle_process:near
     extrn init_double_fault:near
+    extrn clone_proc:word
 
     assume cs:code
 
@@ -232,6 +233,54 @@ trap_create_process_done:
     call trap_start_program
     ret
 trap_create_process     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TRAP_FORK_PROCESS
+;
+;           DESCRIPTION:    Handle ForkProcess hooks
+;
+;           PARAMETERS:     EAX         CR3 of source process
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_fork_process     PROC near
+    sti
+    push cx
+    push si
+;    
+    call cs:clone_proc
+    InitProcessApp
+;
+    mov ax,proc_data_sel
+    mov ds,ax
+    mov cl,ds:create_process_hooks
+    or cl,cl
+    je trap_fork_process_done
+;
+    mov bx,OFFSET create_process_arr
+
+trap_fork_process_loop:
+    push ds
+    push bx
+    push cx
+    call fword ptr [bx]
+    pop cx
+    pop bx
+    pop ds
+    add bx,8
+    dec cl
+    jnz trap_fork_process_loop
+
+trap_fork_process_done:
+    pop si
+    pop cx
+;
+    xor ebp,ebp
+    call trap_create_thread
+    ret
+trap_fork_process     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -670,6 +719,22 @@ notify_process_exit       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           NotifyProcessForked
+;
+;           DESCRIPTION:    Notify process forked
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_process_forked_name  DB 'Notify Process Forked',0
+
+notify_process_forked       PROC far
+    call trap_fork_process
+    retf32
+notify_process_forked       ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           NotifyStartProgram
 ;
 ;           DESCRIPTION:    Notify program started
@@ -1030,6 +1095,12 @@ init_thread     PROC near
     mov edi,OFFSET notify_process_exit_name
     xor cl,cl
     mov ax,notify_process_exit_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET notify_process_forked
+    mov edi,OFFSET notify_process_forked_name
+    xor cl,cl
+    mov ax,notify_process_forked_nr
     RegisterOsGate
 ;
     mov esi,OFFSET notify_start_program

@@ -101,6 +101,7 @@ code    SEGMENT byte public use16 'CODE'
     public get_thread_page_entry_proc
     public set_thread_page_entry_proc
     public get_thread_page_dir_proc
+    public clone_proc
 
 proc_start:
 init_process_proc               DW OFFSET local_init_process32
@@ -361,12 +362,6 @@ init_page_table     PROC near
     mov edi,OFFSET get_thread_page_dir_name
     xor cl,cl
     mov ax,get_thread_page_dir_nr
-    RegisterOsGate
-;    
-    mov esi,OFFSET clone_process
-    mov edi,OFFSET clone_process_name
-    xor cl,cl
-    mov ax,clone_process_nr
     RegisterOsGate
 ;
     mov esi,OFFSET has_physical64
@@ -4758,24 +4753,6 @@ get_thread_page_dir    Proc far
     call cs:get_thread_page_dir_proc
     retf32
 get_thread_page_dir    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Clone
-;
-;           DESCRIPTION:    Clone 
-;
-;           PARAMETERS:     EAX         Source CR3 to clone from
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-clone_process_name   DB 'Clone Process',0
-
-clone_process    Proc far
-    call cs:clone_proc
-    retf32
-clone_process    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

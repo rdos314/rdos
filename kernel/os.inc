@@ -555,6 +555,11 @@ NotifyProcessExit MACRO
     OsGate notify_process_exit_nr
                     ENDM
 
+;   EAX         CR3 of source process
+NotifyProcessForked MACRO
+    OsGate notify_process_forked_nr
+                    ENDM
+
 NotifyStartProgram MACRO
     OsGate notify_start_program_nr
                     ENDM
@@ -1589,11 +1594,6 @@ ThreadToSel     MACRO
 ; OUT  AX       0 = child
 ForkProcess    MACRO
     OsGate fork_process_nr
-                        ENDM
-
-; IN  EAX       CR3 to clone from
-CloneProcess    MACRO
-    OsGate clone_process_nr
                         ENDM
 
 ;;;;;;;;;;; Crash handler ;;;;;;;;;;;;;;;;
