@@ -7645,11 +7645,21 @@ init_process_block      PROC near
     mov es:p_process_sel,bx
 ;
     push es
+    push cx
+    push di
+;    
     mov eax,SIZE app_seg
     AllocateSmallGlobalMem
+    mov cx,ax
+    xor di,di
+    xor al,al
+    rep stosb
+;
     mov bx,es
     mov es:app_next,0
 ;
+    pop di
+    pop cx
     pop es
     mov es:p_app_sel,bx
 ;
@@ -8644,11 +8654,17 @@ init_fork_regs    PROC near
     mov es:p_cr3,edx
     mov dword ptr ds:p_rax,edx
 ;
+    push ds
+    GetThread
+    mov ds,ax
+    mov dx,ds:p_app_sel
+    pop ds
+    mov dword ptr ds:p_rdx,edx
+;
     mov dword ptr ds:p_rip,OFFSET fork_start
 ;
     xor edx,edx
     mov dword ptr ds:p_rcx,edx
-    mov dword ptr ds:p_rdx,edx
     mov dword ptr ds:p_rbx,edx
     mov dword ptr ds:p_rbp,edx
     mov dword ptr ds:p_rsi,edx
@@ -8825,7 +8841,10 @@ init_fork_stack	Endp
 fork_process_name     DB 'Fork Process',0
 
 fork_start:
+    push dx
     NotifyProcessForked
+    pop ax
+    CloneApp
     xor eax,eax
     jmp fork_done
 

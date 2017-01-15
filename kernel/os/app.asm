@@ -131,6 +131,12 @@ init_app    PROC near
     mov ax,close_app_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET clone_app
+    mov edi,OFFSET clone_app_name
+    xor cl,cl
+    mov ax,clone_app_nr
+    RegisterOsGate
+;
     mov esi,OFFSET hook_open_app
     mov edi,OFFSET hook_open_app_name
     xor cl,cl
@@ -744,6 +750,53 @@ close_app_ldt:
     retf32
 close_app       ENDP
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CloneApp
+;
+;           DESCRIPTION:    Clone app
+;
+;           PARAMETERS:     AX          Source app
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clone_app_name   DB 'Clone App',0
+
+clone_app    PROC far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ds,ax
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    xor si,si
+    xor di,di
+    mov cx,SIZE app_seg
+    rep movs byte ptr es:[di],ds:[si]
+;
+    mov es:app_next,0
+    mov es:app_exit_code,0
+    mov es:app_mem_blocks,0
+    mov es:app_parent_ldt,0
+;
+    CreateAppHandle
+    mov es:app_handle_sel,ax
+    mov es:app_handle_mem_sel,dx    
+;
+    CreateCHandle    
+    mov es:app_c_handle_sel,ax    
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    retf32
+clone_app    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

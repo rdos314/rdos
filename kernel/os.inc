@@ -2009,6 +2009,11 @@ CloseApp    MACRO
     OsGate close_app_nr
                     ENDM
 
+;  AX            Source app
+CloneApp MACRO
+    OsGate clone_app_nr
+                    ENDM
+
 ;  DS:ESI       Program name
 ;  ES:EDI       Cmd line
 InitLongExe     MACRO

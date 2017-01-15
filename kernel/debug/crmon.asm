@@ -332,6 +332,26 @@ CondReadLinearByte   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           FaultSetCr2
+;
+;           DESCRIPTION:    Set CR2 and generate page fault
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FaultSetCr2:
+    pop ebx
+    pop es
+;
+    mov ds:[ebp].reg_cr2,ebx
+    mov ds:[ebp].reg_cr2+4,edi
+    jmp PageFault
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ReadLinearByte
 ;
 ;           DESCRIPTION:    
@@ -350,7 +370,7 @@ ReadLinearByte   PROC near
     push ebx
 ;    
     call MapLinear
-    jc PageFault
+    jc FaultSetCr2
 ;    
     mov al,es:[ebx]
 ;
@@ -408,7 +428,7 @@ WriteLinearByte   PROC near
     push ebx
 ;    
     call MapLinear
-    jc PageFault
+    jc FaultSetCr2
 ;    
     mov es:[ebx],al
 ;

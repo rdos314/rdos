@@ -714,5 +714,6 @@ open_kernel_file_nr         = 596
 
 fork_process_nr             = 597
 notify_process_forked_nr    = 598
+clone_app_nr                = 599
 
 osgate_entries                          = 600
