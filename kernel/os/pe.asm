@@ -37,6 +37,7 @@ INCLUDE exec.def
 INCLUDE pe.def
 INCLUDE system.inc
 INCLUDE ..\debevent.inc
+INCLUDE ..\handle.inc
 
 
 SYS_BASE EQU 0DE000000h
@@ -4069,15 +4070,44 @@ spawn_proc      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fork_proc      Proc far
+    mov ebx,fs:pvModuleHandle
+    DerefModuleHandle
+    push bx
+;
     ForkProcess
     or ax,ax
     jz fork_child
 
 fork_parent:
+    pop bx
     jmp fork_done
 
 fork_child:
     int 3
+    pop dx
+    mov es,dx
+    SetModule
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel 
+;       
+    mov bx,ds:app_handle
+    DerefModuleHandle
+;
+    push ds
+    mov edx,[ebp].trap_eip
+    mov ds,ds:app_mod_sel
+    mov ax,ds:lib_debug_lib
+    or ax,ax
+    jz fork_notify_ok
+;
+    call AllocateKernelEvent
+    call CreateThreadEvent
+    call SendEvent
+
+fork_notify_ok:    
+    pop ds
 
 fork_done:    
     ret
