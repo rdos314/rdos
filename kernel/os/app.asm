@@ -531,7 +531,6 @@ init_system_app_name   DB 'Init System App',0
 init_system_app    PROC far
     mov al,16
     SetBitness
-    call run_open_hooks
     retf32
 init_system_app    ENDP
     
@@ -548,6 +547,7 @@ init_process_app_name   DB 'Init App Process',0
 
 init_process_app    PROC far
     call create_ldt
+    call run_open_hooks
     retf32
 init_process_app    ENDP
 
