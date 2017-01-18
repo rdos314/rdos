@@ -4070,40 +4070,44 @@ spawn_proc      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fork_proc      Proc far
+    push ebx
+    push ecx
+;
     mov ebx,fs:pvModuleHandle
     DerefModuleHandle
-    push bx
-;
-    mov ebx,fs:pvArbitrary
     push ebx
 ;
-    mov ebx,fs:pvStackUserTop
-    push ebx
+    mov eax,fs:pvArbitrary
+    push eax
 ;
-    mov ebx,fs:pvStackUserBottom
-    push ebx
+    mov eax,fs:pvStackUserTop
+    push eax
 ;
-    mov ebx,fs:pvStackUserSize
-    push ebx
+    mov eax,fs:pvStackUserBottom
+    push eax
 ;
-    mov ebx,fs:pvBase
-    push ebx
+    mov eax,fs:pvStackUserSize
+    push eax
+;
+    mov eax,fs:pvBase
+    push eax
 ;
     ForkProcess
     or ax,ax
     jz fork_child
 
 fork_parent:
+    pop eax
+    pop eax
+    pop eax
+    pop eax
+    pop eax
+    pop eax
+    pop ecx
     pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-    pop bx
     jmp fork_done
 
 fork_child:
-    int 3
     push ds
     push es
     push bx
@@ -4128,8 +4132,8 @@ fork_child:
 ;
     pop edx
     pop ecx
-    pop es
     pop bx
+    pop es
     pop ds
 ;
     pop eax
@@ -4145,12 +4149,12 @@ fork_child:
     mov fs:pvStackUserTop,eax
 ;
     pop eax
-    mov fs:pvArbitrary,ecx
+    mov fs:pvArbitrary,eax
 ;
-    pop dx
+    pop eax
 ;
     push es
-    mov es,dx
+    mov es,ax
     SetModule
     pop es
 ;
@@ -4164,22 +4168,34 @@ fork_child:
     mov fs:pvProcessHandle,eax
 ;
     mov ds,ds:p_app_sel        
-    movzx ebx,ds:app_handle
-    mov fs:pvModuleHandle,ebx
+    movzx eax,ds:app_handle
+    mov fs:pvModuleHandle,eax
 ;
-    mov edx,stack0_size - 10h
-    mov edx,ss:[edx]
     mov ds,ds:app_mod_sel
     mov ax,ds:lib_debug_lib
     or ax,ax
     jz fork_notify_ok
 ;
+    push ds
+    push es
+    pushad
+;
+    mov edx,stack0_size - 10h
+    mov edx,ss:[edx]
+;
     call AllocateKernelEvent
     call CreateThreadEvent
     call SendEvent
+;
+    popad
+    pop es
+    pop ds
 
 fork_notify_ok:    
     pop ds
+    pop ecx
+    pop ebx
+    int 3
 
 fork_done:    
     ret
