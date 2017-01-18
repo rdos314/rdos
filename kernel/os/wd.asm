@@ -103,7 +103,7 @@ start_watchdog   Proc far
 ;
     mov bx,cs
     mov es,bx
-    mov di,OFFSET WdTimeout
+    mov edi,OFFSET WdTimeout
     mov bx,SEG data
     StartTimer
 ;
@@ -428,7 +428,7 @@ kw_kick:
 ;
     mov bx,cs
     mov es,bx
-    mov di,OFFSET WdTimeout
+    mov edi,OFFSET WdTimeout
     mov bx,SEG data
     StopTimer
     StartTimer
