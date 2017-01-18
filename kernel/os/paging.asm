@@ -213,6 +213,70 @@ page_fault_user_retry:
     ret
 page_fault_user ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           page_write_user
+;
+;           DESCRIPTION:    Page write in user mode
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+page_write_user PROC near
+    mov ax,[ebp].trap_eflags
+    and ax,NOT 4500h
+    push ax
+    mov edx,cr2
+    popf
+;    
+    and dx,0F000h
+    call cs:get_page_entry_proc
+;    
+    test ax,400h
+    jz page_fault_error
+;
+    push es
+    push ecx
+    push esi
+    push edi
+;
+    push edx
+    mov esi,edx
+    mov eax,1000h
+    AllocateBigLinear
+    mov edi,edx
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov ecx,400h
+    rep movs dword ptr es:[edi],es:[esi]
+;
+    call cs:get_page_entry_proc
+    push eax
+    push ebx
+;
+    xor eax,eax
+    xor ebx,ebx
+    call cs:set_page_entry_proc
+;
+    mov ecx,1000h
+    FreeLinear
+;
+    pop ebx
+    pop eax
+    pop edx    
+    call cs:set_page_entry_proc
+;
+    int 3
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+    ret
+page_write_user ENDP
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -451,8 +515,16 @@ pagefault_trap:
     mov eax,[ebp].trap_err
     test ax,1
     jz trap_not_present
-;
+
 trap_error_do:
+    test ax,4
+    jz trap_kernel_error
+
+trap_user_error:
+    call page_write_user
+    jmp trap_14_done
+
+trap_kernel_error:
     call page_fault_error
     jmp trap_14_done
 

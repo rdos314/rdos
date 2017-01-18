@@ -1235,6 +1235,7 @@ prot_exception32    PROC near
     and bl,3
     cmp bl,3
     jne run_default_exception
+;
     push ax
     GetThread
     mov ds,ax

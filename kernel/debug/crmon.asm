@@ -114,19 +114,21 @@ MapPhysical       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           MapLinear
+;           NAME:           MapReadLinear
 ;
-;           DESCRIPTION:    Map linear address
+;           DESCRIPTION:    Map linear address for read
 ;
 ;           PARAMETERS:     DS:EBP      Registers
 ;                           EDI:EBX     Linear address
 ;
 ;           RETURNS:        NC
 ;                               ES:EBX  Mapping
+;                           CY
+;                               BX	Fault code
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MapLinear       Proc near
+MapReadLinear       Proc near
     push fs
     push eax
     push edx
@@ -139,7 +141,7 @@ MapLinear       Proc near
     mov fs,ax
 ;
     test dword ptr ds:[ebp].reg_cr0, CR0_PG
-    jnz mlPaged
+    jnz mrlPaged
 ;
     mov edx,ebx
     mov eax,ebx
@@ -150,28 +152,28 @@ MapLinear       Proc near
     and ebx,0FFFh    
     add ebx,fs:mon_map_linear
     clc
-    jmp mlDone
+    jmp mrlDone
     
-mlPaged:
+mrlPaged:
     mov edx,ebx
     mov eax,ds:[ebp].reg_cr3
     xor ebx,ebx
     call MapPhysical
 ;
     test ds:[ebp].reg_efer,EFER_LME
-    jnz mlLong
+    jnz mrlLong
 ;    
     test ds:[ebp].reg_cr4,20h
-    jnz mlPae
+    jnz mrlPae
 
-mlProt:
+mrlProt:
     mov esi,edx
     shr esi,20
     and si,0FFFCh
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
-    jz mlFail
+    jz mrlFail
 ;
     xor ebx,ebx
     call MapPhysical
@@ -182,7 +184,7 @@ mlProt:
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
-    jz mlFail
+    jz mrlFail
 ;
     xor ebx,ebx
     call MapPhysical
@@ -191,16 +193,16 @@ mlProt:
     and ebx,0FFFh    
     add ebx,fs:mon_map_linear
     clc
-    jmp mlDone
+    jmp mrlDone
 
-mlPae:
+mrlPae:
     mov esi,edx
     shr esi,27
     and si,0FFF8h
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
-    jz mlFail
+    jz mrlFail
 ;
     mov ebx,es:[esi+4]
     call MapPhysical
@@ -211,7 +213,7 @@ mlPae:
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
-    jz mlFail
+    jz mrlFail
 ;
     mov ebx,es:[esi+4]
     call MapPhysical
@@ -222,7 +224,7 @@ mlPae:
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
-    jz mlFail
+    jz mrlFail
 ;
     mov ebx,es:[esi+4]
     call MapPhysical
@@ -231,16 +233,16 @@ mlPae:
     and ebx,0FFFh    
     add ebx,fs:mon_map_linear
     clc
-    jmp mlDone
+    jmp mrlDone
 
-mlLong:
+mrlLong:
     mov esi,edi
     shr esi,4
     and si,0FFF8h
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
-    jz mlFail
+    jz mrlFail
 ;
     mov ebx,es:[esi+4]
     call MapPhysical
@@ -254,7 +256,7 @@ mlLong:
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
-    jz mlFail
+    jz mrlFail
 ;
     mov ebx,es:[esi+4]
     call MapPhysical
@@ -265,7 +267,7 @@ mlLong:
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
-    jz mlFail
+    jz mrlFail
 ;
     mov ebx,es:[esi+4]
     call MapPhysical
@@ -276,7 +278,7 @@ mlLong:
     add esi,fs:mon_map_linear
     mov eax,es:[esi]
     test al,1
-    jz mlFail
+    jz mrlFail
 ;
     mov ebx,es:[esi+4]
     call MapPhysical
@@ -284,19 +286,242 @@ mlLong:
     and ebx,0FFFh    
     add ebx,fs:mon_map_linear
     clc
-    jmp mlDone
+    jmp mrlDone
 
-mlFail:
+mrlFail:
+    xor cl,cl
     stc
 
-mlDone: 
+mrlDone: 
     pop esi
     pop edx
     pop eax
     pop fs
     ret
-MapLinear       Endp           
+MapReadLinear       Endp           
             
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MapWriteLinear
+;
+;           DESCRIPTION:    Map linear address for write
+;
+;           PARAMETERS:     DS:EBP      Registers
+;                           EDI:EBX     Linear address
+;
+;           RETURNS:        NC
+;                               ES:EBX  Mapping
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapWriteLinear       Proc near
+    push fs
+    push eax
+    push edx
+    push esi
+;
+    mov ax,mon_flat_sel
+    mov es,ax    
+;    
+    mov ax,mon_data_sel
+    mov fs,ax
+;
+    test dword ptr ds:[ebp].reg_cr0, CR0_PG
+    jnz mwlPaged
+;
+    mov edx,ebx
+    mov eax,ebx
+    xor ebx,ebx    
+    call MapPhysical
+;    
+    mov ebx,edx
+    and ebx,0FFFh    
+    add ebx,fs:mon_map_linear
+    clc
+    jmp mwlDone
+    
+mwlPaged:
+    mov edx,ebx
+    mov eax,ds:[ebp].reg_cr3
+    xor ebx,ebx
+    call MapPhysical
+;
+    test ds:[ebp].reg_efer,EFER_LME
+    jnz mwlLong
+;    
+    test ds:[ebp].reg_cr4,20h
+    jnz mwlPae
+
+mwlProt:
+    mov esi,edx
+    shr esi,20
+    and si,0FFFCh
+    add esi,fs:mon_map_linear
+    mov eax,es:[esi]
+    test al,1
+    jz mwlFail
+;
+    test al,2
+    jz mwlFail
+;
+    xor ebx,ebx
+    call MapPhysical
+;
+    mov esi,edx
+    shr esi,10
+    and esi,0FFCh
+    add esi,fs:mon_map_linear
+    mov eax,es:[esi]
+    test al,1
+    jz mwlFail
+;
+    test al,2
+    jz mwlFail
+;
+    xor ebx,ebx
+    call MapPhysical
+;    
+    mov ebx,edx
+    and ebx,0FFFh    
+    add ebx,fs:mon_map_linear
+    clc
+    jmp mwlDone
+
+mwlPae:
+    mov esi,edx
+    shr esi,27
+    and si,0FFF8h
+    add esi,fs:mon_map_linear
+    mov eax,es:[esi]
+    test al,1
+    jz mwlFail
+;
+    test al,2
+    jz mwlFail
+;
+    mov ebx,es:[esi+4]
+    call MapPhysical
+;
+    mov esi,edx
+    shr esi,18
+    and esi,0FF8h
+    add esi,fs:mon_map_linear
+    mov eax,es:[esi]
+    test al,1
+    jz mwlFail
+;
+    test al,2
+    jz mwlFail
+;
+    mov ebx,es:[esi+4]
+    call MapPhysical
+;
+    mov esi,edx
+    shr esi,9
+    and esi,0FF8h
+    add esi,fs:mon_map_linear
+    mov eax,es:[esi]
+    test al,1
+    jz mwlFail
+;
+    test al,2
+    jz mwlFail
+;
+    mov ebx,es:[esi+4]
+    call MapPhysical
+;    
+    mov ebx,edx
+    and ebx,0FFFh    
+    add ebx,fs:mon_map_linear
+    clc
+    jmp mwlDone
+
+mwlLong:
+    mov esi,edi
+    shr esi,4
+    and si,0FFF8h
+    add esi,fs:mon_map_linear
+    mov eax,es:[esi]
+    test al,1
+    jz mwlFail
+;
+    test al,2
+    jz mwlFail
+;
+    mov ebx,es:[esi+4]
+    call MapPhysical
+;    
+    mov esi,edx
+    shr esi,27
+    mov eax,edi
+    shl eax,5
+    or si,ax
+    and si,0FFF8h
+    add esi,fs:mon_map_linear
+    mov eax,es:[esi]
+    test al,1
+    jz mwlFail
+;
+    test al,2
+    jz mwlFail
+;
+    mov ebx,es:[esi+4]
+    call MapPhysical
+;
+    mov esi,edx
+    shr esi,18
+    and esi,0FF8h
+    add esi,fs:mon_map_linear
+    mov eax,es:[esi]
+    test al,1
+    jz mwlFail
+;
+    test al,2
+    jz mwlFail
+;
+    mov ebx,es:[esi+4]
+    call MapPhysical
+;
+    mov esi,edx
+    shr esi,9
+    and esi,0FF8h
+    add esi,fs:mon_map_linear
+    mov eax,es:[esi]
+    test al,1
+    jz mwlFail
+;
+    test al,2
+    jz mwlFail
+;
+    mov ebx,es:[esi+4]
+    call MapPhysical
+    mov ebx,edx
+    and ebx,0FFFh    
+    add ebx,fs:mon_map_linear
+    clc
+    jmp mwlDone
+
+mwlFail:
+    test al,1
+    jz mvlNotPresent
+;
+    mov cl,3
+    stc
+    jmp mvlDone
+
+mvlNotPresent:
+    xor cl,cl
+    stc
+
+mwlDone: 
+    pop esi
+    pop edx
+    pop eax
+    pop fs
+    ret
+MapWriteLinear       Endp           
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -317,7 +542,7 @@ CondReadLinearByte   PROC near
     push es
     push ebx
 ;    
-    call MapLinear
+    call MapReadLinear
     jc crlbDone
 ;    
     mov al,es:[ebx]
@@ -338,6 +563,7 @@ CondReadLinearByte   Endp
 ;
 ;           PARAMETERS:     DS:EBP      Registers
 ;                           EDI:EBX     Linear address
+;                           CL          Fault code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -347,6 +573,7 @@ FaultSetCr2:
 ;
     mov ds:[ebp].reg_cr2,ebx
     mov ds:[ebp].reg_cr2+4,edi
+    movzx ebx,cl
     jmp PageFault
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -369,7 +596,7 @@ ReadLinearByte   PROC near
     push es
     push ebx
 ;    
-    call MapLinear
+    call MapReadLinear
     jc FaultSetCr2
 ;    
     mov al,es:[ebx]
@@ -396,7 +623,7 @@ CondWriteLinearByte   PROC near
     push es
     push ebx
 ;    
-    call MapLinear
+    call MapWriteLinear
     jc cwlbDone
 ;    
     mov es:[ebx],al
@@ -427,7 +654,7 @@ WriteLinearByte   PROC near
     push es
     push ebx
 ;    
-    call MapLinear
+    call MapWriteLinear
     jc FaultSetCr2
 ;    
     mov es:[ebx],al
