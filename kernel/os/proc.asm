@@ -251,6 +251,7 @@ trap_fork_process     PROC near
     push si
 ;    
     call cs:clone_proc
+    call init_process_mem
     InitProcessApp
 ;
     mov ax,proc_data_sel

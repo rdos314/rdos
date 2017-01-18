@@ -4086,11 +4086,15 @@ fork_proc      Proc far
     mov ebx,fs:pvStackUserSize
     push ebx
 ;
+    mov ebx,fs:pvBase
+    push ebx
+;
     ForkProcess
     or ax,ax
     jz fork_child
 
 fork_parent:
+    pop ebx
     pop ebx
     pop ebx
     pop ebx
@@ -4129,6 +4133,9 @@ fork_child:
     pop ds
 ;
     pop eax
+    mov fs:pvBase,eax
+;
+    pop eax
     mov fs:pvStackUserSize,eax
 ;
     pop eax
@@ -4151,6 +4158,11 @@ fork_child:
 ;
     GetThread
     mov ds,ax
+;
+    movzx eax,ds:p_id
+    mov fs:pvThreadHandle,eax
+    mov fs:pvProcessHandle,eax
+;
     mov ds,ds:p_app_sel        
     movzx ebx,ds:app_handle
     mov fs:pvModuleHandle,ebx
