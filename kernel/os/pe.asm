@@ -4074,29 +4074,89 @@ fork_proc      Proc far
     DerefModuleHandle
     push bx
 ;
+    mov ebx,fs:pvArbitrary
+    push ebx
+;
+    mov ebx,fs:pvStackUserTop
+    push ebx
+;
+    mov ebx,fs:pvStackUserBottom
+    push ebx
+;
+    mov ebx,fs:pvStackUserSize
+    push ebx
+;
     ForkProcess
     or ax,ax
     jz fork_child
 
 fork_parent:
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
     pop bx
     jmp fork_done
 
 fork_child:
     int 3
+    push ds
+    push es
+    push bx
+    push ecx
+    push edx
+;
+    mov ax,system_data_sel
+    mov fs,ax
+;
+    mov eax,1000h
+    AllocateLocalLinear
+    AllocateLdt
+    or bx,7
+    mov ecx,eax     
+    CreateDataSelector32
+    mov es,bx
+    sub edx,fs:flat_base
+    mov es:pvBase,edx
+;
+    mov ax,es
+    mov fs,ax
+;
+    pop edx
+    pop ecx
+    pop es
+    pop bx
+    pop ds
+;
+    pop eax
+    mov fs:pvStackUserSize,eax
+;
+    pop eax
+    mov fs:pvStackUserBottom,eax
+;
+    pop eax
+    mov fs:pvStackUserTop,eax
+;
+    pop eax
+    mov fs:pvArbitrary,ecx
+;
     pop dx
+;
+    push es
     mov es,dx
     SetModule
+    pop es
+;
+    push ds
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel 
-;       
-    mov bx,ds:app_handle
-    DerefModuleHandle
+    mov ds,ds:p_app_sel        
+    movzx ebx,ds:app_handle
+    mov fs:pvModuleHandle,ebx
 ;
-    push ds
-    mov edx,[ebp].trap_eip
+    mov edx,stack0_size - 10h
+    mov edx,ss:[edx]
     mov ds,ds:app_mod_sel
     mov ax,ds:lib_debug_lib
     or ax,ax
