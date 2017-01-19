@@ -124,7 +124,7 @@ MapPhysical       Endp
 ;           RETURNS:        NC
 ;                               ES:EBX  Mapping
 ;                           CY
-;                               BX	Fault code
+;                               BX      Fault code
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -505,13 +505,13 @@ mwlLong:
 
 mwlFail:
     test al,1
-    jz mvlNotPresent
+    jz mwlNotPresent
 ;
     mov cl,3
     stc
-    jmp mvlDone
+    jmp mwlDone
 
-mvlNotPresent:
+mwlNotPresent:
     xor cl,cl
     stc
 
