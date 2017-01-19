@@ -4207,8 +4207,6 @@ fork_notify_ok:
 ;
     pop ecx
     pop ebx
-    int 3
-    CrashGate
 
 fork_done:    
     ret
