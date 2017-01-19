@@ -400,9 +400,6 @@ mwlPae:
     test al,1
     jz mwlFail
 ;
-    test al,2
-    jz mwlFail
-;
     mov ebx,es:[esi+4]
     call MapPhysical
 ;
