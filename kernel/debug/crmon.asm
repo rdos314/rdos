@@ -569,6 +569,14 @@ CondReadLinearByte   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FaultSetCr2:
+    mov bx,ds:[ebp].reg_cs.d_selector
+    and bl,3
+    cmp bl,3
+    jne FaultSetCr2UserOk
+;
+    or cl,4
+
+FaultSetCr2UserOk:
     pop ebx
     pop es
 ;
@@ -657,9 +665,24 @@ WriteLinearByte   PROC near
     push es
     push ebx
 ;    
+    push ax
+    mov ax,ds:[ebp].reg_cs.d_selector
+    and al,3
+    cmp al,3
+    pop ax
+    je WriteLinearUser
+
+WriteLinearKernel:
+    call MapReadLinear
+    jc FaultSetCr2
+;
+    jmp WriteLinearDone
+
+WriteLinearUser:
     call MapWriteLinear
     jc FaultSetCr2
-;    
+
+WriteLinearDone:    
     mov es:[ebx],al
 ;
     pop ebx
