@@ -124,7 +124,7 @@ MapPhysical       Endp
 ;           RETURNS:        NC
 ;                               ES:EBX  Mapping
 ;                           CY
-;                               BX      Fault code
+;                               CL      Fault code
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -313,6 +313,8 @@ MapReadLinear       Endp
 ;
 ;           RETURNS:        NC
 ;                               ES:EBX  Mapping
+;                           CY
+;                               CL      Fault code
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -541,6 +543,7 @@ MapWriteLinear       Endp
 CondReadLinearByte   PROC near
     push es
     push ebx
+    push cx
 ;    
     call MapReadLinear
     jc crlbDone
@@ -549,6 +552,7 @@ CondReadLinearByte   PROC near
     clc
     
 crlbDone:
+    pop cx
     pop ebx
     pop es
     ret
@@ -622,6 +626,7 @@ ReadLinearByte   Endp
 CondWriteLinearByte   PROC near
     push es
     push ebx
+    push cx
 ;    
     call MapWriteLinear
     jc cwlbDone
@@ -630,6 +635,7 @@ CondWriteLinearByte   PROC near
     clc
 
 cwlbDone:
+    pop cx
     pop ebx
     pop es
     ret
