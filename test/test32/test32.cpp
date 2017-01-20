@@ -344,7 +344,15 @@ void main()
     unsigned long lsb, msb;
 
     val = RdosFork();
-    __asm int 3
+
+    if (val == 0)
+    {
+        printf("Forked process\r\n");
+        for (;;)
+            RdosWaitMilli(5000);
+    }
+    else
+        printf("Forked ID: %d\r\n", val);
 
     size = read(0, buf, 30);
     write(1, buf, size);

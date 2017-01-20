@@ -4137,6 +4137,9 @@ CopyForkPages   Endp
 ;
 ;           DESCRIPTION:    Fork
 ;
+;           RETURNS:        Child:  EAX = 0
+;                           Parent: EAX = child thread selector
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fork_proc      Proc far
@@ -4187,6 +4190,11 @@ fork_parent:
 ;
     pop ecx
     pop ebx
+;
+    push es
+    mov es,ax
+    movzx eax,es:p_id
+    pop es
     jmp fork_done
 
 fork_child:
@@ -4289,7 +4297,7 @@ fork_notify_ok:
     pop ds
 ;
     pop ebx
-;    Signal
+    Signal
 ;
     pop ecx
     pop ebx
