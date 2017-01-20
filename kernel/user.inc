@@ -893,9 +893,14 @@ SpawnExe	MACRO
 	UserGate spawn_exe_nr
 					ENDM
 
-; OUT AX		Process handle (parent) or 0 (child)
+; OUT AX		Child thread id (parent) or 0 (child)
 Fork	MACRO
 	UserGate fork_nr
+					ENDM
+
+; OUT NC        Is forked
+IsForked	MACRO
+	UserGate is_forked_nr
 					ENDM
 
 ; IN  AX		Exit code

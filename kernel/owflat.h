@@ -1726,7 +1726,12 @@
 
 #pragma aux RdosFork = \
     CallGate_fork  \
-    "movsx eax,ax"  \
+    "movzx eax,ax"  \
+    value [eax];
+
+#pragma aux RdosIsForked = \
+    CallGate_is_forked  \
+    CarryToBool \
     value [eax];
 
 #pragma aux RdosUnloadExe = \
