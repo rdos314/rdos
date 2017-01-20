@@ -269,7 +269,6 @@ page_write_user PROC near
     pop edx    
     call cs:set_page_entry_proc
 ;
-    int 3
     pop edi
     pop esi
     pop ecx

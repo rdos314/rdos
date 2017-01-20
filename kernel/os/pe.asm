@@ -4080,6 +4080,9 @@ fork_proc      Proc far
     DerefModuleHandle
     push ebx
 ;
+    mov eax,fs:pvFirstExcept
+    push eax
+;
     mov eax,fs:pvArbitrary
     push eax
 ;
@@ -4103,6 +4106,7 @@ fork_proc      Proc far
 fork_parent:
     WaitForSignal
 ;    
+    pop eax
     pop eax
     pop eax
     pop eax
@@ -4158,6 +4162,9 @@ fork_child:
 ;
     pop eax
     mov fs:pvArbitrary,eax
+;
+    pop eax
+    mov fs:pvFirstExcept,eax
 ;
     pop eax
 ;
