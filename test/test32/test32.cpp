@@ -353,6 +353,9 @@ void main()
     else
         printf("Forked ID: %d\r\n", val);
 
+
+    exit(1);
+
     size = read(0, buf, 30);
     write(1, buf, size);
 

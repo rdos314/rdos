@@ -66,6 +66,7 @@ code    SEGMENT byte public use16 'CODE'
     extrn free_process_proc:word
     extrn free_handle_process:near
     extrn init_double_fault:near
+    extrn set_page_entry_proc:word
     extrn clone_proc:word
 
     assume cs:code
@@ -237,6 +238,32 @@ trap_create_process     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ClearLowPages
+;
+;           DESCRIPTION:    Clear low pages
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearLowPages     PROC near
+    pushad
+;
+    mov edx,local_byte_linear
+    xor eax,eax
+    xor ebx,ebx
+
+clpLoop:
+    call cs:set_page_entry_proc
+    add edx,1000h
+    cmp edx,local_page_linear
+    jne clpLoop
+;
+    popad
+    ret
+ClearLowPages	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           TRAP_FORK_PROCESS
 ;
 ;           DESCRIPTION:    Handle ForkProcess hooks
@@ -251,6 +278,8 @@ trap_fork_process     PROC near
     push si
 ;    
     call cs:clone_proc
+    call ClearLowPages
+;
     call init_process_mem
     InitProcessApp
 ;
