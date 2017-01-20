@@ -2003,6 +2003,7 @@ lcPageLoop32:
     or ax,400h
 
 lcPageSave32:
+    or ax,800h
     mov es:[esi],eax
 ;
     add esi,4
@@ -4166,6 +4167,7 @@ lcPageLoop64:
     or ax,400h
 
 lcPageSave64:
+    or ax,800h
     mov es:[esi],eax
     mov es:[esi+4],ebx
 ;

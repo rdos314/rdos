@@ -348,8 +348,7 @@ void main()
     if (val == 0)
     {
         printf("Forked process\r\n");
-        for (;;)
-            RdosWaitMilli(5000);
+        exit (0);
     }
     else
         printf("Forked ID: %d\r\n", val);

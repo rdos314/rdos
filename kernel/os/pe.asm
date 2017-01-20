@@ -4168,6 +4168,12 @@ fork_proc      Proc far
     mov eax,fs:pvStackUserSize
     push eax
 ;
+    mov eax,fs:pvTLSBitmap
+    push eax
+;
+    mov eax,fs:pvTLSArray
+    push eax
+;
     mov eax,fs:pvBase
     push eax
 ;
@@ -4179,6 +4185,8 @@ fork_proc      Proc far
 fork_parent:
     WaitForSignal
 ;    
+    pop eax
+    pop eax
     pop eax
     pop eax
     pop eax
@@ -4228,6 +4236,12 @@ fork_child:
 ;
     pop eax
     mov fs:pvBase,eax
+;
+    pop eax
+    mov fs:pvTLSArray,eax
+;
+    pop eax
+    mov fs:pvTLSBitmap,eax
 ;
     pop eax
     mov fs:pvStackUserSize,eax
