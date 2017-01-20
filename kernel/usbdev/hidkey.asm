@@ -584,7 +584,7 @@ tk29    DB  1,      1Bh,    01h,     1Bh,   1Bh,    1Bh,    1Bh,    ESC_KEY  ; V
 tk2A    DB  -1,     08h,    0Eh,     08h,   08h,    08h,    08h,    STD_KEY  ; VK_BACK
 tk2B    DB  0Fh,    09h,    0Fh,     09h,   09h,    09h,    09h,    STD_KEY  ; VK_TAB
 tk2C    DB  -1,     ' ',    39h,     ' ',   ' ',    ' ',    ' ',    STD_KEY      ; VK_SPACE
-tk2D    DB  -1,     '-',    0Ch,     '-',   '_',    '_',    -1,     STD_KEY  ; -, _
+tk2D    DB  -1,     0BBh,   0Ch,     '+',   '?',    '\',    -1,     STD_KEY  ; /?+
 tk2E    DB  -1,     0DBh,   0Dh,     27h,   60h,    5Ch,    -1,     STD_KEY  ; =, + 
 tk2F    DB  -1,     0DDh,   1Ah,     'Ü',   'è',    0,      -1,     CAPS_KEY ; [, {
 tk30    DB  -1,     0BAh,   1Bh,     '\',   '^',    '~',    -1,     STD_KEY  ; ], }
