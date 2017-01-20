@@ -4269,6 +4269,7 @@ fork_child:
 ;
     GetThread
     mov ds,ax
+    lock or ds:p_flags,THREAD_FLAG_FORKED
 ;
     movzx eax,ds:p_id
     mov fs:pvThreadHandle,eax
@@ -4339,24 +4340,38 @@ close_proc      Proc far
     mov ds,ds:p_app_sel
     mov ax,word ptr ds:app_loader_name
     cmp ax,OFFSET pe_loader_name
-    jne free_process_no_debug
+    jne cpDone
 ;
     mov ax,cs
     cmp ax,word ptr ds:app_loader_name+2
-    jne free_process_no_debug
+    jne cpDone
 ;
     GetThread
     mov ds,ax
+    test ds:p_flags,THREAD_FLAG_FORKED
+    jz cpNorm
+;
     mov ds,ds:p_app_sel
     mov ds,ds:app_mod_sel   
     mov ax,ds:lib_debug_lib
     or ax,ax
-    jz free_process_no_debug
+    jz cpDone
+;
+    call TerminateThreadEvent
+    call SendEvent
+    jmp cpDone
+
+cpNorm:
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_mod_sel   
+    mov ax,ds:lib_debug_lib
+    or ax,ax
+    jz cpDone
 ;
     call TerminateProcessEvent
     call SendEvent
 
-free_process_no_debug:
+cpDone:
     ret
 close_proc      Endp
 

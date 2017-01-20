@@ -227,6 +227,12 @@ init_app    PROC near
     mov ax,fork_nr
     RegisterBimodalUserGate
 ;
+    mov esi,OFFSET is_forked
+    mov edi,OFFSET is_forked_name
+    xor dx,dx
+    mov ax,is_forked_nr
+    RegisterBimodalUserGate
+;
     mov esi,OFFSET allocate_app_mem
     mov edi,OFFSET allocate_app_mem_name
     mov dx,virt_es_out
@@ -1252,6 +1258,38 @@ fork_done:
     pop ds
     retf32
 fork_pr    ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsForked
+;
+;           DESCRIPTION:    Check if thread is forked
+;
+;           RETURNS:        NC		Forked
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_forked_name   DB 'Is Forked',0
+
+is_forked    PROC far
+    push ds
+    push ax
+;
+    GetThread
+    mov ds,ax
+    test ds:p_flags,THREAD_FLAG_FORKED
+    stc
+    jz ifDone
+;
+    clc
+
+ifDone:
+    pop ax
+    pop ds
+    retf32
+is_forked    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
