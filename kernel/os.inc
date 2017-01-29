@@ -3072,6 +3072,11 @@ UnlockFile     MACRO
 
 ;;;;;;;;;;;; VIDEO ;;;;;;;;;;;
 
+;  ES           App sel
+CloneConsole MACRO
+    OsGate clone_console_nr
+                    ENDM
+
 ;  IN   ES:EDI      UTF-8 string
 ;  IN   BX          font handle
 ;  OUT  AX          start x

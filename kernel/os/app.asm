@@ -797,6 +797,8 @@ clone_app    PROC far
     CreateCHandle    
     mov es:app_c_handle_sel,ax    
 ;
+    CloneConsole
+;
     popad
     pop fs
     pop es

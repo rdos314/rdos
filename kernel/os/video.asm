@@ -1412,6 +1412,27 @@ EnableConsoleFocus Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;   NAME:           CloneConsole
+;
+;   DESCRIPTION:    Clone console
+;
+;   PARAMETERS:     ES          App selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clone_console_name      DB 'Clone Console', 0
+    
+clone_console  PROC far
+    push es
+    mov es,es:app_console
+    inc es:c_usage
+    pop es
+    ret
+clone_console   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           GetLocalConsole
 ;
 ;           DESCRIPTION:    Get local console
@@ -5645,6 +5666,12 @@ init_video      PROC near
     mov edi,OFFSET add_video_mode_name
     xor cl,cl
     mov ax,add_video_mode_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET clone_console
+    mov edi,OFFSET clone_console_name
+    xor cl,cl
+    mov ax,clone_console_nr
     RegisterOsGate
 ;
     mov esi,OFFSET read_c_console

@@ -19,12 +19,16 @@ void main()
     char buf[32];
     int size;
     int val;
+    char *ptr;
 
     val = fork();
 
     if (val == 0)
     {
-        printf("Forked process\r\n");
+        ptr = new char[256];
+        strcpy(ptr,"Forked process\r\n"); 
+        printf(ptr);
+        delete ptr;
         exit (0);
     }
     else

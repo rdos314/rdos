@@ -7532,6 +7532,25 @@ allocate_thread_block   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           inc_thread_count
+;
+;           DESCRIPTION:    Increment thread count
+;
+;           PARAMETERS:     ES          Thread
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+inc_thread_count       PROC near
+    push fs
+    mov fs,es:p_process_sel
+    inc fs:ms_thread_count
+    pop fs
+    ret
+inc_thread_count	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           INIT_THREAD_BLOCK
 ;
 ;           DESCRIPTION:    Init thread content
@@ -7544,13 +7563,10 @@ allocate_thread_block   ENDP
 init_thread_block       PROC near
     GetThread
     mov ds,ax
-;
-    push fs
     mov ax,ds:p_process_sel
-    mov fs,ax
-    inc fs:ms_thread_count
     mov es:p_process_sel,ax
 ;
+    push fs
     GetCore
     mov es:p_core,fs
     pop fs
@@ -8278,6 +8294,7 @@ create_thread   PROC near
     call allocate_thread_block
     mov dx,[ebp].cr_prio
     call init_thread_block
+    call inc_thread_count
     mov ax,es
     mov ds,ax
     mov ax,[ebp].cr_mode
@@ -8490,6 +8507,7 @@ init_regs_iopl_done:
     mov ds:p_ds,ax
     mov ds:p_fs,ax
     mov ds:p_gs,ax
+    mov ds:p_stack_sel,0
     ret
 init_process_regs    ENDP
 
@@ -8735,6 +8753,7 @@ init_fork_regs    PROC near
     mov ds:p_fault_vector,-1
     mov ds:p_fault_code,0
     mov ds:p_action_text,0
+    mov ds:p_stack_sel,0
     ret
 init_fork_regs    ENDP
 
