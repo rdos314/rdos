@@ -86,6 +86,6 @@ int TExecCommand::Execute(char *param)
             return -1;
      }
      else
-          return RdosExec(FProgName.GetData(), param);
+          return RdosExec(FProgName.GetData(), param, "", "");
 }
 

@@ -20,11 +20,14 @@ void main()
     int size;
     int val;
     char *ptr;
+    char *arg[] = {"z:\\command.exe", 0};
 
     val = fork();
 
     if (val == 0)
     {
+        execv(arg[0], (char **)&arg);
+
         ptr = new char[256];
         strcpy(ptr,"Forked process\r\n"); 
         printf(ptr);

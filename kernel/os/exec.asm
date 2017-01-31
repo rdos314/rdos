@@ -1857,7 +1857,10 @@ DoExecLoad Endp
 ;           DESCRIPTION:    Load executable file
 ;
 ;           PARAMETERS:     DS:(E)SI    Filename
-;                           ES:(E)DI    Command line
+;                           ES:(E)DI    Parameters
+;                               +0  command line
+;                               +8  startdir
+;                               +12 env
 ;
 ;       RETURN VALUE:   
 ;
@@ -1871,6 +1874,7 @@ load_program   Proc near
     push cx
     push dx
 ;
+    les edi,es:[edi]
     UserGateForce32 is_64_bit_exe_nr
     jc lepProt
 ;

@@ -869,14 +869,17 @@ Is64BitExe	MACRO
 
 ; IN  DS:(E)SI	Program name
 ; IN  ES:(E)DI	Command line
-LoadExe	MACRO
-	UserGate load_exe_nr
+DosExtExec	MACRO
+	UserGate dos_ext_exec_nr
 					ENDM
 
 ; IN  DS:(E)SI	Program name
-; IN  ES:(E)DI	Command line
-DosExtExec	MACRO
-	UserGate dos_ext_exec_nr
+; IN  ES:(E)DI	Parameters
+;               +0  Command line
+;               +8  Startup directory & drive
+;               +12 Environment
+LoadExe	MACRO
+	UserGate load_exe_nr
 					ENDM
 
 ; IN  DS:(E)SI	Program name
