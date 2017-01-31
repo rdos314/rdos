@@ -33,7 +33,7 @@ void main()
 {
     int thread;
         
-    RdosSpawn("z:\\tcpwd.exe", "", "d:\\fnm", "", "", &thread);
+    RdosSpawn("z:\\tcpwd.exe", "", "d:\\fnm", "", &thread);
 
     for (;;)
         RdosWaitMilli(20000);

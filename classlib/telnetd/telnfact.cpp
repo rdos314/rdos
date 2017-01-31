@@ -211,7 +211,7 @@ int TTelnetSocketServerFactory::StartShell(const char *param)
     int ThreadId;
     int Handle;
 
-    Handle = RdosSpawn(FFullPath.Get().GetData(), param, StartupDir.Get().GetData(), 0, 0, &ThreadId);
+    Handle = RdosSpawn(FFullPath.Get().GetData(), param, StartupDir.Get().GetData(), 0, &ThreadId);
     if (Handle)
     {
         RdosFreeProcessHandle(Handle);

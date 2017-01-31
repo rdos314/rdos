@@ -869,7 +869,6 @@ Is64BitExe	MACRO
 
 ; IN  DS:(E)SI	Program name
 ; IN  ES:(E)DI	Command line
-; IN  GS:(E)BX	Options
 LoadExe	MACRO
 	UserGate load_exe_nr
 					ENDM
@@ -885,7 +884,6 @@ DosExtExec	MACRO
 ;               +0  Command line
 ;               +8  Startup directory & drive
 ;               +12 Environment
-;               +16 Options
 ; IN  DX		Debug module handle
 ; OUT AX		Thread #
 ; OUT DX		Process handle

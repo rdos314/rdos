@@ -680,76 +680,6 @@ CreateSpawnEnv Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateSpawnOptions
-;
-;           DESCRIPTION:    Make global copy of options
-;
-;           PARAMETERS:     ES:EDI      Param struc
-;               GS      Spawn sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateSpawnOptions Proc near
-    push ds
-    push es
-    push eax
-    push ecx
-    push esi
-    push edi
-;
-    mov eax,es:[edi].sp_option_sel
-    or ax,3
-    verr ax
-    stc
-    jnz csoNoOpt
-;
-    mov ds,ax
-    mov esi,es:[edi].sp_option_offs
-    mov edi,esi
-    xor ecx,ecx
-
-csoLoop:
-    inc ecx
-    lods byte ptr [esi]
-    or al,al
-    jnz csoLoop
-;
-    inc ecx
-    lods byte ptr [esi]
-    or al,al
-    jnz csoLoop
-
-csoSizeOk:
-    mov esi,edi
-    mov eax,ecx
-    AllocateSmallGlobalMem
-    xor edi,edi
-    push ecx
-    rep movs byte ptr es:[edi],ds:[esi]     
-    pop ecx
-    jmp csoDone
-
-csoNoOpt:
-    xor ax,ax
-    mov es,ax
-    xor ecx,ecx
-
-csoDone:    
-    mov gs:s_opt,es
-    mov gs:s_opt_size,cx
-;       
-    pop edi
-    pop esi
-    pop ecx
-    pop eax
-    pop es
-    pop ds
-    ret
-CreateSpawnOptions Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           SetupSpawnDir
 ;
 ;           DESCRIPTION:    Setup spawn directory
@@ -825,34 +755,6 @@ SetupSpawnEnv   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupSpawnOptions
-;
-;           DESCRIPTION:    Setup span options
-;
-;           PARAMETERS:     GS      Spawn sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupSpawnOptions Proc near
-    push es
-    push ax
-;
-    mov ax,gs:s_opt
-    or ax,ax
-    jz ssoDone
-;
-    mov es,ax
-    SetOptions
-
-ssoDone:    
-    pop ax
-    pop es
-    ret
-SetupSpawnOptions   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           FreeSpawn
 ;
 ;           DESCRIPTION:    Free spawn environment
@@ -874,14 +776,6 @@ FreeSpawn Proc near
     mov es,gs:s_env
     FreeMem    
 ;
-    mov ax,gs:s_opt
-    or ax,ax
-    jz fsOptOk
-;    
-    mov es,ax
-    FreeMem
-
-fsOptOk:
     mov ax,gs
     mov es,ax
     xor ax,ax
@@ -919,7 +813,6 @@ SetupSpawn Proc near
     mov gs:s_cmd,0
     mov gs:s_curr_dir,0
     mov gs:s_env,0
-    mov gs:s_opt,0
     mov gs:s_param,0
     mov bx,dx
     DerefModuleHandle
@@ -1197,8 +1090,6 @@ spCopyExeLoop:
     call load_exe_file
     jc spCloseFail
 ;
-    call SetupSpawnOptions
-;
     mov gs:s_ret_code,0
     GetThread
     mov ds,ax
@@ -1351,10 +1242,9 @@ spFail64:
 ;
 ;           PARAMETERS:     DS:(E)SI    Filename
 ;                           ES:(E)DI    Parameters
-;                   +0  command line
-;                   +8  startdir
-;                   +12 env
-;                   +16 options (file redir)
+;                               +0  command line
+;                               +8  startdir
+;                               +12 env
 ;                           DX              Debug module handle
 ;
 ;       RETURN VALUE:   AX          Thread ID
@@ -1377,7 +1267,6 @@ spawn_program   Proc near
     call CreateSpawnParam
     call CreateSpawnStartDir
     call CreateSpawnEnv
-    call CreateSpawnOptions
 ;
     call DoSpawn64    
     jmp spWait
@@ -1388,7 +1277,6 @@ spProt:
     call CreateSpawnParam
     call CreateSpawnStartDir
     call CreateSpawnEnv
-    call CreateSpawnOptions
 ;
     call DoSpawn
 
@@ -1970,7 +1858,6 @@ DoExecLoad Endp
 ;
 ;           PARAMETERS:     DS:(E)SI    Filename
 ;                           ES:(E)DI    Command line
-;               GS:(E)BX    Options
 ;
 ;       RETURN VALUE:   
 ;

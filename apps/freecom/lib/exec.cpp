@@ -70,14 +70,13 @@ int TExecCommand::Execute(char *param)
     TPathName StartupDir;
     int ThreadId;
     int Handle;
-    char env[2] = {0, 0};
 
     if (RdosIs64BitExe(FProgName.GetData()))
         FDetach = TRUE;
 
     if (FDetach)
     {
-        Handle = RdosSpawn(FProgName.GetData(), param, StartupDir.Get().GetData(), 0, 0, &ThreadId);
+        Handle = RdosSpawn(FProgName.GetData(), param, StartupDir.Get().GetData(), 0, &ThreadId);
         if (Handle)
         {
             RdosFreeProcessHandle(Handle);
@@ -87,6 +86,6 @@ int TExecCommand::Execute(char *param)
             return -1;
      }
      else
-          return RdosExec(FProgName.GetData(), param, env);
+          return RdosExec(FProgName.GetData(), param);
 }
 
