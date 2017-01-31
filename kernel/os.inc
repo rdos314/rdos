@@ -2055,11 +2055,6 @@ AliasModuleHandle       MACRO
     OsGate alias_module_handle_nr
                     ENDM
 
-; IN  ES    Options selector
-SetOptions      MACRO
-    OsGate set_options_nr
-                    ENDM
-
 ; IN  AX    Lib sel
 ; IN  DX    Process descriptor
 ; OUT BX    Process handle

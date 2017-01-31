@@ -1387,10 +1387,6 @@ InsertApp       Proc near
     mov ds:app_get_exe_proc+4,cs 
     mov ds:app_get_cmd_line_proc,OFFSET get_cmd_line
     mov ds:app_get_cmd_line_proc+4,cs 
-    mov ds:app_get_options_proc,OFFSET get_options
-    mov ds:app_get_options_proc+4,cs 
-    mov ds:app_set_options_proc,OFFSET set_options
-    mov ds:app_set_options_proc+4,cs 
     mov ds:app_allocate_mem_proc,OFFSET allocate_mem
     mov ds:app_allocate_mem_proc+4,cs 
     mov ds:app_free_mem_proc,OFFSET free_mem
@@ -3553,7 +3549,6 @@ load_pe_name_size:
     add eax,ebx
     AllocateAppMem
     mov fs:app_cmd_line,edx
-    mov fs:app_options,0
 ;
     push es
     push ecx
@@ -6042,82 +6037,6 @@ get_cmd_line    Proc far
     ret
 get_cmd_line    Endp
                        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetOptions
-;
-;           DESCRIPTION:    Set options
-;
-;       PARAMETERS:     ES  Option selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_options     Proc far
-    push ds
-    push es
-    pusha
-;
-    mov ax,es
-    mov ds,ax
-    xor esi,esi
-    xor ecx,ecx
-
-set_opt_size:
-    lodsb
-    inc ecx
-    or al,al
-    jnz set_opt_size
-;
-    lodsb
-    inc ecx
-    or al,al
-    jnz set_opt_size
-;
-    mov eax,ecx
-    AllocateAppMem
-    mov edi,edx
-    xor esi,esi
-    mov ax,flat_data_sel
-    mov es,ax
-    rep movs byte ptr es:[edi],ds:[esi]
-;    
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_options,edx
-;
-    clc
-    popa
-    pop es
-    pop ds
-    ret
-set_options     Endp
-                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetOptions
-;
-;           DESCRIPTION:    Get options
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_options     Proc far
-    push ds
-    push ax
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel 
-    mov edi,ds:app_options
-    clc
-;
-    pop ax      
-    pop ds
-    ret
-get_options     Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;

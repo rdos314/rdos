@@ -1,236 +1,236 @@
 
-allocate_dos_mem_nr			= 0
-allocate_local_mem_nr		= 1
-free_mem_nr					= 2
-available_small_local_linear_nr	= 3
-used_local_linear_nr		= 4
-available_vm_linear_nr		= 5
-used_vm_linear_nr			= 6
+allocate_dos_mem_nr                     = 0
+allocate_local_mem_nr           = 1
+free_mem_nr                                     = 2
+available_small_local_linear_nr = 3
+used_local_linear_nr            = 4
+available_vm_linear_nr          = 5
+used_vm_linear_nr                       = 6
 
-reserve_pe_mem_nr			= 7
-set_flat_linear_valid_nr	= 8
-set_flat_linear_invalid_nr	= 9
-set_flat_linear_read_nr		= 10
+reserve_pe_mem_nr                       = 7
+set_flat_linear_valid_nr        = 8
+set_flat_linear_invalid_nr      = 9
+set_flat_linear_read_nr         = 10
 set_flat_linear_readwrite_nr = 11
 
-get_raw_switch_ads_nr		= 12
-raw_switch_pm_nr			= 13
-get_exception_nr			= 14
-set_exception_nr			= 15
-get_pm_int_nr				= 16
-set_pm_int_nr				= 17
-get_vm_int_nr				= 18
-set_vm_int_nr				= 19
-dpmi_int_nr					= 20
-dpmi_call_int_nr			= 21
-dpmi_call_nr				= 22
-allocate_vm_callback_nr		= 23
-free_vm_callback_nr			= 24
+get_raw_switch_ads_nr           = 12
+raw_switch_pm_nr                        = 13
+get_exception_nr                        = 14
+set_exception_nr                        = 15
+get_pm_int_nr                           = 16
+set_pm_int_nr                           = 17
+get_vm_int_nr                           = 18
+set_vm_int_nr                           = 19
+dpmi_int_nr                                     = 20
+dpmi_call_int_nr                        = 21
+dpmi_call_nr                            = 22
+allocate_vm_callback_nr         = 23
+free_vm_callback_nr                     = 24
 
-wait_milli_nr				= 25
-wait_micro_nr				= 26
-wait_until_nr				= 27
-create_thread_nr			= 28
-terminate_thread_nr			= 29
-get_thread_nr				= 30
-raw_switch_vm_nr			= 31
+wait_milli_nr                           = 25
+wait_micro_nr                           = 26
+wait_until_nr                           = 27
+create_thread_nr                        = 28
+terminate_thread_nr                     = 29
+get_thread_nr                           = 30
+raw_switch_vm_nr                        = 31
 
-create_user_section_nr		= 32
+create_user_section_nr          = 32
 create_blocked_user_section_nr = 33
-delete_user_section_nr		= 34
-enter_user_section_nr		= 35
-leave_user_section_nr		= 36
+delete_user_section_nr          = 34
+enter_user_section_nr           = 35
+leave_user_section_nr           = 36
 
-get_local_mailslot_nr		= 37
-get_remote_mailslot_nr		= 38
-free_mailslot_nr			= 39
-send_mailslot_nr			= 40
-define_mailslot_nr			= 41
-receive_mailslot_nr			= 42
-reply_mailslot_nr			= 43
+get_local_mailslot_nr           = 37
+get_remote_mailslot_nr          = 38
+free_mailslot_nr                        = 39
+send_mailslot_nr                        = 40
+define_mailslot_nr                      = 41
+receive_mailslot_nr                     = 42
+reply_mailslot_nr                       = 43
 
-load_exe_nr					= 44
-spawn_exe_nr				= 45
-unload_exe_nr				= 46
-get_exit_code_nr			= 47
-get_exe_name_nr				= 48
-get_cmd_line_nr				= 49
-get_env_nr					= 50
-load_dll_nr					= 51
-free_dll_nr					= 52
-get_module_proc_nr			= 53
-get_module_resource_nr		= 54
-get_module_name_nr			= 55
-get_module_nr				= 56
-allocate_app_mem_nr			= 57
-free_app_mem_nr				= 58
-get_psp_sel_nr				= 59
+load_exe_nr                                     = 44
+spawn_exe_nr                            = 45
+unload_exe_nr                           = 46
+get_exit_code_nr                        = 47
+get_exe_name_nr                         = 48
+get_cmd_line_nr                         = 49
+get_env_nr                                      = 50
+load_dll_nr                                     = 51
+free_dll_nr                                     = 52
+get_module_proc_nr                      = 53
+get_module_resource_nr          = 54
+get_module_name_nr                      = 55
+get_module_nr                           = 56
+allocate_app_mem_nr                     = 57
+free_app_mem_nr                         = 58
+get_psp_sel_nr                          = 59
 
 invalid_user_nr             = 60
 
-get_debug_thread_nr			= 61
-debug_trace_nr				= 62
-debug_pace_nr				= 63
-debug_go_nr					= 64
-debug_next_nr				= 65
+get_debug_thread_nr                     = 61
+debug_trace_nr                          = 62
+debug_pace_nr                           = 63
+debug_go_nr                                     = 64
+debug_next_nr                           = 65
 
-add_wait_for_debug_event_nr	= 66
+add_wait_for_debug_event_nr     = 66
 get_debug_event_data_nr     = 67
-continue_debug_event_nr		= 68
-notify_pe_exception_nr		= 70
-read_thread_mem_nr			= 71
-write_thread_mem_nr			= 72
-get_thread_tss_nr			= 73
-set_thread_tss_nr			= 74
+continue_debug_event_nr         = 68
+notify_pe_exception_nr          = 70
+read_thread_mem_nr                      = 71
+write_thread_mem_nr                     = 72
+get_thread_tss_nr                       = 73
+set_thread_tss_nr                       = 74
 
-get_cpu_time_nr				= 75
-get_system_time_nr			= 76
-get_time_nr					= 77
-time_to_system_time_nr		= 78
-system_time_to_time_nr		= 79
-days_in_month_nr			= 80
-adjust_time_nr				= 81
-passed_days_nr				= 82
-time_to_binary_nr			= 83
-binary_to_time_nr			= 84
-sync_time_nr				= 85
+get_cpu_time_nr                         = 75
+get_system_time_nr                      = 76
+get_time_nr                                     = 77
+time_to_system_time_nr          = 78
+system_time_to_time_nr          = 79
+days_in_month_nr                        = 80
+adjust_time_nr                          = 81
+passed_days_nr                          = 82
+time_to_binary_nr                       = 83
+binary_to_time_nr                       = 84
+sync_time_nr                            = 85
 
-set_focus_nr				= 86
-enable_focus_nr				= 87
+set_focus_nr                            = 86
+enable_focus_nr                         = 87
 
-get_dns_nr					= 88
-get_ppp_dns_nr				= 89
-open_tcp_connection_nr		= 90
-wait_for_tcp_connection_nr	= 92
-close_tcp_connection_nr		= 93
-delete_tcp_connection_nr	= 94
-is_tcp_connection_closed_nr	= 95
-abort_tcp_connection_nr		= 96
-read_tcp_connection_nr		= 97
-write_tcp_connection_nr		= 98
-push_tcp_connection_nr		= 99
-get_ip_address_nr			= 100
-name_to_ip_nr				= 101
-ip_to_name_nr				= 102
-ping_nr						= 103 
+get_dns_nr                                      = 88
+get_ppp_dns_nr                          = 89
+open_tcp_connection_nr          = 90
+wait_for_tcp_connection_nr      = 92
+close_tcp_connection_nr         = 93
+delete_tcp_connection_nr        = 94
+is_tcp_connection_closed_nr     = 95
+abort_tcp_connection_nr         = 96
+read_tcp_connection_nr          = 97
+write_tcp_connection_nr         = 98
+push_tcp_connection_nr          = 99
+get_ip_address_nr                       = 100
+name_to_ip_nr                           = 101
+ip_to_name_nr                           = 102
+ping_nr                                         = 103 
 
-get_old_disc_info_nr	    = 104
-format_drive_nr				= 105
-get_rdfs_info_nr			= 106
-read_short_disc_nr			= 107
-write_short_disc_nr		    = 108
-get_drive_info_nr			= 109
+get_old_disc_info_nr        = 104
+format_drive_nr                         = 105
+get_rdfs_info_nr                        = 106
+read_short_disc_nr                      = 107
+write_short_disc_nr                 = 108
+get_drive_info_nr                       = 109
 
-set_cur_drive_nr			= 110
-get_cur_drive_nr			= 111
-set_cur_dir_nr				= 112
-get_cur_dir_nr				= 113
-make_dir_nr					= 114
-remove_dir_nr				= 115
-rename_file_nr				= 116
-delete_file_nr				= 117
-get_file_attribute_nr		= 118
-set_file_attribute_nr		= 119
-open_dir_nr					= 120
-close_dir_nr				= 121
-read_dir_nr					= 122
+set_cur_drive_nr                        = 110
+get_cur_drive_nr                        = 111
+set_cur_dir_nr                          = 112
+get_cur_dir_nr                          = 113
+make_dir_nr                                     = 114
+remove_dir_nr                           = 115
+rename_file_nr                          = 116
+delete_file_nr                          = 117
+get_file_attribute_nr           = 118
+set_file_attribute_nr           = 119
+open_dir_nr                                     = 120
+close_dir_nr                            = 121
+read_dir_nr                                     = 122
 
-open_file_nr				= 123
-create_file_nr				= 124
-close_file_nr				= 125
-dupl_file_nr				= 126
-get_ioctl_data_nr			= 127
-get_file_size_nr			= 128
-set_file_size_nr			= 129
-get_file_pos_nr				= 130
-set_file_pos_nr				= 131
-get_file_time_nr			= 132
-set_file_time_nr			= 133
-read_file_nr				= 134
-write_file_nr				= 135
+open_file_nr                            = 123
+create_file_nr                          = 124
+close_file_nr                           = 125
+dupl_file_nr                            = 126
+get_ioctl_data_nr                       = 127
+get_file_size_nr                        = 128
+set_file_size_nr                        = 129
+get_file_pos_nr                         = 130
+set_file_pos_nr                         = 131
+get_file_time_nr                        = 132
+set_file_time_nr                        = 133
+read_file_nr                            = 134
+write_file_nr                           = 135
 
-create_mapping_nr			= 137
-create_named_mapping_nr		= 138
-create_file_mapping_nr		= 139
+create_mapping_nr                       = 137
+create_named_mapping_nr         = 138
+create_file_mapping_nr          = 139
 create_named_file_mapping_nr = 140
-open_named_mapping_nr		= 141
-sync_mapping_nr				= 142
-close_mapping_nr			= 143
-map_view_nr					= 144
-unmap_view_nr				= 145
+open_named_mapping_nr           = 141
+sync_mapping_nr                         = 142
+close_mapping_nr                        = 143
+map_view_nr                                     = 144
+unmap_view_nr                           = 145
 
-read_keyboard_nr			= 146
-poll_keyboard_nr			= 147
-flush_keyboard_nr			= 148
-get_keyboard_state_nr		= 151
+read_keyboard_nr                        = 146
+poll_keyboard_nr                        = 147
+flush_keyboard_nr                       = 148
+get_keyboard_state_nr           = 151
 
-show_mouse_nr				= 152
-hide_mouse_nr				= 153
-get_mouse_position_nr		= 154
-set_mouse_position_nr		= 155
-set_mouse_window_nr			= 156
-set_mouse_mickey_nr			= 157
-get_left_button_nr			= 158
-get_right_button_nr			= 159
-get_left_button_press_position_nr	= 160
-get_right_button_press_position_nr	= 161
-get_left_button_release_position_nr	= 162
-get_right_button_release_position_nr	= 163
-hook_mouse_nr				= 164
-unhook_mouse_nr				= 165
+show_mouse_nr                           = 152
+hide_mouse_nr                           = 153
+get_mouse_position_nr           = 154
+set_mouse_position_nr           = 155
+set_mouse_window_nr                     = 156
+set_mouse_mickey_nr                     = 157
+get_left_button_nr                      = 158
+get_right_button_nr                     = 159
+get_left_button_press_position_nr       = 160
+get_right_button_press_position_nr      = 161
+get_left_button_release_position_nr     = 162
+get_right_button_release_position_nr    = 163
+hook_mouse_nr                           = 164
+unhook_mouse_nr                         = 165
 
-lock_cd_nr					= 166
-unlock_cd_nr				= 167
-eject_cd_nr					= 168
-insert_cd_nr				= 169
+lock_cd_nr                                      = 166
+unlock_cd_nr                            = 167
+eject_cd_nr                                     = 168
+insert_cd_nr                            = 169
 
-open_com_nr					= 170
-close_com_nr				= 171
-flush_com_nr				= 172
-add_wait_for_com_nr			= 174
-read_com_nr					= 175
-write_com_nr				= 176
-set_dtr_nr					= 177
-reset_dtr_nr				= 178
+open_com_nr                                     = 170
+close_com_nr                            = 171
+flush_com_nr                            = 172
+add_wait_for_com_nr                     = 174
+read_com_nr                                     = 175
+write_com_nr                            = 176
+set_dtr_nr                                      = 177
+reset_dtr_nr                            = 178
 reset_com_nr                = 179
 
-set_cursor_position_nr		= 182
-get_cursor_position_nr		= 183
-write_char_nr				= 184
-write_asciiz_nr				= 185
-write_size_string_nr		= 186
+set_cursor_position_nr          = 182
+get_cursor_position_nr          = 183
+write_char_nr                           = 184
+write_asciiz_nr                         = 185
+write_size_string_nr            = 186
 
-set_video_mode_nr			= 187
-set_vga_mode_nr				= 188
-set_forecolor_nr			= 189
-set_backcolor_nr			= 190
-get_string_metrics_nr		= 193
-set_font_nr					= 194
+set_video_mode_nr                       = 187
+set_vga_mode_nr                         = 188
+set_forecolor_nr                        = 189
+set_backcolor_nr                        = 190
+get_string_metrics_nr           = 193
+set_font_nr                                     = 194
 get_video_mode_nr           = 195
-draw_string_nr				= 197
+draw_string_nr                          = 197
 
-xms_handler_nr				= 198
-ems_handler_nr				= 199
+xms_handler_nr                          = 198
+ems_handler_nr                          = 199
 
-resize_flat_linear_nr		= 201
+resize_flat_linear_nr           = 201
 
-set_drawcolor_nr			= 202
-set_lgop_nr					= 203
-set_hollow_style_nr			= 204
-set_filled_style_nr			= 205
-get_pixel_nr				= 206
-set_pixel_nr				= 207
-draw_line_nr				= 208
-draw_rect_nr				= 209
-draw_ellipse_nr				= 210
-create_bitmap_nr			= 211
-close_bitmap_nr				= 212
-blit_nr						= 213
-open_font_nr				= 215
-close_font_nr				= 216
-create_string_bitmap_nr		= 217
-get_bitmap_info_nr			= 218
-draw_mask_nr				= 219
+set_drawcolor_nr                        = 202
+set_lgop_nr                                     = 203
+set_hollow_style_nr                     = 204
+set_filled_style_nr                     = 205
+get_pixel_nr                            = 206
+set_pixel_nr                            = 207
+draw_line_nr                            = 208
+draw_rect_nr                            = 209
+draw_ellipse_nr                         = 210
+create_bitmap_nr                        = 211
+close_bitmap_nr                         = 212
+blit_nr                                         = 213
+open_font_nr                            = 215
+close_font_nr                           = 216
+create_string_bitmap_nr         = 217
+get_bitmap_info_nr                      = 218
+draw_mask_nr                            = 219
 
 create_sprite_nr            = 220
 close_sprite_nr             = 221
@@ -247,40 +247,40 @@ reset_rts_nr                = 229
 get_com_receive_space_nr    = 230
 get_com_send_space_nr       = 231
 
-get_char_attrib_nr			= 232
+get_char_attrib_nr                      = 232
 
 create_wait_nr              = 233
 close_wait_nr               = 234
-is_wait_idle_nr				= 235
+is_wait_idle_nr                         = 235
 wait_no_timeout_nr          = 236
-wait_timeout_nr				= 237
+wait_timeout_nr                         = 237
 stop_wait_nr                = 238
 add_wait_for_keyboard_nr    = 239
 
 peek_key_event_nr           = 240
 read_key_event_nr           = 241
 
-add_wait_for_mouse_nr		= 242
+add_wait_for_mouse_nr           = 242
 remove_wait_nr              = 243
 
-add_wait_for_adc_nr			= 244
-open_adc_nr					= 245
-close_adc_nr				= 246
-define_adc_time_nr 			= 247
-read_adc_nr					= 248
+add_wait_for_adc_nr                     = 244
+open_adc_nr                                     = 245
+close_adc_nr                            = 246
+define_adc_time_nr                      = 247
+read_adc_nr                                     = 248
 
 free_v86_nr                 = 249
 
-read_serial_lines_nr		= 250
-toggle_serial_line_nr		= 251
+read_serial_lines_nr            = 250
+toggle_serial_line_nr           = 251
 
-read_serial_val_nr			= 252
-write_serial_val_nr			= 253
+read_serial_val_nr                      = 252
+write_serial_val_nr                     = 253
 
 create_file_drive_nr        = 254
 open_file_drive_nr          = 255
 
-dos_ext_exec_nr				= 256
+dos_ext_exec_nr                         = 256
 
 open_sys_env_nr             = 257
 open_proc_env_nr            = 258
@@ -288,11 +288,11 @@ close_env_nr                = 259
 add_env_var_nr              = 260
 delete_env_var_nr           = 261
 find_env_var_nr             = 262
-get_env_data_nr     	    = 263
-set_env_data_nr 	        = 264
+get_env_data_nr             = 263
+set_env_data_nr                 = 264
 
-open_sys_ini_nr				= 265
-close_ini_nr				= 266
+open_sys_ini_nr                         = 265
+close_ini_nr                            = 266
 goto_ini_section_nr         = 267
 remove_ini_section_nr       = 268
 read_ini_nr                 = 269
@@ -325,7 +325,7 @@ disable_auto_rts_nr         = 288
 
 put_keyboard_code_nr        = 289
 
-poll_tcp_connection_nr		= 290
+poll_tcp_connection_nr          = 290
 
 create_signal_nr            = 291
 free_signal_nr              = 292
@@ -341,15 +341,15 @@ get_floppy_disc_nr          = 299
 demand_load_drive_nr        = 300
 set_disc_info_nr            = 301
 
-get_thread_state_nr			= 302
-suspend_thread_nr	    	= 303
-resume_thread_nr	    	= 304
+get_thread_state_nr                     = 302
+suspend_thread_nr               = 303
+resume_thread_nr                = 304
 
-update_time_nr				= 305
+update_time_nr                          = 305
 
-allocate_static_drive_nr	= 306
-allocate_fixed_drive_nr		= 307
-allocate_dynamic_drive_nr	= 308
+allocate_static_drive_nr        = 306
+allocate_fixed_drive_nr         = 307
+allocate_dynamic_drive_nr       = 308
 
 add_wait_for_tcp_listen_nr  = 310
 create_tcp_listen_nr        = 311
@@ -398,9 +398,9 @@ read_icsp_data_nr           = 343
 
 get_gateway_nr              = 344
 
-get_free_physical_nr		= 345
+get_free_physical_nr            = 345
 get_free_gdt_nr             = 346
-available_big_linear_nr		= 347
+available_big_linear_nr         = 347
 available_small_linear_nr   = 348
 
 get_ip_mask_nr              = 349
@@ -438,7 +438,7 @@ clear_debug_event_nr        = 372
 
 get_free_handles_nr         = 373
 
-get_env_size_nr     	    = 374
+get_env_size_nr             = 374
 
 show_exception_text_nr      = 375
 
@@ -447,27 +447,26 @@ get_watchdog_tics_nr        = 376
 is_usb_trans_done_nr        = 377
 was_usb_trans_ok_nr         = 378
 
-is_tcp_connection_idle_nr	= 379
+is_tcp_connection_idle_nr       = 379
 
-set_codec_gpio0_nr	        = 380
+set_codec_gpio0_nr              = 380
 
 free_proc_handle_nr         = 381
 add_wait_for_proc_end_nr    = 382
 get_proc_exit_code_nr       = 383
 
 get_cpu_version_nr          = 384
-get_options_nr              = 385
 
 fork_nr                     = 386
 
 get_core_id_nr              = 387
 
-create_user_read_write_section_nr	= 388
-delete_user_read_write_section_nr	= 389
-enter_user_read_section_nr		    = 390
-leave_user_read_section_nr		    = 391
-enter_user_write_section_nr		    = 392
-leave_user_write_section_nr		    = 393
+create_user_read_write_section_nr       = 388
+delete_user_read_write_section_nr       = 389
+enter_user_read_section_nr                  = 390
+leave_user_read_section_nr                  = 391
+enter_user_write_section_nr                 = 392
+leave_user_write_section_nr                 = 393
 
 power_failure_nr                    = 394
 
@@ -518,7 +517,7 @@ wait_for_print_nr           = 426
 
 has_audio_nr                = 427
 
-available_big_local_linear_nr	= 428
+available_big_local_linear_nr   = 428
 
 get_allocated_usb_blocks_nr     = 429
 get_usb_close_count_nr          = 430
@@ -656,7 +655,7 @@ extract_invalid_bitmap_mask_nr  = 523
 
 create_alpha_bitmap_nr          = 524
 
-create_long_thread_nr			= 525
+create_long_thread_nr                   = 525
 
 broadcast_udp_nr                = 526
 
@@ -690,7 +689,7 @@ check_can_serial_port_nr        = 547
 get_mac_address_nr              = 548
 create_uuid_nr                  = 549
 
-get_disc_info_nr	            = 550
+get_disc_info_nr                    = 550
 
 get_can_module_version_nr       = 551
 program_can_module_nr           = 552
@@ -802,4 +801,4 @@ dup_ini_nr                      = 627
 
 is_forked_nr                    = 628
 
-usergate_entries			    = 650
+usergate_entries                            = 650

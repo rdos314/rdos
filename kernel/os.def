@@ -389,7 +389,6 @@ create_proc_handle_nr       = 351
 deref_proc_handle_nr        = 352
 
 notify_time_drift_nr        = 353
-set_options_nr              = 354
 
 get_apic_id_nr              = 357
 

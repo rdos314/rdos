@@ -185,12 +185,6 @@ init_app    PROC near
     mov ax,alias_module_handle_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET set_options
-    mov edi,OFFSET set_options_name
-    xor cl,cl
-    mov ax,set_options_nr
-    RegisterOsGate
-;
     mov esi,OFFSET app_patch
     mov edi,OFFSET app_patch_name
     xor cl,cl
@@ -213,12 +207,6 @@ init_app    PROC near
     mov edi,OFFSET get_env_name
     mov dx,virt_es_in
     mov ax,get_env_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_options
-    mov edi,OFFSET get_options_name
-    mov dx,virt_es_in
-    mov ax,get_options_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET fork_pr
@@ -450,10 +438,6 @@ run_open_hooks  Proc near
     mov ds:app_get_cmd_line_proc+4,0
     mov ds:app_get_env_proc,0
     mov ds:app_get_env_proc+4,0
-    mov ds:app_get_options_proc,0
-    mov ds:app_get_options_proc+4,0
-    mov ds:app_set_options_proc,0
-    mov ds:app_set_options_proc+4,0
     mov ds:app_allocate_mem_proc,0
     mov ds:app_allocate_mem_proc+4,0
     mov ds:app_free_mem_proc,0
@@ -483,7 +467,6 @@ run_open_hooks  Proc near
     mov ds:app_env,0
     mov ds:app_name,0
     mov ds:app_cmd_line,0
-    mov ds:app_options,0
     mov ds:app_mem_blocks,0
 ;
     mov ds:app_vm_psp_seg,0
@@ -1161,73 +1144,6 @@ get_env_done:
     retf32
 get_env ENDP
 
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           SetOptions
-;
-;           DESCRIPTION:    Set options
-;
-;           RETURNS:        ES  option selector or 0
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_options_name    DB 'Set Options',0
-
-set_options     PROC far
-    push ds
-;
-    push eax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov eax,ds:app_set_options_proc
-    or eax,ds:app_set_options_proc+4
-    pop eax
-    stc
-    jz set_options_done
-;
-    call fword ptr ds:app_set_options_proc
-
-set_options_done:
-    pop ds
-    retf32
-set_options     ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetOptions
-;
-;           DESCRIPTION:    Get options
-;
-;           RETURNS:        ES:(E)DI        Options
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_options_name    DB 'Get Options',0
-
-get_options     PROC far
-    push ds
-;
-    push eax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov eax,ds:app_get_options_proc
-    or eax,ds:app_get_options_proc+4
-    pop eax
-    stc
-    jz get_options_done
-;
-    call fword ptr ds:app_get_options_proc
-
-get_options_done:
-    pop ds
-    retf32
-get_options     ENDP
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1269,7 +1185,7 @@ fork_pr    ENDP
 ;
 ;           DESCRIPTION:    Check if thread is forked
 ;
-;           RETURNS:        NC		Forked
+;           RETURNS:        NC          Forked
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

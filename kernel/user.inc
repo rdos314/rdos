@@ -944,10 +944,6 @@ GetCmdLine	MACRO
 	UserGate get_cmd_line_nr
 					ENDM
 
-; OUT ES:(E)DI	Options
-GetOptions	MACRO
-	UserGate get_options_nr
-					ENDM
 
 ; OUT ES:(E)DI	Environment
 GetEnvironment	MACRO
