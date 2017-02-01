@@ -97,6 +97,7 @@ el_cmd                          DW ?
 el_curr_dir                     DW ?
 el_env                          DW ?
 el_loader_name                  DD ?
+el_param                        DW ?
 el_thread                       DW ?
 el_console                      DW ?
 el_app                          DW ?
@@ -107,13 +108,13 @@ el_col                          DW ?
 
 exec_load_struc ENDS
 
-spawn_param_struc   STRUC
+load_param_struc   STRUC
 
-sp_param_offs       DD ?
-sp_param_sel        DD ?
-sp_startdir_offs    DD ?
-sp_startdir_sel     DD ?
-sp_env_offs         DD ?
-sp_env_sel          DD ?
+lp_param_offs       DD ?
+lp_param_sel        DD ?
+lp_startdir_offs    DD ?
+lp_startdir_sel     DD ?
+lp_env_offs         DD ?
+lp_env_sel          DD ?
 
-spawn_param_struc   ENDS
+load_param_struc   ENDS

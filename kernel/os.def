@@ -716,4 +716,7 @@ notify_process_forked_nr    = 598
 clone_app_nr                = 599
 clone_console_nr            = 600
 
+reset_process_nr            = 601
+exec_app_nr                 = 602
+
 osgate_entries              = 650

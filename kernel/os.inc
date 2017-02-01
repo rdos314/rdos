@@ -568,6 +568,10 @@ NotifyEndProgram MACRO
     OsGate notify_end_program_nr
                     ENDM
 
+ResetProcess MACRO
+    OsGate reset_process_nr
+                    ENDM
+
 ;       EDX         LINEAR ADDRESS
 ;       EBX:EAX     PAGE ENTRY
 GetPageEntry MACRO
@@ -2012,6 +2016,10 @@ CloseApp    MACRO
 ;  AX            Source app
 CloneApp MACRO
     OsGate clone_app_nr
+                    ENDM
+
+ExecApp MACRO
+    OsGate exec_app_nr
                     ENDM
 
 ;  DS:ESI       Program name

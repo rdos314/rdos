@@ -220,6 +220,12 @@ init_page_table     PROC near
     mov ax,notify_delete_process_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET reset_process
+    mov edi,OFFSET reset_process_name
+    xor cl,cl
+    mov ax,reset_process_nr
+    RegisterOsGate
+;
     mov esi,OFFSET get_page_entry
     mov edi,OFFSET get_page_entry_name
     xor cl,cl
@@ -4277,6 +4283,24 @@ notify_delete_process       Proc far
     call cs:delete_process_proc
     retf32
 notify_delete_process       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ResetProcess
+;
+;           DESCRIPTION:    Free user page of process
+;
+;           PARAMETERS:     EAX         CR3
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_process_name  DB 'Reset Process',0
+
+reset_process       Proc far
+    call cs:free_process_proc
+    retf32
+reset_process       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

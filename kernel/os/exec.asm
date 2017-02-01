@@ -481,14 +481,14 @@ CreateSpawnParam Proc near
     push esi
     push edi
 ;
-    mov eax,es:[edi].sp_param_sel
+    mov eax,es:[edi].lp_param_sel
     or ax,3
     verr ax
     stc
     jnz cspaNoParam
 ;
     mov ds,ax
-    mov esi,es:[edi].sp_param_offs
+    mov esi,es:[edi].lp_param_offs
     mov edi,esi
     xor ecx,ecx
 
@@ -548,14 +548,14 @@ CreateSpawnStartDir Proc near
     push esi
     push edi
 ;
-    mov eax,es:[edi].sp_startdir_sel
+    mov eax,es:[edi].lp_startdir_sel
     or ax,3
     verr ax
     stc
     jnz cssdNoStartDir
 ;
     mov ds,ax
-    mov esi,es:[edi].sp_startdir_offs
+    mov esi,es:[edi].lp_startdir_offs
     mov edi,esi
     xor ecx,ecx
 
@@ -626,14 +626,14 @@ CreateSpawnEnv Proc near
     push esi
     push edi
 ;
-    mov eax,es:[edi].sp_env_sel
+    mov eax,es:[edi].lp_env_sel
     or ax,3
     verr ax
     stc
     jnz cseNoEnv
 ;
     mov ds,ax
-    mov esi,es:[edi].sp_env_offs
+    mov esi,es:[edi].lp_env_offs
     mov edi,esi
     xor ecx,ecx
 
@@ -1333,47 +1333,6 @@ spawn_program32 Proc far
     retf32
 spawn_program32 Endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupExecLoad
-;
-;           DESCRIPTION:    Setup exec load
-;
-;       RETURNS:            GS      Spawn sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupExecLoad Proc near    
-    push ds
-    push eax
-    push bx
-; 
-    push es
-    mov eax,SIZE exec_load_struc
-    AllocateSmallGlobalMem
-    mov ax,es
-    mov gs,ax
-    pop es
-;  
-    mov gs:el_name,0
-    mov gs:el_cmd,0
-    mov gs:el_curr_dir,0
-    mov gs:el_env,0
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov eax,ds:app_loader_name
-    mov gs:el_loader_name,eax
-    mov ax,ds:app_console
-    mov gs:el_console,ax
-;
-    pop bx
-    pop eax
-    pop ds
-    ret
-SetupExecLoad  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1383,7 +1342,7 @@ SetupExecLoad  Endp
 ;           DESCRIPTION:    Make global copy of program name
 ;
 ;           PARAMETERS:     DS:ESI      Filename
-;                           GS          Exec load sel
+;                           GS          Load sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1397,15 +1356,15 @@ CreateExecProg Proc near
     mov edi,esi
     xor ecx,ecx
 
-cepLoop:
+cexrLoop:
     lods byte ptr [esi]
     or al,al
-    jz cepSizeOk
+    jz cexrSizeOk
 ;
     inc ecx
-    jmp cepLoop
+    jmp cexrLoop
 
-cepSizeOk:
+cexrSizeOk:
     mov esi,edi
     inc ecx 
     mov eax,ecx
@@ -1413,9 +1372,6 @@ cepSizeOk:
     mov gs:el_name,es
     xor edi,edi
     rep movs byte ptr es:[edi],ds:[esi]     
-;
-    GetThread
-    mov gs:el_wake_thread,ax
 ;
     GetCursorPosition
     mov gs:el_row,dx
@@ -1437,7 +1393,7 @@ CreateExecProg Endp
 ;           DESCRIPTION:    Make global copy of parameters
 ;
 ;           PARAMETERS:     ES:EDI      Param struc
-;                           GS          Exec load sel
+;                           GS          Load sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1449,26 +1405,42 @@ CreateExecParam Proc near
     push esi
     push edi
 ;
+    mov eax,es:[edi].lp_param_sel
+    or ax,3
+    verr ax
+    stc
+    jnz cexpNoParam
+;
+    mov ds,ax
+    mov esi,es:[edi].lp_param_offs
+    mov edi,esi
     xor ecx,ecx
-    mov esi,edi
 
-ceparLoop:
-    lods byte ptr es:[esi]
+cexpLoop:
+    lods byte ptr [esi]
     or al,al
-    jz ceparSizeOk
+    jz cexpSizeOk
 ;
     inc ecx
-    jmp ceparLoop
+    jmp cexpLoop
 
-ceparSizeOk:
+cexpSizeOk:
     mov esi,edi
     inc ecx 
     mov eax,ecx
     AllocateSmallGlobalMem
     xor edi,edi
     rep movs byte ptr es:[edi],ds:[esi]     
+    jmp cexpDone
 
-ceparDone:    
+cexpNoParam:
+    mov eax,1
+    AllocateSmallGlobalMem
+    xor edi,edi
+    xor al,al
+    stos byte ptr es:[edi]
+
+cexpDone:    
     mov gs:el_cmd,es
 ;       
     pop edi
@@ -1487,7 +1459,8 @@ CreateExecParam Endp
 ;
 ;           DESCRIPTION:    Make global copy of start dir
 ;
-;           PARAMETERS:     GS      Exec load sel
+;           PARAMETERS:     ES:EDI      Param struc
+;                           GS          Load sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1499,6 +1472,35 @@ CreateExecStartDir Proc near
     push esi
     push edi
 ;
+    mov eax,es:[edi].lp_startdir_sel
+    or ax,3
+    verr ax
+    stc
+    jnz cexsdNoStartDir
+;
+    mov ds,ax
+    mov esi,es:[edi].lp_startdir_offs
+    mov edi,esi
+    xor ecx,ecx
+
+cexsdLoop:
+    lods byte ptr [esi]
+    or al,al
+    jz cexsdSizeOk
+;
+    inc ecx
+    jmp cexsdLoop
+
+cexsdSizeOk:
+    mov esi,edi
+    inc ecx 
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]     
+    jmp cexsdDone
+
+cexsdNoStartDir:
     mov eax,256
     AllocateSmallGlobalMem
     xor edi,edi
@@ -1515,6 +1517,8 @@ CreateExecStartDir Proc near
 ;
     mov al,ah
     GetCurDir
+
+cexsdDone:    
     mov gs:el_curr_dir,es
 ;       
     pop edi
@@ -1533,7 +1537,8 @@ CreateExecStartDir Endp
 ;
 ;           DESCRIPTION:    Make global copy of environment variables
 ;
-;           PARAMETERS:     GS          Exec load sel
+;           PARAMETERS:     ES:EDI      Param struc
+;                           GS          Load sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1545,6 +1550,37 @@ CreateExecEnv Proc near
     push esi
     push edi
 ;
+    mov eax,es:[edi].lp_env_sel
+    or ax,3
+    verr ax
+    stc
+    jnz cexeNoEnv
+;
+    mov ds,ax
+    mov esi,es:[edi].lp_env_offs
+    mov edi,esi
+    xor ecx,ecx
+
+cexeLoop:
+    inc ecx
+    lods byte ptr [esi]
+    or al,al
+    jnz cexeLoop
+;
+    inc ecx
+    lods byte ptr [esi]
+    or al,al
+    jnz cexeLoop
+
+cexeSizeOk:
+    mov esi,edi
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]     
+    jmp cexeDone
+
+cexeNoEnv:
     OpenProcEnv
     GetEnvSize
     movzx eax,ax
@@ -1552,6 +1588,8 @@ CreateExecEnv Proc near
     xor di,di
     GetEnvData
     CloseEnv
+
+cexeDone:    
     mov gs:el_env,es
 ;       
     pop edi
@@ -1568,9 +1606,9 @@ CreateExecEnv Endp
 ;
 ;           NAME:           SetupExecDir
 ;
-;           DESCRIPTION:    Setup exec directory
+;           DESCRIPTION:    Setup spawn directory
 ;
-;           PARAMETERS:     GS      Exec load sel
+;           PARAMETERS:     GS      Spawn sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1583,26 +1621,26 @@ SetupExecDir Proc near
     xor di,di
     mov ax,es:[di]
     cmp ah,':'
-    jne sedDirOk
+    jne sexDirOk
 ;
     sub al,'A'
-    jc sedDirOk
+    jc sexDirOk
 ;
     cmp al,26
-    jc sedSetDrive
+    jc sexSetDrive
 ;
     sub al,20h
-    jc sedDirOk
+    jc sexDirOk
 ;
     cmp al,26
-    jnc sedDirOk
+    jnc sexDirOk
 
-sedSetDrive:
+sexSetDrive:
     SetCurDrive
     add di,2
     SetCurDir
     
-sedDirOk:
+sexDirOk:
     pop di
     pop ax
     pop es
@@ -1614,9 +1652,9 @@ SetupExecDir   Endp
 ;
 ;           NAME:           SetupExecEnv
 ;
-;           DESCRIPTION:    Setup exec load environment
+;           DESCRIPTION:    Setup exec environment
 ;
-;           PARAMETERS:     GS      Exec load sel
+;           PARAMETERS:     GS      Load sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1645,14 +1683,11 @@ SetupExecEnv   Endp
 ;
 ;           DESCRIPTION:    Free exec environment
 ;
-;           PARAMETERS:     GS      Exec sel
+;           PARAMETERS:     GS      Load sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeExec Proc near
-    push es
-    push ax
-;
     mov es,gs:el_name
     FreeMem
 ;
@@ -1670,11 +1705,52 @@ FreeExec Proc near
     xor ax,ax
     mov gs,ax
     FreeMem
-;
-    pop ax
-    pop es    
     ret
 FreeExec   Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupExec
+;
+;           DESCRIPTION:    Setup exec
+;
+;           RETURNS:        GS      Load sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupExec Proc near    
+    push ds
+    push eax
+    push bx
+; 
+    push es
+    mov eax,SIZE exec_load_struc
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov gs,ax
+    pop es
+;  
+    mov gs:el_name,0
+    mov gs:el_cmd,0
+    mov gs:el_curr_dir,0
+    mov gs:el_env,0
+    mov gs:el_param,0
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_loader_name
+    mov gs:el_loader_name,eax
+    mov ax,ds:app_console
+    mov gs:el_console,ax
+;
+    pop bx
+    pop eax
+    pop ds
+    ret
+SetupExec  Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1812,46 +1888,6 @@ lepRet:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DoExecLoad
-;
-;           DESCRIPTION:    Do exec load
-;
-;           PARAMETERS:     GS      Exec load sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DoExecLoad Proc near       
-    push ds
-    push es
-    push ax
-    push bx
-    push ecx
-    push si
-    push di
-;    
-    mov es,gs:el_name
-    xor edi,edi
-    mov ax,cs
-    mov ds,ax
-    mov esi,OFFSET exec_startup
-    mov bx,gs
-    mov ax,2
-    mov ecx,stack0_size
-    CreateProcess
-;
-    pop di
-    pop si
-    pop ecx
-    pop bx
-    pop ax
-    pop es
-    pop ds
-    ret
-DoExecLoad Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           load_program16/32
 ;
 ;           DESCRIPTION:    Load executable file
@@ -1872,48 +1908,87 @@ load_program   Proc near
     push gs
     push bx
     push cx
-    push dx
 ;
-    les edi,es:[edi]
-    UserGateForce32 is_64_bit_exe_nr
-    jc lepProt
-;
-    call SetupExecLoad
+    call SetupExec
     call CreateExecProg
     call CreateExecParam
     call CreateExecStartDir
     call CreateExecEnv
-    int 3
-;    call DoExecLoad64    
-    jmp lepWait
-    
-lepProt:
-    call SetupExecLoad
-    call CreateExecProg
-    call CreateExecParam
-    call CreateExecStartDir
-    call CreateExecEnv
-    call DoExecLoad
+;
+    push gs
+    ExecApp
+    pop gs
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+;
+    SaveContext
+    xor eax,eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+;
+    GetThread
+    mov gs:el_thread,ax
+    mov es,ax
+;
+    xor si,si
+    mov ds,gs:el_name    
+    mov di,OFFSET thread_name
+    mov cx,32
 
-lepWait:    
-    WaitForSignal
-    mov ax,gs:el_console
-    or ax,ax
-    jnz lepWait
+lepThreadNameLoop:
+    lodsb
+    or al,al
+    jz lepThreadNamePad
 ;
-    mov ax,gs:el_ret_code
+    stosb
+    loop lepThreadNameLoop
+
+lepThreadNamePad:
+    or cx,cx
+    jz lepThreadNameDone
+;
+    mov al,' '
+    rep stosb
+
+lepThreadNameDone:
+    mov es,es:p_app_sel
+    xor si,si
+    mov ds,gs:el_name    
+    mov di,OFFSET app_exe_name
+
+lepCpExeLoop:
+    lodsb
+    stosb
+    or al,al
+    jne lepCpExeLoop
+;
+    pop ds
+    xor bx,bx
+;
+    int 3
+    call SetupExecDir
+    call SetupExecEnv
+;
     mov cx,gs:el_col
     mov dx,gs:el_row
     SetCursorPosition
-    call FreeExec
+;       
+    xor di,di
+    mov es,gs:el_name
+    xor cx,cx
+    OpenFile
+    jc lepFail
 
-lepDone:
-    pop dx
-    pop cx
-    pop bx
-    pop gs
-    ret
-load_program   Endp
+;
+
+load_program    Endp
     
 load_program16 Proc far
     push ebx

@@ -137,6 +137,12 @@ init_app    PROC near
     mov ax,clone_app_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET exec_app
+    mov edi,OFFSET exec_app_name
+    xor cl,cl
+    mov ax,exec_app_nr
+    RegisterOsGate
+;
     mov esi,OFFSET hook_open_app
     mov edi,OFFSET hook_open_app_name
     xor cl,cl
@@ -788,6 +794,127 @@ clone_app    PROC far
     pop ds
     retf32
 clone_app    ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ExecApp
+;
+;           DESCRIPTION:    Exec app
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+exec_app_name   DB 'Exec App',0
+
+exec_app    PROC far
+    xor ax,ax
+    mov es,ax
+    mov fs,ax
+    mov gs,ax
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    mov eax,es:app_close_proc
+    or eax,es:app_close_proc+4
+    jz eaAppClosed
+;
+    call fword ptr es:app_close_proc
+
+eaAppClosed:
+    GetThread
+    mov es,ax
+    lock and es:p_flags,NOT THREAD_FLAG_FORKED
+    mov es,es:p_app_sel
+;
+    mov es:app_get_cmd_line_proc,0
+    mov es:app_get_cmd_line_proc+4,0
+;
+    mov es:app_get_exe_proc,0
+    mov es:app_get_exe_proc+4,0
+;
+    mov es:app_get_env_proc,0
+    mov es:app_get_env_proc+4,0
+;
+    mov es:app_allocate_mem_proc,0
+    mov es:app_allocate_mem_proc+4,0
+;
+    mov es:app_free_mem_proc,0
+    mov es:app_free_mem_proc+4,0
+;
+    mov es:app_debug_allocate_mem_proc,0
+    mov es:app_debug_allocate_mem_proc+4,0
+;
+    mov es:app_debug_free_mem_proc,0
+    mov es:app_debug_free_mem_proc+4,0
+;
+    mov es:app_init_thread_proc,0
+    mov es:app_init_thread_proc+4,0
+;
+    mov es:app_free_thread_proc,0
+    mov es:app_free_thread_proc+4,0
+;
+    mov es:app_spawn_proc,0
+    mov es:app_spawn_proc+4,0
+;
+    mov es:app_fork_proc,0
+    mov es:app_fork_proc+4,0
+;
+    mov es:app_close_proc,0
+    mov es:app_close_proc+4,0
+;
+    mov es:app_load_dll_proc,0
+    mov es:app_load_dll_proc+4,0
+;
+    mov es:app_patch_proc,0
+    mov es:app_patch_proc+4,0
+;
+    mov es:app_get_current_dll_proc,0
+    mov es:app_get_current_dll_proc+4,0
+;
+    mov es:app_loader_name,0
+    mov es:app_section_base,0
+;
+    mov es:app_create_section_proc,0
+    mov es:app_create_section_proc+4,0
+;
+    mov es:app_create_named_section_proc,0
+    mov es:app_create_named_section_proc+4,0
+;
+    mov es:app_delete_section_proc,0
+    mov es:app_delete_section_proc+4,0
+;
+    mov es:app_enter_section_proc,0
+    mov es:app_enter_section_proc+4,0
+;
+    mov es:app_leave_section_proc,0
+    mov es:app_leave_section_proc+4,0
+;
+    mov es:app_exit_code,0
+    mov es:app_fork_id,0
+;
+    mov es:app_handle,0
+    mov es:app_mod_sel,0
+;
+    InitSection es:app_lib_section
+;
+    mov es:app_env,0
+    mov es:app_name,0
+    mov es:app_cmd_line,0
+    mov es:app_mem_blocks,0
+;
+    mov es:app_context,0
+    mov es:app_bitness,0
+    mov es:app_key,0
+;
+    xor ax,ax
+    mov es,ax
+;
+    ResetProcess
+    NotifyStartProgram
+    retf32
+exec_app    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
