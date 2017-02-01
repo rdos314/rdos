@@ -774,6 +774,7 @@ notify_process_forked       ENDP
 notify_start_program_name  DB 'Notify Start Program',0
 
 notify_start_program       PROC far
+    call init_process_mem
     call trap_start_program
     retf32
 notify_start_program       ENDP
