@@ -1755,139 +1755,6 @@ SetupExec  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ExecStartup
-;
-;           DESCRIPTION:    Exec startup stub
-;
-;           PARAMETERS:     BX      Spawn sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-exec_startup:
-    sti
-    mov gs,bx
-    mov ax,SEG data
-    mov ds,ax
-    SaveContext
-    xor eax,eax
-    push eax
-    push eax
-    push eax
-    push eax
-    push eax
-    push eax
-    push eax
-;
-    push es
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
-    mov es:app_context,bx
-    mov es:app_unload_proc,OFFSET lepRet
-;
-    CreateAppHandle
-    mov es:app_handle_sel,ax
-    mov es:app_handle_mem_sel,dx    
-;
-    CreateCHandle    
-    mov es:app_c_handle_sel,ax
-;
-    xor si,si
-    mov ds,gs:s_name    
-    mov di,OFFSET app_exe_name
-
-lepCopyExeLoop:
-    lodsb
-    stosb
-    or al,al
-    jne lepCopyExeLoop
-;
-    pop ds
-    xor bx,bx
-;       
-    GetThread
-    mov gs:el_thread,ax
-;
-    call SetupExecDir
-    call SetupExecEnv
-;
-    mov cx,gs:el_col
-    mov dx,gs:el_row
-    SetCursorPosition
-;       
-    xor di,di
-    mov es,gs:el_name
-    xor cx,cx
-    OpenFile
-    jc lepFail
-;
-    xor esi,esi
-    xor edi,edi
-    mov ds,gs:el_name
-    mov es,gs:el_cmd
-    call load_exe_file
-    jc lepFail
-;
-    mov gs:el_ret_code,0
-    GetThread
-    mov ds,ax
-    mov ax,ds:p_app_sel
-    mov gs:el_app,ax
-    mov ds,ax
-    mov ax,gs:el_console
-    mov ds:app_console,ax
-;
-    test byte ptr [bp+2].load_eflags,2
-    jnz lepVm16
-;
-    mov ds,[bp].load_ds
-    mov es,[bp].load_es
-    mov fs,[bp].load_fs
-    mov gs,[bp].load_gs
-
-lepVm16:
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    iretd
-
-lepFail:
-    mov ax,-1
-    UnloadExe
-
-lepRet:
-    push ax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_console,0
-    mov bx,ds:app_context
-    pop ax
-    mov ds:app_exit_code,ax
-    RestoreContext
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_exit_code    
-    mov gs:el_ret_code,ax
-;
-    GetCursorPosition
-    mov gs:el_col,cx
-    mov gs:el_row,dx
-;    
-    mov gs:el_console,0
-    mov bx,gs:el_wake_thread
-    Signal    
-    TerminateThread
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           load_program16/32
 ;
 ;           DESCRIPTION:    Load executable file
@@ -1919,10 +1786,6 @@ load_program   Proc near
     ExecApp
     pop gs
 ;
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
-;
     SaveContext
     xor eax,eax
     push eax
@@ -1936,7 +1799,12 @@ load_program   Proc near
     GetThread
     mov gs:el_thread,ax
     mov es,ax
+    mov es,es:p_app_sel
+    mov es:app_context,bx
+    mov es:app_unload_proc,OFFSET lepRet
 ;
+    GetThread
+    mov es,ax
     xor si,si
     mov ds,gs:el_name    
     mov di,OFFSET thread_name
@@ -1972,7 +1840,6 @@ lepCpExeLoop:
     pop ds
     xor bx,bx
 ;
-    int 3
     call SetupExecDir
     call SetupExecEnv
 ;
@@ -1985,9 +1852,65 @@ lepCpExeLoop:
     xor cx,cx
     OpenFile
     jc lepFail
-
 ;
+    int 3
+    xor esi,esi
+    xor edi,edi
+    mov ds,gs:el_name
+    mov es,gs:el_cmd
+    call load_exe_file
+    jc lepFail
+;
+    mov gs:el_ret_code,0
+;
+    test byte ptr [bp+2].load_eflags,2
+    jnz lepVm16
+;
+    mov ds,[bp].load_ds
+    mov es,[bp].load_es
+    mov fs,[bp].load_fs
+    mov gs,[bp].load_gs
 
+lepVm16:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+lepFail:
+    mov ax,-1
+    UnloadExe
+
+lepRet:
+    int 3
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds:app_console,0
+    mov bx,ds:app_context
+    pop ax
+    mov ds:app_exit_code,ax
+    RestoreContext
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ax,ds:app_exit_code    
+    mov gs:el_ret_code,ax
+;
+    GetCursorPosition
+    mov gs:el_col,cx
+    mov gs:el_row,dx
+;    
+    mov gs:el_console,0
+    mov bx,gs:el_wake_thread
+    Signal    
+    TerminateThread
 load_program    Endp
     
 load_program16 Proc far
