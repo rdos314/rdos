@@ -1727,6 +1727,10 @@
     CallGate_unload_exe  \
     parm [eax];
 
+#pragma aux RdosWaitForExec = \
+    CallGate_wait_for_exec  \
+    parm [eax];
+
 #pragma aux RdosGetExitCode = \
     CallGate_get_exit_code  \
     "movsx eax,ax" \

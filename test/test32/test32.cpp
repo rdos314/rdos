@@ -37,8 +37,7 @@ void main()
     else
         printf("Forked ID: %d\r\n", val);
 
-    for (;;)
-        RdosWaitMilli(1000);
+    RdosWaitForExec(val);
 
     size = read(0, buf, 30);
     write(1, buf, size);

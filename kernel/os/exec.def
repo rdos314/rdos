@@ -92,6 +92,10 @@ spawn_struc     ENDS
 
 exec_load_struc STRUC
 
+el_prev                         DW ?
+el_next                         DW ?
+el_pid                          DW ?
+
 el_name                         DW ?
 el_cmd                          DW ?
 el_curr_dir                     DW ?
