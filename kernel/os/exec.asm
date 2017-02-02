@@ -1837,7 +1837,6 @@ lepCpExeLoop:
     or al,al
     jne lepCpExeLoop
 ;
-    pop ds
     xor bx,bx
 ;
     call SetupExecDir
