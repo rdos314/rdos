@@ -53,8 +53,7 @@ long_map_linear         EQU 000110000h
 long_idt_linear         EQU 00011F000h
 long_map_size           EQU 000010000h
 
-local_byte_linear               EQU 000120000h
-local_page_linear               EQU 000300000h
+local_page_linear               EQU 000200000h
 
 boot_efi_linear         EQU 040000000h
 

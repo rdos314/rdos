@@ -77,9 +77,6 @@ mem_seg ENDS
 
 local_mem_seg   STRUC
 
-local_avail_mem     DD ?
-local_used_mem      DD ?
-
 local_big_used_mem      DD ?
 local_big_avail_mem     DD ?
 
@@ -518,24 +515,8 @@ init_process_mem    PROC near
     push edx
     push di
 ;
-    mov ax,local_linear_sel
-    mov ds,ax
-    xor eax,eax
-    mov edx,10h
-    mov [eax].slf_next,edx
-    mov [eax].sls_next,edx
-    mov [eax].sls_prev,edx
-    mov eax,edx
-    mov edx,local_page_linear - local_byte_linear - 10h
-    mov [eax].slf_prev,0
-    mov [eax].slf_next,0
-    mov [eax].sls_prev,0
-    mov [eax].sls_next,edx
-;
     mov ax,local_mem_sel
     mov ds,ax
-    mov ds:local_avail_mem,edx
-    mov ds:local_used_mem,0
     mov ds:local_big_avail_mem,flat_size - local_page_linear
     mov ds:local_big_used_mem,0
     mov ds:local_big_base,local_page_linear
@@ -637,11 +618,6 @@ init_mem_sels   PROC near
     or ax,807h
     mov edx,fixed_vm_linear
     call cs:set_sys_page_entry_proc
-;
-    mov bx,local_linear_sel
-    mov edx,local_byte_linear
-    mov ecx,local_page_linear - local_byte_linear
-    CreateDataSelector32
 ;
     mov bx,vm_linear_sel
     mov edx,vm_linear
@@ -995,102 +971,7 @@ allocate_local_linear   PROC far
     push eax
     push ebx
     push ecx
-    test ax,0FFFh
-    jz allocate_page_local_linear
-    cmp eax,4000h
-    jnc allocate_page_local_linear
 ;
-    dec eax
-    and al,0FCh
-    add eax,4
-;
-    mov dx,local_mem_sel
-    mov ds,dx
-    mov es,dx
-    EnterSection ds:local_mem_section
-    mov edx,ds:local_avail_mem
-    add ds:local_used_mem,eax
-    sub edx,eax
-    sub edx,10h
-    add eax,10h
-    mov ds:local_avail_mem,edx
-;
-    mov dx,local_linear_sel
-    mov ds,dx
-    xor edx,edx
-    xor ebx,ebx
-    mov edx,[edx].slf_next
-allocate_local_loop:
-    mov ecx,[edx].sls_next
-    sub ecx,edx
-    cmp ecx,eax
-    jnc allocate_local_found
-    mov ebx,edx
-    mov edx,[edx].slf_next
-    jmp allocate_local_loop
-allocate_local_found:
-    sub ecx,eax
-    cmp ecx,16
-    jc allocate_local_no_split
-    mov ebx,eax
-    add ebx,edx
-;       
-    mov eax,[edx].sls_next
-    mov [ebx].sls_next,eax
-    mov [ebx].sls_prev,edx
-    mov [edx].sls_next,ebx
-    mov [eax].sls_prev,ebx
-;
-    mov eax,[edx].slf_next
-    mov [ebx].slf_next,eax
-    mov [edx].slf_next,ebx
-    or eax,eax
-    jz allocate_local_last_free
-    mov [eax].slf_prev,ebx
-allocate_local_last_free:
-    mov eax,[edx].slf_prev
-    mov [ebx].slf_prev,eax
-    or eax,eax
-    jz allocate_local_first_free
-    mov [eax].slf_next,ebx
-allocate_local_first_free:
-;
-    jmp allocate_local_done
-allocate_local_no_split:
-    mov eax,[edx].slf_prev
-    mov ebx,[edx].slf_next
-    mov [eax].slf_next,ebx
-    mov [ebx].slf_prev,eax
-allocate_local_done:
-    xor eax,eax
-    mov ebx,[eax].slf_next
-    cmp ebx,edx
-    jnz allocate_local_end
-    mov ebx,[edx].slf_next
-    mov [eax].slf_next,ebx
-allocate_local_end:
-    xor eax,eax
-    mov ebx,[eax].sls_prev
-    mov ecx,[edx].sls_next
-    cmp ebx,ecx
-    jnc no_local_biggest_block
-    mov [eax].sls_prev,ecx
-no_local_biggest_block: 
-    dec eax
-    mov [edx].slf_prev,eax
-    mov [edx].slf_next,eax
-    mov ax,local_mem_sel
-    mov ds,ax
-    LeaveSection ds:local_mem_section
-    add edx,local_byte_linear + 10h
-    pop ecx
-    pop ebx
-    pop eax
-    pop es
-    pop ds
-    retf32
-
-allocate_page_local_linear:
     dec eax
     and ax,0F000h
     add eax,1000h
@@ -1145,101 +1026,7 @@ allocate_debug_local_linear     PROC far
     push eax
     push ebx
     push ecx
-    test ax,0FFFh
-    jz allocate_debug_page_local_linear
-    cmp eax,4000h
-    jnc allocate_debug_page_local_linear
 ;
-    dec eax
-    and al,0FCh
-    add eax,4
-;
-    mov dx,local_mem_sel
-    mov ds,dx
-    mov es,dx
-    EnterSection ds:local_mem_section
-    mov edx,ds:local_avail_mem
-    add ds:local_used_mem,eax
-    sub edx,eax
-    sub edx,10h
-    add eax,10h
-    mov ds:local_avail_mem,edx
-;
-    mov dx,local_linear_sel
-    mov ds,dx
-    xor edx,edx
-    xor ebx,ebx
-    mov edx,[edx].slf_next
-allocate_debug_local_loop:
-    mov ecx,[edx].sls_next
-    sub ecx,edx
-    cmp ecx,eax
-    jnc allocate_debug_local_found
-    mov ebx,edx
-    mov edx,[edx].slf_next
-    jmp allocate_debug_local_loop
-allocate_debug_local_found:
-    sub ecx,eax
-    cmp ecx,16
-    jc allocate_debug_local_no_split
-    mov ebx,eax
-    add ebx,edx
-;       
-    mov eax,[edx].sls_next
-    mov [ebx].sls_next,eax
-    mov [ebx].sls_prev,edx
-    mov [edx].sls_next,ebx
-    mov [eax].sls_prev,ebx
-;
-    mov eax,[edx].slf_next
-    mov [ebx].slf_next,eax
-    mov [edx].slf_next,ebx
-    or eax,eax
-    jz allocate_debug_local_last_free
-    mov [eax].slf_prev,ebx
-allocate_debug_local_last_free:
-    mov eax,[edx].slf_prev
-    mov [ebx].slf_prev,eax
-    or eax,eax
-    jz allocate_debug_local_first_free
-    mov [eax].slf_next,ebx
-allocate_debug_local_first_free:
-;
-    jmp allocate_debug_local_done
-allocate_debug_local_no_split:
-    mov eax,[edx].slf_prev
-    mov ebx,[edx].slf_next
-    mov [eax].slf_next,ebx
-    mov [ebx].slf_prev,eax
-allocate_debug_local_done:
-    xor eax,eax
-    mov ebx,[eax].slf_next
-    cmp ebx,edx
-    jnz allocate_debug_local_end
-    mov ebx,[edx].slf_next
-    mov [eax].slf_next,ebx
-allocate_debug_local_end:
-    xor eax,eax
-    mov ebx,[eax].sls_prev
-    mov ecx,[edx].sls_next
-    cmp ebx,ecx
-    jnc no_debug_local_biggest_block
-    mov [eax].sls_prev,ecx
-no_debug_local_biggest_block:   
-    dec eax
-    mov [edx].slf_prev,eax
-    mov [edx].slf_next,eax
-    mov ax,local_mem_sel
-    mov ds,ax
-    LeaveSection ds:local_mem_section
-    add edx,local_byte_linear + 10h
-    pop ecx
-    pop ebx
-    pop eax
-    pop es
-    pop ds
-    retf32
-allocate_debug_page_local_linear:
     dec eax
     and ax,0F000h
     add eax,1000h
@@ -1679,11 +1466,8 @@ available_small_linear  ENDP
 available_small_local_linear_name     DB 'Available Small Local Linear',0
 
 available_small_local_linear  PROC far
-    push ds
-    mov ax,local_mem_sel
-    mov ds,ax
-    mov eax,ds:local_avail_mem
-    pop ds
+    xor eax,eax
+    stc
     retf32
 available_small_local_linear  ENDP
 
@@ -1794,11 +1578,8 @@ used_small_linear       ENDP
 used_local_linear_name  DB 'Used Local Linear',0
 
 used_local_linear       PROC far
-    push ds
-    mov ax,local_mem_sel
-    mov ds,ax
-    mov eax,ds:local_used_mem
-    pop ds
+    xor eax,eax
+    stc
     retf32
 used_local_linear       ENDP
 
@@ -2144,112 +1925,10 @@ free_system:
     jmp free_error
 
 free_local_mem  PROC near
-    cmp edx,local_byte_linear
-    jc free_low_mem
     cmp edx,local_page_linear
-    jnc free_big_local_mem
-    mov ax,local_mem_sel
-    mov ds,ax
-    mov es,ax
-    EnterSection ds:local_mem_section
-    sub edx,local_byte_linear
-    sub edx,10h
-    mov ax,local_linear_sel
-    mov ds,ax
-    mov eax,[edx].sls_next
-    sub eax,edx
-    mov ebx,es:local_avail_mem
-    add ebx,eax
-    mov es:local_avail_mem,ebx
-    add es:local_used_mem,10h
-    sub es:local_used_mem,eax
-;
-    mov eax,[edx].sls_prev
-    or eax,eax
-    jz free_local_no_merge_down
-    mov eax,[eax].slf_next
-    inc eax
-    or eax,eax
-    jz free_local_no_merge_down
-    mov eax,edx
-    mov edx,[eax].sls_prev
-    mov ebx,[eax].sls_next
-    mov [edx].sls_next,ebx
-    mov [ebx].sls_prev,edx
-    jmp free_local_test_up
-free_local_no_merge_down:
-    xor eax,eax
-    mov ebx,[eax].slf_next
-    cmp edx,ebx
-    jc free_local_insert_first
-
-free_local_insert_loop:
-    mov ebx,[ebx].slf_next
-    cmp edx,ebx
-    jnc free_local_insert_loop
-;
-    mov eax,[ebx].slf_prev
-    mov [edx].slf_prev,eax
-    mov [eax].slf_next,edx
-    mov [edx].slf_next,ebx
-    mov [ebx].slf_prev,edx
-    jmp free_local_test_up
-
-free_local_insert_first:
-    mov [edx].slf_prev,eax
-    mov ebx,[eax].slf_next
-    mov [edx].slf_next,ebx
-    mov [eax].slf_next,edx
-    mov [ebx].slf_prev,edx
-
-free_local_test_up:
-    mov eax,[edx].sls_next
-    mov eax,[eax].slf_prev
-    inc eax
-    or eax,eax
-    jz free_local_no_merge_up
-    push edx
-    mov edx,[edx].sls_next
-    mov eax,[edx].slf_prev
-    mov ebx,[edx].slf_next
-    or eax,eax
-    jz fm1_local_bypass
-    mov [eax].slf_next,ebx
-fm1_local_bypass:
-    or ebx,ebx
-    jz fm2_local_bypass
-    mov [ebx].slf_prev,eax
-fm2_local_bypass:
-    xor eax,eax
-    mov ebx,[eax].slf_next
-    cmp ebx,edx
-    jne fm3_local_bypass
-    mov ebx,[ebx].slf_next
-    mov [eax].slf_next,ebx
-fm3_local_bypass:
-    pop edx
-    mov ebx,[edx].sls_next
-    mov ebx,[ebx].sls_next
-    mov [ebx].sls_prev,edx
-    mov [edx].sls_next,ebx
-free_local_no_merge_up:
-    xor eax,eax
-    mov ebx,[eax].sls_prev
-    mov eax,[edx].sls_next
-    cmp eax,ebx
-    jc free_local_not_limit_page
-    mov eax,ebx
-    add eax,1000h
-    xor ebx,ebx
-    mov [ebx].sls_prev,edx
-free_local_not_limit_page:
-    add edx,local_byte_linear + 10h
-    add eax,local_byte_linear
-    mov bx,local_mem_sel
-    mov ds,bx
-    LeaveSection ds:local_mem_section
-    ret
-free_local_mem  ENDP
+    jc free_low_mem
+    jmp free_big_local_mem
+free_local_mem  Endp
 
 free_low_mem    Proc near
     cmp edx,vm_linear
@@ -2586,11 +2265,8 @@ resize_linear   PROC far
     cmp edx,flat_size
     jnc resize_mem_error
 ;
-    cmp edx,local_byte_linear
-    jc resize_low_mem
-;
     cmp edx,local_page_linear
-    jc resize_mem_error
+    jc resize_low_mem
 ;
     mov si,system_data_sel
     mov ds,si

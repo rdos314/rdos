@@ -238,32 +238,6 @@ trap_create_process     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ClearLowPages
-;
-;           DESCRIPTION:    Clear low pages
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearLowPages     PROC near
-    pushad
-;
-    mov edx,local_byte_linear
-    xor eax,eax
-    xor ebx,ebx
-
-clpLoop:
-    call cs:set_page_entry_proc
-    add edx,1000h
-    cmp edx,local_page_linear
-    jne clpLoop
-;
-    popad
-    ret
-ClearLowPages	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           TRAP_FORK_PROCESS
 ;
 ;           DESCRIPTION:    Handle ForkProcess hooks
@@ -278,7 +252,6 @@ trap_fork_process     PROC near
     push si
 ;    
     call cs:clone_proc
-    call ClearLowPages
 ;
     call init_process_mem
     InitProcessApp
