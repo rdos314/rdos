@@ -2038,7 +2038,6 @@ lepFail:
     UnloadExe
 
 lepRet:
-    int 3
     push ax
     GetThread
     mov ds,ax

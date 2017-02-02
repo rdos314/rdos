@@ -4180,16 +4180,16 @@ fork_proc      Proc far
 fork_parent:
     WaitForSignal
 ;    
-    pop eax
-    pop eax
-    pop eax
-    pop eax
-    pop eax
-    pop eax
-    pop eax
-    pop eax
-    pop eax
-    pop eax
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
 ;
     pop ecx
     pop ebx
