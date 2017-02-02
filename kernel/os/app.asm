@@ -769,19 +769,152 @@ clone_app    PROC far
     GetThread
     mov es,ax
     mov es,es:p_app_sel
-    xor si,si
-    xor di,di
-    mov cx,SIZE app_seg
-    rep movs byte ptr es:[di],ds:[si]
 ;
-    mov es:app_next,0
+    mov eax,ds:app_get_cmd_line_proc
+    mov es:app_get_cmd_line_proc,eax
+    mov eax,ds:app_get_cmd_line_proc+4
+    mov es:app_get_cmd_line_proc+4,eax
+;
+    mov eax,ds:app_get_exe_proc
+    mov es:app_get_exe_proc,eax
+    mov eax,ds:app_get_exe_proc+4
+    mov es:app_get_exe_proc+4,eax
+;
+    mov eax,ds:app_get_env_proc
+    mov es:app_get_env_proc,eax
+    mov eax,ds:app_get_env_proc+4
+    mov es:app_get_env_proc+4,eax
+;
+    mov eax,ds:app_allocate_mem_proc
+    mov es:app_allocate_mem_proc,eax
+    mov eax,ds:app_allocate_mem_proc+4
+    mov es:app_allocate_mem_proc+4,eax
+;
+    mov eax,ds:app_free_mem_proc
+    mov es:app_free_mem_proc,eax
+    mov eax,ds:app_free_mem_proc+4
+    mov es:app_free_mem_proc+4,eax
+;
+    mov eax,ds:app_debug_allocate_mem_proc
+    mov es:app_debug_allocate_mem_proc,eax
+    mov eax,ds:app_debug_allocate_mem_proc+4
+    mov es:app_debug_allocate_mem_proc+4,eax
+;
+    mov eax,ds:app_debug_free_mem_proc
+    mov es:app_debug_free_mem_proc,eax
+    mov eax,ds:app_debug_free_mem_proc+4
+    mov es:app_debug_free_mem_proc+4,eax
+;
+    mov eax,ds:app_init_thread_proc
+    mov es:app_init_thread_proc,eax
+    mov eax,ds:app_init_thread_proc+4
+    mov es:app_init_thread_proc+4,eax
+;
+    mov eax,ds:app_free_thread_proc
+    mov es:app_free_thread_proc,eax
+    mov eax,ds:app_free_thread_proc+4
+    mov es:app_free_thread_proc+4,eax
+;
+    mov eax,ds:app_spawn_proc
+    mov es:app_spawn_proc,eax
+    mov eax,ds:app_spawn_proc+4
+    mov es:app_spawn_proc+4,eax
+;
+    mov eax,ds:app_fork_proc
+    mov es:app_fork_proc,eax
+    mov eax,ds:app_fork_proc+4
+    mov es:app_fork_proc+4,eax
+;
+    mov eax,ds:app_close_proc
+    mov es:app_close_proc,eax
+    mov eax,ds:app_close_proc+4
+    mov es:app_close_proc+4,eax
+;
+    mov eax,ds:app_load_dll_proc
+    mov es:app_load_dll_proc,eax
+    mov eax,ds:app_load_dll_proc+4
+    mov es:app_load_dll_proc+4,eax
+;
+    mov eax,ds:app_patch_proc
+    mov es:app_patch_proc,eax
+    mov eax,ds:app_patch_proc+4
+    mov es:app_patch_proc+4,eax
+;
+    mov eax,ds:app_get_current_dll_proc
+    mov es:app_get_current_dll_proc,eax
+    mov eax,ds:app_get_current_dll_proc+4
+    mov es:app_get_current_dll_proc+4,eax
+;
+    mov eax,ds:app_loader_name
+    mov es:app_loader_name,eax
+;
+    mov eax,ds:app_section_base
+    mov es:app_section_base,eax
+;
+    mov eax,ds:app_create_section_proc
+    mov es:app_create_section_proc,eax
+    mov eax,ds:app_create_section_proc+4
+    mov es:app_create_section_proc+4,eax
+;
+    mov eax,ds:app_create_named_section_proc
+    mov es:app_create_named_section_proc,eax
+    mov eax,ds:app_create_named_section_proc+4
+    mov es:app_create_named_section_proc+4,eax
+;
+    mov eax,ds:app_delete_section_proc
+    mov es:app_delete_section_proc,eax
+    mov eax,ds:app_delete_section_proc+4
+    mov es:app_delete_section_proc+4,eax
+;
+    mov eax,ds:app_enter_section_proc
+    mov es:app_enter_section_proc,eax
+    mov eax,ds:app_enter_section_proc+4
+    mov es:app_enter_section_proc+4,eax
+;
+    mov eax,ds:app_leave_section_proc
+    mov es:app_leave_section_proc,eax
+    mov eax,ds:app_leave_section_proc+4
+    mov es:app_leave_section_proc+4,eax
+;
+    mov ax,ds:app_unload_proc
+    mov es:app_unload_proc,ax
+;
+    mov ax,ds:app_handle
+    mov es:app_handle,ax
+;
+    mov ax,ds:app_mod_sel
+    mov es:app_mod_sel,ax
+;
+    mov eax,ds:app_env
+    mov es:app_env,eax
+;
+    mov eax,ds:app_name
+    mov es:app_name,eax
+;
+    mov eax,ds:app_cmd_line
+    mov es:app_cmd_line,eax
+;
+    mov eax,ds:app_mem_blocks
+    mov es:app_mem_blocks,eax
+;
+    mov ax,ds:app_context
+    mov es:app_context,ax
+;
+    mov al,ds:app_bitness
+    mov es:app_bitness,al
+;
+    mov al,ds:app_key
+    mov es:app_key,al
+;
     mov es:app_exit_code,0
     mov es:app_mem_blocks,0
-    mov es:app_parent_ldt,0
+    mov es:app_exe_name,0
 ;
-    CreateAppHandle
+    mov ax,ds:app_handle_sel
     mov es:app_handle_sel,ax
-    mov es:app_handle_mem_sel,dx    
+;
+    mov ax,ds:app_handle_mem_sel
+    mov es:app_handle_mem_sel,ax
 ;
     CreateCHandle    
     mov es:app_c_handle_sel,ax    
@@ -810,17 +943,16 @@ exec_app_name   DB 'Exec App',0
 exec_app    PROC far
     xor ax,ax
     mov es,ax
-    mov fs,ax
     mov gs,ax
 ;
     GetThread
     mov es,ax
     mov es,es:p_app_sel
-    mov eax,es:app_close_proc
-    or eax,es:app_close_proc+4
+    mov eax,es:app_free_thread_proc
+    or eax,es:app_free_thread_proc+4
     jz eaAppClosed
 ;
-    call fword ptr es:app_close_proc
+    call fword ptr es:app_free_thread_proc
 
 eaAppClosed:
     GetThread
@@ -907,6 +1039,10 @@ eaAppClosed:
     mov es:app_context,0
     mov es:app_bitness,0
     mov es:app_key,0
+;
+    CreateAppHandle
+    mov es:app_handle_sel,ax
+    mov es:app_handle_mem_sel,dx    
 ;
     xor ax,ax
     mov es,ax

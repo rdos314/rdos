@@ -3075,7 +3075,8 @@ UnlockFile     MACRO
 
 ;;;;;;;;;;;; VIDEO ;;;;;;;;;;;
 
-;  ES           App sel
+;  DS           Source app sel
+;  ES           Dest app sel
 CloneConsole MACRO
     OsGate clone_console_nr
                     ENDM

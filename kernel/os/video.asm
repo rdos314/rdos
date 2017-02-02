@@ -1416,7 +1416,8 @@ EnableConsoleFocus Endp
 ;
 ;   DESCRIPTION:    Clone console
 ;
-;   PARAMETERS:     ES          App selector
+;   PARAMETERS:     DS		Source app selector
+;                   ES          Dest app selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1424,8 +1425,14 @@ clone_console_name      DB 'Clone Console', 0
     
 clone_console  PROC far
     push es
-    mov es,es:app_console
+    push ax
+;
+    mov ax,ds:app_console
+    mov es:app_console,ax
+    mov es,ax
     inc es:c_usage
+;
+    pop ax
     pop es
     ret
 clone_console   Endp
