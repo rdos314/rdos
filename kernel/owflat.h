@@ -1729,7 +1729,8 @@
 
 #pragma aux RdosWaitForExec = \
     CallGate_wait_for_exec  \
-    parm [eax];
+    parm [eax] \
+    value [eax];
 
 #pragma aux RdosGetExitCode = \
     CallGate_get_exit_code  \
