@@ -26,6 +26,7 @@
 ########################################################################*/
 
 #include <string.h>
+#include <unistd.h>
 
 #include "rdos.h"
 #include "exec.h"
@@ -70,6 +71,9 @@ int TExecCommand::Execute(char *param)
     TPathName StartupDir;
     int ThreadId;
     int Handle;
+    char *arg[] = {0, param, 0};
+
+    arg[0] = (char *)FProgName.GetData();
 
     if (RdosIs64BitExe(FProgName.GetData()))
         FDetach = TRUE;
@@ -86,6 +90,6 @@ int TExecCommand::Execute(char *param)
             return -1;
      }
      else
-          return RdosExec(FProgName.GetData(), param, "", "");
+          return execv(arg[0], (char **)&arg);
 }
 
