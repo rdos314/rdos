@@ -28,6 +28,9 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "session.h"
 #include "rdos.h"
@@ -110,7 +113,7 @@ static TCommandFactory *acpi;
 static TCommandFactory *audio;
 static TCommandFactory *call;
 static TCommandFactory *cd;
-static TCommandFactory *chdir;
+static TCommandFactory *chdirc;
 static TCommandFactory *cls;
 static TCommandFactory *crash;
 static TCommandFactory *newsess;
@@ -151,7 +154,7 @@ static TCommandFactory *rd;
 static TCommandFactory *reboot;
 static TCommandFactory *rem;
 static TCommandFactory *remote;
-static TCommandFactory *rmdir;
+static TCommandFactory *rmdirc;
 static TCommandFactory *rmpart;
 static TCommandFactory *set;
 static TCommandFactory *state;
@@ -239,7 +242,7 @@ TSession::TSession(const char *ipc)
         state = new TStateFactory;
         set = new TSetFactory;
         rmpart = new TRemovePartitionFactory;
-        rmdir = new TRmdirFactory;
+        rmdirc = new TRmdirFactory;
         remote = new TRemoteFactory;
         rem = new TRemFactory;
         reboot = new TRebootFactory;
@@ -280,7 +283,7 @@ TSession::TSession(const char *ipc)
         com = new TComFactory;
         newsess = new TNewSessionFactory;
         cls = new TClsFactory;
-        chdir = new TChdirFactory;
+        chdirc = new TChdirFactory;
         cd = new TCdFactory;
         capture = new TCaptureFactory;
         can = new TCanFactory;
@@ -385,7 +388,7 @@ TSession::~TSession()
         delete state;
         delete set;
         delete rmpart;
-        delete rmdir;
+        delete rmdirc;
         delete remote;
         delete rem;
         delete reboot;
@@ -415,7 +418,7 @@ TSession::~TSession()
         delete com;
         delete newsess;
         delete cls;
-        delete chdir;
+        delete chdirc;
         delete cd;
         delete capture;
         delete can;
@@ -1277,18 +1280,7 @@ TFile *TSession::GetErrorFile()
 ##########################################################################*/
 void TSession::Write(char ch)
 {
-    char str[2];
-
-    str[0] = ch;
-    str[1] = 0;
-
-    if (FOutputFile)
-        FOutputFile->Write(str, 1);
-    else
-    {
-        RdosWriteChar(ch);
-        IpcOut += TString(str);
-    }
+    write(1, &ch, 1);
 }
 
 /*##########################################################################
@@ -1304,15 +1296,7 @@ void TSession::Write(char ch)
 ##########################################################################*/
 void TSession::Write(const char *str)
 {
-    int size = strlen(str);
-
-    if (FOutputFile)
-        FOutputFile->Write(str, size);
-    else
-    {
-        RdosWriteString(str);
-        IpcOut += TString(str);
-    }
+    write(1, str, strlen(str));
 }
 
 /*##########################################################################
@@ -1328,18 +1312,7 @@ void TSession::Write(const char *str)
 ##########################################################################*/
 void TSession::WriteError(char ch)
 {
-    char str[2];
-
-    str[0] = ch;
-    str[1] = 0;
-
-    if (FOutputFile)
-        FOutputFile->Write(str, 1);
-    else
-    {
-        RdosWriteChar(ch);
-        IpcOut += TString(str);
-    }
+    write(2, &ch, 1);
 }
 
 /*##########################################################################
@@ -1355,15 +1328,7 @@ void TSession::WriteError(char ch)
 ##########################################################################*/
 void TSession::WriteError(const char *str)
 {
-    int size = strlen(str);
-
-    if (FOutputFile)
-        FOutputFile->Write(str, size);
-    else
-    {
-        RdosWriteString(str);
-        IpcOut += TString(str);
-    }
+    write(2, str, strlen(str));
 }
 
 /*##########################################################################
