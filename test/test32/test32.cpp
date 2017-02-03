@@ -20,7 +20,7 @@ void main()
     int size;
     int val;
     char *ptr;
-    char *arg[] = {"z:\\command.exe", 0};
+    char *arg[] = {"showpos.exe", 0};
 
     execv(arg[0], (char **)&arg);
 

@@ -1522,10 +1522,6 @@ cexrSizeOk:
     mov gs:el_name,es
     xor edi,edi
     rep movs byte ptr es:[edi],ds:[esi]     
-;
-    GetCursorPosition
-    mov gs:el_row,dx
-    mov gs:el_col,cx        
 ;    
     pop edi
     pop esi
@@ -1893,10 +1889,6 @@ SetupExec Proc near
     mov ax,ds:p_id
     mov gs:el_pid,ax
     mov ds,ds:p_app_sel
-    mov eax,ds:app_loader_name
-    mov gs:el_loader_name,eax
-    mov ax,ds:app_console
-    mov gs:el_console,ax
 ;
     pop bx
     pop eax
@@ -1951,7 +1943,6 @@ load_program   Proc near
     push eax
 ;
     GetThread
-    mov gs:el_thread,ax
     mov es,ax
     mov es,es:p_app_sel
     mov es:app_context,bx
@@ -1995,10 +1986,6 @@ lepCpExeLoop:
 ;
     call SetupExecDir
     call SetupExecEnv
-;
-    mov cx,gs:el_col
-    mov dx,gs:el_row
-    SetCursorPosition
 ;       
     xor di,di
     mov es,gs:el_name
@@ -2042,7 +2029,6 @@ lepRet:
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov ds:app_console,0
     mov bx,ds:app_context
     pop ax
     mov ds:app_exit_code,ax
@@ -2053,12 +2039,7 @@ lepRet:
     mov ds,ds:p_app_sel
     mov ax,ds:app_exit_code    
     mov gs:el_ret_code,ax
-;
-    GetCursorPosition
-    mov gs:el_col,cx
-    mov gs:el_row,dx
 ;    
-    mov gs:el_console,0
     mov bx,gs:el_wake_thread
     Signal    
 ;

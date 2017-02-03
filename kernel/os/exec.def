@@ -100,15 +100,9 @@ el_name                         DW ?
 el_cmd                          DW ?
 el_curr_dir                     DW ?
 el_env                          DW ?
-el_loader_name                  DD ?
 el_param                        DW ?
-el_thread                       DW ?
-el_console                      DW ?
-el_app                          DW ?
 el_ret_code                     DW ?
 el_wake_thread                  DW ?
-el_row                          DW ?
-el_col                          DW ?
 
 exec_load_struc ENDS
 
