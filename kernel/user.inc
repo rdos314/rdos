@@ -882,7 +882,8 @@ LoadExe	MACRO
 	UserGate load_exe_nr
 					ENDM
 
-; IN  BX        forked id
+; IN  AX        Forked id
+; OUT AX        Exit code
 WaitForExec	MACRO
 	UserGate wait_for_exec_nr
 					ENDM

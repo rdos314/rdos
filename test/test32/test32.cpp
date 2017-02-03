@@ -22,22 +22,7 @@ void main()
     char *ptr;
     char *arg[] = {"z:\\command.exe", 0};
 
-    val = fork();
-
-    if (val == 0)
-    {
-        execv(arg[0], (char **)&arg);
-
-        ptr = new char[256];
-        strcpy(ptr,"Forked process\r\n"); 
-        printf(ptr);
-        delete ptr;
-        exit (0);
-    }
-    else
-        printf("Forked ID: %d\r\n", val);
-
-    RdosWaitForExec(val);
+    execv(arg[0], (char **)&arg);
 
     size = read(0, buf, 30);
     write(1, buf, size);

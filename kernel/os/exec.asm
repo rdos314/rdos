@@ -2127,6 +2127,8 @@ unload_exe:
 ;
 ;           PARAMETERS:     AX          Forked ID
 ;
+;           RETURNS:        AX          Exit code
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 wait_for_exec_name DB 'Wait For Exec',0
@@ -2144,6 +2146,7 @@ wait_for_exec   Proc far
     mov gs:el_wake_thread,ax
 ;
     WaitForSignal
+    mov ax,gs:el_ret_code
     clc
  
 wfeDone:   

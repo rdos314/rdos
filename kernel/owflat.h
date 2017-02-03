@@ -1729,6 +1729,7 @@
 
 #pragma aux RdosWaitForExec = \
     CallGate_wait_for_exec  \
+    "movzx eax,ax" \
     parm [eax] \
     value [eax];
 
