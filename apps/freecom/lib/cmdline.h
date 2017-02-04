@@ -34,27 +34,26 @@
 class TCommandLine
 {
 public:
-	TCommandLine(TSession *session, const char *line);
-	~TCommandLine();
+    TCommandLine(TSession *session, const char *line);
+    ~TCommandLine();
 
     int IsExit();
-	int Run();
+    int Run();
 
 protected:
-	int IsRedir(char ch);
-	void InsertLast(TCommand *cmd);
-	const char *RedirInput(const char *line);
-	const char *RedirOutput(const char *line);
-	const char *RedirAppend(const char *line);
-	void Pipe(TString &str);
-	void Add(TString &str);
+    int IsRedir(char ch);
+    void InsertLast(TCommand *cmd);
+    const char *RedirInput(const char *line);
+    const char *RedirOutput(const char *line);
+    const char *RedirAppend(const char *line);
+    void Pipe(TString &str);
+    void Add(TString &str);
 
-   TSession *FSession;
-	TCommand *FList;
-	 int FRemoveInput;
-	TString FInputFile;
-	TString FOutputFile;
-	TString FAppendFile;
+    TSession *FSession;
+    TCommand *FList;
+    TString FInputFile;
+    TString FOutputFile;
+    TString FAppendFile;
 };
 
 #endif

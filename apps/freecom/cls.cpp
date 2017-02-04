@@ -64,7 +64,7 @@ TClsFactory::TClsFactory()
 ##########################################################################*/
 TCommand *TClsFactory::Create(TSession *session, const char *param)
 {
-	return new TClsCommand(session, param);
+        return new TClsCommand(session, param);
 }
 
 /*##########################################################################
@@ -81,7 +81,7 @@ TCommand *TClsFactory::Create(TSession *session, const char *param)
 TClsCommand::TClsCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_CLS);
+        FHelpScreen.Load(TEXT_CMDHELP_CLS);
 }
 
 /*##########################################################################
@@ -98,10 +98,11 @@ TClsCommand::TClsCommand(TSession *session, const char *param)
 int TClsCommand::Execute(char *param)
 {
 
-	if (LeadOptions(&param, 0) != E_None)
-		return 1;
+        if (LeadOptions(&param, 0) != E_None)
+                return 1;
 
-    RdosClearText();    
+    RdosClearText();
+    RdosSetConsoleCursorPosition(0, 0);    
     
-	return 0;
+        return 0;
 }

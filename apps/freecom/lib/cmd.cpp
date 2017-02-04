@@ -28,6 +28,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "lang.h"
 #include "cmd.h"
@@ -88,11 +89,6 @@ TCommand::TCommand(TSession *session, const char *param)
 {
     FArgList = 0;
     FSession = session;
-    FInputFile = 0;
-    FOutputFile = 0;
-    FErrorFile = 0;
-
-    FRemovePath = 0;
 }
 
 /*##########################################################################
@@ -117,21 +113,6 @@ TCommand::~TCommand()
         delete arg;
         arg = FArgList;
     }
-    
-    if (FInputFile)
-        delete FInputFile;
-
-        if (FOutputFile)
-                delete FOutputFile;
-
-        if (FErrorFile)
-                delete FErrorFile;
-
-        if (FRemovePath)
-        {
-                FRemovePath->DeleteFile();
-                delete FRemovePath;
-        }
 }
 
 /*##########################################################################
@@ -163,9 +144,9 @@ int TCommand::IsExit()
 ##########################################################################*/
 int TCommand::Command()
 {
-        TSession session(*FSession);
-        session.Run();
-        return 0;
+    TSession session(*FSession);
+    session.Run();
+    return 0;
 }
 
 /*##########################################################################
@@ -181,9 +162,9 @@ int TCommand::Command()
 ##########################################################################*/
 int TCommand::Command(const char *param)
 {
-        TSession session(*FSession);
-        session.Run(param);
-        return 0;
+    TSession session(*FSession);
+    session.Run(param);
+    return 0;
 }
 
 /*##########################################################################
@@ -199,8 +180,8 @@ int TCommand::Command(const char *param)
 ##########################################################################*/
 int TCommand::RunBatch(const char *name)
 {
-        TSession session(*FSession);
-        return session.Run(name, FArgList);
+    TSession session(*FSession);
+    return session.Run(name, FArgList);
 }
 
 /*##########################################################################
@@ -216,7 +197,7 @@ int TCommand::RunBatch(const char *name)
 ##########################################################################*/
 void TCommand::Write(char ch)
 {
-    FSession->Write(ch);
+    write(1, &ch, 1);
 }
 
 /*##########################################################################
@@ -232,7 +213,7 @@ void TCommand::Write(char ch)
 ##########################################################################*/
 void TCommand::Write(const char *str)
 {
-    FSession->Write(str);
+    write(1, str, strlen(str));
 }
 
 /*##########################################################################
@@ -248,7 +229,7 @@ void TCommand::Write(const char *str)
 ##########################################################################*/
 void TCommand::WriteError(char ch)
 {
-    FSession->WriteError(ch);
+    write(2, &ch, 1);
 }
 
 /*##########################################################################
@@ -264,23 +245,79 @@ void TCommand::WriteError(char ch)
 ##########################################################################*/
 void TCommand::WriteError(const char *str)
 {
-    FSession->WriteError(str);
+    write(2, str, strlen(str));
 }
 
 /*##########################################################################
 #
 #   Name       : TCommand::WriteLong
 #
-#   Purpose....: Write long to std error
+#   Purpose....: Write long to std output
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TCommand::WriteLong(long Value)
+void TCommand::WriteLong(long value)
 {
-    FSession->WriteLong(Value);
+    char str[4];
+    int tmp;
+    int use = FALSE;
+
+    tmp = value / 1000000000;
+    if (tmp)
+    {
+        use = TRUE;
+        sprintf(str, "%2d", tmp);
+    }
+    else
+        strcpy(str, "  ");
+
+    Write(str);
+    Write(" ");
+    value = value % 1000000000;
+
+    tmp = value / 1000000;
+    if (use)
+        sprintf(str, "%03d", tmp);
+    else
+    {
+        if (tmp)
+        {
+            use = TRUE;
+            sprintf(str, "%3d", tmp);
+        }
+        else
+            strcpy(str, "   ");
+    }
+    Write(str);
+    Write(" ");
+    value = value % 1000000;
+
+    tmp = value / 1000;
+    if (use)
+        sprintf(str, "%03d", tmp);
+    else
+    {
+        if (tmp)
+        {
+            use = TRUE;
+            sprintf(str, "%3d", tmp);
+        }
+        else
+            strcpy(str, "   ");
+    }
+    Write(str);
+    Write(" ");
+    value = value % 1000;
+
+    tmp = value;
+    if (use)
+        sprintf(str, "%03d", tmp);
+    else
+        sprintf(str, "%3d", tmp);
+    Write(str);
 }
 
 /*##########################################################################
@@ -310,11 +347,9 @@ int TCommand::Read(char *str, int maxsize)
 #   Returns....: *
 #
 ##########################################################################*/
-void TCommand::DefineInput(TString &name, int remove)
+void TCommand::DefineInput(TString &name)
 {
-        FInputName = name;
-        if (remove)
-                FRemovePath = new TPathName(name);
+    FInputName = name;
 }
 
 /*##########################################################################
@@ -330,7 +365,7 @@ void TCommand::DefineInput(TString &name, int remove)
 ##########################################################################*/
 void TCommand::DefineOutput(TString &name)
 {
-        FOutputName = name;
+    FOutputName = name;
 }
 
 /*##########################################################################
@@ -346,7 +381,7 @@ void TCommand::DefineOutput(TString &name)
 ##########################################################################*/
 void TCommand::DefineError(TString &name)
 {
-        FErrorName = name;
+    FErrorName = name;
 }
 
 /*##########################################################################
@@ -362,7 +397,71 @@ void TCommand::DefineError(TString &name)
 ##########################################################################*/
 void TCommand::DefineAppend(TString &name)
 {
-        FAppendName = name;
+    FAppendName = name;
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::GetInput
+#
+#   Purpose....: Get input file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TCommand::GetInput()
+{
+    return FInputName.GetData();
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::GetOutput
+#
+#   Purpose....: Get output file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TCommand::GetOutput()
+{
+    return FOutputName.GetData();
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::GetError
+#
+#   Purpose....: Get error file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TCommand::GetError()
+{
+    return FErrorName.GetData();
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::GetAppend
+#
+#   Purpose....: Get append to output file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TCommand::GetAppend()
+{
+    return FAppendName.GetData();
 }
 
 /*##########################################################################
@@ -378,59 +477,21 @@ void TCommand::DefineAppend(TString &name)
 ##########################################################################*/
 int TCommand::Run()
 {
-        char *param;
-        char *ptr;
-        int size;
-        int result;
+    char *param;
+    char *ptr;
+    int size;
+    int result;
 
-        size = FCmdLine.GetSize();
-        param = new char[size + 1];
-        memcpy(param, FCmdLine.GetData(), size + 1);
+    size = FCmdLine.GetSize();
+    param = new char[size + 1];
+    memcpy(param, FCmdLine.GetData(), size + 1);
 
-        ptr = param;
+    ptr = param;
 
-        if (FInputName.GetSize())
-        {
-                FInputFile = new TFile(FInputName.GetData());
-                if (FInputFile->IsOpen())
-                        FSession->SetInputFile(FInputFile);
-        }
+    result = Execute(ptr);
 
-        if (FOutputName.GetSize())
-        {
-                FOutputFile = new TFile(FOutputName.GetData(), 0);
-                if (FOutputFile->IsOpen())
-                        FSession->SetOutputFile(FOutputFile);
-        }
-        else
-        {
-                if (FAppendName.GetSize())
-                {
-                        FOutputFile = new TFile(FAppendName.GetData());
-                        if (FOutputFile->IsOpen())
-                                FOutputFile->SetPos(FOutputFile->GetSize());
-                        else
-                        {
-                                delete FOutputFile;
-                                FOutputFile = new TFile(FAppendName.GetData(), 0);
-                        }
-
-                        if (FOutputFile->IsOpen())
-                                FSession->SetOutputFile(FOutputFile);
-                }
-        }
-
-        if (FErrorName.GetSize())
-        {
-                FErrorFile = new TFile(FErrorName.GetData(), 0);
-                if (FErrorFile->IsOpen())
-                        FSession->SetErrorFile(FErrorFile);
-        }
-
-        result = Execute(ptr);
-
-        delete param;
-        return result;
+    delete param;
+    return result;
 }
 
 /*##########################################################################

@@ -59,8 +59,6 @@ public:
     void WriteError(char ch);
     void WriteError(const char *str);
 
-    void WriteLong(long Value);
-
     int Read(char *str, int maxsize);
     int ReadCmd(char *str, int maxsize);
 

@@ -53,18 +53,23 @@ class TCommand : public TParser
     friend class TCommandLine;
 public:
     TCommand(TSession *session, const char *param);
-	virtual ~TCommand();
+    virtual ~TCommand();
 
-	virtual int IsExit();
+    virtual int IsExit();
 
-	int Command();
-	int Command(const char *param);
+    int Command();
+    int Command(const char *param);
 
-	void DefineInput(TString &name, int remove);
-	void DefineOutput(TString &name);
-	void DefineAppend(TString &name);
-	void DefineError(TString &name);
-    
+    void DefineInput(TString &name);
+    void DefineOutput(TString &name);
+    void DefineAppend(TString &name);
+    void DefineError(TString &name);
+
+    const char *GetInput();
+    const char *GetOutput();
+    const char *GetAppend();
+    const char *GetError();
+
     void Write(char ch);
     void Write(const char *str);
 
@@ -74,21 +79,21 @@ public:
     void WriteLong(long Value);
 
     int Read(char *str, int maxsize);
-	
-	int Run();
-	virtual int Execute(char *param) = 0;
+        
+    int Run();
+    virtual int Execute(char *param) = 0;
 
-	static int ErrorLevel;
+    static int ErrorLevel;
 
 protected:
     int RunBatch(const char *name);
     
-	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
-	void OptError(const char *optstr);
-	void ErrorSyntax(const char *str);
+    virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
+    void OptError(const char *optstr);
+    void ErrorSyntax(const char *str);
 
-	int ScanOpt(void *ag, char *rest);
-	int LeadOptions(char **Xline, void *arg);
+    int ScanOpt(void *ag, char *rest);
+    int LeadOptions(char **Xline, void *arg);
 
     void AddArg(const char *name);
     void AddArg(char *sBeg, char **sEnd);
@@ -97,29 +102,23 @@ protected:
     int ScanCmdLine(char *line, void *arg);
 
     void ShowCount(int BaseId, int count);
-	
-	int OptScanBool(const char *optstr, int bool, const char *arg, int *value);
+        
+    int OptScanBool(const char *optstr, int bool, const char *arg, int *value);
 
     TSession *FSession;
-	TLangString FMsg;
-	TString FCmdLine;
-	TLangString FHelpScreen;
-	TCommand *FList;
-	
-	TArg *FArgList;
-	int FArgCount;
-	int FOptCount;
+    TLangString FMsg;
+    TString FCmdLine;
+    TLangString FHelpScreen;
+    TCommand *FList;
+        
+    TArg *FArgList;
+    int FArgCount;
+    int FOptCount;
 
-	TFile *FInputFile;
-	TFile *FOutputFile;
-	TFile *FErrorFile;
-
-	TString FInputName;
-	TString FOutputName;
-	TString FAppendName;
-	TString FErrorName;
-
-    TPathName *FRemovePath;
+    TString FInputName;
+    TString FOutputName;
+    TString FAppendName;
+    TString FErrorName;
 };
 
 #endif
