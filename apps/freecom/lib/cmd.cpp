@@ -333,7 +333,7 @@ void TCommand::WriteLong(long value)
 ##########################################################################*/
 int TCommand::Read(char *str, int maxsize)
 {
-    return FSession->Read(str, maxsize);
+    return read(0, str, maxsize);
 }
 
 /*##########################################################################

@@ -208,20 +208,12 @@ TSession::TSession(const char *ipc)
         IpcOutPos = 0;
 
         FCmdFile = 0;
-        FInputFile = 0;
-        FOutputFile = 0;
-        FErrorFile = 0;
         FThreadExit = FALSE;
 
         RdosCreateThread(::IpcThread, ipc, this, STACK_SIZE);
     }
     else
-    {
         FCmdFile = new TFile("CON");
-        FInputFile = new TFile("CON");
-        FOutputFile = new TFile("CON");
-        FErrorFile = new TFile("CON");
-    }
 
     if (Count == 0)
     {
@@ -325,21 +317,6 @@ TSession::TSession(const TSession &src)
         FCmdFile = new TFile("CON");
     else
         FCmdFile = new TFile(*src.FCmdFile);
-
-    if (src.FInputFile->IsDevice())
-        FInputFile = new TFile("CON");
-    else
-        FInputFile = new TFile(*src.FInputFile);
-
-    if (src.FOutputFile->IsDevice())
-        FOutputFile = new TFile("CON");
-    else
-        FOutputFile = new TFile(*src.FOutputFile);
-
-    if (src.FErrorFile->IsDevice())
-        FErrorFile = new TFile("CON");
-    else
-        FErrorFile = new TFile(*src.FErrorFile);
 }
 
 /*##########################################################################
@@ -357,15 +334,6 @@ TSession::~TSession()
 {
     if (FCmdFile)
         delete FCmdFile;
-
-    if (FInputFile)
-        delete FInputFile;
-
-    if (FOutputFile)
-        delete FOutputFile;
-
-    if (FErrorFile)
-        delete FErrorFile;
 
     Count--;
 
@@ -1157,54 +1125,6 @@ void TSession::SetCmdFile(TFile *File)
 
 /*##########################################################################
 #
-#   Name       : TSession::SetInputFile
-#
-#   Purpose....: Set input file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSession::SetInputFile(TFile *File)
-{
-    FInputFile = File;
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::SetOutputFile
-#
-#   Purpose....: Set output file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSession::SetOutputFile(TFile *File)
-{
-    FOutputFile = File;
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::SetErrorFile
-#
-#   Purpose....: Set error file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSession::SetErrorFile(TFile *File)
-{
-    FErrorFile = File;
-}
-
-/*##########################################################################
-#
 #   Name       : GetCmdFile
 #
 #   Purpose....: Get cmd file
@@ -1217,54 +1137,6 @@ void TSession::SetErrorFile(TFile *File)
 TFile *TSession::GetCmdFile()
 {
     return FCmdFile;
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::GetInputFile
-#
-#   Purpose....: Get input file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFile *TSession::GetInputFile()
-{
-    return FInputFile;
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::GetOutputFile
-#
-#   Purpose....: Get output file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFile *TSession::GetOutputFile()
-{
-    return FOutputFile;
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::GetErrorFile
-#
-#   Purpose....: Get error file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFile *TSession::GetErrorFile()
-{
-    return FErrorFile;
 }
 
 /*##########################################################################
@@ -1394,40 +1266,7 @@ int TSession::ReadCmd(char *str, int maxsize)
 ##########################################################################*/
 int TSession::Read(char *str, int maxsize)
 {
-    char ch;
-    int i;
-
-    if (FInputFile)
-    {
-        if (FInputFile->IsDevice())
-            return ReadCon(str, maxsize);
-        else
-        {
-            for (i = 0; i < maxsize; i++)
-            {   
-                ch = 0;
-                FInputFile->Read(&ch, 1);
-    
-                if (ch == 3)
-                    return FALSE;
-
-                if (ch == 0 || ch == 0xa)
-                {
-                    *str = 0;
-                    break;
-                }
-                else
-                {
-                    *str = ch;
-                    str++;
-                }
-            }
-            *str = 0;
-            return TRUE;
-        }
-    }
-    else
-        return ReadIpc(str, maxsize);
+    return read(0, str, maxsize);
 }
 
 /*##########################################################################
@@ -1555,7 +1394,7 @@ void TSession::Run()
             if (cmd->IsExit())
             {
                 delete cmd;
-                if (FInputFile || FThreadExit)
+                if (FThreadExit)
                     break;
             }
             else
@@ -1566,8 +1405,7 @@ void TSession::Run()
         }
     }
 
-    if (!FInputFile)
-        RdosWaitMilli(50);
+    RdosWaitMilli(50);
 }
 
 /*##########################################################################

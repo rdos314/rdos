@@ -68,14 +68,8 @@ public:
     int ReadIpc(char *str, int maxsize);
 
     void SetCmdFile(TFile *File);
-    void SetInputFile(TFile *File);
-    void SetOutputFile(TFile *File);
-    void SetErrorFile(TFile *File);
 
     TFile *GetCmdFile();
-    TFile *GetInputFile();
-    TFile *GetOutputFile();
-    TFile *GetErrorFile();
 
     void IpcThread();
 
@@ -99,9 +93,6 @@ protected:
     int FThreadExit;
     
     TFile *FCmdFile;
-    TFile *FInputFile;
-    TFile *FOutputFile;
-    TFile *FErrorFile;
 
     TString FName;
     TArg *FArgList;
