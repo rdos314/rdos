@@ -28,7 +28,6 @@
 #ifndef _SESSION_H
 #define _SESSION_H
 
-#include "file.h"
 #include "cmd.h"
 #include "cmdfact.h"
 #include "part.h"
@@ -65,10 +64,6 @@ public:
     void DisplayPrompt();
     int ReadCon(char *str, int maxsize);
  
-    void SetCmdFile(TFile *File);
-
-    TFile *GetCmdFile();
-
 protected:
     void WriteWelcome();
     TString FormatTime(TDateTime &time);
@@ -78,8 +73,8 @@ protected:
     TString ExpandParam(const char *param);
 
     int FThreadExit;
-    
-    TFile *FCmdFile;
+
+    int FBatHandle;
 
     TString FName;
     TArg *FArgList;

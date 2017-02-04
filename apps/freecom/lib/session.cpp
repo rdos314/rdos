@@ -188,7 +188,7 @@ TSession::TSession()
     FArgList = 0;
     FEcho = TRUE;
 
-    FCmdFile = 0;
+    FBatHandle = 0;
 
     if (Count == 0)
     {
@@ -287,10 +287,7 @@ TSession::TSession(const TSession &src)
     FArgList = 0;
     FEcho = TRUE;
 
-    if (src.FCmdFile)
-        FCmdFile = new TFile(*src.FCmdFile);
-    else
-        FCmdFile = 0;
+    FBatHandle = src.FBatHandle;
 }
 
 /*##########################################################################
@@ -306,9 +303,6 @@ TSession::TSession(const TSession &src)
 ##########################################################################*/
 TSession::~TSession()
 {
-    if (FCmdFile)
-        delete FCmdFile;
-
     Count--;
 
     if (Count == 0)
@@ -860,38 +854,6 @@ int TSession::ReadCon(char *str, int maxsize)
 
 /*##########################################################################
 #
-#   Name       : TSession::SetCmdFile
-#
-#   Purpose....: Set cmd file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSession::SetCmdFile(TFile *File)
-{
-    FCmdFile = File;
-}
-
-/*##########################################################################
-#
-#   Name       : GetCmdFile
-#
-#   Purpose....: Get cmd file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFile *TSession::GetCmdFile()
-{
-    return FCmdFile;
-}
-
-/*##########################################################################
-#
 #   Name       : TSession::Write
 #
 #   Purpose....: Write character to standard output
@@ -970,12 +932,12 @@ int TSession::ReadCmd(char *str, int maxsize)
     char ch;
     int i;
 
-    if (FCmdFile)
+    if (FBatHandle)
     {
         for (i = 0; i < maxsize; i++)
         {
             ch = 0;
-            FCmdFile->Read(&ch, 1);
+            read(FBatHandle, &ch, 1);
     
             if (ch == 0 || ch == 0xa)
             {
@@ -1199,13 +1161,11 @@ int TSession::Run(const char *name, TArg *ArgList)
     FArgList = ArgList;
     FName = name;
 
-    if (FCmdFile)
-        delete FCmdFile;
+    FBatHandle = open(name, O_RDONLY);
 
-    FCmdFile = new TFile(name);
-    if (FCmdFile->IsOpen())
+    if (FBatHandle >= 0)
     {
-        while (FCmdFile->GetPos() != FCmdFile->GetSize())
+        while (!eof(FBatHandle))
         {
             if (FEcho)
                 DisplayPrompt();
@@ -1236,19 +1196,18 @@ int TSession::Run(const char *name, TArg *ArgList)
             }
             else
             {
-                delete FCmdFile;
-                FCmdFile = 0;
+                close(FBatHandle);
+                FBatHandle = 0;
                 return 1;
             }
         }
-        delete FCmdFile;
-        FCmdFile = 0;
+        close(FBatHandle);
+        FBatHandle = 0;
         return 0;
     }
     else
     {
-        delete FCmdFile;
-        FCmdFile = 0;
+        FBatHandle = 0;
         return 1;
     }
 }
