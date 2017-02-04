@@ -32,14 +32,7 @@ int main(int argc, char **argv)
 {
     TSession *session;
 
-    if (argc == 2)
-    {
-        argv++;
-        session = new TSession(*argv);
-    }
-    else
-        session = new TSession(0);
-
+    session = new TSession;
     session->Run();
 
     return 0;

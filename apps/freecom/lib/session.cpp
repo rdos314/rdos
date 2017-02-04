@@ -172,18 +172,6 @@ static TKeyboardDevice *Keyboard;
 
 int TSession::Count = 0;
 
-/*##################  IpcThread  ##############################################
- *   Purpose....: Startup procedure for IPC thread                                             #
- *   In params..: *                                                          #
- *   Out params.: *                                                          #
- *   Returns....: *                                                          #
- *   Created....: 96-10-02 le                                                #
- *##########################################################################*/
-static void IpcThread(void *ptr)
-{
-    ((TSession *)ptr)->IpcThread();
-}
-
 /*##########################################################################
 #
 #   Name       : TSession::TSession
@@ -195,25 +183,12 @@ static void IpcThread(void *ptr)
 #   Returns....: *
 #
 ##########################################################################*/
-TSession::TSession(const char *ipc)
- : IpcSection("RemoteCommand")
+TSession::TSession()
 {
     FArgList = 0;
     FEcho = TRUE;
 
-    if (ipc)
-    {
-        IpcName = TString(ipc);
-        IpcInPos = 0;
-        IpcOutPos = 0;
-
-        FCmdFile = 0;
-        FThreadExit = FALSE;
-
-        RdosCreateThread(::IpcThread, ipc, this, STACK_SIZE);
-    }
-    else
-        FCmdFile = new TFile("CON");
+    FCmdFile = new TFile("CON");
 
     if (Count == 0)
     {
@@ -306,7 +281,6 @@ TSession::TSession(const char *ipc)
 #
 ##########################################################################*/
 TSession::TSession(const TSession &src)
- : IpcSection("RemoteCommand")
 {
     Count++;
 
@@ -886,229 +860,6 @@ int TSession::ReadCon(char *str, int maxsize)
 
 /*##########################################################################
 #
-#   Name       : TSession::ReadIpcOne
-#
-#   Purpose....: Read single char
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-char TSession::ReadIpcOne()
-{
-    const char *ptr;
-    int size;
-
-    for (;;)
-    {
-        IpcSection.Enter();
-
-        size = IpcIn.GetSize();
-
-        if (size)
-        {
-            if (size > IpcInPos)
-            {
-                ptr = IpcIn.GetData();
-                ptr += IpcInPos;
-                IpcInPos++;
-                if (*ptr == 0xd)
-                {
-                    IpcSection.Leave();
-                    return *ptr;
-                }
-
-                if (*ptr != 0xa)
-                {
-                    IpcSection.Leave();
-                    return *ptr;
-                }
-            }
-            else
-            {
-                IpcInPos = 0;
-                IpcIn = TString("");
-            }
-        }
-
-        IpcSection.Leave();
-
-        if (!size)
-            IpcSignal.WaitForever();
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::ReadIpc
-#
-#   Purpose....: Read a string from IPC
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSession::ReadIpc(char *str, int maxsize)
-{
-    int OrgX;
-    int OrgY;
-    int CurrX;
-    int CurrY;
-    char ch;
-    int Count = 0;
-    int CurrPos = 0;
-    int i;
-    TString prev;
-    const char *prevstr;
-    int ok;
-    int GetNext = FALSE;
-
-    if (History->GotoFirst())
-        prev = History->Get();
-
-    prevstr = prev.GetData();
-
-    RdosGetConsoleCursorPosition(&OrgY, &OrgX);
-    CurrX = OrgX;
-    CurrY = OrgY;
-
-    memset(str, 0, maxsize);
-
-    for (;;)
-    {
-        ch = ReadIpcOne();
-
-        switch (ch)
-        {
-            case 0x1b:
-                ch = ReadIpcOne();
-                if (ch != '[')
-                    break;
-
-                ch = ReadIpcOne();
-                switch (ch)
-                {
-                    case 'A':
-                        if (GetNext)
-                            ok = History->GotoNext();
-                        else
-                        {
-                            ok = History->GotoFirst();
-                            GetNext = TRUE;
-                        }
-
-                        if (ok)
-                        {
-                            memset(str, ' ', Count);
-                            RdosSetConsoleCursorPosition(OrgY, OrgX);
-                            Write(str);
-
-                            prev = History->Get();
-                            prevstr = prev.GetData();
-                            strcpy(str, prevstr);
-                            RdosSetConsoleCursorPosition(OrgY, OrgX);
-                            Write(str);
-                            RdosGetConsoleCursorPosition(&CurrY, &CurrX);
-                            Count = strlen(str);
-                            CurrPos = Count;
-                            
-                            Write("\r\n");
-                            Write(str);
-                        }
-                        break;
-
-                    case 'B':
-                        if (History->GotoPrev())
-                        {
-                            memset(str, ' ', Count);
-                            RdosSetConsoleCursorPosition(OrgY, OrgX);
-                            Write(str);
-
-                            prev = History->Get();
-                            prevstr = prev.GetData();
-                            strcpy(str, prevstr);
-                            RdosSetConsoleCursorPosition(OrgY, OrgX);
-                            Write(str);
-                            RdosGetConsoleCursorPosition(&CurrY, &CurrX);
-                            Count = strlen(str);
-                            CurrPos = Count;
-
-                            Write("\r\n");
-                            Write(str);
-                        }
-                        break;
-
-                    case 'C':                                        
-                        if (CurrPos != Count)
-                        {
-                            CurrPos++;
-                            if (CurrX == MAX_X)
-                            {
-                                CurrX = 1;
-                                CurrY++;
-                            }
-                            else
-                                CurrX++;
-                            RdosSetConsoleCursorPosition(CurrY, CurrX);
-                        }
-                        break;
-
-                    case 'D':
-                        if (CurrPos)
-                        {
-                            CurrPos--;
-                            if (CurrX)
-                                CurrX--;
-                            else
-                            {
-                                CurrX = MAX_X;
-                                CurrY--;
-                            }
-                            RdosSetConsoleCursorPosition(CurrY, CurrX);
-                        }
-                        break;
-
-                    default:
-                        break;   
-
-                }
-                break;
-            
-            case 0xd:
-                if (Count)
-                {
-                    TString s(str);
-
-                    if (History->Find(s))
-                        History->RemoveCurrent();
-
-                    History->AddFirst(s);
-                    if (History->GetSize() >= MAX_HISTORY)
-                        History->RemoveLast();
-                }
-                Write("\r\n");
-                return TRUE;
-
-            default:
-                if (CurrPos == Count)
-                    Count++;
-                str[CurrPos] = ch;
-                Write(str[CurrPos]);
-                RdosGetConsoleCursorPosition(&CurrY, &CurrX);
-                str[Count] = 0;
-
-                if (CurrX == 0)
-                    OrgY--;
-                CurrPos++;
-                break;
-        }
-    }
-}
-
-/*##########################################################################
-#
 #   Name       : TSession::SetCmdFile
 #
 #   Purpose....: Set cmd file
@@ -1244,11 +995,6 @@ int TSession::ReadCmd(char *str, int maxsize)
             *str = 0;
             return TRUE;
         }
-    }
-    else
-    {
-        if (ReadIpc(str, maxsize))
-            return TRUE;
     }
     return FALSE;
 }
@@ -1497,75 +1243,4 @@ int TSession::Run(const char *name, TArg *ArgList)
     }
     else
         return 1;
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::IpcThread
-#
-#   Purpose....: IPC handler thread
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSession::IpcThread()
-{
-    int size;
-    const char *ptr;
-    char *InBuf = new char[0x1001];
-
-    RdosWaitMilli(50);
-
-    RdosDefineMailslot(IpcName.GetData(), 0x1000);
-
-    while (!FThreadExit)
-    {
-        size = RdosReceiveMailslot(InBuf);
-        InBuf[size] = 0;
-
-        if (size == 1 && InBuf[0] == 0)
-        {
-            strcpy(InBuf, "exit\r\n");
-            FThreadExit = TRUE;
-        }
-
-        if (size)
-            IpcSignal.Signal();
-
-        IpcSection.Enter();
-
-        IpcIn += InBuf;
-
-        size = IpcOut.GetSize();
-        if (size)
-        {
-            ptr = IpcOut.GetData();
-            size -= IpcOutPos;
-
-            if (size < 0)
-                size = 0;
-            ptr += IpcOutPos;
-        }
-        else
-            ptr = 0;
-
-        if (size > 0x1000)
-            size = 0x1000;
-                       
-        RdosReplyMailslot(ptr, size);
-        
-        if (size == 0)
-        {
-            IpcOutPos = 0;
-            IpcOut = TString("");
-        }
-        else
-            IpcOutPos += size;
-
-        IpcSection.Leave();
-    }
-
-    delete InBuf;    
 }

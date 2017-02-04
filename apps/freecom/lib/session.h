@@ -41,8 +41,8 @@ class TArg;
 class TSession
 {
 public:
-    TSession(const char *ipc);
-        TSession(const TSession &source);
+    TSession();
+    TSession(const TSession &source);
     ~TSession();
 
     void Run();
@@ -64,14 +64,10 @@ public:
 
     void DisplayPrompt();
     int ReadCon(char *str, int maxsize);
-    char ReadIpcOne();
-    int ReadIpc(char *str, int maxsize);
-
+ 
     void SetCmdFile(TFile *File);
 
     TFile *GetCmdFile();
-
-    void IpcThread();
 
 protected:
     void WriteWelcome();
@@ -80,15 +76,6 @@ protected:
 
     const char *GetArg(int ArgNr);
     TString ExpandParam(const char *param);
-
-    TString IpcName;
-
-    TSignalDevice IpcSignal;
-    TSection IpcSection;
-    TString IpcIn;
-    int IpcInPos;
-    TString IpcOut;
-    int IpcOutPos;
 
     int FThreadExit;
     
