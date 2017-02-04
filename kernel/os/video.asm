@@ -1416,7 +1416,7 @@ EnableConsoleFocus Endp
 ;
 ;   DESCRIPTION:    Clone console
 ;
-;   PARAMETERS:     DS		Source app selector
+;   PARAMETERS:     DS          Source app selector
 ;                   ES          Dest app selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2591,6 +2591,93 @@ get_cursor_position     PROC far
     ret
 get_cursor_position     ENDP
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetConsoleCursorPosition
+;
+;           DESCRIPTION:    Get console cursor position
+;
+;           RETURNS:        CX          COL (x)
+;                           DX          Row (y)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_console_cursor_pos_name     DB 'Get Console Cursor Position',0
+
+get_console_cursor_position     PROC far
+    push ds
+    push ax
+;
+    GetThread
+    mov ds,ax
+    mov dx,ds:p_row
+    mov cx,ds:p_col
+;    
+    mov ds,ds:p_app_sel
+    mov ax,ds:app_console
+    mov ds,ax    
+    or ax,ax
+    jz gccpDone
+;
+    mov dx,ds:c_con_row
+    mov cx,ds:c_con_col
+
+gccpDone:
+    pop ax
+    pop ds
+    ret
+get_console_cursor_position     ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetConsoleCursorPosition
+;
+;           DESCRIPTION:    Set console cursor position
+;
+;           PARAMETERS:     CX          COL (x)
+;                           DX          ROW (y)
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_console_cursor_pos_name     DB 'Set Console Cursor Position',0
+
+set_console_cursor_position     PROC far
+    push ds
+    push fs
+    push ax
+;
+    GetThread
+    mov ds,ax
+    mov ds:p_row,dx
+    mov ds:p_col,cx
+;
+    mov fs,ds:p_app_sel
+    mov ax,fs:app_console
+    mov fs,ax    
+    or ax,ax
+    jz scpDone
+;
+    mov fs:c_con_row,dx
+    mov fs:c_con_col,cx
+    mov fs:c_curr_row,dx
+    mov fs:c_curr_col,cx
+
+    test fs:c_flags,CONSOLE_FLAG_ACTIVE
+    jz sccpDone
+;
+    mov ds,fs:c_video_sel
+    call fword ptr ds:v_update_cursor_pos_proc
+
+sccpDone:
+    pop ax
+    pop fs
+    pop ds
+    ret
+set_console_cursor_position     ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4813,7 +4900,7 @@ write_c_console     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 
-con_write	Proc near
+con_write       Proc near
     push es
     push bx
 ;
@@ -4826,7 +4913,7 @@ con_write	Proc near
     pop bx
     pop es
     ret
-con_write	Endp
+con_write       Endp
     
 con_io_tab:
     mov al,' '
@@ -5733,6 +5820,18 @@ init_video      PROC near
     mov edi,OFFSET get_cursor_pos_name
     xor dx,dx
     mov ax,get_cursor_position_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_console_cursor_position
+    mov edi,OFFSET get_console_cursor_pos_name
+    xor dx,dx
+    mov ax,get_console_cursor_position_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_console_cursor_position
+    mov edi,OFFSET set_console_cursor_pos_name
+    xor dx,dx
+    mov ax,set_console_cursor_position_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET set_forecolor

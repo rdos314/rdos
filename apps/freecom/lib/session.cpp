@@ -667,7 +667,7 @@ int TSession::ReadCon(char *str, int maxsize)
 
     prevstr = prev.GetData();
 
-    RdosGetCursorPosition(&OrgY, &OrgX);
+    RdosGetConsoleCursorPosition(&OrgY, &OrgX);
     CurrX = OrgX;
     CurrY = OrgY;
 
@@ -699,9 +699,9 @@ int TSession::ReadCon(char *str, int maxsize)
                                 CurrX = MAX_X;
                                 CurrY--;
                             }                                
-                            RdosSetCursorPosition(CurrY, CurrX);
-                            RdosWriteChar(' ');
-                            RdosSetCursorPosition(CurrY, CurrX);
+                            RdosSetConsoleCursorPosition(CurrY, CurrX);
+                            Write(' ');
+                            RdosSetConsoleCursorPosition(CurrY, CurrX);
                         }
                         else
                         {
@@ -715,10 +715,10 @@ int TSession::ReadCon(char *str, int maxsize)
                                 CurrX = MAX_X;
                                 CurrY--;
                             }
-                            RdosSetCursorPosition(CurrY, CurrX);
-                            RdosWriteString(&str[CurrPos - 1]);
-                            RdosWriteChar(' ');
-                            RdosSetCursorPosition(CurrY, CurrX);
+                            RdosSetConsoleCursorPosition(CurrY, CurrX);
+                            Write(&str[CurrPos - 1]);
+                            Write(' ');
+                            RdosSetConsoleCursorPosition(CurrY, CurrX);
                         }
                         CurrPos--;
                         Count--;
@@ -738,9 +738,9 @@ int TSession::ReadCon(char *str, int maxsize)
                             str[i] = str[i + 1];
                         Count--;
                         str[Count] = 0;
-                        RdosWriteString(&str[CurrPos]);
-                        RdosWriteChar(' ');
-                        RdosSetCursorPosition(CurrY, CurrX);
+                        Write(&str[CurrPos]);
+                        Write(' ');
+                        RdosSetConsoleCursorPosition(CurrY, CurrX);
                     }
                     break;
 
@@ -749,7 +749,7 @@ int TSession::ReadCon(char *str, int maxsize)
                     {
                         CurrX = OrgX;
                         CurrY = OrgY;
-                        RdosSetCursorPosition(CurrY, CurrX);
+                        RdosSetConsoleCursorPosition(CurrY, CurrX);
                         CurrPos = 0;
                     }
                     break;
@@ -757,9 +757,9 @@ int TSession::ReadCon(char *str, int maxsize)
                 case VK_END:
                     if (CurrPos != Count)
                     {
-                        RdosSetCursorPosition(OrgY, OrgX);
-                        RdosWriteString(str);
-                        RdosGetCursorPosition(&CurrY, &CurrX);
+                        RdosSetConsoleCursorPosition(OrgY, OrgX);
+                        Write(str);
+                        RdosGetConsoleCursorPosition(&CurrY, &CurrX);
                     }
                     break;
 
@@ -775,7 +775,7 @@ int TSession::ReadCon(char *str, int maxsize)
                         if (History->GetSize() >= MAX_HISTORY)
                             History->RemoveLast();
                     }
-                    RdosWriteString("\r\n");
+                    Write("\r\n");
                     return TRUE;
 
                 case VK_ESCAPE:
@@ -793,7 +793,7 @@ int TSession::ReadCon(char *str, int maxsize)
                         }
                         else
                             CurrX++;
-                        RdosSetCursorPosition(CurrY, CurrX);
+                        RdosSetConsoleCursorPosition(CurrY, CurrX);
                         break;
                     }
 
@@ -801,8 +801,8 @@ int TSession::ReadCon(char *str, int maxsize)
                     if (CurrPos < strlen(prevstr))
                     {
                         str[CurrPos] = prevstr[CurrPos];
-                        RdosWriteChar(str[CurrPos]);
-                        RdosGetCursorPosition(&CurrY, &CurrX);
+                        Write(str[CurrPos]);
+                        RdosGetConsoleCursorPosition(&CurrY, &CurrX);
                         CurrPos++;
                         Count = CurrPos;
                         str[Count] = 0;
@@ -811,13 +811,13 @@ int TSession::ReadCon(char *str, int maxsize)
 
                 case VK_F3:
                     memset(str, ' ', Count);
-                    RdosSetCursorPosition(OrgY, OrgX);
-                    RdosWriteString(str);
+                    RdosSetConsoleCursorPosition(OrgY, OrgX);
+                    Write(str);
 
                     strcpy(str, prevstr);
-                    RdosSetCursorPosition(OrgY, OrgX);
-                    RdosWriteString(str);
-                    RdosGetCursorPosition(&CurrY, &CurrX);
+                    RdosSetConsoleCursorPosition(OrgY, OrgX);
+                    Write(str);
+                    RdosGetConsoleCursorPosition(&CurrY, &CurrX);
                     Count = strlen(str);
                     CurrPos = Count;
                     break;
@@ -834,15 +834,15 @@ int TSession::ReadCon(char *str, int maxsize)
                     if (ok)
                     {
                         memset(str, ' ', Count);
-                        RdosSetCursorPosition(OrgY, OrgX);
-                        RdosWriteString(str);
+                        RdosSetConsoleCursorPosition(OrgY, OrgX);
+                        Write(str);
 
                         prev = History->Get();
                         prevstr = prev.GetData();
                         strcpy(str, prevstr);
-                        RdosSetCursorPosition(OrgY, OrgX);
-                        RdosWriteString(str);
-                        RdosGetCursorPosition(&CurrY, &CurrX);
+                        RdosSetConsoleCursorPosition(OrgY, OrgX);
+                        Write(str);
+                        RdosGetConsoleCursorPosition(&CurrY, &CurrX);
                         Count = strlen(str);
                         CurrPos = Count;
                     }
@@ -852,15 +852,15 @@ int TSession::ReadCon(char *str, int maxsize)
                     if (History->GotoPrev())
                     {
                         memset(str, ' ', Count);
-                        RdosSetCursorPosition(OrgY, OrgX);
-                        RdosWriteString(str);
+                        RdosSetConsoleCursorPosition(OrgY, OrgX);
+                        Write(str);
 
                         prev = History->Get();
                         prevstr = prev.GetData();
                         strcpy(str, prevstr);
-                        RdosSetCursorPosition(OrgY, OrgX);
-                        RdosWriteString(str);
-                        RdosGetCursorPosition(&CurrY, &CurrX);
+                        RdosSetConsoleCursorPosition(OrgY, OrgX);
+                        Write(str);
+                        RdosGetConsoleCursorPosition(&CurrY, &CurrX);
                         Count = strlen(str);
                         CurrPos = Count;
                     }
@@ -877,7 +877,7 @@ int TSession::ReadCon(char *str, int maxsize)
                             CurrX = MAX_X;
                             CurrY--;
                         }
-                        RdosSetCursorPosition(CurrY, CurrX);
+                        RdosSetConsoleCursorPosition(CurrY, CurrX);
                     }
                     break;
 
@@ -891,19 +891,19 @@ int TSession::ReadCon(char *str, int maxsize)
                                 str[i] = str[i - 1];
                             Count++;
                             str[CurrPos] = (char)ExtKey;
-                            RdosWriteChar(str[CurrPos]);
-                            RdosGetCursorPosition(&CurrY, &CurrX);
+                            Write(str[CurrPos]);
+                            RdosGetConsoleCursorPosition(&CurrY, &CurrX);
                             str[Count] = 0;
-                            RdosWriteString(&str[CurrPos + 1]);
-                            RdosSetCursorPosition(CurrY, CurrX);
+                            Write(&str[CurrPos + 1]);
+                            RdosSetConsoleCursorPosition(CurrY, CurrX);
                         }
                         else
                         {
                             if (CurrPos == Count)
                                 Count++;
                             str[CurrPos] = (char)ExtKey;
-                            RdosWriteChar(str[CurrPos]);
-                            RdosGetCursorPosition(&CurrY, &CurrX);
+                            Write(str[CurrPos]);
+                            RdosGetConsoleCursorPosition(&CurrY, &CurrX);
                             str[Count] = 0;
                         }
                         if (CurrX == 0)
@@ -1002,7 +1002,7 @@ int TSession::ReadIpc(char *str, int maxsize)
 
     prevstr = prev.GetData();
 
-    RdosGetCursorPosition(&OrgY, &OrgX);
+    RdosGetConsoleCursorPosition(&OrgY, &OrgX);
     CurrX = OrgX;
     CurrY = OrgY;
 
@@ -1034,15 +1034,15 @@ int TSession::ReadIpc(char *str, int maxsize)
                         if (ok)
                         {
                             memset(str, ' ', Count);
-                            RdosSetCursorPosition(OrgY, OrgX);
-                            RdosWriteString(str);
+                            RdosSetConsoleCursorPosition(OrgY, OrgX);
+                            Write(str);
 
                             prev = History->Get();
                             prevstr = prev.GetData();
                             strcpy(str, prevstr);
-                            RdosSetCursorPosition(OrgY, OrgX);
-                            RdosWriteString(str);
-                            RdosGetCursorPosition(&CurrY, &CurrX);
+                            RdosSetConsoleCursorPosition(OrgY, OrgX);
+                            Write(str);
+                            RdosGetConsoleCursorPosition(&CurrY, &CurrX);
                             Count = strlen(str);
                             CurrPos = Count;
                             
@@ -1055,15 +1055,15 @@ int TSession::ReadIpc(char *str, int maxsize)
                         if (History->GotoPrev())
                         {
                             memset(str, ' ', Count);
-                            RdosSetCursorPosition(OrgY, OrgX);
-                            RdosWriteString(str);
+                            RdosSetConsoleCursorPosition(OrgY, OrgX);
+                            Write(str);
 
                             prev = History->Get();
                             prevstr = prev.GetData();
                             strcpy(str, prevstr);
-                            RdosSetCursorPosition(OrgY, OrgX);
-                            RdosWriteString(str);
-                            RdosGetCursorPosition(&CurrY, &CurrX);
+                            RdosSetConsoleCursorPosition(OrgY, OrgX);
+                            Write(str);
+                            RdosGetConsoleCursorPosition(&CurrY, &CurrX);
                             Count = strlen(str);
                             CurrPos = Count;
 
@@ -1083,7 +1083,7 @@ int TSession::ReadIpc(char *str, int maxsize)
                             }
                             else
                                 CurrX++;
-                            RdosSetCursorPosition(CurrY, CurrX);
+                            RdosSetConsoleCursorPosition(CurrY, CurrX);
                         }
                         break;
 
@@ -1098,7 +1098,7 @@ int TSession::ReadIpc(char *str, int maxsize)
                                 CurrX = MAX_X;
                                 CurrY--;
                             }
-                            RdosSetCursorPosition(CurrY, CurrX);
+                            RdosSetConsoleCursorPosition(CurrY, CurrX);
                         }
                         break;
 
@@ -1120,15 +1120,15 @@ int TSession::ReadIpc(char *str, int maxsize)
                     if (History->GetSize() >= MAX_HISTORY)
                         History->RemoveLast();
                 }
-                RdosWriteString("\r\n");
+                Write("\r\n");
                 return TRUE;
 
             default:
                 if (CurrPos == Count)
                     Count++;
                 str[CurrPos] = ch;
-                RdosWriteChar(str[CurrPos]);
-                RdosGetCursorPosition(&CurrY, &CurrX);
+                Write(str[CurrPos]);
+                RdosGetConsoleCursorPosition(&CurrY, &CurrX);
                 str[Count] = 0;
 
                 if (CurrX == 0)

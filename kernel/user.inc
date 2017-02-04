@@ -2759,6 +2759,18 @@ GetCursorPosition    MACRO
 	UserGate get_cursor_position_nr
 						ENDM
 
+;	IN  CX              Column number (x)
+;	IN  DX              Row number (y)
+SetConsoleCursorPosition    MACRO
+	UserGate set_console_cursor_position_nr
+						ENDM
+
+;	OUT CX              Column number (x)
+;	OUT DX              Row number (y)
+GetConsoleCursorPosition    MACRO
+	UserGate get_console_cursor_position_nr
+						ENDM
+
 ;	IN  AL              Color number
 SetForeColor        MACRO
 	UserGate set_forecolor_nr
