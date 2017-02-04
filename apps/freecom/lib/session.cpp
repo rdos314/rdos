@@ -188,7 +188,7 @@ TSession::TSession()
     FArgList = 0;
     FEcho = TRUE;
 
-    FCmdFile = new TFile("CON");
+    FCmdFile = 0;
 
     if (Count == 0)
     {
@@ -287,10 +287,10 @@ TSession::TSession(const TSession &src)
     FArgList = 0;
     FEcho = TRUE;
 
-    if (src.FCmdFile->IsDevice())
-        FCmdFile = new TFile("CON");
-    else
+    if (src.FCmdFile)
         FCmdFile = new TFile(*src.FCmdFile);
+    else
+        FCmdFile = 0;
 }
 
 /*##########################################################################
@@ -972,30 +972,28 @@ int TSession::ReadCmd(char *str, int maxsize)
 
     if (FCmdFile)
     {
-        if (FCmdFile->IsDevice())
-            return ReadCon(str, maxsize);
-        else
+        for (i = 0; i < maxsize; i++)
         {
-            for (i = 0; i < maxsize; i++)
-            {
-                ch = 0;
-                FCmdFile->Read(&ch, 1);
+            ch = 0;
+            FCmdFile->Read(&ch, 1);
     
-                if (ch == 0 || ch == 0xa)
-                {
-                    *str = 0;
-                    break;
-                }
-                else
-                {
-                    *str = ch;
-                    str++;
-                }
+            if (ch == 0 || ch == 0xa)
+            {
+                *str = 0;
+                break;
             }
-            *str = 0;
-            return TRUE;
+            else
+            {
+                *str = ch;
+                str++;
+            }
         }
+        *str = 0;
+        return TRUE;
     }
+    else
+        return ReadCon(str, maxsize);
+
     return FALSE;
 }
 
@@ -1237,10 +1235,20 @@ int TSession::Run(const char *name, TArg *ArgList)
                 }
             }
             else
+            {
+                delete FCmdFile;
+                FCmdFile = 0;
                 return 1;
+            }
         }
+        delete FCmdFile;
+        FCmdFile = 0;
         return 0;
     }
     else
+    {
+        delete FCmdFile;
+        FCmdFile = 0;
         return 1;
+    }
 }
