@@ -131,6 +131,300 @@ cchLoop:
     pop ds
     retf32
 create_c_handle Endp
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_create
+;
+;           DESCRIPTION:    Notify create process
+;
+;           PARAMETERS:     ES		App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_create	Proc far
+    mov es:app_c_handle_sel,0
+    retf32
+notify_create	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_start
+;
+;           DESCRIPTION:    Notify start boot process
+;
+;           PARAMETERS:     ES		App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_start	Proc far
+    push ax
+    push ds
+    push es
+    push bx
+    push cx
+    push dx
+    push si
+    push di
+;    
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov di,OFFSET hd_data
+    inc ds:[di].he_ref_count
+;
+    add di,SIZE handle_entry_struc
+    add ds:[di].he_ref_count,2
+;
+    mov eax,SIZE handle_struc
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov ds,ax
+;    
+    mov di,OFFSET h_arr
+    mov ds:[di].hp_handle,1
+    mov ds:[di].hp_access,IO_READ OR IO_ISTTY
+    mov ds:[di].hp_pos,0
+;
+    add di,SIZE handle_proc_struc
+    mov ds:[di].hp_handle,2
+    mov ds:[di].hp_access,IO_WRITE OR IO_ISTTY
+    mov ds:[di].hp_pos,0
+;
+    add di,SIZE handle_proc_struc
+    mov ds:[di].hp_handle,2
+    mov ds:[di].hp_access,IO_WRITE OR IO_ISTTY
+    mov ds:[di].hp_pos,0
+;    
+    mov cx,MAX_HANDLES - 3
+
+nsLoop:
+    add di,SIZE handle_proc_struc
+    mov ds:[di].hp_handle,0
+    mov ds:[di].hp_access,0
+    mov ds:[di].hp_pos,0
+    loop nsLoop
+;    
+    InitSection ds:h_section
+    mov ax,ds
+;
+    pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx    
+    pop es
+    pop ds
+;
+    mov es:app_c_handle_sel,ax
+    pop ax
+    retf32
+notify_start	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_clone
+;
+;           DESCRIPTION:    Notify clone (spawn + fork)
+;
+;           PARAMETERS:     ES		App sel
+;                           DS		Parent app sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_clone	Proc far
+    push ds
+    push es
+    pushad
+;
+    push es
+    mov eax,SIZE handle_struc
+    AllocateSmallGlobalMem
+;
+    mov ds,ds:app_c_handle_sel
+;    
+    mov cx,MAX_HANDLES
+    xor bx,bx
+
+ncLoop:
+    push bx
+    push cx
+;
+    shl bx,3
+    add bx,OFFSET h_arr
+;
+    mov es:[bx].hp_handle,0
+    mov es:[bx].hp_access,0
+    mov es:[bx].hp_pos,0
+;
+    EnterSection ds:h_section
+    mov ax,ds:[bx].hp_handle
+    or ax,ax
+    jz ncNextLeave
+;
+    mov es:[bx].hp_handle,ax
+;
+    push ds
+    push bx
+;
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+    add ds:[bx].he_ref_count,1
+;
+    pop bx
+    pop ds
+;
+    mov ax,ds:[bx].hp_access
+    mov es:[bx].hp_access,ax
+;
+    mov eax,ds:[bx].hp_pos
+    mov es:[bx].hp_pos,eax
+
+ncNextLeave:
+    LeaveSection ds:h_section
+
+ncNext:
+    pop cx
+    pop bx
+;
+    inc bx
+    sub cx,1
+    jnz ncLoop
+;
+    pop ds
+    mov es:app_c_handle_sel,ds
+;
+    popad
+    pop es
+    pop ds
+    retf32
+notify_clone	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_exec
+;
+;           DESCRIPTION:    Notify exec
+;
+;           PARAMETERS:     ES		App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_exec	Proc far
+    retf32
+notify_exec	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_terminate
+;
+;           DESCRIPTION:    Notify terminate
+;
+;           PARAMETERS:     ES		App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_terminate	Proc far
+    push ds
+    push es
+    pushad
+;
+    mov ds,es:app_c_handle_sel
+;    
+    mov cx,MAX_HANDLES
+    xor bx,bx
+
+ntLoop:
+    push bx
+    push cx
+;
+    shl bx,3
+    add bx,OFFSET h_arr
+    EnterSection ds:h_section
+    xor ax,ax
+    xchg ax,ds:[bx].hp_handle
+    mov ds:[bx].hp_access,0
+    mov ds:[bx].hp_pos,0
+    LeaveSection ds:h_section
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae ntNext
+;    
+    or ax,ax
+    jz ntNext
+;
+    push ds
+    dec ax
+    movzx ecx,ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+    EnterSection ds:hd_section
+;
+    sub ds:[bx].he_ref_count,1
+    jnz ntLeave
+;
+    xor ax,ax
+    xchg ax,ds:[bx].he_sel
+    mov bx,ds:[bx].he_type
+    btc ds:hd_bitmap,ecx
+;
+    cmp bx,10
+    jae ntLeave
+;
+    shl bx,1
+    call word ptr cs:[bx].close_tab
+
+ntLeave:
+    LeaveSection ds:hd_section
+    pop ds
+
+ntNext:
+    pop cx
+    pop bx
+;
+    inc bx
+    sub cx,1
+    jnz ntLoop
+;
+    mov ax,ds
+    mov es,ax
+    xor ax,ax
+    mov ds,ax
+    FreeMem
+;
+    popad
+    pop es
+    pop ds
+    retf32
+notify_terminate	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;           NAME:           App activity table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_activity_table:
+a0 DD OFFSET notify_create,  	SEG code   ; create process
+a1 DD OFFSET notify_start,  	SEG code   ; boot app
+a2 DD OFFSET notify_clone,  	SEG code   ; forked
+a3 DD OFFSET notify_exec,  	SEG code   ; exec
+a4 DD OFFSET notify_clone,  	SEG code   ; spawn
+a5 DD OFFSET notify_terminate,  SEG code   ; terminate process
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1900,6 +2194,9 @@ init_chandle     PROC near
 ;
     mov edi,OFFSET close_app
     HookCloseApp
+;
+    mov edi,OFFSET app_activity_table
+    HookAppActivity
 ;
     mov esi,OFFSET create_c_handle
     mov edi,OFFSET create_c_handle_name
