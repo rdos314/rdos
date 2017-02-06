@@ -456,10 +456,11 @@ load_process_default_drive:
     mov ax,es
     mov ds,ax
     mov si,di
-;       
+;
     GetThread
     mov es,ax
     mov es,es:p_app_sel
+    AppNotifyStart
 ;
     CreateAppHandle
     mov es:app_handle_sel,ax
@@ -984,6 +985,7 @@ spFocusDone:
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
+    mov gs:s_parent_app_sel,ds
     mov eax,ds:app_loader_name
     mov gs:s_loader_name,eax
 ;
@@ -1189,6 +1191,9 @@ spawn_startup:
     mov es,es:p_app_sel
     mov es:app_context,bx
     mov es:app_unload_proc,OFFSET spUnload
+;
+    mov ds,gs:s_parent_app_sel
+    AppNotifySpawn
 ;
     CreateAppHandle
     mov es:app_handle_sel,ax
@@ -1947,6 +1952,7 @@ load_program   Proc near
     mov es,es:p_app_sel
     mov es:app_context,bx
     mov es:app_unload_proc,OFFSET lepRet
+    AppNotifyExec
 ;
     GetThread
     mov es,ax

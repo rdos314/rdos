@@ -719,4 +719,11 @@ clone_console_nr            = 600
 reset_process_nr            = 601
 exec_app_nr                 = 602
 
+app_notify_create_nr        = 603
+app_notify_start_nr         = 604
+app_notify_forked_nr        = 605
+app_notify_exec_nr          = 606
+app_notify_spawn_nr         = 607
+app_notify_terminate_nr     = 608
+
 osgate_entries              = 650

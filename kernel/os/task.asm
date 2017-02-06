@@ -8441,6 +8441,11 @@ terminate_free_pd:
     xor ax,ax
     mov ds,ax
     FreeMem    
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    AppNotifyTerminate
 
 terminate_pd_done:
     NotifyThreadExit
@@ -8860,6 +8865,18 @@ init_fork_stack	Endp
 fork_process_name     DB 'Fork Process',0
 
 fork_start:
+    push ds
+    push es
+    push ax
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    mov ds,dx
+    AppNotifyForked
+    pop ax
+    pop es
+    pop ds
+;
     push dx
     NotifyProcessForked
     pop ax
@@ -9051,6 +9068,13 @@ init_long_callback_frame    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_process_callback:
+    push es
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    AppNotifyCreate
+    pop es
+;
     GetThread
     mov fs,ax
 ;

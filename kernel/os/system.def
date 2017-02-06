@@ -242,6 +242,17 @@ phys_bitmap_header   ENDS
 phys_header_start    = 8
 phys_bitmap_start    = 2000h
 
+app_activity_struc  STRUC
+
+aa_create_proc              DD ?,?
+aa_start_proc               DD ?,?
+aa_forked_proc              DD ?,?
+aa_exec_proc                DD ?,?
+aa_spawn_proc               DD ?,?
+aa_terminate_proc           DD ?,?
+
+app_activity_struc  ENDS
+
 app_seg STRUC
 
 app_next                                DW ?

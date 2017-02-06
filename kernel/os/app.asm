@@ -119,6 +119,42 @@ init_app    PROC near
     mov ax,exit_process_app_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET app_notify_create
+    mov edi,OFFSET app_notify_create_name
+    xor cl,cl
+    mov ax,app_notify_create_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET app_notify_start
+    mov edi,OFFSET app_notify_start_name
+    xor cl,cl
+    mov ax,app_notify_start_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET app_notify_forked
+    mov edi,OFFSET app_notify_forked_name
+    xor cl,cl
+    mov ax,app_notify_forked_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET app_notify_exec
+    mov edi,OFFSET app_notify_exec_name
+    xor cl,cl
+    mov ax,app_notify_exec_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET app_notify_spawn
+    mov edi,OFFSET app_notify_spawn_name
+    xor cl,cl
+    mov ax,app_notify_spawn_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET app_notify_terminate
+    mov edi,OFFSET app_notify_terminate_name
+    xor cl,cl
+    mov ax,app_notify_terminate_nr
+    RegisterOsGate
+;
     mov esi,OFFSET open_app
     mov edi,OFFSET open_app_name
     xor cl,cl
@@ -347,6 +383,110 @@ init_app    PROC near
     ret
 init_app    ENDP
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AppNotifyCreate
+;
+;           DESCRIPTION:    Notify app create process
+;
+;           PARAMETERS:     ES	App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_notify_create_name      DB 'App Notify Create',0
+
+app_notify_create   PROC far
+    retf32
+app_notify_create   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AppNotifyStart
+;
+;           DESCRIPTION:    Notify start boot program
+;
+;           PARAMETERS:     ES	App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_notify_start_name      DB 'App Notify Start',0
+
+app_notify_start   PROC far
+    retf32
+app_notify_start   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AppNotifyForked
+;
+;           DESCRIPTION:    Notify forked
+;
+;           PARAMETERS:     ES	App sel
+;                           DS  Source sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_notify_forked_name      DB 'App Notify Forked',0
+
+app_notify_forked   PROC far
+    retf32
+app_notify_forked   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AppNotifyExec
+;
+;           DESCRIPTION:    Notify exec
+;
+;           PARAMETERS:     ES	App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_notify_exec_name      DB 'App Notify Exec',0
+
+app_notify_exec   PROC far
+    retf32
+app_notify_exec   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AppNotifySpawn
+;
+;           DESCRIPTION:    Notify spawn
+;
+;           PARAMETERS:     ES	App sel
+;                           DS  Source sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_notify_spawn_name      DB 'App Notify Spawn',0
+
+app_notify_spawn   PROC far
+    retf32
+app_notify_spawn   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AppNotifyTerminate
+;
+;           DESCRIPTION:    Notify process terminate
+;
+;           PARAMETERS:     ES	App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_notify_terminate_name      DB 'App Notify Terminate',0
+
+app_notify_terminate   PROC far
+    retf32
+app_notify_terminate   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
