@@ -1978,6 +1978,11 @@ DerefHandle     MACRO
 
 ;;;;;;;;;;;;;; Application / process  ;;;;;;;;;;;;;;;;;;
 
+; IN  ES:EDI     Activity table
+HookAppActivity     MACRO
+    OsGate hook_app_activity_nr
+                    ENDM
+
 ; IN  ES	App sel
 AppNotifyCreate     MACRO
     OsGate app_notify_create_nr

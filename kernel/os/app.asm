@@ -42,9 +42,11 @@ app_data_seg    STRUC
 
 open_app_hooks      DB ?
 close_app_hooks     DB ?
+app_activity_hooks  DB ?
 
 open_app_arr        DD 2*8 DUP(?)
 close_app_arr       DD 2*8 DUP(?)
+app_activity_arr    DD 2*16 DUP(?)
 
 app_data_seg    ENDS
 
@@ -117,6 +119,12 @@ init_app    PROC near
     mov edi,OFFSET exit_process_app_name
     xor cl,cl
     mov ax,exit_process_app_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET hook_app_activity
+    mov edi,OFFSET hook_app_activity_name
+    xor cl,cl
+    mov ax,hook_app_activity_nr
     RegisterOsGate
 ;
     mov esi,OFFSET app_notify_create
@@ -376,6 +384,7 @@ init_app    PROC near
     xor ax,ax
     mov ds:open_app_hooks,al
     mov ds:close_app_hooks,al
+    mov ds:app_activity_hooks,al
 ;
     popa
     pop es
@@ -387,11 +396,45 @@ init_app    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           HookAppActivity
+;
+;           DESCRIPTION:    Add hook for app activity
+;
+;           PARAMETERS:     ES:EDI       Activity table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_app_activity_name      DB 'Hook Open App',0
+
+hook_app_activity   PROC far
+    push ds
+    push ax
+    push bx
+    mov ax,app_data_sel
+    mov ds,ax
+    mov al,ds:app_activity_hooks
+    mov bl,al
+    xor bh,bh
+    shl bx,3
+    add bx,OFFSET app_activity_arr
+    mov [bx],edi
+    mov [bx+4],es
+    inc al
+    mov ds:app_activity_hooks,al
+    pop bx
+    pop ax
+    pop ds
+    retf32
+hook_app_activity   ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           AppNotifyCreate
 ;
 ;           DESCRIPTION:    Notify app create process
 ;
-;           PARAMETERS:     ES	App sel
+;           PARAMETERS:     ES  App sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -408,7 +451,7 @@ app_notify_create   Endp
 ;
 ;           DESCRIPTION:    Notify start boot program
 ;
-;           PARAMETERS:     ES	App sel
+;           PARAMETERS:     ES  App sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -425,7 +468,7 @@ app_notify_start   Endp
 ;
 ;           DESCRIPTION:    Notify forked
 ;
-;           PARAMETERS:     ES	App sel
+;           PARAMETERS:     ES  App sel
 ;                           DS  Source sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -443,7 +486,7 @@ app_notify_forked   Endp
 ;
 ;           DESCRIPTION:    Notify exec
 ;
-;           PARAMETERS:     ES	App sel
+;           PARAMETERS:     ES  App sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -460,7 +503,7 @@ app_notify_exec   Endp
 ;
 ;           DESCRIPTION:    Notify spawn
 ;
-;           PARAMETERS:     ES	App sel
+;           PARAMETERS:     ES  App sel
 ;                           DS  Source sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -478,7 +521,7 @@ app_notify_spawn   Endp
 ;
 ;           DESCRIPTION:    Notify process terminate
 ;
-;           PARAMETERS:     ES	App sel
+;           PARAMETERS:     ES  App sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
