@@ -1199,9 +1199,6 @@ spawn_startup:
     mov es:app_handle_sel,ax
     mov es:app_handle_mem_sel,dx    
 ;
-    CreateCHandle    
-    mov es:app_c_handle_sel,ax
-;
     mov ax,3Bh
     EnableFocus
     SetFocus

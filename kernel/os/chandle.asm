@@ -300,7 +300,7 @@ ncNext:
     jnz ncLoop
 ;
     pop ds
-    mov es:app_c_handle_sel,ds
+    mov ds:app_c_handle_sel,es
 ;
     popad
     pop es

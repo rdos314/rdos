@@ -511,6 +511,33 @@ app_notify_exec   Endp
 app_notify_spawn_name      DB 'App Notify Spawn',0
 
 app_notify_spawn   PROC far
+    push fs
+    push gs
+    push ebx
+    push ecx
+    push edi
+;
+    mov cx,app_data_sel
+    mov fs,cx
+    mov cl,fs:app_activity_hooks
+    or cl,cl
+    je app_notify_spawn_done
+;
+    mov bx,OFFSET app_activity_arr
+
+app_notify_spawn_loop:
+    lgs edi,fs:[bx]
+    call fword ptr gs:[edi].aa_spawn_proc
+    add bx,8
+    dec cl
+    jnz app_notify_spawn_loop
+
+app_notify_spawn_done:
+    pop edi
+    pop ecx
+    pop ebx
+    pop gs
+    pop fs
     retf32
 app_notify_spawn   Endp
     
