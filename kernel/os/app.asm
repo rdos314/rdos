@@ -441,6 +441,33 @@ hook_app_activity   ENDP
 app_notify_create_name      DB 'App Notify Create',0
 
 app_notify_create   PROC far
+    push fs
+    push gs
+    push ebx
+    push ecx
+    push edi
+;
+    mov cx,app_data_sel
+    mov fs,cx
+    mov cl,fs:app_activity_hooks
+    or cl,cl
+    je app_notify_create_done
+;
+    mov bx,OFFSET app_activity_arr
+
+app_notify_create_loop:
+    lgs edi,fs:[bx]
+    call fword ptr gs:[edi].aa_create_proc
+    add bx,8
+    dec cl
+    jnz app_notify_create_loop
+
+app_notify_create_done:
+    pop edi
+    pop ecx
+    pop ebx
+    pop gs
+    pop fs
     retf32
 app_notify_create   Endp
     
@@ -458,6 +485,33 @@ app_notify_create   Endp
 app_notify_start_name      DB 'App Notify Start',0
 
 app_notify_start   PROC far
+    push fs
+    push gs
+    push ebx
+    push ecx
+    push edi
+;
+    mov cx,app_data_sel
+    mov fs,cx
+    mov cl,fs:app_activity_hooks
+    or cl,cl
+    je app_notify_start_done
+;
+    mov bx,OFFSET app_activity_arr
+
+app_notify_start_loop:
+    lgs edi,fs:[bx]
+    call fword ptr gs:[edi].aa_start_proc
+    add bx,8
+    dec cl
+    jnz app_notify_start_loop
+
+app_notify_start_done:
+    pop edi
+    pop ecx
+    pop ebx
+    pop gs
+    pop fs
     retf32
 app_notify_start   Endp
     
@@ -1125,9 +1179,6 @@ clone_app    PROC far
 ;
     mov ax,ds:app_handle_mem_sel
     mov es:app_handle_mem_sel,ax
-;
-    CreateCHandle    
-    mov es:app_c_handle_sel,ax    
 ;
     CloneConsole
 ;

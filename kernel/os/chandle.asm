@@ -58,79 +58,6 @@ handle_struc    ENDS
 code    SEGMENT byte public use16 'CODE'
     
     assume cs:code
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Create C handle
-;
-;           DESCRIPTION:    Create std-C handle selector
-;
-;           RETURNS:        AX          C handle sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_c_handle_name  DB 'Create C Handle', 0
-
-create_c_handle    PROC far
-    push ds
-    push es
-    push bx
-    push cx
-    push dx
-    push si
-    push di
-;    
-    mov ax,chandle_data_sel
-    mov ds,ax
-;
-    mov di,OFFSET hd_data
-    inc ds:[di].he_ref_count
-;
-    add di,SIZE handle_entry_struc
-    add ds:[di].he_ref_count,2
-;
-    mov eax,SIZE handle_struc
-    AllocateSmallGlobalMem
-    mov ax,es
-    mov ds,ax
-;    
-    mov di,OFFSET h_arr
-    mov ds:[di].hp_handle,1
-    mov ds:[di].hp_access,IO_READ OR IO_ISTTY
-    mov ds:[di].hp_pos,0
-;
-    add di,SIZE handle_proc_struc
-    mov ds:[di].hp_handle,2
-    mov ds:[di].hp_access,IO_WRITE OR IO_ISTTY
-    mov ds:[di].hp_pos,0
-;
-    add di,SIZE handle_proc_struc
-    mov ds:[di].hp_handle,2
-    mov ds:[di].hp_access,IO_WRITE OR IO_ISTTY
-    mov ds:[di].hp_pos,0
-;    
-    mov cx,MAX_HANDLES - 3
-
-cchLoop:
-    add di,SIZE handle_proc_struc
-    mov ds:[di].hp_handle,0
-    mov ds:[di].hp_access,0
-    mov ds:[di].hp_pos,0
-    loop cchLoop
-;    
-    InitSection ds:h_section
-    mov ax,ds
-;
-    pop di
-    pop si
-    pop dx
-    pop cx
-    pop bx    
-    pop es
-    pop ds
-    retf32
-create_c_handle Endp
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2197,12 +2124,6 @@ init_chandle     PROC near
 ;
     mov edi,OFFSET app_activity_table
     HookAppActivity
-;
-    mov esi,OFFSET create_c_handle
-    mov edi,OFFSET create_c_handle_name
-    xor cl,cl
-    mov ax,create_c_handle_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET allocate_c_handle
     mov edi,OFFSET allocate_c_handle_name
