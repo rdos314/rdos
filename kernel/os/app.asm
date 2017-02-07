@@ -663,7 +663,6 @@ app_notify_spawn   Endp
 app_notify_terminate_name      DB 'App Notify Terminate',0
 
 app_notify_terminate   PROC far
-    int 3
     push fs
     push gs
     push ebx
