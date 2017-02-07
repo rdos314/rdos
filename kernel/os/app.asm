@@ -1382,6 +1382,10 @@ eaAppClosed:
     mov es:app_bitness,0
     mov es:app_key,0
 ;
+    CreateAppHandle
+    mov es:app_handle_sel,ax
+    mov es:app_handle_mem_sel,dx    
+;
     xor ax,ax
     mov es,ax
 ;
