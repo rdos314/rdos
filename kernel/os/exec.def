@@ -104,6 +104,7 @@ el_env                          DW ?
 el_param                        DW ?
 el_ret_code                     DW ?
 el_wake_thread                  DW ?
+el_done                         DW ?
 
 exec_load_struc ENDS
 

@@ -574,6 +574,33 @@ app_notify_forked   Endp
 app_notify_exec_name      DB 'App Notify Exec',0
 
 app_notify_exec   PROC far
+    push fs
+    push gs
+    push ebx
+    push ecx
+    push edi
+;
+    mov cx,app_data_sel
+    mov fs,cx
+    mov cl,fs:app_activity_hooks
+    or cl,cl
+    je app_notify_exec_done
+;
+    mov bx,OFFSET app_activity_arr
+
+app_notify_exec_loop:
+    lgs edi,fs:[bx]
+    call fword ptr gs:[edi].aa_exec_proc
+    add bx,8
+    dec cl
+    jnz app_notify_exec_loop
+
+app_notify_exec_done:
+    pop edi
+    pop ecx
+    pop ebx
+    pop gs
+    pop fs
     retf32
 app_notify_exec   Endp
     

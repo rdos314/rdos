@@ -1882,6 +1882,7 @@ SetupExec Proc near
     mov gs:el_env,0
     mov gs:el_param,0
     mov gs:el_wake_thread,0
+    mov gs:el_done,0
 ;
     GetThread
     mov ds,ax
@@ -2039,6 +2040,7 @@ lepRet:
     mov ds,ds:p_app_sel
     mov ax,ds:app_exit_code    
     mov gs:el_ret_code,ax
+    mov gs:el_done,1
 ;    
     mov bx,gs:el_wake_thread
     Signal    
@@ -2125,8 +2127,13 @@ wait_for_exec   Proc far
 ;
     GetThread
     mov gs:el_wake_thread,ax
-;
+
+wfeRetry:
     WaitForSignal
+    mov ax,gs:el_done
+    or ax,ax
+    jz wfeRetry
+;
     mov ax,gs:el_ret_code
     clc
  
