@@ -19,8 +19,7 @@
 ; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ;
 ; The author of this program may be contacted at leif@rdos.net
-;
-; SYSTEM.DEF
+;; SYSTEM.DEF
 ; System-wide structure & constant definitions
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -252,6 +251,13 @@ aa_spawn_proc               DD ?,?
 aa_terminate_proc           DD ?,?
 
 app_activity_struc  ENDS
+
+app_activity_data   STRUC
+
+app_activity_hooks  DB ?
+app_activity_arr    DD 2*16 DUP(?)
+
+app_activity_data   ENDS
 
 app_seg STRUC
 

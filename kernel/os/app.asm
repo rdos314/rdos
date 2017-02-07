@@ -42,11 +42,9 @@ app_data_seg    STRUC
 
 open_app_hooks      DB ?
 close_app_hooks     DB ?
-app_activity_hooks  DB ?
 
 open_app_arr        DD 2*8 DUP(?)
 close_app_arr       DD 2*8 DUP(?)
-app_activity_arr    DD 2*16 DUP(?)
 
 app_data_seg    ENDS
 
@@ -381,10 +379,14 @@ init_app    PROC near
     mov eax,SIZE app_data_seg
     AllocateFixedSystemMem
     mov ds,bx
-    xor ax,ax
-    mov ds:open_app_hooks,al
-    mov ds:close_app_hooks,al
-    mov ds:app_activity_hooks,al
+    mov ds:open_app_hooks,0
+    mov ds:close_app_hooks,0
+;
+    mov bx,app_activity_sel
+    mov eax,SIZE app_activity_data
+    AllocateFixedSystemMem
+    mov ds,bx
+    mov ds:app_activity_hooks,0
 ;
     popa
     pop es
@@ -410,7 +412,7 @@ hook_app_activity   PROC far
     push ds
     push ax
     push bx
-    mov ax,app_data_sel
+    mov ax,app_activity_sel
     mov ds,ax
     mov al,ds:app_activity_hooks
     mov bl,al
@@ -447,7 +449,7 @@ app_notify_create   PROC far
     push ecx
     push edi
 ;
-    mov cx,app_data_sel
+    mov cx,app_activity_sel
     mov fs,cx
     mov cl,fs:app_activity_hooks
     or cl,cl
@@ -491,7 +493,7 @@ app_notify_start   PROC far
     push ecx
     push edi
 ;
-    mov cx,app_data_sel
+    mov cx,app_activity_sel
     mov fs,cx
     mov cl,fs:app_activity_hooks
     or cl,cl
@@ -536,7 +538,7 @@ app_notify_forked   PROC far
     push ecx
     push edi
 ;
-    mov cx,app_data_sel
+    mov cx,app_activity_sel
     mov fs,cx
     mov cl,fs:app_activity_hooks
     or cl,cl
@@ -580,7 +582,7 @@ app_notify_exec   PROC far
     push ecx
     push edi
 ;
-    mov cx,app_data_sel
+    mov cx,app_activity_sel
     mov fs,cx
     mov cl,fs:app_activity_hooks
     or cl,cl
@@ -625,7 +627,7 @@ app_notify_spawn   PROC far
     push ecx
     push edi
 ;
-    mov cx,app_data_sel
+    mov cx,app_activity_sel
     mov fs,cx
     mov cl,fs:app_activity_hooks
     or cl,cl
@@ -669,7 +671,7 @@ app_notify_terminate   PROC far
     push ecx
     push edi
 ;
-    mov cx,app_data_sel
+    mov cx,app_activity_sel
     mov fs,cx
     mov cl,fs:app_activity_hooks
     or cl,cl
