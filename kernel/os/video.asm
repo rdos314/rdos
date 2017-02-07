@@ -1412,34 +1412,6 @@ EnableConsoleFocus Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;   NAME:           CloneConsole
-;
-;   DESCRIPTION:    Clone console
-;
-;   PARAMETERS:     DS          Source app selector
-;                   ES          Dest app selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-clone_console_name      DB 'Clone Console', 0
-    
-clone_console  PROC far
-    push es
-    push ax
-;
-    mov ax,ds:app_console
-    mov es:app_console,ax
-    mov es,ax
-    inc es:c_usage
-;
-    pop ax
-    pop es
-    ret
-clone_console   Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           GetLocalConsole
 ;
 ;           DESCRIPTION:    Get local console
@@ -5625,33 +5597,28 @@ notify_create   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           notify_alloc
+;           NAME:           notify_forked
 ;
-;           DESCRIPTION:    Notify alloc console
-;
-;           PARAMETERS:     ES          App sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_alloc    Proc far
-    ret
-notify_alloc    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_clone
-;
-;           DESCRIPTION:    Notify clone (spawn + fork)
+;           DESCRIPTION:    Notify fork
 ;
 ;           PARAMETERS:     ES          App sel
 ;                           DS          Parent app sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-notify_clone    Proc far
+notify_forked    Proc far
+    push es
+    push ax
+;
+    mov ax,ds:app_console
+    mov es:app_console,ax
+    mov es,ax
+    inc es:c_usage
+;
+    pop ax
+    pop es
     ret
-notify_clone    Endp
+notify_forked    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5692,10 +5659,10 @@ notify_free     Endp
 
 app_activity_table:
 a0 DD OFFSET notify_create,     SEG code   ; create process
-a1 DD OFFSET notify_alloc,      SEG code   ; boot app
-a2 DD OFFSET notify_clone,      SEG code   ; forked
+a1 DD OFFSET notify_none,       SEG code   ; boot app
+a2 DD OFFSET notify_forked,     SEG code   ; forked
 a3 DD OFFSET notify_none,       SEG code   ; exec
-a4 DD OFFSET notify_alloc,      SEG code   ; spawn
+a4 DD OFFSET notify_none,       SEG code   ; spawn
 a5 DD OFFSET notify_free,       SEG code   ; terminate process
 
     
@@ -5806,12 +5773,6 @@ init_video      PROC near
     mov edi,OFFSET add_video_mode_name
     xor cl,cl
     mov ax,add_video_mode_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET clone_console
-    mov edi,OFFSET clone_console_name
-    xor cl,cl
-    mov ax,clone_console_nr
     RegisterOsGate
 ;
     mov esi,OFFSET read_c_console

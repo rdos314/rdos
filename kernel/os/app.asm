@@ -1217,8 +1217,6 @@ clone_app    PROC far
     mov ax,ds:app_handle_mem_sel
     mov es:app_handle_mem_sel,ax
 ;
-    CloneConsole
-;
     popad
     pop fs
     pop es
