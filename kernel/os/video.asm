@@ -5592,63 +5592,112 @@ init_thread     PROC far
 init_thread     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
 ;
-;           NAME:           init_process
 ;
-;           DESCRIPTION:    init process
+;           NAME:           notify_none
 ;
-;           PARAMETERS:         
+;           DESCRIPTION:    Notify none
+;
+;           PARAMETERS:     ES          App sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-            
-init_process     PROC far
-    push ds
-    push ax
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_console,0
-;
-    pop ax
-    pop ds
+
+notify_none     Proc far
     ret
-init_process     ENDP
+notify_none     Endp
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_create
+;
+;           DESCRIPTION:    Notify create process
+;
+;           PARAMETERS:     ES          App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_create   Proc far
+    mov es:app_console,0
+    ret
+notify_create   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
 ;
-;           NAME:           free_process
 ;
-;           DESCRIPTION:    free process
+;           NAME:           notify_alloc
 ;
-;           PARAMETERS:         
+;           DESCRIPTION:    Notify alloc console
+;
+;           PARAMETERS:     ES          App sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-            
-free_process     PROC far
+
+notify_alloc    Proc far
+    ret
+notify_alloc    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_clone
+;
+;           DESCRIPTION:    Notify clone (spawn + fork)
+;
+;           PARAMETERS:     ES          App sel
+;                           DS          Parent app sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_clone    Proc far
+    ret
+notify_clone    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_free
+;
+;           DESCRIPTION:    Notify free console
+;
+;           PARAMETERS:     ES          App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_free        Proc far
     push es
     push ax
 ;
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
     mov ax,es:app_console
     or ax,ax
-    jz fp_done
+    jz nfDone
 ;
     mov es,ax
     sub es:c_usage,1
-    jnz fp_done
+    jnz nfDone
 ;    
     call DeleteConsole
     
-fp_done:
+nfDone:
     pop ax
     pop es
     ret
-free_process     ENDP
+notify_free     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;           NAME:           App activity table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_activity_table:
+a0 DD OFFSET notify_create,     SEG code   ; create process
+a1 DD OFFSET notify_alloc,      SEG code   ; boot app
+a2 DD OFFSET notify_clone,      SEG code   ; forked
+a3 DD OFFSET notify_none,       SEG code   ; exec
+a4 DD OFFSET notify_alloc,      SEG code   ; spawn
+a5 DD OFFSET notify_free,       SEG code   ; terminate process
+
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5732,11 +5781,8 @@ init_video      PROC near
     mov edi,OFFSET init_thread
     HookCreateThread
 ;
-    mov edi,OFFSET init_process
-    HookCreateProcess
-;
-    mov edi,OFFSET free_process
-    HookTerminateProcess
+    mov edi,OFFSET app_activity_table
+    HookAppActivity
 ;
     mov esi,OFFSET invert_mouse
     mov edi,OFFSET invert_mouse_name
