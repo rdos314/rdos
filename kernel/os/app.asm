@@ -119,12 +119,6 @@ init_app    PROC near
     mov ax,exit_process_app_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET hook_app_activity
-    mov edi,OFFSET hook_app_activity_name
-    xor cl,cl
-    mov ax,hook_app_activity_nr
-    RegisterOsGate
-;
     mov esi,OFFSET app_notify_create
     mov edi,OFFSET app_notify_create_name
     xor cl,cl
@@ -382,52 +376,12 @@ init_app    PROC near
     mov ds:open_app_hooks,0
     mov ds:close_app_hooks,0
 ;
-    mov bx,app_activity_sel
-    mov eax,SIZE app_activity_data
-    AllocateFixedSystemMem
-    mov ds,bx
-    mov ds:app_activity_hooks,0
-;
     popa
     pop es
     pop ds
     ret
 init_app    ENDP
 
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           HookAppActivity
-;
-;           DESCRIPTION:    Add hook for app activity
-;
-;           PARAMETERS:     ES:EDI       Activity table
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_app_activity_name      DB 'Hook Open App',0
-
-hook_app_activity   PROC far
-    push ds
-    push ax
-    push bx
-    mov ax,app_activity_sel
-    mov ds,ax
-    mov al,ds:app_activity_hooks
-    mov bl,al
-    xor bh,bh
-    shl bx,3
-    add bx,OFFSET app_activity_arr
-    mov [bx],edi
-    mov [bx+4],es
-    inc al
-    mov ds:app_activity_hooks,al
-    pop bx
-    pop ax
-    pop ds
-    retf32
-hook_app_activity   ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
