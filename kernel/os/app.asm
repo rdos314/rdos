@@ -530,6 +530,33 @@ app_notify_start   Endp
 app_notify_forked_name      DB 'App Notify Forked',0
 
 app_notify_forked   PROC far
+    push fs
+    push gs
+    push ebx
+    push ecx
+    push edi
+;
+    mov cx,app_data_sel
+    mov fs,cx
+    mov cl,fs:app_activity_hooks
+    or cl,cl
+    je app_notify_forked_done
+;
+    mov bx,OFFSET app_activity_arr
+
+app_notify_forked_loop:
+    lgs edi,fs:[bx]
+    call fword ptr gs:[edi].aa_forked_proc
+    add bx,8
+    dec cl
+    jnz app_notify_forked_loop
+
+app_notify_forked_done:
+    pop edi
+    pop ecx
+    pop ebx
+    pop gs
+    pop fs
     retf32
 app_notify_forked   Endp
     
