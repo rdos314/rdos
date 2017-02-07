@@ -64,7 +64,6 @@ code    SEGMENT byte public use16 'CODE'
     extrn init_process_mem:near
     extrn init_program_mem:near
     extrn free_process_proc:word
-    extrn free_handle_process:near
     extrn init_double_fault:near
     extrn set_page_entry_proc:word
     extrn clone_proc:word
@@ -397,14 +396,6 @@ trap_init_tasking_loop:
     dec cl
     jnz trap_init_tasking_loop
 trap_init_tasking_done:
-    push dx
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    CreateAppHandle
-    mov ds:app_handle_sel,ax
-    mov ds:app_handle_mem_sel,dx
-    pop dx
     pop cx
     ret
 trap_init_tasking       ENDP
@@ -715,7 +706,6 @@ notify_process_exit_name  DB 'Notify Process Exit',0
 
 notify_process_exit       PROC far
     call trap_terminate_process
-    call free_handle_process
     retf32
 notify_process_exit       ENDP
     
@@ -764,7 +754,6 @@ notify_start_program       ENDP
 notify_end_program_name  DB 'Notify End Program',0
 
 notify_end_program       PROC far
-    call free_handle_process
     call trap_end_program
     retf32
 notify_end_program       ENDP

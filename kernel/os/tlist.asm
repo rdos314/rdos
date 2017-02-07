@@ -54,11 +54,9 @@ tlist_name          DB 'Thread List',0
 tlist_process:
     sti
     GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    CreateAppHandle
-    mov ds:app_handle_sel,ax
-    mov ds:app_handle_mem_sel,dx
+    mov es,ax
+    mov es,es:p_app_sel
+    AppNotifyStart
 ;
     mov ax,43h
     EnableFocus

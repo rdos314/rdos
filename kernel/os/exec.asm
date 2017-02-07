@@ -462,10 +462,6 @@ load_process_default_drive:
     mov es,es:p_app_sel
     AppNotifyStart
 ;
-    CreateAppHandle
-    mov es:app_handle_sel,ax
-    mov es:app_handle_mem_sel,dx    
-;
     mov ax,3Bh
     EnableFocus
     SetFocus
@@ -1191,10 +1187,6 @@ spawn_startup:
 ;
     mov ds,gs:s_parent_app_sel
     AppNotifySpawn
-;
-    CreateAppHandle
-    mov es:app_handle_sel,ax
-    mov es:app_handle_mem_sel,dx    
 ;
     mov ax,3Bh
     EnableFocus

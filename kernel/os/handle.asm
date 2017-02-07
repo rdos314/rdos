@@ -72,6 +72,186 @@ code    SEGMENT byte public 'CODE'
     
     assume cs:code
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_none
+;
+;           DESCRIPTION:    Notify dummy
+;
+;           PARAMETERS:     ES          App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_none     Proc far
+    retf32
+notify_none     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_create
+;
+;           DESCRIPTION:    Notify create process
+;
+;           PARAMETERS:     ES          App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_create     Proc far
+    mov es:app_handle_sel,0
+    mov es:app_handle_mem_sel,0
+    retf32
+notify_create     Endp
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_alloc
+;
+;           DESCRIPTION:    Notify alloc handle selectors
+;
+;           PARAMETERS:     ES          App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_alloc   Proc far
+    push ax
+    push dx
+;
+    push es
+    push bx
+    push cx
+    push si
+    push di
+;    
+    mov eax,SIZE handle_seg
+    AllocateSmallGlobalMem
+;
+    InitSection es:handle_section
+;
+    mov cx,MAX_HANDLES
+    mov di,2 * MAX_HANDLES + OFFSET handle_arr
+    mov ax,0FFFEh
+
+naLoop:
+    sub di,2
+    mov es:[di],ax
+    mov ax,di
+    loop naLoop
+;
+    mov es:handle_list,di
+    push es
+;
+    mov eax,10000h
+    AllocateGlobalMem
+;    
+    xor bx,bx
+    mov dx,8
+    mov es:[bx].hf_next,dx
+    mov es:[bx].hs_next,dx
+    mov es:[bx].hs_prev,dx
+    mov bx,dx
+    mov dx,0FFF8h
+    mov es:[bx].hf_prev,0
+    mov es:[bx].hf_next,0
+    mov es:[bx].hs_prev,0
+    mov es:[bx].hs_next,dx
+;
+    mov dx,es
+    pop ax    
+;
+    pop di
+    pop si
+    pop cx
+    pop bx
+    pop es
+;
+    mov es:app_handle_sel,ax
+    mov es:app_handle_mem_sel,dx    
+;
+    pop dx
+    pop ax
+    retf32
+notify_alloc   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_free
+;
+;           DESCRIPTION:    Notify free handle selectors
+;
+;           PARAMETERS:     ES          App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_free        Proc far
+    int 3
+    push ds
+    push es
+    pushad
+;
+    mov bx,es:app_handle_sel
+;
+    or bx,bx
+    jz nfHandleSelFree
+;
+    mov ds,bx
+    xor bx,bx
+    mov di,OFFSET handle_arr
+    mov cx,MAX_HANDLES
+
+nfLoop:
+    mov si,[di]
+    cmp bx,es:[si].hh_handle
+    jne nfNext
+;
+    call delete_handle
+
+nfNext:
+    inc bx
+    add di,2
+    loop nfLoop
+;
+    push es
+    mov ax,ds
+    mov es,ax
+    FreeMem
+    pop es
+
+nfHandleSelFree:
+    mov bx,es:app_handle_mem_sel
+    or bx,bx
+    jz nfDone
+;
+    mov es,bx
+    FreeMem
+
+nfDone:
+    popad
+    pop es
+    pop ds
+;
+    mov es:app_handle_sel,0
+    mov es:app_handle_mem_sel,0
+    retf32
+notify_free        Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;           NAME:           App activity table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_activity_table:
+a0 DD OFFSET notify_create,    SEG code   ; create process
+a1 DD OFFSET notify_alloc,     SEG code   ; boot app
+a2 DD OFFSET notify_alloc,     SEG code   ; forked
+a3 DD OFFSET notify_none,      SEG code   ; exec
+a4 DD OFFSET notify_alloc,     SEG code   ; spawn
+a5 DD OFFSET notify_free,      SEG code   ; terminate process
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -493,7 +673,6 @@ deref_done:
     retf32
 deref_handle    ENDP
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -744,61 +923,6 @@ delete_handle_done:
     ret
 delete_handle   Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FREE_PROCESS
-;
-;           DESCRIPTION:    Free per-process data
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public free_handle_process
-
-free_handle_process     PROC near
-    push ds
-    push es
-    pushad
-;
-    GetThread
-    mov ds,ax    
-    mov ds,ds:p_app_sel
-    mov es,ds:app_handle_mem_sel
-    mov ds,ds:app_handle_sel
-;
-    xor bx,bx
-    mov di,OFFSET handle_arr
-    mov cx,MAX_HANDLES
-
-free_handle_loop:
-    mov si,[di]
-    cmp bx,es:[si].hh_handle
-    jne free_handle_next
-;
-    call delete_handle
-
-free_handle_next:
-    inc bx
-    add di,2
-    loop free_handle_loop
-;
-    FreeMem
-    mov ax,ds
-    mov es,ax
-    xor ax,ax
-    mov ds,ax
-    FreeMem
-;
-    popad
-    pop es
-    pop ds
-    ret
-free_handle_process     Endp
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -823,6 +947,9 @@ init_handle     PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov edi,OFFSET app_activity_table
+    HookAppActivity
 ;
     mov esi,OFFSET create_app_handle
     mov edi,OFFSET create_app_handle_name
