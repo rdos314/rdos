@@ -38,6 +38,7 @@ INCLUDE pe.def
 INCLUDE system.inc
 INCLUDE ..\debevent.inc
 INCLUDE ..\handle.inc
+INCLUDE chandle.inc
 
 
 SYS_BASE EQU 0DE000000h
@@ -1693,8 +1694,8 @@ OpenDll Proc near
     mov es,di
     mov edi,esi
 ;
-    xor cl,cl
-    OpenFile
+    mov cx,O_RDONLY OR O_BINARY
+    OpenKernelFile
     jnc open_dll_done
 ;
     LockProcEnv
@@ -1768,8 +1769,8 @@ find_path_name_loop:
 ;
     push bx
     xor edi,edi
-    xor cl,cl
-    OpenFile
+    mov cx,O_RDONLY OR O_BINARY
+    OpenKernelFile
     jnc find_path_file_ok
 ;
     pop bx
@@ -2672,34 +2673,46 @@ load_dll_do:
     call OpenDll
     jc load_dll_fail_nofree
 ;
+    push edx
     mov eax,40h
     AllocateSmallGlobalMem
     mov ecx,eax
     xor edi,edi
-    ReadFile
+    xor edx,edx
+    ReadCFile
+    pop edx
     jc load_dll_fail
+;
     cmp ax,40h
     jne load_dll_fail
+;
     mov ax,es:exeh_signature
     cmp ax,5A4Dh
     jne load_dll_fail
+;
     mov ax,es:exeh_reloc_offs
     cmp ax,40h
     jne load_dll_fail
+;
+    push edx
     mov ax,es:[3Ch]
-    movzx eax,ax
-    SetFilePos
+    movzx edx,ax
     mov ecx,40h
-    ReadFile   
+    ReadCFile   
+    mov eax,edx
+    pop edx
     jc load_dll_fail
+;
+    push ax
     mov ax,es:[0]
     cmp ax,'EP'
+    pop ax
     jne load_dll_fail
 ;
-    GetFilePos
+    push dx
+    mov edx,eax
     movzx ecx,cx
-    sub eax,ecx
-    SetFilePos
+    sub edx,ecx
 ;
     FreeMem
     call CreateLib
@@ -2708,6 +2721,7 @@ load_dll_do:
     CreateModule
 ;       
     call CreateImage
+    pop dx
     mov edi,es:lib_base
 ;
     mov es:lib_debug_lib,dx
@@ -2821,7 +2835,7 @@ fdMod:
     mov edx,es:lib_base
     mov ecx,es:lib_size
     mov bx,es:lib_file_handle
-    CloseFile
+    CloseCFile
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -5885,7 +5899,7 @@ unload_no_tls:
     mov edx,es:lib_base
     mov ecx,es:lib_size
     mov bx,es:lib_file_handle
-    CloseFile
+    CloseCFile
     add edx,ebp
     FreeLinear
     FreeMem
