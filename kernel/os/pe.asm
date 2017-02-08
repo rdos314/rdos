@@ -2906,15 +2906,15 @@ load_page_file:
     mov ecx,1000h
 
 load_page_size_ok:
-    add eax,[esi].o_phys_offset
-    SetFilePos      
-;
     push es
+    push edx
     push edi
+    mov edi,edx
+    mov edx,eax
     mov ax,ds
     mov es,ax
-    mov edi,edx
-    ReadFile
+    add edx,[esi].o_phys_offset
+    ReadCFile
     add edi,eax
     mov ecx,1000h
     sub ecx,eax
@@ -2922,6 +2922,7 @@ load_page_size_ok:
     xor eax,eax
     rep stos dword ptr es:[edi]
     pop edi
+    pop edx
     pop es
     clc
 
@@ -3496,7 +3497,6 @@ load_pe Proc far
     movzx ecx,cx
     sub edx,ecx
 ;
-    int 3
     FreeMem
     call CreateLib
     SetModule
@@ -3516,6 +3516,7 @@ load_pe Proc far
     call RunImage
     pop edi
     pop esi
+    pop edx
     pop fs
     pop es
     pop ds
@@ -3590,7 +3591,6 @@ load_pe_fail:
 load_pe_done:
     pop edi
     pop esi
-    pop edx
     pop fs
     pop es
     pop ds
