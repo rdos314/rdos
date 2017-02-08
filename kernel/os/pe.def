@@ -143,6 +143,7 @@ lib_size                        DD ?
 lib_header                      DD ?
 lib_objects                     DD ?
 lib_file_handle         DW ?
+lib_file_pos            DD ?
 lib_usage_count         DW ?
 lib_process                     DW ?
 lib_debug_lib           DW ?

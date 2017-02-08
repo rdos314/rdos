@@ -1269,8 +1269,9 @@ FreeDllEvent Endp
 ;
 ;           DESCRIPTION:    Create lib
 ;
-;           PARAMETERS:     FS:ESI  Image name
-;                           BX          File handle
+;           PARAMETERS:     FS:ESI      Image name
+;                           BX          C file handle
+;                           EDX         File position
 ;
 ;           RETURNS:        ES          Lib handle
 ;
@@ -1284,6 +1285,7 @@ CreateLib       Proc near
 ;
     xor cx,cx
     push esi
+
 create_lib_size_loop:
     mov al,fs:[esi]
     or al,al
@@ -1315,6 +1317,7 @@ create_lib_size_ok:
     mov es:lib_events,0
     mov es:lib_suppress,0
     mov es:lib_file_handle,bx
+    mov es:lib_file_pos,edx
     mov es:lib_run_now,0
     mov es:lib_init_param,0
     InitSpinlock es:lib_spinlock
@@ -3058,7 +3061,7 @@ MapToImage  Endp
 ;
 ;           DESCRIPTION:    Create memory image of header
 ;
-;           PARAMETERS:     FS:ESI  Image name
+;           PARAMETERS:     FS:ESI      Image name
 ;                           ES          Lib handle
 ;
 ;           RETURNS:        EDI         Image base
@@ -3446,7 +3449,6 @@ RunImage    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 load_pe Proc far
-    int 3
     push ds
     push es
     push fs
@@ -3492,6 +3494,7 @@ load_pe Proc far
     movzx ecx,cx
     sub edx,ecx
 ;
+    int 3
     FreeMem
     call CreateLib
     SetModule
