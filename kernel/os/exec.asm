@@ -483,7 +483,6 @@ load_process_default_drive:
     mov es,ax
     movzx edi,di
 ;
-    int 3
     mov cx,O_RDONLY OR O_BINARY
     OpenKernelFile
     jc load_process_fail
