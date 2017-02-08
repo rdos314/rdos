@@ -3084,14 +3084,14 @@ CreateImage     Proc near
     mov ds,bx
 ;
     mov bx,es:lib_file_handle
-    GetFilePos
-    push eax
+    mov edx,es:lib_file_pos
+    push edx
     push es
     mov eax,SIZE pe_header
     AllocateLocalMem
     mov ecx,eax
     xor edi,edi
-    ReadFile   
+    ReadCFile   
     mov ecx,es:peh_image_size
     mov edx,es:peh_image_base
     mov si,es:peh_nthdr_size
@@ -3136,14 +3136,14 @@ create_image_alloced:
     add es:lib_objects,edx
     mov es:lib_base,edx
 ;
-    xor eax,eax
-    SetFilePos
-;
     push es
+    push edx
     mov ax,ds
     mov es,ax
     mov edi,edx
-    ReadFile
+    xor edx,edx
+    ReadCFile
+    pop edx
     pop es
 ;
     mov esi,es:lib_header
@@ -3182,19 +3182,21 @@ hook_object_do:
     jc fixup_done
 ;
     mov ecx,eax
-    mov eax,[esi].o_phys_offset
-    SetFilePos
 ;
     push es
+    push edx
     push edi
     mov edi,edx
     add edx,ebp
     mov eax,ecx
     UnhookPage
+;
+    mov edx,[esi].o_phys_offset
     mov ax,ds
     mov es,ax
-    ReadFile
+    ReadCFile
     pop edi
+    pop edx
     pop es
 
 fixup_done:
