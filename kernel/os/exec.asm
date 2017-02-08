@@ -1992,8 +1992,8 @@ lepCpExeLoop:
 ;       
     xor di,di
     mov es,gs:el_name
-    xor cx,cx
-    OpenFile
+    mov cx,O_RDONLY OR O_BINARY
+    OpenKernelFile
     jc lepFail
 ;
     xor esi,esi
