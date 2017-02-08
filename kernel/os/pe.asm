@@ -3439,16 +3439,18 @@ RunImage    Endp
 ;
 ;           DESCRIPTION:    Load portable executable file
 ;
-;           PARAMETERS:     BX          file handle
+;           PARAMETERS:     BX      C file handle
 ;                           DS:ESI  File name
 ;                           ES:EDI  Command line
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 load_pe Proc far
+    int 3
     push ds
     push es
     push fs
+    push edx
     push esi
     push edi
 ;
@@ -3458,36 +3460,37 @@ load_pe Proc far
     mov ax,flat_data_sel
     mov ds,ax
 ;
-    xor eax,eax
-    SetFilePos
+    xor edx,edx
     mov eax,40h
     AllocateSmallGlobalMem
     mov ecx,eax
     xor edi,edi
-    ReadFile
+    ReadCFile
     jc load_pe_fail
+;
     cmp ax,40h
     jne load_pe_fail
+;
     mov ax,es:exeh_signature
     cmp ax,5A4Dh
     jne load_pe_fail
+;
     mov ax,es:exeh_reloc_offs
     cmp ax,40h
     jne load_pe_fail
+;
     mov ax,es:[3Ch]
-    movzx eax,ax
-    SetFilePos
+    movzx edx,ax
     mov ecx,40h
-    ReadFile   
+    ReadCFile   
     jc load_pe_fail
+;
     mov ax,es:[0]
     cmp ax,'EP'
     jne load_pe_fail
 ;
-    GetFilePos
     movzx ecx,cx
-    sub eax,ecx
-    SetFilePos
+    sub edx,ecx
 ;
     FreeMem
     call CreateLib
@@ -3582,6 +3585,7 @@ load_pe_fail:
 load_pe_done:
     pop edi
     pop esi
+    pop edx
     pop fs
     pop es
     pop ds

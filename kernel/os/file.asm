@@ -1366,7 +1366,16 @@ read_c_file       Proc far
 ;
     mov ds,bx
     mov al,ds:file_drive
+    test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+    jz rcfBuf
+;
+    CallFileSystem fs_read_file_proc
+    jmp rcfCheck
+
+rcfBuf:
     call read_file
+
+rcfCheck:    
     jc rcfDone
 ;
     add edx,eax
@@ -1654,7 +1663,16 @@ wcfFillLoop:
 
 wcfFillDo:
     mov al,ds:file_drive
+    test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+    jz wcfFillBuf
+;
+    CallFileSystem fs_write_file_proc
+    jmp wcfFillCheck
+
+wcfFillBuf:
     call write_file
+
+wcfFillCheck:
     mov eax,ecx
 ;
     pop ecx
@@ -1671,7 +1689,16 @@ wcfFillDo:
 
 wcfDo:
     mov al,ds:file_drive
+    test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+    jz wcfDoBuf
+;
+    CallFileSystem fs_write_file_proc
+    jmp wcfDoCheck
+
+wcfDoBuf:
     call write_file
+
+wcfDoCheck:
     jc wcfDone
 ;
     add edx,eax

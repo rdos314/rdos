@@ -36,6 +36,7 @@ INCLUDE int.def
 INCLUDE exec.def
 INCLUDE system.inc
 INCLUDE ..\fs.inc
+INCLUDE chandle.inc
 
 data    SEGMENT byte public 'DATA'
 
@@ -243,7 +244,7 @@ hook_load_exe   ENDP
 ;
 ;           DESCRIPTION:    Load executable file
 ;
-;           PARAMETERS:     BX          File handle
+;           PARAMETERS:     BX      C file handle
 ;                           DS:ESI  File name
 ;                           ES:EDI  Command line
 ;                           
@@ -481,8 +482,10 @@ load_process_default_drive:
     mov ax,ds
     mov es,ax
     movzx edi,di
-    xor cl,cl
-    OpenFile
+;
+    int 3
+    mov cx,O_RDONLY OR O_BINARY
+    OpenKernelFile
     jc load_process_fail
 ;
     xor esi,esi
