@@ -1035,10 +1035,8 @@ CreateProcessEvent Proc near
     mov es:event_size,ax
     mov es:event_code,EVENT_CREATE_PROCESS
 ;
-    mov bx,ds:lib_file_handle
-    GetFileInfo
-    mov word ptr es:[di].cpeFile,ax
-    mov word ptr es:[di].cpeFile+2,cx
+    movzx ebx,ds:lib_c_file_handle
+    mov es:[di].cpeFile,ebx
 ;       
     movzx ebx,ds:mod_handle
     DerefModuleHandle
@@ -1201,10 +1199,8 @@ LoadDllEvent Proc near
     mov es:event_size,ax
     mov es:event_code,EVENT_LOAD_DLL
 ;
-    mov bx,ds:lib_file_handle
-    GetFileInfo
-    mov word ptr es:[di].ldeFile,ax
-    mov word ptr es:[di].ldeFile+2,cx
+    movzx ebx,ds:lib_c_file_handle
+    mov es:[di].ldeFile,ebx
 ;       
     movzx ebx,ds:mod_handle
     DerefModuleHandle
@@ -1317,16 +1313,13 @@ create_lib_size_ok:
     mov es:lib_debug_obj,0
     mov es:lib_events,0
     mov es:lib_suppress,0
-    mov es:lib_file_handle,bx
+    mov es:lib_c_file_handle,bx
     mov es:lib_file_pos,edx
     mov es:lib_run_now,0
     mov es:lib_init_param,0
     InitSpinlock es:lib_spinlock
 ;
     mov es:mod_free_dll_proc,0
-;
-    mov es:mod_dupl_file_handle_proc,OFFSET dupl_file_handle_proc
-    mov es:mod_dupl_file_handle_proc+4,cs
 ;
     mov es:mod_get_proc_proc,OFFSET get_module_proc
     mov es:mod_get_proc_proc+4,cs
@@ -2834,7 +2827,7 @@ fdMod:
     call FreeImportedDlls
     mov edx,es:lib_base
     mov ecx,es:lib_size
-    mov bx,es:lib_file_handle
+    mov bx,es:lib_c_file_handle
     CloseCFile
 ;
     mov ax,system_data_sel
@@ -2903,7 +2896,7 @@ load_page_zero:
     jmp load_page_done
 
 load_page_from_file:
-    mov bx,es:lib_file_handle
+    mov bx,es:lib_c_file_handle
     mov eax,ebp
     sub eax,edi
     sub eax,[esi].o_va
@@ -3098,7 +3091,7 @@ CreateImage     Proc near
     mov bx,flat_data_sel
     mov ds,bx
 ;
-    mov bx,es:lib_file_handle
+    mov bx,es:lib_c_file_handle
     mov edx,es:lib_file_pos
     push edx
     push es
@@ -5475,32 +5468,6 @@ free_dll    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DuplFileHandle
-;
-;           DESCRIPTION:    Duplicate file handle for module
-;
-;       PARAMETERS:         BX          Lib sel
-;                           
-;           RETURNS:        BX          Duplicated handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dupl_file_handle_proc Proc far
-    push es
-    push ax
-;    
-    mov es,bx
-    mov ax,es:lib_file_handle
-    DuplFile
-;
-    pop ax   
-    pop es
-    ret
-dupl_file_handle_proc    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetModuleProc
 ;
 ;           DESCRIPTION:    Get module procedure
@@ -5898,7 +5865,7 @@ close_app       Proc far
 unload_no_tls:
     mov edx,es:lib_base
     mov ecx,es:lib_size
-    mov bx,es:lib_file_handle
+    mov bx,es:lib_c_file_handle
     CloseCFile
     add edx,ebp
     FreeLinear
