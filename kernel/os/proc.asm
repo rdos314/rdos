@@ -181,56 +181,6 @@ trap_create_process     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           TRAP_FORK_PROCESS
-;
-;           DESCRIPTION:    Handle ForkProcess hooks
-;
-;           PARAMETERS:     EAX         CR3 of source process
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-trap_fork_process     PROC near
-    sti
-    push cx
-    push si
-;    
-    call cs:clone_proc
-;
-    call init_process_mem
-    InitProcessApp
-;
-    mov ax,proc_data_sel
-    mov ds,ax
-    mov cl,ds:create_process_hooks
-    or cl,cl
-    je trap_fork_process_done
-;
-    mov bx,OFFSET create_process_arr
-
-trap_fork_process_loop:
-    push ds
-    push bx
-    push cx
-    call fword ptr [bx]
-    pop cx
-    pop bx
-    pop ds
-    add bx,8
-    dec cl
-    jnz trap_fork_process_loop
-
-trap_fork_process_done:
-    pop si
-    pop cx
-;
-    xor ebp,ebp
-    call trap_create_thread
-    ret
-trap_fork_process     ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           TRAP_INIT_TASKING
 ;
 ;           DESCRIPTION:    Handle init-tasking hooks
@@ -493,7 +443,10 @@ notify_process_exit       ENDP
 notify_process_forked_name  DB 'Notify Process Forked',0
 
 notify_process_forked       PROC far
-    call trap_fork_process
+    call cs:clone_proc
+    call init_process_mem
+    InitProcessApp
+    call trap_create_process
     retf32
 notify_process_forked       ENDP
     
