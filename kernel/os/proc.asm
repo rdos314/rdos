@@ -408,8 +408,8 @@ notify_thread_exit       ENDP
 notify_process_created_name  DB 'Notify Process Created',0
 
 notify_process_created       PROC far
-    InitProcessApp
     call trap_create_process
+    InitProcessApp
     retf32
 notify_process_created       ENDP
     
@@ -442,8 +442,8 @@ notify_process_forked_name  DB 'Notify Process Forked',0
 
 notify_process_forked       PROC far
     call cs:clone_proc
-    InitProcessApp
     call trap_create_process
+    InitProcessApp
     retf32
 notify_process_forked       ENDP
     
