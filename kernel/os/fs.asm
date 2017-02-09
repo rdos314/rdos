@@ -566,15 +566,15 @@ rename_file16   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           INIT_PROGRAM
+;           NAME:           INIT_PROCESS
 ;
-;           DESCRIPTION:    Init per-program data
+;           DESCRIPTION:    Init per-process data
 ;
 ;           PARAMETERS:         
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_program    PROC far
+init_process    PROC far
     push ds
     push es
     pushad
@@ -591,7 +591,7 @@ init_program    PROC far
     pop es
     pop ds
     retf32
-init_program    ENDP
+init_process    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -802,8 +802,8 @@ init    PROC far
     mov edi,OFFSET init_hook_thread
     HookInitTasking
 ;
-    mov edi,OFFSET init_program
-    HookStartProgram
+    mov edi,OFFSET init_process
+    HookCreateProcess
 ;
     mov eax,SIZE fs_process_seg
     mov bx,fs_process_sel
