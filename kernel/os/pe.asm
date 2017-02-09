@@ -5790,47 +5790,109 @@ get_resource_done:
     pop eax
     ret
 get_resource    Endp
-                       
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           OpenApp
+;           NAME:           notify_create
 ;
-;           DESCRIPTION:    open app callback
+;           DESCRIPTION:    Notify create process
+;
+;           PARAMETERS:     ES		App sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_app    Proc far
-    push ds
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_mem_blocks,0
-    mov ds:app_mod_sel,0
-    pop ds
+notify_create	Proc far
+    mov es:app_mem_blocks,0
+    mov es:app_mod_sel,0
     ret
-open_app    Endp
-                       
+notify_create	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           close_app
+;           NAME:           notify_start
 ;
-;           DESCRIPTION:    Close app
+;           DESCRIPTION:    Notify start boot process
+;
+;           PARAMETERS:     ES		App sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-close_app       Proc far
+notify_start	Proc far
+    ret
+notify_start	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_forked
+;
+;           DESCRIPTION:    Notify forked
+;
+;           PARAMETERS:     ES		App sel
+;                           DS		Parent app sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_forked	Proc far
+    ret
+notify_forked	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_exec
+;
+;           DESCRIPTION:    Notify exec
+;
+;           PARAMETERS:     ES		App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_exec	Proc far
+    ret
+notify_exec	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_spawn
+;
+;           DESCRIPTION:    Notify spawn
+;
+;           PARAMETERS:     ES		App sel
+;                           DS		Parent app sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_spawn	Proc far
+    ret
+notify_spawn	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_terminate
+;
+;           DESCRIPTION:    Notify terminate
+;
+;           PARAMETERS:     ES		App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_terminate	Proc far
+    push ds
+    push es
+    pushad
+;
     mov ax,system_data_sel
     mov ds,ax
     mov ebp,ds:flat_base
 ;    
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_mod_sel
+    mov ax,es:app_mod_sel
     or ax,ax
-    jz close_app_done
+    jz ntDone
 ;       
     mov es,ax
     ResetModule
@@ -5849,7 +5911,7 @@ close_app       Proc far
     mov esi,es:lib_header
     mov eax,[esi].peh_tls_va
     or eax,eax
-    jz unload_no_tls
+    jz ntNoTls
 ;
     add eax,edi
     mov edx,[eax].tls_index_va
@@ -5862,7 +5924,7 @@ close_app       Proc far
     sub ecx,[eax].tls_start_data_va
     FreeLinear
 
-unload_no_tls:
+ntNoTls:
     mov edx,es:lib_base
     mov ecx,es:lib_size
     mov bx,es:lib_c_file_handle
@@ -5873,7 +5935,7 @@ unload_no_tls:
 ;
     mov ax,fs
     or ax,ax
-    jz close_app_done
+    jz ntDone
 ;    
     mov edx,fs:pvStackUserBottom
     add edx,ebp
@@ -5885,9 +5947,24 @@ unload_no_tls:
     mov fs,ax
     FreeMem
 
-close_app_done:
+ntDone:
     ret
-close_app       Endp
+notify_terminate	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;           NAME:           App activity table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_activity_table:
+a0 DD OFFSET notify_create,  	SEG code   ; create process
+a1 DD OFFSET notify_start,  	SEG code   ; boot app
+a2 DD OFFSET notify_forked,  	SEG code   ; forked
+a3 DD OFFSET notify_exec,  	SEG code   ; exec
+a4 DD OFFSET notify_spawn,  	SEG code   ; spawn
+a5 DD OFFSET notify_terminate,  SEG code   ; terminate process
+
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6047,23 +6124,8 @@ init    PROC far
     mov edi,OFFSET load_pe
     HookLoadExe
 ;
-    mov edi,OFFSET open_app
-    HookOpenApp
-;
-    mov edi,OFFSET close_app
-    HookCloseApp
-;
-;    mov esi,OFFSET watcom_start_thread
-;    mov edi,OFFSET watcom_start_thread_name
-;    xor dx,dx
-;    mov ax,watcom_start_thread_nr
-;    RegisterUserGate32
-;
-;    mov esi,OFFSET watcom_end_thread
-;    mov edi,OFFSET watcom_end_thread_name
-;    xor dx,dx
-;    mov ax,watcom_end_thread_nr
-;    RegisterUserGate32
+    mov edi,OFFSET app_activity_table
+    HookAppActivity
 ;
     mov esi,OFFSET notify_pe_exception
     mov edi,OFFSET notify_pe_exception_name
