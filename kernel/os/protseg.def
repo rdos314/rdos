@@ -66,8 +66,7 @@ system_mem_start                EQU 0BE000000h
 
 long_section_alias      EQU 0BEE00000h
 
-handle_linear                   EQU 0BF000000h
-fixed_program_linear    EQU 0BF010000h
+handle_linear           EQU 0BF000000h
 long_process_linear     EQU 0BF400000h
 
 long_alloc_section      EQU 0BF7EFFE8h

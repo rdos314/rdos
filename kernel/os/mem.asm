@@ -70,7 +70,6 @@ small_section       section_typ <>
 
 system_alloc_base       DD ?
 process_alloc_base      DD ?
-program_alloc_base      DD ?
 fixed_vm_base       DD ?
 
 mem_seg ENDS
@@ -201,7 +200,6 @@ init_mem    PROC near
     mov ds:big_used_mem,0
     mov ds:small_used_mem,0
     mov ds:process_alloc_base,fixed_process_linear + SIZE process_seg
-    mov ds:program_alloc_base,fixed_program_linear
     mov ds:fixed_vm_base,fixed_vm_linear
 ;
     mov ax,cs
@@ -325,12 +323,6 @@ init_mem    PROC near
     mov ax,allocate_process_linear_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET allocate_program_linear
-    mov edi,OFFSET allocate_program_linear_name
-    xor cl,cl
-    mov ax,allocate_program_linear_nr
-    RegisterOsGate
-;
     mov esi,OFFSET allocate_system_linear
     mov edi,OFFSET allocate_system_linear_name
     xor cl,cl
@@ -347,12 +339,6 @@ init_mem    PROC near
     mov edi,OFFSET allocate_fixed_system_mem_name
     xor cl,cl
     mov ax,allocate_fixed_system_mem_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_fixed_program_mem
-    mov edi,OFFSET allocate_fixed_program_mem_name
-    xor cl,cl
-    mov ax,allocate_fixed_program_mem_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_thread_selector_page
@@ -561,39 +547,6 @@ ipmDone:
 init_process_mem    ENDP
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           INIT_PROGRAM_MEM
-;
-;           DESCRIPTION:    Init per-program memory
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public init_program_mem
-
-init_program_mem    PROC near
-    push ds
-    push eax
-    push edx
-    push di
-;
-    mov ax,long_mem_sel
-    mov ds,ax
-    mov ds:long_avail_mem,long_buf_size - long_buf_linear
-    mov ds:long_used_mem,0
-    mov ds:long_base,long_buf_linear
-    InitSection ds:long_mem_section
-;
-    pop di
-    pop edx
-    pop eax
-    pop ds
-    ret
-init_program_mem    ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -627,10 +580,6 @@ init_mem_sels   PROC near
     mov eax,SIZE local_mem_seg
     mov bx,local_mem_sel
     AllocateFixedProcessMem
-;
-    mov eax,SIZE long_mem_seg
-    mov bx,long_mem_sel
-    AllocateFixedProgramMem
 ;    
     mov ax,system_data_sel
     mov es,ax
@@ -2771,32 +2720,6 @@ allocate_process_linear ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           ALLOCATE_PROGRAM_LINEAR
-;
-;           DESCRIPTION:    Allocate fixed program linear
-;
-;           PARAMETERS:     EAX         Number of bytes
-;
-;           RETURNS:        EDX         Linear base address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_program_linear_name    DB 'Allocate Program Linear',0
-
-allocate_program_linear PROC far
-    push ds
-    mov dx,mem_sel
-    mov ds,dx
-    mov edx,ds:program_alloc_base
-    add ds:program_alloc_base,eax
-    pop ds
-    retf32
-allocate_program_linear ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           ALLOCATE_SYSTEM_LINEAR
 ;
 ;           DESCRIPTION:    Allocate fixed system memory
@@ -2887,39 +2810,6 @@ local_allocate_fixed_process_mem      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           Local_ALLOCATE_FIXED_PROGRAM_MEM
-;
-;           DESCRIPTION:    Allocate fixed program memory
-;
-;           PARAMETERS:         EAX         Number of bytes
-;                           BX          Selector
-;                           
-;           RETURNS:        ES          Selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public local_allocate_fixed_program_mem
-
-local_allocate_fixed_program_mem      PROC near
-    push ds
-    push ecx
-    push edx
-;
-    AllocateProgramLinear
-    mov ecx,eax
-    CreateDataSelector16
-    mov es,bx
-;
-    pop edx
-    pop ecx
-    pop ds
-    ret
-local_allocate_fixed_program_mem      ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           LOCAL_ALLOCATE_FIXED_SYSTEM_MEM
 ;
 ;           DESCRIPTION:    Allocate fixed system memory
@@ -2984,39 +2874,6 @@ allocate_fixed_process_mem      PROC far
     pop ds
     retf32
 allocate_fixed_process_mem      ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ALLOCATE_FIXED_PROGRAM_MEM
-;
-;           DESCRIPTION:    Allocate fixed program memory
-;
-;           PARAMETERS:     EAX         Number of bytes
-;                           BX          Selector
-;                           
-;           RETURNS:        ES          Selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_fixed_program_mem_name DB 'Allocate Fixed Program Mem',0
-
-allocate_fixed_program_mem      PROC far
-    push ds
-    push ecx
-    push edx
-;
-    AllocateProgramLinear
-    mov ecx,eax
-    CreateDataSelector16
-    mov es,bx
-;
-    pop edx
-    pop ecx
-    pop ds
-    retf32
-allocate_fixed_program_mem      ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

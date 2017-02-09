@@ -41,10 +41,8 @@ thread_data_seg STRUC
 create_thread_hooks         DB ?
 terminate_thread_hooks      DB ?
 create_process_hooks        DB ?
-start_program_hooks         DB ?
 init_tasking_hooks          DB ?
 
-start_program_arr       DD 2*32 DUP(?)
 create_process_arr      DD 2*32 DUP(?)
 create_thread_arr       DD 2*8 DUP(?)
 terminate_thread_arr    DD 2*8 DUP(?)
@@ -58,7 +56,6 @@ thread_data_seg ENDS
 code    SEGMENT byte public use16 'CODE'
 
     extrn init_process_mem:near
-    extrn init_program_mem:near
     extrn free_process_proc:word
     extrn free_handle_process:near
     extrn init_double_fault:near
@@ -139,52 +136,6 @@ trap_terminate_thread_done:
     ret
 trap_terminate_thread   ENDP
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TRAP_START_PROGRAM
-;
-;           DESCRIPTION:    Handle StartProgram hooks
-;
-;           PARAMETERS:         
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-trap_start_program     PROC near
-    push cx
-    push si
-;
-    call init_program_mem
-;    
-    mov ax,proc_data_sel
-    mov ds,ax
-    mov cl,ds:start_program_hooks
-    or cl,cl
-    je trap_start_program_done
-;    
-    mov bx,OFFSET start_program_arr
-
-trap_start_program_loop:
-    push ds
-    push bx
-    push cx
-    call fword ptr [bx]
-    pop cx
-    pop bx
-    pop ds
-    add bx,8
-    dec cl
-    jnz trap_start_program_loop
-
-trap_start_program_done:
-    pop si
-    pop cx
-    ret
-trap_start_program     ENDP
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -227,7 +178,6 @@ trap_create_process_done:
 ;
     xor ebp,ebp
     call trap_create_thread
-    call trap_start_program
     ret
 trap_create_process     ENDP
 
@@ -436,41 +386,6 @@ hook_create_process     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           HOOK_START_PROGRAM
-;
-;           DESCRIPTION:    Add StartProgram hook
-;
-;           PARAMETERS:     ES:EDI       Callback
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_start_program_name    DB 'Hook Start Program',0
-
-hook_start_program     PROC far
-    push ds
-    push ax
-    push bx
-    mov ax,proc_data_sel
-    mov ds,ax
-    mov al,ds:start_program_hooks
-    mov bl,al
-    xor bh,bh
-    shl bx,3
-    add bx,OFFSET start_program_arr
-    mov [bx],edi
-    mov [bx+4],es
-    inc al
-    mov ds:start_program_hooks,al
-    pop bx
-    pop ax
-    pop ds
-    retf32
-hook_start_program     ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           HOOK_INIT_TASKING
 ;
 ;           DESCRIPTION:    Add init-tasking hook
@@ -595,7 +510,6 @@ notify_start_program_name  DB 'Notify Start Program',0
 
 notify_start_program       PROC far
     call init_process_mem
-    call trap_start_program
     retf32
 notify_start_program       ENDP
     
@@ -846,7 +760,6 @@ init_thread     PROC near
     xor ax,ax
     mov ds:create_thread_hooks,al
     mov ds:terminate_thread_hooks,al
-    mov ds:start_program_hooks,al
     mov ds:create_process_hooks,al
     mov ds:init_tasking_hooks,al
 ;
@@ -896,12 +809,6 @@ init_thread     PROC near
     mov edi,OFFSET hook_create_process_name
     xor cl,cl
     mov ax,hook_create_process_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET hook_start_program
-    mov edi,OFFSET hook_start_program_name
-    xor cl,cl
-    mov ax,hook_start_program_nr
     RegisterOsGate
 ;
     mov esi,OFFSET hook_init_tasking

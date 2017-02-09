@@ -157,7 +157,6 @@ __C000                          EQU 28Bh
 
 chandle_data_sel    EQU 290h
 handle_data_sel     EQU 2A0h
-long_mem_sel        EQU 2A8h        
 
 sys_dir_sel                     EQU 2B0h
 sys_page_sel            EQU 2B8h
