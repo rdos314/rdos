@@ -1355,7 +1355,7 @@ init_device_loop:
 ;
     mov eax,SIZE env_proc_seg
     mov bx,env_proc_sel
-    AllocateFixedProgramMem
+    AllocateFixedProcessMem
 ;
     mov ax,cs
     mov ds,ax

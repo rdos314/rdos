@@ -807,7 +807,7 @@ init    PROC far
 ;
     mov eax,SIZE fs_process_seg
     mov bx,fs_process_sel
-    AllocateFixedProgramMem
+    AllocateFixedProcessMem
 ;       
     mov eax,SIZE fs_data_seg
     mov bx,fs_sys_data_sel

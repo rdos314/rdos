@@ -256,14 +256,14 @@ create_uuid16   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   INIT_PROGRAM
+;               NAME:                   INIT_PROCESS
 ;
-;               DESCRIPTION:    Init random program
+;               DESCRIPTION:    Init random process
 ;
 ;                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_program    PROC far
+init_process    PROC far
     push ds
     pushad
 ;
@@ -301,7 +301,7 @@ init_genrand_loop:
     popad
     pop ds
     retf32
-init_program    Endp
+init_process    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -323,14 +323,14 @@ init_random     PROC near
 ;
     mov bx,random_proc_sel
     mov eax,SIZE random_proc_seg
-    AllocateFixedProgramMem
+    AllocateFixedProcessMem
 ;
     mov ax,cs
     mov ds,ax
     mov es,ax
 ;
-    mov edi,OFFSET init_program
-    HookStartProgram
+    mov edi,OFFSET init_process
+    HookCreateProcess
 ;
     mov esi,OFFSET get_random
     mov edi,OFFSET get_random_name
