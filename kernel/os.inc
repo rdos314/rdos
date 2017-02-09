@@ -2974,19 +2974,6 @@ ResetDrive      MACRO
 
 ;;;;;;;;;;;; File system ;;;;;;;;;;;;
 
-;  IN   DS:ESI       Device read
-;  IN   ES:EDI       Device write
-;  IN   FS:EBX       Device name
-InstallDeviceFile  MACRO
-    OsGate install_device_file_nr
-                    ENDM
-
-;  IN   ES:EDI      FILENAME
-;  IO   AL              DRIVE IN / OUT
-CheckDeviceFile     MACRO
-    OsGate check_device_file_nr
-                    ENDM
-
 ;  IN  ES:EDI      INIT CALLBACK
 HookInitFileSystem      MACRO
     OsGate hook_init_file_system_nr
