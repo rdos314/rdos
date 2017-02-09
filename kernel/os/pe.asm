@@ -5948,6 +5948,9 @@ ntNoTls:
     FreeMem
 
 ntDone:
+    popad
+    pop es
+    pop ds
     ret
 notify_terminate	Endp
 
