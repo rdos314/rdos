@@ -151,9 +151,6 @@ trap_create_process     PROC near
     sti
     push cx
     push si
-;    
-    call init_process_mem
-    InitProcessApp
 ;
     mov ax,proc_data_sel
     mov ds,ax
@@ -245,7 +242,8 @@ trap_fork_process     ENDP
 trap_init_tasking       PROC near
     InitTrapGates
     InitSystemApp
-    call trap_create_process
+    NotifyProcessCreated
+;
     push cx
     mov ax,proc_data_sel
     mov ds,ax
@@ -461,6 +459,8 @@ notify_thread_exit       ENDP
 notify_process_created_name  DB 'Notify Process Created',0
 
 notify_process_created       PROC far
+    call init_process_mem
+    InitProcessApp
     call trap_create_process
     retf32
 notify_process_created       ENDP
