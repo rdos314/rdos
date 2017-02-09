@@ -95,7 +95,6 @@ debug_exc_break_nr                  = 92
 hook_create_thread_nr           = 93
 hook_create_process_nr          = 94
 hook_terminate_thread_nr        = 95
-hook_terminate_process_nr       = 96
 hook_init_tasking_nr            = 97
 hook_state_nr                           = 98
 

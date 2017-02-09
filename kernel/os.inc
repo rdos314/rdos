@@ -1372,11 +1372,6 @@ HookCreateProcess       MACRO
                     ENDM
 
 ;       ES:EDI       ADDRESS TILL CALLBACK
-HookTerminateProcess    MACRO
-    OsGate hook_terminate_process_nr
-                    ENDM
-
-;       ES:EDI       ADDRESS TILL CALLBACK
 HookStartProgram       MACRO
     OsGate hook_start_program_nr
                     ENDM

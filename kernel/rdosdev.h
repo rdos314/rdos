@@ -1482,10 +1482,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     OsGate_hook_create_process \
     parm [es edi];
 
-#pragma aux RdosHookTerminateProcess = \
-    OsGate_hook_terminate_process \
-    parm [es edi];
-
 #pragma aux RdosHookCreateThread = \
     OsGate_hook_create_thread \
     parm [es edi];

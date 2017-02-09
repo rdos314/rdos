@@ -41,7 +41,6 @@ thread_data_seg STRUC
 create_thread_hooks         DB ?
 terminate_thread_hooks      DB ?
 create_process_hooks        DB ?
-terminate_process_hooks     DB ?
 start_program_hooks         DB ?
 end_program_hooks           DB ?
 init_tasking_hooks          DB ?
@@ -49,7 +48,6 @@ init_tasking_hooks          DB ?
 start_program_arr       DD 2*32 DUP(?)
 end_program_arr         DD 2*32 DUP(?)
 create_process_arr      DD 2*32 DUP(?)
-terminate_process_arr   DD 2*32 DUP(?)
 create_thread_arr       DD 2*8 DUP(?)
 terminate_thread_arr    DD 2*8 DUP(?)
 init_tasking_arr        DD 2*64 DUP(?)
@@ -324,43 +322,6 @@ trap_end_program_done:
     ret
 trap_end_program  ENDP
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TRAP_TERMINATE_PROCESS
-;
-;           DESCRIPTION:    Handle TerminateProcess hooks
-;
-;           PARAMETERS:         
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-trap_terminate_process  PROC near
-    call trap_end_program
-    call cs:free_process_proc
-    push cx
-    mov ax,proc_data_sel
-    mov ds,ax
-    mov cl,ds:terminate_process_hooks
-    or cl,cl
-    je trap_terminate_process_done
-    mov bx,OFFSET terminate_process_arr
-trap_terminate_process_loop:
-    push ds
-    push bx
-    push cx
-    call fword ptr [bx]
-    pop cx
-    pop bx
-    pop ds
-    add bx,8
-    dec cl
-    jnz trap_terminate_process_loop
-trap_terminate_process_done:
-    pop cx
-    ret
-trap_terminate_process  ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -513,42 +474,6 @@ hook_create_process     PROC far
     pop ds
     retf32
 hook_create_process     ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           HOOK_TERMINATE_PROCESS
-;
-;           DESCRIPTION:    Add TerminateProcess hook
-;
-;           PARAMETERS:         ES:EDI       Callback
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_terminate_process_name     DB 'Hook Terminate Process',0
-
-hook_terminate_process  PROC far
-    push ds
-    push ax
-    push bx
-    mov ax,proc_data_sel
-    mov ds,ax
-    mov al,ds:terminate_process_hooks
-    mov bl,al
-    xor bh,bh
-    shl bx,3
-    add bx,OFFSET terminate_process_arr
-    mov [bx],edi
-    mov [bx+4],es
-    inc al
-    mov ds:terminate_process_hooks,al
-    pop bx
-    pop ax
-    pop ds
-    retf32
-hook_terminate_process  ENDP
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -714,7 +639,6 @@ notify_process_created       ENDP
 notify_process_exit_name  DB 'Notify Process Exit',0
 
 notify_process_exit       PROC far
-    call trap_terminate_process
     call free_handle_process
     retf32
 notify_process_exit       ENDP
@@ -1002,7 +926,6 @@ init_thread     PROC near
     mov ds:start_program_hooks,al
     mov ds:end_program_hooks,al
     mov ds:create_process_hooks,al
-    mov ds:terminate_process_hooks,al
     mov ds:init_tasking_hooks,al
 ;
     mov eax,OFFSET terminate_user_end - OFFSET terminate_user_start
@@ -1051,12 +974,6 @@ init_thread     PROC near
     mov edi,OFFSET hook_create_process_name
     xor cl,cl
     mov ax,hook_create_process_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET hook_terminate_process
-    mov edi,OFFSET hook_terminate_process_name
-    xor cl,cl
-    mov ax,hook_terminate_process_nr
     RegisterOsGate
 ;
     mov esi,OFFSET hook_start_program
