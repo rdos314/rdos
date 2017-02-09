@@ -1267,13 +1267,13 @@ delete_handle   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
 ;
-;       NAME:       InitProgram
+;       NAME:       InitProcess
 ;
-;       DESCRIPTION:    Init program
+;       DESCRIPTION:    Init process
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_program    Proc far
+init_process    Proc far
     push ds
     push es
     pushad
@@ -1310,7 +1310,7 @@ init_proc_var_loop:
     pop es
     pop ds
     retf32
-init_program    Endp
+init_process    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1361,8 +1361,8 @@ init_device_loop:
     mov ds,ax
     mov es,ax
 ;
-    mov edi,OFFSET init_program
-    HookStartProgram
+    mov edi,OFFSET init_process
+    HookCreateProcess
 ;
     mov edi,OFFSET delete_handle
     mov ax,ENV_HANDLE
