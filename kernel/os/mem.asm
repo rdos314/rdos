@@ -485,72 +485,6 @@ init_mem    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           INIT_PROCESS_MEM
-;
-;           DESCRIPTION:    Init per-process memory
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public init_process_mem
-
-init_process_mem    PROC near
-    push ds
-    push eax
-    push edx
-    push di
-;
-    mov ax,local_mem_sel
-    mov ds,ax
-    mov ds:local_big_avail_mem,flat_size - local_page_linear
-    mov ds:local_big_used_mem,0
-    mov ds:local_big_base,local_page_linear
-    InitSection ds:local_mem_section
-    InitSection ds:vm_mem_section
-;
-    mov edx,vm_linear
-    xor eax,eax
-    xor ebx,ebx
-    mov cx,0Fh
-
-init_vm_linear_loop:
-    SetPageEntry
-    add edx,1000h
-    loop init_vm_linear_loop
-;
-    mov ax,vm_linear_sel
-    mov ds,ax
-    xor bx,bx
-    mov dx,8
-    mov [bx].vmf_next,dx
-    mov [bx].vms_next,dx
-    mov [bx].vms_prev,dx
-    mov bx,dx
-    mov dx,0EFF8h
-    mov [bx].vmf_prev,0
-    mov [bx].vmf_next,0
-    mov [bx].vms_prev,0
-    mov [bx].vms_next,dx
-;
-    mov ax,local_mem_sel
-    mov ds,ax
-    mov ds:vm_avail_mem,dx
-    mov ds:vm_used_mem,0
-
-ipmDone:
-    pop di
-    pop edx
-    pop eax
-    pop ds
-    ret
-init_process_mem    ENDP
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           INIT_MEM_SELS
 ;
 ;           DESCRIPTION:    Init selectors
@@ -3903,6 +3837,51 @@ write_thread64   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_create   Proc far
+    push ds
+    push es
+    pushad
+;
+    mov ax,local_mem_sel
+    mov ds,ax
+    mov ds:local_big_avail_mem,flat_size - local_page_linear
+    mov ds:local_big_used_mem,0
+    mov ds:local_big_base,local_page_linear
+    InitSection ds:local_mem_section
+    InitSection ds:vm_mem_section
+;
+    mov edx,vm_linear
+    xor eax,eax
+    xor ebx,ebx
+    mov cx,0Fh
+
+init_vm_linear_loop:
+    SetPageEntry
+    add edx,1000h
+    loop init_vm_linear_loop
+;
+    mov ax,vm_linear_sel
+    mov ds,ax
+    xor bx,bx
+    mov dx,8
+    mov [bx].vmf_next,dx
+    mov [bx].vms_next,dx
+    mov [bx].vms_prev,dx
+    mov bx,dx
+    mov dx,0EFF8h
+    mov [bx].vmf_prev,0
+    mov [bx].vmf_next,0
+    mov [bx].vms_prev,0
+    mov [bx].vms_next,dx
+;
+    mov ax,local_mem_sel
+    mov ds,ax
+    mov ds:vm_avail_mem,dx
+    mov ds:vm_used_mem,0
+
+ipmDone:
+    popad
+    pop es
+    pop ds
     retf32
 notify_create   Endp
 

@@ -564,7 +564,6 @@ start_long_exe_nr           = 493
 read_thread64_nr            = 494
 write_thread64_nr           = 495
 
-notify_start_program_nr     = 500
 notify_end_program_nr       = 501
 
 allocate_long_buf_nr        = 502

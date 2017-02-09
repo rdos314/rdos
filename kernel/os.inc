@@ -560,10 +560,6 @@ NotifyProcessForked MACRO
     OsGate notify_process_forked_nr
                     ENDM
 
-NotifyStartProgram MACRO
-    OsGate notify_start_program_nr
-                    ENDM
-
 NotifyEndProgram MACRO
     OsGate notify_end_program_nr
                     ENDM

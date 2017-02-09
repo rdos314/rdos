@@ -1183,7 +1183,6 @@ eaAppClosed:
     mov es,ax
 ;
     ResetProcess
-    NotifyStartProgram
     retf32
 exec_app    ENDP
     

@@ -55,7 +55,6 @@ thread_data_seg ENDS
 
 code    SEGMENT byte public use16 'CODE'
 
-    extrn init_process_mem:near
     extrn free_process_proc:word
     extrn free_handle_process:near
     extrn init_double_fault:near
@@ -409,7 +408,6 @@ notify_thread_exit       ENDP
 notify_process_created_name  DB 'Notify Process Created',0
 
 notify_process_created       PROC far
-    call init_process_mem
     InitProcessApp
     call trap_create_process
     retf32
@@ -444,27 +442,10 @@ notify_process_forked_name  DB 'Notify Process Forked',0
 
 notify_process_forked       PROC far
     call cs:clone_proc
-    call init_process_mem
     InitProcessApp
     call trap_create_process
     retf32
 notify_process_forked       ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           NotifyStartProgram
-;
-;           DESCRIPTION:    Notify program started
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_start_program_name  DB 'Notify Start Program',0
-
-notify_start_program       PROC far
-    call init_process_mem
-    retf32
-notify_start_program       ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -798,12 +779,6 @@ init_thread     PROC near
     mov edi,OFFSET notify_process_forked_name
     xor cl,cl
     mov ax,notify_process_forked_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET notify_start_program
-    mov edi,OFFSET notify_start_program_name
-    xor cl,cl
-    mov ax,notify_start_program_nr
     RegisterOsGate
 ;
     mov esi,OFFSET notify_end_program
