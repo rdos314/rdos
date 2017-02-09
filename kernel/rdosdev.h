@@ -643,9 +643,6 @@ void RdosHookCreateThread(__rdos_hook_callback *callb_proc);
 void RdosHookTerminateThread(__rdos_hook_callback *callb_proc);
 void RdosHookInitPci(__rdos_hook_callback *callb_proc);
 
-void RdosHookOpenApp(__rdos_hook_callback *callb_proc);
-void RdosHookCloseApp(__rdos_hook_callback *callb_proc);
-
 void RdosHookEnableFocus(__rdos_hook_callback *callb_proc);
 
 void RdosHookState(__rdos_hook_state_callback *callb_proc);
