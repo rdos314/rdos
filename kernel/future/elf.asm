@@ -1239,12 +1239,6 @@ init	PROC far
 	mov edi,OFFSET load_elf
 	HookLoadExe
 ;
-	mov edi,OFFSET open_app
-	HookOpenApp
-;
-	mov edi,OFFSET close_app
-	HookCloseApp
-;
 	popa
 	pop es
 	pop ds

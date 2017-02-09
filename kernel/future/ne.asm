@@ -1945,12 +1945,6 @@ init	PROC far
 	mov edi,OFFSET load_ne
 	HookLoadDosExe
 ;
-	mov edi,OFFSET open_app
-	HookOpenApp
-;
-	mov edi,OFFSET close_app
-	HookCloseApp
-;
 	mov si,OFFSET demand_load
 	mov di,OFFSET demand_load_name
 	xor cl,cl

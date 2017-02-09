@@ -1314,12 +1314,6 @@ init    PROC far
     mov ax,get_psp_sel_nr
     RegisterBimodalUserGate
 ;
-    mov edi,OFFSET open_app
-    HookOpenApp
-;
-    mov edi,OFFSET close_app
-    HookCloseApp
-;
     mov edi,OFFSET init_process
     HookCreateProcess
 ;

@@ -38,16 +38,6 @@ INCLUDE ..\handle.inc
 INCLUDE module.def
 include ..\wait.inc
 
-app_data_seg    STRUC
-
-open_app_hooks      DB ?
-close_app_hooks     DB ?
-
-open_app_arr        DD 2*8 DUP(?)
-close_app_arr       DD 2*8 DUP(?)
-
-app_data_seg    ENDS
-
 
 module_handle_seg           STRUC
 
@@ -177,18 +167,6 @@ init_app    PROC near
     mov edi,OFFSET exec_app_name
     xor cl,cl
     mov ax,exec_app_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET hook_open_app
-    mov edi,OFFSET hook_open_app_name
-    xor cl,cl
-    mov ax,hook_open_app_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET hook_close_app
-    mov edi,OFFSET hook_close_app_name
-    xor cl,cl
-    mov ax,hook_close_app_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_module
@@ -368,13 +346,6 @@ init_app    PROC near
     xor dx,dx
     mov ax,continue_debug_event_nr
     RegisterBimodalUserGate
-;
-    mov bx,app_data_sel
-    mov eax,SIZE app_data_seg
-    AllocateFixedSystemMem
-    mov ds,bx
-    mov ds:open_app_hooks,0
-    mov ds:close_app_hooks,0
 ;
     popa
     pop es
@@ -648,75 +619,6 @@ app_notify_terminate_done:
     pop fs
     retf32
 app_notify_terminate   Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           HookOpenApp
-;
-;           DESCRIPTION:    Register callback for open app
-;
-;           PARAMETERS:     ES:EDI       CALLBACK ADDRESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_open_app_name      DB 'Hook Open App',0
-
-hook_open_app   PROC far
-    push ds
-    push ax
-    push bx
-    mov ax,app_data_sel
-    mov ds,ax
-    mov al,ds:open_app_hooks
-    mov bl,al
-    xor bh,bh
-    shl bx,3
-    add bx,OFFSET open_app_arr
-    mov [bx],edi
-    mov [bx+4],es
-    inc al
-    mov ds:open_app_hooks,al
-    pop bx
-    pop ax
-    pop ds
-    retf32
-hook_open_app   ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           HookCloseApp
-;
-;           DESCRIPTION:    Register callback for close app
-;
-;           PARAMETERS:     ES:EDI       CALLBACK ADDRESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_close_app_name     DB 'Hook Close App',0
-
-hook_close_app  PROC far
-    push ds
-    push ax
-    push bx
-    mov ax,app_data_sel
-    mov ds,ax
-    mov al,ds:close_app_hooks
-    mov bl,al
-    xor bh,bh
-    shl bx,3
-    add bx,OFFSET close_app_arr
-    mov [bx],edi
-    mov [bx+4],es
-    inc al
-    mov ds:close_app_hooks,al
-    pop bx
-    pop ax
-    pop ds
-    retf32
-hook_close_app  ENDP
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -785,27 +687,6 @@ run_open_hooks  Proc near
     mov ds:app_psp_mode,0
     mov ds:app_dta_mode,0
 ;
-    mov ax,app_data_sel
-    mov ds,ax
-    mov cl,ds:open_app_hooks
-    or cl,cl
-    je trap_open_app_done
-;
-    mov bx,OFFSET open_app_arr
-
-trap_open_app_loop:
-    push ds
-    push bx
-    push cx
-    call fword ptr [bx]
-    pop cx
-    pop bx
-    pop ds
-    add bx,8
-    dec cl
-    jnz trap_open_app_loop
-
-trap_open_app_done:
     pop cx
     pop ax
     pop ds
@@ -882,27 +763,6 @@ epCleanRootApp:
     call fword ptr ds:app_close_proc
 
 epCloseHandled:
-    mov ax,app_data_sel
-    mov ds,ax
-    mov cl,ds:close_app_hooks
-    or cl,cl
-    je epTrapCloseDone
-;
-    mov bx,OFFSET close_app_arr
-
-epTrapCloseLoop:
-    push ds
-    push bx
-    push cx
-    call fword ptr [bx]
-    pop cx
-    pop bx
-    pop ds
-    add bx,8
-    dec cl
-    jnz epTrapCloseLoop
-
-epTrapCloseDone:
     xor ax,ax
     mov ds,ax
     mov es,ax
@@ -980,27 +840,6 @@ close_app       PROC far
     call fword ptr ds:app_close_proc
 
 close_proc_handled:
-    mov ax,app_data_sel
-    mov ds,ax
-    mov cl,ds:close_app_hooks
-    or cl,cl
-    je trap_close_app_done
-;
-    mov bx,OFFSET close_app_arr
-
-trap_close_app_loop:
-    push ds
-    push bx
-    push cx
-    call fword ptr [bx]
-    pop cx
-    pop bx
-    pop ds
-    add bx,8
-    dec cl
-    jnz trap_close_app_loop
-
-trap_close_app_done:
     xor ax,ax
     mov ds,ax
     mov es,ax

@@ -152,8 +152,6 @@ __B000                          EQU 263h
 __B800                          EQU 26Bh
 __F000                          EQU 273h
 
-app_data_sel            EQU 278h
-
 __A000                          EQU 283h
 __C000                          EQU 28Bh
 

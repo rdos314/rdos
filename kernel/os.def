@@ -178,8 +178,6 @@ enter_dos32_nr                          = 172
 register_dos_device_nr          = 173
 check_dos_device_nr                 = 174
 
-hook_open_app_nr                        = 177
-hook_close_app_nr                       = 178
 hook_load_exe_nr                        = 179
 open_app_nr                                     = 180
 close_app_nr                            = 181

@@ -2010,16 +2010,6 @@ AppNotifyTerminate     MACRO
     OsGate app_notify_terminate_nr
                     ENDM
 
-;       ES:EDI       ADDRESS TO CALLBACK
-HookOpenApp     MACRO
-    OsGate hook_open_app_nr
-                    ENDM
-
-;       ES:EDI       ADDRESS TO CALLBACK
-HookCloseApp    MACRO
-    OsGate hook_close_app_nr
-                    ENDM
-
 ;       ES:EDI       HANDLER ADDRESS
 HookLoadExe     MACRO
     OsGate hook_load_exe_nr

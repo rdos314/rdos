@@ -1836,62 +1836,6 @@ get_resource_done:
 	retf32
 get_resource	Endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			open_app
-;
-;		DESCRIPTION:    Open app hook
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_app	Proc far
-	retf32
-open_app	Endp
-                                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			close_app
-;
-;		DESCRIPTION:   	Close app
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_app	Proc far
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-	mov ax,ds:app_mod_sel
-	or ax,ax
-	jz close_app_done
-;
-    mov es,ax
-    ResetModule
-;
-	xor ax,ax
-	mov es,ax
-	mov fs,ax
-	mov gs,ax
-;
-    mov bx,es:mod_list
-    or bx,bx
-    jz close_app_done	
-
-unload_loop:
-    mov es,bx
-	push ds
-	call free_dll
-	pop ds
-;
-    mov bx,es:mod_next	
-	or bx,bx
-	jnz unload_loop
-
-close_app_done:
-	retf32
-close_app	Endp
-
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1950,12 +1894,6 @@ init	PROC far
 ;
 	mov di,OFFSET load_ne
 	HookLoadDosExe
-;
-	mov edi,OFFSET open_app
-	HookOpenApp
-;
-	mov edi,OFFSET close_app
-	HookCloseApp
 ;
 	mov esi,OFFSET demand_load
 	mov edi,OFFSET demand_load_name
