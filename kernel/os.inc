@@ -898,12 +898,6 @@ AllocateFixedProcessMem MACRO
     OsGate allocate_fixed_process_mem_nr
                     ENDM
 
-;       EAX         ANTAL BYTES
-;       BX          SELECTOR IN
-;       ES          SELECTOR UT
-AllocateFixedProgramMem MACRO
-    OsGate allocate_fixed_program_mem_nr
-                    ENDM
 
 ;       EAX         ANTAL BYTES
 ;       BX          SELECTOR IN
@@ -916,12 +910,6 @@ AllocateFixedSystemMem  MACRO
 ;       EDX         LINJŽR ADDRESS
 AllocateProcessLinear   MACRO
     OsGate allocate_process_linear_nr
-                    ENDM
-
-;       EAX         ANTAL BYTES
-;       EDX         LINJŽR ADDRESS
-AllocateProgramLinear   MACRO
-    OsGate allocate_program_linear_nr
                     ENDM
 
 ;       EAX         ANTAL BYTES
@@ -1369,11 +1357,6 @@ HookInitTasking MACRO
 ;       ES:EDI       ADDRESS TILL CALLBACK
 HookCreateProcess       MACRO
     OsGate hook_create_process_nr
-                    ENDM
-
-;       ES:EDI       ADDRESS TILL CALLBACK
-HookStartProgram       MACRO
-    OsGate hook_start_program_nr
                     ENDM
 
 ;       ES:EDI       ADDRESS TILL CALLBACK
