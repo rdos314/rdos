@@ -1377,11 +1377,6 @@ HookStartProgram       MACRO
                     ENDM
 
 ;       ES:EDI       ADDRESS TILL CALLBACK
-HookEndProgram    MACRO
-    OsGate hook_end_program_nr
-                    ENDM
-
-;       ES:EDI       ADDRESS TILL CALLBACK
 HookCreateThread    MACRO
     OsGate hook_create_thread_nr
                     ENDM

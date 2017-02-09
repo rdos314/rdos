@@ -1487,14 +1487,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     OsGate_hook_terminate_thread \
     parm [es edi];
 
-#pragma aux RdosHookOpenApp = \
-    OsGate_hook_open_app \
-    parm [es edi];
-
-#pragma aux RdosHookCloseApp = \
-    OsGate_hook_close_app \
-    parm [es edi];
-
 #pragma aux RdosHookEnableFocus = \
     OsGate_hook_enable_focus \
     parm [es edi];

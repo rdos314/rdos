@@ -42,11 +42,9 @@ create_thread_hooks         DB ?
 terminate_thread_hooks      DB ?
 create_process_hooks        DB ?
 start_program_hooks         DB ?
-end_program_hooks           DB ?
 init_tasking_hooks          DB ?
 
 start_program_arr       DD 2*32 DUP(?)
-end_program_arr         DD 2*32 DUP(?)
 create_process_arr      DD 2*32 DUP(?)
 create_thread_arr       DD 2*8 DUP(?)
 terminate_thread_arr    DD 2*8 DUP(?)
@@ -286,46 +284,6 @@ trap_fork_process     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           TRAP_END_PROGRAM
-;
-;           DESCRIPTION:    Handle EndProgram hooks
-;
-;           PARAMETERS:         
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-trap_end_program  PROC near
-    push cx
-    mov ax,proc_data_sel
-    mov ds,ax
-    mov cl,ds:end_program_hooks
-    or cl,cl
-    je trap_end_program_done
-;
-    mov bx,OFFSET end_program_arr
-
-trap_end_program_loop:
-    push ds
-    push bx
-    push cx
-    call fword ptr [bx]
-    pop cx
-    pop bx
-    pop ds
-    add bx,8
-    dec cl
-    jnz trap_end_program_loop
-
-trap_end_program_done:
-    ExitProcessApp
-    pop cx
-    ret
-trap_end_program  ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           TRAP_INIT_TASKING
 ;
 ;           DESCRIPTION:    Handle init-tasking hooks
@@ -513,41 +471,6 @@ hook_start_program     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           HOOK_END_PROGRAM
-;
-;           DESCRIPTION:    Add EndProgram hook
-;
-;           PARAMETERS:         ES:EDI       Callback
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_end_program_name     DB 'Hook End Program',0
-
-hook_end_program  PROC far
-    push ds
-    push ax
-    push bx
-    mov ax,proc_data_sel
-    mov ds,ax
-    mov al,ds:end_program_hooks
-    mov bl,al
-    xor bh,bh
-    shl bx,3
-    add bx,OFFSET end_program_arr
-    mov [bx],edi
-    mov [bx+4],es
-    inc al
-    mov ds:end_program_hooks,al
-    pop bx
-    pop ax
-    pop ds
-    retf32
-hook_end_program  ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           HOOK_INIT_TASKING
 ;
 ;           DESCRIPTION:    Add init-tasking hook
@@ -689,7 +612,7 @@ notify_end_program_name  DB 'Notify End Program',0
 
 notify_end_program       PROC far
     call free_handle_process
-    call trap_end_program
+    ExitProcessApp
     retf32
 notify_end_program       ENDP
     
@@ -924,7 +847,6 @@ init_thread     PROC near
     mov ds:create_thread_hooks,al
     mov ds:terminate_thread_hooks,al
     mov ds:start_program_hooks,al
-    mov ds:end_program_hooks,al
     mov ds:create_process_hooks,al
     mov ds:init_tasking_hooks,al
 ;
@@ -980,12 +902,6 @@ init_thread     PROC near
     mov edi,OFFSET hook_start_program_name
     xor cl,cl
     mov ax,hook_start_program_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET hook_end_program
-    mov edi,OFFSET hook_end_program_name
-    xor cl,cl
-    mov ax,hook_end_program_nr
     RegisterOsGate
 ;
     mov esi,OFFSET hook_init_tasking
