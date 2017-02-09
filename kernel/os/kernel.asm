@@ -63,6 +63,7 @@ ENDIF
     extrn init_paging_gates:near
     extrn init_page_table:near
     extrn init_mem:near
+    extrn init_mem_activity:near
     extrn init_gdt:near
     extrn init_idt:near
     extrn init_thread:near
@@ -952,6 +953,7 @@ prot_init:
     call init_tsc
     call init_thread
     call init_app_activity
+    call init_mem_activity
     call init_handle
     call init_int
     call init_trap_vectors
