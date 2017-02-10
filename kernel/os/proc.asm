@@ -56,7 +56,6 @@ thread_data_seg ENDS
 code    SEGMENT byte public use16 'CODE'
 
     extrn free_process_proc:word
-    extrn free_handle_process:near
     extrn init_double_fault:near
     extrn set_page_entry_proc:word
 
@@ -417,7 +416,6 @@ notify_process_created       ENDP
 notify_process_exit_name  DB 'Notify Process Exit',0
 
 notify_process_exit       PROC far
-    call free_handle_process
     retf32
 notify_process_exit       ENDP
     
@@ -450,7 +448,6 @@ notify_process_forked       ENDP
 notify_end_program_name  DB 'Notify End Program',0
 
 notify_end_program       PROC far
-    call free_handle_process
     ExitProcessApp
     retf32
 notify_end_program       ENDP

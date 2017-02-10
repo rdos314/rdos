@@ -136,6 +136,55 @@ init_handle_loop:
     ret
 alloc_handle_data    Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FREE_HANDLE_PROCESS
+;
+;           DESCRIPTION:    Free per-process data
+;
+;           PARAMETERS:     ES App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_handle_data     PROC near
+    push ds
+    push es
+    pushad
+;
+    mov ds,es:app_handle_sel
+    mov es,es:app_handle_mem_sel
+;
+    xor bx,bx
+    mov di,OFFSET handle_arr
+    mov cx,MAX_HANDLES
+
+free_handle_loop:
+    mov si,[di]
+    cmp bx,es:[si].hh_handle
+    jne free_handle_next
+;
+    call delete_handle
+
+free_handle_next:
+    inc bx
+    add di,2
+    loop free_handle_loop
+;
+    FreeMem
+    mov ax,ds
+    mov es,ax
+    xor ax,ax
+    mov ds,ax
+    FreeMem
+;
+    popad
+    pop es
+    pop ds
+    ret
+free_handle_data     Endp
+
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -187,15 +236,6 @@ notify_start    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_forked   Proc far
-    push ax
-;
-    mov ax,ds:app_handle_sel
-    mov es:app_handle_sel,ax
-;
-    mov ax,ds:app_handle_mem_sel
-    mov es:app_handle_mem_sel,ax
-;
-    pop ax
     retf32
 notify_forked   Endp
 
@@ -211,12 +251,12 @@ notify_forked   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_exec     Proc far
-    pushad
+    call free_handle_data
 ;
+    pushad
     call alloc_handle_data
     mov es:app_handle_sel,ax
     mov es:app_handle_mem_sel,dx
-;
     popad
     retf32
 notify_exec     Endp
@@ -249,6 +289,7 @@ notify_spawn    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_terminate        Proc far
+    call free_handle_data
     retf32
 notify_terminate        Endp
 
@@ -870,60 +911,6 @@ delete_handle_done:
     pop ds
     ret
 delete_handle   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FREE_PROCESS
-;
-;           DESCRIPTION:    Free per-process data
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public free_handle_process
-
-free_handle_process     PROC near
-    push ds
-    push es
-    pushad
-;
-    GetThread
-    mov ds,ax    
-    mov ds,ds:p_app_sel
-    mov es,ds:app_handle_mem_sel
-    mov ds,ds:app_handle_sel
-;
-    xor bx,bx
-    mov di,OFFSET handle_arr
-    mov cx,MAX_HANDLES
-
-free_handle_loop:
-    mov si,[di]
-    cmp bx,es:[si].hh_handle
-    jne free_handle_next
-;
-    call delete_handle
-
-free_handle_next:
-    inc bx
-    add di,2
-    loop free_handle_loop
-;
-    FreeMem
-    mov ax,ds
-    mov es,ax
-    xor ax,ax
-    mov ds,ax
-    FreeMem
-;
-    popad
-    pop es
-    pop ds
-    ret
-free_handle_process     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
