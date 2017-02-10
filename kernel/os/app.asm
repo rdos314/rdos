@@ -1050,12 +1050,6 @@ clone_app    PROC far
     mov es:app_mem_blocks,0
     mov es:app_exe_name,0
 ;
-    mov ax,ds:app_handle_sel
-    mov es:app_handle_sel,ax
-;
-    mov ax,ds:app_handle_mem_sel
-    mov es:app_handle_mem_sel,ax
-;
     popad
     pop fs
     pop es
@@ -1174,10 +1168,6 @@ eaAppClosed:
     mov es:app_context,0
     mov es:app_bitness,0
     mov es:app_key,0
-;
-    CreateAppHandle
-    mov es:app_handle_sel,ax
-    mov es:app_handle_mem_sel,dx    
 ;
     xor ax,ax
     mov es,ax

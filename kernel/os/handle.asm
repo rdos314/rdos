@@ -72,6 +72,70 @@ code    SEGMENT byte public 'CODE'
     
     assume cs:code
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           alloc_handle_data
+;
+;           DESCRIPTION:    Allocate handle struct
+;
+;           RETURNS:        AX          Handle sel
+;                           DX          Handle mem sel    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+alloc_handle_data    PROC near
+    push es
+    push bx
+    push cx
+    push si
+    push di
+;    
+    mov eax,SIZE handle_seg
+    AllocateSmallGlobalMem
+;
+    InitSection es:handle_section
+;
+    mov cx,MAX_HANDLES
+    mov di,2 * MAX_HANDLES + OFFSET handle_arr
+    mov ax,0FFFEh
+
+init_handle_loop:
+    sub di,2
+    mov es:[di],ax
+    mov ax,di
+    loop init_handle_loop
+;
+    mov es:handle_list,di
+    push es
+;
+    mov eax,10000h
+    AllocateGlobalMem
+;    
+    xor bx,bx
+    mov dx,8
+    mov es:[bx].hf_next,dx
+    mov es:[bx].hs_next,dx
+    mov es:[bx].hs_prev,dx
+    mov bx,dx
+    mov dx,0FFF8h
+    mov es:[bx].hf_prev,0
+    mov es:[bx].hf_next,0
+    mov es:[bx].hs_prev,0
+    mov es:[bx].hs_next,dx
+;
+    mov dx,es
+    pop ax    
+;
+    pop di
+    pop si
+    pop cx
+    pop bx
+    pop es
+    ret
+alloc_handle_data    Endp
+
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -85,6 +149,13 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_create   Proc far
+    pushad
+;
+    call alloc_handle_data
+    mov es:app_handle_sel,ax
+    mov es:app_handle_mem_sel,dx
+;
+    popad
     retf32
 notify_create   Endp
 
@@ -116,6 +187,15 @@ notify_start    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_forked   Proc far
+    push ax
+;
+    mov ax,ds:app_handle_sel
+    mov es:app_handle_sel,ax
+;
+    mov ax,ds:app_handle_mem_sel
+    mov es:app_handle_mem_sel,ax
+;
+    pop ax
     retf32
 notify_forked   Endp
 
@@ -131,6 +211,13 @@ notify_forked   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_exec     Proc far
+    pushad
+;
+    call alloc_handle_data
+    mov es:app_handle_sel,ax
+    mov es:app_handle_mem_sel,dx
+;
+    popad
     retf32
 notify_exec     Endp
 
@@ -603,72 +690,6 @@ deref_handle    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           INIT_PROGRAM
-;
-;           DESCRIPTION:    Init per-program data
-;
-;           RETURNS:        AX          Handle sel
-;                           DX          Handle mem sel    
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_app_handle_name  DB 'Create App Handle', 0
-
-create_app_handle    PROC far
-    push es
-    push bx
-    push cx
-    push si
-    push di
-;    
-    mov eax,SIZE handle_seg
-    AllocateSmallGlobalMem
-;
-    InitSection es:handle_section
-;
-    mov cx,MAX_HANDLES
-    mov di,2 * MAX_HANDLES + OFFSET handle_arr
-    mov ax,0FFFEh
-
-init_handle_loop:
-    sub di,2
-    mov es:[di],ax
-    mov ax,di
-    loop init_handle_loop
-;
-    mov es:handle_list,di
-    push es
-;
-    mov eax,10000h
-    AllocateGlobalMem
-;    
-    xor bx,bx
-    mov dx,8
-    mov es:[bx].hf_next,dx
-    mov es:[bx].hs_next,dx
-    mov es:[bx].hs_prev,dx
-    mov bx,dx
-    mov dx,0FFF8h
-    mov es:[bx].hf_prev,0
-    mov es:[bx].hf_next,0
-    mov es:[bx].hs_prev,0
-    mov es:[bx].hs_next,dx
-;
-    mov dx,es
-    pop ax    
-;
-    pop di
-    pop si
-    pop cx
-    pop bx
-    pop es
-    retf32
-create_app_handle    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           verify_mem_list
 ;
 ;           DESCRIPTION:    Verify handle is in mem list
@@ -932,12 +953,6 @@ init_handle     PROC near
 ;
     mov edi,OFFSET app_activity_table
     HookAppActivity
-;
-    mov esi,OFFSET create_app_handle
-    mov edi,OFFSET create_app_handle_name
-    xor cl,cl
-    mov ax,create_app_handle_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET register_handle
     mov edi,OFFSET register_handle_name

@@ -2073,12 +2073,6 @@ DerefProcHandle MACRO
     OsGate deref_proc_handle_nr
                     ENDM
 
-; OUT AX    Handle sel
-; OUT DX    Handle mem sel
-CreateAppHandle MACRO
-    OsGate create_app_handle_nr
-                    ENDM
-
 ; IN  AX        Entry type
 ; IN  DX        Selector
 ; OUT BX        Entry handle

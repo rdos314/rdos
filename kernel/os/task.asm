@@ -9325,6 +9325,12 @@ init_first_process      Endp
 init_first_process_callback:
     NotifyInitProcess
     call start_processor_null_threads
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    AppNotifyCreate
+;
     NotifyInitTasking
     sti
     jmp null_thread0

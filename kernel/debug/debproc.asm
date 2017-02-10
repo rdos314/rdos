@@ -589,13 +589,6 @@ debug_name          DB 'Debug',0
 
 debug_process:
     sti
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    CreateAppHandle
-    mov ds:app_handle_sel,ax
-    mov ds:app_handle_mem_sel,dx
-;
     mov ax,42h
     EnableFocus
 ;
