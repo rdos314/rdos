@@ -46,15 +46,196 @@ INCLUDE int.def
     extrn prot_exception16:near
     extrn prot_exception32:near
 
-    extrn set_flags:near
-    extrn get_flags:near
-
     extrn setup_idt16:near
     extrn setup_idt32:near
 
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           sim_sti
+;
+;           DESCRIPTION:    Simulate STI
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sim_sti_name    DB 'Simulate Sti',0
+
+sim_sti PROC far
+    push ds
+    push ax
+    sti
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_process_sel
+    mov ds:ms_virt_flags,7200h
+sim_sti_test_wake:
+    cmp ds:ms_wait_sti,0
+    jz sim_sti_nowake
+    push si
+    mov si,OFFSET ms_wait_sti
+    Wake
+    pop si
+    jmp sim_sti_test_wake
+sim_sti_nowake:
+    pop ax
+    pop ds
+    retf32
+sim_sti ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           sim_cli
+;
+;           DESCRIPTION:    Simulate CLI
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sim_cli_name    DB 'Simulate Cli',0
+
+sim_cli PROC far
+    push ds
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_process_sel
+    cli
+    mov ds:ms_cli_thread,ax
+    mov ds:ms_virt_flags,7000h
+    sti
+    pop ax
+    pop ds
+    retf32
+sim_cli ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           set_flags
+;
+;           DESCRIPTION:    Simulate set flags
+;
+;           PARAMETERS:         AX          FLAGS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public set_flags
+
+set_flags       PROC near
+    push ax
+    GetThread
+    mov ds,ax
+    mov bx,ax
+    pop ax
+    mov ds,ds:p_process_sel
+    cli
+    mov ds:ms_cli_thread,bx
+    mov bx,ax
+    and bx,200h
+    or bx,7000h
+    mov ds:ms_virt_flags,bx
+    sti
+    test bx,200h
+    jz set_flags_nowake
+set_flags_test_wake:
+    cmp ds:ms_wait_sti,0
+    jz set_flags_nowake
+    push si
+    mov si,OFFSET ms_wait_sti
+    Wake
+    pop si
+    jmp set_flags_test_wake
+set_flags_nowake:
+    and ax,NOT 7000h
+;    or ax,ds:ms_iopl
+    or ax,200h
+    ret
+set_flags       ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           sim_set_flags
+;
+;           DESCRIPTION:    Simulate set flags
+;
+;           PARAMETERS:         AX          FLAGS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sim_set_flags_name      DB 'Set Flags',0
+
+sim_set_flags   PROC far
+    push ds
+    push bx
+    call set_flags
+    pop bx
+    pop ds
+    retf32
+sim_set_flags   ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           get_flags
+;
+;           DESCRIPTION:    Modify int bit in simulated flags
+;
+;           PARAMETERS:         AX          FLAGS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public get_flags
+
+get_flags       PROC near
+    push ax
+    GetThread
+    mov ds,ax
+    pop ax
+    mov ds,ds:p_process_sel
+    and ax,NOT 200h
+    mov bx,ds:ms_virt_flags
+    and bx,200h
+    or ax,bx
+    or ax,7000h
+    ret
+get_flags       ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           sim_get_flags
+;
+;           DESCRIPTION:    Modify int bit in simulated flags
+;
+;           PARAMETERS:         AX          FLAGS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sim_get_flags_name      DB 'Get Flags',0
+
+sim_get_flags   PROC far
+    push ds
+    push bx
+    call get_flags
+    pop bx
+    pop ds
+    retf32
+sim_get_flags   ENDP
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -304,6 +485,30 @@ init_exc_loop:
     xor ebx,ebx
     xor esi,esi
     xor edi,edi
+;
+    mov esi,OFFSET sim_sti
+    mov edi,OFFSET sim_sti_name
+    xor cl,cl
+    mov ax,sim_sti_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET sim_cli
+    mov edi,OFFSET sim_cli_name
+    xor cl,cl
+    mov ax,sim_cli_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET sim_set_flags
+    mov edi,OFFSET sim_set_flags_name
+    xor cl,cl
+    mov ax,sim_set_flags_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET sim_get_flags
+    mov edi,OFFSET sim_get_flags_name
+    xor cl,cl
+    mov ax,sim_get_flags_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET set_bitness
     mov edi,OFFSET set_bitness_name
