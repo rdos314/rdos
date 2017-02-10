@@ -92,33 +92,11 @@ notify_init_tasking       ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-terminate_user_start:
-    TerminateThread
-terminate_user_end:
-
     public init_thread
 
 init_thread     PROC near
     pusha
     push ds
-;
-    mov eax,OFFSET terminate_user_end - OFFSET terminate_user_start
-    AllocateSmallLinear
-    mov bx,term_code_sel
-    mov ecx,eax
-    CreateDataSelector16
-;
-    mov es,bx
-    xor di,di
-    mov ax,cs
-    mov ds,ax
-    mov si,OFFSET terminate_user_start
-    mov cx,OFFSET terminate_user_end - OFFSET terminate_user_start
-    rep movsb
-    and bx,0FFF8h
-    mov ax,gdt_sel
-    mov ds,ax
-    mov byte ptr [bx+5],0FAh
 ;
     mov edx,fixed_process_linear
     mov ecx,SIZE process_seg
