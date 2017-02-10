@@ -252,7 +252,7 @@ aa_terminate_proc           DD ?,?
 
 app_activity_struc  ENDS
 
-app_activity_data   STRUC
+hook_data_struc   STRUC
 
 create_thread_hooks         DB ?
 terminate_thread_hooks      DB ?
@@ -266,7 +266,7 @@ create_thread_arr           DD 2*8 DUP(?)
 terminate_thread_arr        DD 2*8 DUP(?)
 init_tasking_arr            DD 2*64 DUP(?)
 
-app_activity_data   ENDS
+hook_data_struc   ENDS
 
 app_seg STRUC
 

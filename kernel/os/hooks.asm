@@ -229,7 +229,7 @@ init_hooks       Proc near
     pushad
 ;
     mov bx,hook_sel
-    mov eax,SIZE app_activity_data
+    mov eax,SIZE hook_data_struc
     AllocateFixedSystemMem
     mov ds,bx
     mov ds:app_activity_hooks,0
