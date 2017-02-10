@@ -7563,7 +7563,7 @@ inc_thread_count        ENDP
 trap_create_thread      PROC near
     sti
     push cx
-    mov ax,app_activity_sel
+    mov ax,hook_sel
     mov ds,ax
     mov cl,ds:create_thread_hooks
     or cl,cl
@@ -7602,7 +7602,7 @@ trap_create_thread      ENDP
 
 trap_terminate_thread   PROC near
     push cx
-    mov ax,app_activity_sel
+    mov ax,hook_sel
     mov ds,ax
     mov cl,ds:terminate_thread_hooks
     or cl,cl
@@ -7643,7 +7643,7 @@ trap_create_process     PROC near
     push cx
     push si
 ;
-    mov ax,app_activity_sel
+    mov ax,hook_sel
     mov ds,ax
     mov cl,ds:create_process_hooks
     or cl,cl
@@ -7687,7 +7687,7 @@ trap_init_tasking       PROC near
     InitProcessApp
 ;
     push cx
-    mov ax,app_activity_sel
+    mov ax,hook_sel
     mov ds,ax
     mov cl,ds:init_tasking_hooks
     or cl,cl

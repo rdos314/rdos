@@ -57,7 +57,7 @@ hook_create_thread      PROC far
     push ds
     push ax
     push bx
-    mov ax,app_activity_sel
+    mov ax,hook_sel
     mov ds,ax
     mov al,ds:create_thread_hooks
     mov bl,al
@@ -92,7 +92,7 @@ hook_terminate_thread   PROC far
     push ds
     push ax
     push bx
-    mov ax,app_activity_sel
+    mov ax,hook_sel
     mov ds,ax
     mov al,ds:terminate_thread_hooks
     mov bl,al
@@ -127,7 +127,7 @@ hook_create_process     PROC far
     push ds
     push ax
     push bx
-    mov ax,app_activity_sel
+    mov ax,hook_sel
     mov ds,ax
     mov al,ds:create_process_hooks
     mov bl,al
@@ -161,7 +161,7 @@ hook_init_tasking       PROC far
     push ds
     push ax
     push bx
-    mov ax,app_activity_sel
+    mov ax,hook_sel
     mov ds,ax
     mov al,ds:init_tasking_hooks
     mov bl,al
@@ -195,7 +195,7 @@ hook_app_activity   PROC far
     push ds
     push ax
     push bx
-    mov ax,app_activity_sel
+    mov ax,hook_sel
     mov ds,ax
     mov al,ds:app_activity_hooks
     mov bl,al
@@ -228,7 +228,7 @@ init_hooks       Proc near
     push es
     pushad
 ;
-    mov bx,app_activity_sel
+    mov bx,hook_sel
     mov eax,SIZE app_activity_data
     AllocateFixedSystemMem
     mov ds,bx

@@ -374,7 +374,7 @@ app_notify_create   PROC far
     push ecx
     push edi
 ;
-    mov cx,app_activity_sel
+    mov cx,hook_sel
     mov fs,cx
     mov cl,fs:app_activity_hooks
     or cl,cl
@@ -418,7 +418,7 @@ app_notify_start   PROC far
     push ecx
     push edi
 ;
-    mov cx,app_activity_sel
+    mov cx,hook_sel
     mov fs,cx
     mov cl,fs:app_activity_hooks
     or cl,cl
@@ -463,7 +463,7 @@ app_notify_forked   PROC far
     push ecx
     push edi
 ;
-    mov cx,app_activity_sel
+    mov cx,hook_sel
     mov fs,cx
     mov cl,fs:app_activity_hooks
     or cl,cl
@@ -507,7 +507,7 @@ app_notify_exec   PROC far
     push ecx
     push edi
 ;
-    mov cx,app_activity_sel
+    mov cx,hook_sel
     mov fs,cx
     mov cl,fs:app_activity_hooks
     or cl,cl
@@ -552,7 +552,7 @@ app_notify_spawn   PROC far
     push ecx
     push edi
 ;
-    mov cx,app_activity_sel
+    mov cx,hook_sel
     mov fs,cx
     mov cl,fs:app_activity_hooks
     or cl,cl
@@ -596,7 +596,7 @@ app_notify_terminate   PROC far
     push ecx
     push edi
 ;
-    mov cx,app_activity_sel
+    mov cx,hook_sel
     mov fs,cx
     mov cl,fs:app_activity_hooks
     or cl,cl
