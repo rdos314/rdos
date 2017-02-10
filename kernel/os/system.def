@@ -254,8 +254,17 @@ app_activity_struc  ENDS
 
 app_activity_data   STRUC
 
-app_activity_hooks  DB ?
-app_activity_arr    DD 2*16 DUP(?)
+create_thread_hooks         DB ?
+terminate_thread_hooks      DB ?
+create_process_hooks        DB ?
+init_tasking_hooks          DB ?
+app_activity_hooks          DB ?
+
+app_activity_arr            DD 2*16 DUP(?)
+create_process_arr          DD 2*32 DUP(?)
+create_thread_arr           DD 2*8 DUP(?)
+terminate_thread_arr        DD 2*8 DUP(?)
+init_tasking_arr            DD 2*64 DUP(?)
 
 app_activity_data   ENDS
 

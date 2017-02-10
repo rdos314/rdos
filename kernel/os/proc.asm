@@ -36,19 +36,6 @@ INCLUDE ..\driver.def
 INCLUDE ..\handle.inc
 include proc.inc
 
-thread_data_seg STRUC
-
-create_thread_hooks         DB ?
-terminate_thread_hooks      DB ?
-create_process_hooks        DB ?
-init_tasking_hooks          DB ?
-
-create_process_arr      DD 2*32 DUP(?)
-create_thread_arr       DD 2*8 DUP(?)
-terminate_thread_arr    DD 2*8 DUP(?)
-init_tasking_arr        DD 2*64 DUP(?)
-
-thread_data_seg ENDS
 
 
     .386p
@@ -75,7 +62,7 @@ code    SEGMENT byte public use16 'CODE'
 trap_create_thread      PROC near
     sti
     push cx
-    mov ax,proc_data_sel
+    mov ax,app_activity_sel
     mov ds,ax
     mov cl,ds:create_thread_hooks
     or cl,cl
@@ -111,7 +98,7 @@ trap_create_thread      ENDP
 
 trap_terminate_thread   PROC near
     push cx
-    mov ax,proc_data_sel
+    mov ax,app_activity_sel
     mov ds,ax
     mov cl,ds:terminate_thread_hooks
     or cl,cl
@@ -149,7 +136,7 @@ trap_create_process     PROC near
     push cx
     push si
 ;
-    mov ax,proc_data_sel
+    mov ax,app_activity_sel
     mov ds,ax
     mov cl,ds:create_process_hooks
     or cl,cl
@@ -193,7 +180,7 @@ trap_init_tasking       PROC near
     InitProcessApp
 ;
     push cx
-    mov ax,proc_data_sel
+    mov ax,app_activity_sel
     mov ds,ax
     mov cl,ds:init_tasking_hooks
     or cl,cl
@@ -234,7 +221,7 @@ hook_create_thread      PROC far
     push ds
     push ax
     push bx
-    mov ax,proc_data_sel
+    mov ax,app_activity_sel
     mov ds,ax
     mov al,ds:create_thread_hooks
     mov bl,al
@@ -269,7 +256,7 @@ hook_terminate_thread   PROC far
     push ds
     push ax
     push bx
-    mov ax,proc_data_sel
+    mov ax,app_activity_sel
     mov ds,ax
     mov al,ds:terminate_thread_hooks
     mov bl,al
@@ -304,7 +291,7 @@ hook_create_process     PROC far
     push ds
     push ax
     push bx
-    mov ax,proc_data_sel
+    mov ax,app_activity_sel
     mov ds,ax
     mov al,ds:create_process_hooks
     mov bl,al
@@ -338,7 +325,7 @@ hook_init_tasking       PROC far
     push ds
     push ax
     push bx
-    mov ax,proc_data_sel
+    mov ax,app_activity_sel
     mov ds,ax
     mov al,ds:init_tasking_hooks
     mov bl,al
@@ -657,16 +644,6 @@ terminate_user_end:
 init_thread     PROC near
     pusha
     push ds
-;
-    mov bx,proc_data_sel
-    mov eax,SIZE thread_data_seg
-    AllocateFixedSystemMem
-    mov ds,bx
-    xor ax,ax
-    mov ds:create_thread_hooks,al
-    mov ds:terminate_thread_hooks,al
-    mov ds:create_process_hooks,al
-    mov ds:init_tasking_hooks,al
 ;
     mov eax,OFFSET terminate_user_end - OFFSET terminate_user_start
     AllocateSmallLinear

@@ -168,6 +168,10 @@ init_app_activity	Proc near
     AllocateFixedSystemMem
     mov ds,bx
     mov ds:app_activity_hooks,0
+    mov ds:create_thread_hooks,0
+    mov ds:terminate_thread_hooks,0
+    mov ds:create_process_hooks,0
+    mov ds:init_tasking_hooks,0
 ;
     mov ax,cs
     mov ds,ax
