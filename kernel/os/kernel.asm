@@ -67,7 +67,6 @@ ENDIF
     extrn init_mem_activity:near
     extrn init_gdt:near
     extrn init_idt:near
-    extrn init_thread:near
     extrn init_handle:near
     extrn init_mem_sels:near
     extrn init_osgate:near
@@ -297,7 +296,7 @@ hook_app_activity   ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_app_activity	Proc near
+init_app_activity       Proc near
     push ds
     push es
     pushad
@@ -350,7 +349,7 @@ init_app_activity	Proc near
     pop es
     pop ds
     ret
-init_app_activity	Endp
+init_app_activity       Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1119,7 +1118,6 @@ prot_init:
     call move_efi_lfb        
     call init_mem_sels
     call init_tsc
-    call init_thread
     call init_app_activity
     call init_mem_activity
     call init_handle

@@ -513,7 +513,6 @@ get_sys_page_dir_nr         = 451
 
 notify_init_process_nr      = 452
 notify_create_process_nr    = 453
-notify_init_tasking_nr      = 454
 
 get_scheduler_lock_counter_nr = 459
 flush_tlb_nr                = 460
@@ -559,8 +558,6 @@ start_long_exe_nr           = 493
 
 read_thread64_nr            = 494
 write_thread64_nr           = 495
-
-notify_end_program_nr       = 501
 
 allocate_long_buf_nr        = 502
 free_long_buf_nr            = 503

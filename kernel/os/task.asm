@@ -9496,7 +9496,6 @@ init_first_process_callback:
     mov es,es:p_app_sel
     AppNotifyCreate
 ;
-    NotifyInitTasking
     call trap_init_tasking
     sti
     jmp null_thread0

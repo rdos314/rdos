@@ -540,14 +540,6 @@ NotifyDeleteProcess MACRO
     OsGate notify_delete_process_nr
                     ENDM
 
-NotifyInitTasking MACRO
-    OsGate notify_init_tasking_nr
-                    ENDM
-
-NotifyEndProgram MACRO
-    OsGate notify_end_program_nr
-                    ENDM
-
 ResetProcess MACRO
     OsGate reset_process_nr
                     ENDM
