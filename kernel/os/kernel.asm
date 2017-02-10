@@ -118,6 +118,144 @@ get_version Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           HOOK_CREATE_THREAD
+;
+;           DESCRIPTION:    Add CreateThread hook
+;
+;           PARAMETERS:         ES:EDI       Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_create_thread_name DB 'Hook Create Thread',0
+
+hook_create_thread      PROC far
+    push ds
+    push ax
+    push bx
+    mov ax,app_activity_sel
+    mov ds,ax
+    mov al,ds:create_thread_hooks
+    mov bl,al
+    xor bh,bh
+    shl bx,3
+    add bx,OFFSET create_thread_arr
+    mov [bx],edi
+    mov [bx+4],es
+    inc al
+    mov ds:create_thread_hooks,al
+    pop bx
+    pop ax
+    pop ds
+    retf32
+hook_create_thread      ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           HOOK_TERMINATE_THREAD
+;
+;           DESCRIPTION:    Add TerminateThread hook
+;
+;           PARAMETERS:     ES:EDI       Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_terminate_thread_name      DB 'Hook Terminate Thread',0
+
+hook_terminate_thread   PROC far
+    push ds
+    push ax
+    push bx
+    mov ax,app_activity_sel
+    mov ds,ax
+    mov al,ds:terminate_thread_hooks
+    mov bl,al
+    xor bh,bh
+    shl bx,3
+    add bx,OFFSET terminate_thread_arr
+    mov [bx],edi
+    mov [bx+4],es
+    inc al
+    mov ds:terminate_thread_hooks,al
+    pop bx
+    pop ax
+    pop ds
+    retf32
+hook_terminate_thread   ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           HOOK_CREATE_PROCESS
+;
+;           DESCRIPTION:    Add CreateProcess hook
+;
+;           PARAMETERS:     ES:EDI       Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_create_process_name    DB 'Hook Create Process',0
+
+hook_create_process     PROC far
+    push ds
+    push ax
+    push bx
+    mov ax,app_activity_sel
+    mov ds,ax
+    mov al,ds:create_process_hooks
+    mov bl,al
+    xor bh,bh
+    shl bx,3
+    add bx,OFFSET create_process_arr
+    mov [bx],edi
+    mov [bx+4],es
+    inc al
+    mov ds:create_process_hooks,al
+    pop bx
+    pop ax
+    pop ds
+    retf32
+hook_create_process     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           HOOK_INIT_TASKING
+;
+;           DESCRIPTION:    Add init-tasking hook
+;
+;           PARAMETERS:         ES:EDI       Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_init_tasking_name  DB 'Hook Init Tasking',0
+
+hook_init_tasking       PROC far
+    push ds
+    push ax
+    push bx
+    mov ax,app_activity_sel
+    mov ds,ax
+    mov al,ds:init_tasking_hooks
+    mov bl,al
+    xor bh,bh
+    shl bx,3
+    add bx,OFFSET init_tasking_arr
+    mov [bx],edi
+    mov [bx+4],es
+    inc al
+    mov ds:init_tasking_hooks,al
+    pop bx
+    pop ax
+    pop ds
+    retf32
+hook_init_tasking       ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           HookAppActivity
 ;
 ;           DESCRIPTION:    Add hook for app activity
@@ -176,6 +314,31 @@ init_app_activity	Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET hook_create_thread
+    mov edi,OFFSET hook_create_thread_name
+    xor cl,cl
+    mov ax,hook_create_thread_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET hook_terminate_thread
+    mov edi,OFFSET hook_terminate_thread_name
+    xor cl,cl
+    mov ax,hook_terminate_thread_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET hook_create_process
+    mov edi,OFFSET hook_create_process_name
+    xor cl,cl
+    mov ax,hook_create_process_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET hook_init_tasking
+    mov edi,OFFSET hook_init_tasking_name
+    xor cl,cl
+    mov ax,hook_init_tasking_nr
+    RegisterOsGate
+;
     mov esi,OFFSET hook_app_activity
     mov edi,OFFSET hook_app_activity_name
     xor cl,cl
