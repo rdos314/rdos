@@ -8449,7 +8449,6 @@ terminate_free_pd:
 
 terminate_pd_done:
     NotifyThreadExit
-    NotifyProcessExit
     jmp cleanup_process
 
 
@@ -8881,6 +8880,7 @@ fork_start:
 ;
     push dx
     NotifyProcessForked
+    InitProcessApp
     pop ax
     CloneApp
     xor eax,eax
@@ -9082,6 +9082,7 @@ create_process_callback:
 ;
     push ds
     NotifyProcessCreated
+    InitProcessApp
     pop ds
 ;
     mov es,ds:cm_process

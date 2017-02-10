@@ -556,10 +556,6 @@ NotifyProcessCreated MACRO
     OsGate notify_process_created_nr
                     ENDM
 
-NotifyProcessExit MACRO
-    OsGate notify_process_exit_nr
-                    ENDM
-
 ;   EAX         CR3 of source process
 NotifyProcessForked MACRO
     OsGate notify_process_forked_nr

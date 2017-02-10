@@ -400,24 +400,8 @@ notify_process_created_name  DB 'Notify Process Created',0
 
 notify_process_created       PROC far
     call trap_create_process
-    InitProcessApp
     retf32
 notify_process_created       ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           NotifyProcessExit
-;
-;           DESCRIPTION:    Notify process exit
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_process_exit_name  DB 'Notify Process Exit',0
-
-notify_process_exit       PROC far
-    retf32
-notify_process_exit       ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -432,7 +416,6 @@ notify_process_forked_name  DB 'Notify Process Forked',0
 
 notify_process_forked       PROC far
     call trap_create_process
-    InitProcessApp
     retf32
 notify_process_forked       ENDP
     
@@ -755,12 +738,6 @@ init_thread     PROC near
     mov edi,OFFSET notify_process_created_name
     xor cl,cl
     mov ax,notify_process_created_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET notify_process_exit
-    mov edi,OFFSET notify_process_exit_name
-    xor cl,cl
-    mov ax,notify_process_exit_nr
     RegisterOsGate
 ;
     mov esi,OFFSET notify_process_forked
