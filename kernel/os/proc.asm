@@ -43,7 +43,6 @@ include proc.inc
 code    SEGMENT byte public use16 'CODE'
 
     extrn free_process_proc:word
-    extrn init_double_fault:near
     extrn set_page_entry_proc:word
 
     assume cs:code
@@ -76,7 +75,6 @@ notify_end_program       ENDP
 notify_init_tasking_name  DB 'Notify Init Tasking',0
 
 notify_init_tasking       PROC far
-    call init_double_fault
     retf32
 notify_init_tasking       ENDP
 

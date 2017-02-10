@@ -49,6 +49,7 @@ ENDIF
     extrn local_get_selector_base_size:near
     extrn local_create_data_sel16:near
     extrn local_create_tss_sel:near
+    extrn init_double_fault:near
 
     extrn create_gdt:near
     extrn create_mem:near
@@ -1126,6 +1127,7 @@ prot_init:
     call init_trap_vectors
     call init_reg32
     call init_device    
+    call init_double_fault
 ;
     mov bx,system_data_sel
     mov ds,bx
