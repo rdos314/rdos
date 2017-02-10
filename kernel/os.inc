@@ -530,6 +530,11 @@ NotifyCreateLongProcess MACRO
     OsGate notify_create_long_process_nr
                     ENDM
 
+;   EAX    CR3 to clone
+NotifyCloneProcess MACRO
+    OsGate notify_clone_process_nr
+                    ENDM
+
 ;   EAX    CR3
 NotifyDeleteProcess MACRO
     OsGate notify_delete_process_nr

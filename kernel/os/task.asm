@@ -8865,6 +8865,8 @@ init_fork_stack	Endp
 fork_process_name     DB 'Fork Process',0
 
 fork_start:
+    NotifyCloneProcess
+;
     push ds
     push es
     push ax

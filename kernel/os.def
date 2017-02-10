@@ -712,4 +712,6 @@ app_notify_spawn_nr         = 607
 app_notify_terminate_nr     = 608
 hook_app_activity_nr        = 609
 
+notify_clone_process_nr     = 610
+
 osgate_entries              = 650

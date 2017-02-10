@@ -208,6 +208,12 @@ init_page_table     PROC near
     mov ax,notify_create_process_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET notify_clone_process
+    mov edi,OFFSET notify_clone_process_name
+    xor cl,cl
+    mov ax,notify_clone_process_nr
+    RegisterOsGate
+;
     mov esi,OFFSET notify_create_long_process
     mov edi,OFFSET notify_create_long_process_name
     xor cl,cl
@@ -4246,6 +4252,24 @@ notify_create_process       Proc far
     call cs:create_process_proc
     retf32
 notify_create_process       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NotifyCloneProcess
+;
+;           DESCRIPTION:    Notify clone process
+;
+;           PARAMETERS:     EAX         CR3 to clone from
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_clone_process_name  DB 'Notify Clone Process',0
+
+notify_clone_process       Proc far
+    call cs:clone_proc
+    retf32
+notify_clone_process       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

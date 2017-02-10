@@ -59,7 +59,6 @@ code    SEGMENT byte public use16 'CODE'
     extrn free_handle_process:near
     extrn init_double_fault:near
     extrn set_page_entry_proc:word
-    extrn clone_proc:word
 
     assume cs:code
 
@@ -434,7 +433,6 @@ notify_process_exit       ENDP
 notify_process_forked_name  DB 'Notify Process Forked',0
 
 notify_process_forked       PROC far
-    call cs:clone_proc
     call trap_create_process
     InitProcessApp
     retf32
