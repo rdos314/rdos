@@ -1358,7 +1358,7 @@ thread_create:
     push ds
     push es
 ;
-    NotifyThreadCreated
+    call trap_create_thread
 ;
     pop es
     pop ds
@@ -7546,7 +7546,169 @@ inc_thread_count       PROC near
     inc fs:ms_thread_count
     pop fs
     ret
-inc_thread_count	ENDP
+inc_thread_count        ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TRAP_CREATE_THREAD
+;
+;           DESCRIPTION:    Handle CreateThread hooks
+;
+;           PARAMETERS:         
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_create_thread      PROC near
+    sti
+    push cx
+    mov ax,app_activity_sel
+    mov ds,ax
+    mov cl,ds:create_thread_hooks
+    or cl,cl
+    je trap_create_thread_done
+;
+    mov bx,OFFSET create_thread_arr
+
+trap_create_thread_loop:
+    push ds
+    push bx
+    push cx
+    call fword ptr [bx]
+    pop cx
+    pop bx
+    pop ds
+    add bx,8
+    dec cl
+    jnz trap_create_thread_loop
+
+trap_create_thread_done:
+    pop cx
+    ret
+trap_create_thread      ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TRAP_TERMINATE_THREAD
+;
+;           DESCRIPTION:    Handle TerminateThread hooks
+;
+;           PARAMETERS:         
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_terminate_thread   PROC near
+    push cx
+    mov ax,app_activity_sel
+    mov ds,ax
+    mov cl,ds:terminate_thread_hooks
+    or cl,cl
+    je trap_terminate_thread_done
+;
+    mov bx,OFFSET terminate_thread_arr
+
+trap_terminate_thread_loop:
+    push ds
+    push bx
+    push cx
+    call fword ptr [bx]
+    pop cx
+    pop bx
+    pop ds
+    add bx,8
+    dec cl
+    jnz trap_terminate_thread_loop
+
+trap_terminate_thread_done:
+    pop cx
+    ret
+trap_terminate_thread   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TRAP_CREATE_PROCESS
+;
+;           DESCRIPTION:    Handle CreateProcess hooks
+;
+;           PARAMETERS:         
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_create_process     PROC near
+    sti
+    push cx
+    push si
+;
+    mov ax,app_activity_sel
+    mov ds,ax
+    mov cl,ds:create_process_hooks
+    or cl,cl
+    je trap_create_process_done
+    mov bx,OFFSET create_process_arr
+trap_create_process_loop:
+    push ds
+    push bx
+    push cx
+    call fword ptr [bx]
+    pop cx
+    pop bx
+    pop ds
+    add bx,8
+    dec cl
+    jnz trap_create_process_loop
+trap_create_process_done:
+    pop si
+    pop cx
+;
+    xor ebp,ebp
+    call trap_create_thread
+    ret
+trap_create_process     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TRAP_INIT_TASKING
+;
+;           DESCRIPTION:    Handle init-tasking hooks
+;
+;           PARAMETERS:         
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+trap_init_tasking       PROC near
+    InitTrapGates
+    InitSystemApp
+    call trap_create_process
+    InitProcessApp
+;
+    push cx
+    mov ax,app_activity_sel
+    mov ds,ax
+    mov cl,ds:init_tasking_hooks
+    or cl,cl
+    je trap_init_tasking_done
+    mov bx,OFFSET init_tasking_arr
+trap_init_tasking_loop:
+    push ds
+    push bx
+    push cx
+    call fword ptr [bx]
+    pop cx
+    pop bx
+    pop ds
+;
+    add bx,8
+    dec cl
+    jnz trap_init_tasking_loop
+trap_init_tasking_done:
+    pop cx
+    ret
+trap_init_tasking       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -8408,7 +8570,7 @@ no_free_ss:
     call fword ptr ds:p_free_proc
 
 terminate_app_handled:
-    NotifyThreadExit
+    call trap_terminate_thread
     jmp cleanup_thread
 
 terminate_proc:
@@ -8448,7 +8610,7 @@ terminate_free_pd:
     AppNotifyTerminate
 
 terminate_pd_done:
-    NotifyThreadExit
+    call trap_terminate_thread
     jmp cleanup_process
 
 
@@ -8824,7 +8986,7 @@ init_fork_thread    ENDP
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_fork_stack	Proc near
+init_fork_stack Proc near
     mov ax,ds:p_kernel_ss
     mov ds:p_ss,ax
     movzx eax,sp
@@ -8848,7 +9010,7 @@ init_fork_stack	Proc near
     pop ds
 ;
     ret
-init_fork_stack	Endp
+init_fork_stack Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -8879,7 +9041,7 @@ fork_start:
     pop ds
 ;
     push dx
-    NotifyProcessForked
+    call trap_create_process
     InitProcessApp
     pop ax
     CloneApp
@@ -9081,7 +9243,7 @@ create_process_callback:
     mov fs,ax
 ;
     push ds
-    NotifyProcessCreated
+    call trap_create_process
     InitProcessApp
     pop ds
 ;
@@ -9335,6 +9497,7 @@ init_first_process_callback:
     AppNotifyCreate
 ;
     NotifyInitTasking
+    call trap_init_tasking
     sti
     jmp null_thread0
 

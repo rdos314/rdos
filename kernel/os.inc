@@ -544,23 +544,6 @@ NotifyInitTasking MACRO
     OsGate notify_init_tasking_nr
                     ENDM
 
-NotifyThreadCreated MACRO
-    OsGate notify_thread_created_nr
-                    ENDM
-
-NotifyThreadExit MACRO
-    OsGate notify_thread_exit_nr
-                    ENDM
-
-NotifyProcessCreated MACRO
-    OsGate notify_process_created_nr
-                    ENDM
-
-;   EAX         CR3 of source process
-NotifyProcessForked MACRO
-    OsGate notify_process_forked_nr
-                    ENDM
-
 NotifyEndProgram MACRO
     OsGate notify_end_program_nr
                     ENDM

@@ -514,9 +514,6 @@ get_sys_page_dir_nr         = 451
 notify_init_process_nr      = 452
 notify_create_process_nr    = 453
 notify_init_tasking_nr      = 454
-notify_thread_created_nr    = 455
-notify_thread_exit_nr       = 456
-notify_process_created_nr   = 457
 
 get_scheduler_lock_counter_nr = 459
 flush_tlb_nr                = 460
@@ -697,7 +694,6 @@ write_c_console_nr          = 595
 open_kernel_file_nr         = 596
 
 fork_process_nr             = 597
-notify_process_forked_nr    = 598
 clone_app_nr                = 599
 
 reset_process_nr            = 601
