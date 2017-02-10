@@ -98,11 +98,6 @@ init_thread     PROC near
     pusha
     push ds
 ;
-    mov edx,fixed_process_linear
-    mov ecx,SIZE process_seg
-    mov bx,process_sel
-    CreateDataSelector16
-;
     mov ax,cs
     mov ds,ax
     mov es,ax

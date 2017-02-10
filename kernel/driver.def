@@ -61,7 +61,6 @@ shutdown_pretask_gate   EQU 68h
 ; used in kernel and device-drivers only
 ;
 
-process_sel                     EQU 70h
 core_save_sel       EQU 78h
 core_image_sel      EQU 80h
 temp_sel                        EQU 88h
