@@ -145,18 +145,6 @@ init_app    PROC near
     mov ax,app_notify_terminate_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET open_app
-    mov edi,OFFSET open_app_name
-    xor cl,cl
-    mov ax,open_app_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET close_app
-    mov edi,OFFSET close_app_name
-    xor cl,cl
-    mov ax,close_app_nr
-    RegisterOsGate
-;
     mov esi,OFFSET clone_app
     mov edi,OFFSET clone_app_name
     xor cl,cl
@@ -748,14 +736,6 @@ epRetryApp:
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov ax,ds:app_next
-    or ax,ax
-    jz epCleanRootApp
-;
-    CloseApp
-    jmp epRetryApp
-
-epCleanRootApp:    
     mov eax,ds:app_close_proc
     or eax,ds:app_close_proc+4
     jz epCloseHandled

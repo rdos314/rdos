@@ -641,7 +641,7 @@ load_dos_exe_ok:
     jmp load_dos_exe_done
 
 load_dos_exe_unload:
-    CloseApp
+;    CloseApp
     stc
     jmp load_dos_exe_done
 

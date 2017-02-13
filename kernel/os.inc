@@ -1977,13 +1977,6 @@ ExitProcessApp MACRO
     OsGate exit_process_app_nr
                     ENDM
 
-OpenApp MACRO
-    OsGate open_app_nr
-                    ENDM
-
-CloseApp    MACRO
-    OsGate close_app_nr
-                    ENDM
 
 ;  AX            Source app
 CloneApp MACRO

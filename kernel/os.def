@@ -179,9 +179,6 @@ register_dos_device_nr          = 173
 check_dos_device_nr                 = 174
 
 hook_load_exe_nr                        = 179
-open_app_nr                                     = 180
-close_app_nr                            = 181
-
 hook_enable_focus_nr            = 182
 get_focus_thread_nr                     = 185
 get_thread_focus_key_nr         = 186
