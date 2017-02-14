@@ -4157,6 +4157,9 @@ fork_proc      Proc far
     push ebx
     push ecx
 ;
+    GetThread
+    push eax
+;
     mov ebx,fs:pvModuleHandle
     DerefModuleHandle
     push ebx
@@ -4185,31 +4188,44 @@ fork_proc      Proc far
     mov eax,fs:pvBase
     push eax
 ;
+    ClearSignal
     ForkProcess
     or ax,ax
     jz fork_child
 
 fork_parent:
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-;    
-    pop ecx
-    pop ebx
-;
+    int 3
     push es
     mov es,ax
+
+fork_wait_child:
+    test es:p_flags,THREAD_FLAG_FORKED
+    jnz fork_child_completed
+;
+    WaitForSignal
+    jmp fork_wait_child
+    
+fork_child_completed:
     movzx eax,es:p_id
+;
     pop es
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+;
+    pop ecx
+    pop ebx
     jmp fork_done
 
 fork_child:
+    int 3
     push ds
     push es
     push bx
@@ -4269,11 +4285,13 @@ fork_child:
     SetModule
     pop es
 ;
+    mov al,32
+    SetBitness
+;
     push ds
 ;
     GetThread
     mov ds,ax
-    lock or ds:p_flags,THREAD_FLAG_FORKED
 ;
     movzx eax,ds:p_id
     mov fs:pvThreadHandle,eax
@@ -4313,14 +4331,20 @@ fork_notify_ok:
     call CopyForkPages
     pop edx
 ;
+    GetThread
+    mov ds,ax
+    lock or ds:p_flags,THREAD_FLAG_FORKED
+;
     pop ds
+;
+    pop ebx
+    Signal
 ;
     pop ecx
     pop ebx
     xor eax,eax
 
 fork_done:    
-    int 3
     ret
 fork_proc  Endp
 

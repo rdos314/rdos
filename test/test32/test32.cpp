@@ -20,7 +20,16 @@ void main()
     int size;
     int val;
     char *ptr;
+    int id;
+
+    id = RdosFork();
+
+    _asm int 3
+    _asm int 3
+
+
     char *arg[] = {"showpos.exe", 0};
+
 
     execv(arg[0], (char **)&arg);
 
