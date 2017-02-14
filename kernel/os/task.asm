@@ -9031,11 +9031,14 @@ fork_start:
     push ds
     push es
     push ax
+;
     GetThread
     mov es,ax
     mov es,es:p_app_sel
     mov ds,dx
+    AppNotifyCreate
     AppNotifyForked
+;
     pop ax
     pop es
     pop ds

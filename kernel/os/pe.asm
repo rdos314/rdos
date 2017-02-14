@@ -4217,6 +4217,7 @@ fork_parent:
     jmp fork_done
 
 fork_child:
+    int 3
     push ds
     push es
     push bx
