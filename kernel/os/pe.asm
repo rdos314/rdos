@@ -4190,7 +4190,6 @@ fork_proc      Proc far
     jz fork_child
 
 fork_parent:
-    int 3
     pop ebx
     pop ebx
     pop ebx
@@ -4211,7 +4210,6 @@ fork_parent:
     jmp fork_done
 
 fork_child:
-    int 3
     push ds
     push es
     push bx
@@ -4322,6 +4320,7 @@ fork_notify_ok:
     xor eax,eax
 
 fork_done:    
+    int 3
     ret
 fork_proc  Endp
 
