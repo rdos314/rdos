@@ -170,6 +170,7 @@ notify_clone	Proc far
     push es
     mov eax,SIZE handle_struc
     AllocateSmallGlobalMem
+    InitSection es:h_section
 ;
     mov ds,ds:app_c_handle_sel
 ;    
