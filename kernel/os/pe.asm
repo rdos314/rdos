@@ -4157,9 +4157,6 @@ fork_proc      Proc far
     push ebx
     push ecx
 ;
-    GetThread
-    push eax
-;
     mov ebx,fs:pvModuleHandle
     DerefModuleHandle
     push ebx
@@ -4188,25 +4185,22 @@ fork_proc      Proc far
     mov eax,fs:pvBase
     push eax
 ;
-    ClearSignal
     ForkProcess
     or ax,ax
     jz fork_child
 
 fork_parent:
-    WaitForSignal
+    int 3
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
+    pop ebx
 ;    
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-;
     pop ecx
     pop ebx
 ;
@@ -4322,9 +4316,6 @@ fork_notify_ok:
     pop edx
 ;
     pop ds
-;
-    pop ebx
-    Signal
 ;
     pop ecx
     pop ebx
