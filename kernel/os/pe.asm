@@ -4194,7 +4194,6 @@ fork_proc      Proc far
     jz fork_child
 
 fork_parent:
-    int 3
     push es
     mov es,ax
 
@@ -4225,7 +4224,6 @@ fork_child_completed:
     jmp fork_done
 
 fork_child:
-    int 3
     push ds
     push es
     push bx

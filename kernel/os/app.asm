@@ -1538,7 +1538,6 @@ fork_pr    PROC far
     jz fork_done
 ;
     call fword ptr ds:app_fork_proc
-    int 3
     
 fork_done:
     pop ds
