@@ -3251,6 +3251,9 @@ app_dir_copy   Proc near
     push bx
     push cx
 ;
+    mov al,ds:app_curr_drive
+    mov es:app_curr_drive,al
+;
     mov cx,256
     mov bx,OFFSET app_cur_dir_sel
 
