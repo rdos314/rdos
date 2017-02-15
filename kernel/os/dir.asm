@@ -3200,31 +3200,6 @@ delete_handle_done:
     pop ds
     retf32
 delete_handle   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Init process
-;
-;           DESCRIPTION:    Init per-process data
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public init_dir_process
-
-init_dir_process    PROC near
-;    mov ax,fs_process_sel
-;    mov es,ax
-;    mov di,OFFSET cur_dir_sel
-;    mov cx,256
-;    xor ax,ax
-;    rep stosw
-    ret
-init_dir_process    Endp
-
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
