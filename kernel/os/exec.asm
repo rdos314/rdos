@@ -43,9 +43,6 @@ data    SEGMENT byte public 'DATA'
 load_exe_hooks  DB ?
 load_exe_arr    DD 2*16 DUP(?)
 
-exec_section    section_typ <>
-exec_list       DW ?
-
 data    ENDS
 
 code    SEGMENT byte public 'CODE'
@@ -53,154 +50,6 @@ code    SEGMENT byte public 'CODE'
 .386p
     
     assume cs:code
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           InsertExec
-;
-;           DESCRIPTION:    Insert exec sel into list
-;
-;           PARAMETERS:     GS          Exec sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertExec Proc near
-    push ds
-    push es
-    push si
-    push di
-;
-    mov si,SEG data
-    mov ds,si
-    EnterSection ds:exec_section
-;
-    mov di,ds:exec_list
-    or di,di
-    je ieEmpty
-;    
-    mov es,di
-    mov si,gs:el_prev
-    mov es:el_prev,gs
-    mov es,si
-    mov es:el_next,gs
-    mov gs:el_next,di
-    mov gs:el_prev,si
-    jmp ieDone
-    
-ieEmpty:
-    mov gs:el_next,gs
-    mov gs:el_prev,gs
-    mov ds:exec_list,gs
-
-ieDone:
-    LeaveSection ds:exec_section
-;
-    pop di
-    pop si
-    pop es
-    pop ds
-    ret
-InsertExec Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           RemoveExec
-;
-;           DESCRIPTION:    Remove from exec list
-;
-;           PARAMETERS:     GS          Exec sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemoveExec Proc near
-    push ds
-    push es
-    push si
-    push di
-;
-    mov si,SEG data
-    mov ds,si
-    EnterSection ds:exec_section
-;    
-    mov ds:exec_list,gs
-    mov di,gs:el_next
-    cmp di,ds:exec_list
-    mov ds:exec_list,di
-    mov si,gs:el_prev
-    mov es,di
-    mov es:el_prev,si
-    mov es,si
-    mov es:el_next,di
-    jne reDone
-;    
-    mov ds:exec_list,0
-    
-reDone:
-    LeaveSection ds:exec_section
-;
-    pop di
-    pop si
-    pop es
-    pop ds
-    ret
-RemoveExec Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetExec
-;
-;           DESCRIPTION:    Get exec
-;
-;           PARAMETERS:     BX          Thread id
-;
-;           RETURNS:        NC
-;                               GS      Exec sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetExec Proc near
-    push ds
-    push es
-    push si
-    push di
-;
-    mov si,SEG data
-    mov ds,si
-    EnterSection ds:exec_section
-;    
-    mov si,ds:exec_list
-    mov di,si
-
-geLoop:
-    mov es,si
-    cmp bx,es:el_pid
-    je geOk
-;
-    mov si,es:el_next
-    cmp si,di
-    jne geLoop
-
-geFail:
-    stc
-    jmp geDone
-
-geOk:
-    mov gs,si
-    clc
-
-geDone:
-    LeaveSection ds:exec_section
-;
-    pop di
-    pop si
-    pop es
-    pop ds
-    ret
-GetExec Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1920,7 +1769,6 @@ load_program   Proc near
     call CreateExecParam
     call CreateExecStartDir
     call CreateExecEnv
-    call InsertExec
 ;
     push gs
     ExecApp
@@ -2020,7 +1868,6 @@ lepFail:
     UnloadExe
 
 lepRet:
-    int 3
     push ax
     GetThread
     mov ds,ax
@@ -2038,12 +1885,6 @@ lepRet:
     mov ax,ds:app_exit_code    
     mov gs:el_ret_code,ax
     mov gs:el_done,1
-;    
-    mov bx,gs:el_wake_thread
-    Signal    
-;
-    call RemoveExec
-;
     TerminateThread
 load_program    Endp
     
@@ -2114,30 +1955,6 @@ unload_exe:
 wait_for_exec_name DB 'Wait For Exec',0
     
 wait_for_exec   Proc far
-    push gs
-    push ax
-    push bx
-;
-    mov bx,ax
-    call GetExec
-    jc wfeDone
-;
-    GetThread
-    mov gs:el_wake_thread,ax
-
-wfeRetry:
-    WaitForSignal
-    mov ax,gs:el_done
-    or ax,ax
-    jz wfeRetry
-;
-    mov ax,gs:el_ret_code
-    clc
- 
-wfeDone:   
-    pop bx
-    pop ax
-    pop gs
     retf32
 wait_for_exec   Endp
 
@@ -2342,8 +2159,6 @@ init    PROC far
     mov bx,SEG data
     mov es,bx
     mov es:load_exe_hooks,0
-    mov es:exec_list,0
-    InitSection es:exec_section
 ;
     mov ax,cs
     mov ds,ax
