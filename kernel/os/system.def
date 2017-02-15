@@ -270,24 +270,24 @@ hook_data_struc   ENDS
 
 app_seg STRUC
 
-app_next                                DW ?
+app_next                    DW ?
 
 app_get_cmd_line_proc       DD ?,?
-app_get_exe_proc                    DD ?,?
-app_get_env_proc                    DD ?,?
+app_get_exe_proc            DD ?,?
+app_get_env_proc            DD ?,?
 app_allocate_mem_proc       DD ?,?
-app_free_mem_proc                   DD ?,?
-app_debug_allocate_mem_proc     DD ?,?
-app_debug_free_mem_proc         DD ?,?
+app_free_mem_proc           DD ?,?
+app_debug_allocate_mem_proc DD ?,?
+app_debug_free_mem_proc     DD ?,?
 app_init_thread_proc        DD ?,?
 app_free_thread_proc        DD ?,?
-app_spawn_proc                      DD ?,?
-app_fork_proc              DD ?,?
-app_close_proc                      DD ?,?
+app_spawn_proc              DD ?,?
+app_fork_proc               DD ?,?
+app_close_proc              DD ?,?
 app_load_dll_proc           DD ?,?
 app_patch_proc              DD ?,?
 app_get_current_dll_proc    DD ?,?
-app_loader_name                     DD ?
+app_loader_name             DD ?
 
 app_section_base            DD ?
 app_create_section_proc     DD ?,?
@@ -296,7 +296,7 @@ app_delete_section_proc     DD ?,?
 app_enter_section_proc      DD ?,?
 app_leave_section_proc      DD ?,?
 
-app_exit_code                       DW ?
+app_exit_code               DW ?
 app_fork_id                 DW ?
 app_unload_proc             DW ?
 
@@ -309,33 +309,38 @@ app_name                    DD ?
 app_cmd_line                DD ?
 app_mem_blocks              DD ?
 
-app_vm_psp_seg                  DW ?
-app_pm_psp_sel                  DW ?
-app_vm_mem_strat                DW ?
-app_vm_dta_seg                  DW ?
-app_pm_dta_sel                  DW ?
-app_dta_offset                  DD ?
-app_psp_mode                    DB ?
-app_dta_mode                    DB ?
-app_find_sel                    DW ?
+app_vm_psp_seg              DW ?
+app_pm_psp_sel              DW ?
+app_vm_mem_strat            DW ?
+app_vm_dta_seg              DW ?
+app_pm_dta_sel              DW ?
+app_dta_offset              DD ?
+app_psp_mode                DB ?
+app_dta_mode                DB ?
+app_find_sel                DW ?
 
-app_ldt_section                 section_typ <>
-app_ldt_data_sel                DW ?
-app_ldt_free                    DW ?
-app_ldt_sel                             DW ?
-app_parent_ldt                  DW ?
+app_ldt_section             section_typ <>
+app_ldt_data_sel            DW ?
+app_ldt_free                DW ?
+app_ldt_sel                 DW ?
+app_parent_ldt              DW ?
 
-app_handle_sel                  DW ?
-app_handle_mem_sel              DW ?
-app_c_handle_sel                DW ?
+app_handle_sel              DW ?
+app_handle_mem_sel          DW ?
+app_c_handle_sel            DW ?
 
-app_context                             DW ?
-app_bitness                             DB ?
+app_context                 DW ?
+app_bitness                 DB ?
 app_key                     DB ?
 app_console                 DW ?
 
-app_pm_int                              DD 100h DUP(?,?)
-app_pm_exc                              DD 20h DUP(?,?)
+app_pm_int                  DD 100h DUP(?,?)
+app_pm_exc                  DD 20h DUP(?,?)
+
+app_cur_dir_sel		    DW 256 DUP(?)
+app_curr_drive		    DB ?
+app_memmap_list	            DD ?
+app_memmap_spinlock         spinlock_typ <>
 
 app_exe_name                DB 100h DUP(?)
 
