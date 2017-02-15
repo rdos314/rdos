@@ -60,13 +60,6 @@ fs_sel				DW 256 DUP(?)
 
 fs_data_seg		ENDS
 
-fs_process_seg	STRUC
-
-memmap_list			DD ?
-memmap_spinlock     spinlock_typ <>
-
-fs_process_seg	ENDS
-
 file_list_struc	STRUC
 
 fl_usage			DW ?

@@ -243,7 +243,6 @@ ems_process_sel         EQU 5A0h
 fs_code_sel                     EQU 5B0h
 fs_data_sel                     EQU 5B8h
 fs_sys_data_sel     EQU 5C0h
-fs_process_sel          EQU 5C8h
 
 rem_debug_code_sel  EQU 5D0h
 rem_debug_data_sel  EQU 5D8h

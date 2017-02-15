@@ -58,10 +58,10 @@ CallFileSystem  MACRO   call_proc
 
 data    SEGMENT byte public 'DATA'
 
-fs_init_hooks		DB ?
-fs_done_hooks		DB ?
-fs_init_hook_arr	DD 32 DUP(?,?)
-fs_done_hook_arr	DD 32 DUP(?,?)
+fs_init_hooks           DB ?
+fs_done_hooks           DB ?
+fs_init_hook_arr        DD 32 DUP(?,?)
+fs_done_hook_arr        DD 32 DUP(?,?)
 
 data    ENDS
 
@@ -74,11 +74,13 @@ code    SEGMENT byte public 'CODE'
     extrn init_file:near
     extrn init_dir:near
     extrn init_memmap:near
-    extrn init_memmap_process:near
 
     extrn app_dir_create:near
     extrn app_dir_copy:near
     extrn app_dir_delete:near
+    
+    extrn app_memmap_create:near
+    extrn app_memmap_delete:near
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -93,6 +95,7 @@ code    SEGMENT byte public 'CODE'
 
 notify_create   Proc far
     call app_dir_create
+    call app_memmap_create
     retf32
 notify_create   Endp
 
@@ -173,6 +176,7 @@ notify_spawn    Endp
 
 notify_terminate        Proc far
     call app_dir_delete
+    call app_memmap_delete
     retf32
 notify_terminate        Endp
 
@@ -681,33 +685,6 @@ rename_file16   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           INIT_PROCESS
-;
-;           DESCRIPTION:    Init per-process data
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_process    PROC far
-    push ds
-    push es
-    pushad
-;
-    mov ax,fs_process_sel
-    mov es,ax
-;
-    call init_memmap_process
-;
-    popad
-    pop es
-    pop ds
-    retf32
-init_process    ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           Hook_thread
 ;
 ;           DESCRIPTION:    Run all init file system hooks
@@ -916,13 +893,6 @@ init    PROC far
 ;
     mov edi,OFFSET init_hook_thread
     HookInitTasking
-;
-    mov edi,OFFSET init_process
-    HookCreateProcess
-;
-    mov eax,SIZE fs_process_seg
-    mov bx,fs_process_sel
-    AllocateFixedProcessMem
 ;       
     mov eax,SIZE fs_data_seg
     mov bx,fs_sys_data_sel
