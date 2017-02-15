@@ -4196,6 +4196,19 @@ fork_proc      Proc far
 fork_parent:
     push es
     mov es,ax
+;
+    push ds
+    push dx
+;
+    mov ds,es:p_app_sel
+    mov ax,ds:app_mod_sel
+    mov ds,es:p_process_sel
+    mov dx,ds:ms_pd_sel
+    CreateProcHandle
+    movzx eax,bx
+;
+    pop dx
+    pop ds
 
 fork_wait_child:
     test es:p_flags,THREAD_FLAG_FORKED
@@ -4205,8 +4218,6 @@ fork_wait_child:
     jmp fork_wait_child
     
 fork_child_completed:
-    movzx eax,es:p_id
-;
     pop es
     pop ebx
     pop ebx
