@@ -3201,6 +3201,119 @@ init_dir_process    PROC near
     ret
 init_dir_process    Endp
 
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           app_dir_create
+;
+;           DESCRIPTION:    App dir create
+;
+;           PARAMETERS:     ES          App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public app_dir_create
+
+app_dir_create   Proc near
+    push ax
+    push cx
+    push di
+;
+    mov es:curr_drive,MAX_DRIVES - 1
+    mov di,OFFSET app_cur_dir_sel
+    mov cx,256
+    xor ax,ax
+    rep stosw
+;
+    pop di
+    pop cx
+    pop ax
+    ret
+app_dir_create   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           app_dir_copy
+;
+;           DESCRIPTION:    App dir copy
+;
+;           PARAMETERS:     ES          App sel
+;                           DS          Parent app sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public app_dir_copy
+
+app_dir_copy   Proc near
+    push fs
+    push ax
+    push bx
+    push cx
+;
+    mov cx,256
+    mov bx,OFFSET app_cur_dir_sel
+
+adcLoop:
+    mov ax,ds:[bx]
+    mov es:[bx],ax
+    or ax,ax
+    jz adcNext
+;
+    mov fs,ax
+    inc fs:ds_usage
+
+adcNext:
+    add bx,2
+    loop adcLoop
+;
+    pop cx
+    pop bx
+    pop ax
+    pop fs
+    ret
+app_dir_copy   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           app_dir_delete
+;
+;           DESCRIPTION:    App dir delete
+;
+;           PARAMETERS:     ES          App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public app_dir_delete
+
+app_dir_delete        Proc near
+    push ax
+    push bx
+    push cx
+    push di
+;
+    mov cx,256
+    mov di,OFFSET app_cur_dir_sel
+
+addLoop:
+    mov bx,es:[di]
+    or bx,bx
+    jz addNext
+;
+    call FreeDir
+
+addNext:
+    add di,2
+    loop addLoop
+;
+    pop di
+    pop cx
+    pop bx
+    pop ax
+    ret
+app_dir_delete        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

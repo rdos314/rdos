@@ -77,7 +77,9 @@ code    SEGMENT byte public 'CODE'
     extrn init_dir_process:near
     extrn init_memmap_process:near
 
-
+    extrn app_dir_create:near
+    extrn app_dir_copy:near
+    extrn app_dir_delete:near
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -91,6 +93,7 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_create   Proc far
+    call app_dir_create
     retf32
 notify_create   Endp
 
@@ -122,6 +125,7 @@ notify_start    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_forked   Proc far
+    call app_dir_copy
     retf32
 notify_forked   Endp
 
@@ -153,6 +157,7 @@ notify_exec     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_spawn    Proc far
+    call app_dir_copy
     retf32
 notify_spawn    Endp
 
@@ -168,6 +173,7 @@ notify_spawn    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_terminate        Proc far
+    call app_dir_delete
     retf32
 notify_terminate        Endp
 
