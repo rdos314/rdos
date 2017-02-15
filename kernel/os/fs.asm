@@ -77,6 +77,116 @@ code    SEGMENT byte public 'CODE'
     extrn init_dir_process:near
     extrn init_memmap_process:near
 
+
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_create
+;
+;           DESCRIPTION:    Notify create process
+;
+;           PARAMETERS:     ES          App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_create   Proc far
+    retf32
+notify_create   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_start
+;
+;           DESCRIPTION:    Notify start boot process
+;
+;           PARAMETERS:     ES          App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_start    Proc far
+    retf32
+notify_start    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_forked
+;
+;           DESCRIPTION:    Notify forked
+;
+;           PARAMETERS:     ES          App sel
+;                           DS          Parent app sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_forked   Proc far
+    retf32
+notify_forked   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_exec
+;
+;           DESCRIPTION:    Notify exec
+;
+;           PARAMETERS:     ES          App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_exec     Proc far
+    retf32
+notify_exec     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_spawn
+;
+;           DESCRIPTION:    Notify spawn
+;
+;           PARAMETERS:     ES          App sel
+;                           DS          Parent app sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_spawn    Proc far
+    retf32
+notify_spawn    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           notify_terminate
+;
+;           DESCRIPTION:    Notify terminate
+;
+;           PARAMETERS:     ES          App sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_terminate        Proc far
+    retf32
+notify_terminate        Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;           NAME:           App activity table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_activity_table:
+a0 DD OFFSET notify_create,     SEG code   ; create process
+a1 DD OFFSET notify_start,      SEG code   ; boot app
+a2 DD OFFSET notify_forked,     SEG code   ; forked
+a3 DD OFFSET notify_exec,       SEG code   ; exec
+a4 DD OFFSET notify_spawn,      SEG code   ; spawn
+a5 DD OFFSET notify_terminate,  SEG code   ; terminate process
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -741,6 +851,9 @@ init    PROC far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov edi,OFFSET app_activity_table
+    HookAppActivity
 ;
     mov esi,OFFSET hook_init_file_system
     mov edi,OFFSET hook_init_file_system_name
