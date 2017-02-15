@@ -2020,9 +2020,11 @@ lepFail:
     UnloadExe
 
 lepRet:
+    int 3
     push ax
     GetThread
     mov ds,ax
+    mov ds:p_temp_word,fs
     mov ds,ds:p_app_sel
     mov bx,ds:app_context
     pop ax
@@ -2031,6 +2033,7 @@ lepRet:
 ;
     GetThread
     mov ds,ax
+    mov fs,ds:p_temp_word
     mov ds,ds:p_app_sel
     mov ax,ds:app_exit_code    
     mov gs:el_ret_code,ax

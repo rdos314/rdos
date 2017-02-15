@@ -356,23 +356,24 @@ init_app    ENDP
 app_notify_create_name      DB 'App Notify Create',0
 
 app_notify_create   PROC far
-    push fs
     push gs
     push ebx
     push ecx
     push edi
 ;
     mov cx,hook_sel
-    mov fs,cx
-    mov cl,fs:app_activity_hooks
+    mov gs,cx
+    mov cl,gs:app_activity_hooks
     or cl,cl
     je app_notify_create_done
 ;
     mov bx,OFFSET app_activity_arr
 
 app_notify_create_loop:
-    lgs edi,fs:[bx]
+    push gs
+    lgs edi,gs:[bx]
     call fword ptr gs:[edi].aa_create_proc
+    pop gs
     add bx,8
     dec cl
     jnz app_notify_create_loop
@@ -382,7 +383,6 @@ app_notify_create_done:
     pop ecx
     pop ebx
     pop gs
-    pop fs
     retf32
 app_notify_create   Endp
     
@@ -400,23 +400,24 @@ app_notify_create   Endp
 app_notify_start_name      DB 'App Notify Start',0
 
 app_notify_start   PROC far
-    push fs
     push gs
     push ebx
     push ecx
     push edi
 ;
     mov cx,hook_sel
-    mov fs,cx
-    mov cl,fs:app_activity_hooks
+    mov gs,cx
+    mov cl,gs:app_activity_hooks
     or cl,cl
     je app_notify_start_done
 ;
     mov bx,OFFSET app_activity_arr
 
 app_notify_start_loop:
-    lgs edi,fs:[bx]
+    push gs
+    lgs edi,gs:[bx]
     call fword ptr gs:[edi].aa_start_proc
+    pop gs
     add bx,8
     dec cl
     jnz app_notify_start_loop
@@ -426,7 +427,6 @@ app_notify_start_done:
     pop ecx
     pop ebx
     pop gs
-    pop fs
     retf32
 app_notify_start   Endp
     
@@ -445,23 +445,24 @@ app_notify_start   Endp
 app_notify_forked_name      DB 'App Notify Forked',0
 
 app_notify_forked   PROC far
-    push fs
     push gs
     push ebx
     push ecx
     push edi
 ;
     mov cx,hook_sel
-    mov fs,cx
-    mov cl,fs:app_activity_hooks
+    mov gs,cx
+    mov cl,gs:app_activity_hooks
     or cl,cl
     je app_notify_forked_done
 ;
     mov bx,OFFSET app_activity_arr
 
 app_notify_forked_loop:
-    lgs edi,fs:[bx]
+    push gs
+    lgs edi,gs:[bx]
     call fword ptr gs:[edi].aa_forked_proc
+    pop gs
     add bx,8
     dec cl
     jnz app_notify_forked_loop
@@ -471,7 +472,6 @@ app_notify_forked_done:
     pop ecx
     pop ebx
     pop gs
-    pop fs
     retf32
 app_notify_forked   Endp
     
@@ -489,23 +489,24 @@ app_notify_forked   Endp
 app_notify_exec_name      DB 'App Notify Exec',0
 
 app_notify_exec   PROC far
-    push fs
     push gs
     push ebx
     push ecx
     push edi
 ;
     mov cx,hook_sel
-    mov fs,cx
-    mov cl,fs:app_activity_hooks
+    mov gs,cx
+    mov cl,gs:app_activity_hooks
     or cl,cl
     je app_notify_exec_done
 ;
     mov bx,OFFSET app_activity_arr
 
 app_notify_exec_loop:
-    lgs edi,fs:[bx]
+    push gs
+    lgs edi,gs:[bx]
     call fword ptr gs:[edi].aa_exec_proc
+    pop gs
     add bx,8
     dec cl
     jnz app_notify_exec_loop
@@ -515,7 +516,6 @@ app_notify_exec_done:
     pop ecx
     pop ebx
     pop gs
-    pop fs
     retf32
 app_notify_exec   Endp
     
@@ -534,23 +534,24 @@ app_notify_exec   Endp
 app_notify_spawn_name      DB 'App Notify Spawn',0
 
 app_notify_spawn   PROC far
-    push fs
     push gs
     push ebx
     push ecx
     push edi
 ;
     mov cx,hook_sel
-    mov fs,cx
-    mov cl,fs:app_activity_hooks
+    mov gs,cx
+    mov cl,gs:app_activity_hooks
     or cl,cl
     je app_notify_spawn_done
 ;
     mov bx,OFFSET app_activity_arr
 
 app_notify_spawn_loop:
-    lgs edi,fs:[bx]
+    push gs
+    lgs edi,gs:[bx]
     call fword ptr gs:[edi].aa_spawn_proc
+    pop gs
     add bx,8
     dec cl
     jnz app_notify_spawn_loop
@@ -560,7 +561,6 @@ app_notify_spawn_done:
     pop ecx
     pop ebx
     pop gs
-    pop fs
     retf32
 app_notify_spawn   Endp
     
@@ -578,24 +578,30 @@ app_notify_spawn   Endp
 app_notify_terminate_name      DB 'App Notify Terminate',0
 
 app_notify_terminate   PROC far
-    push fs
     push gs
+    push eax
     push ebx
     push ecx
     push edi
 ;
     mov cx,hook_sel
-    mov fs,cx
-    mov cl,fs:app_activity_hooks
+    mov gs,cx
+    mov cl,gs:app_activity_hooks
     or cl,cl
     je app_notify_terminate_done
 ;
     mov bx,OFFSET app_activity_arr
+    movzx ax,cl
+    dec ax
+    shl ax,3
+    add bx,ax
 
 app_notify_terminate_loop:
-    lgs edi,fs:[bx]
+    push gs
+    lgs edi,gs:[bx]
     call fword ptr gs:[edi].aa_terminate_proc
-    add bx,8
+    pop gs
+    sub bx,8
     dec cl
     jnz app_notify_terminate_loop
 
@@ -603,8 +609,8 @@ app_notify_terminate_done:
     pop edi
     pop ecx
     pop ebx
+    pop eax
     pop gs
-    pop fs
     retf32
 app_notify_terminate   Endp
 
