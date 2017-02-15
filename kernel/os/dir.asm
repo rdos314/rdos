@@ -530,9 +530,10 @@ ParseDir    Proc near
     push esi
     push ebp
 ;
-    mov bx,fs_process_sel
-    mov ds,bx
-    mov al,ds:curr_drive
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov al,ds:app_curr_drive
     mov bx,es:[edi]
     or bl,bl
     je parse_drive_done
@@ -574,7 +575,7 @@ parse_dir_abs:
 parse_dir_rel:
     movzx si,al
     add si,si
-    mov bx,ds:[si].cur_dir_sel
+    mov bx,ds:[si].app_cur_dir_sel
     or bx,bx
     jz parse_dir_root
 ;
@@ -600,11 +601,14 @@ parse_dir_old:
     call FreeDir
 
 parse_dir_old_zero:
-    mov bx,fs_process_sel
-    mov ds,bx
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    pop ax
     movzx si,al
     add si,si
-    mov ds:[si].cur_dir_sel,0
+    mov ds:[si].app_cur_dir_sel,0
 
 parse_dir_root:
     mov bx,fs_sys_data_sel
@@ -628,11 +632,14 @@ parse_dir_root:
     mov ds:fs_root_dir_sel,bx
 ;
     push ds
+    push ax
     mov ds,bx
     inc ds:ds_usage
-    mov dx,fs_process_sel
-    mov ds,dx
-    mov ds:[si].cur_dir_sel,bx
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds:[si].app_cur_dir_sel,bx
+    pop ax
     pop ds
 
 parse_dir_buffered:
@@ -857,9 +864,12 @@ GetDeviceRoot   Proc near
     mov ds:fs_root_dir_sel,bx
 ;
     push ds
-    mov dx,fs_process_sel
-    mov ds,dx
-    mov ds:[si].cur_dir_sel,bx
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds:[si].app_cur_dir_sel,bx
+    pop ax
     pop ds
 
 get_device_root_done:
@@ -1117,11 +1127,14 @@ GetCurDirBase   Proc near
     mov ds:fs_access_parse,1
     mov edx,ds:fs_mount_id
 ;
-    mov si,fs_process_sel
-    mov ds,si
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    pop ax
     mov si,flat_sel
     mov fs,si
-    mov bx,ds:[bx].cur_dir_sel
+    mov bx,ds:[bx].app_cur_dir_sel
     xor ecx,ecx
     mov byte ptr es:[edi],0
     or bx,bx
@@ -1246,13 +1259,17 @@ SetCurDirBase   Proc near
     push bx
     push si
 ;
-    mov bx,fs_process_sel
-    mov es,bx
+    push ax
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    pop ax
+;
     mov bx,ds
     mov al,ds:ds_drive
     movzx si,al
     add si,si
-    xchg bx,es:[si].cur_dir_sel
+    xchg bx,es:[si].app_cur_dir_sel
     or bx,bx
     jz set_cur_dir_setup
 ;
@@ -2459,12 +2476,16 @@ set_cur_drive:
 
     push ds
     push si
-    mov si,fs_process_sel
-    mov ds,si
+;
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    pop ax
     call ValidateDrive
     jc set_cur_drive_done
 ;
-    mov ds:curr_drive,al
+    mov ds:app_curr_drive,al
 
 set_cur_drive_done:
     pop si
@@ -2494,9 +2515,12 @@ get_cur_drive_name      DB 'Get Current Drive',0
 get_cur_drive:
     push ds
     push si
-    mov si,fs_process_sel
-    mov ds,si
-    mov al,ds:curr_drive
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    pop ax
+    mov al,ds:app_curr_drive
     clc
     pop si
     pop ds
@@ -3192,12 +3216,12 @@ delete_handle   Endp
     public init_dir_process
 
 init_dir_process    PROC near
-    mov ax,fs_process_sel
-    mov es,ax
-    mov di,OFFSET cur_dir_sel
-    mov cx,256
-    xor ax,ax
-    rep stosw
+;    mov ax,fs_process_sel
+;    mov es,ax
+;    mov di,OFFSET cur_dir_sel
+;    mov cx,256
+;    xor ax,ax
+;    rep stosw
     ret
 init_dir_process    Endp
 
@@ -3220,7 +3244,7 @@ app_dir_create   Proc near
     push cx
     push di
 ;
-    mov es:curr_drive,MAX_DRIVES - 1
+    mov es:app_curr_drive,MAX_DRIVES - 1
     mov di,OFFSET app_cur_dir_sel
     mov cx,256
     xor ax,ax

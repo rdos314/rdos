@@ -698,7 +698,7 @@ init_process    PROC far
     mov ax,fs_process_sel
     mov es,ax
 ;
-    mov es:curr_drive,MAX_DRIVES - 1
+;    mov es:curr_drive,MAX_DRIVES - 1
 ;
     call init_dir_process
     call init_memmap_process
