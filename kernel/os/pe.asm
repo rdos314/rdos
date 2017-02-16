@@ -4348,6 +4348,8 @@ fork_notify_ok:
 ;
     pop ebx
     Signal
+    mov ax,10
+    WaitMilliSec
 ;
     pop ecx
     pop ebx

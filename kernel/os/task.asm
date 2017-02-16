@@ -7370,7 +7370,7 @@ start_wait_for_proc_end PROC far
 start_wait_done:    
     pop eax
     pop ds
-    ret
+    retf32
 start_wait_for_proc_end Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7394,7 +7394,7 @@ stop_wait_for_proc_end  PROC far
 ;    
     pop eax
     pop ds
-    ret
+    retf32
 stop_wait_for_proc_end Endp
 
     
@@ -7410,7 +7410,7 @@ stop_wait_for_proc_end Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 dummy_clear_proc_end    PROC far
-    ret
+    retf32
 dummy_clear_proc_end Endp
 
     
@@ -7441,7 +7441,7 @@ is_proc_end_idle    PROC far
 is_idle_done:    
     pop eax
     pop ds
-    ret
+    retf32
 is_proc_end_idle Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8590,6 +8590,9 @@ terminate_proc:
 ;
     mov es,ax
     SignalWait
+;
+    mov ax,200
+    WaitMilliSec
 
 terminate_proc_sig_done:   
     LeaveSection ds:pd_section
