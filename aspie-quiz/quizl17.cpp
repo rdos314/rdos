@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# QuizL16.cpp
-# Quiz class for L16
+# QuizL17.cpp
+# Quiz class for L17
 #
 #######################################################################*/
 
@@ -29,8 +29,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "quizl16.h"
-#include "quizdl16.h"
+#include "quizl17.h"
+#include "quizdl17.h"
 
 #define CI      1
 
@@ -41,16 +41,16 @@
 
 /*##########################################################################
 #
-#   Name       : TQuizL16::TQuizL16
+#   Name       : TQuizL17::TQuizL17
 #
-#   Purpose....: Constructor for TQuizL16
+#   Purpose....: Constructor for TQuizL17
 #
 #   In params..: Filename to load quiz from
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizL16::TQuizL16(const char *FileName)
+TQuizL17::TQuizL17(const char *FileName)
   : TQuiz(125),
         FDataFile(FileName)
 {
@@ -63,44 +63,43 @@ TQuizL16::TQuizL16(const char *FileName)
 
 /*##########################################################################
 #
-#   Name       : TQuizL16::~TQuizL16
+#   Name       : TQuizL17::~TQuizL17
 #
-#   Purpose....: Destructor for TQuizL16
+#   Purpose....: Destructor for TQuizL17
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizL16::~TQuizL16()
+TQuizL17::~TQuizL17()
 {
 }
 
-/*##################  TQuizL16::GetPcaCount ##########################
+/*##################  TQuizL17::GetPcaCount ##########################
 *   Purpose....: Return number of available PCA axises                          #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizL16::GetPcaCount()
+int TQuizL17::GetPcaCount()
 {
     return 4;
 }
 
-/*##################  TQuizL16::GetCatCount ##########################
+/*##################  TQuizL17::GetCatCount ##########################
 *   Purpose....: Return number of categories for question                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizL16::GetCatCount(int Question)
+int TQuizL17::GetCatCount(int Question)
 {
     switch (Question)
     {
         case 122:
-        case 123:
             return 5;
 
         case 124:
@@ -118,14 +117,14 @@ int TQuizL16::GetCatCount(int Question)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizL16::GetQuizN()
+int TQuizL17::GetQuizN()
 {
     return 125;
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizL16::WriteName
+#   Name       : TQuizL17::WriteName
 #
 #   Purpose....: Write quiz name
 #
@@ -134,14 +133,14 @@ int TQuizL16::GetQuizN()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL16::WriteName(TFile &File)
+void TQuizL17::WriteName(TFile &File)
 {
-    File.Write("L16");
+    File.Write("L17");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizL16::WriteLongName
+#   Name       : TQuizL17::WriteLongName
 #
 #   Purpose....: Write long quiz name
 #
@@ -150,14 +149,14 @@ void TQuizL16::WriteName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL16::WriteLongName(TFile &File)
+void TQuizL17::WriteLongName(TFile &File)
 {
-    File.Write("L16");
+    File.Write("L17");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizL16::SetupTexts
+#   Name       : TQuizL17::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
 #
@@ -166,7 +165,7 @@ void TQuizL16::WriteLongName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL16::SetupTexts()
+void TQuizL17::SetupTexts()
 {
   Quiz[0].Aspie = TRUE;
   Quiz[1].Aspie = TRUE;
@@ -554,9 +553,9 @@ void TQuizL16::SetupTexts()
   Quiz[118].Text = "Can you easily remember verbal instructions?";
   Quiz[119].Text = "Do you accept criticism, correction and direction?";
   Quiz[120].Text = "Do you find it easy to estimate the age of people?";
-  Quiz[121].Text = "Have you received pictures with sexual context specfically addressed to you online or to your smart-phone (sexting)?";
+  Quiz[121].Text = "Have you sent pictures with sexual context to somebody online or to their smart-phone (sexting)?";
   Quiz[122].Text = "How were you related at the time the sext was sent?";
-  Quiz[123].Text = "How did you feel about it? [sexting]";
+  Quiz[123].Text = "What kind of reaction did you get? [sexting]";
   Quiz[124].Text = "Who was in the picture? [sexting]";
 
 
@@ -564,7 +563,7 @@ void TQuizL16::SetupTexts()
 
 /*##########################################################################
 #
-#   Name       : TQuizL16::LoadPopulations
+#   Name       : TQuizL17::LoadPopulations
 #
 #   Purpose....: Load populations
 #
@@ -573,7 +572,7 @@ void TQuizL16::SetupTexts()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL16::LoadPopulations()
+void TQuizL17::LoadPopulations()
 {
         TQuizRow Row;
         int i;
@@ -730,7 +729,7 @@ void TQuizL16::LoadPopulations()
 
 /*##########################################################################
 #
-#   Name       : TQuizL16::SetupCross
+#   Name       : TQuizL17::SetupCross
 #
 #   Purpose....: Setup cross-references
 #
@@ -739,7 +738,7 @@ void TQuizL16::LoadPopulations()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL16::SetupCross()
+void TQuizL17::SetupCross()
 {
     int i;
 
@@ -749,7 +748,7 @@ void TQuizL16::SetupCross()
 
 /*##########################################################################
 #
-#   Name       : TQuizL16::GetReferer
+#   Name       : TQuizL17::GetReferer
 #
 #   Purpose....: Get referer population
 #
@@ -758,18 +757,18 @@ void TQuizL16::SetupCross()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL16::GetReferer(const char *referer, TPopulation *pop)
+void TQuizL17::GetReferer(const char *referer, TPopulation *pop)
 {
 }
 
-/*##################  TQuizL16::ImportMvsp ##########################
+/*##################  TQuizL17::ImportMvsp ##########################
 *   Purpose....: Import MVSP loadings                                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizL16::ImportMvsp(const char *filename, int PcaType)
+void TQuizL17::ImportMvsp(const char *filename, int PcaType)
 {
         char buf[MAX_IN_ROW];
         int size;
