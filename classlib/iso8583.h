@@ -78,7 +78,7 @@ protected:
     TIso8583Element *AddElem(int Id);
 
     int *FDigitTable;
-    TIso8583Element *FIsoArr[128];
+    TIso8583Element *FIsoArr[193];
 
 private:
 };
