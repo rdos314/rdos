@@ -28,6 +28,8 @@
 #ifndef _ISO8583_H
 #define _ISO8583_H
 
+#include "datetime.h"
+
 class TIso8583Element
 {
 public:
@@ -47,6 +49,9 @@ public:
 
     const char *GetString();
     void SetString(const char *str);
+
+    TDateTime GetTime();
+    void SetTime(TDateTime &time);
 
     int GetBinarySize();
     const char *GetBinaryData();
@@ -72,6 +77,7 @@ public:
     void AddInt(int Id, int val);
     void AddLong(int Id, long long val);
     void AddString(int Id, const char *str);
+    void AddTime(int Id, TDateTime &time);
     void AddBinary(int Id, const char *data, int size);
 
     int Encode(char *buf, int size);

@@ -425,6 +425,104 @@ void TIso8583Element::SetString(const char *str)
 
 /*##########################################################################
 #
+#   Name       : TIso8583Element::GetTime
+#
+#   Purpose....: Get data as time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime TIso8583Element::GetTime()
+{
+    int year, month, day;
+    int hour, min, sec;
+    int count;
+
+    year = 0;
+    month = 1;
+    day = 1;
+    hour = 0;
+    min = 0;
+    sec = 0;
+
+    switch (FSize)
+    {
+        case 10:
+            count = sscanf(FBuf, "%02d%02d%02d%02d%02d", &month, &day, &hour, &min, &sec);
+            break;
+
+        case 12:
+            count = sscanf(FBuf, "%02d%02d%02d%02d%02d%02d", &year, &month, &day, &hour, &min, &sec);
+            break;
+
+        case 14:
+            count = sscanf(FBuf, "%04d%02d%02d%02d%02d%02d", &year, &month, &day, &hour, &min, &sec);
+            break;
+    
+        case 6:
+            count = sscanf(FBuf, "%02d%02d%02d", &year, &month, &day);
+            break;
+
+        case 4:
+            count = sscanf(FBuf, "%02d%02d%02d", &year, &month);
+            break;
+    }
+
+    if (year && year < 100)
+        year += 2000;
+
+    return TDateTime(year, month, day, hour, min, sec);
+
+}    
+
+/*##########################################################################
+#
+#   Name       : TIso8583Element::SetTime
+#
+#   Purpose....: Set data as time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583Element::SetTime(TDateTime &time)
+{
+    char str[20];
+
+    switch (FFixedDigits)
+    {
+        case 10:
+            sprintf(str, "%02d%02d%02d%02d%02d", time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
+            break;
+
+        case 12:
+            sprintf(str, "%02d%02d%02d%02d%02d%02d", time.GetYear() - 2000, time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
+            break;
+
+        case 14:
+            sprintf(str, "%04d%02d%02d%02d%02d%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
+            break;
+    
+        case 6:
+            sprintf(str, "%02d%02d%02d", time.GetYear() - 2000, time.GetMonth(), time.GetDay());
+            break;
+
+        case 4:
+            sprintf(str, "%02d%02d%02d", time.GetYear() - 2000, time.GetMonth());
+            break;
+
+        default:
+            str[0] = 0;
+    }
+
+    SetString(str);
+}    
+
+/*##########################################################################
+#
 #   Name       : TIso8583Element::GetBinarySize
 #
 #   Purpose....: Get binary size
@@ -680,6 +778,25 @@ void TIso8583::AddString(int Id, const char *str)
 
     if (elem)
         elem->SetString(str);
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::AddTime
+#
+#   Purpose....: Add time element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583::AddTime(int Id, TDateTime &time)
+{
+    TIso8583Element *elem = AddElem(Id);
+
+    if (elem)
+        elem->SetTime(time);
 }
 
 /*##########################################################################
