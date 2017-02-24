@@ -67,17 +67,23 @@ public:
     TIso8583();
     virtual ~TIso8583();
 
+    void Create(int MsgType);
+    
     void AddInt(int Id, int val);
     void AddLong(int Id, long long val);
     void AddString(int Id, const char *str);
     void AddBinary(int Id, const char *data, int size);
 
+    int Encode(char *buf, int size);
+
 protected:
     void Init();
     void Reset();
     TIso8583Element *AddElem(int Id);
+    char *EncodeBitmap1(char *buf, int *RemSize);
 
     int *FDigitTable;
+    int FMsgType;
     TIso8583Element *FIsoArr[193];
 
 private:

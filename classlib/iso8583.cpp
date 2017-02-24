@@ -550,6 +550,8 @@ void TIso8583::Init()
 
     for (i = 0; i <= 192; i++)
         FIsoArr[i] = 0;
+
+    FMsgType = 0;
 }
 
 /*##########################################################################
@@ -575,6 +577,23 @@ void TIso8583::Reset()
             FIsoArr[i] = 0;
         }
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::Create
+#
+#   Purpose....: create a new msg
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583::Create(int MsgType)
+{
+    Reset();
+    FMsgType = MsgType;
 }
 
 /*##########################################################################
@@ -680,4 +699,126 @@ void TIso8583::AddBinary(int Id, const char *data, int size)
 
     if (elem)
         elem->SetBinary(data, size);
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Element::EncodeBitmap1
+#
+#   Purpose....: Encode primary bitmap
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TIso8583::EncodeBitmap1(char *buf, int *remsize)
+{
+    int i, j;
+    int elem;
+    char mask;
+    char ch;
+    char *ptr = buf;
+    int Has2 = FALSE;
+    int Has3 = FALSE;
+
+    for (i = 65; i <= 192; i++)
+        if (FIsoArr[i])
+            Has2 = TRUE;
+
+    for (i = 129; i <= 192; i++)
+        if (FIsoArr[i])
+            Has3 = TRUE;
+
+    if (*remsize >= 8)
+    {
+        for (i = 0; i < 8; i++)
+        {
+            elem = 8 * i + 1;
+            mask = 0x80;
+
+            if (i == 0 && Has2)
+                ch = 0x80;
+            else
+                ch = 0;
+
+            for (j = 0; j < 8; j++)
+            {
+                if (FIsoArr[elem])
+                    ch |= mask;
+
+                mask = mask >> 1;
+                elem++;
+            }
+            ptr[i] = ch;
+        }
+        *remsize -= 8;
+        ptr += 8;
+    }
+    else
+        return 0;
+
+    if (Has2 && *remsize >= 8)
+    {
+        for (i = 0; i < 8; i++)
+        {
+            elem = 64 + 8 * i + 1;
+            mask = 0x80;
+
+            if (i == 0 && Has3)
+                ch = 0x80;
+            else
+                ch = 0;
+
+            for (j = 0; j < 8; j++)
+            {
+                if (FIsoArr[elem])
+                    ch |= mask;
+
+                mask = mask >> 1;
+                elem++;
+            }
+            ptr[i] = ch;
+        }
+        *remsize -= 8;
+        ptr += 8;
+    }
+
+    return ptr;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::Encode
+#
+#   Purpose....: Encode message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIso8583::Encode(char *buf, int size)
+{
+    int remsize;
+    char *ptr;
+    int elem;
+
+    if (size > 8)
+    {
+        sprintf(buf, "%04d", FMsgType);
+
+        remsize = size - 4;
+        ptr = buf + 4;
+
+        ptr = EncodeBitmap1(ptr, &remsize);
+
+        for (elem = 2; elem <= 64 && ptr; elem++)
+            if (FIsoArr[elem])
+                ptr = FIsoArr[elem]->Encode(ptr, &remsize);
+
+        return size - remsize;
+
+    }
+    return 0;
 }
