@@ -31,13 +31,26 @@
 class TIso8583Element
 {
 public:
-    TIso8583Element(int Id);
+    TIso8583Element(int Id, int *DigitTable);
     virtual ~TIso8583Element();
 
     char *Decode(char *Buf, int *RemSize);
     char *Encode(char *Buf, int *RemSize);
 
     int GetId();
+
+    int GetInt();
+    void SetInt(int val);
+
+    long long GetLong();
+    void SetLong(long long val);
+
+    const char *GetString();
+    void SetString(const char *str);
+
+    int GetBinarySize();
+    const char *GetBinaryData();
+    void SetBinary(const char *data, int size);
 
 protected:
     int FId;
@@ -54,9 +67,21 @@ public:
     TIso8583();
     virtual ~TIso8583();
 
+    void AddInt(int Id, int val);
+    void AddLong(int Id, long long val);
+    void AddString(int Id, const char *str);
+    void AddBinary(int Id, const char *data, int size);
 
 protected:
+    void Init();
+    void Reset();
+    TIso8583Element *AddElem(int Id);
+
+    int *FDigitTable;
+    TIso8583Element *FIsoArr[128];
+
 private:
 };
+
 
 #endif

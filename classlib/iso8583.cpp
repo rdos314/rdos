@@ -76,12 +76,12 @@ static int ElemDigits[] = {
 #   Returns....: *
 #
 ##########################################################################*/
-TIso8583Element::TIso8583Element(int Id)
+TIso8583Element::TIso8583Element(int Id, int *DigitTable)
 {
     int digits = 0;
 
-    if (Id > 0 && Id <=128)
-        digits = ElemDigits[Id];
+    if (Id > 0 && Id <= 128)
+        digits = DigitTable[Id];
 
     if (digits)
     {
@@ -206,14 +206,17 @@ char *TIso8583Element::Decode(char *buf, int *remsize)
 char *TIso8583Element::Encode(char *buf, int *remsize)
 {
     char FormStr[10];
-    char SizeBuf[5];
 
     if (FSizeDigits && FSize)
     {
         if (FSizeDigits <= *remsize)
         {
-            sprintf(FormStr, "%d%%d", FSizeDigits);
+            sprintf(FormStr, "%%0%dd", FSizeDigits);
             sprintf(buf, FormStr, FSize); 
+
+            if (strlen(buf) > FSizeDigits)
+                return 0;
+
             buf += FSizeDigits;
             *remsize -= FSizeDigits;
         }
@@ -232,6 +235,256 @@ char *TIso8583Element::Encode(char *buf, int *remsize)
         return 0;
 }
 
+/*##########################################################################
+#
+#   Name       : TIso8583Element::GetInt
+#
+#   Purpose....: Get data as int
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIso8583Element::GetInt()
+{
+    if (FBuf)
+        return atol(FBuf);
+    else
+        return 0;
+}    
+
+
+/*##########################################################################
+#
+#   Name       : TIso8583Element::GetLong
+#
+#   Purpose....: Get data as long long
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TIso8583Element::GetLong()
+{
+    if (FBuf)
+        return atoll(FBuf);
+    else
+        return 0;
+}    
+
+/*##########################################################################
+#
+#   Name       : TIso8583Element::SetInt
+#
+#   Purpose....: Set data as int
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583Element::SetInt(int val)
+{
+    char FormStr[10];
+
+    if (FBuf)
+    {
+        delete FBuf;
+        FBuf = 0;
+    }
+
+    if (FFixedDigits)
+    {
+        FSize = FFixedDigits;
+        FBuf = new char[FFixedDigits + 10];
+        sprintf(FormStr, "%%0%dd", FFixedDigits);
+        sprintf(FBuf, FormStr, val);
+    }
+    else
+    {
+        FBuf = new char[20];
+        sprintf(FBuf, "%d", val);
+        FSize = strlen(FBuf);
+    }
+}    
+
+
+/*##########################################################################
+#
+#   Name       : TIso8583Element::SetLong
+#
+#   Purpose....: Set data as long
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583Element::SetLong(long long val)
+{
+    char FormStr[10];
+
+    if (FBuf)
+    {
+        delete FBuf;
+        FBuf = 0;
+    }
+
+    if (FFixedDigits)
+    {
+        FSize = FFixedDigits;
+        FBuf = new char[FFixedDigits + 20];
+        sprintf(FormStr, "%%0%dlld", FFixedDigits);
+        sprintf(FBuf, FormStr, val);
+    }
+    else
+    {
+        FBuf = new char[40];
+        sprintf(FBuf, "%d", val);
+        FSize = strlen(FBuf);
+    }
+}    
+
+
+/*##########################################################################
+#
+#   Name       : TIso8583Element::GetString
+#
+#   Purpose....: Get data as string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TIso8583Element::GetString()
+{
+    return FBuf;
+}    
+
+/*##########################################################################
+#
+#   Name       : TIso8583Element::SetString
+#
+#   Purpose....: Set data as string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583Element::SetString(const char *str)
+{
+    int len = strlen(str);
+
+    if (FBuf)
+    {
+        delete FBuf;
+        FBuf = 0;
+    }
+
+    if (FFixedDigits)
+    {
+        FSize = FFixedDigits;
+        FBuf = new char[FSize + 1];
+
+        if (len > FSize)
+        {
+            memcpy(FBuf, str, FSize);
+            FBuf[FSize] = 0;
+        }
+        else
+        {
+            strcpy(FBuf, str);
+            while (strlen(FBuf) < FSize)
+                strcat(FBuf, " ");
+        }
+    }
+    else
+    {
+        FSize = len;
+        FBuf = new char[FSize + 1];
+        strcpy(FBuf, str);
+    }
+}    
+
+/*##########################################################################
+#
+#   Name       : TIso8583Element::GetBinarySize
+#
+#   Purpose....: Get binary size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIso8583Element::GetBinarySize()
+{
+    return FSize;
+}    
+
+/*##########################################################################
+#
+#   Name       : TIso8583Element::GetBinaryData
+#
+#   Purpose....: Get data as binary
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TIso8583Element::GetBinaryData()
+{
+    return FBuf;
+}    
+
+/*##########################################################################
+#
+#   Name       : TIso8583Element::SetBinary
+#
+#   Purpose....: Set data as binary
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583Element::SetBinary(const char *data, int size)
+{
+    int i;
+
+    if (FBuf)
+    {
+        delete FBuf;
+        FBuf = 0;
+    }
+
+    if (FFixedDigits)
+    {
+        FSize = FFixedDigits;
+        FBuf = new char[FSize];
+
+        if (size > FSize)
+            memcpy(FBuf, data, FSize);
+        else
+        {
+            memcpy(FBuf, data, size);
+
+            for (i = size; i < FSize; i++)
+                FBuf[i] = 0;
+        }
+    }
+    else
+    {
+        FSize = size;
+        FBuf = new char[FSize];
+        memcpy(FBuf, data, FSize);
+    }
+}    
 
 /*##########################################################################
 #
@@ -246,6 +499,9 @@ char *TIso8583Element::Encode(char *buf, int *remsize)
 ##########################################################################*/
 TIso8583::TIso8583()
 {
+    FDigitTable = ElemDigits;
+
+    Init();
 }
 
 /*##########################################################################
@@ -261,4 +517,154 @@ TIso8583::TIso8583()
 ##########################################################################*/
 TIso8583::~TIso8583()
 {
+    Reset();
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::Init
+#
+#   Purpose....: Init elements
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583::Init()
+{
+    int i;
+
+    for (i = 0; i < 128; i++)
+        FIsoArr[i] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::Reset
+#
+#   Purpose....: Reset elements
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583::Reset()
+{
+    int i;
+
+    for (i = 0; i < 128; i++)
+    {
+        if (FIsoArr[i])
+        {
+            delete FIsoArr[i];
+            FIsoArr[i] = 0;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::AddElem
+#
+#   Purpose....: Add element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TIso8583Element *TIso8583::AddElem(int Id)
+{
+    int digits = 0;
+
+    if (Id > 0 && Id <= 128)
+    {
+        digits = FDigitTable[Id];
+        if (digits)
+        {
+            if (FIsoArr[Id] == 0)
+                FIsoArr[Id] = new TIso8583Element(Id, FDigitTable);
+
+            return FIsoArr[Id];
+        }
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::AddInt
+#
+#   Purpose....: Add int element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583::AddInt(int Id, int val)
+{
+    TIso8583Element *elem = AddElem(Id);
+
+    if (elem)
+        elem->SetInt(val);
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::AddLong
+#
+#   Purpose....: Add long element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583::AddLong(int Id, long long val)
+{
+    TIso8583Element *elem = AddElem(Id);
+
+    if (elem)
+        elem->SetLong(val);
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::AddString
+#
+#   Purpose....: Add string element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583::AddString(int Id, const char *str)
+{
+    TIso8583Element *elem = AddElem(Id);
+
+    if (elem)
+        elem->SetString(str);
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::AddBinary
+#
+#   Purpose....: Add binary element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583::AddBinary(int Id, const char *data, int size)
+{
+    TIso8583Element *elem = AddElem(Id);
+
+    if (elem)
+        elem->SetBinary(data, size);
 }
