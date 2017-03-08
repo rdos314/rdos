@@ -2922,6 +2922,11 @@ load_page_size_ok:
     mov es,ax
     add edx,[esi].o_phys_offset
     ReadCFile
+    jnc load_page_pad
+;
+    xor eax,eax
+
+load_page_pad:    
     add edi,eax
     mov ecx,1000h
     sub ecx,eax
