@@ -98,6 +98,7 @@ udp_remote_port         DW ?
 udp_wait                DW ?
 udp_data_sel            DW ?
 udp_data_size           DW ?
+udp_conn_section        section_typ <>
 
 udp_connection  ENDS
 
@@ -1251,6 +1252,7 @@ CreateConnection    Proc near
 ;
     mov eax,SIZE udp_connection
     AllocateSmallGlobalMem
+    InitSection es:udp_conn_section
     mov es:udp_port,si
     mov es:udp_remote_ip,edx
     mov es:udp_remote_port,di
@@ -1291,17 +1293,8 @@ DeleteConnection    Proc near
     push ecx
     push edx
 ;
-    mov ax,ds:udp_data_sel
-    or ax,ax
-    jz delete_data_freed
-;
-    mov es,ax
-    FreeMem
-
-delete_data_freed:        
+    push ds
     mov dx,ds:udp_next
-    mov bx,ds
-    mov es,bx
 ;
     mov ax,SEG data
     mov ds,ax
@@ -1334,6 +1327,21 @@ delete_connect_unlinked:
     mov ds,ax
     LeaveSection ds:udp_section
 ;    
+    pop ds
+;
+    mov ax,25
+    WaitMilliSec
+;
+    mov ax,ds:udp_data_sel
+    or ax,ax
+    jz delete_data_freed
+;
+    mov es,ax
+    FreeMem
+
+delete_data_freed:        
+    mov ax,ds
+    mov es,ax
     FreeMem
 ;
     pop edx
@@ -1425,6 +1433,7 @@ UpdateConnection  Proc near
     mov si,di
 ;
     mov ds,ax
+    EnterSection ds:udp_conn_section
     mov ax,ds:udp_data_sel
     or ax,ax
     jz update_conn_add
@@ -1440,6 +1449,8 @@ update_conn_add:
 ;    
     xor di,di
     rep movs es:[di],fs:[si]    
+;
+    LeaveSection ds:udp_conn_section
 ;
     mov ax,ds:udp_wait
     or ax,ax
@@ -1712,6 +1723,8 @@ read_udp_connection       Proc near
     push edi
 ;
     mov ds,ax
+    EnterSection ds:udp_conn_section
+;
     mov eax,ecx
     movzx ecx,ds:udp_data_size
     cmp ecx,eax
@@ -1742,6 +1755,8 @@ read_udp_do:
     mov ds:udp_data_size,0
     
 read_udp_copied:
+    LeaveSection ds:udp_conn_section
+;
     pop edi
     pop esi
     pop ecx    
