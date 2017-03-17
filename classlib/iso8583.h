@@ -80,19 +80,24 @@ public:
     void AddTime(int Id, TDateTime &time);
     void AddBinary(int Id, const char *data, int size);
 
+    void Reset();
     int Encode(char *buf, int size);
+    int Decode(char *buf, int size);
 
 protected:
     void Init();
-    void Reset();
     TIso8583Element *AddElem(int Id);
+    TIso8583Element *AddElem();
     char *EncodeBitmap1(char *buf, int *RemSize);
+
+    char *DecodeBitmap1(char *buf, int *RemSize);
 
     int *FDigitTable;
     int FMsgType;
     TIso8583Element *FIsoArr[193];
 
 private:
+    int FUsedArr[193];
 };
 
 

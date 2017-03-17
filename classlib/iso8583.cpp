@@ -192,7 +192,7 @@ char *TIso8583Element::Decode(char *buf, int *remsize)
     else
         FSize = FFixedDigits;
 
-    if (FSize > 0 && FSize < *remsize)
+    if (FSize > 0 && FSize <= *remsize)
     {
         FBuf = new char[FSize + 1];
         memcpy(FBuf, buf, FSize);
@@ -698,7 +698,7 @@ void TIso8583::Create(int MsgType)
 #
 #   Name       : TIso8583::AddElem
 #
-#   Purpose....: Add element
+#   Purpose....: Add element using ID
 #
 #   In params..: *
 #   Out params.: *
@@ -709,6 +709,45 @@ TIso8583Element *TIso8583::AddElem(int Id)
 {
     int digits = 0;
 
+    if (Id > 0 && Id <= 192)
+    {
+        digits = FDigitTable[Id];
+        if (digits)
+        {
+            if (FIsoArr[Id] == 0)
+                FIsoArr[Id] = new TIso8583Element(Id, FDigitTable);
+
+            return FIsoArr[Id];
+        }
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::AddElem
+#
+#   Purpose....: Add element from used array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TIso8583Element *TIso8583::AddElem()
+{
+    int digits = 0;
+    int Id;
+
+    for (Id = 1; Id <= 192; Id++)
+    {
+        if (FUsedArr[Id])
+        {
+            FUsedArr[Id] = 0;
+            break;
+        }
+    }
+ 
     if (Id > 0 && Id <= 192)
     {
         digits = FDigitTable[Id];
@@ -933,6 +972,122 @@ int TIso8583::Encode(char *buf, int size)
         for (elem = 2; elem <= 64 && ptr; elem++)
             if (FIsoArr[elem])
                 ptr = FIsoArr[elem]->Encode(ptr, &remsize);
+
+        return size - remsize;
+
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Element::DncodeBitmap1
+#
+#   Purpose....: Decode primary bitmap
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TIso8583::DecodeBitmap1(char *buf, int *remsize)
+{
+    int i, j;
+    int elem;
+    char mask;
+    char *ptr = buf;
+    char ch;
+
+    for (i = 0; i <= 192; i++)
+        FUsedArr[i] = FALSE;
+
+    if (*remsize >= 8)
+    {
+        for (i = 0; i < 8; i++)
+        {
+            elem = 8 * i + 1;
+            mask = 0x80;
+            ch = ptr[i];
+
+            for (j = 0; j < 8; j++)
+            {
+                if (ch & mask)
+                    FUsedArr[elem] = TRUE;
+
+                mask = mask >> 1;
+                elem++;
+            }
+        }
+        *remsize -= 8;
+        ptr += 8;
+    }
+    else
+        return 0;
+
+    if (FUsedArr[1] && *remsize >= 8)
+    {
+        FUsedArr[1] = FALSE;
+
+        for (i = 0; i < 8; i++)
+        {
+            elem = 64 + 8 * i + 1;
+            mask = 0x80;
+            ch = ptr[i];
+
+            for (j = 0; j < 8; j++)
+            {
+                if (ch & mask)
+                    FUsedArr[elem] = TRUE;
+
+                mask = mask >> 1;
+                elem++;
+            }
+        }
+        *remsize -= 8;
+        ptr += 8;
+    }
+
+    return ptr;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::Decode
+#
+#   Purpose....: Decode message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIso8583::Decode(char *buf, int size)
+{
+    int remsize;
+    char *ptr;
+    int elem;
+    char str[10];
+    TIso8583Element *e;
+
+    if (size > 8)
+    {
+        memcpy(str, buf, 4);
+        str[4] = 0;
+        FMsgType = atoi(str);
+
+        remsize = size - 4;
+        ptr = buf + 4;
+
+        ptr = DecodeBitmap1(ptr, &remsize);
+
+        while (ptr)
+        {
+            e = AddElem();
+            if (e)
+                ptr = e->Decode(ptr, &remsize);
+            else
+                ptr = 0;
+        }
 
         return size - remsize;
 
