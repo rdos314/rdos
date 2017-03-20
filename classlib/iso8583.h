@@ -80,12 +80,21 @@ public:
     void AddTime(int Id, TDateTime &time);
     void AddBinary(int Id, const char *data, int size);
 
+    int IsValid(int Id);
+    int GetInt(int Id);
+    long long GetLong(int Id);
+    const char *GetString(int Id);
+    TDateTime GetTime(int Id);
+    int GetBinarySize(int Id);
+    const char *GetBinaryData(int Id);
+
     void Reset();
     int Encode(char *buf, int size);
     int Decode(char *buf, int size);
 
 protected:
     void Init();
+    TIso8583Element *GetElem(int Id);
     TIso8583Element *AddElem(int Id);
     TIso8583Element *AddElem();
     char *EncodeBitmap1(char *buf, int *RemSize);

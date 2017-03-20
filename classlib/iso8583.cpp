@@ -696,6 +696,22 @@ void TIso8583::Create(int MsgType)
 
 /*##########################################################################
 #
+#   Name       : TIso8583::GetElem
+#
+#   Purpose....: Get element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TIso8583Element *TIso8583::GetElem(int Id)
+{
+    return FIsoArr[Id];
+}
+
+/*##########################################################################
+#
 #   Name       : TIso8583::AddElem
 #
 #   Purpose....: Add element using ID
@@ -760,6 +776,153 @@ TIso8583Element *TIso8583::AddElem()
         }
     }
     return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::IsValid
+#
+#   Purpose....: Check if id is valid
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIso8583::IsValid(int Id)
+{
+    TIso8583Element *elem = GetElem(Id);
+
+    if (elem)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::GetInt
+#
+#   Purpose....: Get int element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIso8583::GetInt(int Id)
+{
+    TIso8583Element *elem = GetElem(Id);
+
+    if (elem)
+        return elem->GetInt();
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::GetLong
+#
+#   Purpose....: Get long long element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TIso8583::GetLong(int Id)
+{
+    TIso8583Element *elem = GetElem(Id);
+
+    if (elem)
+        return elem->GetInt();
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::GetString
+#
+#   Purpose....: Get string element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TIso8583::GetString(int Id)
+{
+    TIso8583Element *elem = GetElem(Id);
+
+    if (elem)
+        return elem->GetString();
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::GetTime
+#
+#   Purpose....: Get time element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime TIso8583::GetTime(int Id)
+{
+    TIso8583Element *elem = GetElem(Id);
+
+    if (elem)
+        return elem->GetTime();
+    else
+        return TDateTime();
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::GetBinarySize
+#
+#   Purpose....: Get binary element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIso8583::GetBinarySize(int Id)
+{
+    TIso8583Element *elem = GetElem(Id);
+
+    if (elem)
+        return elem->GetBinarySize();
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::GetBinaryData
+#
+#   Purpose....: Get binary element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TIso8583::GetBinaryData(int Id)
+{
+    TIso8583Element *elem = GetElem(Id);
+
+    if (elem)
+        return elem->GetBinaryData();
+    else
+        return 0;
 }
 
 /*##########################################################################
