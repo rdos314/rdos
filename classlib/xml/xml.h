@@ -33,6 +33,8 @@
 #include <ctype.h>
 #include <assert.h>
 
+#include "str.h"
+
 
 // Z template class
 template <class T>class Z
@@ -365,6 +367,9 @@ class XMLElement
                 void RemoveAllContents();
                 unsigned int GetContentsNum();
 
+                TString GetContentString(const char *def);
+
+
                 // Children Stuff
                 XMLElement** GetChildren();
                 unsigned int GetChildrenNum();
@@ -396,6 +401,7 @@ class XMLElement
                 int GetVariableInt(const char*  x, int def);
                 unsigned int GetVariableUInt(const char*  x, unsigned int def);
                 int GetVariableHex(const char*  x, int def);
+                TString GetVariableString(const char*  x, const char *def);
                              
                 XMLElement* GetElementInSection(const char*);
                 int XMLQuery(const char* expression,XMLElement** rv,unsigned int deep = 0xFFFFFFFF);
@@ -479,6 +485,7 @@ class XMLVariable
                 long long GetValueInt64();
                 unsigned long long GetValueUInt64();
                 int GetValueHex();
+                TString GetValueString();
                 float GetValueFloat();
                 void SetName(const char*,int NoDecode = 0);
                 void SetValue(const char*,int NoDecode = 0);

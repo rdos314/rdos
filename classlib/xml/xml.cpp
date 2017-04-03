@@ -3568,6 +3568,17 @@ int XMLElement :: GetVariableHex(const char*  x, int def)
             return def;
 }
 
+TString XMLElement :: GetVariableString(const char*  x, const char *def)
+{
+        XMLVariable* V = GetVariable(x);
+
+        if (V)
+            return V->GetValueString();
+        else
+            return def;
+}
+
+
 	XMLVariable* XMLElement::FindVariableZ(const char*  x, bool ForceCreate, char* defnew, bool Temp)
 	{
 		for (unsigned int i = 0; i < variablesnum; i++)
@@ -4324,6 +4335,21 @@ int XMLElement :: GetVariableHex(const char*  x, int def)
 		return contentsnum;
 	}
 
+	TString XMLElement::GetContentString(const char *def)
+	{
+            if (contentsnum == 0)
+                return TString(def);
+            else
+            {
+                int len = contents[0]->GetValue(0);
+                char *str = new char[len + 1];
+                contents[0]->GetValue(str);
+                TString ret(str);
+                delete str;                
+                return ret;
+            }
+	}
+
 
 	unsigned int XMLElement::GetAllChildren(XMLElement** x, unsigned int deep)
 	{
@@ -5036,15 +5062,19 @@ int XMLVariable :: GetValueHex()
         Z<char> d(p + 10);
         GetValue(d);
 
-        switch (p)
-        {
-            case 4:
-                count = sscanf(d, "%04hX", &val);
-                break;
+        char str[10];
+        int pos = 8 - p;
+        int i;
 
-            case 8:
-                count = sscanf(d, "%08hX", &val);
-                break;
+        if (pos >= 0)
+        {
+            memcpy(&str[pos], d, p);
+            str[8] = 0;
+
+            for (i = 0; i < pos; i++)
+                str[i] = '0';
+             
+            count = sscanf(str, "%08lXu", &val);
         }
 
         if (count)
@@ -5052,6 +5082,20 @@ int XMLVariable :: GetValueHex()
         else
             return 0;
         }
+
+TString XMLVariable :: GetValueString()
+        {
+        int count = 0;
+        int val;
+        int len = GetValue(0);
+        char *str = new char[len + 1];
+        GetValue(str);
+
+        TString ret(str);
+        delete str;                
+        return ret;
+	}
+
 
 	void XMLVariable::SetValueInt(int V)
 	{
