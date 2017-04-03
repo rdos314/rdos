@@ -5039,11 +5039,11 @@ int XMLVariable :: GetValueHex()
         switch (p)
         {
             case 4:
-                count = sscanf("%04hX", d, &val);
+                count = sscanf(d, "%04hX", &val);
                 break;
 
             case 8:
-                count = sscanf("%08hX", d, &val);
+                count = sscanf(d, "%08hX", &val);
                 break;
         }
 
