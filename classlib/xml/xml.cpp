@@ -3578,6 +3578,15 @@ TString XMLElement :: GetVariableString(const char*  x, const char *def)
             return def;
 }
 
+bool XMLElement::GetVariableBoolean(const char*  x, bool def)
+{
+	XMLVariable* V = GetVariable(x);
+
+	if (V)
+		return V->GetValueBoolean();
+	else
+		return def;
+}
 
 	XMLVariable* XMLElement::FindVariableZ(const char*  x, bool ForceCreate, char* defnew, bool Temp)
 	{
@@ -5024,6 +5033,7 @@ TString XMLElement :: GetVariableString(const char*  x, const char *def)
 		GetValue(d);
 		return atoi(d);
 	}
+
 	unsigned int XMLVariable::GetValueUInt()
 	{
 		size_t p = GetValue(0);
@@ -5094,6 +5104,17 @@ TString XMLVariable :: GetValueString()
         TString ret(str);
         delete str;                
         return ret;
+	}
+
+	bool XMLVariable::GetValueBoolean()
+	{
+		size_t p = GetValue(0);
+		Z<char> d(p + 10);
+		GetValue(d);
+                if (!strcmp(d, "true"))
+                    return true;
+                else
+    		    return atoi(d);
 	}
 
 
