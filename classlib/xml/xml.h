@@ -237,6 +237,7 @@ class XMLHeader
                 bool IntegrityTest();
                 int Compare(XMLHeader*);
                 void SetEncoding(const char*);
+				void SetVersion(const char* e);
                 XMLHeader* Duplicate();
 
 
