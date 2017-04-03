@@ -394,6 +394,7 @@ class XMLElement
                 XMLVariable * GetVariable(const char*  x);
                 int GetVariableInt(const char*  x, int def);
                 unsigned int GetVariableUInt(const char*  x, unsigned int def);
+                int GetVariableHex(const char*  x, int def);
                              
                 XMLElement* GetElementInSection(const char*);
                 int XMLQuery(const char* expression,XMLElement** rv,unsigned int deep = 0xFFFFFFFF);
@@ -476,6 +477,7 @@ class XMLVariable
                 unsigned int GetValueUInt();
                 long long GetValueInt64();
                 unsigned long long GetValueUInt64();
+                int GetValueHex();
                 float GetValueFloat();
                 void SetName(const char*,int NoDecode = 0);
                 void SetValue(const char*,int NoDecode = 0);

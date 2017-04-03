@@ -3548,6 +3548,16 @@ unsigned int XMLElement :: GetVariableUInt(const char*  x, unsigned int def)
             return def;
 }
 
+int XMLElement :: GetVariableHex(const char*  x, int def)
+{
+        XMLVariable* V = GetVariable(x);
+
+        if (V)
+            return V->GetValueHex();
+        else
+            return def;
+}
+
 XMLVariable* XMLElement :: FindVariableZ(const char*  x,bool ForceCreate,char* defnew,bool Temp)
         {
         for(unsigned int i = 0 ; i < variablesnum ; i++)
@@ -4995,6 +5005,31 @@ unsigned long long XMLVariable :: GetValueUInt64()
         unsigned long long x = 0;
         sscanf(d,"%I64u",&x);
         return x;
+        }
+
+int XMLVariable :: GetValueHex()
+        {
+        int count = 0;
+        int val;
+        size_t p = GetValue(0);
+        Z<char> d(p + 10);
+        GetValue(d);
+
+        switch (p)
+        {
+            case 4:
+                count = sscanf("%04hX", d, &val);
+                break;
+
+            case 8:
+                count = sscanf("%08hX", d, &val);
+                break;
+        }
+
+        if (count)
+            return val;
+        else
+            return 0;
         }
 
 void XMLVariable :: SetValueInt(int V)
