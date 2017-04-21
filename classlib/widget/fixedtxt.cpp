@@ -466,6 +466,15 @@ void TFixedTextControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width
                         xmin, ymin,
                         xmax, ymax);
 
+        xdiff = xmax - xmin + 1;
+        ydiff = ymax - ymin + 1;
+
+        xdiff = (xdiff - FCellWidth * FCols) / 2;
+        ydiff = (ydiff - FFontHeight * FRows) / 2;
+
+        xmin += xdiff;
+        ymin += ydiff;
+
         for (row = 0; row < FRows; row++)
         {
             for (col = 0; col < FCols; col++)
@@ -474,7 +483,7 @@ void TFixedTextControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width
                 ConvColor(FDisp->RowArr[row][col].BackColor, &BackR, &BackG, &BackB);
 
                 x = xmin + FCellWidth * col;
-                y = ymin + FCellHeight * row;
+                y = ymin + FFontHeight * row;
 
                 dev->SetDrawColor(BackR, BackG, BackB);
                 dev->DrawRect(x, y, x + FCellWidth, y + FFontHeight);      
