@@ -63,6 +63,7 @@ public:
     
 protected:
     void ResetDisp();
+    void ConvColor(char color, int *r, int *g, int *b);
 
     virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);     
 
@@ -74,6 +75,10 @@ protected:
 
     TFixedTextDisp *FDisp;
     TFont *FFont;
+
+    int FFontHeight;
+    int FCellWidth;
+    int FCellHeight;
 
 private:
     void Init();

@@ -149,6 +149,9 @@ void TFixedTextControl::Init()
     FRows = 0;
     FCols = 0;
     FFont = 0;
+    FFontHeight = 0;
+    FCellWidth = 0;
+    FCellHeight = 0;
 
     ControlType += TString(".FIXEDTEXT");
 }
@@ -212,7 +215,10 @@ void TFixedTextControl::SetSize(int rows, int cols)
     int col;
     int xoffs, yoffs;
     int xdiff, ydiff;
+    int xsize, ysize;
     int height;
+    int width;
+    char str[2] = {' ', 0};
 
     if (FRows != rows || FCols != cols)
     {
@@ -229,7 +235,7 @@ void TFixedTextControl::SetSize(int rows, int cols)
             for (col = 0; col < cols; col++)
             {
                 FDisp->RowArr[row][col].ForeColor = 7;
-                FDisp->RowArr[row][col].BackColor = 7;
+                FDisp->RowArr[row][col].BackColor = 0;
                 FDisp->RowArr[row][col].ch = ' ';
             }
         }
@@ -237,17 +243,23 @@ void TFixedTextControl::SetSize(int rows, int cols)
         FRows = rows;
         FCols = cols;
 
-        GetInner(&xoffs, &yoffs, &xdiff, &ydiff);
         height = GetHeight();
-        height -= ydiff;
-
-        height = height / rows;
+        FFontHeight = height / rows;
 
         if (FFont)
             delete FFont;
 
-        FFont = new TFont(FFixedFont, height);
+        FFont = new TFont(FFixedFont, FFontHeight);
+        FFont->GetStringMetrics(str, &FCellWidth, &FCellHeight);
 
+        width = GetWidth();
+        while (FCellWidth * cols > width)
+        {
+            delete FFont;
+            FFontHeight--;
+            FFont = new TFont(FFixedFont, FFontHeight);
+            FFont->GetStringMetrics(str, &FCellWidth, &FCellHeight);
+        }
     }
 }
 
@@ -274,6 +286,125 @@ void TFixedTextControl::SetChar(int Row, int Col, char ForeColor, char BackColor
 
 /*##########################################################################
 #
+#   Name       : TFixedTextControl::ConvColor
+#
+#   Purpose....: Convert CGA colors
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFixedTextControl::ConvColor(char color, int *r, int *g, int *b)
+{
+    switch (color)
+    {
+        case 0:
+            *r = 0;
+            *g = 0;
+            *b = 0;
+            break;
+
+        case 1:
+            *r = 0;
+            *g = 0;
+            *b = 0xA8;
+            break;
+
+        case 2:
+            *r = 0;
+            *g = 0xA8;
+            *b = 0;
+            break;
+
+        case 3:
+            *r = 0;
+            *g = 0xA8;
+            *b = 0xA8;
+            break;
+
+        case 4:
+            *r = 0xA8;
+            *g = 0;
+            *b = 0;
+            break;
+
+        case 5:
+            *r = 0xA8;
+            *g = 0;
+            *b = 0xA8;
+            break;
+
+        case 6:
+            *r = 0xA8;
+            *g = 0x54;
+            *b = 0;
+            break;
+
+        case 7:
+            *r = 0xA8;
+            *g = 0xA8;
+            *b = 0xA8;
+            break;
+
+        case 8:
+            *r = 0x54;
+            *g = 0x54;
+            *b = 0x54;
+            break;
+
+        case 9:
+            *r = 0x54;
+            *g = 0x54;
+            *b = 0xFE;
+            break;
+
+        case 10:
+            *r = 0x54;
+            *g = 0xFE;
+            *b = 0x54;
+            break;
+
+        case 11:
+            *r = 0x54;
+            *g = 0xFE;
+            *b = 0xFE;
+            break;
+
+        case 12:
+            *r = 0xFE;
+            *g = 0x54;
+            *b = 0x54;
+            break;
+
+        case 13:
+            *r = 0xFE;
+            *g = 0x54;
+            *b = 0xFE;
+            break;
+
+        case 14:
+            *r = 0xFE;
+            *g = 0xFE;
+            *b = 0x54;
+            break;
+
+        case 15:
+            *r = 0xFE;
+            *g = 0xFE;
+            *b = 0xFE;
+            break;
+
+        default:
+            *r = 0;
+            *g = 0;
+            *b = 0;
+            break;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TFixedTextControl::Paint
 #
 #   Purpose....: Paint control
@@ -290,10 +421,14 @@ void TFixedTextControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width
     int xsize;
     int ysize;
     int xmax, ymax;
-    int row;
     int xoffs, yoffs;
     int xdiff, ydiff;
     int redraw;
+    int row, col;
+    int ForeR, ForeG, ForeB;
+    int BackR, BackG, BackB;
+    int x, y;
+    char str[2];
 
     if (IsTransparent())
     {
@@ -325,11 +460,31 @@ void TFixedTextControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width
     {
         dev->SetLgopNone();
         dev->SetFilledStyle();
+        dev->SetFont(FFont);
 
         SetClipRect(    dev,
                         xmin, ymin,
                         xmax, ymax);
 
+        for (row = 0; row < FRows; row++)
+        {
+            for (col = 0; col < FCols; col++)
+            {
+                ConvColor(FDisp->RowArr[row][col].ForeColor, &ForeR, &ForeG, &ForeB);
+                ConvColor(FDisp->RowArr[row][col].BackColor, &BackR, &BackG, &BackB);
+
+                x = xmin + FCellWidth * col;
+                y = ymin + FCellHeight * row;
+
+                dev->SetDrawColor(BackR, BackG, BackB);
+                dev->DrawRect(x, y, x + FCellWidth, y + FFontHeight);      
+
+                dev->SetDrawColor(ForeR, ForeG, ForeB);
+                str[0] = FDisp->RowArr[row][col].ch;
+                str[1] = 0;
+                dev->DrawString(x, y, str);
+            }
+        }
     }
     FSection.Leave();
 
