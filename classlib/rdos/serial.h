@@ -50,6 +50,8 @@ public:
     TSerialDevice();
     ~TSerialDevice();
 
+    void SetBufferSize(int size);
+
     virtual void DeviceName(char *Name, int MaxLen) const;
 
     void StartDebug(TFile *File, int InChannel, int OutChannel);
@@ -113,6 +115,7 @@ private:
 
     TSection FSection;
     int FHandle;
+    int FBufferSize;
 
     int FPort;
     long FBaudrate;

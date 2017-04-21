@@ -299,7 +299,8 @@ void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int
     FEntryCount = 0;
     FDumpFiles = 0;
     FUseCts = FALSE;
-        
+    FBufferSize = 0x4000;
+       
     OpenPort();
 }
 
@@ -468,6 +469,21 @@ void TSerialDevice::Add(TWait *Wait)
 {
     if (FHandle)
         RdosAddWaitForCom(Wait->GetHandle(), FHandle, (int)this);
+}
+/*##########################################################################
+#
+#   Name       : TSerialDevice::SetBufferSize
+#
+#   Purpose....: Set buffer size
+#
+#   In params..: wait
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSerialDevice::SetBufferSize(int Size)
+{
+    FBufferSize = Size;
 }
 
 /*##########################################################################
@@ -712,7 +728,7 @@ void TSerialDevice::Execute()
 void TSerialDevice::OpenPort()
 {
     if (FPort)
-        FHandle = RdosOpenCom(FPort - 1, FBaudrate, FParity, FDataBits, FStopBits, 0x4000, 0x4000);
+        FHandle = RdosOpenCom(FPort - 1, FBaudrate, FParity, FDataBits, FStopBits, FBufferSize, FBufferSize);
     else
         FHandle = 0;
         
