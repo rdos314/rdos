@@ -2323,6 +2323,39 @@ open_c_file   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           dupl_c_file_to_file
+;
+;           DESCRIPTION:    Dupl C file to file
+;
+;           PARAMETERS:     BX          File handle entry
+;                           
+;           RETURNS:        BX          File handle
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dupl_c_file_to_file_name  DB 'Dupl C File To File',0
+
+dupl_c_file_to_file    Proc far
+    push es
+    push ax
+    push cx
+;
+    mov es,bx
+    mov al,es:file_drive
+    xor cl,cl
+    call CreateFileHandle
+
+dcfDone:
+    pop cx
+    pop ax
+    pop es
+    retf32
+dupl_c_file_to_file   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           open_kernel_file
 ;
 ;           DESCRIPTION:    Open kernel C file
@@ -3370,6 +3403,12 @@ init_dir    PROC near
     mov edi,OFFSET open_kernel_file_name
     xor cl,cl
     mov ax,open_kernel_file_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET dupl_c_file_to_file
+    mov edi,OFFSET dupl_c_file_to_file_name
+    xor cl,cl
+    mov ax,dupl_c_file_to_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_drive_info

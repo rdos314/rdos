@@ -1321,6 +1321,9 @@ create_lib_size_ok:
 ;
     mov es:mod_free_dll_proc,0
 ;
+    mov es:mod_dupl_file_handle_proc,OFFSET dupl_file_handle_proc
+    mov es:mod_dupl_file_handle_proc+4,cs
+;
     mov es:mod_get_proc_proc,OFFSET get_module_proc
     mov es:mod_get_proc_proc+4,cs
 ;
@@ -5495,6 +5498,30 @@ free_dll    Proc far
     call FreePeDll
     ret
 free_dll    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DuplFileHandle
+;
+;           DESCRIPTION:    Duplicate file handle for module
+;
+;       PARAMETERS:         BX          Lib sel
+;                           
+;           RETURNS:        BX          Duplicated handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dupl_file_handle_proc Proc far
+    push ds
+;    
+    mov ds,bx
+    movzx ebx,ds:lib_c_file_handle
+    DuplCFileToFile
+;
+    pop ds
+    ret
+dupl_file_handle_proc    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

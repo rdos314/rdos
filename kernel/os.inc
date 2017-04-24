@@ -2071,6 +2071,18 @@ OpenKernelFile MACRO
     OsGate open_kernel_file_nr
                     ENDM
 
+; IN  BX        C File handle
+; OUT BX        File handle
+DuplCFileToFile MACRO
+    OsGate dupl_c_file_to_file_nr
+                    ENDM
+
+; IN  BX        C File handle
+; OUT BX        File sel
+CHandleToFileSel MACRO
+    OsGate c_handle_to_file_sel_nr
+                    ENDM
+
 ; IN  BX     File selector
 CloseCFile MACRO
     OsGate close_c_file_nr
