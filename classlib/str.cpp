@@ -32,6 +32,10 @@
 #include "str.h"
 #include "section.h"
 
+#ifdef __RDOS__
+#include "rdos.h"
+#endif
+
 TSection Section("String");
 
 #define ZEROPAD 1               /* pad with zero */
@@ -44,6 +48,27 @@ TSection Section("String");
 
 #define FALSE 0
 #define TRUE !FALSE
+
+#ifdef __RDOS__
+
+/*##########################################################################
+#
+#   Name       : PrintfCallback
+#
+#   Purpose....: Printf callback
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void PrintfCallback(void *param, char ch)
+{
+    TString *str = (TString *)param;
+    str->Append(ch);
+}
+
+#endif
 
 /*##########################################################################
 #
@@ -839,6 +864,8 @@ void TString::Append(const char *str)
     }
 }
 
+#ifndef __RDOS__
+
 /*##########################################################################
 #
 #   Name       : TString::Number
@@ -971,6 +998,8 @@ int TString::Number(long num, int base, int size, int precision, int type)
         return n;
 }
 
+#endif
+
 /*##########################################################################
 #
 #   Name       : TString::printf
@@ -984,254 +1013,260 @@ int TString::Number(long num, int base, int size, int precision, int type)
 ##########################################################################*/
 int TString::printf(const char *fmt, va_list args)
 {
-        int len, n;
-        unsigned long num;
-        int i, base;
-        const char *s;
+    int len, n;
 
-        FSection.Enter();
+    FSection.Enter();
 
-        Release();
+    Release();
 
-        int flags;              /* flags to number() */
+#ifdef __RDOS__
+    n = RdosPrintf(&PrintfCallback, this, fmt, args);
+#else
 
-        int field_width;        /* width of output field */
-        int precision;          /* min. # of digits for integers; max
+    unsigned long num;
+    int i, base;
+    const char *s;
+
+    int flags;              /* flags to number() */
+
+    int field_width;        /* width of output field */
+    int precision;          /* min. # of digits for integers; max
                                    number of chars for from string */
-        int qualifier;          /* 'h', 'l', or 'L' for integer fields */
+    int qualifier;          /* 'h', 'l', or 'L' for integer fields */
                                 /* 'z' support added 23/7/1999 S.H.    */
                                 /* 'z' changed to 'Z' --davidm 1/25/99 */
 
         
-        for (n = 0 ; *fmt ; ++fmt) {
-                if (*fmt != '%')
+    for (n = 0 ; *fmt ; ++fmt) {
+        if (*fmt != '%')
+        {
+            Append(*fmt);
+            n++;
+            continue;
+        }
+                        
+        /* process flags */
+        flags = 0;
+        repeat:
+        ++fmt;          /* this also skips first '%' */
+        switch (*fmt)
+        {
+            case '-': flags |= LEFT; goto repeat;
+            case '+': flags |= PLUS; goto repeat;
+            case ' ': flags |= SPACE; goto repeat;
+            case '#': flags |= SPECIAL; goto repeat;
+            case '0': flags |= ZEROPAD; goto repeat;
+        }
+                
+        /* get field width */
+        field_width = -1;
+        if (isdigit(*fmt))
+            field_width = skip_atoi(&fmt);
+
+        else
+            if (*fmt == '*')
+            {
+                ++fmt;
+                /* it's the next argument */
+                field_width = va_arg(args, int);
+                if (field_width < 0)
                 {
-                        Append(*fmt);
+                    field_width = -field_width;
+                    flags |= LEFT;
+                }
+            }
+
+            /* get the precision */
+            precision = -1;
+            if (*fmt == '.')
+            {
+                ++fmt;  
+                if (isdigit(*fmt))
+                    precision = skip_atoi(&fmt);
+                else if (*fmt == '*')
+                {
+                    ++fmt;
+                    /* it's the next argument */
+                    precision = va_arg(args, int);
+                }
+
+                if (precision < 0)
+                    precision = 0;
+            }
+
+            /* get the conversion qualifier */
+            qualifier = -1;
+            if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' || *fmt =='Z')
+            {
+                qualifier = *fmt;
+                ++fmt;
+            }
+
+            /* default base */
+            base = 10;
+
+            switch (*fmt)
+            {
+                case 'c':
+                    if (!(flags & LEFT))
+                        while (--field_width > 0)
+                        {
+                            Append(' ');
+                            n++;
+                        }
+                
+                        Append((unsigned char) va_arg(args, int));
+                        n++;
+                        while (--field_width > 0)
+                        {
+                            Append(' ');
+                            n++;
+                        }
+                        continue;
+
+                case 's':
+                    s = va_arg(args, char *);
+                    if (!s)
+                        s = "<NULL>";
+
+                    len = strlen(s);
+                    if (precision != -1 && len > precision)
+                        len = precision;
+
+                    if (!(flags & LEFT))
+                        while (len < field_width--)
+                        {
+                            Append(' ');
+                            n++;
+                        }
+                
+                    for (i = 0; i < len; ++i)
+                    {
+                        Append(*s++);
+                        n++;
+                    }
+
+                    while (len < field_width--)
+                    {
+                        Append(' ');
+                        n++;
+                    }
+                    continue;
+
+                case 'p':
+                    if (field_width == -1)
+                    {
+                        field_width = 2*sizeof(void *);
+                        flags |= ZEROPAD;
+                    }
+                    n += Number((unsigned long) va_arg(args, void *), 16,
+                    field_width, precision, flags);
+                    continue;
+
+                case 'n':
+                    if (qualifier == 'l')
+                    {
+                        long * ip = va_arg(args, long *);
+                        *ip = n;
+                    }
+                    else
+                        if (qualifier == 'Z')
+                        {
+                            size_t * ip = va_arg(args, size_t *);
+                            *ip = n;
+                        }
+                        else 
+                        {
+                            int * ip = va_arg(args, int *);
+                            *ip = n;
+                        }
+                    continue;
+
+                    case '%':
+                        Append('%');
                         n++;
                         continue;
-                }
-                        
-                /* process flags */
-                flags = 0;
-                repeat:
-                        ++fmt;          /* this also skips first '%' */
-                        switch (*fmt)
+
+                    case 'I':
                         {
-                                case '-': flags |= LEFT; goto repeat;
-                                case '+': flags |= PLUS; goto repeat;
-                                case ' ': flags |= SPACE; goto repeat;
-                                case '#': flags |= SPECIAL; goto repeat;
-                                case '0': flags |= ZEROPAD; goto repeat;
+                            union
+                            {
+                                long            l;
+                                unsigned char   c[4];
+                            } u;
+
+                            u.l = va_arg(args, long);
+                            printf("%d.%d.%d.%d", u.c[0], u.c[1], u.c[2], u.c[3]);
                         }
-                
-                /* get field width */
-                field_width = -1;
-                if (isdigit(*fmt))
-                        field_width = skip_atoi(&fmt);
+                        continue;
 
-                else
-                        if (*fmt == '*')
+                    /* integer number formats - set up the flags and "break" */
+                    case 'o':
+                    base = 8;
+                        break;
+
+                    case 'X':
+                        flags |= LARGE;
+
+                    case 'x':
+                        base = 16;
+                        break;
+
+                    case 'd':
+                    case 'i':
+                        flags |= SIGN;
+
+                    case 'u':
+                        break;
+
+                    default:
+                        Append('%');
+                        n++;
+                        if (*fmt)
                         {
-                                ++fmt;
-                                /* it's the next argument */
-                                field_width = va_arg(args, int);
-                                if (field_width < 0)
-                                {
-                                        field_width = -field_width;
-                                        flags |= LEFT;
-                                }
-                        }
-
-                /* get the precision */
-                precision = -1;
-                if (*fmt == '.')
-                {
-                        ++fmt;  
-                        if (isdigit(*fmt))
-                                precision = skip_atoi(&fmt);
-                        else if (*fmt == '*')
-                        {
-                                ++fmt;
-                                /* it's the next argument */
-                                precision = va_arg(args, int);
-                        }
-
-                        if (precision < 0)
-                                precision = 0;
-                }
-
-                /* get the conversion qualifier */
-                qualifier = -1;
-                if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' || *fmt =='Z')
-                {
-                        qualifier = *fmt;
-                        ++fmt;
-                }
-
-                /* default base */
-                base = 10;
-
-                switch (*fmt)
-                {
-                        case 'c':
-                                if (!(flags & LEFT))
-                                        while (--field_width > 0)
-                                        {
-                                                Append(' ');
-                                                n++;
-                                        }
-                
-                                Append((unsigned char) va_arg(args, int));
-                                n++;
-                                while (--field_width > 0)
-                                {
-                                        Append(' ');
-                                        n++;
-                                }
-                                continue;
-
-                        case 's':
-                                s = va_arg(args, char *);
-                                if (!s)
-                                        s = "<NULL>";
-
-                                len = strlen(s);
-                                if (precision != -1 && len > precision)
-                                        len = precision;
-
-                                if (!(flags & LEFT))
-                                        while (len < field_width--)
-                                        {
-                                                Append(' ');
-                                                n++;
-                                        }
-                
-                                for (i = 0; i < len; ++i)
-                                {
-                                        Append(*s++);
-                                        n++;
-                                }
-
-                                while (len < field_width--)
-                                {
-                                        Append(' ');
-                                        n++;
-                                }
-                                continue;
-
-                        case 'p':
-                                if (field_width == -1)
-                                {
-                                        field_width = 2*sizeof(void *);
-                                        flags |= ZEROPAD;
-                                }
-                                n += Number((unsigned long) va_arg(args, void *), 16,
-                                                field_width, precision, flags);
-                                continue;
-
-                        case 'n':
-                                if (qualifier == 'l')
-                                {
-                                        long * ip = va_arg(args, long *);
-                                        *ip = n;
-                                }
-                                else
-                                        if (qualifier == 'Z')
-                                        {
-                                                size_t * ip = va_arg(args, size_t *);
-                                                *ip = n;
-                                        }
-                                        else 
-                                        {
-                                                int * ip = va_arg(args, int *);
-                                                *ip = n;
-                                        }
-                                continue;
-
-                        case '%':
-                                Append('%');
-                                n++;
-                                continue;
-
-                        case 'I':
-                                {
-                                        union
-                                        {
-                                                long            l;
-                                                unsigned char   c[4];
-                                        } u;
-
-                                        u.l = va_arg(args, long);
-                                        printf("%d.%d.%d.%d", u.c[0], u.c[1], u.c[2], u.c[3]);
-                                }
-                                continue;
-
-                        /* integer number formats - set up the flags and "break" */
-                        case 'o':
-                                base = 8;
-                                break;
-
-                        case 'X':
-                                flags |= LARGE;
-
-                        case 'x':
-                                base = 16;
-                                break;
-
-                        case 'd':
-                        case 'i':
-                                flags |= SIGN;
-
-                        case 'u':
-                                break;
-
-                        default:
-                                Append('%');
-                                n++;
-                                if (*fmt)
-                                {
-                                        Append(*fmt);
-                                        n++;
-                                }
-                                else
-                                        --fmt;
-                                continue;
-                }
-
-                if (qualifier == 'L')
-                        num = va_arg(args, long);
-                else
-                        if (qualifier == 'l')
-                        {
-                                num = va_arg(args, unsigned long);
-                                if (flags & SIGN)
-                                        num = (signed long) num;
+                            Append(*fmt);
+                            n++;
                         }
                         else
-                                if (qualifier == 'Z')
-                                {
-                                        num = va_arg(args, size_t);
-                                }
-                                else
-                                        if (qualifier == 'h')
-                                        {
-                                                num = (unsigned short) va_arg(args, int);
-                                                if (flags & SIGN)
-                                                        num = (signed short) num;
-                                        }
-                                        else
-                                        {
-                                                num = va_arg(args, unsigned int);
-                                                if (flags & SIGN)
-                                                        num = (signed int) num;
-                                        }
+                            --fmt;
+                            continue;
+            }
 
-                n += Number(num, base, field_width, precision, flags);
-        }
+            if (qualifier == 'L')
+                num = va_arg(args, long);
+            else
+                if (qualifier == 'l')
+                {
+                    num = va_arg(args, unsigned long);
+                    if (flags & SIGN)
+                        num = (signed long) num;
+                }
+                else
+                    if (qualifier == 'Z')
+                    {
+                        num = va_arg(args, size_t);
+                    }
+                    else
+                        if (qualifier == 'h')
+                        {
+                            num = (unsigned short) va_arg(args, int);
+                            if (flags & SIGN)
+                                num = (signed short) num;
+                        }
+                        else
+                        {
+                            num = va_arg(args, unsigned int);
+                            if (flags & SIGN)
+                                num = (signed int) num;
+                        }
 
-        FSection.Leave();
+        n += Number(num, base, field_width, precision, flags);
+    }
+#endif
+
+    FSection.Leave();
         
-        return n;
+    return n;
 }
 
 /*##########################################################################
@@ -1247,16 +1282,22 @@ int TString::printf(const char *fmt, va_list args)
 ##########################################################################*/
 int TString::printf(const char *fmt, ...)
 {
-        va_list args;
-        int result;
+    va_list args;
+    int result;
 
-        FSection.Enter();
+    FSection.Enter();
 
-        va_start(args, fmt);
-        result = printf(fmt, args);
-        va_end(args);
+    va_start(args, fmt);
 
-        FSection.Leave();
+#ifdef __RDOS__
+    Release();
+    result = RdosPrintf(&PrintfCallback, this, fmt, args);
+#else
+    result = printf(fmt, args);
+#endif
+    va_end(args);
 
-        return result;
+    FSection.Leave();
+
+    return result;
 }
