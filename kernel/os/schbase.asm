@@ -408,6 +408,30 @@ pfacDone:
 ProbeFlatAppCode    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetThreadHandle
+;
+;           DESCRIPTION:    Get current thread handle
+;
+;           RETURNS:        EAX         Thread handle         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_thread_handle_name  DB 'Get Thread Handle', 0
+
+get_thread_handle    Proc far
+    push es
+;    
+    GetThread
+    mov es,eax
+    movzx eax,es:p_id
+;
+    pop es
+    ret
+get_thread_handle       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           GetThreadActionState
@@ -870,6 +894,12 @@ init_state_hooks:
     mov dx,virt_es_in
     mov ax,get_thread_action_state_nr
     RegisterUserGate
+;
+    mov esi,OFFSET get_thread_handle
+    mov edi,OFFSET get_thread_handle_name
+    xor dx,dx
+    mov ax,get_thread_handle_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET suspend_thread
     mov edi,OFFSET suspend_thread_name

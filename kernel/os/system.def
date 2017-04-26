@@ -287,6 +287,7 @@ app_close_proc              DD ?,?
 app_load_dll_proc           DD ?,?
 app_patch_proc              DD ?,?
 app_get_current_dll_proc    DD ?,?
+app_fatal_error_exit_proc   DD ?,?
 app_loader_name             DD ?
 
 app_section_base            DD ?

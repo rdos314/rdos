@@ -199,6 +199,12 @@ init_app    PROC near
     mov ax,app_patch_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET fatal_error_exit
+    mov edi,OFFSET fatal_error_exit_name
+    xor dx,dx
+    mov ax,fatal_error_exit_nr
+    RegisterBimodalUserGate
+;
     mov esi,OFFSET get_exe_name
     mov edi,OFFSET get_exe_name_name
     mov dx,virt_es_in
@@ -665,6 +671,8 @@ run_open_hooks  Proc near
     mov ds:app_patch_proc+4,0
     mov ds:app_get_current_dll_proc,0
     mov ds:app_get_current_dll_proc+4,0
+    mov ds:app_fatal_error_exit_proc,0
+    mov ds:app_fatal_error_exit_proc+4,0
 ;
     InitSection ds:app_lib_section
     mov ds:app_env,0
@@ -971,6 +979,11 @@ clone_app    PROC far
     mov eax,ds:app_get_current_dll_proc+4
     mov es:app_get_current_dll_proc+4,eax
 ;
+    mov eax,ds:app_fatal_error_exit_proc
+    mov es:app_fatal_error_exit_proc,eax
+    mov eax,ds:app_fatal_error_exit_proc+4
+    mov es:app_fatal_error_exit_proc+4,eax
+;
     mov eax,ds:app_loader_name
     mov es:app_loader_name,eax
 ;
@@ -1113,6 +1126,9 @@ eaAppClosed:
 ;
     mov es:app_load_dll_proc,0
     mov es:app_load_dll_proc+4,0
+;
+    mov es:app_fatal_error_exit_proc,0
+    mov es:app_fatal_error_exit_proc+4,0
 ;
     mov es:app_patch_proc,0
     mov es:app_patch_proc+4,0
@@ -1516,6 +1532,38 @@ get_env_done:
     pop ds
     retf32
 get_env ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FatalErrorExit
+;
+;           DESCRIPTION:    Fatal error exit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fatal_error_exit_name       DB 'Fatal Error Exit',0
+
+fatal_error_exit    PROC far
+    push ds
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_fatal_error_exit_proc
+    or eax,ds:app_fatal_error_exit_proc+4
+    pop eax
+    stc
+    jz fatal_error_exit_done
+;
+    call fword ptr ds:app_fatal_error_exit_proc
+
+fatal_error_exit_done:
+    pop ds
+    retf32
+fatal_error_exit    ENDP
 
 
     

@@ -514,6 +514,12 @@ GetThread	MACRO
 	UserGate get_thread_nr
 					ENDM
 
+
+; OUT AX		Thread handle
+GetThreadHandle	MACRO
+	UserGate get_thread_handle_nr
+					ENDM
+
 ;   NC      Global timer
 HasGlobalTimer       MACRO
 	UserGate has_global_timer_nr
@@ -913,6 +919,10 @@ IsForked	MACRO
 ; IN  AX		Exit code
 UnloadExe	MACRO
 	UserGate unload_exe_nr
+					ENDM
+
+FatalErrorExit	MACRO
+	UserGate fatal_error_exit_nr
 					ENDM
 
 ;  IN  AX   Process handle

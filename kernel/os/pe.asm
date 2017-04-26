@@ -1409,6 +1409,8 @@ InsertApp       Proc near
     mov ds:app_load_dll_proc+4,cs
     mov ds:app_get_current_dll_proc,OFFSET get_current_dll
     mov ds:app_get_current_dll_proc+4,cs
+    mov ds:app_fatal_error_exit_proc,OFFSET fatal_error_exit
+    mov ds:app_fatal_error_exit_proc+4,cs
     mov ds:app_patch_proc,OFFSET section_patch
     mov ds:app_patch_proc+4,cs 
     mov word ptr ds:app_loader_name,OFFSET pe_loader_name
@@ -5393,6 +5395,30 @@ setDone:
     pop es    
     ret
 show_exception_text     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FatalErrorExit
+;
+;           DESCRIPTION:    Fatal error exit handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+fatal_error_exit     PROC far
+    mov ax,wd_code_sel
+    verr ax
+    jnz feeDone
+;
+    mov ax,2500
+    WaitMilliSec
+;
+    SoftReset
+
+feeDone:
+    ret
+fatal_error_exit     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
