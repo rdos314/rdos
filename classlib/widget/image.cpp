@@ -123,6 +123,14 @@ TLoaderThread::~TLoaderThread()
 *##########################################################################*/
 void TLoaderThread::StartLoad(TImageControl *img)
 {
+    while (img->FLoadActive)
+    {
+        img->FAborted = TRUE;
+        RdosWaitMilli(25);
+    }
+
+    img->FAborted = FALSE;
+
     img->FLoading++;    
     FSection.Enter();
     FCurrImg = img;
@@ -229,7 +237,7 @@ TImageControl::~TImageControl()
 {
     int i;
 
-    FAbortLoad = TRUE;
+    FAborted = TRUE;
 
     while (FLoading)
         RdosWaitMilli(25);
@@ -264,12 +272,14 @@ void TImageControl::Init()
         }
 
         FLoadIni = 0;
-        FAbortLoad = FALSE;
         FMultiImage = FALSE;
 
         FBackR = 0;
         FBackG = 0;
         FBackB = 0;
+
+        FAborted = FALSE;
+        FLoadActive = FALSE;
 
         FKey = 0;
         FCount = 0;
@@ -628,6 +638,8 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
     TBitmapGraphicDevice *bitmap;
     TIniFile *SeqIni = 0;
 
+    FLoadActive = TRUE;
+
     int DoCheckJpg = TRUE;
     int DoCheckPng = TRUE;
     int DoCheckBmp = TRUE;
@@ -643,32 +655,35 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
         strcpy(str, path);
         strupr(str);
 
-        if (CheckJpg(str))
+        if (CheckJpg(str) && !FAborted)
             bitmap = TJpegBitmapDevice::Create(str);
 
-        if (CheckBmp(str) && !bitmap)
+        if (CheckBmp(str) && !bitmap && !FAborted)
             bitmap = TBmpBitmapDevice::Create(str);
 
-        if (CheckPng(str) && !bitmap)
+        if (CheckPng(str) && !bitmap && !FAborted)
             bitmap = TPngBitmapDevice::Create(str, FBackR, FBackG, FBackB);
 
-        if (CheckGif(str) && !bitmap)
+        if (CheckGif(str) && !bitmap && !FAborted)
             bitmap = TGifBitmapDevice::Create(str);
 
         if (bitmap)
         {
+            if (FAborted)
+                delete bitmap;
+            else
+            {
+                Protect();
             
-            Protect();
+                if (FImgArr[FCount])
+                    delete FImgArr[FCount];
             
-            if (FImgArr[FCount])
-                delete FImgArr[FCount];
-            
-            FImgArr[FCount] = bitmap;
-            FDelayArr[FCount] = StdDelay;
-            FCount++;
+                FImgArr[FCount] = bitmap;
+                FDelayArr[FCount] = StdDelay;
+                FCount++;
 
-            Unprotect();
-
+                Unprotect();
+            }
         }
     }
     else
@@ -710,10 +725,7 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
 
         for (i = FirstNr; FCount < MaxCount && i <= LastNr; i++)
         {
-            if (FAbortLoad)
-                break;
-                
-            if (FLoader && FCount && !IsVisible())
+            if (FLoader && FCount && !IsVisible() || FAborted)
                 break;
                 
             delay = StdDelay;
@@ -729,25 +741,25 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
 
             bitmap = 0;
 
-            if (DoCheckJpg)
+            if (DoCheckJpg && !FAborted)
             {       
                 sprintf(str, "%s\\%d.jpg", path, i);
                 bitmap = TJpegBitmapDevice::Create(str);
             }
 
-            if (DoCheckBmp && !bitmap)
+            if (DoCheckBmp && !bitmap && !FAborted)
             {
                 sprintf(str, "%s\\%d.bmp", path, i);
                 bitmap = TBmpBitmapDevice::Create(str);
             }
 
-            if (DoCheckPng && !bitmap)
+            if (DoCheckPng && !bitmap && !FAborted)
             {
                 sprintf(str, "%s\\%d.png", path, i);
                 bitmap = TPngBitmapDevice::Create(str, FBackR, FBackG, FBackB);
             }
 
-            if (DoCheckGif && !bitmap)
+            if (DoCheckGif && !bitmap && !FAborted)
             {
                 sprintf(str, "%s\\%d.gif", path, i);
                 bitmap = TGifBitmapDevice::Create(str);
@@ -755,22 +767,30 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
 
             if (bitmap)
             {
-                Protect();
+                if (FAborted)
+                    delete bitmap;
+                else
+                {
+                    Protect();
             
-                if (FImgArr[FCount])
-                    delete FImgArr[FCount];
+                    if (FImgArr[FCount])
+                        delete FImgArr[FCount];
             
-                FImgArr[FCount] = bitmap;
-                FDelayArr[FCount] = delay;
-                FCount++;
+                    FImgArr[FCount] = bitmap;
+                    FDelayArr[FCount] = delay;
+                    FCount++;
 
-                Unprotect();
+                    Unprotect();
+                }
             }
         }
     }
 
     if (SeqIni)
         delete SeqIni;
+
+    FLoadActive = FALSE;
+
 }
 
 /*##########################################################################
@@ -792,16 +812,27 @@ void TImageControl::Load(int MaxCount)
 
     if (FLoadIni)
     {
+        while (FLoadActive)
+        {
+            FAborted = TRUE;
+            RdosWaitMilli(25);
+        }
+
+        FAborted = FALSE;
+
         FLoading++;
         FCount = 0;
 
         FLoadIni->GotoSection(FLoadSection.GetData());
 
         if (FLoadIni->ReadVar("Path", SeqPath, 255))
-            LoadOne(SeqPath, MaxCount);
+        {
+            if (!FAborted)
+                LoadOne(SeqPath, MaxCount);
+        }
         else
         {
-            for (i = 0; i < 256 && !FAbortLoad; i++)
+            for (i = 0; i < 256 && !FAborted; i++)
             {
                 sprintf(str, "Path%i", i);
 
