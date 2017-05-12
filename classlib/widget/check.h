@@ -114,7 +114,8 @@ public:
     
 protected:
     virtual void NotifyResize();
-        virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);     
+    virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
+    virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);     
 
     TSection FSection;
 

@@ -229,7 +229,7 @@ protected:
 
     virtual void ChildChange();
 
-        virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
+    virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
     virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 
     void UpdateScroll();

@@ -148,6 +148,8 @@ protected:
     TBitmapGraphicDevice *FTransBitmap;
     int FTransChanged;
 
+    TControl *GetSiblingControlById(int Index);
+
 private:
     void Init();
     void Add(TControl *Control);

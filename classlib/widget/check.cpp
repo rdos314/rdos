@@ -1103,6 +1103,50 @@ void TCheckControl::NotifyResize()
 
 /*##########################################################################
 #
+#   Name       : TCheckControl::OnLeftDown
+#
+#   Purpose....: Handle left button down
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCheckControl::OnLeftDown(int x, int y, int ButtonState, int KeyState)
+{
+    int i;
+    TControl *control;
+    TCheckControl *check;
+
+    if (IsInside(x, y))
+    {
+        if (!IsChecked())
+        {
+            Check();
+
+            for (i = 0;; i++)
+            {
+                control = GetSiblingControlById(i);
+                if (control)
+                {
+                    if (IsCheckControl(control))
+                    {
+                        check = (TCheckControl *)control;
+                        if (check != this)
+                            check->Uncheck();
+                    }
+                }
+                else
+                    break;
+            }
+        }
+        return TRUE;
+    }
+    return TPanelControl::OnLeftDown(x, y, ButtonState, KeyState);
+}
+
+/*##########################################################################
+#
 #   Name       : TCheckControl::Paint
 #
 #   Purpose....: Paint control

@@ -1880,6 +1880,34 @@ void TControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int hei
 
 /*##########################################################################
 #
+#   Name       : TControl::GetSiblingControlById
+#
+#   Purpose....: Get sibling control by ID
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TControl *TControl::GetSiblingControlById(int Index)
+{
+    TControl *Parent = FParent;    
+    TControl *control = 0;
+    int i;
+
+    if (Parent)
+    {
+        control = Parent->FControlList;
+
+        for (i = 0; i < Index && control; i++)
+            control = control->FNext;
+    }
+
+    return control;
+}
+
+/*##########################################################################
+#
 #   Name       : TControl::RedrawChildren
 #
 #   Purpose....: Redraw children
