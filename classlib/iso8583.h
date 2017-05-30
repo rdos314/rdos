@@ -65,6 +65,46 @@ protected:
     int FSizeDigits;
 };
 
+class TIso8583Bitmap
+{
+public:
+    TIso8583Bitmap(int *DigitTable);
+    virtual ~TIso8583Bitmap();
+
+    void AddInt(int Id, int val);
+    void AddLong(int Id, long long val);
+    void AddString(int Id, const char *str);
+    void AddTime(int Id, TDateTime &time);
+    void AddBinary(int Id, const char *data, int size);
+
+    int IsValid(int Id);
+    int GetInt(int Id);
+    long long GetLong(int Id);
+    const char *GetString(int Id);
+    TDateTime GetTime(int Id);
+    int GetBinarySize(int Id);
+    const char *GetBinaryData(int Id);
+
+    void Reset();
+    int Encode(char *buf, int size);
+    int Decode(char *buf, int size);
+
+protected:
+    void Init();
+    TIso8583Element *GetElem(int Id);
+    TIso8583Element *AddElem(int Id);
+    TIso8583Element *AddElem();
+    char *EncodeBitmap(char *buf, int *RemSize);
+
+    char *DecodeBitmap(char *buf, int *RemSize);
+
+    int *FDigitTable;
+    TIso8583Element *FIsoArr[64];
+
+private:
+    int FUsedArr[64];
+};
+
 
 class TIso8583
 {

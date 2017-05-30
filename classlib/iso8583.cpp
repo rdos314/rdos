@@ -599,6 +599,573 @@ void TIso8583Element::SetBinary(const char *data, int size)
 
 /*##########################################################################
 #
+#   Name       : TIso8583Bitmap::TIso8583Bitmap
+#
+#   Purpose....: Constructor for TIso8583Bitmap
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TIso8583Bitmap::TIso8583Bitmap(int *DigitTable)
+{
+    FDigitTable = DigitTable;
+
+    Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::~TIso8583Bitmap
+#
+#   Purpose....: Destructor for TIso8583Bitmap
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TIso8583Bitmap::~TIso8583Bitmap()
+{
+    Reset();
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583::Init
+#
+#   Purpose....: Init elements
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583Bitmap::Init()
+{
+    int i;
+
+    for (i = 0; i <= 63; i++)
+        FIsoArr[i] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::Reset
+#
+#   Purpose....: Reset elements
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583Bitmap::Reset()
+{
+    int i;
+
+    for (i = 0; i <= 63; i++)
+    {
+        if (FIsoArr[i])
+        {
+            delete FIsoArr[i];
+            FIsoArr[i] = 0;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::GetElem
+#
+#   Purpose....: Get element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TIso8583Element *TIso8583Bitmap::GetElem(int Id)
+{
+    return FIsoArr[Id];
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::AddElem
+#
+#   Purpose....: Add element using ID
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TIso8583Element *TIso8583Bitmap::AddElem(int Id)
+{
+    int digits = 0;
+
+    if (Id > 0 && Id <= 192)
+    {
+        digits = FDigitTable[Id];
+        if (digits)
+        {
+            if (FIsoArr[Id] == 0)
+                FIsoArr[Id] = new TIso8583Element(Id, FDigitTable);
+
+            return FIsoArr[Id];
+        }
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::AddElem
+#
+#   Purpose....: Add element from used array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TIso8583Element *TIso8583Bitmap::AddElem()
+{
+    int digits = 0;
+    int Id;
+
+    for (Id = 1; Id <= 63; Id++)
+    {
+        if (FUsedArr[Id])
+        {
+            FUsedArr[Id] = 0;
+            break;
+        }
+    }
+ 
+    if (Id > 0 && Id <= 63)
+    {
+        digits = FDigitTable[Id];
+        if (digits)
+        {
+            if (FIsoArr[Id] == 0)
+                FIsoArr[Id] = new TIso8583Element(Id, FDigitTable);
+
+            return FIsoArr[Id];
+        }
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::IsValid
+#
+#   Purpose....: Check if id is valid
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIso8583Bitmap::IsValid(int Id)
+{
+    TIso8583Element *elem = GetElem(Id);
+
+    if (elem)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::GetInt
+#
+#   Purpose....: Get int element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIso8583Bitmap::GetInt(int Id)
+{
+    TIso8583Element *elem = GetElem(Id);
+
+    if (elem)
+        return elem->GetInt();
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::GetLong
+#
+#   Purpose....: Get long long element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TIso8583Bitmap::GetLong(int Id)
+{
+    TIso8583Element *elem = GetElem(Id);
+
+    if (elem)
+        return elem->GetInt();
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::GetString
+#
+#   Purpose....: Get string element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TIso8583Bitmap::GetString(int Id)
+{
+    TIso8583Element *elem = GetElem(Id);
+
+    if (elem)
+        return elem->GetString();
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::GetTime
+#
+#   Purpose....: Get time element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime TIso8583Bitmap::GetTime(int Id)
+{
+    TIso8583Element *elem = GetElem(Id);
+
+    if (elem)
+        return elem->GetTime();
+    else
+        return TDateTime();
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::GetBinarySize
+#
+#   Purpose....: Get binary element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIso8583Bitmap::GetBinarySize(int Id)
+{
+    TIso8583Element *elem = GetElem(Id);
+
+    if (elem)
+        return elem->GetBinarySize();
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::GetBinaryData
+#
+#   Purpose....: Get binary element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TIso8583Bitmap::GetBinaryData(int Id)
+{
+    TIso8583Element *elem = GetElem(Id);
+
+    if (elem)
+        return elem->GetBinaryData();
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::AddInt
+#
+#   Purpose....: Add int element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583Bitmap::AddInt(int Id, int val)
+{
+    TIso8583Element *elem = AddElem(Id);
+
+    if (elem)
+        elem->SetInt(val);
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::AddLong
+#
+#   Purpose....: Add long element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583Bitmap::AddLong(int Id, long long val)
+{
+    TIso8583Element *elem = AddElem(Id);
+
+    if (elem)
+        elem->SetLong(val);
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::AddString
+#
+#   Purpose....: Add string element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583Bitmap::AddString(int Id, const char *str)
+{
+    TIso8583Element *elem = AddElem(Id);
+
+    if (elem)
+        elem->SetString(str);
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::AddTime
+#
+#   Purpose....: Add time element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583Bitmap::AddTime(int Id, TDateTime &time)
+{
+    TIso8583Element *elem = AddElem(Id);
+
+    if (elem)
+        elem->SetTime(time);
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::AddBinary
+#
+#   Purpose....: Add binary element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TIso8583Bitmap::AddBinary(int Id, const char *data, int size)
+{
+    TIso8583Element *elem = AddElem(Id);
+
+    if (elem)
+        elem->SetBinary(data, size);
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::EncodeBitmap
+#
+#   Purpose....: Encode primary bitmap
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TIso8583Bitmap::EncodeBitmap(char *buf, int *remsize)
+{
+    int i, j;
+    int elem;
+    char mask;
+    char ch;
+    char *ptr = buf;
+
+    if (*remsize >= 8)
+    {
+        for (i = 0; i < 8; i++)
+        {
+            elem = 8 * i + 1;
+            mask = 0x80;
+            ch = 0;
+
+            for (j = 0; j < 8; j++)
+            {
+                if (FIsoArr[elem])
+                    ch |= mask;
+
+                mask = mask >> 1;
+                elem++;
+            }
+            ptr[i] = ch;
+        }
+        *remsize -= 8;
+        ptr += 8;
+    }
+    else
+        return 0;
+
+    return ptr;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::Encode
+#
+#   Purpose....: Encode message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIso8583Bitmap::Encode(char *buf, int size)
+{
+    int remsize;
+    char *ptr;
+    int elem;
+
+    if (size > 8)
+    {
+        ptr = EncodeBitmap(ptr, &remsize);
+
+        for (elem = 1; elem <= 63 && ptr; elem++)
+            if (FIsoArr[elem])
+                ptr = FIsoArr[elem]->Encode(ptr, &remsize);
+
+        return size - remsize;
+
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::DecodeBitmap
+#
+#   Purpose....: Decode primary bitmap
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TIso8583Bitmap::DecodeBitmap(char *buf, int *remsize)
+{
+    int i, j;
+    int elem;
+    char mask;
+    char *ptr = buf;
+    char ch;
+
+    for (i = 0; i <= 63; i++)
+        FUsedArr[i] = FALSE;
+
+    if (*remsize >= 8)
+    {
+        for (i = 0; i < 8; i++)
+        {
+            elem = 8 * i + 1;
+            mask = 0x80;
+            ch = ptr[i];
+
+            for (j = 0; j < 8; j++)
+            {
+                if (ch & mask)
+                    FUsedArr[elem] = TRUE;
+
+                mask = mask >> 1;
+                elem++;
+            }
+        }
+        *remsize -= 8;
+        ptr += 8;
+    }
+    else
+        return 0;
+
+    return ptr;
+}
+
+/*##########################################################################
+#
+#   Name       : TIso8583Bitmap::Decode
+#
+#   Purpose....: Decode message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TIso8583Bitmap::Decode(char *buf, int size)
+{
+    int remsize;
+    char *ptr;
+    int elem;
+    char str[10];
+    TIso8583Element *e;
+
+    if (size > 8)
+    {
+        ptr = DecodeBitmap(ptr, &remsize);
+
+        while (ptr)
+        {
+            e = AddElem();
+            if (e)
+                ptr = e->Decode(ptr, &remsize);
+            else
+                ptr = 0;
+        }
+
+        return size - remsize;
+
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TIso8583::TIso8583
 #
 #   Purpose....: Constructor for TIso8583
