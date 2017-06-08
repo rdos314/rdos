@@ -1964,18 +1964,7 @@ ResetDev    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-action_read_reset DB 'Read Reset', 0
-action_read_start DB 'Read', 0
-
 read_drive      Proc near
-    push es
-    push edi
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET action_read_start
-    SetThreadAction
-    pop edi
-    pop es
 
 rdLoop:    
     push ecx
@@ -2041,14 +2030,14 @@ rdDoRetry:
     mov word ptr fs:REG_CMD,123Ah
 
 rdSectorLoop:    
-    mov cx,2    
+    mov cx,8
 
 rdSectorRetry:
     push eax
     push edx
 ;
     GetSystemTime
-    add eax,1193 * 1000
+    add eax,1193 * 250
     adc edx,0
     WaitForSignalWithTimeout
 ;
@@ -2065,17 +2054,14 @@ rdSectorRetry:
 ;
     sub cx,1
     jnz rdSectorRetry
+;
+    push eax
+    push edx
+    nop
+    nop
+    nop
 
 rdReset:
-    push es
-    push edi
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET action_read_reset
-    SetThreadAction
-    pop edi
-    pop es
-;
     call ResetDev
 ;
     pop edx
@@ -2140,14 +2126,6 @@ action_write_start DB 'Write', 0
 action_write_reset DB 'Write Reset', 0
 
 write_drive     Proc near
-    push es
-    push edi
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET action_write_start
-    SetThreadAction
-    pop edi
-    pop es
 
 wrLoop:    
     push ecx
@@ -2211,14 +2189,14 @@ wrDoRetry:
     mov word ptr fs:REG_CMD,193Ah
 
 wrSectorLoop:    
-    mov cx,2    
+    mov cx,8
 
 wrSectorRetry:
     push eax
     push edx
 ;
     GetSystemTime
-    add eax,1193 * 1000
+    add eax,1193 * 250
     adc edx,0
     WaitForSignalWithTimeout
 ;
@@ -2234,17 +2212,11 @@ wrSectorRetry:
 ;
     sub cx,1
     jnz wrSectorRetry
+;
+    push eax
+    push edx    
 
 wrReset:
-    push es
-    push edi
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET action_write_reset
-    SetThreadAction
-    pop edi
-    pop es
-;
     call ResetDev
 ;
     pop edx
@@ -2363,15 +2335,6 @@ discbuf_thread:
     mov bx,ds:sd_disc_sel
 
 discbuf_thread_loop:
-    push es
-    push edi
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET action_idle
-    SetThreadAction
-    pop edi
-    pop es
-;
     WaitForDiscRequest    
     call perform_one
     jmp discbuf_thread_loop

@@ -706,7 +706,7 @@ TIso8583Element *TIso8583Bitmap::AddElem(int Id)
 {
     int digits = 0;
 
-    if (Id > 0 && Id <= 192)
+    if (Id > 0 && Id <= 63)
     {
         digits = FDigitTable[Id];
         if (digits)
@@ -1066,6 +1066,9 @@ int TIso8583Bitmap::Encode(char *buf, int size)
 
     if (size > 8)
     {
+        ptr = buf;
+        remsize = size;
+
         ptr = EncodeBitmap(ptr, &remsize);
 
         for (elem = 1; elem <= 63 && ptr; elem++)
@@ -1147,6 +1150,9 @@ int TIso8583Bitmap::Decode(char *buf, int size)
 
     if (size > 8)
     {
+        ptr = buf;
+        remsize = size;
+
         ptr = DecodeBitmap(ptr, &remsize);
 
         while (ptr)
