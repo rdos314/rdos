@@ -807,6 +807,9 @@
 #define usergate_fatal_error_exit 0x00000278
 #define usergate_get_thread_handle 0x00000279
 
+#define usergate_set_serial_line 0x0000027A
+#define usergate_reset_serial_line 0x0000027B
+
 
 
 #ifdef __FLAT__
@@ -1619,6 +1622,9 @@
 #define CallGate_fatal_error_exit 0x55 0x67 0x9a 120 2 0 0 3 0 0x5d
 #define CallGate_get_thread_handle 0x55 0x67 0x9a 121 2 0 0 3 0 0x5d
 
+#define CallGate_set_serial_line 0x55 0x67 0x9a 122 2 0 0 3 0 0x5d
+#define CallGate_reset_serial_line 0x55 0x67 0x9a 123 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2428,5 +2434,8 @@
 
 #define CallGate_fatal_error_exit 0x3e 0x67 0x9a 120 2 0 0 3 0
 #define CallGate_get_thread_handle 0x3e 0x67 0x9a 121 2 0 0 3 0
+
+#define CallGate_set_serial_line 0x3e 0x67 0x9a 122 2 0 0 3 0
+#define CallGate_reset_serial_line 0x3e 0x67 0x9a 123 2 0 0 3 0
 
 #endif

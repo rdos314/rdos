@@ -2901,6 +2901,22 @@
     value [eax] \
     modify [dh];
 
+#pragma aux RdosSetSerialLine = \
+    "mov dh,cl" \
+    CallGate_set_serial_line  \
+    CarryToBool \
+    parm [ecx] [edx] \
+    value [eax] \
+    modify [dh];
+
+#pragma aux RdosResetSerialLine = \
+    "mov dh,cl" \
+    CallGate_reset_serial_line  \
+    CarryToBool \
+    parm [ecx] [edx] \
+    value [eax] \
+    modify [dh];
+
 #pragma aux RdosReadSerialVal = \
     "mov dh,cl" \
     CallGate_read_serial_val  \

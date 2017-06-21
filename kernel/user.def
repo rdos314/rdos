@@ -807,4 +807,7 @@ set_console_cursor_position_nr  = 631
 fatal_error_exit_nr             = 632
 get_thread_handle_nr            = 633
 
+set_serial_line_nr              = 634
+reset_serial_line_nr            = 635
+
 usergate_entries                            = 650

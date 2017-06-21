@@ -760,6 +760,8 @@ long RDOSAPI RdosReadAdc(int handle);
 
 int RDOSAPI RdosReadSerialLines(int device, int *val);
 int RDOSAPI RdosToggleSerialLine(int device, int line);
+int RDOSAPI RdosSetSerialLine(int device, int line);
+int RDOSAPI RdosResetSerialLine(int device, int line);
 int RDOSAPI RdosReadSerialVal(int device, int line, int *val);
 int RDOSAPI RdosWriteSerialVal(int device, int line, int val);
 int RDOSAPI RdosReadSerialRaw(int device, int line, int *val);
