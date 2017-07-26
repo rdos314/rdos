@@ -1196,6 +1196,14 @@ receive_dhcp_done:
     cmp al,127
     je receive_this_node
 ;
+    push edx
+    mov edx,ds:ip_mask
+    not edx
+    or edx,ds:my_ip
+    cmp eax,edx
+    pop edx
+    je receive_this_node
+;   
     rol eax,8
     cmp al,255
     je receive_fail

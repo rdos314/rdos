@@ -32,13 +32,132 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
-
+INCLUDE serio.inc
 
     .386p
 
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;     NAME:           ToggleSerialLine
+;
+;     DESCRIPTION:    Toggle serial input line
+;
+;     PARAMETERS:     DL              Line #
+;                     DH              Device #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+toggle_serial_line_name DB 'Toggle Serial Line', 0
+
+toggle_serial_line      Proc far
+    stc
+    retf32
+toggle_serial_line  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;     NAME:           ResetSerialLine
+;
+;     DESCRIPTION:    Reset serial input line
+;
+;     PARAMETERS:     DL              Line #
+;                     DH              Device #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_serial_line_name DB 'Reset Serial Line', 0
+
+reset_serial_line      Proc far
+    stc
+    retf32
+reset_serial_line  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;     NAME:           SetSerialLine
+;
+;     DESCRIPTION:    Set serial input line
+;
+;     PARAMETERS:     DL              Line #
+;                     DH              Device #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_serial_line_name DB 'Set Serial Line', 0
+
+set_serial_line      Proc far
+    stc
+    retf32
+set_serial_line  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;     NAME:           ReadSerialLines
+;
+;     DESCRIPTION:    Read serial lines
+;
+;     PARAMETERS:     DH              Device #
+;
+;     RETURNS:        AL              State
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_serial_lines_name  DB 'Read Serial Lines', 0
+
+read_serial_lines       Proc far
+    stc
+    retf32
+read_serial_lines       Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;     NAME:           WriteSerialVal
+;
+;     DESCRIPTION:    Write serial value
+;
+;     PARAMETERS:     DL              Line #
+;                     DH              Device #
+;                     EAX             Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_serial_val_name   DB 'Write Serial Value', 0
+
+write_serial_val        Proc far
+    retf32
+write_serial_val        Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;     NAME:           ReadSerialVal
+;
+;     DESCRIPTION:    Read serial val
+;
+;     PARAMETERS:     DL              Line #
+;                     DH              Device #
+;
+;     RETURNS:        EAX             Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_serial_val_name    DB 'Read Serial Value', 0
+
+read_serial_val Proc far
+    retf32
+read_serial_val Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -58,6 +177,35 @@ init_ser_io PROC near
     push ds
     pushad
 ;
+    mov esi,OFFSET read_serial_lines
+    mov edi,OFFSET read_serial_lines_name
+    mov ax,read_serial_lines_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET toggle_serial_line
+    mov edi,OFFSET toggle_serial_line_name
+    mov ax,toggle_serial_line_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET reset_serial_line
+    mov edi,OFFSET reset_serial_line_name
+    mov ax,reset_serial_line_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_serial_line
+    mov edi,OFFSET set_serial_line_name
+    mov ax,set_serial_line_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET write_serial_val
+    mov edi,OFFSET write_serial_val_name
+    mov ax,write_serial_val_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET read_serial_val
+    mov edi,OFFSET read_serial_val_name
+    mov ax,read_serial_val_nr
+    RegisterBimodalUserGate
 ;
     popad
     pop ds

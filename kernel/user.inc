@@ -3148,6 +3148,19 @@ ToggleSerialLine      MACRO
 						ENDM
 
 ;	IN  DH		Device #
+;	IN  DL		Line #
+ResetSerialLine      MACRO
+	UserGate reset_serial_line_nr
+						ENDM
+
+;	IN  DH		Device #
+;	IN  DL		Line #
+SetSerialLine      MACRO
+	UserGate set_serial_line_nr
+						ENDM
+
+
+;	IN  DH		Device #
 ;	IN	DL		Line #
 ;	OUT EAX		Value
 ReadSerialVal      MACRO
