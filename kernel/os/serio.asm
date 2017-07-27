@@ -53,7 +53,7 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;       DESCRIPTION:    Add serial IO device
 ;
-;       PARAMETERS:     ES:EDI          Function table
+;       PARAMETERS:     ES              Ser IO sel
 ;                       DH              Device #
 ;               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -63,11 +63,7 @@ add_ser_io_device_name    DB 'Add Serial IO Device',0
 add_ser_io_device Proc far
     push ds
     push es
-    push fs
     pushad
-;    
-    mov ax,es
-    mov fs,ax
 ;    
     mov ax,SEG data
     mov ds,ax
@@ -75,24 +71,17 @@ add_ser_io_device Proc far
     add bx,bx
     mov ax,ds:[bx].dev_arr
     or ax,ax
-    jz asiAlloc
+    jz asiSave
 ;
+    push es
     mov es,ax
-    jmp asiFill    
+    FreeMem
+    pop es
 
-asiAlloc:
-    mov eax,SIZE serio_tab
-    AllocateSmallGlobalMem
+asiSave:
     mov ds:[bx].dev_arr,es
-
-asiFill:    
-    mov esi,edi
-    xor edi,edi
-    mov ecx,2 * SER_TAB_COUNT
-    rep movs dword ptr es:[edi],fs:[esi]
 ;
     popad
-    pop fs
     pop es
     pop ds    
     retf32

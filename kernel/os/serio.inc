@@ -28,7 +28,7 @@
 
 SER_TAB_COUNT   = 6
 
-serio_tab	STRUC
+serio_struc	STRUC
 
 siot_get_proc           DD ?,?
 siot_toggle_proc        DD ?,?
@@ -37,5 +37,5 @@ siot_set_proc           DD ?,?
 siot_read_proc          DD ?,?
 siot_write_proc         DD ?,?
 
-serio_tab	ENDS
+serio_struc	ENDS
 
