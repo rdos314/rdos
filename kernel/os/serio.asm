@@ -33,12 +33,70 @@ INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE serio.inc
+    
+data    SEGMENT byte public 'DATA'
+
+dev_arr DW 256 DUP (?)
+
+data  ENDS
 
     .386p
 
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddSerIoDevice
+;
+;       DESCRIPTION:    Add serial IO device
+;
+;       PARAMETERS:     ES:EDI          Function table
+;                       DH              Device #
+;               
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_ser_io_device_name    DB 'Add Serial IO Device',0
+
+add_ser_io_device Proc far
+    push ds
+    push es
+    push fs
+    pushad
+;    
+    mov ax,es
+    mov fs,ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    movzx bx,dh
+    add bx,bx
+    mov ax,ds:[bx].dev_arr
+    or ax,ax
+    jz asiAlloc
+;
+    mov es,ax
+    jmp asiFill    
+
+asiAlloc:
+    mov eax,SIZE serio_tab
+    AllocateSmallGlobalMem
+    mov ds:[bx].dev_arr,es
+
+asiFill:    
+    mov esi,edi
+    xor edi,edi
+    mov ecx,2 * SER_TAB_COUNT
+    rep movs dword ptr es:[edi],fs:[esi]
+;
+    popad
+    pop fs
+    pop es
+    pop ds    
+    retf32
+add_ser_io_device Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -55,7 +113,27 @@ code    SEGMENT byte public use16 'CODE'
 toggle_serial_line_name DB 'Toggle Serial Line', 0
 
 toggle_serial_line      Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx bx,dh
+    add bx,bx
+    mov bx,ds:[bx].dev_arr
+    or bx,bx
+    jz tslFail
+;
+    mov ds,bx
+    call fword ptr ds:siot_toggle_proc
+    jmp tslDone
+
+tslFail:    
     stc
+
+tslDone:
+    pop ebx
+    pop ds
     retf32
 toggle_serial_line  Endp
 
@@ -75,7 +153,27 @@ toggle_serial_line  Endp
 reset_serial_line_name DB 'Reset Serial Line', 0
 
 reset_serial_line      Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx bx,dh
+    add bx,bx
+    mov bx,ds:[bx].dev_arr
+    or bx,bx
+    jz rslFail
+;
+    mov ds,bx
+    call fword ptr ds:siot_reset_proc
+    jmp rslDone
+
+rslFail:    
     stc
+
+rslDone:
+    pop ebx
+    pop ds
     retf32
 reset_serial_line  Endp
 
@@ -94,7 +192,27 @@ reset_serial_line  Endp
 set_serial_line_name DB 'Set Serial Line', 0
 
 set_serial_line      Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx bx,dh
+    add bx,bx
+    mov bx,ds:[bx].dev_arr
+    or bx,bx
+    jz sslFail
+;
+    mov ds,bx
+    call fword ptr ds:siot_set_proc
+    jmp sslDone
+
+sslFail:    
     stc
+
+sslDone:
+    pop ebx
+    pop ds
     retf32
 set_serial_line  Endp
         
@@ -114,7 +232,27 @@ set_serial_line  Endp
 read_serial_lines_name  DB 'Read Serial Lines', 0
 
 read_serial_lines       Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx bx,dh
+    add bx,bx
+    mov bx,ds:[bx].dev_arr
+    or bx,bx
+    jz gslFail
+;
+    mov ds,bx
+    call fword ptr ds:siot_get_proc
+    jmp gslDone
+
+gslFail:    
     stc
+
+gslDone:
+    pop ebx
+    pop ds
     retf32
 read_serial_lines       Endp
 
@@ -135,6 +273,27 @@ read_serial_lines       Endp
 write_serial_val_name   DB 'Write Serial Value', 0
 
 write_serial_val        Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx bx,dh
+    add bx,bx
+    mov bx,ds:[bx].dev_arr
+    or bx,bx
+    jz wvslFail
+;
+    mov ds,bx
+    call fword ptr ds:siot_write_proc
+    jmp wvslDone
+
+wvslFail:    
+    stc
+
+wvslDone:
+    pop ebx
+    pop ds
     retf32
 write_serial_val        Endp
 
@@ -156,6 +315,27 @@ write_serial_val        Endp
 read_serial_val_name    DB 'Read Serial Value', 0
 
 read_serial_val Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx bx,dh
+    add bx,bx
+    mov bx,ds:[bx].dev_arr
+    or bx,bx
+    jz rvslFail
+;
+    mov ds,bx
+    call fword ptr ds:siot_read_proc
+    jmp rvslDone
+
+rvslFail:    
+    stc
+
+rvslDone:
+    pop ebx
+    pop ds
     retf32
 read_serial_val Endp
 
@@ -175,7 +355,24 @@ read_serial_val Endp
 
 init_ser_io PROC near
     push ds
+    push es
     pushad
+;
+    mov ax,SEG data
+    mov es,ax
+    mov edi,OFFSET dev_arr
+    mov ecx,256
+    xor ax,ax
+    rep stosw
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax    
+;
+    mov esi,OFFSET add_ser_io_device
+    mov edi,OFFSET add_ser_io_device_name
+    mov ax,add_serio_device_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET read_serial_lines
     mov edi,OFFSET read_serial_lines_name
@@ -205,9 +402,10 @@ init_ser_io PROC near
     mov esi,OFFSET read_serial_val
     mov edi,OFFSET read_serial_val_name
     mov ax,read_serial_val_nr
-    RegisterBimodalUserGate
+    RegisterBimodalUserGate    
 ;
     popad
+    pop es
     pop ds
     ret
 init_ser_io ENDP

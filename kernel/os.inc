@@ -1750,6 +1750,12 @@ HookOut MACRO
     OsGate hook_out_nr
                     ENDM
 
+; IN  ES:EDI       Serio function table
+; IN  DH           Device #
+AddSerIoDevice  MACRO
+    OsGate add_serio_device_nr
+                    ENDM
+
 ;;;;;;;;;; IRQ ;;;;;;;;;;;;;;;;;;;
 
 IrqSchedule    MACRO

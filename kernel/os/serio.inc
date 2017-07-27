@@ -25,8 +25,12 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+SER_TAB_COUNT   = 6
+
 serio_tab	STRUC
 
+siot_get_proc           DD ?,?
 siot_toggle_proc        DD ?,?
 siot_reset_proc         DD ?,?
 siot_set_proc           DD ?,?

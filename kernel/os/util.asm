@@ -46,6 +46,7 @@ INCLUDE ..\os.inc
     extrn init_app:near
     extrn init_ldt:near
     extrn init_chandle:near
+    extrn init_ser_io:near
 
 code    SEGMENT byte public use16 'CODE'
 
@@ -74,6 +75,7 @@ init    PROC far
     call init_time
     call init_env
     call init_wait
+    call init_ser_io
     clc
         ret
 init    ENDP
