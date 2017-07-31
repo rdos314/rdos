@@ -391,6 +391,46 @@ InsertAddress   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       Name:           UpdateAddress
+;
+;       Purpose:        Update protocol logical address
+;
+;       Parameters:     DS          Protocol
+;                       ES:DI       Address to physical
+;                       FS          Driver handle
+;                       AX          Protocol selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateAddress   Proc near
+    push ds
+    push es
+    push ecx
+    push esi
+    push edi
+;
+    mov cx,es
+    mov ds,cx
+    mov es,ax
+    mov si,di
+;    
+    mov di,OFFSET prot_logical_addr
+    movzx cx,es:prot_logical_addr_len
+    add di,cx
+    movzx cx,es:prot_hardware_addr_len
+    rep movs byte ptr es:[di],ds:[si]
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+    pop ds
+    ret
+UpdateAddress   Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       Name:           SendArp
 ;
 ;       Purpose:        Send arp request to all drivers
@@ -576,11 +616,17 @@ receive_arp_found:
     add esi,ecx
     push fs
     call FindAddress
-    jnc receive_arp_check_dest
+    jnc receive_arp_update_src
 ;
     mov edi,SIZE arp_data + OFFSET ar_data
     mov fs,bp
     call InsertAddress
+    jmp receive_arp_check_dest
+
+receive_arp_update_src:
+    mov edi,SIZE arp_data + OFFSET ar_data
+    mov fs,bp
+    call UpdateAddress
 
 receive_arp_check_dest:
     pop fs
@@ -1358,7 +1404,7 @@ add_net_source_address  Proc far
     mov fs,ax
     mov esi,edi
     call FindAddress
-    jnc add_src_address_done
+    jnc add_src_address_update
 ;
     mov fs,bp
     push esi
@@ -1366,6 +1412,15 @@ add_net_source_address  Proc far
     mov edi,esi
     pop esi
     call InsertAddress
+    jmp add_src_address_done
+
+add_src_address_update:
+    mov fs,bp
+    push esi
+    call fword ptr fs:d_get_address
+    mov edi,esi
+    pop esi
+    call UpdateAddress
 
 add_src_address_done:
     pop bp
