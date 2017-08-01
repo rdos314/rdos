@@ -80,6 +80,7 @@ dhcp_ip2        DD ?
 dhcp_serv_arr       DW 256 DUP(?)
 
 dhcp_enabled    DB ?
+dhcp_done       DB ?
 
 data    ENDS
 
@@ -1001,8 +1002,8 @@ ReceiveDiscover Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    mov ax,ds:dhcp_driver_sel
-    or ax,ax
+    mov al,ds:dhcp_done
+    or al,al
     jz discover_req_done
 ;    
     mov eax,ds:dhcp_ip2
@@ -1155,8 +1156,8 @@ ReceiveRequest  Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    mov ax,ds:dhcp_driver_sel
-    or ax,ax
+    mov al,ds:dhcp_done
+    or al,al
     jz req_req_done
 ;
     mov ax,es
@@ -2179,8 +2180,8 @@ IsDhcpDone      Proc near
 ;
     mov ax,SEG data
     mov ds,ax
-    mov ax,ds:dhcp_driver_sel
-    or ax,ax
+    mov al,ds:dhcp_done
+    or al,al
     stc
     jz is_dhcp_done
 ;
@@ -2234,7 +2235,16 @@ IsDhcpEnabled      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReceiveError    Proc near
+    push ds
+    push ax
+;       
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:dhcp_server,0
     FreeMem
+;
+    pop ax
+    pop ds
     ret
 ReceiveError    Endp
 
@@ -2372,6 +2382,7 @@ receive_ack_next:
 
 receive_ack_leave:
     mov ds:dhcp_driver_sel,gs
+    mov ds:dhcp_done,1
 
 receive_ack_done:
     FreeMem
@@ -2498,6 +2509,12 @@ define_lease_time      Proc far
 ;
     mov eax,es:[di]
     Reverse
+    sub eax,10
+    ja define_lease_save
+;
+    mov eax,1
+
+define_lease_save:
     mov ds:dhcp_lease,eax
 
 define_lease_done:
@@ -2509,17 +2526,17 @@ define_lease_time      Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;       Name:           HandleEnabledDhcp
+;       Name:           HandleDiscoverDhcp
 ;
-;       Purpose:        Handle enabled DHCP
+;       Purpose:        Handle discover DHCP
 ;
 ;       Parameters:     DS           Data seg
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-HandleEnabledDhcp   Proc near
-    mov ds:dhcp_server,0
-;       
+HandleDiscoverDhcp   Proc near
+    mov ds:dhcp_driver_sel,0
+;
     mov ax,cs
     mov es,ax
     mov edi,OFFSET DhcpDiscover
@@ -2528,33 +2545,79 @@ HandleEnabledDhcp   Proc near
     mov ax,500
     WaitMilliSec    
 ;    
-    mov bx,SEG data
-    mov ds,bx
     mov ax,ds:dhcp_driver_sel
     or ax,ax
-    jz hedFailed
+    jz hdidFailed
 ;
     mov edx,ds:dhcp_ip
     call is_ip_in_use
-    jc hedOk
+    jc hdidOk
 ;
     mov ax,cs
     mov es,ax
     mov edi,OFFSET DhcpDecline
     NetBroadcast
 
-hedFailed:
+hdidFailed:
     stc
-    jmp hedDone
+    jmp hdidDone
 
-hedOk:
+hdidOk:
     mov eax,ds:dhcp_ip
     call define_ip
     clc
 
-hedDone:
+hdidDone:
     ret
-HandleEnabledDhcp  Endp
+HandleDiscoverDhcp  Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           HandleRenewDhcp
+;
+;       Purpose:        Handle renew DHCP
+;
+;       Parameters:     DS           Data seg
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleRenewDhcp   Proc near
+    mov ds:dhcp_driver_sel,0
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET DhcpRequest
+    NetBroadcast
+;
+    mov ax,500
+    WaitMilliSec    
+;    
+    mov ax,ds:dhcp_driver_sel
+    or ax,ax
+    jz hrdFailed
+;
+    mov edx,ds:dhcp_ip
+    call is_ip_in_use
+    jc hrdOk
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET DhcpDecline
+    NetBroadcast
+
+hrdFailed:
+    stc
+    jmp hdidDone
+
+hrdOk:
+    mov eax,ds:dhcp_ip
+    call define_ip
+    clc
+
+hrdDone:
+    ret
+HandleRenewDhcp  Endp
 
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2568,7 +2631,7 @@ HandleEnabledDhcp  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleDisabledDhcp   Proc near
-    mov ds:dhcp_driver_sel,1
+    mov ds:dhcp_done,1
 ;    
     call get_gateway_driver
     jnc hddOk
@@ -2605,8 +2668,6 @@ HandleDisabledDhcp   Endp
 dhcp_thread_name    DB 'DHCP',0
 
 ip_name         DB 'IP',0
-
-
 host_name       DB 'HOST',0
 
 dhcp_thread_pr:
@@ -2618,6 +2679,8 @@ dhcp_thread_pr:
 ;       
     GetIpAddress
     mov ds:dhcp_ip,edx
+;
+    mov cx,8
 
 dtRedo:
     mov al,ds:dhcp_enabled
@@ -2625,9 +2688,26 @@ dtRedo:
     jz dtDisabled
 
 dtEnabled:
-    call HandleEnabledDhcp
+    mov eax,ds:dhcp_server
+    or eax,eax
+    jz dtDiscover
+
+dtRenew:
+    inc ds:dhcp_ident
+    call HandleRenewDhcp
     jnc dtNext
-;
+
+dtFail:
+    mov cx,8
+    mov ds:dhcp_server,0
+    mov ds:dhcp_lease,1    
+    inc ds:dhcp_ident
+
+dtDiscover:
+    call HandleDiscoverDhcp
+    jnc dtNext
+;    
+    mov ds:dhcp_server,0
     mov ds:dhcp_lease,1    
     jmp dtNext
 
@@ -2636,13 +2716,21 @@ dtDisabled:
     jmp dtDone
 
 dtNext:
+    or cx,cx
+    jz dtWait
+;
+    sub cx,1
+    jnz dtWait
+;
+    mov ds:dhcp_done,1
+
+dtWait:
     mov ax,1000
     WaitMilliSec    
 ;
     sub ds:dhcp_lease,1
-    jnz dtNext
+    jnz dtWait
 ;
-    int 3
     jmp dtRedo
 
 dtDone:
@@ -2669,6 +2757,7 @@ init_task_dhcp       PROC near
     mov es:dhcp_option_list,0
     mov es:dhcp_driver_sel,0
     mov es:dhcp_server,0
+    mov es:dhcp_done,0
     mov es:dhcp_lease,DEFAULT_LEASE
     GetIpAddress
     mov es:dhcp_wanted_ip,edx
