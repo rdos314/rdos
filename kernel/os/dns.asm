@@ -863,6 +863,9 @@ define_dns      Proc far
     jz define_dns_done
 ;
     mov edx,es:[di]
+    cmp edx,ds:dns1
+    je define_dns1_ok
+;
     mov ds:dns1,edx
 ;
     push es
@@ -873,13 +876,17 @@ define_dns      Proc far
     call WriteIpEnv
     pop di
     pop es
-;
+
+define_dns1_ok:
     add di,4
     sub cx,4
     or cx,cx
     jz define_dns_done
 ;
     mov edx,es:[di]
+    cmp edx,ds:dns2
+    je define_dns_done
+;
     mov ds:dns2,edx
 ;
     push es

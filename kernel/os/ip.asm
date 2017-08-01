@@ -64,6 +64,7 @@ ip_mask             DD ?
 gateway             DD ?
 ip_handle               DW ?
 curr_id             DW ?
+host_name_sel       DW ?
 protocol_count      DW ?
 protocol_arr        DW 16 DUP(?)
 dhcp_no_netmask     DB ?
@@ -1332,6 +1333,30 @@ get_gateway_driver  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           get_host_name
+;
+;           description:    Get host name
+;
+;           RETURNS:        AX  Host name sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public get_host_name
+
+get_host_name      Proc near
+    push es
+    mov ax,SEG data
+    mov es,ax
+    mov ax,es:host_name_sel
+    pop es
+    ret
+get_host_name  Endp    
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ping_gateway
 ;
 ;           description:    Ping gateway
@@ -1425,19 +1450,25 @@ define_ip       Proc near
     push ds
     mov dx,SEG data
     mov ds,dx
-    mov ds:my_ip,eax
     mov ds:bc_ip,eax
+    cmp eax,ds:my_ip
+    pushf
+;
+    mov ds:my_ip,eax
     mov esi,OFFSET my_ip
     mov bx,ds:ip_handle
     DefineProtocolAddress
+    popf
     pop ds
+    je define_ip_done
 ;
     mov edx,eax
     mov ax,cs
     mov es,ax
     mov di,OFFSET ip_name
     call WriteIpEnv
-;
+
+define_ip_done:
     pop di
     pop esi
     pop edx
@@ -1469,13 +1500,17 @@ define_mask     Proc far
     mov ax,SEG data
     mov ds,ax
     mov edx,es:[di]
+    cmp edx,ds:ip_mask
+    je define_mask_done
+;
     mov ds:ip_mask,edx
 ;
     mov ax,cs
     mov es,ax
     mov di,OFFSET mask_name
     call WriteIpEnv
-;
+
+define_mask_done:
     pop di
     pop edx
     pop ax
@@ -1506,13 +1541,17 @@ define_gateway  Proc far
     mov ax,SEG data
     mov ds,ax
     mov edx,es:[di]
+    cmp edx,ds:gateway
+    je define_gateway_done
+;
     mov ds:gateway,edx
 ;
     mov ax,cs
     mov es,ax
     mov di,OFFSET gateway_name
     call WriteIpEnv
-;
+
+define_gateway_done:
     pop di
     pop edx
     pop ax
@@ -1610,6 +1649,105 @@ find_ip_done:
     pop ds
     ret
 GetIPNumber     Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetEnvStr
+;
+;       Purpose:        Get environment string
+;
+;       Parameters:     ES:DI   Name
+;
+;       Returns:        NC          Found
+;                       AX          Sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetEnvStr
+    
+GetEnvStr     Proc near
+    push ds
+    push es
+    push ebx
+    push cx
+    push si
+    push di
+;
+    LockSysEnv
+    mov ds,bx
+    xor si,si
+
+gesRetry:
+    push di
+
+gesLoop:
+    cmpsb
+    jnz gesNext
+;
+    mov al,es:[di]
+    or al,al
+    jnz gesLoop
+;
+    mov al,[si]
+    cmp al,'='
+    je gesFound
+
+gesNext:
+    pop di
+
+gesNextBp:
+    lodsb
+    or al,al
+    jnz gesNextBp
+;
+    mov al,[si]
+    or al,al
+    jne gesRetry
+;
+    stc
+    jmp gesDone
+
+gesFound:
+    pop di
+    xor ebx,ebx
+    inc si
+;
+    xor cx,cx
+    push si
+
+gesSizeLoop:
+    lodsb
+    or al,al
+    je gesSizeOk
+;
+    inc cx
+    jmp gesSizeLoop
+
+gesSizeOk:
+    inc cx
+    movzx eax,cx
+    AllocateSmallGlobalMem
+;
+    pop si
+    xor di,di
+    rep movsb
+    mov ax,es
+    clc
+
+gesDone:
+    pushf
+    UnlockSysEnv
+    popf
+;
+    pop di
+    pop si
+    pop cx
+    pop ebx
+    pop es
+    pop ds
+    ret
+GetEnvStr     Endp
 
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1744,6 +1882,8 @@ ip_name             DB 'IP',0
 mask_name           DB 'NETMASK',0
 gateway_name        DB 'GATEWAY',0
 dhcp_no_mask_name   DB 'DHCP.NO.NETMASK',0
+host_name           DB 'HOST',0
+default_host        DB 'RDOS',0
 
 init_tasking    Proc far
     push ds
@@ -1765,6 +1905,25 @@ init_tasking    Proc far
     mov di,OFFSET gateway_name
     call GetIPNumber
     mov ds:gateway,eax
+;
+    mov di,OFFSET host_name
+    call GetEnvStr
+    jnc iHostOk
+;
+    push ds
+    push es
+    mov eax,5
+    AllocateSmallGlobalMem
+    xor di,di
+    mov si,OFFSET default_host
+    mov cx,5
+    rep movs byte ptr es:[di],cs:[si]
+    mov ax,es
+    pop es
+    pop ds
+    
+iHostOk:    
+    mov ds:host_name_sel,ax
 ;
     mov ds:dhcp_no_netmask,0
     mov di,OFFSET dhcp_no_mask_name
@@ -1909,6 +2068,7 @@ init    PROC far
     mov ds,ax
     mov ds:my_ip,0
     mov ds:bc_ip,0
+    mov ds:host_name_sel,0
     mov esi,OFFSET my_ip
     mov edi,OFFSET receive
     RegisterNetProtocol

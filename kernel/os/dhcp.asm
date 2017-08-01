@@ -38,6 +38,8 @@ INCLUDE net.inc
 INCLUDE udp.inc
 INCLUDE dhcp.inc
 
+DEFAULT_LEASE = 600
+
 Reverse MACRO
     xchg al,ah
     rol eax,16
@@ -70,6 +72,7 @@ dhcp_wanted_ip      DD ?
 dhcp_server             DD ?
 dhcp_option_list    DW ?
 dhcp_driver_sel     DW ?
+dhcp_lease      DD ?
 dhcp_ip         DD ?
 dhcp_ip2        DD ?
 ;dhcp_mask2      DD ?
@@ -83,9 +86,11 @@ data    ENDS
     extrn is_ip_in_use:near
     extrn define_ip:near
     extrn get_gateway_driver:near
+    extrn get_host_name:near
     extrn ping_gateway:near
     extrn GetIPNumber:near
     extrn GetValue:near
+    extrn GetEnvStr:near
 
 code    SEGMENT byte public 'CODE'
 
@@ -1531,7 +1536,8 @@ LeaseData       Proc near
     stosb
     mov al,4
     stosb
-    mov eax,-1
+    mov eax,DEFAULT_LEASE
+    Reverse
     stosd
 ;
     pop eax
@@ -1643,6 +1649,99 @@ ReqIpData       Proc near
     pop ds
     ret
 ReqIpData       Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           HostNameSize
+;
+;       Purpose:        Size of client host name
+;
+;       Parameters:     DS              Class selector
+;                       FS              Driver selector
+;
+;       Returns:        CX              Size of client IP
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HostNameSize       Proc near
+    push ds
+    push ax
+    push si
+;    
+    call get_host_name
+    mov ds,ax
+    xor si,si
+    mov cx,2
+
+hnsLoop:
+    lodsb
+    or al,al
+    jz hnsOk
+;
+    inc cx
+    jmp hnsLoop
+
+hnsOk:
+    pop si
+    pop ax
+    pop ds
+    ret
+HostNameSize       Endp
+    
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           HostNameData
+;
+;       Purpose:        Copy client host name
+;
+;       Parameters:     DS              Class selector
+;                       FS              Driver selector
+;                       ES:DI       Position to copy at
+;
+;       Returns:        ES:DI       New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HostNameData       Proc near
+    push ds
+    push ax
+    push cx
+    push si
+;
+    call get_host_name
+    mov ds,ax
+    xor si,si
+;
+    mov al,12
+    stosb
+;
+    push di
+    inc di
+;    
+    xor si,si
+    xor cx,cx
+
+hndLoop:
+    lodsb
+    or al,al
+    jz hndOk
+;
+    stosb
+    inc cx
+    jmp hndLoop
+
+hndOk:
+    pop si
+    mov es:[si],cl
+;
+    pop si
+    pop cx
+    pop ax
+    pop ds
+    ret
+HostNameData       Endp
     
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1719,7 +1818,8 @@ d00     DW OFFSET ClientSize,       OFFSET ClientData
 d01 DW OFFSET ParamSize,        OFFSET ParamData
 d02 DW OFFSET LeaseSize,        OFFSET LeaseData
 d03 DW OFFSET ReqIpSize,        OFFSET ReqIpData
-d04     DW -1
+d04 DW OFFSET HostNameSize,        OFFSET HostNameData
+d05     DW -1
 
 DhcpDiscover    Proc far
     mov dx,SIZE dhcp_header + 1
@@ -1831,7 +1931,8 @@ ro01 DW OFFSET ParamSize,           OFFSET ParamData
 ro02 DW OFFSET LeaseSize,           OFFSET LeaseData
 ro03 DW OFFSET ReqIpSize,           OFFSET ReqIpData
 ro04 DW OFFSET ServerSize,          OFFSET ServerData
-ro05 DW -1
+ro05 DW OFFSET HostNameSize,        OFFSET HostNameData
+ro06 DW -1
 
 DhcpRequest     Proc far
     mov dx,SIZE dhcp_header + 1
@@ -2374,6 +2475,37 @@ receive_cl_done:
     ret
 ReceiveClientDhcp       Endp
 
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           define_lease
+;
+;       Purpose:        Define lease
+;
+;       Parameters:     ECX          Size of msg
+;                       ES:EDI       Lease time
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+define_lease_time      Proc far
+    push ds
+    push eax
+;
+    mov ax,SEG data
+    mov ds,ax
+    or cx,cx
+    jz define_lease_done
+;
+    mov eax,es:[di]
+    Reverse
+    mov ds:dhcp_lease,eax
+
+define_lease_done:
+    pop eax
+    pop ds
+    retf32
+define_lease_time      Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2391,6 +2523,9 @@ ReceiveClientDhcp       Endp
 dhcp_thread_name    DB 'DHCP',0
 
 ip_name         DB 'IP',0
+
+
+host_name       DB 'HOST',0
 
 dhcp_thread_pr:
     mov ax,250
@@ -2456,6 +2591,9 @@ dhcp_gw_ok:
 dhcp_thread_done:    
     mov eax,ds:dhcp_ip
     call define_ip
+;
+    int 3
+    mov eax,ds:dhcp_lease    
     retf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2479,6 +2617,7 @@ init_task_dhcp       PROC near
     mov es:dhcp_option_list,0
     mov es:dhcp_driver_sel,0
     mov es:dhcp_server,0
+    mov es:dhcp_lease,DEFAULT_LEASE
     GetIpAddress
     mov es:dhcp_wanted_ip,edx
     mov es:dhcp_ident,0
@@ -2515,6 +2654,10 @@ init_dhcp_enabled_ok:
     xor cl,cl
     mov ax,add_dhcp_option_nr
     RegisterOsGate
+;
+    mov al,51
+    mov edi,OFFSET define_lease_time
+    AddDhcpOption
 ;
     mov ax,cs
     mov ds,ax
