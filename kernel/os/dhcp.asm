@@ -38,7 +38,7 @@ INCLUDE net.inc
 INCLUDE udp.inc
 INCLUDE dhcp.inc
 
-DEFAULT_LEASE = 600
+DEFAULT_LEASE = 60
 
 Reverse MACRO
     xchg al,ah
@@ -2506,6 +2506,88 @@ define_lease_done:
     retf32
 define_lease_time      Endp
 
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           HandleEnabledDhcp
+;
+;       Purpose:        Handle enabled DHCP
+;
+;       Parameters:     DS           Data seg
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleEnabledDhcp   Proc near
+    mov ds:dhcp_server,0
+;       
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET DhcpDiscover
+    NetBroadcast
+;
+    mov ax,500
+    WaitMilliSec    
+;    
+    mov bx,SEG data
+    mov ds,bx
+    mov ax,ds:dhcp_driver_sel
+    or ax,ax
+    jz hedFailed
+;
+    mov edx,ds:dhcp_ip
+    call is_ip_in_use
+    jc hedOk
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET DhcpDecline
+    NetBroadcast
+
+hedFailed:
+    stc
+    jmp hedDone
+
+hedOk:
+    mov eax,ds:dhcp_ip
+    call define_ip
+    clc
+
+hedDone:
+    ret
+HandleEnabledDhcp  Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           HandleDisabledDhcp
+;
+;       Purpose:        Handle disabled DHCP
+;
+;       Parameters:     DS           Data seg
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleDisabledDhcp   Proc near
+    mov ds:dhcp_driver_sel,1
+;    
+    call get_gateway_driver
+    jnc hddOk
+;
+    mov eax,250
+    call ping_gateway
+    jc hddDone
+;    
+    call get_gateway_driver
+    jc hddDone
+
+hddOk:
+    mov ds:dhcp_driver_sel,bx
+
+hddDone:    
+    mov eax,ds:dhcp_ip
+    call define_ip
+    ret
+HandleDisabledDhcp   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2536,64 +2618,34 @@ dhcp_thread_pr:
 ;       
     GetIpAddress
     mov ds:dhcp_ip,edx
-;       
+
+dtRedo:
     mov al,ds:dhcp_enabled
     or al,al
-    jz dhcp_thread_disabled
-;    
-    mov cx,8
+    jz dtDisabled
 
-dhcp_thread_retry:    
-    mov ds:dhcp_server,0
-;       
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET DhcpDiscover
-    NetBroadcast
+dtEnabled:
+    call HandleEnabledDhcp
+    jnc dtNext
 ;
-    mov ax,500
+    mov ds:dhcp_lease,1    
+    jmp dtNext
+
+dtDisabled:
+    call HandleDisabledDhcp
+    jmp dtDone
+
+dtNext:
+    mov ax,1000
     WaitMilliSec    
-;    
-    mov bx,SEG data
-    mov ds,bx
-    mov ax,ds:dhcp_driver_sel
-    or ax,ax
-    jz dhcp_thread_failed
 ;
-    mov edx,ds:dhcp_ip
-    call is_ip_in_use
-    jc dhcp_thread_done
-;
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET DhcpDecline
-    NetBroadcast
-
-dhcp_thread_failed:
-    loop dhcp_thread_retry    
-
-dhcp_thread_disabled:    
-    mov ds:dhcp_driver_sel,1
-;    
-    call get_gateway_driver
-    jnc dhcp_gw_ok
-;
-    mov eax,250
-    call ping_gateway
-    jc dhcp_thread_done
-;    
-    call get_gateway_driver
-    jc dhcp_thread_done
-
-dhcp_gw_ok:
-    mov ds:dhcp_driver_sel,bx
-
-dhcp_thread_done:    
-    mov eax,ds:dhcp_ip
-    call define_ip
+    sub ds:dhcp_lease,1
+    jnz dtNext
 ;
     int 3
-    mov eax,ds:dhcp_lease    
+    jmp dtRedo
+
+dtDone:
     retf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
