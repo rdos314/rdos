@@ -45,6 +45,7 @@ INCLUDE udp.inc
     extrn init_task_ntp:near
     extrn init_task_tcp:near
     extrn init_task_syslog:near
+    extrn dhcp_link_up:near
 
     extrn init_cache:near
     extrn IsDhcpDone:near
@@ -1854,6 +1855,8 @@ link_up_arp  Proc far
     push ds
     push bx
 ;    
+    call dhcp_link_up
+;
     call IsDhcpEnabled
     jnc link_up_done
 ;    

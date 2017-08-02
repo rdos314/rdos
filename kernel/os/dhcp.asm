@@ -103,6 +103,31 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           dhcp_link_up
+;
+;           DESCRIPTION:    Notify link up change
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public dhcp_link_up
+
+dhcp_link_up    Proc near
+    push ds
+    push ax
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:dhcp_lease,1
+
+dluDone:
+    pop ax
+    pop ds
+    ret
+dhcp_link_up    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CalcChecksum
 ;
 ;           DESCRIPTION:    Calculate checksum for UDP
@@ -2235,18 +2260,36 @@ IsDhcpEnabled      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReceiveError    Proc near
+    FreeMem
+    ret
+ReceiveError    Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           ReceiveNak
+;
+;       Purpose:        Receive NAK
+;
+;       Parameters:         ES:EDI  UDP data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveNak    Proc near
     push ds
     push ax
 ;       
     mov ax,SEG data
     mov ds,ax
     mov ds:dhcp_server,0
+    mov ds:dhcp_lease,1    
+    inc ds:dhcp_ident
     FreeMem
 ;
     pop ax
     pop ds
     ret
-ReceiveError    Endp
+ReceiveNak    Endp
 
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2383,6 +2426,9 @@ receive_ack_next:
 receive_ack_leave:
     mov ds:dhcp_driver_sel,gs
     mov ds:dhcp_done,1
+;
+    mov eax,ds:dhcp_ip
+    call define_ip
 
 receive_ack_done:
     FreeMem
@@ -2416,7 +2462,7 @@ cr02    DW OFFSET ReceiveOffer
 cr03    DW OFFSET ReceiveError
 cr04    DW OFFSET ReceiveError
 cr05    DW OFFSET ReceiveAck
-cr06    DW OFFSET ReceiveError
+cr06    DW OFFSET ReceiveNak
 cr07    DW OFFSET ReceiveError
 cr08    DW OFFSET ReceiveError
 
@@ -2467,11 +2513,43 @@ receive_cl_dest_ok:
 ;
     mov eax,ds:dhcp_ident
     cmp eax,es:[di].dhcp_id
-    jne receive_cl_free
+    jne receive_cl_check
 ;
     add bx,bx
     call word ptr cs:[bx].cl_receive_tab    
     jmp receive_cl_done
+
+receive_cl_check:
+    mov eax,ds:dhcp_server
+    or eax,eax
+    jz receive_cl_free
+;
+    add di,SIZE dhcp_header
+
+receive_cl_insp_loop:
+    mov al,es:[di]
+    cmp al,54
+    jne receive_cl_insp_next
+;
+    mov eax,es:[di+2]
+    cmp eax,ds:dhcp_server
+    je receive_cl_free
+;
+    mov ds:dhcp_server,0
+    mov ds:dhcp_lease,1    
+    inc ds:dhcp_ident
+    jmp receive_cl_free
+
+receive_cl_insp_next:
+    inc di
+    sub cx,1
+    jz receive_cl_free
+;
+    movzx ax,byte ptr es:[di]
+    inc ax
+    add di,ax
+    sub cx,ax
+    ja receive_cl_insp_loop
 
 receive_cl_free:
     xor ax,ax
@@ -2563,8 +2641,6 @@ hdidFailed:
     jmp hdidDone
 
 hdidOk:
-    mov eax,ds:dhcp_ip
-    call define_ip
     clc
 
 hdidDone:
@@ -2611,8 +2687,6 @@ hrdFailed:
     jmp hdidDone
 
 hrdOk:
-    mov eax,ds:dhcp_ip
-    call define_ip
     clc
 
 hrdDone:

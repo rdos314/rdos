@@ -1241,7 +1241,11 @@ NetThread:
 net_thread_loop:
     call CheckLink
     call ReceiveData
-    WaitForSignal
+;
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    WaitForSignalWithTimeout
     jmp net_thread_loop
 
         
