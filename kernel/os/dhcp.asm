@@ -81,6 +81,7 @@ dhcp_serv_arr       DW 256 DUP(?)
 
 dhcp_enabled    DB ?
 dhcp_done       DB ?
+dhcp_rebind     DB ?
 
 data    ENDS
 
@@ -92,6 +93,7 @@ data    ENDS
     extrn GetIPNumber:near
     extrn GetValue:near
     extrn GetEnvStr:near
+    extrn RebindGateway:near
 
 code    SEGMENT byte public 'CODE'
 
@@ -2429,6 +2431,13 @@ receive_ack_leave:
 ;
     mov eax,ds:dhcp_ip
     call define_ip
+;
+    mov al,ds:dhcp_rebind
+    or al,al
+    jz receive_ack_done
+;
+    call RebindGateway
+    mov ds:dhcp_rebind,0
 
 receive_ack_done:
     FreeMem
@@ -2775,6 +2784,7 @@ dtFail:
     mov cx,8
     mov ds:dhcp_server,0
     mov ds:dhcp_lease,1    
+    mov ds:dhcp_rebind,1    
     inc ds:dhcp_ident
 
 dtDiscover:
@@ -2832,6 +2842,7 @@ init_task_dhcp       PROC near
     mov es:dhcp_driver_sel,0
     mov es:dhcp_server,0
     mov es:dhcp_done,0
+    mov es:dhcp_rebind,0
     mov es:dhcp_lease,DEFAULT_LEASE
     GetIpAddress
     mov es:dhcp_wanted_ip,edx

@@ -1910,6 +1910,13 @@ req_arp  Proc far
     rep movs byte ptr es:[edi],ds:[esi]
     pop ds
 ;
+    mov ecx,4
+    add cl,gs:p_logical_addr_len
+    adc ch,0
+    add cl,ds:addr_len
+    adc ch,0
+    movzx ecx,cx
+    add ecx,ecx
     mov dx,806h
     mov esi,OFFSET broadcast_addr
     call fword ptr fs:d_send

@@ -1560,7 +1560,44 @@ define_gateway_done:
     pop ds
     retf32
 define_gateway  Endp
-        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           RebindGateway
+;
+;       Purpose:        Rebind gateway
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public RebindGateway
+
+RebindGateway	Proc near        
+    push ds
+    push ax
+    push bx
+    push esi
+;
+    mov ax,SEG data
+    mov fs,ax
+    mov esi,OFFSET gateway
+    mov bx,fs:ip_handle
+    GetNetDriver
+    jc rgDone
+;
+    mov fs,bx
+    mov ax,SEG data
+    mov ds,ax
+    mov esi,OFFSET gateway
+    mov bx,ds:ip_handle
+    ReqArp
+
+rgDone:
+    pop esi
+    pop bx
+    pop ax
+    pop ds
+    ret
+RebindGateway	Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
