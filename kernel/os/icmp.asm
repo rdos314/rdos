@@ -79,6 +79,7 @@ code    SEGMENT byte public 'CODE'
     
     assume cs:code
 
+    extrn RebindIP:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -406,12 +407,15 @@ ping_node Proc far
     not ax
     mov es:[di].icmp_checksum,ax
     SendIp
+;
     mov ax,SEG data
     mov ds,ax
     mov ax,cs
     mov es,ax
     mov edi,OFFSET PingTimeout
     pop eax
+;
+    push edx
     mov edx,1192
     mul edx
     mov ecx,eax
@@ -422,17 +426,23 @@ ping_node Proc far
     StartTimer
     WaitForSignal
     StopTimer
+    pop edx
+;
     mov ds:ping_thread,0
     mov al,ds:ping_status
     LeaveSection ds:ping_section
 ;
     or al,al
-    stc
-    jz ping_done
+    jz ping_fail
 ;
     clc
     jmp ping_done
 
+ping_fail:
+    call RebindIP
+    stc
+    jmp ping_done
+    
 ping_pop_fail:
     mov ax,SEG data
     mov ds,ax
