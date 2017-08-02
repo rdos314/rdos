@@ -94,6 +94,7 @@ data    ENDS
     extrn GetValue:near
     extrn GetEnvStr:near
     extrn RebindGateway:near
+    extrn CreateUnboundIp:near
 
 code    SEGMENT byte public 'CODE'
 
@@ -228,6 +229,55 @@ create_req_br_done:
     pop ds
     ret
 CreateDhcpReqBroadcast  Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           CreateUnboundDhcpBroadcast
+;
+;       Purpose:        Create an unbound req DHCP broadcast header
+;
+;       Parameters:         CX              Number of bytes to allocate
+;                       FS              Driver selector
+;
+;       Returns:        NC              Ok
+;                       ES:DI       Allocate buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateUnboundDhcpBroadcast  Proc near
+    push ds
+    push ax
+    push ecx
+    push esi
+;
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET ip_options
+    mov al,17
+    mov ah,30
+    movzx ecx,cx
+    add ecx,8
+    call CreateUnboundIp
+    jc create_unb_req_br_done
+;       
+    mov ax,67
+    xchg al,ah
+    mov es:[edi].udp_dest,ax
+;
+    mov ax,68
+    xchg al,ah
+    mov es:[edi].udp_source,ax
+    add edi,8
+    clc
+
+create_unb_req_br_done:
+    pop esi
+    pop ecx
+    pop ax
+    pop ds
+    ret
+CreateUnboundDhcpBroadcast  Endp
 
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1866,7 +1916,7 @@ dhcp_disc_size_loop:
 dhcp_disc_size_ok:
     mov cx,dx
     push cx
-    call CreateDhcpReqBroadcast
+    call CreateUnboundDhcpBroadcast
     mov es:[di].dhcp_op,1
     mov al,ds:class_id
     mov es:[di].dhcp_hw_type,al
@@ -1977,9 +2027,24 @@ dhcp_req_size_loop:
     jmp dhcp_req_size_loop
 
 dhcp_req_size_ok:
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov al,ds:dhcp_rebind
+    pop ds
+;
     mov cx,dx
     push cx
+    or al,al
+    jz dhcp_req_renew
+;
+    call CreateUnboundDhcpBroadcast
+    jmp dhcp_req_header_ok
+
+dhcp_req_renew:
     call CreateDhcpReqBroadcast
+
+dhcp_req_header_ok:
     mov es:[di].dhcp_op,1
     mov al,ds:class_id
     mov es:[di].dhcp_hw_type,al
