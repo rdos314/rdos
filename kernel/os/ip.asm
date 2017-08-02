@@ -1573,6 +1573,7 @@ define_gateway  Endp
 
 RebindGateway	Proc near        
     push ds
+    push fs
     push ax
     push bx
     push esi
@@ -1595,9 +1596,59 @@ rgDone:
     pop esi
     pop bx
     pop ax
+    pop fs
     pop ds
     ret
 RebindGateway	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           RebindIp
+;
+;       Purpose:        Rebind IP
+;
+;       Parameters:     EDX		IP
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public RebindIP
+
+RebindIP	Proc near        
+    push ds
+    push fs
+    push ax
+    push bx
+    push esi
+    push ebp
+    mov ebp,esp
+    push edx
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ss
+    mov fs,ax
+    lea esi,[ebp-4]
+    mov bx,ds:ip_handle
+    GetNetDriver
+    jc riDone
+;
+    mov fs,bx
+    mov bx,ds:ip_handle
+    mov ax,ss
+    mov ds,ax
+    lea esi,[ebp-4]
+    ReqArp
+
+riDone:
+    pop edx
+    pop ebp
+    pop esi
+    pop bx
+    pop ax
+    pop fs
+    pop ds
+    ret
+RebindIP	Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
