@@ -117,6 +117,7 @@ tcp_send_tail		DW ?
 tcp_id				DW ?
 tcp_iss				DD ?
 tcp_state			DB ?
+tcp_has_time            DB ?
 tcp_send_una		DD ?
 tcp_send_next		DD ?
 tcp_send_wnd		DW ?

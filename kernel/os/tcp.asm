@@ -39,6 +39,7 @@ INCLUDE system.inc
 INCLUDE ip.inc
 INCLUDE tcp.inc
 INCLUDE ..\apicheck.inc
+INCLUDE chandle.inc
 
 Reverse MACRO
     xchg al,ah
@@ -77,6 +78,9 @@ ConnectionCount     DW ?
 ListenList          DW ?
 TcpThread           DW ?
 LastPort            DW ?
+
+RtoLogHandle        DW ?
+
 PortMap             DB 2000h DUP(?)
 
 data    ENDS
@@ -289,7 +293,6 @@ GetIss  Proc near
     push eax
 ;
     GetSystemTime
-    mov ds:tcp_time_val,eax
     rcr edx,1
     rcr eax,1
     rcr edx,1
@@ -672,12 +675,39 @@ CopyToBuffer    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+rto_log	DB 'd:/cap/rtt.log', 0
+
 CreateConnection    Proc near
     push es
     push ax
     push ecx
     push edx
 ;
+
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:RtoLogHandle
+    or ax,ax
+    jnz ccLogOk
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET rto_log
+    mov cx,O_RDWR OR O_TRUNC OR O_CREAT
+    OpenKernelFile
+    mov ds:RtoLogHandle,bx
+
+ccLogOk:
+    popad
+    pop es
+    pop ds
+    
+
     dec ecx
     and cx,0F000h
     add ecx,1000h
@@ -697,12 +727,13 @@ CreateConnection    Proc near
     mov es:tcp_buffer_size,cx
     mov es:tcp_rcv_wnd,cx
     mov es:tcp_state,-1
+    mov es:tcp_has_time,0
     mov es:tcp_mtu,1400
     mov es:tcp_pending,0
     mov es:tcp_push_timeout,0
-    mov es:tcp_rtt,119300
-    mov es:tcp_rto,1193000 * 3
-    mov es:tcp_rts,1193000 * 3
+    mov es:tcp_rtt,1193 * 10   ; 10 ms
+    mov es:tcp_rto,1193 * 300  ; 300 ms
+    mov es:tcp_rts,1193 * 300  ; 300 ms
     mov es:tcp_rtm,0
     mov es:tcp_reorder_count,0
     mov es:tcp_send_timeout,0
@@ -1187,8 +1218,42 @@ FindListen      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateRto       Proc near
+    pushad
+;
+    mov al,ds:tcp_has_time
+    or al,al
+    jz update_rto_done
+;
     GetSystemTime
     sub eax,ds:tcp_time_val
+
+
+    push ds
+    push es
+    pushad
+;
+    push eax
+    GetSystemTime
+    push edx
+    push eax
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,ds:RtoLogHandle
+    GetCFileSize
+    mov edx,eax
+    mov ecx,12
+    mov ax,ss
+    mov es,ax
+    mov edi,esp
+    WriteCFile
+;
+    add esp,12
+    popad
+    pop es
+    pop ds
+
+
     cmp eax,1193000
     ja update_rto_rtt_ok
 ;       
@@ -1219,6 +1284,9 @@ update_rto_err_ok:
     mov eax,240 * 1193000
 update_rto_small:
     mov ds:tcp_rto,eax
+
+update_rto_done:
+    popad
     ret
 UpdateRto       Endp
 
@@ -1355,6 +1423,7 @@ send_ack_and_data:
     call UpdateRto
     GetSystemTime
     mov ds:tcp_time_val,eax 
+    mov ds:tcp_has_time,1
     mov eax,ds:tcp_send_next
     mov ds:tcp_time_seq,eax
 
@@ -1525,6 +1594,9 @@ RetransmitSynSent       Proc near
     or ax,ax
     jz rssDone
 ;
+    GetSystemTime
+    mov ds:tcp_time_val,eax
+;
     xor ecx,ecx
     call CreateSegment
     jc rssDone
@@ -1551,6 +1623,9 @@ RetransmitSynSent       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RetransmitSynRcvd       Proc near
+    GetSystemTime
+    mov ds:tcp_time_val,eax
+;
     xor ecx,ecx
     call CreateSegment
     mov es:[di].tcp_flags, SYN OR ACK
@@ -2124,6 +2199,9 @@ update_send_wnd_new:
     mov eax,es:[di].tcp_ack
     Reverse
     mov ds:tcp_send_una,eax
+;
+    call UpdateRto
+    mov ds:tcp_has_time,0
     clc
     jmp update_send_wnd_done
 
@@ -2524,6 +2602,9 @@ ReceiveListen   Proc near
     mov ds:tcp_send_next,eax    
     mov ds:tcp_state,STATE_SYN_RCVD
 ;
+    GetSystemTime
+    mov ds:tcp_time_val,eax
+;
     xor ecx,ecx
     call CreateSegment
     mov es:[di].tcp_flags, SYN OR ACK
@@ -2599,6 +2680,9 @@ receive_syn_sent_answer:
     mov eax,ds:tcp_send_una
     cmp eax,ds:tcp_iss
     jg receive_syn_sent_ok
+;
+    GetSystemTime
+    mov ds:tcp_time_val,eax
 ;
     mov ds:tcp_state, STATE_SYN_RCVD
     xor ecx,ecx
@@ -5425,6 +5509,9 @@ update_user_done:
     call CreateSegment
     jc update_con_syn_pop
 ;       
+    GetSystemTime
+    mov ds:tcp_time_val,eax
+;
     mov es:[di].tcp_flags, SYN
     mov eax,ds:tcp_iss
     Reverse
