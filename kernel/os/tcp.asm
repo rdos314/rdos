@@ -97,6 +97,82 @@ ENDIF
     
     assume cs:code
 
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           InitLog
+;
+;       Purpose:        Init log
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitLog     Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:RtoLogHandle
+    or ax,ax
+    jnz ccLogOk
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET rto_log
+    mov cx,O_RDWR OR O_TRUNC OR O_CREAT
+    OpenKernelFile
+    mov ds:RtoLogHandle,bx
+
+ccLogOk:
+    popad
+    pop es
+    pop ds
+    ret
+InitLog   Endp
+    
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           LogTime
+;
+;       Purpose:        Log time
+;
+;       Parameters:     EAX		Value       
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LogTime     Proc near
+    push ds
+    push es
+    pushad
+;
+    push eax
+    GetSystemTime
+    push edx
+    push eax
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,ds:RtoLogHandle
+    GetCFileSize
+    mov edx,eax
+    mov ecx,12
+    mov ax,ss
+    mov es,ax
+    mov edi,esp
+    WriteCFile
+;
+    add esp,12
+    popad
+    pop es
+    pop ds
+    ret
+LogTime	Endp
+
+
+
 
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -383,6 +459,22 @@ SendSegment     Proc near
     push ax
     push cx
 ;
+    push eax
+    push edx
+    GetSystemTime
+    test al,3
+    pop edx
+    pop eax
+    jnz ssOk
+;
+    test es:[di].tcp_flags, SYN
+    jnz ssOk
+;
+    inc es:[di].tcp_dest    
+    inc es:[di].tcp_source    
+
+ssOk:
+
     mov ax,ds:tcp_checksum_base
     add cx,SIZE tcp_header
     xchg cl,ch
@@ -684,29 +776,7 @@ CreateConnection    Proc near
     push ecx
     push edx
 ;
-
-    push ds
-    push es
-    pushad
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,ds:RtoLogHandle
-    or ax,ax
-    jnz ccLogOk
-;
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET rto_log
-    mov cx,O_RDWR OR O_TRUNC OR O_CREAT
-    OpenKernelFile
-    mov ds:RtoLogHandle,bx
-
-ccLogOk:
-    popad
-    pop es
-    pop ds
-    
+    call InitLog
 
     dec ecx
     and cx,0F000h
@@ -1227,32 +1297,7 @@ UpdateRto       Proc near
     GetSystemTime
     sub eax,ds:tcp_time_val
 
-
-    push ds
-    push es
-    pushad
-;
-    push eax
-    GetSystemTime
-    push edx
-    push eax
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov bx,ds:RtoLogHandle
-    GetCFileSize
-    mov edx,eax
-    mov ecx,12
-    mov ax,ss
-    mov es,ax
-    mov edi,esp
-    WriteCFile
-;
-    add esp,12
-    popad
-    pop es
-    pop ds
-
+    call LogTime
 
     cmp eax,1193000
     ja update_rto_rtt_ok
@@ -1420,7 +1465,6 @@ send_ack_and_data:
     sub eax,ds:tcp_send_una
     jg send_ack_no_rtt
 ;
-    call UpdateRto
     GetSystemTime
     mov ds:tcp_time_val,eax 
     mov ds:tcp_has_time,1
@@ -1746,6 +1790,8 @@ Retransmit      Proc near
     test ds:tcp_pending,FLAG_DELETE_NET OR FLAG_DELETE_USER
     jnz retrans_done
 ;    
+    mov ds:tcp_has_time,0
+;
     test ds:tcp_pending,FLAG_RETRY
     jz retrans_first
 ;
@@ -2226,7 +2272,7 @@ update_send_wnd_empty:
 
 update_send_wnd_fail:
     or ds:tcp_pending,FLAG_ACK
-    stc
+    clc
 
 update_send_wnd_done:
     ret
@@ -2445,6 +2491,11 @@ process_data_available:
     sub eax,ds:tcp_rcv_next
     jg process_data_in_future
 ;
+    jz process_data_new
+;
+    or ds:tcp_pending,FLAG_ACK
+
+process_data_new:
     neg ax
     add si,ax
     sub cx,ax
@@ -2771,7 +2822,6 @@ receive_syn_rcvd_ack_ok:
     mov ds:tcp_state,STATE_ESTAB
     call InitConnection
     call UpdateSendWnd
-    jc receive_syn_rcvd_done
 ;
     mov al,es:[di].tcp_flags
     test al,FIN
@@ -2809,7 +2859,7 @@ ReceiveSynRcvd  Endp
 
 ReceiveEstab    Proc near
     call CheckSeq
-    jc receive_estab_done
+    jc receive_estab_check_ack
 ;
     call CheckRst
     jc receive_estab_done
@@ -2826,22 +2876,31 @@ ReceiveEstab    Proc near
 
 receive_estab_normal:
     test es:[di].tcp_flags, ACK
-    jz receive_estab_done
+    jz receive_estab_process
 ;
     call UpdateSendWnd
-    jc receive_estab_done
-;
+
+receive_estab_process:
     call ProcessData
 ;
     test ds:tcp_pending, FLAG_CLOSED
+    jnz receive_estab_closed
+
+receive_estab_check_ack:
+    test ds:tcp_pending,FLAG_ACK
     jz receive_estab_done
-;
+
+receive_estab_ack:
+    and ds:tcp_pending,NOT FLAG_ACK
+    call SendAck
+    jmp receive_estab_done
+
+receive_estab_closed:
     mov ds:tcp_state,STATE_CLOSE_WAIT
     
 receive_estab_done:
     ret
 ReceiveEstab    Endp
-
 
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2869,11 +2928,11 @@ ReceiveFinWait1 Proc near
     jc receive_fin_wait1_done
 ;
     test es:[di].tcp_flags, ACK
-    jz receive_fin_wait1_done
+    jz receive_fin_wait1_process
 ;
     call UpdateSendWnd
-    jc receive_fin_wait1_done
-;
+
+receive_fin_wait1_process:
     call ProcessData
 ;
     test ds:tcp_pending, FLAG_CLOSED
@@ -2922,11 +2981,11 @@ ReceiveFinWait2 Proc near
     jc receive_fin_wait2_done
 ;
     test es:[di].tcp_flags, ACK
-    jz receive_fin_wait2_done
+    jz receive_fin_wait2_process
 ;
     call UpdateSendWnd
-    jc receive_fin_wait2_done
-;
+
+receive_fin_wait2_process:
     call ProcessData
 ;
     test ds:tcp_pending, FLAG_CLOSED
@@ -3004,7 +3063,6 @@ ReceiveClosing  Proc near
     jz receive_closing_done
 ;
     call UpdateSendWnd
-    jc receive_closing_done
 
 receive_closing_done:
     ret
@@ -3266,6 +3324,17 @@ rt07 DW OFFSET ReceiveClosing
 rt08 DW OFFSET ReceiveTimeWait
 
 Receive Proc far
+
+    push eax
+    push edx
+    GetSystemTime
+    test al,3
+    pop edx
+    pop eax
+    jz receive_free
+
+
+
     call ReceiveChecksum
     jc receive_free
 ;   
