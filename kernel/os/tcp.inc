@@ -149,6 +149,7 @@ tcp_syn_timeout     DW ?
 tcp_zero_timeout	DW ?
 tcp_send_timeout    DW ?
 tcp_delete_timeout  DW ?
+tcp_resend_count        DB ?
 tcp_options			DB ?
 
 tcp_connection	ENDS

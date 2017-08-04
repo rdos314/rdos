@@ -459,22 +459,6 @@ SendSegment     Proc near
     push ax
     push cx
 ;
-    push eax
-    push edx
-    GetSystemTime
-    test al,3
-    pop edx
-    pop eax
-    jnz ssOk
-;
-    test es:[di].tcp_flags, SYN
-    jnz ssOk
-;
-    inc es:[di].tcp_dest    
-    inc es:[di].tcp_source    
-
-ssOk:
-
     mov ax,ds:tcp_checksum_base
     add cx,SIZE tcp_header
     xchg cl,ch
@@ -776,7 +760,7 @@ CreateConnection    Proc near
     push ecx
     push edx
 ;
-    call InitLog
+;    call InitLog
 
     dec ecx
     and cx,0F000h
@@ -808,6 +792,8 @@ CreateConnection    Proc near
     mov es:tcp_reorder_count,0
     mov es:tcp_send_timeout,0
     mov es:tcp_delete_timeout,0
+    mov es:tcp_resend_count,0
+    mov es:tcp_resend_timeout,1
 ;
     call CreateBuffer
     mov es:tcp_receive_buffer,ax
@@ -1297,9 +1283,9 @@ UpdateRto       Proc near
     GetSystemTime
     sub eax,ds:tcp_time_val
 
-    call LogTime
+;    call LogTime
 
-    cmp eax,1193000
+    cmp eax,5 * 1193000
     ja update_rto_rtt_ok
 ;       
     mov edx,ds:tcp_rtt
@@ -1369,6 +1355,19 @@ SetResendTimeout    Proc near
     mov ecx,119300
     div ecx
     add ax,1
+;
+    mov cl,ds:tcp_resend_count
+    shl ax,cl
+    or ax,ax
+    jz set_resend_timeout_max
+;
+    cmp ax,10 * 10
+    jb set_resend_timeout_do
+
+set_resend_timeout_max:
+    mov ax,10 * 10
+
+set_resend_timeout_do:
     mov ds:tcp_resend_timeout,ax
     pop ecx
     ret
@@ -1832,6 +1831,7 @@ retrans_first:
 retrans_do:
     or ds:tcp_pending,FLAG_RESENT OR FLAG_RETRY
     and ds:tcp_pending,NOT FLAG_DELAY_ACK
+    inc ds:tcp_resend_count
     call SetResendTimeout
 ;
     movzx bx,ds:tcp_state
@@ -2240,6 +2240,7 @@ update_send_wnd_ok:
 
 update_send_wnd_new:
     call NewAck
+    mov ds:tcp_resend_count,0
     call SetResendTimeout
 ;
     mov eax,es:[di].tcp_ack
@@ -3324,17 +3325,6 @@ rt07 DW OFFSET ReceiveClosing
 rt08 DW OFFSET ReceiveTimeWait
 
 Receive Proc far
-
-    push eax
-    push edx
-    GetSystemTime
-    test al,3
-    pop edx
-    pop eax
-    jz receive_free
-
-
-
     call ReceiveChecksum
     jc receive_free
 ;   
