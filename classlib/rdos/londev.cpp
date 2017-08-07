@@ -189,7 +189,7 @@ TLonDevice::TLonDevice(int lonid)
 
     if (FLonHandle)
     {
-        sprintf(str, "Lon Handler #%s", lonid);
+        sprintf(str, "Lon Handler #%d", lonid);
         Start(str, 0x6000);
     }
 }
