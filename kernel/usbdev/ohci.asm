@@ -300,18 +300,12 @@ AllocateBlock32 PROC near
 ;
     push ebx    
     AllocatePhysical32
-    mov al,13h
+    or al,67h
     SetPageEntry
     pop ebx
 ;    
     mov ecx,32
     mov ds:OhciList32,edx
-;
-    push ebx    
-    AllocatePhysical32
-    mov al,13h
-    SetPageEntry
-    pop ebx
     
 allocate_block32_loop:
     mov eax,edx
@@ -356,7 +350,6 @@ FreeBlock32     PROC near
 ;
     mov ax,SEG data
     mov ds,ax
-;    
     EnterSection ds:OhciSection
     dec ds:OhciUsedBlocks
     mov eax,ds:OhciList32
@@ -1860,6 +1853,29 @@ etLoop:
     cmp ebx,es:[eax].oes_tailp
     je etOk
 ;
+    mov ax,es:[edx].otd_flags
+    and ax,0F000h
+    cmp ax,0F000h
+    jne etNotBusy
+;
+    mov ax,25
+    WaitMilliSec
+;
+    mov ax,es:[edx].otd_flags
+    and ax,0F000h
+    cmp ax,0F000h
+    jne etNotBusy
+;
+    mov esi,fs:osp_ed
+    mov eax,es:[edx].otd_next_va        
+    mov eax,es:[eax].otd_phys
+    mov es:[esi].oes_headp,eax
+;
+    mov ax,5
+    WaitMilliSec
+    jmp etNext
+
+etNotBusy:    
     mov ax,es:[edx].otd_flags
     and ax,18h
     cmp ax,10h

@@ -530,7 +530,7 @@ NotifyStatus   Proc near
 ;
     xor di,di
     or cx,cx
-    jz nsDone
+    jz nsReset
     
 nsNext:
     mov al,es:[di]
@@ -549,6 +549,21 @@ nsNext:
     inc di    
     sub cx,1
     jnz nsNext
+    jmp nsDone
+
+nsReset:
+    test ds:kr_flag,FLAG_ATTACHED
+    jz nsDone
+;    
+    lock and ds:kr_flag,NOT FLAG_ATTACHED
+    pushad
+    mov bx,ds:kr_controller
+    mov ax,ds:kr_device
+    xor dl,dl
+    OpenUsbPipe
+    ResetUsbPipe
+    CloseUsbPipe
+    popad
 
 nsDone:
     pop di
@@ -2074,6 +2089,7 @@ reset_printer   Proc far
     stc
     jz reset_done
 ;    
+    lock and ds:kr_flag,NOT FLAG_ATTACHED
     mov bx,ds:kr_controller
     mov ax,ds:kr_device
     xor dl,dl
@@ -2148,6 +2164,7 @@ init_thread_retry:
     cmp ax,50
     jb init_thread_do
 ;
+    and ds:kr_flag,NOT FLAG_ATTACHED
     mov bx,ds:kr_in_handle
     ResetUsbPipe
     jmp init_done

@@ -1329,6 +1329,7 @@ nuaFreeDone:
 nuaDone:
     jnc nuaPipeOk
 ;
+    int 3
     call ClosePipe
     stc
 
