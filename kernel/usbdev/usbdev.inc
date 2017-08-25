@@ -152,6 +152,7 @@ usb_port_sel_arr       DW MAX_USB_HUB_PORTS DUP(?)
 usb_attach_thread_arr  DW MAX_USB_HUB_PORTS DUP(?)
 usb_detach_thread_arr  DW MAX_USB_HUB_PORTS DUP(?)
 usb_reset_thread_arr   DW MAX_USB_HUB_PORTS DUP(?)
+usb_retry_arr          DW MAX_USB_HUB_PORTS DUP(?)
 usb_timeout_arr        DD MAX_USB_HUB_PORTS DUP(?,?)
 usb_addr_arr           DW 128 DUP(?)
 

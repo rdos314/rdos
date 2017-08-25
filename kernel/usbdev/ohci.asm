@@ -2503,8 +2503,10 @@ attach_thread:
     movzx di,cl
     add di,di
 ;    
+    EnterSection ds:usb_section    
     GetThread
     mov ds:[di].usb_attach_thread_arr,ax
+    LeaveSection ds:usb_section
 ;
     mov dx,10
 
@@ -2585,7 +2587,9 @@ atUnlock:
     UnlockUsb    
 
 atDone:
+    EnterSection ds:usb_section
     mov ds:[di].usb_attach_thread_arr,0
+    LeaveSection ds:usb_section
     TerminateThread
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2612,13 +2616,17 @@ detach_thread:
     movzx di,cl
     add di,di
 ;    
+    EnterSection ds:usb_section
     GetThread
     mov ds:[di].usb_detach_thread_arr,ax
+    LeaveSection ds:usb_section
 ;    
     mov al,cl
     NotifyUsbDetach
 ;
+    EnterSection ds:usb_section
     mov ds:[di].usb_detach_thread_arr,0
+    LeaveSection ds:usb_section    
     TerminateThread
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2645,8 +2653,10 @@ reset_thread:
     movzx di,cl
     add di,di
 ;    
+    EnterSection ds:usb_section
     GetThread
     mov ds:[di].usb_reset_thread_arr,ax
+    LeaveSection ds:usb_section
 ;
     mov eax,10h
     mov es:[si].HcRhPortStatus,eax
@@ -2714,7 +2724,9 @@ rtUnlock:
     UnlockUsb    
 
 rtDone:
+    EnterSection ds:usb_section
     mov ds:[di].usb_reset_thread_arr,0
+    LeaveSection ds:usb_section
     TerminateThread
         
 
@@ -2738,8 +2750,8 @@ UpdatePort   Proc near
 ;    
     movzx si,cl
     shl si,2
-    movzx di,cl
-    add di,di
+    movzx edi,cl
+    add edi,edi
     mov es,ds:ohc_reg_sel
 ;    
     mov ax,1
@@ -2754,22 +2766,22 @@ UpdatePort   Proc near
     test al,1
     jz upNoReset
 ;
-    mov bx,ds:[di].usb_port_sel_arr
+    mov bx,ds:[edi].usb_port_sel_arr
     or bx,bx
     jz upNoReset
 ;    
-    mov bx,ds:[di].usb_attach_thread_arr
-    or bx,ds:[di].usb_detach_thread_arr
-    or bx,ds:[di].usb_reset_thread_arr
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
     jnz upCheckTimeout
 ;
-    mov ds:[di].usb_reset_thread_arr,-1
+    mov ds:[edi].usb_reset_thread_arr,-1
+    mov ds:[edi].usb_retry_arr,0
     GetSystemTime
     add eax,1193 * 2500
     adc edx,0
-    shl di,1
-    mov ds:[di].usb_timeout_arr,eax
-    mov ds:[di].usb_timeout_arr+4,edx
+    mov ds:[4*edi].usb_timeout_arr,eax
+    mov ds:[4*edi].usb_timeout_arr+4,edx
 ;
     mov dx,cx
     mov si,OFFSET reset_thread
@@ -2785,22 +2797,22 @@ upNoReset:
     jz upDetach
     
 upAttach:
-    mov bx,ds:[di].usb_port_sel_arr
+    mov bx,ds:[edi].usb_port_sel_arr
     or bx,bx
     jnz upCheckTimeout
 ;
-    mov bx,ds:[di].usb_attach_thread_arr
-    or bx,ds:[di].usb_detach_thread_arr
-    or bx,ds:[di].usb_reset_thread_arr
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
     jnz upCheckTimeout
 ;
-    mov ds:[di].usb_attach_thread_arr,-1
+    mov ds:[edi].usb_attach_thread_arr,-1
+    mov ds:[edi].usb_retry_arr,0
     GetSystemTime
     add eax,1193 * 2500
     adc edx,0
-    shl di,1
-    mov ds:[di].usb_timeout_arr,eax
-    mov ds:[di].usb_timeout_arr+4,edx
+    mov ds:[4*edi].usb_timeout_arr,eax
+    mov ds:[4*edi].usb_timeout_arr+4,edx
 ;    
     mov dx,cx
     mov si,OFFSET attach_thread
@@ -2810,24 +2822,23 @@ upAttach:
     jmp upDone
 
 upDetach:
-    mov bx,ds:[di].usb_port_sel_arr
+    mov bx,ds:[edi].usb_port_sel_arr
     or bx,bx
     jz upCheckTimeout
 ;    
-    mov bx,ds:[di].usb_attach_thread_arr
-    or bx,ds:[di].usb_detach_thread_arr
-    or bx,ds:[di].usb_reset_thread_arr
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
     jnz upCheckTimeout
 ;
-    mov ds:[di].usb_detach_thread_arr,-1    
+    mov ds:[edi].usb_detach_thread_arr,-1    
+    mov ds:[edi].usb_retry_arr,0
     GetSystemTime
     add eax,1193 * 2500
     adc edx,0
-    shl di,1
-    mov ds:[di].usb_timeout_arr,eax
-    mov ds:[di].usb_timeout_arr+4,edx
+    mov ds:[4*edi].usb_timeout_arr,eax
+    mov ds:[4*edi].usb_timeout_arr+4,edx
 ;    
-;
     mov dx,cx
     mov si,OFFSET detach_thread
     mov di,OFFSET detach_thread_name
@@ -2836,45 +2847,65 @@ upDetach:
     jmp upDone
 
 upCheckTimeout:
-    mov bx,ds:[di].usb_attach_thread_arr
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
+    jz upDone
+;
+    GetSystemTime
+    sub eax,ds:[4*edi].usb_timeout_arr
+    sbb edx,ds:[4*edi].usb_timeout_arr+4
+    jc upDone
+;
+    mov ax,ds:[edi].usb_retry_arr
+    inc ax
+    mov ds:[edi].usb_retry_arr,ax
+;
+    cmp ax,100
+    jb upNotFatal
+;
+    int 3
+
+upNotFatal:
+    cmp ax,10
+    jnz upDoSignal
+;   
+    mov eax,10h
+    mov es:[si].HcRhPortStatus,eax
+    jmp upDone
+
+upDoSignal:
+    GetSystemTime
+    add eax,1193 * 500
+    adc edx,0
+    mov ds:[4*edi].usb_timeout_arr,eax
+    mov ds:[4*edi].usb_timeout_arr+4,edx
+;
+    EnterSection ds:usb_section
+    mov bx,ds:[edi].usb_attach_thread_arr
     or bx,bx
     jz upCheckDetach
 ;
-    shl di,1
-    GetSystemTime
-    sub eax,ds:[di].usb_timeout_arr
-    sbb edx,ds:[di].usb_timeout_arr+4
-    jc upDone
-;
     Signal
-    jmp upDone    
+    jmp upLeave
 
 upCheckDetach:    
-    mov bx,ds:[di].usb_detach_thread_arr
+    mov bx,ds:[edi].usb_detach_thread_arr
     or bx,bx
     jz upCheckReset
 ;
-    shl di,1
-    GetSystemTime
-    sub eax,ds:[di].usb_timeout_arr
-    sbb edx,ds:[di].usb_timeout_arr+4
-    jc upDone
-;
     Signal
-    jmp upDone
+    jmp upLeave
             
 upCheckReset:    
-    mov bx,ds:[di].usb_reset_thread_arr
+    mov bx,ds:[edi].usb_reset_thread_arr
     or bx,bx
-    jz upDone
-;
-    shl di,1
-    GetSystemTime
-    sub eax,ds:[di].usb_timeout_arr
-    sbb edx,ds:[di].usb_timeout_arr+4
-    jc upDone
+    jz upLeave
 ;
     Signal
+
+upLeave:
+    LeaveSection ds:usb_section
             
 upDone:    
     popad
