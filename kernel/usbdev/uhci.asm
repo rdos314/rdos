@@ -2401,6 +2401,10 @@ LocalIsConnected   Proc near
     clc
     jnz icDone
 ;    
+    test ax,200h
+    clc
+    jz icDone
+;
     stc
 
 icDone:
@@ -3035,7 +3039,6 @@ upNotFatal:
     in ax,dx
     or ax,200h
     out dx,ax
-    jmp upDone
 
 upDoSignal:
     GetSystemTime

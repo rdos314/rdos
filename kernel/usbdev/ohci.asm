@@ -2235,6 +2235,10 @@ LocalIsConnected   Proc near
     clc
     jnz icDone
 ;    
+    test al,10h
+    clc
+    jz icDone
+;
     stc
 
 icDone:
@@ -2872,7 +2876,6 @@ upNotFatal:
 ;   
     mov eax,10h
     mov es:[si].HcRhPortStatus,eax
-    jmp upDone
 
 upDoSignal:
     GetSystemTime

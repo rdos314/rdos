@@ -2447,7 +2447,11 @@ icLocal:
     test al,1
     clc
     jnz icDone
-;    
+;   
+    test ax,100h
+    clc 
+    jz icDone
+;
     stc
 
 icDone:
@@ -3176,7 +3180,6 @@ upNotFatal:
     and al,NOT 4
     or ax,100h
     mov es:[2*edi].HcPortSc,eax
-    jmp upDone
 
 upDoSignal:
     GetSystemTime
