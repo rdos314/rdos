@@ -2444,14 +2444,14 @@ icLocal:
     mov es,ds:ehc_reg_sel
     mov eax,es:[si].HcPortSc
     pop es
+    test al,4
+    jz icFail
+;
     test al,1
     clc
     jnz icDone
-;   
-    test ax,100h
-    clc 
-    jz icDone
-;
+
+icFail:   
     stc
 
 icDone:
@@ -2900,6 +2900,9 @@ atWaitNotify:
     mov es:usbf_address,0
     mov es:usbf_speed,2
     NotifyUsbAttach
+    jnc atDone
+;
+    mov ds:[edi].usb_port_sel_arr,0
     jmp atDone
 
 atUnlock:
@@ -3022,6 +3025,9 @@ rtWaitNotify:
     mov es:usbf_address,0
     mov es:usbf_speed,2
     NotifyUsbAttach
+    jnc rtDone
+;
+    mov ds:[edi].usb_port_sel_arr,0
     jmp rtDone
 
 rtUnlock:
@@ -3170,7 +3176,10 @@ upCheckTimeout:
     cmp ax,100
     jb upNotFatal
 ;
-    int 3
+    mov ds:[edi].usb_attach_thread_arr,0
+    mov ds:[edi].usb_detach_thread_arr,0
+    mov ds:[edi].usb_reset_thread_arr,0
+    mov ds:[edi].usb_port_sel_arr,0
 
 upNotFatal:
     cmp ax,10
@@ -3178,7 +3187,6 @@ upNotFatal:
 ;   
     mov eax,es:[2*edi].HcPortSc
     and al,NOT 4
-    or ax,100h
     mov es:[2*edi].HcPortSc,eax
 
 upDoSignal:
