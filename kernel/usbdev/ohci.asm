@@ -2231,14 +2231,14 @@ LocalIsConnected   Proc near
     shl si,2
     mov es,ds:ohc_reg_sel
     mov eax,es:[si].HcRhPortStatus
+    test al,2
+    jz icFail
+;
     test al,1
     clc
     jnz icDone
-;    
-    test al,10h
-    clc
-    jz icDone
-;
+
+icFail:
     stc
 
 icDone:
@@ -2585,6 +2585,9 @@ atWaitNotify:
     mov es:usbf_slot,0
     mov es:usbf_address,0
     NotifyUsbAttach
+    jnc atDone
+;
+    mov ds:[di].usb_port_sel_arr,0
     jmp atDone
 
 atUnlock:
@@ -2722,6 +2725,9 @@ rtWaitNotify:
     mov es:usbf_slot,0
     mov es:usbf_address,0
     NotifyUsbAttach
+    jnc rtDone
+;
+    mov ds:[di].usb_port_sel_arr,0
     jmp rtDone
 
 rtUnlock:
@@ -2757,7 +2763,7 @@ UpdatePort   Proc near
     movzx edi,cl
     add edi,edi
     mov es,ds:ohc_reg_sel
-;    
+;
     mov ax,1
     shl ax,cl
     test ax,ds:ohc_reset
@@ -2868,13 +2874,16 @@ upCheckTimeout:
     cmp ax,100
     jb upNotFatal
 ;
-    int 3
+    mov ds:[edi].usb_attach_thread_arr,0
+    mov ds:[edi].usb_detach_thread_arr,0
+    mov ds:[edi].usb_reset_thread_arr,0
+    mov ds:[edi].usb_port_sel_arr,0
 
 upNotFatal:
     cmp ax,10
     jnz upDoSignal
 ;   
-    mov eax,10h
+    mov eax,1
     mov es:[si].HcRhPortStatus,eax
 
 upDoSignal:
