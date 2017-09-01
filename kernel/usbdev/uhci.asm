@@ -2708,6 +2708,9 @@ atNotify:
     mov es:usbf_address,0
 ;
     NotifyUsbAttach
+    jnc atDone
+;
+    mov ds:[di].usb_port_sel_arr,0
     jmp atDone
 
 atUnlock:
@@ -2850,6 +2853,9 @@ rtNotify:
     mov es:usbf_address,0
 ;
     NotifyUsbAttach
+    jnc rtDone
+;
+    mov ds:[si].usb_port_sel_arr,0
     jmp rtDone
 
 rtUnlock:
@@ -2888,6 +2894,16 @@ UpdatePort   Proc near
     add dx,PortscReg1
     add dx,si
 ;    
+    mov bx,ds:[edi].usb_attach_thread_arr
+    or bx,ds:[edi].usb_detach_thread_arr
+    or bx,ds:[edi].usb_reset_thread_arr
+    jnz upNoPendingReset
+;
+    in ax,dx
+    test ax,200h
+    jnz upAttach
+
+upNoPendingReset:
     mov ax,1
     shl ax,cl
     test ax,ds:uhc_reset
@@ -3026,7 +3042,10 @@ upCheckTimeout:
     cmp ax,100
     jb upNotFatal
 ;
-    int 3
+    mov ds:[edi].usb_attach_thread_arr,0
+    mov ds:[edi].usb_detach_thread_arr,0
+    mov ds:[edi].usb_reset_thread_arr,0
+    mov ds:[edi].usb_port_sel_arr,0
 
 upNotFatal:
     cmp ax,10
@@ -3072,7 +3091,7 @@ upCheckReset:
 
 upLeave:
     LeaveSection ds:usb_section
-                        
+
 upDone:    
     popad
     pop fs

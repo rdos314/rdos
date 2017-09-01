@@ -556,7 +556,6 @@ cdcLoop:
     loop cdcLoop
 
 cdcFail:
-    int 3
     stc
     pushf
     jmp cdcDone
@@ -913,11 +912,12 @@ cOut:
     mov es:[bx].usbf_out_endpoint_arr,0
 
 cEndpointOk:    
-    or ax,ax
-    jz ceDone
+    verr ax
+    jnz ceDone
 
 ceClose:
     push fs
+;    
     mov fs,ax
     sub fs:usbp_usage,1
     jnz ceCloseDone
@@ -1329,7 +1329,6 @@ nuaFreeDone:
 nuaDone:
     jnc nuaPipeOk
 ;
-    int 3
     call ClosePipe
     stc
 
@@ -2533,7 +2532,6 @@ cudNextDescr:
     jmp cudDone
 
 cudFail:
-    int 3
     stc
     
 cudDone: 
@@ -2798,7 +2796,6 @@ oupIn:
     or di,di
     jnz oupCreateHandle    
 ;
-;    int 3
     jmp oupFail
 
 oupOut:
@@ -2809,7 +2806,6 @@ oupOut:
     or di,di
     jnz oupCreateHandle    
 ;
-;    int 3
     jmp oupFail
 
 oupCreateHandle:    
@@ -3727,7 +3723,6 @@ clear_usb_pipe_stalled    Proc far
     mov fs,ds:[ebx].up_pipe_sel
     mov ds,ds:[ebx].up_func_sel
 ;
-    int 3
     push fs
     movzx dx,fs:usbp_endpoint
     mov fs,fs:usbp_function_sel
