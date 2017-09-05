@@ -2519,6 +2519,9 @@ cudCreateInterrupt:
     
 cudNextDescr:
     movzx cx,gs:[di].ucd_len
+    or cx,cx
+    jz cudFail
+;
     add di,cx
     cmp di,gs:ucd_size
     jb cudDescrLoop    

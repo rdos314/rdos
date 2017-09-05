@@ -403,7 +403,7 @@ void cdecl main()
         Mouse->OnRightUp = RightUp;
         Mouse->OnRightDown = RightDown;
 
-        for (i = 0x10; i < 0x200; i++)
+        for (i = 0x10; i < 0x1000; i++)
         {
             if (RdosQueryVideoMode(i, &bits, &x, &y))
                 printf("Mode: %04hX, %dx%d, %d-bits\r\n", i, x, y, bits);
