@@ -2772,7 +2772,6 @@ attach_thread:
 ;    
     movzx edi,cl
     add edi,edi
-    push edi
 ;    
     EnterSection ds:usb_section    
     GetThread
@@ -2886,13 +2885,16 @@ atWaitNotify:
     sub dx,1
     jnz atWaitNotify
 ;
+    push es
     push cx    
+    push edi
     mov eax,SIZE usb_function_struc
     AllocateSmallGlobalMem
     xor di,di
     mov cx,SIZE usb_function_struc
     xor al,al
     rep stosb
+    pop edi
     pop cx
 ;    
     mov es:usbf_port,cl
@@ -2900,7 +2902,12 @@ atWaitNotify:
     mov es:usbf_address,0
     mov es:usbf_speed,2
     NotifyUsbAttach
+    pop es
     jnc atDone
+;
+    mov eax,es:[2*edi].HcPortSc
+    and al,NOT 4
+    mov es:[2*edi].HcPortSc,eax
 ;
     mov ds:[edi].usb_port_sel_arr,0
     jmp atDone
@@ -2909,7 +2916,6 @@ atUnlock:
     UnlockUsb
 
 atDone:
-    pop edi
     EnterSection ds:usb_section
     mov ds:[edi].usb_attach_thread_arr,0
     LeaveSection ds:usb_section
@@ -2974,7 +2980,6 @@ reset_thread:
 ;    
     movzx edi,cl
     add edi,edi
-    push edi
 ;    
     EnterSection ds:usb_section
     GetThread
@@ -3011,13 +3016,16 @@ rtWaitNotify:
     sub dx,1
     jnz rtWaitNotify
 ;
+    push es
     push cx    
+    push edi
     mov eax,SIZE usb_function_struc
     AllocateSmallGlobalMem
     xor di,di
     mov cx,SIZE usb_function_struc
     xor al,al
     rep stosb
+    pop edi
     pop cx
 ;    
     mov es:usbf_port,cl
@@ -3025,7 +3033,12 @@ rtWaitNotify:
     mov es:usbf_address,0
     mov es:usbf_speed,2
     NotifyUsbAttach
+    pop es
     jnc rtDone
+;
+    mov eax,es:[2*edi].HcPortSc
+    and al,NOT 4
+    mov es:[2*edi].HcPortSc,eax
 ;
     mov ds:[edi].usb_port_sel_arr,0
     jmp rtDone
@@ -3034,7 +3047,6 @@ rtUnlock:
     UnlockUsb    
 
 rtDone:
-    pop edi
     EnterSection ds:usb_section
     mov ds:[edi].usb_reset_thread_arr,0
     LeaveSection ds:usb_section

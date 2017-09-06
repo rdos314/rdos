@@ -2691,7 +2691,7 @@ atNotify:
     and ah,1
     mov al,bl
 ;
-        push ax
+    push ax
     push di
     mov eax,SIZE usb_function_struc
     AllocateSmallGlobalMem
@@ -2700,7 +2700,7 @@ atNotify:
     xor al,al
     rep stosb
     pop di
-        pop ax
+    pop ax
 ;
     mov es:usbf_speed,ah
     mov es:usbf_port,al
@@ -2709,6 +2709,10 @@ atNotify:
 ;
     NotifyUsbAttach
     jnc atDone
+;
+    in ax,dx
+    or ax,200h
+    out dx,ax
 ;
     mov ds:[di].usb_port_sel_arr,0
     jmp atDone
@@ -2854,6 +2858,10 @@ rtNotify:
 ;
     NotifyUsbAttach
     jnc rtDone
+;
+    in ax,dx
+    or ax,200h
+    out dx,ax
 ;
     mov ds:[si].usb_port_sel_arr,0
     jmp rtDone

@@ -2561,6 +2561,7 @@ atWaitNotify:
     WaitMilliSec
 ;
     mov eax,es:[si].HcRhPortStatus
+    push es
     push eax
     push cx    
     push di
@@ -2585,7 +2586,11 @@ atWaitNotify:
     mov es:usbf_slot,0
     mov es:usbf_address,0
     NotifyUsbAttach
+    pop es
     jnc atDone
+;
+    mov eax,1
+    mov es:[si].HcRhPortStatus,eax
 ;
     mov ds:[di].usb_port_sel_arr,0
     jmp atDone
@@ -2701,6 +2706,7 @@ rtWaitNotify:
     jnz rtWaitNotify
 ;    
     mov eax,es:[si].HcRhPortStatus
+    push es
     push eax
     push cx    
     push di
@@ -2725,7 +2731,11 @@ rtWaitNotify:
     mov es:usbf_slot,0
     mov es:usbf_address,0
     NotifyUsbAttach
+    pop es
     jnc rtDone
+;
+    mov eax,1
+    mov es:[si].HcRhPortStatus,eax
 ;
     mov ds:[di].usb_port_sel_arr,0
     jmp rtDone

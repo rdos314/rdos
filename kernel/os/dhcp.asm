@@ -1382,11 +1382,18 @@ ReceiveServerDhcp       Proc near
     mov ax,ds:dhcp_driver_sel
     mov bx,gs
     or ax,ax
-    jz receive_serv_free    
+    jz receive_serv_check_enabled
 ;
     cmp ax,bx
     je receive_serv_free
-;
+    jmp receive_serv_ok
+
+receive_serv_check_enabled:
+    mov al,ds:dhcp_enabled
+    or al,al
+    jnz receive_serv_free
+
+receive_serv_ok:
     mov ax,es:[di].udp_source
     xchg al,ah
     cmp ax,68
@@ -2378,6 +2385,14 @@ ReceiveOffer    Proc near
 ;       
     mov ax,SEG data
     mov ds,ax
+    mov al,ds:dhcp_enabled
+    or al,al
+    jnz receive_offer_ok
+;
+    mov ds:dhcp_driver_sel,gs
+    jmp receive_offer_leave
+
+receive_offer_ok:
     mov eax,es:[di].dhcp_req_ip
     mov ds:dhcp_wanted_ip,eax
 ;
