@@ -2455,6 +2455,37 @@ SetMaxLen   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CloseControlPipe
+;
+;           DESCRIPTION:    Close control pipe
+;
+;       PARAMETERS:         DS      Function selector
+;                           FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseControlPipe   Proc far
+    push es
+    pushad
+;    
+    mov es,fs:usbp_function_sel
+    mov cl,es:usbf_port
+    movzx si,cl
+    shl si,2
+    mov eax,1
+    mov es:[si].HcRhPortStatus,eax
+;
+    mov ax,150
+    WaitMilliSec
+;
+    popad
+    pop es
+    retf32
+CloseControlPipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdateQueue
 ;
 ;           DESCRIPTION:    Update done queue
@@ -3353,6 +3384,7 @@ ot19 DD OFFSET GetMaxLen,       SEG code
 ot1A DD 0,                      0
 ot1B DD 0,                      0
 ot1C DD OFFSET SetMaxLen,       SEG code
+ot1D DD OFFSET CloseControlPipe, SEG code
 
 InitFunction    Proc near
     push ds
@@ -3410,7 +3442,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*1Dh
+    mov cx,2*1Eh
 
 ifTabLoop:
     lods dword ptr cs:[si]

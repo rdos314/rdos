@@ -1329,6 +1329,12 @@ nuaFreeDone:
 nuaDone:
     jnc nuaPipeOk
 ;
+    call fword ptr ds:is_connected_proc
+    jc nuaDoClose
+;
+    call fword ptr ds:close_control_pipe_proc
+
+nuaDoClose:
     call ClosePipe
     stc
 

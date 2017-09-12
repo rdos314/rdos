@@ -2029,6 +2029,7 @@ IssueTransfer    Endp
 LocalIsTransferDone   Proc near
     push es
     push eax
+    push ebx
     push edx
 ;
     test fs:usp_flags, USP_FLAG_TRANSFER_PENDING
@@ -2072,6 +2073,7 @@ itdOk:
 
 itdEnd:    
     pop edx
+    pop ebx
     pop eax
     pop es
     ret
@@ -2188,6 +2190,9 @@ LocalEndTransfer   Proc near
     mov fs:usp_data_size,0     
     and fs:usp_flags, NOT USP_FLAG_TRANSFER_PENDING
     and fs:usp_flags, NOT USP_FLAG_TRANSFER_OK
+;
+    call LocalIsConnected
+    jc etDone
 ;    
     mov edx,fs:usp_qh
     or edx,edx
@@ -2398,13 +2403,13 @@ LocalIsConnected   Proc near
 ;
     in ax,dx
     test al,1
-    clc
-    jnz icDone
-;    
+    jz icFail
+;
     test ax,200h
     clc
     jz icDone
-;
+
+icFail:
     stc
 
 icDone:
@@ -2615,6 +2620,44 @@ GetMaxLen   Endp
 SetMaxLen   Proc far
     retf32
 SetMaxLen   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CloseControlPipe
+;
+;           DESCRIPTION:    Close control pipe
+;
+;       PARAMETERS:         DS      Function selector
+;                           FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseControlPipe   Proc far
+    push es
+    pushad
+;    
+    mov es,fs:usbp_function_sel
+    mov cl,es:usbf_port
+;
+    movzx di,cl
+    add di,di
+;
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg1
+    add dx,di    
+;
+    in ax,dx
+    or ax,200h
+    out dx,ax
+;
+    mov ax,150
+    WaitMillisec
+;
+    popad
+    pop es
+    retf32
+CloseControlPipe   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3173,6 +3216,7 @@ ut19 DD OFFSET GetMaxLen,       SEG code
 ut1A DD 0,                      0
 ut1B DD 0,                      0
 ut1C DD OFFSET SetMaxLen,       SEG code
+ut1D DD OFFSET CloseControlPipe, SEG code
 
 InitFunction    Proc near
     push ds
@@ -3194,7 +3238,7 @@ ifNotLegacy:
 ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,2*1Dh
+    mov cx,2*1Eh
 
 ifTabLoop:
     lods dword ptr cs:[si]

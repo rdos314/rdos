@@ -2750,6 +2750,53 @@ GetMaxLen   Endp
 SetMaxLen   Proc far
     retf32
 SetMaxLen   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               CloseControlPipe
+;
+;       DESCRIPTION:        Close control pipe
+;
+;       PARAMETERS:         DS      Function selector
+;                           FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseControlPipe   Proc far
+    push es
+    pushad
+;    
+    mov ax,fs:usbp_hub_sel
+    or ax,ax
+    jz ccpNoHub
+;
+    push gs
+    mov gs,ax
+    mov dx,fs:usbp_hub_port
+    ResetUsbHubPort
+    pop gs
+    jmp ccpDone
+       
+ccpNoHub:
+    mov es,fs:usbp_function_sel
+    mov cl,es:usbf_port
+    movzx edi,cl
+    add edi,edi
+;
+    mov eax,es:[2*edi].HcPortSc
+    and al,NOT 4
+    mov es:[2*edi].HcPortSc,eax
+
+ccpDone:
+    mov ax,50
+    WaitMilliSec
+;
+    popad
+    pop es
+    retf32
+CloseControlPipe Endp
+
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3725,6 +3772,7 @@ et19 DD OFFSET GetMaxLen,       SEG code
 et1A DD 0,                      0
 et1B DD 0,                      0
 et1C DD OFFSET SetMaxLen,       SEG code
+et1D DD OFFSET CloseControlPipe, SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -3746,7 +3794,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*1Dh
+    mov cx,2*1Eh
 
 ifTabLoop:
     lods dword ptr cs:[si]

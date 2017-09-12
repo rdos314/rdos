@@ -5269,7 +5269,7 @@ write_tcp_fail:
 
 write_tcp_ok:
     mov ax,ds:tcp_send_count
-    cmp ax,600h
+    cmp ax,ds:tcp_mtu
     jc write_tcp_delay
 ;       
     call SendData
