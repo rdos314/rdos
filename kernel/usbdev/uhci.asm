@@ -2190,9 +2190,6 @@ LocalEndTransfer   Proc near
     mov fs:usp_data_size,0     
     and fs:usp_flags, NOT USP_FLAG_TRANSFER_PENDING
     and fs:usp_flags, NOT USP_FLAG_TRANSFER_OK
-;
-    call LocalIsConnected
-    jc etDone
 ;    
     mov edx,fs:usp_qh
     or edx,edx
