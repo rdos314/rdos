@@ -2312,15 +2312,19 @@ int TUnzip::SeekFile(TUnzipFile *file)
 
     if (request < 0) {
         Info(0x401, SeekMsg, file->cfilname);
-        if (file == FFileArr[0] && FExtraBytes != 0L) {
-            FOldExtraBytes =  FExtraBytes;
-            FExtraBytes = 0L;
-            request = file->offset;  /* could also check if != 0 */
-            inbuf_offset = request % INBUFSIZ;
-            bufstart = request - inbuf_offset;
-            /* try again */
-            if (request < 0) {
-                Info(0x401, SeekMsg, file->cfilname);
+        if (FFileArr) {
+            if (file == FFileArr[0] && FExtraBytes != 0L) {
+                FOldExtraBytes =  FExtraBytes;
+                FExtraBytes = 0L;
+                request = file->offset;  /* could also check if != 0 */
+                inbuf_offset = request % INBUFSIZ;
+                bufstart = request - inbuf_offset;
+                /* try again */
+                if (request < 0) {
+                    Info(0x401, SeekMsg, file->cfilname);
+                    return FALSE;
+                }
+            } else {
                 return FALSE;
             }
         } else {
@@ -2352,27 +2356,33 @@ int TUnzip::SeekFile(TUnzipFile *file)
 
     if (memcmp(sig, local_hdr_sig, 4)) {
         Info(0x401, OffsetMsg, "signature", request);
-        if ((file == FFileArr[0] &&  FExtraBytes != 0L) ||
-                ( FExtraBytes == 0L && FOldExtraBytes != 0L)) {
-            if (FExtraBytes) {
-                FOldExtraBytes = FExtraBytes;
-                FExtraBytes = 0L;
-            } else
-                FExtraBytes = FOldExtraBytes; /* third attempt */
+        if (FFileArr) {
+            if ((file == FFileArr[0] &&  FExtraBytes != 0L) ||
+                    ( FExtraBytes == 0L && FOldExtraBytes != 0L)) {
+                if (FExtraBytes) {
+                    FOldExtraBytes = FExtraBytes;
+                    FExtraBytes = 0L;
+                } else
+                    FExtraBytes = FOldExtraBytes; /* third attempt */
 
-            ok = Seek(file->offset);
-            if (!ok || ReadBuf(sig, 4) == 0) {  /* bad offset */
-                if (!ok)
-                    Info(0x401, OffsetMsg, "EOF", request);
+                ok = Seek(file->offset);
+                if (!ok || ReadBuf(sig, 4) == 0) {  /* bad offset */
+                    if (!ok)
+                        Info(0x401, OffsetMsg, "EOF", request);
+                    return FALSE;
+                }
+                if (memcmp(sig, local_hdr_sig, 4)) {
+                    Info(0x401, OffsetMsg, "signature", request);
+                    return FALSE;
+                }
+            } else {
                 return FALSE;
             }
-            if (memcmp(sig, local_hdr_sig, 4)) {
-                Info(0x401, OffsetMsg, "signature", request);
-                return FALSE;
-            }
-        } else
+        } else {
             return FALSE;
+        }
     }
+        
     return TRUE;
 }
 
