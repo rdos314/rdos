@@ -748,13 +748,8 @@ allocate_small_linear   PROC far
     dec eax
     and al,0FCh
     add eax,4
-;    
-    mov edx,es:small_avail_mem
-    add es:small_used_mem,eax
-    sub edx,eax
-    sub edx,10h
+;
     add eax,10h
-    mov es:small_avail_mem,edx
 ;
     mov dx,small_mem_sel
     mov ds,dx
@@ -820,6 +815,15 @@ no_small_biggest_block:
     dec eax
     mov [edx].slf_prev,eax
     mov [edx].slf_next,eax
+;
+    mov eax,[edx].sls_next
+    sub eax,edx    
+    mov ebx,es:small_avail_mem
+    sub ebx,eax
+    mov es:small_avail_mem,ebx
+    sub eax,10h
+    add es:small_used_mem,eax
+;
     mov ax,mem_sel
     mov ds,ax
     LeaveSection ds:small_section
@@ -1707,7 +1711,7 @@ free_small_mem  PROC near
     mov ebx,es:small_avail_mem
     add ebx,eax
     mov es:small_avail_mem,ebx
-    add es:small_used_mem,10h
+    sub eax,10h
     sub es:small_used_mem,eax
 ;
     mov eax,[edx].sls_prev

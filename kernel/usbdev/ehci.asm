@@ -3235,10 +3235,7 @@ upCheckTimeout:
     cmp ax,100
     jb upNotFatal
 ;
-    mov ds:[edi].usb_attach_thread_arr,0
-    mov ds:[edi].usb_detach_thread_arr,0
-    mov ds:[edi].usb_reset_thread_arr,0
-    mov ds:[edi].usb_port_sel_arr,0
+    int 3
 
 upNotFatal:
     cmp ax,10
