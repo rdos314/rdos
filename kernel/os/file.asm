@@ -691,7 +691,7 @@ ReleaseFileSel     PROC near
     mov ds,bx
     mov ds,ds:file_dir_sel
     push ds
-    EnterWriteSection ds:ds_access_section
+    EnterSection ds:ds_list_section
 ;
     mov ds,bx
     sub ds:file_usage,1
@@ -734,13 +734,13 @@ rel_file_sel:
     FreeMem
 ;
     pop ds
-    LeaveWriteSection ds:ds_access_section
+    LeaveSection ds:ds_list_section
     clc
     jmp rel_file_sel_done
 
 rel_file_fail:
     pop ds
-    LeaveWriteSection ds:ds_access_section
+    LeaveSection ds:ds_list_section
     stc
 
 rel_file_sel_done:

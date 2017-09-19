@@ -1635,10 +1635,12 @@ SetFileAttribBase       Endp
 
 DeleteFilePhysical      Proc near
     push ds
+    push es
     push ax
     push bx
     push ecx
 ;
+    EnterSection ds:ds_list_section
     mov al,ds:ds_drive
     mov bx,fs:[edx].dfe_file_sel
     or bx,bx
@@ -1650,6 +1652,10 @@ DeleteFilePhysical      Proc near
     mov fs:[edx].dfe_file_sel,bx
 
 delete_file_phys_opened:
+    mov es,bx
+    add es:file_usage,1
+    LeaveSection ds:ds_list_section
+;
     push edx
     xor edx,edx
     CallFileSystem fs_set_file_size_proc
@@ -1660,13 +1666,12 @@ delete_file_phys_opened:
     CallFileSystem fs_delete_file_proc
     pop bx
 ;
-    mov ds,bx
-    add ds:file_usage,1
     call ReleaseFileSel
 ;
     pop ecx
     pop bx
     pop ax
+    pop es
     pop ds
     ret
 DeleteFilePhysical      Endp
@@ -3037,17 +3042,23 @@ isflush_dir_list_done:
     jz isflush_file_list_done
 
 isflush_file_list_check:
+    EnterSection ds:ds_list_section
+;
     mov bx,es:[edi].dfe_file_sel
     or bx,bx
     jz isflush_file_list_next
 ;
-    push ds
-    mov ds,bx
-    add ds:file_usage,1
+    push es
+    mov es,bx
+    add es:file_usage,1
+    LeaveSection ds:ds_list_section
     call ReleaseFileSel
-    pop ds
+    EnterSection ds:ds_list_section
+    pop es
 
 isflush_file_list_next:
+    LeaveSection ds:ds_list_section
+;
     mov edi,es:[edi].de_next
     cmp edi,fs:ds_file_ptr
     jne isflush_file_list_check
