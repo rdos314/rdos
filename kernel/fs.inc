@@ -82,6 +82,7 @@ file_next		DW ?
 file_size_section	read_write_section_typ <>
 file_list_section	section_typ <>
 file_dir_entry		DD ?
+file_dir_sel            DW ?
 file_usage		DW ?
 file_drive	        DB ?
 file_attrib	        DB ?

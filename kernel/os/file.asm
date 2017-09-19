@@ -503,6 +503,7 @@ FreeListDir     Endp
 ;                           AH              Attribute
 ;                           ECX             File size
 ;                           EDX             File dir entry
+;                           DS              Dir sel
 ;
 ;           RETURNS:        BX              File selector
 ;
@@ -556,6 +557,8 @@ crfs_block_loop:
     shl eax,2
     add eax,SIZE file_data_struc - 4
     AllocateSmallGlobalMem
+    mov es:file_dir_sel,ds
+;
     mov ax,es
     mov ds,ax
     pop eax
@@ -686,6 +689,11 @@ ReleaseFileSel     PROC near
     push edi
 ;       
     mov ds,bx
+    mov ds,ds:file_dir_sel
+    push ds
+    EnterWriteSection ds:ds_access_section
+;
+    mov ds,bx
     sub ds:file_usage,1
     jnz rel_file_fail
 ;
@@ -724,10 +732,15 @@ rel_file_sel:
     mov ds,ax
     mov ds:[ecx].dfe_file_sel,0
     FreeMem
+;
+    pop ds
+    LeaveWriteSection ds:ds_access_section
     clc
     jmp rel_file_sel_done
 
 rel_file_fail:
+    pop ds
+    LeaveWriteSection ds:ds_access_section
     stc
 
 rel_file_sel_done:
@@ -740,26 +753,6 @@ rel_file_sel_done:
     pop ds
     ret
 ReleaseFileSel     ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FreeFile
-;
-;           DESCRIPTION:    Free file selector
-;
-;           PARAMETERS:         BX          File selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public FreeFile
-
-FreeFile    PROC near
-    call ReleaseFileSel
-    ret
-FreeFile    Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

@@ -1955,7 +1955,7 @@ close_dir_unlock_loop:
     je close_dir_next
 ;
     int 3
-;       FreeMem
+;   FreeMem
 
 close_dir_next:
     add bx,4
