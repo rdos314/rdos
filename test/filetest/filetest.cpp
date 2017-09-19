@@ -60,6 +60,42 @@ void OpenFile()
         
     RdosCloseFile(handle);        
 }
+
+void AppendFile()
+{
+    char FileName[40];
+    char *str;
+    int handle;
+    int size;
+    int pos;
+    int i;
+    int id = RdosGetRandom(10);
+
+    sprintf(FileName, "%d.txt", id);
+    handle = RdosOpenFile(FileName, 0);
+    if (handle)
+    {
+        pos = RdosGetFileSize(handle);
+        RdosSetFilePos(handle, pos);
+
+        size = RdosGetRandom(256);
+
+        str = new char[size + 1];
+
+        for (i = 0; i < size; i++)
+            str[i] = 'F';
+
+        RdosWriteFile(handle, str, size);
+        delete str;
+
+        printf("File append <%s>, %d bytes\r\n", FileName, size);                
+    }
+    else
+        printf("File doesn't exist <%s>\r\n", FileName);                
+        
+    RdosCloseFile(handle);        
+}
+
 void DeleteFile()
 {
     char FileName[40];
@@ -76,19 +112,23 @@ void FileThread(void *Param)
 {
     for (;;)
     {
-        RdosWaitMilli(RdosGetRandom(250) + 5);
+        RdosWaitMilli(RdosGetRandom(500) + 5);
 
-        switch (RdosGetRandom(1))
+        switch (RdosGetRandom(2))
         {
             case 0:
                 OpenFile();
                 break;
 
             case 1:
-                CreateFile();
+                AppendFile();
                 break;
 
             case 2:
+                CreateFile();
+                break;
+
+            case 3:
                 DeleteFile();
                 break;
         }
@@ -100,7 +140,7 @@ void cdecl main()
     int j;
     char ThreadName[40];
 
-    for (j = 0; j < 40; j++)
+    for (j = 0; j < 15; j++)
     {
         sprintf(ThreadName, "File %d", j);
         RdosCreateThread(FileThread, ThreadName, 0, 0x10000);

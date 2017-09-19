@@ -622,41 +622,46 @@ GrowFileSel     PROC near
     push eax
     push ecx
     push edx
-    push si
-    push di
+    push esi
+    push edi
+    push ebp
 ;
-    push ds
-    mov si,bx
-    GetSelectorBaseSize
-    AllocateGdt
-    CreateDataSelector16
-    mov ds,bx
-;    
-    mov bx,si
+    int 3    
     movzx eax,ds:file_dir_entries
+    inc eax
     shl eax,2
     add eax,SIZE file_data_struc
+    mov ebp,eax
     AllocateSmallLinear
-    mov ecx,eax
-    CreateDataSelector16
-    mov es,bx
-;
-    xor di,di
-    xor si,si
-    mov cx,ax
-    sub cx,4
-    rep movsb
-    xor eax,eax
-    stosd
-    inc es:file_dir_entries
-    mov bx,es
-    mov ax,ds
+    mov ecx,ebp
+    mov edi,edx
+    mov ax,flat_sel
     mov es,ax
-    pop ds
-    FreeMem
 ;
-    pop di
-    pop si
+    xor esi,esi
+    sub ecx,4
+    rep movs byte ptr es:[edi],ds:[esi]
+    xor eax,eax
+    stos dword ptr es:[edi]
+    inc es:[edi].file_dir_entries
+;
+    GetSelectorBaseSize
+    push ecx
+    push edx
+;
+    mov ecx,ebp
+    mov edx,edi
+    CreateDataSelector16
+;
+    pop edx
+    pop ecx
+    FreeLinear
+;
+    mov ds,bx
+;
+    pop ebp
+    pop edi
+    pop esi
     pop edx
     pop ecx
     pop eax
