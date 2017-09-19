@@ -578,6 +578,7 @@ crfs_block_loop:
 crfs_skip_lists:
     mov eax,SIZE file_data_struc - 4
     AllocateSmallGlobalMem
+    mov es:file_dir_sel,ds
     mov ax,es
     mov ds,ax
     mov ds:file_block_size,0
