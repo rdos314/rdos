@@ -664,17 +664,20 @@ GrowFileSel ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FreeFileSel
+;           NAME:           ReleaseFileSel
 ;
-;           DESCRIPTION:    Free file selector
+;           DESCRIPTION:    Release file selector
 ;
-;           PARAMETERS:         DS              File selector
+;           PARAMETERS:     BX              File selector
+;
+;           RETURNS:        NC              Released
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public FreeFileSel
+    public ReleaseFileSel
 
-FreeFileSel     PROC near
+ReleaseFileSel     PROC near
+    push ds
     push es
     push ax
     push ebx
@@ -682,7 +685,10 @@ FreeFileSel     PROC near
     push si
     push edi
 ;       
-    mov bx,ds
+    mov ds,bx
+    sub ds:file_usage,1
+    jnz rel_file_fail
+;
     call RemoveFileSel
 ;    
     mov ax,flat_sel
@@ -690,27 +696,27 @@ FreeFileSel     PROC near
     mov edi,ds:file_dir_entry
     mov cx,es:[edi].de_usage
     or cx,cx
-    jnz free_file_sel_done
+    jnz rel_file_fail
 ;
     mov ecx,ds:file_block_size
     or ecx,ecx
-    jz free_file_sel
+    jz rel_file_sel
 ;
     mov cx,ds:file_dir_entries
     mov si,OFFSET file_entries
 
-free_file_dir_loop:
+rel_file_dir_loop:
     mov ebx,[si]
     or ebx,ebx
-    jz free_file_dir_next
+    jz rel_file_dir_next
 ;
     call FreeListDir
 
-free_file_dir_next:
+rel_file_dir_next:
     add si,4
-    loop free_file_dir_loop
+    loop rel_file_dir_loop
 
-free_file_sel:
+rel_file_sel:
     mov ecx,ds:file_dir_entry
     mov ax,ds
     mov es,ax
@@ -718,19 +724,22 @@ free_file_sel:
     mov ds,ax
     mov ds:[ecx].dfe_file_sel,0
     FreeMem
+    clc
+    jmp rel_file_sel_done
 
-free_file_sel_done:
-    xor ax,ax
-    mov ds,ax
-;
+rel_file_fail:
+    stc
+
+rel_file_sel_done:
     pop edi
     pop si
     pop ecx
     pop ebx
     pop ax
     pop es
+    pop ds
     ret
-FreeFileSel     ENDP
+ReleaseFileSel     ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -747,20 +756,7 @@ FreeFileSel     ENDP
     public FreeFile
 
 FreeFile    PROC near
-    push ds
-    push ax
-;
-    mov ds,bx
-    mov ax,ds:file_usage
-    or ax,ax
-    stc
-    jnz free_file_done
-;
-    call FreeFileSel
-
-free_file_done:
-    pop ax
-    pop ds
+    call ReleaseFileSel
     ret
 FreeFile    Endp
 
@@ -1827,19 +1823,11 @@ lock_file  ENDP
 unlock_file_name     DB 'Unlock File',0
 
 unlock_file  PROC far
-    push ds
-    push ax
-;    
-    mov ds,ax
-    sub ds:file_usage,1
-    jnz unlock_file_done
-;
-    call FreeFileSel
-
-unlock_file_done:    
+    push bx
+    mov bx,ax
+    call ReleaseFileSel
     clc
-    pop ax
-    pop ds
+    pop bx
     retf32
 unlock_file  ENDP
 
@@ -1858,12 +1846,6 @@ unlock_file  ENDP
 close_file_name DB 'Close File',0
 
 close_file:     
-    ApiSaveEax
-    ApiSaveEcx
-    ApiSaveEdx
-    ApiSaveEsi
-    ApiSaveEdi
-
     push ds
     push eax
     push ebx
@@ -1880,13 +1862,8 @@ close_file:
     stc
     jz close_file_done
 ;
-    mov ds,bx
-    sub ds:file_usage,1
-    jnz close_file_handle
+    call ReleaseFileSel
 ;
-    call FreeFileSel
-
-close_file_handle:
     mov ebx,esi
     FreeHandle
     clc
@@ -1896,12 +1873,6 @@ close_file_done:
     pop ebx
     pop eax
     pop ds
-
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEdx
-    ApiCheckEcx
-    ApiCheckEax
     retf32
 
 
@@ -1928,10 +1899,9 @@ close_c_file    Proc far
 ;
     mov ds,bx
     mov ds:file_c_handle,0
-    sub ds:file_usage,1
-    jnz ccfDone
 ;
-    call FreeFileSel
+    call ReleaseFileSel
+    clc
 
 ccfDone:
     pop ds
@@ -3135,13 +3105,8 @@ delete_handle   Proc far
     stc
     jz delete_handle_done
 ;
-    mov ds,bx
-    sub ds:file_usage,1
-    jnz delete_handle_handle
+    call ReleaseFileSel
 ;
-    call FreeFileSel
-
-delete_handle_handle:
     mov ebx,esi
     FreeHandle
     clc

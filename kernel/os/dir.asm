@@ -74,8 +74,7 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn CreateFileHandle:near
     extrn CreateFileSel:near
-    extrn FreeFileSel:near
-    extrn FreeFile:near
+    extrn ReleaseFileSel:near
 
 char_tab:
 ct00 DB 0,          0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
@@ -1662,7 +1661,8 @@ delete_file_phys_opened:
     pop bx
 ;
     mov ds,bx
-    call FreeFileSel
+    add ds:file_usage,1
+    call ReleaseFileSel
 ;
     pop ecx
     pop bx
@@ -2278,10 +2278,10 @@ ocfAlloc:
     AllocateCHandle
     jnc ocfSaveHandle
 ;
-    sub es:file_usage,1
-    jnz ocfFailed
-;
-    call FreeFileSel
+    mov bx,es
+    xor ax,ax
+    mov es,ax
+    call ReleaseFileSel
     jmp ocfFailed
 
 ocfRef:
@@ -3041,10 +3041,11 @@ isflush_file_list_check:
     or bx,bx
     jz isflush_file_list_next
 ;
-    call FreeFile
-    jc isflush_dir_done
-;
-    mov es:[edi].dfe_file_sel,0
+    push ds
+    mov ds,bx
+    add ds:file_usage,1
+    call ReleaseFileSel
+    pop ds
 
 isflush_file_list_next:
     mov edi,es:[edi].de_next
