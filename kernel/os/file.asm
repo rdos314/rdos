@@ -626,9 +626,7 @@ GrowFileSel     PROC near
     push edi
     push ebp
 ;
-    int 3    
     movzx eax,ds:file_dir_entries
-    inc eax
     shl eax,2
     add eax,SIZE file_data_struc
     mov ebp,eax
@@ -643,6 +641,7 @@ GrowFileSel     PROC near
     rep movs byte ptr es:[edi],ds:[esi]
     xor eax,eax
     stos dword ptr es:[edi]
+    mov edi,edx
     inc es:[edi].file_dir_entries
 ;
     GetSelectorBaseSize
@@ -652,6 +651,9 @@ GrowFileSel     PROC near
     mov ecx,ebp
     mov edx,edi
     CreateDataSelector16
+;
+    mov ax,5
+    WaitMilliSec
 ;
     pop edx
     pop ecx
@@ -797,6 +799,17 @@ get_file_list_entry     Proc far
     mov esi,edx
     mov cl,ds:file_dir_shift
     shr esi,cl
+
+get_list_size_retry:
+    cmp si,ds:file_dir_entries
+    jb get_list_size_ok
+;
+    mov bx,ds
+    call GrowFileSel
+    mov ds,bx
+    jmp get_list_size_retry
+
+get_list_size_ok:
     shl si,2
     mov ebx,ds:[si].file_entries
     or ebx,ebx
