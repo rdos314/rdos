@@ -1644,9 +1644,10 @@ block   Proc near
     push ax
     push bx
     push dx
+;
     mov ax,es:[edi].dh_thread
     or ax,ax
-    jnz block_no_signal
+    jnz block_list
 ;
     GetThread
     mov es:[edi].dh_thread,ax
@@ -1654,13 +1655,8 @@ block   Proc near
     Signal
     jmp block_do
 
-block_no_signal:
+block_list:
     push ds
-
-ifdef DEBUG     
-    call CheckDriveWait
-endif
-    
     mov ax,SEG data
     mov ds,ax
     mov bx,ds:drive_wait_free
@@ -1668,17 +1664,41 @@ endif
     mov ds:drive_wait_free,ax
     GetThread
     mov ds:[bx].dws_thread,ax
-    mov ax,es:[edi].dh_wait
-    mov ds:[bx].dws_link,ax
+    mov dx,es:[edi].dh_wait
+    mov ds:[bx].dws_link,dx
     mov es:[edi].dh_wait,bx
-
-ifdef DEBUG     
-    dec ds:drive_wait_count
-    call CheckDriveWait
-endif
-    
     pop ds
 
+block_list_do:
+    LeaveSection ds:disc_section
+    WaitForSignal
+    EnterSection ds:disc_section
+;       
+    push ds
+    mov bx,SEG data
+    mov ds,bx
+;    
+    GetThread
+    mov bx,es:[edi].dh_wait
+
+block_list_check_loop:
+    or bx,bx
+    jz block_list_exit_pop
+;
+    cmp ax,ds:[bx].dws_thread
+    je block_list_cont_pop
+;    
+    mov bx,ds:[bx].dws_link
+    jmp block_list_check_loop
+
+block_list_cont_pop:
+    pop ds
+    jmp block_list_do
+
+block_list_exit_pop:
+    pop ds
+    jmp block_exit
+    
 block_do:
     LeaveSection ds:disc_section
     WaitForSignal
@@ -1687,30 +1707,6 @@ block_do:
     mov bx,es:[edi].dh_thread
     cmp ax,bx
     je block_do
-;    
-    push ds
-    mov bx,SEG data
-    mov ds,bx
-;    
-    GetThread
-    mov bx,es:[edi].dh_wait
-
-block_check_loop:
-    or bx,bx
-    jz block_exit_pop
-;
-    cmp ax,ds:[bx].dws_thread
-    je block_cont_pop
-;    
-    mov bx,ds:[bx].dws_link
-    jmp block_check_loop
-
-block_cont_pop:
-    pop ds
-    jmp block_do
-
-block_exit_pop:
-    pop ds
     
 block_exit:
     pop dx

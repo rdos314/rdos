@@ -141,6 +141,9 @@ void cdecl main()
     char ThreadName[40];
 
     for (j = 0; j < 15; j++)
+        CreateFile();
+
+    for (j = 0; j < 15; j++)
     {
         sprintf(ThreadName, "File %d", j);
         RdosCreateThread(FileThread, ThreadName, 0, 0x10000);
