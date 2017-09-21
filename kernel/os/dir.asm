@@ -2126,10 +2126,22 @@ create_file_normal:
 create_file_truncate:
     pop edi
     call RequestFileSel
+;
+    push ds
+    mov ds,bx
+    EnterWriteSection ds:file_size_section
+    pop ds
+;
     push edx
     xor edx,edx
     CallFileSystem fs_set_file_size_proc
     pop edx
+;
+    push ds
+    mov ds,bx
+    LeaveWriteSection ds:file_size_section
+    pop ds
+;
     LeaveWriteSection ds:ds_access_section
 
 create_file_handle:

@@ -114,7 +114,7 @@ void FileThread(void *Param)
     {
         RdosWaitMilli(RdosGetRandom(500) + 5);
 
-        switch (RdosGetRandom(2))
+        switch (RdosGetRandom(3))
         {
             case 0:
                 OpenFile();
@@ -139,9 +139,6 @@ void cdecl main()
 {
     int j;
     char ThreadName[40];
-
-    for (j = 0; j < 15; j++)
-        CreateFile();
 
     for (j = 0; j < 15; j++)
     {
