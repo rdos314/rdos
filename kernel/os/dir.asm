@@ -73,7 +73,7 @@ code    SEGMENT byte public use16 'CODE'
     assume cs:code
 
     extrn CreateFileHandle:near
-    extrn CreateFileSel:near
+    extrn RequestFileSel:near
     extrn ReleaseFileSel:near
 
 char_tab:
@@ -1648,12 +1648,10 @@ DeleteFilePhysical      Proc near
 ;
     mov ah,fs:[edx].de_attrib
     mov ecx,fs:[edx].dfe_data_size
-    call CreateFileSel
+    call RequestFileSel
     mov fs:[edx].dfe_file_sel,bx
 
 delete_file_phys_opened:
-    mov es,bx
-    add es:file_usage,1
     LeaveSection ds:ds_list_section
 ;
     push edx
@@ -1979,44 +1977,6 @@ close_dir_unlock_free:
     ret
 CloseDirBase    Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupFileSel
-;
-;           DESCRIPTION:    Setup file selector
-;
-;           PARAMETERS:         DS          Dir
-;                           EDX         Dir file entry
-;
-;           RETURNS:        BX          File sel
-;                           AL          Drive
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupFileSel    Proc near
-    push ecx
-;
-    mov al,ds:ds_drive
-    EnterSection ds:ds_list_section
-    mov bx,fs:[edx].dfe_file_sel
-    or bx,bx
-    jnz setup_file_sel_leave
-;
-    mov ah,fs:[edx].de_attrib
-    mov ecx,fs:[edx].dfe_data_size
-    call CreateFileSel
-    mov fs:[edx].dfe_file_sel,bx
-
-setup_file_sel_leave:
-    LeaveSection ds:ds_list_section
-;
-    pop ecx
-    ret
-SetupFileSel    Endp
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2053,7 +2013,7 @@ open_file_device:
     jc open_file_device_end
 ;
     EnterReadSection ds:ds_access_section
-    call SetupFileSel
+    call RequestFileSel
     LeaveReadSection ds:ds_access_section
     jmp open_file_handle
 
@@ -2071,7 +2031,7 @@ open_file_normal:
     jc open_file_leave_failed
 ;
     pop edi
-    call SetupFileSel
+    call RequestFileSel
     LeaveReadSection ds:ds_access_section
 
 open_file_handle:
@@ -2135,7 +2095,7 @@ create_file_device:
     jc create_file_device_end
 ;
     EnterReadSection ds:ds_access_section
-    call SetupFileSel
+    call RequestFileSel
     LeaveReadSection ds:ds_access_section
     jmp create_file_handle
 
@@ -2158,14 +2118,14 @@ create_file_normal:
     mov al,ds:ds_drive
     mov bx,ds
     CallFileSystem fs_create_file_proc
-    call SetupFileSel
+    call RequestFileSel
     LeaveWriteSection ds:ds_access_section
     pop edi
     jmp create_file_handle
 
 create_file_truncate:
     pop edi
-    call SetupFileSel
+    call RequestFileSel
     push edx
     xor edx,edx
     CallFileSystem fs_set_file_size_proc
@@ -2243,7 +2203,7 @@ open_c_file    Proc far
     mov al,ds:ds_drive
     mov bx,ds
     CallFileSystem fs_create_file_proc
-    call SetupFileSel
+    call RequestFileSel
     pop cx
 ;
     LeaveWriteSection ds:ds_access_section
@@ -2255,7 +2215,7 @@ ocfExists:
     jnz ocfLeaveFailed
 ;
     pop edi
-    call SetupFileSel
+    call RequestFileSel
 ;
     test cx,O_CREAT OR O_TRUNC
     jz ocfOpen
@@ -2270,7 +2230,6 @@ ocfOpen:
 
 ocfHandle:
     mov es,bx
-    inc es:file_usage
     call ParseEnd
 ;
     mov bx,es:file_c_handle
@@ -2349,6 +2308,7 @@ dupl_c_file_to_file    Proc far
     mov es,bx
     mov al,es:file_drive
     xor cl,cl
+    inc es:file_usage
     call CreateFileHandle
 
 dcfDone:
@@ -2406,7 +2366,7 @@ open_kernel_file    Proc far
     mov al,ds:ds_drive
     mov bx,ds
     CallFileSystem fs_create_file_proc
-    call SetupFileSel
+    call RequestFileSel
     pop cx
 ;
     LeaveWriteSection ds:ds_access_section
@@ -2418,7 +2378,7 @@ okfExists:
     jnz okfLeaveFailed
 ;
     pop edi
-    call SetupFileSel
+    call RequestFileSel
 ;
     test cx,O_CREAT OR O_TRUNC
     jz okfOpen
@@ -2433,7 +2393,6 @@ okfOpen:
 
 okfHandle:
     mov es,bx
-    inc es:file_usage
     call ParseEnd
 ;
     mov ebx,es

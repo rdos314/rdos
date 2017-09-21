@@ -227,17 +227,16 @@ RemoveFileSel Endp
 
 CreateFileHandle    Proc near
     push ds
-    push es
+    push dx
     push si
 ;
-    mov es,bx
-    inc es:file_usage
+    mov dx,bx
     push cx
     mov cx,SIZE file_handle_seg
     AllocateHandle
     pop cx
     mov [ebx].file_handle_pos,0
-    mov [ebx].file_handle_sel,es
+    mov [ebx].file_handle_sel,dx
     mov [ebx].file_handle_access,cl
     mov [ebx].file_handle_drive,al
     mov [ebx].hh_sign,FILE_HANDLE
@@ -245,7 +244,7 @@ CreateFileHandle    Proc near
     clc
 ;
     pop si
-    pop es
+    pop dx
     pop ds
     ret
 CreateFileHandle    Endp
@@ -495,55 +494,61 @@ FreeListDir     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateFileSelector
+;           NAME:           RequestFileSel
 ;
-;           DESCRIPTION:    Open a file handle
+;           DESCRIPTION:    Request a file selector
 ;
-;           PARAMETERS:         AL              Drive
-;                           AH              Attribute
-;                           ECX             File size
-;                           EDX             File dir entry
+;           PARAMETERS:     FS:EDX          File dir entry
 ;                           DS              Dir sel
 ;
 ;           RETURNS:        BX              File selector
+;                           AL              Drive
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public CreateFileSel
+    public RequestFileSel
 
-CreateFileSel   PROC near
-    push ds
+RequestFileSel   PROC near
     push es
-    push eax
-    push di
-;
     push ecx
     push edx
+    push esi
+    push edi
 ;
+    push ds
+    mov esi,edx
+    mov al,ds:ds_drive
+    EnterSection ds:ds_list_section
+;
+    mov bx,fs:[esi].dfe_file_sel
+    or bx,bx
+    jnz req_file_inc
+;
+    mov ah,fs:[esi].de_attrib
     mov bx,ax
     test ah,80h
-    jnz crfs_skip_lists
+    jnz req_file_skip_lists
 ;
     mov al,bl
-    push si
+    push esi
     push edi
     GetDriveParam
     pop edi
-    pop si
-    jnc crfs_ok_params
+    pop esi
+    jnc req_file_ok_params
 ;
     mov eax,1000h
     mov ecx,1000h
 
-crfs_ok_params:
+req_file_ok_params:
     mov edx,ecx
     dec eax
     xor cl,cl
 
-crfs_block_loop:
+req_file_block_loop:
     inc cl
     shr eax,1
-    jnz crfs_block_loop
+    jnz req_file_block_loop
 ;
     mov eax,1
     shl eax,cl
@@ -573,9 +578,9 @@ crfs_block_loop:
     mov di,OFFSET file_entries
     xor eax,eax
     rep stosd
-    jmp crfs_init
+    jmp req_file_init
 
-crfs_skip_lists:
+req_file_skip_lists:
     mov eax,SIZE file_data_struc - 4
     AllocateSmallGlobalMem
     mov es:file_dir_sel,ds
@@ -584,26 +589,42 @@ crfs_skip_lists:
     mov ds:file_block_size,0
     mov ds:file_dir_entries,0
 
-crfs_init:
-    pop edx
-    pop ecx
+req_file_init:
     InitReadWriteSection ds:file_size_section
     InitSection ds:file_list_section
-    mov ds:file_usage,0
+    mov ds:file_usage,1
     mov ds:file_c_handle,0
     mov ds:file_drive,bl
+    mov ds:file_dir_entry,esi
+;
+    mov ah,fs:[esi].de_attrib
     mov ds:file_attrib,bh
+
+    mov ecx,fs:[esi].dfe_data_size
     mov ds:file_size,ecx
-    mov ds:file_dir_entry,edx
+;
     mov bx,ds
     call InsertFileSel
 ;
-    pop di
-    pop eax
-    pop es
+    mov fs:[esi].dfe_file_sel,bx
+    jmp req_file_leave
+
+req_file_inc:
+    mov ds,bx
+    add ds:file_usage,1
+
+req_file_leave:
     pop ds
+    LeaveSection ds:ds_list_section
+    mov al,ds:ds_drive
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop es
     ret
-CreateFileSel   ENDP
+RequestFileSel   ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
