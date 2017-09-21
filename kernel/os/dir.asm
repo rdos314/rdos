@@ -1640,19 +1640,12 @@ DeleteFilePhysical      Proc near
     push bx
     push ecx
 ;
-    EnterSection ds:ds_list_section
-    mov al,ds:ds_drive
-    mov bx,fs:[edx].dfe_file_sel
-    or bx,bx
-    jnz delete_file_phys_opened
-;
-    mov ah,fs:[edx].de_attrib
-    mov ecx,fs:[edx].dfe_data_size
     call RequestFileSel
-    mov fs:[edx].dfe_file_sel,bx
-
-delete_file_phys_opened:
-    LeaveSection ds:ds_list_section
+;
+    push ds
+    mov ds,bx
+    EnterWriteSection ds:file_size_section
+    pop ds
 ;
     push edx
     xor edx,edx
@@ -1663,6 +1656,11 @@ delete_file_phys_opened:
     mov bx,ds
     CallFileSystem fs_delete_file_proc
     pop bx
+;
+    push ds
+    mov ds,bx
+    LeaveWriteSection ds:file_size_section
+    pop ds
 ;
     call ReleaseFileSel
 ;
@@ -2232,10 +2230,20 @@ ocfExists:
     test cx,O_CREAT OR O_TRUNC
     jz ocfOpen
 ;
+    push ds
+    mov ds,bx
+    EnterWriteSection ds:file_size_section
+    pop ds
+;
     push edx
     xor edx,edx
     CallFileSystem fs_set_file_size_proc
     pop edx
+;
+    push ds
+    mov ds,bx
+    LeaveWriteSection ds:file_size_section
+    pop ds
 
 ocfOpen:
     LeaveWriteSection ds:ds_access_section
@@ -2395,10 +2403,20 @@ okfExists:
     test cx,O_CREAT OR O_TRUNC
     jz okfOpen
 ;
+    push ds
+    mov ds,bx
+    EnterWriteSection ds:file_size_section
+    pop ds
+;
     push edx
     xor edx,edx
     CallFileSystem fs_set_file_size_proc
     pop edx
+;
+    push ds
+    mov ds,bx
+    LeaveWriteSection ds:file_size_section
+    pop ds
 
 okfOpen:
     LeaveWriteSection ds:ds_access_section

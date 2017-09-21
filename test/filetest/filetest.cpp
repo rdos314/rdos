@@ -114,21 +114,27 @@ void FileThread(void *Param)
     {
         RdosWaitMilli(RdosGetRandom(500) + 5);
 
-        switch (RdosGetRandom(3))
+        switch (RdosGetRandom(10))
         {
             case 0:
+            case 1:
+            case 2:
+            case 3:
                 OpenFile();
                 break;
 
-            case 1:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
                 AppendFile();
                 break;
 
-            case 2:
+            case 8:
                 CreateFile();
                 break;
 
-            case 3:
+            case 9:
                 DeleteFile();
                 break;
         }
