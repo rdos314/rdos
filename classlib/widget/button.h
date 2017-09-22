@@ -188,6 +188,8 @@ public:
     void DefineDisabled(TBitmapGraphicDevice *bitmap, int x, int y);
     void DefineDisabled(TBitmapGraphicDevice *bitmap);
 
+    virtual void Hide();
+
     virtual void Set(TIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
@@ -248,11 +250,12 @@ protected:
 
     virtual void NotifyResize();
 
-        virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
-        virtual int OnLeftUp(int x, int y, int ButtonState, int KeyState);
-        virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
-        virtual int OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
-        virtual int OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+    virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
+    virtual int OnMouseMove(int x, int y, int ButtonState, int KeyState);
+    virtual int OnLeftUp(int x, int y, int ButtonState, int KeyState);
+    virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
+    virtual int OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+    virtual int OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 
 private:
     void Init(char ch);

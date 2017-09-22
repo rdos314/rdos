@@ -3192,6 +3192,61 @@ void TButtonControl::PaintButton(TGraphicDevice *dev, int xstart, int ystart, in
 
 /*##########################################################################
 #
+#   Name       : TButtonControl::Hide
+#
+#   Purpose....: Hide control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::Hide()
+{
+    FPressed = FALSE;
+
+    TControl::Hide();
+}
+
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::OnMouseMove
+#
+#   Purpose....: Handle mouse move
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TButtonControl::OnMouseMove(int x, int y, int ButtonState, int KeyState)
+{
+    if (ButtonState & MOUSE_LEFT_BUTTON)
+    {
+        if (IsInside(x, y))
+        {
+            if (!FKeepDown)
+            {
+                if (!FPressed)
+                {  
+                    if (FKey)
+                        PutKey(FKey);
+
+                    FPressed = TRUE;
+                    Redraw();
+
+                    NotifyChanged();
+                }
+            }
+        }
+    }
+
+    return TControl::OnMouseMove(x, y, ButtonState, KeyState);
+}
+
+/*##########################################################################
+#
 #   Name       : TButtonControl::OnLeftUp
 #
 #   Purpose....: Handle left button up
