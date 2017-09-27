@@ -146,6 +146,8 @@ phdLoop:
     mov gs:[bx].hps_status,0
     mov gs:[bx].hps_req_reset,0
     mov gs:[bx].hps_ext_reset,0
+    mov gs:[bx].hps_failed,0
+    mov gs:[bx].hps_retry,0
     mov gs:[bx].hps_dev_port,0
     mov gs:[bx].hps_attach_thread,0
     mov gs:[bx].hps_detach_thread,0
@@ -618,6 +620,9 @@ attach_thread:
     shl bx,5
     add bx,OFFSET hub_port_arr
 ;
+    GetThread
+    mov gs:[bx].hps_attach_thread,ax
+;
     mov al,gs:[bx].hps_dev_port
     or al,al
     jnz atHasPort
@@ -630,9 +635,6 @@ attach_thread:
 
 atHasPort:
     LockUsb
-;
-    GetThread
-    mov gs:[bx].hps_attach_thread,ax
 ;        
     mov ax,gs:hub_attached
     or ax,ax
@@ -671,9 +673,11 @@ atWaitLoop:
 atIsEnabled:
     mov dx,si
     call HubAttach 
-    jmp atDone
+    jnc atDone
 
 atFreeUnlock:
+    mov gs:[bx].hps_ext_reset,1
+;
     mov al,gs:[bx].hps_dev_port
     or al,al
     jz atUnlock
@@ -819,6 +823,8 @@ uopResetOk:
     jnz uopCheckTimeout
 ;
     mov gs:[bx].hps_attach_thread,-1
+    mov gs:[bx].hps_retry,0
+    mov gs:[bx].hps_failed,0
     GetSystemTime
     add eax,1193 * 500
     adc edx,0
@@ -852,6 +858,8 @@ uopNotConnected:
     jnz uopCheckTimeout
 ;
     mov gs:[bx].hps_detach_thread,-1
+    mov gs:[bx].hps_retry,0
+    mov gs:[bx].hps_failed,0
     GetSystemTime
     add eax,1193 * 500
     adc edx,0
@@ -877,55 +885,54 @@ uopNotConnected:
 
 uopCheckTimeout:
     mov ax,gs:[bx].hps_attach_thread
-    or ax,ax
-    jz uopCheckDetach
+    or ax,gs:[bx].hps_detach_thread
+    jz uopDone
 ;
-    cmp ax,-1
-    jnz uopTimeoutAttach
+    GetSystemTime
+    sub eax,gs:[bx].hps_timeout
+    sbb edx,gs:[bx].hps_timeout+4
+    jc uopDone
 ;    
+    mov ax,gs:[bx].hps_retry
+    inc ax
+    mov gs:[bx].hps_retry,ax
+;
+    cmp ax,100
+    jb uopNotFatal
+;
+    int 3
+
+uopNotFatal:
+    cmp ax,10
+    jnz uopDoSignal
+;   
+    mov gs:[bx].hps_failed,1
+
+uopDoSignal:
     GetSystemTime
     add eax,1193 * 500
     adc edx,0
     mov gs:[bx].hps_timeout,eax
     mov gs:[bx].hps_timeout+4,edx
-    jmp uopDone
-
-uopTimeoutAttach:    
-    GetSystemTime
-    sub eax,gs:[bx].hps_timeout
-    sbb edx,gs:[bx].hps_timeout+4
-    jc uopDone
 ;
     push bx
     mov bx,gs:[bx].hps_attach_thread
-    Signal
-    pop bx
-    jmp uopDone    
-
-uopCheckDetach:    
-    mov ax,gs:[bx].hps_detach_thread
-    or ax,ax
-    jz uopDone
-;
-    cmp ax,-1
-    jnz uopTimeoutDetach
+    or bx,bx
+    jz uopAttachSignalOk
 ;    
-    GetSystemTime
-    add eax,1193 * 500
-    adc edx,0
-    mov gs:[bx].hps_timeout,eax
-    mov gs:[bx].hps_timeout+4,edx
-    jmp uopDone
+    Signal
 
-uopTimeoutDetach:    
-    GetSystemTime
-    sub eax,gs:[bx].hps_timeout
-    sbb edx,gs:[bx].hps_timeout+4
-    jc uopDone
+uopAttachSignalOk:
+    pop bx
 ;
     push bx
     mov bx,gs:[bx].hps_detach_thread
+    or bx,bx
+    jz uopDetachSignalOk
+;    
     Signal
+
+uopDetachSignalOk:
     pop bx
 
 uopDone:    
@@ -1595,11 +1602,16 @@ is_usb_hub_port_connected  Proc far
     mov si,dx
     dec si
     shl si,5
+    mov al,gs:[si].hub_port_arr.hps_failed
+    or al,al
+    jnz iuhFail
+;
     mov ax,gs:[si].hub_port_arr.hps_status
     test al,1
     clc
     jnz iuhDone
-;    
+
+iuhFail:    
     stc
 
 iuhDone:

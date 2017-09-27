@@ -2871,6 +2871,9 @@ atDoReset:
     WaitMilliSec
 ;
     mov eax,es:[2*edi].HcPortSc
+    test al,1
+    jz atUnlock
+;    
     test al,4
     jnz atHighSpeed
 ;
@@ -2905,6 +2908,9 @@ atResetDone:
     WaitMilliSec
 ;
     mov eax,es:[2*edi].HcPortSc
+    test al,1
+    jz atUnlock
+;    
     test al,4
     jnz atNotify
 ;    
