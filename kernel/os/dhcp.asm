@@ -1396,16 +1396,16 @@ ReceiveDiscover Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;       Name:           ReceiveServerOffer
+;       Name:           ReceiveRelayOffer
 ;
-;       Purpose:        Receive offset
+;       Purpose:        Receive relay offer
 ;
 ;       Parameters:     ES:EDI  UDP data
 ;                       GS      Driver selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReceiveServerOffer Proc near
+ReceiveRelayOffer Proc near
     push ds
     push es
     push fs
@@ -1419,18 +1419,18 @@ ReceiveServerOffer Proc near
     mov ds,ax
     mov al,ds:dhcp_done
     or al,al
-    jz soffer_done
+    jz relay_offer_done
 ;    
     mov al,ds:dhcp_relay
     or al,al
-    jz soffer_done
+    jz relay_offer_done
 ;
     call FindRelay
-    jc soffer_done
+    jc relay_offer_done
 ;
     int 3
 
-soffer_done:
+relay_offer_done:
     pop bp
     pop di
     pop si
@@ -1439,7 +1439,7 @@ soffer_done:
     pop es
     pop ds
     ret
-ReceiveServerOffer Endp
+ReceiveRelayOffer Endp
 
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2797,6 +2797,17 @@ cr06    DW OFFSET ReceiveNak
 cr07    DW OFFSET ReceiveError
 cr08    DW OFFSET ReceiveError
 
+rl_receive_tab:
+rr00    DW OFFSET ReceiveError
+rr01    DW OFFSET ReceiveError
+rr02    DW OFFSET ReceiveRelayOffer
+rr03    DW OFFSET ReceiveError
+rr04    DW OFFSET ReceiveError
+rr05    DW OFFSET ReceiveError
+rr06    DW OFFSET ReceiveError
+rr07    DW OFFSET ReceiveError
+rr08    DW OFFSET ReceiveError
+
 ReceiveClientDhcp       Proc near
     push ds
     push ax
@@ -2846,7 +2857,9 @@ receive_cl_dest_ok:
     jc receive_cl_local
 
 receive_cl_relay:
-    int 3
+    add bx,bx
+    call word ptr cs:[bx].rl_receive_tab    
+    jmp receive_cl_done
 
 receive_cl_local:
     mov eax,ds:dhcp_ident
