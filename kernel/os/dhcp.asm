@@ -65,6 +65,16 @@ dsd_hw_data     DB 10h DUP(?)
 
 dhcp_serv_data  ENDS
 
+dhcp_relay_entry	STRUC
+
+dre_ip          DD ?
+dre_hw_type     DB ?
+dre_hw_len      DB ?
+dre_hw_data     DB 10h DUP(?)
+
+dhcp_relay_entry        ENDS
+
+
 data    SEGMENT byte public 'DATA'
 
 dhcp_ident              DD ?
@@ -78,8 +88,10 @@ dhcp_ip2        DD ?
 ;dhcp_mask2      DD ?
 ;dhcp_gateway2       DD ?
 dhcp_serv_arr       DW 256 DUP(?)
+dhcp_relay_arr      DW 256 DUP(?)
 
 dhcp_enabled    DB ?
+dhcp_relay      DB ?
 dhcp_done       DB ?
 dhcp_rebind     DB ?
 
@@ -575,6 +587,83 @@ create_serv_done:
     ret
 CreateServerSel Endp
 
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           FindRelay
+;
+;       Purpose:        Find relay request
+;
+;       Parameters:     ES:DI		UDP data
+;
+;       Returns:        NC
+;                           AX          Relay selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindRelay	Proc near
+    push ds
+    push fs
+    push bx
+    push cx
+    push bp
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov bx,OFFSET dhcp_relay_arr
+    mov cx,256
+
+frLoop:
+    mov ax,ds:[bx]
+    or ax,ax
+    jz frNext
+;
+    mov fs,ax
+    mov al,es:[di].dhcp_hw_type
+    cmp al,fs:dre_hw_type
+    jne frNext
+;
+    mov al,es:[di].dhcp_hw_len
+    cmp al,fs:dre_hw_len
+    jne frNext
+;
+    push cx
+    movzx cx,al
+    xor bp,bp
+
+frCompLoop:
+    mov al,es:[bp+di].dhcp_hw_addr
+    cmp al,fs:[bp].dre_hw_data
+    je frCompNext
+;
+    pop cx
+    jmp frNext
+
+frCompNext:
+    inc bp
+    loop frCompLoop
+;
+    pop cx
+    mov ax,fs
+    clc
+    jmp frDone
+
+frNext:
+    add bx,2
+    loop frLoop
+;
+    stc
+
+frDone:
+    pop bp
+    pop cx
+    pop bx
+    pop fs
+    pop ds
+    ret
+FindRelay    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1069,6 +1158,7 @@ dro05 DW OFFSET ServRenewSize,      OFFSET ServRenewData
 dro06 DW OFFSET ServRebindSize,     OFFSET ServRebindData
 dro07 DW -1
 
+
 ReceiveDiscover Proc near
     push ds
     push es
@@ -1076,6 +1166,7 @@ ReceiveDiscover Proc near
     push bx
     push si
     push di
+    push bp
 ;
     mov ax,SEG data
     mov ds,ax
@@ -1083,6 +1174,108 @@ ReceiveDiscover Proc near
     or al,al
     jz discover_req_done
 ;    
+    mov al,ds:dhcp_relay
+    or al,al
+    jz discover_not_relay
+;
+    call FindRelay
+    jc discover_relay_alloc
+;
+    mov fs,ax
+    jmp discover_relay_ok
+
+discover_relay_alloc:
+    push cx
+    mov bx,OFFSET dhcp_relay_arr
+    mov cx,256
+
+discover_alloc_mac_loop:
+    mov ax,ds:[bx]
+    or ax,ax
+    jz discover_alloc_mac_do
+;
+    add bx,2
+    loop discover_alloc_mac_loop
+
+discover_alloc_fail:
+    pop cx
+    jmp discover_req_done
+
+discover_alloc_mac_do:
+    mov al,es:[di].dhcp_hw_len
+    or al,al
+    jz discover_alloc_fail
+;
+    push es
+    mov eax,SIZE dhcp_relay_entry
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov fs,ax
+    pop es
+    mov ds:[bx],ax
+;
+    mov fs:dre_ip,0
+    mov al,es:[di].dhcp_hw_type
+    mov fs:dre_hw_type,al
+;
+    mov al,es:[di].dhcp_hw_len
+    mov fs:dre_hw_len,al
+;
+    movzx cx,al
+    xor bp,bp
+
+discover_alloc_mac_copy:
+    mov al,es:[bp+di].dhcp_hw_addr
+    mov fs:[bp].dre_hw_data,al
+    inc bp
+    loop discover_alloc_mac_copy
+;
+    pop cx
+
+discover_relay_ok:
+    push es
+    push fs
+    push si
+    push di
+;
+    mov ax,es
+    mov fs,ax
+    mov si,di
+;
+    push cx
+    push fs
+    mov fs,ds:dhcp_driver_sel
+    call CreateUnboundDhcpBroadcast
+    pop fs
+    pop cx
+;
+    push cx
+    push di
+    sub si,8
+    sub di,8
+    add cx,8
+
+discover_relay_copy_data:
+    mov al,fs:[si]
+    stosb
+    inc si
+    loop discover_relay_copy_data
+;
+    pop di
+    pop cx
+;
+    or es:[di].dhcp_flags,80h
+;
+    mov fs,ds:dhcp_driver_sel
+    call SendDhcpBroadcast
+;
+    pop di
+    pop si
+    pop fs
+    pop es
+    jmp discover_req_done
+
+discover_not_relay:
     mov eax,ds:dhcp_ip2
     or eax,eax
     jz discover_req_done
@@ -1189,6 +1382,7 @@ discover_req_data_ok:
     call SendDhcpBroadcast
 
 discover_req_done:
+    pop bp
     pop di
     pop si
     pop bx
@@ -2393,6 +2587,9 @@ ReceiveOffer    Proc near
     jmp receive_offer_leave
 
 receive_offer_ok:
+    int 3
+    call FindRelay
+;
     mov eax,es:[di].dhcp_req_ip
     mov ds:dhcp_wanted_ip,eax
 ;
@@ -2909,8 +3106,9 @@ dtDone:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-dhcp_name       DB 'DHCP', 0
+dhcp_name           DB 'DHCP', 0
 dhcp_ip_name        DB 'DHCP.IP',0
+dhcp_relay_name     DB 'DHCP.RELAY',0
 
     public init_task_dhcp
 
@@ -2931,8 +3129,11 @@ init_task_dhcp       PROC near
     mov cx,256
     xor ax,ax
     rep stosw
-    mov es:dhcp_serv_arr,-1
-    mov es:dhcp_serv_arr+2,-1
+;
+    mov di,OFFSET dhcp_relay_arr
+    mov cx,256
+    xor ax,ax
+    rep stosw
 ;
     mov ax,es
     mov ds,ax
@@ -2951,6 +3152,14 @@ init_task_dhcp       PROC near
     mov ds:dhcp_enabled,al
 
 init_dhcp_enabled_ok:
+    mov ds:dhcp_relay,0
+    mov di,OFFSET dhcp_relay_name
+    call GetValue       
+    jc init_dhcp_relay_ok
+;
+    mov ds:dhcp_relay,al
+
+init_dhcp_relay_ok:
     mov ax,cs
     mov ds,ax
     mov es,ax
