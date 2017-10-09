@@ -1396,6 +1396,54 @@ ReceiveDiscover Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       Name:           ReceiveServerOffer
+;
+;       Purpose:        Receive offset
+;
+;       Parameters:     ES:EDI  UDP data
+;                       GS      Driver selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveServerOffer Proc near
+    push ds
+    push es
+    push fs
+    push bx
+    push si
+    push di
+    push bp
+;
+    int 3
+    mov ax,SEG data
+    mov ds,ax
+    mov al,ds:dhcp_done
+    or al,al
+    jz soffer_done
+;    
+    mov al,ds:dhcp_relay
+    or al,al
+    jz soffer_done
+;
+    call FindRelay
+    jc soffer_done
+;
+    int 3
+
+soffer_done:
+    pop bp
+    pop di
+    pop si
+    pop bx
+    pop fs
+    pop es
+    pop ds
+    ret
+ReceiveServerOffer Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       Name:           ReceiveRequest
 ;
 ;       Purpose:        Receive request
@@ -2587,9 +2635,6 @@ ReceiveOffer    Proc near
     jmp receive_offer_leave
 
 receive_offer_ok:
-    int 3
-    call FindRelay
-;
     mov eax,es:[di].dhcp_req_ip
     mov ds:dhcp_wanted_ip,eax
 ;
@@ -2797,6 +2842,13 @@ receive_cl_dest_ok:
     cmp dx,67
     je receive_cl_free    
 ;
+    call FindRelay
+    jc receive_cl_local
+
+receive_cl_relay:
+    int 3
+
+receive_cl_local:
     mov eax,ds:dhcp_ident
     cmp eax,es:[di].dhcp_id
     jne receive_cl_check
