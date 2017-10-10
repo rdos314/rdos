@@ -1236,9 +1236,6 @@ discover_alloc_mac_copy:
 
 discover_relay_ok:
     push es
-    push fs
-    push si
-    push di
 ;
     mov ax,es
     mov fs,ax
@@ -1269,9 +1266,6 @@ discover_relay_copy_data:
     mov fs,ds:dhcp_driver_sel
     call SendDhcpBroadcast
 ;
-    pop di
-    pop si
-    pop fs
     pop es
     jmp discover_req_done
 
@@ -1482,7 +1476,50 @@ ReceiveRequest  Proc near
     mov al,ds:dhcp_done
     or al,al
     jz req_req_done
+;    
+    mov al,ds:dhcp_relay
+    or al,al
+    jz req_not_relay
 ;
+    call FindRelay
+    jc req_not_relay
+;
+    mov fs,ax
+    push es
+;
+    mov ax,es
+    mov fs,ax
+    mov si,di
+;
+    push fs
+    mov fs,ds:dhcp_driver_sel
+    call CreateUnboundDhcpBroadcast
+    pop fs
+;
+    push cx
+    push di
+    sub si,8
+    sub di,8
+    add cx,8
+
+req_relay_copy_data:
+    mov al,fs:[si]
+    stosb
+    inc si
+    loop req_relay_copy_data
+;
+    pop di
+    pop cx
+;
+    or es:[di].dhcp_flags,80h
+;
+    mov fs,ds:dhcp_driver_sel
+    call SendDhcpBroadcast
+;
+    pop es
+    jmp req_req_done
+
+req_not_relay:
     mov ax,es
     mov ds,ax
     mov si,di
