@@ -1134,8 +1134,180 @@ ServReqIdData   Proc near
     pop ds
     ret
 ServReqIdData   Endp
-    
+
         
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           FindOption
+;
+;       Purpose:        Find option
+;
+;       Parameters:     ES:DI    DHCP message
+;                       CX       Message size
+;                       AL       Option
+;
+;       Returns:        BX       Option position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindOption   Proc near
+    push cx
+    push di
+;
+    add di,SIZE dhcp_header
+    sub cx,SIZE dhcp_header
+
+    mov bx,OFFSET DiscReqOptTab
+
+foLoop:
+    cmp al,es:[di]
+    je foOk
+;
+    movzx bx,es:[di+1]
+    add bx,2
+    sub cx,bx
+    jbe foFail
+;
+    add di,bx
+    jmp foLoop
+
+foOk:
+    mov bx,di
+    clc
+    jmp foDone
+
+foFail:
+    stc
+
+foDone:
+    pop di
+    pop cx
+    ret
+Findoption	Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           FindOptionEnd
+;
+;       Purpose:        Find option end
+;
+;       Parameters:     ES:DI    DHCP message
+;                       CX       Message size
+;
+;       Returns:        BX       Option end position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindOptionEnd   Proc near
+    push cx
+    push di
+;
+    add di,SIZE dhcp_header
+    sub cx,SIZE dhcp_header
+
+    mov bx,OFFSET DiscReqOptTab
+
+foeLoop:
+    mov al,es:[di]
+    cmp al,-1
+    je foeOk
+;
+    movzx bx,es:[di+1]
+    add bx,2
+    sub cx,bx
+    jbe foeFail
+;
+    add di,bx
+    jmp foeLoop
+
+foeOk:
+    mov bx,di
+    clc
+    jmp foeDone
+
+foeFail:
+    stc
+
+foeDone:
+    pop di
+    pop cx
+    ret
+FindoptionEnd	Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetRequestedIpSize
+;
+;       Purpose:        Get size of requested IP address
+;
+;       Parameters:     ES:DI    DHCP message
+;                       CX       Message size
+;
+;       Returns:        AX       Additional size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetRequestedIpSize   Proc near
+    push bx
+;
+    mov al,50
+    call FindOption
+    jc grisFailed
+;
+    xor ax,ax
+    jmp grisDone
+
+grisFailed:
+    mov ax,6
+
+grisDone:
+    pop bx
+    ret
+GetRequestedIpSize	Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           UpdateRequestedIp
+;
+;       Purpose:        Update requested IP address
+;
+;       Parameters:     ES:DI    DHCP message
+;                       CX       Message size
+;
+;       Returns:        CX       New message size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateRequestedIp   Proc near
+    push eax
+    push bx
+;
+    mov al,50
+    call FindOption
+    jc urqAdd
+;
+    mov eax,ds:dhcp_ip2
+    mov es:[bx+2],eax
+    jmp urqDone
+
+urqAdd:
+    call FindOptionEnd
+    jc urqDone
+;
+    mov eax,ds:dhcp_ip2
+    mov byte ptr es:[bx],50
+    mov byte ptr es:[bx+1],4
+    mov es:[bx+2],eax
+    mov byte ptr es:[bx+6],-1
+    add cx,6
+
+urqDone:
+    pop bx
+    pop eax
+    ret
+UpdateRequestedIp	Endp
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;       Name:           ReceiveDiscover
@@ -1165,6 +1337,7 @@ ReceiveDiscover Proc near
     push es
     push fs
     push bx
+    push dx
     push si
     push di
     push bp
@@ -1236,7 +1409,16 @@ discover_alloc_mac_copy:
 
 discover_relay_ok:
     push es
+    push cx
 ;
+    mov eax,ds:dhcp_ip2
+    or eax,eax
+    jz discover_req_ip_size_ok
+;
+    call GetRequestedIpSize
+    add cx,ax
+
+discover_req_ip_size_ok:
     mov ax,es
     mov fs,ax
     mov si,di
@@ -1245,6 +1427,7 @@ discover_relay_ok:
     mov fs,ds:dhcp_driver_sel
     call CreateUnboundDhcpBroadcast
     pop fs
+    pop cx
 ;
     push cx
     push di
@@ -1261,6 +1444,13 @@ discover_relay_copy_data:
     pop di
     pop cx
 ;
+    mov eax,ds:dhcp_ip2
+    or eax,eax
+    jz discover_update_req_ip_ok
+;
+    call UpdateRequestedIp
+
+discover_update_req_ip_ok:
     or es:[di].dhcp_flags,80h
 ;
     mov fs,ds:dhcp_driver_sel
@@ -1379,6 +1569,7 @@ discover_req_done:
     pop bp
     pop di
     pop si
+    pop dx
     pop bx
     pop fs    
     pop es
