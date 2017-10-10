@@ -1628,7 +1628,112 @@ req_req_done:
     FreeMem
     ret
 ReceiveRequest Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           ReceiveRelayAck
+;
+;       Purpose:        Receive relay ACK
+;
+;       Parameters:     ES:EDI  UDP data
+;                       AX      Relay data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+ReceiveRelayAck Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    push bx
+    push edx
+    push si
+    push di
+;
+    mov gs,ax
+    mov fs,gs:dre_driver
+    mov edx,es:[di].dhcp_req_ip
+    mov gs:dre_ip,edx
+;
+    mov ax,es
+    mov ds,ax
+    mov si,di
+;
+    call CreateUnboundDhcpBroadcast
+;
+    push cx
+    push di
+    sub si,8
+    sub di,8
+    add cx,8
+    rep movsb
+    pop di
+    pop cx
+;
+    or es:[di].dhcp_flags,80h
+    call SendDhcpBroadcast
+;
+    pop di
+    pop si
+    pop edx
+    pop bx
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+ReceiveRelayAck Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           ReceiveRelayNak
+;
+;       Purpose:        Receive relay NAK
+;
+;       Parameters:     ES:EDI  UDP data
+;                       AX      Relay data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveRelayNak Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    push bx
+    push si
+    push di
+;
+    mov gs,ax
+    mov fs,gs:dre_driver
+;
+    mov ax,es
+    mov ds,ax
+    mov si,di
+;
+    call CreateUnboundDhcpBroadcast
+;
+    push cx
+    push di
+    sub si,8
+    sub di,8
+    add cx,8
+    rep movsb
+    pop di
+    pop cx
+;
+    or es:[di].dhcp_flags,80h
+    call SendDhcpBroadcast
+;
+    pop di
+    pop si
+    pop bx
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+ReceiveRelayNak Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2844,8 +2949,8 @@ rr01    DW OFFSET ReceiveError
 rr02    DW OFFSET ReceiveRelayOffer
 rr03    DW OFFSET ReceiveError
 rr04    DW OFFSET ReceiveError
-rr05    DW OFFSET ReceiveError
-rr06    DW OFFSET ReceiveError
+rr05    DW OFFSET ReceiveRelayAck
+rr06    DW OFFSET ReceiveRelayNak
 rr07    DW OFFSET ReceiveError
 rr08    DW OFFSET ReceiveError
 
