@@ -3309,6 +3309,56 @@ dtDone:
     retf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetDhcpEntry
+;
+;           DESCRIPTION:    Get DHCP entry
+;
+;           PARAMETERS:     AX	        Entry #
+;
+;           RETURNS:        EDX		IP
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_dhcp_entry_name    DB 'Get DHCP Entry', 0
+
+get_dhcp_entry Proc far
+    push ds
+    push ax
+    push bx
+;
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,OFFSET dhcp_relay_arr
+    or ah,ah
+    jnz gdeFail
+;
+    add ax,ax
+    add bx,ax
+    mov ax,ds:[bx]
+    or ax,ax
+    jz gdeFail
+;
+    mov ds,ax
+    mov edx,ds:dre_ip
+    or edx,edx
+    jz gdeFail
+;
+    clc
+    jmp gdeDone
+
+gdeFail:
+    stc
+
+gdeDone:
+    pop bx
+    pop ax
+    pop ds
+    retf32
+get_dhcp_entry Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           init_task_dhcp
@@ -3374,6 +3424,12 @@ init_dhcp_relay_ok:
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET get_dhcp_entry
+    mov edi,OFFSET get_dhcp_entry_name
+    xor dx,dx
+    mov ax,get_dhcp_entry_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET add_dhcp_option
     mov edi,OFFSET add_dhcp_option_name

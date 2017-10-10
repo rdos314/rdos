@@ -40,6 +40,7 @@
 #include "help.h"
 #include "time.h"
 #include "date.h"
+#include "dhcp.h"
 #include "cls.h"
 #include "copy.h"
 #include "newsess.h"
@@ -125,6 +126,7 @@ static TCommandFactory *date;
 static TCommandFactory *debug;
 static TCommandFactory *del;
 static TCommandFactory *dev;
+static TCommandFactory *dhcp;
 static TCommandFactory *dir;
 static TCommandFactory *echo;
 static TCommandFactory *erase;
@@ -235,6 +237,7 @@ TSession::TSession()
         fd2file = new TFloppyToFileFactory;
         erase = new TEraseFactory;
         echo = new TEchoFactory;
+        dhcp = new TDhcpFactory;
         dir = new TDirFactory;
         dev = new TDeviceFactory;
         del = new TDelFactory;
@@ -347,6 +350,7 @@ TSession::~TSession()
         delete exitcmd;
         delete erase;
         delete echo;
+        delete dhcp;
         delete dir;
         delete del;
         delete date;

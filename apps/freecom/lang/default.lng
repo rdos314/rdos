@@ -1910,3 +1910,7 @@ CPU temperature is %d.%01d degrees
 :TEXT_NO_CPU_TEMP
 CPU temperature not supported
 .
+
+:TEXT_CMDHELP_DHCP
+Show DHCP entries
+.

@@ -810,6 +810,8 @@
 #define usergate_set_serial_line 0x0000027A
 #define usergate_reset_serial_line 0x0000027B
 
+#define usergate_get_dhcp_entry 0x0000027C
+
 
 
 #ifdef __FLAT__
@@ -1625,6 +1627,8 @@
 #define CallGate_set_serial_line 0x55 0x67 0x9a 122 2 0 0 3 0 0x5d
 #define CallGate_reset_serial_line 0x55 0x67 0x9a 123 2 0 0 3 0 0x5d
 
+#define CallGate_get_dhcp_entry 0x55 0x67 0x9a 124 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2437,5 +2441,7 @@
 
 #define CallGate_set_serial_line 0x3e 0x67 0x9a 122 2 0 0 3 0
 #define CallGate_reset_serial_line 0x3e 0x67 0x9a 123 2 0 0 3 0
+
+#define CallGate_get_dhcp_entry 0x3e 0x67 0x9a 124 2 0 0 3 0
 
 #endif

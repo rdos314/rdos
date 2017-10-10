@@ -1713,6 +1713,14 @@ GetIpMask	MACRO
 	UserGate get_ip_mask_nr
 						ENDM
 
+
+; IN  AX                Entry #
+; OUT EDX		Entry IP address
+GetDhcpEntry	MACRO
+	UserGate get_dhcp_entry_nr
+						ENDM
+
+
 ; IN  ES:(E)DI		Host name
 ; OUT EDX			IP address
 NameToIP		MACRO

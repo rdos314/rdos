@@ -810,4 +810,6 @@ get_thread_handle_nr            = 633
 set_serial_line_nr              = 634
 reset_serial_line_nr            = 635
 
+get_dhcp_entry_nr               = 636
+
 usergate_entries                            = 650

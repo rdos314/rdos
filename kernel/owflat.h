@@ -2130,6 +2130,12 @@
     CallGate_add_wait_for_signal  \
     parm [ebx] [eax] [ecx];
 
+#pragma aux RdosGetDhcpEntry = \
+    CallGate_get_dhcp_entry  \
+    ValidateEdx  \
+    parm [eax] \
+    value [edx];
+
 #pragma aux RdosGetIp = \
     CallGate_get_ip_address  \
     value [edx];
