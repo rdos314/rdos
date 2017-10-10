@@ -67,6 +67,7 @@ dhcp_serv_data  ENDS
 
 dhcp_relay_entry	STRUC
 
+dre_driver      DW ?
 dre_ip          DD ?
 dre_hw_type     DB ?
 dre_hw_len      DB ?
@@ -1215,6 +1216,7 @@ discover_alloc_mac_do:
     mov ds:[bx],ax
 ;
     mov fs:dre_ip,0
+    mov fs:dre_driver,gs
     mov al,es:[di].dhcp_hw_type
     mov fs:dre_hw_type,al
 ;
@@ -1242,12 +1244,10 @@ discover_relay_ok:
     mov fs,ax
     mov si,di
 ;
-    push cx
     push fs
     mov fs,ds:dhcp_driver_sel
     call CreateUnboundDhcpBroadcast
     pop fs
-    pop cx
 ;
     push cx
     push di
@@ -1401,7 +1401,7 @@ ReceiveDiscover Endp
 ;       Purpose:        Receive relay offer
 ;
 ;       Parameters:     ES:EDI  UDP data
-;                       GS      Driver selector
+;                       AX      Relay data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1409,32 +1409,36 @@ ReceiveRelayOffer Proc near
     push ds
     push es
     push fs
+    push gs
     push bx
     push si
     push di
-    push bp
 ;
-    int 3
-    mov ax,SEG data
+    mov gs,ax
+    mov fs,gs:dre_driver
+;
+    mov ax,es
     mov ds,ax
-    mov al,ds:dhcp_done
-    or al,al
-    jz relay_offer_done
-;    
-    mov al,ds:dhcp_relay
-    or al,al
-    jz relay_offer_done
+    mov si,di
 ;
-    call FindRelay
-    jc relay_offer_done
+    call CreateUnboundDhcpBroadcast
 ;
-    int 3
-
-relay_offer_done:
-    pop bp
+    push cx
+    push di
+    sub si,8
+    sub di,8
+    add cx,8
+    rep movsb
+    pop di
+    pop cx
+;
+    or es:[di].dhcp_flags,80h
+    call SendDhcpBroadcast
+;
     pop di
     pop si
     pop bx
+    pop gs
     pop fs
     pop es
     pop ds
