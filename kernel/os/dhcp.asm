@@ -1757,6 +1757,10 @@ ReceiveRequest  Proc near
 ;
     mov fs,ax
     push es
+    push cx
+;
+    call GetLeaseSize
+    add cx,ax
 ;
     mov ax,es
     mov fs,ax
@@ -1766,6 +1770,7 @@ ReceiveRequest  Proc near
     mov fs,ds:dhcp_driver_sel
     call CreateUnboundDhcpBroadcast
     pop fs
+    pop cx
 ;
     push cx
     push di
@@ -1782,6 +1787,7 @@ req_relay_copy_data:
     pop di
     pop cx
 ;
+    call UpdateLease
     or es:[di].dhcp_flags,80h
 ;
     mov fs,ds:dhcp_driver_sel
