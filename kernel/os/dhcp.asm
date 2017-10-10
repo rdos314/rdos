@@ -1307,6 +1307,81 @@ urqDone:
     pop eax
     ret
 UpdateRequestedIp	Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetLeaseSize
+;
+;       Purpose:        Get size of lease time
+;
+;       Parameters:     ES:DI    DHCP message
+;                       CX       Message size
+;
+;       Returns:        AX       Additional size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetLeaseSize   Proc near
+    push bx
+;
+    mov al,51
+    call FindOption
+    jc glsFailed
+;
+    xor ax,ax
+    jmp glsDone
+
+glsFailed:
+    mov ax,6
+
+glsDone:
+    pop bx
+    ret
+GetLeaseSize	Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           UpdateLease
+;
+;       Purpose:        Update lease time
+;
+;       Parameters:     ES:DI    DHCP message
+;                       CX       Message size
+;
+;       Returns:        CX       New message size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateLease   Proc near
+    push eax
+    push bx
+;
+    mov al,51
+    call FindOption
+    jc ulAdd
+;
+    mov eax,DEFAULT_LEASE
+    Reverse
+    mov es:[bx+2],eax
+    jmp ulDone
+
+ulAdd:
+    call FindOptionEnd
+    jc ulDone
+;
+    mov eax,DEFAULT_LEASE
+    Reverse
+    mov byte ptr es:[bx],51
+    mov byte ptr es:[bx+1],4
+    mov es:[bx+2],eax
+    mov byte ptr es:[bx+6],-1
+    add cx,6
+
+ulDone:
+    pop bx
+    pop eax
+    ret
+UpdateLease	Endp
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1419,6 +1494,9 @@ discover_relay_ok:
     add cx,ax
 
 discover_req_ip_size_ok:
+    call GetLeaseSize
+    add cx,ax
+;
     mov ax,es
     mov fs,ax
     mov si,di
@@ -1451,6 +1529,8 @@ discover_relay_copy_data:
     call UpdateRequestedIp
 
 discover_update_req_ip_ok:
+    call UpdateLease
+;
     or es:[di].dhcp_flags,80h
 ;
     mov fs,ds:dhcp_driver_sel
