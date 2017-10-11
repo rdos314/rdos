@@ -67,6 +67,7 @@ dhcp_serv_data  ENDS
 
 dhcp_relay_entry	STRUC
 
+dre_last_update DD ?,?
 dre_driver      DW ?
 dre_ip          DD ?
 dre_hw_type     DB ?
@@ -92,7 +93,6 @@ dhcp_serv_arr       DW 256 DUP(?)
 dhcp_relay_arr      DW 256 DUP(?)
 
 dhcp_enabled    DB ?
-dhcp_relay      DB ?
 dhcp_done       DB ?
 dhcp_rebind     DB ?
 
@@ -1423,7 +1423,7 @@ ReceiveDiscover Proc near
     or al,al
     jz discover_req_done
 ;    
-    mov al,ds:dhcp_relay
+    mov al,ds:dhcp_enabled
     or al,al
     jz discover_not_relay
 ;
@@ -1463,6 +1463,8 @@ discover_alloc_mac_do:
     pop es
     mov ds:[bx],ax
 ;
+    mov fs:dre_last_update,0
+    mov fs:dre_last_update+4,0
     mov fs:dre_ip,0
     mov fs:dre_driver,gs
     mov al,es:[di].dhcp_hw_type
@@ -1748,7 +1750,7 @@ ReceiveRequest  Proc near
     or al,al
     jz req_req_done
 ;    
-    mov al,ds:dhcp_relay
+    mov al,ds:dhcp_enabled
     or al,al
     jz req_not_relay
 ;
@@ -1931,6 +1933,9 @@ ReceiveRelayAck Proc near
     mov fs,gs:dre_driver
     mov edx,es:[di].dhcp_req_ip
     mov gs:dre_ip,edx
+    GetSystemTime
+    mov gs:dre_last_update,eax
+    mov gs:dre_last_update+4,edx
 ;
     mov ax,es
     mov ds,ax
@@ -3602,8 +3607,6 @@ get_dhcp_entry_name    DB 'Get DHCP Entry', 0
 
 get_dhcp_entry Proc far
     push ds
-    push ax
-    push bx
 ;
     mov bx,SEG data
     mov ds,bx
@@ -3618,8 +3621,10 @@ get_dhcp_entry Proc far
     jz gdeFail
 ;
     mov ds,ax
-    mov edx,ds:dre_ip
-    or edx,edx
+    mov eax,ds:dre_last_update
+    mov edx,ds:dre_last_update+4
+    mov ebx,ds:dre_ip
+    or ebx,ebx
     jz gdeFail
 ;
     clc
@@ -3629,8 +3634,6 @@ gdeFail:
     stc
 
 gdeDone:
-    pop bx
-    pop ax
     pop ds
     retf32
 get_dhcp_entry Endp    
@@ -3646,7 +3649,6 @@ get_dhcp_entry Endp
 
 dhcp_name           DB 'DHCP', 0
 dhcp_ip_name        DB 'DHCP.IP',0
-dhcp_relay_name     DB 'DHCP.RELAY',0
 
     public init_task_dhcp
 
@@ -3690,14 +3692,6 @@ init_task_dhcp       PROC near
     mov ds:dhcp_enabled,al
 
 init_dhcp_enabled_ok:
-    mov ds:dhcp_relay,0
-    mov di,OFFSET dhcp_relay_name
-    call GetValue       
-    jc init_dhcp_relay_ok
-;
-    mov ds:dhcp_relay,al
-
-init_dhcp_relay_ok:
     mov ax,cs
     mov ds,ax
     mov es,ax

@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include "rdos.h"
 
+#include "datetime.h"
 #include "cmdhelp.h"
 #include "lang.h"
 #include "dhcp.h"
@@ -103,14 +104,17 @@ int TDhcpCommand::Execute(char *param)
     long ip;
     unsigned long Temp;
     unsigned long n0, n1, n2, n3;
+    unsigned long msb, lsb;
     char str[40];
 
     for (i = 0; i < 256; i++)
     {
-        ip = RdosGetDhcpEntry(i);
+        ip = RdosGetDhcpEntry(i, &msb, &lsb);
 
         if (ip)
         {
+            TDateTime time(msb, lsb);
+
             Temp = (unsigned long)ip;
 	    n3 = Temp & 0xFF;
             Temp = Temp >> 8;
@@ -119,7 +123,7 @@ int TDhcpCommand::Execute(char *param)
             n1 = Temp & 0xFF;
             Temp = Temp >> 8;
             n0 = Temp & 0xFF;
-            sprintf(str, "%d.%d.%d.%d\r\n", n3, n2, n1, n0);
+            sprintf(str, "%d.%d.%d.%d, %04d-%02d-%02d %02d.%02d\r\n", n3, n2, n1, n0, time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin());
             Write(str);
         }
     }

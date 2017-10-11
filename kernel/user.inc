@@ -1715,7 +1715,8 @@ GetIpMask	MACRO
 
 
 ; IN  AX                Entry #
-; OUT EDX		Entry IP address
+; OUT EBX		Entry IP address
+; OUT EDX:EAX           Last update
 GetDhcpEntry	MACRO
 	UserGate get_dhcp_entry_nr
 						ENDM

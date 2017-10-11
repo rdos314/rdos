@@ -2132,9 +2132,16 @@
 
 #pragma aux RdosGetDhcpEntry = \
     CallGate_get_dhcp_entry  \
-    ValidateEdx  \
-    parm [eax] \
-    value [edx];
+    "jnc save" \
+    "xor eax,eax" \
+    "xor edx,edx" \
+    "xor ebx,ebx" \
+    "save:" \
+    "mov [esi],edx" \
+    "mov [edi],eax" \
+    parm [eax] [esi] [edi] \
+    value [ebx] \
+    modify [edx eax];
 
 #pragma aux RdosGetIp = \
     CallGate_get_ip_address  \

@@ -602,7 +602,7 @@ void RDOSAPI RdosAddWaitForSignal(int Handle, int SignalHandle, int ID);
 
 long RDOSAPI RdosGetIp();
 long RDOSAPI RdosGetGateway();
-long RDOSAPI RdosGetDhcpEntry(int Index);
+long RDOSAPI RdosGetDhcpEntry(int Index, unsigned long *MsbTime, unsigned long *LsbTime);
 int RDOSAPI RdosNameToIp(const char *HostName);
 int RDOSAPI RdosIpToName(int Ip, char *HostName, int MaxSize);
 
