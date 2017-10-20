@@ -40,8 +40,12 @@ data    SEGMENT byte public 'DATA'
 cd_thread        DW ?
 cd_controller    DW ?
 cd_control_pipe  DW ?
+cd_control_wait  DW ?
 cd_device        DB ?
 cd_active        DB ?
+
+cd_setup         usb_setup_data <>
+cd_data          DB 8 DUP(?)
 
 data    ENDS
 
@@ -84,13 +88,74 @@ HandleCan       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPipes   Proc near
+    mov bx,ds:cd_control_wait
+    or bx,bx
+    jz opCreateWait
+;
+    CloseWait
+
+opCreateWait:
+    CreateWait
+    mov ds:cd_control_wait,bx
+;
     mov bx,ds:cd_controller
     movzx ax,ds:cd_device
     xor dl,dl
     OpenUsbPipe
     mov ds:cd_control_pipe,bx
+;
+    mov ax,ds:cd_control_pipe
+    mov bx,ds:cd_control_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
     ret
 OpenPipes  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetCanVersion
+;
+;       DESCRIPTION:    Get software version
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetCanVersion   Proc near
+    mov bx,ds:cd_control_pipe
+    LockUsbPipe
+;
+    mov cx,8
+    mov di,OFFSET cd_setup
+    mov es:[di].usd_type,0C1h
+    mov es:[di].usd_req,92h
+    mov es:[di].usd_value,0
+    mov es:[di].usd_index,0
+    mov es:[di].usd_len,6
+    WriteUsbControl
+;
+    mov cx,6
+    mov di,OFFSET cd_data
+    ReqUsbData
+;
+    WriteUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:cd_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:cd_control_pipe
+    WasUsbTransactionOk
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    mov di,OFFSET cd_data
+    ret
+GetCanVersion  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -106,9 +171,9 @@ usbcan_thread_name DB 'USB Can', 0
 usbcan_thread:
     mov ax,SEG data
     mov ds,ax
+    mov es,ax
     GetThread
     mov ds:cd_thread,ax
-    int 3
 
 utLoop:
     mov al,ds:cd_active
@@ -119,7 +184,9 @@ utLoop:
     or ax,ax
     jnz utPipeOk
 ;
+    int 3
     call OpenPipes
+    call GetCanVersion
 
 utPipeOk:
     call HandleCan
