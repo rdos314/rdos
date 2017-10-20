@@ -2479,11 +2479,26 @@ config_usb_device       Proc near
     popf
     jc cudFail
 ;
+    mov cx,16
+    xor si,si
     mov es,fs:usbp_function_sel
-    movzx si,dl
-    dec si
-    add si,si
-    mov gs,fs:[si].usbp_config_sel
+
+cudFindConfigLoop:
+    mov ax,fs:[si].usbp_config_sel
+    or ax,ax
+    jz cudFindConfigNext
+;
+    mov gs,ax
+    cmp dl,gs:ucd_config_id
+    je cudFindConfigOk
+
+cudFindConfigNext:
+    add si,2
+    loop cudFindConfigLoop
+;
+    jmp cudFail
+
+cudFindConfigOk:
     xor di,di
     movzx cx,gs:ucd_len
     add di,cx
