@@ -464,15 +464,17 @@ void TVp::UpdateVp(int diff)
                 RdosToggleSerialLine(1, 6);   // heat
                                                
         }
-                
-        if (FCirc == 0)
-            if ((diostat & 0x10) != 0)
-                RdosToggleSerialLine(1, 4);
 
-        if (FCirc > 25)
-            if ((diostat & 0x10) == 0)
-                RdosToggleSerialLine(1, 4);
-                
+        if (FTankTemp > 300)
+        {                
+            if (FCirc == 0)
+                if ((diostat & 0x10) != 0)
+                    RdosToggleSerialLine(1, 4);
+
+            if (FCirc > 25)
+                if ((diostat & 0x10) == 0)
+                    RdosToggleSerialLine(1, 4);
+        }
     }
 
     FSection.Leave();
