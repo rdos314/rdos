@@ -37,7 +37,11 @@ INCLUDE ..\os\protseg.def
 
 data    SEGMENT byte public 'DATA'
 
-temp   DB ?
+cd_thread        DW ?
+cd_controller    DW ?
+cd_control_pipe  DW ?
+cd_device        DB ?
+cd_active        DB ?
 
 data    ENDS
 
@@ -53,6 +57,123 @@ IFDEF __WASM__
 ELSE
     .386p
 ENDIF
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HandleCan
+;
+;       DESCRIPTION:    Handle CAN 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleCan	Proc near
+
+    mov ax,20
+    WaitMilliSec
+    ret
+HandleCan       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           OpenPipes
+;
+;       DESCRIPTION:    Open pipes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenPipes   Proc near
+    mov bx,ds:cd_controller
+    movzx ax,ds:cd_device
+    xor dl,dl
+    OpenUsbPipe
+    mov ds:cd_control_pipe,bx
+    ret
+OpenPipes  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           USB CAN thread
+;
+;       DESCRIPTION:    USB can thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+usbcan_thread_name DB 'USB Can', 0
+
+usbcan_thread:
+    mov ax,SEG data
+    mov ds,ax
+    GetThread
+    mov ds:cd_thread,ax
+    int 3
+
+utLoop:
+    mov al,ds:cd_active
+    or al,al
+    jz utEnd
+;
+    mov ax,ds:cd_control_pipe
+    or ax,ax
+    jnz utPipeOk
+;
+    call OpenPipes
+
+utPipeOk:
+    call HandleCan
+    jmp utLoop
+
+utEnd:
+    mov ds:cd_thread,0
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddDevice
+;
+;       DESCRIPTION:    Add device
+;
+;       PARAMETERS:     AL      Device address
+;                       BX      Controller id
+;                       ES:DI   Interface descriptor + endpoints
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddDevice Proc near
+    push ds
+    push es
+    pushad
+;
+    mov dx,SEG data
+    mov ds,dx
+    mov ds:cd_device,al
+    mov ds:cd_controller,bx
+    mov ds:cd_active,1
+;
+    mov dx,ds:cd_thread
+    or dx,dx
+    jnz adThreadStarted
+;
+    mov ds:cd_thread,-1    
+    mov dx,cs
+    mov ds,dx
+    mov es,dx
+    mov di,OFFSET usbcan_thread_name
+    mov si,OFFSET usbcan_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+        
+adThreadStarted:
+    popad
+    pop es
+    pop ds      
+    ret
+AddDevice Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -104,7 +225,6 @@ uaNext:
     jmp uaDone    
 
 uaFound:
-    int 3
     xor dl,dl
     mov cx,1000h
     xor di,di
@@ -119,6 +239,7 @@ uaFound:
     ConfigUsbDevice
     jc uaDone
 ;
+    call AddDevice
     jmp uaDone
     
 uaDone:
@@ -146,6 +267,18 @@ usb_detach  Proc far
     push es
     pushad
 ;    
+    mov dx,SEG data
+    mov ds,dx
+    cmp bx,ds:cd_controller
+    jne udDone
+;
+    cmp al,ds:cd_device
+    jne udDone
+;
+    mov ds:cd_controller,0
+    mov ds:cd_device,0
+    mov ds:cd_active,0
+    mov ds:cd_control_pipe,0
 
 udDone:
     popad
@@ -167,6 +300,11 @@ usb_detach  Endp
 init    Proc far
     mov bx,SEG data
     mov es,bx
+    mov es:cd_thread,0
+    mov es:cd_controller,0
+    mov es:cd_device,0
+    mov es:cd_active,0
+    mov ds:cd_control_pipe,0
 ;       
     mov ax,cs
     mov ds,ax
