@@ -123,18 +123,32 @@ TLoaderThread::~TLoaderThread()
 *##########################################################################*/
 void TLoaderThread::StartLoad(TImageControl *img)
 {
-    while (img->FLoadActive)
+    TImageControl *curr;
+
+    FSection.Enter();
+
+    while (FCurrImg)
     {
-        img->FAborted = TRUE;
-        RdosWaitMilli(25);
+        curr = FCurrImg;
+
+        FSection.Leave();
+
+        while (curr->FLoadActive)
+        {
+            curr->FAborted = TRUE;
+            RdosWaitMilli(25);
+        }
+
+        FSection.Enter();
+
     }
 
     img->FAborted = FALSE;
-
     img->FLoading++;    
-    FSection.Enter();
     FCurrImg = img;
+
     FSection.Leave();
+
     FSignal.Signal();
 }
 
@@ -147,6 +161,8 @@ void TLoaderThread::StartLoad(TImageControl *img)
 *##########################################################################*/
 void TLoaderThread::Execute()
 {
+    TImageControl *curr;
+
     while (FInstalled)
     {
         FSignal.WaitForever();
@@ -155,9 +171,16 @@ void TLoaderThread::Execute()
 
         if (FCurrImg)
         {
-            FCurrImg->Load(MAX_IMAGE_COUNT);
-            FCurrImg->FLoading--;
-            FCurrImg = 0;
+            curr = FCurrImg;
+            FSection.Leave();
+            
+            curr->Load(MAX_IMAGE_COUNT);
+            curr->FLoading--;
+
+            FSection.Enter();
+
+            if (curr == FCurrImg)
+                FCurrImg = 0;
         }
 
         FSection.Leave();
@@ -237,6 +260,7 @@ TImageControl::~TImageControl()
 {
     int i;
 
+    FDeleted = TRUE;
     FAborted = TRUE;
 
     while (FLoading)
@@ -279,6 +303,7 @@ void TImageControl::Init()
         FBackB = 0;
 
         FAborted = FALSE;
+        FDeleted = FALSE;
         FLoadActive = FALSE;
 
         FKey = 0;
@@ -677,7 +702,7 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
             
                 if (FImgArr[FCount])
                     delete FImgArr[FCount];
-            
+
                 FImgArr[FCount] = bitmap;
                 FDelayArr[FCount] = StdDelay;
                 FCount++;
@@ -775,7 +800,7 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
             
                     if (FImgArr[FCount])
                         delete FImgArr[FCount];
-            
+
                     FImgArr[FCount] = bitmap;
                     FDelayArr[FCount] = delay;
                     FCount++;
@@ -818,29 +843,32 @@ void TImageControl::Load(int MaxCount)
             RdosWaitMilli(25);
         }
 
-        FAborted = FALSE;
-
-        FLoading++;
-        FCount = 0;
-
-        FLoadIni->GotoSection(FLoadSection.GetData());
-
-        if (FLoadIni->ReadVar("Path", SeqPath, 255))
+        if (!FDeleted)
         {
-            if (!FAborted)
-                LoadOne(SeqPath, MaxCount);
-        }
-        else
-        {
-            for (i = 0; i < 256 && !FAborted; i++)
+            FAborted = FALSE;
+
+            FLoading++;
+            FCount = 0;
+
+            FLoadIni->GotoSection(FLoadSection.GetData());
+
+            if (FLoadIni->ReadVar("Path", SeqPath, 255))
             {
-                sprintf(str, "Path%i", i);
-
-                if (FLoadIni->ReadVar(str, SeqPath, 255))
+                if (!FAborted)
                     LoadOne(SeqPath, MaxCount);
+            } 
+            else
+            {
+                for (i = 0; i < 256 && !FAborted; i++)
+                {
+                    sprintf(str, "Path%i", i);
+
+                    if (FLoadIni->ReadVar(str, SeqPath, 255))
+                        LoadOne(SeqPath, MaxCount);
+                }
             }
+            FLoading--;
         }
-        FLoading--;
     }
 }
 
@@ -880,6 +908,9 @@ void TImageControl::LoadImage(const char *FileName)
 void TImageControl::CreateImage(int bpp)
 {
     TBitmapGraphicDevice *bitmap = new TBitmapGraphicDevice(bpp, GetWidth(), GetHeight());
+
+    if (FImgArr[0])
+        delete FImgArr[0];
 
     FImgArr[0] = bitmap;
     FCount = 1;

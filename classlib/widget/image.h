@@ -93,6 +93,7 @@ protected:
     TLoaderThread *FLoader;
     int FLoading;
     int FAborted;
+    int FDeleted;
     int FLoadActive;
 
     TBitmapGraphicDevice *FImgArr[MAX_IMAGE_COUNT];
