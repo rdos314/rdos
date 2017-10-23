@@ -473,11 +473,11 @@ cslShiftLoop:
     mov cl,bl
     mov ebp,es:[esi]
     shl ebp,cl
-    pop cx
+    pop ecx
     or eax,ebp
     mov es:[edi],eax
 ;        
-    push cx
+    push ecx
     mov cl,32
     sub cl,bl
     mov eax,es:[esi]
@@ -514,6 +514,100 @@ cslDone:
     popad
     ret
 CopyShiftLeft     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CopyShiftRight
+;
+;           DESCRIPTION:    Make a right shifted copy
+;
+;           PARAMETERS:     ES:ESI      Source data
+;                           ECX         Source buffer count
+;                           ES:EDI      Dest data
+;                           EDX         Dest buffer count
+;                           EBX         Shift count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyShiftRight     PROC near
+    pushad
+;    
+    mov eax,ebx
+    shr eax,5
+
+csrSkipLoop:    
+    or eax,eax
+    jz csrShiftIn
+;
+    add esi,4
+    sub ecx,1
+    jz csrDone
+;
+    sub ebx,32
+    sub eax,1
+    jnz csrSkipLoop
+
+csrShiftIn:
+    mov ebp,edi
+    mov eax,ecx
+    dec eax
+    shl eax,2    
+    add esi,eax
+    add edi,eax
+    xor eax,eax
+
+csrShiftLoop:    
+    or bl,bl
+    jz csrShiftZero
+;    
+    push ebp
+    push ecx
+    mov cl,bl
+    mov ebp,es:[esi]
+    shr ebp,cl
+    pop ecx
+    or eax,ebp
+    mov es:[edi],eax
+;        
+    push ecx
+    mov cl,32
+    sub cl,bl
+    mov eax,es:[esi]
+    shl eax,cl
+    pop ecx
+    pop ebp
+    jmp csrShiftNext
+
+csrShiftZero:
+    mov eax,es:[esi]
+    mov es:[edi],eax
+    xor eax,eax
+    
+csrShiftNext:
+    sub esi,4
+    sub edi,4
+    add ebp,4
+    sub edx,1
+    jz csrDone
+;
+    sub ecx,1
+    jnz csrShiftLoop    
+;
+    xor eax,eax
+
+csrEndLoop:
+    add ebp,4
+    sub edx,1
+    jz csrDone
+;
+    mov es:[ebp],eax        
+    jmp csrEndLoop        
+
+csrDone:   
+    popad
+    ret
+CopyShiftRight     ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -996,7 +1090,7 @@ lbn64SignOk:
     jz lbn64Small
 
 lbn64Big:
-    mov cx,2
+    mov ecx,2
     call RecreateBuf
 ;
     mov edi,ds:[ebx].bn_data
@@ -1010,7 +1104,7 @@ lbn64Small:
     or eax,eax
     jz ln64Zero
 ;    
-    mov cx,1
+    mov ecx,1
     call RecreateBuf
 ;
     mov edi,ds:[ebx].bn_data
@@ -1019,7 +1113,7 @@ lbn64Small:
     jmp lbn64Done
 
 ln64Zero:
-    xor cx,cx
+    xor ecx,ecx
     call RecreateBuf
 
 lbn64Done: 
@@ -1552,7 +1646,7 @@ mul_bignum     PROC far
     add eax,[ebp].mul_in_count2
     mov [ebp].mul_out_count,eax
 ;
-    mov cx,ax
+    mov ecx,eax
     call RecreateBuf
 ;
     mov ax,ds:[esi].bn_flags
@@ -3160,11 +3254,12 @@ factor_pow2_bignum     PROC far
     or ecx,ecx
     jz fp2Zero
 ;
-    mov edx,ecx
-    call CopyBuf
+    call RecreateBuf
 ;
-    mov ecx,ds:[ebx].bn_count
-    mov esi,ds:[ebx].bn_data
+    mov edx,ds:[ebx].bn_count
+    mov edi,ds:[ebx].bn_data
+    mov ebx,1
+    call CopyShiftRight
 
 fp2Zero:
     xor ecx,ecx
