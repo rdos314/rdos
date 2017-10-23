@@ -812,4 +812,7 @@ reset_serial_line_nr            = 635
 
 get_dhcp_entry_nr               = 636
 
+create_random_odd_bignum_nr     = 637
+factor_pow2_bignum_nr           = 638
+
 usergate_entries                            = 650

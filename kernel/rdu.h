@@ -812,6 +812,9 @@
 
 #define usergate_get_dhcp_entry 0x0000027C
 
+#define usergate_create_random_odd_bignum 0x0000027D
+#define usergate_factor_pow2_bignum 0x0000027E
+
 
 
 #ifdef __FLAT__
@@ -1629,6 +1632,9 @@
 
 #define CallGate_get_dhcp_entry 0x55 0x67 0x9a 124 2 0 0 3 0 0x5d
 
+#define CallGate_create_random_odd_bignum 0x55 0x67 0x9a 125 2 0 0 3 0 0x5d
+#define CallGate_factor_pow2_bignum 0x55 0x67 0x9a 126 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2443,5 +2449,8 @@
 #define CallGate_reset_serial_line 0x3e 0x67 0x9a 123 2 0 0 3 0
 
 #define CallGate_get_dhcp_entry 0x3e 0x67 0x9a 124 2 0 0 3 0
+
+#define CallGate_create_random_odd_bignum 0x3e 0x67 0x9a 125 2 0 0 3 0
+#define CallGate_factor_pow2_bignum 0x3e 0x67 0x9a 126 2 0 0 3 0
 
 #endif

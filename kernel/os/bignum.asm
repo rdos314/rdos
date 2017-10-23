@@ -43,7 +43,7 @@ bignum_handle_seg          STRUC
 bn_base         handle_header <>
 
 bn_data         DD ?
-bn_count        DW ?
+bn_count        DD ?
 bn_flags        DW ?
 
 bignum_handle_seg          ENDS
@@ -110,36 +110,36 @@ code    SEGMENT byte public use32 'CODE'
 ;           DESCRIPTION:    Recreate buffer
 ;
 ;           PARAMETERS:     DS:EBX      Handle data
-;                           CX          New entry count
+;                           ECX         New entry count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RecreateBuf     PROC near
-    cmp cx,ds:[ebx].bn_count
+    cmp ecx,ds:[ebx].bn_count
     je rbDone
 ;
     push eax
     push ecx
     push edx
 ;    
-    mov ax,ds:[ebx].bn_count
-    or ax,ax
+    mov eax,ds:[ebx].bn_count
+    or eax,eax
     jz rbCreate
 ;
     push ecx
-    movzx ecx,ax
+    mov ecx,eax
     shl ecx,2
     mov edx,ds:[ebx].bn_data
     FreeLinear
     pop ecx
 
 rbCreate:
-    mov ds:[ebx].bn_count,cx
+    mov ds:[ebx].bn_count,ecx
 ;    
-    or cx,cx
+    or ecx,ecx
     jz rbCreated
 ;    
-    movzx eax,cx
+    mov eax,ecx
     shl eax,2
     AllocateSmallLinear
     mov ds:[ebx].bn_data,edx
@@ -161,25 +161,25 @@ RecreateBuf ENDP
 ;           DESCRIPTION:    Copy buffer
 ;
 ;           PARAMETERS:     DS:EBX      Handle data
-;                           DX          Buffer count
+;                           EDX         Buffer count
 ;                           ES:ESI      Data
-;                           CX          Data count
+;                           ECX         Data count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CopyBuf     PROC near
     pushad
 ;    
-    cmp dx,ds:[ebx].bn_count
+    cmp edx,ds:[ebx].bn_count
     je cbCopy
 ;    
-    mov ax,ds:[ebx].bn_count
-    or ax,ax
+    mov eax,ds:[ebx].bn_count
+    or eax,eax
     jz cbCreate
 ;
     push ecx
     push edx
-    movzx ecx,ax
+    mov ecx,eax
     shl ecx,2
     mov edx,ds:[ebx].bn_data
     FreeLinear
@@ -187,24 +187,24 @@ CopyBuf     PROC near
     pop ecx
 
 cbCreate:
-    mov ds:[ebx].bn_count,dx
+    mov ds:[ebx].bn_count,edx
 ;    
-    or dx,dx
+    or edx,edx
     jz cbCopy
 ;    
     push edx
-    movzx eax,dx
+    mov eax,edx
     shl eax,2
     AllocateSmallLinear
     mov ds:[ebx].bn_data,edx
     pop edx
 
 cbCopy:
-    or dx,dx
+    or edx,edx
     jz cbDone
 ;
     mov edi,ds:[ebx].bn_data
-    or cx,cx
+    or ecx,ecx
     jz cbZeroFill
 
 cbCopyLoop:
@@ -212,10 +212,10 @@ cbCopyLoop:
     mov es:[edi],eax
     add esi,4
     add edi,4
-    sub dx,1
+    sub edx,1
     jz cbDone
 ;
-    sub cx,1
+    sub ecx,1
     jnz cbCopyLoop
 
 cbZeroFill:
@@ -224,7 +224,7 @@ cbZeroFill:
 cbZeroFillLoop:    
     mov es:[edi],eax
     add edi,4
-    sub dx,1
+    sub edx,1
     jnz cbZeroFillLoop
 
 cbDone:
@@ -240,7 +240,7 @@ CopyBuf ENDP
 ;           DESCRIPTION:    Grow buffer
 ;
 ;           PARAMETERS:     DS:EBX      Handle data
-;                           CX          Additional count
+;                           ECX         Additional count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -248,25 +248,25 @@ GrowBuf     PROC near
     pushad
 ;    
     mov esi,ds:[ebx].bn_data
-    mov ax,ds:[ebx].bn_count
-    or ax,ax
+    mov eax,ds:[ebx].bn_count
+    or eax,eax
     jnz gbSrcOk
 ;
     xor esi,esi
 
 gbSrcOk:    
     push esi
-    add cx,ds:[ebx].bn_count
-    movzx eax,cx
+    add ecx,ds:[ebx].bn_count
+    mov eax,ecx
     shl eax,2
     AllocateSmallLinear
     mov edi,edx
     mov ds:[ebx].bn_data,edx
 ;
-    mov dx,ds:[ebx].bn_count
-    mov ds:[ebx].bn_count,cx
+    mov edx,ds:[ebx].bn_count
+    mov ds:[ebx].bn_count,ecx
 ;
-    or dx,dx
+    or edx,edx
     jz gbCopyOk
 
 gbCopyLoop:
@@ -274,11 +274,11 @@ gbCopyLoop:
     mov es:[edi],eax
     add esi,4
     add edi,4
-    sub cx,1
-    sub dx,1        
+    sub ecx,1
+    sub edx,1        
     jnz gbCopyLoop
 ;
-    or cx,cx
+    or ecx,ecx
     jz gbDone
 
 gbCopyOk:
@@ -287,7 +287,7 @@ gbCopyOk:
 gbZeroLoop:    
     mov es:[edi],eax
     add edi,4
-    sub cx,1
+    sub ecx,1
     jnz gbZeroLoop
 ;    
     pop edx
@@ -317,15 +317,15 @@ OptBuf     PROC near
     pushad
 ;    
     mov esi,ds:[ebx].bn_data
-    mov cx,ds:[ebx].bn_count
-    or cx,cx
+    mov ecx,ds:[ebx].bn_count
+    or ecx,ecx
     jz obDone
 ;
-    movzx eax,cx
+    mov eax,ecx
     dec eax
     shl eax,2
     add esi,eax
-    xor dx,dx
+    xor edx,edx
 
 obCheckLoop:
     mov eax,es:[esi]
@@ -333,22 +333,22 @@ obCheckLoop:
     jnz obCheckDone
 ;
     sub esi,4
-    inc dx
-    sub cx,1    
+    inc edx
+    sub ecx,1    
     jnz obCheckLoop
 
 obCheckDone:
-    or dx,dx
+    or edx,edx
     jz obDone
 ;
-    mov cx,ds:[ebx].bn_count
-    sub cx,dx
-    mov ds:[ebx].bn_count,cx
+    mov ecx,ds:[ebx].bn_count
+    sub ecx,edx
+    mov ds:[ebx].bn_count,ecx
     jz obZero
 ;
     mov esi,ds:[ebx].bn_data
     push esi
-    movzx eax,cx
+    mov eax,ecx
     shl eax,2
     AllocateSmallLinear
     mov edi,edx
@@ -359,7 +359,7 @@ obCopyLoop:
     mov es:[edi],eax
     add esi,4
     add edi,4
-    sub cx,1
+    sub ecx,1
     jnz obCopyLoop    
 ;
     pop edx
@@ -385,7 +385,7 @@ OptBuf ENDP
 ;           DESCRIPTION:    Get bit count in operand
 ;
 ;           PARAMETERS:     ES:ESI      Data
-;                           CX          Buffer count
+;                           ECX         Buffer count
 ;
 ;           RETURNS:        ECX         Bits
 ;
@@ -395,8 +395,7 @@ GetBits     PROC near
     push eax
     push esi
 ;    
-    movzx ecx,cx
-    or cx,cx
+    or ecx,ecx
     jz gbitsDone
 ;
     shl ecx,2
@@ -432,45 +431,45 @@ GetBits     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           CopyShifted
+;           NAME:           CopyShiftLeft
 ;
-;           DESCRIPTION:    Make a shifted copy
+;           DESCRIPTION:    Make a left shifted copy
 ;
 ;           PARAMETERS:     ES:ESI      Source data
-;                           CX          Source buffer count
+;                           ECX         Source buffer count
 ;                           ES:EDI      Dest data
-;                           DX          Dest buffer count
+;                           EDX         Dest buffer count
 ;                           EBX         Shift count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CopyShifted     PROC near
+CopyShiftLeft     PROC near
     pushad
 ;    
     mov eax,ebx
     shr eax,5
 
-csZeroLoop:    
-    or ax,ax
-    jz csShiftIn
+cslZeroLoop:    
+    or eax,eax
+    jz cslShiftIn
 ;
     mov dword ptr es:[edi],0
     add edi,4
-    sub dx,1
-    jz csDone
+    sub edx,1
+    jz cslDone
 ;
     sub ebx,32
-    sub ax,1
-    jnz csZeroLoop
+    sub eax,1
+    jnz cslZeroLoop
 
-csShiftIn:
+cslShiftIn:
     xor eax,eax
 
-csShiftLoop:    
+cslShiftLoop:    
     or bl,bl
-    jz csShiftZero
+    jz cslShiftZero
 ;    
-    push cx
+    push ecx
     mov cl,bl
     mov ebp,es:[esi]
     shl ebp,cl
@@ -483,38 +482,38 @@ csShiftLoop:
     sub cl,bl
     mov eax,es:[esi]
     shr eax,cl
-    pop cx
-    jmp csShiftNext
+    pop ecx
+    jmp cslShiftNext
 
-csShiftZero:
+cslShiftZero:
     mov eax,es:[esi]
     mov es:[edi],eax
     xor eax,eax
     
-csShiftNext:
+cslShiftNext:
     add esi,4
     add edi,4
-    sub dx,1
-    jz csDone
+    sub edx,1
+    jz cslDone
 ;
-    sub cx,1
-    jnz csShiftLoop    
+    sub ecx,1
+    jnz cslShiftLoop    
 ;
     mov es:[edi],eax
     xor eax,eax
 
-csEndLoop:
+cslEndLoop:
     add edi,4
-    sub dx,1
-    jz csDone
+    sub edx,1
+    jz cslDone
 ;
     mov es:[edi],eax        
-    jmp csEndLoop        
+    jmp cslEndLoop        
 
-csDone:   
+cslDone:   
     popad
     ret
-CopyShifted     ENDP
+CopyShiftLeft     ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -525,7 +524,7 @@ CopyShifted     ENDP
 ;
 ;           PARAMETERS:     ES:ESI      Source data to subtract
 ;                           ES:EDI      Dest data
-;                           CX          Buffer count
+;                           ECX         Buffer count
 ;
 ;           RETURNS:        CY          Source larger
 ;                           NC          Dest larger
@@ -539,10 +538,10 @@ DoCompare     PROC near
     push esi
     push edi
 ;
-    or cx,cx
+    or ecx,ecx
     jz compDone
 ;
-    movzx eax,cx
+    mov eax,ecx
     dec eax
     shl eax,2
     add esi,eax
@@ -555,7 +554,7 @@ compLoop:
 ;
     sub esi,4
     sub edi,4
-    sub cx,1
+    sub ecx,1
     jnz compLoop    
 
 compDone:
@@ -575,7 +574,7 @@ DoCompare     ENDP
 ;
 ;           PARAMETERS:     ES:ESI      Source data
 ;                           ES:EDI      Dest data
-;                           CX          Buffer count
+;                           ECX          Buffer count
 ;
 ;           RETURNS:        CY          overflow
 ;
@@ -587,7 +586,7 @@ DoAdd     PROC near
     push esi
     push edi
 ;
-    or cx,cx
+    or ecx,ecx
     clc
     jz daDone
 ;
@@ -601,7 +600,7 @@ daLoop:
 ;
     add esi,4
     add edi,4
-    sub cx,1
+    sub ecx,1
     jnz daLoop        
 ;
     popf    
@@ -623,7 +622,7 @@ DoAdd     ENDP
 ;
 ;           PARAMETERS:     ES:ESI      Source data to subtract
 ;                           ES:EDI      Dest data and result
-;                           CX          Buffer count
+;                           ECX         Buffer count
 ;
 ;           RETURNS:        CY          overflow
 ;                           ZR          highest dword zero
@@ -636,7 +635,7 @@ DoSub     PROC near
     push esi
     push edi
 ;
-    or cx,cx
+    or ecx,ecx
     clc
     jz dsDone
 ;
@@ -650,7 +649,7 @@ dsLoop:
 ;
     add esi,4
     add edi,4
-    sub cx,1
+    sub ecx,1
     jnz dsLoop        
 ;
     popf    
@@ -671,7 +670,7 @@ DoSub     ENDP
 ;           DESCRIPTION:    Do a not
 ;
 ;           PARAMETERS:     ES:EDI      Dest data
-;                           CX          Buffer count
+;                           ECX         Buffer count
 ;
 ;           RETURNS:        CY          overflow
 ;
@@ -682,7 +681,7 @@ DoNeg     PROC near
     push ecx
     push edi
 ;
-    or cx,cx
+    or ecx,ecx
     clc
     jz dnDone
 ;
@@ -698,7 +697,7 @@ dnLoop:
     pushf
 ;
     add edi,4    
-    sub cx,1
+    sub ecx,1
     jnz dnLoop        
 ;
     popf    
@@ -827,7 +826,7 @@ divLoop:
     mov ecx,[ebp].div_divisor_count
     mov edi,[ebp].div_temp_quot_data
     mov edx,[ebp].div_temp_count
-    call CopyShifted
+    call CopyShiftLeft
 ;
     mov esi,[ebp].div_temp_quot_data
     mov edi,[ebp].div_mod_data
@@ -929,7 +928,7 @@ delete_bignum     PROC far
     DerefHandle
     jc cbnDone
 ;
-    movzx ecx,ds:[ebx].bn_count
+    mov ecx,ds:[ebx].bn_count
     or ecx,ecx
     jz cbnFree
 ;
@@ -1086,22 +1085,22 @@ add_bignum     PROC far
     jnz anSub
 
 anAdd:
-    mov cx,ds:[esi].bn_count
-    cmp cx,ds:[edi].bn_count
+    mov ecx,ds:[esi].bn_count
+    cmp ecx,ds:[edi].bn_count
     ja anAddUse2
 
 anAddUse1:
     push esi
     push edi
 ;    
-    mov cx,ds:[esi].bn_count
-    mov dx,ds:[edi].bn_count
+    mov ecx,ds:[esi].bn_count
+    mov edx,ds:[edi].bn_count
     mov esi,ds:[esi].bn_data
     call CopyBuf
 ;    
     mov esi,ds:[edi].bn_data
     mov edi,ds:[ebx].bn_data
-    mov cx,ds:[ebx].bn_count
+    mov ecx,ds:[ebx].bn_count
     call DoAdd
 ;
     pop edi
@@ -1113,14 +1112,14 @@ anAddUse2:
     push edi
 ;      
     xchg esi,edi
-    mov cx,ds:[esi].bn_count
-    mov dx,ds:[edi].bn_count
+    mov ecx,ds:[esi].bn_count
+    mov edx,ds:[edi].bn_count
     mov esi,ds:[esi].bn_data
     call CopyBuf
 ;    
     mov esi,ds:[edi].bn_data
     mov edi,ds:[ebx].bn_data
-    mov cx,ds:[ebx].bn_count
+    mov ecx,ds:[ebx].bn_count
     call DoAdd
 ;
     pop edi
@@ -1129,10 +1128,10 @@ anAddUse2:
 anFixupAdd:
     jnc anAddSign
 ;
-    mov cx,1
+    mov ecx,1
     call GrowBuf
 ;
-    movzx edx,ds:[ebx].bn_count
+    mov edx,ds:[ebx].bn_count
     dec edx
     shl edx,2
     add edx,ds:[ebx].bn_data
@@ -1146,22 +1145,22 @@ anAddSign:
     jmp anDone
 
 anSub:
-    mov cx,ds:[esi].bn_count
-    cmp cx,ds:[edi].bn_count
+    mov ecx,ds:[esi].bn_count
+    cmp ecx,ds:[edi].bn_count
     ja anSubUse2
 
 anSubUse1:
     push esi
     push edi
 ;    
-    mov cx,ds:[esi].bn_count
-    mov dx,ds:[edi].bn_count
+    mov ecx,ds:[esi].bn_count
+    mov edx,ds:[edi].bn_count
     mov esi,ds:[esi].bn_data
     call CopyBuf
 ;    
     mov esi,ds:[edi].bn_data
     mov edi,ds:[ebx].bn_data
-    mov cx,ds:[ebx].bn_count
+    mov ecx,ds:[ebx].bn_count
     call DoSub
 ;
     pop edi
@@ -1170,7 +1169,7 @@ anSubUse1:
 ;
     push edi
     mov edi,ds:[ebx].bn_data
-    mov cx,ds:[ebx].bn_count
+    mov ecx,ds:[ebx].bn_count
     call DoNeg
     pop edi
 ;
@@ -1198,14 +1197,14 @@ anSubUse2:
     push edi
 ;      
     xchg esi,edi
-    mov cx,ds:[esi].bn_count
-    mov dx,ds:[edi].bn_count
+    mov ecx,ds:[esi].bn_count
+    mov edx,ds:[edi].bn_count
     mov esi,ds:[esi].bn_data
     call CopyBuf
 ;    
     mov esi,ds:[edi].bn_data
     mov edi,ds:[ebx].bn_data
-    mov cx,ds:[ebx].bn_count
+    mov ecx,ds:[ebx].bn_count
     call DoSub
 ;
     pop edi
@@ -1214,7 +1213,7 @@ anSubUse2:
 ;
     push edi
     mov edi,ds:[ebx].bn_data
-    mov cx,ds:[ebx].bn_count
+    mov ecx,ds:[ebx].bn_count
     call DoNeg
     pop edi
 ;
@@ -1311,22 +1310,22 @@ sub_bignum     PROC far
     jz sbnSub
 
 sbnAdd:
-    mov cx,ds:[esi].bn_count
-    cmp cx,ds:[edi].bn_count
+    mov ecx,ds:[esi].bn_count
+    cmp ecx,ds:[edi].bn_count
     ja sbnAddUse2
 
 sbnAddUse1:
     push esi
     push edi
 ;    
-    mov cx,ds:[esi].bn_count
-    mov dx,ds:[edi].bn_count
+    mov ecx,ds:[esi].bn_count
+    mov edx,ds:[edi].bn_count
     mov esi,ds:[esi].bn_data
     call CopyBuf
 ;    
     mov esi,ds:[edi].bn_data
     mov edi,ds:[ebx].bn_data
-    mov cx,ds:[ebx].bn_count
+    mov ecx,ds:[ebx].bn_count
     call DoAdd
 ;
     pop edi
@@ -1338,14 +1337,14 @@ sbnAddUse2:
     push edi
 ;      
     xchg esi,edi
-    mov cx,ds:[esi].bn_count
-    mov dx,ds:[edi].bn_count
+    mov ecx,ds:[esi].bn_count
+    mov edx,ds:[edi].bn_count
     mov esi,ds:[esi].bn_data
     call CopyBuf
 ;    
     mov esi,ds:[edi].bn_data
     mov edi,ds:[ebx].bn_data
-    mov cx,ds:[ebx].bn_count
+    mov ecx,ds:[ebx].bn_count
     call DoAdd
 ;
     pop edi
@@ -1354,10 +1353,10 @@ sbnAddUse2:
 sbnFixupAdd:
     jnc anAddSign
 ;
-    mov cx,1
+    mov ecx,1
     call GrowBuf
 ;
-    movzx edx,ds:[ebx].bn_count
+    mov edx,ds:[ebx].bn_count
     dec edx
     shl edx,2
     add edx,ds:[ebx].bn_data
@@ -1372,22 +1371,22 @@ sbnAddSign:
     jmp sbnDone
 
 sbnSub:
-    mov cx,ds:[esi].bn_count
-    cmp cx,ds:[edi].bn_count
+    mov ecx,ds:[esi].bn_count
+    cmp ecx,ds:[edi].bn_count
     ja sbnSubUse2
 
 sbnSubUse1:
     push esi
     push edi
 ;    
-    mov cx,ds:[esi].bn_count
-    mov dx,ds:[edi].bn_count
+    mov ecx,ds:[esi].bn_count
+    mov edx,ds:[edi].bn_count
     mov esi,ds:[esi].bn_data
     call CopyBuf
 ;    
     mov esi,ds:[edi].bn_data
     mov edi,ds:[ebx].bn_data
-    mov cx,ds:[ebx].bn_count
+    mov ecx,ds:[ebx].bn_count
     call DoSub
 ;
     pop edi
@@ -1396,7 +1395,7 @@ sbnSubUse1:
 ;
     push edi
     mov edi,ds:[ebx].bn_data
-    mov cx,ds:[ebx].bn_count
+    mov ecx,ds:[ebx].bn_count
     call DoNeg
     pop edi
 ;
@@ -1426,14 +1425,14 @@ sbnSubUse2:
     push edi
 ;      
     xchg esi,edi
-    mov cx,ds:[esi].bn_count
-    mov dx,ds:[edi].bn_count
+    mov ecx,ds:[esi].bn_count
+    mov edx,ds:[edi].bn_count
     mov esi,ds:[esi].bn_data
     call CopyBuf
 ;    
     mov esi,ds:[edi].bn_data
     mov edi,ds:[ebx].bn_data
-    mov cx,ds:[ebx].bn_count
+    mov ecx,ds:[ebx].bn_count
     call DoSub
 ;
     pop edi
@@ -1442,7 +1441,7 @@ sbnSubUse2:
 ;
     push edi
     mov edi,ds:[ebx].bn_data
-    mov cx,ds:[ebx].bn_count
+    mov ecx,ds:[ebx].bn_count
     call DoNeg
     pop edi
 ;
@@ -1526,7 +1525,7 @@ mul_bignum     PROC far
 ;
     push ax
     mov esi,ebx
-    movzx eax,ds:[ebx].bn_count
+    mov eax,ds:[ebx].bn_count
     mov [ebp].mul_in_count1,eax
     mov eax,ds:[ebx].bn_data
     mov [ebp].mul_in_data1,eax
@@ -1537,7 +1536,7 @@ mul_bignum     PROC far
     jc mnFail
 ;
     mov edi,ebx
-    movzx eax,ds:[ebx].bn_count
+    mov eax,ds:[ebx].bn_count
     mov [ebp].mul_in_count2,eax
     mov eax,ds:[ebx].bn_data
     mov [ebp].mul_in_data2,eax
@@ -1632,7 +1631,7 @@ div_bignum     PROC far
 ;
     mov esi,ebx
     push ax
-    movzx eax,ds:[ebx].bn_count
+    mov eax,ds:[ebx].bn_count
     mov [ebp].div_quot_count,eax    
     mov eax,ds:[ebx].bn_data
     mov [ebp].div_mod_data,eax
@@ -1643,7 +1642,7 @@ div_bignum     PROC far
     jc dnFail
 ;
     mov edi,ebx
-    movzx eax,ds:[ebx].bn_count
+    mov eax,ds:[ebx].bn_count
     mov [ebp].div_divisor_count,eax    
     mov eax,ds:[ebx].bn_data
     mov [ebp].div_divisor_data,eax
@@ -1814,7 +1813,7 @@ mod_bignum     PROC far
 ;
     mov esi,ebx
     push ax
-    movzx eax,ds:[ebx].bn_count
+    mov eax,ds:[ebx].bn_count
     mov [ebp].div_quot_count,eax    
     mov eax,ds:[ebx].bn_data
     mov [ebp].div_mod_data,eax
@@ -1825,7 +1824,7 @@ mod_bignum     PROC far
     jc mbnFail
 ;
     mov edi,ebx
-    movzx eax,ds:[ebx].bn_count
+    mov eax,ds:[ebx].bn_count
     mov [ebp].div_divisor_count,eax    
     mov eax,ds:[ebx].bn_data
     mov [ebp].div_divisor_data,eax
@@ -1842,6 +1841,7 @@ mod_bignum     PROC far
     AllocateHandle
     mov ds:[ebx].bn_count,0
     mov ds:[ebx].bn_data,0
+    mov ds:[ebx].bn_flags,0
     mov [ebx].hh_sign,BIGNUM_HANDLE
 ;    
     push esi
@@ -1995,7 +1995,7 @@ pow_mod_bignum     PROC far
     jc pmFail
 ;
     push ax
-    movzx eax,ds:[ebx].bn_count
+    mov eax,ds:[ebx].bn_count
     mov [ebp].pow_mod_base_count,eax    
     mov [ebp].div_quot_count,eax
     mov eax,ds:[ebx].bn_data
@@ -2007,7 +2007,7 @@ pow_mod_bignum     PROC far
     DerefHandle
     jc pmFail
 ;
-    movzx eax,ds:[ebx].bn_count
+    mov eax,ds:[ebx].bn_count
     mov [ebp].pow_mod_exp_count,eax    
     mov eax,ds:[ebx].bn_data
     mov [ebp].pow_mod_exp_data,eax
@@ -2017,7 +2017,7 @@ pow_mod_bignum     PROC far
     DerefHandle
     jc pmFail
 ;
-    movzx eax,ds:[ebx].bn_count
+    mov eax,ds:[ebx].bn_count
     mov [ebp].div_divisor_count,eax    
     mov eax,ds:[ebx].bn_data
     mov [ebp].div_divisor_data,eax        
@@ -2286,7 +2286,7 @@ get_bignum_size10     PROC far
     test ax,BN_FLAG_INFINITE
     jnz gbs10Infinite
 ;
-    movzx eax,ds:[ebx].bn_count
+    mov eax,ds:[ebx].bn_count
     or eax,eax
     jz gbs10Zero
 ;    
@@ -2467,7 +2467,7 @@ get_bignum_buf10     PROC near
     test ax,BN_FLAG_INFINITE
     jnz gbb10Infinite
 ;
-    movzx eax,ds:[ebx].bn_count
+    mov eax,ds:[ebx].bn_count
     or eax,eax
     jz gbb10Zero
 ;    
@@ -2693,7 +2693,7 @@ get_bignum_size16     PROC far
     test ax,BN_FLAG_INFINITE
     jnz gbs16Infinite
 ;
-    movzx ecx,ds:[ebx].bn_count
+    mov ecx,ds:[ebx].bn_count
     or ecx,ecx
     jz gbs16AddSign
 ;
@@ -2785,7 +2785,7 @@ get_bignum_buf16     PROC near
     test ax,BN_FLAG_INFINITE
     jnz gbb16Infinite
 ;
-    movzx edx,ds:[ebx].bn_count
+    mov edx,ds:[ebx].bn_count
     or edx,edx
     jz gbb16AddSign
 
@@ -2949,7 +2949,7 @@ get_bignum_buf16_16   Endp
 ;
 ;           DESCRIPTION:    Create random big number
 ;
-;           PARAMETERS:     CX          Number of bits
+;           PARAMETERS:     ECX         Number of bits
 ;
 ;           RETURNS:        BX          Big number handle
 ;
@@ -2961,20 +2961,19 @@ create_random_bignum     PROC far
     push ds
     push es
     push eax
-    push cx
+    push ecx
 ;
     mov ax,flat_sel
     mov es,ax
 ;    
-    push cx
+    push ecx
     mov cx,SIZE bignum_handle_seg
     AllocateHandle
     mov ds:[ebx].bn_count,0
     mov ds:[ebx].bn_data,0
     mov ds:[ebx].bn_flags,0
     mov [ebx].hh_sign,BIGNUM_HANDLE
-    pop cx
-    movzx ecx,cx
+    pop ecx
     or ecx,ecx
     jz crbDone
 ;
@@ -3018,12 +3017,169 @@ crbDone:
     mov bx,[ebx].hh_handle
     clc
 ;
-    pop cx
+    pop ecx
     pop eax
     pop es
     pop ds
     ret
 create_random_bignum     ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CreateRandomOddBigNum
+;
+;           DESCRIPTION:    Create random odd big number
+;
+;           PARAMETERS:     CX          Number of bits
+;
+;           RETURNS:        BX          Big number handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_random_odd_bignum_name    DB 'Create Random Odd Big Number',0
+
+create_random_odd_bignum     PROC far
+    push ds
+    push es
+    push eax
+    push ecx
+;
+    mov ax,flat_sel
+    mov es,ax
+;    
+    push ecx
+    mov cx,SIZE bignum_handle_seg
+    AllocateHandle
+    mov ds:[ebx].bn_count,0
+    mov ds:[ebx].bn_data,0
+    mov ds:[ebx].bn_flags,0
+    mov [ebx].hh_sign,BIGNUM_HANDLE
+    pop ecx
+    or ecx,ecx
+    stc
+    jz crobEnd
+;
+    mov edx,ecx
+    dec ecx
+    shr ecx,5
+    inc ecx
+    call RecreateBuf
+;    
+    mov edi,ds:[ebx].bn_data
+
+crobLoop:    
+    GetRandom
+    sub ecx,1
+    jz crobPartial
+
+crobFull:
+    mov es:[edi],eax
+    add edi,4
+    sub edx,32
+    jmp crobLoop
+
+crobPartial:
+    and dl,1Fh
+    jz crobAll
+;
+    stc
+    rcr eax,1
+    mov cl,32
+    sub cl,dl
+    shr eax,cl
+    mov es:[edi],eax
+    jmp crobDone
+
+crobAll:
+    stc
+    rcr eax,1
+    mov es:[edi],eax
+
+crobDone:    
+    mov edi,ds:[ebx].bn_data
+    or byte ptr es:[edi],1
+;
+    mov bx,[ebx].hh_handle
+    clc
+
+crobEnd:
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    ret
+create_random_odd_bignum     ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FactorPow2BigNum
+;
+;           DESCRIPTION:    Express number as d x 2 ^ r
+;
+;           PARAMETERS:     BX          Number to factor
+;
+;           RETURNS:        BX          Result big num handle (d)
+;                           ECX         r
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+factor_pow2_bignum_name    DB 'Factor Power 2 Big Number',0
+
+factor_pow2_bignum     PROC far
+    push ds
+    push es
+    push eax
+    push edx
+    push esi
+    push edi
+;
+    push ax
+    mov ax,flat_sel
+    mov es,ax    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    pop ax
+    jc fp2Done
+;
+    mov ecx,ds:[ebx].bn_count
+    mov esi,ds:[ebx].bn_data
+;
+    push ecx
+    mov cx,SIZE bignum_handle_seg
+    AllocateHandle
+    mov ds:[ebx].bn_count,0
+    mov ds:[ebx].bn_data,0
+    mov ds:[ebx].bn_flags,0
+    mov [ebx].hh_sign,BIGNUM_HANDLE
+    pop ecx
+;
+    or ecx,ecx
+    jz fp2Zero
+;
+    mov edx,ecx
+    call CopyBuf
+;
+    mov ecx,ds:[ebx].bn_count
+    mov esi,ds:[ebx].bn_data
+
+fp2Zero:
+    xor ecx,ecx
+    mov bx,[ebx].hh_handle
+    clc
+
+fp2Done:
+    pop edi
+    pop esi
+    pop edx
+    pop eax
+    pop es
+    pop ds
+    ret
+factor_pow2_bignum	ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3046,7 +3202,7 @@ delete_handle     PROC far
     DerefHandle
     jc dbnDone
 ;
-    movzx ecx,ds:[ebx].bn_count
+    mov ecx,ds:[ebx].bn_count
     or ecx,ecx
     jz dbnFree
 ;
@@ -3168,6 +3324,18 @@ init    PROC far
     mov edi,OFFSET create_random_bignum_name
     xor dx,dx
     mov ax,create_random_bignum_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET create_random_odd_bignum
+    mov edi,OFFSET create_random_odd_bignum_name
+    xor dx,dx
+    mov ax,create_random_odd_bignum_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET factor_pow2_bignum
+    mov edi,OFFSET factor_pow2_bignum_name
+    xor dx,dx
+    mov ax,factor_pow2_bignum_nr
     RegisterBimodalUserGate
 ;
     ret

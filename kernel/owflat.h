@@ -3538,3 +3538,21 @@
     ValidateHandle \
     parm [ecx] \
     value [ebx];
+
+#pragma aux RdosCreateRandomOddBigNum = \
+    CallGate_create_random_odd_bignum  \
+    ValidateHandle \
+    parm [ecx] \
+    value [ebx];
+
+#pragma aux RdosFactorPow2BigNum = \
+    CallGate_factor_pow2_bignum  \
+    "jc Fail" \
+    "mov [esi],ecx" \
+    "jmp Done" \
+    "Fail:" \
+    "xor ebx,ebx" \
+    "Done:" \
+    modify [ecx] \
+    parm [ebx] [esi] \
+    value [ebx];

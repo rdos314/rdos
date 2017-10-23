@@ -886,6 +886,8 @@ void RDOSAPI RdosGetBigNumString10(int handle, char *buf, int bufsize);
 int RDOSAPI RdosGetBigNumSize16(int handle);
 void RDOSAPI RdosGetBigNumString16(int handle, char *buf, int bufsize);
 int RDOSAPI RdosCreateRandomBigNum(int bits);
+int RDOSAPI RdosCreateRandomOddBigNum(int bits);
+int RDOSAPI RdosFactorPow2BigNum(int handle, int *exponent);
 
 #ifdef __cplusplus
 }

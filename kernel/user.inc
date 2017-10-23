@@ -4028,8 +4028,22 @@ GetBigNumString10	MACRO
 	UserGate get_bignum_str10_nr
 	        ENDM
 
-; IN  CX            Number of bits
+; IN  ECX           Number of bits
 ; OUT BX            Bignum handle
 CreateRandomBigNum	MACRO
 	UserGate create_random_bignum_nr
+	        ENDM
+
+; IN  ECX           Number of bits
+; OUT BX            Bignum handle
+CreateRandomOddBigNum	MACRO
+	UserGate create_random_odd_bignum_nr
+	        ENDM
+
+
+; IN  BX            Bignum handle to factor
+; OUT BX            Bignum handle remainder
+; OUT ECX           Exponent
+FactorPow2BigNum	MACRO
+	UserGate factor_pow2_bignum_nr
 	        ENDM

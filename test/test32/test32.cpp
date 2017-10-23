@@ -16,32 +16,36 @@
 
 void main()
 {
-    char buf[32];
+    int handle;
+    int handle1;
+    int handle2;
+    int powhandle;
+    int powexp;
     int size;
-    int val;
-    char *ptr;
-    int id;
+    char *buf;
 
-    id = RdosFork();
+    handle1 = RdosCreateBigNum();
+    RdosLoadBigNum64(handle1, 1);
 
-    _asm int 3
-    _asm int 3
+    handle = RdosCreateRandomOddBigNum(512);
+    size = RdosGetBigNumSize10(handle);
+    buf = new char[size + 1];
+    RdosGetBigNumString10(handle, buf, size + 1);
+    printf("Random: ");
+    printf(buf);
+    printf("\r\n");
+    delete buf;
 
+    handle2 = RdosSubBigNum(handle, handle1);
+    powhandle = RdosFactorPow2BigNum(handle2, &powexp);
 
-    char *arg[] = {"showpos.exe", 0};
+    size = RdosGetBigNumSize10(powhandle);
+    buf = new char[size + 1];
+    RdosGetBigNumString10(powhandle, buf, size + 1);
+    printf("Factor: ");
+    printf(buf);
+    printf(", Exp: %d\r\n", powexp);
+    delete buf;
 
-
-    execv(arg[0], (char **)&arg);
-
-    size = read(0, buf, 30);
-    write(1, buf, size);
-
-    char str[100];
-    int i;
-
-    printf( "Enter a value :");
-    scanf("%s %d", str, &i);
-
-    printf( "\nYou entered: %s %d ", str, i);
     
 }
