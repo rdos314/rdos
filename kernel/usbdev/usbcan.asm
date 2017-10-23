@@ -115,13 +115,13 @@ OpenPipes  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           GetCanVersion
+;       NAME:           GetSoftwareVersion
 ;
 ;       DESCRIPTION:    Get software version
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetCanVersion   Proc near
+GetSoftwareVersion   Proc near
     mov bx,ds:cd_control_pipe
     LockUsbPipe
 ;
@@ -152,10 +152,130 @@ GetCanVersion   Proc near
     pushf
     UnlockUsbPipe
     popf
-;
-    mov di,OFFSET cd_data
     ret
-GetCanVersion  Endp
+GetSoftwareVersion  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetBufferSize
+;
+;       DESCRIPTION:    Get max buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetBufferSize   Proc near
+    mov bx,ds:cd_control_pipe
+    LockUsbPipe
+;
+    mov cx,8
+    mov di,OFFSET cd_setup
+    mov es:[di].usd_type,0C1h
+    mov es:[di].usd_req,83h
+    mov es:[di].usd_value,0
+    mov es:[di].usd_index,0
+    mov es:[di].usd_len,4
+    WriteUsbControl
+;
+    mov cx,4
+    mov di,OFFSET cd_data
+    ReqUsbData
+;
+    WriteUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:cd_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:cd_control_pipe
+    WasUsbTransactionOk
+    pushf
+    UnlockUsbPipe
+    popf
+    ret
+GetBufferSize  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PowerUpModules
+;
+;       DESCRIPTION:    Power up modules
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PowerUpModules   Proc near
+    mov bx,ds:cd_control_pipe
+    LockUsbPipe
+;
+    mov cx,8
+    mov di,OFFSET cd_setup
+    mov es:[di].usd_type,41h
+    mov es:[di].usd_req,93h
+    mov es:[di].usd_value,101h
+    mov es:[di].usd_index,0
+    mov es:[di].usd_len,0
+    WriteUsbControl
+;    
+    ReqUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:cd_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:cd_control_pipe
+    WasUsbTransactionOk
+    pushf
+    UnlockUsbPipe
+    popf
+    ret
+PowerUpModules  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PowerDownModules
+;
+;       DESCRIPTION:    Power down modules
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PowerDownModules   Proc near
+    mov bx,ds:cd_control_pipe
+    LockUsbPipe
+;
+    mov cx,8
+    mov di,OFFSET cd_setup
+    mov es:[di].usd_type,41h
+    mov es:[di].usd_req,93h
+    mov es:[di].usd_value,100h
+    mov es:[di].usd_index,0
+    mov es:[di].usd_len,0
+    WriteUsbControl
+;    
+    ReqUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:cd_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:cd_control_pipe
+    WasUsbTransactionOk
+    pushf
+    UnlockUsbPipe
+    popf
+    ret
+PowerDownModules  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -186,7 +306,9 @@ utLoop:
 ;
     int 3
     call OpenPipes
-    call GetCanVersion
+    call PowerUpModules
+    call PowerDownModules
+    call GetSoftwareVersion
 
 utPipeOk:
     call HandleCan
