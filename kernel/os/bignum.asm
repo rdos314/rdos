@@ -1202,15 +1202,100 @@ load_signed_bignum16   Proc far
     ret
 load_signed_bignum16   Endp    
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LoadUnsignedBigNum
+;
+;           DESCRIPTION:    Load unsigned big num
+;
+;           PARAMETERS:     BX          Big num handle
+;                           ES:(E)DI    Buffer
+;                           (E)CX       Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 load_unsigned_bignum_name    DB 'Load Unsigned Big Number',0
 
+load_unsigned_bignum     PROC near
+    push ds
+    push fs
+    pushad
+;
+    mov eax,flat_sel
+    mov fs,eax    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc lsuDone
+;
+    or ecx,ecx
+    jnz lsuNonZero
+;
+    xor ecx,ecx
+    call RecreateBuf
+    jmp lsuDone
+
+lsuNonZero:
+    push ecx
+    dec ecx
+    shr ecx,2
+    inc ecx
+    call RecreateBuf
+    pop ecx
+;
+    mov ds:[ebx].bn_flags,0
+    mov esi,ds:[ebx].bn_data
+    mov edx,ds:[ebx].bn_count
+    shl edx,2
+
+lsuCopy:
+    mov al,es:[edi]
+    mov fs:[esi],al
+    inc esi
+    inc edi
+    dec edx
+    loop lsuCopy
+;
+    or edx,edx
+    jz lsuOpt
+;
+    xor al,al
+
+lsuFill:
+    mov fs:[esi],al
+    inc esi
+    sub edx,1
+    jnz lsuFill
+
+lsuOpt:
+    call OptBuf
+
+lsuDone: 
+    popad
+    pop fs
+    pop ds
+    ret
+load_unsigned_bignum     ENDP
+
 load_unsigned_bignum32   Proc far
+    call load_unsigned_bignum
     ret
 load_unsigned_bignum32   Endp
 
 load_unsigned_bignum16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call load_unsigned_bignum
+;       
+    pop edi
+    pop ecx
     ret
 load_unsigned_bignum16   Endp    
+
 
 save_signed_bignum_name    DB 'Save Signed Big Number',0
 

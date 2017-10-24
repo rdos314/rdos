@@ -43,8 +43,8 @@ void main()
     printf(str.GetData());
     printf("\r\n");
 
-    val = -123456;
-    num1.LoadSigned((const char *)&val, 7);
+    val = 123456;
+    num1.LoadUnsigned((const char *)&val, 7);
     str = num1.GetDec();
     printf(str.GetData());
     printf("\r\n");
