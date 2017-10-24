@@ -109,21 +109,17 @@ TBigNum::~TBigNum()
 #   Returns....: *
 #
 ##########################################################################*/
-TString TBigNum::GetHex()
+TString TBigNum::GetHex(int digits)
 {
     int size;
     char *buf;
     char *ptr;
 
-    size = RdosGetHexStrSizeBigNum(FHandle) + 1;
+    size = digits + 1;
     buf = new char[size]; 
     RdosSaveHexStrBigNum(FHandle, buf, size);
 
-    ptr = buf;
-    while (*ptr == ' ')
-        ptr++;   
-
-    TString str(ptr);
+    TString str(buf);
     delete buf;
 
     return str;

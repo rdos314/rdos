@@ -38,7 +38,7 @@ public:
     TBigNum(long long Value);
     ~TBigNum();
 
-    TString GetHex();
+    TString GetHex(int digits);
     TString GetDec();
 
 protected:

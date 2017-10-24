@@ -23,8 +23,18 @@ void main()
 
     str = num1.GetDec();
     printf(str.GetData());
+    printf("\r\n");
 
     str = num2.GetDec();
     printf(str.GetData());
+    printf("\r\n");
+
+    str = num1.GetHex(8);
+    printf(str.GetData());
+    printf("\r\n");
+
+    str = num2.GetHex(4);
+    printf(str.GetData());
+    printf("\r\n");
     
 }
