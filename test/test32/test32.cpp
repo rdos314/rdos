@@ -19,5 +19,12 @@ void main()
 {
     TBigNum num1;
     TBigNum num2(100);
+    TString str;
+
+    str = num1.GetDec();
+    printf(str.GetData());
+
+    str = num2.GetDec();
+    printf(str.GetData());
     
 }

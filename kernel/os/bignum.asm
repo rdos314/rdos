@@ -917,7 +917,11 @@ DoDiv     PROC near
     mov [ebp].div_temp_count,ecx
     mov edi,[ebp].div_quot_data
     xor eax,eax
-    rep stos dword ptr es:[edi]
+
+ddClearLoop:
+    mov [edi],eax
+    add edi,4
+    loop ddClearLoop
 ;
     mov esi,[ebp].div_mod_data
     mov ecx,[ebp].div_temp_count
@@ -972,7 +976,7 @@ divNext:
        
 divEqual:
     mov edx,[ebp].div_quot_data
-    bts es:[edx],ebx
+    bts [edx],ebx
     call DoSub
 
 divDone:
@@ -1197,13 +1201,13 @@ get_dec_str_size_bignum     PROC far
     shl eax,2
     AllocateSmallLinear
     mov [ebp].div_divisor_data,edx
-    mov eax,10
-    mov es:[edx],eax
 ;    
     push esi
     push edi
     mov eax,flat_sel
     mov ds,eax    
+    mov eax,10
+    mov ds:[edx],eax
 ;
     mov esi,[ebp].div_mod_data
     mov eax,[ebp].div_quot_count

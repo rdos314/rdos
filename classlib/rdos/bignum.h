@@ -36,7 +36,10 @@ public:
     TBigNum();
     TBigNum(int Value);
     TBigNum(long long Value);
-   ~TBigNum();
+    ~TBigNum();
+
+    TString GetHex();
+    TString GetDec();
 
 protected:
 

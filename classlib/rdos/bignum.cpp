@@ -97,3 +97,65 @@ TBigNum::~TBigNum()
 {
     RdosDeleteBigNum(FHandle);
 }
+
+/*##########################################################################
+#
+#   Name       : TBigNum::GetHex
+#
+#   Purpose....: Get number as hex string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TBigNum::GetHex()
+{
+    int size;
+    char *buf;
+    char *ptr;
+
+    size = RdosGetHexStrSizeBigNum(FHandle) + 1;
+    buf = new char[size]; 
+    RdosSaveHexStrBigNum(FHandle, buf, size);
+
+    ptr = buf;
+    while (*ptr == ' ')
+        ptr++;   
+
+    TString str(ptr);
+    delete buf;
+
+    return str;
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::GetDec
+#
+#   Purpose....: Get number as decimal string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TBigNum::GetDec()
+{
+    int size;
+    char *buf;
+    char *ptr;
+
+    size = RdosGetDecStrSizeBigNum(FHandle) + 1;
+    buf = new char[size]; 
+    RdosSaveDecStrBigNum(FHandle, buf, size);
+
+    ptr = buf;
+    while (*ptr == ' ')
+        ptr++;   
+
+    TString str(ptr);
+    delete buf;
+
+    return str;
+}
