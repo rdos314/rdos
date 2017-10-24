@@ -1295,17 +1295,131 @@ load_unsigned_bignum16   Proc far
     pop ecx
     ret
 load_unsigned_bignum16   Endp    
-
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SaveSignedBigNum
+;
+;           DESCRIPTION:    Save signed big num
+;
+;           PARAMETERS:     BX          Big num handle
+;                           ES:(E)DI    Buffer
+;                           (E)CX       Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 save_signed_bignum_name    DB 'Save Signed Big Number',0
 
+save_signed_bignum     PROC near
+    push ds
+    push fs
+    pushad
+;
+    mov eax,flat_sel
+    mov fs,eax    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc ssDone
+;
+    or ecx,ecx
+    stc
+    jz ssDone
+;
+    push ecx
+    push edi
+;
+    mov esi,ds:[ebx].bn_data
+    mov edx,ds:[ebx].bn_count
+
+ssCopy:
+    or edx,edx
+    jz ssPad
+;
+    mov al,fs:[esi]
+    mov es:[edi],al
+    inc esi
+    inc edi
+    sub ecx,1
+    jz ssSign
+;
+    mov al,fs:[esi]
+    mov es:[edi],al
+    inc esi
+    inc edi
+    sub ecx,1
+    jz ssSign
+;
+    mov al,fs:[esi]
+    mov es:[edi],al
+    inc esi
+    inc edi
+    sub ecx,1
+    jz ssSign
+;
+    mov al,fs:[esi]
+    mov es:[edi],al
+    inc esi
+    inc edi
+    sub ecx,1
+    jz ssSign
+;
+    sub edx,1
+    jnz ssCopy
+
+ssPad:
+    xor al,al
+    mov es:[edi],al
+    inc edi
+    sub ecx,1
+    jnz ssPad
+
+ssSign:
+    pop edi
+    pop ecx
+;
+    test ds:[ebx].bn_flags,BN_FLAG_NEGATIVE
+    jz ssDone
+;
+    stc
+    lahf
+
+ssNegLoop:
+    mov al,es:[edi]
+    not al
+    sahf
+    adc al,0
+    mov es:[edi],al
+    lahf
+;
+    inc edi
+    loop ssNegLoop
+
+ssDone: 
+    popad
+    pop fs
+    pop ds
+    ret
+save_signed_bignum     ENDP
+
 save_signed_bignum32   Proc far
+    call save_signed_bignum
     ret
 save_signed_bignum32   Endp
 
 save_signed_bignum16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call save_signed_bignum
+;       
+    pop edi
+    pop ecx
     ret
 save_signed_bignum16   Endp    
+
 
 save_unsigned_bignum_name    DB 'Save Unsigned Big Number',0
 

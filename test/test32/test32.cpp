@@ -17,7 +17,7 @@
 
 void main()
 {
-    long long val;
+    int val;
     TBigNum num1;
     TBigNum num2(100);
     TBigNum num3(-2000);
@@ -43,10 +43,13 @@ void main()
     printf(str.GetData());
     printf("\r\n");
 
-    val = 123456;
-    num1.LoadUnsigned((const char *)&val, 7);
-    str = num1.GetDec();
-    printf(str.GetData());
-    printf("\r\n");
+    num1.SaveSigned((char *)&val, 4);
+    printf("%d\r\n", val);
+
+    num2.SaveSigned((char *)&val, 4);
+    printf("%d\r\n", val);
+
+    num3.SaveSigned((char *)&val, 4);
+    printf("%d\r\n", val);
     
 }
