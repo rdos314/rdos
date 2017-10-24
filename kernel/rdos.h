@@ -878,10 +878,15 @@ void RDOSAPI RdosLoadSignedBigNum(int handle, const char *buf, int size);
 void RDOSAPI RdosLoadUnsignedBigNum(int handle, const char *buf, int size);
 void RDOSAPI RdosSaveSignedBigNum(int handle, char *buf, int size);
 void RDOSAPI RdosSaveUnsignedBigNum(int handle, char *buf, int size);
+
+void RDOSAPI RdosLoadDecStrBigNum(int handle, const char *str);
 int RDOSAPI RdosGetDecStrSizeBigNum(int handle);
 void RDOSAPI RdosSaveDecStrBigNum(int handle, char *buf, int bufsize);
+
+void RDOSAPI RdosLoadHexStrBigNum(int handle, const char *str);
 int RDOSAPI RdosGetHexStrSizeBigNum(int handle);
 void RDOSAPI RdosSaveHexStrBigNum(int handle, char *buf, int bufsize);
+
 int RDOSAPI RdosAddBigNum(int handle1, int handle2);
 int RDOSAPI RdosSubBigNum(int handle1, int handle2);
 int RDOSAPI RdosMulBigNum(int handle1, int handle2);

@@ -3527,6 +3527,10 @@
     CallGate_save_unsigned_bignum  \
     parm [ebx] [edi] [ecx];
 
+#pragma aux RdosLoadDecStrBigNum = \
+    CallGate_load_dec_str_bignum  \
+    parm [ebx] [edi];
+
 #pragma aux RdosGetDecStrSizeBigNum = \
     CallGate_get_dec_str_size_bignum  \
     parm [ebx] \
@@ -3535,6 +3539,10 @@
 #pragma aux RdosSaveDecStrBigNum = \
     CallGate_save_dec_str_bignum  \
     parm [ebx] [edi] [ecx];
+
+#pragma aux RdosLoadHexStrBigNum = \
+    CallGate_load_hex_str_bignum  \
+    parm [ebx] [edi];
 
 #pragma aux RdosGetHexStrSizeBigNum = \
     CallGate_get_hex_str_size_bignum  \

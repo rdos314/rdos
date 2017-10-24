@@ -118,6 +118,40 @@ TBigNum::TBigNum(unsigned long long val)
 
 /*##########################################################################
 #
+#   Name       : TBigNum::TBigNum
+#
+#   Purpose....: Constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TBigNum::TBigNum(const char *str)
+{
+    FHandle = RdosCreateBigNum();
+    RdosLoadDecStrBigNum(FHandle, str);
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::TBigNum
+#
+#   Purpose....: Constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TBigNum::TBigNum(TString &str)
+{
+    FHandle = RdosCreateBigNum();
+    RdosLoadDecStrBigNum(FHandle, str.GetData());
+}
+
+/*##########################################################################
+#
 #   Name       : TBigNum::~TBigNum
 #
 #   Purpose....: Destructor
@@ -130,6 +164,70 @@ TBigNum::TBigNum(unsigned long long val)
 TBigNum::~TBigNum()
 {
     RdosDeleteBigNum(FHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::LoadDec
+#
+#   Purpose....: Load from decimal string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TBigNum::LoadDec(const char *str)
+{
+    RdosLoadDecStrBigNum(FHandle, str);
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::LoadHex
+#
+#   Purpose....: Load from hex string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TBigNum::LoadHex(const char *str)
+{
+    RdosLoadHexStrBigNum(FHandle, str);
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::LoadDec
+#
+#   Purpose....: Load from decimal string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TBigNum::LoadDec(TString &str)
+{
+    RdosLoadDecStrBigNum(FHandle, str.GetData());
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::LoadHex
+#
+#   Purpose....: Load from hex string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TBigNum::LoadHex(TString &str)
+{
+    RdosLoadHexStrBigNum(FHandle, str.GetData());
 }
 
 /*##########################################################################

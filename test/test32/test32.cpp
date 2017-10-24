@@ -18,7 +18,7 @@
 void main()
 {
     int val;
-    TBigNum num1;
+    TBigNum num1("-233445565766");
     TBigNum num2(100);
     TBigNum num3(-2000);
     TString str;

@@ -38,12 +38,19 @@ public:
     TBigNum(long long Value);
     TBigNum(unsigned int Value);
     TBigNum(unsigned long long Value);
+    TBigNum(const char *str);
+    TBigNum(TString &str);
     ~TBigNum();
 
     void LoadSigned(const char *buf, int size);
     void LoadUnsigned(const char *buf, int size);
     void SaveSigned(char *buf, int size);
     void SaveUnsigned(char *buf, int size);
+
+    void LoadDec(const char *str);
+    void LoadHex(const char *str);
+    void LoadDec(TString &str);
+    void LoadHex(TString &str);
 
     TString GetHex(int digits);
     TString GetDec();

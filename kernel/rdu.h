@@ -818,6 +818,8 @@
 #define usergate_load_unsigned_bignum 0x00000280
 #define usergate_save_signed_bignum 0x00000281
 #define usergate_save_unsigned_bignum 0x00000282
+#define usergate_load_dec_str_bignum 0x00000283
+#define usergate_load_hex_str_bignum 0x00000284
 
 
 
@@ -1642,6 +1644,8 @@
 #define CallGate_load_unsigned_bignum 0x55 0x67 0x9a 128 2 0 0 3 0 0x5d
 #define CallGate_save_signed_bignum 0x55 0x67 0x9a 129 2 0 0 3 0 0x5d
 #define CallGate_save_unsigned_bignum 0x55 0x67 0x9a 130 2 0 0 3 0 0x5d
+#define CallGate_load_dec_str_bignum 0x55 0x67 0x9a 131 2 0 0 3 0 0x5d
+#define CallGate_load_hex_str_bignum 0x55 0x67 0x9a 132 2 0 0 3 0 0x5d
 
 #else
 
@@ -2464,5 +2468,7 @@
 #define CallGate_load_unsigned_bignum 0x3e 0x67 0x9a 128 2 0 0 3 0
 #define CallGate_save_signed_bignum 0x3e 0x67 0x9a 129 2 0 0 3 0
 #define CallGate_save_unsigned_bignum 0x3e 0x67 0x9a 130 2 0 0 3 0
+#define CallGate_load_dec_str_bignum 0x3e 0x67 0x9a 131 2 0 0 3 0
+#define CallGate_load_hex_str_bignum 0x3e 0x67 0x9a 132 2 0 0 3 0
 
 #endif

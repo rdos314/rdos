@@ -4044,6 +4044,12 @@ SaveUnsignedBigNum	MACRO
 	        ENDM
 
 ; IN  BX            Bignum handle
+; IN  ES:(E)DI      String
+LoadDecStrBigNum	MACRO
+	UserGate load_dec_str_bignum_nr
+	        ENDM
+
+; IN  BX            Bignum handle
 ; OUT ECX           Bytes required for base 10 buffer
 GetDecStrSizeBigNum	MACRO
 	UserGate get_dec_str_size_bignum_nr
@@ -4054,6 +4060,12 @@ GetDecStrSizeBigNum	MACRO
 ; IN  ES:(E)DI      Buffer
 SaveDecStrBigNum	MACRO
 	UserGate save_dec_str_bignum_nr
+	        ENDM
+
+; IN  BX            Bignum handle
+; IN  ES:(E)DI      String
+LoadHexStrBigNum	MACRO
+	UserGate load_hex_str_bignum_nr
 	        ENDM
 
 ; IN  BX            Bignum handle
