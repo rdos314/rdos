@@ -1077,7 +1077,7 @@ delete_bignum     ENDP
 
 load_signed_bignum_name    DB 'Load Signed Big Number',0
 
-load_signed_bignum     PROC far
+load_signed_bignum     PROC near
     push ds
     push fs
     pushad
@@ -1518,6 +1518,119 @@ save_unsigned_bignum16   Proc far
     pop ecx
     ret
 save_unsigned_bignum16   Endp    
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ConvDecDigit
+;
+;           DESCRIPTION:    Convert decimal digit
+;
+;           PARAMETERS:     AL
+;
+;           RETURNS:        NC	Decimal digit
+;                           AL  Converted value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConvDecDigit  Proc near
+    sub al,'0'
+    jb cddFail
+;
+    cmp al,9
+    ja cddFail
+;
+    clc
+    ret
+
+cddFail:
+    stc
+    ret
+ConvDecDigit  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ConvHexDigit
+;
+;           DESCRIPTION:    Convert hex digit
+;
+;           PARAMETERS:     AL
+;
+;           RETURNS:        NC	Decimal digit
+;                           AL  Converted value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConvHexDigit  Proc near
+    cmp al,'a'
+    jae chdSmall
+;
+    cmp al,'A'
+    jae chdBig
+
+chdDec:
+    sub al,'0'
+    jb chdFail
+;
+    cmp al,9
+    ja chdFail
+;
+    clc
+    ret
+
+chdSmall:
+    sub al,'a'
+    add al,10
+    cmp al,10h
+    jae chdFail
+;
+    clc
+    ret
+
+chdBig:
+    sub al,'A'
+    add al,10
+    cmp al,10h
+    jae chdFail
+;
+    clc
+    ret
+
+chdFail:
+    stc
+    ret
+ConvHexDigit  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetStringStart
+;
+;           DESCRIPTION:    Get string start
+;
+;           PARAMETERS:     ES:EDI string
+;
+;           RETURNS:        ES:EDI start of string
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetStringStart  Proc near
+    mov al,es:[edi]
+    cmp al,' '
+    je gssAdv
+;
+    cmp al,'	'
+    je gssAdv
+;
+    ret
+
+gssAdv:
+    inc edi
+    jmp GetStringStart
+
+GetStringStart  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1534,17 +1647,146 @@ save_unsigned_bignum16   Endp
 load_dec_str_bignum_name    DB 'Load Dec String Big Number',0
 
 load_dec_str_bignum     PROC near
+    push ebp
+    sub esp,SIZE mul_struc
+    mov ebp,esp
+;
     push ds
+    push fs
     pushad
 ;
     mov ax,BIGNUM_HANDLE
     DerefHandle
     jc ldsDone
 ;
+    call GetStringStart
+    mov ds:[ebx].bn_flags,0
+    mov al,es:[edi]
+    cmp al,'-'
+    jne ldsPos
+;
+    inc edi
+    mov ds:[ebx].bn_flags,BN_FLAG_NEGATIVE
+
+ldsPos:
+    push edi
+    xor ecx,ecx
+
+ldsGetSizeLoop:
+    mov al,es:[edi]
+    call ConvDecDigit
+    jc ldsSizeOk
+;
+    inc edi
+    inc ecx
+    jmp ldsGetSizeLoop
+
+ldsSizeOk:
+    pop edi
+;
+    dec ecx
+    shr ecx,2
+    inc ecx
+    call RecreateBuf
+;
+    mov eax,flat_sel
+    mov fs,eax    
+    mov esi,ds:[ebx].bn_data
+    mov ecx,ds:[ebx].bn_count
+    or ecx,ecx
+    jz ldsDone
+;
+    xor eax,eax
+
+ldsClearLoop:    
+    mov fs:[esi],eax
+    add esi,4
+    loop ldsClearLoop
+;
+    push ds
+;
+    mov eax,4
+    AllocateSmallLinear
+    mov [ebp].mul_in_data1,edx
+    mov [ebp].mul_in_count1,1
+    mov eax,10
+    mov fs:[edx],eax
+;
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].mul_in_data2,eax
+    mov eax,ds:[ebx].bn_count
+    mov [ebp].mul_in_count2,eax
+;
+    mov eax,ds:[ebx].bn_count
+    mov [ebp].mul_out_count,eax
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].mul_out_data,edx
+;
+    mov eax,flat_sel
+    mov ds,eax
+
+ldsConvLoop:
+    mov al,es:[edi]
+    call ConvDecDigit
+    jc ldsConvDone
+;
+    push eax
+    call DoMul
+    pop eax
+;
+    push ecx
+    push esi
+    push edi
+;
+    movzx eax,al
+    mov ecx,[ebp].mul_out_count
+    mov esi,[ebp].mul_out_data
+    mov edi,[ebp].mul_in_data2
+    clc
+    lahf
+
+ldsMoveAddLoop:
+    sahf
+    adc eax,ds:[esi]
+    mov ds:[edi],eax
+    lahf
+    xor eax,eax
+;
+    add esi,4
+    add edi,4
+    loop ldsMoveAddLoop
+;
+    pop edi
+    pop esi
+    pop ecx
+;
+    inc edi
+    inc ecx
+    jmp ldsConvLoop
+
+ldsConvDone:
+    pop ds
+;
+    mov ecx,[ebp].mul_in_count1
+    shl ecx,2
+    mov edx,[ebp].mul_in_data1
+    FreeLinear
+;
+    mov ecx,[ebp].mul_out_count
+    shl ecx,2
+    mov edx,[ebp].mul_out_data
+    FreeLinear
+;
+    call OptBuf
 
 ldsDone: 
     popad
+    pop fs
     pop ds
+;
+    add esp,SIZE mul_struc
+    pop ebp
     ret
 load_dec_str_bignum     ENDP
 
