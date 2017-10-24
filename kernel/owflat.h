@@ -3515,22 +3515,22 @@
     parm [ebx] [eax] [edx] \
     value [ebx];
 
-#pragma aux RdosGetBigNumSize10 = \
-    CallGate_get_bignum_size10  \
+#pragma aux RdosGetDecStrSizeBigNum = \
+    CallGate_get_dec_str_size_bignum  \
     parm [ebx] \
     value [ecx];
 
-#pragma aux RdosGetBigNumString10 = \
-    CallGate_get_bignum_str10  \
+#pragma aux RdosSaveDecStrBigNum = \
+    CallGate_save_dec_str_bignum  \
     parm [ebx] [edi] [ecx];
 
-#pragma aux RdosGetBigNumSize16 = \
-    CallGate_get_bignum_size16  \
+#pragma aux RdosGetHexStrSizeBigNum = \
+    CallGate_get_hex_str_size_bignum  \
     parm [ebx] \
     value [ecx];
 
-#pragma aux RdosGetBigNumString16 = \
-    CallGate_get_bignum_str16  \
+#pragma aux RdosSaveHexStrBigNum = \
+    CallGate_save_hex_str_bignum  \
     parm [ebx] [edi] [ecx];
 
 #pragma aux RdosCreateRandomBigNum = \

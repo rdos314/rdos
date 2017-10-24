@@ -4017,15 +4017,28 @@ PowModBigNum	MACRO
 
 ; IN  BX            Bignum handle 1
 ; OUT ECX           Bytes required for base 10 buffer
-GetBigNumSize10	MACRO
-	UserGate get_bignum_size10_nr
+GetDecStrSizeBigNum	MACRO
+	UserGate get_dec_str_size_bignum_nr
 	        ENDM
 
 ; IN  BX            Bignum handle 1
 ; IN  (E)CX         Buffer size
 ; IN  ES:(E)DI      Buffer
-GetBigNumString10	MACRO
-	UserGate get_bignum_str10_nr
+SaveDecStrBigNum	MACRO
+	UserGate save_dec_str_bignum_nr
+	        ENDM
+
+; IN  BX            Bignum handle 1
+; OUT ECX           Bytes required for base 16 buffer
+GetHexStrSizeBigNum	MACRO
+	UserGate get_hex_str_size_bignum_nr
+	        ENDM
+
+; IN  BX            Bignum handle 1
+; IN  (E)CX         Buffer size
+; IN  ES:(E)DI      Buffer
+SaveHexStrBigNum	MACRO
+	UserGate save_hex_str_bignum_nr
 	        ENDM
 
 ; IN  ECX           Number of bits

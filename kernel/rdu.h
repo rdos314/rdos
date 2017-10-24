@@ -765,11 +765,11 @@
 #define usergate_get_thread_action_state 0x00000257
 #define usergate_set_thread_action 0x00000258
 
-#define usergate_get_bignum_size10 0x00000259
-#define usergate_get_bignum_str10 0x0000025A
+#define usergate_get_dec_str_size_bignum 0x00000259
+#define usergate_save_dec_str_bignum 0x0000025A
 
-#define usergate_get_bignum_size16 0x0000025B
-#define usergate_get_bignum_str16 0x0000025C
+#define usergate_get_hex_str_size_bignum 0x0000025B
+#define usergate_save_hex_str_bignum 0x0000025C
 
 #define usergate_create_random_bignum 0x0000025D
 
@@ -1585,11 +1585,11 @@
 #define CallGate_get_thread_action_state 0x55 0x67 0x9a 87 2 0 0 3 0 0x5d
 #define CallGate_set_thread_action 0x55 0x67 0x9a 88 2 0 0 3 0 0x5d
 
-#define CallGate_get_bignum_size10 0x55 0x67 0x9a 89 2 0 0 3 0 0x5d
-#define CallGate_get_bignum_str10 0x55 0x67 0x9a 90 2 0 0 3 0 0x5d
+#define CallGate_get_dec_str_size_bignum 0x55 0x67 0x9a 89 2 0 0 3 0 0x5d
+#define CallGate_save_dec_str_bignum 0x55 0x67 0x9a 90 2 0 0 3 0 0x5d
 
-#define CallGate_get_bignum_size16 0x55 0x67 0x9a 91 2 0 0 3 0 0x5d
-#define CallGate_get_bignum_str16 0x55 0x67 0x9a 92 2 0 0 3 0 0x5d
+#define CallGate_get_hex_str_size_bignum 0x55 0x67 0x9a 91 2 0 0 3 0 0x5d
+#define CallGate_save_hex_str_bignum 0x55 0x67 0x9a 92 2 0 0 3 0 0x5d
 
 #define CallGate_create_random_bignum 0x55 0x67 0x9a 93 2 0 0 3 0 0x5d
 
@@ -2403,11 +2403,11 @@
 #define CallGate_get_thread_action_state 0x3e 0x67 0x9a 87 2 0 0 3 0
 #define CallGate_set_thread_action 0x3e 0x67 0x9a 88 2 0 0 3 0
 
-#define CallGate_get_bignum_size10 0x3e 0x67 0x9a 89 2 0 0 3 0
-#define CallGate_get_bignum_str10 0x3e 0x67 0x9a 90 2 0 0 3 0
+#define CallGate_get_dec_str_size_bignum 0x3e 0x67 0x9a 89 2 0 0 3 0
+#define CallGate_save_dec_str_bignum 0x3e 0x67 0x9a 90 2 0 0 3 0
 
-#define CallGate_get_bignum_size16 0x3e 0x67 0x9a 91 2 0 0 3 0
-#define CallGate_get_bignum_str16 0x3e 0x67 0x9a 92 2 0 0 3 0
+#define CallGate_get_hex_str_size_bignum 0x3e 0x67 0x9a 91 2 0 0 3 0
+#define CallGate_save_hex_str_bignum 0x3e 0x67 0x9a 92 2 0 0 3 0
 
 #define CallGate_create_random_bignum 0x3e 0x67 0x9a 93 2 0 0 3 0
 

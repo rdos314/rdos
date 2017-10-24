@@ -162,12 +162,13 @@ RecreateBuf ENDP
 ;
 ;           PARAMETERS:     DS:EBX      Handle data
 ;                           EDX         Buffer count
-;                           ES:ESI      Data
+;                           ESI         Data
 ;                           ECX         Data count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CopyBuf     PROC near
+    push ds
     pushad
 ;    
     cmp edx,ds:[ebx].bn_count
@@ -204,12 +205,16 @@ cbCopy:
     jz cbDone
 ;
     mov edi,ds:[ebx].bn_data
+;
+    mov eax,flat_sel
+    mov ds,eax
+;
     or ecx,ecx
     jz cbZeroFill
 
 cbCopyLoop:
-    mov eax,es:[esi]    
-    mov es:[edi],eax
+    mov eax,[esi]    
+    mov [edi],eax
     add esi,4
     add edi,4
     sub edx,1
@@ -222,13 +227,14 @@ cbZeroFill:
     xor eax,eax
 
 cbZeroFillLoop:    
-    mov es:[edi],eax
+    mov [edi],eax
     add edi,4
     sub edx,1
     jnz cbZeroFillLoop
 
 cbDone:
     popad        
+    pop ds
     ret
 CopyBuf ENDP
     
@@ -245,6 +251,7 @@ CopyBuf ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GrowBuf     PROC near
+    push ds
     pushad
 ;    
     mov esi,ds:[ebx].bn_data
@@ -266,12 +273,15 @@ gbSrcOk:
     mov edx,ds:[ebx].bn_count
     mov ds:[ebx].bn_count,ecx
 ;
+    mov eax,flat_sel
+    mov ds,eax
+;
     or edx,edx
     jz gbCopyOk
 
 gbCopyLoop:
-    mov eax,es:[esi]
-    mov es:[edi],eax
+    mov eax,[esi]
+    mov [edi],eax
     add esi,4
     add edi,4
     sub ecx,1
@@ -285,7 +295,7 @@ gbCopyOk:
     xor eax,eax    
 
 gbZeroLoop:    
-    mov es:[edi],eax
+    mov [edi],eax
     add edi,4
     sub ecx,1
     jnz gbZeroLoop
@@ -299,6 +309,7 @@ gbZeroLoop:
 
 gbDone:        
     popad
+    pop ds
     ret
 GrowBuf ENDP
     
@@ -314,12 +325,16 @@ GrowBuf ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OptBuf     PROC near
+    push es
     pushad
 ;    
     mov esi,ds:[ebx].bn_data
     mov ecx,ds:[ebx].bn_count
     or ecx,ecx
     jz obDone
+;
+    mov eax,flat_sel
+    mov ds,eax
 ;
     mov eax,ecx
     dec eax
@@ -374,6 +389,7 @@ obZero:
 
 obDone:    
     popad
+    pop es
     ret
 OptBuf ENDP
     
@@ -384,7 +400,7 @@ OptBuf ENDP
 ;
 ;           DESCRIPTION:    Get bit count in operand
 ;
-;           PARAMETERS:     ES:ESI      Data
+;           PARAMETERS:     DS:ESI      Data
 ;                           ECX         Buffer count
 ;
 ;           RETURNS:        ECX         Bits
@@ -404,7 +420,7 @@ GetBits     PROC near
     shl ecx,3
 
 gbitsLoop:
-    mov al,es:[esi]
+    mov al,[esi]
     or al,al
     jnz gbitsBitLoop
 ;
@@ -435,9 +451,9 @@ GetBits     Endp
 ;
 ;           DESCRIPTION:    Make a left shifted copy
 ;
-;           PARAMETERS:     ES:ESI      Source data
+;           PARAMETERS:     DS:ESI      Source data
 ;                           ECX         Source buffer count
-;                           ES:EDI      Dest data
+;                           DS:EDI      Dest data
 ;                           EDX         Dest buffer count
 ;                           EBX         Shift count
 ;
@@ -453,7 +469,7 @@ cslZeroLoop:
     or eax,eax
     jz cslShiftIn
 ;
-    mov dword ptr es:[edi],0
+    mov dword ptr [edi],0
     add edi,4
     sub edx,1
     jz cslDone
@@ -471,23 +487,23 @@ cslShiftLoop:
 ;    
     push ecx
     mov cl,bl
-    mov ebp,es:[esi]
+    mov ebp,[esi]
     shl ebp,cl
     pop ecx
     or eax,ebp
-    mov es:[edi],eax
+    mov [edi],eax
 ;        
     push ecx
     mov cl,32
     sub cl,bl
-    mov eax,es:[esi]
+    mov eax,[esi]
     shr eax,cl
     pop ecx
     jmp cslShiftNext
 
 cslShiftZero:
-    mov eax,es:[esi]
-    mov es:[edi],eax
+    mov eax,[esi]
+    mov [edi],eax
     xor eax,eax
     
 cslShiftNext:
@@ -499,7 +515,7 @@ cslShiftNext:
     sub ecx,1
     jnz cslShiftLoop    
 ;
-    mov es:[edi],eax
+    mov [edi],eax
     xor eax,eax
 
 cslEndLoop:
@@ -507,7 +523,7 @@ cslEndLoop:
     sub edx,1
     jz cslDone
 ;
-    mov es:[edi],eax        
+    mov [edi],eax        
     jmp cslEndLoop        
 
 cslDone:   
@@ -522,9 +538,9 @@ CopyShiftLeft     ENDP
 ;
 ;           DESCRIPTION:    Make a right shifted copy
 ;
-;           PARAMETERS:     ES:ESI      Source data
+;           PARAMETERS:     DS:ESI      Source data
 ;                           ECX         Source buffer count
-;                           ES:EDI      Dest data
+;                           DS:EDI      Dest data
 ;                           EDX         Dest buffer count
 ;                           EBX         Shift count
 ;
@@ -564,24 +580,24 @@ csrShiftLoop:
     push ebp
     push ecx
     mov cl,bl
-    mov ebp,es:[esi]
+    mov ebp,[esi]
     shr ebp,cl
     pop ecx
     or eax,ebp
-    mov es:[edi],eax
+    mov [edi],eax
 ;        
     push ecx
     mov cl,32
     sub cl,bl
-    mov eax,es:[esi]
+    mov eax,[esi]
     shl eax,cl
     pop ecx
     pop ebp
     jmp csrShiftNext
 
 csrShiftZero:
-    mov eax,es:[esi]
-    mov es:[edi],eax
+    mov eax,[esi]
+    mov [edi],eax
     xor eax,eax
     
 csrShiftNext:
@@ -601,7 +617,7 @@ csrEndLoop:
     sub edx,1
     jz csrDone
 ;
-    mov es:[ebp],eax        
+    mov ds:[ebp],eax        
     jmp csrEndLoop        
 
 csrDone:   
@@ -616,8 +632,8 @@ CopyShiftRight     ENDP
 ;
 ;           DESCRIPTION:    Compare numbers
 ;
-;           PARAMETERS:     ES:ESI      Source data to subtract
-;                           ES:EDI      Dest data
+;           PARAMETERS:     DS:ESI      Source data to subtract
+;                           DS:EDI      Dest data
 ;                           ECX         Buffer count
 ;
 ;           RETURNS:        CY          Source larger
@@ -642,8 +658,8 @@ DoCompare     PROC near
     add edi,eax
     
 compLoop:
-    mov eax,es:[edi]
-    sub eax,es:[esi]
+    mov eax,[edi]
+    sub eax,[esi]
     jnz compDone
 ;
     sub esi,4
@@ -666,9 +682,9 @@ DoCompare     ENDP
 ;
 ;           DESCRIPTION:    Do an add
 ;
-;           PARAMETERS:     ES:ESI      Source data
-;                           ES:EDI      Dest data
-;                           ECX          Buffer count
+;           PARAMETERS:     DS:ESI      Source data
+;                           DS:EDI      Dest data
+;                           ECX         Buffer count
 ;
 ;           RETURNS:        CY          overflow
 ;
@@ -688,8 +704,8 @@ DoAdd     PROC near
 
 daLoop:
     popf
-    mov eax,es:[esi]
-    adc es:[edi],eax
+    mov eax,[esi]
+    adc [edi],eax
     pushf
 ;
     add esi,4
@@ -714,8 +730,8 @@ DoAdd     ENDP
 ;
 ;           DESCRIPTION:    Do a sub
 ;
-;           PARAMETERS:     ES:ESI      Source data to subtract
-;                           ES:EDI      Dest data and result
+;           PARAMETERS:     DS:ESI      Source data to subtract
+;                           DS:EDI      Dest data and result
 ;                           ECX         Buffer count
 ;
 ;           RETURNS:        CY          overflow
@@ -737,8 +753,8 @@ DoSub     PROC near
 
 dsLoop:
     popf
-    mov eax,es:[esi]
-    sbb es:[edi],eax
+    mov eax,[esi]
+    sbb [edi],eax
     pushf
 ;
     add esi,4
@@ -763,7 +779,7 @@ DoSub     ENDP
 ;
 ;           DESCRIPTION:    Do a not
 ;
-;           PARAMETERS:     ES:EDI      Dest data
+;           PARAMETERS:     DS:EDI      Dest data
 ;                           ECX         Buffer count
 ;
 ;           RETURNS:        CY          overflow
@@ -783,11 +799,11 @@ DoNeg     PROC near
     pushf    
 
 dnLoop:
-    mov eax,es:[edi]
+    mov eax,[edi]
     not eax
     popf
     adc eax,0
-    mov es:[edi],eax
+    mov [edi],eax
     pushf
 ;
     add edi,4    
@@ -811,7 +827,7 @@ DoNeg     ENDP
 ;           DESCRIPTION:    Do a mul
 ;
 ;           PARAMETERS:     SS:EBP      Mul params
-;                           ES          Flat sel
+;                           DS          Flat sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -826,7 +842,7 @@ DoMul     PROC near
     mov edi,[ebp].mul_out_data    
 
 dmInitResLoop:
-    mov es:[edi],eax
+    mov [edi],eax
     add edi,4
     loop dmInitResLoop
 ;
@@ -844,15 +860,15 @@ dmInitResLoop:
     mov edi,[ebp].mul_in_data2
 
 dmLoop:
-    mov eax,es:[esi]
-    mul es:[edi]
+    mov eax,[esi]
+    mul [edi]
 ;
     push ebx    
     add ebx,ecx
     shl ebx,2
     add ebx,[ebp].mul_out_data
-    add es:[ebx],eax
-    adc es:[ebx+4],edx
+    add [ebx],eax
+    adc [ebx+4],edx
     jnc dmNext
 ;    
     mov eax,1
@@ -860,7 +876,7 @@ dmLoop:
 
 dmCy:
     add ebx,4
-    add es:[ebx],eax
+    add [ebx],eax
     jc dmCy
 
 dmNext:
@@ -890,7 +906,7 @@ DoMul     ENDP
 ;           DESCRIPTION:    Do a div
 ;
 ;           PARAMETERS:     SS:EBP      Div params
-;                           ES          Flat sel
+;                           DS          Flat sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -930,7 +946,7 @@ divLoop:
     jc divNext
 ;
     mov edx,[ebp].div_quot_data
-    bts es:[edx],ebx
+    bts [edx],ebx
 ;
     call DoSub
     jnz divNext
@@ -1063,12 +1079,12 @@ load_bignum64     PROC far
     push ecx
     push edi
 ;
-    push ax
-    mov ax,flat_sel
-    mov es,ax    
+    push eax
+    mov eax,flat_sel
+    mov es,eax    
     mov ax,BIGNUM_HANDLE
     DerefHandle
-    pop ax
+    pop eax
     jc lbn64Done
 ;
     test edx,80000000h
@@ -1124,6 +1140,716 @@ lbn64Done:
     pop ds
     ret
 load_bignum64     ENDP
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetDecStrSizeBigNum
+;
+;           DESCRIPTION:    Get big num size in base 10
+;
+;           PARAMETERS:     BX          Num handle
+;
+;           RETURNS:        ECX         Buffer size for base 10
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_dec_str_size_bignum_name    DB 'Get Decimal String Size for Big Number',0
+
+text_invalid DB 'Invalid', 0
+text_infinite DB 'Infinite', 0
+
+get_dec_str_size_bignum     PROC far
+    push ebp
+    sub esp,SIZE div_struc
+    mov ebp,esp
+;    
+    push ds
+    push fs
+    push eax
+    push ebx
+    push edx
+    push esi
+    push edi
+;
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc gdssFail
+;    
+    mov eax,ds
+    mov fs,eax
+;
+    mov ax,ds:[ebx].bn_flags
+    test ax,BN_FLAG_INFINITE
+    jnz gdssInfinite
+;
+    mov eax,ds:[ebx].bn_count
+    or eax,eax
+    jz gdssZero
+;    
+    mov [ebp].div_quot_count,eax    
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].div_mod_data,eax
+;
+    mov eax,1    
+    mov [ebp].div_divisor_count,eax    
+    mov ecx,eax
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].div_divisor_data,edx
+    mov eax,10
+    mov es:[edx],eax
+;    
+    push esi
+    push edi
+    mov eax,flat_sel
+    mov ds,eax    
+;
+    mov esi,[ebp].div_mod_data
+    mov eax,[ebp].div_quot_count
+    mov ecx,eax
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].div_mod_data,edx
+    mov edi,edx
+
+gdssCopyNomLoop:
+    mov eax,[esi]
+    mov [edi],eax
+    add esi,4
+    add edi,4
+    loop gdssCopyNomLoop    
+
+gdssCopyDone:
+    pop edi
+    pop esi    
+;
+    mov eax,[ebp].div_quot_count
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].div_temp_quot_data,edx
+;    
+    mov eax,[ebp].div_quot_count
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].div_quot_data,edx
+;
+    mov edx,1
+
+gdssRetry:
+    call DoDiv
+;
+    mov ecx,[ebp].div_quot_count
+    mov esi,[ebp].div_quot_data
+    call GetBits
+    or ecx,ecx
+    jz gdssOk
+;
+    inc edx
+    mov ecx,[ebp].div_quot_count
+    mov esi,[ebp].div_quot_data
+    mov edi,[ebp].div_mod_data
+
+gdssRetryLoop:
+    mov eax,[esi]
+    mov [edi],eax
+    add esi,4
+    add edi,4
+    loop gdssRetryLoop
+    jmp gdssRetry
+
+gdssOk:
+    mov ecx,edx
+;    
+    push ecx
+    mov ecx,[ebp].div_quot_count
+    shl ecx,2
+    mov edx,[ebp].div_temp_quot_data
+    FreeLinear
+    pop ecx
+;    
+    push ecx
+    mov ecx,[ebp].div_quot_count
+    shl ecx,2
+    mov edx,[ebp].div_quot_data
+    FreeLinear
+    pop ecx
+;    
+    push ecx
+    mov ecx,[ebp].div_divisor_count
+    shl ecx,2
+    mov edx,[ebp].div_divisor_data
+    FreeLinear
+    pop ecx
+;    
+    push ecx
+    mov ecx,[ebp].div_quot_count
+    shl ecx,2
+    mov edx,[ebp].div_mod_data
+    FreeLinear
+    pop ecx
+    jmp gdssAddSign
+            
+gdssFail:
+    mov ecx,7
+    jmp gdssLeave
+
+gdssZero:
+    mov ecx,1
+    jmp gdssLeave
+
+gdssInfinite:
+    mov ecx,8
+
+gdssAddSign:
+    test fs:[ebx].bn_flags,BN_FLAG_NEGATIVE
+    jz gdssLeave
+;
+    inc ecx
+    
+gdssLeave:
+    inc ecx
+;    
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+;
+    add esp,SIZE div_struc
+    pop ebp
+    ret
+get_dec_str_size_bignum  ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SaveDecStrBigNum
+;
+;           DESCRIPTION:    Save big number as decimal string
+;
+;           PARAMETERS:     BX          Num handle
+;                           ES:EDI      Buffer
+;                           ECX         Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+save_dec_str_bignum_name    DB 'Save Decimal String Big Number',0
+
+save_dec_str_bignum     PROC near
+    push ebp
+    sub esp,SIZE div_struc
+    mov ebp,esp
+;    
+    push ds
+    push fs
+    pushad
+;
+    cmp ecx,2
+    jb sdsLeave
+;    
+    add edi,ecx
+    dec edi
+    xor al,al
+    mov es:[edi],al
+    dec edi
+;
+    mov [ebp].div_offset,edi
+    dec ecx
+    mov [ebp].div_size,ecx
+;    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc sdsFail
+;    
+    mov eax,ds
+    mov fs,eax
+;
+    mov ax,ds:[ebx].bn_flags
+    test ax,BN_FLAG_INFINITE
+    jnz sdsInfinite
+;
+    mov eax,ds:[ebx].bn_count
+    or eax,eax
+    jz sdsZero
+;    
+    mov [ebp].div_quot_count,eax    
+    mov eax,ds:[ebx].bn_data
+    mov [ebp].div_mod_data,eax
+;
+    mov eax,flat_sel
+    mov ds,eax    
+;
+    mov eax,1    
+    mov [ebp].div_divisor_count,eax    
+    mov ecx,eax
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].div_divisor_data,edx
+    mov eax,10
+    mov [edx],eax
+;    
+    push esi
+    push edi
+;
+    mov esi,[ebp].div_mod_data
+    mov eax,[ebp].div_quot_count
+    mov ecx,eax
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].div_mod_data,edx
+    mov edi,edx
+
+sdsCopyNomLoop:
+    mov eax,[esi]
+    mov [edi],eax
+    add esi,4
+    add edi,4
+    loop sdsCopyNomLoop    
+
+sdsCopyDone:
+    pop edi
+    pop esi    
+;
+    mov eax,[ebp].div_quot_count
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].div_temp_quot_data,edx
+;    
+    mov eax,[ebp].div_quot_count
+    shl eax,2
+    AllocateSmallLinear
+    mov [ebp].div_quot_data,edx
+
+sdsRetry:
+    call DoDiv
+;
+    mov edi,[ebp].div_mod_data
+    mov al,[edi]
+    add al,'0'
+    mov edi,[ebp].div_offset
+    mov es:[edi],al
+    dec edi
+    mov [ebp].div_offset,edi
+    sub [ebp].div_size,1
+    jz sdsOk
+;
+    mov ecx,[ebp].div_quot_count
+    mov esi,[ebp].div_quot_data
+    call GetBits
+    or ecx,ecx
+    jz sdsOk
+;
+    mov ecx,[ebp].div_quot_count
+    mov esi,[ebp].div_quot_data
+    mov edi,[ebp].div_mod_data
+
+sdsRetryLoop:
+    mov eax,[esi]
+    mov [edi],eax
+    add esi,4
+    add edi,4
+    loop sdsRetryLoop
+;
+    jmp sdsRetry
+
+sdsOk:
+    mov ecx,[ebp].div_quot_count
+    shl ecx,2
+    mov edx,[ebp].div_temp_quot_data
+    FreeLinear
+;    
+    mov ecx,[ebp].div_quot_count
+    shl ecx,2
+    mov edx,[ebp].div_quot_data
+    FreeLinear
+;    
+    mov ecx,[ebp].div_divisor_count
+    shl ecx,2
+    mov edx,[ebp].div_divisor_data
+    FreeLinear
+;    
+    mov ecx,[ebp].div_quot_count
+    shl ecx,2
+    mov edx,[ebp].div_mod_data
+    FreeLinear
+;
+    mov eax,[ebp].div_size
+    or eax,eax
+    jz sdsLeave
+;    
+    jmp sdsAddSign
+            
+sdsFail:
+    mov esi,OFFSET text_invalid
+    jmp sdsWriteText
+
+sdsZero:
+    mov al,'0'
+    mov edi,[ebp].div_offset
+    mov es:[edi],al
+    dec edi
+    mov [ebp].div_offset,edi
+    sub [ebp].div_size,1
+    jz sdsLeave
+    jmp sdsFill
+
+sdsInfinite: 
+    mov esi,OFFSET text_infinite
+
+sdsWriteText:    
+    mov edi,[ebp].div_offset
+    mov ecx,[ebp].div_size
+    sub edi,ecx
+    inc edi
+    inc ecx
+
+sdsWriteLoop:    
+    mov al,cs:[esi]
+    or al,al
+    jz sdsAddNull
+;    
+    mov es:[edi],al
+    inc edi
+    inc esi
+    sub ecx,1
+    jnz sdsWriteLoop
+;
+    dec edi
+
+sdsAddNull:    
+    xor al,al
+    mov es:[edi],al
+    jmp sdsLeave    
+
+sdsAddSign:
+    test fs:[ebx].bn_flags,BN_FLAG_NEGATIVE
+    jz sdsFill
+;
+    mov al,'-'
+    mov edi,[ebp].div_offset
+    mov es:[edi],al
+    dec edi
+    mov [ebp].div_offset,edi
+    sub [ebp].div_size,1
+    jz sdsLeave
+
+sdsFill:
+    mov al,' '
+    mov edi,[ebp].div_offset
+    mov es:[edi],al
+    dec edi
+    mov [ebp].div_offset,edi
+    sub [ebp].div_size,1
+    jnz sdsFill
+    
+sdsLeave:
+    popad
+    pop fs
+    pop ds
+;
+    add esp,SIZE div_struc
+    pop ebp
+    ret
+save_dec_str_bignum     ENDP
+
+save_dec_str_bignum32   Proc far
+    call save_dec_str_bignum
+    ret
+save_dec_str_bignum32   Endp
+
+save_dec_str_bignum16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call save_dec_str_bignum
+;       
+    pop edi
+    pop ecx
+    ret
+save_dec_str_bignum16   Endp    
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetHexStrSizeBigNum
+;
+;           DESCRIPTION:    Get big num size in base 16
+;
+;           PARAMETERS:     BX          Num handle
+;
+;           RETURNS:        ECX         Buffer size for base 16
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_hex_str_size_bignum_name    DB 'Get Hex String Size for Big Number',0
+
+get_hex_str_size_bignum     PROC far
+    push ds
+    push eax
+    push ebx
+    push edx
+;    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc ghssFail
+;    
+    mov ax,ds:[ebx].bn_flags
+    test ax,BN_FLAG_INFINITE
+    jnz ghssInfinite
+;
+    mov ecx,ds:[ebx].bn_count
+    or ecx,ecx
+    jz ghssAddSign
+;
+    mov esi,ds:[ebx].bn_data
+;
+    push ds
+    mov eax,flat_sel
+    mov ds,eax
+    call GetBits
+    pop ds
+;
+    dec ecx
+    shr ecx,2
+    inc ecx
+    jmp ghssAddSign
+            
+ghssFail:
+    mov ecx,7
+    jmp ghssLeave
+
+ghssInfinite:
+    mov ecx,8
+
+ghssAddSign:
+    test ds:[ebx].bn_flags,BN_FLAG_NEGATIVE
+    jz ghssLeave
+;
+    inc ecx
+    
+ghssLeave:
+    inc ecx
+;    
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+get_hex_str_size_bignum  ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SaveHexStrBigNum
+;
+;           DESCRIPTION:    Get big num str in base 16
+;
+;           PARAMETERS:     BX          Num handle
+;                           ES:EDI      Buffer
+;                           ECX         Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+save_hex_str_bignum_name    DB 'Save Hex String Big Number',0
+
+ToHex   Proc near
+    and al,0Fh
+    cmp al,10
+    jb thLow
+;
+    sub al,10
+    add al,'A'        
+    ret
+
+thLow:
+    add al,'0'
+    ret    
+ToHex   Endp
+
+save_hex_str_bignum     PROC near
+    push ds
+    pushad
+;
+    cmp ecx,2
+    jb shsLeave
+;    
+    add edi,ecx
+    dec edi
+    xor al,al
+    mov es:[edi],al
+    dec edi
+    dec ecx
+;    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc shsFail
+;    
+    mov ax,ds:[ebx].bn_flags
+    test ax,BN_FLAG_INFINITE
+    jnz shsInfinite
+;
+    mov edx,ds:[ebx].bn_count
+    or edx,edx
+    jz shsAddSign
+
+    mov esi,ds:[ebx].bn_data
+    mov bp,ds:[ebx].bn_flags
+    mov eax,flat_sel
+    mov ds,eax
+
+shsLoop:
+    mov eax,[esi]
+    call ToHex
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz shsLeave
+;    
+    mov eax,[esi]
+    shr eax,4
+    call ToHex
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz shsLeave
+;
+    mov eax,[esi]
+    shr eax,8
+    call ToHex
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz shsLeave
+;    
+    mov eax,[esi]
+    shr eax,12
+    call ToHex
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz shsLeave
+;
+    mov eax,[esi]
+    shr eax,16
+    call ToHex
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz shsLeave
+;    
+    mov eax,[esi]
+    shr eax,20
+    call ToHex
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz shsLeave
+;
+    mov eax,[esi]
+    shr eax,24
+    call ToHex
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz shsLeave
+;    
+    mov eax,[esi]
+    shr eax,28
+    call ToHex
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz shsLeave
+;    
+    add esi,4
+    sub edx,1
+    jnz shsLoop
+;
+    jmp shsAddSign
+                
+shsFail:
+    mov esi,OFFSET text_invalid
+    jmp shsWriteText
+
+shsZero:
+    mov al,'0'
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz shsLeave
+    jmp shsFill
+
+shsInfinite: 
+    mov esi,OFFSET text_infinite
+
+shsWriteText:    
+    sub edi,ecx
+    inc edi
+    inc ecx
+
+shsWriteLoop:    
+    mov al,cs:[esi]
+    or al,al
+    jz shsAddNull
+;    
+    mov es:[edi],al
+    inc edi
+    inc esi
+    sub ecx,1
+    jnz shsWriteLoop
+;
+    dec edi
+
+shsAddNull:    
+    xor al,al
+    mov es:[edi],al
+    jmp shsLeave    
+
+shsAddSign:
+    test bp,BN_FLAG_NEGATIVE
+    jz shsFill
+;
+    mov al,'-'
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jz shsLeave
+
+shsFill:
+    mov al,'0'
+    mov es:[edi],al
+    dec edi
+    sub ecx,1
+    jnz shsFill
+    
+shsLeave:
+    popad
+    pop ds
+    ret
+save_hex_str_bignum  ENDP
+
+save_hex_str_bignum32   Proc far
+    call save_hex_str_bignum
+    ret
+save_hex_str_bignum32   Endp
+
+save_hex_str_bignum16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call save_hex_str_bignum
+;       
+    pop edi
+    pop ecx
+    ret
+save_hex_str_bignum16   Endp    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1716,8 +2442,6 @@ div_bignum     PROC far
     push edi
 ;
     push ax
-    mov ax,flat_sel
-    mov es,ax    
     mov ax,BIGNUM_HANDLE
     DerefHandle
     pop ax
@@ -1741,6 +2465,9 @@ div_bignum     PROC far
     mov eax,ds:[ebx].bn_data
     mov [ebp].div_divisor_data,eax
 ;
+    mov eax,flat_sel
+    mov ds,eax
+;
     push esi
     mov esi,[ebp].div_divisor_data
     mov ecx,[ebp].div_divisor_count
@@ -1761,10 +2488,15 @@ div_bignum     PROC far
     mov ecx,eax
     shl eax,2
     AllocateSmallLinear
+;
     mov [ebp].div_mod_data,edx
+    push es
+    mov eax,flat_sel
+    mov es,eax
     mov edi,edx
     xor eax,eax
     stos dword ptr es:[edi]
+    pop es
     jmp dnCopyDone
     
 dnNotZero:
@@ -1776,8 +2508,8 @@ dnNotZero:
     mov edi,edx
 
 dnCopyNomLoop:
-    mov eax,es:[esi]
-    mov es:[edi],eax
+    mov eax,[esi]
+    mov [edi],eax
     add esi,4
     add edi,4
     loop dnCopyNomLoop    
@@ -1812,7 +2544,12 @@ dnCopyDone:
     mov eax,ds:[ebx].bn_data
     mov [ebp].div_quot_data,eax
 ;    
+    push ds
+    mov eax,flat_sel
+    mov ds,eax
     call DoDiv
+    pop ds
+;
     call OptBuf    
 ;
     mov ecx,[ebp].div_quot_count
@@ -1898,8 +2635,6 @@ mod_bignum     PROC far
     push edi
 ;
     push ax
-    mov ax,flat_sel
-    mov es,ax    
     mov ax,BIGNUM_HANDLE
     DerefHandle
     pop ax
@@ -1922,6 +2657,9 @@ mod_bignum     PROC far
     mov [ebp].div_divisor_count,eax    
     mov eax,ds:[ebx].bn_data
     mov [ebp].div_divisor_data,eax
+;
+    mov eax,flat_sel
+    mov ds,eax
 ;
     push esi
     mov esi,[ebp].div_divisor_data
@@ -1948,11 +2686,16 @@ mod_bignum     PROC far
     mov ecx,1
     mov [ebp].div_quot_count,ecx    
     call RecreateBuf
+;
+    push es
+    mov eax,flat_sel
+    mov es,eax
     mov eax,ds:[ebx].bn_data
     mov [ebp].div_mod_data,eax
     mov edi,eax
     xor eax,eax
     stos dword ptr es:[edi]
+    pop es
     jmp mbnCopyDone
     
 mbnNotZero:
@@ -1962,13 +2705,19 @@ mbnNotZero:
     mov eax,ds:[ebx].bn_data
     mov [ebp].div_mod_data,eax
     mov edi,eax
+;
+    push ds
+    mov eax,flat_sel
+    mov ds,eax
 
 mbnCopyNomLoop:
-    mov eax,es:[esi]
-    mov es:[edi],eax
+    mov eax,[esi]
+    mov [edi],eax
     add esi,4
     add edi,4
     loop mbnCopyNomLoop    
+;
+    pop ds
 
 mbnCopyDone:
     pop edi
@@ -1994,7 +2743,12 @@ mbnCopyDone:
     and ax,BN_FLAG_NEGATIVE
     or ds:[ebx].bn_flags,ax
 ;    
+    push ds
+    mov eax,flat_sel
+    mov ds,eax
     call DoDiv
+    pop ds
+;
     call OptBuf    
 ;
     mov ecx,[ebp].div_quot_count
@@ -2338,703 +3092,6 @@ pmLeave:
     pop ebp
     ret
 pow_mod_bignum  ENDP
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetBigNumSize10
-;
-;           DESCRIPTION:    Get big num size in base 10
-;
-;           PARAMETERS:     BX          Num handle
-;
-;           RETURNS:        ECX         Buffer size for base 10
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_bignum_size10_name    DB 'Get Big Number Size10',0
-
-text_invalid DB 'Invalid', 0
-text_infinite DB 'Infinite', 0
-
-get_bignum_size10     PROC far
-    push ebp
-    sub esp,SIZE div_struc
-    mov ebp,esp
-;    
-    push ds
-    push es
-    push eax
-    push ebx
-    push edx
-    push esi
-    push edi
-;
-    mov ax,flat_sel
-    mov es,ax    
-    mov ax,BIGNUM_HANDLE
-    DerefHandle
-    jc gbs10Fail
-;    
-    mov ax,ds:[ebx].bn_flags
-    test ax,BN_FLAG_INFINITE
-    jnz gbs10Infinite
-;
-    mov eax,ds:[ebx].bn_count
-    or eax,eax
-    jz gbs10Zero
-;    
-    mov [ebp].div_quot_count,eax    
-    mov eax,ds:[ebx].bn_data
-    mov [ebp].div_mod_data,eax
-;
-    mov eax,1    
-    mov [ebp].div_divisor_count,eax    
-    mov ecx,eax
-    shl eax,2
-    AllocateSmallLinear
-    mov [ebp].div_divisor_data,edx
-    mov eax,10
-    mov es:[edx],eax
-;    
-    push esi
-    push edi
-;
-    mov esi,[ebp].div_mod_data
-    mov eax,[ebp].div_quot_count
-    mov ecx,eax
-    shl eax,2
-    AllocateSmallLinear
-    mov [ebp].div_mod_data,edx
-    mov edi,edx
-
-gbs10CopyNomLoop:
-    mov eax,es:[esi]
-    mov es:[edi],eax
-    add esi,4
-    add edi,4
-    loop gbs10CopyNomLoop    
-
-gbs10CopyDone:
-    pop edi
-    pop esi    
-;
-    mov eax,[ebp].div_quot_count
-    shl eax,2
-    AllocateSmallLinear
-    mov [ebp].div_temp_quot_data,edx
-;    
-    mov eax,[ebp].div_quot_count
-    shl eax,2
-    AllocateSmallLinear
-    mov [ebp].div_quot_data,edx
-;
-    mov edx,1
-
-gbs10Retry:
-    call DoDiv
-;
-    mov ecx,[ebp].div_quot_count
-    mov esi,[ebp].div_quot_data
-    call GetBits
-    or ecx,ecx
-    jz gbs10Ok
-;
-    inc edx
-    mov ecx,[ebp].div_quot_count
-    mov esi,[ebp].div_quot_data
-    mov edi,[ebp].div_mod_data
-    rep movs dword ptr es:[edi],es:[esi]
-    jmp gbs10Retry
-
-gbs10Ok:
-    mov ecx,edx
-;    
-    push ecx
-    mov ecx,[ebp].div_quot_count
-    shl ecx,2
-    mov edx,[ebp].div_temp_quot_data
-    FreeLinear
-    pop ecx
-;    
-    push ecx
-    mov ecx,[ebp].div_quot_count
-    shl ecx,2
-    mov edx,[ebp].div_quot_data
-    FreeLinear
-    pop ecx
-;    
-    push ecx
-    mov ecx,[ebp].div_divisor_count
-    shl ecx,2
-    mov edx,[ebp].div_divisor_data
-    FreeLinear
-    pop ecx
-;    
-    push ecx
-    mov ecx,[ebp].div_quot_count
-    shl ecx,2
-    mov edx,[ebp].div_mod_data
-    FreeLinear
-    pop ecx
-    jmp gbs10AddSign
-            
-gbs10Fail:
-    mov ecx,7
-    jmp gbs10Leave
-
-gbs10Zero:
-    mov ecx,1
-    jmp gbs10Leave
-
-gbs10Infinite:
-    mov ecx,8
-
-gbs10AddSign:
-    test ds:[ebx].bn_flags,BN_FLAG_NEGATIVE
-    jz gbs10Leave
-;
-    inc ecx
-    
-gbs10Leave:
-    inc ecx
-;    
-    pop edi
-    pop esi
-    pop edx
-    pop ebx
-    pop eax
-    pop es
-    pop ds
-;
-    add esp,SIZE div_struc
-    pop ebp
-    ret
-get_bignum_size10  ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetBigNumStr10
-;
-;           DESCRIPTION:    Get big num str in base 10
-;
-;           PARAMETERS:     BX          Num handle
-;                           ES:EDI      Buffer
-;                           ECX         Buffer size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_bignum_buf10_name    DB 'Get Big Number String base-10',0
-
-get_bignum_buf10     PROC near
-    push ebp
-    sub esp,SIZE div_struc
-    mov ebp,esp
-;    
-    push ds
-    push es
-    push fs
-    pushad
-;
-    cmp ecx,2
-    jb gbb10Leave
-;    
-    mov ax,es
-    mov fs,ax
-    add edi,ecx
-    dec edi
-    xor al,al
-    mov fs:[edi],al
-    dec edi
-    mov [ebp].div_offset,edi
-    dec ecx
-    mov [ebp].div_size,ecx
-;    
-    mov ax,flat_sel
-    mov es,ax    
-    mov ax,BIGNUM_HANDLE
-    DerefHandle
-    jc gbb10Fail
-;    
-    mov ax,ds:[ebx].bn_flags
-    test ax,BN_FLAG_INFINITE
-    jnz gbb10Infinite
-;
-    mov eax,ds:[ebx].bn_count
-    or eax,eax
-    jz gbb10Zero
-;    
-    mov [ebp].div_quot_count,eax    
-    mov eax,ds:[ebx].bn_data
-    mov [ebp].div_mod_data,eax
-;
-    mov eax,1    
-    mov [ebp].div_divisor_count,eax    
-    mov ecx,eax
-    shl eax,2
-    AllocateSmallLinear
-    mov [ebp].div_divisor_data,edx
-    mov eax,10
-    mov es:[edx],eax
-;    
-    push esi
-    push edi
-;
-    mov esi,[ebp].div_mod_data
-    mov eax,[ebp].div_quot_count
-    mov ecx,eax
-    shl eax,2
-    AllocateSmallLinear
-    mov [ebp].div_mod_data,edx
-    mov edi,edx
-
-gbb10CopyNomLoop:
-    mov eax,es:[esi]
-    mov es:[edi],eax
-    add esi,4
-    add edi,4
-    loop gbb10CopyNomLoop    
-
-gbb10CopyDone:
-    pop edi
-    pop esi    
-;
-    mov eax,[ebp].div_quot_count
-    shl eax,2
-    AllocateSmallLinear
-    mov [ebp].div_temp_quot_data,edx
-;    
-    mov eax,[ebp].div_quot_count
-    shl eax,2
-    AllocateSmallLinear
-    mov [ebp].div_quot_data,edx
-
-gbb10Retry:
-    call DoDiv
-;
-    mov edi,[ebp].div_mod_data
-    mov al,es:[edi]
-    add al,'0'
-    mov edi,[ebp].div_offset
-    mov fs:[edi],al
-    dec edi
-    mov [ebp].div_offset,edi
-    sub [ebp].div_size,1
-    jz gbb10Ok
-;
-    mov ecx,[ebp].div_quot_count
-    mov esi,[ebp].div_quot_data
-    call GetBits
-    or ecx,ecx
-    jz gbb10Ok
-;
-    mov ecx,[ebp].div_quot_count
-    mov esi,[ebp].div_quot_data
-    mov edi,[ebp].div_mod_data
-    rep movs dword ptr es:[edi],es:[esi]
-    jmp gbb10Retry
-
-gbb10Ok:
-    mov ecx,[ebp].div_quot_count
-    shl ecx,2
-    mov edx,[ebp].div_temp_quot_data
-    FreeLinear
-;    
-    mov ecx,[ebp].div_quot_count
-    shl ecx,2
-    mov edx,[ebp].div_quot_data
-    FreeLinear
-;    
-    mov ecx,[ebp].div_divisor_count
-    shl ecx,2
-    mov edx,[ebp].div_divisor_data
-    FreeLinear
-;    
-    mov ecx,[ebp].div_quot_count
-    shl ecx,2
-    mov edx,[ebp].div_mod_data
-    FreeLinear
-;
-    mov eax,[ebp].div_size
-    or eax,eax
-    jz gbb10Leave
-;    
-    jmp gbb10AddSign
-            
-gbb10Fail:
-    mov esi,OFFSET text_invalid
-    jmp gbb10WriteText
-
-gbb10Zero:
-    mov al,'0'
-    mov edi,[ebp].div_offset
-    mov fs:[edi],al
-    dec edi
-    mov [ebp].div_offset,edi
-    sub [ebp].div_size,1
-    jz gbb10Leave
-    jmp gbb10Fill
-
-gbb10Infinite: 
-    mov esi,OFFSET text_infinite
-
-gbb10WriteText:    
-    mov edi,[ebp].div_offset
-    mov ecx,[ebp].div_size
-    sub edi,ecx
-    inc edi
-    inc ecx
-
-gbb10WriteLoop:    
-    mov al,cs:[esi]
-    or al,al
-    jz gbb10AddNull
-;    
-    mov fs:[edi],al
-    inc edi
-    inc esi
-    sub ecx,1
-    jnz gbb10WriteLoop
-;
-    dec edi
-
-gbb10AddNull:    
-    xor al,al
-    mov fs:[edi],al
-    jmp gbb10Leave    
-
-gbb10AddSign:
-    test ds:[ebx].bn_flags,BN_FLAG_NEGATIVE
-    jz gbb10Fill
-;
-    mov al,'-'
-    mov edi,[ebp].div_offset
-    mov fs:[edi],al
-    dec edi
-    mov [ebp].div_offset,edi
-    sub [ebp].div_size,1
-    jz gbb10Leave
-
-gbb10Fill:
-    mov al,' '
-    mov edi,[ebp].div_offset
-    mov fs:[edi],al
-    dec edi
-    mov [ebp].div_offset,edi
-    sub [ebp].div_size,1
-    jnz gbb10Fill
-    
-gbb10Leave:
-    popad
-    pop fs
-    pop es
-    pop ds
-;
-    add esp,SIZE div_struc
-    pop ebp
-    ret
-get_bignum_buf10  ENDP
-
-get_bignum_buf10_32   Proc far
-    call get_bignum_buf10
-    ret
-get_bignum_buf10_32   Endp
-
-get_bignum_buf10_16   Proc far
-    push ecx
-    push edi
-;
-    movzx ecx,cx
-    movzx edi,di
-    call get_bignum_buf10
-;       
-    pop edi
-    pop ecx
-    ret
-get_bignum_buf10_16   Endp    
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetBigNumSize16
-;
-;           DESCRIPTION:    Get big num size in base 16
-;
-;           PARAMETERS:     BX          Num handle
-;
-;           RETURNS:        ECX         Buffer size for base 16
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_bignum_size16_name    DB 'Get Big Number Size16',0
-
-get_bignum_size16     PROC far
-    push ds
-    push es
-    push eax
-    push ebx
-    push edx
-;
-    mov ax,flat_sel
-    mov es,ax
-;    
-    mov ax,BIGNUM_HANDLE
-    DerefHandle
-    jc gbs16Fail
-;    
-    mov ax,ds:[ebx].bn_flags
-    test ax,BN_FLAG_INFINITE
-    jnz gbs16Infinite
-;
-    mov ecx,ds:[ebx].bn_count
-    or ecx,ecx
-    jz gbs16AddSign
-;
-    mov esi,ds:[ebx].bn_data
-    call GetBits
-    dec ecx
-    shr ecx,2
-    inc ecx
-    jmp gbs16AddSign
-            
-gbs16Fail:
-    mov ecx,7
-    jmp gbs16Leave
-
-gbs16Infinite:
-    mov ecx,8
-
-gbs16AddSign:
-    test ds:[ebx].bn_flags,BN_FLAG_NEGATIVE
-    jz gbs16Leave
-;
-    inc ecx
-    
-gbs16Leave:
-    inc ecx
-;    
-    pop edx
-    pop ebx
-    pop eax
-    pop es
-    pop ds
-    ret
-get_bignum_size16  ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetBigNumStr16
-;
-;           DESCRIPTION:    Get big num str in base 16
-;
-;           PARAMETERS:     BX          Num handle
-;                           ES:EDI      Buffer
-;                           ECX         Buffer size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_bignum_buf16_name    DB 'Get Big Number String base-16',0
-
-ToHex   Proc near
-    and al,0Fh
-    cmp al,10
-    jb thLow
-;
-    sub al,10
-    add al,'A'        
-    ret
-
-thLow:
-    add al,'0'
-    ret    
-ToHex   Endp
-
-get_bignum_buf16     PROC near
-    push ds
-    push es
-    push fs
-    pushad
-;
-    cmp ecx,2
-    jb gbb16Leave
-;    
-    mov ax,es
-    mov fs,ax
-    add edi,ecx
-    dec edi
-    xor al,al
-    mov fs:[edi],al
-    dec edi
-    dec ecx
-;    
-    mov ax,flat_sel
-    mov es,ax    
-    mov ax,BIGNUM_HANDLE
-    DerefHandle
-    jc gbb16Fail
-;    
-    mov ax,ds:[ebx].bn_flags
-    test ax,BN_FLAG_INFINITE
-    jnz gbb16Infinite
-;
-    mov edx,ds:[ebx].bn_count
-    or edx,edx
-    jz gbb16AddSign
-
-    mov esi,ds:[ebx].bn_data
-
-gbb16Loop:
-    mov eax,es:[esi]
-    call ToHex
-    mov es:[edi],al
-    dec edi
-    sub ecx,1
-    jz gbb16Leave
-;    
-    mov eax,es:[esi]
-    shr eax,4
-    call ToHex
-    mov es:[edi],al
-    dec edi
-    sub ecx,1
-    jz gbb16Leave
-;
-    mov eax,es:[esi]
-    shr eax,8
-    call ToHex
-    mov es:[edi],al
-    dec edi
-    sub ecx,1
-    jz gbb16Leave
-;    
-    mov eax,es:[esi]
-    shr eax,12
-    call ToHex
-    mov es:[edi],al
-    dec edi
-    sub ecx,1
-    jz gbb16Leave
-;
-    mov eax,es:[esi]
-    shr eax,16
-    call ToHex
-    mov es:[edi],al
-    dec edi
-    sub ecx,1
-    jz gbb16Leave
-;    
-    mov eax,es:[esi]
-    shr eax,20
-    call ToHex
-    mov es:[edi],al
-    dec edi
-    sub ecx,1
-    jz gbb16Leave
-;
-    mov eax,es:[esi]
-    shr eax,24
-    call ToHex
-    mov es:[edi],al
-    dec edi
-    sub ecx,1
-    jz gbb16Leave
-;    
-    mov eax,es:[esi]
-    shr eax,28
-    call ToHex
-    mov es:[edi],al
-    dec edi
-    sub ecx,1
-    jz gbb16Leave
-;    
-    add esi,4
-    sub edx,1
-    jnz gbb16Loop
-;
-    jmp gbb16AddSign
-                
-gbb16Fail:
-    mov esi,OFFSET text_invalid
-    jmp gbb16WriteText
-
-gbb16Zero:
-    mov al,'0'
-    mov fs:[edi],al
-    dec edi
-    sub ecx,1
-    jz gbb16Leave
-    jmp gbb16Fill
-
-gbb16Infinite: 
-    mov esi,OFFSET text_infinite
-
-gbb16WriteText:    
-    sub edi,ecx
-    inc edi
-    inc ecx
-
-gbb16WriteLoop:    
-    mov al,cs:[esi]
-    or al,al
-    jz gbb16AddNull
-;    
-    mov fs:[edi],al
-    inc edi
-    inc esi
-    sub ecx,1
-    jnz gbb16WriteLoop
-;
-    dec edi
-
-gbb16AddNull:    
-    xor al,al
-    mov fs:[edi],al
-    jmp gbb16Leave    
-
-gbb16AddSign:
-    test ds:[ebx].bn_flags,BN_FLAG_NEGATIVE
-    jz gbb16Fill
-;
-    mov al,'-'
-    mov fs:[edi],al
-    dec edi
-    sub ecx,1
-    jz gbb16Leave
-
-gbb16Fill:
-    mov al,'0'
-    mov fs:[edi],al
-    dec edi
-    sub ecx,1
-    jnz gbb16Fill
-    
-gbb16Leave:
-    popad
-    pop fs
-    pop es
-    pop ds
-    ret
-get_bignum_buf16  ENDP
-
-get_bignum_buf16_32   Proc far
-    call get_bignum_buf16
-    ret
-get_bignum_buf16_32   Endp
-
-get_bignum_buf16_16   Proc far
-    push ecx
-    push edi
-;
-    movzx ecx,cx
-    movzx edi,di
-    call get_bignum_buf16
-;       
-    pop edi
-    pop ecx
-    ret
-get_bignum_buf16_16   Endp    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3389,31 +3446,31 @@ init    PROC far
     mov ax,pow_mod_bignum_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_bignum_size10
-    mov edi,OFFSET get_bignum_size10_name
+    mov esi,OFFSET get_dec_str_size_bignum
+    mov edi,OFFSET get_dec_str_size_bignum_name
     xor dx,dx
-    mov ax,get_bignum_size10_nr
+    mov ax,get_dec_str_size_bignum_nr
     RegisterBimodalUserGate
 ;
-    mov ebx,OFFSET get_bignum_buf10_16
-    mov esi,OFFSET get_bignum_buf10_32
-    mov edi,OFFSET get_bignum_buf10_name
+    mov ebx,OFFSET save_dec_str_bignum16
+    mov esi,OFFSET save_dec_str_bignum32
+    mov edi,OFFSET save_dec_str_bignum_name
     mov dx,virt_es_in
-    mov ax,get_bignum_str10_nr
+    mov ax,save_dec_str_bignum_nr
     RegisterUserGate
 ;
-    mov esi,OFFSET get_bignum_size16
-    mov edi,OFFSET get_bignum_size16_name
+    mov ebx,OFFSET save_hex_str_bignum16
+    mov esi,OFFSET save_hex_str_bignum32
+    mov edi,OFFSET save_hex_str_bignum_name
+    mov dx,virt_es_in
+    mov ax,save_hex_str_bignum_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET get_hex_str_size_bignum
+    mov edi,OFFSET get_hex_str_size_bignum_name
     xor dx,dx
-    mov ax,get_bignum_size16_nr
+    mov ax,get_hex_str_size_bignum_nr
     RegisterBimodalUserGate
-;
-    mov ebx,OFFSET get_bignum_buf16_16
-    mov esi,OFFSET get_bignum_buf16_32
-    mov edi,OFFSET get_bignum_buf16_name
-    mov dx,virt_es_in
-    mov ax,get_bignum_str16_nr
-    RegisterUserGate
 ;
     mov esi,OFFSET create_random_bignum
     mov edi,OFFSET create_random_bignum_name
