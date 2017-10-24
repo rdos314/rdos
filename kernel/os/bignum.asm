@@ -1518,6 +1518,94 @@ save_unsigned_bignum16   Proc far
     pop ecx
     ret
 save_unsigned_bignum16   Endp    
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LoadDecStrBigNum
+;
+;           DESCRIPTION:    Load big num from string
+;
+;           PARAMETERS:     BX          Big num handle
+;                           ES:(E)DI    String
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_dec_str_bignum_name    DB 'Load Dec String Big Number',0
+
+load_dec_str_bignum     PROC near
+    push ds
+    pushad
+;
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc ldsDone
+;
+
+ldsDone: 
+    popad
+    pop ds
+    ret
+load_dec_str_bignum     ENDP
+
+load_dec_str_bignum32   Proc far
+    call load_dec_str_bignum
+    ret
+load_dec_str_bignum32   Endp
+
+load_dec_str_bignum16   Proc far
+    push edi
+;
+    movzx edi,di
+    call load_dec_str_bignum
+;       
+    pop edi
+    ret
+load_dec_str_bignum16   Endp    
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LoadHexStrBigNum
+;
+;           DESCRIPTION:    Load big num from hex string
+;
+;           PARAMETERS:     BX          Big num handle
+;                           ES:(E)DI    String
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_hex_str_bignum_name    DB 'Load Hex String Big Number',0
+
+load_hex_str_bignum     PROC near
+    push ds
+    pushad
+;
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc lhsDone
+;
+
+lhsDone: 
+    popad
+    pop ds
+    ret
+load_hex_str_bignum     ENDP
+
+load_hex_str_bignum32   Proc far
+    call load_hex_str_bignum
+    ret
+load_hex_str_bignum32   Endp
+
+load_hex_str_bignum16   Proc far
+    push edi
+;
+    movzx edi,di
+    call load_hex_str_bignum
+;       
+    pop edi
+    ret
+load_hex_str_bignum16   Endp    
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3808,6 +3896,20 @@ init    PROC far
     mov edi,OFFSET save_unsigned_bignum_name
     mov dx,virt_es_in
     mov ax,save_unsigned_bignum_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET load_dec_str_bignum16
+    mov esi,OFFSET load_dec_str_bignum32
+    mov edi,OFFSET load_dec_str_bignum_name
+    mov dx,virt_es_in
+    mov ax,load_dec_str_bignum_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET load_hex_str_bignum16
+    mov esi,OFFSET load_hex_str_bignum32
+    mov edi,OFFSET load_hex_str_bignum_name
+    mov dx,virt_es_in
+    mov ax,load_hex_str_bignum_nr
     RegisterUserGate
 ;
     mov esi,OFFSET add_bignum
