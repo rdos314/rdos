@@ -334,7 +334,7 @@ OptBuf     PROC near
     jz obDone
 ;
     mov eax,flat_sel
-    mov ds,eax
+    mov es,eax
 ;
     mov eax,ecx
     dec eax
@@ -1065,85 +1065,172 @@ delete_bignum     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           LoadBigNum
+;           NAME:           LoadSignedBigNum
 ;
-;           DESCRIPTION:    Load big num
+;           DESCRIPTION:    Load signed big num
 ;
 ;           PARAMETERS:     BX          Big num handle
-;                           EDX:EAX     Value
+;                           ES:(E)DI    Buffer
+;                           (E)CX       Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-load_bignum64_name    DB 'Load 64-bit Big Number',0
+load_signed_bignum_name    DB 'Load Signed Big Number',0
 
-load_bignum64     PROC far
+load_signed_bignum     PROC far
     push ds
-    push es
-    push ebx
+    push fs
+    pushad
+;
+    mov eax,flat_sel
+    mov fs,eax    
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc lsbDone
+;
+    or ecx,ecx
+    jnz lsbCopy
+;
+    xor ecx,ecx
+    call RecreateBuf
+    jmp lsbDone
+
+lsbCopy:
+    push ecx
+    dec ecx
+    shr ecx,2
+    inc ecx
+    call RecreateBuf
+    pop ecx
+;
+    mov esi,ds:[ebx].bn_data
+    mov edx,ds:[ebx].bn_count
+    shl edx,2
+;
+    mov eax,edi
+    add eax,ecx
+    dec eax
+    mov al,es:[eax]
+    test al,80h
+    jz lsbPos
+
+lsbNeg:
+    mov ds:[ebx].bn_flags,BN_FLAG_NEGATIVE
+
+lsbNegCopy:
+    mov al,es:[edi]
+    not al
+    mov fs:[esi],al
+    inc esi
+    inc edi
+    dec edx
+    loop lsbNegCopy
+;
+    or edx,edx
+    jz lsbNegInc
+;
+    xor al,al
+
+lsbNegFill:
+    mov fs:[esi],al
+    inc esi
+    sub edx,1
+    jnz lsbNegFill
+
+lsbNegInc:
+    mov esi,ds:[ebx].bn_data
+    mov ecx,ds:[ebx].bn_count
+    xor edx,edx
+    stc
+    lahf
+
+lsbNegIncLoop:
+    sahf
+    adc fs:[esi],edx
+    lahf
+    loop lsbNegIncLoop
+;
+    jmp lsbOpt
+
+lsbPos:
+    mov ds:[ebx].bn_flags,0
+
+lsbPosCopy:
+    mov al,es:[edi]
+    mov fs:[esi],al
+    inc esi
+    inc edi
+    dec edx
+    loop lsbPosCopy
+;
+    or edx,edx
+    jz lsbOpt
+;
+    xor al,al
+
+lsbPosFill:
+    mov fs:[esi],al
+    inc esi
+    sub edx,1
+    jnz lsbPosFill
+
+lsbOpt:
+    call OptBuf
+
+lsbDone: 
+    popad
+    pop fs
+    pop ds
+    ret
+load_signed_bignum     ENDP
+
+load_signed_bignum32   Proc far
+    call load_signed_bignum
+    ret
+load_signed_bignum32   Endp
+
+load_signed_bignum16   Proc far
     push ecx
     push edi
 ;
-    push eax
-    mov eax,flat_sel
-    mov es,eax    
-    mov ax,BIGNUM_HANDLE
-    DerefHandle
-    pop eax
-    jc lbn64Done
-;
-    test edx,80000000h
-    jz lbn64Pos
-
-lbn64Neg:
-    not eax
-    not edx
-    add eax,1
-    adc edx,0
-    mov ds:[ebx].bn_flags,BN_FLAG_NEGATIVE
-    jmp lbn64SignOk
-
-lbn64Pos:    
-    mov ds:[ebx].bn_flags,0
-
-lbn64SignOk:
-    or edx,edx
-    jz lbn64Small
-
-lbn64Big:
-    mov ecx,2
-    call RecreateBuf
-;
-    mov edi,ds:[ebx].bn_data
-    stosd
-    mov eax,edx
-    stosd
-    clc   
-    jmp lbn64Done
-
-lbn64Small:
-    or eax,eax
-    jz ln64Zero
-;    
-    mov ecx,1
-    call RecreateBuf
-;
-    mov edi,ds:[ebx].bn_data
-    stosd
-    clc   
-    jmp lbn64Done
-
-ln64Zero:
-    xor ecx,ecx
-    call RecreateBuf
-
-lbn64Done: 
+    movzx ecx,cx
+    movzx edi,di
+    call load_signed_bignum
+;       
     pop edi
     pop ecx
-    pop ebx
-    pop es
-    pop ds
     ret
-load_bignum64     ENDP
+load_signed_bignum16   Endp    
+
+load_unsigned_bignum_name    DB 'Load Unsigned Big Number',0
+
+load_unsigned_bignum32   Proc far
+    ret
+load_unsigned_bignum32   Endp
+
+load_unsigned_bignum16   Proc far
+    ret
+load_unsigned_bignum16   Endp    
+
+save_signed_bignum_name    DB 'Save Signed Big Number',0
+
+save_signed_bignum32   Proc far
+    ret
+save_signed_bignum32   Endp
+
+save_signed_bignum16   Proc far
+    ret
+save_signed_bignum16   Endp    
+
+save_unsigned_bignum_name    DB 'Save Unsigned Big Number',0
+
+save_unsigned_bignum32   Proc far
+    ret
+save_unsigned_bignum32   Endp
+
+save_unsigned_bignum16   Proc far
+    ret
+save_unsigned_bignum16   Endp    
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3408,11 +3495,33 @@ init    PROC far
     mov ax,delete_bignum_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET load_bignum64
-    mov edi,OFFSET load_bignum64_name
-    xor dx,dx
-    mov ax,load_bignum64_nr
-    RegisterBimodalUserGate
+    mov ebx,OFFSET load_signed_bignum16
+    mov esi,OFFSET load_signed_bignum32
+    mov edi,OFFSET load_signed_bignum_name
+    mov dx,virt_es_in
+    mov ax,load_signed_bignum_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET load_unsigned_bignum16
+    mov esi,OFFSET load_unsigned_bignum32
+    mov edi,OFFSET load_unsigned_bignum_name
+    mov dx,virt_es_in
+    mov ax,load_unsigned_bignum_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET save_signed_bignum16
+    mov esi,OFFSET save_signed_bignum32
+    mov edi,OFFSET save_signed_bignum_name
+    mov dx,virt_es_in
+    mov ax,save_signed_bignum_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET save_unsigned_bignum16
+    mov esi,OFFSET save_unsigned_bignum32
+    mov edi,OFFSET save_unsigned_bignum_name
+    mov dx,virt_es_in
+    mov ax,save_unsigned_bignum_nr
+    RegisterUserGate
 ;
     mov esi,OFFSET add_bignum
     mov edi,OFFSET add_bignum_name

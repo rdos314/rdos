@@ -20,6 +20,7 @@ void main()
     int val;
     TBigNum num1;
     TBigNum num2(100);
+    TBigNum num3(-2000);
     TString str;
 
     str = num1.GetDec();
@@ -27,6 +28,10 @@ void main()
     printf("\r\n");
 
     str = num2.GetDec();
+    printf(str.GetData());
+    printf("\r\n");
+
+    str = num3.GetDec();
     printf(str.GetData());
     printf("\r\n");
 
@@ -39,7 +44,7 @@ void main()
     printf("\r\n");
 
     val = 123456;
-    num1.LoadSigned((const char *)val, 4);
+    num1.LoadSigned((const char *)&val, 4);
     str = num1.GetDec();
     printf(str.GetData());
     printf("\r\n");
