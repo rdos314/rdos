@@ -43,13 +43,13 @@ void main()
     printf(str.GetData());
     printf("\r\n");
 
-    num1.SaveSigned((char *)&val, 4);
+    num1.SaveUnsigned((char *)&val, 4);
     printf("%d\r\n", val);
 
-    num2.SaveSigned((char *)&val, 4);
+    num2.SaveUnsigned((char *)&val, 4);
     printf("%d\r\n", val);
 
-    num3.SaveSigned((char *)&val, 4);
+    num3.SaveUnsigned((char *)&val, 4);
     printf("%d\r\n", val);
     
 }

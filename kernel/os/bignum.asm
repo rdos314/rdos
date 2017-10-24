@@ -1420,14 +1420,102 @@ save_signed_bignum16   Proc far
     ret
 save_signed_bignum16   Endp    
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SaveUnsignedBigNum
+;
+;           DESCRIPTION:    Save unsigned big num
+;
+;           PARAMETERS:     BX          Big num handle
+;                           ES:(E)DI    Buffer
+;                           (E)CX       Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 save_unsigned_bignum_name    DB 'Save Unsigned Big Number',0
 
+save_unsigned_bignum     PROC near
+    push ds
+    pushad
+;
+    mov ax,BIGNUM_HANDLE
+    DerefHandle
+    jc susDone
+;
+    or ecx,ecx
+    stc
+    jz susDone
+;
+    mov esi,ds:[ebx].bn_data
+    mov edx,ds:[ebx].bn_count
+    mov eax,flat_sel
+    mov ds,eax    
+
+susCopy:
+    or edx,edx
+    jz susPad
+;
+    mov al,[esi]
+    mov es:[edi],al
+    inc esi
+    inc edi
+    sub ecx,1
+    jz susDone
+;
+    mov al,[esi]
+    mov es:[edi],al
+    inc esi
+    inc edi
+    sub ecx,1
+    jz susDone
+;
+    mov al,[esi]
+    mov es:[edi],al
+    inc esi
+    inc edi
+    sub ecx,1
+    jz susDone
+;
+    mov al,[esi]
+    mov es:[edi],al
+    inc esi
+    inc edi
+    sub ecx,1
+    jz susDone
+;
+    sub edx,1
+    jnz susCopy
+
+susPad:
+    xor al,al
+    mov es:[edi],al
+    inc edi
+    sub ecx,1
+    jnz susPad
+
+susDone: 
+    popad
+    pop ds
+    ret
+save_unsigned_bignum     ENDP
+
 save_unsigned_bignum32   Proc far
+    call save_unsigned_bignum
     ret
 save_unsigned_bignum32   Endp
 
 save_unsigned_bignum16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call save_unsigned_bignum
+;       
+    pop edi
+    pop ecx
     ret
 save_unsigned_bignum16   Endp    
         
