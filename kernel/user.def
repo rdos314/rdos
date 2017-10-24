@@ -757,7 +757,6 @@ get_usb_com_par_nr              = 592
 
 create_bignum_nr                = 593
 delete_bignum_nr                = 594
-load_bignum64_nr                = 595
 add_bignum_nr                   = 596
 mul_bignum_nr                   = 597
 div_bignum_nr                   = 598
@@ -814,5 +813,10 @@ get_dhcp_entry_nr               = 636
 
 create_random_odd_bignum_nr     = 637
 factor_pow2_bignum_nr           = 638
+
+load_signed_bignum_nr           = 639
+load_unsigned_bignum_nr         = 640
+save_signed_bignum_nr           = 641
+save_unsigned_bignum_nr         = 642
 
 usergate_entries                            = 650

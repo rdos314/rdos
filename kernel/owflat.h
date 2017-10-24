@@ -3481,10 +3481,6 @@
     CallGate_delete_bignum  \
     parm [ebx];
 
-#pragma aux RdosLoadBigNum64 = \
-    CallGate_load_bignum64  \
-    parm [ebx] [edx eax];
-
 #pragma aux RdosAddBigNum = \
     CallGate_add_bignum  \
     parm [ebx] [eax] \
@@ -3514,6 +3510,22 @@
     CallGate_pow_mod_bignum  \
     parm [ebx] [eax] [edx] \
     value [ebx];
+
+#pragma aux RdosLoadSignedBigNum = \
+    CallGate_load_signed_bignum  \
+    parm [ebx] [edi] [ecx];
+
+#pragma aux RdosLoadUnsignedBigNum = \
+    CallGate_load_unsigned_bignum  \
+    parm [ebx] [edi] [ecx];
+
+#pragma aux RdosSaveSignedBigNum = \
+    CallGate_save_signed_bignum  \
+    parm [ebx] [edi] [ecx];
+
+#pragma aux RdosSaveUnsignedBigNum = \
+    CallGate_save_unsigned_bignum  \
+    parm [ebx] [edi] [ecx];
 
 #pragma aux RdosGetDecStrSizeBigNum = \
     CallGate_get_dec_str_size_bignum  \

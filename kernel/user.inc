@@ -4015,26 +4015,54 @@ PowModBigNum	MACRO
 	UserGate pow_mod_bignum_nr
 	        ENDM
 
-; IN  BX            Bignum handle 1
+; IN  BX            Bignum handle
+; IN  ES:(E)DI      Buffer
+; IN  ECX           Size
+LoadSignedBigNum	MACRO
+	UserGate load_signed_bignum_nr
+	        ENDM
+
+; IN  BX            Bignum handle
+; IN  ES:(E)DI      Buffer
+; IN  ECX           Size
+LoadUnsignedBigNum	MACRO
+	UserGate load_unsigned_bignum_nr
+	        ENDM
+
+; IN  BX            Bignum handle
+; IN  ES:(E)DI      Buffer
+; IN  ECX           Size
+SaveSignedBigNum	MACRO
+	UserGate save_signed_bignum_nr
+	        ENDM
+
+; IN  BX            Bignum handle
+; IN  ES:(E)DI      Buffer
+; IN  ECX           Size
+SaveUnsignedBigNum	MACRO
+	UserGate save_unsigned_bignum_nr
+	        ENDM
+
+; IN  BX            Bignum handle
 ; OUT ECX           Bytes required for base 10 buffer
 GetDecStrSizeBigNum	MACRO
 	UserGate get_dec_str_size_bignum_nr
 	        ENDM
 
-; IN  BX            Bignum handle 1
+; IN  BX            Bignum handle
 ; IN  (E)CX         Buffer size
 ; IN  ES:(E)DI      Buffer
 SaveDecStrBigNum	MACRO
 	UserGate save_dec_str_bignum_nr
 	        ENDM
 
-; IN  BX            Bignum handle 1
+; IN  BX            Bignum handle
 ; OUT ECX           Bytes required for base 16 buffer
 GetHexStrSizeBigNum	MACRO
 	UserGate get_hex_str_size_bignum_nr
 	        ENDM
 
-; IN  BX            Bignum handle 1
+; IN  BX            Bignum handle
 ; IN  (E)CX         Buffer size
 ; IN  ES:(E)DI      Buffer
 SaveHexStrBigNum	MACRO

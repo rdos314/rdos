@@ -874,7 +874,10 @@ int RDOSAPI RdosHasTouch();
 
 int RDOSAPI RdosCreateBigNum();
 void RDOSAPI RdosDeleteBigNum(int handle);
-void RDOSAPI RdosLoadBigNum64(int handle, long long Value);
+void RDOSAPI RdosLoadSignedBigNum(int handle, const char *buf, int size);
+void RDOSAPI RdosLoadUnsignedBigNum(int handle, const char *buf, int size);
+void RDOSAPI RdosSaveSignedBigNum(int handle, char *buf, int size);
+void RDOSAPI RdosSaveUnsignedBigNum(int handle, char *buf, int size);
 int RDOSAPI RdosGetDecStrSizeBigNum(int handle);
 void RDOSAPI RdosSaveDecStrBigNum(int handle, char *buf, int bufsize);
 int RDOSAPI RdosGetHexStrSizeBigNum(int handle);

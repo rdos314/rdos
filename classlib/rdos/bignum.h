@@ -36,7 +36,14 @@ public:
     TBigNum();
     TBigNum(int Value);
     TBigNum(long long Value);
+    TBigNum(unsigned int Value);
+    TBigNum(unsigned long long Value);
     ~TBigNum();
+
+    void LoadSigned(const char *buf, int size);
+    void LoadUnsigned(const char *buf, int size);
+    void SaveSigned(char *buf, int size);
+    void SaveUnsigned(char *buf, int size);
 
     TString GetHex(int digits);
     TString GetDec();

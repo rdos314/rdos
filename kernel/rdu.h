@@ -757,7 +757,6 @@
 
 #define usergate_create_bignum 0x00000251
 #define usergate_delete_bignum 0x00000252
-#define usergate_load_bignum64 0x00000253
 #define usergate_add_bignum 0x00000254
 #define usergate_mul_bignum 0x00000255
 #define usergate_div_bignum 0x00000256
@@ -814,6 +813,11 @@
 
 #define usergate_create_random_odd_bignum 0x0000027D
 #define usergate_factor_pow2_bignum 0x0000027E
+
+#define usergate_load_signed_bignum 0x0000027F
+#define usergate_load_unsigned_bignum 0x00000280
+#define usergate_save_signed_bignum 0x00000281
+#define usergate_save_unsigned_bignum 0x00000282
 
 
 
@@ -1577,7 +1581,6 @@
 
 #define CallGate_create_bignum 0x55 0x67 0x9a 81 2 0 0 3 0 0x5d
 #define CallGate_delete_bignum 0x55 0x67 0x9a 82 2 0 0 3 0 0x5d
-#define CallGate_load_bignum64 0x55 0x67 0x9a 83 2 0 0 3 0 0x5d
 #define CallGate_add_bignum 0x55 0x67 0x9a 84 2 0 0 3 0 0x5d
 #define CallGate_mul_bignum 0x55 0x67 0x9a 85 2 0 0 3 0 0x5d
 #define CallGate_div_bignum 0x55 0x67 0x9a 86 2 0 0 3 0 0x5d
@@ -1634,6 +1637,11 @@
 
 #define CallGate_create_random_odd_bignum 0x55 0x67 0x9a 125 2 0 0 3 0 0x5d
 #define CallGate_factor_pow2_bignum 0x55 0x67 0x9a 126 2 0 0 3 0 0x5d
+
+#define CallGate_load_signed_bignum 0x55 0x67 0x9a 127 2 0 0 3 0 0x5d
+#define CallGate_load_unsigned_bignum 0x55 0x67 0x9a 128 2 0 0 3 0 0x5d
+#define CallGate_save_signed_bignum 0x55 0x67 0x9a 129 2 0 0 3 0 0x5d
+#define CallGate_save_unsigned_bignum 0x55 0x67 0x9a 130 2 0 0 3 0 0x5d
 
 #else
 
@@ -2395,7 +2403,6 @@
 
 #define CallGate_create_bignum 0x3e 0x67 0x9a 81 2 0 0 3 0
 #define CallGate_delete_bignum 0x3e 0x67 0x9a 82 2 0 0 3 0
-#define CallGate_load_bignum64 0x3e 0x67 0x9a 83 2 0 0 3 0
 #define CallGate_add_bignum 0x3e 0x67 0x9a 84 2 0 0 3 0
 #define CallGate_mul_bignum 0x3e 0x67 0x9a 85 2 0 0 3 0
 #define CallGate_div_bignum 0x3e 0x67 0x9a 86 2 0 0 3 0
@@ -2452,5 +2459,10 @@
 
 #define CallGate_create_random_odd_bignum 0x3e 0x67 0x9a 125 2 0 0 3 0
 #define CallGate_factor_pow2_bignum 0x3e 0x67 0x9a 126 2 0 0 3 0
+
+#define CallGate_load_signed_bignum 0x3e 0x67 0x9a 127 2 0 0 3 0
+#define CallGate_load_unsigned_bignum 0x3e 0x67 0x9a 128 2 0 0 3 0
+#define CallGate_save_signed_bignum 0x3e 0x67 0x9a 129 2 0 0 3 0
+#define CallGate_save_unsigned_bignum 0x3e 0x67 0x9a 130 2 0 0 3 0
 
 #endif

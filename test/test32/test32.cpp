@@ -17,6 +17,7 @@
 
 void main()
 {
+    int val;
     TBigNum num1;
     TBigNum num2(100);
     TString str;
@@ -34,6 +35,12 @@ void main()
     printf("\r\n");
 
     str = num2.GetHex(4);
+    printf(str.GetData());
+    printf("\r\n");
+
+    val = 123456;
+    num1.LoadSigned((const char *)val, 4);
+    str = num1.GetDec();
     printf(str.GetData());
     printf("\r\n");
     

@@ -62,7 +62,7 @@ TBigNum::TBigNum()
 TBigNum::TBigNum(int val)
 {
     FHandle = RdosCreateBigNum();
-    RdosLoadBigNum64(FHandle, (long long)val);
+    RdosLoadSignedBigNum(FHandle, (const char *)&val, 4);
 }
 
 /*##########################################################################
@@ -79,7 +79,41 @@ TBigNum::TBigNum(int val)
 TBigNum::TBigNum(long long val)
 {
     FHandle = RdosCreateBigNum();
-    RdosLoadBigNum64(FHandle, val);
+    RdosLoadSignedBigNum(FHandle, (const char *)&val, 8);
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::TBigNum
+#
+#   Purpose....: Constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TBigNum::TBigNum(unsigned int val)
+{
+    FHandle = RdosCreateBigNum();
+    RdosLoadUnsignedBigNum(FHandle, (const char *)&val, 4);
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::TBigNum
+#
+#   Purpose....: Constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TBigNum::TBigNum(unsigned long long val)
+{
+    FHandle = RdosCreateBigNum();
+    RdosLoadUnsignedBigNum(FHandle, (const char *)&val, 8);
 }
 
 /*##########################################################################
@@ -154,4 +188,69 @@ TString TBigNum::GetDec()
     delete buf;
 
     return str;
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::LoadSigned
+#
+#   Purpose....: Load as signed data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TBigNum::LoadSigned(const char *buf, int size)
+{
+    RdosLoadSignedBigNum(FHandle, buf, size);
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::LoadUnsigned
+#
+#   Purpose....: Load as unsigned data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TBigNum::LoadUnsigned(const char *buf, int size)
+{
+    RdosLoadUnsignedBigNum(FHandle, buf, size);
+}
+
+
+/*##########################################################################
+#
+#   Name       : TBigNum::SaveSigned
+#
+#   Purpose....: Save as signed data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TBigNum::SaveSigned(char *buf, int size)
+{
+    RdosSaveSignedBigNum(FHandle, buf, size);
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::SaveUnsigned
+#
+#   Purpose....: Save as unsigned data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TBigNum::SaveUnsigned(char *buf, int size)
+{
+    RdosSaveUnsignedBigNum(FHandle, buf, size);
 }
