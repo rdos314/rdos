@@ -1739,7 +1739,7 @@ ldsConvLoop:
     push esi
     push edi
 ;
-    movzx eax,al
+    movzx edx,al
     mov ecx,[ebp].mul_out_count
     mov esi,[ebp].mul_out_data
     mov edi,[ebp].mul_in_data2
@@ -1748,10 +1748,10 @@ ldsConvLoop:
 
 ldsMoveAddLoop:
     sahf
-    adc eax,ds:[esi]
-    mov ds:[edi],eax
+    adc edx,ds:[esi]
+    mov ds:[edi],edx
     lahf
-    xor eax,eax
+    xor edx,edx
 ;
     add esi,4
     add edi,4
