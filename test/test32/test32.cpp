@@ -43,13 +43,14 @@ void main()
     printf(str.GetData());
     printf("\r\n");
 
-    num1.SaveUnsigned((char *)&val, 4);
-    printf("%d\r\n", val);
+    num2.LoadHex("aB01A567EEFA");
 
-    num2.SaveUnsigned((char *)&val, 4);
-    printf("%d\r\n", val);
+    str = num2.GetDec();
+    printf(str.GetData());
+    printf("\r\n");
 
-    num3.SaveUnsigned((char *)&val, 4);
-    printf("%d\r\n", val);
+    str = num2.GetHex(12);
+    printf(str.GetData());
+    printf("\r\n");
     
 }

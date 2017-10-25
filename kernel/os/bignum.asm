@@ -1821,15 +1821,88 @@ load_hex_str_bignum_name    DB 'Load Hex String Big Number',0
 
 load_hex_str_bignum     PROC near
     push ds
+    push fs
     pushad
+;
+    mov eax,flat_sel
+    mov fs,eax
 ;
     mov ax,BIGNUM_HANDLE
     DerefHandle
     jc lhsDone
 ;
+    call GetStringStart
+    mov ds:[ebx].bn_flags,0
+;
+    push edi
+    xor ecx,ecx
+
+lhsGetSizeLoop:
+    mov al,es:[edi]
+    call ConvHexDigit
+    jc lhsSizeOk
+;
+    inc edi
+    inc ecx
+    jmp lhsGetSizeLoop
+
+lhsSizeOk:
+    pop edi
+;
+    dec ecx
+    shr ecx,2
+    inc ecx
+    call RecreateBuf
+;
+    mov esi,ds:[ebx].bn_data
+    mov ecx,ds:[ebx].bn_count
+    or ecx,ecx
+    jz lhsDone
+;
+    xor eax,eax
+
+lhsClearLoop:    
+    mov fs:[esi],eax
+    add esi,4
+    loop lhsClearLoop
+
+lhsConvLoop:
+    mov al,es:[edi]
+    call ConvHexDigit
+    jc lhsConvDone
+;
+    movzx edx,al
+    mov esi,ds:[ebx].bn_data
+    mov ecx,ds:[ebx].bn_count
+;
+    clc
+    lahf
+
+lhsMoveAddLoop:
+    mov ebp,fs:[esi]
+    shl ebp,4
+    sahf
+    adc edx,ebp
+    lahf
+;
+    mov ebp,fs:[esi]
+    shr ebp,28
+;
+    mov fs:[esi],edx
+    mov edx,ebp
+;
+    add esi,4
+    loop lhsMoveAddLoop
+;
+    inc edi
+    jmp lhsConvLoop
+
+lhsConvDone:
+    call OptBuf
 
 lhsDone: 
     popad
+    pop fs
     pop ds
     ret
 load_hex_str_bignum     ENDP
