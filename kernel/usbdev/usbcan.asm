@@ -34,6 +34,15 @@ include ..\driver.def
 include usb.inc
 INCLUDE ..\os\protseg.def
 
+id_hook_struc   STRUC
+
+ih_id       DD ?
+ih_mask     DD ?
+ih_offset   DD ?
+ih_sel      DW ?
+ih_param    DW ?
+
+id_hook_struc   ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -41,8 +50,21 @@ cd_thread        DW ?
 cd_controller    DW ?
 cd_control_pipe  DW ?
 cd_control_wait  DW ?
+cd_in_pipe       DW ?
+cd_in_wait       DW ?
 cd_device        DB ?
 cd_active        DB ?
+
+in_sel           DW ?
+
+hw_id            DB ?
+rdos_major       DB ?
+rdos_minor       DB ?
+ver_major        DB ?
+ver_minor        DB ?
+ver_sub          DB ?
+
+can_id_hook_arr  DD 15 * 4 DUP(?)
 
 cd_setup         usb_setup_data <>
 cd_data          DB 8 DUP(?)
@@ -65,22 +87,6 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           HandleCan
-;
-;       DESCRIPTION:    Handle CAN 
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-HandleCan	Proc near
-
-    mov ax,20
-    WaitMilliSec
-    ret
-HandleCan       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           OpenPipes
 ;
 ;       DESCRIPTION:    Open pipes
@@ -90,11 +96,11 @@ HandleCan       Endp
 OpenPipes   Proc near
     mov bx,ds:cd_control_wait
     or bx,bx
-    jz opCreateWait
+    jz opCreateControlWait
 ;
     CloseWait
 
-opCreateWait:
+opCreateControlWait:
     CreateWait
     mov ds:cd_control_wait,bx
 ;
@@ -106,6 +112,27 @@ opCreateWait:
 ;
     mov ax,ds:cd_control_pipe
     mov bx,ds:cd_control_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;
+    mov bx,ds:cd_in_wait
+    or bx,bx
+    jz opCreateInWait
+;
+    CloseWait
+
+opCreateInWait:
+    CreateWait
+    mov ds:cd_in_wait,bx
+;
+    mov bx,ds:cd_controller
+    movzx ax,ds:cd_device
+    mov dl,81h
+    OpenUsbPipe
+    mov ds:cd_in_pipe,bx
+;
+    mov ax,ds:cd_in_pipe
+    mov bx,ds:cd_in_wait
     movzx ecx,bx
     AddWaitForUsbPipe
     ret
@@ -152,6 +179,23 @@ GetSoftwareVersion   Proc near
     pushf
     UnlockUsbPipe
     popf
+    jc gsvDone
+;
+    mov bx,OFFSET cd_data
+    mov al,[bx]
+    mov ds:hw_id,al
+    mov al,[bx+1]
+    mov ds:rdos_major,al
+    mov al,[bx+2]
+    mov ds:rdos_minor,al
+    mov al,[bx+4]
+    mov ds:ver_major,al
+    mov al,[bx+5]
+    mov ds:ver_minor,al
+    mov al,[bx+6]
+    mov ds:ver_sub,al
+
+gsvDone:
     ret
 GetSoftwareVersion  Endp
 
@@ -280,6 +324,145 @@ PowerDownModules  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           StartModules
+;
+;       DESCRIPTION:    Start modules
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartModules   Proc near
+    mov bx,ds:cd_control_pipe
+    LockUsbPipe
+;
+    mov cx,8
+    mov di,OFFSET cd_setup
+    mov es:[di].usd_type,41h
+    mov es:[di].usd_req,91h
+    mov es:[di].usd_value,0
+    mov es:[di].usd_index,0
+    mov es:[di].usd_len,0
+    WriteUsbControl
+;    
+    ReqUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:cd_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:cd_control_pipe
+    WasUsbTransactionOk
+    pushf
+    UnlockUsbPipe
+    popf
+    ret
+StartModules  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           StartCanCom
+;
+;       DESCRIPTION:    Start can communication
+;
+;       RETURNS:        EAX     Number of devices
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_can_com_name    DB 'Start Can Com', 0
+
+start_can_com   Proc far
+    push ds
+    push es
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ax
+
+sccWait:
+    mov ax,ds:cd_control_pipe
+    or ax,ax
+    jnz sccDo
+;
+    mov ax,250
+    WaitMilliSec
+    jmp sccWait
+
+sccDo:
+    call PowerDownModules
+    mov ax,500
+    WaitMilliSec
+;
+    call PowerUpModules
+    mov ax,5000
+    WaitMilliSec
+;
+    call StartModules
+    mov ax,500
+    WaitMilliSec
+;
+    mov eax,1
+    pop es
+    pop ds
+    retf32
+start_can_com  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           NotifyMsg
+;
+;   DESCRIPTION:    Notify CAN message
+;
+;   PARAMETERS:     EDX:EAX     Data
+;                   CL          Size (0..8)
+;                   EBX         Identifier
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+NotifyMsg   Proc near
+    int 3
+    push eax
+    push ecx
+;
+    mov si,OFFSET can_id_hook_arr
+    mov cx,15
+
+nmIdLoop:
+    mov di,ds:[si].ih_sel
+    or di,di
+    jz nmIdNext
+;
+    mov eax,ds:[si].ih_mask
+    and eax,ebx
+    cmp eax,ds:[si].ih_id
+    je nmIdOk
+
+nmIdNext:
+    add si,16
+    loop nmIdLoop
+;
+    pop ecx
+    pop eax
+    jmp nmDone
+
+nmIdOk:
+    pop ecx
+    pop eax
+;
+    call fword ptr ds:[si].ih_offset
+
+nmDone:
+    ret
+NotifyMsg   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           USB CAN thread
 ;
 ;       DESCRIPTION:    USB can thread
@@ -304,15 +487,56 @@ utLoop:
     or ax,ax
     jnz utPipeOk
 ;
-    int 3
     call OpenPipes
-    call PowerUpModules
-    call PowerDownModules
     call GetSoftwareVersion
+    jc utEnd
+;
+    push es
+    push edi
+    mov eax,10
+    AllocateSmallGlobalMem
+    mov ds:in_sel,es
+    mov bx,ds:cd_in_pipe
+    mov ecx,10
+    xor edi,edi
+    ReqUsbData
+    StartUsbTransaction
+    pop edi
+    pop es
 
 utPipeOk:
-    call HandleCan
-    jmp utLoop
+    mov bx,ds:cd_in_wait
+    WaitWithoutTimeout
+;
+    mov bx,ds:cd_in_pipe
+    IsUsbTransactionDone
+    jc utPipeOk
+;
+    WasUsbTransactionOk
+;
+    push es
+    push edi
+    mov es,ds:in_sel
+
+    mov cl,es:[1]
+    and cl,0Fh
+    movzx ebx,word ptr es:[0]
+    xchg bl,bh
+    and bl,0F0h
+    shl ebx,12
+    mov eax,es:[2]
+    mov edx,es:[6]
+    call NotifyMsg
+;
+    xor edi,edi
+    mov bx,ds:cd_in_pipe
+    mov ecx,10
+    xor edi,edi
+    ReqUsbData
+    StartUsbTransaction
+    pop edi
+    pop es
+    jmp utPipeOk
 
 utEnd:
     mov ds:cd_thread,0
@@ -468,6 +692,7 @@ usb_detach  Proc far
     mov ds:cd_device,0
     mov ds:cd_active,0
     mov ds:cd_control_pipe,0
+    mov ds:cd_in_pipe,0
 
 udDone:
     popad
@@ -476,6 +701,122 @@ udDone:
     retf32
 usb_detach  Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CreateCanIdHook
+;
+;   DESCRIPTION:    Create an id-based filter hook
+;
+;   PARAMETERS:     EAX       Identifier 
+;                   EDX       Identifier mask
+;                   DS        Param
+;                   ES:EDI    Hook callback
+;                       DS        Param
+;                       EDX:EAX   Data
+;                       CL        Size (0..8)
+;                       EBX       Identifier
+;
+;   RETURNS:        BX        Buffer #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_id_hook_name   DB 'Create CAN ID Hook', 0
+
+create_id_hook    Proc far
+    push ds
+    push es
+    push cx
+    push esi
+    push bp
+;    
+    xor ax,ax
+    mov bp,ds
+    mov bx,SEG data
+    mov ds,bx
+;
+    mov bx,OFFSET can_id_hook_arr
+    mov cx,15
+
+cihLoop:
+    mov si,ds:[bx].ih_sel
+    or si,si
+    jz cihFound
+;
+    add bx,16        
+    loop cihLoop
+;
+    stc
+    jmp cihDone
+
+cihFound:
+    mov ds:[bx].ih_id,eax
+    mov ds:[bx].ih_mask,edx
+    mov ds:[bx].ih_param,bp
+    mov ds:[bx].ih_offset,edi
+    mov ds:[bx].ih_sel,es
+;            
+    sub bx,OFFSET can_id_hook_arr
+    shr bx,4
+    inc bx
+    clc
+    
+cihDone:
+    pop bp
+    pop esi
+    pop cx
+    pop es
+    pop ds    
+    retf32
+create_id_hook    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           DeleteCanIdHook
+;
+;   DESCRIPTION:    Delete an id-based filter hook
+;
+;   PARAMETERS:     BX        Buffer #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_id_hook_name   DB 'Delete CAN ID Hook', 0
+
+delete_id_hook    Proc far    
+    or bx,bx
+    jz dihDone
+;
+    cmp bx,15
+    jae dihDone
+;        
+    push ds
+    push es
+    push ax
+    push bx
+;    
+    mov ax,SEG data
+    mov ds,ax
+;    
+    dec bx
+    shl bx,4
+    add bx,OFFSET can_id_hook_arr
+    mov ds:[bx].ih_id,0
+    mov ds:[bx].ih_mask,0
+    mov ds:[bx].ih_param,0
+    mov ds:[bx].ih_offset,0
+    mov ds:[bx].ih_sel,0
+;    
+    pop bx
+    pop ax
+    pop es
+    pop ds    
+    
+dihDone:
+    clc
+    retf32
+delete_id_hook    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -494,10 +835,31 @@ init    Proc far
     mov es:cd_device,0
     mov es:cd_active,0
     mov ds:cd_control_pipe,0
+    mov ds:cd_in_pipe,0
+;
+    mov di,OFFSET can_id_hook_arr
+    mov cx,4 * 15
+    xor eax,eax
+    rep stosd
 ;       
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET start_can_com
+    mov edi,OFFSET start_can_com_name
+    mov ax,start_can_com_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_id_hook
+    mov edi,OFFSET create_id_hook_name
+    mov ax,create_can_id_hook_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET delete_id_hook
+    mov edi,OFFSET delete_id_hook_name
+    mov ax,delete_can_id_hook_nr
+    RegisterOsGate
 ;
     mov edi,OFFSET usb_attach
     HookUsbAttach
