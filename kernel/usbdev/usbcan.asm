@@ -55,7 +55,8 @@ cd_in_wait       DW ?
 cd_device        DB ?
 cd_active        DB ?
 
-in_sel           DW ?
+in_buf           DB 10 DUP(?)
+out_buf          DB 10 DUP(?)
 
 hw_id            DB ?
 rdos_major       DB ?
@@ -491,18 +492,11 @@ utLoop:
     call GetSoftwareVersion
     jc utEnd
 ;
-    push es
-    push edi
-    mov eax,10
-    AllocateSmallGlobalMem
-    mov ds:in_sel,es
+    mov edi,OFFSET in_buf
     mov bx,ds:cd_in_pipe
     mov ecx,10
-    xor edi,edi
     ReqUsbData
     StartUsbTransaction
-    pop edi
-    pop es
 
 utPipeOk:
     mov bx,ds:cd_in_wait
@@ -514,28 +508,22 @@ utPipeOk:
 ;
     WasUsbTransactionOk
 ;
-    push es
-    push edi
-    mov es,ds:in_sel
-
-    mov cl,es:[1]
+    mov edi,OFFSET in_buf
+    mov cl,[di+1]
     and cl,0Fh
-    movzx ebx,word ptr es:[0]
+    movzx ebx,word ptr [di]
     xchg bl,bh
     and bl,0F0h
     shl ebx,12
-    mov eax,es:[2]
-    mov edx,es:[6]
+    mov eax,[di+2]
+    mov edx,[di+6]
     call NotifyMsg
 ;
-    xor edi,edi
     mov bx,ds:cd_in_pipe
     mov ecx,10
-    xor edi,edi
+    mov edi,OFFSET in_buf
     ReqUsbData
     StartUsbTransaction
-    pop edi
-    pop es
     jmp utPipeOk
 
 utEnd:
