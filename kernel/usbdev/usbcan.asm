@@ -44,6 +44,18 @@ ih_param    DW ?
 
 id_hook_struc   ENDS
 
+
+capture_block   STRUC
+
+cc_prev     DD ?
+cc_next     DD ?
+cc_time     DD ?,?
+cc_id       DD ?
+cc_data     DD ?,?
+cc_size     DB ?
+
+capture_block   ENDS
+
 data    SEGMENT byte public 'DATA'
 
 cd_thread        DW ?
@@ -52,8 +64,12 @@ cd_control_pipe  DW ?
 cd_control_wait  DW ?
 cd_in_pipe       DW ?
 cd_in_wait       DW ?
+cd_out_pipe      DW ?
+cd_out_wait      DW ?
 cd_device        DB ?
 cd_active        DB ?
+
+can_send_section section_typ <>
 
 in_buf           DB 10 DUP(?)
 out_buf          DB 10 DUP(?)
@@ -66,6 +82,11 @@ ver_minor        DB ?
 ver_sub          DB ?
 
 can_id_hook_arr  DD 15 * 4 DUP(?)
+
+capture_handle          DW ?
+capture_thread          DW ?
+capture_list            DD ?
+capture_section         section_typ <>
 
 cd_setup         usb_setup_data <>
 cd_data          DB 8 DUP(?)
@@ -134,6 +155,27 @@ opCreateInWait:
 ;
     mov ax,ds:cd_in_pipe
     mov bx,ds:cd_in_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;
+    mov bx,ds:cd_out_wait
+    or bx,bx
+    jz opCreateOutWait
+;
+    CloseWait
+
+opCreateOutWait:
+    CreateWait
+    mov ds:cd_out_wait,bx
+;
+    mov bx,ds:cd_controller
+    movzx ax,ds:cd_device
+    mov dl,2
+    OpenUsbPipe
+    mov ds:cd_out_pipe,bx
+;
+    mov ax,ds:cd_out_pipe
+    mov bx,ds:cd_out_wait
     movzx ecx,bx
     AddWaitForUsbPipe
     ret
@@ -412,9 +454,167 @@ sccDo:
 start_can_com  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
+;
+;
+;           NAME:           CaptureThread
+;
+;           description:    Capture thread
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+capture_thread_name DB 'Can Capture', 0
+
+capture_thread_pr:
+    mov bx,SEG data
+    mov ds,bx
+    GetThread
+    mov ds:capture_thread,ax
+    LeaveSection ds:capture_section
+;    
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov bx,ds:capture_handle
+    xor eax,eax
+    SetFilePos
+    SetFileSize
+
+ctpLoop:
+    WaitForSignal
+
+ctpMore:
+    EnterSection ds:capture_section    
+    mov ax,ds:capture_thread
+    or ax,ax
+    jz ctpExit
+;
+    mov edx,ds:capture_list
+    or edx,edx
+    jz ctpNext
+;
+    push ebx
+    mov eax,es:[edx].cc_next
+    mov ebx,es:[edx].cc_prev
+    mov es:[ebx].cc_next,eax
+    mov es:[eax].cc_prev,ebx
+    pop ebx
+    cmp eax,edx
+    jne ctpUnlink
+;
+    mov ds:capture_list,0
+    jmp ctpWrite
+
+ctpUnlink:
+    mov ds:capture_list,eax
+
+ctpWrite:       
+    LeaveSection ds:capture_section
+;    
+    mov edi,edx
+    add edi,OFFSET cc_time
+    mov ecx,SIZE capture_block - OFFSET cc_time
+    UserGateForce32 write_file_nr
+;
+    mov ecx,SIZE capture_block
+    FreeLinear    
+    jmp ctpMore
+    
+ctpNext:
+    LeaveSection ds:capture_section
+    jmp ctpLoop
+
+ctpExit:  
+    mov ds:capture_thread,0
+    LeaveSection ds:capture_section
+    retf    
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;
 ;   NAME:           NotifyMsg
+;
+;   Description:    Notify reception of ethernet packet
+;
+;   PARAMETERS:     EDX:EAX     Data
+;                   CL          Size (0..8)
+;                   EBX         Identifier
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyMsg  Proc near
+    push ds
+    push si
+;
+    mov si,SEG data
+    mov ds,si
+    EnterSection ds:capture_section
+    mov si,ds:capture_thread
+    or si,si
+    jz nmLeave
+;    
+    push es
+    pushad
+;    
+    push eax
+    push edx
+    mov dx,flat_sel
+    mov es,dx
+    mov eax,SIZE capture_block
+    AllocateSmallLinear
+    mov edi,edx
+    GetTime
+    mov es:[edi].cc_time,eax
+    mov es:[edi].cc_time+4,edx
+    pop edx
+    pop eax
+;    
+    mov es:[edi].cc_id,ebx
+    mov es:[edi].cc_data,eax
+    mov es:[edi].cc_data+4,edx
+    mov es:[edi].cc_size,cl
+    mov edx,edi
+;
+    mov bx,SEG data
+    mov ds,bx
+;
+    mov eax,ds:capture_list
+    or eax,eax
+    jne nmQueue
+
+nmEmpty:
+    mov es:[edx].cc_prev,edx
+    mov es:[edx].cc_next,edx
+    mov ds:capture_list,edx
+    jmp nmSignal
+
+nmQueue:
+    mov ebx,es:[eax].cc_prev
+    mov es:[eax].cc_prev,edx
+    mov es:[ebx].cc_next,edx
+    mov es:[edx].cc_prev,ebx
+    mov es:[edx].cc_next,eax    
+
+nmSignal:
+    mov bx,ds:capture_thread
+    Signal
+;
+    popad
+    pop es
+
+nmLeave:
+    LeaveSection ds:capture_section
+;    
+    pop si
+    pop ds    
+    ret
+NotifyMsg  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           HandleMsg
 ;
 ;   DESCRIPTION:    Notify CAN message
 ;
@@ -425,41 +625,51 @@ start_can_com  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-NotifyMsg   Proc near
-    int 3
+HandleMsg   Proc near
+    push ds
+    push es
+;
+    call NotifyMsg
+;
     push eax
     push ecx
 ;
     mov si,OFFSET can_id_hook_arr
     mov cx,15
 
-nmIdLoop:
+hmIdLoop:
     mov di,ds:[si].ih_sel
     or di,di
-    jz nmIdNext
+    jz hmIdNext
 ;
     mov eax,ds:[si].ih_mask
     and eax,ebx
     cmp eax,ds:[si].ih_id
-    je nmIdOk
+    je hmIdOk
 
-nmIdNext:
+hmIdNext:
     add si,16
-    loop nmIdLoop
+    loop hmIdLoop
 ;
     pop ecx
     pop eax
-    jmp nmDone
+    jmp hmDone
 
-nmIdOk:
+hmIdOk:
+    mov ax,ds
+    mov es,ax
+;
     pop ecx
     pop eax
 ;
-    call fword ptr ds:[si].ih_offset
+    mov ds,es:[si].ih_param
+    call fword ptr es:[si].ih_offset
 
-nmDone:
+hmDone:
+    pop es
+    pop ds
     ret
-NotifyMsg   Endp
+HandleMsg   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -514,10 +724,10 @@ utPipeOk:
     movzx ebx,word ptr [di]
     xchg bl,bh
     and bl,0F0h
-    shl ebx,12
+    shl ebx,14
     mov eax,[di+2]
     mov edx,[di+6]
-    call NotifyMsg
+    call HandleMsg
 ;
     mov bx,ds:cd_in_pipe
     mov ecx,10
@@ -681,6 +891,7 @@ usb_detach  Proc far
     mov ds:cd_active,0
     mov ds:cd_control_pipe,0
     mov ds:cd_in_pipe,0
+    mov ds:cd_out_pipe,0
 
 udDone:
     popad
@@ -809,6 +1020,167 @@ delete_id_hook    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           SendCanBusMsg
+;
+;   DESCRIPTION:    Send CAN bus message
+;
+;   PARAMETERS:     EDX:EAX     Data
+;                   CL          Size (0..8)
+;                   EBX         Identifier
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_can_bus_msg_name   DB 'Send CAN Bus Message', 0
+
+send_can_bus_msg    Proc far
+    push ds
+    push es
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    push eax
+    push ebx
+    push ecx
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ax
+;
+    mov bx,ds:cd_out_pipe
+    or bx,bx
+    jz scbDone
+;
+    EnterSection ds:can_send_section
+
+scbRetry:
+    mov bx,ds:cd_out_pipe
+    IsUsbTransactionDone
+    jnc scbIdle
+;
+    mov bx,ds:cd_out_wait
+    WaitWithoutTimeout
+    jmp scbRetry
+
+scbIdle:
+    pop ecx
+    pop ebx
+    pop eax
+    call NotifyMsg
+;
+    mov edi,OFFSET out_buf
+    mov byte ptr [di],0
+    mov [di+1],cl
+    shr ebx,14
+    xchg bl,bh
+    or [di],bx
+    mov [di+2],eax
+    mov [di+6],edx
+;
+    mov bx,ds:cd_out_pipe
+    mov ecx,10
+    mov edi,OFFSET out_buf
+    WriteUsbData
+    StartUsbTransaction    
+;
+    LeaveSection ds:can_send_section
+
+scbDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    retf32
+send_can_bus_msg    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StartCanCapture
+;
+;           description:    Start capturing CAN-packets
+;
+;       parameters:     BX      File handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_can_capture_name DB 'Start Can Capture', 0
+
+start_can_capture       Proc
+    push ds
+    push es
+    push ax
+    push bx
+    push cx
+    push si
+    push di
+;    
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:capture_section
+;
+    mov ds:capture_handle,bx
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov si,OFFSET capture_thread_pr
+    mov di,OFFSET capture_thread_name
+    mov ax,3
+    mov cx,stack0_size
+    CreateThread
+;       
+    pop di
+    pop si
+    pop cx
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    retf32
+start_can_capture       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StopCanCapture
+;
+;           description:    Stop capturing can-packets
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_can_capture_name DB 'Stop Can Capture', 0
+
+stop_can_capture    Proc
+    push ds
+    push bx
+;    
+    mov bx,SEG data
+    mov ds,bx
+    EnterSection ds:capture_section
+    xor bx,bx
+    xchg bx,ds:capture_thread
+    or bx,bx
+    jz sncThreadDone
+;    
+    Signal
+    mov bx,ds:capture_handle
+    CloseFile
+
+sncThreadDone:
+    mov ds:capture_handle,0
+    LeaveSection ds:capture_section    
+;
+    pop bx
+    pop ds    
+    retf32
+stop_can_capture    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init
 ;
 ;           description:    Init device
@@ -822,8 +1194,14 @@ init    Proc far
     mov es:cd_controller,0
     mov es:cd_device,0
     mov es:cd_active,0
-    mov ds:cd_control_pipe,0
-    mov ds:cd_in_pipe,0
+    mov es:cd_control_pipe,0
+    mov es:cd_in_pipe,0
+    mov es:cd_out_pipe,0
+    InitSection es:can_send_section
+    InitSection es:capture_section
+    mov es:capture_handle,0
+    mov es:capture_thread,0
+    mov es:capture_list,0
 ;
     mov di,OFFSET can_id_hook_arr
     mov cx,4 * 15
@@ -848,6 +1226,28 @@ init    Proc far
     mov edi,OFFSET delete_id_hook_name
     mov ax,delete_can_id_hook_nr
     RegisterOsGate
+;
+    mov esi,OFFSET send_can_bus_msg
+    mov edi,OFFSET send_can_bus_msg_name
+    mov ax,send_can_bus_msg_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET send_can_bus_msg
+    mov edi,OFFSET send_can_bus_msg_name
+    mov ax,send_can_bus_block_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET start_can_capture
+    mov edi,OFFSET start_can_capture_name
+    xor dx,dx
+    mov ax,start_can_capture_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET stop_can_capture
+    mov edi,OFFSET stop_can_capture_name
+    xor dx,dx
+    mov ax,stop_can_capture_nr
+    RegisterBimodalUserGate
 ;
     mov edi,OFFSET usb_attach
     HookUsbAttach
