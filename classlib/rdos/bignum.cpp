@@ -168,6 +168,210 @@ TBigNum::~TBigNum()
 
 /*##########################################################################
 #
+#   Name       : TBigNum::operator=
+#
+#   Purpose....: Assignment operator
+#
+#   In params..: src
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TBigNum &TBigNum::operator=(int val)
+{
+    RdosLoadSignedBigNum(FHandle, (const char *)&val, 4);
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::operator=
+#
+#   Purpose....: Assignment operator
+#
+#   In params..: src
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TBigNum &TBigNum::operator=(long long val )
+{
+    RdosLoadSignedBigNum(FHandle, (const char *)&val, 8);
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::operator=
+#
+#   Purpose....: Assignment operator
+#
+#   In params..: src
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TBigNum &TBigNum::operator=(unsigned int val)
+{
+    RdosLoadUnsignedBigNum(FHandle, (const char *)&val, 4);
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::operator=
+#
+#   Purpose....: Assignment operator
+#
+#   In params..: src
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TBigNum &TBigNum::operator=(unsigned long long val)
+{
+    RdosLoadUnsignedBigNum(FHandle, (const char *)&val, 8);
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::operator+=
+#
+#   Purpose....: += operator
+#
+#   In params..: str
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TBigNum &TBigNum::operator+=(int val)
+{
+    RdosAddSignedBigNum(FHandle, (const char *)&val, 4);
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::operator+=
+#
+#   Purpose....: += operator
+#
+#   In params..: str
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TBigNum &TBigNum::operator+=(long long val)
+{
+    RdosAddSignedBigNum(FHandle, (const char *)&val, 8);
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::operator+=
+#
+#   Purpose....: += operator
+#
+#   In params..: str
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TBigNum &TBigNum::operator+=(unsigned int val)
+{
+    RdosAddUnsignedBigNum(FHandle, (const char *)&val, 4);
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::operator+=
+#
+#   Purpose....: += operator
+#
+#   In params..: str
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TBigNum &TBigNum::operator+=(unsigned long long val)
+{
+    RdosAddUnsignedBigNum(FHandle, (const char *)&val, 8);
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::operator-=
+#
+#   Purpose....: -= operator
+#
+#   In params..: str
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TBigNum &TBigNum::operator-=(int val)
+{
+    RdosSubSignedBigNum(FHandle, (const char *)&val, 4);
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::operator-=
+#
+#   Purpose....: -= operator
+#
+#   In params..: str
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TBigNum &TBigNum::operator-=(long long val)
+{
+    RdosSubSignedBigNum(FHandle, (const char *)&val, 8);
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::operator-=
+#
+#   Purpose....: -= operator
+#
+#   In params..: str
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TBigNum &TBigNum::operator-=(unsigned int val)
+{
+    RdosSubUnsignedBigNum(FHandle, (const char *)&val, 4);
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TBigNum::operator-=
+#
+#   Purpose....: -= operator
+#
+#   In params..: str
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TBigNum &TBigNum::operator-=(unsigned long long val)
+{
+    RdosSubUnsignedBigNum(FHandle, (const char *)&val, 8);
+    return *this;
+}
+
+/*##########################################################################
+#
 #   Name       : TBigNum::LoadDec
 #
 #   Purpose....: Load from decimal string

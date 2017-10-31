@@ -821,6 +821,11 @@
 #define usergate_load_dec_str_bignum 0x00000283
 #define usergate_load_hex_str_bignum 0x00000284
 
+#define usergate_add_signed_bignum 0x00000285
+#define usergate_add_unsigned_bignum 0x00000286
+#define usergate_sub_signed_bignum 0x00000287
+#define usergate_sub_unsigned_bignum 0x00000288
+
 
 
 #ifdef __FLAT__
@@ -1647,6 +1652,11 @@
 #define CallGate_load_dec_str_bignum 0x55 0x67 0x9a 131 2 0 0 3 0 0x5d
 #define CallGate_load_hex_str_bignum 0x55 0x67 0x9a 132 2 0 0 3 0 0x5d
 
+#define CallGate_add_signed_bignum 0x55 0x67 0x9a 133 2 0 0 3 0 0x5d
+#define CallGate_add_unsigned_bignum 0x55 0x67 0x9a 134 2 0 0 3 0 0x5d
+#define CallGate_sub_signed_bignum 0x55 0x67 0x9a 135 2 0 0 3 0 0x5d
+#define CallGate_sub_unsigned_bignum 0x55 0x67 0x9a 136 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2470,5 +2480,10 @@
 #define CallGate_save_unsigned_bignum 0x3e 0x67 0x9a 130 2 0 0 3 0
 #define CallGate_load_dec_str_bignum 0x3e 0x67 0x9a 131 2 0 0 3 0
 #define CallGate_load_hex_str_bignum 0x3e 0x67 0x9a 132 2 0 0 3 0
+
+#define CallGate_add_signed_bignum 0x3e 0x67 0x9a 133 2 0 0 3 0
+#define CallGate_add_unsigned_bignum 0x3e 0x67 0x9a 134 2 0 0 3 0
+#define CallGate_sub_signed_bignum 0x3e 0x67 0x9a 135 2 0 0 3 0
+#define CallGate_sub_unsigned_bignum 0x3e 0x67 0x9a 136 2 0 0 3 0
 
 #endif

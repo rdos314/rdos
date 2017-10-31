@@ -821,4 +821,9 @@ save_unsigned_bignum_nr         = 642
 load_dec_str_bignum_nr          = 643
 load_hex_str_bignum_nr          = 644
 
+add_signed_bignum_nr             = 645
+add_unsigned_bignum_nr           = 646
+sub_signed_bignum_nr             = 647
+sub_unsigned_bignum_nr           = 648
+
 usergate_entries                            = 650

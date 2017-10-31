@@ -27,30 +27,22 @@ void main()
     printf(str.GetData());
     printf("\r\n");
 
-    str = num2.GetDec();
+    num1 = 1234;
+
+    str = num1.GetDec();
     printf(str.GetData());
     printf("\r\n");
 
-    str = num3.GetDec();
+    num1 += 5576;
+
+    str = num1.GetDec();
     printf(str.GetData());
     printf("\r\n");
 
-    str = num1.GetHex(8);
-    printf(str.GetData());
-    printf("\r\n");
-
-    str = num2.GetHex(4);
-    printf(str.GetData());
-    printf("\r\n");
-
-    num2.LoadHex("aB01A567EEFA");
-
-    str = num2.GetDec();
-    printf(str.GetData());
-    printf("\r\n");
-
-    str = num2.GetHex(12);
-    printf(str.GetData());
-    printf("\r\n");
+    num1 -= 8888;
     
+    str = num1.GetDec();
+    printf(str.GetData());
+    printf("\r\n");
+
 }

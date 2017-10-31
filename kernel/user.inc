@@ -4081,6 +4081,35 @@ SaveHexStrBigNum	MACRO
 	UserGate save_hex_str_bignum_nr
 	        ENDM
 
+; IN  BX            Bignum handle
+; IN  ES:(E)DI      Buffer
+; IN  ECX           Size
+AddSignedBigNum	MACRO
+	UserGate add_signed_bignum_nr
+	        ENDM
+
+; IN  BX            Bignum handle
+; IN  ES:(E)DI      Buffer
+; IN  ECX           Size
+AddUnsignedBigNum	MACRO
+	UserGate add_unsigned_bignum_nr
+	        ENDM
+
+; IN  BX            Bignum handle
+; IN  ES:(E)DI      Buffer
+; IN  ECX           Size
+SubSignedBigNum	MACRO
+	UserGate sub_signed_bignum_nr
+	        ENDM
+
+; IN  BX            Bignum handle
+; IN  ES:(E)DI      Buffer
+; IN  ECX           Size
+SubUnsignedBigNum	MACRO
+	UserGate sub_unsigned_bignum_nr
+	        ENDM
+
+
 ; IN  ECX           Number of bits
 ; OUT BX            Bignum handle
 CreateRandomBigNum	MACRO

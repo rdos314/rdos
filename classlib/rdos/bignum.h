@@ -42,6 +42,21 @@ public:
     TBigNum(TString &str);
     ~TBigNum();
 
+    const TBigNum &operator=(int value);
+    const TBigNum &operator=(long long value);
+    const TBigNum &operator=(unsigned int value);
+    const TBigNum &operator=(unsigned long long value);
+
+    const TBigNum &operator+=(int value);
+    const TBigNum &operator+=(long long value);
+    const TBigNum &operator+=(unsigned int value);
+    const TBigNum &operator+=(unsigned long long value);
+
+    const TBigNum &operator-=(int value);
+    const TBigNum &operator-=(long long value);
+    const TBigNum &operator-=(unsigned int value);
+    const TBigNum &operator-=(unsigned long long value);
+
     void LoadSigned(const char *buf, int size);
     void LoadUnsigned(const char *buf, int size);
     void SaveSigned(char *buf, int size);

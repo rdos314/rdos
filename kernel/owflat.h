@@ -3559,6 +3559,22 @@
     parm [ecx] \
     value [ebx];
 
+#pragma aux RdosAddSignedBigNum = \
+    CallGate_add_signed_bignum  \
+    parm [ebx] [edi] [ecx];
+
+#pragma aux RdosAddUnsignedBigNum = \
+    CallGate_add_unsigned_bignum  \
+    parm [ebx] [edi] [ecx];
+
+#pragma aux RdosSubSignedBigNum = \
+    CallGate_sub_signed_bignum  \
+    parm [ebx] [edi] [ecx];
+
+#pragma aux RdosSubUnsignedBigNum = \
+    CallGate_sub_unsigned_bignum  \
+    parm [ebx] [edi] [ecx];
+
 #pragma aux RdosCreateRandomOddBigNum = \
     CallGate_create_random_odd_bignum  \
     ValidateHandle \
