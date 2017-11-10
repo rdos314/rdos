@@ -1310,6 +1310,39 @@ delete_id_hook    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           HasCanSendBuf
+;
+;   DESCRIPTION:    Check if there is a free send buffer
+;
+;   RETURNS:        NC      Has buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_can_send_buf_name   DB 'Has CAN Send Buf', 0
+
+has_can_send_buf    Proc far
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov ax,ds:send_count
+    cmp ax,100h
+    stc
+    je hcsbDone
+;
+    clc
+
+hcsbDone:
+    pop ax
+    pop ds    
+    retf32
+has_can_send_buf    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           SendCanBusMsg
 ;
 ;   DESCRIPTION:    Send CAN bus message
@@ -1469,6 +1502,11 @@ init    Proc far
     mov esi,OFFSET delete_id_hook
     mov edi,OFFSET delete_id_hook_name
     mov ax,delete_can_id_hook_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET has_can_send_buf
+    mov edi,OFFSET has_can_send_buf_name
+    mov ax,has_can_send_buf_nr
     RegisterOsGate
 ;
     mov esi,OFFSET send_can_bus_msg
