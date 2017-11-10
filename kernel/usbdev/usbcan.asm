@@ -56,9 +56,18 @@ cc_size     DB ?
 
 capture_block   ENDS
 
+data_block   STRUC
+
+db_data     DB 10 DUP(?)
+db_prev     DW ?
+db_next     DW ?
+
+data_block   ENDS
+
 data    SEGMENT byte public 'DATA'
 
-cd_thread        DW ?
+cd_rec_thread    DW ?
+cd_send_thread   DW ?
 cd_controller    DW ?
 cd_control_pipe  DW ?
 cd_control_wait  DW ?
@@ -76,6 +85,16 @@ out_buf          DB 10 DUP(?)
 
 can_active       DB ?
 can_extra        DB ?
+
+rec_sel          DW ?
+rec_count        DW ?
+rec_head         DW ?
+rec_tail         DW ?
+
+send_sel         DW ?
+send_count       DW ?
+send_head        DW ?
+send_tail        DW ?
 
 hw_id            DB ?
 rdos_major       DB ?
@@ -108,6 +127,227 @@ IFDEF __WASM__
 ELSE
     .386p
 ENDIF
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ClearBuf
+;
+;       DESCRIPTION:    Clear buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearBuf   Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov ds:rec_count,0
+    mov ds:rec_head,0
+    mov ds:rec_tail,0
+;
+    mov ds:send_count,0
+    mov ds:send_head,0
+    mov ds:send_tail,0
+;
+    popad
+    pop es
+    pop ds
+    ret
+ClearBuf  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitBuf
+;
+;       DESCRIPTION:    Init buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitBuf   Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov eax,1000h
+    AllocateGlobalMem
+    mov ds:rec_sel,es
+;
+    mov eax,1000h
+    AllocateGlobalMem
+    mov ds:send_sel,es
+;
+    call ClearBuf
+;
+    popad
+    pop es
+    pop ds
+    ret
+InitBuf  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           InsertSend
+;
+;   DESCRIPTION:    Insert send
+;
+;   PARAMETERS:     EDX:EAX     Data
+;                   CL          Size (0..8)
+;                   EBX         Identifier
+;       
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertSend   Proc near
+    push es
+    push di
+;
+    EnterSection ds:can_send_section
+    mov di,ds:send_count
+    cmp di,100h
+    je isDone
+;       
+    mov es,ds:send_sel
+    inc di
+    mov ds:send_count,di
+;
+    mov di,ds:send_tail
+    shl di,4
+    mov byte ptr es:[di],0
+    mov es:[di+1],cl
+    shr ebx,14
+    xchg bl,bh
+    or es:[di],bx
+    mov es:[di+2],eax
+    mov es:[di+6],edx
+;
+    shr di,4
+    inc di
+    cmp di,100h
+    jnz isWrapOk
+;
+    xor di,di
+    
+isWrapOk:
+    mov ds:send_tail,di
+
+isDone:
+    LeaveSection ds:can_send_section
+;
+    push bx
+    mov bx,ds:cd_send_thread
+    Signal
+    pop bx
+;
+    pop di
+    pop es
+    ret
+InsertSend   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           RemoveSend
+;
+;   DESCRIPTION:    Remove send
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveSend   Proc near
+    push es
+    push eax
+    push bx
+    push dx
+    push di
+;
+    EnterSection ds:can_send_section
+    mov dx,ds:send_count
+    or dx,dx
+    stc
+    jz rsDone
+;       
+    mov es,ds:send_sel
+    dec dx
+    mov ds:send_count,dx
+    mov bx,ds:send_head
+    shl bx,4
+;
+    mov di,OFFSET out_buf
+    mov eax,es:[bx]
+    mov [di],eax
+    mov eax,es:[bx+4]
+    mov [di+4],eax
+    mov ax,es:[bx+8]
+    mov [di+8],ax
+;
+    shr bx,4
+    inc bx
+    cmp bx,100
+    jnz rsWrapOk
+;       
+    xor bx,bx
+
+rsWrapOk:
+    mov ds:send_head,bx
+    clc
+
+rsDone:
+    LeaveSection ds:can_send_section
+;
+    pop di
+    pop dx
+    pop bx
+    pop eax
+    pop es
+    ret
+RemoveSend   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           PollSend
+;
+;   DESCRIPTION:    Poll send
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+PollSend   Proc near
+    call RemoveSend
+    jc psDone
+;
+    mov bx,ds:cd_out_pipe
+    mov ecx,10
+    mov edi,OFFSET out_buf
+    WriteUsbData
+    StartUsbTransaction    
+
+psRetry:
+    mov bx,ds:cd_out_wait
+    WaitWithoutTimeout
+;
+    mov bx,ds:cd_out_pipe
+    IsUsbTransactionDone
+    jc psRetry
+;
+    mov bx,ds:cd_out_pipe
+    WasUsbTransactionOk
+    jnc PollSend
+;
+    int 3
+
+psDone:
+    ret
+PollSend    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -679,20 +919,20 @@ HandleMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           USB CAN thread
+;       NAME:           USB CAN rec thread
 ;
-;       DESCRIPTION:    USB can thread
+;       DESCRIPTION:    USB can rec thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-usbcan_thread_name DB 'USB Can', 0
+usbcan_rec_thread_name DB 'USB Can Rec', 0
 
-usbcan_thread:
+usbcan_rec_thread:
     mov ax,SEG data
     mov ds,ax
     mov es,ax
     GetThread
-    mov ds:cd_thread,ax
+    mov ds:cd_rec_thread,ax
 
 utLoop:
     mov al,ds:cd_active
@@ -742,7 +982,44 @@ utPipeOk:
     jmp utPipeOk
 
 utEnd:
-    mov ds:cd_thread,0
+    mov ds:cd_rec_thread,0
+    mov bx,ds:cd_send_thread
+    Signal
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           USB CAN send thread
+;
+;       DESCRIPTION:    USB can send thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+usbcan_send_thread_name DB 'USB Can Send', 0
+
+usbcan_send_thread:
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ax
+    GetThread
+    mov ds:cd_send_thread,ax
+
+usLoop:
+    mov al,ds:cd_active
+    or al,al
+    jz usEnd
+;
+    WaitForSignal
+    mov ax,ds:cd_rec_thread
+    or ax,ax
+    jz usEnd
+;
+    call PollSend
+    jmp usLoop
+
+usEnd:
+    mov ds:cd_send_thread,0
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -769,16 +1046,23 @@ AddDevice Proc near
     mov ds:cd_controller,bx
     mov ds:cd_active,1
 ;
-    mov dx,ds:cd_thread
+    mov dx,ds:cd_rec_thread
     or dx,dx
     jnz adThreadStarted
 ;
-    mov ds:cd_thread,-1    
+    mov ds:cd_rec_thread,-1    
+    mov ds:cd_send_thread,-1    
     mov dx,cs
     mov ds,dx
     mov es,dx
-    mov di,OFFSET usbcan_thread_name
-    mov si,OFFSET usbcan_thread
+    mov di,OFFSET usbcan_rec_thread_name
+    mov si,OFFSET usbcan_rec_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+;
+    mov di,OFFSET usbcan_send_thread_name
+    mov si,OFFSET usbcan_send_thread
     mov ax,2
     mov cx,stack0_size
     CreateThread
@@ -1040,72 +1324,15 @@ send_can_bus_msg_name   DB 'Send CAN Bus Message', 0
 
 send_can_bus_msg    Proc far
     push ds
-    push es
-    push ebx
-    push ecx
-    push esi
-    push edi
 ;
     push ax
-;
     mov ax,SEG data
     mov ds,ax
-    mov es,ax
-;
-    EnterSection ds:can_send_section
-
-scbWait:
-    mov al,ds:can_active
-    or al,al
-    jnz scbActive
-;
-    mov ax,100
-    WaitMilliSec
-    jmp scbWait
-
-scbActive:
     pop ax
 ;
     call NotifyMsg
+    call InsertSend
 ;
-    mov edi,OFFSET out_buf
-    mov byte ptr [di],0
-    mov [di+1],cl
-    shr ebx,14
-    xchg bl,bh
-    or [di],bx
-    mov [di+2],eax
-    mov [di+6],edx
-;
-    mov bx,ds:cd_out_pipe
-    mov ecx,10
-    mov edi,OFFSET out_buf
-    WriteUsbData
-    StartUsbTransaction    
-
-scbRetry:
-    mov bx,ds:cd_out_wait
-    WaitWithoutTimeout
-;
-    mov bx,ds:cd_out_pipe
-    IsUsbTransactionDone
-    jc scbRetry
-;
-    mov bx,ds:cd_out_pipe
-    WasUsbTransactionOk
-    jnc scbLeave
-;
-    int 3
-
-scbLeave:
-    LeaveSection ds:can_send_section
-
-scbDone:
-    pop edi
-    pop esi
-    pop ecx
-    pop ebx
-    pop es
     pop ds
     retf32
 send_can_bus_msg    Endp    
@@ -1204,7 +1431,8 @@ stop_can_capture    Endp
 init    Proc far
     mov bx,SEG data
     mov es,bx
-    mov es:cd_thread,0
+    mov es:cd_rec_thread,0
+    mov es:cd_send_thread,0
     mov es:cd_controller,0
     mov es:cd_device,0
     mov es:cd_active,0
@@ -1217,6 +1445,7 @@ init    Proc far
     mov es:capture_handle,0
     mov es:capture_thread,0
     mov es:capture_list,0
+    call InitBuf
 ;
     mov di,OFFSET can_id_hook_arr
     mov cx,4 * 15
