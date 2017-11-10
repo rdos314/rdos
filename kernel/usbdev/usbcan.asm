@@ -1040,33 +1040,14 @@ send_can_bus_msg    Proc far
     push esi
     push edi
 ;
-    push eax
-    push ebx
-    push ecx
-;
+    push ax
     mov ax,SEG data
     mov ds,ax
     mov es,ax
-;
-    mov bx,ds:cd_out_pipe
-    or bx,bx
-    jz scbDone
+    pop ax
 ;
     EnterSection ds:can_send_section
-
-scbRetry:
-    mov bx,ds:cd_out_pipe
-    IsUsbTransactionDone
-    jnc scbIdle
 ;
-    mov bx,ds:cd_out_wait
-    WaitWithoutTimeout
-    jmp scbRetry
-
-scbIdle:
-    pop ecx
-    pop ebx
-    pop eax
     call NotifyMsg
 ;
     mov edi,OFFSET out_buf
@@ -1083,7 +1064,22 @@ scbIdle:
     mov edi,OFFSET out_buf
     WriteUsbData
     StartUsbTransaction    
+
+scbRetry:
+    mov bx,ds:cd_out_wait
+    WaitWithoutTimeout
 ;
+    mov bx,ds:cd_out_pipe
+    IsUsbTransactionDone
+    jc scbRetry
+;
+    mov bx,ds:cd_out_pipe
+    WasUsbTransactionOk
+    jnc scbLeave
+;
+    int 3
+
+scbLeave:
     LeaveSection ds:can_send_section
 
 scbDone:
