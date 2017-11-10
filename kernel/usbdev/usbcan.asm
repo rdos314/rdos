@@ -74,6 +74,9 @@ can_send_section section_typ <>
 in_buf           DB 10 DUP(?)
 out_buf          DB 10 DUP(?)
 
+can_active       DB ?
+can_extra        DB ?
+
 hw_id            DB ?
 rdos_major       DB ?
 rdos_minor       DB ?
@@ -424,6 +427,7 @@ start_can_com   Proc far
     mov ax,SEG data
     mov ds,ax
     mov es,ax
+    mov ds:can_active,0
 
 sccWait:
     mov ax,ds:cd_control_pipe
@@ -446,6 +450,7 @@ sccDo:
     call StartModules
     mov ax,500
     WaitMilliSec
+    mov ds:can_active,1
 ;
     mov eax,1
     pop es
@@ -886,6 +891,7 @@ usb_detach  Proc far
     cmp al,ds:cd_device
     jne udDone
 ;
+    mov ds:can_active,0
     mov ds:cd_controller,0
     mov ds:cd_device,0
     mov ds:cd_active,0
@@ -1041,12 +1047,24 @@ send_can_bus_msg    Proc far
     push edi
 ;
     push ax
+;
     mov ax,SEG data
     mov ds,ax
     mov es,ax
-    pop ax
 ;
     EnterSection ds:can_send_section
+
+scbWait:
+    mov al,ds:can_active
+    or al,al
+    jnz scbActive
+;
+    mov ax,100
+    WaitMilliSec
+    jmp scbWait
+
+scbActive:
+    pop ax
 ;
     call NotifyMsg
 ;
@@ -1193,6 +1211,7 @@ init    Proc far
     mov es:cd_control_pipe,0
     mov es:cd_in_pipe,0
     mov es:cd_out_pipe,0
+    mov es:can_active,0
     InitSection es:can_send_section
     InitSection es:capture_section
     mov es:capture_handle,0
