@@ -134,11 +134,11 @@ static void ProcessRow(char *str)
                 break;
 
             case 6:
-                Row.Sex = atoi(valstr);
+                Row.Gender = atoi(valstr);
                 break;
 
             case 7:
-                Row.Gender = atoi(valstr);
+                Row.GenderId = atoi(valstr);
                 break;
 
             case 8:

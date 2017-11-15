@@ -8,8 +8,8 @@ struct TQuizRow
     long FilloutTime;
     int  BirthYear;
     int  BirthMonth;
-        char Sex;
         char Gender;
+        char GenderId;
         int Country;
         int Ancestry;
         char Aspie;
