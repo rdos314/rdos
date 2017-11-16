@@ -3652,6 +3652,42 @@ is_usb_trans_done       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           IsUsbConnected
+;
+;           DESCRIPTION:    Check if connected
+;
+;           PARAMETERS:         BX          Pipe handle
+;
+;       RETURNS:    NC      Connected
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_usb_connected_name  DB 'Is USB Connected',0
+
+is_usb_connected       Proc far
+    push ds
+    push fs
+    push ebx
+;
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc iucdDone
+;
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
+    call fword ptr ds:is_connected_proc
+
+iucdDone:
+    pop ebx
+    pop fs
+    pop ds
+    retf32
+is_usb_connected       Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           WasUsbTransactionOk
 ;
 ;           DESCRIPTION:    Check if transaction was performed ok
@@ -4159,6 +4195,12 @@ init    Proc far
     mov edi,OFFSET is_usb_trans_done_name
     xor dx,dx
     mov ax,is_usb_trans_done_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_usb_connected
+    mov edi,OFFSET is_usb_connected_name
+    xor dx,dx
+    mov ax,is_usb_connected_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET was_usb_trans_ok

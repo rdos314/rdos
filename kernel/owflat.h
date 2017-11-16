@@ -3198,6 +3198,12 @@
     CallGate_write_usb_status \
     parm [ebx];
 
+#pragma aux RdosIsUsbConnected = \
+    CallGate_is_usb_connected \
+    CarryToBool \
+    parm [ebx] \
+    value [eax];
+
 #pragma aux RdosIsUsbTransactionDone = \
     CallGate_is_usb_trans_done \
     CarryToBool \

@@ -3372,6 +3372,11 @@ WriteUsbStatus      MACRO
 						ENDM
 
 ;   IN  BX          Handle
+IsUsbConnected      MACRO
+	UserGate is_usb_connected_nr
+						ENDM
+
+;   IN  BX          Handle
 StartUsbTransaction      MACRO
 	UserGate start_usb_transaction_nr
 						ENDM

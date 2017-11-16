@@ -708,4 +708,7 @@ c_handle_to_file_sel_nr     = 612
 
 add_serio_device_nr         = 613
 
+is_can_online_nr            = 614
+notify_can_offline_nr       = 615
+
 osgate_entries              = 650

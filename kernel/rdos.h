@@ -822,6 +822,7 @@ int RDOSAPI RdosGetUsbDataSize(int Handle);
 void RDOSAPI RdosWriteUsbData(int Handle, const char *buf, int size);
 void RDOSAPI RdosReqUsbStatus(int Handle);
 void RDOSAPI RdosWriteUsbStatus(int Handle);
+int RDOSAPI RdosIsUsbConnected(int Handle);
 int RDOSAPI RdosIsUsbTransactionDone(int Handle);
 int RDOSAPI RdosWasUsbTransactionOk(int Handle);
 

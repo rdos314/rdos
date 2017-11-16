@@ -826,6 +826,8 @@
 #define usergate_sub_signed_bignum 0x00000287
 #define usergate_sub_unsigned_bignum 0x00000288
 
+#define usergate_is_usb_connected 0x00000289
+
 
 
 #ifdef __FLAT__
@@ -1657,6 +1659,8 @@
 #define CallGate_sub_signed_bignum 0x55 0x67 0x9a 135 2 0 0 3 0 0x5d
 #define CallGate_sub_unsigned_bignum 0x55 0x67 0x9a 136 2 0 0 3 0 0x5d
 
+#define CallGate_is_usb_connected 0x55 0x67 0x9a 137 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2485,5 +2489,7 @@
 #define CallGate_add_unsigned_bignum 0x3e 0x67 0x9a 134 2 0 0 3 0
 #define CallGate_sub_signed_bignum 0x3e 0x67 0x9a 135 2 0 0 3 0
 #define CallGate_sub_unsigned_bignum 0x3e 0x67 0x9a 136 2 0 0 3 0
+
+#define CallGate_is_usb_connected 0x3e 0x67 0x9a 137 2 0 0 3 0
 
 #endif

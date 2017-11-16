@@ -84,7 +84,7 @@ in_buf           DB 10 DUP(?)
 out_buf          DB 10 DUP(?)
 
 can_active       DB ?
-can_extra        DB ?
+can_restart      DB ?
 
 rec_sel          DW ?
 rec_count        DW ?
@@ -650,6 +650,46 @@ StartModules  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           IsCanOnline
+;
+;       DESCRIPTION:    Check is can bus is online
+;
+;       RETURNS:        NC	Online
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_can_online_name    DB 'Is Can Online', 0
+
+is_can_online   Proc far
+    push ds
+    push ax
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov ax,ds:cd_controller
+    cmp ax,-1
+    jz icoFail
+;
+    mov ax,ds:cd_control_pipe
+    or ax,ax
+    jz icoFail
+;
+    clc
+    jmp icoDone
+
+icoFail:
+    stc
+
+icoDone:
+    pop ax
+    pop ds
+    retf32
+is_can_online   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           StartCanCom
 ;
 ;       DESCRIPTION:    Start can communication
@@ -662,38 +702,24 @@ start_can_com_name    DB 'Start Can Com', 0
 
 start_can_com   Proc far
     push ds
-    push es
 ;
     mov ax,SEG data
     mov ds,ax
-    mov es,ax
     mov ds:can_active,0
+    mov ds:can_restart,1
 
 sccWait:
-    mov ax,ds:cd_control_pipe
-    or ax,ax
-    jnz sccDo
+    mov al,ds:can_active
+    or al,al
+    jnz sccDone
 ;
     mov ax,250
     WaitMilliSec
     jmp sccWait
 
-sccDo:
-    call PowerDownModules
-    mov ax,500
-    WaitMilliSec
-;
-    call PowerUpModules
-    mov ax,5000
-    WaitMilliSec
-;
-    call StartModules
-    mov ax,500
-    WaitMilliSec
-    mov ds:can_active,1
-;
+sccDone:
     mov eax,1
-    pop es
+;
     pop ds
     retf32
 start_can_com  Endp
@@ -954,13 +980,46 @@ utLoop:
     StartUsbTransaction
 
 utPipeOk:
-    mov bx,ds:cd_in_wait
-    WaitWithoutTimeout
+    mov al,ds:cd_active
+    or al,al
+    jz utEnd
+;
+    mov al,ds:can_restart
+    or al,al
+    jz utRestartOk
+
+utRestart:
+    call PowerDownModules
+    jc utEnd
+;
+    mov ax,500
+    WaitMilliSec
+;
+    call PowerUpModules
+    jc utEnd
+;
+    mov ax,5000
+    WaitMilliSec
+;
+    call StartModules
+    jc utEnd
+;
+    mov ds:can_restart,0
+    mov ax,500
+    WaitMilliSec
+    mov ds:can_active,1
+
+utRestartOk:
+    GetSystemTime
+    add eax,1193 * 250
+    adc edx,0
+    mov bx,ds:cd_control_wait
+    WaitWithTimeout
 ;
     mov bx,ds:cd_in_pipe
     IsUsbTransactionDone
     jc utPipeOk
-;
+;           
     WasUsbTransactionOk
 ;
     mov edi,OFFSET in_buf
@@ -982,9 +1041,22 @@ utPipeOk:
     jmp utPipeOk
 
 utEnd:
+    mov ds:can_active,0
+    mov ds:cd_active,0
     mov ds:cd_rec_thread,0
+;
     mov bx,ds:cd_send_thread
     Signal
+
+utWait:
+    mov ax,ds:cd_controller
+    cmp ax,-1
+    jz utTerm
+;
+    mov ax,100
+    WaitMilliSec
+
+utTerm:
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1020,6 +1092,16 @@ usLoop:
 
 usEnd:
     mov ds:cd_send_thread,0
+
+usWait:
+    mov ax,ds:cd_controller
+    cmp ax,-1
+    jz usTerm
+;
+    mov ax,100
+    WaitMilliSec
+
+usTerm:
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1176,12 +1258,20 @@ usb_detach  Proc far
     jne udDone
 ;
     mov ds:can_active,0
-    mov ds:cd_controller,0
+    mov ds:cd_controller,-1
     mov ds:cd_device,0
     mov ds:cd_active,0
     mov ds:cd_control_pipe,0
     mov ds:cd_in_pipe,0
     mov ds:cd_out_pipe,0
+;
+    mov bx,ds:cd_rec_thread
+    Signal
+;
+    mov ax,100
+    WaitMilliSec
+;
+    NotifyCanOffline
 
 udDone:
     popad
@@ -1466,13 +1556,14 @@ init    Proc far
     mov es,bx
     mov es:cd_rec_thread,0
     mov es:cd_send_thread,0
-    mov es:cd_controller,0
+    mov es:cd_controller,-1
     mov es:cd_device,0
     mov es:cd_active,0
     mov es:cd_control_pipe,0
     mov es:cd_in_pipe,0
     mov es:cd_out_pipe,0
     mov es:can_active,0
+    mov es:can_restart,0
     InitSection es:can_send_section
     InitSection es:capture_section
     mov es:capture_handle,0
@@ -1488,6 +1579,11 @@ init    Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET is_can_online
+    mov edi,OFFSET is_can_online_name
+    mov ax,is_can_online_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET start_can_com
     mov edi,OFFSET start_can_com_name
