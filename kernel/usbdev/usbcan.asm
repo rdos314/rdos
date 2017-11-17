@@ -291,7 +291,7 @@ RemoveSend   Proc near
 ;
     shr bx,4
     inc bx
-    cmp bx,100
+    cmp bx,100h
     jnz rsWrapOk
 ;       
     xor bx,bx
@@ -1013,7 +1013,7 @@ utRestartOk:
     GetSystemTime
     add eax,1193 * 250
     adc edx,0
-    mov bx,ds:cd_control_wait
+    mov bx,ds:cd_in_wait
     WaitWithTimeout
 ;
     mov bx,ds:cd_in_pipe
@@ -1082,7 +1082,11 @@ usLoop:
     or al,al
     jz usEnd
 ;
-    WaitForSignal
+    GetSystemTime
+    add eax,1193 * 100
+    adc edx,0
+    WaitForSignalWithTimeout
+;
     mov ax,ds:cd_rec_thread
     or ax,ax
     jz usEnd
