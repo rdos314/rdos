@@ -81,7 +81,6 @@ cd_active        DB ?
 can_send_section section_typ <>
 
 in_buf           DB 10 DUP(?)
-out_buf          DB 10 DUP(?)
 
 can_active       DB ?
 can_restart      DB ?
@@ -95,6 +94,7 @@ send_sel         DW ?
 send_count       DW ?
 send_head        DW ?
 send_tail        DW ?
+send_curr_count  DW ?
 
 hw_id            DB ?
 rdos_major       DB ?
@@ -152,6 +152,7 @@ ClearBuf   Proc near
     mov ds:send_count,0
     mov ds:send_head,0
     mov ds:send_tail,0
+    mov ds:send_curr_count,0
 ;
     popad
     pop es
@@ -256,60 +257,79 @@ InsertSend   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           RemoveSend
+;   NAME:           GetSendBuffer
 ;
-;   DESCRIPTION:    Remove send
+;   DESCRIPTION:    Get send buffer
+;
+;   RETURNS:        NC        Success
+;                       ES:DI Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RemoveSend   Proc near
-    push es
+GetSendBuffer   Proc near
     push eax
     push bx
     push dx
-    push di
 ;
     EnterSection ds:can_send_section
     mov dx,ds:send_count
     or dx,dx
     stc
-    jz rsDone
+    jz gsbDone
+;
+    sub dx,ds:send_curr_count
+    stc
+    jz gsbDone
 ;       
+    inc ds:send_curr_count
+;
     mov es,ds:send_sel
-    dec dx
-    mov ds:send_count,dx
     mov bx,ds:send_head
-    shl bx,4
+    mov di,bx
+    shl di,4
 ;
-    mov di,OFFSET out_buf
-    mov eax,es:[bx]
-    mov [di],eax
-    mov eax,es:[bx+4]
-    mov [di+4],eax
-    mov ax,es:[bx+8]
-    mov [di+8],ax
-;
-    shr bx,4
     inc bx
     cmp bx,100h
-    jnz rsWrapOk
+    jnz gsbWrapOk
 ;       
     xor bx,bx
 
-rsWrapOk:
+gsbWrapOk:
     mov ds:send_head,bx
     clc
 
-rsDone:
+gsbDone:
     LeaveSection ds:can_send_section
 ;
-    pop di
     pop dx
     pop bx
     pop eax
-    pop es
     ret
-RemoveSend   Endp
+GetSendBuffer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           UpdateSent
+;
+;   DESCRIPTION:    Update with sent package(s)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateSent   Proc near
+    push ax
+;
+    EnterSection ds:can_send_section
+;
+    xor ax,ax
+    xchg ax,ds:send_curr_count
+    sub ds:send_count,ax   
+;
+    LeaveSection ds:can_send_section
+;
+    pop ax
+    ret
+UpdateSent   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -322,13 +342,17 @@ RemoveSend   Endp
 
 
 PollSend   Proc near
-    call RemoveSend
+    call GetSendBuffer
     jc psDone
-;
+
+psAdd:
     mov bx,ds:cd_out_pipe
     mov ecx,10
-    mov edi,OFFSET out_buf
     WriteUsbData
+;
+    call GetSendBuffer
+    jnc psAdd
+;
     StartUsbTransaction    
 
 psRetry:
@@ -341,9 +365,13 @@ psRetry:
 ;
     mov bx,ds:cd_out_pipe
     WasUsbTransactionOk
-    jnc PollSend
+    jnc psUpdate
 ;
     int 3
+
+psUpdate:
+    call UpdateSent
+    jmp PollSend
 
 psDone:
     ret
