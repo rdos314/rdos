@@ -3216,6 +3216,10 @@
     parm [ebx] \
     value [eax];
 
+#pragma aux RdosStartOneUsbTransaction = \
+    CallGate_start_one_usb_trans \
+    parm [ebx];
+
 #pragma aux RdosGetAllocatedUsbBlocks = \
     CallGate_get_allocated_usb_blocks \
     value [eax];

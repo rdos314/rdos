@@ -2483,6 +2483,24 @@ CloseControlPipe   Proc far
     retf32
 CloseControlPipe   Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IssueOne
+;
+;           DESCRIPTION:    Issue one transfer
+;
+;       PARAMETERS:         FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IssueOne   Proc far
+    int 3
+    clc
+    retf32
+IssueOne   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3382,6 +3400,7 @@ ot1A DD 0,                      0
 ot1B DD 0,                      0
 ot1C DD OFFSET SetMaxLen,       SEG code
 ot1D DD OFFSET CloseControlPipe, SEG code
+ot1E DD OFFSET IssueOne,        SEG code
 
 InitFunction    Proc near
     push ds
@@ -3439,7 +3458,7 @@ ifIrqDone:
 ;    
     mov si,OFFSET ohci_tab
     xor di,di
-    mov cx,2*1Eh
+    mov cx,2*1Fh
 
 ifTabLoop:
     lods dword ptr cs:[si]

@@ -3396,6 +3396,11 @@ WasUsbTransactionOk      MACRO
 						ENDM
 
 ;   IN  BX          Handle
+StartOneUsbTransaction      MACRO
+	UserGate start_one_usb_trans_nr
+						ENDM
+
+;   IN  BX          Handle
 ;   OUT CY          Stalled
 IsUsbPipeStalled      MACRO
 	UserGate is_usb_pipe_stalled_nr

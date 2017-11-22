@@ -134,7 +134,8 @@ ehc_curr_cnt        DD 1024 DUP(?)
 ehci_func_sel    ENDS
 
 ESP_FLAG_TRANSFER_PENDING   = 1
-ESP_FLAG_TRANSFER_OK    = 2
+ESP_FLAG_TRANSFER_OK        = 2
+ESP_FLAG_SINGLE             = 4
 
 ehci_pipe   STRUC
 
@@ -148,6 +149,7 @@ esp_table_size  DW ?
 
 esp_pending     DD ?
 esp_first       DD ?
+esp_current     DD ?
 esp_signal      DW ?
 esp_size        DW ?
 esp_flags       DB ?
@@ -2062,6 +2064,16 @@ LocalIsTransferDone   Proc near
     or eax,eax
     jz itdFail
 ;
+    test fs:esp_flags, ESP_FLAG_SINGLE
+    jz itdMulti
+;
+    mov eax,es:[edx].qh_next_qtd
+    cmp eax,fs:esp_current
+    je itdFail
+;
+    jmp itdOk
+
+itdMulti:
     mov al,es:[edx].qh_status
     test al,80h
     jnz itdFail
@@ -2303,6 +2315,68 @@ GetDataSize   Proc far
 gdsDone:
     retf32
 GetDataSize   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:               IssueOne
+;
+;       DESCRIPTION:        Issue one transfer
+;
+;       PARAMETERS:         FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IssueOne   Proc far
+    push es
+    push eax
+    push ebx
+    push edx
+;    
+    mov ax,flat_sel
+    mov es,ax
+;    
+    GetThread
+    mov fs:esp_signal,ax
+;
+    test fs:esp_flags, ESP_FLAG_SINGLE
+    jnz iotNew
+;
+    and fs:esp_flags, NOT ESP_FLAG_TRANSFER_OK
+    or fs:esp_flags, ESP_FLAG_TRANSFER_PENDING OR ESP_FLAG_SINGLE
+    mov edx,fs:esp_qh
+    mov al,fs:usbp_address
+    mov es:[edx].qh_adress,al
+;    
+    mov al,fs:usbp_endpoint
+    and al,0Fh
+    mov ah,es:[edx].qh_endpoint
+    and ah,0F0h
+    or al,ah
+    mov es:[edx].qh_endpoint,al    
+;
+    mov eax,fs:esp_pending
+    mov eax,es:[eax].qtd_my_phys
+    mov es:[edx].qh_next_qtd,eax
+    mov fs:esp_current,eax
+    jmp iotDone
+
+iotNew:
+    int 3
+    mov edx,fs:esp_pending
+    mov eax,es:[edx].qtd_next_va
+    mov fs:esp_pending,eax
+    mov eax,es:[eax].qtd_my_phys
+    mov fs:esp_current,eax
+    call FreeBlock128
+
+iotDone:
+    pop edx
+    pop ebx
+    pop eax
+    pop es    
+    retf32
+IssueOne   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2797,7 +2871,6 @@ ccpDone:
     pop es
     retf32
 CloseControlPipe Endp
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3564,15 +3637,26 @@ uplElemLoop:
     mov eax,es:[edx].qh_current_qtd
     or eax,eax
     jz uplNext
+;    
+    test fs:esp_flags, ESP_FLAG_SINGLE
+    jz uplMulti
 ;
+    mov eax,es:[edx].qh_next_qtd
+    cmp eax,fs:esp_current
+    je uplNext
+;
+    jmp uplSignal
+
+uplMulti:
     mov al,es:[edx].qh_status
     test al,80h
     jnz uplNext
-;    
+;
     mov eax,es:[edx].qh_next_qtd
     test al,1
     jz uplNext
-;
+
+uplSignal:
     xor bx,bx
     xchg bx,fs:esp_signal
     or bx,bx
@@ -3777,6 +3861,7 @@ et1A DD 0,                      0
 et1B DD 0,                      0
 et1C DD OFFSET SetMaxLen,       SEG code
 et1D DD OFFSET CloseControlPipe, SEG code
+ec1E DD OFFSET IssueOne,        SEG code
 
 ;
 ;           PARAMETERS:         BH          Bus
@@ -3798,7 +3883,7 @@ InitFunction    Proc near
 ;    
     mov si,OFFSET ehci_tab
     xor di,di
-    mov cx,2*1Eh
+    mov cx,2*1Fh
 
 ifTabLoop:
     lods dword ptr cs:[si]

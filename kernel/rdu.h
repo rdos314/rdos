@@ -827,6 +827,7 @@
 #define usergate_sub_unsigned_bignum 0x00000288
 
 #define usergate_is_usb_connected 0x00000289
+#define usergate_start_one_usb_trans 0x0000028A
 
 
 
@@ -1660,6 +1661,7 @@
 #define CallGate_sub_unsigned_bignum 0x55 0x67 0x9a 136 2 0 0 3 0 0x5d
 
 #define CallGate_is_usb_connected 0x55 0x67 0x9a 137 2 0 0 3 0 0x5d
+#define CallGate_start_one_usb_trans 0x55 0x67 0x9a 138 2 0 0 3 0 0x5d
 
 #else
 
@@ -2491,5 +2493,6 @@
 #define CallGate_sub_unsigned_bignum 0x3e 0x67 0x9a 136 2 0 0 3 0
 
 #define CallGate_is_usb_connected 0x3e 0x67 0x9a 137 2 0 0 3 0
+#define CallGate_start_one_usb_trans 0x3e 0x67 0x9a 138 2 0 0 3 0
 
 #endif

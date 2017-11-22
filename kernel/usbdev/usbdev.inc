@@ -148,6 +148,10 @@ set_max_len_proc        DD ?,?
 ; IN  FS        Control pipe selector
 close_control_pipe_proc DD ?,?
 
+; IN  FS        Pipe selector
+issue_one_proc       DD ?,?
+
+
 usb_section            section_typ <>
 
 usb_controller_id      DW ?

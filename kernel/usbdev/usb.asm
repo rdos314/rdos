@@ -3724,6 +3724,39 @@ was_usb_trans_ok    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           StartOneUsbTransaction
+;
+;           DESCRIPTION:    Issue a single transfer
+;
+;           PARAMETERS:         BX          Pipe handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_one_usb_trans_name   DB 'Start One USB Transaction',0
+
+start_one_usb_trans    Proc far
+    push ds
+    push fs
+    push ebx
+;
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc soutDone
+;
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
+    call fword ptr ds:issue_one_proc
+
+soutDone:
+    pop ebx
+    pop fs
+    pop ds
+    retf32
+start_one_usb_trans    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           IsUsbPipeStalled
 ;
 ;           DESCRIPTION:    Check if pipe is stalled
@@ -4207,6 +4240,12 @@ init    Proc far
     mov edi,OFFSET was_usb_trans_ok_name
     xor dx,dx
     mov ax,was_usb_trans_ok_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET start_one_usb_trans
+    mov edi,OFFSET start_one_usb_trans_name
+    xor dx,dx
+    mov ax,start_one_usb_trans_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET is_usb_pipe_stalled

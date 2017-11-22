@@ -827,5 +827,6 @@ sub_signed_bignum_nr             = 647
 sub_unsigned_bignum_nr           = 648
 
 is_usb_connected_nr              = 649
+start_one_usb_trans_nr           = 650
 
-usergate_entries                            = 650
+usergate_entries                            = 670

@@ -825,6 +825,7 @@ void RDOSAPI RdosWriteUsbStatus(int Handle);
 int RDOSAPI RdosIsUsbConnected(int Handle);
 int RDOSAPI RdosIsUsbTransactionDone(int Handle);
 int RDOSAPI RdosWasUsbTransactionOk(int Handle);
+void RDOSAPI RdosStartOnetransaction(int Handle);
 
 int RDOSAPI RdosOpenHid(int Controller, int Device);
 void RDOSAPI RdosCloseHid(int handle);

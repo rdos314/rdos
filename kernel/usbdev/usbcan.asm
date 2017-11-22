@@ -66,6 +66,7 @@ data_block   ENDS
 
 data    SEGMENT byte public 'DATA'
 
+cd_super_thread  DW ?
 cd_rec_thread    DW ?
 cd_send_thread   DW ?
 cd_controller    DW ?
@@ -86,9 +87,7 @@ can_active       DB ?
 can_restart      DB ?
 
 rec_sel          DW ?
-rec_count        DW ?
-rec_head         DW ?
-rec_tail         DW ?
+rec_pos          DW ?
 
 send_sel         DW ?
 send_count       DW ?
@@ -145,9 +144,7 @@ ClearBuf   Proc near
     mov ax,SEG data
     mov ds,ax
 ;
-    mov ds:rec_count,0
-    mov ds:rec_head,0
-    mov ds:rec_tail,0
+    mov ds:rec_pos,0
 ;
     mov ds:send_count,0
     mov ds:send_head,0
@@ -178,12 +175,28 @@ InitBuf   Proc near
     mov ds,ax
 ;
     mov eax,1000h
-    AllocateGlobalMem
-    mov ds:rec_sel,es
+    AllocateBigLinear
+;
+    AllocatePhysical32
+    or al,67h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov ds:rec_sel,bx
 ;
     mov eax,1000h
-    AllocateGlobalMem
-    mov ds:send_sel,es
+    AllocateBigLinear
+;
+    AllocatePhysical32
+    or al,67h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov ds:send_sel,bx
 ;
     call ClearBuf
 ;
@@ -376,6 +389,44 @@ psUpdate:
 psDone:
     ret
 PollSend    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           GetRecBuffer
+;
+;   DESCRIPTION:    Get receive buffer
+;
+;   RETURNS:        ES:DI Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetRecBuffer   Proc near
+    push eax
+    push bx
+    push dx
+;
+    mov es,ds:rec_sel
+    mov bx,ds:rec_pos
+    mov di,bx
+    shl di,4
+;
+    inc bx
+    cmp bx,100h
+    jnz grbWrapOk
+;       
+    xor bx,bx
+
+grbWrapOk:
+    mov ds:rec_pos,bx
+    clc
+
+grbDone:
+    pop dx
+    pop bx
+    pop eax
+    ret
+GetRecBuffer   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -927,6 +978,7 @@ NotifyMsg  Endp
 HandleMsg   Proc near
     push ds
     push es
+    push di
 ;
     call NotifyMsg
 ;
@@ -965,6 +1017,7 @@ hmIdOk:
     call fword ptr es:[si].ih_offset
 
 hmDone:
+    pop di
     pop es
     pop ds
     ret
@@ -988,90 +1041,155 @@ usbcan_rec_thread:
     GetThread
     mov ds:cd_rec_thread,ax
 
-utLoop:
+ureWaitOpen:
     mov al,ds:cd_active
     or al,al
-    jz utEnd
+    jz ureEnd
 ;
-    mov ax,ds:cd_control_pipe
-    or ax,ax
-    jnz utPipeOk
+    mov bx,ds:cd_in_pipe
+    or bx,bx
+    jnz ureStart
 ;
-    call OpenPipes
-    call GetSoftwareVersion
-    jc utEnd
+    mov ax,100
+    WaitMilliSec
+    jmp ureWaitOpen
+
+ureStart:
+    mov cx,100h
+    mov bx,ds:cd_in_pipe
+
+ureAddReqLoop:
+    call GetRecBuffer
 ;
-    mov edi,OFFSET in_buf
+    push cx
+    mov ecx,10
+    ReqUsbData
+    pop cx
+;
+    loop ureAddReqLoop
+;
+    StartOneUsbTransaction
+
+ureLoop:
+    mov al,ds:cd_active
+    or al,al
+    jz ureEnd
+;
+    mov bx,ds:cd_in_wait
+    WaitWithoutTimeout
+;
+    mov bx,ds:cd_in_pipe
+    IsUsbTransactionDone
+    jc ureLoop
+;
+    call GetRecBuffer
+;
+    mov cl,es:[di+1]
+    and cl,0Fh
+    movzx ebx,word ptr es:[di]
+    xchg bl,bh
+    and bl,0F0h
+    shl ebx,14
+    mov eax,es:[di+2]
+    mov edx,es:[di+6]
+    call HandleMsg
+;
     mov bx,ds:cd_in_pipe
     mov ecx,10
     ReqUsbData
-    StartUsbTransaction
+    StartOneUsbTransaction
+;
+    jmp ureLoop
 
-utPipeOk:
+ureEnd:
+    mov ds:cd_rec_thread,0
+
+ureWait:
+    mov ax,ds:cd_controller
+    cmp ax,-1
+    jz ureTerm
+;
+    mov ax,100
+    WaitMilliSec
+
+ureTerm:
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           USB CAN supervisor thread
+;
+;       DESCRIPTION:    USB can supervisor thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+usbcan_super_thread_name DB 'USB Can Super', 0
+
+usbcan_super_thread:
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ax
+    GetThread
+    mov ds:cd_super_thread,ax
+
+usuLoop:
     mov al,ds:cd_active
     or al,al
-    jz utEnd
+    jz usuEnd
+;
+    mov ax,ds:cd_control_pipe
+    or ax,ax
+    jnz usuPipeOk
+;
+    call OpenPipes
+    call GetSoftwareVersion
+    jc usuEnd
+
+usuPipeOk:
+    mov al,ds:cd_active
+    or al,al
+    jz usuEnd
 ;
     mov al,ds:can_restart
     or al,al
-    jz utRestartOk
+    jz usuRestartOk
 
-utRestart:
+usuRestart:
     call PowerDownModules
-    jc utEnd
+    jc usuEnd
 ;
     mov ax,500
     WaitMilliSec
 ;
     call PowerUpModules
-    jc utEnd
+    jc usuEnd
 ;
     mov ax,5000
     WaitMilliSec
 ;
     call StartModules
-    jc utEnd
+    jc usuEnd
 ;
     mov ds:can_restart,0
     mov ax,500
     WaitMilliSec
     mov ds:can_active,1
 
-utRestartOk:
+usuRestartOk:
     GetSystemTime
     add eax,1193 * 250
     adc edx,0
-    mov bx,ds:cd_in_wait
-    WaitWithTimeout
-;
-    mov bx,ds:cd_in_pipe
-    IsUsbTransactionDone
-    jc utPipeOk
-;           
-    WasUsbTransactionOk
-;
-    mov edi,OFFSET in_buf
-    mov cl,[di+1]
-    and cl,0Fh
-    movzx ebx,word ptr [di]
-    xchg bl,bh
-    and bl,0F0h
-    shl ebx,14
-    mov eax,[di+2]
-    mov edx,[di+6]
-    call HandleMsg
-;
-    mov bx,ds:cd_in_pipe
-    mov ecx,10
-    mov edi,OFFSET in_buf
-    ReqUsbData
-    StartUsbTransaction
-    jmp utPipeOk
+    WaitForSignalWithTimeout
+    jmp usuPipeOk
 
-utEnd:
+usuEnd:
     mov ds:can_active,0
     mov ds:cd_active,0
-    mov ds:cd_rec_thread,0
+    mov ds:cd_super_thread,0
+;
+    mov bx,ds:cd_rec_thread
+    Signal
 ;
     mov bx,ds:cd_send_thread
     Signal
@@ -1079,12 +1197,12 @@ utEnd:
 utWait:
     mov ax,ds:cd_controller
     cmp ax,-1
-    jz utTerm
+    jz usuTerm
 ;
     mov ax,100
     WaitMilliSec
 
-utTerm:
+usuTerm:
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1115,7 +1233,7 @@ usLoop:
     adc edx,0
     WaitForSignalWithTimeout
 ;
-    mov ax,ds:cd_rec_thread
+    mov ax,ds:cd_super_thread
     or ax,ax
     jz usEnd
 ;
@@ -1160,15 +1278,22 @@ AddDevice Proc near
     mov ds:cd_controller,bx
     mov ds:cd_active,1
 ;
-    mov dx,ds:cd_rec_thread
+    mov dx,ds:cd_super_thread
     or dx,dx
     jnz adThreadStarted
 ;
+    mov ds:cd_super_thread,-1    
     mov ds:cd_rec_thread,-1    
     mov ds:cd_send_thread,-1    
     mov dx,cs
     mov ds,dx
     mov es,dx
+    mov di,OFFSET usbcan_super_thread_name
+    mov si,OFFSET usbcan_super_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+;
     mov di,OFFSET usbcan_rec_thread_name
     mov si,OFFSET usbcan_rec_thread
     mov ax,2
@@ -1297,7 +1422,7 @@ usb_detach  Proc far
     mov ds:cd_in_pipe,0
     mov ds:cd_out_pipe,0
 ;
-    mov bx,ds:cd_rec_thread
+    mov bx,ds:cd_super_thread
     Signal
 ;
     mov ax,100
@@ -1586,6 +1711,7 @@ stop_can_capture    Endp
 init    Proc far
     mov bx,SEG data
     mov es,bx
+    mov es:cd_super_thread,0
     mov es:cd_rec_thread,0
     mov es:cd_send_thread,0
     mov es:cd_controller,-1
