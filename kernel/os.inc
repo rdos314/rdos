@@ -3535,6 +3535,20 @@ GetUsbInfo      MACRO
     OsGate get_usb_info_nr
                         ENDM
 
+; IN  BX      Handle
+; IN  ES:EDI  Data
+; IN  CX      Size
+ReqUsbDataNoCopy      MACRO
+    OsGate req_usb_data_no_copy_nr
+                        ENDM
+
+; IN  BX      Handle
+; IN  ES:EDI  Data
+; IN  CX      Size
+WriteUsbDataNoCopy      MACRO
+    OsGate write_usb_data_no_copy_nr
+                        ENDM
+
 ;;;;;;;;;; Audio codec ;;;;;;;;;
 
 ; IN    BX Register

@@ -3045,6 +3045,19 @@ delete_handle   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_wait_for_pipe     PROC far
+    push ds
+    push fs
+;
+    mov ds,es:pw_func_sel
+    mov fs,es:pw_pipe_sel
+    call fword ptr ds:is_transfer_done_proc
+    jc swfpDone
+;
+    SignalWait
+
+swfpDone:
+    pop fs
+    pop ds    
     retf32
 start_wait_for_pipe Endp
     
@@ -3367,6 +3380,44 @@ req_usb_data    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           ReqUsbDataNoCopy
+;
+;           DESCRIPTION:    Setup request for input data on pipe, low buffer memory
+;
+;           PARAMETERS:     BX          Pipe handle
+;                           CX          Size of buffer
+;                           ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+req_usb_data_no_copy_name       DB 'Request USB Data, No Copy',0
+
+req_usb_data_no_copy    Proc far
+    push ds
+    push fs
+    push ax
+    push ebx
+;
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc rudncDone
+;
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
+    call fword ptr ds:add_in_proc
+
+rudncDone:
+    pop ebx
+    pop ax
+    pop fs
+    pop ds
+    retf32
+req_usb_data_no_copy    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           GetUsbDataSize
 ;
 ;           DESCRIPTION:    Get data size from previous input req
@@ -3505,6 +3556,46 @@ wudDone32:
     pop ds
     retf32
 write_usb_data32    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           WriteUsbDataNoCopy
+;
+;           DESCRIPTION:    Write USB data
+;
+;           PARAMETERS:     BX          Pipe handle
+;                           CX      Size of data to request
+;                           ES:(E)DI    Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_usb_data_no_copy_name     DB 'Write USB Data, No Copy',0
+
+write_usb_data_no_copy    Proc far
+    push ds
+    push fs
+    push ax
+    push ebx
+    push cx
+;
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc wudncDone
+;
+    mov fs,ds:[ebx].up_pipe_sel
+    mov ds,ds:[ebx].up_func_sel
+    call fword ptr ds:add_out_proc
+
+wudncDone:
+    pop cx
+    pop ebx
+    pop ax
+    pop fs
+    pop ds
+    retf32
+write_usb_data_no_copy    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4109,6 +4200,18 @@ init    Proc far
     mov edi,OFFSET get_usb_info_name
     xor cl,cl
     mov ax,get_usb_info_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET req_usb_data_no_copy
+    mov edi,OFFSET req_usb_data_no_copy_name
+    xor cl,cl
+    mov ax,req_usb_data_no_copy_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET write_usb_data_no_copy
+    mov edi,OFFSET write_usb_data_no_copy_name
+    xor cl,cl
+    mov ax,write_usb_data_no_copy_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET get_usb_device16

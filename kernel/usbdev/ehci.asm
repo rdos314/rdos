@@ -1861,10 +1861,6 @@ AddIn    Proc far
     mov es,ax
     mov edx,fs:esp_qh
 ;    
-    mov ax,es:[edx].qh_size
-    and ax,8000h
-    mov es:[edx].qh_size,ax
-;
     mov al,fs:usbp_endpoint
     or al,al
     jz aiControl
@@ -1877,6 +1873,10 @@ aiData:
     jmp aiDone
 
 aiControl:    
+    mov ax,es:[edx].qh_size
+    and ax,8000h
+    mov es:[edx].qh_size,ax
+;
     mov ax,es:[edx].qh_max_packet
     and ax,0F800h
     or ax,fs:usbp_maxlen
@@ -2067,7 +2067,6 @@ LocalIsTransferDone   Proc near
     test fs:esp_flags, ESP_FLAG_SINGLE
     jz itdMulti
 ;
-    mov eax,es:[edx].qh_next_qtd
     cmp eax,fs:esp_current
     je itdFail
 ;
@@ -2362,10 +2361,10 @@ IssueOne   Proc far
     jmp iotDone
 
 iotNew:
-    int 3
     mov edx,fs:esp_pending
     mov eax,es:[edx].qtd_next_va
     mov fs:esp_pending,eax
+;
     mov eax,es:[eax].qtd_my_phys
     mov fs:esp_current,eax
     call FreeBlock128
@@ -3641,7 +3640,6 @@ uplElemLoop:
     test fs:esp_flags, ESP_FLAG_SINGLE
     jz uplMulti
 ;
-    mov eax,es:[edx].qh_next_qtd
     cmp eax,fs:esp_current
     je uplNext
 ;

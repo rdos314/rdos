@@ -359,9 +359,10 @@ PollSend   Proc near
     jc psDone
 
 psAdd:
+    movzx edi,di
     mov bx,ds:cd_out_pipe
     mov ecx,10
-    WriteUsbData
+    WriteUsbDataNoCopy
 ;
     call GetSendBuffer
     jnc psAdd
@@ -1060,10 +1061,11 @@ ureStart:
 
 ureAddReqLoop:
     call GetRecBuffer
+    movzx edi,di
 ;
     push cx
     mov ecx,10
-    ReqUsbData
+    ReqUsbDataNoCopy
     pop cx
 ;
     loop ureAddReqLoop
@@ -1083,6 +1085,7 @@ ureLoop:
     jc ureLoop
 ;
     call GetRecBuffer
+    movzx edi,di
 ;
     mov cl,es:[di+1]
     and cl,0Fh
@@ -1096,7 +1099,7 @@ ureLoop:
 ;
     mov bx,ds:cd_in_pipe
     mov ecx,10
-    ReqUsbData
+    ReqUsbDataNoCopy
     StartOneUsbTransaction
 ;
     jmp ureLoop
