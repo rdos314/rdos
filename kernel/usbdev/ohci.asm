@@ -110,7 +110,8 @@ otd_spare       DW ?
 ohc_td_struc    ENDS
 
 OSP_FLAG_TRANSFER_PENDING   = 1
-OSP_FLAG_TRANSFER_OK    = 2
+OSP_FLAG_TRANSFER_OK        = 2
+OSP_FLAG_SINGLE             = 4
 
 ohci_pipe   STRUC
 
@@ -1690,7 +1691,7 @@ IssueTransfer    Endp
 LocalIsTransferDone   Proc near
     push es
     push eax
-    push bx
+    push ebx
     push edx
 ;
     test fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
@@ -1711,7 +1712,20 @@ LocalIsTransferDone   Proc near
     test al,1
     jnz itdOk
 ;
-    and ax,0FFF0h    
+    test fs:osp_flags, OSP_FLAG_SINGLE
+    jz itdMulti
+
+itdSingle:
+    and al,0F0h
+    mov ebx,es:[edx].oes_head_va
+    mov ebx,es:[ebx].otd_phys
+    cmp eax,ebx
+    je itdFail
+;
+    jmp itdOk
+
+itdMulti:
+    and al,0F0h    
     cmp eax,es:[edx].oes_tailp
     je itdOk
 
@@ -1724,7 +1738,7 @@ itdOk:
 
 itdDone:
     pop edx
-    pop bx
+    pop ebx
     pop eax
     pop es
     ret
@@ -2496,8 +2510,69 @@ CloseControlPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IssueOne   Proc far
-    int 3
+    push es
+    push eax
+    push ebx
+    push edx
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+    GetThread
+    mov fs:osp_signal,ax
+;
+    test fs:osp_flags, OSP_FLAG_SINGLE
+    jnz iotNew
+;
+    and fs:osp_flags, NOT OSP_FLAG_TRANSFER_OK
+    or fs:osp_flags, OSP_FLAG_TRANSFER_PENDING OR OSP_FLAG_SINGLE
+;    
+    mov edx,fs:osp_ed
+    test es:[edx].oes_fa_en,4000h
+    jz iotEnabled
+;
+    call InitPipeEd 
+
+iotEnabled:    
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    jne iotNotControl
+;
+    push ds
+    mov ds,ds:ohc_reg_sel
+    mov eax,ds:HcCommandStatus
+    or al,2
+    mov ds:HcCommandStatus,eax
+    pop ds
+    jmp iotDone
+
+iotNotControl:
+    cmp al,MODE_BULK
+    jne iotDone
+;
+    push ds
+    mov ds,ds:ohc_reg_sel
+    mov eax,ds:HcCommandStatus
+    or al,4
+    mov ds:HcCommandStatus,eax
+    pop ds
+    jmp iotDone
+
+iotNew:
+    mov edx,fs:osp_ed
+    mov ebx,es:[edx].oes_head_va
+    mov eax,es:[ebx].otd_next_va
+    mov es:[edx].oes_head_va,eax
+;
+    mov edx,ebx
+    call FreeBlock32
+
+iotDone:
     clc
+    pop edx
+    pop ebx
+    pop eax
+    pop es
     retf32
 IssueOne   Endp
 
@@ -3194,11 +3269,24 @@ uplElemLoop:
     mov eax,es:[edx].oes_head_va
     or eax,eax
     jz uplNext
-;    
+;
+    test fs:osp_flags, OSP_FLAG_SINGLE
+    jz uplMulti
+
+uplSingle:    
+    mov ebx,es:[eax].otd_phys
+    mov eax,es:[edx].oes_headp
+    and al,0F0h
+    cmp eax,ebx
+    je uplNext
+    jmp uplSignal
+
+uplMulti:    
     mov ebx,es:[eax].otd_phys
     cmp ebx,es:[edx].oes_headp
     je uplNext
-;
+
+uplSignal:
     xor bx,bx
     xchg bx,fs:osp_signal
     Signal
