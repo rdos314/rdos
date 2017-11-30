@@ -1883,6 +1883,9 @@ etLoop:
     mov esi,fs:osp_ed
     mov eax,es:[edx].otd_next_va        
     mov eax,es:[eax].otd_phys
+    mov ebx,es:[esi].oes_headp
+    and ebx,0Fh
+    or eax,ebx
     mov es:[esi].oes_headp,eax
 ;
     mov ax,5
