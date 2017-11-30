@@ -3283,7 +3283,9 @@ uplSingle:
 
 uplMulti:    
     mov ebx,es:[eax].otd_phys
-    cmp ebx,es:[edx].oes_headp
+    mov eax,es:[edx].oes_headp
+    and al,0F0h
+    cmp eax,ebx
     je uplNext
 
 uplSignal:
