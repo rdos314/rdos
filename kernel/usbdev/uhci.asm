@@ -103,6 +103,7 @@ uhci_func_sel    ENDS
 
 USP_FLAG_TRANSFER_PENDING   = 1
 USP_FLAG_TRANSFER_OK    = 2
+USP_FLAG_SINGLE             = 4
 
 uhci_pipe   STRUC
 
@@ -214,10 +215,22 @@ uplElemLoop:
     mov ebx,es:[edx].uqh_va_elem
     or ebx,ebx
     jz uplNext
-;    
+;
+    test fs:usp_flags, USP_FLAG_SINGLE
+    jz uplMulti
+
+uplSingle:
+    mov eax,es:[edx].uqh_elem
+    and al,0F0h
+    cmp eax,es:[ebx].utd_phys
+    jz uplNext
+    jmp uplSignal
+
+uplMulti:    
     test byte ptr es:[edx].uqh_elem,1
     jz uplNext
-;    
+
+uplSignal:    
     xor bx,bx
     xchg bx,fs:usp_signal
     or bx,bx
@@ -2054,6 +2067,22 @@ LocalIsTransferDone   Proc near
 
 itdControlBulk:
     mov edx,fs:usp_qh
+;
+    test fs:usp_flags, USP_FLAG_SINGLE
+    jz itdMulti
+
+itdSingle:
+    mov eax,es:[edx].uqh_va_elem
+    test es:[eax].utd_control,400000h    
+    jnz itdRecover
+;
+    mov ebx,es:[edx].uqh_elem
+    and bl,0F0h
+    cmp ebx,es:[eax].utd_phys
+    jz itdFail
+    jmp itdOk
+
+itdMulti:
     test es:[edx].uqh_elem,1
     jnz itdOk
 ;
@@ -2668,8 +2697,48 @@ CloseControlPipe   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IssueOne   Proc far
-    int 3
-    clc
+    push es
+    push eax
+    push ecx
+    push edx
+;    
+    mov ax,flat_sel
+    mov es,ax    
+    mov edx,fs:usp_qh
+;    
+    GetThread
+    mov fs:usp_signal,ax
+;
+    test fs:usp_flags, USP_FLAG_SINGLE
+    jnz iotNew
+;
+    and fs:usp_flags, NOT USP_FLAG_TRANSFER_OK
+    or fs:usp_flags, USP_FLAG_TRANSFER_PENDING OR USP_FLAG_SINGLE
+;    
+    mov eax,es:[edx].uqh_va_elem    
+    or eax,eax
+    jz iotDone
+;    
+    mov eax,es:[eax].utd_phys
+    mov es:[edx].uqh_elem,eax
+    jmp iotDone
+
+iotNew:
+    mov ecx,es:[edx].uqh_va_elem    
+    or ecx,ecx
+    jz iotDone
+;
+    mov eax,es:[ecx].utd_va_link
+    mov es:[edx].uqh_va_elem,eax
+;
+    mov edx,ecx
+    call FreeBlock32
+
+iotDone:
+    pop edx 
+    pop ecx
+    pop eax
+    pop es
     retf32
 IssueOne   Endp
     
