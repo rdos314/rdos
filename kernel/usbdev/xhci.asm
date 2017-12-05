@@ -289,6 +289,86 @@ IFDEF __WASM__
 ELSE
     .386p
 ENDIF
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           PortToSpeed
+;
+;           DESCRIPTION:    Convert Port SC to speed
+;
+;       PARAMETERS:         EAX Port SC
+;
+;       RETURNS:            AL  Speed 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ptsTab:
+pts00 DB -1
+pts01 DB 1
+pts02 DB 0
+pts03 DB 2
+pts04 DB 3
+pts05 DB -1  
+pts06 DB -1  
+pts07 DB -1  
+pts08 DB -1  
+pts09 DB -1  
+pts0A DB -1  
+pts0B DB -1  
+pts0C DB -1  
+pts0D DB -1  
+pts0E DB -1  
+pts0F DB -1  
+
+PortToSpeed   Proc near
+    push bx
+    mov bx,ax
+    shr bx,10
+    and bx,0Fh
+    mov al,byte ptr cs:[bx].ptsTab
+    pop bx
+    ret
+PortToSpeed   Endp
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SpeedToPsi
+;
+;           DESCRIPTION:    Convert speed to PSI value
+;
+;       PARAMETERS:         AH  speed
+;
+;       RETURNS:            AL  PSI value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stpTab:
+stp00 DB 2
+stp01 DB 1
+stp02 DB 3
+stp03 DB 4
+stp05 DB -1  
+stp06 DB -1  
+stp07 DB -1  
+stp08 DB -1  
+stp09 DB -1  
+stp0A DB -1  
+stp0B DB -1  
+stp0C DB -1  
+stp0D DB -1  
+stp0E DB -1  
+stp0F DB -1  
+
+SpeedToPsi   Proc near
+    push bx
+    movzx bx,ah
+    and bx,0Fh
+    mov al,byte ptr cs:[bx].stpTab
+    pop bx
+    ret
+SpeedToPsi   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -749,6 +829,7 @@ ResetSlot  Endp
 ;       DESCRIPTION:    Allocate device
 ;
 ;       PARAMETERS:     DS      Device sel
+;                       AL      Speed
 ;
 ;       RETURNS:        ES      Function sel
 ;
@@ -757,6 +838,7 @@ ResetSlot  Endp
 AllocateDevice    Proc near
     pushad
 ;
+    push eax
     mov eax,1000h
     AllocateBigLinear
 ;    
@@ -783,6 +865,9 @@ AllocateDevice    Proc near
     mov es:xd_phys+4,ebx
     mov es:xd_linear,edx
     mov es:xd_dev_sel,ds
+;
+    pop eax
+    mov es:usbf_speed,al
 ;    
     mov bx,SIZE xhci_dev_struc
     add bx,40h
@@ -843,24 +928,19 @@ AllocateDevice    Endp
 ;       PARAMETERS:     DS      Device sel
 ;                       ES      Function sel
 ;                       CL      Port #
+;                       AL      PSI speed value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupRootDevice    Proc near
-    push fs
     pushad
 ;    
-    movzx di,cl
-    shl di,4
-    mov fs,ds:xhc_port_sel
 ;
     mov bx,es:xd_input_context_offset
     mov es:[bx].icc_add_mask,0
 ;    
     mov bx,es:xd_input_slot_offset
-    mov eax,fs:[di]
-    shr eax,10
-    and eax,0Fh
+    movzx eax,al
     shl eax,20
     or eax,08000000h
     mov es:[bx].s_misc,eax
@@ -869,7 +949,6 @@ SetupRootDevice    Proc near
     mov es:[bx].s_root_hub,al
 ;    
     popad
-    pop fs
     ret
 SetupRootDevice     Endp
 
@@ -1099,7 +1178,8 @@ StopEndpoint   Endp
 
 CreateControl   Proc far
     pushad
-;   
+;
+    call SpeedToPsi
     mov cl,es:usbf_port
     call SetupRootDevice
     call CreateEndpointRing
@@ -2404,7 +2484,7 @@ IssueOne   Proc far
     clc
     retf32
 IssueOne   Endp
-    
+   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2476,7 +2556,27 @@ atUnlock:
     jmp atDone
 
 atSlotOk:
+    push eax
+    mov dx,100
+
+atSlotLoop:
+    mov eax,es:[si]
+    call PortToSpeed
+    cmp al,-1
+    jne atSlotAlloc
+;
+    sub dx,1
+    jz atUnlock
+;
+    mov ax,25
+    WaitMilliSec
+    jmp atSlotLoop    
+
+atSlotAlloc:
     call AllocateDevice
+    mov al,es:usbf_speed
+    pop eax
+;
     movzx bx,al
     shl bx,1
     mov ds:[bx].xhc_func_sel_arr,es
@@ -2681,7 +2781,26 @@ rtUnlock:
     jmp rtDone
     
 rtEnableOk: 
+    push eax
+    mov dx,100
+
+rtSlotLoop:
+    mov eax,es:[si]
+    call PortToSpeed
+    cmp al,-1
+    jne rtSlotAlloc
+;
+    sub dx,1
+    jz rtUnlock
+;
+    mov ax,25
+    WaitMilliSec
+    jmp rtSlotLoop    
+
+rtSlotAlloc:
     call AllocateDevice
+    pop eax
+;
     movzx bx,al
     shl bx,1
     mov ds:[bx].xhc_func_sel_arr,es
@@ -3030,47 +3149,6 @@ CreateEventThread   Proc near
     pop ds
     ret
 CreateEventThread   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ConvSpeed
-;
-;           DESCRIPTION:    Convert speed
-;
-;       PARAMETERS:         EAX Port SC
-;
-;       RETURNS:            AL  Speed 
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-cspTab:
-csp00 DB -1
-csp01 DB 1
-csp02 DB 0
-csp03 DB 2
-csp04 DB 3
-csp05 DB -1  
-csp06 DB -1  
-csp07 DB -1  
-csp08 DB -1  
-csp09 DB -1  
-csp0A DB -1  
-csp0B DB -1  
-csp0C DB -1  
-csp0D DB -1  
-csp0E DB -1  
-csp0F DB -1  
-
-ConvSpeed   Proc near
-    push bx
-    mov bx,ax
-    shr bx,10
-    and bx,0Fh
-    mov al,byte ptr cs:[bx].cspTab
-    pop bx
-    ret
-ConvSpeed   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
