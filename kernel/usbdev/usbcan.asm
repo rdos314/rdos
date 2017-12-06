@@ -101,6 +101,7 @@ rdos_minor       DB ?
 ver_major        DB ?
 ver_minor        DB ?
 ver_sub          DB ?
+req_reset        DB ?
 
 can_id_hook_arr  DD 15 * 4 DUP(?)
 
@@ -367,11 +368,19 @@ psAdd:
     call GetSendBuffer
     jnc psAdd
 ;
-    StartUsbTransaction    
+    StartUsbTransaction        
+;
+    mov bp, 5 * 5
 
 psRetry:
+    sub bp,1
+    jz psReset
+;
+    GetSystemTime
+    add eax,1193 * 200
+    adc edx,0
     mov bx,ds:cd_out_wait
-    WaitWithoutTimeout
+    WaitWithTimeout
 ;
     mov bx,ds:cd_out_pipe
     IsUsbTransactionDone
@@ -386,6 +395,9 @@ psRetry:
 psUpdate:
     call UpdateSent
     jmp PollSend
+
+psReset:
+    mov ds:req_reset,1
 
 psDone:
     ret
@@ -428,82 +440,6 @@ grbDone:
     pop eax
     ret
 GetRecBuffer   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           OpenPipes
-;
-;       DESCRIPTION:    Open pipes
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OpenPipes   Proc near
-    mov bx,ds:cd_control_wait
-    or bx,bx
-    jz opCreateControlWait
-;
-    CloseWait
-
-opCreateControlWait:
-    CreateWait
-    mov ds:cd_control_wait,bx
-;
-    mov bx,ds:cd_controller
-    movzx ax,ds:cd_device
-    xor dl,dl
-    OpenUsbPipe
-    mov ds:cd_control_pipe,bx
-;
-    mov ax,ds:cd_control_pipe
-    mov bx,ds:cd_control_wait
-    movzx ecx,bx
-    AddWaitForUsbPipe
-;
-    mov bx,ds:cd_in_wait
-    or bx,bx
-    jz opCreateInWait
-;
-    CloseWait
-
-opCreateInWait:
-    CreateWait
-    mov ds:cd_in_wait,bx
-;
-    mov bx,ds:cd_controller
-    movzx ax,ds:cd_device
-    mov dl,81h
-    OpenUsbPipe
-    mov ds:cd_in_pipe,bx
-;
-    mov ax,ds:cd_in_pipe
-    mov bx,ds:cd_in_wait
-    movzx ecx,bx
-    AddWaitForUsbPipe
-;
-    mov bx,ds:cd_out_wait
-    or bx,bx
-    jz opCreateOutWait
-;
-    CloseWait
-
-opCreateOutWait:
-    CreateWait
-    mov ds:cd_out_wait,bx
-;
-    mov bx,ds:cd_controller
-    movzx ax,ds:cd_device
-    mov dl,2
-    OpenUsbPipe
-    mov ds:cd_out_pipe,bx
-;
-    mov ax,ds:cd_out_pipe
-    mov bx,ds:cd_out_wait
-    movzx ecx,bx
-    AddWaitForUsbPipe
-    ret
-OpenPipes  Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1051,7 +987,7 @@ ureWaitOpen:
     or bx,bx
     jnz ureStart
 ;
-    mov ax,100
+    mov ax,25
     WaitMilliSec
     jmp ureWaitOpen
 
@@ -1076,6 +1012,10 @@ ureLoop:
     mov al,ds:cd_active
     or al,al
     jz ureEnd
+;
+    mov al,ds:req_reset
+    or al,al
+    jnz ureEnd
 ;
     mov bx,ds:cd_in_wait
     WaitWithoutTimeout
@@ -1107,13 +1047,14 @@ ureLoop:
 ureEnd:
     mov ds:cd_rec_thread,0
 
-ureWait:
-    mov ax,ds:cd_controller
-    cmp ax,-1
+ureWaitClose:
+    mov bx,ds:cd_in_pipe
+    or bx,bx
     jz ureTerm
 ;
-    mov ax,100
+    mov ax,25
     WaitMilliSec
+    jmp ureWaitClose
 
 ureTerm:
     TerminateThread
@@ -1145,7 +1086,20 @@ usuLoop:
     or ax,ax
     jnz usuPipeOk
 ;
-    call OpenPipes
+    CreateWait
+    mov ds:cd_control_wait,bx
+;
+    mov bx,ds:cd_controller
+    movzx ax,ds:cd_device
+    xor dl,dl
+    OpenUsbPipe
+    mov ds:cd_control_pipe,bx
+; 
+    mov ax,ds:cd_control_pipe
+    mov bx,ds:cd_control_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;
     call GetSoftwareVersion
     jc usuEnd
 
@@ -1153,6 +1107,14 @@ usuPipeOk:
     mov al,ds:cd_active
     or al,al
     jz usuEnd
+;
+    mov ax,ds:cd_in_pipe
+    or ax,ax
+    jz usuRestart
+;
+    mov al,ds:req_reset
+    or al,al
+    jnz usuEnd
 ;
     mov al,ds:can_restart
     or al,al
@@ -1177,6 +1139,40 @@ usuRestart:
     mov ds:can_restart,0
     mov ax,500
     WaitMilliSec
+;
+    mov ax,ds:cd_in_pipe
+    or ax,ax
+    jnz usuRestartWait
+;
+    CreateWait
+    mov ds:cd_in_wait,bx
+;
+    mov bx,ds:cd_controller
+    movzx ax,ds:cd_device
+    mov dl,81h
+    OpenUsbPipe
+    mov ds:cd_in_pipe,bx
+;
+    mov ax,ds:cd_in_pipe
+    mov bx,ds:cd_in_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;
+    CreateWait
+    mov ds:cd_out_wait,bx
+;
+    mov bx,ds:cd_controller
+    movzx ax,ds:cd_device
+    mov dl,2
+    OpenUsbPipe
+    mov ds:cd_out_pipe,bx
+;
+    mov ax,ds:cd_out_pipe
+    mov bx,ds:cd_out_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+
+usuRestartWait:
     mov ds:can_active,1
 
 usuRestartOk:
@@ -1187,25 +1183,64 @@ usuRestartOk:
     jmp usuPipeOk
 
 usuEnd:
+    mov bx,ds:cd_in_pipe
+    DeleteUsbPipe
+;
+    mov bx,ds:cd_out_pipe
+    DeleteUsbPipe
+
+usuWaitDead:
+    mov ax,25
+    WaitMilliSec
+;
+    mov ds:cd_control_pipe,0
+    mov ds:cd_in_pipe,0
+    mov ds:cd_out_pipe,0
+;
+    mov bx,ds:cd_rec_thread
+    or bx,bx
+    jz usuRecDead
+;
+    Signal
+    jmp usuWaitDead
+
+usuRecDead:
+    mov bx,ds:cd_send_thread
+    or bx,bx
+    jz usuAllDead
+;
+    Signal
+    jmp usuWaitDead
+
+usuAllDead:
+    mov al,ds:req_reset
+    or al,al
+    jz usuResetDone
+;
+    mov ds:req_reset,0
+    mov bx,ds:cd_control_pipe
+    ResetUsbPipe
+
+usuResetDone:
+    mov bx,ds:cd_control_pipe
+    CloseUsbPipe
+    mov ds:cd_control_pipe,0
+;
+    mov bx,ds:cd_control_wait
+    CloseWait
+    mov ds:cd_control_wait,0
+;
+    mov bx,ds:cd_in_wait
+    CloseWait
+    mov ds:cd_in_wait,0
+;
+    mov bx,ds:cd_out_wait
+    CloseWait
+    mov ds:cd_out_wait,0
+;
     mov ds:can_active,0
     mov ds:cd_active,0
     mov ds:cd_super_thread,0
-;
-    mov bx,ds:cd_rec_thread
-    Signal
-;
-    mov bx,ds:cd_send_thread
-    Signal
-
-utWait:
-    mov ax,ds:cd_controller
-    cmp ax,-1
-    jz usuTerm
-;
-    mov ax,100
-    WaitMilliSec
-
-usuTerm:
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1231,6 +1266,19 @@ usLoop:
     or al,al
     jz usEnd
 ;
+    mov al,ds:req_reset
+    or al,al
+    jnz usEnd
+;
+    mov bx,ds:cd_out_pipe
+    or bx,bx
+    jnz usActive
+;
+    mov ax,25
+    WaitMilliSec
+    jmp usLoop
+
+usActive:
     GetSystemTime
     add eax,1193 * 100
     adc edx,0
@@ -1246,13 +1294,14 @@ usLoop:
 usEnd:
     mov ds:cd_send_thread,0
 
-usWait:
-    mov ax,ds:cd_controller
-    cmp ax,-1
+usWaitClose:
+    mov bx,ds:cd_out_pipe
+    or bx,bx
     jz usTerm
 ;
-    mov ax,100
+    mov ax,25
     WaitMilliSec
+    jmp usWaitClose
 
 usTerm:
     TerminateThread
@@ -1285,6 +1334,7 @@ AddDevice Proc near
     or dx,dx
     jnz adThreadStarted
 ;
+    mov ds:can_restart,1
     mov ds:cd_super_thread,-1    
     mov ds:cd_rec_thread,-1    
     mov ds:cd_send_thread,-1    
@@ -1421,9 +1471,6 @@ usb_detach  Proc far
     mov ds:cd_controller,-1
     mov ds:cd_device,0
     mov ds:cd_active,0
-    mov ds:cd_control_pipe,0
-    mov ds:cd_in_pipe,0
-    mov ds:cd_out_pipe,0
 ;
     mov bx,ds:cd_super_thread
     Signal
@@ -1725,6 +1772,7 @@ init    Proc far
     mov es:cd_out_pipe,0
     mov es:can_active,0
     mov es:can_restart,0
+    mov es:req_reset,0
     InitSection es:can_send_section
     InitSection es:capture_section
     mov es:capture_handle,0

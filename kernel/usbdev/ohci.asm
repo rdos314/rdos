@@ -2154,9 +2154,23 @@ cpFreeEdList:
 ;    
     mov ax,1
     WaitMilliSec
-    jmp cpFreeEdList
 
 cpFreeTd:
+    test fs:osp_flags, OSP_FLAG_SINGLE
+    jnz cpFreeSingle
+
+cpFreeSingle:
+    mov ax,1
+    WaitMilliSec
+;
+    mov fs:osp_data_size,0     
+    and fs:osp_flags, NOT OSP_FLAG_TRANSFER_PENDING
+    and fs:osp_flags, NOT OSP_FLAG_TRANSFER_OK
+;    
+    mov edx,es:[edx].oes_head_va
+    jmp cpTdListLoop
+    
+cpFreeMulti:
     call LocalEndTransfer
     mov edx,es:[edx].oes_head_va
 

@@ -2951,6 +2951,80 @@ cupDone:
     retf32
 close_usb_pipe  Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DeleteUsbPipe
+;
+;           DESCRIPTION:    Delete an USB pipe
+;
+;           PARAMETERS:         BX          Pipe handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_usb_pipe_name     DB 'Deleted USB Pipe',0
+
+delete_usb_pipe  Proc far
+    push ds
+    push es
+    push fs
+    push ax
+    push ebx
+    push dx
+;
+    mov ax,USB_PIPE_HANDLE
+    DerefHandle
+    jc dupDone
+;
+    call CleanupData
+;    
+    push ds
+    push ebx
+    mov dl,ds:[ebx].up_pipe
+    mov fs,ds:[ebx].up_pipe_sel
+    mov fs:usbp_usage,0
+    mov ds,ds:[ebx].up_func_sel
+;       
+    mov ax,fs:usbp_device_sel
+    or ax,ax
+    jz dupClose
+;
+    mov es,ax
+;
+    movzx bx,fs:usbp_endpoint
+    and bx,0Fh
+    add bx,bx    
+;
+    test dl,80h
+    jz dupOut
+
+dupIn:   
+    mov es:[bx].usbf_in_endpoint_arr,0
+    jmp dupClose
+
+dupOut:
+    mov es:[bx].usbf_out_endpoint_arr,0
+
+dupClose:    
+    call ClosePipe
+
+dupCloseDone:
+    pop ebx
+    pop ds
+    FreeHandle
+    clc
+
+dupDone:
+    pop dx
+    pop ebx
+    pop ax
+    pop fs
+    pop es
+    pop ds
+    retf32
+delete_usb_pipe  Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -4212,6 +4286,12 @@ init    Proc far
     mov edi,OFFSET write_usb_data_no_copy_name
     xor cl,cl
     mov ax,write_usb_data_no_copy_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET delete_usb_pipe
+    mov edi,OFFSET delete_usb_pipe_name
+    xor cl,cl
+    mov ax,delete_usb_pipe_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET get_usb_device16
