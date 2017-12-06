@@ -1658,11 +1658,15 @@ send_can_bus_msg    Proc far
     push ax
     mov ax,SEG data
     mov ds,ax
+    mov ax,ds:cd_send_thread
+    or ax,ax
     pop ax
+    jz scbDone
 ;
     call NotifyMsg
     call InsertSend
-;
+
+scbDone:
     pop ds
     retf32
 send_can_bus_msg    Endp    
