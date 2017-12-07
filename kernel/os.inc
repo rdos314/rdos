@@ -3736,8 +3736,20 @@ NotifyCanOffline      MACRO
     OsGate notify_can_offline_nr
                         ENDM
 
+NotifyCanOnline      MACRO
+    OsGate notify_can_online_nr
+                        ENDM
+
+NotifyCanModulesUp      MACRO
+    OsGate notify_can_modules_up_nr
+                        ENDM
+
 ResetCanBuffers      MACRO
     OsGate reset_can_buffers_nr
+                        ENDM
+
+RestartCanModules      MACRO
+    OsGate restart_can_modules_nr
                         ENDM
 
 ; OUT  NC       Has buffer
@@ -3786,12 +3798,6 @@ DeleteCanIdHook      MACRO
     OsGate delete_can_id_hook_nr
                         ENDM
 
-;;;;;;;;;; CAN com ;;;;;;;;;
-
-; OUT EAX       Number of devices
-StartCanCom      MACRO
-    OsGate start_can_com_nr
-                        ENDM
 
 ;;;;;;;;;; LON ;;;;;;;;;
 

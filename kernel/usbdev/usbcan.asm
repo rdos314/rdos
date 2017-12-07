@@ -706,39 +706,25 @@ is_can_online   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           StartCanCom
+;       NAME:           RestartCanModules
 ;
-;       DESCRIPTION:    Start can communication
-;
-;       RETURNS:        EAX     Number of devices
+;       DESCRIPTION:    Restart can communication
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_can_com_name    DB 'Start Can Com', 0
+restart_can_modules_name    DB 'Retart Can Modules', 0
 
-start_can_com   Proc far
+restart_can_modules   Proc far
     push ds
 ;
     mov ax,SEG data
     mov ds,ax
     mov ds:can_active,0
     mov ds:can_restart,1
-
-sccWait:
-    mov al,ds:can_active
-    or al,al
-    jnz sccDone
-;
-    mov ax,250
-    WaitMilliSec
-    jmp sccWait
-
-sccDone:
-    mov eax,1
 ;
     pop ds
     retf32
-start_can_com  Endp
+restart_can_modules  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1076,6 +1062,8 @@ usbcan_super_thread:
     mov es,ax
     GetThread
     mov ds:cd_super_thread,ax
+;
+    NotifyCanOnline
 
 usuLoop:
     mov al,ds:cd_active
@@ -1130,15 +1118,13 @@ usuRestart:
     call PowerUpModules
     jc usuEnd
 ;
-    mov ax,5000
+    mov ax,4000
     WaitMilliSec
 ;
     call StartModules
     jc usuEnd
 ;
     mov ds:can_restart,0
-    mov ax,500
-    WaitMilliSec
 ;
     mov ax,ds:cd_in_pipe
     or ax,ax
@@ -1174,6 +1160,7 @@ usuRestart:
 
 usuRestartWait:
     mov ds:can_active,1
+    NotifyCanModulesUp
 
 usuRestartOk:
     GetSystemTime
@@ -1193,7 +1180,6 @@ usuWaitDead:
     mov ax,25
     WaitMilliSec
 ;
-    mov ds:cd_control_pipe,0
     mov ds:cd_in_pipe,0
     mov ds:cd_out_pipe,0
 ;
@@ -1798,9 +1784,9 @@ init    Proc far
     mov ax,is_can_online_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET start_can_com
-    mov edi,OFFSET start_can_com_name
-    mov ax,start_can_com_nr
+    mov esi,OFFSET restart_can_modules
+    mov edi,OFFSET restart_can_modules_name
+    mov ax,restart_can_modules_nr
     RegisterOsGate
 ;
     mov esi,OFFSET create_id_hook

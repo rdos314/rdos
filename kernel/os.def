@@ -600,7 +600,7 @@ stop_disc_request_nr        = 532
 lock_usb_nr                 = 533
 unlock_usb_nr               = 534
 
-start_can_com_nr            = 535
+restart_can_modules_nr      = 535
 
 send_can_bus_msg_nr         = 536
 hook_can_gen_bus_msg_nr     = 537
@@ -714,5 +714,8 @@ notify_can_offline_nr       = 615
 req_usb_data_no_copy_nr     = 616
 write_usb_data_no_copy_nr   = 617
 delete_usb_pipe_nr          = 618
+
+notify_can_modules_up_nr    = 619
+notify_can_online_nr        = 620
 
 osgate_entries              = 650
