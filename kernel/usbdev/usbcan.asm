@@ -1003,8 +1003,10 @@ ureLoop:
     or al,al
     jnz ureEnd
 ;
-    mov bx,ds:cd_in_wait
-    WaitWithoutTimeout
+    GetSystemTime
+    add eax,1193 * 100
+    adc edx,0
+    WaitForSignalWithTimeout
 ;
     mov bx,ds:cd_in_pipe
     IsUsbTransactionDone

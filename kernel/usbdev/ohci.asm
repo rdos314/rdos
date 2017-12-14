@@ -143,7 +143,7 @@ ohc_bulk_linear     DD ?
 ohc_pipe_list       DW ?
 ohc_thread          DW ?
 
-ohc_spinlock        spinlock_typ <>
+ohc_pipe_section    section_typ <>
 ohc_enum_section    section_typ <>
 
 ohc_root_ports      DW ?
@@ -227,144 +227,6 @@ ELSE
     .386p
 ENDIF
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           UpdatePipeList
-;
-;       DESCRIPTION:    Update pipe list
-;
-;       PARAMETERS:     DS      Function selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdatePipeList  Proc near
-    push ax
-
-uplLoop:
-    push es
-    push fs
-    push ebx
-    push edx
-    push di
-;
-    RequestSpinlock ds:ohc_spinlock
-    mov ax,ds:ohc_pipe_list
-    or ax,ax
-    jz uplDone
-;
-    mov di,ax
-    mov fs,ax
-;
-    mov ax,flat_sel
-    mov es,ax
-
-uplElemLoop:
-    test fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
-    jz uplNext
-;
-    mov edx,fs:osp_ed
-    mov eax,es:[edx].oes_head_va
-    or eax,eax
-    jz uplNext
-;
-    test fs:osp_flags, OSP_FLAG_SINGLE
-    jz uplMulti
-
-uplSingle:    
-    mov ebx,es:[eax].otd_phys
-    mov eax,es:[edx].oes_headp
-    and al,0F0h
-    cmp eax,ebx
-    je uplNext
-    jmp uplSignal
-
-uplMulti:    
-    mov ebx,es:[eax].otd_phys
-    mov eax,es:[edx].oes_headp
-    and al,0F0h
-    cmp eax,ebx
-    je uplNext
-
-uplSignal:
-    xor bx,bx
-    xchg bx,fs:osp_signal
-    or bx,bx
-    jz uplNext
-;
-    ReleaseSpinlock ds:ohc_spinlock    
-    Signal
-    pop di
-    pop edx
-    pop ebx
-    pop fs
-    pop es    
-    jmp uplLoop
-
-uplNext:    
-    mov ax,fs:osp_next
-    mov fs,ax
-    cmp ax,di
-    jne uplElemLoop
-
-uplDone:    
-    pop di
-    pop edx
-    pop ebx
-    pop fs
-    pop es    
-    ReleaseSpinlock ds:ohc_spinlock
-;
-    pop ax
-    ret
-UpdatePipeList  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           port_timer
-;
-;           DESCRIPTION:    Port timer
-;
-;       PARAMETERS:     
-;
-;           RETURNS:        
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-port_timer  Proc far
-    push edx
-    push eax
-;    
-    mov ax,SEG data
-    mov ds,ax
-;
-    mov cx,ds:OhciFuncCount
-    mov bx,OFFSET OhciFuncArr
-
-timer_func_loop:
-    push ds
-    mov ds,[bx]
-;
-    call UpdatePipeList
-;
-    pop ds
-    add bx,2
-    loop timer_func_loop
-;
-    pop eax   
-    pop edx
-;    
-    add eax,1193
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov bx,cs
-    mov edi,OFFSET port_timer
-    StartTimer
-    retf32
-port_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -516,7 +378,7 @@ FreeBlock32     ENDP
 
 InsertPipe  Proc near
     push di
-    RequestSpinlock ds:ohc_spinlock
+    EnterSection ds:ohc_pipe_section
 ;
     mov di,ds:ohc_pipe_list
     or di,di
@@ -545,7 +407,7 @@ ipEmpty:
 ipDone:
     mov fs:osp_signal,0
     mov fs:osp_flags,0
-    ReleaseSpinlock ds:ohc_spinlock
+    LeaveSection ds:ohc_pipe_section
     ret
 InsertPipe  Endp
 
@@ -566,7 +428,7 @@ RemovePipe  Proc near
     push si
     push di
 ;       
-    RequestSpinlock ds:ohc_spinlock
+    EnterSection ds:ohc_pipe_section
     push ds
     mov si,fs:osp_prev
     mov di,fs:osp_next
@@ -590,7 +452,7 @@ rpEmpty:
     mov ds:ohc_pipe_list,0    
 
 rpDone:
-    ReleaseSpinlock ds:ohc_spinlock
+    LeaveSection ds:ohc_pipe_section
     pop di
     pop si
     ret
@@ -3293,8 +3155,6 @@ otLoop:
     push si
 ;    
     mov ds,ds:[si]
-    call UpdatePipeList
-;
     mov es,ds:ohc_reg_sel
     mov eax,es:HcInterruptStatus
     test al,2
@@ -3386,6 +3246,109 @@ bhDone:
     pop fs
     ret
 BiosHandoff    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UpdatePipeList
+;
+;       DESCRIPTION:    Update pipe list
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePipeList  Proc near
+    push ax
+
+    EnterSection ds:ohc_pipe_section
+    mov ax,ds:ohc_pipe_list
+    or ax,ax
+    jz uplDone
+;
+    push es
+    push fs
+    push ebx
+    push edx
+    push di
+;
+    mov di,ax
+    mov fs,ax
+;
+    mov ax,flat_sel
+    mov es,ax
+
+uplElemLoop:
+    test fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
+    jz uplNext
+;
+    mov edx,fs:osp_ed
+    mov eax,es:[edx].oes_head_va
+    or eax,eax
+    jz uplNext
+;
+    test fs:osp_flags, OSP_FLAG_SINGLE
+    jz uplMulti
+
+uplSingle:    
+    mov ebx,es:[eax].otd_phys
+    mov eax,es:[edx].oes_headp
+    and al,0F0h
+    cmp eax,ebx
+    je uplNext
+    jmp uplSignal
+
+uplMulti:    
+    mov ebx,es:[eax].otd_phys
+    mov eax,es:[edx].oes_headp
+    and al,0F0h
+    cmp eax,ebx
+    je uplNext
+
+uplSignal:
+    xor bx,bx
+    xchg bx,fs:osp_signal
+    Signal
+
+uplNext:    
+    mov ax,fs:osp_next
+    mov fs,ax
+    cmp ax,di
+    jne uplElemLoop
+;
+    pop di
+    pop edx
+    pop ebx
+    pop fs
+    pop es    
+
+uplDone:    
+    LeaveSection ds:ohc_pipe_section
+    pop ax
+    ret
+UpdatePipeList  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           OHCI function handler
+;
+;           DESCRIPTION:    OHCI function thread
+;
+;       PARAMETERS:         BX      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ohci_function_handler:
+    mov ds,bx
+    AddThreadInt
+    GetThread
+    mov ds:ohc_thread,ax
+
+ofhLoop:
+    WaitForSignal    
+    call UpdatePipeList
+    jmp ofhLoop
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3480,6 +3443,27 @@ sfCopyDone:
     pop es
     ret
 StartThread Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StartFunctionThread
+;
+;           DESCRIPTION:    Start OHCI function thread
+;
+;       PARAMETERS:         DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+func_name    DB 'OHCI ', 0
+
+StartFunctionThread Proc near
+    mov si,OFFSET ohci_function_handler
+    mov di,OFFSET func_name
+    mov ax,5
+    call StartThread
+    ret
+StartFunctionThread Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3720,7 +3704,7 @@ AddFunction  Proc near
     mov cx,400h
     rep stosd
 ;
-    InitSpinlock ds:ohc_spinlock
+    InitSection ds:ohc_pipe_section
     InitSection ds:ohc_enum_section
     mov ds:ohc_pipe_list,0
     mov ds:ohc_reset,0
@@ -3887,6 +3871,7 @@ otInitLoop:
 ;    
     mov ds,ds:[si]
     call InitFunction
+    call StartFunctionThread
 ;
     pop si
     pop cx    
@@ -3897,7 +3882,7 @@ otInitLoop:
 ;
     mov al,ds:UseTimer
     or al,al
-    jz otUpdateTimer
+    jz otTimerStarted
 ;    
     GetSystemTime
     add eax,11930
@@ -3906,17 +3891,6 @@ otInitLoop:
     mov es,bx
     mov bx,cs
     mov edi,OFFSET ohci_timer
-    StartTimer
-    jmp otTimerStarted
-
-otUpdateTimer:
-    GetSystemTime
-    add eax,11930
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov bx,cs
-    mov edi,OFFSET port_timer
     StartTimer
 
 otTimerStarted:       
