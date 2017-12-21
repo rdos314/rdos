@@ -5014,11 +5014,15 @@ read_tcp_loop:
     jz read_tcp_ok
 
 read_tcp_retry:
-    test ds:tcp_pending,FLAG_DELETE_NET
-    jnz read_tcp_fail
-;
     mov edx,ecx
     movzx eax,ds:tcp_receive_count
+    or eax,eax
+    jnz read_tcp_has_bytes
+;
+    test ds:tcp_pending,FLAG_DELETE_NET
+    jnz read_tcp_fail
+
+read_tcp_has_bytes:
     cmp ecx,eax
     jb read_tcp_size_ok
 ;
