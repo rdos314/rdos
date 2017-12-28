@@ -720,5 +720,6 @@ notify_can_online_nr        = 620
 
 lock_log_nr                 = 621
 unlock_log_nr               = 622
+log_thread_nr               = 623
 
 osgate_entries              = 650

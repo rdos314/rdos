@@ -1903,12 +1903,17 @@ UpdateRtc   MACRO
 
 ;;;;;;;;;; Kernel log ;;;;;;;;;;;;;;;;;;
 
+; IN ES:EDI    Log section
 LockLog  MACRO
     OsGate lock_log_nr
                     ENDM
 
 UnlockLog  MACRO
     OsGate unlock_log_nr
+                    ENDM
+
+LogThread  MACRO
+    OsGate log_thread_nr
                     ENDM
 
 ;;;;;;;;;; HANDLES ;;;;;;;;;;;;;;;;;;

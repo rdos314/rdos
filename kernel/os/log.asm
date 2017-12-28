@@ -57,38 +57,6 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           LogThreadName
-;
-;       Description:    Log thread name
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LogThreadName  proc near
-    push ds
-    push es
-    pushad
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov bx,ds:log_handle
-    mov edx,ds:log_pos
-    GetThread
-    mov es,ax
-    mov edi,OFFSET thread_name
-    mov ecx,30
-    WriteCFile
-    mov ds:log_pos,edx
-;
-    popad
-    pop es
-    pop ds
-    ret
-LogThreadName  endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           LogChar
 ;
 ;       Description:    Add char to log
@@ -466,10 +434,12 @@ LogDec4  Endp
 ;
 ;           description:    Lock Log
 ;
+;           Parameters:     ES:EDI    Log section
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 lock_log_name DB 'Lock Log', 0
-log_name  DB 'c:/usb.log', 0
+log_name  DB 'z:/log.txt', 0
 
 lock_log       Proc far
     push ds
@@ -484,11 +454,15 @@ lock_log       Proc far
     or bx,bx
     jnz llOpen
 ;
+    push es
+    push edi
     mov ax,cs
     mov es,ax
     mov edi,OFFSET log_name
     mov cx,O_RDWR OR O_CREAT OR O_TRUNC
     OpenKernelFile
+    pop edi
+    pop es
     jc llOpen
 ;
     mov ds:log_handle,bx
@@ -561,10 +535,29 @@ llOpen:
     call LogChar
     pop ax
 ;
+    mov esi,edi
+    xor ecx,ecx
+
+llSizeLoop:
+    lods byte ptr es:[esi]
+    or al,al
+    jz llSizeOk
+;
+    inc ecx
+    jmp llSizeLoop
+
+llSizeOk:    
+    mov bx,ds:log_handle
+    mov edx,ds:log_pos
+    WriteCFile
+    mov ds:log_pos,edx
+;
+    mov al,' '
+    call LogChar
+;
     popad
     pop es
     pop ds
-    ret
     retf32
 lock_log    Endp
 
@@ -596,12 +589,47 @@ unlock_log       Proc far
     mov ecx,2
     WriteCFile
     mov ds:log_pos,edx
+    LeaveSection ds:log_section
 ;
     popad
     pop es
     pop ds
     retf32
 unlock_log  endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LogThread
+;
+;       Description:    Log thread name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+log_thread_name DB 'Log Thread', 0
+
+log_thread  proc far
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,ds:log_handle
+    mov edx,ds:log_pos
+    GetThread
+    mov es,ax
+    mov edi,OFFSET thread_name
+    mov ecx,30
+    WriteCFile
+    mov ds:log_pos,edx
+;
+    popad
+    pop es
+    pop ds
+    retf32
+log_thread  endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -636,6 +664,12 @@ init_log    Proc near
     mov edi,OFFSET unlock_log_name
     xor cl,cl
     mov ax,unlock_log_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET log_thread
+    mov edi,OFFSET log_thread_name
+    xor cl,cl
+    mov ax,log_thread_nr
     RegisterOsGate
     clc
     ret

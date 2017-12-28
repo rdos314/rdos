@@ -1181,7 +1181,7 @@ unlock_usb    Endp
 
 notify_usb_attach_name DB 'Notify USB Attach', 0
 
-attach_text DB 'Attach ', 0
+attach_text DB 'Attach', 0
 
 notify_usb_attach       Proc far
     push gs
@@ -1197,9 +1197,16 @@ notify_usb_attach       Proc far
     mov ax,ds
     mov es,ax
 ;
-    int 3
+    push es
+    push edi
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET attach_text
     LockLog
+    LogThread
     UnlockLog
+    pop edi
+    pop es
 ;
     mov di,OFFSET usb_addr_arr
     mov cx,128
@@ -1366,10 +1373,24 @@ notify_usb_attach   Endp
 
 notify_usb_detach_name DB 'Notify USB Detach', 0
 
+detach_text DB 'Detach', 0
+
 notify_usb_detach       Proc far
     push es
     pushad
 ;
+    push es
+    push edi
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET detach_text
+    LockLog
+    LogThread
+    UnlockLog
+    pop edi
+    pop es
+
+
     movzx bx,al
     add bx,bx
     xor ax,ax
@@ -1377,7 +1398,6 @@ notify_usb_detach       Proc far
     or ax,ax
     jz nudDone
 ; 
-    int 3   
     mov es,ax
     mov bx,ds:usb_controller_id
     mov al,es:usbf_address
