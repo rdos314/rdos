@@ -1916,6 +1916,10 @@ LogThread  MACRO
     OsGate log_thread_nr
                     ENDM
 
+LogMemory  MACRO
+    OsGate log_memory_nr
+                    ENDM
+
 ;;;;;;;;;; HANDLES ;;;;;;;;;;;;;;;;;;
 
 ; IN  AX        Signature

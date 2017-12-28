@@ -1204,6 +1204,7 @@ notify_usb_attach       Proc far
     mov edi,OFFSET attach_text
     LockLog
     LogThread
+    LogMemory
     UnlockLog
     pop edi
     pop es
@@ -1386,6 +1387,7 @@ notify_usb_detach       Proc far
     mov edi,OFFSET detach_text
     LockLog
     LogThread
+    LogMemory
     UnlockLog
     pop edi
     pop es

@@ -632,6 +632,36 @@ log_thread  endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LogMemory
+;
+;       Description:    Log memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+log_memory_name DB 'Log Thread', 0
+
+gdt_text  DB 'GDT=', 0
+
+log_memory  proc far
+    push ds
+    push es
+    pushad
+;
+    mov di,OFFSET gdt_text
+    call LogCodeText
+;
+    GetFreeGdt
+    call LogDec
+;
+    popad
+    pop es
+    pop ds
+    retf32
+log_memory  endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           init_log
@@ -670,6 +700,12 @@ init_log    Proc near
     mov edi,OFFSET log_thread_name
     xor cl,cl
     mov ax,log_thread_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET log_memory
+    mov edi,OFFSET log_memory_name
+    xor cl,cl
+    mov ax,log_memory_nr
     RegisterOsGate
     clc
     ret
