@@ -37,6 +37,7 @@ INCLUDE ..\handle.inc
 INCLUDE ..\wait.inc
 INCLUDE usb.inc
 INCLUDE usbdev.inc
+INCLUDE ..\os\chandle.inc
 
 MAX_ATTACH_HOOKS = 32
 MAX_DETACH_HOOKS = 32
@@ -117,7 +118,7 @@ data    SEGMENT byte public 'DATA'
 usb_enum_section    section_typ <>
 
 usb_dev_count       DW ?
-usb_dev_arr     DW 256 DUP(?)
+usb_dev_arr         DW 256 DUP(?)
 
 usb_attach_hooks    DW ?
 usb_attach_arr      DD 2 * MAX_ATTACH_HOOKS DUP(?)
@@ -132,7 +133,6 @@ data    ENDS
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1181,6 +1181,8 @@ unlock_usb    Endp
 
 notify_usb_attach_name DB 'Notify USB Attach', 0
 
+attach_text DB 'Attach ', 0
+
 notify_usb_attach       Proc far
     push gs
     push fs
@@ -1194,6 +1196,10 @@ notify_usb_attach       Proc far
     push es
     mov ax,ds
     mov es,ax
+;
+    int 3
+    LockLog
+    UnlockLog
 ;
     mov di,OFFSET usb_addr_arr
     mov cx,128
@@ -1370,7 +1376,8 @@ notify_usb_detach       Proc far
     xchg ax,ds:[bx].usb_port_sel_arr
     or ax,ax
     jz nudDone
-;    
+; 
+    int 3   
     mov es,ax
     mov bx,ds:usb_controller_id
     mov al,es:usbf_address

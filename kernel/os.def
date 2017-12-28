@@ -718,4 +718,7 @@ delete_usb_pipe_nr          = 618
 notify_can_modules_up_nr    = 619
 notify_can_online_nr        = 620
 
+lock_log_nr                 = 621
+unlock_log_nr               = 622
+
 osgate_entries              = 650

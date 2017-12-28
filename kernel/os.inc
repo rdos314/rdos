@@ -1900,6 +1900,17 @@ UpdateRtc   MACRO
     OsGate update_rtc_nr
                     ENDM
 
+
+;;;;;;;;;; Kernel log ;;;;;;;;;;;;;;;;;;
+
+LockLog  MACRO
+    OsGate lock_log_nr
+                    ENDM
+
+UnlockLog  MACRO
+    OsGate unlock_log_nr
+                    ENDM
+
 ;;;;;;;;;; HANDLES ;;;;;;;;;;;;;;;;;;
 
 ; IN  AX        Signature
