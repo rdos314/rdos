@@ -2733,8 +2733,10 @@ atWaitNotify:
     mov eax,1
     mov es:[si].HcRhPortStatus,eax
 ;
-    mov ds:[di].usb_port_sel_arr,0
+    mov al,cl
+    NotifyUsbDetach
     jmp atDone
+
 
 atUnlock:
     UnlockUsb    
