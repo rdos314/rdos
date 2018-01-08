@@ -550,26 +550,26 @@ UpdateSent   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           PollSend
+;   NAME:           GetIdMsg
 ;
-;   DESCRIPTION:    Poll send
+;   DESCRIPTION:    Get ID messages
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-PollSend   Proc near
-    call CheckAnySendBuffer
-    jc psDone
+GetIdMsg	Proc near
+    push ds
+    push cx
+    push si
 ;
     mov si,OFFSET send_buf_arr
     mov cx,15
 
-psGetIdLoop:
+gimLoop:
     push ds
     mov ds,ds:[si]
     call GetSendBuffer
     pop ds
-    jc psGetIdNext
+    jc gimNext
 ;
     push cx
     push si
@@ -582,9 +582,32 @@ psGetIdLoop:
     pop si
     pop cx
 
-psGetIdNext:
+gimNext:
     add si,2
-    loop psGetIdLoop
+    loop gimLoop
+;
+    pop si
+    pop cx
+    pop ds
+    ret
+GetIdMsg	Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           PollSend
+;
+;   DESCRIPTION:    Poll send
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+PollSend   Proc near
+    call CheckAnySendBuffer
+    jc psDone
+;
+    call GetIdMsg
 
 psPoll:
     push ds
@@ -600,6 +623,8 @@ psPoll:
     jmp psPoll
 
 psStart:
+    call GetIdMsg
+;
     StartUsbTransaction        
 ;
     mov bp, 5 * 5
