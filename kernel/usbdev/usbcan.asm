@@ -64,6 +64,18 @@ db_next     DW ?
 
 data_block   ENDS
 
+send_buf_struc  STRUC
+
+send_sel         DW ?
+send_count       DW ?
+send_head        DW ?
+send_tail        DW ?
+send_curr_count  DW ?
+
+send_section     section_typ <>
+
+send_buf_struc  ENDS
+
 data    SEGMENT byte public 'DATA'
 
 cd_super_thread  DW ?
@@ -79,8 +91,6 @@ cd_out_wait      DW ?
 cd_device        DB ?
 cd_active        DB ?
 
-can_send_section section_typ <>
-
 in_buf           DB 10 DUP(?)
 
 can_active       DB ?
@@ -89,12 +99,6 @@ can_restart      DB ?
 rec_sel          DW ?
 rec_pos          DW ?
 
-send_sel         DW ?
-send_count       DW ?
-send_head        DW ?
-send_tail        DW ?
-send_curr_count  DW ?
-
 hw_id            DB ?
 rdos_major       DB ?
 rdos_minor       DB ?
@@ -102,6 +106,9 @@ ver_major        DB ?
 ver_minor        DB ?
 ver_sub          DB ?
 req_reset        DB ?
+
+default_send_buf DW ?
+send_buf_arr     DW 15 DUP(?)
 
 can_id_hook_arr  DD 15 * 4 DUP(?)
 
@@ -131,32 +138,87 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ClearBuf
+;       NAME:           CreateSendBuf
 ;
-;       DESCRIPTION:    Clear buffer
+;       DESCRIPTION:    Create a send buffer
+;
+;       RETURNS:        AX    Buffer sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ClearBuf   Proc near
-    push ds
+CreateSendBuf	Proc near
     push es
-    pushad
+    push ebx
+    push ecx
+    push edx
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SIZE send_buf_struc
+    AllocateSmallGlobalMem
 ;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical32
+    or al,67h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov es:send_sel,bx
+;
+    mov es:send_count,0
+    mov es:send_head,0
+    mov es:send_tail,0
+    mov es:send_curr_count,0
+    InitSection es:send_section
+;
+    mov ax,es
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    ret
+CreateSendBuf	Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateRecBuf
+;
+;       DESCRIPTION:    Create a receive buffer
+;
+;       RETURNS:        AX    Buffer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateRecBuf	Proc near
+    push ds
+    push ebx
+    push ecx
+    push edx
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical32
+    or al,67h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov ds:rec_sel,bx
     mov ds:rec_pos,0
 ;
-    mov ds:send_count,0
-    mov ds:send_head,0
-    mov ds:send_tail,0
-    mov ds:send_curr_count,0
-;
-    popad
-    pop es
+    pop edx
+    pop ecx
+    pop ebx
     pop ds
     ret
-ClearBuf  Endp
+CreateRecBuf	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -174,32 +236,20 @@ InitBuf   Proc near
 ;
     mov ax,SEG data
     mov ds,ax
+    call CreateRecBuf
 ;
-    mov eax,1000h
-    AllocateBigLinear
+    call CreateSendBuf
+    mov ds:default_send_buf,ax
 ;
-    AllocatePhysical32
-    or al,67h
-    SetPageEntry
+    mov cx,15
+    mov bx,OFFSET send_buf_arr
+
+ibHookLoop:
+    call CreateSendBuf
+    mov ds:[bx],ax
 ;
-    AllocateGdt
-    mov ecx,1000h
-    CreateDataSelector16
-    mov ds:rec_sel,bx
-;
-    mov eax,1000h
-    AllocateBigLinear
-;
-    AllocatePhysical32
-    or al,67h
-    SetPageEntry
-;
-    AllocateGdt
-    mov ecx,1000h
-    CreateDataSelector16
-    mov ds:send_sel,bx
-;
-    call ClearBuf
+    add bx,2
+    loop ibHookLoop
 ;
     popad
     pop es
@@ -223,9 +273,44 @@ InitBuf  Endp
 
 InsertSend   Proc near
     push es
+    push si
     push di
 ;
-    EnterSection ds:can_send_section
+    push eax
+    push ecx
+;
+    mov si,OFFSET can_id_hook_arr
+    mov cx,15
+
+isIdLoop:
+    mov di,ds:[si].ih_sel
+    or di,di
+    jz isIdNext
+;
+    mov eax,ds:[si].ih_mask
+    and eax,NOT 10000000h
+    and eax,ebx
+    cmp eax,ds:[si].ih_id
+    je isIdOk
+
+isIdNext:
+    add si,16
+    loop isIdLoop
+;
+    mov si,OFFSET default_send_buf
+    jmp isIdFound
+    
+isIdOk:
+    sub si,OFFSET can_id_hook_arr
+    shr si,3
+    add si,OFFSET send_buf_arr
+
+isIdFound:
+    pop ecx
+    pop eax
+;
+    mov ds,ds:[si]
+    EnterSection ds:send_section
     mov di,ds:send_count
     cmp di,100h
     je isDone
@@ -255,18 +340,96 @@ isWrapOk:
     mov ds:send_tail,di
 
 isDone:
-    LeaveSection ds:can_send_section
+    LeaveSection ds:send_section
 ;
     push bx
+    mov bx,SEG data
+    mov ds,bx
     mov bx,ds:cd_send_thread
     Signal
     pop bx
 ;
     pop di
+    pop si
     pop es
     ret
 InsertSend   Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CheckSendBuffer
+;
+;   DESCRIPTION:    Check send buffer
+;
+;   RETURNS:        NC        Has data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckSendBuffer   Proc near
+    push dx
+;
+    EnterSection ds:send_section
+    mov dx,ds:send_count
+    or dx,dx
+    stc
+    jz csbDone
+;
+    sub dx,ds:send_curr_count
+    stc
+    jz csbDone
+;       
+    clc
+
+csbDone:
+    LeaveSection ds:send_section
+;
+    pop dx
+    ret
+CheckSendBuffer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CheckAnySendBuffer
+;
+;   DESCRIPTION:    Check for data in any send buffer
+;
+;   RETURNS:        NC        Has data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckAnySendBuffer   Proc near
+    push ds
+    push es
+    push si
+;
+    mov si,SEG data
+    mov es,si
+;
+    mov ds,es:default_send_buf
+    call CheckSendBuffer
+    jnc casbDone
+;
+    mov si,OFFSET send_buf_arr
+    mov cx,15
+
+casbLoop:
+    mov ds,es:[si]
+    call CheckSendBuffer
+    jnc casbDone
+;
+    add si,2
+    loop casbLoop
+;
+    stc
+
+casbDone:
+    pop si
+    pop es
+    pop ds
+    ret
+CheckAnySendBuffer	Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -285,7 +448,7 @@ GetSendBuffer   Proc near
     push bx
     push dx
 ;
-    EnterSection ds:can_send_section
+    EnterSection ds:send_section
     mov dx,ds:send_count
     or dx,dx
     stc
@@ -313,13 +476,38 @@ gsbWrapOk:
     clc
 
 gsbDone:
-    LeaveSection ds:can_send_section
+    LeaveSection ds:send_section
 ;
     pop dx
     pop bx
     pop eax
     ret
 GetSendBuffer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           UpdateSendBuf
+;
+;   DESCRIPTION:    Update with sent package(s)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateSendBuf   Proc near
+    push ax
+;
+    EnterSection ds:send_section
+;
+    xor ax,ax
+    xchg ax,ds:send_curr_count
+    sub ds:send_count,ax   
+;
+    LeaveSection ds:send_section
+;
+    pop ax
+    ret
+UpdateSendBuf   Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -331,17 +519,31 @@ GetSendBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateSent   Proc near
-    push ax
+    push ds
+    push es
+    push cx
+    push si
 ;
-    EnterSection ds:can_send_section
+    mov ax,SEG data
+    mov es,ax
 ;
-    xor ax,ax
-    xchg ax,ds:send_curr_count
-    sub ds:send_count,ax   
+    mov ds,es:default_send_buf
+    call UpdateSendBuf
 ;
-    LeaveSection ds:can_send_section
+    mov si,OFFSET send_buf_arr
+    mov cx,15
+
+usIdLoop:
+    mov ds,es:[si]
+    call UpdateSendBuf
 ;
-    pop ax
+    add si,2
+    loop usIdLoop
+;
+    pop si
+    pop cx
+    pop es
+    pop ds
     ret
 UpdateSent   Endp
 
@@ -356,18 +558,48 @@ UpdateSent   Endp
 
 
 PollSend   Proc near
-    call GetSendBuffer
+    call CheckAnySendBuffer
     jc psDone
+;
+    mov si,OFFSET send_buf_arr
+    mov cx,15
 
-psAdd:
+psGetIdLoop:
+    push ds
+    mov ds,ds:[si]
+    call GetSendBuffer
+    pop ds
+    jc psGetIdNext
+;
+    push cx
+    push si
+;
     movzx edi,di
     mov bx,ds:cd_out_pipe
     mov ecx,10
     WriteUsbDataNoCopy
 ;
+    pop si
+    pop cx
+
+psGetIdNext:
+    add si,2
+    loop psGetIdLoop
+
+psPoll:
+    push ds
+    mov ds,ds:default_send_buf
     call GetSendBuffer
-    jnc psAdd
+    pop ds
+    jc psStart
 ;
+    movzx edi,di
+    mov bx,ds:cd_out_pipe
+    mov ecx,10
+    WriteUsbDataNoCopy
+    jmp psPoll
+
+psStart:
     StartUsbTransaction        
 ;
     mov bp, 5 * 5
@@ -1765,7 +1997,6 @@ init    Proc far
     mov es:can_active,0
     mov es:can_restart,0
     mov es:req_reset,0
-    InitSection es:can_send_section
     InitSection es:capture_section
     mov es:capture_handle,0
     mov es:capture_thread,0
