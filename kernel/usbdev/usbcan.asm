@@ -1265,6 +1265,14 @@ ureLoop:
     adc edx,0
     WaitForSignalWithTimeout
 ;
+    mov al,ds:cd_active
+    or al,al
+    jz ureEnd
+;
+    mov al,ds:req_reset
+    or al,al
+    jnz ureEnd
+;
     mov bx,ds:cd_in_pipe
     IsUsbTransactionDone
     jc ureLoop

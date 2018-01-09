@@ -1197,18 +1197,6 @@ notify_usb_attach       Proc far
     mov ax,ds
     mov es,ax
 ;
-    push es
-    push edi
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET attach_text
-    LockLog
-    LogThread
-    LogMemory
-    UnlockLog
-    pop edi
-    pop es
-;
     mov di,OFFSET usb_addr_arr
     mov cx,128
     add di,2
@@ -1380,18 +1368,6 @@ notify_usb_detach       Proc far
     push es
     pushad
 ;
-    push es
-    push edi
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET detach_text
-    LockLog
-    LogThread
-    LogMemory
-    UnlockLog
-    pop edi
-    pop es
-
 
     movzx bx,al
     add bx,bx

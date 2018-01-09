@@ -208,67 +208,29 @@ AddHexWord  endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           LogHexByte
+;       NAME:           AddHexDword
 ;
-;       Description:    Add hex byte to log
+;       Description:    Add hex dword to log
 ;
-;       Parameters:     AL      Value
+;       Parameters:     ES:DI   Buffer
+;                       EAX     Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LogHexByte  proc near
-    push es
-    pushad
-;
-    mov di,SEG data
-    mov es,di
-    mov di,OFFSET log_buf
+AddHexDword  proc near
+    push eax
+    shr eax,16
+    xchg al,ah
     call AddHexByte
-;
-    mov bx,es:log_handle
-    mov edx,es:log_pos
-    mov ecx,2
-    mov edi,OFFSET log_buf
-    WriteCFile
-    mov es:log_pos,edx
-;
-    popad
-    pop es
+    xchg al,ah
+    call AddHexByte
+    pop eax
+    xchg al,ah
+    call AddHexByte
+    xchg al,ah
+    call AddHexByte
     ret    
-LogHexByte  endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           LogHexWord
-;
-;       Description:    Add hex word to log
-;
-;       Parameters:     AX      Value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LogHexWord  proc near
-    push es
-    pushad
-;
-    mov di,SEG data
-    mov es,di
-    mov di,OFFSET log_buf
-    call AddHexWord
-;
-    mov bx,es:log_handle
-    mov edx,es:log_pos
-    mov ecx,4
-    mov edi,OFFSET log_buf
-    WriteCFile
-    mov es:log_pos,edx
-;
-    popad
-    pop es
-    ret    
-LogHexWord  endp
-
+AddHexDword  endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -662,6 +624,151 @@ log_memory  proc far
 log_memory  endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LogText
+;
+;       Description:    Log text
+;
+;       Parameters:     ES:EDI     Offset to text
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+log_text_name DB 'Log Text', 0
+
+log_text  proc far
+    push ds
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov bx,ds:log_handle
+    mov edx,ds:log_pos
+;
+    mov esi,edi
+    xor ecx,ecx
+
+ltSizeLoop:
+    lods byte ptr es:[esi]
+    or al,al
+    jz ltSizeOk
+;
+    inc cx
+    jmp ltSizeLoop
+
+ltSizeOk:    
+    WriteCFile
+    mov ds:log_pos,edx
+;
+    popad
+    pop ds
+    retf32
+log_text  endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LogHexByte
+;
+;       Description:    Add hex byte to log
+;
+;       Parameters:     AL      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+log_hex_byte_name DB 'Log Hex Byte', 0
+
+log_hex_byte  proc far
+    push es
+    pushad
+;
+    mov di,SEG data
+    mov es,di
+    mov di,OFFSET log_buf
+    call AddHexByte
+;
+    mov bx,es:log_handle
+    mov edx,es:log_pos
+    mov ecx,2
+    mov edi,OFFSET log_buf
+    WriteCFile
+    mov es:log_pos,edx
+;
+    popad
+    pop es
+    retf32
+log_hex_byte  endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LogHexWord
+;
+;       Description:    Add hex word to log
+;
+;       Parameters:     AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+log_hex_word_name DB 'Log Hex Word', 0
+
+log_hex_word  proc far
+    push es
+    pushad
+;
+    mov di,SEG data
+    mov es,di
+    mov di,OFFSET log_buf
+    call AddHexWord
+;
+    mov bx,es:log_handle
+    mov edx,es:log_pos
+    mov ecx,4
+    mov edi,OFFSET log_buf
+    WriteCFile
+    mov es:log_pos,edx
+;
+    popad
+    pop es
+    retf32
+log_hex_word  endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LogHexDword
+;
+;       Description:    Add hex dword to log
+;
+;       Parameters:     EAX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+log_hex_dword_name DB 'Log Hex Dword', 0
+
+log_hex_dword  proc far
+    push es
+    pushad
+;
+    mov di,SEG data
+    mov es,di
+    mov di,OFFSET log_buf
+    call AddHexDword
+;
+    mov bx,es:log_handle
+    mov edx,es:log_pos
+    mov ecx,8
+    mov edi,OFFSET log_buf
+    WriteCFile
+    mov es:log_pos,edx
+;
+    popad
+    pop es
+    retf32
+log_hex_dword  endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           init_log
@@ -706,6 +813,30 @@ init_log    Proc near
     mov edi,OFFSET log_memory_name
     xor cl,cl
     mov ax,log_memory_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET log_text
+    mov edi,OFFSET log_text_name
+    xor cl,cl
+    mov ax,log_text_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET log_hex_byte
+    mov edi,OFFSET log_hex_byte_name
+    xor cl,cl
+    mov ax,log_hex_byte_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET log_hex_word
+    mov edi,OFFSET log_hex_word_name
+    xor cl,cl
+    mov ax,log_hex_word_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET log_hex_dword
+    mov edi,OFFSET log_hex_dword_name
+    xor cl,cl
+    mov ax,log_hex_dword_nr
     RegisterOsGate
     clc
     ret

@@ -68,6 +68,9 @@ small_used_mem      DD ?
 big_section             section_typ <>
 small_section       section_typ <>
 
+small_alloc_count   DD ?
+big_alloc_count     DD ?
+
 system_alloc_base       DD ?
 process_alloc_base      DD ?
 fixed_vm_base       DD ?
@@ -199,6 +202,8 @@ init_mem    PROC near
 ;
     mov ds:big_used_mem,0
     mov ds:small_used_mem,0
+    mov ds:big_alloc_count,0
+    mov ds:small_alloc_count,0
     mov ds:process_alloc_base,fixed_process_linear + SIZE process_seg
     mov ds:fixed_vm_base,fixed_vm_linear
 ;
@@ -237,6 +242,18 @@ init_mem    PROC near
     mov edi,OFFSET allocate_big_mem_name
     xor cl,cl
     mov ax,allocate_big_mem_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET log_small_mem
+    mov edi,OFFSET log_small_mem_name
+    xor cl,cl
+    mov ax,log_small_mem_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET log_big_mem
+    mov edi,OFFSET log_big_mem_name
+    xor cl,cl
+    mov ax,log_big_mem_nr
     RegisterOsGate
 ;
     mov esi,OFFSET free_mem
@@ -683,6 +700,7 @@ allocate_big_linear     PROC far
     mov es,dx
     EnterSection ds:big_section
 ;    
+    inc es:big_alloc_count
     mov edx,global_page_size
     sub edx,es:big_avail_mem
     add edx,global_page_linear
@@ -823,6 +841,7 @@ no_small_biggest_block:
     mov es:small_avail_mem,ebx
     sub eax,10h
     add es:small_used_mem,eax
+    inc es:small_alloc_count
 ;
     mov ax,mem_sel
     mov ds,ax
@@ -1690,6 +1709,7 @@ free_big_mem    PROC near
     mov ax,mem_sel
     mov ds,ax
     EnterSection ds:big_section
+    dec es:big_alloc_count
     add es:big_avail_mem,ecx
     sub es:big_used_mem,ecx
     shr ecx,12
@@ -1713,6 +1733,7 @@ free_small_mem  PROC near
     mov es:small_avail_mem,ebx
     sub eax,10h
     sub es:small_used_mem,eax
+    dec es:small_alloc_count
 ;
     mov eax,[edx].sls_prev
     or eax,eax
@@ -2182,6 +2203,59 @@ resize_mem_done:
     pop ds
     retf32
 resize_linear   ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LogSmallMem
+;
+;           DESCRIPTION:    Log small mem allocations
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+log_small_mem_name DB 'Log Small Memory',0
+
+log_small_mem      PROC far
+    push ds
+    push eax
+;
+    mov ax,mem_sel
+    mov ds,ax
+    mov eax,ds:small_alloc_count
+    LogHexDword
+;
+    pop eax
+    pop ds
+    retf32
+log_small_mem	Endp
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LogBigMem
+;
+;           DESCRIPTION:    Log big mem allocations
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+log_big_mem_name DB 'Log Big Memory',0
+
+log_big_mem      PROC far
+    push ds
+    push eax
+;
+    mov ax,mem_sel
+    mov ds,ax
+    mov eax,ds:big_alloc_count
+    LogHexDword
+;
+    pop eax
+    pop ds
+    retf32
+log_big_mem	Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

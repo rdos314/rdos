@@ -2096,6 +2096,10 @@ DeleteThread    Proc near
     mov bx,es:p_tss_sel
     FreeGdt
 ;    
+    mov edx,es:p_tss_linear
+    mov ecx,SIZE tss32_seg
+    FreeLinear
+;
     FreeMem
     ret
 DeleteThread    Endp
@@ -7975,6 +7979,7 @@ create_tss32    PROC near
     AllocateGdt
     CreateTssSelector
     mov ds:p_tss_sel,bx
+    mov ds:p_tss_linear,edi
     mov ds:p_futex_id,bx
 ;    
     sldt dx

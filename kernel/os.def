@@ -722,5 +722,11 @@ lock_log_nr                 = 621
 unlock_log_nr               = 622
 log_thread_nr               = 623
 log_memory_nr               = 624
+log_text_nr                 = 625
+log_hex_byte_nr             = 626
+log_hex_word_nr             = 627
+log_hex_dword_nr            = 628
+log_small_mem_nr            = 629
+log_big_mem_nr              = 630
 
 osgate_entries              = 650

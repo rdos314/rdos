@@ -1920,6 +1920,34 @@ LogMemory  MACRO
     OsGate log_memory_nr
                     ENDM
 
+LogSmallMemory  MACRO
+    OsGate log_small_mem_nr
+                    ENDM
+
+LogBigMemory  MACRO
+    OsGate log_big_mem_nr
+                    ENDM
+
+; IN ES:EDI    Text to log
+LogText  MACRO
+    OsGate log_text_nr
+                    ENDM
+
+; IN AL        Value
+LogHexByte  MACRO
+    OsGate log_hex_byte_nr
+                    ENDM
+
+; IN AX        Value
+LogHexWord  MACRO
+    OsGate log_hex_word_nr
+                    ENDM
+
+; IN EAX        Value
+LogHexDword  MACRO
+    OsGate log_hex_dword_nr
+                    ENDM
+
 ;;;;;;;;;; HANDLES ;;;;;;;;;;;;;;;;;;
 
 ; IN  AX        Signature

@@ -1920,6 +1920,9 @@ etNext:
     mov edi,es:[edx].otd_next_va        
     call FreeBlock32
 ;
+    or edi,edi
+    jz etOk
+;
     mov ebx,edi
     mov eax,es:[edi].otd_phys
     and ax,0FFFh
@@ -2152,7 +2155,7 @@ cpFreeEdList:
     call LocalIsConnected
     jc cpFreeTd
 ;    
-    mov ax,1
+    mov ax,10
     WaitMilliSec
 
 cpFreeTd:
@@ -2160,7 +2163,7 @@ cpFreeTd:
     jnz cpFreeSingle
 
 cpFreeSingle:
-    mov ax,1
+    mov ax,10
     WaitMilliSec
 ;
     mov fs:osp_data_size,0     
@@ -2196,7 +2199,7 @@ dpDone:
     FreeLinear
 
 rpSetupDone:   
-    mov ax,2
+    mov ax,10
     WaitMilliSec
 ;
     LeaveSection ds:ohc_section
@@ -2880,7 +2883,8 @@ rtWaitNotify:
     mov eax,1
     mov es:[si].HcRhPortStatus,eax
 ;
-    mov ds:[di].usb_port_sel_arr,0
+    mov al,cl
+    NotifyUsbDetach
     jmp rtDone
 
 rtUnlock:
