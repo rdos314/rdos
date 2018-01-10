@@ -718,11 +718,12 @@ void TDebugThread::ReadState()
     ThreadState state;
     int i;
     int ok;
+    int ThreadCount = RdosGetThreadCount();
     char str[21];
 
     ok = FALSE;
     
-    for (i = 0; i < 256 && !ok; i++)
+    for (i = 0; i < ThreadCount && !ok; i++)
     {
         RdosGetThreadState(i, &state);
         if (state.ID == ThreadID)

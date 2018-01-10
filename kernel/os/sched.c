@@ -29,7 +29,7 @@
 #include "rdosdev.h"
 #include "string.h"
 
-#define MAX_THREADS             256
+#define MAX_THREADS             512
 #define MAX_PROCESSOR_COUNT     32
 
 #define FALSE 0

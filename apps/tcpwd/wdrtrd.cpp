@@ -258,13 +258,14 @@ void TWdRunThreadService::ReqGetRuntime()
     int milli;
     int micro;
     int started;
+    int CurrentThreads = RdosGetThreadCount();
     TDebug *Debug = GetDebug();
     
     id = GetDword();
 
     ok = FALSE;
     
-    for (i = 0; i < 256 && !ok; i++)
+    for (i = 0; i < CurrentThreads && !ok; i++)
     {
         RdosGetThreadState(i, &State);
         if (State.ID == id)

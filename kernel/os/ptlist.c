@@ -261,6 +261,7 @@ void ProcessHandler()
     int absrow;
     int lastrow;
     int WaitHandle = RdosCreateWait();
+    int ThreadCount;
     char key[4];
     int val;
 
@@ -272,8 +273,10 @@ void ProcessHandler()
 
     for (;;)
     {
+        ThreadCount = RdosGetThreadCount();
+
         row = 0;
-        for (i = 0; i < 256; i++)
+        for (i = 0; i < ThreadCount; i++)
         {
             if (RdosGetThreadActionState(i, &state))
             {            

@@ -322,21 +322,22 @@ int TStateCommand::Execute(char *param)
     int i;
     ThreadActionState state;
     short int ID;
+    int ThreadCount = RdosGetThreadCount();
     TArg *arg;
 
-        InitOptions();
+    InitOptions();
 
-        if (LeadOptions(&param, 0) != E_None)
-                return 1;
+    if (LeadOptions(&param, 0) != E_None)
+        return 1;
 
-        if (!ScanCmdLine(param, 0))
-                return 1;
+    if (!ScanCmdLine(param, 0))
+        return 1;
 
-        if (FArgCount == 0)
-        {
-        for (i = 0; i < 256; i++)
-                if (RdosGetThreadActionState(i, &state))
-                    WriteOne(&state);
+    if (FArgCount == 0)
+    {
+        for (i = 0; i < ThreadCount; i++)
+            if (RdosGetThreadActionState(i, &state))
+                WriteOne(&state);
                         
         return 0;
     }
@@ -344,37 +345,37 @@ int TStateCommand::Execute(char *param)
     {
         arg = FArgList;
 
-                while (arg)
-                {
-                if (sscanf(arg->FName.GetData(), "%4hX", &ID) == 1)
+        while (arg)
+        {
+            if (sscanf(arg->FName.GetData(), "%4hX", &ID) == 1)
             {           
-                for (i = 0; i < 256; i++)
+                for (i = 0; i < ThreadCount; i++)
                 {
-                        if (RdosGetThreadActionState(i, &state))
+                    if (RdosGetThreadActionState(i, &state))
+                    {
+                        if (state.ID == ID)
                         {
-                            if (state.ID == ID)
+                            if (FOptF)
                             {
-                                if (FOptF)
-                                {
-                                                                RdosSuspendAndSignalThread(ID);
-                                                                RdosWaitMilli(50);
-                                                        }
-                                                        else
-                                                        {
-                                                                if (FOptS)
-                                                                {
-                                                                        RdosSuspendThread(ID);
-                                        RdosWaitMilli(50);
-                                    }
-                                }
-                                WriteOne(&state);
+                                RdosSuspendAndSignalThread(ID);
+                                RdosWaitMilli(50);
                             }
+                            else
+                            {
+                                if (FOptS)
+                                {
+                                    RdosSuspendThread(ID);
+                                    RdosWaitMilli(50);
+                                }
+                            }
+                            WriteOne(&state);
                         }
                     }
                 }
-                        arg = arg->FList;
-                }
-                return 0;
+            }
+            arg = arg->FList;
         }
+        return 0;
+    }
 }
 
