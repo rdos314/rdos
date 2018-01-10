@@ -77,6 +77,7 @@ int ProcessorCount = 0;
 int CurrLoad = 0;
 int MaxLoad = 0;
 int NextPid = 1;
+int ActiveThreads = 0;
 
 struct TThread ThreadArr[MAX_THREADS];
 struct TCore CoreArr[MAX_PROCESSOR_COUNT];
@@ -139,24 +140,42 @@ void StopCore()
 void ThreadCreated(int handle, int ID, int Prio)
 {
     int i;
+    int ok = FALSE;
+    int Index;
 
-    RdosEnterKernelSection(&ThreadSection);    
+    RdosEnterKernelSection(&ThreadSection);
 
-    for (i = 0; i < MAX_THREADS; i++)
+    for (i = 0; i < ActiveThreads; i++)
     {
         if (!ThreadArr[i].Valid)
         {
-            ThreadArr[i].Valid = TRUE;
-            ThreadArr[i].Handle = handle;
-            ThreadArr[i].ID = ID;
-            ThreadArr[i].Core = 0;
-            ThreadArr[i].Prio = Prio;
-            ThreadArr[i].IdleCount = 0;
-            ThreadArr[i].BaseTics = 0;
+            ok = TRUE;
+            Index = i;
             break;
         }
     }
 
+    if (!ok)
+    {
+        if (ActiveThreads < MAX_THREADS)
+        {
+            Index = ActiveThreads;
+            ActiveThreads++;
+            ok = TRUE;
+        }
+    }
+
+    if (ok)
+    {
+        ThreadArr[Index].Valid = TRUE;
+        ThreadArr[Index].Handle = handle;
+        ThreadArr[Index].ID = ID;
+        ThreadArr[Index].Core = 0;
+        ThreadArr[Index].Prio = Prio;
+        ThreadArr[Index].IdleCount = 0;
+        ThreadArr[Index].BaseTics = 0;
+    }
+    
     RdosLeaveKernelSection(&ThreadSection);    
 }
     
@@ -172,11 +191,15 @@ void ThreadTerminated(int handle)
 
     RdosEnterKernelSection(&ThreadSection);    
 
-    for (i = 0; i < MAX_THREADS; i++)
+    for (i = 0; i < ActiveThreads; i++)
     {
         if (ThreadArr[i].Valid && ThreadArr[i].Handle == handle) 
         {
             ThreadArr[i].Valid = FALSE;
+
+            if (i == ActiveThreads - 1)
+                ActiveThreads--;
+
             break;
         }
     }
@@ -199,7 +222,7 @@ int IdToHandle(int ID)
 
     RdosEnterKernelSection(&ThreadSection);    
 
-    for (i = 0; i < MAX_THREADS; i++)
+    for (i = 0; i < ActiveThreads; i++)
     {
         if (ThreadArr[i].Valid && ThreadArr[i].ID == ID) 
         {
@@ -227,7 +250,7 @@ int IndexToHandle(int Index)
 
     RdosEnterKernelSection(&ThreadSection);    
 
-    if (Index >= 0 && Index < MAX_THREADS)
+    if (Index >= 0 && Index < ActiveThreads)
         if (ThreadArr[Index].Valid) 
             handle = ThreadArr[Index].Handle;
 
@@ -257,11 +280,15 @@ int GetNextPid()
     while (!ok)
     {
         pid = NextPid;
-        NextPid++;
+
+        if (NextPid == 0x7FFF)
+            NextPid = 1;
+        else
+            NextPid++;
 
         ok = TRUE;
 
-        for (i = 0; i < MAX_THREADS; i++)
+        for (i = 0; i < ActiveThreads; i++)
         {
             if (ThreadArr[i].Valid && ThreadArr[i].ID == pid) 
             {
@@ -299,7 +326,7 @@ void MoveThread(int Core, int ThreadId)
 
         RdosEnterKernelSection(&ThreadSection); 
 
-        for (i = 0; i < MAX_THREADS; i++)
+        for (i = 0; i < ActiveThreads; i++)
         {
             if (ThreadArr[i].Valid && ThreadArr[i].ID == ThreadId) 
             {
@@ -423,7 +450,7 @@ void __far SchedulerThread(void *param)
         if (CurrLoad > 1000)
             CurrLoad = 1000;
 
-        for (i = 0; i < MAX_THREADS; i++)
+        for (i = 0; i < ActiveThreads; i++)
         {
             if (ThreadArr[i].Valid)
             {
@@ -533,7 +560,7 @@ void __far SchedulerThread(void *param)
 
                 RdosEnterKernelSection(&ThreadSection); 
     
-                for (i = 0; i < MAX_THREADS; i++)
+                for (i = 0; i < ActiveThreads; i++)
                 {
                     if (ThreadArr[i].Valid && ThreadArr[i].ID == ThreadStatArr[BestThread].ID)
                     {
@@ -546,7 +573,7 @@ void __far SchedulerThread(void *param)
                     }
                 }
 
-                for (i = 0; i < MAX_THREADS; i++)
+                for (i = 0; i < ActiveThreads; i++)
                 {
                     if (ThreadArr[i].Valid && ThreadArr[i].Core != 0 && ThreadArr[i].Prio && ThreadArr[i].IdleCount > 16)
                     {
