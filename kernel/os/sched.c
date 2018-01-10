@@ -214,6 +214,29 @@ int IdToHandle(int ID)
     
 /*##########################################################################
 #
+#   Name       : IndexToHandle
+#
+#   Descr      : Convert from index to handle
+#
+##########################################################################*/
+#pragma aux IndexToHandle "*" rdosdev parm routine [eax]
+int IndexToHandle(int Index)
+{
+    int handle = 0;
+
+    RdosEnterKernelSection(&ThreadSection);    
+
+    if (Index >= 0 && Index < MAX_THREADS)
+        if (ThreadArr[Index].Valid) 
+            handle = ThreadArr[Index].Handle;
+
+    RdosLeaveKernelSection(&ThreadSection);    
+
+    return handle;
+}
+    
+/*##########################################################################
+#
 #   Name       : MoveThread
 #
 #   Descr      : Move thread to new core

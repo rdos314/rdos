@@ -1206,6 +1206,46 @@ HandleMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           Start test threads
+;
+;       DESCRIPTION:    Start test thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_thread_name DB 'Starter', 0
+
+log_text DB 'Test', 0
+
+test_thread_name  DB 'Test', 0
+
+test_thread:
+    mov ax,1000
+    WaitMilliSec
+    TerminateThread
+    
+
+start_thread:
+    mov ax,1000
+    WaitMilliSec
+;
+    mov dx,cs
+    mov ds,dx
+    mov es,dx
+    mov di,OFFSET test_thread_name
+    mov si,OFFSET test_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+;
+    mov di,OFFSET log_text
+    LockLog
+    LogMemory
+    UnlockLog
+    jmp start_thread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           USB CAN rec thread
 ;
 ;       DESCRIPTION:    USB can rec thread
@@ -1599,6 +1639,17 @@ AddDevice Proc near
     mov ax,2
     mov cx,stack0_size
     CreateThread
+
+    mov dx,cs
+    mov ds,dx
+    mov es,dx
+    mov di,OFFSET start_thread_name
+    mov si,OFFSET start_thread
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
+
+
 ;
     mov di,OFFSET usbcan_rec_thread_name
     mov si,OFFSET usbcan_rec_thread

@@ -49,6 +49,7 @@ _TEXT    SEGMENT byte public 'CODE'
     assume cs:_TEXT
 
     extrn IdToHandle:near
+    extrn IndexToHandle:near
     extrn MoveThread:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -245,7 +246,7 @@ get_thread_state    Proc near
     pushad
 ;    
     movzx eax,ax
-    call IdToHandle
+    call IndexToHandle
     or eax,eax
     stc
     jz get_state_done
@@ -452,7 +453,7 @@ get_thread_action_state    Proc near
     pushad
 ;    
     movzx eax,ax
-    call IdToHandle
+    call IndexToHandle
     or eax,eax
     stc
     jz get_action_state_done
