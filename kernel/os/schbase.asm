@@ -56,6 +56,26 @@ _TEXT    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetThreadCount
+;
+;           DESCRIPTION:    Get thread count
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extrn GetActiveThreads:near
+
+get_thread_count_name DB 'Get Thread Count',0
+
+get_thread_count    Proc far
+    call GetActiveThreads
+    ret
+get_thread_count    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreatePid
 ;
 ;           DESCRIPTION:    Create new PID for thread
@@ -924,6 +944,12 @@ init_state_hooks:
     mov dx,virt_es_in
     mov ax,get_thread_action_state_nr
     RegisterUserGate
+;
+    mov esi,OFFSET get_thread_count
+    mov edi,OFFSET get_thread_count_name
+    xor dx,dx
+    mov ax,get_thread_count_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_thread_handle
     mov edi,OFFSET get_thread_handle_name

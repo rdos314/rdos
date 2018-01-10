@@ -829,4 +829,6 @@ sub_unsigned_bignum_nr           = 648
 is_usb_connected_nr              = 649
 start_one_usb_trans_nr           = 650
 
+get_thread_count_nr              = 651
+
 usergate_entries                            = 670

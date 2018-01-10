@@ -1592,6 +1592,16 @@
     parm [eax] [edi] \
     value [eax];
 
+#pragma aux RdosGetThreadCount = \
+    CallGate_get_thread_count  \
+    "jc def" \
+    "movzx eax,ax" \
+    "jmp done" \
+    "def: " \
+    "mov eax,256" \
+    "done: " \
+    value [eax];
+
 #pragma aux RdosGetThreadState = \
     CallGate_get_thread_state  \
     CarryToBool \

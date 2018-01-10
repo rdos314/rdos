@@ -1337,6 +1337,12 @@ SetThreadAction     MACRO
 	UserGate set_thread_action_nr
 						ENDM
 
+
+; IN  AX           	Thread count
+GetThreadCount     MACRO
+	UserGate get_thread_count_nr
+						ENDM
+
 ; IN  ES:(E)DI   	State buffer
 ; IN  AX           	Thread #
 GetThreadState     MACRO

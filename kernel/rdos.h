@@ -495,6 +495,7 @@ int RDOSAPI RdosGetCrashCoreInfo(int Core, char *CrashBuf);
 
 void RDOSAPI RdosSetThreadAction(const char *ActionStr);
 
+int RDOSAPI RdosGetThreadCount();
 int RDOSAPI RdosGetThreadState(int ThreadNr, ThreadState *State);
 int RDOSAPI RdosGetThreadActionState(int ThreadNr, ThreadActionState *State);
 int RDOSAPI RdosSuspendThread(int Thread);
