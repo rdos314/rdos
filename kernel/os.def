@@ -729,4 +729,6 @@ log_hex_dword_nr            = 628
 log_small_mem_nr            = 629
 log_big_mem_nr              = 630
 
+create_pid_nr               = 631
+
 osgate_entries              = 650

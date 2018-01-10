@@ -138,8 +138,6 @@ list_lock           DW ?
 sys_lsb_tics_base   DD ?
 sys_msb_tics_base   DD ?
 
-next_pid            DW ?
-
 futex_section       section_typ <>
 
 patch_sel           DW ?
@@ -7770,16 +7768,8 @@ init_thread_block       PROC near
 ;
     mov es:p_sleep_sel,0
     mov es:p_sleep_offset,0
-    push ds
-    mov ax,SEG data
-    mov ds,ax
-    cli
-    mov ax,ds:next_pid
+    CreatePid
     mov es:p_id,ax
-    inc ax
-    mov ds:next_pid,ax
-    sti
-    pop ds
     ret
 init_thread_block       ENDP
 
@@ -9355,12 +9345,7 @@ first_move_done:
     push ds
     mov ax,SEG data
     mov ds,ax
-    cli
-    mov ax,ds:next_pid
-    mov es:p_id,ax
-    inc ax
-    mov ds:next_pid,ax
-    sti
+    xor ax,ax
     pop ds  
     ret
 create_first_thread       ENDP
@@ -9818,7 +9803,6 @@ init       PROC far
     mov ds:term_thread_list,0
     mov ds:term_proc_list,0
     mov ds:list_lock,0
-    mov ds:next_pid,0
 ;
     InitSection ds:futex_section
     mov ds:timer_spinlock,0

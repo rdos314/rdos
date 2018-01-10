@@ -1070,6 +1070,12 @@ AddThreadInt    MACRO
     OsGate add_thread_int_nr
                     ENDM
 
+;  OUT AX   PID
+CreatePid    MACRO
+    OsGate create_pid_nr
+                    ENDM
+
+
 ;;;;;;;;;;; Signal & waits ;;;;;;;;;;;;;;;;
 
 ClearSignal     MACRO

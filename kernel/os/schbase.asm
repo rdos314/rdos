@@ -39,6 +39,7 @@ INCLUDE proc.inc
 
 data    SEGMENT byte public 'DATA'
 
+next_pid            DW ?
 state_hooks         DW ?
 state_arr           DD 2*32 DUP(?)
 
@@ -51,6 +52,26 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn IdToHandle:near
     extrn IndexToHandle:near
     extrn MoveThread:near
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreatePid
+;
+;           DESCRIPTION:    Create new PID for thread
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extrn GetNextPid:near
+
+create_pid_name DB 'Create PID',0
+
+create_pid    Proc far
+    call GetNextPid
+    ret
+create_pid    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -851,6 +872,8 @@ InitScheduler_    Proc near
     mov bx,SEG data
     mov es,ebx
     mov es:state_hooks,0
+    mov es:next_pid,1
+;
     mov ecx,32
     mov edi,OFFSET state_arr
     
@@ -880,6 +903,12 @@ init_state_hooks:
     mov edi,OFFSET thread_to_sel_name
     xor cl,cl
     mov ax,thread_to_sel_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_pid
+    mov edi,OFFSET create_pid_name
+    xor cl,cl
+    mov ax,create_pid_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET get_thread_state16

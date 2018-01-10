@@ -76,6 +76,7 @@ int ActiveProcessors = 1;
 int ProcessorCount = 0;
 int CurrLoad = 0;
 int MaxLoad = 0;
+int NextPid = 1;
 
 struct TThread ThreadArr[MAX_THREADS];
 struct TCore CoreArr[MAX_PROCESSOR_COUNT];
@@ -233,6 +234,46 @@ int IndexToHandle(int Index)
     RdosLeaveKernelSection(&ThreadSection);    
 
     return handle;
+}
+    
+/*##########################################################################
+#
+#   Name       : GetNextPid
+#
+#   Descr      : Convert from ID to handle
+#
+##########################################################################*/
+#pragma aux GetNextPid "*" rdosdev parm routine
+int GetNextPid()
+{
+    int i;
+    int pid;
+    int ok;
+
+    RdosEnterKernelSection(&ThreadSection);    
+
+    ok = FALSE;
+
+    while (!ok)
+    {
+        pid = NextPid;
+        NextPid++;
+
+        ok = TRUE;
+
+        for (i = 0; i < MAX_THREADS; i++)
+        {
+            if (ThreadArr[i].Valid && ThreadArr[i].ID == pid) 
+            {
+                ok = FALSE;
+                break;
+            }
+        }
+    }
+
+    RdosLeaveKernelSection(&ThreadSection);    
+
+    return pid;
 }
     
 /*##########################################################################

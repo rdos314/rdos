@@ -1219,13 +1219,13 @@ log_text DB 'Test', 0
 test_thread_name  DB 'Test', 0
 
 test_thread:
-    mov ax,1000
+    mov ax,100
     WaitMilliSec
     TerminateThread
     
 
 start_thread:
-    mov ax,1000
+    mov ax,25
     WaitMilliSec
 ;
     mov dx,cs
