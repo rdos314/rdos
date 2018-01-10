@@ -1724,6 +1724,7 @@ usb_detach  Proc far
     mov ds:cd_controller,-1
     mov ds:cd_device,0
     mov ds:cd_active,0
+    mov ds:can_restart,1
 ;
     mov bx,ds:cd_super_thread
     Signal
