@@ -2875,6 +2875,137 @@ set_usb_interface    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CleanupHandle
+;
+;           DESCRIPTION:    Clean up USB handle
+;
+;           PARAMETERS:     DS:EBX          Handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CleanupHandle	Proc near
+    push es
+    push eax
+    push esi
+;
+    push ds
+    mov ds,ds:[ebx].up_port_sel
+    EnterSection ds:usb_sync_section
+    pop ds
+;
+    mov es,ds:[ebx].up_port_sel
+    mov esi,es:usb_handle_list    
+    cmp ebx,esi
+    jne chListLoop
+;
+    mov esi,ds:[esi].up_handle_list
+    mov es:usb_handle_list,esi
+    jmp chListDone
+
+chListLoop:
+    cmp ebx,ds:[esi].up_handle_list
+    jne chListNext
+;
+    mov eax,ds:[ebx].up_handle_list
+    mov ds:[esi].up_handle_list,eax
+    jmp chListDone
+
+chListNext:
+    mov esi,ds:[esi].up_handle_list
+    or esi,esi
+    jnz chListLoop
+
+chListDone:    
+    call CleanupData
+;
+    push ds
+    mov ds,ds:[ebx].up_port_sel
+    LeaveSection ds:usb_sync_section
+    pop ds
+;
+    pop esi
+    pop eax
+    pop es
+    ret
+CleanupHandle	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LockAndGetPipe
+;
+;           DESCRIPTION:    Lock and get pipe & function selector from handle
+;
+;           PARAMETERS:     DS:EBX          Handle data
+;
+;           RETURNS:        NC	
+;				DS          Function sel
+;                           	FS	    Pipe sel
+;                           BP              Port sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockAndGetPipe	Proc near
+    push ax
+    push dx
+    push si
+    push di
+;
+    mov bp,ds:[ebx].up_port_sel
+    mov di,ds:[ebx].up_func_sel
+    mov dl,ds:[ebx].up_pipe
+    mov ds,bp
+    EnterSection ds:usb_sync_section
+    mov ax,ds:usb_function_sel
+    or ax,ax
+    jz lgpFail
+;
+    mov ds,ax
+    and dl,8Fh
+    test dl,80h
+    jz lgpOut    
+
+lgpIn:
+    movzx si,dl
+    and si,0Fh
+    add si,si
+    mov ax,ds:[si].usbf_in_endpoint_arr
+    or ax,ax
+    jnz lgpOk
+;
+    jmp lgpFail
+
+lgpOut:
+    movzx si,dl
+    add si,si
+    mov ax,ds:[si].usbf_out_endpoint_arr
+    or ax,ax
+    jnz lgpOk    
+
+lgpFail:
+    xor ax,ax
+    mov ds,ax
+    mov fs,ax
+    stc
+    jmp lgpDone
+
+lgpOk:
+    mov ds,di
+    mov fs,ax
+    clc
+
+lgpDone:
+    pop di
+    pop si
+    pop dx
+    pop ax
+    ret
+LockAndGetPipe	Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           OpenUsbPipe
@@ -3011,137 +3142,6 @@ oupDone:
     pop ds
     retf32
 open_usb_pipe    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           CleanupHandle
-;
-;           DESCRIPTION:    Clean up USB handle
-;
-;           PARAMETERS:     DS:EBX          Handle data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CleanupHandle	Proc near
-    push es
-    push eax
-    push esi
-;
-    push ds
-    mov ds,ds:[ebx].up_port_sel
-    EnterSection ds:usb_sync_section
-    pop ds
-;
-    mov es,ds:[ebx].up_port_sel
-    mov esi,es:usb_handle_list    
-    cmp ebx,esi
-    jne chListLoop
-;
-    mov esi,ds:[esi].up_handle_list
-    mov es:usb_handle_list,esi
-    jmp chListDone
-
-chListLoop:
-    cmp ebx,ds:[esi].up_handle_list
-    jne chListNext
-;
-    mov eax,ds:[ebx].up_handle_list
-    mov ds:[esi].up_handle_list,eax
-    jmp chListDone
-
-chListNext:
-    mov esi,ds:[esi].up_handle_list
-    or esi,esi
-    jnz chListLoop
-
-chListDone:    
-    call CleanupData
-;
-    push ds
-    mov ds,ds:[ebx].up_port_sel
-    LeaveSection ds:usb_sync_section
-    pop ds
-;
-    pop esi
-    pop eax
-    pop es
-    ret
-CleanupHandle	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           LockAndGetPipe
-;
-;           DESCRIPTION:    Lock and get pipe & function selector from handle
-;
-;           PARAMETERS:     DS:EBX          Handle data
-;
-;           RETURNS:        NC	
-;				DS          Function sel
-;                           	FS	    Pipe sel
-;                           BP              Port sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockAndGetPipe	Proc near
-    push ax
-    push dx
-    push si
-    push di
-;
-    mov bp,ds:[ebx].up_port_sel
-    mov di,ds:[ebx].up_func_sel
-    mov dl,ds:[ebx].up_pipe
-    mov ds,bp
-    EnterSection ds:usb_sync_section
-    mov ax,ds:usb_function_sel
-    or ax,ax
-    jz lgpFail
-;
-    mov ds,ax
-    and dl,8Fh
-    test dl,80h
-    jz lgpOut    
-
-lgpIn:
-    movzx si,dl
-    and si,0Fh
-    add si,si
-    mov ax,ds:[si].usbf_in_endpoint_arr
-    or ax,ax
-    jnz lgpOk
-;
-    jmp lgpFail
-
-lgpOut:
-    movzx si,dl
-    add si,si
-    mov ax,ds:[si].usbf_out_endpoint_arr
-    or ax,ax
-    jnz lgpOk    
-
-lgpFail:
-    xor ax,ax
-    mov ds,ax
-    mov fs,ax
-    stc
-    jmp lgpDone
-
-lgpOk:
-    mov ds,di
-    mov fs,ax
-    clc
-
-lgpDone:
-    pop di
-    pop si
-    pop dx
-    pop ax
-    ret
-LockAndGetPipe	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3510,23 +3510,35 @@ req_usb_data    Proc far
     push fs
     push ax
     push ebx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc rudDone
 ;
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    stc
+    jnz rudDone
+;
     push es
     push edi
 ;
     call HandleReadData    
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
+    call LockAndGetPipe
+    jc rudLeave
+;
     call fword ptr ds:add_in_proc
+
+rudLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
 ;
     pop edi
     pop es    
 
 rudDone:
+    pop bp
     pop ebx
     pop ax
     pop fs
