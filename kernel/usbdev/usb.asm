@@ -3917,16 +3917,28 @@ write_usb_status    Proc far
     push fs
     push ebx
     push cx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc wusDone
 ;
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    stc
+    jnz wusDone
+;
+    call LockAndGetPipe
+    jc wusLeave
+;
     call fword ptr ds:add_status_out_proc
 
+wusLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+
 wusDone:
+    pop bp
     pop cx
     pop ebx
     pop fs
