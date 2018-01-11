@@ -67,16 +67,14 @@ pipe_copy_struc     ENDS
 pipe_handle_struc       STRUC
 
 up_base         handle_header <>
+up_handle_list  DD ?
 up_func_sel     DW ?
 up_pipe_sel     DW ?
 up_pipe         DB ?
 up_copy         DB ?
 up_list         DW ?
-
-up_handle_list  DD ?
 up_port_sel     DW ?
 up_deleted      DB ?
-up_pipe_nr      DB ?
 
 pipe_handle_struc       ENDS
 
@@ -1565,13 +1563,20 @@ create_usb_req  Proc far
     push fs
     push ax
     push cx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc curDone
 ;       
-    mov fs,ds:[ebx].up_pipe_sel
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    stc
+    jnz curDone
+;
     mov ax,ds:[ebx].up_func_sel
+    call LockAndGetPipe
+    jc curLeave
 ;       
     mov cx,SIZE req_handle_struc
     AllocateHandle
@@ -1584,7 +1589,12 @@ create_usb_req  Proc far
     mov bx,[ebx].hh_handle
     clc
 
+curLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+
 curDone:
+    pop bp
     pop cx
     pop ax
     pop fs
@@ -3192,18 +3202,29 @@ reset_usb_pipe     Proc far
     push fs
     push ax
     push ebx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc rupDone
 ;
     call CleanupData
-;    
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    stc
+    jnz rupDone
+;
+    call LockAndGetPipe
+    jc rupLeave
+;
     call fword ptr ds:reset_pipe_proc
 
+rupLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+
 rupDone:
+    pop bp
     pop ebx
     pop ax
     pop fs
@@ -4229,78 +4250,6 @@ iupsDone:
     retf32
 is_usb_pipe_stalled    Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ClearUsbPipeStalled
-;
-;           DESCRIPTION:    Clear stalled pipe
-;
-;           PARAMETERS:         BX          Pipe handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-clear_usb_pipe_stalled_name   DB 'Clear Usb Pipe Stalled',0
-
-clear_usb_pipe_stalled    Proc far
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov ax,USB_PIPE_HANDLE
-    DerefHandle
-    jc cupsDone
-;
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
-;
-    push fs
-    movzx dx,fs:usbp_endpoint
-    mov fs,fs:usbp_function_sel
-    mov si,fs:usbf_in_endpoint_arr
-    or si,si
-    stc
-    jz cupsPopDone
-;
-    mov fs,si    
-    mov eax,8
-    call AllocateBufSel
-    xor edi,edi
-    mov es:usd_type,2
-    mov es:usd_req,CLEAR_FEATURE
-    mov es:usd_value,0
-    mov es:usd_index,dx
-    mov es:usd_len,0
-;    
-    mov cx,8
-    call fword ptr ds:add_setup_proc
-    call fword ptr ds:add_status_in_proc
-    call fword ptr ds:issue_transfer_proc
-    call fword ptr ds:wait_for_completion_proc
-;
-    pushf
-    FreeMem
-    popf
-    jc cupsPopDone
-;    
-    pop fs
-    call fword ptr ds:clear_stalled_proc
-    jmp cupsDone
-
-cupsPopDone:
-    pop fs
-
-cupsDone:
-    popad
-    pop fs
-    pop es
-    pop ds
-    retf32
-clear_usb_pipe_stalled    Endp
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -4692,12 +4641,6 @@ init    Proc far
     mov edi,OFFSET is_usb_pipe_stalled_name
     xor dx,dx
     mov ax,is_usb_pipe_stalled_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET clear_usb_pipe_stalled
-    mov edi,OFFSET clear_usb_pipe_stalled_name
-    xor dx,dx
-    mov ax,clear_usb_pipe_stalled_nr
     RegisterBimodalUserGate
     clc
     ret
