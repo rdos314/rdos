@@ -4130,16 +4130,28 @@ start_one_usb_trans    Proc far
     push ds
     push fs
     push ebx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc soutDone
 ;
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    stc
+    jnz soutDone
+;
+    call LockAndGetPipe
+    jc soutLeave
+;
     call fword ptr ds:issue_one_proc
 
+soutLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+
 soutDone:
+    pop bp
     pop ebx
     pop fs
     pop ds
