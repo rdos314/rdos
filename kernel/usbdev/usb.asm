@@ -3988,16 +3988,28 @@ is_usb_trans_done       Proc far
     push ds
     push fs
     push ebx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc iutdDone
 ;
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    stc
+    jnz iutdDone
+;
+    call LockAndGetPipe
+    jc iutdLeave
+;
     call fword ptr ds:is_transfer_done_proc
 
+iutdLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+
 iutdDone:
+    pop bp
     pop ebx
     pop fs
     pop ds
