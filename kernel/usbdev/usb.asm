@@ -428,7 +428,7 @@ init_usb_device Proc far
     mov ax,ds
     mov es,ax
     mov cx,MAX_USB_HUB_PORTS
-    mov di,OFFSET usb_port_sel_arr
+    mov di,OFFSET usb_port_arr
     xor ax,ax
     rep stosw
 ;    
@@ -831,7 +831,7 @@ is_valid_usb_pipe_sel    Proc far
     push si
 ;    
     mov cx,MAX_USB_HUB_PORTS
-    mov si,OFFSET usb_port_sel_arr
+    mov si,OFFSET usb_port_arr
 
 ivupFunctionLoop:
     push cx
@@ -839,6 +839,11 @@ ivupFunctionLoop:
     or cx,cx
     jz ivupFunctionNext
 ;    
+    mov es,cx
+    mov cx,es:usb_function_sel
+    or cx,cx
+    jz ivupFunctionNext
+;
     mov es,cx
     mov bx,OFFSET usbf_in_endpoint_arr
     mov cx,16
@@ -1166,6 +1171,48 @@ unlock_usb       Proc far
     retf32
 unlock_usb    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddUsbFunction
+;
+;       Description:    Add USB function
+;
+;       Parameters:     DS      USB device selector
+;                       ES      USB function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddUsbFunction       Proc near
+    push fs
+    push ax
+    push bx
+;
+    movzx bx,es:usbf_port
+    add bx,bx
+    mov ax,ds:[bx].usb_port_arr
+    or ax,ax
+    jnz aufAdd
+;    
+    push es
+    mov eax,SIZE usb_port_struc
+    AllocateSmallGlobalMem
+    mov es:usb_function_sel,0
+    mov es:usb_port,bl
+    InitSection es:usb_sync_section
+    mov ax,es
+    pop es
+    mov ds:[bx].usb_port_arr,ax
+
+aufAdd:
+    mov fs,ax
+    mov fs:usb_function_sel,es
+;
+    pop bx
+    pop ax
+    pop fs
+    ret
+AddUsbFunction	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1215,9 +1262,7 @@ nuaSlot:
     add di,OFFSET usb_addr_arr
     mov ds:[di],es
 ;
-    movzx bx,es:usbf_port
-    add bx,bx
-    mov ds:[bx].usb_port_sel_arr,es
+    call AddUsbFunction
 ;
     push ax
     mov cx,MAX_USB_HUB_PORTS
@@ -1366,13 +1411,19 @@ detach_text DB 'Detach', 0
 
 notify_usb_detach       Proc far
     push es
+    push fs
     pushad
 ;
 
     movzx bx,al
     add bx,bx
+    mov ax,ds:[bx].usb_port_arr
+    or ax,ax
+    jz nudDone
+;
+    mov fs,ax
     xor ax,ax
-    xchg ax,ds:[bx].usb_port_sel_arr
+    xchg ax,fs:usb_function_sel
     or ax,ax
     jz nudDone
 ; 
@@ -1384,6 +1435,7 @@ notify_usb_detach       Proc far
 
 nudDone:    
     popad
+    pop fs
     pop es
     retf32
 notify_usb_detach   Endp

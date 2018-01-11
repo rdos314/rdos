@@ -3188,7 +3188,12 @@ UpdatePort  Proc near
     test al,2
     jz upNoReset
 ;
-    mov bx,es:[edi].usb_port_sel_arr
+    mov bx,es:[edi].usb_port_arr
+    or bx,bx
+    jz upNoReset
+;
+    mov fs,bx
+    mov bx,fs:usb_function_sel
     or bx,bx
     jz upNoReset
 ;    
@@ -3237,10 +3242,16 @@ upAttach:
     mov ax,es
     mov ds,ax
 ;
-    mov bx,ds:[edi].usb_port_sel_arr
+    mov bx,ds:[edi].usb_port_arr
+    or bx,bx
+    jz upCheckAttach
+;
+    mov fs,bx
+    mov bx,fs:usb_function_sel
     or bx,bx
     jnz upCheckTimeout
-;
+
+upCheckAttach:
     mov bx,ds:[edi].usb_attach_thread_arr
     or bx,ds:[edi].usb_detach_thread_arr
     or bx,ds:[edi].usb_reset_thread_arr
@@ -3271,7 +3282,12 @@ upDetach:
     mov ax,es
     mov ds,ax
 ;
-    mov bx,ds:[edi].usb_port_sel_arr
+    mov bx,ds:[edi].usb_port_arr
+    or bx,bx
+    jz upCheckTimeout
+;
+    mov fs,bx
+    mov bx,fs:usb_function_sel
     or bx,bx
     jz upCheckTimeout
 ;    

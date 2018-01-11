@@ -3035,7 +3035,7 @@ atWaitNotify:
     and al,NOT 4
     mov es:[2*edi].HcPortSc,eax
 ;
-    mov ds:[edi].usb_port_sel_arr,0
+    NotifyUsbDetach
     jmp atDone
 
 atUnlock:
@@ -3166,7 +3166,7 @@ rtWaitNotify:
     and al,NOT 4
     mov es:[2*edi].HcPortSc,eax
 ;
-    mov ds:[edi].usb_port_sel_arr,0
+    NotifyUsbDetach
     jmp rtDone
 
 rtUnlock:
@@ -3214,7 +3214,12 @@ UpdatePort   Proc near
     test al,1
     jz upNoReset
 ;
-    mov bx,ds:[edi].usb_port_sel_arr
+    mov bx,ds:[edi].usb_port_arr
+    or bx,bx
+    jz upNoReset
+;
+    mov fs,bx
+    mov bx,fs:usb_function_sel
     or bx,bx
     jz upNoReset
 ;    
@@ -3247,10 +3252,15 @@ upNoReset:
     jz upDetach
     
 upAttach:
-    mov bx,ds:[edi].usb_port_sel_arr
+    mov bx,ds:[edi].usb_port_arr
     or bx,bx
-    jnz upCheckTimeout
+    jz upCheckAttach
 ;
+    mov fs,bx
+    mov bx,fs:usb_function_sel
+    jnz upCheckTimeout
+
+upCheckAttach:
     mov bx,ds:[edi].usb_attach_thread_arr
     or bx,ds:[edi].usb_detach_thread_arr
     or bx,ds:[edi].usb_reset_thread_arr
@@ -3272,7 +3282,12 @@ upAttach:
     jmp upDone
 
 upDetach:
-    mov bx,ds:[edi].usb_port_sel_arr
+    mov bx,ds:[edi].usb_port_arr
+    or bx,bx
+    jz upCheckTimeout
+;
+    mov fs,bx
+    mov bx,fs:usb_function_sel
     or bx,bx
     jz upCheckTimeout
 ;    
