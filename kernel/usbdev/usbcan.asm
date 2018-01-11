@@ -1438,10 +1438,10 @@ usuRestartOk:
 
 usuEnd:
     mov bx,ds:cd_in_pipe
-    DeleteUsbPipe
+    CloseUsbPipe
 ;
     mov bx,ds:cd_out_pipe
-    DeleteUsbPipe
+    CloseUsbPipe
 
 usuWaitDead:
     mov ax,25

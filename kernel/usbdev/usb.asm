@@ -3015,6 +3015,63 @@ open_usb_pipe    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           CleanupHandle
+;
+;           DESCRIPTION:    Clean up USB handle
+;
+;           PARAMETERS:     DS:EBX          Handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CleanupHandle	Proc near
+    push es
+    push eax
+    push esi
+;
+    push ds
+    mov ds,ds:[ebx].up_port_sel
+    EnterSection ds:usb_sync_section
+    pop ds
+;
+    mov es,ds:[ebx].up_port_sel
+    mov esi,es:usb_handle_list    
+    cmp ebx,esi
+    jne chListLoop
+;
+    mov esi,ds:[esi].up_handle_list
+    mov es:usb_handle_list,esi
+    jmp chListDone
+
+chListLoop:
+    cmp ebx,ds:[esi].up_handle_list
+    jne chListNext
+;
+    mov eax,ds:[ebx].up_handle_list
+    mov ds:[esi].up_handle_list,eax
+    jmp chListDone
+
+chListNext:
+    mov esi,ds:[esi].up_handle_list
+    or esi,esi
+    jnz chListLoop
+
+chListDone:    
+    call CleanupData
+;
+    push ds
+    mov ds,ds:[ebx].up_port_sel
+    LeaveSection ds:usb_sync_section
+    pop ds
+;
+    pop esi
+    pop eax
+    pop es
+    ret
+CleanupHandle	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           CloseUsbPipe
 ;
 ;           DESCRIPTION:    Close a USB pipe handle
@@ -3027,139 +3084,22 @@ close_usb_pipe_name     DB 'Close USB Pipe',0
 
 close_usb_pipe  Proc far
     push ds
-    push es
-    push fs
-    push ax
     push ebx
-    push dx
-    push esi
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc cupDone
 ;
-    push ds
-    mov ds,ds:[ebx].up_port_sel
-    EnterSection ds:usb_sync_section
-    pop ds
-;
-    mov es,ds:[ebx].up_port_sel
-    mov esi,es:usb_handle_list    
-    cmp ebx,esi
-    jne cupListLoop
-;
-    mov esi,ds:[esi].up_handle_list
-    mov es:usb_handle_list,esi
-    jmp cupListDone
-
-cupListLoop:
-    cmp ebx,ds:[esi].up_handle_list
-    jne cupListNext
-;
-    mov eax,ds:[ebx].up_handle_list
-    mov ds:[esi].up_handle_list,eax
-    jmp cupListDone
-
-cupListNext:
-    mov esi,ds:[esi].up_handle_list
-    or esi,esi
-    jnz cupListLoop
-
-cupListDone:    
-    call CleanupData
-;
-    push ds
-    mov ds,ds:[ebx].up_port_sel
-    LeaveSection ds:usb_sync_section
-    pop ds
-;
+    int 3
+    call CleanupHandle
     FreeHandle
     clc
 
 cupDone:
-    pop esi
-    pop dx
     pop ebx
-    pop ax
-    pop fs
-    pop es
     pop ds
     retf32
 close_usb_pipe  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           DeleteUsbPipe
-;
-;           DESCRIPTION:    Delete an USB pipe
-;
-;           PARAMETERS:         BX          Pipe handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-delete_usb_pipe_name     DB 'Deleted USB Pipe',0
-
-delete_usb_pipe  Proc far
-    push ds
-    push es
-    push fs
-    push ax
-    push ebx
-    push dx
-;
-    mov ax,USB_PIPE_HANDLE
-    DerefHandle
-    jc dupDone
-;
-    call CleanupData
-;    
-    push ds
-    push ebx
-    mov dl,ds:[ebx].up_pipe
-    mov fs,ds:[ebx].up_pipe_sel
-    mov fs:usbp_usage,0
-    mov ds,ds:[ebx].up_func_sel
-;       
-    mov ax,fs:usbp_device_sel
-    or ax,ax
-    jz dupClose
-;
-    mov es,ax
-;
-    movzx bx,fs:usbp_endpoint
-    and bx,0Fh
-    add bx,bx    
-;
-    test dl,80h
-    jz dupOut
-
-dupIn:   
-    mov es:[bx].usbf_in_endpoint_arr,0
-    jmp dupClose
-
-dupOut:
-    mov es:[bx].usbf_out_endpoint_arr,0
-
-dupClose:    
-    call ClosePipe
-
-dupCloseDone:
-    pop ebx
-    pop ds
-    FreeHandle
-    clc
-
-dupDone:
-    pop dx
-    pop ebx
-    pop ax
-    pop fs
-    pop es
-    pop ds
-    retf32
-delete_usb_pipe  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3209,39 +3149,21 @@ reset_usb_pipe     Endp
 
 delete_handle   Proc far
     push ds
-    push fs
-    push ax
     push ebx
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc delete_handle_done
 ;
-    push ds
-    push ebx
-;
-    call CleanupData    
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
-    sub fs:usbp_usage,1
-    jnz delete_handle_pipe_ok
-;       
-    call ClosePipe
-
-delete_handle_pipe_ok:
-    pop ebx
-    pop ds
+    call CleanupHandle
     FreeHandle
     clc
 
 delete_handle_done:
     pop ebx
-    pop ax
-    pop fs
     pop ds
     retf32
 delete_handle   Endp
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4422,12 +4344,6 @@ init    Proc far
     mov edi,OFFSET write_usb_data_no_copy_name
     xor cl,cl
     mov ax,write_usb_data_no_copy_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET delete_usb_pipe
-    mov edi,OFFSET delete_usb_pipe_name
-    xor cl,cl
-    mov ax,delete_usb_pipe_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET get_usb_device16

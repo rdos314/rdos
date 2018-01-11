@@ -3508,11 +3508,6 @@ IsValidUsbPipeSel   MACRO
                     ENDM
 
 ; IN  BX    Pipe handle
-DeleteUsbPipe      MACRO
-    OsGate delete_usb_pipe_nr
-                        ENDM
-
-; IN  BX    Pipe handle
 ; OUT BX    Req handle
 CreateUsbReq      MACRO
     OsGate create_usb_req_nr

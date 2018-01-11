@@ -713,7 +713,6 @@ notify_can_offline_nr       = 615
 
 req_usb_data_no_copy_nr     = 616
 write_usb_data_no_copy_nr   = 617
-delete_usb_pipe_nr          = 618
 
 notify_can_modules_up_nr    = 619
 notify_can_online_nr        = 620
