@@ -4072,17 +4072,29 @@ was_usb_trans_ok    Proc far
     push ds
     push fs
     push ebx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc wutoDone
 ;
     call CleanupData
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    stc
+    jnz wutoDone
+;
+    call LockAndGetPipe
+    jc wutoLeave
+;
     call fword ptr ds:was_transfer_ok_proc
 
+wutoLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+
 wutoDone:
+    pop bp
     pop ebx
     pop fs
     pop ds
