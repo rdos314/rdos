@@ -3808,16 +3808,28 @@ write_usb_data_no_copy    Proc far
     push ax
     push ebx
     push cx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc wudncDone
 ;
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    stc
+    jnz wudncDone
+;
+    call LockAndGetPipe
+    jc wudncLeave
+;
     call fword ptr ds:add_out_proc
 
+wudncLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+
 wudncDone:
+    pop bp
     pop cx
     pop ebx
     pop ax
@@ -3864,7 +3876,6 @@ req_usb_status  Proc far
 rusLeave:
     mov ds,bp
     LeaveSection ds:usb_sync_section
-;
 
 rusDone:
     pop bp
@@ -3929,16 +3940,28 @@ start_usb_trans Proc far
     push ds
     push fs
     push ebx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc sutDone
 ;
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    stc
+    jnz sutDone
+;
+    call LockAndGetPipe
+    jc sutLeave
+;
     call fword ptr ds:issue_transfer_proc
 
+sutLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+
 sutDone:
+    pop bp
     pop ebx
     pop fs
     pop ds
