@@ -2898,8 +2898,9 @@ open_usb_pipe    Proc far
     push ax
     push cx
     push dx
-    push si
-    push di
+    push esi
+    push edi
+    push ebp
 ;
     mov si,SEG data
     mov ds,si
@@ -2923,29 +2924,38 @@ open_usb_pipe    Proc far
     or si,si
     jz oupFail
 ;
+    mov fs,si
+    movzx bx,fs:usbf_port
+    mov bx,es:[bx].usb_port_arr
+    or bx,bx
+    jz oupFail
+;
+    mov ds,bx
+    EnterSection ds:usb_sync_section
+;
     and dl,8Fh
     test dl,80h
     jz oupOut    
 
 oupIn:
-    mov ds,si
     movzx si,dl
     and si,0Fh
     add si,si
-    mov di,ds:[si].usbf_in_endpoint_arr
+    mov di,fs:[si].usbf_in_endpoint_arr
     or di,di
     jnz oupCreateHandle    
 ;
+    LeaveSection ds:usb_sync_section
     jmp oupFail
 
 oupOut:
-    mov ds,si
     movzx si,dl
     add si,si
-    mov di,ds:[si].usbf_out_endpoint_arr
+    mov di,fs:[si].usbf_out_endpoint_arr
     or di,di
     jnz oupCreateHandle    
 ;
+    LeaveSection ds:usb_sync_section
     jmp oupFail
 
 oupCreateHandle:    
@@ -2963,6 +2973,9 @@ oupCreateHandle:
     mov dh,1
 
 oupAlloc:
+    mov esi,ds:usb_handle_list
+    mov bp,ds
+    push ds
     mov cx,SIZE pipe_handle_struc
     AllocateHandle
     mov [ebx].up_func_sel,es
@@ -2970,11 +2983,15 @@ oupAlloc:
     mov [ebx].up_pipe,dl
     mov [ebx].up_copy,dh
     mov [ebx].up_list,0
+    mov [ebx].up_handle_list,esi
+    mov [ebx].up_port_sel,bp
+    mov [ebx].up_deleted,0
     mov [ebx].hh_sign,USB_PIPE_HANDLE
+    mov esi,ebx
     mov bx,[ebx].hh_handle
-;
-    mov fs,di
-    inc fs:usbp_usage
+    pop ds
+    mov ds:usb_handle_list,esi
+    LeaveSection ds:usb_sync_section
     clc
     jmp oupDone
 
@@ -2982,8 +2999,9 @@ oupFail:
     stc
 
 oupDone:
-    pop di
-    pop si
+    pop ebp
+    pop edi
+    pop esi
     pop dx
     pop cx
     pop ax
@@ -3014,50 +3032,52 @@ close_usb_pipe  Proc far
     push ax
     push ebx
     push dx
+    push esi
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc cupDone
 ;
-    call CleanupData
-;    
     push ds
-    push ebx
-    mov dl,ds:[ebx].up_pipe
-    mov fs,ds:[ebx].up_pipe_sel
-    sub fs:usbp_usage,1
-    jnz cupCloseDone
-;       
-    mov ds,ds:[ebx].up_func_sel
-    mov ax,fs:usbp_device_sel
-    or ax,ax
-    jz cupCloseDone
-;
-    mov es,ax
-    movzx bx,fs:usbp_endpoint
-    and bx,0Fh
-    add bx,bx    
-;
-    test dl,80h
-    jz cupOut
-
-cupIn:   
-    mov es:[bx].usbf_in_endpoint_arr,0
-    jmp cupClose
-
-cupOut:
-    mov es:[bx].usbf_out_endpoint_arr,0
-
-cupClose:    
-    call ClosePipe
-
-cupCloseDone:
-    pop ebx
+    mov ds,ds:[ebx].up_port_sel
+    EnterSection ds:usb_sync_section
     pop ds
+;
+    mov es,ds:[ebx].up_port_sel
+    mov esi,es:usb_handle_list    
+    cmp ebx,esi
+    jne cupListLoop
+;
+    mov esi,ds:[esi].up_handle_list
+    mov es:usb_handle_list,esi
+    jmp cupListDone
+
+cupListLoop:
+    cmp ebx,ds:[esi].up_handle_list
+    jne cupListNext
+;
+    mov eax,ds:[ebx].up_handle_list
+    mov ds:[esi].up_handle_list,eax
+    jmp cupListDone
+
+cupListNext:
+    mov esi,ds:[esi].up_handle_list
+    or esi,esi
+    jnz cupListLoop
+
+cupListDone:    
+    call CleanupData
+;
+    push ds
+    mov ds,ds:[ebx].up_port_sel
+    LeaveSection ds:usb_sync_section
+    pop ds
+;
     FreeHandle
     clc
 
 cupDone:
+    pop esi
     pop dx
     pop ebx
     pop ax
