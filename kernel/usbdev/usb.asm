@@ -2926,6 +2926,7 @@ open_usb_pipe    Proc far
 ;
     mov fs,si
     movzx bx,fs:usbf_port
+    add bx,bx
     mov bx,es:[bx].usb_port_arr
     or bx,bx
     jz oupFail
