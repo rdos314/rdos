@@ -3617,18 +3617,37 @@ get_usb_data_size16     Proc far
     push fs
     push ebx
     push cx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
-    jc gudDone16
+    jc gudFail16
 ;
     call CleanupData
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    jnz gudFail16
+;
+    call LockAndGetPipe
+    jc gudLeave16
+;
     call fword ptr ds:get_data_size_proc
+
+gudLeave16:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+    jc gudFail16
+;
     mov ax,cx
+    clc
+    jmp gudDone16
+
+gudFail16:
+    xor ax,ax
+    stc
 
 gudDone16:
+    pop bp
     pop cx
     pop ebx
     pop fs
@@ -3641,25 +3660,41 @@ get_usb_data_size32     Proc far
     push fs
     push ebx
     push cx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
-    jc gudDone32
+    jc gudFail32
 ;
     call CleanupData
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    jnz gudFail32
+;
+    call LockAndGetPipe
+    jc gudLeave32
+;
     call fword ptr ds:get_data_size_proc
+
+gudLeave32:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+    jc gudFail32
+;
     movzx eax,cx
+    jmp gudDone32
+
+gudFail32:
+    xor eax,eax
 
 gudDone32:
+    pop bp
     pop cx
     pop ebx
     pop fs
     pop ds
     retf32
 get_usb_data_size32     Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
