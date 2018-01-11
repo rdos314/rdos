@@ -3626,16 +3626,28 @@ req_usb_data_no_copy    Proc far
     push fs
     push ax
     push ebx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc rudncDone
 ;
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    stc
+    jnz rudncDone
+;
+    call LockAndGetPipe
+    jc rudncLeave
+;
     call fword ptr ds:add_in_proc
 
+rudncLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+
 rudncDone:
+    pop bp
     pop ebx
     pop ax
     pop fs
