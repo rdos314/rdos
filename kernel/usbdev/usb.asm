@@ -4060,16 +4060,28 @@ is_usb_connected       Proc far
     push ds
     push fs
     push ebx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc iucdDone
 ;
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    stc
+    jnz iucdDone
+;
+    call LockAndGetPipe
+    jc iucdLeave
+;
     call fword ptr ds:is_connected_proc
 
+iucdLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+
 iucdDone:
+    pop bp
     pop ebx
     pop fs
     pop ds
@@ -4189,16 +4201,28 @@ is_usb_pipe_stalled    Proc far
     push ds
     push fs
     push ebx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc iupsDone
 ;
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    stc
+    jnz iupsDone
+;
+    call LockAndGetPipe
+    jc iupsLeave
+;
     call fword ptr ds:is_stalled_proc
 
+iupsLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+
 iupsDone:
+    pop bp
     pop ebx
     pop fs
     pop ds
