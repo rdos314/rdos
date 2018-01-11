@@ -591,7 +591,6 @@ SendOutputReport_   Proc near
     mov ds,es:ho_dev
     mov bx,ds:hid_control_handle
 ;
-    LockUsbPipe
     mov edi,OFFSET ho_req_type
     mov ecx,8
     WriteUsbControl
@@ -611,9 +610,6 @@ SendOutputReport_   Proc near
 ;    
     mov bx,ds:hid_control_handle
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     popad
     pop es
@@ -660,7 +656,6 @@ GetReportDescr_   Proc near
     mov ebp,es
     mov bx,fs:[esi].hid_control_handle
 ;
-    LockUsbPipe
     mov ecx,8
     WriteUsbControl
 ;    
@@ -690,8 +685,6 @@ grdFail:
     xor eax,eax
     
 grdUnlock:    
-    UnlockUsbPipe
-;
     push es
     mov es,ebp
     FreeMem
@@ -735,7 +728,6 @@ SetHidProtocol   Proc near
     xor di,di
     mov bx,fs:hid_control_handle
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
@@ -750,9 +742,6 @@ SetHidProtocol   Proc near
 ;    
     mov bx,fs:hid_control_handle
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     pop edi
     pop edx
@@ -803,7 +792,6 @@ SetIdle_   Proc near
     xor di,di
     mov bx,fs:hid_control_handle
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
@@ -818,9 +806,6 @@ SetIdle_   Proc near
 ;    
     mov bx,fs:hid_control_handle
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     pop edi
     pop edx

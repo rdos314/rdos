@@ -709,7 +709,6 @@ GetRecBuffer   Endp
 
 GetSoftwareVersion   Proc near
     mov bx,ds:cd_control_pipe
-    LockUsbPipe
 ;
     mov cx,8
     mov di,OFFSET cd_setup
@@ -735,9 +734,6 @@ GetSoftwareVersion   Proc near
 ;    
     mov bx,ds:cd_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
     jc gsvDone
 ;
     mov bx,OFFSET cd_data
@@ -770,7 +766,6 @@ GetSoftwareVersion  Endp
 
 GetBufferSize   Proc near
     mov bx,ds:cd_control_pipe
-    LockUsbPipe
 ;
     mov cx,8
     mov di,OFFSET cd_setup
@@ -796,9 +791,6 @@ GetBufferSize   Proc near
 ;    
     mov bx,ds:cd_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
     ret
 GetBufferSize  Endp
 
@@ -813,7 +805,6 @@ GetBufferSize  Endp
 
 PowerUpModules   Proc near
     mov bx,ds:cd_control_pipe
-    LockUsbPipe
 ;
     mov cx,8
     mov di,OFFSET cd_setup
@@ -835,9 +826,6 @@ PowerUpModules   Proc near
 ;    
     mov bx,ds:cd_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
     ret
 PowerUpModules  Endp
 
@@ -852,7 +840,6 @@ PowerUpModules  Endp
 
 PowerDownModules   Proc near
     mov bx,ds:cd_control_pipe
-    LockUsbPipe
 ;
     mov cx,8
     mov di,OFFSET cd_setup
@@ -874,9 +861,6 @@ PowerDownModules   Proc near
 ;    
     mov bx,ds:cd_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
     ret
 PowerDownModules  Endp
 
@@ -891,7 +875,6 @@ PowerDownModules  Endp
 
 StartModules   Proc near
     mov bx,ds:cd_control_pipe
-    LockUsbPipe
 ;
     mov cx,8
     mov di,OFFSET cd_setup
@@ -913,9 +896,6 @@ StartModules   Proc near
 ;    
     mov bx,ds:cd_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
     ret
 StartModules  Endp
 

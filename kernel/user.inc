@@ -3331,16 +3331,6 @@ ResetUsbPipe      MACRO
 						ENDM
 
 ;   IN  BX          Handle
-LockUsbPipe      MACRO
-	UserGate lock_usb_pipe_nr
-						ENDM
-
-;   IN  BX          Handle
-UnlockUsbPipe      MACRO
-	UserGate unlock_usb_pipe_nr
-						ENDM
-
-;   IN  BX          Handle
 ;   IN  CX          Size of data
 ;   IN  ES:(E)DI    Buffer
 WriteUsbControl      MACRO

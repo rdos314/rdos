@@ -379,8 +379,6 @@ write_usb_data_nr           = 328
 req_usb_status_nr           = 329
 write_usb_status_nr         = 330
 write_usb_control_nr        = 331
-lock_usb_pipe_nr            = 333
-unlock_usb_pipe_nr          = 334
 
 get_max_com_port_nr         = 335
 

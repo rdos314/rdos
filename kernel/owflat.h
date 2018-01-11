@@ -3170,14 +3170,6 @@
     CallGate_reset_usb_pipe \
     parm [ebx];
 
-#pragma aux RdosLockUsbPipe = \
-    CallGate_lock_usb_pipe \
-    parm [ebx];
-
-#pragma aux RdosUnlockUsbPipe = \
-    CallGate_unlock_usb_pipe \
-    parm [ebx];
-
 #pragma aux RdosAddWaitForUsbPipe = \
     CallGate_add_wait_for_usb_pipe \
     parm [ebx] [eax] [ecx];

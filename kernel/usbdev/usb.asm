@@ -3163,7 +3163,6 @@ close_usb_pipe  Proc far
     DerefHandle
     jc cupDone
 ;
-    int 3
     call CleanupHandle
     FreeHandle
     clc
@@ -3386,77 +3385,6 @@ add_wait_done:
     pop ds
     retf32
 add_wait_for_pipe       ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           LockUsbPipe
-;
-;           DESCRIPTION:    Lock USB pipe
-;
-;           PARAMETERS:         BX          Pipe handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-lock_usb_pipe_name      DB 'Lock USB Pipe',0
-
-lock_usb_pipe   Proc far
-    push ds
-    push ax
-    push ebx
-;
-    mov ax,USB_PIPE_HANDLE
-    DerefHandle
-    jc lupDone
-;
-    push ds
-    mov ds,ds:[ebx].up_pipe_sel
-    EnterSection ds:usbp_section
-    pop ds
-
-lupDone:
-    pop ebx
-    pop ax
-    pop ds
-    retf32
-lock_usb_pipe   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           UnlockUsbPipe
-;
-;           DESCRIPTION:    Unlock USB pipe
-;
-;           PARAMETERS:         BX          Pipe handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-unlock_usb_pipe_name    DB 'Unlock USB Pipe',0
-
-unlock_usb_pipe   Proc far
-    push ds
-    push ax
-    push ebx
-;
-    mov ax,USB_PIPE_HANDLE
-    DerefHandle
-    jc uupDone
-;       
-    push ds
-    mov ds,ds:[ebx].up_pipe_sel
-    LeaveSection ds:usbp_section
-    pop ds
-
-uupDone:
-    pop ebx
-    pop ax
-    pop ds
-    retf32
-unlock_usb_pipe   Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4581,18 +4509,6 @@ init    Proc far
     mov edi,OFFSET add_wait_for_pipe_name
     xor dx,dx
     mov ax,add_wait_for_usb_pipe_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET lock_usb_pipe
-    mov edi,OFFSET lock_usb_pipe_name
-    xor dx,dx
-    mov ax,lock_usb_pipe_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET unlock_usb_pipe
-    mov edi,OFFSET unlock_usb_pipe_name
-    xor dx,dx
-    mov ax,unlock_usb_pipe_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET write_usb_control16

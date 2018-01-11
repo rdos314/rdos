@@ -561,7 +561,6 @@ reset_sio       PROC near
     mov es:usd_len,0
     xor di,di
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
@@ -576,9 +575,6 @@ reset_sio       PROC near
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     popad
     pop es    
@@ -615,7 +611,6 @@ set_latency_timer       PROC near
     mov es:usd_len,0
     xor di,di
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
@@ -630,9 +625,6 @@ set_latency_timer       PROC near
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     popad
     pop es    
@@ -680,7 +672,6 @@ set_baud_index_ok:
     mov es:usd_len,0
     xor di,di
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
@@ -695,9 +686,6 @@ set_baud_index_ok:
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     popad
     pop es    
@@ -763,7 +751,6 @@ set_data_stop_ok:
     mov es:usd_len,0
     xor di,di
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
@@ -778,9 +765,6 @@ set_data_stop_ok:
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     popad
     pop es    
@@ -1017,7 +1001,6 @@ enable_cts_ftdi PROC near
     mov es:usd_len,0
     xor di,di
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
@@ -1032,9 +1015,6 @@ enable_cts_ftdi PROC near
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     popad
     pop es    
@@ -1076,7 +1056,6 @@ disable_cts_ftdi    PROC near
     mov es:usd_len,0
     xor di,di
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
@@ -1091,9 +1070,6 @@ disable_cts_ftdi    PROC near
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     popad
     pop es    
@@ -1135,7 +1111,6 @@ set_dtr_ftdi    Proc near
     mov es:usd_len,0
     xor di,di
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
@@ -1150,9 +1125,6 @@ set_dtr_ftdi    Proc near
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     popad
     pop es    
@@ -1194,7 +1166,6 @@ reset_dtr_ftdi  Proc near
     mov es:usd_len,0
     xor di,di
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
@@ -1209,9 +1180,6 @@ reset_dtr_ftdi  Proc near
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     popad
     pop es    
@@ -1253,7 +1221,6 @@ set_rts_ftdi    Proc near
     mov es:usd_len,0
     xor di,di
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
@@ -1268,9 +1235,6 @@ set_rts_ftdi    Proc near
 ;
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     popad
     pop es    
@@ -1312,7 +1276,6 @@ reset_rts_ftdi  Proc near
     mov es:usd_len,0
     xor di,di
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
     ReqUsbStatus
@@ -1327,9 +1290,6 @@ reset_rts_ftdi  Proc near
 ;
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     popad
     pop es    
@@ -1372,7 +1332,6 @@ Fish    Proc near
     mov es:usd_len,1
     xor di,di
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
 ;
@@ -1391,9 +1350,6 @@ Fish    Proc near
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     popad
     pop es    
@@ -1430,7 +1386,6 @@ ReadLineState   Proc near
     mov es:usd_len,7
     xor di,di
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
 ;
@@ -1459,10 +1414,6 @@ ReadLineState   Proc near
     clc
     
 rlsDone:    
-    pushf
-    UnlockUsbPipe
-    popf
-;
     popad
     pop es    
     ret
@@ -1547,7 +1498,6 @@ WriteLineState  Proc near
     mov es:usd_len,7
     xor di,di
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
 ;
@@ -1571,9 +1521,6 @@ WriteLineState  Proc near
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     popad
     pop es    
@@ -1613,7 +1560,6 @@ WriteControl    Proc near
     mov es:usd_len,0
     xor di,di
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
 ;    
@@ -1629,9 +1575,6 @@ WriteControl    Proc near
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     popad
     pop es    
@@ -1670,7 +1613,6 @@ Soup    Proc near
     mov es:usd_len,0
     xor di,di
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
 ;    
@@ -1686,9 +1628,6 @@ Soup    Proc near
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     popad
     pop es    
@@ -1987,7 +1926,6 @@ ecpIndexOk:
     mov es:usd_len,0
     xor di,di
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
 ;    
@@ -2003,9 +1941,6 @@ ecpIndexOk:
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     popad
     pop es    
@@ -2299,7 +2234,6 @@ SetBaudMct      PROC near
     mov es:usd_len,4
     xor edi,edi
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
 ;
@@ -2323,9 +2257,6 @@ SetBaudMct      PROC near
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     pop eax
     pop bp
@@ -2375,7 +2306,6 @@ SendUnknownMct  Proc near
     mov es:usd_len,1
     xor edi,edi
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
 ;
@@ -2399,9 +2329,6 @@ SendUnknownMct  Proc near
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     pop ax
     pop bp
@@ -2457,7 +2384,6 @@ scmValOk:
     mov es:usd_len,1
     xor edi,edi
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
 ;
@@ -2481,9 +2407,6 @@ scmValOk:
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     pop ax
     pop bp
@@ -2560,7 +2483,6 @@ slcParityOk:
     mov es:usd_len,1
     xor edi,edi
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
 ;
@@ -2584,9 +2506,6 @@ slcParityOk:
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     pop ax
     pop bp
@@ -2648,7 +2567,6 @@ rmcDtrOk:
     mov es:usd_len,1
     xor edi,edi
 ;
-    LockUsbPipe
     mov cx,8
     WriteUsbControl
 ;
@@ -2672,9 +2590,6 @@ rmcDtrOk:
 ;    
     mov bx,ds:ups_control_pipe
     WasUsbTransactionOk
-    pushf
-    UnlockUsbPipe
-    popf
 ;
     pop ax
     pop bp
