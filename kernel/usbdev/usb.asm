@@ -3845,16 +3845,29 @@ req_usb_status  Proc far
     push fs
     push ebx
     push cx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc rusDone
 ;
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    stc
+    jnz rusDone
+;
+    call LockAndGetPipe
+    jc rusLeave
+;
     call fword ptr ds:add_status_in_proc
 
+rusLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+;
+
 rusDone:
+    pop bp
     pop cx
     pop ebx
     pop fs
