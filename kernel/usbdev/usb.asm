@@ -3717,24 +3717,36 @@ write_usb_data16    Proc far
     push ax
     push ebx
     push cx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc wudDone16
+;
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    stc
+    jnz wudDone16
 ;
     push es
     push edi
 ;    
     movzx edi,di
     call HandleWriteData
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
+    call LockAndGetPipe
+    jc wudLeave16
+;
     call fword ptr ds:add_out_proc
+
+wudLeave16:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
 ;
     pop edi
     pop es
 
 wudDone16:
+    pop bp
     pop cx
     pop ebx
     pop ax
@@ -3749,23 +3761,35 @@ write_usb_data32    Proc far
     push ax
     push ebx
     push cx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc wudDone32
 ;
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    stc
+    jnz wudDone32
+;
     push es
     push edi
 ;
     call HandleWriteData    
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
+    call LockAndGetPipe
+    jc wudLeave32
+;
     call fword ptr ds:add_out_proc
+
+wudLeave32:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
 ;   
     pop edi
     pop es    
 
 wudDone32:
+    pop bp
     pop cx
     pop ebx
     pop ax
