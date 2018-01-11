@@ -151,7 +151,6 @@ close_control_pipe_proc DD ?,?
 ; IN  FS        Pipe selector
 issue_one_proc       DD ?,?
 
-
 usb_section            section_typ <>
 
 usb_controller_id      DW ?
@@ -167,6 +166,7 @@ usb_dev_struc   ENDS
 
 usb_port_struc  STRUC
 
+usb_handle_list         DD ?
 usb_function_sel        DW ?
 usb_sync_section        section_typ <>
 usb_port                DB ?

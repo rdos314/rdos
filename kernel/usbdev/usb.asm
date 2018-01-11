@@ -73,6 +73,11 @@ up_pipe         DB ?
 up_copy         DB ?
 up_list         DW ?
 
+up_handle_list  DD ?
+up_port_sel     DW ?
+up_deleted      DB ?
+up_pipe_nr      DB ?
+
 pipe_handle_struc       ENDS
 
 pipe_wait_header    STRUC
@@ -1197,6 +1202,7 @@ AddUsbFunction       Proc near
     push es
     mov eax,SIZE usb_port_struc
     AllocateSmallGlobalMem
+    mov es:usb_handle_list,0
     mov es:usb_function_sel,0
     mov es:usb_port,bl
     InitSection es:usb_sync_section
@@ -1213,6 +1219,72 @@ aufAdd:
     pop fs
     ret
 AddUsbFunction	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RemoveUsbFunction
+;
+;       Description:    Remove USB function
+;
+;       Parameters:     DS      USB device selector
+;                       AL      Port
+;
+;       Returns:        NC
+;                           ES  USB function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveUsbFunction       Proc near
+    push ds
+    push ax
+    push ebx
+;
+    movzx bx,al
+    add bx,bx
+    mov ax,ds:[bx].usb_port_arr
+    or ax,ax
+    stc
+    jz rufDone
+;
+    mov ds,ax
+    EnterSection ds:usb_sync_section
+    xor ax,ax
+    xchg ax,ds:usb_function_sel
+;
+    mov ebx,ds:usb_handle_list
+    or ebx,ebx
+    jz rufHandleDone
+;
+    push ax
+    GetThread
+    mov es,ax    
+    mov es,es:p_app_sel
+    mov es,es:app_handle_mem_sel
+    pop ax
+
+rufHandleLoop:
+    mov es:[ebx].up_deleted,1
+    mov ebx,es:[ebx].up_handle_list
+    or ebx,ebx
+    jnz rufHandleLoop
+
+rufHandleDone:
+    LeaveSection ds:usb_sync_section
+;
+    or ax,ax
+    stc
+    jz rufDone
+;
+    mov es,ax
+    clc
+
+rufDone:
+    pop ebx
+    pop ax
+    pop ds
+    ret
+RemoveUsbFunction	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1411,23 +1483,11 @@ detach_text DB 'Detach', 0
 
 notify_usb_detach       Proc far
     push es
-    push fs
     pushad
 ;
-
-    movzx bx,al
-    add bx,bx
-    mov ax,ds:[bx].usb_port_arr
-    or ax,ax
-    jz nudDone
-;
-    mov fs,ax
-    xor ax,ax
-    xchg ax,fs:usb_function_sel
-    or ax,ax
-    jz nudDone
+    call RemoveUsbFunction
+    jc nudDone
 ; 
-    mov es,ax
     mov bx,ds:usb_controller_id
     mov al,es:usbf_address
     call trap_usb_detach      
@@ -1435,7 +1495,6 @@ notify_usb_detach       Proc far
 
 nudDone:    
     popad
-    pop fs
     pop es
     retf32
 notify_usb_detach   Endp
