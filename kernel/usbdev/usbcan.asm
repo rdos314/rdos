@@ -1241,9 +1241,10 @@ ureLoop:
     jnz ureEnd
 ;
     GetSystemTime
-    add eax,1193 * 100
+    add eax,1193 * 200
     adc edx,0
-    WaitForSignalWithTimeout
+    mov bx,ds:cd_in_wait
+    WaitWithTimeout
 ;
     mov al,ds:cd_active
     or al,al

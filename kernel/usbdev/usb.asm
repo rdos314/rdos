@@ -3384,10 +3384,13 @@ start_wait_for_pipe     PROC far
     call LockWaitPipe
     jc swfpSignal
 ;
+    mov fs:usbp_wait,es
+;
     call fword ptr ds:is_transfer_done_proc
     jc swfpDone
 
 swfpSignal:
+    mov fs:usbp_wait,0
     SignalWait
 
 swfpDone:
@@ -3412,6 +3415,22 @@ start_wait_for_pipe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 stop_wait_for_pipe      PROC far
+    push ds
+    push fs
+    push bp
+;
+    call LockWaitPipe
+    jc swDone
+;
+    mov fs:usbp_wait,0
+
+swDone:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+;
+    pop bp
+    pop fs
+    pop ds    
     retf32
 stop_wait_for_pipe Endp
 
@@ -4123,9 +4142,6 @@ start_usb_trans Proc far
     call LockAndGetPipe
     jc sutLeave
 ;
-    GetThread
-    mov fs:usbp_signal,ax
-;
     call fword ptr ds:issue_transfer_proc
 
 sutLeave:
@@ -4315,9 +4331,6 @@ start_one_usb_trans    Proc far
 ;
     call LockAndGetPipe
     jc soutLeave
-;
-    GetThread
-    mov fs:usbp_signal,ax
 ;
     call fword ptr ds:issue_one_proc
 
