@@ -90,10 +90,11 @@ req_handle_struc    STRUC
 
 rh_base         handle_header <>
 rh_func_sel     DW ?
-rh_pipe_sel         DW ?
+rh_port_sel     DW ?
 rh_signal       DW ?
-rh_list     DW ?
-rh_flags    DB ?
+rh_list         DW ?
+rh_flags        DB ?
+rh_pipe         DB ?
 
 req_handle_struc    ENDS
 
@@ -104,8 +105,7 @@ REQ_TYPE_STATUS_IN = 4
 REQ_TYPE_STATUS_OUT = 5
 
 REQ_FLAG_STARTED = 1
-REQ_FLAG_LOCKED  = 2
-REQ_FLAG_ACTIVE  = 4
+REQ_FLAG_ACTIVE  = 2
 
 req_entry_struc STRUC
 
@@ -1581,23 +1581,20 @@ create_usb_req  Proc far
     jnz curDone
 ;
     mov ax,ds:[ebx].up_func_sel
-    call LockAndGetPipe
-    jc curLeave
+    mov dl,ds:[ebx].up_pipe
+    mov bp,ds:[ebx].up_port_sel
 ;       
     mov cx,SIZE req_handle_struc
     AllocateHandle
     mov [ebx].rh_func_sel,ax
-    mov [ebx].rh_pipe_sel,fs
+    mov [ebx].rh_port_sel,bp
     mov [ebx].rh_list,0
     mov [ebx].rh_signal,0
     mov [ebx].rh_flags,0
+    mov [ebx].rh_pipe,dl
     mov [ebx].hh_sign,USB_REQ_HANDLE
     mov bx,[ebx].hh_handle
     clc
-
-curLeave:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
 
 curDone:
     pop bp
@@ -1838,6 +1835,80 @@ add_usb_status_out_req   Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LockReqPipe
+;
+;           DESCRIPTION:    Lock and get pipe & function selector from handle
+;
+;           PARAMETERS:     DS:EBX          Handle data
+;
+;           RETURNS:        NC	
+;				DS          Function sel
+;                           	FS	    Pipe sel
+;                           BP              Port sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockReqPipe	Proc near
+    push ax
+    push dx
+    push si
+    push di
+;
+    mov bp,ds:[ebx].rh_port_sel
+    mov di,ds:[ebx].rh_func_sel
+    mov dl,ds:[ebx].rh_pipe
+    mov ds,bp
+    EnterSection ds:usb_sync_section
+    mov ax,ds:usb_function_sel
+    or ax,ax
+    jz lrpFail
+;
+    mov ds,ax
+    and dl,8Fh
+    test dl,80h
+    jz lrpOut    
+
+lrpIn:
+    movzx si,dl
+    and si,0Fh
+    add si,si
+    mov ax,ds:[si].usbf_in_endpoint_arr
+    or ax,ax
+    jnz lrpOk
+;
+    jmp lrpFail
+
+lrpOut:
+    movzx si,dl
+    add si,si
+    mov ax,ds:[si].usbf_out_endpoint_arr
+    or ax,ax
+    jnz lrpOk    
+
+lrpFail:
+    xor ax,ax
+    mov ds,ax
+    mov fs,ax
+    stc
+    jmp lrpDone
+
+lrpOk:
+    mov ds,di
+    mov fs,ax
+    clc
+
+lrpDone:
+    pop di
+    pop si
+    pop dx
+    pop ax
+    ret
+LockReqPipe	Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           ReqWriteControl
@@ -1988,25 +2059,18 @@ start_usb_req   Proc far
     push fs
     push ax
     push ebx
+    push bp
 ;
     mov ax,USB_REQ_HANDLE
     DerefHandle
     jc surDone
 ;
-    test ds:[ebx].rh_flags,REQ_FLAG_LOCKED
-    jnz surStart
-;
-    push ds
-    mov ds,[ebx].rh_pipe_sel
-    EnterSection ds:usbp_section
-    pop ds
-    or ds:[ebx].rh_flags,REQ_FLAG_LOCKED
-
-surStart:    
     or ds:[ebx].rh_flags,REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE
     mov ax,ds:[ebx].rh_list
-    mov fs,ds:[ebx].rh_pipe_sel
-    mov ds,ds:[ebx].rh_func_sel
+;
+    call LockReqPipe
+    jc surLeave
+;
     call fword ptr ds:end_transfer_proc
 
 surReqLoop:
@@ -2033,7 +2097,12 @@ surIssue:
     mov fs:usbp_signal,ax
     call fword ptr ds:issue_transfer_proc
 
+surLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+
 surDone:    
+    pop bp
     pop ebx
     pop ax
     pop fs
@@ -2060,33 +2129,35 @@ stop_usb_req    Proc far
     push fs
     push ax
     push ebx
+    push bp
 ;
     mov ax,USB_REQ_HANDLE
     DerefHandle
     jc sturEnd
 ;
     push ds
-    mov fs,ds:[ebx].rh_pipe_sel
-    mov ds,ds:[ebx].rh_func_sel
+    push ebx
+;
+    call LockReqPipe
+    jc sturLeave
+;
     call fword ptr ds:end_transfer_proc
+
+sturLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+;
+    pop ebx
     pop ds
 ;
     mov ax,5
     WaitMilliSec    
-;    
-    test ds:[ebx].rh_flags,REQ_FLAG_LOCKED
-    jz sturDone
-;
-    push ds
-    mov ds,[ebx].rh_pipe_sel
-    LeaveSection ds:usbp_section
-    pop ds
-    and ds:[ebx].rh_flags,NOT REQ_FLAG_LOCKED
 
 sturDone:
     and ds:[ebx].rh_flags,NOT (REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE)
 
 sturEnd:
+    pop bp
     pop ebx
     pop ax
     pop fs
@@ -2153,6 +2224,7 @@ is_usb_req_ready    Proc far
     push fs
     push ax
     push ebx
+    push bp
 ;
     mov ax,USB_REQ_HANDLE
     DerefHandle
@@ -2163,9 +2235,18 @@ is_usb_req_ready    Proc far
     jz iurrDone
 ;
     push ds
-    mov fs,ds:[ebx].rh_pipe_sel
-    mov ds,ds:[ebx].rh_func_sel
+    push ebx
+;
+    call LockReqPipe
+    jc iurrLeave
+;
     call fword ptr ds:is_transfer_done_proc
+
+iurrLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+;
+    pop ebx
     pop ds
     jc iurrDone
 ;
@@ -2173,6 +2254,7 @@ is_usb_req_ready    Proc far
     clc
     
 iurrDone:       
+    pop bp
     pop ebx
     pop ax
     pop fs
@@ -2202,6 +2284,7 @@ get_usb_req_data    Proc far
     push fs
     push ax
     push ebx
+    push bp
 ;
     xor cx,cx
     mov ax,USB_REQ_HANDLE
@@ -2212,16 +2295,17 @@ get_usb_req_data    Proc far
     stc
     jz gurdDone
 ;
-    mov fs,ds:[ebx].rh_pipe_sel
     mov ax,ds:[ebx].rh_list
-    mov ds,ds:[ebx].rh_func_sel
+    call LockReqPipe
+    jc gurdLeave
+;
     call fword ptr ds:was_transfer_ok_proc
-    jc gurdDone
+    jc gurdLeave
 
 gurdReqLoop:
     or ax,ax
     clc
-    jz gurdDone
+    jz gurdLeave
 ;
     mov es,ax
     mov al,es:re_type
@@ -2229,13 +2313,18 @@ gurdReqLoop:
     jne gurdNext
 ;    
     call fword ptr ds:get_data_size_proc
-    jmp gurdDone
+    jmp gurdLeave
 
 gurdNext:
     mov ax,es:re_next    
     jmp gurdReqLoop
 
+gurdLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+
 gurdDone:       
+    pop bp
     pop ebx
     pop ax
     pop fs
@@ -2262,6 +2351,7 @@ close_usb_req   Proc far
     push es
     push fs
     push ax
+    push bp
 ;
     mov ax,USB_REQ_HANDLE
     DerefHandle
@@ -2271,9 +2361,18 @@ close_usb_req   Proc far
     jz crFreeList
 ;
     push ds
-    mov fs,ds:[ebx].rh_pipe_sel
-    mov ds,ds:[ebx].rh_func_sel
+    push ebx
+;
+    call LockReqPipe
+    jc curLeave
+;
     call fword ptr ds:end_transfer_proc
+
+curLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+;
+    pop ebx
     pop ds
 ;    
     mov ax,5
@@ -2305,18 +2404,10 @@ crBufFree:
     jmp crFreeLoop
 
 crFreeHandle:
-    test ds:[ebx].rh_flags,REQ_FLAG_LOCKED
-    jz crLockOk
-;
-    push ds
-    mov ds,[ebx].rh_pipe_sel
-    LeaveSection ds:usbp_section
-    pop ds
-
-crLockOk:
    FreeHandle
 
 crDone: 
+    pop bp
     pop ax
     pop fs
     pop es
