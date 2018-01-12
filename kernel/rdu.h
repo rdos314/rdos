@@ -379,8 +379,6 @@
 #define usergate_req_usb_status 0x00000149
 #define usergate_write_usb_status 0x0000014A
 #define usergate_write_usb_control 0x0000014B
-#define usergate_lock_usb_pipe 0x0000014D
-#define usergate_unlock_usb_pipe 0x0000014E
 
 #define usergate_get_max_com_port 0x0000014F
 
@@ -701,7 +699,6 @@
 #define usergate_acquire_named_futex 0x0000022C
 
 #define usergate_is_usb_pipe_stalled 0x0000022D
-#define usergate_clear_usb_pipe_stalled 0x0000022E
 
 #define usergate_get_lon_modules 0x0000022F
 #define usergate_open_lon_module 0x00000230
@@ -1215,8 +1212,6 @@
 #define CallGate_req_usb_status 0x55 0x67 0x9a 73 1 0 0 3 0 0x5d
 #define CallGate_write_usb_status 0x55 0x67 0x9a 74 1 0 0 3 0 0x5d
 #define CallGate_write_usb_control 0x55 0x67 0x9a 75 1 0 0 3 0 0x5d
-#define CallGate_lock_usb_pipe 0x55 0x67 0x9a 77 1 0 0 3 0 0x5d
-#define CallGate_unlock_usb_pipe 0x55 0x67 0x9a 78 1 0 0 3 0 0x5d
 
 #define CallGate_get_max_com_port 0x55 0x67 0x9a 79 1 0 0 3 0 0x5d
 
@@ -1537,7 +1532,6 @@
 #define CallGate_acquire_named_futex 0x55 0x67 0x9a 44 2 0 0 3 0 0x5d
 
 #define CallGate_is_usb_pipe_stalled 0x55 0x67 0x9a 45 2 0 0 3 0 0x5d
-#define CallGate_clear_usb_pipe_stalled 0x55 0x67 0x9a 46 2 0 0 3 0 0x5d
 
 #define CallGate_get_lon_modules 0x55 0x67 0x9a 47 2 0 0 3 0 0x5d
 #define CallGate_open_lon_module 0x55 0x67 0x9a 48 2 0 0 3 0 0x5d
@@ -2049,8 +2043,6 @@
 #define CallGate_req_usb_status 0x3e 0x67 0x9a 73 1 0 0 3 0
 #define CallGate_write_usb_status 0x3e 0x67 0x9a 74 1 0 0 3 0
 #define CallGate_write_usb_control 0x3e 0x67 0x9a 75 1 0 0 3 0
-#define CallGate_lock_usb_pipe 0x3e 0x67 0x9a 77 1 0 0 3 0
-#define CallGate_unlock_usb_pipe 0x3e 0x67 0x9a 78 1 0 0 3 0
 
 #define CallGate_get_max_com_port 0x3e 0x67 0x9a 79 1 0 0 3 0
 
@@ -2371,7 +2363,6 @@
 #define CallGate_acquire_named_futex 0x3e 0x67 0x9a 44 2 0 0 3 0
 
 #define CallGate_is_usb_pipe_stalled 0x3e 0x67 0x9a 45 2 0 0 3 0
-#define CallGate_clear_usb_pipe_stalled 0x3e 0x67 0x9a 46 2 0 0 3 0
 
 #define CallGate_get_lon_modules 0x3e 0x67 0x9a 47 2 0 0 3 0
 #define CallGate_open_lon_module 0x3e 0x67 0x9a 48 2 0 0 3 0

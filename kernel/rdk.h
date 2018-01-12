@@ -367,8 +367,6 @@
 
 #define osgate_stop_usb_req 344
 
-#define osgate_get_usb_info 345
-
 #define osgate_reserve_com_line 346
 
 #define osgate_device_set_dtr 347
@@ -600,7 +598,7 @@
 #define osgate_lock_usb 533
 #define osgate_unlock_usb 534
 
-#define osgate_start_can_com 535
+#define osgate_restart_can_modules 535
 
 #define osgate_send_can_bus_msg 536
 #define osgate_hook_can_gen_bus_msg 537
@@ -702,6 +700,33 @@
 #define osgate_hook_app_activity 609
 
 #define osgate_notify_clone_process 610
+
+#define osgate_dupl_c_file_to_file 611
+#define osgate_c_handle_to_file_sel 612
+
+#define osgate_add_serio_device 613
+
+#define osgate_is_can_online 614
+#define osgate_notify_can_offline 615
+
+#define osgate_req_usb_data_no_copy 616
+#define osgate_write_usb_data_no_copy 617
+
+#define osgate_notify_can_modules_up 619
+#define osgate_notify_can_online 620
+
+#define osgate_lock_log 621
+#define osgate_unlock_log 622
+#define osgate_log_thread 623
+#define osgate_log_memory 624
+#define osgate_log_text 625
+#define osgate_log_hex_byte 626
+#define osgate_log_hex_word 627
+#define osgate_log_hex_dword 628
+#define osgate_log_small_mem 629
+#define osgate_log_big_mem 630
+
+#define osgate_create_pid 631
 
 
 
@@ -1074,8 +1099,6 @@
 
 #define OsGate_stop_usb_req 0x3E 0x67 0x9a 88 1 0 0 2 0
 
-#define OsGate_get_usb_info 0x3E 0x67 0x9a 89 1 0 0 2 0
-
 #define OsGate_reserve_com_line 0x3E 0x67 0x9a 90 1 0 0 2 0
 
 #define OsGate_device_set_dtr 0x3E 0x67 0x9a 91 1 0 0 2 0
@@ -1307,7 +1330,7 @@
 #define OsGate_lock_usb 0x3E 0x67 0x9a 21 2 0 0 2 0
 #define OsGate_unlock_usb 0x3E 0x67 0x9a 22 2 0 0 2 0
 
-#define OsGate_start_can_com 0x3E 0x67 0x9a 23 2 0 0 2 0
+#define OsGate_restart_can_modules 0x3E 0x67 0x9a 23 2 0 0 2 0
 
 #define OsGate_send_can_bus_msg 0x3E 0x67 0x9a 24 2 0 0 2 0
 #define OsGate_hook_can_gen_bus_msg 0x3E 0x67 0x9a 25 2 0 0 2 0
@@ -1409,4 +1432,31 @@
 #define OsGate_hook_app_activity 0x3E 0x67 0x9a 97 2 0 0 2 0
 
 #define OsGate_notify_clone_process 0x3E 0x67 0x9a 98 2 0 0 2 0
+
+#define OsGate_dupl_c_file_to_file 0x3E 0x67 0x9a 99 2 0 0 2 0
+#define OsGate_c_handle_to_file_sel 0x3E 0x67 0x9a 100 2 0 0 2 0
+
+#define OsGate_add_serio_device 0x3E 0x67 0x9a 101 2 0 0 2 0
+
+#define OsGate_is_can_online 0x3E 0x67 0x9a 102 2 0 0 2 0
+#define OsGate_notify_can_offline 0x3E 0x67 0x9a 103 2 0 0 2 0
+
+#define OsGate_req_usb_data_no_copy 0x3E 0x67 0x9a 104 2 0 0 2 0
+#define OsGate_write_usb_data_no_copy 0x3E 0x67 0x9a 105 2 0 0 2 0
+
+#define OsGate_notify_can_modules_up 0x3E 0x67 0x9a 107 2 0 0 2 0
+#define OsGate_notify_can_online 0x3E 0x67 0x9a 108 2 0 0 2 0
+
+#define OsGate_lock_log 0x3E 0x67 0x9a 109 2 0 0 2 0
+#define OsGate_unlock_log 0x3E 0x67 0x9a 110 2 0 0 2 0
+#define OsGate_log_thread 0x3E 0x67 0x9a 111 2 0 0 2 0
+#define OsGate_log_memory 0x3E 0x67 0x9a 112 2 0 0 2 0
+#define OsGate_log_text 0x3E 0x67 0x9a 113 2 0 0 2 0
+#define OsGate_log_hex_byte 0x3E 0x67 0x9a 114 2 0 0 2 0
+#define OsGate_log_hex_word 0x3E 0x67 0x9a 115 2 0 0 2 0
+#define OsGate_log_hex_dword 0x3E 0x67 0x9a 116 2 0 0 2 0
+#define OsGate_log_small_mem 0x3E 0x67 0x9a 117 2 0 0 2 0
+#define OsGate_log_big_mem 0x3E 0x67 0x9a 118 2 0 0 2 0
+
+#define OsGate_create_pid 0x3E 0x67 0x9a 119 2 0 0 2 0
 

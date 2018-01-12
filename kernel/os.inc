@@ -3583,13 +3583,6 @@ CloseUsbReq      MACRO
                         ENDM
 
 ; IN  BX      Handle
-; OUT FS      Pipe sel
-; OUT DS      Function sel
-GetUsbInfo      MACRO
-    OsGate get_usb_info_nr
-                        ENDM
-
-; IN  BX      Handle
 ; IN  ES:EDI  Data
 ; IN  CX      Size
 ReqUsbDataNoCopy      MACRO

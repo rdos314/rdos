@@ -367,8 +367,6 @@ thread_to_sel_nr            = 342
 
 stop_usb_req_nr             = 344
 
-get_usb_info_nr             = 345
-
 reserve_com_line_nr         = 346
 
 device_set_dtr_nr           = 347

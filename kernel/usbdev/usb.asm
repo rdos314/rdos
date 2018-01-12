@@ -4388,40 +4388,6 @@ iupsDone:
 is_usb_pipe_stalled    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetUsbInfo
-;
-;           DESCRIPTION:    Get pipe info
-;
-;           PARAMETERS:         BX          Pipe handle
-;
-;       RETURNS:    FS      Pipe sel
-;               DS      Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_usb_info_name       DB 'Get USB Info',0
-
-get_usb_info    Proc far
-    push ebx
-    push cx
-;
-    mov ax,USB_PIPE_HANDLE
-    DerefHandle
-    jc guinDone
-;
-    mov fs,ds:[ebx].up_pipe_sel
-    mov ds,ds:[ebx].up_func_sel
-
-guinDone:
-    pop cx
-    pop ebx
-    retf32
-get_usb_info    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           HookUsbAttach
@@ -4629,12 +4595,6 @@ init    Proc far
     mov edi,OFFSET close_usb_req_name
     xor cl,cl
     mov ax,close_usb_req_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET get_usb_info
-    mov edi,OFFSET get_usb_info_name
-    xor cl,cl
-    mov ax,get_usb_info_nr
     RegisterOsGate
 ;
     mov esi,OFFSET req_usb_data_no_copy
