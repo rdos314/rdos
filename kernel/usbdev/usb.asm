@@ -510,6 +510,9 @@ CreateDefaultControl    Proc near
     mov fs:usbp_signal,0
     mov fs:usbp_wait,0
     mov fs:usbp_usage,1
+;
+    GetThread
+    mov fs:usbp_signal,ax
 ;    
     push ds
     mov ax,fs
@@ -1451,6 +1454,8 @@ nuaFreeDone:
     stc
     
 nuaDone:
+    mov fs:usbp_signal,0
+;
     jnc nuaPipeOk
 ;
     call fword ptr ds:is_connected_proc
@@ -2030,6 +2035,8 @@ surReqLoop:
 
 surIssue:
     ClearSignal
+    GetThread
+    mov fs:usbp_signal,ax
     call fword ptr ds:issue_transfer_proc
 
 surDone:    
@@ -2590,6 +2597,9 @@ config_usb_device       Proc near
     jz cudFail
 ;
     mov fs,si    
+    GetThread
+    mov fs:usbp_signal,ax
+;
     mov eax,8
     call AllocateBufSel
     xor edi,edi
@@ -2606,6 +2616,8 @@ config_usb_device       Proc near
     call fword ptr ds:issue_transfer_proc
     call fword ptr ds:wait_for_completion_proc
     call fword ptr ds:was_transfer_ok_proc
+;
+    mov fs:usbp_signal,0
 ;
     pushf
     FreeMem
@@ -2759,6 +2771,9 @@ get_usb_interface       Proc far
     jz guiFail
 ;
     mov fs,si    
+    GetThread
+    mov fs:usbp_signal,ax
+;
     mov eax,9
     call AllocateBufSel
     xor edi,edi
@@ -2779,6 +2794,8 @@ get_usb_interface       Proc far
     call fword ptr ds:add_status_out_proc
     call fword ptr ds:issue_transfer_proc
     call fword ptr ds:wait_for_completion_proc
+    mov fs:usbp_signal,0
+;
     pushf
     call fword ptr ds:get_data_size_proc
     mov cl,es:[edi]
@@ -2854,6 +2871,9 @@ set_usb_interface       Proc far
     jz suiFail
 ;
     mov fs,si    
+    GetThread
+    mov fs:usbp_signal,ax
+;
     mov eax,8
     call AllocateBufSel
     xor edi,edi
@@ -2869,6 +2889,7 @@ set_usb_interface       Proc far
     call fword ptr ds:add_status_in_proc
     call fword ptr ds:issue_transfer_proc
     call fword ptr ds:wait_for_completion_proc
+    mov fs:usbp_signal,0
 ;
     pushf
     FreeMem
@@ -4097,6 +4118,9 @@ start_usb_trans Proc far
 ;
     call LockAndGetPipe
     jc sutLeave
+;
+    GetThread
+    mov fs:usbp_signal,ax
 ;
     call fword ptr ds:issue_transfer_proc
 
