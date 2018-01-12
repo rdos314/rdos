@@ -166,8 +166,10 @@ usb_dev_struc   ENDS
 
 usb_port_struc  STRUC
 
-usb_handle_list         DD ?
-usb_req_list            DD ?
+usb_pipe_list_offset    DD ?
+usb_pipe_list_sel       DW ?
+usb_req_list_offset     DD ?
+usb_req_list_sel        DW ?
 usb_function_sel        DW ?
 usb_sync_section        section_typ <>
 usb_port                DB ?

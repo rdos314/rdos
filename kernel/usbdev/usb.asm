@@ -67,7 +67,8 @@ pipe_copy_struc     ENDS
 pipe_handle_struc       STRUC
 
 up_base         handle_header <>
-up_handle_list  DD ?
+up_list_offset  DD ?
+up_list_sel     DW ?
 up_func_sel     DW ?
 up_pipe         DB ?
 up_copy         DB ?
@@ -93,7 +94,8 @@ rh_func_sel     DW ?
 rh_port_sel     DW ?
 rh_signal       DW ?
 rh_list         DW ?
-rh_handle_list  DD ?
+rh_list_offset  DD ?
+rh_list_sel     DW ?
 rh_flags        DB ?
 rh_pipe         DB ?
 rh_deleted      DB ?
@@ -1206,8 +1208,10 @@ AddUsbFunction       Proc near
     push es
     mov eax,SIZE usb_port_struc
     AllocateSmallGlobalMem
-    mov es:usb_handle_list,0
-    mov es:usb_req_list,0
+    mov es:usb_pipe_list_offset,0
+    mov es:usb_pipe_list_sel,0
+    mov es:usb_req_list_offset,0
+    mov es:usb_req_list_sel,0
     mov es:usb_function_sel,0
     mov es:usb_port,bl
     InitSection es:usb_sync_section
@@ -1244,6 +1248,7 @@ RemoveUsbFunction       Proc near
     push ds
     push ax
     push ebx
+    push dx
 ;
     movzx bx,al
     add bx,bx
@@ -1257,40 +1262,40 @@ RemoveUsbFunction       Proc near
     xor ax,ax
     xchg ax,ds:usb_function_sel
 ;
-    mov ebx,ds:usb_handle_list
-    or ebx,ebx
+    mov dx,ds:usb_pipe_list_sel
+    or dx,dx
     jz rufHandleDone
 ;
-    push ax
-    GetThread
-    mov es,ax    
-    mov es,es:p_app_sel
-    mov es,es:app_handle_mem_sel
-    pop ax
+    mov es,dx
+    mov ebx,ds:usb_pipe_list_offset
 
 rufHandleLoop:
     mov es:[ebx].up_deleted,1
-    mov ebx,es:[ebx].up_handle_list
-    or ebx,ebx
-    jnz rufHandleLoop
+    mov dx,es:[ebx].up_list_sel
+    or dx,dx
+    jz rufHandleDone
+;
+    mov ebx,es:[ebx].up_list_offset
+    mov es,dx
+    jmp rufHandleLoop
 
 rufHandleDone:
-    mov ebx,ds:usb_req_list
-    or ebx,ebx
+    mov dx,ds:usb_req_list_sel
+    or dx,dx
     jz rufReqDone
 ;
-    push ax
-    GetThread
-    mov es,ax    
-    mov es,es:p_app_sel
-    mov es,es:app_handle_mem_sel
-    pop ax
+    mov es,dx
+    mov ebx,ds:usb_req_list_offset
 
 rufReqLoop:
     mov es:[ebx].rh_deleted,1
-    mov ebx,es:[ebx].rh_handle_list
-    or ebx,ebx
-    jnz rufReqLoop
+    mov dx,es:[ebx].rh_list_sel
+    or dx,dx
+    jz rufReqDone
+;
+    mov ebx,es:[ebx].rh_list_offset
+    mov es,dx
+    jmp rufReqLoop
 
 rufReqDone:
     LeaveSection ds:usb_sync_section
@@ -1303,6 +1308,7 @@ rufReqDone:
     clc
 
 rufDone:
+    pop dx
     pop ebx
     pop ax
     pop ds
@@ -1538,38 +1544,57 @@ notify_usb_detach   Endp
 CleanupReq	Proc near
     push ds
     push es
+    push fs
     push eax
+    push dx
     push esi
     push bp
 ;
     mov bp,ds:[ebx].rh_port_sel
     mov es,bp
+    mov ax,ds
 ;
     push ds
     mov ds,bp
     EnterSection ds:usb_sync_section
     pop ds
 ;
-    mov esi,es:usb_req_list    
+    mov dx,es:usb_req_list_sel
+    mov fs,dx
+    mov esi,es:usb_req_list_offset
     cmp ebx,esi
     jne crListLoop
 ;
-    mov esi,ds:[esi].rh_handle_list
-    mov es:rh_handle_list,esi
+    cmp ax,dx
+    jne crListLoop
+;
+    mov dx,ds:[ebx].rh_list_sel
+    mov eax,ds:[ebx].rh_list_offset
+    mov es:usb_req_list_offset,eax
+    mov es:usb_req_list_sel,dx
     jmp crListDone
 
 crListLoop:
-    cmp ebx,ds:[esi].rh_handle_list
+    cmp ebx,fs:[esi].rh_list_offset
     jne crListNext
 ;
-    mov eax,ds:[ebx].rh_handle_list
-    mov ds:[esi].rh_handle_list,eax
+    cmp ax,fs:[esi].rh_list_sel
+    jne crListNext
+;
+    mov eax,ds:[ebx].rh_list_offset
+    mov dx,ds:[ebx].rh_list_sel
+    mov fs:[esi].rh_list_offset,eax
+    mov fs:[esi].rh_list_sel,dx
     jmp crListDone
 
 crListNext:
-    mov esi,ds:[esi].rh_handle_list
-    or esi,esi
-    jnz crListLoop
+    mov dx,fs:[esi].rh_list_sel
+    or dx,dx
+    jz crListDone
+;
+    mov esi,fs:[esi].rh_list_offset
+    mov fs,dx
+    jmp crListLoop
 
 crListDone:    
     mov ds,bp
@@ -1577,7 +1602,9 @@ crListDone:
 ;
     pop bp
     pop esi
+    pop dx
     pop eax
+    pop fs
     pop es
     pop ds
     ret
