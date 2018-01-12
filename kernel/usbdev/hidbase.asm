@@ -924,16 +924,6 @@ ihsDone:
     OpenUsbPipe
     mov fs:hid_control_handle,bx
 ;
-    push ds
-    push fs    
-    GetUsbInfo
-    mov ax,ds
-    mov dx,fs
-    pop fs
-    pop ds        
-    mov fs:hid_function_sel,ax
-    mov fs:hid_control_sel,dx
-;
     CreateWait
     mov fs:hid_control_wait,bx
 ;    
@@ -991,8 +981,6 @@ CloseHidDev_ Proc near
     mov fs:hid_intr_buf,0
     mov fs:hid_control_handle,0
     mov fs:hid_control_wait,0
-    mov fs:hid_function_sel,0
-    mov fs:hid_control_sel,0
 ;
     pop ebx
     pop eax

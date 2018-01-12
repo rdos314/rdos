@@ -42,9 +42,6 @@ hid_intr_size       DW ?
 hid_intr_buf        DW ?
 hid_intr_req        DW ?
 
-hid_function_sel    DW ?
-hid_control_sel     DW ?
-
 hid_country_code    DB ?
 hid_descr_count     DB ?
 

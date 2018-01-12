@@ -209,9 +209,6 @@ struct THidDevice
     short int IntrBufSel;
     short int IntrReq;
 
-    short int FunctionSel;
-    short int ControlSel;
-
     unsigned char CountryCode;
     unsigned char DescrCount;
 
