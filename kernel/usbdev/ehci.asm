@@ -150,9 +150,9 @@ esp_table_size  DW ?
 esp_pending     DD ?
 esp_first       DD ?
 esp_current     DD ?
-esp_signal      DW ?
 esp_size        DW ?
 esp_flags       DB ?
+esp_done        DB ?
 
 ehci_pipe   ENDS
 
@@ -1973,7 +1973,9 @@ IssueTransfer    Proc far
 ;    
     ClearSignal
     GetThread
-    mov fs:esp_signal,ax
+    mov fs:usbp_signal,ax
+;
+    mov fs:esp_done,0
     and fs:esp_flags, NOT ESP_FLAG_TRANSFER_OK
     or fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
 ;    
@@ -2336,8 +2338,9 @@ IssueOne   Proc far
     mov es,ax
 ;    
     GetThread
-    mov fs:esp_signal,ax
+    mov fs:usbp_signal,ax
 ;
+    mov fs:esp_done,0
     test fs:esp_flags, ESP_FLAG_SINGLE
     jnz iotNew
 ;
@@ -3670,12 +3673,27 @@ uplMulti:
     jz uplNext
 
 uplSignal:
-    xor bx,bx
-    xchg bx,fs:esp_signal
+    mov al,1
+    xchg al,fs:esp_done
+;
+    cmp al,1
+    je uplNext
+;
+    mov bx,fs:usbp_signal
+    or bx,bx
+    jz uplSignalDone
+;
+    Signal
+
+uplSignalDone:
+    mov bx,fs:usbp_wait
     or bx,bx
     jz uplNext
 ;
-    Signal
+    push es
+    mov es,bx
+    SignalWait
+    pop es
 
 uplNext:    
     mov ax,fs:esp_next

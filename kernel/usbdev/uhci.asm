@@ -113,10 +113,10 @@ usp_intr_ptr    DW ?
 usp_intr_cnt    DW ?
 usp_prev        DW ?
 usp_next        DW ?
-usp_signal      DW ?
 usp_data_size       DW ?
 usp_setup_linear    DD ?
 usp_flags       DB ?
+usp_done        DB ?
 
 uhci_pipe   ENDS
 
@@ -230,14 +230,38 @@ uplMulti:
     test byte ptr es:[edx].uqh_elem,1
     jz uplNext
 
-uplSignal:    
-    xor bx,bx
-    xchg bx,fs:usp_signal
+uplSignal:  
+    mov al,1
+    xchg al,fs:usp_done
+;
+    cmp al,1
+    je uplNext
+;
+    mov bx,fs:usbp_signal
+    or bx,bx
+    jz uplSignalDone
+;
+    ReleaseSpinlock ds:uhc_spinlock    
+    Signal
+;
+    mov bx,fs:usbp_wait
+    or bx,bx
+    jz uplRetry
+;
+    mov es,bx
+    SignalWait
+    jmp uplRetry
+
+uplSignalDone:
+    mov bx,fs:usbp_wait
     or bx,bx
     jz uplNext
 ;
     ReleaseSpinlock ds:uhc_spinlock    
-    Signal
+    mov es,bx
+    SignalWait
+
+uplRetry:
     pop di
     pop dx
     pop ebx
@@ -460,7 +484,7 @@ ipEmpty:
 
 ipDone:
     ReleaseSpinlock ds:uhc_spinlock
-    mov fs:usp_signal,0
+    mov fs:usp_done,0
     ret
 InsertPipe  Endp
 
@@ -2008,7 +2032,9 @@ IssueTransfer    Proc far
 ;    
     ClearSignal
     GetThread
-    mov fs:usp_signal,ax
+    mov fs:usbp_signal,ax
+;
+    mov fs:usp_done,0
     and fs:usp_flags, NOT USP_FLAG_TRANSFER_OK
     or fs:usp_flags, USP_FLAG_TRANSFER_PENDING
 ;    
@@ -2054,9 +2080,9 @@ LocalIsTransferDone   Proc near
     mov ax,flat_sel
     mov es,ax
 ;    
-    mov bx,fs:usp_signal
-    or bx,bx
-    jnz itdFail
+    mov al,fs:usp_done
+    or al,al
+    jz itdFail
 ;    
     mov al,fs:usbp_mode
     cmp al,MODE_CONTROL
@@ -2707,8 +2733,9 @@ IssueOne   Proc far
     mov edx,fs:usp_qh
 ;    
     GetThread
-    mov fs:usp_signal,ax
+    mov fs:usbp_signal,ax
 ;
+    mov fs:usp_done,0
     test fs:usp_flags, USP_FLAG_SINGLE
     jnz iotNew
 ;

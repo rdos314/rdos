@@ -257,7 +257,6 @@ xp_setup_offset     DW ?
 xp_ring_enque       DW ?
 xp_ring_pcs         DW ?
 
-xp_thread           DW ?
 xp_size             DW ?
 xp_remain_size      DW ?
 
@@ -1858,7 +1857,8 @@ itMarkDone:
 
 itNorm:
     GetThread
-    mov fs:xp_thread,ax
+    mov fs:usbp_signal,ax
+;
     mov fs:xp_result,-1
     lock or fs:xp_flags, XP_FLAG_TRANSFER_PENDING
     mov ax,fs:xp_size
@@ -2131,16 +2131,6 @@ ClosePipe   Proc far
     mov fs:xp_result,-1
     lock or fs:xp_flags,XP_FLAG_CLOSED
 ;    
-    test fs:xp_flags,XP_FLAG_TRANSFER_PENDING
-    jz cpIdle
-;    
-    mov bx,fs:xp_thread
-    or bx,bx
-    jz cpIdle
-;
-    Signal    
-
-cpIdle:    
     mov al,fs:xp_db_target
     cmp al,1
     je cpStopped
@@ -2979,11 +2969,22 @@ transfer_event Proc near
     mov fs:xp_remain_size,ax
     mov al,ds:[si+0Bh]
     mov fs:xp_result,al
-    mov bx,fs:xp_thread
+;
+    mov bx,fs:usbp_signal
+    or bx,bx
+    jz teSignalDone
+;
+    Signal
+
+teSignalDone:
+    mov bx,fs:usbp_wait
     or bx,bx
     jz teDone
 ;
-    Signal    
+    push es
+    mov es,bx
+    SignalWait
+    pop es
 
 teDone:    
     ret

@@ -200,6 +200,8 @@ usbp_section        section_typ <>
 usbp_device_sel     DW ?
 usbp_hub_sel        DW ?
 usbp_hub_port       DW ?
+usbp_signal         DW ?
+usbp_wait           DW ?
 usbp_config_sel     DW 16 DUP(?)
 
 usb_pipe_struc      ENDS

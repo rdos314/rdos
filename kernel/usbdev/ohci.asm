@@ -119,12 +119,12 @@ osp_pipe_base       usb_pipe_struc <>
 osp_ed          DD ?
 osp_prev        DW ?
 osp_next        DW ?
-osp_signal      DW ?
 osp_intr_list       DW ?
 osp_intr_count      DW ?
 osp_data_size       DW ?
 osp_setup_linear    DD ?
 osp_flags       DB ?
+osp_done        DB ?
 
 ohci_pipe   ENDS
 
@@ -405,7 +405,7 @@ ipEmpty:
     mov ds:ohc_pipe_list,fs
 
 ipDone:
-    mov fs:osp_signal,0
+    mov fs:osp_done,0
     mov fs:osp_flags,0
     LeaveSection ds:ohc_pipe_section
     ret
@@ -1635,7 +1635,9 @@ IssueTransfer    Proc far
 ;
     ClearSignal
     GetThread
-    mov fs:osp_signal,ax
+    mov fs:usbp_signal,ax
+;
+    mov fs:osp_done,0
     and fs:osp_flags, NOT OSP_FLAG_TRANSFER_OK
     or fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
 ;    
@@ -1703,9 +1705,9 @@ LocalIsTransferDone   Proc near
     mov ax,flat_sel
     mov es,ax
 ;    
-    mov bx,fs:osp_signal
-    or bx,bx
-    jnz itdFail
+    mov al,fs:osp_done
+    or al,al
+    jz itdFail
 ;
     mov edx,fs:osp_ed
     mov eax,es:[edx].oes_headp
@@ -2539,8 +2541,9 @@ IssueOne   Proc far
     mov es,ax
 ;
     GetThread
-    mov fs:osp_signal,ax
+    mov fs:usbp_signal,ax
 ;
+    mov fs:osp_done,0
     test fs:osp_flags, OSP_FLAG_SINGLE
     jnz iotNew
 ;
@@ -3328,9 +3331,27 @@ uplMulti:
     je uplNext
 
 uplSignal:
-    xor bx,bx
-    xchg bx,fs:osp_signal
+    mov al,1
+    xchg al,fs:osp_done
+;
+    cmp al,1
+    je uplNext
+;
+    mov bx,fs:usbp_signal
+    or bx,bx
+    jz uplSignalDone
+;
     Signal
+
+uplSignalDone:
+    mov bx,fs:usbp_wait
+    or bx,bx
+    jz uplNext
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
 
 uplNext:    
     mov ax,fs:osp_next
