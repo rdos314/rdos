@@ -3111,6 +3111,7 @@ open_usb_pipe    Proc far
     mov dh,1
 
 oupAlloc:
+    mov ds,bp
     mov esi,ds:usb_handle_list
     mov cx,SIZE pipe_handle_struc
     AllocateHandle
