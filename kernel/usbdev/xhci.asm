@@ -1856,9 +1856,6 @@ itMarkDone:
     pop cx
 
 itNorm:
-    GetThread
-    mov fs:usbp_signal,ax
-;
     mov fs:xp_result,-1
     lock or fs:xp_flags, XP_FLAG_TRANSFER_PENDING
     mov ax,fs:xp_size

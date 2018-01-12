@@ -1633,10 +1633,6 @@ IssueTransfer    Proc far
     mov es,ax
     mov edx,fs:osp_ed
 ;
-    ClearSignal
-    GetThread
-    mov fs:usbp_signal,ax
-;
     mov fs:osp_done,0
     and fs:osp_flags, NOT OSP_FLAG_TRANSFER_OK
     or fs:osp_flags, OSP_FLAG_TRANSFER_PENDING
@@ -2539,9 +2535,6 @@ IssueOne   Proc far
 ;    
     mov ax,flat_sel
     mov es,ax
-;
-    GetThread
-    mov fs:usbp_signal,ax
 ;
     mov fs:osp_done,0
     test fs:osp_flags, OSP_FLAG_SINGLE

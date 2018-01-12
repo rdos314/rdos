@@ -1971,10 +1971,6 @@ IssueTransfer    Proc far
     mov ax,flat_sel
     mov es,ax
 ;    
-    ClearSignal
-    GetThread
-    mov fs:usbp_signal,ax
-;
     mov fs:esp_done,0
     and fs:esp_flags, NOT ESP_FLAG_TRANSFER_OK
     or fs:esp_flags, ESP_FLAG_TRANSFER_PENDING
@@ -2336,9 +2332,6 @@ IssueOne   Proc far
 ;    
     mov ax,flat_sel
     mov es,ax
-;    
-    GetThread
-    mov fs:usbp_signal,ax
 ;
     mov fs:esp_done,0
     test fs:esp_flags, ESP_FLAG_SINGLE

@@ -2029,10 +2029,6 @@ IssueTransfer    Proc far
     mov ax,flat_sel
     mov es,ax    
     mov edx,fs:usp_qh
-;    
-    ClearSignal
-    GetThread
-    mov fs:usbp_signal,ax
 ;
     mov fs:usp_done,0
     and fs:usp_flags, NOT USP_FLAG_TRANSFER_OK
@@ -2732,9 +2728,6 @@ IssueOne   Proc far
     mov es,ax    
     mov edx,fs:usp_qh
 ;    
-    GetThread
-    mov fs:usbp_signal,ax
-;
     mov fs:usp_done,0
     test fs:usp_flags, USP_FLAG_SINGLE
     jnz iotNew

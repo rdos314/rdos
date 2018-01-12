@@ -511,6 +511,7 @@ CreateDefaultControl    Proc near
     mov fs:usbp_wait,0
     mov fs:usbp_usage,1
 ;
+    ClearSignal
     GetThread
     mov fs:usbp_signal,ax
 ;    
@@ -2597,6 +2598,7 @@ config_usb_device       Proc near
     jz cudFail
 ;
     mov fs,si    
+    ClearSignal
     GetThread
     mov fs:usbp_signal,ax
 ;
@@ -2771,6 +2773,7 @@ get_usb_interface       Proc far
     jz guiFail
 ;
     mov fs,si    
+    ClearSignal
     GetThread
     mov fs:usbp_signal,ax
 ;
@@ -2871,6 +2874,7 @@ set_usb_interface       Proc far
     jz suiFail
 ;
     mov fs,si    
+    ClearSignal
     GetThread
     mov fs:usbp_signal,ax
 ;
@@ -4311,6 +4315,9 @@ start_one_usb_trans    Proc far
 ;
     call LockAndGetPipe
     jc soutLeave
+;
+    GetThread
+    mov fs:usbp_signal,ax
 ;
     call fword ptr ds:issue_one_proc
 
