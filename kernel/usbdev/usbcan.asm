@@ -1889,19 +1889,22 @@ send_can_bus_msg_name   DB 'Send CAN Bus Message', 0
 
 send_can_bus_msg    Proc far
     push ds
+    push bp
 ;
-    push ax
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,ds:cd_send_thread
-    or ax,ax
-    pop ax
+    mov bp,SEG data
+    mov ds,bp
+    mov bp,ds:cd_send_thread
+    or bp,bp
+    jz scbDone
+;
+    cmp bp,-1
     jz scbDone
 ;
     call NotifyMsg
     call InsertSend
 
 scbDone:
+    pop bp
     pop ds
     retf32
 send_can_bus_msg    Endp    

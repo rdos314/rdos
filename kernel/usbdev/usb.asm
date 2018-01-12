@@ -3368,9 +3368,10 @@ start_wait_for_pipe     PROC far
 ;
     call fword ptr ds:is_transfer_done_proc
     jc swfpDone
+;    
+    mov fs:usbp_wait,0
 
 swfpSignal:
-    mov fs:usbp_wait,0
     SignalWait
 
 swfpDone:
