@@ -93,8 +93,10 @@ rh_func_sel     DW ?
 rh_port_sel     DW ?
 rh_signal       DW ?
 rh_list         DW ?
+rh_handle_list  DD ?
 rh_flags        DB ?
 rh_pipe         DB ?
+rh_deleted      DB ?
 
 req_handle_struc    ENDS
 
@@ -1205,6 +1207,7 @@ AddUsbFunction       Proc near
     mov eax,SIZE usb_port_struc
     AllocateSmallGlobalMem
     mov es:usb_handle_list,0
+    mov es:usb_req_list,0
     mov es:usb_function_sel,0
     mov es:usb_port,bl
     InitSection es:usb_sync_section
@@ -1272,6 +1275,24 @@ rufHandleLoop:
     jnz rufHandleLoop
 
 rufHandleDone:
+    mov ebx,ds:usb_req_list
+    or ebx,ebx
+    jz rufReqDone
+;
+    push ax
+    GetThread
+    mov es,ax    
+    mov es,es:p_app_sel
+    mov es,es:app_handle_mem_sel
+    pop ax
+
+rufReqLoop:
+    mov es:[ebx].rh_deleted,1
+    mov ebx,es:[ebx].rh_handle_list
+    or ebx,ebx
+    jnz rufReqLoop
+
+rufReqDone:
     LeaveSection ds:usb_sync_section
 ;
     or ax,ax
@@ -1504,6 +1525,65 @@ nudDone:
 notify_usb_detach   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CleanupReq
+;
+;           DESCRIPTION:    Clean up req handle
+;
+;           PARAMETERS:     DS:EBX          Handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CleanupReq	Proc near
+    push ds
+    push es
+    push eax
+    push esi
+    push bp
+;
+    mov bp,ds:[ebx].rh_port_sel
+    mov es,bp
+;
+    push ds
+    mov ds,bp
+    EnterSection ds:usb_sync_section
+    pop ds
+;
+    mov esi,es:usb_req_list    
+    cmp ebx,esi
+    jne crListLoop
+;
+    mov esi,ds:[esi].rh_handle_list
+    mov es:rh_handle_list,esi
+    jmp crListDone
+
+crListLoop:
+    cmp ebx,ds:[esi].rh_handle_list
+    jne crListNext
+;
+    mov eax,ds:[ebx].rh_handle_list
+    mov ds:[esi].rh_handle_list,eax
+    jmp crListDone
+
+crListNext:
+    mov esi,ds:[esi].rh_handle_list
+    or esi,esi
+    jnz crListLoop
+
+crListDone:    
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+;
+    pop bp
+    pop esi
+    pop eax
+    pop es
+    pop ds
+    ret
+CleanupReq	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           AddReqBlock
@@ -1583,17 +1663,28 @@ create_usb_req  Proc far
     mov ax,ds:[ebx].up_func_sel
     mov dl,ds:[ebx].up_pipe
     mov bp,ds:[ebx].up_port_sel
+;
+    mov ds,bp
+    EnterSection ds:usb_sync_section
+    mov esi,ds:usb_req_list
 ;       
     mov cx,SIZE req_handle_struc
     AllocateHandle
     mov [ebx].rh_func_sel,ax
     mov [ebx].rh_port_sel,bp
+    mov [ebx].rh_handle_list,esi
     mov [ebx].rh_list,0
     mov [ebx].rh_signal,0
     mov [ebx].rh_flags,0
+    mov [ebx].rh_deleted,0
     mov [ebx].rh_pipe,dl
     mov [ebx].hh_sign,USB_REQ_HANDLE
+    mov esi,ebx
     mov bx,[ebx].hh_handle
+;
+    mov ds,bp
+    mov ds:usb_req_list,esi
+    LeaveSection ds:usb_sync_section
     clc
 
 curDone:
@@ -2357,6 +2448,8 @@ close_usb_req   Proc far
     DerefHandle
     jc crDone
 ;
+    call CleanupReq
+;
     test ds:[ebx].rh_flags,REQ_FLAG_STARTED
     jz crFreeList
 ;
@@ -3012,16 +3105,20 @@ set_usb_interface    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CleanupHandle	Proc near
+    push ds
     push es
     push eax
     push esi
+    push bp
+;
+    mov bp,ds:[ebx].up_port_sel
+    mov es,bp
 ;
     push ds
-    mov ds,ds:[ebx].up_port_sel
+    mov ds,bp
     EnterSection ds:usb_sync_section
     pop ds
 ;
-    mov es,ds:[ebx].up_port_sel
     mov esi,es:usb_handle_list    
     cmp ebx,esi
     jne chListLoop
@@ -3045,15 +3142,14 @@ chListNext:
 
 chListDone:    
     call CleanupData
-;
-    push ds
-    mov ds,ds:[ebx].up_port_sel
+    mov ds,bp
     LeaveSection ds:usb_sync_section
-    pop ds
 ;
+    pop bp
     pop esi
     pop eax
     pop es
+    pop ds
     ret
 CleanupHandle	Endp
 
