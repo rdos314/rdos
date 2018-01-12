@@ -2156,6 +2156,11 @@ start_usb_req   Proc far
     DerefHandle
     jc surDone
 ;
+    mov al,ds:[ebx].rh_deleted
+    or al,al
+    stc
+    jnz surDone
+;
     or ds:[ebx].rh_flags,REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE
     mov ax,ds:[ebx].rh_list
 ;
@@ -2225,6 +2230,11 @@ stop_usb_req    Proc far
     mov ax,USB_REQ_HANDLE
     DerefHandle
     jc sturEnd
+;
+    mov al,ds:[ebx].rh_deleted
+    or al,al
+    stc
+    jnz sturDone
 ;
     push ds
     push ebx
@@ -2321,6 +2331,11 @@ is_usb_req_ready    Proc far
     DerefHandle
     jc iurrDone
 ;
+    mov al,ds:[ebx].rh_deleted
+    or al,al
+    clc
+    jnz iurrDone
+;
     test ds:[ebx].rh_flags,REQ_FLAG_ACTIVE
     stc
     jz iurrDone
@@ -2381,6 +2396,11 @@ get_usb_req_data    Proc far
     mov ax,USB_REQ_HANDLE
     DerefHandle
     jc gurdDone
+;
+    mov al,ds:[ebx].rh_deleted
+    or al,al
+    stc
+    jnz gurdDone
 ;
     test ds:[ebx].rh_flags,REQ_FLAG_ACTIVE
     stc
@@ -2449,6 +2469,9 @@ close_usb_req   Proc far
     jc crDone
 ;
     call CleanupReq
+    mov al,ds:[ebx].rh_deleted
+    or al,al
+    jnz crFreeList
 ;
     test ds:[ebx].rh_flags,REQ_FLAG_STARTED
     jz crFreeList
