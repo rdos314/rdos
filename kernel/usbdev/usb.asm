@@ -69,7 +69,6 @@ pipe_handle_struc       STRUC
 up_base         handle_header <>
 up_handle_list  DD ?
 up_func_sel     DW ?
-up_pipe_sel     DW ?
 up_pipe         DB ?
 up_copy         DB ?
 up_list         DW ?
@@ -3046,13 +3045,13 @@ LockAndGetPipe	Endp
 ;
 ;           NAME:           OpenUsbPipe
 ;
-;           description:    Open USB pipe
+;       description:    Open USB pipe
 ;
 ;       parameters:     BX      Controller #
-;               AL      Device address (1..128)
-;               DL      Pipe # (bit 7 is direction)
+;                       AL      Device address (1..128)
+;                       DL      Pipe # (bit 7 is direction)
 ;
-;       RETURNS:    BX      Pipe handle
+;       RETURNS:        BX      Pipe handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3094,45 +3093,16 @@ open_usb_pipe    Proc far
     mov fs,si
     movzx bx,fs:usbf_port
     add bx,bx
-    mov bx,es:[bx].usb_port_arr
-    or bx,bx
+    mov bp,es:[bx].usb_port_arr
+    or bp,bp
     jz oupFail
 ;
-    mov ds,bx
-    EnterSection ds:usb_sync_section
-;
-    and dl,8Fh
-    test dl,80h
-    jz oupOut    
-
-oupIn:
-    movzx si,dl
-    and si,0Fh
-    add si,si
-    mov di,fs:[si].usbf_in_endpoint_arr
-    or di,di
-    jnz oupCreateHandle    
-;
-    LeaveSection ds:usb_sync_section
-    jmp oupFail
-
-oupOut:
-    movzx si,dl
-    add si,si
-    mov di,fs:[si].usbf_out_endpoint_arr
-    or di,di
-    jnz oupCreateHandle    
-;
-    LeaveSection ds:usb_sync_section
-    jmp oupFail
-
-oupCreateHandle:    
     xor dh,dh
-    push ds
+    and dl,8Fh
+;
     mov ax,es
     mov ds,ax
     call fword ptr ds:has_64bit_proc
-    pop ds
     jnc oupAlloc
 ;
     HasPhysical64
@@ -3142,12 +3112,9 @@ oupCreateHandle:
 
 oupAlloc:
     mov esi,ds:usb_handle_list
-    mov bp,ds
-    push ds
     mov cx,SIZE pipe_handle_struc
     AllocateHandle
     mov [ebx].up_func_sel,es
-    mov [ebx].up_pipe_sel,di
     mov [ebx].up_pipe,dl
     mov [ebx].up_copy,dh
     mov [ebx].up_list,0
@@ -3157,9 +3124,9 @@ oupAlloc:
     mov [ebx].hh_sign,USB_PIPE_HANDLE
     mov esi,ebx
     mov bx,[ebx].hh_handle
-    pop ds
+;
+    mov ds,bp
     mov ds:usb_handle_list,esi
-    LeaveSection ds:usb_sync_section
     clc
     jmp oupDone
 
@@ -3195,16 +3162,34 @@ close_usb_pipe_name     DB 'Close USB Pipe',0
 close_usb_pipe  Proc far
     push ds
     push ebx
+    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc cupDone
 ;
     call CleanupHandle
+    mov al,ds:[ebx].up_deleted
+    or al,al
+    stc
+    jnz cupFree
+;
+    call LockAndGetPipe
+    jc cupLeave
+;
+    mov fs:usbp_signal,0
+    mov fs:usbp_wait,0
+
+cupLeave:
+    mov ds,bp
+    LeaveSection ds:usb_sync_section
+
+cupFree:
     FreeHandle
     clc
 
 cupDone:
+    pop bp
     pop ebx
     pop ds
     retf32
