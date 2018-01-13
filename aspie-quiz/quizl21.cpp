@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizL21::TQuizL21(const char *FileName)
-  : TQuiz(130),
+  : TQuiz(132),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -109,7 +109,7 @@ int TQuizL21::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizL21::GetQuizN()
 {
-    return 130;
+    return 132;
 }
 
 /*##########################################################################
@@ -423,6 +423,8 @@ void TQuizL21::SetupTexts()
   Quiz[127].MyGroup = GROUP_MIXED;
   Quiz[128].MyGroup = GROUP_MIXED;
   Quiz[129].MyGroup = GROUP_MIXED;
+  Quiz[130].MyGroup = GROUP_MIXED;
+  Quiz[131].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Do you have an avid perseverance in gathering and/or cataloguing information on a topic of interest?";
@@ -555,6 +557,8 @@ void TQuizL21::SetupTexts()
   Quiz[127].Text = "If you have to be touched, do you prefer it to be firmly rather than lightly?";
   Quiz[128].Text = "Do you dislike being hugged when you haven’t asked for it?";
   Quiz[129].Text = "Are you homosexual or bisexual?";
+  Quiz[130].Text = "Are you sensitive to electromagnetic fields?";
+  Quiz[131].Text = "Are your inner thoughts verbal?";
 
 }
 
@@ -739,7 +743,7 @@ void TQuizL21::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 130; i++)
+    for (i = 0; i < 132; i++)
             DefineGlobalId(i, i);
 }
 

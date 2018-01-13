@@ -166,6 +166,7 @@ void ConvFr1();
 void ConvEs1();
 
 void ConvRu();
+void ConvRu4();
 void ConvRu4a();
 void ConvPl4a();
 void ConvSw4a();
@@ -701,7 +702,7 @@ int main(int argc, char **argv)
  
 */
 
-    ConvL21();
+    ConvRu4();
         
     return 0;
 }
