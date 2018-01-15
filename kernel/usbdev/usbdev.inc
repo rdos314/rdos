@@ -213,6 +213,7 @@ usb_user_pipe_struc     STRUC
 usbu_func_sel       DW ?
 usbu_port_sel       DW ?
 usbu_pipe_sel       DW ?
+usbu_data_list      DW ?
 usbu_section        section_typ <>
 usbu_copy           DB ?
 usbu_pipe           DB ?

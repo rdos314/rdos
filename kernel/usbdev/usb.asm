@@ -342,6 +342,71 @@ HandleWriteData  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           HandlePipeWrite
+;
+;       description:    Handle write data request
+;
+;       parameters:     DS      User pipe sel
+;                       ES:EDI  Buffer
+;                       CX      Size
+;
+;       Returns:        ES:EDI  Buffer to use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandlePipeWrite  Proc near
+    push eax
+;    
+    mov al,ds:usbu_copy
+    or al,al
+    jz hpwDone
+;
+    push edx
+;    
+    call AllocateBuf32
+;
+    push ds
+    push esi
+    push ecx
+;
+    mov esi,edi
+    mov ax,es
+    mov ds,ax
+    mov edi,edx
+    mov ax,flat_sel
+    mov es,ax
+    movzx ecx,cx
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    pop ecx
+    pop esi
+    pop ds
+;    
+    mov eax,SIZE pipe_copy_struc
+    AllocateSmallGlobalMem
+    mov es:pc_user_offset,0
+    mov es:pc_user_sel,0
+    mov es:pc_usb_linear,edx
+    mov es:pc_size,cx
+;
+    mov ax,ds:usbu_data_list
+    mov es:pc_next,ax
+    mov ds:usbu_data_list,es
+;
+    mov edi,edx
+    mov ax,flat_sel
+    mov es,ax
+;        
+    pop edx
+
+hpwDone:
+    pop eax    
+    ret
+HandlePipeWrite  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CleanupData
 ;
 ;       description:    Cleanup after data transfer
@@ -3397,6 +3462,7 @@ CreateUserPipe	Proc near
     InitSection es:usbu_section
     mov es:usbu_func_sel,bx
     mov es:usbu_port_sel,ds
+    mov es:usbu_data_list,0
     mov es:usbu_pipe,dl
     mov es:usbu_copy,dh
     mov es:usbu_deleted,0
@@ -3585,7 +3651,6 @@ close_usb_pipe_name     DB 'Close USB Pipe',0
 close_usb_pipe  Proc far
     push ds
     push ebx
-    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
@@ -3619,7 +3684,6 @@ cupFree:
     clc
 
 cupDone:
-    pop bp
     pop ebx
     pop ds
     retf32
@@ -3643,29 +3707,35 @@ reset_usb_pipe     Proc far
     push fs
     push ax
     push ebx
-    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc rupDone
 ;
     call CleanupData
-    mov al,ds:[ebx].up_deleted
+;
+    mov ds,ds:[ebx].up_pipe_sel
+    mov al,ds:usbu_deleted
     or al,al
     stc
     jnz rupDone
 ;
-    call LockAndGetPipe
-    jc rupLeave
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    stc
+    jz rupLeave
 ;
+    push ds
+    mov fs,ax
+    mov ds,ds:usbu_func_sel
     call fword ptr ds:reset_pipe_proc
+    pop ds
 
 rupLeave:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
+    LeaveSection ds:usbu_section
 
 rupDone:
-    pop bp
     pop ebx
     pop ax
     pop fs
@@ -3982,13 +4052,13 @@ write_usb_control16     Proc far
     push ax
     push ebx
     push cx
-    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc wucDone16
 ;
-    mov al,ds:[ebx].up_deleted
+    mov ds,ds:[ebx].up_pipe_sel
+    mov al,ds:usbu_deleted
     or al,al
     stc
     jnz wucDone16
@@ -3997,21 +4067,27 @@ write_usb_control16     Proc far
     push edi
 ;    
     movzx edi,di
-    call HandleWriteData
-    call LockAndGetPipe
-    jc wucLeave16
+    call HandlePipeWrite
 ;
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    stc
+    jz wucLeave16
+;
+    push ds
+    mov fs,ax
+    mov ds,ds:usbu_func_sel
     call fword ptr ds:add_setup_proc
+    pop ds
 
 wucLeave16:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
+    LeaveSection ds:usbu_section
 ;
     pop edi
     pop es
 
 wucDone16:
-    pop bp
     pop cx
     pop ebx
     pop ax
@@ -4026,13 +4102,13 @@ write_usb_control32     Proc far
     push ax
     push ebx
     push cx
-    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc wucDone32
 ;
-    mov al,ds:[ebx].up_deleted
+    mov ds,ds:[ebx].up_pipe_sel
+    mov al,ds:usbu_deleted
     or al,al
     stc
     jnz wucDone32
@@ -4040,21 +4116,27 @@ write_usb_control32     Proc far
     push es
     push edi
 ;
-    call HandleWriteData    
-    call LockAndGetPipe
-    jc wucLeave32
+    call HandlePipeWrite 
 ;
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    stc
+    jz wucLeave32
+;
+    push ds
+    mov fs,ax
+    mov ds,ds:usbu_func_sel
     call fword ptr ds:add_setup_proc
+    pop ds
 
 wucLeave32:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
+    LeaveSection ds:usbu_section
 ;
     pop edi
     pop es    
 
 wucDone32:
-    pop bp
     pop cx
     pop ebx
     pop ax
