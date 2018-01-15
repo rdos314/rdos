@@ -3482,79 +3482,6 @@ chListDone:
 CleanupHandle	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           LockAndGetPipe
-;
-;           DESCRIPTION:    Lock and get pipe & function selector from handle
-;
-;           PARAMETERS:     DS:EBX          Handle data
-;
-;           RETURNS:        NC	
-;				DS          Function sel
-;                           	FS	    Pipe sel
-;                           BP              Port sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockAndGetPipe	Proc near
-    push ax
-    push dx
-    push si
-    push di
-;
-    mov bp,ds:[ebx].up_port_sel
-    mov di,ds:[ebx].up_func_sel
-    mov dl,ds:[ebx].up_pipe
-    mov ds,bp
-    EnterSection ds:usb_sync_section
-    mov ax,ds:usb_function_sel
-    or ax,ax
-    jz lgpFail
-;
-    mov ds,ax
-    and dl,8Fh
-    test dl,80h
-    jz lgpOut    
-
-lgpIn:
-    movzx si,dl
-    and si,0Fh
-    add si,si
-    mov ax,ds:[si].usbf_in_endpoint_arr
-    or ax,ax
-    jnz lgpOk
-;
-    jmp lgpFail
-
-lgpOut:
-    movzx si,dl
-    add si,si
-    mov ax,ds:[si].usbf_out_endpoint_arr
-    or ax,ax
-    jnz lgpOk    
-
-lgpFail:
-    xor ax,ax
-    mov ds,ax
-    mov fs,ax
-    stc
-    jmp lgpDone
-
-lgpOk:
-    mov ds,di
-    mov fs,ax
-    clc
-
-lgpDone:
-    pop di
-    pop si
-    pop dx
-    pop ax
-    ret
-LockAndGetPipe	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:       CreateUserPipe
@@ -5057,28 +4984,33 @@ is_usb_pipe_stalled    Proc far
     push ds
     push fs
     push ebx
-    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc iupsDone
 ;
-    mov al,ds:[ebx].up_deleted
+    mov ds,ds:[ebx].up_pipe_sel
+    mov al,ds:usbu_deleted
     or al,al
     stc
     jnz iupsDone
 ;
-    call LockAndGetPipe
-    jc iupsLeave
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    stc
+    jz iupsLeave
 ;
+    push ds
+    mov fs,ax
+    mov ds,ds:usbu_func_sel
     call fword ptr ds:is_stalled_proc
+    pop ds
 
 iupsLeave:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
+    LeaveSection ds:usbu_section
 
 iupsDone:
-    pop bp
     pop ebx
     pop fs
     pop ds
