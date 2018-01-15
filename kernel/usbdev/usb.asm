@@ -69,6 +69,7 @@ pipe_handle_struc       STRUC
 up_base         handle_header <>
 up_handle_list  DD ?
 up_func_sel     DW ?
+up_pipe_sel     DW ?
 up_pipe         DB ?
 up_copy         DB ?
 up_list         DW ?
@@ -1196,6 +1197,8 @@ AddUsbFunction       Proc near
     push fs
     push ax
     push bx
+    push cx
+    push di
 ;
     movzx bx,es:usbf_port
     add bx,bx
@@ -1211,6 +1214,17 @@ AddUsbFunction       Proc near
     mov es:usb_function_sel,0
     mov es:usb_port,bl
     InitSection es:usb_sync_section
+;
+    mov cx,16
+    mov di,OFFSET usb_in_pipe_arr
+    xor ax,ax
+    stosw
+;
+    mov cx,16
+    mov di,OFFSET usb_out_pipe_arr
+    xor ax,ax
+    stosw
+;
     mov ax,es
     pop es
     mov ds:[bx].usb_port_arr,ax
@@ -1219,6 +1233,8 @@ aufAdd:
     mov fs,ax
     mov fs:usb_function_sel,es
 ;
+    pop di
+    pop cx
     pop bx
     pop ax
     pop fs
@@ -3249,11 +3265,77 @@ lgpDone:
     ret
 LockAndGetPipe	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:       CreateUserPipe
+;
+;       description:    Create user pipe
+;
+;       parameters:     DS	Port sel
+;                       ES      Function sel
+;                       DL      Pipe #
+;                       DH      Copy
+;
+;       RETURNS:        AX      User pipe
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateUserPipe	Proc near
+    push ds
+    push es
+    push bx
+    push si
+;
+    mov bx,es
+    mov eax,SIZE usb_user_pipe_struc
+    AllocateSmallGlobalMem
+;
+    InitSection es:usbu_section
+    mov es:usbu_func_sel,bx
+    mov es:usbu_port_sel,ds
+    mov es:usbu_pipe,dl
+    mov es:usbu_copy,dh
+    mov es:usbu_deleted,0
+;
+    mov ax,ds:usb_function_sel
+    or ax,ax
+    jz cupSave
+;
+    mov ds,ax
+    and dl,8Fh
+    test dl,80h
+    jz cupOut    
+
+cupIn:
+    movzx si,dl
+    and si,0Fh
+    add si,si
+    mov ax,ds:[si].usbf_in_endpoint_arr
+    jmp cupSave
+
+cupOut:
+    movzx si,dl
+    add si,si
+    mov ax,ds:[si].usbf_out_endpoint_arr
+    jmp cupSave
+
+cupSave:
+    mov es:usbu_pipe_sel,ax
+    mov ax,es
+;
+    pop si
+    pop bx
+    pop es
+    pop ds
+    ret
+CreateUserPipe  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           OpenUsbPipe
+;           NAME:       OpenUsbPipe
 ;
 ;       description:    Open USB pipe
 ;
@@ -3321,11 +3403,40 @@ open_usb_pipe    Proc far
     mov dh,1
 
 oupAlloc:
+    int 3
     mov ds,bp
+    and dl,8Fh
+    test dl,80h
+    jz oupOut    
+
+oupIn:
+    movzx si,dl
+    and si,0Fh
+    add si,si
+    mov ax,ds:[si].usb_in_pipe_arr
+    or ax,ax
+    jnz oupOk
+;
+    call CreateUserPipe
+    mov ds:[si].usb_in_pipe_arr,ax
+    jmp oupOk
+
+oupOut:
+    movzx si,dl
+    add si,si
+    mov ax,ds:[si].usb_out_pipe_arr
+    or ax,ax
+    jnz oupOk    
+;
+    call CreateUserPipe
+    mov ds:[si].usb_out_pipe_arr,ax
+
+oupOk:
     mov esi,ds:usb_handle_list
     mov cx,SIZE pipe_handle_struc
     AllocateHandle
     mov [ebx].up_func_sel,es
+    mov [ebx].up_pipe_sel,ax
     mov [ebx].up_pipe,dl
     mov [ebx].up_copy,dh
     mov [ebx].up_list,0
