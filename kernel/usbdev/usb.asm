@@ -78,9 +78,7 @@ pipe_handle_struc       ENDS
 pipe_wait_header    STRUC
 
 pw_obj          wait_obj_header <>
-pw_func_sel     DW ?
-pw_port_sel     DW ?
-pw_pipe         DB ?
+pw_pipe_sel     DW ?
 
 pipe_wait_header    ENDS
 
@@ -3584,79 +3582,6 @@ delete_handle_done:
     retf32
 delete_handle   Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           LockWaitPipe
-;
-;           DESCRIPTION:    Lock and get pipe & function selector from wait object
-;
-;           PARAMETERS:     ES	            Wait object
-;
-;           RETURNS:        NC	
-;				DS          Function sel
-;                           	FS	    Pipe sel
-;                           BP              Port sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockWaitPipe	Proc near
-    push ax
-    push dx
-    push si
-    push di
-;
-    mov bp,es:pw_port_sel
-    mov di,es:pw_func_sel
-    mov dl,es:pw_pipe
-    mov ds,bp
-    EnterSection ds:usb_sync_section
-    mov ax,ds:usb_function_sel
-    or ax,ax
-    jz lwpFail
-;
-    mov ds,ax
-    and dl,8Fh
-    test dl,80h
-    jz lwpOut    
-
-lwpIn:
-    movzx si,dl
-    and si,0Fh
-    add si,si
-    mov ax,ds:[si].usbf_in_endpoint_arr
-    or ax,ax
-    jnz lwpOk
-;
-    jmp lwpFail
-
-lwpOut:
-    movzx si,dl
-    add si,si
-    mov ax,ds:[si].usbf_out_endpoint_arr
-    or ax,ax
-    jnz lwpOk    
-
-lwpFail:
-    xor ax,ax
-    mov ds,ax
-    mov fs,ax
-    stc
-    jmp lwpDone
-
-lwpOk:
-    mov ds,di
-    mov fs,ax
-    clc
-
-lwpDone:
-    pop di
-    pop si
-    pop dx
-    pop ax
-    ret
-LockWaitPipe	Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3672,26 +3597,38 @@ LockWaitPipe	Endp
 start_wait_for_pipe     PROC far
     push ds
     push fs
-    push bp
 ;
-    call LockWaitPipe
-    jc swfpSignal
+    mov ds,es:pw_pipe_sel
+    mov al,ds:usbu_deleted
+    or al,al
+    jz swfpLock
 ;
+    SignalWait
+    jmp swfpDone
+
+swfpLock:
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    jz swfpSignalLeave
+;
+    push ds
+    mov fs,ax
+    mov ds,ds:usbu_func_sel
     mov fs:usbp_wait,es
-;
     call fword ptr ds:is_transfer_done_proc
-    jc swfpDone
+    pop ds
+    jc swfpLeave
 ;    
     mov fs:usbp_wait,0
 
-swfpSignal:
+swfpSignalLeave:
     SignalWait
 
+swfpLeave:
+    LeaveSection ds:usbu_section
+
 swfpDone:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
-;
-    pop bp
     pop fs
     pop ds    
     retf32
@@ -3711,18 +3648,26 @@ start_wait_for_pipe Endp
 stop_wait_for_pipe      PROC far
     push ds
     push fs
-    push bp
 ;
-    call LockWaitPipe
-    jc swDone
+    mov ds,es:pw_pipe_sel
+    mov al,ds:usbu_deleted
+    or al,al
+    stc
+    jnz swDone
 ;
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    stc
+    jz swLeave
+;
+    mov fs,ax
     mov fs:usbp_wait,0
 
+swLeave:
+    LeaveSection ds:usbu_section
+
 swDone:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
-;
-    pop bp
     pop fs
     pop ds    
     retf32
@@ -3759,19 +3704,30 @@ clear_wait_for_pipe Endp
 is_pipe_idle    PROC far
     push ds
     push fs
-    push bp
 ;
-    call LockWaitPipe
-    jc ipdDone
+    mov ds,es:pw_pipe_sel
+    mov al,ds:usbu_deleted
+    or al,al
+    stc
+    jnz ipdDone
 ;
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    stc
+    jz ipdLeave
+;
+    push ds
+    mov fs,ax
+    mov ds,ds:usbu_func_sel
     call fword ptr ds:is_transfer_done_proc
     cmc
+    pop ds
+
+ipdLeave:
+    LeaveSection ds:usbu_section
 
 ipdDone:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
-;
-    pop bp
     pop fs
     pop ds    
     retf32
@@ -3813,9 +3769,7 @@ add_wait_for_pipe       PROC far
     DerefHandle
     jc add_wait_pop_done
 ;
-    mov fs,ds:[ebx].up_port_sel
-    mov dl,ds:[ebx].up_pipe
-    mov ds,ds:[ebx].up_func_sel
+    mov dx,ds:[ebx].up_pipe_sel
     pop bx
 ;
     mov ax,cs
@@ -3825,9 +3779,7 @@ add_wait_for_pipe       PROC far
     AddWait
     jc add_wait_done
 ;
-    mov es:pw_func_sel,ds
-    mov es:pw_port_sel,fs
-    mov es:pw_pipe,dl
+    mov es:pw_pipe_sel,dx
     clc
     jmp add_wait_done
 
