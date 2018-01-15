@@ -1764,7 +1764,8 @@ add_write_usb_control_req       Proc far
     jc awucDone
 ;
     push ds
-    mov ds,ds:[ebx].rh_func_sel
+    mov ds,ds:[ebx].rh_pipe_sel
+    mov ds,ds:usbu_func_sel
     movzx eax,ax
     call AllocateBufSel     
     mov ax,es
@@ -1814,7 +1815,8 @@ add_write_usb_data_req  Proc far
     jc awudDone
 ;
     push ds
-    mov ds,ds:[ebx].rh_func_sel
+    mov ds,ds:[ebx].rh_pipe_sel
+    mov ds,ds:usbu_func_sel
     add ax,cx
     movzx eax,ax
     call AllocateBufSel     
@@ -1865,7 +1867,8 @@ add_read_usb_data_req   Proc far
     jc arudDone
 ;
     push ds
-    mov ds,ds:[ebx].rh_func_sel
+    mov ds,ds:[ebx].rh_pipe_sel
+    mov ds,ds:usbu_func_sel
     add ax,cx
     movzx eax,ax
     call AllocateBufSel     
@@ -1961,80 +1964,6 @@ ausoDone:
     pop ds
     retf32
 add_usb_status_out_req   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           LockReqPipe
-;
-;           DESCRIPTION:    Lock and get pipe & function selector from handle
-;
-;           PARAMETERS:     DS:EBX          Handle data
-;
-;           RETURNS:        NC	
-;				DS          Function sel
-;                           	FS	    Pipe sel
-;                           BP              Port sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockReqPipe	Proc near
-    push ax
-    push dx
-    push si
-    push di
-;
-    mov bp,ds:[ebx].rh_port_sel
-    mov di,ds:[ebx].rh_func_sel
-    mov dl,ds:[ebx].rh_pipe
-    mov ds,bp
-    EnterSection ds:usb_sync_section
-    mov ax,ds:usb_function_sel
-    or ax,ax
-    jz lrpFail
-;
-    mov ds,ax
-    and dl,8Fh
-    test dl,80h
-    jz lrpOut    
-
-lrpIn:
-    movzx si,dl
-    and si,0Fh
-    add si,si
-    mov ax,ds:[si].usbf_in_endpoint_arr
-    or ax,ax
-    jnz lrpOk
-;
-    jmp lrpFail
-
-lrpOut:
-    movzx si,dl
-    add si,si
-    mov ax,ds:[si].usbf_out_endpoint_arr
-    or ax,ax
-    jnz lrpOk    
-
-lrpFail:
-    xor ax,ax
-    mov ds,ax
-    mov fs,ax
-    stc
-    jmp lrpDone
-
-lrpOk:
-    mov ds,di
-    mov fs,ax
-    clc
-
-lrpDone:
-    pop di
-    pop si
-    pop dx
-    pop ax
-    ret
-LockReqPipe	Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
