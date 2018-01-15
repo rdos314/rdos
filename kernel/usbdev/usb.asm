@@ -3592,22 +3592,29 @@ close_usb_pipe  Proc far
     jc cupDone
 ;
     call CleanupHandle
-    mov al,ds:[ebx].up_deleted
+;
+    mov ds,ds:[ebx].up_pipe_sel
+    mov al,ds:usbu_deleted
     or al,al
     stc
     jnz cupFree
 ;
-    call LockAndGetPipe
-    jc cupLeave
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    stc
+    jz cupLeave
 ;
+    mov fs,ax
     mov fs:usbp_signal,0
     mov fs:usbp_wait,0
 
 cupLeave:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
+    LeaveSection ds:usbu_section
 
 cupFree:
+    mov ds:usbu_deleted,0
+;
     FreeHandle
     clc
 
