@@ -4953,29 +4953,35 @@ was_usb_trans_ok    Proc far
     push ds
     push fs
     push ebx
-    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc wutoDone
 ;
-    call CleanupData
-    mov al,ds:[ebx].up_deleted
+    mov ds,ds:[ebx].up_pipe_sel
+    call CleanupPipe
+;
+    mov al,ds:usbu_deleted
     or al,al
     stc
     jnz wutoDone
 ;
-    call LockAndGetPipe
-    jc wutoLeave
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    stc
+    jz wutoLeave
 ;
+    push ds
+    mov fs,ax
+    mov ds,ds:usbu_func_sel
     call fword ptr ds:was_transfer_ok_proc
+    pop ds
 
 wutoLeave:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
+    LeaveSection ds:usbu_section
 
 wutoDone:
-    pop bp
     pop ebx
     pop fs
     pop ds
@@ -4999,28 +5005,33 @@ start_one_usb_trans    Proc far
     push ds
     push fs
     push ebx
-    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc soutDone
 ;
-    mov al,ds:[ebx].up_deleted
+    mov ds,ds:[ebx].up_pipe_sel
+    mov al,ds:usbu_deleted
     or al,al
     stc
     jnz soutDone
 ;
-    call LockAndGetPipe
-    jc soutLeave
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    stc
+    jz soutLeave
 ;
+    push ds
+    mov fs,ax
+    mov ds,ds:usbu_func_sel
     call fword ptr ds:issue_one_proc
+    pop ds
 
 soutLeave:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
+    LeaveSection ds:usbu_section
 
 soutDone:
-    pop bp
     pop ebx
     pop fs
     pop ds
