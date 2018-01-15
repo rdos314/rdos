@@ -67,9 +67,7 @@ pipe_copy_struc     ENDS
 pipe_handle_struc       STRUC
 
 up_base         handle_header <>
-up_func_sel     DW ?
 up_pipe_sel     DW ?
-up_pipe         DB ?
 up_port_sel     DW ?
 up_deleted      DB ?
 
@@ -3066,46 +3064,6 @@ suiDone:
     retf32
 set_usb_interface    Endp    
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           CleanupHandle
-;
-;           DESCRIPTION:    Clean up USB handle
-;
-;           PARAMETERS:     DS:EBX          Handle data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CleanupHandle	Proc near
-    push ds
-    push es
-    push eax
-    push esi
-    push bp
-;
-    mov bp,ds:[ebx].up_port_sel
-    mov es,bp
-;
-    push ds
-    mov ds,bp
-    EnterSection ds:usb_sync_section
-    pop ds
-;
-    mov ds,ds:[ebx].up_pipe_sel
-    call CleanupPipe
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
-;
-    pop bp
-    pop esi
-    pop eax
-    pop es
-    pop ds
-    ret
-CleanupHandle	Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3275,9 +3233,7 @@ oupOut:
 oupOk:
     mov cx,SIZE pipe_handle_struc
     AllocateHandle
-    mov [ebx].up_func_sel,es
     mov [ebx].up_pipe_sel,ax
-    mov [ebx].up_pipe,dl
     mov [ebx].up_port_sel,bp
     mov [ebx].up_deleted,0
     mov [ebx].hh_sign,USB_PIPE_HANDLE
@@ -3325,9 +3281,11 @@ close_usb_pipe  Proc far
     DerefHandle
     jc cupDone
 ;
-    call CleanupHandle
+    push ds
 ;
     mov ds,ds:[ebx].up_pipe_sel
+    call CleanupPipe
+;
     mov al,ds:usbu_deleted
     or al,al
     stc
@@ -3348,7 +3306,7 @@ cupLeave:
 
 cupFree:
     mov ds:usbu_deleted,0
-;
+    pop ds
     FreeHandle
     clc
 
@@ -3429,7 +3387,11 @@ delete_handle   Proc far
     DerefHandle
     jc delete_handle_done
 ;
-    call CleanupHandle
+    push ds
+    mov ds,ds:[ebx].up_pipe_sel
+    call CleanupPipe
+    pop ds
+;
     FreeHandle
     clc
 
