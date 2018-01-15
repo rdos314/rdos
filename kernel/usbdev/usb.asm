@@ -1205,7 +1205,6 @@ AddUsbFunction       Proc near
     push es
     mov eax,SIZE usb_port_struc
     AllocateSmallGlobalMem
-    mov es:usb_req_list,0
     mov es:usb_function_sel,0
     mov es:usb_port,bl
     InitSection es:usb_sync_section
@@ -1308,25 +1307,6 @@ rufOutNext:
 ;
     xor ax,ax
     xchg ax,ds:usb_function_sel
-;
-    mov ebx,ds:usb_req_list
-    or ebx,ebx
-    jz rufReqDone
-;
-    push ax
-    GetThread
-    mov es,ax    
-    mov es,es:p_app_sel
-    mov es,es:app_handle_mem_sel
-    pop ax
-
-rufReqLoop:
-    mov es:[ebx].rh_deleted,1
-    mov ebx,es:[ebx].rh_handle_list
-    or ebx,ebx
-    jnz rufReqLoop
-
-rufReqDone:
     LeaveSection ds:usb_sync_section
 ;
     or ax,ax
@@ -1559,65 +1539,6 @@ nudDone:
 notify_usb_detach   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           CleanupReq
-;
-;           DESCRIPTION:    Clean up req handle
-;
-;           PARAMETERS:     DS:EBX          Handle data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CleanupReq	Proc near
-    push ds
-    push es
-    push eax
-    push esi
-    push bp
-;
-    mov bp,ds:[ebx].rh_port_sel
-    mov es,bp
-;
-    push ds
-    mov ds,bp
-    EnterSection ds:usb_sync_section
-    pop ds
-;
-    mov esi,es:usb_req_list    
-    cmp ebx,esi
-    jne crListLoop
-;
-    mov esi,ds:[esi].rh_handle_list
-    mov es:rh_handle_list,esi
-    jmp crListDone
-
-crListLoop:
-    cmp ebx,ds:[esi].rh_handle_list
-    jne crListNext
-;
-    mov eax,ds:[ebx].rh_handle_list
-    mov ds:[esi].rh_handle_list,eax
-    jmp crListDone
-
-crListNext:
-    mov esi,ds:[esi].rh_handle_list
-    or esi,esi
-    jnz crListLoop
-
-crListDone:    
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
-;
-    pop bp
-    pop esi
-    pop eax
-    pop es
-    pop ds
-    ret
-CleanupReq	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           AddReqBlock
@@ -1702,7 +1623,6 @@ create_usb_req  Proc far
 ;
     mov ds,bp
     EnterSection ds:usb_sync_section
-    mov esi,ds:usb_req_list
 ;       
     mov cx,SIZE req_handle_struc
     AllocateHandle
@@ -1720,7 +1640,6 @@ create_usb_req  Proc far
     mov bx,[ebx].hh_handle
 ;
     mov ds,bp
-    mov ds:usb_req_list,esi
     LeaveSection ds:usb_sync_section
     clc
 
@@ -2462,8 +2381,6 @@ close_usb_req   Proc far
     mov ax,USB_REQ_HANDLE
     DerefHandle
     jc crDone
-;
-    call CleanupReq
 ;
     mov ax,ds
     mov fs,ax

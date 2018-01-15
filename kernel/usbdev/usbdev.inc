@@ -198,7 +198,6 @@ usb_pipe_struc   ENDS
 
 usb_port_struc  STRUC
 
-usb_req_list        DD ?
 usb_function_sel    DW ?
 usb_sync_section    section_typ <>
 usb_in_pipe_arr     DW 16 DUP(?)
