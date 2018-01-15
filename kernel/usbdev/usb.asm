@@ -4134,28 +4134,33 @@ req_usb_data_no_copy    Proc far
     push fs
     push ax
     push ebx
-    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc rudncDone
 ;
-    mov al,ds:[ebx].up_deleted
+    mov ds,ds:[ebx].up_pipe_sel
+    mov al,ds:usbu_deleted
     or al,al
     stc
     jnz rudncDone
 ;
-    call LockAndGetPipe
-    jc rudncLeave
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    stc
+    jz rudncLeave
 ;
+    push ds
+    mov fs,ax
+    mov ds,ds:usbu_func_sel
     call fword ptr ds:add_in_proc
+    pop ds
 
 rudncLeave:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
+    LeaveSection ds:usbu_section
 
 rudncDone:
-    pop bp
     pop ebx
     pop ax
     pop fs
@@ -4387,28 +4392,33 @@ write_usb_data_no_copy    Proc far
     push ax
     push ebx
     push cx
-    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc wudncDone
 ;
-    mov al,ds:[ebx].up_deleted
+    mov ds,ds:[ebx].up_pipe_sel
+    mov al,ds:usbu_deleted
     or al,al
     stc
     jnz wudncDone
 ;
-    call LockAndGetPipe
-    jc wudncLeave
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    stc
+    jz wudncLeave
 ;
+    push ds
+    mov fs,ax
+    mov ds,ds:usbu_func_sel
     call fword ptr ds:add_out_proc
+    pop ds
 
 wudncLeave:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
+    LeaveSection ds:usbu_section
 
 wudncDone:
-    pop bp
     pop cx
     pop ebx
     pop ax
