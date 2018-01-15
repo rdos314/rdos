@@ -86,14 +86,8 @@ req_handle_struc    STRUC
 
 rh_base         handle_header <>
 rh_pipe_sel     DW ?
-rh_func_sel     DW ?
-rh_port_sel     DW ?
-rh_signal       DW ?
 rh_list         DW ?
-rh_handle_list  DD ?
 rh_flags        DB ?
-rh_pipe         DB ?
-rh_deleted      DB ?
 
 req_handle_struc    ENDS
 
@@ -1610,37 +1604,16 @@ create_usb_req  Proc far
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc curDone
-;       
-    mov al,ds:[ebx].up_deleted
-    or al,al
-    stc
-    jnz curDone
 ;
-    mov ax,ds:[ebx].up_func_sel
-    mov dl,ds:[ebx].up_pipe
-    mov bp,ds:[ebx].up_port_sel
-    mov di,ds:[ebx].up_pipe_sel
-;
-    mov ds,bp
-    EnterSection ds:usb_sync_section
-;       
+    mov ax,ds:[ebx].up_pipe_sel       
     mov cx,SIZE req_handle_struc
     AllocateHandle
-    mov [ebx].rh_pipe_sel,di
-    mov [ebx].rh_func_sel,ax
-    mov [ebx].rh_port_sel,bp
-    mov [ebx].rh_handle_list,esi
+    mov [ebx].rh_pipe_sel,ax
     mov [ebx].rh_list,0
-    mov [ebx].rh_signal,0
     mov [ebx].rh_flags,0
-    mov [ebx].rh_deleted,0
-    mov [ebx].rh_pipe,dl
     mov [ebx].hh_sign,USB_REQ_HANDLE
     mov esi,ebx
     mov bx,[ebx].hh_handle
-;
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
     clc
 
 curDone:
