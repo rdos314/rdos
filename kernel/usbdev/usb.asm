@@ -342,6 +342,147 @@ HandleWriteData  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CleanupData
+;
+;       description:    Cleanup after data transfer
+;
+;       parameters:     DS:EBX  Handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CleanupData  Proc near  
+    push eax
+;    
+    xor ax,ax
+    xchg ax,ds:[ebx].up_list
+
+cdLoop:    
+    or ax,ax
+    jz cdDone
+;
+    push es
+    mov es,ax
+;
+    mov ax,es:pc_user_sel
+    or ax,ax
+    jz cdCopyOk
+;
+    push ds
+    push es
+    push ecx
+    push esi
+    push edi
+;    
+    movzx ecx,es:pc_size
+    mov esi,es:pc_usb_linear
+    mov ax,flat_sel
+    mov ds,ax
+    mov edi,es:pc_user_offset
+    mov es,es:pc_user_sel
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+    pop ds  
+
+cdCopyOk:      
+    push ecx
+    push edx
+;    
+    mov edx,es:pc_usb_linear
+    movzx ecx,es:pc_size
+    FreeLinear
+;
+    pop edx
+    pop ecx   
+;     
+    mov ax,es:pc_next
+    FreeMem
+;
+    pop es    
+    jmp cdLoop
+
+cdDone:
+    pop eax       
+    ret
+CleanupData  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CleanupPipe
+;
+;       description:    Cleanup after data transfer
+;
+;       parameters:     DS       User pipe sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CleanupPipe  Proc near  
+    push eax
+;    
+    xor ax,ax
+    xchg ax,ds:usbu_data_list
+
+cpLoop:    
+    or ax,ax
+    jz cpDone
+;
+    push es
+    mov es,ax
+;
+    mov ax,es:pc_user_sel
+    or ax,ax
+    jz cpCopyOk
+;
+    push ds
+    push es
+    push ecx
+    push esi
+    push edi
+;    
+    movzx ecx,es:pc_size
+    mov esi,es:pc_usb_linear
+    mov ax,flat_sel
+    mov ds,ax
+    mov edi,es:pc_user_offset
+    mov es,es:pc_user_sel
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+    pop ds  
+
+cpCopyOk:      
+    push ecx
+    push edx
+;    
+    mov edx,es:pc_usb_linear
+    movzx ecx,es:pc_size
+    FreeLinear
+;
+    pop edx
+    pop ecx   
+;     
+    mov ax,es:pc_next
+    FreeMem
+;
+    pop es    
+    jmp cpLoop
+
+cpDone:
+    pop eax       
+    ret
+CleanupPipe  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           HandlePipeRead
 ;
 ;       description:    Handle read data request
@@ -454,76 +595,6 @@ hpwDone:
     pop eax    
     ret
 HandlePipeWrite  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CleanupData
-;
-;       description:    Cleanup after data transfer
-;
-;       parameters:     DS:EBX  Handle data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CleanupData  Proc near  
-    push eax
-;    
-    xor ax,ax
-    xchg ax,ds:[ebx].up_list
-
-cdLoop:    
-    or ax,ax
-    jz cdDone
-;
-    push es
-    mov es,ax
-;
-    mov ax,es:pc_user_sel
-    or ax,ax
-    jz cdCopyOk
-;
-    push ds
-    push es
-    push ecx
-    push esi
-    push edi
-;    
-    movzx ecx,es:pc_size
-    mov esi,es:pc_usb_linear
-    mov ax,flat_sel
-    mov ds,ax
-    mov edi,es:pc_user_offset
-    mov es,es:pc_user_sel
-    rep movs byte ptr es:[edi],ds:[esi]
-;
-    pop edi
-    pop esi
-    pop ecx
-    pop es
-    pop ds  
-
-cdCopyOk:      
-    push ecx
-    push edx
-;    
-    mov edx,es:pc_usb_linear
-    movzx ecx,es:pc_size
-    FreeLinear
-;
-    pop edx
-    pop ecx   
-;     
-    mov ax,es:pc_next
-    FreeMem
-;
-    pop es    
-    jmp cdLoop
-
-cdDone:
-    pop eax       
-    ret
-CleanupData  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3763,9 +3834,9 @@ reset_usb_pipe     Proc far
     DerefHandle
     jc rupDone
 ;
-    call CleanupData
-;
     mov ds,ds:[ebx].up_pipe_sel
+    call CleanupPipe
+;
     mov al,ds:usbu_deleted
     or al,al
     stc
@@ -4335,25 +4406,33 @@ get_usb_data_size16     Proc far
     push fs
     push ebx
     push cx
-    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc gudFail16
 ;
-    call CleanupData
-    mov al,ds:[ebx].up_deleted
+    mov ds,ds:[ebx].up_pipe_sel
+    call CleanupPipe
+;    
+    mov al,ds:usbu_deleted
     or al,al
+    stc
     jnz gudFail16
 ;
-    call LockAndGetPipe
-    jc gudLeave16
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    stc
+    jz gudLeave16
 ;
+    push ds
+    mov fs,ax
+    mov ds,ds:usbu_func_sel
     call fword ptr ds:get_data_size_proc
+    pop ds
 
 gudLeave16:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
+    LeaveSection ds:usbu_section
     jc gudFail16
 ;
     mov ax,cx
@@ -4365,7 +4444,6 @@ gudFail16:
     stc
 
 gudDone16:
-    pop bp
     pop cx
     pop ebx
     pop fs
@@ -4378,25 +4456,33 @@ get_usb_data_size32     Proc far
     push fs
     push ebx
     push cx
-    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc gudFail32
 ;
-    call CleanupData
-    mov al,ds:[ebx].up_deleted
+    mov ds,ds:[ebx].up_pipe_sel
+    call CleanupPipe
+;
+    mov al,ds:usbu_deleted
     or al,al
+    stc
     jnz gudFail32
 ;
-    call LockAndGetPipe
-    jc gudLeave32
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    stc
+    jz gudLeave32
 ;
+    push ds
+    mov fs,ax
+    mov ds,ds:usbu_func_sel
     call fword ptr ds:get_data_size_proc
+    pop ds
 
 gudLeave32:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
+    LeaveSection ds:usbu_section
     jc gudFail32
 ;
     movzx eax,cx
@@ -4406,7 +4492,6 @@ gudFail32:
     xor eax,eax
 
 gudDone32:
-    pop bp
     pop cx
     pop ebx
     pop fs
