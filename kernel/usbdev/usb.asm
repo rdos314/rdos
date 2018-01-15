@@ -2188,22 +2188,33 @@ start_usb_req   Proc far
     push fs
     push ax
     push ebx
-    push bp
+    push dx
 ;
     mov ax,USB_REQ_HANDLE
     DerefHandle
     jc surDone
 ;
-    mov al,ds:[ebx].rh_deleted
+    mov ax,ds
+    mov fs,ax
+    mov ds,ds:[ebx].rh_pipe_sel
+    mov al,ds:usbu_deleted
     or al,al
     stc
     jnz surDone
 ;
-    or ds:[ebx].rh_flags,REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE
-    mov ax,ds:[ebx].rh_list
+    EnterSection ds:usbu_section
+    mov dx,ds:usbu_pipe_sel
+    or dx,dx
+    stc
+    jz surLeave
 ;
-    call LockReqPipe
-    jc surLeave
+    or fs:[ebx].rh_flags,REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE
+    mov ax,fs:[ebx].rh_list
+;
+    push ds
+;
+    mov fs,dx
+    mov ds,ds:usbu_func_sel
 ;
     call fword ptr ds:end_transfer_proc
 
@@ -2230,13 +2241,14 @@ surIssue:
     GetThread
     mov fs:usbp_signal,ax
     call fword ptr ds:issue_transfer_proc
+;
+    pop ds
 
 surLeave:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
+    LeaveSection ds:usbu_section
 
 surDone:    
-    pop bp
+    pop dx
     pop ebx
     pop ax
     pop fs
@@ -2263,40 +2275,41 @@ stop_usb_req    Proc far
     push fs
     push ax
     push ebx
-    push bp
 ;
     mov ax,USB_REQ_HANDLE
     DerefHandle
     jc sturEnd
 ;
-    mov al,ds:[ebx].rh_deleted
+    mov ax,ds
+    mov fs,ax
+    mov ds,ds:[ebx].rh_pipe_sel
+    mov al,ds:usbu_deleted
     or al,al
     stc
     jnz sturDone
 ;
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    stc
+    jz sturLeave
+;
     push ds
-    push ebx
-;
-    call LockReqPipe
-    jc sturLeave
-;
+    mov fs,ax
+    mov ds,ds:usbu_func_sel
     call fword ptr ds:end_transfer_proc
+    pop ds
 
 sturLeave:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
-;
-    pop ebx
-    pop ds
+    LeaveSection ds:usbu_section
 ;
     mov ax,5
     WaitMilliSec    
 
 sturDone:
-    and ds:[ebx].rh_flags,NOT (REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE)
+    and fs:[ebx].rh_flags,NOT (REQ_FLAG_STARTED OR REQ_FLAG_ACTIVE)
 
 sturEnd:
-    pop bp
     pop ebx
     pop ax
     pop fs
@@ -2363,42 +2376,46 @@ is_usb_req_ready    Proc far
     push fs
     push ax
     push ebx
-    push bp
 ;
     mov ax,USB_REQ_HANDLE
     DerefHandle
     jc iurrDone
 ;
-    mov al,ds:[ebx].rh_deleted
+    mov ax,ds
+    mov fs,ax
+;
+    mov ds,ds:[ebx].rh_pipe_sel
+    mov al,ds:usbu_deleted
     or al,al
     clc
     jnz iurrDone
 ;
-    test ds:[ebx].rh_flags,REQ_FLAG_ACTIVE
+    test fs:[ebx].rh_flags,REQ_FLAG_ACTIVE
     stc
     jz iurrDone
 ;
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    clc
+    jz iurrLeave
+;
     push ds
-    push ebx
-;
-    call LockReqPipe
-    jc iurrLeave
-;
+    push fs
+    mov fs,ax
+    mov ds,ds:usbu_func_sel
     call fword ptr ds:is_transfer_done_proc
+    pop fs
+    pop ds
 
 iurrLeave:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
-;
-    pop ebx
-    pop ds
+    LeaveSection ds:usbu_section
     jc iurrDone
 ;
-    and ds:[ebx].rh_flags,NOT REQ_FLAG_STARTED
+    and fs:[ebx].rh_flags,NOT REQ_FLAG_STARTED
     clc
     
 iurrDone:       
-    pop bp
     pop ebx
     pop ax
     pop fs
@@ -2428,33 +2445,43 @@ get_usb_req_data    Proc far
     push fs
     push ax
     push ebx
-    push bp
+    push dx
 ;
     xor cx,cx
     mov ax,USB_REQ_HANDLE
     DerefHandle
     jc gurdDone
 ;
-    mov al,ds:[ebx].rh_deleted
+    mov ax,ds
+    mov fs,ax
+    mov ds,ds:[ebx].rh_pipe_sel
+    mov al,ds:usbu_deleted
     or al,al
     stc
     jnz gurdDone
 ;
-    test ds:[ebx].rh_flags,REQ_FLAG_ACTIVE
+    test fs:[ebx].rh_flags,REQ_FLAG_ACTIVE
     stc
     jz gurdDone
 ;
-    mov ax,ds:[ebx].rh_list
-    call LockReqPipe
-    jc gurdLeave
+    EnterSection ds:usbu_section
+    mov dx,ds:usbu_pipe_sel
+    or dx,dx
+    stc
+    jz gurdLeave
 ;
+    mov ax,fs:[ebx].rh_list
+;
+    push ds
+    mov fs,dx
+    mov ds,ds:usbu_func_sel
     call fword ptr ds:was_transfer_ok_proc
-    jc gurdLeave
+    jc gurdPopLeave
 
 gurdReqLoop:
     or ax,ax
     clc
-    jz gurdLeave
+    jz gurdPopLeave
 ;
     mov es,ax
     mov al,es:re_type
@@ -2462,18 +2489,20 @@ gurdReqLoop:
     jne gurdNext
 ;    
     call fword ptr ds:get_data_size_proc
-    jmp gurdLeave
+    jmp gurdPopLeave
 
 gurdNext:
     mov ax,es:re_next    
     jmp gurdReqLoop
 
+gurdPopLeave:
+    pop ds
+
 gurdLeave:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
+    LeaveSection ds:usbu_section
 
 gurdDone:       
-    pop bp
+    pop dx
     pop ebx
     pop ax
     pop fs
@@ -2500,40 +2529,45 @@ close_usb_req   Proc far
     push es
     push fs
     push ax
-    push bp
 ;
     mov ax,USB_REQ_HANDLE
     DerefHandle
     jc crDone
 ;
     call CleanupReq
-    mov al,ds:[ebx].rh_deleted
+;
+    mov ax,ds
+    mov fs,ax
+    mov ds,ds:[ebx].rh_pipe_sel
+    mov al,ds:usbu_deleted
     or al,al
     jnz crFreeList
 ;
-    test ds:[ebx].rh_flags,REQ_FLAG_STARTED
+    test fs:[ebx].rh_flags,REQ_FLAG_STARTED
     jz crFreeList
 ;
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    stc
+    jz curLeave
+;
     push ds
-    push ebx
-;
-    call LockReqPipe
-    jc curLeave
-;
+    push fs
+    mov fs,ax
+    mov ds,ds:usbu_func_sel
     call fword ptr ds:end_transfer_proc
+    pop fs
+    pop ds
 
 curLeave:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
-;
-    pop ebx
-    pop ds
+    LeaveSection ds:usbu_section
 ;    
     mov ax,5
     WaitMilliSec    
 
 crFreeList:
-    mov ax,ds:[ebx].rh_list
+    mov ax,fs:[ebx].rh_list
 
 crFreeLoop:
     or ax,ax
@@ -2561,7 +2595,6 @@ crFreeHandle:
    FreeHandle
 
 crDone: 
-    pop bp
     pop ax
     pop fs
     pop es
