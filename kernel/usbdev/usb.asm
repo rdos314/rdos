@@ -4794,28 +4794,33 @@ start_usb_trans Proc far
     push ds
     push fs
     push ebx
-    push bp
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
     jc sutDone
 ;
-    mov al,ds:[ebx].up_deleted
+    mov ds,ds:[ebx].up_pipe_sel
+    mov al,ds:usbu_deleted
     or al,al
     stc
     jnz sutDone
 ;
-    call LockAndGetPipe
-    jc sutLeave
+    EnterSection ds:usbu_section
+    mov ax,ds:usbu_pipe_sel
+    or ax,ax
+    stc
+    jz sutLeave
 ;
+    push ds
+    mov fs,ax
+    mov ds,ds:usbu_func_sel
     call fword ptr ds:issue_transfer_proc
+    pop ds
 
 sutLeave:
-    mov ds,bp
-    LeaveSection ds:usb_sync_section
+    LeaveSection ds:usbu_section
 
 sutDone:
-    pop bp
     pop ebx
     pop fs
     pop ds
