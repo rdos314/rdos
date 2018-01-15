@@ -70,8 +70,6 @@ up_base         handle_header <>
 up_func_sel     DW ?
 up_pipe_sel     DW ?
 up_pipe         DB ?
-up_copy         DB ?
-up_list         DW ?
 up_port_sel     DW ?
 up_deleted      DB ?
 
@@ -3425,8 +3423,6 @@ oupOk:
     mov [ebx].up_func_sel,es
     mov [ebx].up_pipe_sel,ax
     mov [ebx].up_pipe,dl
-    mov [ebx].up_copy,dh
-    mov [ebx].up_list,0
     mov [ebx].up_port_sel,bp
     mov [ebx].up_deleted,0
     mov [ebx].hh_sign,USB_PIPE_HANDLE
