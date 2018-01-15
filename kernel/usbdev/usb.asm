@@ -1218,12 +1218,12 @@ AddUsbFunction       Proc near
     mov cx,16
     mov di,OFFSET usb_in_pipe_arr
     xor ax,ax
-    stosw
+    rep stosw
 ;
     mov cx,16
     mov di,OFFSET usb_out_pipe_arr
     xor ax,ax
-    stosw
+    rep stosw
 ;
     mov ax,es
     pop es
@@ -1284,6 +1284,7 @@ rufInLoop:
     EnterSection ds:usbu_section
     mov ds:usbu_pipe_sel,0
     mov ds:usbu_deleted,1
+    LeaveSection ds:usbu_section
     pop ds
 
 rufInNext:
@@ -1303,6 +1304,7 @@ rufOutLoop:
     EnterSection ds:usbu_section
     mov ds:usbu_pipe_sel,0
     mov ds:usbu_deleted,1
+    LeaveSection ds:usbu_section
     pop ds
 
 rufOutNext:
@@ -2824,7 +2826,8 @@ config_usb_device       Proc near
     push cx
     push esi
     push edi
-;    
+    push bp
+;   
     mov si,SEG data
     mov ds,si
     mov si,ds:usb_dev_count
@@ -2848,6 +2851,10 @@ config_usb_device       Proc near
     jz cudFail
 ;
     mov fs,si
+    movzx si,fs:usbf_port
+    add si,si
+    mov bp,ds:[si].usb_port_arr
+;
     mov si,fs:usbf_in_endpoint_arr
     or si,si
     jz cudFail
@@ -2949,6 +2956,61 @@ cudNextDescr:
     cmp di,gs:ucd_size
     jb cudDescrLoop    
 ;
+    or bp,bp
+    jz cudConfig
+;
+    push ds
+    mov ds,bp
+    EnterSection ds:usb_sync_section
+;
+    mov cx,16
+    mov si,OFFSET usb_in_pipe_arr
+    mov di,OFFSET usbf_in_endpoint_arr
+
+cudInLoop:
+    mov ax,ds:[si]
+    or ax,ax
+    jz cudInNext
+;
+    push ds
+    mov ds,ax
+    EnterSection ds:usbu_section
+    mov ax,es:[di]
+    mov ds:usbu_pipe_sel,ax
+    LeaveSection ds:usbu_section
+    pop ds
+
+cudInNext:
+    add si,2
+    add di,2
+    loop cudInLoop
+;
+    mov cx,16
+    mov si,OFFSET usb_out_pipe_arr
+    mov di,OFFSET usbf_out_endpoint_arr
+
+cudOutLoop:
+    mov ax,ds:[si]
+    or ax,ax
+    jz cudOutNext
+;
+    push ds
+    mov ds,ax
+    EnterSection ds:usbu_section
+    mov ax,es:[di]
+    mov ds:usbu_pipe_sel,ax
+    LeaveSection ds:usbu_section
+    pop ds
+
+cudOutNext:
+    add si,2
+    add di,2
+    loop cudOutLoop
+;
+    LeaveSection ds:usb_sync_section
+    pop ds
+
+cudConfig:
     mov ax,word ptr ds:config_device_proc+4
     or ax,ax
     clc
@@ -2961,6 +3023,7 @@ cudFail:
     stc
     
 cudDone: 
+    pop bp
     pop edi
     pop esi
     pop cx
