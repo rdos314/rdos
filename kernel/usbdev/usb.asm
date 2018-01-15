@@ -1270,6 +1270,45 @@ RemoveUsbFunction       Proc near
 ;
     mov ds,ax
     EnterSection ds:usb_sync_section
+;
+    mov cx,16
+    mov si,OFFSET usb_in_pipe_arr
+
+rufInLoop:
+    mov ax,ds:[si]
+    or ax,ax
+    jz rufInNext
+;
+    push ds
+    mov ds,ax
+    EnterSection ds:usbu_section
+    mov ds:usbu_pipe_sel,0
+    mov ds:usbu_deleted,1
+    pop ds
+
+rufInNext:
+    add si,2
+    loop rufInLoop
+;
+    mov cx,16
+    mov si,OFFSET usb_out_pipe_arr
+
+rufOutLoop:
+    mov ax,ds:[si]
+    or ax,ax
+    jz rufOutNext
+;
+    push ds
+    mov ds,ax
+    EnterSection ds:usbu_section
+    mov ds:usbu_pipe_sel,0
+    mov ds:usbu_deleted,1
+    pop ds
+
+rufOutNext:
+    add si,2
+    loop rufOutLoop
+;
     xor ax,ax
     xchg ax,ds:usb_function_sel
 ;
@@ -3403,7 +3442,6 @@ open_usb_pipe    Proc far
     mov dh,1
 
 oupAlloc:
-    int 3
     mov ds,bp
     and dl,8Fh
     test dl,80h
