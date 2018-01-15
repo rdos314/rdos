@@ -85,6 +85,7 @@ pipe_wait_header    ENDS
 req_handle_struc    STRUC
 
 rh_base         handle_header <>
+rh_pipe_sel     DW ?
 rh_func_sel     DW ?
 rh_port_sel     DW ?
 rh_signal       DW ?
@@ -1683,6 +1684,7 @@ create_usb_req  Proc far
     push ax
     push cx
     push bp
+    push di
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
@@ -1696,6 +1698,7 @@ create_usb_req  Proc far
     mov ax,ds:[ebx].up_func_sel
     mov dl,ds:[ebx].up_pipe
     mov bp,ds:[ebx].up_port_sel
+    mov di,ds:[ebx].up_pipe_sel
 ;
     mov ds,bp
     EnterSection ds:usb_sync_section
@@ -1703,6 +1706,7 @@ create_usb_req  Proc far
 ;       
     mov cx,SIZE req_handle_struc
     AllocateHandle
+    mov [ebx].rh_pipe_sel,di
     mov [ebx].rh_func_sel,ax
     mov [ebx].rh_port_sel,bp
     mov [ebx].rh_handle_list,esi
@@ -1721,6 +1725,7 @@ create_usb_req  Proc far
     clc
 
 curDone:
+    pop di
     pop bp
     pop cx
     pop ax
