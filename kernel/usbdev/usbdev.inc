@@ -198,7 +198,6 @@ usb_pipe_struc   ENDS
 
 usb_port_struc  STRUC
 
-usb_handle_list     DD ?
 usb_req_list        DD ?
 usb_function_sel    DW ?
 usb_sync_section    section_typ <>

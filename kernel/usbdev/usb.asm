@@ -67,7 +67,6 @@ pipe_copy_struc     ENDS
 pipe_handle_struc       STRUC
 
 up_base         handle_header <>
-up_handle_list  DD ?
 up_func_sel     DW ?
 up_pipe_sel     DW ?
 up_pipe         DB ?
@@ -1209,7 +1208,6 @@ AddUsbFunction       Proc near
     push es
     mov eax,SIZE usb_port_struc
     AllocateSmallGlobalMem
-    mov es:usb_handle_list,0
     mov es:usb_req_list,0
     mov es:usb_function_sel,0
     mov es:usb_port,bl
@@ -1314,24 +1312,6 @@ rufOutNext:
     xor ax,ax
     xchg ax,ds:usb_function_sel
 ;
-    mov ebx,ds:usb_handle_list
-    or ebx,ebx
-    jz rufHandleDone
-;
-    push ax
-    GetThread
-    mov es,ax    
-    mov es,es:p_app_sel
-    mov es,es:app_handle_mem_sel
-    pop ax
-
-rufHandleLoop:
-    mov es:[ebx].up_deleted,1
-    mov ebx,es:[ebx].up_handle_list
-    or ebx,ebx
-    jnz rufHandleLoop
-
-rufHandleDone:
     mov ebx,ds:usb_req_list
     or ebx,ebx
     jz rufReqDone
@@ -3260,28 +3240,6 @@ CleanupHandle	Proc near
     EnterSection ds:usb_sync_section
     pop ds
 ;
-    mov esi,es:usb_handle_list    
-    cmp ebx,esi
-    jne chListLoop
-;
-    mov esi,ds:[esi].up_handle_list
-    mov es:usb_handle_list,esi
-    jmp chListDone
-
-chListLoop:
-    cmp ebx,ds:[esi].up_handle_list
-    jne chListNext
-;
-    mov eax,ds:[ebx].up_handle_list
-    mov ds:[esi].up_handle_list,eax
-    jmp chListDone
-
-chListNext:
-    mov esi,ds:[esi].up_handle_list
-    or esi,esi
-    jnz chListLoop
-
-chListDone:    
     mov ds,ds:[ebx].up_pipe_sel
     call CleanupPipe
     mov ds,bp
@@ -3462,7 +3420,6 @@ oupOut:
     mov ds:[si].usb_out_pipe_arr,ax
 
 oupOk:
-    mov esi,ds:usb_handle_list
     mov cx,SIZE pipe_handle_struc
     AllocateHandle
     mov [ebx].up_func_sel,es
@@ -3470,7 +3427,6 @@ oupOk:
     mov [ebx].up_pipe,dl
     mov [ebx].up_copy,dh
     mov [ebx].up_list,0
-    mov [ebx].up_handle_list,esi
     mov [ebx].up_port_sel,bp
     mov [ebx].up_deleted,0
     mov [ebx].hh_sign,USB_PIPE_HANDLE
@@ -3478,7 +3434,6 @@ oupOk:
     mov bx,[ebx].hh_handle
 ;
     mov ds,bp
-    mov ds:usb_handle_list,esi
     clc
     jmp oupDone
 
