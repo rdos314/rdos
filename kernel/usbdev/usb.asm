@@ -1592,11 +1592,8 @@ create_usb_req_name DB 'Create USB req', 0
 
 create_usb_req  Proc far
     push ds
-    push fs
     push ax
     push cx
-    push bp
-    push di
 ;
     mov ax,USB_PIPE_HANDLE
     DerefHandle
@@ -1609,16 +1606,12 @@ create_usb_req  Proc far
     mov [ebx].rh_list,0
     mov [ebx].rh_flags,0
     mov [ebx].hh_sign,USB_REQ_HANDLE
-    mov esi,ebx
     mov bx,[ebx].hh_handle
     clc
 
 curDone:
-    pop di
-    pop bp
     pop cx
     pop ax
-    pop fs
     pop ds
     retf32
 create_usb_req   Endp
@@ -3212,6 +3205,8 @@ oupConfigRetry:
     jmp oupConfigRetry
 
 oupConfigOk:
+    EnterSection ds:usb_sync_section
+;
     and dl,8Fh
     test dl,80h
     jz oupOut    
@@ -3239,8 +3234,13 @@ oupOut:
     mov ds:[si].usb_out_pipe_arr,ax
 
 oupOk:
+    push ds
     mov ds,ax
+    EnterSection ds:usbu_section
     mov ds:usbu_deleted,0
+    LeaveSection ds:usbu_section
+    pop ds
+    LeaveSection ds:usb_sync_section
 ;
     mov cx,SIZE pipe_handle_struc
     AllocateHandle
@@ -3309,7 +3309,6 @@ cupLeave:
     LeaveSection ds:usbu_section
 
 cupFree:
-    mov ds:usbu_deleted,0
     pop ds
     FreeHandle
     clc
