@@ -2264,14 +2264,25 @@ LocalIsConnected   Proc near
     mov es,ds:ohc_reg_sel
     mov eax,es:[si].HcRhPortStatus
     test al,2
-    jz icFail
+    jz icDisabled
 ;
     test al,1
     clc
     jnz icDone
+    jmp icFail
+
+icDisabled:
+    push cx
+    mov es,fs:usbp_function_sel
+    mov cl,es:usbf_port
+    mov ax,1
+    shl ax,cl
+    lock or ds:ohc_reset,ax
+    pop cx
 
 icFail:
     stc
+
 
 icDone:
     pop si
