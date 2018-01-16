@@ -203,6 +203,7 @@ usb_sync_section    section_typ <>
 usb_in_pipe_arr     DW 16 DUP(?)
 usb_out_pipe_arr    DW 16 DUP(?)
 usb_port            DB ?
+usb_configured      DB ?
 
 usb_port_struc  ENDS
 

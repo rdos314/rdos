@@ -68,7 +68,6 @@ pipe_handle_struc       STRUC
 
 up_base         handle_header <>
 up_pipe_sel     DW ?
-up_deleted      DB ?
 
 pipe_handle_struc       ENDS
 
@@ -1217,6 +1216,7 @@ AddUsbFunction       Proc near
 aufAdd:
     mov fs,ax
     mov fs:usb_function_sel,es
+    mov fs:usb_configured,0
 ;
     pop di
     pop cx
@@ -1255,6 +1255,7 @@ RemoveUsbFunction       Proc near
 ;
     mov ds,ax
     EnterSection ds:usb_sync_section
+    mov ds:usb_configured,0
 ;
     mov cx,16
     mov si,OFFSET usb_in_pipe_arr
@@ -1475,7 +1476,6 @@ nuaFreeDone:
     
 nuaDone:
     mov fs:usbp_signal,0
-;
     jnc nuaPipeOk
 ;
     call fword ptr ds:is_connected_proc
@@ -2837,6 +2837,7 @@ cudOutNext:
     add di,2
     loop cudOutLoop
 ;
+    mov ds:usb_configured,1
     LeaveSection ds:usb_sync_section
     pop ds
 
@@ -3200,6 +3201,17 @@ open_usb_pipe    Proc far
 
 oupAlloc:
     mov ds,bx
+
+oupConfigRetry:
+    mov al,ds:usb_configured
+    or al,al
+    jnz oupConfigOk
+;
+    mov ax,25
+    WaitMilliSec
+    jmp oupConfigRetry
+
+oupConfigOk:
     and dl,8Fh
     test dl,80h
     jz oupOut    
