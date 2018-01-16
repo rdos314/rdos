@@ -3279,6 +3279,7 @@ close_usb_pipe_name     DB 'Close USB Pipe',0
 
 close_usb_pipe  Proc far
     push ds
+    push ax
     push ebx
 ;
     mov ax,USB_PIPE_HANDLE
@@ -3301,9 +3302,11 @@ close_usb_pipe  Proc far
     stc
     jz cupLeave
 ;
+    push fs
     mov fs,ax
     mov fs:usbp_signal,0
     mov fs:usbp_wait,0
+    pop fs
 
 cupLeave:
     LeaveSection ds:usbu_section
@@ -3315,6 +3318,7 @@ cupFree:
 
 cupDone:
     pop ebx
+    pop ax
     pop ds
     retf32
 close_usb_pipe  Endp
