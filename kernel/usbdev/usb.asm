@@ -68,7 +68,6 @@ pipe_handle_struc       STRUC
 
 up_base         handle_header <>
 up_pipe_sel     DW ?
-up_port_sel     DW ?
 up_deleted      DB ?
 
 pipe_handle_struc       ENDS
@@ -3152,13 +3151,10 @@ open_usb_pipe_name DB 'Open USB Pipe', 0
 open_usb_pipe    Proc far
     push ds
     push es
-    push fs
     push ax
     push cx
     push dx
-    push esi
-    push edi
-    push ebp
+    push si
 ;
     mov si,SEG data
     mov ds,si
@@ -3182,11 +3178,11 @@ open_usb_pipe    Proc far
     or si,si
     jz oupFail
 ;
-    mov fs,si
-    movzx bx,fs:usbf_port
+    mov ds,si
+    movzx bx,ds:usbf_port
     add bx,bx
-    mov bp,es:[bx].usb_port_arr
-    or bp,bp
+    mov bx,es:[bx].usb_port_arr
+    or bx,bx
     jz oupFail
 ;
     xor dh,dh
@@ -3203,7 +3199,7 @@ open_usb_pipe    Proc far
     mov dh,1
 
 oupAlloc:
-    mov ds,bp
+    mov ds,bx
     and dl,8Fh
     test dl,80h
     jz oupOut    
@@ -3231,16 +3227,15 @@ oupOut:
     mov ds:[si].usb_out_pipe_arr,ax
 
 oupOk:
+    mov ds,ax
+    mov ds:usbu_deleted,0
+;
     mov cx,SIZE pipe_handle_struc
     AllocateHandle
     mov [ebx].up_pipe_sel,ax
-    mov [ebx].up_port_sel,bp
-    mov [ebx].up_deleted,0
     mov [ebx].hh_sign,USB_PIPE_HANDLE
     mov esi,ebx
     mov bx,[ebx].hh_handle
-;
-    mov ds,bp
     clc
     jmp oupDone
 
@@ -3248,13 +3243,10 @@ oupFail:
     stc
 
 oupDone:
-    pop ebp
-    pop edi
-    pop esi
+    pop si
     pop dx
     pop cx
     pop ax
-    pop fs
     pop es
     pop ds
     retf32
