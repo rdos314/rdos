@@ -555,6 +555,7 @@ cdcLoop:
 cdcFail:
     stc
     pushf
+    FreeMem
     jmp cdcDone
             
 cdcOk:    

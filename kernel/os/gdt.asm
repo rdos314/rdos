@@ -34,6 +34,12 @@ INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE proc.inc
 
+gdt_list_struc	STRUC
+
+gls_head    DW ?
+gls_tail    DW ?
+
+gdt_list_struc  ENDS
 
     .386p
 
@@ -107,8 +113,8 @@ init_free_dt_loop:
     loop init_free_dt_loop
 ;
     mov si,bx
-    xor bx,bx
-    mov [bx],si
+    mov ds:gls_head,si
+    mov ds:gls_tail,2000h
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -290,69 +296,24 @@ allocate_gdt    PROC far
     push ds
     push es
     push si
-    push di
 ;
     mov si,system_data_sel
     mov ds,si
     mov si,gdt_sel
     mov es,si
     EnterSection ds:gdt_section
-    xor di,di
-    mov si,es:[di]
+    mov si,es:gls_head
     or si,si
     jnz alloc_gdt_room
 ;
     int 3
-    push ds
-    push cx
-    mov si,gdt_sel
-    mov cx,es:[si]
-    inc cx
-    or cx,cx
-    jnz alloc_gdt_not_full
-;
-    int 3
-
-alloc_gdt_not_full:
-    add word ptr es:[si],1000h
-;
-    xor bx,bx
-    mov eax,es:[si+2]
-    mov cl,es:[si+7]
-    mov es:[bx+4],eax
-    mov es:[bx+7],cl
-    mov ax,es:[si]
-    mov es:[bx+2],ax
-    db 66h
-    lgdt fword ptr es:[bx+2]
-    mov bx,gdt_sel
-    mov ds,bx
-;
-    mov si,es:[bx]
-    inc si
-    sub si,1000h
-    mov cx,1000h SHR 3
-    xor bx,bx
-
-extend_gdt_loop:
-    mov es:[si],bx
-    mov bx,si
-    add si,8
-    loop extend_gdt_loop
-;
-    mov si,bx
-    xor bx,bx
-    mov es:[bx],si
-    pop cx
-    pop ds
 
 alloc_gdt_room:
     mov bx,si
     mov si,es:[si]
-    mov es:[di],si
+    mov es:gls_head,si
     LeaveSection ds:gdt_section
 ;
-    pop di
     pop si
     pop es
     pop ds
@@ -385,11 +346,10 @@ free_gdt    PROC far
 ;
     EnterSection ds:gdt_section
     mov byte ptr es:[bx+5],0
-    xor si,si
-    mov si,es:[si]
-    mov es:[bx],si
-    xor si,si
+    mov si,es:gls_tail
     mov es:[si],bx
+    mov word ptr es:[bx],0
+    mov es:gls_tail,bx
     LeaveSection ds:gdt_section
 ;
     pop si
