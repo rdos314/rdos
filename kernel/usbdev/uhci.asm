@@ -364,7 +364,7 @@ port_timer  Endp
 AllocateBlock32 PROC near
     push ds
     push eax
-;    
+;
     mov ax,SEG data
     mov ds,ax
     EnterSection ds:UhciSection
@@ -426,7 +426,7 @@ AllocateBlock32 ENDP
 FreeBlock32     PROC near
     push ds
     push eax
-;
+;    
     mov ax,SEG data
     mov ds,ax
 ;    
@@ -1578,10 +1578,31 @@ GetIntrQh  ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+create_text  DB 'Control', 0
+
 CreateControl   Proc far
     push es
     pushad
 ;    
+
+    push es
+    push ax
+    push edi
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET create_text
+    LockLog
+    mov ax,SEG data
+    mov es,ax
+    mov eax,es:UhciUsedBlocks
+    LogHexDword
+    UnlockLog
+    pop edi
+    pop ax
+    pop es
+
+
     push ax
     mov eax,SIZE uhci_pipe
     AllocateSmallGlobalMem
@@ -2355,6 +2376,9 @@ ClosePipe   Proc far
 dpControlBulk:
     mov ax,flat_sel
     mov es,ax
+    mov edx,fs:usp_qh
+    call FreeVaElem
+;
     mov edx,ds:uhc_period_td
     mov eax,fs:usp_qh
     call RemoveTd

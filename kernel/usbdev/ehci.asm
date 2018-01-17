@@ -3031,6 +3031,7 @@ atWaitNotify:
     and al,NOT 4
     mov es:[2*edi].HcPortSc,eax
 ;
+    mov al,cl
     NotifyUsbDetach
     jmp atDone
 
@@ -3162,6 +3163,7 @@ rtWaitNotify:
     and al,NOT 4
     mov es:[2*edi].HcPortSc,eax
 ;
+    mov al,cl
     NotifyUsbDetach
     jmp rtDone
 
