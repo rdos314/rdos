@@ -645,9 +645,7 @@ psRetry:
 ;
     mov bx,ds:cd_out_pipe
     WasUsbTransactionOk
-    jnc psUpdate
-;
-    int 3
+    jc psReset
 
 psUpdate:
     call UpdateSent

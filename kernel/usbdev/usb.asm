@@ -538,7 +538,7 @@ cdcSendAddress:
 ;  
     mov fs:usbp_address,al
 ;
-    mov cx,100    
+    mov cx,10
 
 cdcLoop:
     call fword ptr ds:is_transfer_done_proc
