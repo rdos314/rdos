@@ -1579,30 +1579,10 @@ GetIntrQh  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-create_text  DB 'Control', 0
-
 CreateControl   Proc far
     push es
     pushad
 ;    
-
-    push es
-    push ax
-    push edi
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET create_text
-    LockLog
-    mov ax,SEG data
-    mov es,ax
-    mov eax,es:UhciUsedBlocks
-    LogHexDword
-    UnlockLog
-    pop edi
-    pop ax
-    pop es
-
-
     push ax
     mov eax,SIZE uhci_pipe
     AllocateSmallGlobalMem
