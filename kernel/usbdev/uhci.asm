@@ -2820,8 +2820,7 @@ atLoop:
     loop atLoop
 ;
     pop cx
-    stc
-    jmp atDone
+    jmp atUnlock
 
 atNotify:
     pop cx
@@ -2860,6 +2859,7 @@ atNotify:
     or ax,200h
     out dx,ax
 ;
+    mov al,bl
     NotifyUsbDetach
     jmp atDone
 
@@ -2969,8 +2969,7 @@ rtLoop:
     loop rtLoop
 ;
     pop cx
-    stc
-    jmp rtDone
+    jmp rtUnlock
 
 rtNotify:    
     pop cx
@@ -3009,6 +3008,7 @@ rtNotify:
     or ax,200h
     out dx,ax
 ;
+    mov al,bl
     NotifyUsbDetach
     jmp rtDone
 
