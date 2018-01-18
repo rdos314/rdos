@@ -3137,6 +3137,11 @@
 #pragma aux RdosStopLonCapture = \
     CallGate_stop_lon_capture;
 
+#pragma aux RdosIsCanOnline = \
+    CallGate_is_can_online \
+    ValidateEax \
+    value [eax];
+
 #pragma aux RdosGetUsbDevice = \
     CallGate_get_usb_device \
     ValidateEax \

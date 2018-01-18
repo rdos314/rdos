@@ -2028,11 +2028,6 @@ init    Proc far
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET is_can_online
-    mov edi,OFFSET is_can_online_name
-    mov ax,is_can_online_nr
-    RegisterOsGate
-;
     mov esi,OFFSET restart_can_modules
     mov edi,OFFSET restart_can_modules_name
     mov ax,restart_can_modules_nr
@@ -2062,6 +2057,12 @@ init    Proc far
     mov edi,OFFSET send_can_bus_msg_name
     mov ax,send_can_bus_block_nr
     RegisterOsGate
+;
+    mov esi,OFFSET is_can_online
+    mov edi,OFFSET is_can_online_name
+    xor dx,dx
+    mov ax,is_can_online_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET start_can_capture
     mov edi,OFFSET start_can_capture_name

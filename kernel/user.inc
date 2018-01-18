@@ -3910,6 +3910,10 @@ HasTouch      MACRO
 
 ;;;;;;;;;;; Can modules ;;;;;;;;;;
 
+IsCanOnline      MACRO
+	UserGate is_can_online_nr
+						ENDM
+
 ;   IN  EAX         Device #
 ;   OUT CX          Number of com ports
 ;   OUT DX          Module type

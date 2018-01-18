@@ -706,7 +706,6 @@
 
 #define osgate_add_serio_device 613
 
-#define osgate_is_can_online 614
 #define osgate_notify_can_offline 615
 
 #define osgate_req_usb_data_no_copy 616
@@ -1438,7 +1437,6 @@
 
 #define OsGate_add_serio_device 0x3E 0x67 0x9a 101 2 0 0 2 0
 
-#define OsGate_is_can_online 0x3E 0x67 0x9a 102 2 0 0 2 0
 #define OsGate_notify_can_offline 0x3E 0x67 0x9a 103 2 0 0 2 0
 
 #define OsGate_req_usb_data_no_copy 0x3E 0x67 0x9a 104 2 0 0 2 0

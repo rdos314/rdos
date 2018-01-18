@@ -3770,10 +3770,6 @@ NotifyIrData      MACRO
 
 ;;;;;;;;;; CAN bus ;;;;;;;;;
 
-IsCanOnline      MACRO
-    OsGate is_can_online_nr
-                        ENDM
-
 NotifyCanOffline      MACRO
     OsGate notify_can_offline_nr
                         ENDM

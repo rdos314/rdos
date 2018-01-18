@@ -828,4 +828,6 @@ start_one_usb_trans_nr           = 650
 
 get_thread_count_nr              = 651
 
+is_can_online_nr                 = 652
+
 usergate_entries                            = 670

@@ -828,6 +828,8 @@
 
 #define usergate_get_thread_count 0x0000028B
 
+#define usergate_is_can_online 0x0000028C
+
 
 
 #ifdef __FLAT__
@@ -1661,6 +1663,8 @@
 
 #define CallGate_get_thread_count 0x55 0x67 0x9a 139 2 0 0 3 0 0x5d
 
+#define CallGate_is_can_online 0x55 0x67 0x9a 140 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2491,5 +2495,7 @@
 #define CallGate_start_one_usb_trans 0x3e 0x67 0x9a 138 2 0 0 3 0
 
 #define CallGate_get_thread_count 0x3e 0x67 0x9a 139 2 0 0 3 0
+
+#define CallGate_is_can_online 0x3e 0x67 0x9a 140 2 0 0 3 0
 
 #endif
