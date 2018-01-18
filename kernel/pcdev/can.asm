@@ -111,7 +111,6 @@ ih_mask     DD ?
 ih_offset   DD ?
 ih_sel      DW ?
 ih_param    DW ?
-ih_timer    DD ?,?
 
 id_hook_struc   ENDS
 
@@ -141,7 +140,6 @@ can_rec_pend            DD ?
 can_rec_arr             DB 32 * 32 DUP(?)
 
 can_id_hook_arr         DD 15 * 4 DUP(?)
-can_timer_arr           DD 15 * 2 DUP(?)
 
 can_gen_hook_count      DW ?
 can_gen_hook_arr        DD MAX_GEN_HOOK_COUNT DUP(?,?)
@@ -1032,76 +1030,6 @@ reset_can_buffers    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           WaitModule
-;
-;   DESCRIPTION:    Wait for module
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-WaitModule	Proc near
-    push es
-    push eax
-    push edx
-    push cx
-    push si
-    push di
-;
-    mov si,OFFSET can_id_hook_arr
-    mov cx,15
-
-wmIdLoop:
-    mov di,ds:[si].ih_sel
-    or di,di
-    jz wmIdNext
-;
-    mov eax,ds:[si].ih_mask
-    and eax,NOT 10000000h
-    and eax,ebx
-    cmp eax,ds:[si].ih_id
-    je wmIdOk
-
-wmIdNext:
-    add si,16
-    loop wmIdLoop
-;
-    jmp wmDone
-    
-wmIdOk:
-    sub si,OFFSET can_id_hook_arr
-    shr si,1
-    add si,OFFSET can_timer_arr
-;
-    GetSystemTime
-    sub eax,ds:[si]
-    sbb edx,ds:[si+4]
-    jnc wmTimerOk
-
-wmTimeout:
-    mov eax,ds:[si]
-    mov edx,ds:[si+4]
-    WaitUntil
-
-wmTimerOk:
-    GetSystemTime
-    add eax,596
-    adc edx,0
-    mov ds:[si],eax
-    mov ds:[si+4],edx
-
-wmDone:
-    pop di
-    pop si
-    pop cx
-    pop edx
-    pop eax
-    pop es
-    ret
-WaitModule	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;   NAME:           SendCanBusMsg
 ;
 ;   DESCRIPTION:    Send CAN bus message
@@ -1126,7 +1054,6 @@ send_can_bus_msg    Proc far
     mov bp,2000
     mov si,SEG data
     mov ds,si
-    call WaitModule
 
 scRetry:    
     EnterSection ds:can_send_section
@@ -1217,7 +1144,6 @@ send_can_bus_block    Proc far
     mov bp,2000
     mov si,SEG data
     mov ds,si
-    call WaitModule
 
 scbRetry:    
     EnterSection ds:can_send_section
@@ -1478,7 +1404,6 @@ delete_id_hook    Proc far
     mov ds:[bx].ih_param,0
     mov ds:[bx].ih_offset,0
     mov ds:[bx].ih_sel,0
-    mov ds:[bx].ih_timer,0
 ;
     LeaveSection ds:can_rec_section    
 ;    
@@ -1803,11 +1728,6 @@ init    PROC far
     xor eax,eax
     rep stosd
 ;
-    mov di,OFFSET can_timer_arr
-    mov cx,2 * 15
-    xor eax,eax
-    rep stosd
-;    
     mov ax,cs
     mov es,ax
     mov ds,ax
