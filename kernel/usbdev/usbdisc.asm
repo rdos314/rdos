@@ -93,9 +93,11 @@ disc_bulk_out_pipe      DB ?
 disc_bulk_in_maxsize    DW ?
 disc_bulk_out_maxsize   DW ?
 
+disc_control_handle     DW ?
 disc_bulk_in_handle     DW ?
 disc_bulk_out_handle    DW ?
 
+disc_control_wait       DW ?
 disc_bulk_in_wait       DW ?
 disc_bulk_out_wait      DW ?
 
@@ -128,6 +130,7 @@ disc_csw_tag            DD ?
 disc_csw_residue        DD ?
 disc_csw_status         DB ?
 
+disc_control_buf        DB 8 DUP(?)
 ;
 ; do not reorganize, connected to responses
 ;
@@ -713,6 +716,50 @@ WriteData Proc near
     WasUsbTransactionOk
     ret
 WriteData Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ResetDevice
+;
+;   DESCRIPTION:    Reset device
+;
+;   PARAMETERS:     FS      Disc sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ResetDevice Proc near
+    push es
+;
+    mov ax,fs
+    mov es,ax
+;
+    mov bx,fs:disc_control_handle
+;
+    mov cx,8
+    mov di,OFFSET disc_control_buf 
+    mov es:[di].usd_type,21h
+    mov es:[di].usd_req,0FFh
+    mov es:[di].usd_value,0
+    mov es:[di].usd_index,0
+    mov es:[di].usd_len,0
+    WriteUsbControl
+;
+    ReqUsbStatus
+    StartUsbTransaction
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,fs:disc_control_wait
+    WaitWithTimeout
+;    
+    mov bx,fs:disc_control_handle
+    WasUsbTransactionOk
+;
+    pop es
+    ret
+ResetDevice	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1588,7 +1635,7 @@ rdBufLoop:
     jnc rdOk
     
 rdFail:
-    int 3
+    call ResetDevice
     pop ecx
 
 rdFailLoop:    
@@ -1747,7 +1794,7 @@ wdBufLoop:
     jnc wdOk
     
 wdFail:
-    int 3
+    call ResetDevice
     pop ecx
 
 wdFailLoop:    
@@ -1871,6 +1918,20 @@ dtInsDo:
 ;
     mov bx,fs:disc_controller
     movzx ax,fs:disc_device
+    xor dl,dl
+    OpenUsbPipe
+    mov fs:disc_control_handle,bx
+;
+    CreateWait
+    mov fs:disc_control_wait,bx
+;    
+    mov ax,fs:disc_control_handle
+    mov bx,fs:disc_control_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;
+    mov bx,fs:disc_controller
+    movzx ax,fs:disc_device
     mov dl,fs:disc_bulk_in_pipe
     OpenUsbPipe
     mov fs:disc_bulk_in_handle,bx
@@ -1915,7 +1976,9 @@ dtRetry:
     pop cx
     sub cx,1
     jz dtFailed
-;    
+;
+    call ResetDevice
+;
     mov ax,100
     WaitMilliSec
     jmp dtRetryLoop
@@ -1993,6 +2056,12 @@ dtFailed:
     EndDiscHandler    
     
 dtEnd: 
+    mov bx,fs:disc_control_wait
+    CloseWait
+;
+    mov bx,fs:disc_control_handle
+    CloseUsbPipe
+;
     mov bx,fs:disc_bulk_in_wait
     CloseWait
 ;
