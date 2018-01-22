@@ -368,6 +368,46 @@ SpeedToPsi   Proc near
     pop bx
     ret
 SpeedToPsi   Endp
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetDefaultPacketSize
+;
+;       DESCRIPTION:    Convert speed to PSI value
+;
+;       PARAMETERS:     AH  speed
+;
+;       RETURNS:        AX  Packet size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+gdpsTab:
+gdps00 DW 8
+gdps01 DW 8
+gdps02 DW 64
+gdps03 DW 512
+gdps05 DW 8 
+gdps06 DW 8  
+gdps07 DW 8  
+gdps08 DW 8  
+gdps09 DW 8  
+gdps0A DW 8  
+gdps0B DW 8  
+gdps0C DW 8  
+gdps0D DW 8  
+gdps0E DW 8  
+gdps0F DW 8  
+
+GetDefaultPacketSize   Proc near
+    push bx
+    movzx bx,ah
+    and bx,0Fh
+    add bx,bx
+    mov ax,word ptr cs:[bx].gdpsTab
+    pop bx
+    ret
+GetDefaultPacketSize   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1183,6 +1223,7 @@ CreateControl   Proc far
     call SetupRootDevice
     call CreateEndpointRing
 ;
+    push ax
     mov fs:xp_dev_sel,es
     mov al,es:usbf_port
     mov fs:xp_port_nr,al
@@ -1192,15 +1233,18 @@ CreateControl   Proc far
     mov fs:xp_slot,al
     mov fs:xp_db_target,1
     mov es:xd_ep_sel_arr,fs
+    pop ax
 ; 
     mov bx,es:xd_input_ep_arr_offset
+    call GetDefaultPacketSize
+    mov es:[bx].ec_packet_size,ax
+    mov es:[bx].ec_avg_len,ax
+;
     mov eax,fs:xp_ring_phys
     or al,1
     mov es:[bx].ec_tr_dequeue,eax
     mov eax,fs:xp_ring_phys+4
     mov es:[bx].ec_tr_dequeue+4,eax        
-    mov es:[bx].ec_avg_len,8
-    mov es:[bx].ec_packet_size,8
 ;
     mov al,3 SHL 1
     or al,4 SHL 3
@@ -1253,9 +1297,13 @@ AddressDevice   Proc far
 ;
     mov al,gs:[edi+100Bh]
     cmp al,1
-    stc
-    jne adDone
+    je adOk
 ;
+    int 3
+    stc
+    jmp adDone
+
+adOk:
     mov al,gs:[edi+100Fh]
     clc        
 
@@ -2589,6 +2637,31 @@ atSlotAlloc:
     WaitMilliSec
 ;
     NotifyUsbAttach
+    jnc atDone
+;
+    int 3
+    mov bx,ds:xhc_port_thread
+    Signal
+;    
+    push ecx
+    movzx bx,cl    
+    mov al,ds:[bx].xhc_port_slot_arr
+    movzx bx,al
+    shl bx,1
+    xor ax,ax
+    xchg ax,ds:[bx].xhc_func_sel_arr
+    mov bx,ax
+    GetSelectorBaseSize    
+    mov ecx,1000h
+    CreateDataSelector16
+    pop ecx
+;
+    mov al,cl
+    NotifyUsbDetach
+;
+    movzx bx,cl    
+    mov al,ds:[bx].xhc_port_slot_arr
+    call DisableSlot
 
 atDone:
     mov eax,1
