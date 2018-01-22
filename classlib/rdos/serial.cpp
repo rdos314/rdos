@@ -402,6 +402,12 @@ TSerialDevice::TSerialDevice(int Port, long Baudrate, char Parity, int DataBits,
 ##########################################################################*/
 TSerialDevice::~TSerialDevice()
 {
+    if (FDumpStarted)
+    {
+        FInstalled = FALSE;
+        FDumpSignal.Signal();
+    }        
+
     if (FHandle)
         RdosCloseCom(FHandle);
 }
