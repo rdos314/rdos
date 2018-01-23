@@ -34,6 +34,8 @@ include ..\driver.def
 include usb.inc
 INCLUDE ..\os\protseg.def
 
+REC_BUF_COUNT = 80h
+
 id_hook_struc   STRUC
 
 ih_id       DD ?
@@ -680,7 +682,7 @@ GetRecBuffer   Proc near
     shl di,4
 ;
     inc bx
-    cmp bx,100h
+    cmp bx,REC_BUF_COUNT
     jnz grbWrapOk
 ;       
     xor bx,bx
@@ -1213,7 +1215,7 @@ ureWaitOpen:
     jmp ureWaitOpen
 
 ureStart:
-    mov cx,100h
+    mov cx,REC_BUF_COUNT
     mov bx,ds:cd_in_pipe
 
 ureAddReqLoop:

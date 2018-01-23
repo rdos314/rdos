@@ -2514,8 +2514,54 @@ CloseControlPipe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IssueOne   Proc far
-    int 3
-    clc
+    push ds
+    push eax
+    push cx
+    push si
+;
+    test fs:xp_flags,XP_FLAG_DATA
+    jz ioDone
+;
+    mov si,fs:xp_data_head
+
+ioMarkLoop:    
+    mov ax,fs:[si].trb_type
+    test ax,2
+    jz ioMarkNext
+;
+    mov si,fs:xp_ring_offset
+
+ioMarkNext:    
+    mov ax,fs:[si].trb_type
+    and ax,NOT 10h
+    or ax,20h     
+    mov fs:[si].trb_type,ax
+;
+    cmp si,fs:xp_data_last
+    je ioMarkDone
+;
+    add si,SIZE trb_struc
+    jmp ioMarkLoop
+
+ioMarkDone:
+    mov fs:xp_result,-1
+    lock or fs:xp_flags, XP_FLAG_TRANSFER_PENDING
+    lock and fs:xp_flags,NOT XP_FLAG_DATA
+;
+    mov ax,fs:xp_size
+    mov fs:xp_remain_size,ax
+;    
+    mov ds,ds:xhc_db_sel
+    movzx si,fs:xp_slot
+    shl si,2
+    movzx eax,fs:xp_db_target
+    mov ds:[si],eax
+
+ioDone:
+    pop si
+    pop cx
+    pop eax
+    pop ds
     retf32
 IssueOne   Endp
    
