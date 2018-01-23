@@ -625,7 +625,7 @@ CreateCommandRing   Proc near
     pop es
 ;
     mov edi,edx
-    add edi,1FF0h
+    add edi,0FF0h
     mov eax,es:xhc_crcr
     mov ebx,es:xhc_crcr+4
     call SetupLinkTrb
@@ -1299,7 +1299,6 @@ AddressDevice   Proc far
     cmp al,1
     je adOk
 ;
-    int 3
     stc
     jmp adDone
 
@@ -2639,7 +2638,6 @@ atSlotAlloc:
     NotifyUsbAttach
     jnc atDone
 ;
-    int 3
     mov bx,ds:xhc_port_thread
     Signal
 ;    
@@ -2662,6 +2660,12 @@ atSlotAlloc:
     movzx bx,cl    
     mov al,ds:[bx].xhc_port_slot_arr
     call DisableSlot
+;
+    mov es,ds:xhc_port_sel
+    mov eax,es:[si]
+    and eax,0EE03E1h
+    or al,10h
+    mov es:[si],eax
 
 atDone:
     mov eax,1
@@ -3237,6 +3241,7 @@ UpdatePort  Proc near
     push ds
     push es
     push fs
+    push gs
     pushad
 ;        
     mov ax,ds
@@ -3263,8 +3268,8 @@ UpdatePort  Proc near
     or bx,bx
     jz upNoReset
 ;
-    mov fs,bx
-    mov bx,fs:usb_function_sel
+    mov gs,bx
+    mov bx,gs:usb_function_sel
     or bx,bx
     jz upNoReset
 ;    
@@ -3317,8 +3322,8 @@ upAttach:
     or bx,bx
     jz upCheckAttach
 ;
-    mov fs,bx
-    mov bx,fs:usb_function_sel
+    mov gs,bx
+    mov bx,gs:usb_function_sel
     or bx,bx
     jnz upCheckTimeout
 
@@ -3357,8 +3362,8 @@ upDetach:
     or bx,bx
     jz upCheckTimeout
 ;
-    mov fs,bx
-    mov bx,fs:usb_function_sel
+    mov gs,bx
+    mov bx,gs:usb_function_sel
     or bx,bx
     jz upCheckTimeout
 ;    
@@ -3453,6 +3458,7 @@ upLeave:
 
 upDone:
     popad
+    pop gs
     pop fs
     pop es
     pop ds
