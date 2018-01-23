@@ -926,6 +926,11 @@ ihsDone:
 ;
     CreateWait
     mov fs:hid_control_wait,bx
+;
+    mov ax,fs:hid_control_handle
+    mov bx,fs:hid_control_wait
+    movzx ecx,bx
+    AddWaitForUsbPipe
 ;    
     mov fs:hid_intr_handle,0
     mov fs:hid_intr_size,0
