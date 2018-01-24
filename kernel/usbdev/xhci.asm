@@ -64,6 +64,7 @@ TRB_TYPE_MFI_WRAP       = 39
 XP_FLAG_TRANSFER_PENDING   = 1
 XP_FLAG_CLOSED             = 2
 XP_FLAG_DATA               = 4
+XP_FLAG_SINGLE             = 8
 
 trb_struc   STRUC
 
@@ -255,6 +256,8 @@ xp_slot             DB ?
 xp_setup_offset     DW ?
 
 xp_ring_enque       DW ?
+xp_ring_fetch       DW ?
+xp_ring_deque       DW ?
 xp_ring_pcs         DW ?
 
 xp_size             DW ?
@@ -1086,6 +1089,8 @@ CreateEndpointRing   Proc near
     and dx,0FFF0h
     mov fs:xp_ring_offset,dx    
     mov fs:xp_ring_enque,dx
+    mov fs:xp_ring_deque,dx
+    mov fs:xp_ring_fetch,0
     mov fs:xp_ring_pcs,1
 ;    
     add eax,edx
@@ -1984,6 +1989,15 @@ LocalIsTransferDone   Proc near
     call LocalIsConnected
     jc itdOk
 ;
+    test fs:xp_flags, XP_FLAG_SINGLE
+    jz itdNotSingle
+;
+    mov ax,fs:xp_ring_deque
+    cmp ax,fs:xp_ring_fetch
+    je itdFail
+    jmp itdOk
+
+itdNotSingle:
     mov al,fs:xp_result
     cmp al,-1
     jne itdOk
@@ -2522,6 +2536,27 @@ IssueOne   Proc far
     test fs:xp_flags,XP_FLAG_DATA
     jz ioDone
 ;
+    mov si,fs:xp_ring_fetch
+    or si,si
+    jz letFetchInit
+;
+    add si,SIZE trb_struc
+;
+    mov ax,fs:[si].trb_type
+    test ax,2
+    jz letFetchSave
+;
+    mov si,fs:xp_ring_offset
+
+letFetchSave:
+    mov fs:xp_ring_fetch,si
+    jmp letFetchOk
+
+letFetchInit:
+    mov si,fs:xp_ring_offset
+    mov fs:xp_ring_fetch,si
+
+letFetchOk:
     mov si,fs:xp_data_head
 
 ioMarkLoop:    
@@ -2532,7 +2567,6 @@ ioMarkLoop:
     mov si,fs:xp_ring_offset
 
 ioMarkNext:    
-    mov ax,fs:[si].trb_type
     and ax,NOT 10h
     or ax,20h     
     mov fs:[si].trb_type,ax
@@ -2544,12 +2578,7 @@ ioMarkNext:
     jmp ioMarkLoop
 
 ioMarkDone:
-    mov fs:xp_result,-1
-    lock or fs:xp_flags, XP_FLAG_TRANSFER_PENDING
-    lock and fs:xp_flags,NOT XP_FLAG_DATA
-;
-    mov ax,fs:xp_size
-    mov fs:xp_remain_size,ax
+    lock or fs:xp_flags, XP_FLAG_TRANSFER_PENDING OR XP_FLAG_SINGLE
 ;    
     mov ds,ds:xhc_db_sel
     movzx si,fs:xp_slot
@@ -3090,6 +3119,29 @@ transfer_event Proc near
     mov al,ds:[si+0Bh]
     mov fs:xp_result,al
 ;
+    mov eax,ds:[si]
+    mov edx,ds:[si+4]
+    sub eax,fs:xp_ring_phys
+    sbb edx,fs:xp_ring_phys+4
+    or edx,edx
+    jnz teDequeDone
+;
+    cmp eax,1000h
+    jae teDequeDone
+;
+    add ax,fs:xp_ring_offset
+    mov di,ax
+    add di,SIZE trb_struc
+    mov ax,fs:[di].trb_type
+    test ax,2
+    jz teSaveDeque
+;
+    mov di,fs:xp_ring_offset
+
+teSaveDeque:
+    mov fs:xp_ring_deque,di
+
+teDequeDone:
     mov bx,fs:usbp_signal
     or bx,bx
     jz teSignalDone
