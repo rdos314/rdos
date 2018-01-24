@@ -36,7 +36,10 @@ INCLUDE ..\os.inc
 
 data SEGMENT byte public 'DATA'
 
-port   DW ?
+port         DW ?
+
+com_handle   DW ?
+wait_handle  DW ?
 
 data ENDS
 
@@ -109,6 +112,50 @@ find_val_save:
     pop bx
     ret
 GetValue    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           OpenPort
+;
+;       Purpose:        Open com port and create wait handle
+;
+;       Parameters:     ES:EDI      String
+;
+;       Returns:        NC          Found
+;                           AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenPort Proc near
+    pushad
+;
+    mov ds:com_handle,0
+    mov ds:wait_handle,0
+;
+    mov ax,ds:port
+    mov ah,8
+    mov bl,1
+    mov bh,'N'
+    mov ecx,9600
+    mov si,100h
+    mov di,100h
+    OpenCom
+    jc opDone
+;
+    mov ds:com_handle,bx
+;
+    CreateWait
+    mov ds:wait_handle,bx
+;
+    mov ax,ds:com_handle
+    AddWaitForCom
+;
+    clc
+
+opDone:
+    popad
+    ret
+OpenPort Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -128,7 +175,7 @@ test_gate    PROC far
 ;
     mov ax,SEG data
     mov ds,ax
-    mov ax,ds:port
+    call OpenPort
 ;
     pop ax
     pop ds
