@@ -40,6 +40,13 @@ port         DW ?
 
 com_handle   DW ?
 wait_handle  DW ?
+
+ext_key      DW ?
+key_state    DW ?
+virt_key     DB ?
+scan_code    DB ?
+press_type   DB ?
+
 msg          DB 14 DUP(?)
 
 data ENDS
@@ -113,7 +120,102 @@ find_val_save:
     pop bx
     ret
 GetValue    Endp
+
         
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           DecodeHexByte
+;
+;       Purpose:        Get hex byte from string
+;
+;       Parameters:     DS:SI       String in
+;
+;       Returns:        DS:SI       String out
+;                       NC          OK
+;                           AL      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DecodeHexByte Proc near
+    push dx
+;
+    xor dl,dl
+    lodsb
+    sub al,'0'
+    jc dbFail
+;
+    cmp al,10
+    jb dbSave1
+;
+    sub al,7
+    jc dbFail
+;
+    cmp al,10h
+    jae dbFail
+
+dbSave1:
+    shl al,4
+    mov dl,al
+;
+    lodsb
+    sub al,'0'
+    jc dbFail
+;
+    cmp al,10
+    jb dbSave2
+;
+    sub al,7
+    jc dbFail
+;
+    cmp al,10h
+    jae dbFail
+
+dbSave2:
+    or al,dl
+    clc
+    jmp dbDone
+
+dbFail:
+    stc
+
+dbDone:
+    pop dx    
+    ret
+DecodeHexByte    Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           DecodeHexWord
+;
+;       Purpose:        Get hex word from string
+;
+;       Parameters:     DS:SI       String in
+;
+;       Returns:        DS:SI       String out
+;                       NC          OK
+;                           AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DecodeHexWord Proc near
+    push dx
+;
+    call DecodeHexByte
+    jc dhwDone
+;
+    mov dl,al
+    call DecodeHexByte
+    jc dhwDone
+;
+    mov ah,dl
+    clc
+
+dhwDone:
+    pop dx
+    ret
+DecodeHexWord Endp
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;       Name:           OpenPort
@@ -239,36 +341,122 @@ gmDone:
 GetMsg Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
 ;
+;    NAME:		keyboard_thread
 ;
-;           NAME:           test_gate
+;    DESCRIPTION:	Keyboard thread
 ;
-;           DESCRIPTION:    Test gate
-;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-test_gate_name   DB 'Test Gate',0
+keyboard_name DB 'Serial Keyboard', 0
 
-test_gate    PROC far
-    int 3
-    push ds
-    push ax
+keyboard_pr:
+    mov ax,500
+    WaitMilliSec
 ;
     mov ax,SEG data
     mov ds,ax
     mov es,ax
     call OpenPort
-    jc test_done
-;
+    jc ktDone
+
+ktLoop:
     call GetMsg
+    jc ktLoop
+;
+    mov si,OFFSET msg
+    lodsb
+    mov ds:press_type,al
+;
+    call DecodeHexWord   
+    jc ktLoop
+;
+    mov ds:ext_key,ax
+;
+    call DecodeHexWord
+    jc ktLoop
+;
+    mov ds:key_state,ax
+;
+    call DecodeHexByte
+    jc ktLoop
+;
+    mov ds:virt_key,al
+;
+    call DecodeHexByte
+    jc ktLoop
+;
+    mov ds:scan_code,al
+;
+    mov ax,ds:key_state
+    SetKeyboardState
+;
+    mov ax,ds:ext_key
+    xchg al,ah
+    mov dl,ds:virt_key
+    mov dh,ds:scan_code
+    mov cl,ds:press_type
+    cmp cl,'P'
+    je ktSend
+;
+    cmp cl,'R'
+    jne ktLoop
+;
+    or al,80h
+    or dh,80h
 
- 
+ktSend:
+    PutKeyboardCode
+;
+    mov al,'P'
+    jne ktLoop
+;    
+    mov ax,ds:key_state
+    test ax,2
+    jz ktLoop
+;
+    mov al,ds:scan_code
+    cmp al,3Bh
+    jc ktLoop
+;
+    cmp al,44h
+    ja ktLoop
+;
+    SetFocus
+    jmp ktLoop
 
-test_done:
-    pop ax
+ktDone:
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;    NAME:		init_keyb_thread
+;
+;    DESCRIPTION:	Init keyboard threads
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_keyb_thread	PROC far
+    push ds
+    push es
+    pushad
+;    
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET keyboard_pr
+    mov edi,OFFSET keyboard_name
+    mov ecx,stack0_size
+    mov ax,4
+    CreateThread
+;
+    popad
+    pop es
     pop ds
     retf32
-test_gate   Endp
+init_keyb_thread	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -291,11 +479,8 @@ init_reg:
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET test_gate
-    mov edi,OFFSET test_gate_name
-    xor dx,dx
-    mov ax,test_gate_nr
-    RegisterBimodalUserGate
+    mov edi,OFFSET init_keyb_thread
+    HookInitTasking
     ret
 init	ENDP
 
