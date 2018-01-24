@@ -2912,6 +2912,9 @@ rtResetDone:
     mov ax,25
     WaitMilliSec
 ;
+    mov bx,ds:xhc_port_thread
+    Signal
+;
     call EnableSlot
     jnc rtEnableOk
 
@@ -2961,7 +2964,40 @@ rtSlotAlloc:
     mov es:usbf_slot,al
     mov es:usbf_address,0
 ;
+    mov ax,25
+    WaitMilliSec
+;
     NotifyUsbAttach
+    jnc rtDone
+;
+    mov bx,ds:xhc_port_thread
+    Signal
+;    
+    push ecx
+    movzx bx,cl    
+    mov al,ds:[bx].xhc_port_slot_arr
+    movzx bx,al
+    shl bx,1
+    xor ax,ax
+    xchg ax,ds:[bx].xhc_func_sel_arr
+    mov bx,ax
+    GetSelectorBaseSize    
+    mov ecx,1000h
+    CreateDataSelector16
+    pop ecx
+;
+    mov al,cl
+    NotifyUsbDetach
+;
+    movzx bx,cl    
+    mov al,ds:[bx].xhc_port_slot_arr
+    call DisableSlot
+;
+    mov es,ds:xhc_port_sel
+    mov eax,es:[si]
+    and eax,0EE03E1h
+    or al,10h
+    mov es:[si],eax
 
 rtDone:
     mov eax,1
