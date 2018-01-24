@@ -40,6 +40,7 @@ port         DW ?
 
 com_handle   DW ?
 wait_handle  DW ?
+msg          DB 256 DUP(?)
 
 data ENDS
 
@@ -133,6 +134,11 @@ OpenPort Proc near
     mov ds:wait_handle,0
 ;
     mov ax,ds:port
+    or ax,ax
+    stc
+    jz opDone
+;
+    dec al
     mov ah,8
     mov bl,1
     mov bh,'N'
@@ -157,6 +163,77 @@ opDone:
     ret
 OpenPort Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           ReadPort
+;
+;       Purpose:        Read a single char from serial port
+;
+;       Returns:        AL	Char
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadPort Proc near
+    push bx
+    push ecx
+;
+    mov bx,ds:wait_handle
+    WaitWithoutTimeout
+;
+    mov bx,ds:com_handle
+    ReadCom
+;
+    pop ecx
+    pop bx
+    ret
+ReadPort Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetMsg
+;
+;       Purpose:        Get a message
+;
+;       Returns:        NC    OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMsg Proc near
+    push ax
+    push cx
+    push di
+;
+    mov di,OFFSET msg
+    mov cx,255
+
+gmLoop:
+    call ReadPort
+    cmp al,0Dh
+    je gmWaitLf
+;
+    stosb
+    loop gmLoop
+;
+    stc
+    jmp gmDone
+
+gmWaitLf:
+    call ReadPort
+    cmp al,0Ah
+    stc
+    jne gmDone
+;
+    xor al,al
+    stosb
+    clc
+
+gmDone:
+    pop di
+    pop cx
+    pop ax
+    ret
+GetMsg Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -175,8 +252,15 @@ test_gate    PROC far
 ;
     mov ax,SEG data
     mov ds,ax
+    mov es,ax
     call OpenPort
+    jc test_done
 ;
+    call GetMsg
+
+ 
+
+test_done:
     pop ax
     pop ds
     retf32
