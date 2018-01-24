@@ -40,7 +40,7 @@ port         DW ?
 
 com_handle   DW ?
 wait_handle  DW ?
-msg          DB 256 DUP(?)
+msg          DB 14 DUP(?)
 
 data ENDS
 
@@ -204,7 +204,7 @@ GetMsg Proc near
     push di
 ;
     mov di,OFFSET msg
-    mov cx,255
+    mov cx,14
 
 gmLoop:
     call ReadPort
@@ -220,6 +220,10 @@ gmLoop:
 gmWaitLf:
     call ReadPort
     cmp al,0Ah
+    stc
+    jne gmDone
+;
+    cmp cx,1
     stc
     jne gmDone
 ;
