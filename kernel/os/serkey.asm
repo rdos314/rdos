@@ -34,12 +34,81 @@ INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 
-    .386p
+data SEGMENT byte public 'DATA'
 
-code	SEGMENT byte public use16 'CODE'
+port   DW ?
+
+data ENDS
+
+code SEGMENT byte public 'CODE'
+
+    .386p
 
     assume cs:code
 
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetValue
+;
+;       Purpose:        Get value from string
+;
+;       Parameters:     ES:EDI      String
+;
+;       Returns:        NC          Found
+;                           AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetValue    Proc near
+    push bx
+    push cx
+    push dx
+;    
+    xor ax,ax
+
+find_first_loop:
+    mov bl,es:[edi]
+    cmp bl,' '
+    je find_first_next
+;
+    cmp bl,','
+    je find_first_next
+;
+    cmp bl,8
+    je find_first_next
+;
+    or bl,bl
+    jnz find_val_digit  
+
+find_first_next:
+    inc edi
+    jmp find_first_loop      
+
+find_val_digit:
+    mov bl,es:[edi]
+    or bl,bl
+    jz find_val_save
+;    
+    inc edi
+    sub bl,'0'
+    jc find_val_save
+;
+    cmp bl,10
+    jnc find_val_save
+;       
+    mov cx,10
+    mul cx
+    add al,bl
+    adc ah,0
+    jmp find_val_digit
+
+find_val_save:
+    pop dx
+    pop cx
+    pop bx
+    ret
+GetValue    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -54,6 +123,15 @@ test_gate_name   DB 'Test Gate',0
 
 test_gate    PROC far
     int 3
+    push ds
+    push ax
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:port
+;
+    pop ax
+    pop ds
     retf32
 test_gate   Endp
 
@@ -67,6 +145,13 @@ test_gate   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init	PROC far
+    mov ax,SEG data
+    mov ds,ax
+;
+    call GetValue
+    mov ds:port,ax
+
+init_reg:
     mov ax,cs
     mov ds,ax
     mov es,ax

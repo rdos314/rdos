@@ -17,6 +17,9 @@
 
 void main()
 {
+    RdosTestGate("");
+
+
     int val;
     TBigNum num1("-233445565766");
     TBigNum num2(100);
