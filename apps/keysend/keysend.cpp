@@ -22,8 +22,11 @@ void KeyPress(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKe
 {
     char str[120];
 
-    sprintf(str, "ExtKey = %04hX, KeyState = %04hX, VK = %02hX, Scan = %02hX, Pressed", ExtKey, KeyState, VirtualKey, ScanCode);
+    sprintf(str, "P%04hX%04hX%02hX%02hX\r\n", ExtKey, KeyState, VirtualKey, ScanCode);
     printf(str);
+
+    if (Serial)
+        Serial->Write(str);
 }
 
 /*##################  KeyRelease ##########################
@@ -37,8 +40,11 @@ void KeyRelease(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int Virtual
 {
     char str[120];
 
-    sprintf(str, "ExtKey = %04hX, KeyState = %04hX, VK = %02hX, Scan = %02hX, Released", ExtKey, KeyState, VirtualKey, ScanCode);
+    sprintf(str, "R%04hX%04hX%02hX%02hX\r\n", ExtKey, KeyState, VirtualKey, ScanCode);
     printf(str);
+
+    if (Serial)
+        Serial->Write(str);
 }
 
 /*##################  main ##########################
