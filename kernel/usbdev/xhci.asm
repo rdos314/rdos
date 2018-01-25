@@ -1951,10 +1951,14 @@ LocalIsConnected   Proc near
     shl si,4
     mov es,fs:xp_port_sel
     mov eax,es:[si]
+    test al,10h
+    jnz licFail
+;
     test al,1
     clc
     jnz licDone
-;    
+
+licFail:    
     stc
 
 licDone:
@@ -3542,24 +3546,23 @@ upCheckTimeout:
     inc ax
     mov ds:[edi].usb_retry_arr,ax
 ;
-    cmp ax,100
+    cmp ax,200
     jb upNotFatal
 ;
     int 3
 
 upNotFatal:
-    cmp ax,10
+    test ax,0Fh
     jnz upDoSignal
 ;   
     mov eax,fs:[si]
     and eax,0EE03E1h
     or al,10h
     mov fs:[si],eax
-    jmp upDone
 
 upDoSignal:
     GetSystemTime
-    add eax,1193 * 500
+    add eax,1193 * 400
     adc edx,0
     mov ds:[4*edi].usb_timeout_arr,eax
     mov ds:[4*edi].usb_timeout_arr+4,edx
