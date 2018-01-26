@@ -257,6 +257,8 @@ mon_key_code        DW ?
 mon_c_vk_code       DB ?
 mon_scan_code       DB ?
 
+mon_com_buf         DB 14 DUP(?)
+
 ; should be last!
 
 mon_core_regs       DB ?

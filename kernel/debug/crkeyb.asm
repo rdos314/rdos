@@ -29,6 +29,9 @@ INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 INCLUDE kdebug.inc
 
+PORT_BASE    = 3F8h
+BAUD_DIVISOR = 12
+
 ;
 ; status
 ;
@@ -1101,6 +1104,44 @@ InitCrashKeyboard Proc near
     mov ds:mon_c_vk_code,0
     mov ds:mon_scan_code,0
 ;
+    mov al,83h
+    mov dx,PORT_BASE + 3
+    out dx,al           ; set line control to divisor access
+;
+    mov dx,PORT_BASE
+    mov ax,BAUD_DIVISOR
+    out dx,al           ; output LSB divisor latch
+;
+    mov dx,PORT_BASE + 1
+    mov al,ah
+    out dx,al           ; output MSB divisor latch
+;
+    mov dx,PORT_BASE + 2
+    mov al,1
+    out dx,al           ; enable FIFOs if present
+;
+    mov dx,PORT_BASE + 3
+    mov al,3
+    out dx,al           ; set line control 
+;
+    mov dx,PORT_BASE + 1
+    xor al,al
+    out dx,al           ; no ints
+;
+    mov dx,PORT_BASE + 4
+    in al,dx
+    or al,0Bh
+    out dx,al           ; modem control, DTR = high, RTS = high
+;
+    mov dx,PORT_BASE
+    in al,dx
+;
+    mov dx,PORT_BASE + 5
+    in al,dx
+;
+    mov dx,PORT_BASE + 6
+    in al,dx
+;
     pop ds
     ret
 InitCrashKeyboard Endp
@@ -1124,6 +1165,9 @@ UpdateKeyboard  Proc near
     
 crash_key_loop:
     in al,64h
+    cmp al,0FFh
+    je crash_key_done
+;
     test al,1
     jz crash_key_done
 ;
@@ -1279,6 +1323,242 @@ umDone:
 UpdateMode      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           PollCom
+;
+;       DESCRIPTION:    Poll com port
+;
+;       RETURNS:        NC
+;                           AL    Char
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollCom  Proc near
+    push dx
+;
+    mov dx,PORT_BASE + 5
+    in al,dx
+    test al,1
+    stc
+    jz ppDone
+;
+    mov dx,PORT_BASE
+    in al,dx
+    clc
+
+ppDone:    
+    pop dx
+    ret
+PollCom  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadCom
+;
+;       DESCRIPTION:    Read com port
+;
+;       RETURNS:        NC
+;                           AL    Char
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadCom  Proc near
+    call PollCom
+    jc ReadCom
+    ret
+ReadCom  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetMsg
+;
+;       DESCRIPTION:    Get complete message
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMsg  Proc near
+    mov bx,OFFSET mon_com_buf
+    mov cx,13
+
+gmLoop:
+    call ReadCom
+    cmp al,0Dh
+    je gmWaitLf
+;
+    mov ds:[bx],al
+    inc bx
+    loop gmLoop
+;
+    stc
+    jmp gmDone
+
+gmWaitLf:
+    call ReadCom
+    cmp al,0Ah
+    stc
+    jne gmDone
+;
+    cmp cx,1
+    stc
+    jne gmDone
+;
+    xor al,al
+    mov ds:[bx],al
+    clc
+
+gmDone:
+    ret
+GetMsg   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           DecodeHexByte
+;
+;       Purpose:        Get hex byte from string
+;
+;       Parameters:     DS:SI       String in
+;
+;       Returns:        DS:SI       String out
+;                       NC          OK
+;                           AL      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DecodeHexByte Proc near
+    push dx
+;
+    xor dl,dl
+    lodsb
+    sub al,'0'
+    jc dbFail
+;
+    cmp al,10
+    jb dbSave1
+;
+    sub al,7
+    jc dbFail
+;
+    cmp al,10h
+    jae dbFail
+
+dbSave1:
+    shl al,4
+    mov dl,al
+;
+    lodsb
+    sub al,'0'
+    jc dbFail
+;
+    cmp al,10
+    jb dbSave2
+;
+    sub al,7
+    jc dbFail
+;
+    cmp al,10h
+    jae dbFail
+
+dbSave2:
+    or al,dl
+    clc
+    jmp dbDone
+
+dbFail:
+    stc
+
+dbDone:
+    pop dx    
+    ret
+DecodeHexByte    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           DecodeHexWord
+;
+;       Purpose:        Get hex word from string
+;
+;       Parameters:     DS:SI       String in
+;
+;       Returns:        DS:SI       String out
+;                       NC          OK
+;                           AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DecodeHexWord Proc near
+    push dx
+;
+    call DecodeHexByte
+    jc dhwDone
+;
+    mov dl,al
+    call DecodeHexByte
+    jc dhwDone
+;
+    mov ah,dl
+    clc
+
+dhwDone:
+    pop dx
+    ret
+DecodeHexWord Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UpdateCom
+;
+;       DESCRIPTION:    Update com port
+;
+;       RETURNS:        NC
+;                           AL    Char
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateCom  Proc near
+    call PollCom
+    jc ucDone
+;
+    cmp al,'P'
+    je ucPress
+;
+    cmp al,'R'
+    jne ucDone
+
+ucRel:
+    call GetMsg
+    jmp ucDone
+
+ucPress:
+    call GetMsg
+    jc ucDone
+;
+    mov si,OFFSET mon_com_buf
+;
+    call DecodeHexWord   
+    jc ucDone
+;
+    call DecodeHexWord
+    jc ucDone
+;
+    call DecodeHexByte
+    jc ucDone
+;
+    mov ds:mon_c_vk_code,al
+;
+    call DecodeHexByte
+    jc ucDone
+;
+    mov ds:mon_scan_code,al
+
+ucDone:
+    ret
+UpdateCom  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           GetCrashKey
@@ -1300,6 +1580,7 @@ GetCrashKey      PROC near
     mov ds,ax
     call UpdateKeyboard
     call UpdateMode
+    call UpdateCom
 ;
     mov ah,ds:mon_scan_code
     or ah,ah
