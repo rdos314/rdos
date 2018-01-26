@@ -730,6 +730,7 @@ WriteData Endp
 
 ResetDevice Proc near
     push es
+    pushad
 ;
     mov ax,fs
     mov es,ax
@@ -757,6 +758,7 @@ ResetDevice Proc near
     mov bx,fs:disc_control_handle
     WasUsbTransactionOk
 ;
+    popad
     pop es
     ret
 ResetDevice	Endp
@@ -1598,7 +1600,8 @@ rdDoTrans:
     xchg al,ah    
     mov word ptr fs:disc_cbw_cmd_data+7,ax
     mov fs:disc_cbw_cmd_data+9,0
-;
+
+rdRetry:
     call SendCbw
     jc rdFail
 ;    
@@ -1636,7 +1639,7 @@ rdBufLoop:
     
 rdFail:
     call ResetDevice
-    pop ecx
+    jmp rdRetry
 
 rdFailLoop:    
     mov edi,es:[esi]
@@ -1757,7 +1760,8 @@ wdDoTrans:
     xchg al,ah    
     mov word ptr fs:disc_cbw_cmd_data+7,ax
     mov fs:disc_cbw_cmd_data+9,0
-;
+
+wdRetry:
     call SendCbw
     jc wdFail
 ;    
@@ -1795,7 +1799,7 @@ wdBufLoop:
     
 wdFail:
     call ResetDevice
-    pop ecx
+    jmp wdRetry
 
 wdFailLoop:    
     mov edi,es:[esi]
