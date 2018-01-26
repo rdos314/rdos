@@ -778,6 +778,9 @@ ClosePipe   Proc near
     push cx
     push es
 ;
+    mov fs:usbp_signal,0
+    mov fs:usbp_wait,0
+;
     mov ax,fs:usbp_device_sel
     or ax,ax
     jz cpDevOk
