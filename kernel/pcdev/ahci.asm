@@ -759,6 +759,7 @@ CreatePortCmdList   Proc near
 cpclLoop:
     mov es:[di].acl_ctba,eax
     mov es:[di].acl_flags,5
+    mov es:[di].acl_thread,0
     add di,20h
     add eax,edx
     loop cpclLoop    
@@ -3229,6 +3230,7 @@ perform_write_queue_loop:
     mov ds:[bx].acl_prdtl,cx
     mov ds:[bx].acl_flags,0C5h
     mov ds:[bx].acl_transfer_count,0
+    mov ds:[bx].acl_thread,0
 ;
     movzx ecx,cx
     shl ecx,9
@@ -3303,6 +3305,7 @@ perform_read_queue_loop:
     mov ds:[bx].acl_prdtl,cx
     mov ds:[bx].acl_flags,85h
     mov ds:[bx].acl_transfer_count,0
+    mov ds:[bx].acl_thread,0
 ;
     movzx ecx,cx
     shl ecx,9
@@ -3525,6 +3528,7 @@ notify_discbuf_has_data:
     jmp notify_discbuf_loop
 
 notify_discbuf_try_reset:
+    int 3
     mov gs:ap_retry_count,0
 ;    
     mov ds,gs:ap_hba_sel
@@ -3636,8 +3640,10 @@ notify_cmd_done:
     call NotifyCmdList
     mov eax,ebx
     not eax
+    RequestSpinlock gs:ap_spinlock
     and gs:ap_active_mask,eax
     and gs:ap_reserved_mask,eax
+    ReleaseSpinlock gs:ap_spinlock
     pop cx
     pop eax
     
