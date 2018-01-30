@@ -85,6 +85,7 @@ struct TWidget
     int Node;
     int Cap;
     int Channels;
+    int InPath;
     struct TAmp InputAmp;
     struct TAmp OutputAmp;
     int ConnectionCount;
@@ -110,6 +111,7 @@ struct TAudioOutput
     int Node;
     int Cap;
     int Channels;
+    int InPath;
     struct TAmp InputAmp;
     struct TAmp OutputAmp;
     int ConnectionCount;
@@ -128,6 +130,7 @@ struct TAudioInput
     int Node;
     int Cap;
     int Channels;
+    int InPath;
     struct TAmp InputAmp;
     struct TAmp OutputAmp;
     int ConnectionCount;
@@ -146,6 +149,7 @@ struct TAudioMixer
     int Node;
     int Cap;
     int Channels;
+    int InPath;
     struct TAmp InputAmp;
     struct TAmp OutputAmp;
     int ConnectionCount;
@@ -160,6 +164,7 @@ struct TAudioSelector
     int Node;
     int Cap;
     int Channels;
+    int InPath;
     struct TAmp InputAmp;
     struct TAmp OutputAmp;
     int ConnectionCount;
@@ -174,6 +179,7 @@ struct TPinComplex
     int Node;
     int Cap;
     int Channels;
+    int InPath;
     struct TAmp InputAmp;
     struct TAmp OutputAmp;
     int ConnectionCount;
@@ -198,6 +204,7 @@ struct TPowerWidget
     int Node;
     int Cap;
     int Channels;
+    int InPath;
     struct TAmp InputAmp;
     struct TAmp OutputAmp;
     int ConnectionCount;
@@ -212,6 +219,7 @@ struct TBeepWidget
     int Node;
     int Cap;
     int Channels;
+    int InPath;
     struct TAmp InputAmp;
     struct TAmp OutputAmp;
     int ConnectionCount;
@@ -264,7 +272,7 @@ static int OutputLVol = 0;
 static int OutputRVol = 0;
 
 static int ForceFixed = FALSE;
-static int ForceOutput = -1;
+static int ForceOutput = 0;
 
 /*##########################################################################
 #
@@ -427,6 +435,7 @@ void AddAudioOutput(struct TCodec *codec, int node, int cap, int channels)
     widget->Node = node;
     widget->Cap = cap;
     widget->Channels = channels;
+    widget->InPath = FALSE;
     widget->PcmRates = GetParam(codec, node, 0xA);
 
     for (i = 0; i < MAX_CONNECTIONS; i++)
@@ -476,6 +485,7 @@ void AddAudioInput(struct TCodec *codec, int node, int cap, int channels)
         widget->Node = node;
         widget->Cap = cap;
         widget->Channels = channels;
+        widget->InPath = FALSE;
         widget->PcmRates = GetParam(codec, node, 0xA);
 
         if (widget->Cap & 2)
@@ -526,6 +536,7 @@ void AddAudioMixer(struct TCodec *codec, int node, int cap, int channels)
         widget->Node = node;
         widget->Cap = cap;
         widget->Channels = channels;
+        widget->InPath = FALSE;
 
         if (widget->Cap & 2)
         {
@@ -581,6 +592,7 @@ void AddAudioSelector(struct TCodec *codec, int node, int cap, int channels)
         widget->Node = node;
         widget->Cap = cap;
         widget->Channels = channels;
+        widget->InPath = FALSE;
 
         ResetAmp(&widget->InputAmp);
 
@@ -662,6 +674,7 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
         widget->Node = node;
         widget->Cap = cap;
         widget->Channels = channels;
+        widget->InPath = FALSE;
         widget->PinCap = GetParam(codec, node, 0xC);
 
         widget->Connectivity = conn;
@@ -776,6 +789,7 @@ void AddPowerWidget(struct TCodec *codec, int node, int cap, int channels)
         widget->Node = node;
         widget->Cap = cap;
         widget->Channels = channels;
+        widget->InPath = FALSE;
 
         ResetAmp(&widget->InputAmp);
         ResetAmp(&widget->OutputAmp);
@@ -817,6 +831,7 @@ void AddBeepWidget(struct TCodec *codec, int node, int cap, int channels)
         widget->Node = node;
         widget->Cap = cap;
         widget->Channels = channels;
+        widget->InPath = FALSE;
 
         ResetAmp(&widget->InputAmp);
         ResetAmp(&widget->OutputAmp);
@@ -2851,6 +2866,65 @@ void UpdateOutputVolume()
 
 /*##########################################################################
 #
+#   Name       : ActivateHeadPhone
+#
+#   Purpose....: Activate head phone
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void ActivateHeadPhone(struct TWidget *widget)
+{
+    int i;
+    struct TWidget *input;
+
+    if (widget->OutputAmp.NumSteps < 2)
+        SetOutputAmp(widget, 0, 0);
+
+    for (i = 0; widget->ConnectionCount; i++)
+    {
+        input = widget->ConnectionList[i]; 
+        if (input->InPath)
+        {
+            SetInputAmp(widget, i, 0, 0);
+            break;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : DeactivateHeadPhone
+#
+#   Purpose....: Deactivate head phone
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void DeactivateHeadPhone(struct TWidget *widget)
+{
+    int i;
+    struct TWidget *input;
+
+    MuteOutputAmp(widget, &widget->OutputAmp);
+
+    for (i = 0; widget->ConnectionCount; i++)
+    {
+        input = widget->ConnectionList[i]; 
+        if (input->InPath)
+        {
+            MuteInputAmp(widget, &widget->InputAmp, i);
+            break;
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : ActivateOutput
 #
 #   Purpose....: Activate output
@@ -2863,6 +2937,8 @@ void UpdateOutputVolume()
 void ActivateOutput(struct TWidget *widget)
 {
     int i;
+
+    widget->InPath = TRUE;
 
     if (widget->Type == AUDIO_WIDGET_TYPE_OUTPUT)
     {
@@ -2901,6 +2977,8 @@ void ActivateOutput(struct TWidget *widget)
 void DeactivateOutput(struct TWidget *widget)
 {
     int i;
+
+    widget->InPath = FALSE;
 
     if (widget->Type == AUDIO_WIDGET_TYPE_OUTPUT)
         MuteOutputAmp(widget, &widget->OutputAmp);
@@ -3002,9 +3080,14 @@ void __far ImplSetAudioOutputVolume(int l, int r)
 ##########################################################################*/
 void AssignOutput(struct TWidget *widget)
 {
+    int i;
+
     CreateOutputVolumeControls(widget);
     UpdateOutputVolume();
     ActivateOutput(widget);
+    
+    for (i = 0; i < HeadPhoneCount; i++)
+        ActivateHeadPhone((struct TWidget *)HeadPhoneArr[i]);
 }
 
 /*##########################################################################
@@ -3020,6 +3103,11 @@ void AssignOutput(struct TWidget *widget)
 ##########################################################################*/
 void DeassignOutput(struct TWidget *widget)
 {
+    int i;
+    
+    for (i = 0; i < HeadPhoneCount; i++)
+        DeactivateHeadPhone((struct TWidget *)HeadPhoneArr[i]);
+
     FreeOutputVolumeControls();
     DeactivateOutput(widget);
 }
@@ -3129,7 +3217,7 @@ void __far ImplSetDacRate(int rate)
     int verb;
     int format;
     int width = 4;
-    
+
     UpdateOutput();
 
     if (OutputWidget)
