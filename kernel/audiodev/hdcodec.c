@@ -248,6 +248,9 @@ struct TKernelSection OutputSection;
 static int OutputCount = 0;
 static struct TPinComplex *OutputArr[MAX_OUTPUTS];
 
+static int HeadPhoneCount = 0;
+static struct TPinComplex *HeadPhoneArr[MAX_OUTPUTS];
+
 int OutputVolumeControls = 0;
 struct TVolumeControl *OutputVolumeArr[MAX_VOLUME_CONTROLS];
 struct TPinComplex *CurrentOutput = 0;
@@ -727,6 +730,20 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
         {
             if (widget->Connectivity == 2 && widget->Device == 1)
                FixedSpeaker = widget;
+            else
+            {
+                if (widget->PinCap & 0x10)
+                {
+                    if (widget->PinCap & 0x8)
+                    {
+                        if (HeadPhoneCount < MAX_OUTPUTS)
+                        {
+                            HeadPhoneArr[HeadPhoneCount] = widget;
+                            HeadPhoneCount++;
+                        }
+                    }
+                }
+            }
         }            
     }
 }
@@ -2146,6 +2163,26 @@ void __far ImplIsAudioOutputAmpMuted(int Device, int Codec, int Node, int Channe
 struct TPinComplex *GetFixedOutput()
 {
     return FixedSpeaker;
+}
+
+/*##########################################################################
+#
+#   Name       : GetHeadPhonePin
+#
+#   Purpose....: Get headphone
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetHeadPhonePin "*" rdosdev parm routine [ebx] value [dx eax]
+struct TPinComplex *GetHeadPhonePin(int num)
+{
+    if (num < HeadPhoneCount)
+        return HeadPhoneArr[num];
+    else
+        return 0;
 }
 
 /*##########################################################################

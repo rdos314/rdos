@@ -739,6 +739,31 @@ void TAudioCommand::ShowDevices()
 
     for (i = 0; i < 256; i++)
     {
+        ok = RdosGetHeadPhone(i, &dev, &codec, &node);
+        if (ok)
+        {
+            if (i == 0)
+                Write("Head Phone:\r\n");                
+
+            sprintf(Info, "%d: ", i + 1);
+            Write(Info);
+
+            RdosGetAudioWidgetInfo(dev, codec, node, Info);
+            Write(Info);
+            sprintf(Info, " (%d.%d.%d)", dev, codec, node); 
+            Write(Info);
+            Write("\r\n");
+        }
+        else
+        {
+            if (i != 0)
+                Write("\r\n");
+            break;
+        }
+    }
+
+    for (i = 0; i < 256; i++)
+    {
         ok = RdosGetJackAudioInput(i, &dev, &codec, &node);
         if (ok)
         {

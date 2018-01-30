@@ -3660,6 +3660,14 @@ GetFixedAudioOutput      MACRO
 	UserGate get_fixed_audio_output_nr
 	                ENDM
 
+;   IN  EBX         Head phone #
+;   OUT EAX         Device #
+;   OUT EDX         Codec #
+;   OUT ECX         Node #
+GetHeadPhone      MACRO
+	UserGate get_head_phone_nr
+	                ENDM
+
 ;   IN  EBX         Jack #
 ;   OUT EAX         Device #
 ;   OUT EDX         Codec #

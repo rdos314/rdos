@@ -393,6 +393,24 @@
     parm [esi] [edi] [ecx] \
     value [eax];
 
+#pragma aux RdosGetHeadPhone = \
+    "push ecx" \
+    CallGate_get_head_phone  \
+    "jnc save" \
+    "xor eax,eax" \
+    "xor ecx,ecx" \
+    "xor edx,edx" \
+    "stc" \
+    "save: " \
+    "mov [esi],eax" \
+    "mov [edi],edx" \
+    "mov eax,ecx" \
+    "pop ecx" \
+    "mov [ecx],eax" \
+    CarryToBool \
+    parm [ebx] [esi] [edi] [ecx] \
+    value [eax];
+
 #pragma aux RdosGetJackAudioOutput = \
     "push ecx" \
     CallGate_get_jack_audio_output  \
