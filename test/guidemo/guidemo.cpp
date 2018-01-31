@@ -389,6 +389,7 @@ void cdecl main()
         TLabelControl *Label;
         TImageControl *Image;
         char str[128];
+        char RusStr[] = {0xd0, 0x82, 0xd0, 0x8a, 0};
 
         RdosWaitMilli(250);
 
@@ -409,7 +410,7 @@ void cdecl main()
                 printf("Mode: %04hX, %dx%d, %d-bits\r\n", i, x, y, bits);
         }
 
-        RdosWaitMilli(7500);
+        RdosWaitMilli(2500);
 
         vbe = new TVideoGraphicDevice(24, 1366, 768);
 //      vbe = new TVideoGraphicDevice(24, 1280, 800);
@@ -499,7 +500,8 @@ void cdecl main()
 
         vbe->SetLgopNone();
         vbe->SetDrawColor(0, 255, 255);
-        vbe->DrawString(40, 111, "RDOS operating system");
+//        vbe->DrawString(40, 111, "RDOS operating system");
+        vbe->DrawString(40, 111, RusStr);
 
         delete font;
 
