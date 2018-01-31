@@ -830,6 +830,4 @@ get_thread_count_nr              = 651
 
 is_can_online_nr                 = 652
 
-get_head_phone_nr                = 653
-
 usergate_entries                            = 670

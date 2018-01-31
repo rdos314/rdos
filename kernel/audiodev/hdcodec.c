@@ -256,9 +256,6 @@ struct TKernelSection OutputSection;
 static int OutputCount = 0;
 static struct TPinComplex *OutputArr[MAX_OUTPUTS];
 
-static int HeadPhoneCount = 0;
-static struct TPinComplex *HeadPhoneArr[MAX_OUTPUTS];
-
 int OutputVolumeControls = 0;
 struct TVolumeControl *OutputVolumeArr[MAX_VOLUME_CONTROLS];
 struct TPinComplex *CurrentOutput = 0;
@@ -272,7 +269,7 @@ static int OutputLVol = 0;
 static int OutputRVol = 0;
 
 static int ForceFixed = FALSE;
-static int ForceOutput = 0;
+static int ForceOutput = -1;
 
 /*##########################################################################
 #
@@ -743,21 +740,7 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
         {
             if (widget->Connectivity == 2 && widget->Device == 1)
                FixedSpeaker = widget;
-            else
-            {
-                if (widget->PinCap & 0x10)
-                {
-                    if (widget->PinCap & 0x8)
-                    {
-                        if (HeadPhoneCount < MAX_OUTPUTS)
-                        {
-                            HeadPhoneArr[HeadPhoneCount] = widget;
-                            HeadPhoneCount++;
-                        }
-                    }
-                }
-            }
-        }            
+        }
     }
 }
 
@@ -2182,26 +2165,6 @@ struct TPinComplex *GetFixedOutput()
 
 /*##########################################################################
 #
-#   Name       : GetHeadPhonePin
-#
-#   Purpose....: Get headphone
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-#pragma aux GetHeadPhonePin "*" rdosdev parm routine [ebx] value [dx eax]
-struct TPinComplex *GetHeadPhonePin(int num)
-{
-    if (num < HeadPhoneCount)
-        return HeadPhoneArr[num];
-    else
-        return 0;
-}
-
-/*##########################################################################
-#
 #   Name       : GetOutputJack
 #
 #   Purpose....: Get output jack
@@ -2866,65 +2829,6 @@ void UpdateOutputVolume()
 
 /*##########################################################################
 #
-#   Name       : ActivateHeadPhone
-#
-#   Purpose....: Activate head phone
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void ActivateHeadPhone(struct TWidget *widget)
-{
-    int i;
-    struct TWidget *input;
-
-    if (widget->OutputAmp.NumSteps < 2)
-        SetOutputAmp(widget, 0, 0);
-
-    for (i = 0; widget->ConnectionCount; i++)
-    {
-        input = widget->ConnectionList[i]; 
-        if (input->InPath)
-        {
-            SetInputAmp(widget, i, 0, 0);
-            break;
-        }
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : DeactivateHeadPhone
-#
-#   Purpose....: Deactivate head phone
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void DeactivateHeadPhone(struct TWidget *widget)
-{
-    int i;
-    struct TWidget *input;
-
-    MuteOutputAmp(widget, &widget->OutputAmp);
-
-    for (i = 0; widget->ConnectionCount; i++)
-    {
-        input = widget->ConnectionList[i]; 
-        if (input->InPath)
-        {
-            MuteInputAmp(widget, &widget->InputAmp, i);
-            break;
-        }
-    }
-}
-
-/*##########################################################################
-#
 #   Name       : ActivateOutput
 #
 #   Purpose....: Activate output
@@ -3080,14 +2984,9 @@ void __far ImplSetAudioOutputVolume(int l, int r)
 ##########################################################################*/
 void AssignOutput(struct TWidget *widget)
 {
-    int i;
-
     CreateOutputVolumeControls(widget);
     UpdateOutputVolume();
     ActivateOutput(widget);
-    
-    for (i = 0; i < HeadPhoneCount; i++)
-        ActivateHeadPhone((struct TWidget *)HeadPhoneArr[i]);
 }
 
 /*##########################################################################
@@ -3103,11 +3002,6 @@ void AssignOutput(struct TWidget *widget)
 ##########################################################################*/
 void DeassignOutput(struct TWidget *widget)
 {
-    int i;
-    
-    for (i = 0; i < HeadPhoneCount; i++)
-        DeactivateHeadPhone((struct TWidget *)HeadPhoneArr[i]);
-
     FreeOutputVolumeControls();
     DeactivateOutput(widget);
 }

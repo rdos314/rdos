@@ -178,7 +178,6 @@ code    SEGMENT byte public 'CODE'
     extrn GetFixedOutput:near
     extrn GetOutputJack:near
     extrn GetInputJack:near
-    extrn GetHeadPhonePin:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -217,46 +216,6 @@ gfoDone:
     pop es
     ret    
 get_fixed_output  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetHeadPhone
-;
-;           DESCRIPTION:    Get headphone
-;
-;           PARAMETERS:     EBX     Headphone #
-;
-;           RETURNS:        NC      Available
-;                           EAX     Function
-;                           EDX     Codec
-;                           ECX     Node
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_head_phone_name DB 'Get Headphone',0
-
-get_head_phone      Proc far
-    push es
-    push edi
-;    
-    call GetHeadPhonePin
-    or dx,dx
-    stc
-    jz ghpDone
-;
-    mov es,dx
-    mov edi,eax
-    mov eax,es:[edi].wb_id
-    mov edx,es:[edi].wb_address
-    mov ecx,es:[edi].wb_node
-    clc
-
-ghpDone:
-    pop edi
-    pop es
-    ret    
-get_head_phone  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1837,12 +1796,6 @@ InitHda_    PROC near
     mov edi,OFFSET get_fixed_output_name
     xor dx,dx
     mov ax,get_fixed_audio_output_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_head_phone
-    mov edi,OFFSET get_head_phone_name
-    xor dx,dx
-    mov ax,get_head_phone_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_jack_output

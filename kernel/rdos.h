@@ -258,7 +258,6 @@ int RDOSAPI RdosReadAudioOutputAmp(int Device, int Codec, int Node, int Channel)
 int RDOSAPI RdosIsAudioInputAmpMuted(int Device, int Codec, int Node, int Channel, int Input);
 int RDOSAPI RdosIsAudioOutputAmpMuted(int Device, int Codec, int Node, int Channel);
 int RDOSAPI RdosGetFixedAudioOutput(int *Device, int *Codec, int *Node);
-int RDOSAPI RdosGetHeadPhone(int Num, int *Device, int *Codec, int *Node);
 int RDOSAPI RdosGetJackAudioOutput(int Num, int *Device, int *Codec, int *Node);
 int RDOSAPI RdosGetJackAudioInput(int Num, int *Device, int *Codec, int *Node);
 
