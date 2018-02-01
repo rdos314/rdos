@@ -69,6 +69,8 @@ long long CodeLongLong(int Lsb, int Msb);
 
 #define OUTPUT_STREAM       1
 
+struct TCodec;
+
 struct TAmp
 {
     int StepSize;
@@ -86,6 +88,7 @@ struct TWidget
     int Cap;
     int Channels;
     int InPath;
+    struct TCodec *Codec;
     struct TAmp InputAmp;
     struct TAmp OutputAmp;
     int ConnectionCount;
@@ -112,6 +115,7 @@ struct TAudioOutput
     int Cap;
     int Channels;
     int InPath;
+    struct TCodec *Codec;
     struct TAmp InputAmp;
     struct TAmp OutputAmp;
     int ConnectionCount;
@@ -131,6 +135,7 @@ struct TAudioInput
     int Cap;
     int Channels;
     int InPath;
+    struct TCodec *Codec;
     struct TAmp InputAmp;
     struct TAmp OutputAmp;
     int ConnectionCount;
@@ -150,6 +155,7 @@ struct TAudioMixer
     int Cap;
     int Channels;
     int InPath;
+    struct TCodec *Codec;
     struct TAmp InputAmp;
     struct TAmp OutputAmp;
     int ConnectionCount;
@@ -165,6 +171,7 @@ struct TAudioSelector
     int Cap;
     int Channels;
     int InPath;
+    struct TCodec *Codec;
     struct TAmp InputAmp;
     struct TAmp OutputAmp;
     int ConnectionCount;
@@ -180,6 +187,7 @@ struct TPinComplex
     int Cap;
     int Channels;
     int InPath;
+    struct TCodec *Codec;
     struct TAmp InputAmp;
     struct TAmp OutputAmp;
     int ConnectionCount;
@@ -205,6 +213,7 @@ struct TPowerWidget
     int Cap;
     int Channels;
     int InPath;
+    struct TCodec *Codec;
     struct TAmp InputAmp;
     struct TAmp OutputAmp;
     int ConnectionCount;
@@ -220,6 +229,7 @@ struct TBeepWidget
     int Cap;
     int Channels;
     int InPath;
+    struct TCodec *Codec;
     struct TAmp InputAmp;
     struct TAmp OutputAmp;
     int ConnectionCount;
@@ -231,6 +241,8 @@ struct TCodec
     int Id;
     int Address;
     int AudioNode;
+    int VendorID;
+    int DeviceID;
 
     struct TWidget *WidgetArr[MAX_WIDGETS];
 };
@@ -433,6 +445,7 @@ void AddAudioOutput(struct TCodec *codec, int node, int cap, int channels)
     widget->Cap = cap;
     widget->Channels = channels;
     widget->InPath = FALSE;
+    widget->Codec = codec;
     widget->PcmRates = GetParam(codec, node, 0xA);
 
     for (i = 0; i < MAX_CONNECTIONS; i++)
@@ -483,6 +496,7 @@ void AddAudioInput(struct TCodec *codec, int node, int cap, int channels)
         widget->Cap = cap;
         widget->Channels = channels;
         widget->InPath = FALSE;
+        widget->Codec = codec;
         widget->PcmRates = GetParam(codec, node, 0xA);
 
         if (widget->Cap & 2)
@@ -534,6 +548,7 @@ void AddAudioMixer(struct TCodec *codec, int node, int cap, int channels)
         widget->Cap = cap;
         widget->Channels = channels;
         widget->InPath = FALSE;
+        widget->Codec = codec;
 
         if (widget->Cap & 2)
         {
@@ -590,6 +605,7 @@ void AddAudioSelector(struct TCodec *codec, int node, int cap, int channels)
         widget->Cap = cap;
         widget->Channels = channels;
         widget->InPath = FALSE;
+        widget->Codec = codec;
 
         ResetAmp(&widget->InputAmp);
 
@@ -672,6 +688,7 @@ void AddPinComplex(struct TCodec *codec, int node, int cap, int channels)
         widget->Cap = cap;
         widget->Channels = channels;
         widget->InPath = FALSE;
+        widget->Codec = codec;
         widget->PinCap = GetParam(codec, node, 0xC);
 
         widget->Connectivity = conn;
@@ -773,6 +790,7 @@ void AddPowerWidget(struct TCodec *codec, int node, int cap, int channels)
         widget->Cap = cap;
         widget->Channels = channels;
         widget->InPath = FALSE;
+        widget->Codec = codec;
 
         ResetAmp(&widget->InputAmp);
         ResetAmp(&widget->OutputAmp);
@@ -815,6 +833,7 @@ void AddBeepWidget(struct TCodec *codec, int node, int cap, int channels)
         widget->Cap = cap;
         widget->Channels = channels;
         widget->InPath = FALSE;
+        widget->Codec = codec;
 
         ResetAmp(&widget->InputAmp);
         ResetAmp(&widget->OutputAmp);
@@ -848,6 +867,10 @@ void ProcessCodec(struct TCodec *codec)
     int type;
     int channels;
     int verb;
+
+    codec->VendorID = Query(codec, 0, 0xF0000);
+    codec->DeviceID = codec->VendorID & 0xFFFF;
+    codec->VendorID = (codec->VendorID >> 16) & 0xFFFF;    
 
     Vendor = GetParam(codec, 0, 0);
     SubSys = GetParam(codec, 0, 1);
@@ -1703,6 +1726,42 @@ char GetAudioWidgetInfo(int Device, int CodecNr, int Node, char *Info)
         }
     }
     return Type;
+}
+
+/*##########################################################################
+#
+#   Name       : GetAudioCodecVersion
+#
+#   Purpose....: Get audio codec version
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetAudioCodecVersion "*" rdosdev parm routine [eax] [edx] value [edx eax]
+long long __far ImplGetAudioCodecVersion(int Device, int CodecNr)
+{
+    long long val = 0;
+    struct TFunction *Function;
+    struct TCodec *Codec = 0;
+    
+    if (Device < FunctionCount)
+    {
+        Function = FunctionArr[Device];
+        if (Function && CodecNr < Function->CodecCount)
+            Codec = Function->CodecArr[CodecNr];
+    }
+
+    if (Codec)
+    {
+        val = CodeLongLong(Codec->DeviceID, Codec->VendorID);
+        RdosSetSuccess();
+    }
+    else
+        RdosSetFailure();
+        
+    return val;
 }
 
 /*##########################################################################
@@ -2984,9 +3043,15 @@ void __far ImplSetAudioOutputVolume(int l, int r)
 ##########################################################################*/
 void AssignOutput(struct TWidget *widget)
 {
+    struct TCodec *codec = widget->Codec;
+
     CreateOutputVolumeControls(widget);
     UpdateOutputVolume();
     ActivateOutput(widget);
+
+    if (codec->VendorID == 0x10EC && codec->DeviceID == 0x892)
+        if (widget == (struct TWidget *)FixedSpeaker)
+            TurnOnOutput(OutputArr[0]);
 }
 
 /*##########################################################################
@@ -3280,6 +3345,7 @@ int main()
     RdosRegisterBimodalUserGate(usergate_has_audio, (__rdos_gate_callback *)&ImplHasAudio, "Has Audio?");
     RdosRegisterBimodalUserGate(usergate_get_audio_device_count, (__rdos_gate_callback *)&ImplGetAudioDeviceCount, "Get Audio Device Count");
     RdosRegisterBimodalUserGate(usergate_get_audio_codec_count, (__rdos_gate_callback *)&ImplGetAudioCodecCount, "Get Audio Device Count");
+    RdosRegisterBimodalUserGate(usergate_get_audio_codec_version, (__rdos_gate_callback *)&ImplGetAudioCodecVersion, "Get Audio Codec Version");
     RdosRegisterUserGate(usergate_get_audio_widget_info, (__rdos_gate_callback *)&ImplGetAudioWidgetInfo16, (__rdos_gate_callback *)&ImplGetAudioWidgetInfo32, "Get Audio Widget Info");
     RdosRegisterUserGate(usergate_get_audio_widget_connection_list, (__rdos_gate_callback *)&ImplGetAudioConnectionList16, (__rdos_gate_callback *)&ImplGetAudioConnectionList32, "Get Audio Connection List");
     RdosRegisterBimodalUserGate(usergate_get_selected_audio_connection, (__rdos_gate_callback *)&ImplGetSelectedAudioConnection, "Get Selected Audio Connection");

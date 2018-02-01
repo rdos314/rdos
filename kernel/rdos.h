@@ -246,6 +246,7 @@ int RDOSAPI RdosGetHidReportFeatureData(int Device, int Report, int Index, char 
 
 int RDOSAPI RdosGetAudioDeviceCount();
 int RDOSAPI RdosGetAudioCodecCount(int Device);
+int RDOSAPI RdosGetAudioCodecVersion(int Device, int Codec, int *VendorID, int *DeviceID);
 int RDOSAPI RdosGetAudioWidgetInfo(int Device, int Codec, int Node, char *Info);
 int RDOSAPI RdosGetAudioWidgetConnectionList(int Device, int Codec, int Node, int *ConnectionList);
 int RDOSAPI RdosGetSelectedAudioConnection(int Device, int Codec, int Node);

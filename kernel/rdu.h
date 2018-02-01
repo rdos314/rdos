@@ -830,7 +830,7 @@
 
 #define usergate_is_can_online 0x0000028C
 
-#define usergate_get_head_phone 0x0000028D
+#define usergate_get_audio_codec_version 0x0000028D
 
 
 
@@ -1667,7 +1667,7 @@
 
 #define CallGate_is_can_online 0x55 0x67 0x9a 140 2 0 0 3 0 0x5d
 
-#define CallGate_get_head_phone 0x55 0x67 0x9a 141 2 0 0 3 0 0x5d
+#define CallGate_get_audio_codec_version 0x55 0x67 0x9a 141 2 0 0 3 0 0x5d
 
 #else
 
@@ -2502,6 +2502,6 @@
 
 #define CallGate_is_can_online 0x3e 0x67 0x9a 140 2 0 0 3 0
 
-#define CallGate_get_head_phone 0x3e 0x67 0x9a 141 2 0 0 3 0
+#define CallGate_get_audio_codec_version 0x3e 0x67 0x9a 141 2 0 0 3 0
 
 #endif

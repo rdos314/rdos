@@ -294,6 +294,20 @@
     parm [eax] \
     value [ecx];
 
+#pragma aux RdosGetAudioCodecVersion = \
+    CallGate_get_audio_codec_version  \
+    "jnc save" \
+    "xor eax,eax" \
+    "xor edx,edx" \
+    "save: " \
+    "movzx eax,ax" \
+    "movzx edx,dx" \
+    "mov [esi],edx" \
+    "mov [edi],eax" \
+    parm [eax] [edx] [esi] [edi]   \
+    value [eax] \
+    modify [eax edx];
+
 #pragma aux RdosGetAudioWidgetInfo = \
     CallGate_get_audio_widget_info  \
     "movzx eax,al" \    

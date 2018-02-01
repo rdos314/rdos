@@ -616,6 +616,9 @@ void TAudioCommand::ShowFull()
     long double lmax;
     int mute;
     char str[256];
+    char *ptr;
+    int VendorId;
+    int DeviceId;
 
     FunctionCount = RdosGetAudioDeviceCount();
 
@@ -628,8 +631,34 @@ void TAudioCommand::ShowFull()
 
         for (j = 0; j < CodecCount; j++)
         {
-            sprintf(str, "Codec device: %d\r\n", j);
+            sprintf(str, "Codec device: %d, ", j);
             Write(str);
+
+            if (RdosGetAudioCodecVersion(i, j, &VendorId, &DeviceId))
+            {
+                switch (VendorId)
+                {
+                    case 0x10EC:
+                        Write("ALC");
+                        sprintf(str, "%04hX", DeviceId);
+                        ptr = str;
+                        while (*ptr == '0')
+                            ptr++;
+                        strcat(ptr, "\r\n");
+                        Write(ptr);
+                        break;
+
+                    case 0:
+                        Write("\r\n");
+                        break;
+
+                    default:
+                        sprintf(str, "Vendor: %04hX, Device: %04hX\r\n", VendorId, DeviceId);
+                        Write(str);
+                        break;
+                }
+            }            
+
             
             for (k = 0; k < 128; k++)
             {

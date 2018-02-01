@@ -3566,6 +3566,14 @@ GetAudioWidgetInfo      MACRO
 
 ;   IN  EAX         Device #
 ;   IN  EDX         Codec #
+;   OUT DX          Vendor ID
+;   OUT AX          Device ID
+GetAudioCodecVersion      MACRO
+	UserGate get_audio_codec_version_nr
+		        ENDM
+
+;   IN  EAX         Device #
+;   IN  EDX         Codec #
 ;   IN  EBX         Node #
 ;   IN  ES:(E)DI    Connection list array
 ;   OUT ECX         Connection count
