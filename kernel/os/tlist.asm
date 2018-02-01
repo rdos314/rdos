@@ -78,7 +78,7 @@ InitTasking_      PROC far
     mov esi,OFFSET tlist_process
     mov edi,OFFSET tlist_name
     mov ecx,stack0_size
-    mov ax,10
+    mov ax,2
     CreateProcess
     popa
     pop es
