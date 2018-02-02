@@ -2009,13 +2009,15 @@ lcPageLoop32:
     jz lcPageSave32
 ;
     test al,2
-    jz lcPageSave32
+    jz lcPageSaveCopy32
 ;
     and al,NOT 2
     or ax,400h
 
-lcPageSave32:
+lcPageSaveCopy32:
     or ax,800h
+
+lcPageSave32:
     mov es:[esi],eax
 ;
     add esi,4
@@ -4173,13 +4175,15 @@ lcPageLoop64:
     jz lcPageSave64
 ;
     test al,2
-    jz lcPageSave64
+    jz lcPageSaveCopy64
 ;
     and al,NOT 2
     or ax,400h
 
-lcPageSave64:
+lcPageSaveCopy64:
     or ax,800h
+
+lcPageSave64:
     mov es:[esi],eax
     mov es:[esi+4],ebx
 ;

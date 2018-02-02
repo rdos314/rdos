@@ -3667,7 +3667,7 @@ ptPowerNext:
     cmp cl,es:xhc_port_count
     jb ptPowerLoop
 ;
-    mov ax,250
+    mov ax,750
     WaitMilliSec
     
 ptLoop:
