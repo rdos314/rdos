@@ -4168,6 +4168,11 @@ fork_proc      Proc far
     push ecx
 ;
     GetThread
+    push es
+    mov es,ax
+    lock and es:p_flags,NOT THREAD_FLAG_FORK_COMPLETED
+    pop es
+;
     push eax
 ;
     mov ebx,fs:pvModuleHandle
@@ -4219,9 +4224,12 @@ fork_parent:
 ;
     pop dx
     pop ds
+;
+    GetThread
+    mov es,ax
 
 fork_wait_child:
-    test es:p_flags,THREAD_FLAG_FORKED
+    test es:p_flags,THREAD_FLAG_FORK_COMPLETED
     jnz fork_child_completed
 ;
     WaitForSignal
@@ -4350,16 +4358,13 @@ fork_notify_ok:
     call CopyForkPages
     pop edx
 ;
-    GetThread
-    mov ds,ax
-    lock or ds:p_flags,THREAD_FLAG_FORKED
-;
     pop ds
 ;
     pop ebx
+;
+    mov ds,bx
+    lock or ds:p_flags,THREAD_FLAG_FORK_COMPLETED
     Signal
-    mov ax,10
-    WaitMilliSec
 ;
     pop ecx
     pop ebx
