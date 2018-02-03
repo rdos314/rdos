@@ -1418,6 +1418,256 @@ free_debug_mem_done:
     pop ds
     ret
 free_debug_app_mem      ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetModule
+;
+;           DESCRIPTION:    Set module for active process
+;
+;           PARAMETERS:     ES  Module sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_module_name DB 'Set Module',0
+
+set_module      PROC far
+    push ds
+    push ax
+    push ebx
+    push dx
+;
+    mov dx,es
+    mov cx,SIZE module_handle_seg
+    AllocateHandle
+    mov [ebx].mh_sel,dx
+    mov [ebx].hh_sign,MODULE_HANDLE
+    mov bx,[ebx].hh_handle
+;
+    mov ds,dx
+    InitSection ds:mod_section
+    mov ds:mod_handle,bx
+    mov ds:mod_list,0
+;    
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds:app_handle,bx
+    mov ds:app_mod_sel,dx
+    mov al,ds:app_key
+    mov es:mod_key,al
+;    
+    pop dx
+    pop ebx
+    pop ax
+    pop ds
+    ret
+set_module      ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ResetModule
+;
+;           DESCRIPTION:    Reset module for active process
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_module_name       DB 'Reset Module',0
+
+reset_module    PROC far
+    push ds
+    push es
+    push ax
+    push ebx
+    push dx
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov bx,ds:app_handle
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc reset_mod_handle_ok
+;
+    mov ax,[ebx].mh_sel
+    or ax,ax
+    jz reset_mod_free_mod
+;
+    mov es,ax    
+
+reset_mod_loop:    
+    mov ax,es:mod_list
+    or ax,ax
+    jz reset_mod_free_mod
+;
+    push es
+    mov es,ax
+    FreeModule
+    pop es
+    jmp reset_mod_loop
+
+reset_mod_free_mod:
+    FreeHandle
+
+reset_mod_handle_ok:    
+    pop dx
+    pop ebx
+    pop ax
+    pop es
+    pop ds
+    ret
+reset_module    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CreateModule
+;
+;           DESCRIPTION:    Create new module for active process
+;
+;       PARAMETERS:     ES  Module sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_module_name      DB 'Create Module',0
+
+create_module   PROC far
+    push ds
+    push es
+    push ax
+    push ebx
+    push dx
+;
+    mov ax,es
+    mov ds,ax
+    InitSection ds:mod_section
+;    
+    mov cx,SIZE module_handle_seg
+    AllocateHandle
+    mov [ebx].mh_sel,es
+    mov [ebx].hh_sign,MODULE_HANDLE
+    mov bx,[ebx].hh_handle
+;
+    mov es:mod_handle,bx
+    mov es:mod_list,0
+;    
+    mov dx,es
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov bx,ds:app_handle
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc create_module_done
+;
+    mov ax,[ebx].mh_sel
+    or ax,ax
+    jz create_module_done
+;
+    mov ds,ax    
+    EnterSection ds:mod_section
+    mov ax,ds:mod_list
+    mov ds:mod_list,es
+    mov es:mod_next,ax
+    LeaveSection ds:mod_section
+    
+create_module_done:    
+    pop dx
+    pop ebx
+    pop ax
+    pop es
+    pop ds
+    ret
+create_module   ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FreeModule
+;
+;           DESCRIPTION:    Free module for active process
+;
+;       PARAMETERS:     ES      Module sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_module_name    DB 'Free Module',0
+
+free_module     PROC far
+    push ds
+    push es
+    push ax
+    push ebx
+    push dx
+    push si
+;
+    mov dx,es
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov bx,ds:app_handle
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc free_module_done
+;
+    mov si,[ebx].mh_sel
+    or si,si
+    jz free_module_done
+;
+    mov ds,si
+    EnterSection ds:mod_section
+    mov ax,ds:mod_list
+    or ax,ax
+    jz free_module_leave
+;
+    cmp ax,dx
+    jne free_mod_not_head
+;
+    mov es,ax
+    mov ax,es:mod_next
+    mov ds:mod_list,ax
+    mov bx,es:mod_handle
+    jmp free_mod_handle
+    
+free_mod_not_head:    
+    mov es,ax
+    cmp dx,es:mod_next
+    je free_mod_in_list
+;
+    mov ax,es:mod_next
+    or ax,ax
+    jnz free_mod_not_head
+;
+    jmp free_module_leave
+
+free_mod_in_list:
+    mov ds,dx
+    mov ax,ds:mod_next
+    mov es:mod_next,ax
+    mov bx,ds:mod_handle
+
+free_mod_handle:
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc free_module_leave
+;
+    FreeHandle
+
+free_module_leave:      
+    mov ds,si
+    LeaveSection ds:mod_section
+        
+free_module_done:
+    pop si
+    pop dx
+    pop ebx
+    pop ax
+    pop es
+    pop ds
+    ret
+free_module     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2338,6 +2588,30 @@ init_state_hooks:
     mov edi,OFFSET app_notify_terminate_name
     xor cl,cl
     mov ax,app_notify_terminate_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET set_module
+    mov edi,OFFSET set_module_name
+    xor cl,cl
+    mov ax,set_module_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET reset_module
+    mov edi,OFFSET reset_module_name
+    xor cl,cl
+    mov ax,reset_module_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_module
+    mov edi,OFFSET create_module_name
+    xor cl,cl
+    mov ax,create_module_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_module
+    mov edi,OFFSET free_module_name
+    xor cl,cl
+    mov ax,free_module_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET get_thread_state16
