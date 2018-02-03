@@ -1143,6 +1143,372 @@ app_notify_terminate_done:
     ret
 app_notify_terminate   Endp
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetExeName
+;
+;           DESCRIPTION:    Get name of executable file
+;
+;           RETURNS:        ES:(E)DI        Name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_exe_name_name       DB 'Get Exe Name',0
+
+get_exe_name    PROC far
+    push ds
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_get_exe_proc
+    or eax,ds:app_get_exe_proc+4
+    pop eax
+    stc
+    jz get_exe_name_done
+;
+    call fword ptr ds:app_get_exe_proc
+
+get_exe_name_done:
+    pop ds
+    ret
+get_exe_name    ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetCmdLine
+;
+;           DESCRIPTION:    Get command line
+;
+;           RETURNS:        ES:(E)DI        Command line
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_cmd_line_name       DB 'Get Cmd Line',0
+
+get_cmd_line    PROC far
+    push ds
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_get_cmd_line_proc
+    or eax,ds:app_get_cmd_line_proc+4
+    pop eax
+    stc
+    jz get_cmd_line_done
+;
+    call fword ptr ds:app_get_cmd_line_proc
+
+get_cmd_line_done:
+    pop ds
+    ret
+get_cmd_line    ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetEnvironment
+;
+;           DESCRIPTION:    Get environment
+;
+;           RETURNS:        ES:(E)DI        Name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_env_name    DB 'Get Environment',0
+
+get_env PROC far
+    push ds
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_get_env_proc
+    or eax,ds:app_get_env_proc+4
+    pop eax
+    stc
+    jz get_env_done
+;
+    call fword ptr ds:app_get_env_proc
+
+get_env_done:
+    pop ds
+    ret
+get_env ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FatalErrorExit
+;
+;           DESCRIPTION:    Fatal error exit
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fatal_error_exit_name       DB 'Fatal Error Exit',0
+
+fatal_error_exit    PROC far
+    push ds
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_fatal_error_exit_proc
+    or eax,ds:app_fatal_error_exit_proc+4
+    pop eax
+    stc
+    jz fatal_error_exit_done
+;
+    call fword ptr ds:app_fatal_error_exit_proc
+
+fatal_error_exit_done:
+    pop ds
+    ret
+fatal_error_exit    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           Fork
+;
+;           DESCRIPTION:    Fork process
+;
+;           RETURNS:        AX = 0 for child
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fork_name   DB 'Fork',0
+
+fork_pr    PROC far
+    push ds
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_fork_proc
+    or eax,ds:app_fork_proc+4
+    mov eax,-1
+    jz fork_done
+;
+    call fword ptr ds:app_fork_proc
+    
+fork_done:
+    pop ds
+    ret
+fork_pr    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsForked
+;
+;           DESCRIPTION:    Check if thread is forked
+;
+;           RETURNS:        NC          Forked
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_forked_name   DB 'Is Forked',0
+
+is_forked    PROC far
+    push ds
+    push ax
+;
+    GetThread
+    mov ds,ax
+    test ds:p_flags,THREAD_FLAG_FORKED
+    stc
+    jz ifDone
+;
+    clc
+
+ifDone:
+    pop ax
+    pop ds
+    ret
+is_forked    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AllocateAppMem
+;
+;           DESCRIPTION:    Allocate application memory
+;
+;           PARAMETERS:         EAX             Size
+;
+;           RETURNS:        ES / (E)DX      Memory block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_app_mem_name   DB 'Allocate App Mem',0
+
+allocate_app_mem    PROC far
+    push ds
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_allocate_mem_proc
+    or eax,ds:app_allocate_mem_proc+4
+    pop eax
+    jz allocate_mem_default
+;
+    call fword ptr ds:app_allocate_mem_proc
+    jmp allocate_mem_done
+
+allocate_mem_default:
+    AllocateLocalMem
+
+allocate_mem_done:
+    pop ds
+    ret
+allocate_app_mem    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FreeAppMem
+;
+;           DESCRIPTION:    Free application memory
+;
+;           PARAMETERS:         ES / (E)DX      Memory block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_app_mem_name       DB 'Free App Mem',0
+
+free_app_mem    PROC far
+    push ds
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_free_mem_proc
+    or eax,ds:app_free_mem_proc+4
+    pop eax
+    jz free_mem_default
+;
+    call fword ptr ds:app_free_mem_proc
+    jmp free_mem_done
+
+free_mem_default:
+    FreeMem
+
+free_mem_done:
+    pop ds
+    ret
+free_app_mem    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AllocateDebugAppMem
+;
+;           DESCRIPTION:    Allocate application memory, debug mode
+;
+;           PARAMETERS:         EAX             Size
+;
+;           RETURNS:        ES / (E)DX      Memory block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_debug_app_mem_name     DB 'Allocate Debug App Mem',0
+
+allocate_debug_app_mem  PROC far
+    push ds
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_debug_allocate_mem_proc
+    or eax,ds:app_debug_allocate_mem_proc+4
+    pop eax
+    jz allocate_debug_mem_norm
+;
+    call fword ptr ds:app_debug_allocate_mem_proc
+    jmp allocate_debug_mem_done
+
+allocate_debug_mem_norm:
+    push eax
+    mov eax,ds:app_allocate_mem_proc
+    or eax,ds:app_allocate_mem_proc+4
+    pop eax
+    jz allocate_debug_mem_default
+;
+    call fword ptr ds:app_allocate_mem_proc
+    jmp allocate_debug_mem_done
+
+allocate_debug_mem_default:
+    AllocateLocalMem
+
+allocate_debug_mem_done:
+    pop ds
+    ret
+allocate_debug_app_mem  ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FreeDebugAppMem
+;
+;           DESCRIPTION:    Free application memory, debug mode
+;
+;           PARAMETERS:         ES / (E)DX      Memory block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_debug_app_mem_name DB 'Free Debug App Mem',0
+
+free_debug_app_mem      PROC far
+    push ds
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_debug_free_mem_proc
+    or eax,ds:app_debug_free_mem_proc+4
+    pop eax
+    jz free_debug_mem_norm
+;
+    call fword ptr ds:app_debug_free_mem_proc
+    jmp free_debug_mem_done
+
+free_debug_mem_norm:
+    push eax
+    mov eax,ds:app_free_mem_proc
+    or eax,ds:app_free_mem_proc+4
+    pop eax
+    jz free_debug_mem_default
+;
+    call fword ptr ds:app_free_mem_proc
+    jmp free_debug_mem_done
+
+free_debug_mem_default:
+    FreeMem
+
+free_debug_mem_done:
+    pop ds
+    ret
+free_debug_app_mem      ENDP
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1287,6 +1653,66 @@ init_state_hooks:
     mov edi,OFFSET move_thread_to_core_name
     xor dx,dx
     mov ax,move_thread_to_core_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET fatal_error_exit
+    mov edi,OFFSET fatal_error_exit_name
+    xor dx,dx
+    mov ax,fatal_error_exit_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_exe_name
+    mov edi,OFFSET get_exe_name_name
+    mov dx,virt_es_in
+    mov ax,get_exe_name_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_cmd_line
+    mov edi,OFFSET get_cmd_line_name
+    mov dx,virt_es_in
+    mov ax,get_cmd_line_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_env
+    mov edi,OFFSET get_env_name
+    mov dx,virt_es_in
+    mov ax,get_env_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET fork_pr
+    mov edi,OFFSET fork_name
+    xor dx,dx
+    mov ax,fork_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_forked
+    mov edi,OFFSET is_forked_name
+    xor dx,dx
+    mov ax,is_forked_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET allocate_app_mem
+    mov edi,OFFSET allocate_app_mem_name
+    mov dx,virt_es_out
+    mov ax,allocate_app_mem_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET free_app_mem
+    mov edi,OFFSET free_app_mem_name
+    mov dx,virt_es_in
+    mov ax,free_app_mem_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET allocate_debug_app_mem
+    mov edi,OFFSET allocate_debug_app_mem_name
+    mov dx,virt_es_out
+    mov ax,allocate_debug_app_mem_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET free_debug_app_mem
+    mov edi,OFFSET free_debug_app_mem_name
+    mov dx,virt_es_in
+    mov ax,free_debug_app_mem_nr
     RegisterBimodalUserGate
 ;
     popad
