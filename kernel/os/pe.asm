@@ -1318,29 +1318,7 @@ create_lib_size_ok:
     mov es:lib_run_now,0
     mov es:lib_init_param,0
     InitSpinlock es:lib_spinlock
-;
     mov es:mod_loader,pe_loader_sel
-;
-    mov es:mod_start_wait_for_debug_event_proc,OFFSET start_wait_for_debug_event
-    mov es:mod_start_wait_for_debug_event_proc+4,cs
-;
-    mov es:mod_stop_wait_for_debug_event_proc,OFFSET stop_wait_for_debug_event
-    mov es:mod_stop_wait_for_debug_event_proc+4,cs
-;
-    mov es:mod_is_debug_event_idle_proc,OFFSET is_debug_event_idle
-    mov es:mod_is_debug_event_idle_proc+4,cs
-;
-    mov es:mod_get_debug_event_proc,OFFSET get_debug_event
-    mov es:mod_get_debug_event_proc+4,cs
-;
-    mov es:mod_get_debug_event_data_proc,OFFSET get_debug_event_data
-    mov es:mod_get_debug_event_data_proc+4,cs
-;
-    mov es:mod_clear_debug_event_proc,OFFSET clear_debug_event
-    mov es:mod_clear_debug_event_proc+4,cs
-;
-    mov es:mod_continue_debug_event_proc,OFFSET continue_debug_event
-    mov es:mod_continue_debug_event_proc+4,cs
 ;
     pop edi
     pop esi
@@ -6157,19 +6135,26 @@ get_cmd_line    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 loader_tab:
-l00 DD OFFSET get_exe_name,       SEG code
-l01 DD OFFSET get_cmd_line,       SEG code
-l02 DD OFFSET get_env,            SEG code
-l03 DD OFFSET allocate_mem,       SEG code
-l04 DD OFFSET free_mem,           SEG code
-l05 DD OFFSET debug_allocate_mem, SEG code
-l06 DD OFFSET debug_free_mem,     SEG code
-l07 DD OFFSET load_dll,           SEG code
-l08 DD OFFSET free_dll,           SEG code
-l09 DD OFFSET get_current_dll,    SEG code
-l10 DD OFFSET get_module_proc,    SEG code
-l11 DD OFFSET get_resource,       SEG code
-l12 DD OFFSET get_module_name,    SEG code
+l00 DD OFFSET get_exe_name,               SEG code
+l01 DD OFFSET get_cmd_line,               SEG code
+l02 DD OFFSET get_env,                    SEG code
+l03 DD OFFSET allocate_mem,               SEG code
+l04 DD OFFSET free_mem,                   SEG code
+l05 DD OFFSET debug_allocate_mem,         SEG code
+l06 DD OFFSET debug_free_mem,             SEG code
+l07 DD OFFSET load_dll,                   SEG code
+l08 DD OFFSET free_dll,                   SEG code
+l09 DD OFFSET get_current_dll,            SEG code
+l10 DD OFFSET get_module_proc,            SEG code
+l11 DD OFFSET get_resource,               SEG code
+l12 DD OFFSET get_module_name,            SEG code
+l13 DD OFFSET start_wait_for_debug_event, SEG code
+l14 DD OFFSET stop_wait_for_debug_event,  SEG code
+l15 DD OFFSET is_debug_event_idle,        SEG code
+l16 DD OFFSET get_debug_event,            SEG code
+l17 DD OFFSET get_debug_event_data,       SEG code
+l18 DD OFFSET clear_debug_event,          SEG code
+l19 DD OFFSET continue_debug_event,       SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc

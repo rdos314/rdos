@@ -36,6 +36,7 @@ INCLUDE system.def
 INCLUDE proc.inc
 INCLUDE module.def
 INCLUDE ..\handle.inc
+INCLUDE ..\wait.inc
 
     .686p
 
@@ -46,6 +47,13 @@ mh_base handle_header <>
 mh_sel        DW ?
 
 module_handle_seg           ENDS
+
+debug_event_wait_header STRUC
+
+dew_obj         wait_obj_header <>
+dew_module_sel         DW ?
+
+debug_event_wait_header ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -1778,6 +1786,374 @@ get_module_name16  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           StartWaitForDebugEvent
+;
+;           DESCRIPTION:    Start a wait for debug event
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_debug_event      PROC far
+    push ds
+    push eax
+    push bx
+;
+    mov bx,es:dew_module_sel
+    mov ds,bx
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz start_wait_for_done
+;    
+    call fword ptr ds:loader_start_wait_for_debug_event_proc
+
+start_wait_for_done:
+    pop bx
+    pop eax
+    pop ds
+    ret
+start_wait_for_debug_event Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StopWaitForDebugEvent
+;
+;           DESCRIPTION:    Stop a wait for debug event
+;
+;           PARAMETERS:         ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_debug_event       PROC far
+    push ds
+    push eax
+    push bx
+;
+    mov bx,es:dew_module_sel
+    mov ds,bx
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz stop_wait_for_done
+;    
+    call fword ptr ds:loader_stop_wait_for_debug_event_proc
+
+stop_wait_for_done:
+    pop bx
+    pop eax
+    pop ds
+    ret
+stop_wait_for_debug_event Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DummyClearDebugEvent
+;
+;           DESCRIPTION:    Clear debug event
+;
+;           PARAMETERS:         ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dummy_clear_debug_event PROC far
+    ret
+dummy_clear_debug_event Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsDebugEventIdle
+;
+;           DESCRIPTION:    Check if debug event is idle
+;
+;           PARAMETERS:         ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_debug_event_idle     PROC far
+    push ds
+    push eax
+    push bx
+;
+    mov bx,es:dew_module_sel
+    mov ds,bx
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz is_idle_done
+;    
+    call fword ptr ds:loader_is_debug_event_idle_proc
+
+is_idle_done:
+    pop bx
+    pop eax
+    pop ds
+    ret
+is_debug_event_idle Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AddWaitForDebugEvent
+;
+;           DESCRIPTION:    Add a wait for debug event
+;
+;           PARAMETERS:     AX      Process handle
+;                           BX      Wait handle
+;                           ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_debug_event_name   DB 'Add Wait For Debug Event',0
+
+add_wait_tab:
+aw0 DD OFFSET start_wait_for_debug_event,   SEG _text
+aw1 DD OFFSET stop_wait_for_debug_event,    SEG _text
+aw2 DD OFFSET dummy_clear_debug_event,      SEG _text
+aw3 DD OFFSET is_debug_event_idle,          SEG _text
+
+add_wait_for_debug_event    PROC far
+    push ds
+    push es
+    push eax
+    push dx
+    push edi
+;
+    push bx
+    mov bx,ax
+    DerefProcHandle
+    pop bx
+    jc add_wait_done
+;
+    push ax
+    mov ax,cs
+    mov es,ax
+    mov ax,SIZE debug_event_wait_header - SIZE wait_obj_header
+    mov edi,OFFSET add_wait_tab
+    AddWait
+    pop ax
+    jc add_wait_done
+;    
+    mov es:dew_module_sel,ax
+
+add_wait_done:
+    pop edi
+    pop dx
+    pop eax
+    pop es
+    pop ds
+    ret
+add_wait_for_debug_event    ENDP
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetDebugEvent
+;
+;       DESCRIPTION:    Get current debug event
+;
+;       PARAMETERS:     BX      Process handle
+;
+;       RETURNS:        AX      Thread ID
+;                       BL      Event type  
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_debug_event_name    DB 'Get Debug Event',0
+
+get_debug_event  Proc far
+    push ds
+    push ecx
+    push dx
+;    
+    DerefProcHandle
+    jc get_debug_event_done
+;
+    mov bx,ax
+    mov ds,ax
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz get_debug_event_done
+;    
+    call fword ptr ds:loader_get_debug_event_proc
+
+get_debug_event_done:
+    pop dx
+    pop ecx
+    pop ds
+    ret
+get_debug_event  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetDebugEventData
+;
+;           DESCRIPTION:    Get debug event data
+;
+;       PARAMETERS:         BX          Handle
+;                           ES:(E)DI    Event buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_debug_event_data_name       DB 'Get Debug Event Data',0
+
+get_debug_event_data32  Proc far
+    push ds
+    push eax
+    push bx
+    push dx
+;    
+    DerefProcHandle
+    jc get_debug_event_data_done32
+;
+    mov ds,ax
+    mov bx,ax
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz get_debug_event_data_done32
+;    
+    call fword ptr ds:loader_get_debug_event_data_proc
+
+get_debug_event_data_done32:
+    pop dx
+    pop bx
+    pop eax
+    pop ds
+    ret
+get_debug_event_data32  Endp
+
+get_debug_event_data16  Proc far
+    push ds
+    push eax
+    push bx
+    push dx
+    push edi
+;    
+    DerefProcHandle
+    jc get_debug_event_data_done16
+;
+    mov bx,ax
+    mov ds,ax
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz get_debug_event_data_done16
+;    
+    call fword ptr ds:loader_get_debug_event_data_proc
+
+get_debug_event_data_done16:
+    pop edi
+    pop dx
+    pop bx
+    pop eax
+    pop ds
+    ret
+get_debug_event_data16  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ClearDebugEvent
+;
+;           DESCRIPTION:    Clear debug event
+;
+;       PARAMETERS:         BX          Module handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_debug_event_name  DB 'Clear Debug Event',0
+
+clear_debug_event  Proc far
+    push ds
+    push ax
+    push bx
+    push ecx
+    push dx
+;    
+    DerefProcHandle
+    jc clear_debug_event_done
+;
+    mov bx,ax
+    mov ds,ax
+    mov cx,ds:mod_loader
+    or cx,cx
+    mov ds,cx
+    stc
+    jz clear_debug_event_done
+;    
+    call fword ptr ds:loader_clear_debug_event_proc
+
+clear_debug_event_done:
+    pop dx
+    pop ecx
+    pop bx
+    pop ax
+    pop ds
+    ret
+clear_debug_event  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ContinueDebugEvent
+;
+;           DESCRIPTION:    Continue debug event
+;
+;       PARAMETERS:         BX          Module handle
+;                           EAX     Thread ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+continue_debug_event_name       DB 'Continue Debug Event',0
+
+continue_debug_event  Proc far
+    push ds
+    push bx
+    push ecx
+    push dx
+    push esi
+;    
+    mov esi,eax
+    DerefProcHandle
+    jc continue_debug_event_done
+;
+    mov bx,ax
+    mov ds,ax
+    mov eax,esi
+    mov cx,ds:mod_loader
+    or cx,cx
+    mov ds,cx
+    stc
+    jz continue_debug_event_done
+;    
+    call fword ptr ds:loader_continue_debug_event_proc
+
+continue_debug_event_done:
+    pop esi
+    pop dx
+    pop ecx
+    pop bx
+    pop ds
+    ret
+continue_debug_event  Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           FatalErrorExit
 ;
 ;           DESCRIPTION:    Fatal error exit
@@ -2112,6 +2488,37 @@ init_state_hooks:
     mov dx,virt_es_in
     mov ax,get_module_name_nr
     RegisterUserGate
+;
+    mov esi,OFFSET add_wait_for_debug_event
+    mov edi,OFFSET add_wait_for_debug_event_name
+    xor dx,dx
+    mov ax,add_wait_for_debug_event_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_debug_event
+    mov edi,OFFSET get_debug_event_name
+    xor dx,dx
+    mov ax,get_debug_event_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_debug_event_data16
+    mov esi,OFFSET get_debug_event_data32
+    mov edi,OFFSET get_debug_event_data_name
+    mov dx,virt_es_in
+    mov ax,get_debug_event_data_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET clear_debug_event
+    mov edi,OFFSET clear_debug_event_name
+    xor dx,dx
+    mov ax,clear_debug_event_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET continue_debug_event
+    mov edi,OFFSET continue_debug_event_name
+    xor dx,dx
+    mov ax,continue_debug_event_nr
+    RegisterBimodalUserGate
 ;
     popad
     pop es

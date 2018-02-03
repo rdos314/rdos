@@ -328,6 +328,34 @@ loader_get_resource_proc       DD ?,?
 ; OUT (E)AX               Name size
 loader_get_name_proc           DD ?,?
 
+; IN  ES                  Wait object
+; IN  BX                  Module sel
+loader_start_wait_for_debug_event_proc   DD ?,?
+
+; IN  ES                  Wait object
+; IN  BX                  Module sel
+loader_stop_wait_for_debug_event_proc   DD ?,?
+
+; IN  ES                  Wait object
+; IN  BX                  Module sel
+loader_is_debug_event_idle_proc   DD ?,?
+
+; IN  BX                  Module sel
+; OUT AX                  Thread ID
+; OUT BL                  Event type  
+loader_get_debug_event_proc   DD ?,?
+
+; IN  BX                  Module sel
+; IN  ES:(E)DI            Event buffer
+loader_get_debug_event_data_proc   DD ?,?
+
+; IN  BX                  Module sel
+loader_clear_debug_event_proc   DD ?,?
+
+; IN  BX                  Module sel
+; IN  AX                  Thread ID
+loader_continue_debug_event_proc   DD ?,?
+
 loader_interface_struc    ENDS
 
 
