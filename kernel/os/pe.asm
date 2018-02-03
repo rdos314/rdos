@@ -5493,13 +5493,15 @@ load_dll    Endp
 ;
 ;           DESCRIPTION:    Free DLL
 ;
-;       PARAMETERS:         ES          Lib sel
-;               BX      Lib sel
+;       PARAMETERS:         BX      Lib sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_dll    Proc far
+    push es
+    mov es,bx
     call FreePeDll
+    pop es
     ret
 free_dll    Endp
 

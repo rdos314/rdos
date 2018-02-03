@@ -276,18 +276,56 @@ hook_data_struc   ENDS
 
 loader_interface_struc    STRUC
 
+; OUT  ES:(E)DI           Name
 loader_get_exe_proc            DD ?,?
+
+; OUT  ES:(E)DI           Cmd line
 loader_get_cmd_line_proc       DD ?,?
+
+; OUT  ES:(E)DI           Environment
 loader_get_env_proc            DD ?,?
+
+; IN  (E)AX               Size
+; OUT (E)DX               Address
 loader_allocate_mem_proc       DD ?,?
+
+; IN  (E)DX               Address
 loader_free_mem_proc           DD ?,?
+
+; IN  (E)AX               Size
+; OUT (E)DX               Address
 loader_debug_allocate_mem_proc DD ?,?
+
+; IN  (E)DX               Address
 loader_debug_free_mem_proc     DD ?,?
+
+; IN  ES:(E)DI            DLL name
+; OUT BX                  Module sel
 loader_load_dll_proc           DD ?,?
+
+; IN  BX                  Module sel
 loader_free_dll_proc           DD ?,?
+
+; IN  ES:(E)DI            DLL address
+; OUT BX                  Module sel
 loader_get_current_dll_proc    DD ?,?
+
+; IN  BX                  Module sel
+; IN  ES:(E)DI            Proc name
+; OUT DS:(E)SI            Proc address
 loader_get_proc_proc           DD ?,?
+
+; IN  BX                  Module sel
+; IN  EAX                 Resource ID
+; IN  EDX                 Resource type
+; OUT DS:(E)SI            Resource address
+; OUT (E)CX               Resource size
 loader_get_resource_proc       DD ?,?
+
+; IN  BX                  Module sel
+; IN  (E)CX               Buffer size
+; IN  ES:(E)DI            Buffer
+; OUT (E)AX               Name size
 loader_get_name_proc           DD ?,?
 
 loader_interface_struc    ENDS

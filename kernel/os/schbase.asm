@@ -1502,7 +1502,6 @@ free_dll_name   DB 'Free Dll',0
 
 free_dll  Proc far
     push ds
-    push es
     push eax
     push ebx
 ;    
@@ -1515,8 +1514,8 @@ free_dll  Proc far
     stc
     jz free_dll_done
 ;
-    mov es,bx
-    mov ax,es:mod_loader
+    mov ds,bx
+    mov ax,ds:mod_loader
     or ax,ax
     mov ds,ax
     stc
@@ -1527,7 +1526,6 @@ free_dll  Proc far
 free_dll_done:
     pop ebx
     pop eax
-    pop es
     pop ds    
     ret
 free_dll  Endp
