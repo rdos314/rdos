@@ -34,8 +34,18 @@ INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE proc.inc
+INCLUDE module.def
+INCLUDE ..\handle.inc
 
     .686p
+
+module_handle_seg           STRUC
+
+mh_base handle_header <>
+
+mh_sel        DW ?
+
+module_handle_seg           ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -1401,6 +1411,166 @@ free_debug_mem_done:
     ret
 free_debug_app_mem      ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           load_dll
+;
+;           DESCRIPTION:    Load DLL
+;
+;       PARAMETERS:         ES:(E)DI    Name of dll to load
+;
+;           RETURNS:        BX          Module handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_dll_name   DB 'Load Dll',0
+
+load_dll32  Proc far
+    push ds
+    push eax
+;    
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_load_dll_proc
+    or eax,ds:app_load_dll_proc+4
+    stc
+    jz load_dll32_done
+;
+    call fword ptr ds:app_load_dll_proc
+    jc load_dll32_done
+;
+    push es
+    mov es,bx
+    mov bx,es:mod_handle
+    pop es      
+
+load_dll32_done:
+    pop eax
+    pop ds
+    ret
+load_dll32  Endp
+
+load_dll16  Proc far
+    push ds
+    push eax
+    push edi
+;    
+    movzx edi,di
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_load_dll_proc
+    or eax,ds:app_load_dll_proc+4
+    stc
+    jz load_dll16_done
+;
+    call fword ptr ds:app_load_dll_proc
+    jc load_dll16_done
+;
+    push es
+    mov es,bx
+    mov bx,es:mod_handle
+    pop es      
+
+load_dll16_done:
+    pop edi
+    pop eax
+    pop ds
+    ret
+load_dll16  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           free_dll
+;
+;           DESCRIPTION:    Free DLL
+;
+;       PARAMETERS:         BX          Module handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_dll_name   DB 'Free Dll',0
+
+free_dll  Proc far
+    push ds
+    push es
+    push eax
+    push ebx
+;    
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc free_dll_done
+;
+    mov bx,[ebx].mh_sel
+    or bx,bx
+    stc
+    jz free_dll_done
+;
+    mov es,bx
+    mov eax,es:mod_free_dll_proc
+    or eax,es:mod_free_dll_proc+4
+    stc
+    jz free_dll_done
+;    
+    call fword ptr es:mod_free_dll_proc    
+
+free_dll_done:
+    pop ebx
+    pop eax
+    pop es
+    pop ds    
+    ret
+free_dll  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetCurrentDll
+;
+;           DESCRIPTION:    Get current DLL module handle
+;
+;       PARAMETERS:         ES:EDI      Code position
+;
+;       RETURNS:            BX          Module handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_current_dll_name       DB 'Get Current Dll',0
+
+get_current_dll  Proc far
+    push ebp
+    mov ebp,esp
+    push ds
+    push es
+    push eax
+    push edi
+;    
+    les edi,[ebp+4]    
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_get_current_dll_proc
+    or eax,ds:app_get_current_dll_proc+4
+    stc
+    jz get_current_dll_done
+;
+    call fword ptr ds:app_get_current_dll_proc
+    jc get_current_dll_done
+;
+    mov es,bx
+    mov bx,es:mod_handle
+
+get_current_dll_done:
+    pop edi
+    pop eax
+    pop es
+    pop ds    
+    pop ebp
+    ret
+get_current_dll  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1699,6 +1869,25 @@ init_state_hooks:
     mov edi,OFFSET free_debug_app_mem_name
     mov dx,virt_es_in
     mov ax,free_debug_app_mem_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET load_dll16
+    mov esi,OFFSET load_dll32
+    mov edi,OFFSET load_dll_name
+    mov dx,virt_es_in
+    mov ax,load_dll_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET free_dll
+    mov edi,OFFSET free_dll_name
+    xor dx,dx
+    mov ax,free_dll_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_current_dll
+    mov edi,OFFSET get_current_dll_name
+    xor dx,dx
+    mov ax,get_current_dll_nr
     RegisterBimodalUserGate
 ;
     popad
