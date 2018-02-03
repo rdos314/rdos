@@ -195,7 +195,7 @@ hook_app_activity   PROC far
     push ds
     push ax
     push bx
-    mov ax,hook_sel
+    mov ax,app_activity_sel
     mov ds,ax
     mov al,ds:app_activity_hooks
     mov bl,al
@@ -232,11 +232,16 @@ init_hooks       Proc near
     mov eax,SIZE hook_data_struc
     AllocateFixedSystemMem
     mov ds,bx
-    mov ds:app_activity_hooks,0
     mov ds:create_thread_hooks,0
     mov ds:terminate_thread_hooks,0
     mov ds:create_process_hooks,0
     mov ds:init_tasking_hooks,0
+;
+    mov bx,app_activity_sel
+    mov eax,SIZE app_activity_struc
+    AllocateFixedSystemMem
+    mov ds,bx
+    mov ds:app_activity_hooks,0
 ;
     mov ax,cs
     mov ds,ax

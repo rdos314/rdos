@@ -241,7 +241,7 @@ phys_bitmap_header   ENDS
 phys_header_start    = 8
 phys_bitmap_start    = 2000h
 
-app_activity_struc  STRUC
+app_activity_entry  STRUC
 
 aa_create_proc              DD ?,?
 aa_start_proc               DD ?,?
@@ -250,7 +250,16 @@ aa_exec_proc                DD ?,?
 aa_spawn_proc               DD ?,?
 aa_terminate_proc           DD ?,?
 
-app_activity_struc  ENDS
+app_activity_entry  ENDS
+
+app_activity_struc   STRUC
+
+app_activity_hooks          DB ?,?,?,?
+
+app_activity_arr            DD 2*16 DUP(?)
+
+app_activity_struc   ENDS
+
 
 hook_data_struc   STRUC
 
@@ -258,9 +267,7 @@ create_thread_hooks         DB ?
 terminate_thread_hooks      DB ?
 create_process_hooks        DB ?
 init_tasking_hooks          DB ?
-app_activity_hooks          DB ?
 
-app_activity_arr            DD 2*16 DUP(?)
 create_process_arr          DD 2*32 DUP(?)
 create_thread_arr           DD 2*8 DUP(?)
 terminate_thread_arr        DD 2*8 DUP(?)
