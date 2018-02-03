@@ -112,10 +112,6 @@ create_lib_size_ok:
 	mov es:lib_init,0
 	mov es:lib_fini,0
 ;
-    mov es:mod_free_dll_proc,0
-    mov es:mod_get_proc_proc,0
-    mov es:mod_get_resource_proc,0
-    mov es:mod_get_name_proc,0
     mov es:mod_start_wait_for_debug_event_proc,0
     mov es:mod_stop_wait_for_debug_event_proc,0
     mov es:mod_is_debug_event_idle_proc,0

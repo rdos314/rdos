@@ -27,23 +27,6 @@
 
 module_struc    STRUC
 
-; IN  BX        Module sel
-; IN  ES:EDI    Proc name
-; OUT DS:ESI    Proc address
-mod_get_proc_proc       DD ?,?
-
-; IN  BX        Module sel
-; IN  EAX               Resource handle
-; IN  EDX               Resource type
-; OUT DS:ESI    Resource address
-mod_get_resource_proc   DD ?,?
-
-; IN  BX        Module sel
-; IN  ECX               Max name size
-; IN  ES:EDI    Name buffer
-; OUT EAX               Bytes copied
-mod_get_name_proc       DD ?,?
-
 ; IN  ES        Wait object
 ; IN  BX        Module sel
 mod_start_wait_for_debug_event_proc   DD ?,?

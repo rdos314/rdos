@@ -286,6 +286,9 @@ loader_debug_free_mem_proc     DD ?,?
 loader_load_dll_proc           DD ?,?
 loader_free_dll_proc           DD ?,?
 loader_get_current_dll_proc    DD ?,?
+loader_get_proc_proc           DD ?,?
+loader_get_resource_proc       DD ?,?
+loader_get_name_proc           DD ?,?
 
 loader_interface_struc    ENDS
 

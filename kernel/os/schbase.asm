@@ -1516,18 +1516,13 @@ free_dll  Proc far
     jz free_dll_done
 ;
     mov es,bx
-    push eax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_loader
+    mov ax,es:mod_loader
     or ax,ax
     mov ds,ax
-    pop eax
     stc
     jz free_dll_done
 ;    
-    call fword ptr es:loader_free_dll_proc    
+    call fword ptr ds:loader_free_dll_proc    
 
 free_dll_done:
     pop ebx
@@ -1584,6 +1579,203 @@ get_current_dll_done:
     pop ebp
     ret
 get_current_dll  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetModuleProc
+;
+;           DESCRIPTION:    Get module procedure
+;
+;       PARAMETERS:         BX          Module handle
+;                           ES:(E)DI    Proc name
+;
+;       RETURNS:    DS:(E)SI    Proc address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_proc_name    DB 'Get Module Proc',0
+
+get_module_proc32  Proc far
+    push eax
+    push ebx
+;    
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc get_module_proc_done32
+;
+    mov bx,[ebx].mh_sel
+    or bx,bx
+    stc
+    jz get_module_proc_done32
+;
+    mov ds,bx
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz get_module_proc_done32
+;    
+    call fword ptr ds:loader_get_proc_proc
+
+get_module_proc_done32:
+    pop ebx
+    pop eax
+    ret
+get_module_proc32  Endp
+
+get_module_proc16  Proc far
+    push eax
+    push ebx
+    push edi
+;    
+    movzx edi,di
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc get_module_proc_done16
+;
+    mov bx,[ebx].mh_sel
+    or bx,bx
+    stc
+    jz get_module_proc_done16
+;
+    mov ds,bx
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz get_module_proc_done16
+;
+    call fword ptr ds:loader_get_proc_proc
+
+get_module_proc_done16:
+    pop edi
+    pop ebx
+    pop eax
+    ret
+get_module_proc16  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetModuleResource
+;
+;           DESCRIPTION:    Get module resource
+;
+;       PARAMETERS:         BX          Module handle
+;               (E)AX       Resource handle
+;               (E)DX       Resource type
+;
+;       RETURNS:    DS:(E)SI    Resource address
+;               (E)CX       Resource size   
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_resource_name    DB 'Get Module Resource',0
+
+get_module_resource  Proc far
+    push ebx
+;    
+    push ax
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    pop ax
+    jc get_resource_done
+;
+    mov bx,[ebx].mh_sel
+    or bx,bx
+    stc
+    jz get_resource_done
+;
+    mov ds,bx
+    mov cx,ds:mod_loader
+    or cx,cx
+    mov ds,cx
+    stc
+    jz get_resource_done
+;    
+    call fword ptr ds:loader_get_resource_proc
+
+get_resource_done:
+    pop ebx
+    ret
+get_module_resource  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetModuleName
+;
+;           DESCRIPTION:    Get module name
+;
+;       PARAMETERS:         BX          Handle
+;                           (E)CX       Max name size
+;                           ES:(E)DI    Name buffer
+;                           
+;           RETURNS:        (E)AX       Bytes copied
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_name_name    DB 'Get Module Name',0
+
+get_module_name32  Proc far
+    push ds
+    push ebx
+;    
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc get_module_name_done32
+;
+    mov bx,[ebx].mh_sel
+    or bx,bx
+    stc
+    jz get_module_name_done32
+;
+    mov ds,bx
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz get_module_name_done32
+;    
+    call fword ptr ds:loader_get_name_proc
+
+get_module_name_done32:
+    pop ebx
+    pop ds
+    ret
+get_module_name32  Endp
+
+get_module_name16  Proc far
+    push ds
+    push ebx
+    push edi
+;    
+    movzx edi,di
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc get_module_name_done16
+;
+    mov bx,[ebx].mh_sel
+    or bx,bx
+    stc
+    jz get_module_name_done16
+;
+    mov ds,bx
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz get_module_name_done16
+;    
+    call fword ptr ds:loader_get_name_proc
+
+get_module_name_done16:
+    pop edi
+    pop ebx
+    pop ds
+    ret
+get_module_name16  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1902,6 +2094,26 @@ init_state_hooks:
     xor dx,dx
     mov ax,get_current_dll_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_module_proc16
+    mov esi,OFFSET get_module_proc32
+    mov edi,OFFSET get_module_proc_name
+    mov dx,virt_ds_out OR virt_es_in
+    mov ax,get_module_proc_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET get_module_resource
+    mov edi,OFFSET get_module_resource_name
+    xor dx,dx
+    mov ax,get_module_resource_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_module_name16
+    mov esi,OFFSET get_module_name32
+    mov edi,OFFSET get_module_name_name
+    mov dx,virt_es_in
+    mov ax,get_module_name_nr
+    RegisterUserGate
 ;
     popad
     pop es

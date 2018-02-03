@@ -1321,15 +1321,6 @@ create_lib_size_ok:
 ;
     mov es:mod_loader,pe_loader_sel
 ;
-    mov es:mod_get_proc_proc,OFFSET get_module_proc
-    mov es:mod_get_proc_proc+4,cs
-;
-    mov es:mod_get_resource_proc,OFFSET get_resource
-    mov es:mod_get_resource_proc+4,cs
-;
-    mov es:mod_get_name_proc,OFFSET get_module_name
-    mov es:mod_get_name_proc+4,cs
-;
     mov es:mod_start_wait_for_debug_event_proc,OFFSET start_wait_for_debug_event
     mov es:mod_start_wait_for_debug_event_proc+4,cs
 ;
@@ -6174,6 +6165,9 @@ l06 DD OFFSET debug_free_mem,     SEG code
 l07 DD OFFSET load_dll,           SEG code
 l08 DD OFFSET free_dll,           SEG code
 l09 DD OFFSET get_current_dll,    SEG code
+l10 DD OFFSET get_module_proc,    SEG code
+l11 DD OFFSET get_resource,       SEG code
+l12 DD OFFSET get_module_name,    SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc
