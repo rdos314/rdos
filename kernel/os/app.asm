@@ -272,8 +272,7 @@ run_open_hooks  Proc near
 ;       
     mov ds:app_fork_id,0
     mov ds:app_handle,0
-    mov ds:app_get_exe_proc,0
-    mov ds:app_get_exe_proc+4,0
+    mov ds:app_loader,0
     mov ds:app_get_cmd_line_proc,0
     mov ds:app_get_cmd_line_proc+4,0
     mov ds:app_get_env_proc,0
@@ -535,15 +534,13 @@ clone_app    PROC far
     mov es,ax
     mov es,es:p_app_sel
 ;
+    mov ax,ds:app_loader
+    mov es:app_loader,ax
+;
     mov eax,ds:app_get_cmd_line_proc
     mov es:app_get_cmd_line_proc,eax
     mov eax,ds:app_get_cmd_line_proc+4
     mov es:app_get_cmd_line_proc+4,eax
-;
-    mov eax,ds:app_get_exe_proc
-    mov es:app_get_exe_proc,eax
-    mov eax,ds:app_get_exe_proc+4
-    mov es:app_get_exe_proc+4,eax
 ;
     mov eax,ds:app_get_env_proc
     mov es:app_get_env_proc,eax
@@ -719,11 +716,10 @@ eaAppClosed:
     lock and es:p_flags,NOT THREAD_FLAG_FORKED
     mov es,es:p_app_sel
 ;
+    mov es:app_loader,0
+;
     mov es:app_get_cmd_line_proc,0
     mov es:app_get_cmd_line_proc+4,0
-;
-    mov es:app_get_exe_proc,0
-    mov es:app_get_exe_proc+4,0
 ;
     mov es:app_get_env_proc,0
     mov es:app_get_env_proc+4,0

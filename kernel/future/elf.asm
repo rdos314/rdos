@@ -143,28 +143,29 @@ CreateLib	Endp
 elf_loader_name	DB 'ELF',0
 
 InsertApp	Proc near
-	push ds
-	push ax
+    push ds
+    push es
+    pushad
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-	mov word ptr ds:app_loader_name,OFFSET elf_loader_name
-	mov word ptr ds:app_loader_name+2,cs
-	mov word ptr ds:app_get_env_proc,OFFSET get_env
-	mov word ptr ds:app_get_env_proc+2,cs 
-	mov word ptr ds:app_get_exe_proc,OFFSET get_exe_name
-	mov word ptr ds:app_get_exe_proc+2,cs 
-	mov word ptr ds:app_get_cmd_line_proc,OFFSET get_cmd_line
-	mov word ptr ds:app_get_cmd_line_proc+2,cs 
-	mov word ptr ds:app_allocate_mem_proc,OFFSET allocate_mem
-	mov word ptr ds:app_allocate_mem_proc+2,cs 
-	mov word ptr ds:app_free_mem_proc,OFFSET free_mem
-	mov word ptr ds:app_free_mem_proc+2,cs 
-	mov word ptr ds:app_debug_allocate_mem_proc,OFFSET allocate_mem
-	mov word ptr ds:app_debug_allocate_mem_proc+2,cs 
-	mov word ptr ds:app_debug_free_mem_proc,OFFSET free_mem
-	mov word ptr ds:app_debug_free_mem_proc+2,cs 
+    mov ds:app_loader,elf_loader_sel
+;
+    mov word ptr ds:app_loader_name,OFFSET elf_loader_name
+    mov word ptr ds:app_loader_name+2,cs
+    mov word ptr ds:app_get_env_proc,OFFSET get_env
+    mov word ptr ds:app_get_env_proc+2,cs 
+    mov word ptr ds:app_get_cmd_line_proc,OFFSET get_cmd_line
+    mov word ptr ds:app_get_cmd_line_proc+2,cs 
+    mov word ptr ds:app_allocate_mem_proc,OFFSET allocate_mem
+    mov word ptr ds:app_allocate_mem_proc+2,cs 
+    mov word ptr ds:app_free_mem_proc,OFFSET free_mem
+    mov word ptr ds:app_free_mem_proc+2,cs 
+    mov word ptr ds:app_debug_allocate_mem_proc,OFFSET allocate_mem
+    mov word ptr ds:app_debug_allocate_mem_proc+2,cs 
+    mov word ptr ds:app_debug_free_mem_proc,OFFSET free_mem
+    mov word ptr ds:app_debug_free_mem_proc+2,cs 
 ;	mov word ptr ds:app_init_thread_proc,OFFSET init_thread
 ;	mov word ptr ds:app_init_thread_proc+2,cs
 ;	mov word ptr ds:app_free_thread_proc,OFFSET free_thread
@@ -174,9 +175,10 @@ InsertApp	Proc near
 ;	mov word ptr ds:app_close_proc,OFFSET close_proc
 ;	mov word ptr ds:app_close_proc+2,cs
 ;
-	pop ax
-	pop ds
-	ret
+    popad
+    pop es
+    pop ds
+    ret
 InsertApp	Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1224,25 +1226,36 @@ get_cmd_line	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+loader_tab:
+l00 DD OFFSET get_exe_name, SEG code
+
 init	PROC far
-	push ds
-	push es
-	pusha
+    push ds
+    push es
+    pusha
 ;
-	mov bx,elf_code_sel
-	InitDevice
+    mov eax,SIZE loader_interface_struc
+    mov bx,elf_loader_sel
+    AllocateFixedSystemMem
+    xor di,di
+    mov si,OFFSET loader_tab
+    mov cx,SIZE loader_interface_struc
+    rep movs byte ptr es:[di],cs:[si]
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
+    mov bx,elf_code_sel
+    InitDevice
 ;
-	mov edi,OFFSET load_elf
-	HookLoadExe
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-	popa
-	pop es
-	pop ds
-	ret
+    mov edi,OFFSET load_elf
+    HookLoadExe
+;
+    popa
+    pop es
+    pop ds
+    ret
 init	ENDP
 
 code    ENDS

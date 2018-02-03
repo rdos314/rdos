@@ -1164,13 +1164,14 @@ get_exe_name    PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov eax,ds:app_get_exe_proc
-    or eax,ds:app_get_exe_proc+4
+    mov ax,ds:app_loader
+    or ax,ax
+    mov ds,ax
     pop eax
     stc
     jz get_exe_name_done
 ;
-    call fword ptr ds:app_get_exe_proc
+    call fword ptr ds:loader_get_exe_proc
 
 get_exe_name_done:
     pop ds

@@ -260,7 +260,6 @@ app_activity_arr            DD 2*16 DUP(?)
 
 app_activity_struc   ENDS
 
-
 hook_data_struc   STRUC
 
 create_thread_hooks         DB ?
@@ -275,12 +274,20 @@ init_tasking_arr            DD 2*64 DUP(?)
 
 hook_data_struc   ENDS
 
+loader_interface_struc    STRUC
+
+loader_get_exe_proc         DD ?,?
+
+loader_interface_struc    ENDS
+
+
 app_seg STRUC
 
 app_next                    DW ?
 
+app_loader                  DW ?
+
 app_get_cmd_line_proc       DD ?,?
-app_get_exe_proc            DD ?,?
 app_get_env_proc            DD ?,?
 app_allocate_mem_proc       DD ?,?
 app_free_mem_proc           DD ?,?

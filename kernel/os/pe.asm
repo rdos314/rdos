@@ -1376,15 +1376,16 @@ pe_loader_name  DB 'PE',0
 
 InsertApp       Proc near
     push ds
-    push ax
+    push es
+    pushad
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
+    mov ds:app_loader,pe_loader_sel
+;
     mov ds:app_get_env_proc,OFFSET get_env
     mov ds:app_get_env_proc+4,cs 
-    mov ds:app_get_exe_proc,OFFSET get_exe_name
-    mov ds:app_get_exe_proc+4,cs 
     mov ds:app_get_cmd_line_proc,OFFSET get_cmd_line
     mov ds:app_get_cmd_line_proc+4,cs 
     mov ds:app_allocate_mem_proc,OFFSET allocate_mem
@@ -1416,7 +1417,8 @@ InsertApp       Proc near
     mov word ptr ds:app_loader_name,OFFSET pe_loader_name
     mov word ptr ds:app_loader_name+2,cs
 ;
-    pop ax
+    popad
+    pop es
     pop ds
     ret
 InsertApp       Endp
@@ -6205,7 +6207,18 @@ get_cmd_line    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+loader_tab:
+l00 DD OFFSET get_exe_name, SEG code
+
 init    PROC far
+    mov eax,SIZE loader_interface_struc
+    mov bx,pe_loader_sel
+    AllocateFixedSystemMem
+    xor di,di
+    mov si,OFFSET loader_tab
+    mov cx,SIZE loader_interface_struc
+    rep movs byte ptr es:[di],cs:[si]
+;
     mov ax,cs
     mov ds,ax
     mov es,ax

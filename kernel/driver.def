@@ -265,6 +265,7 @@ disc_code_sel           EQU 630h
 disc_data_sel           EQU 638h
 
 elf_code_sel            EQU 640h
+elf_loader_sel          EQU 648h
 
 debug_tss_sel           EQU 650h
 
@@ -307,8 +308,9 @@ com_data_sel        EQU 758h
 ramdrive_process_sel EQU 780h
 flashfs_code_sel        EQU 788h
 
-ne_code_sel                     EQU 790h
-pe_code_sel                     EQU 7A0h
+ne_code_sel             EQU 790h
+pe_code_sel             EQU 7A0h
+pe_loader_sel           EQU 7A8h
 
 ether_code_sel          EQU 7B0h
 ether_data_sel          EQU 7B8h
