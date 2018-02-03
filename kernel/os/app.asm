@@ -163,12 +163,6 @@ init_app    PROC near
     mov ax,app_patch_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET dupl_module_file_handle
-    mov edi,OFFSET dupl_module_file_handle_name
-    xor dx,dx
-    mov ax,dupl_module_file_handle_nr
-    RegisterBimodalUserGate
-;
     mov esi,OFFSET get_module_focus_key
     mov edi,OFFSET get_module_focus_key_name
     xor dx,dx
@@ -1068,48 +1062,6 @@ get_module_focus_done:
     pop ds    
     retf32
 get_module_focus_key  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DuplModuleFileHandle
-;
-;           DESCRIPTION:    Dupl module file handle
-;
-;       PARAMETERS:         BX          Module handle
-;
-;       RETURNS:            BX          Duplicated file handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dupl_module_file_handle_name       DB 'Dupl Module File Handle',0
-
-dupl_module_file_handle  Proc far
-    push ds
-    push eax
-;    
-    mov ax,MODULE_HANDLE
-    DerefHandle
-    jc dupl_module_file_handle_done
-;
-    mov bx,[ebx].mh_sel
-    or bx,bx
-    stc
-    jz dupl_module_file_handle_done
-;
-    mov ds,bx
-    mov eax,ds:mod_dupl_file_handle_proc
-    or eax,ds:mod_dupl_file_handle_proc+4
-    stc
-    jz dupl_module_file_handle_done
-;    
-    call fword ptr ds:mod_dupl_file_handle_proc
-
-dupl_module_file_handle_done:
-    pop eax
-    pop ds    
-    retf32
-dupl_module_file_handle  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

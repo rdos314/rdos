@@ -2831,12 +2831,6 @@
 // ReadResource here
 // ReadBinaryResource here
 
-#pragma aux RdosDuplModuleFileHandle = \
-    CallGate_dupl_module_file_handle  \
-    ValidateHandle \
-    parm [ebx] \
-    value [ebx];
-
 #pragma aux RdosGetModuleProc = \
     CallGate_get_module_proc  \
     ValidateEsi \

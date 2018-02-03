@@ -28,10 +28,6 @@
 module_struc    STRUC
 
 ; IN  BX        Module sel
-; OUT BX        Duplicated file handle
-mod_dupl_file_handle_proc       DD ?,?
-
-; IN  BX        Module sel
 ; IN  ES:EDI    Proc name
 ; OUT DS:ESI    Proc address
 mod_get_proc_proc       DD ?,?
