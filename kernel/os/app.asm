@@ -34,19 +34,6 @@ INCLUDE ..\driver.def
 INCLUDE int.def
 INCLUDE system.def
 INCLUDE system.inc
-INCLUDE ..\handle.inc
-INCLUDE module.def
-include ..\wait.inc
-
-
-module_handle_seg           STRUC
-
-mh_base handle_header <>
-
-mh_sel        DW ?
-
-module_handle_seg           ENDS
-
 
     .386p
 
@@ -114,29 +101,11 @@ init_app    PROC near
     mov ax,exec_app_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET deref_module_handle
-    mov edi,OFFSET deref_module_handle_name
-    xor cl,cl
-    mov ax,deref_module_handle_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET alias_module_handle
-    mov edi,OFFSET alias_module_handle_name
-    xor cl,cl
-    mov ax,alias_module_handle_nr
-    RegisterOsGate
-;
     mov esi,OFFSET app_patch
     mov edi,OFFSET app_patch_name
     xor cl,cl
     mov ax,app_patch_nr
     RegisterOsGate
-;
-    mov esi,OFFSET get_module_focus_key
-    mov edi,OFFSET get_module_focus_key_name
-    xor dx,dx
-    mov ax,get_module_focus_key_nr
-    RegisterBimodalUserGate
 ;
     popa
     pop es
@@ -617,115 +586,6 @@ eaAppClosed:
     ResetProcess
     retf32
 exec_app    ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DerefModuleHandle
-;
-;           DESCRIPTION:    Dereference module handle
-;
-;       PARAMETERS:         BX      Module handle
-;
-;           RETURNS:        BX          Lib sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-deref_module_handle_name    DB 'Deref Module Handle',0
-
-deref_module_handle  Proc far
-    push ds
-    push ax
-;
-    mov ax,MODULE_HANDLE
-    DerefHandle
-    jc deref_module_done
-;
-    mov bx,[ebx].mh_sel
-    or bx,bx
-    stc
-    jz deref_module_done
-;
-    clc
-
-deref_module_done:    
-    pop ax
-    pop ds    
-    retf32
-deref_module_handle  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AliasModuleHandle
-;
-;           DESCRIPTION:    Create an alias handle for module
-;
-;       PARAMETERS:         BX      Lib sel
-;
-;           RETURNS:        BX      Module handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-alias_module_handle_name    DB 'Alias Module Handle',0
-
-alias_module_handle  Proc far
-    push ds
-    push ax
-    push cx
-    push dx
-;
-    mov dx,bx
-    mov cx,SIZE module_handle_seg
-    AllocateHandle
-    mov [ebx].mh_sel,dx
-    mov [ebx].hh_sign,MODULE_HANDLE
-    mov bx,[ebx].hh_handle
-;    
-    pop dx
-    pop cx
-    pop ax
-    pop ds
-    retf32
-alias_module_handle  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetModuleFocusKey
-;
-;           DESCRIPTION:    Get module focus key
-;
-;       PARAMETERS:         BX          Module handle
-;
-;       RETURNS:    AL      Key
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_module_focus_key_name       DB 'Get Module Focus Key',0
-
-get_module_focus_key  Proc far
-    push ds
-    push ebx
-;    
-    mov ax,MODULE_HANDLE
-    DerefHandle
-    jc get_module_focus_done
-;
-    mov bx,[ebx].mh_sel
-    or bx,bx
-    stc
-    jz get_module_focus_done
-;
-    mov ds,bx
-    mov al,ds:mod_key
-    clc
-
-get_module_focus_done:
-    pop ebx
-    pop ds    
-    retf32
-get_module_focus_key  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

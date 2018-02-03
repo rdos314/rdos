@@ -1672,6 +1672,115 @@ free_module     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           DerefModuleHandle
+;
+;           DESCRIPTION:    Dereference module handle
+;
+;       PARAMETERS:         BX      Module handle
+;
+;           RETURNS:        BX          Lib sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+deref_module_handle_name    DB 'Deref Module Handle',0
+
+deref_module_handle  Proc far
+    push ds
+    push ax
+;
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc deref_module_done
+;
+    mov bx,[ebx].mh_sel
+    or bx,bx
+    stc
+    jz deref_module_done
+;
+    clc
+
+deref_module_done:    
+    pop ax
+    pop ds    
+    ret
+deref_module_handle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AliasModuleHandle
+;
+;           DESCRIPTION:    Create an alias handle for module
+;
+;       PARAMETERS:         BX      Lib sel
+;
+;           RETURNS:        BX      Module handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+alias_module_handle_name    DB 'Alias Module Handle',0
+
+alias_module_handle  Proc far
+    push ds
+    push ax
+    push cx
+    push dx
+;
+    mov dx,bx
+    mov cx,SIZE module_handle_seg
+    AllocateHandle
+    mov [ebx].mh_sel,dx
+    mov [ebx].hh_sign,MODULE_HANDLE
+    mov bx,[ebx].hh_handle
+;    
+    pop dx
+    pop cx
+    pop ax
+    pop ds
+    ret
+alias_module_handle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetModuleFocusKey
+;
+;           DESCRIPTION:    Get module focus key
+;
+;       PARAMETERS:         BX          Module handle
+;
+;       RETURNS:    AL      Key
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_focus_key_name       DB 'Get Module Focus Key',0
+
+get_module_focus_key  Proc far
+    push ds
+    push ebx
+;    
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc get_module_focus_done
+;
+    mov bx,[ebx].mh_sel
+    or bx,bx
+    stc
+    jz get_module_focus_done
+;
+    mov ds,bx
+    mov al,ds:mod_key
+    clc
+
+get_module_focus_done:
+    pop ebx
+    pop ds    
+    ret
+get_module_focus_key  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           load_dll
 ;
 ;           DESCRIPTION:    Load DLL
@@ -2614,6 +2723,18 @@ init_state_hooks:
     mov ax,free_module_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET deref_module_handle
+    mov edi,OFFSET deref_module_handle_name
+    xor cl,cl
+    mov ax,deref_module_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET alias_module_handle
+    mov edi,OFFSET alias_module_handle_name
+    xor cl,cl
+    mov ax,alias_module_handle_nr
+    RegisterOsGate
+;
     mov ebx,OFFSET get_thread_state16
     mov esi,OFFSET get_thread_state32
     mov edi,OFFSET get_thread_state_name
@@ -2722,6 +2843,12 @@ init_state_hooks:
     mov edi,OFFSET free_debug_app_mem_name
     mov dx,virt_es_in
     mov ax,free_debug_app_mem_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_module_focus_key
+    mov edi,OFFSET get_module_focus_key_name
+    xor dx,dx
+    mov ax,get_module_focus_key_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET load_dll16
