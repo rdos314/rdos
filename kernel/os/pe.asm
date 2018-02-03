@@ -1319,6 +1319,8 @@ create_lib_size_ok:
     mov es:lib_init_param,0
     InitSpinlock es:lib_spinlock
 ;
+    mov es:mod_loader,pe_loader_sel
+;
     mov es:mod_free_dll_proc,0
 ;
     mov es:mod_dupl_file_handle_proc,OFFSET dupl_file_handle_proc
@@ -2704,6 +2706,7 @@ load_dll_do:
 ;
     FreeMem
     call CreateLib
+;
     mov es:mod_free_dll_proc,OFFSET free_dll   
     mov es:mod_free_dll_proc+4,cs
     CreateModule
