@@ -154,18 +154,6 @@ InsertApp	Proc near
 ;
     mov word ptr ds:app_loader_name,OFFSET elf_loader_name
     mov word ptr ds:app_loader_name+2,cs
-    mov word ptr ds:app_get_env_proc,OFFSET get_env
-    mov word ptr ds:app_get_env_proc+2,cs 
-    mov word ptr ds:app_get_cmd_line_proc,OFFSET get_cmd_line
-    mov word ptr ds:app_get_cmd_line_proc+2,cs 
-    mov word ptr ds:app_allocate_mem_proc,OFFSET allocate_mem
-    mov word ptr ds:app_allocate_mem_proc+2,cs 
-    mov word ptr ds:app_free_mem_proc,OFFSET free_mem
-    mov word ptr ds:app_free_mem_proc+2,cs 
-    mov word ptr ds:app_debug_allocate_mem_proc,OFFSET allocate_mem
-    mov word ptr ds:app_debug_allocate_mem_proc+2,cs 
-    mov word ptr ds:app_debug_free_mem_proc,OFFSET free_mem
-    mov word ptr ds:app_debug_free_mem_proc+2,cs 
 ;	mov word ptr ds:app_init_thread_proc,OFFSET init_thread
 ;	mov word ptr ds:app_init_thread_proc+2,cs
 ;	mov word ptr ds:app_free_thread_proc,OFFSET free_thread
@@ -1227,7 +1215,13 @@ get_cmd_line	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 loader_tab:
-l00 DD OFFSET get_exe_name, SEG code
+l00 DD OFFSET get_exe_name,    SEG code
+l01 DD OFFSET get_cmd_line,    SEG code
+l02 DD OFFSET get_env,         SEG code
+l03 DD OFFSET allocate_mem,    SEG code
+l04 DD OFFSET free_mem,        SEG code
+l05 DD OFFSET allocate_mem,    SEG code
+l06 DD OFFSET free_mem,        SEG code
 
 init	PROC far
     push ds

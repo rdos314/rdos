@@ -1384,18 +1384,6 @@ InsertApp       Proc near
     mov ds,ds:p_app_sel
     mov ds:app_loader,pe_loader_sel
 ;
-    mov ds:app_get_env_proc,OFFSET get_env
-    mov ds:app_get_env_proc+4,cs 
-    mov ds:app_get_cmd_line_proc,OFFSET get_cmd_line
-    mov ds:app_get_cmd_line_proc+4,cs 
-    mov ds:app_allocate_mem_proc,OFFSET allocate_mem
-    mov ds:app_allocate_mem_proc+4,cs 
-    mov ds:app_free_mem_proc,OFFSET free_mem
-    mov ds:app_free_mem_proc+4,cs 
-    mov ds:app_debug_allocate_mem_proc,OFFSET debug_allocate_mem
-    mov ds:app_debug_allocate_mem_proc+4,cs 
-    mov ds:app_debug_free_mem_proc,OFFSET debug_free_mem
-    mov ds:app_debug_free_mem_proc+4,cs 
     mov ds:app_init_thread_proc,OFFSET init_thread
     mov ds:app_init_thread_proc+4,cs
     mov ds:app_free_thread_proc,OFFSET free_thread
@@ -6208,7 +6196,13 @@ get_cmd_line    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 loader_tab:
-l00 DD OFFSET get_exe_name, SEG code
+l00 DD OFFSET get_exe_name,       SEG code
+l01 DD OFFSET get_cmd_line,       SEG code
+l02 DD OFFSET get_env,            SEG code
+l03 DD OFFSET allocate_mem,       SEG code
+l04 DD OFFSET free_mem,           SEG code
+l05 DD OFFSET debug_allocate_mem, SEG code
+l06 DD OFFSET debug_free_mem,     SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc

@@ -1199,13 +1199,14 @@ get_cmd_line    PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov eax,ds:app_get_cmd_line_proc
-    or eax,ds:app_get_cmd_line_proc+4
+    mov ax,ds:app_loader
+    or ax,ax
+    mov ds,ax
     pop eax
     stc
     jz get_cmd_line_done
 ;
-    call fword ptr ds:app_get_cmd_line_proc
+    call fword ptr ds:loader_get_cmd_line_proc
 
 get_cmd_line_done:
     pop ds
@@ -1233,18 +1234,172 @@ get_env PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov eax,ds:app_get_env_proc
-    or eax,ds:app_get_env_proc+4
+    mov ax,ds:app_loader
+    or ax,ax
+    mov ds,ax
     pop eax
     stc
     jz get_env_done
 ;
-    call fword ptr ds:app_get_env_proc
+    call fword ptr ds:loader_get_env_proc
 
 get_env_done:
     pop ds
     ret
 get_env ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AllocateAppMem
+;
+;           DESCRIPTION:    Allocate application memory
+;
+;           PARAMETERS:         EAX             Size
+;
+;           RETURNS:        ES / (E)DX      Memory block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_app_mem_name   DB 'Allocate App Mem',0
+
+allocate_app_mem    PROC far
+    push ds
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ax,ds:app_loader
+    or ax,ax
+    mov ds,ax
+    pop eax
+    jz allocate_mem_default
+;
+    call fword ptr ds:loader_allocate_mem_proc
+    jmp allocate_mem_done
+
+allocate_mem_default:
+    AllocateLocalMem
+
+allocate_mem_done:
+    pop ds
+    ret
+allocate_app_mem    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FreeAppMem
+;
+;           DESCRIPTION:    Free application memory
+;
+;           PARAMETERS:         ES / (E)DX      Memory block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_app_mem_name       DB 'Free App Mem',0
+
+free_app_mem    PROC far
+    push ds
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ax,ds:app_loader
+    or ax,ax
+    mov ds,ax
+    pop eax
+    jz free_mem_default
+;
+    call fword ptr ds:loader_free_mem_proc
+    jmp free_mem_done
+
+free_mem_default:
+    FreeMem
+
+free_mem_done:
+    pop ds
+    ret
+free_app_mem    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AllocateDebugAppMem
+;
+;           DESCRIPTION:    Allocate application memory, debug mode
+;
+;           PARAMETERS:         EAX             Size
+;
+;           RETURNS:        ES / (E)DX      Memory block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_debug_app_mem_name     DB 'Allocate Debug App Mem',0
+
+allocate_debug_app_mem  PROC far
+    push ds
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ax,ds:app_loader
+    or ax,ax
+    mov ds,ax
+    pop eax
+    jz allocate_debug_mem_norm
+;
+    call fword ptr ds:loader_debug_allocate_mem_proc
+    jmp allocate_debug_mem_done
+
+allocate_debug_mem_norm:
+    AllocateLocalMem
+
+allocate_debug_mem_done:
+    pop ds
+    ret
+allocate_debug_app_mem  ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FreeDebugAppMem
+;
+;           DESCRIPTION:    Free application memory, debug mode
+;
+;           PARAMETERS:         ES / (E)DX      Memory block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_debug_app_mem_name DB 'Free Debug App Mem',0
+
+free_debug_app_mem      PROC far
+    push ds
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ax,ds:app_loader
+    or ax,ax
+    mov ds,ax
+    pop eax
+    jz free_debug_mem_norm
+;
+    call fword ptr ds:loader_debug_free_mem_proc
+    jmp free_debug_mem_done
+
+free_debug_mem_norm:
+    FreeMem
+
+free_debug_mem_done:
+    pop ds
+    ret
+free_debug_app_mem      ENDP
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1339,176 +1494,6 @@ ifDone:
     pop ds
     ret
 is_forked    ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           AllocateAppMem
-;
-;           DESCRIPTION:    Allocate application memory
-;
-;           PARAMETERS:         EAX             Size
-;
-;           RETURNS:        ES / (E)DX      Memory block
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_app_mem_name   DB 'Allocate App Mem',0
-
-allocate_app_mem    PROC far
-    push ds
-;
-    push eax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov eax,ds:app_allocate_mem_proc
-    or eax,ds:app_allocate_mem_proc+4
-    pop eax
-    jz allocate_mem_default
-;
-    call fword ptr ds:app_allocate_mem_proc
-    jmp allocate_mem_done
-
-allocate_mem_default:
-    AllocateLocalMem
-
-allocate_mem_done:
-    pop ds
-    ret
-allocate_app_mem    ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           FreeAppMem
-;
-;           DESCRIPTION:    Free application memory
-;
-;           PARAMETERS:         ES / (E)DX      Memory block
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_app_mem_name       DB 'Free App Mem',0
-
-free_app_mem    PROC far
-    push ds
-;
-    push eax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov eax,ds:app_free_mem_proc
-    or eax,ds:app_free_mem_proc+4
-    pop eax
-    jz free_mem_default
-;
-    call fword ptr ds:app_free_mem_proc
-    jmp free_mem_done
-
-free_mem_default:
-    FreeMem
-
-free_mem_done:
-    pop ds
-    ret
-free_app_mem    ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           AllocateDebugAppMem
-;
-;           DESCRIPTION:    Allocate application memory, debug mode
-;
-;           PARAMETERS:         EAX             Size
-;
-;           RETURNS:        ES / (E)DX      Memory block
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_debug_app_mem_name     DB 'Allocate Debug App Mem',0
-
-allocate_debug_app_mem  PROC far
-    push ds
-;
-    push eax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov eax,ds:app_debug_allocate_mem_proc
-    or eax,ds:app_debug_allocate_mem_proc+4
-    pop eax
-    jz allocate_debug_mem_norm
-;
-    call fword ptr ds:app_debug_allocate_mem_proc
-    jmp allocate_debug_mem_done
-
-allocate_debug_mem_norm:
-    push eax
-    mov eax,ds:app_allocate_mem_proc
-    or eax,ds:app_allocate_mem_proc+4
-    pop eax
-    jz allocate_debug_mem_default
-;
-    call fword ptr ds:app_allocate_mem_proc
-    jmp allocate_debug_mem_done
-
-allocate_debug_mem_default:
-    AllocateLocalMem
-
-allocate_debug_mem_done:
-    pop ds
-    ret
-allocate_debug_app_mem  ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           FreeDebugAppMem
-;
-;           DESCRIPTION:    Free application memory, debug mode
-;
-;           PARAMETERS:         ES / (E)DX      Memory block
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_debug_app_mem_name DB 'Free Debug App Mem',0
-
-free_debug_app_mem      PROC far
-    push ds
-;
-    push eax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov eax,ds:app_debug_free_mem_proc
-    or eax,ds:app_debug_free_mem_proc+4
-    pop eax
-    jz free_debug_mem_norm
-;
-    call fword ptr ds:app_debug_free_mem_proc
-    jmp free_debug_mem_done
-
-free_debug_mem_norm:
-    push eax
-    mov eax,ds:app_free_mem_proc
-    or eax,ds:app_free_mem_proc+4
-    pop eax
-    jz free_debug_mem_default
-;
-    call fword ptr ds:app_free_mem_proc
-    jmp free_debug_mem_done
-
-free_debug_mem_default:
-    FreeMem
-
-free_debug_mem_done:
-    pop ds
-    ret
-free_debug_app_mem      ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

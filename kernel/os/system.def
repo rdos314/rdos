@@ -276,7 +276,13 @@ hook_data_struc   ENDS
 
 loader_interface_struc    STRUC
 
-loader_get_exe_proc         DD ?,?
+loader_get_exe_proc            DD ?,?
+loader_get_cmd_line_proc       DD ?,?
+loader_get_env_proc            DD ?,?
+loader_allocate_mem_proc       DD ?,?
+loader_free_mem_proc           DD ?,?
+loader_debug_allocate_mem_proc DD ?,?
+loader_debug_free_mem_proc     DD ?,?
 
 loader_interface_struc    ENDS
 
@@ -287,12 +293,6 @@ app_next                    DW ?
 
 app_loader                  DW ?
 
-app_get_cmd_line_proc       DD ?,?
-app_get_env_proc            DD ?,?
-app_allocate_mem_proc       DD ?,?
-app_free_mem_proc           DD ?,?
-app_debug_allocate_mem_proc DD ?,?
-app_debug_free_mem_proc     DD ?,?
 app_init_thread_proc        DD ?,?
 app_free_thread_proc        DD ?,?
 app_spawn_proc              DD ?,?
