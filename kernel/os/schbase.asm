@@ -1430,15 +1430,18 @@ load_dll32  Proc far
     push ds
     push eax
 ;    
+    push eax
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov eax,ds:app_load_dll_proc
-    or eax,ds:app_load_dll_proc+4
+    mov ax,ds:app_loader
+    or ax,ax
+    mov ds,ax
+    pop eax
     stc
     jz load_dll32_done
 ;
-    call fword ptr ds:app_load_dll_proc
+    call fword ptr ds:loader_load_dll_proc
     jc load_dll32_done
 ;
     push es
@@ -1458,15 +1461,18 @@ load_dll16  Proc far
     push edi
 ;    
     movzx edi,di
+    push eax
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov eax,ds:app_load_dll_proc
-    or eax,ds:app_load_dll_proc+4
+    mov ax,ds:app_loader
+    or ax,ax
+    mov ds,ax
+    pop eax
     stc
     jz load_dll16_done
 ;
-    call fword ptr ds:app_load_dll_proc
+    call fword ptr ds:loader_load_dll_proc
     jc load_dll16_done
 ;
     push es
@@ -1510,12 +1516,18 @@ free_dll  Proc far
     jz free_dll_done
 ;
     mov es,bx
-    mov eax,es:mod_free_dll_proc
-    or eax,es:mod_free_dll_proc+4
+    push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ax,ds:app_loader
+    or ax,ax
+    mov ds,ax
+    pop eax
     stc
     jz free_dll_done
 ;    
-    call fword ptr es:mod_free_dll_proc    
+    call fword ptr es:loader_free_dll_proc    
 
 free_dll_done:
     pop ebx
@@ -1552,12 +1564,13 @@ get_current_dll  Proc far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov eax,ds:app_get_current_dll_proc
-    or eax,ds:app_get_current_dll_proc+4
+    mov ax,ds:app_loader
+    or ax,ax
+    mov ds,ax
     stc
     jz get_current_dll_done
 ;
-    call fword ptr ds:app_get_current_dll_proc
+    call fword ptr ds:loader_get_current_dll_proc
     jc get_current_dll_done
 ;
     mov es,bx

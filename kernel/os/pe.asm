@@ -1321,8 +1321,6 @@ create_lib_size_ok:
 ;
     mov es:mod_loader,pe_loader_sel
 ;
-    mov es:mod_free_dll_proc,0
-;
     mov es:mod_dupl_file_handle_proc,OFFSET dupl_file_handle_proc
     mov es:mod_dupl_file_handle_proc+4,cs
 ;
@@ -1396,10 +1394,6 @@ InsertApp       Proc near
     mov ds:app_fork_proc+4,cs
     mov ds:app_close_proc,OFFSET close_proc
     mov ds:app_close_proc+4,cs
-    mov ds:app_load_dll_proc,OFFSET load_dll
-    mov ds:app_load_dll_proc+4,cs
-    mov ds:app_get_current_dll_proc,OFFSET get_current_dll
-    mov ds:app_get_current_dll_proc+4,cs
     mov ds:app_fatal_error_exit_proc,OFFSET fatal_error_exit
     mov ds:app_fatal_error_exit_proc+4,cs
     mov ds:app_patch_proc,OFFSET section_patch
@@ -2707,8 +2701,6 @@ load_dll_do:
     FreeMem
     call CreateLib
 ;
-    mov es:mod_free_dll_proc,OFFSET free_dll   
-    mov es:mod_free_dll_proc+4,cs
     CreateModule
 ;       
     call CreateImage
@@ -6206,6 +6198,9 @@ l03 DD OFFSET allocate_mem,       SEG code
 l04 DD OFFSET free_mem,           SEG code
 l05 DD OFFSET debug_allocate_mem, SEG code
 l06 DD OFFSET debug_free_mem,     SEG code
+l07 DD OFFSET load_dll,           SEG code
+l08 DD OFFSET free_dll,           SEG code
+l09 DD OFFSET get_current_dll,    SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc

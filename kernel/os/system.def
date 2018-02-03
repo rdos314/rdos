@@ -283,6 +283,9 @@ loader_allocate_mem_proc       DD ?,?
 loader_free_mem_proc           DD ?,?
 loader_debug_allocate_mem_proc DD ?,?
 loader_debug_free_mem_proc     DD ?,?
+loader_load_dll_proc           DD ?,?
+loader_free_dll_proc           DD ?,?
+loader_get_current_dll_proc    DD ?,?
 
 loader_interface_struc    ENDS
 
@@ -298,9 +301,7 @@ app_free_thread_proc        DD ?,?
 app_spawn_proc              DD ?,?
 app_fork_proc               DD ?,?
 app_close_proc              DD ?,?
-app_load_dll_proc           DD ?,?
 app_patch_proc              DD ?,?
-app_get_current_dll_proc    DD ?,?
 app_fatal_error_exit_proc   DD ?,?
 app_loader_name             DD ?
 

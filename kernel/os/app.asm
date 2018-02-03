@@ -264,12 +264,8 @@ run_open_hooks  Proc near
     mov ds:app_fork_proc+4,0
     mov ds:app_close_proc,0
     mov ds:app_close_proc+4,0
-    mov ds:app_load_dll_proc,0
-    mov ds:app_load_dll_proc+4,0
     mov ds:app_patch_proc,0
     mov ds:app_patch_proc+4,0
-    mov ds:app_get_current_dll_proc,0
-    mov ds:app_get_current_dll_proc+4,0
     mov ds:app_fatal_error_exit_proc,0
     mov ds:app_fatal_error_exit_proc+4,0
 ;
@@ -531,20 +527,10 @@ clone_app    PROC far
     mov eax,ds:app_close_proc+4
     mov es:app_close_proc+4,eax
 ;
-    mov eax,ds:app_load_dll_proc
-    mov es:app_load_dll_proc,eax
-    mov eax,ds:app_load_dll_proc+4
-    mov es:app_load_dll_proc+4,eax
-;
     mov eax,ds:app_patch_proc
     mov es:app_patch_proc,eax
     mov eax,ds:app_patch_proc+4
     mov es:app_patch_proc+4,eax
-;
-    mov eax,ds:app_get_current_dll_proc
-    mov es:app_get_current_dll_proc,eax
-    mov eax,ds:app_get_current_dll_proc+4
-    mov es:app_get_current_dll_proc+4,eax
 ;
     mov eax,ds:app_fatal_error_exit_proc
     mov es:app_fatal_error_exit_proc,eax
@@ -672,17 +658,11 @@ eaAppClosed:
     mov es:app_close_proc,0
     mov es:app_close_proc+4,0
 ;
-    mov es:app_load_dll_proc,0
-    mov es:app_load_dll_proc+4,0
-;
     mov es:app_fatal_error_exit_proc,0
     mov es:app_fatal_error_exit_proc+4,0
 ;
     mov es:app_patch_proc,0
     mov es:app_patch_proc+4,0
-;
-    mov es:app_get_current_dll_proc,0
-    mov es:app_get_current_dll_proc+4,0
 ;
     mov es:app_loader_name,0
     mov es:app_section_base,0
