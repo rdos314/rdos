@@ -2819,7 +2819,8 @@ lpNameDone:
     mov eax,cs
     mov es,eax
     mov edi,OFFSET load_cmd_line
-    Exec
+    mov fs,fs:pr_loader
+    call fword ptr fs:loader_load_exe_proc
     jc lpCloseFail
 ;
     test byte ptr [bp+2].load_eflags,2

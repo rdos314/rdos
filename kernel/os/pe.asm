@@ -3714,6 +3714,7 @@ load_exe Proc far
     push ds
     push es
     push fs
+    push edx
     push esi
     push edi
 ;
