@@ -2752,6 +2752,908 @@ load_exe   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CreateSpawnProg
+;
+;           DESCRIPTION:    Make global copy of program name
+;
+;           PARAMETERS:     DS:ESI      Filename
+;               GS      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateSpawnProg Proc near
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    mov edi,esi
+    xor ecx,ecx
+
+csprLoop:
+    lods byte ptr [esi]
+    or al,al
+    jz csprSizeOk
+;
+    inc ecx
+    jmp csprLoop
+
+csprSizeOk:
+    mov esi,edi
+    inc ecx 
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    mov gs:s_name,es
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]     
+;    
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateSpawnProg Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateSpawnParam
+;
+;           DESCRIPTION:    Make global copy of parameters
+;
+;           PARAMETERS:     ES:EDI      Param struc
+;               GS      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateSpawnParam Proc near
+    push ds
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    mov eax,es:[edi].lp_param_sel
+    or ax,3
+    verr ax
+    stc
+    jnz cspaNoParam
+;
+    mov ds,ax
+    mov esi,es:[edi].lp_param_offs
+    mov edi,esi
+    xor ecx,ecx
+
+cspaLoop:
+    lods byte ptr [esi]
+    or al,al
+    jz cspaSizeOk
+;
+    inc ecx
+    jmp cspaLoop
+
+cspaSizeOk:
+    mov esi,edi
+    inc ecx 
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]     
+    jmp cspaDone
+
+cspaNoParam:
+    mov eax,1
+    AllocateSmallGlobalMem
+    xor edi,edi
+    xor al,al
+    stos byte ptr es:[edi]
+
+cspaDone:    
+    mov gs:s_cmd,es
+;       
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    ret
+CreateSpawnParam Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateSpawnStartDir
+;
+;           DESCRIPTION:    Make global copy of start dir
+;
+;           PARAMETERS:     ES:EDI      Param struc
+;               GS      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateSpawnStartDir Proc near
+    push ds
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    mov eax,es:[edi].lp_startdir_sel
+    or ax,3
+    verr ax
+    stc
+    jnz cssdNoStartDir
+;
+    mov ds,ax
+    mov esi,es:[edi].lp_startdir_offs
+    mov edi,esi
+    xor ecx,ecx
+
+cssdLoop:
+    lods byte ptr [esi]
+    or al,al
+    jz cssdSizeOk
+;
+    inc ecx
+    jmp cssdLoop
+
+cssdSizeOk:
+    mov esi,edi
+    inc ecx 
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]     
+    jmp cssdDone
+
+cssdNoStartDir:
+    mov eax,256
+    AllocateSmallGlobalMem
+    xor edi,edi
+    GetCurDrive
+    mov ah,al
+    add al,'A'
+    stos byte ptr es:[edi]
+;
+    mov al,':'
+    stos byte ptr es:[edi]
+;
+    mov al,'\'
+    stos byte ptr es:[edi]
+;
+    mov al,ah
+    GetCurDir
+
+cssdDone:    
+    mov gs:s_curr_dir,es
+;       
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    ret
+CreateSpawnStartDir Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateSpawnEnv
+;
+;           DESCRIPTION:    Make global copy of environment variables
+;
+;           PARAMETERS:     ES:EDI      Param struc
+;               GS      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateSpawnEnv Proc near
+    push ds
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    mov eax,es:[edi].lp_env_sel
+    or ax,3
+    verr ax
+    stc
+    jnz cseNoEnv
+;
+    mov ds,ax
+    mov esi,es:[edi].lp_env_offs
+    mov edi,esi
+    xor ecx,ecx
+
+cseLoop:
+    inc ecx
+    lods byte ptr [esi]
+    or al,al
+    jnz cseLoop
+;
+    inc ecx
+    lods byte ptr [esi]
+    or al,al
+    jnz cseLoop
+
+cseSizeOk:
+    mov esi,edi
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]     
+    jmp cseDone
+
+cseNoEnv:
+    OpenProcEnv
+    GetEnvSize
+    movzx eax,ax
+    AllocateSmallGlobalMem
+    xor edi,edi
+    GetEnvData
+    CloseEnv
+
+cseDone:    
+    mov gs:s_env,es
+;       
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    ret
+CreateSpawnEnv Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupSpawnDir
+;
+;           DESCRIPTION:    Setup spawn directory
+;
+;           PARAMETERS:     GS      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupSpawnDir Proc near
+    push es
+    push ax
+    push edi
+;
+    mov es,gs:s_curr_dir
+    xor edi,edi
+    mov ax,es:[edi]
+    cmp ah,':'
+    jne spDirOk
+;
+    sub al,'A'
+    jc spDirOk
+;
+    cmp al,26
+    jc spSetDrive
+;
+    sub al,20h
+    jc spDirOk
+;
+    cmp al,26
+    jnc spDirOk
+
+spSetDrive:
+    SetCurDrive
+    add edi,2
+    SetCurDir
+    
+spDirOk:
+    pop edi
+    pop ax
+    pop es
+    ret
+SetupSpawnDir   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupSpawnEnv
+;
+;           DESCRIPTION:    Setup spawn environment
+;
+;           PARAMETERS:     GS      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupSpawnEnv Proc near
+    push es
+    push ebx
+    push edi
+;
+    mov es,gs:s_env
+    xor edi,edi
+;
+    OpenProcEnv
+    SetEnvData
+    CloseEnv
+;
+    pop edi
+    pop ebx
+    pop es
+    ret
+SetupSpawnEnv   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreeSpawn
+;
+;           DESCRIPTION:    Free spawn environment
+;
+;           PARAMETERS:     GS      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeSpawn Proc near
+    mov es,gs:s_name
+    FreeMem
+;
+    mov es,gs:s_cmd
+    FreeMem
+;
+    mov es,gs:s_curr_dir
+    FreeMem
+;
+    mov es,gs:s_env
+    FreeMem    
+;
+    mov ax,gs
+    mov es,ax
+    xor ax,ax
+    mov gs,ax
+    FreeMem
+    ret
+FreeSpawn   Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupSpawn
+;
+;           DESCRIPTION:    Setup spawn
+;
+;           PARAMETERS:     DX      Debug module handle
+;
+;       RETURNS:    GS      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupSpawn Proc near    
+    push ds
+    push eax
+    push bx
+; 
+    push es
+    mov eax,SIZE spawn_struc
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov gs,ax
+    pop es
+;  
+    mov gs:s_name,0
+    mov gs:s_cmd,0
+    mov gs:s_curr_dir,0
+    mov gs:s_env,0
+    mov gs:s_param,0
+    mov bx,dx
+    DerefModuleHandle
+    jc spDebugOk
+;    
+    mov gs:s_param,bx
+
+spDebugOk:
+    mov gs:s_switch,0
+;
+    GetThread
+    mov bx,ax
+    GetThreadFocusKey
+    jc spFocusDone
+;
+    mov gs:s_switch,al
+
+spFocusDone:
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov gs:s_parent_app_sel,ds
+    mov eax,ds:app_loader_name
+    mov gs:s_loader_name,eax
+;
+    InitSection gs:s_sect1
+    mov gs:s_sect1.cs_value,-1
+;
+    pop bx
+    pop eax
+    pop ds
+    ret
+SetupSpawn  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DoSpawn
+;
+;           DESCRIPTION:    Do spawn
+;
+;           PARAMETERS:     GS      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoSpawn Proc near       
+    push ds
+    push es
+    push ax
+    push bx
+    push ecx
+    push si
+    push di
+;    
+    mov es,gs:s_name
+    xor edi,edi
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET spawn_startup
+    mov bx,gs
+    mov ax,2
+    mov ecx,stack0_size
+    CreateProcess
+;
+    pop di
+    pop si
+    pop ecx
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    ret
+DoSpawn Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DoSpawn64
+;
+;           DESCRIPTION:    Do spawn, 64-bit
+;
+;           PARAMETERS:     GS      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoSpawn64 Proc near       
+    push ds
+    push es
+    push ax
+    push bx
+    push ecx
+    push si
+    push di
+;    
+    mov es,gs:s_name
+    xor edi,edi
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET spawn_startup64
+    mov bx,gs
+    mov ax,202h
+    mov ecx,stack0_size
+    CreateProcess
+;
+    pop di
+    pop si
+    pop ecx
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    ret
+DoSpawn64 Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WaitForSpawn
+;
+;           DESCRIPTION:    Wait for spawn
+;
+;           PARAMETERS:     GS      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForSpawn Proc near  
+    push ds
+    push ax
+;    
+    mov ax,gs
+    mov ds,ax
+    EnterSection ds:s_sect1
+;
+    pop ax
+    pop ds
+    ret
+WaitForSpawn    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetSpawnThread
+;
+;           DESCRIPTION:    Get spawned thread id
+;
+;           PARAMETERS:     GS      Spawn sel
+;
+;       RETURNS:    AX      Thread id
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetSpawnThread Proc near
+    push es
+    mov ax,gs:s_thread
+    mov es,ax
+    mov ax,es:p_id
+    pop es
+    ret
+GetSpawnThread  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateSpawnHandle
+;
+;           DESCRIPTION:    Create new spawn handle
+;
+;           PARAMETERS:     GS      Spawn sel
+;
+;       RETURNS:    BX      Process handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateSpawnHandle Proc near
+    push ax
+    push dx
+;    
+    mov ax,gs:s_param
+    or ax,ax
+    jz spLibOk
+;       
+    push es
+    mov es,gs:s_app
+    mov ax,es:app_mod_sel
+    pop es
+
+spLibOk:
+    mov dx,gs:s_proc_sel
+    CreateProcHandle
+;    
+    pop dx
+    pop ax
+    ret
+CreateSpawnHandle   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SpawnStartup
+;
+;           DESCRIPTION:    Spawn startup stub
+;
+;           PARAMETERS:     BX      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+spawn_startup:
+    sti
+    mov gs,bx
+    SaveContext
+    xor eax,eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+;
+    push es
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    mov es:app_context,bx
+    mov es:app_unload_proc,OFFSET spUnload
+;
+    mov ds,gs:s_parent_app_sel
+    AppNotifySpawn
+;
+    mov ax,3Bh
+    EnableFocus
+    SetFocus
+    mov es:app_key,al
+;
+    xor si,si
+    mov ds,gs:s_name    
+    mov di,OFFSET app_exe_name
+
+spCopyExeLoop:
+    lodsb
+    stosb
+    or al,al
+    jne spCopyExeLoop
+;
+    pop ds
+    xor bx,bx
+;
+    GetThread
+    mov es,ax
+    mov al,gs:s_switch
+    mov es:p_parent_switch,al
+;       
+    GetThread
+    mov gs:s_thread,ax
+;
+    call SetupSpawnDir
+    call SetupSpawnEnv
+;       
+    xor di,di
+    mov es,gs:s_name
+    mov cx,O_RDONLY OR O_BINARY
+    OpenKernelFile
+    jc spFail
+;
+    xor esi,esi
+    xor edi,edi
+    mov ds,gs:s_name
+    mov es,gs:s_cmd
+;
+    Exec
+    jc spCloseFail
+;
+    mov gs:s_ret_code,0
+    GetThread
+    mov ds,ax
+    mov ax,ds:p_app_sel
+    mov gs:s_app,ax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_process_sel
+    mov ax,ds:ms_pd_sel
+    mov gs:s_proc_sel,ax
+;
+    mov ax,gs
+    mov ds,ax
+    mov es,ax
+    LeaveSection ds:s_sect1
+    WaitForSignal
+;
+    mov ax,10
+    WaitMilliSec
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_spawn_proc
+    or eax,ds:app_spawn_proc+4
+    jz spNotifyDone
+;
+    call fword ptr ds:app_spawn_proc
+
+spNotifyDone:
+    call FreeSpawn
+;
+    test byte ptr [bp+2].load_eflags,2
+    jnz spVm16
+;
+    mov ds,[bp].load_ds
+    mov es,[bp].load_es
+    mov fs,[bp].load_fs
+    mov gs,[bp].load_gs
+
+spVm16:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+spCloseFail:
+    CloseFile
+
+spFail:
+    mov gs:s_ret_code,-1
+    mov ax,gs
+    mov ds,ax
+    LeaveSection ds:s_sect1
+    WaitForSignal
+;
+    mov ax,10
+    WaitMilliSec
+;
+    call FreeSpawn
+    UnloadExe
+
+spUnload:
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SpawnStartup64
+;
+;           DESCRIPTION:    Spawn startup stub, 64-bit version
+;
+;           PARAMETERS:     BX      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+spawn_startup64:
+    sti
+    mov gs,bx
+    GetThread
+    mov es,ax
+;
+    mov ax,3Bh
+    EnableFocus
+    SetFocus
+;
+    GetThread
+    mov es,ax
+    mov al,gs:s_switch
+    mov es:p_parent_switch,al
+;       
+    GetThread
+    mov gs:s_thread,ax
+;
+    call SetupSpawnDir
+    call SetupSpawnEnv
+;
+    xor esi,esi
+    xor edi,edi
+    mov ds,gs:s_name
+    mov es,gs:s_cmd
+    InitLongExe
+    jc spFail64
+;    
+    mov gs:s_ret_code,0
+    mov gs:s_app,0
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_process_sel
+    mov ax,ds:ms_pd_sel
+    mov gs:s_proc_sel,ax
+;
+    mov ax,gs
+    mov ds,ax
+    mov es,ax
+    LeaveSection ds:s_sect1
+    WaitForSignal
+;
+    mov ax,10
+    WaitMilliSec
+;
+    call FreeSpawn
+    StartLongExe
+
+spFail64:
+    mov gs:s_ret_code,-1
+    mov ax,gs
+    mov ds,ax
+    LeaveSection ds:s_sect1
+    WaitForSignal
+;
+    mov ax,10
+    WaitMilliSec
+;
+    call FreeSpawn
+    UnloadExe
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           spawn_program16/32
+;
+;           DESCRIPTION:    Load & detach executable file
+;
+;           PARAMETERS:     DS:(E)SI    Filename
+;                           ES:(E)DI    Parameters
+;                               +0  command line
+;                               +8  startdir
+;                               +12 env
+;                           DX              Debug module handle
+;
+;       RETURN VALUE:   AX          Thread ID
+;               DX      Process handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+spawn_exe_name  DB 'Spawn Exe',0
+
+spawn_program   Proc near
+    push gs
+    push bx
+    push cx
+;
+    call SetupSpawn
+    call CreateSpawnProg
+    call CreateSpawnParam
+    call CreateSpawnStartDir
+    call CreateSpawnEnv
+;
+    call DoSpawn
+
+spWait:    
+    call WaitForSpawn
+;
+    mov cx,gs:s_ret_code
+    or cx,cx
+    jnz spLeave
+;    
+    call GetSpawnThread
+    call CreateSpawnHandle
+    mov dx,bx
+
+spLeave:
+    push cx
+    mov bx,gs:s_thread
+    xor cx,cx
+    mov gs,cx    
+    Signal
+    pop cx
+;
+    or cx,cx
+    jz spOk
+;
+    stc
+    jmp spDone
+
+spOk:
+    clc
+
+spDone:
+    pop cx
+    pop bx
+    pop gs
+    ret
+spawn_program   Endp
+    
+spawn_program16 Proc far
+    push esi
+    push edi
+;
+    movzx esi,si
+    movzx edi,di
+    call spawn_program
+;
+    pop edi
+    pop esi
+    ret
+spawn_program16 Endp
+    
+spawn_program32 Proc far
+    call spawn_program
+    ret
+spawn_program32 Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           load_process
 ;
 ;       DESCRIPTION:    Run program as process
@@ -3274,6 +4176,13 @@ init_state_hooks:
     xor dx,dx
     mov ax,move_thread_to_core_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET spawn_program16
+    mov esi,OFFSET spawn_program32
+    mov edi,OFFSET spawn_exe_name
+    mov dx,virt_es_in OR virt_ds_in
+    mov ax,spawn_exe_nr
+    RegisterUserGate
 ;
     mov esi,OFFSET fatal_error_exit
     mov edi,OFFSET fatal_error_exit_name
