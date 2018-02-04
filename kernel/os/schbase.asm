@@ -50,6 +50,11 @@ pr_name_sel          DW ?
 pr_cmd_sel           DW ?
 pr_dir_sel           DW ?
 pr_env_sel           DW ?
+pr_debug_sel         DW ?
+
+pr_parent_app_sel    DW ?
+pr_loader_name       DD ?
+pr_switch            DB ?
 
 process_struc    ENDS
 
@@ -2752,6 +2757,66 @@ load_exe_file_done:
     ret
 load_exe   ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateProcess
+;
+;       DESCRIPTION:    Allocate process
+;
+;       PARAMETERS:     DX      Debug module handle
+;
+;       RETURNS:        GS      Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateProcess Proc near    
+    push ds
+    push eax
+    push bx
+; 
+    push es
+    mov eax,SIZE process_struc
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov gs,ax
+    pop es
+;  
+    mov gs:pr_name_sel,0
+    mov gs:pr_cmd_sel,0
+    mov gs:pr_dir_sel,0
+    mov gs:pr_env_sel,0
+    mov gs:pr_cmd_sel,0
+;
+    mov bx,dx
+    DerefModuleHandle
+    jc apDebugOk
+;    
+    mov gs:pr_debug_sel,bx
+
+apDebugOk:
+    mov gs:pr_switch,0
+;
+    GetThread
+    mov bx,ax
+    GetThreadFocusKey
+    jc apFocusDone
+;
+    mov gs:pr_switch,al
+
+apFocusDone:
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov gs:pr_parent_app_sel,ds
+    mov eax,ds:app_loader_name
+    mov gs:pr_loader_name,eax
+;
+    pop bx
+    pop eax
+    pop ds
+    ret
+AllocateProcess  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
