@@ -29,11 +29,18 @@
 #include "rdosdev.h"
 #include "string.h"
 
+#define MAX_PROCESSES           64
 #define MAX_THREADS             512
 #define MAX_PROCESSOR_COUNT     32
 
 #define FALSE 0
 #define TRUE !FALSE
+
+struct TProcess
+{
+    int Valid;
+    int ID;
+};
 
 struct TThread
 {
@@ -78,7 +85,9 @@ int CurrLoad = 0;
 int MaxLoad = 0;
 int NextPid = 1;
 int ActiveThreads = 0;
+int ActiveProcesses = 0;
 
+struct TProcess ProcessArr[MAX_PROCESSES];
 struct TThread ThreadArr[MAX_THREADS];
 struct TCore CoreArr[MAX_PROCESSOR_COUNT];
 
@@ -617,6 +626,9 @@ void InitThreadList()
 
     for (i = 0; i < MAX_THREADS; i++)
         ThreadArr[i].Valid = FALSE;
+
+    for (i = 0; i < MAX_PROCESSES; i++)
+        ProcessArr[i].Valid = FALSE;
         
     RdosInitKernelSection(&ThreadSection);
     RdosInitKernelSection(&CoreSection);
