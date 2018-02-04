@@ -3061,7 +3061,7 @@ StartPrograms      MACRO
     OsGate start_programs_nr
                     ENDM
 
-;  IN   ES:EDI          Loader table
+;  IN   BX          Loader selector
 RegisterLoader      MACRO
     OsGate register_loader_nr
                     ENDM

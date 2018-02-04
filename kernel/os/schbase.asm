@@ -64,7 +64,7 @@ load_exe_hooks      DW ?
 loader_count        DW ?
 state_arr           DD 2*32 DUP(?)
 load_exe_arr        DD 2*16 DUP(?)
-loader_arr          DD 2*16 DUP(?)
+loader_arr          DW 16 DUP(?)
 
 data    ENDS
 
@@ -2615,7 +2615,7 @@ is_forked    ENDP
 ;
 ;           DESCRIPTION:    Register a loader
 ;
-;           PARAMETERS:     ES:EDI       Loader table
+;           PARAMETERS:     BX       Loader table selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2624,20 +2624,18 @@ register_loader_name      DB 'Register Loader',0
 register_loader   PROC far
     push ds
     push ax
-    push ebx
+    push esi
 ;
     mov ax,SEG data
     mov ds,ax
     mov ax,ds:loader_count
-    movzx ebx,ax
-    shl ebx,3
-    add ebx,OFFSET loader_arr
-    mov [ebx],edi
-    mov [ebx+4],es
+    movzx esi,ax
+    add esi,esi
+    mov ds:[esi].loader_arr,bx
     inc ax
     mov ds:loader_count,ax
 ;
-    pop ebx
+    pop esi
     pop ax
     pop ds
     ret
@@ -2895,7 +2893,42 @@ load_process_default_drive64:
 run_process     PROC near
     push ds
     push es
+    push fs
     pushad
+;
+    mov eax,ds
+    mov es,eax
+    mov edi,edx
+    add edi,SIZE rdos_header
+    mov cx,O_RDONLY OR O_BINARY
+    OpenKernelFile
+    jc rpFail
+;
+    mov ax,SEG data
+    mov fs,ax
+    movzx ecx,fs:loader_count
+    or ecx,ecx
+    je rpLoaderFail
+;
+    mov esi,OFFSET loader_arr
+
+rpLoaderLoop:
+    push ds
+    mov ds,fs:[esi]
+    call fword ptr ds:loader_is_valid_exe_proc
+    pop ds
+    jnc rpLoaderOk
+;
+    add esi,8
+    loop rpLoaderLoop
+
+rpLoaderFail:
+    CloseCFile
+    stc
+    jmp rpFail
+
+rpLoaderOk:
+    CloseCFile
 ;
     mov ecx,[edx].len
     sub ecx,SIZE rdos_header
@@ -2934,8 +2967,10 @@ run_process64:
 run_process_wait:    
     mov ax,100
     WaitMilliSec
-;
+
+rpFail:
     popad
+    pop fs
     pop es
     pop ds
     ret

@@ -6232,7 +6232,7 @@ init    PROC far
     mov ds,ax
     mov es,ax
 ;
-    mov edi,OFFSET loader_tab
+    mov bx,pe_loader_sel
     RegisterLoader
 ;
     mov edi,OFFSET start_thread
