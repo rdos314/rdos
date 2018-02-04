@@ -3047,6 +3047,81 @@ CreateEnv Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupDir
+;
+;           DESCRIPTION:    Setup directory
+;
+;           PARAMETERS:     GS      Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupDir Proc near
+    push es
+    push ax
+    push edi
+;
+    mov es,gs:pr_dir_sel
+    xor edi,edi
+    mov ax,es:[edi]
+    cmp ah,':'
+    jne sdDirOk
+;
+    sub al,'A'
+    jc sdDirOk
+;
+    cmp al,26
+    jc sdSetDrive
+;
+    sub al,20h
+    jc sdDirOk
+;
+    cmp al,26
+    jnc sdDirOk
+
+sdSetDrive:
+    SetCurDrive
+    add edi,2
+    SetCurDir
+    
+sdDirOk:
+    pop edi
+    pop ax
+    pop es
+    ret
+SetupDir   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupEnv
+;
+;           DESCRIPTION:    Setup environment
+;
+;           PARAMETERS:     GS      Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupEnv Proc near
+    push es
+    push ebx
+    push edi
+;
+    mov es,gs:pr_env_sel
+    xor edi,edi
+;
+    OpenProcEnv
+    SetEnvData
+    CloseEnv
+;
+    pop edi
+    pop ebx
+    pop es
+    ret
+SetupEnv   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateSpawnProg
 ;
 ;           DESCRIPTION:    Make global copy of program name
