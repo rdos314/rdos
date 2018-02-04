@@ -58,10 +58,8 @@ CallFileSystem  MACRO   call_proc
 
 data    SEGMENT byte public 'DATA'
 
-fs_init_hooks           DB ?
-fs_done_hooks           DB ?
+fs_init_hooks           DW ?
 fs_init_hook_arr        DD 32 DUP(?,?)
-fs_done_hook_arr        DD 32 DUP(?,?)
 
 data    ENDS
 
@@ -216,57 +214,20 @@ hook_init_file_system   Proc far
 ;    
     mov ax,SEG data
     mov ds,ax
-    mov al,ds:fs_init_hooks
-    mov bl,al
-    xor bh,bh
+    mov ax,ds:fs_init_hooks
+    mov bx,ax
     shl bx,3
     add bx,OFFSET fs_init_hook_arr
     mov [bx],edi
     mov [bx+4],es
-    inc al
-    mov ds:fs_init_hooks,al
+    inc ax
+    mov ds:fs_init_hooks,ax
 ;    
     pop bx
     pop ax
     pop ds
     retf32
 hook_init_file_system   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           HookFileSystemStarted
-;
-;           DESCRIPTION:    Hook file-system started
-;
-;           PARAMETERS:     ES:EDI       CALLBACK
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_file_system_started_name      DB 'Hook File System Started',0
-
-hook_file_system_started   Proc far
-    push ds
-    push ax
-    push bx
-;    
-    mov ax,SEG data
-    mov ds,ax
-    mov al,ds:fs_done_hooks
-    mov bl,al
-    xor bh,bh
-    shl bx,3
-    add bx,OFFSET fs_done_hook_arr
-    mov [bx],edi
-    mov [bx+4],es
-    inc al
-    mov ds:fs_done_hooks,al
-;    
-    pop bx
-    pop ax
-    pop ds
-    retf32
-hook_file_system_started   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -698,8 +659,8 @@ hook_thread_name DB 'Init File System', 0
 hook_thread     PROC far
     mov ax,SEG data
     mov ds,ax
-    mov cl,ds:fs_init_hooks
-    or cl,cl
+    mov cx,ds:fs_init_hooks
+    or cx,cx
     je hook_thread_done
 ;
     mov bx,OFFSET fs_init_hook_arr
@@ -712,7 +673,7 @@ hook_thread_loop:
     pop bx
     pop ds
     add bx,8
-    dec cl
+    sub cx,1
     jnz hook_thread_loop
 
 hook_thread_done:
@@ -721,27 +682,7 @@ hook_thread_done:
     mov ds:fs_init_done,1
     LeaveSection ds:fs_init_section
 ;
-    mov ax,SEG data
-    mov ds,ax
-    mov cl,ds:fs_done_hooks
-    or cl,cl
-    je hook_started_done
-;
-    mov bx,OFFSET fs_done_hook_arr
-
-hook_started_loop:
-    push ds
-    push bx
-    push cx
-    call fword ptr [bx]
-    pop cx
-    pop bx
-    pop ds
-    add bx,8
-    dec cl
-    jnz hook_started_loop
-
-hook_started_done:
+    StartPrograms
     ret
 hook_thread     Endp
 
@@ -839,11 +780,6 @@ init    PROC far
     mov ax,hook_init_file_system_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET hook_file_system_started
-    mov edi,OFFSET hook_file_system_started_name
-    mov ax,hook_file_system_started_nr
-    RegisterOsGate
-;
     mov esi,OFFSET register_file_system
     mov edi,OFFSET register_file_system_name
     mov ax,register_file_system_nr
@@ -909,7 +845,6 @@ init    PROC far
     mov ax,SEG data
     mov ds,ax    
     mov ds:fs_init_hooks,0
-    mov ds:fs_done_hooks,0
     pop ds
 ;
     mov di,OFFSET fs_sel

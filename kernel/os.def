@@ -235,7 +235,6 @@ free_file_list_entry_nr         = 239
 cache_dir_nr                            = 240
 insert_dir_entry_nr                     = 241
 insert_file_entry_nr            = 242
-hook_file_system_started_nr     = 243
 set_disc_use32_nr           = 244
 
 get_file_info_nr                        = 247
@@ -728,5 +727,6 @@ log_big_mem_nr              = 630
 create_pid_nr               = 631
 
 exec_nr                     = 632
+start_programs_nr           = 633
 
 osgate_entries              = 650
