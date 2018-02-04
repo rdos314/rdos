@@ -3568,6 +3568,68 @@ load_pe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           is_valid_exe
+;
+;           DESCRIPTION:    Check for valid exe
+;
+;           PARAMETERS:     BX      C file handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_valid_exe Proc far
+    push es
+    push edx
+    push esi
+    push edi
+;
+    xor edx,edx
+    mov eax,40h
+    AllocateSmallGlobalMem
+    mov ecx,eax
+    xor edi,edi
+    ReadCFile
+    jc iseFail
+;
+    cmp ax,40h
+    jne iseFail
+;
+    mov ax,es:exeh_signature
+    cmp ax,5A4Dh
+    jne iseFail
+;
+    mov ax,es:exeh_reloc_offs
+    cmp ax,40h
+    jne iseFail
+;
+    mov ax,es:[3Ch]
+    movzx edx,ax
+    mov ecx,40h
+    ReadCFile   
+    jc iseFail
+;
+    mov ax,es:[0]
+    cmp ax,'EP'
+    jne iseFail
+;
+    FreeMem
+    clc
+    jmp iseDone
+
+iseFail:
+    FreeMem
+    stc
+
+iseDone:
+    pop edi
+    pop esi
+    pop edx
+    pop es
+    ret
+is_valid_exe Endp
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitThread
 ;
 ;           DESCRIPTION:    Init thread
@@ -5816,15 +5878,15 @@ get_resource    Endp
 ;
 ;           DESCRIPTION:    Notify create process
 ;
-;           PARAMETERS:     ES		App sel
+;           PARAMETERS:     ES          App sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-notify_create	Proc far
+notify_create   Proc far
     mov es:app_mem_blocks,0
     mov es:app_mod_sel,0
     ret
-notify_create	Endp
+notify_create   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5833,13 +5895,13 @@ notify_create	Endp
 ;
 ;           DESCRIPTION:    Notify start boot process
 ;
-;           PARAMETERS:     ES		App sel
+;           PARAMETERS:     ES          App sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-notify_start	Proc far
+notify_start    Proc far
     ret
-notify_start	Endp
+notify_start    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5848,14 +5910,14 @@ notify_start	Endp
 ;
 ;           DESCRIPTION:    Notify forked
 ;
-;           PARAMETERS:     ES		App sel
-;                           DS		Parent app sel
+;           PARAMETERS:     ES          App sel
+;                           DS          Parent app sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-notify_forked	Proc far
+notify_forked   Proc far
     ret
-notify_forked	Endp
+notify_forked   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5864,13 +5926,13 @@ notify_forked	Endp
 ;
 ;           DESCRIPTION:    Notify exec
 ;
-;           PARAMETERS:     ES		App sel
+;           PARAMETERS:     ES          App sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-notify_exec	Proc far
+notify_exec     Proc far
     ret
-notify_exec	Endp
+notify_exec     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5879,14 +5941,14 @@ notify_exec	Endp
 ;
 ;           DESCRIPTION:    Notify spawn
 ;
-;           PARAMETERS:     ES		App sel
-;                           DS		Parent app sel
+;           PARAMETERS:     ES          App sel
+;                           DS          Parent app sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-notify_spawn	Proc far
+notify_spawn    Proc far
     ret
-notify_spawn	Endp
+notify_spawn    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5895,11 +5957,11 @@ notify_spawn	Endp
 ;
 ;           DESCRIPTION:    Notify terminate
 ;
-;           PARAMETERS:     ES		App sel
+;           PARAMETERS:     ES          App sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-notify_terminate	Proc far
+notify_terminate        Proc far
     push ds
     push es
     pushad
@@ -5970,7 +6032,7 @@ ntDone:
     pop es
     pop ds
     ret
-notify_terminate	Endp
+notify_terminate        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5979,11 +6041,11 @@ notify_terminate	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 app_activity_table:
-a0 DD OFFSET notify_create,  	SEG code   ; create process
-a1 DD OFFSET notify_start,  	SEG code   ; boot app
-a2 DD OFFSET notify_forked,  	SEG code   ; forked
-a3 DD OFFSET notify_exec,  	SEG code   ; exec
-a4 DD OFFSET notify_spawn,  	SEG code   ; spawn
+a0 DD OFFSET notify_create,     SEG code   ; create process
+a1 DD OFFSET notify_start,      SEG code   ; boot app
+a2 DD OFFSET notify_forked,     SEG code   ; forked
+a3 DD OFFSET notify_exec,       SEG code   ; exec
+a4 DD OFFSET notify_spawn,      SEG code   ; spawn
 a5 DD OFFSET notify_terminate,  SEG code   ; terminate process
 
                        
@@ -6135,26 +6197,27 @@ get_cmd_line    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 loader_tab:
-l00 DD OFFSET get_exe_name,               SEG code
-l01 DD OFFSET get_cmd_line,               SEG code
-l02 DD OFFSET get_env,                    SEG code
-l03 DD OFFSET allocate_mem,               SEG code
-l04 DD OFFSET free_mem,                   SEG code
-l05 DD OFFSET debug_allocate_mem,         SEG code
-l06 DD OFFSET debug_free_mem,             SEG code
-l07 DD OFFSET load_dll,                   SEG code
-l08 DD OFFSET free_dll,                   SEG code
-l09 DD OFFSET get_current_dll,            SEG code
-l10 DD OFFSET get_module_proc,            SEG code
-l11 DD OFFSET get_resource,               SEG code
-l12 DD OFFSET get_module_name,            SEG code
-l13 DD OFFSET start_wait_for_debug_event, SEG code
-l14 DD OFFSET stop_wait_for_debug_event,  SEG code
-l15 DD OFFSET is_debug_event_idle,        SEG code
-l16 DD OFFSET get_debug_event,            SEG code
-l17 DD OFFSET get_debug_event_data,       SEG code
-l18 DD OFFSET clear_debug_event,          SEG code
-l19 DD OFFSET continue_debug_event,       SEG code
+l00 DD OFFSET is_valid_exe,               SEG code
+l01 DD OFFSET get_exe_name,               SEG code
+l02 DD OFFSET get_cmd_line,               SEG code
+l03 DD OFFSET get_env,                    SEG code
+l04 DD OFFSET allocate_mem,               SEG code
+l05 DD OFFSET free_mem,                   SEG code
+l06 DD OFFSET debug_allocate_mem,         SEG code
+l07 DD OFFSET debug_free_mem,             SEG code
+l08 DD OFFSET load_dll,                   SEG code
+l09 DD OFFSET free_dll,                   SEG code
+l10 DD OFFSET get_current_dll,            SEG code
+l11 DD OFFSET get_module_proc,            SEG code
+l12 DD OFFSET get_resource,               SEG code
+l13 DD OFFSET get_module_name,            SEG code
+l14 DD OFFSET start_wait_for_debug_event, SEG code
+l15 DD OFFSET stop_wait_for_debug_event,  SEG code
+l16 DD OFFSET is_debug_event_idle,        SEG code
+l17 DD OFFSET get_debug_event,            SEG code
+l18 DD OFFSET get_debug_event_data,       SEG code
+l19 DD OFFSET clear_debug_event,          SEG code
+l20 DD OFFSET continue_debug_event,       SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc
@@ -6168,6 +6231,9 @@ init    PROC far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov edi,OFFSET loader_tab
+    RegisterLoader
 ;
     mov edi,OFFSET start_thread
     HookCreateThread

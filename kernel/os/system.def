@@ -276,6 +276,9 @@ hook_data_struc   ENDS
 
 loader_interface_struc    STRUC
 
+; IN   BX                 C file handle
+loader_is_valid_exe            DD ?,?
+
 ; OUT  ES:(E)DI           Name
 loader_get_exe_proc            DD ?,?
 
