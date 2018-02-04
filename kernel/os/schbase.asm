@@ -106,12 +106,12 @@ get_thread_count    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    extrn GetNextPid:near
+    extrn CreateTid:near
 
 create_pid_name DB 'Create PID',0
 
 create_pid    Proc far
-    call GetNextPid
+    call CreateTid
     ret
 create_pid    Endp
 

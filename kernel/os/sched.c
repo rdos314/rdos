@@ -40,6 +40,7 @@ struct TProcess
 {
     int Valid;
     int ID;
+    int Sel;
 };
 
 struct TThread
@@ -83,6 +84,7 @@ int ActiveProcessors = 1;
 int ProcessorCount = 0;
 int CurrLoad = 0;
 int MaxLoad = 0;
+int NextTid = 1;
 int NextPid = 1;
 int ActiveThreads = 0;
 int ActiveProcesses = 0;
@@ -281,16 +283,16 @@ int IndexToHandle(int Index)
     
 /*##########################################################################
 #
-#   Name       : GetNextPid
+#   Name       : CreateTid
 #
-#   Descr      : Convert from ID to handle
+#   Descr      : Get thread ID
 #
 ##########################################################################*/
-#pragma aux GetNextPid "*" rdosdev parm routine
-int GetNextPid()
+#pragma aux CreateTid "*" rdosdev parm routine
+int CreateTid()
 {
     int i;
-    int pid;
+    int tid;
     int ok;
 
     RdosEnterKernelSection(&ThreadSection);    
@@ -299,18 +301,18 @@ int GetNextPid()
 
     while (!ok)
     {
-        pid = NextPid;
+        tid = NextTid;
 
-        if (NextPid == 0x7FFF)
-            NextPid = 1;
+        if (NextTid == 0x7FFF)
+            NextTid = 1;
         else
-            NextPid++;
+            NextTid++;
 
         ok = TRUE;
 
         for (i = 0; i < ActiveThreads; i++)
         {
-            if (ThreadArr[i].Valid && ThreadArr[i].ID == pid) 
+            if (ThreadArr[i].Valid && ThreadArr[i].ID == tid) 
             {
                 ok = FALSE;
                 break;
@@ -320,7 +322,7 @@ int GetNextPid()
 
     RdosLeaveKernelSection(&ThreadSection);    
 
-    return pid;
+    return tid;
 }
     
 /*##########################################################################
@@ -372,6 +374,106 @@ void MoveThread(int Core, int ThreadId)
 int __far ImplGetActiveCores()
 {
     return ActiveProcessors;
+}
+        
+/*##########################################################################
+#
+#   Name       : ProcessCreated
+#
+##########################################################################*/
+#pragma aux ProcessCreated "*" rdosdev parm routine [ebx] value [eax]
+int ProcessCreated(int sel)
+{
+    int i;
+    int ok = FALSE;
+    int Index;
+    int pid;
+
+    RdosEnterKernelSection(&ThreadSection);    
+
+    ok = FALSE;
+
+    while (!ok)
+    {
+        pid = NextPid;
+
+        if (NextPid == 0x7FFF)
+            NextPid = 1;
+        else
+            NextPid++;
+
+        ok = TRUE;
+
+        for (i = 0; i < ActiveProcesses; i++)
+        {
+            if (ProcessArr[i].Valid && ProcessArr[i].ID == pid) 
+            {
+                ok = FALSE;
+                break;
+            }
+        }
+    }
+
+    ok = FALSE;
+
+    for (i = 0; i < ActiveProcesses; i++)
+    {
+        if (!ProcessArr[i].Valid)
+        {
+            ok = TRUE;
+            Index = i;
+            break;
+        }
+    }
+
+    if (!ok)
+    {
+        if (ActiveProcesses < MAX_PROCESSES)
+        {
+            Index = ActiveProcesses;
+            ActiveProcesses++;
+            ok = TRUE;
+        }
+    }
+
+    if (ok)
+    {
+        ProcessArr[Index].Valid = TRUE;
+        ProcessArr[Index].Sel = sel;
+        ProcessArr[Index].ID = pid;
+    }
+    
+    RdosLeaveKernelSection(&ThreadSection);
+
+    return pid;
+}
+    
+/*##########################################################################
+#
+#   Name       : ProcessTerminated
+#
+##########################################################################*/
+#pragma aux ProcessTerminated "*" rdosdev parm routine [eax]
+void ProcessTerminated(int sel)
+{
+    int i;
+
+    RdosEnterKernelSection(&ThreadSection);    
+
+    for (i = 0; i < ActiveProcesses; i++)
+    {
+        if (ProcessArr[i].Valid && ProcessArr[i].Sel == sel) 
+        {
+            ProcessArr[i].Valid = FALSE;
+
+            if (i == ActiveProcesses - 1)
+                ActiveProcesses--;
+
+            break;
+        }
+    }
+
+    RdosLeaveKernelSection(&ThreadSection);    
 }
     
 /*##########################################################################
