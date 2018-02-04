@@ -34,7 +34,6 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 include ..\handle.inc
 include ..\wait.inc
-INCLUDE exec.def
 INCLUDE system.inc
 INCLUDE ip.inc
 INCLUDE tcp.inc

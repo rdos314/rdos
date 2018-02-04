@@ -32,7 +32,6 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE int.def
-INCLUDE exec.def
 INCLUDE system.def
 INCLUDE system.inc
 INCLUDE gate.def

@@ -32,7 +32,6 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
-INCLUDE exec.def
 INCLUDE system.inc
 INCLUDE ip.inc
 INCLUDE tcp.inc
