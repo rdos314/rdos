@@ -728,5 +728,6 @@ create_pid_nr               = 631
 
 exec_nr                     = 632
 start_programs_nr           = 633
+register_loader_nr          = 634
 
 osgate_entries              = 650

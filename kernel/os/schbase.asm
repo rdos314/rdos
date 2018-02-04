@@ -59,11 +59,12 @@ debug_event_wait_header ENDS
 
 data    SEGMENT byte public 'DATA'
 
-next_pid            DW ?
 state_hooks         DW ?
 load_exe_hooks      DW ?
+loader_count        DW ?
 state_arr           DD 2*32 DUP(?)
 load_exe_arr        DD 2*16 DUP(?)
+loader_arr          DD 2*16 DUP(?)
 
 data    ENDS
 
@@ -2606,7 +2607,41 @@ ifDone:
     pop ds
     ret
 is_forked    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           RegisterLoader
+;
+;           DESCRIPTION:    Register a loader
+;
+;           PARAMETERS:     ES:EDI       Loader table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+register_loader_name      DB 'Register Loader',0
+
+register_loader   PROC far
+    push ds
+    push ax
+    push ebx
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:loader_count
+    movzx ebx,ax
+    shl ebx,3
+    add ebx,OFFSET loader_arr
+    mov [ebx],edi
+    mov [ebx+4],es
+    inc ax
+    mov ds:loader_count,ax
+;
+    pop ebx
+    pop ax
+    pop ds
+    ret
+register_loader   ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2624,21 +2659,20 @@ hook_load_exe_name      DB 'Hook Load Exe',0
 hook_load_exe   PROC far
     push ds
     push ax
-    push bx
+    push ebx
 ;
     mov ax,SEG data
     mov ds,ax
     mov ax,ds:load_exe_hooks
-    mov bl,al
-    xor bh,bh
-    shl bx,3
-    add bx,OFFSET load_exe_arr
-    mov [bx],edi
-    mov [bx+4],es
+    movzx ebx,ax
+    shl ebx,3
+    add ebx,OFFSET load_exe_arr
+    mov [ebx],edi
+    mov [ebx+4],es
     inc ax
     mov ds:load_exe_hooks,ax
 ;
-    pop bx
+    pop ebx
     pop ax
     pop ds
     ret
@@ -2663,43 +2697,42 @@ load_exe   PROC far
     push gs
     mov ax,SEG data
     mov fs,ax
-    mov cx,fs:load_exe_hooks
-    or cx,cx
+    movzx ecx,fs:load_exe_hooks
+    or ecx,ecx
     stc
     je load_exe_file_done
 ;
-    mov ax,OFFSET load_exe_arr
+    mov eax,OFFSET load_exe_arr
 
 load_exe_file_loop:
     push fs
-    push ax
-    push cx
+    push eax
+    push ecx
 ;
     xor ecx,ecx
     mov cx,cs
     push ecx
-    mov cx,OFFSET load_exe_file_ret
+    mov ecx,OFFSET load_exe_file_ret
     push ecx
 ;    
-    push bx
-    mov bx,ax
-    mov eax,fs:[bx]
-    mov ecx,fs:[bx+4]
-    pop bx
+    push ebx
+    movzx ebx,ax
+    mov eax,fs:[ebx]
+    mov ecx,fs:[ebx+4]
+    pop ebx
 ;
     push ecx
     push eax
     ret
 
 load_exe_file_ret:
-    pop cx
-    pop ax
+    pop ecx
+    pop eax
     pop fs
     jnc load_exe_file_done
 ;
-    add ax,8
-    sub cx,1
-    jnz load_exe_file_loop
+    add eax,8
+    loop load_exe_file_loop
 ;
     stc
 
@@ -3004,8 +3037,8 @@ InitScheduler_    Proc near
     mov bx,SEG data
     mov es,ebx
     mov es:state_hooks,0
-    mov es:next_pid,1
     mov es:load_exe_hooks,0
+    mov es:loader_count,0
 ;
     mov ecx,32
     mov edi,OFFSET state_arr
@@ -3025,6 +3058,12 @@ init_state_hooks:
 ;
     mov edi,OFFSET terminate_thread
     HookTerminateThread
+;
+    mov esi,OFFSET register_loader
+    mov edi,OFFSET register_loader_name
+    xor cl,cl
+    mov ax,register_loader_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET start_programs
     mov edi,OFFSET start_programs_name
