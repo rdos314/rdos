@@ -3626,6 +3626,168 @@ iseDone:
     pop es
     ret
 is_valid_exe Endp
+
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           load_exe
+;
+;           DESCRIPTION:    Load portable executable file
+;
+;           PARAMETERS:     BX      C file handle
+;                           DS:ESI  File name
+;                           ES:EDI  Command line
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_exe Proc far
+    push ds
+    push es
+    push fs
+    push edx
+    push esi
+    push edi
+;
+    push ax
+    mov ax,ds
+    mov fs,ax
+    mov ax,flat_data_sel
+    mov ds,ax
+;
+    xor edx,edx
+    mov eax,40h
+    AllocateSmallGlobalMem
+    mov ecx,eax
+    xor edi,edi
+    ReadCFile
+    jc load_exe_fail
+;
+    cmp ax,40h
+    jne load_exe_fail
+;
+    mov ax,es:exeh_signature
+    cmp ax,5A4Dh
+    jne load_exe_fail
+;
+    mov ax,es:exeh_reloc_offs
+    cmp ax,40h
+    jne load_exe_fail
+;
+    mov ax,es:[3Ch]
+    movzx edx,ax
+    mov ecx,40h
+    ReadCFile   
+    jc load_exe_fail
+;
+    mov ax,es:[0]
+    cmp ax,'EP'
+    jne load_exe_fail
+;
+    movzx ecx,cx
+    sub edx,ecx
+;
+    FreeMem
+    call CreateLib
+    SetModule
+;       
+    xor ax,ax
+    mov fs,ax
+;
+    mov al,32
+    SetBitness
+;
+    call CreateImage
+    call InsertApp
+    call InitStack
+    call CreateSections
+    call LoadImportedDlls
+    pop ax
+    call RunImage
+    pop edi
+    pop esi
+    pop edx
+    pop fs
+    pop es
+    pop ds
+;
+    push ds
+    push es
+    push fs
+    push esi
+    push edi
+;
+    GetThread
+    mov fs,ax
+    mov fs,fs:p_app_sel
+;
+    xor ecx,ecx
+    push edi
+
+load_exe_cmd_size:
+    mov al,es:[edi]
+    inc edi
+    inc ecx
+    or al,al
+    jnz load_exe_cmd_size
+;
+    pop edi
+    xor ebx,ebx
+    push esi
+
+load_exe_name_size:
+    mov al,[esi]
+    inc esi
+    inc ebx
+    or al,al
+    jnz load_exe_name_size
+;
+    pop esi
+;
+    mov eax,ecx
+    add eax,ebx
+    AllocateAppMem
+    mov fs:app_cmd_line,edx
+;
+    push es
+    push ecx
+    push edi
+    mov ax,flat_data_sel
+    mov es,ax
+    mov edi,edx
+    mov ecx,ebx
+    rep movs byte ptr es:[edi],ds:[esi]
+    mov edx,edi
+    pop edi
+    pop ecx
+    pop es  
+;
+    mov esi,edi
+    mov edi,edx
+    mov ax,es
+    mov ds,ax
+    mov ax,flat_data_sel
+    mov es,ax
+    mov byte ptr es:[edi-1],' '
+    rep movs byte ptr es:[edi],ds:[esi]
+    clc
+    jmp load_exe_done
+
+load_exe_fail:
+    pop ax
+    FreeMem
+    stc
+
+load_exe_done:
+    pop edi
+    pop esi
+    pop edx
+    pop fs
+    pop es
+    pop ds
+    ret
+load_exe Endp
+                       
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6198,26 +6360,27 @@ get_cmd_line    Endp
 
 loader_tab:
 l00 DD OFFSET is_valid_exe,               SEG code
-l01 DD OFFSET get_exe_name,               SEG code
-l02 DD OFFSET get_cmd_line,               SEG code
-l03 DD OFFSET get_env,                    SEG code
-l04 DD OFFSET allocate_mem,               SEG code
-l05 DD OFFSET free_mem,                   SEG code
-l06 DD OFFSET debug_allocate_mem,         SEG code
-l07 DD OFFSET debug_free_mem,             SEG code
-l08 DD OFFSET load_dll,                   SEG code
-l09 DD OFFSET free_dll,                   SEG code
-l10 DD OFFSET get_current_dll,            SEG code
-l11 DD OFFSET get_module_proc,            SEG code
-l12 DD OFFSET get_resource,               SEG code
-l13 DD OFFSET get_module_name,            SEG code
-l14 DD OFFSET start_wait_for_debug_event, SEG code
-l15 DD OFFSET stop_wait_for_debug_event,  SEG code
-l16 DD OFFSET is_debug_event_idle,        SEG code
-l17 DD OFFSET get_debug_event,            SEG code
-l18 DD OFFSET get_debug_event_data,       SEG code
-l19 DD OFFSET clear_debug_event,          SEG code
-l20 DD OFFSET continue_debug_event,       SEG code
+l01 DD OFFSET load_exe,                   SEG code
+l02 DD OFFSET get_exe_name,               SEG code
+l03 DD OFFSET get_cmd_line,               SEG code
+l04 DD OFFSET get_env,                    SEG code
+l05 DD OFFSET allocate_mem,               SEG code
+l06 DD OFFSET free_mem,                   SEG code
+l07 DD OFFSET debug_allocate_mem,         SEG code
+l08 DD OFFSET debug_free_mem,             SEG code
+l09 DD OFFSET load_dll,                   SEG code
+l10 DD OFFSET free_dll,                   SEG code
+l11 DD OFFSET get_current_dll,            SEG code
+l12 DD OFFSET get_module_proc,            SEG code
+l13 DD OFFSET get_resource,               SEG code
+l14 DD OFFSET get_module_name,            SEG code
+l15 DD OFFSET start_wait_for_debug_event, SEG code
+l16 DD OFFSET stop_wait_for_debug_event,  SEG code
+l17 DD OFFSET is_debug_event_idle,        SEG code
+l18 DD OFFSET get_debug_event,            SEG code
+l19 DD OFFSET get_debug_event_data,       SEG code
+l20 DD OFFSET clear_debug_event,          SEG code
+l21 DD OFFSET continue_debug_event,       SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc
