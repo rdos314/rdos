@@ -4024,6 +4024,50 @@ spawn_program   Proc near
     push bx
     push cx
 ;
+    push es
+    push edi
+;
+    mov eax,ds
+    mov es,eax
+    mov edi,esi
+    mov cx,O_RDONLY OR O_BINARY
+    OpenKernelFile
+;
+    pop edi
+    pop es
+    jnc spFound
+;
+    int 3
+
+spFound:
+    push esi
+;
+    mov ax,SEG data
+    mov gs,ax
+    movzx ecx,gs:loader_count
+    or ecx,ecx
+    je spLoaderFail
+;
+    mov esi,OFFSET loader_arr
+
+spLoaderLoop:
+    push ds
+    mov ds,gs:[esi]
+    call fword ptr ds:loader_is_valid_exe_proc
+    pop ds
+    jnc spLoaderOk
+;
+    add esi,8
+    loop spLoaderLoop
+
+spLoaderFail:
+    pop esi
+    CloseCFile
+    jmp spInvalid
+
+spLoaderOk:
+    pop esi
+;
     call SetupSpawn
     call CreateSpawnProg
     call CreateSpawnParam
@@ -4053,12 +4097,13 @@ spLeave:
 ;
     or cx,cx
     jz spOk
-;
+
+spInvalid:
     stc
     jmp spDone
 
 spOk:
-    clc
+    clc   
 
 spDone:
     pop cx
