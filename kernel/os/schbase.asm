@@ -42,6 +42,14 @@ INCLUDE chandle.inc
 
     .686p
 
+process_struc    STRUC
+
+pr_loader            DW ?
+pr_kernel_file       DW ?
+pr_file_name_sel     DW ?
+
+process_struc    ENDS
+
 module_handle_seg           STRUC
 
 mh_base handle_header <>
@@ -2753,18 +2761,23 @@ load_exe   ENDP
 load_cmd_line   DB 0, 0Dh
 
 load_process:
-    mov es,bx
-    xor di,di
-    mov al,es:[di+1]
+    mov fs,bx
+    mov es,fs:pr_file_name_sel
+    xor edi,edi
+    mov al,es:[edi+1]
     cmp al,':'
-    jne load_process_default_drive
-    mov al,es:[di]
+    jne lpDefaultDrive
+;
+    mov al,es:[edi]
     sub al,'a'
-    jnc load_process_set_drive
+    jnc lpSetDrive
+;
     add al,20h
-load_process_set_drive:
+
+lpSetDrive:
     SetCurDrive
-load_process_default_drive:
+
+lpDefaultDrive:
     SaveContext
     xor eax,eax
     push eax
@@ -2775,9 +2788,8 @@ load_process_default_drive:
     push eax
     push eax
 ;
-    mov ax,es
-    mov ds,ax
-    mov si,di
+    mov ds,fs:pr_file_name_sel
+    mov esi,edi
 ;
     GetThread
     mov es,ax
@@ -2790,36 +2802,35 @@ load_process_default_drive:
     mov es:app_key,al
     mov es:app_context,bx
 ;       
-    push si
-    mov di,OFFSET app_exe_name
-    mov cx,100h
-    rep movsb
-    pop di
-    xor bx,bx
-    mov ax,ds
-    mov es,ax
-    movzx edi,di
+    mov edi,OFFSET app_exe_name
+    mov ecx,100h
+
+lpNameCopy:
+    lodsb
+    stosb
+    or al,al
+    jz lpNameDone
 ;
-    mov cx,O_RDONLY OR O_BINARY
-    OpenKernelFile
-    jc load_process_fail
-;
+    loop lpNameCopy
+
+lpNameDone:
+    mov bx,fs:pr_kernel_file
     xor esi,esi
-    mov ax,cs
-    mov es,ax
+    mov eax,cs
+    mov es,eax
     mov edi,OFFSET load_cmd_line
     Exec
-    jc load_process_close_fail
+    jc lpCloseFail
 ;
     test byte ptr [bp+2].load_eflags,2
-    jnz load_process_vm
+    jnz lpVm
 ;
     mov ds,[bp].load_ds
     mov es,[bp].load_es
     mov fs,[bp].load_fs
     mov gs,[bp].load_gs
 
-load_process_vm:
+lpVm:
     pop ebp
     pop edi
     pop esi
@@ -2829,10 +2840,8 @@ load_process_vm:
     pop eax
     iretd
 
-load_process_close_fail:
-    CloseFile
-
-load_process_fail:
+lpCloseFail:
+    CloseCFile
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2928,28 +2937,29 @@ rpLoaderFail:
     jmp rpFail
 
 rpLoaderOk:
-    CloseCFile
+    mov eax,SIZE process_struc
+    AllocateSmallGlobalMem
+    mov es:pr_kernel_file,bx
+    mov ax,fs:[esi]
+    mov es:pr_loader,ax
+    mov ax,es
+    mov fs,ax
 ;
     mov ecx,[edx].len
     sub ecx,SIZE rdos_header
     add edx,SIZE rdos_header
     mov esi,edx
-    mov eax,1000h
-    AllocateGlobalMem
+    mov eax,ecx
+    AllocateSmallGlobalMem
     xor edi,edi
-    rep movs dword ptr es:[edi],ds:[esi]
-    xor edi,edi
-;
-    xor esi,esi
-    mov ax,es
-    mov ds,ax
-    Is64BitExe
-    jnc run_process64
+    rep movs byte ptr es:[edi],ds:[esi]
+    mov fs:pr_file_name_sel,es
 ;   
-    mov bx,es
+    mov bx,fs
     mov ax,cs
     mov ds,ax
     mov esi,OFFSET load_process
+    xor edi,edi
     mov ax,2
     mov ecx,stack0_size
     CreateProcess
