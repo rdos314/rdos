@@ -38,117 +38,11 @@ INCLUDE system.inc
 INCLUDE ..\fs.inc
 INCLUDE chandle.inc
 
-data    SEGMENT byte public 'DATA'
-
-load_exe_hooks  DB ?
-load_exe_arr    DD 2*16 DUP(?)
-
-data    ENDS
-
 code    SEGMENT byte public 'CODE'
 
 .386p
     
     assume cs:code
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           HOOK_LOAD_EXE
-;
-;           DESCRIPTION:    Add hook for LoadExe
-;
-;           PARAMETERS:     ES:EDI       Callback
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_load_exe_name      DB 'Hook Load Exe',0
-
-hook_load_exe   PROC far
-    push ds
-    push ax
-    push bx
-    mov ax,SEG data
-    mov ds,ax
-    mov al,ds:load_exe_hooks
-    mov bl,al
-    xor bh,bh
-    shl bx,3
-    add bx,OFFSET load_exe_arr
-    mov [bx],edi
-    mov [bx+4],es
-    inc al
-    mov ds:load_exe_hooks,al
-    pop bx
-    pop ax
-    pop ds
-    retf32
-hook_load_exe   ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LOAD_EXE
-;
-;           DESCRIPTION:    Load executable file
-;
-;           PARAMETERS:     BX      C file handle
-;                           DS:ESI  File name
-;                           ES:EDI  Command line
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-load_exe_name      DB 'Load Exe',0
-
-load_exe   PROC far
-    push gs
-    mov ax,SEG data
-    mov fs,ax
-    mov cl,fs:load_exe_hooks
-    or cl,cl
-    stc
-    je load_exe_file_done
-;
-    mov ax,OFFSET load_exe_arr
-
-load_exe_file_loop:
-    push fs
-    push ax
-    push cx
-;
-    xor ecx,ecx
-    mov cx,cs
-    push ecx
-    mov cx,OFFSET load_exe_file_ret
-    push ecx
-;    
-    push bx
-    mov bx,ax
-    mov eax,fs:[bx]
-    mov ecx,fs:[bx+4]
-    pop bx
-;
-    push ecx
-    push eax
-    retf32
-
-load_exe_file_ret:
-    pop cx
-    pop ax
-    pop fs
-    jnc load_exe_file_done
-;
-    add ax,8
-    dec cl
-    jnz load_exe_file_loop
-;
-    stc
-
-load_exe_file_done:
-    pop gs
-    retf32
-load_exe   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -281,8 +175,6 @@ unload_dos_ext:
 load_cmd_line   DB 0, 0Dh
 
 load_process:
-    mov ax,SEG data
-    mov ds,ax
     mov es,bx
     xor di,di
     mov al,es:[di+1]
@@ -378,8 +270,6 @@ load_process_fail:
 
 load_process64:
     int 3
-    mov ax,SEG data
-    mov ds,ax
     mov es,bx
     xor di,di
     mov al,es:[di+1]
@@ -1019,8 +909,6 @@ CreateSpawnHandle   Endp
 spawn_startup:
     sti
     mov gs,bx
-    mov ax,SEG data
-    mov ds,ax
     SaveContext
     xor eax,eax
     push eax
@@ -2158,28 +2046,12 @@ init_sys    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
-    mov bx,SEG data
-    mov es,bx
-    mov es:load_exe_hooks,0
-;
     mov ax,cs
     mov ds,ax
     mov es,ax
 ;
     mov edi,OFFSET init_sys
     HookFileSystemStarted
-;
-    mov esi,OFFSET hook_load_exe
-    mov edi,OFFSET hook_load_exe_name
-    xor cl,cl
-    mov ax,hook_load_exe_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET load_exe
-    mov edi,OFFSET load_exe_name
-    xor cl,cl
-    mov ax,exec_nr
-    RegisterOsGate
 ;
     mov ebx,OFFSET load_program16
     mov esi,OFFSET load_program32

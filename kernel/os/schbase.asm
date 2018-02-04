@@ -59,7 +59,9 @@ data    SEGMENT byte public 'DATA'
 
 next_pid            DW ?
 state_hooks         DW ?
+load_exe_hooks      DW ?
 state_arr           DD 2*32 DUP(?)
+load_exe_arr        DD 2*16 DUP(?)
 
 data    ENDS
 
@@ -2603,6 +2605,107 @@ ifDone:
     ret
 is_forked    ENDP
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           HOOK_LOAD_EXE
+;
+;           DESCRIPTION:    Add hook for LoadExe
+;
+;           PARAMETERS:     ES:EDI       Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_load_exe_name      DB 'Hook Load Exe',0
+
+hook_load_exe   PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:load_exe_hooks
+    mov bl,al
+    xor bh,bh
+    shl bx,3
+    add bx,OFFSET load_exe_arr
+    mov [bx],edi
+    mov [bx+4],es
+    inc ax
+    mov ds:load_exe_hooks,ax
+;
+    pop bx
+    pop ax
+    pop ds
+    ret
+hook_load_exe   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LOAD_EXE
+;
+;           DESCRIPTION:    Load executable file
+;
+;           PARAMETERS:     BX      C file handle
+;                           DS:ESI  File name
+;                           ES:EDI  Command line
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_exe_name      DB 'Load Exe',0
+
+load_exe   PROC far
+    push gs
+    mov ax,SEG data
+    mov fs,ax
+    mov cx,fs:load_exe_hooks
+    or cx,cx
+    stc
+    je load_exe_file_done
+;
+    mov ax,OFFSET load_exe_arr
+
+load_exe_file_loop:
+    push fs
+    push ax
+    push cx
+;
+    xor ecx,ecx
+    mov cx,cs
+    push ecx
+    mov cx,OFFSET load_exe_file_ret
+    push ecx
+;    
+    push bx
+    mov bx,ax
+    mov eax,fs:[bx]
+    mov ecx,fs:[bx+4]
+    pop bx
+;
+    push ecx
+    push eax
+    ret
+
+load_exe_file_ret:
+    pop cx
+    pop ax
+    pop fs
+    jnc load_exe_file_done
+;
+    add ax,8
+    sub cx,1
+    jnz load_exe_file_loop
+;
+    stc
+
+load_exe_file_done:
+    pop gs
+    ret
+load_exe   ENDP
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2625,6 +2728,7 @@ InitScheduler_    Proc near
     mov es,ebx
     mov es:state_hooks,0
     mov es:next_pid,1
+    mov es:load_exe_hooks,0
 ;
     mov ecx,32
     mov edi,OFFSET state_arr
@@ -2644,6 +2748,18 @@ init_state_hooks:
 ;
     mov edi,OFFSET terminate_thread
     HookTerminateThread
+;
+    mov esi,OFFSET hook_load_exe
+    mov edi,OFFSET hook_load_exe_name
+    xor cl,cl
+    mov ax,hook_load_exe_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET load_exe
+    mov edi,OFFSET load_exe_name
+    xor cl,cl
+    mov ax,exec_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET hook_state
     mov edi,OFFSET hook_state_name
