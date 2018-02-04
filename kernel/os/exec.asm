@@ -89,7 +89,7 @@ hook_load_exe   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           LOAD_EXE_FILE
+;           NAME:           LOAD_EXE
 ;
 ;           DESCRIPTION:    Load executable file
 ;
@@ -99,7 +99,9 @@ hook_load_exe   ENDP
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-load_exe_file   PROC near
+load_exe_name      DB 'Load Exe',0
+
+load_exe   PROC far
     push gs
     mov ax,SEG data
     mov fs,ax
@@ -145,8 +147,8 @@ load_exe_file_ret:
 
 load_exe_file_done:
     pop gs
-    ret
-load_exe_file   ENDP
+    retf32
+load_exe   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -336,7 +338,7 @@ load_process_default_drive:
     mov ax,cs
     mov es,ax
     mov di,OFFSET load_cmd_line
-    call load_exe_file
+    Exec
     jc load_process_close_fail
 ;
     test byte ptr [bp+2].load_eflags,2
@@ -1079,7 +1081,7 @@ spCopyExeLoop:
     mov ds,gs:s_name
     mov es,gs:s_cmd
 ;
-    call load_exe_file
+    Exec
     jc spCloseFail
 ;
     mov gs:s_ret_code,0
@@ -1757,7 +1759,7 @@ SetupExec  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-load_exe_name   DB 'Load Exe',0
+load_program_name   DB 'Load Program',0
 
 load_program   Proc near
     push gs
@@ -1840,7 +1842,7 @@ lepCpExeLoop:
     xor edi,edi
     mov ds,gs:el_name
     mov es,gs:el_cmd
-    call load_exe_file
+    Exec
     jc lepFail
 ;
     mov gs:el_ret_code,0
@@ -2173,9 +2175,15 @@ init    PROC far
     mov ax,hook_load_exe_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET load_exe
+    mov edi,OFFSET load_exe_name
+    xor cl,cl
+    mov ax,exec_nr
+    RegisterOsGate
+;
     mov ebx,OFFSET load_program16
     mov esi,OFFSET load_program32
-    mov edi,OFFSET load_exe_name
+    mov edi,OFFSET load_program_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,load_exe_nr
     RegisterUserGate

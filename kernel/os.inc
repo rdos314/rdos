@@ -1988,34 +1988,34 @@ HookAppActivity     MACRO
     OsGate hook_app_activity_nr
                     ENDM
 
-; IN  ES	App sel
+; IN  ES        App sel
 AppNotifyCreate     MACRO
     OsGate app_notify_create_nr
                     ENDM
 
-; IN  ES	App sel
+; IN  ES        App sel
 AppNotifyStart     MACRO
     OsGate app_notify_start_nr
                     ENDM
 
-; IN  ES	App sel
+; IN  ES        App sel
 ; IN  DS        Creator app sel
 AppNotifyForked     MACRO
     OsGate app_notify_forked_nr
                     ENDM
 
-; IN  ES	App sel
+; IN  ES        App sel
 AppNotifyExec     MACRO
     OsGate app_notify_exec_nr
                     ENDM
 
-; IN  ES	App sel
+; IN  ES        App sel
 ; IN  DS        Creator app sel
 AppNotifySpawn     MACRO
     OsGate app_notify_spawn_nr
                     ENDM
 
-; IN  ES	App sel
+; IN  ES        App sel
 AppNotifyTerminate     MACRO
     OsGate app_notify_terminate_nr
                     ENDM
@@ -2023,6 +2023,10 @@ AppNotifyTerminate     MACRO
 ;       ES:EDI       HANDLER ADDRESS
 HookLoadExe     MACRO
     OsGate hook_load_exe_nr
+                    ENDM
+
+Exec     MACRO
+    OsGate exec_nr
                     ENDM
 
 InitSystemApp MACRO

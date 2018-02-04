@@ -727,4 +727,6 @@ log_big_mem_nr              = 630
 
 create_pid_nr               = 631
 
+exec_nr                     = 632
+
 osgate_entries              = 650
