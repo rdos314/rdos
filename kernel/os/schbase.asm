@@ -83,6 +83,8 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn IdToHandle:near
     extrn IndexToHandle:near
     extrn MoveThread:near
+    extrn ProcessCreated:near
+    extrn GetProcessSel:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2750,18 +2752,20 @@ load_exe   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           load_process
+;       NAME:           load_process
 ;
-;           DESCRIPTION:    Run program as process
+;       DESCRIPTION:    Run program as process
 ;
-;       RETURN VALUE:
+;       Parameters:     BX    Process ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 load_cmd_line   DB 0, 0Dh
 
 load_process:
-    mov fs,bx
+    call GetProcessSel
+    mov fs,eax
+;
     mov es,fs:pr_file_name_sel
     xor edi,edi
     mov al,es:[edi+1]
@@ -2955,10 +2959,12 @@ rpLoaderOk:
     xor edi,edi
     rep movs byte ptr es:[edi],ds:[esi]
     mov fs:pr_file_name_sel,es
-;   
-    mov bx,fs
-    mov ax,cs
-    mov ds,ax
+;
+    mov ebx,fs
+    call ProcessCreated
+    mov ebx,eax
+    mov eax,cs
+    mov ds,eax
     mov esi,OFFSET load_process
     xor edi,edi
     mov ax,2

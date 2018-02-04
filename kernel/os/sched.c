@@ -478,6 +478,35 @@ void ProcessTerminated(int sel)
     
 /*##########################################################################
 #
+#   Name       : GetProcessSel
+#
+#   Descr      : Convert from process ID to selector
+#
+##########################################################################*/
+#pragma aux GetProcessSel "*" rdosdev parm routine [ebx] value [eax]
+int GetProcessSel(int ID)
+{
+    int i;
+    int sel = 0;
+
+    RdosEnterKernelSection(&ThreadSection);    
+
+    for (i = 0; i < ActiveProcesses; i++)
+    {
+        if (ProcessArr[i].Valid && ProcessArr[i].ID == ID) 
+        {
+            sel = ProcessArr[i].Sel;
+            break;
+        }
+    }
+
+    RdosLeaveKernelSection(&ThreadSection);    
+
+    return sel;
+}
+    
+/*##########################################################################
+#
 #   Name       : Scheduler thread
 #
 ##########################################################################*/
