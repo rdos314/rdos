@@ -46,7 +46,10 @@ process_struc    STRUC
 
 pr_loader            DW ?
 pr_kernel_file       DW ?
-pr_file_name_sel     DW ?
+pr_name_sel          DW ?
+pr_cmd_sel           DW ?
+pr_dir_sel           DW ?
+pr_env_sel           DW ?
 
 process_struc    ENDS
 
@@ -2749,6 +2752,298 @@ load_exe_file_done:
     ret
 load_exe   ENDP
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateProg
+;
+;       DESCRIPTION:    Make global copy of program name
+;
+;       PARAMETERS:     DS:ESI      Filename
+;                       GS          Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateProg Proc near
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    mov edi,esi
+    xor ecx,ecx
+
+cprLoop:
+    lods byte ptr [esi]
+    or al,al
+    jz cprSizeOk
+;
+    inc ecx
+    jmp cprLoop
+
+cprSizeOk:
+    mov esi,edi
+    inc ecx 
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]     
+    mov gs:pr_name_sel,es
+;    
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateProg Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateNoParam
+;
+;       DESCRIPTION:    Make global copy of empty parameters
+;
+;       PARAMETERS:     GS          Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateNoParam Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov eax,1
+    AllocateSmallGlobalMem
+    xor edi,edi
+    xor al,al
+    stos byte ptr es:[edi]
+    mov gs:pr_cmd_sel,es
+;       
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateNoParam Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateParam
+;
+;       DESCRIPTION:    Make global copy of parameters
+;
+;       PARAMETERS:     DS:ESI      Param pointer
+;                       GS          Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateParam Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov edi,esi
+    xor ecx,ecx
+
+cpaLoop:
+    lods byte ptr [esi]
+    or al,al
+    jz cpaSizeOk
+;
+    inc ecx
+    jmp cpaLoop
+
+cpaSizeOk:
+    mov esi,edi
+    inc ecx 
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]     
+    mov gs:pr_cmd_sel,es
+;       
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateParam Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateDefaultStartDir
+;
+;       DESCRIPTION:    Make global copy of default directory
+;
+;       PARAMETERS:     GS          Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDefaultStartDir Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov eax,256
+    AllocateSmallGlobalMem
+    xor edi,edi
+    GetCurDrive
+    mov ah,al
+    add al,'A'
+    stos byte ptr es:[edi]
+;
+    mov al,':'
+    stos byte ptr es:[edi]
+;
+    mov al,'\'
+    stos byte ptr es:[edi]
+;
+    mov al,ah
+    GetCurDir
+;
+    mov gs:pr_dir_sel,es
+;       
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateDefaultStartDir Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateStartDir
+;
+;       DESCRIPTION:    Make global copy of start dir
+;
+;       PARAMETERS:     DS:ESI      Startup dir
+;                       GS          Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateStartDir Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov edi,esi
+    xor ecx,ecx
+
+csdLoop:
+    lods byte ptr [esi]
+    or al,al
+    jz csdSizeOk
+;
+    inc ecx
+    jmp csdLoop
+
+csdSizeOk:
+    mov esi,edi
+    inc ecx 
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]     
+    mov gs:pr_dir_sel,es
+;       
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateStartDir Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateDefaultEnv
+;
+;       DESCRIPTION:    Make global copy of default environment variables
+;
+;       PARAMETERS:     GS      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDefaultEnv Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    OpenProcEnv
+    GetEnvSize
+    movzx eax,ax
+    AllocateSmallGlobalMem
+    xor edi,edi
+    GetEnvData
+    CloseEnv
+    mov gs:pr_env_sel,es
+;       
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateDefaultEnv Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateEnv
+;
+;       DESCRIPTION:    Put environment variables in process structure
+;
+;       PARAMETERS:     DS:ESI  Environment ptr
+;                       GS      Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateEnv Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov edi,esi
+    xor ecx,ecx
+
+ceLoop:
+    inc ecx
+    lods byte ptr [esi]
+    or al,al
+    jnz ceLoop
+;
+    inc ecx
+    lods byte ptr [esi]
+    or al,al
+    jnz ceLoop
+
+ceSizeOk:
+    mov esi,edi
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]     
+    mov gs:pr_env_sel,es
+;       
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateEnv Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3668,7 +3963,7 @@ load_process:
     call GetProcessSel
     mov fs,eax
 ;
-    mov es,fs:pr_file_name_sel
+    mov es,fs:pr_name_sel
     xor edi,edi
     mov al,es:[edi+1]
     cmp al,':'
@@ -3694,7 +3989,7 @@ lpDefaultDrive:
     push eax
     push eax
 ;
-    mov ds,fs:pr_file_name_sel
+    mov ds,fs:pr_name_sel
     mov esi,edi
 ;
     GetThread
@@ -3860,7 +4155,7 @@ rpLoaderOk:
     AllocateSmallGlobalMem
     xor edi,edi
     rep movs byte ptr es:[edi],ds:[esi]
-    mov fs:pr_file_name_sel,es
+    mov fs:pr_name_sel,es
 ;
     mov ebx,fs
     call ProcessCreated
