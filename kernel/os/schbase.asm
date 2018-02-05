@@ -3801,6 +3801,79 @@ load_program32 Proc far
 load_program32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           unload_exe
+;
+;           DESCRIPTION:    Unload running program
+;
+;           PARAMETERS:         AX          Exit code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unload_exe_name DB 'Unload Exe',0
+    
+unload_exe:
+    int 3
+    push ax
+    GetThread
+    mov ds,ax
+    pop ax
+;       
+    mov ds,ds:p_process_sel
+    mov ds,ds:ms_pd_sel
+    mov ds:pd_exit_code,ax
+;
+    push ax
+    GetThread
+    mov ds,ax
+    pop ax
+    mov ds,ds:p_app_sel
+    jmp ds:app_unload_proc    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WaitForExec
+;
+;           DESCRIPTION:    Wait for exec
+;
+;           PARAMETERS:     AX          Forked ID
+;
+;           RETURNS:        AX          Exit code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_exec_name DB 'Wait For Exec',0
+    
+wait_for_exec   Proc far
+    ret
+wait_for_exec   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetExitCode
+;
+;           DESCRIPTION:    Get exit code
+;
+;           RETURNS:        AX          Exit code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_exit_code_name DB 'Get Exit Code',0
+    
+get_exit_code   Proc far
+    push ds
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ax,ds:app_exit_code
+    pop ds
+    ret
+get_exit_code   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           run_process
@@ -4164,6 +4237,24 @@ init_state_hooks:
     mov dx,virt_es_in OR virt_ds_in
     mov ax,spawn_exe_nr
     RegisterUserGate
+;
+    mov esi,OFFSET unload_exe
+    mov edi,OFFSET unload_exe_name
+    xor dx,dx
+    mov ax,unload_exe_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET wait_for_exec
+    mov edi,OFFSET wait_for_exec_name
+    xor dx,dx
+    mov ax,wait_for_exec_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_exit_code
+    mov edi,OFFSET get_exit_code_name
+    xor dx,dx
+    mov ax,get_exit_code_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET fatal_error_exit
     mov edi,OFFSET fatal_error_exit_name

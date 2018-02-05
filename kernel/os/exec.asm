@@ -164,80 +164,6 @@ unload_dos_ext:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           unload_exe
-;
-;           DESCRIPTION:    Unload running program
-;
-;           PARAMETERS:         AX          Exit code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-unload_exe_name DB 'Unload Exe',0
-    
-unload_exe:
-    push ax
-    GetThread
-    mov ds,ax
-    pop ax
-;       
-    mov ds,ds:p_process_sel
-    mov ds,ds:ms_pd_sel
-    mov ds:pd_exit_code,ax
-;
-    push ax
-    GetThread
-    mov ds,ax
-    pop ax
-    mov ds,ds:p_app_sel
-    jmp ds:app_unload_proc    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           WaitForExec
-;
-;           DESCRIPTION:    Wait for exec
-;
-;           PARAMETERS:     AX          Forked ID
-;
-;           RETURNS:        AX          Exit code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-wait_for_exec_name DB 'Wait For Exec',0
-    
-wait_for_exec   Proc far
-    retf32
-wait_for_exec   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetExitCode
-;
-;           DESCRIPTION:    Get exit code
-;
-;           RETURNS:        AX          Exit code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_exit_code_name DB 'Get Exit Code',0
-    
-get_exit_code   Proc far
-    push ds
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_exit_code
-    pop ds
-    retf32
-get_exit_code   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           init
 ;
 ;           DESCRIPTION:    init module
@@ -255,24 +181,6 @@ init    PROC far
     mov edi,OFFSET dos_ext_exec_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,dos_ext_exec_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET unload_exe
-    mov edi,OFFSET unload_exe_name
-    xor dx,dx
-    mov ax,unload_exe_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET wait_for_exec
-    mov edi,OFFSET wait_for_exec_name
-    xor dx,dx
-    mov ax,wait_for_exec_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_exit_code
-    mov edi,OFFSET get_exit_code_name
-    xor dx,dx
-    mov ax,get_exit_code_nr
     RegisterBimodalUserGate
     ret
 init    ENDP
