@@ -3574,6 +3574,9 @@ lpNoEnv:
     call CreateDefaultEnv
 
 lpEnvDone:
+    mov ebx,gs
+    call ProcessCreated
+;
     push gs
     ExecApp
     pop gs
