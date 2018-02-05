@@ -411,6 +411,7 @@ void TStateCommand::WritePrograms()
             Write(NameBuf);
             Write("\r\n");
             WriteProgramThreads(i);
+            Write("\r\n");
         }
     }
 }
