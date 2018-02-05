@@ -2775,8 +2775,7 @@ load_exe   ENDP
 
 AllocateProcess Proc near    
     push ds
-    push eax
-    push bx
+    pushad
 ; 
     push es
     mov eax,SIZE process_struc
@@ -2815,8 +2814,7 @@ apFocusDone:
     mov eax,ds:app_loader_name
     mov gs:pr_loader_name,eax
 ;
-    pop bx
-    pop eax
+    popad
     pop ds
     ret
 AllocateProcess  Endp
@@ -3266,7 +3264,10 @@ spCopyExeLoop:
     mov ds,gs:pr_name_sel
     mov es,gs:pr_cmd_sel
 ;
-    Exec
+    push gs
+    mov gs,gs:pr_loader
+    call fword ptr gs:loader_load_exe_proc
+    pop gs
     jc spCloseFail
 ;
     GetThread
@@ -3378,8 +3379,11 @@ spLoaderFail:
     CloseCFile
     jmp spInvalid
 
-spLoaderOk:
+spLoaderOk:    
+    mov ax,gs:[esi]
     call AllocateProcess
+    mov gs:pr_loader,ax
+;
     mov gs:pr_kernel_file,bx
     pop esi
 ;
