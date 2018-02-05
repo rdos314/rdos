@@ -831,6 +831,9 @@
 
 #define usergate_get_audio_codec_version 0x0000028D
 
+#define usergate_get_program_count 0x0000028E
+#define usergate_get_program_info 0x0000028F
+
 
 
 #ifdef __FLAT__
@@ -1667,6 +1670,9 @@
 
 #define CallGate_get_audio_codec_version 0x55 0x67 0x9a 141 2 0 0 3 0 0x5d
 
+#define CallGate_get_program_count 0x55 0x67 0x9a 142 2 0 0 3 0 0x5d
+#define CallGate_get_program_info 0x55 0x67 0x9a 143 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2500,5 +2506,8 @@
 #define CallGate_is_can_online 0x3e 0x67 0x9a 140 2 0 0 3 0
 
 #define CallGate_get_audio_codec_version 0x3e 0x67 0x9a 141 2 0 0 3 0
+
+#define CallGate_get_program_count 0x3e 0x67 0x9a 142 2 0 0 3 0
+#define CallGate_get_program_info 0x3e 0x67 0x9a 143 2 0 0 3 0
 
 #endif

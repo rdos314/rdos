@@ -1101,6 +1101,19 @@ SetEnvData	MACRO
 	UserGate set_env_data_nr
 	        ENDM
 
+; OUT  AX           Program count
+GetProgramCount	MACRO
+	UserGate get_program_count_nr
+	        ENDM
+
+; IN   AX           Program #
+; IN   ES:(E)DI     Name buffer
+; IN   (E)CX        Max name size
+; OUT  DX           ID
+GetProgramInfo	MACRO
+	UserGate get_program_info_nr
+	        ENDM
+
 ;;;;;;;;;;;; C Handles ;;;;;;;;;;;;;;;;
 
 ; IN  ES:(E)DI      Name

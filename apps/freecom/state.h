@@ -35,23 +35,26 @@
 class TStateFactory : public TCommandFactory
 {
 public:
-	TStateFactory();
-	virtual TCommand *Create(TSession *session, const char *param);
+    TStateFactory();
+    virtual TCommand *Create(TSession *session, const char *param);
 };
 
 class TStateCommand : public TCommand
 {
 public:
-	TStateCommand(TSession *session, const char *param);
+    TStateCommand(TSession *session, const char *param);
 
-	virtual int Execute(char *param);	
+    virtual int Execute(char *param);       
 
 protected:
     void InitOptions();
-	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
+    virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 
-	void WriteOne(ThreadActionState *state);
+    void WriteOne(ThreadActionState *state);
+    void WriteThreads();
+    void WritePrograms();
 
+    int FOptT;
     int FOptS;
     int FOptF;
     int FOptU;

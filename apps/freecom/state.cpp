@@ -65,7 +65,7 @@ TStateFactory::TStateFactory()
 ##########################################################################*/
 TCommand *TStateFactory::Create(TSession *session, const char *param)
 {
-        return new TStateCommand(session, param);
+    return new TStateCommand(session, param);
 }
 
 /*##########################################################################
@@ -82,7 +82,7 @@ TCommand *TStateFactory::Create(TSession *session, const char *param)
 TStateCommand::TStateCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-        FHelpScreen.Load(TEXT_CMDHELP_STATE);
+    FHelpScreen.Load(TEXT_CMDHELP_STATE);
 }
 
 /*##########################################################################
@@ -98,20 +98,23 @@ TStateCommand::TStateCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TStateCommand::OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg)
 {
-        switch(ch)
-        {
-            case 'S':
-                        return OptScanBool(optstr, bool, strarg, &FOptS);
+    switch(ch)
+    {
+        case 'T':
+            return OptScanBool(optstr, bool, strarg, &FOptT);
 
-            case 'F':
-                        return OptScanBool(optstr, bool, strarg, &FOptF);
+        case 'S':
+            return OptScanBool(optstr, bool, strarg, &FOptS);
 
-            case 'U':
-                        return OptScanBool(optstr, bool, strarg, &FOptU);
+        case 'F':
+            return OptScanBool(optstr, bool, strarg, &FOptF);
 
-        }
-        OptError(optstr);
-        return E_Useage;
+        case 'U':
+            return OptScanBool(optstr, bool, strarg, &FOptU);
+
+    }
+    OptError(optstr);
+    return E_Useage;
 }
 
 /*##########################################################################
@@ -127,6 +130,7 @@ int TStateCommand::OptScan(const char *optstr, int ch, int bool, const char *str
 ##########################################################################*/
 void TStateCommand::InitOptions()
 {
+    FOptT = FALSE;
     FOptS = FALSE;
     FOptF = FALSE;
     FOptU = FALSE;
@@ -308,6 +312,59 @@ void TStateCommand::WriteOne(ThreadActionState *State)
 
 /*##########################################################################
 #
+#   Name       : TStateCommand::WriteThreads
+#
+#   Purpose....: Write threads
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TStateCommand::WriteThreads()
+{
+    int i;
+    int ThreadCount = RdosGetThreadCount();
+    ThreadActionState state;
+    
+    for (i = 0; i < ThreadCount; i++)
+        if (RdosGetThreadActionState(i, &state))
+            WriteOne(&state);
+}
+
+/*##########################################################################
+#
+#   Name       : TStateCommand::WritePrograms
+#
+#   Purpose....: Write threads
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TStateCommand::WritePrograms()
+{
+    char str[40];
+    char NameBuf[100];
+    int i;
+    int ID;
+    int ProgramCount = RdosGetProgramCount();
+    
+    for (i = 0; i < ProgramCount; i++)
+    {
+        if (RdosGetProgramInfo(i, &ID, NameBuf, 100))
+        {
+            sprintf(str, "%04hX ", ID);
+            Write(str);
+            Write(NameBuf);
+            Write("\r\n");
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TStateCommand::Execute
 #
 #   Purpose....: Execute command
@@ -322,7 +379,6 @@ int TStateCommand::Execute(char *param)
     int i;
     ThreadActionState state;
     short int ID;
-    int ThreadCount = RdosGetThreadCount();
     TArg *arg;
 
     InitOptions();
@@ -335,15 +391,18 @@ int TStateCommand::Execute(char *param)
 
     if (FArgCount == 0)
     {
-        for (i = 0; i < ThreadCount; i++)
-            if (RdosGetThreadActionState(i, &state))
-                WriteOne(&state);
+        if (FOptT)
+            WriteThreads();
+        else
+            WritePrograms();
                         
         return 0;
     }
     else
     {
-        arg = FArgList;
+         int ThreadCount = RdosGetThreadCount();
+
+         arg = FArgList;
 
         while (arg)
         {

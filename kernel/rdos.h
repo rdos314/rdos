@@ -505,6 +505,9 @@ int RDOSAPI RdosSuspendAndSignalThread(int Thread);
 void RDOSAPI RdosMoveToCore(int Core);
 void RDOSAPI RdosMoveThreadToCore(int Core, int ThreadNr);
 
+int RDOSAPI RdosGetProgramCount();
+int RDOSAPI RdosGetProgramInfo(int Index, int *ID, char *NameBuf, int NameSize);
+
 int RDOSAPI RdosGetImageHeader(int Adapter, int Entry, TRdosObjectHeader *Header);
 int RDOSAPI RdosGetImageData(int Adapter, int Entry, void *Buf);
 int RDOSAPI RdosGetDeviceInfo(int CodeSel, char *Name, unsigned int *CodeSize, unsigned short int *DataSel, unsigned int *DataSize);

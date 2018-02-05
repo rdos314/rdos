@@ -93,7 +93,9 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn IndexToHandle:near
     extrn MoveThread:near
     extrn ProcessCreated:near
+    extrn GetActiveProcesses:near
     extrn GetProcessSel:near
+    extrn GetProcessID:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3774,6 +3776,104 @@ get_exit_code   Proc far
 get_exit_code   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetProgramCount
+;
+;           DESCRIPTION:    Get number of programs
+;
+;           RETURNS:        AX          Program count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_program_count_name DB 'Get Program Count',0
+    
+get_program_count   Proc far
+    call GetActiveProcesses
+    clc
+    ret
+get_program_count   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetProgramInfo
+;
+;           DESCRIPTION:    Get program info
+;
+;           PARAMETERS:     AX          Program #
+;                           ES:(E)DI    Name buffer
+;                           (E)CX       Size of buffer
+;
+;           RETURNS:        DX          process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_program_info_name DB 'Get Program Info',0
+    
+get_program_info    Proc near
+    push ds
+    push ebx
+    push esi
+    push edi
+;
+    call GetProcessID
+    or eax,eax
+    stc
+    jz gpiDone
+;
+    mov edx,eax
+    mov ebx,eax
+    call GetProcessSel
+    or eax,eax
+    stc
+    jz gpiDone
+;
+    mov ds,eax
+    mov ds,ds:pr_name_sel
+    xor esi,esi
+
+gpiCopy:
+    lodsb
+    stosb
+    or al,al
+    jz gpiOk
+;
+    loop gpiCopy
+;
+    xor al,al
+    mov es:[edi-1],al
+
+gpiOk:
+    clc
+
+gpiDone:
+    pop edi
+    pop esi
+    pop ebx
+    pop ds
+    ret
+get_program_info    Endp
+
+get_program_info16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call get_program_info
+;
+    pop edi
+    pop ecx
+    ret
+get_program_info16   Endp
+
+get_program_info32   Proc far
+    call get_program_info
+    ret
+get_program_info32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           run_process
@@ -4278,6 +4378,19 @@ init_state_hooks:
     xor dx,dx
     mov ax,continue_debug_event_nr
     RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_program_count
+    mov edi,OFFSET get_program_count_name
+    xor dx,dx
+    mov ax,get_program_count_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_program_info16
+    mov esi,OFFSET get_program_info32
+    mov edi,OFFSET get_program_info_name
+    mov dx,virt_es_in
+    mov ax,get_program_info_nr
+    RegisterUserGate
 ;
     popad
     pop es

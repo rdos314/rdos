@@ -375,6 +375,17 @@ int __far ImplGetActiveCores()
 {
     return ActiveProcessors;
 }
+    
+/*##########################################################################
+#
+#   Name       : GetActiveProcesses
+#
+##########################################################################*/
+#pragma aux GetActiveProcesses "*" rdosdev parm routine
+int GetActiveProcesses()
+{
+    return ActiveProcesses;
+}
         
 /*##########################################################################
 #
@@ -503,6 +514,29 @@ int GetProcessSel(int ID)
     RdosLeaveKernelSection(&ThreadSection);    
 
     return sel;
+}
+    
+/*##########################################################################
+#
+#   Name       : GetProcessID
+#
+#   Descr      : Get process ID byte index
+#
+##########################################################################*/
+#pragma aux GetProcessID "*" rdosdev parm routine [eax] value [eax]
+int GetProcessID(int Index)
+{
+    int ID = 0;
+
+    RdosEnterKernelSection(&ThreadSection);
+
+    if (Index >= 0 && Index < ActiveProcesses)
+        if (ProcessArr[Index].Valid)
+            ID = ProcessArr[Index].ID;
+
+    RdosLeaveKernelSection(&ThreadSection);    
+
+    return ID;
 }
     
 /*##########################################################################
