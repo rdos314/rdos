@@ -4166,7 +4166,7 @@ free_thread     Endp
 ;
 ;           DESCRIPTION:    Spawn callback
 ;
-;           PARAMETERS:         GS          spawn selector
+;           PARAMETERS:     DX     Debug lib
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4176,7 +4176,6 @@ debug_startup   DB 'DebugStartup',0
 spawn_proc      Proc far
     GetThread
     mov ds,ax
-    mov dx,gs:s_param
     or dx,dx
     jz spawn_debug_hook_ok
 ;
@@ -4190,17 +4189,6 @@ spawn_debug_hook_ok:
     mov ax,flat_data_sel
     mov ds,ax
     mov fs,[bp].load_fs
-;
-    xor edx,edx
-    mov ax,word ptr gs:s_loader_name
-    cmp ax,OFFSET pe_loader_name
-    jne spawn_param_ok
-;
-    mov ax,cs
-    cmp ax,word ptr gs:s_loader_name+2
-    jne spawn_param_ok
-;       
-    mov dx,gs:s_param
     
 spawn_param_ok:
     mov es:lib_debug_lib,dx
