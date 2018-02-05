@@ -2020,15 +2020,6 @@ AppNotifyTerminate     MACRO
     OsGate app_notify_terminate_nr
                     ENDM
 
-;       ES:EDI       HANDLER ADDRESS
-HookLoadExe     MACRO
-    OsGate hook_load_exe_nr
-                    ENDM
-
-Exec     MACRO
-    OsGate exec_nr
-                    ENDM
-
 InitSystemApp MACRO
     OsGate init_system_app_nr
                     ENDM

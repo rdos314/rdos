@@ -894,8 +894,8 @@ init_dos_exec   PROC near
     mov ax,load_dos_exe_nr
     RegisterOsGate
 ;
-    mov edi,OFFSET load_dos_exe
-    HookLoadExe
+;    mov edi,OFFSET load_dos_exe
+;    HookLoadExe
 ;
     pop ds
     popa

@@ -79,10 +79,8 @@ debug_event_wait_header ENDS
 data    SEGMENT byte public 'DATA'
 
 state_hooks         DW ?
-load_exe_hooks      DW ?
 loader_count        DW ?
 state_arr           DD 2*32 DUP(?)
-load_exe_arr        DD 2*16 DUP(?)
 loader_arr          DW 16 DUP(?)
 
 data    ENDS
@@ -2661,104 +2659,6 @@ register_loader   PROC far
     pop ds
     ret
 register_loader   ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           HOOK_LOAD_EXE
-;
-;           DESCRIPTION:    Add hook for LoadExe
-;
-;           PARAMETERS:     ES:EDI       Callback
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_load_exe_name      DB 'Hook Load Exe',0
-
-hook_load_exe   PROC far
-    push ds
-    push ax
-    push ebx
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,ds:load_exe_hooks
-    movzx ebx,ax
-    shl ebx,3
-    add ebx,OFFSET load_exe_arr
-    mov [ebx],edi
-    mov [ebx+4],es
-    inc ax
-    mov ds:load_exe_hooks,ax
-;
-    pop ebx
-    pop ax
-    pop ds
-    ret
-hook_load_exe   ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LOAD_EXE
-;
-;           DESCRIPTION:    Load executable file
-;
-;           PARAMETERS:     BX      C file handle
-;                           DS:ESI  File name
-;                           ES:EDI  Command line
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-load_exe_name      DB 'Load Exe',0
-
-load_exe   PROC far
-    push gs
-    mov ax,SEG data
-    mov fs,ax
-    movzx ecx,fs:load_exe_hooks
-    or ecx,ecx
-    stc
-    je load_exe_file_done
-;
-    mov eax,OFFSET load_exe_arr
-
-load_exe_file_loop:
-    push fs
-    push eax
-    push ecx
-;
-    xor ecx,ecx
-    mov cx,cs
-    push ecx
-    mov ecx,OFFSET load_exe_file_ret
-    push ecx
-;    
-    push ebx
-    movzx ebx,ax
-    mov eax,fs:[ebx]
-    mov ecx,fs:[ebx+4]
-    pop ebx
-;
-    push ecx
-    push eax
-    ret
-
-load_exe_file_ret:
-    pop ecx
-    pop eax
-    pop fs
-    jnc load_exe_file_done
-;
-    add eax,8
-    loop load_exe_file_loop
-;
-    stc
-
-load_exe_file_done:
-    pop gs
-    ret
-load_exe   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4038,7 +3938,6 @@ InitScheduler_    Proc near
     mov bx,SEG data
     mov es,ebx
     mov es:state_hooks,0
-    mov es:load_exe_hooks,0
     mov es:loader_count,0
 ;
     mov ecx,32
@@ -4070,18 +3969,6 @@ init_state_hooks:
     mov edi,OFFSET start_programs_name
     xor cl,cl
     mov ax,start_programs_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET hook_load_exe
-    mov edi,OFFSET hook_load_exe_name
-    xor cl,cl
-    mov ax,hook_load_exe_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET load_exe
-    mov edi,OFFSET load_exe_name
-    xor cl,cl
-    mov ax,exec_nr
     RegisterOsGate
 ;
     mov esi,OFFSET hook_state

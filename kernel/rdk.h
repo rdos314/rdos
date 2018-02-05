@@ -178,7 +178,6 @@
 #define osgate_register_dos_device 173
 #define osgate_check_dos_device 174
 
-#define osgate_hook_load_exe 179
 #define osgate_hook_enable_focus 182
 #define osgate_get_focus_thread 185
 #define osgate_get_thread_focus_key 186
@@ -235,7 +234,6 @@
 #define osgate_cache_dir 240
 #define osgate_insert_dir_entry 241
 #define osgate_insert_file_entry 242
-#define osgate_hook_file_system_started 243
 #define osgate_set_disc_use32 244
 
 #define osgate_get_file_info 247
@@ -727,6 +725,9 @@
 
 #define osgate_create_pid 631
 
+#define osgate_start_programs 633
+#define osgate_register_loader 634
+
 
 
 
@@ -909,7 +910,6 @@
 #define OsGate_register_dos_device 0x3E 0x67 0x9a 173 0 0 0 2 0
 #define OsGate_check_dos_device 0x3E 0x67 0x9a 174 0 0 0 2 0
 
-#define OsGate_hook_load_exe 0x3E 0x67 0x9a 179 0 0 0 2 0
 #define OsGate_hook_enable_focus 0x3E 0x67 0x9a 182 0 0 0 2 0
 #define OsGate_get_focus_thread 0x3E 0x67 0x9a 185 0 0 0 2 0
 #define OsGate_get_thread_focus_key 0x3E 0x67 0x9a 186 0 0 0 2 0
@@ -966,7 +966,6 @@
 #define OsGate_cache_dir 0x3E 0x67 0x9a 240 0 0 0 2 0
 #define OsGate_insert_dir_entry 0x3E 0x67 0x9a 241 0 0 0 2 0
 #define OsGate_insert_file_entry 0x3E 0x67 0x9a 242 0 0 0 2 0
-#define OsGate_hook_file_system_started 0x3E 0x67 0x9a 243 0 0 0 2 0
 #define OsGate_set_disc_use32 0x3E 0x67 0x9a 244 0 0 0 2 0
 
 #define OsGate_get_file_info 0x3E 0x67 0x9a 247 0 0 0 2 0
@@ -1457,4 +1456,7 @@
 #define OsGate_log_big_mem 0x3E 0x67 0x9a 118 2 0 0 2 0
 
 #define OsGate_create_pid 0x3E 0x67 0x9a 119 2 0 0 2 0
+
+#define OsGate_start_programs 0x3E 0x67 0x9a 121 2 0 0 2 0
+#define OsGate_register_loader 0x3E 0x67 0x9a 122 2 0 0 2 0
 

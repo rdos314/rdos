@@ -154,8 +154,6 @@ InsertApp	Proc near
 ;	mov word ptr ds:app_init_thread_proc+2,cs
 ;	mov word ptr ds:app_free_thread_proc,OFFSET free_thread
 ;	mov word ptr ds:app_free_thread_proc+2,cs
-;	mov word ptr ds:app_spawn_proc,OFFSET spawn_proc
-;	mov word ptr ds:app_spawn_proc+2,cs
 ;	mov word ptr ds:app_close_proc,OFFSET close_proc
 ;	mov word ptr ds:app_close_proc+2,cs
 ;
@@ -1238,9 +1236,6 @@ init	PROC far
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov edi,OFFSET load_elf
-    HookLoadExe
 ;
     popa
     pop es

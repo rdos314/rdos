@@ -1354,8 +1354,6 @@ InsertApp       Proc near
     mov ds:app_init_thread_proc+4,cs
     mov ds:app_free_thread_proc,OFFSET free_thread
     mov ds:app_free_thread_proc+4,cs
-    mov ds:app_spawn_proc,OFFSET spawn_proc
-    mov ds:app_spawn_proc+4,cs
     mov ds:app_fork_proc,OFFSET fork_proc
     mov ds:app_fork_proc+4,cs
     mov ds:app_close_proc,OFFSET close_proc
@@ -3409,165 +3407,6 @@ RunImage    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           load_pe
-;
-;           DESCRIPTION:    Load portable executable file
-;
-;           PARAMETERS:     BX      C file handle
-;                           DS:ESI  File name
-;                           ES:EDI  Command line
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-load_pe Proc far
-    push ds
-    push es
-    push fs
-    push edx
-    push esi
-    push edi
-;
-    push ax
-    mov ax,ds
-    mov fs,ax
-    mov ax,flat_data_sel
-    mov ds,ax
-;
-    xor edx,edx
-    mov eax,40h
-    AllocateSmallGlobalMem
-    mov ecx,eax
-    xor edi,edi
-    ReadCFile
-    jc load_pe_fail
-;
-    cmp ax,40h
-    jne load_pe_fail
-;
-    mov ax,es:exeh_signature
-    cmp ax,5A4Dh
-    jne load_pe_fail
-;
-    mov ax,es:exeh_reloc_offs
-    cmp ax,40h
-    jne load_pe_fail
-;
-    mov ax,es:[3Ch]
-    movzx edx,ax
-    mov ecx,40h
-    ReadCFile   
-    jc load_pe_fail
-;
-    mov ax,es:[0]
-    cmp ax,'EP'
-    jne load_pe_fail
-;
-    movzx ecx,cx
-    sub edx,ecx
-;
-    FreeMem
-    call CreateLib
-    SetModule
-;       
-    xor ax,ax
-    mov fs,ax
-;
-    mov al,32
-    SetBitness
-;
-    call CreateImage
-    call InsertApp
-    call InitStack
-    call CreateSections
-    call LoadImportedDlls
-    pop ax
-    call RunImage
-    pop edi
-    pop esi
-    pop edx
-    pop fs
-    pop es
-    pop ds
-;
-    push ds
-    push es
-    push fs
-    push esi
-    push edi
-;
-    GetThread
-    mov fs,ax
-    mov fs,fs:p_app_sel
-;
-    xor ecx,ecx
-    push edi
-
-load_pe_cmd_size:
-    mov al,es:[edi]
-    inc edi
-    inc ecx
-    or al,al
-    jnz load_pe_cmd_size
-;
-    pop edi
-    xor ebx,ebx
-    push esi
-
-load_pe_name_size:
-    mov al,[esi]
-    inc esi
-    inc ebx
-    or al,al
-    jnz load_pe_name_size
-;
-    pop esi
-;
-    mov eax,ecx
-    add eax,ebx
-    AllocateAppMem
-    mov fs:app_cmd_line,edx
-;
-    push es
-    push ecx
-    push edi
-    mov ax,flat_data_sel
-    mov es,ax
-    mov edi,edx
-    mov ecx,ebx
-    rep movs byte ptr es:[edi],ds:[esi]
-    mov edx,edi
-    pop edi
-    pop ecx
-    pop es  
-;
-    mov esi,edi
-    mov edi,edx
-    mov ax,es
-    mov ds,ax
-    mov ax,flat_data_sel
-    mov es,ax
-    mov byte ptr es:[edi-1],' '
-    rep movs byte ptr es:[edi],ds:[esi]
-    clc
-    jmp load_pe_done
-
-load_pe_fail:
-    pop ax
-    FreeMem
-    stc
-
-load_pe_done:
-    pop edi
-    pop esi
-    pop fs
-    pop es
-    pop ds
-    ret
-load_pe Endp
-                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           is_valid_exe
 ;
 ;           DESCRIPTION:    Check for valid exe
@@ -4211,93 +4050,6 @@ free_thread_no_tls:
     FreeMem
     ret
 free_thread     Endp
-
-                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           spawn_proc
-;
-;           DESCRIPTION:    Spawn callback
-;
-;           PARAMETERS:     DX     Debug lib
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-kernel_dll          DB 'kernel32.dll',0
-debug_startup   DB 'DebugStartup',0
-
-spawn_proc      Proc far
-    GetThread
-    mov ds,ax
-    or dx,dx
-    jz spawn_debug_hook_ok
-;
-    call AllocateKernelEvent
-    mov word ptr ds:p_debug_proc,OFFSET NotifyKernelDebug
-    mov word ptr ds:p_debug_proc+2,cs
-
-spawn_debug_hook_ok:    
-    mov ds,ds:p_app_sel
-    mov es,ds:app_mod_sel
-    mov ax,flat_data_sel
-    mov ds,ax
-    mov fs,[bp].load_fs
-    
-spawn_param_ok:
-    mov es:lib_debug_lib,dx
-    mov es:lib_suppress,1
-    mov es:lib_init_param,dx
-    mov edi,es:lib_base
-    mov es:lib_run_now,1
-    call StartImportedDlls
-    call Preload
-;
-    mov dx,es:lib_debug_lib
-    or dx,dx
-    jz spawn_no_debug
-;
-    push ds
-    push es
-    mov ax,es
-    mov ds,ax
-    call CreateProcessEvent
-    call SendEvent
-    pop es
-    pop ds
-    call NotifyImportedDlls
-;
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET kernel_dll
-    GetModule
-    jc spawn_wd_debug
-;
-    mov edi,OFFSET debug_startup
-    GetModuleProc
-    jc spawn_wd_debug
-;
-    xchg esi,[bp].load_eip
-    mov eax,[bp].load_esp
-    mov ds,[bp].load_ss
-    sub eax,4
-    mov [eax],esi
-    mov [bp].load_esp,eax
-    ret
-
-spawn_wd_debug: 
-    push es
-    mov ax,flat_data_sel
-    mov es,ax
-    mov esi,[bp].load_eip
-    mov esi,es:[esi-4]
-    mov [bp].load_eip,esi
-    pop es
-
-spawn_no_debug:
-    ret
-spawn_proc      Endp
-
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6447,9 +6199,6 @@ init    PROC far
 ;
     mov edi,OFFSET start_thread
     HookCreateThread
-;
-    mov edi,OFFSET load_pe
-    HookLoadExe
 ;
     mov edi,OFFSET app_activity_table
     HookAppActivity
