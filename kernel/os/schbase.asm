@@ -2763,6 +2763,101 @@ load_exe   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           OpenProgramFile
+;
+;       DESCRIPTION:    Open program file
+;
+;       PARAMETERS:     DS:ESI  File name
+;
+;       RETURNS:        BX      File handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenProgramFile Proc near    
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov eax,ds
+    mov es,eax
+    mov edi,esi
+    mov cx,O_RDONLY OR O_BINARY
+    OpenKernelFile
+    jnc opfDone
+;
+    int 3
+
+opfDone:
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+OpenProgramFile Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetProgramLoader
+;
+;       DESCRIPTION:    Get program loader
+;
+;       PARAMETERS:     DS:ESI  File name
+;
+;       RETURNS:        AX      Loader
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetProgramLoader Proc near
+    push ds
+    push es
+    push fs
+    push ecx
+    push esi
+    push edi
+;
+    mov eax,ds
+    mov es,eax
+    mov edi,esi
+;
+    mov ax,SEG data
+    mov fs,ax
+    movzx ecx,fs:loader_count
+    or ecx,ecx
+    je gplFail
+;
+    mov esi,OFFSET loader_arr
+
+gplLoop:
+    mov ds,fs:[esi]
+    call fword ptr ds:loader_is_valid_exe_proc
+    jnc gplOk
+;
+    add esi,2
+    loop gplLoop
+
+gplFail:
+    stc
+    jmp gplDone
+
+gplOk:
+    mov ax,fs:[esi]
+    clc
+
+gplDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop fs
+    pop es
+    pop ds
+    ret
+GetProgramLoader Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AllocateProcess
 ;
 ;       DESCRIPTION:    Allocate process
@@ -3337,54 +3432,21 @@ spawn_program   Proc near
     push esi
     push edi
 ;
-    push es
-    push edi
+    call OpenProgramFile
+    jc spDone
 ;
-    mov eax,ds
-    mov es,eax
-    mov edi,esi
-    mov cx,O_RDONLY OR O_BINARY
-    OpenKernelFile
-;
-    pop edi
-    pop es
-    jnc spFound
-;
-    int 3
-
-spFound:
-    push esi
-;
-    mov ax,SEG data
-    mov gs,ax
-    movzx ecx,gs:loader_count
-    or ecx,ecx
-    je spLoaderFail
-;
-    mov esi,OFFSET loader_arr
-
-spLoaderLoop:
-    push ds
-    mov ds,gs:[esi]
-    call fword ptr ds:loader_is_valid_exe_proc
-    pop ds
+    call GetProgramLoader
     jnc spLoaderOk
 ;
-    add esi,8
-    loop spLoaderLoop
-
-spLoaderFail:
-    pop esi
     CloseCFile
-    jmp spInvalid
+    stc
+    jmp spDone
 
 spLoaderOk:    
-    mov ax,gs:[esi]
     call AllocateProcess
     mov gs:pr_loader,ax
 ;
     mov gs:pr_kernel_file,bx
-    pop esi
 ;
     call CreateProg
 ;
