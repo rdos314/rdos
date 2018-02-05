@@ -219,8 +219,11 @@ create_thread    Proc far
 ;
     movzx ebx,es:p_prog_id
     or ebx,ebx
-    jz ctDone
+    jnz ctAdd
 ;
+    mov ebx,1
+
+ctAdd:
     call AddProgramThread
 
 ctDone:
