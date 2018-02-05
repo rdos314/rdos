@@ -829,8 +829,8 @@ void __far InitTasking()
 ##########################################################################*/
 int main()
 {
-    InitScheduler();
     InitThreadList();
+    InitScheduler();
     RdosHookInitTasking(&InitTasking);
 
     RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");

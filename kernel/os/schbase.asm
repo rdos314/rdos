@@ -4117,6 +4117,7 @@ init_adapter_process    Proc near
     push ax
     push bx
     push edx
+;
     mov ax,flat_sel
     mov ds,ax
     mov es,ax
@@ -4186,11 +4187,14 @@ start_programs    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+system_process_name DB "System", 0
+
     public InitScheduler_
 
 InitScheduler_    Proc near
     push ds
     push es
+    push gs
     pushad
 ;
     mov bx,SEG data
@@ -4206,6 +4210,18 @@ init_state_hooks:
     mov es:[edi+4],cs
     add edi,8
     loop init_state_hooks
+;
+    call AllocateProcess
+    mov eax,7
+    mov ecx,eax
+    AllocateSmallGlobalMem
+    mov esi,OFFSET system_process_name
+    xor edi,edi
+    rep movs byte ptr es:[edi],cs:[esi]
+    mov gs:pr_name_sel,es
+;
+    mov ebx,gs
+    call ProcessCreated
 ;    
     mov ax,cs
     mov ds,ax
@@ -4558,6 +4574,7 @@ init_state_hooks:
     RegisterUserGate
 ;
     popad
+    pop gs
     pop es
     pop ds
     ret
