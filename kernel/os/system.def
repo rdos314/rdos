@@ -391,6 +391,7 @@ app_delete_section_proc     DD ?,?
 app_enter_section_proc      DD ?,?
 app_leave_section_proc      DD ?,?
 
+app_prog_id                 DW ?
 app_exit_code               DW ?
 app_fork_id                 DW ?
 app_unload_proc             DW ?

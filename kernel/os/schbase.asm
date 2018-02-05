@@ -3414,6 +3414,12 @@ spEnvDone:
     mov ebx,gs
     call ProcessCreated
     mov ebx,eax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds:app_prog_id,bx
+;
     ClearSignal
 ;
     mov es,gs:pr_name_sel
@@ -3576,6 +3582,11 @@ lpNoEnv:
 lpEnvDone:
     mov ebx,gs
     call ProcessCreated
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds:app_prog_id,bx
 ;
     push gs
     ExecApp
@@ -3922,6 +3933,11 @@ rpLoaderOk:
     mov ebx,gs
     call ProcessCreated
     mov ebx,eax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds:app_prog_id,bx
 ;
     mov es,gs:pr_name_sel
     xor edi,edi
