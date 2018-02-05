@@ -2906,14 +2906,6 @@ apDebugOk:
     mov gs:pr_switch,al
 
 apFocusDone:
-    GetThread
-    mov gs:pr_parent_thread,ax
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov gs:pr_parent_app_sel,ds
-    mov eax,ds:app_loader_name
-    mov gs:pr_loader_name,eax
-;
     popad
     pop ds
     ret
@@ -3311,15 +3303,26 @@ spawn_startup:
     push eax
     push eax
 ;
+
     GetThread
     mov es,ax
     mov es,es:p_app_sel
     mov es:app_context,bx
     mov es:app_unload_proc,OFFSET spUnload
 ;
+    mov ax,gs:pr_parent_app_sel
+    or ax,ax
+    jnz ssSpawn
+
+ssStart:
+    AppNotifyStart
+    jmp ssNotifyOk
+
+ssSpawn:
     mov ds,gs:pr_parent_app_sel
     AppNotifySpawn
-;
+
+ssNotifyOk:
     mov ax,3Bh
     EnableFocus
     SetFocus
@@ -3448,6 +3451,16 @@ spLoaderOk:
     call AllocateProcess
     mov gs:pr_loader,ax
     mov gs:pr_kernel_file,bx
+;
+    push ds
+    GetThread
+    mov gs:pr_parent_thread,ax
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov gs:pr_parent_app_sel,ds
+    mov eax,ds:app_loader_name
+    mov gs:pr_loader_name,eax
+    pop ds
 ;
     call CreateProg
 ;
@@ -3735,6 +3748,10 @@ rpLoaderOk:
     mov gs:pr_kernel_file,bx
     mov gs:pr_loader,ax
 ;
+    GetThread
+    mov gs:pr_parent_thread,ax
+    mov gs:pr_parent_app_sel,0
+;
     call CreateProg
     call CreateNoParam
     call CreateDefaultStartDir
@@ -3748,12 +3765,15 @@ rpLoaderOk:
     xor edi,edi
     mov ax,cs
     mov ds,ax
-    mov esi,OFFSET load_process
+    mov esi,OFFSET spawn_startup
     mov ax,2
     mov ecx,stack0_size
     CreateProcess
 ;
     WaitForSignal
+;
+    mov ax,25
+    WaitMilliSec
 
 rpFail:
     popad
