@@ -3584,6 +3584,223 @@ spawn_program32 Proc far
 spawn_program32 Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           load_program16/32
+;
+;       DESCRIPTION:    Load executable file
+;
+;       PARAMETERS:     DS:(E)SI    Filename
+;                       ES:(E)DI    Parameters
+;                           +0  command line
+;                           +8  startdir
+;                           +12 env
+;
+;       RETURN VALUE:   
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_program_name   DB 'Load Program',0
+
+load_program   Proc near
+    push ds
+    push es
+    push gs
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    call OpenProgramFile
+    jc lpFail
+;
+    call GetProgramLoader
+    jnc lpLoaderOk
+;
+    CloseCFile
+    jmp lpFail
+
+lpLoaderOk:    
+    call AllocateProcess
+    mov gs:pr_loader,ax
+    mov gs:pr_kernel_file,bx
+;
+    call CreateProg
+;
+    mov eax,es:[edi].lp_param_sel
+    or ax,3
+    verr ax
+    stc
+    jnz lpNoParam
+;
+    mov ds,ax
+    mov esi,es:[edi].lp_param_offs
+    call CreateParam
+    jmp lpParamDone
+
+lpNoParam:
+    call CreateNoParam
+
+lpParamDone:
+    mov eax,es:[edi].lp_startdir_sel
+    or ax,3
+    verr ax
+    stc
+    jnz lpNoStartDir
+;
+    mov ds,ax
+    mov esi,es:[edi].lp_startdir_offs
+    call CreateStartDir
+    jmp lpStartDirDone
+
+lpNoStartDir:
+    call CreateDefaultStartDir
+
+lpStartDirDone:
+    mov eax,es:[edi].lp_env_sel
+    or ax,3
+    verr ax
+    stc
+    jnz lpNoEnv
+;
+    mov ds,ax
+    mov esi,es:[edi].lp_env_offs
+    call CreateEnv
+    jmp lpEnvDone
+
+lpNoEnv:
+    call CreateDefaultEnv
+
+lpEnvDone:
+    push gs
+    ExecApp
+    pop gs
+;
+    SaveContext
+    xor eax,eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    mov es:app_context,bx
+;    mov es:app_unload_proc,OFFSET lepRet
+    AppNotifyExec
+;
+    GetThread
+    mov es,ax
+    xor esi,esi
+    mov ds,gs:pr_name_sel
+    mov edi,OFFSET thread_name
+    mov ecx,32
+
+lpThreadNameLoop:
+    lodsb
+    or al,al
+    jz lpThreadNamePad
+;
+    stosb
+    loop lpThreadNameLoop
+
+lpThreadNamePad:
+    or ecx,ecx
+    jz lpThreadNameDone
+;
+    mov al,' '
+    rep stosb
+
+lpThreadNameDone:
+    mov es,es:p_app_sel
+    xor esi,esi
+    mov ds,gs:pr_name_sel
+    mov edi,OFFSET app_exe_name
+
+lpCpExeLoop:
+    lodsb
+    stosb
+    or al,al
+    jne lpCpExeLoop
+;
+    xor bx,bx
+;
+    call SetupStartDir
+    call SetupEnv
+;       
+    mov bx,gs:pr_kernel_file
+    xor esi,esi
+    xor edi,edi
+    mov ds,gs:pr_name_sel
+    mov es,gs:pr_cmd_sel
+;
+    push gs
+    mov gs,gs:pr_loader
+    call fword ptr gs:loader_load_exe_proc
+    pop gs
+    jc lpLoadFail
+;
+    mov gs:el_ret_code,0
+;
+    test byte ptr [bp+2].load_eflags,2
+    jnz lpVm16
+;
+    mov ds,[bp].load_ds
+    mov es,[bp].load_es
+    mov fs,[bp].load_fs
+    mov gs,[bp].load_gs
+
+lpVm16:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+lpLoadFail:
+    int 3
+
+lpFail:
+    stc
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop gs
+    pop es
+    pop ds
+    ret
+load_program    Endp
+    
+load_program16 Proc far
+    push ebx
+    push esi
+    push edi
+;
+    movzx esi,si
+    movzx edi,di
+    movzx ebx,bx
+    call load_program
+;
+    pop edi
+    pop esi
+    pop ebx
+    retf32
+load_program16  Endp
+    
+load_program32 Proc far
+    call load_program
+    retf32
+load_program32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           run_process
@@ -3933,6 +4150,13 @@ init_state_hooks:
     xor dx,dx
     mov ax,move_thread_to_core_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET load_program16
+    mov esi,OFFSET load_program32
+    mov edi,OFFSET load_program_name
+    mov dx,virt_ds_in OR virt_es_in
+    mov ax,load_exe_nr
+    RegisterUserGate
 ;
     mov ebx,OFFSET spawn_program16
     mov esi,OFFSET spawn_program32

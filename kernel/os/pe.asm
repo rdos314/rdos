@@ -4454,6 +4454,9 @@ fork_wait_child:
     jmp fork_wait_child
     
 fork_child_completed:
+    mov ax,100
+    WaitMilliSec
+;
     pop es
     pop ebx
     pop ebx
