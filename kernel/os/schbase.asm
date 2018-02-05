@@ -42,6 +42,8 @@ INCLUDE chandle.inc
 
     .686p
 
+MAX_PROCESS_THREADS  = 256
+
 process_struc    STRUC
 
 pr_loader            DW ?
@@ -57,7 +59,12 @@ pr_app_sel           DW ?
 pr_parent_app_sel    DW ?
 pr_proc_sel          DW ?
 pr_loader_name       DD ?
-pr_switch            DB ?
+pr_switch            DB ?,?
+
+pr_section           section_typ <>
+
+pr_thread_count      DW ?
+pr_thread_arr        DW MAX_PROCESS_THREADS DUP(?)
 
 process_struc    ENDS
 
@@ -100,6 +107,54 @@ _TEXT    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddProgramThread
+;
+;           DESCRIPTION:    Add thread to program
+;
+;           PARAMETERS:     ES      Thread
+;                           BX      Program ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddProgramThread    Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+;
+    call GetProcessSel
+    or eax,eax
+    jz aptDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    movzx ecx,ds:pr_thread_count
+    cmp ecx,MAX_PROCESS_THREADS
+    jae aptLeave
+;
+    mov ebx,ecx
+    shl ebx,1
+    inc ecx
+    mov ds:pr_thread_count,cx
+;
+    mov ax,es:p_id
+    mov ds:[ebx].pr_thread_arr,ax
+    
+aptLeave:
+    LeaveSection ds:pr_section
+            
+aptDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+AddProgramThread    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetThreadCount
 ;
 ;           DESCRIPTION:    Get thread count
@@ -137,6 +192,7 @@ create_pid    Proc far
     ret
 create_pid    Endp
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -161,6 +217,13 @@ create_thread    Proc far
     movzx ecx,es:p_prio
     call ThreadCreated
 ;
+    movzx ebx,es:p_prog_id
+    or ebx,ebx
+    jz ctDone
+;
+    call AddProgramThread
+
+ctDone:
     popad
     pop es    
     ret
@@ -2790,6 +2853,8 @@ AllocateProcess Proc near
     mov gs:pr_thread,0
     mov gs:pr_proc_sel,0
     mov gs:pr_switch,0
+    mov gs:pr_thread_count,0
+    InitSection gs:pr_section
 ;
     mov bx,dx
     DerefModuleHandle
@@ -3192,6 +3257,11 @@ SetupEnv   Endp
 
 spawn_startup:
     sti
+    GetThread
+    mov es,ax
+    mov es:p_prog_id,bx
+    call AddProgramThread
+;
     call GetProcessSel
     mov gs,eax
 ;
@@ -3205,7 +3275,6 @@ spawn_startup:
     push eax
     push eax
 ;
-
     GetThread
     mov es,ax
     mov es,es:p_app_sel
@@ -3414,12 +3483,6 @@ spEnvDone:
     mov ebx,gs
     call ProcessCreated
     mov ebx,eax
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_prog_id,bx
-;
     ClearSignal
 ;
     mov es,gs:pr_name_sel
@@ -3584,9 +3647,9 @@ lpEnvDone:
     call ProcessCreated
 ;
     GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_prog_id,bx
+    mov es,ax
+    mov es:p_prog_id,bx
+    call AddProgramThread
 ;
     push gs
     ExecApp
@@ -3933,11 +3996,6 @@ rpLoaderOk:
     mov ebx,gs
     call ProcessCreated
     mov ebx,eax
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_prog_id,bx
 ;
     mov es,gs:pr_name_sel
     xor edi,edi

@@ -135,7 +135,6 @@ run_open_hooks  Proc near
     mov ds:app_fork_id,0
     mov ds:app_handle,0
     mov ds:app_loader,0
-    mov ds:app_prog_id,0
     mov ds:app_init_thread_proc,0
     mov ds:app_init_thread_proc+4,0
     mov ds:app_free_thread_proc,0
@@ -382,9 +381,6 @@ clone_app    PROC far
     mov ax,ds:app_loader
     mov es:app_loader,ax
 ;
-    mov ax,ds:app_prog_id
-    mov es:app_prog_id,ax
-;
     mov eax,ds:app_init_thread_proc
     mov es:app_init_thread_proc,eax
     mov eax,ds:app_init_thread_proc+4
@@ -520,7 +516,6 @@ eaAppClosed:
     mov es,es:p_app_sel
 ;
     mov es:app_loader,0
-    mov es:app_prog_id,0
 ;
     mov es:app_init_thread_proc,0
     mov es:app_init_thread_proc+4,0

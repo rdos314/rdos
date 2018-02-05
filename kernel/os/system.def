@@ -391,7 +391,6 @@ app_delete_section_proc     DD ?,?
 app_enter_section_proc      DD ?,?
 app_leave_section_proc      DD ?,?
 
-app_prog_id                 DW ?
 app_exit_code               DW ?
 app_fork_id                 DW ?
 app_unload_proc             DW ?
@@ -558,6 +557,7 @@ p_kill                      DB ?
 p_is_waiting        DB ?
 p_ref_count                 DW ?
 p_core              DW ?
+p_prog_id           DW ?
 p_wanted_core       DW ?
 p_int_count         DW ?
 
