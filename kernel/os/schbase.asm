@@ -3270,17 +3270,16 @@ spCopyExeLoop:
     pop gs
     jc spCloseFail
 ;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov eax,ds:app_spawn_proc
-    or eax,ds:app_spawn_proc+4
-    jz spNotifyDone
-;
     mov dx,gs:pr_debug_sel
-    call fword ptr ds:app_spawn_proc
+    or dx,dx
+    jz spDebugDone
+;
+    push gs
+    mov gs,gs:pr_loader
+    call fword ptr gs:loader_setup_debug_proc
+    pop gs
 
-spNotifyDone:
+spDebugDone:
     test byte ptr [bp+2].load_eflags,2
     jnz spVm16
 ;

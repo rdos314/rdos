@@ -284,6 +284,9 @@ loader_is_valid_exe_proc       DD ?,?
 ; IN   ES:EDI             Command line
 loader_load_exe_proc           DD ?,?
 
+; IN   DX                 Debug lib sel
+loader_setup_debug_proc        DD ?,?
+
 ; OUT  ES:(E)DI           Name
 loader_get_exe_proc            DD ?,?
 
