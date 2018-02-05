@@ -2884,6 +2884,10 @@ AllocateProcess Proc near
     mov gs:pr_dir_sel,0
     mov gs:pr_env_sel,0
     mov gs:pr_cmd_sel,0
+    mov gs:pr_debug_sel,0
+    mov gs:pr_thread,0
+    mov gs:pr_proc_sel,0
+    mov gs:pr_switch,0
 ;
     mov bx,dx
     DerefModuleHandle
@@ -2903,6 +2907,7 @@ apDebugOk:
 
 apFocusDone:
     GetThread
+    mov gs:pr_parent_thread,ax
     mov ds,ax
     mov ds,ds:p_app_sel
     mov gs:pr_parent_app_sel,ds
@@ -3306,7 +3311,6 @@ spawn_startup:
     push eax
     push eax
 ;
-    push es
     GetThread
     mov es,ax
     mov es,es:p_app_sel
@@ -3321,17 +3325,15 @@ spawn_startup:
     SetFocus
     mov es:app_key,al
 ;
-    xor si,si
+    xor esi,esi
     mov ds,gs:pr_name_sel    
-    mov di,OFFSET app_exe_name
+    mov edi,OFFSET app_exe_name
 
 spCopyExeLoop:
     lodsb
     stosb
     or al,al
     jne spCopyExeLoop
-;
-    pop ds
 ;
     GetThread
     mov es,ax
@@ -3445,7 +3447,6 @@ spawn_program   Proc near
 spLoaderOk:    
     call AllocateProcess
     mov gs:pr_loader,ax
-;
     mov gs:pr_kernel_file,bx
 ;
     call CreateProg
@@ -3498,11 +3499,7 @@ spEnvDone:
     mov ebx,gs
     call ProcessCreated
     mov ebx,eax
-;
     ClearSignal
-    GetThread
-    mov gs:pr_parent_thread,ax
-    mov gs:pr_thread,0
 ;
     mov es,gs:pr_name_sel
     xor edi,edi
@@ -3585,28 +3582,10 @@ spawn_program32 Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-load_cmd_line   DB 0, 0Dh
-
 load_process:
     call GetProcessSel
-    mov fs,eax
+    mov gs,eax
 ;
-    mov es,fs:pr_name_sel
-    xor edi,edi
-    mov al,es:[edi+1]
-    cmp al,':'
-    jne lpDefaultDrive
-;
-    mov al,es:[edi]
-    sub al,'a'
-    jnc lpSetDrive
-;
-    add al,20h
-
-lpSetDrive:
-    SetCurDrive
-
-lpDefaultDrive:
     SaveContext
     xor eax,eax
     push eax
@@ -3617,40 +3596,44 @@ lpDefaultDrive:
     push eax
     push eax
 ;
-    mov ds,fs:pr_name_sel
-    mov esi,edi
-;
     GetThread
     mov es,ax
     mov es,es:p_app_sel
+    mov es:app_context,bx
     AppNotifyStart
 ;
     mov ax,3Bh
     EnableFocus
     SetFocus
     mov es:app_key,al
-    mov es:app_context,bx
 ;       
+    xor esi,esi
+    mov ds,gs:pr_name_sel    
     mov edi,OFFSET app_exe_name
-    mov ecx,100h
 
-lpNameCopy:
+lpCopyExeLoop:
     lodsb
     stosb
     or al,al
-    jz lpNameDone
+    jne lpCopyExeLoop
 ;
-    loop lpNameCopy
-
-lpNameDone:
-    mov bx,fs:pr_kernel_file
+    call SetupStartDir
+    call SetupEnv
+;
+    mov bx,gs:pr_kernel_file
     xor esi,esi
-    mov eax,cs
-    mov es,eax
-    mov edi,OFFSET load_cmd_line
-    mov fs,fs:pr_loader
-    call fword ptr fs:loader_load_exe_proc
+    xor edi,edi
+    mov ds,gs:pr_name_sel
+    mov es,gs:pr_cmd_sel
+;    
+    push gs
+    mov gs,gs:pr_loader
+    call fword ptr gs:loader_load_exe_proc
+    pop gs
     jc lpCloseFail
+;
+    mov bx,gs:pr_parent_thread
+    Signal
 ;
     test byte ptr [bp+2].load_eflags,2
     jnz lpVm
@@ -3735,80 +3718,42 @@ run_process     PROC near
     push fs
     pushad
 ;
-    mov eax,ds
-    mov es,eax
-    mov edi,edx
-    add edi,SIZE rdos_header
-    mov cx,O_RDONLY OR O_BINARY
-    OpenKernelFile
+    mov esi,edx
+    add esi,SIZE rdos_header
+    call OpenProgramFile
     jc rpFail
 ;
-    mov ax,SEG data
-    mov fs,ax
-    movzx ecx,fs:loader_count
-    or ecx,ecx
-    je rpLoaderFail
-;
-    mov esi,OFFSET loader_arr
-
-rpLoaderLoop:
-    push ds
-    mov ds,fs:[esi]
-    call fword ptr ds:loader_is_valid_exe_proc
-    pop ds
+    call GetProgramLoader
     jnc rpLoaderOk
 ;
-    add esi,8
-    loop rpLoaderLoop
-
-rpLoaderFail:
     CloseCFile
     stc
     jmp rpFail
 
 rpLoaderOk:
-    mov eax,SIZE process_struc
-    AllocateSmallGlobalMem
-    mov es:pr_kernel_file,bx
-    mov ax,fs:[esi]
-    mov es:pr_loader,ax
-    mov ax,es
-    mov fs,ax
+    call AllocateProcess
+    mov gs:pr_kernel_file,bx
+    mov gs:pr_loader,ax
 ;
-    mov ecx,[edx].len
-    sub ecx,SIZE rdos_header
-    add edx,SIZE rdos_header
-    mov esi,edx
-    mov eax,ecx
-    AllocateSmallGlobalMem
-    xor edi,edi
-    rep movs byte ptr es:[edi],ds:[esi]
-    mov fs:pr_name_sel,es
+    call CreateProg
+    call CreateNoParam
+    call CreateDefaultStartDir
+    call CreateDefaultEnv
 ;
-    mov ebx,fs
+    mov ebx,gs
     call ProcessCreated
     mov ebx,eax
-    mov eax,cs
-    mov ds,eax
-    mov esi,OFFSET load_process
+;
+    mov es,gs:pr_name_sel
     xor edi,edi
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET load_process
     mov ax,2
     mov ecx,stack0_size
     CreateProcess
-    jmp run_process_wait
-
-run_process64:
-    mov bx,es
-    mov ax,cs
-    mov ds,ax
-    mov esi,OFFSET load_process64
-    mov ax,202h
-    mov ecx,stack0_size
-    CreateProcess
-
-run_process_wait:    
-    mov ax,100
-    WaitMilliSec
+;
+    WaitForSignal
 
 rpFail:
     popad

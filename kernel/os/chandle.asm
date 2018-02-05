@@ -167,6 +167,10 @@ notify_clone	Proc far
     push es
     pushad
 ;
+    mov ax,ds:app_c_handle_sel
+    or ax,ax
+    jz ncDone
+;
     push es
     mov eax,SIZE handle_struc
     AllocateSmallGlobalMem
@@ -229,7 +233,8 @@ ncNext:
 ;
     pop ds
     mov ds:app_c_handle_sel,es
-;
+
+ncDone:
     popad
     pop es
     pop ds
