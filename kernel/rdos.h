@@ -507,6 +507,7 @@ void RDOSAPI RdosMoveThreadToCore(int Core, int ThreadNr);
 
 int RDOSAPI RdosGetProgramCount();
 int RDOSAPI RdosGetProgramInfo(int Index, int *ID, char *NameBuf, int NameSize);
+int RDOSAPI RdosGetProgramThreads(int Index, unsigned short int *IdArr, int MaxThreads);
 
 int RDOSAPI RdosGetImageHeader(int Adapter, int Entry, TRdosObjectHeader *Header);
 int RDOSAPI RdosGetImageData(int Adapter, int Entry, void *Buf);

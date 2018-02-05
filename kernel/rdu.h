@@ -833,6 +833,7 @@
 
 #define usergate_get_program_count 0x0000028E
 #define usergate_get_program_info 0x0000028F
+#define usergate_get_program_threads 0x00000290
 
 
 
@@ -1672,6 +1673,7 @@
 
 #define CallGate_get_program_count 0x55 0x67 0x9a 142 2 0 0 3 0 0x5d
 #define CallGate_get_program_info 0x55 0x67 0x9a 143 2 0 0 3 0 0x5d
+#define CallGate_get_program_threads 0x55 0x67 0x9a 144 2 0 0 3 0 0x5d
 
 #else
 
@@ -2509,5 +2511,6 @@
 
 #define CallGate_get_program_count 0x3e 0x67 0x9a 142 2 0 0 3 0
 #define CallGate_get_program_info 0x3e 0x67 0x9a 143 2 0 0 3 0
+#define CallGate_get_program_threads 0x3e 0x67 0x9a 144 2 0 0 3 0
 
 #endif

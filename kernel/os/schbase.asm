@@ -3951,6 +3951,87 @@ get_program_info32   Proc far
 get_program_info32   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetProgramThreads
+;
+;           DESCRIPTION:    Get program threads
+;
+;           PARAMETERS:     AX          Program #
+;                           ES:(E)DI    Thread ID buffer (2 bytes per entry)
+;                           (E)CX       Max thread ids
+;
+;           RETURNS:        ECX         Actual threads
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_program_threads_name DB 'Get Program Threads',0
+    
+get_program_threads    Proc near
+    push ds
+    push ebx
+    push edx
+    push esi
+    push edi
+;
+    call GetProcessID
+    or eax,eax
+    stc
+    jz gptDone
+;
+    mov edx,eax
+    mov ebx,eax
+    call GetProcessSel
+    or eax,eax
+    stc
+    jz gptDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    movzx edx,ds:pr_thread_count
+    mov esi,OFFSET pr_thread_arr
+
+gptCopy:
+    or edx,edx
+    jz gptLeave
+;
+    dec edx
+    lodsw
+    stosw
+    loop gptCopy
+
+gptLeave:
+    movzx ecx,ds:pr_thread_count
+    LeaveSection ds:pr_section
+    clc
+
+gptDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop ds
+    ret
+get_program_threads    Endp
+
+get_program_threads16   Proc far
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call get_program_threads
+;
+    pop edi
+    ret
+get_program_threads16   Endp
+
+get_program_threads32   Proc far
+    call get_program_threads
+    ret
+get_program_threads32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           run_process
@@ -4467,6 +4548,13 @@ init_state_hooks:
     mov edi,OFFSET get_program_info_name
     mov dx,virt_es_in
     mov ax,get_program_info_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET get_program_threads16
+    mov esi,OFFSET get_program_threads32
+    mov edi,OFFSET get_program_threads_name
+    mov dx,virt_es_in
+    mov ax,get_program_threads_nr
     RegisterUserGate
 ;
     popad

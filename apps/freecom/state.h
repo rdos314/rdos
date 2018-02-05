@@ -53,11 +53,15 @@ protected:
     void WriteOne(ThreadActionState *state);
     void WriteThreads();
     void WritePrograms();
+    void WriteProgramThreads(int pid);
+    void WriteThreadById(int tid);
 
     int FOptT;
     int FOptS;
     int FOptF;
     int FOptU;
+
+    unsigned short int IdBuf[256];
 };
 
 #endif

@@ -833,5 +833,6 @@ get_audio_codec_version_nr       = 653
 
 get_program_count_nr             = 654
 get_program_info_nr              = 655
+get_program_threads_nr           = 656
 
 usergate_entries                            = 670
