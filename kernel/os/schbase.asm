@@ -3942,6 +3942,92 @@ get_exit_code   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetModuleCount
+;
+;           DESCRIPTION:    Get number of modules
+;
+;           RETURNS:        AX          Module count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_count_name DB 'Get Module Count',0
+    
+get_module_count   Proc far
+    call GetActiveModules
+    clc
+    ret
+get_module_count   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetModuleInfo
+;
+;           DESCRIPTION:    Get module info
+;
+;           PARAMETERS:     AX          Module #
+;                           ES:(E)DI    Name buffer
+;                           (E)CX       Size of buffer
+;
+;           RETURNS:        DX          module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_info_name DB 'Get Module Info',0
+    
+get_module_info    Proc near
+    push ds
+    push ebx
+    push esi
+    push edi
+;
+    call GetModuleID
+    or eax,eax
+    stc
+    jz gmiDone
+;
+    mov edx,eax
+    mov ebx,eax
+    call GetModuleSel
+    or eax,eax
+    stc
+    jz gmiDone
+;
+    mov ds,eax
+    int 3
+
+gmiOk:
+    clc
+
+gmiDone:
+    pop edi
+    pop esi
+    pop ebx
+    pop ds
+    ret
+get_module_info    Endp
+
+get_module_info16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call get_module_info
+;
+    pop edi
+    pop ecx
+    ret
+get_module_info16   Endp
+
+get_module_info32   Proc far
+    call get_module_info
+    ret
+get_module_info32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetProgramCount
 ;
 ;           DESCRIPTION:    Get number of programs
@@ -4639,6 +4725,19 @@ init_state_hooks:
     xor dx,dx
     mov ax,continue_debug_event_nr
     RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_module_count
+    mov edi,OFFSET get_module_count_name
+    xor dx,dx
+    mov ax,get_module_count_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_module_info16
+    mov esi,OFFSET get_module_info32
+    mov edi,OFFSET get_module_info_name
+    mov dx,virt_es_in
+    mov ax,get_module_info_nr
+    RegisterUserGate
 ;
     mov esi,OFFSET get_program_count
     mov edi,OFFSET get_program_count_name

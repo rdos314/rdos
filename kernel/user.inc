@@ -1122,6 +1122,19 @@ GetProgramThreads	MACRO
 	UserGate get_program_threads_nr
 	        ENDM
 
+; OUT  AX           Module count
+GetModuleCount	MACRO
+	UserGate get_module_count_nr
+	        ENDM
+
+; IN   AX           Module #
+; IN   ES:(E)DI     Name buffer
+; IN   (E)CX        Max name size
+; OUT  DX           ID
+GetModuleInfo	MACRO
+	UserGate get_module_info_nr
+	        ENDM
+
 ;;;;;;;;;;;; C Handles ;;;;;;;;;;;;;;;;
 
 ; IN  ES:(E)DI      Name

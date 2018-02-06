@@ -835,4 +835,7 @@ get_program_count_nr             = 654
 get_program_info_nr              = 655
 get_program_threads_nr           = 656
 
+get_module_count_nr              = 657
+get_module_info_nr               = 658
+
 usergate_entries                            = 670

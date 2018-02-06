@@ -1652,6 +1652,25 @@
     CallGate_move_thread_to_core  \
     parm [eax ebx];
 
+#pragma aux RdosGetModuleCount = \
+    CallGate_get_module_count  \
+    "jc fail" \
+    "movzx eax,ax" \
+    "jmp done" \
+    "fail: " \
+    "xor eax,eax" \
+    "done: " \
+    value [eax];
+
+#pragma aux RdosGetModuleInfo = \
+    CallGate_get_module_info  \
+    CarryToBool \
+    "movzx edx,dx" \
+    "mov [esi],edx" \
+    parm [eax] [esi] [edi] [ecx] \
+    modify [edx] \
+    value [eax];
+
 #pragma aux RdosGetProgramCount = \
     CallGate_get_program_count  \
     "jc fail" \

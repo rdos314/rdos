@@ -505,6 +505,9 @@ int RDOSAPI RdosSuspendAndSignalThread(int Thread);
 void RDOSAPI RdosMoveToCore(int Core);
 void RDOSAPI RdosMoveThreadToCore(int Core, int ThreadNr);
 
+int RDOSAPI RdosGetModuleCount();
+int RDOSAPI RdosGetModuleInfo(int Index, int *ID, char *NameBuf, int NameSize);
+
 int RDOSAPI RdosGetProgramCount();
 int RDOSAPI RdosGetProgramInfo(int Index, int *ID, char *NameBuf, int NameSize);
 int RDOSAPI RdosGetProgramThreads(int Index, unsigned short int *IdArr, int MaxThreads);

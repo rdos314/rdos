@@ -103,6 +103,9 @@ int TStateCommand::OptScan(const char *optstr, int ch, int bool, const char *str
         case 'T':
             return OptScanBool(optstr, bool, strarg, &FOptT);
 
+        case 'M':
+            return OptScanBool(optstr, bool, strarg, &FOptM);
+
         case 'S':
             return OptScanBool(optstr, bool, strarg, &FOptS);
 
@@ -131,6 +134,7 @@ int TStateCommand::OptScan(const char *optstr, int ch, int bool, const char *str
 void TStateCommand::InitOptions()
 {
     FOptT = FALSE;
+    FOptM = FALSE;
     FOptS = FALSE;
     FOptF = FALSE;
     FOptU = FALSE;
@@ -334,6 +338,50 @@ void TStateCommand::WriteThreads()
 
 /*##########################################################################
 #
+#   Name       : TStateCommand::WriteOneModule
+#
+#   Purpose....: Write one module
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TStateCommand::WriteOneModule(int mid, const char *Name)
+{
+    char str[40];
+
+    sprintf(str, "%04hX ", mid);
+    Write(str);
+    Write(Name);
+    Write("\r\n");
+}
+
+/*##########################################################################
+#
+#   Name       : TStateCommand::WriteModules
+#
+#   Purpose....: Write modules
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TStateCommand::WriteModules()
+{
+    int i;
+    int id;
+    char buf[256];
+    int ModuleCount = RdosGetModuleCount();
+    
+    for (i = 0; i < ModuleCount; i++)
+        if (RdosGetModuleInfo(i, &id, buf, 256))
+            WriteOneModule(id, buf);
+}
+
+/*##########################################################################
+#
 #   Name       : TStateCommand::WriteThreadById
 #
 #   Purpose....: Write thread by ID
@@ -452,8 +500,14 @@ int TStateCommand::Execute(char *param)
 
     if (FArgCount == 0)
     {
-        if (FOptT)
-            WriteThreads();
+        if (FOptT || FOptM)
+        {
+            if (FOptT)
+                WriteThreads();
+
+            if (FOptM)
+                WriteModules();
+        }
         else
             WritePrograms();
                         

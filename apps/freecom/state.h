@@ -52,10 +52,15 @@ protected:
 
     void WriteOne(ThreadActionState *state);
     void WriteThreads();
+
+    void WriteOneModule(int mid, const char *Name);
+    void WriteModules();
+
     void WritePrograms();
     void WriteProgramThreads(int pid);
     void WriteThreadById(int tid);
 
+    int FOptM;
     int FOptT;
     int FOptS;
     int FOptF;
