@@ -1609,6 +1609,9 @@ set_module      PROC far
     push ebx
     push dx
 ;
+    mov ebx,es
+    call ModuleLoaded
+;
     mov dx,es
     mov cx,SIZE module_handle_seg
     AllocateHandle
@@ -1710,6 +1713,9 @@ create_module   PROC far
     push ax
     push ebx
     push dx
+;
+    mov ebx,es
+    call ModuleLoaded
 ;
     mov ax,es
     mov ds,ax
@@ -3977,6 +3983,7 @@ get_module_info_name DB 'Get Module Info',0
     
 get_module_info    Proc near
     push ds
+    push eax
     push ebx
     push esi
     push edi
@@ -3994,15 +4001,27 @@ get_module_info    Proc near
     jz gmiDone
 ;
     mov ds,eax
-    int 3
+    movzx esi,ds:mod_name_offs
 
-gmiOk:
+gmiCopyLoop:
+    lodsb
+    stosb
+    or al,al
+    jz gmiCopyDone
+;
+    loop gmiCopyLoop
+;
+    xor al,al
+    mov es:[edi-1],al
+
+gmiCopyDone:
     clc
 
 gmiDone:
     pop edi
     pop esi
     pop ebx
+    pop eax
     pop ds
     ret
 get_module_info    Endp
@@ -4063,6 +4082,7 @@ get_program_info_name DB 'Get Program Info',0
     
 get_program_info    Proc near
     push ds
+    push eax
     push ebx
     push esi
     push edi
@@ -4101,6 +4121,7 @@ gpiDone:
     pop edi
     pop esi
     pop ebx
+    pop eax
     pop ds
     ret
 get_program_info    Endp
