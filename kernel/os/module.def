@@ -27,14 +27,15 @@
 
 module_struc    STRUC
 
-mod_base                DD ?
-mod_size                DD ?
+mod_base                DD ?,?
+mod_size                DD ?,?
+mod_sel                 DW ?
 mod_name_offs           DW ?
 
 mod_loader              DW ?
 
 mod_handle              DW ?
-mod_section                         section_typ <>
+mod_section             section_typ <>
 mod_next                DW ?
 mod_list                DW ?
 mod_key                 DB ?

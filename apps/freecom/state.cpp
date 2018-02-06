@@ -350,8 +350,13 @@ void TStateCommand::WriteThreads()
 void TStateCommand::WriteOneModule(int mid, const char *Name)
 {
     char str[50];
-    long Start = RdosGetModuleBase(mid);
-    long End = Start + RdosGetModuleSize(mid) - 1;
+    int iStart;
+    int iSize;
+    int iLow;
+    int iHigh;
+    int Sel = RdosGetModuleSel(mid);
+    long long Start = RdosGetModuleBase(mid);
+    long long Size = RdosGetModuleSize(mid);
 
     sprintf(str, "%04hX ", mid);
     Write(str);
@@ -363,8 +368,25 @@ void TStateCommand::WriteOneModule(int mid, const char *Name)
 
     Write(str);
 
-    sprintf(str, "%08lX-%08lX ", Start, End);
-    Write(str);
+    if (Sel)
+    {
+        iStart = (int)Start;
+        iSize = (int)Size;
+        sprintf(str, "%04hX:%08lX (%08lX) ", Sel, iStart, iSize);
+        Write(str);
+    }
+    else
+    {
+        iHigh = (int)(Start >> 32);
+        iLow = (int)Start;
+        sprintf(str, "%04hX_%08lX ", iHigh, iLow);
+        Write(str);
+
+        iHigh = (int)(Size >> 32);
+        iLow = (int)Size;
+        sprintf(str, "(%04hX_%08lX) ", iHigh, iLow);
+        Write(str);
+    }
     Write("\r\n");
 }
 

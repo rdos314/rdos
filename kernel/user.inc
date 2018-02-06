@@ -51,18 +51,18 @@ LGOP_ALPHA = 13
 ; Segment transfer flags bits
 ;
 
-virt_ds_in		EQU 1
-virt_es_in		EQU 2
-virt_fs_in		EQU 4
-virt_gs_in		EQU 8
+virt_ds_in              EQU 1
+virt_es_in              EQU 2
+virt_fs_in              EQU 4
+virt_gs_in              EQU 8
 ;
-virt_ds_out		EQU 10h
-virt_es_out		EQU 20h
-virt_fs_out		EQU 40h
-virt_gs_out		EQU 80h
+virt_ds_out             EQU 10h
+virt_es_out             EQU 20h
+virt_fs_out             EQU 40h
+virt_gs_out             EQU 80h
 ;
-virt_seg_in		EQU 0Fh
-virt_seg_out	EQU 0F0h
+virt_seg_in             EQU 0Fh
+virt_seg_out    EQU 0F0h
 
 ; interface data-type
 
@@ -94,10 +94,10 @@ ut_dr7              DD ?
 ut_math_control     DD ?
 ut_math_status      DD ?
 ut_math_tag         DD ?
-ut_math_eip		    DD ?
-ut_math_cs	        DW ?
-ut_math_data_offs	DD ?
-ut_math_data_sel	DW ?
+ut_math_eip                 DD ?
+ut_math_cs              DW ?
+ut_math_data_offs       DD ?
+ut_math_data_sel        DW ?
 ut_st0              DT ?
 ut_st1              DT ?
 ut_st2              DT ?
@@ -110,21 +110,21 @@ ut_st7              DT ?
 user_tss_struc  ENDS
 
 
-UserGate16	MACRO gate_nr
+UserGate16      MACRO gate_nr
     db 67h
     db 66h
     db 9Ah
     dd gate_nr
     dw 1
-			ENDM
+                        ENDM
 
-UserGate32	MACRO gate_nr
+UserGate32      MACRO gate_nr
     db 3Eh
     db 67h
     db 9Ah
     dd gate_nr
     dw 3
-			ENDM
+                        ENDM
 
 UserGate64    MACRO gate_nr
     push r15
@@ -139,14 +139,14 @@ UserGateForce32 MACRO gate_nr
     db 9Ah
     dd gate_nr
     dw 3
-			ENDM
+                        ENDM
 
-UserGateApp	MACRO gate_nr
+UserGateApp     MACRO gate_nr
     db 67h
     db 9Ah
     dd gate_nr
     dw 3
-			ENDM
+                        ENDM
 
 UserGate        MACRO gate_nr
 IF (size $) EQ 0FF02h
@@ -158,33 +158,33 @@ ELSE
     UserGate32 gate_nr
   ENDIF
 ENDIF
-			ENDM
-			
+                        ENDM
+                        
 
 ;   NC      Valid
-IsValidUserGate	MACRO
-	UserGate is_valid_UserGate_nr
-				ENDM
+IsValidUserGate MACRO
+        UserGate is_valid_UserGate_nr
+                                ENDM
 
 ;;;;;;;;;;;;;; MEMORY ;;;;;;;;;;;;;;;;;;;
 
-; IN  BX		Entry #
+; IN  BX                Entry #
 ; OUT EAX       Type
-GetPhysicalEntryType	MACRO
-	UserGate get_physical_entry_type_nr
-				ENDM
+GetPhysicalEntryType    MACRO
+        UserGate get_physical_entry_type_nr
+                                ENDM
 
-; IN  BX		Entry #
+; IN  BX                Entry #
 ; OUT EBX:EAX   Base
-GetPhysicalEntryBase	MACRO
-	UserGate get_physical_entry_base_nr
-				ENDM
+GetPhysicalEntryBase    MACRO
+        UserGate get_physical_entry_base_nr
+                                ENDM
 
-; IN  BX		Entry #
+; IN  BX                Entry #
 ; OUT EBX:EAX   Size
-GetPhysicalEntrySize	MACRO
-	UserGate get_physical_entry_size_nr
-				ENDM
+GetPhysicalEntrySize    MACRO
+        UserGate get_physical_entry_size_nr
+                                ENDM
 
 ; NC                Has 64 bit addresses
 HasPhysical64    MACRO
@@ -196,296 +196,296 @@ UsesPae    MACRO
     UserGate uses_pae_nr
                     ENDM
 
-;	EAX		Number of free physical bytes
-GetFreePhysical	MACRO
-	UserGate get_free_physical_nr
-				ENDM
+;       EAX             Number of free physical bytes
+GetFreePhysical MACRO
+        UserGate get_free_physical_nr
+                                ENDM
 
-;	AX		Number of free GDT entries
-GetFreeGdt	MACRO
-	UserGate get_free_gdt_nr
-				ENDM
+;       AX              Number of free GDT entries
+GetFreeGdt      MACRO
+        UserGate get_free_gdt_nr
+                                ENDM
 
-;	EAX	    Number of free bytes
-AvailableBigLinear	MACRO
-	UserGate available_big_linear_nr
-					ENDM
+;       EAX         Number of free bytes
+AvailableBigLinear      MACRO
+        UserGate available_big_linear_nr
+                                        ENDM
 
-;	EAX		Number of free bytes
-AvailableSmallLinear	MACRO
-	UserGate available_small_linear_nr
-					ENDM
+;       EAX             Number of free bytes
+AvailableSmallLinear    MACRO
+        UserGate available_small_linear_nr
+                                        ENDM
 
 ; IN  EAX     Number of bytes
 ; OUT ES      Selector
 AllocateDosMem  MACRO
-	UserGate allocate_dos_mem_nr
-						ENDM
+        UserGate allocate_dos_mem_nr
+                                                ENDM
 
 ; IN  EAX     Number of bytes
 ; OUT ES      Selector
 AllocateLocalMem        MACRO
-	UserGate allocate_local_mem_nr
-						ENDM
+        UserGate allocate_local_mem_nr
+                                                ENDM
 
 ; IN  ES      Selector
 FreeMem MACRO
-	UserGate free_mem_nr
-						ENDM
+        UserGate free_mem_nr
+                                                ENDM
 
 ; OUT EAX     Number of bytes
 AvailableSmallLocalLinear    MACRO
-	UserGate available_small_local_linear_nr
-						ENDM
+        UserGate available_small_local_linear_nr
+                                                ENDM
 
 ; OUT EAX     Number of bytes
 AvailableBigLocalLinear    MACRO
-	UserGate available_big_local_linear_nr
-						ENDM
+        UserGate available_big_local_linear_nr
+                                                ENDM
 
 ; OUT EAX     Number of bytes
 UsedLocalLinear MACRO
-	UserGate used_local_linear_nr
-						ENDM
+        UserGate used_local_linear_nr
+                                                ENDM
 
 ; OUT EAX     Number of bytes
 AvailableVMLinear       MACRO
-	UserGate available_vm_linear_nr
-						ENDM
+        UserGate available_vm_linear_nr
+                                                ENDM
 
 ; OUT EAX     Number of bytes
 UsedVMLinear    MACRO
-	UserGate used_vm_linear_nr
-						ENDM
+        UserGate used_vm_linear_nr
+                                                ENDM
 
 ; OUT AX      Number of free handles
 GetFreeHandles MACRO
-	UserGate get_free_handles_nr
-						ENDM
+        UserGate get_free_handles_nr
+                                                ENDM
 
 ; OUT EAX     Amount of free handle memory
 GetFreeHandleMem MACRO
-	UserGate get_free_handle_mem_nr
-						ENDM
+        UserGate get_free_handle_mem_nr
+                                                ENDM
 
 ;;;;;;;;;;; PAGING ;;;;;;;;;;;;;;
 
-FreeV86	MACRO
-	UserGate free_v86_nr
-					ENDM
+FreeV86 MACRO
+        UserGate free_v86_nr
+                                        ENDM
 
-; IN  EAX     	Size
-; IN  BX		Owner
-; IN  EDX      	Flat offset
+; IN  EAX       Size
+; IN  BX                Owner
+; IN  EDX       Flat offset
 ReservePeMem MACRO
-	UserGate reserve_pe_mem_nr
-						ENDM
+        UserGate reserve_pe_mem_nr
+                                                ENDM
 
-; IN  EAX		New size
-; IN  ECX		Old size
-; IN  EDX		Flat offset
-; OUT EDX		Flat offset
-ResizeFlatLinear	MACRO
-	UserGate resize_flat_linear_nr
-					ENDM
+; IN  EAX               New size
+; IN  ECX               Old size
+; IN  EDX               Flat offset
+; OUT EDX               Flat offset
+ResizeFlatLinear        MACRO
+        UserGate resize_flat_linear_nr
+                                        ENDM
 
-; IN  EAX		Number of bytes
-; IN  EDX		Flat offset
-SetFlatLinearValid	MACRO
-	UserGate set_flat_linear_valid_nr
-					ENDM
+; IN  EAX               Number of bytes
+; IN  EDX               Flat offset
+SetFlatLinearValid      MACRO
+        UserGate set_flat_linear_valid_nr
+                                        ENDM
 
-; IN  EAX		Number of bytes
-; IN  EDX		Flat offset
-SetFlatLinearInvalid	MACRO
-	UserGate set_flat_linear_invalid_nr
-					ENDM
+; IN  EAX               Number of bytes
+; IN  EDX               Flat offset
+SetFlatLinearInvalid    MACRO
+        UserGate set_flat_linear_invalid_nr
+                                        ENDM
 
-; IN  EAX		Number of bytes
-; IN  EDX		Flat offset
-SetFlatLinearRead	MACRO
-	UserGate set_flat_linear_read_nr
-					ENDM
+; IN  EAX               Number of bytes
+; IN  EDX               Flat offset
+SetFlatLinearRead       MACRO
+        UserGate set_flat_linear_read_nr
+                                        ENDM
 
-; IN  EAX		Number of bytes
-;	EDX			Flat offset
-SetFlatLinearReadWrite	MACRO
-	UserGate set_flat_linear_readwrite_nr
-					ENDM
+; IN  EAX               Number of bytes
+;       EDX                     Flat offset
+SetFlatLinearReadWrite  MACRO
+        UserGate set_flat_linear_readwrite_nr
+                                        ENDM
 
 ;;;;;;;;;;;; INTERRUPT & EXCEPTION ;;;;;;;;;;;
 
-; OUT BX:CX		V86 address to use to switch to Prot mode
-; OUT SI:(E)DI	Prot mode address to use to switch to V86.
-GetRawSwitchAds	MACRO
-	UserGate get_raw_switch_ads_nr
-					ENDM
+; OUT BX:CX             V86 address to use to switch to Prot mode
+; OUT SI:(E)DI  Prot mode address to use to switch to V86.
+GetRawSwitchAds MACRO
+        UserGate get_raw_switch_ads_nr
+                                        ENDM
 
-; IN  AX		New DS
-; IN  CX		New ES
-; IN  DX		New SS
-; IN  (E)BX		New (E)SP
-; IN  SI		New CS
-; IN  (E)DI		New (E)IP
+; IN  AX                New DS
+; IN  CX                New ES
+; IN  DX                New SS
+; IN  (E)BX             New (E)SP
+; IN  SI                New CS
+; IN  (E)DI             New (E)IP
 RawSwitchPm       MACRO
-	UserGate raw_switch_pm_nr
-						ENDM
+        UserGate raw_switch_pm_nr
+                                                ENDM
 
-; IN  AX		New DS
-; IN  CX		New ES
-; IN  DX		New SS
-; IN  (E)BX		New (E)SP
-; IN  SI		New CS
-; IN  (E)DI		New (E)IP
+; IN  AX                New DS
+; IN  CX                New ES
+; IN  DX                New SS
+; IN  (E)BX             New (E)SP
+; IN  SI                New CS
+; IN  (E)DI             New (E)IP
 RawSwitchVm       MACRO
-	UserGate raw_switch_vm_nr
-						ENDM
+        UserGate raw_switch_vm_nr
+                                                ENDM
 
 ; IN  AL        Exception #
 ; OUT ES:(E)DI  Exception vector
 GetException      MACRO
-	UserGate get_exception_nr
-						ENDM
+        UserGate get_exception_nr
+                                                ENDM
 
 ; IN  AL        Exception #
 ; IN  ES:(E)DI  Exception vector
 SetException      MACRO
-	UserGate set_exception_nr
-						ENDM
+        UserGate set_exception_nr
+                                                ENDM
 
 ; IN  AL        Int #
-; OUT ES:(E)DI	Int vector
+; OUT ES:(E)DI  Int vector
 GetPMInt    MACRO
-	UserGate get_pm_int_nr
-						ENDM
+        UserGate get_pm_int_nr
+                                                ENDM
 
 ; IN  AL        Int #
 ; IN  ES:(E)DI  Int vector
 SetPMInt    MACRO
-	UserGate set_pm_int_nr
-						ENDM
+        UserGate set_pm_int_nr
+                                                ENDM
 
-; IN  AL		Int #
-; OUT DX:BX		Int vector
-GetVMInt	MACRO
-	UserGate get_vm_int_nr
-					ENDM
+; IN  AL                Int #
+; OUT DX:BX             Int vector
+GetVMInt        MACRO
+        UserGate get_vm_int_nr
+                                        ENDM
 
-; IN  AL		Int #
-; IN  DX:BX		Int vector
-SetVMInt	MACRO
-	UserGate set_vm_int_nr
-					ENDM
+; IN  AL                Int #
+; IN  DX:BX             Int vector
+SetVMInt        MACRO
+        UserGate set_vm_int_nr
+                                        ENDM
 
 ; IN  AL         Int #
 ; IN  CX         Words to copy on stack
 ; IN  DS:(E)SI   Parameters
 ; IN  ES:(E)DI   VM_CALL_STRUC
 DpmiInt   MACRO
-	UserGate dpmi_int_nr
-					ENDM
+        UserGate dpmi_int_nr
+                                        ENDM
 
 ; IN  CX         Words to copy on stack
 ; IN  DS:(E)SI   Parameters
 ; IN  ES:(E)DI   VM_CALL_STRUC
 DpmiCallInt       MACRO
-	UserGate dpmi_call_int_nr
-					ENDM
+        UserGate dpmi_call_int_nr
+                                        ENDM
 
 ; IN  CX          Words to copy on stack
 ; IN  DS:(E)SI    Parameters
 ; IN  ES:(E)DI    VM_CALL_STRUC
 DpmiCall  MACRO
-	UserGate dpmi_call_nr
-					ENDM
+        UserGate dpmi_call_nr
+                                        ENDM
 
 ; IN  DS:(E)SI    Callback procedure
 ; IN  ES:(E)DI    VM_CALL_STRUC
 ; OUT DX:AX       V86 address to call
 AllocateVMCallback      MACRO
-	UserGate allocate_vm_callback_nr
-					ENDM
+        UserGate allocate_vm_callback_nr
+                                        ENDM
 
 ; IN  DX:AX       V86 address to call
 FreeVMCallback  MACRO
-	UserGate free_vm_callback_nr
-					ENDM
+        UserGate free_vm_callback_nr
+                                        ENDM
 
 ;;;;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;
 
 ;  OUT AX       0 = power ok
 ;               1 = power failure
 PowerFailure        MACRO
-	UserGate power_failure_nr
-						ENDM
+        UserGate power_failure_nr
+                                                ENDM
 
 ;  OUT CY       Not emergency stopped
 ;      NC       Emergency stopped
 IsEmergencyStopped        MACRO
-	UserGate is_emergency_stopped_nr
-						ENDM
+        UserGate is_emergency_stopped_nr
+                                                ENDM
 
 SoftReset        MACRO
-	UserGate soft_reset_nr
-						ENDM
+        UserGate soft_reset_nr
+                                                ENDM
 
 HardReset        MACRO
-	UserGate hard_reset_nr
-						ENDM
+        UserGate hard_reset_nr
+                                                ENDM
 
 HasHardReset        MACRO
-	UserGate has_hard_reset_nr
-						ENDM
+        UserGate has_hard_reset_nr
+                                                ENDM
 
 ; OUT AX        Active cores
 GetActiveCores        MACRO
-	UserGate get_active_cores_nr
-						ENDM
+        UserGate get_active_cores_nr
+                                                ENDM
 
 ; IN  AX        Core nr
 ; OUT EDX:EAX   Core tics
 ; OUT ECX:EBX   Null tics
 GetCoreLoad        MACRO
-	UserGate get_core_load_nr
-						ENDM
+        UserGate get_core_load_nr
+                                                ENDM
 
 ; IN  AX        Core nr
 ; OUT EDX:EAX   Core tics
 ; OUT ECX:EBX   Total tics
 GetCoreDuty        MACRO
-	UserGate get_core_duty_nr
-						ENDM
+        UserGate get_core_duty_nr
+                                                ENDM
 
 ; OUT AX         Core nr
 GetCoreId        MACRO
-	UserGate get_core_id_nr
-						ENDM
+        UserGate get_core_id_nr
+                                                ENDM
 
 ; IN AX          Core nr
 MoveToCore        MACRO
-	UserGate move_to_core_nr
-						ENDM
+        UserGate move_to_core_nr
+                                                ENDM
 
 ; IN AX          Core nr
 ; IN BX          Thread #
 MoveThreadToCore        MACRO
-	UserGate move_thread_to_core_nr
-						ENDM
+        UserGate move_thread_to_core_nr
+                                                ENDM
 
 ; IN  AX         Number of milliseconds
 WaitMilliSec        MACRO
-	UserGate wait_milli_nr
-						ENDM
+        UserGate wait_milli_nr
+                                                ENDM
 
 ; IN  AX         Number of microseconds
 WaitMicroSec        MACRO
-	UserGate wait_micro_nr
-						ENDM
+        UserGate wait_micro_nr
+                                                ENDM
 
 ; IN  EDX:EAX    System time to wait until
 WaitUntil       MACRO
-	UserGate wait_until_nr
-						ENDM
+        UserGate wait_until_nr
+                                                ENDM
 
 ; IN  AL         Priority
 ; IN  AH         Mode, 0=PM, 1=VM
@@ -493,8 +493,8 @@ WaitUntil       MACRO
 ; IN  DS:(E)SI   Start address
 ; IN  ES:(E)DI   Thread name
 CreateThread   MACRO
-	UserGate create_thread_nr
-						ENDM
+        UserGate create_thread_nr
+                                                ENDM
 
 ; IN  AL         Priority
 ; IN  RCX        Stack size
@@ -502,253 +502,253 @@ CreateThread   MACRO
 ; IN  RSI        Start address
 ; IN  ES:EDI     Thread name
 CreateLongThread   MACRO
-	UserGate create_long_thread_nr
-						ENDM
+        UserGate create_long_thread_nr
+                                                ENDM
 
 TerminateThread        MACRO
-	UserGate terminate_thread_nr
-						ENDM
+        UserGate terminate_thread_nr
+                                                ENDM
 
-; OUT AX		Thread handle
-GetThread	MACRO
-	UserGate get_thread_nr
-					ENDM
+; OUT AX                Thread handle
+GetThread       MACRO
+        UserGate get_thread_nr
+                                        ENDM
 
 
-; OUT AX		Thread handle
-GetThreadHandle	MACRO
-	UserGate get_thread_handle_nr
-					ENDM
+; OUT AX                Thread handle
+GetThreadHandle MACRO
+        UserGate get_thread_handle_nr
+                                        ENDM
 
 ;   NC      Global timer
 HasGlobalTimer       MACRO
-	UserGate has_global_timer_nr
-						ENDM
+        UserGate has_global_timer_nr
+                                                ENDM
 
 ;;;;;;;;; CRITICAL SECTIONS ;;;;;;;;;;;;
 
 
-; IN  ES:(E)BX		Futex structure
-AcquireFutex	MACRO
-	UserGate acquire_futex_nr
-					ENDM
+; IN  ES:(E)BX          Futex structure
+AcquireFutex    MACRO
+        UserGate acquire_futex_nr
+                                        ENDM
 
-; IN  ES:(E)BX		Futex structure
+; IN  ES:(E)BX          Futex structure
 ; IN  ES:(E)DI      Futex name
-AcquireNamedFutex	MACRO
-	UserGate acquire_named_futex_nr
-					ENDM
+AcquireNamedFutex       MACRO
+        UserGate acquire_named_futex_nr
+                                        ENDM
 
-; IN  ES:(E)BX		Futex structure
-ReleaseFutex	MACRO
-	UserGate release_futex_nr
-					ENDM
+; IN  ES:(E)BX          Futex structure
+ReleaseFutex    MACRO
+        UserGate release_futex_nr
+                                        ENDM
 
-; IN  ES:(E)BX		Futex structure
-CleanupFutex	MACRO
-	UserGate cleanup_futex_nr
-					ENDM
+; IN  ES:(E)BX          Futex structure
+CleanupFutex    MACRO
+        UserGate cleanup_futex_nr
+                                        ENDM
 
-; OUT BX		Section handle
-CreateUserSection	MACRO
-	UserGate create_user_section_nr
-					ENDM
+; OUT BX                Section handle
+CreateUserSection       MACRO
+        UserGate create_user_section_nr
+                                        ENDM
 
 ; IN  ES:(E)DI  Section name
-; OUT BX		Section handle
-CreateNamedUserSection	MACRO
-	UserGate create_named_user_section_nr
-					ENDM
+; OUT BX                Section handle
+CreateNamedUserSection  MACRO
+        UserGate create_named_user_section_nr
+                                        ENDM
 
-; OUT BX		Section handle
-CreateBlockedUserSection	MACRO
-	UserGate create_blocked_user_section_nr
-					ENDM
+; OUT BX                Section handle
+CreateBlockedUserSection        MACRO
+        UserGate create_blocked_user_section_nr
+                                        ENDM
 
-; IN  BX		Section handle
-DeleteUserSection	MACRO
-	UserGate delete_user_section_nr
-					ENDM
+; IN  BX                Section handle
+DeleteUserSection       MACRO
+        UserGate delete_user_section_nr
+                                        ENDM
 
-; IN  BX		Section handle
-EnterUserSection	MACRO
-	UserGate enter_user_section_nr
-					ENDM
+; IN  BX                Section handle
+EnterUserSection        MACRO
+        UserGate enter_user_section_nr
+                                        ENDM
 
-; IN  BX		Section handle
-LeaveUserSection	MACRO
-	UserGate leave_user_section_nr
-					ENDM
+; IN  BX                Section handle
+LeaveUserSection        MACRO
+        UserGate leave_user_section_nr
+                                        ENDM
 
-; OUT BX		Section handle
-CreateUserReadWriteSection	MACRO
-	UserGate create_user_read_write_section_nr
-					ENDM
+; OUT BX                Section handle
+CreateUserReadWriteSection      MACRO
+        UserGate create_user_read_write_section_nr
+                                        ENDM
 
-; IN  BX		Section handle
-DeleteUserReadWriteSection	MACRO
-	UserGate delete_user_read_write_section_nr
-					ENDM
+; IN  BX                Section handle
+DeleteUserReadWriteSection      MACRO
+        UserGate delete_user_read_write_section_nr
+                                        ENDM
 
-; IN  BX		Section handle
-EnterUserReadSection	MACRO
-	UserGate enter_user_read_section_nr
-					ENDM
+; IN  BX                Section handle
+EnterUserReadSection    MACRO
+        UserGate enter_user_read_section_nr
+                                        ENDM
 
-; IN  BX		Section handle
-LeaveUserReadSection	MACRO
-	UserGate leave_user_read_section_nr
-					ENDM
+; IN  BX                Section handle
+LeaveUserReadSection    MACRO
+        UserGate leave_user_read_section_nr
+                                        ENDM
 
-; IN  BX		Section handle
-EnterUserWriteSection	MACRO
-	UserGate enter_user_write_section_nr
-					ENDM
+; IN  BX                Section handle
+EnterUserWriteSection   MACRO
+        UserGate enter_user_write_section_nr
+                                        ENDM
 
-; IN  BX		Section handle
-LeaveUserWriteSection	MACRO
-	UserGate leave_user_write_section_nr
-					ENDM
+; IN  BX                Section handle
+LeaveUserWriteSection   MACRO
+        UserGate leave_user_write_section_nr
+                                        ENDM
 
-; OUT BX		Section handle
-CreateSectionHandle	MACRO
-	UserGate create_section_handle_nr
-					ENDM
+; OUT BX                Section handle
+CreateSectionHandle     MACRO
+        UserGate create_section_handle_nr
+                                        ENDM
 
 ;;;;;;;;; WAITABLE OBJECTS ;;;;;;;;;;;;
 
-; OUT BX		Wait handle
-CreateWait	MACRO
-	UserGate create_wait_nr
-					ENDM
+; OUT BX                Wait handle
+CreateWait      MACRO
+        UserGate create_wait_nr
+                                        ENDM
 
-; IN  BX		Wait handle
-; OUT ECX		Non-idle ID
-IsWaitIdle	MACRO
-	UserGate is_wait_idle_nr
-					ENDM
+; IN  BX                Wait handle
+; OUT ECX               Non-idle ID
+IsWaitIdle      MACRO
+        UserGate is_wait_idle_nr
+                                        ENDM
 
-; IN  BX		Wait handle
-; OUT ECX		Signalled ID
-WaitWithoutTimeout	MACRO
-	UserGate wait_no_timeout_nr
-					ENDM
+; IN  BX                Wait handle
+; OUT ECX               Signalled ID
+WaitWithoutTimeout      MACRO
+        UserGate wait_no_timeout_nr
+                                        ENDM
 
-; IN  BX		Wait handle
-; IN  EDX:EAX	Timeout
-; OUT ECX		Signalled ID
-WaitWithTimeout	MACRO
-	UserGate wait_timeout_nr
-					ENDM
+; IN  BX                Wait handle
+; IN  EDX:EAX   Timeout
+; OUT ECX               Signalled ID
+WaitWithTimeout MACRO
+        UserGate wait_timeout_nr
+                                        ENDM
 
-; IN  BX		Wait handle
-StopWait	MACRO
-	UserGate stop_wait_nr
-					ENDM
+; IN  BX                Wait handle
+StopWait        MACRO
+        UserGate stop_wait_nr
+                                        ENDM
 
-; IN  BX		Wait handle
+; IN  BX                Wait handle
 ; IN  ECX       Object ID
-RemoveWait	MACRO
-	UserGate remove_wait_nr
-					ENDM
+RemoveWait      MACRO
+        UserGate remove_wait_nr
+                                        ENDM
 
-; IN  BX		Wait handle
-CloseWait	MACRO
-	UserGate close_wait_nr
-					ENDM
+; IN  BX                Wait handle
+CloseWait       MACRO
+        UserGate close_wait_nr
+                                        ENDM
 
-; IN  BX		Wait handle
+; IN  BX                Wait handle
 ; IN  ECX       Object ID
 AddWaitForKeyboard       MACRO
-	UserGate add_wait_for_keyboard_nr
-						ENDM
+        UserGate add_wait_for_keyboard_nr
+                                                ENDM
 
-; IN  BX		Wait handle
+; IN  BX                Wait handle
 ; IN  ECX       Object ID
 AddWaitForMouse       MACRO
-	UserGate add_wait_for_mouse_nr
-						ENDM
+        UserGate add_wait_for_mouse_nr
+                                                ENDM
 
 ; IN  AX        Com handle
-; IN  BX		Wait handle
+; IN  BX                Wait handle
 ; IN  ECX       Object ID
 AddWaitForCom       MACRO
-	UserGate add_wait_for_com_nr
-						ENDM
+        UserGate add_wait_for_com_nr
+                                                ENDM
 
 ; IN  AX        Tcp connection handle
-; IN  BX		Wait handle
+; IN  BX                Wait handle
 ; IN  ECX       Object ID
 AddWaitForTcpConnection       MACRO
-	UserGate add_wait_for_tcp_connection_nr
-						ENDM
+        UserGate add_wait_for_tcp_connection_nr
+                                                ENDM
 
 ; IN  AX        Udp connection handle
-; IN  BX		Wait handle
+; IN  BX                Wait handle
 ; IN  ECX       Object ID
 AddWaitForUdpConnection       MACRO
-	UserGate add_wait_for_udp_connection_nr
-						ENDM
+        UserGate add_wait_for_udp_connection_nr
+                                                ENDM
 
 ; IN  AX        Tcp listen handle
-; IN  BX		Wait handle
+; IN  BX                Wait handle
 ; IN  ECX       Object ID
 AddWaitForTcpListen       MACRO
-	UserGate add_wait_for_tcp_listen_nr
-						ENDM
+        UserGate add_wait_for_tcp_listen_nr
+                                                ENDM
 
 ; IN  AX        Udp listen handle
-; IN  BX		Wait handle
+; IN  BX                Wait handle
 ; IN  ECX       Object ID
 AddWaitForUdpListen       MACRO
-	UserGate add_wait_for_udp_listen_nr
-						ENDM
+        UserGate add_wait_for_udp_listen_nr
+                                                ENDM
 
 ; IN  AX        USB pipe handle
-; IN  BX		Wait handle
+; IN  BX                Wait handle
 ; IN  ECX       Object ID
 AddWaitForUsbPipe       MACRO
-	UserGate add_wait_for_usb_pipe_nr
-						ENDM
+        UserGate add_wait_for_usb_pipe_nr
+                                                ENDM
 
 ; IN  AX        ADC handle
-; IN  BX		Wait handle
+; IN  BX                Wait handle
 ; IN  ECX       Object ID
 AddWaitForAdc       MACRO
-	UserGate add_wait_for_adc_nr
-						ENDM
+        UserGate add_wait_for_adc_nr
+                                                ENDM
 
 ; OUT BX        Signal handle
 CreateSignal       MACRO
-	UserGate create_signal_nr
-						ENDM
+        UserGate create_signal_nr
+                                                ENDM
 
 ; IN  BX        Signal handle
 SetSignal       MACRO
-	UserGate set_signal_nr
-						ENDM
-						
+        UserGate set_signal_nr
+                                                ENDM
+                                                
 ; IN  BX        Signal handle
 ResetSignal       MACRO
-	UserGate reset_signal_nr
-						ENDM
-						
+        UserGate reset_signal_nr
+                                                ENDM
+                                                
 ; IN  BX        Signal handle
 IsSignalled       MACRO
-	UserGate is_signalled_nr
-						ENDM
+        UserGate is_signalled_nr
+                                                ENDM
 
 ; IN  BX        Signal handle
 FreeSignal       MACRO
-	UserGate free_signal_nr
-						ENDM
+        UserGate free_signal_nr
+                                                ENDM
 
 ; IN  AX        Signal handle
-; IN  BX		Wait handle
+; IN  BX                Wait handle
 ; IN  ECX       Object ID
 AddWaitForSignal       MACRO
-	UserGate add_wait_for_signal_nr
-						ENDM
+        UserGate add_wait_for_signal_nr
+                                                ENDM
 
 
 ;;;;;;;;;;; RANDOM NUMBERS ;;;;
@@ -773,1034 +773,1040 @@ CreateUuid   MACRO
 
 ;;;;;;;;;;; IPC ;;;;;;;;;;;;;;;
 
-;	IN  ES:(E)DI	Mailslot name
-;	OUT BX			Mailslot handle
-GetLocalMailslot		MACRO
-	UserGate get_local_mailslot_nr
-			ENDM
+;       IN  ES:(E)DI    Mailslot name
+;       OUT BX                  Mailslot handle
+GetLocalMailslot                MACRO
+        UserGate get_local_mailslot_nr
+                        ENDM
 
-;	IN  EDX			IP address
-;	IN  ES:(E)DI	Mailslot name
-;	OUT BX			Mailslot handle
-GetRemoteMailslot		MACRO
-	UserGate get_remote_mailslot_nr
-			ENDM
+;       IN  EDX                 IP address
+;       IN  ES:(E)DI    Mailslot name
+;       OUT BX                  Mailslot handle
+GetRemoteMailslot               MACRO
+        UserGate get_remote_mailslot_nr
+                        ENDM
 
-;	IN  BX			Mailslot handle
-FreeMailslot		MACRO
-	UserGate free_mailslot_nr
-			ENDM
+;       IN  BX                  Mailslot handle
+FreeMailslot            MACRO
+        UserGate free_mailslot_nr
+                        ENDM
 
-;	IN  BX				Mailslot handle
-;	IN  DS:(E)SI		Message buffer
-;	IN  (E)CX			Message size
-;	IN  ES:(E)DI		Reply buffer
-;	IN  (E)AX			Max reply size
-;	IN  EDX				Timeout in milliseconds
-;	OUT (E)CX			Reply size
-SendMailslot		MACRO
-	UserGate send_mailslot_nr
-			ENDM
+;       IN  BX                          Mailslot handle
+;       IN  DS:(E)SI            Message buffer
+;       IN  (E)CX                       Message size
+;       IN  ES:(E)DI            Reply buffer
+;       IN  (E)AX                       Max reply size
+;       IN  EDX                         Timeout in milliseconds
+;       OUT (E)CX                       Reply size
+SendMailslot            MACRO
+        UserGate send_mailslot_nr
+                        ENDM
 
-;	IN  (E)CX			Max message size
-;	IN  ES:(E)DI		Mailslot name
-DefineMailslot		MACRO
-	UserGate define_mailslot_nr
-			ENDM
+;       IN  (E)CX                       Max message size
+;       IN  ES:(E)DI            Mailslot name
+DefineMailslot          MACRO
+        UserGate define_mailslot_nr
+                        ENDM
 
-;	IN  ES:(E)DI		Message buffer
-;	OUT (E)CX			Size
-ReceiveMailslot		MACRO
-	UserGate receive_mailslot_nr
-			ENDM
+;       IN  ES:(E)DI            Message buffer
+;       OUT (E)CX                       Size
+ReceiveMailslot         MACRO
+        UserGate receive_mailslot_nr
+                        ENDM
 
-;	IN  ES:(E)DI		Reply buffer
-;	IN  (E)CX			Reply size
-ReplyMailslot		MACRO
-	UserGate reply_mailslot_nr
-			ENDM
+;       IN  ES:(E)DI            Reply buffer
+;       IN  (E)CX                       Reply size
+ReplyMailslot           MACRO
+        UserGate reply_mailslot_nr
+                        ENDM
 
 ;;;;;;;;;;;; PROGRAMS & DLLS ;;;;;;;;;;;;;;;;
 
 ; IN  AL            Adapter # (0..n)
 ; IN  DL            Entry # (0..n)
 ; IN  ES:(E)DI      Header buffer
-GetImageHeader	MACRO
-	UserGate get_image_header_nr
-					ENDM
+GetImageHeader  MACRO
+        UserGate get_image_header_nr
+                                        ENDM
 
 ; IN  AL            Adapter # (0..n)
 ; IN  DL            Entry # (0..n)
 ; IN  ES:(E)DI      Data buffer
-GetImageData	MACRO
-	UserGate get_image_data_nr
-					ENDM
+GetImageData    MACRO
+        UserGate get_image_data_nr
+                                        ENDM
 
 ; IN  BX            Code selector
 ; IN  ES:(E)DI      Name buffer
 ; OUT BX            Data selector
 ; OUT EAX           Code limit
 ; OUT EDX           Data limit
-GetDeviceInfo	MACRO
-	UserGate get_device_info_nr
-					ENDM
+GetDeviceInfo   MACRO
+        UserGate get_device_info_nr
+                                        ENDM
 
 ; IN  ES:(E)DI)     CPU vendor string
 ; OUT AL            CPU version
 ; OUT EBX           Frequency (MHz)
 ; OUT EDX           Feature flags
-GetCpuVersion	MACRO
-	UserGate get_cpu_version_nr
-					ENDM
+GetCpuVersion   MACRO
+        UserGate get_cpu_version_nr
+                                        ENDM
 
 ; OUT AX Minor version
 ; OUT DX Major version
 ; OUT CX Release #
-GetVersion	MACRO
-	UserGate get_version_nr
-					ENDM
+GetVersion      MACRO
+        UserGate get_version_nr
+                                        ENDM
 
-EmsHandler	MACRO
-	UserGate ems_handler_nr
-					ENDM
+EmsHandler      MACRO
+        UserGate ems_handler_nr
+                                        ENDM
 
-XmsHandler	MACRO
-	UserGate xms_handler_nr
-					ENDM
+XmsHandler      MACRO
+        UserGate xms_handler_nr
+                                        ENDM
 
-; IN  DS:(E)SI	Program name
-Is64BitExe	MACRO
-	UserGate is_64_bit_exe_nr
-					ENDM
+; IN  DS:(E)SI  Program name
+Is64BitExe      MACRO
+        UserGate is_64_bit_exe_nr
+                                        ENDM
 
-; IN  DS:(E)SI	Program name
-; IN  ES:(E)DI	Command line
-DosExtExec	MACRO
-	UserGate dos_ext_exec_nr
-					ENDM
+; IN  DS:(E)SI  Program name
+; IN  ES:(E)DI  Command line
+DosExtExec      MACRO
+        UserGate dos_ext_exec_nr
+                                        ENDM
 
-; IN  DS:(E)SI	Program name
-; IN  ES:(E)DI	Parameters
+; IN  DS:(E)SI  Program name
+; IN  ES:(E)DI  Parameters
 ;               +0  Command line
 ;               +8  Startup directory & drive
 ;               +12 Environment
-LoadExe	MACRO
-	UserGate load_exe_nr
-					ENDM
+LoadExe MACRO
+        UserGate load_exe_nr
+                                        ENDM
 
 ; IN  AX        Forked id
 ; OUT AX        Exit code
-WaitForExec	MACRO
-	UserGate wait_for_exec_nr
-					ENDM
+WaitForExec     MACRO
+        UserGate wait_for_exec_nr
+                                        ENDM
 
-; IN  DS:(E)SI	Program name
-; IN  ES:(E)DI	Parameters
+; IN  DS:(E)SI  Program name
+; IN  ES:(E)DI  Parameters
 ;               +0  Command line
 ;               +8  Startup directory & drive
 ;               +12 Environment
-; IN  DX		Debug module handle
-; OUT AX		Thread #
-; OUT DX		Process handle
-SpawnExe	MACRO
-	UserGate spawn_exe_nr
-					ENDM
+; IN  DX                Debug module handle
+; OUT AX                Thread #
+; OUT DX                Process handle
+SpawnExe        MACRO
+        UserGate spawn_exe_nr
+                                        ENDM
 
-; OUT AX		Child thread id (parent) or 0 (child)
-Fork	MACRO
-	UserGate fork_nr
-					ENDM
+; OUT AX                Child thread id (parent) or 0 (child)
+Fork    MACRO
+        UserGate fork_nr
+                                        ENDM
 
 ; OUT NC        Is forked
-IsForked	MACRO
-	UserGate is_forked_nr
-					ENDM
+IsForked        MACRO
+        UserGate is_forked_nr
+                                        ENDM
 
-; IN  AX		Exit code
-UnloadExe	MACRO
-	UserGate unload_exe_nr
-					ENDM
+; IN  AX                Exit code
+UnloadExe       MACRO
+        UserGate unload_exe_nr
+                                        ENDM
 
-FatalErrorExit	MACRO
-	UserGate fatal_error_exit_nr
-					ENDM
+FatalErrorExit  MACRO
+        UserGate fatal_error_exit_nr
+                                        ENDM
 
 ;  IN  AX   Process handle
-;  IN  BX	Wait handle
+;  IN  BX       Wait handle
 ;  IN  ECX  Signalled ID
 AddWaitForProcEnd MACRO
-	UserGate add_wait_for_proc_end_nr
-						ENDM
+        UserGate add_wait_for_proc_end_nr
+                                                ENDM
 
 ;  IN  BX   Process handle
-;  OUT AX	Exit code
-GetProcExitCode	MACRO
-	UserGate get_proc_exit_code_nr
-					ENDM
+;  OUT AX       Exit code
+GetProcExitCode MACRO
+        UserGate get_proc_exit_code_nr
+                                        ENDM
 
 ; IN  BX        Process handle
-FreeProcHandle	MACRO
-	UserGate free_proc_handle_nr
-					ENDM
+FreeProcHandle  MACRO
+        UserGate free_proc_handle_nr
+                                        ENDM
 
-; IN  EAX		0 = don't show text
-ShowExceptionText	MACRO
-	UserGate show_exception_text_nr
-					ENDM
+; IN  EAX               0 = don't show text
+ShowExceptionText       MACRO
+        UserGate show_exception_text_nr
+                                        ENDM
 
-; OUT AX		Exit code
-GetExitCode	MACRO
-	UserGate get_exit_code_nr
-					ENDM
+; OUT AX                Exit code
+GetExitCode     MACRO
+        UserGate get_exit_code_nr
+                                        ENDM
 
-; OUT ES:(E)DI	Program name
-GetExeName	MACRO
-	UserGate get_exe_name_nr
-					ENDM
+; OUT ES:(E)DI  Program name
+GetExeName      MACRO
+        UserGate get_exe_name_nr
+                                        ENDM
 
-; OUT ES:(E)DI	Command line
-GetCmdLine	MACRO
-	UserGate get_cmd_line_nr
-					ENDM
+; OUT ES:(E)DI  Command line
+GetCmdLine      MACRO
+        UserGate get_cmd_line_nr
+                                        ENDM
 
 
-; OUT ES:(E)DI	Environment
-GetEnvironment	MACRO
-	UserGate get_env_nr
-					ENDM
+; OUT ES:(E)DI  Environment
+GetEnvironment  MACRO
+        UserGate get_env_nr
+                                        ENDM
 
-; IN  ES:(E)DI	DLL name
-; OUT BX		Module handle
-LoadDll	MACRO
-	UserGate load_dll_nr
-					ENDM
+; IN  ES:(E)DI  DLL name
+; OUT BX                Module handle
+LoadDll MACRO
+        UserGate load_dll_nr
+                                        ENDM
 
-; IN  BX		Module handle
-FreeDll	MACRO
-	UserGate free_dll_nr
-					ENDM
+; IN  BX                Module handle
+FreeDll MACRO
+        UserGate free_dll_nr
+                                        ENDM
 
-; IN  BX		Module handle
+; IN  BX                Module handle
 ; OUT AL        Focus key
-GetModuleFocusKey	MACRO
-	UserGate get_module_focus_key_nr
-					ENDM
+GetModuleFocusKey       MACRO
+        UserGate get_module_focus_key_nr
+                                        ENDM
 
-; OUT BX		Module handle
-GetCurrentDll	MACRO
-	UserGate get_current_dll_nr
-					ENDM
+; OUT BX                Module handle
+GetCurrentDll   MACRO
+        UserGate get_current_dll_nr
+                                        ENDM
 
-; IN  BX		Module handle
+; IN  BX                Module handle
 ; OUT BX        Duplicated file handle
-DuplModuleFileHandle	MACRO
-	UserGate dupl_module_file_handle_nr
-					ENDM
+DuplModuleFileHandle    MACRO
+        UserGate dupl_module_file_handle_nr
+                                        ENDM
 
-; IN  ES:(E)DI	Module name
-; OUT BX		Module handle
-GetModule	MACRO
-	UserGate get_module_nr
-					ENDM
+; IN  ES:(E)DI  Module name
+; OUT BX                Module handle
+GetModule       MACRO
+        UserGate get_module_nr
+                                        ENDM
 
-; IN  BX		Module handle
-; IN  ES:(E)DI	Proc name
-; OUT DS:(E)SI	Proc address
-GetModuleProc	MACRO
-	UserGate get_module_proc_nr
-					ENDM
+; IN  BX                Module handle
+; IN  ES:(E)DI  Proc name
+; OUT DS:(E)SI  Proc address
+GetModuleProc   MACRO
+        UserGate get_module_proc_nr
+                                        ENDM
 
-; IN  BX		Module handle
-; IN  (E)AX		Resource handle
-; IN  (E)DX		Resource type
-; OUT DS:(E)SI	Resource address
+; IN  BX                Module handle
+; IN  (E)AX             Resource handle
+; IN  (E)DX             Resource type
+; OUT DS:(E)SI  Resource address
 ; OUT ECX       Resource size
-GetModuleResource	MACRO
-	UserGate get_module_resource_nr
-					ENDM
+GetModuleResource       MACRO
+        UserGate get_module_resource_nr
+                                        ENDM
 
-; IN  BX		Module handle
-; IN  (E)CX		Max name size
-; IN  ES:(E)DI	Name buffer
-; OUT (E)AX		Bytes copied
-GetModuleName	MACRO
-	UserGate get_module_name_nr
-					ENDM
+; IN  BX                Module handle
+; IN  (E)CX             Max name size
+; IN  ES:(E)DI  Name buffer
+; OUT (E)AX             Bytes copied
+GetModuleName   MACRO
+        UserGate get_module_name_nr
+                                        ENDM
 
-; IN  EAX     		Number of bytes
+; IN  EAX               Number of bytes
 ; OUT ES / (E)DX    Selector or linear base address (depends on loader)
 AllocateAppMem     MACRO
-	UserGate allocate_app_mem_nr
-						ENDM
+        UserGate allocate_app_mem_nr
+                                                ENDM
 
 ; IN  ES / (E)DX    Selector or linear base address (depends on loader)
 FreeAppMem     MACRO
-	UserGate free_app_mem_nr
-						ENDM
+        UserGate free_app_mem_nr
+                                                ENDM
 
-; IN  EAX     		Number of bytes
+; IN  EAX               Number of bytes
 ; OUT ES / (E)DX    Selector or linear base address (depends on loader)
 AllocateDebugAppMem     MACRO
-	UserGate allocate_debug_app_mem_nr
-						ENDM
+        UserGate allocate_debug_app_mem_nr
+                                                ENDM
 
 ; IN  ES / (E)DX    Selector or linear base address (depends on loader)
 FreeDebugAppMem     MACRO
-	UserGate free_debug_app_mem_nr
-						ENDM
+        UserGate free_debug_app_mem_nr
+                                                ENDM
 
-; OUT BX			PSP Selector
-GetPspSel	MACRO
-	UserGate get_psp_sel_nr
-					ENDM
-
-; OUT BX            Env handle
-OpenSysEnv	MACRO
-	UserGate open_sys_env_nr
-	        ENDM
+; OUT BX                        PSP Selector
+GetPspSel       MACRO
+        UserGate get_psp_sel_nr
+                                        ENDM
 
 ; OUT BX            Env handle
-OpenProcEnv	MACRO
-	UserGate open_proc_env_nr
-	        ENDM
+OpenSysEnv      MACRO
+        UserGate open_sys_env_nr
+                ENDM
+
+; OUT BX            Env handle
+OpenProcEnv     MACRO
+        UserGate open_proc_env_nr
+                ENDM
 
 ; IN  BX            Env handle
-CloseEnv	MACRO
-	UserGate close_env_nr
-	        ENDM
+CloseEnv        MACRO
+        UserGate close_env_nr
+                ENDM
 
 ; IN  BX            Env handle
 ; IN  DS:(E)SI      Env var name
 ; IN  ES:(E)DI      Env var data
-AddEnvVar	MACRO
-	UserGate add_env_var_nr
-	        ENDM
+AddEnvVar       MACRO
+        UserGate add_env_var_nr
+                ENDM
 
 ; IN  BX            Env handle
 ; IN  DS:(E)SI      Env var name
-DeleteEnvVar	MACRO
-	UserGate delete_env_var_nr
-	        ENDM
+DeleteEnvVar    MACRO
+        UserGate delete_env_var_nr
+                ENDM
 
 ; IN  BX            Env handle
 ; IN  DS:(E)SI      Env var name
 ; IN  ES:(E)DI      Env var data
-FindEnvVar	MACRO
-	UserGate find_env_var_nr
-	        ENDM
+FindEnvVar      MACRO
+        UserGate find_env_var_nr
+                ENDM
 
 ; IN  BX            Env handle
 ; OUT (E)AX         Required size of data buffer
-GetEnvSize	MACRO
-	UserGate get_env_size_nr
-	        ENDM
+GetEnvSize      MACRO
+        UserGate get_env_size_nr
+                ENDM
 
 ; IN  BX            Env handle
 ; IN  ES:(E)DI      Env data buffer
-GetEnvData	MACRO
-	UserGate get_env_data_nr
-	        ENDM
+GetEnvData      MACRO
+        UserGate get_env_data_nr
+                ENDM
 
 ; IN  BX            Env handle
 ; IN  ES:(E)DI      Env data buffer
-SetEnvData	MACRO
-	UserGate set_env_data_nr
-	        ENDM
+SetEnvData      MACRO
+        UserGate set_env_data_nr
+                ENDM
 
 ; OUT  AX           Program count
-GetProgramCount	MACRO
-	UserGate get_program_count_nr
-	        ENDM
+GetProgramCount MACRO
+        UserGate get_program_count_nr
+                ENDM
 
 ; IN   AX           Program #
 ; IN   ES:(E)DI     Name buffer
 ; IN   (E)CX        Max name size
 ; OUT  DX           ID
-GetProgramInfo	MACRO
-	UserGate get_program_info_nr
-	        ENDM
+GetProgramInfo  MACRO
+        UserGate get_program_info_nr
+                ENDM
 
 ; IN   AX           Program #
 ; IN   ES:(E)DI     Thread ID buffer (2 bytes per entry)
 ; IN   (E)CX        Max Threads
 ; OUT  ECX          Thread count
-GetProgramThreads	MACRO
-	UserGate get_program_threads_nr
-	        ENDM
+GetProgramThreads       MACRO
+        UserGate get_program_threads_nr
+                ENDM
 
 ; IN   AX           Program #
 ; IN   ES:(E)DI     Module ID buffer (2 bytes per entry)
 ; IN   (E)CX        Max modules
 ; OUT  ECX          Module count
-GetProgramModules	MACRO
-	UserGate get_program_modules_nr
-	        ENDM
+GetProgramModules       MACRO
+        UserGate get_program_modules_nr
+                ENDM
 
 ; OUT  AX           Module count
-GetModuleCount	MACRO
-	UserGate get_module_count_nr
-	        ENDM
+GetModuleCount  MACRO
+        UserGate get_module_count_nr
+                ENDM
 
 ; IN   AX           Module #
 ; IN   ES:(E)DI     Name buffer
 ; IN   (E)CX        Max name size
 ; OUT  DX           ID
-GetModuleInfo	MACRO
-	UserGate get_module_info_nr
-	        ENDM
+GetModuleInfo   MACRO
+        UserGate get_module_info_nr
+                ENDM
 
 ; IN   BX           Module ID
-; OUT  EAX          Base address
-GetModuleBase	MACRO
-	UserGate get_module_base_nr
-	        ENDM
+; OUT  AX           Selector (or 0 for long mode)
+GetModuleSelector    MACRO
+        UserGate get_module_sel_nr
+                ENDM
 
 ; IN   BX           Module ID
-; OUT  EAX          Size
-GetModuleSize	MACRO
-	UserGate get_module_size_nr
-	        ENDM
+; OUT  EDX:EAX      Base address
+GetModuleBase   MACRO
+        UserGate get_module_base_nr
+                ENDM
+
+; IN   BX           Module ID
+; OUT  EDX:EAX      Size
+GetModuleSize   MACRO
+        UserGate get_module_size_nr
+                ENDM
 
 ;;;;;;;;;;;; C Handles ;;;;;;;;;;;;;;;;
 
 ; IN  ES:(E)DI      Name
 ; IN  CX            Mode
 ; OUT EBX           C handle
-OpenHandle	MACRO
-	UserGate open_handle_nr
-					ENDM
+OpenHandle      MACRO
+        UserGate open_handle_nr
+                                        ENDM
 
 ; IN  BX            C handle
 ; OUT EBX           Result
-CloseHandle	MACRO
-	UserGate close_handle_nr
-					ENDM
+CloseHandle     MACRO
+        UserGate close_handle_nr
+                                        ENDM
 
-; IN  BX      	Handle
-; IN  ES:(E)DI	Buffer
-; IN  (E)CX	Number of bytes to read
-; OUT (E)AX 	Number of bytes read
+; IN  BX        Handle
+; IN  ES:(E)DI  Buffer
+; IN  (E)CX     Number of bytes to read
+; OUT (E)AX     Number of bytes read
 ReadHandle        MACRO
-	UserGate read_handle_nr
-					ENDM
+        UserGate read_handle_nr
+                                        ENDM
 
-; IN  BX    	Handle
-; IN  ES:(E)DI 	Buffer
-; IN  (E)CX	Number of bytes to write
-; OUT (E)AX 	Number of bytes written
+; IN  BX        Handle
+; IN  ES:(E)DI  Buffer
+; IN  (E)CX     Number of bytes to write
+; OUT (E)AX     Number of bytes written
 WriteHandle       MACRO
-	UserGate write_handle_nr
-						ENDM
+        UserGate write_handle_nr
+                                                ENDM
 
-; IN  BX    	Handle
+; IN  BX        Handle
 ; OUT EBX       New handle
 DupHandle       MACRO
-	UserGate dup_handle_nr
-						ENDM
+        UserGate dup_handle_nr
+                                                ENDM
 
-; IN  BX    	Src handle
+; IN  BX        Src handle
 ; IN  AX        Dest handle
 ; OUT EBX       New handle
 Dup2Handle       MACRO
-	UserGate dup2_handle_nr
-						ENDM
+        UserGate dup2_handle_nr
+                                                ENDM
 
-; IN	BX 	Handle
-; OUT	EAX 	Filesize
+; IN    BX      Handle
+; OUT   EAX     Filesize
 GetHandleSize     MACRO
-	UserGate get_handle_size_nr
-						ENDM
+        UserGate get_handle_size_nr
+                                                ENDM
 
 
-; IN	BX	Handle
-; IN	EAX	Filesize
+; IN    BX      Handle
+; IN    EAX     Filesize
 ; OUT   EAX     Result
 SetHandleSize     MACRO
-	UserGate set_handle_size_nr
-						ENDM
+        UserGate set_handle_size_nr
+                                                ENDM
 
 
-; IN	BX 	Handle
-; OUT	EAX 	Mode
+; IN    BX      Handle
+; OUT   EAX     Mode
 GetHandleMode     MACRO
-	UserGate get_handle_mode_nr
-						ENDM
+        UserGate get_handle_mode_nr
+                                                ENDM
 
 
-; IN	BX	Handle
-; IN	EAX	Mode
+; IN    BX      Handle
+; IN    EAX     Mode
 ; OUT   EAX     Result
 SetHandleMode     MACRO
-	UserGate set_handle_mode_nr
-						ENDM
+        UserGate set_handle_mode_nr
+                                                ENDM
 
 
-; IN	BX 	Handle
-; OUT	EAX 	Position
+; IN    BX      Handle
+; OUT   EAX     Position
 GetHandlePos     MACRO
-	UserGate get_handle_pos_nr
-						ENDM
+        UserGate get_handle_pos_nr
+                                                ENDM
 
 
-; IN	BX	Handle
-; IN	EAX	Position
+; IN    BX      Handle
+; IN    EAX     Position
 ; OUT   EAX     Result
 SetHandlePos     MACRO
-	UserGate set_handle_pos_nr
-						ENDM
+        UserGate set_handle_pos_nr
+                                                ENDM
 
 
-; IN  BX    	Handle
+; IN  BX        Handle
 ; OUT EAX       Eof status
 EofHandle       MACRO
-	UserGate eof_handle_nr
-						ENDM
+        UserGate eof_handle_nr
+                                                ENDM
 
-; IN  BX    	Handle
+; IN  BX        Handle
 ; OUT NC        Device
 IsHandleDevice       MACRO
-	UserGate is_handle_device_nr
-						ENDM
+        UserGate is_handle_device_nr
+                                                ENDM
 
-; IN	BX 	        Handle
-; OUT	EDX:EAX 	Time
+; IN    BX              Handle
+; OUT   EDX:EAX         Time
 GetHandleTime     MACRO
-	UserGate get_handle_time_nr
-						ENDM
+        UserGate get_handle_time_nr
+                                                ENDM
 
-; IN	BX		Handle
-; IN	EDX:EAX		Time
+; IN    BX              Handle
+; IN    EDX:EAX         Time
 ; OUT   EAX             Result
 SetHandleTime      MACRO
-	UserGate set_handle_time_nr
-						ENDM
+        UserGate set_handle_time_nr
+                                                ENDM
 
 ;;;;;;;;;;;;;; INI FILE HANDLING ;;;;;;;;;;;
 
 ; OUT BX            Ini handle
-OpenSysIni	MACRO
-	UserGate open_sys_ini_nr
-	        ENDM
+OpenSysIni      MACRO
+        UserGate open_sys_ini_nr
+                ENDM
 
 ; IN  ES:(E)DI      Ini file name
 ; OUT BX            Ini handle
-OpenIni	MACRO
-	UserGate open_ini_nr
-	        ENDM
+OpenIni MACRO
+        UserGate open_ini_nr
+                ENDM
 
 ; IN  BX            Ini handle
-CloseIni	MACRO
-	UserGate close_ini_nr
-	        ENDM
+CloseIni        MACRO
+        UserGate close_ini_nr
+                ENDM
 
 ; IN  BX            In handle
 ; OUT BX            Out handle
-DupIni	MACRO
-	UserGate dup_ini_nr
-	        ENDM
+DupIni  MACRO
+        UserGate dup_ini_nr
+                ENDM
 
 ; IN  BX            Ini handle
 ; IN  ES:(E)DI      Section name
-GotoIniSection	MACRO
-	UserGate goto_ini_section_nr
-	        ENDM
+GotoIniSection  MACRO
+        UserGate goto_ini_section_nr
+                ENDM
 
 ; IN  BX            Ini handle
 ; IN  ES:(E)DI      Section name
-RemoveIniSection	MACRO
-	UserGate remove_ini_section_nr
-	        ENDM
+RemoveIniSection        MACRO
+        UserGate remove_ini_section_nr
+                ENDM
 
 ; IN  BX            Ini handle
 ; IN  DS:(E)SI      Var name
 ; IN  ES:(E)DI      Buffer
 ; IN  (E)CX         Max size
-ReadIni	MACRO
-	UserGate read_ini_nr
-	        ENDM
+ReadIni MACRO
+        UserGate read_ini_nr
+                ENDM
 
 ; IN  BX            Ini handle
 ; IN  DS:(E)SI      Var name
 ; IN  ES:(E)DI      String
-WriteIni	MACRO
-	UserGate write_ini_nr
-	        ENDM
+WriteIni        MACRO
+        UserGate write_ini_nr
+                ENDM
 
 ; IN  BX            Ini handle
 ; IN  DS:(E)SI      Var name
-DeleteIni	MACRO
-	UserGate delete_ini_nr
-	        ENDM
+DeleteIni       MACRO
+        UserGate delete_ini_nr
+                ENDM
 
 ; IN  BX            Ini handle
-GotoFirstIniVar	MACRO
-	UserGate goto_first_inivar_nr
-	        ENDM
+GotoFirstIniVar MACRO
+        UserGate goto_first_inivar_nr
+                ENDM
 
 ; IN  BX            Ini handle
-GotoNextIniVar	MACRO
-	UserGate goto_next_inivar_nr
-	        ENDM
+GotoNextIniVar  MACRO
+        UserGate goto_next_inivar_nr
+                ENDM
 
 ; IN  BX            Ini handle
 ; IN  ES:(E)DI      Var name
 ; IN  (E)CX         Max var size
-GetCurrIniVar	MACRO
-	UserGate get_curr_inivar_nr
-	        ENDM
+GetCurrIniVar   MACRO
+        UserGate get_curr_inivar_nr
+                ENDM
 
 ;;;;;;;;;;;;;; DEBUGGING ;;;;;;;;;;;
 
 ; IN  EDX           IP address (0 = local)
 RemoteGui      MACRO
-	UserGate remote_gui_nr
-						ENDM
+        UserGate remote_gui_nr
+                                                ENDM
 
 ; IN  EDX           IP address (0 = local)
 RemoteDebug      MACRO
-	UserGate remote_debug_nr
-						ENDM
+        UserGate remote_debug_nr
+                                                ENDM
 
 ; OUT AX               Thread ID
 ;GetDebugThread MACRO
-;	UserGate get_debug_thread_nr
-;						ENDM
+;       UserGate get_debug_thread_nr
+;                                               ENDM
 
 DebugTrace      MACRO
-	UserGate debug_trace_nr
-						ENDM
+        UserGate debug_trace_nr
+                                                ENDM
 
 DebugPace       MACRO
-	UserGate debug_pace_nr
-						ENDM
+        UserGate debug_pace_nr
+                                                ENDM
 
 DebugGo MACRO
-	UserGate debug_go_nr
-						ENDM
+        UserGate debug_go_nr
+                                                ENDM
 
 DebugRun MACRO
-	UserGate debug_run_nr
-						ENDM
+        UserGate debug_run_nr
+                                                ENDM
 
 DebugNext       MACRO
-	UserGate debug_next_nr
-						ENDM
+        UserGate debug_next_nr
+                                                ENDM
 
-; IN  ES:(E)DI   	Action buffer
+; IN  ES:(E)DI          Action buffer
 SetThreadAction     MACRO
-	UserGate set_thread_action_nr
-						ENDM
+        UserGate set_thread_action_nr
+                                                ENDM
 
 
-; IN  AX           	Thread count
+; IN  AX                Thread count
 GetThreadCount     MACRO
-	UserGate get_thread_count_nr
-						ENDM
+        UserGate get_thread_count_nr
+                                                ENDM
 
-; IN  ES:(E)DI   	State buffer
-; IN  AX           	Thread #
+; IN  ES:(E)DI          State buffer
+; IN  AX                Thread #
 GetThreadState     MACRO
-	UserGate get_thread_state_nr
-						ENDM
+        UserGate get_thread_state_nr
+                                                ENDM
 
-; IN  ES:(E)DI   	Action state buffer
-; IN  AX           	Thread #
+; IN  ES:(E)DI          Action state buffer
+; IN  AX                Thread #
 GetThreadActionState     MACRO
-	UserGate get_thread_action_state_nr
-						ENDM
+        UserGate get_thread_action_state_nr
+                                                ENDM
 
 ; IN  AX            Thread ID
 SuspendThread     MACRO
-	UserGate suspend_thread_nr
-						ENDM
+        UserGate suspend_thread_nr
+                                                ENDM
 
 ; IN  AX            Thread ID
 SuspendAndSignalThread     MACRO
-	UserGate suspend_and_signal_thread_nr
-						ENDM
+        UserGate suspend_and_signal_thread_nr
+                                                ENDM
 
 ;  IN  AX   Process handle
-;  IN  BX	Wait handle
+;  IN  BX       Wait handle
 ;  IN  ECX  Signalled ID
 AddWaitForDebugEvent MACRO
-	UserGate add_wait_for_debug_event_nr
-						ENDM
+        UserGate add_wait_for_debug_event_nr
+                                                ENDM
 
 ;  IN  BX   Process handle
 ;  OUT AX   Thread #
 ;  OUT BL   Event type  
 GetDebugEvent MACRO
-	UserGate get_debug_event_nr
-						ENDM
+        UserGate get_debug_event_nr
+                                                ENDM
 
 ;  IN  BX       Process handle
-;  IN  ES:EDI	Event buffer
+;  IN  ES:EDI   Event buffer
 GetDebugEventData MACRO
-	UserGate get_debug_event_data_nr
-						ENDM
+        UserGate get_debug_event_data_nr
+                                                ENDM
 
 ;  IN  BX       Process handle
 ClearDebugEvent MACRO
-	UserGate clear_debug_event_nr
-						ENDM
+        UserGate clear_debug_event_nr
+                                                ENDM
 
 ;  IN  BX       Process handle
-;  IN  EAX	    Thread #
+;  IN  EAX          Thread #
 ContinueDebugEvent MACRO
-	UserGate continue_debug_event_nr
-						ENDM
+        UserGate continue_debug_event_nr
+                                                ENDM
 
-;  IN  EBP	Exception frame
-;  IN  EAX	Exception code
+;  IN  EBP      Exception frame
+;  IN  EAX      Exception code
 NotifyPeException MACRO
-	UserGate notify_pe_exception_nr
-						ENDM
+        UserGate notify_pe_exception_nr
+                                                ENDM
 
-;  IN  DX:ESI	Selector:Offset
-;  IN  BX		Thread #
+;  IN  DX:ESI   Selector:Offset
+;  IN  BX               Thread #
 ;  OUT EDX      Linear address
-GetThreadLinear	MACRO
-	UserGate get_thread_linear_nr
-					ENDM
+GetThreadLinear MACRO
+        UserGate get_thread_linear_nr
+                                        ENDM
 
-;  IN  (E)CX	Number of bytes
-;  IN  DX:ESI	Address to read at
-;  IN  ES:(E)DI	Buffer
-;  IN  BX		Thread #
-;  OUT (E)AX	Bytes read
-ReadThreadMem	MACRO
-	UserGate read_thread_mem_nr
-					ENDM
+;  IN  (E)CX    Number of bytes
+;  IN  DX:ESI   Address to read at
+;  IN  ES:(E)DI Buffer
+;  IN  BX               Thread #
+;  OUT (E)AX    Bytes read
+ReadThreadMem   MACRO
+        UserGate read_thread_mem_nr
+                                        ENDM
 
-;  IN  (E)CX	Number of bytes
-;  IN  DX:ESI	Address to write at
-;  IN  ES:(E)DI	Buffer
-;  IN  BX		Thread #
-;  OUT (E)AX	Bytes written
-WriteThreadMem	MACRO
-	UserGate write_thread_mem_nr
-					ENDM
+;  IN  (E)CX    Number of bytes
+;  IN  DX:ESI   Address to write at
+;  IN  ES:(E)DI Buffer
+;  IN  BX               Thread #
+;  OUT (E)AX    Bytes written
+WriteThreadMem  MACRO
+        UserGate write_thread_mem_nr
+                                        ENDM
 
-;  IN  ES:(E)DI	Buffer
-;  IN  BX		Thread #
-GetThreadTss	MACRO
-	UserGate get_thread_tss_nr
-					ENDM
+;  IN  ES:(E)DI Buffer
+;  IN  BX               Thread #
+GetThreadTss    MACRO
+        UserGate get_thread_tss_nr
+                                        ENDM
 
-;  IN  ES:(E)DI	Buffer
-;  IN  BX		Thread #
-SetThreadTss	MACRO
-	UserGate set_thread_tss_nr
-					ENDM
+;  IN  ES:(E)DI Buffer
+;  IN  BX               Thread #
+SetThreadTss    MACRO
+        UserGate set_thread_tss_nr
+                                        ENDM
 
 ;  IN  AL       Disc #
 ;  IN  EDX      Start sector #
 ;  IN  ECX      Number of sectors
 DefineFaultSave     MACRO
-	UserGate define_fault_save_nr
-						ENDM
+        UserGate define_fault_save_nr
+                                                ENDM
 
 ClearFaultSave     MACRO
-	UserGate clear_fault_save_nr
-						ENDM
+        UserGate clear_fault_save_nr
+                                                ENDM
 
 ; IN  ES:(E)DI      State buffer
-; IN  AX           	Fault thread #
+; IN  AX                Fault thread #
 GetFaultThreadState     MACRO
-	UserGate get_fault_thread_state_nr
-						ENDM
+        UserGate get_fault_thread_state_nr
+                                                ENDM
 
 ; IN  ES:(E)DI      TSS data buffer
-; IN  AX           	Fault thread #
+; IN  AX                Fault thread #
 GetFaultThreadTss     MACRO
-	UserGate get_fault_thread_tss_nr
-						ENDM
+        UserGate get_fault_thread_tss_nr
+                                                ENDM
 
 HasCrashInfo     MACRO
-	UserGate has_crash_info_nr
-						ENDM
+        UserGate has_crash_info_nr
+                                                ENDM
 
 ; IN  AX            Core #
 ; IN  ES:(E)DI      Data buffer
 GetCrashCoreInfo     MACRO
-	UserGate get_crash_core_info_nr
-						ENDM
+        UserGate get_crash_core_info_nr
+                                                ENDM
 
 ; IN  BX            Selector
 ; OUT ECX           Limit
 ; OUT AL            Bitness (16 or 32)
 GetSelectorInfo     MACRO
-	UserGate get_selector_info_nr
-						ENDM
+        UserGate get_selector_info_nr
+                                                ENDM
 
 ;;;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;
 
-; IN  BX			Thread handle
-; OUT EDX:EAX		Used CPU time
-GetCpuTime	MACRO
-	UserGate get_cpu_time_nr
-					ENDM
+; IN  BX                        Thread handle
+; OUT EDX:EAX           Used CPU time
+GetCpuTime      MACRO
+        UserGate get_cpu_time_nr
+                                        ENDM
 
 ; OUT EDX:EAX       System time
 GetSystemTime   MACRO
-	UserGate get_system_time_nr
-					ENDM
+        UserGate get_system_time_nr
+                                        ENDM
 
 ; OUT EDX:EAX         Real time
 GetTime   MACRO
-	UserGate get_time_nr
-					ENDM
+        UserGate get_time_nr
+                                        ENDM
 
 TimeToSystemTime   MACRO
-	UserGate time_to_system_time_nr
-					ENDM
+        UserGate time_to_system_time_nr
+                                        ENDM
 
 ; IN  EDX:EAX         System time
 ; OUT EDX:EAX         Real time
 SystemTimeToTime   MACRO
-	UserGate system_time_to_time_nr
-					ENDM
+        UserGate system_time_to_time_nr
+                                        ENDM
 
 
-; IN  EDX:EAX		Difference between real time and system time
-UpdateTime	MACRO
-	UserGate update_time_nr
-					ENDM
+; IN  EDX:EAX           Difference between real time and system time
+UpdateTime      MACRO
+        UserGate update_time_nr
+                                        ENDM
 
-; IN  DX		Year
-; IN  CH		Month
-; OUT AL		Days in month
-DaysInMonth	MACRO
-	UserGate days_in_month_nr
-				ENDM
+; IN  DX                Year
+; IN  CH                Month
+; OUT AL                Days in month
+DaysInMonth     MACRO
+        UserGate days_in_month_nr
+                                ENDM
 
-; IN  DX		Year
-; IN  CH		Month
-; IN  CL		Day
-; IN  BH		Hour
-; IN  BL		Minute
-; IN  AH		Seconds
-; OUT DX		Year
-; OUT CH		Month
-; OUT CL		Day
-; OUT BH		Hour
-; OUT BL		Minute
-; OUT AH		Seconds
-AdjustTime	MACRO
-	UserGate adjust_time_nr
-				ENDM
+; IN  DX                Year
+; IN  CH                Month
+; IN  CL                Day
+; IN  BH                Hour
+; IN  BL                Minute
+; IN  AH                Seconds
+; OUT DX                Year
+; OUT CH                Month
+; OUT CL                Day
+; OUT BH                Hour
+; OUT BL                Minute
+; OUT AH                Seconds
+AdjustTime      MACRO
+        UserGate adjust_time_nr
+                                ENDM
 
-; IN  DX		Year
-; IN  CH		Month
-; IN  CL		Day
-; OUT AX		Passed days
-PassedDays	MACRO
-	UserGate passed_days_nr
-				ENDM
+; IN  DX                Year
+; IN  CH                Month
+; IN  CL                Day
+; OUT AX                Passed days
+PassedDays      MACRO
+        UserGate passed_days_nr
+                                ENDM
 
 
-; IN  DX		Year
-; IN  CH		Month
-; IN  CL		Day
-; IN  BH		Hour
-; IN  BL		Minute
-; IN  AH		Seconds
-; OUT EDX:EAX	Binary time
-TimeToBinary	MACRO
-	UserGate time_to_binary_nr
-				ENDM
+; IN  DX                Year
+; IN  CH                Month
+; IN  CL                Day
+; IN  BH                Hour
+; IN  BL                Minute
+; IN  AH                Seconds
+; OUT EDX:EAX   Binary time
+TimeToBinary    MACRO
+        UserGate time_to_binary_nr
+                                ENDM
 
-; IN  EDX:EAX	Binary time
-; OUT DX		Year
-; OUT CH		Month
-; OUT CL		Day
-; OUT BH		Hour
-; OUT BL		Minute
-; OUT AH		Seconds
-BinaryToTime	MACRO
-	UserGate binary_to_time_nr
-				ENDM
+; IN  EDX:EAX   Binary time
+; OUT DX                Year
+; OUT CH                Month
+; OUT CL                Day
+; OUT BH                Hour
+; OUT BL                Minute
+; OUT AH                Seconds
+BinaryToTime    MACRO
+        UserGate binary_to_time_nr
+                                ENDM
 
-; IN  EDX		NTP IP address
-SyncTime		MACRO
-	UserGate sync_time_nr
-			ENDM
+; IN  EDX               NTP IP address
+SyncTime                MACRO
+        UserGate sync_time_nr
+                        ENDM
 
 ;;;;;;;;;;; CONSOLE ;;;;;;;;;;;
 
-; IN  AL      	Switch key
+; IN  AL        Switch key
 EnableFocus     MACRO
-	UserGate enable_focus_nr
-						ENDM
+        UserGate enable_focus_nr
+                                                ENDM
 
-; IN  AL    	Switch key
+; IN  AL        Switch key
 SetFocus        MACRO
-	UserGate set_focus_nr
-						ENDM
+        UserGate set_focus_nr
+                                                ENDM
 
 ;;;;;;;;;;;;; NETWORK ;;;;;;;;;;;
 
-; OUT EAX		Primary DNS IP address (or 0)
-; OUT EDX		Secondary DNS IP address (or 0)
-GetDns	MACRO
-	UserGate get_dns_nr
-				ENDM
+; OUT EAX               Primary DNS IP address (or 0)
+; OUT EDX               Secondary DNS IP address (or 0)
+GetDns  MACRO
+        UserGate get_dns_nr
+                                ENDM
 
-; OUT EAX		Primary DNS IP address (or 0)
-; OUT EDX		Secondary DNS IP address (or 0)
-GetPppDns	MACRO
-	UserGate get_ppp_dns_nr
-				ENDM
+; OUT EAX               Primary DNS IP address (or 0)
+; OUT EDX               Secondary DNS IP address (or 0)
+GetPppDns       MACRO
+        UserGate get_ppp_dns_nr
+                                ENDM
 
 ; IN  AX            max connections
-; IN  ECX			buffer size
-; IN  SI			local port
+; IN  ECX                       buffer size
+; IN  SI                        local port
 ; OUT BX            listen handle
-CreateTcpListen	MACRO
-	UserGate create_tcp_listen_nr
-			ENDM
+CreateTcpListen MACRO
+        UserGate create_tcp_listen_nr
+                        ENDM
 
 ; IN  BX            listen handle
 ; OUT AX            connection handle
-GetTcpListen	MACRO
-	UserGate get_tcp_listen_nr
-			ENDM
+GetTcpListen    MACRO
+        UserGate get_tcp_listen_nr
+                        ENDM
 
-; IN  BX		listen handle
-CloseTcpListen	MACRO
-	UserGate close_tcp_listen_nr
-			ENDM
+; IN  BX                listen handle
+CloseTcpListen  MACRO
+        UserGate close_tcp_listen_nr
+                        ENDM
 
-; IN  EAX		Timeout in milliseconds for connection
-; IN  ECX		buffer size
-; IN  EDX		ip address
-; IN  SI		local port (0 for dynamic port)
-; IN  DI		remote port
-; OUT BX		connection handle
-OpenTcpConnection	MACRO
-	UserGate open_tcp_connection_nr
-			ENDM
+; IN  EAX               Timeout in milliseconds for connection
+; IN  ECX               buffer size
+; IN  EDX               ip address
+; IN  SI                local port (0 for dynamic port)
+; IN  DI                remote port
+; OUT BX                connection handle
+OpenTcpConnection       MACRO
+        UserGate open_tcp_connection_nr
+                        ENDM
 
-; IN  BX		connection handle
-; IN  EAX		timeout in milliseconds
-WaitForTcpConnection	MACRO
-	UserGate wait_for_tcp_connection_nr
-			ENDM
+; IN  BX                connection handle
+; IN  EAX               timeout in milliseconds
+WaitForTcpConnection    MACRO
+        UserGate wait_for_tcp_connection_nr
+                        ENDM
 
-; IN  BX		connection handle
-CloseTcpConnection	MACRO
-	UserGate close_tcp_connection_nr
-			ENDM
+; IN  BX                connection handle
+CloseTcpConnection      MACRO
+        UserGate close_tcp_connection_nr
+                        ENDM
 
-; IN  BX		connection handle
-DeleteTcpConnection	MACRO
-	UserGate delete_tcp_connection_nr
-			ENDM
+; IN  BX                connection handle
+DeleteTcpConnection     MACRO
+        UserGate delete_tcp_connection_nr
+                        ENDM
 
-; IN  BX		connection handle
-IsTcpConnectionClosed	MACRO
-	UserGate is_tcp_connection_closed_nr
-			ENDM
+; IN  BX                connection handle
+IsTcpConnectionClosed   MACRO
+        UserGate is_tcp_connection_closed_nr
+                        ENDM
 
-; IN  BX		connection handle
+; IN  BX                connection handle
 ; OUT NC        Idle
-IsTcpConnectionIdle	MACRO
-	UserGate is_tcp_connection_idle_nr
-			ENDM
+IsTcpConnectionIdle     MACRO
+        UserGate is_tcp_connection_idle_nr
+                        ENDM
 
-; IN  BX		connection handle
+; IN  BX                connection handle
 ; OUT EAX       IP
-GetRemoteTcpConnectionIP	MACRO
-	UserGate get_remote_tcp_connection_ip_nr
-			ENDM
+GetRemoteTcpConnectionIP        MACRO
+        UserGate get_remote_tcp_connection_ip_nr
+                        ENDM
 
-; IN  BX		connection handle
+; IN  BX                connection handle
 ; OUT AX        port
-GetRemoteTcpConnectionPort	MACRO
-	UserGate get_remote_tcp_connection_port_nr
-			ENDM
+GetRemoteTcpConnectionPort      MACRO
+        UserGate get_remote_tcp_connection_port_nr
+                        ENDM
 
-; IN  BX		connection handle
+; IN  BX                connection handle
 ; OUT AX        port
-GetLocalTcpConnectionPort	MACRO
-	UserGate get_local_tcp_connection_port_nr
-			ENDM
+GetLocalTcpConnectionPort       MACRO
+        UserGate get_local_tcp_connection_port_nr
+                        ENDM
 
-; IN  BX		connection handle
-AbortTcpConnection	MACRO
-	UserGate abort_tcp_connection_nr
-			ENDM
+; IN  BX                connection handle
+AbortTcpConnection      MACRO
+        UserGate abort_tcp_connection_nr
+                        ENDM
 
-; IN  EAX			timeout in ms for receive
-; IN  BX			connection handle
-; IN  (E)CX		wanted number of bytes
-; IN  ES:E(DI)	data buffer
-; OUT (E)AX		size of received data
-ReadTcpConnection	MACRO
-	UserGate read_tcp_connection_nr
-			ENDM
+; IN  EAX                       timeout in ms for receive
+; IN  BX                        connection handle
+; IN  (E)CX             wanted number of bytes
+; IN  ES:E(DI)  data buffer
+; OUT (E)AX             size of received data
+ReadTcpConnection       MACRO
+        UserGate read_tcp_connection_nr
+                        ENDM
 
-; IN  BX			connection handle
-; IN  (E)CX		buffer size
-; IN  ES:(E)DI	data buffer
-WriteTcpConnection		MACRO
-	UserGate write_tcp_connection_nr
-			ENDM
+; IN  BX                        connection handle
+; IN  (E)CX             buffer size
+; IN  ES:(E)DI  data buffer
+WriteTcpConnection              MACRO
+        UserGate write_tcp_connection_nr
+                        ENDM
 
-; IN  BX		connection handle
-PushTcpConnection		MACRO
-	UserGate push_tcp_connection_nr
-			ENDM
+; IN  BX                connection handle
+PushTcpConnection               MACRO
+        UserGate push_tcp_connection_nr
+                        ENDM
 
-; IN  BX		connection handle
+; IN  BX                connection handle
 ; OUT (E)AX     number of available bytes in buffer
-PollTcpConnection		MACRO
-	UserGate poll_tcp_connection_nr
-			ENDM
+PollTcpConnection               MACRO
+        UserGate poll_tcp_connection_nr
+                        ENDM
 
-; OUT EDX		My IP address
-GetIpAddress	MACRO
-	UserGate get_ip_address_nr
-						ENDM
+; OUT EDX               My IP address
+GetIpAddress    MACRO
+        UserGate get_ip_address_nr
+                                                ENDM
 
-; OUT EDX		My IP address
-GetGateway	MACRO
-	UserGate get_gateway_nr
-						ENDM
+; OUT EDX               My IP address
+GetGateway      MACRO
+        UserGate get_gateway_nr
+                                                ENDM
 
-; OUT EDX	    IP mask
-GetIpMask	MACRO
-	UserGate get_ip_mask_nr
-						ENDM
+; OUT EDX           IP mask
+GetIpMask       MACRO
+        UserGate get_ip_mask_nr
+                                                ENDM
 
 
 ; IN  AX                Entry #
-; OUT EBX		Entry IP address
+; OUT EBX               Entry IP address
 ; OUT EDX:EAX           Last update
-GetDhcpEntry	MACRO
-	UserGate get_dhcp_entry_nr
-						ENDM
+GetDhcpEntry    MACRO
+        UserGate get_dhcp_entry_nr
+                                                ENDM
 
 
-; IN  ES:(E)DI		Host name
-; OUT EDX			IP address
-NameToIP		MACRO
-	UserGate name_to_ip_nr
-			ENDM
+; IN  ES:(E)DI          Host name
+; OUT EDX                       IP address
+NameToIP                MACRO
+        UserGate name_to_ip_nr
+                        ENDM
 
-; IN  EDX				IP address
-; IN  (E)CX			Size of buffer
-; IN  ES:(E)DI		Host name buffer
-; OUT (E)AX			Length of host name
-IPToName		MACRO
-	UserGate ip_to_name_nr
-			ENDM
+; IN  EDX                               IP address
+; IN  (E)CX                     Size of buffer
+; IN  ES:(E)DI          Host name buffer
+; OUT (E)AX                     Length of host name
+IPToName                MACRO
+        UserGate ip_to_name_nr
+                        ENDM
 
-; IN  EAX				Timeout in ms
-; IN  EDX				IP address
-Ping		MACRO
-	UserGate ping_nr
-			ENDM
+; IN  EAX                               Timeout in ms
+; IN  EDX                               IP address
+Ping            MACRO
+        UserGate ping_nr
+                        ENDM
 
 ; IN  SI        source port
 ; IN  BX        destination port
@@ -1817,7 +1823,7 @@ SendUdp    MACRO
 ; IN  ES:(E)DI    Data buffer
 BroadcastUdp      MACRO
     UserGate broadcast_udp_nr
-	                ENDM
+                        ENDM
 
 ; IN  EDX         Timeout in ms
 ; IN  (E)CX       Size of setup message
@@ -1828,62 +1834,62 @@ BroadcastUdp      MACRO
 ; OUT EDX         IP
 BroadcastQueryUdp      MACRO
     UserGate broadcast_query_udp_nr
-	                ENDM
+                        ENDM
 
 ; IN  AX            max number of outstanding messages
-; IN  SI			local port
+; IN  SI                        local port
 ; OUT BX            listen handle
-CreateUdpListen	MACRO
-	UserGate create_udp_listen_nr
-			ENDM
+CreateUdpListen MACRO
+        UserGate create_udp_listen_nr
+                        ENDM
 
 ; IN  BX            listen handle
 ; OUT EAX           data size
-GetUdpListenSize	MACRO
-	UserGate get_udp_listen_size_nr
-			ENDM
+GetUdpListenSize        MACRO
+        UserGate get_udp_listen_size_nr
+                        ENDM
 
 ; IN  BX            listen handle
 ; OUT EAX           IP
-GetUdpListenIp	MACRO
-	UserGate get_udp_listen_ip_nr
-			ENDM
+GetUdpListenIp  MACRO
+        UserGate get_udp_listen_ip_nr
+                        ENDM
 
 ; IN  BX            listen handle
 ; OUT AX            Port
-GetUdpListenPort	MACRO
-	UserGate get_udp_listen_port_nr
-			ENDM
+GetUdpListenPort        MACRO
+        UserGate get_udp_listen_port_nr
+                        ENDM
 
 ; IN  BX            listen handle
 ; IN  (E)CX         buffer size
 ; IN  ES:(E)DI      buffer
-GetUdpListenData	MACRO
-	UserGate get_udp_listen_data_nr
-			ENDM
+GetUdpListenData        MACRO
+        UserGate get_udp_listen_data_nr
+                        ENDM
 
 ; IN  BX            listen handle
-ClearUdpListenData	MACRO
-	UserGate clear_udp_listen_data_nr
-			ENDM
+ClearUdpListenData      MACRO
+        UserGate clear_udp_listen_data_nr
+                        ENDM
 
-; IN  BX		listen handle
-CloseUdpListen	MACRO
-	UserGate close_udp_listen_nr
-			ENDM
+; IN  BX                listen handle
+CloseUdpListen  MACRO
+        UserGate close_udp_listen_nr
+                        ENDM
 
-; IN  EDX		ip address
-; IN  SI		local port
-; IN  DI		remote port
-; OUT BX		connection handle
-OpenUdpConnection	MACRO
-	UserGate open_udp_connection_nr
-			ENDM
+; IN  EDX               ip address
+; IN  SI                local port
+; IN  DI                remote port
+; OUT BX                connection handle
+OpenUdpConnection       MACRO
+        UserGate open_udp_connection_nr
+                        ENDM
 
-; IN  BX		connection handle
-CloseUdpConnection	MACRO
-	UserGate close_udp_connection_nr
-			ENDM
+; IN  BX                connection handle
+CloseUdpConnection      MACRO
+        UserGate close_udp_connection_nr
+                        ENDM
 
 ; IN  BX        connection handle
 ; IN  ES:(E)DI  Data buffer
@@ -1909,556 +1915,556 @@ ReadUdpConnection    MACRO
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;
 
 ; IN   BL           Unit #
-; OUT  AL			Disc #
+; OUT  AL                       Disc #
 GetIdeDisc     MACRO
-	UserGate get_ide_disc_nr
-						ENDM
+        UserGate get_ide_disc_nr
+                                                ENDM
 
 ; IN   BL           Unit #
-; OUT  AL			Disc #
+; OUT  AL                       Disc #
 GetFloppyDisc     MACRO
-	UserGate get_floppy_disc_nr
-						ENDM
+        UserGate get_floppy_disc_nr
+                                                ENDM
 
-;	IN	AL			Disc #
+;       IN      AL                      Disc #
 ;   OUT NC          Idle
 IsDiscIdle     MACRO
-	UserGate is_disc_idle_nr
-						ENDM
+        UserGate is_disc_idle_nr
+                                                ENDM
 
-;	IN	AL			Disc #
-;	OUT	CX			Bytes / sector
-;	OUT	EDX:EAX	    Total # of sectors
-;	OUT SI			BIOS sectors / cylinder
-;	OUT DI			BIOS heads
+;       IN      AL                      Disc #
+;       OUT     CX                      Bytes / sector
+;       OUT     EDX:EAX     Total # of sectors
+;       OUT SI                  BIOS sectors / cylinder
+;       OUT DI                  BIOS heads
 GetDiscInfo     MACRO
-	UserGate get_disc_info_nr
-						ENDM
+        UserGate get_disc_info_nr
+                                                ENDM
 
 ; IN   AL           Disc #
-; IN   CX			Bytes / sector
+; IN   CX                       Bytes / sector
 ; IN   EDX          Total # of sectors
 ; IN   SI           BIOS sectors / cylinder
 ; IN   DI           BIOS heads
 SetDiscInfo     MACRO
-	UserGate set_disc_info_nr
-						ENDM
+        UserGate set_disc_info_nr
+                                                ENDM
 
-;	IN	AL			Disc #
+;       IN      AL                      Disc #
 ;   IN  ES:(E)DI    Buffer
 ;   IN  (E)CX       Buffer size
 GetDiscVendorInfo     MACRO
-	UserGate get_disc_vendor_info_nr
-						ENDM
+        UserGate get_disc_vendor_info_nr
+                                                ENDM
 
-;	OUT	AL		Drive #
-AllocateStaticDrive	MACRO
-	UserGate allocate_static_drive_nr
-					ENDM
+;       OUT     AL              Drive #
+AllocateStaticDrive     MACRO
+        UserGate allocate_static_drive_nr
+                                        ENDM
 
-;	IN	AL		Drive #
-AllocateFixedDrive	MACRO
-	UserGate allocate_fixed_drive_nr
-					ENDM
+;       IN      AL              Drive #
+AllocateFixedDrive      MACRO
+        UserGate allocate_fixed_drive_nr
+                                        ENDM
 
-;	OUT	AL		Drive #
-AllocateDynamicDrive	MACRO
-	UserGate allocate_dynamic_drive_nr
-					ENDM
+;       OUT     AL              Drive #
+AllocateDynamicDrive    MACRO
+        UserGate allocate_dynamic_drive_nr
+                                        ENDM
 
-;	IN	AL		Drive #
-DemandLoadDrive	MACRO
-	UserGate demand_load_drive_nr
-					ENDM
+;       IN      AL              Drive #
+DemandLoadDrive MACRO
+        UserGate demand_load_drive_nr
+                                        ENDM
 
-;	IN	AL			Disc #
-;	IN	EDX			Start sector
-;	IN	ECX			Number of sectors
-;	IN	ES:(E)DI	File system name
+;       IN      AL                      Disc #
+;       IN      EDX                     Start sector
+;       IN      ECX                     Number of sectors
+;       IN      ES:(E)DI        File system name
 FormatDrive     MACRO
-	UserGate format_drive_nr
-						ENDM
+        UserGate format_drive_nr
+                                                ENDM
 
-;	IN DS:(E)SI		Main key buffer
-;	IN ES:(E)DI		Selection key buffer
-;	IN GS:(E)BX		Extent size buffer
+;       IN DS:(E)SI             Main key buffer
+;       IN ES:(E)DI             Selection key buffer
+;       IN GS:(E)BX             Extent size buffer
 GetRdfsInfo     MACRO
-	UserGate get_rdfs_info_nr
-						ENDM
+        UserGate get_rdfs_info_nr
+                                                ENDM
 
-;	IN	AL			Disc #
-;	IN	EDX			Sector #
-;	IN	(E)CX		Size
-;	IN	ES:(E)DI	Buffer
+;       IN      AL                      Disc #
+;       IN      EDX                     Sector #
+;       IN      (E)CX           Size
+;       IN      ES:(E)DI        Buffer
 ReadShortDisc     MACRO
-	UserGate read_short_disc_nr
-						ENDM
+        UserGate read_short_disc_nr
+                                                ENDM
 
-;	IN	AL			Disc #
-;	IN	EDX			Sector #
-;	IN	(E)CX		Size
-;	IN	ES:(E)DI	Buffer
+;       IN      AL                      Disc #
+;       IN      EDX                     Sector #
+;       IN      (E)CX           Size
+;       IN      ES:(E)DI        Buffer
 WriteShortDisc     MACRO
-	UserGate write_short_disc_nr
-						ENDM
+        UserGate write_short_disc_nr
+                                                ENDM
 
-;	IN	BL			Disc #
-;	IN	EDX:EAX		Sector #
-;	IN	(E)CX		Size
-;	IN	ES:(E)DI	Buffer
+;       IN      BL                      Disc #
+;       IN      EDX:EAX         Sector #
+;       IN      (E)CX           Size
+;       IN      ES:(E)DI        Buffer
 ReadLongDisc     MACRO
-	UserGate read_long_disc_nr
-						ENDM
+        UserGate read_long_disc_nr
+                                                ENDM
 
-;	IN	BL			Disc #
-;	IN	EDX:EAX		Sector #
-;	IN	(E)CX		Size
-;	IN	ES:(E)DI	Buffer
+;       IN      BL                      Disc #
+;       IN      EDX:EAX         Sector #
+;       IN      (E)CX           Size
+;       IN      ES:(E)DI        Buffer
 WriteLongDisc     MACRO
-	UserGate write_long_disc_nr
-						ENDM
+        UserGate write_long_disc_nr
+                                                ENDM
 
-;	IN	AL			Disc #
-;	IN	EDX			Sector #
-;	IN	(E)CX	    Number of sectors to erase
+;       IN      AL                      Disc #
+;       IN      EDX                     Sector #
+;       IN      (E)CX       Number of sectors to erase
 EraseDiscSectors     MACRO
-	UserGate erase_disc_sectors_nr
-						ENDM
+        UserGate erase_disc_sectors_nr
+                                                ENDM
 
-;	IN	AL			Drive #
-;	OUT	EAX			Free units
-;	OUT	CX			bytes / unit
-;	OUT	EDX			total # of units
+;       IN      AL                      Drive #
+;       OUT     EAX                     Free units
+;       OUT     CX                      bytes / unit
+;       OUT     EDX                     total # of units
 GetDriveInfo     MACRO
-	UserGate get_drive_info_nr
-						ENDM
+        UserGate get_drive_info_nr
+                                                ENDM
 
-;	IN	AL			Drive #
+;       IN      AL                      Drive #
 ;   OUT AL          Disc #
 ;   OUT ECX         Total # of sectors
 ;   OUT EDX         Start sector
 GetDriveDiscParam     MACRO
-	UserGate get_drive_disc_param_nr
-						ENDM
+        UserGate get_drive_disc_param_nr
+                                                ENDM
 
 ;   IN  AL          Drive #   
-;   IN  ECX 	    Size of filesystem
-;	IN	DS:(E)SI	File system name
-;	IN	ES:(E)DI	Filename
+;   IN  ECX         Size of filesystem
+;       IN      DS:(E)SI        File system name
+;       IN      ES:(E)DI        Filename
 CreateFileDrive     MACRO
-	UserGate create_file_drive_nr
-						ENDM
+        UserGate create_file_drive_nr
+                                                ENDM
 
 ;   IN  AL          Drive #   
-;	IN	ES:(E)DI	Filename
+;       IN      ES:(E)DI        Filename
 OpenFileDrive     MACRO
-	UserGate open_file_drive_nr
-						ENDM
+        UserGate open_file_drive_nr
+                                                ENDM
 
 ;;;;;;;;;;;;;; DIRECTORY ;;;;;;;;;;;;;
 
-; 	IN	AL              Drive #
+;       IN      AL              Drive #
 SetCurDrive     MACRO
-	UserGate set_cur_drive_nr
-						ENDM
+        UserGate set_cur_drive_nr
+                                                ENDM
 
-;	OUT	AL              Drive #
+;       OUT     AL              Drive #
 GetCurDrive     MACRO
-	UserGate get_cur_drive_nr
-						ENDM
+        UserGate get_cur_drive_nr
+                                                ENDM
 
 
-;	IN	ES:(E)DI      	Pathname
+;       IN      ES:(E)DI        Pathname
 SetCurDir       MACRO
-	UserGate set_cur_dir_nr
-						ENDM
+        UserGate set_cur_dir_nr
+                                                ENDM
 
-;	IN	AL              Drive
-;	IN	ES:(E)DI        Pathname
+;       IN      AL              Drive
+;       IN      ES:(E)DI        Pathname
 GetCurDir       MACRO
-	UserGate get_cur_dir_nr
-						ENDM
+        UserGate get_cur_dir_nr
+                                                ENDM
 
-;	IN	ES:(E)DI        Pathname
+;       IN      ES:(E)DI        Pathname
 MakeDir MACRO
-	UserGate make_dir_nr
-						ENDM
+        UserGate make_dir_nr
+                                                ENDM
 
-;	IN	ES:(E)DI        Pathname
+;       IN      ES:(E)DI        Pathname
 RemoveDir       MACRO
-	UserGate remove_dir_nr
-						ENDM
+        UserGate remove_dir_nr
+                                                ENDM
 
-;	IN	DS:(E)SI		Old pathname
-;	IN	ES:(E)DI        New pathname
+;       IN      DS:(E)SI                Old pathname
+;       IN      ES:(E)DI        New pathname
 RenameFile      MACRO
-	UserGate rename_file_nr
-						ENDM
+        UserGate rename_file_nr
+                                                ENDM
 
-;	IN	ES:(E)DI        Pathname
+;       IN      ES:(E)DI        Pathname
 DeleteFile      MACRO
-	UserGate delete_file_nr
-						ENDM
+        UserGate delete_file_nr
+                                                ENDM
 
-;	IN	ES:(E)DI        Pathname
-;	IN	CX              File attribute
+;       IN      ES:(E)DI        Pathname
+;       IN      CX              File attribute
 GetFileAttribute        MACRO
-	UserGate get_file_attribute_nr
-						ENDM
+        UserGate get_file_attribute_nr
+                                                ENDM
 
-;	IN	ES:(E)DI        Pathname
-;	IN	CX              File attribute
+;       IN      ES:(E)DI        Pathname
+;       IN      CX              File attribute
 SetFileAttribute        MACRO
-	UserGate set_file_attribute_nr
-						ENDM
+        UserGate set_file_attribute_nr
+                                                ENDM
 
 
-;	IN	ES:(E)DI		Pathname
-;	OUT	BX				Handle
+;       IN      ES:(E)DI                Pathname
+;       OUT     BX                              Handle
 OpenDir   MACRO
-	UserGate open_dir_nr
-						ENDM
+        UserGate open_dir_nr
+                                                ENDM
 
-;	IN	BX				Handle
+;       IN      BX                              Handle
 CloseDir   MACRO
-	UserGate close_dir_nr
-						ENDM
+        UserGate close_dir_nr
+                                                ENDM
 
-;	IN	BX				Handle
-;	IN	DX				Entry #
-;	IN	CX				Max size of name
-;	IN	ES:(E)DI		Buffer
-;	OUT	ECX				Filesize
-;	OUT	BX				File attribute
-;	OUT	EDX:EAX			File systemtime
+;       IN      BX                              Handle
+;       IN      DX                              Entry #
+;       IN      CX                              Max size of name
+;       IN      ES:(E)DI                Buffer
+;       OUT     ECX                             Filesize
+;       OUT     BX                              File attribute
+;       OUT     EDX:EAX                 File systemtime
 ReadDir        MACRO
-	UserGate read_dir_nr
-						ENDM
+        UserGate read_dir_nr
+                                                ENDM
 
 ;;;;;;;;;;;;;; FILES ;;;;;;;;;;;;;
 
-;	IN	ES:(E)DI	Pathname
-;	IN	CL			Access mode
-;	OUT	BX			Handle
+;       IN      ES:(E)DI        Pathname
+;       IN      CL                      Access mode
+;       OUT     BX                      Handle
 OpenFile        MACRO
-	UserGate open_file_nr
-						ENDM
+        UserGate open_file_nr
+                                                ENDM
 
-;	IN	ES:(E)DI	Pathname
-;	IN	CX     		Attribute
-;	OUT	BX        	Handle
+;       IN      ES:(E)DI        Pathname
+;       IN      CX              Attribute
+;       OUT     BX              Handle
 CreateFile      MACRO
-	UserGate create_file_nr
-						ENDM
+        UserGate create_file_nr
+                                                ENDM
 
-;	IN	BX   		Handle
+;       IN      BX              Handle
 CloseFile       MACRO
-	UserGate close_file_nr
-						ENDM
+        UserGate close_file_nr
+                                                ENDM
 
-;	IN	AX			Old handle
-;	OUT	BX			New handle
+;       IN      AX                      Old handle
+;       OUT     BX                      New handle
 DuplFile       MACRO
-	UserGate dupl_file_nr
-						ENDM
+        UserGate dupl_file_nr
+                                                ENDM
 
-;	IN	BX   		Handle
-;	OUT	DX  		Device data
+;       IN      BX              Handle
+;       OUT     DX              Device data
 GetIoctlData    MACRO
-	UserGate get_ioctl_data_nr
-						ENDM
+        UserGate get_ioctl_data_nr
+                                                ENDM
 
 
-;	IN	BX 			Handle
-;	OUT	EAX 		Filesize
+;       IN      BX                      Handle
+;       OUT     EAX             Filesize
 GetFileSize     MACRO
-	UserGate get_file_size_nr
-						ENDM
+        UserGate get_file_size_nr
+                                                ENDM
 
 
-;	IN	BX			Handle
-;	IN	EAX			Filesize
+;       IN      BX                      Handle
+;       IN      EAX                     Filesize
 SetFileSize     MACRO
-	UserGate set_file_size_nr
-						ENDM
+        UserGate set_file_size_nr
+                                                ENDM
 
 
-;	IN	BX			Handle
-;	IN	EAX			File position
+;       IN      BX                      Handle
+;       IN      EAX                     File position
 GetFilePos      MACRO
-	UserGate get_file_pos_nr
-						ENDM
+        UserGate get_file_pos_nr
+                                                ENDM
 
 
-;	IN	BX			Handle
-;	IN	EAX			File position
+;       IN      BX                      Handle
+;       IN      EAX                     File position
 SetFilePos      MACRO
-	UserGate set_file_pos_nr
-						ENDM
+        UserGate set_file_pos_nr
+                                                ENDM
 
-;	IN	BX			Handle
-;	OUT	EDX:EAX		File system time
+;       IN      BX                      Handle
+;       OUT     EDX:EAX         File system time
 GetFileTime      MACRO
-	UserGate get_file_time_nr
-						ENDM
+        UserGate get_file_time_nr
+                                                ENDM
 
-;	IN	BX			Handle
-;	IN	EDX:EAX		File system time
+;       IN      BX                      Handle
+;       IN      EDX:EAX         File system time
 SetFileTime      MACRO
-	UserGate set_file_time_nr
-						ENDM
+        UserGate set_file_time_nr
+                                                ENDM
 
-;	IN	BX      	Handle
-;	IN	ES:(E)DI	Buffer
-;	IN	(E)CX		Number of bytes to read
-;	OUT	(E)AX 		Number of bytes read
+;       IN      BX              Handle
+;       IN      ES:(E)DI        Buffer
+;       IN      (E)CX           Number of bytes to read
+;       OUT     (E)AX           Number of bytes read
 ReadFile        MACRO
-	UserGate read_file_nr
-						ENDM
+        UserGate read_file_nr
+                                                ENDM
 
-;	IN	BX    		Handle
-;	IN	ES:(E)DI 	Buffer
-;	IN	(E)CX		Number of bytes to write
-; 	OUT (E)AX 		Number of bytes written
+;       IN      BX              Handle
+;       IN      ES:(E)DI        Buffer
+;       IN      (E)CX           Number of bytes to write
+;       OUT (E)AX               Number of bytes written
 WriteFile       MACRO
-	UserGate write_file_nr
-						ENDM
+        UserGate write_file_nr
+                                                ENDM
 
 ;;;;;;;;;;; MEMORY MAPPING ;;;;;;;;;;
 
-;	IN EAX			Size of mapping object
-;	OUT BX			Handle
+;       IN EAX                  Size of mapping object
+;       OUT BX                  Handle
 CreateMapping        MACRO
-	UserGate create_mapping_nr
-						ENDM
+        UserGate create_mapping_nr
+                                                ENDM
 
-;	IN EAX			Size of mapping object
-;	IN ES:(E)DI 	Name for mapping
-;	OUT BX			Handle
+;       IN EAX                  Size of mapping object
+;       IN ES:(E)DI     Name for mapping
+;       OUT BX                  Handle
 CreateNamedMapping        MACRO
-	UserGate create_named_mapping_nr
-						ENDM
+        UserGate create_named_mapping_nr
+                                                ENDM
 
-;	IN EAX			Size of mapping object
-;	IN BX			File handle
-;	OUT BX			Handle
+;       IN EAX                  Size of mapping object
+;       IN BX                   File handle
+;       OUT BX                  Handle
 CreateFileMapping        MACRO
-	UserGate create_file_mapping_nr
-						ENDM
+        UserGate create_file_mapping_nr
+                                                ENDM
 
-;	IN EAX			Size of mapping object
-;	IN BX			File handle
-;	IN ES:(E)DI 	Name of mapping
-;	OUT BX			Handle
+;       IN EAX                  Size of mapping object
+;       IN BX                   File handle
+;       IN ES:(E)DI     Name of mapping
+;       OUT BX                  Handle
 CreateNamedFileMapping        MACRO
-	UserGate create_named_file_mapping_nr
-						ENDM
+        UserGate create_named_file_mapping_nr
+                                                ENDM
 
-;	IN	ES:(E)DI 	Name of mapping
-;	OUT BX			Handle
+;       IN      ES:(E)DI        Name of mapping
+;       OUT BX                  Handle
 OpenNamedMapping        MACRO
-	UserGate open_named_mapping_nr
-						ENDM
+        UserGate open_named_mapping_nr
+                                                ENDM
 
-;	IN  BX			Handle
+;       IN  BX                  Handle
 SyncMapping        MACRO
-	UserGate sync_mapping_nr
-						ENDM
+        UserGate sync_mapping_nr
+                                                ENDM
 
-;	IN  BX			Handle
+;       IN  BX                  Handle
 CloseMapping        MACRO
-	UserGate close_mapping_nr
-						ENDM
+        UserGate close_mapping_nr
+                                                ENDM
 
-;	IN  EAX			Offset into object
-;	IN  BX			Handle
-;	IN	(E)CX		Size
-;	IN  ES:(E)DI	Address to map at
+;       IN  EAX                 Offset into object
+;       IN  BX                  Handle
+;       IN      (E)CX           Size
+;       IN  ES:(E)DI    Address to map at
 MapView        MACRO
-	UserGate map_view_nr
-						ENDM
+        UserGate map_view_nr
+                                                ENDM
 
-;	IN  BX			Handle
+;       IN  BX                  Handle
 UnmapView        MACRO
-	UserGate unmap_view_nr
-						ENDM
+        UserGate unmap_view_nr
+                                                ENDM
 
 ;;;;;;;;;;; KEYBOARD ;;;;;;;;;;;;;
 
 ;  IN  ES:(E)DI     Layout name buffer (must be at least 3 bytes)
 GetKeyboardLayout    MACRO
-	UserGate get_key_layout_nr
-						ENDM
+        UserGate get_key_layout_nr
+                                                ENDM
 
 ;  IN  ES:(E)DI     Layout name
 SetKeyboardLayout    MACRO
-	UserGate set_key_layout_nr
-						ENDM
+        UserGate set_key_layout_nr
+                                                ENDM
 
-; OUT  AX			Character read
+; OUT  AX                       Character read
 ReadKeyboard    MACRO
-	UserGate read_keyboard_nr
-						ENDM
+        UserGate read_keyboard_nr
+                                                ENDM
 
 PollKeyboard    MACRO
-	UserGate poll_keyboard_nr
-						ENDM
+        UserGate poll_keyboard_nr
+                                                ENDM
 
 FlushKeyboard   MACRO
-	UserGate flush_keyboard_nr
-						ENDM
+        UserGate flush_keyboard_nr
+                                                ENDM
 
 ; IN  AX          Keyboard code
 ; IN  DL          Virtual key code
 ; IN  DH          Scan code
-PutKeyboardCode	MACRO
-	UserGate put_keyboard_code_nr
-					ENDM
+PutKeyboardCode MACRO
+        UserGate put_keyboard_code_nr
+                                        ENDM
 
-; OUT AX			Character read
+; OUT AX                        Character read
 ; OUT CX            Keyboard state
 ; OUT DL            Virtual key code
 ; OUT DH            Scan code
 PeekKeyEvent    MACRO
-	UserGate peek_key_event_nr
-						ENDM
+        UserGate peek_key_event_nr
+                                                ENDM
 
-; OUT AX			Character read
+; OUT AX                        Character read
 ; OUT CX            Keyboard state
 ; OUT DL            Virtual key code
 ; OUT DH            Scan code
 ReadKeyEvent    MACRO
-	UserGate read_key_event_nr
-						ENDM
+        UserGate read_key_event_nr
+                                                ENDM
 
-ext_numpad_handled	EQU 800h
-ext_numpad_active	EQU 400h
-num_active			EQU 200h
-caps_active			EQU 100h
-print_pressed		EQU 20h
-scroll_pressed		EQU 10h
-pause_pressed		EQU 8
-ctrl_pressed		EQU 4
-alt_pressed			EQU 2
-shift_pressed		EQU 1
+ext_numpad_handled      EQU 800h
+ext_numpad_active       EQU 400h
+num_active                      EQU 200h
+caps_active                     EQU 100h
+print_pressed           EQU 20h
+scroll_pressed          EQU 10h
+pause_pressed           EQU 8
+ctrl_pressed            EQU 4
+alt_pressed                     EQU 2
+shift_pressed           EQU 1
 
-; OUT  AX		Keyboard states.
+; OUT  AX               Keyboard states.
 GetKeyboardState    MACRO
-	UserGate get_keyboard_state_nr
-						ENDM
+        UserGate get_keyboard_state_nr
+                                                ENDM
 
 ;;;;;;;;;;;; MOUSE ;;;;;;;;;;;
 
 ShowMouse    MACRO
-	UserGate show_mouse_nr
-						ENDM
+        UserGate show_mouse_nr
+                                                ENDM
 
 HideMouse    MACRO
-	UserGate hide_mouse_nr
-						ENDM
+        UserGate hide_mouse_nr
+                                                ENDM
 
 ; OUT CX              x
 ; OUT DX              y
 GetMousePosition    MACRO
-	UserGate get_mouse_position_nr
-						ENDM
+        UserGate get_mouse_position_nr
+                                                ENDM
 
 ; IN  CX              x
 ; IN  DX              y
 SetMousePosition    MACRO
-	UserGate set_mouse_position_nr
-						ENDM
+        UserGate set_mouse_position_nr
+                                                ENDM
 
-;	IN  AX			start x
-;	IN  BX			start y
+;       IN  AX                  start x
+;       IN  BX                  start y
 ;   IN  CX          end x
 ;   IN  DX          end y
 SetMouseWindow    MACRO
-	UserGate set_mouse_window_nr
-						ENDM
+        UserGate set_mouse_window_nr
+                                                ENDM
 
-;	IN  CX           mickeys in x-direction
-;	IN  DX           mickeys in y-direction
+;       IN  CX           mickeys in x-direction
+;       IN  DX           mickeys in y-direction
 SetMouseMickey    MACRO
-	UserGate set_mouse_mickey_nr
-						ENDM
+        UserGate set_mouse_mickey_nr
+                                                ENDM
 
-;		NC			button is pressed
+;               NC                      button is pressed
 GetLeftButton    MACRO
-	UserGate get_left_button_nr
-						ENDM
+        UserGate get_left_button_nr
+                                                ENDM
 
-;		NC			button is pressed
+;               NC                      button is pressed
 GetRightButton    MACRO
-	UserGate get_right_button_nr
-						ENDM
+        UserGate get_right_button_nr
+                                                ENDM
 
-;	OUT CX              x
-;	OUT DX              y
+;       OUT CX              x
+;       OUT DX              y
 GetLeftButtonPressPosition    MACRO
-	UserGate get_left_button_press_position_nr
-						ENDM
+        UserGate get_left_button_press_position_nr
+                                                ENDM
 
-;	OUT CX              x
-;	OUT DX              y
+;       OUT CX              x
+;       OUT DX              y
 GetRightButtonPressPosition    MACRO
-	UserGate get_right_button_press_position_nr
-						ENDM
+        UserGate get_right_button_press_position_nr
+                                                ENDM
 
-;	OUT CX              x
-;	OUT DX              y
+;       OUT CX              x
+;       OUT DX              y
 GetLeftButtonReleasePosition    MACRO
-	UserGate get_left_button_release_position_nr
-						ENDM
+        UserGate get_left_button_release_position_nr
+                                                ENDM
 
-;	OUT CX              x
-;	OUT DX              y
+;       OUT CX              x
+;       OUT DX              y
 GetRightButtonReleasePosition    MACRO
-	UserGate get_right_button_release_position_nr
-						ENDM
+        UserGate get_right_button_release_position_nr
+                                                ENDM
 
-;	IN  ES:(E)DI	Callback
-;			AX		Buttons
-;			CX		Delta x movement
-;			DX		Delta y movement
+;       IN  ES:(E)DI    Callback
+;                       AX              Buttons
+;                       CX              Delta x movement
+;                       DX              Delta y movement
 HookMouse    MACRO
-	UserGate hook_mouse_nr
-						ENDM
+        UserGate hook_mouse_nr
+                                                ENDM
 
 UnhookMouse    MACRO
-	UserGate unhook_mouse_nr
-						ENDM
+        UserGate unhook_mouse_nr
+                                                ENDM
 
 ;;;;;;;;;;;;; CDROM ;;;;;;;;;;;;
 
 LockCd  MACRO
-	UserGate lock_cd_nr
-		ENDM
-		
+        UserGate lock_cd_nr
+                ENDM
+                
 UnlockCd        MACRO
-	UserGate unlock_cd_nr
-			ENDM
-			
+        UserGate unlock_cd_nr
+                        ENDM
+                        
 EjectCd MACRO
-	UserGate eject_cd_nr
-		ENDM
-		
+        UserGate eject_cd_nr
+                ENDM
+                
 InsertCd        MACRO
-	UserGate insert_cd_nr
-			ENDM
+        UserGate insert_cd_nr
+                        ENDM
 
 ;;;;;;;;;;;;; SERIAL PORT ;;;;;;;;;;;;;
 
 ;   OUT AL      Port #
 GetMaxComPort       MACRO
-	UserGate get_max_com_port_nr
-						ENDM
+        UserGate get_max_com_port_nr
+                                                ENDM
 
-;	IN  AL		Port #
+;       IN  AL          Port #
 ;   NC          Available
 IsComAvailable       MACRO
-	UserGate is_com_available_nr
-						ENDM
+        UserGate is_com_available_nr
+                                                ENDM
 
 ;   IN AL      Port #
 ;   NC         OK
@@ -2466,846 +2472,846 @@ IsComAvailable       MACRO
 ;   OUT DX     IO Base
 ;   OUT ECX    Baud base
 GetStdComPar       MACRO
-	UserGate get_std_com_par_nr
-						ENDM
+        UserGate get_std_com_par_nr
+                                                ENDM
 
 ;   IN AL      Port #
 ;   NC         OK
 ;   OUT AX     Device type
 GetUsbComPar       MACRO
-	UserGate get_usb_com_par_nr
-						ENDM
+        UserGate get_usb_com_par_nr
+                                                ENDM
 
-;	IN  AL		Port #
-;	IN  AH		# of data bits
-;	IN  BL		# of stop bits
-;	IN  BH		parity ('N', 'E' or 'O')
-;	IN  ECX		baudrate
-;	IN  SI		size of transmit buffer
-;	IN  DI		size of receive buffer
-;	OUT BX		port handle
+;       IN  AL          Port #
+;       IN  AH          # of data bits
+;       IN  BL          # of stop bits
+;       IN  BH          parity ('N', 'E' or 'O')
+;       IN  ECX         baudrate
+;       IN  SI          size of transmit buffer
+;       IN  DI          size of receive buffer
+;       OUT BX          port handle
 OpenCom       MACRO
-	UserGate open_com_nr
-						ENDM
+        UserGate open_com_nr
+                                                ENDM
 
-;	IN  BX		port handle
+;       IN  BX          port handle
 CloseCom       MACRO
-	UserGate close_com_nr
-						ENDM
+        UserGate close_com_nr
+                                                ENDM
 
-;	IN  BX		port handle
+;       IN  BX          port handle
 FlushCom       MACRO
-	UserGate flush_com_nr
-						ENDM
+        UserGate flush_com_nr
+                                                ENDM
 
-;	IN  BX		port handle
+;       IN  BX          port handle
 ResetCom       MACRO
-	UserGate reset_com_nr
-						ENDM
+        UserGate reset_com_nr
+                                                ENDM
 
-;	IN  BX		port handle
-;	OUT AX		data read or -1
+;       IN  BX          port handle
+;       OUT AX          data read or -1
 ReadCom       MACRO
-	UserGate read_com_nr
-						ENDM
+        UserGate read_com_nr
+                                                ENDM
 
-;	IN  BX		port handle
-;	OUT AL		data to send
+;       IN  BX          port handle
+;       OUT AL          data to send
 WriteCom       MACRO
-	UserGate write_com_nr
-						ENDM
+        UserGate write_com_nr
+                                                ENDM
 
-;	IN  BX		port handle
+;       IN  BX          port handle
 WaitForSendCompletedCom       MACRO
-	UserGate wait_for_send_completed_com_nr
-						ENDM
+        UserGate wait_for_send_completed_com_nr
+                                                ENDM
 
-;	IN  BX		port handle
+;       IN  BX          port handle
 EnableCts       MACRO
-	UserGate enable_cts_nr
-						ENDM
+        UserGate enable_cts_nr
+                                                ENDM
 
-;	IN  BX		port handle
+;       IN  BX          port handle
 DisableCts       MACRO
-	UserGate disable_cts_nr
-						ENDM
+        UserGate disable_cts_nr
+                                                ENDM
 
-;	IN  BX		port handle
+;       IN  BX          port handle
 SetDtr       MACRO
-	UserGate set_dtr_nr
-						ENDM
+        UserGate set_dtr_nr
+                                                ENDM
 
-;	IN  BX		port handle
+;       IN  BX          port handle
 ResetDtr       MACRO
-	UserGate reset_dtr_nr
-						ENDM
+        UserGate reset_dtr_nr
+                                                ENDM
 
-;	IN  BX		port handle
+;       IN  BX          port handle
 SetRts       MACRO
-	UserGate set_rts_nr
-						ENDM
+        UserGate set_rts_nr
+                                                ENDM
 
-;	IN  BX		port handle
+;       IN  BX          port handle
 ResetRts       MACRO
-	UserGate reset_rts_nr
-						ENDM
+        UserGate reset_rts_nr
+                                                ENDM
 
-;	IN  BX		port handle
+;       IN  BX          port handle
 EnableAutoRts       MACRO
-	UserGate enable_auto_rts_nr
-						ENDM
+        UserGate enable_auto_rts_nr
+                                                ENDM
 
-;	IN  BX		port handle
+;       IN  BX          port handle
 DisableAutoRts       MACRO
-	UserGate disable_auto_rts_nr
-						ENDM
+        UserGate disable_auto_rts_nr
+                                                ENDM
 
-;	IN  BX		port handle
+;       IN  BX          port handle
 ;   OUT EAX     free space
 GetComReceiveSpace       MACRO
-	UserGate get_com_receive_space_nr
-						ENDM
+        UserGate get_com_receive_space_nr
+                                                ENDM
 
-;	IN  BX		port handle
+;       IN  BX          port handle
 ;   OUT EAX     free space
 GetComSendSpace       MACRO
-	UserGate get_com_send_space_nr
-						ENDM
+        UserGate get_com_send_space_nr
+                                                ENDM
 
-;	IN  BX		port handle
+;       IN  BX          port handle
 ;   OUT NC      ON
 ;   OUT CY      OFF
 GetCts       MACRO
-	UserGate read_cts_nr
-						ENDM
+        UserGate read_cts_nr
+                                                ENDM
 
-;	IN  BX		port handle
+;       IN  BX          port handle
 ;   OUT NC      ON
 ;   OUT CY      OFF
 GetDsr       MACRO
-	UserGate read_dsr_nr
-						ENDM
+        UserGate read_dsr_nr
+                                                ENDM
 
 ;;;;;;;;;;;;;; PRINTER ;;;;;;;;;;;;
 
 ;   OUT AL      Printer #
 GetMaxPrinters       MACRO
-	UserGate get_max_printer_nr
-						ENDM
+        UserGate get_max_printer_nr
+                                                ENDM
 
-;	IN  AL		Printer #
-;	OUT BX		Printer handle
+;       IN  AL          Printer #
+;       OUT BX          Printer handle
 OpenPrinter       MACRO
-	UserGate open_printer_nr
-						ENDM
+        UserGate open_printer_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 ClosePrinter       MACRO
-	UserGate close_printer_nr
-						ENDM
+        UserGate close_printer_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 ;   IN  ES:(E)DI      Name buffer
 GetPrinterName       MACRO
-	UserGate get_printer_name_nr
-						ENDM
+        UserGate get_printer_name_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 ;   OUT CY      Jammed
 IsPrinterJammed       MACRO
-	UserGate is_printer_jammed_nr
-						ENDM
+        UserGate is_printer_jammed_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 ;   OUT CY      Low
 IsPrinterPaperLow       MACRO
-	UserGate is_printer_paper_low_nr
-						ENDM
+        UserGate is_printer_paper_low_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 ;   OUT CY      End
 IsPrinterPaperEnd       MACRO
-	UserGate is_printer_paper_end_nr
-						ENDM
+        UserGate is_printer_paper_end_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 ;   OUT CY      Cutter jammed
 IsPrinterCutterJammed       MACRO
-	UserGate is_printer_cutter_jammed_nr
-						ENDM
+        UserGate is_printer_cutter_jammed_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 ;   OUT NC      OK
 IsPrinterOk       MACRO
-	UserGate is_printer_ok_nr
-						ENDM
+        UserGate is_printer_ok_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 ;   OUT CY      Lifted
 IsPrinterHeadLifted       MACRO
-	UserGate is_printer_head_lifted_nr
-						ENDM
+        UserGate is_printer_head_lifted_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 ;   OUT CY      Paper in presenter
 HasPrinterPaperInPresenter      MACRO
-	UserGate has_printer_paper_in_presenter_nr
-						ENDM
+        UserGate has_printer_paper_in_presenter_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 ;   OUT CY      Temperature error
 HasPrinterTemperatureError      MACRO
-	UserGate has_printer_temp_error_nr
-						ENDM
+        UserGate has_printer_temp_error_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 ;   OUT CY      Feed error
 HasPrinterFeedError      MACRO
-	UserGate has_printer_feed_error_nr
-						ENDM
+        UserGate has_printer_feed_error_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 PrintTest       MACRO
-	UserGate print_test_nr
-						ENDM
+        UserGate print_test_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 ;   IN  DX      Height
 ;   OUT AX      Bitmap handle
 CreatePrinterBitmap       MACRO
-	UserGate create_printer_bitmap_nr
-						ENDM
+        UserGate create_printer_bitmap_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 ;   IN  AX      Bitmap handle
 PrintBitmap       MACRO
-	UserGate print_bitmap_nr
-						ENDM
+        UserGate print_bitmap_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 ;   IN  AX      Length in mm
 PresentPrinterMedia       MACRO
-	UserGate present_printer_media_nr
-						ENDM
+        UserGate present_printer_media_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 EjectPrinterMedia       MACRO
-	UserGate eject_printer_media_nr
-						ENDM
+        UserGate eject_printer_media_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 WaitForPrint       MACRO
-	UserGate wait_for_print_nr
-						ENDM
+        UserGate wait_for_print_nr
+                                                ENDM
 
-;	IN  BX		Printer handle
+;       IN  BX          Printer handle
 ResetPrinter       MACRO
-	UserGate reset_printer_nr
-						ENDM
+        UserGate reset_printer_nr
+                                                ENDM
 
 ;;;;;;;;;;;;;; Lonworks ;;;;;;;;;;;;
 
 ;   OUT AL      Lon modules #
 GetLonModules       MACRO
-	UserGate get_lon_modules_nr
-						ENDM
+        UserGate get_lon_modules_nr
+                                                ENDM
 
-;	IN  AL		Lon module #
+;       IN  AL          Lon module #
 ;   IN  SI      Send buffers
 ;   IN  DI      Receive buffers
-;	OUT BX		Lon handle
+;       OUT BX          Lon handle
 OpenLonModule       MACRO
-	UserGate open_lon_module_nr
-						ENDM
+        UserGate open_lon_module_nr
+                                                ENDM
 
-;	IN  AL	    Lon module #
+;       IN  AL      Lon module #
 ResetLonModule       MACRO
-	UserGate reset_lon_module_nr
-						ENDM
+        UserGate reset_lon_module_nr
+                                                ENDM
 
-;	IN  BX	    Lon handle
+;       IN  BX      Lon handle
 CloseLonModule       MACRO
-	UserGate close_lon_module_nr
-						ENDM
+        UserGate close_lon_module_nr
+                                                ENDM
 
-; IN  BX		Wait handle
+; IN  BX                Wait handle
 ; IN  AX        Lon handle
 ; IN  ECX       Object ID
 AddWaitForLonModule       MACRO
-	UserGate add_wait_for_lon_module_nr
-						ENDM
+        UserGate add_wait_for_lon_module_nr
+                                                ENDM
 
-; IN  BX		Lon handle
+; IN  BX                Lon handle
 ; IN  ES:(E)DI  Buffer
 ; IN  (E)CX     Size
 SendLonModuleMsg       MACRO
-	UserGate send_lon_module_msg_nr
-						ENDM
+        UserGate send_lon_module_msg_nr
+                                                ENDM
 
-; IN  BX		Lon handle
+; IN  BX                Lon handle
 ; OUT NC        Message
 HasLonModuleMsg       MACRO
-	UserGate has_lon_module_msg_nr
-						ENDM
+        UserGate has_lon_module_msg_nr
+                                                ENDM
 
-; IN  BX		Lon handle
+; IN  BX                Lon handle
 ; IN  ES:(E)DI  Buffer
 ; OUT ECX       Size
 ReceiveLonModuleMsg       MACRO
-	UserGate receive_lon_module_msg_nr
-						ENDM
+        UserGate receive_lon_module_msg_nr
+                                                ENDM
 
 ;;;;;;;;;;;;;; CARD DEVICE ;;;;;;;;;;;;
 
 ;   OUT AL      Card device #
 GetMaxCardDev       MACRO
-	UserGate get_max_carddev_nr
-						ENDM
+        UserGate get_max_carddev_nr
+                                                ENDM
 
-;	IN  AL		Card device #
-;	OUT BX		Card device handle
+;       IN  AL          Card device #
+;       OUT BX          Card device handle
 OpenCardDev       MACRO
-	UserGate open_carddev_nr
-						ENDM
+        UserGate open_carddev_nr
+                                                ENDM
 
-;	IN  BX		Card device handle
+;       IN  BX          Card device handle
 CloseCardDev       MACRO
-	UserGate close_carddev_nr
-						ENDM
+        UserGate close_carddev_nr
+                                                ENDM
 
-;	IN  BX		      Card device handle
+;       IN  BX                Card device handle
 ;   IN  ES:(E)DI      Name buffer
 GetCardDevName       MACRO
-	UserGate get_carddev_name_nr
-						ENDM
+        UserGate get_carddev_name_nr
+                                                ENDM
 
-;	IN  BX		Card device handle
+;       IN  BX          Card device handle
 ;   OUT NC      OK
 IsCardDevOk       MACRO
-	UserGate is_carddev_ok_nr
-						ENDM
+        UserGate is_carddev_ok_nr
+                                                ENDM
 
-;	IN  BX		Card device handle
+;       IN  BX          Card device handle
 ;   OUT NC      Busy
 IsCardDevBusy       MACRO
-	UserGate is_carddev_busy_nr
-						ENDM
+        UserGate is_carddev_busy_nr
+                                                ENDM
 
-;	IN  BX		Card device handle
+;       IN  BX          Card device handle
 ;   OUT NC      Card inserted
 IsCardDevInserted       MACRO
-	UserGate is_carddev_inserted_nr
-						ENDM
+        UserGate is_carddev_inserted_nr
+                                                ENDM
 
-;	IN  BX		Card device handle
+;       IN  BX          Card device handle
 ;   OUT NC      Card inserted
 HadCardDevInserted       MACRO
-	UserGate had_carddev_inserted_nr
-						ENDM
+        UserGate had_carddev_inserted_nr
+                                                ENDM
 
-;	IN  BX		Card device handle
+;       IN  BX          Card device handle
 ClearCardDevInserted       MACRO
-	UserGate clear_carddev_inserted_nr
-						ENDM
+        UserGate clear_carddev_inserted_nr
+                                                ENDM
 
-;	IN  BX		      Card device handle
+;       IN  BX                Card device handle
 ;   IN  ES:(E)DI      Strip buffer
 WaitForCard       MACRO
-	UserGate wait_for_card_nr
-						ENDM
+        UserGate wait_for_card_nr
+                                                ENDM
 
 ;;;;;;;;;; SCREEN, TEXT MODE ;;;;;;;;;;
 
 ClearText    MACRO
-	UserGate clear_text_nr
-						ENDM
+        UserGate clear_text_nr
+                                                ENDM
 
-;	OUT CX              Columns
-;	OUT DX              Rows
+;       OUT CX              Columns
+;       OUT DX              Rows
 GetTextSize    MACRO
-	UserGate get_text_size_nr
-						ENDM
+        UserGate get_text_size_nr
+                                                ENDM
 
-;	IN  CX              Column number (x)
-;	IN  DX              Row number (y)
+;       IN  CX              Column number (x)
+;       IN  DX              Row number (y)
 SetCursorPosition    MACRO
-	UserGate set_cursor_position_nr
-						ENDM
+        UserGate set_cursor_position_nr
+                                                ENDM
 
-;	OUT CX              Column number (x)
-;	OUT DX              Row number (y)
+;       OUT CX              Column number (x)
+;       OUT DX              Row number (y)
 GetCursorPosition    MACRO
-	UserGate get_cursor_position_nr
-						ENDM
+        UserGate get_cursor_position_nr
+                                                ENDM
 
-;	IN  CX              Column number (x)
-;	IN  DX              Row number (y)
+;       IN  CX              Column number (x)
+;       IN  DX              Row number (y)
 SetConsoleCursorPosition    MACRO
-	UserGate set_console_cursor_position_nr
-						ENDM
+        UserGate set_console_cursor_position_nr
+                                                ENDM
 
-;	OUT CX              Column number (x)
-;	OUT DX              Row number (y)
+;       OUT CX              Column number (x)
+;       OUT DX              Row number (y)
 GetConsoleCursorPosition    MACRO
-	UserGate get_console_cursor_position_nr
-						ENDM
+        UserGate get_console_cursor_position_nr
+                                                ENDM
 
-;	IN  AL              Color number
+;       IN  AL              Color number
 SetForeColor        MACRO
-	UserGate set_forecolor_nr
-						ENDM
+        UserGate set_forecolor_nr
+                                                ENDM
 
-;	IN  AL              Color number. 0FFh is transparent
+;       IN  AL              Color number. 0FFh is transparent
 SetBackColor        MACRO
-	UserGate set_backcolor_nr
-						ENDM
+        UserGate set_backcolor_nr
+                                                ENDM
 
-;	OUT AL       	Char
-;	OUT BL			Back color
-;   OUT BH			Fore color
+;       OUT AL          Char
+;       OUT BL                  Back color
+;   OUT BH                      Fore color
 GetCharAttrib       MACRO
-	UserGate get_char_attrib_nr
-						ENDM
+        UserGate get_char_attrib_nr
+                                                ENDM
 
-;	IN  AL              Char
+;       IN  AL              Char
 WriteChar       MACRO
-	UserGate write_char_nr
-						ENDM
+        UserGate write_char_nr
+                                                ENDM
 
-;	IN  ES:(E)DI           Null terminated string
+;       IN  ES:(E)DI           Null terminated string
 WriteAsciiz     MACRO
-	UserGate write_asciiz_nr
-						ENDM
+        UserGate write_asciiz_nr
+                                                ENDM
 
-;	IN  ES:(E)DI           Buffer
+;       IN  ES:(E)DI           Buffer
 ;   IN  (E)CX              Count
 WriteSizeString MACRO
-	UserGate write_size_string_nr
-						ENDM
+        UserGate write_size_string_nr
+                                                ENDM
 
-;	IN  AX              Column number (x)
-;	IN  DX              Row number (y)
-;	IN  ES:(E)DI        Buffer
+;       IN  AX              Column number (x)
+;       IN  DX              Row number (y)
+;       IN  ES:(E)DI        Buffer
 ;   IN  (E)CX           Count
 WriteAttributeString MACRO
-	UserGate write_attrib_string_nr
-						ENDM
+        UserGate write_attrib_string_nr
+                                                ENDM
 
 ;;;;;;;;;;; FONT ;;;;;;;;;;
 
-;	IN  DS:(E)SI        ANSI string
-;	IN  DS:(E)DI        UTF-8 string
+;       IN  DS:(E)SI        ANSI string
+;       IN  DS:(E)DI        UTF-8 string
 ;   IN  (E)CX           Buffer size
-;	OUT EAX             String size
+;       OUT EAX             String size
 AnsiToUtf8        MACRO
-	UserGate ansi_to_utf8_nr
-						ENDM
+        UserGate ansi_to_utf8_nr
+                                                ENDM
 
-;	IN  DS:(E)SI        UTF-8 string
-;	IN  DS:(E)DI        ANSI string
+;       IN  DS:(E)SI        UTF-8 string
+;       IN  DS:(E)DI        ANSI string
 ;   IN  (E)CX           Buffer size
-;	OUT EAX             String size
+;       OUT EAX             String size
 Utf8ToAnsi        MACRO
-	UserGate utf8_to_ansi_nr
-						ENDM
+        UserGate utf8_to_ansi_nr
+                                                ENDM
 
-;	IN  DS:(E)SI        ANSI string
-;	IN  DS:(E)DI        UTF-16 string
+;       IN  DS:(E)SI        ANSI string
+;       IN  DS:(E)DI        UTF-16 string
 ;   IN  (E)CX           Buffer size
-;	OUT EAX             String size
+;       OUT EAX             String size
 AnsiToUtf16        MACRO
-	UserGate ansi_to_utf16_nr
-						ENDM
+        UserGate ansi_to_utf16_nr
+                                                ENDM
 
-;	IN  DS:(E)SI        UTF-16 string
-;	IN  DS:(E)DI        ANSI string
+;       IN  DS:(E)SI        UTF-16 string
+;       IN  DS:(E)DI        ANSI string
 ;   IN  (E)CX           Buffer size
-;	OUT EAX             String size
+;       OUT EAX             String size
 Utf16ToAnsi        MACRO
-	UserGate utf16_to_ansi_nr
-						ENDM
+        UserGate utf16_to_ansi_nr
+                                                ENDM
 
-;	IN  AX              Requested font height
+;       IN  AX              Requested font height
 ;   IN  DX              Requested font ID
-;	OUT	BX				Font handle
+;       OUT     BX                              Font handle
 OpenFont        MACRO
-	UserGate open_font_nr
-						ENDM
+        UserGate open_font_nr
+                                                ENDM
 
-;	IN	BX				Font handle
+;       IN      BX                              Font handle
 CloseFont        MACRO
-	UserGate close_font_nr
-						ENDM
+        UserGate close_font_nr
+                                                ENDM
 
-;	IN  ES:E(DI)		String to ask about
-;	IN	BX				Font handle
-;	OUT CX				Width of string
-;	OUT DX				Height of char
+;       IN  ES:E(DI)            String to ask about
+;       IN      BX                              Font handle
+;       OUT CX                          Width of string
+;       OUT DX                          Height of char
 GetStringMetrics        MACRO
-	UserGate get_string_metrics_nr
-						ENDM
+        UserGate get_string_metrics_nr
+                                                ENDM
 
 ;;;;;;;;;;; SCREEN, GRAPHICS MODE ;;;;;;;;;;
 
-;	IN  AX		Requested mode
-;	OUT AX		bits / pixel
-;	OUT CX		x-resolution
-;	OUT DX		y-resolution
+;       IN  AX          Requested mode
+;       OUT AX          bits / pixel
+;       OUT CX          x-resolution
+;       OUT DX          y-resolution
 QueryVideoMode      MACRO
-	UserGate query_video_mode_nr
-						ENDM
+        UserGate query_video_mode_nr
+                                                ENDM
 
-;	IN  AX		bits / pixel
-;	IN  CX		x-resolution
-;	IN  DX		y-resolution
-;	OUT AX		Requested mode
+;       IN  AX          bits / pixel
+;       IN  CX          x-resolution
+;       IN  DX          y-resolution
+;       OUT AX          Requested mode
 GetVideoMode      MACRO
-	UserGate get_video_mode_nr
-						ENDM
+        UserGate get_video_mode_nr
+                                                ENDM
 
-;	IN  AX		Requested mode
-;	OUT AX		bits / pixel
-;	OUT BX		bitmap handle
-;	OUT CX		x-resolution
-;	OUT DX		y-resolution
-;	OUT SI		line size
-;	OUT	ES:EDI	video buffer
+;       IN  AX          Requested mode
+;       OUT AX          bits / pixel
+;       OUT BX          bitmap handle
+;       OUT CX          x-resolution
+;       OUT DX          y-resolution
+;       OUT SI          line size
+;       OUT     ES:EDI  video buffer
 SetVideoMode      MACRO
-	UserGate set_video_mode_nr
-						ENDM
+        UserGate set_video_mode_nr
+                                                ENDM
 
 SetVgaMode      MACRO
-	UserGate set_vga_mode_nr
-						ENDM
+        UserGate set_vga_mode_nr
+                                                ENDM
 
-;	IN  EAX           	RGB color
-;	IN	BX				Bitmap handle
+;       IN  EAX                 RGB color
+;       IN      BX                              Bitmap handle
 SetDrawColor        MACRO
-	UserGate set_drawcolor_nr
-						ENDM
+        UserGate set_drawcolor_nr
+                                                ENDM
 
-;	IN  AX              LGOP
-;	IN	BX				Bitmap handle
+;       IN  AX              LGOP
+;       IN      BX                              Bitmap handle
 SetLgop        MACRO
-	UserGate set_lgop_nr
-						ENDM
+        UserGate set_lgop_nr
+                                                ENDM
 
-;	IN	BX		Bitmap handle
-;	IN	CX		min x
-;	IN	DX	    min y
-;	IN  SI		max x
-;	IN  DI	    max y
+;       IN      BX              Bitmap handle
+;       IN      CX              min x
+;       IN      DX          min y
+;       IN  SI          max x
+;       IN  DI      max y
 SetClipRect        MACRO
-	UserGate set_clip_rect_nr
-						ENDM
+        UserGate set_clip_rect_nr
+                                                ENDM
 
-;	IN	BX		Bitmap handle
+;       IN      BX              Bitmap handle
 ClearClipRect        MACRO
-	UserGate clear_clip_rect_nr
-						ENDM
+        UserGate clear_clip_rect_nr
+                                                ENDM
 
-;	IN	BX				Bitmap handle or 0
+;       IN      BX                              Bitmap handle or 0
 SetHollowStyle        MACRO
-	UserGate set_hollow_style_nr
-						ENDM
+        UserGate set_hollow_style_nr
+                                                ENDM
 
-;	IN	BX				Bitmap handle or 0
+;       IN      BX                              Bitmap handle or 0
 SetFilledStyle        MACRO
-	UserGate set_filled_style_nr
-						ENDM
+        UserGate set_filled_style_nr
+                                                ENDM
 
-;	IN	BX		Bitmap handle or 0
-;	IN  CX		x
-;	IN  DX		y
-;	OUT EAX		RGB value
+;       IN      BX              Bitmap handle or 0
+;       IN  CX          x
+;       IN  DX          y
+;       OUT EAX         RGB value
 GetPixel      MACRO
-	UserGate get_pixel_nr
-						ENDM
+        UserGate get_pixel_nr
+                                                ENDM
 
-;	IN	BX		Bitmap handle or 0
-;	IN  CX		x
-;	IN  DX		y
+;       IN      BX              Bitmap handle or 0
+;       IN  CX          x
+;       IN  DX          y
 SetPixel      MACRO
-	UserGate set_pixel_nr
-						ENDM
+        UserGate set_pixel_nr
+                                                ENDM
 
-;	IN  AX		Source bitmap handle or 0
-;	IN	BX		Dest bitmap handle or 0
-;	IN	CX		Width
-;	IN	DX		Height
-;	IN	ESI		source x + y << 16
-;	IN 	EDI		dest x + y << 16
+;       IN  AX          Source bitmap handle or 0
+;       IN      BX              Dest bitmap handle or 0
+;       IN      CX              Width
+;       IN      DX              Height
+;       IN      ESI             source x + y << 16
+;       IN      EDI             dest x + y << 16
 Blit      MACRO
-	UserGate blit_nr
-						ENDM
+        UserGate blit_nr
+                                                ENDM
 
-;	IN	AX		Row size
-;	IN	BX		Bitmap handle or 0
-;	IN	ECX		source x + y << 16
-;	IN	EDX		dest x + y << 16
-;	IN	ESI		width + height << 16
-;	IN	ES:EDI	1-bit mask
+;       IN      AX              Row size
+;       IN      BX              Bitmap handle or 0
+;       IN      ECX             source x + y << 16
+;       IN      EDX             dest x + y << 16
+;       IN      ESI             width + height << 16
+;       IN      ES:EDI  1-bit mask
 DrawMask      MACRO
-	UserGate draw_mask_nr
-						ENDM
+        UserGate draw_mask_nr
+                                                ENDM
 
-;	IN	BX		Bitmap handle or 0
-;	IN	CX		x1
-;	IN	DX		y1
-;	IN  SI		x2
-;	IN  DI		y2
+;       IN      BX              Bitmap handle or 0
+;       IN      CX              x1
+;       IN      DX              y1
+;       IN  SI          x2
+;       IN  DI          y2
 DrawLine      MACRO
-	UserGate draw_line_nr
-						ENDM
+        UserGate draw_line_nr
+                                                ENDM
 
-;	IN  AX			Font handle
-;	IN  BX			Bitmap handle or 0
+;       IN  AX                  Font handle
+;       IN  BX                  Bitmap handle or 0
 SetFont      MACRO
-	UserGate set_font_nr
-						ENDM
+        UserGate set_font_nr
+                                                ENDM
 
-;	IN  CX			x position
-;	IN  DX			y position
-;	IN  ES:(E)DI	String to draw
+;       IN  CX                  x position
+;       IN  DX                  y position
+;       IN  ES:(E)DI    String to draw
 DrawString      MACRO
-	UserGate draw_string_nr
-						ENDM
+        UserGate draw_string_nr
+                                                ENDM
 
-;	IN	BX		Bitmap handle or 0
-;	IN	CX		x
-;	IN	DX		y
-;	IN  SI		width
-;	IN  DI		height
+;       IN      BX              Bitmap handle or 0
+;       IN      CX              x
+;       IN      DX              y
+;       IN  SI          width
+;       IN  DI          height
 DrawRect      MACRO
-	UserGate draw_rect_nr
-						ENDM
+        UserGate draw_rect_nr
+                                                ENDM
 
-;	IN	BX		Bitmap handle or 0
-;	IN	CX		x
-;	IN	DX		y
-;	IN  SI		width
-;	IN  DI		height
+;       IN      BX              Bitmap handle or 0
+;       IN      CX              x
+;       IN      DX              y
+;       IN  SI          width
+;       IN  DI          height
 DrawEllipse      MACRO
-	UserGate draw_ellipse_nr
-						ENDM
+        UserGate draw_ellipse_nr
+                                                ENDM
 
-;	IN  AX		Bits per pixel
-;	IN  CX		Width
-;	IN  DX		Height
-;	OUT BX		Bitmap handle
+;       IN  AX          Bits per pixel
+;       IN  CX          Width
+;       IN  DX          Height
+;       OUT BX          Bitmap handle
 CreateBitmap      MACRO
-	UserGate create_bitmap_nr
-						ENDM
+        UserGate create_bitmap_nr
+                                                ENDM
 
-;	IN  CX		Width
-;	IN  DX		Height
-;	OUT BX		Bitmap handle
+;       IN  CX          Width
+;       IN  DX          Height
+;       OUT BX          Bitmap handle
 CreateAlphaBitmap      MACRO
-	UserGate create_alpha_bitmap_nr
-						ENDM
+        UserGate create_alpha_bitmap_nr
+                                                ENDM
 
-;	IN  BX		Bitmap handle
-;	OUT BX		Mask bitmap handle
+;       IN  BX          Bitmap handle
+;       OUT BX          Mask bitmap handle
 ExtractValidBitmapMask      MACRO
-	UserGate extract_valid_bitmap_mask_nr
-						ENDM
+        UserGate extract_valid_bitmap_mask_nr
+                                                ENDM
 
-;	IN  BX		Bitmap handle
-;	OUT BX		Mask bitmap handle
+;       IN  BX          Bitmap handle
+;       OUT BX          Mask bitmap handle
 ExtractInvalidBitmapMask      MACRO
-	UserGate extract_invalid_bitmap_mask_nr
-						ENDM
+        UserGate extract_invalid_bitmap_mask_nr
+                                                ENDM
 
-;	IN  BX		Bitmap handle
-;	OUT BX		Mask bitmap handle
+;       IN  BX          Bitmap handle
+;       OUT BX          Mask bitmap handle
 ExtractAlphaBitmap      MACRO
-	UserGate extract_alpha_bitmap_nr
-						ENDM
+        UserGate extract_alpha_bitmap_nr
+                                                ENDM
 
-;	IN  BX		Bitmap handle
-;	OUT BX		Duplicated bitmap handle
+;       IN  BX          Bitmap handle
+;       OUT BX          Duplicated bitmap handle
 DuplicateBitmapHandle      MACRO
-	UserGate dup_bitmap_handle_nr
-						ENDM
+        UserGate dup_bitmap_handle_nr
+                                                ENDM
 
-;	IN  BX		Bitmap handle
+;       IN  BX          Bitmap handle
 CloseBitmap      MACRO
-	UserGate close_bitmap_nr
-						ENDM
+        UserGate close_bitmap_nr
+                                                ENDM
 
-;	IN  ES:E(DI)	String
-;	IN  BX			Font handle
-;	OUT	BX			Bitmap handle
+;       IN  ES:E(DI)    String
+;       IN  BX                  Font handle
+;       OUT     BX                      Bitmap handle
 CreateStringBitmap      MACRO
-	UserGate create_string_bitmap_nr
-						ENDM
+        UserGate create_string_bitmap_nr
+                                                ENDM
 
-;	IN  BX			Bitmap handle
-;	OUT	AL			Bits / pixel
-;	OUT CX			Width
-;	OUT DX			Height
-;	OUT	SI			Line size in bytes
-;	OUT ES:EDI		Buffer address
+;       IN  BX                  Bitmap handle
+;       OUT     AL                      Bits / pixel
+;       OUT CX                  Width
+;       OUT DX                  Height
+;       OUT     SI                      Line size in bytes
+;       OUT ES:EDI              Buffer address
 GetBitmapInfo      MACRO
-	UserGate get_bitmap_info_nr
-						ENDM
+        UserGate get_bitmap_info_nr
+                                                ENDM
 
 ;   IN  AX      LGOP
 ;   IN  BX      Dest bitmap handle or 0
-;	IN  CX		Main bitmap
-;	IN  DX		Mask (1-bit bitmap)
-;	OUT BX		Sprite handle
+;       IN  CX          Main bitmap
+;       IN  DX          Mask (1-bit bitmap)
+;       OUT BX          Sprite handle
 CreateSprite      MACRO
-	UserGate create_sprite_nr
-						ENDM
+        UserGate create_sprite_nr
+                                                ENDM
 
-;	IN  BX		Sprite handle
+;       IN  BX          Sprite handle
 CloseSprite      MACRO
-	UserGate close_sprite_nr
-						ENDM
+        UserGate close_sprite_nr
+                                                ENDM
 
-;	IN  BX		Sprite handle
+;       IN  BX          Sprite handle
 ShowSprite      MACRO
-	UserGate show_sprite_nr
-						ENDM
+        UserGate show_sprite_nr
+                                                ENDM
 
-;	IN  BX		Sprite handle
+;       IN  BX          Sprite handle
 HideSprite      MACRO
-	UserGate hide_sprite_nr
-						ENDM
+        UserGate hide_sprite_nr
+                                                ENDM
 
-;	IN  BX		Sprite handle
+;       IN  BX          Sprite handle
 ;   IN  CX      x
 ;   IN  DX      y
 MoveSprite      MACRO
-	UserGate move_sprite_nr
-						ENDM
+        UserGate move_sprite_nr
+                                                ENDM
 
-;	IN  AX		Adc channel
-;	OUT BX		Adc handle
+;       IN  AX          Adc channel
+;       OUT BX          Adc handle
 OpenAdc      MACRO
-	UserGate open_adc_nr
-						ENDM
-						
-;	IN  BX		Adc handle
+        UserGate open_adc_nr
+                                                ENDM
+                                                
+;       IN  BX          Adc handle
 CloseAdc      MACRO
-	UserGate close_adc_nr
-						ENDM
-						
-;	IN  BX		Adc handle
-;   IN  EDX:EAX	Time to do next ADC conversion
+        UserGate close_adc_nr
+                                                ENDM
+                                                
+;       IN  BX          Adc handle
+;   IN  EDX:EAX Time to do next ADC conversion
 DefineAdcTime      MACRO
-	UserGate define_adc_time_nr
-						ENDM
-												
-;	IN  BX		Adc handle
-;   OUT	EAX     Value
+        UserGate define_adc_time_nr
+                                                ENDM
+                                                                                                
+;       IN  BX          Adc handle
+;   OUT EAX     Value
 ReadAdc      MACRO
-	UserGate read_adc_nr
-						ENDM
+        UserGate read_adc_nr
+                                                ENDM
 
-;	IN  DH		Device #
-;	OUT AL		State
+;       IN  DH          Device #
+;       OUT AL          State
 ReadSerialLines      MACRO
-	UserGate read_serial_lines_nr
-						ENDM
+        UserGate read_serial_lines_nr
+                                                ENDM
 
-;	IN  DH		Device #
-;	IN  DL		Line #
+;       IN  DH          Device #
+;       IN  DL          Line #
 ToggleSerialLine      MACRO
-	UserGate toggle_serial_line_nr
-						ENDM
+        UserGate toggle_serial_line_nr
+                                                ENDM
 
-;	IN  DH		Device #
-;	IN  DL		Line #
+;       IN  DH          Device #
+;       IN  DL          Line #
 ResetSerialLine      MACRO
-	UserGate reset_serial_line_nr
-						ENDM
+        UserGate reset_serial_line_nr
+                                                ENDM
 
-;	IN  DH		Device #
-;	IN  DL		Line #
+;       IN  DH          Device #
+;       IN  DL          Line #
 SetSerialLine      MACRO
-	UserGate set_serial_line_nr
-						ENDM
+        UserGate set_serial_line_nr
+                                                ENDM
 
 
-;	IN  DH		Device #
-;	IN	DL		Line #
-;	OUT EAX		Value
+;       IN  DH          Device #
+;       IN      DL              Line #
+;       OUT EAX         Value
 ReadSerialVal      MACRO
-	UserGate read_serial_val_nr
-						ENDM
+        UserGate read_serial_val_nr
+                                                ENDM
 
-;	IN  DH		Device #
-;	IN  DL		Line #
-;	IN  EAX		Value
+;       IN  DH          Device #
+;       IN  DL          Line #
+;       IN  EAX         Value
 WriteSerialVal      MACRO
-	UserGate write_serial_val_nr
-						ENDM
+        UserGate write_serial_val_nr
+                                                ENDM
 
 EnableStatusLED      MACRO
-	UserGate enable_status_led_nr
-						ENDM
+        UserGate enable_status_led_nr
+                                                ENDM
 
 DisableStatusLED      MACRO
-	UserGate disable_status_led_nr
-						ENDM
+        UserGate disable_status_led_nr
+                                                ENDM
 
 ;   IN  EAX     Timeout in milli seconds
 StartWatchdog      MACRO
-	UserGate start_watchdog_nr
-						ENDM
+        UserGate start_watchdog_nr
+                                                ENDM
 
 KickWatchdog      MACRO
-	UserGate kick_watchdog_nr
-						ENDM
+        UserGate kick_watchdog_nr
+                                                ENDM
 
 StopWatchdog      MACRO
-	UserGate stop_watchdog_nr
-						ENDM
+        UserGate stop_watchdog_nr
+                                                ENDM
 
 ;   OUT EAX     Maximum tics between kicks. If 0, watchdog not running.
 GetWatchdogTics      MACRO
-	UserGate get_watchdog_tics_nr
-						ENDM
-						
-;	IN  BX		File handle
+        UserGate get_watchdog_tics_nr
+                                                ENDM
+                                                
+;       IN  BX          File handle
 StartNetCapture      MACRO
-	UserGate start_net_capture_nr
-						ENDM
-						
+        UserGate start_net_capture_nr
+                                                ENDM
+                                                
 StopNetCapture      MACRO
-	UserGate stop_net_capture_nr
-						ENDM
-						
-;	IN  BX		File handle
+        UserGate stop_net_capture_nr
+                                                ENDM
+                                                
+;       IN  BX          File handle
 StartCanCapture      MACRO
-	UserGate start_can_capture_nr
-						ENDM
-						
+        UserGate start_can_capture_nr
+                                                ENDM
+                                                
 StopCanCapture      MACRO
-	UserGate stop_can_capture_nr
-						ENDM
-						
-;	IN  BX		File handle
+        UserGate stop_can_capture_nr
+                                                ENDM
+                                                
+;       IN  BX          File handle
 StarLonCapture      MACRO
-	UserGate start_lon_capture_nr
-						ENDM
-						
+        UserGate start_lon_capture_nr
+                                                ENDM
+                                                
 StopLonCapture      MACRO
-	UserGate stop_lon_capture_nr
-						ENDM
+        UserGate stop_lon_capture_nr
+                                                ENDM
 
 ;   IN  AX          CRC polynom
 ;   OUT BX          CRC handle
 CreateCrc      MACRO
-	UserGate create_crc_nr
-						ENDM
+        UserGate create_crc_nr
+                                                ENDM
 
 ;   IN  BX          CRC handle
 CloseCrc      MACRO
-	UserGate close_crc_nr
-						ENDM
+        UserGate close_crc_nr
+                                                ENDM
 
 ;   IN  BX          CRC handle
 ;   IN  AX          CRC value
@@ -3313,16 +3319,16 @@ CloseCrc      MACRO
 ;   IN  (E)CX       Size
 ;   OUT AX          CRC value
 CalcCrc      MACRO
-	UserGate calc_crc_nr
-						ENDM
+        UserGate calc_crc_nr
+                                                ENDM
 
 ;   IN  EAX         CRC value
 ;   IN  ES:(E)DI    Data
 ;   IN  (E)CX       Size
 ;   OUT EAX         CRC value
 CalcCrc32      MACRO
-	UserGate calc_crc32_nr
-						ENDM
+        UserGate calc_crc32_nr
+                                                ENDM
 
 ;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)
@@ -3330,8 +3336,8 @@ CalcCrc32      MACRO
 ;   IN  ES:(E)DI    Buffer
 ;   OUT (E)AX       Size of descriptor
 GetUsbDevice      MACRO
-	UserGate get_usb_device_nr
-						ENDM
+        UserGate get_usb_device_nr
+                                                ENDM
 
 ;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)
@@ -3340,274 +3346,274 @@ GetUsbDevice      MACRO
 ;   IN  ES:(E)DI    Buffer
 ;   OUT (E)AX       Size of descriptor
 GetUsbConfig      MACRO
-	UserGate get_usb_config_nr
-						ENDM
+        UserGate get_usb_config_nr
+                                                ENDM
 
 ;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)
 ;   IN  DL          Configuration id
 ConfigUsbDevice      MACRO
-	UserGate config_usb_device_nr
-						ENDM
+        UserGate config_usb_device_nr
+                                                ENDM
 
 ;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)
 ;   IN  DX          Interface #
 ;   OUT CL          Alt setting
 GetUsbInterface      MACRO
-	UserGate get_usb_interface_nr
-						ENDM
+        UserGate get_usb_interface_nr
+                                                ENDM
 
 ;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)
 ;   IN  DX          Interface #
 ;   IN  CL          Alt setting
 SetUsbInterface      MACRO
-	UserGate set_usb_interface_nr
-						ENDM
+        UserGate set_usb_interface_nr
+                                                ENDM
 
 ;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)
 ;   IN  DL          Pipe #
 ;   OUT BX          Handle
 OpenUsbPipe      MACRO
-	UserGate open_usb_pipe_nr
-						ENDM
+        UserGate open_usb_pipe_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 CloseUsbPipe      MACRO
-	UserGate close_usb_pipe_nr
-						ENDM
+        UserGate close_usb_pipe_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ResetUsbPipe      MACRO
-	UserGate reset_usb_pipe_nr
-						ENDM
+        UserGate reset_usb_pipe_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ;   IN  CX          Size of data
 ;   IN  ES:(E)DI    Buffer
 WriteUsbControl      MACRO
-	UserGate write_usb_control_nr
-						ENDM
+        UserGate write_usb_control_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ;   IN  CX          Size of data
 ;   IN  ES:(E)DI    Buffer
 ReqUsbData      MACRO
-	UserGate req_usb_data_nr
-						ENDM
+        UserGate req_usb_data_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ;   OUT (E)AX       Read size
 GetUsbDataSize      MACRO
-	UserGate get_usb_data_size_nr
-						ENDM
+        UserGate get_usb_data_size_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ;   IN  CX          Size of data
 ;   IN  ES:(E)DI    Buffer
 WriteUsbData      MACRO
-	UserGate write_usb_data_nr
-						ENDM
+        UserGate write_usb_data_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ReqUsbStatus      MACRO
-	UserGate req_usb_status_nr
-						ENDM
+        UserGate req_usb_status_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 WriteUsbStatus      MACRO
-	UserGate write_usb_status_nr
-						ENDM
+        UserGate write_usb_status_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 IsUsbConnected      MACRO
-	UserGate is_usb_connected_nr
-						ENDM
+        UserGate is_usb_connected_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 StartUsbTransaction      MACRO
-	UserGate start_usb_transaction_nr
-						ENDM
+        UserGate start_usb_transaction_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ;   IN  CY          Transaction pending
 ;   IN  NC          Transaction done
 IsUsbTransactionDone      MACRO
-	UserGate is_usb_trans_done_nr
-						ENDM
+        UserGate is_usb_trans_done_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ;   IN  CY          Transaction failed
 ;   IN  NC          Transaction ok
 WasUsbTransactionOk      MACRO
-	UserGate was_usb_trans_ok_nr
-						ENDM
+        UserGate was_usb_trans_ok_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 StartOneUsbTransaction      MACRO
-	UserGate start_one_usb_trans_nr
-						ENDM
+        UserGate start_one_usb_trans_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ;   OUT CY          Stalled
 IsUsbPipeStalled      MACRO
-	UserGate is_usb_pipe_stalled_nr
-						ENDM
+        UserGate is_usb_pipe_stalled_nr
+                                                ENDM
 
 ;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)
 ;   OUT BX          Handle
 OpenHid      MACRO
-	UserGate open_hid_nr
-						ENDM
+        UserGate open_hid_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 CloseHid      MACRO
-	UserGate close_hid_nr
-						ENDM
+        UserGate close_hid_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ;   OUT AX          Pipe #
 GetHidPipe      MACRO
-	UserGate get_hid_pipe_nr
-						ENDM
+        UserGate get_hid_pipe_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ;   IN  ES:(E)DI    Buffer
 ;   IN  CX          Buffer Size
 ;   IN  EAX         Timeout, milliseconds
 ReadHid      MACRO
-	UserGate read_hid_nr
-						ENDM
+        UserGate read_hid_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ;   IN  ES:(E)DI    Buffer
 ;   IN  CX          Buffer Size
 WriteHid      MACRO
-	UserGate write_hid_nr
-						ENDM
+        UserGate write_hid_nr
+                                                ENDM
 
 ;;;;;;;;;;; ICSP (In-circuit serial programming) ;;;;;;;;;;
 
 HasICSP      MACRO
-	UserGate has_icsp_nr
-						ENDM
+        UserGate has_icsp_nr
+                                                ENDM
 
 ;   IN  AL          Device #
 ;   OUT BX          Handle
 OpenICSP      MACRO
-	UserGate open_icsp_nr
-						ENDM
+        UserGate open_icsp_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 CloseICSP      MACRO
-	UserGate close_icsp_nr
-						ENDM
+        UserGate close_icsp_nr
+                                                ENDM
 
 ;   IN BX          Handle
 ResetICSP      MACRO
-	UserGate reset_icsp_nr
-						ENDM
+        UserGate reset_icsp_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ;   IN  EAX         Command
 WriteICSPCommand      MACRO
-	UserGate write_icsp_cmd_nr
-						ENDM
+        UserGate write_icsp_cmd_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ;   IN  EAX         Data
 WriteICSPData      MACRO
-	UserGate write_icsp_data_nr
-						ENDM
+        UserGate write_icsp_data_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ;   OUT EAX         Data
 ReadICSPData      MACRO
-	UserGate read_icsp_data_nr
-						ENDM
+        UserGate read_icsp_data_nr
+                                                ENDM
 
 ;;;;;;;;;;; Audio ;;;;;;;;;;
 
 ;   OUT NC          Audio hardware available
 HasAudio      MACRO
-	UserGate has_audio_nr
-						ENDM
+        UserGate has_audio_nr
+                                                ENDM
 
 ;   IN  AL          GPIO 0 value
 SetCodecGpio0      MACRO
-	UserGate set_codec_gpio0_nr
-						ENDM
+        UserGate set_codec_gpio0_nr
+                                                ENDM
 
 ;   OUT EAX          Left
 ;   OUT EDX          Right
 GetOutputVolume      MACRO
-	UserGate get_output_volume_nr
-						ENDM
+        UserGate get_output_volume_nr
+                                                ENDM
 
 ;   IN  EAX         Left
 ;   IN  EDX         Right
 SetOutputVolume      MACRO
-	UserGate set_output_volume_nr
-						ENDM
+        UserGate set_output_volume_nr
+                                                ENDM
 
 ;   OUT AL          Left
 ;   OUT AH          Right
 GetMasterVolume      MACRO
-	UserGate get_master_volume_nr
-						ENDM
+        UserGate get_master_volume_nr
+                                                ENDM
 
 ;   IN  AL          Left
 ;   IN  AH          Right
 SetMasterVolume      MACRO
-	UserGate set_master_volume_nr
-						ENDM
+        UserGate set_master_volume_nr
+                                                ENDM
 
 ;   OUT AL          Left
 ;   OUT AH          Right
 GetLineOutVolume      MACRO
-	UserGate get_line_out_volume_nr
-						ENDM
+        UserGate get_line_out_volume_nr
+                                                ENDM
 
 ;   IN  AL          Left
 ;   IN  AH          Right
 SetLineOutVolume      MACRO
-	UserGate set_line_out_volume_nr
-						ENDM
+        UserGate set_line_out_volume_nr
+                                                ENDM
 
 ;   IN  AX          Sample rate
 ;   IN  CL          Bits
 ;   IN  DX          Volume
 ;   OUT BX          Handle
 CreateAudioOutChannel      MACRO
-	UserGate create_audio_out_channel_nr
-						ENDM
+        UserGate create_audio_out_channel_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 CloseAudioOutChannel      MACRO
-	UserGate close_audio_out_channel_nr
-						ENDM
+        UserGate close_audio_out_channel_nr
+                                                ENDM
 
 ;   IN  BX          Handle
 ;   IN  ECX         Buffer size
 ;   IN  DS:ESI      Left channel data
 ;   IN  ES:EDI      Right channel data
 WriteAudio      MACRO
-	UserGate write_audio_nr
-						ENDM
+        UserGate write_audio_nr
+                                                ENDM
 
 ;   OUT ECX         Device count
 GetAudioDeviceCount      MACRO
-	UserGate get_audio_device_count_nr
-	                ENDM
+        UserGate get_audio_device_count_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   OUT ECX         Device count
 GetAudioCodecCount      MACRO
-	UserGate get_audio_codec_count_nr
-	                ENDM
+        UserGate get_audio_codec_count_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EDX         Codec #
@@ -3615,16 +3621,16 @@ GetAudioCodecCount      MACRO
 ;   IN  ES:(E)DI    Info buffer
 ;   OUT AL          Device type
 GetAudioWidgetInfo      MACRO
-	UserGate get_audio_widget_info_nr
-	                ENDM
+        UserGate get_audio_widget_info_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EDX         Codec #
 ;   OUT DX          Vendor ID
 ;   OUT AX          Device ID
 GetAudioCodecVersion      MACRO
-	UserGate get_audio_codec_version_nr
-		        ENDM
+        UserGate get_audio_codec_version_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EDX         Codec #
@@ -3632,16 +3638,16 @@ GetAudioCodecVersion      MACRO
 ;   IN  ES:(E)DI    Connection list array
 ;   OUT ECX         Connection count
 GetAudioWidgetConnectionList      MACRO
-	UserGate get_audio_widget_connection_list_nr
-	                ENDM
+        UserGate get_audio_widget_connection_list_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EDX         Codec #
 ;   IN  EBX         Node #
 ;   OUT EAX         Selected connection
 GetSelectedAudioConnection      MACRO
-	UserGate get_selected_audio_connection_nr
-	                ENDM
+        UserGate get_selected_audio_connection_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EDX         Codec #
@@ -3649,8 +3655,8 @@ GetSelectedAudioConnection      MACRO
 ;   OUT EAX         Min setting (1/4 db)
 ;   OUT EDX         Max setting (1/4 db)
 GetAudioInputAmpCap      MACRO
-	UserGate get_audio_input_amp_cap_nr
-	                ENDM
+        UserGate get_audio_input_amp_cap_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EDX         Codec #
@@ -3658,24 +3664,24 @@ GetAudioInputAmpCap      MACRO
 ;   OUT EAX         Min setting (1/4 db)
 ;   OUT EDX         Max setting (1/4 db)
 GetAudioOutputAmpCap      MACRO
-	UserGate get_audio_output_amp_cap_nr
-	                ENDM
+        UserGate get_audio_output_amp_cap_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EDX         Codec #
 ;   IN  EBX         Node #
 ;   OUT NC          Supported
 HasAudioInputMute      MACRO
-	UserGate has_audio_input_mute_nr
-	                ENDM
+        UserGate has_audio_input_mute_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EDX         Codec #
 ;   IN  EBX         Node #
 ;   OUT NC          Supported
 HasAudioOutputMute      MACRO
-	UserGate has_audio_output_mute_nr
-	                ENDM
+        UserGate has_audio_output_mute_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EDX         Codec #
@@ -3684,8 +3690,8 @@ HasAudioOutputMute      MACRO
 ;   IN  EDX         Input
 ;   OUT EAX         Current setting
 ReadAudioInputAmp      MACRO
-	UserGate read_audio_input_amp_nr
-	                ENDM
+        UserGate read_audio_input_amp_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EDX         Codec #
@@ -3693,8 +3699,8 @@ ReadAudioInputAmp      MACRO
 ;   IN  ECX         Channel
 ;   OUT EAX         Current setting
 ReadAudioOutputAmp      MACRO
-	UserGate read_audio_output_amp_nr
-	                ENDM
+        UserGate read_audio_output_amp_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EDX         Codec #
@@ -3703,8 +3709,8 @@ ReadAudioOutputAmp      MACRO
 ;   IN  EDX         Input
 ;   OUT NC          Muted
 IsAudioInputAmpMuted      MACRO
-	UserGate is_audio_input_amp_muted_nr
-	                ENDM
+        UserGate is_audio_input_amp_muted_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EDX         Codec #
@@ -3712,83 +3718,83 @@ IsAudioInputAmpMuted      MACRO
 ;   IN  ECX         Channel
 ;   OUT NC          Muted
 IsAudioOutputAmpMuted      MACRO
-	UserGate is_audio_output_amp_muted_nr
-	                ENDM
+        UserGate is_audio_output_amp_muted_nr
+                        ENDM
 
 ;   OUT EAX         Device #
 ;   OUT EDX         Codec #
 ;   OUT ECX         Node #
 GetFixedAudioOutput      MACRO
-	UserGate get_fixed_audio_output_nr
-	                ENDM
+        UserGate get_fixed_audio_output_nr
+                        ENDM
 
 ;   IN  EBX         Jack #
 ;   OUT EAX         Device #
 ;   OUT EDX         Codec #
 ;   OUT ECX         Node #
 GetJackAudioOutput      MACRO
-	UserGate get_jack_audio_output_nr
-	                ENDM
+        UserGate get_jack_audio_output_nr
+                        ENDM
 
 ;   IN  EBX         Jack #
 ;   OUT EAX         Device #
 ;   OUT EDX         Codec #
 ;   OUT ECX         Node #
 GetJackAudioInput      MACRO
-	UserGate get_jack_audio_input_nr
-	                ENDM
+        UserGate get_jack_audio_input_nr
+                        ENDM
 
 ;;;;;;;;;;; FM synthesis ;;;;;;;;;;
 
 ;   IN  AX          Sample rate
 ;   OUT BX          FM handle
 OpenFm      MACRO
-	UserGate open_fm_nr
-	                ENDM
+        UserGate open_fm_nr
+                        ENDM
 
 ;   IN  BX          FM handle
 CloseFm      MACRO
-	UserGate close_fm_nr
-	                ENDM
+        UserGate close_fm_nr
+                        ENDM
 
 ;   IN  BX          FM handle
 ;   IN  EAX         Samples to wait
 FmWait      MACRO
-	UserGate fm_wait_nr
-	                ENDM
+        UserGate fm_wait_nr
+                        ENDM
 
 ;   IN  BX          FM handle
 ;   IN  AX:DX       C:M ratio
 ;   IN  ST0         Beta (modulation rate) 
 ;   OUT BX          Handle         
 CreateFmInstrument      MACRO
-	UserGate create_fm_instrument_nr
-	                ENDM
+        UserGate create_fm_instrument_nr
+                        ENDM
 
 ;   IN  BX          Handle         
 FreeFmInstrument      MACRO
-	UserGate free_fm_instrument_nr
-	                ENDM
+        UserGate free_fm_instrument_nr
+                        ENDM
 
 ;   IN  BX          Handle         
 ;   IN  EAX         Time in samples until full volume (attack)
 SetFmAttack      MACRO
-	UserGate set_fm_attack_nr
-	                ENDM
+        UserGate set_fm_attack_nr
+                        ENDM
 
 ;   IN  BX          Handle         
 ;   IN  EAX         Time in samples until volume is halved
 ;   IN  EDX         Time in samples until modulation index is halved
 SetFmSustain      MACRO
-	UserGate set_fm_sustain_nr
-	                ENDM
+        UserGate set_fm_sustain_nr
+                        ENDM
 
 ;   IN  BX          Handle         
 ;   IN  EAX         Time in samples until volume is halved
 ;   IN  EDX         Time in samples until modulation index is halved
 SetFmRelease      MACRO
-	UserGate set_fm_release_nr
-	                ENDM
+        UserGate set_fm_release_nr
+                        ENDM
 
 ;   IN  BX          Instrument handle         
 ;   IN  ECX         Duration of sustain in samples
@@ -3796,8 +3802,8 @@ SetFmRelease      MACRO
 ;   IN  EDX         Peak right volume
 ;   IN  ST0         Frequency
 PlayFmNote      MACRO
-	UserGate play_fm_note_nr
-	                ENDM
+        UserGate play_fm_note_nr
+                        ENDM
 
 
 ;;;;;;;;;;; syslog ;;;;;;;;;;
@@ -3807,18 +3813,18 @@ PlayFmNote      MACRO
 ;   IN  (E)CX       Msg size
 ;   IN  ES:(E)DI    Msg buf
 AddSyslog      MACRO
-	UserGate add_syslog_nr
-	                ENDM
+        UserGate add_syslog_nr
+                        ENDM
 
 ;   OUT BX          Handle 
 OpenSyslog      MACRO
-	UserGate open_syslog_nr
-	                ENDM
+        UserGate open_syslog_nr
+                        ENDM
 
 ;   IN  BX          Handle 
 CloseSyslog      MACRO
-	UserGate close_syslog_nr
-	                ENDM
+        UserGate close_syslog_nr
+                        ENDM
 
 ;   IN  BX          Handle 
 ;   IN  (E)CX       Buf size
@@ -3826,42 +3832,42 @@ CloseSyslog      MACRO
 ;   OUT SI          Severity (LSB), Facility (MSB)
 ;   OUT EDX:EAX     Time
 GetSyslog      MACRO
-	UserGate get_syslog_nr
-	                ENDM
+        UserGate get_syslog_nr
+                        ENDM
 
 ;   IN  AX          Syslog handle 
 ;   IN  BX          Wait handle
 ;   IN  ECX         Signalled ID
 AddWaitForSyslog      MACRO
-	UserGate add_wait_for_syslog_nr
-	                ENDM
+        UserGate add_wait_for_syslog_nr
+                        ENDM
 
 
 ;;;;;;;;;;; ACPI ;;;;;;;;;;
 
 ;   OUT EAX         ACPI status
 GetAcpiStatus      MACRO
-	UserGate get_acpi_status_nr
-	                ENDM
+        UserGate get_acpi_status_nr
+                        ENDM
 
 ;   IN  EAX         Object #
 ;   IN  ES:(E)DI    ACPI name buffer
 GetAcpiObject      MACRO
-	UserGate get_acpi_object_nr
-	                ENDM
+        UserGate get_acpi_object_nr
+                        ENDM
 
 ;   IN  EAX         Object #
 ;   IN  EDX         Method #
 ;   IN  ES:(E)DI    ACPI name buffer
 GetAcpiMethod      MACRO
-	UserGate get_acpi_method_nr
-	                ENDM
+        UserGate get_acpi_method_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  ES:(E)DI    ACPI name buffer
 GetAcpiDevice      MACRO
-	UserGate get_acpi_device_nr
-	                ENDM
+        UserGate get_acpi_device_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EDX         IRQ #
@@ -3870,8 +3876,8 @@ GetAcpiDevice      MACRO
 ;   OUT DL          Polarity (-1, +1)
 ;   OUT DH          Trigger mode (0 = level, 1 = edge)
 GetAcpiDeviceIrq      MACRO
-	UserGate get_acpi_device_irq_nr
-	                ENDM
+        UserGate get_acpi_device_irq_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EDX         IO #
@@ -3879,8 +3885,8 @@ GetAcpiDeviceIrq      MACRO
 ;   OUT DI          End port
 ;   OUT CX          Address len
 GetAcpiDeviceIo      MACRO
-	UserGate get_acpi_device_io_nr
-	                ENDM
+        UserGate get_acpi_device_io_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EDX         IO #
@@ -3888,47 +3894,47 @@ GetAcpiDeviceIo      MACRO
 ;   OUT EDI         End address
 ;   OUT ECX          Address len
 GetAcpiDeviceMem      MACRO
-	UserGate get_acpi_device_mem_nr
-	                ENDM
+        UserGate get_acpi_device_mem_nr
+                        ENDM
 
 ;   IN  EAX         PCI device #
 ;   IN  ES:E(DI)    ACPI name buffer
 GetPciDeviceName      MACRO
-	UserGate get_pci_device_name_nr
-	                ENDM
+        UserGate get_pci_device_name_nr
+                        ENDM
 
 ;   IN  EAX         PCI device #
 ;   OUT BH          Bus
 ;   OUT BL          Device
 ;   OUT CH          Function
 GetPciDeviceInfo      MACRO
-	UserGate get_pci_device_info_nr
-	                ENDM
+        UserGate get_pci_device_info_nr
+                        ENDM
 
 ;   IN  EAX         PCI device #
 ;   OUT AX          Vendor ID
 ;   OUT DX          Device ID
 GetPciDeviceVendor      MACRO
-	UserGate get_pci_device_vendor_nr
-	                ENDM
+        UserGate get_pci_device_vendor_nr
+                        ENDM
 
 ;   IN  EAX         PCI device #
 ;   OUT AH          Class
 ;   OUT AL          Sub class
 GetPciDeviceClass      MACRO
-	UserGate get_pci_device_class_nr
-	                ENDM
+        UserGate get_pci_device_class_nr
+                        ENDM
 
 ;   IN  EAX         PCI device #
 ;   OUT AL          IRQ #
 GetPciDeviceIrq      MACRO
     UserGate get_pci_device_irq_nr
-	                ENDM
+                        ENDM
 
 ;   OUT EAX         Temperature in tenth of degrees Kelvin
 GetCpuTemperature      MACRO
-	UserGate get_cpu_temperature_nr
-	                ENDM
+        UserGate get_cpu_temperature_nr
+                        ENDM
 
 ;;;;;;;;;;; HID ;;;;;;;;;;
 
@@ -3936,263 +3942,263 @@ GetCpuTemperature      MACRO
 ;   IN  EDX         Item #
 ;   IN  ES:(E)DI    HID item buffer
 GetHidReportItem      MACRO
-	UserGate get_hid_report_item_nr
-	                ENDM
+        UserGate get_hid_report_item_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EBX         Report #
 ;   IN  EDX         Entry #
 ;   IN  ES:(E)DI    HID data buffer
 GetHidReportInputData      MACRO
-	UserGate get_hid_report_input_data_nr
-	                ENDM
+        UserGate get_hid_report_input_data_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EBX         Report #
 ;   IN  EDX         Entry #
 ;   IN  ES:(E)DI    HID data buffer
 GetHidReportOutputData      MACRO
-	UserGate get_hid_report_output_data_nr
-	                ENDM
+        UserGate get_hid_report_output_data_nr
+                        ENDM
 
 ;   IN  EAX         Device #
 ;   IN  EBX         Report #
 ;   IN  EDX         Entry #
 ;   IN  ES:(E)DI    HID data buffer
 GetHidReportFeatureData      MACRO
-	UserGate get_hid_report_feature_data_nr
-	                ENDM
+        UserGate get_hid_report_feature_data_nr
+                        ENDM
 
 ;;;;;;;;;;; Touch ;;;;;;;;;;
 
 ;   OUT NC          Touch hardware available
 HasTouch      MACRO
-	UserGate has_touch_nr
-						ENDM
+        UserGate has_touch_nr
+                                                ENDM
 
 ;;;;;;;;;;; Can modules ;;;;;;;;;;
 
 IsCanOnline      MACRO
-	UserGate is_can_online_nr
-						ENDM
+        UserGate is_can_online_nr
+                                                ENDM
 
 ;   IN  EAX         Device #
 ;   OUT CX          Number of com ports
 ;   OUT DX          Module type
 GetCanModuleInfo      MACRO
-	UserGate get_can_module_info_nr
-						ENDM
+        UserGate get_can_module_info_nr
+                                                ENDM
 
-;	IN  AL		    Serial port #
+;       IN  AL              Serial port #
 ;   OUT EAX         Can module
 ;   OUT EDX         Can port
 CheckCanSerialPort      MACRO
-	UserGate check_can_serial_port_nr
-						ENDM
+        UserGate check_can_serial_port_nr
+                                                ENDM
 
 ;   IN  EAX         Device #
 ;   OUT AL          Minor version
 ;   OUT AH          Major version
 ;   OUT DL          Sub version
 GetCanModuleVersion      MACRO
-	UserGate get_can_module_version_nr
-						ENDM
+        UserGate get_can_module_version_nr
+                                                ENDM
 
 ;   IN  EAX         Device #
 ;   OUT AL          Minor version
 ;   OUT AH          Major version
 ;   OUT DL          Sub version
 GetCanLoaderVersion      MACRO
-	UserGate get_can_loader_version_nr
-						ENDM
+        UserGate get_can_loader_version_nr
+                                                ENDM
 
 ;   IN  EAX         Device #
 ;   IN  ES:(E)DI    Buffer
 GetCanSerialNumber      MACRO
-	UserGate get_can_serial_number_nr
-						ENDM
+        UserGate get_can_serial_number_nr
+                                                ENDM
 
 ;   IN  EAX         Device #
 ;   IN  ES:(E)DI    Program file
 ProgramCanModule      MACRO
-	UserGate program_can_module_nr
-						ENDM
+        UserGate program_can_module_nr
+                                                ENDM
 
 ;   IN  EAX         Device #
 ;   OUT AX          Result (0 = ok)
 ;   OUT DX          Error code
 ;   OUT ECX         Position 
 WaitForCanModuleProgramming      MACRO
-	UserGate wait_for_can_module_progamming_nr
-						ENDM
+        UserGate wait_for_can_module_progamming_nr
+                                                ENDM
 
 
 ;;;;;;;;;;; Big numbers ;;;;;;;;;;
 
 ; OUT BX            Bignum handle
-CreateBigNum	MACRO
-	UserGate create_bignum_nr
-	        ENDM
+CreateBigNum    MACRO
+        UserGate create_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle
-DeleteBigNum	MACRO
-	UserGate delete_bignum_nr
-	        ENDM
+DeleteBigNum    MACRO
+        UserGate delete_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle 1
 ; IN  AX            Bignum handle 2
 ; OUT BX            Result bignum handle
-AddBigNum	MACRO
-	UserGate add_bignum_nr
-	        ENDM
+AddBigNum       MACRO
+        UserGate add_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle 1
 ; IN  AX            Bignum handle 2
 ; OUT BX            Result bignum handle
-SubBigNum	MACRO
-	UserGate sub_bignum_nr
-	        ENDM
+SubBigNum       MACRO
+        UserGate sub_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle 1
 ; IN  AX            Bignum handle 2
 ; OUT BX            Result bignum handle
-MulBigNum	MACRO
-	UserGate mul_bignum_nr
-	        ENDM
+MulBigNum       MACRO
+        UserGate mul_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle 1
 ; IN  AX            Bignum handle 2
 ; OUT BX            Result bignum handle
-DivBigNum	MACRO
-	UserGate div_bignum_nr
-	        ENDM
+DivBigNum       MACRO
+        UserGate div_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle 1
 ; IN  AX            Bignum handle 2
 ; OUT BX            Result bignum handle
-ModBigNum	MACRO
-	UserGate mod_bignum_nr
-	        ENDM
+ModBigNum       MACRO
+        UserGate mod_bignum_nr
+                ENDM
 
 ; IN  BX            Base handle
 ; IN  AX            Exp handle
 ; IN  DX            Mod handle
 ; OUT BX            Result bignum handle
-PowModBigNum	MACRO
-	UserGate pow_mod_bignum_nr
-	        ENDM
+PowModBigNum    MACRO
+        UserGate pow_mod_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle
 ; IN  ES:(E)DI      Buffer
 ; IN  ECX           Size
-LoadSignedBigNum	MACRO
-	UserGate load_signed_bignum_nr
-	        ENDM
+LoadSignedBigNum        MACRO
+        UserGate load_signed_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle
 ; IN  ES:(E)DI      Buffer
 ; IN  ECX           Size
-LoadUnsignedBigNum	MACRO
-	UserGate load_unsigned_bignum_nr
-	        ENDM
+LoadUnsignedBigNum      MACRO
+        UserGate load_unsigned_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle
 ; IN  ES:(E)DI      Buffer
 ; IN  ECX           Size
-SaveSignedBigNum	MACRO
-	UserGate save_signed_bignum_nr
-	        ENDM
+SaveSignedBigNum        MACRO
+        UserGate save_signed_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle
 ; IN  ES:(E)DI      Buffer
 ; IN  ECX           Size
-SaveUnsignedBigNum	MACRO
-	UserGate save_unsigned_bignum_nr
-	        ENDM
+SaveUnsignedBigNum      MACRO
+        UserGate save_unsigned_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle
 ; IN  ES:(E)DI      String
-LoadDecStrBigNum	MACRO
-	UserGate load_dec_str_bignum_nr
-	        ENDM
+LoadDecStrBigNum        MACRO
+        UserGate load_dec_str_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle
 ; OUT ECX           Bytes required for base 10 buffer
-GetDecStrSizeBigNum	MACRO
-	UserGate get_dec_str_size_bignum_nr
-	        ENDM
+GetDecStrSizeBigNum     MACRO
+        UserGate get_dec_str_size_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle
 ; IN  (E)CX         Buffer size
 ; IN  ES:(E)DI      Buffer
-SaveDecStrBigNum	MACRO
-	UserGate save_dec_str_bignum_nr
-	        ENDM
+SaveDecStrBigNum        MACRO
+        UserGate save_dec_str_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle
 ; IN  ES:(E)DI      String
-LoadHexStrBigNum	MACRO
-	UserGate load_hex_str_bignum_nr
-	        ENDM
+LoadHexStrBigNum        MACRO
+        UserGate load_hex_str_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle
 ; OUT ECX           Bytes required for base 16 buffer
-GetHexStrSizeBigNum	MACRO
-	UserGate get_hex_str_size_bignum_nr
-	        ENDM
+GetHexStrSizeBigNum     MACRO
+        UserGate get_hex_str_size_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle
 ; IN  (E)CX         Buffer size
 ; IN  ES:(E)DI      Buffer
-SaveHexStrBigNum	MACRO
-	UserGate save_hex_str_bignum_nr
-	        ENDM
+SaveHexStrBigNum        MACRO
+        UserGate save_hex_str_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle
 ; IN  ES:(E)DI      Buffer
 ; IN  ECX           Size
-AddSignedBigNum	MACRO
-	UserGate add_signed_bignum_nr
-	        ENDM
+AddSignedBigNum MACRO
+        UserGate add_signed_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle
 ; IN  ES:(E)DI      Buffer
 ; IN  ECX           Size
-AddUnsignedBigNum	MACRO
-	UserGate add_unsigned_bignum_nr
-	        ENDM
+AddUnsignedBigNum       MACRO
+        UserGate add_unsigned_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle
 ; IN  ES:(E)DI      Buffer
 ; IN  ECX           Size
-SubSignedBigNum	MACRO
-	UserGate sub_signed_bignum_nr
-	        ENDM
+SubSignedBigNum MACRO
+        UserGate sub_signed_bignum_nr
+                ENDM
 
 ; IN  BX            Bignum handle
 ; IN  ES:(E)DI      Buffer
 ; IN  ECX           Size
-SubUnsignedBigNum	MACRO
-	UserGate sub_unsigned_bignum_nr
-	        ENDM
+SubUnsignedBigNum       MACRO
+        UserGate sub_unsigned_bignum_nr
+                ENDM
 
 
 ; IN  ECX           Number of bits
 ; OUT BX            Bignum handle
-CreateRandomBigNum	MACRO
-	UserGate create_random_bignum_nr
-	        ENDM
+CreateRandomBigNum      MACRO
+        UserGate create_random_bignum_nr
+                ENDM
 
 ; IN  ECX           Number of bits
 ; OUT BX            Bignum handle
-CreateRandomOddBigNum	MACRO
-	UserGate create_random_odd_bignum_nr
-	        ENDM
+CreateRandomOddBigNum   MACRO
+        UserGate create_random_odd_bignum_nr
+                ENDM
 
 
 ; IN  BX            Bignum handle to factor
 ; OUT BX            Bignum handle remainder
 ; OUT ECX           Exponent
-FactorPow2BigNum	MACRO
-	UserGate factor_pow2_bignum_nr
-	        ENDM
+FactorPow2BigNum        MACRO
+        UserGate factor_pow2_bignum_nr
+                ENDM

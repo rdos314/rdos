@@ -1671,13 +1671,22 @@
     modify [edx] \
     value [eax];
 
+#pragma aux RdosGetModuleSel = \
+    CallGate_get_module_sel  \
+    "jnc ok" \
+    "xor eax,eax" \
+    "ok: " \
+    "movzx eax,ax" \
+    parm [ebx] \
+    value [eax];
+
 #pragma aux RdosGetModuleBase = \
     CallGate_get_module_base  \
     "jnc ok" \
     "xor eax,eax" \
     "ok: " \
     parm [ebx] \
-    value [eax];
+    value [edx eax];
 
 #pragma aux RdosGetModuleSize = \
     CallGate_get_module_size  \
@@ -1685,7 +1694,7 @@
     "xor eax,eax" \
     "ok: " \
     parm [ebx] \
-    value [eax];
+    value [edx eax];
 
 #pragma aux RdosGetProgramCount = \
     CallGate_get_program_count  \

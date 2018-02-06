@@ -4244,13 +4244,46 @@ get_module_info32   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetModuleSel
+;
+;           DESCRIPTION:    Get module sel
+;
+;           PARAMETERS:     BX          Module ID
+;
+;           RETURNS:        AX          Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_sel_name DB 'Get Module Sel',0
+    
+get_module_sel    Proc far
+    push ds
+;
+    movzx ebx,bx
+    call GetModuleSel
+    or eax,eax
+    stc
+    jz gmsDone
+;
+    mov ds,eax
+    mov ax,ds:mod_sel
+    clc
+
+gmsDone:
+    pop ds
+    ret
+get_module_sel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetModuleBase
 ;
 ;           DESCRIPTION:    Get module base
 ;
 ;           PARAMETERS:     BX          Module ID
 ;
-;           RETURNS:        EAX         Base address
+;           RETURNS:        EDX:EAX     Base address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4267,6 +4300,7 @@ get_module_base    Proc far
 ;
     mov ds,eax
     mov eax,ds:mod_base
+    mov edx,ds:mod_base+4
     clc
 
 gmbDone:
@@ -4283,7 +4317,7 @@ get_module_base    Endp
 ;
 ;           PARAMETERS:     BX          Module ID
 ;
-;           RETURNS:        EAX         Size
+;           RETURNS:        EDX:EAX     Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4296,13 +4330,14 @@ get_module_size    Proc far
     call GetModuleSel
     or eax,eax
     stc
-    jz gmsDone
+    jz gmszDone
 ;
     mov ds,eax
     mov eax,ds:mod_size
+    mov edx,ds:mod_size+4
     clc
 
-gmsDone:
+gmszDone:
     pop ds
     ret
 get_module_size    Endp
@@ -5116,6 +5151,12 @@ init_state_hooks:
     mov dx,virt_es_in
     mov ax,get_module_info_nr
     RegisterUserGate
+;
+    mov esi,OFFSET get_module_sel
+    mov edi,OFFSET get_module_sel_name
+    xor dx,dx
+    mov ax,get_module_sel_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_module_base
     mov edi,OFFSET get_module_base_name

@@ -1307,9 +1307,12 @@ create_lib_size_ok:
     mov es:lib_usage_count,1
 ;       
     mov es:mod_name_offs,OFFSET lib_name
+    mov es:mod_sel,flat_code_sel
     mov es:mod_base,0
+    mov es:mod_base+4,0
     mov es:lib_process,0
     mov es:mod_size,0
+    mov es:mod_size+4,0
     mov es:lib_debug_lib,0
     mov es:lib_debug_obj,0
     mov es:lib_events,0

@@ -840,6 +840,7 @@ get_module_count_nr              = 657
 get_module_info_nr               = 658
 get_module_base_nr               = 659
 get_module_size_nr               = 660
-get_program_modules_nr           = 661
+get_module_sel_nr                = 661
+get_program_modules_nr           = 662
 
 usergate_entries                            = 670

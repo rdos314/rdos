@@ -507,8 +507,9 @@ void RDOSAPI RdosMoveThreadToCore(int Core, int ThreadNr);
 
 int RDOSAPI RdosGetModuleCount();
 int RDOSAPI RdosGetModuleInfo(int Index, int *ID, char *NameBuf, int NameSize);
-long RDOSAPI RdosGetModuleBase(int ID);
-long RDOSAPI RdosGetModuleSize(int ID);
+int RDOSAPI RdosGetModuleSel(int ID);
+long long RDOSAPI RdosGetModuleBase(int ID);
+long long RDOSAPI RdosGetModuleSize(int ID);
 
 int RDOSAPI RdosGetProgramCount();
 int RDOSAPI RdosGetProgramInfo(int Index, int *ID, char *NameBuf, int NameSize);
