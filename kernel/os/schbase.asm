@@ -2452,6 +2452,48 @@ get_module_name_done16:
     pop ds
     ret
 get_module_name16  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           DuplModuleFileHandle
+;
+;       DESCRIPTION:    Dupl module file handle
+;
+;       PARAMETERS:     BX          Module handle
+;
+;       RETURNS:        BX          Duplicated file handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dupl_module_file_handle_name       DB 'Dupl Module File Handle',0
+
+dupl_module_file_handle  Proc far
+    push ds
+    push eax
+;    
+    mov ax,MODULE_HANDLE
+    DerefHandle
+    jc dupl_module_file_handle_done
+;
+    mov bx,[ebx].mh_sel
+    or bx,bx
+    stc
+    jz dupl_module_file_handle_done
+;
+    mov ds,bx
+;    mov eax,ds:mod_dupl_file_handle_proc
+;    or eax,ds:mod_dupl_file_handle_proc+4
+    stc
+;    jz dupl_module_file_handle_done
+;    
+;    call fword ptr ds:mod_dupl_file_handle_proc
+
+dupl_module_file_handle_done:
+    pop eax
+    pop ds    
+    ret
+dupl_module_file_handle  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2594,14 +2636,28 @@ add_wait_for_debug_event    PROC far
     push es
     push eax
     push dx
+    push si
     push edi
 ;
+    mov si,ax
+
+add_deref_again:    
     push bx
     mov bx,ax
     DerefProcHandle
     pop bx
     jc add_wait_done
 ;
+    or ax,ax
+    jnz add_wait_do
+;
+    mov ax,5
+    WaitMilliSec
+;
+    mov ax,si
+    jmp add_deref_again
+    
+add_wait_do:
     push ax
     mov ax,cs
     mov es,ax
@@ -2615,6 +2671,7 @@ add_wait_for_debug_event    PROC far
 
 add_wait_done:
     pop edi
+    pop si
     pop dx
     pop eax
     pop es
@@ -4997,6 +5054,12 @@ init_state_hooks:
     mov dx,virt_es_in
     mov ax,get_module_name_nr
     RegisterUserGate
+;
+    mov esi,OFFSET dupl_module_file_handle
+    mov edi,OFFSET dupl_module_file_handle_name
+    xor dx,dx
+    mov ax,dupl_module_file_handle_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET add_wait_for_debug_event
     mov edi,OFFSET add_wait_for_debug_event_name

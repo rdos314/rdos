@@ -667,6 +667,7 @@
 #define usergate_close_udp_listen 0x00000216
 
 #define usergate_get_current_dll 0x00000217
+#define usergate_dupl_module_file_handle 0x00000218
 
 #define usergate_get_hid_report_item 0x00000219
 #define usergate_get_hid_report_input_data 0x0000021A
@@ -1513,6 +1514,7 @@
 #define CallGate_close_udp_listen 0x55 0x67 0x9a 22 2 0 0 3 0 0x5d
 
 #define CallGate_get_current_dll 0x55 0x67 0x9a 23 2 0 0 3 0 0x5d
+#define CallGate_dupl_module_file_handle 0x55 0x67 0x9a 24 2 0 0 3 0 0x5d
 
 #define CallGate_get_hid_report_item 0x55 0x67 0x9a 25 2 0 0 3 0 0x5d
 #define CallGate_get_hid_report_input_data 0x55 0x67 0x9a 26 2 0 0 3 0 0x5d
@@ -2357,6 +2359,7 @@
 #define CallGate_close_udp_listen 0x3e 0x67 0x9a 22 2 0 0 3 0
 
 #define CallGate_get_current_dll 0x3e 0x67 0x9a 23 2 0 0 3 0
+#define CallGate_dupl_module_file_handle 0x3e 0x67 0x9a 24 2 0 0 3 0
 
 #define CallGate_get_hid_report_item 0x3e 0x67 0x9a 25 2 0 0 3 0
 #define CallGate_get_hid_report_input_data 0x3e 0x67 0x9a 26 2 0 0 3 0
