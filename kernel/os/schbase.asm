@@ -1739,6 +1739,8 @@ set_module      PROC far
 ;
     mov ebx,es
     call ModuleLoaded
+;
+    mov ebx,eax
     call AddProgramModule
 ;
     mov dx,es
@@ -1845,6 +1847,8 @@ create_module   PROC far
 ;
     mov ebx,es
     call ModuleLoaded
+;
+    mov ebx,eax
     call AddProgramModule
 ;
     mov ax,es
