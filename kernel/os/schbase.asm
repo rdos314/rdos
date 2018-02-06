@@ -2636,28 +2636,14 @@ add_wait_for_debug_event    PROC far
     push es
     push eax
     push dx
-    push si
     push edi
 ;
-    mov si,ax
-
-add_deref_again:    
     push bx
     mov bx,ax
     DerefProcHandle
     pop bx
     jc add_wait_done
 ;
-    or ax,ax
-    jnz add_wait_do
-;
-    mov ax,5
-    WaitMilliSec
-;
-    mov ax,si
-    jmp add_deref_again
-    
-add_wait_do:
     push ax
     mov ax,cs
     mov es,ax
@@ -2671,7 +2657,6 @@ add_wait_do:
 
 add_wait_done:
     pop edi
-    pop si
     pop dx
     pop eax
     pop es
