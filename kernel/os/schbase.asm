@@ -423,12 +423,6 @@ create_thread    Proc far
     call ThreadCreated
 ;
     movzx ebx,es:p_prog_id
-    or ebx,ebx
-    jnz ctAdd
-;
-    mov ebx,1
-
-ctAdd:
     call AddProgramThread
 
 ctDone:
