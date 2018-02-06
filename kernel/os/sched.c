@@ -30,6 +30,7 @@
 #include "string.h"
 
 #define MAX_PROCESSES           64
+#define MAX_MODULES             256
 #define MAX_THREADS             512
 #define MAX_PROCESSOR_COUNT     32
 
@@ -37,6 +38,13 @@
 #define TRUE !FALSE
 
 struct TProcess
+{
+    int Valid;
+    int ID;
+    int Sel;
+};
+
+struct TModule
 {
     int Valid;
     int ID;
@@ -85,11 +93,14 @@ int ProcessorCount = 0;
 int CurrLoad = 0;
 int MaxLoad = 0;
 int NextTid = 1;
+int NextMid = 1;
 int NextPid = 1;
 int ActiveThreads = 0;
 int ActiveProcesses = 0;
+int ActiveModules = 0;
 
 struct TProcess ProcessArr[MAX_PROCESSES];
+struct TModule ModuleArr[MAX_MODULES];
 struct TThread ThreadArr[MAX_THREADS];
 struct TCore CoreArr[MAX_PROCESSOR_COUNT];
 
@@ -533,6 +544,170 @@ int GetProcessID(int Index)
     if (Index >= 0 && Index < ActiveProcesses)
         if (ProcessArr[Index].Valid)
             ID = ProcessArr[Index].ID;
+
+    RdosLeaveKernelSection(&ThreadSection);    
+
+    return ID;
+}
+
+    
+/*##########################################################################
+#
+#   Name       : GetActiveModules
+#
+##########################################################################*/
+#pragma aux GetActiveModules "*" rdosdev parm routine
+int GetActiveModules()
+{
+    return ActiveModules;
+}
+        
+/*##########################################################################
+#
+#   Name       : ModuleLoaded
+#
+##########################################################################*/
+#pragma aux ModuleLoaded "*" rdosdev parm routine [ebx] value [eax]
+int ModuleLoaded(int sel)
+{
+    int i;
+    int ok = FALSE;
+    int Index;
+    int mid;
+
+    RdosEnterKernelSection(&ThreadSection);    
+
+    ok = FALSE;
+
+    while (!ok)
+    {
+        mid = NextMid;
+
+        if (NextMid == 0x7FFF)
+            NextMid = 1;
+        else
+            NextMid++;
+
+        ok = TRUE;
+
+        for (i = 0; i < ActiveModules; i++)
+        {
+            if (ModuleArr[i].Valid && ModuleArr[i].ID == mid) 
+            {
+                ok = FALSE;
+                break;
+            }
+        }
+    }
+
+    ok = FALSE;
+
+    for (i = 0; i < ActiveModules; i++)
+    {
+        if (!ModuleArr[i].Valid)
+        {
+            ok = TRUE;
+            Index = i;
+            break;
+        }
+    }
+
+    if (!ok)
+    {
+        if (ActiveModules < MAX_MODULES)
+        {
+            Index = ActiveModules;
+            ActiveModules++;
+            ok = TRUE;
+        }
+    }
+
+    if (ok)
+    {
+        ModuleArr[Index].Valid = TRUE;
+        ModuleArr[Index].Sel = sel;
+        ModuleArr[Index].ID = mid;
+    }
+    
+    RdosLeaveKernelSection(&ThreadSection);
+
+    return mid;
+}
+    
+/*##########################################################################
+#
+#   Name       : ModuleUnloaded
+#
+##########################################################################*/
+#pragma aux ModuleUnloaded "*" rdosdev parm routine [eax]
+void ModuleUnloaded(int sel)
+{
+    int i;
+
+    RdosEnterKernelSection(&ThreadSection);    
+
+    for (i = 0; i < ActiveModules; i++)
+    {
+        if (ModuleArr[i].Valid && ModuleArr[i].Sel == sel) 
+        {
+            ModuleArr[i].Valid = FALSE;
+
+            if (i == ActiveModules - 1)
+                ActiveModules--;
+
+            break;
+        }
+    }
+
+    RdosLeaveKernelSection(&ThreadSection);    
+}
+    
+/*##########################################################################
+#
+#   Name       : GetModuleSel
+#
+#   Descr      : Convert from module ID to selector
+#
+##########################################################################*/
+#pragma aux GetModuleSel "*" rdosdev parm routine [ebx] value [eax]
+int GetModuleSel(int ID)
+{
+    int i;
+    int sel = 0;
+
+    RdosEnterKernelSection(&ThreadSection);    
+
+    for (i = 0; i < ActiveModules; i++)
+    {
+        if (ModuleArr[i].Valid && ModuleArr[i].ID == ID) 
+        {
+            sel = ModuleArr[i].Sel;
+            break;
+        }
+    }
+
+    RdosLeaveKernelSection(&ThreadSection);    
+
+    return sel;
+}
+    
+/*##########################################################################
+#
+#   Name       : GetModuleID
+#
+#   Descr      : Get module ID byte index
+#
+##########################################################################*/
+#pragma aux GetModuleID "*" rdosdev parm routine [eax] value [eax]
+int GetModuleID(int Index)
+{
+    int ID = 0;
+
+    RdosEnterKernelSection(&ThreadSection);
+
+    if (Index >= 0 && Index < ActiveModules)
+        if (ModuleArr[Index].Valid)
+            ID = ModuleArr[Index].ID;
 
     RdosLeaveKernelSection(&ThreadSection);    
 

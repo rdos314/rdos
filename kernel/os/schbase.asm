@@ -99,10 +99,18 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn IdToHandle:near
     extrn IndexToHandle:near
     extrn MoveThread:near
+
     extrn ProcessCreated:near
+    extrn ProcessTerminated:near
     extrn GetActiveProcesses:near
     extrn GetProcessSel:near
     extrn GetProcessID:near
+
+    extrn ModuleLoaded:near
+    extrn ModuleUnloaded:near
+    extrn GetActiveModules:near
+    extrn GetModuleSel:near
+    extrn GetModuleID:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
