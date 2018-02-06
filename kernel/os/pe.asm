@@ -4193,7 +4193,7 @@ fork_parent:
     mov ax,ds:app_mod_sel
     mov ds,es:p_process_sel
     mov dx,ds:ms_pd_sel
-    CreateProcHandle
+;    CreateProcHandle
     movzx eax,bx
 ;
     pop dx

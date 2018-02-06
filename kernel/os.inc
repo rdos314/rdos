@@ -2083,20 +2083,6 @@ AliasModuleHandle       MACRO
     OsGate alias_module_handle_nr
                     ENDM
 
-; IN  AX    Lib sel
-; IN  DX    Process descriptor
-; OUT BX    Process handle
-CreateProcHandle    MACRO
-    OsGate create_proc_handle_nr
-                    ENDM
-
-; IN  BX    Process handle
-; OUT AX    Lib sel
-; OUT DX    Process descriptor
-DerefProcHandle MACRO
-    OsGate deref_proc_handle_nr
-                    ENDM
-
 ; IN  AX        Entry type
 ; IN  DX        Selector
 ; OUT BX        Entry handle

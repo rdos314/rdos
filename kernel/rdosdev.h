@@ -29,7 +29,6 @@ extern "C" {
 #define SPRITE_HANDLE      0x2CF5
 #define CRC_HANDLE         0x367A
 #define FILE_HANDLE        0x3AB6
-#define PROCESS_HANDLE     0x43AF
 #define SERIAL_HANDLE      0x5A45
 #define ENV_HANDLE         0x5FAE
 #define RW_SECTION_HANDLE  0x67AF

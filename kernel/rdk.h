@@ -373,9 +373,6 @@
 #define osgate_wait_for_line_state 349
 #define osgate_get_line_state 350
 
-#define osgate_create_proc_handle 351
-#define osgate_deref_proc_handle 352
-
 #define osgate_notify_time_drift 353
 
 #define osgate_get_apic_id 357
@@ -1104,9 +1101,6 @@
 
 #define OsGate_wait_for_line_state 0x3E 0x67 0x9a 93 1 0 0 2 0
 #define OsGate_get_line_state 0x3E 0x67 0x9a 94 1 0 0 2 0
-
-#define OsGate_create_proc_handle 0x3E 0x67 0x9a 95 1 0 0 2 0
-#define OsGate_deref_proc_handle 0x3E 0x67 0x9a 96 1 0 0 2 0
 
 #define OsGate_notify_time_drift 0x3E 0x67 0x9a 97 1 0 0 2 0
 

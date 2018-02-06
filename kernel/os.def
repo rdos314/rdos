@@ -373,9 +373,6 @@ device_reset_dtr_nr         = 348
 wait_for_line_state_nr      = 349
 get_line_state_nr           = 350
 
-create_proc_handle_nr       = 351
-deref_proc_handle_nr        = 352
-
 notify_time_drift_nr        = 353
 
 get_apic_id_nr              = 357

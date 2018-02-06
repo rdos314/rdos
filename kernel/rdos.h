@@ -553,7 +553,6 @@ void RDOSAPI RdosFatalErrorExit();
 void RDOSAPI RdosUnloadExe(int ExitCode);
 int RDOSAPI RdosGetExitCode();
 void RDOSAPI RdosFreeProcessHandle(int handle);
-int RDOSAPI RdosGetProcessExitCode(int handle);
 void RDOSAPI RdosAddWaitForProcessEnd(int Handle, int ProcessHandle, void *ID);
 int RDOSAPI RdosShowExceptionText();
 

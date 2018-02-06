@@ -75,15 +75,6 @@ fh_lock     DW ?
 
 futex_handle_seg          ENDS
 
-proc_handle_seg     STRUC
-
-ph_base handle_header <>
-
-ph_lib_sel          DW ?
-ph_proc_sel         DW ?
-
-proc_handle_seg     ENDS
-
 proc_end_wait_header    STRUC
 
 pew_obj             wait_obj_header <>
@@ -7194,157 +7185,6 @@ update_time     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           CreateProcHandle
-;
-;           DESCRIPTION:    Create a process handle
-;
-;       PARAMETERS:     AX      Lib selector
-;               DX      Process descriptor
-;
-;       RETURNS:    BX      Process handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_proc_handle_name DB 'Create Process Handle',0
-
-create_proc_handle      PROC far
-    push ds
-    push cx
-    mov cx,SIZE proc_handle_seg
-    AllocateHandle
-    mov [ebx].ph_lib_sel,ax
-    mov [ebx].ph_proc_sel,dx
-    mov [ebx].hh_sign,PROCESS_HANDLE
-    mov bx,[ebx].hh_handle
-;
-    mov ds,dx
-    inc ds:pd_ref_count
-;       
-    pop cx
-    pop ds
-    retf32
-create_proc_handle  Endp    
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           DerefProcHandle
-;
-;           DESCRIPTION:    Deref a process handle
-;
-;       PARAMETERS:     BX      Process handle
-;
-;       RETURNS:    AX      Lib selector
-;               DX      Process descriptor
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-deref_proc_handle_name  DB 'Deref Process Handle',0
-
-deref_proc_handle       PROC far
-    push ds
-    push ebx
-;    
-    mov ax,PROCESS_HANDLE
-    DerefHandle
-    jc deref_proc_handle_done
-;
-    mov ax,[ebx].ph_lib_sel
-    mov dx,[ebx].ph_proc_sel
-    clc
-
-deref_proc_handle_done:
-    pop ebx
-    pop ds
-    retf32
-deref_proc_handle   Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           FreeProcHandle
-;
-;           DESCRIPTION:    Free a process handle
-;
-;       PARAMETERS:     BX      Process handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_proc_handle_name   DB 'Free Process Handle',0
-
-free_proc_handle    PROC far
-    push ds
-    push ax
-    push ebx
-    push dx
-;    
-    mov ax,PROCESS_HANDLE
-    DerefHandle
-    jc free_proc_handle_done
-;
-    mov dx,[ebx].ph_proc_sel
-    FreeHandle
-;       
-    mov ds,dx
-    sub ds:pd_ref_count,1
-    jnz free_proc_handle_done
-;
-    push es
-    mov ax,ds
-    mov es,ax
-    xor ax,ax
-    mov ds,ax
-    FreeMem    
-    pop es
-    clc
-
-free_proc_handle_done:
-    pop dx
-    pop ebx
-    pop ax
-    pop ds
-    retf32
-free_proc_handle    Endp
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetProcExitCode
-;
-;           DESCRIPTION:    Get process exit code
-;
-;       PARAMETERS:     BX      Process handle
-;
-;       RETURNS:    AX      Exit code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_proc_exit_code_name DB 'Get Process Exit Code',0
-
-get_proc_exit_code      PROC far
-    push ds
-    push ebx
-;    
-    mov ax,PROCESS_HANDLE
-    DerefHandle
-    mov ax,-1
-    jc get_proc_exit_done
-;
-    mov ds,[ebx].ph_proc_sel
-    mov ax,ds:pd_exit_code
-    clc
-
-get_proc_exit_done:
-    pop ebx
-    pop ds
-    retf32
-get_proc_exit_code   Endp
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           StartWaitForProcEnd
 ;
 ;           DESCRIPTION:    Start a wait for process end event
@@ -7474,9 +7314,10 @@ add_wait_for_proc_end   PROC far
     push dx
     push edi
 ;
+    int 3
     push bx
     mov bx,ax
-    DerefProcHandle
+;    DerefProcHandle
     pop bx
     jc add_wait_done
 ;
@@ -10000,18 +9841,6 @@ timer_free_list_create:
     mov ax,wait_for_signal_timeout_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET create_proc_handle
-    mov edi,OFFSET create_proc_handle_name
-    xor cl,cl
-    mov ax,create_proc_handle_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET deref_proc_handle
-    mov edi,OFFSET deref_proc_handle_name
-    xor cl,cl
-    mov ax,deref_proc_handle_nr
-    RegisterOsGate
-;
     mov esi,OFFSET fpu_exception
     mov edi,OFFSET fpu_exception_name
     xor cl,cl
@@ -10029,18 +9858,6 @@ timer_free_list_create:
     xor dx,dx
     mov ax,fault_reset_nr
     RegisterOsGate
-;
-    mov esi,OFFSET free_proc_handle
-    mov edi,OFFSET free_proc_handle_name
-    xor dx,dx
-    mov ax,free_proc_handle_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_proc_exit_code
-    mov edi,OFFSET get_proc_exit_code_name
-    xor dx,dx
-    mov ax,get_proc_exit_code_nr
-    RegisterBimodalUserGate
 ;
     mov esi,OFFSET add_wait_for_proc_end
     mov edi,OFFSET add_wait_for_proc_end_name
