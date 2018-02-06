@@ -1874,7 +1874,7 @@ set_module      PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov ds:app_handle,bx
+    mov ds:app_mod_id,bx
     mov ds:app_mod_sel,dx
     mov al,ds:app_key
     mov es:mod_key,al
@@ -1908,7 +1908,7 @@ reset_module    PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov bx,ds:app_handle
+    mov bx,ds:app_mod_id
     mov ax,MODULE_HANDLE
     DerefHandle
     jc reset_mod_handle_ok
@@ -2002,7 +2002,7 @@ free_module     PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov bx,ds:app_handle
+    mov bx,ds:app_mod_id
     mov ax,MODULE_HANDLE
     DerefHandle
     jc free_module_done

@@ -395,7 +395,7 @@ app_exit_code               DW ?
 app_fork_id                 DW ?
 app_unload_proc             DW ?
 
-app_handle                  DW ?
+app_mod_id                  DW ?
 app_mod_sel                 DW ?
 app_lib_section             section_typ <>
 

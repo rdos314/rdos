@@ -455,7 +455,7 @@ demand_load_ldt:
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov bx,ds:app_handle
+    mov bx,ds:app_mod_id
     ModuleIdToSel
     mov ax,bx
     pop bx
@@ -1150,7 +1150,7 @@ get_dll	Proc near
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov bx,ds:app_handle
+    mov bx,ds:app_mod_id
     ModuleIdToSel
 	jc get_dll_end
 ;

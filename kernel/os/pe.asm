@@ -1399,7 +1399,7 @@ FindLib Proc near
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov bx,ds:app_handle
+    mov bx,ds:app_mod_id
     ModuleIdToSel
     jc find_lib_done
 ;    
@@ -1509,7 +1509,7 @@ FindDll Proc near
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov bx,ds:app_handle
+    mov bx,ds:app_mod_id
     ModuleIdToSel
     jc find_dll_end
 ;    
@@ -1574,7 +1574,7 @@ FindApp Proc near
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov bx,ds:app_handle
+    mov bx,ds:app_mod_id
     ModuleIdToSel
     jc find_app_fail
 ;
@@ -3893,7 +3893,7 @@ start_thread    PROC far
 start_thread_notify:    
     pop ds
 ;    
-    mov bx,ds:app_handle
+    mov bx,ds:app_mod_id
     ModuleIdToSel
     jc start_thread_done
 ;    
@@ -3967,7 +3967,7 @@ free_thread     Proc far
     jne free_thread_no_debug
 ;    
     push ds
-    mov bx,ds:app_handle
+    mov bx,ds:app_mod_id
     ModuleIdToSel
     jc free_thread_dll_done
 ;    
@@ -4302,7 +4302,7 @@ fork_child:
     mov fs:pvProcessHandle,eax
 ;
     mov ds,ds:p_app_sel        
-    movzx eax,ds:app_handle
+    movzx eax,ds:app_mod_id
     mov fs:pvModuleHandle,eax
 ;
     mov ds,ds:app_mod_sel

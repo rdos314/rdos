@@ -186,7 +186,7 @@ FindLib	Proc near
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov bx,ds:app_handle
+    mov bx,ds:app_mod_id
     ModuleIdToSel
 	jc find_lib_done
 ;
