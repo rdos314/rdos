@@ -3721,9 +3721,12 @@ lpNoEnv:
 lpEnvDone:
     mov ebx,gs
     call ProcessCreated
+    mov ebx,eax
 ;
     GetThread
     mov es,ax
+    call RemoveProgramThread
+;
     mov es:p_prog_id,bx
     call AddProgramThread
 ;
