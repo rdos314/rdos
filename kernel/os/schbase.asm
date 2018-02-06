@@ -169,8 +169,13 @@ RemoveProgramThread    Proc near
     push ebx
     push ecx
 ;
-    int 3
     mov bx,es:p_prog_id
+    or bx,bx
+    jnz rptStart
+;
+    mov bx,1
+
+rptStart:
     call GetProcessSel
     or eax,eax
     jz rptDone
@@ -314,6 +319,8 @@ terminate_thread    Proc far
 ;    
     GetThread
     movzx eax,ax
+    mov es,eax
+    call RemoveProgramThread
     call ThreadTerminated
 ;
     popad
@@ -3326,6 +3333,8 @@ spawn_startup:
     sti
     GetThread
     mov es,ax
+    call RemoveProgramThread
+;
     mov es:p_prog_id,bx
     call AddProgramThread
 ;
