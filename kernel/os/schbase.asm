@@ -4663,6 +4663,7 @@ get_program_modules32   Endp
 ;           DESCRIPTION:    Add kernel module
 ;
 ;           PARAMETERS:     BX          Selector
+;                           EDX         Base
 ;                           ECX         Size
 ;                           ES:EDI      Module name
 ;
@@ -4677,7 +4678,7 @@ AddKernelModule     PROC near
     mov ds,eax
     mov esi,edi
 ;
-    mov edx,ecx
+    mov ebp,ecx
     xor ecx,ecx
 
 akmSizeLoop:
@@ -4689,9 +4690,9 @@ akmSizeLoop:
     mov eax,SIZE module_struc
     add eax,ecx
     AllocateSmallGlobalMem
-    mov es:mod_base,0
+    mov es:mod_base,edx
     mov es:mod_base+4,0
-    mov es:mod_size,edx
+    mov es:mod_size,ebp
     mov es:mod_size+4,0
     mov es:mod_sel,bx
     mov es:mod_name_offs,SIZE module_struc
@@ -4825,6 +4826,7 @@ not_run_process:
     mov eax,cs
     mov es,eax
     mov edi,OFFSET kernel_code_text    
+    xor edx,edx
     call AddKernelModule
     pop edx
     pop es
@@ -4834,27 +4836,47 @@ adapter_not_kernel:
     cmp ax,RdosDevice16
     jne adapter_not_device16
 ;
+    push edx
     mov edi,edx
     add edi,SIZE rdos_header
     mov bx,ds:[edi].dev16_code_sel
     movzx ecx,ds:[edi].dev16_code_size
     add edi,SIZE device16_header
+    xor edx,edx
     call AddKernelModule
+    pop edx
     jmp init_adapter_process_next
 
 adapter_not_device16:
     cmp ax,RdosDevice32
     jne adapter_not_device32
 ;
+    push edx
     mov edi,edx
     add edi,SIZE rdos_header
     mov bx,ds:[edi].dev32_code_sel
     mov ecx,ds:[edi].dev32_code_size
     add edi,SIZE device32_header
+    xor edx,edx
     call AddKernelModule
+    pop edx
     jmp init_adapter_process_next
 
 adapter_not_device32:
+    cmp ax,RdosLongMode
+    jne adapter_not_long
+;
+    push edx
+    mov edi,edx
+    add edi,SIZE rdos_header
+    xor bx,bx
+    mov ecx,ds:[edi].lm_image_size
+    mov edx,ds:[edi].lm_image_base
+    add edi,SIZE long_mode_header
+    call AddKernelModule
+    pop edx
+    
+adapter_not_long:
     cmp ax,RdosEnd
     je init_adapter_process_done
 
