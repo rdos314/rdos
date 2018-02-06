@@ -1776,13 +1776,15 @@ free_debug_app_mem      ENDP
 ;
 ;           DESCRIPTION:    Convert from module ID to selector
 ;
-;       PARAMETERS:         BX      Module handle
+;       PARAMETERS:         BX          Module ID
 ;
 ;           RETURNS:        BX          Lib sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ModuleIdToSel  Proc near
+module_id_to_sel_name    DB 'Module ID to Sel',0
+
+module_id_to_sel  Proc far
     push eax
 ;
     movzx ebx,bx
@@ -1798,7 +1800,7 @@ mitsDone:
 ;
     pop eax
     ret
-ModuleIdToSel  Endp
+module_id_to_sel  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2067,26 +2069,6 @@ free_module     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DerefModuleHandle
-;
-;           DESCRIPTION:    Dereference module handle
-;
-;       PARAMETERS:         BX      Module handle
-;
-;           RETURNS:        BX          Lib sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-deref_module_handle_name    DB 'Deref Module Handle',0
-
-deref_module_handle  Proc far
-    call ModuleIdToSel
-    ret
-deref_module_handle  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           AliasModuleHandle
 ;
 ;           DESCRIPTION:    Create an alias handle for module
@@ -2126,7 +2108,7 @@ get_module_focus_key  Proc far
     push ds
     push ebx
 ;    
-    call ModuleIdToSel
+    ModuleIdToSel
     jc get_module_focus_done
 ;
     mov ds,bx
@@ -2233,7 +2215,7 @@ free_dll  Proc far
     push eax
     push ebx
 ;    
-    call ModuleIdToSel
+    ModuleIdToSel
     jc free_dll_done
 ;
     mov ds,bx
@@ -2320,7 +2302,7 @@ get_module_proc32  Proc far
     push eax
     push ebx
 ;    
-    call ModuleIdToSel
+    ModuleIdToSel
     jc get_module_proc_done32
 ;
     mov ds,bx
@@ -2344,7 +2326,7 @@ get_module_proc16  Proc far
     push edi
 ;    
     movzx edi,di
-    call ModuleIdToSel
+    ModuleIdToSel
     jc get_module_proc_done16
 ;
     mov ds,bx
@@ -2384,7 +2366,7 @@ get_module_resource_name    DB 'Get Module Resource',0
 get_module_resource  Proc far
     push ebx
 ;    
-    call ModuleIdToSel
+    ModuleIdToSel
     jc get_resource_done
 ;
     mov ds,bx
@@ -2422,7 +2404,7 @@ get_module_name32  Proc far
     push ds
     push ebx
 ;    
-    call ModuleIdToSel
+    ModuleIdToSel
     jc get_module_name_done32
 ;
     mov ds,bx
@@ -2446,7 +2428,7 @@ get_module_name16  Proc far
     push edi
 ;    
     movzx edi,di
-    call ModuleIdToSel
+    ModuleIdToSel
     jc get_module_name_done16
 ;
     mov ds,bx
@@ -2667,7 +2649,7 @@ add_wait_for_debug_event    PROC far
     jc add_wait_done
 ;    
     movzx ebx,ax
-    call ModuleIdToSel
+    ModuleIdToSel
     mov es:dew_module_sel,bx
 
 add_wait_done:
@@ -2705,7 +2687,7 @@ get_debug_event  Proc far
     jc get_debug_event_done
 ;
     movzx ebx,ax
-    call ModuleIdToSel
+    ModuleIdToSel
     jc get_debug_event_done
 ;
     mov ax,bx
@@ -2749,7 +2731,7 @@ get_debug_event_data32  Proc far
     jc get_debug_event_data_done32
 ;
     movzx ebx,ax
-    call ModuleIdToSel
+    ModuleIdToSel
     jc get_debug_event_data_done32
 ;
     mov ax,bx
@@ -2781,7 +2763,7 @@ get_debug_event_data16  Proc far
     jc get_debug_event_data_done16
 ;
     movzx ebx,ax
-    call ModuleIdToSel
+    ModuleIdToSel
     jc get_debug_event_data_done16
 ;
     mov ax,bx
@@ -2827,7 +2809,7 @@ clear_debug_event  Proc far
     jc clear_debug_event_done
 ;
     movzx ebx,ax
-    call ModuleIdToSel
+    ModuleIdToSel
     jc clear_debug_event_done
 ;
     mov ax,bx
@@ -2875,7 +2857,7 @@ continue_debug_event  Proc far
     jc continue_debug_event_done
 ;
     movzx ebx,ax
-    call ModuleIdToSel
+    ModuleIdToSel
     jc continue_debug_event_done
 ;
     mov ax,bx
@@ -3178,7 +3160,7 @@ AllocateProcess Proc near
     call AllocateProcessBlock
 ;
     mov bx,dx
-    DerefModuleHandle
+    ModuleIdToSel
     jc apDebugOk
 ;    
     mov gs:pr_debug_sel,bx
@@ -5060,10 +5042,10 @@ init_state_hooks:
     mov ax,free_module_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET deref_module_handle
-    mov edi,OFFSET deref_module_handle_name
+    mov esi,OFFSET module_id_to_sel
+    mov edi,OFFSET module_id_to_sel_name
     xor cl,cl
-    mov ax,deref_module_handle_nr
+    mov ax,module_id_to_sel_nr
     RegisterOsGate
 ;
     mov esi,OFFSET alias_module_handle

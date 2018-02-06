@@ -358,7 +358,7 @@
 #define osgate_create_module 337
 #define osgate_free_module 338
 #define osgate_reset_module 339
-#define osgate_deref_module_handle 340
+#define osgate_module_id_to_sel 340
 #define osgate_alias_module_handle 341
 
 #define osgate_thread_to_sel 342
@@ -1087,7 +1087,7 @@
 #define OsGate_create_module 0x3E 0x67 0x9a 81 1 0 0 2 0
 #define OsGate_free_module 0x3E 0x67 0x9a 82 1 0 0 2 0
 #define OsGate_reset_module 0x3E 0x67 0x9a 83 1 0 0 2 0
-#define OsGate_deref_module_handle 0x3E 0x67 0x9a 84 1 0 0 2 0
+#define OsGate_module_id_to_sel 0x3E 0x67 0x9a 84 1 0 0 2 0
 #define OsGate_alias_module_handle 0x3E 0x67 0x9a 85 1 0 0 2 0
 
 #define OsGate_thread_to_sel 0x3E 0x67 0x9a 86 1 0 0 2 0

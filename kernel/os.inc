@@ -2071,10 +2071,10 @@ FreeModule      MACRO
     OsGate free_module_nr
                     ENDM
 
-; IN  BX    Module handle
+; IN  BX    Module ID
 ; OUT BX    Lib sel
-DerefModuleHandle       MACRO
-    OsGate deref_module_handle_nr
+ModuleIdToSel       MACRO
+    OsGate module_id_to_sel_nr
                     ENDM
 
 ; IN  BX    Lib sel

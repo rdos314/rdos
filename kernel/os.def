@@ -358,7 +358,7 @@ set_module_nr               = 336
 create_module_nr            = 337
 free_module_nr              = 338
 reset_module_nr             = 339
-deref_module_handle_nr      = 340
+module_id_to_sel_nr         = 340
 alias_module_handle_nr      = 341
 
 thread_to_sel_nr            = 342

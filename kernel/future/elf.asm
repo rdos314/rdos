@@ -187,7 +187,7 @@ FindLib	Proc near
     mov ds,ax
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
-    DerefModuleHandle
+    ModuleIdToSel
 	jc find_lib_done
 ;
     mov ds,bx

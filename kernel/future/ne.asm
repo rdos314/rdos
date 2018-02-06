@@ -456,7 +456,7 @@ demand_load_ldt:
     mov ds,ax
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
-    DerefModuleHandle
+    ModuleIdToSel
     mov ax,bx
     pop bx
 	jc demand_load_end
@@ -1151,7 +1151,7 @@ get_dll	Proc near
     mov ds,ax
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
-    DerefModuleHandle
+    ModuleIdToSel
 	jc get_dll_end
 ;
     push ds

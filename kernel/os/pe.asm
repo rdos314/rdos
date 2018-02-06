@@ -1039,7 +1039,7 @@ CreateProcessEvent Proc near
     mov es:[di].cpeFile,ebx
 ;       
     movzx ebx,ds:mod_handle
-    DerefModuleHandle
+    ModuleIdToSel
     mov es:[di].cpeHandle,ebx
 ;
     mov eax,fs:pvProcessHandle
@@ -1203,7 +1203,7 @@ LoadDllEvent Proc near
     mov es:[di].ldeFile,ebx
 ;       
     movzx ebx,ds:mod_handle
-    DerefModuleHandle
+    ModuleIdToSel
     mov es:[di].ldeHandle,ebx    
 ;
     mov eax,ds:mod_base
@@ -1251,7 +1251,7 @@ FreeDllEvent Proc near
     mov es:event_code,EVENT_FREE_DLL
 ;       
     movzx ebx,ds:mod_handle
-    DerefModuleHandle
+    ModuleIdToSel
     mov es:[di].fdeHandle,ebx    
 ;
     pop ebx
@@ -1400,7 +1400,7 @@ FindLib Proc near
     mov ds,ax
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
-    DerefModuleHandle
+    ModuleIdToSel
     jc find_lib_done
 ;    
     mov ds,bx
@@ -1510,7 +1510,7 @@ FindDll Proc near
     mov ds,ax
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
-    DerefModuleHandle
+    ModuleIdToSel
     jc find_dll_end
 ;    
     mov ds,bx
@@ -1575,7 +1575,7 @@ FindApp Proc near
     mov ds,ax
     mov ds,ds:p_app_sel
     mov bx,ds:app_handle
-    DerefModuleHandle
+    ModuleIdToSel
     jc find_app_fail
 ;
     mov es,bx
@@ -3720,7 +3720,7 @@ init_thread     PROC far
     mov edx,es:pvProcessHandle
     push es
     push bx
-    DerefModuleHandle
+    ModuleIdToSel
     mov es,bx
     mov esi,es:lib_header
     mov edi,es:mod_base
@@ -3894,7 +3894,7 @@ start_thread_notify:
     pop ds
 ;    
     mov bx,ds:app_handle
-    DerefModuleHandle
+    ModuleIdToSel
     jc start_thread_done
 ;    
     mov ds,bx
@@ -3968,7 +3968,7 @@ free_thread     Proc far
 ;    
     push ds
     mov bx,ds:app_handle
-    DerefModuleHandle
+    ModuleIdToSel
     jc free_thread_dll_done
 ;    
     mov ds,bx
@@ -4021,7 +4021,7 @@ free_thread_dll_done:
     
 free_thread_no_debug:
     mov ebx,fs:pvModuleHandle
-    DerefModuleHandle
+    ModuleIdToSel
     mov es,bx
     mov ax,flat_data_sel
     mov ds,ax
@@ -4150,7 +4150,7 @@ fork_proc      Proc far
     push eax
 ;
     mov ebx,fs:pvModuleHandle
-    DerefModuleHandle
+    ModuleIdToSel
     push ebx
 ;
     mov eax,fs:pvFirstExcept
@@ -4767,7 +4767,7 @@ notify_pe_exception     Proc far
 ;
     push ebx
     mov ebx,fs:pvModuleHandle
-    DerefModuleHandle
+    ModuleIdToSel
     mov ds,bx
     pop ebx
 ;       
@@ -4813,7 +4813,7 @@ find_exc_next:
     push es
 ;
     mov ebx,fs:pvModuleHandle
-    DerefModuleHandle
+    ModuleIdToSel
     mov ds,bx
     call ExceptionEvent
 ;
@@ -5355,7 +5355,7 @@ show_exception_text     PROC far
     push ebx
 ;    
     mov ebx,fs:pvModuleHandle
-    DerefModuleHandle
+    ModuleIdToSel
     mov es,bx
     mov ax,es:lib_debug_lib
     or ax,ax
@@ -5464,7 +5464,7 @@ load_dll    Proc far
     mov al,es:[edi]
     mov esi,edi
     mov bx,word ptr fs:pvModuleHandle
-    DerefModuleHandle
+    ModuleIdToSel
     jc load_dll_pr_done
 ;
     mov di,fs
