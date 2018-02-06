@@ -349,13 +349,22 @@ void TStateCommand::WriteThreads()
 ##########################################################################*/
 void TStateCommand::WriteOneModule(int mid, const char *Name)
 {
-    char str[40];
+    char str[50];
     long Start = RdosGetModuleBase(mid);
     long End = Start + RdosGetModuleSize(mid) - 1;
 
-    sprintf(str, "%04hX %08lX-%08lX ", mid, Start, End);
+    sprintf(str, "%04hX ", mid);
     Write(str);
-    Write(Name);
+
+    strncpy(str, Name, 45);
+    str[42] = 0;
+    while (strlen(str) < 41)
+        strcat(str, " ");
+
+    Write(str);
+
+    sprintf(str, "%08lX-%08lX ", Start, End);
+    Write(str);
     Write("\r\n");
 }
 
