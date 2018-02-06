@@ -57,7 +57,9 @@ protected:
     void WriteModules();
 
     void WritePrograms();
+    void WriteProgramModules(int pid);
     void WriteProgramThreads(int pid);
+    void WriteModuleById(int mid);
     void WriteThreadById(int tid);
 
     int FOptM;

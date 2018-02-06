@@ -1714,6 +1714,14 @@
     parm [eax] [edi] [ecx] \
     value [ecx];
 
+#pragma aux RdosGetProgramModules = \
+    CallGate_get_program_modules  \
+    "jnc Ok" \
+    "xor ecx,ecx" \
+    "Ok: " \
+    parm [eax] [edi] [ecx] \
+    value [ecx];
+
 #pragma aux RdosHasHardReset = \
     CallGate_has_hard_reset \
     CarryToBool \

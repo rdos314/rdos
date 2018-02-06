@@ -1122,6 +1122,14 @@ GetProgramThreads	MACRO
 	UserGate get_program_threads_nr
 	        ENDM
 
+; IN   AX           Program #
+; IN   ES:(E)DI     Module ID buffer (2 bytes per entry)
+; IN   (E)CX        Max modules
+; OUT  ECX          Module count
+GetProgramModules	MACRO
+	UserGate get_program_modules_nr
+	        ENDM
+
 ; OUT  AX           Module count
 GetModuleCount	MACRO
 	UserGate get_module_count_nr

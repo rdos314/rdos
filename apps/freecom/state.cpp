@@ -361,6 +361,45 @@ void TStateCommand::WriteOneModule(int mid, const char *Name)
 
 /*##########################################################################
 #
+#   Name       : TStateCommand::WriteModuleById
+#
+#   Purpose....: Write module by ID
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TStateCommand::WriteModuleById(int mid)
+{
+    char buf[256];
+    int ok = FALSE;
+    int i;
+    int id;
+    int ModuleCount = RdosGetModuleCount();
+
+    for (i = 0; i < ModuleCount && !ok; i++)
+    {
+        if (RdosGetModuleInfo(i, &id, buf, 256))
+        {
+            if (id == mid)
+            {
+                Write("  ");
+                WriteOneModule(mid, buf);
+                ok = TRUE;
+            }
+        }
+    }
+
+    if (!ok)
+    {
+        sprintf(buf, "  %04hX\r\n", mid);
+        Write(buf);
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TStateCommand::WriteModules
 #
 #   Purpose....: Write modules
@@ -380,6 +419,26 @@ void TStateCommand::WriteModules()
     for (i = 0; i < ModuleCount; i++)
         if (RdosGetModuleInfo(i, &id, buf, 256))
             WriteOneModule(id, buf);
+}
+
+/*##########################################################################
+#
+#   Name       : TStateCommand::WriteProgramModules
+#
+#   Purpose....: Write program modules
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TStateCommand::WriteProgramModules(int pid)
+{
+    int i;
+    int ModuleCount = RdosGetProgramModules(pid, IdBuf, 256);
+
+    for (i = 0; i < ModuleCount; i++)
+        WriteModuleById(IdBuf[i]);
 }
 
 /*##########################################################################
@@ -468,6 +527,7 @@ void TStateCommand::WritePrograms()
             Write(str);
             Write(NameBuf);
             Write("\r\n");
+            WriteProgramModules(i);
             WriteProgramThreads(i);
             Write("\r\n");
         }

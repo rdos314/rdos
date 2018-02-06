@@ -43,6 +43,7 @@ INCLUDE chandle.inc
     .686p
 
 MAX_PROCESS_THREADS  = 256
+MAX_PROCESS_MODULES  = 256
 
 process_struc    STRUC
 
@@ -62,6 +63,9 @@ pr_loader_name       DD ?
 pr_switch            DB ?,?
 
 pr_section           section_typ <>
+
+pr_module_count      DW ?
+pr_module_arr        DW MAX_PROCESS_MODULES DUP(?)
 
 pr_thread_count      DW ?
 pr_thread_arr        DW MAX_PROCESS_THREADS DUP(?)
@@ -228,6 +232,130 @@ rptDone:
     pop ds
     ret
 RemoveProgramThread    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddProgramModule
+;
+;           DESCRIPTION:    Add module to program
+;
+;           PARAMETERS:     BX      Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddProgramModule    Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+;
+    GetThread
+    mov es,ax
+;
+    push ebx
+    movzx ebx,es:p_prog_id
+    call GetProcessSel
+    pop ebx
+    or eax,eax
+    jz apmDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    movzx ecx,ds:pr_module_count
+    cmp ecx,MAX_PROCESS_MODULES
+    jae apmLeave
+;
+    mov eax,ecx
+    shl eax,1
+    inc ecx
+    mov ds:pr_module_count,cx
+;
+    mov ds:[eax].pr_module_arr,bx
+    
+apmLeave:
+    LeaveSection ds:pr_section
+            
+apmDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+AddProgramModule    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           RemoveProgramModule
+;
+;           DESCRIPTION:    Remove module from program
+;
+;           PARAMETERS:     BX      Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveProgramModule    Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+;
+    GetThread
+    mov es,ax
+;
+    push ebx
+    movzx ebx,es:p_prog_id
+    call GetProcessSel
+    or eax,eax
+    pop ebx
+    jz rpmDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    mov ax,bx
+    movzx ecx,ds:pr_module_count
+    mov ebx,OFFSET pr_module_arr
+    or ecx,ecx
+    jz rpmLeave
+
+rpmLoop:
+    cmp ax,ds:[ebx]
+    je rpmFound
+;
+    add bx,2
+    loop rpmLoop
+;
+    jmp rpmLeave
+
+rpmFound:
+    dec ds:pr_module_count
+;
+    sub ecx,1
+    jz rpmLeave
+
+rpmMove:
+    mov ax,ds:[ebx+2]
+    mov ds:[ebx],ax
+    add ebx,2
+    loop rpmMove
+
+rpmLeave:
+    LeaveSection ds:pr_section
+            
+rpmDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+RemoveProgramModule    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1611,6 +1739,7 @@ set_module      PROC far
 ;
     mov ebx,es
     call ModuleLoaded
+    call AddProgramModule
 ;
     mov dx,es
     mov cx,SIZE module_handle_seg
@@ -1716,6 +1845,7 @@ create_module   PROC far
 ;
     mov ebx,es
     call ModuleLoaded
+    call AddProgramModule
 ;
     mov ax,es
     mov ds,ax
@@ -2942,6 +3072,7 @@ AllocateProcess Proc near
     mov gs:pr_proc_sel,0
     mov gs:pr_switch,0
     mov gs:pr_thread_count,0
+    mov gs:pr_module_count,0
     InitSection gs:pr_section
 ;
     mov bx,dx
@@ -4292,6 +4423,87 @@ get_program_threads32   Proc far
 get_program_threads32   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetProgramModules
+;
+;           DESCRIPTION:    Get program modules
+;
+;           PARAMETERS:     AX          Program #
+;                           ES:(E)DI    Module ID buffer (2 bytes per entry)
+;                           (E)CX       Max module ids
+;
+;           RETURNS:        ECX         Actual modules
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_program_modules_name DB 'Get Program Modules',0
+    
+get_program_modules    Proc near
+    push ds
+    push ebx
+    push edx
+    push esi
+    push edi
+;
+    call GetProcessID
+    or eax,eax
+    stc
+    jz gpmDone
+;
+    mov edx,eax
+    mov ebx,eax
+    call GetProcessSel
+    or eax,eax
+    stc
+    jz gpmDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    movzx edx,ds:pr_module_count
+    mov esi,OFFSET pr_module_arr
+
+gpmCopy:
+    or edx,edx
+    jz gpmLeave
+;
+    dec edx
+    lodsw
+    stosw
+    loop gpmCopy
+
+gpmLeave:
+    movzx ecx,ds:pr_module_count
+    LeaveSection ds:pr_section
+    clc
+
+gpmDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop ds
+    ret
+get_program_modules    Endp
+
+get_program_modules16   Proc far
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call get_program_modules
+;
+    pop edi
+    ret
+get_program_modules16   Endp
+
+get_program_modules32   Proc far
+    call get_program_modules
+    ret
+get_program_modules32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           run_process
@@ -4856,6 +5068,13 @@ init_state_hooks:
     mov edi,OFFSET get_program_threads_name
     mov dx,virt_es_in
     mov ax,get_program_threads_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET get_program_modules16
+    mov esi,OFFSET get_program_modules32
+    mov edi,OFFSET get_program_modules_name
+    mov dx,virt_es_in
+    mov ax,get_program_modules_nr
     RegisterUserGate
 ;
     popad
