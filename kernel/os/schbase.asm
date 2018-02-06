@@ -4729,17 +4729,17 @@ init_state_hooks:
     add edi,8
     loop init_state_hooks
 ;
-    call AllocateProcess
-    mov eax,7
-    mov ecx,eax
-    AllocateSmallGlobalMem
-    mov esi,OFFSET system_process_name
-    xor edi,edi
-    rep movs byte ptr es:[edi],cs:[esi]
-    mov gs:pr_name_sel,es
+;    call AllocateProcess
+;    mov eax,7
+;    mov ecx,eax
+;    AllocateSmallGlobalMem
+;    mov esi,OFFSET system_process_name
+;    xor edi,edi
+;    rep movs byte ptr es:[edi],cs:[esi]
+;    mov gs:pr_name_sel,es
 ;
-    mov ebx,gs
-    call ProcessCreated
+;    mov ebx,gs
+;    call ProcessCreated
 ;    
     mov ax,cs
     mov ds,ax
