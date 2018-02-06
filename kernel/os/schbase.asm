@@ -236,6 +236,57 @@ RemoveProgramThread    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddKernelProgramModule
+;
+;           DESCRIPTION:    Add kernel module to program
+;
+;           PARAMETERS:     BX      Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddKernelProgramModule    Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+;
+    push ebx
+    mov ebx,1
+    call GetProcessSel
+    pop ebx
+    or eax,eax
+    jz akpmDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    movzx ecx,ds:pr_module_count
+    cmp ecx,MAX_PROCESS_MODULES
+    jae akpmLeave
+;
+    mov eax,ecx
+    shl eax,1
+    inc ecx
+    mov ds:pr_module_count,cx
+;
+    mov ds:[eax].pr_module_arr,bx
+    
+akpmLeave:
+    LeaveSection ds:pr_section
+            
+akpmDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+AddKernelProgramModule    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AddProgramModule
 ;
 ;           DESCRIPTION:    Add module to program
@@ -4607,6 +4658,66 @@ get_program_modules32   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           AddKernelModule
+;
+;           DESCRIPTION:    Add kernel module
+;
+;           PARAMETERS:     BX          Selector
+;                           ECX         Size
+;                           ES:EDI      Module name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddKernelModule     PROC near
+    push ds
+    push es
+    pushad
+;
+    mov eax,es
+    mov ds,eax
+    mov esi,edi
+;
+    mov edx,ecx
+    xor ecx,ecx
+
+akmSizeLoop:
+    inc ecx
+    lodsb
+    or al,al
+    jne akmSizeLoop
+;
+    mov eax,SIZE module_struc
+    add eax,ecx
+    AllocateSmallGlobalMem
+    mov es:mod_base,0
+    mov es:mod_base+4,0
+    mov es:mod_size,edx
+    mov es:mod_size+4,0
+    mov es:mod_sel,bx
+    mov es:mod_name_offs,SIZE module_struc
+    mov es:mod_loader,0
+    mov es:mod_handle,0
+    InitSection es:mod_section
+;
+    mov esi,edi
+    mov edi,SIZE module_struc
+    rep movsb
+;
+    mov ebx,es
+    call ModuleLoaded
+;
+    mov ebx,eax
+    call AddKernelProgramModule
+;
+    popad
+    pop es
+    pop ds
+    ret
+AddKernelModule     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           run_process
 ;
 ;           DESCRIPTION:    Run processes in adapter
@@ -4684,12 +4795,12 @@ run_process     ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+kernel_code_text DB 'kernel.exe', 0
+
 init_adapter_process    Proc near
     push ds
     push es
-    push ax
-    push bx
-    push edx
+    pushad
 ;
     mov ax,flat_sel
     mov ds,ax
@@ -4699,18 +4810,60 @@ init_adapter_process_loop:
     mov ax,[edx].typ
     cmp ax,RdosCommand
     jne not_run_process
+;
     call run_process
     jmp init_adapter_process_next
+
 not_run_process:
+    cmp ax,RdosKernel
+    jne adapter_not_kernel
+;
+    push es
+    push edx
+    mov bx,kernel_code
+    GetSelectorBaseSize
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET kernel_code_text    
+    call AddKernelModule
+    pop edx
+    pop es
+    jmp init_adapter_process_next
+
+adapter_not_kernel:
+    cmp ax,RdosDevice16
+    jne adapter_not_device16
+;
+    mov edi,edx
+    add edi,SIZE rdos_header
+    mov bx,ds:[edi].dev16_code_sel
+    movzx ecx,ds:[edi].dev16_code_size
+    add edi,SIZE device16_header
+    call AddKernelModule
+    jmp init_adapter_process_next
+
+adapter_not_device16:
+    cmp ax,RdosDevice32
+    jne adapter_not_device32
+;
+    mov edi,edx
+    add edi,SIZE rdos_header
+    mov bx,ds:[edi].dev32_code_sel
+    mov ecx,ds:[edi].dev32_code_size
+    add edi,SIZE device32_header
+    call AddKernelModule
+    jmp init_adapter_process_next
+
+adapter_not_device32:
     cmp ax,RdosEnd
     je init_adapter_process_done
+
 init_adapter_process_next:
     add edx,[edx].len
     jmp init_adapter_process_loop
+
 init_adapter_process_done:
-    pop edx
-    pop bx
-    pop ax
+    popad
     pop es
     pop ds
     ret
