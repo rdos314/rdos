@@ -423,6 +423,12 @@ create_thread    Proc far
     call ThreadCreated
 ;
     movzx ebx,es:p_prog_id
+    or ebx,ebx
+    jnz ctAdd
+;
+    mov ebx,1
+
+ctAdd:
     call AddProgramThread
 
 ctDone:
@@ -3081,6 +3087,44 @@ GetProgramLoader Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AllocateProcessBlock
+;
+;       DESCRIPTION:    Allocate process block
+;
+;       RETURNS:        GS      Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateProcessBlock Proc near    
+    push es
+    push eax
+; 
+    mov eax,SIZE process_struc
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov gs,ax
+;  
+    mov gs:pr_name_sel,0
+    mov gs:pr_cmd_sel,0
+    mov gs:pr_dir_sel,0
+    mov gs:pr_env_sel,0
+    mov gs:pr_cmd_sel,0
+    mov gs:pr_debug_sel,0
+    mov gs:pr_thread,0
+    mov gs:pr_proc_sel,0
+    mov gs:pr_switch,0
+    mov gs:pr_thread_count,0
+    mov gs:pr_module_count,0
+    InitSection gs:pr_section
+;
+    pop eax
+    pop es
+    ret
+AllocateProcessBlock  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AllocateProcess
 ;
 ;       DESCRIPTION:    Allocate process
@@ -3095,25 +3139,7 @@ AllocateProcess Proc near
     push ds
     pushad
 ; 
-    push es
-    mov eax,SIZE process_struc
-    AllocateSmallGlobalMem
-    mov ax,es
-    mov gs,ax
-    pop es
-;  
-    mov gs:pr_name_sel,0
-    mov gs:pr_cmd_sel,0
-    mov gs:pr_dir_sel,0
-    mov gs:pr_env_sel,0
-    mov gs:pr_cmd_sel,0
-    mov gs:pr_debug_sel,0
-    mov gs:pr_thread,0
-    mov gs:pr_proc_sel,0
-    mov gs:pr_switch,0
-    mov gs:pr_thread_count,0
-    mov gs:pr_module_count,0
-    InitSection gs:pr_section
+    call AllocateProcessBlock
 ;
     mov bx,dx
     DerefModuleHandle
@@ -4706,7 +4732,6 @@ system_process_name DB "System", 0
 InitScheduler_    Proc near
     push ds
     push es
-    push gs
     pushad
 ;
     mov bx,SEG data
@@ -4723,17 +4748,25 @@ init_state_hooks:
     add edi,8
     loop init_state_hooks
 ;
-;    call AllocateProcess
-;    mov eax,7
-;    mov ecx,eax
-;    AllocateSmallGlobalMem
-;    mov esi,OFFSET system_process_name
-;    xor edi,edi
-;    rep movs byte ptr es:[edi],cs:[esi]
-;    mov gs:pr_name_sel,es
+    push es
+    push gs
+    pushad
 ;
-;    mov ebx,gs
-;    call ProcessCreated
+    call AllocateProcessBlock
+    mov eax,7
+    mov ecx,eax
+    AllocateSmallGlobalMem
+    mov esi,OFFSET system_process_name
+    xor edi,edi
+    rep movs byte ptr es:[edi],cs:[esi]
+    mov gs:pr_name_sel,es
+;
+    mov ebx,gs
+    call ProcessCreated
+;
+    popad
+    pop gs
+    pop es
 ;    
     mov ax,cs
     mov ds,ax
@@ -5124,7 +5157,6 @@ init_state_hooks:
     RegisterUserGate
 ;
     popad
-    pop gs
     pop es
     pop ds
     ret
