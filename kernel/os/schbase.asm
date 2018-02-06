@@ -1862,14 +1862,13 @@ set_module      PROC far
     mov ebx,es
     call ModuleLoaded
 ;
-    mov es:mod_id,bx
     mov ebx,eax
     call AddProgramModule
 ;
     mov dx,es
     mov ds,dx
     InitSection ds:mod_section
-    mov ds:mod_handle,bx
+    mov es:mod_id,bx
     mov ds:mod_list,0
 ;    
     GetThread
@@ -1966,10 +1965,9 @@ create_module   PROC far
 ;
     mov ebx,eax
     call AddProgramModule
-    mov es:mod_id,bx
 ;
     InitSection es:mod_section
-    mov es:mod_handle,bx
+    mov es:mod_id,bx
     
 create_module_done:    
     pop ebx
@@ -2025,7 +2023,7 @@ free_module     PROC far
     mov es,ax
     mov ax,es:mod_next
     mov ds:mod_list,ax
-    mov bx,es:mod_handle
+    mov bx,es:mod_id
     jmp free_mod_handle
     
 free_mod_not_head:    
@@ -2043,7 +2041,7 @@ free_mod_in_list:
     mov ds,dx
     mov ax,ds:mod_next
     mov es:mod_next,ax
-    mov bx,ds:mod_handle
+    mov bx,ds:mod_id
 
 free_mod_handle:
     mov ax,MODULE_HANDLE
@@ -2156,7 +2154,7 @@ load_dll32  Proc far
 ;
     push es
     mov es,bx
-    mov bx,es:mod_handle
+    mov bx,es:mod_id
     pop es      
 
 load_dll32_done:
@@ -2187,7 +2185,7 @@ load_dll16  Proc far
 ;
     push es
     mov es,bx
-    mov bx,es:mod_handle
+    mov bx,es:mod_id
     pop es      
 
 load_dll16_done:
@@ -2271,7 +2269,7 @@ get_current_dll  Proc far
     jc get_current_dll_done
 ;
     mov es,bx
-    mov bx,es:mod_handle
+    mov bx,es:mod_id
 
 get_current_dll_done:
     pop edi
@@ -4661,7 +4659,7 @@ akmSizeLoop:
     mov es:mod_sel,bx
     mov es:mod_name_offs,SIZE module_struc
     mov es:mod_loader,0
-    mov es:mod_handle,0
+    mov es:mod_id,0
     InitSection es:mod_section
 ;
     mov esi,edi

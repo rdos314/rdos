@@ -1038,7 +1038,7 @@ CreateProcessEvent Proc near
     movzx ebx,ds:lib_c_file_handle
     mov es:[di].cpeFile,ebx
 ;       
-    movzx ebx,ds:mod_handle
+    movzx ebx,ds:mod_id
     ModuleIdToSel
     mov es:[di].cpeHandle,ebx
 ;
@@ -1202,7 +1202,7 @@ LoadDllEvent Proc near
     movzx ebx,ds:lib_c_file_handle
     mov es:[di].ldeFile,ebx
 ;       
-    movzx ebx,ds:mod_handle
+    movzx ebx,ds:mod_id
     ModuleIdToSel
     mov es:[di].ldeHandle,ebx    
 ;
@@ -1250,7 +1250,7 @@ FreeDllEvent Proc near
     mov es:event_size,ax
     mov es:event_code,EVENT_FREE_DLL
 ;       
-    movzx ebx,ds:mod_handle
+    movzx ebx,ds:mod_id
     ModuleIdToSel
     mov es:[di].fdeHandle,ebx    
 ;
@@ -2071,7 +2071,7 @@ RunDll  Proc near
     add eax,edi
     push eax
     movzx eax,es:lib_init_param
-    movzx ebx,es:mod_handle
+    movzx ebx,es:mod_id
     mov edx,1
     CallPM32
 ;
@@ -2767,7 +2767,7 @@ fdNotifyDone:
     add eax,es:mod_base
     push eax
     movzx eax,es:lib_init_param
-    movzx ebx,es:mod_handle
+    movzx ebx,es:mod_id
     mov edx,0
     CallPM32
 ;
@@ -3352,7 +3352,7 @@ init_stack_no_tls:
     sub edx,4
     mov [edx],eax                       ; reason
     sub edx,4
-    movzx eax,es:mod_handle
+    movzx eax,es:mod_id
     mov dword ptr [edx],eax             ; module handle
     mov fs:pvModuleHandle,eax
     sub edx,4
@@ -3920,7 +3920,7 @@ start_thread_dlls_loop:
     add eax,es:mod_base
     push eax
     movzx eax,es:lib_init_param
-    movzx ebx,es:mod_handle
+    movzx ebx,es:mod_id
     mov edx,2
     CallPM32
 
@@ -3995,7 +3995,7 @@ free_thread_dlls_loop:
     add eax,es:mod_base
     push eax
     movzx eax,es:lib_init_param
-    movzx ebx,es:mod_handle
+    movzx ebx,es:mod_id
     mov edx,3
     CallPM32
     pop ebp
@@ -5690,7 +5690,7 @@ get_dll_handle  Proc far
     jc get_dll_handle_done
 
 get_dll_handle_ok:
-    movzx ebx,es:mod_handle
+    movzx ebx,es:mod_id
 
 get_dll_handle_done:
     pop esi

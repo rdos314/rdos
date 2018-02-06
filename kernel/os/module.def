@@ -35,7 +35,6 @@ mod_id                  DW ?
 
 mod_loader              DW ?
 
-mod_handle              DW ?
 mod_section             section_typ <>
 mod_next                DW ?
 mod_list                DW ?
