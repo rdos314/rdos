@@ -96,8 +96,6 @@ lib_file_offset		DD ?
 lib_object_size		DW ?
 lib_object_count	DW ?
 lib_objects			DW ?
-lib_base			DD ?
-lib_size			DD ?
 lib_reloc			DD ?
 lib_file_handle		DW ?
 lib_usage_count		DW ?

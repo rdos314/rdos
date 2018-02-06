@@ -199,10 +199,10 @@ FindLib	Proc near
 find_lib_dll_loop:
 	mov es,ax
 	mov ecx,edx
-	sub ecx,es:lib_base
+	sub ecx,es:mod_base
 	jc find_lib_dll_next
 ;
-	cmp ecx,es:lib_size
+	cmp ecx,es:mod_size
 	jc find_lib_ok
 
 find_lib_dll_next:
@@ -214,10 +214,10 @@ find_lib_try_app:
     mov ax,ds
     mov es,ax
 	mov ecx,edx
-	sub ecx,es:lib_base
+	sub ecx,es:mod_base
 	jc find_lib_fail
 ;
-	cmp ecx,es:lib_size
+	cmp ecx,es:mod_size
 	jc find_lib_ok
 
 find_lib_fail:
@@ -425,10 +425,10 @@ create_image_alloced:
 	sub edx,ebp
 	SetFlatLinearInvalid
 ;
-	mov fs:lib_base,edx
-	mov fs:lib_size,eax	
+	mov fs:mod_base,edx
+	mov fs:mod_size,eax	
 	pop edx
-	sub edx,fs:lib_base
+	sub edx,fs:mod_base
 	neg edx
 	mov fs:lib_reloc,edx
 ;

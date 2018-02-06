@@ -27,6 +27,10 @@
 
 module_struc    STRUC
 
+mod_base                DD ?
+mod_size                DD ?
+mod_name_offs           DW ?
+
 mod_loader              DW ?
 
 mod_handle              DW ?

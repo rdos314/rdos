@@ -1046,9 +1046,9 @@ CreateProcessEvent Proc near
     mov es:[di].cpeProcess,eax
     mov eax,fs:pvThreadHandle
     mov es:[di].cpeThread,eax       
-    mov eax,ds:lib_base
+    mov eax,ds:mod_base
     mov es:[di].cpeImageBase,eax
-    mov eax,ds:lib_size
+    mov eax,ds:mod_size
     mov es:[di].cpeImageSize,eax
 ;
     push es
@@ -1206,7 +1206,7 @@ LoadDllEvent Proc near
     DerefModuleHandle
     mov es:[di].ldeHandle,ebx    
 ;
-    mov eax,ds:lib_base
+    mov eax,ds:mod_base
     mov es:[di].ldeImageBase,eax
 ;
     push es
@@ -1217,7 +1217,7 @@ LoadDllEvent Proc near
     pop es
     mov es:[di].ldeObjectRva,eax
 ;       
-    mov eax,ds:lib_size
+    mov eax,ds:mod_size
     mov es:[di].ldeImageSize,eax
 ;
     pop di
@@ -1306,9 +1306,10 @@ create_lib_size_ok:
     mov byte ptr es:[edi],0
     mov es:lib_usage_count,1
 ;       
-    mov es:lib_base,0
+    mov es:mod_name_offs,OFFSET lib_name
+    mov es:mod_base,0
     mov es:lib_process,0
-    mov es:lib_size,0
+    mov es:mod_size,0
     mov es:lib_debug_lib,0
     mov es:lib_debug_obj,0
     mov es:lib_events,0
@@ -1408,10 +1409,10 @@ FindLib Proc near
 find_lib_dll_loop:
     mov es,ax
     mov ecx,edx
-    sub ecx,es:lib_base
+    sub ecx,es:mod_base
     jc find_lib_dll_next
 ;       
-    cmp ecx,es:lib_size
+    cmp ecx,es:mod_size
     jc find_lib_ok
 
 find_lib_dll_next:
@@ -1423,10 +1424,10 @@ find_lib_try_app:
     mov ax,ds
     mov es,ax
     mov ecx,edx
-    sub ecx,es:lib_base
+    sub ecx,es:mod_base
     jc find_lib_fail
 ;       
-    cmp ecx,es:lib_size
+    cmp ecx,es:mod_size
     jc find_lib_ok
 
 find_lib_fail:
@@ -1435,7 +1436,7 @@ find_lib_fail:
     jmp find_lib_done
 
 find_lib_ok:
-    mov edi,es:lib_base
+    mov edi,es:mod_base
     LeaveSection ds:mod_section
     clc
 
@@ -1549,7 +1550,7 @@ find_dll_fail:
 
 find_dll_ok:
     pop esi
-    mov edi,es:lib_base
+    mov edi,es:mod_base
     LeaveSection ds:mod_section
     clc
 
@@ -1603,7 +1604,7 @@ find_app_fail:
 
 find_app_ok:
     pop esi
-    mov edi,es:lib_base
+    mov edi,es:mod_base
     clc
 
 find_app_end:
@@ -2389,7 +2390,7 @@ NotifyDll       Proc near
 
 notify_check_debug:
     call Preload
-    mov edi,es:lib_base
+    mov edi,es:mod_base
     xchg dx,es:lib_debug_lib
     or dx,dx
     jnz notify_dll_done
@@ -2505,7 +2506,7 @@ start_dll_found:
     jnz start_dll_done
 ;
     mov es:lib_init_param,dx
-    mov edi,es:lib_base
+    mov edi,es:mod_base
     call RunDll
 ;
     mov edx,es:lib_header
@@ -2612,7 +2613,7 @@ LoadPeDll       PROC near
 
 load_dll_usage:
     inc es:lib_usage_count
-    mov edi,es:lib_base
+    mov edi,es:mod_base
     jmp load_dll_done
 
 load_dll_do:
@@ -2669,13 +2670,13 @@ load_dll_do:
 ;       
     call CreateImage
     pop dx
-    mov edi,es:lib_base
+    mov edi,es:mod_base
 ;
     mov es:lib_debug_lib,dx
     mov ax,gs:lib_fs
     mov es:lib_fs,ax
     mov es:lib_run_now,bp
-    mov ecx,es:lib_size
+    mov ecx,es:mod_size
     call LoadImportedDlls
     call Preload
 ;
@@ -2760,7 +2761,7 @@ fdNotifyDone:
     push fs
     pushad
 ;    
-    add eax,es:lib_base
+    add eax,es:mod_base
     push eax
     movzx eax,es:lib_init_param
     movzx ebx,es:mod_handle
@@ -2777,10 +2778,10 @@ fdMod:
 ;
     mov ax,flat_data_sel
     mov ds,ax
-    mov edi,es:lib_base
+    mov edi,es:mod_base
     call FreeImportedDlls
-    mov edx,es:lib_base
-    mov ecx,es:lib_size
+    mov edx,es:mod_base
+    mov ecx,es:mod_size
     mov bx,es:lib_c_file_handle
     CloseCFile
 ;
@@ -3068,8 +3069,8 @@ CreateImage     Proc near
 ;
     pop eax
     mov es:lib_header,eax
-    mov es:lib_base,edx
-    mov es:lib_size,ecx
+    mov es:mod_base,edx
+    mov es:mod_size,ecx
 ;
     movzx ecx,si
     add ecx,eax
@@ -3081,14 +3082,14 @@ CreateImage     Proc near
     push dx
     push ax
 ;
-    mov edx,es:lib_base
-    mov eax,es:lib_size
+    mov edx,es:mod_base
+    mov eax,es:mod_size
     add edx,ebp
     ReserveLocalLinear
     jnc create_image_alloced
 ;
     AllocateLocalLinear
-    mov es:lib_base,edx
+    mov es:mod_base,edx
 
 create_image_alloced:
     sub edx,ebp
@@ -3101,7 +3102,7 @@ create_image_alloced:
 ;
     add es:lib_header,edx
     add es:lib_objects,edx
-    mov es:lib_base,edx
+    mov es:mod_base,edx
 ;
     push es
     push edx
@@ -3657,7 +3658,7 @@ setup_debug      Proc far
     mov es:lib_debug_lib,dx
     mov es:lib_suppress,1
     mov es:lib_init_param,dx
-    mov edi,es:lib_base
+    mov edi,es:mod_base
     mov es:lib_run_now,1
     call StartImportedDlls
     call Preload
@@ -3719,7 +3720,7 @@ init_thread     PROC far
     DerefModuleHandle
     mov es,bx
     mov esi,es:lib_header
-    mov edi,es:lib_base
+    mov edi,es:mod_base
     pop bx
     pop es
 ;       
@@ -3913,7 +3914,7 @@ start_thread_dlls_loop:
     or eax,eax
     jz start_thread_dlls_next
 ;
-    add eax,es:lib_base
+    add eax,es:mod_base
     push eax
     movzx eax,es:lib_init_param
     movzx ebx,es:mod_handle
@@ -3988,7 +3989,7 @@ free_thread_dlls_loop:
     jz free_thread_dlls_next
 ;
     push ebp
-    add eax,es:lib_base
+    add eax,es:mod_base
     push eax
     movzx eax,es:lib_init_param
     movzx ebx,es:mod_handle
@@ -4022,7 +4023,7 @@ free_thread_no_debug:
     mov ax,flat_data_sel
     mov ds,ax
     mov esi,es:lib_header
-    mov edi,es:lib_base
+    mov edi,es:mod_base
     mov eax,[esi].peh_tls_va
     or eax,eax
     jz free_thread_no_tls
@@ -5527,7 +5528,7 @@ get_module_proc Proc far
 ;
     push es
     mov es,bx
-    mov edx,es:lib_base
+    mov edx,es:mod_base
     mov ax,flat_data_sel
     mov ds,ax
     mov esi,es:lib_header
@@ -5723,7 +5724,7 @@ get_resource    Proc far
 ;
     push es
     mov es,bx
-    mov edx,es:lib_base
+    mov edx,es:mod_base
     mov esi,es:lib_header
     mov cx,flat_data_sel
     mov ds,cx
@@ -5791,7 +5792,7 @@ get_resource_found:
     add eax,edx
     mov ecx,[eax+4]
     mov esi,[eax]
-    add esi,es:lib_base
+    add esi,es:mod_base
     cmp ebp,6
     jne get_resource_ok_pop
 
@@ -5943,7 +5944,7 @@ notify_terminate        Proc far
     mov eax,-1
     mov bx,es
     FreeAppMem
-    mov edi,es:lib_base
+    mov edi,es:mod_base
     push es
     call FreeImportedDlls
     pop es
@@ -5965,8 +5966,8 @@ notify_terminate        Proc far
     FreeLinear
 
 ntNoTls:
-    mov edx,es:lib_base
-    mov ecx,es:lib_size
+    mov edx,es:mod_base
+    mov ecx,es:mod_size
     mov bx,es:lib_c_file_handle
     CloseCFile
     add edx,ebp
