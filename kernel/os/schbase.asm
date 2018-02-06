@@ -155,6 +155,70 @@ AddProgramThread    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           RemoveProgramThread
+;
+;           DESCRIPTION:    Remove thread from program
+;
+;           PARAMETERS:     ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveProgramThread    Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+;
+    int 3
+    mov bx,es:p_prog_id
+    call GetProcessSel
+    or eax,eax
+    jz rptDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    mov ax,es:p_id
+    movzx ecx,ds:pr_thread_count
+    mov ebx,OFFSET pr_thread_arr
+    or ecx,ecx
+    jz rptLeave
+
+rptLoop:
+    cmp ax,ds:[ebx]
+    je rptFound
+;
+    add bx,2
+    loop rptLoop
+;
+    jmp rptLeave
+
+rptFound:
+    dec ds:pr_thread_count
+;
+    sub ecx,1
+    jz rptLeave
+
+rptMove:
+    mov ax,ds:[ebx+2]
+    mov ds:[ebx],ax
+    add ebx,2
+    loop rptMove
+
+rptLeave:
+    LeaveSection ds:pr_section
+            
+rptDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+RemoveProgramThread    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetThreadCount
 ;
 ;           DESCRIPTION:    Get thread count

@@ -345,11 +345,13 @@ void TStateCommand::WriteThreads()
 ##########################################################################*/
 void TStateCommand::WriteThreadById(int tid)
 {
+    char str[40];
+    int ok = FALSE;
     int i;
     ThreadActionState state;
     int ThreadCount = RdosGetThreadCount();
 
-    for (i = 0; i < ThreadCount; i++)
+    for (i = 0; i < ThreadCount && !ok; i++)
     {
         if (RdosGetThreadActionState(i, &state))
         {
@@ -357,9 +359,15 @@ void TStateCommand::WriteThreadById(int tid)
             {
                 Write("  ");
                 WriteOne(&state);
-                break;
+                ok = TRUE;
             }
         }
+    }
+
+    if (!ok)
+    {
+        sprintf(str, "  %04hX\r\n", tid);
+        Write(str);
     }
 }
 
