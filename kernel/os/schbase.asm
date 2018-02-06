@@ -1768,6 +1768,75 @@ free_debug_mem_done:
     pop ds
     ret
 free_debug_app_mem      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ModuleIdToSel
+;
+;           DESCRIPTION:    Convert from module ID to selector
+;
+;       PARAMETERS:         BX      Module handle
+;
+;           RETURNS:        BX          Lib sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ModuleIdToSel  Proc near
+    push eax
+;
+    movzx ebx,bx
+    call GetModuleSel
+    or eax,eax
+    clc
+    jnz mitsDone
+;
+    stc
+
+mitsDone:
+    mov ebx,eax
+;
+    pop eax
+    ret
+ModuleIdToSel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPrimaryModule
+;
+;           DESCRIPTION:    Get primary module ID from process ID
+;
+;       PARAMETERS:         BX          Process ID
+;
+;           RETURNS:        AX          Primary module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPrimaryModule  Proc near
+    push ds
+;
+    movzx ebx,bx
+    call GetProcessSel
+    or eax,eax
+    jz gpmodFail
+;
+    mov ds,eax
+    mov ax,ds:pr_module_count
+    or ax,ax
+    jz gpmodFail
+;
+    mov ax,ds:pr_module_arr
+    clc
+    jmp gpmodDone
+
+gpmodFail:
+    stc
+
+gpmodDone:
+    pop ds
+    ret
+GetPrimaryModule  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1791,16 +1860,11 @@ set_module      PROC far
     mov ebx,es
     call ModuleLoaded
 ;
+    mov es:mod_id,bx
     mov ebx,eax
     call AddProgramModule
 ;
     mov dx,es
-    mov cx,SIZE module_handle_seg
-    AllocateHandle
-    mov [ebx].mh_sel,dx
-    mov [ebx].hh_sign,MODULE_HANDLE
-    mov bx,[ebx].hh_handle
-;
     mov ds,dx
     InitSection ds:mod_section
     mov ds:mod_handle,bx
@@ -1833,6 +1897,7 @@ set_module      ENDP
 reset_module_name       DB 'Reset Module',0
 
 reset_module    PROC far
+    int 3
     push ds
     push es
     push ax
@@ -1890,57 +1955,24 @@ reset_module    ENDP
 create_module_name      DB 'Create Module',0
 
 create_module   PROC far
-    push ds
     push es
     push ax
     push ebx
-    push dx
 ;
     mov ebx,es
     call ModuleLoaded
 ;
     mov ebx,eax
     call AddProgramModule
+    mov es:mod_id,bx
 ;
-    mov ax,es
-    mov ds,ax
-    InitSection ds:mod_section
-;    
-    mov cx,SIZE module_handle_seg
-    AllocateHandle
-    mov [ebx].mh_sel,es
-    mov [ebx].hh_sign,MODULE_HANDLE
-    mov bx,[ebx].hh_handle
-;
+    InitSection es:mod_section
     mov es:mod_handle,bx
-    mov es:mod_list,0
-;    
-    mov dx,es
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov bx,ds:app_handle
-    mov ax,MODULE_HANDLE
-    DerefHandle
-    jc create_module_done
-;
-    mov ax,[ebx].mh_sel
-    or ax,ax
-    jz create_module_done
-;
-    mov ds,ax    
-    EnterSection ds:mod_section
-    mov ax,ds:mod_list
-    mov ds:mod_list,es
-    mov es:mod_next,ax
-    LeaveSection ds:mod_section
     
 create_module_done:    
-    pop dx
     pop ebx
     pop ax
     pop es
-    pop ds
     ret
 create_module   ENDP
     
@@ -1958,6 +1990,7 @@ create_module   ENDP
 free_module_name    DB 'Free Module',0
 
 free_module     PROC far
+    int 3
     push ds
     push es
     push ax
@@ -2047,23 +2080,7 @@ free_module     ENDP
 deref_module_handle_name    DB 'Deref Module Handle',0
 
 deref_module_handle  Proc far
-    push ds
-    push ax
-;
-    mov ax,MODULE_HANDLE
-    DerefHandle
-    jc deref_module_done
-;
-    mov bx,[ebx].mh_sel
-    or bx,bx
-    stc
-    jz deref_module_done
-;
-    clc
-
-deref_module_done:    
-    pop ax
-    pop ds    
+    call ModuleIdToSel
     ret
 deref_module_handle  Endp
 
@@ -2084,20 +2101,8 @@ alias_module_handle_name    DB 'Alias Module Handle',0
 
 alias_module_handle  Proc far
     push ds
-    push ax
-    push cx
-    push dx
-;
-    mov dx,bx
-    mov cx,SIZE module_handle_seg
-    AllocateHandle
-    mov [ebx].mh_sel,dx
-    mov [ebx].hh_sign,MODULE_HANDLE
-    mov bx,[ebx].hh_handle
-;    
-    pop dx
-    pop cx
-    pop ax
+    mov ds,bx
+    mov bx,ds:mod_id
     pop ds
     ret
 alias_module_handle  Endp
@@ -2121,14 +2126,8 @@ get_module_focus_key  Proc far
     push ds
     push ebx
 ;    
-    mov ax,MODULE_HANDLE
-    DerefHandle
+    call ModuleIdToSel
     jc get_module_focus_done
-;
-    mov bx,[ebx].mh_sel
-    or bx,bx
-    stc
-    jz get_module_focus_done
 ;
     mov ds,bx
     mov al,ds:mod_key
@@ -2234,14 +2233,8 @@ free_dll  Proc far
     push eax
     push ebx
 ;    
-    mov ax,MODULE_HANDLE
-    DerefHandle
+    call ModuleIdToSel
     jc free_dll_done
-;
-    mov bx,[ebx].mh_sel
-    or bx,bx
-    stc
-    jz free_dll_done
 ;
     mov ds,bx
     mov ax,ds:mod_loader
@@ -2327,14 +2320,8 @@ get_module_proc32  Proc far
     push eax
     push ebx
 ;    
-    mov ax,MODULE_HANDLE
-    DerefHandle
+    call ModuleIdToSel
     jc get_module_proc_done32
-;
-    mov bx,[ebx].mh_sel
-    or bx,bx
-    stc
-    jz get_module_proc_done32
 ;
     mov ds,bx
     mov ax,ds:mod_loader
@@ -2357,14 +2344,8 @@ get_module_proc16  Proc far
     push edi
 ;    
     movzx edi,di
-    mov ax,MODULE_HANDLE
-    DerefHandle
+    call ModuleIdToSel
     jc get_module_proc_done16
-;
-    mov bx,[ebx].mh_sel
-    or bx,bx
-    stc
-    jz get_module_proc_done16
 ;
     mov ds,bx
     mov ax,ds:mod_loader
@@ -2403,16 +2384,8 @@ get_module_resource_name    DB 'Get Module Resource',0
 get_module_resource  Proc far
     push ebx
 ;    
-    push ax
-    mov ax,MODULE_HANDLE
-    DerefHandle
-    pop ax
+    call ModuleIdToSel
     jc get_resource_done
-;
-    mov bx,[ebx].mh_sel
-    or bx,bx
-    stc
-    jz get_resource_done
 ;
     mov ds,bx
     mov cx,ds:mod_loader
@@ -2449,14 +2422,8 @@ get_module_name32  Proc far
     push ds
     push ebx
 ;    
-    mov ax,MODULE_HANDLE
-    DerefHandle
+    call ModuleIdToSel
     jc get_module_name_done32
-;
-    mov bx,[ebx].mh_sel
-    or bx,bx
-    stc
-    jz get_module_name_done32
 ;
     mov ds,bx
     mov ax,ds:mod_loader
@@ -2479,14 +2446,8 @@ get_module_name16  Proc far
     push edi
 ;    
     movzx edi,di
-    mov ax,MODULE_HANDLE
-    DerefHandle
+    call ModuleIdToSel
     jc get_module_name_done16
-;
-    mov bx,[ebx].mh_sel
-    or bx,bx
-    stc
-    jz get_module_name_done16
 ;
     mov ds,bx
     mov ax,ds:mod_loader
@@ -2686,12 +2647,13 @@ add_wait_for_debug_event    PROC far
     push ds
     push es
     push eax
-    push dx
+    push ebx
+    push edx
     push edi
 ;
     push bx
     mov bx,ax
-    DerefProcHandle
+    call GetPrimaryModule
     pop bx
     jc add_wait_done
 ;
@@ -2704,11 +2666,14 @@ add_wait_for_debug_event    PROC far
     pop ax
     jc add_wait_done
 ;    
-    mov es:dew_module_sel,ax
+    movzx ebx,ax
+    call ModuleIdToSel
+    mov es:dew_module_sel,bx
 
 add_wait_done:
     pop edi
-    pop dx
+    pop edx
+    pop ebx
     pop eax
     pop es
     pop ds
@@ -2736,10 +2701,14 @@ get_debug_event  Proc far
     push ecx
     push dx
 ;    
-    DerefProcHandle
+    call GetPrimaryModule
     jc get_debug_event_done
 ;
-    mov bx,ax
+    movzx ebx,ax
+    call ModuleIdToSel
+    jc get_debug_event_done
+;
+    mov ax,bx
     mov ds,ax
     mov ax,ds:mod_loader
     or ax,ax
@@ -2776,11 +2745,15 @@ get_debug_event_data32  Proc far
     push bx
     push dx
 ;    
-    DerefProcHandle
+    call GetPrimaryModule
     jc get_debug_event_data_done32
 ;
+    movzx ebx,ax
+    call ModuleIdToSel
+    jc get_debug_event_data_done32
+;
+    mov ax,bx
     mov ds,ax
-    mov bx,ax
     mov ax,ds:mod_loader
     or ax,ax
     mov ds,ax
@@ -2804,10 +2777,14 @@ get_debug_event_data16  Proc far
     push dx
     push edi
 ;    
-    DerefProcHandle
+    call GetPrimaryModule
     jc get_debug_event_data_done16
 ;
-    mov bx,ax
+    movzx ebx,ax
+    call ModuleIdToSel
+    jc get_debug_event_data_done16
+;
+    mov ax,bx
     mov ds,ax
     mov ax,ds:mod_loader
     or ax,ax
@@ -2846,10 +2823,14 @@ clear_debug_event  Proc far
     push ecx
     push dx
 ;    
-    DerefProcHandle
+    call GetPrimaryModule
     jc clear_debug_event_done
 ;
-    mov bx,ax
+    movzx ebx,ax
+    call ModuleIdToSel
+    jc clear_debug_event_done
+;
+    mov ax,bx
     mov ds,ax
     mov cx,ds:mod_loader
     or cx,cx
@@ -2890,10 +2871,14 @@ continue_debug_event  Proc far
     push esi
 ;    
     mov esi,eax
-    DerefProcHandle
+    call GetPrimaryModule
     jc continue_debug_event_done
 ;
-    mov bx,ax
+    movzx ebx,ax
+    call ModuleIdToSel
+    jc continue_debug_event_done
+;
+    mov ax,bx
     mov ds,ax
     mov eax,esi
     mov cx,ds:mod_loader
@@ -3849,9 +3834,6 @@ spWait:
     mov ax,es:app_mod_sel
 
 spLibOk:
-    mov dx,gs:s_proc_sel
-    CreateProcHandle
-;
     mov dx,bx
     clc
     jmp spDone
