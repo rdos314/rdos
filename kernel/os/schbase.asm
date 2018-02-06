@@ -4047,6 +4047,72 @@ get_module_info32   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetModuleBase
+;
+;           DESCRIPTION:    Get module base
+;
+;           PARAMETERS:     BX          Module ID
+;
+;           RETURNS:        EAX         Base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_base_name DB 'Get Module Base',0
+    
+get_module_base    Proc far
+    push ds
+;
+    movzx ebx,bx
+    call GetModuleSel
+    or eax,eax
+    stc
+    jz gmbDone
+;
+    mov ds,eax
+    mov eax,ds:mod_base
+    clc
+
+gmbDone:
+    pop ds
+    ret
+get_module_base    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetModuleSize
+;
+;           DESCRIPTION:    Get module size
+;
+;           PARAMETERS:     BX          Module ID
+;
+;           RETURNS:        EAX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_size_name DB 'Get Module Size',0
+    
+get_module_size    Proc far
+    push ds
+;
+    movzx ebx,bx
+    call GetModuleSel
+    or eax,eax
+    stc
+    jz gmsDone
+;
+    mov ds,eax
+    mov eax,ds:mod_size
+    clc
+
+gmsDone:
+    pop ds
+    ret
+get_module_size    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetProgramCount
 ;
 ;           DESCRIPTION:    Get number of programs
@@ -4759,6 +4825,18 @@ init_state_hooks:
     mov dx,virt_es_in
     mov ax,get_module_info_nr
     RegisterUserGate
+;
+    mov esi,OFFSET get_module_base
+    mov edi,OFFSET get_module_base_name
+    xor dx,dx
+    mov ax,get_module_base_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_module_size
+    mov edi,OFFSET get_module_size_name
+    xor dx,dx
+    mov ax,get_module_size_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_program_count
     mov edi,OFFSET get_program_count_name

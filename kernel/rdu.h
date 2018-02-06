@@ -837,6 +837,8 @@
 
 #define usergate_get_module_count 0x00000291
 #define usergate_get_module_info 0x00000292
+#define usergate_get_module_base 0x00000293
+#define usergate_get_module_size 0x00000294
 
 
 
@@ -1680,6 +1682,8 @@
 
 #define CallGate_get_module_count 0x55 0x67 0x9a 145 2 0 0 3 0 0x5d
 #define CallGate_get_module_info 0x55 0x67 0x9a 146 2 0 0 3 0 0x5d
+#define CallGate_get_module_base 0x55 0x67 0x9a 147 2 0 0 3 0 0x5d
+#define CallGate_get_module_size 0x55 0x67 0x9a 148 2 0 0 3 0 0x5d
 
 #else
 
@@ -2521,5 +2525,7 @@
 
 #define CallGate_get_module_count 0x3e 0x67 0x9a 145 2 0 0 3 0
 #define CallGate_get_module_info 0x3e 0x67 0x9a 146 2 0 0 3 0
+#define CallGate_get_module_base 0x3e 0x67 0x9a 147 2 0 0 3 0
+#define CallGate_get_module_size 0x3e 0x67 0x9a 148 2 0 0 3 0
 
 #endif

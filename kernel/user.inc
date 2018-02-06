@@ -1135,6 +1135,18 @@ GetModuleInfo	MACRO
 	UserGate get_module_info_nr
 	        ENDM
 
+; IN   BX           Module ID
+; OUT  EAX          Base address
+GetModuleBase	MACRO
+	UserGate get_module_base_nr
+	        ENDM
+
+; IN   BX           Module ID
+; OUT  EAX          Size
+GetModuleSize	MACRO
+	UserGate get_module_size_nr
+	        ENDM
+
 ;;;;;;;;;;;; C Handles ;;;;;;;;;;;;;;;;
 
 ; IN  ES:(E)DI      Name

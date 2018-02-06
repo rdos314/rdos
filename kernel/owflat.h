@@ -1671,6 +1671,22 @@
     modify [edx] \
     value [eax];
 
+#pragma aux RdosGetModuleBase = \
+    CallGate_get_module_base  \
+    "jnc ok" \
+    "xor eax,eax" \
+    "ok: " \
+    parm [ebx] \
+    value [eax];
+
+#pragma aux RdosGetModuleSize = \
+    CallGate_get_module_size  \
+    "jnc ok" \
+    "xor eax,eax" \
+    "ok: " \
+    parm [ebx] \
+    value [eax];
+
 #pragma aux RdosGetProgramCount = \
     CallGate_get_program_count  \
     "jc fail" \
