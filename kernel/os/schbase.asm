@@ -169,11 +169,11 @@ RemoveProgramThread    Proc near
     push ebx
     push ecx
 ;
-    mov bx,es:p_prog_id
-    or bx,bx
+    movzx ebx,es:p_prog_id
+    or ebx,ebx
     jnz rptStart
 ;
-    mov bx,1
+    mov ebx,1
 
 rptStart:
     call GetProcessSel
