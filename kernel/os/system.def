@@ -305,6 +305,8 @@ loader_init_thread_proc        DD ?,?
 ;        +12              ESP 
 loader_start_thread_proc       DD ?,?
 
+loader_free_thread_proc        DD ?,?
+
 ; IN  (E)AX               Size
 ; OUT (E)DX               Address
 loader_allocate_mem_proc       DD ?,?
@@ -385,7 +387,6 @@ app_next                    DW ?
 
 app_loader                  DW ?
 
-app_free_thread_proc        DD ?,?
 app_fork_proc               DD ?,?
 app_close_proc              DD ?,?
 app_patch_proc              DD ?,?

@@ -135,8 +135,6 @@ run_open_hooks  Proc near
     mov ds:app_fork_id,0
     mov ds:app_mod_id,0
     mov ds:app_loader,0
-    mov ds:app_free_thread_proc,0
-    mov ds:app_free_thread_proc+4,0
     mov ds:app_fork_proc,0
     mov ds:app_fork_proc+4,0
     mov ds:app_close_proc,0
@@ -379,11 +377,6 @@ clone_app    PROC far
     mov ax,ds:app_loader
     mov es:app_loader,ax
 ;
-    mov eax,ds:app_free_thread_proc
-    mov es:app_free_thread_proc,eax
-    mov eax,ds:app_free_thread_proc+4
-    mov es:app_free_thread_proc+4,eax
-;
     mov eax,ds:app_fork_proc
     mov es:app_fork_proc,eax
     mov eax,ds:app_fork_proc+4
@@ -495,23 +488,10 @@ exec_app    PROC far
 ;
     GetThread
     mov es,ax
-    mov es,es:p_app_sel
-    mov eax,es:app_free_thread_proc
-    or eax,es:app_free_thread_proc+4
-    jz eaAppClosed
-;
-    call fword ptr es:app_free_thread_proc
-
-eaAppClosed:
-    GetThread
-    mov es,ax
     lock and es:p_flags,NOT THREAD_FLAG_FORKED
     mov es,es:p_app_sel
 ;
     mov es:app_loader,0
-;
-    mov es:app_free_thread_proc,0
-    mov es:app_free_thread_proc+4,0
 ;
     mov es:app_fork_proc,0
     mov es:app_fork_proc+4,0
