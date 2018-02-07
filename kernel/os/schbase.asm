@@ -1911,7 +1911,6 @@ set_module      PROC far
     mov ds,dx
     InitSection ds:mod_section
     mov es:mod_id,bx
-    mov ds:mod_list,0
 ;    
     GetThread
     mov ds,ax
@@ -1941,46 +1940,6 @@ reset_module_name       DB 'Reset Module',0
 
 reset_module    PROC far
     int 3
-    push ds
-    push es
-    push ax
-    push ebx
-    push dx
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov bx,ds:app_mod_id
-    mov ax,MODULE_HANDLE
-    DerefHandle
-    jc reset_mod_handle_ok
-;
-    mov ax,[ebx].mh_sel
-    or ax,ax
-    jz reset_mod_free_mod
-;
-    mov es,ax    
-
-reset_mod_loop:    
-    mov ax,es:mod_list
-    or ax,ax
-    jz reset_mod_free_mod
-;
-    push es
-    mov es,ax
-    FreeModule
-    pop es
-    jmp reset_mod_loop
-
-reset_mod_free_mod:
-    FreeHandle
-
-reset_mod_handle_ok:    
-    pop dx
-    pop ebx
-    pop ax
-    pop es
-    pop ds
     ret
 reset_module    ENDP
     
@@ -2033,76 +1992,6 @@ free_module_name    DB 'Free Module',0
 
 free_module     PROC far
     int 3
-    push ds
-    push es
-    push ax
-    push ebx
-    push dx
-    push si
-;
-    mov dx,es
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov bx,ds:app_mod_id
-    mov ax,MODULE_HANDLE
-    DerefHandle
-    jc free_module_done
-;
-    mov si,[ebx].mh_sel
-    or si,si
-    jz free_module_done
-;
-    mov ds,si
-    EnterSection ds:mod_section
-    mov ax,ds:mod_list
-    or ax,ax
-    jz free_module_leave
-;
-    cmp ax,dx
-    jne free_mod_not_head
-;
-    mov es,ax
-    mov ax,es:mod_next
-    mov ds:mod_list,ax
-    mov bx,es:mod_id
-    jmp free_mod_handle
-    
-free_mod_not_head:    
-    mov es,ax
-    cmp dx,es:mod_next
-    je free_mod_in_list
-;
-    mov ax,es:mod_next
-    or ax,ax
-    jnz free_mod_not_head
-;
-    jmp free_module_leave
-
-free_mod_in_list:
-    mov ds,dx
-    mov ax,ds:mod_next
-    mov es:mod_next,ax
-    mov bx,ds:mod_id
-
-free_mod_handle:
-    mov ax,MODULE_HANDLE
-    DerefHandle
-    jc free_module_leave
-;
-    FreeHandle
-
-free_module_leave:      
-    mov ds,si
-    LeaveSection ds:mod_section
-        
-free_module_done:
-    pop si
-    pop dx
-    pop ebx
-    pop ax
-    pop es
-    pop ds
     ret
 free_module     ENDP
 

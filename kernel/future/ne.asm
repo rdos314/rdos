@@ -1157,7 +1157,7 @@ get_dll	Proc near
     push ds
     mov ds,bx
     EnterSection ds:mod_section
-    mov ax,ds:mod_list
+;    mov ax,ds:mod_list
     or ax,ax
     jz get_dll_fail
 
@@ -1868,7 +1868,7 @@ close_app	Proc far
 	mov fs,ax
 	mov gs,ax
 ;
-    mov bx,es:mod_list
+;    mov bx,es:mod_list
     or bx,bx
     jz close_app_done	
 

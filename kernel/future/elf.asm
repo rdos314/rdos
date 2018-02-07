@@ -192,7 +192,7 @@ FindLib	Proc near
 ;
     mov ds,bx
     EnterSection ds:mod_section
-    mov ax,ds:mod_list
+;    mov ax,ds:mod_list
     or ax,ax
     jz find_lib_try_app
 
