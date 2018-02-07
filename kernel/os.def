@@ -722,13 +722,10 @@ log_big_mem_nr              = 630
 
 create_pid_nr               = 631
 
-start_programs_nr           = 633
-register_loader_nr          = 634
+start_programs_nr           = 632
+register_loader_nr          = 633
 
-lock_program_module_list_nr   = 635
-unlock_program_module_list_nr = 636
-
-find_module_by_address_nr   = 637
-find_module_by_name_nr      = 638
+find_module_by_address_nr   = 634
+find_module_by_name_nr      = 635
 
 osgate_entries              = 650
