@@ -725,4 +725,7 @@ create_pid_nr               = 631
 start_programs_nr           = 633
 register_loader_nr          = 634
 
+lock_program_module_list_nr   = 635
+unlock_program_module_list_nr = 636
+
 osgate_entries              = 650

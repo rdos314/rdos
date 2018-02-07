@@ -2071,6 +2071,18 @@ FreeModule      MACRO
     OsGate free_module_nr
                     ENDM
 
+; IN  BX        Process ID
+; OUT ES:EDI    Module entry IDs
+; OUT ECX       Number of entries
+LockProgramModuleList    MACRO
+    OsGate lock_program_module_list_nr
+                    ENDM
+
+; IN  ES:EDI    Module entry IDs
+UnlockProgramModuleList    MACRO
+    OsGate unlock_program_module_list_nr
+                    ENDM
+
 ; IN  BX    Module ID
 ; OUT BX    Lib sel
 ModuleIdToSel       MACRO

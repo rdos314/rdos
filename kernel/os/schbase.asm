@@ -4618,6 +4618,67 @@ get_program_modules32   Proc far
 get_program_modules32   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockProgramModuleList
+;
+;           DESCRIPTION:    Lock program module list
+;
+;           PARAMETERS:     BX          Process ID
+;
+;           RETURNS:        ECX         Actual modules
+;                           ES:EDI      Program module arr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lock_program_module_list_name DB 'Lock Program Module List',0
+    
+lock_program_module_list    Proc far
+    push ds
+;
+    call GetProcessSel
+    or eax,eax
+    stc
+    jz lpmlDone
+;
+    mov ds,eax
+    mov es,eax
+    EnterSection ds:pr_section
+;
+    movzx ecx,ds:pr_module_count
+    mov edi,OFFSET pr_module_arr
+    clc
+
+lpmlDone:
+    pop ds
+    ret
+lock_program_module_list    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockProgramModuleList
+;
+;           DESCRIPTION:    Unlock program module list
+;
+;           PARAMETERS:     ES:EDI      Program module arr                           
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unlock_program_module_list_name DB 'Unlock Program Module List',0
+    
+unlock_program_module_list    Proc far
+    push ds
+;
+    mov ax,es
+    mov ds,ax
+    LeaveSection ds:pr_section
+;
+    pop ds
+    ret
+unlock_program_module_list    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           AddKernelModule
@@ -5038,6 +5099,18 @@ init_state_hooks:
     mov edi,OFFSET free_module_name
     xor cl,cl
     mov ax,free_module_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET lock_program_module_list
+    mov edi,OFFSET lock_program_module_list_name
+    xor cl,cl
+    mov ax,lock_program_module_list_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET unlock_program_module_list
+    mov edi,OFFSET unlock_program_module_list_name
+    xor cl,cl
+    mov ax,unlock_program_module_list_nr
     RegisterOsGate
 ;
     mov esi,OFFSET module_id_to_sel

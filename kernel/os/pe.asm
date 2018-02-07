@@ -1392,61 +1392,50 @@ InsertApp       Endp
 FindLib Proc near
     push ds
     push eax
-    push bx
+    push ebx
     push ecx
-    push si
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov bx,ds:app_mod_id
+    movzx ebx,ds:p_prog_id
+    LockProgramModuleList
+    jc flDone
+;
+    or ecx,ecx
+    jz flFail
+
+flLoop:
+    movzx ebx,word ptr es:[edi]
     ModuleIdToSel
-    jc find_lib_done
-;    
-    mov ds,bx
-    EnterSection ds:mod_section
-    mov ax,ds:mod_list
-    or ax,ax
-    jz find_lib_try_app
-
-find_lib_dll_loop:
-    mov es,ax
-    mov ecx,edx
-    sub ecx,es:mod_base
-    jc find_lib_dll_next
+    jc flNext
+;
+    mov ds,ebx
+    mov eax,edx
+    sub eax,ds:mod_base
+    jc flNext
 ;       
-    cmp ecx,es:mod_size
-    jc find_lib_ok
+    cmp eax,ds:mod_size
+    jc flOk
 
-find_lib_dll_next:
-    mov ax,es:mod_next
-    or ax,ax
-    jne find_lib_dll_loop
+flNext:
+    add edi,2
+    loop flLoop
 
-find_lib_try_app:
-    mov ax,ds
-    mov es,ax
-    mov ecx,edx
-    sub ecx,es:mod_base
-    jc find_lib_fail
-;       
-    cmp ecx,es:mod_size
-    jc find_lib_ok
-
-find_lib_fail:
-    LeaveSection ds:mod_section
+flFail:
+    UnlockProgramModuleList
     stc
-    jmp find_lib_done
+    jmp flDone
 
-find_lib_ok:
+flOk:
+    UnlockProgramModuleList
+    mov eax,ds
+    mov es,eax
     mov edi,es:mod_base
-    LeaveSection ds:mod_section
     clc
 
-find_lib_done:
-    pop si
+flDone:
     pop ecx
-    pop bx
+    pop ebx
     pop eax
     pop ds
     ret
