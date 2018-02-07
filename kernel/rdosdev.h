@@ -46,7 +46,6 @@ extern "C" {
 #define PRINTER_HANDLE     0xB63A
 #define MEMMAP_HANDLE      0xBA54
 #define FM_HANDLE          0xBCAF
-#define MODULE_HANDLE      0xC3AF
 #define AUDIO_OUT_HANDLE   0xCEDA
 #define HID_HANDLE         0xD736
 #define BITMAP_HANDLE      0xDB57
