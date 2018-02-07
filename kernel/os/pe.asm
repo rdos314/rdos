@@ -1393,48 +1393,21 @@ FindLib Proc near
     push ds
     push eax
     push ebx
-    push ecx
 ;
     GetThread
-    mov ds,ax
-    movzx ebx,ds:p_prog_id
-    LockProgramModuleList
+    mov ds,eax
+    mov bx,ds:p_prog_id
+    FindModuleByAddress
     jc flDone
 ;
-    or ecx,ecx
-    jz flFail
-
-flLoop:
-    movzx ebx,word ptr es:[edi]
     ModuleIdToSel
-    jc flNext
+    jc flDone
 ;
-    mov ds,ebx
-    mov eax,edx
-    sub eax,ds:mod_base
-    jc flNext
-;       
-    cmp eax,ds:mod_size
-    jc flOk
-
-flNext:
-    add edi,2
-    loop flLoop
-
-flFail:
-    UnlockProgramModuleList
-    stc
-    jmp flDone
-
-flOk:
-    UnlockProgramModuleList
-    mov eax,ds
-    mov es,eax
+    mov es,ebx
     mov edi,es:mod_base
     clc
 
 flDone:
-    pop ecx
     pop ebx
     pop eax
     pop ds

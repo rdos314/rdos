@@ -2073,7 +2073,8 @@ FreeModule      MACRO
 
 ; IN  BX        Process ID
 ; IN  EDX       Address
-; OUT AX        Module ID
+; OUT AX        Entry #
+; OUT BX        Module ID
 FindModuleByAddress    MACRO
     OsGate find_module_by_address_nr
                     ENDM

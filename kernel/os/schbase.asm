@@ -4688,7 +4688,8 @@ unlock_program_module_list    Endp
 ;           PARAMETERS:     BX          Process ID
 ;                           EDX         Virtual adress
 ;
-;           RETURNS:        AX          Module ID
+;           RETURNS:        AX          Entry #
+;                           BX          Module ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4696,8 +4697,7 @@ find_module_by_address_name DB 'Find Module By Address', 0
 
 find_module_by_address Proc far
     push ds
-    push eax
-    push ebx
+    push es
     push ecx
     push esi
 ;
@@ -4722,12 +4722,12 @@ fmbaLoop:
     or eax,eax
     jz fmbaNext
 ;
-    mov ds,eax
+    mov es,eax
     mov eax,edx
-    sub eax,ds:mod_base
+    sub eax,es:mod_base
     jc fmbaNext
 ;       
-    cmp eax,ds:mod_size
+    cmp eax,es:mod_size
     jc fmbaOk
 
 fmbaNext:
@@ -4741,14 +4741,17 @@ fmbaFail:
 
 fmbaOk:
     LeaveSection ds:pr_section
-    mov eax,ds
+;
+    mov eax,esi
+    sub eax,OFFSET pr_module_arr
+    shr eax,1
+    mov bx,es:mod_id
     clc
 
 fmbaDone:
     pop esi
     pop ecx
-    pop ebx
-    pop eax
+    pop es
     pop ds
     ret
 find_module_by_address Endp
