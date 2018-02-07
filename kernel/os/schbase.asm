@@ -58,7 +58,6 @@ pr_thread            DW ?
 pr_parent_thread     DW ?
 pr_app_sel           DW ?
 pr_parent_app_sel    DW ?
-pr_proc_sel          DW ?
 pr_loader_name       DD ?
 pr_switch            DB ?,?
 
@@ -3039,7 +3038,6 @@ AllocateProcessBlock Proc near
     mov gs:pr_cmd_sel,0
     mov gs:pr_debug_sel,0
     mov gs:pr_thread,0
-    mov gs:pr_proc_sel,0
     mov gs:pr_switch,0
     mov gs:pr_thread_count,0
     mov gs:pr_module_count,0
@@ -3534,9 +3532,6 @@ spCopyExeLoop:
     mov ds,ax
     mov ax,ds:p_app_sel
     mov gs:pr_app_sel,ax
-    mov ds,ds:p_process_sel
-    mov ax,ds:ms_pd_sel
-    mov gs:pr_proc_sel,ax
 ;
     mov bx,gs:pr_parent_thread
     Signal
@@ -4013,10 +4008,6 @@ unload_exe:
     GetThread
     mov ds,ax
     pop ax
-;       
-    mov ds,ds:p_process_sel
-    mov ds,ds:ms_pd_sel
-    mov ds:pd_exit_code,ax
 ;
     push ax
     GetThread

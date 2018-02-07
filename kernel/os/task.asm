@@ -7651,10 +7651,6 @@ init_process_block      PROC near
     mov ds,ax
     InitSection ds:pd_section
     pop ds
-;    
-    mov ax,es
-    mov es,bx
-    mov es:ms_pd_sel,ax
 ;       
     pop es
     mov es:p_process_sel,bx
@@ -8414,12 +8410,13 @@ terminate_app_handled:
 terminate_proc:
     GetThread
     mov ds,ax
-    mov ds,ds:p_process_sel
-    mov ds,ds:ms_pd_sel
-    sub ds:pd_ref_count,1
-    jz terminate_free_pd
+    int 3
+;    mov ds,ds:p_process_sel
+;    mov ds,ds:ms_pd_sel
+;    sub ds:pd_ref_count,1
+;    jz terminate_free_pd
 ;
-    EnterSection ds:pd_section
+;    EnterSection ds:pd_section
 ;    
     mov ds:pd_proc_sel,0
     mov ax,ds:pd_wait

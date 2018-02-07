@@ -4053,11 +4053,6 @@ fork_parent:
     push ds
     push dx
 ;
-    mov ds,es:p_app_sel
-    mov ax,ds:app_mod_sel
-    mov ds,es:p_process_sel
-    mov dx,ds:ms_pd_sel
-;    CreateProcHandle
     movzx eax,bx
 ;
     pop dx
