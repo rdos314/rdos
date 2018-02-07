@@ -1491,65 +1491,69 @@ ctF8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
 
 FindDll Proc near
     push ds
-    push ax
+    push eax
     push ebx
-    push dx
+    push ecx
+    push edx
+    push ebp
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov bx,ds:app_mod_id
-    ModuleIdToSel
-    jc find_dll_end
-;    
-    mov ds,bx
-    EnterSection ds:mod_section
-    mov ax,ds:mod_list
-    or ax,ax
-    jz find_dll_fail
+    movzx ebx,ds:p_prog_id
+    LockProgramModuleList
+    jc fdllDone
+;
+    or ecx,ecx
+    jz fdllFail
 
-find_dll_check_dll:
-    mov es,ax
-    mov edi,OFFSET lib_name
-    push esi
-find_dll_check_name:
-    mov al,es:[edi]
-    movzx ebx,al
-    mov al,byte ptr cs:[ebx].UCaseTab
-    mov ah,fs:[esi]
-    movzx ebx,ah
-    mov ah,byte ptr cs:[ebx].UCaseTab
+fdllLoop:
+    movzx ebx,word ptr es:[edi]
+    ModuleIdToSel
+    jc fdllNext
+;
+    mov ds,ebx
+    movzx ebx,ds:mod_name_offs
+    mov ebp,esi
+
+fdllCheckName:
+    mov al,ds:[ebx]
+    movzx edx,al
+    mov al,byte ptr cs:[edx].UCaseTab
+    mov ah,fs:[ebp]
+    movzx edx,ah
+    mov ah,byte ptr cs:[edx].UCaseTab
     cmp al,ah
-    jne find_dll_next
+    jne fdllNext
 ;       
     or al,al
-    je find_dll_ok
+    je fdllOk
 ;
-    inc esi
-    inc edi
-    jmp find_dll_check_name
+    inc ebx
+    inc ebp
+    jmp fdllCheckName
 
-find_dll_next:
-    pop esi
-    mov ax,es:mod_next
-    or ax,ax
-    jne find_dll_check_dll
+fdllNext:
+    add edi,2
+    loop fdllLoop
 
-find_dll_fail:
-    LeaveSection ds:mod_section
+fdllFail:
+    UnlockProgramModuleList
     stc
-    jmp find_dll_end
+    jmp fdllDone
 
-find_dll_ok:
-    pop esi
+fdllOk:
+    UnlockProgramModuleList
+    mov eax,ds
+    mov es,eax
     mov edi,es:mod_base
-    LeaveSection ds:mod_section
     clc
 
-find_dll_end:
-    pop dx
+fdllDone:
+    pop ebp
+    pop edx
+    pop ecx
     pop ebx
-    pop ax
+    pop eax
     pop ds
     ret
 FindDll Endp
