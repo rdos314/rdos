@@ -877,29 +877,83 @@ get_thread_handle       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AppThreadStarted
+;
+;           DESCRIPTION:    Startup of app thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_thread_started      Proc far
+    int 3
+    push ebp
+    mov ebp,esp
+
+app_thread_started      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateAppThread
 ;
 ;           DESCRIPTION:    Create application thread
 ;
-;           PARAMETERS:     ECX		User stack size
+;           PARAMETERS:     DS          New thread 
+;                           ECX         User stack size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_app_thread_name  DB 'Create App Thread', 0
 
 create_app_thread    Proc far
+    push es
     push eax
+    push ebx
+    push edx
 ;
     int 3
     GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_loader
+    mov es,ax
+    mov es,es:p_app_sel
+    mov es,es:app_loader
 ;
     mov eax,ecx
-    call fword ptr ds:loader_allocate_mem_proc
+    call fword ptr es:loader_allocate_mem_proc
+    int 3
 ;
+    mov es,ds:p_ss
+    mov ebx,dword ptr ds:p_rsp
+    mov ax,ds:p_cs
+    cmp ax,flat_code_sel
+    je catFlat
+;
+    int 3
+
+catFlat:
+    sub ebx,4
+    mov eax,flat_data_sel
+    mov es:[ebx],eax
+;
+    sub ebx,4
+    mov es:[ebx],edx
+;
+    sub ebx,4
+    movzx eax,ds:p_cs
+    mov es:[ebx],eax
+;
+    sub ebx,4
+    mov eax,dword ptr ds:p_rip
+    mov es:[ebx],eax
+;
+    mov dword ptr ds:p_rsp,ebx
+;
+    mov ax,cs
+    mov ds:p_cs,ax
+    mov dword ptr ds:p_rip,OFFSET app_thread_started
+;
+    pop edx
+    pop ebx
     pop eax
+    pop es
     ret
 create_app_thread       Endp
 

@@ -8089,7 +8089,6 @@ init_prot_tss   PROC near
     test ax,3
     jz init_kernel_tss
 ;
-    int 3
     mov ax,ds:p_kernel_ss
     mov ds:p_ss,ax
     mov dword ptr ds:p_rsp,stack0_size
