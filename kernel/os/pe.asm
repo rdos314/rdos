@@ -3743,7 +3743,6 @@ start_thread    PROC far
     cmp ax,flat_code_sel
     jnz start_thread_done
 ;
-    push ds
     mov edx,[ebp].trap_eip
     mov ds,ds:app_mod_sel
     mov ax,ds:lib_debug_lib
@@ -3755,31 +3754,32 @@ start_thread    PROC far
     call SendEvent
 
 start_thread_notify:    
-    pop ds
-;    
-    mov bx,ds:app_mod_id
-    ModuleIdToSel
-    jc start_thread_done
-;    
-    mov ds,bx
-    EnterSection ds:mod_section
-    mov ax,ds:mod_list
+    GetThread
+    mov ds,ax
+    mov dx,ds:p_prog_id
+    mov ax,1
 
 start_thread_dlls_loop:
-    or ax,ax
-    jz start_thread_dlls_ok
+    mov bx,dx
+    GetModuleByIndex
+    jc start_thread_done
 ;
-    mov es,ax
+    ModuleIdToSel
+    jc start_thread_dlls_next
+;    
     push ds
     push es
+    push eax
+    push edx
 ;    
     mov ax,flat_sel
     mov ds,ax
+    mov es,bx
 ;    
     mov ebx,es:lib_header
     mov eax,ds:[ebx].peh_entry_point
     or eax,eax
-    jz start_thread_dlls_next
+    jz start_thread_dlls_skip
 ;
     add eax,es:mod_base
     push eax
@@ -3788,14 +3788,15 @@ start_thread_dlls_loop:
     mov edx,2
     CallPM32
 
-start_thread_dlls_next:
+start_thread_dlls_skip:
+    pop edx
+    pop eax
     pop es
     pop ds
-    mov ax,es:mod_next
-    jmp start_thread_dlls_loop
 
-start_thread_dlls_ok:
-    LeaveSection ds:mod_section
+start_thread_dlls_next:
+    inc ax
+    jmp start_thread_dlls_loop
 
 start_thread_done:
     popad

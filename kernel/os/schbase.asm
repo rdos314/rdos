@@ -4662,6 +4662,61 @@ get_program_modules32   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetModuleByIndex
+;
+;           DESCRIPTION:    Get module for a DLL or app module by index
+;
+;           PARAMETERS:     BX          Process ID
+;                           AX          Entry #
+;
+;           RETURNS:        BX          Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_by_index_name DB 'Get Module By Index', 0
+
+get_module_by_index Proc far
+    push ds
+    push eax
+    push ecx
+    push edx
+;
+    mov dx,ax
+    movzx ebx,bx
+    call GetProcessSel
+    or eax,eax
+    stc
+    jz gmbiDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    mov cx,ds:pr_module_count
+    cmp dx,cx
+    jae gmbiFail
+;
+    mov bx,dx
+    add bx,bx
+    mov bx,ds:[bx].pr_module_arr
+    LeaveSection ds:pr_section
+    clc
+    jmp gmbiDone
+
+gmbiFail:
+    LeaveSection ds:pr_section
+    stc
+
+gmbiDone:
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+get_module_by_index Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           FindModuleByAddress
 ;
 ;           DESCRIPTION:    Search for a DLL or app module
@@ -5262,6 +5317,12 @@ init_state_hooks:
     mov edi,OFFSET free_module_name
     xor cl,cl
     mov ax,free_module_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_module_by_index
+    mov edi,OFFSET get_module_by_index_name
+    xor cl,cl
+    mov ax,get_module_by_index_nr
     RegisterOsGate
 ;
     mov esi,OFFSET find_module_by_address
