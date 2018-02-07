@@ -729,4 +729,6 @@ find_module_by_address_nr   = 634
 find_module_by_name_nr      = 635
 get_module_by_index_nr      = 636
 
+create_app_thread_nr        = 637
+
 osgate_entries              = 650

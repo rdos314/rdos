@@ -875,6 +875,35 @@ get_thread_handle    Proc far
 get_thread_handle       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateAppThread
+;
+;           DESCRIPTION:    Create application thread
+;
+;           PARAMETERS:     ECX		User stack size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_app_thread_name  DB 'Create App Thread', 0
+
+create_app_thread    Proc far
+    push eax
+;
+    int 3
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_loader
+;
+    mov eax,ecx
+    call fword ptr ds:loader_allocate_mem_proc
+;
+    pop eax
+    ret
+create_app_thread       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           GetThreadActionState
@@ -5179,6 +5208,12 @@ init_state_hooks:
     mov edi,OFFSET create_pid_name
     xor cl,cl
     mov ax,create_pid_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_app_thread
+    mov edi,OFFSET create_app_thread_name
+    xor cl,cl
+    mov ax,create_app_thread_nr
     RegisterOsGate
 ;
     mov esi,OFFSET app_notify_create

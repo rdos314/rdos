@@ -1551,6 +1551,11 @@ ForkProcess    MACRO
     OsGate fork_process_nr
                         ENDM
 
+; IN  ECX       Stack size
+CreateAppThread MACRO
+    OsGate create_app_thread_nr
+                    ENDM
+
 ;;;;;;;;;;; Crash handler ;;;;;;;;;;;;;;;;
 
 SetupNmiCoreDump       MACRO

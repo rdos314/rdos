@@ -8071,40 +8071,32 @@ init_prot_tss   PROC near
     movzx edx,dx
     mov dword ptr ds:p_rflags,edx
 ;
+    mov ax,[ebp].cr_es
+    mov ds:p_es,ax
+;
+    mov ax,[ebp].cr_ds
+    mov ds:p_ds,ax
+;    
+    mov ax,[ebp].cr_fs
+    mov ds:p_fs,ax
+;    
+    mov ax,[ebp].cr_gs
+    mov ds:p_gs,ax    
+;
     mov es:p_free_proc,0
     mov es:p_free_proc+4,0
     mov ax,[ebp].cr_seg
     test ax,3
     jz init_kernel_tss
 ;
-    mov eax,fs:app_init_thread_proc
-    or eax,fs:app_init_thread_proc+4
-    jz init_prot_tss_default
+    int 3
+    mov ax,ds:p_kernel_ss
+    mov ds:p_ss,ax
+    mov dword ptr ds:p_rsp,stack0_size
+    mov ds:p_stack_sel,0
 ;
-    mov eax,fs:app_free_thread_proc
-    mov es:p_free_proc,eax
-    mov eax,fs:app_free_thread_proc+4
-    mov es:p_free_proc+4,eax
-;
-    mov eax,[ebp].cr_stack
-    mov es:p_stack_sel,0
-    call fword ptr fs:app_init_thread_proc
-    pop fs
-    ret
-
-init_prot_tss_default:
-    push es
-    mov eax,[ebp].cr_stack
-    AllocateLocalMem
-    sub eax,6
-    mov dword ptr ds:p_rsp,eax
-    mov ds:p_ss,es
-    mov es:[eax+4],dx
-    mov word ptr es:[eax+2],term_code_sel
-    mov word ptr es:[eax],0
-    mov bx,es
-    pop es
-    mov es:p_stack_sel,bx
+    mov ecx,[ebp].cr_stack
+    CreateAppThread
     jmp init_prot_tss_com
 
 init_kernel_tss:
@@ -8121,17 +8113,6 @@ init_kernel_tss:
     mov es:p_stack_sel,0
 
 init_prot_tss_com:
-    mov ax,[ebp].cr_es
-    mov ds:p_es,ax
-;
-    mov ax,[ebp].cr_ds
-    mov ds:p_ds,ax
-;    
-    mov ax,[ebp].cr_fs
-    mov ds:p_fs,ax
-;    
-    mov ax,[ebp].cr_gs
-    mov ds:p_gs,ax    
     pop fs
     ret
 init_prot_tss   ENDP
