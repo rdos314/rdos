@@ -385,7 +385,6 @@ app_next                    DW ?
 
 app_loader                  DW ?
 
-app_init_thread_proc        DD ?,?
 app_free_thread_proc        DD ?,?
 app_fork_proc               DD ?,?
 app_close_proc              DD ?,?

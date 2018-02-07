@@ -150,8 +150,6 @@ InsertApp	Proc near
 ;
     mov word ptr ds:app_loader_name,OFFSET elf_loader_name
     mov word ptr ds:app_loader_name+2,cs
-;	mov word ptr ds:app_init_thread_proc,OFFSET init_thread
-;	mov word ptr ds:app_init_thread_proc+2,cs
 ;	mov word ptr ds:app_free_thread_proc,OFFSET free_thread
 ;	mov word ptr ds:app_free_thread_proc+2,cs
 ;	mov word ptr ds:app_close_proc,OFFSET close_proc
