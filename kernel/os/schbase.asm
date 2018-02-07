@@ -72,14 +72,6 @@ pr_thread_arr        DW MAX_PROCESS_THREADS DUP(?)
 
 process_struc    ENDS
 
-module_handle_seg           STRUC
-
-mh_base handle_header <>
-
-mh_sel        DW ?
-
-module_handle_seg           ENDS
-
 debug_event_wait_header STRUC
 
 dew_obj         wait_obj_header <>
@@ -2393,27 +2385,16 @@ dupl_module_file_handle_name       DB 'Dupl Module File Handle',0
 
 dupl_module_file_handle  Proc far
     push ds
-    push eax
 ;    
-    mov ax,MODULE_HANDLE
-    DerefHandle
+    ModuleIdToSel
     jc dupl_module_file_handle_done
 ;
-    mov bx,[ebx].mh_sel
-    or bx,bx
-    stc
-    jz dupl_module_file_handle_done
-;
     mov ds,bx
-;    mov eax,ds:mod_dupl_file_handle_proc
-;    or eax,ds:mod_dupl_file_handle_proc+4
-    stc
-;    jz dupl_module_file_handle_done
-;    
-;    call fword ptr ds:mod_dupl_file_handle_proc
+    mov bx,ds:mod_c_file_handle
+    DuplCFileToFile
+    clc
 
 dupl_module_file_handle_done:
-    pop eax
     pop ds    
     ret
 dupl_module_file_handle  Endp

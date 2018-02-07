@@ -34,6 +34,7 @@ mod_name_offs           DW ?
 mod_id                  DW ?
 
 mod_loader              DW ?
+mod_c_file_handle       DW ?
 
 mod_section             section_typ <>
 mod_key                 DB ?

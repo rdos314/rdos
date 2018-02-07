@@ -1035,7 +1035,7 @@ CreateProcessEvent Proc near
     mov es:event_size,ax
     mov es:event_code,EVENT_CREATE_PROCESS
 ;
-    movzx ebx,ds:lib_c_file_handle
+    movzx ebx,ds:mod_c_file_handle
     mov es:[di].cpeFile,ebx
 ;       
     movzx ebx,ds:mod_id
@@ -1199,7 +1199,7 @@ LoadDllEvent Proc near
     mov es:event_size,ax
     mov es:event_code,EVENT_LOAD_DLL
 ;
-    movzx ebx,ds:lib_c_file_handle
+    movzx ebx,ds:mod_c_file_handle
     mov es:[di].ldeFile,ebx
 ;       
     movzx ebx,ds:mod_id
@@ -1317,7 +1317,7 @@ create_lib_size_ok:
     mov es:lib_debug_obj,0
     mov es:lib_events,0
     mov es:lib_suppress,0
-    mov es:lib_c_file_handle,bx
+    mov es:mod_c_file_handle,bx
     mov es:lib_file_pos,edx
     mov es:lib_run_now,0
     mov es:lib_init_param,0
@@ -2649,7 +2649,7 @@ fdMod:
     call FreeImportedDlls
     mov edx,es:mod_base
     mov ecx,es:mod_size
-    mov bx,es:lib_c_file_handle
+    mov bx,es:mod_c_file_handle
     CloseCFile
 ;
     mov ax,system_data_sel
@@ -2718,7 +2718,7 @@ load_page_zero:
     jmp load_page_done
 
 load_page_from_file:
-    mov bx,es:lib_c_file_handle
+    mov bx,es:mod_c_file_handle
     mov eax,ebp
     sub eax,edi
     sub eax,[esi].o_va
@@ -2918,7 +2918,7 @@ CreateImage     Proc near
     mov bx,flat_data_sel
     mov ds,bx
 ;
-    mov bx,es:lib_c_file_handle
+    mov bx,es:mod_c_file_handle
     mov edx,es:lib_file_pos
     push edx
     push es
@@ -5832,7 +5832,7 @@ notify_terminate        Proc far
 ntNoTls:
     mov edx,es:mod_base
     mov ecx,es:mod_size
-    mov bx,es:lib_c_file_handle
+    mov bx,es:mod_c_file_handle
     CloseCFile
     add edx,ebp
     FreeLinear
