@@ -3769,8 +3769,7 @@ start_thread_dlls_loop:
 ;    
     push ds
     push es
-    push eax
-    push edx
+    pushad
 ;    
     mov ax,flat_sel
     mov ds,ax
@@ -3789,8 +3788,7 @@ start_thread_dlls_loop:
     CallPM32
 
 start_thread_dlls_skip:
-    pop edx
-    pop eax
+    popad
     pop es
     pop ds
 
@@ -3832,49 +3830,50 @@ free_thread     Proc far
     jne free_thread_no_debug
 ;    
     push ds
-    mov bx,ds:app_mod_id
-    ModuleIdToSel
-    jc free_thread_dll_done
-;    
-    mov ds,bx
-    EnterSection ds:mod_section
-    mov ax,ds:mod_list
+;
+    GetThread
+    mov ds,ax
+    mov dx,ds:p_prog_id
+    mov ax,1
 
 free_thread_dlls_loop:
-    or ax,ax
-    jz free_thread_dlls_ok
+    mov bx,dx
+    GetModuleByIndex
+    jc free_thread_done
 ;
-    mov es,ax
+    ModuleIdToSel
+    jc free_thread_dlls_next
+;    
     push ds
     push es
+    pushad
 ;    
     mov ax,flat_sel
     mov ds,ax
+    mov es,bx
 ;    
     mov ebx,es:lib_header
     mov eax,ds:[ebx].peh_entry_point
     or eax,eax
-    jz free_thread_dlls_next
+    jz free_thread_dlls_skip
 ;
-    push ebp
     add eax,es:mod_base
     push eax
     movzx eax,es:lib_init_param
     movzx ebx,es:mod_id
     mov edx,3
     CallPM32
-    pop ebp
 
-free_thread_dlls_next:
+free_thread_dlls_skip:
+    popad
     pop es
     pop ds
-    mov ax,es:mod_next
+
+free_thread_dlls_next:
+    inc ax
     jmp free_thread_dlls_loop
 
-free_thread_dlls_ok:
-    LeaveSection ds:mod_section
-
-free_thread_dll_done:
+free_thread_done:
     pop ds
     mov ds,ds:app_mod_sel   
     mov ax,ds:lib_debug_lib
