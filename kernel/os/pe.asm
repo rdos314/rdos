@@ -1417,9 +1417,9 @@ FindLib Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FindDll / FindApp
+;           NAME:           FindDll
 ;
-;           DESCRIPTION:    get DLL or app from name
+;           DESCRIPTION:    get DLL from name
 ;
 ;           PARAMETERS:     FS:ESI  DLL NAME
 ;
@@ -1456,31 +1456,6 @@ fdllDone:
     pop ds
     ret
 FindDll Endp
-
-FindApp Proc near
-    push ds
-    push eax
-    push ebx
-;
-    GetThread
-    mov ds,ax
-    movzx ebx,ds:p_prog_id
-    FindModuleByName
-    jc fappDone
-;
-    ModuleIdToSel
-    jc fappDone
-;
-    mov es,ebx
-    mov edi,es:mod_base
-    clc
-
-fappDone:
-    pop ebx
-    pop eax
-    pop ds
-    ret
-FindApp Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5521,43 +5496,6 @@ get_module_name Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetDll
-;
-;           DESCRIPTION:    Get DLL handle
-;
-;       PARAMETERS:         ES:EDI  DLL name
-;                           
-;           RETURNS:        EBX         DLL handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_dll_handle_name     DB 'Get DLL',0
-
-get_dll_handle  Proc far
-    push es
-    push fs
-    push esi
-;
-    mov si,es
-    mov fs,si
-    mov esi,edi
-;
-    call FindApp
-    jc get_dll_handle_done
-
-get_dll_handle_ok:
-    movzx ebx,es:mod_id
-
-get_dll_handle_done:
-    pop esi
-    pop fs
-    pop es
-    ret
-get_dll_handle  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetDllResource
 ;
 ;           DESCRIPTION:    Get DLL resource
@@ -6067,12 +6005,6 @@ init    PROC far
     mov edi,OFFSET notify_pe_exception_name
     xor dx,dx
     mov ax,notify_pe_exception_nr
-    RegisterUserGate32
-;
-    mov esi,OFFSET get_dll_handle
-    mov edi,OFFSET get_dll_handle_name
-    xor dx,dx
-    mov ax,get_module_nr
     RegisterUserGate32
 ;
     mov esi,OFFSET reserve_pe_mem

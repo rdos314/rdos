@@ -4193,6 +4193,67 @@ get_module_sel    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetDll
+;
+;           DESCRIPTION:    Get DLL handle
+;
+;       PARAMETERS:         ES:(E)DI    DLL name
+;                           
+;           RETURNS:        EBX         DLL handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_dll_handle_name     DB 'Get DLL',0
+
+get_dll_handle  Proc near
+    push es
+    push fs
+    push eax
+    push esi
+;
+    mov eax,es
+    mov fs,eax
+    mov esi,edi
+;
+    GetThread
+    mov es,eax
+    movzx ebx,es:p_prog_id
+    FindModuleByName
+    jc gdhDone
+;
+    ModuleIdToSel
+    jc gdhDone
+;
+    mov es,ebx
+    movzx ebx,es:mod_id
+    clc
+
+gdhDone:
+    pop esi
+    pop eax
+    pop fs
+    pop es
+    ret
+get_dll_handle  Endp
+
+get_dll_handle16   Proc far
+    push edi
+;
+    movzx edi,di
+    call get_dll_handle
+;
+    pop edi
+    ret
+get_dll_handle16   Endp
+
+get_dll_handle32   Proc far
+    call get_dll_handle
+    ret
+get_dll_handle32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetModuleBase
 ;
 ;           DESCRIPTION:    Get module base
@@ -5370,6 +5431,13 @@ init_state_hooks:
     xor dx,dx
     mov ax,free_dll_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_dll_handle16
+    mov esi,OFFSET get_dll_handle32
+    mov edi,OFFSET get_dll_handle_name
+    mov dx,virt_es_in
+    mov ax,get_module_nr
+    RegisterUserGate
 ;
     mov esi,OFFSET get_current_dll
     mov edi,OFFSET get_current_dll_name
