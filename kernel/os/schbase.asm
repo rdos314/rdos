@@ -884,10 +884,21 @@ get_thread_handle       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 app_thread_started      Proc far
-    int 3
     push ebp
     mov ebp,esp
-
+    push ds
+    push eax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_loader
+    call fword ptr ds:loader_start_thread_proc
+;
+    pop eax
+    pop ds
+    pop ebp
+    ret
 app_thread_started      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -910,18 +921,24 @@ create_app_thread    Proc far
     push ebx
     push edx
 ;
-    int 3
     GetThread
     mov es,ax
     mov es,es:p_app_sel
     mov es,es:app_loader
 ;
     mov eax,ecx
-    call fword ptr es:loader_allocate_mem_proc
-    int 3
+    call fword ptr es:loader_init_thread_proc
 ;
-    mov es,ds:p_ss
-    mov ebx,dword ptr ds:p_rsp
+    mov ax,ds:p_ss
+    test al,3
+    jnz catStackOk
+; 
+    mov eax,ecx
+    call fword ptr es:loader_allocate_mem_proc
+    mov ds:p_ss,flat_data_sel
+    mov dword ptr ds:p_rsp,edx
+
+catStackOk:
     mov ax,ds:p_cs
     cmp ax,flat_code_sel
     je catFlat
@@ -929,6 +946,13 @@ create_app_thread    Proc far
     int 3
 
 catFlat:
+    mov edx,dword ptr ds:p_rsp
+;
+    mov ax,ds:p_kernel_ss
+    mov ds:p_ss,ax
+    mov es,eax
+    mov ebx,stack0_size
+;
     sub ebx,4
     mov eax,flat_data_sel
     mov es:[ebx],eax

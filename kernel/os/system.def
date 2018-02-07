@@ -296,6 +296,15 @@ loader_get_cmd_line_proc       DD ?,?
 ; OUT  ES:(E)DI           Environment
 loader_get_env_proc            DD ?,?
 
+; IN   DS                 New thread block
+loader_init_thread_proc        DD ?,?
+
+; IN   EBP                New thread stack
+;        +0               EBP
+;        +4               EIP
+;        +12              ESP 
+loader_start_thread_proc       DD ?,?
+
 ; IN  (E)AX               Size
 ; OUT (E)DX               Address
 loader_allocate_mem_proc       DD ?,?

@@ -1354,8 +1354,6 @@ InsertApp       Proc near
     mov ds,ds:p_app_sel
     mov ds:app_loader,pe_loader_sel
 ;
-    mov ds:app_init_thread_proc,OFFSET init_thread
-    mov ds:app_init_thread_proc+4,cs
     mov ds:app_free_thread_proc,OFFSET free_thread
     mov ds:app_free_thread_proc+4,cs
     mov ds:app_fork_proc,OFFSET fork_proc
@@ -3693,32 +3691,27 @@ init_thread     Endp
 ;
 ;           DESCRIPTION:    Start thread
 ;
+;           PARAMETERS:     EBP                New thread stack
+;                             +0               EBP
+;                             +4               EIP
+;                             +12              ESP 
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+st_ebp = 0
+st_eip = 4
+st_esp = 12
 
 start_thread    PROC far
     push ds
     push es
     pushad
-;
-    or ebp,ebp
-    je start_thread_done
 ;    
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov ax,word ptr ds:app_loader_name
-    cmp ax,OFFSET pe_loader_name
-    jne start_thread_done
 ;
-    mov ax,cs
-    cmp ax,word ptr ds:app_loader_name+2
-    jne start_thread_done
-;
-    mov ax,[ebp].trap_cs
-    cmp ax,flat_code_sel
-    jnz start_thread_done
-;
-    mov edx,[ebp].trap_eip
+    mov edx,[ebp].st_eip
     mov ds,ds:app_mod_sel
     mov ax,ds:lib_debug_lib
     or ax,ax
@@ -3742,6 +3735,7 @@ start_thread_dlls_loop:
     ModuleIdToSel
     jc start_thread_dlls_next
 ;    
+    int 3
     push ds
     push es
     pushad
@@ -5961,23 +5955,25 @@ l02 DD OFFSET setup_debug,                SEG code
 l03 DD OFFSET get_exe_name,               SEG code
 l04 DD OFFSET get_cmd_line,               SEG code
 l05 DD OFFSET get_env,                    SEG code
-l06 DD OFFSET allocate_mem,               SEG code
-l07 DD OFFSET free_mem,                   SEG code
-l08 DD OFFSET debug_allocate_mem,         SEG code
-l09 DD OFFSET debug_free_mem,             SEG code
-l10 DD OFFSET load_dll,                   SEG code
-l11 DD OFFSET free_dll,                   SEG code
-l12 DD OFFSET get_current_dll,            SEG code
-l13 DD OFFSET get_module_proc,            SEG code
-l14 DD OFFSET get_resource,               SEG code
-l15 DD OFFSET get_module_name,            SEG code
-l16 DD OFFSET start_wait_for_debug_event, SEG code
-l17 DD OFFSET stop_wait_for_debug_event,  SEG code
-l18 DD OFFSET is_debug_event_idle,        SEG code
-l19 DD OFFSET get_debug_event,            SEG code
-l20 DD OFFSET get_debug_event_data,       SEG code
-l21 DD OFFSET clear_debug_event,          SEG code
-l22 DD OFFSET continue_debug_event,       SEG code
+l06 DD OFFSET init_thread,                SEG code
+l07 DD OFFSET start_thread,               SEG code
+l08 DD OFFSET allocate_mem,               SEG code
+l09 DD OFFSET free_mem,                   SEG code
+l10 DD OFFSET debug_allocate_mem,         SEG code
+l11 DD OFFSET debug_free_mem,             SEG code
+l12 DD OFFSET load_dll,                   SEG code
+l13 DD OFFSET free_dll,                   SEG code
+l14 DD OFFSET get_current_dll,            SEG code
+l15 DD OFFSET get_module_proc,            SEG code
+l16 DD OFFSET get_resource,               SEG code
+l17 DD OFFSET get_module_name,            SEG code
+l18 DD OFFSET start_wait_for_debug_event, SEG code
+l19 DD OFFSET stop_wait_for_debug_event,  SEG code
+l20 DD OFFSET is_debug_event_idle,        SEG code
+l21 DD OFFSET get_debug_event,            SEG code
+l22 DD OFFSET get_debug_event_data,       SEG code
+l23 DD OFFSET clear_debug_event,          SEG code
+l24 DD OFFSET continue_debug_event,       SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc
@@ -5994,9 +5990,6 @@ init    PROC far
 ;
     mov bx,pe_loader_sel
     RegisterLoader
-;
-    mov edi,OFFSET start_thread
-    HookCreateThread
 ;
     mov edi,OFFSET app_activity_table
     HookAppActivity
