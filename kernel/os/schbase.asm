@@ -116,6 +116,48 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn GetModuleSel:near
     extrn GetModuleID:near
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Upper case table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UCaseTab:
+ct00 DB 0,          0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ct08 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ct10 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ct18 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ct20 DB ' ',    '!',    0FFh,   '#',    '$',    '%',    '&',    27h
+ct28 DB '(',    ')',    0FFh,   0FFh,   0FFh,   '-',    0,          '/'
+ct30 DB '0',    '1',    '2',    '3',    '4',    '5',    '6',    '7'
+ct38 DB '8',    '9',    0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ct40 DB '@',    'A',    'B',    'C',    'D',    'E',    'F',    'G'
+ct48 DB 'H',    'I',    'J',    'K',    'L',    'M',    'N',    'O'
+ct50 DB 'P',    'Q',    'R',    'S',    'T',    'U',    'V',    'W'
+ct58 DB 'X',    'Y',    'Z',    0FFh,   '\',    0FFh,   '^',    '_'
+ct60 DB 60h,    'A',    'B',    'C',    'D',    'E',    'F',    'G'
+ct68 DB 'H',    'I',    'J',    'K',    'L',    'M',    'N',    'O'
+ct70 DB 'P',    'Q',    'R',    'S',    'T',    'U',    'V',    'W'
+ct78 DB 'X',    'Y',    'Z',    '{',    0FFh,   '}',    '~',    0FFh
+ct80 DB 0FFh,   0FFh,   0FFh,   0FFh,   'é',    0FFh,   'è',    0FFh
+ct88 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   'é',    'è'
+ct90 DB 0FFh,   0FFh,   0FFh,   0FFh,   'ô',    0FFh,   0FFh,   0FFh
+ct98 DB 0FFh,   'ô',    0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctA0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctA8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctB0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctB8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctC0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctC8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctD0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctD8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctE0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctE8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctF0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctF8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -4757,6 +4799,110 @@ fmbaDone:
 find_module_by_address Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FindModuleByName
+;
+;           DESCRIPTION:    Find module by name
+;
+;           PARAMETERS:     BX          Process ID
+;                           FS:ESI      App / DLL NAME
+;
+;           RETURNS:        AX          Entry #
+;                           BX          Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+find_module_by_name_name DB 'Find Module By Name', 0
+
+find_module_by_name Proc far
+    push ds
+    push es
+    push ecx
+    push edi
+    push ebp
+;
+    mov ebp,esi
+
+fmbnRefLoop:
+    mov al,fs:[ebp]
+    or al,al
+    jz fmbnRefOk
+;
+    inc ebp
+    jmp fmbnRefLoop
+
+fmbnRefOk:
+    movzx ebx,bx
+    call GetProcessSel
+    or eax,eax
+    stc
+    jz fmbnDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    movzx ecx,ds:pr_module_count
+    mov edi,OFFSET pr_module_arr
+;
+    or ecx,ecx
+    jz fmbnFail
+
+fmbnLoop:
+    movzx ebx,word ptr ds:[edi]
+    call GetModuleSel
+    or eax,eax
+    jz fmbnNext
+;
+    mov es,eax
+    movzx ebx,es:mod_name_offs
+    mov ebp,esi
+
+fmbnCheckName:
+    mov al,es:[ebx]
+    movzx edx,al
+    mov al,byte ptr cs:[edx].UCaseTab
+    mov ah,fs:[ebp]
+    movzx edx,ah
+    mov ah,byte ptr cs:[edx].UCaseTab
+    cmp al,ah
+    jne fmbnNext
+;       
+    or al,al
+    je fmbnOk
+;
+    inc ebx
+    inc ebp
+    jmp fmbnCheckName
+
+fmbnNext:
+    add edi,2
+    loop fmbnLoop
+
+fmbnFail:
+    LeaveSection ds:pr_section
+    stc
+    jmp fmbnDone
+
+fmbnOk:
+    LeaveSection ds:pr_section
+;
+    mov eax,edi
+    sub eax,OFFSET pr_module_arr
+    shr eax,1
+    mov bx,es:mod_id
+    clc
+
+fmbnDone:
+    pop ebp
+    pop edi
+    pop ecx
+    pop es
+    pop ds
+    ret
+find_module_by_name Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           AddKernelModule
@@ -5183,6 +5329,12 @@ init_state_hooks:
     mov edi,OFFSET find_module_by_address_name
     xor cl,cl
     mov ax,find_module_by_address_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET find_module_by_name
+    mov edi,OFFSET find_module_by_name_name
+    xor cl,cl
+    mov ax,find_module_by_name_nr
     RegisterOsGate
 ;
     mov esi,OFFSET lock_program_module_list

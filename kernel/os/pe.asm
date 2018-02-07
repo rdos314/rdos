@@ -1428,108 +1428,29 @@ FindLib Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UCaseTab:
-ct00 DB 0,          0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ct08 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ct10 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ct18 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ct20 DB ' ',    '!',    0FFh,   '#',    '$',    '%',    '&',    27h
-ct28 DB '(',    ')',    0FFh,   0FFh,   0FFh,   '-',    0,          '/'
-ct30 DB '0',    '1',    '2',    '3',    '4',    '5',    '6',    '7'
-ct38 DB '8',    '9',    0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ct40 DB '@',    'A',    'B',    'C',    'D',    'E',    'F',    'G'
-ct48 DB 'H',    'I',    'J',    'K',    'L',    'M',    'N',    'O'
-ct50 DB 'P',    'Q',    'R',    'S',    'T',    'U',    'V',    'W'
-ct58 DB 'X',    'Y',    'Z',    0FFh,   '\',    0FFh,   '^',    '_'
-ct60 DB 60h,    'A',    'B',    'C',    'D',    'E',    'F',    'G'
-ct68 DB 'H',    'I',    'J',    'K',    'L',    'M',    'N',    'O'
-ct70 DB 'P',    'Q',    'R',    'S',    'T',    'U',    'V',    'W'
-ct78 DB 'X',    'Y',    'Z',    '{',    0FFh,   '}',    '~',    0FFh
-ct80 DB 0FFh,   0FFh,   0FFh,   0FFh,   'é',    0FFh,   'è',    0FFh
-ct88 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   'é',    'è'
-ct90 DB 0FFh,   0FFh,   0FFh,   0FFh,   'ô',    0FFh,   0FFh,   0FFh
-ct98 DB 0FFh,   'ô',    0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ctA0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ctA8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ctB0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ctB8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ctC0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ctC8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ctD0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ctD8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ctE0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ctE8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ctF0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-ctF8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
-
 FindDll Proc near
     push ds
     push eax
     push ebx
-    push ecx
-    push edx
-    push ebp
 ;
     GetThread
     mov ds,ax
     movzx ebx,ds:p_prog_id
-    LockProgramModuleList
+    FindModuleByName
     jc fdllDone
 ;
-    or ecx,ecx
-    jz fdllFail
-;
-    sub ecx,1
-    jz fdllFail
-;
-    add edi,2
-
-fdllLoop:
-    movzx ebx,word ptr es:[edi]
-    ModuleIdToSel
-    jc fdllNext
-;
-    mov ds,ebx
-    movzx ebx,ds:mod_name_offs
-    mov ebp,esi
-
-fdllCheckName:
-    mov al,ds:[ebx]
-    movzx edx,al
-    mov al,byte ptr cs:[edx].UCaseTab
-    mov ah,fs:[ebp]
-    movzx edx,ah
-    mov ah,byte ptr cs:[edx].UCaseTab
-    cmp al,ah
-    jne fdllNext
-;       
-    or al,al
-    je fdllOk
-;
-    inc ebx
-    inc ebp
-    jmp fdllCheckName
-
-fdllNext:
-    add edi,2
-    loop fdllLoop
-
-fdllFail:
-    UnlockProgramModuleList
+    or ax,ax
     stc
-    jmp fdllDone
-
-fdllOk:
-    UnlockProgramModuleList
-    mov eax,ds
-    mov es,eax
+    jz fdllDone
+;
+    ModuleIdToSel
+    jc fdllDone
+;
+    mov es,ebx
     mov edi,es:mod_base
     clc
 
 fdllDone:
-    pop ebp
-    pop edx
-    pop ecx
     pop ebx
     pop eax
     pop ds
@@ -1540,60 +1461,21 @@ FindApp Proc near
     push ds
     push eax
     push ebx
-    push ecx
-    push edx
-    push ebp
 ;
     GetThread
     mov ds,ax
     movzx ebx,ds:p_prog_id
-    LockProgramModuleList
+    FindModuleByName
     jc fappDone
 ;
-    or ecx,ecx
-    jz fappFail
-;
-    movzx ebx,word ptr es:[edi]
     ModuleIdToSel
-    jc fappFail
+    jc fappDone
 ;
-    mov ds,ebx
-    movzx ebx,ds:mod_name_offs
-    mov ebp,esi
-
-fappCheckName:
-    mov al,ds:[ebx]
-    movzx edx,al
-    mov al,byte ptr cs:[edx].UCaseTab
-    mov ah,fs:[ebp]
-    movzx edx,ah
-    mov ah,byte ptr cs:[edx].UCaseTab
-    cmp al,ah
-    jne fappFail
-;       
-    or al,al
-    je fappOk
-;
-    inc ebx
-    inc ebp
-    jmp fappCheckName
-
-fappFail:
-    UnlockProgramModuleList
-    stc
-    jmp fappDone
-
-fappOk:
-    UnlockProgramModuleList
-    mov eax,ds
-    mov es,eax
+    mov es,ebx
     mov edi,es:mod_base
     clc
 
 fappDone:
-    pop ebp
-    pop edx
-    pop ecx
     pop ebx
     pop eax
     pop ds
@@ -5664,9 +5546,6 @@ get_dll_handle  Proc far
     mov si,es
     mov fs,si
     mov esi,edi
-;
-    call FindDll
-    jnc get_dll_handle_ok
 ;
     call FindApp
     jc get_dll_handle_done

@@ -2080,6 +2080,14 @@ FindModuleByAddress    MACRO
                     ENDM
 
 ; IN  BX        Process ID
+; IN  FS:ESI    Module name
+; OUT AX        Entry #
+; OUT BX        Module ID
+FindModuleByName    MACRO
+    OsGate find_module_by_name_nr
+                    ENDM
+
+; IN  BX        Process ID
 ; OUT ES:EDI    Module entry IDs
 ; OUT ECX       Number of entries
 LockProgramModuleList    MACRO

@@ -729,5 +729,6 @@ lock_program_module_list_nr   = 635
 unlock_program_module_list_nr = 636
 
 find_module_by_address_nr   = 637
+find_module_by_name_nr      = 638
 
 osgate_entries              = 650
