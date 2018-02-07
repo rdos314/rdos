@@ -4677,6 +4677,81 @@ unlock_program_module_list    Proc far
     pop ds
     ret
 unlock_program_module_list    Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FindModuleByAddress
+;
+;           DESCRIPTION:    Search for a DLL or app module
+;
+;           PARAMETERS:     BX          Process ID
+;                           EDX         Virtual adress
+;
+;           RETURNS:        AX          Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+find_module_by_address_name DB 'Find Module By Address', 0
+
+find_module_by_address Proc far
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push esi
+;
+    movzx ebx,bx
+    call GetProcessSel
+    or eax,eax
+    stc
+    jz fmbaDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    movzx ecx,ds:pr_module_count
+    mov esi,OFFSET pr_module_arr
+;
+    or ecx,ecx
+    jz fmbaFail
+
+fmbaLoop:
+    movzx ebx,word ptr ds:[esi]
+    call GetModuleSel
+    or eax,eax
+    jz fmbaNext
+;
+    mov ds,eax
+    mov eax,edx
+    sub eax,ds:mod_base
+    jc fmbaNext
+;       
+    cmp eax,ds:mod_size
+    jc fmbaOk
+
+fmbaNext:
+    add esi,2
+    loop fmbaLoop
+
+fmbaFail:
+    LeaveSection ds:pr_section
+    stc
+    jmp fmbaDone
+
+fmbaOk:
+    LeaveSection ds:pr_section
+    mov eax,ds
+    clc
+
+fmbaDone:
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+find_module_by_address Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5099,6 +5174,12 @@ init_state_hooks:
     mov edi,OFFSET free_module_name
     xor cl,cl
     mov ax,free_module_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET find_module_by_address
+    mov edi,OFFSET find_module_by_address_name
+    xor cl,cl
+    mov ax,find_module_by_address_nr
     RegisterOsGate
 ;
     mov esi,OFFSET lock_program_module_list

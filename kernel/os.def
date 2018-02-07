@@ -728,4 +728,6 @@ register_loader_nr          = 634
 lock_program_module_list_nr   = 635
 unlock_program_module_list_nr = 636
 
+find_module_by_address_nr   = 637
+
 osgate_entries              = 650

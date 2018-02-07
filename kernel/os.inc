@@ -2072,6 +2072,13 @@ FreeModule      MACRO
                     ENDM
 
 ; IN  BX        Process ID
+; IN  EDX       Address
+; OUT AX        Module ID
+FindModuleByAddress    MACRO
+    OsGate find_module_by_address_nr
+                    ENDM
+
+; IN  BX        Process ID
 ; OUT ES:EDI    Module entry IDs
 ; OUT ECX       Number of entries
 LockProgramModuleList    MACRO
