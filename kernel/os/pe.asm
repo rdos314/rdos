@@ -1505,6 +1505,11 @@ FindDll Proc near
 ;
     or ecx,ecx
     jz fdllFail
+;
+    sub ecx,1
+    jz fdllFail
+;
+    add edi,2
 
 fdllLoop:
     movzx ebx,word ptr es:[edi]
@@ -1560,53 +1565,64 @@ FindDll Endp
 
 FindApp Proc near
     push ds
-    push ax
+    push eax
     push ebx
-    push dx
+    push ecx
+    push edx
+    push ebp
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov bx,ds:app_mod_id
-    ModuleIdToSel
-    jc find_app_fail
+    movzx ebx,ds:p_prog_id
+    LockProgramModuleList
+    jc fappDone
 ;
-    mov es,bx
-    mov edi,OFFSET lib_name
-    push esi
+    or ecx,ecx
+    jz fappFail
+;
+    movzx ebx,word ptr es:[edi]
+    ModuleIdToSel
+    jc fappFail
+;
+    mov ds,ebx
+    movzx ebx,ds:mod_name_offs
+    mov ebp,esi
 
-find_app_check_name:
-    mov al,es:[edi]
-    inc edi
-    movzx ebx,al
-    mov al,byte ptr cs:[ebx].UCaseTab
-    mov ah,fs:[esi]
-    movzx ebx,ah
-    mov ah,byte ptr cs:[ebx].UCaseTab
+fappCheckName:
+    mov al,ds:[ebx]
+    movzx edx,al
+    mov al,byte ptr cs:[edx].UCaseTab
+    mov ah,fs:[ebp]
+    movzx edx,ah
+    mov ah,byte ptr cs:[edx].UCaseTab
     cmp al,ah
-    jne find_app_pop
+    jne fappFail
+;       
     or al,al
-    je find_app_ok
-    inc esi
-    inc edi
-    jmp find_app_check_name
+    je fappOk
+;
+    inc ebx
+    inc ebp
+    jmp fappCheckName
 
-find_app_pop:
-    pop esi
-
-find_app_fail:
+fappFail:
+    UnlockProgramModuleList
     stc
-    jmp find_app_end
+    jmp fappDone
 
-find_app_ok:
-    pop esi
+fappOk:
+    UnlockProgramModuleList
+    mov eax,ds
+    mov es,eax
     mov edi,es:mod_base
     clc
 
-find_app_end:
-    pop dx
+fappDone:
+    pop ebp
+    pop edx
+    pop ecx
     pop ebx
-    pop ax
+    pop eax
     pop ds
     ret
 FindApp Endp
