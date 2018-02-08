@@ -280,9 +280,16 @@ loader_interface_struc    STRUC
 loader_is_valid_exe_proc       DD ?,?
 
 ; IN   BX                 C file handle
+; OUT  BX                 Module selector
+loader_init_module_proc        DD ?,?
+
+; IN   BX                 Module selector
+loader_fixup_exe_proc          DD ?,?
+
+; IN   BX                 Module selector
 ; IN   DS:ESI             File name
 ; IN   ES:EDI             Command line
-loader_load_exe_proc           DD ?,?
+loader_setup_names_proc        DD ?,?
 
 ; IN   DX                 Debug lib sel
 loader_setup_debug_proc        DD ?,?

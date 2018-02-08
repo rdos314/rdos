@@ -3717,9 +3717,44 @@ spCopyExeLoop:
 ;
     push gs
     mov gs,gs:pr_loader
-    call fword ptr gs:loader_load_exe_proc
+    call fword ptr gs:loader_init_module_proc
     pop gs
     jc spCloseFail
+;
+    SetBitness
+;
+    push ds
+    push es
+    mov es,bx
+;
+    movzx ebx,bx
+    call ModuleLoaded
+;
+    mov ebx,eax
+    call AddProgramModule
+;
+    mov dx,es
+    mov ds,dx
+    InitSection ds:mod_section
+    mov es:mod_id,bx
+;    
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds:app_mod_id,bx
+    mov ds:app_mod_sel,dx
+    mov al,ds:app_key
+    mov es:mod_key,al
+;
+    mov bx,es
+    pop es
+    pop ds
+;
+    push gs
+    mov gs,gs:pr_loader
+    call fword ptr gs:loader_fixup_exe_proc
+    call fword ptr gs:loader_setup_names_proc
+    pop gs
 ;
     mov dx,gs:pr_debug_sel
     or dx,dx
@@ -4099,9 +4134,44 @@ lpCpExeLoop:
 ;
     push gs
     mov gs,gs:pr_loader
-    call fword ptr gs:loader_load_exe_proc
+    call fword ptr gs:loader_init_module_proc
     pop gs
     jc lpLoadFail
+;
+    SetBitness
+;
+    push ds
+    push es
+    mov es,bx
+;
+    movzx ebx,bx
+    call ModuleLoaded
+;
+    mov ebx,eax
+    call AddProgramModule
+;
+    mov dx,es
+    mov ds,dx
+    InitSection ds:mod_section
+    mov es:mod_id,bx
+;    
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds:app_mod_id,bx
+    mov ds:app_mod_sel,dx
+    mov al,ds:app_key
+    mov es:mod_key,al
+;
+    mov bx,es
+    pop es
+    pop ds
+;
+    push gs
+    mov gs,gs:pr_loader
+    call fword ptr gs:loader_fixup_exe_proc
+    call fword ptr gs:loader_setup_names_proc
+    pop gs
 ;
     mov gs:el_ret_code,0
 ;
