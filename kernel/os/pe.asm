@@ -3680,19 +3680,11 @@ init_thread_no_tls:
     pop es
     ret
 init_thread     Endp
-
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           start_thread
-;
-;           DESCRIPTION:    Start thread
-;
-;           PARAMETERS:     EBP                New thread stack
-;                             +0               EBP
-;                             +4               EIP
-;                             +12              ESP 
+;           NAME:           User stack positions
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3702,6 +3694,22 @@ st_ss = 16
 st_esp = 12
 
 thread_code_size  = 32
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitUserStack
+;
+;           DESCRIPTION:    Setup register restore
+;
+;           PARAMETERS:     EBP                New thread stack
+;                             +0               EBP
+;                             +4               EIP
+;                             +12              ESP 
+;
+;           RETURNS:        EAX                Save frame
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 thread_init_start:
     pop edx
@@ -3709,43 +3717,7 @@ thread_init_start:
     retn thread_code_size
 thread_init_end:
 
-thread_exit_start:
-    pop eax
-    mov [eax+4],ebx
-    mov [eax],edx
-    retn thread_code_size
-thread_exit_end:
-
-thread_user_start:
-    pop edx
-    pop ebx
-    pop eax
-    retn
-thread_user_back:
-    retn thread_code_size
-thread_user_end:
-
-start_thread    PROC far
-    push ds
-    push es
-    push gs
-    pushad
-;    
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-;
-    mov edx,[ebp].st_eip
-    mov ds,ds:app_mod_sel
-    mov ax,ds:lib_debug_lib
-    or ax,ax
-    jz start_thread_notify
-;
-    call AllocateKernelEvent
-    call CreateThreadEvent
-    call SendEvent
-
-start_thread_notify:    
+InitUserStack	Proc near
     mov es,[ebp].st_ss
     mov edi,[ebp].st_esp
     sub edi,thread_code_size + 3 * 4
@@ -3764,24 +3736,80 @@ start_thread_notify:
     mov esi,OFFSET thread_init_start
     mov ecx,OFFSET thread_init_end - OFFSET thread_init_start
     rep movsb
+    pop eax
+    ret
+InitUserStack  Endp
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-    GetThread
-    mov ds,ax
-    mov dx,ds:p_prog_id
-    mov ax,1
+;
+;           NAME:           ExitUserStack
+;
+;           DESCRIPTION:    Setup register save
+;
+;           PARAMETERS:     EAX                Save frame
+;                           EBP                New thread stack
+;                             +0               EBP
+;                             +4               EIP
+;                             +12              ESP 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_thread_dlls_loop:
-    mov bx,dx
-    GetModuleByIndex
-    jc start_thread_done
+thread_exit_start:
+    pop eax
+    mov [eax+4],ebx
+    mov [eax],edx
+    retn thread_code_size
+thread_exit_end:
+
+ExitUserStack	Proc near
+    mov es,[ebp].st_ss
+    mov edi,[ebp].st_esp
+    sub edi,thread_code_size + 2 * 4
+    mov [ebp].st_esp,edi
 ;
-    ModuleIdToSel
-    jc start_thread_dlls_next
-;    
-    push ds
-    push eax
-    push edx
-;    
+    stosd
+;
+    mov eax,[ebp].st_eip
+    stosd
+;
+    mov [ebp].st_eip,edi
+;
+    mov eax,cs
+    mov ds,eax
+    mov eax,edi
+    mov esi,OFFSET thread_exit_start
+    mov ecx,OFFSET thread_exit_end - OFFSET thread_exit_start
+    rep movsb
+    ret
+ExitUserStack  Endp
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddUserStack
+;
+;           DESCRIPTION:    Add call frame
+;
+;           PARAMETERS:     BX                 Dll ID
+;                           EDX                DLL code
+;                           EBP                New thread stack
+;                             +0               EBP
+;                             +4               EIP
+;                             +12              ESP 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+thread_user_start:
+    pop edx
+    pop ebx
+    pop eax
+    retn
+thread_user_back:
+    retn thread_code_size
+thread_user_end:
+
+AddUserStack	Proc near
     mov ax,flat_sel
     mov ds,ax
     mov gs,bx
@@ -3789,7 +3817,7 @@ start_thread_dlls_loop:
     mov ebx,gs:lib_header
     mov eax,ds:[ebx].peh_entry_point
     or eax,eax
-    jz start_thread_dlls_skip
+    jz ausDone
 ;
     add eax,gs:mod_base
     push eax
@@ -3799,7 +3827,7 @@ start_thread_dlls_loop:
     sub edi,thread_code_size + 6 * 4
     mov [ebp].st_esp,edi
 ;
-    mov eax,2
+    mov eax,edx
     stosd
 ;
     movzx eax,gs:mod_id
@@ -3828,35 +3856,78 @@ start_thread_dlls_loop:
     mov ecx,OFFSET thread_user_end - OFFSET thread_user_start
     rep movsb
 
-start_thread_dlls_skip:
+ausDone:
+    ret
+AddUserStack	Endp
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           start_thread
+;
+;           DESCRIPTION:    Start thread
+;
+;           PARAMETERS:     EBP                New thread stack
+;                             +0               EBP
+;                             +4               EIP
+;                             +12              ESP 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+start_thread    PROC far
+    push ds
+    push es
+    push gs
+    pushad
+;    
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+;
+    mov edx,[ebp].st_eip
+    mov ds,ds:app_mod_sel
+    mov ax,ds:lib_debug_lib
+    or ax,ax
+    jz start_thread_notify
+;
+    call AllocateKernelEvent
+    call CreateThreadEvent
+    call SendEvent
+
+start_thread_notify:    
+    call InitUserStack
+    push eax
+;
+    GetThread
+    mov ds,ax
+    mov dx,ds:p_prog_id
+    mov ax,1
+
+start_thread_dlls_loop:
+    mov bx,dx
+    GetModuleByIndex
+    jc start_thread_done
+;
+    ModuleIdToSel
+    jc start_thread_dlls_next
+;    
+    push eax
+    push edx
+;
+    mov edx,2
+    call AddUserStack
+;
     pop edx
-    pop es
-    pop ds
+    pop eax
 
 start_thread_dlls_next:
     inc ax
     jmp start_thread_dlls_loop
 
 start_thread_done:
-    mov es,[ebp].st_ss
-    mov edi,[ebp].st_esp
-    sub edi,thread_code_size + 2 * 4
-    mov [ebp].st_esp,edi
-;
     pop eax
-    stosd
-;
-    mov eax,[ebp].st_eip
-    stosd
-;
-    mov [ebp].st_eip,edi
-;
-    mov eax,cs
-    mov ds,eax
-    mov eax,edi
-    mov esi,OFFSET thread_exit_start
-    mov ecx,OFFSET thread_exit_end - OFFSET thread_exit_start
-    rep movsb
+    call ExitUserStack
 ;
     popad
     pop gs
@@ -3894,30 +3965,14 @@ ftuDllsLoop:
     jc ftuDllsNext
 ;    
     int 3
-    push ds
-    push es
-    pushad
-;    
-    mov ax,flat_sel
-    mov ds,ax
-    mov es,bx
-;    
-    mov ebx,es:lib_header
-    mov eax,ds:[ebx].peh_entry_point
-    or eax,eax
-    jz ftuDllsSkip
-;
-    add eax,es:mod_base
     push eax
-    movzx eax,es:lib_init_param
-    movzx ebx,es:mod_id
+    push edx
+;
     mov edx,3
-    CallPM32
-
-ftuDllsSkip:
-    popad
-    pop es
-    pop ds
+    call AddUserStack
+;
+    pop edx
+    pop eax
 
 ftuDllsNext:
     inc ax
