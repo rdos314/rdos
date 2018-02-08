@@ -8351,6 +8351,16 @@ create_thread32 Endp
 terminate_thread_name   DB 'Terminate Thread',0
 
 terminate_thread:
+    push ebp
+    mov ebp,esp
+;
+    mov ax,[ebp+8]
+    test al,3
+    jz terminate_thread_kernel
+;
+    int 3
+
+terminate_thread_kernel:
     GetThread
     mov ds,ax
     mov al,ds:p_parent_switch
