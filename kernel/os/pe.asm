@@ -3773,31 +3773,30 @@ start_thread    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FreeThread
+;           NAME:           FreeThreadUser
 ;
-;           DESCRIPTION:    Free stack
+;           DESCRIPTION:    Free thread, user callback part
+;
+;           PARAMETERS:     EBP                Thread stack
+;                             +0               EBP
+;                             +4               EIP
+;                             +12              ESP 
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-free_thread     Proc far
-    int 3
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel    
-    push ds
-;
+free_thread_user     Proc far
     GetThread
     mov ds,ax
     mov dx,ds:p_prog_id
     mov ax,1
 
-free_thread_dlls_loop:
+ftuDllsLoop:
     mov bx,dx
     GetModuleByIndex
-    jc free_thread_done
+    jc ftuDone
 ;
     ModuleIdToSel
-    jc free_thread_dlls_next
+    jc ftuDllsNext
 ;    
     push ds
     push es
@@ -3810,7 +3809,7 @@ free_thread_dlls_loop:
     mov ebx,es:lib_header
     mov eax,ds:[ebx].peh_entry_point
     or eax,eax
-    jz free_thread_dlls_skip
+    jz ftuDllsSkip
 ;
     add eax,es:mod_base
     push eax
@@ -3819,26 +3818,41 @@ free_thread_dlls_loop:
     mov edx,3
     CallPM32
 
-free_thread_dlls_skip:
+ftuDllsSkip:
     popad
     pop es
     pop ds
 
-free_thread_dlls_next:
+ftuDllsNext:
     inc ax
-    jmp free_thread_dlls_loop
+    jmp ftuDllsLoop
 
-free_thread_done:
-    pop ds
+ftuDone:
+    ret
+free_thread_user     Endp
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreeThreadKernel
+;
+;           DESCRIPTION:    Free thread, kernel part
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_thread_kernel     Proc far
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel    
     mov ds,ds:app_mod_sel   
     mov ax,ds:lib_debug_lib
     or ax,ax
-    jz free_thread_no_debug
+    jz ftkNoDebug
 ;
     call TerminateThreadEvent
     call SendEvent
     
-free_thread_no_debug:
+ftkNoDebug:
     mov ax,system_data_sel
     mov ds,ax
     mov ebp,ds:flat_base
@@ -3852,7 +3866,7 @@ free_thread_no_debug:
     mov edi,es:mod_base
     mov eax,[esi].peh_tls_va
     or eax,eax
-    jz free_thread_no_tls
+    jz ftkNoTls
 ;
     add eax,edi
     mov edx,[eax].tls_index_va
@@ -3865,7 +3879,7 @@ free_thread_no_debug:
     sub ecx,[eax].tls_start_data_va
     FreeLinear
 
-free_thread_no_tls:
+ftkNoTls:
     mov edx,fs:pvStackUserBottom
     add edx,ebp
     mov ecx,fs:pvStackUserSize
@@ -3876,7 +3890,7 @@ free_thread_no_tls:
     mov fs,ax
     FreeMem
     ret
-free_thread     Endp
+free_thread_kernel     Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5947,24 +5961,25 @@ l04 DD OFFSET get_cmd_line,               SEG code
 l05 DD OFFSET get_env,                    SEG code
 l06 DD OFFSET init_thread,                SEG code
 l07 DD OFFSET start_thread,               SEG code
-l08 DD OFFSET free_thread,                SEG code
-l09 DD OFFSET allocate_mem,               SEG code
-l10 DD OFFSET free_mem,                   SEG code
-l11 DD OFFSET debug_allocate_mem,         SEG code
-l12 DD OFFSET debug_free_mem,             SEG code
-l13 DD OFFSET load_dll,                   SEG code
-l14 DD OFFSET free_dll,                   SEG code
-l15 DD OFFSET get_current_dll,            SEG code
-l16 DD OFFSET get_module_proc,            SEG code
-l17 DD OFFSET get_resource,               SEG code
-l18 DD OFFSET get_module_name,            SEG code
-l19 DD OFFSET start_wait_for_debug_event, SEG code
-l20 DD OFFSET stop_wait_for_debug_event,  SEG code
-l21 DD OFFSET is_debug_event_idle,        SEG code
-l22 DD OFFSET get_debug_event,            SEG code
-l23 DD OFFSET get_debug_event_data,       SEG code
-l24 DD OFFSET clear_debug_event,          SEG code
-l25 DD OFFSET continue_debug_event,       SEG code
+l08 DD OFFSET free_thread_user,           SEG code
+l09 DD OFFSET free_thread_kernel,         SEG code
+l10 DD OFFSET allocate_mem,               SEG code
+l11 DD OFFSET free_mem,                   SEG code
+l12 DD OFFSET debug_allocate_mem,         SEG code
+l13 DD OFFSET debug_free_mem,             SEG code
+l14 DD OFFSET load_dll,                   SEG code
+l15 DD OFFSET free_dll,                   SEG code
+l16 DD OFFSET get_current_dll,            SEG code
+l17 DD OFFSET get_module_proc,            SEG code
+l18 DD OFFSET get_resource,               SEG code
+l19 DD OFFSET get_module_name,            SEG code
+l20 DD OFFSET start_wait_for_debug_event, SEG code
+l21 DD OFFSET stop_wait_for_debug_event,  SEG code
+l22 DD OFFSET is_debug_event_idle,        SEG code
+l23 DD OFFSET get_debug_event,            SEG code
+l24 DD OFFSET get_debug_event_data,       SEG code
+l25 DD OFFSET clear_debug_event,          SEG code
+l26 DD OFFSET continue_debug_event,       SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc

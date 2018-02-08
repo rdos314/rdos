@@ -999,6 +999,11 @@ terminate_app_thread_user_name  DB 'Terminate App Thread User', 0
 
 terminate_app_thread_user    Proc far
     int 3
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    mov es,es:app_loader
+    call fword ptr es:loader_free_thread_user_proc
     ret
 terminate_app_thread_user    Endp
 
