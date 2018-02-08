@@ -8356,12 +8356,21 @@ do_terminate:
 terminate_thread:
     push ebp
     mov ebp,esp
+    push ds
+    push es
+    push fs
+    push gs
 ;
     mov ax,[ebp+8]
     test al,3
     jz terminate_thread_not_user
 ;
     TerminateAppThread
+;
+    pop gs
+    pop fs
+    pop es
+    pop ds
     pop ebp
     retf32
 
