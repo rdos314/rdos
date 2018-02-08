@@ -2046,51 +2046,6 @@ GetPrimaryModule  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           SetModule
-;
-;           DESCRIPTION:    Set module for active process
-;
-;           PARAMETERS:     ES  Module sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_module_name DB 'Set Module',0
-
-set_module      PROC far
-    push ds
-    push ax
-    push ebx
-    push dx
-;
-    mov ebx,es
-    call ModuleLoaded
-;
-    mov ebx,eax
-    call AddProgramModule
-;
-    mov dx,es
-    mov ds,dx
-    InitSection ds:mod_section
-    mov es:mod_id,bx
-;    
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_mod_id,bx
-    mov ds:app_mod_sel,dx
-    mov al,ds:app_key
-    mov es:mod_key,al
-;    
-    pop dx
-    pop ebx
-    pop ax
-    pop ds
-    ret
-set_module      ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           ResetModule
 ;
 ;           DESCRIPTION:    Reset module for active process
@@ -5476,12 +5431,6 @@ init_state_hooks:
     mov edi,OFFSET app_notify_terminate_name
     xor cl,cl
     mov ax,app_notify_terminate_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET set_module
-    mov edi,OFFSET set_module_name
-    xor cl,cl
-    mov ax,set_module_nr
     RegisterOsGate
 ;
     mov esi,OFFSET reset_module

@@ -2064,11 +2064,6 @@ StartLongExe     MACRO
     OsGate start_long_exe_nr
                     ENDM
 
-; IN  ES    Module selector
-SetModule       MACRO
-    OsGate set_module_nr
-                    ENDM
-
 ResetModule     MACRO
     OsGate reset_module_nr
                     ENDM

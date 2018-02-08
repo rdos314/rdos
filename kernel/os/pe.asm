@@ -4339,7 +4339,7 @@ fork_child:
 ;
     push es
     mov es,ax
-    SetModule
+;    SetModule
     pop es
 ;
     mov al,32
