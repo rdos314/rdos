@@ -1599,7 +1599,6 @@ OpenDll Endp
 ;           DESCRIPTION:    Search for a object
 ;
 ;           PARAMETERS:     ES          Lib handle
-;                           EDI         Image base
 ;                           EDX         Virtual adress
 ;
 ;           RETURNS:        ESI         Object
@@ -1610,6 +1609,7 @@ FindObject      Proc near
     push eax
     push ecx
 ;
+    mov edi,es:mod_base
     mov esi,es:lib_header
     movzx ecx,[esi].peh_objects
     mov esi,es:lib_objects
@@ -1644,7 +1644,6 @@ FindObject      Endp
 ;           DESCRIPTION:    Relocate a single page
 ;
 ;           PARAMETERS:     ES          Lib handle
-;                           EDI         Image base
 ;                           EDX         Allocate buffer
 ;                           EBP         Real address
 ;
@@ -1713,6 +1712,7 @@ RelocPage       Proc near
     push edi
 ;
     mov ebx,es:lib_header
+    mov edi,es:mod_base
     mov ecx,[ebx].peh_fixup_size
     mov esi,[ebx].peh_fixup_va      
 ;
@@ -1773,7 +1773,6 @@ RelocPage       Endp
 ;           DESCRIPTION:    Check if any relocation span pages
 ;
 ;           PARAMETERS:     ES          Lib handle
-;                           EDI         Image base
 ;                           EBP         Real address
 ;
 ;       RETURNS:    CY      Relocation spans pages
@@ -1805,6 +1804,7 @@ CheckReloc      Proc near
     push esi
 ;
     mov ebx,es:lib_header
+    mov edi,es:mod_base
     mov ecx,[ebx].peh_fixup_size
     mov esi,[ebx].peh_fixup_va      
 ;
@@ -1881,8 +1881,7 @@ CheckReloc      Endp
 ;
 ;           DESCRIPTION:    Init DLL
 ;
-;           PARAMETERS:     DS:EDI  Image base
-;                           ES          Lib handle
+;           PARAMETERS:     ES          Lib handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1893,6 +1892,7 @@ RunDll  Proc near
     push gs
     pushad
 ;
+    mov edi,es:mod_base
     mov fs,es:lib_fs
     mov eax,es:lib_header
     mov eax,[eax].peh_entry_point
@@ -1930,9 +1930,7 @@ RunDll  Endp
 ;           DESCRIPTION:    Import an object
 ;
 ;           PARAMETERS:     EBX         Address of import ordinal + name        
-;                           ESI         Image base of export DLL
 ;                           GS          Lib handle of export DLL
-;                           EDI         Image base of import DLL/APP
 ;                           ES          Lib handle of import DLL/APP
 ;                           
 ;           RETURNS:        EAX         Virtual address
@@ -1948,6 +1946,7 @@ ImportObject    Proc near
     push esi
     push edi
 ;
+    mov esi,gs:mod_base
     mov edi,esi
     mov esi,gs:lib_header
     mov esi,[esi].peh_export_va
@@ -2048,9 +2047,7 @@ ImportObject    Endp
 ;           DESCRIPTION:    Bind imported functions
 ;
 ;           PARAMETERS:     EDX         Import descr
-;                           ESI         Export image base
 ;                           GS          Export Lib handle
-;                           EDI         Import Image base
 ;                           ES          Import Lib handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2061,6 +2058,8 @@ BindImport      Proc near
     push esi
     push edi
 ;
+    mov esi,gs:mod_base
+    mov edi,es:mod_base
     mov eax,gs:lib_header
     mov eax,[eax].peh_export_va
     or eax,eax
@@ -2096,8 +2095,7 @@ BindImport      Endp
 ;
 ;           DESCRIPTION:    Load imported DLLs
 ;
-;           PARAMETERS:     EDI         Image base
-;                           ES          Lib
+;           PARAMETERS:     ES          Lib
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2108,6 +2106,7 @@ LoadImportedDlls    Proc near
     push edx
     push esi
 ;
+    mov edi,es:mod_base
     mov ax,flat_data_sel
     mov fs,ax
 ;
@@ -2155,7 +2154,6 @@ LoadImportedDlls    Endp
 ;           DESCRIPTION:    Free imported DLLs
 ;
 ;           PARAMETERS:     ES          Lib handle
-;                           EDI         Image base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2164,6 +2162,7 @@ FreeImportedDlls    Proc near
     push edx
     push esi
 ;
+    mov edi,es:mod_base
     mov edx,es:lib_header
     mov edx,[edx].peh_import_va
     or edx,edx
@@ -2211,8 +2210,7 @@ FreeImportedDlls    Endp
 ;
 ;           DESCRIPTION:    Notify one DLL
 ;
-;           PARAMETERS:     EDI         Image base
-;                           ES          Lib
+;           PARAMETERS:     ES          Lib
 ;                           ESI         DLL name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2273,8 +2271,7 @@ NotifyDll       Endp
 ;
 ;           DESCRIPTION:    Notify imported DLLs
 ;
-;           PARAMETERS:     EDI         Image base
-;                           ES          Lib
+;           PARAMETERS:     ES          Lib
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2289,6 +2286,7 @@ NotifyImportedDlls      Proc near
     mov ds,ax
     mov fs,ax
 ;
+    mov edi,es:mod_base
     mov edx,es:lib_header
     mov edx,[edx].peh_import_va
     or edx,edx
@@ -2322,8 +2320,7 @@ NotifyImportedDlls      Endp
 ;
 ;           DESCRIPTION:    Start one DLL
 ;
-;           PARAMETERS:     EDI         Image base
-;                           ES          Lib
+;           PARAMETERS:     ES          Lib
 ;                           ESI         DLL name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2378,8 +2375,7 @@ StartDll    Endp
 ;
 ;           DESCRIPTION:    Start imported DLLs
 ;
-;           PARAMETERS:     EDI         Image base
-;                           ES          Lib
+;           PARAMETERS:     ES          Lib
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2394,6 +2390,7 @@ StartImportedDlls       Proc near
     mov ds,ax
     mov fs,ax
 ;
+    mov edi,es:mod_base
     mov edx,es:lib_header
     mov edx,[edx].peh_import_va
     or edx,edx
@@ -2507,6 +2504,7 @@ load_dll_do:
     CreateModule
 ;       
     call CreateImage
+    call FixupImage
     pop dx
     mov edi,es:mod_base
 ;
@@ -2876,7 +2874,7 @@ MapToImage  Endp
 
 CreateImage     Proc near
     push eax
-    push bx
+    push ebx
     push ecx
     push edx
     push esi
@@ -2977,6 +2975,39 @@ hook_object_do:
     loop hook_object_loop
     pop es
 ;
+    pop ebp
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+CreateImage     Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FixupImage
+;
+;           DESCRIPTION:    Fixup image
+;
+;           PARAMETERS:     ES          Lib handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 
+FixupImage      Proc near
+    push ds
+    push es
+    pushad
+;
+    mov bx,system_data_sel
+    mov ds,bx
+    mov ebp,ds:flat_base
+;
+    mov bx,flat_data_sel
+    mov ds,bx
+;
+    mov edi,es:mod_base
     mov esi,es:lib_header
     mov eax,[esi].peh_fixup_size
     mov edx,[esi].peh_fixup_va      
@@ -2988,33 +3019,24 @@ hook_object_do:
     jc fixup_done
 ;
     mov ecx,eax
-;
-    push es
-    push edx
-    push edi
     mov edi,edx
     add edx,ebp
     mov eax,ecx
     UnhookPage
 ;
+    mov bx,es:mod_c_file_handle
     mov edx,[esi].o_phys_offset
     mov ax,ds
     mov es,ax
     ReadCFile
-    pop edi
-    pop edx
-    pop es
 
 fixup_done:
-    pop ebp
-    pop esi
-    pop edx
-    pop ecx
-    pop bx
-    pop eax
+    popad
+    pop es
+    pop ds
     ret
-CreateImage     Endp
-                       
+FixupImage      Endp
+                      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3022,8 +3044,7 @@ CreateImage     Endp
 ;
 ;           DESCRIPTION:    Preload image
 ;
-;           PARAMETERS:     EDI         Image base
-;                           ES          Lib handle
+;           PARAMETERS:     ES          Lib handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3033,6 +3054,7 @@ Preload Proc near
     push edx
     push esi
 ;
+    mov edi,es:mod_base
     mov esi,es:lib_header
     movzx ecx,[esi].peh_objects
     mov esi,es:lib_objects
@@ -3064,8 +3086,7 @@ Preload Endp
 ;
 ;           DESCRIPTION:    Init stack and TIB
 ;
-;           PARAMETERS:     EDI     Image base
-;                           ES      Lib handle
+;           PARAMETERS:     ES      Lib handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3077,6 +3098,7 @@ InitStack       Proc near
     push edx
     push esi
 ;
+    mov edi,es:mod_base
     push ds
     mov ax,system_data_sel
     mov ds,ax
@@ -3213,8 +3235,7 @@ InitStack       Endp
 ;
 ;           DESCRIPTION:    Setup registers to run image
 ;
-;           PARAMETERS:     EDI         Image base
-;                           ES          Lib handle
+;           PARAMETERS:     ES          Lib handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3223,6 +3244,7 @@ RunImage    Proc near
     push ebx
     push edx
 ;
+    mov edi,es:mod_base
     mov dword ptr [bp].load_cs,flat_code_sel
     mov eax,es:lib_header
     mov eax,[eax].peh_entry_point
@@ -3362,20 +3384,22 @@ load_exe Proc far
     cmp ax,'EP'
     jne load_exe_fail
 ;
+    int 3
     movzx ecx,cx
     sub edx,ecx
 ;
     FreeMem
     call CreateLib
-    SetModule
+    call CreateImage
 ;       
     xor ax,ax
     mov fs,ax
 ;
     mov al,32
     SetBitness
+    SetModule
 ;
-    call CreateImage
+    call FixupImage
     call InsertApp
     call InitStack
     call CreateSections
@@ -3717,7 +3741,7 @@ thread_init_start:
     retn thread_code_size
 thread_init_end:
 
-InitUserStack	Proc near
+InitUserStack   Proc near
     mov es,[ebp].st_ss
     mov edi,[ebp].st_esp
     sub edi,thread_code_size + 3 * 4
@@ -3762,7 +3786,7 @@ thread_exit_start:
     retn thread_code_size
 thread_exit_end:
 
-ExitUserStack	Proc near
+ExitUserStack   Proc near
     mov es,[ebp].st_ss
     mov edi,[ebp].st_esp
     sub edi,thread_code_size + 2 * 4
@@ -3809,7 +3833,7 @@ thread_user_back:
     retn thread_code_size
 thread_user_end:
 
-AddUserStack	Proc near
+AddUserStack    Proc near
     mov ax,flat_sel
     mov ds,ax
     mov gs,bx
@@ -3858,7 +3882,7 @@ AddUserStack	Proc near
 
 ausDone:
     ret
-AddUserStack	Endp
+AddUserStack    Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
