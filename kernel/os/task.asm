@@ -8106,7 +8106,7 @@ init_kernel_tss:
     mov es,ax
     mov es:[bx+4],dx
     mov es:[bx+2],cs
-    mov word ptr es:[bx],OFFSET terminate_thread
+    mov word ptr es:[bx],OFFSET do_terminate
     pop es
     mov dword ptr ds:p_rsp,stack0_size - 6
     mov es:p_stack_sel,0
@@ -8349,6 +8349,9 @@ create_thread32 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 terminate_thread_name   DB 'Terminate Thread',0
+
+do_terminate:
+    TerminateThread
 
 terminate_thread:
     push ebp
