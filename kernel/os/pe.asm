@@ -3698,11 +3698,37 @@ init_thread     Endp
 
 st_ebp = 0
 st_eip = 4
+st_ss = 16
 st_esp = 12
+
+thread_code_size  = 32
+
+thread_init_start:
+    pop edx
+    pop ebx
+    retn thread_code_size
+thread_init_end:
+
+thread_exit_start:
+    pop eax
+    mov [eax+4],ebx
+    mov [eax],edx
+    retn thread_code_size
+thread_exit_end:
+
+thread_user_start:
+    pop edx
+    pop ebx
+    pop eax
+    retn
+thread_user_back:
+    retn thread_code_size
+thread_user_end:
 
 start_thread    PROC far
     push ds
     push es
+    push gs
     pushad
 ;    
     GetThread
@@ -3720,6 +3746,25 @@ start_thread    PROC far
     call SendEvent
 
 start_thread_notify:    
+    mov es,[ebp].st_ss
+    mov edi,[ebp].st_esp
+    sub edi,thread_code_size + 3 * 4
+    mov [ebp].st_esp,edi
+    push edi
+;
+    add edi,2 * 4
+    mov eax,[ebp].st_eip
+    stosd
+;
+    mov [ebp].st_eip,edi
+;
+    mov eax,cs
+    mov ds,eax
+    mov eax,edi
+    mov esi,OFFSET thread_init_start
+    mov ecx,OFFSET thread_init_end - OFFSET thread_init_start
+    rep movsb
+;
     GetThread
     mov ds,ax
     mov dx,ds:p_prog_id
@@ -3733,29 +3778,58 @@ start_thread_dlls_loop:
     ModuleIdToSel
     jc start_thread_dlls_next
 ;    
-    int 3
     push ds
-    push es
-    pushad
+    push eax
+    push edx
 ;    
     mov ax,flat_sel
     mov ds,ax
-    mov es,bx
+    mov gs,bx
 ;    
-    mov ebx,es:lib_header
+    mov ebx,gs:lib_header
     mov eax,ds:[ebx].peh_entry_point
     or eax,eax
     jz start_thread_dlls_skip
 ;
-    add eax,es:mod_base
+    add eax,gs:mod_base
     push eax
-    movzx eax,es:lib_init_param
-    movzx ebx,es:mod_id
-    mov edx,2
-    CallPM32
+;
+    mov es,[ebp].st_ss
+    mov edi,[ebp].st_esp
+    sub edi,thread_code_size + 6 * 4
+    mov [ebp].st_esp,edi
+;
+    mov eax,2
+    stosd
+;
+    movzx eax,gs:mod_id
+    stosd
+;
+    movzx eax,gs:lib_init_param
+    stosd
+;
+    pop eax
+    stosd
+;
+    mov eax,edi
+    add eax,8
+    add eax,OFFSET thread_user_back - OFFSET thread_user_start
+    stosd
+;
+    mov eax,[ebp].st_eip
+    stosd
+;
+    mov [ebp].st_eip,edi
+;
+    mov eax,cs
+    mov ds,eax
+    mov eax,edi
+    mov esi,OFFSET thread_user_start
+    mov ecx,OFFSET thread_user_end - OFFSET thread_user_start
+    rep movsb
 
 start_thread_dlls_skip:
-    popad
+    pop edx
     pop es
     pop ds
 
@@ -3764,7 +3838,28 @@ start_thread_dlls_next:
     jmp start_thread_dlls_loop
 
 start_thread_done:
+    mov es,[ebp].st_ss
+    mov edi,[ebp].st_esp
+    sub edi,thread_code_size + 2 * 4
+    mov [ebp].st_esp,edi
+;
+    pop eax
+    stosd
+;
+    mov eax,[ebp].st_eip
+    stosd
+;
+    mov [ebp].st_eip,edi
+;
+    mov eax,cs
+    mov ds,eax
+    mov eax,edi
+    mov esi,OFFSET thread_exit_start
+    mov ecx,OFFSET thread_exit_end - OFFSET thread_exit_start
+    rep movsb
+;
     popad
+    pop gs
     pop es
     pop ds
     ret
