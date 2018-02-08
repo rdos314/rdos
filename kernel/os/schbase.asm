@@ -3883,8 +3883,8 @@ spWait:
     mov es,ax
     mov ax,es:p_id
 ;
-    mov ax,gs:pr_debug_sel
-    or ax,ax
+    mov dx,gs:pr_debug_sel
+    or dx,dx
     jz spLibOk
 ;
     mov es,gs:pr_app_sel
