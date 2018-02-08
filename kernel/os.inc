@@ -1559,8 +1559,8 @@ CreateAppThread MACRO
 ;        +0              EBP
 ;        +4              EIP
 ;        +12             ESP 
-TerminateAppThreadUser MACRO
-    OsGate terminate_app_thread_user_nr
+TerminateAppThread MACRO
+    OsGate terminate_app_thread_nr
                     ENDM
 
 ;;;;;;;;;;; Crash handler ;;;;;;;;;;;;;;;;

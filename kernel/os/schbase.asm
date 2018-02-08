@@ -80,6 +80,7 @@ debug_event_wait_header ENDS
 
 data    SEGMENT byte public 'DATA'
 
+term_gate_sel       DW ?
 state_hooks         DW ?
 loader_count        DW ?
 state_arr           DD 2*32 DUP(?)
@@ -984,7 +985,27 @@ create_app_thread       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           TerminateAppThreadUser
+;           NAME:           TerminateAppThreadKernel
+;
+;           DESCRIPTION:    Terminate application thread, callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+terminate_app_thread_kernel:
+    int 3
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    mov es,es:app_loader
+    call fword ptr es:loader_free_thread_kernel_proc
+;
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TerminateAppThread
 ;
 ;           DESCRIPTION:    Terminate application thread with user stack
 ;
@@ -995,17 +1016,35 @@ create_app_thread       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-terminate_app_thread_user_name  DB 'Terminate App Thread User', 0
+terminate_app_thread_name  DB 'Terminate App Thread', 0
 
-terminate_app_thread_user    Proc far
+terminate_app_thread    Proc far
     int 3
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov es,[ebp+16]
+    mov edi,[ebp+12]
+    sub edi,16
+    mov [ebp+12],edi
+    mov [ebp+4],edi
+;
+    mov al,9Ah
+    stosb
+;
+    xor eax,eax
+    stosd
+;
+    mov ax,ds:term_gate_sel
+    stosw
+;
     GetThread
     mov es,ax
     mov es,es:p_app_sel
     mov es,es:app_loader
     call fword ptr es:loader_free_thread_user_proc
     ret
-terminate_app_thread_user    Endp
+terminate_app_thread    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5245,6 +5284,15 @@ InitScheduler_    Proc near
     mov es:state_hooks,0
     mov es:loader_count,0
 ;
+    AllocateGdt
+    or bl,3
+    mov eax,cs
+    mov ds,eax
+    mov esi,OFFSET terminate_app_thread_kernel
+    xor cl,cl
+    CreateCallGateSelector32
+    mov es:term_gate_sel,bx
+;
     mov ecx,32
     mov edi,OFFSET state_arr
     
@@ -5320,10 +5368,10 @@ init_state_hooks:
     mov ax,create_app_thread_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET terminate_app_thread_user
-    mov edi,OFFSET terminate_app_thread_user_name
+    mov esi,OFFSET terminate_app_thread
+    mov edi,OFFSET terminate_app_thread_name
     xor cl,cl
-    mov ax,terminate_app_thread_user_nr
+    mov ax,terminate_app_thread_nr
     RegisterOsGate
 ;
     mov esi,OFFSET app_notify_create

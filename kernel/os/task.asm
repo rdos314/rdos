@@ -8362,7 +8362,7 @@ terminate_thread:
     jz terminate_thread_not_user
 ;
     int 3
-    TerminateAppThreadUser
+    TerminateAppThread
     pop ebp
     retf32
 
