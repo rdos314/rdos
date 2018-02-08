@@ -730,5 +730,6 @@ find_module_by_name_nr      = 635
 get_module_by_index_nr      = 636
 
 create_app_thread_nr        = 637
+terminate_app_thread_user_nr = 638
 
 osgate_entries              = 650

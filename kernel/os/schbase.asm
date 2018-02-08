@@ -982,6 +982,27 @@ catFlat:
 create_app_thread       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TerminateAppThreadUser
+;
+;           DESCRIPTION:    Terminate application thread with user stack
+;
+;           PARAMETERS:     EBP         Thread stack 
+;                             +0        EBP
+;                             +4        EIP
+;                             +12       ESP 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+terminate_app_thread_user_name  DB 'Terminate App Thread User', 0
+
+terminate_app_thread_user    Proc far
+    int 3
+    ret
+terminate_app_thread_user    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           GetThreadActionState
@@ -5292,6 +5313,12 @@ init_state_hooks:
     mov edi,OFFSET create_app_thread_name
     xor cl,cl
     mov ax,create_app_thread_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET terminate_app_thread_user
+    mov edi,OFFSET terminate_app_thread_user_name
+    xor cl,cl
+    mov ax,terminate_app_thread_user_nr
     RegisterOsGate
 ;
     mov esi,OFFSET app_notify_create

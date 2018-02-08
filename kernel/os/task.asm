@@ -8359,11 +8359,14 @@ terminate_thread:
 ;
     mov ax,[ebp+8]
     test al,3
-    jz terminate_thread_kernel
+    jz terminate_thread_not_user
 ;
     int 3
+    TerminateAppThreadUser
+    pop ebp
+    retf32
 
-terminate_thread_kernel:
+terminate_thread_not_user:
     GetThread
     mov ds,ax
     mov al,ds:p_parent_switch

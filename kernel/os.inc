@@ -1555,6 +1555,13 @@ ForkProcess    MACRO
 CreateAppThread MACRO
     OsGate create_app_thread_nr
                     ENDM
+; IN  EBP                Thread stack
+;        +0              EBP
+;        +4              EIP
+;        +12             ESP 
+TerminateAppThreadUser MACRO
+    OsGate terminate_app_thread_user_nr
+                    ENDM
 
 ;;;;;;;;;;; Crash handler ;;;;;;;;;;;;;;;;
 
