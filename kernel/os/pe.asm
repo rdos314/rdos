@@ -3798,6 +3798,7 @@ ftuDllsLoop:
     ModuleIdToSel
     jc ftuDllsNext
 ;    
+    int 3
     push ds
     push es
     pushad
