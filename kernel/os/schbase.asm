@@ -993,7 +993,6 @@ create_app_thread       Endp
 
 
 terminate_app_thread_kernel:
-    int 3
     GetThread
     mov es,ax
     mov es,es:p_app_sel
@@ -1019,7 +1018,6 @@ terminate_app_thread_kernel:
 terminate_app_thread_name  DB 'Terminate App Thread', 0
 
 terminate_app_thread    Proc far
-    int 3
     mov ax,SEG data
     mov ds,ax
 ;

@@ -8361,7 +8361,6 @@ terminate_thread:
     test al,3
     jz terminate_thread_not_user
 ;
-    int 3
     TerminateAppThread
     pop ebp
     retf32
