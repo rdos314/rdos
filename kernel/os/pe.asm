@@ -2431,32 +2431,45 @@ StartImportedDlls       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fixup_dll       PROC far
-    push ds
-    push es
-    pushad
-;
     mov es,bx
-;
     call FixupImage
 ;
     mov es:lib_debug_lib,dx
     mov ecx,es:mod_size
     call LoadImportedDlls
+    ret
+fixup_dll	Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;
+;           NAME:           run_dll
+;
+;           DESCRIPTION:    Run dll
+;
+;           PARAMETERS:     BX		Module sel
+;                           EBP         Stack frame
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+run_dll  Proc far
+    mov es,bx
+    mov dx,es:lib_debug_lib
     or dx,dx
-    jz fixup_dll_nodeb
+    jz run_dll_nodeb
 ;
     mov ax,es
     mov ds,ax
     call LoadDllEvent
     call SendEvent
 
-fixup_dll_nodeb:
-    popad
-    pop es
-    pop ds
+run_dll_nodeb:
+    call InitUserStack
+;
+    mov edx,1
+    call AddUserStack
     ret
-fixup_dll	Endp
+run_dll  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5483,59 +5496,6 @@ get_current_dll     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           load_dll
-;
-;           DESCRIPTION:    Load DLL
-;
-;       PARAMETERS:         ES:EDI  name of dll to load
-;
-;           RETURNS:        BX      Lib sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-load_dll    Proc far
-    push ds
-    push es
-    push fs
-    push gs
-    push eax
-    push ecx
-    push edx
-    push esi
-    push edi
-;
-    mov al,es:[edi]
-    mov esi,edi
-    mov bx,word ptr fs:pvModuleHandle
-    ModuleIdToSel
-    jc load_dll_pr_done
-;
-    mov di,fs
-    mov ax,es
-    mov fs,ax
-    mov es,bx
-    mov es:lib_fs,di
-    mov ax,flat_data_sel
-    mov ds,ax
-    call LoadPeDll
-    mov bx,es
-
-load_dll_pr_done:       
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop eax
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    ret
-load_dll    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           free_dll
 ;
 ;           DESCRIPTION:    Free DLL
@@ -6182,7 +6142,7 @@ l14 DD OFFSET debug_allocate_mem,         SEG code
 l15 DD OFFSET debug_free_mem,             SEG code
 l16 DD OFFSET init_module,                SEG code
 l17 DD OFFSET fixup_dll,                  SEG code
-l18 DD OFFSET load_dll,                   SEG code
+l18 DD OFFSET run_dll,                    SEG code
 l19 DD OFFSET free_dll,                   SEG code
 l20 DD OFFSET get_current_dll,            SEG code
 l21 DD OFFSET get_module_proc,            SEG code

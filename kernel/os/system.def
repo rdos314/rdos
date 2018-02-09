@@ -341,9 +341,9 @@ loader_init_dll_proc           DD ?,?
 ; IN  DX                  Debug sel
 loader_fixup_dll_proc          DD ?,?
 
-; IN  ES:(E)DI            DLL name
-; OUT BX                  Module sel
-loader_load_dll_proc           DD ?,?
+; IN  BX                  Module sel
+; IN  EBP                 Stack frame
+loader_run_dll_proc            DD ?,?
 
 ; IN  BX                  Module sel
 loader_free_dll_proc           DD ?,?

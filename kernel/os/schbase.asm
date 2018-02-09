@@ -2284,7 +2284,13 @@ load_dll32  Proc far
     mov es:mod_id,bx
 ;
     mov ebx,es
+    push ebx
     call fword ptr gs:loader_fixup_dll_proc
+    pop ebx
+;
+    push ebx
+    call fword ptr gs:loader_run_dll_proc
+    pop ebx
 ;
     mov es,bx
     movzx ebx,es:mod_id
