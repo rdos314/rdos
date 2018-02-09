@@ -2248,7 +2248,6 @@ load_dll32  Proc far
     push fs
     push gs
 ;    
-    int 3
     mov eax,es
     mov ds,eax
     mov esi,edi
@@ -2256,8 +2255,8 @@ load_dll32  Proc far
     jc ldlluFail32
 ;
     GetThread
-    mov gs,ax
-    mov gs,gs:p_app_sel
+    mov es,ax
+    mov gs,es:p_app_sel
     mov ax,gs:app_loader
     or ax,ax
     mov gs,ax
@@ -2266,8 +2265,27 @@ load_dll32  Proc far
     call fword ptr gs:loader_init_dll_proc
     jc ldlluFail32
 ;
-
-
+    int 3
+    push ebx
+    movzx ebx,es:p_prog_id
+    call GetProcessSel
+    mov es,ax
+    mov dx,es:pr_debug_sel
+    pop ebx
+    mov es,bx
+;
+    movzx ebx,bx
+    call ModuleLoaded
+;
+    mov ebx,eax
+    call AddProgramModule
+;
+    InitSection es:mod_section
+    mov es:mod_id,bx
+;
+    mov ebx,es
+    call fword ptr gs:loader_fixup_dll_proc
+;
     mov es,bx
     movzx ebx,es:mod_id
     mov [ebp].load_ebx,ebx
@@ -3859,16 +3877,14 @@ spCopyExeLoop:
     mov ebx,eax
     call AddProgramModule
 ;
-    mov dx,es
-    mov ds,dx
-    InitSection ds:mod_section
+    InitSection es:mod_section
     mov es:mod_id,bx
 ;    
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
     mov ds:app_mod_id,bx
-    mov ds:app_mod_sel,dx
+    mov ds:app_mod_sel,es
     mov al,ds:app_key
     mov es:mod_key,al
 ;
@@ -4276,16 +4292,14 @@ lpCpExeLoop:
     mov ebx,eax
     call AddProgramModule
 ;
-    mov dx,es
-    mov ds,dx
-    InitSection ds:mod_section
+    InitSection es:mod_section
     mov es:mod_id,bx
 ;    
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
     mov ds:app_mod_id,bx
-    mov ds:app_mod_sel,dx
+    mov ds:app_mod_sel,es
     mov al,ds:app_key
     mov es:mod_key,al
 ;

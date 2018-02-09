@@ -2417,6 +2417,47 @@ start_import_dlls_done:
     ret
 StartImportedDlls       Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           fixup_dll
+;
+;           DESCRIPTION:    Fixup DLL
+;
+;           PARAMETERS:     BX          Module sel
+;                           DX          Debug sel
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fixup_dll       PROC far
+    push ds
+    push es
+    pushad
+;
+    mov es,bx
+;
+    call FixupImage
+;
+    mov es:lib_debug_lib,dx
+    mov ecx,es:mod_size
+    call LoadImportedDlls
+;
+    or dx,dx
+    jz fixup_dll_nodeb
+;
+    mov ax,es
+    mov ds,ax
+    call LoadDllEvent
+    call SendEvent
+
+fixup_dll_nodeb:
+    popad
+    pop es
+    pop ds
+    ret
+fixup_dll	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -6140,19 +6181,20 @@ l13 DD OFFSET free_mem,                   SEG code
 l14 DD OFFSET debug_allocate_mem,         SEG code
 l15 DD OFFSET debug_free_mem,             SEG code
 l16 DD OFFSET init_module,                SEG code
-l17 DD OFFSET load_dll,                   SEG code
-l18 DD OFFSET free_dll,                   SEG code
-l19 DD OFFSET get_current_dll,            SEG code
-l20 DD OFFSET get_module_proc,            SEG code
-l21 DD OFFSET get_resource,               SEG code
-l22 DD OFFSET get_module_name,            SEG code
-l23 DD OFFSET start_wait_for_debug_event, SEG code
-l24 DD OFFSET stop_wait_for_debug_event,  SEG code
-l25 DD OFFSET is_debug_event_idle,        SEG code
-l26 DD OFFSET get_debug_event,            SEG code
-l27 DD OFFSET get_debug_event_data,       SEG code
-l28 DD OFFSET clear_debug_event,          SEG code
-l29 DD OFFSET continue_debug_event,       SEG code
+l17 DD OFFSET fixup_dll,                  SEG code
+l18 DD OFFSET load_dll,                   SEG code
+l19 DD OFFSET free_dll,                   SEG code
+l20 DD OFFSET get_current_dll,            SEG code
+l21 DD OFFSET get_module_proc,            SEG code
+l22 DD OFFSET get_resource,               SEG code
+l23 DD OFFSET get_module_name,            SEG code
+l24 DD OFFSET start_wait_for_debug_event, SEG code
+l25 DD OFFSET stop_wait_for_debug_event,  SEG code
+l26 DD OFFSET is_debug_event_idle,        SEG code
+l27 DD OFFSET get_debug_event,            SEG code
+l28 DD OFFSET get_debug_event_data,       SEG code
+l29 DD OFFSET clear_debug_event,          SEG code
+l30 DD OFFSET continue_debug_event,       SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc

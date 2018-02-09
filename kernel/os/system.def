@@ -337,6 +337,10 @@ loader_debug_free_mem_proc     DD ?,?
 ; OUT BX                  Module sel
 loader_init_dll_proc           DD ?,?
 
+; IN  BX                  Module sel
+; IN  DX                  Debug sel
+loader_fixup_dll_proc          DD ?,?
+
 ; IN  ES:(E)DI            DLL name
 ; OUT BX                  Module sel
 loader_load_dll_proc           DD ?,?
