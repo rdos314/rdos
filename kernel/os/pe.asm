@@ -3336,7 +3336,8 @@ is_valid_exe Endp
 ;
 ;           DESCRIPTION:    Init module
 ;
-;           PARAMETERS:     BX      C file handle
+;           PARAMETERS:     FS:ESI      Image name
+;                           BX      C file handle
 ;
 ;           RETURNS:        BX      Module selector
 ;                           AL      Bitness

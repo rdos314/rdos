@@ -2222,7 +2222,6 @@ get_module_focus_key  Endp
 load_dll_name   DB 'Load Dll',0
 
 load_dll32  Proc far
-    int 3
     mov ax,[esp+4]
     cmp ax,flat_code_sel
     jne load_dll_kernel32
@@ -2249,17 +2248,26 @@ load_dll32  Proc far
     push fs
     push gs
 ;    
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_loader
-    or ax,ax
-    mov ds,ax
-    jz ldlluFail32
-;
-    call fword ptr ds:loader_load_dll_proc
+    int 3
+    mov eax,es
+    mov ds,eax
+    mov esi,edi
+    call OpenModuleFile
     jc ldlluFail32
 ;
+    GetThread
+    mov gs,ax
+    mov gs,gs:p_app_sel
+    mov ax,gs:app_loader
+    or ax,ax
+    mov gs,ax
+    jz ldlluFail32
+;
+    call fword ptr gs:loader_init_dll_proc
+    jc ldlluFail32
+;
+
+
     mov es,bx
     movzx ebx,es:mod_id
     mov [ebp].load_ebx,ebx
@@ -3093,41 +3101,152 @@ register_loader   PROC far
     ret
 register_loader   ENDP
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           OpenProgramFile
+;           NAME:           OpenModuleFile
 ;
-;       DESCRIPTION:    Open program file
+;           DESCRIPTION:    Open module file
 ;
-;       PARAMETERS:     DS:ESI  File name
+;           PARAMETERS:     DS:ESI  File name
 ;
-;       RETURNS:        BX      File handle
-;
+;           RETURNS:        BX          C File handle
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-OpenProgramFile Proc near    
+PathName        DB 'PATH',0
+
+OpenModuleFile Proc near       
+    push ds
     push es
     push eax
     push ecx
+    push esi
     push edi
 ;
     mov eax,ds
     mov es,eax
     mov edi,esi
+;
     mov cx,O_RDONLY OR O_BINARY
     OpenKernelFile
-    jnc opfDone
+    jnc omfDone
 ;
-    int 3
+    LockProcEnv
+    mov ds,bx
+    mov ebx,esi
+    xor esi,esi
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET PathName
 
-opfDone:
+omfFindLoop:
+    cmpsb
+    jnz omfFindNext
+;
+    mov al,es:[edi]
+    or al,al
+    jnz omfFindLoop
+;
+    mov al,[esi]
+    cmp al,'='
+    je omfFindFound
+
+omfFindNext:
+    lodsb
+    or al,al
+    jnz omfFindNext
+;
+    mov al,[esi]
+    or al,al
+    mov edi,OFFSET PathName
+    jne omfFindLoop
+    jmp omfFailed
+
+omfFindFound:
+    mov eax,200h
+    AllocateSmallGlobalMem
+;
+    xor edi,edi
+    inc esi
+
+omfMoveLoop:
+    lodsb
+    or al,al
+    jz omfMoveOk
+;
+    cmp al,';'
+    je omfMoveOk
+;
+    stosb
+    jmp omfMoveLoop 
+
+omfMoveOk:
+    or edi,edi
+    jz omfAddFile
+;    
+    mov al,es:[edi-1]
+    cmp al,'\'
+    je omfAddFile
+;
+    cmp al,'/'
+    je omfAddFile
+;
+    cmp al,':'
+    je omfAddFile
+;
+    mov al,'\'
+    stosb
+    
+omfAddFile:    
+    push ebx
+
+omfNameLoop:
+    mov al,fs:[ebx]
+    inc ebx
+    stosb
+    or al,al
+    jnz omfNameLoop
+;
+    pop ebx
+;
+    push bx
+    xor edi,edi
+    mov cx,O_RDONLY OR O_BINARY
+    OpenKernelFile
+    jnc omfFileOk
+;
+    pop bx
+    mov al,[esi-1]
+    or al,al
+    jnz omfMoveLoop
+;
+    FreeMem
+
+omfFailed:
+    stc
+    jmp omfUnlock
+
+omfFileOk:
+    add esp,2
+    FreeMem
+    clc
+    
+omfUnlock:
+    pushf
+    UnlockProcEnv
+    popf
+
+omfDone:
     pop edi
+    pop esi
     pop ecx
     pop eax
     pop es
+    pop ds
     ret
-OpenProgramFile Endp
+OpenModuleFile Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3830,7 +3949,7 @@ spawn_program   Proc near
     push esi
     push edi
 ;
-    call OpenProgramFile
+    call OpenModuleFile
     jc spDone
 ;
     call GetProgramLoader
@@ -4001,7 +4120,7 @@ load_program   Proc near
     push esi
     push edi
 ;
-    call OpenProgramFile
+    call OpenModuleFile
     jc lpFail
 ;
     call GetProgramLoader
@@ -5145,7 +5264,7 @@ run_process     PROC near
 ;
     mov esi,edx
     add esi,SIZE rdos_header
-    call OpenProgramFile
+    call OpenModuleFile
     jc rpFail
 ;
     call GetProgramLoader
