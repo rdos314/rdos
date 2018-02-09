@@ -1033,24 +1033,27 @@ terminate_app_thread_kernel:
 ;
 ;           DESCRIPTION:    Terminate application thread with user stack
 ;
-;           PARAMETERS:     EBP         Thread stack 
-;                             +0        EBP
-;                             +4        EIP
-;                             +12       ESP 
+;           PARAMETERS:     EBP         Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 terminate_app_thread_name  DB 'Terminate App Thread', 0
 
-terminate_app_thread    Proc far
+terminate_app_thread:
+    add esp,8
+    push ds
+    push es
+    push fs
+    push gs
+;
     mov ax,SEG data
     mov ds,ax
 ;
-    mov es,[ebp+16]
-    mov edi,[ebp+12]
+    mov es,[ebp].load_ss
+    mov edi,[ebp].load_esp
     sub edi,16
-    mov [ebp+12],edi
-    mov [ebp+4],edi
+    mov [ebp].load_esp,edi
+    mov [ebp].load_eip,edi
 ;
     mov al,9Ah
     stosb
@@ -1066,8 +1069,20 @@ terminate_app_thread    Proc far
     mov es,es:p_app_sel
     mov es,es:app_loader
     call fword ptr es:loader_free_thread_user_proc
-    ret
-terminate_app_thread    Endp
+;
+    pop gs
+    pop fs
+    pop es
+    pop ds
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

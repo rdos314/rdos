@@ -3980,15 +3980,11 @@ start_thread    Endp
 ;
 ;           DESCRIPTION:    Free thread, user callback part
 ;
-;           PARAMETERS:     EBP                Thread stack
-;                             +0               EBP
-;                             +4               EIP
-;                             +12              ESP 
+;           PARAMETERS:     EBP                Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_thread_user     Proc far
-    int 3
     GetThread
     mov ds,ax
     mov dx,ds:p_prog_id
@@ -4002,6 +3998,7 @@ ftuDllsLoop:
     ModuleIdToSel
     jc ftuDllsNext
 ;    
+    int 3
     push eax
     push edx
 ;

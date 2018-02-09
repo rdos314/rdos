@@ -8354,25 +8354,27 @@ do_terminate:
     TerminateThread
 
 terminate_thread:
+    mov ax,[esp+4]
+    cmp ax,flat_code_sel
+    jne terminate_thread_not_user
+;
+    push eax
+    pushfd
+    pop eax
+    mov [esp+8],eax
+    mov eax,[esp+4]
+    xchg eax,[esp]
+    mov dword ptr [esp+4],flat_code_sel
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
     push ebp
     mov ebp,esp
-    push ds
-    push es
-    push fs
-    push gs
-;
-    mov ax,[ebp+8]
-    test al,3
-    jz terminate_thread_not_user
-;
+    add ebp,28
     TerminateAppThread
-;
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    pop ebp
-    retf32
 
 terminate_thread_not_user:
     GetThread
