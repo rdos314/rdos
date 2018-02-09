@@ -150,6 +150,7 @@ lib_spinlock        spinlock_typ <>
 lib_suppress        DW ?
 lib_curr_event      DW ?
 lib_local_handle    DW ?
+lib_org_eip         DD ?
 lib_run_now                     DW ?
 lib_init_param          DW ?
 lib_fs              DW ?

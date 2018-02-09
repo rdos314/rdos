@@ -1062,7 +1062,7 @@ CreateProcessEvent Proc near
     mov eax,fs:pvBase
     mov es:[di].cpeFsLinear,eax
     mov es:[di].cpeStartCs,flat_code_sel
-    mov eax,[ebp].load_eip
+    mov eax,ds:lib_org_eip
     mov es:[di].cpeStartEip,eax
 ;
     pop di
@@ -3508,10 +3508,12 @@ fixup_exe Proc far
     or dx,dx
     jz feNoDebug
 ;
+    mov esi,[ebp].load_eip
+    mov es:lib_org_eip,esi
+;
     push es
     mov ax,flat_data_sel
     mov es,ax
-    mov esi,[ebp].load_eip
     mov esi,es:[esi-4]
     mov [ebp].load_eip,esi
     pop es
