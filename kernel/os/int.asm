@@ -944,7 +944,9 @@ save_context    PROC far
     mov bx,ds:p_int_locked_stack
     or bx,bx
     jnz save_context_start
+;
     call allocate_switch_stack
+
 save_context_start:
     mov cx,stack0_size
     sub cx,sp
@@ -978,7 +980,7 @@ save_context_start:
     push dword ptr 0
     push dword ptr 0
     push dword ptr 0
-    mov bp,sp
+    movzx ebp,sp
     push ds
     push ax
     GetThread

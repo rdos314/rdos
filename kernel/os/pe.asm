@@ -1016,7 +1016,7 @@ ExceptionEvent Endp
 ;
 ;           PARAMETERS:     DS          Lib
 ;                           FS          TIB
-;                           BP          Startup info
+;                           EBP         Stack frame
 ;
 ;           RETURNS:        ES          Event
 ;
@@ -1062,7 +1062,7 @@ CreateProcessEvent Proc near
     mov eax,fs:pvBase
     mov es:[di].cpeFsLinear,eax
     mov es:[di].cpeStartCs,flat_code_sel
-    mov eax,[bp].load_eip
+    mov eax,[ebp].load_eip
     mov es:[di].cpeStartEip,eax
 ;
     pop di
@@ -3087,6 +3087,7 @@ Preload Endp
 ;           DESCRIPTION:    Init stack and TIB
 ;
 ;           PARAMETERS:     ES      Lib handle
+;                           EBP     Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3111,7 +3112,7 @@ InitStack       Proc near
     or bx,7
     mov ecx,eax     
     CreateDataSelector32
-    mov [bp].load_fs,bx
+    mov [ebp].load_fs,bx
     mov es:lib_fs,bx
     mov fs,bx
     pop bx
@@ -3119,12 +3120,12 @@ InitStack       Proc near
     sub edx,ebx
     mov fs:pvBase,edx
 ;
-    mov dword ptr [bp].load_ss,flat_data_sel
+    mov dword ptr [ebp].load_ss,flat_data_sel
     mov esi,es:lib_header
     mov eax,[esi].peh_stack_reserve_size
     AllocateLocalLinear
     sub edx,ebx
-    mov [bp].load_ebx,edx
+    mov [ebp].load_ebx,edx
     mov fs:pvFirstExcept,-1
     mov fs:pvStackUserBottom,edx
     mov fs:pvStackUserSize,eax
@@ -3139,9 +3140,9 @@ InitStack       Proc near
     mov fs:pvThreadHandle,eax
     mov fs:pvProcessHandle,eax
     mov [edx+24h],eax
-    mov [bp].load_ebp,edx
+    mov [ebp].load_ebp,edx
     sub edx,10h
-    mov [bp].load_ecx,edx
+    mov [ebp].load_ecx,edx
     sub edx,100h
     mov fs:pvTLSArray,edx
 ;
@@ -3217,7 +3218,7 @@ init_stack_no_tls:
     mov [edx],eax                       ; return address
     sub edx,4
     mov [edx],edx
-    mov [bp].load_esp,edx
+    mov [ebp].load_esp,edx
 ;
     pop esi
     pop edx
@@ -3236,6 +3237,7 @@ InitStack       Endp
 ;           DESCRIPTION:    Setup registers to run image
 ;
 ;           PARAMETERS:     ES          Lib handle
+;                           EBP         Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3245,19 +3247,19 @@ RunImage    Proc near
     push edx
 ;
     mov edi,es:mod_base
-    mov dword ptr [bp].load_cs,flat_code_sel
+    mov dword ptr [ebp].load_cs,flat_code_sel
     mov eax,es:lib_header
     mov eax,[eax].peh_entry_point
     add eax,edi
-    mov [bp].load_eip,eax
-    mov [bp].load_eax,eax
-    mov dword ptr [bp].load_edi,0
-    mov word ptr [bp+2].load_eflags,0
+    mov [ebp].load_eip,eax
+    mov [ebp].load_eax,eax
+    mov dword ptr [ebp].load_edi,0
+    mov word ptr [ebp+2].load_eflags,0
     mov ax,7202h
     SetFlags
-    mov [bp].load_eflags,ax
-    mov dword ptr [bp].load_ds,flat_data_sel
-    mov dword ptr [bp].load_es,flat_data_sel
+    mov [ebp].load_eflags,ax
+    mov dword ptr [ebp].load_ds,flat_data_sel
+    mov dword ptr [ebp].load_es,flat_data_sel
 ;
     pop edx
     pop ebx
@@ -3417,6 +3419,7 @@ init_module  Endp
 ;           DESCRIPTION:    Fixup exe
 ;
 ;           PARAMETERS:     BX      Module sel
+;                           EBP     Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3547,6 +3550,7 @@ setup_names Endp
 ;       DESCRIPTION:    Setup debug
 ;
 ;       PARAMETERS:     DX     Debug lib
+;                       EBP    Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3562,7 +3566,7 @@ setup_debug      Proc far
     mov es,ds:app_mod_sel
     mov ax,flat_data_sel
     mov ds,ax
-    mov fs,[bp].load_fs
+    mov fs,[ebp].load_fs
 ;
     mov es:lib_debug_lib,dx
     mov es:lib_suppress,1
@@ -3586,9 +3590,9 @@ setup_debug      Proc far
     push es
     mov ax,flat_data_sel
     mov es,ax
-    mov esi,[bp].load_eip
+    mov esi,[ebp].load_eip
     mov esi,es:[esi-4]
-    mov [bp].load_eip,esi
+    mov [ebp].load_eip,esi
     pop es
     ret
 setup_debug      Endp
