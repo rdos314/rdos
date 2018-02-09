@@ -2431,6 +2431,8 @@ StartImportedDlls       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fixup_dll       PROC far
+    mov ax,flat_data_sel
+    mov ds,eax
     mov es,bx
     call FixupImage
 ;
@@ -3831,13 +3833,14 @@ thread_init_start:
     pop ecx
     pop ebx
     pop eax
+    popfd
     retn thread_code_size
 thread_init_end:
 
 InitUserStack   Proc near
     mov es,[ebp].load_ss
     mov edi,[ebp].load_esp
-    sub edi,thread_code_size + 7 * 4
+    sub edi,thread_code_size + 8 * 4
     mov [ebp].load_esp,edi
 ;
     mov eax,[ebp].load_edi
@@ -3856,6 +3859,9 @@ InitUserStack   Proc near
     stosd
 ;
     mov eax,[ebp].load_eax
+    stosd
+;
+    mov eax,[ebp].load_eflags
     stosd
 ;
     mov eax,[ebp].load_eip

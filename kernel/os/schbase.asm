@@ -2265,7 +2265,6 @@ load_dll32  Proc far
     call fword ptr gs:loader_init_dll_proc
     jc ldlluFail32
 ;
-    int 3
     push ebx
     movzx ebx,es:p_prog_id
     call GetProcessSel
@@ -2282,20 +2281,15 @@ load_dll32  Proc far
 ;
     InitSection es:mod_section
     mov es:mod_id,bx
-;
+    mov [ebp].load_ebx,ebx
+    and byte ptr [ebp].load_eflags,NOT 1
     mov ebx,es
+;
     push ebx
     call fword ptr gs:loader_fixup_dll_proc
     pop ebx
 ;
-    push ebx
     call fword ptr gs:loader_run_dll_proc
-    pop ebx
-;
-    mov es,bx
-    movzx ebx,es:mod_id
-    mov [ebp].load_ebx,ebx
-    and byte ptr [ebp].load_eflags,NOT 1
     jmp ldlluDone32
 
 ldlluFail32:
