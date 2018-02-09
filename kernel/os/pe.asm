@@ -3759,20 +3759,6 @@ init_thread     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           User stack positions
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-st_ebp = 0
-st_eip = 4
-st_ss = 16
-st_esp = 12
-
-thread_code_size  = 32
-                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           InitUserStack
 ;
 ;           DESCRIPTION:    Setup register restore
@@ -3780,6 +3766,8 @@ thread_code_size  = 32
 ;           PARAMETERS:     EBP                Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+thread_code_size  = 32
 
 thread_init_start:
     pop edi
@@ -3838,10 +3826,7 @@ InitUserStack  Endp
 ;
 ;           PARAMETERS:     BX                 Dll ID
 ;                           EDX                DLL code
-;                           EBP                New thread stack
-;                             +0               EBP
-;                             +4               EIP
-;                             +12              ESP 
+;                           EBP                Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
