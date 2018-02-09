@@ -3724,7 +3724,7 @@ spCopyExeLoop:
 ;
     push gs
     mov gs,gs:pr_loader
-    call fword ptr gs:loader_init_module_proc
+    call fword ptr gs:loader_init_exe_proc
     pop gs
     jc spCloseFail
 ;
@@ -4141,7 +4141,7 @@ lpCpExeLoop:
 ;
     push gs
     mov gs,gs:pr_loader
-    call fword ptr gs:loader_init_module_proc
+    call fword ptr gs:loader_init_exe_proc
     pop gs
     jc lpLoadFail
 ;

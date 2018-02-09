@@ -281,7 +281,7 @@ loader_is_valid_exe_proc       DD ?,?
 
 ; IN   BX                 C file handle
 ; OUT  BX                 Module selector
-loader_init_module_proc        DD ?,?
+loader_init_exe_proc           DD ?,?
 
 ; IN   BX                 Module selector
 ; IN   EBP                Stack frame
@@ -329,6 +329,10 @@ loader_debug_allocate_mem_proc DD ?,?
 
 ; IN  (E)DX               Address
 loader_debug_free_mem_proc     DD ?,?
+
+; IN  BX                  C file handle
+; OUT BX                  Module sel
+loader_init_dll_proc           DD ?,?
 
 ; IN  ES:(E)DI            DLL name
 ; OUT BX                  Module sel

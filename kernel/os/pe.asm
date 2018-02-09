@@ -6138,19 +6138,20 @@ l12 DD OFFSET allocate_mem,               SEG code
 l13 DD OFFSET free_mem,                   SEG code
 l14 DD OFFSET debug_allocate_mem,         SEG code
 l15 DD OFFSET debug_free_mem,             SEG code
-l16 DD OFFSET load_dll,                   SEG code
-l17 DD OFFSET free_dll,                   SEG code
-l18 DD OFFSET get_current_dll,            SEG code
-l19 DD OFFSET get_module_proc,            SEG code
-l20 DD OFFSET get_resource,               SEG code
-l21 DD OFFSET get_module_name,            SEG code
-l22 DD OFFSET start_wait_for_debug_event, SEG code
-l23 DD OFFSET stop_wait_for_debug_event,  SEG code
-l24 DD OFFSET is_debug_event_idle,        SEG code
-l25 DD OFFSET get_debug_event,            SEG code
-l26 DD OFFSET get_debug_event_data,       SEG code
-l27 DD OFFSET clear_debug_event,          SEG code
-l28 DD OFFSET continue_debug_event,       SEG code
+l16 DD OFFSET init_module,                SEG code
+l17 DD OFFSET load_dll,                   SEG code
+l18 DD OFFSET free_dll,                   SEG code
+l19 DD OFFSET get_current_dll,            SEG code
+l20 DD OFFSET get_module_proc,            SEG code
+l21 DD OFFSET get_resource,               SEG code
+l22 DD OFFSET get_module_name,            SEG code
+l23 DD OFFSET start_wait_for_debug_event, SEG code
+l24 DD OFFSET stop_wait_for_debug_event,  SEG code
+l25 DD OFFSET is_debug_event_idle,        SEG code
+l26 DD OFFSET get_debug_event,            SEG code
+l27 DD OFFSET get_debug_event_data,       SEG code
+l28 DD OFFSET clear_debug_event,          SEG code
+l29 DD OFFSET continue_debug_event,       SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc
