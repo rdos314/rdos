@@ -2222,63 +2222,75 @@ get_module_focus_key  Endp
 load_dll_name   DB 'Load Dll',0
 
 load_dll32  Proc far
+    int 3
+    mov ax,[esp+4]
+    cmp ax,flat_code_sel
+    jne load_dll_kernel32
+;
+    push eax
+    pushfd
+    pop eax
+    mov [esp+8],eax
+    mov eax,[esp+4]
+    xchg eax,[esp]
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    mov ebp,esp
+    add ebp,28
+    mov dword ptr [ebp].load_cs,flat_code_sel
+;
     push ds
-    push eax
+    push es
+    push fs
+    push gs
 ;    
-    push eax
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
     mov ax,ds:app_loader
     or ax,ax
     mov ds,ax
-    pop eax
-    stc
-    jz load_dll32_done
+    jz ldlluFail32
 ;
     call fword ptr ds:loader_load_dll_proc
-    jc load_dll32_done
+    jc ldlluFail32
 ;
-    push es
     mov es,bx
-    mov bx,es:mod_id
-    pop es      
+    movzx ebx,es:mod_id
+    mov [ebp].load_ebx,ebx
+    and byte ptr [ebp].load_eflags,NOT 1
+    jmp ldlluDone32
 
-load_dll32_done:
-    pop eax
+ldlluFail32:
+    or byte ptr [ebp].load_eflags,1
+    
+ldlluDone32:
+    pop gs
+    pop fs
+    pop es
     pop ds
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+load_dll_kernel32:
+    int 3
     ret
 load_dll32  Endp
 
 load_dll16  Proc far
-    push ds
-    push eax
-    push edi
-;    
-    movzx edi,di
-    push eax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_loader
-    or ax,ax
-    mov ds,ax
-    pop eax
-    stc
-    jz load_dll16_done
-;
-    call fword ptr ds:loader_load_dll_proc
-    jc load_dll16_done
-;
-    push es
-    mov es,bx
-    mov bx,es:mod_id
-    pop es      
-
-load_dll16_done:
-    pop edi
-    pop eax
-    pop ds
+    int 3
     ret
 load_dll16  Endp
 
