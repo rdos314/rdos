@@ -308,10 +308,7 @@ loader_get_env_proc            DD ?,?
 ; IN   DS                 New thread block
 loader_init_thread_proc        DD ?,?
 
-; IN   EBP                New thread stack
-;        +0               EBP
-;        +4               EIP
-;        +12              ESP 
+; IN   EBP                Stack frame
 loader_start_thread_proc       DD ?,?
 
 ; IN   EBP                Thread stack

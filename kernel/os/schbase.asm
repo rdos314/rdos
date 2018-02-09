@@ -884,11 +884,28 @@ get_thread_handle       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-app_thread_started      Proc far
+app_thread_started:
+    push eax
+    pushfd
+    pop eax
+    mov [esp+8],eax
+    mov eax,[esp+4]
+    xchg eax,[esp]
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
     push ebp
     mov ebp,esp
+    add ebp,28
+    mov dword ptr [ebp].load_cs,flat_code_sel
+;
     push ds
-    push eax
+    push es
+    push fs
+    push gs
 ;
     GetThread
     mov ds,ax
@@ -896,11 +913,19 @@ app_thread_started      Proc far
     mov ds,ds:app_loader
     call fword ptr ds:loader_start_thread_proc
 ;
-    pop eax
+    pop gs
+    pop fs
+    pop es
     pop ds
+;
     pop ebp
-    ret
-app_thread_started      Endp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3721,13 +3746,13 @@ spCopyExeLoop:
     pop gs
 
 spDebugDone:
-    test byte ptr [bp+2].load_eflags,2
+    test byte ptr [ebp+2].load_eflags,2
     jnz spVm16
 ;
-    mov ds,[bp].load_ds
-    mov es,[bp].load_es
-    mov fs,[bp].load_fs
-    mov gs,[bp].load_gs
+    mov ds,[ebp].load_ds
+    mov es,[ebp].load_es
+    mov fs,[ebp].load_fs
+    mov gs,[ebp].load_gs
 
 spVm16:
     pop ebp
@@ -4130,13 +4155,13 @@ lpCpExeLoop:
 ;
     mov gs:el_ret_code,0
 ;
-    test byte ptr [bp+2].load_eflags,2
+    test byte ptr [ebp+2].load_eflags,2
     jnz lpVm16
 ;
-    mov ds,[bp].load_ds
-    mov es,[bp].load_es
-    mov fs,[bp].load_fs
-    mov gs,[bp].load_gs
+    mov ds,[ebp].load_ds
+    mov es,[ebp].load_es
+    mov fs,[ebp].load_fs
+    mov gs,[ebp].load_gs
 
 lpVm16:
     pop ebp

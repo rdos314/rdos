@@ -3777,33 +3777,48 @@ thread_code_size  = 32
 ;
 ;           DESCRIPTION:    Setup register restore
 ;
-;           PARAMETERS:     EBP                New thread stack
-;                             +0               EBP
-;                             +4               EIP
-;                             +12              ESP 
-;
-;           RETURNS:        EAX                Save frame
+;           PARAMETERS:     EBP                Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 thread_init_start:
+    pop edi
+    pop esi
     pop edx
+    pop ecx
     pop ebx
+    pop eax
     retn thread_code_size
 thread_init_end:
 
 InitUserStack   Proc near
-    mov es,[ebp].st_ss
-    mov edi,[ebp].st_esp
-    sub edi,thread_code_size + 3 * 4
-    mov [ebp].st_esp,edi
-    push edi
+    mov es,[ebp].load_ss
+    mov edi,[ebp].load_esp
+    sub edi,thread_code_size + 7 * 4
+    mov [ebp].load_esp,edi
 ;
-    add edi,2 * 4
-    mov eax,[ebp].st_eip
+    mov eax,[ebp].load_edi
     stosd
 ;
-    mov [ebp].st_eip,edi
+    mov eax,[ebp].load_esi
+    stosd
+;
+    mov eax,[ebp].load_edx
+    stosd
+;
+    mov eax,[ebp].load_ecx
+    stosd
+;
+    mov eax,[ebp].load_ebx
+    stosd
+;
+    mov eax,[ebp].load_eax
+    stosd
+;
+    mov eax,[ebp].load_eip
+    stosd
+;
+    mov [ebp].load_eip,edi
 ;
     mov eax,cs
     mov ds,eax
@@ -3811,53 +3826,8 @@ InitUserStack   Proc near
     mov esi,OFFSET thread_init_start
     mov ecx,OFFSET thread_init_end - OFFSET thread_init_start
     rep movsb
-    pop eax
     ret
 InitUserStack  Endp
-                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ExitUserStack
-;
-;           DESCRIPTION:    Setup register save
-;
-;           PARAMETERS:     EAX                Save frame
-;                           EBP                New thread stack
-;                             +0               EBP
-;                             +4               EIP
-;                             +12              ESP 
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-thread_exit_start:
-    pop eax
-    mov [eax+4],ebx
-    mov [eax],edx
-    retn thread_code_size
-thread_exit_end:
-
-ExitUserStack   Proc near
-    mov es,[ebp].st_ss
-    mov edi,[ebp].st_esp
-    sub edi,thread_code_size + 2 * 4
-    mov [ebp].st_esp,edi
-;
-    stosd
-;
-    mov eax,[ebp].st_eip
-    stosd
-;
-    mov [ebp].st_eip,edi
-;
-    mov eax,cs
-    mov ds,eax
-    mov eax,edi
-    mov esi,OFFSET thread_exit_start
-    mov ecx,OFFSET thread_exit_end - OFFSET thread_exit_start
-    rep movsb
-    ret
-ExitUserStack  Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3897,10 +3867,10 @@ AddUserStack    Proc near
     add eax,gs:mod_base
     push eax
 ;
-    mov es,[ebp].st_ss
-    mov edi,[ebp].st_esp
+    mov es,[ebp].load_ss
+    mov edi,[ebp].load_esp
     sub edi,thread_code_size + 6 * 4
-    mov [ebp].st_esp,edi
+    mov [ebp].load_esp,edi
 ;
     mov eax,edx
     stosd
@@ -3919,10 +3889,10 @@ AddUserStack    Proc near
     add eax,OFFSET thread_user_back - OFFSET thread_user_start
     stosd
 ;
-    mov eax,[ebp].st_eip
+    mov eax,[ebp].load_eip
     stosd
 ;
-    mov [ebp].st_eip,edi
+    mov [ebp].load_eip,edi
 ;
     mov eax,cs
     mov ds,eax
@@ -3942,13 +3912,9 @@ AddUserStack    Endp
 ;
 ;           DESCRIPTION:    Start thread
 ;
-;           PARAMETERS:     EBP                New thread stack
-;                             +0               EBP
-;                             +4               EIP
-;                             +12              ESP 
+;           PARAMETERS:     EBP                Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 start_thread    PROC far
     push ds
@@ -3960,7 +3926,7 @@ start_thread    PROC far
     mov ds,ax
     mov ds,ds:p_app_sel
 ;
-    mov edx,[ebp].st_eip
+    mov edx,[ebp].load_eip
     mov ds,ds:app_mod_sel
     mov ax,ds:lib_debug_lib
     or ax,ax
@@ -3972,7 +3938,6 @@ start_thread    PROC far
 
 start_thread_notify:    
     call InitUserStack
-    push eax
 ;
     GetThread
     mov ds,ax
@@ -4001,9 +3966,6 @@ start_thread_dlls_next:
     jmp start_thread_dlls_loop
 
 start_thread_done:
-    pop eax
-    call ExitUserStack
-;
     popad
     pop gs
     pop es
@@ -4026,6 +3988,7 @@ start_thread    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_thread_user     Proc far
+    int 3
     GetThread
     mov ds,ax
     mov dx,ds:p_prog_id
