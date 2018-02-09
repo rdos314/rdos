@@ -2122,13 +2122,17 @@ load_import_dlls_loop:
     jz load_import_dlls_done
 ;
     push es
+    push ebx
     push edi
-    add esi,edi
-    call LoadPeDll
-    mov esi,edi
-    mov ax,es
-    mov gs,ax
+;
+    mov eax,ds
+    mov es,eax
+    add edi,esi
+    LoadDll
+;
+    mov gs,bx
     pop edi
+    pop ebx
     pop es
     jc load_import_dlls_loop
 ;       
@@ -3476,6 +3480,7 @@ init_module  Endp
 ;           DESCRIPTION:    Fixup exe
 ;
 ;           PARAMETERS:     BX      Module sel
+;                           DX      Debug sel
 ;                           EBP     Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3492,12 +3497,27 @@ fixup_exe Proc far
     mov ds,eax
     mov es,bx
 ;
+    push dx
     call FixupImage
     call InsertApp
     call InitStack
     call CreateSections
-    call LoadImportedDlls
     call RunImage
+    pop dx
+;
+    or dx,dx
+    jz feNoDebug
+;
+    push es
+    mov ax,flat_data_sel
+    mov es,ax
+    mov esi,[ebp].load_eip
+    mov esi,es:[esi-4]
+    mov [ebp].load_eip,esi
+    pop es
+
+feNoDebug:
+    call LoadImportedDlls
 ;
     pop edi
     pop esi
@@ -3630,8 +3650,8 @@ setup_debug      Proc far
     mov es:lib_init_param,dx
     mov edi,es:mod_base
     mov es:lib_run_now,1
-    call StartImportedDlls
-    call Preload
+;    call StartImportedDlls
+;    call Preload
 ;
     mov dx,es:lib_debug_lib
     push ds
@@ -3643,14 +3663,6 @@ setup_debug      Proc far
     pop es
     pop ds
     call NotifyImportedDlls
-;
-    push es
-    mov ax,flat_data_sel
-    mov es,ax
-    mov esi,[ebp].load_eip
-    mov esi,es:[esi-4]
-    mov [ebp].load_eip,esi
-    pop es
     ret
 setup_debug      Endp
                                               

@@ -2206,53 +2206,27 @@ get_module_focus_done:
     ret
 get_module_focus_key  Endp
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           load_dll
+;       NAME:           load_dll
 ;
-;           DESCRIPTION:    Load DLL
+;       DESCRIPTION:    Load DLL
 ;
-;       PARAMETERS:         ES:(E)DI    Name of dll to load
+;       PARAMETERS:     ES:EDI      Name of dll to load
+;                       EBP         Stack frame   
 ;
-;           RETURNS:        BX          Module handle
+;       RETURNS:        BX          Module handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-load_dll_name   DB 'Load Dll',0
-
-load_dll32  Proc far
-    mov ax,[esp+4]
-    cmp ax,flat_code_sel
-    jne load_dll_kernel32
-;
-    push eax
-    pushfd
-    pop eax
-    mov [esp+8],eax
-    mov eax,[esp+4]
-    xchg eax,[esp]
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
-    mov ebp,esp
-    add ebp,28
-    mov dword ptr [ebp].load_cs,flat_code_sel
-;
-    push ds
-    push es
-    push fs
-    push gs
-;    
+load_dll	Proc  near    
     mov eax,es
     mov ds,eax
     mov esi,edi
     call OpenModuleFile
-    jc ldlluFail32
+    jc ldllFail
 ;
     GetThread
     mov es,ax
@@ -2260,10 +2234,10 @@ load_dll32  Proc far
     mov ax,gs:app_loader
     or ax,ax
     mov gs,ax
-    jz ldlluFail32
+    jz ldllFail
 ;
     call fword ptr gs:loader_init_dll_proc
-    jc ldlluFail32
+    jc ldllFail
 ;
     push ebx
     movzx ebx,es:p_prog_id
@@ -2289,13 +2263,62 @@ load_dll32  Proc far
     call fword ptr gs:loader_fixup_dll_proc
     pop ebx
 ;
+    push ebx
     call fword ptr gs:loader_run_dll_proc
-    jmp ldlluDone32
+    pop ebx
+    jmp ldllDone
 
-ldlluFail32:
+ldllFail:
     or byte ptr [ebp].load_eflags,1
     
-ldlluDone32:
+ldllDone:
+    ret
+load_dll	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           load_dll
+;
+;           DESCRIPTION:    Load DLL
+;
+;       PARAMETERS:         ES:(E)DI    Name of dll to load
+;
+;           RETURNS:        BX          Module handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_dll_name   DB 'Load Dll',0
+
+load_dll32  Proc far
+    mov bx,[esp+4]
+    cmp bx,flat_code_sel
+    jne load_dll_kernel32
+;
+    push eax
+    pushfd
+    pop eax
+    mov [esp+8],eax
+    mov eax,[esp+4]
+    xchg eax,[esp]
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    mov ebp,esp
+    add ebp,28
+    mov dword ptr [ebp].load_cs,flat_code_sel
+;
+    push ds
+    push es
+    push fs
+    push gs
+;
+    call load_dll
+;
     pop gs
     pop fs
     pop es
@@ -2311,12 +2334,97 @@ ldlluDone32:
     iretd
 
 load_dll_kernel32:
-    int 3
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    call load_dll
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
     ret
 load_dll32  Endp
 
 load_dll16  Proc far
-    int 3
+    mov bx,[esp+4]
+    cmp bx,flat_code_sel
+    jne load_dll_kernel16
+;
+    push eax
+    pushfd
+    pop eax
+    mov [esp+8],eax
+    mov eax,[esp+4]
+    xchg eax,[esp]
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    mov ebp,esp
+    add ebp,28
+    mov dword ptr [ebp].load_cs,flat_code_sel
+;
+    push ds
+    push es
+    push fs
+    push gs
+;
+    movzx edi,di
+    call load_dll
+;
+    pop gs
+    pop fs
+    pop es
+    pop ds
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+load_dll_kernel16:
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    movzx edi,di
+    call load_dll
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
     ret
 load_dll16  Endp
 
@@ -3859,6 +3967,7 @@ spCopyExeLoop:
     mov ds,gs:pr_name_sel
     mov es,gs:pr_cmd_sel
 ;
+    mov dx,gs:pr_debug_sel
     push gs
     mov gs,gs:pr_loader
     call fword ptr gs:loader_init_exe_proc
