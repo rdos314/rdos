@@ -2943,6 +2943,92 @@ init_module  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           InitDebug
+;
+;           DESCRIPTION:    Pre DLL import debug setup
+;
+;           PARAMETERS:     DX      Debug sel
+;                           EBP     Stack frame
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitDebug Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,flat_data_sel
+    mov ds,ax
+    mov esi,[ebp].load_eip
+    mov esi,ds:[esi-4]
+    mov es:lib_org_eip,esi
+    mov eax,ds:[esi+1]
+    add eax,esi
+    add eax,5
+    mov [ebp].load_eip,eax
+;
+    add esi,5
+    call InitDebugUserStack
+;
+    GetThread
+    mov ds,ax
+;
+    call AllocateKernelEvent
+    mov word ptr ds:p_debug_proc,OFFSET NotifyKernelDebug
+    mov word ptr ds:p_debug_proc+2,cs
+;
+    mov es:lib_debug_lib,dx
+    mov es:lib_init_param,dx
+;
+    mov ax,es
+    mov ds,ax
+    mov fs,[ebp].load_fs
+    call CreateProcessEvent
+    call SendEvent
+;
+    popad
+    pop es
+    pop ds
+    ret
+InitDebug   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FixupDebug
+;
+;           DESCRIPTION:    Post DLL import debug setup
+;
+;           PARAMETERS:     DX      Debug sel
+;                           EBP     Stack frame
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FixupDebug Proc near
+    push ds
+    push es
+    pushad
+;
+    call FixupDebugUserStack
+;
+    mov ax,flat_data_sel
+    mov ds,ax
+    mov esi,es:lib_org_eip
+    mov eax,[ebp].load_eip
+    sub eax,esi
+    sub eax,5
+    mov ds:[esi+1],eax
+    mov [ebp].load_eip,esi
+;
+    popad
+    pop es
+    pop ds
+    ret
+FixupDebug  Endp
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           fixup_exe
 ;
 ;           DESCRIPTION:    Fixup exe
@@ -2976,17 +3062,7 @@ fixup_exe Proc far
     or dx,dx
     jz feNoPreDebug
 ;
-    push ds
-    mov ax,flat_data_sel
-    mov ds,ax
-    mov esi,[ebp].load_eip
-    mov esi,ds:[esi-4]
-    mov es:lib_org_eip,esi
-    mov eax,ds:[esi+1]
-    add eax,esi
-    add eax,5
-    mov [ebp].load_eip,eax
-    pop ds
+    call InitDebug
 
 feNoPreDebug:
     push dx
@@ -2996,16 +3072,7 @@ feNoPreDebug:
     or dx,dx
     jz feNoPostDebug
 ;
-    push ds
-    mov ax,flat_data_sel
-    mov ds,ax
-    mov esi,es:lib_org_eip
-    mov eax,[ebp].load_eip
-    sub eax,esi
-    sub eax,5
-    mov ds:[esi+1],eax
-    mov [ebp].load_eip,esi
-    pop ds
+    call FixupDebug
 
 feNoPostDebug:
     pop edi
@@ -3121,35 +3188,6 @@ setup_names Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 setup_debug      Proc far
-    GetThread
-    mov ds,ax
-;
-    call AllocateKernelEvent
-    mov word ptr ds:p_debug_proc,OFFSET NotifyKernelDebug
-    mov word ptr ds:p_debug_proc+2,cs
-;
-    mov ds,ds:p_app_sel
-    mov es,ds:app_mod_sel
-    mov ax,flat_data_sel
-    mov ds,ax
-    mov fs,[ebp].load_fs
-;
-    mov es:lib_debug_lib,dx
-    mov es:lib_suppress,1
-    mov es:lib_init_param,dx
-    mov edi,es:mod_base
-    mov es:lib_run_now,1
-;    call Preload
-;
-    mov dx,es:lib_debug_lib
-    push ds
-    push es
-    mov ax,es
-    mov ds,ax
-    call CreateProcessEvent
-    call SendEvent
-    pop es
-    pop ds
     ret
 setup_debug      Endp
                                               
@@ -3449,6 +3487,83 @@ AddUserStack    Proc near
 ausDone:
     ret
 AddUserStack    Endp
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitDebugUserStack
+;
+;           DESCRIPTION:    Init debugger stack
+;
+;           PARAMETERS:     EBP                Stack frame
+;                           ESI                Return address from call
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitDebugUserStack   Proc near
+    push ds
+    push es
+    pushad
+;
+    mov es,[ebp].load_ss
+    mov edi,[ebp].load_esp
+    sub edi,4
+    mov [ebp].load_esp,edi
+;
+    mov eax,esi
+    stosd
+;
+    popad
+    pop es
+    pop ds
+    ret
+InitDebugUserStack   Endp
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FixupDebugUserStack
+;
+;           DESCRIPTION:    Fixup debugger stack
+;
+;           PARAMETERS:     EBP                Stack frame
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+thread_debug_start:
+    add esp,4
+    retn thread_code_size
+thread_debug_end:
+
+FixupDebugUserStack   Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,flat_sel
+    mov ds,ax
+;
+    mov es,[ebp].load_ss
+    mov edi,[ebp].load_esp
+    sub edi,thread_code_size + 4
+    mov [ebp].load_esp,edi
+;
+    mov eax,[ebp].load_eip
+    stosd
+    mov [ebp].load_eip,edi
+;
+    mov eax,cs
+    mov ds,eax
+    mov eax,edi
+    mov esi,OFFSET thread_debug_start
+    mov ecx,OFFSET thread_debug_end - OFFSET thread_debug_start
+    rep movsb
+;
+    popad
+    pop es
+    pop ds
+    ret
+FixupDebugUserStack   Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

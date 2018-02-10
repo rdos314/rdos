@@ -12,11 +12,15 @@
 #include <math.h>
 #include "bignum.h"
 
+#include "testlib.h"
+
 #define FALSE 0
 #define TRUE !FALSE
 
 void main()
 {
+    TestFunc();
+    
     RdosTestGate("");
 
 
