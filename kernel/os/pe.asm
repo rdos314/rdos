@@ -3408,6 +3408,7 @@ init_module Proc far
     push ds
     push es
     push fs
+    push ecx
     push edx
     push esi
     push edi
@@ -3466,6 +3467,7 @@ imDone:
     pop edi
     pop esi
     pop edx
+    pop ecx
     pop fs
     pop es
     pop ds
