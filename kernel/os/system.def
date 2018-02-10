@@ -286,6 +286,7 @@ loader_is_valid_exe_proc       DD ?,?
 loader_init_exe_proc           DD ?,?
 
 ; IN   BX                 Module selector
+; IN   DX                 Debug lib sel
 ; IN   EBP                Stack frame
 loader_fixup_exe_proc          DD ?,?
 
@@ -293,10 +294,6 @@ loader_fixup_exe_proc          DD ?,?
 ; IN   DS:ESI             File name
 ; IN   ES:EDI             Command line
 loader_setup_names_proc        DD ?,?
-
-; IN   DX                 Debug lib sel
-; IN   EBP                Stack frame
-loader_setup_debug_proc        DD ?,?
 
 ; OUT  ES:(E)DI           Name
 loader_get_exe_proc            DD ?,?
@@ -339,11 +336,8 @@ loader_init_dll_proc           DD ?,?
 
 ; IN  BX                  Module sel
 ; IN  DX                  Debug sel
-loader_fixup_dll_proc          DD ?,?
-
-; IN  BX                  Module sel
 ; IN  EBP                 Stack frame
-loader_run_dll_proc            DD ?,?
+loader_fixup_dll_proc          DD ?,?
 
 ; IN  BX                  Module sel
 loader_free_dll_proc           DD ?,?

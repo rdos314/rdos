@@ -2221,7 +2221,7 @@ get_module_focus_key  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-load_dll	Proc  near    
+load_dll        Proc  near    
     mov eax,es
     mov ds,eax
     mov esi,edi
@@ -2262,10 +2262,6 @@ load_dll	Proc  near
     push ebx
     call fword ptr gs:loader_fixup_dll_proc
     pop ebx
-;
-    push ebx
-    call fword ptr gs:loader_run_dll_proc
-    pop ebx
     jmp ldllDone
 
 ldllFail:
@@ -2273,7 +2269,7 @@ ldllFail:
     
 ldllDone:
     ret
-load_dll	Endp
+load_dll        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4002,18 +3998,10 @@ spCopyExeLoop:
     pop ds
 ;
     push gs
+    mov dx,gs:pr_debug_sel
     mov gs,gs:pr_loader
     call fword ptr gs:loader_fixup_exe_proc
     call fword ptr gs:loader_setup_names_proc
-    pop gs
-;
-    mov dx,gs:pr_debug_sel
-    or dx,dx
-    jz spDebugDone
-;
-    push gs
-    mov gs,gs:pr_loader
-    call fword ptr gs:loader_setup_debug_proc
     pop gs
 
 spDebugDone:
