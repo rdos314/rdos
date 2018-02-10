@@ -2427,21 +2427,16 @@ load_dll16  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           free_dll
+;           NAME:           free_dll_do
 ;
 ;           DESCRIPTION:    Free DLL
 ;
 ;       PARAMETERS:         BX          Module handle
+;                           EBP         Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-free_dll_name   DB 'Free Dll',0
-
-free_dll  Proc far
-    push ds
-    push eax
-    push ebx
-;    
+free_dll_do  Proc near
     ModuleIdToSel
     jc free_dll_done
 ;
@@ -2455,9 +2450,89 @@ free_dll  Proc far
     call fword ptr ds:loader_free_dll_proc    
 
 free_dll_done:
+    ret
+free_dll_do  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           free_dll
+;
+;           DESCRIPTION:    Free DLL
+;
+;       PARAMETERS:         BX          Module handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_dll_name   DB 'Free Dll',0
+
+free_dll  Proc far
+    push eax
+    mov ax,[esp+8]
+    cmp ax,flat_code_sel
+    pop eax
+    jne free_dll_kernel
+;
+    push eax
+    pushfd
+    pop eax
+    mov [esp+8],eax
+    mov eax,[esp+4]
+    xchg eax,[esp]
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    mov ebp,esp
+    add ebp,28
+    mov dword ptr [ebp].load_cs,flat_code_sel
+;
+    push ds
+    push es
+    push fs
+    push gs
+;
+    call free_dll_do
+;
+    pop gs
+    pop fs
+    pop es
+    pop ds
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
     pop ebx
     pop eax
-    pop ds    
+    iretd
+
+free_dll_kernel:
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    call free_dll_do
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
     ret
 free_dll  Endp
 
