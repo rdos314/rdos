@@ -143,135 +143,425 @@ NotifyKernelDebug   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           load_object
+;           NAME:           SendEvent
 ;
-;           DESCRIPTION:    Demand load object
+;           DESCRIPTION:    Sent event to debugger
 ;
-;           PARAMETERS:     EDX         LINEAR ADDRESS
+;           PARAMETERS:     DS          Lib
+;                           ES          Event
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-load_object     Proc far
+SendEvent Proc near
+    push ds
+    push eax
+    push bx
+    ClearSignal
+;
+    GetThread
+    push es
+    mov es,ax
+    mov ax,es:p_id
+    pop es  
+    mov es:event_thread_id,ax
+;
+    mov ax,ds:lib_debug_lib
+    or ax,ax
+    jz seDone
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds,ds:app_mod_sel
+    RequestSpinlock ds:lib_spinlock
+;
+    mov ax,ds:lib_events
+    or ax,ax
+    je seEmpty
+;
+    push ds
+    push si
+    mov ds,ax
+    mov si,ds:event_prev
+    mov ds:event_prev,es
+    mov ds,si
+    mov ds:event_next,es
+    mov es:event_next,ax
+    mov es:event_prev,si
+    pop si
+    pop ds
+    jmp seInsDone
+
+seEmpty:
+    mov es:event_next,es
+    mov es:event_prev,es
+
+seInsDone:
+    mov ds:lib_events,es
+    xor ax,ax
+    mov es,ax
+    ReleaseSpinlock ds:lib_spinlock
+;
+    push es
+
+seSignalLoop:
+    mov ax,ds:lib_debug_obj
+    or ax,ax
+    jnz seSignalDo
+;
+    mov ax,10
+    WaitMilliSec
+    jmp seSignalLoop
+
+seSignalDo:
+    mov es,ax
+    SignalWait
+    pop es
+    
+seDone:
+    WaitForSignal
+    pop bx
+    pop eax
+    pop ds
+    ret
+SendEvent Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocateKernelEvent
+;
+;           DESCRIPTION:    Pre-allocate kernel event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateKernelEvent   Proc near
     push ds
     push es
-    pushad
-;       
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ecx,ds:flat_base
-    sub edx,ecx
-    mov ax,flat_data_sel
-    mov ds,ax
-    and dx,0F000h
+    push eax
+    push di
 ;
-    call FindLib
-    jc load_object_done
+    mov eax,SIZE kernel_exception_event_struc
+    mov di,SIZE event_struc
+    add ax,di
+    AllocateSmallGlobalMem
+    sub ax,di
+    mov es:event_size,ax
+    mov es:event_code,EVENT_KERNEL
 ;
-    call FindObject
-    jc load_object_done
+    GetThread
+    mov ds,ax
+    mov ax,ds:p_id
+    mov es:event_thread_id,ax
+    mov ds:p_debug_event,es
+;
+    pop di
+    pop eax 
+    pop es
+    pop ds   
+    ret
+AllocateKernelEvent   Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ExceptionEvent
+;
+;           DESCRIPTION:    Exception event
+;
+;           PARAMETERS:     DS          Lib
+;                           EBP         Exception frame
+;                           EAX         Exception code
+;
+;           RETURNS:        ES          Event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ExceptionEvent Proc near
+    push ebp
+    mov ebp,[ebp]
+    push eax
+    push di
+;
+    push eax
+    mov eax,SIZE exception_event_struc
+    mov di,SIZE event_struc
+    add ax,di
+    AllocateSmallGlobalMem
+    sub ax,di
+    mov es:event_size,ax
+    mov es:event_code,EVENT_EXCEPTION
+    pop eax
+    mov es:[di].excCode,eax
+;
+    lea eax,[ebp+8]
+    mov es:[di].excPtr,eax
 ;
     push ds
-    mov ax,es
+    mov ax,flat_data_sel
     mov ds,ax
-    EnterSection ds:mod_section
-;
-    push edx
-    add edx,ecx
-    HasPageEntry
-    pop edx
+    mov eax,ds:[ebp+20]
     pop ds
-    jnc load_object_leave
+    mov es:[di].excEip,eax
+    mov es:[di].excCs,flat_code_sel
 ;
-    xor eax,eax
-    mov ebp,edx
-;    
-    mov ebx,es:lib_header
-    cmp edi,[ebx].peh_image_base
-    je load_object_size_ok
-
-load_object_get_size:
-    call CheckReloc
-    jnc load_object_size_ok
-;
-    add eax,1000h
-    add ebp,1000h
-    jmp load_object_get_size
-
-load_object_size_ok:
-    mov ebp,edx
-    add eax,1000h
-    AllocateLocalLinear
-    push edx    
-    push eax
-;
-    sub edx,ecx
-;
-    push eax
-    push edx
-    push ebp
-
-load_object_load_loop:
-    call LoadPage
-    jc load_object_load_done
-;
-    sub eax,1000h
-    jz load_object_load_done
-;    
-    add edx,1000h
-    add ebp,1000h
-    jmp load_object_load_loop
-
-load_object_load_done:
-    call MapFromImage
-    mov ebx,eax
-;
-    pop ebp
-    pop edx
+    pop di
     pop eax
-;    
-    sub eax,ebx
+    pop ebp
+    ret
+ExceptionEvent Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateProcessEvent
+;
+;           DESCRIPTION:    Create process debug event
+;
+;           PARAMETERS:     DS          Lib
+;                           FS          TIB
+;                           EBP         Stack frame
+;
+;           RETURNS:        ES          Event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateProcessEvent Proc near
+    push eax
+    push ebx
+    push di
+;
+    mov eax,SIZE create_process_event_struc
+    mov di,SIZE event_struc
+    add ax,di
+    AllocateSmallGlobalMem
+    sub ax,di
+    mov es:event_size,ax
+    mov es:event_code,EVENT_CREATE_PROCESS
+;
+    movzx ebx,ds:mod_c_file_handle
+    mov es:[di].cpeFile,ebx
+;       
+    movzx ebx,ds:mod_id
+    ModuleIdToSel
+    mov es:[di].cpeHandle,ebx
+;
+    mov eax,fs:pvProcessHandle
+    mov es:[di].cpeProcess,eax
+    mov eax,fs:pvThreadHandle
+    mov es:[di].cpeThread,eax       
+    mov eax,ds:mod_base
+    mov es:[di].cpeImageBase,eax
+    mov eax,ds:mod_size
+    mov es:[di].cpeImageSize,eax
+;
+    push es
+    mov ax,flat_data_sel
+    mov es,ax
+    mov eax,ds:lib_objects
+    mov eax,es:[eax].o_va
+    pop es
+    mov es:[di].cpeObjectRva,eax
+;       
+    mov eax,fs:pvBase
+    mov es:[di].cpeFsLinear,eax
+    mov es:[di].cpeStartCs,flat_code_sel
+    mov eax,ds:lib_org_eip
+    mov es:[di].cpeStartEip,eax
+;
+    pop di
+    pop ebx
+    pop eax
+    ret
+CreateProcessEvent Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TerminateProcessEvent
+;
+;           DESCRIPTION:    Terminate process debug event
+;
+;           PARAMETERS:         EAX         Exit code
+;
+;           RETURNS:        ES          Event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TerminateProcessEvent Proc near
+    push ebx
+    push di
 ;
     push eax
-    push edx
-    push ebp    
-;
-    mov ebx,es:lib_header
-    cmp edi,[ebx].peh_image_base
-    je load_object_map
-
-load_object_reloc_loop:
-    call RelocPage
-;
-    sub eax,1000h
-    jz load_object_map
-;    
-    add edx,1000h
-    add ebp,1000h
-    jmp load_object_reloc_loop
-
-load_object_map:
-    pop ebp
-    pop edx
+    mov eax,SIZE terminate_process_event_struc
+    mov di,SIZE event_struc
+    add ax,di
+    AllocateSmallGlobalMem
+    sub ax,di
+    mov es:event_size,ax
+    mov es:event_code,EVENT_TERMINATE_PROCESS
     pop eax
+;
+    mov es:[di].tpeExitCode,eax
+;
+    pop di
+    pop ebx
+    ret
+TerminateProcessEvent Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateThreadEvent
+;
+;           DESCRIPTION:    Create thread debug event
+;
+;           PARAMETERS:     DS          Lib
+;                           FS          TIB
+;                           EDX         EIP
+;
+;           RETURNS:        ES          Event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateThreadEvent Proc near
+    push eax
+    push ebx
+    push di
+;
+    mov eax,SIZE create_thread_event_struc
+    mov di,SIZE event_struc
+    add ax,di
+    AllocateSmallGlobalMem
+    sub ax,di
+    mov es:event_size,ax
+    mov es:event_code,EVENT_CREATE_THREAD
+;
+    mov eax,fs:pvThreadHandle
+    mov es:[di].cteThread,eax
+    mov eax,fs:pvBase
+    mov es:[di].cteFsLinear,eax
+    mov es:[di].cteStartEip,edx
+    mov es:[di].cteStartCs,flat_code_sel
+;
+    pop di
+    pop ebx
+    pop eax
+    ret
+CreateThreadEvent Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TerminateThreadEvent
+;
+;           DESCRIPTION:    Terminate thread debug event
+;
+;           PARAMETERS:     DS          Lib
+;                           FS          TIB
+;
+;           RETURNS:        ES          Event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TerminateThreadEvent Proc near
+    push eax
+    push ebx
+;
+    mov eax,SIZE event_struc
+    AllocateSmallGlobalMem
+    mov es:event_size,0
+    mov es:event_code,EVENT_TERMINATE_THREAD
 ;
     pop ebx
-    call MapToImage
+    pop eax
+    ret
+TerminateThreadEvent Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-    mov ecx,ebx
-    pop edx
-    FreeLinear
+;
+;           NAME:           LoadDllEvent
+;
+;           DESCRIPTION:    Load Dll debug event
+;
+;           PARAMETERS:     DS          Lib
+;
+;           RETURNS:        ES          Event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-load_object_leave:
-    mov ax,es
-    mov ds,ax
-    LeaveSection ds:mod_section
-    
-load_object_done:
-    popad
+LoadDllEvent Proc near
+    push eax
+    push di
+;
+    mov eax,SIZE load_dll_event_struc
+    mov di,SIZE event_struc
+    add ax,di
+    AllocateSmallGlobalMem
+    sub ax,di
+    mov es:event_size,ax
+    mov es:event_code,EVENT_LOAD_DLL
+;
+    movzx ebx,ds:mod_c_file_handle
+    mov es:[di].ldeFile,ebx
+;       
+    movzx ebx,ds:mod_id
+    ModuleIdToSel
+    mov es:[di].ldeHandle,ebx    
+;
+    mov eax,ds:mod_base
+    mov es:[di].ldeImageBase,eax
+;
+    push es
+    mov ax,flat_data_sel
+    mov es,ax
+    mov eax,ds:lib_objects
+    mov eax,es:[eax].o_va
     pop es
-    pop ds
-    retf16
-load_object     Endp 
+    mov es:[di].ldeObjectRva,eax
+;       
+    mov eax,ds:mod_size
+    mov es:[di].ldeImageSize,eax
+;
+    pop di
+    pop eax
+    ret
+LoadDllEvent    Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreeDllEvent
+;
+;           DESCRIPTION:    Free DLL debug event
+;
+;           PARAMETERS:     DS          Lib
+;
+;           RETURNS:        ES          Event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeDllEvent Proc near
+    push eax
+    push ebx
+;
+    mov eax,SIZE free_dll_event_struc
+    mov di,SIZE event_struc
+    add ax,di
+    AllocateSmallGlobalMem
+    sub ax,di
+    mov es:event_size,ax
+    mov es:event_code,EVENT_FREE_DLL
+;       
+    movzx ebx,ds:mod_id
+    ModuleIdToSel
+    mov es:[di].fdeHandle,ebx    
+;
+    pop ebx
+    pop eax
+    ret
+FreeDllEvent Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -839,429 +1129,6 @@ section_patch  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SendEvent
-;
-;           DESCRIPTION:    Sent event to debugger
-;
-;           PARAMETERS:     DS          Lib
-;                           ES          Event
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendEvent Proc near
-    push ds
-    push eax
-    push bx
-    ClearSignal
-;
-    GetThread
-    push es
-    mov es,ax
-    mov ax,es:p_id
-    pop es  
-    mov es:event_thread_id,ax
-;
-    mov ax,ds:lib_debug_lib
-    or ax,ax
-    jz seDone
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_mod_sel
-    RequestSpinlock ds:lib_spinlock
-;
-    mov ax,ds:lib_events
-    or ax,ax
-    je seEmpty
-;
-    push ds
-    push si
-    mov ds,ax
-    mov si,ds:event_prev
-    mov ds:event_prev,es
-    mov ds,si
-    mov ds:event_next,es
-    mov es:event_next,ax
-    mov es:event_prev,si
-    pop si
-    pop ds
-    jmp seInsDone
-
-seEmpty:
-    mov es:event_next,es
-    mov es:event_prev,es
-
-seInsDone:
-    mov ds:lib_events,es
-    xor ax,ax
-    mov es,ax
-    ReleaseSpinlock ds:lib_spinlock
-;
-    push es
-
-seSignalLoop:
-    mov ax,ds:lib_debug_obj
-    or ax,ax
-    jnz seSignalDo
-;
-    mov ax,10
-    WaitMilliSec
-    jmp seSignalLoop
-
-seSignalDo:
-    mov es,ax
-    SignalWait
-    pop es
-    
-seDone:
-    WaitForSignal
-    pop bx
-    pop eax
-    pop ds
-    ret
-SendEvent Endp
-                      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AllocateKernelEvent
-;
-;           DESCRIPTION:    Pre-allocate kernel event
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateKernelEvent   Proc near
-    push ds
-    push es
-    push eax
-    push di
-;
-    mov eax,SIZE kernel_exception_event_struc
-    mov di,SIZE event_struc
-    add ax,di
-    AllocateSmallGlobalMem
-    sub ax,di
-    mov es:event_size,ax
-    mov es:event_code,EVENT_KERNEL
-;
-    GetThread
-    mov ds,ax
-    mov ax,ds:p_id
-    mov es:event_thread_id,ax
-    mov ds:p_debug_event,es
-;
-    pop di
-    pop eax 
-    pop es
-    pop ds   
-    ret
-AllocateKernelEvent   Endp
-                      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ExceptionEvent
-;
-;           DESCRIPTION:    Exception event
-;
-;           PARAMETERS:     DS          Lib
-;                           EBP         Exception frame
-;                           EAX         Exception code
-;
-;           RETURNS:        ES          Event
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ExceptionEvent Proc near
-    push ebp
-    mov ebp,[ebp]
-    push eax
-    push di
-;
-    push eax
-    mov eax,SIZE exception_event_struc
-    mov di,SIZE event_struc
-    add ax,di
-    AllocateSmallGlobalMem
-    sub ax,di
-    mov es:event_size,ax
-    mov es:event_code,EVENT_EXCEPTION
-    pop eax
-    mov es:[di].excCode,eax
-;
-    lea eax,[ebp+8]
-    mov es:[di].excPtr,eax
-;
-    push ds
-    mov ax,flat_data_sel
-    mov ds,ax
-    mov eax,ds:[ebp+20]
-    pop ds
-    mov es:[di].excEip,eax
-    mov es:[di].excCs,flat_code_sel
-;
-    pop di
-    pop eax
-    pop ebp
-    ret
-ExceptionEvent Endp
-                      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateProcessEvent
-;
-;           DESCRIPTION:    Create process debug event
-;
-;           PARAMETERS:     DS          Lib
-;                           FS          TIB
-;                           EBP         Stack frame
-;
-;           RETURNS:        ES          Event
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateProcessEvent Proc near
-    push eax
-    push ebx
-    push di
-;
-    mov eax,SIZE create_process_event_struc
-    mov di,SIZE event_struc
-    add ax,di
-    AllocateSmallGlobalMem
-    sub ax,di
-    mov es:event_size,ax
-    mov es:event_code,EVENT_CREATE_PROCESS
-;
-    movzx ebx,ds:mod_c_file_handle
-    mov es:[di].cpeFile,ebx
-;       
-    movzx ebx,ds:mod_id
-    ModuleIdToSel
-    mov es:[di].cpeHandle,ebx
-;
-    mov eax,fs:pvProcessHandle
-    mov es:[di].cpeProcess,eax
-    mov eax,fs:pvThreadHandle
-    mov es:[di].cpeThread,eax       
-    mov eax,ds:mod_base
-    mov es:[di].cpeImageBase,eax
-    mov eax,ds:mod_size
-    mov es:[di].cpeImageSize,eax
-;
-    push es
-    mov ax,flat_data_sel
-    mov es,ax
-    mov eax,ds:lib_objects
-    mov eax,es:[eax].o_va
-    pop es
-    mov es:[di].cpeObjectRva,eax
-;       
-    mov eax,fs:pvBase
-    mov es:[di].cpeFsLinear,eax
-    mov es:[di].cpeStartCs,flat_code_sel
-    mov eax,ds:lib_org_eip
-    mov es:[di].cpeStartEip,eax
-;
-    pop di
-    pop ebx
-    pop eax
-    ret
-CreateProcessEvent Endp
-                      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TerminateProcessEvent
-;
-;           DESCRIPTION:    Terminate process debug event
-;
-;           PARAMETERS:         EAX         Exit code
-;
-;           RETURNS:        ES          Event
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TerminateProcessEvent Proc near
-    push ebx
-    push di
-;
-    push eax
-    mov eax,SIZE terminate_process_event_struc
-    mov di,SIZE event_struc
-    add ax,di
-    AllocateSmallGlobalMem
-    sub ax,di
-    mov es:event_size,ax
-    mov es:event_code,EVENT_TERMINATE_PROCESS
-    pop eax
-;
-    mov es:[di].tpeExitCode,eax
-;
-    pop di
-    pop ebx
-    ret
-TerminateProcessEvent Endp
-                      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateThreadEvent
-;
-;           DESCRIPTION:    Create thread debug event
-;
-;           PARAMETERS:     DS          Lib
-;                           FS          TIB
-;                           EDX         EIP
-;
-;           RETURNS:        ES          Event
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateThreadEvent Proc near
-    push eax
-    push ebx
-    push di
-;
-    mov eax,SIZE create_thread_event_struc
-    mov di,SIZE event_struc
-    add ax,di
-    AllocateSmallGlobalMem
-    sub ax,di
-    mov es:event_size,ax
-    mov es:event_code,EVENT_CREATE_THREAD
-;
-    mov eax,fs:pvThreadHandle
-    mov es:[di].cteThread,eax
-    mov eax,fs:pvBase
-    mov es:[di].cteFsLinear,eax
-    mov es:[di].cteStartEip,edx
-    mov es:[di].cteStartCs,flat_code_sel
-;
-    pop di
-    pop ebx
-    pop eax
-    ret
-CreateThreadEvent Endp
-                      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TerminateThreadEvent
-;
-;           DESCRIPTION:    Terminate thread debug event
-;
-;           PARAMETERS:     DS          Lib
-;                           FS          TIB
-;
-;           RETURNS:        ES          Event
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TerminateThreadEvent Proc near
-    push eax
-    push ebx
-;
-    mov eax,SIZE event_struc
-    AllocateSmallGlobalMem
-    mov es:event_size,0
-    mov es:event_code,EVENT_TERMINATE_THREAD
-;
-    pop ebx
-    pop eax
-    ret
-TerminateThreadEvent Endp
-                      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           LoadDllEvent
-;
-;           DESCRIPTION:    Load Dll debug event
-;
-;           PARAMETERS:     DS          Lib
-;
-;           RETURNS:        ES          Event
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadDllEvent Proc near
-    push eax
-    push di
-;
-    mov eax,SIZE load_dll_event_struc
-    mov di,SIZE event_struc
-    add ax,di
-    AllocateSmallGlobalMem
-    sub ax,di
-    mov es:event_size,ax
-    mov es:event_code,EVENT_LOAD_DLL
-;
-    movzx ebx,ds:mod_c_file_handle
-    mov es:[di].ldeFile,ebx
-;       
-    movzx ebx,ds:mod_id
-    ModuleIdToSel
-    mov es:[di].ldeHandle,ebx    
-;
-    mov eax,ds:mod_base
-    mov es:[di].ldeImageBase,eax
-;
-    push es
-    mov ax,flat_data_sel
-    mov es,ax
-    mov eax,ds:lib_objects
-    mov eax,es:[eax].o_va
-    pop es
-    mov es:[di].ldeObjectRva,eax
-;       
-    mov eax,ds:mod_size
-    mov es:[di].ldeImageSize,eax
-;
-    pop di
-    pop eax
-    ret
-LoadDllEvent    Endp
-                      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FreeDllEvent
-;
-;           DESCRIPTION:    Free DLL debug event
-;
-;           PARAMETERS:     DS          Lib
-;
-;           RETURNS:        ES          Event
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeDllEvent Proc near
-    push eax
-    push ebx
-;
-    mov eax,SIZE free_dll_event_struc
-    mov di,SIZE event_struc
-    add ax,di
-    AllocateSmallGlobalMem
-    sub ax,di
-    mov es:event_size,ax
-    mov es:event_code,EVENT_FREE_DLL
-;       
-    movzx ebx,ds:mod_id
-    ModuleIdToSel
-    mov es:[di].fdeHandle,ebx    
-;
-    pop ebx
-    pop eax
-    ret
-FreeDllEvent Endp
-                      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           CreateLib
 ;
 ;           DESCRIPTION:    Create lib
@@ -1735,6 +1602,139 @@ check_reloc_done:
     pop eax
     ret
 CheckReloc      Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           load_object
+;
+;           DESCRIPTION:    Demand load object
+;
+;           PARAMETERS:     EDX         LINEAR ADDRESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_object     Proc far
+    push ds
+    push es
+    pushad
+;       
+    mov ax,system_data_sel
+    mov ds,ax
+    mov ecx,ds:flat_base
+    sub edx,ecx
+    mov ax,flat_data_sel
+    mov ds,ax
+    and dx,0F000h
+;
+    call FindLib
+    jc load_object_done
+;
+    call FindObject
+    jc load_object_done
+;
+    push ds
+    mov ax,es
+    mov ds,ax
+    EnterSection ds:mod_section
+;
+    push edx
+    add edx,ecx
+    HasPageEntry
+    pop edx
+    pop ds
+    jnc load_object_leave
+;
+    xor eax,eax
+    mov ebp,edx
+;    
+    mov ebx,es:lib_header
+    cmp edi,[ebx].peh_image_base
+    je load_object_size_ok
+
+load_object_get_size:
+    call CheckReloc
+    jnc load_object_size_ok
+;
+    add eax,1000h
+    add ebp,1000h
+    jmp load_object_get_size
+
+load_object_size_ok:
+    mov ebp,edx
+    add eax,1000h
+    AllocateLocalLinear
+    push edx    
+    push eax
+;
+    sub edx,ecx
+;
+    push eax
+    push edx
+    push ebp
+
+load_object_load_loop:
+    call LoadPage
+    jc load_object_load_done
+;
+    sub eax,1000h
+    jz load_object_load_done
+;    
+    add edx,1000h
+    add ebp,1000h
+    jmp load_object_load_loop
+
+load_object_load_done:
+    call MapFromImage
+    mov ebx,eax
+;
+    pop ebp
+    pop edx
+    pop eax
+;    
+    sub eax,ebx
+;
+    push eax
+    push edx
+    push ebp    
+;
+    mov ebx,es:lib_header
+    cmp edi,[ebx].peh_image_base
+    je load_object_map
+
+load_object_reloc_loop:
+    call RelocPage
+;
+    sub eax,1000h
+    jz load_object_map
+;    
+    add edx,1000h
+    add ebp,1000h
+    jmp load_object_reloc_loop
+
+load_object_map:
+    pop ebp
+    pop edx
+    pop eax
+;
+    pop ebx
+    call MapToImage
+;
+    mov ecx,ebx
+    pop edx
+    FreeLinear
+
+load_object_leave:
+    mov ax,es
+    mov ds,ax
+    LeaveSection ds:mod_section
+    
+load_object_done:
+    popad
+    pop es
+    pop ds
+    retf16
+load_object     Endp 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
