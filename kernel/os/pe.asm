@@ -1176,13 +1176,11 @@ create_lib_size_ok:
     mov es:mod_sel,flat_code_sel
     mov es:mod_base,0
     mov es:mod_base+4,0
-    mov es:lib_process,0
     mov es:mod_size,0
     mov es:mod_size+4,0
     mov es:lib_debug_lib,0
     mov es:lib_debug_obj,0
     mov es:lib_events,0
-    mov es:lib_suppress,0
     mov es:mod_c_file_handle,bx
     mov es:lib_file_pos,edx
     mov es:lib_init_param,0
@@ -4234,7 +4232,7 @@ get_debug_event_data Proc far
 gdedDuplFile:
     mov bx,es:[edi+4]
     mov ds,bx
-    AliasModuleHandle
+    mov bx,ds:mod_id
     mov es:[edi+4],bx   
     mov ds:lib_local_handle,bx
 ;
@@ -4249,7 +4247,7 @@ gdedDuplFile:
 gdedFreeDll:
     mov bx,es:[edi]
     mov ds,bx
-    mov bx,ds:lib_local_handle
+    mov bx,ds:mod_id
     mov es:[edi],bx     
 
 gdedDone:

@@ -141,7 +141,6 @@ lib_mod             module_struc <>
 lib_header          DD ?
 lib_objects         DD ?
 lib_file_pos        DD ?
-lib_process         DW ?
 lib_debug_lib       DW ?
 lib_debug_obj       DW ?
 lib_events          DW ?
