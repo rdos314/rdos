@@ -2974,21 +2974,40 @@ fixup_exe Proc far
     pop dx
 ;
     or dx,dx
-    jz feNoDebug
+    jz feNoPreDebug
 ;
-    mov esi,[ebp].load_eip
-    mov es:lib_org_eip,esi
-;
-    push es
+    push ds
     mov ax,flat_data_sel
-    mov es,ax
-    mov esi,es:[esi-4]
-    mov [ebp].load_eip,esi
-    pop es
+    mov ds,ax
+    mov esi,[ebp].load_eip
+    mov esi,ds:[esi-4]
+    mov es:lib_org_eip,esi
+    mov eax,ds:[esi+1]
+    add eax,esi
+    add eax,5
+    mov [ebp].load_eip,eax
+    pop ds
 
-feNoDebug:
+feNoPreDebug:
+    push dx
     call LoadImportedDlls
+    pop dx
 ;
+    or dx,dx
+    jz feNoPostDebug
+;
+    push ds
+    mov ax,flat_data_sel
+    mov ds,ax
+    mov esi,es:lib_org_eip
+    mov eax,[ebp].load_eip
+    sub eax,esi
+    sub eax,5
+    mov ds:[esi+1],eax
+    mov [ebp].load_eip,esi
+    pop ds
+
+feNoPostDebug:
     pop edi
     pop esi
     pop edx
