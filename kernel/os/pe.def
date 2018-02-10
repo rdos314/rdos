@@ -141,7 +141,6 @@ lib_mod             module_struc <>
 lib_header          DD ?
 lib_objects         DD ?
 lib_file_pos        DD ?
-lib_usage_count     DW ?
 lib_process         DW ?
 lib_debug_lib       DW ?
 lib_debug_obj       DW ?
@@ -151,9 +150,7 @@ lib_suppress        DW ?
 lib_curr_event      DW ?
 lib_local_handle    DW ?
 lib_org_eip         DD ?
-lib_run_now         DW ?
 lib_init_param      DW ?
-lib_fs              DW ?
 lib_name            DB ?
 
 lib_struc ENDS

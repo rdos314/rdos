@@ -1171,7 +1171,6 @@ create_lib_size_ok:
 ;
     rep movs byte ptr es:[edi],fs:[esi]
     mov byte ptr es:[edi],0
-    mov es:lib_usage_count,1
 ;       
     mov es:mod_name_offs,OFFSET lib_name
     mov es:mod_sel,flat_code_sel
@@ -1186,7 +1185,6 @@ create_lib_size_ok:
     mov es:lib_suppress,0
     mov es:mod_c_file_handle,bx
     mov es:lib_file_pos,edx
-    mov es:lib_run_now,0
     mov es:lib_init_param,0
     InitSpinlock es:lib_spinlock
     mov es:mod_loader,pe_loader_sel
@@ -2072,9 +2070,6 @@ fixup_dll  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreePeDll       Proc near
-    sub es:lib_usage_count,1
-    jnz free_pe_dll_done
-;
     push ds
     push eax
     push ebx
@@ -2623,7 +2618,6 @@ InitStack       Proc near
     mov ecx,eax     
     CreateDataSelector32
     mov [ebp].load_fs,bx
-    mov es:lib_fs,bx
     mov fs,bx
     pop bx
     pop ds
