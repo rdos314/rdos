@@ -4573,6 +4573,43 @@ unload_exe:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AppPatch
+;
+;       DESCRIPTION:    Patch app
+;
+;       DESCRIPTION:    App specific usergate patching
+;
+;       PARAMETERS:     DS:EBX      Instruction to patch
+;                       EAX         Gate #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_patch_name DB 'App Patch', 0
+
+app_patch Proc far
+    push gs
+;
+    push eax
+    GetThread
+    mov es,ax
+    mov gs,es:p_app_sel
+    mov ax,gs:app_loader
+    mov gs,ax
+    or ax,ax
+    stc
+    pop eax
+    jz apDone
+;
+    call fword ptr gs:loader_patch_proc
+
+apDone:
+    pop gs
+    ret
+app_patch Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           WaitForExec
 ;
 ;           DESCRIPTION:    Wait for exec
@@ -5838,6 +5875,12 @@ init_state_hooks:
     mov edi,OFFSET alias_module_handle_name
     xor cl,cl
     mov ax,alias_module_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET app_patch
+    mov edi,OFFSET app_patch_name
+    xor cl,cl
+    mov ax,app_patch_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET get_thread_state16

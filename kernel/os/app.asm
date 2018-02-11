@@ -101,12 +101,6 @@ init_app    PROC near
     mov ax,exec_app_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET app_patch
-    mov edi,OFFSET app_patch_name
-    xor cl,cl
-    mov ax,app_patch_nr
-    RegisterOsGate
-;
     popa
     pop es
     pop ds
