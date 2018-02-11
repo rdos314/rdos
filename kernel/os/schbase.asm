@@ -4026,13 +4026,11 @@ spCopyExeLoop:
     pop es
     pop ds
 ;
-    push gs
     mov dx,gs:pr_debug_sel
-    mov gs,gs:pr_loader
-    call fword ptr gs:loader_fixup_exe_proc
-    call fword ptr gs:loader_setup_names_proc
-    pop gs
-
+    mov fs,gs:pr_loader
+    call fword ptr fs:loader_fixup_exe_proc
+    call fword ptr fs:loader_setup_names_proc
+ 
 spDebugDone:
     test byte ptr [ebp+2].load_eflags,2
     jnz spVm16
@@ -4439,11 +4437,9 @@ lpCpExeLoop:
     pop es
     pop ds
 ;
-    push gs
-    mov gs,gs:pr_loader
-    call fword ptr gs:loader_fixup_exe_proc
-    call fword ptr gs:loader_setup_names_proc
-    pop gs
+    mov fs,gs:pr_loader
+    call fword ptr fs:loader_fixup_exe_proc
+    call fword ptr fs:loader_setup_names_proc
 ;
     mov gs:el_ret_code,0
 ;
@@ -4545,6 +4541,7 @@ unload_exe:
 app_patch_name DB 'App Patch', 0
 
 app_patch Proc far
+    push fs
     push gs
 ;
     push eax
@@ -4552,15 +4549,17 @@ app_patch Proc far
     mov gs,ax
     mov ax,gs:p_loader
     or ax,ax
-    mov gs,ax
+    mov fs,ax
     stc
     pop eax
     jz apDone
 ;
-    call fword ptr gs:loader_patch_proc
+    mov gs,gs:p_prog_sel
+    call fword ptr fs:loader_patch_proc
 
 apDone:
     pop gs
+    pop fs
     ret
 app_patch Endp
 

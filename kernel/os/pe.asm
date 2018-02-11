@@ -569,7 +569,7 @@ FreeDllEvent Endp
 ;
 ;           DESCRIPTION:    New create section
 ;
-;           PARAMS:         FS      App selector
+;           PARAMS:         GS      PE process selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -810,22 +810,17 @@ section_end:
 
 CreateSections  Proc near
     push es
-    push fs
     push eax
     push ecx
     push edx
     push esi
     push edi
-;    
-    GetThread
-    mov fs,ax
-    mov fs,fs:p_app_sel
 ;
     mov esi,OFFSET section_start
     mov eax,OFFSET section_end
     sub eax,esi
     mov ecx,eax
-    AllocateAppMem
+    call allocate_mem
     mov edi,edx
 ;
     mov ax,flat_data_sel
@@ -836,32 +831,27 @@ CreateSections  Proc near
 ;    
     mov edi,edx
     add edi,OFFSET create_us_section
-    mov fs:app_create_section_proc,edi
-    mov fs:app_create_section_proc+4,es
+    mov gs:ppr_create_section_proc,edi
 ;    
     mov edi,edx
     add edi,OFFSET create_named_us_section
-    mov fs:app_create_named_section_proc,edi
-    mov fs:app_create_named_section_proc+4,es
+    mov gs:ppr_create_named_section_proc,edi
 ;    
     mov edi,edx
     add edi,OFFSET free_us_section
-    mov fs:app_delete_section_proc,edi
-    mov fs:app_delete_section_proc+4,es
+    mov gs:ppr_delete_section_proc,edi
 ;    
     mov edi,edx
     add edi,OFFSET enter_us_section
-    mov fs:app_enter_section_proc,edi
-    mov fs:app_enter_section_proc+4,es
+    mov gs:ppr_enter_section_proc,edi
 ;    
     mov edi,edx
     add edi,OFFSET leave_us_section
-    mov fs:app_leave_section_proc,edi
-    mov fs:app_leave_section_proc+4,es
+    mov gs:ppr_leave_section_proc,edi
 ;
     mov esi,edx
     mov eax,MAX_SECTIONS * 16  ; 4 bytes for index + 12 bytes for data
-    AllocateAppMem
+    call allocate_mem
     mov edi,edx
 ;
     mov ecx,MAX_SECTIONS  ; only initialize indexes
@@ -901,7 +891,6 @@ CreateSections  Proc near
     pop edx
     pop ecx
     pop eax    
-    pop fs
     pop es    
     ret
 CreateSections     ENDP
@@ -914,6 +903,7 @@ CreateSections     ENDP
 ;           DESCRIPTION:    Patch sections to local calls
 ;
 ;           PARAMS:         DS:EBX      Instruction buffer
+;                           GS          PE process sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -955,10 +945,7 @@ spCreate:
     mov ax,flat_sel
     mov ds,ax    
 ;
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
-    mov eax,es:app_create_section_proc    
+    mov eax,gs:ppr_create_section_proc    
     sub eax,esi
     sub eax,6
     xchg eax,ds:[ebx+2]
@@ -991,10 +978,7 @@ spCreateNamed:
     mov ax,flat_sel
     mov ds,ax    
 ;
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
-    mov eax,es:app_create_named_section_proc
+    mov eax,gs:ppr_create_named_section_proc
     sub eax,esi
     sub eax,6
     xchg eax,ds:[ebx+2]
@@ -1027,10 +1011,7 @@ spDelete:
     mov ax,flat_sel
     mov ds,ax    
 ;
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
-    mov eax,es:app_delete_section_proc    
+    mov eax,gs:ppr_delete_section_proc    
     sub eax,esi
     sub eax,6
     xchg eax,ds:[ebx+2]
@@ -1063,10 +1044,7 @@ spEnter:
     mov ax,flat_sel
     mov ds,ax    
 ;
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
-    mov eax,es:app_enter_section_proc    
+    mov eax,gs:ppr_enter_section_proc    
     sub eax,esi
     sub eax,6
     xchg eax,ds:[ebx+2]
@@ -1099,10 +1077,7 @@ spLeave:
     mov ax,flat_sel
     mov ds,ax    
 ;
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
-    mov eax,es:app_leave_section_proc    
+    mov eax,gs:ppr_leave_section_proc    
     sub eax,esi
     sub eax,6
     xchg eax,ds:[ebx+2]
@@ -2770,7 +2745,8 @@ RunImage    Endp
 ;           DESCRIPTION:    Check for valid exe
 ;
 ;           PARAMETERS:     BX      C file handle
-;                           GS      Process sel
+;
+;           RETURNS:        GS      Process sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3008,6 +2984,7 @@ FixupDebug  Endp
 ;
 ;           PARAMETERS:     BX      Module sel
 ;                           DX      Debug sel
+;                           GS      PE process sel
 ;                           EBP     Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3025,10 +3002,10 @@ fixup_exe Proc far
     mov es,bx
 ;
     push dx
+    call CreateSections
     call FixupImage
     call InsertApp
     call InitStack
-    call CreateSections
     call RunImage
     pop dx
 ;

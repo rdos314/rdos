@@ -380,34 +380,6 @@ clone_app    PROC far
     mov eax,ds:app_fatal_error_exit_proc+4
     mov es:app_fatal_error_exit_proc+4,eax
 ;
-    mov eax,ds:app_section_base
-    mov es:app_section_base,eax
-;
-    mov eax,ds:app_create_section_proc
-    mov es:app_create_section_proc,eax
-    mov eax,ds:app_create_section_proc+4
-    mov es:app_create_section_proc+4,eax
-;
-    mov eax,ds:app_create_named_section_proc
-    mov es:app_create_named_section_proc,eax
-    mov eax,ds:app_create_named_section_proc+4
-    mov es:app_create_named_section_proc+4,eax
-;
-    mov eax,ds:app_delete_section_proc
-    mov es:app_delete_section_proc,eax
-    mov eax,ds:app_delete_section_proc+4
-    mov es:app_delete_section_proc+4,eax
-;
-    mov eax,ds:app_enter_section_proc
-    mov es:app_enter_section_proc,eax
-    mov eax,ds:app_enter_section_proc+4
-    mov es:app_enter_section_proc+4,eax
-;
-    mov eax,ds:app_leave_section_proc
-    mov es:app_leave_section_proc,eax
-    mov eax,ds:app_leave_section_proc+4
-    mov es:app_leave_section_proc+4,eax
-;
     mov ax,ds:app_unload_proc
     mov es:app_unload_proc,ax
 ;
@@ -479,23 +451,6 @@ exec_app    PROC far
 ;
     mov es:app_fatal_error_exit_proc,0
     mov es:app_fatal_error_exit_proc+4,0
-;
-    mov es:app_section_base,0
-;
-    mov es:app_create_section_proc,0
-    mov es:app_create_section_proc+4,0
-;
-    mov es:app_create_named_section_proc,0
-    mov es:app_create_named_section_proc+4,0
-;
-    mov es:app_delete_section_proc,0
-    mov es:app_delete_section_proc+4,0
-;
-    mov es:app_enter_section_proc,0
-    mov es:app_enter_section_proc+4,0
-;
-    mov es:app_leave_section_proc,0
-    mov es:app_leave_section_proc+4,0
 ;
     mov es:app_exit_code,0
     mov es:app_fork_id,0

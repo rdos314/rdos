@@ -151,16 +151,19 @@ process_struc    ENDS
 loader_interface_struc    STRUC
 
 ; IN   BX                 C file handle
+; OUT  GS                 Process sel
 loader_is_valid_exe_proc       DD ?,?
 
 ; IN   DS:ESI             Image name
 ; IN   ES:EDI             Cmd line
 ; IN   BX                 C file handle
+; IN   GS                 Process sel
 ; OUT  BX                 Module selector
 loader_init_exe_proc           DD ?,?
 
 ; IN   BX                 Module selector
 ; IN   DX                 Debug lib sel
+; IN   GS                 Process sel
 ; IN   EBP                Stack frame
 loader_fixup_exe_proc          DD ?,?
 
