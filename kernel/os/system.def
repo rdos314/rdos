@@ -274,6 +274,34 @@ init_tasking_arr            DD 2*64 DUP(?)
 
 hook_data_struc   ENDS
 
+MAX_PROCESS_THREADS  = 256
+MAX_PROCESS_MODULES  = 256
+
+process_struc    STRUC
+
+pr_loader            DW ?
+pr_kernel_file       DW ?
+pr_name_sel          DW ?
+pr_cmd_sel           DW ?
+pr_dir_sel           DW ?
+pr_env_sel           DW ?
+pr_debug_sel         DW ?
+pr_thread            DW ?
+pr_parent_thread     DW ?
+pr_app_sel           DW ?
+pr_parent_app_sel    DW ?
+pr_switch            DB ?,?
+
+pr_section           section_typ <>
+
+pr_module_count      DW ?
+pr_module_arr        DW MAX_PROCESS_MODULES DUP(?)
+
+pr_thread_count      DW ?
+pr_thread_arr        DW MAX_PROCESS_THREADS DUP(?)
+
+process_struc    ENDS
+
 loader_interface_struc    STRUC
 
 ; IN   BX                 C file handle
@@ -583,6 +611,7 @@ p_ref_count                 DW ?
 p_core              DW ?
 p_prog_id           DW ?
 p_loader            DW ?
+p_prog_sel          DW ?
 p_wanted_core       DW ?
 p_int_count         DW ?
 

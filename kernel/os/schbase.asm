@@ -42,34 +42,6 @@ INCLUDE chandle.inc
 
     .686p
 
-MAX_PROCESS_THREADS  = 256
-MAX_PROCESS_MODULES  = 256
-
-process_struc    STRUC
-
-pr_loader            DW ?
-pr_kernel_file       DW ?
-pr_name_sel          DW ?
-pr_cmd_sel           DW ?
-pr_dir_sel           DW ?
-pr_env_sel           DW ?
-pr_debug_sel         DW ?
-pr_thread            DW ?
-pr_parent_thread     DW ?
-pr_app_sel           DW ?
-pr_parent_app_sel    DW ?
-pr_switch            DB ?,?
-
-pr_section           section_typ <>
-
-pr_module_count      DW ?
-pr_module_arr        DW MAX_PROCESS_MODULES DUP(?)
-
-pr_thread_count      DW ?
-pr_thread_arr        DW MAX_PROCESS_THREADS DUP(?)
-
-process_struc    ENDS
-
 debug_event_wait_header STRUC
 
 dew_obj         wait_obj_header <>
@@ -3960,6 +3932,7 @@ spawn_startup:
     call AddProgramThread
 ;
     call GetProcessSel
+    mov es:p_prog_sel,ax
     mov gs,eax
 ;
     SaveContext
@@ -4370,6 +4343,7 @@ lpEnvDone:
     call RemoveProgramThread
 ;
     mov es:p_prog_id,bx
+    mov es:p_prog_sel,gs
     call AddProgramThread
 ;
     push gs
