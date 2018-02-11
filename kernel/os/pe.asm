@@ -555,7 +555,6 @@ FreeDllEvent Proc near
     mov es:event_code,EVENT_FREE_DLL
 ;       
     movzx ebx,ds:mod_id
-    ModuleIdToSel
     mov es:[di].fdeHandle,ebx    
 ;
     pop ebx
@@ -2078,7 +2077,7 @@ FreePeDll       Proc near
 ;
     mov dx,es:lib_debug_lib
     or dx,dx
-    jz fdNotifyDone
+    jz fpdNotifyDone
 ;
     push es
     mov ax,es
@@ -2087,7 +2086,7 @@ FreePeDll       Proc near
     call SendEvent
     pop es
 
-fdNotifyDone:
+fpdNotifyDone:
     mov ax,flat_data_sel
     mov ds,ax
     mov eax,es:lib_header
@@ -4221,8 +4220,6 @@ get_debug_event_data Proc far
     pop edi
 ;
     mov al,ds:event_code
-    cmp al,EVENT_FREE_DLL
-    je gdedFreeDll
 ;    
     cmp al,EVENT_CREATE_PROCESS
     je gdedDuplFile
@@ -4243,12 +4240,6 @@ gdedDuplFile:
     mov es:[edi],eax
 ;
     jmp gdedDone
-
-gdedFreeDll:
-    mov bx,es:[edi]
-    mov ds,bx
-    mov bx,ds:mod_id
-    mov es:[edi],bx     
 
 gdedDone:
     pop esi
@@ -5081,14 +5072,33 @@ get_current_dll     Endp
 ;           DESCRIPTION:    Free DLL
 ;
 ;       PARAMETERS:         BX      Lib sel
+;                           EBP     Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_dll    Proc far
-    push es
     mov es,bx
-    call FreePeDll
+    mov dx,es:lib_debug_lib
+    or dx,dx
+    jz fdNotifyDone
+;
+    push es
+    mov ax,es
+    mov ds,ax
+    call FreeDllEvent
+    call SendEvent
     pop es
+
+fdNotifyDone:
+    mov ax,flat_data_sel
+    mov ds,ax
+    mov edi,es:mod_base
+    call FreeImportedDlls
+;
+    call InitUserStack
+;
+    mov edx,0
+    call AddUserStack
     ret
 free_dll    Endp
 

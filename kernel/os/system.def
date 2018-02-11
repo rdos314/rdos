@@ -340,6 +340,7 @@ loader_init_dll_proc           DD ?,?
 loader_fixup_dll_proc          DD ?,?
 
 ; IN  BX                  Module sel
+; IN  EBP                 Stack frame
 loader_free_dll_proc           DD ?,?
 
 ; IN  ES:(E)DI            DLL address

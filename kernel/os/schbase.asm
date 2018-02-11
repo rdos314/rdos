@@ -3317,6 +3317,7 @@ PathName        DB 'PATH',0
 OpenModuleFile Proc near       
     push ds
     push es
+    push fs
     push eax
     push ecx
     push esi
@@ -3329,6 +3330,9 @@ OpenModuleFile Proc near
     mov cx,O_RDONLY OR O_BINARY
     OpenKernelFile
     jnc omfDone
+;
+    mov eax,ds
+    mov fs,eax
 ;
     LockProcEnv
     mov ds,bx
@@ -3440,6 +3444,7 @@ omfDone:
     pop esi
     pop ecx
     pop eax
+    pop fs
     pop es
     pop ds
     ret

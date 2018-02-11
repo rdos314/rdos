@@ -126,7 +126,7 @@ public:
 void x86_mad_registers::Init()
 {
         int i, j;
-    
+
     cpu.eax = 0;
     cpu.ebx = 0;
     cpu.ecx = 0;
@@ -154,7 +154,7 @@ void x86_mad_registers::Init()
     fpu.ip_err.segment = 0;
     fpu.op_err.offset = 0;
     fpu.op_err.segment = 0;
-    
+
     for (i = 0; i < 8; i++)
         for (j = 0; j < 16; j++)
             xmm.xmm[i][j] = 0;
@@ -226,7 +226,7 @@ void x86_mad_registers::Read(TDebugThread *t)
     fpu.op_err.segment = t->MathCs;
 
     for (i = 0; i < 8; i++)
-        fpu.reg[i] = t->St[i];    
+        fpu.reg[i] = t->St[i];
 }
 
 /*##########################################################################
@@ -272,7 +272,7 @@ void x86_mad_registers::Write(TDebugThread *t)
     t->MathCs = fpu.op_err.segment;
 
     for (i = 0; i < 8; i++)
-        t->St[i] = fpu.reg[i];    
+        t->St[i] = fpu.reg[i];
 
     t->WriteRegs();
 }
@@ -394,7 +394,7 @@ void TWdSocketServer::GetString(char *str, int maxsize)
 
     if (len >= maxsize)
         len = maxsize - 1;
-    
+
     if (len > 0)
     {
         memcpy(str, FInPtr, len);
@@ -424,7 +424,7 @@ void TWdSocketServer::GetData(void *data, int size)
 
     if (len > size)
         len = size;
-    
+
     if (len > 0)
     {
         memcpy(data, FInPtr, len);
@@ -451,7 +451,7 @@ void *TWdSocketServer::GetData(int *size)
     *size = FInSize - len;
     ptr = FInPtr;
     FInPtr += *size;
-    return ptr;    
+    return ptr;
 }
 
 /*##########################################################################
@@ -754,12 +754,12 @@ void TWdSocketServer::ReqConnect()
 
     ch = GetByte();
 
-    if (ch == 17)
+    if (ch == 17 || ch == 18)
     {
         PutWord(MAX_MSG_SIZE);
         PutByte(0);
     }
-    else   
+    else
     {
         PutWord(0);
         PutString("Illegal version");
@@ -894,7 +894,7 @@ void TWdSocketServer::ReqGetSysConfig()
     int major, minor, release;
 
          RdosGetVersion(&major, &minor, &release);
-    
+
          PutByte(0x3F);
          PutByte(0xF);
          PutByte((char)major);
@@ -949,7 +949,7 @@ void TWdSocketServer::ReqMapAddr()
                     PutWord(mod->CodeSel);
                     PutDword(0);
                     PutDword(mod->ImageSize - 1);
-                    break;                
+                    break;
 
                 case 2:
                 case 3:
@@ -983,7 +983,7 @@ void TWdSocketServer::ReqMapAddr()
                             PutDword(0);
                         break;
                     }
-                    
+
                     PutDword(Offset);
                     PutWord(0);
                     PutDword(0);
@@ -994,7 +994,7 @@ void TWdSocketServer::ReqMapAddr()
             }
         }
         FDebug->UnlockModule();
-    }        
+    }
 }
 
 /*##########################################################################
@@ -1053,7 +1053,7 @@ void TWdSocketServer::ReqReadMem()
     Size = GetWord();
 
     Data = new char[Size];
-    
+
     Count = FDebug->ReadMem(Sel, Offset, Data, Size);
 
     if (Count)
@@ -1229,9 +1229,9 @@ void TWdSocketServer::ReqProgGo()
                 CondFlags |= COND_WATCH;
 
             if (FCurrentThread->HasFaultOccurred())
-                CondFlags |= COND_EXCEPTION;                
+                CondFlags |= COND_EXCEPTION;
         }
-    }                   
+    }
 
     if (FCurrentThread)
     {
@@ -1246,10 +1246,10 @@ void TWdSocketServer::ReqProgGo()
     else
         {
         PutDword(0);
-        PutWord(0);    
+        PutWord(0);
 
         PutDword(0);
-        PutWord(0);   
+        PutWord(0);
 
                 PutWord(CondFlags);
         }
@@ -1296,9 +1296,9 @@ void TWdSocketServer::ReqProgStep()
                                 CondFlags |= COND_TRACE;
 
             if (FCurrentThread->HasFaultOccurred())
-                CondFlags |= COND_EXCEPTION;                
+                CondFlags |= COND_EXCEPTION;
         }
-    }                   
+    }
 
     if (FCurrentThread)
     {
@@ -1313,10 +1313,10 @@ void TWdSocketServer::ReqProgStep()
     else
     {
         PutDword(0);
-        PutWord(0);    
+        PutWord(0);
 
         PutDword(0);
-        PutWord(0);   
+        PutWord(0);
 
         PutWord(CondFlags);
     }
@@ -1359,10 +1359,10 @@ void TWdSocketServer::ReqProgLoad()
             if (str.GetSize() == 0)
                 str =  GetFullPathName(name, ".exe");
         }
-    
+
         if (str.GetSize())
         {
-            argstr = name + strlen(name) + 1;       
+            argstr = name + strlen(name) + 1;
             FDebug = new TDebug(str.GetData(), argstr, curdir.Get().GetData(), FFactory->FLogFile.GetData());
 
             RdosWaitMilli(500);
@@ -1674,7 +1674,7 @@ void TWdSocketServer::ReqGetMsgText()
     PutByte(8);
 
     if (FCurrentThread)
-        PutString(FCurrentThread->FaultText.GetData());    
+        PutString(FCurrentThread->FaultText.GetData());
     else
         PutString("Exception fault");
 }
@@ -1759,7 +1759,7 @@ void TWdSocketServer::ReqSplitCmd()
                 done = TRUE;
                 break;
         }
-    }                                    
+    }
 
     if (!done)
     {
@@ -1788,7 +1788,7 @@ void TWdSocketServer::ReqReadReg()
 
     if (FCurrentThread)
         reg.Read(FCurrentThread);
-    
+
     PutData(&reg, sizeof(reg));
 }
 
@@ -1810,7 +1810,7 @@ void TWdSocketServer::ReqWriteReg()
     if (FCurrentThread)
     {
         reg.Read(FCurrentThread);
-        GetData(&reg, sizeof(reg));        
+        GetData(&reg, sizeof(reg));
         reg.Write(FCurrentThread);
     }
 }
@@ -1838,7 +1838,7 @@ void TWdSocketServer::ReqMachineData()
     {
         if (size > 0xFFFF)
             bitness = 32;
-            
+
         PutDword(0);
         PutDword(size);
         if (bitness == 16)
@@ -1847,7 +1847,7 @@ void TWdSocketServer::ReqMachineData()
             PutByte(1);
     }
     else
-    {    
+    {
         PutDword(0);
         PutDword(0xFFFFFFFF);
         PutByte(1);
@@ -2032,7 +2032,7 @@ void TWdSocketServer::NotifyMsg19()
         default:
             ReqError();
             break;
-    }    
+    }
 
     if (ch & 0x80)
         FSuppressAnswer = TRUE;
@@ -2196,7 +2196,7 @@ void TWdSocketServer::NotifyMsg20()
         default:
             ReqError();
             break;
-    }    
+    }
 
     if (ch & 0x80)
         FSuppressAnswer = TRUE;
@@ -2258,12 +2258,12 @@ void TWdSocketServer::NotifyMsg()
         default:
             ReqError();
             break;
-    }    
+    }
 
     if (ch & 0x80)
         FSuppressAnswer = TRUE;
 }
-        
+
 
 /*##########################################################################
 #
@@ -2279,7 +2279,7 @@ void TWdSocketServer::NotifyMsg()
 void TWdSocketServer::HandleSocket()
 {
     int count;
-    
+
         while (FSocket->IsOpen())
         {
             FInSize = 0;
