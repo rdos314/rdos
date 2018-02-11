@@ -3418,6 +3418,7 @@ OpenModuleFile Endp
 ;       PARAMETERS:     DS:ESI  File name
 ;
 ;       RETURNS:        AX      Loader
+;                       GS      Process sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3486,7 +3487,24 @@ AllocateProcessBlock Proc near
     AllocateSmallGlobalMem
     mov ax,es
     mov gs,ax
-;  
+;
+    pop eax
+    pop es
+    ret
+AllocateProcessBlock  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitProcessBlock
+;
+;       DESCRIPTION:    Init process block
+;
+;       PARAMETERS:     GS      Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitProcessBlock Proc near    
     mov gs:pr_name_sel,0
     mov gs:pr_cmd_sel,0
     mov gs:pr_dir_sel,0
@@ -3498,11 +3516,8 @@ AllocateProcessBlock Proc near
     mov gs:pr_thread_count,0
     mov gs:pr_module_count,0
     InitSection gs:pr_section
-;
-    pop eax
-    pop es
     ret
-AllocateProcessBlock  Endp
+InitProcessBlock  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3512,8 +3527,7 @@ AllocateProcessBlock  Endp
 ;       DESCRIPTION:    Allocate process
 ;
 ;       PARAMETERS:     DX      Debug module handle
-;
-;       RETURNS:        GS      Process sel
+;                       GS      Process sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3521,7 +3535,7 @@ AllocateProcess Proc near
     push ds
     pushad
 ; 
-    call AllocateProcessBlock
+    call InitProcessBlock
 ;
     mov bx,dx
     ModuleIdToSel
@@ -4115,6 +4129,7 @@ spawn_program   Proc near
     jmp spDone
 
 spLoaderOk:    
+    call AllocateProcessBlock
     call AllocateProcess
     mov gs:pr_loader,ax
     mov gs:pr_kernel_file,bx
@@ -4283,6 +4298,7 @@ load_program   Proc near
     jmp lpFail
 
 lpLoaderOk:    
+    call AllocateProcessBlock
     call AllocateProcess
     mov gs:pr_loader,ax
     mov gs:pr_kernel_file,bx
@@ -5468,6 +5484,7 @@ run_process     PROC near
     jmp rpFail
 
 rpLoaderOk:
+    call AllocateProcessBlock
     call AllocateProcess
     mov gs:pr_kernel_file,bx
     mov gs:pr_loader,ax
@@ -5694,6 +5711,7 @@ init_state_hooks:
     pushad
 ;
     call AllocateProcessBlock
+    call InitProcessBlock
     mov eax,7
     mov ecx,eax
     AllocateSmallGlobalMem
