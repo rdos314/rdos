@@ -397,9 +397,6 @@ clone_app    PROC far
     mov eax,ds:app_fatal_error_exit_proc+4
     mov es:app_fatal_error_exit_proc+4,eax
 ;
-    mov eax,ds:app_loader_name
-    mov es:app_loader_name,eax
-;
     mov eax,ds:app_section_base
     mov es:app_section_base,eax
 ;
@@ -505,7 +502,6 @@ exec_app    PROC far
     mov es:app_patch_proc,0
     mov es:app_patch_proc+4,0
 ;
-    mov es:app_loader_name,0
     mov es:app_section_base,0
 ;
     mov es:app_create_section_proc,0

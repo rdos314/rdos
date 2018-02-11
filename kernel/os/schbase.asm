@@ -58,7 +58,6 @@ pr_thread            DW ?
 pr_parent_thread     DW ?
 pr_app_sel           DW ?
 pr_parent_app_sel    DW ?
-pr_loader_name       DD ?
 pr_switch            DB ?,?
 
 pr_section           section_typ <>
@@ -4163,8 +4162,6 @@ spLoaderOk:
     mov ds,ax
     mov ds,ds:p_app_sel
     mov gs:pr_parent_app_sel,ds
-    mov eax,ds:app_loader_name
-    mov gs:pr_loader_name,eax
     pop ds
 ;
     call CreateProg

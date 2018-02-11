@@ -1204,8 +1204,6 @@ CreateLib       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-pe_loader_name  DB 'PE',0
-
 InsertApp       Proc near
     push ds
     push es
@@ -1224,8 +1222,6 @@ InsertApp       Proc near
     mov ds:app_fatal_error_exit_proc+4,cs
     mov ds:app_patch_proc,OFFSET section_patch
     mov ds:app_patch_proc+4,cs 
-    mov word ptr ds:app_loader_name,OFFSET pe_loader_name
-    mov word ptr ds:app_loader_name+2,cs
 ;
     popad
     pop es
@@ -3999,17 +3995,6 @@ fork_proc  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_proc      Proc far
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,word ptr ds:app_loader_name
-    cmp ax,OFFSET pe_loader_name
-    jne cpDone
-;
-    mov ax,cs
-    cmp ax,word ptr ds:app_loader_name+2
-    jne cpDone
-;
     GetThread
     mov ds,ax
     test ds:p_flags,THREAD_FLAG_FORKED

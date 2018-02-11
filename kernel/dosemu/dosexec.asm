@@ -300,8 +300,6 @@ load_com    PROC near
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov word ptr ds:app_loader_name,OFFSET com_loader_name
-    mov word ptr ds:app_loader_name+2,cs
     clc
     jmp load_com_done
 
@@ -330,8 +328,6 @@ load_com    ENDP
 ;           PARAMETERS:     BX          File handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-exe_loader_name DB 'DOS EXE',0
 
 load_exe    PROC near
     push ds
@@ -470,8 +466,6 @@ load_exe_noreloc2:
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov word ptr ds:app_loader_name,OFFSET exe_loader_name
-    mov word ptr ds:app_loader_name+2,cs
     FreeMem
     clc
     jmp load_exe_done
@@ -822,8 +816,6 @@ load_ext_exe_noreloc2:
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    mov word ptr ds:app_loader_name,OFFSET exe_loader_name
-    mov word ptr ds:app_loader_name+2,cs
     FreeMem
     jmp load_ext_exe_ok
 

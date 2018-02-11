@@ -1581,8 +1581,6 @@ run_ne	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ne_loader_name	DB 'NE', 0
-
 load_ne	Proc far
 	push ds
 	push es
@@ -1634,8 +1632,6 @@ load_ne	Proc far
 	GetThread
 	mov ds,ax
 	mov ds,ds:p_app_sel
-	mov word ptr ds:app_loader_name,OFFSET ne_loader_name
-	mov word ptr ds:app_loader_name+2,cs
 	mov word ptr ds:app_load_dll_proc,OFFSET load_dll_pr
 	mov word ptr ds:app_load_dll_proc+2,cs
 	clc

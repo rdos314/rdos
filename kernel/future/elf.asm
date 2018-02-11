@@ -136,8 +136,6 @@ CreateLib	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-elf_loader_name	DB 'ELF',0
-
 InsertApp	Proc near
     push ds
     push es
@@ -148,8 +146,6 @@ InsertApp	Proc near
     mov ds,ds:p_app_sel
     mov ds:app_loader,elf_loader_sel
 ;
-    mov word ptr ds:app_loader_name,OFFSET elf_loader_name
-    mov word ptr ds:app_loader_name+2,cs
 ;	mov word ptr ds:app_close_proc,OFFSET close_proc
 ;	mov word ptr ds:app_close_proc+2,cs
 ;
