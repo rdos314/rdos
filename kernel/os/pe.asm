@@ -1220,8 +1220,6 @@ InsertApp       Proc near
     mov ds:app_close_proc+4,cs
     mov ds:app_fatal_error_exit_proc,OFFSET fatal_error_exit
     mov ds:app_fatal_error_exit_proc+4,cs
-    mov ds:app_patch_proc,OFFSET section_patch
-    mov ds:app_patch_proc+4,cs 
 ;
     popad
     pop es

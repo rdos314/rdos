@@ -408,7 +408,6 @@ app_loader                  DW ?
 
 app_fork_proc               DD ?,?
 app_close_proc              DD ?,?
-app_patch_proc              DD ?,?
 app_fatal_error_exit_proc   DD ?,?
 
 app_section_base            DD ?

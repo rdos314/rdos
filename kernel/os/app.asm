@@ -133,8 +133,6 @@ run_open_hooks  Proc near
     mov ds:app_fork_proc+4,0
     mov ds:app_close_proc,0
     mov ds:app_close_proc+4,0
-    mov ds:app_patch_proc,0
-    mov ds:app_patch_proc+4,0
     mov ds:app_fatal_error_exit_proc,0
     mov ds:app_fatal_error_exit_proc+4,0
 ;
@@ -381,11 +379,6 @@ clone_app    PROC far
     mov eax,ds:app_close_proc+4
     mov es:app_close_proc+4,eax
 ;
-    mov eax,ds:app_patch_proc
-    mov es:app_patch_proc,eax
-    mov eax,ds:app_patch_proc+4
-    mov es:app_patch_proc+4,eax
-;
     mov eax,ds:app_fatal_error_exit_proc
     mov es:app_fatal_error_exit_proc,eax
     mov eax,ds:app_fatal_error_exit_proc+4
@@ -493,9 +486,6 @@ exec_app    PROC far
     mov es:app_fatal_error_exit_proc,0
     mov es:app_fatal_error_exit_proc+4,0
 ;
-    mov es:app_patch_proc,0
-    mov es:app_patch_proc+4,0
-;
     mov es:app_section_base,0
 ;
     mov es:app_create_section_proc,0
@@ -537,40 +527,6 @@ exec_app    PROC far
     retf32
 exec_app    ENDP
     
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           AppPatch
-;
-;       DESCRIPTION:    App specific usergate patching
-;
-;       PARAMETERS:     DS:EBX      Instruction to patch
-;                       EAX         Gate #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-app_patch_name DB 'App Patch',0
-
-app_patch      PROC far
-    push es
-    push eax
-;
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
-    mov eax,es:app_patch_proc
-    or eax,es:app_patch_proc+4
-    stc
-    jz app_patch_done
-;    
-    call fword ptr es:app_patch_proc
-
-app_patch_done:
-    pop eax
-    pop es
-    retf32
-app_patch      ENDP
-
 code    ENDS
 
 END
