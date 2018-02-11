@@ -2770,19 +2770,21 @@ RunImage    Endp
 ;           DESCRIPTION:    Check for valid exe
 ;
 ;           PARAMETERS:     BX      C file handle
+;                           GS      Process sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_valid_exe Proc far
     push es
+    push ecx
     push edx
     push esi
     push edi
 ;
     xor edx,edx
-    mov eax,40h
+    mov eax,SIZE pe_process_struc
     AllocateSmallGlobalMem
-    mov ecx,eax
+    mov ecx,40h
     xor edi,edi
     ReadCFile
     jc iseFail
@@ -2808,7 +2810,8 @@ is_valid_exe Proc far
     cmp ax,'EP'
     jne iseFail
 ;
-    FreeMem
+    mov ax,es
+    mov gs,ax
     clc
     jmp iseDone
 
@@ -2820,6 +2823,7 @@ iseDone:
     pop edi
     pop esi
     pop edx
+    pop ecx
     pop es
     ret
 is_valid_exe Endp

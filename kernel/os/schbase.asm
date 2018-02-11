@@ -3471,31 +3471,6 @@ GetProgramLoader Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocateProcessBlock
-;
-;       DESCRIPTION:    Allocate process block
-;
-;       RETURNS:        GS      Process sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateProcessBlock Proc near    
-    push es
-    push eax
-; 
-    mov eax,SIZE process_struc
-    AllocateSmallGlobalMem
-    mov ax,es
-    mov gs,ax
-;
-    pop eax
-    pop es
-    ret
-AllocateProcessBlock  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           InitProcessBlock
 ;
 ;       DESCRIPTION:    Init process block
@@ -3534,8 +3509,6 @@ InitProcessBlock  Endp
 AllocateProcess Proc near    
     push ds
     pushad
-; 
-    call InitProcessBlock
 ;
     mov bx,dx
     ModuleIdToSel
@@ -4129,7 +4102,7 @@ spawn_program   Proc near
     jmp spDone
 
 spLoaderOk:    
-    call AllocateProcessBlock
+    call InitProcessBlock
     call AllocateProcess
     mov gs:pr_loader,ax
     mov gs:pr_kernel_file,bx
@@ -4298,7 +4271,7 @@ load_program   Proc near
     jmp lpFail
 
 lpLoaderOk:    
-    call AllocateProcessBlock
+    call InitProcessBlock
     call AllocateProcess
     mov gs:pr_loader,ax
     mov gs:pr_kernel_file,bx
@@ -5484,7 +5457,7 @@ run_process     PROC near
     jmp rpFail
 
 rpLoaderOk:
-    call AllocateProcessBlock
+    call InitProcessBlock
     call AllocateProcess
     mov gs:pr_kernel_file,bx
     mov gs:pr_loader,ax
@@ -5710,7 +5683,11 @@ init_state_hooks:
     push gs
     pushad
 ;
-    call AllocateProcessBlock
+    mov eax,SIZE process_struc
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov gs,ax
+;
     call InitProcessBlock
     mov eax,7
     mov ecx,eax
