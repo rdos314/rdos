@@ -7579,16 +7579,25 @@ init_thread_block       PROC near
     mov es:p_signal_spinlock,0
     mov es:p_wanted_core,0
     mov es:p_int_count,0
+;
     mov ax,ds:p_app_sel
     mov es:p_app_sel,ax
+;
     mov ax,ds:p_prog_id
     mov es:p_prog_id,ax
+;
+    mov ax,ds:p_loader
+    mov es:p_loader,ax
+;
     mov ax,ds:p_ldt_sel
     mov es:p_ldt_sel,ax
+;
     mov ax,ds:p_lib_sel
     mov es:p_lib_sel,ax
+;
     mov eax,ds:p_debug_proc
     mov es:p_debug_proc,eax
+;
     mov es:p_signal,0
     mov es:p_parent_switch,0
     mov es:p_wait_list,0
@@ -9156,6 +9165,7 @@ create_first_thread       PROC near
     mov es:p_pm_deb_offs,eax
     mov es:p_app_sel,ax
     mov es:p_prog_id,ax
+    mov es:p_loader,ax
     mov es:p_ldt_sel,ax
     mov es:p_lib_sel,ax
 ;

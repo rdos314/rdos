@@ -143,8 +143,7 @@ InsertApp	Proc near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_loader,elf_loader_sel
+    mov ds:p_loader,elf_loader_sel
 ;
 ;	mov word ptr ds:app_close_proc,OFFSET close_proc
 ;	mov word ptr ds:app_close_proc+2,cs

@@ -908,8 +908,7 @@ app_thread_started:
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_loader
+    mov ds,ds:p_loader
     call fword ptr ds:loader_start_thread_proc
 ;
     pop gs
@@ -948,8 +947,7 @@ create_app_thread    Proc far
 ;
     GetThread
     mov es,ax
-    mov es,es:p_app_sel
-    mov es,es:app_loader
+    mov es,es:p_loader
 ;
     mov eax,ecx
     call fword ptr es:loader_init_thread_proc
@@ -1019,8 +1017,7 @@ create_app_thread       Endp
 terminate_app_thread_kernel:
     GetThread
     mov es,ax
-    mov es,es:p_app_sel
-    mov es,es:app_loader
+    mov es,es:p_loader
     call fword ptr es:loader_free_thread_kernel_proc
 ;
     TerminateThread
@@ -1065,8 +1062,7 @@ terminate_app_thread:
 ;
     GetThread
     mov es,ax
-    mov es,es:p_app_sel
-    mov es,es:app_loader
+    mov es,es:p_loader
     call fword ptr es:loader_free_thread_user_proc
 ;
     pop gs
@@ -1773,8 +1769,7 @@ get_exe_name    PROC far
     push eax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_loader
+    mov ax,ds:p_loader
     or ax,ax
     mov ds,ax
     pop eax
@@ -1808,8 +1803,7 @@ get_cmd_line    PROC far
     push eax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_loader
+    mov ax,ds:p_loader
     or ax,ax
     mov ds,ax
     pop eax
@@ -1843,8 +1837,7 @@ get_env PROC far
     push eax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_loader
+    mov ax,ds:p_loader
     or ax,ax
     mov ds,ax
     pop eax
@@ -1879,8 +1872,7 @@ allocate_app_mem    PROC far
     push eax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_loader
+    mov ax,ds:p_loader
     or ax,ax
     mov ds,ax
     pop eax
@@ -1916,8 +1908,7 @@ free_app_mem    PROC far
     push eax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_loader
+    mov ax,ds:p_loader
     or ax,ax
     mov ds,ax
     pop eax
@@ -1955,8 +1946,7 @@ allocate_debug_app_mem  PROC far
     push eax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_loader
+    mov ax,ds:p_loader
     or ax,ax
     mov ds,ax
     pop eax
@@ -1993,8 +1983,7 @@ free_debug_app_mem      PROC far
     push eax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_loader
+    mov ax,ds:p_loader
     or ax,ax
     mov ds,ax
     pop eax
@@ -2229,8 +2218,7 @@ load_dll        Proc  near
 ;
     GetThread
     mov es,ax
-    mov gs,es:p_app_sel
-    mov ax,gs:app_loader
+    mov ax,es:p_loader
     or ax,ax
     mov gs,ax
     jz ldllFail
@@ -2561,8 +2549,7 @@ get_current_dll  Proc far
     les edi,[ebp+4]    
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_loader
+    mov ax,ds:p_loader
     or ax,ax
     mov ds,ax
     stc
@@ -4030,6 +4017,9 @@ spCopyExeLoop:
     mov ax,ds:p_app_sel
     mov gs:pr_app_sel,ax
 ;
+    mov ax,gs:pr_loader
+    mov ds:p_loader,ax
+;
     mov bx,gs:pr_parent_thread
     Signal
 ;
@@ -4405,6 +4395,10 @@ lpEnvDone:
 ;
     GetThread
     mov es,ax
+;
+    mov ax,gs:pr_loader
+    mov es:p_loader,ax
+;
     xor esi,esi
     mov ds,gs:pr_name_sel
     mov edi,OFFSET thread_name
@@ -4474,6 +4468,7 @@ lpCpExeLoop:
     mov ds,ds:p_app_sel
     mov ds:app_mod_id,bx
     mov ds:app_mod_sel,es
+;
     mov al,ds:app_key
     mov es:mod_key,al
 ;
@@ -4591,11 +4586,10 @@ app_patch Proc far
 ;
     push eax
     GetThread
-    mov es,ax
-    mov gs,es:p_app_sel
-    mov ax,gs:app_loader
     mov gs,ax
+    mov ax,gs:p_loader
     or ax,ax
+    mov gs,ax
     stc
     pop eax
     jz apDone
