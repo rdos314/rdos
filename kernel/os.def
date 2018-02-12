@@ -735,5 +735,6 @@ program_created_nr          = 639
 program_terminated_nr       = 640
 get_program_sel_nr          = 641
 get_program_id_nr           = 642
+module_loaded_nr            = 643
 
 osgate_entries              = 650

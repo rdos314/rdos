@@ -1098,6 +1098,12 @@ GetProgramId    MACRO
     OsGate get_program_id_nr
                     ENDM
 
+;  IN  EBX  	Selector
+;  OUT AX   	MID
+ModuleLoaded    MACRO
+    OsGate module_loaded_nr
+                    ENDM
+
 ;;;;;;;;;;; Signal & waits ;;;;;;;;;;;;;;;;
 
 ClearSignal     MACRO

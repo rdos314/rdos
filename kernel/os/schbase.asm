@@ -67,7 +67,6 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn IndexToHandle:near
     extrn MoveThread:near
 
-    extrn ModuleLoaded:near
     extrn ModuleUnloaded:near
     extrn GetModuleSel:near
     extrn GetModuleID:near
@@ -2065,7 +2064,7 @@ create_module   PROC far
     push ebx
 ;
     mov ebx,es
-    call ModuleLoaded
+    ModuleLoaded
 ;
     mov ebx,eax
     call AddProgramModule
@@ -2203,7 +2202,7 @@ load_dll        Proc  near
     mov es,bx
 ;
     movzx ebx,bx
-    call ModuleLoaded
+    ModuleLoaded
 ;
     mov ebx,eax
     call AddProgramModule
@@ -4135,7 +4134,7 @@ spCopyExeLoop:
     mov es,bx
 ;
     movzx ebx,bx
-    call ModuleLoaded
+    ModuleLoaded
 ;
     mov ebx,eax
     call AddProgramModule
@@ -4546,7 +4545,7 @@ lpCpExeLoop:
     mov es,bx
 ;
     movzx ebx,bx
-    call ModuleLoaded
+    ModuleLoaded
 ;
     mov ebx,eax
     call AddProgramModule
@@ -5489,7 +5488,7 @@ akmSizeLoop:
     rep movsb
 ;
     mov ebx,es
-    call ModuleLoaded
+    ModuleLoaded
 ;
     mov ebx,eax
     call AddKernelProgramModule

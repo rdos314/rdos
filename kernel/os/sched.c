@@ -595,8 +595,8 @@ int __far ImplGetModuleCount()
 #   Name       : ModuleLoaded
 #
 ##########################################################################*/
-#pragma aux ModuleLoaded "*" rdosdev parm routine [ebx] value [eax]
-int ModuleLoaded(int sel)
+#pragma aux ImplModuleLoaded "*" rdosdev parm routine [ebx] value [eax]
+int __far ImplModuleLoaded(int sel)
 {
     int i;
     int ok = FALSE;
@@ -658,6 +658,11 @@ int ModuleLoaded(int sel)
     }
 
     RdosLeaveKernelSection(&ThreadSection);
+
+    if (mid)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
 
     return mid;
 }
@@ -1050,6 +1055,7 @@ int main()
     RdosRegisterOsGate(osgate_program_terminated, (__rdos_gate_callback *)&ImplProgramTerminated, "Program Terminated");
     RdosRegisterOsGate(osgate_get_program_sel, (__rdos_gate_callback *)&ImplGetProgramSel, "Get Program Selector");
     RdosRegisterOsGate(osgate_get_program_id, (__rdos_gate_callback *)&ImplGetProgramID, "Get Program ID");
+    RdosRegisterOsGate(osgate_module_loaded, (__rdos_gate_callback *)&ImplModuleLoaded, "Module Loaded");
 
     RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
     RdosRegisterBimodalUserGate(usergate_get_program_count, (__rdos_gate_callback *)&ImplGetProgramCount, "Get Program Count");

@@ -735,6 +735,7 @@
 #define osgate_program_terminated 640
 #define osgate_get_program_sel 641
 #define osgate_get_program_id 642
+#define osgate_module_loaded 643
 
 
 
@@ -1475,4 +1476,5 @@
 #define OsGate_program_terminated 0x3E 0x67 0x9a 128 2 0 0 2 0
 #define OsGate_get_program_sel 0x3E 0x67 0x9a 129 2 0 0 2 0
 #define OsGate_get_program_id 0x3E 0x67 0x9a 130 2 0 0 2 0
+#define OsGate_module_loaded 0x3E 0x67 0x9a 131 2 0 0 2 0
 
