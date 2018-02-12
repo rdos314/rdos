@@ -67,7 +67,6 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn IndexToHandle:near
     extrn MoveThread:near
 
-    extrn ProcessTerminated:near
     extrn GetProcessSel:near
     extrn GetProcessID:near
 

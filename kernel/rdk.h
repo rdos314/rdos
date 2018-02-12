@@ -732,6 +732,7 @@
 #define osgate_terminate_app_thread 638
 
 #define osgate_program_created 639
+#define osgate_program_terminated 640
 
 
 
@@ -1469,4 +1470,5 @@
 #define OsGate_terminate_app_thread 0x3E 0x67 0x9a 126 2 0 0 2 0
 
 #define OsGate_program_created 0x3E 0x67 0x9a 127 2 0 0 2 0
+#define OsGate_program_terminated 0x3E 0x67 0x9a 128 2 0 0 2 0
 

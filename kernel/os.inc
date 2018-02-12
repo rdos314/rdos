@@ -1074,10 +1074,16 @@ AddThreadInt    MACRO
 CreatePid    MACRO
     OsGate create_pid_nr
                     ENDM
+
 ;  IN  EBX  	Selector
 ;  OUT AX   	PID
 ProgramCreated    MACRO
     OsGate program_created_nr
+                    ENDM
+
+;  IN  EBX  	Selector
+ProgramTerminated    MACRO
+    OsGate program_terminated_nr
                     ENDM
 
 ;;;;;;;;;;; Signal & waits ;;;;;;;;;;;;;;;;

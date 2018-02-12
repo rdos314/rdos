@@ -491,8 +491,8 @@ int __far ImplProgramCreated(int sel)
 #   Name       : ProcessTerminated
 #
 ##########################################################################*/
-#pragma aux ProcessTerminated "*" rdosdev parm routine [eax]
-void ProcessTerminated(int sel)
+#pragma aux ImplProgramTerminated "*" rdosdev parm routine [ebx]
+void __far ImplProgramTerminated(int sel)
 {
     int i;
 
@@ -512,6 +512,8 @@ void ProcessTerminated(int sel)
     }
 
     RdosLeaveKernelSection(&ThreadSection);    
+
+    RdosSetSuccess();
 }
     
 /*##########################################################################
@@ -1045,6 +1047,7 @@ int main()
     RdosHookInitTasking(&InitTasking);
 
     RdosRegisterOsGate(osgate_program_created, (__rdos_gate_callback *)&ImplProgramCreated, "Program Created");
+    RdosRegisterOsGate(osgate_program_terminated, (__rdos_gate_callback *)&ImplProgramTerminated, "Program Terminated");
 
     RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
     RdosRegisterBimodalUserGate(usergate_get_program_count, (__rdos_gate_callback *)&ImplGetProgramCount, "Get Program Count");
