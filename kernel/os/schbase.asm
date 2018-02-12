@@ -69,7 +69,6 @@ _TEXT    SEGMENT byte public 'CODE'
 
     extrn ModuleLoaded:near
     extrn ModuleUnloaded:near
-    extrn GetActiveModules:near
     extrn GetModuleSel:near
     extrn GetModuleID:near
 
@@ -4739,25 +4738,6 @@ get_exit_code   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetModuleCount
-;
-;           DESCRIPTION:    Get number of modules
-;
-;           RETURNS:        AX          Module count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_module_count_name DB 'Get Module Count',0
-    
-get_module_count   Proc far
-    call GetActiveModules
-    clc
-    ret
-get_module_count   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetModuleInfo
 ;
 ;           DESCRIPTION:    Get module info
@@ -6150,12 +6130,6 @@ init_state_hooks:
     mov edi,OFFSET continue_debug_event_name
     xor dx,dx
     mov ax,continue_debug_event_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_module_count
-    mov edi,OFFSET get_module_count_name
-    xor dx,dx
-    mov ax,get_module_count_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET get_module_info16

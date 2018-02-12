@@ -135,7 +135,7 @@ void StartCore()
         ActiveProcessors++;
     }
 }
-    
+
 /*##########################################################################
 #
 #   Name       : StopCore
@@ -150,9 +150,9 @@ void StopCore()
         ActiveProcessors--;
         ReqShutdown(ActiveProcessors);
     }
-*/    
+*/
 }
-    
+
 /*##########################################################################
 #
 #   Name       : GetActiveThreads
@@ -163,7 +163,7 @@ int GetActiveThreads()
 {
     return ActiveThreads;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : ThreadCreated
@@ -208,10 +208,10 @@ void ThreadCreated(int handle, int ID, int Prio)
         ThreadArr[Index].IdleCount = 0;
         ThreadArr[Index].BaseTics = 0;
     }
-    
-    RdosLeaveKernelSection(&ThreadSection);    
+
+    RdosLeaveKernelSection(&ThreadSection);
 }
-    
+
 /*##########################################################################
 #
 #   Name       : ThreadTerminated
@@ -222,11 +222,11 @@ void ThreadTerminated(int handle)
 {
     int i;
 
-    RdosEnterKernelSection(&ThreadSection);    
+    RdosEnterKernelSection(&ThreadSection);
 
     for (i = 0; i < ActiveThreads; i++)
     {
-        if (ThreadArr[i].Valid && ThreadArr[i].Handle == handle) 
+        if (ThreadArr[i].Valid && ThreadArr[i].Handle == handle)
         {
             ThreadArr[i].Valid = FALSE;
 
@@ -237,9 +237,9 @@ void ThreadTerminated(int handle)
         }
     }
 
-    RdosLeaveKernelSection(&ThreadSection);    
+    RdosLeaveKernelSection(&ThreadSection);
 }
-    
+
 /*##########################################################################
 #
 #   Name       : IdToHandle
@@ -253,11 +253,11 @@ int IdToHandle(int ID)
     int i;
     int handle = 0;
 
-    RdosEnterKernelSection(&ThreadSection);    
+    RdosEnterKernelSection(&ThreadSection);
 
     for (i = 0; i < ActiveThreads; i++)
     {
-        if (ThreadArr[i].Valid && ThreadArr[i].ID == ID) 
+        if (ThreadArr[i].Valid && ThreadArr[i].ID == ID)
         {
             handle = ThreadArr[i].Handle;
             break;
@@ -273,7 +273,7 @@ int IdToHandle(int ID)
 
     return handle;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : IndexToHandle
@@ -286,13 +286,13 @@ int IndexToHandle(int Index)
 {
     int handle = 0;
 
-    RdosEnterKernelSection(&ThreadSection);    
+    RdosEnterKernelSection(&ThreadSection);
 
     if (Index >= 0 && Index < ActiveThreads)
-        if (ThreadArr[Index].Valid) 
+        if (ThreadArr[Index].Valid)
             handle = ThreadArr[Index].Handle;
 
-    RdosLeaveKernelSection(&ThreadSection);    
+    RdosLeaveKernelSection(&ThreadSection);
 
     if (handle)
         RdosSetSuccess();
@@ -301,7 +301,7 @@ int IndexToHandle(int Index)
 
     return handle;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : CreateTid
@@ -316,7 +316,7 @@ int CreateTid()
     int tid;
     int ok;
 
-    RdosEnterKernelSection(&ThreadSection);    
+    RdosEnterKernelSection(&ThreadSection);
 
     ok = FALSE;
 
@@ -333,7 +333,7 @@ int CreateTid()
 
         for (i = 0; i < ActiveThreads; i++)
         {
-            if (ThreadArr[i].Valid && ThreadArr[i].ID == tid) 
+            if (ThreadArr[i].Valid && ThreadArr[i].ID == tid)
             {
                 ok = FALSE;
                 break;
@@ -341,11 +341,11 @@ int CreateTid()
         }
     }
 
-    RdosLeaveKernelSection(&ThreadSection);    
+    RdosLeaveKernelSection(&ThreadSection);
 
     return tid;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : MoveThread
@@ -357,21 +357,21 @@ int CreateTid()
 void MoveThread(int Core, int ThreadId)
 {
     int i;
-    
+
     if (Core < RdosGetCoreCount())
     {
-        RdosEnterKernelSection(&CoreSection); 
+        RdosEnterKernelSection(&CoreSection);
 
         while (ActiveProcessors <= Core)
             StartCore();
 
-        RdosLeaveKernelSection(&CoreSection); 
+        RdosLeaveKernelSection(&CoreSection);
 
-        RdosEnterKernelSection(&ThreadSection); 
+        RdosEnterKernelSection(&ThreadSection);
 
         for (i = 0; i < ActiveThreads; i++)
         {
-            if (ThreadArr[i].Valid && ThreadArr[i].ID == ThreadId) 
+            if (ThreadArr[i].Valid && ThreadArr[i].ID == ThreadId)
             {
                 if (Core != ThreadArr[i].Core)
                 {
@@ -385,7 +385,7 @@ void MoveThread(int Core, int ThreadId)
         RdosLeaveKernelSection(&ThreadSection);
     }
 }
-    
+
 /*##########################################################################
 #
 #   Name       : GetActiveCores
@@ -396,7 +396,7 @@ int __far ImplGetActiveCores()
 {
     return ActiveProcessors;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : GetProgramCount
@@ -408,7 +408,7 @@ int __far ImplGetProgramCount()
     RdosSetSuccess();
     return ActiveProcesses;
 }
-        
+
 /*##########################################################################
 #
 #   Name       : ProcessCreated
@@ -422,7 +422,7 @@ int __far ImplProgramCreated(int sel)
     int Index;
     int pid;
 
-    RdosEnterKernelSection(&ThreadSection);    
+    RdosEnterKernelSection(&ThreadSection);
 
     ok = FALSE;
 
@@ -439,7 +439,7 @@ int __far ImplProgramCreated(int sel)
 
         for (i = 0; i < ActiveProcesses; i++)
         {
-            if (ProcessArr[i].Valid && ProcessArr[i].ID == pid) 
+            if (ProcessArr[i].Valid && ProcessArr[i].ID == pid)
             {
                 ok = FALSE;
                 break;
@@ -475,7 +475,7 @@ int __far ImplProgramCreated(int sel)
         ProcessArr[Index].Sel = sel;
         ProcessArr[Index].ID = pid;
     }
-    
+
     RdosLeaveKernelSection(&ThreadSection);
 
     if (pid)
@@ -485,7 +485,7 @@ int __far ImplProgramCreated(int sel)
 
     return pid;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : ProgramTerminated
@@ -496,11 +496,11 @@ void __far ImplProgramTerminated(int sel)
 {
     int i;
 
-    RdosEnterKernelSection(&ThreadSection);    
+    RdosEnterKernelSection(&ThreadSection);
 
     for (i = 0; i < ActiveProcesses; i++)
     {
-        if (ProcessArr[i].Valid && ProcessArr[i].Sel == sel) 
+        if (ProcessArr[i].Valid && ProcessArr[i].Sel == sel)
         {
             ProcessArr[i].Valid = FALSE;
 
@@ -511,11 +511,11 @@ void __far ImplProgramTerminated(int sel)
         }
     }
 
-    RdosLeaveKernelSection(&ThreadSection);    
+    RdosLeaveKernelSection(&ThreadSection);
 
     RdosSetSuccess();
 }
-    
+
 /*##########################################################################
 #
 #   Name       : GetProgramSel
@@ -529,18 +529,18 @@ int __far ImplGetProgramSel(int ID)
     int i;
     int sel = 0;
 
-    RdosEnterKernelSection(&ThreadSection);    
+    RdosEnterKernelSection(&ThreadSection);
 
     for (i = 0; i < ActiveProcesses; i++)
     {
-        if (ProcessArr[i].Valid && ProcessArr[i].ID == ID) 
+        if (ProcessArr[i].Valid && ProcessArr[i].ID == ID)
         {
             sel = ProcessArr[i].Sel;
             break;
         }
     }
 
-    RdosLeaveKernelSection(&ThreadSection);    
+    RdosLeaveKernelSection(&ThreadSection);
 
     if (sel)
         RdosSetSuccess();
@@ -549,7 +549,7 @@ int __far ImplGetProgramSel(int ID)
 
     return sel;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : GetProgramID
@@ -568,7 +568,7 @@ int __far ImplGetProgramID(int Index)
         if (ProcessArr[Index].Valid)
             ID = ProcessArr[Index].ID;
 
-    RdosLeaveKernelSection(&ThreadSection);    
+    RdosLeaveKernelSection(&ThreadSection);
 
     if (ID)
         RdosSetSuccess();
@@ -577,18 +577,19 @@ int __far ImplGetProgramID(int Index)
 
     return ID;
 }
-    
+
 /*##########################################################################
 #
-#   Name       : GetActiveModules
+#   Name       : GetModuleCount
 #
 ##########################################################################*/
-#pragma aux GetActiveModules "*" rdosdev parm routine
-int GetActiveModules()
+#pragma aux ImplGetModuleCount "*" rdosdev parm routine
+int __far ImplGetModuleCount()
 {
+    RdosSetSuccess();
     return ActiveModules;
 }
-        
+
 /*##########################################################################
 #
 #   Name       : ModuleLoaded
@@ -602,7 +603,7 @@ int ModuleLoaded(int sel)
     int Index;
     int mid;
 
-    RdosEnterKernelSection(&ThreadSection);    
+    RdosEnterKernelSection(&ThreadSection);
 
     ok = FALSE;
 
@@ -619,7 +620,7 @@ int ModuleLoaded(int sel)
 
         for (i = 0; i < ActiveModules; i++)
         {
-            if (ModuleArr[i].Valid && ModuleArr[i].ID == mid) 
+            if (ModuleArr[i].Valid && ModuleArr[i].ID == mid)
             {
                 ok = FALSE;
                 break;
@@ -655,12 +656,12 @@ int ModuleLoaded(int sel)
         ModuleArr[Index].Sel = sel;
         ModuleArr[Index].ID = mid;
     }
-    
+
     RdosLeaveKernelSection(&ThreadSection);
 
     return mid;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : ModuleUnloaded
@@ -671,11 +672,11 @@ void ModuleUnloaded(int sel)
 {
     int i;
 
-    RdosEnterKernelSection(&ThreadSection);    
+    RdosEnterKernelSection(&ThreadSection);
 
     for (i = 0; i < ActiveModules; i++)
     {
-        if (ModuleArr[i].Valid && ModuleArr[i].Sel == sel) 
+        if (ModuleArr[i].Valid && ModuleArr[i].Sel == sel)
         {
             ModuleArr[i].Valid = FALSE;
 
@@ -686,9 +687,9 @@ void ModuleUnloaded(int sel)
         }
     }
 
-    RdosLeaveKernelSection(&ThreadSection);    
+    RdosLeaveKernelSection(&ThreadSection);
 }
-    
+
 /*##########################################################################
 #
 #   Name       : GetModuleSel
@@ -702,18 +703,18 @@ int GetModuleSel(int ID)
     int i;
     int sel = 0;
 
-    RdosEnterKernelSection(&ThreadSection);    
+    RdosEnterKernelSection(&ThreadSection);
 
     for (i = 0; i < ActiveModules; i++)
     {
-        if (ModuleArr[i].Valid && ModuleArr[i].ID == ID) 
+        if (ModuleArr[i].Valid && ModuleArr[i].ID == ID)
         {
             sel = ModuleArr[i].Sel;
             break;
         }
     }
 
-    RdosLeaveKernelSection(&ThreadSection);    
+    RdosLeaveKernelSection(&ThreadSection);
 
     if (sel)
         RdosSetSuccess();
@@ -722,7 +723,7 @@ int GetModuleSel(int ID)
 
     return sel;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : GetModuleID
@@ -741,7 +742,7 @@ int GetModuleID(int Index)
         if (ModuleArr[Index].Valid)
             ID = ModuleArr[Index].ID;
 
-    RdosLeaveKernelSection(&ThreadSection);    
+    RdosLeaveKernelSection(&ThreadSection);
 
     if (ID)
         RdosSetSuccess();
@@ -750,7 +751,7 @@ int GetModuleID(int Index)
 
     return ID;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : Scheduler thread
@@ -796,7 +797,7 @@ void __far SchedulerThread(void *param)
         StatCount = 0;
         MaxLoad = 0;
 
-        RdosEnterKernelSection(&ThreadSection); 
+        RdosEnterKernelSection(&ThreadSection);
 
         for (Core = 0; Core < ProcessorCount; Core++)
         {
@@ -810,7 +811,7 @@ void __far SchedulerThread(void *param)
 
         NullSum = 0;
         CoreSum = 0;
-        
+
         for (Core = 0; Core < ActiveProcessors; Core++)
         {
             NullTime = CoreStatArr[Core].NullTics;
@@ -818,7 +819,7 @@ void __far SchedulerThread(void *param)
 
             NullSum += NullTime;
             CoreSum += CoreTime;
-    
+
             if (CoreTime)
                 Load = 1000 - 1000 * NullTime / CoreTime;
             else
@@ -833,7 +834,7 @@ void __far SchedulerThread(void *param)
             if (Load > MaxLoad)
                 MaxLoad = Load;
 
-            CoreStatArr[Core].Load = Load;                
+            CoreStatArr[Core].Load = Load;
         }
 
         if (CoreSum)
@@ -859,13 +860,13 @@ void __far SchedulerThread(void *param)
                 Core = ThreadArr[i].Core;
 
                 Load = 0;
-                
+
                 if (Core < ProcessorCount)
                 {
-                    CoreStatArr[Core].ThreadCount++;        
+                    CoreStatArr[Core].ThreadCount++;
 
                     if (ThreadArr[i].Prio && ThreadArr[i].Prio < 10)
-                    {            
+                    {
                         if (CoreStatArr[Core].CoreTics)
                             Load = 1000 * Diff / CoreStatArr[Core].CoreTics;
                         else
@@ -886,23 +887,23 @@ void __far SchedulerThread(void *param)
                 else
                     ThreadArr[i].IdleCount++;
             }
-        } 
+        }
 
-        RdosLeaveKernelSection(&ThreadSection); 
+        RdosLeaveKernelSection(&ThreadSection);
 
-        RdosEnterKernelSection(&CoreSection); 
+        RdosEnterKernelSection(&CoreSection);
 
         if (MaxLoad > 600)
             RdosUpdateFreq(-1);
         else
         {
-            if (MaxLoad < 300)            
+            if (MaxLoad < 300)
                 RdosUpdateFreq(1);
             else
                 RdosUpdateFreq(0);
         }
 
-        RdosLeaveKernelSection(&CoreSection); 
+        RdosLeaveKernelSection(&CoreSection);
 
         if (CurrLoad > 400)
             StartCore();
@@ -912,7 +913,7 @@ void __far SchedulerThread(void *param)
         {
             HighestLoad = -1;
             LowestLoad = 1100;
-        
+
             for (Core = 0; Core < ActiveProcessors; Core++)
             {
                 Load = CoreStatArr[Core].Load;
@@ -922,7 +923,7 @@ void __far SchedulerThread(void *param)
                     HighestCore = Core;
                     HighestLoad = Load;
                 }
-    
+
                 if (Load < LowestLoad)
                 {
                     LowestCore = Core;
@@ -951,12 +952,12 @@ void __far SchedulerThread(void *param)
                         {
                             BestLoad = Load;
                             BestThread = i;
-                        }                
+                        }
                     }
                 }
 
-                RdosEnterKernelSection(&ThreadSection); 
-    
+                RdosEnterKernelSection(&ThreadSection);
+
                 for (i = 0; i < ActiveThreads; i++)
                 {
                     if (ThreadArr[i].Valid && ThreadArr[i].ID == ThreadStatArr[BestThread].ID)
@@ -979,10 +980,10 @@ void __far SchedulerThread(void *param)
                         SetThreadCore(0, ThreadArr[i].Handle);
                     }
                 }
- 
+
                 RdosLeaveKernelSection(&ThreadSection);
             }
-        }    
+        }
     }
 }
 
@@ -1006,7 +1007,7 @@ void InitThreadList()
 
     for (i = 0; i < MAX_PROCESSES; i++)
         ProcessArr[i].Valid = FALSE;
-        
+
     RdosInitKernelSection(&ThreadSection);
     RdosInitKernelSection(&CoreSection);
 }
@@ -1026,7 +1027,7 @@ void InitThreadList()
 void __far InitTasking()
 {
     RdosCreateKernelThread(5, 0x1000, &SchedulerThread, "Scheduler", 0);
-} 
+}
 
 /*##########################################################################
 #
@@ -1052,4 +1053,5 @@ int main()
 
     RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
     RdosRegisterBimodalUserGate(usergate_get_program_count, (__rdos_gate_callback *)&ImplGetProgramCount, "Get Program Count");
+    RdosRegisterBimodalUserGate(usergate_get_module_count, (__rdos_gate_callback *)&ImplGetModuleCount, "Get Module Count");
 }
