@@ -51,6 +51,7 @@ debug_event_wait_header ENDS
 data    SEGMENT byte public 'DATA'
 
 term_gate_sel       DW ?
+free_dll_gate_sel   DW ?
 state_hooks         DW ?
 loader_count        DW ?
 state_arr           DD 2*32 DUP(?)
@@ -2212,6 +2213,7 @@ load_dll        Proc  near
     call AddProgramModule
 ;
     InitSection es:mod_section
+    mov es:mod_usage,1
     mov es:mod_id,bx
     mov [ebp].load_ebx,ebx
     and byte ptr [ebp].load_eflags,NOT 1
@@ -2385,6 +2387,62 @@ load_dll16  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           unload_dll
+;
+;           DESCRIPTION:    Unload DLL callback
+;
+;       PARAMETERS:         EBX         Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unload_dll:
+    push eax
+    pushfd
+    pop eax
+    mov [esp+8],eax
+    mov eax,[esp+4]
+    xchg eax,[esp]
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    mov ebp,esp
+    add ebp,28
+    mov dword ptr [ebp].load_cs,flat_code_sel
+;
+    push ds
+    push es
+    push fs
+    push gs
+;
+    mov es,[ebp].load_ss
+    mov edi,[ebp].load_esp
+    add edi,8
+    mov eax,es:[edi]
+    mov [ebp].load_eip,eax
+    add edi,4
+    mov [ebp].load_esp,edi
+;
+    pop gs
+    pop fs
+    pop es
+    pop ds
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           free_dll_do
 ;
 ;           DESCRIPTION:    Free DLL
@@ -2399,6 +2457,44 @@ free_dll_do  Proc near
     jc free_dll_done
 ;
     mov ds,bx
+    sub ds:mod_usage,1
+    jnz free_dll_done
+;
+    push ds
+    push es
+    push edx
+    push edi
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov edx,[ebp].load_eip
+    mov es,[ebp].load_ss
+    mov edi,[ebp].load_esp
+    sub edi,12
+    mov [ebp].load_esp,edi
+    mov [ebp].load_eip,edi
+;
+    mov al,90h
+    stosb
+;
+    mov al,9Ah
+    stosb
+;
+    xor eax,eax
+    stosd
+;
+    mov ax,ds:free_dll_gate_sel
+    stosw
+;
+    mov eax,edx
+    stosd
+;
+    pop edi
+    pop edx
+    pop es
+    pop ds
+;
     mov ax,ds:mod_loader
     or ax,ax
     mov ds,ax
@@ -5667,6 +5763,15 @@ InitScheduler_    Proc near
     xor cl,cl
     CreateCallGateSelector32
     mov es:term_gate_sel,bx
+;
+    AllocateGdt
+    or bl,3
+    mov eax,cs
+    mov ds,eax
+    mov esi,OFFSET unload_dll
+    xor cl,cl
+    CreateCallGateSelector32
+    mov es:free_dll_gate_sel,bx
 ;
     mov ecx,32
     mov edi,OFFSET state_arr
