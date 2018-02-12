@@ -3425,6 +3425,56 @@ AddUserStack    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           PutOnUserStack
+;
+;           DESCRIPTION:    Put address on call frame
+;
+;           PARAMETERS:     ESI                Address
+;                           EBP                Stack frame
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+put_user_start:
+    retn
+put_user_back:
+    retn thread_code_size
+put_user_end:
+
+PutOnUserStack    Proc near
+    mov ax,flat_sel
+    mov ds,ax
+    mov gs,bx
+;    
+    mov es,[ebp].load_ss
+    mov edi,[ebp].load_esp
+    sub edi,thread_code_size + 3 * 4
+    mov [ebp].load_esp,edi
+;
+    mov eax,esi
+    stosd
+;
+    mov eax,edi
+    add eax,8
+    add eax,OFFSET put_user_back - OFFSET put_user_start
+    stosd
+;
+    mov eax,[ebp].load_eip
+    stosd
+;
+    mov [ebp].load_eip,edi
+;
+    mov eax,cs
+    mov ds,eax
+    mov eax,edi
+    mov esi,OFFSET put_user_start
+    mov ecx,OFFSET put_user_end - OFFSET put_user_start
+    rep movsb
+    ret
+PutOnUserStack    Endp
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitDebugUserStack
 ;
 ;           DESCRIPTION:    Init debugger stack
@@ -5040,6 +5090,8 @@ get_current_dll     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+wep_name DB 'WEP', 0
+
 unload_dll    Proc far
     mov es,bx
     mov dx,es:lib_debug_lib
@@ -5054,15 +5106,31 @@ unload_dll    Proc far
     pop es
 
 udNotifyDone:
-    mov ax,flat_data_sel
-    mov ds,ax
-    mov edi,es:mod_base
-    call FreeImportedDlls
-;
+    push es
     call InitUserStack
 ;
     mov edx,0
     call AddUserStack
+    pop es
+;
+    push es
+    mov bx,es:mod_id
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET wep_name
+    GetModuleProc
+    pop es
+    jc udWepOk
+;
+    push es
+    call PutOnUserStack
+    pop es
+
+udWepOk:
+    mov ax,flat_data_sel
+    mov ds,ax
+    mov edi,es:mod_base
+    call FreeImportedDlls
     ret
 unload_dll    Endp
 
