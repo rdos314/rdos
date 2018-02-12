@@ -17,10 +17,28 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+void TestThread(void *)
+{
+    RdosWaitMilli(140);
+}
+
 void main()
 {
-//    TestFunc();
+    int i;
+    int gdt;
+    int linear;
 
-    int handle = RdosLoadDll("testlib.dll");
-    RdosFreeDll(handle);
+    TestFunc();
+
+    for (i = 0; i < 100000; i++)
+    {
+        RdosCreateThread(&TestThread, "Test", 0, 0x40000);
+
+        gdt = RdosGetFreeGdt();
+        linear = RdosGetFreeBigLocalLinear();
+
+        printf("GDT: %d, Linear: %08lX\r\n", gdt, linear);
+
+        RdosWaitMilli(250);
+    }
 }
