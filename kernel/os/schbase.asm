@@ -67,7 +67,6 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn IndexToHandle:near
     extrn MoveThread:near
 
-    extrn ProcessCreated:near
     extrn ProcessTerminated:near
     extrn GetProcessSel:near
     extrn GetProcessID:near
@@ -4302,7 +4301,8 @@ spNoEnv:
 
 spEnvDone:
     mov ebx,gs
-    call ProcessCreated
+    ProgramCreated
+;
     mov ebx,eax
     ClearSignal
 ;
@@ -4463,7 +4463,7 @@ lpNoEnv:
 
 lpEnvDone:
     mov ebx,gs
-    call ProcessCreated
+    ProgramCreated
     mov ebx,eax
 ;
     GetThread
@@ -5593,7 +5593,7 @@ rpLoaderOk:
     call CreateDefaultEnv
 ;
     mov ebx,gs
-    call ProcessCreated
+    ProgramCreated
     mov ebx,eax
 ;
     mov es,gs:pr_name_sel
@@ -5768,8 +5768,6 @@ start_programs    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-system_process_name DB "System", 0
-
     public InitScheduler_
 
 InitScheduler_    Proc near
@@ -5808,31 +5806,6 @@ init_state_hooks:
     mov es:[edi+4],cs
     add edi,8
     loop init_state_hooks
-;
-    push es
-    push gs
-    pushad
-;
-    mov eax,SIZE process_struc
-    AllocateSmallGlobalMem
-    mov ax,es
-    mov gs,ax
-;
-    call InitProcessBlock
-    mov eax,7
-    mov ecx,eax
-    AllocateSmallGlobalMem
-    mov esi,OFFSET system_process_name
-    xor edi,edi
-    rep movs byte ptr es:[edi],cs:[esi]
-    mov gs:pr_name_sel,es
-;
-    mov ebx,gs
-    call ProcessCreated
-;
-    popad
-    pop gs
-    pop es
 ;    
     mov ax,cs
     mov ds,ax

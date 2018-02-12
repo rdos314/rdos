@@ -354,7 +354,6 @@
 #define osgate_post_audio_out_buf 334
 #define osgate_is_audio_out_completed 335
 
-#define osgate_set_module 336
 #define osgate_create_module 337
 #define osgate_free_module 338
 #define osgate_reset_module 339
@@ -722,8 +721,17 @@
 
 #define osgate_create_pid 631
 
-#define osgate_start_programs 633
-#define osgate_register_loader 634
+#define osgate_start_programs 632
+#define osgate_register_loader 633
+
+#define osgate_find_module_by_address 634
+#define osgate_find_module_by_name 635
+#define osgate_get_module_by_index 636
+
+#define osgate_create_app_thread 637
+#define osgate_terminate_app_thread 638
+
+#define osgate_program_created 639
 
 
 
@@ -1083,7 +1091,6 @@
 #define OsGate_post_audio_out_buf 0x3E 0x67 0x9a 78 1 0 0 2 0
 #define OsGate_is_audio_out_completed 0x3E 0x67 0x9a 79 1 0 0 2 0
 
-#define OsGate_set_module 0x3E 0x67 0x9a 80 1 0 0 2 0
 #define OsGate_create_module 0x3E 0x67 0x9a 81 1 0 0 2 0
 #define OsGate_free_module 0x3E 0x67 0x9a 82 1 0 0 2 0
 #define OsGate_reset_module 0x3E 0x67 0x9a 83 1 0 0 2 0
@@ -1451,6 +1458,15 @@
 
 #define OsGate_create_pid 0x3E 0x67 0x9a 119 2 0 0 2 0
 
-#define OsGate_start_programs 0x3E 0x67 0x9a 121 2 0 0 2 0
-#define OsGate_register_loader 0x3E 0x67 0x9a 122 2 0 0 2 0
+#define OsGate_start_programs 0x3E 0x67 0x9a 120 2 0 0 2 0
+#define OsGate_register_loader 0x3E 0x67 0x9a 121 2 0 0 2 0
+
+#define OsGate_find_module_by_address 0x3E 0x67 0x9a 122 2 0 0 2 0
+#define OsGate_find_module_by_name 0x3E 0x67 0x9a 123 2 0 0 2 0
+#define OsGate_get_module_by_index 0x3E 0x67 0x9a 124 2 0 0 2 0
+
+#define OsGate_create_app_thread 0x3E 0x67 0x9a 125 2 0 0 2 0
+#define OsGate_terminate_app_thread 0x3E 0x67 0x9a 126 2 0 0 2 0
+
+#define OsGate_program_created 0x3E 0x67 0x9a 127 2 0 0 2 0
 

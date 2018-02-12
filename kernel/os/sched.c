@@ -405,6 +405,7 @@ int __far ImplGetActiveCores()
 #pragma aux ImplGetProgramCount "*" rdosdev parm routine
 int __far ImplGetProgramCount()
 {
+    RdosSetSuccess();
     return ActiveProcesses;
 }
         
@@ -413,8 +414,8 @@ int __far ImplGetProgramCount()
 #   Name       : ProcessCreated
 #
 ##########################################################################*/
-#pragma aux ProcessCreated "*" rdosdev parm routine [ebx] value [eax]
-int ProcessCreated(int sel)
+#pragma aux ImplProgramCreated "*" rdosdev parm routine [ebx] value [eax]
+int __far ImplProgramCreated(int sel)
 {
     int i;
     int ok = FALSE;
@@ -476,6 +477,11 @@ int ProcessCreated(int sel)
     }
     
     RdosLeaveKernelSection(&ThreadSection);
+
+    if (pid)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
 
     return pid;
 }
@@ -1037,6 +1043,8 @@ int main()
     InitThreadList();
     InitScheduler();
     RdosHookInitTasking(&InitTasking);
+
+    RdosRegisterOsGate(osgate_program_created, (__rdos_gate_callback *)&ImplProgramCreated, "Program Created");
 
     RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
     RdosRegisterBimodalUserGate(usergate_get_program_count, (__rdos_gate_callback *)&ImplGetProgramCount, "Get Program Count");
