@@ -1109,6 +1109,12 @@ ModuleUnloaded    MACRO
     OsGate module_unloaded_nr
                     ENDM
 
+;  IN  EAX  	Module #
+;  OUT AX       ID
+GetModuleId    MACRO
+    OsGate get_module_id_nr
+                    ENDM
+
 ;;;;;;;;;;; Signal & waits ;;;;;;;;;;;;;;;;
 
 ClearSignal     MACRO

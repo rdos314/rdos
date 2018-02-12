@@ -67,8 +67,6 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn IndexToHandle:near
     extrn MoveThread:near
 
-    extrn GetModuleID:near
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -4722,10 +4720,8 @@ get_module_info    Proc near
     push esi
     push edi
 ;
-    call GetModuleID
-    or eax,eax
-    stc
-    jz gmiDone
+    GetModuleId
+    jc gmiDone
 ;
     mov edx,eax
     mov ebx,eax

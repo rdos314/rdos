@@ -737,8 +737,8 @@ int __far ImplModuleIdToSel(int ID)
 #   Descr      : Get module ID byte index
 #
 ##########################################################################*/
-#pragma aux GetModuleID "*" rdosdev parm routine [eax] value [eax]
-int GetModuleID(int Index)
+#pragma aux ImplGetModuleId "*" rdosdev parm routine [eax] value [eax]
+int __far ImplGetModuleId(int Index)
 {
     int ID = 0;
 
@@ -1059,6 +1059,7 @@ int main()
     RdosRegisterOsGate(osgate_module_loaded, (__rdos_gate_callback *)&ImplModuleLoaded, "Module Loaded");
     RdosRegisterOsGate(osgate_module_unloaded, (__rdos_gate_callback *)&ImplModuleUnloaded, "Module Unloaded");
     RdosRegisterOsGate(osgate_module_id_to_sel, (__rdos_gate_callback *)&ImplModuleIdToSel, "Module ID to Selector");
+    RdosRegisterOsGate(osgate_get_module_id, (__rdos_gate_callback *)&ImplGetModuleId, "Get Module ID");
 
     RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
     RdosRegisterBimodalUserGate(usergate_get_program_count, (__rdos_gate_callback *)&ImplGetProgramCount, "Get Program Count");
