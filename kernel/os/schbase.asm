@@ -2465,6 +2465,12 @@ unload_dll:
 unload_dll_free:
     movzx eax,bx
     call ModuleUnloaded
+;
+    mov es,ebx
+    mov bx,es:mod_c_file_handle
+    CloseCFile
+;
+    FreeMem
 
 unload_dll_done:
     pop gs
