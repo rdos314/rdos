@@ -67,7 +67,6 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn IndexToHandle:near
     extrn MoveThread:near
 
-    extrn ModuleUnloaded:near
     extrn GetModuleSel:near
     extrn GetModuleID:near
 
@@ -2449,8 +2448,8 @@ unload_dll:
     pop bx
 
 unload_dll_free:
-    movzx eax,bx
-    call ModuleUnloaded
+    movzx ebx,bx
+    ModuleUnloaded
 ;
     mov es,ebx
     mov bx,es:mod_c_file_handle

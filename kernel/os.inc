@@ -1104,6 +1104,11 @@ ModuleLoaded    MACRO
     OsGate module_loaded_nr
                     ENDM
 
+;  IN  EBX  	Selector
+ModuleUnloaded    MACRO
+    OsGate module_unloaded_nr
+                    ENDM
+
 ;;;;;;;;;;; Signal & waits ;;;;;;;;;;;;;;;;
 
 ClearSignal     MACRO
