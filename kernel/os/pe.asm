@@ -3430,6 +3430,7 @@ AddUserStack    Endp
 ;           DESCRIPTION:    Put address on call frame
 ;
 ;           PARAMETERS:     ESI                Address
+;                           EDX                P
 ;                           EBP                Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3447,15 +3448,18 @@ PutOnUserStack    Proc near
 ;    
     mov es,[ebp].load_ss
     mov edi,[ebp].load_esp
-    sub edi,thread_code_size + 3 * 4
+    sub edi,thread_code_size + 4 * 4
     mov [ebp].load_esp,edi
 ;
     mov eax,esi
     stosd
 ;
     mov eax,edi
-    add eax,8
+    add eax,12
     add eax,OFFSET put_user_back - OFFSET put_user_start
+    stosd
+;
+    mov eax,edx
     stosd
 ;
     mov eax,[ebp].load_eip

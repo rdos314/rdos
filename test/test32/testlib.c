@@ -8,3 +8,8 @@ int __stdcall LibMain( int hdll, int reason, void *reserved )
 void DLL_EXPORT TestFunc()
 {
 }
+
+int __declspec(dllexport) __pascal WEP(int p)
+{
+    return 1;
+}
