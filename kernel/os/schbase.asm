@@ -2456,9 +2456,15 @@ unload_dll:
     or ax,ax
     mov ds,ax
     stc
-    jz unload_dll_done
+    jz unload_dll_free
 ;    
+    push bx
     call fword ptr ds:loader_free_dll_proc    
+    pop bx
+
+unload_dll_free:
+    movzx eax,bx
+    call ModuleUnloaded
 
 unload_dll_done:
     pop gs
