@@ -3159,7 +3159,7 @@ init_thread     PROC far
     push es
     push bx
     ModuleIdToSel
-    mov es,bx
+    mov es,ebx
     mov esi,es:lib_header
     mov edi,es:mod_base
     pop bx
@@ -3691,9 +3691,9 @@ ftkNoDebug:
 ;
     mov ebx,fs:pvModuleHandle
     ModuleIdToSel
-    mov es,bx
+    mov es,ebx
     mov ax,flat_data_sel
-    mov ds,ax
+    mov ds,eax
     mov esi,es:lib_header
     mov edi,es:mod_base
     mov eax,[esi].peh_tls_va
@@ -4413,7 +4413,7 @@ notify_pe_exception     Proc far
     push ebx
     mov ebx,fs:pvModuleHandle
     ModuleIdToSel
-    mov ds,bx
+    mov ds,ebx
     pop ebx
 ;       
     mov dx,ds:lib_debug_lib
@@ -4459,7 +4459,7 @@ find_exc_next:
 ;
     mov ebx,fs:pvModuleHandle
     ModuleIdToSel
-    mov ds,bx
+    mov ds,ebx
     call ExceptionEvent
 ;
     mov ds,[ebp].trap_ss
@@ -5001,7 +5001,7 @@ show_exception_text     PROC far
 ;    
     mov ebx,fs:pvModuleHandle
     ModuleIdToSel
-    mov es,bx
+    mov es,ebx
     mov ax,es:lib_debug_lib
     or ax,ax
     jnz setStop

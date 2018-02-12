@@ -181,7 +181,7 @@ FindLib	Proc near
     ModuleIdToSel
 	jc find_lib_done
 ;
-    mov ds,bx
+    mov ds,ax
     EnterSection ds:mod_section
 ;    mov ax,ds:mod_list
     or ax,ax

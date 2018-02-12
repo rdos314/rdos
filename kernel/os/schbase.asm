@@ -67,9 +67,7 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn IndexToHandle:near
     extrn MoveThread:near
 
-    extrn GetModuleSel:near
     extrn GetModuleID:near
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1961,39 +1959,6 @@ free_debug_app_mem      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ModuleIdToSel
-;
-;           DESCRIPTION:    Convert from module ID to selector
-;
-;       PARAMETERS:         BX          Module ID
-;
-;           RETURNS:        BX          Lib sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-module_id_to_sel_name    DB 'Module ID to Sel',0
-
-module_id_to_sel  Proc far
-    push eax
-;
-    movzx ebx,bx
-    call GetModuleSel
-    or eax,eax
-    clc
-    jnz mitsDone
-;
-    stc
-
-mitsDone:
-    mov ebx,eax
-;
-    pop eax
-    ret
-module_id_to_sel  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetPrimaryModule
 ;
 ;           DESCRIPTION:    Get primary module ID from process ID
@@ -2141,7 +2106,7 @@ get_module_focus_key  Proc far
     ModuleIdToSel
     jc get_module_focus_done
 ;
-    mov ds,bx
+    mov ds,ebx
     mov al,ds:mod_key
     clc
 
@@ -2224,7 +2189,7 @@ ldllOk:
     ModuleIdToSel
     jc ldllFail
 ;
-    mov es,bx
+    mov es,ebx
     inc es:mod_usage
     and byte ptr [ebp].load_eflags,NOT 1
     jmp ldllDone
@@ -2436,7 +2401,7 @@ unload_dll:
     ModuleIdToSel
     jc unload_dll_done
 ;
-    mov ds,bx
+    mov ds,ebx
     mov ax,ds:mod_loader
     or ax,ax
     mov ds,ax
@@ -2488,7 +2453,7 @@ free_dll_do  Proc near
     ModuleIdToSel
     jc free_dll_done
 ;
-    mov ds,bx
+    mov ds,ebx
     sub ds:mod_usage,1
     jnz free_dll_done
 ;
@@ -2692,7 +2657,7 @@ get_module_proc32  Proc far
     ModuleIdToSel
     jc get_module_proc_done32
 ;
-    mov ds,bx
+    mov ds,ebx
     mov ax,ds:mod_loader
     or ax,ax
     mov ds,ax
@@ -2716,7 +2681,7 @@ get_module_proc16  Proc far
     ModuleIdToSel
     jc get_module_proc_done16
 ;
-    mov ds,bx
+    mov ds,ebx
     mov ax,ds:mod_loader
     or ax,ax
     mov ds,ax
@@ -2756,7 +2721,7 @@ get_module_resource  Proc far
     ModuleIdToSel
     jc get_resource_done
 ;
-    mov ds,bx
+    mov ds,ebx
     mov cx,ds:mod_loader
     or cx,cx
     mov ds,cx
@@ -2794,7 +2759,7 @@ get_module_name32  Proc far
     ModuleIdToSel
     jc get_module_name_done32
 ;
-    mov ds,bx
+    mov ds,ebx
     mov ax,ds:mod_loader
     or ax,ax
     mov ds,ax
@@ -2818,7 +2783,7 @@ get_module_name16  Proc far
     ModuleIdToSel
     jc get_module_name_done16
 ;
-    mov ds,bx
+    mov ds,ebx
     mov ax,ds:mod_loader
     or ax,ax
     mov ds,ax
@@ -2855,7 +2820,7 @@ dupl_module_file_handle  Proc far
     ModuleIdToSel
     jc dupl_module_file_handle_done
 ;
-    mov ds,bx
+    mov ds,ebx
     mov bx,ds:mod_c_file_handle
     DuplCFileToFile
     clc
@@ -3066,8 +3031,8 @@ get_debug_event  Proc far
     ModuleIdToSel
     jc get_debug_event_done
 ;
-    mov ax,bx
-    mov ds,ax
+    mov eax,ebx
+    mov ds,eax
     mov ax,ds:mod_loader
     or ax,ax
     mov ds,ax
@@ -3100,8 +3065,8 @@ get_debug_event_data_name       DB 'Get Debug Event Data',0
 get_debug_event_data32  Proc far
     push ds
     push eax
-    push bx
-    push dx
+    push ebx
+    push edx
 ;    
     call GetPrimaryModule
     jc get_debug_event_data_done32
@@ -3110,8 +3075,8 @@ get_debug_event_data32  Proc far
     ModuleIdToSel
     jc get_debug_event_data_done32
 ;
-    mov ax,bx
-    mov ds,ax
+    mov eax,ebx
+    mov ds,eax
     mov ax,ds:mod_loader
     or ax,ax
     mov ds,ax
@@ -3121,8 +3086,8 @@ get_debug_event_data32  Proc far
     call fword ptr ds:loader_get_debug_event_data_proc
 
 get_debug_event_data_done32:
-    pop dx
-    pop bx
+    pop edx
+    pop ebx
     pop eax
     pop ds
     ret
@@ -3131,8 +3096,8 @@ get_debug_event_data32  Endp
 get_debug_event_data16  Proc far
     push ds
     push eax
-    push bx
-    push dx
+    push ebx
+    push edx
     push edi
 ;    
     call GetPrimaryModule
@@ -3142,8 +3107,8 @@ get_debug_event_data16  Proc far
     ModuleIdToSel
     jc get_debug_event_data_done16
 ;
-    mov ax,bx
-    mov ds,ax
+    mov eax,ebx
+    mov ds,eax
     mov ax,ds:mod_loader
     or ax,ax
     mov ds,ax
@@ -3154,8 +3119,8 @@ get_debug_event_data16  Proc far
 
 get_debug_event_data_done16:
     pop edi
-    pop dx
-    pop bx
+    pop edx
+    pop ebx
     pop eax
     pop ds
     ret
@@ -3176,10 +3141,10 @@ clear_debug_event_name  DB 'Clear Debug Event',0
 
 clear_debug_event  Proc far
     push ds
-    push ax
-    push bx
+    push eax
+    push ebx
     push ecx
-    push dx
+    push edx
 ;    
     call GetPrimaryModule
     jc clear_debug_event_done
@@ -3188,8 +3153,8 @@ clear_debug_event  Proc far
     ModuleIdToSel
     jc clear_debug_event_done
 ;
-    mov ax,bx
-    mov ds,ax
+    mov eax,ebx
+    mov ds,eax
     mov cx,ds:mod_loader
     or cx,cx
     mov ds,cx
@@ -3199,10 +3164,10 @@ clear_debug_event  Proc far
     call fword ptr ds:loader_clear_debug_event_proc
 
 clear_debug_event_done:
-    pop dx
+    pop edx
     pop ecx
-    pop bx
-    pop ax
+    pop ebx
+    pop eax
     pop ds
     ret
 clear_debug_event  Endp
@@ -3223,9 +3188,9 @@ continue_debug_event_name       DB 'Continue Debug Event',0
 
 continue_debug_event  Proc far
     push ds
-    push bx
+    push ebx
     push ecx
-    push dx
+    push edx
     push esi
 ;    
     mov esi,eax
@@ -3236,8 +3201,8 @@ continue_debug_event  Proc far
     ModuleIdToSel
     jc continue_debug_event_done
 ;
-    mov ax,bx
-    mov ds,ax
+    mov eax,ebx
+    mov ds,eax
     mov eax,esi
     mov cx,ds:mod_loader
     or cx,cx
@@ -3249,9 +3214,9 @@ continue_debug_event  Proc far
 
 continue_debug_event_done:
     pop esi
-    pop dx
+    pop edx
     pop ecx
-    pop bx
+    pop ebx
     pop ds
     ret
 continue_debug_event  Endp
@@ -4764,12 +4729,10 @@ get_module_info    Proc near
 ;
     mov edx,eax
     mov ebx,eax
-    call GetModuleSel
-    or eax,eax
-    stc
-    jz gmiDone
+    ModuleIdToSel
+    jc gmiDone
 ;
-    mov ds,eax
+    mov ds,ebx
     movzx esi,ds:mod_name_offs
 
 gmiCopyLoop:
@@ -4830,18 +4793,18 @@ get_module_sel_name DB 'Get Module Sel',0
     
 get_module_sel    Proc far
     push ds
+    push ebx
 ;
     movzx ebx,bx
-    call GetModuleSel
-    or eax,eax
-    stc
-    jz gmsDone
+    ModuleIdToSel
+    jc gmsDone
 ;
-    mov ds,eax
+    mov ds,ebx
     mov ax,ds:mod_sel
     clc
 
 gmsDone:
+    pop ebx
     pop ds
     ret
 get_module_sel    Endp
@@ -4924,19 +4887,19 @@ get_module_base_name DB 'Get Module Base',0
     
 get_module_base    Proc far
     push ds
+    push ebx
 ;
     movzx ebx,bx
-    call GetModuleSel
-    or eax,eax
-    stc
-    jz gmbDone
+    ModuleIdToSel
+    jc gmbDone
 ;
-    mov ds,eax
+    mov ds,ebx
     mov eax,ds:mod_base
     mov edx,ds:mod_base+4
     clc
 
 gmbDone:
+    pop ebx
     pop ds
     ret
 get_module_base    Endp
@@ -4958,19 +4921,19 @@ get_module_size_name DB 'Get Module Size',0
     
 get_module_size    Proc far
     push ds
+    push ebx
 ;
     movzx ebx,bx
-    call GetModuleSel
-    or eax,eax
-    stc
-    jz gmszDone
+    ModuleIdToSel
+    jc gmszDone
 ;
-    mov ds,eax
+    mov ds,ebx
     mov eax,ds:mod_size
     mov edx,ds:mod_size+4
     clc
 
 gmszDone:
+    pop ebx
     pop ds
     ret
 get_module_size    Endp
@@ -5297,11 +5260,10 @@ find_module_by_address Proc far
 
 fmbaLoop:
     movzx ebx,word ptr ds:[esi]
-    call GetModuleSel
-    or eax,eax
-    jz fmbaNext
+    ModuleIdToSel
+    jc fmbaNext
 ;
-    mov es,eax
+    mov es,ebx
     mov eax,edx
     sub eax,es:mod_base
     jc fmbaNext
@@ -5385,11 +5347,10 @@ fmbnRefOk:
 
 fmbnLoop:
     movzx ebx,word ptr ds:[edi]
-    call GetModuleSel
-    or eax,eax
-    jz fmbnNext
+    ModuleIdToSel
+    jc fmbnNext
 ;
-    mov es,eax
+    mov es,ebx
     movzx ebx,es:mod_name_offs
     mov ebp,esi
 
@@ -5879,12 +5840,6 @@ init_state_hooks:
     mov edi,OFFSET find_module_by_name_name
     xor cl,cl
     mov ax,find_module_by_name_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET module_id_to_sel
-    mov edi,OFFSET module_id_to_sel_name
-    xor cl,cl
-    mov ax,module_id_to_sel_nr
     RegisterOsGate
 ;
     mov esi,OFFSET alias_module_handle

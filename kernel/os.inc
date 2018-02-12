@@ -2134,7 +2134,7 @@ FindModuleByName    MACRO
     OsGate find_module_by_name_nr
                     ENDM
 
-; IN  BX    Module ID
+; IN  EBX    Module ID
 ; OUT BX    Lib sel
 ModuleIdToSel       MACRO
     OsGate module_id_to_sel_nr

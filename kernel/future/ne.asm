@@ -457,7 +457,6 @@ demand_load_ldt:
     mov ds,ds:p_app_sel
     mov bx,ds:app_mod_id
     ModuleIdToSel
-    mov ax,bx
     pop bx
 	jc demand_load_end
 ;    

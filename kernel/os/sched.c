@@ -698,13 +698,13 @@ void __far ImplModuleUnloaded(int sel)
 
 /*##########################################################################
 #
-#   Name       : GetModuleSel
+#   Name       : ModuleIdToSel
 #
 #   Descr      : Convert from module ID to selector
 #
 ##########################################################################*/
-#pragma aux GetModuleSel "*" rdosdev parm routine [ebx] value [eax]
-int GetModuleSel(int ID)
+#pragma aux ImplModuleIdToSel "*" rdosdev parm routine [ebx] value [ebx]
+int __far ImplModuleIdToSel(int ID)
 {
     int i;
     int sel = 0;
@@ -1058,6 +1058,7 @@ int main()
     RdosRegisterOsGate(osgate_get_program_id, (__rdos_gate_callback *)&ImplGetProgramID, "Get Program ID");
     RdosRegisterOsGate(osgate_module_loaded, (__rdos_gate_callback *)&ImplModuleLoaded, "Module Loaded");
     RdosRegisterOsGate(osgate_module_unloaded, (__rdos_gate_callback *)&ImplModuleUnloaded, "Module Unloaded");
+    RdosRegisterOsGate(osgate_module_id_to_sel, (__rdos_gate_callback *)&ImplModuleIdToSel, "Module ID to Selector");
 
     RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
     RdosRegisterBimodalUserGate(usergate_get_program_count, (__rdos_gate_callback *)&ImplGetProgramCount, "Get Program Count");
