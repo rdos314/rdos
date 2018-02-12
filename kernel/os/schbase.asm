@@ -67,8 +67,6 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn IndexToHandle:near
     extrn MoveThread:near
 
-    extrn GetProcessID:near
-
     extrn ModuleLoaded:near
     extrn ModuleUnloaded:near
     extrn GetActiveModules:near
@@ -5023,10 +5021,8 @@ get_program_info    Proc near
     push esi
     push edi
 ;
-    call GetProcessID
-    or eax,eax
-    stc
-    jz gpiDone
+    GetProgramId
+    jc gpiDone
 ;
     mov edx,eax
     mov ebx,eax
@@ -5102,10 +5098,8 @@ get_program_threads    Proc near
     push esi
     push edi
 ;
-    call GetProcessID
-    or eax,eax
-    stc
-    jz gptDone
+    GetProgramId
+    jc gptDone
 ;
     mov edx,eax
     mov ebx,eax
@@ -5181,10 +5175,8 @@ get_program_modules    Proc near
     push esi
     push edi
 ;
-    call GetProcessID
-    or eax,eax
-    stc
-    jz gpmDone
+    GetProgramId
+    jc gpmDone
 ;
     mov edx,eax
     mov ebx,eax

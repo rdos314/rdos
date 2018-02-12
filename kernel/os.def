@@ -734,5 +734,6 @@ terminate_app_thread_nr     = 638
 program_created_nr          = 639
 program_terminated_nr       = 640
 get_program_sel_nr          = 641
+get_program_id_nr           = 642
 
 osgate_entries              = 650

@@ -1092,6 +1092,12 @@ GetProgramSel    MACRO
     OsGate get_program_sel_nr
                     ENDM
 
+;  IN  EAX  	Program #
+;  OUT AX       ID
+GetProgramId    MACRO
+    OsGate get_program_id_nr
+                    ENDM
+
 ;;;;;;;;;;; Signal & waits ;;;;;;;;;;;;;;;;
 
 ClearSignal     MACRO

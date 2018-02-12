@@ -552,13 +552,13 @@ int __far ImplGetProgramSel(int ID)
     
 /*##########################################################################
 #
-#   Name       : GetProcessID
+#   Name       : GetProgramID
 #
-#   Descr      : Get process ID byte index
+#   Descr      : Get program ID byte index
 #
 ##########################################################################*/
-#pragma aux GetProcessID "*" rdosdev parm routine [eax] value [eax]
-int GetProcessID(int Index)
+#pragma aux ImplGetProgramID "*" rdosdev parm routine [eax] value [eax]
+int __far ImplGetProgramID(int Index)
 {
     int ID = 0;
 
@@ -577,7 +577,6 @@ int GetProcessID(int Index)
 
     return ID;
 }
-
     
 /*##########################################################################
 #
@@ -1049,6 +1048,7 @@ int main()
     RdosRegisterOsGate(osgate_program_created, (__rdos_gate_callback *)&ImplProgramCreated, "Program Created");
     RdosRegisterOsGate(osgate_program_terminated, (__rdos_gate_callback *)&ImplProgramTerminated, "Program Terminated");
     RdosRegisterOsGate(osgate_get_program_sel, (__rdos_gate_callback *)&ImplGetProgramSel, "Get Program Selector");
+    RdosRegisterOsGate(osgate_get_program_id, (__rdos_gate_callback *)&ImplGetProgramID, "Get Program ID");
 
     RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
     RdosRegisterBimodalUserGate(usergate_get_program_count, (__rdos_gate_callback *)&ImplGetProgramCount, "Get Program Count");
