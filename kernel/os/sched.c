@@ -264,7 +264,12 @@ int IdToHandle(int ID)
         }
     }
 
-    RdosLeaveKernelSection(&ThreadSection);    
+    RdosLeaveKernelSection(&ThreadSection);
+
+    if (handle)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
 
     return handle;
 }
@@ -288,6 +293,11 @@ int IndexToHandle(int Index)
             handle = ThreadArr[Index].Handle;
 
     RdosLeaveKernelSection(&ThreadSection);    
+
+    if (handle)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
 
     return handle;
 }
@@ -389,11 +399,11 @@ int __far ImplGetActiveCores()
     
 /*##########################################################################
 #
-#   Name       : GetActiveProcesses
+#   Name       : GetProgramCount
 #
 ##########################################################################*/
-#pragma aux GetActiveProcesses "*" rdosdev parm routine
-int GetActiveProcesses()
+#pragma aux ImplGetProgramCount "*" rdosdev parm routine
+int __far ImplGetProgramCount()
 {
     return ActiveProcesses;
 }
@@ -524,6 +534,11 @@ int GetProcessSel(int ID)
 
     RdosLeaveKernelSection(&ThreadSection);    
 
+    if (sel)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
     return sel;
 }
     
@@ -546,6 +561,11 @@ int GetProcessID(int Index)
             ID = ProcessArr[Index].ID;
 
     RdosLeaveKernelSection(&ThreadSection);    
+
+    if (ID)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
 
     return ID;
 }
@@ -688,6 +708,11 @@ int GetModuleSel(int ID)
 
     RdosLeaveKernelSection(&ThreadSection);    
 
+    if (sel)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
     return sel;
 }
     
@@ -710,6 +735,11 @@ int GetModuleID(int Index)
             ID = ModuleArr[Index].ID;
 
     RdosLeaveKernelSection(&ThreadSection);    
+
+    if (ID)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
 
     return ID;
 }
@@ -1009,4 +1039,5 @@ int main()
     RdosHookInitTasking(&InitTasking);
 
     RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
+    RdosRegisterBimodalUserGate(usergate_get_program_count, (__rdos_gate_callback *)&ImplGetProgramCount, "Get Program Count");
 }

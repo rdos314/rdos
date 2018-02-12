@@ -69,7 +69,6 @@ _TEXT    SEGMENT byte public 'CODE'
 
     extrn ProcessCreated:near
     extrn ProcessTerminated:near
-    extrn GetActiveProcesses:near
     extrn GetProcessSel:near
     extrn GetProcessID:near
 
@@ -5011,25 +5010,6 @@ get_module_size    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetProgramCount
-;
-;           DESCRIPTION:    Get number of programs
-;
-;           RETURNS:        AX          Program count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_program_count_name DB 'Get Program Count',0
-    
-get_program_count   Proc far
-    call GetActiveProcesses
-    clc
-    ret
-get_program_count   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetProgramInfo
 ;
 ;           DESCRIPTION:    Get program info
@@ -6256,12 +6236,6 @@ init_state_hooks:
     mov edi,OFFSET get_module_size_name
     xor dx,dx
     mov ax,get_module_size_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_program_count
-    mov edi,OFFSET get_program_count_name
-    xor dx,dx
-    mov ax,get_program_count_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET get_program_info16
