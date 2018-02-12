@@ -1086,6 +1086,12 @@ ProgramTerminated    MACRO
     OsGate program_terminated_nr
                     ENDM
 
+;  IN  EBX  	Program ID
+;  OUT AX       Selector
+GetProgramSel    MACRO
+    OsGate get_program_sel_nr
+                    ENDM
+
 ;;;;;;;;;;; Signal & waits ;;;;;;;;;;;;;;;;
 
 ClearSignal     MACRO

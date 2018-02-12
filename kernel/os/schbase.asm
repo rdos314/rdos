@@ -67,7 +67,6 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn IndexToHandle:near
     extrn MoveThread:near
 
-    extrn GetProcessSel:near
     extrn GetProcessID:near
 
     extrn ModuleLoaded:near
@@ -136,9 +135,8 @@ AddProgramThread    Proc near
     push ebx
     push ecx
 ;
-    call GetProcessSel
-    or eax,eax
-    jz aptDone
+    GetProgramSel
+    jc aptDone
 ;
     mov ds,eax
     EnterSection ds:pr_section
@@ -190,9 +188,8 @@ RemoveProgramThread    Proc near
     mov ebx,1
 
 rptStart:
-    call GetProcessSel
-    or eax,eax
-    jz rptDone
+    GetProgramSel
+    jc rptDone
 ;
     mov ds,eax
     EnterSection ds:pr_section
@@ -255,10 +252,9 @@ AddKernelProgramModule    Proc near
 ;
     push ebx
     mov ebx,1
-    call GetProcessSel
+    GetProgramSel
     pop ebx
-    or eax,eax
-    jz akpmDone
+    jc akpmDone
 ;
     mov ds,eax
     EnterSection ds:pr_section
@@ -309,10 +305,9 @@ AddProgramModule    Proc near
 ;
     push ebx
     movzx ebx,es:p_prog_id
-    call GetProcessSel
+    GetProgramSel
     pop ebx
-    or eax,eax
-    jz apmDone
+    jc apmDone
 ;
     mov ds,eax
     EnterSection ds:pr_section
@@ -363,10 +358,9 @@ RemoveProgramModule    Proc near
 ;
     push ebx
     movzx ebx,es:p_prog_id
-    call GetProcessSel
-    or eax,eax
+    GetProgramSel
     pop ebx
-    jz rpmDone
+    jc rpmDone
 ;
     mov ds,eax
     EnterSection ds:pr_section
@@ -2019,9 +2013,8 @@ GetPrimaryModule  Proc near
     push ds
 ;
     movzx ebx,bx
-    call GetProcessSel
-    or eax,eax
-    jz gpmodFail
+    GetProgramSel
+    jc gpmodFail
 ;
     mov ds,eax
     mov ax,ds:pr_module_count
@@ -2206,7 +2199,7 @@ load_dll        Proc  near
 ;
     push ebx
     movzx ebx,es:p_prog_id
-    call GetProcessSel
+    GetProgramSel
     mov es,ax
     mov dx,es:pr_debug_sel
     pop ebx
@@ -4057,7 +4050,7 @@ spawn_startup:
     mov es:p_prog_id,bx
     call AddProgramThread
 ;
-    call GetProcessSel
+    GetProgramSel
     mov es:p_prog_sel,ax
     mov gs,eax
 ;
@@ -5037,10 +5030,8 @@ get_program_info    Proc near
 ;
     mov edx,eax
     mov ebx,eax
-    call GetProcessSel
-    or eax,eax
-    stc
-    jz gpiDone
+    GetProgramSel
+    jc gpiDone
 ;
     mov ds,eax
     mov ds,ds:pr_name_sel
@@ -5118,10 +5109,8 @@ get_program_threads    Proc near
 ;
     mov edx,eax
     mov ebx,eax
-    call GetProcessSel
-    or eax,eax
-    stc
-    jz gptDone
+    GetProgramSel
+    jc gptDone
 ;
     mov ds,eax
     EnterSection ds:pr_section
@@ -5199,10 +5188,8 @@ get_program_modules    Proc near
 ;
     mov edx,eax
     mov ebx,eax
-    call GetProcessSel
-    or eax,eax
-    stc
-    jz gpmDone
+    GetProgramSel
+    jc gpmDone
 ;
     mov ds,eax
     EnterSection ds:pr_section
@@ -5273,10 +5260,8 @@ get_module_by_index Proc far
 ;
     mov dx,ax
     movzx ebx,bx
-    call GetProcessSel
-    or eax,eax
-    stc
-    jz gmbiDone
+    GetProgramSel
+    jc gmbiDone
 ;
     mov ds,eax
     EnterSection ds:pr_section
@@ -5328,10 +5313,8 @@ find_module_by_address Proc far
     push esi
 ;
     movzx ebx,bx
-    call GetProcessSel
-    or eax,eax
-    stc
-    jz fmbaDone
+    GetProgramSel
+    jc fmbaDone
 ;
     mov ds,eax
     EnterSection ds:pr_section
@@ -5418,10 +5401,8 @@ fmbnRefLoop:
 
 fmbnRefOk:
     movzx ebx,bx
-    call GetProcessSel
-    or eax,eax
-    stc
-    jz fmbnDone
+    GetProgramSel
+    jc fmbnDone
 ;
     mov ds,eax
     EnterSection ds:pr_section
