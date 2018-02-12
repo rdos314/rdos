@@ -19,6 +19,8 @@
 
 void main()
 {
+    TestFunc();
+
     int handle = RdosLoadDll("testlib.dll");
     RdosFreeDll(handle);
     

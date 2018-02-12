@@ -276,3 +276,22 @@ loader_continue_debug_event_proc   DD ?,?
 
 loader_interface_struc    ENDS
 
+module_struc    STRUC
+
+mod_base                DD ?,?
+mod_size                DD ?,?
+mod_sel                 DW ?
+mod_name_offs           DW ?
+mod_id                  DW ?
+
+mod_loader              DW ?
+mod_c_file_handle       DW ?
+
+mod_usage               DW ?
+
+mod_section             section_typ <>
+mod_key                 DB ?
+
+module_struc    ENDS
+
+
