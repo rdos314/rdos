@@ -5031,20 +5031,20 @@ get_current_dll     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           free_dll
+;           NAME:           unload_dll
 ;
-;           DESCRIPTION:    Free DLL
+;           DESCRIPTION:    Unload DLL
 ;
 ;       PARAMETERS:         BX      Lib sel
 ;                           EBP     Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-free_dll    Proc far
+unload_dll    Proc far
     mov es,bx
     mov dx,es:lib_debug_lib
     or dx,dx
-    jz fdNotifyDone
+    jz udNotifyDone
 ;
     push es
     mov ax,es
@@ -5053,7 +5053,7 @@ free_dll    Proc far
     call SendEvent
     pop es
 
-fdNotifyDone:
+udNotifyDone:
     mov ax,flat_data_sel
     mov ds,ax
     mov edi,es:mod_base
@@ -5063,6 +5063,29 @@ fdNotifyDone:
 ;
     mov edx,0
     call AddUserStack
+    ret
+unload_dll    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           free_dll
+;
+;           DESCRIPTION:    Free DLL
+;
+;       PARAMETERS:         BX      Lib sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_dll    Proc far
+    mov ax,system_data_sel
+    mov ds,ax
+    mov es,bx
+;
+    mov edx,es:mod_base
+    add edx,ds:flat_base
+    mov ecx,es:mod_size
+    FreeLinear
     ret
 free_dll    Endp
 
@@ -5696,18 +5719,19 @@ l14 DD OFFSET debug_allocate_mem,         SEG code
 l15 DD OFFSET debug_free_mem,             SEG code
 l16 DD OFFSET init_module,                SEG code
 l17 DD OFFSET fixup_dll,                  SEG code
-l18 DD OFFSET free_dll,                   SEG code
-l19 DD OFFSET get_current_dll,            SEG code
-l20 DD OFFSET get_module_proc,            SEG code
-l21 DD OFFSET get_resource,               SEG code
-l22 DD OFFSET get_module_name,            SEG code
-l23 DD OFFSET start_wait_for_debug_event, SEG code
-l24 DD OFFSET stop_wait_for_debug_event,  SEG code
-l25 DD OFFSET is_debug_event_idle,        SEG code
-l26 DD OFFSET get_debug_event,            SEG code
-l27 DD OFFSET get_debug_event_data,       SEG code
-l28 DD OFFSET clear_debug_event,          SEG code
-l29 DD OFFSET continue_debug_event,       SEG code
+l18 DD OFFSET unload_dll,                 SEG code
+l19 DD OFFSET free_dll,                   SEG code
+l20 DD OFFSET get_current_dll,            SEG code
+l21 DD OFFSET get_module_proc,            SEG code
+l22 DD OFFSET get_resource,               SEG code
+l23 DD OFFSET get_module_name,            SEG code
+l24 DD OFFSET start_wait_for_debug_event, SEG code
+l25 DD OFFSET stop_wait_for_debug_event,  SEG code
+l26 DD OFFSET is_debug_event_idle,        SEG code
+l27 DD OFFSET get_debug_event,            SEG code
+l28 DD OFFSET get_debug_event_data,       SEG code
+l29 DD OFFSET clear_debug_event,          SEG code
+l30 DD OFFSET continue_debug_event,       SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc

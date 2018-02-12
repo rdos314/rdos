@@ -222,7 +222,10 @@ loader_fixup_dll_proc          DD ?,?
 
 ; IN  BX                  Module sel
 ; IN  EBP                 Stack frame
-loader_free_dll_proc           DD ?,?
+loader_unload_dll_proc           DD ?,?
+
+; IN  BX                  Module sel
+loader_free_dll_proc             DD ?,?
 
 ; IN  ES:(E)DI            DLL address
 ; OUT BX                  Module sel

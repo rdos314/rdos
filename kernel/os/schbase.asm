@@ -2426,6 +2426,19 @@ unload_dll:
     add edi,4
     mov [ebp].load_esp,edi
 ;
+    ModuleIdToSel
+    jc unload_dll_done
+;
+    mov ds,bx
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz unload_dll_done
+;    
+    call fword ptr ds:loader_free_dll_proc    
+
+unload_dll_done:
     pop gs
     pop fs
     pop es
@@ -2501,7 +2514,7 @@ free_dll_do  Proc near
     stc
     jz free_dll_done
 ;    
-    call fword ptr ds:loader_free_dll_proc    
+    call fword ptr ds:loader_unload_dll_proc    
 
 free_dll_done:
     ret
