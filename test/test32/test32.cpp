@@ -19,41 +19,8 @@
 
 void main()
 {
-    TestFunc();
+//    TestFunc();
 
     int handle = RdosLoadDll("testlib.dll");
     RdosFreeDll(handle);
-    
-    
-    RdosTestGate("");
-
-
-    int val;
-    TBigNum num1("-233445565766");
-    TBigNum num2(100);
-    TBigNum num3(-2000);
-    TString str;
-
-    str = num1.GetDec();
-    printf(str.GetData());
-    printf("\r\n");
-
-    num1 = 1234;
-
-    str = num1.GetDec();
-    printf(str.GetData());
-    printf("\r\n");
-
-    num1 += 5576;
-
-    str = num1.GetDec();
-    printf(str.GetData());
-    printf("\r\n");
-
-    num1 -= 8888;
-    
-    str = num1.GetDec();
-    printf(str.GetData());
-    printf("\r\n");
-
 }

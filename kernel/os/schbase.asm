@@ -2438,6 +2438,8 @@ unload_dll:
     push fs
     push gs
 ;
+    call RemoveProgramModule
+;
     mov es,[ebp].load_ss
     mov edi,[ebp].load_esp
     add edi,8
