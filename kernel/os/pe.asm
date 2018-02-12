@@ -3580,7 +3580,7 @@ start_thread    PROC far
     or ax,ax
     jz start_thread_notify
 ;
-    call AllocateKernelEvent
+;    call AllocateKernelEvent
     call CreateThreadEvent
     call SendEvent
 
@@ -3981,7 +3981,7 @@ fork_child:
     mov edx,stack0_size - 10h
     mov edx,ss:[edx]
 ;
-    call AllocateKernelEvent
+;    call AllocateKernelEvent
     call CreateThreadEvent
     call SendEvent
 ;
