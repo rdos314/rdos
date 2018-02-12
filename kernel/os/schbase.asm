@@ -2183,8 +2183,17 @@ get_module_focus_key  Endp
 
 load_dll        Proc  near    
     mov eax,es
-    mov ds,eax
+    mov fs,eax
     mov esi,edi
+;
+    GetThread
+    mov ds,ax
+    movzx ebx,ds:p_prog_id
+    FindModuleByName
+    jnc ldllOk
+;
+    mov eax,es
+    mov ds,eax
     call OpenModuleFile
     jc ldllFail
 ;
@@ -2222,6 +2231,17 @@ load_dll        Proc  near
     push ebx
     call fword ptr gs:loader_fixup_dll_proc
     pop ebx
+    jmp ldllDone
+
+ldllOk:
+    mov [ebp].load_ebx,ebx
+;
+    ModuleIdToSel
+    jc ldllFail
+;
+    mov es,bx
+    inc es:mod_usage
+    and byte ptr [ebp].load_eflags,NOT 1
     jmp ldllDone
 
 ldllFail:
