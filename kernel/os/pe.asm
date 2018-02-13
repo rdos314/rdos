@@ -1242,50 +1242,7 @@ flDone:
     pop ds
     ret
 FindLib Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FindDll
-;
-;           DESCRIPTION:    get DLL from name
-;
-;           PARAMETERS:     FS:ESI  DLL NAME
-;
-;           RETURNS:        ES          Lib handle
-;                           EDI         Image base
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FindDll Proc near
-    push ds
-    push eax
-    push ebx
-;
-    GetThread
-    mov ds,ax
-    movzx ebx,ds:p_prog_id
-    FindModuleByName
-    jc fdllDone
-;
-    or ax,ax
-    stc
-    jz fdllDone
-;
-    ModuleIdToSel
-    jc fdllDone
-;
-    mov es,ebx
-    mov edi,es:mod_base
-    clc
-
-fdllDone:
-    pop ebx
-    pop eax
-    pop ds
-    ret
-FindDll Endp
-                      
+               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1959,23 +1916,26 @@ free_import_dlls_loop:
     or esi,esi
     jz free_import_dlls_done
 ;
-    push es
+    push ds
     push fs
-    push edi
-    mov ax,ds
-    mov fs,ax
+    pushad
+;
+    mov eax,ds
+    mov fs,eax
     add esi,edi
 ;
-    call FindDll
-    jc fidf
+    GetThread
+    mov ds,ax
+    movzx ebx,ds:p_prog_id
+    FindModuleByName
+    jc free_import_one_done
+;
+    FreeDll
 
-free_do:
-    call FreePeDll
-
-fidf:
-    pop edi
+free_import_one_done:
+    popad
     pop fs
-    pop es
+    pop ds
 ;
     add edx,SIZE import_descr
     jmp free_import_dlls_loop
@@ -2025,93 +1985,7 @@ fdNodeb:
     call AddUserStack
     ret
 fixup_dll  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FreePeDll
-;
-;           DESCRIPTION:    Free PE DLL
-;
-;       PARAMETERS:         ES          Lib handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreePeDll       Proc near
-    push ds
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push si
-    push edi
-;
-    mov dx,es:lib_debug_lib
-    or dx,dx
-    jz fpdNotifyDone
-;
-    push es
-    mov ax,es
-    mov ds,ax
-    call FreeDllEvent
-    call SendEvent
-    pop es
-
-fpdNotifyDone:
-    mov ax,flat_data_sel
-    mov ds,ax
-    mov eax,es:lib_header
-    mov eax,[eax].peh_entry_point
-    or eax,eax
-    jz fdMod
-;       
-    push ds
-    push es
-    push fs
-    pushad
-;    
-    add eax,es:mod_base
-    push eax
-    movzx eax,es:lib_init_param
-    movzx ebx,es:mod_id
-    mov edx,0
-    CallPM32
-;
-    popad
-    pop fs
-    pop es
-    pop ds      
-
-fdMod:
-;    FreeModule
-;
-    mov ax,flat_data_sel
-    mov ds,ax
-    mov edi,es:mod_base
-    call FreeImportedDlls
-    mov edx,es:mod_base
-    mov ecx,es:mod_size
-    mov bx,es:mod_c_file_handle
-    CloseCFile
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    add edx,ds:flat_base
-    FreeLinear
-    FreeMem
-;
-    pop edi
-    pop si
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    pop ds
-
-free_pe_dll_done:
-    ret
-FreePeDll Endp
-                      
+             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
