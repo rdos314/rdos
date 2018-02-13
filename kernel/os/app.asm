@@ -378,9 +378,6 @@ clone_app    PROC far
     mov eax,ds:app_fatal_error_exit_proc+4
     mov es:app_fatal_error_exit_proc+4,eax
 ;
-    mov ax,ds:app_unload_proc
-    mov es:app_unload_proc,ax
-;
     mov ax,ds:app_mod_id
     mov es:app_mod_id,ax
 ;

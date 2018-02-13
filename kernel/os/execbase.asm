@@ -144,7 +144,6 @@ dos_ext_exec16:
     mov es,ax
     mov es,es:p_app_sel
     mov es:app_context,bx
-    mov es:app_unload_proc,OFFSET unload_dos_ext
 ;
     push si
     mov di,OFFSET app_exe_name
@@ -1246,7 +1245,6 @@ spawn_startup:
     mov es,ax
     mov es,es:p_app_sel
     mov es:app_context,bx
-    mov es:app_unload_proc,OFFSET spUnload
 ;
     mov ax,gs:pr_parent_app_sel
     or ax,ax
@@ -1663,7 +1661,6 @@ lpEnvDone:
     mov es,ax
     mov es,es:p_app_sel
     mov es:app_context,bx
-;    mov es:app_unload_proc,OFFSET lepRet
     AppNotifyExec
 ;
     GetThread
@@ -2066,17 +2063,6 @@ unload_exe_name DB 'Unload Exe',0
     
 unload_exe:
     int 3
-    push ax
-    GetThread
-    mov ds,ax
-    pop ax
-;
-    push ax
-    GetThread
-    mov ds,ax
-    pop ax
-    mov ds,ds:p_app_sel
-    jmp ds:app_unload_proc    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
