@@ -1158,7 +1158,9 @@ create_lib_size_ok:
     mov es:mod_c_file_handle,bx
     mov es:lib_file_pos,edx
     mov es:lib_init_param,0
+    mov es:lib_mem_blocks,0
     InitSpinlock es:lib_spinlock
+    InitSection es:lib_section
     mov es:mod_loader,pe_loader_sel
 ;
     pop edi
@@ -4605,9 +4607,10 @@ allocate_mem    PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterSection ds:app_lib_section     
+    mov ds,ds:app_mod_sel   
+    EnterSection ds:lib_section     
 ;
-    mov eax,ds:app_mem_blocks
+    mov eax,ds:lib_mem_blocks
     or eax,eax
     je alloc_ins_empty
 ;
@@ -4623,8 +4626,8 @@ alloc_ins_empty:
     mov es:[edi].mem_prev,edi
 
 alloc_ins_done:
-    mov ds:app_mem_blocks,edi
-    LeaveSection ds:app_lib_section     
+    mov ds:lib_mem_blocks,edi
+    LeaveSection ds:lib_section     
 ;
     pop edi
     pop esi
@@ -4659,12 +4662,13 @@ free_mem    PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
+    mov ds,ds:app_mod_sel   
     mov ax,flat_sel
     mov es,ax
-    EnterSection ds:app_lib_section     
+    EnterSection ds:lib_section     
 
 free_mem_more:
-    mov eax,ds:app_mem_blocks
+    mov eax,ds:lib_mem_blocks
     or eax,eax
     jz free_mem_failed
 ;
@@ -4693,11 +4697,11 @@ free_mem_ok:
 ;
     mov ecx,es:[edi].mem_size
     FreeLinear
-    mov ds:app_mem_blocks,edi
+    mov ds:lib_mem_blocks,edi
     mov eax,es:[edi].mem_prev
-    cmp eax,ds:app_mem_blocks
+    cmp eax,ds:lib_mem_blocks
     pushf
-    mov ds:app_mem_blocks,eax
+    mov ds:lib_mem_blocks,eax
     mov esi,es:[edi].mem_next
     mov es:[eax].mem_next,esi
     mov es:[esi].mem_prev,eax
@@ -4709,10 +4713,10 @@ free_mem_ok:
     jne free_mem_done
 
 free_mem_last_block:
-    mov ds:app_mem_blocks,0
+    mov ds:lib_mem_blocks,0
 
 free_mem_done:
-    LeaveSection ds:app_lib_section     
+    LeaveSection ds:lib_section     
 ;
     pop edi
     pop esi
@@ -4793,9 +4797,10 @@ debug_alloc_fill_ok:
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
-    EnterSection ds:app_lib_section     
+    mov ds,ds:app_mod_sel   
+    EnterSection ds:lib_section     
 ;
-    mov eax,ds:app_mem_blocks
+    mov eax,ds:lib_mem_blocks
     or eax,eax
     je debug_alloc_ins_empty
 ;
@@ -4811,8 +4816,8 @@ debug_alloc_ins_empty:
     mov es:[edi].mem_prev,edi
 
 debug_alloc_ins_done:
-    mov ds:app_mem_blocks,edi
-    LeaveSection ds:app_lib_section     
+    mov ds:lib_mem_blocks,edi
+    LeaveSection ds:lib_section     
 ;
     pop edi
     pop esi
@@ -4847,12 +4852,13 @@ debug_free_mem  PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel
+    mov ds,ds:app_mod_sel   
     mov ax,flat_sel
     mov es,ax
-    EnterSection ds:app_lib_section     
+    EnterSection ds:lib_section     
 
 debug_free_mem_more:
-    mov eax,ds:app_mem_blocks
+    mov eax,ds:lib_mem_blocks
     or eax,eax
     jz debug_free_mem_failed
 ;
@@ -4905,11 +4911,11 @@ debug_free_mem_check_done:
     mov ecx,es:[edi].mem_size
     FreeLinear
 ;
-    mov ds:app_mem_blocks,edi
+    mov ds:lib_mem_blocks,edi
     mov eax,es:[edi].mem_prev
-    cmp eax,ds:app_mem_blocks
+    cmp eax,ds:lib_mem_blocks
     pushf
-    mov ds:app_mem_blocks,eax
+    mov ds:lib_mem_blocks,eax
     mov esi,es:[edi].mem_next
     mov es:[eax].mem_next,esi
     mov es:[esi].mem_prev,eax
@@ -4921,10 +4927,10 @@ debug_free_mem_check_done:
     jne debug_free_mem_done
 
 debug_free_mem_last_block:
-    mov ds:app_mem_blocks,0
+    mov ds:lib_mem_blocks,0
 
 debug_free_mem_done:
-    LeaveSection ds:app_lib_section     
+    LeaveSection ds:lib_section     
 ;
     pop edi
     pop esi
@@ -5459,7 +5465,6 @@ get_resource    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_create   Proc far
-    mov es:app_mem_blocks,0
     mov es:app_mod_sel,0
     ret
 notify_create   Endp

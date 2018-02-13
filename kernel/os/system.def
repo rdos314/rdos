@@ -288,12 +288,10 @@ app_unload_proc             DW ?
 
 app_mod_id                  DW ?
 app_mod_sel                 DW ?
-app_lib_section             section_typ <>
 
 app_env                     DD ?
 app_name                    DD ?
 app_cmd_line                DD ?
-app_mem_blocks              DD ?
 
 app_vm_psp_seg              DW ?
 app_pm_psp_sel              DW ?

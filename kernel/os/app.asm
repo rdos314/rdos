@@ -135,11 +135,9 @@ run_open_hooks  Proc near
     mov ds:app_fatal_error_exit_proc,0
     mov ds:app_fatal_error_exit_proc+4,0
 ;
-    InitSection ds:app_lib_section
     mov ds:app_env,0
     mov ds:app_name,0
     mov ds:app_cmd_line,0
-    mov ds:app_mem_blocks,0
 ;
     mov ds:app_vm_psp_seg,0
     mov ds:app_pm_psp_sel,0
@@ -398,9 +396,6 @@ clone_app    PROC far
     mov eax,ds:app_cmd_line
     mov es:app_cmd_line,eax
 ;
-    mov eax,ds:app_mem_blocks
-    mov es:app_mem_blocks,eax
-;
     mov ax,ds:app_context
     mov es:app_context,ax
 ;
@@ -411,7 +406,6 @@ clone_app    PROC far
     mov es:app_key,al
 ;
     mov es:app_exit_code,0
-    mov es:app_mem_blocks,0
     mov es:app_exe_name,0
 ;
     popad
@@ -458,12 +452,9 @@ exec_app    PROC far
     mov es:app_mod_id,0
     mov es:app_mod_sel,0
 ;
-    InitSection es:app_lib_section
-;
     mov es:app_env,0
     mov es:app_name,0
     mov es:app_cmd_line,0
-    mov es:app_mem_blocks,0
 ;
     mov es:app_context,0
     mov es:app_bitness,0
