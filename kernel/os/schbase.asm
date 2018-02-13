@@ -1520,123 +1520,6 @@ app_notify_terminate_done:
     pop gs
     ret
 app_notify_terminate   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AliasModuleHandle
-;
-;           DESCRIPTION:    Create an alias handle for module
-;
-;       PARAMETERS:         BX      Lib sel
-;
-;           RETURNS:        BX      Module handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-alias_module_handle_name    DB 'Alias Module Handle',0
-
-alias_module_handle  Proc far
-    push ds
-    mov ds,bx
-    mov bx,ds:mod_id
-    pop ds
-    ret
-alias_module_handle  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetModuleFocusKey
-;
-;           DESCRIPTION:    Get module focus key
-;
-;       PARAMETERS:         BX          Module handle
-;
-;       RETURNS:    AL      Key
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_module_focus_key_name       DB 'Get Module Focus Key',0
-
-get_module_focus_key  Proc far
-    push ds
-    push ebx
-;    
-    ModuleIdToSel
-    jc get_module_focus_done
-;
-    mov ds,ebx
-    mov al,ds:mod_key
-    clc
-
-get_module_focus_done:
-    pop ebx
-    pop ds    
-    ret
-get_module_focus_key  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           DuplModuleFileHandle
-;
-;       DESCRIPTION:    Dupl module file handle
-;
-;       PARAMETERS:     BX          Module handle
-;
-;       RETURNS:        BX          Duplicated file handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dupl_module_file_handle_name       DB 'Dupl Module File Handle',0
-
-dupl_module_file_handle  Proc far
-    push ds
-;    
-    ModuleIdToSel
-    jc dupl_module_file_handle_done
-;
-    mov ds,ebx
-    mov bx,ds:mod_c_file_handle
-    DuplCFileToFile
-    clc
-
-dupl_module_file_handle_done:
-    pop ds    
-    ret
-dupl_module_file_handle  Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           FatalErrorExit
-;
-;           DESCRIPTION:    Fatal error exit
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-fatal_error_exit_name       DB 'Fatal Error Exit',0
-
-fatal_error_exit    PROC far
-    push ds
-;
-    push eax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov eax,ds:app_fatal_error_exit_proc
-    or eax,ds:app_fatal_error_exit_proc+4
-    pop eax
-    stc
-    jz fatal_error_exit_done
-;
-    call fword ptr ds:app_fatal_error_exit_proc
-
-fatal_error_exit_done:
-    pop ds
-    ret
-fatal_error_exit    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2764,12 +2647,6 @@ init_state_hooks:
     mov ax,find_module_by_name_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET alias_module_handle
-    mov edi,OFFSET alias_module_handle_name
-    xor cl,cl
-    mov ax,alias_module_handle_nr
-    RegisterOsGate
-;
     mov esi,OFFSET app_patch
     mov edi,OFFSET app_patch_name
     xor cl,cl
@@ -2838,12 +2715,6 @@ init_state_hooks:
     mov ax,get_exit_code_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET fatal_error_exit
-    mov edi,OFFSET fatal_error_exit_name
-    xor dx,dx
-    mov ax,fatal_error_exit_nr
-    RegisterBimodalUserGate
-;
     mov esi,OFFSET fork_pr
     mov edi,OFFSET fork_name
     xor dx,dx
@@ -2856,24 +2727,12 @@ init_state_hooks:
     mov ax,is_forked_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_module_focus_key
-    mov edi,OFFSET get_module_focus_key_name
-    xor dx,dx
-    mov ax,get_module_focus_key_nr
-    RegisterBimodalUserGate
-;
     mov ebx,OFFSET get_dll_handle16
     mov esi,OFFSET get_dll_handle32
     mov edi,OFFSET get_dll_handle_name
     mov dx,virt_es_in
     mov ax,get_module_nr
     RegisterUserGate
-;
-    mov esi,OFFSET dupl_module_file_handle
-    mov edi,OFFSET dupl_module_file_handle_name
-    xor dx,dx
-    mov ax,dupl_module_file_handle_nr
-    RegisterBimodalUserGate
 ;
     mov ebx,OFFSET get_module_info16
     mov esi,OFFSET get_module_info32
