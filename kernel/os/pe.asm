@@ -3205,14 +3205,14 @@ thread_init_start:
     pop edx
     pop ecx
     pop eax
-    popfd
+    clc
     retn thread_code_size
 thread_init_end:
 
 InitUserStack   Proc near
     mov es,[ebp].load_ss
     mov edi,[ebp].load_esp
-    sub edi,thread_code_size + 7 * 4
+    sub edi,thread_code_size + 6 * 4
     mov [ebp].load_esp,edi
 ;
     mov eax,[ebp].load_edi
@@ -3228,9 +3228,6 @@ InitUserStack   Proc near
     stosd
 ;
     mov eax,[ebp].load_eax
-    stosd
-;
-    mov eax,[ebp].load_eflags
     stosd
 ;
     mov eax,[ebp].load_eip
