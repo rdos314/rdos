@@ -77,6 +77,7 @@ struct TCoreState
     int Load;
 };
 
+struct TKernelSection ProcessSection;
 struct TKernelSection ThreadSection;
 struct TKernelSection CoreSection;
 
@@ -411,7 +412,7 @@ int __far ImplProgramCreated(int sel)
     int Index;
     int pid;
 
-    RdosEnterKernelSection(&ThreadSection);
+    RdosEnterKernelSection(&ProcessSection);
 
     ok = FALSE;
 
@@ -465,7 +466,7 @@ int __far ImplProgramCreated(int sel)
         ProcessArr[Index].ID = pid;
     }
 
-    RdosLeaveKernelSection(&ThreadSection);
+    RdosLeaveKernelSection(&ProcessSection);
 
     if (pid)
         RdosSetSuccess();
@@ -485,7 +486,7 @@ void __far ImplProgramTerminated(int sel)
 {
     int i;
 
-    RdosEnterKernelSection(&ThreadSection);
+    RdosEnterKernelSection(&ProcessSection);
 
     for (i = 0; i < ActiveProcesses; i++)
     {
@@ -500,7 +501,7 @@ void __far ImplProgramTerminated(int sel)
         }
     }
 
-    RdosLeaveKernelSection(&ThreadSection);
+    RdosLeaveKernelSection(&ProcessSection);
 
     RdosSetSuccess();
 }
@@ -518,7 +519,7 @@ int __far ImplGetProgramSel(int ID)
     int i;
     int sel = 0;
 
-    RdosEnterKernelSection(&ThreadSection);
+    RdosEnterKernelSection(&ProcessSection);
 
     for (i = 0; i < ActiveProcesses; i++)
     {
@@ -529,7 +530,7 @@ int __far ImplGetProgramSel(int ID)
         }
     }
 
-    RdosLeaveKernelSection(&ThreadSection);
+    RdosLeaveKernelSection(&ProcessSection);
 
     if (sel)
         RdosSetSuccess();
@@ -551,13 +552,13 @@ int __far ImplGetProgramID(int Index)
 {
     int ID = 0;
 
-    RdosEnterKernelSection(&ThreadSection);
+    RdosEnterKernelSection(&ProcessSection);
 
     if (Index >= 0 && Index < ActiveProcesses)
         if (ProcessArr[Index].Valid)
             ID = ProcessArr[Index].ID;
 
-    RdosLeaveKernelSection(&ThreadSection);
+    RdosLeaveKernelSection(&ProcessSection);
 
     if (ID)
         RdosSetSuccess();
@@ -825,6 +826,7 @@ void InitThreadList()
 
     RdosInitKernelSection(&ThreadSection);
     RdosInitKernelSection(&CoreSection);
+    RdosInitKernelSection(&ProcessSection);
 }
 
 /*##########################################################################
