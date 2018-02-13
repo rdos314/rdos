@@ -2502,6 +2502,218 @@ free_dll  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetCurrentDll
+;
+;           DESCRIPTION:    Get current DLL module handle
+;
+;       PARAMETERS:         ES:EDI      Code position
+;
+;       RETURNS:            BX          Module handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_current_dll_name       DB 'Get Current Dll',0
+
+get_current_dll  Proc far
+    push ebp
+    mov ebp,esp
+    push ds
+    push es
+    push eax
+    push edi
+;    
+    les edi,[ebp+4]    
+    GetThread
+    mov ds,ax
+    mov ax,ds:p_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz get_current_dll_done
+;
+    call fword ptr ds:loader_get_current_dll_proc
+    jc get_current_dll_done
+;
+    mov es,bx
+    mov bx,es:mod_id
+
+get_current_dll_done:
+    pop edi
+    pop eax
+    pop es
+    pop ds    
+    pop ebp
+    ret
+get_current_dll  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetModuleProc
+;
+;           DESCRIPTION:    Get module procedure
+;
+;       PARAMETERS:         BX          Module handle
+;                           ES:(E)DI    Proc name
+;
+;       RETURNS:    DS:(E)SI    Proc address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_proc_name    DB 'Get Module Proc',0
+
+get_module_proc32  Proc far
+    push eax
+    push ebx
+;    
+    ModuleIdToSel
+    jc get_module_proc_done32
+;
+    mov ds,ebx
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz get_module_proc_done32
+;    
+    call fword ptr ds:loader_get_proc_proc
+
+get_module_proc_done32:
+    pop ebx
+    pop eax
+    ret
+get_module_proc32  Endp
+
+get_module_proc16  Proc far
+    push eax
+    push ebx
+    push edi
+;    
+    movzx edi,di
+    ModuleIdToSel
+    jc get_module_proc_done16
+;
+    mov ds,ebx
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz get_module_proc_done16
+;
+    call fword ptr ds:loader_get_proc_proc
+
+get_module_proc_done16:
+    pop edi
+    pop ebx
+    pop eax
+    ret
+get_module_proc16  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetModuleResource
+;
+;           DESCRIPTION:    Get module resource
+;
+;       PARAMETERS:         BX          Module handle
+;               (E)AX       Resource handle
+;               (E)DX       Resource type
+;
+;       RETURNS:    DS:(E)SI    Resource address
+;               (E)CX       Resource size   
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_resource_name    DB 'Get Module Resource',0
+
+get_module_resource  Proc far
+    push ebx
+;    
+    ModuleIdToSel
+    jc get_resource_done
+;
+    mov ds,ebx
+    mov cx,ds:mod_loader
+    or cx,cx
+    mov ds,cx
+    stc
+    jz get_resource_done
+;    
+    call fword ptr ds:loader_get_resource_proc
+
+get_resource_done:
+    pop ebx
+    ret
+get_module_resource  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetModuleName
+;
+;           DESCRIPTION:    Get module name
+;
+;       PARAMETERS:         BX          Handle
+;                           (E)CX       Max name size
+;                           ES:(E)DI    Name buffer
+;                           
+;           RETURNS:        (E)AX       Bytes copied
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_name_name    DB 'Get Module Name',0
+
+get_module_name32  Proc far
+    push ds
+    push ebx
+;    
+    ModuleIdToSel
+    jc get_module_name_done32
+;
+    mov ds,ebx
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz get_module_name_done32
+;    
+    call fword ptr ds:loader_get_name_proc
+
+get_module_name_done32:
+    pop ebx
+    pop ds
+    ret
+get_module_name32  Endp
+
+get_module_name16  Proc far
+    push ds
+    push ebx
+    push edi
+;    
+    movzx edi,di
+    ModuleIdToSel
+    jc get_module_name_done16
+;
+    mov ds,ebx
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz get_module_name_done16
+;    
+    call fword ptr ds:loader_get_name_proc
+
+get_module_name_done16:
+    pop edi
+    pop ebx
+    pop ds
+    ret
+get_module_name16  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init
 ;
 ;           DESCRIPTION:    init module
@@ -2598,6 +2810,32 @@ init    PROC far
     xor dx,dx
     mov ax,free_dll_nr
     RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_current_dll
+    mov edi,OFFSET get_current_dll_name
+    xor dx,dx
+    mov ax,get_current_dll_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_module_proc16
+    mov esi,OFFSET get_module_proc32
+    mov edi,OFFSET get_module_proc_name
+    mov dx,virt_ds_out OR virt_es_in
+    mov ax,get_module_proc_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET get_module_resource
+    mov edi,OFFSET get_module_resource_name
+    xor dx,dx
+    mov ax,get_module_resource_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_module_name16
+    mov esi,OFFSET get_module_name32
+    mov edi,OFFSET get_module_name_name
+    mov dx,virt_es_in
+    mov ax,get_module_name_nr
+    RegisterUserGate
     ret
 init    ENDP
 
