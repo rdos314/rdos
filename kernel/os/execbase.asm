@@ -2027,7 +2027,106 @@ unload_exe:
     pop ax
     mov ds,ds:p_app_sel
     jmp ds:app_unload_proc    
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetExeName
+;
+;           DESCRIPTION:    Get name of executable file
+;
+;           RETURNS:        ES:(E)DI        Name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+get_exe_name_name       DB 'Get Exe Name',0
+
+get_exe_name    PROC far
+    push ds
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ax,ds:p_loader
+    or ax,ax
+    mov ds,ax
+    pop eax
+    stc
+    jz get_exe_name_done
+;
+    call fword ptr ds:loader_get_exe_proc
+
+get_exe_name_done:
+    pop ds
+    ret
+get_exe_name    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetCmdLine
+;
+;           DESCRIPTION:    Get command line
+;
+;           RETURNS:        ES:(E)DI        Command line
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_cmd_line_name       DB 'Get Cmd Line',0
+
+get_cmd_line    PROC far
+    push ds
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ax,ds:p_loader
+    or ax,ax
+    mov ds,ax
+    pop eax
+    stc
+    jz get_cmd_line_done
+;
+    call fword ptr ds:loader_get_cmd_line_proc
+
+get_cmd_line_done:
+    pop ds
+    ret
+get_cmd_line    ENDP
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetEnvironment
+;
+;           DESCRIPTION:    Get environment
+;
+;           RETURNS:        ES:(E)DI        Name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_env_name    DB 'Get Environment',0
+
+get_env PROC far
+    push ds
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ax,ds:p_loader
+    or ax,ax
+    mov ds,ax
+    pop eax
+    stc
+    jz get_env_done
+;
+    call fword ptr ds:loader_get_env_proc
+
+get_env_done:
+    pop ds
+    ret
+get_env ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2796,6 +2895,24 @@ init    PROC far
     mov edi,OFFSET unload_exe_name
     xor dx,dx
     mov ax,unload_exe_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_exe_name
+    mov edi,OFFSET get_exe_name_name
+    mov dx,virt_es_in
+    mov ax,get_exe_name_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_cmd_line
+    mov edi,OFFSET get_cmd_line_name
+    mov dx,virt_es_in
+    mov ax,get_cmd_line_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_env
+    mov edi,OFFSET get_env_name
+    mov dx,virt_es_in
+    mov ax,get_env_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET load_dll16
