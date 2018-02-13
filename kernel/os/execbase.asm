@@ -2066,7 +2066,7 @@ unload_kernel:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-do_unload	Proc near
+do_unload       Proc near
     mov ax,SEG data
     mov ds,ax
 ;
@@ -2113,7 +2113,7 @@ do_unload	Proc near
 
 duDone:
     ret
-do_unload 	Endp
+do_unload       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2130,17 +2130,12 @@ unload_exe_name DB 'Unload Exe',0
     
 unload_exe:
     int 3
-    mov bx,[esp+4]
-    cmp bx,flat_code_sel
-    jne unload_kernel32
-;
-    push eax
     pushfd
-    pop eax
-    mov [esp+8],eax
-    mov eax,[esp+4]
-    xchg eax,[esp]
     push eax
+    mov eax,[esp+12]
+    test al,3
+    jz unload_kernel32
+;
     push ebx
     push ecx
     push edx
@@ -2149,7 +2144,12 @@ unload_exe:
     push ebp
     mov ebp,esp
     add ebp,28
-    mov dword ptr [ebp].load_cs,flat_code_sel
+    push dword ptr [ebp+4].load_eax
+    mov eax,[ebp+4].load_eip
+    mov [ebp].load_eip,eax
+    mov eax,[ebp+4].load_cs
+    mov [ebp].load_cs,eax
+    pop dword ptr [ebp].load_eflags   
 ;
     push ds
     push es
