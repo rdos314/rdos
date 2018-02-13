@@ -3479,33 +3479,6 @@ AllocateProcess  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           unload_exe
-;
-;           DESCRIPTION:    Unload running program
-;
-;           PARAMETERS:         AX          Exit code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-unload_exe_name DB 'Unload Exe',0
-    
-unload_exe:
-    int 3
-    push ax
-    GetThread
-    mov ds,ax
-    pop ax
-;
-    push ax
-    GetThread
-    mov ds,ax
-    pop ax
-    mov ds,ds:p_app_sel
-    jmp ds:app_unload_proc    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           AppPatch
 ;
 ;       DESCRIPTION:    Patch app
@@ -4503,12 +4476,6 @@ init_state_hooks:
     mov edi,OFFSET move_thread_to_core_name
     xor dx,dx
     mov ax,move_thread_to_core_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET unload_exe
-    mov edi,OFFSET unload_exe_name
-    xor dx,dx
-    mov ax,unload_exe_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET wait_for_exec

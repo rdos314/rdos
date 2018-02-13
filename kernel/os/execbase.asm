@@ -1934,6 +1934,33 @@ register_loader   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           unload_exe
+;
+;           DESCRIPTION:    Unload running program
+;
+;           PARAMETERS:         AX          Exit code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unload_exe_name DB 'Unload Exe',0
+    
+unload_exe:
+    int 3
+    push ax
+    GetThread
+    mov ds,ax
+    pop ax
+;
+    push ax
+    GetThread
+    mov ds,ax
+    pop ax
+    mov ds,ds:p_app_sel
+    jmp ds:app_unload_proc    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init
 ;
 ;           DESCRIPTION:    init module
@@ -2001,6 +2028,12 @@ init    PROC far
     mov dx,virt_es_in OR virt_ds_in
     mov ax,spawn_exe_nr
     RegisterUserGate
+;
+    mov esi,OFFSET unload_exe
+    mov edi,OFFSET unload_exe_name
+    xor dx,dx
+    mov ax,unload_exe_nr
+    RegisterBimodalUserGate
     ret
 init    ENDP
 
