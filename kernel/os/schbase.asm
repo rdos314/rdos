@@ -216,60 +216,6 @@ RemoveProgramThread    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AddProgramModule
-;
-;           DESCRIPTION:    Add module to program
-;
-;           PARAMETERS:     BX      Module ID
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddProgramModule    Proc near
-    push ds
-    push es
-    push eax
-    push ebx
-    push ecx
-;
-    GetThread
-    mov es,ax
-;
-    push ebx
-    movzx ebx,es:p_prog_id
-    GetProgramSel
-    pop ebx
-    jc apmDone
-;
-    mov ds,eax
-    EnterSection ds:pr_section
-;
-    movzx ecx,ds:pr_module_count
-    cmp ecx,MAX_PROCESS_MODULES
-    jae apmLeave
-;
-    mov eax,ecx
-    shl eax,1
-    inc ecx
-    mov ds:pr_module_count,cx
-;
-    mov ds:[eax].pr_module_arr,bx
-    
-apmLeave:
-    LeaveSection ds:pr_section
-            
-apmDone:
-    pop ecx
-    pop ebx
-    pop eax
-    pop es
-    pop ds
-    ret
-AddProgramModule    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetThreadCount
 ;
 ;           DESCRIPTION:    Get thread count
