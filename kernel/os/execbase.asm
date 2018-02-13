@@ -4613,7 +4613,9 @@ terminate_app_thread:
 
 system_process_name DB "System", 0
 
-init    PROC far
+    public InitExec_
+
+InitExec_    Proc near
     mov ax,SEG data
     mov ds,eax
     mov es,eax
@@ -4945,8 +4947,8 @@ init    PROC far
     mov ax,get_module_size_nr
     RegisterBimodalUserGate
     ret
-init    ENDP
+InitExec_    Endp
 
 _TEXT    ENDS
 
-    END init
+    END
