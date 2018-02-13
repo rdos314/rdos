@@ -4159,6 +4159,244 @@ find_module_by_name Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetModuleInfo
+;
+;           DESCRIPTION:    Get module info
+;
+;           PARAMETERS:     AX          Module #
+;                           ES:(E)DI    Name buffer
+;                           (E)CX       Size of buffer
+;
+;           RETURNS:        DX          module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_info_name DB 'Get Module Info',0
+    
+get_module_info    Proc near
+    push ds
+    push eax
+    push ebx
+    push esi
+    push edi
+;
+    GetModuleId
+    jc gmiDone
+;
+    mov edx,eax
+    mov ebx,eax
+    ModuleIdToSel
+    jc gmiDone
+;
+    mov ds,ebx
+    movzx esi,ds:mod_name_offs
+
+gmiCopyLoop:
+    lodsb
+    stosb
+    or al,al
+    jz gmiCopyDone
+;
+    loop gmiCopyLoop
+;
+    xor al,al
+    mov es:[edi-1],al
+
+gmiCopyDone:
+    clc
+
+gmiDone:
+    pop edi
+    pop esi
+    pop ebx
+    pop eax
+    pop ds
+    ret
+get_module_info    Endp
+
+get_module_info16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call get_module_info
+;
+    pop edi
+    pop ecx
+    ret
+get_module_info16   Endp
+
+get_module_info32   Proc far
+    call get_module_info
+    ret
+get_module_info32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetModuleSel
+;
+;           DESCRIPTION:    Get module sel
+;
+;           PARAMETERS:     BX          Module ID
+;
+;           RETURNS:        AX          Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_sel_name DB 'Get Module Sel',0
+    
+get_module_sel    Proc far
+    push ds
+    push ebx
+;
+    movzx ebx,bx
+    ModuleIdToSel
+    jc gmsDone
+;
+    mov ds,ebx
+    mov ax,ds:mod_sel
+    clc
+
+gmsDone:
+    pop ebx
+    pop ds
+    ret
+get_module_sel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetDll
+;
+;           DESCRIPTION:    Get DLL handle
+;
+;       PARAMETERS:         ES:(E)DI    DLL name
+;                           
+;           RETURNS:        EBX         DLL handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_dll_handle_name     DB 'Get DLL',0
+
+get_dll_handle  Proc near
+    push es
+    push fs
+    push eax
+    push esi
+;
+    mov eax,es
+    mov fs,eax
+    mov esi,edi
+;
+    GetThread
+    mov es,eax
+    movzx ebx,es:p_prog_id
+    FindModuleByName
+    jc gdhDone
+;
+    ModuleIdToSel
+    jc gdhDone
+;
+    mov es,ebx
+    movzx ebx,es:mod_id
+    clc
+
+gdhDone:
+    pop esi
+    pop eax
+    pop fs
+    pop es
+    ret
+get_dll_handle  Endp
+
+get_dll_handle16   Proc far
+    push edi
+;
+    movzx edi,di
+    call get_dll_handle
+;
+    pop edi
+    ret
+get_dll_handle16   Endp
+
+get_dll_handle32   Proc far
+    call get_dll_handle
+    ret
+get_dll_handle32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetModuleBase
+;
+;           DESCRIPTION:    Get module base
+;
+;           PARAMETERS:     BX          Module ID
+;
+;           RETURNS:        EDX:EAX     Base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_base_name DB 'Get Module Base',0
+    
+get_module_base    Proc far
+    push ds
+    push ebx
+;
+    movzx ebx,bx
+    ModuleIdToSel
+    jc gmbDone
+;
+    mov ds,ebx
+    mov eax,ds:mod_base
+    mov edx,ds:mod_base+4
+    clc
+
+gmbDone:
+    pop ebx
+    pop ds
+    ret
+get_module_base    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetModuleSize
+;
+;           DESCRIPTION:    Get module size
+;
+;           PARAMETERS:     BX          Module ID
+;
+;           RETURNS:        EDX:EAX     Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_size_name DB 'Get Module Size',0
+    
+get_module_size    Proc far
+    push ds
+    push ebx
+;
+    movzx ebx,bx
+    ModuleIdToSel
+    jc gmszDone
+;
+    mov ds,ebx
+    mov eax,ds:mod_size
+    mov edx,ds:mod_size+4
+    clc
+
+gmszDone:
+    pop ebx
+    pop ds
+    ret
+get_module_size    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init
 ;
 ;           DESCRIPTION:    init module
@@ -4227,6 +4465,24 @@ init    PROC far
     mov edi,OFFSET alias_module_handle_name
     xor cl,cl
     mov ax,alias_module_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_module_by_index
+    mov edi,OFFSET get_module_by_index_name
+    xor cl,cl
+    mov ax,get_module_by_index_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET find_module_by_address
+    mov edi,OFFSET find_module_by_address_name
+    xor cl,cl
+    mov ax,find_module_by_address_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET find_module_by_name
+    mov edi,OFFSET find_module_by_name_name
+    xor cl,cl
+    mov ax,find_module_by_name_nr
     RegisterOsGate
 ;
     mov esi,OFFSET dos_ext_exec16
@@ -4430,23 +4686,37 @@ init    PROC far
     mov ax,get_program_modules_nr
     RegisterUserGate
 ;
-    mov esi,OFFSET get_module_by_index
-    mov edi,OFFSET get_module_by_index_name
-    xor cl,cl
-    mov ax,get_module_by_index_nr
-    RegisterOsGate
+    mov ebx,OFFSET get_dll_handle16
+    mov esi,OFFSET get_dll_handle32
+    mov edi,OFFSET get_dll_handle_name
+    mov dx,virt_es_in
+    mov ax,get_module_nr
+    RegisterUserGate
 ;
-    mov esi,OFFSET find_module_by_address
-    mov edi,OFFSET find_module_by_address_name
-    xor cl,cl
-    mov ax,find_module_by_address_nr
-    RegisterOsGate
+    mov ebx,OFFSET get_module_info16
+    mov esi,OFFSET get_module_info32
+    mov edi,OFFSET get_module_info_name
+    mov dx,virt_es_in
+    mov ax,get_module_info_nr
+    RegisterUserGate
 ;
-    mov esi,OFFSET find_module_by_name
-    mov edi,OFFSET find_module_by_name_name
-    xor cl,cl
-    mov ax,find_module_by_name_nr
-    RegisterOsGate
+    mov esi,OFFSET get_module_sel
+    mov edi,OFFSET get_module_sel_name
+    xor dx,dx
+    mov ax,get_module_sel_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_module_base
+    mov edi,OFFSET get_module_base_name
+    xor dx,dx
+    mov ax,get_module_base_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_module_size
+    mov edi,OFFSET get_module_size_name
+    xor dx,dx
+    mov ax,get_module_size_nr
+    RegisterBimodalUserGate
     ret
 init    ENDP
 
