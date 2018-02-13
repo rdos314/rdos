@@ -7601,6 +7601,9 @@ init_thread_block       PROC near
     mov eax,ds:p_debug_proc
     mov es:p_debug_proc,eax
 ;
+    mov ax,ds:p_debug_event
+    mov es:p_debug_event,ax
+;
     mov es:p_signal,0
     mov es:p_parent_switch,0
     mov es:p_wait_list,0
@@ -8629,6 +8632,7 @@ create_process  PROC far
     mov dx,[ebp].cr_prio
     call init_thread_block
     mov es:p_debug_proc,0
+    mov es:p_debug_event,0
     call init_process_block
     mov ax,es
     mov ds,ax
@@ -9174,6 +9178,7 @@ create_first_thread       PROC near
     mov es:p_lib_sel,ax
 ;
     mov es:p_debug_proc,0
+    mov es:p_debug_event,0
     mov es:p_flags,0
     mov es:p_signal_spinlock,0
     mov es:p_wanted_core,0
