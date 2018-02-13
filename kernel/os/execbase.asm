@@ -2039,6 +2039,68 @@ unload_exe:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           Fork
+;
+;           DESCRIPTION:    Fork process
+;
+;           RETURNS:        AX = 0 for child
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fork_name   DB 'Fork',0
+
+fork_pr    PROC far
+    push ds
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov eax,ds:app_fork_proc
+    or eax,ds:app_fork_proc+4
+    mov eax,-1
+    jz fork_done
+;
+    call fword ptr ds:app_fork_proc
+    
+fork_done:
+    pop ds
+    ret
+fork_pr    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsForked
+;
+;           DESCRIPTION:    Check if thread is forked
+;
+;           RETURNS:        NC          Forked
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_forked_name   DB 'Is Forked',0
+
+is_forked    PROC far
+    push ds
+    push ax
+;
+    GetThread
+    mov ds,ax
+    test ds:p_flags,THREAD_FLAG_FORKED
+    stc
+    jz ifDone
+;
+    clc
+
+ifDone:
+    pop ax
+    pop ds
+    ret
+is_forked    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           FatalErrorExit
 ;
 ;           DESCRIPTION:    Fatal error exit
@@ -3603,6 +3665,18 @@ init    PROC far
     mov edi,OFFSET unload_exe_name
     xor dx,dx
     mov ax,unload_exe_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET fork_pr
+    mov edi,OFFSET fork_name
+    xor dx,dx
+    mov ax,fork_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_forked
+    mov edi,OFFSET is_forked_name
+    xor dx,dx
+    mov ax,is_forked_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_exe_name
