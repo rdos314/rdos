@@ -2129,6 +2129,7 @@ do_unload 	Endp
 unload_exe_name DB 'Unload Exe',0
     
 unload_exe:
+    int 3
     mov bx,[esp+4]
     cmp bx,flat_code_sel
     jne unload_kernel32
