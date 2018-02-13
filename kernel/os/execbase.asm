@@ -50,6 +50,7 @@ debug_event_wait_header ENDS
 
 data    SEGMENT byte public 'DATA'
 
+term_gate_sel       DW ?
 free_dll_gate_sel   DW ?
 
 loader_count        DW ?
@@ -4397,6 +4398,211 @@ get_module_size    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AppThreadStarted
+;
+;           DESCRIPTION:    Startup of app thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_thread_started:
+    push eax
+    pushfd
+    pop eax
+    mov [esp+8],eax
+    mov eax,[esp+4]
+    xchg eax,[esp]
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    mov ebp,esp
+    add ebp,28
+    mov dword ptr [ebp].load_cs,flat_code_sel
+;
+    push ds
+    push es
+    push fs
+    push gs
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_loader
+    call fword ptr ds:loader_start_thread_proc
+;
+    pop gs
+    pop fs
+    pop es
+    pop ds
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateAppThread
+;
+;           DESCRIPTION:    Create application thread
+;
+;           PARAMETERS:     DS          New thread 
+;                           ECX         User stack size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_app_thread_name  DB 'Create App Thread', 0
+
+create_app_thread    Proc far
+    push es
+    push eax
+    push ebx
+    push edx
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_loader
+;
+    mov eax,ecx
+    call fword ptr es:loader_init_thread_proc
+;
+    mov ax,ds:p_ss
+    test al,3
+    jnz catStackOk
+; 
+    mov eax,ecx
+    call fword ptr es:loader_allocate_mem_proc
+    mov ds:p_ss,flat_data_sel
+    mov dword ptr ds:p_rsp,edx
+
+catStackOk:
+    mov ax,ds:p_cs
+    cmp ax,flat_code_sel
+    je catFlat
+;
+    int 3
+
+catFlat:
+    mov edx,dword ptr ds:p_rsp
+;
+    mov ax,ds:p_kernel_ss
+    mov ds:p_ss,ax
+    mov es,eax
+    mov ebx,stack0_size
+;
+    sub ebx,4
+    mov eax,flat_data_sel
+    mov es:[ebx],eax
+;
+    sub ebx,4
+    mov es:[ebx],edx
+;
+    sub ebx,4
+    movzx eax,ds:p_cs
+    mov es:[ebx],eax
+;
+    sub ebx,4
+    mov eax,dword ptr ds:p_rip
+    mov es:[ebx],eax
+;
+    mov dword ptr ds:p_rsp,ebx
+;
+    mov ax,cs
+    mov ds:p_cs,ax
+    mov dword ptr ds:p_rip,OFFSET app_thread_started
+;
+    pop edx
+    pop ebx
+    pop eax
+    pop es
+    ret
+create_app_thread       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TerminateAppThreadKernel
+;
+;           DESCRIPTION:    Terminate application thread, callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+terminate_app_thread_kernel:
+    GetThread
+    mov es,ax
+    mov es,es:p_loader
+    call fword ptr es:loader_free_thread_kernel_proc
+;
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TerminateAppThread
+;
+;           DESCRIPTION:    Terminate application thread with user stack
+;
+;           PARAMETERS:     EBP         Stack frame
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+terminate_app_thread_name  DB 'Terminate App Thread', 0
+
+terminate_app_thread:
+    add esp,8
+    push ds
+    push es
+    push fs
+    push gs
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov es,[ebp].load_ss
+    mov edi,[ebp].load_esp
+    sub edi,16
+    mov [ebp].load_esp,edi
+    mov [ebp].load_eip,edi
+;
+    mov al,9Ah
+    stosb
+;
+    xor eax,eax
+    stosd
+;
+    mov ax,ds:term_gate_sel
+    stosw
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_loader
+    call fword ptr es:loader_free_thread_user_proc
+;
+    pop gs
+    pop fs
+    pop es
+    pop ds
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init
 ;
 ;           DESCRIPTION:    init module
@@ -4412,6 +4618,15 @@ init    PROC far
     mov ds,eax
     mov es,eax
     mov ds:loader_count,0
+;
+    AllocateGdt
+    or bl,3
+    mov eax,cs
+    mov ds,eax
+    mov esi,OFFSET terminate_app_thread_kernel
+    xor cl,cl
+    CreateCallGateSelector32
+    mov es:term_gate_sel,bx
 ;
     AllocateGdt
     or bl,3
@@ -4483,6 +4698,18 @@ init    PROC far
     mov edi,OFFSET find_module_by_name_name
     xor cl,cl
     mov ax,find_module_by_name_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_app_thread
+    mov edi,OFFSET create_app_thread_name
+    xor cl,cl
+    mov ax,create_app_thread_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET terminate_app_thread
+    mov edi,OFFSET terminate_app_thread_name
+    xor cl,cl
+    mov ax,terminate_app_thread_nr
     RegisterOsGate
 ;
     mov esi,OFFSET dos_ext_exec16
