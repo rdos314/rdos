@@ -42,6 +42,8 @@ INCLUDE chandle.inc
 
 data    SEGMENT byte public 'DATA'
 
+free_dll_gate_sel   DW ?
+
 loader_count        DW ?
 loader_arr          DW 16 DUP(?)
 
@@ -496,6 +498,74 @@ akpmDone:
     pop ds
     ret
 AddKernelProgramModule    Endp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           RemoveProgramModule
+;
+;           DESCRIPTION:    Remove module from program
+;
+;           PARAMETERS:     BX      Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveProgramModule    Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+;
+    GetThread
+    mov es,ax
+;
+    push ebx
+    movzx ebx,es:p_prog_id
+    GetProgramSel
+    pop ebx
+    jc rpmDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    mov ax,bx
+    movzx ecx,ds:pr_module_count
+    mov ebx,OFFSET pr_module_arr
+    or ecx,ecx
+    jz rpmLeave
+
+rpmLoop:
+    cmp ax,ds:[ebx]
+    je rpmFound
+;
+    add bx,2
+    loop rpmLoop
+;
+    jmp rpmLeave
+
+rpmFound:
+    dec ds:pr_module_count
+;
+    sub ecx,1
+    jz rpmLeave
+
+rpmMove:
+    mov ax,ds:[ebx+2]
+    mov ds:[ebx],ax
+    add ebx,2
+    loop rpmMove
+
+rpmLeave:
+    LeaveSection ds:pr_section
+            
+rpmDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+RemoveProgramModule    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1958,6 +2028,477 @@ unload_exe:
     mov ds,ds:p_app_sel
     jmp ds:app_unload_proc    
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           load_dll
+;
+;       DESCRIPTION:    Load DLL
+;
+;       PARAMETERS:     ES:EDI      Name of dll to load
+;                       EBP         Stack frame   
+;
+;       RETURNS:        BX          Module handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_dll        Proc  near    
+    mov eax,es
+    mov fs,eax
+    mov esi,edi
+;
+    GetThread
+    mov ds,ax
+    movzx ebx,ds:p_prog_id
+    FindModuleByName
+    jnc ldllOk
+;
+    mov eax,es
+    mov ds,eax
+    call OpenModuleFile
+    jc ldllFail
+;
+    GetThread
+    mov es,ax
+    mov ax,es:p_loader
+    or ax,ax
+    mov gs,ax
+    jz ldllFail
+;
+    call fword ptr gs:loader_init_dll_proc
+    jc ldllFail
+;
+    push ebx
+    movzx ebx,es:p_prog_id
+    GetProgramSel
+    mov es,ax
+    mov dx,es:pr_debug_sel
+    pop ebx
+    mov es,bx
+;
+    movzx ebx,bx
+    ModuleLoaded
+;
+    mov ebx,eax
+    call AddProgramModule
+;
+    InitSection es:mod_section
+    mov es:mod_usage,1
+    mov es:mod_id,bx
+    mov [ebp].load_ebx,ebx
+    and byte ptr [ebp].load_eflags,NOT 1
+    mov ebx,es
+;
+    push ebx
+    call fword ptr gs:loader_fixup_dll_proc
+    pop ebx
+    jmp ldllDone
+
+ldllOk:
+    mov [ebp].load_ebx,ebx
+;
+    ModuleIdToSel
+    jc ldllFail
+;
+    mov es,ebx
+    inc es:mod_usage
+    and byte ptr [ebp].load_eflags,NOT 1
+    jmp ldllDone
+
+ldllFail:
+    or byte ptr [ebp].load_eflags,1
+    
+ldllDone:
+    ret
+load_dll        Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           load_dll
+;
+;           DESCRIPTION:    Load DLL
+;
+;       PARAMETERS:         ES:(E)DI    Name of dll to load
+;
+;           RETURNS:        BX          Module handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_dll_name   DB 'Load Dll',0
+
+load_dll32  Proc far
+    mov bx,[esp+4]
+    cmp bx,flat_code_sel
+    jne load_dll_kernel32
+;
+    push eax
+    pushfd
+    pop eax
+    mov [esp+8],eax
+    mov eax,[esp+4]
+    xchg eax,[esp]
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    mov ebp,esp
+    add ebp,28
+    mov dword ptr [ebp].load_cs,flat_code_sel
+;
+    push ds
+    push es
+    push fs
+    push gs
+;
+    call load_dll
+;
+    pop gs
+    pop fs
+    pop es
+    pop ds
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+load_dll_kernel32:
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    call load_dll
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+load_dll32  Endp
+
+load_dll16  Proc far
+    mov bx,[esp+4]
+    cmp bx,flat_code_sel
+    jne load_dll_kernel16
+;
+    push eax
+    pushfd
+    pop eax
+    mov [esp+8],eax
+    mov eax,[esp+4]
+    xchg eax,[esp]
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    mov ebp,esp
+    add ebp,28
+    mov dword ptr [ebp].load_cs,flat_code_sel
+;
+    push ds
+    push es
+    push fs
+    push gs
+;
+    movzx edi,di
+    call load_dll
+;
+    pop gs
+    pop fs
+    pop es
+    pop ds
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+load_dll_kernel16:
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    movzx edi,di
+    call load_dll
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+load_dll16  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           unload_dll
+;
+;           DESCRIPTION:    Unload DLL callback
+;
+;       PARAMETERS:         EBX         Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unload_dll:
+    push eax
+    pushfd
+    pop eax
+    mov [esp+8],eax
+    mov eax,[esp+4]
+    xchg eax,[esp]
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    mov ebp,esp
+    add ebp,28
+    mov dword ptr [ebp].load_cs,flat_code_sel
+;
+    push ds
+    push es
+    push fs
+    push gs
+;
+    call RemoveProgramModule
+;
+    mov es,[ebp].load_ss
+    mov edi,[ebp].load_esp
+    add edi,8
+    mov eax,es:[edi]
+    mov [ebp].load_eip,eax
+    add edi,4
+    mov [ebp].load_esp,edi
+;
+    ModuleIdToSel
+    jc unload_dll_done
+;
+    mov ds,ebx
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz unload_dll_free
+;    
+    push bx
+    call fword ptr ds:loader_free_dll_proc    
+    pop bx
+
+unload_dll_free:
+    movzx ebx,bx
+    ModuleUnloaded
+;
+    mov es,ebx
+    mov bx,es:mod_c_file_handle
+    CloseCFile
+;
+    FreeMem
+
+unload_dll_done:
+    pop gs
+    pop fs
+    pop es
+    pop ds
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           free_dll_do
+;
+;           DESCRIPTION:    Free DLL
+;
+;       PARAMETERS:         BX          Module handle
+;                           EBP         Stack frame
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_dll_do  Proc near
+    ModuleIdToSel
+    jc free_dll_done
+;
+    mov ds,ebx
+    sub ds:mod_usage,1
+    jnz free_dll_done
+;
+    push ds
+    push es
+    push edx
+    push edi
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov edx,[ebp].load_eip
+    mov es,[ebp].load_ss
+    mov edi,[ebp].load_esp
+    sub edi,12
+    mov [ebp].load_esp,edi
+    mov [ebp].load_eip,edi
+;
+    mov al,90h
+    stosb
+;
+    mov al,9Ah
+    stosb
+;
+    xor eax,eax
+    stosd
+;
+    mov ax,ds:free_dll_gate_sel
+    stosw
+;
+    mov eax,edx
+    stosd
+;
+    pop edi
+    pop edx
+    pop es
+    pop ds
+;
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov ds,ax
+    stc
+    jz free_dll_done
+;    
+    call fword ptr ds:loader_unload_dll_proc    
+
+free_dll_done:
+    ret
+free_dll_do  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           free_dll
+;
+;           DESCRIPTION:    Free DLL
+;
+;       PARAMETERS:         BX          Module handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_dll_name   DB 'Free Dll',0
+
+free_dll  Proc far
+    push eax
+    mov ax,[esp+8]
+    cmp ax,flat_code_sel
+    pop eax
+    jne free_dll_kernel
+;
+    push eax
+    pushfd
+    pop eax
+    mov [esp+8],eax
+    mov eax,[esp+4]
+    xchg eax,[esp]
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    mov ebp,esp
+    add ebp,28
+    mov dword ptr [ebp].load_cs,flat_code_sel
+;
+    push ds
+    push es
+    push fs
+    push gs
+;
+    call free_dll_do
+;
+    pop gs
+    pop fs
+    pop es
+    pop ds
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+free_dll_kernel:
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    call free_dll_do
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+free_dll  Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1974,7 +2515,17 @@ system_process_name DB "System", 0
 init    PROC far
     mov ax,SEG data
     mov ds,eax
+    mov es,eax
     mov ds:loader_count,0
+;
+    AllocateGdt
+    or bl,3
+    mov eax,cs
+    mov ds,eax
+    mov esi,OFFSET unload_dll
+    xor cl,cl
+    CreateCallGateSelector32
+    mov es:free_dll_gate_sel,bx
 ;
     mov eax,SIZE process_struc
     AllocateSmallGlobalMem
@@ -2033,6 +2584,19 @@ init    PROC far
     mov edi,OFFSET unload_exe_name
     xor dx,dx
     mov ax,unload_exe_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET load_dll16
+    mov esi,OFFSET load_dll32
+    mov edi,OFFSET load_dll_name
+    mov dx,virt_es_in
+    mov ax,load_dll_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET free_dll
+    mov edi,OFFSET free_dll_name
+    xor dx,dx
+    mov ax,free_dll_nr
     RegisterBimodalUserGate
     ret
 init    ENDP
