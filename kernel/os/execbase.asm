@@ -2129,7 +2129,6 @@ do_unload       Endp
 unload_exe_name DB 'Unload Exe',0
     
 unload_exe:
-    int 3
     pushfd
     push eax
     mov eax,[esp+12]
@@ -2730,12 +2729,7 @@ load_dll16  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 unload_dll:
-    push eax
     pushfd
-    pop eax
-    mov [esp+8],eax
-    mov eax,[esp+4]
-    xchg eax,[esp]
     push eax
     push ebx
     push ecx
@@ -2745,7 +2739,12 @@ unload_dll:
     push ebp
     mov ebp,esp
     add ebp,28
-    mov dword ptr [ebp].load_cs,flat_code_sel
+    push dword ptr [ebp+4].load_eax
+    mov eax,[ebp+4].load_eip
+    mov [ebp].load_eip,eax
+    mov eax,[ebp+4].load_cs
+    mov [ebp].load_cs,eax
+    pop dword ptr [ebp].load_eflags   
 ;
     push ds
     push es
