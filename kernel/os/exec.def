@@ -172,6 +172,10 @@ loader_fixup_exe_proc          DD ?,?
 ; IN   ES:EDI             Command line
 loader_setup_names_proc        DD ?,?
 
+; IN   BX                 Module selector
+; IN   EBP                Stack frame
+loader_unload_exe_proc         DD ?,?
+
 ; IN  DS:EBX              Instruction to patch
 ; IN  EAX                 Gate #
 loader_patch_proc              DD ?,?

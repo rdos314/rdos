@@ -262,7 +262,7 @@ AllocateProcess Proc near
     push ds
     pushad
 ;
-    mov bx,dx
+    movzx ebx,dx
     ModuleIdToSel
     jc apDebugOk
 ;    
@@ -2087,9 +2087,31 @@ do_unload	Proc near
 ;
     GetThread
     mov es,ax
-    mov es,es:p_loader
-;    call fword ptr es:loader_free_thread_user_proc
 ;
+    push ebx
+    movzx ebx,es:p_prog_id
+    GetProgramSel
+    pop ebx
+    jc duDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+    movzx ebx,ds:pr_module_arr
+    LeaveSection ds:pr_section
+;
+    ModuleIdToSel
+    jc duDone
+;
+    mov ds,ebx
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov es,eax
+    stc
+    jz duDone
+;    
+    call fword ptr es:loader_unload_exe_proc
+
+duDone:
     ret
 do_unload 	Endp
 
@@ -2445,6 +2467,7 @@ get_module_focus_key  Proc far
     push ds
     push ebx
 ;    
+    movzx ebx,bx
     ModuleIdToSel
     jc get_module_focus_done
 ;
@@ -2791,6 +2814,7 @@ unload_dll_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_dll_do  Proc near
+    movzx ebx,bx
     ModuleIdToSel
     jc free_dll_done
 ;
@@ -2995,6 +3019,7 @@ get_module_proc32  Proc far
     push eax
     push ebx
 ;    
+    movzx ebx,bx
     ModuleIdToSel
     jc get_module_proc_done32
 ;
@@ -3019,6 +3044,7 @@ get_module_proc16  Proc far
     push edi
 ;    
     movzx edi,di
+    movzx ebx,bx
     ModuleIdToSel
     jc get_module_proc_done16
 ;
@@ -3058,7 +3084,8 @@ get_module_resource_name    DB 'Get Module Resource',0
 
 get_module_resource  Proc far
     push ebx
-;    
+;   
+    movzx ebx,bx 
     ModuleIdToSel
     jc get_resource_done
 ;
@@ -3097,6 +3124,7 @@ get_module_name32  Proc far
     push ds
     push ebx
 ;    
+    movzx ebx,bx
     ModuleIdToSel
     jc get_module_name_done32
 ;
@@ -3121,6 +3149,7 @@ get_module_name16  Proc far
     push edi
 ;    
     movzx edi,di
+    movzx ebx,bx
     ModuleIdToSel
     jc get_module_name_done16
 ;
@@ -3756,7 +3785,8 @@ dupl_module_file_handle_name       DB 'Dupl Module File Handle',0
 
 dupl_module_file_handle  Proc far
     push ds
-;    
+;
+    movzx ebx,bx    
     ModuleIdToSel
     jc dupl_module_file_handle_done
 ;
