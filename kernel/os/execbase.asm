@@ -40,6 +40,13 @@ INCLUDE chandle.inc
 
 .386p
 
+data    SEGMENT byte public 'DATA'
+
+loader_count        DW ?
+loader_arr          DW 16 DUP(?)
+
+data    ENDS
+
 _TEXT    SEGMENT byte public 'CODE'
 
     assume cs:_TEXT
@@ -190,6 +197,1743 @@ InitProcessBlock  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AllocateProcess
+;
+;       DESCRIPTION:    Allocate process
+;
+;       PARAMETERS:     DX      Debug module handle
+;                       GS      Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateProcess Proc near    
+    push ds
+    pushad
+;
+    mov bx,dx
+    ModuleIdToSel
+    jc apDebugOk
+;    
+    mov gs:pr_debug_sel,bx
+
+apDebugOk:
+    mov gs:pr_switch,0
+;
+    GetThread
+    mov bx,ax
+    GetThreadFocusKey
+    jc apFocusDone
+;
+    mov gs:pr_switch,al
+
+apFocusDone:
+    popad
+    pop ds
+    ret
+AllocateProcess  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateProg
+;
+;       DESCRIPTION:    Make global copy of program name
+;
+;       PARAMETERS:     DS:ESI      Filename
+;                       GS          Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateProg Proc near
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    mov edi,esi
+    xor ecx,ecx
+
+cprLoop:
+    lods byte ptr [esi]
+    or al,al
+    jz cprSizeOk
+;
+    inc ecx
+    jmp cprLoop
+
+cprSizeOk:
+    mov esi,edi
+    inc ecx 
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]     
+    mov gs:pr_name_sel,es
+;    
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateProg Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddProgramThread
+;
+;           DESCRIPTION:    Add thread to program
+;
+;           PARAMETERS:     ES      Thread
+;                           BX      Program ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddProgramThread    Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+;
+    GetProgramSel
+    jc aptDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    movzx ecx,ds:pr_thread_count
+    cmp ecx,MAX_PROCESS_THREADS
+    jae aptLeave
+;
+    mov ebx,ecx
+    shl ebx,1
+    inc ecx
+    mov ds:pr_thread_count,cx
+;
+    mov ax,es:p_id
+    mov ds:[ebx].pr_thread_arr,ax
+    
+aptLeave:
+    LeaveSection ds:pr_section
+            
+aptDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+AddProgramThread    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           RemoveProgramThread
+;
+;           DESCRIPTION:    Remove thread from program
+;
+;           PARAMETERS:     ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveProgramThread    Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+;
+    movzx ebx,es:p_prog_id
+    or ebx,ebx
+    jnz rptStart
+;
+    mov ebx,1
+
+rptStart:
+    GetProgramSel
+    jc rptDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    mov ax,es:p_id
+    movzx ecx,ds:pr_thread_count
+    mov ebx,OFFSET pr_thread_arr
+    or ecx,ecx
+    jz rptLeave
+
+rptLoop:
+    cmp ax,ds:[ebx]
+    je rptFound
+;
+    add bx,2
+    loop rptLoop
+;
+    jmp rptLeave
+
+rptFound:
+    dec ds:pr_thread_count
+;
+    sub ecx,1
+    jz rptLeave
+
+rptMove:
+    mov ax,ds:[ebx+2]
+    mov ds:[ebx],ax
+    add ebx,2
+    loop rptMove
+
+rptLeave:
+    LeaveSection ds:pr_section
+            
+rptDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+RemoveProgramThread    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddProgramModule
+;
+;           DESCRIPTION:    Add module to program
+;
+;           PARAMETERS:     BX      Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddProgramModule    Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+;
+    GetThread
+    mov es,ax
+;
+    push ebx
+    movzx ebx,es:p_prog_id
+    GetProgramSel
+    pop ebx
+    jc apmDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    movzx ecx,ds:pr_module_count
+    cmp ecx,MAX_PROCESS_MODULES
+    jae apmLeave
+;
+    mov eax,ecx
+    shl eax,1
+    inc ecx
+    mov ds:pr_module_count,cx
+;
+    mov ds:[eax].pr_module_arr,bx
+    
+apmLeave:
+    LeaveSection ds:pr_section
+            
+apmDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+AddProgramModule    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddKernelProgramModule
+;
+;           DESCRIPTION:    Add kernel module to program
+;
+;           PARAMETERS:     BX      Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddKernelProgramModule    Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+;
+    push ebx
+    mov ebx,1
+    GetProgramSel
+    pop ebx
+    jc akpmDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    movzx ecx,ds:pr_module_count
+    cmp ecx,MAX_PROCESS_MODULES
+    jae akpmLeave
+;
+    mov eax,ecx
+    shl eax,1
+    inc ecx
+    mov ds:pr_module_count,cx
+;
+    mov ds:[eax].pr_module_arr,bx
+    
+akpmLeave:
+    LeaveSection ds:pr_section
+            
+akpmDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+AddKernelProgramModule    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           OpenModuleFile
+;
+;           DESCRIPTION:    Open module file
+;
+;           PARAMETERS:     DS:ESI  File name
+;
+;           RETURNS:        BX          C File handle
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PathName        DB 'PATH',0
+
+OpenModuleFile Proc near       
+    push ds
+    push es
+    push fs
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    mov eax,ds
+    mov es,eax
+    mov edi,esi
+;
+    mov cx,O_RDONLY OR O_BINARY
+    OpenKernelFile
+    jnc omfDone
+;
+    mov eax,ds
+    mov fs,eax
+;
+    LockProcEnv
+    mov ds,bx
+    mov ebx,esi
+    xor esi,esi
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET PathName
+
+omfFindLoop:
+    cmpsb
+    jnz omfFindNext
+;
+    mov al,es:[edi]
+    or al,al
+    jnz omfFindLoop
+;
+    mov al,[esi]
+    cmp al,'='
+    je omfFindFound
+
+omfFindNext:
+    lodsb
+    or al,al
+    jnz omfFindNext
+;
+    mov al,[esi]
+    or al,al
+    mov edi,OFFSET PathName
+    jne omfFindLoop
+    jmp omfFailed
+
+omfFindFound:
+    mov eax,200h
+    AllocateSmallGlobalMem
+;
+    xor edi,edi
+    inc esi
+
+omfMoveLoop:
+    lodsb
+    or al,al
+    jz omfMoveOk
+;
+    cmp al,';'
+    je omfMoveOk
+;
+    stosb
+    jmp omfMoveLoop 
+
+omfMoveOk:
+    or edi,edi
+    jz omfAddFile
+;    
+    mov al,es:[edi-1]
+    cmp al,'\'
+    je omfAddFile
+;
+    cmp al,'/'
+    je omfAddFile
+;
+    cmp al,':'
+    je omfAddFile
+;
+    mov al,'\'
+    stosb
+    
+omfAddFile:    
+    push ebx
+
+omfNameLoop:
+    mov al,fs:[ebx]
+    inc ebx
+    stosb
+    or al,al
+    jnz omfNameLoop
+;
+    pop ebx
+;
+    push bx
+    xor edi,edi
+    mov cx,O_RDONLY OR O_BINARY
+    OpenKernelFile
+    jnc omfFileOk
+;
+    pop bx
+    mov al,[esi-1]
+    or al,al
+    jnz omfMoveLoop
+;
+    FreeMem
+
+omfFailed:
+    stc
+    jmp omfUnlock
+
+omfFileOk:
+    add esp,2
+    FreeMem
+    clc
+    
+omfUnlock:
+    pushf
+    UnlockProcEnv
+    popf
+
+omfDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop fs
+    pop es
+    pop ds
+    ret
+OpenModuleFile Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetProgramLoader
+;
+;       DESCRIPTION:    Get program loader
+;
+;       PARAMETERS:     DS:ESI  File name
+;
+;       RETURNS:        AX      Loader
+;                       GS      Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetProgramLoader Proc near
+    push ds
+    push es
+    push fs
+    push ecx
+    push esi
+    push edi
+;
+    mov eax,ds
+    mov es,eax
+    mov edi,esi
+;
+    mov ax,SEG data
+    mov fs,ax
+    movzx ecx,fs:loader_count
+    or ecx,ecx
+    je gplFail
+;
+    mov esi,OFFSET loader_arr
+
+gplLoop:
+    mov ds,fs:[esi]
+    call fword ptr ds:loader_is_valid_exe_proc
+    jnc gplOk
+;
+    add esi,2
+    loop gplLoop
+
+gplFail:
+    stc
+    jmp gplDone
+
+gplOk:
+    mov ax,fs:[esi]
+    clc
+
+gplDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop fs
+    pop es
+    pop ds
+    ret
+GetProgramLoader Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateNoParam
+;
+;       DESCRIPTION:    Make global copy of empty parameters
+;
+;       PARAMETERS:     GS          Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateNoParam Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov eax,1
+    AllocateSmallGlobalMem
+    xor edi,edi
+    xor al,al
+    stos byte ptr es:[edi]
+    mov gs:pr_cmd_sel,es
+;       
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateNoParam Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateParam
+;
+;       DESCRIPTION:    Make global copy of parameters
+;
+;       PARAMETERS:     DS:ESI      Param pointer
+;                       GS          Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateParam Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov edi,esi
+    xor ecx,ecx
+
+cpaLoop:
+    lods byte ptr [esi]
+    or al,al
+    jz cpaSizeOk
+;
+    inc ecx
+    jmp cpaLoop
+
+cpaSizeOk:
+    mov esi,edi
+    inc ecx 
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]     
+    mov gs:pr_cmd_sel,es
+;       
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateParam Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateDefaultStartDir
+;
+;       DESCRIPTION:    Make global copy of default directory
+;
+;       PARAMETERS:     GS          Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDefaultStartDir Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov eax,256
+    AllocateSmallGlobalMem
+    xor edi,edi
+    GetCurDrive
+    mov ah,al
+    add al,'A'
+    stos byte ptr es:[edi]
+;
+    mov al,':'
+    stos byte ptr es:[edi]
+;
+    mov al,'\'
+    stos byte ptr es:[edi]
+;
+    mov al,ah
+    GetCurDir
+;
+    mov gs:pr_dir_sel,es
+;       
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateDefaultStartDir Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateStartDir
+;
+;       DESCRIPTION:    Make global copy of start dir
+;
+;       PARAMETERS:     DS:ESI      Startup dir
+;                       GS          Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateStartDir Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov edi,esi
+    xor ecx,ecx
+
+csdLoop:
+    lods byte ptr [esi]
+    or al,al
+    jz csdSizeOk
+;
+    inc ecx
+    jmp csdLoop
+
+csdSizeOk:
+    mov esi,edi
+    inc ecx 
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]     
+    mov gs:pr_dir_sel,es
+;       
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateStartDir Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateDefaultEnv
+;
+;       DESCRIPTION:    Make global copy of default environment variables
+;
+;       PARAMETERS:     GS      Spawn sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDefaultEnv Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    OpenProcEnv
+    GetEnvSize
+    movzx eax,ax
+    AllocateSmallGlobalMem
+    xor edi,edi
+    GetEnvData
+    CloseEnv
+    mov gs:pr_env_sel,es
+;       
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateDefaultEnv Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateEnv
+;
+;       DESCRIPTION:    Put environment variables in process structure
+;
+;       PARAMETERS:     DS:ESI  Environment ptr
+;                       GS      Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateEnv Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov edi,esi
+    xor ecx,ecx
+
+ceLoop:
+    inc ecx
+    lods byte ptr [esi]
+    or al,al
+    jnz ceLoop
+;
+    inc ecx
+    lods byte ptr [esi]
+    or al,al
+    jnz ceLoop
+
+ceSizeOk:
+    mov esi,edi
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]     
+    mov gs:pr_env_sel,es
+;       
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateEnv Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupStartDir
+;
+;           DESCRIPTION:    Setup start directory
+;
+;           PARAMETERS:     GS      Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupStartDir Proc near
+    push es
+    push ax
+    push edi
+;
+    mov es,gs:pr_dir_sel
+    xor edi,edi
+    mov ax,es:[edi]
+    cmp ah,':'
+    jne sdDirOk
+;
+    sub al,'A'
+    jc sdDirOk
+;
+    cmp al,26
+    jc sdSetDrive
+;
+    sub al,20h
+    jc sdDirOk
+;
+    cmp al,26
+    jnc sdDirOk
+
+sdSetDrive:
+    SetCurDrive
+    add edi,2
+    SetCurDir
+    
+sdDirOk:
+    pop edi
+    pop ax
+    pop es
+    ret
+SetupStartDir   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupEnv
+;
+;           DESCRIPTION:    Setup environment
+;
+;           PARAMETERS:     GS      Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupEnv Proc near
+    push es
+    push ebx
+    push edi
+;
+    mov es,gs:pr_env_sel
+    xor edi,edi
+;
+    OpenProcEnv
+    SetEnvData
+    CloseEnv
+;
+    pop edi
+    pop ebx
+    pop es
+    ret
+SetupEnv   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AddKernelModule
+;
+;           DESCRIPTION:    Add kernel module
+;
+;           PARAMETERS:     BX          Selector
+;                           EDX         Base
+;                           ECX         Size
+;                           ES:EDI      Module name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddKernelModule     PROC near
+    push ds
+    push es
+    pushad
+;
+    mov eax,es
+    mov ds,eax
+    mov esi,edi
+;
+    mov ebp,ecx
+    xor ecx,ecx
+
+akmSizeLoop:
+    inc ecx
+    lodsb
+    or al,al
+    jne akmSizeLoop
+;
+    mov eax,SIZE module_struc
+    add eax,ecx
+    AllocateSmallGlobalMem
+    mov es:mod_base,edx
+    mov es:mod_base+4,0
+    mov es:mod_size,ebp
+    mov es:mod_size+4,0
+    mov es:mod_sel,bx
+    mov es:mod_name_offs,SIZE module_struc
+    mov es:mod_loader,0
+    mov es:mod_id,0
+    InitSection es:mod_section
+;
+    mov esi,edi
+    mov edi,SIZE module_struc
+    rep movsb
+;
+    mov ebx,es
+    ModuleLoaded
+;
+    mov ebx,eax
+    call AddKernelProgramModule
+;
+    popad
+    pop es
+    pop ds
+    ret
+AddKernelModule     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SpawnStartup
+;
+;           DESCRIPTION:    Spawn startup stub
+;
+;           PARAMETERS:     BX      Process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+spawn_startup:
+    sti
+    GetThread
+    mov es,ax
+    call RemoveProgramThread
+;
+    mov es:p_prog_id,bx
+    call AddProgramThread
+;
+    GetProgramSel
+    mov es:p_prog_sel,ax
+    mov gs,eax
+;
+    SaveContext
+    xor eax,eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    mov es:app_context,bx
+    mov es:app_unload_proc,OFFSET spUnload
+;
+    mov ax,gs:pr_parent_app_sel
+    or ax,ax
+    jnz ssSpawn
+
+ssStart:
+    AppNotifyStart
+    jmp ssNotifyOk
+
+ssSpawn:
+    mov ds,gs:pr_parent_app_sel
+    AppNotifySpawn
+
+ssNotifyOk:
+    mov ax,3Bh
+    EnableFocus
+    SetFocus
+    mov es:app_key,al
+;
+    xor esi,esi
+    mov ds,gs:pr_name_sel    
+    mov edi,OFFSET app_exe_name
+
+spCopyExeLoop:
+    lodsb
+    stosb
+    or al,al
+    jne spCopyExeLoop
+;
+    GetThread
+    mov es,ax
+    mov al,gs:pr_switch
+    mov es:p_parent_switch,al
+;       
+    GetThread
+    mov gs:pr_thread,ax
+    mov ds,ax
+    mov ax,ds:p_app_sel
+    mov gs:pr_app_sel,ax
+;
+    mov ax,gs:pr_loader
+    mov ds:p_loader,ax
+;
+    mov bx,gs:pr_parent_thread
+    Signal
+;
+    call SetupStartDir
+    call SetupEnv
+;       
+    mov bx,gs:pr_kernel_file
+    xor esi,esi
+    xor edi,edi
+    mov ds,gs:pr_name_sel
+    mov es,gs:pr_cmd_sel
+;
+    mov dx,gs:pr_debug_sel
+    push gs
+    mov gs,gs:pr_loader
+    call fword ptr gs:loader_init_exe_proc
+    pop gs
+    jc spCloseFail
+;
+    SetBitness
+;
+    push ds
+    push es
+    mov es,bx
+;
+    movzx ebx,bx
+    ModuleLoaded
+;
+    mov ebx,eax
+    call AddProgramModule
+;
+    InitSection es:mod_section
+    mov es:mod_id,bx
+;    
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds:app_mod_id,bx
+    mov ds:app_mod_sel,es
+    mov al,ds:app_key
+    mov es:mod_key,al
+;
+    mov bx,es
+    pop es
+    pop ds
+;
+    mov dx,gs:pr_debug_sel
+    mov fs,gs:pr_loader
+    call fword ptr fs:loader_fixup_exe_proc
+    call fword ptr fs:loader_setup_names_proc
+ 
+spDebugDone:
+    test byte ptr [ebp+2].load_eflags,2
+    jnz spVm16
+;
+    mov ds,[ebp].load_ds
+    mov es,[ebp].load_es
+    mov fs,[ebp].load_fs
+    mov gs,[ebp].load_gs
+
+spVm16:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+spCloseFail:
+    CloseCFile
+
+spFail:
+    int 3
+
+spUnload:
+    TerminateThread
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           spawn_program16/32
+;
+;       DESCRIPTION:    Load & detach executable file
+;
+;       PARAMETERS:     DS:(E)SI    Filename
+;                       ES:(E)DI    Parameters
+;                           +0      command line
+;                           +8      startdir
+;                           +12     env
+;                       DX          Debug module handle
+;
+;       RETURN VALUE:   AX          Thread ID
+;                       DX          Process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+spawn_exe_name  DB 'Spawn Exe',0
+
+spawn_program   Proc near
+    push ds
+    push es
+    push gs
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    call OpenModuleFile
+    jc spDone
+;
+    call GetProgramLoader
+    jnc spLoaderOk
+;
+    CloseCFile
+    stc
+    jmp spDone
+
+spLoaderOk:    
+    call InitProcessBlock
+    call AllocateProcess
+    mov gs:pr_loader,ax
+    mov gs:pr_kernel_file,bx
+;
+    push ds
+    GetThread
+    mov gs:pr_parent_thread,ax
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov gs:pr_parent_app_sel,ds
+    pop ds
+;
+    call CreateProg
+;
+    mov eax,es:[edi].lp_param_sel
+    or ax,3
+    verr ax
+    stc
+    jnz spNoParam
+;
+    mov ds,ax
+    mov esi,es:[edi].lp_param_offs
+    call CreateParam
+    jmp spParamDone
+
+spNoParam:
+    call CreateNoParam
+
+spParamDone:
+    mov eax,es:[edi].lp_startdir_sel
+    or ax,3
+    verr ax
+    stc
+    jnz spNoStartDir
+;
+    mov ds,ax
+    mov esi,es:[edi].lp_startdir_offs
+    call CreateStartDir
+    jmp spStartDirDone
+
+spNoStartDir:
+    call CreateDefaultStartDir
+
+spStartDirDone:
+    mov eax,es:[edi].lp_env_sel
+    or ax,3
+    verr ax
+    stc
+    jnz spNoEnv
+;
+    mov ds,ax
+    mov esi,es:[edi].lp_env_offs
+    call CreateEnv
+    jmp spEnvDone
+
+spNoEnv:
+    call CreateDefaultEnv
+
+spEnvDone:
+    mov ebx,gs
+    ProgramCreated
+;
+    mov ebx,eax
+    ClearSignal
+;
+    mov es,gs:pr_name_sel
+    xor edi,edi
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET spawn_startup
+    mov ax,2
+    mov ecx,stack0_size
+    CreateProcess
+
+spWait:    
+    WaitForSignal
+    mov ax,gs:pr_thread
+    or ax,ax
+    jz spWait
+;
+    mov es,ax
+    mov ax,es:p_id
+;
+    mov dx,gs:pr_debug_sel
+    or dx,dx
+    jz spLibOk
+;
+    mov es,gs:pr_app_sel
+    mov ax,es:app_mod_sel
+
+spLibOk:
+    mov dx,bx
+    clc
+    jmp spDone
+
+spInvalid:
+    stc
+    jmp spDone
+
+spOk:
+    clc   
+
+spDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop gs
+    pop es
+    pop ds
+    ret
+spawn_program   Endp
+    
+spawn_program16 Proc far
+    push esi
+    push edi
+;
+    movzx esi,si
+    movzx edi,di
+    call spawn_program
+;
+    pop edi
+    pop esi
+    ret
+spawn_program16 Endp
+    
+spawn_program32 Proc far
+    call spawn_program
+    ret
+spawn_program32 Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           load_program16/32
+;
+;       DESCRIPTION:    Load executable file
+;
+;       PARAMETERS:     DS:(E)SI    Filename
+;                       ES:(E)DI    Parameters
+;                           +0  command line
+;                           +8  startdir
+;                           +12 env
+;
+;       RETURN VALUE:   
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_program_name   DB 'Load Program',0
+
+load_program   Proc near
+    push ds
+    push es
+    push gs
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    call OpenModuleFile
+    jc lpFail
+;
+    call GetProgramLoader
+    jnc lpLoaderOk
+;
+    CloseCFile
+    jmp lpFail
+
+lpLoaderOk:    
+    call InitProcessBlock
+    call AllocateProcess
+    mov gs:pr_loader,ax
+    mov gs:pr_kernel_file,bx
+;
+    call CreateProg
+;
+    mov eax,es:[edi].lp_param_sel
+    or ax,3
+    verr ax
+    stc
+    jnz lpNoParam
+;
+    mov ds,ax
+    mov esi,es:[edi].lp_param_offs
+    call CreateParam
+    jmp lpParamDone
+
+lpNoParam:
+    call CreateNoParam
+
+lpParamDone:
+    mov eax,es:[edi].lp_startdir_sel
+    or ax,3
+    verr ax
+    stc
+    jnz lpNoStartDir
+;
+    mov ds,ax
+    mov esi,es:[edi].lp_startdir_offs
+    call CreateStartDir
+    jmp lpStartDirDone
+
+lpNoStartDir:
+    call CreateDefaultStartDir
+
+lpStartDirDone:
+    mov eax,es:[edi].lp_env_sel
+    or ax,3
+    verr ax
+    stc
+    jnz lpNoEnv
+;
+    mov ds,ax
+    mov esi,es:[edi].lp_env_offs
+    call CreateEnv
+    jmp lpEnvDone
+
+lpNoEnv:
+    call CreateDefaultEnv
+
+lpEnvDone:
+    mov ebx,gs
+    ProgramCreated
+    mov ebx,eax
+;
+    GetThread
+    mov es,ax
+    call RemoveProgramThread
+;
+    mov es:p_prog_id,bx
+    mov es:p_prog_sel,gs
+    call AddProgramThread
+;
+    push gs
+    ExecApp
+    pop gs
+;
+    SaveContext
+    xor eax,eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_app_sel
+    mov es:app_context,bx
+;    mov es:app_unload_proc,OFFSET lepRet
+    AppNotifyExec
+;
+    GetThread
+    mov es,ax
+;
+    mov ax,gs:pr_loader
+    mov es:p_loader,ax
+;
+    xor esi,esi
+    mov ds,gs:pr_name_sel
+    mov edi,OFFSET thread_name
+    mov ecx,32
+
+lpThreadNameLoop:
+    lodsb
+    or al,al
+    jz lpThreadNamePad
+;
+    stosb
+    loop lpThreadNameLoop
+
+lpThreadNamePad:
+    or ecx,ecx
+    jz lpThreadNameDone
+;
+    mov al,' '
+    rep stosb
+
+lpThreadNameDone:
+    mov es,es:p_app_sel
+    xor esi,esi
+    mov ds,gs:pr_name_sel
+    mov edi,OFFSET app_exe_name
+
+lpCpExeLoop:
+    lodsb
+    stosb
+    or al,al
+    jne lpCpExeLoop
+;
+    xor bx,bx
+;
+    call SetupStartDir
+    call SetupEnv
+;       
+    mov bx,gs:pr_kernel_file
+    xor esi,esi
+    xor edi,edi
+    mov ds,gs:pr_name_sel
+    mov es,gs:pr_cmd_sel
+;
+    push gs
+    mov gs,gs:pr_loader
+    call fword ptr gs:loader_init_exe_proc
+    pop gs
+    jc lpLoadFail
+;
+    SetBitness
+;
+    push ds
+    push es
+    mov es,bx
+;
+    movzx ebx,bx
+    ModuleLoaded
+;
+    mov ebx,eax
+    call AddProgramModule
+;
+    InitSection es:mod_section
+    mov es:mod_id,bx
+;    
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ds:app_mod_id,bx
+    mov ds:app_mod_sel,es
+;
+    mov al,ds:app_key
+    mov es:mod_key,al
+;
+    mov bx,es
+    pop es
+    pop ds
+;
+    mov fs,gs:pr_loader
+    call fword ptr fs:loader_fixup_exe_proc
+    call fword ptr fs:loader_setup_names_proc
+;
+    mov gs:el_ret_code,0
+;
+    test byte ptr [ebp+2].load_eflags,2
+    jnz lpVm16
+;
+    mov ds,[ebp].load_ds
+    mov es,[ebp].load_es
+    mov fs,[ebp].load_fs
+    mov gs,[ebp].load_gs
+
+lpVm16:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
+
+lpLoadFail:
+    int 3
+
+lpFail:
+    stc
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop gs
+    pop es
+    pop ds
+    ret
+load_program    Endp
+    
+load_program16 Proc far
+    push ebx
+    push esi
+    push edi
+;
+    movzx esi,si
+    movzx edi,di
+    movzx ebx,bx
+    call load_program
+;
+    pop edi
+    pop esi
+    pop ebx
+    retf32
+load_program16  Endp
+    
+load_program32 Proc far
+    call load_program
+    retf32
+load_program32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           run_process
+;
+;           DESCRIPTION:    Run processes in adapter
+;
+;           PARAMETERS:         DS:EDX  device header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+run_process     PROC near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov esi,edx
+    add esi,SIZE rdos_header
+    call OpenModuleFile
+    jc rpFail
+;
+    call GetProgramLoader
+    jnc rpLoaderOk
+;
+    CloseCFile
+    stc
+    jmp rpFail
+
+rpLoaderOk:
+    call InitProcessBlock
+    call AllocateProcess
+    mov gs:pr_kernel_file,bx
+    mov gs:pr_loader,ax
+;
+    GetThread
+    mov gs:pr_parent_thread,ax
+    mov gs:pr_parent_app_sel,0
+;
+    call CreateProg
+    call CreateNoParam
+    call CreateDefaultStartDir
+    call CreateDefaultEnv
+;
+    mov ebx,gs
+    ProgramCreated
+    mov ebx,eax
+;
+    mov es,gs:pr_name_sel
+    xor edi,edi
+    mov ax,cs
+    mov ds,ax
+    mov esi,OFFSET spawn_startup
+    mov ax,2
+    mov ecx,stack0_size
+    CreateProcess
+;
+    WaitForSignal
+;
+    mov ax,25
+    WaitMilliSec
+
+rpFail:
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+run_process     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           init_adapter_process
+;
+;           DESCRIPTION:    Start all processes in adapter
+;
+;           PARAMETERS:         edx         base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+kernel_code_text DB 'kernel.exe', 0
+
+init_adapter_process    Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+
+init_adapter_process_loop:
+    mov ax,[edx].typ
+    cmp ax,RdosCommand
+    jne not_run_process
+;
+    call run_process
+    jmp init_adapter_process_next
+
+not_run_process:
+    cmp ax,RdosKernel
+    jne adapter_not_kernel
+;
+    push es
+    push edx
+    mov bx,kernel_code
+    GetSelectorBaseSize
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET kernel_code_text    
+    xor edx,edx
+    call AddKernelModule
+    pop edx
+    pop es
+    jmp init_adapter_process_next
+
+adapter_not_kernel:
+    cmp ax,RdosDevice16
+    jne adapter_not_device16
+;
+    push edx
+    mov edi,edx
+    add edi,SIZE rdos_header
+    mov bx,ds:[edi].dev16_code_sel
+    movzx ecx,ds:[edi].dev16_code_size
+    add edi,SIZE device16_header
+    xor edx,edx
+    call AddKernelModule
+    pop edx
+    jmp init_adapter_process_next
+
+adapter_not_device16:
+    cmp ax,RdosDevice32
+    jne adapter_not_device32
+;
+    push edx
+    mov edi,edx
+    add edi,SIZE rdos_header
+    mov bx,ds:[edi].dev32_code_sel
+    mov ecx,ds:[edi].dev32_code_size
+    add edi,SIZE device32_header
+    xor edx,edx
+    call AddKernelModule
+    pop edx
+    jmp init_adapter_process_next
+
+adapter_not_device32:
+    cmp ax,RdosLongMode
+    jne adapter_not_long
+;
+    push edx
+    mov edi,edx
+    add edi,SIZE rdos_header
+    xor bx,bx
+    mov ecx,ds:[edi].lm_image_size
+    mov edx,ds:[edi].lm_image_base
+    add edi,SIZE long_mode_header
+    call AddKernelModule
+    pop edx
+    
+adapter_not_long:
+    cmp ax,RdosEnd
+    je init_adapter_process_done
+
+init_adapter_process_next:
+    add edx,[edx].len
+    jmp init_adapter_process_loop
+
+init_adapter_process_done:
+    popad
+    pop es
+    pop ds
+    ret
+init_adapter_process    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StartPrograms
+;
+;           DESCRIPTION:    Start all processes
+;
+;       RETURN VALUE:
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_programs_name DB 'Start Programs', 0
+
+start_programs    Proc far
+    push ds
+    pushad
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    movzx ecx,ds:rom_modules
+    mov bx,OFFSET rom_adapters
+
+spLoop:
+    mov edx,[bx].adapter_base
+    call init_adapter_process
+    add bx,SIZE adapter_typ
+    loop spLoop
+;
+    popad
+    pop ds
+    ret
+start_programs    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           RegisterLoader
+;
+;           DESCRIPTION:    Register a loader
+;
+;           PARAMETERS:     BX       Loader table selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+register_loader_name      DB 'Register Loader',0
+
+register_loader   PROC far
+    push ds
+    push ax
+    push esi
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:loader_count
+    movzx esi,ax
+    add esi,esi
+    mov ds:[esi].loader_arr,bx
+    inc ax
+    mov ds:loader_count,ax
+;
+    pop esi
+    pop ax
+    pop ds
+    ret
+register_loader   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init
 ;
 ;           DESCRIPTION:    init module
@@ -201,6 +1945,10 @@ InitProcessBlock  Endp
 system_process_name DB "System", 0
 
 init    PROC far
+    mov ax,SEG data
+    mov ds,eax
+    mov ds:loader_count,0
+;
     mov eax,SIZE process_struc
     AllocateSmallGlobalMem
     mov ax,es
@@ -222,11 +1970,37 @@ init    PROC far
     mov ds,ax
     mov es,ax
 ;
+    mov esi,OFFSET register_loader
+    mov edi,OFFSET register_loader_name
+    xor cl,cl
+    mov ax,register_loader_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET start_programs
+    mov edi,OFFSET start_programs_name
+    xor cl,cl
+    mov ax,start_programs_nr
+    RegisterOsGate
+;
     mov esi,OFFSET dos_ext_exec16
     mov edi,OFFSET dos_ext_exec_name
     mov dx,virt_ds_in OR virt_es_in
     mov ax,dos_ext_exec_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET load_program16
+    mov esi,OFFSET load_program32
+    mov edi,OFFSET load_program_name
+    mov dx,virt_ds_in OR virt_es_in
+    mov ax,load_exe_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET spawn_program16
+    mov esi,OFFSET spawn_program32
+    mov edi,OFFSET spawn_exe_name
+    mov dx,virt_es_in OR virt_ds_in
+    mov ax,spawn_exe_nr
+    RegisterUserGate
     ret
 init    ENDP
 
