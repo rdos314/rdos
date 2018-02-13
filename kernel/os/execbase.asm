@@ -2128,6 +2128,87 @@ fatal_error_exit_done:
     pop ds
     ret
 fatal_error_exit    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AppPatch
+;
+;       DESCRIPTION:    Patch app
+;
+;       DESCRIPTION:    App specific usergate patching
+;
+;       PARAMETERS:     DS:EBX      Instruction to patch
+;                       EAX         Gate #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_patch_name DB 'App Patch', 0
+
+app_patch Proc far
+    push fs
+    push gs
+;
+    push eax
+    GetThread
+    mov gs,ax
+    mov ax,gs:p_loader
+    or ax,ax
+    mov fs,ax
+    stc
+    pop eax
+    jz apDone
+;
+    mov gs,gs:p_prog_sel
+    call fword ptr fs:loader_patch_proc
+
+apDone:
+    pop gs
+    pop fs
+    ret
+app_patch Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WaitForExec
+;
+;           DESCRIPTION:    Wait for exec
+;
+;           PARAMETERS:     AX          Forked ID
+;
+;           RETURNS:        AX          Exit code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_exec_name DB 'Wait For Exec',0
+    
+wait_for_exec   Proc far
+    ret
+wait_for_exec   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetExitCode
+;
+;           DESCRIPTION:    Get exit code
+;
+;           RETURNS:        AX          Exit code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_exit_code_name DB 'Get Exit Code',0
+    
+get_exit_code   Proc far
+    push ds
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+    mov ax,ds:app_exit_code
+    pop ds
+    ret
+get_exit_code   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3635,6 +3716,12 @@ init    PROC far
     mov ax,start_programs_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET app_patch
+    mov edi,OFFSET app_patch_name
+    xor cl,cl
+    mov ax,app_patch_nr
+    RegisterOsGate
+;
     mov esi,OFFSET alias_module_handle
     mov edi,OFFSET alias_module_handle_name
     xor cl,cl
@@ -3677,6 +3764,18 @@ init    PROC far
     mov edi,OFFSET is_forked_name
     xor dx,dx
     mov ax,is_forked_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET wait_for_exec
+    mov edi,OFFSET wait_for_exec_name
+    xor dx,dx
+    mov ax,wait_for_exec_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_exit_code
+    mov edi,OFFSET get_exit_code_name
+    xor dx,dx
+    mov ax,get_exit_code_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_exe_name

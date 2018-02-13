@@ -1524,87 +1524,6 @@ app_notify_terminate   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AppPatch
-;
-;       DESCRIPTION:    Patch app
-;
-;       DESCRIPTION:    App specific usergate patching
-;
-;       PARAMETERS:     DS:EBX      Instruction to patch
-;                       EAX         Gate #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-app_patch_name DB 'App Patch', 0
-
-app_patch Proc far
-    push fs
-    push gs
-;
-    push eax
-    GetThread
-    mov gs,ax
-    mov ax,gs:p_loader
-    or ax,ax
-    mov fs,ax
-    stc
-    pop eax
-    jz apDone
-;
-    mov gs,gs:p_prog_sel
-    call fword ptr fs:loader_patch_proc
-
-apDone:
-    pop gs
-    pop fs
-    ret
-app_patch Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           WaitForExec
-;
-;           DESCRIPTION:    Wait for exec
-;
-;           PARAMETERS:     AX          Forked ID
-;
-;           RETURNS:        AX          Exit code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-wait_for_exec_name DB 'Wait For Exec',0
-    
-wait_for_exec   Proc far
-    ret
-wait_for_exec   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetExitCode
-;
-;           DESCRIPTION:    Get exit code
-;
-;           RETURNS:        AX          Exit code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_exit_code_name DB 'Get Exit Code',0
-    
-get_exit_code   Proc far
-    push ds
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_exit_code
-    pop ds
-    ret
-get_exit_code   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetModuleInfo
 ;
 ;           DESCRIPTION:    Get module info
@@ -2434,12 +2353,6 @@ init_state_hooks:
     mov ax,find_module_by_name_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET app_patch
-    mov edi,OFFSET app_patch_name
-    xor cl,cl
-    mov ax,app_patch_nr
-    RegisterOsGate
-;
     mov ebx,OFFSET get_thread_state16
     mov esi,OFFSET get_thread_state32
     mov edi,OFFSET get_thread_state_name
@@ -2488,18 +2401,6 @@ init_state_hooks:
     mov edi,OFFSET move_thread_to_core_name
     xor dx,dx
     mov ax,move_thread_to_core_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET wait_for_exec
-    mov edi,OFFSET wait_for_exec_name
-    xor dx,dx
-    mov ax,wait_for_exec_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_exit_code
-    mov edi,OFFSET get_exit_code_name
-    xor dx,dx
-    mov ax,get_exit_code_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET get_dll_handle16
