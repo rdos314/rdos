@@ -2824,7 +2824,8 @@ void TDebug::SignalNewData()
             break;
 
         case EVENT_TERMINATE_THREAD:
-            LogMsg("Terminate thread");
+            sprintf(str, "Terminate thread, ID: %d", ThreadId);
+            LogMsg(str);
             HandleTerminateThread(ThreadId);
             FThreadChanged = TRUE;
             if (CurrentThread)
@@ -2841,14 +2842,16 @@ void TDebug::SignalNewData()
             break;
 
         case EVENT_LOAD_DLL:
-            LogMsg("Load DLL");
             RdosGetDebugEventData(FHandle, &lde);
+            sprintf(str, "Load Dll, ID: %d", lde.Handle);
+            LogMsg(str);
             HandleLoadDll(&lde);
             break;
 
         case EVENT_FREE_DLL:
-            LogMsg("Free DLL");
             RdosGetDebugEventData(FHandle, &handle);
+            sprintf(str, "Free Dll, ID: %d", handle);
+            LogMsg(str);
             HandleFreeDll(handle);
             break;
 
