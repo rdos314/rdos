@@ -52,6 +52,7 @@ data    SEGMENT byte public 'DATA'
 
 term_gate_sel       DW ?
 free_dll_gate_sel   DW ?
+exit_gate_sel       DW ?
 
 loader_count        DW ?
 loader_arr          DW 16 DUP(?)
@@ -2047,6 +2048,18 @@ register_loader   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           unload_kernel
+;
+;           DESCRIPTION:    Do final unload
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unload_kernel:
+    int 3
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           do_unload
 ;
 ;           DESCRIPTION:    Do unload
@@ -2054,6 +2067,29 @@ register_loader   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 do_unload	Proc near
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov es,[ebp].load_ss
+    mov edi,[ebp].load_esp
+    sub edi,16
+    mov [ebp].load_esp,edi
+    mov [ebp].load_eip,edi
+;
+    mov al,9Ah
+    stosb
+;
+    xor eax,eax
+    stosd
+;
+    mov ax,ds:exit_gate_sel
+    stosw
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_loader
+;    call fword ptr es:loader_free_thread_user_proc
+;
     ret
 do_unload 	Endp
 
@@ -4676,6 +4712,15 @@ InitExec_    Proc near
     xor cl,cl
     CreateCallGateSelector32
     mov es:free_dll_gate_sel,bx
+;
+    AllocateGdt
+    or bl,3
+    mov eax,cs
+    mov ds,eax
+    mov esi,OFFSET unload_kernel
+    xor cl,cl
+    CreateCallGateSelector32
+    mov es:exit_gate_sel,bx
 ;
     mov eax,SIZE process_struc
     AllocateSmallGlobalMem
