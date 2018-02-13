@@ -3199,7 +3199,6 @@ thread_init_start:
     pop esi
     pop edx
     pop ecx
-    pop ebx
     pop eax
     popfd
     retn thread_code_size
@@ -3208,7 +3207,7 @@ thread_init_end:
 InitUserStack   Proc near
     mov es,[ebp].load_ss
     mov edi,[ebp].load_esp
-    sub edi,thread_code_size + 8 * 4
+    sub edi,thread_code_size + 7 * 4
     mov [ebp].load_esp,edi
 ;
     mov eax,[ebp].load_edi
@@ -3221,9 +3220,6 @@ InitUserStack   Proc near
     stosd
 ;
     mov eax,[ebp].load_ecx
-    stosd
-;
-    mov eax,[ebp].load_ebx
     stosd
 ;
     mov eax,[ebp].load_eax
@@ -5347,182 +5343,6 @@ get_resource_done:
     pop eax
     ret
 get_resource    Endp
- 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_create
-;
-;           DESCRIPTION:    Notify create process
-;
-;           PARAMETERS:     ES          App sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_create   Proc far
-    mov es:app_mod_sel,0
-    ret
-notify_create   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_start
-;
-;           DESCRIPTION:    Notify start boot process
-;
-;           PARAMETERS:     ES          App sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_start    Proc far
-    ret
-notify_start    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_forked
-;
-;           DESCRIPTION:    Notify forked
-;
-;           PARAMETERS:     ES          App sel
-;                           DS          Parent app sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_forked   Proc far
-    ret
-notify_forked   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_exec
-;
-;           DESCRIPTION:    Notify exec
-;
-;           PARAMETERS:     ES          App sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_exec     Proc far
-    ret
-notify_exec     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_spawn
-;
-;           DESCRIPTION:    Notify spawn
-;
-;           PARAMETERS:     ES          App sel
-;                           DS          Parent app sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_spawn    Proc far
-    ret
-notify_spawn    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_terminate
-;
-;           DESCRIPTION:    Notify terminate
-;
-;           PARAMETERS:     ES          App sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_terminate        Proc far
-    push ds
-    push es
-    pushad
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ebp,ds:flat_base
-;    
-    mov ax,es:app_mod_sel
-    or ax,ax
-    jz ntDone
-;       
-    mov es,ax
-;
-    mov ax,flat_data_sel
-    mov ds,ax
-    xor edx,edx
-    mov eax,-1
-    mov bx,es
-    FreeAppMem
-    mov edi,es:mod_base
-    push es
-    call FreeImportedDlls
-    pop es
-;
-    mov esi,es:lib_header
-    mov eax,[esi].peh_tls_va
-    or eax,eax
-    jz ntNoTls
-;
-    add eax,edi
-    mov edx,[eax].tls_index_va
-    mov edx,[edx]
-    mov esi,fs:pvTLSArray
-    mov edx,[esi+4*edx]
-    add edx,ebp
-;
-    mov ecx,[eax].tls_end_data_va
-    sub ecx,[eax].tls_start_data_va
-    FreeLinear
-
-ntNoTls:
-    mov edx,es:mod_base
-    mov ecx,es:mod_size
-    mov bx,es:mod_c_file_handle
-    CloseCFile
-    add edx,ebp
-    FreeLinear
-    FreeMem
-;
-    mov ax,fs
-    or ax,ax
-    jz ntDone
-;    
-    mov edx,fs:pvStackUserBottom
-    add edx,ebp
-    mov ecx,fs:pvStackUserSize
-    FreeLinear      
-    mov ax,fs
-    mov es,ax
-    xor ax,ax
-    mov fs,ax
-    FreeMem
-
-ntDone:
-    popad
-    pop es
-    pop ds
-    ret
-notify_terminate        Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;           NAME:           App activity table
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-app_activity_table:
-a0 DD OFFSET notify_create,     SEG code   ; create process
-a1 DD OFFSET notify_start,      SEG code   ; boot app
-a2 DD OFFSET notify_forked,     SEG code   ; forked
-a3 DD OFFSET notify_exec,       SEG code   ; exec
-a4 DD OFFSET notify_spawn,      SEG code   ; spawn
-a5 DD OFFSET notify_terminate,  SEG code   ; terminate process
-
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5720,9 +5540,6 @@ init    PROC far
 ;
     mov bx,pe_loader_sel
     RegisterLoader
-;
-    mov edi,OFFSET app_activity_table
-    HookAppActivity
 ;
     mov esi,OFFSET notify_pe_exception
     mov edi,OFFSET notify_pe_exception_name
