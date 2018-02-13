@@ -2537,13 +2537,12 @@ load_dll        Proc  near
     InitSection es:mod_section
     mov es:mod_usage,1
     mov es:mod_id,bx
-    mov [ebp].load_ebx,ebx
-    and byte ptr [ebp].load_eflags,NOT 1
-    mov ebx,es
 ;
     push ebx
+    mov ebx,es
     call fword ptr gs:loader_fixup_dll_proc
     pop ebx
+    clc
     jmp ldllDone
 
 ldllOk:
@@ -2554,11 +2553,12 @@ ldllOk:
 ;
     mov es,ebx
     inc es:mod_usage
-    and byte ptr [ebp].load_eflags,NOT 1
+    mov bx,es:mod_id
+    clc
     jmp ldllDone
 
 ldllFail:
-    or byte ptr [ebp].load_eflags,1
+    stc
     
 ldllDone:
     ret
@@ -2580,17 +2580,12 @@ load_dll        Endp
 load_dll_name   DB 'Load Dll',0
 
 load_dll32  Proc far
-    mov bx,[esp+4]
-    cmp bx,flat_code_sel
-    jne load_dll_kernel32
-;
-    push eax
     pushfd
-    pop eax
-    mov [esp+8],eax
-    mov eax,[esp+4]
-    xchg eax,[esp]
     push eax
+    mov eax,[esp+12]
+    test al,3
+    jz load_dll_kernel32
+;
     push ebx
     push ecx
     push edx
@@ -2599,7 +2594,12 @@ load_dll32  Proc far
     push ebp
     mov ebp,esp
     add ebp,28
-    mov dword ptr [ebp].load_cs,flat_code_sel
+    push dword ptr [ebp+4].load_eax
+    mov eax,[ebp+4].load_eip
+    mov [ebp].load_eip,eax
+    mov eax,[ebp+4].load_cs
+    mov [ebp].load_cs,eax
+    pop dword ptr [ebp].load_eflags   
 ;
     push ds
     push es
@@ -2607,7 +2607,16 @@ load_dll32  Proc far
     push gs
 ;
     call load_dll
+    jc load_dll_fail32
 ;
+    mov [ebp].load_ebx,bx
+    and byte ptr [ebp].load_eflags,NOT 1
+    jmp load_dll_done32    
+
+load_dll_fail32:
+    or byte ptr [ebp].load_eflags,1
+
+load_dll_done32:
     pop gs
     pop fs
     pop es
@@ -2623,27 +2632,27 @@ load_dll32  Proc far
     iretd
 
 load_dll_kernel32:
-    push ds
-    push es
-    push fs
-    push gs
-    push eax
     push ecx
     push edx
     push esi
     push edi
+    push ds
+    push es
+    push fs
+    push gs
 ;
     call load_dll
 ;
+    pop gs
+    pop fs
+    pop es
+    pop ds
     pop edi
     pop esi
     pop edx
     pop ecx
     pop eax
-    pop gs
-    pop fs
-    pop es
-    pop ds
+    add esp,4
     ret
 load_dll32  Endp
 
@@ -2676,7 +2685,16 @@ load_dll16  Proc far
 ;
     movzx edi,di
     call load_dll
+    jc load_dll_fail16
 ;
+    mov [ebp].load_ebx,bx
+    and byte ptr [ebp].load_eflags,NOT 1
+    jmp load_dll_done16
+
+load_dll_fail16:
+    or byte ptr [ebp].load_eflags,1
+
+load_dll_done16:
     pop gs
     pop fs
     pop es

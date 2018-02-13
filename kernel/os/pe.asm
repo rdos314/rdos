@@ -1839,9 +1839,7 @@ BindImport      Endp
 LoadImportedDlls    Proc near
     push fs
     push gs
-    push eax
-    push edx
-    push esi
+    pushad
 ;
     mov edi,es:mod_base
     mov ax,flat_data_sel
@@ -1853,23 +1851,32 @@ LoadImportedDlls    Proc near
     jz load_import_dlls_done
 ;
     add edx,edi
+
 load_import_dlls_loop:
     mov esi,[edx].imp_dll_name_va
     or esi,esi
     jz load_import_dlls_done
 ;
     push es
-    push ebx
     push edi
 ;
     mov eax,ds
     mov es,eax
     add edi,esi
     LoadDll
+    jc load_import_dll_fail
+;
+    ModuleIdToSel
+    jc load_import_dll_fail
 ;
     mov gs,bx
+    jmp load_import_dll_bind
+
+load_import_dll_fail:
+    int 3
+
+load_import_dll_bind:
     pop edi
-    pop ebx
     pop es
     jc load_import_dlls_loop
 ;       
@@ -1879,9 +1886,7 @@ load_import_dlls_loop:
     jmp load_import_dlls_loop
 
 load_import_dlls_done:
-    pop esi
-    pop edx
-    pop eax
+    popad
     pop gs
     pop fs
     ret
