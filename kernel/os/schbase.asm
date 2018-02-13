@@ -1618,24 +1618,6 @@ gpmodDone:
     pop ds
     ret
 GetPrimaryModule  Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           FreeModule
-;
-;           DESCRIPTION:    Free module for active process
-;
-;       PARAMETERS:     ES      Module sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_module_name    DB 'Free Module',0
-
-free_module     PROC far
-    int 3
-    ret
-free_module     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3252,12 +3234,6 @@ init_state_hooks:
     mov edi,OFFSET app_notify_terminate_name
     xor cl,cl
     mov ax,app_notify_terminate_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET free_module
-    mov edi,OFFSET free_module_name
-    xor cl,cl
-    mov ax,free_module_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_module_by_index

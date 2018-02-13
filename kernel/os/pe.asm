@@ -2083,7 +2083,7 @@ fpdNotifyDone:
     pop ds      
 
 fdMod:
-    FreeModule
+;    FreeModule
 ;
     mov ax,flat_data_sel
     mov ds,ax

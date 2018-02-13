@@ -2103,11 +2103,6 @@ StartLongExe     MACRO
     OsGate start_long_exe_nr
                     ENDM
 
-; IN  ES    Module selector
-FreeModule      MACRO
-    OsGate free_module_nr
-                    ENDM
-
 ; IN  BX        Process ID
 ; IN  AX        Entry #
 ; OUT BX        Module ID
