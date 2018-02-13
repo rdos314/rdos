@@ -1622,22 +1622,6 @@ GetPrimaryModule  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           ResetModule
-;
-;           DESCRIPTION:    Reset module for active process
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-reset_module_name       DB 'Reset Module',0
-
-reset_module    PROC far
-    int 3
-    ret
-reset_module    ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           CreateModule
 ;
 ;           DESCRIPTION:    Create new module for active process
@@ -3302,12 +3286,6 @@ init_state_hooks:
     mov edi,OFFSET app_notify_terminate_name
     xor cl,cl
     mov ax,app_notify_terminate_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET reset_module
-    mov edi,OFFSET reset_module_name
-    xor cl,cl
-    mov ax,reset_module_nr
     RegisterOsGate
 ;
     mov esi,OFFSET create_module

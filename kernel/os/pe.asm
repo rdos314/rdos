@@ -5556,7 +5556,6 @@ notify_terminate        Proc far
     jz ntDone
 ;       
     mov es,ax
-    ResetModule
 ;
     mov ax,flat_data_sel
     mov ds,ax

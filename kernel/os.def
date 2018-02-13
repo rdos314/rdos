@@ -356,7 +356,6 @@ is_audio_out_completed_nr   = 335
 
 create_module_nr            = 337
 free_module_nr              = 338
-reset_module_nr             = 339
 module_id_to_sel_nr         = 340
 alias_module_handle_nr      = 341
 
