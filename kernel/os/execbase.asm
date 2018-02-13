@@ -64,6 +64,47 @@ _TEXT    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           Upper case table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UCaseTab:
+ct00 DB 0,          0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ct08 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ct10 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ct18 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ct20 DB ' ',    '!',    0FFh,   '#',    '$',    '%',    '&',    27h
+ct28 DB '(',    ')',    0FFh,   0FFh,   0FFh,   '-',    0,          '/'
+ct30 DB '0',    '1',    '2',    '3',    '4',    '5',    '6',    '7'
+ct38 DB '8',    '9',    0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ct40 DB '@',    'A',    'B',    'C',    'D',    'E',    'F',    'G'
+ct48 DB 'H',    'I',    'J',    'K',    'L',    'M',    'N',    'O'
+ct50 DB 'P',    'Q',    'R',    'S',    'T',    'U',    'V',    'W'
+ct58 DB 'X',    'Y',    'Z',    0FFh,   '\',    0FFh,   '^',    '_'
+ct60 DB 60h,    'A',    'B',    'C',    'D',    'E',    'F',    'G'
+ct68 DB 'H',    'I',    'J',    'K',    'L',    'M',    'N',    'O'
+ct70 DB 'P',    'Q',    'R',    'S',    'T',    'U',    'V',    'W'
+ct78 DB 'X',    'Y',    'Z',    '{',    0FFh,   '}',    '~',    0FFh
+ct80 DB 0FFh,   0FFh,   0FFh,   0FFh,   'é',    0FFh,   'è',    0FFh
+ct88 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   'é',    'è'
+ct90 DB 0FFh,   0FFh,   0FFh,   0FFh,   'ô',    0FFh,   0FFh,   0FFh
+ct98 DB 0FFh,   'ô',    0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctA0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctA8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctB0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctB8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctC0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctC8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctD0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctD8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctE0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctE8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctF0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+ctF8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           dos_ext_exec
 ;
 ;           DESCRIPTION:    DOS extender load
@@ -3658,6 +3699,466 @@ dupl_module_file_handle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetProgramInfo
+;
+;           DESCRIPTION:    Get program info
+;
+;           PARAMETERS:     AX          Program #
+;                           ES:(E)DI    Name buffer
+;                           (E)CX       Size of buffer
+;
+;           RETURNS:        DX          process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_program_info_name DB 'Get Program Info',0
+    
+get_program_info    Proc near
+    push ds
+    push eax
+    push ebx
+    push esi
+    push edi
+;
+    GetProgramId
+    jc gpiDone
+;
+    mov edx,eax
+    mov ebx,eax
+    GetProgramSel
+    jc gpiDone
+;
+    mov ds,eax
+    mov ds,ds:pr_name_sel
+    xor esi,esi
+
+gpiCopy:
+    lodsb
+    stosb
+    or al,al
+    jz gpiOk
+;
+    loop gpiCopy
+;
+    xor al,al
+    mov es:[edi-1],al
+
+gpiOk:
+    clc
+
+gpiDone:
+    pop edi
+    pop esi
+    pop ebx
+    pop eax
+    pop ds
+    ret
+get_program_info    Endp
+
+get_program_info16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call get_program_info
+;
+    pop edi
+    pop ecx
+    ret
+get_program_info16   Endp
+
+get_program_info32   Proc far
+    call get_program_info
+    ret
+get_program_info32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetProgramThreads
+;
+;           DESCRIPTION:    Get program threads
+;
+;           PARAMETERS:     AX          Program #
+;                           ES:(E)DI    Thread ID buffer (2 bytes per entry)
+;                           (E)CX       Max thread ids
+;
+;           RETURNS:        ECX         Actual threads
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_program_threads_name DB 'Get Program Threads',0
+    
+get_program_threads    Proc near
+    push ds
+    push ebx
+    push edx
+    push esi
+    push edi
+;
+    GetProgramId
+    jc gptDone
+;
+    mov edx,eax
+    mov ebx,eax
+    GetProgramSel
+    jc gptDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    movzx edx,ds:pr_thread_count
+    mov esi,OFFSET pr_thread_arr
+
+gptCopy:
+    or edx,edx
+    jz gptLeave
+;
+    dec edx
+    lodsw
+    stosw
+    loop gptCopy
+
+gptLeave:
+    movzx ecx,ds:pr_thread_count
+    LeaveSection ds:pr_section
+    clc
+
+gptDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop ds
+    ret
+get_program_threads    Endp
+
+get_program_threads16   Proc far
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call get_program_threads
+;
+    pop edi
+    ret
+get_program_threads16   Endp
+
+get_program_threads32   Proc far
+    call get_program_threads
+    ret
+get_program_threads32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetProgramModules
+;
+;           DESCRIPTION:    Get program modules
+;
+;           PARAMETERS:     AX          Program #
+;                           ES:(E)DI    Module ID buffer (2 bytes per entry)
+;                           (E)CX       Max module ids
+;
+;           RETURNS:        ECX         Actual modules
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_program_modules_name DB 'Get Program Modules',0
+    
+get_program_modules    Proc near
+    push ds
+    push ebx
+    push edx
+    push esi
+    push edi
+;
+    GetProgramId
+    jc gpmDone
+;
+    mov edx,eax
+    mov ebx,eax
+    GetProgramSel
+    jc gpmDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    movzx edx,ds:pr_module_count
+    mov esi,OFFSET pr_module_arr
+
+gpmCopy:
+    or edx,edx
+    jz gpmLeave
+;
+    dec edx
+    lodsw
+    stosw
+    loop gpmCopy
+
+gpmLeave:
+    movzx ecx,ds:pr_module_count
+    LeaveSection ds:pr_section
+    clc
+
+gpmDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop ds
+    ret
+get_program_modules    Endp
+
+get_program_modules16   Proc far
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call get_program_modules
+;
+    pop edi
+    ret
+get_program_modules16   Endp
+
+get_program_modules32   Proc far
+    call get_program_modules
+    ret
+get_program_modules32   Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetModuleByIndex
+;
+;           DESCRIPTION:    Get module for a DLL or app module by index
+;
+;           PARAMETERS:     BX          Process ID
+;                           AX          Entry #
+;
+;           RETURNS:        BX          Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_by_index_name DB 'Get Module By Index', 0
+
+get_module_by_index Proc far
+    push ds
+    push eax
+    push ecx
+    push edx
+;
+    mov dx,ax
+    movzx ebx,bx
+    GetProgramSel
+    jc gmbiDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    mov cx,ds:pr_module_count
+    cmp dx,cx
+    jae gmbiFail
+;
+    mov bx,dx
+    add bx,bx
+    mov bx,ds:[bx].pr_module_arr
+    LeaveSection ds:pr_section
+    clc
+    jmp gmbiDone
+
+gmbiFail:
+    LeaveSection ds:pr_section
+    stc
+
+gmbiDone:
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+get_module_by_index Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FindModuleByAddress
+;
+;           DESCRIPTION:    Search for a DLL or app module
+;
+;           PARAMETERS:     BX          Process ID
+;                           EDX         Virtual adress
+;
+;           RETURNS:        AX          Entry #
+;                           BX          Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+find_module_by_address_name DB 'Find Module By Address', 0
+
+find_module_by_address Proc far
+    push ds
+    push es
+    push ecx
+    push esi
+;
+    movzx ebx,bx
+    GetProgramSel
+    jc fmbaDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    movzx ecx,ds:pr_module_count
+    mov esi,OFFSET pr_module_arr
+;
+    or ecx,ecx
+    jz fmbaFail
+
+fmbaLoop:
+    movzx ebx,word ptr ds:[esi]
+    ModuleIdToSel
+    jc fmbaNext
+;
+    mov es,ebx
+    mov eax,edx
+    sub eax,es:mod_base
+    jc fmbaNext
+;       
+    cmp eax,es:mod_size
+    jc fmbaOk
+
+fmbaNext:
+    add esi,2
+    loop fmbaLoop
+
+fmbaFail:
+    LeaveSection ds:pr_section
+    stc
+    jmp fmbaDone
+
+fmbaOk:
+    LeaveSection ds:pr_section
+;
+    mov eax,esi
+    sub eax,OFFSET pr_module_arr
+    shr eax,1
+    mov bx,es:mod_id
+    clc
+
+fmbaDone:
+    pop esi
+    pop ecx
+    pop es
+    pop ds
+    ret
+find_module_by_address Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FindModuleByName
+;
+;           DESCRIPTION:    Find module by name
+;
+;           PARAMETERS:     BX          Process ID
+;                           FS:ESI      App / DLL NAME
+;
+;           RETURNS:        AX          Entry #
+;                           BX          Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+find_module_by_name_name DB 'Find Module By Name', 0
+
+find_module_by_name Proc far
+    push ds
+    push es
+    push ecx
+    push edi
+    push ebp
+;
+    mov ebp,esi
+
+fmbnRefLoop:
+    mov al,fs:[ebp]
+    or al,al
+    jz fmbnRefOk
+;
+    inc ebp
+    jmp fmbnRefLoop
+
+fmbnRefOk:
+    movzx ebx,bx
+    GetProgramSel
+    jc fmbnDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    movzx ecx,ds:pr_module_count
+    mov edi,OFFSET pr_module_arr
+;
+    or ecx,ecx
+    jz fmbnFail
+
+fmbnLoop:
+    movzx ebx,word ptr ds:[edi]
+    ModuleIdToSel
+    jc fmbnNext
+;
+    mov es,ebx
+    movzx ebx,es:mod_name_offs
+    mov ebp,esi
+
+fmbnCheckName:
+    mov al,es:[ebx]
+    movzx edx,al
+    mov al,byte ptr cs:[edx].UCaseTab
+    mov ah,fs:[ebp]
+    movzx edx,ah
+    mov ah,byte ptr cs:[edx].UCaseTab
+    cmp al,ah
+    jne fmbnNext
+;       
+    or al,al
+    je fmbnOk
+;
+    inc ebx
+    inc ebp
+    jmp fmbnCheckName
+
+fmbnNext:
+    add edi,2
+    loop fmbnLoop
+
+fmbnFail:
+    LeaveSection ds:pr_section
+    stc
+    jmp fmbnDone
+
+fmbnOk:
+    LeaveSection ds:pr_section
+;
+    mov eax,edi
+    sub eax,OFFSET pr_module_arr
+    shr eax,1
+    mov bx,es:mod_id
+    clc
+
+fmbnDone:
+    pop ebp
+    pop edi
+    pop ecx
+    pop es
+    pop ds
+    ret
+find_module_by_name Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init
 ;
 ;           DESCRIPTION:    init module
@@ -3907,6 +4408,45 @@ init    PROC far
     xor dx,dx
     mov ax,dupl_module_file_handle_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_program_info16
+    mov esi,OFFSET get_program_info32
+    mov edi,OFFSET get_program_info_name
+    mov dx,virt_es_in
+    mov ax,get_program_info_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET get_program_threads16
+    mov esi,OFFSET get_program_threads32
+    mov edi,OFFSET get_program_threads_name
+    mov dx,virt_es_in
+    mov ax,get_program_threads_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET get_program_modules16
+    mov esi,OFFSET get_program_modules32
+    mov edi,OFFSET get_program_modules_name
+    mov dx,virt_es_in
+    mov ax,get_program_modules_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET get_module_by_index
+    mov edi,OFFSET get_module_by_index_name
+    xor cl,cl
+    mov ax,get_module_by_index_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET find_module_by_address
+    mov edi,OFFSET find_module_by_address_name
+    xor cl,cl
+    mov ax,find_module_by_address_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET find_module_by_name
+    mov edi,OFFSET find_module_by_name_name
+    xor cl,cl
+    mov ax,find_module_by_name_nr
+    RegisterOsGate
     ret
 init    ENDP
 
