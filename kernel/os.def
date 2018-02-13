@@ -354,7 +354,6 @@ get_audio_out_buf_nr        = 333
 post_audio_out_buf_nr       = 334
 is_audio_out_completed_nr   = 335
 
-create_module_nr            = 337
 free_module_nr              = 338
 module_id_to_sel_nr         = 340
 alias_module_handle_nr      = 341

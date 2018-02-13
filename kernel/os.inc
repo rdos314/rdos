@@ -2104,11 +2104,6 @@ StartLongExe     MACRO
                     ENDM
 
 ; IN  ES    Module selector
-CreateModule    MACRO
-    OsGate create_module_nr
-                    ENDM
-
-; IN  ES    Module selector
 FreeModule      MACRO
     OsGate free_module_nr
                     ENDM

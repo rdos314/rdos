@@ -1622,40 +1622,6 @@ GetPrimaryModule  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           CreateModule
-;
-;           DESCRIPTION:    Create new module for active process
-;
-;       PARAMETERS:     ES  Module sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_module_name      DB 'Create Module',0
-
-create_module   PROC far
-    push es
-    push ax
-    push ebx
-;
-    mov ebx,es
-    ModuleLoaded
-;
-    mov ebx,eax
-    call AddProgramModule
-;
-    InitSection es:mod_section
-    mov es:mod_id,bx
-    
-create_module_done:    
-    pop ebx
-    pop ax
-    pop es
-    ret
-create_module   ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           FreeModule
 ;
 ;           DESCRIPTION:    Free module for active process
@@ -3286,12 +3252,6 @@ init_state_hooks:
     mov edi,OFFSET app_notify_terminate_name
     xor cl,cl
     mov ax,app_notify_terminate_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET create_module
-    mov edi,OFFSET create_module_name
-    xor cl,cl
-    mov ax,create_module_nr
     RegisterOsGate
 ;
     mov esi,OFFSET free_module
