@@ -51,7 +51,6 @@ debug_event_wait_header ENDS
 data    SEGMENT byte public 'DATA'
 
 term_gate_sel       DW ?
-load_dll_gate_sel   DW ?
 free_dll_gate_sel   DW ?
 exit_gate_sel       DW ?
 
@@ -2484,65 +2483,6 @@ get_module_focus_key  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           loaded_dll
-;
-;       DESCRIPTION:    Loaded DLL
-;
-;       PARAMETERS:     ES:EDI      Name of dll to load
-;
-;       RETURNS:        BX          Module handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-loaded_dll:
-    int 3
-    pushfd
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
-    mov ebp,esp
-    add ebp,28
-    push dword ptr [ebp+4].load_eax
-    mov eax,[ebp+4].load_eip
-    mov [ebp].load_eip,eax
-    mov eax,[ebp+4].load_cs
-    mov [ebp].load_cs,eax
-    pop dword ptr [ebp].load_eflags   
-;
-    push ds
-;
-    GetThread
-    mov ds,ax
-    movzx ebx,ds:p_prog_id
-    FindModuleByName
-    jc loaded_failed
-;
-    mov [ebp].load_ebx,ebx
-    and byte ptr [ebp].load_eflags,NOT 1
-    jmp loaded_done
-
-loaded_failed:
-    or byte ptr [ebp].load_eflags,1
-
-loaded_done:    
-    pop ds
-;
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    iretd
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           load_dll
 ;
 ;       DESCRIPTION:    Load DLL
@@ -2675,44 +2615,15 @@ load_dll32  Proc far
 ;
     mov ds,eax
     call fword ptr ds:loader_regs_to_user_proc
+;
     push ds
     push esi
-;
-;    push es
-;    push edi
-;
-;    mov ax,SEG data
-;    mov ds,ax
-;
-;    mov edx,[ebp].load_eip
-;    mov es,[ebp].load_ss
-;    mov edi,[ebp].load_esp
-;    sub edi,12
-;    mov [ebp].load_esp,edi
-;    mov [ebp].load_eip,edi
-;
-;    mov al,90h
-;    stosb
-;
-;    mov al,9Ah
-;    stosb
-;
-;    xor eax,eax
-;    stosd
-;
-;    mov ax,ds:load_dll_gate_sel
-;    stosw
-;
-;    mov eax,edx
-;    stosd
-;
-;    pop edi
-;    pop es
-;
+;    
     call load_dll
 ;
     pop esi
     pop ds
+;
     mov ds:[esi].user_ebx,bx
     and byte ptr ds:[esi].user_eflags,NOT 1
     jmp load_dll_exit32
@@ -4854,15 +4765,6 @@ InitExec_    Proc near
     xor cl,cl
     CreateCallGateSelector32
     mov es:term_gate_sel,bx
-;
-    AllocateGdt
-    or bl,3
-    mov eax,cs
-    mov ds,eax
-    mov esi,OFFSET loaded_dll
-    xor cl,cl
-    CreateCallGateSelector32
-    mov es:load_dll_gate_sel,bx
 ;
     AllocateGdt
     or bl,3

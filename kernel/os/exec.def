@@ -294,6 +294,10 @@ loader_continue_debug_event_proc   DD ?,?
 ; OUT DS:ESI              User registers
 loader_regs_to_user_proc         DD ?,?
 
+; IN  EBP                 Stack frame
+; IN  BX                  Gate sel
+loader_add_gate_proc         DD ?,?
+
 loader_interface_struc    ENDS
 
 module_struc    STRUC

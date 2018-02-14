@@ -3267,7 +3267,65 @@ regs_to_user   Proc far
     pop eax
     ret
 regs_to_user  Endp
-     
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           add_user_gate
+;
+;       DESCRIPTION:    Add call gate to user stack
+;
+;       PARAMETERS:     EBP                Stack frame
+;                       BX                 Gate selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+gate_init_start:
+    retn thread_code_size
+gate_init_end:
+
+add_user_gate   Proc far
+    push ds
+    push es
+    push eax
+    push esi
+    push edi
+;
+    mov es,[ebp].load_ss
+    mov edi,[ebp].load_esp
+    sub edi,thread_code_size + 4
+    mov [ebp].load_esp,edi
+;
+    mov eax,[ebp].load_eip
+    stosd
+;
+    mov [ebp].load_eip,edi
+;
+    mov al,90h
+    stosb
+;
+    mov al,9Ah
+    stosb
+;
+    xor eax,eax
+    stosd
+;
+    mov ax,bx
+    stosw
+;
+    mov eax,cs
+    mov ds,eax
+    mov esi,OFFSET gate_init_start
+    mov ecx,OFFSET gate_init_end - OFFSET gate_init_start
+    rep movsb
+;
+    pop edi
+    pop esi
+    pop eax
+    pop es
+    pop ds
+    ret
+add_user_gate  Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5610,6 +5668,7 @@ l29 DD OFFSET get_debug_event_data,       SEG code
 l30 DD OFFSET clear_debug_event,          SEG code
 l31 DD OFFSET continue_debug_event,       SEG code
 l32 DD OFFSET regs_to_user,               SEG code
+l33 DD OFFSET add_user_gate,              SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc
