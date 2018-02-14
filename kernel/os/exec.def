@@ -172,7 +172,7 @@ loader_init_exe_proc           DD ?,?
 
 ; IN   BX                 Process ID
 ; IN   ES:EDI             Thread name
-create_process_proc       DD ?,?
+loader_create_process_proc     DD ?,?
 
 ; IN   BX                 Module selector
 ; IN   DX                 Debug lib sel

@@ -1494,12 +1494,8 @@ spEnvDone:
 ;
     mov es,gs:pr_name_sel
     xor edi,edi
-    mov ax,cs
-    mov ds,ax
-    mov esi,OFFSET spawn_startup
-    mov ax,2
-    mov ecx,stack0_size
-    CreateProcess
+    mov ds,gs:pr_loader
+    call fword ptr ds:loader_create_process_proc
 
 spWait:    
     WaitForSignal
@@ -1873,12 +1869,8 @@ rpLoaderOk:
 ;
     mov es,gs:pr_name_sel
     xor edi,edi
-    mov ax,cs
-    mov ds,ax
-    mov esi,OFFSET spawn_startup
-    mov ax,2
-    mov ecx,stack0_size
-    CreateProcess
+    mov ds,gs:pr_loader
+    call fword ptr ds:loader_create_process_proc
 ;
     WaitForSignal
 ;
