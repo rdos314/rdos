@@ -167,10 +167,10 @@ SendEvent Proc near
 ;
     mov bx,ds:mod_debug_id
     or bx,bx
-    jz seDone
+    jz seClear
 ;
     ModuleIdToSel
-    jc seDone
+    jc seClear
 ;
     GetThread
     mov ds,ax
@@ -215,6 +215,10 @@ seSignalLoop:
     mov ax,10
     WaitMilliSec
     jmp seSignalLoop
+
+seClear:
+    mov ds:mod_debug_id,0
+    jmp seDone
 
 seSignalDo:
     mov es,ax
