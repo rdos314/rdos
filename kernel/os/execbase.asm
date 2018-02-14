@@ -548,6 +548,7 @@ akpmDone:
     pop ds
     ret
 AddKernelProgramModule    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2067,6 +2068,7 @@ register_loader   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 unload_kernel:
+    int 3
     GetThread
     mov es,ax
 ;
@@ -2083,6 +2085,10 @@ unload_kernel:
     jc ukDone
 ;
     mov ds,ebx
+    movzx ebx,ds:mod_id
+    call RemoveProgramModule
+;
+    mov ebx,ds
     mov ax,ds:mod_loader
     or ax,ax
     mov es,eax
@@ -2091,9 +2097,15 @@ unload_kernel:
     call fword ptr es:loader_unload_exe_kernel_proc
 
 ukDone:
-    mov ax,1000
-    WaitMilliSec
-    int 3
+    movzx ebx,bx
+    ModuleUnloaded
+;
+    mov es,ebx
+    mov bx,es:mod_c_file_handle
+    CloseCFile
+;
+    FreeMem
+    TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
