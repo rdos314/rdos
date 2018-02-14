@@ -237,7 +237,7 @@ InitProcessBlock Proc near
     mov gs:pr_dir_sel,0
     mov gs:pr_env_sel,0
     mov gs:pr_cmd_sel,0
-    mov gs:pr_debug_sel,0
+    mov gs:pr_debug_id,0
     mov gs:pr_thread,0
     mov gs:pr_switch,0
     mov gs:pr_thread_count,0
@@ -253,7 +253,7 @@ InitProcessBlock  Endp
 ;
 ;       DESCRIPTION:    Allocate process
 ;
-;       PARAMETERS:     DX      Debug module handle
+;       PARAMETERS:     DX      Debug module ID
 ;                       GS      Process sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -266,7 +266,7 @@ AllocateProcess Proc near
     ModuleIdToSel
     jc apDebugOk
 ;    
-    mov gs:pr_debug_sel,bx
+    mov gs:pr_debug_id,bx
 
 apDebugOk:
     mov gs:pr_switch,0
@@ -1342,7 +1342,7 @@ spCopyExeLoop:
     mov ds,gs:pr_name_sel
     mov es,gs:pr_cmd_sel
 ;
-    mov dx,gs:pr_debug_sel
+    mov dx,gs:pr_debug_id
     push gs
     mov gs,gs:pr_loader
     call fword ptr gs:loader_init_exe_proc
@@ -1376,7 +1376,7 @@ spCopyExeLoop:
     pop es
     pop ds
 ;
-    mov dx,gs:pr_debug_sel
+    mov dx,gs:pr_debug_id
     mov fs,gs:pr_loader
     call fword ptr fs:loader_fixup_exe_proc
     call fword ptr fs:loader_setup_names_proc
@@ -1547,7 +1547,7 @@ spWait:
     mov es,ax
     mov ax,es:p_id
 ;
-    mov dx,gs:pr_debug_sel
+    mov dx,gs:pr_debug_id
     or dx,dx
     jz spLibOk
 ;
@@ -2602,7 +2602,7 @@ load_dll        Proc  near
     movzx ebx,es:p_prog_id
     GetProgramSel
     mov es,ax
-    mov dx,es:pr_debug_sel
+    mov dx,es:pr_debug_id
     pop ebx
     mov es,bx
 ;

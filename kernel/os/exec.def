@@ -140,7 +140,7 @@ pr_name_sel          DW ?
 pr_cmd_sel           DW ?
 pr_dir_sel           DW ?
 pr_env_sel           DW ?
-pr_debug_sel         DW ?
+pr_debug_id          DW ?
 pr_thread            DW ?
 pr_parent_thread     DW ?
 pr_app_sel           DW ?

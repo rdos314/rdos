@@ -1963,18 +1963,11 @@ FreeImportedDlls    Endp
 ;           DESCRIPTION:    Fixup DLL
 ;
 ;           PARAMETERS:     BX          Module sel
-;                           DX          Debug sel
+;                           DX          Debug module ID
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fixup_dll       PROC far
-    or dx,dx
-    jz dllNoDebug
-;
-    mov es,dx
-    mov dx,es:mod_id
-
-dllNoDebug:
     mov ax,flat_data_sel
     mov ds,eax
     mov es,bx
