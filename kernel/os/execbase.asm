@@ -2067,7 +2067,6 @@ register_loader   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 unload_kernel:
-    int 3
     GetThread
     mov es,ax
 ;
@@ -2092,6 +2091,9 @@ unload_kernel:
     call fword ptr es:loader_unload_exe_kernel_proc
 
 ukDone:
+    mov ax,1000
+    WaitMilliSec
+    int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

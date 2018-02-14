@@ -3059,7 +3059,15 @@ unload_user_exe        Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 unload_kernel_exe        Proc far
-    mov es,bx
+    mov ds,bx
+    mov ax,ds:lib_debug_lib
+    or ax,ax
+    jz ukDone
+;
+    call TerminateProcessEvent
+    call SendEvent
+
+ukDone:
     ret
 unload_kernel_exe        Endp
                                               
@@ -4099,32 +4107,6 @@ fork_proc  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_proc      Proc far
-    GetThread
-    mov ds,ax
-    test ds:p_flags,THREAD_FLAG_FORKED
-    jz cpNorm
-;
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_mod_sel   
-    mov ax,ds:lib_debug_lib
-    or ax,ax
-    jz cpDone
-;
-    call TerminateThreadEvent
-    call SendEvent
-    jmp cpDone
-
-cpNorm:
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_mod_sel   
-    mov ax,ds:lib_debug_lib
-    or ax,ax
-    jz cpDone
-;
-    call TerminateProcessEvent
-    call SendEvent
-
-cpDone:
     ret
 close_proc      Endp
 
