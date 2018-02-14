@@ -2124,10 +2124,6 @@ unload_kernel:
     jc ukDone
 ;
     mov ds,ebx
-    movzx ebx,ds:mod_id
-    call RemoveProgramModule
-;
-    mov ebx,ds
     mov ax,ds:mod_loader
     or ax,ax
     mov es,eax
@@ -2136,6 +2132,11 @@ unload_kernel:
     call fword ptr es:loader_unload_exe_kernel_proc
 
 ukDone:
+    mov ds,ebx
+    movzx ebx,ds:mod_id
+    call RemoveProgramModule
+;
+    mov ebx,ds
     movzx ebx,bx
     ModuleUnloaded
 ;
