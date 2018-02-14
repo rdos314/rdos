@@ -2672,17 +2672,12 @@ load_dll_kernel32:
 load_dll32  Endp
 
 load_dll16  Proc far
-    mov bx,[esp+4]
-    cmp bx,flat_code_sel
-    jne load_dll_kernel16
-;
-    push eax
     pushfd
-    pop eax
-    mov [esp+8],eax
-    mov eax,[esp+4]
-    xchg eax,[esp]
     push eax
+    mov eax,[esp+12]
+    test al,3
+    jz load_dll_kernel16
+;
     push ebx
     push ecx
     push edx
@@ -2691,7 +2686,12 @@ load_dll16  Proc far
     push ebp
     mov ebp,esp
     add ebp,28
-    mov dword ptr [ebp].load_cs,flat_code_sel
+    push dword ptr [ebp+4].load_eax
+    mov eax,[ebp+4].load_eip
+    mov [ebp].load_eip,eax
+    mov eax,[ebp+4].load_cs
+    mov [ebp].load_cs,eax
+    pop dword ptr [ebp].load_eflags   
 ;
     push ds
     push es
@@ -2699,17 +2699,33 @@ load_dll16  Proc far
     push gs
 ;
     movzx edi,di
-    call load_dll
-    jc load_dll_fail16
 ;
-    mov [ebp].load_ebx,bx
-    and byte ptr [ebp].load_eflags,NOT 1
-    jmp load_dll_done16
+    GetThread
+    mov ds,eax
+    mov ax,ds:p_loader
+    or ax,ax
+    stc
+    jz load_dll_fail16
+;
+    mov ds,eax
+    call fword ptr ds:loader_regs_to_user_proc
+;
+    push ds
+    push esi
+;    
+    call load_dll
+;
+    pop esi
+    pop ds
+;
+    mov ds:[esi].user_ebx,bx
+    and byte ptr ds:[esi].user_eflags,NOT 1
+    jmp load_dll_exit16
 
 load_dll_fail16:
-    or byte ptr [ebp].load_eflags,1
+    or byte ptr ds:[esi].user_eflags,1
 
-load_dll_done16:
+load_dll_exit16:
     pop gs
     pop fs
     pop es
@@ -2725,28 +2741,28 @@ load_dll_done16:
     iretd
 
 load_dll_kernel16:
-    push ds
-    push es
-    push fs
-    push gs
-    push eax
     push ecx
     push edx
     push esi
     push edi
+    push ds
+    push es
+    push fs
+    push gs
 ;
     movzx edi,di
     call load_dll
 ;
+    pop gs
+    pop fs
+    pop es
+    pop ds
     pop edi
     pop esi
     pop edx
     pop ecx
     pop eax
-    pop gs
-    pop fs
-    pop es
-    pop ds
+    add esp,4
     ret
 load_dll16  Endp
 
