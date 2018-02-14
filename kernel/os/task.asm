@@ -8433,7 +8433,6 @@ terminate_app_handled:
 terminate_proc:
     GetThread
     mov ds,ax
-    int 3
 ;    mov ds,ds:p_process_sel
 ;    mov ds,ds:ms_pd_sel
 ;    sub ds:pd_ref_count,1
@@ -8453,7 +8452,7 @@ terminate_proc:
     WaitMilliSec
 
 terminate_proc_sig_done:   
-    LeaveSection ds:pd_section
+;    LeaveSection ds:pd_section
     xor ax,ax
     mov ds,ax
     jmp terminate_pd_done    
