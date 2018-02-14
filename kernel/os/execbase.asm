@@ -4499,12 +4499,7 @@ get_module_size    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 app_thread_started:
-    push eax
     pushfd
-    pop eax
-    mov [esp+8],eax
-    mov eax,[esp+4]
-    xchg eax,[esp]
     push eax
     push ebx
     push ecx
@@ -4514,7 +4509,12 @@ app_thread_started:
     push ebp
     mov ebp,esp
     add ebp,28
-    mov dword ptr [ebp].load_cs,flat_code_sel
+    push dword ptr [ebp+4].load_eax
+    mov eax,[ebp+4].load_eip
+    mov [ebp].load_eip,eax
+    mov eax,[ebp+4].load_cs
+    mov [ebp].load_cs,eax
+    pop dword ptr [ebp].load_eflags   
 ;
     push ds
     push es
@@ -4627,7 +4627,6 @@ create_app_thread       Endp
 ;           DESCRIPTION:    Terminate application thread, callback
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 terminate_app_thread_kernel:
     GetThread
