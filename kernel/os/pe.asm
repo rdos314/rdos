@@ -124,7 +124,7 @@ nkeInsDone:
     xor ax,ax
     mov es,ax
 ;
-    mov ax,ds:lib_debug_obj
+    mov ax,ds:lib_debug_wait
     or ax,ax
     jz nkeDone
 ;       
@@ -205,7 +205,7 @@ seInsDone:
     push es
 
 seSignalLoop:
-    mov ax,ds:lib_debug_obj
+    mov ax,ds:lib_debug_wait
     or ax,ax
     jnz seSignalDo
 ;
@@ -1153,7 +1153,7 @@ create_lib_size_ok:
     mov es:mod_size,0
     mov es:mod_size+4,0
     mov es:lib_debug_lib,0
-    mov es:lib_debug_obj,0
+    mov es:lib_debug_wait,0
     mov es:lib_events,0
     mov es:mod_c_file_handle,bx
     mov es:lib_file_pos,edx
@@ -4129,13 +4129,13 @@ start_wait_for_debug_event Proc far
 ;
     mov ds,bx
     ClearSignal
-    mov ds:lib_debug_obj,es
+    mov ds:lib_debug_wait,es
 
     mov ax,ds:lib_events
     or ax,ax
     jz start_wait_done
 ;
-    mov ds:lib_debug_obj,0
+    mov ds:lib_debug_wait,0
     SignalWait
 
 start_wait_done:    
@@ -4161,7 +4161,7 @@ stop_wait_for_debug_event Proc far
     push ds
 ;
     mov ds,bx
-    mov ds:lib_debug_obj,0
+    mov ds:lib_debug_wait,0
 ;       
     pop ds  
     ret
@@ -4592,7 +4592,7 @@ neInsDone:
     xor ax,ax
     mov es,ax
 ;
-    mov ax,ds:lib_debug_obj
+    mov ax,ds:lib_debug_wait
     or ax,ax
     jz neSignalDone
 ;       
