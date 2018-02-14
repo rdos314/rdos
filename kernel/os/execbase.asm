@@ -334,6 +334,46 @@ CreateProg Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           RemoveProg
+;
+;       DESCRIPTION:    Remove prog
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveProg Proc near
+    GetThread
+    mov es,ax
+    movzx ebx,es:p_prog_id
+    GetProgramSel
+    jc rpDone
+;
+    mov ds,eax
+    movzx ebx,ax
+    ProgramTerminated
+;
+    mov es,ds:pr_name_sel
+    FreeMem
+;
+    mov es,ds:pr_cmd_sel
+    FreeMem
+;
+    mov es,ds:pr_dir_sel
+    FreeMem
+;
+    mov es,ds:pr_env_sel
+    FreeMem
+;
+    mov eax,ds
+    mov es,eax
+    FreeMem
+
+rpDone:
+    ret
+RemoveProg Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AddProgramThread
 ;
 ;           DESCRIPTION:    Add thread to program
@@ -2105,6 +2145,7 @@ ukDone:
     CloseCFile
 ;
     FreeMem
+    call RemoveProg
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
