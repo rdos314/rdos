@@ -170,6 +170,10 @@ loader_is_valid_exe_proc       DD ?,?
 ; OUT  BX                 Module selector
 loader_init_exe_proc           DD ?,?
 
+; IN   BX                 Process ID
+; IN   ES:EDI             Thread name
+create_process_proc       DD ?,?
+
 ; IN   BX                 Module selector
 ; IN   DX                 Debug lib sel
 ; IN   GS                 Process sel

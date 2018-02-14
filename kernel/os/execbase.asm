@@ -1368,6 +1368,26 @@ spFail:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetExeStart32
+;
+;       DESCRIPTION:    Get 32-bit entry-point
+;
+;       RETURN VALUE:   DS:ESI      Entry point
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_exe_start32_name  DB 'Get Exe Start32',0
+
+get_exe_start32   Proc far
+    mov esi,cs
+    mov ds,esi
+    mov esi,OFFSET spawn_startup
+    ret
+get_exe_start32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           spawn_program16/32
 ;
 ;       DESCRIPTION:    Load & detach executable file
@@ -4779,6 +4799,12 @@ InitExec_    Proc near
     mov edi,OFFSET start_programs_name
     xor cl,cl
     mov ax,start_programs_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_exe_start32
+    mov edi,OFFSET get_exe_start32_name
+    xor cl,cl
+    mov ax,get_exe_start32_nr
     RegisterOsGate
 ;
     mov esi,OFFSET app_patch

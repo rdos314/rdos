@@ -736,4 +736,6 @@ module_loaded_nr            = 643
 module_unloaded_nr          = 644
 get_module_id_nr            = 645
 
+get_exe_start32_nr          = 646
+
 osgate_entries              = 650

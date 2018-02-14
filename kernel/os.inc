@@ -2103,6 +2103,12 @@ StartLongExe     MACRO
     OsGate start_long_exe_nr
                     ENDM
 
+
+; OUT  DS:ESI   Startup procedure
+GetExeStart32     MACRO
+    OsGate get_exe_start32_nr
+                    ENDM
+
 ; IN  BX        Process ID
 ; IN  AX        Entry #
 ; OUT BX        Module ID
