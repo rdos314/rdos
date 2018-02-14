@@ -2666,39 +2666,61 @@ load_dll32  Proc far
     push fs
     push gs
 ;
-    push es
-    push edi
+    GetThread
+    mov ds,eax
+    mov ax,ds:p_loader
+    or ax,ax
+    stc
+    jz load_dll_fail32
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov ds,eax
+    call fword ptr ds:loader_regs_to_user_proc
+    push ds
+    push esi
 ;
-    mov edx,[ebp].load_eip
-    mov es,[ebp].load_ss
-    mov edi,[ebp].load_esp
-    sub edi,12
-    mov [ebp].load_esp,edi
-    mov [ebp].load_eip,edi
+;    push es
+;    push edi
 ;
-    mov al,90h
-    stosb
+;    mov ax,SEG data
+;    mov ds,ax
 ;
-    mov al,9Ah
-    stosb
+;    mov edx,[ebp].load_eip
+;    mov es,[ebp].load_ss
+;    mov edi,[ebp].load_esp
+;    sub edi,12
+;    mov [ebp].load_esp,edi
+;    mov [ebp].load_eip,edi
 ;
-    xor eax,eax
-    stosd
+;    mov al,90h
+;    stosb
 ;
-    mov ax,ds:load_dll_gate_sel
-    stosw
+;    mov al,9Ah
+;    stosb
 ;
-    mov eax,edx
-    stosd
+;    xor eax,eax
+;    stosd
 ;
-    pop edi
-    pop es
+;    mov ax,ds:load_dll_gate_sel
+;    stosw
+;
+;    mov eax,edx
+;    stosd
+;
+;    pop edi
+;    pop es
 ;
     call load_dll
 ;
+    pop esi
+    pop ds
+    mov ds:[esi].user_ebx,bx
+    and byte ptr ds:[esi].user_eflags,NOT 1
+    jmp load_dll_exit32
+
+load_dll_fail32:
+    or byte ptr ds:[esi].user_eflags,1
+
+load_dll_exit32:
     pop gs
     pop fs
     pop es

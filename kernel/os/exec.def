@@ -48,6 +48,15 @@ load_esi        EQU -20
 load_edi        EQU -24
 load_ebp        EQU -28
 
+user_edi        EQU 0
+user_esi        EQU 4
+user_edx        EQU 8
+user_ecx        EQU 12
+user_ebx        EQU 16
+user_eax        EQU 20
+user_eflags     EQU 24
+user_ret        EQU 28
+
 exec_block      STRUC
 exec_enviro     DW ?
 exec_line       DD ?
@@ -280,6 +289,10 @@ loader_clear_debug_event_proc   DD ?,?
 ; IN  BX                  Module sel
 ; IN  AX                  Thread ID
 loader_continue_debug_event_proc   DD ?,?
+
+; IN  EBP                 Stack frame
+; OUT DS:ESI              User registers
+loader_regs_to_user_proc         DD ?,?
 
 loader_interface_struc    ENDS
 

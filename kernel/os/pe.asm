@@ -1984,8 +1984,6 @@ fixup_dll       PROC far
     call SendEvent
 
 fdNodeb:
-    call InitUserStack
-;
     mov edx,1
     call AddUserStack
     ret
@@ -3189,6 +3187,91 @@ init_thread     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           regs_to_user
+;
+;       DESCRIPTION:    Move registers to user-space
+;
+;       PARAMETERS:     EBP                Stack frame
+;
+;       RETURNS:        DS:ESI             User registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+thread_code_size  = 32
+
+regs_init_start:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    popfd
+    retn thread_code_size
+regs_init_end:
+
+regs_to_user   Proc far
+    push eax
+;
+    mov ds,[ebp].load_ss
+    mov esi,[ebp].load_esp
+    sub esi,thread_code_size + 8 * 4
+;
+    mov [ebp].load_esp,esi
+;
+    mov eax,[ebp].load_eflags
+    mov [esi].user_eflags,eax
+;
+    mov eax,[ebp].load_eax
+    mov [esi].user_eax,eax
+;
+    mov eax,[ebp].load_ebx
+    mov [esi].user_ebx,eax
+;
+    mov eax,[ebp].load_ecx
+    mov [esi].user_ecx,eax
+;
+    mov eax,[ebp].load_edx
+    mov [esi].user_edx,eax
+;
+    mov eax,[ebp].load_esi
+    mov [esi].user_esi,eax
+;
+    mov eax,[ebp].load_edi
+    mov [esi].user_edi,eax
+;
+    mov eax,[ebp].load_eip
+    mov [esi].user_ret,eax
+;
+    push ds
+    push es
+    push esi
+    push edi
+;
+    mov edi,esi
+    add edi,8 * 4
+    mov [ebp].load_eip,edi
+    mov es,[ebp].load_ss
+    mov eax,cs
+    mov ds,eax
+    mov eax,edi
+    mov esi,OFFSET regs_init_start
+    mov ecx,OFFSET regs_init_end - OFFSET regs_init_start
+    rep movsb
+;
+    pop edi
+    pop esi
+    pop es
+    pop ds
+;
+    pop eax
+    ret
+regs_to_user  Endp
+     
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitUserStack
 ;
 ;           DESCRIPTION:    Setup register restore
@@ -3242,8 +3325,8 @@ InitUserStack   Proc near
     mov ecx,OFFSET thread_init_end - OFFSET thread_init_start
     rep movsb
     ret
-InitUserStack  Endp
-                       
+InitUserStack  Endp                  
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -5526,6 +5609,7 @@ l28 DD OFFSET get_debug_event,            SEG code
 l29 DD OFFSET get_debug_event_data,       SEG code
 l30 DD OFFSET clear_debug_event,          SEG code
 l31 DD OFFSET continue_debug_event,       SEG code
+l32 DD OFFSET regs_to_user,               SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc
