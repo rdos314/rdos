@@ -139,7 +139,6 @@ lib_mod             module_struc <>
 lib_header          DD ?
 lib_objects         DD ?
 lib_file_pos        DD ?
-lib_debug_lib       DW ?
 lib_debug_wait      DW ?
 lib_events          DW ?
 lib_spinlock        spinlock_typ <>

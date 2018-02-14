@@ -313,6 +313,7 @@ mod_size                DD ?,?
 mod_sel                 DW ?
 mod_name_offs           DW ?
 mod_id                  DW ?
+mod_debug_id            DW ?
 
 mod_loader              DW ?
 mod_c_file_handle       DW ?

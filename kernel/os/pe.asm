@@ -165,9 +165,12 @@ SendEvent Proc near
     pop es  
     mov es:event_thread_id,ax
 ;
-    mov ax,ds:lib_debug_lib
-    or ax,ax
+    mov bx,ds:mod_debug_id
+    or bx,bx
     jz seDone
+;
+    ModuleIdToSel
+    jc seDone
 ;
     GetThread
     mov ds,ax
@@ -216,10 +219,10 @@ seSignalLoop:
 seSignalDo:
     mov es,ax
     SignalWait
-    pop es
-    
-seDone:
+    pop es    
     WaitForSignal
+
+seDone:
     pop bx
     pop eax
     pop ds
@@ -1152,7 +1155,7 @@ create_lib_size_ok:
     mov es:mod_base+4,0
     mov es:mod_size,0
     mov es:mod_size+4,0
-    mov es:lib_debug_lib,0
+    mov es:mod_debug_id,0
     mov es:lib_debug_wait,0
     mov es:lib_events,0
     mov es:mod_c_file_handle,bx
@@ -1965,16 +1968,23 @@ FreeImportedDlls    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fixup_dll       PROC far
+    or dx,dx
+    jz dllNoDebug
+;
+    mov es,dx
+    mov dx,es:mod_id
+
+dllNoDebug:
     mov ax,flat_data_sel
     mov ds,eax
     mov es,bx
     call FixupImage
 ;
-    mov es:lib_debug_lib,dx
+    mov es:mod_debug_id,dx
     mov ecx,es:mod_size
     call LoadImportedDlls
 ;
-    mov dx,es:lib_debug_lib
+    mov dx,es:mod_debug_id
     or dx,dx
     jz fdNodeb
 ;
@@ -2786,6 +2796,13 @@ InitDebug Proc near
     push es
     pushad
 ;
+    or dx,dx
+    jz idNoDebug
+;
+    mov ds,dx
+    mov dx,ds:mod_id
+
+idNoDebug:
     mov ax,flat_data_sel
     mov ds,ax
     mov esi,[ebp].load_eip
@@ -2806,7 +2823,7 @@ InitDebug Proc near
     mov word ptr ds:p_debug_proc,OFFSET NotifyKernelDebug
     mov word ptr ds:p_debug_proc+2,cs
 ;
-    mov es:lib_debug_lib,dx
+    mov es:mod_debug_id,dx
     mov es:lib_init_param,dx
 ;
     mov ax,es
@@ -3060,7 +3077,7 @@ unload_user_exe        Endp
 
 unload_kernel_exe        Proc far
     mov ds,bx
-    mov ax,ds:lib_debug_lib
+    mov ax,ds:mod_debug_id
     or ax,ax
     jz ukDone
 ;
@@ -3655,11 +3672,10 @@ start_thread    PROC far
 ;
     mov edx,[ebp].load_eip
     mov ds,ds:app_mod_sel
-    mov ax,ds:lib_debug_lib
+    mov ax,ds:mod_debug_id
     or ax,ax
     jz start_thread_notify
 ;
-;    call AllocateKernelEvent
     call CreateThreadEvent
     call SendEvent
 
@@ -3756,7 +3772,7 @@ free_thread_kernel     Proc far
     mov ds,ax
     mov ds,ds:p_app_sel    
     mov ds,ds:app_mod_sel   
-    mov ax,ds:lib_debug_lib
+    mov ax,ds:mod_debug_id
     or ax,ax
     jz ftkNoDebug
 ;
@@ -4049,7 +4065,7 @@ fork_child:
     mov fs:pvModuleHandle,eax
 ;
     mov ds,ds:app_mod_sel
-    mov ax,ds:lib_debug_lib
+    mov ax,ds:mod_debug_id
     or ax,ax
     jz fork_notify_ok
 ;
@@ -4060,7 +4076,6 @@ fork_child:
     mov edx,stack0_size - 10h
     mov edx,ss:[edx]
 ;
-;    call AllocateKernelEvent
     call CreateThreadEvent
     call SendEvent
 ;
@@ -4469,7 +4484,7 @@ notify_pe_exception     Proc far
     mov ds,ebx
     pop ebx
 ;       
-    mov dx,ds:lib_debug_lib
+    mov dx,ds:mod_debug_id
     or dx,dx
     jz neDone
 ;       
@@ -5059,7 +5074,7 @@ show_exception_text     PROC far
     mov ebx,fs:pvModuleHandle
     ModuleIdToSel
     mov es,ebx
-    mov ax,es:lib_debug_lib
+    mov ax,es:mod_debug_id
     or ax,ax
     jnz setStop
 ;
@@ -5155,7 +5170,7 @@ wep_name DB 'WEP', 0
 
 unload_dll    Proc far
     mov es,bx
-    mov dx,es:lib_debug_lib
+    mov dx,es:mod_debug_id
     or dx,dx
     jz udNotifyDone
 ;
