@@ -266,7 +266,7 @@ AllocateProcess Proc near
     ModuleIdToSel
     jc apDebugOk
 ;    
-    mov gs:pr_debug_id,bx
+    mov gs:pr_debug_id,dx
 
 apDebugOk:
     mov gs:pr_switch,0

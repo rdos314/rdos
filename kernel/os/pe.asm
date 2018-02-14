@@ -2779,7 +2779,7 @@ init_module  Endp
 ;
 ;           DESCRIPTION:    Pre DLL import debug setup
 ;
-;           PARAMETERS:     DX      Debug sel
+;           PARAMETERS:     DX      Debug module ID
 ;                           EBP     Stack frame
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2789,13 +2789,6 @@ InitDebug Proc near
     push es
     pushad
 ;
-    or dx,dx
-    jz idNoDebug
-;
-    mov ds,dx
-    mov dx,ds:mod_id
-
-idNoDebug:
     mov ax,flat_data_sel
     mov ds,ax
     mov esi,[ebp].load_eip
