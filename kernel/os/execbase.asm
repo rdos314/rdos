@@ -2056,6 +2056,30 @@ register_loader   ENDP
 
 unload_kernel:
     int 3
+    GetThread
+    mov es,ax
+;
+    movzx ebx,es:p_prog_id
+    GetProgramSel
+    jc ukDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+    movzx ebx,ds:pr_module_arr
+    LeaveSection ds:pr_section
+;
+    ModuleIdToSel
+    jc ukDone
+;
+    mov ds,ebx
+    mov ax,ds:mod_loader
+    or ax,ax
+    mov es,eax
+    jz ukDone
+;    
+    call fword ptr es:loader_unload_exe_kernel_proc
+
+ukDone:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2072,7 +2096,7 @@ do_unload       Proc near
 ;
     movzx ebx,es:p_prog_id
     GetProgramSel
-    jc duDone
+    jc ukDone
 ;
     mov ds,eax
     EnterSection ds:pr_section
@@ -2080,17 +2104,15 @@ do_unload       Proc near
     LeaveSection ds:pr_section
 ;
     ModuleIdToSel
-    jc duDone
+    jc ukDone
 ;
     mov ds,ebx
     mov ax,ds:mod_loader
     or ax,ax
     mov es,eax
-    jz duDone
+    jz ukDone
 ;    
-    call fword ptr es:loader_unload_exe_proc
-
-duDone:
+    call fword ptr es:loader_unload_exe_user_proc
     ret
 do_unload       Endp
 
