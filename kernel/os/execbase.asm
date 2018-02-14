@@ -2777,38 +2777,12 @@ load_dll16  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-unload_dll:
-    pushfd
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
-    mov ebp,esp
-    add ebp,28
-    push dword ptr [ebp+4].load_eax
-    mov eax,[ebp+4].load_eip
-    mov [ebp].load_eip,eax
-    mov eax,[ebp+4].load_cs
-    mov [ebp].load_cs,eax
-    pop dword ptr [ebp].load_eflags   
-;
+unload_dll Proc far
     push ds
     push es
-    push fs
-    push gs
+    pushad
 ;
     call RemoveProgramModule
-;
-    mov es,[ebp].load_ss
-    mov edi,[ebp].load_esp
-    add edi,8
-    mov eax,es:[edi]
-    mov [ebp].load_eip,eax
-    add edi,4
-    mov [ebp].load_esp,edi
 ;
     ModuleIdToSel
     jc unload_dll_done
@@ -2835,19 +2809,11 @@ unload_dll_free:
     FreeMem
 
 unload_dll_done:
-    pop gs
-    pop fs
+    popad
     pop es
     pop ds
-;
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    iretd
+    ret
+unload_dll	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2868,48 +2834,25 @@ free_dll_do  Proc near
 ;
     mov ds,ebx
     sub ds:mod_usage,1
+    clc
     jnz free_dll_done
 ;
-    push ds
-    push es
-    push edx
-    push edi
-;
     mov ax,SEG data
-    mov ds,ax
+    mov ds,eax
+    mov dx,ds:free_dll_gate_sel
 ;
-    mov edx,[ebp].load_eip
-    mov es,[ebp].load_ss
-    mov edi,[ebp].load_esp
-    sub edi,12
-    mov [ebp].load_esp,edi
-    mov [ebp].load_eip,edi
-;
-    mov al,90h
-    stosb
-;
-    mov al,9Ah
-    stosb
-;
-    xor eax,eax
-    stosd
-;
-    mov ax,ds:free_dll_gate_sel
-    stosw
-;
-    mov eax,edx
-    stosd
-;
-    pop edi
-    pop edx
-    pop es
-    pop ds
-;
-    mov ax,ds:mod_loader
+    GetThread
+    mov ds,eax
+    mov ax,ds:p_loader
     or ax,ax
-    mov ds,ax
     stc
     jz free_dll_done
+;
+    push ebx
+    mov bx,dx
+    mov ds,eax
+    call fword ptr ds:loader_add_gate_proc
+    pop ebx
 ;    
     call fword ptr ds:loader_unload_dll_proc    
 
@@ -2931,19 +2874,12 @@ free_dll_do  Endp
 free_dll_name   DB 'Free Dll',0
 
 free_dll  Proc far
-    push eax
-    mov ax,[esp+8]
-    cmp ax,flat_code_sel
-    pop eax
-    jne free_dll_kernel
-;
-    push eax
     pushfd
-    pop eax
-    mov [esp+8],eax
-    mov eax,[esp+4]
-    xchg eax,[esp]
     push eax
+    mov eax,[esp+12]
+    test al,3
+    jz free_dll_kernel
+;
     push ebx
     push ecx
     push edx
@@ -2952,7 +2888,12 @@ free_dll  Proc far
     push ebp
     mov ebp,esp
     add ebp,28
-    mov dword ptr [ebp].load_cs,flat_code_sel
+    push dword ptr [ebp+4].load_eax
+    mov eax,[ebp+4].load_eip
+    mov [ebp].load_eip,eax
+    mov eax,[ebp+4].load_cs
+    mov [ebp].load_cs,eax
+    pop dword ptr [ebp].load_eflags   
 ;
     push ds
     push es
@@ -2976,27 +2917,28 @@ free_dll  Proc far
     iretd
 
 free_dll_kernel:
-    push ds
-    push es
-    push fs
-    push gs
-    push eax
     push ecx
     push edx
     push esi
     push edi
+    push ds
+    push es
+    push fs
+    push gs
 ;
     call free_dll_do
 ;
+    pop gs
+    pop fs
+    pop es
+    pop ds
     pop edi
     pop esi
     pop edx
     pop ecx
     pop eax
-    pop gs
-    pop fs
-    pop es
-    pop ds
+    add esp,4
+    ret
     ret
 free_dll  Endp
 
