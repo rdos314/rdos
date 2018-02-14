@@ -44,7 +44,7 @@ INCLUDE chandle.inc
 debug_event_wait_header STRUC
 
 dew_obj             wait_obj_header <>
-dew_module_sel      DW ?
+dew_module_id       DW ?
 
 debug_event_wait_header ENDS
 
@@ -2891,7 +2891,7 @@ unload_dll_done:
     pop es
     pop ds
     ret
-unload_dll	Endp
+unload_dll      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3439,7 +3439,10 @@ start_wait_for_debug_event      PROC far
     push eax
     push bx
 ;
-    mov bx,es:dew_module_sel
+    movzx ebx,es:dew_module_id
+    ModuleIdToSel
+    jc start_wait_for_done
+;
     mov ds,bx
     mov ax,ds:mod_loader
     or ax,ax
@@ -3472,7 +3475,10 @@ stop_wait_for_debug_event       PROC far
     push eax
     push bx
 ;
-    mov bx,es:dew_module_sel
+    movzx ebx,es:dew_module_id
+    ModuleIdToSel
+    jc stop_wait_for_done
+;
     mov ds,bx
     mov ax,ds:mod_loader
     or ax,ax
@@ -3520,7 +3526,10 @@ is_debug_event_idle     PROC far
     push eax
     push bx
 ;
-    mov bx,es:dew_module_sel
+    movzx ebx,es:dew_module_id
+    ModuleIdToSel
+    jc is_idle_done
+;
     mov ds,bx
     mov ax,ds:mod_loader
     or ax,ax
@@ -3581,9 +3590,7 @@ add_wait_for_debug_event    PROC far
     pop ax
     jc add_wait_done
 ;    
-    movzx ebx,ax
-    ModuleIdToSel
-    mov es:dew_module_sel,bx
+    mov es:dew_module_id,ax
 
 add_wait_done:
     pop edi
