@@ -4652,6 +4652,7 @@ terminate_app_thread_name  DB 'Terminate App Thread', 0
 
 terminate_app_thread:
     add esp,8
+;
     push ds
     push es
     push fs
@@ -4659,26 +4660,18 @@ terminate_app_thread:
 ;
     mov ax,SEG data
     mov ds,ax
-;
-    mov es,[ebp].load_ss
-    mov edi,[ebp].load_esp
-    sub edi,16
-    mov [ebp].load_esp,edi
-    mov [ebp].load_eip,edi
-;
-    mov al,9Ah
-    stosb
-;
-    xor eax,eax
-    stosd
-;
-    mov ax,ds:term_gate_sel
-    stosw
+    mov bx,ds:term_gate_sel
 ;
     GetThread
-    mov es,ax
-    mov es,es:p_loader
-    call fword ptr es:loader_free_thread_user_proc
+    mov ds,eax
+    mov ax,ds:p_loader
+    or ax,ax
+    stc
+    jz terminate_app_thread_fail
+;
+    mov ds,eax
+    call fword ptr ds:loader_add_gate_proc
+    call fword ptr ds:loader_free_thread_user_proc
 ;
     pop gs
     pop fs
@@ -4693,6 +4686,9 @@ terminate_app_thread:
     pop ebx
     pop eax
     iretd
+
+terminate_app_thread_fail:
+    TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

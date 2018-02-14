@@ -40,6 +40,7 @@ INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
 include ..\wait.inc
 include gate.def
+include exec.def
 
 MSR_SYSENTER_CS  = 174h
 MSR_SYSENTER_ESP = 175h
@@ -8369,18 +8370,12 @@ do_terminate:
     TerminateThread
 
 terminate_thread:
-    mov ax,[esp+4]
-    cmp ax,flat_code_sel
-    jne terminate_thread_not_user
-;
-    push eax
     pushfd
-    pop eax
-    mov [esp+8],eax
-    mov eax,[esp+4]
-    xchg eax,[esp]
-    mov dword ptr [esp+4],flat_code_sel
     push eax
+    mov eax,[esp+12]
+    test al,3
+    jz terminate_thread_not_user
+;
     push ebx
     push ecx
     push edx
@@ -8389,6 +8384,13 @@ terminate_thread:
     push ebp
     mov ebp,esp
     add ebp,28
+    push dword ptr [ebp+4].load_eax
+    mov eax,[ebp+4].load_eip
+    mov [ebp].load_eip,eax
+    mov eax,[ebp+4].load_cs
+    mov [ebp].load_cs,eax
+    pop dword ptr [ebp].load_eflags   
+;
     TerminateAppThread
 
 terminate_thread_not_user:
