@@ -2067,31 +2067,11 @@ unload_kernel:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 do_unload       Proc near
-    mov ax,SEG data
-    mov ds,ax
-;
-    mov es,[ebp].load_ss
-    mov edi,[ebp].load_esp
-    sub edi,16
-    mov [ebp].load_esp,edi
-    mov [ebp].load_eip,edi
-;
-    mov al,9Ah
-    stosb
-;
-    xor eax,eax
-    stosd
-;
-    mov ax,ds:exit_gate_sel
-    stosw
-;
     GetThread
     mov es,ax
 ;
-    push ebx
     movzx ebx,es:p_prog_id
     GetProgramSel
-    pop ebx
     jc duDone
 ;
     mov ds,eax
@@ -2106,7 +2086,6 @@ do_unload       Proc near
     mov ax,ds:mod_loader
     or ax,ax
     mov es,eax
-    stc
     jz duDone
 ;    
     call fword ptr es:loader_unload_exe_proc
@@ -2133,7 +2112,7 @@ unload_exe:
     push eax
     mov eax,[esp+12]
     test al,3
-    jz unload_kernel32
+    jz unload_kernel
 ;
     push ebx
     push ecx
@@ -2155,6 +2134,18 @@ unload_exe:
     push fs
     push gs
 ;
+    mov ax,SEG data
+    mov ds,eax
+    mov bx,ds:exit_gate_sel
+;
+    GetThread
+    mov ds,eax
+    mov ax,ds:p_loader
+    or ax,ax
+    jz unload_kernel
+;
+    mov ds,eax
+    call fword ptr ds:loader_add_gate_proc
     call do_unload
 ;
     pop gs
@@ -2170,8 +2161,6 @@ unload_exe:
     pop ebx
     pop eax
     iretd
-
-unload_kernel32:
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
