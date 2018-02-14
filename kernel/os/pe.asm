@@ -3301,9 +3301,6 @@ add_user_gate   Proc far
 ;
     mov [ebp].load_eip,edi
 ;
-    mov al,90h
-    stosb
-;
     mov al,9Ah
     stosb
 ;
