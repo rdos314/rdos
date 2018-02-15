@@ -165,7 +165,7 @@ SendEvent Proc near
     pop es  
     mov es:event_thread_id,ax
 ;
-    mov bx,ds:mod_debug_id
+    movzx ebx,ds:mod_debug_id
     or bx,bx
     jz seClear
 ;

@@ -22,7 +22,8 @@
 
 void TestThread(void *)
 {
-    RdosWaitMilli(140);
+    for (;;)
+        RdosWaitMilli(140);
 }
 
 void main()
@@ -31,6 +32,11 @@ void main()
     int gdt;
     int linear;
     int handle;
+
+    RdosCreateThread(&TestThread, "Test", 0, 0x40000);
+
+    for (;;)
+        RdosWaitMilli(140);
 
 //    TestFunc();
 
