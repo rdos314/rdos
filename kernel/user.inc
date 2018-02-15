@@ -937,6 +937,7 @@ AddWaitForProcEnd MACRO
 GetProcExitCode MACRO
         UserGate get_proc_exit_code_nr
                                         ENDM
+
 ; IN  EAX               0 = don't show text
 ShowExceptionText       MACRO
         UserGate show_exception_text_nr

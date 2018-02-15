@@ -1852,6 +1852,12 @@
     CallGate_add_wait_for_proc_end  \
     parm [ebx] [eax] [ecx];
 
+#pragma aux RdosGetProcessExitCode = \
+    CallGate_get_proc_exit_code  \
+    "movsx eax,ax" \
+    parm [ebx]  \
+    value [eax];
+
 #pragma aux RdosShowExceptionText = \
     CallGate_show_exception_text  \
     value [eax];
