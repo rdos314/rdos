@@ -1451,6 +1451,11 @@ ContinueDebugEvent MACRO
         UserGate continue_debug_event_nr
                                                 ENDM
 
+;  IN  BX       Process handle
+AbortDebug MACRO
+        UserGate abort_debug_nr
+                                                ENDM
+
 ;  IN  EBP      Exception frame
 ;  IN  EAX      Exception code
 NotifyPeException MACRO

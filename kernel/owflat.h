@@ -2947,6 +2947,10 @@
     CallGate_clear_debug_event  \
     parm [ebx];
 
+#pragma aux RdosAbortDebug = \
+    CallGate_abort_debug  \
+    parm [ebx];
+
 #pragma aux RdosContinueDebugEvent = \
     CallGate_continue_debug_event  \
     parm [ebx] [eax];

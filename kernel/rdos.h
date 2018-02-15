@@ -758,6 +758,7 @@ char RDOSAPI RdosGetDebugEvent(int handle, int *thread);
 void RDOSAPI RdosGetDebugEventData(int handle, void *buf);
 void RDOSAPI RdosClearDebugEvent(int handle);
 void RDOSAPI RdosContinueDebugEvent(int handle, int thread);
+void RDOSAPI RdosAbortDebug(int Handle);
 
 #endif
 

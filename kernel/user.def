@@ -843,4 +843,6 @@ get_module_size_nr               = 660
 get_module_sel_nr                = 661
 get_program_modules_nr           = 662
 
+abort_debug_nr                   = 663
+
 usergate_entries                            = 670

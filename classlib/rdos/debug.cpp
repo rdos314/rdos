@@ -2958,5 +2958,7 @@ void TDebug::Execute()
     while (FInstalled)
         WaitTimeout(250);
 
+    RdosAbortDebug(FHandle);
+
     FDone = TRUE;
 }

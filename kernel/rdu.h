@@ -843,6 +843,8 @@
 #define usergate_get_module_sel 0x00000295
 #define usergate_get_program_modules 0x00000296
 
+#define usergate_abort_debug 0x00000297
+
 
 
 #ifdef __FLAT__
@@ -1691,6 +1693,8 @@
 #define CallGate_get_module_sel 0x55 0x67 0x9a 149 2 0 0 3 0 0x5d
 #define CallGate_get_program_modules 0x55 0x67 0x9a 150 2 0 0 3 0 0x5d
 
+#define CallGate_abort_debug 0x55 0x67 0x9a 151 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2536,5 +2540,7 @@
 #define CallGate_get_module_size 0x3e 0x67 0x9a 148 2 0 0 3 0
 #define CallGate_get_module_sel 0x3e 0x67 0x9a 149 2 0 0 3 0
 #define CallGate_get_program_modules 0x3e 0x67 0x9a 150 2 0 0 3 0
+
+#define CallGate_abort_debug 0x3e 0x67 0x9a 151 2 0 0 3 0
 
 #endif
