@@ -44,7 +44,7 @@ void main()
 #endif
 
 #ifdef CREATE_THREAD
-//        RdosCreateThread(&TestThread, "Test", 0, 0x40000);
+        RdosCreateThread(&TestThread, "Test", 0, 0x40000);
 #endif
 
         gdt = RdosGetFreeGdt();

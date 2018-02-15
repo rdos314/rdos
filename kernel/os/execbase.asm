@@ -3823,6 +3823,55 @@ continue_debug_event  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AbortDebug
+;
+;           DESCRIPTION:    Abort debugging
+;
+;       PARAMETERS:         BX          Module handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+abort_debug_name  DB 'Abort Debug',0
+
+abort_debug  Proc far
+    push ds
+    push es
+    pushad
+;    
+    movzx ebx,bx
+    GetProgramSel
+    jc adDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    movzx ecx,ds:pr_module_count
+    mov esi,OFFSET pr_module_arr
+    
+adLoop:
+    movzx ebx,word ptr ds:[esi]
+    ModuleIdToSel
+    jc adNext
+;
+    mov es,ebx
+    mov es:mod_debug_id,0
+
+adNext:
+    add esi,2
+    loop adLoop
+
+    LeaveSection ds:pr_section
+
+adDone:
+    popad
+    pop es
+    pop ds
+    ret
+abort_debug  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AliasModuleHandle
 ;
 ;           DESCRIPTION:    Create an alias handle for module
@@ -5075,6 +5124,12 @@ InitExec_    Proc near
     mov edi,OFFSET continue_debug_event_name
     xor dx,dx
     mov ax,continue_debug_event_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET abort_debug
+    mov edi,OFFSET abort_debug_name
+    xor dx,dx
+    mov ax,abort_debug_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET dupl_module_file_handle
