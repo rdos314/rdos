@@ -128,6 +128,8 @@ protected:
     int FIs19;
     int FIs20;
 
+    int FRunning;
+
     TWdSocketServerFactory *FFactory;
     TWdSupplService *FSupplList;
     TDebug *FDebug;

@@ -1409,13 +1409,10 @@ void TWdSocketServer::ReqProgLoad()
 ##########################################################################*/
 void TWdSocketServer::ReqProgKill()
 {
-    if (FDebug)
-        delete FDebug;
-
-    FDebug = 0;
-        FMainThread = 0;
-        FCurrentThread = 0;
-        FMainModule = 0;
+    FRunning = FALSE;
+    FMainThread = 0;
+    FCurrentThread = 0;
+    FMainModule = 0;
 
     PutDword(0);
 }
@@ -2280,29 +2277,47 @@ void TWdSocketServer::HandleSocket()
 {
     int count;
 
-        while (FSocket->IsOpen())
+    FRunning = TRUE;
+
+    while (FSocket->IsOpen() && FRunning)
+    {
+        if (FSocket->WaitForData(10000))
         {
+
             FInSize = 0;
-                if (FSocket->Read((char *)&FInSize, 2) == 2)
+            if (FSocket->Read((char *)&FInSize, 2) == 2)
             {
-            count = FSocket->Read(FInBuf, FInSize);
+                count = FSocket->Read(FInBuf, FInSize);
 
-            if (count == FInSize)
-            {
-                FInPtr = FInBuf;
-                FOutPtr = FOutBuf;
-                FOutSize = 0;
-                FSuppressAnswer = FALSE;
-
-                NotifyMsg();
-
-                if (!FSuppressAnswer)
+                if (count == FInSize)
                 {
-                            FSocket->Write((char *)&FOutSize, 2);
-                    FSocket->Write(FOutBuf, FOutSize);
-                    FSocket->Push();
+                    FInPtr = FInBuf;
+                    FOutPtr = FOutBuf;
+                    FOutSize = 0;
+                    FSuppressAnswer = FALSE;
+
+                    NotifyMsg();
+
+                    if (!FSuppressAnswer)
+                    {
+                        FSocket->Write((char *)&FOutSize, 2);
+                        FSocket->Write(FOutBuf, FOutSize);
+                        FSocket->Push();
+                    }
                 }
             }
-                }
         }
+        else
+            FSocket->Push();
+    }
+
+    FDebug->Stop();
+
+    while (!FDebug->IsDone())
+        RdosWaitMilli(250);
+
+    if (FDebug)
+        delete FDebug;
+
+    FDebug = 0;
 }

@@ -225,6 +225,9 @@ public:
 
     virtual void DeviceName(char *Name, int MaxLen) const;
 
+    void Stop();
+    int IsDone();
+
     TDebugThread *GetMainThread();
     TDebugModule *GetMainModule();
 
@@ -332,6 +335,7 @@ protected:
     int FThreadChanged;
 
     int FWaitLoad;
+    int FDone;
 
     int FConfigChange;
     int FMemoryModel;

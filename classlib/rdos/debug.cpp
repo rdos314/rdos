@@ -955,6 +955,7 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir, con
     FConfigChange = FALSE;
     
     FWaitLoad = TRUE;
+    FDone = FALSE;
     
     Start("Debug device", 0x4000);
 }
@@ -972,8 +973,52 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir, con
 ##########################################################################*/
 TDebug::~TDebug()
 {
-    if (FHandle)
-        RdosFreeProcessHandle(FHandle);
+    while (ThreadList)
+        RemoveThread(ThreadList->ThreadID);
+
+    while (ModuleList)
+        RemoveModule(ModuleList->Handle);
+
+    while (HwBreakList)
+        RemoveBreak(HwBreakList);
+
+    while (SwBreakList)
+        RemoveBreak(SwBreakList);
+
+    while (WatchList)
+        ClearWatch(WatchList->Sel, WatchList->Offset, WatchList->Size);
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::Stop
+#
+#   Purpose....: Stop debugging
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDebug::Stop()
+{
+    FInstalled = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDebug::IsDone
+#
+#   Purpose....: Check if done
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebug::IsDone()
+{
+    return FDone;
 }
 
 /*##########################################################################
@@ -2911,5 +2956,7 @@ void TDebug::Execute()
         FInstalled = FALSE;
         
     while (FInstalled)
-        WaitForever();
+        WaitTimeout(250);
+
+    FDone = TRUE;
 }
