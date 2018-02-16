@@ -3855,6 +3855,14 @@ adLoop:
 ;
     mov es,ebx
     mov es:mod_debug_id,0
+;
+    mov ax,es:mod_loader
+    or ax,ax
+    mov es,eax
+    stc
+    jz adNext
+;    
+    call fword ptr es:loader_stop_debug_proc
 
 adNext:
     add esi,2

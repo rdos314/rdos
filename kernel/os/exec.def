@@ -304,6 +304,9 @@ loader_regs_to_user_proc         DD ?,?
 ; IN  BX                  Gate sel
 loader_add_gate_proc         DD ?,?
 
+; IN   BX                 Module selector
+loader_stop_debug_proc       DD ?,?
+
 loader_interface_struc    ENDS
 
 module_struc    STRUC

@@ -5650,6 +5650,66 @@ get_cmd_line    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           stop_debug
+;
+;           DESCRIPTION:    Stop debugging
+;
+;           PARAMETERS:     BX      Module selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_debug  Proc far
+    push ds
+    push es
+    pushad
+;
+    mov ds,bx
+    mov bx,ds:lib_curr_event
+    mov es,bx   
+    FreeMem
+    mov ds:lib_curr_event,0
+
+sdLoop:
+    RequestSpinlock ds:lib_spinlock
+    mov ax,ds:lib_events
+    or ax,ax
+    jz sdLeaveDone
+;       
+    mov es,ax
+    mov ax,es:event_prev
+    cmp ax,ds:lib_events
+    push ds
+    mov ds:lib_events,ax
+    mov si,es:event_next
+    mov ds,ax
+    mov ds:event_next,si
+    mov ds,si
+    mov ds:event_prev,ax
+    pop ds
+    jne sdRemoved
+;
+    mov ds:lib_events,0
+
+sdRemoved:
+    ReleaseSpinlock ds:lib_spinlock
+;
+    FreeMem
+    jmp sdLoop
+
+sdLeaveDone:
+    ReleaseSpinlock ds:lib_spinlock
+;
+    mov ds:lib_debug_wait,0
+;
+    popad
+    pop es
+    pop ds
+    ret
+stop_debug   Endp
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init
 ;
 ;           DESCRIPTION:    Init pe loader module
@@ -5693,6 +5753,7 @@ l32 DD OFFSET clear_debug_event,          SEG code
 l33 DD OFFSET continue_debug_event,       SEG code
 l34 DD OFFSET regs_to_user,               SEG code
 l35 DD OFFSET add_user_gate,              SEG code
+l36 DD OFFSET stop_debug,                 SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc
