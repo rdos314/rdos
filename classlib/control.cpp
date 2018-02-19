@@ -2928,6 +2928,14 @@ void TDisplayControlThread::EnableRedraw(int Delay)
 ##########################################################################*/
 void TDisplayControlThread::DisableRedraw()
 {
+    int i;
+
+    for (i = 0; i < 15; i++)
+    {
+        FSignal.Signal();
+        RdosWaitMilli(5);
+    }
+
     Enabled = FALSE;
 }
 
@@ -3356,7 +3364,7 @@ void TDisplayControlThread::PutKey(char ch)
         FKeyboard->Put(ch);
     else
         NotifyKeyPressed(ch, ch, ch, ch);
-}
+    }
 
 /*##########################################################################
 #
