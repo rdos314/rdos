@@ -1335,38 +1335,38 @@ void TWdSocketServer::ReqProgStep()
 ##########################################################################*/
 void TWdSocketServer::ReqProgLoad()
 {
-        char truearg;
-        char name[256];
-        char *argstr;
-        TPathName curdir;
-        TString str;
+    char truearg;
+    char name[256];
+    char *argstr;
+    TPathName curdir;
+    TString str;
 
-        if (FDebug)
-                delete FDebug;
+    if (FDebug)
+        delete FDebug;
 
-        FDebug = 0;
-        FMainThread = 0;
-        FCurrentThread = 0;
-        FMainModule = 0;
+    FDebug = 0;
+    FMainThread = 0;
+    FCurrentThread = 0;
+    FMainModule = 0;
 
-        truearg = GetByte();
-        GetString(name, 255);
+    truearg = GetByte();
+    GetString(name, 255);
 
     if (strlen(name))
     {
-            str = GetFullPathName(name, ".com");
+        str = GetFullPathName(name, ".com");
 
-            if (str.GetSize() == 0)
-                str =  GetFullPathName(name, ".exe");
-        }
+        if (str.GetSize() == 0)
+            str =  GetFullPathName(name, ".exe");
+    }
 
-        if (str.GetSize())
-        {
-            argstr = name + strlen(name) + 1;
-            FDebug = new TDebug(str.GetData(), argstr, curdir.Get().GetData(), FFactory->FLogFile.GetData());
+    if (str.GetSize())
+    {
+        argstr = name + strlen(name) + 1;
+        FDebug = new TDebug(str.GetData(), argstr, curdir.Get().GetData(), FFactory->FLogFile.GetData());
 
-            RdosWaitMilli(500);
-            FDebug->WaitForLoad(5000);
+        RdosWaitMilli(500);
+        FDebug->WaitForLoad(5000);
 
         FMainThread = FDebug->GetMainThread();
         FCurrentThread = FDebug->GetCurrentThread();
@@ -1376,7 +1376,7 @@ void TWdSocketServer::ReqProgLoad()
         {
             PutDword(0);
             PutDword(FMainThread->ThreadID);
-                    PutDword(FMainModule->Handle);
+            PutDword(FMainModule->Handle);
             PutByte(0x10);
         }
         else

@@ -2932,6 +2932,83 @@ void TDebug::SignalNewData()
 
 /*##########################################################################
 #
+#   Name       : TDebug::FindRunning
+#
+#   Purpose....: Find already running app
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDebug::AttachRunning(const char *FileName)
+{
+    const char *Name;
+    const char *sptr;
+    int count = RdosGetProgramCount();
+    int p;
+    int pid;
+    char ProgName[256];
+    const char *pname;
+    const char *pptr;
+    int ok;
+
+    sptr = FileName;
+    Name = FileName;
+
+    while (*sptr)
+    {
+        if (*sptr == '/' || *sptr == '\\')
+            if (sptr[1] != 0)
+                Name = sptr + 1;
+
+        sptr++;
+    }
+
+    ok = FALSE;
+
+    for (p = 0; p < count && !ok; p++)
+    {
+        if (RdosGetProgramInfo(p, &pid, ProgName, 256))
+        {
+            pptr = ProgName;
+            pname = ProgName;
+
+            while (*pptr)
+            { 
+                if (*pptr == '/' || *pptr == '\\')
+                    if (pptr[1] != 0)
+                        pname = pptr + 1;
+
+                pptr++;
+            }
+
+            sptr = Name;
+            pptr = pname;
+            ok = TRUE;
+
+            while (*sptr && *pptr)
+            {
+                if (*sptr != *pptr)
+                {
+                    ok = FALSE;
+                    break;
+                }
+
+                sptr++;
+                pptr++;
+            }
+        }
+    }
+
+    if (ok)
+        return pid;
+    else
+       return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TDebug::Execute
 #
 #   Purpose....: Execute debugger
@@ -2941,14 +3018,23 @@ void TDebug::SignalNewData()
 #   Returns....: *
 #
 ##########################################################################*/
-
 void TDebug::Execute()
 {
     int thread;
+    char str[40];
         
     RdosWaitMilli(250);
 
-    FHandle = RdosSpawnDebug(FProgram.GetData(), FParam.GetData(), FStartDir.GetData(), 0, &thread);
+    FHandle = AttachRunning(FProgram.GetData());
+
+    if (FHandle)
+    {
+        sprintf(str, "Attach to process, ID: %d", FHandle);
+        LogMsg(str);
+        thread = RdosAttachDebugger(FHandle);
+    }
+    else
+        FHandle = RdosSpawnDebug(FProgram.GetData(), FParam.GetData(), FStartDir.GetData(), 0, &thread);
         
     RdosWaitMilli(250);
 

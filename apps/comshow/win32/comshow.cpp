@@ -44,11 +44,11 @@
 *##########################################################################*/
 void cdecl main()
 {
-        TFile RawFile("c:\\cap\\autotank.bin");
+        TFile RawFile("c:\\cap\\atg.sdd");
 
         TProtocolAnalyser analyzer(&RawFile, 0x400);
 
-        analyzer.DefineLogFile("c:\\cap\\autotank.txt");
+        analyzer.DefineLogFile("c:\\rdos\\apps\\canshow\\atg.txt");
 
         for (;;)
         {

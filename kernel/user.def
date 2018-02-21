@@ -845,4 +845,6 @@ get_program_modules_nr           = 662
 
 abort_debug_nr                   = 663
 
+attach_debugger_nr               = 664
+
 usergate_entries                            = 670

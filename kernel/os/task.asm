@@ -7602,8 +7602,7 @@ init_thread_block       PROC near
     mov eax,ds:p_debug_proc
     mov es:p_debug_proc,eax
 ;
-    mov ax,ds:p_debug_event
-    mov es:p_debug_event,ax
+    mov es:p_debug_event,0
 ;
     mov es:p_signal,0
     mov es:p_parent_switch,0

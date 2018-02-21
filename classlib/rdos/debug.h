@@ -283,6 +283,8 @@ protected:
     virtual void Add(TWait *Wait);
     virtual void Execute();
 
+    int AttachRunning(const char *FileName);
+
     void InsertThread(TDebugThread *thread);
 
     TDebugModule *FindModule(int Cs);

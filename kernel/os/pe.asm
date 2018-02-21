@@ -272,6 +272,33 @@ AllocateKernelEvent   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           FreeKernelEvent
+;
+;           DESCRIPTION:    Free pre-allocated kernel event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeKernelEvent   Proc near
+    push ds
+    push es
+    push eax
+;
+    GetThread
+    mov ds,ax
+    xor ax,ax
+    xchg ax,ds:p_debug_event
+    mov es,ax
+    FreeMem
+;
+    pop eax 
+    pop es
+    pop ds   
+    ret
+FreeKernelEvent   Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ExceptionEvent
 ;
 ;           DESCRIPTION:    Exception event
@@ -3031,7 +3058,7 @@ create_process    Proc far
     mov ecx,stack0_size
     CreateProcess
     ret
-create_process	Endp
+create_process  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3666,6 +3693,7 @@ start_thread    PROC far
     or ax,ax
     jz start_thread_notify
 ;
+    call AllocateKernelEvent
     call CreateThreadEvent
     call SendEvent
 
@@ -3718,6 +3746,17 @@ start_thread    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_thread_user     Proc far
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_app_sel
+
+    mov ax,ds:mod_debug_id
+    or ax,ax
+    jz ftuDebugOk
+;
+    call FreeKernelEvent
+
+ftuDebugOk:
     GetThread
     mov ds,ax
     mov dx,ds:p_prog_id

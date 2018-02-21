@@ -906,6 +906,14 @@ SpawnExe        MACRO
         UserGate spawn_exe_nr
                                         ENDM
 
+
+; IN  BX        Process ID
+; IN  DX        Debug module handle
+; OUT AX        Thread #
+AttachDebugger        MACRO
+        UserGate attach_debugger_nr
+                                        ENDM
+
 ; OUT AX                Child thread id (parent) or 0 (child)
 Fork    MACRO
         UserGate fork_nr
