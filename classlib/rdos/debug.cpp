@@ -2863,8 +2863,9 @@ void TDebug::SignalNewData()
             break;
 
         case EVENT_CREATE_PROCESS:
-            LogMsg("Create process");
             RdosGetDebugEventData(FHandle, &cpe);
+            sprintf(str, "Create process, ID: %d", cpe.Handle);
+            LogMsg(str);
             HandleCreateProcess(&cpe);
             break;
 
@@ -3032,8 +3033,12 @@ void TDebug::Execute()
         sprintf(str, "Attach to process, ID: %d", FHandle);
         LogMsg(str);
         thread = RdosAttachDebugger(FHandle);
+
+        if (!thread)
+            FHandle = 0;
     }
-    else
+
+    if (!FHandle)
         FHandle = RdosSpawnDebug(FProgram.GetData(), FParam.GetData(), FStartDir.GetData(), 0, &thread);
         
     RdosWaitMilli(250);
