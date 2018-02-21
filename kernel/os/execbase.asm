@@ -2064,6 +2064,35 @@ spLoop:
     pop ds
     ret
 start_programs    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AttachDebugger
+;
+;       DESCRIPTION:    Attach debugger to running thread
+;
+;       PARAMETERS:     BX          Program ID
+;                       DX          Debug module handle
+;
+;       RETURN VALUE:   AX          Thread ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+attach_debugger_name  DB 'Attach Debugger',0
+
+attach_debugger   Proc far
+    int 3
+    push ebx
+    movzx ebx,dx
+    ModuleIdToSel
+    pop ebx
+    jc atdDone
+;    
+
+atdDone:
+    ret
+attach_debugger   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4979,6 +5008,12 @@ InitExec_    Proc near
     mov dx,virt_es_in OR virt_ds_in
     mov ax,spawn_exe_nr
     RegisterUserGate
+;
+    mov esi,OFFSET attach_debugger
+    mov edi,OFFSET attach_debugger_name
+    xor dx,dx
+    mov ax,attach_debugger_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET unload_exe
     mov edi,OFFSET unload_exe_name
