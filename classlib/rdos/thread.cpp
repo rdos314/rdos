@@ -45,14 +45,14 @@
 ##########################################################################*/
 static void ThreadStartup(void *ptr)
 {
-	((TThread *)ptr)->Run();
+    ((TThread *)ptr)->Run();
 }
 
 /*##########################################################################
 #
 #   Name       : TThread::TThread
 #
-#   Purpose....: Constructor for TThread		                          
+#   Purpose....: Constructor for TThread                                  
 #
 #   In params..: *
 #   Out params.: *
@@ -61,15 +61,15 @@ static void ThreadStartup(void *ptr)
 ##########################################################################*/
 TThread::TThread()
 {
-	FInstalled = TRUE;
-	FThreadRunning = FALSE;
+    FInstalled = TRUE;
+    FThreadRunning = FALSE;
 }
 
 /*##########################################################################
 #
 #   Name       : TThread::TThread
 #
-#   Purpose....: Constructor for TThread		                          
+#   Purpose....: Constructor for TThread                                  
 #
 #   In params..: *
 #   Out params.: *
@@ -78,17 +78,17 @@ TThread::TThread()
 ##########################################################################*/
 TThread::TThread(const char *ThreadName, int StackSize)
 {
-	FInstalled = TRUE;
-	FThreadRunning = FALSE;
-	
-	Start(ThreadName, StackSize);
+    FInstalled = TRUE;
+    FThreadRunning = FALSE;
+    
+    Start(ThreadName, StackSize);
 }
 
 /*##########################################################################
 #
 #   Name       : TThread::TThread
 #
-#   Purpose....: Constructor for TThread		                          
+#   Purpose....: Constructor for TThread                                  
 #
 #   In params..: *
 #   Out params.: *
@@ -97,18 +97,18 @@ TThread::TThread(const char *ThreadName, int StackSize)
 ##########################################################################*/
 TThread::TThread(const char *ThreadName, int StackSize, bool Run)
 {
-	FInstalled = TRUE;
-	FThreadRunning = FALSE;
+    FInstalled = TRUE;
+    FThreadRunning = FALSE;
 
-	if (Run)
-		Start(ThreadName, StackSize);
+    if (Run)
+        Start(ThreadName, StackSize);
 }
 
 /*##########################################################################
 #
 #   Name       : TThread::~TThread
 #
-#   Purpose....: Destructor for TThread		                          
+#   Purpose....: Destructor for TThread                               
 #
 #   In params..: *
 #   Out params.: *
@@ -117,7 +117,22 @@ TThread::TThread(const char *ThreadName, int StackSize, bool Run)
 ##########################################################################*/
 TThread::~TThread()
 {
-	Stop();
+    Stop();
+}
+
+/*##########################################################################
+#
+#   Name       : TThread::Terminated
+#
+#   Purpose....: Thread terminated
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TThread::Terminated()
+{
 }
 
 /*##########################################################################
@@ -133,9 +148,9 @@ TThread::~TThread()
 ##########################################################################*/
 void TThread::Stop()
 {
-	FInstalled = FALSE;
-	while (FThreadRunning)
-		RdosWaitMilli(250);
+    FInstalled = FALSE;
+    while (FThreadRunning)
+        RdosWaitMilli(250);
 }
 
 /*##########################################################################
@@ -184,7 +199,7 @@ bool TThread::IsRunning()
 ##########################################################################*/
 void TThread::Start(const char *ThreadName, int StackSize)
 {
-	RdosCreateThread(ThreadStartup, ThreadName, this, StackSize);
+    RdosCreateThread(ThreadStartup, ThreadName, this, StackSize);
 }
 
 /*##########################################################################
@@ -202,7 +217,7 @@ void TThread::Start(const char *ThreadName, int StackSize)
 ##########################################################################*/
 void TThread::Start(const char *ThreadName, int Prio, int StackSize)
 {
-	RdosCreatePrioThread(ThreadStartup, Prio, ThreadName, this, StackSize);
+    RdosCreatePrioThread(ThreadStartup, Prio, ThreadName, this, StackSize);
 }
 
 /*##########################################################################
@@ -220,12 +235,13 @@ void TThread::Start(const char *ThreadName, int Prio, int StackSize)
 void TThread::Run()
 {
     FInstalled = TRUE;
-	if (!FThreadRunning)
-	{
-		FThreadRunning = TRUE;
-		Execute();
-		FThreadRunning = FALSE;
-	}
+    if (!FThreadRunning)
+    {
+        FThreadRunning = TRUE;
+        Execute();
+        FThreadRunning = FALSE;
+        Terminated();
+    }
 }
 
 /*##########################################################################
