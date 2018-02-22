@@ -5103,6 +5103,9 @@ show_exception_text     PROC far
     mov ebx,fs:pvModuleHandle
     ModuleIdToSel
     mov es,ebx
+    or ebx,ebx
+    jz setStop
+;
     mov ax,es:mod_debug_id
     or ax,ax
     jnz setStop
