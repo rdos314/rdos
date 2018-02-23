@@ -5754,6 +5754,60 @@ stop_debug   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           attach_thread
+;
+;           DESCRIPTION:    Attach to debugger thread
+;
+;           PARAMETERS:     BX      Module selector
+;                           DX      Debug module selector
+;                           GS      Debugged program
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+attach_name DB 'Debugger Attach', 0
+
+attach_thread:
+    int 3
+    mov ax,250
+    WaitMilliSec
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           attach_debug
+;
+;           DESCRIPTION:    Attach debugger
+;
+;           PARAMETERS:     BX      Module selector
+;                           DX      Debug module selector
+;                           GS      Debugged program
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+attach_debug  Proc far
+    push ds
+    push es
+    pushad
+;
+    int 3
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov esi,OFFSET attach_thread
+    mov edi,OFFSET attach_name
+    mov ecx,stack0_size
+    mov ax,2
+    CreateThread
+;
+    popad
+    pop es
+    pop ds
+    ret
+attach_debug  Endp
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init
 ;
 ;           DESCRIPTION:    Init pe loader module
@@ -5798,6 +5852,7 @@ l33 DD OFFSET continue_debug_event,       SEG code
 l34 DD OFFSET regs_to_user,               SEG code
 l35 DD OFFSET add_user_gate,              SEG code
 l36 DD OFFSET stop_debug,                 SEG code
+l37 DD OFFSET attach_debug,               SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc

@@ -307,6 +307,10 @@ loader_add_gate_proc         DD ?,?
 ; IN   BX                 Module selector
 loader_stop_debug_proc       DD ?,?
 
+; IN   BX                 Module selector
+; IN   DX                 Debug lib sel
+loader_attach_debug_proc     DD ?,?
+
 loader_interface_struc    ENDS
 
 module_struc    STRUC

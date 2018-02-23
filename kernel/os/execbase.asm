@@ -2082,15 +2082,42 @@ start_programs    Endp
 attach_debugger_name  DB 'Attach Debugger',0
 
 attach_debugger   Proc far
+    push fs
+    push gs
+    push ebx
+    push ecx
+;
     int 3
     push ebx
     movzx ebx,dx
     ModuleIdToSel
+    mov dx,bx
     pop ebx
     jc atdDone
 ;    
+    GetProgramSel
+    jc atdDone
+;
+    mov gs,eax
+    mov cx,gs:pr_module_count
+    or cx,cx
+    stc
+    jz atdDone
+;
+    movzx ebx,gs:pr_module_arr
+    ModuleIdToSel
+    jc atdDone
+;
+    mov fs,gs:pr_loader
+    call fword ptr fs:loader_attach_debug_proc
+;
+    mov ax,gs:pr_thread_arr
 
 atdDone:
+    pop ecx
+    pop ebx
+    pop gs
+    pop fs
     ret
 attach_debugger   Endp
     
