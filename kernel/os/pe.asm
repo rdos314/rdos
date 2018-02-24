@@ -5922,8 +5922,9 @@ attach_thread:
     WaitMilliSec
 ;
     call CreateAttachProcessEvent
-    mov ds:mod_debug_id,dx
     call SendAttachEvent
+;
+    mov ds:mod_debug_id,dx
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
