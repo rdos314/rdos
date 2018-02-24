@@ -59,121 +59,6 @@ _TEXT    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AddProgramThread
-;
-;           DESCRIPTION:    Add thread to program
-;
-;           PARAMETERS:     ES      Thread
-;                           BX      Program ID
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddProgramThread    Proc near
-    push ds
-    push eax
-    push ebx
-    push ecx
-;
-    GetProgramSel
-    jc aptDone
-;
-    mov ds,eax
-    EnterSection ds:pr_section
-;
-    movzx ecx,ds:pr_thread_count
-    cmp ecx,MAX_PROCESS_THREADS
-    jae aptLeave
-;
-    mov ebx,ecx
-    shl ebx,1
-    inc ecx
-    mov ds:pr_thread_count,cx
-;
-    mov ax,es:p_id
-    mov ds:[ebx].pr_thread_arr,ax
-    
-aptLeave:
-    LeaveSection ds:pr_section
-            
-aptDone:
-    pop ecx
-    pop ebx
-    pop eax
-    pop ds
-    ret
-AddProgramThread    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           RemoveProgramThread
-;
-;           DESCRIPTION:    Remove thread from program
-;
-;           PARAMETERS:     ES      Thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemoveProgramThread    Proc near
-    push ds
-    push eax
-    push ebx
-    push ecx
-;
-    movzx ebx,es:p_prog_id
-    or ebx,ebx
-    jnz rptStart
-;
-    mov ebx,1
-
-rptStart:
-    GetProgramSel
-    jc rptDone
-;
-    mov ds,eax
-    EnterSection ds:pr_section
-;
-    mov ax,es:p_id
-    movzx ecx,ds:pr_thread_count
-    mov ebx,OFFSET pr_thread_arr
-    or ecx,ecx
-    jz rptLeave
-
-rptLoop:
-    cmp ax,ds:[ebx]
-    je rptFound
-;
-    add bx,2
-    loop rptLoop
-;
-    jmp rptLeave
-
-rptFound:
-    dec ds:pr_thread_count
-;
-    sub ecx,1
-    jz rptLeave
-
-rptMove:
-    mov ax,ds:[ebx+2]
-    mov ds:[ebx],ax
-    add ebx,2
-    loop rptMove
-
-rptLeave:
-    LeaveSection ds:pr_section
-            
-rptDone:
-    pop ecx
-    pop ebx
-    pop eax
-    pop ds
-    ret
-RemoveProgramThread    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetThreadCount
 ;
 ;           DESCRIPTION:    Get thread count
@@ -236,16 +121,6 @@ create_thread    Proc far
     movzx ecx,es:p_prio
     call ThreadCreated
 ;
-    movzx ebx,es:p_prog_id
-    or ebx,ebx
-    jnz ctAdd
-;
-    mov ebx,1
-
-ctAdd:
-    call AddProgramThread
-
-ctDone:
     popad
     pop es    
     ret
@@ -270,7 +145,6 @@ terminate_thread    Proc far
     GetThread
     movzx eax,ax
     mov es,eax
-    call RemoveProgramThread
     call ThreadTerminated
 ;
     popad

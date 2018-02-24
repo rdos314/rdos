@@ -1265,11 +1265,8 @@ spawn_startup:
     sti
     GetThread
     mov es,ax
-    call RemoveProgramThread
 ;
     mov es:p_prog_id,bx
-    call AddProgramThread
-;
     GetProgramSel
     mov es:p_prog_sel,ax
     mov gs,eax
@@ -1692,11 +1689,8 @@ lpEnvDone:
 ;
     GetThread
     mov es,ax
-    call RemoveProgramThread
-;
     mov es:p_prog_id,bx
     mov es:p_prog_sel,gs
-    call AddProgramThread
 ;
     push gs
     ExecApp
