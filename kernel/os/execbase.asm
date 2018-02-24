@@ -1149,11 +1149,7 @@ spawn_startup:
     sti
     GetThread
     mov es,ax
-;
-    mov es:p_prog_id,bx
-    GetProgramSel
-    mov es:p_prog_sel,ax
-    mov gs,eax
+    mov gs,es:p_prog_sel
 ;
     SaveContext
     xor eax,eax
@@ -1573,8 +1569,6 @@ lpEnvDone:
 ;
     GetThread
     mov es,ax
-    mov es:p_prog_id,bx
-    mov es:p_prog_sel,gs
 ;
     push gs
     ExecApp
