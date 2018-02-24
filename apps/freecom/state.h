@@ -56,11 +56,17 @@ protected:
     void WriteOneModule(int mid, const char *Name);
     void WriteModules();
 
+    void WriteOneProcess(int pid, const char *Name);
+
     void WritePrograms();
     void WriteProgramModules(int pid);
     void WriteProgramThreads(int pid);
     void WriteModuleById(int mid);
     void WriteThreadById(int tid);
+
+    void WriteProcessById(int pid);
+    void WriteProcessThreads(int pid);
+    void WriteProgramProcesses(int pid);
 
     int FOptM;
     int FOptT;
@@ -69,6 +75,7 @@ protected:
     int FOptU;
 
     unsigned short int IdBuf[256];
+    unsigned short int TIdBuf[256];
 };
 
 #endif

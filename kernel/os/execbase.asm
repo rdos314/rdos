@@ -4970,6 +4970,79 @@ get_process_info32   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetProcessThreads
+;
+;           DESCRIPTION:    Get process threads
+;
+;           PARAMETERS:     BX          Process ID
+;                           ES:(E)DI    Thread ID buffer (2 bytes per entry)
+;                           (E)CX       Max thread ids
+;
+;           RETURNS:        ECX         Actual threads
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_process_threads_name DB 'Get Process Threads',0
+    
+get_process_threads    Proc near
+    push ds
+    push ebx
+    push edx
+    push esi
+    push edi
+;
+    movzx ebx,bx
+    ProcessIdToSel
+    jc gpftDone
+;
+    mov ds,ebx
+    EnterSection ds:pf_section
+;
+    movzx edx,ds:pf_thread_count
+    mov esi,OFFSET pf_thread_arr
+
+gpftCopy:
+    or edx,edx
+    jz gpftLeave
+;
+    dec edx
+    lodsw
+    stosw
+    loop gpftCopy
+
+gpftLeave:
+    movzx ecx,ds:pf_thread_count
+    LeaveSection ds:pf_section
+    clc
+
+gpftDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop ds
+    ret
+get_process_threads    Endp
+
+get_process_threads16   Proc far
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call get_process_threads
+;
+    pop edi
+    ret
+get_process_threads16   Endp
+
+get_process_threads32   Proc far
+    call get_process_threads
+    ret
+get_process_threads32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AppThreadStarted
 ;
 ;           DESCRIPTION:    Startup of app thread
@@ -5553,6 +5626,13 @@ InitExec_    Proc near
     mov edi,OFFSET get_process_info_name
     mov dx,virt_es_in
     mov ax,get_process_info_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET get_process_threads16
+    mov esi,OFFSET get_process_threads32
+    mov edi,OFFSET get_process_threads_name
+    mov dx,virt_es_in
+    mov ax,get_process_threads_nr
     RegisterUserGate
     ret
 InitExec_    Endp

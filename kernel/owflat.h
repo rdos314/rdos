@@ -1714,6 +1714,14 @@
     parm [eax] [esi] [edi] [ecx] \
     modify [edx] \
     value [eax];
+
+#pragma aux RdosGetProcessThreads = \
+    CallGate_get_process_threads  \
+    "jnc Ok" \
+    "xor ecx,ecx" \
+    "Ok: " \
+    parm [ebx] [edi] [ecx] \
+    value [ecx];
     
 #pragma aux RdosGetProgramCount = \
     CallGate_get_program_count  \

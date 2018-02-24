@@ -3026,7 +3026,9 @@ void TDebug::Execute()
         
     RdosWaitMilli(250);
 
-    FHandle = AttachRunning(FProgram.GetData());
+//    FHandle = AttachRunning(FProgram.GetData());
+
+    FHandle = 0;
 
     if (FHandle)
     {

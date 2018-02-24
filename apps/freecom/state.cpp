@@ -265,7 +265,7 @@ void TStateCommand::WriteOne(ThreadActionState *State)
 
         str[len] = ')';
         len++;
-    
+
         for (i = len; i < 20 + 13; i++)
             str[i] = ' ';
 
@@ -330,7 +330,7 @@ void TStateCommand::WriteThreads()
     int i;
     int ThreadCount = RdosGetThreadCount();
     ThreadActionState state;
-    
+
     for (i = 0; i < ThreadCount; i++)
         if (RdosGetThreadActionState(i, &state))
             WriteOne(&state);
@@ -446,7 +446,7 @@ void TStateCommand::WriteModules()
     int id;
     char buf[256];
     int ModuleCount = RdosGetModuleCount();
-    
+
     for (i = 0; i < ModuleCount; i++)
         if (RdosGetModuleInfo(i, &id, buf, 256))
             WriteOneModule(id, buf);
@@ -470,6 +470,97 @@ void TStateCommand::WriteProgramModules(int pid)
 
     for (i = 0; i < ModuleCount; i++)
         WriteModuleById(IdBuf[i]);
+}
+
+/*##########################################################################
+#
+#   Name       : TStateCommand::WriteOneProcess
+#
+#   Purpose....: Write one process
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TStateCommand::WriteOneProcess(int pid, const char *Name)
+{
+    char str[50];
+    int i;
+    int ThreadCount = RdosGetProcessThreads(pid, TIdBuf, 256);
+
+    sprintf(str, "%04hX ", pid);
+    Write(str);
+
+    strncpy(str, Name, 45);
+    str[42] = 0;
+    while (strlen(str) < 41)
+        strcat(str, " ");
+
+    Write(str);
+    Write("\r\n");
+
+    for (i = 0; i < ThreadCount; i++)
+        WriteThreadById(TIdBuf[i]);
+}
+
+/*##########################################################################
+#
+#   Name       : TStateCommand::WriteProcessById
+#
+#   Purpose....: Write process by ID
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TStateCommand::WriteProcessById(int pid)
+{
+    char buf[256];
+    int ok = FALSE;
+    int i;
+    int id;
+    int ProcessCount = RdosGetProcessCount();
+
+    for (i = 0; i < ProcessCount && !ok; i++)
+    {
+        if (RdosGetProcessInfo(i, &id, buf, 256))
+        {
+            if (id == pid)
+            {
+                Write(" ");
+                WriteOneProcess(pid, buf);
+                ok = TRUE;
+            }
+        }
+    }
+
+    if (!ok)
+    {
+        sprintf(buf, " %04hX\r\n", pid);
+        Write(buf);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TStateCommand::WriteProgramProcesses
+#
+#   Purpose....: Write program processes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TStateCommand::WriteProgramProcesses(int pid)
+{
+    int i;
+    int ProcessCount = RdosGetProgramProcesses(pid, IdBuf, 256);
+
+    for (i = 0; i < ProcessCount; i++)
+        WriteProcessById(IdBuf[i]);
 }
 
 /*##########################################################################
@@ -549,7 +640,7 @@ void TStateCommand::WritePrograms()
     int i;
     int ID;
     int ProgramCount = RdosGetProgramCount();
-    
+
     for (i = 0; i < ProgramCount; i++)
     {
         if (RdosGetProgramInfo(i, &ID, NameBuf, 100))
@@ -560,6 +651,7 @@ void TStateCommand::WritePrograms()
             Write("\r\n");
             WriteProgramModules(i);
             WriteProgramThreads(i);
+            WriteProgramProcesses(i);
             Write("\r\n");
         }
     }
@@ -603,7 +695,7 @@ int TStateCommand::Execute(char *param)
         }
         else
             WritePrograms();
-                        
+
         return 0;
     }
     else
@@ -615,7 +707,7 @@ int TStateCommand::Execute(char *param)
         while (arg)
         {
             if (sscanf(arg->FName.GetData(), "%4hX", &ID) == 1)
-            {           
+            {
                 for (i = 0; i < ThreadCount; i++)
                 {
                     if (RdosGetThreadActionState(i, &state))

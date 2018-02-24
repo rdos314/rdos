@@ -1191,6 +1191,14 @@ GetProcessInfo   MACRO
         UserGate get_process_info_nr
                 ENDM
 
+; IN   BX           Process ID
+; IN   ES:(E)DI     Thread ID buffer (2 bytes per entry)
+; IN   (E)CX        Max Threads
+; OUT  ECX          Thread count
+GetProcessThreads       MACRO
+        UserGate get_process_threads_nr
+                ENDM
+
 ;;;;;;;;;;;; C Handles ;;;;;;;;;;;;;;;;
 
 ; IN  ES:(E)DI      Name
