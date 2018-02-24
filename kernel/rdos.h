@@ -517,7 +517,6 @@ int RDOSAPI RdosGetProcessThreads(int pid, unsigned short int *IdArr, int MaxThr
 
 int RDOSAPI RdosGetProgramCount();
 int RDOSAPI RdosGetProgramInfo(int Index, int *ID, char *NameBuf, int NameSize);
-int RDOSAPI RdosGetProgramThreads(int Index, unsigned short int *IdArr, int MaxThreads);
 int RDOSAPI RdosGetProgramModules(int Index, unsigned short int *IdArr, int MaxModules);
 int RDOSAPI RdosGetProgramProcesses(int Index, unsigned short int *IdArr, int MaxProcesses);
 

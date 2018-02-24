@@ -1124,14 +1124,6 @@ GetProgramInfo  MACRO
                 ENDM
 
 ; IN   AX           Program #
-; IN   ES:(E)DI     Thread ID buffer (2 bytes per entry)
-; IN   (E)CX        Max Threads
-; OUT  ECX          Thread count
-GetProgramThreads       MACRO
-        UserGate get_program_threads_nr
-                ENDM
-
-; IN   AX           Program #
 ; IN   ES:(E)DI     Module ID buffer (2 bytes per entry)
 ; IN   (E)CX        Max modules
 ; OUT  ECX          Module count

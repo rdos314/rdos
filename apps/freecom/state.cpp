@@ -595,26 +595,6 @@ void TStateCommand::WriteThreadById(int tid)
 
 /*##########################################################################
 #
-#   Name       : TStateCommand::WriteProgramThreads
-#
-#   Purpose....: Write program threads
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TStateCommand::WriteProgramThreads(int pid)
-{
-    int i;
-    int ThreadCount = RdosGetProgramThreads(pid, IdBuf, 256);
-
-    for (i = 0; i < ThreadCount; i++)
-        WriteThreadById(IdBuf[i]);
-}
-
-/*##########################################################################
-#
 #   Name       : TStateCommand::WritePrograms
 #
 #   Purpose....: Write threads
@@ -641,7 +621,6 @@ void TStateCommand::WritePrograms()
             Write(NameBuf);
             Write("\r\n");
             WriteProgramModules(i);
-            WriteProgramThreads(i);
             WriteProgramProcesses(i);
             Write("\r\n");
         }
