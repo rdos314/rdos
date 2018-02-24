@@ -489,26 +489,21 @@ free_name       DB 'Free Ldt',0
 free_ldt    PROC far
     push ds
     push es
-    push si
-;       
     push ax
+;       
     GetThread
     mov ds,ax
     mov ds,ds:p_prog_sel
-    pop ax
 ;       
-    push ds
     EnterSection ds:pr_ldt_section
-    mov si,ds
-    mov es,si
-    mov ds,ds:pr_ldt_data_sel
-    mov byte ptr [bx+5],0
-    mov si,es:pr_ldt_free
-    mov [bx],si
-    mov es:pr_ldt_free,bx
-    pop ds
+    mov es,ds:pr_ldt_data_sel
+    mov byte ptr es:[bx+5],0
+    mov ax,ds:pr_ldt_free
+    mov es:[bx],ax
+    mov ds:pr_ldt_free,bx
     LeaveSection ds:pr_ldt_section
-    pop si
+;
+    pop ax
     pop es
     pop ds
     retf32
