@@ -251,7 +251,6 @@ open_app    PROC far
     mov es:app_next,ax
     mov ds:p_app_sel,bx
 ;
-    CreateLdt
     call run_open_hooks
 ;
     popad

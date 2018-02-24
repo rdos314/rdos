@@ -1147,6 +1147,7 @@ AddKernelModule     Endp
 
 spawn_startup:
     sti
+    CreateLdt
     GetThread
     mov es,ax
     mov gs,es:p_prog_sel
