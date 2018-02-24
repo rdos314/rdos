@@ -4346,6 +4346,83 @@ get_program_modules32   Proc far
     call get_program_modules
     ret
 get_program_modules32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetProgramProcesses
+;
+;           DESCRIPTION:    Get program processes
+;
+;           PARAMETERS:     AX          Program #
+;                           ES:(E)DI    Process ID buffer (2 bytes per entry)
+;                           (E)CX       Max process ids
+;
+;           RETURNS:        ECX         Actual processes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_program_processes_name DB 'Get Program Processes',0
+    
+get_program_processes    Proc near
+    push ds
+    push ebx
+    push edx
+    push esi
+    push edi
+;
+    GetProgramId
+    jc gppDone
+;
+    mov edx,eax
+    mov ebx,eax
+    GetProgramSel
+    jc gppDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+;
+    movzx edx,ds:pr_process_count
+    mov esi,OFFSET pr_process_arr
+
+gppCopy:
+    or edx,edx
+    jz gppLeave
+;
+    dec edx
+    lodsw
+    stosw
+    loop gppCopy
+
+gppLeave:
+    movzx ecx,ds:pr_process_count
+    LeaveSection ds:pr_section
+    clc
+
+gppDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop ds
+    ret
+get_program_processes    Endp
+
+get_program_processes16   Proc far
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call get_program_processes
+;
+    pop edi
+    ret
+get_program_processes16   Endp
+
+get_program_processes32   Proc far
+    call get_program_processes
+    ret
+get_program_processes32   Endp
                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4813,6 +4890,82 @@ gmszDone:
     pop ds
     ret
 get_module_size    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetProcessInfo
+;
+;           DESCRIPTION:    Get process info
+;
+;           PARAMETERS:     AX          Process #
+;                           ES:(E)DI    Name buffer
+;                           (E)CX       Size of buffer
+;
+;           RETURNS:        DX          process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_process_info_name DB 'Get Process Info',0
+    
+get_process_info    Proc near
+    push ds
+    push eax
+    push ebx
+    push esi
+    push edi
+;
+    GetProcessId
+    jc gmpDone
+;
+    mov edx,eax
+    mov ebx,eax
+    ProcessIdToSel
+    jc gmpDone
+;
+    mov ds,ebx
+    mov esi,OFFSET pf_name
+
+gmpCopyLoop:
+    lodsb
+    stosb
+    or al,al
+    jz gmpCopyDone
+;
+    loop gmpCopyLoop
+;
+    xor al,al
+    mov es:[edi-1],al
+
+gmpCopyDone:
+    clc
+
+gmpDone:
+    pop edi
+    pop esi
+    pop ebx
+    pop eax
+    pop ds
+    ret
+get_process_info    Endp
+
+get_process_info16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call get_process_info
+;
+    pop edi
+    pop ecx
+    ret
+get_process_info16   Endp
+
+get_process_info32   Proc far
+    call get_process_info
+    ret
+get_process_info32   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5356,6 +5509,13 @@ InitExec_    Proc near
     mov ax,get_program_modules_nr
     RegisterUserGate
 ;
+    mov ebx,OFFSET get_program_processes16
+    mov esi,OFFSET get_program_processes32
+    mov edi,OFFSET get_program_processes_name
+    mov dx,virt_es_in
+    mov ax,get_program_processes_nr
+    RegisterUserGate
+;
     mov ebx,OFFSET get_dll_handle16
     mov esi,OFFSET get_dll_handle32
     mov edi,OFFSET get_dll_handle_name
@@ -5387,6 +5547,13 @@ InitExec_    Proc near
     xor dx,dx
     mov ax,get_module_size_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_process_info16
+    mov esi,OFFSET get_process_info32
+    mov edi,OFFSET get_process_info_name
+    mov dx,virt_es_in
+    mov ax,get_process_info_nr
+    RegisterUserGate
     ret
 InitExec_    Endp
 

@@ -848,5 +848,7 @@ abort_debug_nr                   = 663
 attach_debugger_nr               = 664
 
 get_process_count_nr             = 665
+get_process_info_nr              = 666
+get_program_processes_nr         = 667
 
-usergate_entries                            = 670
+usergate_entries                 = 670

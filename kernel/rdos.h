@@ -512,11 +512,13 @@ long long RDOSAPI RdosGetModuleBase(int ID);
 long long RDOSAPI RdosGetModuleSize(int ID);
 
 int RDOSAPI RdosGetProcessCount();
+int RDOSAPI RdosGetProcessInfo(int Index, int *ID, char *NameBuf, int NameSize);
 
 int RDOSAPI RdosGetProgramCount();
 int RDOSAPI RdosGetProgramInfo(int Index, int *ID, char *NameBuf, int NameSize);
 int RDOSAPI RdosGetProgramThreads(int Index, unsigned short int *IdArr, int MaxThreads);
 int RDOSAPI RdosGetProgramModules(int Index, unsigned short int *IdArr, int MaxModules);
+int RDOSAPI RdosGetProgramProcesses(int Index, unsigned short int *IdArr, int MaxProcesses);
 
 int RDOSAPI RdosGetImageHeader(int Adapter, int Entry, TRdosObjectHeader *Header);
 int RDOSAPI RdosGetImageData(int Adapter, int Entry, void *Buf);

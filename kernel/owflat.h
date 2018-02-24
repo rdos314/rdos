@@ -1706,6 +1706,15 @@
     "done: " \
     value [eax];
 
+#pragma aux RdosGetProcessInfo = \
+    CallGate_get_process_info  \
+    CarryToBool \
+    "movzx edx,dx" \
+    "mov [esi],edx" \
+    parm [eax] [esi] [edi] [ecx] \
+    modify [edx] \
+    value [eax];
+    
 #pragma aux RdosGetProgramCount = \
     CallGate_get_program_count  \
     "jc fail" \
@@ -1735,6 +1744,14 @@
 
 #pragma aux RdosGetProgramModules = \
     CallGate_get_program_modules  \
+    "jnc Ok" \
+    "xor ecx,ecx" \
+    "Ok: " \
+    parm [eax] [edi] [ecx] \
+    value [ecx];
+
+#pragma aux RdosGetProgramProcesses = \
+    CallGate_get_program_processes  \
     "jnc Ok" \
     "xor ecx,ecx" \
     "Ok: " \

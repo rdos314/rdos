@@ -1139,6 +1139,14 @@ GetProgramModules       MACRO
         UserGate get_program_modules_nr
                 ENDM
 
+; IN   AX           Program #
+; IN   ES:(E)DI     Process ID buffer (2 bytes per entry)
+; IN   (E)CX        Max Processes
+; OUT  ECX          Process count
+GetProgramProcesses       MACRO
+        UserGate get_program_processes_nr
+                ENDM
+
 ; OUT  AX           Module count
 GetModuleCount  MACRO
         UserGate get_module_count_nr
@@ -1173,6 +1181,14 @@ GetModuleBase   MACRO
 ; OUT  EDX:EAX      Size
 GetModuleSize   MACRO
         UserGate get_module_size_nr
+                ENDM
+
+; IN   AX           Process #
+; IN   ES:(E)DI     Name buffer
+; IN   (E)CX        Max name size
+; OUT  DX           ID
+GetProcessInfo   MACRO
+        UserGate get_process_info_nr
                 ENDM
 
 ;;;;;;;;;;;; C Handles ;;;;;;;;;;;;;;;;
