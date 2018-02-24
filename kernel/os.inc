@@ -278,6 +278,14 @@ FreeGdt MACRO
     OsGate free_gdt_nr
                     ENDM
 
+CreateLdt     MACRO
+    OsGate create_ldt_nr
+                    ENDM
+
+DestroyLdt     MACRO
+    OsGate destroy_ldt_nr
+                    ENDM
+
 ;       BX          LDT DESCRIPTOR
 AllocateLdt     MACRO
     OsGate allocate_ldt_nr

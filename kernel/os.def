@@ -743,4 +743,7 @@ process_terminated_nr       = 648
 process_id_to_sel_nr        = 649
 get_process_id_nr           = 650
 
+create_ldt_nr               = 651
+destroy_ldt_nr              = 652
+
 osgate_entries              = 700

@@ -39,9 +39,6 @@ INCLUDE system.inc
 
 code    SEGMENT byte public use16 'CODE'
 
-    extrn create_ldt:near
-    extrn destroy_ldt:near
-
     assume cs:code
 
 
@@ -184,7 +181,7 @@ init_system_app    ENDP
 init_process_app_name   DB 'Init App Process',0
 
 init_process_app    PROC far
-    call create_ldt
+    CreateLdt
     call run_open_hooks
     retf32
 init_process_app    ENDP
@@ -221,7 +218,7 @@ epCloseHandled:
     mov es,ax
     mov fs,ax
     mov gs,ax
-    call destroy_ldt
+    DestroyLdt
 
 epDone:
     retf32
@@ -260,7 +257,7 @@ open_app    PROC far
     mov es:app_next,ax
     mov ds:p_app_sel,bx
 ;
-    call create_ldt
+    CreateLdt
     call run_open_hooks
 ;
     popad
@@ -298,7 +295,7 @@ close_proc_handled:
     mov es,ax
     mov fs,ax
     mov gs,ax
-    call destroy_ldt
+    DestroyLdt
 ;
     GetThread
     mov ds,ax

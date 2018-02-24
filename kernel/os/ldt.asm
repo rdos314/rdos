@@ -64,6 +64,18 @@ init_ldt    PROC near
     mov ds,ax
     mov es,ax
 ;    
+    mov esi,OFFSET create_ldt
+    mov edi,OFFSET create_ldt_name
+    xor cl,cl
+    mov ax,create_ldt_nr
+    RegisterOsGate
+;    
+    mov esi,OFFSET destroy_ldt
+    mov edi,OFFSET destroy_ldt_name
+    xor cl,cl
+    mov ax,destroy_ldt_nr
+    RegisterOsGate
+;    
     mov esi,OFFSET allocate_ldt
     mov edi,OFFSET allocate_name
     xor cl,cl
@@ -96,9 +108,9 @@ init_ldt    ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public create_ldt
+create_ldt_name   DB 'Create LDT', 0
 
-create_ldt      PROC near
+create_ldt      PROC far
     push ds
     push es
     pusha
@@ -147,7 +159,7 @@ init_ldt_loop:
     popa
     pop es
     pop ds
-    ret
+    retf32
 create_ldt      ENDP
 
 
@@ -162,9 +174,9 @@ create_ldt      ENDP
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public destroy_ldt
+destroy_ldt_name DB 'Destroy LDT', 0
 
-destroy_ldt     PROC near
+destroy_ldt     PROC far
     push ds
     push es
     push ax
@@ -188,7 +200,7 @@ destroy_ldt     PROC near
     pop ax
     pop es
     pop ds
-    ret
+    retf32
 destroy_ldt     ENDP
 
 
