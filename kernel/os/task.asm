@@ -9567,6 +9567,10 @@ init_first_process      Proc near
     mov es:p_int_count,0
     mov es:p_core,fs
     mov es:p_sleep_sel,0
+;
+    mov ds,ds:p_proc_sel
+    mov ds:pf_thread_count,1
+    mov ds:pf_thread_arr,0
     ret
 init_first_process      Endp
     
