@@ -161,15 +161,15 @@ pr_process_arr       DW MAX_PROGRAM_PROCESSES DUP(?)
 
 program_struc    ENDS
 
-new_process_struc    STRUC
+process_struc    STRUC
 
-pf_program_id         DW ?
-pf_program_sel        DW ?
+pf_program_id        DW ?
+pf_program_sel       DW ?
 
 pf_thread_count      DW ?
 pf_thread_arr        DW MAX_PROCESS_THREADS DUP(?)
 
-new_process_struc    ENDS
+process_struc    ENDS
 
 loader_interface_struc    STRUC
 
