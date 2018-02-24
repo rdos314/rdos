@@ -8514,6 +8514,63 @@ create_thread32 Proc far
     retf32
 create_thread32 Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           remove_process_thread
+;
+;           DESCRIPTION:    Remove thread from process
+;
+;           PARAMETERS:     ES      Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+remove_process_thread    Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+;
+    mov ds,es:p_proc_sel
+    EnterSection ds:pf_section
+;
+    mov ax,es:p_id
+    movzx ecx,ds:pf_thread_count
+    mov ebx,OFFSET pf_thread_arr
+    or ecx,ecx
+    jz rptLeave
+
+rptLoop:
+    cmp ax,ds:[ebx]
+    je rptFound
+;
+    add bx,2
+    loop rptLoop
+;
+    jmp rptLeave
+
+rptFound:
+    dec ds:pf_thread_count
+;
+    sub ecx,1
+    jz rptLeave
+
+rptMove:
+    mov ax,ds:[ebx+2]
+    mov ds:[ebx],ax
+    add ebx,2
+    loop rptMove
+
+rptLeave:
+    LeaveSection ds:pf_section
+            
+rptDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+remove_process_thread    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -8558,6 +8615,9 @@ terminate_thread:
 terminate_thread_not_user:
     GetThread
     mov ds,ax
+    mov es,ax
+    call remove_process_thread
+;
     mov al,ds:p_parent_switch
     or al,al
     jz terminate_focus_ok
