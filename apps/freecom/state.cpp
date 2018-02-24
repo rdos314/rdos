@@ -485,19 +485,10 @@ void TStateCommand::WriteProgramModules(int pid)
 ##########################################################################*/
 void TStateCommand::WriteOneProcess(int pid, const char *Name)
 {
-    char str[50];
     int i;
     int ThreadCount = RdosGetProcessThreads(pid, TIdBuf, 256);
 
-    sprintf(str, "%04hX ", pid);
-    Write(str);
-
-    strncpy(str, Name, 45);
-    str[42] = 0;
-    while (strlen(str) < 41)
-        strcat(str, " ");
-
-    Write(str);
+    Write(Name);
     Write("\r\n");
 
     for (i = 0; i < ThreadCount; i++)
@@ -529,7 +520,7 @@ void TStateCommand::WriteProcessById(int pid)
         {
             if (id == pid)
             {
-                Write(" ");
+                Write(" Process: ");
                 WriteOneProcess(pid, buf);
                 ok = TRUE;
             }
