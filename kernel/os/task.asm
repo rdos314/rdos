@@ -7557,6 +7557,141 @@ trap_init_tasking       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddHexByte
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     ES:EDI       Buffer
+;                           AL          Byte to write
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+AddHexByte    PROC near
+    push eax
+;    
+    mov ah,al
+    and al,0F0h
+    rol al,4
+    cmp al,0Ah
+    jb add_byte_low1
+;    
+    add al,7
+
+add_byte_low1:
+    add al,'0'
+    stosb
+;
+    mov al,ah
+    and al,0Fh
+    cmp al,0Ah
+    jb add_byte_high1
+;
+    add al,7
+
+add_byte_high1:
+    add al,'0'
+    stosb
+;
+    pop eax
+    ret
+AddHexByte    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddHexWord
+;
+;           DESCRIPTION:    
+;
+;           PARAMETERS:     ES:EDI       Buffer
+;                           AX           Word to write
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+AddHexWord    PROC near
+    xchg al,ah
+    call AddHexByte
+    xchg al,ah
+    call AddHexByte
+    ret
+AddHexWord    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           create_process_sel
+;
+;       DESCRIPTION:    Create process selector
+;
+;       PARAMETERS:     BX          Program ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_process_sel Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ax,es
+    mov fs,ax
+;
+    mov eax,SIZE process_struc + 4
+    AllocateSmallGlobalMem
+;
+    mov es:pf_thread_count,0
+    mov es:pf_program_id,bx
+    InitSection es:pf_section
+;
+    mov fs:p_prog_id,bx
+    movzx ebx,bx
+    GetProgramSel
+    mov es:pf_program_sel,ax
+    mov fs:p_prog_sel,ax
+;
+    mov ds,ax
+    mov bx,es
+    movzx ebx,bx
+    ProcessCreated
+;
+    push ax
+    mov edi,OFFSET pf_name
+    call AddHexWord
+    xor al,al
+    stosb
+    pop ax
+;
+    EnterSection ds:pr_section
+;
+    movzx ecx,ds:pr_process_count
+    cmp ecx,MAX_PROGRAM_PROCESSES
+    jae cpsLeave
+;
+    mov ebx,ecx
+    shl ebx,1
+    inc ecx
+    mov ds:pr_process_count,cx
+;
+    mov ds:[ebx].pr_process_arr,ax
+    
+cpsLeave:
+    LeaveSection ds:pr_section
+;
+    mov fs:p_proc_id,ax
+    movzx ebx,ax
+    ProcessIdToSel
+    mov fs:p_proc_sel,bx
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+create_process_sel Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           INIT_THREAD_BLOCK
 ;
 ;           DESCRIPTION:    Init thread content
@@ -7644,12 +7779,18 @@ init_thread_block       ENDP
 ;
 ;           DESCRIPTION:    Init process content
 ;
-;           PARAMETERS:         ES          Thread
+;           PARAMETERS:     ES        Thread
+;                           BX        Program ID
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 init_process_block      PROC near
+    or bx,bx
+    je ipbNoCreate
+;
+    call create_process_sel
+
+ipbNoCreate:
     push es
     mov eax,SIZE process_seg
     AllocateSmallGlobalMem
@@ -8598,6 +8739,7 @@ init_process_callback   ENDP
 ;
 ;           PARAMETERS:     AL          Priority
 ;                           AH          Mode, 0=Protected mode, 1=V86 mode, 2=Long mode
+;                           BX          Program ID
 ;                           ECX         Stack size
 ;                           DS:ESI      Start address
 ;                           ES:EDI      Thread name
@@ -8621,6 +8763,7 @@ create_process  PROC far
     push edx
     push esi
     push edi
+;
     mov [ebp].cr_seg,ds
     mov [ebp].cr_offs,esi
     xor dx,dx
@@ -8639,6 +8782,8 @@ create_process  PROC far
     call init_thread_block
     mov es:p_debug_proc,0
     mov es:p_debug_event,0
+;
+    mov bx,[ebp].cr_ebx
     call init_process_block
     mov ax,es
     mov ds,ax
@@ -8940,6 +9085,7 @@ fork_process  PROC far
 ;    
     mov eax,fs:p_debug_proc
     mov es:p_debug_proc,eax
+    mov bx,1
     call init_process_block
 ;    
     mov ax,es
@@ -9330,6 +9476,8 @@ init_first_process      Proc near
     call create_initial_tss
 ;
     call create_first_thread
+;
+    xor bx,bx
     call init_process_block
     mov ax,es
     mov ds,ax
