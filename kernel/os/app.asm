@@ -213,12 +213,6 @@ epRetryApp:
     call fword ptr ds:app_close_proc
 
 epCloseHandled:
-    xor ax,ax
-    mov ds,ax
-    mov es,ax
-    mov fs,ax
-    mov gs,ax
-    DestroyLdt
 
 epDone:
     retf32
@@ -290,13 +284,6 @@ close_app       PROC far
     call fword ptr ds:app_close_proc
 
 close_proc_handled:
-    xor ax,ax
-    mov ds,ax
-    mov es,ax
-    mov fs,ax
-    mov gs,ax
-    DestroyLdt
-;
     GetThread
     mov ds,ax
     mov es,ds:p_app_sel

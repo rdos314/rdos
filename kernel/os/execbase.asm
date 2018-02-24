@@ -2074,6 +2074,7 @@ ukDone:
     CloseCFile
 ;
     FreeMem
+    DestroyLdt
     call RemoveProg
     TerminateThread
 
