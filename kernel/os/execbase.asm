@@ -2087,7 +2087,6 @@ attach_debugger   Proc far
     push ebx
     push ecx
 ;
-    int 3
     push ebx
     movzx ebx,dx
     ModuleIdToSel

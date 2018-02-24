@@ -5770,6 +5770,7 @@ attach_thread:
     int 3
     mov ax,250
     WaitMilliSec
+
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5789,7 +5790,6 @@ attach_debug  Proc far
     push es
     pushad
 ;
-    int 3
     mov eax,cs
     mov ds,eax
     mov es,eax
