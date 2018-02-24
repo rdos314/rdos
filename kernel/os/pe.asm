@@ -561,6 +561,42 @@ CreateAttachProcessEvent Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AttachExceptionEvent
+;
+;           DESCRIPTION:    Attach exception event
+;
+;           PARAMETERS:     GS          Program sel
+;
+;           RETURNS:        ES          Event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AttachExceptionEvent Proc near
+    push eax
+    push edi
+;
+    mov eax,SIZE exception_event_struc
+    mov di,SIZE event_struc
+    add ax,di
+    AllocateSmallGlobalMem
+    sub ax,di
+    mov es:event_size,ax
+    mov es:event_code,EVENT_EXCEPTION
+    mov es:[di].excCode,80000003h
+    mov es:[di].excPtr,0
+;
+    mov eax,ds:lib_org_eip
+    mov es:[di].excEip,eax
+    mov es:[di].excCs,flat_code_sel
+;
+    pop edi
+    pop eax
+    ret
+AttachExceptionEvent Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           TerminateProcessEvent
 ;
 ;           DESCRIPTION:    Terminate process debug event
@@ -5922,6 +5958,9 @@ attach_thread:
     WaitMilliSec
 ;
     call CreateAttachProcessEvent
+    call SendAttachEvent
+;
+    call AttachExceptionEvent
     call SendAttachEvent
 ;
     mov ds:mod_debug_id,dx
