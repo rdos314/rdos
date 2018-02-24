@@ -312,28 +312,6 @@ close_proc_handled:
 
 close_app_last:
     FreeMem
-;
-    GetThread
-    mov es,ax
-    cli
-    mov bx,fs
-    or bx,bx
-    jz close_app_ldt_data
-;
-    mov bx,fs:app_ldt_data_sel
-
-close_app_ldt_data:
-    mov ds:p_ldt_sel,bx
-;
-    mov bx,fs
-    or bx,bx
-    jz close_app_ldt
-;
-    mov bx,fs:app_ldt_sel
-
-close_app_ldt:
-    mov es:p_ldt,bx
-    lldt bx
     sti
     retf32
 close_app       ENDP

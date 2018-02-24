@@ -302,12 +302,6 @@ app_psp_mode                DB ?
 app_dta_mode                DB ?
 app_find_sel                DW ?
 
-app_ldt_section             section_typ <>
-app_ldt_data_sel            DW ?
-app_ldt_free                DW ?
-app_ldt_sel                 DW ?
-app_parent_ldt              DW ?
-
 app_handle_sel              DW ?
 app_handle_mem_sel          DW ?
 app_c_handle_sel            DW ?

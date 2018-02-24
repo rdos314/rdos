@@ -150,6 +150,11 @@ pr_switch            DB ?,?
 
 pr_section           section_typ <>
 
+pr_ldt_sel           DW ?
+pr_ldt_data_sel      DW ?
+pr_ldt_free          DW ?
+pr_ldt_section       section_typ <>
+
 pr_module_count      DW ?
 pr_module_arr        DW MAX_PROGRAM_MODULES DUP(?)
 

@@ -33,6 +33,7 @@ INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE int.def
 INCLUDE protseg.def
+INCLUDE exec.def
 
 ldt_start       EQU 80h
 
@@ -102,12 +103,6 @@ create_ldt      PROC near
     push es
     pusha
 ;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    sldt bx
-    mov ds:app_parent_ldt,bx
-;
     mov eax,10000h
     AllocateBigLinear
     AllocateGdt
@@ -117,18 +112,22 @@ create_ldt      PROC near
     GetThread
     mov es,ax
     mov es:p_ldt,bx
-    mov ds:app_ldt_sel,bx
+;
+    mov ds,es:p_prog_sel
+    mov ds:pr_ldt_sel,bx
     lldt bx
+;
     AllocateGdt
     CreateDataSelector16
     GetThread
     mov es,ax
     mov es:p_ldt_sel,bx
-    mov ds:app_ldt_data_sel,bx
+    mov ds:pr_ldt_data_sel,bx
     mov es,bx
     xor di,di
     mov dx,8
     mov cx,200h
+
 init_ldt_loop:
     mov ax,dx
     stosw
@@ -138,11 +137,12 @@ init_ldt_loop:
     stosw
     add dx,8
     loop init_ldt_loop
+;
     sub di,8
     stosw
 ;
-    InitSection ds:app_ldt_section
-    mov ds:app_ldt_free,ldt_start
+    InitSection ds:pr_ldt_section
+    mov ds:pr_ldt_free,ldt_start
 ;       
     popa
     pop es
@@ -172,27 +172,18 @@ destroy_ldt     PROC near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_ldt_sel
-    cmp ax,ds:app_parent_ldt
-    je destroy_ldt_done
 ;
-    GetThread
-    mov ds,ax
     xor bx,bx
     xchg bx,ds:p_ldt
     xor ax,ax
     lldt ax
     FreeGdt
 ;
-    GetThread
-    mov ds,ax
     xor ax,ax
     xchg ax,ds:p_ldt_sel
     mov es,ax
     FreeMem
-
-destroy_ldt_done:
+;
     pop bx
     pop ax
     pop es
@@ -221,19 +212,21 @@ allocate_ldt    PROC far
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_prog_sel
     pop ax
 ;
     mov bx,ds   
     push bx
     mov ds,bx
     mov es,bx
-    EnterSection ds:app_ldt_section
-    mov ds,ds:app_ldt_data_sel
+    EnterSection ds:pr_ldt_section
+    mov ds,ds:pr_ldt_data_sel
+
 allocate_ldt_again:
-    mov bx,es:app_ldt_free
+    mov bx,es:pr_ldt_free
     or bx,bx
     jnz allocate_ldt_ok
+;
     push ds
     push ax
     push cx
@@ -257,6 +250,7 @@ allocate_ldt_again:
     mov dx,ax
     add dx,8
     mov cx,200h
+
 extend_ldt_loop:
     mov ax,dx
     stosw
@@ -266,11 +260,12 @@ extend_ldt_loop:
     stosw
     add dx,8
     loop extend_ldt_loop
+;
     sub di,8
     stosw
     sub dx,1008h
     pop es
-    mov es:app_ldt_free,dx
+    mov es:pr_ldt_free,dx
     sldt ax
     lldt ax
     pop dx
@@ -278,16 +273,18 @@ extend_ldt_loop:
     pop ax
     pop ds
     jmp allocate_ldt_again
+
 allocate_ldt_ok:
     mov di,[bx]
     cmp di,0FFFFh
     jne al1
     int 3
+
 al1:
-    mov es:app_ldt_free,di
+    mov es:pr_ldt_free,di
     mov di,ds
     pop ds
-    LeaveSection ds:app_ldt_section
+    LeaveSection ds:pr_ldt_section
     mov ds,di
 ;
     pop di
@@ -334,6 +331,7 @@ allocate_mldt_extend    PROC near
     mov dx,ax
     add dx,8
     mov cx,200h
+
 extend_mldt_loop:
     mov ax,dx
     stosw
@@ -343,11 +341,12 @@ extend_mldt_loop:
     stosw
     add dx,8
     loop extend_mldt_loop
+;
     sub di,8
     stosw
     pop es
     sub dx,1008h
-    mov es:app_ldt_free,dx
+    mov es:pr_ldt_free,dx
     pop dx
     add dx,1000h
     pop cx
@@ -373,68 +372,85 @@ allocate_multiple_ldt   PROC far
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel 
+    mov ds,ds:p_prog_sel 
     pop ax
     mov bx,ds
     mov es,bx
     push ds
-    EnterSection ds:app_ldt_section
-    mov ds,ds:app_ldt_data_sel
+    EnterSection ds:pr_ldt_section
+    mov ds,ds:pr_ldt_data_sel
     mov bx,ldt_start
+
 allocate_mldt_retry_loop:
     push cx
+
 allocate_mldt_loop:
     mov al,[bx+5]
     add bx,8
     or al,al
     jz allocate_mldt_free
+;
     pop cx
     jmp allocate_mldt_retry_loop
+
 allocate_mldt_free:
     cmp bx,dx
     jne allocate_mldt_next
+;
     call allocate_mldt_extend
+
 allocate_mldt_next:
     loop allocate_mldt_loop
+;
     pop cx
     push cx
     mov dx,cx
     shl dx,3
     sub bx,dx
-    mov ax,es:app_ldt_free
+    mov ax,es:pr_ldt_free
+
 allocate_mldt_head_first_loop:
     sub ax,bx
     jc allocate_mldt_head_unalloc
+;
     cmp ax,dx
     jnc allocate_mldt_head_unalloc
+;
     add ax,bx
     mov si,ax
     mov ax,[si]
-    mov es:app_ldt_free,ax
+    mov es:pr_ldt_free,ax
     loop allocate_mldt_head_first_loop
+;
     jmp allocate_mldt_end
+
 allocate_mldt_head_unalloc:
     add ax,bx
     mov si,ax
     mov di,ax
+
 allocate_mldt_selector_head_loop:
     mov ax,[si]
     sub ax,bx
     jc allocate_mldt_save_head
+;
     cmp ax,dx
     jnc allocate_mldt_save_head
+;
     mov si,[si]
     loop allocate_mldt_selector_head_loop
+
 allocate_mldt_save_head:
     mov si,[si]
     mov [di],si
     mov di,si
     or cx,cx
     jnz allocate_mldt_selector_head_loop
+
 allocate_mldt_end:
     pop cx
     pop ds
-    LeaveSection ds:app_ldt_section
+    LeaveSection ds:pr_ldt_section
 ;
     pop di
     pop si
@@ -444,7 +460,6 @@ allocate_mldt_end:
     pop ds
     retf32
 allocate_multiple_ldt   ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -467,20 +482,20 @@ free_ldt    PROC far
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_prog_sel
     pop ax
 ;       
     push ds
-    EnterSection ds:app_ldt_section
+    EnterSection ds:pr_ldt_section
     mov si,ds
     mov es,si
-    mov ds,ds:app_ldt_data_sel
+    mov ds,ds:pr_ldt_data_sel
     mov byte ptr [bx+5],0
-    mov si,es:app_ldt_free
+    mov si,es:pr_ldt_free
     mov [bx],si
-    mov es:app_ldt_free,bx
+    mov es:pr_ldt_free,bx
     pop ds
-    LeaveSection ds:app_ldt_section
+    LeaveSection ds:pr_ldt_section
     pop si
     pop es
     pop ds
