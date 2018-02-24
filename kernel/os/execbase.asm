@@ -240,7 +240,6 @@ InitProgramBlock Proc near
     mov gs:pr_debug_id,0
     mov gs:pr_thread,0
     mov gs:pr_switch,0
-    mov gs:pr_thread_count,0
     mov gs:pr_module_count,0
     mov gs:pr_process_count,0
     InitSection gs:pr_section
@@ -371,121 +370,6 @@ RemoveProg Proc near
 rpDone:
     ret
 RemoveProg Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AddProgramThread
-;
-;           DESCRIPTION:    Add thread to program
-;
-;           PARAMETERS:     ES      Thread
-;                           BX      Program ID
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddProgramThread    Proc near
-    push ds
-    push eax
-    push ebx
-    push ecx
-;
-    GetProgramSel
-    jc aptDone
-;
-    mov ds,eax
-    EnterSection ds:pr_section
-;
-    movzx ecx,ds:pr_thread_count
-    cmp ecx,MAX_PROGRAM_THREADS
-    jae aptLeave
-;
-    mov ebx,ecx
-    shl ebx,1
-    inc ecx
-    mov ds:pr_thread_count,cx
-;
-    mov ax,es:p_id
-    mov ds:[ebx].pr_thread_arr,ax
-    
-aptLeave:
-    LeaveSection ds:pr_section
-            
-aptDone:
-    pop ecx
-    pop ebx
-    pop eax
-    pop ds
-    ret
-AddProgramThread    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           RemoveProgramThread
-;
-;           DESCRIPTION:    Remove thread from program
-;
-;           PARAMETERS:     ES      Thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemoveProgramThread    Proc near
-    push ds
-    push eax
-    push ebx
-    push ecx
-;
-    movzx ebx,es:p_prog_id
-    or ebx,ebx
-    jnz rptStart
-;
-    mov ebx,1
-
-rptStart:
-    GetProgramSel
-    jc rptDone
-;
-    mov ds,eax
-    EnterSection ds:pr_section
-;
-    mov ax,es:p_id
-    movzx ecx,ds:pr_thread_count
-    mov ebx,OFFSET pr_thread_arr
-    or ecx,ecx
-    jz rptLeave
-
-rptLoop:
-    cmp ax,ds:[ebx]
-    je rptFound
-;
-    add bx,2
-    loop rptLoop
-;
-    jmp rptLeave
-
-rptFound:
-    dec ds:pr_thread_count
-;
-    sub ecx,1
-    jz rptLeave
-
-rptMove:
-    mov ax,ds:[ebx+2]
-    mov ds:[ebx],ax
-    add ebx,2
-    loop rptMove
-
-rptLeave:
-    LeaveSection ds:pr_section
-            
-rptDone:
-    pop ecx
-    pop ebx
-    pop eax
-    pop ds
-    ret
-RemoveProgramThread    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2097,7 +1981,7 @@ attach_debugger   Proc far
     stc
     jz atdDone
 ;
-    mov cx,gs:pr_thread_count
+    mov cx,gs:pr_process_count
     or cx,cx
     stc
     jz atdDone
@@ -2105,7 +1989,8 @@ attach_debugger   Proc far
     mov fs,gs:pr_loader
     call fword ptr fs:loader_attach_debug_proc
 ;
-    mov ax,gs:pr_thread_arr
+    mov gs,gs:pr_process_arr
+    mov ax,gs:pf_thread_arr
 
 atdDone:
     pop ecx

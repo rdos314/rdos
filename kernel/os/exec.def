@@ -133,8 +133,6 @@ MAX_PROGRAM_MODULES   = 256
 MAX_PROGRAM_PROCESSES = 256
 MAX_PROCESS_THREADS   = 256
 
-MAX_PROGRAM_THREADS = 256
-
 program_struc    STRUC
 
 pr_loader            DW ?
@@ -154,9 +152,6 @@ pr_section           section_typ <>
 
 pr_module_count      DW ?
 pr_module_arr        DW MAX_PROGRAM_MODULES DUP(?)
-
-pr_thread_count      DW ?
-pr_thread_arr        DW MAX_PROGRAM_THREADS DUP(?)
 
 pr_process_count     DW ?
 pr_process_arr       DW MAX_PROGRAM_PROCESSES DUP(?)

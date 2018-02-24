@@ -524,7 +524,8 @@ CreateAttachProcessEvent Proc near
     GetProgramSel
     mov gs,eax
 ;
-    movzx ebx,gs:pr_thread_arr
+    mov ds,gs:pr_process_arr
+    movzx ebx,ds:pf_thread_arr
     mov es:[di].cpeThread,eax       
 ;
     movzx ebx,gs:pr_module_arr
