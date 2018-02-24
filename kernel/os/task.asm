@@ -9251,7 +9251,7 @@ init_prot_callback_frame    PROC near
     pop bp
     xor eax,eax
     mov eax,ds:cm_stack
-    AllocateLocalMem
+    AllocateSmallGlobalMem
 ;
     push 0
     push es
@@ -9336,7 +9336,6 @@ create_process_callback:
 ;
     push ds
     call trap_create_process
-    CreateLdt
     InitProcessApp
     pop ds
 ;

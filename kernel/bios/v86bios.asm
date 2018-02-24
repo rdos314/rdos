@@ -332,6 +332,8 @@ HandleOutputSel Endp
 bios_name       DB 'V86 BIOS',0
 
 bios_process:
+    CreateLdt
+;
     mov al,16
     SetBitness
 ;

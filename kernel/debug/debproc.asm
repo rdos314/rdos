@@ -588,6 +588,7 @@ HandleMouse     Endp
 debug_name          DB 'Debug',0
 
 debug_process:
+    CreateLdt
     sti
     mov ax,42h
     EnableFocus
