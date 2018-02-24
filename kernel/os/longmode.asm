@@ -1740,6 +1740,7 @@ init_task:
     mov edi,OFFSET test_process_name
     mov ax,202h
     mov ecx,1000h
+    mov bx,1
     CreateProcess
 ;
     popad

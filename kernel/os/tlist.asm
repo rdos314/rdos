@@ -79,6 +79,7 @@ InitTasking_      PROC far
     mov edi,OFFSET tlist_name
     mov ecx,stack0_size
     mov ax,2
+    mov bx,1
     CreateProcess
     popa
     pop es

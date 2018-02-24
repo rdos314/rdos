@@ -626,6 +626,7 @@ void RdosCreateKernelThread(
             void *parm);
 
 void RdosCreateKernelProcess(
+            int progid,
             int prio,
             int stack,
             __rdos_thread_callback *startup,

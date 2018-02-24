@@ -3233,7 +3233,7 @@ setup_names Endp
 ;
 ;           DESCRIPTION:    Create process
 ;
-;           PARAMETERS:     BX                 Module selector
+;           PARAMETERS:     BX                 Program ID
 ;                           ES:EDI             Thread name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

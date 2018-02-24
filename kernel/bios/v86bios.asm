@@ -600,6 +600,7 @@ init_process    PROC far
     mov esi,OFFSET bios_process
     mov edi,OFFSET bios_name
     mov ecx,stack0_size
+    mov bx,1
     mov ax,5
     CreateProcess
     popa

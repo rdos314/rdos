@@ -1593,11 +1593,12 @@ Sleep    MACRO
     OsGate sleep_thread_nr
                     ENDM
 
-;       AL          PRIORITET
-;       AH          MODE, 0=Protected mode, 1=V86 mode, 2=Long mode
-;       ECX         STACK SIZE
-;       DS:ESI      ADDRESS TO START AT
-;       ES:EDI      PROCESS NAME
+; IN  AL          PRIORITET
+; IN  AH          MODE, 0=Protected mode, 1=V86 mode, 2=Long mode
+; IN  BX          Program ID
+; IN  ECX         STACK SIZE
+; IN  DS:ESI      ADDRESS TO START AT
+; IN  ES:EDI      PROCESS NAME
 CreateProcess    MACRO
     OsGate create_process_nr
                         ENDM

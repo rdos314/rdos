@@ -1918,6 +1918,7 @@ remote_debug    Proc far
     mov edi,OFFSET debug_name
     mov ecx,stack0_size
     mov ax,20
+    mov bx,1
     CreateProcess
     popa
     pop es

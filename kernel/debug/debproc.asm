@@ -635,6 +635,7 @@ init_local_debug      PROC near
     mov edi,OFFSET debug_name
     mov ecx,stack0_size
     mov ax,26
+    mov bx,1
     CreateProcess
     ret
 init_local_debug      ENDP

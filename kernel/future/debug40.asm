@@ -236,6 +236,7 @@ init_debug_process	PROC far
 	mov di,OFFSET debug_name
 	mov ecx,512
 	mov ax,26
+        mov bx,1
 	CreateProcess
 	popa
 	pop es
