@@ -7528,6 +7528,7 @@ trap_init_tasking       PROC near
     InitTrapGates
     InitSystemApp
     call trap_create_process
+    CreateLdt
     InitProcessApp
 ;
     push cx
@@ -9335,6 +9336,7 @@ create_process_callback:
 ;
     push ds
     call trap_create_process
+    CreateLdt
     InitProcessApp
     pop ds
 ;

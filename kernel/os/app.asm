@@ -181,7 +181,6 @@ init_system_app    ENDP
 init_process_app_name   DB 'Init App Process',0
 
 init_process_app    PROC far
-    CreateLdt
     call run_open_hooks
     retf32
 init_process_app    ENDP
