@@ -168,8 +168,12 @@ process_struc    STRUC
 pf_program_id        DW ?
 pf_program_sel       DW ?
 
+pf_section           section_typ <>
+
 pf_thread_count      DW ?
 pf_thread_arr        DW MAX_PROCESS_THREADS DUP(?)
+
+pf_name              DB ?
 
 process_struc    ENDS
 

@@ -242,6 +242,7 @@ InitProgramBlock Proc near
     mov gs:pr_switch,0
     mov gs:pr_thread_count,0
     mov gs:pr_module_count,0
+    mov gs:pr_process_count,0
     InitSection gs:pr_section
     ret
 InitProgramBlock  Endp
@@ -657,6 +658,116 @@ rpmDone:
     pop ds
     ret
 RemoveProgramModule    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateProcess
+;
+;       DESCRIPTION:    Allocate process
+;
+;       PARAMETERS:     BX          Program ID
+;                       ES:EDI      Process name
+;
+;       RETURNS:        BX          Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateProcess Proc near
+    push ds
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    mov eax,es
+    mov ds,eax
+    mov esi,edi
+    xor ecx,ecx
+
+apLoop:
+    lods byte ptr ds:[esi]
+    or al,al
+    jz apSizeOk
+;
+    inc ecx
+    jmp apLoop
+
+apSizeOk:
+    mov esi,edi
+    mov eax,ecx
+    add eax,SIZE process_struc
+    AllocateSmallGlobalMem
+    mov edi,OFFSET pf_name
+    inc ecx
+    rep movs byte ptr es:[edi],ds:[esi]     
+;
+    mov es:pf_thread_count,0
+    mov es:pf_program_id,bx
+    InitSection es:pf_section
+;
+    movzx ebx,bx
+    GetProgramSel
+    mov es:pf_program_sel,ax
+;
+    mov ebx,es
+;    
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    ret
+AllocateProcess Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddProcessThread
+;
+;           DESCRIPTION:    Add thread to process
+;
+;           PARAMETERS:     ES      Thread
+;                           BX      Process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddProcessThread    Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+;
+    ProcessIdToSel
+    jc apftDone
+;
+    mov ds,ebx
+    EnterSection ds:pf_section
+;
+    movzx ecx,ds:pf_thread_count
+    cmp ecx,MAX_PROCESS_THREADS
+    jae apftLeave
+;
+    mov ebx,ecx
+    shl ebx,1
+    inc ecx
+    mov ds:pf_thread_count,cx
+;
+    mov ax,es:p_id
+    mov ds:[ebx].pf_thread_arr,ax
+    
+apftLeave:
+    LeaveSection ds:pf_section
+            
+apftDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+AddProcessThread    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1260,6 +1371,8 @@ AddKernelModule     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+proc_name  DB '01', 0
+
 spawn_startup:
     sti
     GetThread
@@ -1272,6 +1385,21 @@ spawn_startup:
     GetProgramSel
     mov es:p_prog_sel,ax
     mov gs,eax
+;
+    push es
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET proc_name
+    call AllocateProcess
+    pop es
+;
+    movzx ebx,bx
+    ProcessCreated
+    mov gs:pr_process_arr,ax
+    mov gs:pr_process_count,1
+;
+    mov bx,ax
+    call AddProcessThread
 ;
     SaveContext
     xor eax,eax

@@ -1118,7 +1118,7 @@ GetModuleId    MACRO
 ;  IN  EBX  	Selector
 ;  OUT AX   	PID
 ProcessCreated    MACRO
-    OsGate process_loaded_nr
+    OsGate process_created_nr
                     ENDM
 
 ;  IN  EBX  	Selector
