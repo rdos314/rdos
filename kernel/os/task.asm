@@ -7785,12 +7785,8 @@ init_thread_block       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_process_block      PROC near
-    or bx,bx
-    je ipbNoCreate
-;
     call create_process_sel
-
-ipbNoCreate:
+;
     push es
     mov eax,SIZE process_seg
     AllocateSmallGlobalMem
@@ -9477,7 +9473,7 @@ init_first_process      Proc near
 ;
     call create_first_thread
 ;
-    xor bx,bx
+    mov bx,1
     call init_process_block
     mov ax,es
     mov ds,ax
