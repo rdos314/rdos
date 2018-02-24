@@ -223,15 +223,15 @@ unload_dos_ext:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           InitProcessBlock
+;       NAME:           InitProgramBlock
 ;
-;       DESCRIPTION:    Init process block
+;       DESCRIPTION:    Init program block
 ;
-;       PARAMETERS:     GS      Process sel
+;       PARAMETERS:     GS      Program sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitProcessBlock Proc near    
+InitProgramBlock Proc near    
     mov gs:pr_name_sel,0
     mov gs:pr_cmd_sel,0
     mov gs:pr_dir_sel,0
@@ -244,21 +244,21 @@ InitProcessBlock Proc near
     mov gs:pr_module_count,0
     InitSection gs:pr_section
     ret
-InitProcessBlock  Endp
+InitProgramBlock  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocateProcess
+;       NAME:           AllocateProgram
 ;
-;       DESCRIPTION:    Allocate process
+;       DESCRIPTION:    Allocate program
 ;
 ;       PARAMETERS:     DX      Debug module ID
-;                       GS      Process sel
+;                       GS      Program sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateProcess Proc near    
+AllocateProgram Proc near    
     push ds
     pushad
 ;
@@ -282,7 +282,7 @@ apFocusDone:
     popad
     pop ds
     ret
-AllocateProcess  Endp
+AllocateProgram  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -292,7 +292,7 @@ AllocateProcess  Endp
 ;       DESCRIPTION:    Make global copy of program name
 ;
 ;       PARAMETERS:     DS:ESI      Filename
-;                       GS          Process sel
+;                       GS          Program sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -396,7 +396,7 @@ AddProgramThread    Proc near
     EnterSection ds:pr_section
 ;
     movzx ecx,ds:pr_thread_count
-    cmp ecx,MAX_PROCESS_THREADS
+    cmp ecx,MAX_PROGRAM_THREADS
     jae aptLeave
 ;
     mov ebx,ecx
@@ -819,7 +819,7 @@ OpenModuleFile Endp
 ;       PARAMETERS:     DS:ESI  File name
 ;
 ;       RETURNS:        AX      Loader
-;                       GS      Process sel
+;                       GS      Program sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -876,7 +876,7 @@ GetProgramLoader Endp
 ;
 ;       DESCRIPTION:    Make global copy of empty parameters
 ;
-;       PARAMETERS:     GS          Process sel
+;       PARAMETERS:     GS          Program sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -908,7 +908,7 @@ CreateNoParam Endp
 ;       DESCRIPTION:    Make global copy of parameters
 ;
 ;       PARAMETERS:     DS:ESI      Param pointer
-;                       GS          Process sel
+;                       GS          Program sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -952,7 +952,7 @@ CreateParam Endp
 ;
 ;       DESCRIPTION:    Make global copy of default directory
 ;
-;       PARAMETERS:     GS          Process sel
+;       PARAMETERS:     GS          Program sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -996,7 +996,7 @@ CreateDefaultStartDir Endp
 ;       DESCRIPTION:    Make global copy of start dir
 ;
 ;       PARAMETERS:     DS:ESI      Startup dir
-;                       GS          Process sel
+;                       GS          Program sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1071,10 +1071,10 @@ CreateDefaultEnv Endp
 ;
 ;       NAME:           CreateEnv
 ;
-;       DESCRIPTION:    Put environment variables in process structure
+;       DESCRIPTION:    Put environment variables in program structure
 ;
 ;       PARAMETERS:     DS:ESI  Environment ptr
-;                       GS      Process sel
+;                       GS      Program sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1120,7 +1120,7 @@ CreateEnv Endp
 ;
 ;           DESCRIPTION:    Setup start directory
 ;
-;           PARAMETERS:     GS      Process sel
+;           PARAMETERS:     GS      Program sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1166,7 +1166,7 @@ SetupStartDir   Endp
 ;
 ;           DESCRIPTION:    Setup environment
 ;
-;           PARAMETERS:     GS      Process sel
+;           PARAMETERS:     GS      Program sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1256,7 +1256,7 @@ AddKernelModule     Endp
 ;
 ;           DESCRIPTION:    Spawn startup stub
 ;
-;           PARAMETERS:     BX      Process ID
+;           PARAMETERS:     BX      Program ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1441,7 +1441,7 @@ get_exe_start32   Endp
 ;                       DX          Debug module handle
 ;
 ;       RETURN VALUE:   AX          Thread ID
-;                       DX          Process ID
+;                       DX          Program ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1467,8 +1467,8 @@ spawn_program   Proc near
     jmp spDone
 
 spLoaderOk:    
-    call InitProcessBlock
-    call AllocateProcess
+    call InitProgramBlock
+    call AllocateProgram
     mov gs:pr_loader,ax
     mov gs:pr_kernel_file,bx
 ;
@@ -1633,8 +1633,8 @@ load_program   Proc near
     jmp lpFail
 
 lpLoaderOk:    
-    call InitProcessBlock
-    call AllocateProcess
+    call InitProgramBlock
+    call AllocateProgram
     mov gs:pr_loader,ax
     mov gs:pr_kernel_file,bx
 ;
@@ -1863,15 +1863,15 @@ load_program32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           run_process
+;           NAME:           run_program
 ;
-;           DESCRIPTION:    Run processes in adapter
+;           DESCRIPTION:    Run programs in adapter
 ;
 ;           PARAMETERS:         DS:EDX  device header
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-run_process     PROC near
+run_program     PROC near
     push ds
     push es
     push fs
@@ -1890,8 +1890,8 @@ run_process     PROC near
     jmp rpFail
 
 rpLoaderOk:
-    call InitProcessBlock
-    call AllocateProcess
+    call InitProgramBlock
+    call AllocateProgram
     mov gs:pr_kernel_file,bx
     mov gs:pr_loader,ax
 ;
@@ -1924,14 +1924,14 @@ rpFail:
     pop es
     pop ds
     ret
-run_process     ENDP
+run_program     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           init_adapter_process
+;           NAME:           init_adapter_programs
 ;
-;           DESCRIPTION:    Start all processes in adapter
+;           DESCRIPTION:    Start all programs in adapter
 ;
 ;           PARAMETERS:         edx         base address
 ;
@@ -1939,7 +1939,7 @@ run_process     ENDP
 
 kernel_code_text DB 'kernel.exe', 0
 
-init_adapter_process    Proc near
+init_adapter_programs    Proc near
     push ds
     push es
     pushad
@@ -1948,15 +1948,15 @@ init_adapter_process    Proc near
     mov ds,ax
     mov es,ax
 
-init_adapter_process_loop:
+init_adapter_program_loop:
     mov ax,[edx].typ
     cmp ax,RdosCommand
-    jne not_run_process
+    jne not_run_program
 ;
-    call run_process
-    jmp init_adapter_process_next
+    call run_program
+    jmp init_adapter_program_next
 
-not_run_process:
+not_run_program:
     cmp ax,RdosKernel
     jne adapter_not_kernel
 ;
@@ -1971,7 +1971,7 @@ not_run_process:
     call AddKernelModule
     pop edx
     pop es
-    jmp init_adapter_process_next
+    jmp init_adapter_program_next
 
 adapter_not_kernel:
     cmp ax,RdosDevice16
@@ -1986,7 +1986,7 @@ adapter_not_kernel:
     xor edx,edx
     call AddKernelModule
     pop edx
-    jmp init_adapter_process_next
+    jmp init_adapter_program_next
 
 adapter_not_device16:
     cmp ax,RdosDevice32
@@ -2001,7 +2001,7 @@ adapter_not_device16:
     xor edx,edx
     call AddKernelModule
     pop edx
-    jmp init_adapter_process_next
+    jmp init_adapter_program_next
 
 adapter_not_device32:
     cmp ax,RdosLongMode
@@ -2019,25 +2019,25 @@ adapter_not_device32:
     
 adapter_not_long:
     cmp ax,RdosEnd
-    je init_adapter_process_done
+    je init_adapter_program_done
 
-init_adapter_process_next:
+init_adapter_program_next:
     add edx,[edx].len
-    jmp init_adapter_process_loop
+    jmp init_adapter_program_loop
 
-init_adapter_process_done:
+init_adapter_program_done:
     popad
     pop es
     pop ds
     ret
-init_adapter_process    Endp
+init_adapter_programs    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           StartPrograms
 ;
-;           DESCRIPTION:    Start all processes
+;           DESCRIPTION:    Start all programs
 ;
 ;       RETURN VALUE:
 ;
@@ -2056,7 +2056,7 @@ start_programs    Proc far
 
 spLoop:
     mov edx,[bx].adapter_base
-    call init_adapter_process
+    call init_adapter_programs
     add bx,SIZE adapter_typ
     loop spLoop
 ;
@@ -3446,9 +3446,9 @@ free_debug_app_mem      ENDP
 ;
 ;           NAME:           GetPrimaryModule
 ;
-;           DESCRIPTION:    Get primary module ID from process ID
+;           DESCRIPTION:    Get primary module ID from program ID
 ;
-;       PARAMETERS:         BX          Process ID
+;       PARAMETERS:         BX          Program ID
 ;
 ;           RETURNS:        AX          Primary module ID
 ;
@@ -3608,7 +3608,7 @@ is_debug_event_idle Endp
 ;
 ;           DESCRIPTION:    Add a wait for debug event
 ;
-;           PARAMETERS:     AX      Process handle
+;           PARAMETERS:     AX      Program handle
 ;                           BX      Wait handle
 ;                           ECX     Signalled ID
 ;
@@ -3664,7 +3664,7 @@ add_wait_for_debug_event    ENDP
 ;
 ;       DESCRIPTION:    Get current debug event
 ;
-;       PARAMETERS:     BX      Process handle
+;       PARAMETERS:     BX      Program handle
 ;
 ;       RETURNS:        AX      Thread ID
 ;                       BL      Event type  
@@ -3999,7 +3999,7 @@ dupl_module_file_handle  Endp
 ;                           ES:(E)DI    Name buffer
 ;                           (E)CX       Size of buffer
 ;
-;           RETURNS:        DX          process ID
+;           RETURNS:        DX          program ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4226,7 +4226,7 @@ get_program_modules32   Endp
 ;
 ;           DESCRIPTION:    Get module for a DLL or app module by index
 ;
-;           PARAMETERS:     BX          Process ID
+;           PARAMETERS:     BX          Program ID
 ;                           AX          Entry #
 ;
 ;           RETURNS:        BX          Module ID
@@ -4279,7 +4279,7 @@ get_module_by_index Endp
 ;
 ;           DESCRIPTION:    Search for a DLL or app module
 ;
-;           PARAMETERS:     BX          Process ID
+;           PARAMETERS:     BX          Program ID
 ;                           EDX         Virtual adress
 ;
 ;           RETURNS:        AX          Entry #
@@ -4354,7 +4354,7 @@ find_module_by_address Endp
 ;
 ;           DESCRIPTION:    Find module by name
 ;
-;           PARAMETERS:     BX          Process ID
+;           PARAMETERS:     BX          Program ID
 ;                           FS:ESI      App / DLL NAME
 ;
 ;           RETURNS:        AX          Entry #
@@ -4897,7 +4897,7 @@ terminate_app_thread_fail:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-system_process_name DB "System", 0
+system_program_name DB "System", 0
 
     public InitExec_
 
@@ -4939,11 +4939,11 @@ InitExec_    Proc near
     mov ax,es
     mov gs,ax
 ;
-    call InitProcessBlock
+    call InitProgramBlock
     mov eax,7
     mov ecx,eax
     AllocateSmallGlobalMem
-    mov esi,OFFSET system_process_name
+    mov esi,OFFSET system_program_name
     xor edi,edi
     rep movs byte ptr es:[edi],cs:[esi]
     mov gs:pr_name_sel,es

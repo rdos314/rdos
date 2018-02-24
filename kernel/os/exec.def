@@ -133,6 +133,8 @@ MAX_PROGRAM_MODULES   = 256
 MAX_PROGRAM_PROCESSES = 256
 MAX_PROCESS_THREADS   = 256
 
+MAX_PROGRAM_THREADS = 256
+
 program_struc    STRUC
 
 pr_loader            DW ?
@@ -154,7 +156,7 @@ pr_module_count      DW ?
 pr_module_arr        DW MAX_PROGRAM_MODULES DUP(?)
 
 pr_thread_count      DW ?
-pr_thread_arr        DW MAX_PROCESS_THREADS DUP(?)
+pr_thread_arr        DW MAX_PROGRAM_THREADS DUP(?)
 
 pr_process_count     DW ?
 pr_process_arr       DW MAX_PROGRAM_PROCESSES DUP(?)
@@ -174,23 +176,23 @@ process_struc    ENDS
 loader_interface_struc    STRUC
 
 ; IN   BX                 C file handle
-; OUT  GS                 Process sel
+; OUT  GS                 Program sel
 loader_is_valid_exe_proc       DD ?,?
 
 ; IN   DS:ESI             Image name
 ; IN   ES:EDI             Cmd line
 ; IN   BX                 C file handle
-; IN   GS                 Process sel
+; IN   GS                 Program sel
 ; OUT  BX                 Module selector
 loader_init_exe_proc           DD ?,?
 
-; IN   BX                 Process ID
+; IN   BX                 Program ID
 ; IN   ES:EDI             Thread name
 loader_create_process_proc     DD ?,?
 
 ; IN   BX                 Module selector
 ; IN   DX                 Debug lib sel
-; IN   GS                 Process sel
+; IN   GS                 Program sel
 ; IN   EBP                Stack frame
 loader_fixup_exe_proc          DD ?,?
 
