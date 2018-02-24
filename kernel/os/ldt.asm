@@ -113,7 +113,7 @@ create_ldt_name   DB 'Create LDT', 0
 create_ldt      PROC far
     push ds
     push es
-    pusha
+    pushad
 ;
     mov eax,10000h
     AllocateBigLinear
@@ -156,7 +156,7 @@ init_ldt_loop:
     InitSection ds:pr_ldt_section
     mov ds:pr_ldt_free,ldt_start
 ;       
-    popa
+    popad
     pop es
     pop ds
     retf32
@@ -211,7 +211,7 @@ destroy_ldt     ENDP
 ;
 ;           DESCRIPTION:    Allocate LDT descriptor entry
 ;
-;           RETURNS:        BX          Selector
+;           RETURNS:        DS:BX          Selector
 ;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -219,13 +219,12 @@ allocate_name   DB 'Allocate Ldt',0
 
 allocate_ldt    PROC far
     push es
+    push ax
     push di
 ;       
-    push ax
     GetThread
     mov ds,ax
     mov ds,ds:p_prog_sel
-    pop ax
 ;
     mov bx,ds   
     push bx
@@ -300,6 +299,7 @@ al1:
     mov ds,di
 ;
     pop di
+    pop ax
     pop es
     retf32
 allocate_ldt    ENDP
