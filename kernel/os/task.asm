@@ -8106,6 +8106,26 @@ create_tss64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_default_regs    PROC near
+    push ds
+    mov ax,ds:p_id
+    mov ds,ds:p_proc_sel
+    EnterSection ds:pf_section
+;
+    movzx ecx,ds:pf_thread_count
+    cmp ecx,MAX_PROCESS_THREADS
+    jae idrLeave
+;
+    mov ebx,ecx
+    shl ebx,1
+    inc ecx
+    mov ds:pf_thread_count,cx
+;
+    mov ds:[ebx].pf_thread_arr,ax
+    
+idrLeave:
+    LeaveSection ds:pf_section
+    pop ds
+;
     mov edx,cr3
     mov es:p_cr3,edx
 ;
