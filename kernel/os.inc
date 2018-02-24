@@ -2132,14 +2132,14 @@ GetExeStart32     MACRO
     OsGate get_exe_start32_nr
                     ENDM
 
-; IN  BX        Process ID
+; IN  BX        Program ID
 ; IN  AX        Entry #
 ; OUT BX        Module ID
 GetModuleByIndex    MACRO
     OsGate get_module_by_index_nr
                     ENDM
 
-; IN  BX        Process ID
+; IN  BX        Program ID
 ; IN  EDX       Address
 ; OUT AX        Entry #
 ; OUT BX        Module ID
@@ -2147,7 +2147,7 @@ FindModuleByAddress    MACRO
     OsGate find_module_by_address_nr
                     ENDM
 
-; IN  BX        Process ID
+; IN  BX        Program ID
 ; IN  FS:ESI    Module name
 ; OUT AX        Entry #
 ; OUT BX        Module ID

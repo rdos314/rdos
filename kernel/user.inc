@@ -899,17 +899,17 @@ WaitForExec     MACRO
 ;               +0  Command line
 ;               +8  Startup directory & drive
 ;               +12 Environment
-; IN  DX                Debug module handle
-; OUT AX                Thread #
-; OUT DX                Process handle
+; IN  DX                Debug module ID
+; OUT AX                Thread ID
+; OUT DX                Program ID
 SpawnExe        MACRO
         UserGate spawn_exe_nr
                                         ENDM
 
 
-; IN  BX        Process ID
-; IN  DX        Debug module handle
-; OUT AX        Thread #
+; IN  BX        Program ID
+; IN  DX        Debug module ID
+; OUT AX        Thread ID
 AttachDebugger        MACRO
         UserGate attach_debugger_nr
                                         ENDM
@@ -1433,38 +1433,38 @@ SuspendAndSignalThread     MACRO
         UserGate suspend_and_signal_thread_nr
                                                 ENDM
 
-;  IN  AX   Process handle
-;  IN  BX       Wait handle
+;  IN  AX   Program ID
+;  IN  BX   Wait handle
 ;  IN  ECX  Signalled ID
 AddWaitForDebugEvent MACRO
         UserGate add_wait_for_debug_event_nr
                                                 ENDM
 
-;  IN  BX   Process handle
-;  OUT AX   Thread #
+;  IN  BX   Program ID
+;  OUT AX   Thread ID
 ;  OUT BL   Event type  
 GetDebugEvent MACRO
         UserGate get_debug_event_nr
                                                 ENDM
 
-;  IN  BX       Process handle
+;  IN  BX       Program ID
 ;  IN  ES:EDI   Event buffer
 GetDebugEventData MACRO
         UserGate get_debug_event_data_nr
                                                 ENDM
 
-;  IN  BX       Process handle
+;  IN  BX       Program ID
 ClearDebugEvent MACRO
         UserGate clear_debug_event_nr
                                                 ENDM
 
-;  IN  BX       Process handle
-;  IN  EAX          Thread #
+;  IN  BX       Program ID
+;  IN  EAX      Thread ID
 ContinueDebugEvent MACRO
         UserGate continue_debug_event_nr
                                                 ENDM
 
-;  IN  BX       Process handle
+;  IN  BX       Program ID
 AbortDebug MACRO
         UserGate abort_debug_nr
                                                 ENDM
