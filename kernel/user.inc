@@ -1144,6 +1144,11 @@ GetModuleCount  MACRO
         UserGate get_module_count_nr
                 ENDM
 
+; OUT  AX           Process count
+GetProcessCount  MACRO
+        UserGate get_process_count_nr
+                ENDM
+
 ; IN   AX           Module #
 ; IN   ES:(E)DI     Name buffer
 ; IN   (E)CX        Max name size

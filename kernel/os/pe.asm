@@ -2857,7 +2857,7 @@ is_valid_exe Proc far
     push edi
 ;
     xor edx,edx
-    mov eax,SIZE pe_process_struc
+    mov eax,SIZE pe_program_struc
     AllocateSmallGlobalMem
     mov ecx,40h
     xor edi,edi

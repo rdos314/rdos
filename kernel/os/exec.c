@@ -30,6 +30,7 @@
 #include "string.h"
 
 #define MAX_MODULES             256
+#define MAX_PROCESSES           256
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -41,12 +42,24 @@ struct TModule
     int Sel;
 };
 
+struct TProcess
+{
+    int Valid;
+    int ID;
+    int Sel;
+};
+
 struct TKernelSection ModuleSection;
+struct TKernelSection ProcessSection;
 
 int ActiveModules = 0;
 int NextMid = 1;
 
+int ActiveProcesses = 0;
+int NextPid = 1;
+
 struct TModule ModuleArr[MAX_MODULES];
+struct TProcess ProcessArr[MAX_PROCESSES];
 
 extern void InitExec();
 
@@ -230,6 +243,187 @@ int __far ImplGetModuleId(int Index)
     return ID;
 }
 
+
+/*##########################################################################
+#
+#   Name       : GetProcessCount
+#
+##########################################################################*/
+#pragma aux ImplGetProcessCount "*" rdosdev parm routine
+int __far ImplGetProcessCount()
+{
+    RdosSetSuccess();
+    return ActiveProcesses;
+}
+
+/*##########################################################################
+#
+#   Name       : ProcessCreated
+#
+##########################################################################*/
+#pragma aux ImplProcessCreated "*" rdosdev parm routine [ebx] value [eax]
+int __far ImplProcessCreated(int sel)
+{
+    int i;
+    int ok = FALSE;
+    int Index;
+    int pid;
+
+    RdosEnterKernelSection(&ProcessSection);
+
+    ok = FALSE;
+
+    while (!ok)
+    {
+        pid = NextPid;
+
+        if (NextPid == 0x7FFF)
+            NextPid = 1;
+        else
+            NextPid++;
+
+        ok = TRUE;
+
+        for (i = 0; i < ActiveProcesses; i++)
+        {
+            if (ProcessArr[i].Valid && ProcessArr[i].ID == pid)
+            {
+                ok = FALSE;
+                break;
+            }
+        }
+    }
+
+    ok = FALSE;
+
+    for (i = 0; i < ActiveProcesses; i++)
+    {
+        if (!ProcessArr[i].Valid)
+        {
+            ok = TRUE;
+            Index = i;
+            break;
+        }
+    }
+
+    if (!ok)
+    {
+        if (ActiveProcesses < MAX_PROCESSES)
+        {
+            Index = ActiveProcesses;
+            ActiveProcesses++;
+            ok = TRUE;
+        }
+    }
+
+    if (ok)
+    {
+        ProcessArr[Index].Valid = TRUE;
+        ProcessArr[Index].Sel = sel;
+        ProcessArr[Index].ID = pid;
+    }
+
+    RdosLeaveKernelSection(&ProcessSection);
+
+    if (pid)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    return pid;
+}
+
+/*##########################################################################
+#
+#   Name       : ProcessTerminated
+#
+##########################################################################*/
+#pragma aux ImplProcessTerminated "*" rdosdev parm routine [ebx]
+void __far ImplProcessTerminated(int sel)
+{
+    int i;
+
+    RdosEnterKernelSection(&ProcessSection);
+
+    for (i = 0; i < ActiveProcesses; i++)
+    {
+        if (ProcessArr[i].Valid && ProcessArr[i].Sel == sel)
+        {
+            ProcessArr[i].Valid = FALSE;
+
+            if (i == ActiveProcesses - 1)
+                ActiveProcesses--;
+
+            break;
+        }
+    }
+
+    RdosLeaveKernelSection(&ProcessSection);
+    RdosSetSuccess();
+}
+
+/*##########################################################################
+#
+#   Name       : ProcessIdToSel
+#
+#   Descr      : Convert from process ID to selector
+#
+##########################################################################*/
+#pragma aux ImplProcessIdToSel "*" rdosdev parm routine [ebx] value [ebx]
+int __far ImplProcessIdToSel(int ID)
+{
+    int i;
+    int sel = 0;
+
+    RdosEnterKernelSection(&ProcessSection);
+
+    for (i = 0; i < ActiveProcesses; i++)
+    {
+        if (ProcessArr[i].Valid && ProcessArr[i].ID == ID)
+        {
+            sel = ProcessArr[i].Sel;
+            break;
+        }
+    }
+
+    RdosLeaveKernelSection(&ProcessSection);
+
+    if (sel)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    return sel;
+}
+
+/*##########################################################################
+#
+#   Name       : GetProcessID
+#
+#   Descr      : Get process ID byte index
+#
+##########################################################################*/
+#pragma aux ImplGetProcessId "*" rdosdev parm routine [eax] value [eax]
+int __far ImplGetProcessId(int Index)
+{
+    int ID = 0;
+
+    RdosEnterKernelSection(&ProcessSection);
+
+    if (Index >= 0 && Index < ActiveProcesses)
+        if (ProcessArr[Index].Valid)
+            ID = ProcessArr[Index].ID;
+
+    RdosLeaveKernelSection(&ProcessSection);
+
+    if (ID)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+
+    return ID;
+}
+
 /*##########################################################################
 #
 #   Name       : InitGates
@@ -248,7 +442,13 @@ void InitGates()
     RdosRegisterOsGate(osgate_module_id_to_sel, (__rdos_gate_callback *)&ImplModuleIdToSel, "Module ID to Selector");
     RdosRegisterOsGate(osgate_get_module_id, (__rdos_gate_callback *)&ImplGetModuleId, "Get Module ID");
 
+    RdosRegisterOsGate(osgate_process_created, (__rdos_gate_callback *)&ImplProcessCreated, "Process Created");
+    RdosRegisterOsGate(osgate_process_terminated, (__rdos_gate_callback *)&ImplProcessTerminated, "Process Terminated");
+    RdosRegisterOsGate(osgate_process_id_to_sel, (__rdos_gate_callback *)&ImplProcessIdToSel, "Process ID to Selector");
+    RdosRegisterOsGate(osgate_get_process_id, (__rdos_gate_callback *)&ImplGetProcessId, "Get Process ID");
+
     RdosRegisterBimodalUserGate(usergate_get_module_count, (__rdos_gate_callback *)&ImplGetModuleCount, "Get Module Count");
+    RdosRegisterBimodalUserGate(usergate_get_process_count, (__rdos_gate_callback *)&ImplGetProcessCount, "Get Process Count");
 }
 
 /*##########################################################################

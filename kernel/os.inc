@@ -1115,6 +1115,29 @@ GetModuleId    MACRO
     OsGate get_module_id_nr
                     ENDM
 
+;  IN  EBX  	Selector
+;  OUT AX   	PID
+ProcessCreated    MACRO
+    OsGate process_loaded_nr
+                    ENDM
+
+;  IN  EBX  	Selector
+ProcessTerminated    MACRO
+    OsGate process_terminated_nr
+                    ENDM
+
+; IN  EBX       Process ID
+; OUT BX        Selector
+ProcessIdToSel       MACRO
+    OsGate process_id_to_sel_nr
+                    ENDM
+
+;  IN  EAX  	Process #
+;  OUT AX       ID
+GetProcessId    MACRO
+    OsGate get_process_id_nr
+                    ENDM
+
 ;;;;;;;;;;; Signal & waits ;;;;;;;;;;;;;;;;
 
 ClearSignal     MACRO

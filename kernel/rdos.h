@@ -511,6 +511,8 @@ int RDOSAPI RdosGetModuleSel(int ID);
 long long RDOSAPI RdosGetModuleBase(int ID);
 long long RDOSAPI RdosGetModuleSize(int ID);
 
+int RDOSAPI RdosGetProcessCount();
+
 int RDOSAPI RdosGetProgramCount();
 int RDOSAPI RdosGetProgramInfo(int Index, int *ID, char *NameBuf, int NameSize);
 int RDOSAPI RdosGetProgramThreads(int Index, unsigned short int *IdArr, int MaxThreads);

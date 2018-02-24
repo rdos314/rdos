@@ -1696,6 +1696,16 @@
     parm [ebx] \
     value [edx eax];
 
+#pragma aux RdosGetProcessCount = \
+    CallGate_get_process_count  \
+    "jc fail" \
+    "movzx eax,ax" \
+    "jmp done" \
+    "fail: " \
+    "xor eax,eax" \
+    "done: " \
+    value [eax];
+
 #pragma aux RdosGetProgramCount = \
     CallGate_get_program_count  \
     "jc fail" \

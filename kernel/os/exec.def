@@ -129,10 +129,11 @@ lp_env_sel          DD ?
 load_param_struc   ENDS
 
 
-MAX_PROCESS_THREADS  = 256
-MAX_PROCESS_MODULES  = 256
+MAX_PROGRAM_MODULES   = 256
+MAX_PROGRAM_PROCESSES = 256
+MAX_PROCESS_THREADS   = 256
 
-process_struc    STRUC
+program_struc    STRUC
 
 pr_loader            DW ?
 pr_kernel_file       DW ?
@@ -150,12 +151,25 @@ pr_switch            DB ?,?
 pr_section           section_typ <>
 
 pr_module_count      DW ?
-pr_module_arr        DW MAX_PROCESS_MODULES DUP(?)
+pr_module_arr        DW MAX_PROGRAM_MODULES DUP(?)
 
 pr_thread_count      DW ?
 pr_thread_arr        DW MAX_PROCESS_THREADS DUP(?)
 
-process_struc    ENDS
+pr_process_count     DW ?
+pr_process_arr       DW MAX_PROGRAM_PROCESSES DUP(?)
+
+program_struc    ENDS
+
+new_process_struc    STRUC
+
+pf_program_id         DW ?
+pf_program_sel        DW ?
+
+pf_thread_count      DW ?
+pf_thread_arr        DW MAX_PROCESS_THREADS DUP(?)
+
+new_process_struc    ENDS
 
 loader_interface_struc    STRUC
 

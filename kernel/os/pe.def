@@ -153,9 +153,9 @@ lib_name            DB ?
 
 lib_struc ENDS
 
-pe_process_struc  STRUC
+pe_program_struc  STRUC
 
-ppr_base                        process_struc <>
+ppr_base                        program_struc <>
 
 ppr_create_section_proc         DD ?
 ppr_create_named_section_proc   DD ?
@@ -163,7 +163,7 @@ ppr_delete_section_proc         DD ?
 ppr_enter_section_proc          DD ?
 ppr_leave_section_proc          DD ?
 
-pe_process_struc  ENDS
+pe_program_struc  ENDS
 
 export_descr    STRUC
 

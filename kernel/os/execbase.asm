@@ -517,7 +517,7 @@ AddProgramModule    Proc near
     EnterSection ds:pr_section
 ;
     movzx ecx,ds:pr_module_count
-    cmp ecx,MAX_PROCESS_MODULES
+    cmp ecx,MAX_PROGRAM_MODULES
     jae apmLeave
 ;
     mov eax,ecx
@@ -567,7 +567,7 @@ AddKernelProgramModule    Proc near
     EnterSection ds:pr_section
 ;
     movzx ecx,ds:pr_module_count
-    cmp ecx,MAX_PROCESS_MODULES
+    cmp ecx,MAX_PROGRAM_MODULES
     jae akpmLeave
 ;
     mov eax,ecx
@@ -4934,7 +4934,7 @@ InitExec_    Proc near
     CreateCallGateSelector32
     mov es:exit_gate_sel,bx
 ;
-    mov eax,SIZE process_struc
+    mov eax,SIZE program_struc
     AllocateSmallGlobalMem
     mov ax,es
     mov gs,ax
