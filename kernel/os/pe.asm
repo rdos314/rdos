@@ -236,6 +236,87 @@ SendEvent Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SendAttachEvent
+;
+;           DESCRIPTION:    Sent attach event to debugger
+;
+;           PARAMETERS:     ES          Event
+;                           GS          Program sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendAttachEvent Proc near
+    push ds
+    push eax
+    push bx
+;
+    ClearSignal
+    GetThread
+    mov ds,ax
+    mov ax,ds:p_id
+    mov es:event_thread_id,ax
+;
+    movzx ebx,gs:pr_module_arr
+    ModuleIdToSel
+    jc saeDone
+;
+    mov ds,ebx
+    RequestSpinlock ds:lib_spinlock
+;
+    mov ax,ds:lib_events
+    or ax,ax
+    je saeEmpty
+;
+    push ds
+    push si
+    mov ds,ax
+    mov si,ds:event_prev
+    mov ds:event_prev,es
+    mov ds,si
+    mov ds:event_next,es
+    mov es:event_next,ax
+    mov es:event_prev,si
+    pop si
+    pop ds
+    jmp saeInsDone
+
+saeEmpty:
+    mov es:event_next,es
+    mov es:event_prev,es
+
+saeInsDone:
+    mov ds:lib_events,es
+    xor ax,ax
+    mov es,ax
+    ReleaseSpinlock ds:lib_spinlock
+;
+    push es
+
+saeSignalLoop:
+    mov ax,ds:lib_debug_wait
+    or ax,ax
+    jnz saeSignalDo
+;
+    mov ax,10
+    WaitMilliSec
+    jmp saeSignalLoop
+
+saeSignalDo:
+    mov es,ax
+    SignalWait
+    pop es    
+    WaitForSignal
+
+saeDone:
+    pop bx
+    pop eax
+    pop ds
+    ret
+SendAttachEvent Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AllocateKernelEvent
 ;
 ;           DESCRIPTION:    Pre-allocate kernel event
@@ -408,6 +489,74 @@ CreateProcessEvent Proc near
     pop eax
     ret
 CreateProcessEvent Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateAttachProcessEvent
+;
+;           DESCRIPTION:    Create attach process debug event
+;
+;           PARAMETERS:     BX          Program #
+;
+;           RETURNS:        DS          Lib sel
+;                           ES          Event
+;                           GS          Program sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateAttachProcessEvent Proc near
+    push eax
+    push ebx
+    push di
+;
+    mov eax,SIZE create_process_event_struc
+    mov di,SIZE event_struc
+    add ax,di
+    AllocateSmallGlobalMem
+    sub ax,di
+    mov es:event_size,ax
+    mov es:event_code,EVENT_CREATE_PROCESS
+;
+    movzx ebx,bx
+    mov es:[di].cpeProcess,ebx
+;
+    GetProgramSel
+    mov gs,eax
+;
+    movzx ebx,gs:pr_thread_arr
+    mov es:[di].cpeThread,eax       
+;
+    movzx ebx,gs:pr_module_arr
+    mov es:[di].cpeHandle,ebx
+    ModuleIdToSel
+    mov ds,ebx
+    movzx ebx,ds:mod_c_file_handle
+    mov es:[di].cpeFile,ebx
+;
+    mov eax,ds:mod_base
+    mov es:[di].cpeImageBase,eax
+    mov eax,ds:mod_size
+    mov es:[di].cpeImageSize,eax
+;
+    push es
+    mov ax,flat_data_sel
+    mov es,ax
+    mov eax,ds:lib_objects
+    mov eax,es:[eax].o_va
+    pop es
+    mov es:[di].cpeObjectRva,eax
+;       
+    mov es:[di].cpeFsLinear,0
+    mov es:[di].cpeStartCs,flat_code_sel
+    mov eax,ds:lib_org_eip
+    mov es:[di].cpeStartEip,eax
+;
+    pop di
+    pop ebx
+    pop eax
+    ret
+CreateAttachProcessEvent Endp
                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4336,6 +4485,8 @@ get_debug_event_data Proc far
     rep movs byte ptr es:[edi],ds:[esi]
     pop edi
 ;
+    jmp gdedDone
+    
     mov al,ds:event_code
 ;    
     cmp al,EVENT_CREATE_PROCESS
@@ -5758,9 +5909,8 @@ stop_debug   Endp
 ;
 ;           DESCRIPTION:    Attach to debugger thread
 ;
-;           PARAMETERS:     BX      Module selector
-;                           DX      Debug module selector
-;                           GS      Debugged program
+;           PARAMETERS:     BX      Debugged program #
+;                           DX      Debug module ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5770,7 +5920,10 @@ attach_thread:
     int 3
     mov ax,250
     WaitMilliSec
-
+;
+    call CreateAttachProcessEvent
+    mov ds:mod_debug_id,dx
+    call SendAttachEvent
             
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5779,9 +5932,8 @@ attach_thread:
 ;
 ;           DESCRIPTION:    Attach debugger
 ;
-;           PARAMETERS:     BX      Module selector
-;                           DX      Debug module selector
-;                           GS      Debugged program
+;           PARAMETERS:     BX      Debugged program #
+;                           DX      Debug module ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

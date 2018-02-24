@@ -2090,7 +2090,6 @@ attach_debugger   Proc far
     push ebx
     movzx ebx,dx
     ModuleIdToSel
-    mov dx,bx
     pop ebx
     jc atdDone
 ;    
@@ -2103,9 +2102,10 @@ attach_debugger   Proc far
     stc
     jz atdDone
 ;
-    movzx ebx,gs:pr_module_arr
-    ModuleIdToSel
-    jc atdDone
+    mov cx,gs:pr_thread_count
+    or cx,cx
+    stc
+    jz atdDone
 ;
     mov fs,gs:pr_loader
     call fword ptr fs:loader_attach_debug_proc
