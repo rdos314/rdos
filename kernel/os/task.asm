@@ -7781,6 +7781,9 @@ init_thread_block       PROC near
     mov ax,ds:p_ldt_sel
     mov es:p_ldt_sel,ax
 ;
+    mov ax,ds:p_console
+    mov es:p_console,ax
+;
     mov ax,ds:p_lib_sel
     mov es:p_lib_sel,ax
 ;
@@ -9467,6 +9470,7 @@ create_first_thread       PROC near
     mov es:p_proc_id,ax
     mov es:p_proc_sel,ax
     mov es:p_loader,ax
+    mov es:p_console,ax
     mov es:p_ldt_sel,ax
     mov es:p_lib_sel,ax
 ;

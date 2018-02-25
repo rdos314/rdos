@@ -1263,8 +1263,7 @@ ccText:
 ccDone:
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_console,es
+    mov ds:p_console,es
 ;
     pop ax
     pop es
@@ -1350,8 +1349,7 @@ EnableConsoleFocus Proc near
     push bx
 ;    
     mov es,bx
-    mov es,es:p_app_sel
-    mov bx,es:app_console
+    mov bx,es:p_console
     or bx,bx
     jz ecfDone
 ;
@@ -1427,8 +1425,7 @@ GetLocalConsole     PROC near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_console
+    mov ax,ds:p_console
     mov ds,ax
     or ax,ax
     clc
@@ -1698,8 +1695,7 @@ set_video_mode  PROC far
     push ax
     GetThread
     mov ds,ax
-    mov fs,ds:p_app_sel
-    mov ax,fs:app_console
+    mov ax,ds:p_console
     mov fs,ax    
     or ax,ax
     pop ax
@@ -2065,8 +2061,7 @@ invert_mouse    PROC far
     mov es,ax
     GetThread
     mov ds,ax
-    mov fs,ds:p_app_sel
-    mov ax,fs:app_console
+    mov ax,ds:p_console
     mov fs,ax    
     or ax,ax
     jz imDone
@@ -2410,8 +2405,7 @@ get_text_size     PROC far
 ;
     GetThread
     mov ds,ax
-    mov fs,ds:p_app_sel
-    mov ax,fs:app_console
+    mov ax,ds:p_console
     mov fs,ax    
     or ax,ax
     jz gtsDone
@@ -2447,8 +2441,7 @@ clear_text     PROC far
 ;
     GetThread
     mov ds,ax
-    mov fs,ds:p_app_sel
-    mov ax,fs:app_console
+    mov ax,ds:p_console
     mov fs,ax    
     or ax,ax
     jz ctDone
@@ -2512,8 +2505,7 @@ set_cursor_position     PROC far
     mov ds:p_row,dx
     mov ds:p_col,cx
 ;
-    mov fs,ds:p_app_sel
-    mov ax,fs:app_console
+    mov ax,ds:p_console
     mov fs,ax    
     or ax,ax
     jz scpDone
@@ -2587,8 +2579,7 @@ get_console_cursor_position     PROC far
     mov dx,ds:p_row
     mov cx,ds:p_col
 ;    
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_console
+    mov ax,ds:p_console
     mov ds,ax    
     or ax,ax
     jz gccpDone
@@ -2627,8 +2618,7 @@ set_console_cursor_position     PROC far
     mov ds:p_row,dx
     mov ds:p_col,cx
 ;
-    mov fs,ds:p_app_sel
-    mov ax,fs:app_console
+    mov ax,ds:p_console
     mov fs,ax    
     or ax,ax
     jz scpDone
@@ -2755,8 +2745,7 @@ write_char      PROC far
     mov es,ax
     GetThread
     mov ds,ax
-    mov fs,ds:p_app_sel
-    mov ax,fs:app_console
+    mov ax,ds:p_console
     mov fs,ax    
     or ax,ax
     pop ax
@@ -2805,8 +2794,7 @@ write_asciiz16  PROC far
     mov es,ax
     GetThread
     mov ds,ax
-    mov fs,ds:p_app_sel
-    mov ax,fs:app_console
+    mov ax,ds:p_console
     or ax,ax
     jz write_asciiz_done16
 ;
@@ -2852,8 +2840,7 @@ write_asciiz32  PROC far
     mov es,ax
     GetThread
     mov ds,ax
-    mov fs,ds:p_app_sel
-    mov ax,fs:app_console
+    mov ax,ds:p_console
     or ax,ax
     jz write_asciiz_done32
 ;
@@ -2938,8 +2925,7 @@ write_size_string16     PROC far
     mov es,ax
     GetThread
     mov ds,ax
-    mov fs,ds:p_app_sel
-    mov ax,fs:app_console
+    mov ax,ds:p_console
     or ax,ax
     jz write_size_string_done16
 ;
@@ -2988,8 +2974,7 @@ write_size_string32     PROC far
     mov es,ax
     GetThread
     mov ds,ax
-    mov fs,ds:p_app_sel
-    mov ax,fs:app_console
+    mov ax,ds:p_console
     or ax,ax
     jz write_size_string_done32
 ;
@@ -3051,8 +3036,7 @@ write_attr_string       Proc near
     mov es,ax
     GetThread
     mov ds,ax
-    mov fs,ds:p_app_sel
-    mov ax,fs:app_console
+    mov ax,ds:p_console
     mov fs,ax    
     pop ax
 ;
@@ -4818,8 +4802,7 @@ write_c_console     PROC far
     mov es,ax
     GetThread
     mov ds,ax
-    mov fs,ds:p_app_sel
-    mov ax,fs:app_console
+    mov ax,ds:p_console
     or ax,ax
     jz write_c_done
 ;
@@ -5492,8 +5475,7 @@ read_c_console  PROC far
 ;
     GetThread
     mov ds,ax
-    mov fs,ds:p_app_sel
-    mov ax,fs:app_console
+    mov ax,ds:p_console
     or ax,ax
     jz con_io_done
 ;
@@ -5566,105 +5548,29 @@ init_thread     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           notify_none
+;           NAME:           CloseConsole
 ;
-;           DESCRIPTION:    Notify none
+;           DESCRIPTION:    Close console
 ;
-;           PARAMETERS:     ES          App sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_none     Proc far
-    ret
-notify_none     Endp
- 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_create
-;
-;           DESCRIPTION:    Notify create process
-;
-;           PARAMETERS:     ES          App sel
+;           PARAMETERS:     AX        Console
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-notify_create   Proc far
-    mov es:app_console,0
-    ret
-notify_create   Endp
+close_console_name DB 'Close Console', 0
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_forked
-;
-;           DESCRIPTION:    Notify fork
-;
-;           PARAMETERS:     ES          App sel
-;                           DS          Parent app sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_forked    Proc far
+close_console        Proc far
     push es
-    push ax
-;
-    mov ax,ds:app_console
-    mov es:app_console,ax
-    mov es,ax
-    inc es:c_usage
-;
-    pop ax
-    pop es
-    ret
-notify_forked    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_free
-;
-;           DESCRIPTION:    Notify free console
-;
-;           PARAMETERS:     ES          App sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_free        Proc far
-    push es
-    push ax
-;
-    mov ax,es:app_console
-    or ax,ax
-    jz nfDone
 ;
     mov es,ax
     sub es:c_usage,1
-    jnz nfDone
+    jnz ccsDone
 ;    
     call DeleteConsole
     
-nfDone:
-    pop ax
+ccsDone:
     pop es
     ret
-notify_free     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;           NAME:           App activity table
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-app_activity_table:
-a0 DD OFFSET notify_create,     SEG code   ; create process
-a1 DD OFFSET notify_none,       SEG code   ; boot app
-a2 DD OFFSET notify_forked,     SEG code   ; forked
-a3 DD OFFSET notify_none,       SEG code   ; exec
-a4 DD OFFSET notify_none,       SEG code   ; spawn
-a5 DD OFFSET notify_free,       SEG code   ; terminate process
-
+close_console     Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5748,8 +5654,11 @@ init_video      PROC near
     mov edi,OFFSET init_thread
     HookCreateThread
 ;
-    mov edi,OFFSET app_activity_table
-    HookAppActivity
+    mov esi,OFFSET close_console
+    mov edi,OFFSET close_console_name
+    xor cl,cl
+    mov ax,close_console_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET invert_mouse
     mov edi,OFFSET invert_mouse_name

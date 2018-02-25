@@ -308,7 +308,6 @@ app_handle_mem_sel          DW ?
 app_context                 DW ?
 app_bitness                 DB ?
 app_key                     DB ?
-app_console                 DW ?
 
 app_pm_int                  DD 100h DUP(?,?)
 app_pm_exc                  DD 20h DUP(?,?)
@@ -442,6 +441,7 @@ p_prog_id           DW ?
 p_prog_sel          DW ?
 p_proc_id           DW ?
 p_proc_sel          DW ?
+p_console           DW ?
 p_loader            DW ?
 p_wanted_core       DW ?
 p_int_count         DW ?

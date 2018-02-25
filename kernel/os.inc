@@ -2296,6 +2296,11 @@ WriteCConsole MACRO
     OsGate write_c_console_nr
                     ENDM
 
+; IN  AX       Console selector
+CloseConsole MACRO
+    OsGate close_console_nr
+                    ENDM
+
 ;;;;;;;;;;;;; Dos ;;;;;;;;;;;;;;;;;;;
 
 ;       EAX     Bytes

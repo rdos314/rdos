@@ -2084,6 +2084,12 @@ ukDone:
 ;
     FreeMem
     DestroyLdt
+;
+    GetThread
+    mov es,ax
+    mov ax,es:p_console
+    CloseConsole
+;
     call RemoveProg
     TerminateThread
 
