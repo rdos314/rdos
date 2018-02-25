@@ -178,7 +178,6 @@
 #define osgate_register_dos_device 173
 #define osgate_check_dos_device 174
 
-#define osgate_hook_enable_focus 182
 #define osgate_get_focus_thread 185
 #define osgate_get_thread_focus_key 186
 
@@ -743,6 +742,15 @@
 #define osgate_process_id_to_sel 649
 #define osgate_get_process_id 650
 
+#define osgate_create_ldt 651
+#define osgate_destroy_ldt 652
+
+#define osgate_create_c_handle 653
+#define osgate_clone_c_handle 654
+#define osgate_delete_c_handle 655
+
+#define osgate_close_console 656
+
 
 
 
@@ -925,7 +933,6 @@
 #define OsGate_register_dos_device 0x3E 0x67 0x9a 173 0 0 0 2 0
 #define OsGate_check_dos_device 0x3E 0x67 0x9a 174 0 0 0 2 0
 
-#define OsGate_hook_enable_focus 0x3E 0x67 0x9a 182 0 0 0 2 0
 #define OsGate_get_focus_thread 0x3E 0x67 0x9a 185 0 0 0 2 0
 #define OsGate_get_thread_focus_key 0x3E 0x67 0x9a 186 0 0 0 2 0
 
@@ -1489,4 +1496,13 @@
 #define OsGate_process_terminated 0x3E 0x67 0x9a 136 2 0 0 2 0
 #define OsGate_process_id_to_sel 0x3E 0x67 0x9a 137 2 0 0 2 0
 #define OsGate_get_process_id 0x3E 0x67 0x9a 138 2 0 0 2 0
+
+#define OsGate_create_ldt 0x3E 0x67 0x9a 139 2 0 0 2 0
+#define OsGate_destroy_ldt 0x3E 0x67 0x9a 140 2 0 0 2 0
+
+#define OsGate_create_c_handle 0x3E 0x67 0x9a 141 2 0 0 2 0
+#define OsGate_clone_c_handle 0x3E 0x67 0x9a 142 2 0 0 2 0
+#define OsGate_delete_c_handle 0x3E 0x67 0x9a 143 2 0 0 2 0
+
+#define OsGate_close_console 0x3E 0x67 0x9a 144 2 0 0 2 0
 

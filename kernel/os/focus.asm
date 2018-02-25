@@ -40,15 +40,6 @@ focus_thread            DW 256 DUP(?)
 
 focus_current_thread    DW ?
 focus_section           section_typ <>
-focus_switched          DB ?
-
-focus_alloc_rel         DD ?
-
-enable_focus_hooks      DB ?
-
-enable_focus_arr        DD 2*16 DUP(?)
-lost_focus_arr          DD 2*16 DUP(?)
-got_focus_arr           DD 2*16 DUP(?)
 
 data    ENDS
 
@@ -162,7 +153,6 @@ free_thread_loop:
     cmp ax,ds:focus_current_thread
     jne free_thread_done
 ;
-    mov ds:focus_switched,0
     mov ds:focus_current_thread,0
     jmp free_thread_done
 
@@ -174,76 +164,6 @@ free_thread_next:
 free_thread_done:
     ret
 free_thread     Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TRAP_ENABLE_FOCUS
-;
-;           DESCRIPTION:    Run hooks for EnableFocus
-;
-;           PARAMETERS:         
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-trap_enable_focus       PROC near
-    mov ax,SEG data
-    mov ds,ax
-    mov cl,ds:enable_focus_hooks
-    or cl,cl
-    je trap_enable_focus_done
-    mov bx,OFFSET enable_focus_arr
-trap_enable_focus_loop:
-    push ds
-    push bx
-    push cx
-    call fword ptr [bx]
-    pop cx
-    pop bx
-    pop ds
-    add bx,8
-    dec cl
-    jnz trap_enable_focus_loop
-trap_enable_focus_done:
-    ret
-trap_enable_focus       ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           HOOK_ENABLE_FOCUS
-;
-;           DESCRIPTION:    Add hook for EnableFocus
-;
-;           PARAMETERS:     ES:EDI       CALLBACK ADDRESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_enable_focus_name  DB 'Hook Enable Focus',0
-
-hook_enable_focus       PROC far
-    push ds
-    push ax
-    push bx
-    mov ax,SEG data
-    mov ds,ax
-    mov al,ds:enable_focus_hooks
-    mov bl,al
-    xor bh,bh
-    shl bx,3
-    add bx,OFFSET enable_focus_arr
-    mov [bx],edi
-    mov [bx+4],es
-    inc al
-    mov ds:enable_focus_hooks,al
-    pop bx
-    pop ax
-    pop ds
-    ret
-hook_enable_focus       ENDP
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -276,7 +196,6 @@ set_focus       PROC far
     mov bx,ax
     
 set_focus_no_lost:
-    mov ds:focus_switched,1
     mov ds:focus_current_thread,bx
     mov bp,bx
 ;
@@ -335,9 +254,6 @@ enable_focus_next:
 
 enable_focus_done:
     call CreateConsole
-    pushad
-    call trap_enable_focus
-    popad
 ;
     mov ax,bx
     shr ax,1
@@ -368,9 +284,6 @@ init_focus      PROC near
     mov ecx,256
     xor ax,ax
     rep stosw
-    mov ds:enable_focus_hooks,0
-    mov ds:focus_switched,0
-    mov ds:focus_alloc_rel,0
     mov ds:focus_current_thread,0
     InitSection ds:focus_section
 ;
@@ -392,12 +305,6 @@ init_focus      PROC near
     xor dx,dx
     mov ax,enable_focus_nr
     RegisterBimodalUserGate
-;
-    mov esi,OFFSET hook_enable_focus
-    mov edi,OFFSET hook_enable_focus_name
-    xor cl,cl
-    mov ax,hook_enable_focus_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET get_focus_thread
     mov edi,OFFSET get_focus_thread_name

@@ -178,7 +178,6 @@ enter_dos32_nr                          = 172
 register_dos_device_nr          = 173
 check_dos_device_nr                 = 174
 
-hook_enable_focus_nr            = 182
 get_focus_thread_nr                     = 185
 get_thread_focus_key_nr         = 186
 

@@ -642,8 +642,6 @@ void RdosHookCreateThread(__rdos_hook_callback *callb_proc);
 void RdosHookTerminateThread(__rdos_hook_callback *callb_proc);
 void RdosHookInitPci(__rdos_hook_callback *callb_proc);
 
-void RdosHookEnableFocus(__rdos_hook_callback *callb_proc);
-
 void RdosHookState(__rdos_hook_state_callback *callb_proc);
 
 void RdosSendEoi(int irq);
@@ -1484,10 +1482,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
 
 #pragma aux RdosHookTerminateThread = \
     OsGate_hook_terminate_thread \
-    parm [es edi];
-
-#pragma aux RdosHookEnableFocus = \
-    OsGate_hook_enable_focus \
     parm [es edi];
 
 #pragma aux RdosHookState = \

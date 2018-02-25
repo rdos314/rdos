@@ -2475,11 +2475,6 @@ FindSysEnvVar   MACRO
 
 ;;;;;;;;;;;; Focus ;;;;;;;;;;;;;
 
-;       ES:EDI       Address to callback
-HookEnableFocus MACRO
-    OsGate hook_enable_focus_nr
-                    ENDM
-
 ;       AX          Focus thread
 GetFocusThread  MACRO
     OsGate get_focus_thread_nr
