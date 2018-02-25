@@ -52,28 +52,6 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           GetFocusThread
-;
-;           DESCRIPTION:    Get focus thread
-;
-;           RETURNS:        AX          Focus thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_focus_thread_name   DB 'Get Focus Thread',0
-
-get_focus_thread    PROC far
-    push ds
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,ds:focus_current_thread
-    pop ds
-    ret
-get_focus_thread    ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           SET_FOCUS
 ;
 ;           DESCRIPTION:    Set input focus
@@ -211,12 +189,6 @@ init_focus      PROC near
     xor dx,dx
     mov ax,enable_focus_nr
     RegisterBimodalUserGate
-;
-    mov esi,OFFSET get_focus_thread
-    mov edi,OFFSET get_focus_thread_name
-    xor cl,cl
-    mov ax,get_focus_thread_nr
-    RegisterOsGate
     ret
 init_focus      ENDP
 

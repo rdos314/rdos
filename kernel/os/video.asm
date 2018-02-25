@@ -1318,6 +1318,41 @@ gfcDone:
     pop ds
     ret
 get_focus_console     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetFocusThread
+;
+;           DESCRIPTION:    Get focus thread
+;
+;           RETURNS:        AX       Thread
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_focus_thread_name DB 'Get Focus Thread', 0
+
+get_focus_thread     PROC far
+    push ds
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:focus_console
+    or ax,ax
+    jz gftFail
+;
+    mov ds,ax
+    mov ax,ds:c_thread
+    clc
+    jmp gftDone
+
+gftFail:
+    stc 
+
+gftDone: 
+    pop ds
+    ret
+get_focus_thread     ENDP
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5627,6 +5662,12 @@ init_video      PROC near
 ;
     mov edi,OFFSET init_thread
     HookCreateThread
+;
+    mov esi,OFFSET get_focus_thread
+    mov edi,OFFSET get_focus_thread_name
+    xor cl,cl
+    mov ax,get_focus_thread_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET get_focus_console
     mov edi,OFFSET get_focus_console_name
