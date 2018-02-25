@@ -38,6 +38,7 @@ INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
 INCLUDE gate.def
 INCLUDE chandle.inc
+INCLUDE exec.def
 
 dir_handle_seg  STRUC
 
@@ -531,8 +532,9 @@ ParseDir    Proc near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov al,ds:app_curr_drive
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_cur_dir_sel
+    mov al,ds:pc_drive
     mov bx,es:[edi]
     or bl,bl
     je parse_drive_done
@@ -574,7 +576,7 @@ parse_dir_abs:
 parse_dir_rel:
     movzx si,al
     add si,si
-    mov bx,ds:[si].app_cur_dir_sel
+    mov bx,ds:[si].pc_dir_sel_arr
     or bx,bx
     jz parse_dir_root
 ;
@@ -603,11 +605,12 @@ parse_dir_old_zero:
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_cur_dir_sel
     pop ax
     movzx si,al
     add si,si
-    mov ds:[si].app_cur_dir_sel,0
+    mov ds:[si].pc_dir_sel_arr,0
 
 parse_dir_root:
     mov bx,fs_sys_data_sel
@@ -636,8 +639,9 @@ parse_dir_root:
     inc ds:ds_usage
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:[si].app_cur_dir_sel,bx
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_cur_dir_sel
+    mov ds:[si].pc_dir_sel_arr,bx
     pop ax
     pop ds
 
@@ -866,8 +870,9 @@ GetDeviceRoot   Proc near
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:[si].app_cur_dir_sel,bx
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_cur_dir_sel
+    mov ds:[si].pc_dir_sel_arr,bx
     pop ax
     pop ds
 
@@ -1129,11 +1134,12 @@ GetCurDirBase   Proc near
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_cur_dir_sel
     pop ax
     mov si,flat_sel
     mov fs,si
-    mov bx,ds:[bx].app_cur_dir_sel
+    mov bx,ds:[bx].pc_dir_sel_arr
     xor ecx,ecx
     mov byte ptr es:[edi],0
     or bx,bx
@@ -1261,14 +1267,15 @@ SetCurDirBase   Proc near
     push ax
     GetThread
     mov es,ax
-    mov es,es:p_app_sel
+    mov es,es:p_proc_sel
+    mov es,es:pf_cur_dir_sel
     pop ax
 ;
     mov bx,ds
     mov al,ds:ds_drive
     movzx si,al
     add si,si
-    xchg bx,es:[si].app_cur_dir_sel
+    xchg bx,es:[si].pc_dir_sel_arr
     or bx,bx
     jz set_cur_dir_setup
 ;
@@ -2507,12 +2514,13 @@ set_cur_drive:
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_cur_dir_sel
     pop ax
     call ValidateDrive
     jc set_cur_drive_done
 ;
-    mov ds:app_curr_drive,al
+    mov ds:pc_drive,al
 
 set_cur_drive_done:
     pop si
@@ -2545,9 +2553,10 @@ get_cur_drive:
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_cur_dir_sel
     pop ax
-    mov al,ds:app_curr_drive
+    mov al,ds:pc_drive
     clc
     pop si
     pop ds
@@ -3238,118 +3247,132 @@ delete_handle   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           app_dir_create
+;           NAME:           CreateCurDir
 ;
-;           DESCRIPTION:    App dir create
+;           DESCRIPTION:    Create cur dir selector
 ;
-;           PARAMETERS:     ES          App sel
+;           RETURNS:        AX      Cur dir selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public app_dir_create
+create_cur_dir_name DB 'Create Cur Dir', 0
 
-app_dir_create   Proc near
-    push ax
+create_cur_dir   Proc far
+    push es
     push cx
     push di
 ;
-    mov es:app_curr_drive,MAX_DRIVES - 1
-    mov di,OFFSET app_cur_dir_sel
+    mov eax,SIZE proc_cur_dir_struc
+    AllocateSmallGlobalMem
+    mov es:pc_drive,MAX_DRIVES - 1
+    mov di,OFFSET pc_dir_sel_arr
     mov cx,256
     xor ax,ax
     rep stosw
+    mov ax,es
 ;
     pop di
     pop cx
-    pop ax
-    ret
-app_dir_create   Endp
+    pop es
+    retf32
+create_cur_dir   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           app_dir_copy
+;           NAME:           clone_cur_dir
 ;
-;           DESCRIPTION:    App dir copy
+;           DESCRIPTION:    Clone cur dir
 ;
-;           PARAMETERS:     ES          App sel
-;                           DS          Parent app sel
+;           PARAMETERS:     AX          Incoming cur dir sel
+;
+;           RETURNS:        AX          New cur dir sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public app_dir_copy
+clone_cur_dir_name DB 'Clone Cur Dir', 0
 
-app_dir_copy   Proc near
+clone_cur_dir   Proc far
+    push ds
+    push es
     push fs
-    push ax
     push bx
     push cx
 ;
-    mov al,ds:app_curr_drive
-    mov es:app_curr_drive,al
+    mov ds,ax
+    mov eax,SIZE proc_cur_dir_struc
+    AllocateSmallGlobalMem
+    mov al,ds:pc_drive
+    mov es:pc_drive,al
 ;
     mov cx,256
-    mov bx,OFFSET app_cur_dir_sel
+    mov bx,OFFSET pc_dir_sel_arr
 
-adcLoop:
+ccdLoop:
     mov ax,ds:[bx]
     mov es:[bx],ax
     or ax,ax
-    jz adcNext
+    jz ccdNext
 ;
     mov fs,ax
     inc fs:ds_usage
 
-adcNext:
+ccdNext:
     add bx,2
-    loop adcLoop
+    loop ccdLoop
+;
+    mov ax,es
 ;
     pop cx
     pop bx
-    pop ax
     pop fs
-    ret
-app_dir_copy   Endp
+    pop es
+    pop ds
+    retf32
+clone_cur_dir   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           app_dir_delete
+;           NAME:           DeleteCurDir
 ;
-;           DESCRIPTION:    App dir delete
+;           DESCRIPTION:    Delete cur dir
 ;
-;           PARAMETERS:     ES          App sel
+;           PARAMETERS:     AX       Cur dir sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public app_dir_delete
+delete_cur_dir_name DB 'Delete Cur Dir', 0
 
-app_dir_delete        Proc near
-    push ax
+delete_cur_dir        Proc far
+    push es
     push bx
     push cx
     push di
 ;
     mov cx,256
-    mov di,OFFSET app_cur_dir_sel
+    mov di,OFFSET pc_dir_sel_arr
+    mov es,ax
 
-addLoop:
+dcdLoop:
     mov bx,es:[di]
     or bx,bx
-    jz addNext
+    jz dcdNext
 ;
     call FreeDir
 
-addNext:
+dcdNext:
     add di,2
-    loop addLoop
+    loop dcdLoop
+;
+    FreeMem
 ;
     pop di
     pop cx
     pop bx
-    pop ax
-    ret
-app_dir_delete        Endp
+    pop es
+    retf32
+delete_cur_dir        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3370,6 +3393,21 @@ init_dir    PROC near
     mov edi,OFFSET delete_handle
     mov ax,DIR_HANDLE
     RegisterHandle
+;
+    mov esi,OFFSET create_cur_dir
+    mov edi,OFFSET create_cur_dir_name
+    mov ax,create_cur_dir_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET clone_cur_dir
+    mov edi,OFFSET clone_cur_dir_name
+    mov ax,clone_cur_dir_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET delete_cur_dir
+    mov edi,OFFSET delete_cur_dir_name
+    mov ax,delete_cur_dir_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET stop_file_system
     mov edi,OFFSET stop_file_system_name

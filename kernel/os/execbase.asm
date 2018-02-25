@@ -2137,6 +2137,9 @@ unload_kernel:
     mov ax,ds:pf_c_handle_sel
     DeleteCHandle
 ;
+    mov ax,ds:pf_cur_dir_sel
+    DeleteCurDir
+;
     movzx ebx,es:p_prog_id
     GetProgramSel
     jc ukDone

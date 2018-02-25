@@ -35,6 +35,7 @@ INCLUDE system.def
 INCLUDE int.def
 INCLUDE system.inc
 INCLUDE ..\fs.inc
+INCLUDE exec.def
 
 CallFileSystem  MACRO   call_proc
     push ds
@@ -72,10 +73,6 @@ code    SEGMENT byte public 'CODE'
     extrn init_file:near
     extrn init_dir:near
     extrn init_memmap:near
-
-    extrn app_dir_create:near
-    extrn app_dir_copy:near
-    extrn app_dir_delete:near
     
     extrn app_memmap_create:near
     extrn app_memmap_delete:near
@@ -92,7 +89,6 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_create   Proc far
-    call app_dir_create
     call app_memmap_create
     retf32
 notify_create   Endp
@@ -125,7 +121,6 @@ notify_start    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_forked   Proc far
-    call app_dir_copy
     retf32
 notify_forked   Endp
 
@@ -157,7 +152,6 @@ notify_exec     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_spawn    Proc far
-    call app_dir_copy
     retf32
 notify_spawn    Endp
 
@@ -173,7 +167,6 @@ notify_spawn    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 notify_terminate        Proc far
-    call app_dir_delete
     call app_memmap_delete
     retf32
 notify_terminate        Endp
@@ -657,6 +650,17 @@ rename_file16   ENDP
 hook_thread_name DB 'Init File System', 0
 
 hook_thread     PROC far
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ax,ds:pf_cur_dir_sel
+    or ax,ax
+    jnz hook_thread_dir_ok
+;
+    CreateCurDir
+    mov ds:pf_cur_dir_sel,ax
+
+hook_thread_dir_ok:
     mov ax,SEG data
     mov ds,ax
     mov cx,ds:fs_init_hooks

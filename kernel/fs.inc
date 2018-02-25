@@ -283,3 +283,9 @@ fs_write_file_block_proc			DD ?,?
 
 file_system_struc	ENDS
 
+proc_cur_dir_struc   STRUC
+
+pc_dir_sel_arr        DW 256 DUP(?)
+pc_drive              DB ?
+
+proc_cur_dir_struc   ENDS

@@ -3162,6 +3162,22 @@ RegisterLoader      MACRO
     OsGate register_loader_nr
                     ENDM
 
+; OUT AX        Cur dir selector
+CreateCurDir MACRO
+    OsGate create_cur_dir_nr
+                    ENDM
+
+; IN  AX        Cur dir selector to clone
+; OUT AX        New cur dir selector
+CloneCurDir MACRO
+    OsGate clone_cur_dir_nr
+                    ENDM
+
+; IN  AX        Cur dir selector
+DeleteCurDir MACRO
+    OsGate delete_cur_dir_nr
+                    ENDM
+
 ;;;;;;;;;;;; FILE ;;;;;;;;;;;
 
 ;  IN   BX          File handle

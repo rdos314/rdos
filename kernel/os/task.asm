@@ -7579,6 +7579,7 @@ create_process_sel Proc near
     mov es:pf_cli_thread,0
     mov es:pf_thread_count,0
     mov es:pf_c_handle_sel,0
+    mov es:pf_cur_dir_sel,0
     mov es:pf_program_id,bx
     InitSection es:pf_section
 ;
@@ -7669,6 +7670,48 @@ cchSave:
     pop ds
     ret
 create_c_handle	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           create_cur_dir
+;
+;           DESCRIPTION:    create current dir sel
+;
+;           PARAMETERS:     ES          New thread
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_cur_dir       PROC near
+    push ds
+    push es
+    push fs
+    push eax
+;
+    GetThread
+    mov ds,ax
+    mov fs,ds:p_proc_sel
+    mov ax,fs:pf_cur_dir_sel
+    or ax,ax
+    jz ccdCreate
+
+ccdClone:
+    CloneCurDir
+    jmp ccdSave
+
+ccdCreate:
+    CreateCurDir
+
+ccdSave:
+    mov fs,es:p_proc_sel
+    mov fs:pf_cur_dir_sel,ax    
+;
+    pop eax
+    pop fs
+    pop es 
+    pop ds
+    ret
+create_cur_dir	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -8804,6 +8847,7 @@ create_process  PROC far
     je cpSkipped
 ;
     call create_c_handle
+    call create_cur_dir
 
 cpSkipped:
 
@@ -9110,6 +9154,7 @@ fork_process  PROC far
     mov bx,1
     call init_process_block
     call create_c_handle
+    call create_cur_dir
 ;    
     mov ax,es
     mov ds,ax

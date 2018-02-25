@@ -753,4 +753,8 @@ set_focus_console_nr        = 657
 get_focus_console_nr        = 658
 create_console_nr           = 659
 
+create_cur_dir_nr           = 660
+clone_cur_dir_nr            = 661
+delete_cur_dir_nr           = 662
+
 osgate_entries              = 700
