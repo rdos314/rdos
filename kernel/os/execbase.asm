@@ -50,18 +50,120 @@ debug_event_wait_header ENDS
 
 data    SEGMENT byte public 'DATA'
 
-term_gate_sel       DW ?
-free_dll_gate_sel   DW ?
-exit_gate_sel       DW ?
+term_gate_sel           DW ?
+free_dll_gate_sel       DW ?
+exit_gate_sel           DW ?
 
-loader_count        DW ?
-loader_arr          DW 16 DUP(?)
+focus_current_console   DW ?
+focus_section           section_typ <>
+
+loader_count            DW ?
+loader_arr              DW 16 DUP(?)
+
+focus_console_arr       DW 256 DUP(?)
 
 data    ENDS
 
 _TEXT    SEGMENT byte public 'CODE'
 
     assume cs:_TEXT
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetFocus
+;
+;           DESCRIPTION:    Set input focus
+;
+;           PARAMETERS:     AL      KEY NUMBER
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_focus_name  DB 'Set Focus',0
+
+set_focus       PROC far
+    push ds
+    push es
+    pushad
+;
+    mov bx,SEG data
+    mov ds,bx
+    EnterSection ds:focus_section
+;
+    movzx bx,al
+    add bx,bx
+    mov bx,ds:[bx].focus_console_arr
+    or bx,bx
+    jz set_focus_done
+;    
+    mov ds:focus_current_console,bx
+    SetFocusConsole
+
+set_focus_done:
+    LeaveSection ds:focus_section
+;
+    popad
+    pop es
+    pop ds
+    ret
+set_focus       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           EnableFocus
+;
+;           DESCRIPTION:    Enable focus
+;
+;           PARAMETERS:     AL      KEY NUMBER
+;
+;       RETURNS:            AL      Actual key
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enable_focus_name       DB 'Enable Focus',0
+
+enable_focus    PROC far
+    push ds
+    push bx
+    push si
+;
+    mov bx,SEG data
+    mov ds,bx
+;
+    movzx si,al
+    add si,si
+
+enable_focus_loop:
+    mov bx,ds:[si].focus_console_arr
+    or bx,bx
+    jnz enable_focus_next
+;
+    CreateConsole
+    mov ds:[si].focus_console_arr,bx
+;
+    GetThread
+    mov ds,ax
+    mov ds:p_console,bx
+;
+    mov ax,si
+    shr ax,1
+    clc
+    jmp enable_focus_done
+
+enable_focus_next:
+    add si,2
+    cmp si,200h
+    jne enable_focus_loop
+;
+    stc
+
+enable_focus_done:
+    pop si
+    pop bx
+    pop ds
+    ret
+enable_focus    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4943,6 +5045,13 @@ InitExec_    Proc near
     mov es,eax
     mov ds:loader_count,0
 ;
+    mov edi,OFFSET focus_console_arr
+    mov ecx,256
+    xor ax,ax
+    rep stosw
+    mov ds:focus_current_console,0
+    InitSection ds:focus_section
+;
     AllocateGdt
     or bl,3
     mov eax,cs
@@ -5050,6 +5159,18 @@ InitExec_    Proc near
     xor cl,cl
     mov ax,terminate_app_thread_nr
     RegisterOsGate
+;
+    mov esi,OFFSET set_focus
+    mov edi,OFFSET set_focus_name
+    xor dx,dx
+    mov ax,set_focus_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET enable_focus
+    mov edi,OFFSET enable_focus_name
+    xor dx,dx
+    mov ax,enable_focus_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET dos_ext_exec16
     mov edi,OFFSET dos_ext_exec_name
