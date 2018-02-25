@@ -169,6 +169,11 @@ pf_program_sel       DW ?
 
 pf_c_handle_sel      DW ?
 
+pf_virt_flags        DW ?
+pf_wait_sti          DW ?
+pf_cli_thread        DW ?
+pf_iopl              DW ?
+
 pf_section           section_typ <>
 
 pf_thread_count      DW ?

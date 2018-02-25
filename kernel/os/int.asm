@@ -34,6 +34,7 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE int.def
+INCLUDE exec.def
 
 
     .386p
@@ -72,16 +73,19 @@ sim_sti PROC far
     sti
     GetThread
     mov ds,ax
-    mov ds,ds:p_process_sel
-    mov ds:ms_virt_flags,7200h
+    mov ds,ds:p_proc_sel
+    mov ds:pf_virt_flags,7200h
+
 sim_sti_test_wake:
-    cmp ds:ms_wait_sti,0
+    cmp ds:pf_wait_sti,0
     jz sim_sti_nowake
+;
     push si
-    mov si,OFFSET ms_wait_sti
+    mov si,OFFSET pf_wait_sti
     Wake
     pop si
     jmp sim_sti_test_wake
+
 sim_sti_nowake:
     pop ax
     pop ds
@@ -107,10 +111,10 @@ sim_cli PROC far
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_process_sel
+    mov ds,ds:p_proc_sel
     cli
-    mov ds:ms_cli_thread,ax
-    mov ds:ms_virt_flags,7000h
+    mov ds:pf_cli_thread,ax
+    mov ds:pf_virt_flags,7000h
     sti
     pop ax
     pop ds
@@ -137,27 +141,30 @@ set_flags       PROC near
     mov ds,ax
     mov bx,ax
     pop ax
-    mov ds,ds:p_process_sel
+    mov ds,ds:p_proc_sel
     cli
-    mov ds:ms_cli_thread,bx
+    mov ds:pf_cli_thread,bx
     mov bx,ax
     and bx,200h
     or bx,7000h
-    mov ds:ms_virt_flags,bx
+    mov ds:pf_virt_flags,bx
     sti
     test bx,200h
     jz set_flags_nowake
+
 set_flags_test_wake:
-    cmp ds:ms_wait_sti,0
+    cmp ds:pf_wait_sti,0
     jz set_flags_nowake
+;
     push si
-    mov si,OFFSET ms_wait_sti
+    mov si,OFFSET pf_wait_sti
     Wake
     pop si
     jmp set_flags_test_wake
+
 set_flags_nowake:
     and ax,NOT 7000h
-;    or ax,ds:ms_iopl
+;    or ax,ds:pf_iopl
     or ax,200h
     ret
 set_flags       ENDP
@@ -204,9 +211,9 @@ get_flags       PROC near
     GetThread
     mov ds,ax
     pop ax
-    mov ds,ds:p_process_sel
+    mov ds,ds:p_proc_sel
     and ax,NOT 200h
-    mov bx,ds:ms_virt_flags
+    mov bx,ds:pf_virt_flags
     and bx,200h
     or ax,bx
     or ax,7000h

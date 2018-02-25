@@ -377,9 +377,9 @@ WriteEflags	PROC near
 	mov ax,gs:tss_eflags
 	push ds
 	mov ds,gs:tss_thread
-	mov ds,ds:p_process_sel
+	mov ds,ds:p_proc_sel
 	and ax,NOT 200h
-	mov bx,ds:ms_virt_flags
+	mov bx,ds:pf_virt_flags
 	and bx,200h
 	or ax,bx
 	pop ds

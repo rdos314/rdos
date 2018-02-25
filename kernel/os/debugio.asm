@@ -454,9 +454,9 @@ WriteEflags     PROC near
     shl eax,16
     mov ax,word ptr gs:p_rflags
     push ds
-    mov ds,gs:p_process_sel
+    mov ds,gs:p_proc_sel
     and ax,NOT 200h
-    mov bx,ds:ms_virt_flags
+    mov bx,ds:pf_virt_flags
     and bx,200h
     or ax,bx
     pop ds

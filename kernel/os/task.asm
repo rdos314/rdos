@@ -923,11 +923,11 @@ HandlePrio    Proc near
 
 hpqInt:
     mov es,ax
-    mov es,es:p_process_sel
-    test es:ms_virt_flags,200h
+    mov es,es:p_proc_sel
+    test es:pf_virt_flags,200h
     jnz hpqDone
 ;
-    cmp ax,es:ms_cli_thread
+    cmp ax,es:pf_cli_thread
     je hpqDone
 ;
     mov ax,es
@@ -937,7 +937,7 @@ hpqInt:
     call cs:lock_list_proc
     push ds  
     mov ds,ax
-    mov di,OFFSET ms_wait_sti
+    mov di,OFFSET pf_wait_sti
     call InsertBlock
     pop ds
     call cs:unlock_list_proc
@@ -7640,6 +7640,10 @@ create_process_sel Proc near
     mov eax,SIZE process_struc + 4
     AllocateSmallGlobalMem
 ;
+    mov es:pf_virt_flags,7200h
+    mov es:pf_wait_sti,0
+    mov es:pf_iopl,0
+    mov es:pf_cli_thread,0
     mov es:pf_thread_count,0
     mov es:pf_c_handle_sel,0
     mov es:pf_program_id,bx
@@ -7839,11 +7843,7 @@ init_process_block      PROC near
     push es
     mov eax,SIZE process_seg
     AllocateSmallGlobalMem
-    mov es:ms_virt_flags,7200h
-    mov es:ms_wait_sti,0
     mov es:ms_thread_count,1
-    mov es:ms_iopl,0
-    mov es:ms_cli_thread,0
     mov bx,es
 ;       
     mov eax,SIZE proc_descr_seg
@@ -8697,13 +8697,7 @@ terminate_app_handled:
 terminate_proc:
     GetThread
     mov ds,ax
-;    mov ds,ds:p_process_sel
-;    mov ds,ds:ms_pd_sel
-;    sub ds:pd_ref_count,1
-;    jz terminate_free_pd
 ;
-;    EnterSection ds:pd_section
-;    
     mov ds:pd_proc_sel,0
     mov ax,ds:pd_wait
     or ax,ax
