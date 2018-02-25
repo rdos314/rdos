@@ -2041,6 +2041,14 @@ unload_kernel:
     GetThread
     mov es,ax
 ;
+    movzx ebx,es:p_proc_id
+    ProcessIdToSel
+    jc ukDone
+;
+    mov ds,ebx
+    mov ax,ds:pf_c_handle_sel
+    DeleteCHandle
+;
     movzx ebx,es:p_prog_id
     GetProgramSel
     jc ukDone
