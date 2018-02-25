@@ -33,6 +33,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE chandle.inc
+INCLUDE exec.def
 
 MAX_HANDLES           = 256
 
@@ -58,36 +59,21 @@ handle_struc    ENDS
 code    SEGMENT byte public use16 'CODE'
     
     assume cs:code
- 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_create
-;
-;           DESCRIPTION:    Notify create process
-;
-;           PARAMETERS:     ES		App sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_create	Proc far
-    mov es:app_c_handle_sel,0
-    retf32
-notify_create	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           notify_start
+;           NAME:           CreateCHandle
 ;
-;           DESCRIPTION:    Notify start boot process
+;           DESCRIPTION:    Create C handle
 ;
-;           PARAMETERS:     ES		App sel
+;           RETURNS:        AX          C handle selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-notify_start	Proc far
-    push ax
+create_c_handle_name DB 'Create C Handle', 0
+
+create_c_handle Proc far
     push ds
     push es
     push bx
@@ -144,39 +130,35 @@ nsLoop:
     pop bx    
     pop es
     pop ds
-;
-    mov es:app_c_handle_sel,ax
-    pop ax
     retf32
-notify_start	Endp
+create_c_handle Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           notify_clone
+;           NAME:           CloneCHandle
 ;
-;           DESCRIPTION:    Notify clone (spawn + fork)
+;           DESCRIPTION:    Clone C handle
 ;
-;           PARAMETERS:     ES		App sel
-;                           DS		Parent app sel
+;           PARAMETERS:     AX          Incoming C handle sel
+;
+;           RETURNS:        AX          Cloned C handle sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-notify_clone	Proc far
+clone_c_handle_name  DB 'Clone C Handle', 0
+
+clone_c_handle  Proc far
     push ds
     push es
-    pushad
+    push bx
+    push cx
 ;
-    mov ax,ds:app_c_handle_sel
-    or ax,ax
-    jz ncDone
+    mov ds,ax
 ;
-    push es
     mov eax,SIZE handle_struc
     AllocateSmallGlobalMem
     InitSection es:h_section
-;
-    mov ds,ds:app_c_handle_sel
 ;    
     mov cx,MAX_HANDLES
     xor bx,bx
@@ -231,48 +213,34 @@ ncNext:
     sub cx,1
     jnz ncLoop
 ;
-    pop ds
-    mov ds:app_c_handle_sel,es
-
-ncDone:
-    popad
+    mov ax,es
+;
+    pop cx
+    pop bx
     pop es
     pop ds
     retf32
-notify_clone	Endp
+clone_c_handle  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           notify_exec
+;           NAME:           DeleteCHandle
 ;
-;           DESCRIPTION:    Notify exec
+;           DESCRIPTION:    Delete C Handle
 ;
-;           PARAMETERS:     ES		App sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_exec	Proc far
-    retf32
-notify_exec	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_terminate
-;
-;           DESCRIPTION:    Notify terminate
-;
-;           PARAMETERS:     ES		App sel
+;           PARAMETERS:     AX        C handle sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-notify_terminate	Proc far
+delete_c_handle_name DB 'Delete C Handle', 0
+
+delete_c_handle Proc far
     push ds
     push es
     pushad
 ;
-    mov ds,es:app_c_handle_sel
+    mov ds,ax
 ;    
     mov cx,MAX_HANDLES
     xor bx,bx
@@ -343,21 +311,7 @@ ntNext:
     pop es
     pop ds
     retf32
-notify_terminate	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;           NAME:           App activity table
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-app_activity_table:
-a0 DD OFFSET notify_create,  	SEG code   ; create process
-a1 DD OFFSET notify_start,  	SEG code   ; boot app
-a2 DD OFFSET notify_clone,  	SEG code   ; forked
-a3 DD OFFSET notify_exec,  	SEG code   ; exec
-a4 DD OFFSET notify_clone,  	SEG code   ; spawn
-a5 DD OFFSET notify_terminate,  SEG code   ; terminate process
+delete_c_handle Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -596,8 +550,8 @@ open_handle     Proc near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;
     mov al,cl
     and al,3
@@ -736,8 +690,8 @@ close_handle     Proc near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae chFail
@@ -819,8 +773,8 @@ c_handle_to_file_sel     Proc near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae chfsFail
@@ -912,8 +866,8 @@ read_handle     Proc near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae rhFail
@@ -1043,8 +997,8 @@ write_handle     Proc near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae whFail
@@ -1159,8 +1113,8 @@ dup_handle     Proc near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae dhFail
@@ -1237,8 +1191,8 @@ dup2_handle     Proc near
     mov di,ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae d2hFail
@@ -1373,8 +1327,8 @@ get_handle_size     Proc far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae ghsFail
@@ -1425,7 +1379,7 @@ get_handle_size     Endp
 ;           PARAMETERS:     BX          Handle
 ;                           EAX         Size
 ;
-;           RETURNS:        EAX		Result
+;           RETURNS:        EAX         Result
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1462,8 +1416,8 @@ set_handle_size     Proc far
     mov edx,eax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae shsFail
@@ -1550,8 +1504,8 @@ get_handle_time     Proc far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae ghtFail
@@ -1601,9 +1555,9 @@ get_handle_time     Endp
 ;           DESCRIPTION:    Set C handle time
 ;
 ;           PARAMETERS:     BX          Handle
-;                           EDX:EAX	Time
+;                           EDX:EAX     Time
 ;
-;           RETURNS:        EAX		Result
+;           RETURNS:        EAX         Result
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1641,8 +1595,8 @@ set_handle_time     Proc far
     mov esi,eax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae shtFail
@@ -1708,8 +1662,8 @@ get_handle_mode     Proc far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae ghmFail
@@ -1738,7 +1692,7 @@ get_handle_mode     Endp
 ;           PARAMETERS:     BX          Handle
 ;                           EAX         Mode
 ;
-;           RETURNS:        EAX		Result
+;           RETURNS:        EAX         Result
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1752,8 +1706,8 @@ set_handle_mode     Proc far
     mov dx,ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae shmFail
@@ -1795,8 +1749,8 @@ get_handle_pos     Proc far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae ghpFail
@@ -1825,7 +1779,7 @@ get_handle_pos     Endp
 ;           PARAMETERS:     BX          Handle
 ;                           EAX         Position
 ;
-;           RETURNS:        EAX		Result
+;           RETURNS:        EAX         Result
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1839,8 +1793,8 @@ set_handle_pos     Proc far
     mov edx,eax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae shpFail
@@ -1931,8 +1885,8 @@ eof_handle     Proc far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae ehFail
@@ -1984,7 +1938,7 @@ eof_handle     Endp
 ;
 ;           PARAMETERS:     BX          Handle
 ;
-;           RETURNS:        NC		Device
+;           RETURNS:        NC          Device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2019,8 +1973,8 @@ is_handle_device     Proc far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_c_handle_sel
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae ihdFail
@@ -2103,8 +2057,23 @@ init_chandle     PROC near
     mov ds,ax
     mov es,ax
 ;
-    mov edi,OFFSET app_activity_table
-    HookAppActivity
+    mov esi,OFFSET create_c_handle
+    mov edi,OFFSET create_c_handle_name
+    xor cl,cl
+    mov ax,create_c_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET clone_c_handle
+    mov edi,OFFSET clone_c_handle_name
+    xor cl,cl
+    mov ax,clone_c_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET delete_c_handle
+    mov edi,OFFSET delete_c_handle_name
+    xor cl,cl
+    mov ax,delete_c_handle_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET allocate_c_handle
     mov edi,OFFSET allocate_c_handle_name

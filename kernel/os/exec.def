@@ -168,6 +168,8 @@ process_struc    STRUC
 pf_program_id        DW ?
 pf_program_sel       DW ?
 
+pf_c_handle_sel      DW ?
+
 pf_section           section_typ <>
 
 pf_thread_count      DW ?

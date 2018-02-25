@@ -2176,6 +2176,22 @@ AliasModuleHandle       MACRO
     OsGate alias_module_handle_nr
                     ENDM
 
+; OUT AX        C handle selector
+CreateCHandle MACRO
+    OsGate create_c_handle_nr
+                    ENDM
+
+; IN  AX        C handle selector to clone
+; OUT AX        New C handle selector
+CloneCHandle MACRO
+    OsGate clone_c_handle_nr
+                    ENDM
+
+; IN  AX        C handle selector
+DeleteCHandle MACRO
+    OsGate delete_c_handle_nr
+                    ENDM
+
 ; IN  AX        Entry type
 ; IN  DX        Selector
 ; OUT BX        Entry handle

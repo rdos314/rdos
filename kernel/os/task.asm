@@ -7641,6 +7641,7 @@ create_process_sel Proc near
     AllocateSmallGlobalMem
 ;
     mov es:pf_thread_count,0
+    mov es:pf_c_handle_sel,0
     mov es:pf_program_id,bx
     InitSection es:pf_section
 ;
@@ -7689,6 +7690,48 @@ cpsLeave:
     pop ds
     ret
 create_process_sel Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           create_c_handle
+;
+;           DESCRIPTION:    create_c_handle
+;
+;           PARAMETERS:     ES          New thread
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_c_handle       PROC near
+    push ds
+    push es
+    push fs
+    push eax
+;
+    GetThread
+    mov ds,ax
+    mov fs,ds:p_proc_sel
+    mov ax,fs:pf_c_handle_sel
+    or ax,ax
+    jz cchCreate
+
+cchClone:
+    CloneCHandle
+    jmp cchSave
+
+cchCreate:
+    CreateCHandle
+
+cchSave:
+    mov fs,es:p_proc_sel
+    mov fs:pf_c_handle_sel,ax    
+;
+    pop eax
+    pop fs
+    pop es 
+    pop ds
+    ret
+create_c_handle	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -8862,6 +8905,15 @@ create_process  PROC far
 ;
     mov bx,[ebp].cr_ebx
     call init_process_block
+;
+    mov bx,[ebp].cr_ebx
+    cmp bx,1
+    je cpSkipped
+;
+    call create_c_handle
+
+cpSkipped:
+
     mov ax,es
     mov ds,ax
     mov ax,[ebp].cr_mode
@@ -9164,6 +9216,7 @@ fork_process  PROC far
     mov es:p_debug_proc,eax
     mov bx,1
     call init_process_block
+    call create_c_handle
 ;    
     mov ax,es
     mov ds,ax
