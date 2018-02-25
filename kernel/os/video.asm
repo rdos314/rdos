@@ -1263,6 +1263,8 @@ ccText:
     call CreateConsoleBios
 
 ccDone:
+    GetThread
+    mov es:c_thread,ax
     mov bx,es
 ;
     pop eax

@@ -281,6 +281,8 @@ c_curr_col            DW ?
 c_prev_row            DW ?
 c_prev_col            DW ?
 
+c_thread              DW ?
+
 c_usage               DW ?
 
 c_video_mode          DW ?
