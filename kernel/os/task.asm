@@ -8623,10 +8623,16 @@ terminate_thread_not_user:
 no_free_ss:
     GetThread
     mov ds,ax
-    mov ds,ds:p_process_sel
-    sub ds:ms_thread_count,1
-    jz terminate_proc
+    mov ax,ds:p_proc_sel
+    or ax,ax
+    jz t_thread
 ;
+    mov ds,ax
+    mov ax,ds:pf_thread_count
+    or ax,ax
+    jz terminate_proc
+
+t_thread:
     GetThread
     mov ds,ax
     mov eax,ds:p_free_proc
