@@ -2083,12 +2083,20 @@ ukDone:
     CloseCFile
 ;
     FreeMem
-    DestroyLdt
 ;
     GetThread
-    mov es,ax
-    mov ax,es:p_console
+    mov ds,eax
+;
+    mov al,ds:p_parent_switch
+    or al,al
+    jz ukFocusOk
+;
+    SetFocus
+
+ukFocusOk:
+    mov ax,ds:p_console
     CloseConsole
+    DestroyLdt
 ;
     call RemoveProg
     TerminateThread

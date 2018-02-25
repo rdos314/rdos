@@ -8665,13 +8665,6 @@ terminate_thread_not_user:
     mov es,ax
     call remove_process_thread
 ;
-    mov al,ds:p_parent_switch
-    or al,al
-    jz terminate_focus_ok
-;
-    SetFocus
-
-terminate_focus_ok:
     mov es,ds:p_thread_sel
     mov bx,es:p_stack_sel
     verr bx
