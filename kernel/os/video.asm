@@ -1225,14 +1225,16 @@ utNext:
 ;
 ;   DESCRIPTION:    Create a new console
 ;
+;   RETURNS:        BX		Console
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public CreateConsole
+create_console_name DB 'Create Console', 0
     
-CreateConsole  PROC near
+create_console  PROC far
     push ds
     push es
-    push ax
+    push eax
 ;    
     mov ax,SEG data
     mov ds,ax
@@ -1261,15 +1263,13 @@ ccText:
     call CreateConsoleBios
 
 ccDone:
-    GetThread
-    mov ds,ax
-    mov ds:p_console,es
+    mov bx,es
 ;
-    pop ax
+    pop eax
     pop es
     pop ds
     ret
-CreateConsole   Endp
+create_console   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5636,6 +5636,12 @@ init_video      PROC near
     mov edi,OFFSET set_focus_console_name
     xor cl,cl
     mov ax,set_focus_console_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_console
+    mov edi,OFFSET create_console_name
+    xor cl,cl
+    mov ax,create_console_nr
     RegisterOsGate
 ;
     mov esi,OFFSET close_console

@@ -751,5 +751,6 @@ delete_c_handle_nr          = 655
 close_console_nr            = 656
 set_focus_console_nr        = 657
 get_focus_console_nr        = 658
+create_console_nr           = 659
 
 osgate_entries              = 700

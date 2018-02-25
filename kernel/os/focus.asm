@@ -49,8 +49,6 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
-    extrn CreateConsole:near
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -159,7 +157,12 @@ enable_focus_next:
     jne enable_focus_loop
 
 enable_focus_done:
-    call CreateConsole
+    push bx
+    CreateConsole
+    GetThread
+    mov es,ax
+    mov es:p_console,bx
+    pop bx
 ;
     mov ax,bx
     shr ax,1

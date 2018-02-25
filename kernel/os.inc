@@ -2307,6 +2307,11 @@ SetFocusConsole MACRO
     OsGate set_focus_console_nr
                     ENDM
 
+; OUT BX       Console selector
+CreateConsole MACRO
+    OsGate create_console_nr
+                    ENDM
+
 ; IN  BX       Console selector
 CloseConsole MACRO
     OsGate close_console_nr
