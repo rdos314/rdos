@@ -1286,61 +1286,21 @@ DeleteConsole  PROC near
     FreeMem
     ret
 DeleteConsole   Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;   NAME:           DisableConsoleFocus
-;
-;   DESCRIPTION:    Disable console focus
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public DisableConsoleFocus
-
-DisableConsoleFocus Proc near
-    push ds
-    push es
-    push ax
-;    
-    mov ax,SEG data
-    mov ds,ax
-    xor ax,ax
-    xchg ax,ds:focus_console
-    or ax,ax
-    jz dcfDone
-;
-    mov ds,ax
-    lock and ds:c_flags,NOT (CONSOLE_FLAG_ACTIVE OR CONSOLE_FLAG_TEXT_BUFFER OR CONSOLE_FLAG_NEW_WRITES)
-;    
-    test ds:c_flags,CONSOLE_FLAG_BITMAP
-    jz dcfDone
-;
-    mov ax,ds:c_video_sel
-    mov ds,ax
-    mov ds:v_has_focus,0    
         
-dcfDone:
-    pop ax
-    pop es
-    pop ds    
-    ret
-DisableConsoleFocus Endp
-    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;   NAME:           EnableConsoleFocus
+;   NAME:           SetConsoleFocus
 ;
-;   DESCRIPTION:    Enable console focus
+;   DESCRIPTION:    Set console focus
 ;
 ;   PARAMETERS:     BX      Console
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public EnableConsoleFocus
+    public SetConsoleFocus
 
-EnableConsoleFocus Proc near
+SetConsoleFocus Proc near
     push ds
     push es
     push fs
@@ -1351,9 +1311,28 @@ EnableConsoleFocus Proc near
     mov ds,ax
     mov fs,bx
 ;
+    xor ax,ax
+    xchg ax,ds:focus_console
+    or ax,ax
+    jz scfEnable
+;
+    mov ds,ax
+    lock and ds:c_flags,NOT (CONSOLE_FLAG_ACTIVE OR CONSOLE_FLAG_TEXT_BUFFER OR CONSOLE_FLAG_NEW_WRITES)
+;    
+    test ds:c_flags,CONSOLE_FLAG_BITMAP
+    jz scfEnable
+;
+    mov ax,ds:c_video_sel
+    mov ds,ax
+    mov ds:v_has_focus,0    
+        
+scfEnable:
+    mov ax,SEG data
+    mov ds,ax
+;
     mov ax,fs:c_video_mode
     cmp ax,ds:curr_video_mode
-    je ecfModeOk
+    je scfModeOk
 ;
     mov ds:curr_video_mode,ax
     push bx
@@ -1361,29 +1340,29 @@ EnableConsoleFocus Proc near
     SwitchVideoMode
     pop bx
 
-ecfModeOk:
+scfModeOk:
     lock or fs:c_flags,CONSOLE_FLAG_ACTIVE
     mov ds:focus_console,bx
 ;
     test fs:c_flags,CONSOLE_FLAG_BITMAP
-    jz ecfRedraw
+    jz scfRedraw
 ;
     mov ds,fs:c_video_sel
     mov ds:v_has_focus,1
     mov ax,flat_sel
     mov es,ax
     call RedrawVideo
-    jmp ecfDone
+    jmp scfDone
 
-ecfRedraw:
+scfRedraw:
     mov ax,flat_sel
     mov es,ax
     mov ds,fs:c_video_sel
     call RedrawConsole    
 ;
     test fs:c_flags,CONSOLE_FLAG_ACTIVE
-    jz ecfDone
-
+    jz scfDone
+;
     push cx
     push dx
     mov dx,fs:c_curr_row
@@ -1392,14 +1371,14 @@ ecfRedraw:
     pop dx
     pop cx
         
-ecfDone:
+scfDone:
     pop bx
     pop ax
     pop fs
     pop es
     pop ds    
     ret
-EnableConsoleFocus Endp
+SetConsoleFocus Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

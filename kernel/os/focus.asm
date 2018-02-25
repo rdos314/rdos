@@ -50,8 +50,7 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extrn CreateConsole:near
-    extrn DisableConsoleFocus:near
-    extrn EnableConsoleFocus:near
+    extrn SetConsoleFocus:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -192,8 +191,6 @@ set_focus       PROC far
     mov ax,ds:[bx].focus_thread
     or ax,ax
     jz set_focus_done
-;
-    call DisableConsoleFocus
 ;    
     mov ds:focus_current_thread,ax
     mov es,ax
@@ -201,7 +198,7 @@ set_focus       PROC far
     or bx,bx
     jz set_focus_done
 ;
-    call EnableConsoleFocus
+    call SetConsoleFocus
 
 set_focus_done:
     LeaveSection ds:focus_section
