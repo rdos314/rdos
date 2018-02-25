@@ -7195,24 +7195,6 @@ update_time     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_wait_for_proc_end PROC far
-    push ds
-    push eax
-;
-    ClearSignal
-    mov ax,es:pew_proc_sel
-    mov ds,ax
-    mov ds:pd_wait,es
-;
-    mov ax,ds:pd_proc_sel
-    or ax,ax
-    jnz start_wait_done
-;
-    mov ds:pd_wait,0
-    SignalWait
-
-start_wait_done:    
-    pop eax
-    pop ds
     retf32
 start_wait_for_proc_end Endp
     
@@ -7228,15 +7210,6 @@ start_wait_for_proc_end Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 stop_wait_for_proc_end  PROC far
-    push ds
-    push eax
-;
-    mov ax,es:pew_proc_sel
-    mov ds,ax
-    mov ds:pd_wait,0
-;    
-    pop eax
-    pop ds
     retf32
 stop_wait_for_proc_end Endp
 
@@ -7269,21 +7242,7 @@ dummy_clear_proc_end Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_proc_end_idle    PROC far
-    push ds
-    push eax
-;
-    mov ax,es:pew_proc_sel
-    mov ds,ax
-    mov ax,ds:pd_proc_sel
-    or ax,ax
     clc
-    jne is_idle_done
-;
-    stc
-
-is_idle_done:    
-    pop eax
-    pop ds
     retf32
 is_proc_end_idle Endp
     
@@ -7845,20 +7804,6 @@ init_process_block      PROC near
     AllocateSmallGlobalMem
     mov es:ms_thread_count,1
     mov bx,es
-;       
-    mov eax,SIZE proc_descr_seg
-    AllocateSmallGlobalMem
-    mov es:pd_proc_sel,bx
-    mov es:pd_exit_code,0
-    mov es:pd_ref_count,1
-    mov es:pd_wait,0
-;       
-    push ds
-    mov ax,es
-    mov ds,ax
-    InitSection ds:pd_section
-    pop ds
-;       
     pop es
     mov es:p_process_sel,bx
 ;
@@ -8698,19 +8643,6 @@ terminate_proc:
     GetThread
     mov ds,ax
 ;
-    mov ds:pd_proc_sel,0
-    mov ax,ds:pd_wait
-    or ax,ax
-    jz terminate_proc_sig_done
-;
-    mov es,ax
-    SignalWait
-;
-    mov ax,200
-    WaitMilliSec
-
-terminate_proc_sig_done:   
-;    LeaveSection ds:pd_section
     xor ax,ax
     mov ds,ax
     jmp terminate_pd_done    
