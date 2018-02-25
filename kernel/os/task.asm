@@ -9249,22 +9249,31 @@ init_virt_callback_frame    ENDP
 
 init_prot_callback_frame    PROC near
     pop bp
-    xor eax,eax
-    mov eax,ds:cm_stack
-    AllocateSmallGlobalMem
-;
-    push 0
-    push es
-;
-    push eax
-;
-    push 0
-    mov ax,ds:cm_flags
-    or ax,200h
-    and ax,NOT 7000h
-    push ax
 ;
     mov ax,ds:cm_cs
+    test al,3
+    jz init_prot_kernel_frame
+;
+    mov eax,ds:cm_stack
+    AllocateLocalMem
+    mov ax,es
+    jmp init_prot_create_frame
+
+init_prot_kernel_frame:
+    xor eax,eax
+
+init_prot_create_frame:
+    push eax
+;
+    mov eax,ds:cm_stack
+    push eax
+;
+    movzx eax,ds:cm_flags
+    or ax,200h
+    and ax,NOT 7000h
+    push eax
+;
+    movzx eax,ds:cm_cs
     push eax
 ;
     mov eax,ds:cm_eip
