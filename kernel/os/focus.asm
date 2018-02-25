@@ -172,7 +172,7 @@ free_thread     Endp
 ;
 ;           DESCRIPTION:    Set input focus
 ;
-;           PARAMETERS:         AL      KEY NUMBER
+;           PARAMETERS:     AL      KEY NUMBER
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -182,30 +182,30 @@ set_focus       PROC far
     push ds
     push es
     pushad
+;
     mov bx,SEG data
     mov ds,bx
     EnterSection ds:focus_section
-    xor bh,bh
-    mov bl,al
+;
+    movzx bx,al
     add bx,bx
     mov ax,ds:[bx].focus_thread
     or ax,ax
     jz set_focus_done
 ;
     call DisableConsoleFocus
-    mov bx,ax
-    
-set_focus_no_lost:
-    mov ds:focus_current_thread,bx
-    mov bp,bx
+;    
+    mov ds:focus_current_thread,ax
+    mov es,ax
+    mov bx,es:p_console
+    or bx,bx
+    jz set_focus_done
 ;
-    mov bx,SEG data
-    mov ds,bx
-    mov bx,ds:focus_current_thread
     call EnableConsoleFocus
 
 set_focus_done:
     LeaveSection ds:focus_section
+;
     popad
     pop es
     pop ds

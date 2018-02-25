@@ -1312,7 +1312,6 @@ DisableConsoleFocus Proc near
 ;
     mov ds,ax
     lock and ds:c_flags,NOT (CONSOLE_FLAG_ACTIVE OR CONSOLE_FLAG_TEXT_BUFFER OR CONSOLE_FLAG_NEW_WRITES)
-
 ;    
     test ds:c_flags,CONSOLE_FLAG_BITMAP
     jz dcfDone
@@ -1335,7 +1334,7 @@ DisableConsoleFocus Endp
 ;
 ;   DESCRIPTION:    Enable console focus
 ;
-;   PARAMETERS:     BX      Focus thread
+;   PARAMETERS:     BX      Console
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1347,11 +1346,6 @@ EnableConsoleFocus Proc near
     push fs
     push ax
     push bx
-;    
-    mov es,bx
-    mov bx,es:p_console
-    or bx,bx
-    jz ecfDone
 ;
     mov ax,SEG data
     mov ds,ax
