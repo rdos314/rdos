@@ -2084,8 +2084,14 @@ ukDone:
 ;
     FreeMem
 ;
+    GetFocusThread
+    mov ds,eax
+    mov bx,ds:p_console
+;
     GetThread
     mov ds,eax
+    cmp bx,ds:p_console
+    jne ukFocusOk
 ;
     mov al,ds:p_parent_switch
     or al,al
