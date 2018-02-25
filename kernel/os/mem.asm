@@ -204,7 +204,7 @@ init_mem    PROC near
     mov ds:small_used_mem,0
     mov ds:big_alloc_count,0
     mov ds:small_alloc_count,0
-    mov ds:process_alloc_base,fixed_process_linear + SIZE process_seg
+    mov ds:process_alloc_base,fixed_process_linear
     mov ds:fixed_vm_base,fixed_vm_linear
 ;
     mov ax,cs
@@ -2228,7 +2228,7 @@ log_small_mem      PROC far
     pop eax
     pop ds
     retf32
-log_small_mem	Endp
+log_small_mem   Endp
 
 
 
@@ -2255,7 +2255,7 @@ log_big_mem      PROC far
     pop eax
     pop ds
     retf32
-log_big_mem	Endp
+log_big_mem     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
