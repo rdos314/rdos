@@ -1290,7 +1290,7 @@ DeleteConsole   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;   NAME:           SetConsoleFocus
+;   NAME:           SetFocusConsole
 ;
 ;   DESCRIPTION:    Set console focus
 ;
@@ -1298,9 +1298,9 @@ DeleteConsole   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public SetConsoleFocus
+set_focus_console_name DB 'Set Focus Console', 0
 
-SetConsoleFocus Proc near
+set_focus_console Proc far
     push ds
     push es
     push fs
@@ -1378,7 +1378,7 @@ scfDone:
     pop es
     pop ds    
     ret
-SetConsoleFocus Endp
+set_focus_console Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5525,7 +5525,7 @@ init_thread     ENDP
 ;
 ;           DESCRIPTION:    Close console
 ;
-;           PARAMETERS:     AX        Console
+;           PARAMETERS:     BX        Console
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5534,7 +5534,7 @@ close_console_name DB 'Close Console', 0
 close_console        Proc far
     push es
 ;
-    mov es,ax
+    mov es,bx
     sub es:c_usage,1
     jnz ccsDone
 ;    
@@ -5626,6 +5626,12 @@ init_video      PROC near
 ;
     mov edi,OFFSET init_thread
     HookCreateThread
+;
+    mov esi,OFFSET set_focus_console
+    mov edi,OFFSET set_focus_console_name
+    xor cl,cl
+    mov ax,set_focus_console_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET close_console
     mov edi,OFFSET close_console_name

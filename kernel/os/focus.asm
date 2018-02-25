@@ -50,7 +50,6 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extrn CreateConsole:near
-    extrn SetConsoleFocus:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -198,7 +197,7 @@ set_focus       PROC far
     or bx,bx
     jz set_focus_done
 ;
-    call SetConsoleFocus
+    SetFocusConsole
 
 set_focus_done:
     LeaveSection ds:focus_section

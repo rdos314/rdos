@@ -750,5 +750,6 @@ clone_c_handle_nr           = 654
 delete_c_handle_nr          = 655
 
 close_console_nr            = 656
+set_focus_console_nr        = 657
 
 osgate_entries              = 700

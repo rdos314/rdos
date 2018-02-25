@@ -2296,7 +2296,13 @@ WriteCConsole MACRO
     OsGate write_c_console_nr
                     ENDM
 
-; IN  AX       Console selector
+
+; IN  BX       Console selector
+SetFocusConsole MACRO
+    OsGate set_focus_console_nr
+                    ENDM
+
+; IN  BX       Console selector
 CloseConsole MACRO
     OsGate close_console_nr
                     ENDM

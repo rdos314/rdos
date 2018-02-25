@@ -2100,7 +2100,7 @@ ukDone:
     SetFocus
 
 ukFocusOk:
-    mov ax,ds:p_console
+    mov bx,ds:p_console
     CloseConsole
     DestroyLdt
 ;
