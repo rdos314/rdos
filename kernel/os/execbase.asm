@@ -239,7 +239,6 @@ InitProgramBlock Proc near
     mov gs:pr_cmd_sel,0
     mov gs:pr_debug_id,0
     mov gs:pr_thread,0
-    mov gs:pr_switch,0
     mov gs:pr_module_count,0
     mov gs:pr_process_count,0
     InitSection gs:pr_section
@@ -269,16 +268,6 @@ AllocateProgram Proc near
     mov gs:pr_debug_id,dx
 
 apDebugOk:
-    mov gs:pr_switch,0
-;
-    GetThread
-    mov bx,ax
-    GetThreadFocusKey
-    jc apFocusDone
-;
-    mov gs:pr_switch,al
-
-apFocusDone:
     popad
     pop ds
     ret
@@ -1150,6 +1139,8 @@ spawn_startup:
     CreateLdt
     GetThread
     mov es,ax
+    mov ax,es:p_console
+    mov es:p_parent_console,ax
     mov gs,es:p_prog_sel
 ;
     SaveContext
@@ -1194,11 +1185,6 @@ spCopyExeLoop:
     stosb
     or al,al
     jne spCopyExeLoop
-;
-    GetThread
-    mov es,ax
-    mov al,gs:pr_switch
-    mov es:p_parent_switch,al
 ;       
     GetThread
     mov gs:pr_thread,ax
@@ -2090,11 +2076,11 @@ ukDone:
     cmp bx,ds:p_console
     jne ukFocusOk
 ;
-    mov al,ds:p_parent_switch
-    or al,al
+    mov bx,ds:p_parent_console
+    or bx,bx
     jz ukFocusOk
 ;
-    SetFocus
+    SetFocusConsole
 
 ukFocusOk:
     mov bx,ds:p_console

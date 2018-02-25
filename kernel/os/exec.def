@@ -146,7 +146,6 @@ pr_thread            DW ?
 pr_parent_thread     DW ?
 pr_app_sel           DW ?
 pr_parent_app_sel    DW ?
-pr_switch            DB ?,?
 
 pr_section           section_typ <>
 

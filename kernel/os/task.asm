@@ -7784,6 +7784,9 @@ init_thread_block       PROC near
     mov ax,ds:p_console
     mov es:p_console,ax
 ;
+    mov ax,ds:p_parent_console
+    mov es:p_parent_console,ax
+;
     mov ax,ds:p_lib_sel
     mov es:p_lib_sel,ax
 ;
@@ -7793,7 +7796,6 @@ init_thread_block       PROC near
     mov es:p_debug_event,0
 ;
     mov es:p_signal,0
-    mov es:p_parent_switch,0
     mov es:p_wait_list,0
     mov es:p_kill,0
     mov es:p_ref_count,0
@@ -9464,6 +9466,7 @@ create_first_thread       PROC near
     mov es:p_proc_sel,ax
     mov es:p_loader,ax
     mov es:p_console,ax
+    mov es:p_parent_console,ax
     mov es:p_ldt_sel,ax
     mov es:p_lib_sel,ax
 ;
@@ -9474,7 +9477,6 @@ create_first_thread       PROC near
     mov es:p_wanted_core,0
     mov es:p_int_count,0
     mov es:p_signal,0
-    mov es:p_parent_switch,0
     mov es:p_wait_list,0
     mov es:p_kill,0
     mov es:p_ref_count,0
