@@ -2084,10 +2084,7 @@ ukDone:
 ;
     FreeMem
 ;
-    GetFocusThread
-    mov ds,eax
-    mov bx,ds:p_console
-;
+    GetFocusConsole
     GetThread
     mov ds,eax
     cmp bx,ds:p_console
