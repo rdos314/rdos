@@ -36,10 +36,10 @@ INCLUDE ..\user.inc
 
 data    SEGMENT byte public 'DATA'
 
-focus_thread            DW 256 DUP(?)
+focus_current_console    DW ?
+focus_section            section_typ <>
 
-focus_current_thread    DW ?
-focus_section           section_typ <>
+focus_console            DW 256 DUP(?)
 
 data    ENDS
 
@@ -73,16 +73,11 @@ set_focus       PROC far
 ;
     movzx bx,al
     add bx,bx
-    mov ax,ds:[bx].focus_thread
-    or ax,ax
-    jz set_focus_done
-;    
-    mov ds:focus_current_thread,ax
-    mov es,ax
-    mov bx,es:p_console
+    mov bx,ds:[bx].focus_console
     or bx,bx
     jz set_focus_done
-;
+;    
+    mov ds:focus_current_console,bx
     SetFocusConsole
 
 set_focus_done:
@@ -94,7 +89,6 @@ set_focus_done:
     ret
 set_focus       ENDP
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -102,9 +96,9 @@ set_focus       ENDP
 ;
 ;           DESCRIPTION:    Enable focus
 ;
-;           PARAMETERS:         AL      KEY NUMBER
+;           PARAMETERS:     AL      KEY NUMBER
 ;
-;       RETURNS:    Actual key
+;       RETURNS:            AL      Actual key
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -112,40 +106,42 @@ enable_focus_name       DB 'Enable Focus',0
 
 enable_focus    PROC far
     push ds
-    push es
     push bx
+    push si
 ;
     mov bx,SEG data
     mov ds,bx
-    xor bh,bh
-    mov bl,al
-    GetThread
-    add bx,bx
+;
+    movzx si,al
+    add si,si
 
 enable_focus_loop:
-    cmp ds:[bx].focus_thread,0
-    jne enable_focus_next
+    mov bx,ds:[si].focus_console
+    or bx,bx
+    jnz enable_focus_next
 ;
-    mov ds:[bx].focus_thread,ax
+    CreateConsole
+    mov ds:[si].focus_console,bx
+;
+    GetThread
+    mov ds,ax
+    mov ds:p_console,bx
+;
+    mov ax,si
+    shr ax,1
+    clc
     jmp enable_focus_done
 
 enable_focus_next:
-    add bx,2
-    cmp bx,200h
+    add si,2
+    cmp si,200h
     jne enable_focus_loop
+;
+    stc
 
 enable_focus_done:
-    push bx
-    CreateConsole
-    GetThread
-    mov es,ax
-    mov es:p_console,bx
+    pop si
     pop bx
-;
-    mov ax,bx
-    shr ax,1
-    pop bx
-    pop es
     pop ds
     ret
 enable_focus    ENDP
@@ -167,11 +163,11 @@ init_focus      PROC near
     mov bx,SEG data
     mov es,bx
     mov ds,bx
-    mov edi,OFFSET focus_thread
+    mov edi,OFFSET focus_console
     mov ecx,256
     xor ax,ax
     rep stosw
-    mov ds:focus_current_thread,0
+    mov ds:focus_current_console,0
     InitSection ds:focus_section
 ;
     mov ax,cs
