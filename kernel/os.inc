@@ -2491,12 +2491,6 @@ GetFocusThread  MACRO
     OsGate get_focus_thread_nr
                     ENDM
 
-;       BX          Thread
-;   AL      Switch key
-GetThreadFocusKey     MACRO
-    OsGate get_thread_focus_key_nr
-                        ENDM
-
 ;;;;;;;;;; Network ;;;;;;;;;;;;;
 
 ;       AL          Class id

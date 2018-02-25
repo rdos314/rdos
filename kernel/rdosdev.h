@@ -22,7 +22,7 @@ extern "C" {
 
 // handle signatures
 
-#define ADC_HANDLE         0x15FC 
+#define ADC_HANDLE         0x15FC
 #define FM_INSTR_HANDLE    0x17DE
 #define DLL_HANDLE16       0x26CF
 #define DLL_HANDLE32       0x26DF
@@ -664,7 +664,6 @@ int RdosLockProcEnv();
 void RdosUnlockProcEnv();
 
 int RdosGetFocusThread();
-char RdosGetThreadFocusKey(int thread);
 
 void RdosRegisterNetClass(char class_id, int ads_size, void *broadcast_ads);
 int RdosRegisterNetProtocol(int ads_size, short int packet_type, void *my_ads, __rdos_net_prot_callback *packet_callb);
@@ -963,7 +962,7 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     "cmp eax,ebx" \
     "jne NoReloadGs" \
     "mov gs,eax" \
-    "NoReloadGs: "\     
+    "NoReloadGs: "\
     parm [ebx] \
     modify [eax];
 
@@ -1580,7 +1579,7 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     "jmp done" \
     "ok: "\
     "mov dx,ds" \
-    "done: "\    
+    "done: "\
     "pop ds" \
     parm [ax] [ebx] \
     value [dx ebx];
@@ -1607,11 +1606,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     OsGate_get_focus_thread \
     "movzx eax,ax" \
     value [eax];
-
-#pragma aux RdosGetThreadFocusKey = \
-    OsGate_get_thread_focus_key \
-    parm [ebx] \
-    value [al];
 
 #pragma aux RdosRegisterNetClass = \
     "push ds" \
@@ -2004,7 +1998,7 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
 #pragma aux RdosSetCFileSize = \
     OsGate_set_c_file_size  \
     parm [ebx] [eax];
-    
+
 #pragma aux RdosReadCFile = \
     OsGate_read_c_file  \
     ValidateEax \

@@ -179,7 +179,6 @@
 #define osgate_check_dos_device 174
 
 #define osgate_get_focus_thread 185
-#define osgate_get_thread_focus_key 186
 
 #define osgate_bios_pci_int 189
 #define osgate_read_pci_byte 190
@@ -750,6 +749,8 @@
 #define osgate_delete_c_handle 655
 
 #define osgate_close_console 656
+#define osgate_set_focus_console 657
+#define osgate_get_focus_console 658
 
 
 
@@ -934,7 +935,6 @@
 #define OsGate_check_dos_device 0x3E 0x67 0x9a 174 0 0 0 2 0
 
 #define OsGate_get_focus_thread 0x3E 0x67 0x9a 185 0 0 0 2 0
-#define OsGate_get_thread_focus_key 0x3E 0x67 0x9a 186 0 0 0 2 0
 
 #define OsGate_bios_pci_int 0x3E 0x67 0x9a 189 0 0 0 2 0
 #define OsGate_read_pci_byte 0x3E 0x67 0x9a 190 0 0 0 2 0
@@ -1505,4 +1505,6 @@
 #define OsGate_delete_c_handle 0x3E 0x67 0x9a 143 2 0 0 2 0
 
 #define OsGate_close_console 0x3E 0x67 0x9a 144 2 0 0 2 0
+#define OsGate_set_focus_console 0x3E 0x67 0x9a 145 2 0 0 2 0
+#define OsGate_get_focus_console 0x3E 0x67 0x9a 146 2 0 0 2 0
 

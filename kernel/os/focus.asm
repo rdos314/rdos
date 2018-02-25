@@ -73,96 +73,6 @@ get_focus_thread    PROC far
     ret
 get_focus_thread    ENDP
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetThreadFocusKey
-;
-;           DESCRIPTION:    Get thread switch key
-;
-;           PARAMETERS:         BX          Thread
-;
-;           RETURNS:        AL          Switch key
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_thread_focus_key_name       DB 'Get Thread Focus Key',0
-
-get_thread_focus_key    PROC far
-    push ds
-    push cx
-    push si
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov cx,256
-    mov si,OFFSET focus_thread
-
-get_thread_key_loop:
-    cmp bx,[si]
-    je get_thread_key_ok
-;
-    add si,2
-    sub cx,1
-    jnz get_thread_key_loop
-;
-    xor ax,ax
-    stc
-    jmp get_thread_key_done
-
-get_thread_key_ok:
-    mov ax,si
-    sub ax,OFFSET focus_thread
-    shr ax,1
-    clc
-
-get_thread_key_done:
-    pop si
-    pop cx
-    pop ds
-    ret
-get_thread_focus_key    ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           Free_thread
-;
-;           DESCRIPTION:    Handle thread termination
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_thread     Proc far
-    mov bx,SEG data
-    mov ds,bx
-    mov bx,OFFSET focus_thread
-    mov cx,100h
-    GetThread
-
-free_thread_loop:
-    cmp ax,[bx]
-    jne free_thread_next
-;
-    mov word ptr [bx],0
-    cmp ax,ds:focus_current_thread
-    jne free_thread_done
-;
-    mov ds:focus_current_thread,0
-    jmp free_thread_done
-
-free_thread_next:
-    add bx,2
-    sub cx,1
-    jnz free_thread_loop
-
-free_thread_done:
-    ret
-free_thread     Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -287,9 +197,6 @@ init_focus      PROC near
     mov ds,ax
     mov es,ax
 ;
-    mov edi,OFFSET free_thread
-    HookTerminateThread
-;
     mov esi,OFFSET set_focus
     mov edi,OFFSET set_focus_name
     xor dx,dx
@@ -306,12 +213,6 @@ init_focus      PROC near
     mov edi,OFFSET get_focus_thread_name
     xor cl,cl
     mov ax,get_focus_thread_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET get_thread_focus_key
-    mov edi,OFFSET get_thread_focus_key_name
-    xor cl,cl
-    mov ax,get_thread_focus_key_nr
     RegisterOsGate
     ret
 init_focus      ENDP
