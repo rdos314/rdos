@@ -71,7 +71,6 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extrn GetLocalConsole:near
-    extrn GetFocusConsole:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -148,9 +147,10 @@ keyboard_thread_loop:
     cmp ah,-1
     je keyboard_thread_loop
 ;    
-    call GetFocusConsole
+    GetFocusConsole
     jc keyboard_thread_loop
 ;
+    mov ds,ebx
     EnterSection ds:c_key_section
     mov bx,ds:c_key_buffer_tail
     mov si,bx

@@ -1286,6 +1286,36 @@ DeleteConsole  PROC near
     FreeMem
     ret
 DeleteConsole   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetFocusConsole
+;
+;           DESCRIPTION:    Get focus console
+;
+;           RETURNS:        BX          Console
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_focus_console_name DB 'Get Focus Console', 0
+
+get_focus_console     PROC far
+    push ds
+;
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:focus_console
+    or bx,bx
+    clc
+    jnz gfcDone
+;
+    stc 
+
+gfcDone: 
+    pop ds
+    ret
+get_focus_console     ENDP
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1410,38 +1440,7 @@ glcDone:
     pop ax
     ret
 GetLocalConsole     ENDP
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetFocusConsole
-;
-;           DESCRIPTION:    Get focus console
-;
-;           RETURNS:        DS          Console
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public GetFocusConsole
-
-GetFocusConsole     PROC near
-    push ax
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,ds:focus_console
-    mov ds,ax
-    or ax,ax
-    clc
-    jnz gfcDone
-;
-    stc 
-
-gfcDone: 
-    pop ax
-    ret
-GetFocusConsole     ENDP
-    
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -5626,6 +5625,12 @@ init_video      PROC near
 ;
     mov edi,OFFSET init_thread
     HookCreateThread
+;
+    mov esi,OFFSET get_focus_console
+    mov edi,OFFSET get_focus_console_name
+    xor cl,cl
+    mov ax,get_focus_console_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET set_focus_console
     mov edi,OFFSET set_focus_console_name

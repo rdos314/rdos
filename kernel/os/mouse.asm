@@ -66,7 +66,6 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extrn GetLocalConsole:near
-    extrn GetFocusConsole:near
 
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -443,7 +442,12 @@ update_mouse    PROC far
     neg dx
     add ds:md_dy,dx
     mov bx,ds:md_mouse_thread
-    call GetFocusConsole
+;
+    push bx
+    GetFocusConsole
+    mov ds,ebx
+    pop bx
+;
     inc ds:c_m_counter
     mov ax,ds:c_m_notify_thread
     or ax,ax
@@ -501,7 +505,12 @@ set_mouse       PROC far
     mov ds:md_y,ax
 ;       
     mov bx,ds:md_mouse_thread
-    call GetFocusConsole
+;
+    push bx
+    GetFocusConsole
+    mov ds,ebx
+    pop bx
+;
     inc ds:c_m_counter
     mov ax,ds:c_m_notify_thread
     or ax,ax
@@ -761,8 +770,10 @@ reset   Endp
 IsMarkerVisible     PROC near
     push ds
     push ax
+    push bx
 ;
-    call GetFocusConsole
+    GetFocusConsole
+    mov ds,ebx
     mov ax,ds:c_m_cursor_flag
     or ax,ax
     jz imvHidden
@@ -775,6 +786,7 @@ imvHidden:
     stc
 
 imvDone:
+    pop bx
     pop ax
     pop ds
     ret
@@ -1310,12 +1322,11 @@ mouse_thread_loop:
     mov es,ax
 ;
     WaitForSignal
-    call GetFocusConsole
+    GetFocusConsole
     jc mouse_thread_loop
 ;
-;       call hide_marker
+    mov ds,ebx
     call refresh_mouse
-;       call show_marker
     jmp mouse_thread_loop
     ret
 mouse_thread    Endp
