@@ -2113,12 +2113,6 @@ DeleteProcess    Proc near
     FreeMem
     pop es
 ;
-    mov ax,es:p_process_sel
-    push es
-    mov es,ax
-    FreeMem
-    pop es
-;
     push es
     mov es,es:p_kernel_ss
     FreeMem
@@ -7335,26 +7329,6 @@ allocate_thread_block   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           inc_thread_count
-;
-;           DESCRIPTION:    Increment thread count
-;
-;           PARAMETERS:     ES          Thread
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-inc_thread_count       PROC near
-    push fs
-    mov fs,es:p_process_sel
-    inc fs:ms_thread_count
-    pop fs
-    ret
-inc_thread_count        ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           TRAP_CREATE_THREAD
 ;
 ;           DESCRIPTION:    Handle CreateThread hooks
@@ -7711,8 +7685,6 @@ create_c_handle	Endp
 init_thread_block       PROC near
     GetThread
     mov ds,ax
-    mov ax,ds:p_process_sel
-    mov es:p_process_sel,ax
 ;
     push fs
     GetCore
@@ -7798,14 +7770,6 @@ init_thread_block       ENDP
 
 init_process_block      PROC near
     call create_process_sel
-;
-    push es
-    mov eax,SIZE process_seg
-    AllocateSmallGlobalMem
-    mov es:ms_thread_count,1
-    mov bx,es
-    pop es
-    mov es:p_process_sel,bx
 ;
     push es
     push cx
@@ -8442,7 +8406,6 @@ create_thread   PROC near
     call allocate_thread_block
     mov dx,[ebp].cr_prio
     call init_thread_block
-    call inc_thread_count
     mov ax,es
     mov ds,ax
     mov ax,[ebp].cr_mode
