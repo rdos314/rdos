@@ -61,6 +61,8 @@ public:
     TFormControl(TControl *control);
     virtual ~TFormControl();
 
+    static void UpdateTouch();
+
     static void UseTouch();
     static void IgnoreTouch();
     static void UseKeyboard();

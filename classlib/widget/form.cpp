@@ -178,6 +178,23 @@ void TFormControl::Init()
 
     ControlType += TString(".FORM");
 }
+
+    /*##########################################################################
+#
+#   Name       : TFormControl::UpdateTouch
+#
+#   Purpose....: Update touch
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFormControl::UpdateTouch()
+{
+   FUseTouch = RdosHasTouch();
+   FUseKeyboard = !RdosHasTouch();
+}
     
 /*##########################################################################
 #
