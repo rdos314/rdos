@@ -34,7 +34,6 @@ INCLUDE ..\os.inc
 INCLUDE ..\os\int.def
 INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
-INCLUDE ..\os\exec.def
 INCLUDE dos.inc
 
     extrn create_enviroment:near

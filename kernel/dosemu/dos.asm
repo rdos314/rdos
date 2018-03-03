@@ -181,7 +181,7 @@ create_enviroment       PROC near
 ;
     GetThread
     mov fs,ax
-    mov fs,fs:p_app_sel
+    mov fs,fs:p_prog_sel
 ;    
     mov ax,bx
     LockProcEnv
@@ -189,7 +189,7 @@ create_enviroment       PROC near
     jz create_env_start
 ;
     mov bx,ax
-    cmp fs:app_psp_mode,mode_pm
+    cmp fs:dpr_psp_mode,mode_pm
     jz create_env_start
 ;
     SegmentToSelector
@@ -231,7 +231,7 @@ create_env_find_sep:
     xor esi,esi
     rep movs byte ptr es:[edi],ds:[esi]
     pop cx
-    cmp fs:app_psp_mode,mode_pm
+    cmp fs:dpr_psp_mode,mode_pm
     jz create_env_no_free
 ;
     mov ax,ds
@@ -256,7 +256,7 @@ create_env_no_free:
 
 create_env_fail:
     pop edx
-    cmp fs:app_psp_mode,mode_pm
+    cmp fs:dpr_psp_mode,mode_pm
     jz create_env_no_fail_free
     push es
     mov ax,ds
@@ -305,8 +305,8 @@ get_psp_gate    PROC far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel 
-    mov bx,ds:app_vm_psp_seg
+    mov ds,ds:p_prog_sel 
+    mov bx,ds:dpr_vm_psp_seg
 ;
     pop ax      
     pop ds
@@ -334,8 +334,8 @@ set_psp_gate    PROC far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel 
-    mov ds:app_vm_psp_seg,bx
+    mov ds,ds:p_prog_sel 
+    mov ds:dpr_vm_psp_seg,bx
 ;
     pop ax
     pop ds
@@ -363,8 +363,8 @@ get_psp_sel     PROC far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel 
-    mov bx,ds:app_pm_psp_sel
+    mov ds,ds:p_prog_sel 
+    mov bx,ds:dpr_pm_psp_sel
 ;
     pop ax      
     pop ds
@@ -389,10 +389,10 @@ clear_psp       PROC near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_vm_psp_seg,0
-    mov ds:app_pm_psp_sel,0
-    mov ds:app_psp_mode,mode_vm
+    mov ds,ds:p_prog_sel
+    mov ds:dpr_vm_psp_seg,0
+    mov ds:dpr_pm_psp_sel,0
+    mov ds:dpr_psp_mode,mode_vm
 ;
     pop ax
     pop ds
@@ -419,8 +419,8 @@ get_virt_psp    PROC near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov bx,ds:app_vm_psp_seg
+    mov ds,ds:p_prog_sel
+    mov bx,ds:dpr_vm_psp_seg
 ;
     pop ax
     pop ds
@@ -449,13 +449,13 @@ set_virt_psp    PROC near
 ;       
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_vm_psp_seg,bx
-    cmp ds:app_psp_mode,mode_pm
+    mov ds,ds:p_prog_sel
+    mov ds:dpr_vm_psp_seg,bx
+    cmp ds:dpr_psp_mode,mode_pm
     je set_virt_psp_nofree
 ;
     push bx
-    mov bx,ds:app_pm_psp_sel
+    mov bx,ds:dpr_pm_psp_sel
     and bx,0FFF8h
     FreeLdt
     pop bx
@@ -474,8 +474,8 @@ set_virt_psp_nofree:
     mov word ptr [bx+6],0
     or bx,7
     pop ds
-    mov ds:app_pm_psp_sel,bx
-    mov ds:app_psp_mode,mode_vm
+    mov ds:dpr_pm_psp_sel,bx
+    mov ds:dpr_psp_mode,mode_vm
 ;       
     pop edx
     pop bx
@@ -504,8 +504,8 @@ get_prot_psp    PROC near
 ;       
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov bx,ds:app_pm_psp_sel
+    mov ds,ds:p_prog_sel
+    mov bx,ds:dpr_pm_psp_sel
 ;
     pop ax
     pop ds
@@ -532,9 +532,9 @@ set_prot_psp    PROC near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_pm_psp_sel,bx
-    mov ds:app_psp_mode,mode_pm
+    mov ds,ds:p_prog_sel
+    mov ds:dpr_pm_psp_sel,bx
+    mov ds:dpr_psp_mode,mode_pm
 ;
     pop ax
     pop ds
@@ -561,9 +561,9 @@ get_virt_dta    PROC near
 ;       
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov dx,ds:app_vm_dta_seg
-    mov bx,word ptr ds:app_dta_offset
+    mov ds,ds:p_prog_sel
+    mov dx,ds:dpr_vm_dta_seg
+    mov bx,word ptr ds:dpr_dta_offset
 ;
     pop ax      
     pop ds
@@ -592,16 +592,16 @@ set_virt_dta    PROC near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_vm_dta_seg,dx
-    mov word ptr ds:app_dta_offset,bx
-    mov word ptr ds:app_dta_offset+2,0
+    mov ds,ds:p_prog_sel
+    mov ds:dpr_vm_dta_seg,dx
+    mov word ptr ds:dpr_dta_offset,bx
+    mov word ptr ds:dpr_dta_offset+2,0
     mov bx,dx
-    cmp ds:app_dta_mode,mode_pm
+    cmp ds:dpr_dta_mode,mode_pm
     je set_virt_dta_nofree
 ;
     push bx
-    mov bx,ds:app_pm_dta_sel
+    mov bx,ds:dpr_pm_dta_sel
     and bx,0FFF8h
     FreeLdt
     pop bx
@@ -620,8 +620,8 @@ set_virt_dta_nofree:
     mov word ptr [bx+6],0
     or bx,7
     pop ds
-    mov ds:app_pm_dta_sel,bx
-    mov ds:app_dta_mode,mode_vm
+    mov ds:dpr_pm_dta_sel,bx
+    mov ds:dpr_dta_mode,mode_vm
 ;
     pop edx
     pop bx
@@ -650,9 +650,9 @@ get_prot_dta    PROC near
 ;       
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov dx,ds:app_pm_dta_sel
-    mov ebx,ds:app_dta_offset
+    mov ds,ds:p_prog_sel
+    mov dx,ds:dpr_pm_dta_sel
+    mov ebx,ds:dpr_dta_offset
 ;
     pop ax
     pop ds
@@ -680,10 +680,10 @@ set_prot_dta    PROC near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel 
-    mov ds:app_dta_mode,mode_pm
-    mov ds:app_pm_dta_sel,dx
-    mov ds:app_dta_offset,ebx
+    mov ds,ds:p_prog_sel 
+    mov ds:dpr_dta_mode,mode_pm
+    mov ds:dpr_pm_dta_sel,dx
+    mov ds:dpr_dta_offset,ebx
 ;       
     pop bx
     pop ax
@@ -711,8 +711,8 @@ get_find_sel    Proc near
 ;       
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov bx,ds:app_find_sel
+    mov ds,ds:p_prog_sel
+    mov bx,ds:dpr_find_sel
 ;
     pop ax      
     pop ds
@@ -739,8 +739,8 @@ set_find_sel    Proc near
 ;       
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_find_sel,bx
+    mov ds,ds:p_prog_sel
+    mov ds:dpr_find_sel,bx
 ;
     pop ax
     pop ds
@@ -766,14 +766,14 @@ reset_find_sel  Proc near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_find_sel
+    mov ds,ds:p_prog_sel
+    mov ax,ds:dpr_find_sel
     or ax,ax
     jz reset_find_done
 ;
     mov es,ax
     FreeMem
-    mov ds:app_find_sel,0
+    mov ds:dpr_find_sel,0
 
 reset_find_done:
     pop ax
@@ -933,20 +933,20 @@ create_psp      PROC near
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_prog_sel
     pop ax
 ;    
-    push ds:app_vm_psp_seg
+    push ds:dpr_vm_psp_seg
     push ax
     push bx
 ;
     movzx edx,bx
     shl edx,4
-    mov ds:app_vm_psp_seg,bx
-    cmp ds:app_psp_mode,mode_pm
+    mov ds:dpr_vm_psp_seg,bx
+    cmp ds:dpr_psp_mode,mode_pm
     je create_psp_virt_psp_nofree
 ;
-    mov bx,ds:app_pm_psp_sel
+    mov bx,ds:dpr_pm_psp_sel
     or bx,bx
     jz create_psp_virt_psp_nofree
 ;
@@ -965,8 +965,8 @@ create_psp_virt_psp_nofree:
     mov word ptr [bx+6],0
     or bx,7
     pop ds
-    mov ds:app_pm_psp_sel,bx
-    mov ds:app_psp_mode,mode_vm
+    mov ds:dpr_pm_psp_sel,bx
+    mov ds:dpr_psp_mode,mode_vm
 ;
     mov es,bx
     xor di,di
@@ -1058,7 +1058,7 @@ create_psp_virt_psp_nofree:
     mov al,24h
     SetVMInt
 ;
-    mov bx,ds:app_vm_psp_seg
+    mov bx,ds:dpr_vm_psp_seg
     push ds
     mov ax,flat_sel
     mov ds,ax
@@ -1068,14 +1068,14 @@ create_psp_virt_psp_nofree:
     mov [eax+1],bx
     pop ds
 ;
-    mov ds:app_vm_dta_seg,bx
-    mov ds:app_dta_offset,80h
+    mov ds:dpr_vm_dta_seg,bx
+    mov ds:dpr_dta_offset,80h
     movzx edx,bx
     shl edx,4
-    cmp ds:app_dta_mode,mode_pm
+    cmp ds:dpr_dta_mode,mode_pm
     je create_psp_virt_dta_nofree
 ;
-    mov bx,ds:app_pm_dta_sel
+    mov bx,ds:dpr_pm_dta_sel
     or bx,bx
     jz create_psp_virt_dta_nofree
 ;
@@ -1094,8 +1094,8 @@ create_psp_virt_dta_nofree:
     mov word ptr [bx+6],0
     or bx,7
     pop ds
-    mov ds:app_pm_dta_sel,bx
-    mov ds:app_dta_mode,mode_vm
+    mov ds:dpr_pm_dta_sel,bx
+    mov ds:dpr_dta_mode,mode_vm
 ;
     pop bx
     mov es:psp_parent,bx
@@ -1128,8 +1128,8 @@ unload_program  Proc near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov bx,ds:app_pm_psp_sel
+    mov ds,ds:p_prog_sel
+    mov bx,ds:dpr_pm_psp_sel
     or bx,bx
     jz unload_program_done
 ;
@@ -1189,8 +1189,8 @@ get_allocation_strat    Proc near
     push ds
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_vm_mem_strat
+    mov ds,ds:p_prog_sel
+    mov ax,ds:dpr_vm_mem_strat
     pop ds
     ret
 get_allocation_strat    Endp
@@ -1215,9 +1215,9 @@ set_allocation_strat    Proc near
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_prog_sel
     pop ax
-    mov ds:app_vm_mem_strat,ax
+    mov ds:dpr_vm_mem_strat,ax
     pop ds
     ret
 set_allocation_strat    Endp
@@ -1253,9 +1253,9 @@ open_app    Proc far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel    
-    mov ds:app_psp_mode,mode_vm
-    mov ds:app_dta_mode,mode_vm
+    mov ds,ds:p_prog_sel    
+    mov ds:dpr_psp_mode,mode_vm
+    mov ds:dpr_dta_mode,mode_vm
 ;
     pop ax
     pop ds

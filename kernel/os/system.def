@@ -259,16 +259,6 @@ app_seg STRUC
 
 app_next                    DW ?
 
-app_vm_psp_seg              DW ?
-app_pm_psp_sel              DW ?
-app_vm_mem_strat            DW ?
-app_vm_dta_seg              DW ?
-app_pm_dta_sel              DW ?
-app_dta_offset              DD ?
-app_psp_mode                DB ?
-app_dta_mode                DB ?
-app_find_sel                DW ?
-
 app_seg ENDS
 
 block_seg       STRUC

@@ -117,15 +117,6 @@ run_open_hooks  Proc near
     mov ds,ax
     mov ds,ds:p_app_sel
 ;
-    mov ds:app_vm_psp_seg,0
-    mov ds:app_pm_psp_sel,0
-    mov ds:app_vm_mem_strat,0
-    mov ds:app_vm_dta_seg,0
-    mov ds:app_pm_dta_sel,0
-    mov ds:app_find_sel,0
-    mov ds:app_psp_mode,0
-    mov ds:app_dta_mode,0
-;
     pop cx
     pop ax
     pop ds
