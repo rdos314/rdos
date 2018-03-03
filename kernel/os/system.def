@@ -289,7 +289,6 @@ app_mod_id                  DW ?
 app_mod_sel                 DW ?
 
 app_env                     DD ?
-app_name                    DD ?
 app_cmd_line                DD ?
 
 app_vm_psp_seg              DW ?
@@ -311,8 +310,6 @@ app_pm_exc                  DD 20h DUP(?,?)
 
 app_memmap_list             DD ?
 app_memmap_spinlock         spinlock_typ <>
-
-app_exe_name                DB 100h DUP(?)
 
 app_seg ENDS
 

@@ -1171,16 +1171,6 @@ ssNotifyOk:
     EnableFocus
     SetFocus
     mov es:app_key,al
-;
-    xor esi,esi
-    mov ds,gs:pr_name_sel    
-    mov edi,OFFSET app_exe_name
-
-spCopyExeLoop:
-    lodsb
-    stosb
-    or al,al
-    jne spCopyExeLoop
 ;       
     GetThread
     mov gs:pr_thread,ax
@@ -1606,17 +1596,6 @@ lpThreadNamePad:
     rep stosb
 
 lpThreadNameDone:
-    mov es,es:p_app_sel
-    xor esi,esi
-    mov ds,gs:pr_name_sel
-    mov edi,OFFSET app_exe_name
-
-lpCpExeLoop:
-    lodsb
-    stosb
-    or al,al
-    jne lpCpExeLoop
-;
     xor bx,bx
 ;
     call SetupStartDir

@@ -2888,6 +2888,7 @@ is_valid_exe Proc far
 ;
     mov ax,es
     mov gs,ax
+    mov gs:ppr_app_name,0
     clc
     jmp iseDone
 
@@ -5760,13 +5761,15 @@ get_exe_name    Proc far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_prog_sel
 ;
-    mov edi,ds:app_name
+    mov edi,ds:ppr_app_name
     or edi,edi
     jnz get_exe_done
 ;       
-    mov esi,OFFSET app_exe_name
+    push ds
+    mov ds,ds:pr_name_sel
+    xor esi,esi
 
 get_exe_size_loop:
     lodsb
@@ -5774,14 +5777,14 @@ get_exe_size_loop:
     jnz get_exe_size_loop
 ;
     mov eax,esi
-    sub eax,OFFSET app_exe_name
     mov ecx,eax
     AllocateAppMem
     mov edi,edx
-    mov esi,OFFSET app_exe_name
+    xor esi,esi
     rep movs byte ptr es:[edi],ds:[esi]
 ;
-    mov ds:app_name,edx
+    pop ds
+    mov ds:ppr_app_name,edx
     mov edi,edx
 
 get_exe_done:

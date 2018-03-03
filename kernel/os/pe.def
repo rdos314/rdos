@@ -163,6 +163,9 @@ ppr_delete_section_proc         DD ?
 ppr_enter_section_proc          DD ?
 ppr_leave_section_proc          DD ?
 
+ppr_app_name                    DD ?
+ppr_app_env                     DD ?
+
 pe_program_struc  ENDS
 
 export_descr    STRUC
