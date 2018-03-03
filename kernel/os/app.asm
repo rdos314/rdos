@@ -68,12 +68,6 @@ init_app    PROC near
     xor esi,esi
     xor edi,edi
 ;
-    mov esi,OFFSET init_system_app
-    mov edi,OFFSET init_system_app_name
-    xor cl,cl
-    mov ax,init_system_app_nr
-    RegisterOsGate
-;
     mov esi,OFFSET init_process_app
     mov edi,OFFSET init_process_app_name
     xor cl,cl
@@ -111,24 +105,6 @@ init_app    ENDP
 run_open_hooks  Proc near
     ret
 run_open_hooks  Endp
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           init_system_app
-;
-;           DESCRIPTION:    Init system app
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_system_app_name   DB 'Init System App',0
-
-init_system_app    PROC far
-    mov al,16
-    SetBitness
-    retf32
-init_system_app    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

@@ -7453,7 +7453,10 @@ trap_create_process     ENDP
     
 trap_init_tasking       PROC near
     InitTrapGates
-    InitSystemApp
+;
+    mov al,16
+    SetBitness
+;
     call trap_create_process
     CreateLdt
     CreateHandleData

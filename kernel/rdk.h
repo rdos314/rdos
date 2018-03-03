@@ -102,8 +102,6 @@
 #define osgate_sim_cli 100
 #define osgate_sim_set_flags 101
 #define osgate_sim_get_flags 102
-#define osgate_save_context 103
-#define osgate_restore_context 104
 #define osgate_call_vm 105
 #define osgate_call_pm16 106
 #define osgate_call_pm32 107
@@ -644,7 +642,6 @@
 
 #define osgate_get_thread_selector_page 569
 
-#define osgate_init_system_app 570
 #define osgate_init_process_app 571
 #define osgate_exit_process_app 572
 
@@ -679,14 +676,6 @@
 
 #define osgate_reset_process 601
 #define osgate_exec_app 602
-
-#define osgate_app_notify_create 603
-#define osgate_app_notify_start 604
-#define osgate_app_notify_forked 605
-#define osgate_app_notify_exec 606
-#define osgate_app_notify_spawn 607
-#define osgate_app_notify_terminate 608
-#define osgate_hook_app_activity 609
 
 #define osgate_notify_clone_process 610
 
@@ -759,6 +748,8 @@
 
 #define osgate_create_handle_data 663
 #define osgate_destroy_handle_data 664
+
+#define osgate_setup_program_mem 665
 
 
 
@@ -866,8 +857,6 @@
 #define OsGate_sim_cli 0x3E 0x67 0x9a 100 0 0 0 2 0
 #define OsGate_sim_set_flags 0x3E 0x67 0x9a 101 0 0 0 2 0
 #define OsGate_sim_get_flags 0x3E 0x67 0x9a 102 0 0 0 2 0
-#define OsGate_save_context 0x3E 0x67 0x9a 103 0 0 0 2 0
-#define OsGate_restore_context 0x3E 0x67 0x9a 104 0 0 0 2 0
 #define OsGate_call_vm 0x3E 0x67 0x9a 105 0 0 0 2 0
 #define OsGate_call_pm16 0x3E 0x67 0x9a 106 0 0 0 2 0
 #define OsGate_call_pm32 0x3E 0x67 0x9a 107 0 0 0 2 0
@@ -1408,7 +1397,6 @@
 
 #define OsGate_get_thread_selector_page 0x3E 0x67 0x9a 57 2 0 0 2 0
 
-#define OsGate_init_system_app 0x3E 0x67 0x9a 58 2 0 0 2 0
 #define OsGate_init_process_app 0x3E 0x67 0x9a 59 2 0 0 2 0
 #define OsGate_exit_process_app 0x3E 0x67 0x9a 60 2 0 0 2 0
 
@@ -1443,14 +1431,6 @@
 
 #define OsGate_reset_process 0x3E 0x67 0x9a 89 2 0 0 2 0
 #define OsGate_exec_app 0x3E 0x67 0x9a 90 2 0 0 2 0
-
-#define OsGate_app_notify_create 0x3E 0x67 0x9a 91 2 0 0 2 0
-#define OsGate_app_notify_start 0x3E 0x67 0x9a 92 2 0 0 2 0
-#define OsGate_app_notify_forked 0x3E 0x67 0x9a 93 2 0 0 2 0
-#define OsGate_app_notify_exec 0x3E 0x67 0x9a 94 2 0 0 2 0
-#define OsGate_app_notify_spawn 0x3E 0x67 0x9a 95 2 0 0 2 0
-#define OsGate_app_notify_terminate 0x3E 0x67 0x9a 96 2 0 0 2 0
-#define OsGate_hook_app_activity 0x3E 0x67 0x9a 97 2 0 0 2 0
 
 #define OsGate_notify_clone_process 0x3E 0x67 0x9a 98 2 0 0 2 0
 
@@ -1523,4 +1503,6 @@
 
 #define OsGate_create_handle_data 0x3E 0x67 0x9a 151 2 0 0 2 0
 #define OsGate_destroy_handle_data 0x3E 0x67 0x9a 152 2 0 0 2 0
+
+#define OsGate_setup_program_mem 0x3E 0x67 0x9a 153 2 0 0 2 0
 
