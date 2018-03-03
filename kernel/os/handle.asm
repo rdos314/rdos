@@ -33,6 +33,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE ..\handle.inc
+INCLUDE exec.def
 
 MAX_HANDLES = 1000h
 
@@ -76,22 +77,23 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           alloc_handle_data
+;           NAME:           CreateHandleData
 ;
-;           DESCRIPTION:    Allocate handle struct
-;
-;           RETURNS:        AX          Handle sel
-;                           DX          Handle mem sel    
+;           DESCRIPTION:    Create handle data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-alloc_handle_data    PROC near
+create_handle_data_name DB 'Create Handle Data', 0
+
+create_handle_data    PROC far
+    push ds
     push es
-    push bx
-    push cx
-    push si
-    push di
+    pushad
 ;    
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel
+;
     mov eax,SIZE handle_seg
     AllocateSmallGlobalMem
 ;
@@ -101,14 +103,14 @@ alloc_handle_data    PROC near
     mov di,2 * MAX_HANDLES + OFFSET handle_arr
     mov ax,0FFFEh
 
-init_handle_loop:
+chdLoop:
     sub di,2
     mov es:[di],ax
     mov ax,di
-    loop init_handle_loop
+    loop chdLoop
 ;
     mov es:handle_list,di
-    push es
+    mov ds:pr_handle_sel,es
 ;
     mov eax,10000h
     AllocateGlobalMem
@@ -125,52 +127,52 @@ init_handle_loop:
     mov es:[bx].hs_prev,0
     mov es:[bx].hs_next,dx
 ;
-    mov dx,es
-    pop ax    
+    mov ds:pr_handle_mem_sel,es
 ;
-    pop di
-    pop si
-    pop cx
-    pop bx
+    popad
     pop es
-    ret
-alloc_handle_data    Endp
+    pop ds
+    retf32
+create_handle_data    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FREE_HANDLE_PROCESS
+;           NAME:           DestroyHandleData
 ;
-;           DESCRIPTION:    Free per-process data
-;
-;           PARAMETERS:     ES App sel
+;           DESCRIPTION:    Free handle data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-free_handle_data     PROC near
+destroy_handle_data_name DB 'Destroy Handle Data', 0
+
+destroy_handle_data     PROC far
     push ds
     push es
     pushad
 ;
-    mov ds,es:app_handle_sel
-    mov es,es:app_handle_mem_sel
+    GetThread
+    mov es,ax
+    mov es,es:p_prog_sel
+    mov ds,es:pr_handle_sel
+    mov es,es:pr_handle_mem_sel
 ;
     xor bx,bx
     mov di,OFFSET handle_arr
     mov cx,MAX_HANDLES
 
-free_handle_loop:
+dhdLoop:
     mov si,[di]
     cmp bx,es:[si].hh_handle
-    jne free_handle_next
+    jne dhdNext
 ;
     call delete_handle
 
-free_handle_next:
+dhdNext:
     inc bx
     add di,2
-    loop free_handle_loop
+    loop dhdLoop
 ;
     FreeMem
     mov ax,ds
@@ -182,130 +184,8 @@ free_handle_next:
     popad
     pop es
     pop ds
-    ret
-free_handle_data     Endp
-
- 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_create
-;
-;           DESCRIPTION:    Notify create process
-;
-;           PARAMETERS:     ES          App sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_create   Proc far
-    pushad
-;
-    call alloc_handle_data
-    mov es:app_handle_sel,ax
-    mov es:app_handle_mem_sel,dx
-;
-    popad
     retf32
-notify_create   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_start
-;
-;           DESCRIPTION:    Notify start boot process
-;
-;           PARAMETERS:     ES          App sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_start    Proc far
-    retf32
-notify_start    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_forked
-;
-;           DESCRIPTION:    Notify forked
-;
-;           PARAMETERS:     ES          App sel
-;                           DS          Parent app sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_forked   Proc far
-    retf32
-notify_forked   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_exec
-;
-;           DESCRIPTION:    Notify exec
-;
-;           PARAMETERS:     ES          App sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_exec     Proc far
-    call free_handle_data
-;
-    pushad
-    call alloc_handle_data
-    mov es:app_handle_sel,ax
-    mov es:app_handle_mem_sel,dx
-    popad
-    retf32
-notify_exec     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_spawn
-;
-;           DESCRIPTION:    Notify spawn
-;
-;           PARAMETERS:     ES          App sel
-;                           DS          Parent app sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_spawn    Proc far
-    retf32
-notify_spawn    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           notify_terminate
-;
-;           DESCRIPTION:    Notify terminate
-;
-;           PARAMETERS:     ES          App sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-notify_terminate        Proc far
-    call free_handle_data
-    retf32
-notify_terminate        Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;           NAME:           App activity table
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-app_activity_table:
-a0 DD OFFSET notify_create,     kernel_code   ; create process
-a1 DD OFFSET notify_start,      kernel_code   ; boot app
-a2 DD OFFSET notify_forked,     kernel_code   ; forked
-a3 DD OFFSET notify_exec,       kernel_code   ; exec
-a4 DD OFFSET notify_spawn,      kernel_code   ; spawn
-a5 DD OFFSET notify_terminate,  kernel_code   ; terminate process
+destroy_handle_data     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -586,9 +466,9 @@ allocate_handle PROC far
     push ax
     GetThread
     mov ds,ax    
-    mov ds,ds:p_app_sel
-    mov es,ds:app_handle_mem_sel
-    mov ds,ds:app_handle_sel
+    mov ds,ds:p_prog_sel
+    mov es,ds:pr_handle_mem_sel
+    mov ds,ds:pr_handle_sel
     pop ax
 ;
     EnterSection ds:handle_section
@@ -642,9 +522,9 @@ free_handle     PROC far
 ;
     GetThread
     mov ds,ax    
-    mov ds,ds:p_app_sel
-    mov es,ds:app_handle_mem_sel
-    mov ds,ds:app_handle_sel
+    mov ds,ds:p_prog_sel
+    mov es,ds:pr_handle_mem_sel
+    mov ds,ds:pr_handle_sel
 ;
     EnterSection ds:handle_section
     mov si,es:[bx].hh_handle
@@ -695,9 +575,9 @@ deref_handle    PROC far
     push ax
     GetThread
     mov ds,ax    
-    mov ds,ds:p_app_sel
-    mov es,ds:app_handle_mem_sel
-    mov ds,ds:app_handle_sel
+    mov ds,ds:p_prog_sel
+    mov es,ds:pr_handle_mem_sel
+    mov ds,ds:pr_handle_sel
     pop ax
 ;
     mov si,bx
@@ -784,8 +664,8 @@ get_free_handles    Proc far
 ;
     GetThread
     mov ds,ax    
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_handle_sel
+    mov ds,ds:p_prog_sel
+    mov ds,ds:pr_handle_sel
     EnterSection ds:handle_section
 ;
     xor ax,ax       
@@ -828,9 +708,9 @@ get_free_handle_mem     Proc far
 ;
     GetThread
     mov ds,ax    
-    mov ds,ds:p_app_sel
-    mov es,ds:app_handle_mem_sel
-    mov ds,ds:app_handle_sel
+    mov ds,ds:p_prog_sel
+    mov es,ds:pr_handle_mem_sel
+    mov ds,ds:pr_handle_sel
     EnterSection ds:handle_section
 ;
     xor eax,eax
@@ -938,8 +818,17 @@ init_handle     PROC near
     mov ds,ax
     mov es,ax
 ;
-    mov edi,OFFSET app_activity_table
-    HookAppActivity
+    mov esi,OFFSET create_handle_data
+    mov edi,OFFSET create_handle_data_name
+    xor cl,cl
+    mov ax,create_handle_data_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET destroy_handle_data
+    mov edi,OFFSET destroy_handle_data_name
+    xor cl,cl
+    mov ax,destroy_handle_data_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET register_handle
     mov edi,OFFSET register_handle_name

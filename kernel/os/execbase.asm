@@ -1239,6 +1239,7 @@ AddKernelModule     Endp
 spawn_startup:
     sti
     CreateLdt
+    CreateHandleData
     GetThread
     mov es,ax
     mov ax,es:p_console
@@ -2190,6 +2191,7 @@ ukDone:
 ukFocusOk:
     mov bx,ds:p_console
     CloseConsole
+    DestroyHandleData
     DestroyLdt
 ;
     call RemoveProg

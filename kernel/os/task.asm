@@ -7462,6 +7462,7 @@ trap_init_tasking       PROC near
     InitSystemApp
     call trap_create_process
     CreateLdt
+    CreateHandleData
     InitProcessApp
 ;
     push cx

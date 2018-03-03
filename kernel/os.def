@@ -757,4 +757,7 @@ create_cur_dir_nr           = 660
 clone_cur_dir_nr            = 661
 delete_cur_dir_nr           = 662
 
+create_handle_data_nr       = 663
+destroy_handle_data_nr      = 664
+
 osgate_entries              = 700

@@ -2039,6 +2039,14 @@ LogHexDword  MACRO
 
 ;;;;;;;;;; HANDLES ;;;;;;;;;;;;;;;;;;
 
+CreateHandleData  MACRO
+    OsGate create_handle_data_nr
+                    ENDM
+
+DestroyHandleData  MACRO
+    OsGate destroy_handle_data_nr
+                    ENDM
+
 ; IN  AX        Signature
 ; IN  ES:EDI    Delete handle callback
 RegisterHandle  MACRO

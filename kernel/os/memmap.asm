@@ -35,6 +35,7 @@ INCLUDE ..\driver.def
 INCLUDE system.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\fs.inc
+INCLUDE exec.def
 
 memmap_seg          STRUC
 
@@ -1183,7 +1184,8 @@ map_fault       Proc far
     GetThread
     mov ds,ax
     mov es,ds:p_app_sel
-    mov ds,es:app_handle_mem_sel
+    mov ds,ds:p_prog_sel
+    mov ds,ds:pr_handle_mem_sel
     mov ebx,es:app_memmap_list
     or ebx,ebx
     jz map_fault_fail
