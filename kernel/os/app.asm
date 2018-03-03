@@ -274,8 +274,6 @@ clone_app    PROC far
     mov al,ds:app_bitness
     mov es:app_bitness,al
 ;
-    mov es:app_exit_code,0
-;
     popad
     pop fs
     pop es
@@ -308,7 +306,6 @@ exec_app    PROC far
     mov es:app_fatal_error_exit_proc,0
     mov es:app_fatal_error_exit_proc+4,0
 ;
-    mov es:app_exit_code,0
     mov es:app_fork_id,0
 ;
     mov es:app_bitness,0

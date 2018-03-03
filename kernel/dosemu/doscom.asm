@@ -252,10 +252,10 @@ strategy    ENDP
     public exit_code
 
 exit_code       PROC far
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_exit_code
+;    GetThread
+;    mov ds,ax
+;    mov ds,ds:p_app_sel
+;    mov ax,ds:app_exit_code
     mov ebx,[bp].vm_ebx
     and byte ptr [bp].vm_eflags,NOT 1
     retf32

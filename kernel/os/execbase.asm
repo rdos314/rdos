@@ -2324,12 +2324,7 @@ wait_for_exec   Endp
 get_exit_code_name DB 'Get Exit Code',0
     
 get_exit_code   Proc far
-    push ds
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_exit_code
-    pop ds
+    int 3
     ret
 get_exit_code   Endp
     

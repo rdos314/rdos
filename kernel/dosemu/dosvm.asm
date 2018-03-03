@@ -302,12 +302,12 @@ keep_process:
     jc keep_fail
 ;
     mov ah,3
-    push ax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    pop ax
-    mov ds:app_exit_code,ax
+;    push ax
+;    GetThread
+;    mov ds,ax
+;    mov ds,ds:p_app_sel
+;    pop ax
+;    mov ds:app_exit_code,ax
 ;
     call reset_find_sel
     mov bx,flat_sel
@@ -334,10 +334,10 @@ keep_process:
     int 3
 ;    xchg bx,ds:app_context
 ;    RestoreContext
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ax,ds:app_exit_code
+;    GetThread
+;    mov ds,ax
+;    mov ds,ds:p_app_sel
+;    mov ax,ds:app_exit_code
     clc
     retf32
 
