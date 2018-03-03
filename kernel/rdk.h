@@ -751,6 +751,14 @@
 #define osgate_close_console 656
 #define osgate_set_focus_console 657
 #define osgate_get_focus_console 658
+#define osgate_create_console 659
+
+#define osgate_create_cur_dir 660
+#define osgate_clone_cur_dir 661
+#define osgate_delete_cur_dir 662
+
+#define osgate_create_handle_data 663
+#define osgate_destroy_handle_data 664
 
 
 
@@ -1507,4 +1515,12 @@
 #define OsGate_close_console 0x3E 0x67 0x9a 144 2 0 0 2 0
 #define OsGate_set_focus_console 0x3E 0x67 0x9a 145 2 0 0 2 0
 #define OsGate_get_focus_console 0x3E 0x67 0x9a 146 2 0 0 2 0
+#define OsGate_create_console 0x3E 0x67 0x9a 147 2 0 0 2 0
+
+#define OsGate_create_cur_dir 0x3E 0x67 0x9a 148 2 0 0 2 0
+#define OsGate_clone_cur_dir 0x3E 0x67 0x9a 149 2 0 0 2 0
+#define OsGate_delete_cur_dir 0x3E 0x67 0x9a 150 2 0 0 2 0
+
+#define OsGate_create_handle_data 0x3E 0x67 0x9a 151 2 0 0 2 0
+#define OsGate_destroy_handle_data 0x3E 0x67 0x9a 152 2 0 0 2 0
 

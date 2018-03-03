@@ -874,12 +874,6 @@ Is64BitExe      MACRO
                                         ENDM
 
 ; IN  DS:(E)SI  Program name
-; IN  ES:(E)DI  Command line
-DosExtExec      MACRO
-        UserGate dos_ext_exec_nr
-                                        ENDM
-
-; IN  DS:(E)SI  Program name
 ; IN  ES:(E)DI  Parameters
 ;               +0  Command line
 ;               +8  Startup directory & drive

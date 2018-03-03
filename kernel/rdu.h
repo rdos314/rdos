@@ -280,8 +280,6 @@
 #define usergate_create_file_drive 0x000000FE
 #define usergate_open_file_drive 0x000000FF
 
-#define usergate_dos_ext_exec 0x00000100
-
 #define usergate_open_sys_env 0x00000101
 #define usergate_open_proc_env 0x00000102
 #define usergate_close_env 0x00000103
@@ -1136,8 +1134,6 @@
 #define CallGate_create_file_drive 0x55 0x67 0x9a 254 0 0 0 3 0 0x5d
 #define CallGate_open_file_drive 0x55 0x67 0x9a 255 0 0 0 3 0 0x5d
 
-#define CallGate_dos_ext_exec 0x55 0x67 0x9a 0 1 0 0 3 0 0x5d
-
 #define CallGate_open_sys_env 0x55 0x67 0x9a 1 1 0 0 3 0 0x5d
 #define CallGate_open_proc_env 0x55 0x67 0x9a 2 1 0 0 3 0 0x5d
 #define CallGate_close_env 0x55 0x67 0x9a 3 1 0 0 3 0 0x5d
@@ -1989,8 +1985,6 @@
 
 #define CallGate_create_file_drive 0x3e 0x67 0x9a 254 0 0 0 3 0
 #define CallGate_open_file_drive 0x3e 0x67 0x9a 255 0 0 0 3 0
-
-#define CallGate_dos_ext_exec 0x3e 0x67 0x9a 0 1 0 0 3 0
 
 #define CallGate_open_sys_env 0x3e 0x67 0x9a 1 1 0 0 3 0
 #define CallGate_open_proc_env 0x3e 0x67 0x9a 2 1 0 0 3 0
