@@ -264,9 +264,6 @@ clone_app    PROC far
     mov es,ax
     mov es,es:p_app_sel
 ;
-    mov al,ds:app_bitness
-    mov es:app_bitness,al
-;
     popad
     pop fs
     pop es
@@ -297,8 +294,6 @@ exec_app    PROC far
     mov es,es:p_app_sel
 ;
     mov es:app_fork_id,0
-;
-    mov es:app_bitness,0
 ;
     xor ax,ax
     mov es,ax

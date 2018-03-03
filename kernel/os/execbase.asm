@@ -225,6 +225,7 @@ InitProgramBlock Proc near
     mov gs:pr_cmd_sel,0
     mov gs:pr_debug_id,0
     mov gs:pr_thread,0
+    mov gs:pr_bitness,0
     mov gs:pr_module_count,0
     mov gs:pr_process_count,0
     InitSection gs:pr_section

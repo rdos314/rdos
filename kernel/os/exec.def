@@ -149,6 +149,9 @@ pr_parent_app_sel    DW ?
 
 pr_section           section_typ <>
 
+pr_bitness           DB ?
+pr_filler            DB ?
+
 pr_ldt_sel           DW ?
 pr_ldt_data_sel      DW ?
 pr_ldt_free          DW ?

@@ -893,18 +893,18 @@ set_bitness     PROC far
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_prog_sel
     pop ax
     cmp al,16
     je set_bitness16
 
 set_bitness32:
-    mov ds:app_bitness,1
+    mov ds:pr_bitness,1
     call setup_idt32
     jmp set_bitness_done
 
 set_bitness16:
-    mov ds:app_bitness,0
+    mov ds:pr_bitness,0
     call setup_idt16
 
 set_bitness_done:
@@ -2090,9 +2090,9 @@ prot_exception_user:
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_prog_sel
     pop ax
-    test ds:app_bitness,1
+    test ds:pr_bitness,1
     jz prot_exception16
     jmp prot_exception32
 
@@ -2230,8 +2230,8 @@ raw_switch_v86:
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    test ds:app_bitness,1
+    mov ds,ds:p_prog_sel
+    test ds:pr_bitness,1
     jz raw_switch16_v86
 
 raw_switch32_v86:
