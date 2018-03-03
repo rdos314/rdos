@@ -4156,9 +4156,6 @@ fork_child:
 ;    SetModule
     pop es
 ;
-    mov al,32
-    SetBitness
-;
     push ds
 ;
     GetThread
