@@ -3855,8 +3855,12 @@ start_thread    Endp
 free_thread_user     Proc far
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-
+    mov ds,ds:p_prog_sel
+;
+    movzx ebx,ds:pr_module_arr
+    ModuleIdToSel
+    mov ds,ebx
+;
     mov ax,ds:mod_debug_id
     or ax,ax
     jz ftuDebugOk
