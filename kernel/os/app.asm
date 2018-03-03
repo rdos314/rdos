@@ -118,8 +118,6 @@ run_open_hooks  Proc near
     mov ds,ds:p_app_sel
 ;       
     mov ds:app_fork_id,0
-    mov ds:app_fatal_error_exit_proc,0
-    mov ds:app_fatal_error_exit_proc+4,0
 ;
     mov ds:app_vm_psp_seg,0
     mov ds:app_pm_psp_sel,0
@@ -266,11 +264,6 @@ clone_app    PROC far
     mov es,ax
     mov es,es:p_app_sel
 ;
-    mov eax,ds:app_fatal_error_exit_proc
-    mov es:app_fatal_error_exit_proc,eax
-    mov eax,ds:app_fatal_error_exit_proc+4
-    mov es:app_fatal_error_exit_proc+4,eax
-;
     mov al,ds:app_bitness
     mov es:app_bitness,al
 ;
@@ -302,9 +295,6 @@ exec_app    PROC far
     mov es,ax
     lock and es:p_flags,NOT THREAD_FLAG_FORKED
     mov es,es:p_app_sel
-;
-    mov es:app_fatal_error_exit_proc,0
-    mov es:app_fatal_error_exit_proc+4,0
 ;
     mov es:app_fork_id,0
 ;

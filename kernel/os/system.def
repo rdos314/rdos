@@ -278,8 +278,6 @@ app_seg STRUC
 
 app_next                    DW ?
 
-app_fatal_error_exit_proc   DD ?,?
-
 app_fork_id                 DW ?
 
 app_vm_psp_seg              DW ?

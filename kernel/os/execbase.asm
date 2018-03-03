@@ -2235,22 +2235,16 @@ is_forked    ENDP
 fatal_error_exit_name       DB 'Fatal Error Exit',0
 
 fatal_error_exit    PROC far
-    push ds
+    mov ax,wd_code_sel
+    verr ax
+    jnz feeDone
 ;
-    push eax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov eax,ds:app_fatal_error_exit_proc
-    or eax,ds:app_fatal_error_exit_proc+4
-    pop eax
-    stc
-    jz fatal_error_exit_done
+    mov ax,2500
+    WaitMilliSec
 ;
-    call fword ptr ds:app_fatal_error_exit_proc
+    SoftReset
 
-fatal_error_exit_done:
-    pop ds
+feeDone:
     ret
 fatal_error_exit    ENDP
 

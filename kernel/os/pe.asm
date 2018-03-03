@@ -1415,8 +1415,6 @@ InsertApp       Proc near
     mov ds:p_loader,pe_loader_sel
 ;
     mov ds,ds:p_app_sel
-    mov ds:app_fatal_error_exit_proc,OFFSET fatal_error_exit
-    mov ds:app_fatal_error_exit_proc+4,cs
 ;
     popad
     pop es
@@ -5244,30 +5242,6 @@ setDone:
     pop es    
     ret
 show_exception_text     ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           FatalErrorExit
-;
-;           DESCRIPTION:    Fatal error exit handler
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-fatal_error_exit     PROC far
-    mov ax,wd_code_sel
-    verr ax
-    jnz feeDone
-;
-    mov ax,2500
-    WaitMilliSec
-;
-    SoftReset
-
-feeDone:
-    ret
-fatal_error_exit     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
