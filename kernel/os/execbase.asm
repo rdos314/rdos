@@ -1517,10 +1517,9 @@ lpEnvDone:
 ;
     GetThread
     mov es,ax
+    lock and es:p_flags,NOT THREAD_FLAG_FORKED
 ;
-    push gs
-    ExecApp
-    pop gs
+    ResetProcess
 ;
     xor eax,eax
     push eax
