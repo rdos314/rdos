@@ -1130,8 +1130,18 @@ spawn_startup:
     mov es:p_parent_console,ax
     mov gs,es:p_prog_sel
 ;
-    SaveContext
     xor eax,eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    mov ebp,esp
+;
     push eax
     push eax
     push eax
@@ -1141,9 +1151,8 @@ spawn_startup:
     push eax
 ;
     GetThread
-    mov es,ax
+    mov es,eax
     mov es,es:p_app_sel
-    mov es:app_context,bx
 ;
     mov ax,gs:pr_parent_app_sel
     or ax,ax
@@ -1548,7 +1557,6 @@ lpEnvDone:
     ExecApp
     pop gs
 ;
-    SaveContext
     xor eax,eax
     push eax
     push eax
@@ -1557,11 +1565,18 @@ lpEnvDone:
     push eax
     push eax
     push eax
+    push eax
+    push eax
+    mov ebp,esp
 ;
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
-    mov es:app_context,bx
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+;
     AppNotifyExec
 ;
     GetThread
