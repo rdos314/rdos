@@ -1415,8 +1415,6 @@ InsertApp       Proc near
     mov ds:p_loader,pe_loader_sel
 ;
     mov ds,ds:p_app_sel
-    mov ds:app_close_proc,OFFSET close_proc
-    mov ds:app_close_proc+4,cs
     mov ds:app_fatal_error_exit_proc,OFFSET fatal_error_exit
     mov ds:app_fatal_error_exit_proc+4,cs
 ;
@@ -4250,23 +4248,6 @@ fork_notify_ok:
 fork_done:    
     ret
 fork_proc  Endp
-
-                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           close_proc
-;
-;           DESCRIPTION:    Close app callback
-;
-;           PARAMETERS:
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_proc      Proc far
-    ret
-close_proc      Endp
-
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

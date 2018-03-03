@@ -80,12 +80,6 @@ init_app    PROC near
     mov ax,init_process_app_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET exit_process_app
-    mov edi,OFFSET exit_process_app_name
-    xor cl,cl
-    mov ax,exit_process_app_nr
-    RegisterOsGate
-;
     mov esi,OFFSET clone_app
     mov edi,OFFSET clone_app_name
     xor cl,cl
@@ -124,8 +118,6 @@ run_open_hooks  Proc near
     mov ds,ds:p_app_sel
 ;       
     mov ds:app_fork_id,0
-    mov ds:app_close_proc,0
-    mov ds:app_close_proc+4,0
     mov ds:app_fatal_error_exit_proc,0
     mov ds:app_fatal_error_exit_proc+4,0
 ;
@@ -177,38 +169,6 @@ init_process_app    PROC far
     call run_open_hooks
     retf32
 init_process_app    ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           exit_process_app
-;
-;           DESCRIPTION:    Exit per-process data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-exit_process_app_name   DB 'Exit Process App',0
-
-exit_process_app    PROC near
-    IsLongThread
-    jnc epDone
-
-epRetryApp:    
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov eax,ds:app_close_proc
-    or eax,ds:app_close_proc+4
-    jz epCloseHandled
-;
-    call fword ptr ds:app_close_proc
-
-epCloseHandled:
-
-epDone:
-    retf32
-exit_process_app    ENDP
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -267,16 +227,6 @@ close_app_name  DB 'Close App',0
 close_app       PROC far
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov eax,ds:app_close_proc
-    or eax,ds:app_close_proc+4
-    jz close_proc_handled
-;
-    call fword ptr ds:app_close_proc
-
-close_proc_handled:
-    GetThread
-    mov ds,ax
     mov es,ds:p_app_sel
     movzx eax,es:app_next
     or ax,ax
@@ -316,11 +266,6 @@ clone_app    PROC far
     mov es,ax
     mov es,es:p_app_sel
 ;
-    mov eax,ds:app_close_proc
-    mov es:app_close_proc,eax
-    mov eax,ds:app_close_proc+4
-    mov es:app_close_proc+4,eax
-;
     mov eax,ds:app_fatal_error_exit_proc
     mov es:app_fatal_error_exit_proc,eax
     mov eax,ds:app_fatal_error_exit_proc+4
@@ -359,9 +304,6 @@ exec_app    PROC far
     mov es,ax
     lock and es:p_flags,NOT THREAD_FLAG_FORKED
     mov es,es:p_app_sel
-;
-    mov es:app_close_proc,0
-    mov es:app_close_proc+4,0
 ;
     mov es:app_fatal_error_exit_proc,0
     mov es:app_fatal_error_exit_proc+4,0
