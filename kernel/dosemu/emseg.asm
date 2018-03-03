@@ -343,13 +343,10 @@ IntFarPm:
         jz EmulateError
 ;
         push ax
-        GetThread
-        mov ds,ax
-        mov ds,ds:p_app_sel
-        mov al,ds:app_bitness
-        or al,al
+        mov ax,[bp].reg_cs
+        cmp ax,flat_code_sel
         pop ax
-        jnz IntFarPm32
+        je IntFarPm32
 
 IntFarPm16:
         push ax
@@ -404,12 +401,10 @@ ExcFar  Proc near
         jz EmulateError
 ;
         push ax
-        GetThread
-        mov ds,ax
-        mov ds,ds:p_app_sel
-        mov al,ds:app_bitness
-        or al,al
-        jnz ExcFarPm32
+        mov ax,[bp].reg_cs
+        cmp ax,flat_code_sel
+        pop ax
+        je ExcFarPm32
 
 ExcFarPm16:
         GetExceptionStack16
