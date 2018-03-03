@@ -343,9 +343,6 @@ clone_app    PROC far
     mov al,ds:app_bitness
     mov es:app_bitness,al
 ;
-    mov al,ds:app_key
-    mov es:app_key,al
-;
     mov es:app_exit_code,0
 ;
     popad
@@ -393,7 +390,6 @@ exec_app    PROC far
     mov es:app_mod_sel,0
 ;
     mov es:app_bitness,0
-    mov es:app_key,0
 ;
     xor ax,ax
     mov es,ax

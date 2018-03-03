@@ -1150,10 +1150,6 @@ spawn_startup:
     push eax
     push eax
 ;
-    GetThread
-    mov es,eax
-    mov es,es:p_app_sel
-;
     mov ax,gs:pr_parent_app_sel
     or ax,ax
     jnz ssSpawn
@@ -1167,11 +1163,6 @@ ssSpawn:
     AppNotifySpawn
 
 ssNotifyOk:
-    mov ax,3Bh
-    EnableFocus
-    SetFocus
-    mov es:app_key,al
-;       
     GetThread
     mov gs:pr_thread,ax
     mov ds,ax
@@ -1220,7 +1211,10 @@ ssNotifyOk:
     mov ds,ds:p_app_sel
     mov ds:app_mod_id,bx
     mov ds:app_mod_sel,es
-    mov al,ds:app_key
+;
+    mov ax,3Bh
+    EnableFocus
+    SetFocus
     mov es:mod_key,al
 ;
     mov bx,es
@@ -1633,8 +1627,7 @@ lpThreadNameDone:
     mov ds:app_mod_id,bx
     mov ds:app_mod_sel,es
 ;
-    mov al,ds:app_key
-    mov es:mod_key,al
+    mov es:mod_key,0
 ;
     mov bx,es
     pop es

@@ -299,7 +299,6 @@ app_dta_mode                DB ?
 app_find_sel                DW ?
 
 app_bitness                 DB ?
-app_key                     DB ?
 
 app_pm_int                  DD 100h DUP(?,?)
 app_pm_exc                  DD 20h DUP(?,?)
