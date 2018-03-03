@@ -642,8 +642,6 @@
 
 #define osgate_get_thread_selector_page 569
 
-#define osgate_exit_process_app 572
-
 #define osgate_notify_delete_process 573
 
 #define osgate_add_video_mode 574
@@ -1395,8 +1393,6 @@
 #define OsGate_disc_request_retry 0x3E 0x67 0x9a 56 2 0 0 2 0
 
 #define OsGate_get_thread_selector_page 0x3E 0x67 0x9a 57 2 0 0 2 0
-
-#define OsGate_exit_process_app 0x3E 0x67 0x9a 60 2 0 0 2 0
 
 #define OsGate_notify_delete_process 0x3E 0x67 0x9a 61 2 0 0 2 0
 

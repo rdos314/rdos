@@ -2068,11 +2068,6 @@ DerefHandle     MACRO
 
 ;;;;;;;;;;;;;; Application / process  ;;;;;;;;;;;;;;;;;;
 
-ExitProcessApp MACRO
-    OsGate exit_process_app_nr
-                    ENDM
-
-
 ;  AX            Source app
 CloneApp MACRO
     OsGate clone_app_nr
