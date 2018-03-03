@@ -302,13 +302,6 @@ keep_process:
     jc keep_fail
 ;
     mov ah,3
-;    push ax
-;    GetThread
-;    mov ds,ax
-;    mov ds,ds:p_app_sel
-;    pop ax
-;    mov ds:app_exit_code,ax
-;
     call reset_find_sel
     mov bx,flat_sel
     mov ds,bx
@@ -325,19 +318,8 @@ keep_process:
     CreateDataSelector16
     call set_prot_psp
 ;
-    push ax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    pop ax
     xor bx,bx
     int 3
-;    xchg bx,ds:app_context
-;    RestoreContext
-;    GetThread
-;    mov ds,ax
-;    mov ds,ds:p_app_sel
-;    mov ax,ds:app_exit_code
     clc
     retf32
 

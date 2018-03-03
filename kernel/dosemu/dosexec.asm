@@ -296,10 +296,6 @@ load_com    PROC near
     mov ax,7202h
     SetFlags
     mov [bp].load_eflags,ax
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
     clc
     jmp load_com_done
 
@@ -463,9 +459,6 @@ load_exe_noreloc2:
 ;
     mov ax,ds
     mov es,ax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
     FreeMem
     clc
     jmp load_exe_done
@@ -813,9 +806,6 @@ load_ext_exe_noreloc2:
 ;
     mov ax,ds
     mov es,ax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
     FreeMem
     jmp load_ext_exe_ok
 

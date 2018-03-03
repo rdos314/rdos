@@ -764,6 +764,10 @@ UnhookPage      MACRO
 
 ;;;;;;;;;;; LINEAR MEMORY MANAGEMENT ;;;;;;;;
 
+SetupProgramMem     MACRO
+    OsGate setup_program_mem_nr
+                    ENDM
+
 ;       EAX         Byte count
 ;       ES          SELECTOR
 AllocateGlobalMem       MACRO

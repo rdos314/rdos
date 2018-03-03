@@ -758,4 +758,6 @@ delete_cur_dir_nr           = 662
 create_handle_data_nr       = 663
 destroy_handle_data_nr      = 664
 
+setup_program_mem_nr        = 665
+
 osgate_entries              = 700

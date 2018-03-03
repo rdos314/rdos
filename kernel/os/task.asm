@@ -7463,6 +7463,7 @@ trap_init_tasking       PROC near
     call trap_create_process
     CreateLdt
     CreateHandleData
+    SetupProgramMem
     InitProcessApp
 ;
     push cx

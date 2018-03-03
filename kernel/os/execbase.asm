@@ -1127,6 +1127,8 @@ spawn_startup:
     sti
     CreateLdt
     CreateHandleData
+    SetupProgramMem
+;
     GetThread
     mov es,ax
     mov ax,es:p_console
@@ -1169,8 +1171,6 @@ ssNotifyOk:
     GetThread
     mov gs:pr_thread,ax
     mov ds,ax
-    mov ax,ds:p_app_sel
-    mov gs:pr_app_sel,ax
 ;
     mov ax,gs:pr_loader
     mov ds:p_loader,ax
