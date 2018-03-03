@@ -34,6 +34,7 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE int.def
+INCLUDE exec.def
 
 sim_ss      EQU 52
 sim_psp     EQU 50
@@ -307,10 +308,11 @@ setup_idt16     PROC near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov bx,OFFSET app_pm_int
+    mov ds,ds:p_prog_sel
+    mov bx,OFFSET pr_pm_int
     mov cx,100h
     xor edx,edx
+
 setup_int_loop:
     mov [bx],edx
     add bx,4
@@ -319,9 +321,10 @@ setup_int_loop:
     add dx,4
     loop setup_int_loop
 ;
-    mov bx,OFFSET app_pm_exc
+    mov bx,OFFSET pr_pm_exc
     mov cx,20h
     mov edx,4
+
 setup_pm_exception_loop:
     mov [bx],edx
     add bx,4
@@ -391,12 +394,12 @@ get_exception_vector    PROC far
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_prog_sel
     pop ax
     movzx bx,al
     shl bx,3
-    mov di,word ptr ds:[bx].app_pm_exc
-    mov es,word ptr ds:[bx+4].app_pm_exc
+    mov di,word ptr ds:[bx].pr_pm_exc
+    mov es,word ptr ds:[bx+4].pr_pm_exc
     pop bx
     pop ds
     retf32
@@ -423,12 +426,12 @@ set_exception_vector    PROC far
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_prog_sel
     pop ax
     movzx bx,al
     shl bx,3
-    mov word ptr ds:[bx].app_pm_exc,di
-    mov word ptr ds:[bx+4].app_pm_exc,es
+    mov word ptr ds:[bx].pr_pm_exc,di
+    mov word ptr ds:[bx+4].pr_pm_exc,es
     pop bx
     pop ds
     retf32
@@ -454,12 +457,12 @@ default_get_pm_int      PROC far
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_prog_sel
     pop ax
     movzx bx,al
     shl bx,3
-    mov di,word ptr ds:[bx].app_pm_int
-    mov es,word ptr ds:[bx+4].app_pm_int
+    mov di,word ptr ds:[bx].pr_pm_int
+    mov es,word ptr ds:[bx+4].pr_pm_int
     pop bx
     pop ds
     retf32
@@ -484,12 +487,12 @@ default_set_pm_int      PROC far
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_prog_sel
     pop ax
     movzx bx,al
     shl bx,3
-    mov word ptr ds:[bx].app_pm_int,di
-    mov word ptr ds:[bx+4].app_pm_int,es
+    mov word ptr ds:[bx].pr_pm_int,di
+    mov word ptr ds:[bx+4].pr_pm_int,es
     pop bx
     pop ds
     retf32
@@ -1250,16 +1253,16 @@ prot_exception16    PROC near
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_prog_sel
     pop ax
     movzx bx,al
 ;
     shl bx,3
-    cmp word ptr ds:[bx+4].app_pm_exc,callb_exc16_sel
+    cmp word ptr ds:[bx+4].pr_pm_exc,callb_exc16_sel
     je run_default_exception
 ;
-    push word ptr ds:[bx+4].app_pm_exc
-    push word ptr ds:[bx].app_pm_exc
+    push word ptr ds:[bx+4].pr_pm_exc
+    push word ptr ds:[bx].pr_pm_exc
     push ax
 ;
     GetExceptionStack16
