@@ -678,14 +678,6 @@ clone_app_nr                = 599
 reset_process_nr            = 601
 exec_app_nr                 = 602
 
-app_notify_create_nr        = 603
-app_notify_start_nr         = 604
-app_notify_forked_nr        = 605
-app_notify_exec_nr          = 606
-app_notify_spawn_nr         = 607
-app_notify_terminate_nr     = 608
-hook_app_activity_nr        = 609
-
 notify_clone_process_nr     = 610
 
 dupl_c_file_to_file_nr      = 611

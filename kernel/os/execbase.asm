@@ -1155,19 +1155,6 @@ spawn_startup:
     push eax
     push eax
 ;
-    mov ax,gs:pr_parent_app_sel
-    or ax,ax
-    jnz ssSpawn
-
-ssStart:
-    AppNotifyStart
-    jmp ssNotifyOk
-
-ssSpawn:
-    mov ds,gs:pr_parent_app_sel
-    AppNotifySpawn
-
-ssNotifyOk:
     GetThread
     mov gs:pr_thread,ax
     mov ds,ax
@@ -1559,8 +1546,6 @@ lpEnvDone:
     push eax
     push eax
     push eax
-;
-    AppNotifyExec
 ;
     GetThread
     mov es,ax

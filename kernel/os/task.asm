@@ -8667,11 +8667,6 @@ terminate_free_pd:
     xor ax,ax
     mov ds,ax
     FreeMem    
-;
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
-    AppNotifyTerminate
 
 terminate_pd_done:
     call trap_terminate_thread
@@ -9107,21 +9102,6 @@ fork_process_name     DB 'Fork Process',0
 fork_start:
     NotifyCloneProcess
 ;
-    push ds
-    push es
-    push ax
-;
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
-    mov ds,dx
-    AppNotifyCreate
-    AppNotifyForked
-;
-    pop ax
-    pop es
-    pop ds
-;
     push dx
     call trap_create_process
     InitProcessApp
@@ -9326,13 +9306,6 @@ init_long_callback_frame    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_process_callback:
-    push es
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
-    AppNotifyCreate
-    pop es
-;
     GetThread
     mov fs,ax
 ;
@@ -9592,11 +9565,6 @@ init_first_process      Endp
 init_first_process_callback:
     NotifyInitProcess
     call start_processor_null_threads
-;
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
-    AppNotifyCreate
 ;
     call trap_init_tasking
     sti

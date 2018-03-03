@@ -78,8 +78,6 @@ local_mem_sel           EQU 0C0h
 dosb800                         EQU 0D0h
 bios_data                       EQU 0D8h
 ;
-app_activity_sel        EQU 0E0h
-;
 swap_data_sel           EQU 0E8h
 ;
 task_code_sel           EQU 0F0h
