@@ -2107,12 +2107,6 @@ DeleteThread    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DeleteProcess    Proc near
-    mov ax,es:p_app_sel
-    push es
-    mov es,ax
-    FreeMem
-    pop es
-;
     push es
     mov es,es:p_kernel_ss
     FreeMem
@@ -7740,9 +7734,6 @@ init_thread_block       PROC near
     mov es:p_wanted_core,0
     mov es:p_int_count,0
 ;
-    mov ax,ds:p_app_sel
-    mov es:p_app_sel,ax
-;
     mov ax,ds:p_prog_id
     mov es:p_prog_id,ax
 ;
@@ -7815,26 +7806,6 @@ init_thread_block       ENDP
 
 init_process_block      PROC near
     call create_process_sel
-;
-    push es
-    push cx
-    push di
-;    
-    mov eax,SIZE app_seg
-    AllocateSmallGlobalMem
-    mov cx,ax
-    xor di,di
-    xor al,al
-    rep stosb
-;
-    mov bx,es
-    mov es:app_next,0
-;
-    pop di
-    pop cx
-    pop es
-    mov es:p_app_sel,bx
-;
     mov es:p_ldt_sel,0
     ret
 init_process_block      ENDP
@@ -8240,12 +8211,6 @@ init_default_regs    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_prot_tss   PROC near
-    push fs
-;
-    GetThread
-    mov fs,ax
-    mov fs,fs:p_app_sel
-;
     mov dx,[ebp].cr_flags
     or dx,200h
     and dx,NOT 7000h
@@ -8293,7 +8258,6 @@ init_kernel_tss:
     mov es:p_stack_sel,0
 
 init_prot_tss_com:
-    pop fs
     ret
 init_prot_tss   ENDP
 
@@ -8912,13 +8876,6 @@ init_fork_regs    PROC near
     mov es:p_cr3,edx
     mov dword ptr ds:p_rax,edx
 ;
-    push ds
-    GetThread
-    mov ds,ax
-    mov dx,ds:p_app_sel
-    pop ds
-    mov dword ptr ds:p_rdx,edx
-;
     mov dword ptr ds:p_rip,OFFSET fork_start
 ;
     xor edx,edx
@@ -9374,7 +9331,6 @@ create_first_thread       PROC near
     mov es:p_vm_deb_offs,eax
     mov es:p_pm_deb_sel,ax
     mov es:p_pm_deb_offs,eax
-    mov es:p_app_sel,ax
     mov es:p_prog_id,ax
     mov es:p_prog_sel,ax
     mov es:p_proc_id,ax

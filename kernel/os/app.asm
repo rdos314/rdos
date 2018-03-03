@@ -109,17 +109,6 @@ init_app    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 run_open_hooks  Proc near
-    push ds
-    push ax
-    push cx
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-;
-    pop cx
-    pop ax
-    pop ds
     ret
 run_open_hooks  Endp
 
@@ -184,11 +173,6 @@ open_app    PROC far
     mov cx,SIZE app_seg
     xor al,al
     rep stos byte ptr es:[di]
-;    
-    mov bx,es
-    mov ax,ds:p_app_sel
-    mov es:app_next,ax
-    mov ds:p_app_sel,bx
 ;
     call run_open_hooks
 ;
@@ -212,19 +196,6 @@ open_app    ENDP
 close_app_name  DB 'Close App',0
 
 close_app       PROC far
-    GetThread
-    mov ds,ax
-    mov es,ds:p_app_sel
-    movzx eax,es:app_next
-    or ax,ax
-    jz close_app_last
-;
-    mov fs,ax
-    mov ds:p_app_sel,ax
-
-close_app_last:
-    FreeMem
-    sti
     retf32
 close_app       ENDP
 
@@ -243,20 +214,6 @@ close_app       ENDP
 clone_app_name   DB 'Clone App',0
 
 clone_app    PROC far
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov ds,ax
-    GetThread
-    mov es,ax
-    mov es,es:p_app_sel
-;
-    popad
-    pop fs
-    pop es
-    pop ds
     retf32
 clone_app    ENDP
 
@@ -280,7 +237,6 @@ exec_app    PROC far
     GetThread
     mov es,ax
     lock and es:p_flags,NOT THREAD_FLAG_FORKED
-    mov es,es:p_app_sel
 ;
     xor ax,ax
     mov es,ax
