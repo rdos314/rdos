@@ -68,12 +68,6 @@ init_app    PROC near
     xor esi,esi
     xor edi,edi
 ;
-    mov esi,OFFSET init_process_app
-    mov edi,OFFSET init_process_app_name
-    xor cl,cl
-    mov ax,init_process_app_nr
-    RegisterOsGate
-;
     mov esi,OFFSET clone_app
     mov edi,OFFSET clone_app_name
     xor cl,cl
@@ -105,24 +99,7 @@ init_app    ENDP
 run_open_hooks  Proc near
     ret
 run_open_hooks  Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           init_process_app
-;
-;           DESCRIPTION:    Init per-process data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_process_app_name   DB 'Init App Process',0
-
-init_process_app    PROC far
-    call run_open_hooks
-    retf32
-init_process_app    ENDP
-
-    
+     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;

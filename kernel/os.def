@@ -642,7 +642,6 @@ disc_request_retry_nr       = 568
 
 get_thread_selector_page_nr = 569
 
-init_process_app_nr         = 571
 exit_process_app_nr         = 572
 
 notify_delete_process_nr    = 573

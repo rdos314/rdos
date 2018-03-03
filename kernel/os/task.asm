@@ -7461,7 +7461,6 @@ trap_init_tasking       PROC near
     CreateLdt
     CreateHandleData
     SetupProgramMem
-    InitProcessApp
 ;
     push cx
     mov ax,hook_sel
@@ -9064,7 +9063,6 @@ fork_start:
 ;
     push dx
     call trap_create_process
-    InitProcessApp
     pop ax
     CloneApp
     xor eax,eax
@@ -9271,7 +9269,6 @@ create_process_callback:
 ;
     push ds
     call trap_create_process
-    InitProcessApp
     pop ds
 ;
     mov es,ds:cm_process

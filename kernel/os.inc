@@ -2068,10 +2068,6 @@ DerefHandle     MACRO
 
 ;;;;;;;;;;;;;; Application / process  ;;;;;;;;;;;;;;;;;;
 
-InitProcessApp MACRO
-    OsGate init_process_app_nr
-                    ENDM
-
 ExitProcessApp MACRO
     OsGate exit_process_app_nr
                     ENDM
