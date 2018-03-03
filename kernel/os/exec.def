@@ -144,7 +144,6 @@ pr_env_sel           DW ?
 pr_debug_id          DW ?
 pr_thread            DW ?
 pr_parent_thread     DW ?
-pr_parent_app_sel    DW ?
 
 pr_section           section_typ <>
 

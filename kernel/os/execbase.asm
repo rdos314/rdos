@@ -1300,13 +1300,8 @@ spLoaderOk:
     mov gs:pr_loader,ax
     mov gs:pr_kernel_file,bx
 ;
-    push ds
     GetThread
     mov gs:pr_parent_thread,ax
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov gs:pr_parent_app_sel,ds
-    pop ds
 ;
     call CreateProg
 ;
@@ -1707,7 +1702,6 @@ rpLoaderOk:
 ;
     GetThread
     mov gs:pr_parent_thread,ax
-    mov gs:pr_parent_app_sel,0
 ;
     call CreateProg
     call CreateNoParam
