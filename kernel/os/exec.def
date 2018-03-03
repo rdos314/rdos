@@ -210,11 +210,6 @@ loader_create_process_proc     DD ?,?
 ; IN   EBP                Stack frame
 loader_fixup_exe_proc          DD ?,?
 
-; IN   BX                 Module selector
-; IN   DS:ESI             File name
-; IN   ES:EDI             Command line
-loader_setup_names_proc        DD ?,?
-
 ; IN   EBP                Stack frame
 loader_unload_exe_user_proc         DD ?,?
 

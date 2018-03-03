@@ -165,6 +165,7 @@ ppr_leave_section_proc          DD ?
 
 ppr_app_name                    DD ?
 ppr_app_env                     DD ?
+ppr_app_cmd_line                DD ?
 
 pe_program_struc  ENDS
 

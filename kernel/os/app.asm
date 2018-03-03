@@ -132,8 +132,6 @@ run_open_hooks  Proc near
     mov ds:app_fatal_error_exit_proc,0
     mov ds:app_fatal_error_exit_proc+4,0
 ;
-    mov ds:app_cmd_line,0
-;
     mov ds:app_vm_psp_seg,0
     mov ds:app_pm_psp_sel,0
     mov ds:app_vm_mem_strat,0
@@ -342,9 +340,6 @@ clone_app    PROC far
     mov ax,ds:app_mod_sel
     mov es:app_mod_sel,ax
 ;
-    mov eax,ds:app_cmd_line
-    mov es:app_cmd_line,eax
-;
     mov ax,ds:app_context
     mov es:app_context,ax
 ;
@@ -399,8 +394,6 @@ exec_app    PROC far
 ;
     mov es:app_mod_id,0
     mov es:app_mod_sel,0
-;
-    mov es:app_cmd_line,0
 ;
     mov es:app_context,0
     mov es:app_bitness,0

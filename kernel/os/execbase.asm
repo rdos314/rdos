@@ -1230,7 +1230,6 @@ ssNotifyOk:
     mov dx,gs:pr_debug_id
     mov fs,gs:pr_loader
     call fword ptr fs:loader_fixup_exe_proc
-    call fword ptr fs:loader_setup_names_proc
  
 spDebugDone:
     test byte ptr [ebp+2].load_eflags,2
@@ -1643,7 +1642,6 @@ lpThreadNameDone:
 ;
     mov fs,gs:pr_loader
     call fword ptr fs:loader_fixup_exe_proc
-    call fword ptr fs:loader_setup_names_proc
 ;
     mov gs:el_ret_code,0
 ;
