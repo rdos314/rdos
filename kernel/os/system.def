@@ -285,9 +285,6 @@ app_fatal_error_exit_proc   DD ?,?
 app_exit_code               DW ?
 app_fork_id                 DW ?
 
-app_mod_id                  DW ?
-app_mod_sel                 DW ?
-
 app_vm_psp_seg              DW ?
 app_pm_psp_sel              DW ?
 app_vm_mem_strat            DW ?

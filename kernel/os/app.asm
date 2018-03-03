@@ -124,7 +124,6 @@ run_open_hooks  Proc near
     mov ds,ds:p_app_sel
 ;       
     mov ds:app_fork_id,0
-    mov ds:app_mod_id,0
     mov ds:app_fork_proc,0
     mov ds:app_fork_proc+4,0
     mov ds:app_close_proc,0
@@ -334,12 +333,6 @@ clone_app    PROC far
     mov eax,ds:app_fatal_error_exit_proc+4
     mov es:app_fatal_error_exit_proc+4,eax
 ;
-    mov ax,ds:app_mod_id
-    mov es:app_mod_id,ax
-;
-    mov ax,ds:app_mod_sel
-    mov es:app_mod_sel,ax
-;
     mov al,ds:app_bitness
     mov es:app_bitness,al
 ;
@@ -385,9 +378,6 @@ exec_app    PROC far
 ;
     mov es:app_exit_code,0
     mov es:app_fork_id,0
-;
-    mov es:app_mod_id,0
-    mov es:app_mod_sel,0
 ;
     mov es:app_bitness,0
 ;

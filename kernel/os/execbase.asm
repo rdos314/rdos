@@ -1205,12 +1205,6 @@ ssNotifyOk:
 ;
     InitSection es:mod_section
     mov es:mod_id,bx
-;    
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_mod_id,bx
-    mov ds:app_mod_sel,es
 ;
     mov ax,3Bh
     EnableFocus
@@ -1395,8 +1389,11 @@ spWait:
     or dx,dx
     jz spLibOk
 ;
-    mov es,gs:pr_app_sel
-    mov ax,es:app_mod_sel
+    push ebx
+    movzx ebx,gs:pr_module_arr
+    ModuleIdToSel
+    mov ax,bx
+    pop ebx
 
 spLibOk:
     mov dx,bx
@@ -1620,13 +1617,6 @@ lpThreadNameDone:
 ;
     InitSection es:mod_section
     mov es:mod_id,bx
-;    
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds:app_mod_id,bx
-    mov ds:app_mod_sel,es
-;
     mov es:mod_key,0
 ;
     mov bx,es

@@ -75,17 +75,19 @@ NotifyKernelDebug   Proc far
     push di
 ;    
     movzx dx,es:p_fault_vector
-    mov ax,es:p_app_sel
+    mov ax,es:p_prog_sel
     verr ax
     jnz nkeDone
 ;    
-    mov ds,ax
-    mov ax,ds:app_mod_sel
-    verr ax
-    jnz nkeDone
+    push ebx
+    mov ds,eax
+    movzx ebx,ds:pr_module_arr
+    ModuleIdToSel
+    mov ax,bx
+    pop ebx
+    jz nkeDone
 ;
-    mov ds,ax
-;
+    mov ds,ebx
     mov ax,es:p_debug_event
     or ax,ax
     jz nkeDone
@@ -155,7 +157,7 @@ NotifyKernelDebug   Endp
 SendEvent Proc near
     push ds
     push eax
-    push bx
+    push ebx
     ClearSignal
 ;
     GetThread
@@ -174,8 +176,10 @@ SendEvent Proc near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_mod_sel
+    mov ds,ds:p_prog_sel
+    movzx ebx,ds:pr_module_arr
+    ModuleIdToSel
+    mov ds,ebx
     RequestSpinlock ds:lib_spinlock
 ;
     mov ax,ds:lib_events
@@ -227,7 +231,7 @@ seSignalDo:
     WaitForSignal
 
 seDone:
-    pop bx
+    pop ebx
     pop eax
     pop ds
     ret
@@ -3785,10 +3789,13 @@ start_thread    PROC far
 ;    
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
+    mov ds,ds:p_prog_sel
+;
+    movzx ebx,ds:pr_module_arr
+    ModuleIdToSel
+    mov ds,ebx
 ;
     mov edx,[ebp].load_eip
-    mov ds,ds:app_mod_sel
     mov ax,ds:mod_debug_id
     or ax,ax
     jz start_thread_notify
@@ -3899,8 +3906,11 @@ free_thread_user     Endp
 free_thread_kernel     Proc far
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel    
-    mov ds,ds:app_mod_sel   
+    mov ds,ds:p_prog_sel    
+    movzx ebx,ds:pr_module_arr
+    ModuleIdToSel
+    mov ds,ebx
+;
     mov ax,ds:mod_debug_id
     or ax,ax
     jz ftkNoDebug
@@ -4189,11 +4199,12 @@ fork_child:
     mov fs:pvThreadHandle,eax
     mov fs:pvProcessHandle,eax
 ;
-    mov ds,ds:p_app_sel        
-    movzx eax,ds:app_mod_id
-    mov fs:pvModuleHandle,eax
+    mov ds,ds:p_prog_sel        
+    movzx ebx,ds:pr_module_arr
+    mov fs:pvModuleHandle,ebx
 ;
-    mov ds,ds:app_mod_sel
+    ModuleIdToSel
+    mov ds,ebx
     mov ax,ds:mod_debug_id
     or ax,ax
     jz fork_notify_ok
@@ -4706,8 +4717,11 @@ find_exc_next:
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_mod_sel
+    mov ds,ds:p_prog_sel
+    movzx ebx,ds:pr_module_arr
+    ModuleIdToSel
+    mov ds,ebx
+;
     LockTask
     RequestSpinlock ds:lib_spinlock
 ;
@@ -4775,6 +4789,7 @@ allocate_mem    PROC far
     push ds
     push es
     push eax
+    push ebx
     push ecx
     push esi
     push edi
@@ -4803,8 +4818,10 @@ allocate_mem    PROC far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_mod_sel   
+    mov ds,ds:p_prog_sel
+    movzx ebx,ds:pr_module_arr
+    ModuleIdToSel
+    mov ds,ebx
     EnterSection ds:lib_section     
 ;
     mov eax,ds:lib_mem_blocks
@@ -4829,6 +4846,7 @@ alloc_ins_done:
     pop edi
     pop esi
     pop ecx
+    pop ebx
     pop eax
     pop es
     pop ds
@@ -4851,6 +4869,7 @@ free_mem    PROC far
     push ds
     push es
     push eax
+    push ebx
     push ecx
     push edx
     push esi
@@ -4858,8 +4877,11 @@ free_mem    PROC far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_mod_sel   
+    mov ds,ds:p_prog_sel
+    movzx ebx,ds:pr_module_arr
+    ModuleIdToSel
+    mov ds,ebx
+;
     mov ax,flat_sel
     mov es,ax
     EnterSection ds:lib_section     
@@ -4919,6 +4941,7 @@ free_mem_done:
     pop esi
     pop edx
     pop ecx
+    pop ebx
     pop eax
     pop es
     pop ds
@@ -4943,6 +4966,7 @@ debug_allocate_mem      PROC far
     push ds
     push es
     push eax
+    push ebx
     push ecx
     push esi
     push edi
@@ -4993,8 +5017,11 @@ debug_allocate_mem      PROC far
 debug_alloc_fill_ok:
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_mod_sel   
+    mov ds,ds:p_prog_sel
+    movzx ebx,ds:pr_module_arr
+    ModuleIdToSel
+    mov ds,ebx
+;
     EnterSection ds:lib_section     
 ;
     mov eax,ds:lib_mem_blocks
@@ -5019,6 +5046,7 @@ debug_alloc_ins_done:
     pop edi
     pop esi
     pop ecx
+    pop ebx
     pop eax
     pop es
     pop ds
@@ -5041,6 +5069,7 @@ debug_free_mem  PROC far
     push ds
     push es
     push eax
+    push ebx
     push ecx
     push edx
     push esi
@@ -5048,8 +5077,11 @@ debug_free_mem  PROC far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov ds,ds:app_mod_sel   
+    mov ds,ds:p_prog_sel
+    movzx ebx,ds:pr_module_arr
+    ModuleIdToSel
+    mov ds,ebx
+;
     mov ax,flat_sel
     mov es,ax
     EnterSection ds:lib_section     
@@ -5133,6 +5165,7 @@ debug_free_mem_done:
     pop esi
     pop edx
     pop ecx
+    pop ebx
     pop eax
     pop es
     pop ds
