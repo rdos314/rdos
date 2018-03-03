@@ -68,12 +68,6 @@ init_app    PROC near
     xor esi,esi
     xor edi,edi
 ;
-    mov esi,OFFSET clone_app
-    mov edi,OFFSET clone_app_name
-    xor cl,cl
-    mov ax,clone_app_nr
-    RegisterOsGate
-;
     mov esi,OFFSET exec_app
     mov edi,OFFSET exec_app_name
     xor cl,cl
@@ -85,91 +79,6 @@ init_app    PROC near
     pop ds
     ret
 init_app    ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           run_open_hooks
-;
-;           DESCRIPTION:    Run open app hooks
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-run_open_hooks  Proc near
-    ret
-run_open_hooks  Endp
-     
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           OpenApp
-;
-;           DESCRIPTION:    Open app
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_app_name   DB 'Open App',0
-
-open_app    PROC far
-    push ds
-    push es
-    push fs
-    pushad
-;
-    GetThread
-    mov ds,ax
-;
-    mov eax,SIZE app_seg
-    AllocateSmallGlobalMem
-    xor di,di
-    mov cx,SIZE app_seg
-    xor al,al
-    rep stos byte ptr es:[di]
-;
-    call run_open_hooks
-;
-    popad
-    pop fs
-    pop es
-    pop ds
-    retf32
-open_app    ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           CloseApp
-;
-;           DESCRIPTION:    Close app
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_app_name  DB 'Close App',0
-
-close_app       PROC far
-    retf32
-close_app       ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           CloneApp
-;
-;           DESCRIPTION:    Clone app
-;
-;           PARAMETERS:     AX          Source app
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-clone_app_name   DB 'Clone App',0
-
-clone_app    PROC far
-    retf32
-clone_app    ENDP
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

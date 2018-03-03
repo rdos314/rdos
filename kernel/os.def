@@ -669,7 +669,6 @@ write_c_console_nr          = 595
 open_kernel_file_nr         = 596
 
 fork_process_nr             = 597
-clone_app_nr                = 599
 
 reset_process_nr            = 601
 exec_app_nr                 = 602

@@ -7667,7 +7667,7 @@ cchSave:
     pop es 
     pop ds
     ret
-create_c_handle	Endp
+create_c_handle Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -7709,7 +7709,7 @@ ccdSave:
     pop es 
     pop ds
     ret
-create_cur_dir	Endp
+create_cur_dir  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -9064,7 +9064,6 @@ fork_start:
     push dx
     call trap_create_process
     pop ax
-    CloneApp
     xor eax,eax
     jmp fork_done
 
