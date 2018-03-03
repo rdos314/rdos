@@ -1415,8 +1415,6 @@ InsertApp       Proc near
     mov ds:p_loader,pe_loader_sel
 ;
     mov ds,ds:p_app_sel
-    mov ds:app_fork_proc,OFFSET fork_proc
-    mov ds:app_fork_proc+4,cs
     mov ds:app_close_proc,OFFSET close_proc
     mov ds:app_close_proc+4,cs
     mov ds:app_fatal_error_exit_proc,OFFSET fatal_error_exit
@@ -6054,6 +6052,7 @@ l33 DD OFFSET regs_to_user,               SEG code
 l34 DD OFFSET add_user_gate,              SEG code
 l35 DD OFFSET stop_debug,                 SEG code
 l36 DD OFFSET attach_debug,               SEG code
+l37 DD OFFSET fork_proc,                  SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc

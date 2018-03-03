@@ -336,6 +336,10 @@ loader_stop_debug_proc       DD ?,?
 ; IN   DX                 Debug module ID
 loader_attach_debug_proc     DD ?,?
 
+; OUT  Child:  EAX = 0
+; OUT  Parent: EAX = child thread selector
+loader_fork_proc     DD ?,?
+
 loader_interface_struc    ENDS
 
 module_struc    STRUC

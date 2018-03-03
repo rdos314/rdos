@@ -2176,14 +2176,14 @@ fork_pr    PROC far
     push ds
 ;
     GetThread
-    mov ds,ax
-    mov ds,ds:p_app_sel
-    mov eax,ds:app_fork_proc
-    or eax,ds:app_fork_proc+4
-    mov eax,-1
+    mov ds,eax
+    mov ax,ds:p_loader
+    or ax,ax
+    stc
     jz fork_done
 ;
-    call fword ptr ds:app_fork_proc
+    mov ds,eax
+    call fword ptr ds:loader_fork_proc
     
 fork_done:
     pop ds

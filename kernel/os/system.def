@@ -278,7 +278,6 @@ app_seg STRUC
 
 app_next                    DW ?
 
-app_fork_proc               DD ?,?
 app_close_proc              DD ?,?
 app_fatal_error_exit_proc   DD ?,?
 
