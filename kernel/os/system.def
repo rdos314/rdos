@@ -288,7 +288,6 @@ app_fork_id                 DW ?
 app_mod_id                  DW ?
 app_mod_sel                 DW ?
 
-app_env                     DD ?
 app_cmd_line                DD ?
 
 app_vm_psp_seg              DW ?

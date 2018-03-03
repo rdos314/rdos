@@ -2889,6 +2889,7 @@ is_valid_exe Proc far
     mov ax,es
     mov gs,ax
     mov gs:ppr_app_name,0
+    mov gs:ppr_app_env,0
     clc
     jmp iseDone
 
@@ -5817,8 +5818,8 @@ get_env Proc far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_app_sel
-    mov edi,ds:app_env
+    mov ds,ds:p_prog_sel
+    mov edi,ds:ppr_app_env
     or edi,edi
     jnz get_env_done
 ;       
@@ -5842,7 +5843,7 @@ get_env_size_loop:
     xor esi,esi
     rep movs byte ptr es:[edi],ds:[esi]
 ;
-    mov ds:app_env,edx
+    mov ds:ppr_app_env,edx
     mov edi,edx
 ;
     UnlockProcEnv
