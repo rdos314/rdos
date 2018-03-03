@@ -1393,34 +1393,6 @@ create_lib_size_ok:
     pop eax
     ret
 CreateLib       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           InsertApp
-;
-;           DESCRIPTION:    Insert App image into module list
-;
-;           PARAMETERS:     ES          Lib handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertApp       Proc near
-    push ds
-    push es
-    pushad
-;
-    GetThread
-    mov ds,ax
-    mov ds:p_loader,pe_loader_sel
-;
-    mov ds,ds:p_app_sel
-;
-    popad
-    pop es
-    pop ds
-    ret
-InsertApp       Endp
                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3106,7 +3078,6 @@ fixup_exe Proc far
     push dx
     call CreateSections
     call FixupImage
-    call InsertApp
     call InitStack
     call RunImage
     pop dx
