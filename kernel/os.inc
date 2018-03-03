@@ -1722,16 +1722,6 @@ GetExceptionStack32     MACRO
     OsGate get_exception_stack32_nr
                     ENDM
 
-;       BX              Offset to context on locked stack
-SaveContext     MACRO
-    OsGate save_context_nr
-                    ENDM
-
-;       BX              Offset to context on locked stack
-RestoreContext  MACRO
-    OsGate restore_context_nr
-                    ENDM
-
 ;       Stack       Address of real mode code to call
 CallVM  MACRO
     OsGate call_vm_nr

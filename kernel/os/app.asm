@@ -340,9 +340,6 @@ clone_app    PROC far
     mov ax,ds:app_mod_sel
     mov es:app_mod_sel,ax
 ;
-    mov ax,ds:app_context
-    mov es:app_context,ax
-;
     mov al,ds:app_bitness
     mov es:app_bitness,al
 ;
@@ -395,7 +392,6 @@ exec_app    PROC far
     mov es:app_mod_id,0
     mov es:app_mod_sel,0
 ;
-    mov es:app_context,0
     mov es:app_bitness,0
     mov es:app_key,0
 ;

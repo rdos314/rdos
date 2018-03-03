@@ -331,8 +331,9 @@ keep_process:
     mov ds,ds:p_app_sel
     pop ax
     xor bx,bx
-    xchg bx,ds:app_context
-    RestoreContext
+    int 3
+;    xchg bx,ds:app_context
+;    RestoreContext
     GetThread
     mov ds,ax
     mov ds,ds:p_app_sel

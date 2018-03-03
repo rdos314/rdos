@@ -298,7 +298,6 @@ app_psp_mode                DB ?
 app_dta_mode                DB ?
 app_find_sel                DW ?
 
-app_context                 DW ?
 app_bitness                 DB ?
 app_key                     DB ?
 
