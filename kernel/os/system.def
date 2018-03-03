@@ -297,9 +297,6 @@ app_bitness                 DB ?
 app_pm_int                  DD 100h DUP(?,?)
 app_pm_exc                  DD 20h DUP(?,?)
 
-app_memmap_list             DD ?
-app_memmap_spinlock         spinlock_typ <>
-
 app_seg ENDS
 
 block_seg       STRUC

@@ -157,6 +157,9 @@ pr_ldt_section       section_typ <>
 pr_handle_mem_sel    DW ?
 pr_handle_sel        DW ?
 
+pr_memmap_list       DD ?
+pr_memmap_spinlock   spinlock_typ <>
+
 pr_module_count      DW ?
 pr_module_arr        DW MAX_PROGRAM_MODULES DUP(?)
 

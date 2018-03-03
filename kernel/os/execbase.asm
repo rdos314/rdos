@@ -228,6 +228,8 @@ InitProgramBlock Proc near
     mov gs:pr_module_count,0
     mov gs:pr_process_count,0
     InitSection gs:pr_section
+    mov gs:pr_memmap_list,0
+    InitSpinlock gs:pr_memmap_spinlock
     ret
 InitProgramBlock  Endp
 

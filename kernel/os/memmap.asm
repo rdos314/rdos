@@ -769,9 +769,9 @@ CreateHandle    Proc near
 ;
     GetThread
     mov es,ax
-    mov es,es:p_app_sel
-    RequestSpinlock es:app_memmap_spinlock
-    mov edi,es:app_memmap_list
+    mov es,es:p_prog_sel
+    RequestSpinlock es:pr_memmap_spinlock
+    mov edi,es:pr_memmap_list
     or edi,edi
     je create_ins_empty
 ;
@@ -785,10 +785,10 @@ CreateHandle    Proc near
 create_ins_empty:
     mov [ebx].memmap_next,ebx
     mov [ebx].memmap_prev,ebx
-    mov es:app_memmap_list,ebx
+    mov es:pr_memmap_list,ebx
 
 create_ins_done:
-    ReleaseSpinlock es:app_memmap_spinlock
+    ReleaseSpinlock es:pr_memmap_spinlock
     mov [ebx].hh_sign,MEMMAP_HANDLE
     mov bx,[ebx].hh_handle
 ;
@@ -1076,21 +1076,21 @@ close_mapping   Proc far
 ;
     GetThread
     mov es,ax
-    mov es,es:p_app_sel
-    RequestSpinlock es:app_memmap_spinlock
-    mov es:app_memmap_list,ebx
+    mov es,es:p_prog_sel
+    RequestSpinlock es:pr_memmap_spinlock
+    mov es:pr_memmap_list,ebx
     mov edi,[ebx].memmap_next
     cmp edi,ebx
-    mov es:app_memmap_list,edi
+    mov es:pr_memmap_list,edi
     mov esi,[ebx].memmap_prev
     mov [edi].memmap_prev,esi
     mov [esi].memmap_next,edi
     jne close_rem_done
 ;
-    mov es:app_memmap_list,0
+    mov es:pr_memmap_list,0
 
 close_rem_done:
-    ReleaseSpinlock es:app_memmap_spinlock
+    ReleaseSpinlock es:pr_memmap_spinlock
     mov ax,ds:[ebx].memmap_sel
     or ax,ax
     jz cfm_done
@@ -1183,10 +1183,9 @@ map_fault       Proc far
 ;
     GetThread
     mov ds,ax
-    mov es,ds:p_app_sel
-    mov ds,ds:p_prog_sel
-    mov ds,ds:pr_handle_mem_sel
-    mov ebx,es:app_memmap_list
+    mov es,ds:p_prog_sel
+    mov ds,es:pr_handle_mem_sel
+    mov ebx,es:pr_memmap_list
     or ebx,ebx
     jz map_fault_fail
 ;
@@ -1402,21 +1401,21 @@ delete_handle   Proc far
 ;
     GetThread
     mov es,ax
-    mov es,es:p_app_sel
-    RequestSpinlock es:app_memmap_spinlock
-    mov es:app_memmap_list,ebx
+    mov es,es:p_prog_sel
+    RequestSpinlock es:pr_memmap_spinlock
+    mov es:pr_memmap_list,ebx
     mov edi,[ebx].memmap_next
     cmp edi,ebx
-    mov es:app_memmap_list,edi
+    mov es:pr_memmap_list,edi
     mov esi,[ebx].memmap_prev
     mov [edi].memmap_prev,esi
     mov [esi].memmap_next,edi
     jne delete_handle_rem_done
 ;
-    mov es:app_memmap_list,0
+    mov es:pr_memmap_list,0
 
 delete_handle_rem_done:
-    ReleaseSpinlock es:app_memmap_spinlock
+    ReleaseSpinlock es:pr_memmap_spinlock
     mov ax,ds:[ebx].memmap_sel
     or ax,ax
     jz delete_handle_done
@@ -1432,44 +1431,6 @@ delete_handle_done:
     pop ds
     retf32
 delete_handle   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           app_memmap_create
-;
-;           DESCRIPTION:    App memmap process initialization
-;
-;           PARAMETERS:     ES      App sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public app_memmap_create
-
-app_memmap_create     PROC near
-    mov es:app_memmap_list,0
-    InitSpinlock es:app_memmap_spinlock
-    ret
-app_memmap_create     Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           app_memmap_delete
-;
-;           DESCRIPTION:    App memmap process termination
-;
-;           PARAMETERS:     ES      App sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public app_memmap_delete
-
-app_memmap_delete     PROC near
-    ret
-app_memmap_delete     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
