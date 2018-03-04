@@ -7669,6 +7669,53 @@ add_process_thread   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           setup_fork
+;
+;       DESCRIPTION:    Setup fork environment
+;
+;       PARAMETERS:     ES          Forked thread
+;                       FS          Forking thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_fork Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ds,es:p_prog_sel
+    movzx ecx,ds:pr_page_table_count
+    or ecx,ecx
+    jnz sfAddNew
+;
+    mov eax,fs:p_cr3
+    CreateFork
+    mov ds:pr_page_dir_arr,eax
+    mov ds:pr_page_table_arr,edx
+    inc ecx
+
+sfAddNew:
+    mov eax,es:p_cr3
+    CreateFork
+    mov ebx,ecx
+    shl ebx,2
+    mov ds:[ebx].pr_page_dir_arr,eax
+    mov ds:[ebx].pr_page_table_arr,edx
+;
+    inc ecx
+    mov ds:pr_page_table_count,cx
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+setup_fork Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           create_c_handle
 ;
 ;           DESCRIPTION:    create_c_handle
@@ -9114,6 +9161,7 @@ fork_process  PROC far
     mov bx,fs:p_prog_id
     call create_process_sel
     call add_process_thread
+    call setup_fork
 ;
     call init_fork_thread
     call init_fork_stack
