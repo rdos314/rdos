@@ -9173,8 +9173,6 @@ fork_process  PROC far
     mov bx,fs:p_prog_id
     call create_process_sel
     call add_process_thread
-
-    int 3
     call setup_fork
 ;
     call init_fork_thread

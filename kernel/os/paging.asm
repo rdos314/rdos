@@ -520,6 +520,7 @@ trap_error_do:
     jz trap_kernel_error
 
 trap_user_error:
+    int 3
     call page_write_user
     jmp trap_14_done
 
