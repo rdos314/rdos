@@ -87,7 +87,7 @@ NotifyKernelDebug   Proc far
     pop ebx
     jz nkeDone
 ;
-    mov ds,ebx
+    mov ds,eax
     mov ax,es:p_debug_event
     or ax,ax
     jz nkeDone
@@ -4013,6 +4013,7 @@ fork_proc      Proc far
     push ebx
     push ecx
 ;
+    int 3
     GetThread
     push es
     mov es,ax
