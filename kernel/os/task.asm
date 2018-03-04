@@ -9155,8 +9155,6 @@ fork_process  PROC far
 ;    
     mov eax,fs:p_debug_proc
     mov es:p_debug_proc,eax
-    call create_c_handle
-    call create_cur_dir
 ;    
     mov eax,es
     mov ds,eax
@@ -9170,6 +9168,9 @@ fork_process  PROC far
     call create_process_sel
     call add_process_thread
     call setup_fork
+;
+    call create_c_handle
+    call create_cur_dir
 ;
     call init_fork_thread
     call init_fork_stack

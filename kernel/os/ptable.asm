@@ -2042,16 +2042,6 @@ lsfuSave32:
     add edi,4
     loop lsfuLoop32
 ;
-    mov ecx,256
-
-lsfkLoop32:
-    mov eax,ds:[esi]
-    mov ds:[edi],eax
-;
-    add esi,4
-    add edi,4
-    loop lsfkLoop32
-;
     popad
     pop ds
     ret
@@ -4343,18 +4333,6 @@ lsfuSave64:
     add esi,8
     add edi,8
     loop lsfuLoop64
-;
-    mov ecx,512
-
-lsfkLoop64:
-    mov eax,ds:[esi]
-    mov ebx,ds:[esi+4]
-    mov ds:[edi],eax
-    mov ds:[edi+4],ebx
-;
-    add esi,8
-    add edi,8
-    loop lsfkLoop64
 ;
     popad
     pop ds

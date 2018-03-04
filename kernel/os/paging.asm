@@ -208,6 +208,9 @@ page_fault_user_invalid:
 ;
     int 3
     call cs:cow_dir_proc
+    int 3
+    call cs:get_page_dir_proc 
+    test ax,400h
     jmp page_fault_user_retry
 
 page_fault_user_normal:
