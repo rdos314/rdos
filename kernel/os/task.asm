@@ -9063,8 +9063,6 @@ init_fork_stack Endp
 ;
 ;           DESCRIPTION:    Fork process
 ;
-;           PARAMETERS:     BX          Program ID
-;
 ;           RETURNS:        AX = 0, child process
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9073,7 +9071,6 @@ fork_process_name     DB 'Fork Process',0
 
 fork_start:
     int 3
-    NotifyCloneProcess
 ;
     push dx
     call trap_create_process
@@ -9107,16 +9104,17 @@ fork_process  PROC far
     call create_c_handle
     call create_cur_dir
 ;    
-    mov ax,es
-    mov ds,ax
+    mov eax,es
+    mov ds,eax
 ;    
     call create_tss32
     call init_fork_regs
     NotifyCreateProcess
     mov es:p_cr3,eax
 ;
-    mov bx,[ebp].cr_ebx
+    mov bx,fs:p_prog_id
     call create_process_sel
+    call add_process_thread
 ;
     call init_fork_thread
     call init_fork_stack
