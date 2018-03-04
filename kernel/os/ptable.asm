@@ -33,6 +33,7 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\driver.def
+INCLUDE exec.def
 
 IFDEF __WASM__
     .686p
@@ -2063,16 +2064,48 @@ local_start_fork32  Endp
 ;
 ;           DESCRIPTION:    Copy-on-write directory
 ;
-;           PARAMETERS:     DS          Program sel
-;                           EDX         Linear address
+;           PARAMETERS:     EDX         Linear address
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_cow_dir32  Proc near
+    push ds
+    push es
+    push fs
     pushad
 ;
+    mov ax,flat_sel
+    mov fs,eax
+;
+    shr edx,20
+    and dl,0FCh
+;
+    GetThread
+    mov es,ax
+    mov ds,es:p_proc_sel
+    mov esi,ds:pf_page_dir
+    mov esi,fs:[esi+edx]
+;
+    mov ds,es:p_prog_sel
+    movzx ecx,ds:pr_page_table_count
+    mov ebx,OFFSET pr_page_dir_arr
+    xor ebp,ebp
+
+lcowdFind32:
+    mov eax,ds:[ebx]
+    cmp esi,fs:[eax+edx]
+    jnz lcowdNext32
+;
+    inc ebp
+
+lcowdNext32:
+    add ebx,4
+    loop lcowdFind32
 ;
     popad
+    pop fs
+    pop es
+    pop ds
     ret
 local_cow_dir32  Endp
 
@@ -4264,15 +4297,52 @@ local_start_fork64  Endp
 ;
 ;           DESCRIPTION:    Copy-on-write for directory
 ;
-;           PARAMETERS:     DS          Program selector
-;                           EDX         Linear address
+;           PARAMETERS:     EDX         Linear address
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_cow_dir64  Proc near
+    push ds
+    push es
+    push fs
     pushad
 ;
+    mov ax,flat_sel
+    mov fs,eax
+;
+    shr edx,18
+    and dl,0F8h
+;
+    GetThread
+    mov es,ax
+    mov ds,es:p_proc_sel
+    mov eax,ds:pf_page_dir
+    mov esi,fs:[eax+edx]
+    mov edi,fs:[eax+edx+4]
+;
+    mov ds,es:p_prog_sel
+    movzx ecx,ds:pr_page_table_count
+    mov ebx,OFFSET pr_page_dir_arr
+    xor ebp,ebp
+
+lcowdFind64:
+    mov eax,ds:[ebx]
+    cmp esi,fs:[eax+edx]
+    jnz lcowdNext64
+;
+    cmp edi,fs:[eax+edx+4]
+    jnz lcowdNext64
+;
+    inc ebp
+
+lcowdNext64:
+    add ebx,4
+    loop lcowdFind64
+;
     popad
+    pop fs
+    pop es
+    pop ds
     ret
 local_cow_dir64  Endp
 

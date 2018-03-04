@@ -207,9 +207,6 @@ page_fault_user_invalid:
     jz page_fault_error
 ;
     int 3
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_prog_sel
     call cs:cow_dir_proc
     jmp page_fault_error
 
