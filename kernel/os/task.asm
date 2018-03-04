@@ -7555,7 +7555,8 @@ AddHexWord    ENDP
 ;
 ;       DESCRIPTION:    Create process selector
 ;
-;       PARAMETERS:     BX          Program ID
+;       PARAMETERS:     EAX         CR3
+;                       BX          Program ID
 ;                       ES          Thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7567,11 +7568,14 @@ create_process_sel Proc near
     pushad
 ;
     mov es:p_ldt_sel,0
-    mov ax,es
-    mov fs,ax
+    mov edx,es
+    mov fs,edx
 ;
+    push eax
     mov eax,SIZE process_struc + 4
     AllocateSmallGlobalMem
+    pop eax
+    mov es:pf_cr3,eax
 ;
     mov es:pf_virt_flags,7200h
     mov es:pf_wait_sti,0
@@ -7582,9 +7586,6 @@ create_process_sel Proc near
     mov es:pf_cur_dir_sel,0
     mov es:pf_program_id,bx
     InitSection es:pf_section
-;
-    mov eax,fs:p_cr3
-    mov es:pf_cr3,eax
 ;
     mov fs:p_prog_id,bx
     movzx ebx,bx
@@ -7631,6 +7632,40 @@ cpsLeave:
     pop ds
     ret
 create_process_sel Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           add_process_thread
+;
+;       DESCRIPTION:    Add thread to process
+;
+;       PARAMETERS:     DS          Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_process_thread Proc near
+    push ds
+    mov ax,ds:p_id
+    mov ds,ds:p_proc_sel
+    EnterSection ds:pf_section
+;
+    movzx ecx,ds:pf_thread_count
+    cmp ecx,MAX_PROCESS_THREADS
+    jae aptLeave
+;
+    mov ebx,ecx
+    shl ebx,1
+    inc ecx
+    mov ds:pf_thread_count,cx
+;
+    mov ds:[ebx].pf_thread_arr,ax
+    
+aptLeave:
+    LeaveSection ds:pf_section
+    pop ds
+    ret
+add_process_thread   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -8068,26 +8103,6 @@ create_tss64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_default_regs    PROC near
-    push ds
-    mov ax,ds:p_id
-    mov ds,ds:p_proc_sel
-    EnterSection ds:pf_section
-;
-    movzx ecx,ds:pf_thread_count
-    cmp ecx,MAX_PROCESS_THREADS
-    jae idrLeave
-;
-    mov ebx,ecx
-    shl ebx,1
-    inc ecx
-    mov ds:pf_thread_count,cx
-;
-    mov ds:[ebx].pf_thread_arr,ax
-    
-idrLeave:
-    LeaveSection ds:pf_section
-    pop ds
-;
     mov edx,cr3
     mov es:p_cr3,edx
 ;
@@ -8412,11 +8427,13 @@ create_thread   PROC near
 create_t64:
     call create_tss64
     call init_default_regs
+    call add_process_thread
     jmp create_prot
 
 create_t32:
     call create_tss32
     call init_default_regs
+    call add_process_thread
     mov ax,[ebp].cr_mode
     test ax,1
     jz create_prot
@@ -8788,46 +8805,57 @@ create_process  PROC far
     mov es:p_debug_proc,0
     mov es:p_debug_event,0
 ;
-    mov bx,[ebp].cr_ebx
-    call create_process_sel
-;
-    mov bx,[ebp].cr_ebx
-    cmp bx,1
-    je cpSkipped
-;
-    call create_c_handle
-    call create_cur_dir
-
-cpSkipped:
-
     mov ax,es
     mov ds,ax
     mov ax,[ebp].cr_mode
     cmp ax,2
-    jne create_mod32
-;
+    jne cp32
+
+cp64:
     call create_tss64
     call init_default_regs
     NotifyCreateLongProcess
-    jmp create_mod_prot
+;
+    mov bx,[ebp].cr_ebx
+    call create_process_sel
+    call add_process_thread
+    cmp bx,1
+    je cpSkipped64
+;
+    call create_c_handle
+    call create_cur_dir
 
-create_mod32:
+cpSkipped64:
+    jmp cpProt
+
+cp32:
     call create_tss32
     call init_default_regs
+;
     NotifyCreateProcess
     mov es:p_cr3,eax
 ;
+    mov bx,[ebp].cr_ebx
+    call create_process_sel
+    call add_process_thread
+    cmp bx,1
+    je cpSkipped32
+;
+    call create_c_handle
+    call create_cur_dir
+
+cpSkipped32:
     mov ax,[ebp].cr_mode
     cmp ax,1
-    jne create_mod_prot
+    jne cpProt
 ;
     call init_virt_thread
-    jmp create_mod_tss_done
+    jmp cpTssDone
 
-create_mod_prot:
+cpProt:
     call init_prot_thread
 
-create_mod_tss_done:
+cpTssDone:
     call init_process_regs
     call init_process_callback
 ;
@@ -8841,7 +8869,7 @@ create_mod_tss_done:
 ;
     pop gs
     pop fs
-    pop es;
+    pop es
     pop ds
     popf
     pop ebp
@@ -8861,10 +8889,6 @@ create_process  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_fork_regs    PROC near
-    mov edx,cr3
-    mov es:p_cr3,edx
-    mov dword ptr ds:p_rax,edx
-;
     mov dword ptr ds:p_rip,OFFSET fork_start
 ;
     xor edx,edx
@@ -9039,6 +9063,8 @@ init_fork_stack Endp
 ;
 ;           DESCRIPTION:    Fork process
 ;
+;           PARAMETERS:     BX          Program ID
+;
 ;           RETURNS:        AX = 0, child process
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9046,6 +9072,7 @@ init_fork_stack Endp
 fork_process_name     DB 'Fork Process',0
 
 fork_start:
+    int 3
     NotifyCloneProcess
 ;
     push dx
@@ -9077,8 +9104,6 @@ fork_process  PROC far
 ;    
     mov eax,fs:p_debug_proc
     mov es:p_debug_proc,eax
-    mov bx,1
-    call create_process_sel
     call create_c_handle
     call create_cur_dir
 ;    
@@ -9089,6 +9114,9 @@ fork_process  PROC far
     call init_fork_regs
     NotifyCreateProcess
     mov es:p_cr3,eax
+;
+    mov bx,[ebp].cr_ebx
+    call create_process_sel
 ;
     call init_fork_thread
     call init_fork_stack
@@ -9474,13 +9502,15 @@ init_first_process      Proc near
 ;
     call create_first_thread
 ;
-    mov bx,1
-    call create_process_sel
     mov ax,es
     mov ds,ax
     call init_first_tss
     NotifyCreateProcess
     mov es:p_cr3,eax
+;
+    mov bx,1
+    call create_process_sel
+;
     mov ds:p_es,0
     GetCore
     mov fs:ps_null_thread,es
