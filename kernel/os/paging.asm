@@ -50,6 +50,7 @@ INCLUDE system.inc
     extrn set_sys_page_dir_proc:word
     extrn create_page_dir_proc:word
     extrn create_sys_page_dir_proc:word
+    extrn cow_dir_proc:word
     
 code    SEGMENT byte public 'CODE'
 
@@ -209,6 +210,7 @@ page_fault_user_invalid:
     GetThread
     mov ds,ax
     mov ds,ds:p_prog_sel
+    call cs:cow_dir_proc
     jmp page_fault_error
 
 page_fault_user_normal:

@@ -103,6 +103,7 @@ code    SEGMENT byte public use16 'CODE'
     public get_thread_page_dir_proc
     public create_fork_proc
     public start_fork_proc
+    public cow_dir_proc
 
 proc_start:
 init_process_proc               DW OFFSET local_init_process32
@@ -139,6 +140,7 @@ set_thread_page_entry_proc      DW OFFSET local_set_thread_page_entry32
 get_thread_page_dir_proc        DW OFFSET local_get_thread_page_dir32
 create_fork_proc                DW OFFSET local_create_fork32
 start_fork_proc                 DW OFFSET local_start_fork32
+cow_dir_proc                    DW OFFSET local_cow_dir32
 uses_pae_proc                   DW OFFSET local_uses_pae32
 
 p64_start:
@@ -176,6 +178,7 @@ set_thread_page_entry_p64       DW OFFSET local_set_thread_page_entry64
 get_thread_page_dir_p64         DW OFFSET local_get_thread_page_dir64
 create_fork_p64                 DW OFFSET local_create_fork64
 start_fork_p64                  DW OFFSET local_start_fork64
+cow_dir_p64                     DW OFFSET local_cow_dir64
 uses_pae_p64                    DW OFFSET local_uses_pae64
 p64_end:
 
@@ -2056,6 +2059,26 @@ local_start_fork32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_cow_dir32
+;
+;           DESCRIPTION:    Copy-on-write directory
+;
+;           PARAMETERS:     DS          Program sel
+;                           EDX         Linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_cow_dir32  Proc near
+    pushad
+;
+;
+    popad
+    ret
+local_cow_dir32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           uses_pae32
 ;
 ;           DESCRIPTION:    Check for PAE paging, 32-bit version
@@ -2179,7 +2202,7 @@ local_init_process64     Endp
 ;
 ;           DESCRIPTION:    Create process paging environment
 ;
-;           RETURNS:        EAX		CR3
+;           RETURNS:        EAX         CR3
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4233,6 +4256,25 @@ lsfkLoop64:
     pop ds
     ret
 local_start_fork64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_cow_dir64
+;
+;           DESCRIPTION:    Copy-on-write for directory
+;
+;           PARAMETERS:     DS          Program selector
+;                           EDX         Linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_cow_dir64  Proc near
+    pushad
+;
+    popad
+    ret
+local_cow_dir64  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
