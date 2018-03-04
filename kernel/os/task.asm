@@ -7715,9 +7715,9 @@ sfAddNew:
 ;
     mov ds,fs:p_proc_sel
     mov esi,ds:pf_page_dir
-;
     mov ds,es:p_proc_sel
     mov edi,ds:pf_page_dir
+    StartFork
 ;
     popad
     pop gs

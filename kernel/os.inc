@@ -546,6 +546,12 @@ CreateFork MACRO
     OsGate create_fork_nr
                     ENDM
 
+; IN  ESI    Source page directory
+; IN  EDI    Destination page directory
+StartFork MACRO
+    OsGate start_fork_nr
+                    ENDM
+
 ;   EAX    CR3
 NotifyDeleteProcess MACRO
     OsGate notify_delete_process_nr

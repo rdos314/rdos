@@ -102,6 +102,7 @@ code    SEGMENT byte public use16 'CODE'
     public set_thread_page_entry_proc
     public get_thread_page_dir_proc
     public create_fork_proc
+    public start_fork_proc
 
 proc_start:
 init_process_proc               DW OFFSET local_init_process32
@@ -137,6 +138,7 @@ get_thread_page_entry_proc      DW OFFSET local_get_thread_page_entry32
 set_thread_page_entry_proc      DW OFFSET local_set_thread_page_entry32
 get_thread_page_dir_proc        DW OFFSET local_get_thread_page_dir32
 create_fork_proc                DW OFFSET local_create_fork32
+start_fork_proc                 DW OFFSET local_start_fork32
 uses_pae_proc                   DW OFFSET local_uses_pae32
 
 p64_start:
@@ -173,6 +175,7 @@ get_thread_page_entry_p64       DW OFFSET local_get_thread_page_entry64
 set_thread_page_entry_p64       DW OFFSET local_set_thread_page_entry64
 get_thread_page_dir_p64         DW OFFSET local_get_thread_page_dir64
 create_fork_p64                 DW OFFSET local_create_fork64
+start_fork_p64                  DW OFFSET local_start_fork64
 uses_pae_p64                    DW OFFSET local_uses_pae64
 p64_end:
 
@@ -212,6 +215,12 @@ init_page_table     PROC near
     mov edi,OFFSET create_fork_name
     xor cl,cl
     mov ax,create_fork_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET start_fork
+    mov edi,OFFSET start_fork_name
+    xor cl,cl
+    mov ax,start_fork_nr
     RegisterOsGate
 ;
     mov esi,OFFSET notify_create_long_process
@@ -1988,6 +1997,51 @@ local_create_fork32  Proc near
     pop edx
     ret
 local_create_fork32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_start_fork32
+;
+;           DESCRIPTION:    Fork page tables
+;
+;           PARAMETERS:     ESI         Source page directory
+;                           EDI         Destination page directory
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_start_fork32  Proc near
+    push ds
+    pushad
+;
+    mov eax,flat_sel
+    mov ds,eax
+;
+    mov ecx,3 * 256
+
+lsfLoop32:
+    mov eax,ds:[esi]
+    test al,1
+    jz lsfSave32
+;
+    test al,2
+    jz lsfSave32
+;
+    and al,NOT 2
+    or ax,400h
+    mov ds:[esi],eax
+
+lsfSave32:
+    mov ds:[edi],eax
+;
+    add esi,4
+    add edi,4
+    loop lsfLoop32
+;
+    popad
+    pop ds
+    ret
+local_start_fork32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4114,6 +4168,53 @@ local_create_fork64  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_start_fork64
+;
+;           DESCRIPTION:    Fork page tables
+;
+;           PARAMETERS:     ESI         Source page directory
+;                           EDI         Destination page directory
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_start_fork64  Proc near
+    push ds
+    pushad
+;
+    mov eax,flat_sel
+    mov ds,eax
+;
+    mov ecx,3 * 512
+
+lsfLoop64:
+    mov eax,ds:[esi]
+    mov ebx,ds:[esi+4]
+    test al,1
+    jz lsfSave64
+;
+    test al,2
+    jz lsfSave64
+;
+    and al,NOT 2
+    or ax,400h
+    mov ds:[esi],eax
+
+lsfSave64:
+    mov ds:[edi],eax
+    mov ds:[edi+4],ebx
+;
+    add esi,8
+    add edi,8
+    loop lsfLoop64
+;
+    popad
+    pop ds
+    ret
+local_start_fork64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_uses_pae64
 ;
 ;           DESCRIPTION:    Check for PAE paging, 64-bit version
@@ -4182,6 +4283,25 @@ create_fork       Proc far
     call cs:create_fork_proc
     retf32
 create_fork       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StartFork
+;
+;           DESCRIPTION:    Start fork page tables
+;
+;           PARAMETERS:     ESI         Source page directory
+;                           EDI         Destination page directory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_fork_name  DB 'Start Fork',0
+
+start_fork       Proc far
+    call cs:start_fork_proc
+    retf32
+start_fork       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
