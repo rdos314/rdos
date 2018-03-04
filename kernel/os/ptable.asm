@@ -2128,12 +2128,26 @@ lcowdCopy32:
     SetPageEntry
     mov edi,edx
 ;
-    push es
-    mov cx,flat_sel
-    mov es,cx
     mov ecx,1024
-    rep movs dword ptr es:[esi],es:[esi]
-    pop es
+
+lcowdLoop32:
+    mov eax,fs:[esi]
+    test al,1
+    jz lcowdSave32
+;
+    test al,2
+    jz lcowdSave32
+;
+    and al,NOT 2
+    or ax,400h
+    mov fs:[esi],eax
+
+lcowdSave32:
+    mov fs:[edi],eax
+;
+    add esi,4
+    add edi,4
+    loop lcowdLoop32
 ;
     pop edx
 ;
@@ -4414,13 +4428,28 @@ lcowdCopy64:
     SetPageEntry
     mov edi,edx
 ;
-    push es
-    mov cx,flat_sel
-    mov es,cx
-    mov ecx,1024
-    rep movs dword ptr es:[esi],es:[esi]
-    pop es
-    int 3
+    mov ecx,512
+
+lcowdLoop64:
+    mov eax,fs:[esi]
+    mov ebx,fs:[esi+4]
+    test al,1
+    jz lcowdSave64
+;
+    test al,2
+    jz lcowdSave64
+;
+    and al,NOT 2
+    or ax,400h
+    mov fs:[esi],eax
+
+lcowdSave64:
+    mov fs:[edi],eax
+    mov fs:[edi+4],ebx
+;
+    add esi,4
+    add edi,4
+    loop lcowdLoop64
 ;
     pop edx
 ;

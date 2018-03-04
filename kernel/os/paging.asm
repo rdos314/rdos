@@ -208,7 +208,7 @@ page_fault_user_invalid:
 ;
     int 3
     call cs:cow_dir_proc
-    jmp page_fault_error
+    jmp page_fault_user_retry
 
 page_fault_user_normal:
     call local_allocate_physical
