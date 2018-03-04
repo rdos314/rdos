@@ -31,6 +31,9 @@ void main()
     int gdt;
     int linear;
     int handle;
+    int id;
+
+    id = RdosFork();
 
 //    TestFunc();
 
