@@ -530,6 +530,7 @@ NotifyInitProcess MACRO
     OsGate notify_init_process_nr
                     ENDM
 
+; OUT EAX	   CR3
 NotifyCreateProcess MACRO
     OsGate notify_create_process_nr
                     ENDM

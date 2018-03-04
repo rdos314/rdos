@@ -8815,6 +8815,7 @@ create_mod32:
     call create_tss32
     call init_default_regs
     NotifyCreateProcess
+    mov es:p_cr3,eax
 ;
     mov ax,[ebp].cr_mode
     cmp ax,1
@@ -9087,6 +9088,8 @@ fork_process  PROC far
     call create_tss32
     call init_fork_regs
     NotifyCreateProcess
+    mov es:p_cr3,eax
+;
     call init_fork_thread
     call init_fork_stack
     call wake_new
@@ -9477,6 +9480,7 @@ init_first_process      Proc near
     mov ds,ax
     call init_first_tss
     NotifyCreateProcess
+    mov es:p_cr3,eax
     mov ds:p_es,0
     GetCore
     mov fs:ps_null_thread,es

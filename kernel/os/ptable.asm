@@ -504,8 +504,7 @@ local_init_process32     Endp
 ;
 ;           DESCRIPTION:    Create process paging environment
 ;
-;           PARAMETERS:     ES          Thread
-;                           EAX         CR3
+;           RETURNS:        EAX         CR3
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -565,7 +564,6 @@ local_create_process32       PROC near
 ;    
     pop es
     pop ds
-    mov es:p_cr3,eax
     ret
 local_create_process32       ENDP
 
@@ -2164,7 +2162,7 @@ local_init_process64     Endp
 ;
 ;           DESCRIPTION:    Create process paging environment
 ;
-;           RETURNS:        FS          Thread sel
+;           RETURNS:        EAX		CR3
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2274,7 +2272,6 @@ create_process_loop64:
 ;
     pop es
     pop ds
-    mov es:p_cr3,eax
     ret
 local_create_process64       ENDP
 
