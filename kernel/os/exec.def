@@ -177,6 +177,8 @@ process_struc    STRUC
 pf_program_id        DW ?
 pf_program_sel       DW ?
 
+pf_cr3               DD ?
+
 pf_c_handle_sel      DW ?
 pf_cur_dir_sel       DW ?
 

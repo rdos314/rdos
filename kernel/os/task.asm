@@ -7556,6 +7556,7 @@ AddHexWord    ENDP
 ;       DESCRIPTION:    Create process selector
 ;
 ;       PARAMETERS:     BX          Program ID
+;                       ES          Thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -7565,6 +7566,7 @@ create_process_sel Proc near
     push fs
     pushad
 ;
+    mov es:p_ldt_sel,0
     mov ax,es
     mov fs,ax
 ;
@@ -7580,6 +7582,9 @@ create_process_sel Proc near
     mov es:pf_cur_dir_sel,0
     mov es:pf_program_id,bx
     InitSection es:pf_section
+;
+    mov eax,fs:p_cr3
+    mov es:pf_cr3,eax
 ;
     mov fs:p_prog_id,bx
     movzx ebx,bx
@@ -7793,25 +7798,6 @@ init_thread_block       PROC near
     mov es:p_id,ax
     ret
 init_thread_block       ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           INIT_PROCESS_BLOCK
-;
-;           DESCRIPTION:    Init process content
-;
-;           PARAMETERS:     ES        Thread
-;                           BX        Program ID
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_process_block      PROC near
-    call create_process_sel
-    mov es:p_ldt_sel,0
-    ret
-init_process_block      ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -8803,7 +8789,7 @@ create_process  PROC far
     mov es:p_debug_event,0
 ;
     mov bx,[ebp].cr_ebx
-    call init_process_block
+    call create_process_sel
 ;
     mov bx,[ebp].cr_ebx
     cmp bx,1
@@ -9091,7 +9077,7 @@ fork_process  PROC far
     mov eax,fs:p_debug_proc
     mov es:p_debug_proc,eax
     mov bx,1
-    call init_process_block
+    call create_process_sel
     call create_c_handle
     call create_cur_dir
 ;    
@@ -9486,7 +9472,7 @@ init_first_process      Proc near
     call create_first_thread
 ;
     mov bx,1
-    call init_process_block
+    call create_process_sel
     mov ax,es
     mov ds,ax
     call init_first_tss
