@@ -7567,7 +7567,6 @@ create_process_sel Proc near
     push fs
     pushad
 ;
-    mov es:p_ldt_sel,0
     mov edx,es
     mov fs,edx
 ;
