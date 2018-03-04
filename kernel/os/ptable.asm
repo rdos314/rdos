@@ -2021,7 +2021,7 @@ local_start_fork32  Proc near
     mov eax,flat_sel
     mov ds,eax
 ;
-    mov ecx,3 * 256
+    mov ecx,system_mem_start SHR 22
 
 lsfuLoop32:
     mov eax,ds:[esi]
@@ -4311,7 +4311,7 @@ local_start_fork64  Proc near
     mov eax,flat_sel
     mov ds,eax
 ;
-    mov ecx,3 * 512
+    mov ecx,system_mem_start SHR 21
 
 lsfuLoop64:
     mov eax,ds:[esi]
