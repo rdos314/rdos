@@ -2085,6 +2085,7 @@ local_cow_dir32  Proc near
     mov ds,es:p_proc_sel
     mov esi,ds:pf_page_dir
     mov esi,fs:[esi+edx]
+    and si,0F000h
 ;
     mov ds,es:p_prog_sel
     movzx ecx,ds:pr_page_table_count
@@ -2093,7 +2094,9 @@ local_cow_dir32  Proc near
 
 lcowdFind32:
     mov eax,ds:[ebx]
-    cmp esi,fs:[eax+edx]
+    mov eax,fs:[eax+edx]
+    and ax,0F000h
+    cmp eax,esi
     jnz lcowdNext32
 ;
     inc ebp
@@ -4319,6 +4322,7 @@ local_cow_dir64  Proc near
     mov eax,ds:pf_page_dir
     mov esi,fs:[eax+edx]
     mov edi,fs:[eax+edx+4]
+    and si,0F000h
 ;
     mov ds,es:p_prog_sel
     movzx ecx,ds:pr_page_table_count
@@ -4327,10 +4331,12 @@ local_cow_dir64  Proc near
 
 lcowdFind64:
     mov eax,ds:[ebx]
-    cmp esi,fs:[eax+edx]
+    cmp edi,fs:[eax+edx+4]
     jnz lcowdNext64
 ;
-    cmp edi,fs:[eax+edx+4]
+    mov eax,fs:[eax+edx]
+    and ax,0F000h
+    cmp eax,esi
     jnz lcowdNext64
 ;
     inc ebp
