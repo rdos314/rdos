@@ -7680,8 +7680,7 @@ add_process_thread   Endp
 
 setup_fork Proc near
     push ds
-    push es
-    push fs
+    push gs
     pushad
 ;
     mov ds,es:p_prog_sel
@@ -7694,6 +7693,10 @@ setup_fork Proc near
     mov ds:pr_page_dir_arr,eax
     mov ds:pr_page_table_arr,edx
     inc ecx
+;
+    mov gs,fs:p_proc_sel
+    mov gs:pf_page_dir,eax
+    mov gs:pf_page_table,edx
 
 sfAddNew:
     mov eax,es:p_cr3
@@ -7706,9 +7709,18 @@ sfAddNew:
     inc ecx
     mov ds:pr_page_table_count,cx
 ;
+    mov gs,es:p_proc_sel
+    mov gs:pf_page_dir,eax
+    mov gs:pf_page_table,edx
+;
+    mov ds,fs:p_proc_sel
+    mov esi,ds:pf_page_dir
+;
+    mov ds,es:p_proc_sel
+    mov edi,ds:pf_page_dir
+;
     popad
-    pop fs
-    pop es
+    pop gs
     pop ds
     ret
 setup_fork Endp
@@ -9161,6 +9173,8 @@ fork_process  PROC far
     mov bx,fs:p_prog_id
     call create_process_sel
     call add_process_thread
+
+    int 3
     call setup_fork
 ;
     call init_fork_thread

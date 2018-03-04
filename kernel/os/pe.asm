@@ -4013,7 +4013,6 @@ fork_proc      Proc far
     push ebx
     push ecx
 ;
-    int 3
     GetThread
     push es
     mov es,ax
