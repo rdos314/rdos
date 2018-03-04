@@ -9129,10 +9129,6 @@ fork_process_name     DB 'Fork Process',0
 
 fork_start:
     int 3
-;
-    push dx
-    call trap_create_process
-    pop ax
     xor eax,eax
     jmp fork_done
 

@@ -109,7 +109,6 @@ process_dir_fault_local:
 
 process_dir_fault       Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -202,6 +201,14 @@ page_fault_em_normal:
     retf
 
 page_fault_user_invalid:
+    call cs:get_page_dir_proc 
+    test ax,400h
+    jz page_fault_error
+;
+    int 3
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel
     jmp page_fault_error
 
 page_fault_user_normal:

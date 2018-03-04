@@ -2019,24 +2019,34 @@ local_start_fork32  Proc near
 ;
     mov ecx,3 * 256
 
-lsfLoop32:
+lsfuLoop32:
     mov eax,ds:[esi]
     test al,1
-    jz lsfSave32
+    jz lsfuSave32
 ;
     test al,2
-    jz lsfSave32
+    jz lsfuSave32
 ;
     and al,NOT 2
     or ax,400h
     mov ds:[esi],eax
 
-lsfSave32:
+lsfuSave32:
     mov ds:[edi],eax
 ;
     add esi,4
     add edi,4
-    loop lsfLoop32
+    loop lsfuLoop32
+;
+    mov ecx,256
+
+lsfkLoop32:
+    mov eax,ds:[esi]
+    mov ds:[edi],eax
+;
+    add esi,4
+    add edi,4
+    loop lsfkLoop32
 ;
     popad
     pop ds
@@ -4186,26 +4196,38 @@ local_start_fork64  Proc near
 ;
     mov ecx,3 * 512
 
-lsfLoop64:
+lsfuLoop64:
     mov eax,ds:[esi]
     mov ebx,ds:[esi+4]
     test al,1
-    jz lsfSave64
+    jz lsfuSave64
 ;
     test al,2
-    jz lsfSave64
+    jz lsfuSave64
 ;
     and al,NOT 2
     or ax,400h
     mov ds:[esi],eax
 
-lsfSave64:
+lsfuSave64:
     mov ds:[edi],eax
     mov ds:[edi+4],ebx
 ;
     add esi,8
     add edi,8
-    loop lsfLoop64
+    loop lsfuLoop64
+;
+    mov ecx,512
+
+lsfkLoop64:
+    mov eax,ds:[esi]
+    mov ebx,ds:[esi+4]
+    mov ds:[edi],eax
+    mov ds:[edi+4],ebx
+;
+    add esi,8
+    add edi,8
+    loop lsfkLoop64
 ;
     popad
     pop ds
