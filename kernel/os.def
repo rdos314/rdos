@@ -673,7 +673,7 @@ fork_process_nr             = 597
 reset_process_nr            = 601
 exec_app_nr                 = 602
 
-notify_clone_process_nr     = 610
+create_fork_nr              = 610
 
 dupl_c_file_to_file_nr      = 611
 c_handle_to_file_sel_nr     = 612

@@ -101,7 +101,7 @@ code    SEGMENT byte public use16 'CODE'
     public get_thread_page_entry_proc
     public set_thread_page_entry_proc
     public get_thread_page_dir_proc
-    public clone_proc
+    public create_fork_proc
 
 proc_start:
 init_process_proc               DW OFFSET local_init_process32
@@ -136,7 +136,7 @@ unhook_page_proc                DW OFFSET local_unhook_page32
 get_thread_page_entry_proc      DW OFFSET local_get_thread_page_entry32
 set_thread_page_entry_proc      DW OFFSET local_set_thread_page_entry32
 get_thread_page_dir_proc        DW OFFSET local_get_thread_page_dir32
-clone_proc                      DW OFFSET local_clone32
+create_fork_proc                DW OFFSET local_create_fork32
 uses_pae_proc                   DW OFFSET local_uses_pae32
 
 p64_start:
@@ -172,7 +172,7 @@ unhook_page_p64                 DW OFFSET local_unhook_page64
 get_thread_page_entry_p64       DW OFFSET local_get_thread_page_entry64
 set_thread_page_entry_p64       DW OFFSET local_set_thread_page_entry64
 get_thread_page_dir_p64         DW OFFSET local_get_thread_page_dir64
-clone_p64                       DW OFFSET local_clone64
+create_fork_p64                 DW OFFSET local_create_fork64
 uses_pae_p64                    DW OFFSET local_uses_pae64
 p64_end:
 
@@ -208,10 +208,10 @@ init_page_table     PROC near
     mov ax,notify_create_process_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET notify_clone_process
-    mov edi,OFFSET notify_clone_process_name
+    mov esi,OFFSET create_fork
+    mov edi,OFFSET create_fork_name
     xor cl,cl
-    mov ax,notify_clone_process_nr
+    mov ax,create_fork_nr
     RegisterOsGate
 ;
     mov esi,OFFSET notify_create_long_process
@@ -1959,82 +1959,35 @@ local_get_thread_page_dir32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           local_clone32
+;           NAME:           local_create_fork32
 ;
-;           DESCRIPTION:    Clone process, 32-bit version
+;           DESCRIPTION:    Create fork page tables
 ;
-;           PARAMETERS:     EAX         CR3 to clone from
+;           PARAMETERS:     EAX         CR3
+;
+;           RETURNS:        EAX         Page directory
+;                           EDX         Page table
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-local_clone32  Proc near
-    push ds
-    push es
-    pushad
+local_create_fork32  Proc near
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
 ;
-    mov al,3
-    mov bx,process_dir_sel   
-    mov ds,bx
-    mov bx,(clone_page_linear SHR 20)
-    mov ds:[bx],eax
-;
-    mov ax,clone_dir_sel
-    mov ds,ax
-    mov ax,process_page_sel
-    mov es,ax
-;
-    mov ecx,process_page_linear SHR 22
+    push ebx
     xor ebx,ebx
-    xor esi,esi
-
-lcDirLoop32:
-    mov eax,ds:[ebx]
-    test al,1
-    jz lcDirNext32
+    mov al,3
+    SetPageEntry    
+    pop ebx
 ;
-    push ds
-    push ecx
-    push esi
-;
-    mov ax,clone_page_sel
-    mov ds,ax
-;
-    mov ecx,400h
-
-lcPageLoop32:
-    mov eax,ds:[esi]
-    test al,1
-    jz lcPageSave32
-;
-    test al,2
-    jz lcPageSaveCopy32
-;
-    and al,NOT 2
-    or ax,400h
-
-lcPageSaveCopy32:
-    or ax,800h
-
-lcPageSave32:
-    mov es:[esi],eax
-;
-    add esi,4
-    loop lcPageLoop32
-;
-    pop esi
-    pop ecx
-    pop ds
-
-lcDirNext32:
-    add ebx,4
-    add esi,1000h
-    loop lcDirLoop32
-;
-    popad
-    pop es
-    pop ds
+    push edx
+    mov eax,1000h
+    AllocateBigLinear
+    pop edx
     ret
-local_clone32  Endp
+local_create_fork32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4096,112 +4049,67 @@ local_get_thread_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           local_clone64
+;           NAME:           local_create_fork64
 ;
-;           DESCRIPTION:    Clone process, 64-bit version
+;           DESCRIPTION:    Create fork page table, 64-bit version
 ;
-;           PARAMETERS:     EAX         Source cr3
+;           PARAMETERS:     EAX         CR3
+;
+;           RETURNS:        EAX         Page directory
+;                           EDX         Page table
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-local_clone64  Proc near
-    push ds
-    push es
-    pushad
-;
-    mov al,3
-    mov si,process_dir_sel   
-    mov ds,si
-    mov si,clone_dir_sel
-    mov es,si
-    mov si,(clone_page_linear SHR 18)
-    mov ds:[si],eax
-    mov dword ptr ds:[si+4],0
-;
-    mov eax,es:[18h]
-    mov ebx,es:[1Ch]
-    mov ds:[si+18h],eax
-    mov ds:[si+1Ch],ebx
-;
-    mov eax,es:[10h]
-    mov ebx,es:[14h]
-    mov ds:[si+10h],eax
-    mov ds:[si+14h],ebx
-;
-    mov eax,es:[08h]
-    mov ebx,es:[0Ch]
-    mov ds:[si+08h],eax
-    mov ds:[si+0Ch],ebx
-;
-    mov eax,es:[0]
-    mov ebx,es:[4]
-    mov ds:[si],eax
-    mov ds:[si+4],ebx
-;
-    mov eax,cr3
-    mov cr3,eax
-;
-    mov ax,clone_dir_sel
-    mov ds,ax
-    mov ax,process_page_sel
-    mov es,ax
-;
-    mov ecx,process_page_linear SHR 21
-    xor ebx,ebx
-    xor esi,esi
-
-lcDirLoop64:
-    mov eax,ds:[ebx]
-    test al,1
-    jz lcDirNext64
-;
+local_create_fork64  Proc near
     push ds
     push ebx
     push ecx
     push esi
 ;
-    mov ax,clone_page_sel
-    mov ds,ax
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
 ;
-    mov ecx,200h
+    xor ebx,ebx
+    mov al,3
+    SetPageEntry    
+;
+    mov esi,edx
+    mov eax,4000h
+    AllocateBigLinear
+;
+    push edx
+    push esi
+;
+    mov ecx,4
+    mov eax,flat_sel
+    mov ds,eax
 
-lcPageLoop64:
+lcfLoop:
     mov eax,ds:[esi]
     mov ebx,ds:[esi+4]
-    test al,1
-    jz lcPageSave64
-;
-    test al,2
-    jz lcPageSaveCopy64
-;
-    and al,NOT 2
-    or ax,400h
-
-lcPageSaveCopy64:
-    or ax,800h
-
-lcPageSave64:
-    mov es:[esi],eax
-    mov es:[esi+4],ebx
+    mov al,3
+    SetPageEntry
 ;
     add esi,8
-    loop lcPageLoop64
+    add edx,1000h
+    loop lcfLoop
+;
+    pop edx
+;
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+;
+    pop eax
 ;
     pop esi
     pop ecx
     pop ebx
     pop ds
-
-lcDirNext64:
-    add ebx,8
-    add esi,1000h
-    loop lcDirLoop64
-;
-    popad
-    pop es
-    pop ds
     ret
-local_clone64  Endp
+local_create_fork64  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4257,20 +4165,23 @@ notify_create_process       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           NotifyCloneProcess
+;           NAME:           CreateFork
 ;
-;           DESCRIPTION:    Notify clone process
+;           DESCRIPTION:    Create fork page tables
 ;
-;           PARAMETERS:     EAX         CR3 to clone from
+;           PARAMETERS:     EAX         CR3
 ;                           
+;           RETURNS:        EAX         Page directory
+;                           EDX         Page table
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-notify_clone_process_name  DB 'Notify Clone Process',0
+create_fork_name  DB 'Create Fork',0
 
-notify_clone_process       Proc far
-    call cs:clone_proc
+create_fork       Proc far
+    call cs:create_fork_proc
     retf32
-notify_clone_process       Endp
+create_fork       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5412,18 +5323,6 @@ start_paging_global_done32:
     mov ecx,800000h
     mov edx,phys_bitmap_linear
     call local_create_data_sel16
-;
-    mov bx,clone_dir_sel
-    mov ecx,1000h
-    mov edx,clone_page_linear
-    shr edx,10
-    add edx,process_page_linear
-    call local_create_data_sel16
-;
-    mov bx,clone_page_sel
-    mov edx,clone_page_linear
-    mov ecx,400000h
-    call local_create_data_sel16
     ret
 start_paging32    Endp
 
@@ -6074,18 +5973,6 @@ start_paging_global_done64:
     mov bx,phys_bit_sel
     mov ecx,800000h
     mov edx,phys_bitmap_linear
-    call local_create_data_sel16
-;
-    mov bx,clone_dir_sel
-    mov ecx,4000h
-    mov edx,clone_page_linear
-    shr edx,9
-    add edx,process_page_linear
-    call local_create_data_sel16
-;
-    mov bx,clone_page_sel
-    mov edx,clone_page_linear
-    mov ecx,800000h
     call local_create_data_sel16
     ret
 start_paging64    Endp

@@ -165,9 +165,6 @@ process_page_sel        EQU 2C8h
 sched_code_sel      EQU 2D0h
 sched_data_sel      EQU 2D8h
 
-clone_dir_sel       EQU 2E0h
-clone_page_sel      EQU 2E8h
-
 ;
 ; GDT selectors device-driver selectors
 ;

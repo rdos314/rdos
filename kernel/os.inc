@@ -539,9 +539,11 @@ NotifyCreateLongProcess MACRO
     OsGate notify_create_long_process_nr
                     ENDM
 
-;   EAX    CR3 to clone
-NotifyCloneProcess MACRO
-    OsGate notify_clone_process_nr
+; IN  EAX    CR3
+; OUT EAX    Page directory
+; OUT EDX    Page table
+CreateFork MACRO
+    OsGate create_fork_nr
                     ENDM
 
 ;   EAX    CR3

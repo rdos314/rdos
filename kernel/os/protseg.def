@@ -77,7 +77,6 @@ long_ldt_linear         EQU 0BF7F0000h
 process_page_linear             EQU 0BF800000h
 
 sys_page_linear                 EQU 0C0000000h
-clone_page_linear               EQU 0C0800000h
 
 global_byte_linear              EQU 0C1000000h
 global_byte_size                EQU 007000000h
