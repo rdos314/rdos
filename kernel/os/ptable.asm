@@ -1995,10 +1995,10 @@ local_create_fork32  Proc near
     SetPageEntry    
     pop ebx
 ;
-    push edx
-    mov eax,1000h
+    push eax
+    mov eax,2000h
     AllocateBigLinear
-    pop edx
+    pop eax
     ret
 local_create_fork32  Endp
 
@@ -2105,6 +2105,51 @@ lcowdNext32:
     add ebx,4
     loop lcowdFind32
 ;
+    cmp ebp,1
+    je lcowdUnmark32
+;
+    ja lcowdCopy32
+;
+    int 3
+
+lcowdCopy32:
+    push edx
+;
+    mov ds,es:p_proc_sel
+    mov edx,ds:pf_page_table
+    mov eax,esi
+    or al,3
+    SetPageEntry
+    mov esi,edx
+;
+    add edx,1000h
+    AllocatePhysical32
+    or al,3
+    SetPageEntry
+    mov edi,edx
+;
+    push es
+    mov cx,flat_sel
+    mov es,cx
+    mov ecx,1024
+    rep movs dword ptr es:[esi],es:[esi]
+    pop es
+;
+    pop edx
+;
+    mov ds,es:p_proc_sel
+    mov esi,ds:pf_page_dir
+    mov fs:[esi+edx],eax
+    jmp lcowdDone32
+
+lcowdUnmark32:
+    mov ds,es:p_proc_sel
+    mov esi,ds:pf_page_dir
+    mov eax,fs:[esi+edx]
+    and ax,NOT 400h
+    mov fs:[esi+edx],eax
+
+lcowdDone32:    
     popad
     pop fs
     pop es
@@ -4190,7 +4235,7 @@ local_create_fork64  Proc near
     push esi
 ;
     push eax
-    mov eax,1000h
+    mov eax,2000h
     AllocateBigLinear
     pop eax
 ;
@@ -4345,6 +4390,54 @@ lcowdNext64:
     add ebx,4
     loop lcowdFind64
 ;
+    cmp ebp,1
+    je lcowdUnmark64
+;
+    ja lcowdCopy64
+;
+    int 3
+
+lcowdCopy64:
+    push edx
+;
+    mov ds,es:p_proc_sel
+    mov edx,ds:pf_page_table
+    mov eax,esi
+    mov ebx,edi
+    or al,3
+    SetPageEntry
+    mov esi,edx
+;
+    add edx,1000h
+    AllocatePhysical64
+    or al,3
+    SetPageEntry
+    mov edi,edx
+;
+    push es
+    mov cx,flat_sel
+    mov es,cx
+    mov ecx,1024
+    rep movs dword ptr es:[esi],es:[esi]
+    pop es
+    int 3
+;
+    pop edx
+;
+    mov ds,es:p_proc_sel
+    mov esi,ds:pf_page_dir
+    mov fs:[esi+edx],eax
+    mov fs:[esi+edx+4],ebx
+    jmp lcowdDone64
+
+lcowdUnmark64:
+    mov ds,es:p_proc_sel
+    mov esi,ds:pf_page_dir
+    mov eax,fs:[esi+edx]
+    and ax,NOT 400h
+    mov fs:[esi+edx],eax
+
+lcowdDone64:    
     popad
     pop fs
     pop es
