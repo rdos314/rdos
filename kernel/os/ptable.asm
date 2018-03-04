@@ -2124,11 +2124,12 @@ lcowdCopy32:
 ;
     add edx,1000h
     AllocatePhysical32
-    or al,3
+    or al,67h
     SetPageEntry
     mov edi,edx
 ;
     mov ecx,1024
+    push eax
 
 lcowdLoop32:
     mov eax,fs:[esi]
@@ -2149,11 +2150,18 @@ lcowdSave32:
     add edi,4
     loop lcowdLoop32
 ;
+    pop eax
     pop edx
 ;
-    mov ds,es:p_proc_sel
     mov esi,ds:pf_page_dir
     mov fs:[esi+edx],eax
+;
+    mov edx,ds:pf_page_table
+    xor eax,eax
+    SetPageEntry
+;
+    add edx,1000h
+    SetPageEntry
     jmp lcowdDone32
 
 lcowdUnmark32:
@@ -2161,6 +2169,7 @@ lcowdUnmark32:
     mov esi,ds:pf_page_dir
     mov eax,fs:[esi+edx]
     and ax,NOT 400h
+    or al,2
     mov fs:[esi+edx],eax
 
 lcowdDone32:    
@@ -4418,16 +4427,18 @@ lcowdCopy64:
     mov edx,ds:pf_page_table
     mov eax,esi
     mov ebx,edi
-    or al,3
+    or al,67h
     SetPageEntry
     mov esi,edx
 ;
     add edx,1000h
     AllocatePhysical64
-    or al,3
+    or al,67h
     SetPageEntry
     mov edi,edx
 ;
+    push ebx
+    push eax
     mov ecx,512
 
 lcowdLoop64:
@@ -4447,16 +4458,25 @@ lcowdSave64:
     mov fs:[edi],eax
     mov fs:[edi+4],ebx
 ;
-    add esi,4
-    add edi,4
+    add esi,8
+    add edi,8
     loop lcowdLoop64
 ;
+    pop eax
+    pop ebx
     pop edx
 ;
-    mov ds,es:p_proc_sel
     mov esi,ds:pf_page_dir
     mov fs:[esi+edx],eax
     mov fs:[esi+edx+4],ebx
+;
+    mov edx,ds:pf_page_table
+    xor ebx,ebx
+    xor eax,eax
+    SetPageEntry
+;
+    add edx,1000h
+    SetPageEntry
     jmp lcowdDone64
 
 lcowdUnmark64:
@@ -4464,6 +4484,7 @@ lcowdUnmark64:
     mov esi,ds:pf_page_dir
     mov eax,fs:[esi+edx]
     and ax,NOT 400h
+    or al,2
     mov fs:[esi+edx],eax
 
 lcowdDone64:    
