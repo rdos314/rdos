@@ -3930,76 +3930,6 @@ free_thread_kernel     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CopyForkPages
-;
-;           DESCRIPTION:    Copy pages in forked process
-;
-;           PARAMETERS:     EDX         Linear address
-;                           ECX         Number of pages
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CopyForkPages   Proc near
-    push ds
-    push es
-    pushad
-;
-    mov ax,flat_sel
-    mov ds,ax
-    mov es,ax
-;
-    mov esi,edx
-    push ecx
-    mov eax,1000h
-    AllocateBigLinear
-    mov edi,edx
-    pop ecx
-
-cfpLoop:
-    mov edx,esi
-    GetPageEntry
-    test al,1
-    jz cfpNext
-;
-    test ax,400h
-    jz cfpNext
-;
-    push ecx
-    push esi
-    push edi
-    mov ecx,400h
-    rep movs dword ptr es:[edi],ds:[esi]
-    pop edi
-    pop esi
-    pop ecx
-;
-    mov edx,edi
-    GetPageEntry
-;
-    mov edx,esi
-    SetPageEntry
-;
-    mov edx,edi
-    xor eax,eax
-    xor ebx,ebx
-    SetPageEntry
-
-cfpNext:
-    add esi,1000h
-    loop cfpLoop
-;
-    mov ecx,1000h
-    FreeLinear
-;
-    popad
-    pop es
-    pop ds
-    ret
-CopyForkPages   Endp
-                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           fork_proc
 ;
 ;           DESCRIPTION:    Fork
@@ -4190,15 +4120,6 @@ fork_child:
     pop ds
 
 fork_notify_ok:    
-    push edx
-    mov edx,fs:pvStackUserBottom
-    mov ecx,fs:pvStackUserSize
-    dec ecx
-    shr ecx,12
-    inc ecx
-    call CopyForkPages
-    pop edx
-;
     pop ds
 ;
     pop ebx

@@ -9129,6 +9129,7 @@ init_fork_stack Endp
 fork_process_name     DB 'Fork Process',0
 
 fork_start:
+    sti
     int 3
     call trap_create_process
     xor eax,eax
@@ -9337,6 +9338,7 @@ init_long_callback_frame    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_process_callback:
+    sti
     GetThread
     mov fs,ax
 ;
