@@ -9130,7 +9130,6 @@ fork_process_name     DB 'Fork Process',0
 
 fork_start:
     sti
-    int 3
     call trap_create_process
     xor eax,eax
     jmp fork_done
@@ -9150,7 +9149,6 @@ fork_process  PROC far
     GetThread
     mov fs,ax
 ;    
-    int 3
     call allocate_thread_block
 ;    
     mov dx,fs:p_prio

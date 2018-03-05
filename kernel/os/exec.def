@@ -164,6 +164,8 @@ pr_memmap_spinlock   spinlock_typ <>
 pr_pm_int            DD 100h DUP(?,?)
 pr_pm_exc            DD 20h DUP(?,?)
 
+pr_cow_section       section_typ <>
+
 pr_page_table_count  DW ?
 pr_page_dir_arr      DD MAX_PROGRAM_PROCESSES DUP(?)
 pr_page_table_arr    DD MAX_PROGRAM_PROCESSES DUP(?)

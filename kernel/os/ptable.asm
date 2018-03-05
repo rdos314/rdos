@@ -2081,6 +2081,8 @@ local_cow_dir32  Proc near
     and si,0F000h
 ;
     mov ds,es:p_prog_sel
+    EnterSection ds:pr_cow_section
+;
     movzx ecx,ds:pr_page_table_count
     mov ebx,OFFSET pr_page_dir_arr
     xor ebp,ebp
@@ -2162,6 +2164,9 @@ lcowdUnmark32:
     mov fs:[esi+edx],eax
 
 lcowdDone32:    
+    mov ds,es:p_prog_sel
+    LeaveSection ds:pr_cow_section
+;
     popad
     pop fs
     pop es
@@ -4458,6 +4463,8 @@ local_cow_dir64  Proc near
     and si,0F000h
 ;
     mov ds,es:p_prog_sel
+    EnterSection ds:pr_cow_section
+;
     movzx ecx,ds:pr_page_table_count
     mov ebx,OFFSET pr_page_dir_arr
     xor ebp,ebp
@@ -4548,6 +4555,9 @@ lcowdUnmark64:
     mov fs:[esi+edx],eax
 
 lcowdDone64:    
+    mov ds,es:p_prog_sel
+    LeaveSection ds:pr_cow_section
+;
     popad
     pop fs
     pop es
@@ -4580,6 +4590,8 @@ local_cow_page64  Proc near
     mov ebp,ds:pf_page_dir
 ;
     mov ds,es:p_prog_sel
+    EnterSection ds:pr_cow_section
+;
     movzx ecx,ds:pr_page_table_count
     xor esi,esi
     mov ds:pr_temp_ind,si
@@ -4677,11 +4689,12 @@ lcowpCopy64:
     SetPageEntry
     mov edi,edx
 ;
+    push es
     mov ecx,flat_sel
     mov es,ecx
     mov ecx,1024
     rep movs dword ptr es:[edi],es:[esi]
-    int 3
+    pop es
 ;
     mov fs:[ebp],eax
     mov fs:[ebp+4],ebx
@@ -4696,6 +4709,9 @@ lcowpUnmark64:
     mov fs:[edx],eax
 
 lcowpDone64:
+    mov ds,es:p_prog_sel
+    LeaveSection ds:pr_cow_section
+;
     popad
     pop fs
     pop es

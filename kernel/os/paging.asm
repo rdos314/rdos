@@ -209,9 +209,6 @@ page_fault_user_invalid:
 ;
     int 3
     call cs:cow_dir_proc
-    int 3
-    call cs:get_page_dir_proc 
-    test ax,400h
     jmp page_fault_user_retry
 
 page_fault_user_normal:
@@ -245,7 +242,6 @@ page_write_user PROC near
     test ax,400h
     jz page_write_check_page
 ;
-    int 3
     call cs:cow_dir_proc
     ret
 
@@ -254,7 +250,6 @@ page_write_check_page:
     test ax,400h
     jz page_fault_error
 ;
-    int 3
     call cs:cow_page_proc
     ret
 page_write_user ENDP
