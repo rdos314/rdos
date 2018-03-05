@@ -1128,7 +1128,6 @@ spawn_startup:
     sti
     CreateLdt
     CreateHandleData
-    SetupProgramMem
 ;
     GetThread
     mov es,ax

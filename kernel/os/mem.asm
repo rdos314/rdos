@@ -214,10 +214,10 @@ init_mem    PROC near
     xor esi,esi
     xor edi,edi
 ;
-    mov esi,OFFSET setup_program_mem
-    mov edi,OFFSET setup_program_mem_name
+    mov esi,OFFSET init_process_mem
+    mov edi,OFFSET init_process_mem_name
     xor cl,cl
-    mov ax,setup_program_mem_nr
+    mov ax,init_process_mem_nr
     RegisterOsGate
 ;
     mov esi,OFFSET allocate_global_mem
@@ -3912,15 +3912,15 @@ write_thread64   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupProgramMem
+;           NAME:           InitProcessMem
 ;
-;           DESCRIPTION:    Setup program mem
+;           DESCRIPTION:    Initialize per-process memory
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-setup_program_mem_name  DB 'Setup Program Mem', 0
+init_process_mem_name  DB 'Init Process Mem', 0
 
-setup_program_mem   Proc far
+init_process_mem   Proc far
     push ds
     push es
     pushad
@@ -3967,7 +3967,7 @@ ipmDone:
     pop es
     pop ds
     retf32
-setup_program_mem   Endp
+init_process_mem   Endp
 
 code    ENDS
 

@@ -7414,6 +7414,8 @@ trap_create_process     PROC near
     push cx
     push si
 ;
+    InitProcessMem
+;
     mov ax,hook_sel
     mov ds,ax
     mov cl,ds:create_process_hooks
@@ -7460,7 +7462,6 @@ trap_init_tasking       PROC near
     call trap_create_process
     CreateLdt
     CreateHandleData
-    SetupProgramMem
 ;
     push cx
     mov ax,hook_sel
@@ -9129,6 +9130,7 @@ fork_process_name     DB 'Fork Process',0
 
 fork_start:
     int 3
+    call trap_create_process
     xor eax,eax
     jmp fork_done
 
@@ -9147,6 +9149,7 @@ fork_process  PROC far
     GetThread
     mov fs,ax
 ;    
+    int 3
     call allocate_thread_block
 ;    
     mov dx,fs:p_prio

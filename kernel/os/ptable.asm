@@ -1995,7 +1995,7 @@ local_create_fork32  Proc near
     SetPageEntry    
     pop ebx
 ;
-    push eax
+    push edx
     mov eax,2000h
     AllocateBigLinear
     pop eax

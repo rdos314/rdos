@@ -773,8 +773,8 @@ UnhookPage      MACRO
 
 ;;;;;;;;;;; LINEAR MEMORY MANAGEMENT ;;;;;;;;
 
-SetupProgramMem     MACRO
-    OsGate setup_program_mem_nr
+InitProcessMem     MACRO
+    OsGate init_process_mem_nr
                     ENDM
 
 ;       EAX         Byte count
