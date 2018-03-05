@@ -240,51 +240,22 @@ page_write_user PROC near
     mov edx,cr2
     popf
 ;    
-    and dx,0F000h
+    call cs:get_page_dir_proc 
+    test ax,400h
+    jz page_write_check_page
+;
+    int 3
+    call cs:cow_dir_proc
+    ret
+
+page_write_check_page:
     call cs:get_page_entry_proc
-;    
     test ax,400h
     jz page_fault_error
 ;
-    push es
-    push ecx
-    push esi
-    push edi
-;
-    push edx
-    mov esi,edx
-    mov eax,1000h
-    AllocateBigLinear
-    mov edi,edx
-;
-    mov ax,flat_sel
-    mov es,ax
-    mov ecx,400h
-    rep movs dword ptr es:[edi],es:[esi]
-;
-    call cs:get_page_entry_proc
-    push eax
-    push ebx
-;
-    xor eax,eax
-    xor ebx,ebx
-    call cs:set_page_entry_proc
-;
-    mov ecx,1000h
-    FreeLinear
-;
-    pop ebx
-    pop eax
-    pop edx    
-    call cs:set_page_entry_proc
-;
-    pop edi
-    pop esi
-    pop ecx
-    pop es
+    int 3
     ret
 page_write_user ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -529,8 +500,6 @@ trap_error_do:
     jz trap_kernel_error
 
 trap_user_error:
-    mov eax,cr2
-    int 3
     call page_write_user
     jmp trap_14_done
 
