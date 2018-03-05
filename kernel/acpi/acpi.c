@@ -342,7 +342,7 @@ power_update_callback *power_update_proc;
 char TempResourceBuf[0x4000];
 
 long long StateArr[MAX_PROCESSOR_COUNT];
-
+    
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 
 void __far ImplTestGate(const char *msg)
@@ -546,6 +546,39 @@ void UpdateEist(int diff)
 
     ReqPStateUpdate(RdosGetActiveCores());
 }
+    
+/*##########################################################################
+#
+#   Name       : InitEistFreq
+#
+##########################################################################*/
+void InitEistFreq()
+{
+}
+    
+/*##########################################################################
+#
+#   Name       : UpdateEistFreq
+#
+##########################################################################*/
+void UpdateEistFreq(int diff)
+{
+    if (diff < 0)
+    {
+        if (CurrFid < MaxFid)
+            CurrFid++;
+    }
+
+    if (diff > 0)
+    {
+        if (CurrFid > MinFid)
+            CurrFid--;
+
+    }
+
+    ReqPStateUpdate(RdosGetActiveCores());
+}
+
     
 /*##########################################################################
 #
@@ -2832,25 +2865,30 @@ void __far InitTasking()
         {
             if (GetExtFeatureFlags() & 0x80)
             {
-                if ((CpuInfo & 0xFFFFF0) == 0x106C0)
-                {
-
-                    status = ReadMsr(INTEL_PERF_STATUS);
-                    CurrFid = (status >> 8) & 0xFF;
-                    CurrVid = status & 0xFF;
+                status = ReadMsr(INTEL_PERF_STATUS);
+                CurrFid = (status >> 8) & 0xFF;
+                CurrVid = status & 0xFF;
                 
-                    status = status >> 32;
+                status = status >> 32;
 
-                    MinVid = (status >> 16) & 0xFF;
-                    MaxVid = status & 0xFF;
-                    MinFid = (status >> 24) & 0xFF;
-                    MaxFid = (status >> 8) & 0xFF;
+                MinVid = (status >> 16) & 0xFF;
+                MaxVid = status & 0xFF;
+                MinFid = (status >> 24) & 0xFF;
+                MaxFid = (status >> 8) & 0xFF;
 
-                    if (MaxVid > MinVid && MaxFid > MinFid)
+                if (MaxVid > MinVid && MaxFid > MinFid)
+                {
+                    RdosRegisterOsGate(osgate_update_pstate, &ImplUpdatePStateEist, "Update P-State Eist");
+                    power_init_proc = InitEist;
+                    power_update_proc = UpdateEist;
+                }
+                else
+                {
+                    if (MaxFid > MinFid && MaxVid == MinVid)
                     {
                         RdosRegisterOsGate(osgate_update_pstate, &ImplUpdatePStateEist, "Update P-State Eist");
-                        power_init_proc = InitEist;
-                        power_update_proc = UpdateEist;
+                        power_init_proc = InitEistFreq;
+                        power_update_proc = UpdateEistFreq;
                     }
                     else
                     {
