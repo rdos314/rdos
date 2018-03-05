@@ -105,6 +105,7 @@ code    SEGMENT byte public use16 'CODE'
     public create_fork_proc
     public start_fork_proc
     public cow_dir_proc
+    public cow_page_proc
 
 proc_start:
 init_process_proc               DW OFFSET local_init_process32
@@ -142,6 +143,7 @@ get_thread_page_dir_proc        DW OFFSET local_get_thread_page_dir32
 create_fork_proc                DW OFFSET local_create_fork32
 start_fork_proc                 DW OFFSET local_start_fork32
 cow_dir_proc                    DW OFFSET local_cow_dir32
+cow_page_proc                   DW OFFSET local_cow_page32
 uses_pae_proc                   DW OFFSET local_uses_pae32
 
 p64_start:
@@ -180,6 +182,7 @@ get_thread_page_dir_p64         DW OFFSET local_get_thread_page_dir64
 create_fork_p64                 DW OFFSET local_create_fork64
 start_fork_p64                  DW OFFSET local_start_fork64
 cow_dir_p64                     DW OFFSET local_cow_dir64
+cow_page_p64                    DW OFFSET local_cow_page64
 uses_pae_p64                    DW OFFSET local_uses_pae64
 p64_end:
 
@@ -1996,7 +1999,7 @@ local_create_fork32  Proc near
     pop ebx
 ;
     push edx
-    mov eax,2000h
+    mov eax,3000h
     AllocateBigLinear
     pop eax
     ret
@@ -2085,6 +2088,9 @@ local_cow_dir32  Proc near
 lcowdFind32:
     mov eax,ds:[ebx]
     mov eax,fs:[eax+edx]
+    test al,1
+    jz lcowdNext32
+;
     and ax,0F000h
     cmp eax,esi
     jnz lcowdNext32
@@ -2145,13 +2151,6 @@ lcowdSave32:
 ;
     mov esi,ds:pf_page_dir
     mov fs:[esi+edx],eax
-;
-    mov edx,ds:pf_page_table
-    xor eax,eax
-    SetPageEntry
-;
-    add edx,1000h
-    SetPageEntry
     jmp lcowdDone32
 
 lcowdUnmark32:
@@ -2169,6 +2168,94 @@ lcowdDone32:
     pop ds
     ret
 local_cow_dir32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_cow_page32
+;
+;           DESCRIPTION:    Copy-on-write page table
+;
+;           PARAMETERS:     EDX         Linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_cow_page32  Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,eax
+;
+    mov ebx,edx
+    shr ebx,20
+    and bl,0FCh
+;
+    GetThread
+    mov es,ax
+    mov ds,es:p_proc_sel
+    mov eax,ds:pf_page_dir
+    mov eax,fs:[eax+ebx]
+    and ax,0F000h
+;
+    push edx
+    mov ebx,edx
+    shr ebx,10
+    and ebx,0FFCh
+    mov edx,ds:pf_page_table
+    mov al,3
+    SetPageEntry
+    mov esi,fs:[edx+ebx]
+    pop edx
+;
+    mov ds,es:p_prog_sel
+    movzx ecx,ds:pr_page_table_count
+    xor ebx,ebx
+    xor ebp,ebp
+    and si,0F000h
+
+lcowpFind32:
+    mov eax,ds:[ebx].pr_page_dir_arr
+    push edx
+    shr edx,20
+    and dl,0FCh
+    mov eax,fs:[eax+edx]
+    pop edx
+    test al,1
+    jz lcowpNext32
+;
+    push edx
+    mov edi,edx
+    shr edi,10
+    and edi,0FFCh
+    mov edx,ds:[ebx].pr_page_table_arr
+    mov al,3
+    SetPageEntry
+    mov eax,fs:[edx+edi]
+    pop edx
+;
+    test al,1
+    jz lcowpNext32
+;
+    and ax,0F000h
+    cmp eax,esi
+    jnz lcowpNext32
+;
+    inc ebp
+
+lcowpNext32:
+    add ebx,4
+    loop lcowpFind32
+
+lcowpDone32:    
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+local_cow_page32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4248,7 +4335,7 @@ local_create_fork64  Proc near
     push esi
 ;
     push eax
-    mov eax,2000h
+    mov eax,3000h
     AllocateBigLinear
     pop eax
 ;
@@ -4381,6 +4468,9 @@ lcowdFind64:
     jnz lcowdNext64
 ;
     mov eax,fs:[eax+edx]
+    test al,1
+    jz lcowdNext64
+;
     and ax,0F000h
     cmp eax,esi
     jnz lcowdNext64
@@ -4447,14 +4537,6 @@ lcowdSave64:
     mov esi,ds:pf_page_dir
     mov fs:[esi+edx],eax
     mov fs:[esi+edx+4],ebx
-;
-    mov edx,ds:pf_page_table
-    xor ebx,ebx
-    xor eax,eax
-    SetPageEntry
-;
-    add edx,1000h
-    SetPageEntry
     jmp lcowdDone64
 
 lcowdUnmark64:
@@ -4472,6 +4554,154 @@ lcowdDone64:
     pop ds
     ret
 local_cow_dir64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_cow_page64
+;
+;           DESCRIPTION:    Copy-on-write page table
+;
+;           PARAMETERS:     EDX         Linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_cow_page64  Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,eax
+    GetThread
+    mov es,ax
+    mov ds,es:p_proc_sel
+    mov ebp,ds:pf_page_dir
+;
+    mov ds,es:p_prog_sel
+    movzx ecx,ds:pr_page_table_count
+    xor esi,esi
+    mov ds:pr_temp_ind,si
+
+lcowpInitLoop64:
+    mov ds:[esi].pr_temp_arr,0
+    mov edi,ds:[esi].pr_page_dir_arr
+    cmp edi,ebp
+    jne lcowpNotMine64
+;
+    mov ds:pr_temp_ind,si
+
+lcowpNotMine64:
+    mov eax,edx
+    shr eax,18
+    and al,0F8h
+    mov ebx,fs:[edi+eax+4]
+    mov eax,fs:[edi+eax]
+    test al,1
+    jz lcowpInitNext64
+;
+    push edx
+    mov edi,edx
+    shr edi,9
+    and edi,0FF8h
+    mov edx,ds:[esi].pr_page_table_arr
+    and ax,0F000h
+    mov al,3
+    SetPageEntry
+    add edi,edx
+    pop edx
+;
+    mov ds:[esi].pr_temp_arr,edi
+
+lcowpInitNext64:
+    add esi,4
+    loop lcowpInitLoop64
+;
+    movzx esi,ds:pr_temp_ind
+    mov esi,ds:[esi].pr_temp_arr
+    mov edi,fs:[esi+4]
+    mov esi,fs:[esi]
+    and si,0F000h
+    xor ebx,ebx
+    xor ebp,ebp
+    movzx ecx,ds:pr_page_table_count
+
+lcowpFindLoop64:
+    mov edx,ds:[ebx].pr_temp_arr
+    or edx,edx
+    jz lcowpFindNext64
+;
+    mov eax,fs:[edx]
+    test al,1
+    jz lcowpFindNext64
+;
+    and ax,0F000h
+    cmp eax,esi
+    jne lcowpFindNext64
+;
+    mov eax,fs:[edx+4]
+    cmp eax,edi
+    jne lcowpFindNext64
+;
+    inc ebp
+
+lcowpFindNext64:
+    add ebx,4
+    loop lcowpFindLoop64
+;
+    cmp ebp,1
+    je lcowpUnmark64
+;
+    ja lcowpCopy64
+;
+    int 3
+
+lcowpCopy64:
+    movzx eax,ds:pr_temp_ind
+    mov ebp,ds:[eax].pr_temp_arr
+    mov eax,fs:[ebp]
+    mov ebx,fs:[ebp+4]
+    and ax,0F000h
+    or al,67h
+;
+    mov ds,es:p_proc_sel
+    mov edx,ds:pf_page_table
+    add edx,1000h
+    SetPageEntry
+    mov esi,edx
+;
+    add edx,1000h
+    AllocatePhysical64
+    or al,67h
+    SetPageEntry
+    mov edi,edx
+;
+    mov ecx,flat_sel
+    mov es,ecx
+    mov ecx,1024
+    rep movs dword ptr es:[edi],es:[esi]
+    int 3
+;
+    mov fs:[ebp],eax
+    mov fs:[ebp+4],ebx
+    jmp lcowpDone64
+
+lcowpUnmark64:
+    movzx edx,ds:pr_temp_ind
+    mov edx,ds:[edx].pr_temp_arr
+    mov eax,fs:[edx]
+    and ax,NOT 400h
+    or al,2
+    mov fs:[edx],eax
+
+lcowpDone64:
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+local_cow_page64  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

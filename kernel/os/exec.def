@@ -168,6 +168,9 @@ pr_page_table_count  DW ?
 pr_page_dir_arr      DD MAX_PROGRAM_PROCESSES DUP(?)
 pr_page_table_arr    DD MAX_PROGRAM_PROCESSES DUP(?)
 
+pr_temp_ind          DW ?
+pr_temp_arr          DD MAX_PROGRAM_PROCESSES DUP(?)
+
 pr_module_count      DW ?
 pr_module_arr        DW MAX_PROGRAM_MODULES DUP(?)
 

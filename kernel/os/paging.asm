@@ -51,6 +51,7 @@ INCLUDE system.inc
     extrn create_page_dir_proc:word
     extrn create_sys_page_dir_proc:word
     extrn cow_dir_proc:word
+    extrn cow_page_proc:word
     
 code    SEGMENT byte public 'CODE'
 
@@ -254,6 +255,7 @@ page_write_check_page:
     jz page_fault_error
 ;
     int 3
+    call cs:cow_page_proc
     ret
 page_write_user ENDP
 
