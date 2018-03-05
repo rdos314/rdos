@@ -39,7 +39,7 @@ void main()
 
     while (sync_val != 3)
     {
-        RdosTestGate();
+        RdosTestGate("");
         gate_count++;
     }
 

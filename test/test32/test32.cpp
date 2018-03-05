@@ -33,6 +33,8 @@ void main()
     int handle;
     int id;
 
+    RdosTestGate("");
+
     id = RdosFork();
 
 //    TestFunc();
