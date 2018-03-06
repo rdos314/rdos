@@ -106,6 +106,7 @@ code    SEGMENT byte public use16 'CODE'
     public start_fork_proc
     public cow_dir_proc
     public cow_page_proc
+    public detach_fork_proc
 
 proc_start:
 init_process_proc               DW OFFSET local_init_process32
@@ -144,6 +145,7 @@ create_fork_proc                DW OFFSET local_create_fork32
 start_fork_proc                 DW OFFSET local_start_fork32
 cow_dir_proc                    DW OFFSET local_cow_dir32
 cow_page_proc                   DW OFFSET local_cow_page32
+detach_fork_proc                DW OFFSET local_detach_fork32
 uses_pae_proc                   DW OFFSET local_uses_pae32
 
 p64_start:
@@ -183,6 +185,7 @@ create_fork_p64                 DW OFFSET local_create_fork64
 start_fork_p64                  DW OFFSET local_start_fork64
 cow_dir_p64                     DW OFFSET local_cow_dir64
 cow_page_p64                    DW OFFSET local_cow_page64
+detach_fork_p64                 DW OFFSET local_detach_fork64
 uses_pae_p64                    DW OFFSET local_uses_pae64
 p64_end:
 
@@ -228,6 +231,12 @@ init_page_table     PROC near
     mov edi,OFFSET start_fork_name
     xor cl,cl
     mov ax,start_fork_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET detach_fork
+    mov edi,OFFSET detach_fork_name
+    xor cl,cl
+    mov ax,detach_fork_nr
     RegisterOsGate
 ;
     mov esi,OFFSET notify_create_long_process
@@ -2056,6 +2065,24 @@ lsfuSave32:
     pop ds
     ret
 local_start_fork32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_detach_fork32
+;
+;           DESCRIPTION:    Detach current process from fork
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_detach_fork32  Proc near
+    push ds
+    pushad
+;
+    popad
+    pop ds
+    ret
+local_detach_fork32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4516,6 +4543,24 @@ local_start_fork64  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_detach_fork64
+;
+;           DESCRIPTION:    Detach current process from fork
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_detach_fork64  Proc near
+    push ds
+    pushad
+;
+    popad
+    pop ds
+    ret
+local_detach_fork64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_cow_dir64
 ;
 ;           DESCRIPTION:    Copy-on-write for directory
@@ -4891,6 +4936,22 @@ start_fork       Proc far
     call cs:start_fork_proc
     retf32
 start_fork       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DetachFork
+;
+;           DESCRIPTION:    Detach current process from fork
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+detach_fork_name  DB 'Detach Fork',0
+
+detach_fork       Proc far
+    call cs:detach_fork_proc
+    retf32
+detach_fork       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -748,5 +748,6 @@ destroy_handle_data_nr      = 664
 init_process_mem_nr         = 665
 
 start_fork_nr               = 666
+detach_fork_nr              = 667
 
 osgate_entries              = 700
