@@ -2028,7 +2028,7 @@ local_start_fork32  Proc near
     mov eax,flat_sel
     mov ds,eax
 ;
-    mov ecx,system_mem_start SHR 22
+    mov ecx,fork_mem_size SHR 22
 
 lsfuLoop32:
     mov eax,ds:[esi]
@@ -2048,6 +2048,9 @@ lsfuSave32:
     add esi,4
     add edi,4
     loop lsfuLoop32
+;
+    mov eax,ds:[esi]
+    mov ds:[edi],eax
 ;
     popad
     pop ds
@@ -4465,10 +4468,11 @@ local_start_fork64  Proc near
     push ds
     pushad
 ;
+    int 3
     mov eax,flat_sel
     mov ds,eax
 ;
-    mov ecx,system_mem_start SHR 21
+    mov ecx,fork_mem_size SHR 21
 
 lsfuLoop64:
     mov eax,ds:[esi]
@@ -4490,6 +4494,20 @@ lsfuSave64:
     add esi,8
     add edi,8
     loop lsfuLoop64
+;
+    mov eax,ds:[esi]
+    mov ebx,ds:[esi+4]
+    add esi,8
+;
+    mov ds:[edi],eax
+    mov ds:[edi+4],ebx
+    add edi,8
+;
+    mov eax,ds:[esi]
+    mov ebx,ds:[esi+4]
+;
+    mov ds:[edi],eax
+    mov ds:[edi+4],ebx
 ;
     popad
     pop ds

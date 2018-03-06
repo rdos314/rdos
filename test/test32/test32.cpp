@@ -38,10 +38,18 @@ void main()
     TSection section;
 
     section.Enter();
-    section.Leave();
-
 
     id = RdosFork();
+
+    if (id == 0)
+    {
+        section.Enter();
+    }
+    else
+    {
+        section.Leave();
+    }
+
 
 //    TestFunc();
 
