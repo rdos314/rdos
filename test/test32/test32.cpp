@@ -12,6 +12,8 @@
 #include <math.h>
 #include "bignum.h"
 
+#include "section.h"
+
 #include "testlib.h"
 
 #define FALSE 0
@@ -32,6 +34,12 @@ void main()
     int linear;
     int handle;
     int id;
+
+    TSection section;
+
+    section.Enter();
+    section.Leave();
+
 
     id = RdosFork();
 
