@@ -5208,18 +5208,6 @@ wep_name DB 'WEP', 0
 
 unload_dll    Proc far
     mov es,bx
-    mov dx,es:mod_debug_id
-    or dx,dx
-    jz udNotifyDone
-;
-    push es
-    mov ax,es
-    mov ds,ax
-    call FreeDllEvent
-    call SendEvent
-    pop es
-
-udNotifyDone:
     push es
     call InitUserStack
 ;
@@ -5260,6 +5248,19 @@ unload_dll    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_dll    Proc far
+    mov es,bx
+    mov dx,es:mod_debug_id
+    or dx,dx
+    jz udNotifyDone
+;
+    push es
+    mov ax,es
+    mov ds,ax
+    call FreeDllEvent
+    call SendEvent
+    pop es
+
+udNotifyDone:
     mov ax,system_data_sel
     mov ds,ax
     mov es,bx
