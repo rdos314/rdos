@@ -557,6 +557,7 @@ AddProcessModule    Proc near
     mov ds:pf_module_count,cx
 ;
     mov ds:[eax].pf_module_arr,bx
+    mov ds:[eax].pf_module_usage_arr,1
     
 apfmLeave:
     LeaveSection ds:pf_section
@@ -630,6 +631,112 @@ rpfmDone:
     pop ds
     ret
 RemoveProcessModule    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IncModuleUsage
+;
+;           DESCRIPTION:    Increase module usage
+;
+;           PARAMETERS:     BX      Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IncModuleUsage    Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+;
+    GetThread
+    mov es,ax
+    mov ds,es:p_proc_sel
+    EnterSection ds:pf_section
+;
+    mov ax,bx
+    movzx ecx,ds:pf_module_count
+    xor ebx,ebx
+    or ecx,ecx
+    jz imuLeave
+
+imuLoop:
+    cmp ax,ds:[ebx].pf_module_arr
+    je imuFound
+;
+    add bx,2
+    loop imuLoop
+;
+    jmp imuLeave
+
+imuFound:
+    inc ds:[ebx].pf_module_usage_arr
+    
+imuLeave:
+    LeaveSection ds:pf_section
+;
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+IncModuleUsage    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DecModuleUsage
+;
+;           DESCRIPTION:    Decrease module usage
+;
+;           PARAMETERS:     BX      Module ID
+;
+;           RETURNS:        ECX     Usage count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DecModuleUsage    Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+;
+    GetThread
+    mov es,ax
+    mov ds,es:p_proc_sel
+    EnterSection ds:pf_section
+;
+    mov ax,bx
+    movzx ecx,ds:pf_module_count
+    xor ebx,ebx
+    or ecx,ecx
+    jz dmuLeave
+
+dmuLoop:
+    cmp ax,ds:[ebx].pf_module_arr
+    je dmuFound
+;
+    add bx,2
+    loop dmuLoop
+;
+    xor ecx,ecx
+    jmp dmuLeave
+
+dmuFound:
+    dec ds:[ebx].pf_module_usage_arr
+    movzx ecx,ds:[ebx].pf_module_usage_arr
+    
+dmuLeave:
+    LeaveSection ds:pf_section
+;
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+DecModuleUsage    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2249,10 +2356,10 @@ do_unload       Proc near
     sub ecx,1
     jz duModulesOk
 ;
-    mov esi,OFFSET pf_module_arr+2
+    mov esi,2
 
 duModulesLoop:
-    mov bx,ds:[esi]
+    mov bx,ds:[esi].pf_module_arr
 ;
     push ecx
     call GetModuleReferences
@@ -2260,6 +2367,7 @@ duModulesLoop:
     pop ecx
     jne duModulesNext
 ;
+    mov ds:[esi].pf_module_usage_arr,1
     FreeDll
 
 duModulesNext:
@@ -2709,7 +2817,6 @@ load_dll        Proc  near
     call AddProcessModule
 ;
     InitSection es:mod_section
-    mov es:mod_usage,1
     mov es:mod_id,bx
 ;
     push ebx
@@ -2721,13 +2828,7 @@ load_dll        Proc  near
 
 ldllOk:
     mov [ebp].load_ebx,ebx
-;
-    ModuleIdToSel
-    jc ldllFail
-;
-    mov es,ebx
-    inc es:mod_usage
-    mov bx,es:mod_id
+    call IncModuleUsage
     clc
     jmp ldllDone
 
@@ -3003,14 +3104,16 @@ unload_dll      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_dll_do  Proc near
+    push ecx
+    call DecModuleUsage
+    or ecx,ecx
+    pop ecx
+    clc
+    jnz free_dll_done
+;
     movzx ebx,bx
     ModuleIdToSel
     jc free_dll_done
-;
-    mov ds,ebx
-    sub ds:mod_usage,1
-    clc
-    jnz free_dll_done
 ;
     mov ax,SEG data
     mov ds,eax

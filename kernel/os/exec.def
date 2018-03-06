@@ -209,6 +209,7 @@ pf_thread_arr        DW MAX_PROCESS_THREADS DUP(?)
 
 pf_module_count      DW ?
 pf_module_arr        DW MAX_PROCESS_MODULES DUP(?)
+pf_module_usage_arr  DW MAX_PROCESS_MODULES DUP(?)
 
 pf_name              DB ?
 
@@ -382,8 +383,6 @@ mod_debug_id            DW ?
 
 mod_loader              DW ?
 mod_c_file_handle       DW ?
-
-mod_usage               DW ?
 
 mod_section             section_typ <>
 mod_key                 DB ?
