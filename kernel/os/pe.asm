@@ -2125,7 +2125,7 @@ free_import_dlls_loop:
 ;
     GetThread
     mov ds,ax
-    movzx ebx,ds:p_prog_id
+    movzx ebx,ds:p_proc_id
     FindModuleByName
     jc free_import_one_done
 ;

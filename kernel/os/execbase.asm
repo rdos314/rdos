@@ -2579,7 +2579,7 @@ load_dll        Proc  near
 ;
     GetThread
     mov ds,ax
-    movzx ebx,ds:p_prog_id
+    movzx ebx,ds:p_proc_id
     FindModuleByName
     jnc ldllOk
 ;
@@ -4301,7 +4301,7 @@ find_module_by_address Endp
 ;
 ;           DESCRIPTION:    Find module by name
 ;
-;           PARAMETERS:     BX          Program ID
+;           PARAMETERS:     BX          Process ID
 ;                           FS:ESI      App / DLL NAME
 ;
 ;           RETURNS:        AX          Entry #
@@ -4330,14 +4330,14 @@ fmbnRefLoop:
 
 fmbnRefOk:
     movzx ebx,bx
-    GetProgramSel
+    ProcessIdToSel
     jc fmbnDone
 ;
-    mov ds,eax
-    EnterSection ds:pr_section
+    mov ds,ebx
+    EnterSection ds:pf_section
 ;
-    movzx ecx,ds:pr_module_count
-    mov edi,OFFSET pr_module_arr
+    movzx ecx,ds:pf_module_count
+    mov edi,OFFSET pf_module_arr
 ;
     or ecx,ecx
     jz fmbnFail
@@ -4373,15 +4373,15 @@ fmbnNext:
     loop fmbnLoop
 
 fmbnFail:
-    LeaveSection ds:pr_section
+    LeaveSection ds:pf_section
     stc
     jmp fmbnDone
 
 fmbnOk:
-    LeaveSection ds:pr_section
+    LeaveSection ds:pf_section
 ;
     mov eax,edi
-    sub eax,OFFSET pr_module_arr
+    sub eax,OFFSET pf_module_arr
     shr eax,1
     mov bx,es:mod_id
     clc
@@ -4531,7 +4531,7 @@ get_dll_handle  Proc near
 ;
     GetThread
     mov es,eax
-    movzx ebx,es:p_prog_id
+    movzx ebx,es:p_proc_id
     FindModuleByName
     jc gdhDone
 ;

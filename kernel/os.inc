@@ -2116,7 +2116,7 @@ FindModuleByAddress    MACRO
     OsGate find_module_by_address_nr
                     ENDM
 
-; IN  BX        Program ID
+; IN  BX        Process ID
 ; IN  FS:ESI    Module name
 ; OUT AX        Entry #
 ; OUT BX        Module ID
