@@ -4226,7 +4226,7 @@ get_module_by_index Endp
 ;
 ;           DESCRIPTION:    Search for a DLL or app module
 ;
-;           PARAMETERS:     BX          Program ID
+;           PARAMETERS:     BX          Process ID
 ;                           EDX         Virtual adress
 ;
 ;           RETURNS:        AX          Entry #
@@ -4243,14 +4243,14 @@ find_module_by_address Proc far
     push esi
 ;
     movzx ebx,bx
-    GetProgramSel
+    ProcessIdToSel
     jc fmbaDone
 ;
-    mov ds,eax
-    EnterSection ds:pr_section
+    mov ds,ebx
+    EnterSection ds:pf_section
 ;
-    movzx ecx,ds:pr_module_count
-    mov esi,OFFSET pr_module_arr
+    movzx ecx,ds:pf_module_count
+    mov esi,OFFSET pf_module_arr
 ;
     or ecx,ecx
     jz fmbaFail
@@ -4273,15 +4273,15 @@ fmbaNext:
     loop fmbaLoop
 
 fmbaFail:
-    LeaveSection ds:pr_section
+    LeaveSection ds:pf_section
     stc
     jmp fmbaDone
 
 fmbaOk:
-    LeaveSection ds:pr_section
+    LeaveSection ds:pf_section
 ;
     mov eax,esi
-    sub eax,OFFSET pr_module_arr
+    sub eax,OFFSET pf_module_arr
     shr eax,1
     mov bx,es:mod_id
     clc

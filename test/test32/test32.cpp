@@ -38,9 +38,11 @@ void main()
     id = RdosFork();
 
     if (id == 0)
+    {
+        handle = RdosLoadDll("testlib.dll");
         exit(0x1234);
+    }
 
-//    TestFunc();
 
 #if defined(CREATE_THREAD) || defined(LOAD_DLL)
 

@@ -2108,7 +2108,7 @@ GetModuleByIndex    MACRO
     OsGate get_module_by_index_nr
                     ENDM
 
-; IN  BX        Program ID
+; IN  BX        Process ID
 ; IN  EDX       Address
 ; OUT AX        Entry #
 ; OUT BX        Module ID

@@ -9207,7 +9207,6 @@ fork_process  PROC far
     mov bx,fs:p_prog_id
     call create_process_sel
     call add_process_thread
-    int 3
     call copy_process_modules
     call setup_fork
 ;
