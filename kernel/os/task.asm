@@ -7582,6 +7582,7 @@ create_process_sel Proc near
     mov es:pf_iopl,0
     mov es:pf_cli_thread,0
     mov es:pf_thread_count,0
+    mov es:pf_module_count,0
     mov es:pf_c_handle_sel,0
     mov es:pf_cur_dir_sel,0
     mov es:pf_program_id,bx

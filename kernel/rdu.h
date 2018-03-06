@@ -848,6 +848,7 @@
 #define usergate_get_process_info 0x0000029A
 #define usergate_get_program_processes 0x0000029B
 #define usergate_get_process_threads 0x0000029C
+#define usergate_get_process_modules 0x0000029D
 
 
 
@@ -1702,6 +1703,7 @@
 #define CallGate_get_process_info 0x55 0x67 0x9a 154 2 0 0 3 0 0x5d
 #define CallGate_get_program_processes 0x55 0x67 0x9a 155 2 0 0 3 0 0x5d
 #define CallGate_get_process_threads 0x55 0x67 0x9a 156 2 0 0 3 0 0x5d
+#define CallGate_get_process_modules 0x55 0x67 0x9a 157 2 0 0 3 0 0x5d
 
 #else
 
@@ -2554,5 +2556,6 @@
 #define CallGate_get_process_info 0x3e 0x67 0x9a 154 2 0 0 3 0
 #define CallGate_get_program_processes 0x3e 0x67 0x9a 155 2 0 0 3 0
 #define CallGate_get_process_threads 0x3e 0x67 0x9a 156 2 0 0 3 0
+#define CallGate_get_process_modules 0x3e 0x67 0x9a 157 2 0 0 3 0
 
 #endif

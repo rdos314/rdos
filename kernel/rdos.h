@@ -519,6 +519,7 @@ int RDOSAPI RdosGetProgramCount();
 int RDOSAPI RdosGetProgramInfo(int Index, int *ID, char *NameBuf, int NameSize);
 int RDOSAPI RdosGetProgramModules(int Index, unsigned short int *IdArr, int MaxModules);
 int RDOSAPI RdosGetProgramProcesses(int Index, unsigned short int *IdArr, int MaxProcesses);
+int RDOSAPI RdosGetProcessModules(int Index, unsigned short int *IdArr, int MaxModules);
 
 int RDOSAPI RdosGetImageHeader(int Adapter, int Entry, TRdosObjectHeader *Header);
 int RDOSAPI RdosGetImageData(int Adapter, int Entry, void *Buf);

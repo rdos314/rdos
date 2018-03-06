@@ -1722,6 +1722,14 @@
     "Ok: " \
     parm [ebx] [edi] [ecx] \
     value [ecx];
+
+#pragma aux RdosGetProcessModules = \
+    CallGate_get_process_modules  \
+    "jnc Ok" \
+    "xor ecx,ecx" \
+    "Ok: " \
+    parm [ebx] [edi] [ecx] \
+    value [ecx];
     
 #pragma aux RdosGetProgramCount = \
     CallGate_get_program_count  \

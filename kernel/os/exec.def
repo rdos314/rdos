@@ -132,6 +132,7 @@ load_param_struc   ENDS
 MAX_PROGRAM_MODULES   = 256
 MAX_PROGRAM_PROCESSES = 256
 MAX_PROCESS_THREADS   = 256
+MAX_PROCESS_MODULES   = 256
 
 program_struc    STRUC
 
@@ -205,6 +206,9 @@ pf_section           section_typ <>
 
 pf_thread_count      DW ?
 pf_thread_arr        DW MAX_PROCESS_THREADS DUP(?)
+
+pf_module_count      DW ?
+pf_module_arr        DW MAX_PROCESS_MODULES DUP(?)
 
 pf_name              DB ?
 

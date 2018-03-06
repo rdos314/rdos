@@ -1185,6 +1185,14 @@ GetProcessThreads       MACRO
         UserGate get_process_threads_nr
                 ENDM
 
+; IN   BX           Process ID
+; IN   ES:(E)DI     Module ID buffer (2 bytes per entry)
+; IN   (E)CX        Max modules
+; OUT  ECX          Module count
+GetProcessModules       MACRO
+        UserGate get_process_modules_nr
+                ENDM
+
 ;;;;;;;;;;;; C Handles ;;;;;;;;;;;;;;;;
 
 ; IN  ES:(E)DI      Name

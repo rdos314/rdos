@@ -526,6 +526,114 @@ RemoveProgramModule    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddProcessModule
+;
+;           DESCRIPTION:    Add module to process
+;
+;           PARAMETERS:     BX      Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddProcessModule    Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+;
+    GetThread
+    mov es,ax
+;
+    mov ds,es:p_proc_sel
+    EnterSection ds:pf_section
+;
+    movzx ecx,ds:pf_module_count
+    cmp ecx,MAX_PROCESS_MODULES
+    jae apfmLeave
+;
+    mov eax,ecx
+    shl eax,1
+    inc ecx
+    mov ds:pf_module_count,cx
+;
+    mov ds:[eax].pf_module_arr,bx
+    
+apfmLeave:
+    LeaveSection ds:pf_section
+;
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+AddProcessModule    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           RemoveProcessModule
+;
+;           DESCRIPTION:    Remove module from process
+;
+;           PARAMETERS:     BX      Module ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveProcessModule    Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+;
+    GetThread
+    mov es,ax
+    mov ds,es:p_proc_sel
+    EnterSection ds:pf_section
+;
+    mov ax,bx
+    movzx ecx,ds:pf_module_count
+    mov ebx,OFFSET pf_module_arr
+    or ecx,ecx
+    jz rpfmLeave
+
+rpfmLoop:
+    cmp ax,ds:[ebx]
+    je rpfmFound
+;
+    add bx,2
+    loop rpfmLoop
+;
+    jmp rpfmLeave
+
+rpfmFound:
+    dec ds:pf_module_count
+;
+    sub ecx,1
+    jz rpfmLeave
+
+rpfmMove:
+    mov ax,ds:[ebx+2]
+    mov ds:[ebx],ax
+    add ebx,2
+    loop rpfmMove
+
+rpfmLeave:
+    LeaveSection ds:pf_section
+            
+rpfmDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+RemoveProcessModule    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenModuleFile
 ;
 ;           DESCRIPTION:    Open module file
@@ -1193,6 +1301,7 @@ spawn_startup:
 ;
     mov ebx,eax
     call AddProgramModule
+    call AddProcessModule
 ;
     InitSection es:mod_section
     mov es:mod_id,bx
@@ -1597,6 +1706,7 @@ lpThreadNameDone:
 ;
     mov ebx,eax
     call AddProgramModule
+    call AddProcessModule
 ;
     InitSection es:mod_section
     mov es:mod_id,bx
@@ -2006,6 +2116,7 @@ ukDone:
     mov ds,ebx
     movzx ebx,ds:mod_id
     call RemoveProgramModule
+    call RemoveProcessModule
 ;
     mov ebx,ds
     movzx ebx,bx
@@ -2500,6 +2611,7 @@ load_dll        Proc  near
 ;
     mov ebx,eax
     call AddProgramModule
+    call AddProcessModule
 ;
     InitSection es:mod_section
     mov es:mod_usage,1
@@ -2750,6 +2862,7 @@ unload_dll Proc far
     pushad
 ;
     call RemoveProgramModule
+    call RemoveProcessModule
 ;
     ModuleIdToSel
     jc unload_dll_done
@@ -4672,6 +4785,79 @@ get_process_threads32   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetProcessModules
+;
+;           DESCRIPTION:    Get process modules
+;
+;           PARAMETERS:     BX          Process ID
+;                           ES:(E)DI    Module ID buffer (2 bytes per entry)
+;                           (E)CX       Max module ids
+;
+;           RETURNS:        ECX         Actual modules
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_process_modules_name DB 'Get Process Modules',0
+    
+get_process_modules    Proc near
+    push ds
+    push ebx
+    push edx
+    push esi
+    push edi
+;
+    movzx ebx,bx
+    ProcessIdToSel
+    jc gpfmDone
+;
+    mov ds,ebx
+    EnterSection ds:pf_section
+;
+    movzx edx,ds:pf_module_count
+    mov esi,OFFSET pf_module_arr
+
+gpfmCopy:
+    or edx,edx
+    jz gpfmLeave
+;
+    dec edx
+    lodsw
+    stosw
+    loop gpfmCopy
+
+gpfmLeave:
+    movzx ecx,ds:pf_module_count
+    LeaveSection ds:pf_section
+    clc
+
+gpfmDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop ds
+    ret
+get_process_modules    Endp
+
+get_process_modules16   Proc far
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call get_process_modules
+;
+    pop edi
+    ret
+get_process_modules16   Endp
+
+get_process_modules32   Proc far
+    call get_process_modules
+    ret
+get_process_modules32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AppThreadStarted
 ;
 ;           DESCRIPTION:    Startup of app thread
@@ -5268,6 +5454,13 @@ InitExec_    Proc near
     mov edi,OFFSET get_process_threads_name
     mov dx,virt_es_in
     mov ax,get_process_threads_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET get_process_modules16
+    mov esi,OFFSET get_process_modules32
+    mov edi,OFFSET get_process_modules_name
+    mov dx,virt_es_in
+    mov ax,get_process_modules_nr
     RegisterUserGate
     ret
 InitExec_    Endp

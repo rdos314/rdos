@@ -848,5 +848,6 @@ get_process_count_nr             = 665
 get_process_info_nr              = 666
 get_program_processes_nr         = 667
 get_process_threads_nr           = 668
+get_process_modules_nr           = 669
 
-usergate_entries                 = 670
+usergate_entries                 = 700

@@ -486,10 +486,18 @@ void TStateCommand::WriteProgramModules(int pid)
 void TStateCommand::WriteOneProcess(int pid, const char *Name)
 {
     int i;
-    int ThreadCount = RdosGetProcessThreads(pid, TIdBuf, 256);
+    int ThreadCount;
+    int ModuleCount;
 
     Write(Name);
     Write("\r\n");
+
+    ModuleCount = RdosGetProcessModules(pid, TIdBuf, 256);
+
+    for (i = 0; i < ModuleCount; i++)
+        WriteModuleById(TIdBuf[i]);
+
+    ThreadCount = RdosGetProcessThreads(pid, TIdBuf, 256);
 
     for (i = 0; i < ThreadCount; i++)
         WriteThreadById(TIdBuf[i]);
