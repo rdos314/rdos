@@ -3057,8 +3057,12 @@ unload_dll Proc far
     push es
     pushad
 ;
-    call RemoveProgramModule
     call RemoveProcessModule
+    call GetModuleReferences
+    or ecx,ecx
+    jnz unload_dll_done
+;
+    call RemoveProgramModule
 ;
     ModuleIdToSel
     jc unload_dll_done

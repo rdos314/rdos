@@ -7690,11 +7690,19 @@ copy_process_modules Proc near
 ;
     mov ds,fs:p_proc_sel
     mov es,es:p_proc_sel
-    mov esi,OFFSET pf_module_arr
-    mov edi,esi
+    xor ebx,ebx
     movzx ecx,ds:pf_module_count
     mov es:pf_module_count,cx
-    rep movs word ptr es:[edi],ds:[esi]
+
+cpmLoop:
+    mov ax,ds:[ebx].pf_module_arr
+    mov es:[ebx].pf_module_arr,ax
+;
+    mov ax,ds:[ebx].pf_module_usage_arr
+    mov es:[ebx].pf_module_usage_arr,ax
+;
+    add ebx,2
+    loop cpmLoop
 ;
     popad
     pop es

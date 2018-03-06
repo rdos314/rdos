@@ -35,11 +35,13 @@ void main()
     int handle;
     int id;
 
+    handle = RdosLoadDll("testlib.dll");
+
     id = RdosFork();
 
     if (id == 0)
     {
-        handle = RdosLoadDll("testlib.dll");
+        RdosFreeDll(handle);
         exit(0x1234);
     }
 
