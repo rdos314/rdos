@@ -7674,6 +7674,37 @@ add_process_thread   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           copy_process_modules
+;
+;       DESCRIPTION:    Copy modules to new process
+;
+;       PARAMETERS:     ES          New thread
+;                       FS          Present thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+copy_process_modules Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ds,fs:p_proc_sel
+    mov es,es:p_proc_sel
+    mov esi,OFFSET pf_module_arr
+    mov edi,esi
+    movzx ecx,ds:pf_module_count
+    mov es:pf_module_count,cx
+    rep movs word ptr es:[edi],ds:[esi]
+;
+    popad
+    pop es
+    pop ds
+    ret
+copy_process_modules Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           setup_fork
 ;
 ;       DESCRIPTION:    Setup fork environment
@@ -9176,6 +9207,8 @@ fork_process  PROC far
     mov bx,fs:p_prog_id
     call create_process_sel
     call add_process_thread
+    int 3
+    call copy_process_modules
     call setup_fork
 ;
     call create_c_handle
