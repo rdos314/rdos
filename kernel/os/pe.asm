@@ -75,13 +75,13 @@ NotifyKernelDebug   Proc far
     push di
 ;    
     movzx dx,es:p_fault_vector
-    mov ax,es:p_prog_sel
+    mov ax,es:p_proc_sel
     verr ax
     jnz nkeDone
 ;    
     push ebx
     mov ds,eax
-    movzx ebx,ds:pr_module_arr
+    movzx ebx,ds:pf_module_arr
     ModuleIdToSel
     mov ax,bx
     pop ebx
@@ -176,8 +176,8 @@ SendEvent Proc near
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_prog_sel
-    movzx ebx,ds:pr_module_arr
+    mov ds,ds:p_proc_sel
+    movzx ebx,ds:pf_module_arr
     ModuleIdToSel
     mov ds,ebx
     RequestSpinlock ds:lib_spinlock
@@ -3758,9 +3758,9 @@ start_thread    PROC far
 ;    
     GetThread
     mov ds,ax
-    mov ds,ds:p_prog_sel
+    mov ds,ds:p_proc_sel
 ;
-    movzx ebx,ds:pr_module_arr
+    movzx ebx,ds:pf_module_arr
     ModuleIdToSel
     mov ds,ebx
 ;
@@ -3824,9 +3824,9 @@ start_thread    Endp
 free_thread_user     Proc far
     GetThread
     mov ds,ax
-    mov ds,ds:p_prog_sel
+    mov ds,ds:p_proc_sel
 ;
-    movzx ebx,ds:pr_module_arr
+    movzx ebx,ds:pf_module_arr
     ModuleIdToSel
     mov ds,ebx
 ;
@@ -3879,8 +3879,8 @@ free_thread_user     Endp
 free_thread_kernel     Proc far
     GetThread
     mov ds,ax
-    mov ds,ds:p_prog_sel    
-    movzx ebx,ds:pr_module_arr
+    mov ds,ds:p_proc_sel    
+    movzx ebx,ds:pf_module_arr
     ModuleIdToSel
     mov ds,ebx
 ;
@@ -4099,8 +4099,8 @@ fork_child:
     mov fs:pvThreadHandle,eax
     mov fs:pvProcessHandle,eax
 ;
-    mov ds,ds:p_prog_sel        
-    movzx ebx,ds:pr_module_arr
+    mov ds,ds:p_proc_sel        
+    movzx ebx,ds:pf_module_arr
     mov fs:pvModuleHandle,ebx
 ;
     ModuleIdToSel
@@ -4155,8 +4155,8 @@ detach_fork_proc      Proc far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_prog_sel    
-    movzx ebx,ds:pr_module_arr
+    mov ds,ds:p_proc_sel    
+    movzx ebx,ds:pf_module_arr
     ModuleIdToSel
     mov ds,ebx
 ;
@@ -4624,8 +4624,8 @@ find_exc_next:
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_prog_sel
-    movzx ebx,ds:pr_module_arr
+    mov ds,ds:p_proc_sel
+    movzx ebx,ds:pf_module_arr
     ModuleIdToSel
     mov ds,ebx
 ;
