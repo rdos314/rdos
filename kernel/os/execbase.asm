@@ -634,6 +634,83 @@ RemoveProcessModule    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetModuleReferences
+;
+;           DESCRIPTION:    Get module reference count
+;
+;           PARAMETERS:     BX      Module ID
+;
+;           RETURNS:        ECX     References
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetModuleReferences    Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    mov bp,bx
+    xor edx,edx
+;
+    GetThread
+    mov es,ax
+    mov ds,es:p_prog_sel
+    EnterSection ds:pr_section
+    movzx ecx,ds:pr_process_count
+    mov esi,OFFSET pr_process_arr
+
+gmrProcLoop:
+    push ds
+    push ecx
+;
+    movzx ebx,word ptr ds:[esi]
+    ProcessIdToSel
+    jc gmrProcNext
+;
+    mov ds,ebx
+    EnterSection ds:pf_section
+    movzx ecx,ds:pf_module_count
+    mov ebx,OFFSET pf_module_arr
+
+gmrModuleLoop:
+    cmp bp,ds:[ebx]
+    jne gmrModuleNext
+;
+    inc edx
+
+gmrModuleNext:
+    add ebx,2
+    loop gmrModuleLoop
+;
+    LeaveSection ds:pf_section
+
+gmrProcNext:
+    pop ecx
+    pop ds
+;
+    add esi,2
+    loop gmrProcLoop
+;
+    LeaveSection ds:pr_section
+    mov ecx,edx
+;
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+GetModuleReferences  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenModuleFile
 ;
 ;           DESCRIPTION:    Open module file
@@ -2161,17 +2238,35 @@ ukFocusOk:
 do_unload       Proc near
     GetThread
     mov es,ax
-;
-    movzx ebx,es:p_prog_id
-    GetProgramSel
-    jc ukDone
-;
-    mov ds,eax
+    mov ds,es:p_prog_sel
     movzx ecx,ds:pr_process_count
     cmp ecx,1
     jbe do_final_unload
 ;
     int 3
+    mov ds,es:p_proc_sel
+    movzx ecx,ds:pf_module_count
+    sub ecx,1
+    jz duModulesOk
+;
+    mov esi,OFFSET pf_module_arr+2
+
+duModulesLoop:
+    mov bx,ds:[esi]
+;
+    push ecx
+    call GetModuleReferences
+    cmp ecx,1
+    pop ecx
+    jne duModulesNext
+;
+    FreeDll
+
+duModulesNext:
+    add esi,2
+    loop duModulesLoop    
+
+duModulesOk:
     mov es,es:p_loader
     call fword ptr es:loader_detach_fork_proc
     TerminateThread
