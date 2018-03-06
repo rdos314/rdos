@@ -4468,7 +4468,6 @@ local_start_fork64  Proc near
     push ds
     pushad
 ;
-    int 3
     mov eax,flat_sel
     mov ds,eax
 ;

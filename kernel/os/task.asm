@@ -7587,6 +7587,9 @@ create_process_sel Proc near
     mov es:pf_program_id,bx
     InitSection es:pf_section
 ;
+    mov es:pf_mem_blocks,0
+    InitSection es:pf_mem_section
+;
     mov fs:p_prog_id,bx
     movzx ebx,bx
     GetProgramSel
