@@ -1987,6 +1987,8 @@ local_get_thread_page_dir32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_create_fork32  Proc near
+    push ecx
+;
     push eax
     mov eax,1000h
     AllocateBigLinear
@@ -2002,6 +2004,8 @@ local_create_fork32  Proc near
     mov eax,3000h
     AllocateBigLinear
     pop eax
+;
+    pop ecx
     ret
 local_create_fork32  Endp
 
@@ -2067,6 +2071,7 @@ local_cow_dir32  Proc near
     push fs
     pushad
 ;
+    int 3
     mov ax,flat_sel
     mov fs,eax
 ;
@@ -2191,70 +2196,129 @@ local_cow_page32  Proc near
     push fs
     pushad
 ;
+    int 3
     mov ax,flat_sel
     mov fs,eax
-;
-    mov ebx,edx
-    shr ebx,20
-    and bl,0FCh
-;
     GetThread
     mov es,ax
     mov ds,es:p_proc_sel
-    mov eax,ds:pf_page_dir
-    mov eax,fs:[eax+ebx]
-    and ax,0F000h
-;
-    push edx
-    mov ebx,edx
-    shr ebx,10
-    and ebx,0FFCh
-    mov edx,ds:pf_page_table
-    mov al,3
-    SetPageEntry
-    mov esi,fs:[edx+ebx]
-    pop edx
+    mov ebp,ds:pf_page_dir
 ;
     mov ds,es:p_prog_sel
+    EnterSection ds:pr_cow_section
+;
     movzx ecx,ds:pr_page_table_count
-    xor ebx,ebx
-    xor ebp,ebp
-    and si,0F000h
+    xor esi,esi
+    mov ds:pr_temp_ind,si
 
-lcowpFind32:
-    mov eax,ds:[ebx].pr_page_dir_arr
-    push edx
-    shr edx,20
-    and dl,0FCh
-    mov eax,fs:[eax+edx]
-    pop edx
+lcowpInitLoop32:
+    mov ds:[esi].pr_temp_arr,0
+    mov edi,ds:[esi].pr_page_dir_arr
+    cmp edi,ebp
+    jne lcowpNotMine32
+;
+    mov ds:pr_temp_ind,si
+
+lcowpNotMine32:
+    mov eax,edx
+    shr eax,20
+    and al,0FCh
+    mov eax,fs:[edi+eax]
     test al,1
-    jz lcowpNext32
+    jz lcowpInitNext32
 ;
     push edx
     mov edi,edx
     shr edi,10
     and edi,0FFCh
-    mov edx,ds:[ebx].pr_page_table_arr
+    mov edx,ds:[esi].pr_page_table_arr
+    and ax,0F000h
     mov al,3
     SetPageEntry
-    mov eax,fs:[edx+edi]
+    add edi,edx
     pop edx
 ;
+    mov ds:[esi].pr_temp_arr,edi
+
+lcowpInitNext32:
+    add esi,4
+    loop lcowpInitLoop32
+;
+    movzx esi,ds:pr_temp_ind
+    mov esi,ds:[esi].pr_temp_arr
+    mov esi,fs:[esi]
+    and si,0F000h
+    xor ebx,ebx
+    xor ebp,ebp
+    movzx ecx,ds:pr_page_table_count
+
+lcowpFindLoop32:
+    mov edx,ds:[ebx].pr_temp_arr
+    or edx,edx
+    jz lcowpFindNext32
+;
+    mov eax,fs:[edx]
     test al,1
-    jz lcowpNext32
+    jz lcowpFindNext32
 ;
     and ax,0F000h
     cmp eax,esi
-    jnz lcowpNext32
+    jne lcowpFindNext32
 ;
     inc ebp
 
-lcowpNext32:
+lcowpFindNext32:
     add ebx,4
-    loop lcowpFind32
+    loop lcowpFindLoop32
+;
+    cmp ebp,1
+    je lcowpUnmark32
+;
+    ja lcowpCopy32
+;
+    int 3
 
-lcowpDone32:    
+lcowpCopy32:
+    movzx ebx,ds:pr_temp_ind
+    mov ebx,ds:[ebx].pr_temp_arr
+    mov eax,fs:[ebx]
+    and ax,0F000h
+    or al,67h
+;
+    mov ds,es:p_proc_sel
+    mov edx,ds:pf_page_table
+    add edx,1000h
+    SetPageEntry
+    mov esi,edx
+;
+    add edx,1000h
+    AllocatePhysical32
+    or al,67h
+    SetPageEntry
+    mov edi,edx
+;
+    push es
+    mov ecx,flat_sel
+    mov es,ecx
+    mov ecx,1024
+    rep movs dword ptr es:[edi],es:[esi]
+    pop es
+;
+    mov fs:[ebx],eax
+    jmp lcowpDone32
+
+lcowpUnmark32:
+    movzx edx,ds:pr_temp_ind
+    mov edx,ds:[edx].pr_temp_arr
+    mov eax,fs:[edx]
+    and ax,NOT 400h
+    or al,2
+    mov fs:[edx],eax
+
+lcowpDone32:
+    mov ds,es:p_prog_sel
+    LeaveSection ds:pr_cow_section
+;
     popad
     pop fs
     pop es

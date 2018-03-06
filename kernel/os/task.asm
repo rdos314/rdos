@@ -8949,6 +8949,9 @@ create_process  ENDP
 
 init_fork_regs    PROC near
     mov dword ptr ds:p_rip,OFFSET fork_start
+    pushfd
+    pop edx
+    mov dword ptr ds:p_rflags,edx
 ;
     xor edx,edx
     mov dword ptr ds:p_rcx,edx
