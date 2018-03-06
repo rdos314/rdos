@@ -4173,7 +4173,7 @@ get_program_processes32   Endp
 ;
 ;           DESCRIPTION:    Get module for a DLL or app module by index
 ;
-;           PARAMETERS:     BX          Program ID
+;           PARAMETERS:     BX          Process ID
 ;                           AX          Entry #
 ;
 ;           RETURNS:        BX          Module ID
@@ -4190,25 +4190,25 @@ get_module_by_index Proc far
 ;
     mov dx,ax
     movzx ebx,bx
-    GetProgramSel
+    ProcessIdToSel
     jc gmbiDone
 ;
-    mov ds,eax
-    EnterSection ds:pr_section
+    mov ds,ebx
+    EnterSection ds:pf_section
 ;
-    mov cx,ds:pr_module_count
+    mov cx,ds:pf_module_count
     cmp dx,cx
     jae gmbiFail
 ;
     mov bx,dx
     add bx,bx
-    mov bx,ds:[bx].pr_module_arr
-    LeaveSection ds:pr_section
+    mov bx,ds:[bx].pf_module_arr
+    LeaveSection ds:pf_section
     clc
     jmp gmbiDone
 
 gmbiFail:
-    LeaveSection ds:pr_section
+    LeaveSection ds:pf_section
     stc
 
 gmbiDone:

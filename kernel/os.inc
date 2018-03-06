@@ -2101,7 +2101,7 @@ GetExeStart32     MACRO
     OsGate get_exe_start32_nr
                     ENDM
 
-; IN  BX        Program ID
+; IN  BX        Process ID
 ; IN  AX        Entry #
 ; OUT BX        Module ID
 GetModuleByIndex    MACRO

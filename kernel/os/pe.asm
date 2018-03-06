@@ -3778,7 +3778,7 @@ start_thread_notify:
 ;
     GetThread
     mov ds,ax
-    mov dx,ds:p_prog_id
+    mov dx,ds:p_proc_id
     mov ax,1
 
 start_thread_dlls_loop:
@@ -3839,7 +3839,7 @@ free_thread_user     Proc far
 ftuDebugOk:
     GetThread
     mov ds,ax
-    mov dx,ds:p_prog_id
+    mov dx,ds:p_proc_id
     mov ax,1
 
 ftuDllsLoop:
