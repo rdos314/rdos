@@ -4143,6 +4143,39 @@ fork_proc  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           detach_fork_proc
+;
+;           DESCRIPTION:    Detach forked process
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+detach_fork_proc      Proc far
+    push ds
+    pushad
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel    
+    movzx ebx,ds:pr_module_arr
+    ModuleIdToSel
+    mov ds,ebx
+;
+    mov ax,ds:mod_debug_id
+    or ax,ax
+    jz dfNoDebug
+;
+    call TerminateThreadEvent
+    call SendEvent
+    
+dfNoDebug:
+    popad
+    pop ds
+    ret
+detach_fork_proc      Endp
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           StartWaitForDebugEvent
 ;
 ;           DESCRIPTION:    Start wait for an debug event from process
@@ -5889,6 +5922,7 @@ l34 DD OFFSET add_user_gate,              SEG code
 l35 DD OFFSET stop_debug,                 SEG code
 l36 DD OFFSET attach_debug,               SEG code
 l37 DD OFFSET fork_proc,                  SEG code
+l38 DD OFFSET detach_fork_proc,           SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc

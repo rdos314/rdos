@@ -363,6 +363,8 @@ loader_attach_debug_proc     DD ?,?
 ; OUT  Parent: EAX = child thread selector
 loader_fork_proc     DD ?,?
 
+loader_detach_fork_proc      DD ?,?
+
 loader_interface_struc    ENDS
 
 module_struc    STRUC

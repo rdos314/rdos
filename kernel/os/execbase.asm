@@ -2056,6 +2056,16 @@ do_unload       Proc near
     jc ukDone
 ;
     mov ds,eax
+    movzx ecx,ds:pr_process_count
+    cmp ecx,1
+    jbe do_final_unload
+;
+    int 3
+    mov es,es:p_loader
+    call fword ptr es:loader_detach_fork_proc
+    TerminateThread
+
+do_final_unload:
     EnterSection ds:pr_section
     movzx ebx,ds:pr_module_arr
     LeaveSection ds:pr_section

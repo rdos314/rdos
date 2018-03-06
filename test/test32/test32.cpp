@@ -35,21 +35,10 @@ void main()
     int handle;
     int id;
 
-    TSection section;
-
-    section.Enter();
-
     id = RdosFork();
 
     if (id == 0)
-    {
-        section.Enter();
-    }
-    else
-    {
-        section.Leave();
-    }
-
+        exit(0x1234);
 
 //    TestFunc();
 
