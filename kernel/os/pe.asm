@@ -811,7 +811,6 @@ p1:
     mov ecx,MAX_SECTIONS
     xor eax,eax
     repnz scasd
-;
     stc
     jnz csDone
 ;
@@ -862,7 +861,6 @@ p1n:
     mov ecx,MAX_SECTIONS
     xor eax,eax
     repnz scasd
-;
     stc
     jnz cnsDone
 ;
@@ -1033,6 +1031,7 @@ leave_us_section    Endp
 section_end:        
 
 CreateSections  Proc near
+    push ds
     push es
     push eax
     push ecx
@@ -1074,10 +1073,16 @@ CreateSections  Proc near
     mov gs:ppr_leave_section_proc,edi
 ;
     mov esi,edx
-    mov eax,MAX_SECTIONS * 16  ; 4 bytes for index + 12 bytes for data
-    call allocate_mem
-    mov edi,edx
 ;
+    mov edx,section_linear
+    mov eax,MAX_SECTIONS * 16  ; 4 bytes for index + 12 bytes for data
+    ReserveLocalLinear
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    sub edx,ds:flat_base
+;
+    mov edi,edx
     mov ecx,MAX_SECTIONS  ; only initialize indexes
     xor eax,eax
     rep stosd
@@ -1116,6 +1121,7 @@ CreateSections  Proc near
     pop ecx
     pop eax    
     pop es    
+    pop ds
     ret
 CreateSections     ENDP
     
