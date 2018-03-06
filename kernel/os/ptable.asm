@@ -2071,7 +2071,6 @@ local_cow_dir32  Proc near
     push fs
     pushad
 ;
-    int 3
     mov ax,flat_sel
     mov fs,eax
 ;
@@ -2122,6 +2121,7 @@ lcowdCopy32:
     mov edx,ds:pf_page_table
     mov eax,esi
     or al,3
+    xor ebx,ebx
     SetPageEntry
     mov esi,edx
 ;
@@ -2196,7 +2196,6 @@ local_cow_page32  Proc near
     push fs
     pushad
 ;
-    int 3
     mov ax,flat_sel
     mov fs,eax
     GetThread
@@ -2234,6 +2233,7 @@ lcowpNotMine32:
     mov edx,ds:[esi].pr_page_table_arr
     and ax,0F000h
     mov al,3
+    xor ebx,ebx
     SetPageEntry
     add edi,edx
     pop edx
@@ -2279,11 +2279,12 @@ lcowpFindNext32:
     int 3
 
 lcowpCopy32:
-    movzx ebx,ds:pr_temp_ind
-    mov ebx,ds:[ebx].pr_temp_arr
-    mov eax,fs:[ebx]
+    movzx ebp,ds:pr_temp_ind
+    mov ebp,ds:[ebp].pr_temp_arr
+    mov eax,fs:[ebp]
     and ax,0F000h
     or al,67h
+    xor ebx,ebx
 ;
     mov ds,es:p_proc_sel
     mov edx,ds:pf_page_table
@@ -2304,7 +2305,7 @@ lcowpCopy32:
     rep movs dword ptr es:[edi],es:[esi]
     pop es
 ;
-    mov fs:[ebx],eax
+    mov fs:[ebp],eax
     jmp lcowpDone32
 
 lcowpUnmark32:
