@@ -2350,7 +2350,6 @@ do_unload       Proc near
     cmp ecx,1
     jbe do_final_unload
 ;
-    int 3
     mov ds,es:p_proc_sel
     movzx ecx,ds:pf_module_count
     sub ecx,1

@@ -4154,6 +4154,50 @@ detach_fork_proc      Proc far
     push ds
     pushad
 ;
+    int 3
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+;
+    mov ax,flat_sel
+    mov es,ax
+    EnterSection ds:pf_mem_section     
+
+dfFreeLoop:
+    mov eax,ds:pf_mem_blocks
+    or eax,eax
+    jz dfFreeLeave
+;
+    mov esi,eax
+    mov edi,eax
+;
+    push ds
+    mov ax,system_data_sel
+    mov ds,ax
+    mov edx,es:[edi].mem_base
+    add edx,ds:flat_base
+    pop ds
+;
+    mov ecx,es:[edi].mem_size
+    FreeLinear
+    mov ds:pf_mem_blocks,edi
+    mov eax,es:[edi].mem_prev
+    cmp eax,ds:pf_mem_blocks
+    pushf
+    mov ds:pf_mem_blocks,eax
+    mov esi,es:[edi].mem_next
+    mov es:[eax].mem_next,esi
+    mov es:[esi].mem_prev,eax
+;    
+    mov edx,edi
+    mov ecx,SIZE pe_mem_struc
+    FreeLinear
+    popf
+    jne dfFreeLoop
+
+dfFreeLeave:
+    LeaveSection ds:pf_mem_section     
+;
     GetThread
     mov ds,ax
     mov ds,ds:p_proc_sel    
