@@ -4549,16 +4549,84 @@ local_start_fork64  Endp
 ;
 ;           PARAMETERS:     DS             Program sel
 ;                           ES             Process sel
-;                           FS:EDI         Entry
+;                           FS             Flat sel
+;                           ESI            Offset within dir selector
 ;                           EBP            Process index
+;                           EBX:EAX        Entry data
 ;
 ;           RETURNS:        ECX            References
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetDirRefCount64  Proc near
+    push edx
+    push edi
+    push ebp
+;
+    and ax,0F000h
+;
+    movzx ecx,ds:pr_page_table_count
+    xor ebp,ebp
+    xor edi,edi
+
+gdrLoop64:
+    mov edx,ds:[edi].pr_page_dir_arr
+    cmp ebx,fs:[edx+esi+4]
+    jne gdrNext64
+;
+    mov edx,fs:[edx+esi]
+    and dx,0F000h
+    cmp eax,edx
+    jne gdrNext64
+;
+    inc ebp
+
+gdrNext64:
+    add edi,4
+    loop gdrLoop64
+;
+    mov ecx,ebp
+;
+    pop ebp
+    pop edi
+    pop edx
     ret
 GetDirRefCount64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DetachDirEntry64
+;
+;           DESCRIPTION:    Detach single dir entry
+;
+;           PARAMETERS:     DS             Program sel
+;                           ES             Process sel
+;                           FS             Flat sel
+;                           ESI            Offset within dir selector
+;                           EBP            Process index
+;                           EBX:EAX        Entry data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DetachDirEntry64  Proc near
+    int 3
+    push ecx
+    call GetDirRefCount64
+    cmp ecx,1
+    je ddeFree64
+;
+    ja ddeDone
+;
+    int 3
+
+ddeFree64:
+    FreePhysical
+
+ddeDone:
+    pop ecx
+    ret
+DetachDirEntry64  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4604,31 +4672,32 @@ ldfProcNext:
 
 ldfProcDone:
     mov ecx,fork_mem_size SHR 21
+    xor esi,esi
 
 ldfDirLoop64:
-    mov eax,fs:[edi]
-    mov ebx,fs:[edi+4]
+    mov eax,fs:[esi+edi]
+    mov ebx,fs:[esi+edi+4]
     test al,1
     jz ldfDirNext64
 ;
     EnterSection ds:pr_cow_section
-    call GetDirRefCount64
+    call DetachDirEntry64
     LeaveSection ds:pr_cow_section
 
 ldfDirNext64:
     xor eax,eax
-    mov fs:[edi],eax
-    mov fs:[edi+4],eax
+    mov fs:[esi+edi],eax
+    mov fs:[esi+edi+4],eax
 ;
-    add edi,8
+    add esi,8
     loop ldfDirLoop64
 ;
-    mov fs:[edi],eax
-    mov fs:[edi+4],eax
-    add edi,8
+    mov fs:[esi+edi],eax
+    mov fs:[esi+edi+4],eax
+    add esi,8
 ;
-    mov fs:[edi],eax
-    mov fs:[edi+4],eax
+    mov fs:[esi+edi],eax
+    mov fs:[esi+edi+4],eax
 ;
     popad
     pop gs
