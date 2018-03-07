@@ -4550,6 +4550,7 @@ local_start_fork64  Endp
 ;           PARAMETERS:     DS             Program sel
 ;                           ES             Process sel
 ;                           FS:EDI         Entry
+;                           EBP            Process index
 ;
 ;           RETURNS:        ECX            References
 ;                           
@@ -4584,25 +4585,50 @@ local_detach_fork64  Proc near
     mov es,gs:p_proc_sel
     mov edi,es:pf_page_dir
 ;
+    xor ebp,ebp
+    movzx ecx,ds:pr_page_table_count
+    xor esi,esi
+
+ldfProcLoop:
+    cmp edi,ds:[esi].pr_page_dir_arr
+    jne ldfProcNext
+;
+    mov ebp,esi
+    jmp ldfProcDone
+
+ldfProcNext:
+    add esi,4
+    loop ldfProcLoop
+;
+    int 3
+
+ldfProcDone:
     mov ecx,fork_mem_size SHR 21
 
-ldfLoop64:
+ldfDirLoop64:
     mov eax,fs:[edi]
     mov ebx,fs:[edi+4]
     test al,1
-    jz ldfNext64
+    jz ldfDirNext64
 ;
     EnterSection ds:pr_cow_section
     call GetDirRefCount64
     LeaveSection ds:pr_cow_section
 
-ldfNext64:
+ldfDirNext64:
     xor eax,eax
     mov fs:[edi],eax
     mov fs:[edi+4],eax
 ;
     add edi,8
-    loop ldfLoop64
+    loop ldfDirLoop64
+;
+    mov fs:[edi],eax
+    mov fs:[edi+4],eax
+    add edi,8
+;
+    mov fs:[edi],eax
+    mov fs:[edi+4],eax
 ;
     popad
     pop gs
