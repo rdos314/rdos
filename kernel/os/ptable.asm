@@ -4640,6 +4640,43 @@ SetupDetachTables64  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           DoDetachTables64
+;
+;           DESCRIPTION:    Detach page tables
+;
+;           PARAMETERS:     DS             Program sel
+;                           ES             Process sel
+;                           FS             Flat sel
+;                           EBP            Process index
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoDetachTables64  Proc near
+    pushad
+;
+    mov ecx,512
+    xor esi,esi
+    mov edi,ds:[ebp].pr_page_table_arr
+
+ddtLoop64:
+    mov eax,fs:[esi+edi]
+    mov ebx,fs:[esi+edi+4]
+    test al,1
+    jz ddtNext64
+;
+    int 3
+
+ddtNext64:
+    add esi,8
+    loop ddtLoop64
+;
+    popad
+    ret
+DoDetachTables64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           DetachDirEntry64
 ;
 ;           DESCRIPTION:    Detach single dir entry
@@ -4667,6 +4704,7 @@ DetachDirEntry64  Proc near
 ddeFree64:
     mov ds:pr_temp_ind,bp
     call SetupDetachTables64
+    call DoDetachTables64
     FreePhysical
 
 ddeDone:
