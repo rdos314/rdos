@@ -41,7 +41,6 @@ void main()
 
     if (id == 0)
     {
-        RdosFreeDll(handle);
         exit(0x1234);
     }
 

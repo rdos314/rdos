@@ -4144,13 +4144,46 @@ fork_proc  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           detach_fork_proc
+;           NAME:           detach_user_fork_proc
 ;
-;           DESCRIPTION:    Detach forked process
+;           DESCRIPTION:    Detach forked process, user stage
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-detach_fork_proc      Proc far
+detach_user_fork_proc      Proc far
+    push ds
+    pushad
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel    
+    movzx ebx,ds:pf_module_arr
+    ModuleIdToSel
+    mov ds,ebx
+;
+    mov ax,ds:mod_debug_id
+    or ax,ax
+    jz dufNoDebug
+;
+    call TerminateThreadEvent
+    call SendEvent
+    
+dufNoDebug:
+    popad
+    pop ds
+    ret
+detach_user_fork_proc      Endp
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           detach_kernel_fork_proc
+;
+;           DESCRIPTION:    Detach forked process, kernel stage
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+detach_kernel_fork_proc      Proc far
     push ds
     pushad
 ;
@@ -4162,10 +4195,10 @@ detach_fork_proc      Proc far
     mov es,ax
     EnterSection ds:pf_mem_section     
 
-dfFreeLoop:
+dkfFreeLoop:
     mov eax,ds:pf_mem_blocks
     or eax,eax
-    jz dfFreeLeave
+    jz dkfFreeLeave
 ;
     mov esi,eax
     mov edi,eax
@@ -4192,33 +4225,15 @@ dfFreeLoop:
     mov ecx,SIZE pe_mem_struc
     FreeLinear
     popf
-    jne dfFreeLoop
+    jne dkfFreeLoop
 
-dfFreeLeave:
+dkfFreeLeave:
     LeaveSection ds:pf_mem_section     
 ;
-    int 3
-    DetachFork
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_proc_sel    
-    movzx ebx,ds:pf_module_arr
-    ModuleIdToSel
-    mov ds,ebx
-;
-    mov ax,ds:mod_debug_id
-    or ax,ax
-    jz dfNoDebug
-;
-    call TerminateThreadEvent
-    call SendEvent
-    
-dfNoDebug:
     popad
     pop ds
     ret
-detach_fork_proc      Endp
+detach_kernel_fork_proc      Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5970,7 +5985,8 @@ l34 DD OFFSET add_user_gate,              SEG code
 l35 DD OFFSET stop_debug,                 SEG code
 l36 DD OFFSET attach_debug,               SEG code
 l37 DD OFFSET fork_proc,                  SEG code
-l38 DD OFFSET detach_fork_proc,           SEG code
+l38 DD OFFSET detach_user_fork_proc,      SEG code
+l39 DD OFFSET detach_kernel_fork_proc,    SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc

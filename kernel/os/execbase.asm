@@ -2255,32 +2255,24 @@ register_loader   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           unload_kernel
+;           NAME:           UnloadProgram
 ;
-;           DESCRIPTION:    Do final unload
+;           DESCRIPTION:    Unload program
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-unload_kernel:
+UnloadProgram:
     GetThread
     mov es,ax
 ;
-    movzx ebx,es:p_proc_id
-    ProcessIdToSel
-    jc ukDone
-;
-    mov ds,ebx
+    mov ds,es:p_proc_sel
     mov ax,ds:pf_c_handle_sel
     DeleteCHandle
 ;
     mov ax,ds:pf_cur_dir_sel
     DeleteCurDir
 ;
-    movzx ebx,es:p_prog_id
-    GetProgramSel
-    jc ukDone
-;
-    mov ds,eax
+    mov ds,es:p_prog_sel
     EnterSection ds:pr_section
     movzx ebx,ds:pr_module_arr
     LeaveSection ds:pr_section
@@ -2336,65 +2328,93 @@ ukFocusOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           do_unload
+;           NAME:           UnloadProcess
 ;
-;           DESCRIPTION:    Do unload
+;           DESCRIPTION:    Unload process
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-do_unload       Proc near
+UnloadProcess:
     GetThread
     mov es,ax
     mov ds,es:p_prog_sel
+;
     movzx ecx,ds:pr_process_count
     cmp ecx,1
-    jbe do_final_unload
+    jbe UnloadProgram
 ;
+    mov es,es:p_loader
+    call fword ptr es:loader_detach_kernel_fork_proc
+;
+    DetachFork
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnloadUser
+;
+;           DESCRIPTION:    Do user-level unload
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnloadUser       Proc near
+    GetThread
+    mov es,ax
+    mov ds,es:p_proc_sel
+    movzx ecx,ds:pf_thread_count
+    cmp ecx,1
+    jbe uuThreadsGone
+;
+    int 3
+    TerminateThread
+
+uuThreadsGone:
     mov ds,es:p_proc_sel
     movzx ecx,ds:pf_module_count
     sub ecx,1
-    jz duModulesOk
+    jz uupModulesOk
 ;
     mov esi,2
 
-duModulesLoop:
+uupModulesLoop:
     mov bx,ds:[esi].pf_module_arr
-;
-    push ecx
-    call GetModuleReferences
-    cmp ecx,1
-    pop ecx
-    jne duModulesNext
-;
-    mov ds:[esi].pf_module_usage_arr,1
-    FreeDll
+    call unload_dll
 
-duModulesNext:
+uupModulesNext:
     add esi,2
-    loop duModulesLoop    
+    loop uupModulesLoop    
 
-duModulesOk:
+uupModulesOk:
+    mov ds,es:p_prog_sel
+    movzx ecx,ds:pr_process_count
+    cmp ecx,1
+    jbe uuProgram
+
+uuProcess:
     mov es,es:p_loader
-    call fword ptr es:loader_detach_fork_proc
-    TerminateThread
+    call fword ptr es:loader_detach_user_fork_proc
+    jmp uuDone
 
-do_final_unload:
+uuProgram:
     EnterSection ds:pr_section
     movzx ebx,ds:pr_module_arr
     LeaveSection ds:pr_section
 ;
     ModuleIdToSel
-    jc ukDone
+    jc uuDone
 ;
     mov ds,ebx
     mov ax,ds:mod_loader
     or ax,ax
     mov es,eax
-    jz ukDone
+    jz uuDone
 ;    
     call fword ptr es:loader_unload_exe_user_proc
+
+uuDone:
     ret
-do_unload       Endp
+UnloadUser       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2410,11 +2430,12 @@ do_unload       Endp
 unload_exe_name DB 'Unload Exe',0
     
 unload_exe:
+    int 3
     pushfd
     push eax
     mov eax,[esp+12]
     test al,3
-    jz unload_kernel
+    jz UnloadProcess
 ;
     push ebx
     push ecx
@@ -2444,11 +2465,11 @@ unload_exe:
     mov ds,eax
     mov ax,ds:p_loader
     or ax,ax
-    jz unload_kernel
+    jz UnloadProcess
 ;
     mov ds,eax
     call fword ptr ds:loader_add_gate_proc
-    call do_unload
+    call UnloadUser
 ;
     pop gs
     pop fs
@@ -5306,7 +5327,7 @@ InitExec_    Proc near
     or bl,3
     mov eax,cs
     mov ds,eax
-    mov esi,OFFSET unload_kernel
+    mov esi,OFFSET UnloadProcess
     xor cl,cl
     CreateCallGateSelector32
     mov es:exit_gate_sel,bx

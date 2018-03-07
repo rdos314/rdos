@@ -107,6 +107,7 @@ code    SEGMENT byte public use16 'CODE'
     public cow_dir_proc
     public cow_page_proc
     public detach_fork_proc
+    public cleanup_fork_proc
 
 proc_start:
 init_process_proc               DW OFFSET local_init_process32
@@ -146,6 +147,7 @@ start_fork_proc                 DW OFFSET local_start_fork32
 cow_dir_proc                    DW OFFSET local_cow_dir32
 cow_page_proc                   DW OFFSET local_cow_page32
 detach_fork_proc                DW OFFSET local_detach_fork32
+cleanup_fork_proc               DW OFFSET local_cleanup_fork32
 uses_pae_proc                   DW OFFSET local_uses_pae32
 
 p64_start:
@@ -186,6 +188,7 @@ start_fork_p64                  DW OFFSET local_start_fork64
 cow_dir_p64                     DW OFFSET local_cow_dir64
 cow_page_p64                    DW OFFSET local_cow_page64
 detach_fork_p64                 DW OFFSET local_detach_fork64
+cleanup_fork_p64                DW OFFSET local_cleanup_fork64
 uses_pae_p64                    DW OFFSET local_uses_pae64
 p64_end:
 
@@ -237,6 +240,12 @@ init_page_table     PROC near
     mov edi,OFFSET detach_fork_name
     xor cl,cl
     mov ax,detach_fork_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET cleanup_fork
+    mov edi,OFFSET cleanup_fork_name
+    xor cl,cl
+    mov ax,cleanup_fork_nr
     RegisterOsGate
 ;
     mov esi,OFFSET notify_create_long_process
@@ -2374,6 +2383,48 @@ ldfDirNext32:
     pop ds
     ret
 local_detach_fork32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_cleanup_fork32
+;
+;           DESCRIPTION:    Cleanup fork page tables
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_cleanup_fork32  Proc near
+    push ds
+    pushad
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel
+    mov esi,ds:pr_page_dir_arr
+    mov eax,flat_sel
+    mov ds,eax
+    mov ecx,fork_mem_size SHR 22
+
+cfLoop32:
+    mov eax,ds:[esi]
+    test al,1
+    jz cfNext32
+;
+    test ax,400h
+    jz cfNext32
+;
+    and ax,NOT 400h
+    or al,2
+    mov ds:[esi],eax
+
+cfNext32:
+    add esi,4
+    loop cfLoop32
+;
+    popad
+    pop ds
+    ret
+local_cleanup_fork32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5151,6 +5202,48 @@ local_detach_fork64  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_cleanup_fork64
+;
+;           DESCRIPTION:    Cleanup fork page tables
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_cleanup_fork64  Proc near
+    push ds
+    pushad
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel
+    mov esi,ds:pr_page_dir_arr
+    mov eax,flat_sel
+    mov ds,eax
+    mov ecx,fork_mem_size SHR 21
+
+cfLoop64:
+    mov eax,ds:[esi]
+    test al,1
+    jz cfNext64
+;
+    test ax,400h
+    jz cfNext64
+;
+    and ax,NOT 400h
+    or al,2
+    mov ds:[esi],eax
+
+cfNext64:
+    add esi,8
+    loop cfLoop64
+;
+    popad
+    pop ds
+    ret
+local_cleanup_fork64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_cow_dir64
 ;
 ;           DESCRIPTION:    Copy-on-write for directory
@@ -5542,6 +5635,22 @@ detach_fork       Proc far
     call cs:detach_fork_proc
     retf32
 detach_fork       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CleanupFork
+;
+;           DESCRIPTION:    Cleanup fork page tables
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cleanup_fork_name  DB 'Cleanup Fork',0
+
+cleanup_fork       Proc far
+    call cs:cleanup_fork_proc
+    retf32
+cleanup_fork       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

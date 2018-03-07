@@ -368,7 +368,10 @@ loader_attach_debug_proc     DD ?,?
 ; OUT  Parent: EAX = child thread selector
 loader_fork_proc     DD ?,?
 
-loader_detach_fork_proc      DD ?,?
+; IN  EBP                 Stack frame
+loader_detach_user_fork_proc      DD ?,?
+
+loader_detach_kernel_fork_proc    DD ?,?
 
 loader_interface_struc    ENDS
 
