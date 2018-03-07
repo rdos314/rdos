@@ -4543,6 +4543,25 @@ local_start_fork64  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetDirRefCount64
+;
+;           DESCRIPTION:    Get page dir reference count
+;
+;           PARAMETERS:     DS             Program sel
+;                           ES             Process sel
+;                           FS:EDI         Entry
+;
+;           RETURNS:        ECX            References
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDirRefCount64  Proc near
+    ret
+GetDirRefCount64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_detach_fork64
 ;
 ;           DESCRIPTION:    Detach current process from fork
@@ -4551,9 +4570,44 @@ local_start_fork64  Endp
 
 local_detach_fork64  Proc near
     push ds
+    push es
+    push fs
+    push gs
     pushad
 ;
+    mov ax,flat_sel
+    mov fs,eax
+;
+    GetThread
+    mov gs,ax
+    mov ds,gs:p_prog_sel
+    mov es,gs:p_proc_sel
+    mov edi,es:pf_page_dir
+;
+    mov ecx,fork_mem_size SHR 21
+
+ldfLoop64:
+    mov eax,fs:[edi]
+    mov ebx,fs:[edi+4]
+    test al,1
+    jz ldfNext64
+;
+    EnterSection ds:pr_cow_section
+    call GetDirRefCount64
+    LeaveSection ds:pr_cow_section
+
+ldfNext64:
+    xor eax,eax
+    mov fs:[edi],eax
+    mov fs:[edi+4],eax
+;
+    add edi,8
+    loop ldfLoop64
+;
     popad
+    pop gs
+    pop fs
+    pop es
     pop ds
     ret
 local_detach_fork64  Endp

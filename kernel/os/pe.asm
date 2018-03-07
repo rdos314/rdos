@@ -4154,7 +4154,6 @@ detach_fork_proc      Proc far
     push ds
     pushad
 ;
-    int 3
     GetThread
     mov ds,ax
     mov ds,ds:p_proc_sel
@@ -4197,6 +4196,9 @@ dfFreeLoop:
 
 dfFreeLeave:
     LeaveSection ds:pf_mem_section     
+;
+    int 3
+    DetachFork
 ;
     GetThread
     mov ds,ax
