@@ -4596,6 +4596,61 @@ GetDirRefCount64  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetPageRefCount64
+;
+;           DESCRIPTION:    Get page reference count
+;
+;           PARAMETERS:     DS             Program sel
+;                           ES             Process sel
+;                           FS             Flat sel
+;                           ESI            Offset within page selector
+;                           EBX:EAX        Entry data
+;
+;           RETURNS:        ECX            References
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPageRefCount64  Proc near
+    push edx
+    push edi
+    push ebp
+;
+    and ax,0F000h
+;
+    movzx ecx,ds:pr_page_table_count
+    xor ebp,ebp
+    xor edi,edi
+
+gprLoop64:
+    mov edx,ds:[edi].pr_temp_arr
+    or edx,edx
+    jz gprNext64
+;
+    cmp ebx,fs:[edx+esi+4]
+    jne gprNext64
+;
+    mov edx,fs:[edx+esi]
+    and dx,0F000h
+    cmp eax,edx
+    jne gprNext64
+;
+    inc ebp
+
+gprNext64:
+    add edi,4
+    loop gprLoop64
+;
+    mov ecx,ebp
+;
+    pop ebp
+    pop edi
+    pop edx
+    ret
+GetPageRefCount64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SetupDetachTables64
 ;
 ;           DESCRIPTION:    Setup detach page tables
@@ -4664,7 +4719,21 @@ ddtLoop64:
     test al,1
     jz ddtNext64
 ;
+    push ecx
+    call GetPageRefCount64
+    cmp ecx,1
+    je ddtFree64
+;
+    ja ddtOk64
+;
     int 3
+
+ddtFree64:
+    int 3
+    FreePhysical
+
+ddtOk64:
+    pop ecx
 
 ddtNext64:
     add esi,8
