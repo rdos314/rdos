@@ -4729,7 +4729,6 @@ ddtLoop64:
     int 3
 
 ddtFree64:
-    int 3
     FreePhysical
 
 ddtOk64:
@@ -4760,7 +4759,6 @@ DoDetachTables64  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DetachDirEntry64  Proc near
-    int 3
     push ecx
     call GetDirRefCount64
     cmp ecx,1
