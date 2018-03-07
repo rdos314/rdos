@@ -4116,6 +4116,7 @@ fork_child:
     mov edx,stack0_size - 10h
     mov edx,ss:[edx]
 ;
+    call AllocateKernelEvent
     call CreateThreadEvent
     call SendEvent
 ;
