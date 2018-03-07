@@ -392,6 +392,61 @@ void TStateCommand::WriteOneModule(int mid, const char *Name)
 
 /*##########################################################################
 #
+#   Name       : TStateCommand::WriteOneModule
+#
+#   Purpose....: Write one module
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TStateCommand::WriteOneModule(int pid, int mid, const char *Name)
+{
+    char str[50];
+    int iStart;
+    int iSize;
+    int iLow;
+    int iHigh;
+    int Sel = RdosGetModuleSel(mid);
+    long long Start = RdosGetModuleBase(mid);
+    long long Size = RdosGetModuleSize(mid);
+    int Usage = RdosGetProcessModuleUsage(pid, mid);
+
+    sprintf(str, "%04hX %04hX ", mid, Usage);
+    Write(str);
+
+    strncpy(str, Name, 36);
+    str[36] = 0;
+    while (strlen(str) < 36)
+        strcat(str, " ");
+
+    Write(str);
+
+    if (Sel)
+    {
+        iStart = (int)Start;
+        iSize = (int)Size;
+        sprintf(str, "%04hX:%08lX (%08lX) ", Sel, iStart, iSize);
+        Write(str);
+    }
+    else
+    {
+        iHigh = (int)(Start >> 32);
+        iLow = (int)Start;
+        sprintf(str, "%04hX_%08lX ", iHigh, iLow);
+        Write(str);
+
+        iHigh = (int)(Size >> 32);
+        iLow = (int)Size;
+        sprintf(str, "(%04hX_%08lX) ", iHigh, iLow);
+        Write(str);
+    }
+    Write("\r\n");
+}
+
+/*##########################################################################
+#
 #   Name       : TStateCommand::WriteModuleById
 #
 #   Purpose....: Write module by ID
@@ -417,6 +472,46 @@ void TStateCommand::WriteModuleById(int mid)
             {
                 Write("  ");
                 WriteOneModule(mid, buf);
+                ok = TRUE;
+            }
+        }
+    }
+
+    if (!ok)
+    {
+        sprintf(buf, "  %04hX\r\n", mid);
+        Write(buf);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TStateCommand::WriteModuleById
+#
+#   Purpose....: Write module by ID
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TStateCommand::WriteModuleById(int pid, int mid)
+{
+    char buf[256];
+    int ok = FALSE;
+    int i;
+    int id;
+    int Usage;
+    int ModuleCount = RdosGetModuleCount();
+
+    for (i = 0; i < ModuleCount && !ok; i++)
+    {
+        if (RdosGetModuleInfo(i, &id, buf, 256))
+        {
+            if (id == mid)
+            {
+                Write("  ");
+                WriteOneModule(pid, mid, buf);
                 ok = TRUE;
             }
         }
@@ -495,7 +590,7 @@ void TStateCommand::WriteOneProcess(int pid, const char *Name)
     ModuleCount = RdosGetProcessModules(pid, TIdBuf, 256);
 
     for (i = 0; i < ModuleCount; i++)
-        WriteModuleById(TIdBuf[i]);
+        WriteModuleById(pid, TIdBuf[i]);
 
     ThreadCount = RdosGetProcessThreads(pid, TIdBuf, 256);
 

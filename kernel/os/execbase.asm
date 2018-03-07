@@ -725,8 +725,11 @@ dmuLoop:
     jmp dmuLeave
 
 dmuFound:
-    dec ds:[ebx].pf_module_usage_arr
     movzx ecx,ds:[ebx].pf_module_usage_arr
+    sub ecx,1
+    jc dmuLeave
+;
+    mov ds:[ebx].pf_module_usage_arr,cx
     
 dmuLeave:
     LeaveSection ds:pf_section
@@ -2379,7 +2382,7 @@ uuThreadsGone:
 
 uupModulesLoop:
     mov bx,ds:[esi].pf_module_arr
-    call unload_dll
+    FreeDll
 
 uupModulesNext:
     add esi,2
@@ -5080,6 +5083,61 @@ get_process_modules32   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetProcessModuleUsage
+;
+;           DESCRIPTION:    Get usage count for module
+;
+;           PARAMETERS:     BX          Process ID
+;                           DX          Module ID
+;
+;           RETURNS:        ECX         Usage
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_process_module_usage_name DB 'Get Process Module Usage',0
+    
+get_process_module_usage    Proc far
+    push ds
+    push ebx
+    push esi
+;
+    movzx ebx,bx
+    ProcessIdToSel
+    jc gpmuDone
+;
+    mov ds,ebx
+    EnterSection ds:pf_section
+;
+    movzx ecx,ds:pf_module_count
+    xor esi,esi
+    xor eax,eax
+
+gpmuFind:
+    cmp dx,ds:[esi].pf_module_arr
+    jne gpmuNext
+;
+    movzx ecx,ds:[esi].pf_module_usage_arr
+    jmp gpmuDone
+
+gpmuNext:
+    add esi,2
+    loop gpmuFind
+;
+    xor ecx,ecx
+
+gpmuDone:
+    LeaveSection ds:pf_section
+    clc
+;
+    pop esi
+    pop ebx
+    pop ds
+    ret
+get_process_module_usage    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AppThreadStarted
 ;
 ;           DESCRIPTION:    Startup of app thread
@@ -5684,6 +5742,12 @@ InitExec_    Proc near
     mov dx,virt_es_in
     mov ax,get_process_modules_nr
     RegisterUserGate
+;
+    mov esi,OFFSET get_process_module_usage
+    mov edi,OFFSET get_process_module_usage_name
+    xor dx,dx
+    mov ax,get_process_module_usage_nr
+    RegisterBimodalUserGate
     ret
 InitExec_    Endp
 

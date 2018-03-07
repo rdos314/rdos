@@ -54,6 +54,7 @@ protected:
     void WriteThreads();
 
     void WriteOneModule(int mid, const char *Name);
+    void WriteOneModule(int pid, int mid, const char *Name);
     void WriteModules();
 
     void WriteOneProcess(int pid, const char *Name);
@@ -61,6 +62,7 @@ protected:
     void WritePrograms();
     void WriteProgramModules(int pid);
     void WriteModuleById(int mid);
+    void WriteModuleById(int pid, int mid);
     void WriteThreadById(int tid);
 
     void WriteProcessById(int pid);

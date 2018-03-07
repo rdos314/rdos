@@ -1193,6 +1193,13 @@ GetProcessModules       MACRO
         UserGate get_process_modules_nr
                 ENDM
 
+; IN   BX           Process ID
+; IN   DX           Module ID
+; OUT  ECX          Usage count
+GetProcessModuleUsage       MACRO
+        UserGate get_process_module_usage_nr
+                ENDM
+
 ;;;;;;;;;;;; C Handles ;;;;;;;;;;;;;;;;
 
 ; IN  ES:(E)DI      Name
