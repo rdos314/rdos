@@ -4596,6 +4596,50 @@ GetDirRefCount64  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupDetachTables64
+;
+;           DESCRIPTION:    Setup detach page tables
+;
+;           PARAMETERS:     DS             Program sel
+;                           ES             Process sel
+;                           FS             Flat sel
+;                           ESI            Offset within dir selector
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupDetachTables64  Proc near
+    pushad
+;
+    movzx ecx,ds:pr_page_table_count
+    xor edi,edi
+
+sdtLoop64:
+    xor ebp,ebp
+;
+    mov edx,ds:[edi].pr_page_dir_arr
+    mov eax,fs:[edx+esi]
+    mov ebx,fs:[edx+esi+4]
+    test al,1
+    jz sdtSave64
+;
+    and ax,0F000h
+    or al,67h
+    mov edx,ds:[edi].pr_page_table_arr
+    SetPageEntry
+    mov ebp,edx
+
+sdtSave64:
+    mov ds:[edi].pr_temp_arr,ebp
+    add edi,4
+    loop sdtLoop64
+;
+    popad
+    ret
+SetupDetachTables64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           DetachDirEntry64
 ;
 ;           DESCRIPTION:    Detach single dir entry
@@ -4621,6 +4665,8 @@ DetachDirEntry64  Proc near
     int 3
 
 ddeFree64:
+    mov ds:pr_temp_ind,bp
+    call SetupDetachTables64
     FreePhysical
 
 ddeDone:
