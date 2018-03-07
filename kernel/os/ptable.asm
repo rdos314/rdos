@@ -2069,17 +2069,308 @@ local_start_fork32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetDirRefCount32
+;
+;           DESCRIPTION:    Get page dir reference count
+;
+;           PARAMETERS:     DS             Program sel
+;                           ES             Process sel
+;                           FS             Flat sel
+;                           ESI            Offset within dir selector
+;                           EBP            Process index
+;                           EAX            Entry data
+;
+;           RETURNS:        ECX            References
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDirRefCount32  Proc near
+    push edx
+    push edi
+    push ebp
+;
+    and ax,0F000h
+;
+    movzx ecx,ds:pr_page_table_count
+    xor ebp,ebp
+    xor edi,edi
+
+gdrLoop32:
+    mov edx,ds:[edi].pr_page_dir_arr
+    mov edx,fs:[edx+esi]
+    and dx,0F000h
+    cmp eax,edx
+    jne gdrNext32
+;
+    inc ebp
+
+gdrNext32:
+    add edi,4
+    loop gdrLoop32
+;
+    mov ecx,ebp
+;
+    pop ebp
+    pop edi
+    pop edx
+    ret
+GetDirRefCount32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPageRefCount32
+;
+;           DESCRIPTION:    Get page reference count
+;
+;           PARAMETERS:     DS             Program sel
+;                           ES             Process sel
+;                           FS             Flat sel
+;                           ESI            Offset within page selector
+;                           EAX            Entry data
+;
+;           RETURNS:        ECX            References
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPageRefCount32  Proc near
+    push edx
+    push edi
+    push ebp
+;
+    and ax,0F000h
+;
+    movzx ecx,ds:pr_page_table_count
+    xor ebp,ebp
+    xor edi,edi
+
+gprLoop32:
+    mov edx,ds:[edi].pr_temp_arr
+    or edx,edx
+    jz gprNext32
+;
+    mov edx,fs:[edx+esi]
+    and dx,0F000h
+    cmp eax,edx
+    jne gprNext32
+;
+    inc ebp
+
+gprNext32:
+    add edi,4
+    loop gprLoop32
+;
+    mov ecx,ebp
+;
+    pop ebp
+    pop edi
+    pop edx
+    ret
+GetPageRefCount32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupDetachTables32
+;
+;           DESCRIPTION:    Setup detach page tables
+;
+;           PARAMETERS:     DS             Program sel
+;                           ES             Process sel
+;                           FS             Flat sel
+;                           ESI            Offset within dir selector
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupDetachTables32  Proc near
+    pushad
+;
+    movzx ecx,ds:pr_page_table_count
+    xor edi,edi
+
+sdtLoop32:
+    xor ebp,ebp
+;
+    mov edx,ds:[edi].pr_page_dir_arr
+    mov eax,fs:[edx+esi]
+    test al,1
+    jz sdtSave32
+;
+    xor ebx,ebx
+    and ax,0F000h
+    or al,67h
+    mov edx,ds:[edi].pr_page_table_arr
+    SetPageEntry
+    mov ebp,edx
+
+sdtSave32:
+    mov ds:[edi].pr_temp_arr,ebp
+    add edi,4
+    loop sdtLoop32
+;
+    popad
+    ret
+SetupDetachTables32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DoDetachTables32
+;
+;           DESCRIPTION:    Detach page tables
+;
+;           PARAMETERS:     DS             Program sel
+;                           ES             Process sel
+;                           FS             Flat sel
+;                           EBP            Process index
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoDetachTables32  Proc near
+    pushad
+;
+    mov ecx,1024
+    xor esi,esi
+    mov edi,ds:[ebp].pr_page_table_arr
+
+ddtLoop32:
+    mov eax,fs:[esi+edi]
+    test al,1
+    jz ddtNext32
+;
+    push ecx
+    call GetPageRefCount32
+    cmp ecx,1
+    je ddtFree32
+;
+    ja ddtOk32
+;
+    int 3
+
+ddtFree32:
+    xor ebx,ebx
+    FreePhysical
+
+ddtOk32:
+    pop ecx
+
+ddtNext32:
+    add esi,4
+    loop ddtLoop32
+;
+    popad
+    ret
+DoDetachTables32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DetachDirEntry32
+;
+;           DESCRIPTION:    Detach single dir entry
+;
+;           PARAMETERS:     DS             Program sel
+;                           ES             Process sel
+;                           FS             Flat sel
+;                           ESI            Offset within dir selector
+;                           EBP            Process index
+;                           EAX            Entry data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DetachDirEntry32  Proc near
+    push ecx
+    call GetDirRefCount32
+    cmp ecx,1
+    je ddeFree32
+;
+    ja ddeDone32
+;
+    int 3
+
+ddeFree32:
+    call SetupDetachTables32
+    call DoDetachTables32
+;
+    xor ebx,ebx
+    FreePhysical
+
+ddeDone32:
+    pop ecx
+    ret
+DetachDirEntry32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_detach_fork32
 ;
 ;           DESCRIPTION:    Detach current process from fork
-;
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_detach_fork32  Proc near
     push ds
+    push es
+    push fs
+    push gs
     pushad
 ;
+    mov ax,flat_sel
+    mov fs,eax
+;
+    GetThread
+    mov gs,ax
+    mov ds,gs:p_prog_sel
+    mov es,gs:p_proc_sel
+    mov edi,es:pf_page_dir
+;
+    xor ebp,ebp
+    movzx ecx,ds:pr_page_table_count
+    xor esi,esi
+
+ldfProcLoop32:
+    cmp edi,ds:[esi].pr_page_dir_arr
+    jne ldfProcNext32
+;
+    mov ebp,esi
+    jmp ldfProcDone32
+
+ldfProcNext32:
+    add esi,4
+    loop ldfProcLoop32
+;
+    int 3
+
+ldfProcDone32:
+    mov ecx,fork_mem_size SHR 22
+    xor esi,esi
+
+ldfDirLoop32:
+    mov eax,fs:[esi+edi]
+    test al,1
+    jz ldfDirNext32
+;
+    EnterSection ds:pr_cow_section
+    call DetachDirEntry32
+    LeaveSection ds:pr_cow_section
+
+ldfDirNext32:
+    xor eax,eax
+    mov fs:[esi+edi],eax
+;
+    add esi,4
+    loop ldfDirLoop32
+;
+    mov fs:[esi+edi],eax
+    add esi,4
+;
+    mov fs:[esi+edi],eax
+;
     popad
+    pop gs
+    pop fs
+    pop es
     pop ds
     ret
 local_detach_fork32  Endp
@@ -4764,17 +5055,16 @@ DetachDirEntry64  Proc near
     cmp ecx,1
     je ddeFree64
 ;
-    ja ddeDone
+    ja ddeDone64
 ;
     int 3
 
 ddeFree64:
-    mov ds:pr_temp_ind,bp
     call SetupDetachTables64
     call DoDetachTables64
     FreePhysical
 
-ddeDone:
+ddeDone64:
     pop ecx
     ret
 DetachDirEntry64  Endp
@@ -4808,20 +5098,20 @@ local_detach_fork64  Proc near
     movzx ecx,ds:pr_page_table_count
     xor esi,esi
 
-ldfProcLoop:
+ldfProcLoop64:
     cmp edi,ds:[esi].pr_page_dir_arr
-    jne ldfProcNext
+    jne ldfProcNext64
 ;
     mov ebp,esi
-    jmp ldfProcDone
+    jmp ldfProcDone64
 
-ldfProcNext:
+ldfProcNext64:
     add esi,4
-    loop ldfProcLoop
+    loop ldfProcLoop64
 ;
     int 3
 
-ldfProcDone:
+ldfProcDone64:
     mov ecx,fork_mem_size SHR 21
     xor esi,esi
 
