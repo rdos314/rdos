@@ -628,7 +628,7 @@ void TStateCommand::WritePrograms()
             Write(str);
             Write(NameBuf);
             Write("\r\n");
-            if (i == 0)
+//            if (i == 0)
                 WriteProgramModules(i);
             WriteProgramProcesses(i);
             Write("\r\n");
