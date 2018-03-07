@@ -36,17 +36,16 @@ void main()
     int id;
 
     handle = RdosLoadDll("testlib.dll");
-    handle = RdosLoadDll("testlib.dll");
-    RdosFreeDll(handle);
-    RdosFreeDll(handle);
 
     id = RdosFork();
 
     if (id == 0)
     {
+        RdosFreeDll(handle);
         exit(0x1234);
     }
 
+    RdosFreeDll(handle);
 
 
 #if defined(CREATE_THREAD) || defined(LOAD_DLL)
