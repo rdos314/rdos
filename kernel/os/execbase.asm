@@ -2324,8 +2324,6 @@ ukFocusOk:
     CloseConsole
     DestroyHandleData
     DestroyLdt
-;
-    call RemoveProg
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
