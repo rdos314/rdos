@@ -318,12 +318,12 @@ CreateProg Endp
 ;
 ;       DESCRIPTION:    Remove prog
 ;
+;       PARAMETERS:     BX       Progam ID
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RemoveProg Proc near
-    GetThread
-    mov es,ax
-    movzx ebx,es:p_prog_id
+    movzx ebx,bx
     GetProgramSel
     jc rpDone
 ;
@@ -2561,6 +2561,40 @@ is_forked    ENDP
 update_program_name   DB 'Update Program',0
 
 update_program    PROC far
+    push ds
+    push es
+    pushad
+;
+    movzx ebx,bx
+    GetProgramSel
+    jc upDone
+;
+    mov ds,eax
+    EnterSection ds:pr_section
+    movzx ecx,ds:pr_process_count
+    or ecx,ecx
+    jz upRemove
+;
+    cmp ecx,1
+    jne upLeave
+
+upUnfork:
+    int 3
+    CleanupFork
+    jmp upLeave
+
+upRemove:
+    LeaveSection ds:pr_section
+    call RemoveProg
+    jmp upDone
+
+upLeave:
+    LeaveSection ds:pr_section
+
+upDone:
+    popad
+    pop es
+    pop ds    
     ret
 update_program    ENDP
     

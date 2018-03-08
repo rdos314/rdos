@@ -556,6 +556,7 @@ DetachFork MACRO
     OsGate detach_fork_nr
                     ENDM
 
+; IN  BX     Program ID
 CleanupFork MACRO
     OsGate cleanup_fork_nr
                     ENDM

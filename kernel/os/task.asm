@@ -2230,7 +2230,6 @@ stThreadOk:
     call RemoveBlock
     call cs:unlock_list_proc
 ;    
-    int 3
     call delete_process_sel
 ;
     mov bx,es:p_prog_id

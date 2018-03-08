@@ -2391,15 +2391,19 @@ local_detach_fork32  Endp
 ;
 ;           DESCRIPTION:    Cleanup fork page tables
 ;
+;           PARAMETERS:     BX       Program ID
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_cleanup_fork32  Proc near
     push ds
     pushad
 ;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_prog_sel
+    movzx ebx,bx
+    GetProgramSel
+    jc cfDone32
+;
+    mov ds,eax
     mov esi,ds:pr_page_dir_arr
     mov eax,flat_sel
     mov ds,eax
@@ -2420,7 +2424,8 @@ cfLoop32:
 cfNext32:
     add esi,4
     loop cfLoop32
-;
+
+cfDone32:
     popad
     pop ds
     ret
@@ -5206,15 +5211,19 @@ local_detach_fork64  Endp
 ;
 ;           DESCRIPTION:    Cleanup fork page tables
 ;
+;           PARAMETERS:     BX      Program ID
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_cleanup_fork64  Proc near
     push ds
     pushad
 ;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_prog_sel
+    movzx ebx,bx
+    GetProgramSel
+    jc cfDone64
+;
+    mov ds,eax
     mov esi,ds:pr_page_dir_arr
     mov eax,flat_sel
     mov ds,eax
@@ -5235,7 +5244,8 @@ cfLoop64:
 cfNext64:
     add esi,8
     loop cfLoop64
-;
+
+cfDone64:
     popad
     pop ds
     ret
