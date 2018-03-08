@@ -108,6 +108,7 @@ code    SEGMENT byte public use16 'CODE'
     public cow_page_proc
     public detach_fork_proc
     public cleanup_fork_proc
+    public delete_fork_proc
 
 proc_start:
 init_process_proc               DW OFFSET local_init_process32
@@ -148,6 +149,7 @@ cow_dir_proc                    DW OFFSET local_cow_dir32
 cow_page_proc                   DW OFFSET local_cow_page32
 detach_fork_proc                DW OFFSET local_detach_fork32
 cleanup_fork_proc               DW OFFSET local_cleanup_fork32
+delete_fork_proc                DW OFFSET local_delete_fork32
 uses_pae_proc                   DW OFFSET local_uses_pae32
 
 p64_start:
@@ -189,6 +191,7 @@ cow_dir_p64                     DW OFFSET local_cow_dir64
 cow_page_p64                    DW OFFSET local_cow_page64
 detach_fork_p64                 DW OFFSET local_detach_fork64
 cleanup_fork_p64                DW OFFSET local_cleanup_fork64
+delete_fork_p64                 DW OFFSET local_delete_fork64
 uses_pae_p64                    DW OFFSET local_uses_pae64
 p64_end:
 
@@ -246,6 +249,12 @@ init_page_table     PROC near
     mov edi,OFFSET cleanup_fork_name
     xor cl,cl
     mov ax,cleanup_fork_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET delete_fork
+    mov edi,OFFSET delete_fork_name
+    xor cl,cl
+    mov ax,delete_fork_nr
     RegisterOsGate
 ;
     mov esi,OFFSET notify_create_long_process
@@ -1998,34 +2007,74 @@ local_get_thread_page_dir32    Endp
 ;           DESCRIPTION:    Create fork page tables
 ;
 ;           PARAMETERS:     EAX         CR3
-;
-;           RETURNS:        EAX         Page directory
-;                           EDX         Page table
+;                           DS          Process selector
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_create_fork32  Proc near
-    push ecx
+    pushad
 ;
     push eax
     mov eax,1000h
     AllocateBigLinear
     pop eax
 ;
-    push ebx
     xor ebx,ebx
     mov al,3
     SetPageEntry    
-    pop ebx
+    mov ds:pf_page_dir,edx
 ;
-    push edx
     mov eax,3000h
     AllocateBigLinear
-    pop eax
+    mov ds:pf_page_table,edx
 ;
-    pop ecx
+    popad
     ret
 local_create_fork32  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_delete_fork32
+;
+;           DESCRIPTION:    Create delete page table, 32-bit version
+;
+;           PARAMETERS:     DS          Process selector
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_delete_fork32  Proc near
+    push ds
+    pushad
+;
+    xor eax,eax
+    xor ebx,ebx
+    mov edx,ds:pf_page_table
+    mov ecx,3
+
+ldfTableLoop32:
+    SetPageEntry
+    add edx,1000h
+    loop ldfTableLoop32
+;
+    mov edx,ds:pf_page_table
+    mov ecx,3000h
+    FreeLinear
+;
+    xor eax,eax
+    xor ebx,ebx
+    mov edx,ds:pf_page_dir
+    SetPageEntry
+;
+    mov edx,ds:pf_page_dir
+    mov ecx,1000h
+    FreeLinear
+;
+    popad
+    pop ds
+    ret
+local_delete_fork32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2034,14 +2083,17 @@ local_create_fork32  Endp
 ;
 ;           DESCRIPTION:    Fork page tables
 ;
-;           PARAMETERS:     ESI         Source page directory
-;                           EDI         Destination page directory
+;           PARAMETERS:     DS         Source process sel
+;                           ES         Destination process sel
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_start_fork32  Proc near
     push ds
     pushad
+;
+    mov esi,ds:pf_page_dir
+    mov edi,es:pf_page_dir
 ;
     mov eax,flat_sel
     mov ds,eax
@@ -4769,17 +4821,13 @@ local_get_thread_page_dir64    Endp
 ;           DESCRIPTION:    Create fork page table, 64-bit version
 ;
 ;           PARAMETERS:     EAX         CR3
-;
-;           RETURNS:        EAX         Page directory
-;                           EDX         Page table
+;                           DS          Process selector
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_create_fork64  Proc near
     push ds
-    push ebx
-    push ecx
-    push esi
+    pushad
 ;
     push eax
     mov eax,3000h
@@ -4789,13 +4837,12 @@ local_create_fork64  Proc near
     xor ebx,ebx
     mov al,3
     SetPageEntry    
+    mov ds:pf_page_table,edx
 ;
     mov esi,edx
     mov eax,4000h
     AllocateBigLinear
-;
-    push edx
-    push esi
+    mov ds:pf_page_dir,edx
 ;
     mov ecx,4
     mov eax,flat_sel
@@ -4811,20 +4858,58 @@ lcfLoop:
     add edx,1000h
     loop lcfLoop
 ;
-    pop edx
-;
-    xor eax,eax
-    xor ebx,ebx
-    SetPageEntry
-;
-    pop eax
-;
-    pop esi
-    pop ecx
-    pop ebx
+    popad
     pop ds
     ret
 local_create_fork64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_delete_fork64
+;
+;           DESCRIPTION:    Create delete page table, 64-bit version
+;
+;           PARAMETERS:     DS          Process selector
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_delete_fork64  Proc near
+    push ds
+    pushad
+;
+    xor eax,eax
+    xor ebx,ebx
+    mov edx,ds:pf_page_table
+    mov ecx,3
+
+ldfTableLoop64:
+    SetPageEntry
+    add edx,1000h
+    loop ldfTableLoop64
+;
+    mov edx,ds:pf_page_table
+    mov ecx,3000h
+    FreeLinear
+;
+    xor eax,eax
+    xor ebx,ebx
+    mov edx,ds:pf_page_dir
+    mov ecx,4
+
+ldelfDirLoop64:
+    SetPageEntry
+    add edx,1000h
+    loop ldelfDirLoop64
+;
+    mov edx,ds:pf_page_dir
+    mov ecx,4000h
+    FreeLinear
+;
+    popad
+    pop ds
+    ret
+local_delete_fork64  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4833,14 +4918,17 @@ local_create_fork64  Endp
 ;
 ;           DESCRIPTION:    Fork page tables
 ;
-;           PARAMETERS:     ESI         Source page directory
-;                           EDI         Destination page directory
+;           PARAMETERS:     DS         Source process sel
+;                           ES         Destination process sel
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_start_fork64  Proc near
     push ds
     pushad
+;
+    mov esi,ds:pf_page_dir
+    mov edi,es:pf_page_dir
 ;
     mov eax,flat_sel
     mov ds,eax
@@ -5598,9 +5686,7 @@ notify_create_process       Endp
 ;           DESCRIPTION:    Create fork page tables
 ;
 ;           PARAMETERS:     EAX         CR3
-;                           
-;           RETURNS:        EAX         Page directory
-;                           EDX         Page table
+;                           DS          Process sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5614,12 +5700,30 @@ create_fork       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           DeleteFork
+;
+;           DESCRIPTION:    Delete fork page tables
+;
+;           PARAMETERS:     DS          Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_fork_name  DB 'Delete Fork',0
+
+delete_fork       Proc far
+    call cs:delete_fork_proc
+    retf32
+delete_fork       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           StartFork
 ;
 ;           DESCRIPTION:    Start fork page tables
 ;
-;           PARAMETERS:     ESI         Source page directory
-;                           EDI         Destination page directory
+;           PARAMETERS:     DS          Source process sel
+;                           ES          Destination process sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

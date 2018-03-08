@@ -540,14 +540,18 @@ NotifyCreateLongProcess MACRO
                     ENDM
 
 ; IN  EAX    CR3
-; OUT EAX    Page directory
-; OUT EDX    Page table
+; IN  DS     Process sel
 CreateFork MACRO
     OsGate create_fork_nr
                     ENDM
 
-; IN  ESI    Source page directory
-; IN  EDI    Destination page directory
+; IN  DS     Process sel
+DeleteFork MACRO
+    OsGate delete_fork_nr
+                    ENDM
+
+; IN  DS    Source process sel
+; IN  ES    Destination process sel
 StartFork MACRO
     OsGate start_fork_nr
                     ENDM

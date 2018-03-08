@@ -751,5 +751,6 @@ start_fork_nr               = 666
 detach_fork_nr              = 667
 cleanup_fork_nr             = 668
 update_program_nr           = 669
+delete_fork_nr              = 670
 
 osgate_entries              = 700

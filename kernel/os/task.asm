@@ -7798,19 +7798,27 @@ setup_fork Proc near
     or ecx,ecx
     jnz sfAddNew
 ;
+    mov ds,fs:p_proc_sel
     mov eax,fs:p_cr3
     CreateFork
+;
+    mov eax,ds:pf_page_dir
+    mov edx,ds:pf_page_table
+;
+    mov ds,es:p_prog_sel
     mov ds:pr_page_dir_arr,eax
     mov ds:pr_page_table_arr,edx
     inc ecx
-;
-    mov gs,fs:p_proc_sel
-    mov gs:pf_page_dir,eax
-    mov gs:pf_page_table,edx
 
 sfAddNew:
+    mov ds,es:p_proc_sel
     mov eax,es:p_cr3
     CreateFork
+;
+    mov eax,ds:pf_page_dir
+    mov edx,ds:pf_page_table
+;
+    mov ds,es:p_prog_sel
     mov ebx,ecx
     shl ebx,2
     mov ds:[ebx].pr_page_dir_arr,eax
@@ -7819,15 +7827,11 @@ sfAddNew:
     inc ecx
     mov ds:pr_page_table_count,cx
 ;
-    mov gs,es:p_proc_sel
-    mov gs:pf_page_dir,eax
-    mov gs:pf_page_table,edx
-;
+    push es
     mov ds,fs:p_proc_sel
-    mov esi,ds:pf_page_dir
-    mov ds,es:p_proc_sel
-    mov edi,ds:pf_page_dir
+    mov es,es:p_proc_sel
     StartFork
+    pop es
 ;
     popad
     pop gs
