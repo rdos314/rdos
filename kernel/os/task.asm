@@ -2143,15 +2143,15 @@ delete_process_sel Proc near
     EnterSection ds:pr_section
 ;
     movzx ecx,ds:pr_process_count
-    mov ebx,OFFSET pr_process_arr
+    xor ebx,ebx
     or ecx,ecx
     jz dpsLeave
 
 dpsLoop:
-    cmp ax,ds:[ebx]
+    cmp ax,ds:[2*ebx].pr_process_arr
     je dpsFound
 ;
-    add bx,2
+    inc ebx
     loop dpsLoop
 ;
     jmp dpsLeave
@@ -2159,23 +2159,32 @@ dpsLoop:
 dpsFound:
     dec ds:pr_process_count
 ;
+    mov ax,ds:pr_page_table_count
+    or ax,ax
+    jz dpsTablesOk
+;
+    dec ax
+    mov ds:pr_page_table_count,ax
+
+dpsTablesOk:
     sub ecx,1
     jz dpsLeave
 
 dpsMove:
-    mov ax,ds:[ebx+2]
-    mov ds:[ebx],ax
-    add ebx,2
+    mov ax,ds:[2*ebx+2].pr_process_arr
+    mov ds:[2*ebx].pr_process_arr,ax
+;
+    mov eax,ds:[4*ebx+4].pr_page_dir_arr
+    mov ds:[4*ebx].pr_page_dir_arr,eax
+;
+    mov eax,ds:[4*ebx+4].pr_page_table_arr
+    mov ds:[4*ebx].pr_page_table_arr,eax
+;    
+    inc ebx
     loop dpsMove
 
 dpsLeave:
     LeaveSection ds:pr_section
-;
-    movzx ebx,es:p_proc_sel
-    ProcessTerminated
-;
-    mov es,ebx
-    FreeMem
 ;
     popad
     pop es
@@ -2232,8 +2241,19 @@ stThreadOk:
 ;    
     call delete_process_sel
 ;
+    push ds
     mov bx,es:p_prog_id
-    UpdateProgram
+    mov ds,es:p_proc_sel
+    RemovedProcess
+    pop ds
+;
+    movzx ebx,es:p_proc_sel
+    ProcessTerminated
+;
+    push es
+    mov es,ebx
+    FreeMem
+    pop es
 ;
     call DeleteProcess
     jmp stThreadLoop

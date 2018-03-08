@@ -2550,53 +2550,62 @@ is_forked    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           UpdateProgram
+;           NAME:           RemovedProcess
 ;
-;           DESCRIPTION:    Update program after process removal
+;           DESCRIPTION:    Update program after removed process
 ;
 ;           PARAMETERS:     BX       Program ID
+;                           DS       Removed process sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-update_program_name   DB 'Update Program',0
+removed_process_name   DB 'Removed Process',0
 
-update_program    PROC far
+removed_process    PROC far
     push ds
     push es
     pushad
 ;
+    mov eax,ds
+    mov es,eax
+;
     movzx ebx,bx
     GetProgramSel
-    jc upDone
+    jc rpfDone
 ;
     mov ds,eax
     EnterSection ds:pr_section
     movzx ecx,ds:pr_process_count
     or ecx,ecx
-    jz upRemove
+    jz rpfEnd
+;
+    push ds
+    mov eax,es
+    mov ds,eax
+    DeleteFork
+    pop ds
 ;
     cmp ecx,1
-    jne upLeave
+    jne rpfLeave
 
-upUnfork:
-    int 3
+rpfUnfork:
     CleanupFork
-    jmp upLeave
+    jmp rpfLeave
 
-upRemove:
+rpfEnd:
     LeaveSection ds:pr_section
     call RemoveProg
-    jmp upDone
+    jmp rpfDone
 
-upLeave:
+rpfLeave:
     LeaveSection ds:pr_section
 
-upDone:
+rpfDone:
     popad
     pop es
     pop ds    
     ret
-update_program    ENDP
+removed_process    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5519,10 +5528,10 @@ InitExec_    Proc near
     mov ax,terminate_app_thread_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET update_program
-    mov edi,OFFSET update_program_name
+    mov esi,OFFSET removed_process
+    mov edi,OFFSET removed_process_name
     xor cl,cl
-    mov ax,update_program_nr
+    mov ax,removed_process_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_focus
