@@ -180,6 +180,9 @@ pr_module_arr        DW MAX_PROGRAM_MODULES DUP(?)
 pr_process_count     DW ?
 pr_process_arr       DW MAX_PROGRAM_PROCESSES DUP(?)
 
+
+pr_filler            DD 56 DUP(?)
+
 program_struc    ENDS
 
 process_struc    STRUC
