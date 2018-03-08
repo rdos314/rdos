@@ -2431,7 +2431,6 @@ UnloadUser       Endp
 unload_exe_name DB 'Unload Exe',0
     
 unload_exe:
-    int 3
     pushfd
     push eax
     mov eax,[esp+12]

@@ -2169,6 +2169,7 @@ stThreadOk:
     call RemoveBlock
     call cs:unlock_list_proc
 ;    
+    int 3
     call DeleteProcess
     jmp stThreadLoop
 
