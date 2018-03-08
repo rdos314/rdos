@@ -2550,6 +2550,24 @@ is_forked    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           RemoveProcess
+;
+;           DESCRIPTION:    Remove process
+;
+;           PARAMETERS:     BX       Program ID
+;                           DX       Process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+remove_process_name   DB 'Remove Process',0
+
+remove_process    PROC far
+    ret
+remove_process    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           FatalErrorExit
 ;
 ;           DESCRIPTION:    Fatal error exit
@@ -5466,6 +5484,12 @@ InitExec_    Proc near
     mov edi,OFFSET terminate_app_thread_name
     xor cl,cl
     mov ax,terminate_app_thread_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET remove_process
+    mov edi,OFFSET remove_process_name
+    xor cl,cl
+    mov ax,remove_process_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_focus

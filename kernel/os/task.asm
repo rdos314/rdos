@@ -2120,6 +2120,68 @@ DeleteProcess    Proc near
     NotifyDeleteProcess    
     ret
 DeleteProcess   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           delete_process_sel
+;
+;       DESCRIPTION:    Delete process selector
+;
+;       PARAMETERS:     ES          Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_process_sel Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,es:p_proc_id
+    mov ds,es:p_prog_sel
+    EnterSection ds:pr_section
+;
+    movzx ecx,ds:pr_process_count
+    mov ebx,OFFSET pr_process_arr
+    or ecx,ecx
+    jz dpsLeave
+
+dpsLoop:
+    cmp ax,ds:[ebx]
+    je dpsFound
+;
+    add bx,2
+    loop dpsLoop
+;
+    jmp dpsLeave
+
+dpsFound:
+    dec ds:pr_process_count
+;
+    sub ecx,1
+    jz dpsLeave
+
+dpsMove:
+    mov ax,ds:[ebx+2]
+    mov ds:[ebx],ax
+    add ebx,2
+    loop dpsMove
+
+dpsLeave:
+    LeaveSection ds:pr_section
+;
+    movzx ebx,es:p_proc_sel
+    ProcessTerminated
+;
+    mov es,ebx
+    FreeMem
+;
+    popad
+    pop es
+    pop ds
+    ret
+delete_process_sel Endp
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2170,6 +2232,11 @@ stThreadOk:
     call cs:unlock_list_proc
 ;    
     int 3
+    call delete_process_sel
+;
+    mov bx,es:p_prog_id
+    mov dx,es:p_proc_id
+    RemoveProcess
     call DeleteProcess
     jmp stThreadLoop
 

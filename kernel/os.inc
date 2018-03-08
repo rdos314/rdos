@@ -560,6 +560,10 @@ CleanupFork MACRO
     OsGate cleanup_fork_nr
                     ENDM
 
+RemoveProcess MACRO
+    OsGate remove_process_nr
+                    ENDM
+
 ;   EAX    CR3
 NotifyDeleteProcess MACRO
     OsGate notify_delete_process_nr
