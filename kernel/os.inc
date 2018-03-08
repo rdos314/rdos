@@ -560,8 +560,9 @@ CleanupFork MACRO
     OsGate cleanup_fork_nr
                     ENDM
 
-RemoveProcess MACRO
-    OsGate remove_process_nr
+; IN  BX    Program ID
+UpdateProgram MACRO
+    OsGate update_program_nr
                     ENDM
 
 ;   EAX    CR3

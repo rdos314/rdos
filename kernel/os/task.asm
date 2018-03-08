@@ -2182,7 +2182,6 @@ dpsLeave:
     pop ds
     ret
 delete_process_sel Endp
-    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2235,8 +2234,8 @@ stThreadOk:
     call delete_process_sel
 ;
     mov bx,es:p_prog_id
-    mov dx,es:p_proc_id
-    RemoveProcess
+    UpdateProgram
+;
     call DeleteProcess
     jmp stThreadLoop
 

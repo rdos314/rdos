@@ -2550,20 +2550,19 @@ is_forked    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           RemoveProcess
+;           NAME:           UpdateProgram
 ;
-;           DESCRIPTION:    Remove process
+;           DESCRIPTION:    Update program after process removal
 ;
 ;           PARAMETERS:     BX       Program ID
-;                           DX       Process ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-remove_process_name   DB 'Remove Process',0
+update_program_name   DB 'Update Program',0
 
-remove_process    PROC far
+update_program    PROC far
     ret
-remove_process    ENDP
+update_program    ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5486,10 +5485,10 @@ InitExec_    Proc near
     mov ax,terminate_app_thread_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET remove_process
-    mov edi,OFFSET remove_process_name
+    mov esi,OFFSET update_program
+    mov edi,OFFSET update_program_name
     xor cl,cl
-    mov ax,remove_process_nr
+    mov ax,update_program_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_focus
