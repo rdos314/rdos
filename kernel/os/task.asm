@@ -9451,6 +9451,7 @@ init_prot_callback_frame    PROC near
     jz init_prot_kernel_frame
 ;
     mov eax,ds:cm_stack
+    add eax,100
     AllocateLocalMem
     mov ax,es
     jmp init_prot_create_frame

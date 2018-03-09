@@ -3946,6 +3946,7 @@ free_thread_kernel     Endp
 fork_proc      Proc far
     push ebx
     push ecx
+    push edx
 ;
     GetThread
     push es
@@ -3959,29 +3960,12 @@ fork_proc      Proc far
     ModuleIdToSel
     push ebx
 ;
-    mov eax,fs:pvFirstExcept
-    push eax
-;
-    mov eax,fs:pvArbitrary
-    push eax
-;
-    mov eax,fs:pvStackUserTop
-    push eax
-;
-    mov eax,fs:pvStackUserBottom
-    push eax
-;
-    mov eax,fs:pvStackUserSize
-    push eax
-;
-    mov eax,fs:pvTLSBitmap
-    push eax
-;
-    mov eax,fs:pvTLSArray
-    push eax
-;
-    mov eax,fs:pvBase
-    push eax
+    mov bx,fs
+    GetSelectorBaseSize
+    push ecx
+    push edx
+
+
 ;
     ClearSignal
     ForkProcess
@@ -4019,69 +4003,19 @@ fork_child_completed:
     pop ebx
     pop ebx
     pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
-    pop ebx
 ;
+    pop edx
     pop ecx
     pop ebx
     jmp fork_done
 
 fork_child:
-    push ds
-    push es
-    push bx
-    push ecx
-    push edx
-;
-    mov ax,system_data_sel
-    mov fs,ax
-;
-    mov eax,1000h
-    AllocateLocalLinear
-    AllocateLdt
-    or bx,7
-    mov ecx,eax     
-    CreateDataSelector32
-    mov es,bx
-    sub edx,fs:flat_base
-    mov es:pvBase,edx
-;
-    mov ax,es
-    mov fs,ax
-;
     pop edx
     pop ecx
-    pop bx
-    pop es
-    pop ds
-;
-    pop eax
-    mov fs:pvBase,eax
-;
-    pop eax
-    mov fs:pvTLSArray,eax
-;
-    pop eax
-    mov fs:pvTLSBitmap,eax
-;
-    pop eax
-    mov fs:pvStackUserSize,eax
-;
-    pop eax
-    mov fs:pvStackUserBottom,eax
-;
-    pop eax
-    mov fs:pvStackUserTop,eax
-;
-    pop eax
-    mov fs:pvArbitrary,eax
-;
-    pop eax
-    mov fs:pvFirstExcept,eax
+    AllocateLdt
+    or bl,7
+    CreateDataSelector32
+    mov fs,bx
 ;
     pop eax
 ;
@@ -4133,6 +4067,7 @@ fork_notify_ok:
     lock or ds:p_flags,THREAD_FLAG_FORK_COMPLETED
     Signal
 ;
+    pop edx
     pop ecx
     pop ebx
     xor eax,eax
