@@ -4980,6 +4980,67 @@ local_delete_fork64  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           MergeDirEntry64
+;
+;           DESCRIPTION:    Merge dir entry
+;
+;           PARAMETERS:     DS         Source process sel
+;                           ES         Destination process sel
+;                           FS         Flat sel
+;                           ESI        Source entry
+;                           EDI        Destination entry
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MergeDirEntry64  Proc near
+    pushad
+;
+    xor ebx,ebx
+    mov eax,fs:[esi]
+    mov edx,ds:pf_page_table
+    SetPageEntry
+    mov esi,edx
+;
+    mov eax,fs:[edi]
+    mov edx,es:pf_page_table
+    SetPageEntry
+    mov edi,edx
+;
+    mov ecx,200h
+
+mdeLoop64:
+    mov eax,fs:[edi]
+    mov ebx,fs:[edi+4]
+    test al,1
+    jnz mdeSave64
+;
+    mov eax,fs:[esi]
+    mov ebx,fs:[esi+4]
+    test al,1
+    jz mdeSave64
+;
+    test al,2
+    jz mdeSave64
+;
+    and al,NOT 2
+    or ax,400h
+    mov fs:[esi],eax
+
+mdeSave64:
+    mov fs:[edi],eax
+    mov fs:[edi+4],ebx
+;
+    add esi,8
+    add edi,8
+    loop mdeLoop64
+;
+    popad
+    ret
+MergeDirEntry64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_start_fork64
 ;
 ;           DESCRIPTION:    Fork page tables
@@ -4990,20 +5051,29 @@ local_delete_fork64  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_start_fork64  Proc near
-    push ds
+    push fs
     pushad
 ;
     mov esi,ds:pf_page_dir
     mov edi,es:pf_page_dir
 ;
     mov eax,flat_sel
-    mov ds,eax
+    mov fs,eax
 ;
     mov ecx,fork_mem_size SHR 21
 
 lsfuLoop64:
-    mov eax,ds:[esi]
-    mov ebx,ds:[esi+4]
+    mov eax,fs:[edi]
+    mov eax,fs:[edi+4]
+    test al,1
+    jz lsfuFree64
+;
+    call MergeDirEntry64
+    jmp lsfuSave64
+
+lsfuFree64:
+    mov eax,fs:[esi]
+    mov ebx,fs:[esi+4]
     test al,1
     jz lsfuSave64
 ;
@@ -5012,32 +5082,32 @@ lsfuLoop64:
 ;
     and al,NOT 2
     or ax,400h
-    mov ds:[esi],eax
+    mov fs:[esi],eax
 
 lsfuSave64:
-    mov ds:[edi],eax
-    mov ds:[edi+4],ebx
+    mov fs:[edi],eax
+    mov fs:[edi+4],ebx
 ;
     add esi,8
     add edi,8
     loop lsfuLoop64
 ;
-    mov eax,ds:[esi]
-    mov ebx,ds:[esi+4]
+    mov eax,fs:[esi]
+    mov ebx,fs:[esi+4]
     add esi,8
 ;
-    mov ds:[edi],eax
-    mov ds:[edi+4],ebx
+    mov fs:[edi],eax
+    mov fs:[edi+4],ebx
     add edi,8
 ;
-    mov eax,ds:[esi]
-    mov ebx,ds:[esi+4]
+    mov eax,fs:[esi]
+    mov ebx,fs:[esi+4]
 ;
-    mov ds:[edi],eax
-    mov ds:[edi+4],ebx
+    mov fs:[edi],eax
+    mov fs:[edi+4],ebx
 ;
     popad
-    pop ds
+    pop fs
     ret
 local_start_fork64  Endp
 
