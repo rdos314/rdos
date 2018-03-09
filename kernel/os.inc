@@ -2429,10 +2429,19 @@ PollKeyboardSerial      MACRO
 
 ;;;;;;;;;; Environment ;;;;;;;;;;;;;
 
+
+; OUT AX        Env selector
 CreateEnvSel      MACRO
     OsGate create_env_sel_nr
             ENDM
 
+; IN  AX        Env selector to clone
+; OUT AX        New env selector
+CloneEnvSel      MACRO
+    OsGate clone_env_sel_nr
+            ENDM
+
+; IN  AX        Env selector
 DeleteEnvSel      MACRO
     OsGate delete_env_sel_nr
             ENDM

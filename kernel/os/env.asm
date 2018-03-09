@@ -35,6 +35,7 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
+INCLUDE exec.def
 
 ENV_MODE_GLOBAL     = 1
 ENV_MODE_PROCESS    = 2
@@ -247,8 +248,13 @@ lock_proc_env_name      DB 'Lock Proc Env',0
 lock_proc_env    Proc far
     push ds
 ;
-    mov bx,env_proc_sel
-    mov ds,bx
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_env_sel
+    pop ax
+;
     EnterSection ds:env_proc_section
     mov bx,ds:env_proc_raw_sel
 ;
@@ -270,13 +276,15 @@ unlock_proc_env_name    DB 'Unlock Proc Env',0
 
 unlock_proc_env    Proc far
     push ds
-    push bx
+    push ax
 ;
-    mov bx,env_proc_sel
-    mov ds,bx
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_env_sel
     LeaveSection ds:env_proc_section
 ;
-    pop bx
+    pop ax
     pop ds
     retf32
 unlock_proc_env    Endp
@@ -1270,6 +1278,8 @@ delete_handle   Endp
 ;
 ;       DESCRIPTION:    Create environment for program
 ;
+;       RETURNS:        AX		Env sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_env_sel_name DB 'Create Env Sel', 0
@@ -1277,7 +1287,9 @@ create_env_sel_name DB 'Create Env Sel', 0
 create_env_sel    Proc far
     push ds
     push es
-    pushad
+    push ebx
+    push esi
+    push edi
 ;
     LockSysEnv
     mov ds,bx
@@ -1287,31 +1299,92 @@ create_env_sel    Proc far
     AllocateGlobalMem
     xor di,di
 
-init_proc_var_loop:
+cresLoop:
     lodsb
     stosb
     or al,al
-    jnz init_proc_var_loop
+    jnz cresLoop
 ;
     mov al,[si]
     or al,al
-    jnz init_proc_var_loop
+    jnz cresLoop
 ;
     xor al,al
     stosb
 ;
     UnlockSysEnv
 ;
-    mov ax,env_proc_sel
+    push es
+    mov eax,SIZE env_proc_seg
+    AllocateSmallGlobalMem
+    mov ax,es
     mov ds,ax
+    pop es
+;
     InitSection ds:env_proc_section
     mov ds:env_proc_raw_sel,es
+    mov ax,ds
 ;
-    popad
+    pop edi
+    pop esi
+    pop ebx
     pop es
     pop ds
     retf32
 create_env_sel    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   
+;
+;       NAME:           CloneEnvSel
+;
+;       DESCRIPTION:    Clone environment for program
+;
+;       PARAMETERS:     AX              Env sel to clone
+;
+;       RETURNS:        AX		New env sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clone_env_sel_name DB 'Clone Env Sel', 0
+
+clone_env_sel    Proc far
+    push ds
+    push es
+    push ecx
+    push esi
+    push edi
+;
+    mov ds,ax
+    mov ds,ds:env_proc_raw_sel
+    xor si,si
+;
+    mov eax,4000h
+    AllocateGlobalMem
+    xor di,di
+    mov cx,ax
+    rep movsb
+;
+    push es
+    mov eax,SIZE env_proc_seg
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov ds,ax
+    pop es
+;
+    InitSection ds:env_proc_section
+    mov ds:env_proc_raw_sel,es
+    mov ax,ds
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+    pop ds
+    retf32
+clone_env_sel    Endp
+    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
@@ -1319,6 +1392,8 @@ create_env_sel    Endp
 ;       NAME:           DeleteEnvSel
 ;
 ;       DESCRIPTION:    Delete environment for program
+;
+;       PARAMETERS:     AX          Env sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1329,11 +1404,12 @@ delete_env_sel    Proc far
     push es
     pushad
 ;
-    mov ax,env_proc_sel
     mov ds,ax
     mov es,ds:env_proc_raw_sel
     FreeMem
-    mov ds:env_proc_raw_sel,0
+;
+    mov es,ax
+    FreeMem
 ;
     popad
     pop es
@@ -1382,10 +1458,6 @@ init_device_loop:
     InitSection ds:env_sys_section
     mov ds:env_sys_raw_sel,dx
 ;
-    mov eax,SIZE env_proc_seg
-    mov bx,env_proc_sel
-    AllocateFixedProcessMem
-;
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -1404,6 +1476,12 @@ init_device_loop:
     mov edi,OFFSET delete_env_sel_name
     xor cl,cl
     mov ax,delete_env_sel_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET clone_env_sel
+    mov edi,OFFSET clone_env_sel_name
+    xor cl,cl
+    mov ax,clone_env_sel_nr
     RegisterOsGate
 ;
     mov esi,OFFSET lock_sys_env

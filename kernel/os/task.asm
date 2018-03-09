@@ -2138,14 +2138,15 @@ delete_process_sel Proc near
     push es
     pushad
 ;
-    DeleteEnvSel
-;
     mov ds,es:p_proc_sel
     mov ax,ds:pf_c_handle_sel
     DeleteCHandle
 ;
     mov ax,ds:pf_cur_dir_sel
     DeleteCurDir
+;
+    mov ax,ds:pf_env_sel
+    DeleteEnvSel
 ;
     mov ax,es:p_proc_id
     mov ds,es:p_prog_sel
@@ -7510,7 +7511,6 @@ trap_create_process     PROC near
     push si
 ;
     InitProcessMem
-    CreateEnvSel
 ;
     mov ax,hook_sel
     mov ds,ax
@@ -7681,6 +7681,7 @@ create_process_sel Proc near
     mov es:pf_module_count,0
     mov es:pf_c_handle_sel,0
     mov es:pf_cur_dir_sel,0
+    mov es:pf_env_sel,0
     mov es:pf_program_id,bx
     InitSection es:pf_section
 ;
@@ -7910,6 +7911,48 @@ cchSave:
     pop ds
     ret
 create_c_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           create_env_sel
+;
+;           DESCRIPTION:    create env selector
+;
+;           PARAMETERS:     ES          New thread
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_env_sel       PROC near
+    push ds
+    push es
+    push fs
+    push eax
+;
+    GetThread
+    mov ds,ax
+    mov fs,ds:p_proc_sel
+    mov ax,fs:pf_env_sel
+    or ax,ax
+    jz cesCreate
+
+cesClone:
+    CloneEnvSel
+    jmp cesSave
+
+cesCreate:
+    CreateEnvSel
+
+cesSave:
+    mov fs,es:p_proc_sel
+    mov fs:pf_env_sel,ax    
+;
+    pop eax
+    pop fs
+    pop es 
+    pop ds
+    ret
+create_env_sel Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -9026,6 +9069,7 @@ cp64:
 ;
     call create_c_handle
     call create_cur_dir
+    call create_env_sel
 
 cpSkipped64:
     jmp cpProt
@@ -9045,6 +9089,7 @@ cp32:
 ;
     call create_c_handle
     call create_cur_dir
+    call create_env_sel
 
 cpSkipped32:
     mov ax,[ebp].cr_mode
@@ -9320,6 +9365,7 @@ fork_process  PROC far
 ;
     call create_c_handle
     call create_cur_dir
+    call create_env_sel
 ;
     call init_fork_thread
     call init_fork_stack
@@ -9727,6 +9773,9 @@ init_first_process      Proc near
     mov ds,ds:p_proc_sel
     mov ds:pf_thread_count,1
     mov ds:pf_thread_arr,0
+;
+    CreateEnvSel
+    mov ds:pf_env_sel,ax
     ret
 init_first_process      Endp
     

@@ -755,5 +755,6 @@ delete_fork_nr              = 670
 
 create_env_sel_nr           = 671
 delete_env_sel_nr           = 672
+clone_env_sel_nr            = 673
 
 osgate_entries              = 700
