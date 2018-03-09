@@ -851,4 +851,6 @@ get_process_threads_nr           = 668
 get_process_modules_nr           = 669
 get_process_module_usage_nr      = 670
 
+get_free_ldt_nr                  = 671
+
 usergate_entries                 = 700

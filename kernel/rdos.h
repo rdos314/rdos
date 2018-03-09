@@ -350,6 +350,7 @@ int RDOSAPI RdosGetPhysicalEntryType(int Entry);
 long long RDOSAPI RdosGetPhysicalEntryBase(int Entry);
 long long RDOSAPI RdosGetPhysicalEntrySize(int Entry);
 int RDOSAPI RdosGetFreeGdt();
+int RDOSAPI RdosGetFreeLdt();
 int RDOSAPI RdosGetFreeSmallKernelLinear();
 int RDOSAPI RdosGetFreeBigKernelLinear();
 int RDOSAPI RdosGetFreeSmallLocalLinear();

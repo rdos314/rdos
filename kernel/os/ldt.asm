@@ -93,6 +93,12 @@ init_ldt    PROC near
     xor cl,cl
     mov ax,allocate_multiple_ldt_nr
     RegisterOsGate
+;       
+    mov esi,OFFSET get_free_ldt
+    mov edi,OFFSET get_free_ldt_name
+    xor dx,dx
+    mov ax,get_free_ldt_nr
+    RegisterBimodalUserGate
     pop ds
     popa
     ret
@@ -508,6 +514,64 @@ free_ldt    PROC far
     pop ds
     retf32
 free_ldt    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetFreeLdt
+;
+;           DESCRIPTION:    Get free entries in LDT
+;
+;           RETURNS:        AX		Free entries
+;                                                   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_free_ldt_name   DB 'Get Free Ldt',0
+
+get_free_ldt    PROC far
+    push ds
+    push es
+    push ebx
+    push ecx
+    push edx
+;       
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel
+;
+    EnterSection ds:pr_ldt_section
+    mov bx,ds:pr_ldt_data_sel
+    mov es,bx
+;
+    GetSelectorBaseSize
+    inc ecx
+    shr ecx,3
+;
+    mov bx,ds:pr_ldt_free
+
+gfLoop:
+    or bx,bx
+    jz gfDone
+;
+    inc cx
+;
+    mov di,es:[bx]
+    cmp di,0FFFFh
+    je gfDone
+;
+    mov bx,di
+    jmp gfLoop
+
+gfDone:
+    LeaveSection ds:pr_ldt_section
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    retf32
+get_free_ldt    ENDP
 
 code    ENDS
 

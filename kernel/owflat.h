@@ -806,6 +806,11 @@
     "movzx eax,ax"  \
     value [eax];
 
+#pragma aux RdosGetFreeLdt = \
+    CallGate_get_free_ldt  \
+    "movzx eax,ax"  \
+    value [eax];
+
 #pragma aux RdosGetFreeSmallKernelLinear = \
     CallGate_available_small_linear  \
     value [eax];

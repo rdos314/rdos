@@ -206,6 +206,11 @@ GetFreeGdt      MACRO
         UserGate get_free_gdt_nr
                                 ENDM
 
+;       AX              Number of free LDT entries
+GetFreeLdt      MACRO
+        UserGate get_free_ldt_nr
+                                ENDM
+
 ;       EAX         Number of free bytes
 AvailableBigLinear      MACRO
         UserGate available_big_linear_nr
