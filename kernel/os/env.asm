@@ -1263,17 +1263,18 @@ delete_handle_done:
     retf32
 delete_handle   Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   
 ;
-;       NAME:       InitProcess
+;       NAME:           CreateEnvSel
 ;
-;       DESCRIPTION:    Init process
+;       DESCRIPTION:    Create environment for program
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_process    Proc far
+create_env_sel_name DB 'Create Env Sel', 0
+
+create_env_sel    Proc far
     push ds
     push es
     pushad
@@ -1310,7 +1311,35 @@ init_proc_var_loop:
     pop es
     pop ds
     retf32
-init_process    Endp
+create_env_sel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;   
+;
+;       NAME:           DeleteEnvSel
+;
+;       DESCRIPTION:    Delete environment for program
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_env_sel_name DB 'Delete Env Sel', 0
+
+delete_env_sel    Proc far
+    push ds
+    push es
+    pushad
+;
+    mov ax,env_proc_sel
+    mov ds,ax
+    mov es,ds:env_proc_raw_sel
+    FreeMem
+    mov ds:env_proc_raw_sel,0
+;
+    popad
+    pop es
+    pop ds
+    retf32
+delete_env_sel    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1361,12 +1390,21 @@ init_device_loop:
     mov ds,ax
     mov es,ax
 ;
-    mov edi,OFFSET init_process
-    HookCreateProcess
-;
     mov edi,OFFSET delete_handle
     mov ax,ENV_HANDLE
     RegisterHandle
+;
+    mov esi,OFFSET create_env_sel
+    mov edi,OFFSET create_env_sel_name
+    xor cl,cl
+    mov ax,create_env_sel_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET delete_env_sel
+    mov edi,OFFSET delete_env_sel_name
+    xor cl,cl
+    mov ax,delete_env_sel_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET lock_sys_env
     mov edi,OFFSET lock_sys_env_name

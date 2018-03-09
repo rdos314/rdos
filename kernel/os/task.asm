@@ -2138,6 +2138,8 @@ delete_process_sel Proc near
     push es
     pushad
 ;
+    DeleteEnvSel
+;
     mov ds,es:p_proc_sel
     mov ax,ds:pf_c_handle_sel
     DeleteCHandle
@@ -7508,6 +7510,7 @@ trap_create_process     PROC near
     push si
 ;
     InitProcessMem
+    CreateEnvSel
 ;
     mov ax,hook_sel
     mov ds,ax

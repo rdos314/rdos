@@ -2429,6 +2429,14 @@ PollKeyboardSerial      MACRO
 
 ;;;;;;;;;; Environment ;;;;;;;;;;;;;
 
+CreateEnvSel      MACRO
+    OsGate create_env_sel_nr
+            ENDM
+
+DeleteEnvSel      MACRO
+    OsGate delete_env_sel_nr
+            ENDM
+
 ; OUT BX    Env sys sel
 LockSysEnv      MACRO
     OsGate lock_sys_env_nr

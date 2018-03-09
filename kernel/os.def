@@ -753,4 +753,7 @@ cleanup_fork_nr             = 668
 removed_process_nr          = 669
 delete_fork_nr              = 670
 
+create_env_sel_nr           = 671
+delete_env_sel_nr           = 672
+
 osgate_entries              = 700
