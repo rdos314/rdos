@@ -2138,6 +2138,13 @@ delete_process_sel Proc near
     push es
     pushad
 ;
+    mov ds,es:p_proc_sel
+    mov ax,ds:pf_c_handle_sel
+    DeleteCHandle
+;
+    mov ax,ds:pf_cur_dir_sel
+    DeleteCurDir
+;
     mov ax,es:p_proc_id
     mov ds,es:p_prog_sel
     EnterSection ds:pr_section
