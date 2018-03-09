@@ -4083,11 +4083,18 @@ fork_proc  Endp
 ;
 ;           DESCRIPTION:    Detach forked process, user stage
 ;
+;           PARAMETERS:     FS		User mode FS
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 detach_user_fork_proc      Proc far
     push ds
     pushad
+;
+    mov bx,fs
+    xor ax,ax
+    mov fs,ax
+    FreeLdt
 ;
     GetThread
     mov ds,ax
