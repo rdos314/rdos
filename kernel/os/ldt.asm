@@ -544,8 +544,9 @@ get_free_ldt    PROC far
     mov es,bx
 ;
     GetSelectorBaseSize
-    inc ecx
     shr ecx,3
+    mov ax,2000h
+    sub ax,cx
 ;
     mov bx,ds:pr_ldt_free
 
@@ -553,7 +554,7 @@ gfLoop:
     or bx,bx
     jz gfDone
 ;
-    inc cx
+    inc ax
 ;
     mov di,es:[bx]
     cmp di,0FFFFh

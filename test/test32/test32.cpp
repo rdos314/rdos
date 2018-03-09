@@ -34,6 +34,7 @@ void main()
     int id;
 
     int gdt_base;
+    int ldt_base;
     int handlec_base;
     int linear_base;
     int big_base;
@@ -41,6 +42,7 @@ void main()
     long long phys_base;
 
     int gdt;
+    int ldt;
     int handlec;
     int linear;
     int big;
@@ -48,6 +50,7 @@ void main()
     long long phys;
 
     int diff_gdt;
+    int diff_ldt;
     int diff_handlec;
     int diff_linear;
     int diff_big;
@@ -55,6 +58,7 @@ void main()
     int diff_phys;
 
     gdt_base = RdosGetFreeGdt();
+    ldt_base = RdosGetFreeLdt();
     handlec_base = RdosGetFreeHandles();
     linear_base = RdosGetFreeBigLocalLinear();
     big_base = RdosGetFreeBigKernelLinear();
@@ -65,7 +69,7 @@ void main()
 
     for (i = 0; i < 100000; i++)
     {
- 
+
         id = RdosFork();
         if (id == 0)
             exit(0x1234);
@@ -80,6 +84,7 @@ void main()
 #endif
 
         gdt = RdosGetFreeGdt();
+        ldt = RdosGetFreeLdt();
         handlec = RdosGetFreeHandles();
         linear = RdosGetFreeBigLocalLinear();
         big = RdosGetFreeBigKernelLinear();
@@ -87,6 +92,7 @@ void main()
         phys = RdosGetFreePhysical();
 
         diff_gdt = gdt - gdt_base;
+        diff_ldt = ldt - ldt_base;
         diff_handlec = handlec - handlec_base;
         diff_linear = linear - linear_base;
         diff_small = small - small_base;
@@ -94,13 +100,14 @@ void main()
         diff_phys = (int)(phys - phys_base) / 0x1000;
 
         gdt_base = gdt;
+        ldt_base = ldt;
         handlec_base = handlec;
         linear_base = linear;
         small_base = small;
         big_base = big;
         phys_base = phys;
 
-        printf("GDT: %d, Handles: %d, Linear: %d, Big: %d, Small: %d, Phys: %d\r\n", diff_gdt, diff_handlec, diff_linear, diff_big, diff_small, diff_phys);
+        printf("GDT: %d, LDT: %d, Handles: %d, Linear: %d, Big: %d, Small: %d, Phys: %d\r\n", diff_gdt, diff_ldt, diff_handlec, diff_linear, diff_big, diff_small, diff_phys);
 
         RdosWaitMilli(250);
 
