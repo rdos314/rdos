@@ -72,8 +72,17 @@ void main()
 
         id = RdosFork();
         if (id == 0)
-            exit(0x1234);
+        {
+            char *ptr = (char *)RdosAllocateMem(0x4000);
+            int i;
+            for (i = 0; i < 0x4000; i++)
+                ptr[i] = 123;
 
+            handle = RdosLoadDll("testlib.dll");
+            RdosFreeDll(handle);
+
+            exit(0x1234);
+        }
 
 #ifdef LOAD_DLL
         handle = RdosLoadDll("testlib.dll");

@@ -2079,6 +2079,64 @@ local_delete_fork32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           MergeDirEntry32
+;
+;           DESCRIPTION:    Merge dir entry
+;
+;           PARAMETERS:     DS         Source process sel
+;                           ES         Destination process sel
+;                           FS         Flat sel
+;                           ESI        Source entry
+;                           EDI        Destination entry
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MergeDirEntry32  Proc near
+    pushad
+;
+    xor ebx,ebx
+    mov eax,fs:[esi]
+    mov edx,ds:pf_page_table
+    SetPageEntry
+    mov esi,edx
+;
+    mov eax,fs:[edi]
+    mov edx,es:pf_page_table
+    SetPageEntry
+    mov edi,edx
+;
+    mov ecx,400h
+
+mdeLoop32:
+    mov eax,fs:[edi]
+    test al,1
+    jnz mdeSave32
+;
+    mov eax,fs:[esi]
+    test al,1
+    jz mdeSave32
+;
+    test al,2
+    jz mdeSave32
+;
+    and al,NOT 2
+    or ax,400h
+    mov fs:[esi],eax
+
+mdeSave32:
+    mov fs:[edi],eax
+;
+    add esi,4
+    add edi,4
+    loop mdeLoop32
+;
+    popad
+    ret
+MergeDirEntry32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_start_fork32
 ;
 ;           DESCRIPTION:    Fork page tables
@@ -2089,19 +2147,27 @@ local_delete_fork32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_start_fork32  Proc near
-    push ds
+    push fs
     pushad
 ;
     mov esi,ds:pf_page_dir
     mov edi,es:pf_page_dir
 ;
     mov eax,flat_sel
-    mov ds,eax
+    mov fs,eax
 ;
     mov ecx,fork_mem_size SHR 22
 
 lsfuLoop32:
-    mov eax,ds:[esi]
+    mov eax,fs:[edi]
+    test al,1
+    jz lsfuFree32
+;
+    call MergeDirEntry32
+    jmp lsfuSave32
+
+lsfuFree32:
+    mov eax,fs:[esi]
     test al,1
     jz lsfuSave32
 ;
@@ -2110,20 +2176,20 @@ lsfuLoop32:
 ;
     and al,NOT 2
     or ax,400h
-    mov ds:[esi],eax
+    mov fs:[esi],eax
 
 lsfuSave32:
-    mov ds:[edi],eax
+    mov fs:[edi],eax
 ;
     add esi,4
     add edi,4
     loop lsfuLoop32
 ;
-    mov eax,ds:[esi]
-    mov ds:[edi],eax
+    mov eax,fs:[esi]
+    mov fs:[edi],eax
 ;
     popad
-    pop ds
+    pop fs
     ret
 local_start_fork32  Endp
 
