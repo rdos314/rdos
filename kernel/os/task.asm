@@ -2114,6 +2114,10 @@ DeleteProcess    Proc near
 ;
     mov bx,es:p_tss_sel
     FreeGdt
+;    
+    mov edx,es:p_tss_linear
+    mov ecx,SIZE tss32_seg
+    FreeLinear
 ;
     mov eax,es:p_cr3
     FreeMem
