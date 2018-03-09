@@ -78,9 +78,6 @@ void main()
             for (i = 0; i < 0x4000; i++)
                 ptr[i] = 123;
 
-            handle = RdosLoadDll("testlib.dll");
-            RdosFreeDll(handle);
-
             exit(0x1234);
         }
 

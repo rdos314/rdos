@@ -5068,6 +5068,7 @@ lsfuLoop64:
     test al,1
     jz lsfuFree64
 ;
+    int 3
     call MergeDirEntry64
     jmp lsfuSave64
 
