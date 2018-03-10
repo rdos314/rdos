@@ -889,14 +889,22 @@ allocate_local_linear   PROC far
     sub ds:pr_avail_mem,ecx
     shr ecx,12
 ;    
-    mov edx,local_page_linear + 1000h
+    mov edx,ds:pr_mem_base
     mov eax,flat_size
+    call cs:allocate_page_entries_proc
+    jnc allOk
+;
+    mov edx,local_page_linear + 1000h
     call cs:allocate_page_entries_proc
     jnc allOk
 ;
     int 3
 
 allOk:    
+    shl ecx,12
+    add ecx,edx
+    mov ds:pr_mem_base,ecx
+;
     UnlockCow
 ;
     pop ecx
