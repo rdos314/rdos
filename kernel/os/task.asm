@@ -7828,8 +7828,7 @@ setup_fork Proc near
     push gs
     pushad
 ;
-    mov ds,es:p_prog_sel
-    EnterSection ds:pr_cow_section
+    LockCow
 ;
     movzx ecx,ds:pr_page_table_count
     or ecx,ecx
@@ -7870,8 +7869,7 @@ sfAddNew:
     StartFork
     pop es
 ;
-    mov ds,es:p_prog_sel
-    LeaveSection ds:pr_cow_section
+    UnlockCow
 ;
     popad
     pop gs
@@ -9370,7 +9368,6 @@ fork_process  PROC far
     call create_process_sel
     call add_process_thread
     call copy_process_modules
-    call setup_fork
 ;
     call create_c_handle
     call create_cur_dir
@@ -9378,6 +9375,7 @@ fork_process  PROC far
 ;
     call init_fork_thread
     call init_fork_stack
+    call setup_fork
     call wake_new
     mov ax,es
 

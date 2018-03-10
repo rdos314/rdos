@@ -33,6 +33,7 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\driver.def
+INCLUDE exec.def
 
 mmap_struc  STRUC
 
@@ -79,15 +80,10 @@ mem_seg ENDS
 
 local_mem_seg   STRUC
 
-local_big_used_mem      DD ?
-local_big_avail_mem     DD ?
-
-local_big_base      DD ?
 
 vm_avail_mem        DW ?
 vm_used_mem             DW ?
 
-local_mem_section       section_typ <>
 vm_mem_section      section_typ <>
 
 local_mem_seg   ENDS
@@ -879,39 +875,33 @@ allocate_local_linear_name      DB 'Allocate Local Linear',0
 
 allocate_local_linear   PROC far
     push ds
-    push es
     push eax
     push ebx
     push ecx
 ;
-    dec eax
-    and ax,0F000h
-    add eax,1000h
-    mov dx,local_mem_sel
-    mov ds,dx
-    mov es,dx
-    EnterSection ds:local_mem_section
-    add ds:local_big_used_mem,eax
-    sub ds:local_big_avail_mem,eax
-    shr eax,12
+    mov ecx,eax
+    LockCow
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+;
+    add ds:pr_used_mem,ecx
+    sub ds:pr_avail_mem,ecx
+    shr ecx,12
 ;    
     mov edx,local_page_linear + 1000h
-    mov ecx,eax
     mov eax,flat_size
     call cs:allocate_page_entries_proc
-    jnc allocate_page_local_ok
+    jnc allOk
 ;
     int 3
 
-allocate_page_local_ok:    
-    mov ax,local_mem_sel
-    mov ds,ax
-    LeaveSection ds:local_mem_section
+allOk:    
+    UnlockCow
 ;
     pop ecx
     pop ebx
     pop eax
-    pop es
     pop ds
     retf32
 allocate_local_linear   ENDP
@@ -934,24 +924,21 @@ allocate_debug_local_linear_name    DB 'Allocate Debug Local Linear',0
 
 allocate_debug_local_linear     PROC far
     push ds
-    push es
     push eax
     push ebx
     push ecx
 ;
-    dec eax
-    and ax,0F000h
-    add eax,1000h
-    mov dx,local_mem_sel
-    mov ds,dx
-    mov es,dx
-    EnterSection ds:local_mem_section
-    add ds:local_big_used_mem,eax
-    sub ds:local_big_avail_mem,eax
-    shr eax,12
-;    
-    mov edx,ds:local_big_base
     mov ecx,eax
+    LockCow
+;
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    add ds:pr_used_mem,ecx
+    sub ds:pr_avail_mem,ecx
+    shr ecx,12
+;    
+    mov edx,ds:pr_mem_base
     mov eax,flat_size
     call cs:allocate_page_entries_proc
     jnc allocate_debug_page_local_ok
@@ -963,17 +950,14 @@ allocate_debug_local_linear     PROC far
     int 3
 
 allocate_debug_page_local_ok:    
-    mov ax,local_mem_sel
-    mov ds,ax
     shl ecx,12
     add ecx,edx
-    mov ds:local_big_base,ecx
-    LeaveSection ds:local_mem_section
+    mov ds:pr_mem_base,ecx
+    UnlockCow
 ;
     pop ecx
     pop ebx
     pop eax
-    pop es
     pop ds
     retf32
 allocate_debug_local_linear     ENDP
@@ -999,12 +983,11 @@ reserve_local_linear    PROC far
     push ecx
     push edx
 ;
+    LockCow
+;
     dec eax
     and ax,0F000h
     add eax,1000h
-    mov bx,local_mem_sel
-    mov ds,bx
-    EnterSection ds:local_mem_section
     cmp edx,local_page_linear
     jc reserve_local_linear_inv_range
     cmp edx,flat_size
@@ -1025,11 +1008,7 @@ reserve_local_linear_inv_range:
     stc
 
 reserve_local_linear_done:
-    pushf
-    mov ax,local_mem_sel
-    mov ds,ax
-    LeaveSection ds:local_mem_section
-    popf
+    UnlockCow
 ;
     pop edx
     pop ecx
@@ -1067,9 +1046,7 @@ resize_flat_linear      PROC far
     mov ds,bx
     mov esi,ds:flat_base
 ;
-    mov bx,local_mem_sel
-    mov ds,bx
-    EnterSection ds:local_mem_section
+    LockCow
 ;
     cmp edx,flat_size
     jae resize_flat_leave
@@ -1124,20 +1101,16 @@ resize_flat_grow_loop:
     loop resize_flat_grow_loop
 ;
     pop ecx
-    mov bx,local_mem_sel
-    mov ds,bx
-    sub ds:local_big_avail_mem,ecx
-    add ds:local_big_used_mem,ecx
-    LeaveSection ds:local_mem_section
+    sub ds:pr_avail_mem,ecx
+    add ds:pr_used_mem,ecx
+    UnlockCow
     add esp,12
     clc
     jmp resize_flat_done
 
 resize_flat_grow_copy:
     add esp,12
-    mov bx,local_mem_sel
-    mov ds,bx
-    LeaveSection ds:local_mem_section
+    UnlockCow
 ;
     pop ebx
     pop ecx
@@ -1169,8 +1142,8 @@ resize_flat_grow_copy:
 resize_flat_shrink:
     add edx,eax
     sub ecx,eax
-    add ds:local_big_avail_mem,ecx
-    sub ds:local_big_used_mem,ecx
+    add ds:pr_avail_mem,ecx
+    sub ds:pr_used_mem,ecx
     shr ecx,12
 ;
     mov eax,flat_size
@@ -1192,7 +1165,7 @@ resize_flat_size_ok:
     clc
 
 resize_flat_leave:
-    LeaveSection ds:local_mem_section
+    UnlockCow
 
 resize_flat_done:    
     pop esi
@@ -1252,10 +1225,12 @@ allocate_vm_loop:
     mov bx,si
     mov si,[si].vmf_next
     jmp allocate_vm_loop
+
 allocate_vm_found:
     sub cx,ax
     cmp cx,8
     jc allocate_vm_no_split
+;
     mov bx,ax
     add bx,si
 ;       
@@ -1270,35 +1245,44 @@ allocate_vm_found:
     mov [si].vmf_next,bx
     or di,di
     jz allocate_vm_last_free
+;
     mov [di].vmf_prev,bx
+
 allocate_vm_last_free:
     mov di,[si].vmf_prev
     mov [bx].vmf_prev,di
     or di,di
     jz allocate_vm_first_free
-    mov [di].vmf_next,bx
-allocate_vm_first_free:
 ;
+    mov [di].vmf_next,bx
+
+allocate_vm_first_free:
     jmp allocate_vm_done
+
 allocate_vm_no_split:
     mov di,[si].vmf_prev
     mov bx,[si].vmf_next
     mov [di].vmf_next,bx
     mov [bx].vmf_prev,di
+
 allocate_vm_done:
     xor di,di
     mov bx,[di].vmf_next
     cmp bx,si
     jnz allocate_vm_end
+;
     mov bx,[si].vmf_next
     mov [di].vmf_next,bx
+
 allocate_vm_end:
     xor di,di
     mov bx,[di].vms_prev
     mov cx,[si].vms_next
     cmp bx,cx
     jnc no_vm_biggest_block
+;
     mov [di].vms_prev,cx
+
 no_vm_biggest_block:    
     dec di
     mov [si].vmf_prev,di
@@ -1308,6 +1292,7 @@ no_vm_biggest_block:
     LeaveSection ds:vm_mem_section
     movzx edx,si
     add edx,vm_linear + 8
+;
     pop di
     pop si
     pop cx
@@ -1399,9 +1384,10 @@ available_big_local_linear_name     DB 'Available Big Local Linear',0
 
 available_big_local_linear  PROC far
     push ds
-    mov ax,local_mem_sel
+    GetThread
     mov ds,ax
-    mov eax,ds:local_big_avail_mem
+    mov ds,ds:p_prog_sel
+    mov eax,ds:pr_avail_mem
     pop ds
     retf32
 available_big_local_linear  ENDP
@@ -1536,34 +1522,9 @@ used_local_linear_thread_name   DB 'Used Local Linear Thread',0
 
 used_local_linear_thread    PROC far
     push ds
-    push es
-    push cx
-    push dx
-    push esi
-;
-    mov dx,local_mem_sel
-    xor esi,esi
-    ReadThreadSelector
-    mov cx,ax
-    inc esi
-    ReadThreadSelector
-    mov ah,al
-    mov al,cl
-    push ax
-    inc esi
-    ReadThreadSelector
-    mov cx,ax
-    inc esi
-    ReadThreadSelector
-    mov ah,al
-    mov al,cl
-    shl eax,16
-    pop ax
-;
-    pop esi
-    pop dx
-    pop cx
-    pop es
+    mov ds,bx
+    mov ds,ds:p_prog_sel
+    mov eax,ds:pr_avail_mem
     pop ds
     retf32
 used_local_linear_thread    ENDP
@@ -1942,19 +1903,16 @@ free_vm_not_limit_page:
 free_vm_mem     ENDP
 
 free_big_local_mem      PROC near
-    mov ax,local_mem_sel
-    mov ds,ax
-    mov es,ax
-    EnterSection ds:local_mem_section
+    LockCow
     dec ecx
     and cx,0F000h
     add ecx,1000h
-    add es:local_big_avail_mem,ecx
-    sub es:local_big_used_mem,ecx
+    add ds:pr_avail_mem,ecx
+    sub ds:pr_used_mem,ecx
     shr ecx,12
     xor eax,eax
     call cs:free_page_entries_proc
-    LeaveSection ds:local_mem_section
+    UnlockCow
     ret
 free_big_local_mem      ENDP
     
@@ -3927,10 +3885,6 @@ init_process_mem   Proc far
 ;
     mov ax,local_mem_sel
     mov ds,ax
-    mov ds:local_big_avail_mem,flat_size - local_page_linear
-    mov ds:local_big_used_mem,0
-    mov ds:local_big_base,local_page_linear
-    InitSection ds:local_mem_section
     InitSection ds:vm_mem_section
 ;
     mov edx,vm_linear

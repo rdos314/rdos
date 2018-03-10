@@ -362,21 +362,7 @@ pagefault_trap:
 
 ptUser:
     sti
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_prog_sel
-    cmp ax,ds:pr_cow_thread
-    jne ptSection
-;
-    inc ds:pr_cow_counter
-    jmp ptEnter
-
-ptSection:
-    EnterSection ds:pr_cow_section
-    mov ds:pr_cow_counter,0
-    mov ds:pr_cow_thread,ax
-
-ptEnter:
+    LockCow
     call cs:get_page_dir_proc 
     test al,1
     jnz ptUserDirValid
@@ -476,28 +462,11 @@ ptLoaderCheck:
     jnc ptUserDone
 
 ptUserFault:
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_prog_sel
-    mov ds:pr_cow_thread,0
-    mov ds:pr_cow_counter,0
-    LeaveSection ds:pr_cow_section
+    UnlockCow
     jmp ptFault
 
 ptUserDone:
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_prog_sel
-    mov bx,ds:pr_cow_counter
-    or bx,bx
-    jz ptLeave
-;
-    dec ds:pr_cow_counter
-    jmp ptRetry
-
-ptLeave:
-    mov ds:pr_cow_thread,0
-    LeaveSection ds:pr_cow_section
+    UnlockCow
     jmp ptRetry
 
 ptKernel:    
