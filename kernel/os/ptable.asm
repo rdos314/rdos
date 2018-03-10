@@ -2579,8 +2579,6 @@ local_cow_dir32  Proc near
     and si,0F000h
 ;
     mov ds,es:p_prog_sel
-    EnterSection ds:pr_cow_section
-;
     movzx ecx,ds:pr_page_table_count
     mov ebx,OFFSET pr_page_dir_arr
     xor ebp,ebp
@@ -2663,9 +2661,6 @@ lcowdUnmark32:
     mov fs:[esi+edx],eax
 
 lcowdDone32:    
-    mov ds,es:p_prog_sel
-    LeaveSection ds:pr_cow_section
-;
     popad
     pop fs
     pop es
@@ -5506,8 +5501,6 @@ local_cow_dir64  Proc near
     and si,0F000h
 ;
     mov ds,es:p_prog_sel
-    EnterSection ds:pr_cow_section
-;
     movzx ecx,ds:pr_page_table_count
     mov ebx,OFFSET pr_page_dir_arr
     xor ebp,ebp
@@ -5598,9 +5591,6 @@ lcowdUnmark64:
     mov fs:[esi+edx],eax
 
 lcowdDone64:    
-    mov ds,es:p_prog_sel
-    LeaveSection ds:pr_cow_section
-;
     popad
     pop fs
     pop es

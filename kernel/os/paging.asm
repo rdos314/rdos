@@ -520,6 +520,13 @@ ptEnter:
     int 3
 
 ptUserDirValid:
+    test ax,400h
+    jz ptUserCowOk
+;
+    int 3
+    call cs:cow_dir_proc
+
+ptUserCowOk:
     call cs:get_page_entry_proc
 ;    
     test al,1
