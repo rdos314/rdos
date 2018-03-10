@@ -4072,6 +4072,7 @@ detach_user_fork_proc      Proc far
     or ax,ax
     jz dufNoDebug
 ;
+    call FreeKernelEvent
     call TerminateThreadEvent
     call SendEvent
     
