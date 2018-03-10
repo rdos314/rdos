@@ -538,9 +538,9 @@ ptUserCheckPage:
     test ax,400h
     jz ptUserPossibleFault
 ;
-    int 3
     call cs:cow_page_proc
-    int 3
+    mov eax,cr3
+    mov cr3,eax
     jmp ptUserDone
 
 ptUserNotPresent:
@@ -590,6 +590,7 @@ ptUserFlat:
     int 3
 
 ptUserPossibleFault:
+    int 3
     GetThread
     mov ds,ax
     mov ds,ds:p_prog_sel

@@ -41,9 +41,6 @@ void main()
     int small_base;
     long long phys_base;
 
-    char *ptr = 0;
-    *ptr = 0;
-
     int gdt;
     int ldt;
     int handlec;
