@@ -484,6 +484,7 @@ pagefault_trap:
     mov ax,14
     push ax
     push ds
+;
     push es
     push ecx
     push edx
@@ -524,6 +525,8 @@ ptUserDirValid:
     jz ptUserCheckPage
 ;
     call cs:cow_dir_proc
+    mov eax,cr3
+    mov cr3,eax
     jmp ptUserDone
 
 ptUserCheckPage:
@@ -587,7 +590,6 @@ ptUserFlat:
     int 3
 
 ptUserPossibleFault:
-    int 3
     GetThread
     mov ds,ax
     mov ds,ds:p_prog_sel
@@ -603,13 +605,36 @@ ptUserPossibleFault:
 ptUserFaultRetry:
     mov ds:pr_fault_linear,edx
     mov ds:pr_fault_counter,ax
+    mov eax,cr3
+    mov cr3,eax
     jmp ptUserDone
 
 ptLoaderCheck:
     jnc ptUserDone
 
 ptFault:
-    int 3
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel
+    mov ds:pr_cow_thread,0
+    mov ds:pr_cow_counter,0
+    LeaveSection ds:pr_cow_section
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop es
+;    
+    mov eax,[ebp].trap_eflags
+    test eax,20000h
+    jnz ptVm
+;
+    call prot_exception
+    jmp ptRet
+
+ptVm:
+    call virt_exception
+    jmp ptRet
 
 ptUserDone:
     GetThread
@@ -654,6 +679,8 @@ ptRetry:
     pop edx
     pop ecx
     pop es
+
+ptRet:
     pop eax
     mov ds,ax
     pop ebx 
