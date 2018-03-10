@@ -1165,7 +1165,7 @@ map_to_user     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           MapFault
+;           NAME:           pagefault
 ;
 ;           DESCRIPTION:    Page-fault handler for memory mapped object
 ;
@@ -1173,7 +1173,7 @@ map_to_user     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-map_fault       Proc far
+pagefault       Proc far
     push ds
     push eax
     push ebx
@@ -1244,9 +1244,8 @@ map_fault_done:
     pop ebx
     pop eax
     pop ds
-    ret
-map_fault       Endp
-
+    retf32
+pagefault       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1313,9 +1312,8 @@ map_view    Proc near
 ;
     mov ds:[ebx].view_base,edx
     mov ds:[ebx].view_size,ecx
-    mov ax,cs
+    mov ax,memmap_loader_sel
     mov es,ax
-    mov di,OFFSET map_fault
     mov eax,ecx
     HookPage
     clc
@@ -1443,10 +1441,21 @@ delete_handle   Endp
 
     public init_memmap
 
+loader_tab:
+l00 DD OFFSET pagefault,                  SEG code
+
 init_memmap     PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov eax,8
+    mov bx,memmap_loader_sel
+    AllocateFixedSystemMem
+    xor di,di
+    mov si,OFFSET loader_tab
+    mov cx,8
+    rep movs byte ptr es:[di],cs:[si]
 ;
     mov ax,MEMMAP_HANDLE
     mov edi,OFFSET delete_handle
