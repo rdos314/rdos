@@ -115,149 +115,6 @@ process_dir_fault       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           page_fault_user
-;
-;           DESCRIPTION:    Pagefault in global memory
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-pm_es   EQU -12
-pm_ecx  EQU -16
-pm_di   EQU -18
-
-page_fault_user PROC near
-    mov ax,[ebp].trap_eflags
-    and ax,NOT 4500h
-    push ax
-    mov edx,cr2
-    popf
-;    
-    call cs:get_page_entry_proc
-;    
-    test al,1
-    jnz page_fault_user_retry
-;
-    test al,2
-    jnz page_fault_user_valid
-;
-    cmp edx,local_page_linear
-    jae page_fault_user_flat
-;
-    cmp edx,fixed_vm_linear
-    jae page_fault_user_valid
-;    
-    push ds
-    push bx
-    mov bx,system_data_sel
-    mov ds,bx
-    cmp edx,ds:flat_base
-    pop bx
-    pop ds 
-    jb page_fault_user_valid
-    jmp page_fault_user_invalid
-
-page_fault_user_flat:
-    cmp edx,flat_size
-    jb page_fault_user_invalid
-
-page_fault_user_valid:
-    and al,7
-    cmp al,6
-    jne page_fault_user_normal
-;
-    test ah,80h
-    jz page_fault_em_normal
-;
-    mov ax,emulate_opcode_nr
-    IsValidOsGate
-    jc page_fault_user_invalid
-;    
-    pop ax
-    pop edi
-    pop edx
-    pop ecx
-    pop es
-    push ax
-    mov al,0Eh
-    EmulateOpcode
-    pop ax
-    pop eax
-    mov ds,ax
-    pop ebx 
-    pop eax
-    and byte ptr [ebp+2].trap_eflags, NOT 1
-    pop ebp
-    add sp,4
-    iretd
-
-page_fault_em_normal:
-    call cs:get_page_entry_proc
-;
-    push cs
-    push OFFSET page_fault_user_retry
-    and ax,0FFF8h
-    push ax
-    shr eax,16
-    push ax
-    retf
-
-page_fault_user_invalid:
-    call cs:get_page_dir_proc 
-    test ax,400h
-    jz page_fault_error
-;
-    int 3
-    call cs:cow_dir_proc
-    jmp page_fault_user_retry
-
-page_fault_user_normal:
-    call local_allocate_physical
-    mov al,7    
-    call cs:set_page_entry_proc
-
-page_fault_user_retry:
-    ret
-page_fault_user ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           page_write_user
-;
-;           DESCRIPTION:    Page write in user mode
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-page_write_user PROC near
-    mov ax,[ebp].trap_eflags
-    and ax,NOT 4500h
-    push ax
-    mov edx,cr2
-    popf
-;    
-    call cs:get_page_dir_proc 
-    test ax,400h
-    jz page_write_check_page
-;
-    call cs:cow_dir_proc
-    ret
-
-page_write_check_page:
-    call cs:get_page_entry_proc
-    test ax,400h
-    jz page_fault_error
-;
-    call cs:cow_page_proc
-    ret
-page_write_user ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           page_fault_global
 ;
 ;           DESCRIPTION:    pagefault in global system memory
@@ -374,10 +231,10 @@ page_fault      Proc near
     and eax,0FFC00000h
 ;
     cmp eax,system_mem_start
-    jc page_fault_user
+    jc page_fault_error2
 ;
     cmp eax,handle_linear
-    je page_fault_user
+    je page_fault_error2
 ;    
     cmp eax,global_page_linear
     jc page_fault_global    
@@ -386,7 +243,7 @@ page_fault      Proc near
     jnc page_fault_global
 ;
     cmp eax,fixed_process_linear
-    je page_fault_user
+    je page_fault_process
 ;
     cmp eax,phys_bitmap_linear
     jc page_fault_global_page
@@ -404,6 +261,12 @@ page_fault_sys_page:
     jb page_fault_error2
 ;
     jmp cs:create_sys_page_dir_proc
+
+page_fault_process:
+    mov edx,cr2
+    call local_allocate_physical
+    mov al,7    
+    jmp cs:set_page_entry_proc
 
 page_fault      Endp
 
@@ -601,7 +464,7 @@ ptUserPossibleFault:
     mov ax,ds:pr_fault_counter
     inc ax
     cmp ax,3
-    jae ptFault
+    jae ptUserFault
 
 ptUserFaultRetry:
     mov ds:pr_fault_linear,edx
@@ -613,29 +476,14 @@ ptUserFaultRetry:
 ptLoaderCheck:
     jnc ptUserDone
 
-ptFault:
+ptUserFault:
     GetThread
     mov ds,ax
     mov ds,ds:p_prog_sel
     mov ds:pr_cow_thread,0
     mov ds:pr_cow_counter,0
     LeaveSection ds:pr_cow_section
-;
-    pop edi
-    pop edx
-    pop ecx
-    pop es
-;    
-    mov eax,[ebp].trap_eflags
-    test eax,20000h
-    jnz ptVm
-;
-    call prot_exception
-    jmp ptRet
-
-ptVm:
-    call virt_exception
-    jmp ptRet
+    jmp ptFault
 
 ptUserDone:
     GetThread
@@ -656,24 +504,29 @@ ptLeave:
 ptKernel:    
     mov eax,[ebp].trap_err
     test ax,1
-    jz trap_not_present
-
-trap_error_do:
-    test ax,4
-    jz trap_kernel_error
-
-trap_user_error:
-    call page_write_user
-    jmp ptRetry
-
-trap_kernel_error:
-    call page_fault_error
-    jmp ptRetry
-
-trap_not_present:
+    jnz ptFault
+;
     call page_fault
     mov eax,cr3
     mov cr3,eax
+    jmp ptRetry
+
+ptFault:
+    pop edi
+    pop edx
+    pop ecx
+    pop es
+;    
+    mov eax,[ebp].trap_eflags
+    test eax,20000h
+    jnz ptVm
+;
+    call prot_exception
+    jmp ptRet
+
+ptVm:
+    call virt_exception
+    jmp ptRet
 
 ptRetry:
     pop edi
