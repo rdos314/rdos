@@ -521,19 +521,28 @@ ptEnter:
 
 ptUserDirValid:
     test ax,400h
-    jz ptUserCowOk
+    jz ptUserCheckPage
 ;
     int 3
     call cs:cow_dir_proc
     int 3
     jmp ptUserDone
 
-ptUserCowOk:
+ptUserCheckPage:
     call cs:get_page_entry_proc
 ;    
     test al,1
-    jnz ptUserDone
+    jz ptUserNotPresent
 ;
+    test ax,400h
+    jz ptUserPossibleFault
+;
+    int 3
+    call cs:cow_page_proc
+    int 3
+    jmp ptUserDone
+
+ptUserNotPresent:
     test al,2
     jnz ptUserValid
 ;
@@ -541,9 +550,7 @@ ptUserCowOk:
     jae ptUserFlat
 ;
     cmp edx,fixed_vm_linear
-    jae ptUserValid
-;
-    int 3
+    jb ptUserPossibleFault
 
 ptUserValid:
     and al,7
@@ -562,7 +569,7 @@ ptLoader:
     mov eax,cs
     push eax
 ;
-    mov eax,OFFSET ptUserDone
+    mov eax,OFFSET ptLoaderCheck
     push eax
 ;
     mov eax,es:loader_pagefault_proc+4
@@ -579,6 +586,15 @@ ptNormal:
     jmp ptUserDone
 
 ptUserFlat:
+    int 3
+
+ptUserPossibleFault:
+    int 3
+
+ptLoaderCheck:
+    jnc ptUserDone
+
+ptFault:
     int 3
 
 ptUserDone:
