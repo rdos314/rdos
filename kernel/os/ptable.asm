@@ -1687,11 +1687,11 @@ local_emulate_page32    ENDP
 ;
 ;           NAME:           local_hook_page32
 ;
-;           DESCRIPTION:    Hook for a specified linear address range
+;           DESCRIPTION:    Loader hook for a specified linear address range
 ;
 ;           PARAMETERS:     EAX         Size
 ;                           EDX         Linear base
-;                           ES:DI       Callback
+;                           ES          Loader selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1734,10 +1734,9 @@ hpDo32:
     and al,6
     jz hpNext32
 ;
-    mov ax,es
-    or al,6
+    mov ax,6
     mov [edx],ax
-    mov [edx+2],di
+    mov [edx+2],es
 
 hpNext32:
     add edx,4
@@ -4330,11 +4329,11 @@ local_emulate_page64    ENDP
 ;
 ;           NAME:           local_hook_page64
 ;
-;           DESCRIPTION:    Hook for a specified linear address range
+;           DESCRIPTION:    Loader hook for a specified linear address range
 ;
 ;           PARAMETERS:     EAX         Size
 ;                           EDX         Linear base
-;                           ES:DI       Callback
+;                           ES          Loader selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4377,10 +4376,9 @@ hpDo64:
     and al,6
     jz hpNext64
 ;
-    mov ax,es
-    or al,6
+    mov ax,6
     mov [edx],ax
-    mov [edx+2],di
+    mov [edx+2],es
 
 hpNext64:
     add edx,8
@@ -6343,7 +6341,7 @@ set_page_emulate       Endp
 ;
 ;           PARAMETERS:     EAX         Size
 ;                           EDX         Linear base
-;                           ES:DI       Callback
+;                           ES          Loader selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

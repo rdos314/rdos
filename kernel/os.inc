@@ -777,15 +777,15 @@ SetPageEmulate  MACRO
     OsGate set_page_emulate_nr
                     ENDM
 
-;       EAX         ANTAL BYTE
-;       EDX         LINEAR BASE ADDRESS
-;       ES:DI   CALLBACK ROUTINE
+; IN  EAX         Size
+; IN  EDX         Linear address
+; IN  ES          Loader selector
 HookPage    MACRO
     OsGate hook_page_nr
                     ENDM
 
-;       EAX         ANTAL BYTE
-;       EDX         LINEAR BASE ADDRESS
+; IN  EAX         Size
+; IN  EDX         Linear address
 UnhookPage      MACRO
     OsGate unhook_page_nr
                     ENDM

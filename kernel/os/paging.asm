@@ -33,6 +33,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE system.inc
+INCLUDE exec.def
 
     extrn local_create_int_gate_sel:near
 
@@ -488,6 +489,106 @@ pagefault_trap:
     push edx
     push edi
 ;
+    mov edx,cr2
+    cmp edx,system_mem_start
+    jc ptUser
+;
+    cmp edx,handle_linear
+    jne ptKernel
+
+ptUser:
+    sti
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel
+    cmp ax,ds:pr_cow_thread
+    jne ptSection
+;
+    inc ds:pr_cow_counter
+    jmp ptEnter
+
+ptSection:
+    EnterSection ds:pr_cow_section
+    mov ds:pr_cow_counter,0
+    mov ds:pr_cow_thread,ax
+
+ptEnter:
+    call cs:get_page_dir_proc 
+    test al,1
+    jnz ptUserDirValid
+;
+    int 3
+
+ptUserDirValid:
+    call cs:get_page_entry_proc
+;    
+    test al,1
+    jnz ptUserDone
+;
+    test al,2
+    jnz ptUserValid
+;
+    cmp edx,local_page_linear
+    jae ptUserFlat
+;
+    cmp edx,fixed_vm_linear
+    jae ptUserValid
+;
+    int 3
+
+ptUserValid:
+    and al,7
+    cmp al,6
+    jne ptNormal
+;
+    test ah,80h
+    jz ptLoader
+;
+    int 3
+
+ptLoader:
+    shr eax,16
+    mov es,ax
+;
+    mov eax,cs
+    push eax
+;
+    mov eax,OFFSET ptUserDone
+    push eax
+;
+    mov eax,es:loader_pagefault_proc+4
+    push eax
+;
+    mov eax,es:loader_pagefault_proc
+    push eax
+    retf32
+
+ptNormal:
+    call local_allocate_physical
+    mov al,7    
+    call cs:set_page_entry_proc
+    jmp ptUserDone
+
+ptUserFlat:
+    int 3
+
+ptUserDone:
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel
+    mov bx,ds:pr_cow_counter
+    or bx,bx
+    jz ptLeave
+;
+    dec ds:pr_cow_counter
+    jmp ptRetry
+
+ptLeave:
+    mov ds:pr_cow_thread,0
+    LeaveSection ds:pr_cow_section
+    jmp ptRetry
+
+ptKernel:    
     mov eax,[ebp].trap_err
     test ax,1
     jz trap_not_present
@@ -498,18 +599,18 @@ trap_error_do:
 
 trap_user_error:
     call page_write_user
-    jmp trap_14_done
+    jmp ptRetry
 
 trap_kernel_error:
     call page_fault_error
-    jmp trap_14_done
+    jmp ptRetry
 
 trap_not_present:
     call page_fault
     mov eax,cr3
     mov cr3,eax
 
-trap_14_done:
+ptRetry:
     pop edi
     pop edx
     pop ecx

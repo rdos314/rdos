@@ -165,6 +165,8 @@ pr_memmap_spinlock   spinlock_typ <>
 pr_pm_int            DD 100h DUP(?,?)
 pr_pm_exc            DD 20h DUP(?,?)
 
+pr_cow_thread        DW ?
+pr_cow_counter       DW ?
 pr_cow_section       section_typ <>
 
 pr_page_table_count  DW ?
@@ -217,6 +219,9 @@ pf_name              DB ?
 process_struc    ENDS
 
 loader_interface_struc    STRUC
+
+; IN   EDX                Fault address
+loader_pagefault_proc          DD ?,?
 
 ; IN   BX                 C file handle
 ; OUT  GS                 Program sel

@@ -1723,15 +1723,15 @@ CheckReloc      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           load_object
+;           NAME:           pagefault
 ;
-;           DESCRIPTION:    Demand load object
+;           DESCRIPTION:    Page fault handler
 ;
 ;           PARAMETERS:     EDX         LINEAR ADDRESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-load_object     Proc far
+pagefault     Proc far
     push ds
     push es
     pushad
@@ -1745,39 +1745,33 @@ load_object     Proc far
     and dx,0F000h
 ;
     call FindLib
-    jc load_object_done
+    jc pfFail
 ;
     call FindObject
-    jc load_object_done
-;
-    push ds
-    mov ax,es
-    mov ds,ax
-    EnterSection ds:mod_section
+    jc pfFail
 ;
     push edx
     add edx,ecx
     HasPageEntry
     pop edx
-    pop ds
-    jnc load_object_leave
+    jnc pfFail
 ;
     xor eax,eax
     mov ebp,edx
 ;    
     mov ebx,es:lib_header
     cmp edi,[ebx].peh_image_base
-    je load_object_size_ok
+    je pfSizeOk
 
-load_object_get_size:
+pfGetSize:
     call CheckReloc
-    jnc load_object_size_ok
+    jnc pfSizeOk
 ;
     add eax,1000h
     add ebp,1000h
-    jmp load_object_get_size
+    jmp pfGetSize
 
-load_object_size_ok:
+pfSizeOk:
     mov ebp,edx
     add eax,1000h
     AllocateLocalLinear
@@ -1790,18 +1784,18 @@ load_object_size_ok:
     push edx
     push ebp
 
-load_object_load_loop:
+pfLoadLoop:
     call LoadPage
-    jc load_object_load_done
+    jc pfLoadDone
 ;
     sub eax,1000h
-    jz load_object_load_done
+    jz pfLoadDone
 ;    
     add edx,1000h
     add ebp,1000h
-    jmp load_object_load_loop
+    jmp pfLoadLoop
 
-load_object_load_done:
+pfLoadDone:
     call MapFromImage
     mov ebx,eax
 ;
@@ -1817,19 +1811,19 @@ load_object_load_done:
 ;
     mov ebx,es:lib_header
     cmp edi,[ebx].peh_image_base
-    je load_object_map
+    je pfMap
 
-load_object_reloc_loop:
+pfRelocLoop:
     call RelocPage
 ;
     sub eax,1000h
-    jz load_object_map
+    jz pfMap
 ;    
     add edx,1000h
     add ebp,1000h
-    jmp load_object_reloc_loop
+    jmp pfRelocLoop
 
-load_object_map:
+pfMap:
     pop ebp
     pop edx
     pop eax
@@ -1840,18 +1834,18 @@ load_object_map:
     mov ecx,ebx
     pop edx
     FreeLinear
+    clc
+    jmp pfDone
 
-load_object_leave:
-    mov ax,es
-    mov ds,ax
-    LeaveSection ds:mod_section
+pfFail:
+    stc
     
-load_object_done:
+pfDone:
     popad
     pop es
     pop ds
-    retf16
-load_object     Endp 
+    ret
+pagefault     Endp 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2167,7 +2161,7 @@ fixup_dll       PROC far
     mov es:mod_debug_id,dx
     mov ecx,es:mod_size
     call LoadImportedDlls
-    call Preload
+;    call Preload
 ;
     mov dx,es:mod_debug_id
     or dx,dx
@@ -2500,8 +2494,9 @@ create_image_alloced:
     mov esi,es:lib_objects
 ;
     push es
-    mov ax,cs
+    mov ax,pe_loader_sel
     mov es,ax
+
 hook_object_loop:
     mov edx,[esi].o_va
     add edx,edi
@@ -2509,13 +2504,12 @@ hook_object_loop:
     mov eax,[esi].o_virt_size
     cmp eax,[esi].o_phys_size
     jae hook_object_do
+;
     mov eax,[esi].o_phys_size
     mov [esi].o_virt_size,eax
+
 hook_object_do:
-    push di
-    mov di,OFFSET load_object
     HookPage
-    pop di
     add esi,SIZE object_struc
     loop hook_object_loop
     pop es
@@ -3094,7 +3088,7 @@ fixup_exe Proc far
 feNoPreDebug:
     push dx
     call LoadImportedDlls
-    call Preload
+;    call Preload
     pop dx
 ;
     or dx,dx
@@ -4083,7 +4077,7 @@ fork_proc  Endp
 ;
 ;           DESCRIPTION:    Detach forked process, user stage
 ;
-;           PARAMETERS:     FS		User mode FS
+;           PARAMETERS:     FS          User mode FS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5889,46 +5883,47 @@ attach_debug  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 loader_tab:
-l00 DD OFFSET is_valid_exe,               SEG code
-l01 DD OFFSET init_module,                SEG code
-l02 DD OFFSET create_process,             SEG code
-l03 DD OFFSET fixup_exe,                  SEG code
-l04 DD OFFSET unload_user_exe,            SEG code
-l05 DD OFFSET unload_kernel_exe,          SEG code
-l06 DD OFFSET section_patch,              SEG code
-l07 DD OFFSET get_exe_name,               SEG code
-l08 DD OFFSET get_cmd_line,               SEG code
-l09 DD OFFSET get_env,                    SEG code
-l10 DD OFFSET init_thread,                SEG code
-l11 DD OFFSET start_thread,               SEG code
-l12 DD OFFSET free_thread_user,           SEG code
-l13 DD OFFSET free_thread_kernel,         SEG code
-l14 DD OFFSET allocate_mem,               SEG code
-l15 DD OFFSET free_mem,                   SEG code
-l16 DD OFFSET debug_allocate_mem,         SEG code
-l17 DD OFFSET debug_free_mem,             SEG code
-l18 DD OFFSET init_module,                SEG code
-l19 DD OFFSET fixup_dll,                  SEG code
-l20 DD OFFSET unload_dll,                 SEG code
-l21 DD OFFSET free_dll,                   SEG code
-l22 DD OFFSET get_current_dll,            SEG code
-l23 DD OFFSET get_module_proc,            SEG code
-l24 DD OFFSET get_resource,               SEG code
-l25 DD OFFSET get_module_name,            SEG code
-l26 DD OFFSET start_wait_for_debug_event, SEG code
-l27 DD OFFSET stop_wait_for_debug_event,  SEG code
-l28 DD OFFSET is_debug_event_idle,        SEG code
-l29 DD OFFSET get_debug_event,            SEG code
-l30 DD OFFSET get_debug_event_data,       SEG code
-l31 DD OFFSET clear_debug_event,          SEG code
-l32 DD OFFSET continue_debug_event,       SEG code
-l33 DD OFFSET regs_to_user,               SEG code
-l34 DD OFFSET add_user_gate,              SEG code
-l35 DD OFFSET stop_debug,                 SEG code
-l36 DD OFFSET attach_debug,               SEG code
-l37 DD OFFSET fork_proc,                  SEG code
-l38 DD OFFSET detach_user_fork_proc,      SEG code
-l39 DD OFFSET detach_kernel_fork_proc,    SEG code
+l00 DD OFFSET pagefault,                  SEG code
+l01 DD OFFSET is_valid_exe,               SEG code
+l02 DD OFFSET init_module,                SEG code
+l03 DD OFFSET create_process,             SEG code
+l04 DD OFFSET fixup_exe,                  SEG code
+l05 DD OFFSET unload_user_exe,            SEG code
+l06 DD OFFSET unload_kernel_exe,          SEG code
+l07 DD OFFSET section_patch,              SEG code
+l08 DD OFFSET get_exe_name,               SEG code
+l09 DD OFFSET get_cmd_line,               SEG code
+l10 DD OFFSET get_env,                    SEG code
+l11 DD OFFSET init_thread,                SEG code
+l12 DD OFFSET start_thread,               SEG code
+l13 DD OFFSET free_thread_user,           SEG code
+l14 DD OFFSET free_thread_kernel,         SEG code
+l15 DD OFFSET allocate_mem,               SEG code
+l16 DD OFFSET free_mem,                   SEG code
+l17 DD OFFSET debug_allocate_mem,         SEG code
+l18 DD OFFSET debug_free_mem,             SEG code
+l19 DD OFFSET init_module,                SEG code
+l20 DD OFFSET fixup_dll,                  SEG code
+l21 DD OFFSET unload_dll,                 SEG code
+l22 DD OFFSET free_dll,                   SEG code
+l23 DD OFFSET get_current_dll,            SEG code
+l24 DD OFFSET get_module_proc,            SEG code
+l25 DD OFFSET get_resource,               SEG code
+l26 DD OFFSET get_module_name,            SEG code
+l27 DD OFFSET start_wait_for_debug_event, SEG code
+l28 DD OFFSET stop_wait_for_debug_event,  SEG code
+l29 DD OFFSET is_debug_event_idle,        SEG code
+l30 DD OFFSET get_debug_event,            SEG code
+l31 DD OFFSET get_debug_event_data,       SEG code
+l32 DD OFFSET clear_debug_event,          SEG code
+l33 DD OFFSET continue_debug_event,       SEG code
+l34 DD OFFSET regs_to_user,               SEG code
+l35 DD OFFSET add_user_gate,              SEG code
+l36 DD OFFSET stop_debug,                 SEG code
+l37 DD OFFSET attach_debug,               SEG code
+l38 DD OFFSET fork_proc,                  SEG code
+l39 DD OFFSET detach_user_fork_proc,      SEG code
+l40 DD OFFSET detach_kernel_fork_proc,    SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc
