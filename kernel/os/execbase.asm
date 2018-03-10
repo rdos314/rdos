@@ -2578,6 +2578,7 @@ removed_process    PROC far
     or ecx,ecx
     jz rpfEnd
 ;
+    EnterSection ds:pr_cow_section
     push ds
     mov eax,es
     mov ds,eax
@@ -2597,6 +2598,7 @@ rpfEnd:
     jmp rpfDone
 
 rpfLeave:
+    LeaveSection ds:pr_cow_section
     LeaveSection ds:pr_section
 
 rpfDone:

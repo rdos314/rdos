@@ -78,6 +78,9 @@ void main()
             for (i = 0; i < 0x4000; i++)
                 ptr[i] = 123;
 
+            ptr = 0;
+            *ptr = 0;
+
             exit(0x1234);
         }
 

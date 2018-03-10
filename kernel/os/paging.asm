@@ -453,7 +453,6 @@ ptUserFlat:
     int 3
 
 ptUserPossibleFault:
-    int 3
     GetThread
     mov ds,ax
     mov ds,ds:p_prog_sel
