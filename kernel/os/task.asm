@@ -7829,6 +7829,8 @@ setup_fork Proc near
     pushad
 ;
     mov ds,es:p_prog_sel
+    EnterSection ds:pr_cow_section
+;
     movzx ecx,ds:pr_page_table_count
     or ecx,ecx
     jnz sfAddNew
@@ -7867,6 +7869,9 @@ sfAddNew:
     mov es,es:p_proc_sel
     StartFork
     pop es
+;
+    mov ds,es:p_prog_sel
+    LeaveSection ds:pr_cow_section
 ;
     popad
     pop gs
